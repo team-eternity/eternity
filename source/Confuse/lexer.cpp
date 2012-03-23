@@ -53,7 +53,7 @@ static struct cfginclude_s
 
 static int include_stack_ptr = 0;
 
-char *mytext; // haleyjd: equivalent to yytext
+const char *mytext; // haleyjd: equivalent to yytext
 
 // haleyjd 07/11/03: dynamic string buffer solution from 
 // libConfuse v2.0; eliminates unsafe, overflowable array

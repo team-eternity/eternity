@@ -57,7 +57,7 @@
 // QuitDOOM messages
 #define NUM_QUITMESSAGES   22
 
-extern char* endmsg[];
+extern const char *endmsg[];
 
 
 #ifndef PD_BLUEC        // some files don't have boom-specific things

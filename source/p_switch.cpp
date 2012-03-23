@@ -283,7 +283,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    int       texMid;
    int       texBot;
    int       i;
-   char     *sound;     // haleyjd
+   const char *sound;     // haleyjd
    int       sidenum;
    sector_t *sector;
    

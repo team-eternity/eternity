@@ -41,7 +41,7 @@
 #include <windows.h>
 
 // cannot include DOOM headers here; required externs:
-extern void startupmsg(char *, char *);
+extern void startupmsg(const char *, const char *);
 extern int  M_CheckParm(const char *);
 extern int  myargc;
 extern char **myargv;

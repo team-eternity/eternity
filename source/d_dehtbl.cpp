@@ -2112,7 +2112,7 @@ void D_QueueDEH(const char *filename, int lumpnum)
 // DeHackEd support - Ty 03/09/97
 // killough 10/98:
 // Add lump number as third argument, for use when filename==NULL
-void ProcessDehFile(char *filename, const char *outfilename, int lump);
+void ProcessDehFile(const char *filename, const char *outfilename, int lump);
 
 // killough 10/98: support -dehout filename
 // cph - made const, don't cache results

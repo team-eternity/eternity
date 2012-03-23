@@ -72,6 +72,8 @@
 //
 static bool filecmp(const char *filename, const char *wildcard)
 {
+   static char no_ext[] = "";
+
    char *filename_main, *wildcard_main; // filename
    char *filename_ext, *wildcard_ext;   // extension
    bool res = true;
@@ -85,7 +87,7 @@ static bool filecmp(const char *filename, const char *wildcard)
    filename_ext = strrchr(filename_main, '.');
    
    if(!filename_ext) 
-      filename_ext = ""; // no extension
+      filename_ext = no_ext; // no extension
    else
    {
       // break into 2 strings; replace . with \0
@@ -96,7 +98,7 @@ static bool filecmp(const char *filename, const char *wildcard)
    wildcard_ext = strrchr(wildcard_main, '.');
 
    if(!wildcard_ext)
-      wildcard_ext = "";
+      wildcard_ext = no_ext;
    else
       *wildcard_ext++ = '\0';
 

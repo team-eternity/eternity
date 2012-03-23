@@ -1014,7 +1014,7 @@ static void ST_loadGraphics(void)
 // Sets up the DOOM status bar face patches for a particular player
 // skin.  Called by the skin code when creating a player skin.
 //
-void ST_CacheFaces(patch_t **faces, char *facename)
+void ST_CacheFaces(patch_t **faces, const char *facename)
 {
    int i, facenum;
    char namebuf[9];

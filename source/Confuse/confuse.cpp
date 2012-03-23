@@ -408,7 +408,7 @@ int cfg_parse_boolean(const char *s)
    return -1;
 }
 
-cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
+cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
 {
    cfg_value_t *val = 0;
    int b;
@@ -1190,7 +1190,7 @@ void cfg_free(cfg_t *cfg)
    {
       efree(cfg->namealloc);
       efree(cfg->opts);
-      efree(cfg->title);
+      efree(const_cast<char *>(cfg->title));
    }
    else
       efree(cfg->filename);

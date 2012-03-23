@@ -36,7 +36,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-extern void AddIWADDir(char *dir);
+extern void AddIWADDir(const char *dir);
 
 typedef struct registry_value_s
 {

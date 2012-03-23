@@ -161,7 +161,7 @@ struct cfg_t
                                 * always named "root" */
    char *namealloc;        /**< Pointer to name if allocated on heap */
    cfg_opt_t *opts;        /**< Array of options */
-   char *title;            /**< Optional title for this section, only
+   const char *title;      /**< Optional title for this section, only
                                 * set if CFGF_TITLE flag is set */
    char *filename;         /**< Name of the file being parsed */
    int line;               /**< Line number in the config file */
@@ -514,7 +514,7 @@ int           cfg_getflag(cfg_t *cfg, const char *name);
 int           cfg_getnflag(cfg_t *cfg, const char *name, unsigned int index);
 
 
-cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
+cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value);
 
 /** Return the number of values this option has. If the option does
  * not have the CFGF_LIST or CFGF_MULTI flag set, this function will

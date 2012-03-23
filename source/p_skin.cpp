@@ -306,7 +306,7 @@ void P_ParseSkin(int lumpnum)
    strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
 
-   newskin->facename = "STF";      // default status bar face
+   newskin->facename = estrdup("STF");      // default status bar face
    newskin->faces    = NULL;
 
    newskin->type    = SKIN_PLAYER; // haleyjd: it's a player skin
