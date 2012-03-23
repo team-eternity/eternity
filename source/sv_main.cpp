@@ -120,6 +120,7 @@ int sv_randomize_maps = false;
 bool sv_buffer_commands = false;
 unsigned int sv_join_time_limit = 0;
 bool sv_reset_if_no_players = true;
+bool sv_use_player_queue = false;
 unsigned int sv_cyberdemon_spawn_rate = 0;
 unsigned int sv_cyberdemon_spawn_limit = 1;
 

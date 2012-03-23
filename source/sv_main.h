@@ -50,6 +50,7 @@ extern server_client_t server_clients[MAXPLAYERS];
 extern int sv_randomize_maps;
 extern bool sv_buffer_commands;
 extern bool sv_reset_if_no_players;
+extern bool sv_use_player_queue;
 extern const char *sv_spectator_password;
 extern const char *sv_player_password;
 extern const char *sv_moderator_password;

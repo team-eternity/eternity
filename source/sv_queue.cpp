@@ -44,13 +44,18 @@ static void SV_updateQueueLevels()
       client = &clients[i];
       sc = &server_clients[i];
 
-      if(client->queue_level != ql_waiting)
-         continue;
+      if(sv_use_player_queue)
+      {
+         if(client->queue_level != ql_waiting)
+            continue;
 
-      if(client->queue_position != 0)
-         continue;
+         if(client->queue_position != 0)
+            continue;
 
-      SV_QueueSetClientCanJoin(i);
+         SV_QueueSetClientCanJoin(i);
+      }
+      else
+         SV_QueueSetClientDoneWaiting(i);
    }
 }
 
@@ -89,6 +94,10 @@ static int SV_getNewQueuePosition()
    // [CG] First, ensure queue levels are as current as possible.
    SV_updateQueueLevels();
 
+   // [CG] If not using the queue, then the max queue position is 0.
+   if(!sv_use_player_queue)
+      return 0;
+
    // [CG] Check to see if there is room inside max_players.
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -126,6 +135,10 @@ static void SV_advanceQueue(int clientnum)
 {
    int i, queue_position;
 
+   // [CG] If the queue isn't enabled, it never advances.
+   if(!sv_use_player_queue)
+      return;
+
    if(clientnum)
    {
       if(!playeringame[clientnum])
@@ -145,10 +158,13 @@ static void SV_advanceQueue(int clientnum)
    {
       if(!playeringame[i])
          continue;
+
       if(i == clientnum)
          continue;
+
       if(clients[i].queue_level != ql_waiting)
          continue;
+
       if(clients[i].queue_position <= queue_position)
          continue;
 
@@ -162,12 +178,19 @@ static void SV_advanceQueue(int clientnum)
 void SV_QueueSetClientRemoved(int clientnum)
 {
    SV_advanceQueue(clientnum);
-   SV_setQueueLevelAndPosition(clientnum, ql_none, 0);
+
+   if(sv_use_player_queue)
+      SV_setQueueLevelAndPosition(clientnum, ql_none, 0);
+   else
+      SV_setQueueLevelAndPosition(clientnum, ql_can_join, 0);
 }
 
 void SV_QueueSetClientWaiting(int clientnum, int position)
 {
-   SV_setQueueLevelAndPosition(clientnum, ql_waiting, position);
+   if(sv_use_player_queue)
+      SV_setQueueLevelAndPosition(clientnum, ql_waiting, position);
+   else
+      SV_setQueueLevelAndPosition(clientnum, ql_can_join, position);
 }
 
 void SV_QueueSetClientDoneWaiting(int clientnum)
@@ -205,6 +228,10 @@ void SV_MarkQueueClientsAFK()
 {
    int i, tics_waiting;
    int tic_limit = sv_join_time_limit * TICRATE;
+
+   // [CG] The queue can't set clients AFK if it's not enabled.
+   if(!sv_use_player_queue)
+      return;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {

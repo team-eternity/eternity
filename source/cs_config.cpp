@@ -1108,6 +1108,13 @@ void CS_HandleServerSection()
       sv_cyberdemon_spawn_limit =
          server["random_cyberdemon_spawn_limit"].asUInt();
    }
+
+   sv_use_player_queue = false;
+   if((!server["use_player_queue"].empty()) &&
+       server["use_player_queue"].isBool())
+   {
+      sv_use_player_queue = server["use_player_queue"].asBool();
+   }
 }
 
 void CS_HandleMapsSection()
