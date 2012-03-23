@@ -299,6 +299,7 @@ static void broadcast_packet(void *data, size_t data_size)
       send_packet(i, data, data_size);
 }
 
+#if 0
 static void broadcast_unreliable_packet(void *data, size_t data_size)
 {
    int i;
@@ -306,6 +307,7 @@ static void broadcast_unreliable_packet(void *data, size_t data_size)
    for(i = 1; i < MAX_CLIENTS; i++)
       send_unreliable_packet(i, data, data_size);
 }
+#endif
 
 static void broadcast_packet_excluding(int playernum, void *data,
                                        size_t data_size)
@@ -478,54 +480,61 @@ unsigned int SV_GetClientNumberFromAddress(ENetAddress *address)
 mapthing_t* SV_GetCoopSpawnPoint(int playernum)
 {
    int i;
-   fixed_t x = 0;
-   fixed_t y = 0;
    bool remove_solid = false;
    bool remove_tele_stomp = false;
+   Mobj *actor = players[playernum].mo;
+   mapthing_t *start = &playerstarts[0];
 
-   // [CG] FIXME: Apparently sometimes player->mo is NULL.
-   if((players[playernum].mo->flags & MF_SOLID) == 0)
+   if(!actor)
+      return start;
+
+   if((actor->flags & MF_SOLID) == 0)
    {
       remove_solid = true;
-      players[playernum].mo->flags |= MF_SOLID;
+      actor->flags |= MF_SOLID;
    }
 
    for(i = 0; i < MAXPLAYERS; i++)
    {
-      x = playerstarts[i].x << FRACBITS;
-      y = playerstarts[i].x << FRACBITS;
+      start = &playerstarts[i];
 
-      if(P_CheckPosition(players[playernum].mo, x, y))
+      if(P_CheckPosition(actor, start->x << FRACBITS, start->y << FRACBITS))
          break;
    }
 
    if(remove_solid)
-      players[playernum].mo->flags &= ~MF_SOLID;
+      actor->flags &= ~MF_SOLID;
 
-   if(GameType != gt_dm)
+   // [CG] TODO: This needs some work so the victim doesn't lose or drop all
+   //            their stuff in Cooperative mode.
+   if((actor->flags3 & MF3_TELESTOMP) == 0)
    {
-      // [CG] TODO: When in coop mode, just telefrag the things on your spawn.
-      //            This needs some work so you don't drop or lose all your
-      //            stuff.
-      if((players[playernum].mo->flags3 & MF3_TELESTOMP) == 0)
-      {
-         remove_tele_stomp = true;
-         players[playernum].mo->flags3 |= MF3_TELESTOMP;
-      }
+      remove_tele_stomp = true;
+      actor->flags3 |= MF3_TELESTOMP;
+   } 
 
-      P_TeleportMove(players[playernum].mo, x, y, false);
+   P_TeleportMove(actor, start->x << FRACBITS, start->y << FRACBITS, false);
 
-      if(remove_tele_stomp)
-         players[playernum].mo->flags3 &= ~MF3_TELESTOMP;
-   }
-   return &playerstarts[i];
+   if(remove_tele_stomp)
+      actor->flags3 &= ~MF3_TELESTOMP;
+
+   return start;
 }
 
 mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum)
 {
-   int i, j;
+   int i, starts_tried;
    bool remove_solid = false;
+   bool remove_tele_stomp = false;
    int deathmatch_start_count = deathmatch_p - deathmatchstarts;
+   Mobj *actor = players[playernum].mo;
+   mapthing_t *start = &playerstarts[0];
+
+   static bool *deathmatch_start_tried = NULL;
+   static int   current_deathmatch_start_count = 0;
+
+   if(!actor)
+      return start;
 
    if(deathmatch_start_count == 0)
    {
@@ -533,68 +542,152 @@ mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum)
       return SV_GetCoopSpawnPoint(playernum);
    }
 
-   if((players[playernum].mo->flags & MF_SOLID) == 0)
+   start = &deathmatchstarts[0];
+
+   if(current_deathmatch_start_count < deathmatch_start_count)
    {
-      remove_solid = true;
-      players[playernum].mo->flags |= MF_SOLID;
+      if(deathmatch_start_count <= 0)
+         I_Error("SV_GetDeathMatchSpawnPoint: Bad deathmatch start count.\n");
+
+      deathmatch_start_tried = erealloc(
+         bool *,
+         deathmatch_start_tried,
+         sizeof(bool) * deathmatch_start_count
+      );
+
+      current_deathmatch_start_count = deathmatch_start_count;
    }
 
-   // [CG] Try 20 times to find an unoccupied spawn point for the player.
-   for(i = 0; i < 20; i++)
+   if((actor->flags & MF_SOLID) == 0)
    {
-      j = P_Random(pr_dmspawn) % deathmatch_start_count;
-      if(P_CheckPosition(players[playernum].mo,
-                         deathmatchstarts[j].x << FRACBITS,
-                         deathmatchstarts[j].y << FRACBITS))
+      remove_solid = true;
+      actor->flags |= MF_SOLID;
+   }
+
+   for(i = 0; i < deathmatch_start_count; i++)
+      deathmatch_start_tried[i] = false;
+
+   starts_tried = 0;
+   while(starts_tried != deathmatch_start_count)
+   {
+      i = (P_Random(pr_dmspawn) % deathmatch_start_count);
+
+      if(deathmatch_start_tried[i])
+         continue;
+
+      deathmatch_start_tried[i] = true;
+      starts_tried++;
+
+      start = &deathmatchstarts[i];
+
+      if(P_CheckPosition(actor, start->x << FRACBITS, start->y << FRACBITS))
          break;
    }
 
    if(remove_solid)
-      players[playernum].mo->flags &= ~MF_SOLID;
+      actor->flags &= ~MF_SOLID;
 
-   // [CG] Even if there was no good deathmatch spawn, we still use the 20th
-   //      one tried... even if it means the player will probably be stuck.
-   return &deathmatchstarts[j];
+   // [CG] If we can't find an unoccupied deathmatch spawn, telefrag whatever
+   //      is there.  The alternative is to stick 2 players together, and one
+   //      player will just end up being pistol'd or punched to death, so don't
+   //      waste time & just kill whoever's there.
+   if((actor->flags3 & MF3_TELESTOMP) == 0)
+   {
+      remove_tele_stomp = true;
+      actor->flags3 |= MF3_TELESTOMP;
+   } 
+
+   P_TeleportMove(actor, start->x << FRACBITS, start->y << FRACBITS, false);
+
+   if(remove_tele_stomp)
+      actor->flags3 &= ~MF3_TELESTOMP;
+
+   return start;
 }
 
 mapthing_t* SV_GetTeamSpawnPoint(int playernum)
 {
-   int i, j;
-   fixed_t x, y;
-   int color;
-   mapthing_t *spawn_point;
+   int i, starts_tried;
    bool remove_solid = false;
+   bool remove_tele_stomp = false;
+   Mobj *actor = players[playernum].mo;
+   mapthing_t *start = &playerstarts[0];
+   int color = clients[playernum].team;
+   int team_start_count = team_start_counts_by_team[color];
 
-   if(team_start_counts_by_team[clients[playernum].team] == 0)
+   static bool *team_start_tried = NULL;
+   static int   current_team_start_count = 0;
+
+   if(!actor)
+      return start;
+
+   if(!team_start_count)
    {
       doom_printf("No team starts, falling back to deathmatch starts.\n");
       return SV_GetDeathMatchSpawnPoint(playernum);
    }
 
-   if((players[playernum].mo->flags & MF_SOLID) == 0)
+   start = &team_starts_by_team[color][0];
+
+   if(current_team_start_count < team_start_count)
    {
-      remove_solid = true;
-      players[playernum].mo->flags |= MF_SOLID;
+      if(team_start_count <= 0)
+         I_Error("SV_GetTeamSpawnPoint: Bad team start count.\n");
+
+      team_start_tried = erealloc(
+         bool *,
+         team_start_tried,
+         sizeof(bool) * team_start_count
+      );
+
+      current_team_start_count = team_start_count;
    }
 
-   color = clients[playernum].team;
-
-   for(i = 0; i < 20; i++)
+   if((actor->flags & MF_SOLID) == 0)
    {
-      j = P_Random(pr_dmspawn) % team_start_counts_by_team[color];
-      spawn_point = &team_starts_by_team[color][j];
-      x = spawn_point->x;
-      y = spawn_point->y;
-      if(P_CheckPosition(players[playernum].mo, x, y))
+      remove_solid = true;
+      actor->flags |= MF_SOLID;
+   }
+
+   for(i = 0; i < team_start_count; i++)
+      team_start_tried[i] = false;
+
+   starts_tried = 0;
+   while(starts_tried != team_start_count)
+   {
+      i = P_Random(pr_dmspawn) % team_start_count;
+
+      if(team_start_tried[i])
+         continue;
+
+      team_start_tried[i] = true;
+      starts_tried++;
+
+      start = &team_starts_by_team[color][i];
+
+      if(P_CheckPosition(actor, start->x << FRACBITS, start->y << FRACBITS))
          break;
    }
 
    if(remove_solid)
-      players[playernum].mo->flags &= ~MF_SOLID;
+      actor->flags &= ~MF_SOLID;
 
-   // [CG] Even if there was no good team spawn, we still use the 20th one
-   //      tried... even if it means the player will probably be stuck.
-   return spawn_point;
+   // [CG] If we can't find an unoccupied team spawn, telefrag whatever is
+   //      there.  The alternative is to stick 2 players together, and one
+   //      player will just end up being pistol'd or punched to death, so don't
+   //      waste time & just kill whoever's there.
+   if((actor->flags3 & MF3_TELESTOMP) == 0)
+   {
+      remove_tele_stomp = true;
+      actor->flags3 |= MF3_TELESTOMP;
+   } 
+
+   P_TeleportMove(actor, start->x << FRACBITS, start->y << FRACBITS, false);
+
+   if(remove_tele_stomp)
+      actor->flags3 &= ~MF3_TELESTOMP;
+
+   return start;
 }
 
 unsigned int SV_GetPlayingPlayerCount()
