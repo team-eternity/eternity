@@ -159,6 +159,8 @@ void BaseGameType::handleExitLevel()
 {
 }
 
+bool BaseGameType::usesFragsAsScore() { return false; }
+
 bool BaseGameType::usesFlagsAsScore() { return false; }
 
 void BaseGameType::handleActorSpawned(fixed_t x, fixed_t y, fixed_t z,

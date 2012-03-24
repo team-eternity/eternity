@@ -572,6 +572,7 @@ void CS_ZeroClient(int clientnum)
       sc->buffering = false;
       sc->finished_waiting_in_queue_tic = 0;
       sc->connecting = false;
+      sc->firing = 0;
    }
 }
 
@@ -608,33 +609,33 @@ void CS_SetClientTeam(int clientnum, int new_team_color)
    }
 }
 
-void CS_IncrementClientScore(int clientnum)
+void CS_IncrementClientScore(int clientnum, bool increment_team_score)
 {
    if(clientserver)
    {
       clients[clientnum].stats.score++;
 
-      if(CS_TEAMS_ENABLED)
+      if(increment_team_score && CS_TEAMS_ENABLED)
          team_scores[clients[clientnum].team]++;
 
       cs_scoreboard->setClientNeedsRepainted(clientnum);
    }
 }
 
-void CS_DecrementClientScore(int clientnum)
+void CS_DecrementClientScore(int clientnum, bool decrement_team_score)
 {
    if(clientserver)
    {
       clients[clientnum].stats.score--;
 
-      if(CS_TEAMS_ENABLED)
+      if(decrement_team_score && CS_TEAMS_ENABLED)
          team_scores[clients[clientnum].team]--;
 
       cs_scoreboard->setClientNeedsRepainted(clientnum);
    }
 }
 
-void CS_SetClientScore(int clientnum, int new_score)
+void CS_SetClientScore(int clientnum, int new_score, bool set_team_score)
 {
    if(clientserver)
    {
@@ -643,7 +644,7 @@ void CS_SetClientScore(int clientnum, int new_score)
 
       client->stats.score = new_score;
 
-      if(CS_TEAMS_ENABLED)
+      if(set_team_score && CS_TEAMS_ENABLED)
          team_scores[client->team] += delta;
 
       cs_scoreboard->setClientNeedsRepainted(clientnum);
@@ -795,45 +796,21 @@ size_t CS_BuildGameState(int playernum, byte **buffer)
 bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
                                        weapontype_t weapon_two)
 {
-   unsigned int p1, p2;
-   server_client_t *server_client;
-
-   weapon_one++;
-   weapon_two++;
-
    if(CS_SERVER)
    {
-      server_client = &server_clients[playernum];
+      server_client_t *server_client = &server_clients[playernum];
 
-      for(p1 = 0; p1 < NUMWEAPONS; p1++)
+      if(server_client->weapon_preferences[weapon_one] <
+         server_client->weapon_preferences[weapon_two])
       {
-         if(server_client->weapon_preferences[p1] == weapon_one)
-            break;
-      }
-
-      for(p2 = 0; p2 < NUMWEAPONS; p2++)
-      {
-         if(server_client->weapon_preferences[p2] == weapon_two)
-            break;
+         return true;
       }
    }
-   else
+   else if(weapon_preferences[0][weapon_one] <
+           weapon_preferences[0][weapon_two])
    {
-      for(p1 = 0; p1 < NUMWEAPONS; p1++)
-      {
-         if(weapon_preferences[0][p1] == weapon_one)
-            break;
-      }
-
-      for(p2 = 0; p2 < NUMWEAPONS; p2++)
-      {
-         if(weapon_preferences[0][p2] == weapon_two)
-            break;
-      }
-   }
-
-   if(p1 < p2)
       return true;
+   }
 
    return false;
 }

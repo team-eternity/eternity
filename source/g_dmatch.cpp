@@ -86,29 +86,35 @@ bool DeathmatchGameType::shouldExitLevel()
    return false;
 }
 
+bool DeathmatchGameType::usesFragsAsScore()
+{
+   return true;
+}
+
 void DeathmatchGameType::handleActorKilled(Mobj *source, Mobj *target,
                                            emod_t *mod)
 {
    int sourcenum, targetnum;
    client_t *source_client, *target_client;
-
-   // [CG] If a player killed another player (that isn't themselves), increase
-   //      their score.
+   bool modify_team_score = false;
 
    if(!(source && source->player && target && target->player))
       return;
+
+   if(usesFragsAsScore())
+      modify_team_score = true;
 
    sourcenum = source->player - players;
    targetnum = target->player - players;
    target_client = &clients[targetnum];
    source_client = &clients[sourcenum];
 
-   // [CG] Suicides and team kills are -1.
+   // [CG] Suicides and team kills are -1 on the player's score.
    if(sourcenum == targetnum)
-      CS_DecrementClientScore(sourcenum);
+      CS_DecrementClientScore(sourcenum, modify_team_score);
    else if(CS_TEAMS_ENABLED && (source_client->team == target_client->team))
-      CS_DecrementClientScore(sourcenum);
+      CS_DecrementClientScore(sourcenum, modify_team_score);
    else
-      CS_IncrementClientScore(sourcenum);
+      CS_IncrementClientScore(sourcenum, modify_team_score);
 }
 

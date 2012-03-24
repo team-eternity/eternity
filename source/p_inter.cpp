@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "d_deh.h"     // Ty 03/22/98 - externalized strings
 #include "d_dehtbl.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_mod.h"
 #include "d_player.h"
@@ -194,6 +195,17 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
    else if(GET_ASOP(playernum) == AMMO_SWITCH_USE_PWO &&
            (!clientserver || (dmflags2 & dmf_allow_preferred_weapon_order)))
    {
+      if(!allow_weapon_switch_while_firing)
+      {
+         if(player->cmd.buttons & BT_ATTACK)
+         {
+            if(clientserver)
+               return true;
+
+            return false;
+         }
+      }
+
       switch (ammo)
       {
       case am_clip:
@@ -221,16 +233,12 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
          else if(player->weaponowned[wp_chaingun])
          {
             if(CS_WeaponPreferred(playernum, wp_chaingun, player->readyweapon))
-            {
                player->pendingweapon = wp_chaingun;
-            }
          }
          else if(player->weaponowned[wp_pistol])
          {
             if(CS_WeaponPreferred(playernum, wp_pistol, player->readyweapon))
-            {
                player->pendingweapon = wp_pistol;
-            }
          }
          break;
 
@@ -265,12 +273,10 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
                player->pendingweapon = wp_supershotgun;
             }
          }
-         else if(player->weaponowned[wp_plasma])
+         else if(player->weaponowned[wp_shotgun])
          {
-            if(CS_WeaponPreferred(playernum, wp_plasma, player->readyweapon))
-            {
-               player->pendingweapon = wp_plasma;
-            }
+            if(CS_WeaponPreferred(playernum, wp_shotgun, player->readyweapon))
+               player->pendingweapon = wp_shotgun;
          }
          break;
 
@@ -363,14 +369,24 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 
       // [CG] Allow players to pick up weapons without switching to them.
       if(GET_WSOP(playernum) == WEAPON_SWITCH_ALWAYS ||
-         (clientserver &&
-          ((dmflags2 & dmf_allow_no_weapon_switch_on_pickup) == 0)))
+          ((dmflags2 & dmf_allow_no_weapon_switch_on_pickup) == 0))
       {
          player->pendingweapon = weapon;
       }
       else if(GET_WSOP(playernum) == WEAPON_SWITCH_USE_PWO &&
-              (!clientserver || (dmflags2 & dmf_allow_preferred_weapon_order)))
+              ((dmflags2 & dmf_allow_preferred_weapon_order)))
       {
+         if(!allow_weapon_switch_while_firing)
+         {
+            if(player->cmd.buttons & BT_ATTACK)
+            {
+               if(clientserver)
+                  return true;
+
+               return true;
+            }
+         }
+
          if(CS_WeaponPreferred(playernum, weapon, player->readyweapon))
          {
             player->pendingweapon = weapon;

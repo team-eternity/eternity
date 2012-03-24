@@ -1342,6 +1342,15 @@ void G_SaveDefaults(void)
          fprintf(file, "\"\n");
    }
 
+   // write aliases
+   alias_t *alias = aliases.next;
+
+   while(alias)
+   {
+      fprintf(file, "alias %s \"%s\"", alias->name, alias->command);
+      alias = alias->next;
+   }
+
    fclose(file);
 }
 

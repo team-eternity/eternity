@@ -3051,7 +3051,8 @@ void SV_ArchiveServerClients(SaveArchive& arc)
           << sc->ammo_switch_on_pickup
           << sc->buffering
           << sc->finished_waiting_in_queue_tic
-          << sc->connecting;
+          << sc->connecting
+          << sc->firing;
 
       if(arc.isLoading())
       {

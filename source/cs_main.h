@@ -450,7 +450,10 @@ typedef struct
    bool buffering;
    // [CG] The TIC at which the client was able to join the game.
    int finished_waiting_in_queue_tic;
+   // [CG] True if the client is currently connecting.
    bool connecting;
+   // [CG] > 0 if the client is currently firing.
+   int firing;
 } server_client_t;
 
 // [CG] Below are all the network message structure definitions.  Each struct
@@ -937,9 +940,9 @@ void CS_InitPlayer(int playernum);
 void CS_FormatTime(char *formatted_time, unsigned int seconds);
 void CS_FormatTicsAsTime(char *formatted_time, unsigned int tics);
 void CS_SetDisplayPlayer(int playernum);
-void CS_IncrementClientScore(int clientnum);
-void CS_DecrementClientScore(int clientnum);
-void CS_SetClientScore(int clientnum, int new_score);
+void CS_IncrementClientScore(int clientnum, bool increment_team_score);
+void CS_DecrementClientScore(int clientnum, bool decrement_team_score);
+void CS_SetClientScore(int clientnum, int new_score, bool set_team_score);
 void CS_CheckClientSprees(int clientnum);
 fixed_t CS_GetExtraZDoomGravity();
 fixed_t CS_GetZDoomGravity();

@@ -451,6 +451,9 @@ extern int flashing_hom; // killough 10/98
 extern int doom_weapon_toggles;   // killough 10/98
 extern int default_doom_weapon_toggles; // [CG] 09/24/11
 
+extern bool allow_weapon_switch_while_firing;         // [CG] 03/23/2012
+extern bool default_allow_weapon_switch_while_firing; // [CG] 03/23/2012
+
 //=======================================================
 //
 // haleyjd: Eternity Stuff

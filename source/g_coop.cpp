@@ -58,7 +58,8 @@ void CoopGameType::handleActorKilled(Mobj *source, Mobj *target, emod_t *mod)
          else
             playernum = 0;
 
-         CS_IncrementClientScore(playernum);
+         // [CG] FIXME: Team coop is weird....
+         CS_IncrementClientScore(playernum, true);
       }
    }
 }

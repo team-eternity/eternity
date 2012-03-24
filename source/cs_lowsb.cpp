@@ -411,9 +411,8 @@ void LowResDeathmatchScoreboard::display()
          );
       }
       else
-      {
          psnprintf(s, sizeof(s), "%sTime: %s", FC_HI, level_time_s);
-      }
+
       x = (SCREENWIDTH - V_FontStringWidth(hud_overfont, s)) >> 1;
       V_FontWriteText(hud_overfont, s, x, y);
    }
@@ -513,8 +512,10 @@ void LowResDeathmatchScoreboard::display()
       );
 
       // [CG] Draw the player's frags / deaths.
-      psnprintf(s, sizeof(s), "%u / %u", client->stats.player_kills,
-                                         client->stats.total_deaths);
+      psnprintf(s, sizeof(s), "%u / %u",
+         client->stats.player_kills - client->stats.suicides,
+         client->stats.total_deaths
+      );
       V_FontWriteTextColored(
          hud_overfont, s, font_color,
          frags_deaths_column_end - V_FontStringWidth(hud_overfont, s), y
@@ -565,10 +566,8 @@ void LowResDeathmatchScoreboard::display()
       );
 
       // [CG] Draw the player's frags / deaths.
-      psnprintf(s, sizeof(s), "%s%d", FC_TRANS, client->stats.total_deaths);
-      psnprintf(
-         s, sizeof(s), "%s%u / %u", FC_TRANS,
-         client->stats.player_kills,
+      psnprintf(s, sizeof(s), "%s%u / %u", FC_TRANS,
+         client->stats.player_kills - client->stats.suicides,
          client->stats.total_deaths
       );
       V_FontWriteTextColored(

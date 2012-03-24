@@ -2847,17 +2847,20 @@ YSHEAR_FIXME: this feature may return after EDF for weapons
 
 static menuitem_t mn_weapons_items[] =
 {
-   {it_title,      FC_GOLD "weapons",                NULL, "M_WEAP"},
+   {it_title,    FC_GOLD "weapons",                NULL, "M_WEAP"},
    {it_gap},
-   {it_info,       FC_GOLD "options", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,     FC_GOLD "options", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_toggle,     "bfg type",                       "bfgtype"},
-   {it_toggle,     "bobbing",                        "bobbing"},
-   {it_variable,   "bobbing intensity",              "bobbing_intensity"},
-   {it_toggle,     "recoil",                         "recoil"},
-   {it_toggle,     "fist/ssg toggle",                "doom_weapon_toggles"},
-   {it_toggle,     "autoaiming",                     "autoaim"},
-   {it_variable,   "change time",                    "weapspeed"},
+   {it_toggle,   "bfg type",                       "bfgtype"},
+   {it_toggle,   "bobbing",                        "bobbing"},
+   {it_variable, "bobbing intensity",              "bobbing_intensity"},
+   {it_toggle,   "recoil",                         "recoil"},
+   {it_toggle,   "fist/ssg toggle",                "doom_weapon_toggles"},
+   {it_toggle,   "autoaiming",                     "autoaim"},
+   {it_variable, "change time",                    "weapspeed"},
+   {it_toggle,   "weapon switch on weapon pickup", "weapon_switch_on_pickup"},
+   {it_toggle,   "weapon switch on ammo pickup",   "ammo_switch_on_pickup"},
+   {it_toggle,   "switch weapons while firing",    "switch_weapons_while_firing"},
    {it_gap},
    {it_end},
 };
@@ -2882,15 +2885,15 @@ static menuitem_t mn_weapons_pref_items[] =
    {it_gap},
    {it_info, FC_GOLD "preferred weapon order", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_variable, "1", "weappref_1"},
-   {it_variable, "2", "weappref_2"},
-   {it_variable, "3", "weappref_3"},
-   {it_variable, "4", "weappref_4"},
-   {it_variable, "5", "weappref_5"},
-   {it_variable, "6", "weappref_6"},
-   {it_variable, "7", "weappref_7"},
-   {it_variable, "8", "weappref_8"},
-   {it_variable, "9", "weappref_9"},
+   {it_toggle, "fist",            "weappref_1"},
+   {it_toggle, "chainsaw",        "weappref_8"},
+   {it_toggle, "pistol",          "weappref_2"},
+   {it_toggle, "shotgun",         "weappref_3"},
+   {it_toggle, "super shotgun",   "weappref_9"},
+   {it_toggle, "chaingun",        "weappref_4"},
+   {it_toggle, "rocket launcher", "weappref_5"},
+   {it_toggle, "plasma gun",      "weappref_6"},
+   {it_toggle, "bfg",             "weappref_7"},
    {it_end},
 };
 
@@ -2900,9 +2903,9 @@ menu_t menu_weapons_pref =
    &menu_weapons,                 // previous page
    NULL,                          // next page
    &menu_weapons,                 // rootpage
-   88, 15,                        // coords
+   200, 15,                       // coords
    4,                             // first item
-   mf_background|mf_leftaligned,  // flags
+   mf_background,                 // flags
    NULL,                          // no drawer
    mn_weapons_names,              // TOC stuff
    mn_weapons_pages,

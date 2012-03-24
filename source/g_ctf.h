@@ -91,6 +91,7 @@ class CTFGameType : public DeathmatchGameType
 public:
    CTFGameType(const char *new_name);
    int getStrengthOfVictory(float low_score, float high_score);
+   bool usesFragsAsScore();
    bool usesFlagsAsScore();
    bool shouldExitLevel();
    void handleActorKilled(Mobj *source, Mobj *target, emod_t *mod);

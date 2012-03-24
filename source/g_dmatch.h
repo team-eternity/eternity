@@ -35,6 +35,7 @@ public:
 
    virtual int getStrengthOfVictory(float low_score, float high_score);
    virtual bool shouldExitLevel();
+   virtual bool usesFragsAsScore();
    virtual void handleActorKilled(Mobj *source, Mobj *target, emod_t *mod);
 };
 

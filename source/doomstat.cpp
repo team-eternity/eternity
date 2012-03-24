@@ -120,6 +120,9 @@ int flashing_hom;     // killough 10/98
 int doom_weapon_toggles; // killough 10/98
 int default_doom_weapon_toggles; // [CG] 09/24/11
 
+bool allow_weapon_switch_while_firing = true;         // [CG] 03/23/2012
+bool default_allow_weapon_switch_while_firing = true; // [CG] 03/23/2012
+
 int monkeys, default_monkeys;
 
 bool cinema_pause = false; // haleyjd 08/22/01

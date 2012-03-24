@@ -314,6 +314,11 @@ CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0)
       CL_SendPlayerScalarInfo(ci_weapon_toggle);
 }
 
+VARIABLE_TOGGLE(allow_weapon_switch_while_firing,
+                 &default_allow_weapon_switch_while_firing, yesno);
+CONSOLE_VARIABLE(switch_weapons_while_firing,
+                 allow_weapon_switch_while_firing, 0) {}
+
 bool display_target_names = false;
 bool default_display_target_names = false;
 
@@ -1323,13 +1328,20 @@ void G_SetWeapPref(int prefnum, int newvalue)
    for(i=0; i<NUMWEAPONS; i++)
       if(weapon_preferences[0][i] == newvalue) break;
 
-   weapon_preferences[0][i] = weapon_preferences[0][prefnum];
+   // weapon_preferences[0][i] = weapon_preferences[0][prefnum];
    weapon_preferences[0][prefnum] = newvalue;
+
+   // [CG] C/S clients have to inform the server of their new weapon
+   //      preferences so it can assign the proper weapon during weapon/ammo
+   //      pickups, or when ammunition is exhausted.
+   if(CS_CLIENT && net_peer != NULL)
+      CL_SendPlayerArrayInfo(ci_pwo, prefnum);
 }
 
-const char *weapon_str[NUMWEAPONS] =
-{"fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
- "bfg", "chainsaw", "double shotgun"};
+const char *weapon_str[NUMWEAPONS] = {
+   "fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
+   "bfg", "chainsaw", "super shotgun"
+};
 
 void G_WeapPrefHandler(void)
 {
@@ -1339,50 +1351,6 @@ void G_WeapPrefHandler(void)
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
       G_SetWeapPref(prefnum, Console.argv[0]->toInt());
 
-      // [CG] C/S clients have to inform the server of their new weapon
-      //      preferences so it can assign the proper weapon during weapon/ammo
-      //      pickups, or when ammunition is exhausted.
-      if(CS_CLIENT && net_peer != NULL)
-         CL_SendPlayerArrayInfo(ci_pwo, prefnum);
-   }
-}
-
-void G_WeapSlotHandler(void)
-{
-}
-
-void G_AddWeapCommands(void)
-{
-   int i;
-
-   for(i = 0; i < NUMWEAPONS; i++)
-   {
-      variable_t *variable;
-      command_t *command;
-      char tempstr[16];
-
-      memset(tempstr, 0, 16);
-      weapon_numbers[i] = i;
-
-      variable = estructalloc(variable_t, 1);
-      variable->variable = &weapon_numbers[i];
-      variable->v_default = NULL;
-      variable->type = vt_int;
-      variable->min = 1;
-      variable->max = NUMWEAPONS;
-      variable->defines = weapon_str;
-
-      command = estructalloc(command_t, 1);
-
-      sprintf(tempstr, "weap%d", i + 1);
-      command->name = estrdup(tempstr);
-      command->type = ct_variable;
-      command->flags = cf_handlerset;
-      command->variable = variable;
-      command->handler = G_WeapSlotHandler;
-      command->netcmd = 0;
-
-      (C_AddCommand)(command); // hook into cmdlist
    }
 }
 
@@ -1390,7 +1358,7 @@ void G_AddWeapPrefs(void)
 {
    int i;
 
-   for(i=0; i<NUMWEAPONS; i++)   // haleyjd
+   for(i = 0; i < NUMWEAPONS; i++) // haleyjd
    {
       variable_t *variable;
       command_t *command;
@@ -1405,7 +1373,7 @@ void G_AddWeapPrefs(void)
       variable->type = vt_int;
       variable->min = 1;
       variable->max = NUMWEAPONS; // haleyjd
-      variable->defines = weapon_str;  // use weapon string defines
+      // variable->defines = weapon_str;  // use weapon string defines
 
       // now the command
       command = estructalloc(command_t, 1);
@@ -1667,6 +1635,7 @@ void G_AddCommands(void)
    C_AddCommand(ammo_switch_on_pickup);
    C_AddCommand(display_target_names);
    C_AddCommand(toggle);
+   C_AddCommand(switch_weapons_while_firing);
 
    // [CG] C/S demo controls.
    C_AddCommand(cs_demo_folder_path);

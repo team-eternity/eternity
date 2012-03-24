@@ -80,6 +80,8 @@ public:
 
    virtual void handleExitLevel();
 
+   virtual bool usesFragsAsScore();
+
    virtual bool usesFlagsAsScore();
 
    virtual void handleActorSpawned(fixed_t x, fixed_t y, fixed_t z,

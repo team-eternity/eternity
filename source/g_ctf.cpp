@@ -432,6 +432,11 @@ int CTFGameType::getStrengthOfVictory(float low_score, float high_score)
    return sov_normal;
 }
 
+bool CTFGameType::usesFragsAsScore()
+{
+   return false;
+}
+
 bool CTFGameType::usesFlagsAsScore()
 {
    return true;
@@ -452,9 +457,9 @@ bool CTFGameType::shouldExitLevel()
 
 void CTFGameType::handleActorKilled(Mobj *source, Mobj *target, emod_t *mod)
 {
-   DeathmatchGameType::handleActorKilled(source, target, mod);
-
    int targetnum;
+
+   DeathmatchGameType::handleActorKilled(source, target, mod);
 
    if(!target || !target->player)
       return;
