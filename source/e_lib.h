@@ -27,6 +27,8 @@
 #ifndef E_LIB_H__
 #define E_LIB_H__
 
+#include "doomtype.h"
+
 struct dehflagset_t;
 
 typedef struct E_Enable_s
@@ -58,6 +60,10 @@ int E_TranslucCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_TranslucCB2  (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 
+// MetaTable adapter utilities
+class  MetaTable;
+void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
+
 #endif
 
 const char *E_BuildDefaultFn(const char *filename);
@@ -67,7 +73,9 @@ int E_EnableNumForName(const char *name, E_Enable_t *enables);
 int E_StrToNumLinear(const char **strings, int numstrings, const char *value);
 int E_ParseFlags(const char *str, dehflagset_t *flagset);
 const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
+void E_ReplaceString(char *&dest, char *newvalue);
 char *E_GetHeredocLine(char **src);
+byte *E_ParseTranslation(const char *str, int tag);
 
 #define E_MAXCMDTOKENS 8
 

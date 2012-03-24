@@ -72,11 +72,11 @@ enum
 
 // seqcmd_t -- a single sound sequence command
 
-typedef union seqcmd_s
+union seqcmd_t
 {
    sfxinfo_t *sfx; // pointer to a sound -OR-
    int data;       // some kind of data
-} seqcmd_t;
+};
 
 // 10/18/06: sequence flags
 enum
@@ -125,11 +125,11 @@ void S_SquashSequence(PointThinker *mo);
 void S_KillSequence(PointThinker *mo);
 
 void S_StartSectorSequence(sector_t *s, int seqtype);
-void S_StartSectorSequenceName(sector_t *s, const char *seqname, bool fOrC);
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, int originType);
 void S_ReplaceSectorSequence(sector_t *s, int seqtype);
-void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, bool fOrC);
-void S_StopSectorSequence(sector_t *s, bool floorOrCeiling);
-void S_SquashSectorSequence(sector_t *s, bool floorOrCeiling);
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, int originType);
+void S_StopSectorSequence(sector_t *s, int originType);
+void S_SquashSectorSequence(sector_t *s, int originType);
 
 void S_StartPolySequence(polyobj_t *po);
 void S_StopPolySequence(polyobj_t *po);
@@ -141,17 +141,17 @@ void S_SequenceGameLoad(void);
 void S_InitEnviroSpots(void);
 
 bool S_CheckSequenceLoop(PointThinker *mo);
-bool S_CheckSectorSequenceLoop(sector_t *s, bool floorOrCeiling);
+bool S_CheckSectorSequenceLoop(sector_t *s, int originType);
 
 // EnviroSeqMgr_t -- environment sequence manager data
 
-typedef struct EnviroSeqMgr_s
+struct EnviroSeqMgr_t
 {
    int minStartWait;  // minimum wait period at start
    int maxStartWait;  // maximum wait period at start
    int minEnviroWait; // minimum wait period between sequences
    int maxEnviroWait; // maximum wait period between sequences
-} EnviroSeqMgr_t;
+};
 
 extern EnviroSeqMgr_t EnviroSeqManager;
 

@@ -314,7 +314,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, MapContext *), MapCon
 // P_BlockThingsIterator
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 bool P_BlockThingsIterator(int x, int y, bool func(Mobj*, MapContext *), MapContext *c)
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))

@@ -32,6 +32,7 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_player.h"
 #include "doomdef.h"
@@ -57,8 +58,6 @@
 #define NAMEY 65
 
 #define FRAGNUMX 175
-
-extern bool gamekeydown[NUMKEYS]; // g_game.c
 
 player_t *sortedplayers[MAXPLAYERS];
 
@@ -173,20 +172,7 @@ void HU_FragsUpdate(void)
    }
 }
 
-void HU_FragsErase(void)
-{
-   if(GameType != gt_dm)
-      return;
-
-   if(fragsdrawn)
-   {
-      // FIXME: SUBOPTIMAL
-      R_VideoErase(0, 0, SCREENWIDTH, SCREENHEIGHT);
-      fragsdrawn = false;
-   }
-}
-
-////////////////////////////////////
+//=============================================================================
 //
 // Console Commands
 //

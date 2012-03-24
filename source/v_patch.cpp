@@ -139,6 +139,58 @@ static void V_DrawPatchColumnTR(void)
    }
 } 
 
+//
+// V_DrawPatchColumnTRLit
+//
+// Draws a plain patch column with color translation and light remapping
+//
+static void V_DrawPatchColumnTRLit(void) 
+{ 
+   int              count;
+   register byte    *dest;    // killough
+   register fixed_t frac;     // killough
+   fixed_t          fracstep;
+   
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
+      return; // Zero length, column does not exceed a pixel.
+                                 
+#ifdef RANGECHECK 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+#endif 
+
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+
+   // Determine scaling, which is the only mapping to be done.
+   fracstep = patchcol.step;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
+
+   // Inner loop that does the actual texture mapping,
+   //  e.g. a DDA-lile scaling.
+   // This is as fast as it gets.       (Yeah, right!!! -- killough)
+   //
+   // killough 2/1/98: more performance tuning
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
+
+   {
+      register const byte *source = patchcol.source;
+            
+      while((count -= 2) >= 0)
+      {
+         *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
+         dest += patchcol.buffer->pitch;
+         frac += fracstep;
+         *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
+         dest += patchcol.buffer->pitch;
+         frac += fracstep;
+      }
+      if(count & 1)
+         *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
+   }
+} 
+
+
 #define DO_COLOR_BLEND()                       \
    fg = patchcol.fg2rgb[source[frac >> FRACBITS]];    \
    bg = patchcol.bg2rgb[*dest];                       \
@@ -471,6 +523,18 @@ static void V_DrawMaskedColumnUnscaled(column_t *column)
    }
 }
 
+typedef void (*patchcolfunc_t)(void);
+
+static patchcolfunc_t colfuncfordrawstyle[PSTYLE_NUMSTYLES] =
+{
+   V_DrawPatchColumn,
+   V_DrawPatchColumnTR,
+   V_DrawPatchColumnTL,
+   V_DrawPatchColumnTRTL,
+   V_DrawPatchColumnAdd,
+   V_DrawPatchColumnAddTR,
+   V_DrawPatchColumnTRLit
+};
 
 //
 // V_DrawPatchInt
@@ -570,30 +634,12 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    {
       column_t *column;
       int      texturecolumn;
-      
-      switch(pi->drawstyle)
-      {
-      case PSTYLE_NORMAL:
-         patchcol.colfunc = V_DrawPatchColumn;
-         break;
-      case PSTYLE_TLATED:
-         patchcol.colfunc = V_DrawPatchColumnTR;
-         break;
-      case PSTYLE_TRANSLUC:
-         patchcol.colfunc = V_DrawPatchColumnTL;
-         break;
-      case PSTYLE_TLTRANSLUC:
-         patchcol.colfunc = V_DrawPatchColumnTRTL;
-         break;
-      case PSTYLE_ADD:
-         patchcol.colfunc = V_DrawPatchColumnAdd;
-         break;
-      case PSTYLE_TLADD:
-         patchcol.colfunc = V_DrawPatchColumnAddTR;
-         break;
-      default:
+
+#ifdef RANGECHECK
+      if(pi->drawstyle < 0 || pi->drawstyle >= PSTYLE_NUMSTYLES)
          I_Error("V_DrawPatchInt: unknown patch drawstyle %d\n", pi->drawstyle);
-      }
+#endif
+      patchcol.colfunc = colfuncfordrawstyle[pi->drawstyle];
 
       ytop = pi->y - patch->topoffset;
       
@@ -615,6 +661,11 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 void V_SetPatchColrng(byte *colrng)
 {
    patchcol.translation = colrng;
+}
+
+void V_SetPatchLight(byte *lighttable)
+{
+   patchcol.light = lighttable;
 }
 
 void V_SetPatchTL(unsigned int *fg, unsigned int *bg)
@@ -735,7 +786,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
 //
 // haleyjd 07/07/07: converts a linear graphic to a patch
 //
-patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, int tag)
 {
    int      x, y;
    patch_t  *p;
@@ -750,7 +801,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
    size_t total_size = 
       4 * sizeof(int16_t) + w * (h + sizeof(int32_t) + sizeof(column_t) + 3);
    
-   byte *out = emalloc(byte *, total_size);
+   byte *out = ecalloctag(byte *, 1, total_size, tag);
 
    p = (patch_t *)out;
 

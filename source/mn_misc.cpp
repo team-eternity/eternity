@@ -30,6 +30,7 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_event.h"
@@ -153,7 +154,6 @@ bool MN_PopupResponder(event_t *ev)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         redrawborder = true; // need redraw
          current_menuwidget = NULL;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
       }
@@ -176,7 +176,6 @@ bool MN_PopupResponder(event_t *ev)
             C_RunTextCmd(popup_message_command);
          }
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
-         redrawborder = true; // need redraw
          current_menuwidget = NULL;  // kill message
       }
       if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
@@ -186,7 +185,6 @@ bool MN_PopupResponder(event_t *ev)
          action_menu_toggle = action_menu_previous = false;
          menuactive = popupMenuActive;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
-         redrawborder = true; // need redraw
          current_menuwidget = NULL; // kill message
       }
       break;
@@ -439,7 +437,7 @@ void MN_DrawCredits(void)
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2011 Team Eternity et al.\n"
+                   FC_ABSCENTER "Copyright 2012 Team Eternity et al.\n"
                    "http://doomworld.com/eternity/", 0, y);
 }
 
@@ -505,7 +503,6 @@ bool MN_HelpResponder(event_t *ev)
 
       // cancel helpscreen
 cancel:
-      redrawborder = true; // need redraw
       current_menuwidget = NULL;
       // haleyjd 05/29/06: maintain previous menu activation state
       if(!help_prev_menuactive)

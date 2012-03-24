@@ -77,9 +77,6 @@ extern menu_t menu_main;
 extern menu_t menu_episode;
 extern menu_t menu_startmap;
 
-// This is the original cfg variable, now reintroduced.
-int traditional_menu;
-
 // Blocky mode, has default, 0 = high, 1 = normal
 //int     detailLevel;    obsolete -- killough
 int screenSize;      // screen size
@@ -127,47 +124,60 @@ void MN_InitMenus(void)
    MN_InitSearchStr();       // haleyjd 03/15/06
 }
 
-//////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // THE MENUS
 //
-//////////////////////////////////////////////////////////////////////////
+//=============================================================================
 
-/////////////////////////////////////////////////////
+//=============================================================================
 //
 // Main Menu
 //
 
-void MN_MainMenuDrawer(void);
-
-static menuitem_t mn_main_items[] =
-{
-   // 'doom' title drawn by the drawer
-   
-   {it_runcmd, "new game",  "mn_newgame",  "M_NGAME"},
-   {it_runcmd, "options",   "mn_options",  "M_OPTION"},
-   {it_runcmd, "load game", "mn_loadgame", "M_LOADG"},
-   {it_runcmd, "save game", "mn_savegame", "M_SAVEG"},
-   {it_runcmd, "end game",  "mn_endgame",  "M_ENDGAM"},
-   {it_runcmd, "quit",      "mn_quit",     "M_QUITG"},
-   {it_end}
-};
-
-menu_t menu_main =
-{
-   mn_main_items,          // menu items
-   NULL, NULL, NULL,       // pages
-   100, 65,                // x, y offsets
-   0,                      // start with 'new game' selected
-   mf_skullmenu,           // a skull menu
-   MN_MainMenuDrawer       // special drawer
-};
+// Note: The main menu is modified dynamically to point to
+// the rest of the old menu system when appropriate.
 
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
    V_DrawPatch(94, 2, &vbscreen, 
                PatchLoader::CacheName(wGlobalDir, "M_DOOM", PU_CACHE));
+}
+
+static menuitem_t mn_main_items[] =
+{
+   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME"  },
+   { it_runcmd, "options",    "mn_options",  "M_OPTION" },
+   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG"  },
+   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG"  },
+   { it_runcmd, "read this!", "credits",     "M_RDTHIS" },
+   { it_runcmd, "quit",       "mn_quit",     "M_QUITG"  },
+   { it_end }
+};
+
+menu_t menu_main =
+{
+   mn_main_items,
+   NULL, NULL, NULL,           // pages
+   97, 64,
+   0,
+   mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
+   MN_MainMenuDrawer
+};
+
+//
+// MN_PatchOldMainMenu
+//
+// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
+// compatibility.
+//
+static void MN_PatchOldMainMenu(void)
+{
+   // turn "Read This!" into "Quit Game" and move down 8 pixels
+   menu_main.menuitems[4] = menu_main.menuitems[5];
+   menu_main.menuitems[5].type = it_end;
+   menu_main.y += 8;
 }
 
 // haleyjd 05/14/06: moved these up here
@@ -259,7 +269,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
    {
       // hack -- cut off thy flesh consumed if not retail
       if(GameModeInfo->id != retail)
-         menu_episode.menuitems[5].type = it_end;
+         menu_episode.menuitems[3].type = it_end;
       
       MN_StartMenu(&menu_episode);
    }
@@ -299,29 +309,34 @@ CONSOLE_COMMAND(mn_quit, 0)
    MN_QuitDoom();
 }
 
-/////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Episode Selection
 //
 
+static void MN_EpisodeDrawer()
+{
+   V_DrawPatch(54, 38, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
+}
+
 static menuitem_t mn_episode_items[] =
 {
-   {it_title,  "which episode?",            NULL,            "M_EPISOD"},
-   {it_gap},
-   {it_runcmd, "knee deep in the dead",     "mn_episode 1",  "M_EPI1"},
-   {it_runcmd, "the shores of hell",        "mn_episode 2",  "M_EPI2"},
-   {it_runcmd, "inferno!",                  "mn_episode 3",  "M_EPI3"},
-   {it_runcmd, "thy flesh consumed",        "mn_episode 4",  "M_EPI4"},
-   {it_end}
+   { it_runcmd, "knee deep in the dead", "mn_episode 1",  "M_EPI1" },
+   { it_runcmd, "the shores of hell",    "mn_episode 2",  "M_EPI2" },
+   { it_runcmd, "inferno!",              "mn_episode 3",  "M_EPI3" },
+   { it_runcmd, "thy flesh consumed",    "mn_episode 4",  "M_EPI4" },
+   { it_end }
 };
 
 menu_t menu_episode =
 {
-   mn_episode_items,    // menu items
-   NULL, NULL, NULL,    // pages
-   40, 30,              // x, y offsets
-   2,                   // select episode 1
-   mf_skullmenu,        // skull menu
+   mn_episode_items,           // menu items
+   NULL, NULL, NULL,           // pages
+   48, 63,                     // x, y offsets
+   2,                          // select episode 1
+   mf_skullmenu | mf_emulated, // skull menu
+   MN_EpisodeDrawer            // drawer
 };
 
 // console command to select episode
@@ -345,7 +360,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
    MN_StartMenu(&menu_newgame);
 }
 
-//////////////////////////////////////////////////////////
+//=============================================================================
 //
 // New Game Menu: Skill Level Selection
 //
@@ -360,31 +375,38 @@ static void MN_openNewGameMenu(void)
    extern menu_t menu_newgame; // actually just right below...
    
    // start on defaultskill setting
-   menu_newgame.selected = (defaultskill - 1) + 4;
+   menu_newgame.selected = defaultskill - 1;
+}
+
+//
+// MN_DrawNewGame
+//
+static void MN_DrawNewGame()
+{
+   V_DrawPatch(96, 14, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_NEWG", PU_CACHE));
+   V_DrawPatch(54, 38, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_SKILL", PU_CACHE));
 }
 
 static menuitem_t mn_newgame_items[] =
 {
-   {it_title,  "new game",             NULL,                "M_NEWG"},
-   {it_gap},
-   {it_info,   "choose skill level",   NULL,                "M_SKILL"},
-   {it_gap},
-   {it_runcmd, "i'm too young to die", "newgame 0",         "M_JKILL"},
-   {it_runcmd, "hey, not too rough",   "newgame 1",         "M_ROUGH"},
-   {it_runcmd, "hurt me plenty.",      "newgame 2",         "M_HURT"},
-   {it_runcmd, "ultra-violence",       "newgame 3",         "M_ULTRA"},
-   {it_runcmd, "nightmare!",           "newgame 4",         "M_NMARE"},
-   {it_end}
+   { it_runcmd, "i'm too young to die", "newgame 0", "M_JKILL" },
+   { it_runcmd, "hey, not too rough",   "newgame 1", "M_ROUGH" },
+   { it_runcmd, "hurt me plenty.",      "newgame 2", "M_HURT"  },
+   { it_runcmd, "ultra-violence",       "newgame 3", "M_ULTRA" },
+   { it_runcmd, "nightmare!",           "newgame 4", "M_NMARE" },
+   { it_end }
 };
 
 menu_t menu_newgame =
 {
    mn_newgame_items,   // menu items
    NULL, NULL, NULL,   // pages
-   40, 15,             // x,y offsets
-   6,                  // starting item (overridden by open method)
-   mf_skullmenu,       // is a skull menu
-   NULL,               // drawer method
+   48, 63,             // x,y offsets
+   6,                        // starting item (overridden by open method)
+   mf_skullmenu|mf_emulated, // is a skull menu
+   MN_DrawNewGame,     // drawer method
    NULL, NULL,         // toc
    0,                  // gap override
    MN_openNewGameMenu, // open method
@@ -2197,13 +2219,13 @@ static const char *mn_mousejoy_names[] =
 };
 
 extern menu_t menu_mouse;
-extern menu_t menu_mouse_mlook;
+extern menu_t menu_mouse_accel_and_mlook;
 extern menu_t menu_joystick;
 
 static menu_t *mn_mousejoy_pages[] =
 {
    &menu_mouse,
-   &menu_mouse_mlook,
+   &menu_mouse_accel_and_mlook,
 #ifdef _SDL_VER
    &menu_joystick,
 #endif
@@ -2214,19 +2236,19 @@ static menuitem_t mn_mouse_items[] =
 {
    {it_title,      FC_GOLD "mouse settings",       NULL,   "m_mouse"},
    {it_gap},
-   {it_toggle,     "enable mouse",                 "i_usemouse"},
+   {it_toggle,     "enable mouse",                  "i_usemouse"},
    {it_gap},
    {it_info,       FC_GOLD "sensitivity"},
-   {it_variable,   "horizontal",                   "sens_horiz"},
-   {it_variable,   "vertical",                     "sens_vert"},
+   {it_variable,   "horizontal",                    "sens_horiz"},
+   {it_variable,   "vertical",                      "sens_vert"},
+   {it_toggle,     "vanilla sensitivity",           "sens_vanilla"},
    {it_gap},
    {it_info,       FC_GOLD "misc."},
-   {it_toggle,     "invert mouse",                 "invertmouse"},
-   {it_toggle,     "smooth turning",               "smooth_turning"},
-   {it_toggle,     "mouse acceleration",           "mouse_accel"},
-   {it_toggle,     "novert emulation",             "mouse_novert"},
+   {it_toggle,     "invert mouse",                  "invertmouse"},
+   {it_toggle,     "smooth turning",                "smooth_turning"},
+   {it_toggle,     "novert emulation",              "mouse_novert"},
 #ifdef _SDL_VER
-   {it_toggle,     "window grabs mouse",           "i_grabmouse"},
+   {it_toggle,     "window grabs mouse",            "i_grabmouse"},
 #endif
    {it_end}
 };
@@ -2235,7 +2257,7 @@ menu_t menu_mouse =
 {
    mn_mouse_items,               // menu items
    NULL,                         // previous page
-   &menu_mouse_mlook,            // next page
+   &menu_mouse_accel_and_mlook,  // next page
    &menu_mouse,                  // rootpage
    200, 15,                      // x, y offset
    2,                            // first selectable
@@ -2250,32 +2272,37 @@ CONSOLE_COMMAND(mn_mouse, 0)
    MN_StartMenu(&menu_mouse);
 }
 
-static menuitem_t mn_mouse_mlook_items[] =
+static menuitem_t mn_mouse_accel_and_mlook_items[] =
 {
    {it_title,      FC_GOLD "Mouse Settings",       NULL,   "m_mouse"},
    {it_gap},
+   {it_info,       FC_GOLD"acceleration"},
+   {it_toggle,     "type",                "mouse_accel_type"},
+   {it_variable,   "custom threshold",    "mouse_accel_threshold"},
+   {it_variable,   "custom amount",       "mouse_accel_value"},
+   {it_gap},
    {it_info,       FC_GOLD"mouselook"},
-   {it_toggle,     "enable mouselook",             "allowmlook" },
-   {it_toggle,     "always mouselook",             "alwaysmlook"},
-   {it_toggle,     "stretch short skies",          "r_stretchsky"},
+   {it_toggle,     "enable mouselook",    "allowmlook" },
+   {it_toggle,     "always mouselook",    "alwaysmlook"},
+   {it_toggle,     "stretch short skies", "r_stretchsky"},
    {it_end}
 };
 
-menu_t menu_mouse_mlook =
+menu_t menu_mouse_accel_and_mlook =
 {
-   mn_mouse_mlook_items,         // menu items
-   &menu_mouse,                  // previous page
+   mn_mouse_accel_and_mlook_items, // menu items
+   &menu_mouse,                    // previous page
 #ifdef _SDL_VER
-   &menu_joystick,               // next page
+   &menu_joystick,                 // next page
 #else
    NULL,
 #endif
-   &menu_mouse,                  // rootpage
-   200, 15,                      // x, y offset
-   3,                            // first selectable
-   mf_background,                // full-screen menu
-   NULL,                         // no drawer
-   mn_mousejoy_names,            // TOC stuff
+   &menu_mouse,                    // rootpage
+   200, 15,                        // x, y offset
+   3,                              // first selectable
+   mf_background,                  // full-screen menu
+   NULL,                           // no drawer
+   mn_mousejoy_names,              // TOC stuff
    mn_mousejoy_pages,
 };
 
@@ -2359,14 +2386,14 @@ static menuitem_t mn_joystick_items[] =
 menu_t menu_joystick =
 {
    mn_joystick_items,
-   &menu_mouse_mlook,    // previous page
-   NULL,                 // next page
-   &menu_mouse,          // rootpage
-   200, 15,              // x,y offset
-   2,                    // start on first selectable
-   mf_background,        // full-screen menu
-   NULL,                 // no drawer
-   mn_mousejoy_names,    // TOC stuff
+   &menu_mouse_accel_and_mlook,    // previous page
+   NULL,                           // next page
+   &menu_mouse,                    // rootpage
+   200, 15,                        // x,y offset
+   2,                              // start on first selectable
+   mf_background,                  // full-screen menu
+   NULL,                           // no drawer
+   mn_mousejoy_names,              // TOC stuff
    mn_mousejoy_pages,
 };
 
@@ -2858,7 +2885,7 @@ static menuitem_t mn_compat2_items[] =
    { it_info,   FC_GOLD "Simulation",    NULL, NULL, MENUITEM_CENTERED   },
    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff"    },
    { it_toggle, "Actors never fall off ledges",        "comp_falloff"    },
-   { it_toggle, "Monsters can telefrag on MAP30",      "comp_telefrag"   },
+   { it_toggle, "Spawncubes telefrag on MAP30 only",   "comp_telefrag"   },
    { it_toggle, "Monsters can respawn outside map",    "comp_respawnfix" },
    { it_toggle, "Disable terrain types",               "comp_terrain"    },
    { it_toggle, "Disable falling damage",              "comp_fallingdmg" },
@@ -3149,6 +3176,9 @@ static menuitem_t mn_envbindings_items[] =
    {it_binding, "screen size up",       "screensize +"},
    {it_binding, "screen size down",     "screensize -"},
    {it_binding, "take screenshot",      "screenshot"},
+   {it_binding, "spectate prev",        "spectate_prev"},
+   {it_binding, "spectate next",        "spectate_next"},
+   {it_binding, "spectate self",        "spectate_self"},
    {it_end}
 };
 
@@ -3491,7 +3521,6 @@ static menuitem_t mn_menus_items[] =
    {it_runcmd,   "set background...",      "mn_selectflat"},
    {it_gap},
    {it_info,     FC_GOLD "compatibility"},
-   {it_toggle,   "use doom's main menu",   "use_traditional_menu"},
    {it_toggle,   "emulate all old menus",  "mn_classic_menus"},
    {it_gap},
    {it_info,     FC_GOLD "utilities"},
@@ -3595,50 +3624,7 @@ CONSOLE_COMMAND(skinviewer, 0)
 
 #define EMULATED_ITEM_SIZE 16
 
-// haleyjd 05/16/04: traditional menu support
-VARIABLE_BOOLEAN(traditional_menu, NULL, yesno);
-CONSOLE_VARIABLE(use_traditional_menu, traditional_menu, 0) {}
-
 // haleyjd 05/16/04: traditional DOOM main menu support
-
-// Note: the main menu emulation can still be enabled separately from the
-// rest of the purist menu system. It is modified dynamically to point to
-// the rest of the old menu system when appropriate.
-
-static menuitem_t mn_old_main_items[] =
-{
-   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME"  },
-   { it_runcmd, "options",    "mn_options",  "M_OPTION" },
-   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG"  },
-   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG"  },
-   { it_runcmd, "read this!", "credits",     "M_RDTHIS" },
-   { it_runcmd, "quit",       "mn_quit",     "M_QUITG"  },
-   { it_end }
-};
-
-menu_t menu_old_main =
-{
-   mn_old_main_items,
-   NULL, NULL, NULL,           // pages
-   97, 64,
-   0,
-   mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
-   MN_MainMenuDrawer
-};
-
-//
-// MN_PatchOldMainMenu
-//
-// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
-// compatibility.
-//
-static void MN_PatchOldMainMenu(void)
-{
-   // turn "Read This!" into "Quit Game" and move down 8 pixels
-   menu_old_main.menuitems[4] = menu_old_main.menuitems[5];
-   menu_old_main.menuitems[5].type = it_end;
-   menu_old_main.y += 8;
-}
 
 int mn_classic_menus;
 
@@ -3653,11 +3639,11 @@ void MN_LinkClassicMenus(int link)
 {
    if(link) // turn on classic menus
    {
-      menu_old_main.menuitems[1].data = "mn_old_options";
+      menu_main.menuitems[1].data = "mn_old_options";
    }
    else // turn off classic menus
    {
-      menu_old_main.menuitems[1].data = "mn_options";
+      menu_main.menuitems[1].data = "mn_options";
    }
 }
 
@@ -3712,7 +3698,7 @@ extern int mouseSensitivity_c;
 CONSOLE_COMMAND(mn_old_options, 0)
 {
    // propagate horizontal mouse sensitivity to combined setting
-   mouseSensitivity_c = mouseSensitivity_horiz / 4;
+   mouseSensitivity_c = (int)(mouseSensitivity_horiz / 4.0);
 
    // bound to max 16
    if(mouseSensitivity_c > 16)
@@ -3839,7 +3825,6 @@ void MN_AddMenus(void)
 #endif
 
    C_AddCommand(skinviewer);
-   C_AddCommand(use_traditional_menu);
 
    // haleyjd: "old" menus
    C_AddCommand(mn_classic_menus);

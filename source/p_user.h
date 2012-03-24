@@ -43,6 +43,7 @@ void P_DeathThink(player_t *player);
 void P_MovePlayer(player_t *player);
 void P_Thrust(player_t *player, angle_t angle, fixed_t move);
 void P_SetPlayerAttacker(player_t *player, Mobj *attacker);
+void P_SetDisplayPlayer(int new_displayplayer);
 
 #endif // P_USER_H__
 

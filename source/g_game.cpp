@@ -37,6 +37,7 @@
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"              // Ty 3/27/98 deh declarations
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -45,6 +46,7 @@
 #include "dstrings.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_things.h"
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
@@ -139,11 +141,14 @@ int             smooth_turning = 0;   // sf
 int             novert;               // haleyjd
 
 // sf: moved sensitivity here
-int             mouseSensitivity_horiz; // has default   //  killough
-int             mouseSensitivity_vert;  // has default
+double          mouseSensitivity_horiz;   // has default   //  killough
+double          mouseSensitivity_vert;    // has default
+bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 int             invert_mouse = true;
 int             animscreenshot = 0;       // animated screenshots
 int             mouseAccel_type = 0;
+int             mouseAccel_threshold = 10; // [CG] 01/20/12
+double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 
 //
 // controls (have defaults)
@@ -154,7 +159,6 @@ int             mouseAccel_type = 0;
 int key_escape = KEYD_ESCAPE;
 int key_chat;
 int key_help = KEYD_F1;
-int key_spy;
 int key_pause;
 int destination_keys[MAXPLAYERS];
 
@@ -169,25 +173,24 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
 bool *mousebuttons = &mousearray[1];    // allow [-1]
 
 // mouse values are used once
-int  mousex;
-int  mousey;
-int  dclicktime;
-bool dclickstate;
-int  dclicks;
-int  dclicktime2;
-bool dclickstate2;
-int  dclicks2;
+double  mousex;
+double  mousey;
+int     dclicktime;
+bool    dclickstate;
+int     dclicks;
+int     dclicktime2;
+bool    dclickstate2;
+int     dclicks2;
 
 // joystick values are repeated
-int joyxmove;
-int joyymove;
+double joyxmove;
+double joyymove;
 
 int  savegameslot;
 char savedescription[32];
@@ -232,7 +235,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    int mlook = 0;
    static int prevmlook = 0;
    ticcmd_t *base;
-   int tmousex, tmousey;     // local mousex, mousey
+   double tmousex, tmousey;     // local mousex, mousey
    playerclass_t *pc = players[consoleplayer].pclass;
 
    base = I_BaseTiccmd();    // empty, or external driver
@@ -264,7 +267,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       action_flip = false;
    }
 
-  // let movement keys cancel each other out
+   // let movement keys cancel each other out
    if(strafe)
    {
       if(action_right)
@@ -479,13 +482,13 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // this is most important in smoothing movement
    if(smooth_turning)
    {
-      static int oldmousex=0, mousex2;
-      static int oldmousey=0, mousey2;
+      static double oldmousex=0.0, mousex2;
+      static double oldmousey=0.0, mousey2;
 
       mousex2 = tmousex; mousey2 = tmousey;
-      tmousex = (tmousex + oldmousex)/2;        // average
+      tmousex = (tmousex + oldmousex) / 2.0;        // average
       oldmousex = mousex2;
-      tmousey = (tmousey + oldmousey)/2;        // average
+      tmousey = (tmousey + oldmousey) / 2.0;        // average
       oldmousey = mousey2;
    }
 
@@ -494,7 +497,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(mlook)
    {
       // YSHEAR_FIXME: provide separate mlook speed setting?
-      int lookval = tmousey * 16 / ticdup;
+      int lookval = (int)(tmousey * 16.0 / ((double)ticdup));
       if(invert_mouse)
          look -= lookval;
       else
@@ -508,7 +511,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       // haleyjd 10/24/08: novert support
       if(!novert)
-         forward += tmousey;
+         forward += (int)tmousey;
    }
 
    prevmlook = mlook;
@@ -532,9 +535,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    if(strafe)
-      side += tmousex*2;
+      side += (int)(tmousex * 2.0);
    else
-      cmd->angleturn -= tmousex*0x8;
+      cmd->angleturn -= (int)(tmousex * 8.0);
 
    if(forward > MAXPLMOVE)
       forward = MAXPLMOVE;
@@ -564,7 +567,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons = BT_SPECIAL | BTS_SAVEGAME | (savegameslot << BTS_SAVESHIFT);
    }
 
-   mousex = mousey = 0;
+   mousex = mousey = 0.0;
 }
 
 //
@@ -651,9 +654,8 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
-   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
-   mousex = mousey = 0;
+   mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
@@ -688,35 +690,6 @@ void G_DoLoadLevel(void)
 //
 bool G_Responder(event_t* ev)
 {
-   // allow spy mode changes even during the demo
-   // killough 2/22/98: even during DM demo
-   //
-   // killough 11/98: don't autorepeat spy mode switch
-
-   if(ev->data1 == key_spy && netgame && 
-      (demoplayback || GameType != gt_dm) && gamestate == GS_LEVEL)
-   {
-      if(ev->type == ev_keyup)
-         gamekeydown[key_spy] = false;
-      
-      if(ev->type == ev_keydown && !gamekeydown[key_spy])
-      {
-         gamekeydown[key_spy] = true;
-         do // spy mode
-         {
-            if(++displayplayer >= MAXPLAYERS)
-               displayplayer = 0;
-         }
-         while(!playeringame[displayplayer] && displayplayer != consoleplayer);
-         
-         ST_Start();    // killough 3/7/98: switch status bar views too
-         HU_Start();
-         S_UpdateSounds(players[displayplayer].mo);
-         P_ResetChasecam();
-      }
-      return true;
-   }
-
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -725,9 +698,6 @@ bool G_Responder(event_t* ev)
    {
       return true;
    }
-
-   if(G_KeyResponder(ev, kac_cmd))
-      return true;
 
    // any other key pops up menu if in demos
    //
@@ -747,6 +717,10 @@ bool G_Responder(event_t* ev)
             S_ResumeSound();
          return true;
       }
+
+      // [CG] 01/29/12: Respond to command events.
+      if(G_KeyResponder(ev, kac_command))
+         return true;
 
       // killough 10/98:
       // Don't pop up menu, if paused in middle
@@ -789,21 +763,13 @@ bool G_Responder(event_t* ev)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
-      {
          C_RunTextCmd("pause");
-      }
       else
-      {
-         if(ev->data1 < NUMKEYS)
-            gamekeydown[ev->data1] = true;         
-         G_KeyResponder(ev, kac_game); // haleyjd
-      }
+         G_KeyResponder(ev, kac_player | kac_command); // haleyjd
       return true;    // eat key down events
       
    case ev_keyup:
-      if(ev->data1 < NUMKEYS)
-         gamekeydown[ev->data1] = false;
-      G_KeyResponder(ev, kac_game);   // haleyjd
+      G_KeyResponder(ev, kac_player | kac_command);   // haleyjd
       return false;   // always let key up events filter down
       
    case ev_mouse:
@@ -812,8 +778,18 @@ bool G_Responder(event_t* ev)
       mousebuttons[2] = !!(ev->data1 & 4);
 
       // SoM: this mimics the doom2 behavior better. 
-      mousex += (ev->data2 * (mouseSensitivity_horiz + 5) / 10);
-      mousey += (ev->data3 * (mouseSensitivity_vert + 5) / 10);
+      if(mouseSensitivity_vanilla)
+      {
+          mousex += (ev->data2 * (mouseSensitivity_horiz + 5.0) / 10.0);
+          mousey += (ev->data3 * (mouseSensitivity_vert + 5.0) / 10.0);
+      }
+      else
+      {
+          // [CG] 01/20/12: raw sensitivity
+          mousex += (ev->data2 * mouseSensitivity_horiz / 10.0);
+          mousey += (ev->data3 * mouseSensitivity_vert / 10.0);
+      }
+
       return true;    // eat events
       
    case ev_joystick:
@@ -2220,7 +2196,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
                     y + 20 * mtsin,
                     ss->sector->floorheight + 
                        GameModeInfo->teleFogHeight, 
-                    GameModeInfo->teleFogType);
+                    E_SafeThingType(GameModeInfo->teleFogType));
 
    // haleyjd: There was a hack here trying to avoid playing the sound on the
    // "first frame"; but if this is done, then you miss your own spawn sound
@@ -2681,7 +2657,7 @@ public:
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
-   mobjinfo_t *mi = &mobjinfo[thingtype];
+   mobjinfo_t *mi = mobjinfo[thingtype];
 
    if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
    {
@@ -2719,10 +2695,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            MetaTable *meta = mobjinfo[i].meta;
+            MetaTable *meta = mobjinfo[i]->meta;
             if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
+               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
          }
       }
@@ -2733,10 +2709,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            MetaTable *meta = mobjinfo[i].meta;
+            MetaTable *meta = mobjinfo[i]->meta;
             if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
+               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }
          }
       }
@@ -3317,18 +3293,20 @@ bool G_CheckDemoStatus(void)
 
    if(demoplayback)
    {
+      bool wassingledemo = singledemo; // haleyjd 01/08/12: must remember this
+
       // haleyjd 01/08/11: refactored so that stopping netdemos doesn't cause
       // access violations by leaving the game in "netgame" mode.
       Z_ChangeTag(demobuffer, PU_CACHE);
       G_ReloadDefaults();    // killough 3/1/98
       netgame = false;       // killough 3/29/98
 
-      if(singledemo)
+      if(wassingledemo)
          C_SetConsole();
       else
          D_AdvanceDemo();
 
-      return !singledemo;
+      return !wassingledemo;
    }
 
    return false;

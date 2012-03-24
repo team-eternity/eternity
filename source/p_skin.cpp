@@ -300,7 +300,7 @@ void P_ParseSkin(int lumpnum)
 
    memset(inputline, 0, 256);
       
-   newskin = (skin_t *)(Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0));
+   newskin = estructalloc(skin_t, 1);
 
    newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
    strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
@@ -504,7 +504,7 @@ skin_t *P_GetMonsterSkin(spritenum_t sprnum)
 
    if(!monster_skins[sprnum])
    {
-      monster_skins[sprnum] = (skin_t *)(Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0));
+      monster_skins[sprnum] = estructalloc(skin_t, 1);
 
       monster_skins[sprnum]->type = SKIN_MONSTER;
       monster_skins[sprnum]->sprite = sprnum;

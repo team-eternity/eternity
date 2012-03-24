@@ -1,1644 +1,3291 @@
-// EDF for Eternity Engine v3.35.00
+// EDF for Eternity Engine v3.40.21
 //  Thing type definitions for Doom gamemodes.
 
 thingtype DoomPlayer 
 {
-  spawnstate = S_PLAY
-  spawnhealth = 100
-  seestate = S_PLAY_RUN1
-  reactiontime = 0
-  painstate = S_PLAY_PAIN
-  painchance = 255
-  painsound = plpain
-  missilestate = S_PLAY_ATK1
-  deathstate = S_PLAY_DIE1
-  xdeathstate = S_PLAY_XDIE1
-  deathsound = pldeth
-  radius = 16.0
-  height = 56.0
-  flags = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
-  flags2 = FOOTCLIP
-  flags3 = SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
-  droptype = Backpack // this is currently disabled due to bugs!
-  mod = PlayerMisc
-  dehackednum = 1
+  dehackednum  1
+  spawnhealth  100
+  reactiontime 0
+  painchance   255
+  painsound    plpain
+  deathsound   pldeth
+  radius       16.0
+  height       56.0
+  flags        SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
+  flags2       FOOTCLIP
+  flags3       SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  droptype     Backpack // this is currently disabled due to bugs!
+  mod          PlayerMisc
+  
+  firstdecoratestate S_PLAY
+  states
+  @"
+  Spawn:
+    PLAY A -1
+    stop
+  See:
+    PLAY ABCD 4
+    loop
+  Missile:
+    PLAY E 12 
+    goto Spawn
+  Missile2:
+    PLAY F 6 bright
+    goto Missile
+  Pain:
+    PLAY G 4
+    PLAY G 4 A_Pain
+    goto Spawn    
+  Death:
+    PLAY H   10
+    PLAY I   10 A_PlayerScream
+    PLAY J   10 A_Fall
+    PLAY KLM 10
+    PLAY N   -1
+    stop
+  XDeath:
+    PLAY O      5
+    PLAY P      5 A_XScream
+    PLAY Q      5 A_Fall
+    PLAY RSTUV  5
+    PLAY W     -1
+    stop
+  "@
 }
 
 thingtype Zombieman 
 {
-  doomednum = 3004
-  spawnstate = S_POSS_STND
-  spawnhealth = 20
-  seestate = S_POSS_RUN1
-  seesound = posit1
-  attacksound = pistol
-  painstate = S_POSS_PAIN
-  painchance = 200
-  painsound = popain
-  missilestate = S_POSS_ATK1
-  deathstate = S_POSS_DIE1
-  xdeathstate = S_POSS_XDIE1
-  deathsound = podth1
-  speed = 8
-  height = 56.0
-  activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_POSS_RAISE1
-  droptype = AmmoClip
-  obituary_normal = "was capped by a zombie"
-  acs_spawndata { num = 4; modes = doom }
-  dehackednum = 2
+  doomednum   3004
+  dehackednum 2
+  spawnhealth 20
+  seesound    posit1
+  attacksound pistol
+  painchance  200
+  painsound   popain
+  deathsound  podth1
+  speed       8
+  height      56.0
+  activesound posact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  droptype    AmmoClip
+  obituary_normal "was capped by a zombie"
+  acs_spawndata 
+  { 
+    num   4 
+    modes doom
+  }
+    
+  firstdecoratestate S_POSS_STND
+  states
+  @"
+  Spawn:
+    POSS AB 10 A_Look
+    loop
+  See:
+    POSS AABBCCDD 4 A_Chase
+    loop
+  Missile:
+    POSS E 10 A_FaceTarget
+    POSS F  8 A_PosAttack
+    POSS E  8 
+    goto See
+  Pain:
+    POSS G 3
+    POSS G 3 A_Pain
+    goto See
+  Death:
+    POSS H 5
+    POSS I 5 A_Scream
+    POSS J 5 A_Fall
+    POSS K 5
+    POSS L -1
+    stop
+  XDeath:
+    POSS M      5
+    POSS N      5 A_XScream
+    POSS O      5 A_Fall
+    POSS PQRST  5
+    POSS U     -1
+    stop
+  Raise:
+    POSS KJIH 5
+    goto See
+  "@  
 }
 
 thingtype Sergeant 
 {
-  doomednum = 9
-  spawnstate = S_SPOS_STND
-  spawnhealth = 30
-  seestate = S_SPOS_RUN1
-  seesound = posit2
-  painstate = S_SPOS_PAIN
-  painchance = 170
-  painsound = popain
-  missilestate = S_SPOS_ATK1
-  deathstate = S_SPOS_DIE1
-  xdeathstate = S_SPOS_XDIE1
-  deathsound = podth2
-  speed = 8
-  height = 56.0
-  activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_SPOS_RAISE1
-  droptype = WeaponShotgun
-  obituary_normal = "was blasted by a former sergeant"
-  acs_spawndata { num = 1; modes = doom }
-  dehackednum = 3
+  doomednum   9
+  dehackednum 3
+  spawnhealth 30
+  seesound    posit2
+  painchance  170
+  painsound   popain
+  deathsound  podth2
+  speed       8
+  height      56.0
+  activesound posact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  droptype    WeaponShotgun
+  obituary_normal "was blasted by a former sergeant"
+  acs_spawndata 
+  { 
+    num   1 
+    modes doom
+  }
+    
+  firstdecoratestate S_SPOS_STND
+  states
+  @"
+  Spawn:
+    SPOS AB 10 A_Look
+    loop
+  See:
+    SPOS AABBCCDD 3 A_Chase
+    loop
+  Missile:
+    SPOS E 10        A_FaceTarget
+    SPOS F 10 bright A_SPosAttack
+    SPOS E 10
+    goto See
+  Pain:
+    SPOS G 3
+    SPOS G 3 A_Pain
+    goto See
+  Death:
+    SPOS H 5
+    SPOS I 5 A_Scream
+    SPOS J 5 A_Fall
+    SPOS K 5
+    SPOS L -1
+    stop
+  XDeath:
+    SPOS M      5
+    SPOS N      5 A_XScream
+    SPOS O      5 A_Fall
+    SPOS PQRST  5
+    SPOS U     -1
+    stop
+  Raise:
+    SPOS LKJIH 5
+    goto See
+  "@  
 }
 
 thingtype Archvile 
 {
-  doomednum = 64
-  spawnstate = S_VILE_STND
-  spawnhealth = 700
-  seestate = S_VILE_RUN1
-  seesound = vilsit
-  painstate = S_VILE_PAIN
-  painchance = 10
-  painsound = vipain
-  missilestate = S_VILE_ATK1
-  deathstate = S_VILE_DIE1
-  deathsound = vildth
-  speed = 15
-  height = 56.0
-  mass = 500
-  activesound = vilact
-  flags = SOLID|SHOOTABLE|COUNTKILL
-  flags2 = FOOTCLIP|SHORTMRANGE
-  flags3 = DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
-  obituary_normal = "was fried by an archvile"
-  acs_spawndata { num = 111; modes = doom }
-  dehackednum = 4
+  doomednum   64
+  dehackednum 4
+  spawnhealth 700
+  seesound    vilsit
+  painchance  10
+  painsound   vipain
+  deathsound  vildth
+  speed       15
+  height      56.0
+  mass        500
+  activesound vilact
+  flags       SOLID|SHOOTABLE|COUNTKILL
+  flags2      FOOTCLIP|SHORTMRANGE
+  flags3      DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
+  obituary_normal "was fried by an archvile"
+  acs_spawndata 
+  { 
+    num   111 
+    modes doom
+  }
+  
+  firstdecoratestate S_VILE_STND
+  states
+  @"
+  Spawn:
+    VILE AB 10 A_Look
+    loop
+  See:
+    VILE AABBCCDDEEFF 2 A_VileChase
+    loop
+  Missile:
+    VILE G       0 bright A_VileStart
+    VILE G      10 bright A_FaceTarget
+    VILE H       8 bright A_VileTarget
+    VILE IJKLMN  8 bright A_FaceTarget
+    VILE O       8 bright A_VileAttack
+    VILE P      20 bright
+    goto See
+  Heal:
+    VILE "[" 10 bright
+    VILE "\" 10 bright
+    VILE "]" 10 bright
+    goto See
+  Pain:
+    VILE Q 5
+    VILE Q 5 A_Pain
+    goto See
+  Death:
+    VILE Q     7
+    VILE R     7 A_Scream
+    VILE S     7 A_Fall
+    VILE TUVW  7
+    VILE XY    5
+    VILE Z    -1
+    stop
+  "@
 }
 
 thingtype VileFire 
 {
-  spawnstate = S_FIRE1
-  flags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  dehackednum = 5
+  dehackednum 5
+  flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
+  
+  firstdecoratestate S_FIRE1
+  states
+  @"
+  Spawn:
+    FIRE A             2 bright A_StartFire
+    FIRE BAB           2 bright A_Fire
+    FIRE C             2 bright A_FireCrackle
+    FIRE BCBCDCDCDEDED 2 bright A_Fire
+    FIRE E             2 bright A_FireCrackle
+    FIRE FEFEFGHGHGH   2 bright A_Fire
+    stop
+  "@  
 }
 
 thingtype Revenant 
 {
-  doomednum = 66
-  spawnstate = S_SKEL_STND
-  spawnhealth = 300
-  seestate = S_SKEL_RUN1
-  seesound = skesit
-  painstate = S_SKEL_PAIN
-  painchance = 100
-  painsound = popain
-  meleestate = S_SKEL_FIST1
-  missilestate = S_SKEL_MISS1
-  deathstate = S_SKEL_DIE1
-  deathsound = skedth
-  speed = 10
-  height = 56.0
-  mass = 500
-  activesound = skeact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|LONGMELEE|RANGEHALF|SPACMONSTER|PASSMOBJ
-  raisestate = S_SKEL_RAISE1
-  obituary_normal = "couldn't hide from a revenant missile"
-  obituary_melee  = "was sucker-punched by a revenant"
-  acs_spawndata { num = 20; modes = doom }
-  dehackednum = 6
+  doomednum   66
+  dehackednum 6
+  spawnhealth 300
+  seesound    skesit
+  painchance  100
+  painsound   popain
+  deathsound  skedth
+  speed       10
+  height      56.0
+  mass        500
+  activesound skeact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|LONGMELEE|RANGEHALF|SPACMONSTER|PASSMOBJ
+  obituary_normal "couldn't hide from a revenant missile"
+  obituary_melee  "was sucker-punched by a revenant"
+  acs_spawndata 
+  { 
+    num   20 
+    modes doom 
+  }
+    
+  firstdecoratestate S_SKEL_STND
+  states
+  @"
+  Spawn:
+    SKEL AB 10 A_Look
+    loop
+  See:
+    SKEL AABBCCDDEEFF 2 A_Chase
+    loop
+  Melee:
+    SKEL G 0 A_FaceTarget
+    SKEL G 6 A_SkelWhoosh
+    SKEL H 6 A_FaceTarget
+    SKEL I 6 A_SkelFist
+    goto See
+  Missile:
+    SKEL J  0 bright A_FaceTarget
+    SKEL J 10 bright A_FaceTarget
+    SKEL K 10        A_SkelMissile
+    SKEL K 10        A_FaceTarget
+    goto See
+  Pain:
+    SKEL L 5
+    SKEL L 5 A_Pain
+    goto See
+  Death:
+    SKEL LM  7
+    SKEL N   7 A_Scream
+    SKEL O   7 A_Fall
+    SKEL P   7
+    SKEL Q  -1
+    stop
+  Raise:
+    SKEL QPONML 5
+    goto See
+  "@  
 }
 
 thingtype TracerShot 
 {
-  spawnstate = S_TRACER
-  seesound = skeatk
-  deathstate = S_TRACEEXP1
-  deathsound = barexp
-  speed = 10.0
-  radius = 11.0
-  height = 8.0
-  damage = 10
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|SEEKERMISSILE|SPACMISSILE
-  acs_spawndata { num = 52; modes = doom }
-  dehackednum = 7
+  dehackednum 7
+  seesound    skeatk
+  deathsound  barexp
+  speed       10.0
+  radius      11.0
+  height      8.0
+  damage      10
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|SEEKERMISSILE|SPACMISSILE
+  acs_spawndata 
+  { 
+    num   52 
+    modes doom 
+  }
+    
+  firstdecoratestate S_TRACER
+  states
+  @"
+  Spawn:
+    FATB AB 2 bright A_Tracer
+    loop
+  Death:
+    FBXP A  8 bright
+    FBXP B  6 bright
+    FBXP C  4 bright
+    stop
+  "@
 }
 
 thingtype TracerSmoke 
 {
-  spawnstate = S_SMOKE1
-  flags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  dehackednum = 8
+  dehackednum 8
+  flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
+    
+  firstdecoratestate S_SMOKE1
+  states
+  @"
+  Spawn:
+    PUFF BCBCD 4
+    stop
+  "@
 }
 
 thingtype Mancubus 
 {
-  doomednum = 67
-  spawnstate = S_FATT_STND
-  spawnhealth = 600
-  seestate = S_FATT_RUN1
-  seesound = mansit
-  painstate = S_FATT_PAIN
-  painchance = 80
-  painsound = mnpain
-  missilestate = S_FATT_ATK1
-  deathstate = S_FATT_DIE1
-  deathsound = mandth
-  speed = 8
-  radius = 48.0
-  height = 64.0
-  mass = 1000
-  activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS1|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_FATT_RAISE1
-  obituary_normal = "was flattened by a mancubus"
-  acs_spawndata { num = 112; modes = doom }
-  dehackednum = 9
+  doomednum   67
+  dehackednum 9
+  spawnhealth 600
+  seesound    mansit
+  painchance  80
+  painsound   mnpain
+  deathsound  mandth
+  speed       8
+  radius      48.0
+  height      64.0
+  mass        1000
+  activesound posact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS1|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was flattened by a mancubus"
+  acs_spawndata 
+  { 
+    num   112 
+    modes doom 
+  }
+    
+  firstdecoratestate S_FATT_STND
+  states
+  @"
+  Spawn:
+    FATT AB 15 A_Look
+    loop
+  See:
+    FATT AABBCCDDEEFF 4 A_Chase
+    loop
+  Missile:
+    FATT G 20        A_FatRaise
+    FATT H 10 bright A_FatAttack1
+    FATT I  5        A_FaceTarget
+    FATT G  5        A_FaceTarget
+    FATT H 10 bright A_FatAttack2
+    FATT I  5        A_FaceTarget
+    FATT G  5        A_FaceTarget
+    FATT H 10 bright A_FatAttack3
+    FATT I  5        A_FaceTarget
+    FATT G  5        A_FaceTarget
+    goto See
+  Pain:
+    FATT J 3
+    FATT J 3 A_Pain
+    goto See
+  Death:
+    FATT K       6
+    FATT L       6 A_Scream
+    FATT M       6 A_Fall
+    FATT NOPQRS  6
+    FATT T      -1 A_BossDeath
+    stop
+  Raise:
+    FATT RQPONMLK 5
+    goto See
+  "@
 }
 
 thingtype MancubusShot 
 {
-  spawnstate = S_FATSHOT1
-  seesound = firsht
-  deathstate = S_FATSHOTX1
-  deathsound = firxpl
-  speed = 20.0
-  radius = 6.0
-  height = 8.0
-  damage = 8
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
-  acs_spawndata { num = 153; modes = doom }
-  dehackednum = 10
+  dehackednum 10
+  seesound    firsht
+  deathsound  firxpl
+  speed       20.0
+  radius      6.0
+  height      8.0
+  damage      8
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
+  acs_spawndata 
+  { 
+    num   153
+    modes doom 
+  }
+    
+  firstdecoratestate S_FATSHOT1
+  states
+  @"
+  Spawn:
+    MANF AB 4 bright
+    loop
+  Death:
+    MISL B 8 bright
+    MISL C 6 bright
+    MISL D 4 bright
+    stop
+  "@
 }
 
 thingtype Chaingunner 
 {
-  doomednum = 65
-  spawnstate = S_CPOS_STND
-  spawnhealth = 70
-  seestate = S_CPOS_RUN1
-  seesound = posit2
-  painstate = S_CPOS_PAIN
-  painchance = 170
-  painsound = popain
-  missilestate = S_CPOS_ATK1
-  deathstate = S_CPOS_DIE1
-  xdeathstate = S_CPOS_XDIE1
-  deathsound = podth2
-  speed = 8
-  height = 56.0
-  activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_CPOS_RAISE1
-  droptype = WeaponChaingun
-  obituary_normal = "felt the heat from a chaingunner"
-  acs_spawndata { num = 2; modes = doom }
-  dehackednum = 11
+  doomednum   65
+  dehackednum 11
+  spawnhealth 70
+  seesound    posit2
+  painchance  170
+  painsound   popain
+  deathsound  podth2
+  speed       8
+  height      56.0
+  activesound posact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  droptype    WeaponChaingun
+  obituary_normal "felt the heat from a chaingunner"
+  acs_spawndata 
+  { 
+    num   2 
+    modes doom 
+  }
+    
+  firstdecoratestate S_CPOS_STND
+  states
+  @"
+  Spawn:
+    CPOS AB 10 A_Look
+    loop
+  See:
+    CPOS AABBCCDD 3 A_Chase
+    loop
+  Missile:
+    CPOS E 10        A_FaceTarget
+    CPOS F  4 bright A_CPosAttack
+    CPOS E  4 bright A_CPosAttack
+    CPOS F  1        A_CPosRefire
+    goto Missile+1
+  Pain:
+    CPOS G 3
+    CPOS G 3 A_Pain
+    goto See
+  Death:
+    CPOS H    5
+    CPOS I    5 A_Scream
+    CPOS J    5 A_Fall
+    CPOS KLM  5
+    CPOS N   -1
+    stop
+  XDeath:
+    CPOS O   5
+    CPOS P   5 A_XScream
+    CPOS Q   5 A_Fall
+    CPOS RS  5
+    CPOS T  -1
+    stop
+  Raise:
+    CPOS NMLKJIH 5
+    goto See
+  "@
 }
 
 thingtype DoomImp 
 {
-  doomednum = 3001
-  spawnstate = S_TROO_STND
-  spawnhealth = 60
-  seestate = S_TROO_RUN1
-  seesound = bgsit1
-  painstate = S_TROO_PAIN
-  painchance = 200
-  painsound = popain
-  meleestate = S_TROO_ATK1
-  missilestate = S_TROO_ATK1
-  deathstate = S_TROO_DIE1
-  xdeathstate = S_TROO_XDIE1
-  deathsound = bgdth1
-  speed = 8
-  height = 56.0
-  activesound = bgact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_TROO_RAISE1
-  obituary_normal = "was flamed by an imp"
-  obituary_melee  = "was torn apart by an imp"
-  acs_spawndata { num = 5; modes = doom }
-  dehackednum = 12
+  doomednum   3001
+  dehackednum 12
+  spawnhealth 60
+  seesound    bgsit1
+  painchance  200
+  painsound   popain
+  deathsound  bgdth1
+  speed       8
+  height      56.0
+  activesound bgact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was flamed by an imp"
+  obituary_melee  "was torn apart by an imp"
+  acs_spawndata
+  {
+    num   5 
+    modes doom
+  }
+    
+  firstdecoratestate S_TROO_STND
+  states
+  @"
+  Spawn:
+    TROO AB 10 A_Look
+    loop
+  See:
+    TROO AABBCCDD 3 A_Chase
+    loop
+  Melee:
+  Missile:
+    TROO EF 8 A_FaceTarget
+    TROO G  6 A_TroopAttack
+    goto See
+  Pain:
+    TROO H 2
+    TROO H 2 A_Pain
+    goto See
+  Death:
+    TROO I  8
+    TROO J  8 A_Scream
+    TROO K  6
+    TROO L  6 A_Fall
+    TROO M -1
+    stop
+  XDeath:
+    TROO N    5
+    TROO O    5 A_XScream
+    TROO P    5
+    TROO Q    5 A_Fall
+    TROO RST  5
+    TROO U   -1
+    stop
+  Raise:
+    TROO ML  8
+    TROO KJI 6
+    goto See
+  "@  
 }
 
 thingtype Demon 
 {
-  doomednum = 3002
-  spawnstate = S_SARG_STND
-  spawnhealth = 150
-  seestate = S_SARG_RUN1
-  seesound = sgtsit
-  attacksound = sgtatk
-  painstate = S_SARG_PAIN
-  painchance = 180
-  painsound = dmpain
-  meleestate = S_SARG_ATK1
-  deathstate = S_SARG_DIE1
-  deathsound = sgtdth
-  speed = 10
-  radius = 30.0
-  height = 56.0
-  mass = 400
-  activesound = dmact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_SARG_RAISE1
-  obituary_melee = "was chewed on by a demon"
-  acs_spawndata { num = 8; modes = doom }
-  dehackednum = 13
+  doomednum   3002
+  dehackednum 13
+  spawnhealth 150
+  seesound    sgtsit
+  attacksound sgtatk
+  painchance  180
+  painsound   dmpain
+  deathsound  sgtdth
+  speed       10
+  radius      30.0
+  height      56.0
+  mass        400
+  activesound dmact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_melee "was chewed on by a demon"
+  acs_spawndata 
+  { 
+    num   8
+    modes doom
+  }
+    
+  firstdecoratestate S_SARG_STND
+  states
+  @"
+  Spawn:
+    SARG AB 10 A_Look
+    loop
+  See:
+    SARG AABBCCDD 2 A_Chase
+    loop
+  Melee:
+    SARG EF 8 A_FaceTarget
+    SARG G  8 A_SargAttack
+    goto See
+  Pain:
+    SARG H 2
+    SARG H 2 A_Pain
+    goto See
+  Death:
+    SARG I  8
+    SARG J  8 A_Scream
+    SARG K  4
+    SARG L  4 A_Fall
+    SARG M  4
+    SARG N -1
+    stop
+  Raise:
+    SARG NMLKJI 5
+    goto See  
+  "@  
 }
 
 thingtype Spectre 
 {
-  doomednum = 58
-  spawnstate = S_SARG_STND
-  spawnhealth = 150
-  seestate = S_SARG_RUN1
-  seesound = sgtsit
-  attacksound = sgtatk
-  painstate = S_SARG_PAIN
-  painchance = 180
-  painsound = dmpain
-  meleestate = S_SARG_ATK1
-  deathstate = S_SARG_DIE1
-  deathsound = sgtdth
-  speed = 10
-  radius = 30.0
-  height = 56.0
-  mass = 400
-  activesound = dmact
-  cflags = SOLID|SHOOTABLE|SHADOW|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_SARG_RAISE1
-  obituary_melee = "didn't see the spectre"
-  acs_spawndata { num = 9; modes = doom }
-  dehackednum = 14
+  doomednum   58
+  dehackednum 14
+  spawnhealth 150
+  seesound    sgtsit
+  attacksound sgtatk
+  painchance  180
+  painsound   dmpain
+  deathsound  sgtdth
+  speed       10
+  radius      30.0
+  height      56.0
+  mass        400
+  activesound dmact
+  cflags      SOLID|SHOOTABLE|SHADOW|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_melee "didn't see the spectre"
+  acs_spawndata 
+  {
+    num   9 
+    modes doom
+  }
+  
+  // States are shared with/defined by the Demon
+  spawnstate S_SARG_STND
+  seestate   S_SARG_RUN1  
+  painstate  S_SARG_PAIN
+  meleestate S_SARG_ATK1
+  deathstate S_SARG_DIE1
+  raisestate S_SARG_RAISE1
 }
 
 thingtype Cacodemon 
 {
-  doomednum = 3005
-  spawnstate = S_HEAD_STND
-  spawnhealth = 400
-  seestate = S_HEAD_RUN1
-  seesound = cacsit
-  painstate = S_HEAD_PAIN
-  painchance = 128
-  painsound = dmpain
-  missilestate = S_HEAD_ATK1
-  deathstate = S_HEAD_DIE1
-  deathsound = cacdth
-  speed = 8
-  radius = 31.0
-  height = 56.0
-  mass = 400
-  activesound = dmact
-  cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
-  raisestate = S_HEAD_RAISE1
-  obituary_normal = "was roasted by a cacodemon"
-  obituary_melee  = "was bitten by a cacodemon"
-  acs_spawndata { num = 19; modes = doom }
-  dehackednum = 15
+  doomednum   3005
+  dehackednum 15
+  spawnhealth 400
+  seesound    cacsit
+  painchance  128
+  painsound   dmpain
+  deathsound  cacdth
+  speed       8
+  radius      31.0
+  height      56.0
+  mass        400
+  activesound dmact
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
+  obituary_normal "was roasted by a cacodemon"
+  obituary_melee  "was bitten by a cacodemon"
+  acs_spawndata
+  {
+    num   19
+    modes doom
+  }
+    
+  firstdecoratestate S_HEAD_STND
+  states
+  @"
+  Spawn:
+    HEAD A 10 A_Look
+    loop
+  See:
+    HEAD A 3 A_Chase
+    loop
+  Missile:
+    HEAD BC 5        A_FaceTarget
+    HEAD D  5 bright A_HeadAttack
+    goto See
+  Pain:
+    HEAD E 3
+    HEAD E 3 A_Pain
+    HEAD F 6
+    goto See
+  Death:
+    HEAD G   8
+    HEAD H   8 A_Scream
+    HEAD IJ  8
+    HEAD K   8 A_Fall
+    HEAD L  -1
+    stop
+  Raise:
+    HEAD LKJIHG 8
+    goto See
+  "@
 }
 
 thingtype BaronOfHell 
 {
-  doomednum = 3003
-  spawnstate = S_BOSS_STND
-  seestate = S_BOSS_RUN1
-  seesound = brssit
-  painstate = S_BOSS_PAIN
-  painchance = 50
-  painsound = dmpain
-  meleestate = S_BOSS_ATK1
-  missilestate = S_BOSS_ATK1
-  deathstate = S_BOSS_DIE1
-  deathsound = brsdth
-  speed = 8
-  radius = 24.0
-  height = 64.0
-  mass = 1000
-  activesound = dmact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|E1M8BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_BOSS_RAISE1
-  obituary_normal = "was burned by a baron"
-  obituary_melee  = "was ripped open by a baron"
-  acs_spawndata { num = 3; modes = doom }
-  dehackednum = 16
+  doomednum   3003
+  dehackednum 16
+  seesound    brssit
+  painchance  50
+  painsound   dmpain
+  deathsound  brsdth
+  speed       8
+  radius      24.0
+  height      64.0
+  mass        1000
+  activesound dmact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|E1M8BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was burned by a baron"
+  obituary_melee  "was ripped open by a baron"
+  acs_spawndata
+  {
+    num   3
+    modes doom
+  }
+    
+  firstdecoratestate S_BOSS_STND
+  states
+  @"
+  Spawn:
+    BOSS AB 10 A_Look
+    loop
+  See:
+    BOSS AABBCCDD 3 A_Chase
+    loop
+  Melee:
+  Missile:
+    BOSS EF 8 A_FaceTarget
+    BOSS G  8 A_BruisAttack
+    goto See
+  Pain:
+    BOSS H 2
+    BOSS H 2 A_Pain
+    goto See
+  Death:
+    BOSS I   8
+    BOSS J   8 A_Scream
+    BOSS K   8
+    BOSS L   8 A_Fall
+    BOSS MN  8
+    BOSS O  -1 A_BossDeath
+    stop
+  Raise:
+    BOSS ONMLKJI 8
+    goto See
+  "@  
 }
 
 thingtype BaronShot 
 {
-  spawnstate = S_BRBALL1
-  seesound = firsht
-  deathstate = S_BRBALLX1
-  deathsound = firxpl
-  speed = 15.0
-  fastspeed = 20.0
-  radius = 6.0
-  height = 8.0
-  damage = 8
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
-  acs_spawndata { num = 154; modes = doom }
-  dehackednum = 17
+  dehackednum 17
+  seesound    firsht
+  deathsound  firxpl
+  speed       15.0
+  fastspeed   20.0
+  radius      6.0
+  height      8.0
+  damage      8
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
+  acs_spawndata
+  {
+    num   154 
+    modes doom
+  }
+  
+  firstdecoratestate S_BRBALL1
+  states
+  @"
+  Spawn:
+    BAL7 AB 4 bright
+    loop
+  Death:
+    BAL7 CDE 6 bright
+    stop
+  "@
 }
 
 thingtype HellKnight 
 {
-  doomednum = 69
-  spawnstate = S_BOS2_STND
-  spawnhealth = 500
-  seestate = S_BOS2_RUN1
-  seesound = kntsit
-  painstate = S_BOS2_PAIN
-  painchance = 50
-  painsound = dmpain
-  meleestate = S_BOS2_ATK1
-  missilestate = S_BOS2_ATK1
-  deathstate = S_BOS2_DIE1
-  deathsound = kntdth
-  speed = 8
-  radius = 24.0
-  height = 64.0
-  mass = 1000
-  activesound = dmact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_BOS2_RAISE1
-  obituary_normal = "bows before a hell knight"
-  obituary_melee  = "was ripped open by a hell knight"
-  acs_spawndata { num = 113; modes = doom }
-  dehackednum = 18
+  doomednum   69
+  dehackednum 18
+  spawnhealth 500
+  seesound    kntsit
+  painchance  50
+  painsound   dmpain
+  deathsound  kntdth
+  speed       8
+  radius      24.0
+  height      64.0
+  mass        1000
+  activesound dmact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "bows before a hell knight"
+  obituary_melee  "was ripped open by a hell knight"
+  acs_spawndata
+  {
+    num   113
+    modes doom
+  }
+    
+  firstdecoratestate S_BOS2_STND
+  states
+  @"
+  Spawn:
+    BOS2 AB 10 A_Look
+    loop
+  See:
+    BOS2 AABBCCDD 3 A_Chase
+    loop
+  Melee:
+  Missile:
+    BOS2 EF 8 A_FaceTarget
+    BOS2 G  8 A_BruisAttack
+    goto See
+  Pain:
+    BOS2 H 2
+    BOS2 H 2 A_Pain
+    goto See
+  Death:
+    BOS2 I   8
+    BOS2 J   8 A_Scream
+    BOS2 K   8
+    BOS2 L   8 A_Fall
+    BOS2 MN  8
+    BOS2 O  -1
+    stop
+  Raise:
+    BOS2 ONMLKJI 8
+    goto See
+  "@
 }
 
 thingtype LostSoul 
 {
-  doomednum = 3006
-  spawnstate = S_SKULL_STND
-  spawnhealth = 100
-  seestate = S_SKULL_RUN1
-  attacksound = sklatk
-  painstate = S_SKULL_PAIN
-  painchance = 256
-  painsound = dmpain
-  missilestate = S_SKULL_ATK1
-  deathstate = S_SKULL_DIE1
-  deathsound = firxpl
-  speed = 8
-  radius = 16.0
-  height = 56.0
-  mass = 50
-  damage = 3
-  activesound = dmact
-  flags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT
-  flags2 = NOSTRAFE|RANGEHALF
-  flags3 = KILLABLE|DEADFLOAT|SPACMONSTER|PASSMOBJ
-  obituary_normal = "was spooked by a lost soul"
-  acs_spawndata { num = 110; modes = doom }
-  dehackednum = 19
+  doomednum   3006
+  dehackednum 19
+  spawnhealth 100
+  attacksound sklatk
+  painchance  256
+  painsound   dmpain
+  deathsound  firxpl
+  speed       8
+  radius      16.0
+  height      56.0
+  mass        50
+  damage      3
+  activesound dmact
+  flags       SOLID|SHOOTABLE|NOGRAVITY|FLOAT
+  flags2      NOSTRAFE|RANGEHALF
+  flags3      KILLABLE|DEADFLOAT|SPACMONSTER|PASSMOBJ
+  obituary_normal "was spooked by a lost soul"
+  acs_spawndata
+  {
+    num   110
+    modes doom
+  }
+    
+  firstdecoratestate S_SKULL_STND
+  states
+  @"
+  Spawn:
+    SKUL AB 10 bright A_Look
+    loop
+  See:
+    SKUL AB  6 bright A_Chase
+    loop
+  Missile:
+    SKUL C  10 bright A_FaceTarget
+    SKUL D   4 bright A_SkullAttack
+    SKUL CD  4 bright
+    goto Missile+2
+  Pain:
+    SKUL E   3 bright
+    SKUL E   3 bright A_Pain
+    goto See
+  Death:
+    SKUL F   6 bright
+    SKUL G   6 bright A_Scream
+    SKUL H   6 bright
+    SKUL I   6 bright A_Fall
+    SKUL JK  6
+    stop
+  "@  
 }
 
 thingtype Spiderdemon 
 {
-  doomednum = 7
-  spawnstate = S_SPID_STND
-  spawnhealth = 3000
-  seestate = S_SPID_RUN1
-  seesound = spisit
-  attacksound = shotgn
-  painstate = S_SPID_PAIN
-  painchance = 40
-  painsound = dmpain
-  missilestate = S_SPID_ATK1
-  deathstate = S_SPID_DIE1
-  deathsound = spidth
-  speed = 12
-  radius = 128.0  // haleyjd: waaaay too big!
-  height = 100.0
-  mass = 1000
-  activesound = dmact
-  flags = SOLID|SHOOTABLE|COUNTKILL
-  flags2 = E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF
-  flags3 = SPACMONSTER|PASSMOBJ
-  obituary_normal = "stood in awe of the spiderdemon"
-  acs_spawndata { num = 7; modes = doom }
-  dehackednum = 20
+  doomednum   7
+  dehackednum 20
+  spawnhealth 3000
+  seesound    spisit
+  attacksound shotgn
+  painchance  40
+  painsound   dmpain
+  deathsound  spidth
+  speed       12
+  radius      128.0  // haleyjd: waaaay too big!
+  height      100.0
+  mass        1000
+  activesound dmact
+  flags       SOLID|SHOOTABLE|COUNTKILL
+  flags2      E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF
+  flags3      SPACMONSTER|PASSMOBJ
+  obituary_normal "stood in awe of the Spiderdemon"
+  acs_spawndata
+  {
+    num   7
+    modes doom
+  }
+   
+  firstdecoratestate S_SPID_STND
+  states
+  @"
+  Spawn:
+    SPID AB 10 A_Look
+    loop
+  See:
+    SPID A   3 A_Metal
+    SPID ABB 3 A_Chase
+    SPID C   3 A_Metal
+    SPID CDD 3 A_Chase
+    SPID E   3 A_Metal
+    SPID EFF 3 A_Chase
+    loop
+  Missile:
+    SPID A  20 bright A_FaceTarget
+    SPID GH  4 bright A_SPosAttack
+    SPID H   1 bright A_SpidRefire
+    goto Missile+1
+  Pain:
+    SPID I 3
+    SPID I 3 A_Pain
+    goto See
+  Death:
+    SPID J       20 A_Scream
+    SPID K       10 A_Fall
+    SPID LMNOPQR 10
+    SPID S       30
+    SPID S       -1 A_BossDeath
+    stop
+  "@
 }
 
 thingtype Arachnotron 
 {
-  doomednum = 68
-  spawnstate = S_BSPI_STND
-  spawnhealth = 500
-  seestate = S_BSPI_SIGHT
-  seesound = bspsit
-  painstate = S_BSPI_PAIN
-  painchance = 128
-  painsound = dmpain
-  missilestate = S_BSPI_ATK1
-  deathstate = S_BSPI_DIE1
-  deathsound = bspdth
-  speed = 12
-  radius = 64.0
-  height = 64.0
-  mass = 600
-  activesound = bspact
-  flags = SOLID|SHOOTABLE|COUNTKILL
-  flags2 = MAP07BOSS2|FOOTCLIP
-  flags3 = SPACMONSTER|PASSMOBJ
-  raisestate = S_BSPI_RAISE1
-  obituary_normal = "tried to stare down an arachnotron"
-  acs_spawndata { num = 6; modes = doom }
-  dehackednum = 21
+  doomednum   68
+  dehackednum 21
+  spawnhealth 500
+  seesound    bspsit
+  painchance  128
+  painsound   dmpain
+  deathsound  bspdth
+  speed       12
+  radius      64.0
+  height      64.0
+  mass        600
+  activesound bspact
+  flags       SOLID|SHOOTABLE|COUNTKILL
+  flags2      MAP07BOSS2|FOOTCLIP
+  flags3      SPACMONSTER|PASSMOBJ
+  obituary_normal "tried to stare down an arachnotron"
+  acs_spawndata
+  {
+    num   6
+    modes doom
+  }
+    
+  firstdecoratestate S_BSPI_STND
+  states
+  @"
+  Spawn:
+    BSPI AB 10 A_Look
+    loop
+  See:
+    BSPI A     20
+    BSPI A      3 A_BabyMetal
+    BSPI ABBCC  3 A_Chase
+    BSPI D      3 A_BabyMetal
+    BSPI DEEFF  3 A_Chase
+    goto See+1
+  Missile:
+    BSPI A 20 bright A_FaceTarget
+    BSPI G  4 bright A_BspiAttack
+    BSPI H  4 bright
+    BSPI H  1 bright A_SpidRefire
+    goto Missile+1
+  Pain:
+    BSPI I 3
+    BSPI I 3 A_Pain
+    goto See+1
+  Death:
+    BSPI J    20 A_Scream
+    BSPI K     7 A_Fall
+    BSPI LMNO  7
+    BSPI P    -1 A_BossDeath
+    stop
+  Raise:
+    BSPI PONMLKJ 5
+    goto See+1
+  "@  
 }
 
 thingtype Cyberdemon 
 {
-  doomednum = 16
-  spawnstate = S_CYBER_STND
-  spawnhealth = 4000
-  seestate = S_CYBER_RUN1
-  seesound = cybsit
-  painstate = S_CYBER_PAIN
-  painchance = 20
-  painsound = dmpain
-  missilestate = S_CYBER_ATK1
-  deathstate = S_CYBER_DIE1
-  deathsound = cybdth
-  speed = 16
-  radius = 40.0
-  height = 110.0
-  mass = 1000
-  activesound = dmact
-  flags = SOLID|SHOOTABLE|COUNTKILL
-  flags2 = E2M8BOSS|BOSS|E4M6BOSS|FOOTCLIP|RANGEHALF|HIGHERMPROB
-  flags3 = SPACMONSTER|PASSMOBJ
-  obituary_normal = "gulped down a cyberdemon's rocket"
-  acs_spawndata { num = 114; modes = doom }
-  dehackednum = 22
+  doomednum   16
+  dehackednum 22
+  spawnhealth 4000
+  seesound    cybsit
+  painchance  20
+  painsound   dmpain
+  deathsound  cybdth
+  speed       16
+  radius      40.0
+  height      110.0
+  mass        1000
+  activesound dmact
+  flags       SOLID|SHOOTABLE|COUNTKILL
+  flags2      E2M8BOSS|BOSS|E4M6BOSS|FOOTCLIP|RANGEHALF|HIGHERMPROB
+  flags3      SPACMONSTER|PASSMOBJ
+  obituary_normal "gulped down a Cyberdemon's rocket"
+  acs_spawndata
+  {
+    num   114
+    modes doom
+  }
+    
+  firstdecoratestate S_CYBER_STND
+  states
+  @"
+  Spawn:
+    CYBR AB 10 A_Look
+    loop
+  See:
+    CYBR A     3 A_Hoof
+    CYBR ABBCC 3 A_Chase
+    CYBR D     3 A_Metal
+    CYBR D     3 A_Chase
+    loop
+  Missile:
+    CYBR E  6 A_FaceTarget
+    CYBR F 12 A_CyberAttack
+    CYBR E 12 A_FaceTarget
+    CYBR F 12 A_CyberAttack
+    CYBR E 12 A_FaceTarget
+    CYBR F 12 A_CyberAttack
+    goto See
+  Pain:
+    CYBR G 10 A_Pain
+    goto See
+  Death:
+    CYBR H   10
+    CYBR I   10 A_Scream
+    CYBR JKL 10
+    CYBR M   10 A_Fall
+    CYBR NO  10
+    CYBR P   30
+    CYBR P   -1 A_BossDeath
+    stop
+  "@
 }
 
 thingtype PainElemental 
 {
-  doomednum = 71
-  spawnstate = S_PAIN_STND
-  spawnhealth = 400
-  seestate = S_PAIN_RUN1
-  seesound = pesit
-  painstate = S_PAIN_PAIN
-  painchance = 128
-  painsound = pepain
-  missilestate = S_PAIN_ATK1
-  deathstate = S_PAIN_DIE1
-  deathsound = pedth
-  speed = 8
-  radius = 31.0
-  height = 56.0
-  mass = 400
-  activesound = dmact
-  cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
-  raisestate = S_PAIN_RAISE1
-  nukespecial = PainNukeSpec
-  acs_spawndata { num = 115; modes = doom }
-  dehackednum = 23
+  doomednum   71
+  dehackednum 23
+  spawnhealth 400
+  seesound    pesit
+  painchance  128
+  painsound   pepain
+  deathsound  pedth
+  speed       8
+  radius      31.0
+  height      56.0
+  mass        400
+  activesound dmact
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
+  nukespecial PainNukeSpec
+  acs_spawndata
+  {
+    num   115
+    modes doom
+  }
+    
+  firstdecoratestate S_PAIN_STND
+  states
+  @"
+  Spawn:
+    PAIN A 10 A_Look
+    loop
+  See:
+    PAIN AABBCC 3 A_Chase
+    loop
+  Missile:
+    PAIN DE 5        A_FaceTarget
+    PAIN F  5 bright A_FaceTarget
+    PAIN F  0 bright A_PainAttack
+    goto See
+  Pain:
+    PAIN G 6
+    PAIN G 6 A_Pain
+    goto See
+  Death:
+    PAIN H  8 bright
+    PAIN I  8 bright A_Scream
+    PAIN JK 8 bright
+    PAIN L  8 bright A_PainDie
+    PAIN M  8 bright
+    stop
+  Raise:
+    PAIN MLKJIH 8
+    goto See
+  "@
 }
 
 thingtype WolfSS 
 {
-  doomednum = 84
-  spawnstate = S_SSWV_STND
-  spawnhealth = 50
-  seestate = S_SSWV_RUN1
-  seesound = sssit
-  painstate = S_SSWV_PAIN
-  painchance = 170
-  painsound = popain
-  missilestate = S_SSWV_ATK1
-  deathstate = S_SSWV_DIE1
-  xdeathstate = S_SSWV_XDIE1
-  deathsound = ssdth
-  speed = 8
-  height = 56.0
-  activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  raisestate = S_SSWV_RAISE1
-  droptype = AmmoClip
-  obituary_normal = "was no match for the past"
-  acs_spawndata { num = 116; modes = doom }
-  dehackednum = 24
+  doomednum   84
+  dehackednum 24
+  spawnhealth 50
+  seesound    sssit
+  painchance  170
+  painsound   popain
+  deathsound  ssdth
+  speed       8
+  height      56.0
+  activesound posact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  droptype    AmmoClip
+  obituary_normal "was no match for the past"
+  acs_spawndata 
+  {
+    num   116
+    modes doom 
+  }
+    
+  firstdecoratestate S_SSWV_STND
+  states
+  @"
+  Spawn:
+    SSWV AB 10 A_Look
+    loop
+  See:
+    SSWV AABBCCDD 3 A_Chase
+    loop
+  Missile:
+    SSWV EF 10        A_FaceTarget
+    SSWV G   4 bright A_CPosAttack
+    SSWV F   6        A_FaceTarget
+    SSWV G   4 bright A_CPosAttack
+    SSWV F   1        A_CPosRefire
+    goto Missile+1
+  Pain:
+    SSWV H 3
+    SSWV H 3 A_Pain
+    goto See
+  Death:
+    SSWV I  5
+    SSWV J  5 A_Scream
+    SSWV K  5 A_Fall
+    SSWV L  5
+    SSWV M -1
+    stop
+  XDeath:
+    SSWV N      5
+    SSWV O      5 A_XScream
+    SSWV P      5 A_Fall
+    SSWV QRSTU  5
+    SSWV V     -1
+    stop
+  Raise:
+    SSWV MLKJI 5
+    goto See
+  "@
 }
 
 thingtype CommanderKeen 
 {
-  doomednum = 72
-  spawnstate = S_KEENSTND
-  spawnhealth = 100
-  painstate = S_KEENPAIN
-  painchance = 256
-  painsound = keenpn
-  deathstate = S_COMMKEEN
-  deathsound = keendt
-  radius = 16.0
-  height = 72.0
-  correct_height = 51.0
-  mass = 10000000
-  flags = SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|COUNTKILL|PASSMOBJ
-  dehackednum = 25
+  doomednum      72
+  dehackednum    25
+  spawnhealth    100
+  painchance     256
+  painsound      keenpn
+  deathsound     keendt
+  radius         16.0
+  height         72.0
+  correct_height 51.0
+  mass           10000000
+  flags          SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|COUNTKILL|PASSMOBJ
+    
+  firstdecoratestate S_KEENSTND
+  states
+  @"
+  Spawn:
+    KEEN A -1
+    loop
+  Death:
+    KEEN AB      6
+    KEEN C       6 A_Scream
+    KEEN DEFGHIJ 6
+    KEEN K       6 A_KeenDie
+    KEEN L      -1
+    stop
+  Pain:
+    KEEN M 4
+    KEEN M 8 A_Pain
+    goto Spawn
+  "@
 }
 
 thingtype BossBrain 
 {
-  doomednum = 88
-  spawnstate = S_BRAIN
-  spawnhealth = 250
-  painstate = S_BRAIN_PAIN
-  painchance = 255
-  painsound = bospn
-  deathstate = S_BRAIN_DIE1
-  deathsound = bosdth
-  radius = 16.0
-  mass = 10000000
-  flags = SOLID|SHOOTABLE
-  dehackednum = 26
+  doomednum   88
+  dehackednum 26
+  spawnhealth 250
+  painchance  255
+  painsound   bospn
+  deathsound  bosdth
+  radius      16.0
+  mass        10000000
+  flags       SOLID|SHOOTABLE
+  
+  firstdecoratestate S_BRAIN
+  states
+  @"
+  Spawn:
+    BBRN A   -1
+    stop
+  Pain:
+    BBRN B   36 A_BrainPain
+    goto Spawn
+  Death:
+    BBRN A  100 A_BrainScream
+    BBRN AA  10
+    BBRN A   -1 A_BrainDie
+    stop
+  "@
 }
 
 thingtype BossCubeSpitter 
 {
-  doomednum = 89
-  spawnstate = S_BRAINEYE
-  seestate = S_BRAINEYESEE
-  height = 32.0
-  flags = NOSECTOR|NOBLOCKMAP
-  dehackednum = 27
+  doomednum   89
+  dehackednum 27
+  height      32.0
+  flags       NOSECTOR|NOBLOCKMAP
+    
+  firstdecoratestate S_BRAINEYE
+  states
+  @"
+  Spawn:
+    SSWV A  10 A_Look
+    loop
+  See:
+    SSWV A 181 A_BrainAwake
+    SSWV A 150 A_BrainSpit
+    goto See+1
+  "@
 }
 
 thingtype BossSpawnSpot 
 {
-  doomednum = 87
-  height = 32.0
-  flags = NOSECTOR|NOBLOCKMAP
-  dehackednum = 28
+  doomednum   87
+  dehackednum 28
+  height      32.0
+  flags       NOSECTOR|NOBLOCKMAP
 }
 
 thingtype BossSpawnCube 
 {
-  spawnstate = S_SPAWN1
-  seesound = bospit
-  deathsound = firxpl
-  speed = 10.0
-  radius = 6.0
-  height = 32.0
-  damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|NOCLIP|MISSILE|SPACMISSILE
-  dehackednum = 29
+  dehackednum 29
+  seesound    bospit
+  deathsound  firxpl
+  speed       10.0
+  radius      6.0
+  height      32.0
+  damage      3
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|NOCLIP|MISSILE|SPACMISSILE
+  
+  firstdecoratestate S_SPAWN1
+  states
+  @"
+  Spawn:
+    BOSF A 3 bright A_SpawnSound
+    BOSF B 3 bright A_SpawnFly
+    BOSF C 3 bright A_SpawnFly
+    BOSF D 3 bright A_SpawnFly
+    loop
+  "@  
 }
 
 thingtype BossSpawnFire 
 {
-  spawnstate = S_SPAWNFIRE1
-  flags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  acs_spawndata { num = 98; modes = doom }
-  dehackednum = 30
+  dehackednum 30  
+  flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
+  acs_spawndata 
+  { 
+    num   98
+    modes doom
+  }
+
+  firstdecoratestate S_SPAWNFIRE1
+  states
+  @"
+  Spawn:
+    FIRE ABCDEFGH 4 bright A_Fire
+    stop
+  "@
 }
 
 thingtype DoomBarrel 
 {
-  doomednum = 2035
-  spawnstate = S_BAR1
-  spawnhealth = 20
-  deathstate = S_BEXP
-  deathsound = barexp
-  radius = 10.0
-  height = 42.0
-  correct_height = 34.0
-  flags = SOLID|SHOOTABLE|NOBLOOD
-  mod = Barrel
-  acs_spawndata { num = 125; modes = doom }
-  dehackednum = 31
+  doomednum      2035
+  dehackednum    31
+  spawnhealth    20
+  deathsound     barexp
+  radius         10.0
+  height         42.0
+  correct_height 34.0
+  flags          SOLID|SHOOTABLE|NOBLOOD
+  mod            Barrel
+  acs_spawndata 
+  {
+    num   125
+    modes doom
+  }
+  
+  firstdecoratestate S_BAR1
+  states
+  @"
+  Spawn:
+    BAR1 AB 6
+    loop
+  Death:
+    BEXP A  5 bright
+    BEXP B  5 bright A_Scream
+    BEXP C  5 bright
+    BEXP D 10 bright A_Explode
+    BEXP E 10 bright
+    stop
+  "@
 }
 
 thingtype DoomImpShot 
 {
-  spawnstate = S_TBALL1
-  seesound = firsht
-  deathstate = S_TBALLX1
-  deathsound = firxpl
-  speed = 10.0
-  fastspeed = 20.0
-  radius = 6.0
-  height = 8.0
-  damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
-  acs_spawndata { num = 10; modes = doom }
-  dehackednum = 32
+  dehackednum 32
+  seesound    firsht  
+  deathsound  firxpl
+  speed       10.0
+  fastspeed   20.0
+  radius      6.0
+  height      8.0
+  damage      3
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
+  acs_spawndata 
+  { 
+    num   10 
+    modes doom 
+  }
+    
+  firstdecoratestate S_TBALL1
+  states
+  @"
+  Spawn:
+    BAL1 AB 4 bright
+    loop
+  Death:
+    BAL1 CDE 6 bright
+    stop
+  "@
 }
 
 thingtype CacodemonShot 
 {
-  spawnstate = S_RBALL1
-  seesound = firsht
-  deathstate = S_RBALLX1
-  deathsound = firxpl
-  speed = 10.0
-  fastspeed = 20.0
-  radius = 6.0
-  height = 8.0
-  damage = 5
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
-  acs_spawndata { num = 126; modes = doom }
-  dehackednum = 33
+  dehackednum 33
+  seesound    firsht
+  deathsound  firxpl
+  speed       10.0
+  fastspeed   20.0
+  radius      6.0
+  height      8.0
+  damage      5
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
+  acs_spawndata 
+  { 
+    num   126 
+    modes doom
+  }
+    
+  firstdecoratestate S_RBALL1
+  states
+  @"
+  Spawn:
+    BAL2 AB 4 bright
+    loop
+  Death:
+    BAL2 CDE 6 bright
+    stop
+  "@
 }
 
 thingtype RocketShot 
 {
-  spawnstate = S_ROCKET
-  seesound = rlaunc
-  deathstate = S_EXPLODE1
-  deathsound = barexp
-  speed = 20.0
-  radius = 11.0
-  height = 8.0
-  damage = 20
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SPACMISSILE
-  particlefx = ROCKET
-  mod = Rocket
-  acs_spawndata { num = 127; modes = doom }
-  dehackednum = 34
+  dehackednum 34
+  seesound    rlaunc
+  deathsound  barexp
+  speed       20.0
+  radius      11.0
+  height      8.0
+  damage      20
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SPACMISSILE
+  particlefx  ROCKET
+  mod         Rocket
+  acs_spawndata 
+  { 
+    num   127 
+    modes doom
+  }
+    
+  firstdecoratestate S_ROCKET
+  states
+  @"
+  Spawn:
+    MISL A 1 bright
+    loop
+  Death:
+    MISL B 8 bright A_Explode
+    MISL C 6 bright
+    MISL D 4 bright
+    stop
+  "@
 }
 
 thingtype PlasmaShot 
 {
-  spawnstate = S_PLASBALL
-  seesound = plasma
-  deathstate = S_PLASEXP
-  deathsound = firxpl
-  speed = 25.0
-  radius = 13.0
-  height = 8.0
-  damage = 5
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
-  mod = Plasma
-  acs_spawndata { num = 51; modes = doom }
-  dehackednum = 35
+  dehackednum 35
+  seesound    plasma  
+  deathsound  firxpl
+  speed       25.0
+  radius      13.0
+  height      8.0
+  damage      5
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
+  mod         Plasma
+  acs_spawndata 
+  { 
+    num   51 
+    modes doom
+  }
+  
+  firstdecoratestate S_PLASBALL
+  states
+  @"
+  Spawn:
+    PLSS AB 6 bright
+    loop
+  Death:
+    PLSE ABCDE 4 bright
+    stop
+  "@
 }
 
 thingtype BFGShot 
 {
-  spawnstate = S_BFGSHOT
-  deathstate = S_BFGLAND
-  deathsound = rxplod
-  speed = 25.0
-  radius = 13.0
-  height = 8.0
-  damage = 100
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
-  particlefx = BFG
-  mod = BFG
-  acs_spawndata { num = 128; modes = doom }
-  dehackednum = 36
+  dehackednum 36
+  deathsound  rxplod
+  speed       25.0
+  radius      13.0
+  height      8.0
+  damage      100
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
+  particlefx  BFG
+  mod         BFG
+  acs_spawndata 
+  { 
+    num   128 
+    modes doom 
+  }
+    
+  firstdecoratestate S_BFGSHOT
+  states
+  @"
+  Spawn:
+    BFS1 AB  4 bright
+    loop
+  Death:
+    BFE1 AB  8 bright
+    BFE1 C   8 bright A_BFGSpray
+    BFE1 DEF 8 bright
+    stop
+  "@
 }
 
 thingtype ArachnotronShot 
 {
-  spawnstate = S_ARACH_PLAZ
-  seesound = plasma
-  deathstate = S_ARACH_PLEX
-  deathsound = firxpl
-  speed = 25.0
-  radius = 13.0
-  height = 8.0
-  damage = 5
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
-  acs_spawndata { num = 129; modes = doom }
-  dehackednum = 37
+  dehackednum 37
+  seesound    plasma
+  deathsound  firxpl
+  speed       25.0
+  radius      13.0
+  height      8.0
+  damage      5
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
+  acs_spawndata
+  {
+    num   129
+    modes doom
+  }
+    
+  firstdecoratestate S_ARACH_PLAZ
+  states
+  @"
+  Spawn:
+    APLS AB 5 bright
+    loop
+  Death:
+    APBX ABCDE 5 bright
+    stop
+  "@
 }
 
 thingtype BulletPuff 
 {
-  spawnstate = S_PUFF1
-  cflags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT|NOSPLASH
-  acs_spawndata { num = 131; modes = doom }
-  dehackednum = 38
+  dehackednum 38
+  cflags      NOBLOCKMAP|NOGRAVITY|TRANSLUCENT|NOSPLASH
+  acs_spawndata 
+  { 
+    num   131 
+    modes doom 
+  }
+    
+  firstdecoratestate S_PUFF1
+  states
+  @"
+  Spawn:
+    PUFF A 4 bright 
+    PUFF BCD 4
+    stop
+  "@
 }
 
 thingtype DoomBlood 
 {
-  spawnstate = S_BLOOD1
-  cflags = NOBLOCKMAP|NOSPLASH
-  acs_spawndata { num = 130; modes = doom }
-  dehackednum = 39
+  dehackednum 39
+  cflags      NOBLOCKMAP|NOSPLASH
+  acs_spawndata 
+  { 
+    num   130 
+    modes doom 
+  }
+    
+  firstdecoratestate S_BLOOD1
+  states
+  @"
+  Spawn:
+    BLUD CBA 8
+    stop
+  "@
 }
 
 thingtype DoomTeleFog 
 {
-  spawnstate = S_TFOG
-  flags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  dehackednum = 40
+  dehackednum 40
+  flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
+
+  firstdecoratestate S_TFOG
+  states
+  @"
+  Spawn:
+    TFOG ABABCDEFGHIJ 6 bright
+    stop
+  "@
 }
 
 thingtype DoomItemFog 
 {
-  spawnstate = S_IFOG
-  flags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  dehackednum = 41
+  dehackednum 41
+  flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
+    
+  firstdecoratestate S_IFOG
+  states
+  @"
+  Spawn:
+    IFOG ABABCDE 6 bright
+    stop
+  "@
 }
 
 // Note: TeleportSpot is shared between all gamemodes
 
 thingtype BFGFlash 
 {
-  spawnstate = S_BFGEXP
-  flags = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 43
+  dehackednum 43
+  flags       NOBLOCKMAP|NOGRAVITY
+    
+  firstdecoratestate S_BFGEXP
+  states
+  @"
+  Spawn:
+    BFE2 ABCD 8 bright
+    stop    
+  "@
 }
 
 thingtype GreenArmor 
 {
-  doomednum = 2018
-  spawnstate = S_ARM1
-  flags = SPECIAL
-  acs_spawndata { num = 68; modes = doom }
-  dehackednum = 44
+  doomednum   2018
+  dehackednum 44
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   68
+    modes doom
+  }
+  
+  firstdecoratestate S_ARM1
+  states
+  @"
+  Spawn:
+    ARM1 A 6
+    ARM1 B 7 bright
+    loop
+  "@
 }
 
 thingtype BlueArmor 
 {
-  doomednum = 2019
-  spawnstate = S_ARM2
-  flags = SPECIAL
-  acs_spawndata { num = 69; modes = doom }
-  dehackednum = 45
+  doomednum   2019
+  dehackednum 45  
+  flags       SPECIAL
+  acs_spawndata
+  { 
+    num   69
+    modes doom
+  }
+  
+  firstdecoratestate S_ARM2
+  states
+  @"
+  Spawn:
+    ARM2 A 6
+    ARM2 B 6 bright
+    loop
+  "@
 }
 
 thingtype HealthBonus 
 {
-  doomednum = 2014
-  spawnstate = S_BON1
-  flags = SPECIAL|COUNTITEM
-  acs_spawndata { num = 152; modes = doom }
-  dehackednum = 46
+  doomednum   2014
+  dehackednum 46
+  flags       SPECIAL|COUNTITEM
+  acs_spawndata
+  {
+    num   152
+    modes doom
+  }
+  
+  firstdecoratestate S_BON1
+  states
+  @"
+  Spawn:
+    BON1 ABCDCB 6
+    loop
+  "@
 }
 
 thingtype ArmorBonus 
 {
-  doomednum = 2015
-  spawnstate = S_BON2
-  flags = SPECIAL|COUNTITEM
-  acs_spawndata { num = 22; modes = doom }
-  dehackednum = 47
+  doomednum   2015
+  dehackednum 47
+  flags       SPECIAL|COUNTITEM
+  acs_spawndata
+  {
+    num   22
+    modes doom
+  }
+
+  firstdecoratestate S_BON2
+  states
+  @"
+  Spawn:
+    BON2 ABCDCB 6
+    loop
+  "@
 }
 
 thingtype DoomBlueCard 
 {
-  doomednum = 5
-  spawnstate = S_BKEY
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 85; modes = doom }
-  dehackednum = 48
+  doomednum   5
+  dehackednum 48
+  flags       SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   85
+    modes doom
+  }
+  
+  firstdecoratestate S_BKEY
+  states
+  @"
+  Spawn:
+    BKEY A 10
+    BKEY B 10 bright
+    loop
+  "@
 }
 
 thingtype DoomRedCard 
 {
-  doomednum = 13
-  spawnstate = S_RKEY
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 86; modes = doom }
-  dehackednum = 49
+  doomednum   13
+  dehackednum 49
+  flags       SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   86
+    modes doom
+  }
+    
+  firstdecoratestate S_RKEY
+  states
+  @"
+  Spawn:
+    RKEY A 10
+    RKEY B 10 bright
+    loop
+  "@
 }
 
 thingtype DoomYellowCard 
 {
-  doomednum = 6
-  spawnstate = S_YKEY
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 87; modes = doom }
-  dehackednum = 50
+  doomednum   6
+  dehackednum 50
+  flags       SPECIAL|NOTDMATCH
+  acs_spawndata
+  { 
+    num   87
+    modes doom
+  }
+
+  firstdecoratestate S_YKEY
+  states
+  @"
+  Spawn:
+    YKEY A 10
+    YKEY B 10 bright
+    loop
+  "@
 }
 
 thingtype DoomYellowSkull 
 {
-  doomednum = 39
-  spawnstate = S_YSKULL
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 88; modes = doom }
-  dehackednum = 51
+  doomednum   39
+  dehackednum 51
+  flags       SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   88
+    modes doom
+  }
+  
+  firstdecoratestate S_YSKULL
+  states
+  @"
+  Spawn:
+    YSKU A 10
+    YSKU B 10 bright
+    loop
+  "@
 }
 
 thingtype DoomRedSkull 
 {
-  doomednum = 38
-  spawnstate = S_RSKULL
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 89; modes = doom }
-  dehackednum = 52
+  doomednum   38
+  dehackednum 52
+  flags       SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   89
+    modes doom
+  }
+  
+  firstdecoratestate S_RSKULL
+  states
+  @"
+  Spawn:
+    RSKU A 10
+    RSKU B 10 bright
+    loop
+  "@
 }
 
 thingtype DoomBlueSkull 
 {
-  doomednum = 40
-  spawnstate = S_BSKULL
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 90; modes = doom }
-  dehackednum = 53
+  doomednum   40
+  dehackednum 53
+  flags       SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   90
+    modes doom
+  }
+
+  firstdecoratestate S_BSKULL
+  states
+  @"
+  Spawn:
+    BSKU A 10
+    BSKU B 10 bright
+    loop
+  "@
 }
 
 thingtype StimPack 
 {
-  doomednum = 2011
-  spawnstate = S_STIM
-  flags = SPECIAL
-  acs_spawndata { num = 23; modes = doom }
-  dehackednum = 54
+  doomednum   2011
+  dehackednum 54
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   23
+    modes doom
+  }
+
+  firstdecoratestate S_STIM
+  states
+  @"
+  Spawn:
+    STIM A -1
+    stop
+  "@
 }
 
 thingtype MediKit 
 {
-  doomednum = 2012
-  spawnstate = S_MEDI
-  flags = SPECIAL
-  acs_spawndata { num = 24; modes = doom }
-  dehackednum = 55
+  doomednum   2012
+  dehackednum 55
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   24
+    modes doom
+  }
+
+  firstdecoratestate S_MEDI
+  states
+  @"
+  Spawn:
+    MEDI A -1
+    stop
+  "@
 }
 
 thingtype SoulSphere 
 {
-  doomednum = 2013
-  spawnstate = S_SOUL
-  flags = SPECIAL|COUNTITEM|TRANSLUCENT
-  acs_spawndata { num = 25; modes = doom }
-  dehackednum = 56
+  doomednum   2013
+  dehackednum 56
+  flags       SPECIAL|COUNTITEM|TRANSLUCENT
+  acs_spawndata
+  {
+    num   25
+    modes doom
+  }
+
+  firstdecoratestate S_SOUL
+  states
+  @"
+  Spawn:
+    SOUL ABCDCB 6 bright
+    loop
+  "@
 }
 
 thingtype InvulnSphere 
 {
-  doomednum = 2022
-  spawnstate = S_PINV
-  cflags = SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
-  acs_spawndata { num = 133; modes = doom }
-  dehackednum = 57
+  doomednum   2022
+  dehackednum 57
+  cflags      SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
+  acs_spawndata
+  {
+    num   133
+    modes doom
+  }
+
+  firstdecoratestate S_PINV
+  states
+  @"
+  Spawn:
+    PINV ABCD 6 bright
+    loop
+  "@
 }
 
 thingtype BerzerkBox 
 {
-  doomednum = 2023
-  spawnstate = S_PSTR
-  flags = SPECIAL|COUNTITEM
-  acs_spawndata { num = 134; modes = doom }
-  dehackednum = 58
+  doomednum   2023
+  dehackednum 58
+  flags       SPECIAL|COUNTITEM
+  acs_spawndata
+  {
+    num   134
+    modes doom
+  }
+
+  firstdecoratestate S_PSTR
+  states
+  @"
+  Spawn:
+    PSTR A -1 bright
+    stop
+  "@
 }
 
 thingtype InvisiSphere 
 {
-  doomednum = 2024
-  spawnstate = S_PINS
-  cflags = SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
-  acs_spawndata { num = 135; modes = doom }
-  dehackednum = 59
+  doomednum   2024
+  dehackednum 59
+  cflags      SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
+  acs_spawndata
+  {
+    num   135
+    modes doom
+  }
+  
+  firstdecoratestate S_PINS
+  states
+  @"
+  Spawn:
+    PINS ABCD 6 bright
+    loop
+  "@  
 }
 
 thingtype RadiationSuit 
 {
-  doomednum = 2025
-  spawnstate = S_SUIT
-  flags = SPECIAL
-  acs_spawndata { num = 136; modes = doom }
-  dehackednum = 60
+  doomednum   2025
+  dehackednum 60
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   136
+    modes doom
+  }
+  
+  firstdecoratestate S_SUIT
+  states
+  @"
+  Spawn:
+    SUIT A -1 bright
+    stop
+  "@
 }
 
 thingtype ComputerMap 
 {
-  doomednum = 2026
-  spawnstate = S_PMAP
-  flags = SPECIAL|COUNTITEM
-  acs_spawndata { num = 137; modes = doom }
-  dehackednum = 61
+  doomednum   2026
+  dehackednum 61
+  flags       SPECIAL|COUNTITEM
+  acs_spawndata
+  {
+    num   137
+    modes doom
+  }
+  
+  firstdecoratestate S_PMAP
+  states
+  @"
+  Spawn:
+    PMAP ABCDCB 6 bright
+    loop
+  "@
 }
 
 thingtype LightAmpVisor 
 {
-  doomednum = 2045
-  spawnstate = S_PVIS
-  flags = SPECIAL|COUNTITEM
-  acs_spawndata { num = 138; modes = doom }
-  dehackednum = 62
+  doomednum   2045
+  dehackednum 62
+  flags       SPECIAL|COUNTITEM
+  acs_spawndata
+  {
+    num   138
+    modes doom
+  }
+  
+  firstdecoratestate S_PVIS
+  states
+  @"
+  Spawn:
+    PVIS A 6 bright
+    PVIS B 6
+    loop
+  "@
 }
 
 thingtype MegaSphere 
 {
-  doomednum = 83
-  spawnstate = S_MEGA
-  flags = SPECIAL|COUNTITEM|TRANSLUCENT
-  acs_spawndata { num = 132; modes = doom }
-  dehackednum = 63
+  doomednum   83
+  dehackednum 63
+  flags       SPECIAL|COUNTITEM|TRANSLUCENT
+  acs_spawndata
+  {
+    num   132
+    modes doom
+  }
+
+  firstdecoratestate S_MEGA
+  states
+  @"
+  Spawn:
+    MEGA ABCD 6 bright
+    loop
+  "@
 }
 
 thingtype AmmoClip 
 {
-  doomednum = 2007
-  spawnstate = S_CLIP
-  flags = SPECIAL
-  acs_spawndata { num = 11; modes = doom }
-  dehackednum = 64
+  doomednum   2007
+  dehackednum 64
+  flags       SPECIAL
+  acs_spawndata 
+  {
+    num   11
+    modes doom
+  }
+  
+  firstdecoratestate S_CLIP
+  states
+  @"
+  Spawn:
+    CLIP A -1
+    stop
+  "@
 }
 
 thingtype AmmoBulletBox 
 {
-  doomednum = 2048
-  spawnstate = S_AMMO
-  flags = SPECIAL
-  acs_spawndata { num = 139; modes = doom }
-  dehackednum = 65
+  doomednum   2048
+  dehackednum 65
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   139
+    modes doom
+  }
+  
+  firstdecoratestate S_AMMO
+  states
+  @"
+  Spawn:
+    AMMO A -1
+    stop
+  "@
 }
 
 thingtype AmmoRocket 
 {
-  doomednum = 2010
-  spawnstate = S_ROCK
-  flags = SPECIAL
-  acs_spawndata { num = 140; modes = doom }
-  dehackednum = 66
+  doomednum   2010
+  dehackednum 66
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   140
+    modes doom
+  }
+
+  firstdecoratestate S_ROCK
+  states
+  @"
+  Spawn:
+    ROCK A -1
+    stop
+  "@
 }
 
 thingtype AmmoRocketBox 
 {
-  doomednum = 2046
-  spawnstate = S_BROK
-  flags = SPECIAL
-  acs_spawndata { num = 141; modes = doom }
-  dehackednum = 67
+  doomednum   2046
+  dehackednum 67
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   141
+    modes doom
+  }
+  
+  firstdecoratestate S_BROK
+  states
+  @"
+  Spawn:
+    BROK A -1
+    stop
+  "@
 }
 
 thingtype AmmoCell 
 {
-  doomednum = 2047
-  spawnstate = S_CELL
-  flags = SPECIAL
-  acs_spawndata { num = 75; modes = doom }
-  dehackednum = 68
+  doomednum   2047
+  dehackednum 68
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   75
+    modes doom
+  }
+
+  firstdecoratestate S_CELL
+  states
+  @"
+  Spawn:
+    CELL A -1
+    stop
+  "@
 }
 
 thingtype AmmoCellPack 
 {
-  doomednum = 17
-  spawnstate = S_CELP
-  flags = SPECIAL
-  acs_spawndata { num = 142; modes = doom }
-  dehackednum = 69
+  doomednum   17
+  dehackednum 69
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   142
+    modes doom
+  }
+
+  firstdecoratestate S_CELP
+  states
+  @"
+  Spawn:
+    CELP A -1
+    stop
+  "@
 }
 
 thingtype AmmoShells 
 {
-  doomednum = 2008
-  spawnstate = S_SHEL
-  flags = SPECIAL
-  acs_spawndata { num = 12; modes = doom }
-  dehackednum = 70
+  doomednum   2008
+  dehackednum 70
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   12
+    modes doom
+  }
+
+  firstdecoratestate S_SHEL
+  states
+  @"
+  Spawn:
+    SHEL A -1
+    stop
+  "@
 }
 
 thingtype AmmoShellBox 
 {
-  doomednum = 2049
-  spawnstate = S_SBOX
-  flags = SPECIAL
-  acs_spawndata { num = 143; modes = doom }
-  dehackednum = 71
+  doomednum   2049
+  dehackednum 71
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   143
+    modes doom
+  }
+
+  firstdecoratestate S_SBOX
+  states
+  @"
+  Spawn:
+    SBOX A -1
+    stop
+  "@
 }
 
 thingtype Backpack 
 {
-  doomednum = 8
-  spawnstate = S_BPAK
-  flags = SPECIAL
-  acs_spawndata { num = 144; modes = doom }
-  dehackednum = 72
+  doomednum   8
+  dehackednum 72
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   144
+    modes doom
+  }
+
+  firstdecoratestate S_BPAK
+  states
+  @"
+  Spawn:
+    BPAK A -1
+    stop
+  "@
 }
 
 thingtype WeaponBFG 
 {
-  doomednum = 2006
-  spawnstate = S_BFUG
-  flags = SPECIAL
-  acs_spawndata { num = 31; modes = doom }
-  dehackednum = 73
+  doomednum   2006
+  dehackednum 73
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   31
+    modes doom
+  }
+
+  firstdecoratestate S_BFUG
+  states
+  @"
+  Spawn:
+    BFUG A -1
+    stop
+  "@
 }
 
 thingtype WeaponChaingun 
 {
-  doomednum = 2002
-  spawnstate = S_MGUN
-  flags = SPECIAL
-  acs_spawndata { num = 28; modes = doom }
-  dehackednum = 74
+  doomednum   2002
+  dehackednum 74
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   28
+    modes doom
+  }
+
+  firstdecoratestate S_MGUN
+  states
+  @"
+  Spawn:
+    MGUN A -1
+    stop
+  "@
 }
 
 thingtype WeaponChainsaw 
 {
-  doomednum = 2005
-  spawnstate = S_CSAW
-  flags = SPECIAL
-  acs_spawndata { num = 32; modes = doom }
-  dehackednum = 75
+  doomednum   2005
+  dehackednum 75
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   32
+    modes doom
+  }
+
+  firstdecoratestate S_CSAW
+  states
+  @"
+  Spawn:
+    CSAW A -1
+    stop
+  "@
 }
 
 thingtype WeaponRocketLauncher 
 {
-  doomednum = 2003
-  spawnstate = S_LAUN
-  flags = SPECIAL
-  acs_spawndata { num = 29; modes = doom }
-  dehackednum = 76
+  doomednum   2003
+  dehackednum 76
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   29
+    modes doom
+  }
+
+  firstdecoratestate S_LAUN
+  states
+  @"
+  Spawn:
+    LAUN A -1
+    stop
+  "@
 }
 
 thingtype WeaponPlasmaGun 
 {
-  doomednum = 2004
-  spawnstate = S_PLAS
-  flags = SPECIAL
-  acs_spawndata { num = 30; modes = doom }
-  dehackednum = 77
+  doomednum   2004
+  dehackednum 77
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   30
+    modes doom
+  }
+
+  firstdecoratestate S_PLAS
+  states
+  @"
+  Spawn:
+    PLAS A -1
+    stop
+  "@
 }
 
 thingtype WeaponShotgun 
 {
-  doomednum = 2001
-  spawnstate = S_SHOT
-  flags = SPECIAL
-  acs_spawndata { num = 27; modes = doom }
-  dehackednum = 78
+  doomednum   2001
+  dehackednum 78
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   27
+    modes doom
+  }
+
+  firstdecoratestate S_SHOT
+  states
+  @"
+  Spawn:
+    SHOT A -1
+    stop
+  "@
 }
 
 thingtype WeaponSSG 
 {
-  doomednum = 82
-  spawnstate = S_SHOT2
-  flags = SPECIAL
-  acs_spawndata { num = 33; modes = doom }
-  dehackednum = 79
+  doomednum   82
+  dehackednum 79
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   33
+    modes doom
+  }
+
+  firstdecoratestate S_SHOT2
+  states
+  @"
+  Spawn:
+    SGN2 A -1
+    stop
+  "@
 }
 
 thingtype TechLamp1 
 {
-  doomednum = 85
-  spawnstate = S_TECHLAMP
-  radius = 16.0
-  correct_height = 74.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 80
+  doomednum      85
+  dehackednum    80
+  radius         16.0
+  correct_height 74.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_TECHLAMP
+  states
+  @"
+  Spawn:
+    TLMP ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype TechLamp2 
 {
-  doomednum = 86
-  spawnstate = S_TECH2LAMP
-  radius = 16.0
-  correct_height = 54.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 81
+  doomednum      86
+  dehackednum    81
+  radius         16.0
+  correct_height 54.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_TECH2LAMP
+  states
+  @"
+  Spawn:
+    TLP2 ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype ShortLamp 
 {
-  doomednum = 2028
-  spawnstate = S_COLU
-  radius = 16.0
-  correct_height = 44.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 82
+  doomednum      2028
+  dehackednum    82
+  radius         16.0
+  correct_height 44.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_COLU
+  states
+  @"
+  Spawn:
+    COLU A -1 bright
+    stop
+  "@
 }
 
 thingtype ColumnGreenTall 
 {
-  doomednum = 30
-  spawnstate = S_TALLGRNCOL
-  radius = 16.0
-  correct_height = 48.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 83
+  doomednum      30
+  dehackednum    83
+  radius         16.0
+  correct_height 48.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_TALLGRNCOL
+  states
+  @"
+  Spawn:
+    COL1 A -1
+    stop
+  "@
 }
 
 thingtype ColumnGreenShort 
 {
-  doomednum = 31
-  spawnstate = S_SHRTGRNCOL
-  radius = 16.0
-  correct_height = 34.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 84
+  doomednum      31
+  dehackednum    84
+  radius         16.0
+  correct_height 34.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_SHRTGRNCOL
+  states
+  @"
+  Spawn:
+    COL2 A -1
+    stop
+  "@
 }
 
 thingtype ColumnRedTall 
 {
-  doomednum = 32
-  spawnstate = S_TALLREDCOL
-  radius = 16.0
-  correct_height = 48.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 85
+  doomednum      32
+  dehackednum    85
+  radius         16.0
+  correct_height 48.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_TALLREDCOL
+  states
+  @"
+  Spawn:
+    COL3 A -1
+    stop
+  "@
 }
 
 thingtype ColumnRedShort 
 {
-  doomednum = 33
-  spawnstate = S_SHRTREDCOL
-  radius = 16.0
-  correct_height = 34.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 86
+  doomednum      33
+  dehackednum    86
+  radius         16.0
+  correct_height 34.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_SHRTREDCOL
+  states
+  @"
+  Spawn:
+    COL4 A -1
+    stop
+  "@
 }
 
 thingtype ColumnRedSkull 
 {
-  doomednum = 37
-  spawnstate = S_SKULLCOL
-  radius = 16.0
-  correct_height = 44.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 87
+  doomednum      37
+  dehackednum    87
+  radius         16.0
+  correct_height 44.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_SKULLCOL
+  states
+  @"
+  Spawn:
+    COL6 A -1
+    stop
+  "@
 }
 
 thingtype ColumnGreenHeart 
 {
-  doomednum = 36
-  spawnstate = S_HEARTCOL
-  radius = 16.0
-  correct_height = 40.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 88
+  doomednum      36
+  dehackednum    88
+  radius         16.0
+  correct_height 40.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_HEARTCOL
+  states
+  @"
+  Spawn:
+    COL5 AB 14
+    loop
+  "@
 }
 
 thingtype EvilEye 
 {
-  doomednum = 41
-  spawnstate = S_EVILEYE
-  radius = 16.0
-  correct_height = 50.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 89
+  doomednum      41
+  dehackednum    89
+  radius         16.0
+  correct_height 50.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_EVILEYE
+  states
+  @"
+  Spawn:
+    CEYE ABCB 6 bright
+    loop
+  "@
 }
 
 thingtype FloatingSkulls 
 {
-  doomednum = 42
-  spawnstate = S_FLOATSKULL
-  radius = 16.0
-  correct_height = 48.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 90
+  doomednum      42
+  dehackednum    90
+  radius         16.0
+  correct_height 48.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_FLOATSKULL
+  states
+  @"
+  Spawn:
+    FSKU ABC 6 bright
+    loop
+  "@
 }
 
 thingtype TreeGrayShort 
 {
-  doomednum = 43
-  spawnstate = S_TORCHTREE
-  radius = 16.0
-  correct_height = 62.0
+  doomednum      43
+  dehackednum    91
+  radius         16.0
+  correct_height 62.0
   cflags = SOLID|3DDECORATION
-  dehackednum = 91
+
+  firstdecoratestate S_TORCHTREE
+  states
+  @"
+  Spawn:
+    TRE1 A -1
+    stop
+  "@
 }
 
 thingtype TorchBlueTall 
 {
-  doomednum = 44
-  spawnstate = S_BLUETORCH
-  radius = 16.0
-  correct_height = 82.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 92
+  doomednum      44
+  dehackednum    92
+  radius         16.0
+  correct_height 82.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_BLUETORCH
+  states
+  @"
+  Spawn:
+    TBLU ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype TorchGreenTall 
 {
-  doomednum = 45
-  spawnstate = S_GREENTORCH
-  radius = 16.0
-  correct_height = 82.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 93
+  doomednum      45
+  dehackednum    93
+  radius         16.0
+  correct_height 82.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_GREENTORCH
+  states
+  @"
+  Spawn:
+    TGRN ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype TorchRedTall 
 {
-  doomednum = 46
-  spawnstate = S_REDTORCH
-  radius = 16.0
-  correct_height = 82.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 94
+  doomednum      46
+  dehackednum    94
+  radius         16.0
+  correct_height 82.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_REDTORCH
+  states
+  @"
+  Spawn:
+    TRED ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype TorchBlueShort 
 {
-  doomednum = 55
-  spawnstate = S_BTORCHSHRT
-  radius = 16.0
-  correct_height = 64.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 95
+  doomednum      55
+  dehackednum    95
+  radius         16.0
+  correct_height 64.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_BTORCHSHRT
+  states
+  @"
+  Spawn:
+    SMBT ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype TorchGreenShort 
 {
-  doomednum = 56
-  spawnstate = S_GTORCHSHRT
-  radius = 16.0
-  correct_height = 64.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 96
+  doomednum      56
+  dehackednum    96
+  radius         16.0
+  correct_height 64.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_GTORCHSHRT
+  states
+  @"
+  Spawn:
+    SMGT ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype TorchRedShort 
 {
-  doomednum = 57
-  spawnstate = S_RTORCHSHRT
-  radius = 16.0
-  correct_height = 64.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 97
+  doomednum      57
+  dehackednum    97
+  radius         16.0
+  correct_height 64.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_RTORCHSHRT
+  states
+  @"
+  Spawn:
+    SMRT ABCD 4 bright
+    loop
+  "@
 }
 
 thingtype ThornySpikes 
 {
-  doomednum = 47
-  spawnstate = S_STALAGTITE
-  radius = 16.0
-  correct_height = 47.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 98
+  doomednum      47
+  dehackednum    98
+  radius         16.0
+  correct_height 47.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_STALAGTITE
+  states
+  @"
+  Spawn:
+    SMIT A -1
+    stop
+  "@
 }
 
 thingtype TechPillar 
 {
-  doomednum = 48
-  spawnstate = S_TECHPILLAR
-  radius = 16.0
-  correct_height = 120.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 99
+  doomednum      48
+  dehackednum    99
+  radius         16.0
+  correct_height 120.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_TECHPILLAR
+  states
+  @"
+  Spawn:
+    ELEC A -1
+    stop
+  "@
 }
 
 thingtype BlackCandle 
 {
-  doomednum = 34
-  spawnstate = S_CANDLESTIK
-  dehackednum = 100
+  doomednum   34
+  dehackednum 100
+  
+  firstdecoratestate S_CANDLESTIK
+  states
+  @"
+  Spawn:
+    CAND A -1 bright
+    stop
+  "@
 }
 
 thingtype Candelabra 
 {
-  doomednum = 35
-  spawnstate = S_CANDELABRA
-  radius = 16.0
-  correct_height = 54.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 101
+  doomednum      35
+  dehackednum    101
+  radius         16.0
+  correct_height 54.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_CANDELABRA
+  states
+  @"
+  Spawn:
+    CBRA A -1 bright
+    stop
+  "@
 }
 
 thingtype HangingBodyTwitch 
 {
-  doomednum = 49
-  spawnstate = S_BLOODYTWITCH
-  radius = 16.0
-  height = 68.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 102
+  doomednum   49
+  dehackednum 102
+  radius      16.0
+  height      68.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+
+  firstdecoratestate S_BLOODYTWITCH
+  states
+  @"
+  Spawn:
+    GOR1 A 10
+    GOR1 B 15
+    GOR1 C  8
+    GOR1 B  6
+    loop
+  "@
 }
 
 thingtype HangingBodyJacket 
 {
-  doomednum = 50
-  spawnstate = S_MEAT2
-  radius = 16.0
-  height = 84.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 103
+  doomednum   50
+  dehackednum 103
+  radius      16.0
+  height      84.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+
+  firstdecoratestate S_MEAT2
+  states
+  @"
+  Spawn:
+    GOR2 A -1
+    stop
+  "@
 }
 
 thingtype HangingBodyNoLeg 
 {
-  doomednum = 51
-  spawnstate = S_MEAT3
-  radius = 16.0
-  height = 84.0
-  correct_height = 79.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 104
+  doomednum      51
+  dehackednum    104
+  radius         16.0
+  height         84.0
+  correct_height 79.0
+  flags          SOLID|SPAWNCEILING|NOGRAVITY
+
+  firstdecoratestate S_MEAT3
+  states
+  @"
+  Spawn:
+    GOR3 A -1
+    stop
+  "@
 }
 
 thingtype HangingBodyTorso 
 {
-  doomednum = 52
-  spawnstate = S_MEAT4
-  radius = 16.0
-  height = 68.0
-  correct_height = 64.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 105
+  doomednum      52
+  dehackednum    105
+  radius         16.0
+  height         68.0
+  correct_height 64.0
+  flags          SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_MEAT4
+  states
+  @"
+  Spawn:
+    GOR4 A -1
+    stop
+  "@
 }
 
 thingtype HangingBodyLeg 
 {
-  doomednum = 53
-  spawnstate = S_MEAT5
-  radius = 16.0
-  height = 52.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 106
+  doomednum    53
+  dehackednum  106
+  radius       16.0
+  height       52.0
+  flags        SOLID|SPAWNCEILING|NOGRAVITY
+
+  firstdecoratestate S_MEAT5
+  states
+  @"
+  Spawn:
+    GOR5 A -1
+    stop
+  "@
 }
 
 thingtype HangingBodyJacketPass 
 {
-  doomednum = 59
-  spawnstate = S_MEAT2
-  height = 84.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 107
+  doomednum   59
+  dehackednum 107
+  height      84.0
+  flags       SPAWNCEILING|NOGRAVITY
+
+  spawnstate  S_MEAT2
 }
 
 thingtype HangingBodyTorsoPass 
 {
-  doomednum = 60
-  spawnstate = S_MEAT4
-  height = 68.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 108
+  doomednum   60
+  dehackednum 108
+  height      68.0
+  flags       SPAWNCEILING|NOGRAVITY
+  
+  spawnstate  S_MEAT4
 }
 
 thingtype HangingBodyNoLegPass 
 {
-  doomednum = 61
-  spawnstate = S_MEAT3
-  height = 52.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 109
+  doomednum   61
+  dehackednum 109
+  height      52.0
+  flags       SPAWNCEILING|NOGRAVITY
+  
+  spawnstate  S_MEAT3
 }
 
 thingtype HangingBodyLegPass 
 {
-  doomednum = 62
-  spawnstate = S_MEAT5
-  height = 52.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 110
+  doomednum   62
+  dehackednum 110
+  height      52.0
+  flags       SPAWNCEILING|NOGRAVITY
+  
+  spawnstate  S_MEAT5
 }
 
 thingtype HangingBodyTwitchPass 
 {
-  doomednum = 63
-  spawnstate = S_BLOODYTWITCH
-  height = 68.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 111
+  doomednum   63
+  dehackednum 111
+  height      68.0
+  flags       SPAWNCEILING|NOGRAVITY
+
+  spawnstate  S_BLOODYTWITCH
 }
 
 thingtype DeadCacodemon 
 {
-  doomednum = 22
-  spawnstate = S_HEAD_DIE6
-  dehackednum = 112
+  doomednum   22
+  dehackednum 112
+  
+  spawnstate  S_HEAD_DIE6
 }
 
 thingtype DeadDoomPlayer 
 {
-  doomednum = 15
-  spawnstate = S_PLAY_DIE7
-  dehackednum = 113
+  doomednum   15
+  dehackednum 113
+  
+  spawnstate  S_PLAY_DIE7
 }
 
 thingtype DeadZombieman 
 {
-  doomednum = 18
-  spawnstate = S_POSS_DIE5
-  dehackednum = 114
+  doomednum   18
+  dehackednum 114
+  
+  spawnstate  S_POSS_DIE5
 }
 
 thingtype DeadDemon 
 {
-  doomednum = 21
-  spawnstate = S_SARG_DIE6
-  dehackednum = 115
+  doomednum   21
+  dehackednum 115
+  
+  spawnstate  S_SARG_DIE6
 }
 
 thingtype DeadLostSoul 
 {
-  doomednum = 23
-  spawnstate = S_SKULL_DIE6
-  dehackednum = 116
+  doomednum   23
+  dehackednum 116
+  
+  spawnstate  S_SKULL_DIE6
 }
 
 thingtype DeadDoomImp 
 {
-  doomednum = 20
-  spawnstate = S_TROO_DIE5
-  dehackednum = 117
+  doomednum   20
+  dehackednum 117
+  
+  spawnstate  S_TROO_DIE5
 }
 
 thingtype DeadSergeant 
 {
-  doomednum = 19
-  spawnstate = S_SPOS_DIE5
-  dehackednum = 118
+  doomednum   19
+  dehackednum 118
+  
+  spawnstate  S_SPOS_DIE5
 }
 
 thingtype DeadDoomPlayerGibs 
 {
-  doomednum = 10
-  spawnstate = S_PLAY_XDIE9
-  acs_spawndata { num = 145; modes = doom }
-  dehackednum = 119
+  doomednum   10
+  dehackednum 119
+  acs_spawndata
+  {
+    num   145
+    modes doom
+  }
+  
+  spawnstate  S_PLAY_XDIE9
 }
 
 thingtype DeadDoomPlayerGibs2 
 {
-  doomednum = 12
-  spawnstate = S_PLAY_XDIE9
-  dehackednum = 120
+  doomednum   12
+  dehackednum 120
+  
+  spawnstate  S_PLAY_XDIE9
 }
 
 thingtype HeadShishkabob 
 {
-  doomednum = 28
-  spawnstate = S_HEADSONSTICK
-  radius = 16.0
-  correct_height = 60.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 121
+  doomednum      28
+  dehackednum    121
+  radius         16.0
+  correct_height 60.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_HEADSONSTICK
+  states
+  @"
+  Spawn:
+    POL2 A -1
+    stop
+  "@
 }
 
 thingtype CrushedGibs 
 {
-  doomednum = 24
-  spawnstate = S_GIBS
-  acs_spawndata { num = 146; modes = doom }
-  dehackednum = 122
+  doomednum   24
+  dehackednum 122
+  acs_spawndata 
+  {
+    num   146
+    modes doom
+  }
+  
+  firstdecoratestate S_GIBS
+  states
+  @"
+  Spawn:
+    POL5 A -1
+    stop
+  "@
 }
 
 thingtype HeadOnStick 
 {
-  doomednum = 27
-  spawnstate = S_HEADONASTICK
-  radius = 16.0
-  correct_height = 54.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 123
+  doomednum      27
+  dehackednum    123
+  radius         16.0
+  correct_height 54.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_HEADONASTICK
+  states
+  @"
+  Spawn:
+    POL4 A -1
+    stop
+  "@
 }
 
 thingtype SkullsAndCandles 
 {
-  doomednum = 29
-  spawnstate = S_HEADCANDLES
-  radius = 16.0
-  correct_height = 40.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 124
+  doomednum      29
+  dehackednum    124
+  radius         16.0
+  correct_height 40.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_HEADCANDLES
+  states
+  @"
+  Spawn:
+    POL3 A 6 bright
+    POL3 B 6 bright
+    loop
+  "@  
 }
 
 thingtype ImpaledZombieman 
 {
-  doomednum = 25
-  spawnstate = S_DEADSTICK
-  radius = 16.0
-  correct_height = 64.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 125
+  doomednum      25
+  dehackednum    125
+  radius         16.0
+  correct_height 64.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_DEADSTICK
+  states 
+  @"
+  Spawn:
+    POL1 A -1
+    stop
+  "@
 }
 
 thingtype ImpaledZombiemanAlive 
 {
-  doomednum = 26
-  spawnstate = S_LIVESTICK
-  radius = 16.0
-  correct_height = 64.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 126
+  doomednum      26
+  dehackednum    126
+  radius         16.0
+  correct_height 64.0
+  cflags         SOLID|3DDECORATION
+  
+  firstdecoratestate S_LIVESTICK
+  states
+  @"
+  Spawn:
+    POL6 A 6
+    POL6 B 8
+    loop
+  "@
 }
 
 thingtype TreeTanLarge 
 {
-  doomednum = 54
-  spawnstate = S_BIGTREE
-  radius = 32.0
-  correct_height = 124.0
-  cflags = SOLID|3DDECORATION
-  dehackednum = 127
+  doomednum      54
+  dehackednum    127
+  radius         32.0
+  correct_height 124.0
+  cflags         SOLID|3DDECORATION
+
+  firstdecoratestate S_BIGTREE
+  states
+  @"
+  Spawn:
+    TRE2 A -1
+    stop
+  "@
 }
 
 thingtype FlamingBarrel 
 {
-  doomednum = 70
-  spawnstate = S_BBAR1
-  radius = 16.0
-  correct_height = 46.0
-  cflags = SOLID|3DDECORATION
-  acs_spawndata { num = 149; modes = doom }
-  dehackednum = 128
+  doomednum      70
+  dehackednum    128
+  radius         16.0
+  correct_height 46.0
+  cflags         SOLID|3DDECORATION
+  acs_spawndata 
+  {
+    num   149
+    modes doom
+  }
+  
+  firstdecoratestate S_BBAR1
+  states
+  @"
+  Spawn:
+    FCAN ABC 4 bright
+    loop
+  "@
 }
 
 thingtype HangingCorpseNoGuts 
 {
-  doomednum = 73
-  spawnstate = S_HANGNOGUTS
-  radius = 16.0
-  height = 88.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 129
+  doomednum   73
+  dehackednum 129
+  radius      16.0
+  height      88.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_HANGNOGUTS
+  states
+  @"
+  Spawn:
+    HDB1 A -1
+    stop
+  "@
 }
 
 thingtype HangingCorpseNoBrain 
 {
-  doomednum = 74
-  spawnstate = S_HANGBNOBRAIN
-  radius = 16.0
-  height = 88.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 130
+  doomednum   74
+  dehackednum 130
+  radius      16.0
+  height      88.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+
+  firstdecoratestate S_HANGBNOBRAIN
+  states
+  @"
+  Spawn:
+    HDB2 A -1
+    stop
+  "@
 }
 
 thingtype HangingCorpseTop 
 {
-  doomednum = 75
-  spawnstate = S_HANGTLOOKDN
-  radius = 16.0
-  height = 64.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 131
+  doomednum   75
+  dehackednum 131
+  radius      16.0
+  height      64.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_HANGTLOOKDN
+  states
+  @"
+  Spawn:
+    HDB3 A -1
+    stop
+  "@
 }
 
 thingtype HangingCorpseTopBrain 
 {
-  doomednum = 76
-  spawnstate = S_HANGTSKULL
-  radius = 16.0
-  height = 64.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 132
+  doomednum   76
+  dehackednum 132
+  radius      16.0
+  height      64.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+
+  firstdecoratestate S_HANGTSKULL
+  states
+  @"
+  Spawn:
+    HDB4 A -1
+    stop
+  "@
 }
 
 thingtype HangingCorpseTopLookUp 
 {
-  doomednum = 77
-  spawnstate = S_HANGTLOOKUP
-  radius = 16.0
-  height = 64.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 133
+  doomednum   77
+  dehackednum 133
+  radius      16.0
+  height      64.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_HANGTLOOKUP
+  states
+  @"
+  Spawn:
+    HDB5 A -1
+    stop
+  "@
 }
 
 thingtype HangingCorpseTopNoBrain 
 {
-  doomednum = 78
-  spawnstate = S_HANGTNOBRAIN
-  radius = 16.0
-  height = 64.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 134
+  doomednum   78
+  dehackednum 134
+  radius      16.0
+  height      64.0
+  flags       SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_HANGTNOBRAIN
+  states
+  @"
+  Spawn:
+    HDB6 A -1
+    stop
+  "@
 }
 
 thingtype PoolBloodAndGuts 
 {
-  doomednum = 79
-  spawnstate = S_COLONGIBS
-  flags = NOBLOCKMAP
-  acs_spawndata { num = 147; modes = doom }
-  dehackednum = 135
+  doomednum   79
+  dehackednum 135
+  flags       NOBLOCKMAP
+  acs_spawndata
+  {
+    num   147
+    modes doom
+  }
+  
+  firstdecoratestate S_COLONGIBS
+  states
+  @"
+  Spawn:
+    POB1 A -1
+    stop
+  "@
 }
 
 thingtype PoolBlood 
 {
-  doomednum = 80
-  spawnstate = S_SMALLPOOL
-  flags = NOBLOCKMAP
-  acs_spawndata { num = 148; modes = doom }
-  dehackednum = 136
+  doomednum   80
+  dehackednum 136
+  flags       NOBLOCKMAP
+  acs_spawndata
+  {
+    num   148
+    modes doom
+  }
+  
+  firstdecoratestate S_SMALLPOOL
+  states
+  @"
+  Spawn:
+    POB2 A -1
+    stop
+  "@
 }
 
 thingtype PoolBrain 
 {
-  doomednum = 81
-  spawnstate = S_BRAINSTEM
-  flags = NOBLOCKMAP
-  acs_spawndata { num = 150; modes = doom }
-  dehackednum = 137
+  doomednum   81
+  dehackednum 137
+  flags       NOBLOCKMAP
+  acs_spawndata
+  {
+    num   150
+    modes doom
+  }
+  
+  firstdecoratestate S_BRAINSTEM
+  states
+  @"
+  Spawn:
+    BRS1 A -1
+    stop
+  "@
+}
+
+// MBF DOOM-Specific Objects --------------------------------------------------
+
+// Fireballs for Pre-Beta BFG
+
+thingtype MBFBetaPlasma1 
+{
+  dehackednum 141
+  spawnstate  S_PLS1BALL
+  seesound    plasma
+  deathstate  S_PLS1EXP
+  deathsound  firxpl
+  speed       25.0
+  radius      13.0
+  height      8.0
+  damage      4
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS|SPACMISSILE
+  mod         BetaBFG
+}
+
+thingtype MBFBetaPlasma2 
+{
+  dehackednum 142
+  spawnstate  S_PLS2BALL
+  seesound    plasma
+  deathstate  S_PLS2BALLX1
+  deathsound  firxpl
+  speed       25.0
+  radius      6.0
+  height      8.0
+  damage      4
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS|SPACMISSILE
+  mod         BetaBFG
+}
+
+// EE DOOM-Specific Objects ---------------------------------------------------
+
+// Sub-Fireball for Cephaler's Plasma Burst BFG
+
+thingtype EEBetaPlasma3 
+{
+  dehackednum 144
+  spawnstate  S_PLS1BALL
+  deathstate  S_PLS1EXP
+  speed       25.0
+  radius      13.0
+  height      8.0
+  damage      10
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS
+  mod         BFGBurst
 }
 

@@ -1292,7 +1292,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
            seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
    frontc = seg.frontsec->ceilingheight;
-   backc = seg.backsec->ceilingheight;
+   backc  = seg.backsec->ceilingheight;
 
    seg.high  = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
    seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
@@ -1323,11 +1323,11 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       {
          // SoM: Because this is solid, the upper texture can't be assumed to be
          // connecting to any further ceiling flats.
-         seg.high += 1.0f;
+         seg.high  += 1.0f;
          seg.high2 += 1.0f;
       }
 
-      seg.top = seg.high;
+      seg.top  = seg.high;
       seg.top2 = seg.high2;
 
       seg.topstep = seg.highstep;

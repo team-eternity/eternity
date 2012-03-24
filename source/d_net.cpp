@@ -38,6 +38,7 @@
 #include "d_net.h"
 #include "doomstat.h"
 #include "e_player.h"
+#include "e_things.h"
 #include "f_wipe.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -249,7 +250,7 @@ static void GetPackets(void)
                                  players[netconsole].mo->y,
                                  players[netconsole].mo->z + 
                                     GameModeInfo->teleFogHeight,
-                                 GameModeInfo->teleFogType);
+                                 E_SafeThingType(GameModeInfo->teleFogType));
 	      
             tflash->momx = players[netconsole].mo->momx;
             tflash->momy = players[netconsole].mo->momy;
@@ -267,12 +268,10 @@ static void GetPackets(void)
       }
 
       /*
-      // NETCODE_FIXME: bomb out here like it used to do.
-
       // check for a remote game kill
       if(netbuffer->checksum & NCMD_KILL)
       {
-         C_Printf (FC_ERROR"Killed by network driver\n");
+         C_Printf(FC_ERROR "Killed by network driver\n");
          D_QuitNetGame();
       }
       */
@@ -491,9 +490,10 @@ static void D_ArbitrateNetStart(void)
 
    if(doomcom->consoleplayer)
    {
-      usermsg("Listening for network start info...");
+      usermsg("Listening for network start info... (ESC to cancel)");
       while(1)
       {
+         C_Update(); // haleyjd 01/14/12: update the screen
          CheckAbort();
          if(!HGetPacket())
             continue;

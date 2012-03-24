@@ -482,7 +482,13 @@ static bool I_InitGraphicsMode(void)
 // the screen resolution.
 //
 static void I_ResetScreen(void)
-{  
+{
+   int old_disk_icon = disk_icon;
+
+   // [CG] Set disk_icon to 0, so disk reads don't try to flash the disk when
+   //      there is no surface.
+   disk_icon = 0;
+
    // Switch out of old graphics mode
    // haleyjd 10/15/05: WOOPS!
    if(in_graphics_mode)
@@ -495,7 +501,10 @@ static void I_ResetScreen(void)
    // Switch to new graphics mode
    // check for errors -- we may be setting to a different mode instead
    if(I_InitGraphicsMode())
+   {
+      disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
       return;
+   }
    
    // reset other modules
    
@@ -518,6 +527,8 @@ static void I_ResetScreen(void)
    
    // A LOT of heap activity just happened, so check it.
    Z_CheckHeap();
+
+   disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
 }
 
 void I_InitGraphics(void)

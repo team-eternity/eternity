@@ -112,7 +112,7 @@ void QuakeThinker::Think()
 //
 void QuakeThinker::serialize(SaveArchive &arc)
 {
-   PointThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << intensity << duration << quakeRadius << damageRadius;
 }

@@ -86,7 +86,8 @@ extern int mousebstrafe;
 extern int mousebforward;
 extern int viewwidth;
 extern int viewheight;
-extern int mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
+extern double mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
+extern bool mouseSensitivity_vanilla; // [CG] 01/20/12
 extern int leds_always_off;            // killough 3/6/98
 extern int showMessages;
 extern int screenSize;
@@ -157,12 +158,6 @@ default_t defaults[] =
 
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
-
-#ifdef DJGPP
-   // jff 3/4/98 detect # voices
-   DEFAULT_INT("detect_voices", &detect_voices, NULL, 1, 0, 1, default_t::wad_no,
-               "1 enables voice detection prior to calling install sound"),
-#endif
   
    // killough 10/98
    DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
@@ -283,27 +278,32 @@ default_t defaults[] =
    // killough 2/28/98
    DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to disable doubled card and skull key display on status bar"),
-   
-   // haleyjd 05/16/04: restored (see mn_menus.c); changed def. to 0
-   // killough 4/17/98
-   DEFAULT_INT("traditional_menu", &traditional_menu, NULL, 0, 0, 1, default_t::wad_yes,
-               "1 to emulate DOOM's main menu"),
 
    // killough 3/6/98
    DEFAULT_INT("leds_always_off", &leds_always_off, NULL, 0, 0, 1, default_t::wad_no,
                "1 to keep keyboard LEDs turned off"),
 
    //jff 4/3/98 allow unlimited sensitivity
-   DEFAULT_INT("mouse_sensitivity_horiz", &mouseSensitivity_horiz, NULL, 5, 0, UL, default_t::wad_no,
+   DEFAULT_FLOAT("mouse_sensitivity_horiz", &mouseSensitivity_horiz, NULL, 5.0, 0, UL, default_t::wad_no,
                "adjust horizontal (x) mouse sensitivity"),
 
    //jff 4/3/98 allow unlimited sensitivity
-   DEFAULT_INT("mouse_sensitivity_vert", &mouseSensitivity_vert, NULL, 5, 0, UL, default_t::wad_no,
+   DEFAULT_FLOAT("mouse_sensitivity_vert", &mouseSensitivity_vert, NULL, 5.0, 0, UL, default_t::wad_no,
                "adjust vertical (y) mouse sensitivity"),
 
    // SoM
-   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL, 0, 0, 2, default_t::wad_no,
-               "0 for no mouse accel, 1 for linear, 2 for choco-doom"),
+   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL, 0, 0, 3, default_t::wad_no,
+               "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
+
+   // [CG] 01/20/12
+   DEFAULT_BOOL("vanilla_sensitivity", &mouseSensitivity_vanilla, NULL, true, default_t::wad_no,
+                "use vanilla mouse sensitivity values"),
+
+   DEFAULT_INT("mouse_accel_threshold", &mouseAccel_threshold, NULL, 10, 0, UL, default_t::wad_no,
+               "threshold at which to apply mouse acceleration (custom acceleration mode only)"),
+
+   DEFAULT_FLOAT("mouse_accel_value", &mouseAccel_value, NULL, 2.0, 0, UL, default_t::wad_no,
+                 "amount of mouse acceleration to apply (custom acceleration mode only)"),
 
    // haleyjd 10/24/08
    DEFAULT_INT("mouse_novert", &novert, NULL, 0, 0, 1, default_t::wad_no,
@@ -467,9 +467,6 @@ default_t defaults[] =
 
    // TODO/FIXME: make ALL keys dynamically rebindable
 
-   DEFAULT_INT("key_spy", &key_spy, NULL, KEYD_F12, 0, 255, default_t::wad_no,
-               "key to view from another player's vantage"),
-   
    DEFAULT_INT("key_pause", &key_pause, NULL, KEYD_PAUSE, 0, 255, default_t::wad_no,
                "key to pause the game"),
    
@@ -1469,9 +1466,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, basepath, D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 14, userpath, D_DoomExeName());
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", basepath, D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", userpath, D_DoomExeName());
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
@@ -2110,11 +2107,7 @@ void M_ExtractFileBase(const char *path, char *dest)
    while(*src && *src != '.')
    {
       if(length >= 8)
-      {
-         usermsg("M_ExtractFileBase: warning - truncated '%s' to '%.8s'.",
-                 filename, dest);
-         break;
-      }
+         break; // stop at 8
 
       dest[length++] = toupper(*src++);
    }

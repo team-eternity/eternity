@@ -259,7 +259,6 @@ typedef struct missioninfo_s
    int           numEpisodesOR;      // if not    0, overrides number of episodes
    char        **iwadPathOR;         // if not NULL, overrides iwadPath
    finaledata_t *finaleDataOR;       // if not NULL, overrides finaleData
-   menu_t       *mainMenuOR;         // if not NULL, overrides mainMenu
    const char   *menuBackgroundOR;   // if not NULL, overrides menuBackground
    const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
    const char   *consoleBackOR;      // if not NULL, overrides consoleBack
@@ -407,7 +406,6 @@ extern char *gi_path_freedm;
 
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
-void D_InitGameInfo(void);
 void D_InitGMIPostWads(void);
 
 #endif

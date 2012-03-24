@@ -204,7 +204,6 @@ void SDLGL2DVideoDriver::FinishUpdate()
    glEnd();
 
    // push the frame
-   glFinish();
    SDL_GL_SwapBuffers();
 }
 
@@ -507,7 +506,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-   SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,  colordepth);
+   SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   colordepth >= 24 ? 8 : 5);
+   SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, colordepth >= 24 ? 8 : 5);
+   SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  colordepth >= 24 ? 8 : 5);
+   SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, colordepth == 32 ? 8 : 0);
    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, wantvsync ? 1 : 0); // OMG vsync!
 
    // Set GL video mode
@@ -555,7 +557,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-   
+
    // TODO: allow user selection of internal texture format
    glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax, 
                 (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 

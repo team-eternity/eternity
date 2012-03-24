@@ -1111,19 +1111,13 @@ void A_FireBFG(Mobj *actor)
 //
 void A_FireOldBFG(Mobj *mo)
 {
-   static int type1 = -1;
-   static int type2 = -1;
+   int type1 = E_SafeThingType(MT_PLASMA1);
+   int type2 = E_SafeThingType(MT_PLASMA2);
    int type;
    player_t *player = mo->player;
 
    if(!player)
       return;
-
-   if(type1 == -1)
-   {
-      type1 = E_SafeThingType(MT_PLASMA1);
-      type2 = E_SafeThingType(MT_PLASMA2);
-   }
 
    type = type1;
 
@@ -1249,6 +1243,7 @@ void P_BulletSlope(Mobj *mo, TracerContext *tc)
    // haleyjd 08/09/11: allow autoaim disable
    if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
    {
+      trace->aimLineAttack(mo, an, 16*64*FRACUNIT, mask, tc);
       tc->bulletslope = P_PlayerPitchSlope(mo->player);
       return;
    }
@@ -1664,13 +1659,10 @@ void A_BFG11KHit(Mobj *mo)
 //
 void A_BFGBurst(Mobj *mo)
 {
-   int a;
-   angle_t an = 0;
-   Mobj *th;
-   static int plasmaType = -1;
-   
-   if(plasmaType == -1)
-      plasmaType = E_SafeThingType(MT_PLASMA3);
+   int      a;
+   angle_t  an = 0;
+   Mobj    *th;
+   int      plasmaType = E_SafeThingType(MT_PLASMA3);
 
    for(a = 0; a < 40; a++)
    {
@@ -1889,7 +1881,7 @@ void A_FirePlayerMissile(Mobj *actor)
    seek     = !!E_ArgAsKwd(psp->state->args, 1, &seekkwds, 0);
 
    // validate thingtype
-   if(thingnum < 0 || thingnum == NUMMOBJTYPES)
+   if(thingnum < 0 || thingnum == -1)
       return;
 
    // decrement ammo if appropriate

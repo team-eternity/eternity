@@ -68,7 +68,6 @@ void HU_WriteText(const char *s, int x, int y);
 void HU_PlayerMsg(const char *s);
 void HU_CenterMessage(const char *s);
 void HU_CenterMsgTimedColor(const char *s, const char *color, int tics);
-void HU_Erase(void);
 
 #define CROSSHAIRS 3
 extern int crosshairnum;       // 0= none
@@ -81,7 +80,7 @@ extern int  hu_timecolor;
 extern int  hu_levelnamecolor;
 extern int  hu_coordscolor;
 
-extern const char *hud_fontname;
+extern char *hud_fontname;
 
 #endif
 

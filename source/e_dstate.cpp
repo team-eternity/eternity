@@ -351,8 +351,8 @@ typedef struct tkstate_s
    int i;            // index into string
    int tokentype;    // token type, once decided upon
    int tokenerror;   // token error code
-   qstring *line;  // line text
-   qstring *token; // token text
+   qstring *line;    // line text
+   qstring *token;   // token text
 } tkstate_t;
 
 //=============================================================================
@@ -953,7 +953,7 @@ static void doKeyword(pstate_t *ps)
          DSP.numstops++;
 
       // make a keyword object
-      E_AddBufferedState(BUF_KEYWORD, ps->tokenbuffer->getBuffer(), ps->linenum);
+      E_AddBufferedState(BUF_KEYWORD, ps->tokenbuffer->constPtr(), ps->linenum);
    }
    else
    {
@@ -964,12 +964,16 @@ static void doKeyword(pstate_t *ps)
       switch(kwdcode)
       {
       case KWD_WAIT:
-         state->nextstate = DSP.currentstate - 1; // self-referential
-         if(state->tics == 0)
-            state->tics = 1; // eliminate unsafe tics value
+         if(state->decorate)
+         {
+            state->nextstate = DSP.currentstate - 1; // self-referential
+            if(state->tics == 0)
+               state->tics = 1; // eliminate unsafe tics value
+         }
          break;
       case KWD_LOOP:
-         state->nextstate = DSP.lastlabelstate;
+         if(state->decorate)
+            state->nextstate = DSP.lastlabelstate;
          break;
       case KWD_STOP:
          if(DSP.curbufstate->dllObject->type == BUF_LABEL)
@@ -990,7 +994,7 @@ static void doKeyword(pstate_t *ps)
             }
             DSP.curbufstate = link;
          }
-         else
+         else if(state->decorate)
             state->nextstate = NullStateNum; // next state is null state
          break;
       default:
@@ -1064,7 +1068,8 @@ static void doText(pstate_t *ps)
             link->dllObject->linenum == DSP.curbufstate->dllObject->linenum &&
             link->dllObject->type == BUF_STATE)
       {
-         states[statenum]->sprite = sprnum;
+         if(states[statenum]->decorate)
+            states[statenum]->sprite = sprnum;
          link = link->dllNext;
          ++statenum;
       }
@@ -1268,19 +1273,22 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          {
             char c = toupper(ps->tokenbuffer->charAt(stridx));
 
-            states[statenum]->frame = c - 'A';
-
-            if(states[statenum]->frame < 0 || states[statenum]->frame > 28)
+            if(states[statenum]->decorate)
             {
-               E_EDFLoggedWarning(2,
-                  "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
-                  DSP.curbufstate->dllObject->linenum, c);
-               ps->error = true;
-               return;
-            }
+               states[statenum]->frame = c - 'A';
 
-            if(statenum != NUMSTATES - 1)
-               states[statenum]->nextstate = statenum + 1;
+               if(states[statenum]->frame < 0 || states[statenum]->frame > 28)
+               {
+                  E_EDFLoggedWarning(2,
+                     "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
+                     DSP.curbufstate->dllObject->linenum, c);
+                  ps->error = true;
+                  return;
+               }
+
+               if(statenum != NUMSTATES - 1)
+                  states[statenum]->nextstate = statenum + 1;
+            }
 
             ++statenum; // move forward one state in states[]
             ++stridx;   // move forward one char in the qstring
@@ -1317,10 +1325,13 @@ static void DoPSNeedStateTics(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            states[statenum]->tics = tics;
+            if(states[statenum]->decorate)
+            {
+               states[statenum]->tics = tics;
 
-            if(states[statenum]->tics < -1)
-               states[statenum]->tics = -1;
+               if(states[statenum]->tics < -1)
+                  states[statenum]->tics = -1;
+            }
 
             ++statenum;             // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
@@ -1357,7 +1368,8 @@ static void doAction(pstate_t *ps, const char *fn)
       while(link && link->dllObject->type == BUF_STATE && 
             link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
       {
-         states[statenum]->action = ptr->cptr;
+         if(states[statenum]->decorate)
+            states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
 
          ++statenum;           // move forward one state in states[]
          link = link->dllNext; // move forward one buffered state
@@ -1405,9 +1417,10 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            states[statenum]->frame |= FF_FULLBRIGHT;
+            if(states[statenum]->decorate)
+               states[statenum]->frame |= FF_FULLBRIGHT;
 
-            ++statenum;             // move forward one state in states[]
+            ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
          }
       }
@@ -1472,7 +1485,8 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            E_CreateArgList(states[statenum]);
+            if(states[statenum]->decorate)
+               E_CreateArgList(states[statenum]);
 
             ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
@@ -1510,7 +1524,8 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
+            if(states[statenum]->decorate)
+               E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
@@ -1580,7 +1595,8 @@ static void DoPSNeedStateArg(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
+            if(states[statenum]->decorate)
+               E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
@@ -1748,10 +1764,40 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
 //
 // Looks for simple errors in the principals.
 //
-static bool E_checkPrincipalSemantics(void)
+static bool E_checkPrincipalSemantics(const char *firststate)
 {
    DLListItem<estatebuf_t> *link = DSP.statebuffer; 
    estatebuf_t *prev = NULL;
+
+   // Trying to use a pre-defined set of states. Certain conditions must be met:
+   // * The state being named must exist.
+   // * firststatenum + numdecstates should be <= NUMSTATES.
+   // * numgotostates must be zero.
+   if(firststate)
+   {
+      int firststatenum = E_StateNumForName(firststate);
+
+      if(firststatenum < 0)
+      {
+         E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: firstdecoratestate "
+                               "of parent object is invalid\n");
+         return false;
+      }
+      if(firststatenum + DSP.numdecstates > NUMSTATES)
+      {
+         E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: not enough states "
+                               "reserved after firstdecoratestate of parent "
+                               "object\n");
+         return false;
+      }
+      if(DSP.numgotostates > 0)
+      {
+         E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: implicit goto states "
+                               "are incompatible with firstdecoratestate "
+                               "specification in parent object\n");
+         return false;
+      }
+   }
 
    // Empty? No way bub. Not gonna deal with it.
    if(!link)
@@ -1819,18 +1865,18 @@ static bool E_checkPrincipalSemantics(void)
 //
 // Counts and allocates labels, states, etc.
 //
-static edecstateout_t *E_DecoratePrincipals(const char *input)
+static edecstateout_t *E_DecoratePrincipals(const char *input, const char *firststate)
 {
    edecstateout_t *newdso = NULL;
    int totalstates;
-
+   
    // Parse for principals (basic grammatic acceptance/rejection,
    // counting objects, recording some basic information).
    if(!E_parseDecorateInternal(input, true))
       return NULL;
 
    // Run basic semantic checks
-   if(!E_checkPrincipalSemantics())
+   if(!E_checkPrincipalSemantics(firststate))
       return NULL;
 
    // Create the DSO object
@@ -1843,28 +1889,35 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
 
    if(totalstates)
    {
-      state_t *newstates = NULL;
-      int i;
-
       // Record the index of the first state added into globals
-      DSP.firststate = DSP.currentstate = NUMSTATES;
+      if(firststate)
+         DSP.firststate = DSP.currentstate = E_StateNumForName(firststate);
+      else
+         DSP.firststate = DSP.currentstate = NUMSTATES;
 
-      // Add the requisite number of pointers to the states array
-      E_ReallocStates(totalstates);
-
-      // Allocate the new states as a block
-      newstates = estructalloc(state_t, totalstates);
-
-      // Initialize states
-      for(i = DSP.firststate; i < NUMSTATES; ++i)
+      // if not using reserved states, create new ones
+      if(!firststate)
       {
-         states[i] = &newstates[i - DSP.firststate];
-         states[i]->index = i;
-         psnprintf(states[i]->namebuf, 41, "{DS %d}", i);
-         states[i]->name = states[i]->namebuf;
-         states[i]->dehnum = -1;
-         states[i]->sprite = blankSpriteNum;
-         states[i]->nextstate = NullStateNum;
+         state_t *newstates = NULL;
+
+         // Add the required number of pointers to the states array
+         E_ReallocStates(totalstates);
+
+         // Allocate the new states as a block
+         newstates = estructalloc(state_t, totalstates);
+
+         // Initialize states
+         for(int i = DSP.firststate; i < NUMSTATES; i++)
+         {
+            states[i] = &newstates[i - DSP.firststate];
+            states[i]->index = i;
+            states[i]->name = ecalloc(char *, 1, 40);
+            psnprintf(states[i]->name, 40, "{DS %d}", i);         
+            states[i]->dehnum = -1;
+            states[i]->sprite = blankSpriteNum;
+            states[i]->nextstate = NullStateNum;
+            states[i]->decorate = true;
+         }
       }
    }
 
@@ -1882,7 +1935,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
       newdso->numgotosalloc = DSP.numgotos;
 
       // also allocate the internal goto list for the internal relocation pass
-      DSP.internalgotos = ecalloc(internalgoto_t *, DSP.numgotos, sizeof(*DSP.internalgotos));
+      DSP.internalgotos = estructalloc(internalgoto_t, DSP.numgotos);
       DSP.numinternalgotos = 0;
       DSP.numinternalgotosalloc = DSP.numgotos;
    }
@@ -1941,6 +1994,10 @@ static bool E_resolveGotos(edecstateout_t *dso)
          if(!strcasecmp(gotoInfo->gotodest, ds->label))
          {
             foundmatch = true;
+
+            if(!states[igt->state]->decorate)
+               continue;
+
             states[igt->state]->nextstate = ds->state->index;
 
             // apply offset if any
@@ -1963,7 +2020,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
       } // end for
 
       // no match? generate a goto in the DSO
-      if(!foundmatch)
+      if(!foundmatch && states[igt->state]->decorate)
       {
          egoto_t *egoto   = &(dso->gotos[dso->numgotos]);
          egoto->label     = estrdup(gotoInfo->gotodest);
@@ -2029,7 +2086,7 @@ static void E_freeDecorateData(void)
 // * A list of gotos that need external resolution
 // * A list of states to remove from the object
 //
-edecstateout_t *E_ParseDecorateStates(const char *input)
+edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate)
 {
    edecstateout_t *dso = NULL;
    bool isgood = false;
@@ -2039,7 +2096,7 @@ edecstateout_t *E_ParseDecorateStates(const char *input)
    DSP.firststate = DSP.currentstate = DSP.lastlabelstate = NullStateNum;
 
    // parse for principals
-   if(!(dso = E_DecoratePrincipals(input)))
+   if(!(dso = E_DecoratePrincipals(input, firststate)))
       return NULL;
 
    // do main pass

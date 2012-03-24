@@ -44,6 +44,7 @@
 #include "mn_engin.h"
 #include "p_info.h"
 #include "p_skin.h"
+#include "r_draw.h"
 #include "r_patch.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -81,7 +82,7 @@ static void F_InitDemonScroller(void);
 static byte *DemonBuffer; // haleyjd 08/23/02
 
 vfont_t *f_font;
-const char *f_fontname;
+char *f_fontname;
 
 //
 // F_Init
@@ -392,12 +393,12 @@ void F_StartCast(void)
    for(i = 0; i < OLDCASTMAX && i < max_castorder; ++i)
    {
       if(!castorder[i].name)
-         castorder[i].name = DEH_String(oldnames[i]);
+         castorder[i].name = estrdup(DEH_String(oldnames[i]));
    }
 
    wipegamestate = GS_NOSTATE;         // force a screen wipe
    castnum = 0;
-   caststate = states[mobjinfo[castorder[castnum].type].seestate];
+   caststate = states[mobjinfo[castorder[castnum].type]->seestate];
    casttics = caststate->tics;
    castdeath = false;
    finalestage = 2;    
@@ -425,8 +426,8 @@ void F_CastTicker(void)
       castdeath = false;
       if(castorder[castnum].name == NULL)
          castnum = 0;
-      S_StartSound(NULL, mobjinfo[castorder[castnum].type].seesound);
-      caststate = states[mobjinfo[castorder[castnum].type].seestate];
+      S_StartSound(NULL, mobjinfo[castorder[castnum].type]->seesound);
+      caststate = states[mobjinfo[castorder[castnum].type]->seestate];
       castframes = 0;
    }
    else
@@ -438,7 +439,7 @@ void F_CastTicker(void)
       //   goto stopattack;    // Oh, gross hack!
 
       int i;
-      int statenum = mobjinfo[castorder[castnum].type].missilestate;
+      int statenum = mobjinfo[castorder[castnum].type]->missilestate;
 
       if(caststate == states[statenum] && castorder[castnum].stopattack)
          goto stopattack; // not quite as hackish as it used to be
@@ -468,9 +469,9 @@ void F_CastTicker(void)
       // go into attack frame
       castattacking = true;
       if(castonmelee)
-         caststate = states[(stnum = mobjinfo[castorder[castnum].type].meleestate)];
+         caststate = states[(stnum = mobjinfo[castorder[castnum].type]->meleestate)];
       else
-         caststate = states[(stnum = mobjinfo[castorder[castnum].type].missilestate)];
+         caststate = states[(stnum = mobjinfo[castorder[castnum].type]->missilestate)];
 
       castonmelee ^= 1;
 
@@ -478,10 +479,10 @@ void F_CastTicker(void)
       {
          if(castonmelee)
             caststate =
-             states[(stnum = mobjinfo[castorder[castnum].type].meleestate)];
+             states[(stnum = mobjinfo[castorder[castnum].type]->meleestate)];
          else
             caststate =
-             states[(stnum = mobjinfo[castorder[castnum].type].missilestate)];
+             states[(stnum = mobjinfo[castorder[castnum].type]->missilestate)];
       }
 
       // haleyjd 07/04/04: check for sounds matching the missile or
@@ -502,12 +503,12 @@ void F_CastTicker(void)
    if(castattacking)
    {
       if(castframes == 24 ||
-         caststate == states[mobjinfo[castorder[castnum].type].seestate])
+         caststate == states[mobjinfo[castorder[castnum].type]->seestate])
       {
       stopattack:
          castattacking = false;
          castframes = 0;
-         caststate = states[mobjinfo[castorder[castnum].type].seestate];
+         caststate = states[mobjinfo[castorder[castnum].type]->seestate];
       }
    }
       
@@ -530,17 +531,17 @@ bool F_CastResponder(event_t* ev)
    
    // go into death frame
    castdeath  = true;
-   caststate  = states[mobjinfo[castorder[castnum].type].deathstate];
+   caststate  = states[mobjinfo[castorder[castnum].type]->deathstate];
    casttics   = caststate->tics;
    castframes = 0;
    castattacking = false;
-   if(mobjinfo[castorder[castnum].type].deathsound)
+   if(mobjinfo[castorder[castnum].type]->deathsound)
    {
       if(castorder[castnum].type == players[consoleplayer].pclass->type)
          S_StartSoundName(NULL, 
             players[consoleplayer].skin->sounds[sk_pldeth]);
       else
-         S_StartSound(NULL, mobjinfo[castorder[castnum].type].deathsound);
+         S_StartSound(NULL, mobjinfo[castorder[castnum].type]->deathsound);
    }
    
    return true;
@@ -566,30 +567,39 @@ void F_CastPrint(const char *text)
 //
 void F_CastDrawer(void)
 {
-   spritenum_t         altsprite;
-   spritedef_t*        sprdef;
-   spriteframe_t*      sprframe;
-   int                 lump;
-   bool                flip;
-   patch_t*            patch;
+   spritedef_t   *sprdef;
+   spriteframe_t *sprframe;
+   int            lump;
+   bool           flip;
+   patch_t       *patch;
+   byte          *translate = NULL;
+   castinfo_t    *cast    = &castorder[castnum];
+   mobjinfo_t    *mi      =  mobjinfo[cast->type];
+   player_t      *cplayer = &players[consoleplayer];
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
    V_DrawPatch(0, 0, &vbscreen, 
                PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
    
-   F_CastPrint(castorder[castnum].name);
+   if(cast->name)
+      F_CastPrint(cast->name);
    
    // draw the current frame in the middle of the screen
    sprdef = sprites + caststate->sprite;
    
    // override for alternate monster sprite?
-   if((altsprite = mobjinfo[castorder[castnum].type].altsprite) != -1)
-      sprdef = &sprites[altsprite];
+   if(mi->altsprite != -1)
+      sprdef = &sprites[mi->altsprite];
    
    // override for player skin?
-   if(castorder[castnum].type == players[consoleplayer].pclass->type)
-      sprdef = &sprites[players[consoleplayer].skin->sprite];
+   if(cast->type == cplayer->pclass->type)
+   {
+      int colormap = cplayer->colormap;
+      
+      sprdef    = &sprites[cplayer->skin->sprite];
+      translate = colormap ? translationtables[colormap - 1] : NULL;
+   }
    
    // haleyjd 08/15/02
    if(!(sprdef->spriteframes))
@@ -600,10 +610,8 @@ void F_CastDrawer(void)
    flip = !!sprframe->flip[0];
    
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   if(flip)
-      V_DrawPatchFlipped(160, 170, &vbscreen, patch);
-   else
-      V_DrawPatch(160, 170, &vbscreen, patch);
+   
+   V_DrawPatchTranslated(160, 170, &vbscreen, patch, translate, flip);      
 }
 
 //

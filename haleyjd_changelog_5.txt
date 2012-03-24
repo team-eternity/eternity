@@ -2,6 +2,113 @@
 Changes since Eternity Engine v3.40.15
 ================================================================================
 --------------------------------------------------------------------------------
+12/24/11
+
+I am gearing up for a Christmas release of EE 3.40.20, which is codenamed
+"Mjolnir" for the great hammer of the Norse Æsir god Thor, son of Odin, which 
+could cleave the earth and cause lightning to strike with every blow.
+
+In order to deliver sufficient value in the new release, I have completed
+another music related feature: support for "hi-def" music packs. A prerequisite
+to allowing this was to go further along the path earlier taken in converting
+the WAD system into a real virtual filesystem by allowing lumps to represent
+physical filesystem files that do not have to remain open constantly and by
+adding the ability to recursively add physical disk directories/folders into the
+WAD directory as if they were a WAD or PK3.
+
+To activate hi-def music support, the s_hidefmusic cvar must be set to true
+first (note that this cvar can be changed at runtime, but won't take effect
+until the next time the game is started up). Then, music of any SDL_mixer-
+supported format can be placed into a "music" subdirectory under the target
+game's base folder, as such:
+
+HD music for DOOM would go in base/doom/music
+HD music for Heretic would go in base/heretic/music
+etc.
+
+MP3 is heavily disrecommended for use, unfortunately, because the smpeg decoder
+library included with SDL_mixer for this purpose is highly unstable. I would
+recommend use of OGG format music when possible. The existing JHeretic and
+JHexen HD music packs happen to be in OGG format already. I do not know if there
+are corresponding packages for DOOM/DOOM II yet...
+
+--------------------------------------------------------------------------------
+12/22/11
+
+Map music definitions can now be loaded from Hexen SNDINFO lumps, and that means
+that Hexen now has functional music when loaded as a PWAD over DOOM II or 
+Heretic! Yet another important milestone on the road to support.
+
+Note that SNDINFO music definitions, which are deprecated in ZDoom, are probably
+best discouraged for future use by new mods. At any rate, they are considered
+higher priority than any built-in default music name for a map, even if said
+name is BEX-modified, but are considered lower priority than any music name
+defined for the map by a MapInfo entry.
+
+--------------------------------------------------------------------------------
+12/17/11
+
+Yet more estructalloc usage has been propagated, particularly in the dynasegs
+code and in the DECORATE state parser.
+
+printz found yet another issue with improper case sensitivity in the DECORATE
+state parser, again a result of qstring refactoring - this time it was the
+comparison of the current token value with "goto" when determining if the
+current token is a keyword. I just had to replace the == operator call with a
+proper call to qstring::strCaseCmp.
+
+--------------------------------------------------------------------------------
+12/03/11
+
+Getting EE to run on Win95 again did have one positive result in that it lead to
+discovery of a compiler glitch in Visual Studio 2005 relating to inline 
+assembler and/or the CDQ instruction - wtfever the problem actually is, the 
+result is that the player would wall-slide backwards, due to incorrect answers
+being returned from D_abs.
+
+Because of this, I've decided it's just easier to eliminate the MSVC++-only
+inline assembler version of D_abs and let the compiler inline the C version
+wherever it feels there's an advantage to doing so. GCC builds still use a
+different version of the routine that is written as a statement expression,
+which is a GNU extension to C/C++.
+
+--------------------------------------------------------------------------------
+11/28/11
+
+DavidPH suggested a modification to EHashTable that allows me to pass the 
+pointer-to-members that it needs into the template instead of as parameters to
+the constructor. It almost doesn't seem like it ought to work until you realize
+that member pointers in C++ are compile-time constants ;)
+
+--------------------------------------------------------------------------------
+11/27/11
+
+I got the Visual Studio 2005 project updated, and somehow let ConSiGno talk me
+into trying to get that build to run under Windows 95, which, after a hell of a
+lot of pain, I did manage. The 2005 build is also now optimized to nearly the
+same degree as the 2008 release.
+
+--------------------------------------------------------------------------------
+11/26/11
+
+Added the hal/i_platform.cpp module, which contains a number of preprocessor
+defines that make testing parameters of the compilation environment (compiler,
+target operating system, etc.) easier to deal with.
+
+DavidPH has fixed up the CMake scripts, including removing the code that results
+in the libpng and zlib test programs attempting to build on Linux-alikes.
+
+-cdrom mode has finally been completely removed, as I got tired of the 
+unpredictable prototype of the mkdir function, even between different versions
+of GCC.
+
+--------------------------------------------------------------------------------
+11/02/11
+
+Converted some more calls to ecalloc into estructalloc. This will be going on
+for quite some time.
+
+--------------------------------------------------------------------------------
 10/28/11
 
 Added GNUlib's Knuth-Morris-Pratt implementation of strcasestr as M_StrCaseStr,

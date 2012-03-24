@@ -79,6 +79,8 @@ enum
    SEQ_ENVIRONMENT, // for use by scripted ambience
 };
 
+union seqcmd_t;
+
 // haleyjd 06/04/06: EDF sound sequences
 struct ESoundSeq_t
 {
@@ -88,7 +90,7 @@ struct ESoundSeq_t
    int type;                     // type of sequence (see above enum)
    char name[129];               // mnemonic
 
-   union seqcmd_s *commands;     // the compiled commands
+   seqcmd_t *commands;           // the compiled commands
 
    bool randvol;                 // use random starting volume?
    int volume;                   // starting volume (or max vol if randomized)

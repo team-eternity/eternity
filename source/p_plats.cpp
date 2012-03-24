@@ -55,7 +55,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
    if(s->sndSeqID >= 0)
       S_StartSectorSequence(s, SEQ_PLAT);
    else
-      S_StartSectorSequenceName(s, seqname, false);
+      S_StartSectorSequenceName(s, seqname, SEQ_ORIGIN_SECTOR_F);
 }
 
 IMPLEMENT_THINKER_TYPE(PlatThinker)
@@ -95,7 +95,7 @@ void PlatThinker::Think()
       {
          if(res == pastdest) // end of stroke
          {
-            S_StopSectorSequence(this->sector, false); // haleyjd
+            S_StopSectorSequence(this->sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
 
             // if not an instant toggle type, wait, make plat stop sound
             if(this->type != toggleUpDn)
@@ -144,7 +144,7 @@ void PlatThinker::Think()
       }
       else if(res == pastdest)
       {
-         S_StopSectorSequence(this->sector, false); // haleyjd
+         S_StopSectorSequence(this->sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
          if(this->type!=toggleUpDn) //jff 3/14/98 toggle up down
@@ -206,7 +206,7 @@ void PlatThinker::Think()
 //
 void PlatThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << speed << low << high << wait << count << status << oldstatus
        << crush << tag << type;

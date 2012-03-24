@@ -39,24 +39,25 @@
 // links to traverse through.
 //
 // Provide the template the primary type of object to be stored in T, and the
-// type of HashKey object being used in K (see e_hashkeys.h for some basic key 
-// object types that implement the required interface).
+// type of HashKey class being used in K (see e_hashkeys.h for some basic key 
+// class types that implement the required interface).
 //
 // Pass the pointer-to-member from the contained type for the key and the
 // link (must be a DLListItem<T>). The hash table uses these pointer-to-
 // members on all the objects in the hash so that it can manipulate the
 // objects without knowing anything else about their type or layout.
 //
-template<typename T, typename K, K T::* hashKey, DLListItem<T> T::* linkPtr> 
+template<typename item_type, typename key_type, 
+         typename key_type::basic_type const item_type::* hashKey, 
+         DLListItem<item_type> item_type::* linkPtr>
 class EHashTable
 {
 public:
-   typedef T              item_type;    // Type of item this hashtable can hold
-   typedef K              key_type;     // Type of key marshalling object
-   typedef DLListItem<T>  link_type;    // Type of linked list item
+   typedef DLListItem<item_type> link_type;    // Type of linked list item
    
    // Type of key's basic data member
    typedef typename key_type::basic_type basic_key_type; 
+   typedef typename key_type::param_type param_key_type;
 
 protected:
    link_type    **chains;      // hash chains
@@ -78,6 +79,13 @@ public:
    {
    }
 
+   EHashTable(unsigned int pNumChains)
+      : chains(NULL), isInit(false), numChains(0), numItems(0),
+        loadFactor(0.0f), iteratorPos(-1)
+   {
+      initialize(pNumChains);
+   }
+
    // Basic accessors
    int   isInitialized() const { return isInit;     }
    float getLoadFactor() const { return loadFactor; }
@@ -86,28 +94,31 @@ public:
    unsigned int getNumChains() const { return numChains; }
 
    // 
-   // Initialize
+   // initialize
    //
    // Initializes a hash table. This is currently done here rather than in the
    // constructor primarily because EHashTables are generally global objects,
    // and therefore they cannot safely call Z_Malloc during C++ init. I'd rather
    // this move to the constructor eventually.
    //
-   void Initialize(unsigned int pNumChains)
+   void initialize(unsigned int pNumChains)
    {
-      numChains = pNumChains;
-      chains    = ecalloc(link_type **, numChains, sizeof(link_type *));
-      isInit    = true;
+      if(!isInit)
+      {
+         numChains = pNumChains;
+         chains    = ecalloc(link_type **, numChains, sizeof(link_type *));
+         isInit    = true;
+      }
    }
 
    //
-   // Destroy
+   // destroy
    //
    // Frees the hash table's chains. Again this would be better in the 
    // destructor, but it should remain here until/unless initialization is moved
    // into the constructor, so it remains balanced.
    //
-   void Destroy()
+   void destroy()
    {
       if(chains)
          efree(chains);
@@ -127,17 +138,17 @@ public:
    //
    void addObject(item_type &object)
    {
-      if(isInit)
-      {
-         link_type &link = object.*linkPtr;
-         link.dllData    = (object.*hashKey).hashCode();
-         unsigned int hc = link.dllData % numChains;
+      if(!isInit)
+         initialize(127);
 
-         link.insert(&object, &chains[hc]);
+      link_type &link = object.*linkPtr;
+      link.dllData    = key_type::HashCode(object.*hashKey);
+      unsigned int hc = link.dllData % numChains;
 
-         ++numItems;
-         calcLoadFactor();
-      }
+      link.insert(&object, &chains[hc]);
+
+      ++numItems;
+      calcLoadFactor();
    }
 
    // Convenience overload for pointers
@@ -167,17 +178,18 @@ public:
    //
    // objectForKey(key_type&)
    //
-   // Tries to find an object for the given key in the hash table. This version
-   // takes a reference to an object of the key type passed into the template.
+   // Tries to find an object for the given key in the hash table. 
+   // Takes an argument of the key object type's basic_type typedef. 
+   // ie., an int, const char *, etc.
    //
-   item_type *objectForKey(const key_type &key) const
+   item_type *objectForKey(param_key_type key) const
    {
       if(isInit)
       {
-         unsigned int hc  = key.hashCode() % numChains;
+         unsigned int hc  = key_type::HashCode(key) % numChains;
          link_type *chain = chains[hc];
 
-         while(chain && chain->dllObject->*hashKey != key)
+         while(chain && !key_type::Compare(chain->dllObject->*hashKey, key))
             chain = chain->dllNext;
 
          return chain ? chain->dllObject : NULL;
@@ -187,52 +199,23 @@ public:
    }
 
    //
-   // objectForKey(basic_key_type)
-   //
-   // As above, but taking an argument of the key object type's basic_type 
-   // typedef. ie., an int, const char *, etc. This is useful for passing in
-   // literals without having to manually construct a temporary object at
-   // every point of call.
-   //
-   item_type *objectForKey(basic_key_type key) const
-   {
-      key_type tempKey;
-      tempKey = key;
-
-      return objectForKey(tempKey);
-   }
-
-   //
    // chainForKey(key_type&)
    //
    // Returns the first object on the hash chain used by the given key, or NULL
    // if that hash chain is empty. The object returned does not necessarily 
    // match the given key.
    //
-   item_type *chainForKey(const key_type &key) const
+   item_type *chainForKey(param_key_type key) const
    {
       if(isInit)
       {
-         unsigned int hc  = key.hashCode() % numChains;
+         unsigned int hc  = key_type::HashCode(key) % numChains;
          link_type *chain = chains[hc];
 
          return chain ? chain->dllObject : NULL;
       }
       else
          return NULL;
-   }
-
-   //
-   // chainForKey(basic_key_type)
-   //
-   // As above but allowing literal key input, as with objectForKey.
-   //
-   item_type *chainForKey(basic_key_type key) const
-   {
-      key_type tempKey;
-      tempKey = key;
-
-      return chainForKey(tempKey);
    }
 
    //
@@ -258,9 +241,9 @@ public:
    //
    // Retrieves a key from an object in the hash table.
    //
-   key_type &keyForObject(T *object) const
+   basic_key_type keyForObject(item_type *object) const
    {
-      return isInit ? object->*hashKey : NULL;
+      return object->*hashKey;
    }
 
    //
@@ -270,7 +253,7 @@ public:
    // same key. If passed NULL in object, it will start a new search.
    // Returns NULL when the search has reached the end of the hash chain.
    //
-   item_type *keyIterator(item_type *object, const key_type &key)
+   item_type *keyIterator(item_type *object, param_key_type key)
    {
       item_type *ret;
 
@@ -287,21 +270,13 @@ public:
          link = link->dllNext;
 
          // walk down the chain
-         while(link && link->dllObject->*hashKey != key)
+         while(link && !key_type::Compare(link->dllObject->*hashKey, key))
             link = link->dllNext;
 
          ret = link ? link->dllObject : NULL;
       }
 
       return ret;
-   }
-
-   item_type *keyIterator(item_type *object, basic_key_type key)
-   {
-      key_type tempKey;
-      tempKey = key;
-
-      return keyIterator(object, tempKey);
    }
 
    //
@@ -343,12 +318,12 @@ public:
    }
 
    //
-   // Rebuild
+   // rebuild
    //
    // Rehashes all objects in the table, in the event that the load factor has
    // exceeded acceptable levels. Rehashing policy is determined by user code.
    //
-   void Rebuild(unsigned int newNumChains)
+   void rebuild(unsigned int newNumChains)
    {
       link_type    **oldchains    = chains;    // save current chains
       unsigned int   oldNumChains = numChains;

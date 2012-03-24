@@ -34,6 +34,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_dehtbl.h"     // for D_HashTableKey
 #include "i_system.h"
 #include "m_qstr.h"
 #include "m_misc.h"       // for M_Strupr/M_Strlwr
@@ -148,9 +149,10 @@ void qstring::freeBuffer()
 // Indexing function to access a character in a qstring. This is slower but 
 // more secure than using qstring::getBuffer with array indexing.
 //
-char qstring::charAt(size_t idx)
+char qstring::charAt(size_t idx) const
 {
-   checkBuffer();
+   if(!buffer)
+      return '\0';
 
    if(idx >= size)
       I_Error("qstring::charAt: index out of range\n");
@@ -286,13 +288,16 @@ qstring &qstring::Delc()
 //
 qstring &qstring::concat(const char *str)
 {
-   unsigned int cursize = size;
-   unsigned int newsize = index + strlen(str) + 1;
+   if(!buffer)
+      initCreateSize(strlen(str) + 1);
+   else
+   {
+      unsigned int cursize = size;
+      unsigned int newsize = index + strlen(str) + 1;
 
-   checkBuffer();
-   
-   if(newsize > cursize)
-      grow(newsize - cursize);
+      if(newsize > cursize)
+         grow(newsize - cursize);
+   }
 
    strcat(buffer, str);
 
@@ -342,7 +347,7 @@ qstring &qstring::insert(const char *insertstr, size_t pos)
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize = index + insertstrlen + 1;
+   size_t totalsize    = index + insertstrlen + 1;; 
    
    if(!buffer)
       initCreateSize(totalsize);
@@ -375,7 +380,8 @@ qstring &qstring::insert(const char *insertstr, size_t pos)
 //
 qstring &qstring::copy(const char *str)
 {
-   clear();
+   if(index > 0)
+      clear();
    
    return concat(str);
 }
@@ -387,7 +393,8 @@ qstring &qstring::copy(const char *str)
 //
 qstring &qstring::copy(const qstring &src)
 {
-   clear();
+   if(index > 0)
+      clear();
 
    return concat(src);
 }
@@ -406,11 +413,11 @@ qstring &qstring::operator = (const qstring &other)
 // qstring::operator =
 //
 // Assignment from a const char *
+//
 qstring &qstring::operator = (const char *other)
 {
    return copy(other);
 }
-
 
 //
 // qstring::copyInto
@@ -429,7 +436,8 @@ char *qstring::copyInto(char *dest, size_t pSize) const
 //
 qstring &qstring::copyInto(qstring &dest) const
 {
-   dest.clear();
+   if(dest.index > 0)
+      dest.clear();
    
    return dest.concat(*this);
 }
@@ -441,27 +449,29 @@ qstring &qstring::copyInto(qstring &dest) const
 //
 void qstring::swapWith(qstring &str2)
 {
-   qstring temp;
-   
-   temp.buffer = this->buffer; // make a shallow copy
-   temp.size   = this->size;
-   temp.index  = this->index;
+   char   *tmpbuffer;
+   size_t  tmpsize;
+   size_t  tmpindex;
+
+   tmpbuffer = this->buffer; // make a shallow copy
+   tmpsize   = this->size;
+   tmpindex  = this->index;
 
    this->buffer = str2.buffer;
    this->size   = str2.size;
    this->index  = str2.index;
 
-   str2.buffer = temp.buffer;
-   str2.size   = temp.size;
-   str2.index  = temp.index;
+   str2.buffer = tmpbuffer;
+   str2.size   = tmpsize;
+   str2.index  = tmpindex;
 }
 
 //
-// qstring::LStrip
+// qstring::lstrip
 //
 // Removes occurrences of a specified character at the beginning of a qstring.
 //
-qstring &qstring::LStrip(char c)
+qstring &qstring::lstrip(char c)
 {
    size_t i   = 0;
    size_t len = index;
@@ -487,11 +497,11 @@ qstring &qstring::LStrip(char c)
 }
 
 //
-// qstring::RStrip
+// qstring::rstrip
 //
 // Removes occurrences of a specified character at the end of a qstring.
 //
-qstring &qstring::RStrip(char c)
+qstring &qstring::rstrip(char c)
 {
    checkBuffer();
 
@@ -623,6 +633,57 @@ bool qstring::operator != (const char *other) const
 bool qstring::operator != (const qstring &other) const
 {
    return strcmp(buffer ? buffer : "", other.buffer) != 0;
+}
+
+//=============================================================================
+//
+// Hash Code Functions
+//
+// These are just convenience wrappers.
+//
+
+//
+// qstring::HashCodeStatic
+//
+// Static version, for convenience and so that the convention of hashing a
+// null pointer to 0 hash code is enforceable without special checks, even
+// if the thing being hashed isn't a qstring instance.
+//
+unsigned int qstring::HashCodeStatic(const char *str)
+{
+   return D_HashTableKey(str ? str : "");
+}
+
+//
+// qstring::HashCodeCaseStatic
+//
+// As above, but with case sensitivity.
+//
+unsigned int qstring::HashCodeCaseStatic(const char *str)
+{
+   return D_HashTableKeyCase(str ? str : "");
+}
+
+//
+// qstring::hashCode
+//
+// Calls the standard D_HashTableKey that is used for the vast majority of
+// string hash code computations in Eternity.
+//
+unsigned int qstring::hashCode() const
+{
+   return HashCodeStatic(buffer);
+}
+
+//
+// qstring::hashCodeCase
+//
+// Returns a hash code computed with the case of characters being treated as
+// relevant to the computation.
+//
+unsigned int qstring::hashCodeCase() const
+{
+   return HashCodeCaseStatic(buffer);
 }
 
 //=============================================================================
@@ -786,7 +847,7 @@ double qstring::toDouble(char **endptr)
 //
 char *qstring::duplicate(int tag) const
 {
-   return (char *)Z_Strdup(buffer ? buffer : "", tag, NULL);
+   return Z_Strdup(buffer ? buffer : "", tag, NULL);
 }
 
 //
@@ -797,7 +858,7 @@ char *qstring::duplicate(int tag) const
 //
 char *qstring::duplicateAuto() const
 {
-   return (char *)Z_Strdupa(buffer ? buffer : "");
+   return Z_Strdupa(buffer ? buffer : "");
 }
 
 //=============================================================================
@@ -954,9 +1015,14 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
 {
    va_list va2;
    int returnval;
+   size_t fmtsize = strlen(fmt) + 1;
 
    if(maxlen)
    {
+      // If format string is longer than max specified, use format string len
+      if(fmtsize > maxlen)
+         maxlen = fmtsize;
+
       // maxlen is specified. Check it against the qstring's current size.
       if(maxlen > size)
          createSize(maxlen);
@@ -966,15 +1032,15 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
    else
    {
       // determine a worst-case size by parsing the fmt string
-      va_list va1;                     // args
-      char c;                          // current character
-      const char *s = fmt;             // pointer into format string
-      bool pctstate = false;           // seen a percentage?
-      int dummyint;                    // dummy vars just to get args
+      va_list va1;                // args
+      char c;                     // current character
+      const char *s = fmt;        // pointer into format string
+      bool pctstate = false;      // seen a percentage?
+      int dummyint;               // dummy vars just to get args
       double dummydbl;
       const char *dummystr;
       void *dummyptr;
-      size_t charcount = strlen(fmt) + 1; // start at strlen of format string
+      size_t charcount = fmtsize; // start at strlen of format string
 
       va_start(va1, fmt);
       while((c = *s++))

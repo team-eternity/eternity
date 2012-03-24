@@ -33,6 +33,9 @@ struct patch_t;
 
 class PatchLoader : public WadLumpLoader
 {
+private:
+   static patch_t *GetDefaultPatch(int tag);
+
 public:
    // A global instance of PatchLoader for passing to WadDirectory methods
    static PatchLoader patchFmt;

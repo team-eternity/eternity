@@ -45,14 +45,15 @@ static int     numspritesalloc; // number of sprites allocated
 struct esprite_t
 {
    DLListItem<esprite_t> link;    // hash links
-   ENCStringHashKey       nameptr; // hash key
+   char                 *nameptr; // hash key
    
    int  num;      // sprite number
    char name[5];  // sprite name   
 };
 
 // sprite hash table
-static EHashTable<esprite_t, ENCStringHashKey, &esprite_t::nameptr, &esprite_t::link> spritehash;
+static EHashTable<esprite_t, ENCStringHashKey, 
+                  &esprite_t::nameptr, &esprite_t::link> spritehash(257);
 
 //
 // E_SpriteNumForName
@@ -83,11 +84,8 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
    strncpy(sprite->name, name, 4);
    sprite->num = NUMSPRITES;
    sprite->nameptr = sprite->name;
-
-   // initialize the sprite hash if it has not been initialized
-   if(!spritehash.isInitialized())
-      spritehash.Initialize(257);
-   else if(spritehash.objectForKey(name))
+   
+   if(spritehash.objectForKey(name))
       return false; // don't add the same sprite name twice
    
    E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
@@ -185,7 +183,7 @@ bool E_ProcessSingleSprite(const char *sprname)
       return false;
 
    // allocate separate storage for implicit sprites
-   spr = ecalloc(esprite_t *, 1, sizeof(*spr));
+   spr = estructalloc(esprite_t, 1);
 
    // try adding it; if this fails, we need to free spr
    if(!E_AddSprite(sprname, spr))

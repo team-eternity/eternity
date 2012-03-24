@@ -54,7 +54,7 @@ void C_DumpMessages(qstring *filename);
 extern int c_height;     // the height of the console
 extern int c_speed;       // pixels/tic it moves
 
-extern const char *c_fontname;
+extern char *c_fontname;
 
 #endif
 

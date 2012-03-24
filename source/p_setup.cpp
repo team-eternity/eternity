@@ -347,7 +347,7 @@ void P_LoadVertexes(int lump)
    numvertexes = setupwad->LumpLength(lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
-   vertexes = (vertex_t *)(Z_Calloc(numvertexes, sizeof(vertex_t), PU_LEVEL, 0));
+   vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
    
    // Load data into cache.
    data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
@@ -378,7 +378,7 @@ void P_LoadSegs(int lump)
    byte *data;
    
    numsegs = setupwad->LumpLength(lump) / sizeof(mapseg_t);
-   segs = (seg_t *)(Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, NULL));
+   segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
    data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    
    for(i = 0; i < numsegs; ++i)
@@ -438,7 +438,7 @@ void P_LoadSubsectors(int lump)
    int  i;
    
    numsubsectors = setupwad->LumpLength(lump) / sizeof(mapsubsector_t);
-   subsectors = (subsector_t *)(Z_Calloc(numsubsectors, sizeof(subsector_t), PU_LEVEL, 0));
+   subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
    data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    
    for(i = 0; i < numsubsectors; ++i)
@@ -466,7 +466,7 @@ void P_LoadSectors(int lumpnum)
    char namebuf[9];
    
    numsectors  = setupwad->LumpLength(lumpnum) / sizeof(mapsector_t);
-   sectors     = (sector_t *)(Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0));
+   sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
    lump = data = (byte *)(setupwad->CacheLumpNum(lumpnum, PU_STATIC));
 
    // haleyjd 09/24/06: determine what the default sound sequence is
@@ -1161,7 +1161,7 @@ void P_LoadLineDefs(int lump)
    int  i;
 
    numlines = setupwad->LumpLength(lump) / sizeof(maplinedef_t);
-   lines    = (line_t *)(Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0));
+   lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
@@ -1188,8 +1188,12 @@ void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if(ld->special == ED_LINE_SPECIAL)
          E_LoadLineDefExt(ld, true);
-      else if(E_IsParamSpecial(ld->special))
+      else if(E_IsParamSpecial(ld->special) || 
+              ld->special == POLYOBJ_START_LINE || 
+              ld->special == POLYOBJ_EXPLICIT_LINE)
+      {
          E_LoadLineDefExt(ld, false);
+      }
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -1271,7 +1275,7 @@ void P_LoadHexenLineDefs(int lump)
    int  i;
 
    numlines = setupwad->LumpLength(lump) / sizeof(maplinedefhexen_t);
-   lines    = (line_t *)(Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0));
+   lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
@@ -1370,7 +1374,7 @@ void P_LoadLineDefs2(void)
 void P_LoadSideDefs(int lump)
 {
    numsides = setupwad->LumpLength(lump) / sizeof(mapsidedef_t);
-   sides    = (side_t *)(Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0));
+   sides    = estructalloctag(side_t, numsides, PU_LEVEL);
 }
 
 // killough 4/4/98: delay using texture names until

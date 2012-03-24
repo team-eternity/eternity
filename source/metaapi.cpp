@@ -87,7 +87,7 @@ MetaObject::MetaObject(const MetaObject &other)
 {
    type_name = other.type_name;
 
-   if(key_name)
+   if(key_name && key_name != other.key_name)
       efree(key_name);
    key_name = estrdup(other.key_name);
 
@@ -392,25 +392,22 @@ void MetaString::setValue(const char *s, char **ret)
 class metaTablePimpl : public ZoneObject
 {
 public:
-   EHashTable<MetaObject, ENCStringHashKey, &MetaObject::key, &MetaObject::links>    keyhash;
-   EHashTable<MetaObject, EStringHashKey, &MetaObject::type, &MetaObject::typelinks> typehash;
+   // the key hash is growable; keys are case-insensitive.
+   EHashTable<MetaObject, ENCStringHashKey, 
+              &MetaObject::key, &MetaObject::links> keyhash;
 
-   metaTablePimpl() : ZoneObject(), keyhash(), typehash()
-   {
-      // the key hash is growable.
-      // keys are case-insensitive.
-      keyhash.Initialize(METANUMCHAINS);
-     
-      // the type hash is fixed size since there are a limited number of types
-      // defined in the source code.
-      // types are case sensitive, because they are based on C types.
-      typehash.Initialize(METANUMCHAINS);
-   }
+   // the type hash is fixed size since there are a limited number of types
+   // defined in the source code; types are case sensitive, because they are 
+   // based on C types.
+   EHashTable<MetaObject, EStringHashKey, 
+              &MetaObject::type, &MetaObject::typelinks> typehash;
+
+   metaTablePimpl() : ZoneObject(), keyhash(METANUMCHAINS), typehash(METANUMCHAINS) {}
 
    virtual ~metaTablePimpl()
    {
-      keyhash.Destroy();
-      typehash.Destroy();
+      keyhash.destroy();
+      typehash.destroy();
    }
 };
 
@@ -591,7 +588,7 @@ void MetaTable::addObject(MetaObject *object)
       // find a prime larger than the current number of chains
       for(i = 0; curNumChains < metaPrimes[i]; ++i);
 
-      pImpl->keyhash.Rebuild(metaPrimes[i]);
+      pImpl->keyhash.rebuild(metaPrimes[i]);
    }
 
    // Add the object to the key table

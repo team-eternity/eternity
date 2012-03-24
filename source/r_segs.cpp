@@ -300,7 +300,6 @@ static void R_RenderSegLoop(void)
             }
          }
       }
-      
   
       // SoM 3/10/2005: Only add to the portal of the floor is marked
       if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR|SEG_MARKFOVERLAY))
@@ -337,9 +336,7 @@ static void R_RenderSegLoop(void)
                floorclip[i] = (float)b;
             }
          }
-
       }
-      
       
       if(segclip.segtextured)
       {

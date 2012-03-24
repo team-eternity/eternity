@@ -332,7 +332,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NUMMOBJTYPES;
+      return -1;
 
    eval = &(al->values[index]);
 
@@ -432,14 +432,14 @@ static jumpinfo_t E_getJumpInfo(mobjinfo_t *mi, const char *arg)
       int thingtype = E_ThingNumForName(type);
       
       // non-existent thingtype is an error, no jump will happen
-      if(thingtype == NUMMOBJTYPES)
+      if(thingtype == -1)
       {
          ji.mi = mi;
          ji.statename = "";
          return ji;
       }
       else
-         ji.mi = &mobjinfo[thingtype];
+         ji.mi = mobjinfo[thingtype];
    }
 
    ji.statename = statename;

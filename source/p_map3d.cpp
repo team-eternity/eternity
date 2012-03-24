@@ -273,14 +273,8 @@ static bool PIT_CheckThing3D(Mobj *thing, MapContext *mc) // killough 3/26/98: m
    int damage;
 
    // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
-   static int bruiserType = -1;
-   static int knightType  = -1;
-
-   if(bruiserType == -1)
-   {
-      bruiserType = E_ThingNumForDEHNum(MT_BRUISER);
-      knightType  = E_ThingNumForDEHNum(MT_KNIGHT);
-   }
+   int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
+   int knightType  = E_ThingNumForDEHNum(MT_KNIGHT);
 
    // killough 11/98: add touchy things
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))

@@ -50,6 +50,7 @@
 #include "d_deh.h"      // Ty 04/08/98 - Externalizations
 #include "d_dehtbl.h"
 #include "d_diskfile.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"       // SoM 3/12/2002: moved unistd stuff into d_io.h
 #include "d_main.h"
@@ -144,7 +145,10 @@ char    *baseiwad;                // jff 3/23/98: iwad directory
 char    *basesavegame;            // killough 2/16/98: savegame directory
 
 char    *basepath;                // haleyjd 11/23/06: path of "base" directory
-char    *basegamepath;            // haleyjd 11/23/06: path of game directory
+char    *basegamepath;            // haleyjd 11/23/06: path of base/game directory
+
+char    *userpath;                // haleyjd 02/05/12: path of "user" directory
+char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
 
 // set from iwad: level to start new games from
 char firstlevel[9] = "";
@@ -218,8 +222,6 @@ gamestate_t wipegamestate = GS_DEMOSCREEN;
 void        R_ExecuteSetViewSize(void);
 camera_t    *camera;
 extern bool setsizeneeded;
-//bool        redrawsbar;      // sf: globaled - haleyjd 04/16/11: no more caching
-bool        redrawborder;    // sf: cleaned up border redraw
 int         wipewait;        // haleyjd 10/09/07
 
 bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
@@ -322,9 +324,6 @@ void D_Display(void)
       !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
       Wipe_StartScreen();
 
-   if(inwipe || c_moving || menuactive)
-      redrawborder = true;   // redraw status bar and border
-
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
    if(!MN_CheckFullScreen())
@@ -335,7 +334,6 @@ void D_Display(void)
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
-         HU_Erase();
          
          if(automapactive)
          {
@@ -343,9 +341,7 @@ void D_Display(void)
          }
          else
          {
-            // see if the border needs to be updated to the screen
-            if(redrawborder)
-               R_DrawViewBorder();    // redraw border
+            R_DrawViewBorder();    // redraw border
             R_RenderPlayerView (&players[displayplayer], camera);
          }
          
@@ -367,8 +363,6 @@ void D_Display(void)
          break;
       }
          
-      redrawborder = false;
-      
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
          I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
@@ -659,6 +653,22 @@ void D_StartTitle(void)
 static int numwadfiles, numwadfiles_alloc;
 
 //
+// D_reAllocFiles
+//
+// haleyjd 12/24/11: resize the wadfiles array
+//
+static void D_reAllocFiles()
+{
+   // sf: allocate for +2 for safety
+   if(numwadfiles + 2 >= numwadfiles_alloc)
+   {
+      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
+
+      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
+   }
+}
+
+//
 // D_AddFile
 //
 // Rewritten by Lee Killough
@@ -669,23 +679,39 @@ static int numwadfiles, numwadfiles_alloc;
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir)
 {
-   // sf: allocate for +2 for safety
-   if(numwadfiles + 2 >= numwadfiles_alloc)
-   {
-      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
-
-      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
-   }
+   D_reAllocFiles();
 
    wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
    wadfiles[numwadfiles].privatedir   = privatedir;
+   wadfiles[numwadfiles].directory    = false;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
-   numwadfiles++;
+   ++numwadfiles;
+}
+
+//
+// D_AddDirectory
+//
+// haleyjd 12/24/11: add a directory to be loaded as if it's a wad file
+//
+void D_AddDirectory(const char *dir)
+{
+   D_reAllocFiles();
+
+   wadfiles[numwadfiles].filename     = estrdup(dir);
+   wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
+   wadfiles[numwadfiles].f            = NULL;
+   wadfiles[numwadfiles].baseoffset   = 0;
+   wadfiles[numwadfiles].privatedir   = 0;
+   wadfiles[numwadfiles].directory    = true;
+
+   wadfiles[numwadfiles+1].filename = NULL;
+
+   ++numwadfiles;
 }
 
 //sf: console command to list loaded files
@@ -820,8 +846,8 @@ static int D_CheckBasePath(const char *pPath)
    str = pPath;
    
    // Rub out any ending slashes; stat does not like them.
-   str.RStrip('\\');
-   str.RStrip('/');
+   str.rstrip('\\');
+   str.rstrip('/');
 
    path = str.constPtr();
 
@@ -880,7 +906,7 @@ enum
 // haleyjd 11/23/06: Sets the path to the "base" folder, where Eternity stores
 // all of its data.
 //
-static void D_SetBasePath(void)
+static void D_SetBasePath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
@@ -971,6 +997,153 @@ static void D_SetBasePath(void)
    printf("Base path set %s.\n", s);
 }
 
+//
+// D_CheckUserPath
+//
+// Checks a provided path to see that it both exists and that it is a directory
+// and not a plain file.
+//
+static int D_CheckUserPath(const char *pPath)
+{
+   int ret = -1;
+   struct stat sbuf;
+   qstring str;
+   const char *path;
+
+   str = pPath;
+   
+   // Rub out any ending slashes; stat does not like them.
+   str.rstrip('\\');
+   str.rstrip('/');
+
+   path = str.constPtr();
+
+   if(!stat(path, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      {
+         DIR *dir;
+         int score = 0;
+         
+         if((dir = opendir(path)))
+         {
+            // directory should contain at least a /doom and /shots folder
+            dirent *ent;
+            while((ent = readdir(dir)))
+            {
+               if(!strcasecmp(ent->d_name, "doom"))
+                  ++score;
+               else if(!strcasecmp(ent->d_name, "shots"))
+                  ++score;
+            }
+            closedir(dir);
+
+            if(score >= 2)
+               ret = BASE_ISGOOD;    // Got it.
+            else
+               ret = BASE_NOTEEBASE; // Doesn't look like EE's user folder.
+         }
+         else
+            ret = BASE_CANTOPEN; // opendir failed
+      }
+      else
+         ret = BASE_NOTDIR; // S_ISDIR failed
+   }
+   else
+      ret = BASE_NOTEXIST; // stat failed
+   
+   return ret;
+}
+
+
+//
+// D_SetUserPath
+//
+// haleyjd 11/23/06: Sets the path to the "user" folder, where Eternity stores
+// all of its data.
+//
+static void D_SetUserPath()
+{
+   int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
+   const char *s;
+   char *userdir = NULL;
+
+   // Priority:
+   // 1. Command-line argument "-user"
+   // 2. Environment variable "ETERNITYUSER"
+   // 3. /user under working directory
+   // 4. /user under DoomExeDir
+
+   // check command-line
+   if((p = M_CheckParm("-user")) && p < myargc - 1)
+   {
+      userdir = D_ExpandTilde(myargv[p + 1]);
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_CMDLINE;
+   }
+
+   // check environment
+   if(res != BASE_ISGOOD && (s = getenv("ETERNITYUSER")))
+   {
+      userdir = D_ExpandTilde(s);
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_ENVIRON;
+   }
+
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      userdir = Z_Strdupa("./user");
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
+   }
+
+   // check exe dir
+   if(res != BASE_ISGOOD)
+   {
+      const char *exedir = D_DoomExeDir();
+
+      size_t len = M_StringAlloca(&userdir, 1, 6, exedir);
+
+      psnprintf(userdir, len, "%s/user", D_DoomExeDir());
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_EXEDIR;
+   }
+
+   // last straw: use base path - may not work as it is not guaranteed to be a
+   // writable location
+   if(res != BASE_ISGOOD)
+      userdir = basepath;
+
+   userpath = estrdup(userdir);
+   M_NormalizeSlashes(userpath);
+
+   switch(source)
+   {
+   case BASE_CMDLINE:
+      s = "by command line";
+      break;
+   case BASE_ENVIRON:
+      s = "by environment";
+      break;
+   case BASE_WORKING:
+      s = "to working directory";
+      break;
+   case BASE_EXEDIR:
+      s = "to executable directory";
+      break;
+   default:
+      s = "to base directory (warning: writes may fail!)"; // ???
+      break;
+   }
+
+   printf("User path set %s.\n", s);
+}
+
 // haleyjd 8/18/07: if true, the game path has been set
 static bool gamepathset;
 
@@ -978,35 +1151,79 @@ static bool gamepathset;
 static int gamepathparm;
 
 //
+// D_VerifyGamePath
+//
+// haleyjd 02/05/12: Verifies one of the two gamepaths (under /base and /user)
+//
+static int D_VerifyGamePath(const char *path)
+{
+   int ret;
+   struct stat sbuf;
+
+   if(!stat(path, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+         ret = BASE_ISGOOD;
+      else
+         ret = BASE_NOTDIR;
+   }
+   else
+      ret = BASE_NOTEXIST;
+
+   return ret;
+}
+
+//
 // D_CheckGamePathParam
 //
 // haleyjd 08/18/07: This function checks for the -game command-line parameter.
 // If it is set, then its value is saved and gamepathset is asserted.
 //
-static void D_CheckGamePathParam(void)
+static void D_CheckGamePathParam()
 {
    int p;
-   struct stat sbuf;
-   char *gamedir = NULL;
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      gamedir = M_SafeFilePath(basepath, myargv[p + 1]);
+      int gameresult, ugameresult;
+      char *gamedir  = M_SafeFilePath(basepath, myargv[p + 1]);
+      char *ugamedir = M_SafeFilePath(userpath, myargv[p + 1]);
       
       gamepathparm = p + 1;
 
-      if(!stat(gamedir, &sbuf)) // check for existence
+      gameresult  = D_VerifyGamePath(gamedir);
+      ugameresult = D_VerifyGamePath(ugamedir);
+
+      if(gameresult == BASE_ISGOOD && ugameresult == BASE_ISGOOD)
       {
-         if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+         basegamepath = estrdup(gamedir);
+         usergamepath = estrdup(ugamedir);
+         gamepathset = true;
+      }
+      else if(gameresult != BASE_ISGOOD)
+      {
+         switch(gameresult)
          {
-            basegamepath = estrdup(gamedir);
-            gamepathset = true;
-         }
-         else
+         case BASE_NOTDIR:
             I_Error("Game path %s is not a directory.\n", gamedir);
+            break;
+         case BASE_NOTEXIST:
+            I_Error("Game path %s does not exist.\n", gamedir);
+            break;
+         }
       }
       else
-         I_Error("Game path %s does not exist.\n", gamedir);
+      {
+         switch(ugameresult)
+         {
+         case BASE_NOTDIR:
+            I_Error("Game path %s is not a directory.\n", ugamedir);
+            break;
+         case BASE_NOTEXIST:
+            I_Error("Game path %s does not exist.\n", ugamedir);
+            break;
+         }
+      }
    }
 }
 
@@ -1016,21 +1233,45 @@ static void D_CheckGamePathParam(void)
 // haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
 // been determined by the IWAD in use.
 //
-static void D_SetGamePath(void)
+static void D_SetGamePath()
 {
-   struct stat sbuf;
    const char *mstr = GameModeInfo->missionInfo->gamePathName;
-   char *gamedir = M_SafeFilePath(basepath, mstr);
+   char *gamedir    = M_SafeFilePath(basepath, mstr);
+   char *ugamedir   = M_SafeFilePath(userpath, mstr);
+   int gameresult, ugameresult;
 
-   if(!stat(gamedir, &sbuf)) // check for existence
+   gameresult  = D_VerifyGamePath(gamedir);
+   ugameresult = D_VerifyGamePath(ugamedir);
+
+   if(gameresult == BASE_ISGOOD && ugameresult == BASE_ISGOOD)
    {
-      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-         basegamepath = estrdup(gamedir);
-      else
+      basegamepath = estrdup(gamedir);
+      usergamepath = estrdup(ugamedir);
+   }
+   else if(gameresult != BASE_ISGOOD)
+   {
+      switch(gameresult)
+      {
+      case BASE_NOTDIR:
          I_Error("Game path %s is not a directory.\n", gamedir);
+         break;
+      case BASE_NOTEXIST:
+         I_Error("Game path %s does not exist.\n", gamedir);
+         break;
+      }
    }
    else
-      I_Error("Game path %s does not exist.\n", gamedir);
+   {
+      switch(ugameresult)
+      {
+      case BASE_NOTDIR:
+         I_Error("Game path %s is not a directory.\n", ugamedir);
+         break;
+      case BASE_NOTEXIST:
+         I_Error("Game path %s does not exist.\n", ugamedir);
+         break;
+      }
+   }
 }
 
 //
@@ -1038,7 +1279,7 @@ static void D_SetGamePath(void)
 //
 // Looks for an optional root.edf file in base/game
 //
-static char *D_CheckGameEDF(void)
+static char *D_CheckGameEDF()
 {
    struct stat sbuf;
    char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
@@ -1050,6 +1291,27 @@ static char *D_CheckGameEDF(void)
    }
 
    return NULL; // return NULL to indicate the file doesn't exist
+}
+
+//
+// D_CheckGameMusic
+//
+// haleyjd 12/24/11: Looks for an optional music directory in base/game,
+// provided that s_hidefmusic is enabled.
+//
+static void D_CheckGameMusic()
+{
+   if(s_hidefmusic)
+   {
+      struct stat sbuf;
+      char *music_dir = M_SafeFilePath(basegamepath, "music");
+
+      if(!stat(music_dir, &sbuf))
+      {
+         if(S_ISDIR(sbuf.st_mode))
+            D_AddDirectory(music_dir); // add as if it's a wad file
+      }
+   }
 }
 
 //=============================================================================
@@ -1544,7 +1806,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
       qstr += '/';
       qstr += filename;
       qstr.normalizeSlashes();
-      qstr.RStrip('/');
+      qstr.rstrip('/');
 
       // See if the file exists as-is
       if(!stat(qstr.constPtr(), &sbuf)) // check for existence
@@ -1660,11 +1922,6 @@ struct iwadpathmatch_t
                              // in order of precedence from greatest to least.
 };
 
-//
-// The IWAD matcher structures have a priority amongst themselves as well, in 
-// that "doom2" should match doom2 and not doom. Whichever entry returns a valid
-// strstr() value first wins.
-// 
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
@@ -2332,25 +2589,25 @@ static void D_InitPaths(void)
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
    {
       // hack for DOOM modes: optional use of /doom config
-      size_t len = strlen(basepath) + strlen("/doom") +
+      size_t len = strlen(userpath) + strlen("/doom") +
                    strlen(D_DoomExeName()) + 8;
       basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "%s/doom/%s.cfg",
-                basepath, D_DoomExeName());
+                userpath, D_DoomExeName());
    }
    else
    {
-      size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
+      size_t len = strlen(usergamepath) + strlen(D_DoomExeName()) + 8;
 
       basedefault = emalloc(char *, len);
 
-      psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
+      psnprintf(basedefault, len, "%s/%s.cfg", usergamepath, D_DoomExeName());
    }
 
-   // haleyjd 11/23/06: set basesavegame here, and use basegamepath
+   // haleyjd 11/23/06: set basesavegame here, and use usergamepath
    // set save path to -save parm or current dir
-   basesavegame = estrdup(basegamepath);
+   basesavegame = estrdup(usergamepath);
 
    if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
    {
@@ -2415,6 +2672,9 @@ static void IdentifyDisk(void)
    if(diskpwad)
       D_LoadDiskFilePWAD();
 
+   // 12/24/11: check for game folder hi-def music
+   D_CheckGameMusic();
+
    // done with the diskfile structure
    D_CloseDiskFile(diskfile, false);
    diskfile = NULL;
@@ -2456,6 +2716,9 @@ static void IdentifyIWAD(void)
       D_LoadResourceWad();
 
       D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
+
+      // 12/24/11: check for game folder hi-def music
+      D_CheckGameMusic();
 
       // done with iwad string
       efree(iwad);
@@ -3014,7 +3277,6 @@ static void D_LoadEDF(gfs_t *gfs)
    E_ProcessEDF(edfname);
 
    // haleyjd FIXME: temporary hacks
-   D_InitGameInfo();
    D_InitWeaponInfo();
 }
 
@@ -3105,6 +3367,38 @@ static gfs_t *D_LooseGFS(void)
    return NULL;
 }
 
+//
+// D_LooseDemo
+//
+// Looks for a loose LMP file on the command line, to support
+// drag-and-drop for demos.
+//
+static const char *D_LooseDemo()
+{
+   int i;
+   const char *dot;
+   const char *ret = NULL;
+
+   for(i = 1; i < myargc; ++i)
+   {
+      // stop at first param with '-' or '@'
+      if(myargv[i][0] == '-' || myargv[i][0] == '@')
+         break;
+
+      // get extension (search from right end)
+      dot = strrchr(myargv[i], '.');
+
+      // check extension
+      if(!dot || strncasecmp(dot, ".lmp", 4))
+         continue;
+      
+      ret = myargv[i];
+      break; // process only the first demo found
+   }
+
+   return ret;
+}
+
 //=============================================================================
 //
 // Primary Initialization Routines
@@ -3118,9 +3412,9 @@ static gfs_t *D_LooseGFS(void)
 static void D_LoadSysConfig(void)
 {
    char *filename = NULL;
-   size_t len = M_StringAlloca(&filename, 2, 2, basepath, "system.cfg");
+   size_t len = M_StringAlloca(&filename, 2, 2, userpath, "system.cfg");
 
-   psnprintf(filename, len, "%s/system.cfg", basepath);
+   psnprintf(filename, len, "%s/system.cfg", userpath);
 
    M_LoadSysConfig(filename);
 }
@@ -3163,7 +3457,7 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2011 James Haley and Stephen McGranahan\n"
+        "Copyright 2012 James Haley and Stephen McGranahan\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
@@ -3192,8 +3486,9 @@ static void D_DoomInit(void)
 
    FindResponseFile(); // Append response file arguments to command-line
 
-   // haleyjd 08/18/07: set base path
+   // haleyjd 08/18/07: set base path and user path
    D_SetBasePath();
+   D_SetUserPath();
 
    // haleyjd 08/19/07: check for -game parameter first
    D_CheckGamePathParam();
@@ -3351,16 +3646,22 @@ static void D_DoomInit(void)
          p = M_CheckParm("-timedemo");
    }
 
-   if(p && p < myargc - 1)
+   // haleyjd 02/29/2012: support a loose demo on the command line
+   const char *loosedemo = NULL;
+   if(!p)
+      loosedemo = D_LooseDemo();
+
+   if((p && p < myargc - 1) || loosedemo)
    {
+      const char *demosource = loosedemo ? loosedemo : myargv[p + 1];
       char *file = NULL;
-      size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
+      size_t len = M_StringAlloca(&file, 1, 6, demosource);
          
-      strncpy(file, myargv[p + 1], len);
+      strncpy(file, demosource, len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
       D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
-      usermsg("Playing demo %s\n",file);
+      usermsg("Playing demo %s\n", file);
    }
 
    // get skill / episode / map from parms
@@ -3740,7 +4041,7 @@ static void D_DoomInit(void)
       }
    }
 
-   if((p = M_CheckParm ("-fastdemo")) && ++p < myargc)
+   if((p = M_CheckParm("-fastdemo")) && ++p < myargc)
    {                                 // killough
       fastdemo = true;                // run at fastest speed possible
       timingdemo = true;              // show stats after quit
@@ -3755,10 +4056,15 @@ static void D_DoomInit(void)
       G_DeferedPlayDemo(myargv[p]);
       singledemo = true;            // quit after one demo
    }
-   else if((p = M_CheckParm("-playdemo")) && ++p < myargc)
+   else if((p = M_CheckMultiParm(playdemoparms, 1)) && ++p < myargc)
    {
       G_DeferedPlayDemo(myargv[p]);
       singledemo = true;          // quit after one demo
+   }
+   else if(loosedemo)
+   {
+      G_DeferedPlayDemo(loosedemo);
+      singledemo = true;
    }
 
    startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
@@ -3820,10 +4126,7 @@ void D_DoomMain(void)
 
    // haleyjd 02/23/04: fix problems with -warp
    if(autostart)
-   {
       oldgamestate = GS_NOSTATE;
-      redrawborder = true;
-   }
 
    // killough 12/98: inlined D_DoomLoop
 

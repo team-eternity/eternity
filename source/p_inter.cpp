@@ -1650,11 +1650,11 @@ void P_Whistle(Mobj *actor, int mobjtype)
       {
          Mobj *fog = P_SpawnMobj(prevx, prevy, 
                                    prevz + GameModeInfo->teleFogHeight,
-                                   GameModeInfo->teleFogType);
+                                   E_SafeThingType(GameModeInfo->teleFogType));
          S_StartSound(fog, GameModeInfo->teleSound);
 
          fog = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
-                           GameModeInfo->teleFogType);
+                           E_SafeThingType(GameModeInfo->teleFogType));
          S_StartSound(fog, GameModeInfo->teleSound);
 
          // put the thing into its spawnstate and keep it still

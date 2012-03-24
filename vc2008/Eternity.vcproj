@@ -1304,6 +1304,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\e_metastate.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\e_mod.h"
 						>
 					</File>
@@ -1945,28 +1949,6 @@
 							/>
 						</FileConfiguration>
 					</File>
-					<File
-						RelativePath="..\source\metaapi.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
 				</Filter>
 				<Filter
 					Name="M_ Headers"
@@ -2016,6 +1998,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_qstrkeys.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_queue.h"
 						>
 					</File>
@@ -2041,10 +2027,6 @@
 					</File>
 					<File
 						RelativePath="..\source\m_vector.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\metaapi.h"
 						>
 					</File>
 				</Filter>
@@ -2490,28 +2472,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_lights.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\source\p_map3d.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -2990,10 +2950,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_inter.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\p_map3d.h"
 						>
 					</File>
 					<File
@@ -4428,6 +4384,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\precpp11.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\psnprntf.h"
 						>
 					</File>
@@ -5090,6 +5050,44 @@
 				</Filter>
 			</Filter>
 			<Filter
+				Name="MetaAPI"
+				>
+				<File
+					RelativePath="..\source\metaadapter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\metaapi.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\source\metaapi.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\metaqstring.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="Clip"
 				>
 				<Filter
@@ -5113,6 +5111,32 @@
 					</File>
 					<File
 						RelativePath="..\source\p_doomclip.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_map3d.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\p_map3d.h"
 						>
 					</File>
 					<File

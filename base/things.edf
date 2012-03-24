@@ -1,4 +1,4 @@
-// EDF for Eternity Engine v3.35.93
+// EDF for Eternity Engine v3.40.21
 //  Thing types define monsters, fireballs, decorations, etc.
 //  Thing types may be defined elsewhere, and order is unimportant.
 //  User-defined thing types should use DeHackEd numbers greater
@@ -9,7 +9,7 @@
 // Doom Thing Types ------------------------------------------------------------
 
 // DoomEdNums: 1 - 3999
-// DeHackEd Nums: 0 - 137
+// DeHackEd Nums: 0 - 137, 141, 142, 144
 
 includeifenabled("doom/things.edf", "DOOM")
 
@@ -33,297 +33,258 @@ includeifenabled("heretic/things.edf", "HERETIC")
 
 thingtype TeleportSpot 
 {
-  doomednum = 14
-  flags = NOSECTOR|NOBLOCKMAP
-  dehackednum = 42
+  doomednum   14
+  dehackednum 42
+  flags       NOSECTOR|NOBLOCKMAP
 }
 
 // BOOM Objects ----------------------------------------------------------------
 
 thingtype BoomPushPoint 
 {
-  doomednum = 5001
-  spawnstate = S_TNT1
-  radius = 0.0001220703125 // haleyjd: very odd values...
-  height = 0.0001220703125
-  mass = 10
-  flags = NOBLOCKMAP
-  dehackednum = 138
+  doomednum   5001
+  dehackednum 138
+  spawnstate  S_TNT1
+  radius      0.0001220703125 // haleyjd: very odd values...
+  height      0.0001220703125
+  mass        10
+  flags       NOBLOCKMAP
 }
 
 thingtype BoomPullPoint 
 {
-  doomednum = 5002
-  spawnstate = S_TNT1
-  radius = 0.0001220703125 // haleyjd: very odd values...
-  height = 0.0001220703125
-  mass = 10
-  flags = NOBLOCKMAP
-  dehackednum = 139
+  doomednum   5002
+  dehackednum 139
+  spawnstate  S_TNT1
+  radius      0.0001220703125 // haleyjd: very odd values...
+  height      0.0001220703125
+  mass        10
+  flags       NOBLOCKMAP
 }
 
 // MBF Objects -----------------------------------------------------------------
 
 thingtype MBFHelperDog 
 {
-  doomednum = 888
-  spawnstate = S_DOGS_STND
-  spawnhealth = 500
-  seestate = S_DOGS_RUN1
-  seesound = dgsit
-  attacksound = dgatk
-  painstate = S_DOGS_PAIN
-  painchance = 180
-  painsound = dgpain
-  meleestate = S_DOGS_ATK1
-  deathstate = S_DOGS_DIE1
-  deathsound = dgdth
-  speed = 10
-  radius = 12.0
-  height = 28.0
-  activesound = dgact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ|AUTOTRANSLATE
-  raisestate = S_DOGS_RAISE1
-  obituary_melee = "was chased down by a rabid puppy"
-  dehackednum = 140
+  doomednum   888
+  dehackednum 140
+  spawnstate  S_DOGS_STND
+  spawnhealth 500
+  seestate    S_DOGS_RUN1
+  seesound    dgsit
+  attacksound dgatk
+  painstate   S_DOGS_PAIN
+  painchance  180
+  painsound   dgpain
+  meleestate  S_DOGS_ATK1
+  deathstate  S_DOGS_DIE1
+  deathsound  dgdth
+  speed       10
+  radius      12.0
+  height      28.0
+  activesound dgact
+  cflags      SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ|AUTOTRANSLATE
+  raisestate  S_DOGS_RAISE1
+  obituary_melee "was chased down by a rabid puppy"
 }
 
-ifenabled(DOOM)
-
-thingtype MBFBetaPlasma1 
-{
-  spawnstate = S_PLS1BALL
-  seesound = plasma
-  deathstate = S_PLS1EXP
-  deathsound = firxpl
-  speed = 25.0
-  radius = 13.0
-  height = 8.0
-  damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS|SPACMISSILE
-  mod = BetaBFG
-  dehackednum = 141
-}
-
-thingtype MBFBetaPlasma2 
-{
-  spawnstate = S_PLS2BALL
-  seesound = plasma
-  deathstate = S_PLS2BALLX1
-  deathsound = firxpl
-  speed = 25.0
-  radius = 6.0
-  height = 8.0
-  damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS|SPACMISSILE
-  mod = BetaBFG
-  dehackednum = 142
-}
-
-endif()
+// Note: Beta BFG fireballs (deh# 141, 142, 144) are defined in doom/things.edf
 
 // SMMU Objects ----------------------------------------------------------------
 
 thingtype SMMUCameraSpot 
 {
-  doomednum = 5003
-  spawnstate = S_TNT1
-  mass = 10
-  flags = NOBLOCKMAP
-  dehackednum = 143
+  doomednum   5003
+  dehackednum 143
+  spawnstate  S_TNT1
+  mass        10
+  flags       NOBLOCKMAP
 }
 
 // Eternity Engine Objects -----------------------------------------------------
 
-ifenabled(DOOM)
-
-thingtype EEBetaPlasma3 
-{
-  spawnstate = S_PLS1BALL
-  deathstate = S_PLS1EXP
-  speed = 25.0
-  radius = 13.0
-  height = 8.0
-  damage = 10
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS
-  mod = BFGBurst
-  dehackednum = 144
-}
-
-endif()
-
 thingtype Unknown 
 {
-  doomednum = 5005
-  spawnstate = S_UNKNOWN
-  radius = 32.0
-  height = 56.0
-  cflags = NOBLOCKMAP|NOGRAVITY
+  doomednum   5005
+  spawnstate  S_UNKNOWN
+  radius      32.0
+  height      56.0
+  cflags      NOBLOCKMAP|NOGRAVITY
 }
 
 thingtype EESkyboxCam 
 {
-  doomednum = 5006
-  spawnstate = S_TNT1
-  radius = 10.0
-  height = 10.0
-  mass = 10
-  flags = NOBLOCKMAP|NOGRAVITY
+  doomednum   5006
+  spawnstate  S_TNT1
+  radius      10.0
+  height      10.0
+  mass        10
+  flags       NOBLOCKMAP|NOGRAVITY
 }
 
 thingtype EEParticleFountain 
 {
-  spawnstate = S_TNT1
-  height = 0.0
+  spawnstate S_TNT1
+  height     0.0
 }
 
 thingtype EETerrainLavaSplash 
 {
-  spawnstate = S_LAVASPLASH1
-  cflags = NOBLOCKMAP|NOGRAVITY|NOSPLASH
-  dehackednum = 145
+  dehackednum 145
+  spawnstate  S_LAVASPLASH1
+  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
 thingtype EETerrainLavaSmoke 
 {
-  spawnstate = S_LAVASMOKE1
-  cflags = NOBLOCKMAP|NOGRAVITY|NOSPLASH
-  translucency = 26624
-  dehackednum = 146
+  dehackednum  146
+  spawnstate   S_LAVASMOKE1
+  cflags       NOBLOCKMAP|NOGRAVITY|NOSPLASH
+  translucency 26624
+
 }
 
 thingtype EETerrainWaterSplash 
 {
-  spawnstate = S_SPLASH1
-  deathstate = S_SPLASHX
-  radius = 2.0
-  height = 4.0
-  cflags = NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
-  dehackednum = 147
+  dehackednum 147
+  spawnstate  S_SPLASH1
+  deathstate  S_SPLASHX
+  radius      2.0
+  height      4.0
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
 }
 
 thingtype EETerrainWaterBase 
 {
-  spawnstate = S_SPLASHBASE1
-  cflags = NOBLOCKMAP|NOGRAVITY|NOSPLASH
-  dehackednum = 148
+  dehackednum 148
+  spawnstate  S_SPLASHBASE1
+  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
 thingtype EETerrainSludgeChunk 
 {
-  spawnstate = S_SLUDGE1
-  deathstate = S_SLUDGEX
-  radius = 2.0
-  height = 4.0
-  mass = 150
-  cflags = NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
-  dehackednum = 149
+  dehackednum 149
+  spawnstate  S_SLUDGE1
+  deathstate  S_SLUDGEX
+  radius      2.0
+  height      4.0
+  mass        150
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
 }
 
 thingtype EETerrainSludgeBase 
 {
-  spawnstate = S_SLUDGEBASE1
-  cflags = NOBLOCKMAP|NOGRAVITY|NOSPLASH
-  dehackednum = 150
+  dehackednum 150
+  spawnstate  S_SLUDGEBASE1
+  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
 thingtype EEParticleDrip 
 {
-  doomednum = 5007
-  spawnstate = S_TNT1
-  radius = 1.0
-  height = 1.0
-  flags = NOBLOCKMAP|NOGRAVITY
-  particlefx = DRIP
-  dehackednum = 151
+  doomednum   5007
+  dehackednum 151
+  spawnstate  S_TNT1
+  radius      1.0
+  height      1.0
+  flags       NOBLOCKMAP|NOGRAVITY
+  particlefx  DRIP
 }
 
 // Hexen compatible map spots for scripting
 
 thingtype EEMapSpot 
 {
-  doomednum = 9001
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
-  dehackednum = 152
+  doomednum   9001
+  dehackednum 152
+  spawnstate  S_TNT1
+  cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 thingtype EEMapSpotGravity 
 {
-  doomednum = 9013
-  spawnstate = S_TNT1
-  cflags = DONTDRAW|NOSPLASH
-  dehackednum = 153
+  doomednum   9013
+  dehackednum 153
+  spawnstate  S_TNT1
+  cflags      DONTDRAW|NOSPLASH
 }
 
 // Polyobject spots
 
 thingtype EEPolyObjAnchor 
 {
-  doomednum = 9300
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
-  dehackednum = 154
+  doomednum   9300
+  dehackednum 154
+  spawnstate  S_TNT1
+  cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 thingtype EEPolyObjSpawnSpot 
 {
-  doomednum = 9301
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
-  dehackednum = 155
+  doomednum   9301
+  dehackednum 155
+  spawnstate  S_TNT1
+  cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 thingtype EEPolyObjSpawnSpotCrush 
 {
-  doomednum = 9302
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
-  dehackednum = 156
+  doomednum   9302
+  dehackednum 156
+  spawnstate  S_TNT1
+  cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 thingtype EEPolyObjSpawnSpotDamage
 {
-  doomednum = 9303
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
-  dehackednum = 157
+  doomednum   9303
+  dehackednum 157
+  spawnstate  S_TNT1
+  cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Ambience object
 
 thingtype EEAmbience 
 {
-  doomednum = 14065
-  spawnstate = S_EE_AMBIENCE_SPAWN
-  cflags = NOBLOCKMAP|NOGRAVITY
+  doomednum  14065
+  spawnstate S_EE_AMBIENCE_SPAWN
+  cflags     NOBLOCKMAP|NOGRAVITY
+}
+
+// Music Changer
+
+thingtype EEMusicChanger
+{
+  doomednum  14165
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Environmental Sequence Point
 
 thingtype EEEnviroSequence 
 {
-  doomednum  = 1300
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOGRAVITY
+  doomednum  1300
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
 // Sector Sequence Override
 
 thingtype EESectorSequence 
 {
-  doomednum  = 1500
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOGRAVITY
+  doomednum  1500
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
 // What's this??? o_O
 
 thingtype EERavenObj 
 {
-  inherits = Unknown
-  doomednum = 5008
-  skinsprite = EERV
+  inherits   Unknown
+  doomednum  5008
+  skinsprite EERV
 }
 
 // Doom Builder's 3D mode camera spots often get left in maps.
@@ -331,8 +292,8 @@ thingtype EERavenObj
 
 thingtype DoomBuilderCameraSpot
 {
-  inherits = Unknown
-  translucency = 33%
+  inherits     Unknown
+  translucency 33%
 }
 
 // Eternity TC Objects ---------------------------------------------------------
@@ -345,49 +306,49 @@ thingtype DoomBuilderCameraSpot
 
 thingtype ETCFogSpawner 
 {
-  doomednum = 6011
-  spawnstate = S_SPAWNFOG1
-  flags = NOBLOCKMAP
-  flags2 = NOTHRUST|FLOATBOB|DONTDRAW
-  dehackednum = 227
+  doomednum   6011
+  dehackednum 227
+  spawnstate  S_SPAWNFOG1
+  flags       NOBLOCKMAP
+  flags2      NOTHRUST|FLOATBOB|DONTDRAW
 }
 
 thingtype ETCSmallFog 
 {
-  doomednum = 6012
-  spawnstate = S_FOGPATCHS1
-  deathstate = S_FOGPATCHS0
-  speed = 65536
-  flags = NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
-  dehackednum = 228
+  doomednum   6012
+  dehackednum 228
+  spawnstate  S_FOGPATCHS1
+  deathstate  S_FOGPATCHS0
+  speed       65536
+  flags       NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
 }
 
 thingtype ETCMediumFog 
 {
-  doomednum = 6013
-  spawnstate = S_FOGPATCHM1
-  deathstate = S_FOGPATCHM0
-  speed = 65536
-  flags = NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
-  dehackednum = 229
+  doomednum   6013
+  dehackednum 229
+  spawnstate  S_FOGPATCHM1
+  deathstate  S_FOGPATCHM0
+  speed       65536
+  flags       NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
 }
 
 thingtype ETCLargeFog 
 {
-  doomednum = 6014
-  spawnstate = S_FOGPATCHL1
-  deathstate = S_FOGPATCHL0
-  speed = 65536
-  flags = NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
-  dehackednum = 230
+  doomednum   6014
+  dehackednum 230
+  spawnstate  S_FOGPATCHL1
+  deathstate  S_FOGPATCHL0
+  speed       65536
+  flags       NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
 }
 
 thingtype ETCTotalInvisiSphere 
 {
-  doomednum = 6052
-  spawnstate = S_PNS2_1
-  flags = SPECIAL|COUNTITEM|TRANSLUCENT
-  dehackednum = 237
+  doomednum   6052
+  dehackednum 237
+  spawnstate  S_PNS2_1
+  flags       SPECIAL|COUNTITEM|TRANSLUCENT
 }
 
 // Damage Types ----------------------------------------------------------------
@@ -400,63 +361,63 @@ thingtype ETCTotalInvisiSphere
 
 // Normal damagetypes
 
-damagetype Fist       { num =  1; obituary = "$OB_FIST"       }
-damagetype Pistol     { num =  2; obituary = "$OB_PISTOL"     } 
-damagetype Shotgun    { num =  3; obituary = "$OB_SHOTGUN"    }
-damagetype Chaingun   { num =  4; obituary = "$OB_CHAINGUN"   }
-damagetype Plasma     { num =  7; obituary = "$OB_PLASMA"     }
-damagetype BFG        { num =  8; obituary = "$OB_BFG"        }
-damagetype BFG_Splash { num =  9; obituary = "$OB_BFG_SPLASH" }
-damagetype Chainsaw   { num = 10; obituary = "$OB_CHAINSAW"   }
-damagetype SShotgun   { num = 11; obituary = "$OB_SSHOTGUN"   }
-damagetype BetaBFG    { num = 22; obituary = "$OB_BETABFG"    }
-damagetype BFGBurst   { num = 23; obituary = "$OB_BFGBURST"   }
+damagetype Fist       { num  1; obituary "$OB_FIST"       }
+damagetype Pistol     { num  2; obituary "$OB_PISTOL"     } 
+damagetype Shotgun    { num  3; obituary "$OB_SHOTGUN"    }
+damagetype Chaingun   { num  4; obituary "$OB_CHAINGUN"   }
+damagetype Plasma     { num  7; obituary "$OB_PLASMA"     }
+damagetype BFG        { num  8; obituary "$OB_BFG"        }
+damagetype BFG_Splash { num  9; obituary "$OB_BFG_SPLASH" }
+damagetype Chainsaw   { num 10; obituary "$OB_CHAINSAW"   }
+damagetype SShotgun   { num 11; obituary "$OB_SSHOTGUN"   }
+damagetype BetaBFG    { num 22; obituary "$OB_BETABFG"    }
+damagetype BFGBurst   { num 23; obituary "$OB_BFGBURST"   }
 
 // Damagetypes that are sourceless, or want to be treated that way.
 
-damagetype Slime    { num = 12; obituary = "$OB_SLIME";    sourceless = true }
-damagetype Lava     { num = 13; obituary = "$OB_LAVA";     sourceless = true }
-damagetype Crush    { num = 14; obituary = "$OB_CRUSH";    sourceless = true }
-damagetype Telefrag { num = 15; obituary = "$OB_TELEFRAG"; sourceless = true }
-damagetype Falling  { num = 16; obituary = "$OB_FALLING";  sourceless = true }
-damagetype Suicide  { num = 17; obituary = "$OB_SUICIDE";  sourceless = true }
-damagetype Barrel   { num = 18; obituary = "$OB_BARREL";   sourceless = true }
-damagetype Splash   { num = 19; obituary = "$OB_SPLASH";   sourceless = true }
-damagetype Quake    { num = 26; obituary = "$OB_QUAKE";    sourceless = true }
+damagetype Slime    { num 12; obituary "$OB_SLIME";    sourceless true }
+damagetype Lava     { num 13; obituary "$OB_LAVA";     sourceless true }
+damagetype Crush    { num 14; obituary "$OB_CRUSH";    sourceless true }
+damagetype Telefrag { num 15; obituary "$OB_TELEFRAG"; sourceless true }
+damagetype Falling  { num 16; obituary "$OB_FALLING";  sourceless true }
+damagetype Suicide  { num 17; obituary "$OB_SUICIDE";  sourceless true }
+damagetype Barrel   { num 18; obituary "$OB_BARREL";   sourceless true }
+damagetype Splash   { num 19; obituary "$OB_SPLASH";   sourceless true }
+damagetype Quake    { num 26; obituary "$OB_QUAKE";    sourceless true }
 
 // Damage types that can kill oneself, and thus have a special message for it.
 
 damagetype Rocket
 { 
-   num =  5
-   obituary     = "$OB_ROCKET"
-   obituaryself = "$OB_ROCKET_SELF"
+   num 5
+   obituary     "$OB_ROCKET"
+   obituaryself "$OB_ROCKET_SELF"
 }
 
 damagetype R_Splash
 {
-   num =  6
-   obituary     = "$OB_R_SPLASH"
-   obituaryself = "$OB_R_SPLASH_SELF"
+   num 6
+   obituary     "$OB_R_SPLASH"
+   obituaryself "$OB_R_SPLASH_SELF"
 }
 
-damagetype BFG11k_Splash { num = 21; obituaryself = "$OB_BFG11K_SELF" }
+damagetype BFG11k_Splash { num 21; obituaryself "$OB_BFG11K_SELF" }
 
 damagetype Grenade
 { 
-   num = 25
-   obituary     = "$OB_GRENADE"
-   obituaryself = "$OB_GRENADE_SELF"
+   num 25
+   obituary     "$OB_GRENADE"
+   obituaryself "$OB_GRENADE_SELF"
 }
 
 // These two damagetypes are special in that the message they trigger depends on
 // the thing doing the damage, be it a monster, or a player weapon.
 
-damagetype Hit        { num = 20 }
-damagetype PlayerMisc { num = 24 }
+damagetype Hit        { num 20 }
+damagetype PlayerMisc { num 24 }
 
 // These damagetypes are special in that things with certain flag values will 
 // inflict them regardless of the value of their mod field.
 
-damagetype Fire { num = 27 }
+damagetype Fire { num 27 }
 

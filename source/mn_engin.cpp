@@ -1245,10 +1245,6 @@ void MN_Ticker(void)
 
 void MN_Drawer(void)
 { 
-   // redraw needed if menu hidden
-   if(hide_menu) 
-      redrawborder = true;
-   
    // activate menu if displaying widget
    if(current_menuwidget && !menuactive)
       MN_StartControlPanel();
@@ -1305,25 +1301,19 @@ bool MN_Responder(event_t *ev)
    if(ev->data1 == KEYD_RALT)
       altdown = (ev->type == ev_keydown);
 
-   // we only care about key presses
-   switch(ev->type)
-   {
-   case ev_keydown:
-      break;
-   default: // not interested in anything else
+   // menu doesn't want keyup events
+   if(ev->type == ev_keyup)
       return false;
-   }
 
    // are we displaying a widget?
    if(current_menuwidget)
    {
-      return
-         current_menuwidget->responder ?
-            current_menuwidget->responder(ev) : false;
+      current_menuwidget->responder(ev);
+      return true;
    }
 
    // are we inputting a new value into a variable?
-   if(input_command)
+   if(ev->type == ev_keydown && input_command)
    {
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
@@ -1773,7 +1763,7 @@ bool MN_Responder(event_t *ev)
    else
       ch = tolower(ev->data1);
    
-   if(ch >= 'a' && ch <= 'z')
+   if(ev->type == ev_keydown && ch >= 'a' && ch <= 'z')
    {  
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should
@@ -1799,7 +1789,7 @@ bool MN_Responder(event_t *ev)
       } while(n != current_menu->selected);
    }
    
-   return false; //!!current_menu;
+   return true; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1847,7 +1837,6 @@ void MN_StartMenu(menu_t *menu)
       current_menu = current_menu->curpage;
    
    menu_error_time = 0;      // clear error message
-   redrawborder = true;  // need redraw
 
    // haleyjd 11/12/09: custom menu open actions
    if(current_menu->open)
@@ -1872,7 +1861,6 @@ static void MN_PageMenu(menu_t *newpage)
       current_menu->rootpage->curpage = current_menu;
 
    menu_error_time = 0;
-   redrawborder = true;
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
 }
@@ -1890,7 +1878,7 @@ void MN_PrevMenu(void)
       current_menu = menu_history[menu_history_num];
    
    menu_error_time = 0;          // clear errors
-   redrawborder = true;  // need redraw
+
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
@@ -1903,7 +1891,6 @@ void MN_ClearMenus(void)
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
-   redrawborder = true;  // need redraw
 }
 
 CONSOLE_COMMAND(mn_clearmenus, 0)
@@ -1956,13 +1943,7 @@ void MN_StartControlPanel(void)
 
    // haleyjd 05/16/04: traditional DOOM main menu support
    // haleyjd 08/31/06: support for all of DOOM's original menus
-   if(GameModeInfo->flags & GIF_CLASSICMENUS && 
-      (traditional_menu || mn_classic_menus))
-   {
-      MN_StartMenu(&menu_old_main);
-   }
-   else
-      MN_StartMenu(GameModeInfo->mainMenu);
+   MN_StartMenu(GameModeInfo->mainMenu);
 }
 
 //=============================================================================
@@ -1977,9 +1958,9 @@ void MN_StartControlPanel(void)
 //
 
 // haleyjd 02/25/09: font names set by EDF:
-const char *mn_fontname;
-const char *mn_normalfontname;
-const char *mn_bigfontname;
+char *mn_fontname;
+char *mn_normalfontname;
+char *mn_bigfontname;
 
 //
 // MN_InitFonts
