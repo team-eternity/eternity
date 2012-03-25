@@ -33,6 +33,7 @@
 #include "z_zone.h"
 
 #include "d_io.h" // SoM 3/14/2002: MSCV++
+#include "c_batch.h" // [CG] 03/24/2012
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "c_net.h"
@@ -278,6 +279,9 @@ void C_Ticker(void)
    
    C_RunBuffer(c_typed);   // run the delayed typed commands
    C_RunBuffer(c_menu);
+
+   // [CG] Run command batches as well.
+   C_CommandBatchTicker();
 }
 
 //

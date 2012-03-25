@@ -32,6 +32,7 @@
 #include "z_zone.h"
 
 #include "am_map.h"
+#include "c_batch.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
@@ -1245,6 +1246,8 @@ void G_SaveDefaults(void)
    bool in_bind;
    InputKey *key = NULL;
    KeyBind *kb = NULL;
+   alias_t *alias = NULL;
+   CommandBatch *batch = NULL;
 
    if(!cfg_file)         // check defaults have been loaded
       return;
@@ -1343,12 +1346,19 @@ void G_SaveDefaults(void)
    }
 
    // write aliases
-   alias_t *alias = aliases.next;
-
+   alias = aliases.next;
    while(alias)
    {
-      fprintf(file, "alias %s \"%s\"", alias->name, alias->command);
+      fprintf(file, "alias %s \"%s\"\n", alias->name, alias->command);
       alias = alias->next;
+   }
+
+   // write batches
+   while((batch = C_CommandBatchIterator(batch)))
+   {
+      fprintf(
+         file, "batch %s \"%s\"\n", batch->getName(), batch->getCommands()
+      );
    }
 
    fclose(file);
