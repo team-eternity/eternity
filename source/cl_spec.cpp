@@ -49,418 +49,179 @@ void CL_LoadSectorPositions(unsigned int index)
    for(i = 0; i < (unsigned int)numsectors; i++)
    {
       position = &cs_sector_positions[i][index % MAX_POSITIONS];
+
       if(position->world_index != index)
-      {
          continue;
-      }
+
       CS_SetSectorPosition(&sectors[i], position);
-#if _SECTOR_PRED_DEBUG
-      if(i == _DEBUG_SECTOR)
-      {
-         printf(
-            "CL_LoadSectorPositions (%3u/%3u): "
-            "Sector %2u: %3u %5u %5u.\n",
-            cl_current_world_index,
-            cl_latest_world_index,
-            i,
-            position->world_index,
-            position->ceiling_height >> FRACBITS,
-            position->floor_height   >> FRACBITS
-         );
-      }
-#endif
    }
+
    cl_setting_sector_positions = false;
 }
 
-#if 0
-
-void CL_LoadCurrentSectorState(void)
+void CL_LoadLatestSectorPositions(void)
 {
-   CL_LoadSectorState(cl_current_world_index);
+   CL_LoadSectorPositions(cl_latest_world_index);
 }
 
-void CL_LoadCurrentSectorPositions(void)
+void CL_SpawnPlatform(sector_t *sec, cs_platform_data_t *dt)
 {
-   CL_LoadSectorPositions(cl_current_world_index);
+   PlatThinker *platform = new PlatThinker;
+
+   platform->sector = sec;
+   platform->netUpdate(dt);
+
+   P_AddActivePlat(platform);
 }
 
-void CL_LoadSectorState(uint32_t index)
+void CL_SpawnVerticalDoor(line_t *ln, sector_t *sec, cs_door_data_t *dt)
 {
-#if _SECTOR_PRED_DEBUG
-   printf("CL_LoadSectorState: Loading state for index %u.\n", index);
-#endif
+   VerticalDoorThinker *door = new VerticalDoorThinker;
+
+   door->sector = sec;
+   door->netUpdate(dt);
+
+   NetSectorThinkers.add(door);
 }
 
-void CL_SpawnParamCeiling(line_t *line, sector_t *sector,
-                          CeilingThinker::status_t *status,
-                          cs_ceilingdata_t *data)
+void CL_SpawnCeiling(sector_t *sec, cs_ceiling_data_t *dt)
 {
-   ceilingdata_t cd;
+   CeilingThinker *ceiling = new CeilingThinker;
 
-   cd.trigger_type = data->trigger_type;
-   cd.crush = data->crush;
-   cd.direction = data->direction;
-   cd.speed_type = data->speed_type;
-   cd.change_type = data->change_type;
-   cd.change_model = data->change_model;
-   cd.target_type = data->target_type;
-   cd.height_value = data->height_value;
-   cd.speed_value = data->speed_value;
+   ceiling->sector = sec;
+   ceiling->netUpdate(dt);
 
-   CeilingThinker *ceiling = P_SpawnParamCeiling(line, sector, &cd);
-   ceiling->setStatus(status);
-   NetCeilings.add(ceiling);
+   P_AddActiveCeiling(ceiling);
 }
 
-void CL_SpawnParamDoor(line_t *line, sector_t *sector,
-                       VerticalDoorThinker::status_t *status,
-                       cs_doordata_t *data)
+void CL_SpawnFloor(sector_t *sec, cs_floor_data_t *dt)
 {
-   doordata_t dd;
+   FloorMoveThinker *floor = new FloorMoveThinker;
 
-   dd.delay_type     = data->delay_type;
-   dd.kind           = data->kind;
-   dd.speed_type     = data->speed_type;
-   dd.trigger_type   = data->trigger_type;
-   dd.speed_value    = data->speed_value;
-   dd.delay_value    = data->delay_value;
-   dd.altlighttag    = data->altlighttag;
-   dd.usealtlighttag = data->usealtlighttag;
-   dd.topcountdown   = data->topcountdown;
+   floor->sector = sec;
+   floor->netUpdate(dt);
 
-   VerticalDoorThinker *door = P_SpawnParamDoor(line, sector, &dd);
-   door->setStatus(status);
-   NetDoors.add(door);
+   NetSectorThinkers.add(floor);
 }
 
-void CL_SpawnParamFloor(line_t *line, sector_t *sector,
-                        FloorMoveThinker::status_t *status,
-                        cs_floordata_t *data)
+void CL_SpawnElevator(sector_t *sec, cs_elevator_data_t *dt)
 {
-   floordata_t fd;
+   ElevatorThinker *elevator = new ElevatorThinker;
 
-   fd.trigger_type = data->trigger_type;
-   fd.crush        = data->crush;
-   fd.direction    = data->direction;
-   fd.speed_type   = data->speed_type;
-   fd.change_type  = data->change_type;
-   fd.change_model = data->change_model;
-   fd.target_type  = data->target_type;
-   fd.height_value = data->height_value;
-   fd.speed_value  = data->speed_value;
+   elevator->sector = sec;
+   elevator->netUpdate(dt);
 
-   FloorMoveThinker *floor = P_SpawnParamFloor(line, sector, &fd);
-   floor->setStatus(status);
-   NetFloors.add(floor);
+   NetSectorThinkers.add(elevator);
 }
 
-void CL_SpawnCeilingFromStatus(line_t *line, sector_t *sector,
-                               CeilingThinker::status_t *status)
+void CL_SpawnPillar(sector_t *sec, cs_pillar_data_t *dt)
 {
-   CeilingThinker *ceiling = P_SpawnCeiling(
-      line, sector, (ceiling_e)status->type
-   );
+   PillarThinker *pillar = new PillarThinker;
 
-   ceiling->setStatus(status);
-   NetCeilings.add(ceiling);
+   pillar->sector = sec;
+   pillar->netUpdate(dt);
+
+   NetSectorThinkers.add(pillar);
 }
 
-void CL_SpawnDoorFromStatus(line_t *line, sector_t *sector,
-                            VerticalDoorThinker::status_t *status,
-                            map_special_e type)
+void CL_SpawnFloorWaggle(sector_t *sec, cs_floorwaggle_data_t *dt)
 {
-   VerticalDoorThinker *door;
+   FloorWaggleThinker *floor_waggle = new FloorWaggleThinker;
 
-   switch(type)
-   {
-   case ms_door_tagged:
-      door = P_SpawnTaggedDoor(line, sector, (vldoor_e)status->type);
-      break;
-   case ms_door_manual:
-      door = P_SpawnManualDoor(line, sector);
-      break;
-   case ms_door_closein30:
-      door = P_SpawnDoorCloseIn30(sector);
-      break;
-   case ms_door_raisein300:
-      door = P_SpawnDoorRaiseIn5Mins(sector);
-      break;
-   default:
-      I_Error("Unknown door type %d.\n", type);
-      break;
-   }
+   floor_waggle->sector = sec;
+   floor_waggle->netUpdate(dt);
 
-   door->setStatus(status);
-   NetDoors.add(door);
+   NetSectorThinkers.add(floor_waggle);
 }
 
-void CL_SpawnFloorFromStatus(line_t *line, sector_t *sector,
-                             FloorMoveThinker::status_t *status,
-                             map_special_e type)
+void CL_UpdatePlatform(cs_platform_data_t *dt)
 {
-   FloorMoveThinker *floor;
-
-   switch(type)
-   {
-   case ms_floor:
-   case ms_stairs:
-      floor = P_SpawnFloor(line, sector, (floor_e)status->type);
-      break;
-   case ms_donut:
-      floor = P_SpawnDonut(
-         line, sector, status->texture, status->floor_dest_height
-      );
-      break;
-   case ms_donut_hole:
-      floor = P_SpawnDonutHole(line, sector, status->floor_dest_height);
-      break;
-   default:
-      I_Error("Unknown floor type %d.\n", type);
-      break;
-   }
-
-   floor->setStatus(status);
-   NetFloors.add(floor);
+   PlatThinker *platform = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such platform %u.", dt->net_id);
+   else if(!(platform = dynamic_cast<PlatThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a platform.", dt->net_id);
+   else
+      platform->netUpdate(dt);
 }
 
-void CL_SpawnElevatorFromStatus(line_t *line, sector_t *sector,
-                                ElevatorThinker::status_t *status)
+void CL_UpdateVerticalDoor(cs_door_data_t *dt)
 {
-   ElevatorThinker *elevator = P_SpawnElevator(
-      line, sector, (elevator_e)status->type
-   );
-
-   elevator->setStatus(status);
-   NetElevators.add(elevator);
+   VerticalDoorThinker *door = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such door %u.", dt->net_id);
+   else if(!(door = dynamic_cast<VerticalDoorThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a door.", dt->net_id);
+   else
+      door->netUpdate(dt);
 }
 
-void CL_SpawnPillarFromStatus(line_t *line, sector_t *sector,
-                              PillarThinker::status_t *status,
-                              map_special_e type)
+void CL_UpdateCeiling(cs_ceiling_data_t *dt)
 {
-   PillarThinker *pillar;
-
-   switch(type)
-   {
-   case ms_pillar_build:
-      pillar = P_SpawnBuildPillar(line, sector, 0, 0, 0);
-      break;
-   case ms_pillar_open:
-      pillar = P_SpawnOpenPillar(line, sector, 0, 1, 1);
-      break;
-   default:
-      I_Error("Unknown pillar type %d.\n", type);
-      break;
-   }
-
-   pillar->setStatus(status);
-   NetPillars.add(pillar);
+   CeilingThinker *ceiling = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such ceiling %u.", dt->net_id);
+   else if(!(ceiling = dynamic_cast<CeilingThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a ceiling.", dt->net_id);
+   else
+      ceiling->netUpdate(dt);
 }
 
-void CL_SpawnFloorWaggleFromStatus(line_t *line, sector_t *sector,
-                                   FloorWaggleThinker::status_t *status)
+void CL_UpdateFloor(cs_floor_data_t *dt)
 {
-   FloorWaggleThinker *waggle = P_SpawnFloorWaggle(line, sector, 0, 0, 0, 0);
-
-   waggle->setStatus(status);
-   NetFloorWaggles.add(waggle);
+   FloorMoveThinker *floor = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such floor %u.", dt->net_id);
+   else if(!(floor = dynamic_cast<FloorMoveThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a floor.", dt->net_id);
+   else
+      floor->netUpdate(dt);
 }
 
-void CL_SpawnPlatformFromStatus(line_t *line, sector_t *sector,
-                                PlatThinker::status_t *status)
+void CL_UpdateElevator(cs_elevator_data_t *dt)
 {
-   PlatThinker *platform = P_SpawnPlatform(
-      line, sector, 0, (plattype_e)status->type
-   );
-
-   platform->setStatus(status);
-   NetPlatforms.add(platform);
+   ElevatorThinker *elevator = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such elevator %u.", dt->net_id);
+   else if(!(elevator = dynamic_cast<ElevatorThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a elevator.", dt->net_id);
+   else
+      elevator->netUpdate(dt);
 }
 
-void CL_SpawnGenPlatformFromStatus(line_t *line, sector_t *sector,
-                                   PlatThinker::status_t *status)
+void CL_UpdatePillar(cs_pillar_data_t *dt)
 {
-   PlatThinker *platform = P_SpawnGenPlatform(line, sector);
-
-   platform->setStatus(status);
-   NetPlatforms.add(platform);
+   PillarThinker *pillar = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such pillar %u.", dt->net_id);
+   else if(!(pillar = dynamic_cast<PillarThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a pillar.", dt->net_id);
+   else
+      pillar->netUpdate(dt);
 }
 
-void CL_SpawnParamCeilingFromBlob(line_t *line, sector_t *sector, void *blob)
+void CL_UpdateFloorWaggle(cs_floorwaggle_data_t *dt)
 {
-   CeilingThinker::status_t *status = (CeilingThinker::status_t *)blob;
-   cs_ceilingdata_t *data = (cs_ceilingdata_t *)(
-      (char *)blob) + sizeof(CeilingThinker::status_t
-   );
-
-   CL_SpawnParamCeiling(line, sector, status, data);
+   FloorWaggleThinker *floorwaggle = NULL;
+   SectorThinker *thinker = NULL;
+   
+   if(!(thinker = NetSectorThinkers.lookup(dt->net_id)))
+      doom_printf("No such floorwaggle %u.", dt->net_id);
+   else if(!(floorwaggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
+      doom_printf("Sector thinker %u is not a floor waggle.", dt->net_id);
+   else
+      floorwaggle->netUpdate(dt);
 }
-
-void CL_SpawnParamDoorFromBlob(line_t *line, sector_t *sector, void *blob)
-{
-   VerticalDoorThinker::status_t *status =
-      (VerticalDoorThinker::status_t *)blob;
-   cs_doordata_t *data = (cs_doordata_t *)(
-      (char *)blob) + sizeof(VerticalDoorThinker::status_t
-   );
-
-   CL_SpawnParamDoor(line, sector, status, data);
-}
-
-void CL_SpawnParamFloorFromBlob(line_t *line, sector_t *sector, void *blob)
-{
-   FloorMoveThinker::status_t *status = (FloorMoveThinker::status_t *)blob;
-   cs_floordata_t *data = (cs_floordata_t *)(
-      (char *)blob) + sizeof(FloorMoveThinker::status_t
-   );
-
-   CL_SpawnParamFloor(line, sector, status, data);
-}
-
-void CL_SpawnCeilingFromStatusBlob(line_t *line, sector_t *sector, void *blob)
-{
-   CeilingThinker::status_t *status = (CeilingThinker::status_t *)blob;
-
-   CL_SpawnCeilingFromStatus(line, sector, status);
-}
-
-void CL_SpawnDoorFromStatusBlob(line_t *line, sector_t *sector, void *blob,
-                                map_special_e type)
-{
-   VerticalDoorThinker::status_t *status =
-      (VerticalDoorThinker::status_t *)blob;
-
-   CL_SpawnDoorFromStatus(line, sector, status, type);
-}
-
-void CL_SpawnFloorFromStatusBlob(line_t *line, sector_t *sector, void *blob,
-                                 map_special_e type)
-{
-   FloorMoveThinker::status_t *status = (FloorMoveThinker::status_t *)blob;
-
-   CL_SpawnFloorFromStatus(line, sector, status, type);
-}
-
-void CL_SpawnElevatorFromStatusBlob(line_t *line, sector_t *sector, void *blob)
-{
-   ElevatorThinker::status_t *status = (ElevatorThinker:: status_t *)blob;
-
-   CL_SpawnElevatorFromStatus(line, sector, status);
-}
-
-void CL_SpawnPillarFromStatusBlob(line_t *line, sector_t *sector, void *blob,
-                                  map_special_e type)
-{
-   PillarThinker::status_t *status = (PillarThinker:: status_t *)blob;
-
-   CL_SpawnPillarFromStatus(line, sector, status, type);
-}
-
-void CL_SpawnFloorWaggleFromStatusBlob(line_t *line, sector_t *sector,
-                                       void *blob)
-{
-   FloorWaggleThinker::status_t *status =
-      (FloorWaggleThinker:: status_t *)blob;
-
-   CL_SpawnFloorWaggleFromStatus(line, sector, status);
-}
-
-void CL_SpawnPlatformFromStatusBlob(line_t *line, sector_t *sector, void *blob)
-{
-   PlatThinker::status_t *status = (PlatThinker:: status_t *)blob;
-
-   CL_SpawnPlatformFromStatus(line, sector, status);
-}
-
-void CL_SpawnGenPlatformFromStatusBlob(line_t *line, sector_t *sector,
-                                       void *blob)
-{
-   PlatThinker::status_t *status = (PlatThinker:: status_t *)blob;
-
-   CL_SpawnGenPlatformFromStatus(line, sector, status);
-}
-
-void CL_ApplyCeilingStatusFromBlob(void *blob)
-{
-   CeilingThinker *t;
-   CeilingThinker::status_t *status = (CeilingThinker::status_t *)blob;
-
-   if((t = NetCeilings.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-void CL_ApplyDoorStatusFromBlob(void *blob)
-{
-   VerticalDoorThinker *t;
-   VerticalDoorThinker::status_t *status =
-      (VerticalDoorThinker::status_t *)blob;
-
-   if((t = NetDoors.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-void CL_ApplyFloorStatusFromBlob(void *blob)
-{
-   FloorMoveThinker *t;
-   FloorMoveThinker::status_t *status = (FloorMoveThinker::status_t *)blob;
-
-   if((t = NetFloors.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-void CL_ApplyElevatorStatusFromBlob(void *blob)
-{
-   ElevatorThinker *t;
-   ElevatorThinker::status_t *status = (ElevatorThinker::status_t *)blob;
-
-   if((t = NetElevators.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-void CL_ApplyPillarStatusFromBlob(void *blob)
-{
-   PillarThinker *t;
-   PillarThinker::status_t *status = (PillarThinker::status_t *)blob;
-
-   if((t = NetPillars.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-void CL_ApplyFloorWaggleStatusFromBlob(void *blob)
-{
-   FloorWaggleThinker *t;
-   FloorWaggleThinker::status_t *status = (FloorWaggleThinker::status_t *)blob;
-
-   if((t = NetFloorWaggles.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-void CL_ApplyPlatformStatusFromBlob(void *blob)
-{
-   PlatThinker *t;
-   PlatThinker::status_t *status = (PlatThinker::status_t *)blob;
-
-   if((t = NetPlatforms.lookup(status->net_id)))
-      t->setStatus(status);
-}
-
-// [CG] For debugging.
-void CL_PrintSpecialStatuses(void)
-{
-#if _SECTOR_PRED_DEBUG
-   door_netid_t *door_netid = NULL;
-   platform_netid_t *platform_netid = NULL;
-
-   while((door_netid = CS_IterateDoors(door_netid)) != NULL)
-      P_PrintDoor(door_netid->door);
-
-   while((platform_netid = CS_IteratePlatforms(platform_netid)) != NULL)
-      P_PrintPlatform(platform_netid->platform);
-
-   printf("===\n");
-#endif
-}
-
-#endif
 

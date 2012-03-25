@@ -38,6 +38,15 @@ class  SaveArchive;
 struct sector_t;
 struct side_t;
 
+struct cs_platform_data_t;
+struct cs_door_data_t;
+struct cs_spectransfer_t;
+struct cs_ceiling_data_t;
+struct cs_floor_data_t;
+struct cs_elevator_data_t;
+struct cs_pillar_data_t;
+struct cs_floorwaggle_data_t;
+
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
 
@@ -591,14 +600,18 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
 
 public:
-   SectorThinker() : Thinker(), sector(NULL) {}
+   SectorThinker() : Thinker(), sector(NULL), net_id(0), inactive(false) {};
 
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player) { return false; }
+   friend  void ::CL_SectorThink();
 
    // Data Members
    sector_t *sector;
+   uint32_t net_id;
+   bool inactive;
+
 };
 
 
@@ -753,6 +766,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void netSerialize(cs_platform_data_t *data);
+   virtual void netUpdate(cs_platform_data_t *data);
 
    // Data Members
    fixed_t speed;
@@ -799,6 +814,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void netSerialize(cs_door_data_t *data);
+   virtual void netUpdate(cs_door_data_t *data);
 
    // Data Members
    int type;
@@ -864,6 +881,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void netSerialize(cs_ceiling_data_t *data);
+   virtual void netUpdate(cs_ceiling_data_t *data);
 
    // Data Members
    int type;
@@ -929,6 +948,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void netSerialize(cs_floor_data_t *data);
+   virtual void netUpdate(cs_floor_data_t *data);
 
    // Data Members
    int type;
@@ -996,6 +1017,8 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
+   virtual void netSerialize(cs_elevator_data_t *data);
+   virtual void netUpdate(cs_elevator_data_t *data);
    
    // Data Members
    int type;
@@ -1018,6 +1041,8 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
+   virtual void netSerialize(cs_pillar_data_t *data);
+   virtual void netUpdate(cs_pillar_data_t *data);
    
    // Data Members
    int ceilingSpeed;
@@ -1052,6 +1077,8 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
+   virtual void netSerialize(cs_floorwaggle_data_t *data);
+   virtual void netUpdate(cs_floorwaggle_data_t *data);
    
    // Data Members
    fixed_t originalHeight;
@@ -1429,18 +1456,58 @@ void P_ActivateInStasis(int tag);
 
 void P_PlatSequence(sector_t *s, const char *seqname);
 
+PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
+                             plattype_e type);
+
 // p_doors
 
-void P_SpawnDoorCloseIn30(sector_t *sec);
-
-void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
-
 void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haleyjd
+
+void P_RemoveDoor(VerticalDoorThinker *door);
+
+VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
+                                       vldoor_e type);
+
+VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec);
+
+VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec);
+
+VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
 // p_floor
 void P_FloorSequence(sector_t *s);
 
+void P_RemoveFloor(FloorMoveThinker *floor);
+
+void P_RemoveElevator(ElevatorThinker *elevator);
+
+void P_RemovePillar(PillarThinker *pillar);
+
+void P_RemoveFloorWaggle(FloorWaggleThinker *floorwaggle);
+
+FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype);
+
+FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
+                               fixed_t floordestheight);
+
+FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
+                                   fixed_t floordestheight);
+
+ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
+                                 elevator_e elevtype);
+
+PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
+                                  fixed_t height, fixed_t speed, int crush);
+
+PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
+                                 fixed_t fdist, fixed_t cdist);
+
+FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector,
+                                       int height, int speed, int offset,
+                                       int timer);
 // p_ceilng
+
+CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 

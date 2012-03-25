@@ -27,89 +27,137 @@
 #ifndef CS_SPEC_H__
 #define CS_SPEC_H__
 
-#include "m_fixed.h"
-#include "p_spec.h"
-
-typedef enum
-{
-   ms_ceiling,
-   ms_ceiling_param,
-   ms_door_tagged,
-   ms_door_manual,
-   ms_door_closein30,
-   ms_door_raisein300,
-   ms_door_param,
-   ms_floor,
-   ms_floor_param,
-   ms_stairs,
-   ms_donut,
-   ms_donut_hole,
-   ms_elevator,
-   ms_pillar_build,
-   ms_pillar_open,
-   ms_floorwaggle,
-   ms_platform,
-   ms_platform_gen,
-   // [CG] These are parameterized/general specials that I've yet to add.
-   ms_paramstairs,
-   ms_gencrusher,
-} map_special_e;
+const uint8_t st_platform    = 1;
+const uint8_t st_door        = 2;
+const uint8_t st_ceiling     = 3;
+const uint8_t st_floor       = 4;
+const uint8_t st_elevator    = 5;
+const uint8_t st_pillar      = 6;
+const uint8_t st_floorwaggle = 7;
 
 // [CG] Everything below is either sent over the network or saved in demos, and
 //      therefore must be packed and use exact-width integer types.
 
 #pragma pack(push, 1)
 
-typedef struct sector_position_s
+struct sector_position_t
 {
    uint32_t world_index;
-   fixed_t ceiling_height;
-   fixed_t floor_height;
-} sector_position_t;
+   fixed_t  ceiling_height;
+   fixed_t  floor_height;
+};
 
-// [CG] 09/22/11: Status for sending over the network.
-typedef struct cs_ceilingdata_s
+struct cs_platform_data_t
 {
-   int32_t trigger_type;
-   int32_t crush;
-   int32_t direction;
-   int32_t speed_type;
-   int32_t change_type;
-   int32_t change_model;
-   int32_t target_type;
-   fixed_t height_value;
-   fixed_t speed_value;
-} cs_ceilingdata_t;
+   uint32_t net_id;
+   fixed_t  speed;
+   fixed_t  low;
+   fixed_t  high;
+   int32_t  wait;
+   int32_t  count;
+   int32_t  status;
+   int32_t  oldstatus;
+   int32_t  crush;
+   int32_t  tag;
+   int32_t  type;
+};
 
-// [CG] 09/22/11: Status for sending over the network.
-typedef struct cs_doordata_s
+struct cs_door_data_t
 {
-   int32_t delay_type;
-   int32_t kind;
-   int32_t speed_type;
-   int32_t trigger_type;
-   fixed_t speed_value;
-   int32_t delay_value;
-   int32_t altlighttag;
-   int8_t  usealtlighttag;
-   int32_t topcountdown;
-} cs_doordata_t;
+   uint32_t net_id;
+   int32_t  type;
+   fixed_t  topheight;
+   fixed_t  speed;
+   int32_t  direction;
+   int32_t  topwait;
+   int32_t  topcountdown;
+   uint32_t line_number;
+   int32_t  lighttag;
+   uint8_t  turbo;
+};
 
-// [CG] 09/22/11: Status for sending over the network.
-typedef struct cs_floordata_s
+struct cs_spectransfer_t
 {
-   int32_t trigger_type;
-   int32_t crush;
-   int32_t direction;
-   int32_t speed_type;
-   int32_t change_type;
-   int32_t change_model;
-   int32_t target_type;
-   fixed_t height_value;
-   fixed_t speed_value;
-} cs_floordata_t;
+   uint32_t net_id;
+   int32_t  newspecial;
+   uint32_t flags;
+   int32_t  damage;
+   int32_t  damagemask;
+   int32_t  damagemod;
+   int32_t  damageflags;
+};
+
+struct cs_ceiling_data_t
+{
+   uint32_t          net_id;
+   int32_t           type;
+   fixed_t           bottomheight;
+   fixed_t           topheight;
+   fixed_t           speed;
+   fixed_t           oldspeed;
+   int32_t           crush;
+   cs_spectransfer_t special;
+   int32_t           texture;
+   int32_t           direction;
+   uint8_t           inStasis;
+   int32_t           tag;
+   int32_t           olddirection;
+};
+
+struct cs_floor_data_t
+{
+   uint32_t          net_id;
+   int32_t           type;
+   int32_t           crush;
+   int32_t           direction;
+   cs_spectransfer_t special;
+   int16_t           texture;
+   fixed_t           floordestheight;
+   fixed_t           speed;
+   int32_t           resetTime;
+   fixed_t           resetHeight;
+   int32_t           stepRaiseTime;
+   int32_t           delayTime;
+   int32_t           delayTimer;
+};
+
+struct cs_elevator_data_t
+{
+   uint32_t net_id;
+   int32_t  type;
+   int32_t  direction;
+   fixed_t  floordestheight;
+   fixed_t  ceilingdestheight;
+   fixed_t  speed;
+};
+
+struct cs_pillar_data_t
+{
+   uint32_t net_id;
+   int32_t  ceilingSpeed;
+   int32_t  floorSpeed;
+   int32_t  floordest;
+   int32_t  ceilingdest;
+   int32_t  direction;
+   int32_t  crush;
+};
+
+struct cs_floorwaggle_data_t
+{
+   uint32_t net_id;
+   fixed_t  originalHeight;
+   fixed_t  accumulator;
+   fixed_t  accDelta;
+   fixed_t  targetScale;
+   fixed_t  scale;
+   fixed_t  scaleDelta;
+   int32_t  ticker;
+   int32_t  state;
+};
 
 #pragma pack(pop)
+
+struct sector_t;
 
 extern sector_position_t **cs_sector_positions;
 
@@ -122,12 +170,8 @@ void CS_CopySectorPosition(sector_position_t *position_one,
                            sector_position_t *position_two);
 void CS_PrintSectorPosition(size_t sector_number, sector_position_t *position);
 bool CS_SectorPositionIs(sector_t *sector, sector_position_t *position);
-void CS_InitSectorPositions(void);
 void CS_LoadSectorPositions(unsigned int index);
 void CS_LoadCurrentSectorPositions(void);
-void CS_SaveCeilingData(cs_ceilingdata_t *cscd, ceilingdata_t *cd);
-void CS_SaveDoorData(cs_doordata_t *csdd, doordata_t *dd);
-void CS_SaveFloorData(cs_floordata_t *csfd, floordata_t *fd);
 
 #endif
 

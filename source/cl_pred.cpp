@@ -35,6 +35,7 @@
 
 #include "cs_cmd.h"
 #include "cs_main.h"
+#include "cs_netid.h"
 #include "cs_position.h"
 #include "cl_main.h"
 #include "cl_spec.h"
@@ -133,5 +134,13 @@ uint32_t CL_GetLastServerPositionIndex(void)
 uint32_t CL_GetLastServerCommandIndex(void)
 {
    return last_server_command_index;
+}
+
+void CL_SectorThink()
+{
+   NetIDToObject<SectorThinker> *nito = NULL;
+
+   while((nito = NetSectorThinkers.iterate(nito)))
+      nito->object->Think();
 }
 

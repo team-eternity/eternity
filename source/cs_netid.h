@@ -31,19 +31,11 @@
 #include "i_system.h"
 #include "m_queue.h"
 
-#define NUM_NETID_CHAINS 256
+#define NUM_NETID_CHAINS 251
 #define MAX_NETID_LOAD_FACTOR 0.7
 
 class Mobj;
-#if 0
-class CeilingThinker;
-class VerticalDoorThinker;
-class FloorMoveThinker;
-class ElevatorThinker;
-class PillarThinker;
-class FloorWaggleThinker;
-class PlatThinker;
-#endif
+class SectorThinker;
 
 struct NetID
 {
@@ -153,18 +145,15 @@ public:
 
    uint32_t getNetIDsAssigned() const { return netids_assigned; }
 
+   NetIDToObject<T>* iterate(NetIDToObject<T> *nito)
+   {
+      return netid_map.tableIterator(nito);
+   }
+
 };
 
-extern NetIDLookup<Mobj>                NetActors;
-#if 0
-extern NetIDLookup<CeilingThinker>      NetCeilings;
-extern NetIDLookup<VerticalDoorThinker> NetDoors;
-extern NetIDLookup<FloorMoveThinker>    NetFloors;
-extern NetIDLookup<ElevatorThinker>     NetElevators;
-extern NetIDLookup<PillarThinker>       NetPillars;
-extern NetIDLookup<FloorWaggleThinker>  NetFloorWaggles;
-extern NetIDLookup<PlatThinker>         NetPlatforms;
-#endif
+extern NetIDLookup<Mobj>          NetActors;
+extern NetIDLookup<SectorThinker> NetSectorThinkers;
 
 void CS_ClearNetIDs(void);
 

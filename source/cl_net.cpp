@@ -1593,24 +1593,12 @@ void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message)
 #endif
 }
 
-#if 0
-void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message)
+void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
 {
-   line_t *line;
-   sector_t *sector;
-   void *blob = (void *)(((char *)message) + sizeof(nm_specialspawned_t));
+   line_t *line = NULL;
+   sector_t *sector = NULL;
 
-   if(message->line_number >= numlines)
-   {
-      doom_printf(
-         "Received a map special spawned message containing invalid line %d, "
-         "ignoring.",
-         message->line_number
-      );
-      return;
-   }
-
-   if(message->sector_number >= numsectors)
+   if((message->sector_number >= (unsigned int)numsectors))
    {
       doom_printf(
          "Received a map special spawned message containing invalid sector "
@@ -1620,171 +1608,151 @@ void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message)
       return;
    }
 
-   line = &lines[message->line_number];
    sector = &sectors[message->sector_number];
 
-   switch(message->special_type)
+   switch(message->type)
    {
-   case ms_ceiling_param:
-      CL_SpawnParamCeilingFromBlob(line, sector, blob);
-      break;
-   case ms_door_param:
-      CL_SpawnParamDoorFromBlob(line, sector, blob);
-      break;
-   case ms_floor_param:
-      CL_SpawnParamFloorFromBlob(line, sector, blob);
-      break;
-   case ms_ceiling:
-      CL_SpawnCeilingFromStatusBlob(line, sector, blob);
-      break;
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-      CL_SpawnDoorFromStatusBlob(
-         line, sector, blob, (map_special_e)message->special_type
-      );
-      break;
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-      CL_SpawnFloorFromStatusBlob(
-         line, sector, blob, (map_special_e)message->special_type
-      );
-      break;
-   case ms_elevator:
-      CL_SpawnElevatorFromStatusBlob(line, sector, blob);
-      break;
-   case ms_pillar_build:
-   case ms_pillar_open:
-      CL_SpawnPillarFromStatusBlob(
-         line, sector, blob, (map_special_e)message->special_type
-      );
-      break;
-   case ms_floorwaggle:
-      CL_SpawnFloorWaggleFromStatusBlob(line, sector, blob);
-      break;
-   case ms_platform:
-      CL_SpawnPlatformFromStatusBlob(line, sector, blob);
-      break;
-   case ms_platform_gen:
-      CL_SpawnGenPlatformFromStatusBlob(line, sector, blob);
-      break;
-   default:
-      doom_printf(
-         "CL_HandleMapSpecialSpawnedMessage: unknown special type %d, "
-         "ignoring.\n",
-         message->special_type
-      );
-      break;
+      case st_platform:
+         CL_SpawnPlatform(sector, &message->platform_data);
+         break;
+      case st_door:
+         CL_SpawnVerticalDoor(line, sector, &message->door_data);
+         break;
+      case st_ceiling:
+         CL_SpawnCeiling(sector, &message->ceiling_data);
+         break;
+      case st_floor:
+         CL_SpawnFloor(sector, &message->floor_data);
+         break;
+      case st_elevator:
+         CL_SpawnElevator(sector, &message->elevator_data);
+         break;
+      case st_pillar:
+         CL_SpawnPillar(sector, &message->pillar_data);
+         break;
+      case st_floorwaggle:
+         CL_SpawnFloorWaggle(sector, &message->floorwaggle_data);
+         break;
+      default:
+         doom_printf(
+            "CL_HandleSectorThinkerSpawnedMessage: Received a sector thinker "
+            "spawned message with invalid type %d, ignoring.",
+            message->type
+         );
+         break;
    }
 }
-#endif
 
-#if 0
-void CL_HandleMapSpecialStatusMessage(nm_specialstatus_t *message)
+void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 {
-   void *blob = (void *)(((char *)message) + sizeof(nm_specialstatus_t));
-
-   switch(message->special_type)
+   switch(message->type)
    {
-   case ms_ceiling:
-   case ms_ceiling_param:
-      CL_ApplyCeilingStatusFromBlob(blob);
+   case st_platform:
+      CL_UpdatePlatform(&message->platform_data);
       break;
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-   case ms_door_param:
-      CL_ApplyDoorStatusFromBlob(blob);
+   case st_door:
+      CL_UpdateVerticalDoor(&message->door_data);
       break;
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-   case ms_floor_param:
-      CL_ApplyFloorStatusFromBlob(blob);
+   case st_ceiling:
+      CL_UpdateCeiling(&message->ceiling_data);
       break;
-   case ms_elevator:
-      CL_ApplyElevatorStatusFromBlob(blob);
+   case st_floor:
+      CL_UpdateFloor(&message->floor_data);
       break;
-   case ms_pillar_build:
-   case ms_pillar_open:
-      CL_ApplyPillarStatusFromBlob(blob);
+   case st_elevator:
+      CL_UpdateElevator(&message->elevator_data);
       break;
-   case ms_floorwaggle:
-      CL_ApplyFloorWaggleStatusFromBlob(blob);
+   case st_pillar:
+      CL_UpdatePillar(&message->pillar_data);
       break;
-   case ms_platform:
-   case ms_platform_gen:
-      CL_ApplyPlatformStatusFromBlob(blob);
+   case st_floorwaggle:
+      CL_UpdateFloorWaggle(&message->floorwaggle_data);
       break;
    default:
       doom_printf(
-         "CL_LoadSectorState: unknown node type %d, ignoring.\n",
-         message->special_type
+         "CL_HandleSectorThinkerStatusMessage: Received a sector thinker "
+         "status message with invalid type %u, ignoring.",
+         message->type
       );
       break;
    }
 }
-#endif
 
-#if 0
-void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message)
+void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
 {
-   switch(message->special_type)
+   PlatThinker         *platform = NULL;
+   VerticalDoorThinker *door     = NULL;
+   CeilingThinker      *ceiling  = NULL;
+   FloorMoveThinker    *floor    = NULL;
+   ElevatorThinker     *elevator = NULL;
+   PillarThinker       *pillar   = NULL;
+   FloorWaggleThinker  *waggle   = NULL;
+   SectorThinker       *thinker  = NULL;
+   uint32_t            net_id    = message->net_id;
+   
+   if(!(thinker = NetSectorThinkers.lookup(net_id)))
    {
-   case ms_ceiling:
-   case ms_ceiling_param:
-      if(CeilingThinker *t = NetCeilings.lookup(message->net_id))
-         P_RemoveActiveCeiling(t);
+      doom_printf(
+         "CL_HandleSectorThinkerRemovedMessage: Received a sector thinker "
+         "removed message for invalid thinker %u, ignoring.",
+         net_id
+      );
+      return;
+   }
+
+   switch(message->type)
+   {
+   case st_platform:
+      if(!(platform = dynamic_cast<PlatThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not a platform.", net_id);
+      else
+         P_RemoveActivePlat(platform);
       break;
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-   case ms_door_param:
-      if(VerticalDoorThinker *t = NetDoors.lookup(message->net_id))
-         P_RemoveDoor(t);
+   case st_door:
+      if(!(door = dynamic_cast<VerticalDoorThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not a door.", net_id);
+      else
+         P_RemoveDoor(door);
       break;
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-   case ms_floor_param:
-      if(FloorMoveThinker *t = NetFloors.lookup(message->net_id))
-         P_RemoveFloor(t);
+   case st_ceiling:
+      if(!(ceiling = dynamic_cast<CeilingThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not a ceiling.", net_id);
+      else
+         P_RemoveActiveCeiling(ceiling);
       break;
-   case ms_elevator:
-      if(ElevatorThinker *t = NetElevators.lookup(message->net_id))
-         P_RemoveElevator(t);
+   case st_floor:
+      if(!(floor = dynamic_cast<FloorMoveThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not a floor.", net_id);
+      else
+         P_RemoveFloor(floor);
       break;
-   case ms_pillar_build:
-   case ms_pillar_open:
-      if(PillarThinker *t = NetPillars.lookup(message->net_id))
-         P_RemovePillar(t);
+   case st_elevator:
+      if(!(elevator = dynamic_cast<ElevatorThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not an elevator.", net_id);
+      else
+         P_RemoveElevator(elevator);
       break;
-   case ms_floorwaggle:
-      if(FloorWaggleThinker *t = NetFloorWaggles.lookup(message->net_id))
-         P_RemoveFloorWaggle(t);
+   case st_pillar:
+      if(!(pillar = dynamic_cast<PillarThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not an pillar.", net_id);
+      else
+         P_RemovePillar(pillar);
       break;
-   case ms_platform:
-   case ms_platform_gen:
-      if(PlatThinker *t = NetPlatforms.lookup(message->net_id))
-         P_RemoveActivePlat(t);
+   case st_floorwaggle:
+      if(!(waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
+         doom_printf("Sector thinker %u is not a floor waggle.", net_id);
+      else
+         P_RemoveFloorWaggle(waggle);
       break;
    default:
       doom_printf(
-         "CL_HandleMapSpecialRemovedMessage: unknown special type %d, "
-         "ignoring.\n",
-         message->special_type
+         "CL_HandleSectorThinkerRemovedMessage: Received a sector thinker "
+         "removed message with invalid type %d, ignoring.",
+         message->type
       );
       break;
    }
 }
-#endif
 
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 {

@@ -27,28 +27,12 @@
 #include "z_zone.h"
 #include "cs_netid.h"
 
-NetIDLookup<Mobj>                NetActors;
-#if 0
-NetIDLookup<CeilingThinker>      NetCeilings;
-NetIDLookup<VerticalDoorThinker> NetDoors;
-NetIDLookup<FloorMoveThinker>    NetFloors;
-NetIDLookup<ElevatorThinker>     NetElevators;
-NetIDLookup<PillarThinker>       NetPillars;
-NetIDLookup<FloorWaggleThinker>  NetFloorWaggles;
-NetIDLookup<PlatThinker>         NetPlatforms;
-#endif
+NetIDLookup<Mobj>          NetActors;
+NetIDLookup<SectorThinker> NetSectorThinkers;
 
 void CS_ClearNetIDs(void)
 {
    NetActors.clear();
-#if 0
-   NetCeilings.clear();
-   NetDoors.clear();
-   NetFloors.clear();
-   NetElevators.clear();
-   NetPillars.clear();
-   NetFloorWaggles.clear();
-   NetPlatforms.clear();
-#endif
+   NetSectorThinkers.clear();
 }
 

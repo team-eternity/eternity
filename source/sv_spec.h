@@ -32,7 +32,7 @@
 void SV_SaveSectorPositions(void);
 void SV_LoadSectorPositionAt(unsigned int sector_number, unsigned int index);
 void SV_LoadCurrentSectorPosition(unsigned int sector_number);
-void SV_BroadcastMapSpecialStatuses(void);
+void SV_BroadcastSectorThinkerStatuses(void);
 
 #endif
 

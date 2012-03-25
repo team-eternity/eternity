@@ -168,19 +168,17 @@ void NetPacket::process()
    case nm_cubespawned:
       CL_HandleCubeSpawnedMessage((nm_cubespawned_t *)data);
       break;
-#if 0
-   case nm_specialspawned:
-      CL_HandleMapSpecialSpawnedMessage((nm_specialspawned_t *)data);
-      break;
-   case nm_specialstatus:
-      CL_HandleMapSpecialStatusMessage((nm_specialstatus_t *)data);
-      break;
-   case nm_specialremoved:
-      CL_HandleMapSpecialRemovedMessage((nm_specialremoved_t *)data);
-      break;
-#endif
    case nm_sectorposition:
       CL_HandleSectorPositionMessage((nm_sectorposition_t *)data);
+      break;
+   case nm_sectorthinkerspawned:
+      CL_HandleSectorThinkerSpawnedMessage((nm_sectorthinkerspawned_t *)data);
+      break;
+   case nm_sectorthinkerstatus:
+      CL_HandleSectorThinkerStatusMessage((nm_sectorthinkerstatus_t *)data);
+      break;
+   case nm_sectorthinkerremoved:
+      CL_HandleSectorThinkerRemovedMessage((nm_sectorthinkerremoved_t *)data);
       break;
    case nm_announcerevent:
       CL_HandleAnnouncerEventMessage((nm_announcerevent_t *)data);

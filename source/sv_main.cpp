@@ -184,12 +184,10 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
    case nm_missilespawned:
    case nm_missileexploded:
    case nm_cubespawned:
-#if 0
-   case nm_specialspawned:
-   case nm_specialstatus:
-   case nm_specialremoved:
-#endif
    case nm_sectorposition:
+   case nm_sectorthinkerspawned:
+   case nm_sectorthinkerstatus:
+   case nm_sectorthinkerremoved:
    case nm_announcerevent:
    case nm_vote:
    case nm_voteresult:
@@ -239,9 +237,9 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned
 #if 0
-      || message_type == nm_specialspawned
-      // || message_type == nm_specialstatus
-      || message_type == nm_specialremoved
+      || message_type == nm_sectorthinkerspawned
+      // || message_type == nm_sectorthinkerstatus
+      || message_type == nm_sectorthinkerremoved
 #endif
       // || message_type == nm_sectorposition
       || message_type == nm_announcerevent
@@ -2237,321 +2235,154 @@ void SV_BroadcastSectorPosition(size_t sector_number)
    broadcast_packet(&position_message, sizeof(nm_sectorposition_t));
 }
 
-void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
-                                   sector_t *sector,
-                                   map_special_e special_type)
+void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker)
 {
-#if 0
-   size_t msg_size = sizeof(nm_specialspawned_t);
-   size_t special_size, total_size;
-   char *buffer, *status_buffer;
-   nm_specialspawned_t *spawn_message;
+   PlatThinker         *platform     = NULL;
+   VerticalDoorThinker *door         = NULL;
+   CeilingThinker      *ceiling      = NULL;
+   FloorMoveThinker    *floor        = NULL;
+   ElevatorThinker     *elevator     = NULL;
+   PillarThinker       *pillar       = NULL;
+   FloorWaggleThinker  *floor_waggle = NULL;
 
-   switch(special_type)
+   nm_sectorthinkerspawned_t message;
+
+   message.message_type = nm_sectorthinkerspawned;
+   message.world_index = sv_world_index;
+   message.sector_number = thinker->sector - sectors;
+
+   if((platform = dynamic_cast<PlatThinker *>(thinker)))
    {
-   case ms_ceiling:
-   case ms_ceiling_param:
-      special_size = sizeof(CeilingThinker::status_t);
-      break;
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-   case ms_door_param:
-      special_size = sizeof(VerticalDoorThinker::status_t);
-      break;
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-   case ms_floor_param:
-      special_size = sizeof(FloorMoveThinker::status_t);
-      break;
-   case ms_elevator:
-      special_size = sizeof(ElevatorThinker::status_t);
-      break;
-   case ms_pillar_build:
-   case ms_pillar_open:
-      special_size = sizeof(PillarThinker::status_t);
-      break;
-   case ms_floorwaggle:
-      special_size = sizeof(FloorWaggleThinker::status_t);
-      break;
-   case ms_platform:
-   case ms_platform_gen:
-      special_size = sizeof(PlatThinker::status_t);
-      break;
-   default:
-      I_Error(
-         "SV_BroadcastMapSpecialSpawned: Invalid map special type %d.\n",
-         special_type
+      message.type = st_platform;
+      platform->netSerialize(&message.platform_data);
+   }
+   else if((door = dynamic_cast<VerticalDoorThinker *>(thinker)))
+   {
+      message.type = st_door;
+      door->netSerialize(&message.door_data);
+   }
+   else if((ceiling = dynamic_cast<CeilingThinker *>(thinker)))
+   {
+      message.type = st_ceiling;
+      ceiling->netSerialize(&message.ceiling_data);
+   }
+   else if((floor = dynamic_cast<FloorMoveThinker *>(thinker)))
+   {
+      message.type = st_floor;
+      floor->netSerialize(&message.floor_data);
+   }
+   else if((elevator = dynamic_cast<ElevatorThinker *>(thinker)))
+   {
+      message.type = st_elevator;
+      elevator->netSerialize(&message.elevator_data);
+   }
+   else if((pillar = dynamic_cast<PillarThinker *>(thinker)))
+   {
+      message.type = st_pillar;
+      pillar->netSerialize(&message.pillar_data);
+   }
+   else if((floor_waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
+   {
+      message.type = st_floorwaggle;
+      floor_waggle->netSerialize(&message.floorwaggle_data);
+   }
+   else
+   {
+      doom_printf(
+         "Bad sector thinker passed to SV_BroadcastSectorThinkerSpawned."
       );
       return;
    }
 
-   total_size = msg_size + special_size;
-   switch(special_type)
-   {
-   case ms_ceiling_param:
-      total_size += sizeof(cs_ceilingdata_t);
-      break;
-   case ms_door_param:
-      total_size += sizeof(cs_doordata_t);
-      break;
-   case ms_floor_param:
-      total_size += sizeof(cs_floordata_t);
-      break;
-   default:
-      break;
-   }
-
-   buffer = emalloc(char *, total_size));
-   status_buffer = (buffer + sizeof(nm_specialspawned_t));
-   spawn_message = (nm_specialspawned_t *)buffer;
-   spawn_message->message_type = nm_specialspawned;
-   spawn_message->world_index = sv_world_index;
-   spawn_message->special_type = special_type;
-
-   if(line == NULL)
-      spawn_message->line_number = 0;
-   else
-      spawn_message->line_number = line - lines;
-
-   if(sector == NULL)
-      spawn_message->sector_number = 0;
-   else
-      spawn_message->sector_number = sector - sectors;
-
-   switch(special_type)
-   {
-   case ms_ceiling:
-   case ms_ceiling_param:
-   {
-      CeilingThinker *ct = reinterpret_cast<CeilingThinker *>(special);
-      ct->getStatus((CeilingThinker::status_t *)status_buffer);
-      break;
-   }
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-   case ms_door_param:
-   {
-      VerticalDoorThinker *vdt =
-         reinterpret_cast<VerticalDoorThinker *>(special);
-      vdt->getStatus((VerticalDoorThinker::status_t *)status_buffer);
-      break;
-   }
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-   case ms_floor_param:
-   {
-      FloorMoveThinker *fmt = reinterpret_cast<FloorMoveThinker *>(special);
-      fmt->getStatus((FloorMoveThinker::status_t *)status_buffer);
-      break;
-   }
-   case ms_elevator:
-   {
-      ElevatorThinker *et = reinterpret_cast<ElevatorThinker *>(special);
-      et->getStatus((ElevatorThinker::status_t *)status_buffer);
-      break;
-   }
-   case ms_pillar_build:
-   case ms_pillar_open:
-   {
-      PillarThinker *pt = reinterpret_cast<PillarThinker *>(special);
-      pt->getStatus((PillarThinker::status_t *)status_buffer);
-      break;
-   }
-   case ms_floorwaggle:
-   {
-      FloorWaggleThinker *flt =
-         reinterpret_cast<FloorWaggleThinker *>(special);
-      flt->getStatus((FloorWaggleThinker::status_t *)status_buffer);
-      break;
-   }
-   case ms_platform:
-   case ms_platform_gen:
-   {
-      PlatThinker *plt = reinterpret_cast<PlatThinker *>(special);
-      plt->getStatus((PlatThinker::status_t *)status_buffer);
-      break;
-   }
-   default:
-      return;
-   }
-
-   if(special_type == ms_ceiling_param)
-   {
-      ceilingdata_t *ceiling_data = reinterpret_cast<ceilingdata_t *>(data);
-      cs_ceilingdata_t *ceiling_data_buffer = (cs_ceilingdata_t *)(
-         status_buffer + sizeof(CeilingThinker::status_t)
-      );
-      CS_SaveCeilingData(ceiling_data_buffer, ceiling_data);
-   }
-   else if(special_type == ms_door_param)
-   {
-      doordata_t *door_data = reinterpret_cast<doordata_t *>(data);
-      cs_doordata_t *door_data_buffer = (cs_doordata_t *)(
-         status_buffer + sizeof(VerticalDoorThinker::status_t)
-      );
-      CS_SaveDoorData(door_data_buffer, door_data);
-   }
-   else if(special_type == ms_floor_param)
-   {
-      floordata_t *floor_data = reinterpret_cast<floordata_t *>(data);
-      cs_floordata_t *floor_data_buffer = (cs_floordata_t *)(
-         status_buffer + sizeof(FloorMoveThinker::status_t)
-      );
-      CS_SaveFloorData(floor_data_buffer, floor_data);
-   }
-
-   broadcast_packet(buffer, total_size);
-
-   efree(buffer);
-#endif
+   broadcast_packet(&message, sizeof(nm_sectorthinkerspawned_t));
 }
 
-void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type)
+void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker)
 {
-#if 0
-   size_t msg_size = sizeof(nm_specialstatus_t);
-   size_t special_size, total_size;
-   char *buffer, *status_buffer;
-   nm_specialstatus_t *status_message;
+   PlatThinker         *platform     = NULL;
+   VerticalDoorThinker *door         = NULL;
+   CeilingThinker      *ceiling      = NULL;
+   FloorMoveThinker    *floor        = NULL;
+   ElevatorThinker     *elevator     = NULL;
+   PillarThinker       *pillar       = NULL;
+   FloorWaggleThinker  *floor_waggle = NULL;
 
-   switch(special_type)
-   {
-   case ms_ceiling:
-   case ms_ceiling_param:
-      special_size = sizeof(CeilingThinker::status_t);
-      break;
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-   case ms_door_param:
-      special_size = sizeof(VerticalDoorThinker::status_t);
-      break;
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-   case ms_floor_param:
-      special_size = sizeof(FloorMoveThinker::status_t);
-      break;
-   case ms_elevator:
-      special_size = sizeof(ElevatorThinker::status_t);
-      break;
-   case ms_pillar_build:
-   case ms_pillar_open:
-      special_size = sizeof(PillarThinker::status_t);
-      break;
-   case ms_floorwaggle:
-      special_size = sizeof(FloorWaggleThinker::status_t);
-      break;
-   case ms_platform:
-   case ms_platform_gen:
-      special_size = sizeof(PlatThinker::status_t);
-      break;
-   default:
-      I_Error(
-         "SV_BroadcastMapSpecialStatus: Invalid map special type %d.\n",
-         special_type
-      );
-      return;
-   }
+   nm_sectorthinkerstatus_t message;
 
-   total_size = msg_size + special_size;
-   buffer = emalloc(char *, total_size));
-   status_buffer = (buffer + sizeof(nm_specialspawned_t));
+   message.message_type = nm_sectorthinkerstatus;
+   message.world_index = sv_world_index;
 
-   status_message = (nm_specialstatus_t *)buffer;
-   status_message->message_type = nm_specialstatus;
-   status_message->world_index = sv_world_index;
-   status_message->special_type = special_type;
-
-   switch(special_type)
+   if((platform = dynamic_cast<PlatThinker *>(thinker)))
    {
-   case ms_ceiling:
-   case ms_ceiling_param:
-   {
-      CeilingThinker *ct = reinterpret_cast<CeilingThinker *>(special);
-      ct->getStatus((CeilingThinker::status_t *)status_buffer);
-      break;
+      message.type = st_platform;
+      platform->netSerialize(&message.platform_data);
    }
-   case ms_door_tagged:
-   case ms_door_manual:
-   case ms_door_closein30:
-   case ms_door_raisein300:
-   case ms_door_param:
+   else if((door = dynamic_cast<VerticalDoorThinker *>(thinker)))
    {
-      VerticalDoorThinker *vdt =
-         reinterpret_cast<VerticalDoorThinker *>(special);
-      vdt->getStatus((VerticalDoorThinker::status_t *)status_buffer);
-      break;
+      message.type = st_door;
+      door->netSerialize(&message.door_data);
    }
-   case ms_floor:
-   case ms_stairs:
-   case ms_donut:
-   case ms_donut_hole:
-   case ms_floor_param:
+   else if((ceiling = dynamic_cast<CeilingThinker *>(thinker)))
    {
-      FloorMoveThinker *fmt = reinterpret_cast<FloorMoveThinker *>(special);
-      fmt->getStatus((FloorMoveThinker::status_t *)status_buffer);
-      break;
+      message.type = st_ceiling;
+      ceiling->netSerialize(&message.ceiling_data);
    }
-   case ms_elevator:
+   else if((floor = dynamic_cast<FloorMoveThinker *>(thinker)))
    {
-      ElevatorThinker *et = reinterpret_cast<ElevatorThinker *>(special);
-      et->getStatus((ElevatorThinker::status_t *)status_buffer);
-      break;
+      message.type = st_floor;
+      floor->netSerialize(&message.floor_data);
    }
-   case ms_pillar_build:
-   case ms_pillar_open:
+   else if((elevator = dynamic_cast<ElevatorThinker *>(thinker)))
    {
-      PillarThinker *pt = reinterpret_cast<PillarThinker *>(special);
-      pt->getStatus((PillarThinker::status_t *)status_buffer);
-      break;
+      message.type = st_elevator;
+      elevator->netSerialize(&message.elevator_data);
    }
-   case ms_floorwaggle:
+   else if((pillar = dynamic_cast<PillarThinker *>(thinker)))
    {
-      FloorWaggleThinker *flt =
-         reinterpret_cast<FloorWaggleThinker *>(special);
-      flt->getStatus((FloorWaggleThinker::status_t *)status_buffer);
-      break;
+      message.type = st_pillar;
+      pillar->netSerialize(&message.pillar_data);
    }
-   case ms_platform:
-   case ms_platform_gen:
+   else if((floor_waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
    {
-      PlatThinker *plt = reinterpret_cast<PlatThinker *>(special);
-      plt->getStatus((PlatThinker::status_t *)status_buffer);
-      break;
-   }
-   default:
-      return;
+      message.type = st_floorwaggle;
+      floor_waggle->netSerialize(&message.floorwaggle_data);
    }
 
-   broadcast_packet(buffer, total_size);
-   efree(buffer);
-#endif
+   broadcast_packet(&message, sizeof(nm_sectorthinkerstatus_t));
 }
 
-void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
-                                   map_special_e special_type)
+void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker)
 {
-#if 0
-   nm_specialremoved_t removal_message;
+   PlatThinker         *platform     = NULL;
+   VerticalDoorThinker *door         = NULL;
+   CeilingThinker      *ceiling      = NULL;
+   FloorMoveThinker    *floor        = NULL;
+   ElevatorThinker     *elevator     = NULL;
+   PillarThinker       *pillar       = NULL;
+   FloorWaggleThinker  *floor_waggle = NULL;
 
-   removal_message.message_type = nm_specialremoved;
-   removal_message.world_index = sv_world_index;
-   removal_message.special_type = special_type;
-   removal_message.net_id = net_id;
+   nm_sectorthinkerremoved_t message;
 
-   broadcast_packet(&removal_message, sizeof(nm_specialremoved_t));
-#endif
+   message.message_type = nm_sectorthinkerremoved;
+   message.world_index = sv_world_index;
+   message.net_id = thinker->net_id;
+
+   if((platform = dynamic_cast<PlatThinker *>(thinker)))
+      message.type = st_platform;
+   else if((door = dynamic_cast<VerticalDoorThinker *>(thinker)))
+      message.type = st_door;
+   else if((ceiling = dynamic_cast<CeilingThinker *>(thinker)))
+      message.type = st_ceiling;
+   else if((floor = dynamic_cast<FloorMoveThinker *>(thinker)))
+      message.type = st_floor;
+   else if((elevator = dynamic_cast<ElevatorThinker *>(thinker)))
+      message.type = st_elevator;
+   else if((pillar = dynamic_cast<PillarThinker *>(thinker)))
+      message.type = st_pillar;
+   else if((floor_waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
+      message.type = st_floorwaggle;
+
+   broadcast_packet(&message, sizeof(nm_sectorthinkerremoved_t));
 }
 
 void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source)
@@ -3279,7 +3110,7 @@ void SV_TryRunTics(void)
             //      not too much extra bandwidth to send updates even if their
             //      states haven't changed.  If this becomes ridiculous, saving
             //      and checking their state is simple enough.
-            SV_BroadcastMapSpecialStatuses();
+            SV_BroadcastSectorThinkerStatuses();
             SV_MarkQueueClientsAFK();
             // [CG] Now that the game loop has finished, servers can address
             //      new clients and map changes.
@@ -3370,12 +3201,10 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_missilespawned:
    case nm_missileexploded:
    case nm_cubespawned:
-#if 0
-   case nm_specialspawned:
-   case nm_specialstatus:
-   case nm_specialremoved:
-#endif
    case nm_sectorposition:
+   case nm_sectorthinkerspawned:
+   case nm_sectorthinkerstatus:
+   case nm_sectorthinkerremoved:
    case nm_announcerevent:
    case nm_voteresult:
    case nm_ticfinished:

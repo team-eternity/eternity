@@ -175,12 +175,9 @@ void SV_BroadcastMissileSpawned(Mobj *source, Mobj *missile);
 void SV_BroadcastMissileExploded(Mobj *missile);
 void SV_BroadcastCubeSpawned(Mobj *cube);
 void SV_BroadcastSectorPosition(size_t sector_number);
-void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
-                                   sector_t *sector,
-                                   map_special_e special_type);
-void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type);
-void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
-                                   map_special_e special_type);
+void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker);
+void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker);
+void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker);
 void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source);
 void SV_BroadcastVote();
 void SV_BroadcastVoteResult();

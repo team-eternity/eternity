@@ -79,11 +79,9 @@ void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message);
 void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message);
 void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message);
 void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message);
-#if 0
-void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message);
-void CL_HandleMapSpecialStatusMessage(nm_specialstatus_t *message);
-void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message);
-#endif
+void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message);
+void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message);
+void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message);
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message);
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message);
 void CL_HandleVoteMessage(nm_vote_t *message);

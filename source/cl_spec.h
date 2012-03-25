@@ -27,79 +27,29 @@
 #ifndef CL_SPEC_H__
 #define CL_SPEC_H__
 
-#include "p_spec.h"
-
-#include "cs_main.h"
 #include "cs_spec.h"
 
 extern bool cl_predicting_sectors;
 extern bool cl_setting_sector_positions;
 
-void CL_LoadSectorState(unsigned int index);
 void CL_LoadSectorPositions(unsigned int index);
 void CL_LoadCurrentSectorPositions(void);
-void CL_LoadCurrentSectorState(void);
 
-#if 0
-void CL_SpawnParamCeiling(line_t *line, sector_t *sector,
-                          CeilingThinker::status_t *status,
-                          cs_ceilingdata_t *data);
-void CL_SpawnParamDoor(line_t *line, sector_t *sector,
-                       VerticalDoorThinker::status_t *status,
-                       cs_doordata_t *data);
-void CL_SpawnParamFloor(line_t *line, sector_t *sector,
-                        FloorMoveThinker::status_t *status,
-                        cs_floordata_t *data);
-void CL_SpawnCeilingFromStatus(line_t *line, sector_t *sector,
-                               CeilingThinker::status_t *status);
-void CL_SpawnDoorFromStatus(line_t *line, sector_t *sector,
-                            VerticalDoorThinker::status_t *status,
-                            map_special_e type);
-void CL_SpawnFloorFromStatus(line_t *line, sector_t *sector,
-                             FloorMoveThinker::status_t *status,
-                             map_special_e type);
-void CL_SpawnElevatorFromStatus(line_t *line, sector_t *sector,
-                                ElevatorThinker::status_t *status);
-void CL_SpawnPillarFromStatus(line_t *line, sector_t *sector,
-                              PillarThinker::status_t *status,
-                              map_special_e type);
-void CL_SpawnFloorWaggleFromStatus(line_t *line, sector_t *sector,
-                                   FloorWaggleThinker::status_t *status);
-void CL_SpawnPlatformFromStatus(line_t *line, sector_t *sector,
-                                PlatThinker::status_t *status);
-void CL_SpawnGenPlatformFromStatus(line_t *line, sector_t *sector,
-                                   PlatThinker::status_t *status);
+void CL_SpawnPlatform(sector_t *sec, cs_platform_data_t *dt);
+void CL_SpawnVerticalDoor(line_t *ln, sector_t *sec, cs_door_data_t *dt);
+void CL_SpawnCeiling(sector_t *sec, cs_ceiling_data_t *dt);
+void CL_SpawnFloor(sector_t *sec, cs_floor_data_t *dt);
+void CL_SpawnElevator(sector_t *sec, cs_elevator_data_t *dt);
+void CL_SpawnPillar(sector_t *sec, cs_pillar_data_t *dt);
+void CL_SpawnFloorWaggle(sector_t *sec, cs_floorwaggle_data_t *dt);
 
-void CL_SpawnParamCeilingFromBlob(line_t *line, sector_t *sector, void *blob);
-void CL_SpawnParamDoorFromBlob(line_t *line, sector_t *sector, void *blob);
-void CL_SpawnParamFloorFromBlob(line_t *line, sector_t *sector, void *blob);
-
-void CL_SpawnCeilingFromStatusBlob(line_t *line, sector_t *sector, void *blob);
-void CL_SpawnDoorFromStatusBlob(line_t *line, sector_t *sector, void *blob,
-                                map_special_e type);
-void CL_SpawnFloorFromStatusBlob(line_t *line, sector_t *sector, void *blob,
-                                 map_special_e type);
-void CL_SpawnElevatorFromStatusBlob(line_t *line, sector_t *sector, void *blob);
-void CL_SpawnPillarFromStatusBlob(line_t *line, sector_t *sector, void *blob,
-                                    map_special_e type);
-void CL_SpawnFloorWaggleFromStatusBlob(line_t *line, sector_t *sector,
-                                       void *blob);
-void CL_SpawnPlatformFromStatusBlob(line_t *line, sector_t *sector,
-                                    void *blob);
-void CL_SpawnGenPlatformFromStatusBlob(line_t *line, sector_t *sector,
-                                       void *blob);
-
-void CL_ApplyCeilingStatusFromBlob(void *blob);
-void CL_ApplyDoorStatusFromBlob(void *blob);
-void CL_ApplyFloorStatusFromBlob(void *blob);
-void CL_ApplyElevatorStatusFromBlob(void *blob);
-void CL_ApplyPillarStatusFromBlob(void *blob);
-void CL_ApplyFloorWaggleStatusFromBlob(void *blob);
-void CL_ApplyPlatformStatusFromBlob(void *blob);
-
-void CL_ClearMapSpecialStatuses(void);
-void CL_PrintSpecialStatuses(void);
-#endif
+void CL_UpdatePlatform(cs_platform_data_t *dt);
+void CL_UpdateVerticalDoor(cs_door_data_t *dt);
+void CL_UpdateCeiling(cs_ceiling_data_t *dt);
+void CL_UpdateFloor(cs_floor_data_t *dt);
+void CL_UpdateElevator(cs_elevator_data_t *dt);
+void CL_UpdatePillar(cs_pillar_data_t *dt);
+void CL_UpdateFloorWaggle(cs_floorwaggle_data_t *dt);
 
 #endif
 

@@ -55,9 +55,7 @@ void CS_InitSectorPositions(void)
       numsectors * sizeof(sector_position_t *)
    );
 
-   memset(
-      cs_sector_positions, 0, numsectors * sizeof(sector_position_t *)
-   );
+   memset(cs_sector_positions, 0, numsectors * sizeof(sector_position_t *));
 
    for(i = 0; i < numsectors; i++)
    {
@@ -78,12 +76,13 @@ void CS_SetSectorPosition(sector_t *sector, sector_position_t *position)
 bool CS_SectorPositionsEqual(sector_position_t *position_one,
                                 sector_position_t *position_two)
 {
-   if(position_one->ceiling_height == position_two->ceiling_height &&
-      position_one->floor_height   == position_two->floor_height)
-   {
-      return true;
-   }
-   return false;
+   if(position_one->ceiling_height != position_two->ceiling_height)
+      return false;
+
+   if(position_one->floor_height != position_two->floor_height)
+      return false;
+
+   return true;
 }
 
 void CS_SaveSectorPosition(sector_position_t *position, sector_t *sector)
@@ -113,50 +112,12 @@ void CS_PrintSectorPosition(size_t sector_number, sector_position_t *position)
 
 bool CS_SectorPositionIs(sector_t *sector, sector_position_t *position)
 {
-   if(sector->ceilingheight == position->ceiling_height &&
-      sector->floorheight   == position->floor_height)
-   {
-      return true;
-   }
-   return false;
-}
+   if(sector->ceilingheight != position->ceiling_height)
+      return false;
 
-void CS_SaveCeilingData(cs_ceilingdata_t *cscd, ceilingdata_t *cd)
-{
-   cscd->trigger_type = cd->trigger_type;
-   cscd->crush = cd->crush;
-   cscd->direction = cd->direction;
-   cscd->speed_type = cd->speed_type;
-   cscd->change_type = cd->change_type;
-   cscd->change_model = cd->change_model;
-   cscd->target_type = cd->target_type;
-   cscd->height_value = cd->height_value;
-   cscd->speed_value = cd->speed_value;
-}
+   if(sector->floorheight != position->floor_height)
+      return false;
 
-void CS_SaveDoorData(cs_doordata_t *csdd, doordata_t *dd)
-{
-   csdd->delay_type     = dd->delay_value;
-   csdd->kind           = dd->kind;
-   csdd->speed_type     = dd->speed_value;
-   csdd->trigger_type   = dd->trigger_type;
-   csdd->speed_value    = dd->speed_value;
-   csdd->delay_value    = dd->delay_value;
-   csdd->altlighttag    = dd->altlighttag;
-   csdd->usealtlighttag = dd->usealtlighttag;
-   csdd->topcountdown   = dd->topcountdown;
-}
-
-void CS_SaveFloorData(cs_floordata_t *csfd, floordata_t *fd)
-{
-   csfd->trigger_type = fd->trigger_type;
-   csfd->crush        = fd->crush;
-   csfd->direction    = fd->direction;
-   csfd->speed_type   = fd->speed_type;
-   csfd->change_type  = fd->change_type;
-   csfd->change_model = fd->change_model;
-   csfd->target_type  = fd->target_type;
-   csfd->height_value = fd->height_value;
-   csfd->speed_value  = fd->speed_value;
+   return true;
 }
 

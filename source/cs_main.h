@@ -192,14 +192,14 @@ typedef enum
    nm_missileexploded,         // (s => c) 32, Missile exploded
    nm_cubespawned,             // (s => c) 33, Boss brain cube spawned
    nm_sectorposition,          // (s => c) 34, Sector position
-   nm_announcerevent,          // (s => c) 35, Announcer event
-   nm_voterequest,             // (c => s) 36, Vote request
-   nm_vote,                    // ( both ) 37, Client vote
-   nm_voteresult,              // (s => c) 38, Vote result
-   nm_ticfinished,             // (s => c) 39, TIC is finished
-   // nm_specialspawned,          // (s => c) 32, Map special spawned
-   // nm_specialstatus,           // (s => c) 33, Map special's status
-   // nm_specialremoved,          // (s => c) 34, Map special removed
+   nm_sectorthinkerspawned,    // (s => c) 35, Sector thinker spawned
+   nm_sectorthinkerstatus,     // (s => c) 36, Sector thinker status
+   nm_sectorthinkerremoved,    // (s => c) 37, Sectorthinkerremoved
+   nm_announcerevent,          // (s => c) 38, Announcer event
+   nm_voterequest,             // (c => s) 39, Vote request
+   nm_vote,                    // ( both ) 40, Client vote
+   nm_voteresult,              // (s => c) 41, Vote result
+   nm_ticfinished,             // (s => c) 42, TIC is finished
    nm_max_messages
 } network_message_e;
 
@@ -824,35 +824,46 @@ typedef struct
    sector_position_t sector_position;
 } nm_sectorposition_t;
 
-#if 0
-// [CG] A map special's status is appended to the end of this message, the type
-//      of which is indicated by the value of the special_type member.
 typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t special_type; // [CG] map_special_e.
-   uint32_t line_number;
+   uint8_t type;
    uint32_t sector_number;
-} nm_specialspawned_t;
+   union {
+      cs_platform_data_t    platform_data;
+      cs_door_data_t        door_data;
+      cs_ceiling_data_t     ceiling_data;
+      cs_floor_data_t       floor_data;
+      cs_elevator_data_t    elevator_data;
+      cs_pillar_data_t      pillar_data;
+      cs_floorwaggle_data_t floorwaggle_data;
+   };
+} nm_sectorthinkerspawned_t;
 
-// [CG] A map special's status is appended to the end of this message, the type
-//      of which is indicated by the value of the special_type member.
 typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t special_type; // [CG] map_special_e.
-} nm_specialstatus_t;
+   uint8_t type;
+   union {
+      cs_platform_data_t    platform_data;
+      cs_door_data_t        door_data;
+      cs_ceiling_data_t     ceiling_data;
+      cs_floor_data_t       floor_data;
+      cs_elevator_data_t    elevator_data;
+      cs_pillar_data_t      pillar_data;
+      cs_floorwaggle_data_t floorwaggle_data;
+   };
+} nm_sectorthinkerstatus_t;
 
 typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t special_type; // [CG] map_special_e.
+   uint8_t type;
    uint32_t net_id;
-} nm_specialremoved_t;
-#endif
+} nm_sectorthinkerremoved_t;
 
 // [CG] The name of the event is appended to the end of this message.
 typedef struct

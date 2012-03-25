@@ -40,6 +40,10 @@
 #include "s_sound.h"
 #include "sounds.h"
 
+#include "cs_netid.h"
+#include "cl_main.h"
+#include "sv_main.h"
+
 platlist_t *activeplats;       // killough 2/14/98: made global again
 
 //
@@ -217,6 +221,46 @@ void PlatThinker::serialize(SaveArchive &arc)
 }
 
 //
+// PlatThinker::netSerialize
+//
+// Saves data into a net-safe struct.
+//
+void PlatThinker::netSerialize(cs_platform_data_t *data)
+{
+   data->net_id    = net_id;
+   data->speed     = speed;
+   data->low       = low;
+   data->high      = high;
+   data->wait      = wait;
+   data->count     = count;
+   data->status    = status;
+   data->oldstatus = oldstatus;
+   data->crush     = crush;
+   data->tag       = tag;
+   data->type      = type;
+}
+
+//
+// PlatThinker::netUpdate
+//
+// Updates from a net-safe struct.
+//
+void PlatThinker::netUpdate(cs_platform_data_t *data)
+{
+   net_id    = data->net_id;
+   speed     = data->speed;
+   low       = data->low;
+   high      = data->high;
+   wait      = data->wait;
+   count     = data->count;
+   status    = data->status;
+   oldstatus = data->oldstatus;
+   crush     = data->crush;
+   tag       = data->tag;
+   type      = data->type;
+}
+
+//
 // PlatThinker::reTriggerVerticalDoor
 //
 // haleyjd 10/13/2011: emulate vanilla behavior when a PlatThinker is treated as
@@ -269,6 +313,10 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
    case toggleUpDn:
       P_ActivateInStasis(line->tag);
+
+      if(CS_CLIENT)
+         return 1;
+
       rtn=1;
       break;
       
@@ -287,106 +335,129 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
       // Create a thinker
       rtn = 1;
-      plat = new PlatThinker;
-      plat->addThinker();
-      
-      plat->type = type;
-      plat->sector = sec;
-      plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
-      plat->crush = -1;
-      plat->tag = line->tag;
 
-      //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
-      //going down forever -- default low to plat height when triggered
-      plat->low = sec->floorheight;
-      
-      // set up plat according to type  
-      switch(type)
-      {
-      case raiseToNearestAndChange:
-         plat->speed = PLATSPEED/2;
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
-         plat->wait = 0;
-         plat->status = up;
-         //jff 3/14/98 clear old field as well
-         P_ZeroSectorSpecial(sec);
-         P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
-         break;
-          
-      case raiseAndChange:
-         plat->speed = PLATSPEED/2;
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = sec->floorheight + amount*FRACUNIT;
-         plat->wait = 0;
-         plat->status = up;
-         
-         P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
-         break;
-          
-      case downWaitUpStay:
-         plat->speed = PLATSPEED * 4;
-         plat->low = P_FindLowestFloorSurrounding(sec);
-         
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         
-         plat->high = sec->floorheight;
-         plat->wait = 35*PLATWAIT;
-         plat->status = down;
-         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-         break;
-          
-      case blazeDWUS:
-         plat->speed = PLATSPEED * 8;
-         plat->low = P_FindLowestFloorSurrounding(sec);
-         
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         
-         plat->high = sec->floorheight;
-         plat->wait = 35*PLATWAIT;
-         plat->status = down;
-         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-         break;
-          
-      case perpetualRaise:
-         plat->speed = PLATSPEED;
-         plat->low = P_FindLowestFloorSurrounding(sec);
-         
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         
-         plat->high = P_FindHighestFloorSurrounding(sec);
-         
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
-         
-         plat->wait = 35*PLATWAIT;
-         plat->status = (P_Random(pr_plats) & 1) ? down : up;
-         
-         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-         break;
+      // [CG] Clients don't spawn platforms themselves when lines are
+      //      activated, but we have to inform the caller whether or not a
+      //      thinker would have been created regardless.
+      if(CS_CLIENT)
+         return 1;
 
-      case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
-         plat->speed = PLATSPEED;   //not used
-         plat->wait  = 35*PLATWAIT; //not used
-         plat->crush = 10;          //jff 3/14/98 crush anything in the way
-         
-         // set up toggling between ceiling, floor inclusive
-         plat->low    = sec->ceilingheight;
-         plat->high   = sec->floorheight;
-         plat->status = down;
-
-         P_PlatSequence(plat->sector, "EEPlatSilent");
-         break;
-         
-      default:
-         break;
-      }
-      P_AddActivePlat(plat);  // add plat to list of active plats
+      plat = P_SpawnPlatform(line, sec, amount, type);
    }
+
    return rtn;
+}
+
+PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
+                             plattype_e type)
+{
+   PlatThinker *plat = new PlatThinker;
+
+   plat->addThinker();
+   
+   plat->type = type;
+   plat->sector = sec;
+   plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
+   plat->crush = -1;
+   plat->tag = line->tag;
+
+   //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
+   //going down forever -- default low to plat height when triggered
+   plat->low = sec->floorheight;
+   
+   // set up plat according to type  
+   switch(type)
+   {
+   case raiseToNearestAndChange:
+      plat->speed = PLATSPEED/2;
+      sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+      plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
+      plat->wait = 0;
+      plat->status = up;
+      //jff 3/14/98 clear old field as well
+      P_ZeroSectorSpecial(sec);
+      P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
+      break;
+       
+   case raiseAndChange:
+      plat->speed = PLATSPEED/2;
+      sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+      plat->high = sec->floorheight + amount*FRACUNIT;
+      plat->wait = 0;
+      plat->status = up;
+      
+      P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
+      break;
+       
+   case downWaitUpStay:
+      plat->speed = PLATSPEED * 4;
+      plat->low = P_FindLowestFloorSurrounding(sec);
+      
+      if(plat->low > sec->floorheight)
+         plat->low = sec->floorheight;
+      
+      plat->high = sec->floorheight;
+      plat->wait = 35*PLATWAIT;
+      plat->status = down;
+      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      break;
+       
+   case blazeDWUS:
+      plat->speed = PLATSPEED * 8;
+      plat->low = P_FindLowestFloorSurrounding(sec);
+      
+      if(plat->low > sec->floorheight)
+         plat->low = sec->floorheight;
+      
+      plat->high = sec->floorheight;
+      plat->wait = 35*PLATWAIT;
+      plat->status = down;
+      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      break;
+       
+   case perpetualRaise:
+      plat->speed = PLATSPEED;
+      plat->low = P_FindLowestFloorSurrounding(sec);
+      
+      if(plat->low > sec->floorheight)
+         plat->low = sec->floorheight;
+      
+      plat->high = P_FindHighestFloorSurrounding(sec);
+      
+      if(plat->high < sec->floorheight)
+         plat->high = sec->floorheight;
+      
+      plat->wait = 35*PLATWAIT;
+      plat->status = (P_Random(pr_plats) & 1) ? down : up;
+      
+      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      break;
+
+   case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
+      plat->speed = PLATSPEED;   //not used
+      plat->wait  = 35*PLATWAIT; //not used
+      plat->crush = 10;          //jff 3/14/98 crush anything in the way
+      
+      // set up toggling between ceiling, floor inclusive
+      plat->low    = sec->ceilingheight;
+      plat->high   = sec->floorheight;
+      plat->status = down;
+
+      P_PlatSequence(plat->sector, "EEPlatSilent");
+      break;
+      
+   default:
+      break;
+   }
+
+   if(serverside)
+   {
+      P_AddActivePlat(plat);  // add plat to list of active plats
+      if(CS_SERVER)
+         SV_BroadcastSectorThinkerSpawned(plat);
+   }
+
+   return plat;
 }
 
 // The following were all rewritten by Lee Killough to use the new structure 
@@ -461,6 +532,8 @@ void P_AddActivePlat(PlatThinker *plat)
       list->next->prev = &list->next;
    list->prev = &activeplats;
    activeplats = list;
+
+   NetSectorThinkers.add(plat);
 }
 
 //
@@ -479,6 +552,8 @@ void P_RemoveActivePlat(PlatThinker *plat)
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);
+
+   NetSectorThinkers.remove(plat);
 }
 
 //
@@ -492,6 +567,7 @@ void P_RemoveAllActivePlats(void)
 {
    while(activeplats)
    {  
+      NetSectorThinkers.remove(activeplats->plat);
       platlist_t *next = activeplats->next;
       efree(activeplats);
       activeplats = next;
