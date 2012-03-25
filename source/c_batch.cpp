@@ -188,7 +188,7 @@ void CommandBatch::run()
             delay += wait;
             break;
          }
-         else if(current_command.length())
+         else if(command_buffer.length())
             C_RunTextCmd(command_buffer.constPtr());
 
          current_command++;
@@ -196,7 +196,7 @@ void CommandBatch::run()
       else
       {
          // [CG] Don't process trailing wait commands.
-         if((!parseWait(current_command)) && current_command.length())
+         if((!parseWait(current_command)) && command_buffer.length())
             C_RunTextCmd(current_command);
 
          finished = true;
