@@ -95,15 +95,17 @@
 #include <conio.h>
 #endif
 
-#define SHOULD_SEND_PACKET_TO(i, mt) ( \
+#define CLIENT_CONNECTED(i) \
+   (((playeringame[(i)]) || (server_clients[i].current_request != scr_none)))
+
+#define SHOULD_SEND_PACKET_TO(i, mt) (CLIENT_CONNECTED((i)) && ( \
    (((mt) == nm_initialstate) || \
     ((mt) == nm_currentstate) || \
     ((mt) == nm_authresult)   || \
     ((mt) == nm_mapstarted))  || \
-   ((playeringame[(i)]) && \
-    (server_clients[(i)].auth_level >= cs_auth_spectator) && \
+   ((server_clients[(i)].auth_level >= cs_auth_spectator) && \
     (server_clients[(i)].received_game_state)) \
-)
+))
 
 extern int levelTimeLimit;
 extern int levelFragLimit;
@@ -236,11 +238,9 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
       || message_type == nm_missilespawned
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned
-#if 0
       || message_type == nm_sectorthinkerspawned
-      // || message_type == nm_sectorthinkerstatus
+      || message_type == nm_sectorthinkerstatus
       || message_type == nm_sectorthinkerremoved
-#endif
       // || message_type == nm_sectorposition
       || message_type == nm_announcerevent
       || message_type == nm_vote
@@ -297,15 +297,18 @@ static void broadcast_packet(void *data, size_t data_size)
       send_packet(i, data, data_size);
 }
 
-#if 0
 static void broadcast_unreliable_packet(void *data, size_t data_size)
 {
    int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-      send_unreliable_packet(i, data, data_size);
+   {
+      if(server_clients[i].buffering)
+         send_packet(i, data, data_size);
+      else
+         send_unreliable_packet(i, data, data_size);
+   }
 }
-#endif
 
 static void broadcast_packet_excluding(int playernum, void *data,
                                        size_t data_size)
@@ -509,7 +512,7 @@ mapthing_t* SV_GetCoopSpawnPoint(int playernum)
    {
       remove_tele_stomp = true;
       actor->flags3 |= MF3_TELESTOMP;
-   } 
+   }
 
    P_TeleportMove(actor, start->x << FRACBITS, start->y << FRACBITS, false);
 
@@ -593,7 +596,7 @@ mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum)
    {
       remove_tele_stomp = true;
       actor->flags3 |= MF3_TELESTOMP;
-   } 
+   }
 
    P_TeleportMove(actor, start->x << FRACBITS, start->y << FRACBITS, false);
 
@@ -678,7 +681,7 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
    {
       remove_tele_stomp = true;
       actor->flags3 |= MF3_TELESTOMP;
-   } 
+   }
 
    P_TeleportMove(actor, start->x << FRACBITS, start->y << FRACBITS, false);
 
@@ -941,7 +944,7 @@ void SV_StartUnlag(int playernum)
    }
 
    for(j = 0; j < numsectors; j++)
-      SV_LoadSectorPositionAt(j, command_index);
+      CS_SetSectorPosition(j, command_index);
 }
 
 void SV_EndUnlag(int playernum)
@@ -981,7 +984,7 @@ void SV_EndUnlag(int playernum)
    }
 
    for(j = 0; j < numsectors; j++)
-      SV_LoadSectorPositionAt(j, current_index);
+      CS_SetSectorPosition(j, current_index);
 }
 
 int SV_HandleClientConnection(ENetPeer *peer)
@@ -1517,7 +1520,7 @@ void SV_UpdateClientStatuses(void)
 
 void SV_BroadcastPlayerPositions(void)
 {
-   int i, j;
+   int i;
    nm_playerposition_t message;
    cs_player_position_t *pos;
    cs_misc_state_t *ms;
@@ -1549,13 +1552,7 @@ void SV_BroadcastPlayerPositions(void)
       message.last_index_run = sc->last_command_run_index;
       message.last_world_index_run = sc->last_command_run_world_index;
 
-      for(j = 1; j < MAX_CLIENTS; j++)
-      {
-         if(server_clients[j].buffering)
-            send_packet(j, &message, sizeof(nm_playerposition_t));
-         else
-            send_unreliable_packet(j, &message, sizeof(nm_playerposition_t));
-      }
+      broadcast_unreliable_packet(&message, sizeof(nm_playerposition_t));
       client->floor_status = cs_fs_none;
    }
 }
@@ -2209,33 +2206,22 @@ void SV_BroadcastActorMiscState(Mobj *actor, int tic)
 
 void SV_BroadcastSectorPosition(size_t sector_number)
 {
+   sector_t *sector = &sectors[sector_number];
    nm_sectorposition_t position_message;
 
    position_message.message_type = nm_sectorposition;
    position_message.world_index = sv_world_index;
    position_message.sector_number = sector_number;
-   CS_SaveSectorPosition(
-      &position_message.sector_position, &sectors[sector_number]
-   );
    position_message.sector_position.world_index = sv_world_index;
-
-#if _SECTOR_PRED_DEBUG
-   if(playeringame[1] && sector_number == _DEBUG_SECTOR)
-   {
-      printf(
-         "Position for sector %d: %d - %d/%d.\n",
-         sector_number,
-         sv_world_index,
-         position_message.sector_position.ceiling_height >> FRACBITS,
-         position_message.sector_position.floor_height >> FRACBITS
-      );
-   }
-#endif
+   position_message.sector_position.ceiling_height = sector->ceilingheight;
+   position_message.sector_position.floor_height = sector->floorheight;
+   position_message.sector_position.world_index = sv_world_index;
 
    broadcast_packet(&position_message, sizeof(nm_sectorposition_t));
 }
 
-void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker)
+void SV_BroadcastSectorThinkerSpawned(SectorMovementThinker *thinker,
+                                      cs_sector_thinker_spawn_data_t *data)
 {
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
@@ -2254,37 +2240,93 @@ void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker)
    if((platform = dynamic_cast<PlatThinker *>(thinker)))
    {
       message.type = st_platform;
-      platform->netSerialize(&message.platform_data);
+      platform->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.platform_spawn_data,
+            &data->platform_spawn_data,
+            sizeof(message.spawn_data.platform_spawn_data)
+         );
+      }
    }
    else if((door = dynamic_cast<VerticalDoorThinker *>(thinker)))
    {
       message.type = st_door;
-      door->netSerialize(&message.door_data);
+      door->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.door_spawn_data,
+            &data->door_spawn_data,
+            sizeof(message.spawn_data.door_spawn_data)
+         );
+      }
    }
    else if((ceiling = dynamic_cast<CeilingThinker *>(thinker)))
    {
       message.type = st_ceiling;
-      ceiling->netSerialize(&message.ceiling_data);
+      ceiling->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.ceiling_spawn_data,
+            &data->ceiling_spawn_data,
+            sizeof(message.spawn_data.ceiling_spawn_data)
+         );
+      }
    }
    else if((floor = dynamic_cast<FloorMoveThinker *>(thinker)))
    {
       message.type = st_floor;
-      floor->netSerialize(&message.floor_data);
+      floor->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.floor_spawn_data,
+            &data->floor_spawn_data,
+            sizeof(message.spawn_data.floor_spawn_data)
+         );
+      }
    }
    else if((elevator = dynamic_cast<ElevatorThinker *>(thinker)))
    {
       message.type = st_elevator;
-      elevator->netSerialize(&message.elevator_data);
+      elevator->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.floor_spawn_data,
+            &data->floor_spawn_data,
+            sizeof(message.spawn_data.floor_spawn_data)
+         );
+      }
    }
    else if((pillar = dynamic_cast<PillarThinker *>(thinker)))
    {
       message.type = st_pillar;
-      pillar->netSerialize(&message.pillar_data);
+      pillar->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.floor_spawn_data,
+            &data->floor_spawn_data,
+            sizeof(message.spawn_data.floor_spawn_data)
+         );
+      }
    }
    else if((floor_waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
    {
       message.type = st_floorwaggle;
-      floor_waggle->netSerialize(&message.floorwaggle_data);
+      floor_waggle->netSerialize(&message.data);
+      if(data)
+      {
+         memcpy(
+            &message.spawn_data.floor_spawn_data,
+            &data->floor_spawn_data,
+            sizeof(message.spawn_data.floor_spawn_data)
+         );
+      }
    }
    else
    {
@@ -2297,7 +2339,7 @@ void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker)
    broadcast_packet(&message, sizeof(nm_sectorthinkerspawned_t));
 }
 
-void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker)
+void SV_BroadcastSectorThinkerStatus(SectorMovementThinker *thinker)
 {
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
@@ -2315,43 +2357,50 @@ void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker)
    if((platform = dynamic_cast<PlatThinker *>(thinker)))
    {
       message.type = st_platform;
-      platform->netSerialize(&message.platform_data);
+      platform->netSerialize(&message.data);
    }
    else if((door = dynamic_cast<VerticalDoorThinker *>(thinker)))
    {
       message.type = st_door;
-      door->netSerialize(&message.door_data);
+      door->netSerialize(&message.data);
    }
    else if((ceiling = dynamic_cast<CeilingThinker *>(thinker)))
    {
       message.type = st_ceiling;
-      ceiling->netSerialize(&message.ceiling_data);
+      ceiling->netSerialize(&message.data);
    }
    else if((floor = dynamic_cast<FloorMoveThinker *>(thinker)))
    {
       message.type = st_floor;
-      floor->netSerialize(&message.floor_data);
+      floor->netSerialize(&message.data);
    }
    else if((elevator = dynamic_cast<ElevatorThinker *>(thinker)))
    {
       message.type = st_elevator;
-      elevator->netSerialize(&message.elevator_data);
+      elevator->netSerialize(&message.data);
    }
    else if((pillar = dynamic_cast<PillarThinker *>(thinker)))
    {
       message.type = st_pillar;
-      pillar->netSerialize(&message.pillar_data);
+      pillar->netSerialize(&message.data);
    }
    else if((floor_waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
    {
       message.type = st_floorwaggle;
-      floor_waggle->netSerialize(&message.floorwaggle_data);
+      floor_waggle->netSerialize(&message.data);
+   }
+   else
+   {
+      I_Error(
+         "Bad sector thinker passed to SV_BroadcastSectorThinkerStatus.\n"
+      );
+      return;
    }
 
    broadcast_packet(&message, sizeof(nm_sectorthinkerstatus_t));
 }
 
-void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker)
+void SV_BroadcastSectorThinkerRemoved(SectorMovementThinker *thinker)
 {
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
@@ -2381,6 +2430,13 @@ void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker)
       message.type = st_pillar;
    else if((floor_waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
       message.type = st_floorwaggle;
+   else
+   {
+      I_Error(
+         "SV_BroadcastSectorThinkerRemoved: sector movement thinker %u is of"
+         "unknown type.\n", thinker->net_id
+      );
+   }
 
    broadcast_packet(&message, sizeof(nm_sectorthinkerremoved_t));
 }
@@ -2655,6 +2711,9 @@ void SV_BroadcastClientStatuses(void)
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
+      if(!CLIENT_CONNECTED(i))
+         return;
+
       peer = SV_GetPlayerPeer(i);
       client = &clients[i];
       server_client = &server_clients[i];
@@ -3086,8 +3145,7 @@ void SV_TryRunTics(void)
                   if(!cs_demo->stop())
                   {
                      doom_printf(
-                        "Error stopping demo: %s.",
-                        cs_demo->getError()
+                        "Error stopping demo: %s.", cs_demo->getError()
                      );
                   }
                }
@@ -3106,11 +3164,6 @@ void SV_TryRunTics(void)
             SV_SaveSectorPositions();
             SV_BroadcastPlayerPositions();
             SV_BroadcastUpdatedActorPositionsAndMiscState();
-            // [CG] Because map specials are ephemeral by nature, it's probably
-            //      not too much extra bandwidth to send updates even if their
-            //      states haven't changed.  If this becomes ridiculous, saving
-            //      and checking their state is simple enough.
-            SV_BroadcastSectorThinkerStatuses();
             SV_MarkQueueClientsAFK();
             // [CG] Now that the game loop has finished, servers can address
             //      new clients and map changes.

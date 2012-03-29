@@ -114,6 +114,15 @@ void CeilingThinker::Think()
 {
    result_e  res;
 
+   if(inactive)
+      return;
+
+   if(!prediction_index)
+      prediction_index = cl_current_world_index;
+
+   if(CS_SERVER)
+      SectorMovementThinker::storeCurrentStatus();
+
    if(inStasis)
       return;
 
@@ -141,7 +150,7 @@ void CeilingThinker::Think()
             if(serverside)
                P_RemoveActiveCeiling(this);
             else // [CG] Just set inactive if not serverside.
-               inactive = cl_latest_world_index;
+               inactive = prediction_index;
             break;
 
             // movers with texture change, change the texture then get removed
@@ -154,7 +163,7 @@ void CeilingThinker::Think()
             if(serverside)
                P_RemoveActiveCeiling(this);
             else // [CG] Just set inactive if not serverside.
-               inactive = cl_latest_world_index;
+               inactive = prediction_index;
             break;
 
             // crushers reverse direction at the top
@@ -219,7 +228,7 @@ void CeilingThinker::Think()
             if(serverside)
                P_RemoveActiveCeiling(this);
             else // [CG] Just set inactive if not serverside.
-               inactive = cl_latest_world_index;
+               inactive = prediction_index;
             break;
 
             // all other case, just remove the active ceiling
@@ -231,7 +240,7 @@ void CeilingThinker::Think()
             if(serverside)
                P_RemoveActiveCeiling(this);
             else // [CG] Just set inactive if not serverside.
-               inactive = cl_latest_world_index;
+               inactive = prediction_index;
             break;
             
          default:
@@ -264,6 +273,9 @@ void CeilingThinker::Think()
       } // end else
       break;
    } // end switch
+
+   if(CS_SERVER && net_id && statusChanged())
+      SV_BroadcastSectorThinkerStatus(this);
 }
 
 //
@@ -284,31 +296,146 @@ void CeilingThinker::serialize(SaveArchive &arc)
       P_AddActiveCeiling(this);
 }
 
+bool CeilingThinker::statusChanged()
+{
+   if(type                == current_status.ceiling_data.type                &&
+      bottomheight        == current_status.ceiling_data.bottomheight        &&
+      topheight           == current_status.ceiling_data.topheight           &&
+      speed               == current_status.ceiling_data.speed               &&
+      oldspeed            == current_status.ceiling_data.oldspeed            &&
+      crush               == current_status.ceiling_data.crush               &&
+      special.newspecial  == current_status.ceiling_data.special.newspecial  &&
+      special.flags       == current_status.ceiling_data.special.flags       &&
+      special.damage      == current_status.ceiling_data.special.damage      &&
+      special.damagemask  == current_status.ceiling_data.special.damagemask  &&
+      special.damagemod   == current_status.ceiling_data.special.damagemod   &&
+      special.damageflags == current_status.ceiling_data.special.damageflags &&
+      texture             == current_status.ceiling_data.texture             &&
+      direction           == current_status.ceiling_data.direction           &&
+      inStasis            == current_status.ceiling_data.inStasis            &&
+      tag                 == current_status.ceiling_data.tag                 &&
+      olddirection        == current_status.ceiling_data.olddirection)
+   {
+      return false;
+   }
+
+   return true;
+}
+
+//
+// CeilingThinker::loadStatusData
+//
+// Updates from a net-safe struct.
+//
+void CeilingThinker::loadStatusData(cs_sector_thinker_data_t *data)
+{
+   net_id              = data->ceiling_data.net_id;
+   type                = data->ceiling_data.type;
+   bottomheight        = data->ceiling_data.bottomheight;
+   topheight           = data->ceiling_data.topheight;
+   speed               = data->ceiling_data.speed;
+   oldspeed            = data->ceiling_data.oldspeed;
+   crush               = data->ceiling_data.crush;
+   special.newspecial  = data->ceiling_data.special.newspecial;
+   special.flags       = data->ceiling_data.special.flags;
+   special.damage      = data->ceiling_data.special.damage;
+   special.damagemask  = data->ceiling_data.special.damagemask;
+   special.damagemod   = data->ceiling_data.special.damagemod;
+   special.damageflags = data->ceiling_data.special.damageflags;
+   texture             = data->ceiling_data.texture;
+   direction           = data->ceiling_data.direction;
+   inStasis            = data->ceiling_data.inStasis;
+   tag                 = data->ceiling_data.tag;
+   olddirection        = data->ceiling_data.olddirection;
+}
+
+void CeilingThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
+{
+   latest_status.ceiling_data.net_id =
+      data->ceiling_data.net_id;
+   latest_status.ceiling_data.type =
+      data->ceiling_data.type;
+   latest_status.ceiling_data.bottomheight =
+      data->ceiling_data.bottomheight;
+   latest_status.ceiling_data.topheight =
+      data->ceiling_data.topheight;
+   latest_status.ceiling_data.speed =
+      data->ceiling_data.speed;
+   latest_status.ceiling_data.oldspeed =
+      data->ceiling_data.oldspeed;
+   latest_status.ceiling_data.crush =
+      data->ceiling_data.crush;
+   latest_status.ceiling_data.special.newspecial =
+      data->ceiling_data.special.newspecial;
+   latest_status.ceiling_data.special.flags =
+      data->ceiling_data.special.flags;
+   latest_status.ceiling_data.special.damage =
+      data->ceiling_data.special.damage;
+   latest_status.ceiling_data.special.damagemask =
+      data->ceiling_data.special.damagemask;
+   latest_status.ceiling_data.special.damagemod =
+      data->ceiling_data.special.damagemod;
+   latest_status.ceiling_data.special.damageflags =
+      data->ceiling_data.special.damageflags;
+   latest_status.ceiling_data.texture =
+      data->ceiling_data.texture;
+   latest_status.ceiling_data.direction =
+      data->ceiling_data.direction;
+   latest_status.ceiling_data.inStasis =
+      data->ceiling_data.inStasis;
+   latest_status.ceiling_data.tag =
+      data->ceiling_data.tag;
+   latest_status.ceiling_data.olddirection =
+      data->ceiling_data.olddirection;
+}
+
+void CeilingThinker::loadStoredStatusUpdate()
+{
+   net_id              = latest_status.ceiling_data.net_id;
+   type                = latest_status.ceiling_data.type;
+   bottomheight        = latest_status.ceiling_data.bottomheight;
+   topheight           = latest_status.ceiling_data.topheight;
+   speed               = latest_status.ceiling_data.speed;
+   oldspeed            = latest_status.ceiling_data.oldspeed;
+   crush               = latest_status.ceiling_data.crush;
+   special.newspecial  = latest_status.ceiling_data.special.newspecial;
+   special.flags       = latest_status.ceiling_data.special.flags;
+   special.damage      = latest_status.ceiling_data.special.damage;
+   special.damagemask  = latest_status.ceiling_data.special.damagemask;
+   special.damagemod   = latest_status.ceiling_data.special.damagemod;
+   special.damageflags = latest_status.ceiling_data.special.damageflags;
+   texture             = latest_status.ceiling_data.texture;
+   direction           = latest_status.ceiling_data.direction;
+   inStasis            = latest_status.ceiling_data.inStasis;
+   tag                 = latest_status.ceiling_data.tag;
+   olddirection        = latest_status.ceiling_data.olddirection;
+}
+
 //
 // CeilingThinker::netSerialize
 //
 // Saves data into a net-safe struct.
 //
-void CeilingThinker::netSerialize(cs_ceiling_data_t *data)
+void CeilingThinker::netSerialize(cs_sector_thinker_data_t *data)
 {
-   data->net_id              = net_id;
-   data->type                = type;
-   data->bottomheight        = bottomheight;
-   data->topheight           = topheight;
-   data->speed               = speed;
-   data->oldspeed            = oldspeed;
-   data->crush               = crush;
-   data->special.newspecial  = special.newspecial;
-   data->special.flags       = special.flags;
-   data->special.damage      = special.damage;
-   data->special.damagemask  = special.damagemask;
-   data->special.damagemod   = special.damagemod;
-   data->special.damageflags = special.damageflags;
-   data->texture             = texture;
-   data->direction           = direction;
-   data->inStasis            = inStasis;
-   data->tag                 = tag;
-   data->olddirection        = olddirection;
+   data->ceiling_data.net_id              = net_id;
+   data->ceiling_data.type                = type;
+   data->ceiling_data.bottomheight        = bottomheight;
+   data->ceiling_data.topheight           = topheight;
+   data->ceiling_data.speed               = speed;
+   data->ceiling_data.oldspeed            = oldspeed;
+   data->ceiling_data.crush               = crush;
+   data->ceiling_data.special.newspecial  = special.newspecial;
+   data->ceiling_data.special.flags       = special.flags;
+   data->ceiling_data.special.damage      = special.damage;
+   data->ceiling_data.special.damagemask  = special.damagemask;
+   data->ceiling_data.special.damagemod   = special.damagemod;
+   data->ceiling_data.special.damageflags = special.damageflags;
+   data->ceiling_data.texture             = texture;
+   data->ceiling_data.direction           = direction;
+   data->ceiling_data.inStasis            = inStasis;
+   data->ceiling_data.tag                 = tag;
+   data->ceiling_data.olddirection        = olddirection;
 }
 
 //
@@ -316,26 +443,10 @@ void CeilingThinker::netSerialize(cs_ceiling_data_t *data)
 //
 // Updates from a net-safe struct.
 //
-void CeilingThinker::netUpdate(cs_ceiling_data_t *data)
+void CeilingThinker::netUpdate(uint32_t index, cs_sector_thinker_data_t *data)
 {
-   net_id              = data->net_id;
-   type                = data->type;
-   bottomheight        = data->bottomheight;
-   topheight           = data->topheight;
-   speed               = data->speed;
-   oldspeed            = data->oldspeed;
-   crush               = data->crush;
-   special.newspecial  = data->special.newspecial;
-   special.flags       = data->special.flags;
-   special.damage      = data->special.damage;
-   special.damagemask  = data->special.damagemask;
-   special.damagemod   = data->special.damagemod;
-   special.damageflags = data->special.damageflags;
-   texture             = data->texture;
-   direction           = data->direction;
-   inStasis            = data->inStasis;
-   tag                 = data->tag;
-   olddirection        = data->olddirection;
+   SectorMovementThinker::netUpdate(index, data);
+   loadStatusData(data);
 }
 
 //
@@ -374,7 +485,6 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 {
    int       secnum = -1;
    int       rtn = 0;
-   int       noise = CNOISE_NORMAL; // haleyjd 09/28/06
    sector_t  *sec;
    CeilingThinker *ceiling;
       
@@ -487,7 +597,6 @@ CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
    // add the ceiling to the active list
    ceiling->tag = sec->tag;
    ceiling->type = type;
-   P_AddActiveCeiling(ceiling);
 
    // haleyjd 09/28/06: sound sequences
    P_CeilingSequence(ceiling->sector, noise);
@@ -495,9 +604,15 @@ CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
    if(serverside)
    {
       P_AddActiveCeiling(ceiling);
+
       if(CS_SERVER)
-         SV_BroadcastSectorThinkerSpawned(ceiling);
+      {
+         cs_sector_thinker_spawn_data_t spawn_data;
+         spawn_data.ceiling_spawn_data.noise = noise;
+         SV_BroadcastSectorThinkerSpawned(ceiling, &spawn_data);
+      }
    }
+
 
    return ceiling;
 }
@@ -602,6 +717,7 @@ int EV_CeilingCrushStop(line_t* line)
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
    ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
+
    list->ceiling = ceiling;
    ceiling->list = list;
    if((list->next = activeceilings))

@@ -35,7 +35,7 @@
 #define MAX_NETID_LOAD_FACTOR 0.7
 
 class Mobj;
-class SectorThinker;
+class SectorMovementThinker;
 
 struct NetID
 {
@@ -143,7 +143,13 @@ public:
       }
    }
 
-   uint32_t getNetIDsAssigned() const { return netids_assigned; }
+   bool isEmpty() const
+   {
+      if(netids_assigned)
+         return false;
+
+      return true;
+   }
 
    NetIDToObject<T>* iterate(NetIDToObject<T> *nito)
    {
@@ -152,8 +158,8 @@ public:
 
 };
 
-extern NetIDLookup<Mobj>          NetActors;
-extern NetIDLookup<SectorThinker> NetSectorThinkers;
+extern NetIDLookup<Mobj>                  NetActors;
+extern NetIDLookup<SectorMovementThinker> NetSectorThinkers;
 
 void CS_ClearNetIDs(void);
 

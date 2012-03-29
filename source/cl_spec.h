@@ -32,24 +32,44 @@
 extern bool cl_predicting_sectors;
 extern bool cl_setting_sector_positions;
 
-void CL_LoadSectorPositions(unsigned int index);
-void CL_LoadCurrentSectorPositions(void);
+void CL_InitSectorPositions();
+void CL_CarrySectorPositions();
+void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
+                           sector_position_t *new_position);
+void CL_LoadLatestSectorPositions();
+void CL_LoadSectorPositionsAt(uint32_t index);
+void CL_ActivateAllSectorMovementThinkers();
+void CL_ResetAllSectorMovementThinkers();
+void CL_SaveAllSectorMovementThinkerStatuses();
 
-void CL_SpawnPlatform(sector_t *sec, cs_platform_data_t *dt);
-void CL_SpawnVerticalDoor(line_t *ln, sector_t *sec, cs_door_data_t *dt);
-void CL_SpawnCeiling(sector_t *sec, cs_ceiling_data_t *dt);
-void CL_SpawnFloor(sector_t *sec, cs_floor_data_t *dt);
-void CL_SpawnElevator(sector_t *sec, cs_elevator_data_t *dt);
-void CL_SpawnPillar(sector_t *sec, cs_pillar_data_t *dt);
-void CL_SpawnFloorWaggle(sector_t *sec, cs_floorwaggle_data_t *dt);
+void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,
+                      cs_sector_thinker_spawn_data_t *spawn_data);
 
-void CL_UpdatePlatform(cs_platform_data_t *dt);
-void CL_UpdateVerticalDoor(cs_door_data_t *dt);
-void CL_UpdateCeiling(cs_ceiling_data_t *dt);
-void CL_UpdateFloor(cs_floor_data_t *dt);
-void CL_UpdateElevator(cs_elevator_data_t *dt);
-void CL_UpdatePillar(cs_pillar_data_t *dt);
-void CL_UpdateFloorWaggle(cs_floorwaggle_data_t *dt);
+void CL_SpawnVerticalDoor(sector_t *sector, cs_sector_thinker_data_t *data,
+                          cs_sector_thinker_spawn_data_t *spawn_data);
+
+void CL_SpawnCeiling(sector_t *sector, cs_sector_thinker_data_t *data,
+                     cs_sector_thinker_spawn_data_t *spawn_data);
+
+void CL_SpawnFloor(sector_t *sector, cs_sector_thinker_data_t *data,
+                   cs_sector_thinker_spawn_data_t *spawn_data);
+
+void CL_SpawnElevator(sector_t *sector, cs_sector_thinker_data_t *data,
+                      cs_sector_thinker_spawn_data_t *spawn_data);
+
+void CL_SpawnPillar(sector_t *sector, cs_sector_thinker_data_t *data,
+                    cs_sector_thinker_spawn_data_t *spawn_data);
+
+void CL_SpawnFloorWaggle(sector_t *sector, cs_sector_thinker_data_t *data,
+                         cs_sector_thinker_spawn_data_t *spawn_data);
+
+void CL_UpdatePlatform(cs_sector_thinker_data_t *data);
+void CL_UpdateVerticalDoor(cs_sector_thinker_data_t *data);
+void CL_UpdateCeiling(cs_sector_thinker_data_t *data);
+void CL_UpdateFloor(cs_sector_thinker_data_t *data);
+void CL_UpdateElevator(cs_sector_thinker_data_t *data);
+void CL_UpdatePillar(cs_sector_thinker_data_t *data);
+void CL_UpdateFloorWaggle(cs_sector_thinker_data_t *data);
 
 #endif
 

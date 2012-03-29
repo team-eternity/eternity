@@ -47,6 +47,7 @@
 #include "cl_cmd.h"      // [CG] 09/18/11
 #include "cl_main.h"     // [CG] 09/18/11
 #include "cl_pred.h"     // [CG] 09/18/11
+#include "cl_spec.h"     // [CG] 03/29/12
 #include "sv_main.h"     // [CG] 09/18/11
 
 extern int NullStateNum;
@@ -254,22 +255,70 @@ void Thinker::removeThinker()
 void Thinker::RunThinkers(void)
 {
    Mobj *mo;
+   SectorMovementThinker *thinker = NULL;
+
+   if(CS_CLIENT)
+      cl_predicting_sectors = true;
 
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
        currentthinker = currentthinker->next)
    {
       if(currentthinker->removed)
+      {
          currentthinker->removeDelayed();
-      else if(!clientserver)
-         currentthinker->Think();
-      else if(!(mo = thinker_cast<Mobj *>(currentthinker)))
-         currentthinker->Think();
-      else if(serverside && mo->player == NULL)
-         currentthinker->Think();
-      else if(clientside && !sentient(mo))
+         continue;
+      }
+
+      if(CS_CLIENT)
+      {
+         if((thinker = thinker_cast<SectorMovementThinker *>(currentthinker)))
+         {
+            CS_LogSMT(
+               "%u/%u (%u): SMT %u before prediction: %d/%d.\n",
+               cl_latest_world_index,
+               cl_current_world_index,
+               cl_commands_sent - 1,
+               thinker->net_id,
+               thinker->sector->ceilingheight >> FRACBITS,
+               thinker->sector->floorheight >> FRACBITS
+            );
+         }
+
+         if(!(mo = thinker_cast<Mobj *>(currentthinker)))
+            currentthinker->Think();
+         else if(serverside && mo->player == NULL)
+            currentthinker->Think();
+         else if(clientside && !sentient(mo))
+            currentthinker->Think();
+
+         if(thinker)
+         {
+            CS_LogSMT(
+               "%u/%u (%u): SMT %u after prediction: %d/%d.\n",
+               cl_latest_world_index,
+               cl_current_world_index,
+               cl_commands_sent - 1,
+               thinker->net_id,
+               thinker->sector->ceilingheight >> FRACBITS,
+               thinker->sector->floorheight >> FRACBITS
+            );
+            thinker = NULL;
+         }
+      }
+      else if(CS_SERVER)
+      {
+         if(!(mo = thinker_cast<Mobj *>(currentthinker)))
+            currentthinker->Think();
+         else if(mo->player == NULL)
+            currentthinker->Think();
+      }
+      else
          currentthinker->Think();
    }
+
+   if(CS_CLIENT)
+      cl_predicting_sectors = true;
 }
 
 //
@@ -332,49 +381,43 @@ void P_Ticker(void)
 
       for(; i < MAXPLAYERS; i++)
       {
-         if(!playeringame[i])
-            continue;
-
-         if(CS_SERVER)
-            SV_LoadClientOptions(i);
-
-         if(CS_CLIENT && i != consoleplayer)
+         if(playeringame[i])
          {
-            CL_PlayerThink(i);
-         }
-         else
-         {
-            if(CS_CLIENT && i == consoleplayer && !clients[i].spectating)
+            if(CS_SERVER)
+               SV_LoadClientOptions(i);
+
+            if(CS_CLIENT)
             {
-               unsigned int last_server_command_index =
-                  CL_GetLastServerCommandIndex() + 1;
+               if(i == consoleplayer)
+                  CL_Predict();
+               else
+                  CL_PlayerThink(i);
 
-               CL_LoadLastServerPosition();
-
-               if(cl_commands_sent > (last_server_command_index + 1))
+               if(players[i].mo && ((i != consoleplayer) ||
+                                    (clients[i].spectating)))
                {
-                  CL_RePredict(
-                     last_server_command_index,
-                     CL_GetLastServerPositionIndex() + 1,
-                     (cl_commands_sent - last_server_command_index) - 1
-                  );
+                  players[i].mo->Think();
                }
             }
+            else
+               P_PlayerThink(&players[i]);
 
-            P_PlayerThink(&players[i]);
+            if(CS_SERVER)
+               SV_RestoreServerOptions();
          }
-
-         if(players[i].mo && (CS_CLIENT))
-            players[i].mo->Think();
-
-         if(CS_SERVER)
-            SV_RestoreServerOptions();
       }
    }
 
    reset_viewz = false;  // sf
 
+   if(CS_CLIENT)
+      CL_ResetAllSectorMovementThinkers();
+
    Thinker::RunThinkers();
+
+   if(CS_CLIENT)
+      CL_SaveAllSectorMovementThinkerStatuses();
+
    P_UpdateSpecials();
    P_RespawnSpecials();
    if(demo_version >= 329)

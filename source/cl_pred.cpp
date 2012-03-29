@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Prediction routines for clientside and sector prediction
+//   Prediction routines for clientside local player and sector prediction
 //
 //----------------------------------------------------------------------------
 
@@ -38,6 +38,7 @@
 #include "cs_netid.h"
 #include "cs_position.h"
 #include "cl_main.h"
+#include "cl_pred.h"
 #include "cl_spec.h"
 
 bool cl_predicting = false;
@@ -48,8 +49,39 @@ static cs_cmd_t local_commands[MAX_POSITIONS];
 static cs_player_position_t last_server_position;
 static cs_floor_status_e last_floor_status;
 static uint32_t last_server_command_index;
+static uint32_t latest_sector_position_index;
 
-void CL_InitPrediction(void)
+static void CL_runPlayerCommand(uint32_t index, bool think)
+{
+   ticcmd_t ticcmd;
+
+   CS_LogSMT(
+      "%u/%u: Running player command %u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      index
+   );
+
+   CS_CopyCommandToTiccmd(&ticcmd, CL_GetCommandAtIndex(index));
+   CS_RunPlayerCommand(consoleplayer, &ticcmd, think);
+}
+
+static void CL_runSectorThinkers(uint32_t index)
+{
+   NetIDToObject<SectorMovementThinker> *nito = NULL;
+
+   CS_LogSMT(
+      "%u/%u: Re-predicting sector movement at %u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      index
+   );
+
+   while((nito = NetSectorThinkers.iterate(nito)))
+      nito->object->Predict(index);
+}
+
+void CL_InitPrediction()
 {
    cl_current_world_index = 0;
    memset(local_commands, 0, MAX_POSITIONS * sizeof(cs_cmd_t));
@@ -60,62 +92,211 @@ cs_cmd_t* CL_GetCommandAtIndex(uint32_t index)
    return &local_commands[index % MAX_POSITIONS];
 }
 
-cs_cmd_t* CL_GetCurrentCommand(void)
+cs_cmd_t* CL_GetCurrentCommand()
 {
    return CL_GetCommandAtIndex(cl_commands_sent - 1);
 }
 
-void CL_PredictPlayerPosition(unsigned int command_index, bool think)
+void CL_RunPredictedCommand()
 {
-   ticcmd_t ticcmd;
-
-   if(!prediction_enabled)
-      return;
-
-   CS_CopyCommandToTiccmd(&ticcmd, CL_GetCommandAtIndex(command_index));
-   CS_RunPlayerCommand(consoleplayer, &ticcmd, think);
+   CL_runPlayerCommand(cl_commands_sent - 1, false);
 }
 
-void CL_PredictFrom(unsigned int start, unsigned int end)
+void CL_Predict()
 {
-   unsigned int i;
+   int old_status = 0;
+   bool sectors_moving = false;
+   bool started_predicting_sectors = false;
+   uint32_t i, delta, lsindex, world_index, command_index;
+   PlatThinker *platform = (PlatThinker *)NetSectorThinkers.lookup(1);
 
    if(!prediction_enabled)
       return;
 
-   for(i = start; i < end; i++)
-      CL_PredictPlayerPosition(i, true);
-}
+   lsindex = latest_sector_position_index;
 
-void CL_RePredict(unsigned int command_index, unsigned int position_index,
-                  unsigned int count)
-{
-   unsigned int i;
+   command_index = last_server_command_index + 1;
 
-   if(!prediction_enabled)
+   if(cl_commands_sent <= (command_index + 1))
       return;
+
+   delta = cl_commands_sent - (command_index + 1);
+
+   if((!delta) || (delta >= MAX_POSITIONS))
+      return;
+
+   world_index = cl_latest_world_index - delta;
+
+   cl_predicting_sectors = true;
+
+   if(platform)
+   {
+      CS_LogSMT(
+         "%u/%u: SMT %u before re-prediction: %d/%d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         _DEBUG_SECTOR,
+         platform->sector->ceilingheight >> FRACBITS,
+         platform->sector->floorheight >> FRACBITS
+      );
+   }
+
+   if(!NetSectorThinkers.isEmpty())
+      sectors_moving = true;
+
+   if((sectors_moving) && (lsindex <= world_index))
+   {
+      CS_LogSMT(
+         "%u/%u: Catching sectors up (%u => %u).\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         lsindex,
+         world_index
+      );
+
+      cl_setting_sector_positions = true;
+      CL_LoadSectorPositionsAt(lsindex);
+      cl_setting_sector_positions = false;
+
+      CS_LogSMT(
+         "%u/%u: Activating SMTs at %u.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         lsindex
+      );
+      CL_ActivateAllSectorMovementThinkers();
+      started_predicting_sectors = true;
+
+      cl_predicting_sectors = true;
+      do
+      {
+         CL_runSectorThinkers(lsindex);
+      } while(++lsindex <= world_index);
+      cl_predicting_sectors = false;
+
+      CS_LogSMT(
+         "%u/%u: Done catching sectors up.\n",
+         cl_latest_world_index,
+         cl_current_world_index
+      );
+   }
+
+   if(!clients[consoleplayer].spectating)
+      CL_LoadLastServerPosition();
+
+   CS_LogSMT(
+      "%u/%u: Re-predicting %u/%u/%u TICs (%u).\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      command_index,
+      cl_commands_sent - 1,
+      delta,
+      world_index
+   );
+
+   if(platform)
+      old_status = platform->status;
 
    cl_predicting = true;
-   for(i = 0; i < count; i++)
+   for(i = 0; world_index < (cl_current_world_index - 1); i++, world_index++)
    {
-      CL_LoadSectorPositions(position_index + i);
-      CL_PredictPlayerPosition(command_index + i, true);
+      if(!started_predicting_sectors)
+      {
+         cl_setting_sector_positions = true;
+         CL_LoadSectorPositionsAt(world_index);
+         cl_setting_sector_positions = false;
+
+         if((sectors_moving) && (world_index == lsindex))
+         {
+            CS_LogSMT(
+               "%u/%u: Activating SMTs at %u.\n",
+               cl_latest_world_index,
+               cl_current_world_index,
+               world_index
+            );
+            CL_ActivateAllSectorMovementThinkers();
+            started_predicting_sectors = true;
+         }
+      }
+
+      if((i < delta) && (!clients[consoleplayer].spectating))
+         CL_runPlayerCommand(command_index + i, true);
+
+      if(started_predicting_sectors)
+      {
+         cl_predicting_sectors = true;
+         CL_runSectorThinkers(world_index);
+         cl_predicting_sectors = false;
+      }
    }
    cl_predicting = false;
-   CL_LoadSectorPositions(cl_current_world_index);
+
+   if(platform)
+   {
+      CS_LogSMT(
+         "%u/%u: Status changed: %d => %d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         old_status,
+         platform->status
+      );
+
+      CS_LogSMT(
+         "%u/%u: SMT %u after re-prediction: %d/%d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         _DEBUG_SECTOR,
+         platform->sector->ceilingheight >> FRACBITS,
+         platform->sector->floorheight >> FRACBITS
+      );
+   }
+
+   CS_LogSMT(
+      "%u/%u: Done re-predicting.\n",
+      cl_latest_world_index,
+      cl_current_world_index
+   );
+   CS_LogPlayerPosition(consoleplayer);
+   P_PlayerThink(&players[consoleplayer]);
+
+   if((!clients[consoleplayer].spectating) && (players[consoleplayer].mo))
+      players[consoleplayer].mo->Think();
+
+   CS_LogPlayerPosition(consoleplayer);
+   CS_LogSMT(
+      "%u/%u: Done predicting.\n",
+      cl_latest_world_index,
+      cl_current_world_index
+   );
 }
 
-void CL_StoreLastServerPosition(cs_player_position_t *new_server_position,
-                                cs_floor_status_e floor_status,
-                                uint32_t index, uint32_t world_index)
+void CL_StoreLatestSectorPositionIndex()
 {
-   CS_CopyPlayerPosition(&last_server_position, new_server_position);
-   last_server_command_index = index;
-   last_server_position.world_index = world_index;
-   last_floor_status = floor_status;
+   latest_sector_position_index = cl_latest_world_index;
 }
 
-void CL_LoadLastServerPosition(void)
+uint32_t CL_GetLatestSectorPositionIndex()
+{
+   return latest_sector_position_index;
+}
+
+void CL_StoreLastServerPosition(nm_playerposition_t *message)
+{
+   CS_LogSMT(
+      "%u/%u: PPM %u/%u/%u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      message->last_index_run,
+      message->last_world_index_run,
+      message->world_index
+   );
+   CS_CopyPlayerPosition(&last_server_position, &message->position);
+   last_server_command_index = message->last_index_run;
+   last_server_position.world_index = message->last_world_index_run;
+   last_floor_status = (cs_floor_status_e)message->floor_status;
+}
+
+void CL_LoadLastServerPosition()
 {
    CS_SetPlayerPosition(consoleplayer, &last_server_position);
    clients[consoleplayer].floor_status = last_floor_status;
@@ -124,23 +305,5 @@ void CL_LoadLastServerPosition(void)
 cs_player_position_t* CL_GetLastServerPosition()
 {
    return &last_server_position;
-}
-
-uint32_t CL_GetLastServerPositionIndex(void)
-{
-   return last_server_position.world_index;
-}
-
-uint32_t CL_GetLastServerCommandIndex(void)
-{
-   return last_server_command_index;
-}
-
-void CL_SectorThink()
-{
-   NetIDToObject<SectorThinker> *nito = NULL;
-
-   while((nito = NetSectorThinkers.iterate(nito)))
-      nito->object->Think();
 }
 

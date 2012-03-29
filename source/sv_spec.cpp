@@ -33,58 +33,23 @@
 #include "sv_main.h"
 #include "sv_spec.h"
 
-void SV_LoadSectorPositionAt(unsigned int sector_number, unsigned int index)
+void SV_LoadCurrentSectorPosition(uint32_t sector_number)
 {
-   sector_t *sector = &sectors[sector_number];
-   sector_position_t *sector_position =
-      &cs_sector_positions[sector_number][index % MAX_POSITIONS];
-
-   CS_SetSectorPosition(sector, sector_position);
-}
-
-void SV_LoadCurrentSectorPosition(unsigned int sector_number)
-{
-   SV_LoadSectorPositionAt(sector_number, sv_world_index);
+   CS_SetSectorPosition(sector_number, sv_world_index);
 }
 
 void SV_SaveSectorPositions(void)
 {
-   size_t i;
-   sector_position_t *old_position, *new_position;
+   int i;
 
-   if(sv_world_index == 0)
+   if(!sv_world_index)
       return;
 
-   for(i = 0; i < (unsigned int)numsectors; i++)
+   for(i = 0; i < numsectors; i++)
    {
-      old_position =
-         &cs_sector_positions[i][(sv_world_index - 1) % MAX_POSITIONS];
-      new_position =
-         &cs_sector_positions[i][sv_world_index % MAX_POSITIONS];
-      CS_SaveSectorPosition(new_position, &sectors[i]);
-      new_position->world_index = sv_world_index;
-#if _SECTOR_PRED_DEBUG
-      if(i == _DEBUG_SECTOR)
-      {
-         printf(
-            "SV_SaveSectorPositions (%u): Sector %u: %d/%d.\n",
-            sv_world_index,
-            i,
-            sectors[i].ceilingheight >> FRACBITS,
-            sectors[i].floorheight >> FRACBITS
-         );
-      }
-#endif
-      if(!CS_SectorPositionsEqual(old_position, new_position))
+      CS_SaveSectorPosition(sv_world_index, i);
+      if(!CS_SectorPositionsEqual(i, sv_world_index - 1, sv_world_index))
          SV_BroadcastSectorPosition(i);
    }
-}
-
-void SV_BroadcastSectorThinkerStatuses(void)
-{
-   NetIDToObject<SectorThinker> *nito = NULL;
-
-   while((nito = NetSectorThinkers.iterate(nito)))
-      SV_BroadcastSectorThinkerStatus(nito->object);
 }
 

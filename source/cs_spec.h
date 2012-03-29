@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,6 +45,37 @@ struct sector_position_t
    uint32_t world_index;
    fixed_t  ceiling_height;
    fixed_t  floor_height;
+};
+
+struct cs_platform_spawn_data_t
+{
+   char seqname[14];
+};
+
+struct cs_door_spawn_data_t
+{
+   uint8_t make_sound;
+   uint8_t raise;
+   uint8_t turbo;
+   uint8_t bounce;
+};
+
+struct cs_ceiling_spawn_data_t
+{
+   int8_t noise;
+};
+
+struct cs_floor_spawn_data_t
+{
+   uint8_t make_sound;
+};
+
+union cs_sector_thinker_spawn_data_t
+{
+   cs_platform_spawn_data_t    platform_spawn_data;
+   cs_door_spawn_data_t        door_spawn_data;
+   cs_ceiling_spawn_data_t     ceiling_spawn_data;
+   cs_floor_spawn_data_t       floor_spawn_data;
 };
 
 struct cs_platform_data_t
@@ -155,23 +186,31 @@ struct cs_floorwaggle_data_t
    int32_t  state;
 };
 
+union cs_sector_thinker_data_t
+{
+   cs_platform_data_t    platform_data;
+   cs_door_data_t        door_data;
+   cs_ceiling_data_t     ceiling_data;
+   cs_floor_data_t       floor_data;
+   cs_elevator_data_t    elevator_data;
+   cs_pillar_data_t      pillar_data;
+   cs_floorwaggle_data_t floorwaggle_data;
+};
+
 #pragma pack(pop)
 
 struct sector_t;
 
-extern sector_position_t **cs_sector_positions;
-
+void CS_LogSMT(const char *fmt, ...);
 void CS_InitSectorPositions(void);
-void CS_SetSectorPosition(sector_t *sector, sector_position_t *position);
-bool CS_SectorPositionsEqual(sector_position_t *position_one,
-                             sector_position_t *position_two);
-void CS_SaveSectorPosition(sector_position_t *position, sector_t *sector);
-void CS_CopySectorPosition(sector_position_t *position_one,
-                           sector_position_t *position_two);
+sector_position_t* CS_GetSectorPosition(uint32_t sector_number, uint32_t index);
+void CS_SetSectorPosition(uint32_t sector_number, uint32_t index);
+bool CS_SectorPositionsEqual(uint32_t sector_number, uint32_t index_one,
+                             uint32_t index_two);
+void CS_SaveSectorPosition(uint32_t index, uint32_t sector_number);
+void CS_PrintPositionForSector(uint32_t sector_number);
 void CS_PrintSectorPosition(size_t sector_number, sector_position_t *position);
 bool CS_SectorPositionIs(sector_t *sector, sector_position_t *position);
-void CS_LoadSectorPositions(unsigned int index);
-void CS_LoadCurrentSectorPositions(void);
 
 #endif
 

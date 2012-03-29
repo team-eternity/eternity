@@ -27,12 +27,8 @@
 #ifndef SV_SPEC_H__
 #define SV_SPEC_H__
 
-#include "cs_spec.h"
-
+void SV_LoadCurrentSectorPosition(uint32_t);
 void SV_SaveSectorPositions(void);
-void SV_LoadSectorPositionAt(unsigned int sector_number, unsigned int index);
-void SV_LoadCurrentSectorPosition(unsigned int sector_number);
-void SV_BroadcastSectorThinkerStatuses(void);
 
 #endif
 

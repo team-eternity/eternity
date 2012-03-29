@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Prediction routines for clientside and sector prediction
+//   Prediction routines for clientside local player and sector prediction
 //
 //----------------------------------------------------------------------------
 
@@ -31,23 +31,17 @@
 
 extern bool cl_predicting;
 
-void      CL_InitPrediction(void);
-cs_cmd_t* CL_GetCommandAtIndex(uint32_t index);
-cs_cmd_t* CL_GetCurrentCommand(void);
-void      CL_PredictPlayerPosition(unsigned int command_index, bool think);
-void      CL_PredictSectorPositions(unsigned int index);
-void      CL_PredictFrom(unsigned int start, unsigned int end);
-void      CL_RePredict(unsigned int command_index,
-                       unsigned int position_index, unsigned int count);
-void      CL_StoreLastServerPosition(cs_player_position_t *new_server_position,
-                                     cs_floor_status_e floor_status,
-                                     unsigned int index,
-                                     unsigned int world_index);
-void      CL_LoadLastServerPosition(void);
+void                  CL_InitPrediction();
+cs_cmd_t*             CL_GetCommandAtIndex(uint32_t index);
+cs_cmd_t*             CL_GetCurrentCommand();
+void                  CL_RunPredictedCommand();
+void                  CL_Predict();
+void                  CL_StoreLatestSectorPositionIndex();
+uint32_t              CL_GetLatestSectorPositionIndex();
+void                  CL_StoreLastServerPosition(nm_playerposition_t *message);
+void                  CL_LoadLastServerPosition();
 cs_player_position_t* CL_GetLastServerPosition();
-uint32_t  CL_GetLastServerPositionIndex(void);
-uint32_t  CL_GetLastServerCommandIndex(void);
-void      CL_SectorThink();
+uint32_t              CL_GetLastServerCommandIndex();
 
 #endif
 

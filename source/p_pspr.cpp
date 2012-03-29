@@ -208,12 +208,20 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
 
    // [CG] Clients only set weapon sprites for themselves.  Otherwise they wait
    //      for a server message.
-   if(player - players != consoleplayer)
+   if((player - players) != consoleplayer)
    {
-      if(CS_SERVER)
-         SV_BroadcastPlayerWeaponState(player - players, position, stnum);
-      else if(CS_CLIENT && !cl_setting_player_weapon_sprites)
+      int pnum = player - players;
+
+      if(CS_CLIENT && !cl_setting_player_weapon_sprites)
          return;
+
+      if(CS_SERVER && playeringame[pnum] && !clients[pnum].spectating)
+      {
+         if(player->curpsprite != position)
+            SV_BroadcastPlayerWeaponState(pnum, position, stnum);
+         else if(stnum && states[stnum]->action)
+            SV_BroadcastPlayerWeaponState(pnum, position, stnum);
+      }
    }
 
    player->curpsprite = position;

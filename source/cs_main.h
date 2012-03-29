@@ -54,7 +54,7 @@ struct event_t;
 #define _SPECIAL_DEBUG 0
 #define _SECTOR_PRED_DEBUG 0
 
-#define _DEBUG_SECTOR 350
+#define _DEBUG_SECTOR 2
 
 #define LOG_ALL_NETWORK_MESSAGES false
 
@@ -830,15 +830,8 @@ typedef struct
    uint32_t world_index;
    uint8_t type;
    uint32_t sector_number;
-   union {
-      cs_platform_data_t    platform_data;
-      cs_door_data_t        door_data;
-      cs_ceiling_data_t     ceiling_data;
-      cs_floor_data_t       floor_data;
-      cs_elevator_data_t    elevator_data;
-      cs_pillar_data_t      pillar_data;
-      cs_floorwaggle_data_t floorwaggle_data;
-   };
+   cs_sector_thinker_data_t data;
+   cs_sector_thinker_spawn_data_t spawn_data;
 } nm_sectorthinkerspawned_t;
 
 typedef struct
@@ -846,15 +839,7 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint8_t type;
-   union {
-      cs_platform_data_t    platform_data;
-      cs_door_data_t        door_data;
-      cs_ceiling_data_t     ceiling_data;
-      cs_floor_data_t       floor_data;
-      cs_elevator_data_t    elevator_data;
-      cs_pillar_data_t      pillar_data;
-      cs_floorwaggle_data_t floorwaggle_data;
-   };
+   cs_sector_thinker_data_t data;
 } nm_sectorthinkerstatus_t;
 
 typedef struct

@@ -146,22 +146,12 @@ void CL_RunWorldUpdate(void)
 
 void CL_RunAllWorldUpdates(void)
 {
-   unsigned int old_world_index = cl_current_world_index;
-   unsigned int new_world_index = cl_latest_world_index - 2;
-   unsigned int old_commands_sent = cl_commands_sent;
+   uint32_t new_world_index = cl_latest_world_index;
 
    new_world_index -= cl_packet_buffer.capacity();
 
    while(cl_current_world_index < new_world_index)
       CL_RunWorldUpdate();
-
-   if(new_world_index > old_world_index)
-   {
-      CL_PredictFrom(
-         old_commands_sent,
-         old_commands_sent + (new_world_index - old_world_index)
-      );
-   }
 }
 
 void CL_Init(char *url)
@@ -476,6 +466,7 @@ void CL_LoadGame(const char *path)
    cl_setting_sector_positions = false;
    cl_spawning_actor_from_message = false;
    cl_removing_actor_from_message = false;
+   CS_InitSectorPositions();
 }
 
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
@@ -643,6 +634,8 @@ void CL_SetLatestFinishedIndices(unsigned int index)
    //      piled up messages we're receiving.
    if(cl_current_world_index == 0)
       return;
+
+   CL_CarrySectorPositions();
 
    // [CG] Can't flush during independent buffering.
    if(cl_packet_buffer.bufferingIndependently())

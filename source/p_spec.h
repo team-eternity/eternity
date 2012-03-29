@@ -31,6 +31,8 @@
 // Required for: Thinker
 #include "p_tick.h"
 
+#include "cs_spec.h" // [CG] Required for SectorMovementThinkers
+
 struct line_t;
 class  Mobj;
 struct player_t;
@@ -46,6 +48,7 @@ struct cs_floor_data_t;
 struct cs_elevator_data_t;
 struct cs_pillar_data_t;
 struct cs_floorwaggle_data_t;
+union  cs_sector_thinker_data_t;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -600,20 +603,47 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
 
 public:
-   SectorThinker() : Thinker(), sector(NULL), net_id(0), inactive(false) {};
+   SectorThinker() : Thinker(), sector(NULL) {};
 
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player) { return false; }
-   friend  void ::CL_SectorThink();
 
    // Data Members
    sector_t *sector;
-   uint32_t net_id;
-   bool inactive;
 
 };
 
+// [CG] Base class for sector movement action types.
+class SectorMovementThinker : public SectorThinker
+{
+   DECLARE_THINKER_TYPE(SectorMovementThinker, SectorThinker)
+
+protected:
+   uint32_t prediction_index;
+   uint32_t latest_status_index;
+   cs_sector_thinker_data_t latest_status;
+   cs_sector_thinker_data_t current_status;
+   cs_sector_thinker_data_t pre_reprediction_status;
+
+   virtual bool statusChanged() { return false; }
+   virtual void storeCurrentStatus();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data) {}
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data) {}
+
+public:
+   uint32_t net_id;
+   uint32_t inactive;
+
+   SectorMovementThinker()
+      : SectorThinker(), latest_status_index(0), net_id(0), inactive(0) {}
+   virtual void loadStoredStatusUpdate() {}
+   virtual void netSerialize(cs_sector_thinker_data_t *data) {};
+   virtual void storePreRePredictionStatus();
+   virtual void loadPreRePredictionStatus();
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
+   void Predict(uint32_t index);
+};
 
 // p_switch
 
@@ -753,21 +783,28 @@ public:
 
 // p_plats
 
-class PlatThinker : public SectorThinker
+class PlatThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(PlatThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(PlatThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void netSerialize(cs_platform_data_t *data);
-   virtual void netUpdate(cs_platform_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    fixed_t speed;
@@ -801,21 +838,28 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-class VerticalDoorThinker : public SectorThinker
+class VerticalDoorThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(VerticalDoorThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(VerticalDoorThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void netSerialize(cs_door_data_t *data);
-   virtual void netUpdate(cs_door_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    int type;
@@ -868,21 +912,28 @@ struct spectransfer_t
 
 // p_doors
 
-class CeilingThinker : public SectorThinker
+class CeilingThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(CeilingThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(CeilingThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void netSerialize(cs_ceiling_data_t *data);
-   virtual void netUpdate(cs_ceiling_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    int type;
@@ -935,21 +986,28 @@ typedef struct ceilingdata_s
 
 // p_floor
 
-class FloorMoveThinker : public SectorThinker
+class FloorMoveThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(FloorMoveThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(FloorMoveThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void netSerialize(cs_floor_data_t *data);
-   virtual void netUpdate(cs_floor_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    int type;
@@ -1005,20 +1063,27 @@ typedef struct stairdata_s
    int sync_value;
 } stairdata_t;
 
-class ElevatorThinker : public SectorThinker
+class ElevatorThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(ElevatorThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(ElevatorThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void netSerialize(cs_elevator_data_t *data);
-   virtual void netUpdate(cs_elevator_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
    
    // Data Members
    int type;
@@ -1029,20 +1094,27 @@ public:
 };
 
 // joek: pillars
-class PillarThinker : public SectorThinker
+class PillarThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(PillarThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(PillarThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void netSerialize(cs_pillar_data_t *data);
-   virtual void netUpdate(cs_pillar_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
    
    // Data Members
    int ceilingSpeed;
@@ -1065,20 +1137,27 @@ typedef struct pillardata_s
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-class FloorWaggleThinker : public SectorThinker
+class FloorWaggleThinker : public SectorMovementThinker
 {
-   DECLARE_THINKER_TYPE(FloorWaggleThinker, SectorThinker)
+   DECLARE_THINKER_TYPE(FloorWaggleThinker, SectorMovementThinker)
 
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual bool statusChanged();
+   virtual void loadStatusData(cs_sector_thinker_data_t *data);
+   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
 
 public:
+   uint32_t net_id;
+   uint32_t inactive;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void netSerialize(cs_floorwaggle_data_t *data);
-   virtual void netUpdate(cs_floorwaggle_data_t *data);
+   virtual void loadStoredStatusUpdate();
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
+   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
    
    // Data Members
    fixed_t originalHeight;
@@ -1446,7 +1525,7 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 // p_plats
 
-void P_AddActivePlat(PlatThinker *plat);
+void P_AddActivePlat(PlatThinker *plat, const char *seqname);
 
 void P_RemoveActivePlat(PlatThinker *plat);
 
@@ -1468,7 +1547,9 @@ void P_RemoveDoor(VerticalDoorThinker *door);
 VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
                                        vldoor_e type);
 
-VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec);
+VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec,
+                                       bool make_sound, bool raise, bool turbo,
+                                       bool bounce);
 
 VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec);
 

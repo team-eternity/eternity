@@ -78,7 +78,16 @@ IMPLEMENT_THINKER_TYPE(PlatThinker)
 void PlatThinker::Think()
 {
    result_e      res;
-   
+
+   if(inactive)
+      return;
+
+   if(!prediction_index)
+      prediction_index = cl_current_world_index;
+
+   if(CS_SERVER)
+      SectorMovementThinker::storeCurrentStatus();
+
    // handle plat moving, up, down, waiting, or in stasis,
    switch(this->status)
    {
@@ -126,7 +135,10 @@ void PlatThinker::Think()
             case downWaitUpStay:
             case raiseAndChange:
             case genLift:
-               P_RemoveActivePlat(this);     // killough
+               if(serverside)
+                  P_RemoveActivePlat(this);     // killough
+               else // [CG] Just set inactive if not serverside
+                  inactive = prediction_index;
             default:
                break;
             }
@@ -173,7 +185,10 @@ void PlatThinker::Think()
             {
             case raiseAndChange:
             case raiseToNearestAndChange:
-               P_RemoveActivePlat(this);
+               if(serverside)
+                  P_RemoveActivePlat(this);
+               else // [CG] Just set inactive if not serverside
+                  inactive = prediction_index;
             default:
                break;
             }
@@ -201,6 +216,9 @@ void PlatThinker::Think()
    case in_stasis: // do nothing if in stasis
       break;
    }
+
+   if(CS_SERVER && net_id && statusChanged())
+      SV_BroadcastSectorThinkerStatus(this);
 }
 
 //
@@ -217,7 +235,56 @@ void PlatThinker::serialize(SaveArchive &arc)
 
    // Reattach to active plats list
    if(arc.isLoading())
-      P_AddActivePlat(this);
+      P_AddActivePlat(this, NULL);
+}
+
+bool PlatThinker::statusChanged()
+{
+   if(speed     == current_status.platform_data.speed     &&
+      low       == current_status.platform_data.low       &&
+      high      == current_status.platform_data.high      &&
+      wait      == current_status.platform_data.wait      &&
+      count     == current_status.platform_data.count     &&
+      status    == current_status.platform_data.status    &&
+      oldstatus == current_status.platform_data.oldstatus &&
+      crush     == current_status.platform_data.crush     &&
+      tag       == current_status.platform_data.tag       &&
+      type      == current_status.platform_data.type)
+   {
+      return false;
+   }
+
+   return true;
+}
+
+void PlatThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
+{
+   latest_status.platform_data.net_id    = data->platform_data.net_id;
+   latest_status.platform_data.speed     = data->platform_data.speed;
+   latest_status.platform_data.low       = data->platform_data.low;
+   latest_status.platform_data.high      = data->platform_data.high;
+   latest_status.platform_data.wait      = data->platform_data.wait;
+   latest_status.platform_data.count     = data->platform_data.count;
+   latest_status.platform_data.status    = data->platform_data.status;
+   latest_status.platform_data.oldstatus = data->platform_data.oldstatus;
+   latest_status.platform_data.crush     = data->platform_data.crush;
+   latest_status.platform_data.tag       = data->platform_data.tag;
+   latest_status.platform_data.type      = data->platform_data.type;
+}
+
+void PlatThinker::loadStoredStatusUpdate()
+{
+   net_id    = latest_status.platform_data.net_id;
+   speed     = latest_status.platform_data.speed;
+   low       = latest_status.platform_data.low;
+   high      = latest_status.platform_data.high;
+   wait      = latest_status.platform_data.wait;
+   count     = latest_status.platform_data.count;
+   status    = latest_status.platform_data.status;
+   oldstatus = latest_status.platform_data.oldstatus;
+   crush     = latest_status.platform_data.crush;
+   tag       = latest_status.platform_data.tag;
+   type      = latest_status.platform_data.type;
 }
 
 //
@@ -225,19 +292,39 @@ void PlatThinker::serialize(SaveArchive &arc)
 //
 // Saves data into a net-safe struct.
 //
-void PlatThinker::netSerialize(cs_platform_data_t *data)
+void PlatThinker::netSerialize(cs_sector_thinker_data_t *data)
 {
-   data->net_id    = net_id;
-   data->speed     = speed;
-   data->low       = low;
-   data->high      = high;
-   data->wait      = wait;
-   data->count     = count;
-   data->status    = status;
-   data->oldstatus = oldstatus;
-   data->crush     = crush;
-   data->tag       = tag;
-   data->type      = type;
+   data->platform_data.net_id    = net_id;
+   data->platform_data.speed     = speed;
+   data->platform_data.low       = low;
+   data->platform_data.high      = high;
+   data->platform_data.wait      = wait;
+   data->platform_data.count     = count;
+   data->platform_data.status    = status;
+   data->platform_data.oldstatus = oldstatus;
+   data->platform_data.crush     = crush;
+   data->platform_data.tag       = tag;
+   data->platform_data.type      = type;
+}
+
+//
+// PlatThinker::loadStatusData
+//
+// Updates from a net-safe struct.
+//
+void PlatThinker::loadStatusData(cs_sector_thinker_data_t *data)
+{
+   net_id    = data->platform_data.net_id;
+   speed     = data->platform_data.speed;
+   low       = data->platform_data.low;
+   high      = data->platform_data.high;
+   wait      = data->platform_data.wait;
+   count     = data->platform_data.count;
+   status    = data->platform_data.status;
+   oldstatus = data->platform_data.oldstatus;
+   crush     = data->platform_data.crush;
+   tag       = data->platform_data.tag;
+   type      = data->platform_data.type;
 }
 
 //
@@ -245,19 +332,10 @@ void PlatThinker::netSerialize(cs_platform_data_t *data)
 //
 // Updates from a net-safe struct.
 //
-void PlatThinker::netUpdate(cs_platform_data_t *data)
+void PlatThinker::netUpdate(uint32_t index, cs_sector_thinker_data_t *data)
 {
-   net_id    = data->net_id;
-   speed     = data->speed;
-   low       = data->low;
-   high      = data->high;
-   wait      = data->wait;
-   count     = data->count;
-   status    = data->status;
-   oldstatus = data->oldstatus;
-   crush     = data->crush;
-   tag       = data->tag;
-   type      = data->type;
+   SectorMovementThinker::netUpdate(index, data);
+   loadStatusData(data);
 }
 
 //
@@ -351,6 +429,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
 PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                              plattype_e type)
 {
+   const char *seqname = NULL;
    PlatThinker *plat = new PlatThinker;
 
    plat->addThinker();
@@ -376,7 +455,7 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       plat->status = up;
       //jff 3/14/98 clear old field as well
       P_ZeroSectorSpecial(sec);
-      P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
+      seqname = "EEPlatRaise";
       break;
        
    case raiseAndChange:
@@ -386,7 +465,7 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       plat->wait = 0;
       plat->status = up;
       
-      P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
+      seqname = "EEPlatRaise";
       break;
        
    case downWaitUpStay:
@@ -399,7 +478,7 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       plat->high = sec->floorheight;
       plat->wait = 35*PLATWAIT;
       plat->status = down;
-      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      seqname = "EEPlatNormal";
       break;
        
    case blazeDWUS:
@@ -412,7 +491,7 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       plat->high = sec->floorheight;
       plat->wait = 35*PLATWAIT;
       plat->status = down;
-      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      seqname = "EEPlatNormal";
       break;
        
    case perpetualRaise:
@@ -430,7 +509,7 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       plat->wait = 35*PLATWAIT;
       plat->status = (P_Random(pr_plats) & 1) ? down : up;
       
-      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      seqname = "EEPlatNormal";
       break;
 
    case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
@@ -443,19 +522,14 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       plat->high   = sec->floorheight;
       plat->status = down;
 
-      P_PlatSequence(plat->sector, "EEPlatSilent");
+      seqname = "EEPlatSilent";
       break;
       
    default:
       break;
    }
 
-   if(serverside)
-   {
-      P_AddActivePlat(plat);  // add plat to list of active plats
-      if(CS_SERVER)
-         SV_BroadcastSectorThinkerSpawned(plat);
-   }
+   P_AddActivePlat(plat, seqname);  // add plat to list of active plats
 
    return plat;
 }
@@ -523,9 +597,31 @@ int EV_StopPlat(line_t *line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(PlatThinker *plat)
+void P_AddActivePlat(PlatThinker *plat, const char *seqname)
 {
    platlist_t *list = estructalloc(platlist_t, 1);
+   cs_sector_thinker_spawn_data_t spawn_data;
+
+   if(CS_SERVER)
+   {
+      if(seqname)
+      {
+         strncpy(
+            spawn_data.platform_spawn_data.seqname,
+            seqname,
+            sizeof(spawn_data.platform_spawn_data.seqname)
+         );
+      }
+      else
+      {
+         memset(
+            spawn_data.platform_spawn_data.seqname,
+            0, 
+            sizeof(spawn_data.platform_spawn_data.seqname)
+         );
+      }
+   }
+
    list->plat = plat;
    plat->list = list;
    if((list->next = activeplats))
@@ -534,6 +630,9 @@ void P_AddActivePlat(PlatThinker *plat)
    activeplats = list;
 
    NetSectorThinkers.add(plat);
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerSpawned(plat, &spawn_data);
 }
 
 //
@@ -547,13 +646,18 @@ void P_AddActivePlat(PlatThinker *plat)
 void P_RemoveActivePlat(PlatThinker *plat)
 {
    platlist_t *list = plat->list;
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerRemoved(plat);
+
+   NetSectorThinkers.remove(plat);
+
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
    plat->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);
 
-   NetSectorThinkers.remove(plat);
 }
 
 //
@@ -567,6 +671,9 @@ void P_RemoveAllActivePlats(void)
 {
    while(activeplats)
    {  
+      if(CS_SERVER)
+         SV_BroadcastSectorThinkerRemoved(activeplats->plat);
+
       NetSectorThinkers.remove(activeplats->plat);
       platlist_t *next = activeplats->next;
       efree(activeplats);

@@ -24,6 +24,10 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
+#include "doomstat.h"
+#include "m_file.h"
 #include "m_fixed.h"
 #include "p_mobj.h"
 #include "p_portal.h"
@@ -34,14 +38,51 @@
 #include "cs_main.h"
 #include "cs_netid.h"
 #include "cl_main.h"
-
-sector_position_t **cs_sector_positions = NULL;
+#include "cl_spec.h"
+#include "sv_main.h"
 
 static int old_numsectors = 0;
+static bool opened_log_file = false;
+static FILE *specfd;
+
+static sector_position_t **cs_sector_positions = NULL;
+
+void CS_LogSMT(const char *fmt, ...)
+{
+   va_list args;
+
+   if(CS_CLIENT && opened_log_file)
+   {
+      va_start(args, fmt);
+      vfprintf(specfd, fmt, args);
+      va_end(args);
+   }
+}
+
+static void CS_closeSpecLog(void)
+{
+   if(CS_CLIENT && opened_log_file)
+   {
+      M_FlushFile(specfd);
+      M_CloseFile(specfd);
+   }
+}
 
 void CS_InitSectorPositions(void)
 {
    int i;
+   uint32_t index;
+
+   if(CS_CLIENT && (!opened_log_file))
+   {
+      specfd = M_OpenFile("E:/Code/eecs/codeblocks/bin/Debug/spec.log", "wb");
+      if(!specfd)
+         I_Error("Error opening log: %s.\n", M_GetFileSystemErrorMessage());
+
+      atexit(CS_closeSpecLog);
+
+      opened_log_file = true;
+   }
 
    if(cs_sector_positions != NULL)
    {
@@ -57,46 +98,102 @@ void CS_InitSectorPositions(void)
 
    memset(cs_sector_positions, 0, numsectors * sizeof(sector_position_t *));
 
+   if(CS_CLIENT)
+      index = cl_latest_world_index;
+   else if(CS_SERVER)
+      index = sv_world_index;
+   else
+      index = gametic;
+
    for(i = 0; i < numsectors; i++)
    {
-      cs_sector_positions[i] = ecalloc(
-         sector_position_t *, MAX_POSITIONS, sizeof(sector_position_t)
+      cs_sector_positions[i] = emalloc(
+         sector_position_t *, MAX_POSITIONS * sizeof(sector_position_t)
       );
-      CS_SaveSectorPosition(&cs_sector_positions[i][0], &sectors[i]);
+
+      CS_SaveSectorPosition(index, i);
    }
+
    old_numsectors = numsectors;
+
+   if(CS_CLIENT)
+      CL_InitSectorPositions();
 }
 
-void CS_SetSectorPosition(sector_t *sector, sector_position_t *position)
+sector_position_t* CS_GetSectorPosition(uint32_t sector_number, uint32_t index)
 {
-   P_SetCeilingHeight(sector, position->ceiling_height);
-   P_SetFloorHeight(sector, position->floor_height);
+   return &cs_sector_positions[sector_number][index % MAX_POSITIONS];
 }
 
-bool CS_SectorPositionsEqual(sector_position_t *position_one,
-                                sector_position_t *position_two)
+void CS_SetSectorPosition(uint32_t sector_number, uint32_t index)
 {
-   if(position_one->ceiling_height != position_two->ceiling_height)
+   sector_t *sector = &sectors[sector_number];
+   sector_position_t *pos = CS_GetSectorPosition(sector_number, index);
+
+   if(sector_number == _DEBUG_SECTOR)
+   {
+      CS_LogSMT(
+         "%u/%u: CS_SetSectorPosition (%u) %u/%d/%d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         index,
+         pos->world_index,
+         pos->ceiling_height >> FRACBITS,
+         pos->floor_height >> FRACBITS
+      );
+   }
+
+   P_SetCeilingHeight(sector, pos->ceiling_height);
+   P_SetFloorHeight(sector, pos->floor_height);
+}
+
+bool CS_SectorPositionsEqual(uint32_t sector_number, uint32_t index_one,
+                             uint32_t index_two)
+{
+   sector_position_t *one = CS_GetSectorPosition(sector_number, index_one);
+   sector_position_t *two = CS_GetSectorPosition(sector_number, index_two);
+
+   if(one->ceiling_height != two->ceiling_height)
       return false;
 
-   if(position_one->floor_height != position_two->floor_height)
+   if(one->floor_height != two->floor_height)
       return false;
 
    return true;
 }
 
-void CS_SaveSectorPosition(sector_position_t *position, sector_t *sector)
+void CS_SaveSectorPosition(uint32_t index, uint32_t sector_number)
 {
-   position->ceiling_height = sector->ceilingheight;
-   position->floor_height   = sector->floorheight;
+   sector_t *sector = &sectors[sector_number];
+   sector_position_t *pos = CS_GetSectorPosition(sector_number, index);
+
+   if(sector_number == _DEBUG_SECTOR)
+   {
+      CS_LogSMT(
+         "%u/%u: CS_SaveSectorPosition %u/%d/%d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         index,
+         sector->ceilingheight >> FRACBITS,
+         sector->floorheight >> FRACBITS
+      );
+   }
+
+   pos->world_index    = index;
+   pos->ceiling_height = sector->ceilingheight;
+   pos->floor_height   = sector->floorheight;
 }
 
-void CS_CopySectorPosition(sector_position_t *position_one,
-                           sector_position_t *position_two)
+void CS_PrintPositionForSector(uint32_t sector_number)
 {
-   position_one->world_index    = position_two->world_index;
-   position_one->ceiling_height = position_two->ceiling_height;
-   position_one->floor_height   = position_two->floor_height;
+   sector_t *sector = &sectors[sector_number];
+
+   printf(
+      "Sector %u: %5u/%5u.\n",
+      sector_number,
+      sector->ceilingheight >> FRACBITS,
+      sector->floorheight   >> FRACBITS
+   );
 }
 
 void CS_PrintSectorPosition(size_t sector_number, sector_position_t *position)

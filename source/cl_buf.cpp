@@ -272,7 +272,8 @@ bool NetPacketBuffer::overflowed(void)
 
 uint32_t NetPacketBuffer::capacity(void)
 {
-   uint32_t c = m_capacity;
+   if(!enabled())
+      return 0;
 
    if(adaptive())
    {
@@ -282,7 +283,7 @@ uint32_t NetPacketBuffer::capacity(void)
          return (clients[consoleplayer].stats.transit_lag / TICRATE) * 2;
    }
 
-   return c;
+   return m_capacity;
 }
 
 void NetPacketBuffer::setCapacity(uint32_t new_capacity)

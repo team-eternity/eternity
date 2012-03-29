@@ -177,7 +177,7 @@ void CL_SendCommand(void)
    cs_cmd_t *command, *dest_command;
    ticcmd_t ticcmd;
    size_t buffer_size;
-   uint32_t i, command_count;
+   uint32_t i, command_count, world_index;
 
    // [CG] Ensure no commands are made during demo playback.
    if(CS_DEMOPLAY)
@@ -186,19 +186,18 @@ void CL_SendCommand(void)
    // I_StartTic();
    // D_ProcessEvents();
    command = CL_GetCommandAtIndex(cl_commands_sent);
+   world_index = cl_latest_world_index;
 
    if(consoleactive)
    {
       memset(command, 0, sizeof(cs_cmd_t));
       command->index = cl_commands_sent;
-      command->world_index = cl_latest_world_index;
+      command->world_index = world_index;
    }
    else
    {
       G_BuildTiccmd(&ticcmd);
-      CS_CopyTiccmdToCommand(
-         command, &ticcmd, cl_commands_sent, cl_latest_world_index
-      );
+      CS_CopyTiccmdToCommand(command, &ticcmd, cl_commands_sent, world_index);
    }
 
    // [CG] Save all sent commands in the demo if recording.
@@ -513,6 +512,7 @@ void CL_HandleSyncMessage(nm_sync_t *message)
       cl_packet_buffer.enable();
 
    CS_UpdateQueueMessage();
+   CL_StoreLatestSectorPositionIndex();
 
    if(!cl_received_first_sync)
       cl_received_first_sync = true;
@@ -658,9 +658,6 @@ void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
    if(playernum > MAX_CLIENTS || !playeringame[playernum])
       return;
 
-   if(client->spectating)
-      return;
-
    // [CG] Out-of-order position message.
    if(message->world_index <= client->latest_position_index)
       return;
@@ -669,14 +666,11 @@ void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
 
    if(playernum == consoleplayer)
    {
-      CL_StoreLastServerPosition(
-         &message->position,
-         (cs_floor_status_e)message->floor_status,
-         message->last_index_run,
-         message->last_world_index_run
-      );
+      CL_StoreLastServerPosition(message);
+      return;
    }
-   else if(player->mo)
+
+   if((!client->spectating) && (player->mo))
    {
       CS_SetPlayerPosition(playernum, &message->position);
       client->floor_status = message->floor_status;
@@ -1595,7 +1589,6 @@ void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message)
 
 void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
 {
-   line_t *line = NULL;
    sector_t *sector = NULL;
 
    if((message->sector_number >= (unsigned int)numsectors))
@@ -1608,30 +1601,36 @@ void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
       return;
    }
 
+   CS_LogSMT(
+      "%u/%u: Sector thinker spawned.\n",
+      cl_latest_world_index,
+      cl_current_world_index
+   );
+
    sector = &sectors[message->sector_number];
 
    switch(message->type)
    {
       case st_platform:
-         CL_SpawnPlatform(sector, &message->platform_data);
+         CL_SpawnPlatform(sector, &message->data, &message->spawn_data);
          break;
       case st_door:
-         CL_SpawnVerticalDoor(line, sector, &message->door_data);
+         CL_SpawnVerticalDoor(sector, &message->data, &message->spawn_data);
          break;
       case st_ceiling:
-         CL_SpawnCeiling(sector, &message->ceiling_data);
+         CL_SpawnCeiling(sector, &message->data, &message->spawn_data);
          break;
       case st_floor:
-         CL_SpawnFloor(sector, &message->floor_data);
+         CL_SpawnFloor(sector, &message->data, &message->spawn_data);
          break;
       case st_elevator:
-         CL_SpawnElevator(sector, &message->elevator_data);
+         CL_SpawnElevator(sector, &message->data, &message->spawn_data);
          break;
       case st_pillar:
-         CL_SpawnPillar(sector, &message->pillar_data);
+         CL_SpawnPillar(sector, &message->data, &message->spawn_data);
          break;
       case st_floorwaggle:
-         CL_SpawnFloorWaggle(sector, &message->floorwaggle_data);
+         CL_SpawnFloorWaggle(sector, &message->data, &message->spawn_data);
          break;
       default:
          doom_printf(
@@ -1645,28 +1644,36 @@ void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
 
 void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 {
+   return;
+
+   CS_LogSMT(
+      "%u/%u: Sector thinker status update.\n",
+      cl_latest_world_index,
+      cl_current_world_index
+   );
+
    switch(message->type)
    {
    case st_platform:
-      CL_UpdatePlatform(&message->platform_data);
+      CL_UpdatePlatform(&message->data);
       break;
    case st_door:
-      CL_UpdateVerticalDoor(&message->door_data);
+      CL_UpdateVerticalDoor(&message->data);
       break;
    case st_ceiling:
-      CL_UpdateCeiling(&message->ceiling_data);
+      CL_UpdateCeiling(&message->data);
       break;
    case st_floor:
-      CL_UpdateFloor(&message->floor_data);
+      CL_UpdateFloor(&message->data);
       break;
    case st_elevator:
-      CL_UpdateElevator(&message->elevator_data);
+      CL_UpdateElevator(&message->data);
       break;
    case st_pillar:
-      CL_UpdatePillar(&message->pillar_data);
+      CL_UpdatePillar(&message->data);
       break;
    case st_floorwaggle:
-      CL_UpdateFloorWaggle(&message->floorwaggle_data);
+      CL_UpdateFloorWaggle(&message->data);
       break;
    default:
       doom_printf(
@@ -1680,15 +1687,15 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 
 void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
 {
-   PlatThinker         *platform = NULL;
-   VerticalDoorThinker *door     = NULL;
-   CeilingThinker      *ceiling  = NULL;
-   FloorMoveThinker    *floor    = NULL;
-   ElevatorThinker     *elevator = NULL;
-   PillarThinker       *pillar   = NULL;
-   FloorWaggleThinker  *waggle   = NULL;
-   SectorThinker       *thinker  = NULL;
-   uint32_t            net_id    = message->net_id;
+   PlatThinker           *platform = NULL;
+   VerticalDoorThinker   *door     = NULL;
+   CeilingThinker        *ceiling  = NULL;
+   FloorMoveThinker      *floor    = NULL;
+   ElevatorThinker       *elevator = NULL;
+   PillarThinker         *pillar   = NULL;
+   FloorWaggleThinker    *waggle   = NULL;
+   SectorMovementThinker *thinker  = NULL;
+   uint32_t               net_id   = message->net_id;
    
    if(!(thinker = NetSectorThinkers.lookup(net_id)))
    {
@@ -1699,6 +1706,13 @@ void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
       );
       return;
    }
+
+   CS_LogSMT(
+      "%u/%u: SMT %u removed.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      net_id
+   );
 
    switch(message->type)
    {
@@ -1756,7 +1770,6 @@ void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
 
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 {
-   uint32_t index = message->world_index % MAX_POSITIONS;
    int sector_number = message->sector_number;
 
    if(sector_number >= numsectors)
@@ -1768,16 +1781,12 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
       );
       return;
    }
-   cl_setting_sector_positions = true;
-   CS_SetSectorPosition(
-      &sectors[message->sector_number],
-      &message->sector_position
+
+   CL_SaveSectorPosition(
+      message->world_index, message->sector_number, &message->sector_position
    );
-   CS_CopySectorPosition(
-      &cs_sector_positions[message->sector_number][index % MAX_POSITIONS],
-      &message->sector_position
-   );
-   cl_setting_sector_positions = false;
+
+   CL_StoreLatestSectorPositionIndex();
 }
 
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
