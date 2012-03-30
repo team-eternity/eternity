@@ -34,6 +34,7 @@
 #include "cs_spec.h"
 #include "cs_main.h"
 #include "cl_main.h"
+#include "cl_pred.h"
 #include "cl_spec.h"
 
 bool cl_predicting_sectors = false;
@@ -66,25 +67,32 @@ void CL_InitSectorPositions()
    }
 }
 
-void CL_CarrySectorPositions()
+void CL_CarrySectorPositions(uint32_t old_index)
 {
    int i;
+   uint32_t j;
    sector_position_t *old_pos, *new_pos;
 
    CS_LogSMT("\n");
 
    for(i = 0; i < numsectors; i++)
    {
-      old_pos = CS_GetSectorPosition(i, cl_latest_world_index - 1);
-      new_pos = CS_GetSectorPosition(i, cl_latest_world_index);
+      old_pos = CS_GetSectorPosition(i, old_index);
 
-      if(new_pos->world_index != cl_latest_world_index)
+      for(j = old_index + 1; j <= cl_latest_world_index; j++)
       {
-         new_pos->world_index = cl_latest_world_index;
-         new_pos->ceiling_height = old_pos->ceiling_height;
-         new_pos->floor_height = old_pos->floor_height;
+         new_pos = CS_GetSectorPosition(i, j);
+
+         if(new_pos->world_index != j)
+         {
+            new_pos->world_index = j;
+            new_pos->ceiling_height = old_pos->ceiling_height;
+            new_pos->floor_height = old_pos->floor_height;
+         }
       }
    }
+
+   CL_StoreLatestSectorPositionIndex();
 }
 
 void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
@@ -159,6 +167,7 @@ void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,
    platform->addThinker();
    platform->sector = sector;
    platform->netUpdate(cl_latest_world_index, data);
+   platform->storePreRePredictionStatus();
 
    P_AddActivePlat(platform, NULL);
    strncpy(
@@ -176,6 +185,7 @@ void CL_SpawnVerticalDoor(sector_t *sector, cs_sector_thinker_data_t *data,
    door->addThinker();
    door->sector = sector;
    door->netUpdate(cl_latest_world_index, data);
+   door->storePreRePredictionStatus();
 
    NetSectorThinkers.add(door);
 
@@ -198,6 +208,7 @@ void CL_SpawnCeiling(sector_t *sector, cs_sector_thinker_data_t *data,
    ceiling->addThinker();
    ceiling->sector = sector;
    ceiling->netUpdate(cl_latest_world_index, data);
+   ceiling->storePreRePredictionStatus();
 
    P_AddActiveCeiling(ceiling);
    P_CeilingSequence(sector, spawn_data->ceiling_spawn_data.noise);
@@ -211,6 +222,7 @@ void CL_SpawnFloor(sector_t *sector, cs_sector_thinker_data_t *data,
    floor->addThinker();
    floor->sector = sector;
    floor->netUpdate(cl_latest_world_index, data);
+   floor->storePreRePredictionStatus();
 
    NetSectorThinkers.add(floor);
 
@@ -226,6 +238,7 @@ void CL_SpawnElevator(sector_t *sector, cs_sector_thinker_data_t *data,
    elevator->addThinker();
    elevator->sector = sector;
    elevator->netUpdate(cl_latest_world_index, data);
+   elevator->storePreRePredictionStatus();
 
    NetSectorThinkers.add(elevator);
 
@@ -241,6 +254,7 @@ void CL_SpawnPillar(sector_t *sector, cs_sector_thinker_data_t *data,
    pillar->addThinker();
    pillar->sector = sector;
    pillar->netUpdate(cl_latest_world_index, data);
+   pillar->storePreRePredictionStatus();
 
    NetSectorThinkers.add(pillar);
 
@@ -256,6 +270,7 @@ void CL_SpawnFloorWaggle(sector_t *sector, cs_sector_thinker_data_t *data,
    floor_waggle->addThinker();
    floor_waggle->sector = sector;
    floor_waggle->netUpdate(cl_latest_world_index, data);
+   floor_waggle->storePreRePredictionStatus();
 
    NetSectorThinkers.add(floor_waggle);
 

@@ -33,7 +33,7 @@ extern bool cl_predicting_sectors;
 extern bool cl_setting_sector_positions;
 
 void CL_InitSectorPositions();
-void CL_CarrySectorPositions();
+void CL_CarrySectorPositions(uint32_t old_index);
 void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
                            sector_position_t *new_position);
 void CL_LoadLatestSectorPositions();

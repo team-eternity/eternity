@@ -257,9 +257,6 @@ void Thinker::RunThinkers(void)
    Mobj *mo;
    SectorMovementThinker *thinker = NULL;
 
-   if(CS_CLIENT)
-      cl_predicting_sectors = true;
-
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
        currentthinker = currentthinker->next)
@@ -283,17 +280,11 @@ void Thinker::RunThinkers(void)
                thinker->sector->ceilingheight >> FRACBITS,
                thinker->sector->floorheight >> FRACBITS
             );
-         }
-
-         if(!(mo = thinker_cast<Mobj *>(currentthinker)))
+            cl_predicting_sectors = true;
+            thinker->loadPreRePredictionStatus();
             currentthinker->Think();
-         else if(serverside && mo->player == NULL)
-            currentthinker->Think();
-         else if(clientside && !sentient(mo))
-            currentthinker->Think();
-
-         if(thinker)
-         {
+            thinker->storePreRePredictionStatus();
+            cl_predicting_sectors = false;
             CS_LogSMT(
                "%u/%u (%u): SMT %u after prediction: %d/%d.\n",
                cl_latest_world_index,
@@ -303,8 +294,13 @@ void Thinker::RunThinkers(void)
                thinker->sector->ceilingheight >> FRACBITS,
                thinker->sector->floorheight >> FRACBITS
             );
-            thinker = NULL;
          }
+         else if(!(mo = thinker_cast<Mobj *>(currentthinker)))
+            currentthinker->Think();
+         else if(serverside && mo->player == NULL)
+            currentthinker->Think();
+         else if(clientside && !sentient(mo))
+            currentthinker->Think();
       }
       else if(CS_SERVER)
       {
@@ -410,13 +406,7 @@ void P_Ticker(void)
 
    reset_viewz = false;  // sf
 
-   if(CS_CLIENT)
-      CL_ResetAllSectorMovementThinkers();
-
    Thinker::RunThinkers();
-
-   if(CS_CLIENT)
-      CL_SaveAllSectorMovementThinkerStatuses();
 
    P_UpdateSpecials();
    P_RespawnSpecials();

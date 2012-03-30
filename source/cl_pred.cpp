@@ -70,15 +70,60 @@ static void CL_runSectorThinkers(uint32_t index)
 {
    NetIDToObject<SectorMovementThinker> *nito = NULL;
 
-   CS_LogSMT(
-      "%u/%u: Re-predicting sector movement at %u.\n",
-      cl_latest_world_index,
-      cl_current_world_index,
-      index
-   );
-
    while((nito = NetSectorThinkers.iterate(nito)))
       nito->object->Predict(index);
+}
+
+static void CL_removeOldSectorMovementThinkers(uint32_t last_sector_index)
+{
+   PlatThinker           *platform            = NULL;
+   VerticalDoorThinker   *door                = NULL;
+   CeilingThinker        *ceiling             = NULL;
+   FloorMoveThinker      *floor               = NULL;
+   ElevatorThinker       *elevator            = NULL;
+   PillarThinker         *pillar              = NULL;
+   FloorWaggleThinker    *waggle              = NULL;
+   NetIDToObject<SectorMovementThinker> *nito = NULL;
+
+   while((nito = NetSectorThinkers.iterate(nito)))
+   {
+      if(nito->object->removed && (nito->object->removed < last_sector_index))
+      {
+         CS_LogSMT(
+            "%u/%u: Removing SMT %u (%u < %u).\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            nito->object->net_id,
+            nito->object->removed,
+            last_sector_index
+         );
+      }
+      else
+         continue;
+
+      if((platform = dynamic_cast<PlatThinker *>(nito->object)))
+         P_RemoveActivePlat(platform);
+      else if((door = dynamic_cast<VerticalDoorThinker *>(nito->object)))
+         P_RemoveDoor(door);
+      else if((ceiling = dynamic_cast<CeilingThinker *>(nito->object)))
+         P_RemoveActiveCeiling(ceiling);
+      else if((floor = dynamic_cast<FloorMoveThinker *>(nito->object)))
+         P_RemoveFloor(floor);
+      else if((elevator = dynamic_cast<ElevatorThinker *>(nito->object)))
+         P_RemoveElevator(elevator);
+      else if((pillar = dynamic_cast<PillarThinker *>(nito->object)))
+         P_RemovePillar(pillar);
+      else if((waggle = dynamic_cast<FloorWaggleThinker *>(nito->object)))
+         P_RemoveFloorWaggle(waggle);
+      else
+      {
+         I_Error(
+            "CL_RemoveOldSectorMovementThinkers: "
+            "can't remove thinker %u: unknown type.\n",
+            nito->object->net_id
+         );
+      }
+   }
 }
 
 void CL_InitPrediction()
@@ -144,6 +189,11 @@ void CL_Predict()
    if(!NetSectorThinkers.isEmpty())
       sectors_moving = true;
 
+   if(lsindex < world_index)
+      CL_removeOldSectorMovementThinkers(lsindex);
+   else
+      CL_removeOldSectorMovementThinkers(world_index);
+
    if((sectors_moving) && (lsindex <= world_index))
    {
       CS_LogSMT(
@@ -174,11 +224,24 @@ void CL_Predict()
       } while(++lsindex <= world_index);
       cl_predicting_sectors = false;
 
-      CS_LogSMT(
-         "%u/%u: Done catching sectors up.\n",
-         cl_latest_world_index,
-         cl_current_world_index
-      );
+      if(platform)
+      {
+         CS_LogSMT(
+            "%u/%u: Done catching sectors up (%d/%d).\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            platform->sector->ceilingheight >> FRACBITS,
+            platform->sector->floorheight >> FRACBITS
+         );
+      }
+      else
+      {
+         CS_LogSMT(
+            "%u/%u: Done catching sectors up.\n",
+            cl_latest_world_index,
+            cl_current_world_index
+         );
+      }
    }
 
    if(!clients[consoleplayer].spectating)
@@ -202,9 +265,12 @@ void CL_Predict()
    {
       if(!started_predicting_sectors)
       {
-         cl_setting_sector_positions = true;
-         CL_LoadSectorPositionsAt(world_index);
-         cl_setting_sector_positions = false;
+         if(world_index <= lsindex)
+         {
+            cl_setting_sector_positions = true;
+            CL_LoadSectorPositionsAt(world_index);
+            cl_setting_sector_positions = false;
+         }
 
          if((sectors_moving) && (world_index == lsindex))
          {
@@ -231,6 +297,7 @@ void CL_Predict()
    }
    cl_predicting = false;
 
+   /*
    if(platform)
    {
       CS_LogSMT(
@@ -250,6 +317,7 @@ void CL_Predict()
          platform->sector->floorheight >> FRACBITS
       );
    }
+   */
 
    CS_LogSMT(
       "%u/%u: Done re-predicting.\n",
@@ -272,6 +340,12 @@ void CL_Predict()
 
 void CL_StoreLatestSectorPositionIndex()
 {
+   CS_LogSMT(
+      "%u/%u: Last SPI: %u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      cl_latest_world_index
+   );
    latest_sector_position_index = cl_latest_world_index;
 }
 

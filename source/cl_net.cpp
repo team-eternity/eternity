@@ -1687,85 +1687,28 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 
 void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
 {
-   PlatThinker           *platform = NULL;
-   VerticalDoorThinker   *door     = NULL;
-   CeilingThinker        *ceiling  = NULL;
-   FloorMoveThinker      *floor    = NULL;
-   ElevatorThinker       *elevator = NULL;
-   PillarThinker         *pillar   = NULL;
-   FloorWaggleThinker    *waggle   = NULL;
    SectorMovementThinker *thinker  = NULL;
    uint32_t               net_id   = message->net_id;
    
-   if(!(thinker = NetSectorThinkers.lookup(net_id)))
+   if(!(thinker = NetSectorThinkers.lookup(message->net_id)))
    {
       doom_printf(
          "CL_HandleSectorThinkerRemovedMessage: Received a sector thinker "
          "removed message for invalid thinker %u, ignoring.",
-         net_id
+         message->net_id
       );
       return;
    }
 
    CS_LogSMT(
-      "%u/%u: SMT %u removed.\n",
+      "%u/%u: SMT %u removed at %u.\n",
       cl_latest_world_index,
       cl_current_world_index,
-      net_id
+      message->net_id,
+      message->world_index
    );
 
-   switch(message->type)
-   {
-   case st_platform:
-      if(!(platform = dynamic_cast<PlatThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not a platform.", net_id);
-      else
-         P_RemoveActivePlat(platform);
-      break;
-   case st_door:
-      if(!(door = dynamic_cast<VerticalDoorThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not a door.", net_id);
-      else
-         P_RemoveDoor(door);
-      break;
-   case st_ceiling:
-      if(!(ceiling = dynamic_cast<CeilingThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not a ceiling.", net_id);
-      else
-         P_RemoveActiveCeiling(ceiling);
-      break;
-   case st_floor:
-      if(!(floor = dynamic_cast<FloorMoveThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not a floor.", net_id);
-      else
-         P_RemoveFloor(floor);
-      break;
-   case st_elevator:
-      if(!(elevator = dynamic_cast<ElevatorThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not an elevator.", net_id);
-      else
-         P_RemoveElevator(elevator);
-      break;
-   case st_pillar:
-      if(!(pillar = dynamic_cast<PillarThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not an pillar.", net_id);
-      else
-         P_RemovePillar(pillar);
-      break;
-   case st_floorwaggle:
-      if(!(waggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
-         doom_printf("Sector thinker %u is not a floor waggle.", net_id);
-      else
-         P_RemoveFloorWaggle(waggle);
-      break;
-   default:
-      doom_printf(
-         "CL_HandleSectorThinkerRemovedMessage: Received a sector thinker "
-         "removed message with invalid type %d, ignoring.",
-         message->type
-      );
-      break;
-   }
+   thinker->removed = message->world_index;
 }
 
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)

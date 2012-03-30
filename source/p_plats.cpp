@@ -85,6 +85,13 @@ void PlatThinker::Think()
    if(!prediction_index)
       prediction_index = cl_current_world_index;
 
+   CS_LogSMT(
+      "%u/%u: Predicting sector movement at %u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      prediction_index
+   );
+
    if(CS_SERVER)
       SectorMovementThinker::storeCurrentStatus();
 

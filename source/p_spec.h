@@ -633,10 +633,12 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    SectorMovementThinker()
-      : SectorThinker(), latest_status_index(0), net_id(0), inactive(0) {}
+      : SectorThinker(), latest_status_index(0), net_id(0), removed(0),
+                         inactive(0) {}
    virtual void loadStoredStatusUpdate() {}
    virtual void netSerialize(cs_sector_thinker_data_t *data) {};
    virtual void storePreRePredictionStatus();
@@ -797,6 +799,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods
@@ -852,6 +855,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods
@@ -926,6 +930,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods
@@ -1000,6 +1005,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods
@@ -1077,6 +1083,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods
@@ -1108,6 +1115,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods
@@ -1151,6 +1159,7 @@ protected:
 
 public:
    uint32_t net_id;
+   uint32_t removed;
    uint32_t inactive;
 
    // Methods

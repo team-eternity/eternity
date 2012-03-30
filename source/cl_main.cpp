@@ -628,6 +628,8 @@ void CL_PlayerThink(int playernum)
 
 void CL_SetLatestFinishedIndices(unsigned int index)
 {
+   uint32_t saved_index = cl_latest_world_index;
+
    cl_latest_world_index = index;
 
    // [CG] This means we haven't even completed a single TIC yet, so ignore the
@@ -635,7 +637,7 @@ void CL_SetLatestFinishedIndices(unsigned int index)
    if(cl_current_world_index == 0)
       return;
 
-   CL_CarrySectorPositions();
+   CL_CarrySectorPositions(saved_index);
 
    // [CG] Can't flush during independent buffering.
    if(cl_packet_buffer.bufferingIndependently())
