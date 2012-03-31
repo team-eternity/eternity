@@ -27,6 +27,8 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+#include "tables.h" // for angle_t
+
 struct line_t;
 class  Mobj;
 
@@ -82,26 +84,25 @@ typedef struct linetracer_s
    bool finished;
 } linetracer_t;
 
-
-
-typedef struct intercept_s
+struct intercept_t
 {
   fixed_t     frac;           // along trace line
   bool        isaline;
-  union {
-    Mobj* thing;
-    line_t* line;
+  union d_u
+  {
+    Mobj   *thing;
+    line_t *line;
   } d;
-} intercept_t;
+};
 
 typedef bool (*traverser_t)(intercept_t *in);
 
-fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
-int     P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
-int     P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-void    P_MakeDivline (line_t *li, divline_t *dl);
-fixed_t P_InterceptVector (divline_t *v2, divline_t *v1);
-int     P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
+fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+int     P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line);
+int     P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line);
+void    P_MakeDivline(line_t *li, divline_t *dl);
+fixed_t P_InterceptVector(divline_t *v2, divline_t *v1);
+int     P_BoxOnLineSide(fixed_t *tmbox, line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
 void    P_LineOpening (line_t *linedef, Mobj *mo);

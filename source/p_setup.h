@@ -27,6 +27,8 @@
 #ifndef P_SETUP_H__
 #define P_SETUP_H__
 
+#include "doomdef.h" // for skill_t
+
 class  Mobj;
 struct seg_t;
 

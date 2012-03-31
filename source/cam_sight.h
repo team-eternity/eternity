@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2003 James Haley
+// Copyright(C) 2012 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,36 +19,14 @@
 //
 //--------------------------------------------------------------------------
 //
-// General queue code
-//
-// By James Haley
+// DESCRIPTION:
+//      Line of sight checking for cameras
 //
 //-----------------------------------------------------------------------------
 
-#ifndef M_QUEUE_H
-#define M_QUEUE_H
+#ifndef CAM_SIGHT_H__
+#define CAM_SIGHT_H__
 
-typedef struct mqueueitem_s
-{
-   struct mqueueitem_s *next;
-} mqueueitem_t;
-
-typedef struct mqueue_s
-{
-   mqueueitem_t head;
-   mqueueitem_t *tail;
-   mqueueitem_t *rover;
-   unsigned int size;
-} mqueue_t;
-
-void          M_QueueInit(mqueue_t *queue);
-void          M_QueueInsert(mqueueitem_t *item, mqueue_t *queue);
-bool          M_QueueIsEmpty(mqueue_t *queue);
-mqueueitem_t* M_QueuePop(mqueue_t *queue);
-mqueueitem_t* M_QueueIterator(mqueue_t *queue);
-mqueueitem_t* M_QueuePeek(mqueue_t *queue);
-void          M_QueueResetIterator(mqueue_t *queue);
-void          M_QueueFree(mqueue_t *queue);
 
 #endif
 
