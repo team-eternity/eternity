@@ -50,12 +50,8 @@ struct camsight_t
    fixed_t openbottom;  // bottom of linedef silhouette
    fixed_t openrange;   // height of opening
 
-   PODCollection<intercept_t> *intercepts;
+   PODCollection<intercept_t> intercepts;
 };
-
-// This collection acts like a stack of camsight objects, for fully
-// re-entrant behavior.
-static PODCollection<camsight_t> cameratraces;
 
 //
 // CAM_LineOpening
@@ -181,7 +177,7 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
          return false; // stop checking
 
       // store the line for later intersection testing
-      cam.intercepts->addNew().d.line = ld;
+      cam.intercepts.addNew().d.line = ld;
    }
 
    return true; // everything was checked
@@ -201,13 +197,13 @@ static bool CAM_SightTraverseIntercepts(camsight_t &cam)
    PODCollection<intercept_t>::iterator end;
    PODCollection<intercept_t>::iterator in;
 
-   count = cam.intercepts->getLength();
-   end   = cam.intercepts->end();
+   count = cam.intercepts.getLength();
+   end   = cam.intercepts.end();
 
    //
    // calculate intercept distance
    //
-   for(scan = cam.intercepts->begin(); scan < end; scan++)
+   for(scan = cam.intercepts.begin(); scan < end; scan++)
    {
       P_MakeDivline(scan->d.line, &dl);
       scan->frac = P_InterceptVector(&cam.trace, &dl);
@@ -222,7 +218,7 @@ static bool CAM_SightTraverseIntercepts(camsight_t &cam)
    {
       dist = D_MAXINT;
 
-      for(scan = cam.intercepts->begin(); scan < end; scan++)
+      for(scan = cam.intercepts.begin(); scan < end; scan++)
       {
          if(scan->frac < dist)
          {
@@ -377,10 +373,7 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz,
 	
    if(!(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
-      PODCollection<intercept_t> newIntercepts;
-
-      // push a new camera trace
-      camsight_t &newCam = cameratraces.addNew();
+      camsight_t newCam;
 
       //
       // check precisely
@@ -392,12 +385,8 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz,
       newCam.sightzstart = cz;
       newCam.topslope    = (tz + theight) - newCam.sightzstart;
       newCam.bottomslope = tz - newCam.sightzstart;
-      newCam.intercepts  = &newIntercepts;
 
       result = CAM_SightPathTraverse(newCam);
-
-      // remove the camera trace
-      cameratraces.pop();
    }
 
    return result;
