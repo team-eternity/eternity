@@ -42,6 +42,7 @@
 
 #include "cs_netid.h"
 #include "cl_main.h"
+#include "cl_spec.h"
 #include "sv_main.h"
 
 platlist_t *activeplats;       // killough 2/14/98: made global again
@@ -51,15 +52,18 @@ platlist_t *activeplats;       // killough 2/14/98: made global again
 //
 // haleyjd 09/26/06: Starts a sound sequence for a plat.
 //
-void P_PlatSequence(sector_t *s, const char *seqname)
+void P_PlatSequence(PlatThinker *plat, const char *seqname)
 {
-   if(silentmove(s))
+   if(silentmove(plat->sector))
       return;
 
-   if(s->sndSeqID >= 0)
-      S_StartSectorSequence(s, SEQ_PLAT);
+   if(plat->isRePredicting())
+      return;
+
+   if(plat->sector->sndSeqID >= 0)
+      S_StartSectorSequence(plat->sector, SEQ_PLAT);
    else
-      S_StartSectorSequenceName(s, seqname, SEQ_ORIGIN_SECTOR_F);
+      S_StartSectorSequenceName(plat->sector, seqname, SEQ_ORIGIN_SECTOR_F);
 }
 
 IMPLEMENT_THINKER_TYPE(PlatThinker)
@@ -79,21 +83,8 @@ void PlatThinker::Think()
 {
    result_e      res;
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   CS_LogSMT(
-      "%u/%u: Predicting sector movement at %u.\n",
-      cl_latest_world_index,
-      cl_current_world_index,
-      prediction_index
-   );
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
 
    // handle plat moving, up, down, waiting, or in stasis,
    switch(this->status)
@@ -109,7 +100,7 @@ void PlatThinker::Think()
       {
          this->count = this->wait;
          this->status = down;
-         P_PlatSequence(this->sector, "EEPlatNormal"); // haleyjd
+         P_PlatSequence(this, "EEPlatNormal"); // haleyjd
       }
       else  // else handle reaching end of up stroke
       {
@@ -142,10 +133,7 @@ void PlatThinker::Think()
             case downWaitUpStay:
             case raiseAndChange:
             case genLift:
-               if(serverside)
-                  P_RemoveActivePlat(this);     // killough
-               else // [CG] Just set inactive if not serverside
-                  inactive = prediction_index;
+               P_RemoveActivePlat(this);     // killough
             default:
                break;
             }
@@ -163,20 +151,23 @@ void PlatThinker::Think()
       {
          this->count = this->wait;
          this->status = up;
-         P_PlatSequence(this->sector, "EEPlatNormal"); // haleyjd
+         P_PlatSequence(this, "EEPlatNormal"); // haleyjd
       }
       else if(res == pastdest)
       {
+         CS_LogSMT("\t Passed destination.\n");
          S_StopSectorSequence(this->sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
          if(this->type!=toggleUpDn) //jff 3/14/98 toggle up down
          {                           // is silent, instant, no waiting
+            CS_LogSMT("\t Type is not toggleUpDn.\n");
             this->count = this->wait;
             this->status = waiting;
          }
          else // instant toggles go into stasis awaiting next activation
          {
+            CS_LogSMT("\t Type is toggleUpDn.\n");
             this->oldstatus = this->status;//jff 3/14/98 after action wait  
             this->status = in_stasis;      //for reactivation of toggle
          }
@@ -192,31 +183,41 @@ void PlatThinker::Think()
             {
             case raiseAndChange:
             case raiseToNearestAndChange:
-               if(serverside)
-                  P_RemoveActivePlat(this);
-               else // [CG] Just set inactive if not serverside
-                  inactive = prediction_index;
+               P_RemoveActivePlat(this);
             default:
                break;
             }
          }
       }
+      else
+         CS_LogSMT("\t Within destination.\n");
+
       break;
 
    case waiting: // plat is waiting
       if(!--this->count)  // downcount and check for delay elapsed
       {
          if(this->sector->floorheight == this->low)
+         {
+            CS_LogSMT("\t Set status to 'up'.\n");
             this->status = up;     // if at bottom, start up
+         }
          else
+         {
+            CS_LogSMT(
+               "\t Set status to 'down' (%d, %d).\n",
+               this->sector->floorheight,
+               this->low
+            );
             this->status = down;   // if at top, start down
+         }
          
          // make plat start sound
          // haleyjd: changed for sound sequences
          if(this->type == toggleUpDn)
-            P_PlatSequence(this->sector, "EEPlatSilent");
+            P_PlatSequence(this, "EEPlatSilent");
          else
-            P_PlatSequence(this->sector, "EEPlatNormal");
+            P_PlatSequence(this, "EEPlatNormal");
       }
       break; //jff 1/27/98 don't pickup code added later to in_stasis
 
@@ -224,100 +225,39 @@ void PlatThinker::Think()
       break;
    }
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
+   finishThinking();
 }
 
 //
-// PlatThinker::serialize
+// PlatThinker::statusChanged()
 //
-// Saves/loads PlatThinker thinkers.
+// Returns true if the platform's status has changed since it was last saved
+// (stored in the protected current_status member).
 //
-void PlatThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << speed << low << high << wait << count << status << oldstatus
-       << crush << tag << type;
-
-   // Reattach to active plats list
-   if(arc.isLoading())
-      P_AddActivePlat(this, NULL);
-}
-
 bool PlatThinker::statusChanged()
 {
    if(speed     == current_status.platform_data.speed     &&
       low       == current_status.platform_data.low       &&
       high      == current_status.platform_data.high      &&
       wait      == current_status.platform_data.wait      &&
-      count     == current_status.platform_data.count     &&
+      // count     == current_status.platform_data.count     &&
       status    == current_status.platform_data.status    &&
       oldstatus == current_status.platform_data.oldstatus &&
       crush     == current_status.platform_data.crush     &&
       tag       == current_status.platform_data.tag       &&
       type      == current_status.platform_data.type)
    {
-      return false;
+      if(CS_SERVER || count == current_status.platform_data.count)
+         return false;
    }
 
    return true;
 }
 
-void PlatThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
-{
-   latest_status.platform_data.net_id    = data->platform_data.net_id;
-   latest_status.platform_data.speed     = data->platform_data.speed;
-   latest_status.platform_data.low       = data->platform_data.low;
-   latest_status.platform_data.high      = data->platform_data.high;
-   latest_status.platform_data.wait      = data->platform_data.wait;
-   latest_status.platform_data.count     = data->platform_data.count;
-   latest_status.platform_data.status    = data->platform_data.status;
-   latest_status.platform_data.oldstatus = data->platform_data.oldstatus;
-   latest_status.platform_data.crush     = data->platform_data.crush;
-   latest_status.platform_data.tag       = data->platform_data.tag;
-   latest_status.platform_data.type      = data->platform_data.type;
-}
-
-void PlatThinker::loadStoredStatusUpdate()
-{
-   net_id    = latest_status.platform_data.net_id;
-   speed     = latest_status.platform_data.speed;
-   low       = latest_status.platform_data.low;
-   high      = latest_status.platform_data.high;
-   wait      = latest_status.platform_data.wait;
-   count     = latest_status.platform_data.count;
-   status    = latest_status.platform_data.status;
-   oldstatus = latest_status.platform_data.oldstatus;
-   crush     = latest_status.platform_data.crush;
-   tag       = latest_status.platform_data.tag;
-   type      = latest_status.platform_data.type;
-}
-
-//
-// PlatThinker::netSerialize
-//
-// Saves data into a net-safe struct.
-//
-void PlatThinker::netSerialize(cs_sector_thinker_data_t *data)
-{
-   data->platform_data.net_id    = net_id;
-   data->platform_data.speed     = speed;
-   data->platform_data.low       = low;
-   data->platform_data.high      = high;
-   data->platform_data.wait      = wait;
-   data->platform_data.count     = count;
-   data->platform_data.status    = status;
-   data->platform_data.oldstatus = oldstatus;
-   data->platform_data.crush     = crush;
-   data->platform_data.tag       = tag;
-   data->platform_data.type      = type;
-}
-
 //
 // PlatThinker::loadStatusData
 //
-// Updates from a net-safe struct.
+// Loads status from a net-safe struct.
 //
 void PlatThinker::loadStatusData(cs_sector_thinker_data_t *data)
 {
@@ -335,14 +275,61 @@ void PlatThinker::loadStatusData(cs_sector_thinker_data_t *data)
 }
 
 //
-// PlatThinker::netUpdate
+// PlatThinker::dumpStatusData
 //
-// Updates from a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void PlatThinker::netUpdate(uint32_t index, cs_sector_thinker_data_t *data)
+void PlatThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+   data->platform_data.net_id    = net_id;
+   data->platform_data.speed     = speed;
+   data->platform_data.low       = low;
+   data->platform_data.high      = high;
+   data->platform_data.wait      = wait;
+   data->platform_data.count     = count;
+   data->platform_data.status    = status;
+   data->platform_data.oldstatus = oldstatus;
+   data->platform_data.crush     = crush;
+   data->platform_data.tag       = tag;
+   data->platform_data.type      = type;
+}
+
+//
+// PlatThinker::copyStatusData
+//
+// Copies status data from one net-safe struct to another.
+//
+void PlatThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                 cs_sector_thinker_data_t *src)
+{
+   dest->platform_data.net_id    = src->platform_data.net_id;
+   dest->platform_data.speed     = src->platform_data.speed;
+   dest->platform_data.low       = src->platform_data.low;
+   dest->platform_data.high      = src->platform_data.high;
+   dest->platform_data.wait      = src->platform_data.wait;
+   dest->platform_data.count     = src->platform_data.count;
+   dest->platform_data.status    = src->platform_data.status;
+   dest->platform_data.oldstatus = src->platform_data.oldstatus;
+   dest->platform_data.crush     = src->platform_data.crush;
+   dest->platform_data.tag       = src->platform_data.tag;
+   dest->platform_data.type      = src->platform_data.type;
+}
+
+//
+// PlatThinker::serialize
+//
+// Saves/loads PlatThinker thinkers.
+//
+void PlatThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << speed << low << high << wait << count << status << oldstatus
+       << crush << tag << type;
+
+   // Reattach to active plats list
+   if(arc.isLoading())
+      P_AddActivePlat(this, NULL);
 }
 
 //
@@ -369,6 +356,26 @@ bool PlatThinker::reTriggerVerticalDoor(bool player)
    return true;
 }
 
+void PlatThinker::logStatus(cs_sector_thinker_data_t *data)
+{
+   CS_LogSMT(
+      "\tSpeed:     %d | Low:        %d | High:  %d | Wait: %d | Count: %d\n"
+      "\tStatus:    %d | Old Status: %d | Crush: %d | Tag:  %d | Type:  %d\n"
+      "\tCeiling: %d | Floor:      %d\n",
+      data->platform_data.speed >> FRACBITS,
+      data->platform_data.low >> FRACBITS,
+      data->platform_data.high >> FRACBITS,
+      data->platform_data.wait,
+      data->platform_data.count,
+      data->platform_data.status,
+      data->platform_data.oldstatus,
+      data->platform_data.crush,
+      data->platform_data.tag,
+      data->platform_data.type,
+      this->sector->ceilingheight >> FRACBITS,
+      this->sector->floorheight >> FRACBITS
+   );
+}
 
 //
 // EV_DoPlat
@@ -653,6 +660,12 @@ void P_AddActivePlat(PlatThinker *plat, const char *seqname)
 void P_RemoveActivePlat(PlatThinker *plat)
 {
    platlist_t *list = plat->list;
+
+   if(plat->isPredicting() || plat->isRePredicting())
+   {
+      plat->setInactive();
+      return;
+   }
 
    if(CS_SERVER)
       SV_BroadcastSectorThinkerRemoved(plat);

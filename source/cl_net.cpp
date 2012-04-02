@@ -1644,13 +1644,13 @@ void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
 
 void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 {
-   return;
-
    CS_LogSMT(
       "%u/%u: Sector thinker status update.\n",
       cl_latest_world_index,
       cl_current_world_index
    );
+
+   return;
 
    switch(message->type)
    {
@@ -1688,7 +1688,6 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
 {
    SectorMovementThinker *thinker  = NULL;
-   uint32_t               net_id   = message->net_id;
    
    if(!(thinker = NetSectorThinkers.lookup(message->net_id)))
    {

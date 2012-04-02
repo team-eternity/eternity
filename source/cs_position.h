@@ -113,6 +113,7 @@ bool CS_MiscStatesEqual(cs_misc_state_t *state_one,
 void CS_CopyMiscState(cs_misc_state_t *dest, cs_misc_state_t *src);
 
 void CS_LogPlayerPosition(int playernum);
+void CS_LogPlayerPosition(int playernum, cs_player_position_t *position);
 void CS_PrintPlayerPosition(cs_player_position_t *position);
 void CS_PrintPositionForPlayer(int playernum, uint32_t index);
 void CS_SetPlayerPosition(int playernum, cs_player_position_t *position);

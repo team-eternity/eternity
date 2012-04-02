@@ -48,7 +48,9 @@ static bool prediction_enabled = true;
 static cs_cmd_t local_commands[MAX_POSITIONS];
 static cs_player_position_t last_server_position;
 static cs_floor_status_e last_floor_status;
-static uint32_t last_server_command_index;
+static uint32_t last_server_command_command_index;
+static uint32_t last_server_command_client_index;
+static uint32_t last_server_command_server_index;
 static uint32_t latest_sector_position_index;
 
 static void CL_runPlayerCommand(uint32_t index, bool think)
@@ -71,7 +73,7 @@ static void CL_runSectorThinkers(uint32_t index)
    NetIDToObject<SectorMovementThinker> *nito = NULL;
 
    while((nito = NetSectorThinkers.iterate(nito)))
-      nito->object->Predict(index);
+      nito->object->RePredict(index);
 }
 
 static void CL_removeOldSectorMovementThinkers(uint32_t last_sector_index)
@@ -152,7 +154,8 @@ void CL_Predict()
    int old_status = 0;
    bool sectors_moving = false;
    bool started_predicting_sectors = false;
-   uint32_t i, delta, lsindex, world_index, command_index;
+   uint32_t i, delta, lsindex;
+   uint32_t client_world_index, server_world_index, command_index;
    PlatThinker *platform = (PlatThinker *)NetSectorThinkers.lookup(1);
 
    if(!prediction_enabled)
@@ -160,7 +163,7 @@ void CL_Predict()
 
    lsindex = latest_sector_position_index;
 
-   command_index = last_server_command_index + 1;
+   command_index = last_server_command_command_index + 1;
 
    if(cl_commands_sent <= (command_index + 1))
       return;
@@ -170,12 +173,15 @@ void CL_Predict()
    if((!delta) || (delta >= MAX_POSITIONS))
       return;
 
-   world_index = cl_latest_world_index - delta;
+   // client_world_index cl_latest_world_index - delta;
+   client_world_index = last_server_command_client_index + 1;
+   server_world_index = last_server_command_server_index + 1;
 
    cl_predicting_sectors = true;
 
    if(platform)
    {
+      old_status = platform->status;
       CS_LogSMT(
          "%u/%u: SMT %u before re-prediction: %d/%d.\n",
          cl_latest_world_index,
@@ -189,19 +195,19 @@ void CL_Predict()
    if(!NetSectorThinkers.isEmpty())
       sectors_moving = true;
 
-   if(lsindex < world_index)
+   if(lsindex < client_world_index)
       CL_removeOldSectorMovementThinkers(lsindex);
    else
-      CL_removeOldSectorMovementThinkers(world_index);
+      CL_removeOldSectorMovementThinkers(client_world_index);
 
-   if((sectors_moving) && (lsindex <= world_index))
+   if((sectors_moving) && (lsindex < client_world_index))
    {
       CS_LogSMT(
          "%u/%u: Catching sectors up (%u => %u).\n",
          cl_latest_world_index,
          cl_current_world_index,
          lsindex,
-         world_index
+         client_world_index
       );
 
       cl_setting_sector_positions = true;
@@ -214,14 +220,14 @@ void CL_Predict()
          cl_current_world_index,
          lsindex
       );
-      CL_ActivateAllSectorMovementThinkers();
+
+      lsindex++;
+      // CL_ActivateAllSectorMovementThinkers();
       started_predicting_sectors = true;
 
       cl_predicting_sectors = true;
-      do
-      {
+      while(lsindex < client_world_index)
          CL_runSectorThinkers(lsindex);
-      } while(++lsindex <= world_index);
       cl_predicting_sectors = false;
 
       if(platform)
@@ -248,66 +254,54 @@ void CL_Predict()
       CL_LoadLastServerPosition();
 
    CS_LogSMT(
-      "%u/%u: Re-predicting %u/%u/%u TICs (%u).\n",
+      "%u/%u: Re-predicting %u/%u/%u TICs (%u/%u).\n",
       cl_latest_world_index,
       cl_current_world_index,
       command_index,
       cl_commands_sent - 1,
       delta,
-      world_index
+      client_world_index,
+      lsindex
    );
 
-   if(platform)
-      old_status = platform->status;
-
    cl_predicting = true;
-   for(i = 0; world_index < (cl_current_world_index - 1); i++, world_index++)
+   for(i = 0; client_world_index <= (cl_current_world_index - 1); i++, client_world_index++)
    {
-      if(!started_predicting_sectors)
-      {
-         if(world_index <= lsindex)
-         {
-            cl_setting_sector_positions = true;
-            CL_LoadSectorPositionsAt(world_index);
-            cl_setting_sector_positions = false;
-         }
-
-         if((sectors_moving) && (world_index == lsindex))
-         {
-            CS_LogSMT(
-               "%u/%u: Activating SMTs at %u.\n",
-               cl_latest_world_index,
-               cl_current_world_index,
-               world_index
-            );
-            CL_ActivateAllSectorMovementThinkers();
-            started_predicting_sectors = true;
-         }
-      }
-
       if((i < delta) && (!clients[consoleplayer].spectating))
          CL_runPlayerCommand(command_index + i, true);
 
       if(started_predicting_sectors)
       {
          cl_predicting_sectors = true;
-         CL_runSectorThinkers(world_index);
+         CL_runSectorThinkers(client_world_index);
          cl_predicting_sectors = false;
       }
+      else
+      {
+         if(client_world_index <= lsindex)
+         {
+            cl_setting_sector_positions = true;
+            CL_LoadSectorPositionsAt(client_world_index);
+            cl_setting_sector_positions = false;
+            if((sectors_moving) && client_world_index == lsindex)
+            {
+               CS_LogSMT(
+                  "%u/%u: Activating SMTs at %u.\n",
+                  cl_latest_world_index,
+                  cl_current_world_index,
+                  client_world_index
+               );
+               // CL_ActivateAllSectorMovementThinkers();
+               started_predicting_sectors = true;
+            }
+         }
+      }
+
    }
    cl_predicting = false;
 
-   /*
    if(platform)
    {
-      CS_LogSMT(
-         "%u/%u: Status changed: %d => %d.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         old_status,
-         platform->status
-      );
-
       CS_LogSMT(
          "%u/%u: SMT %u after re-prediction: %d/%d.\n",
          cl_latest_world_index,
@@ -316,23 +310,21 @@ void CL_Predict()
          platform->sector->ceilingheight >> FRACBITS,
          platform->sector->floorheight >> FRACBITS
       );
+
+      if(platform->status != old_status)
+      {
+         CS_LogSMT(
+            "%u/%u: Status changed: %d => %d.\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            old_status,
+            platform->status
+         );
+      }
    }
-   */
 
    CS_LogSMT(
       "%u/%u: Done re-predicting.\n",
-      cl_latest_world_index,
-      cl_current_world_index
-   );
-   CS_LogPlayerPosition(consoleplayer);
-   P_PlayerThink(&players[consoleplayer]);
-
-   if((!clients[consoleplayer].spectating) && (players[consoleplayer].mo))
-      players[consoleplayer].mo->Think();
-
-   CS_LogPlayerPosition(consoleplayer);
-   CS_LogSMT(
-      "%u/%u: Done predicting.\n",
       cl_latest_world_index,
       cl_current_world_index
    );
@@ -364,9 +356,13 @@ void CL_StoreLastServerPosition(nm_playerposition_t *message)
       message->last_world_index_run,
       message->world_index
    );
+   CS_LogPlayerPosition(consoleplayer, &message->position);
    CS_CopyPlayerPosition(&last_server_position, &message->position);
-   last_server_command_index = message->last_index_run;
-   last_server_position.world_index = message->last_world_index_run;
+   last_server_command_command_index = message->last_index_run;
+   last_server_command_client_index = message->last_world_index_run;
+   last_server_command_server_index = message->world_index;
+   // last_server_position.world_index = message->last_world_index_run;
+   last_server_position.world_index = message->world_index;
    last_floor_status = (cs_floor_status_e)message->floor_status;
 }
 

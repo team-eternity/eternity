@@ -135,27 +135,15 @@ void CL_ActivateAllSectorMovementThinkers()
    NetIDToObject<SectorMovementThinker> *nito = NULL;
 
    while((nito = NetSectorThinkers.iterate(nito)))
-   {
       nito->object->inactive = 0;
-      nito->object->storePreRePredictionStatus();
-      // nito->object->loadStoredStatusUpdate();
-   }
 }
 
-void CL_ResetAllSectorMovementThinkers()
+void CL_SavePredictedSectorPositions()
 {
-   NetIDToObject<SectorMovementThinker> *nito = NULL;
+   int i;
 
-   while((nito = NetSectorThinkers.iterate(nito)))
-      nito->object->loadPreRePredictionStatus();
-}
-
-void CL_SaveAllSectorMovementThinkerStatuses()
-{
-   NetIDToObject<SectorMovementThinker> *nito = NULL;
-
-   while((nito = NetSectorThinkers.iterate(nito)))
-      nito->object->storePreRePredictionStatus();
+   for(i = 0; i < numsectors; i++)
+      CS_SaveSectorPosition(cl_current_world_index, i);
 }
 
 void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,
@@ -167,14 +155,13 @@ void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,
    platform->addThinker();
    platform->sector = sector;
    platform->netUpdate(cl_latest_world_index, data);
-   platform->storePreRePredictionStatus();
 
    P_AddActivePlat(platform, NULL);
    strncpy(
       seqname, spawn_data->platform_spawn_data.seqname, sizeof(seqname) - 1
    );
    seqname[sizeof(seqname) - 1] = '\0';
-   P_PlatSequence(sector, (const char *)seqname);
+   P_PlatSequence(platform, (const char *)seqname);
 }
 
 void CL_SpawnVerticalDoor(sector_t *sector, cs_sector_thinker_data_t *data,
@@ -185,17 +172,16 @@ void CL_SpawnVerticalDoor(sector_t *sector, cs_sector_thinker_data_t *data,
    door->addThinker();
    door->sector = sector;
    door->netUpdate(cl_latest_world_index, data);
-   door->storePreRePredictionStatus();
 
    NetSectorThinkers.add(door);
 
    if(spawn_data->door_spawn_data.make_sound)
    {
       P_DoorSequence(
+         door,
          spawn_data->door_spawn_data.raise,
          spawn_data->door_spawn_data.turbo,
-         spawn_data->door_spawn_data.bounce,
-         sector
+         spawn_data->door_spawn_data.bounce
       );
    }
 }
@@ -208,10 +194,9 @@ void CL_SpawnCeiling(sector_t *sector, cs_sector_thinker_data_t *data,
    ceiling->addThinker();
    ceiling->sector = sector;
    ceiling->netUpdate(cl_latest_world_index, data);
-   ceiling->storePreRePredictionStatus();
 
    P_AddActiveCeiling(ceiling);
-   P_CeilingSequence(sector, spawn_data->ceiling_spawn_data.noise);
+   P_CeilingSequence(ceiling, spawn_data->ceiling_spawn_data.noise);
 }
 
 void CL_SpawnFloor(sector_t *sector, cs_sector_thinker_data_t *data,
@@ -222,12 +207,11 @@ void CL_SpawnFloor(sector_t *sector, cs_sector_thinker_data_t *data,
    floor->addThinker();
    floor->sector = sector;
    floor->netUpdate(cl_latest_world_index, data);
-   floor->storePreRePredictionStatus();
 
    NetSectorThinkers.add(floor);
 
    if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(sector);
+      P_FloorSequence(floor);
 }
 
 void CL_SpawnElevator(sector_t *sector, cs_sector_thinker_data_t *data,
@@ -238,12 +222,11 @@ void CL_SpawnElevator(sector_t *sector, cs_sector_thinker_data_t *data,
    elevator->addThinker();
    elevator->sector = sector;
    elevator->netUpdate(cl_latest_world_index, data);
-   elevator->storePreRePredictionStatus();
 
    NetSectorThinkers.add(elevator);
 
    if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(sector);
+      P_FloorSequence(elevator);
 }
 
 void CL_SpawnPillar(sector_t *sector, cs_sector_thinker_data_t *data,
@@ -254,12 +237,11 @@ void CL_SpawnPillar(sector_t *sector, cs_sector_thinker_data_t *data,
    pillar->addThinker();
    pillar->sector = sector;
    pillar->netUpdate(cl_latest_world_index, data);
-   pillar->storePreRePredictionStatus();
 
    NetSectorThinkers.add(pillar);
 
    if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(sector);
+      P_FloorSequence(pillar);
 }
 
 void CL_SpawnFloorWaggle(sector_t *sector, cs_sector_thinker_data_t *data,
@@ -270,12 +252,11 @@ void CL_SpawnFloorWaggle(sector_t *sector, cs_sector_thinker_data_t *data,
    floor_waggle->addThinker();
    floor_waggle->sector = sector;
    floor_waggle->netUpdate(cl_latest_world_index, data);
-   floor_waggle->storePreRePredictionStatus();
 
    NetSectorThinkers.add(floor_waggle);
 
    if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(sector);
+      P_FloorSequence(floor_waggle);
 }
 
 void CL_UpdatePlatform(cs_sector_thinker_data_t *data)

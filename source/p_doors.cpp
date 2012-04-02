@@ -53,20 +53,24 @@
 //
 // haleyjd 09/24/06: Plays the appropriate sound sequence for a door.
 //
-void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
+void P_DoorSequence(VerticalDoorThinker *door, bool raise, bool turbo,
+                    bool bounced)
 {
    const char *seqName;
 
    // haleyjd 09/25/06: apparently fraggle forgot silentmove for doors
-   if(silentmove(s))
+   if(silentmove(door->sector))
       return;
 
-   if(s->sndSeqID >= 0)
+   if(door->isRePredicting())
+      return;
+
+   if(door->sector->sndSeqID >= 0)
    {
       if(bounced) // if the door bounced, replace the sequence
-         S_ReplaceSectorSequence(s, SEQ_DOOR);
+         S_ReplaceSectorSequence(door->sector, SEQ_DOOR);
       else
-         S_StartSectorSequence(s, SEQ_DOOR);
+         S_StartSectorSequence(door->sector, SEQ_DOOR);
    }
    else
    {
@@ -86,9 +90,13 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
       }
 
       if(bounced)
-         S_ReplaceSectorSequenceName(s, seqName, SEQ_ORIGIN_SECTOR_C);
+      {
+         S_ReplaceSectorSequenceName(
+            door->sector, seqName, SEQ_ORIGIN_SECTOR_C
+         );
+      }
       else
-         S_StartSectorSequenceName(s, seqName, SEQ_ORIGIN_SECTOR_C);
+         S_StartSectorSequenceName(door->sector, seqName, SEQ_ORIGIN_SECTOR_C);
    }
 }
 
@@ -113,14 +121,8 @@ void VerticalDoorThinker::Think()
 {
    result_e  res;
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
 
    // Is the door waiting, going up, or going down?
    switch(direction)
@@ -135,12 +137,12 @@ void VerticalDoorThinker::Think()
          case paramCloseIn: // haleyjd 03/01/05
          case blazeRaise:
             direction = plat_down; // time to go back down
-            P_DoorSequence(false, turbo, false, sector); // haleyjd
+            P_DoorSequence(this, false, turbo, false); // haleyjd
             break;
 
          case closeThenOpen:
             direction = plat_up;  // time to go back up
-            P_DoorSequence(true, turbo, false, sector); // haleyjd
+            P_DoorSequence(this, true, turbo, false); // haleyjd
             break;
 
          default:
@@ -160,8 +162,8 @@ void VerticalDoorThinker::Think()
             if(turbo)
                type = blazeRaise; // act like a blaze raise door
             else
-            type = doorNormal;   // door acts just like normal 1 DR door now
-            P_DoorSequence(true, turbo, false, sector); // haleyjd
+               type = doorNormal;   // door acts just like normal 1 DR door now
+            P_DoorSequence(this, true, turbo, false); // haleyjd
             break;
             
          default:
@@ -193,10 +195,7 @@ void VerticalDoorThinker::Think()
          case blazeRaise:
          case blazeClose:
          case paramCloseIn:      // haleyjd 03/01/05
-            if(serverside)
-               P_RemoveDoor(this);
-            else // [CG] Just set inactive if not serverside.
-               inactive = prediction_index;
+            P_RemoveDoor(this);
 
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
@@ -228,7 +227,7 @@ void VerticalDoorThinker::Think()
             
          default:             // other types bounce off the obstruction
             direction = plat_up;
-            P_DoorSequence(true, false, true, sector); // haleyjd
+            P_DoorSequence(this, true, false, true); // haleyjd
             break;
          }
       }
@@ -259,10 +258,7 @@ void VerticalDoorThinker::Think()
          case blazeOpen:
          case doorOpen:
             S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
-            if(serverside)
-               P_RemoveDoor(this);
-            else // [CG] Just set inactive if not serverside.
-               inactive = prediction_index;
+            P_RemoveDoor(this);
             break;
             
          default:
@@ -282,7 +278,7 @@ void VerticalDoorThinker::Think()
             
          default:             // other types bounce off the obstruction
             direction = plat_down;
-            P_DoorSequence(false, false, true, sector); // haleyjd
+            P_DoorSequence(this, false, false, true); // haleyjd
             break;
          }
       }
@@ -292,33 +288,15 @@ void VerticalDoorThinker::Think()
       break;
    }
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
-}
-
-void P_RemoveDoor(VerticalDoorThinker *door)
-{
-   if(CS_SERVER)
-      SV_BroadcastSectorThinkerRemoved(door);
-
-   door->sector->ceilingdata = NULL; //jff 2/22/98
-   door->removeThinker(); // unlink and free
-   NetSectorThinkers.remove(door);
+   finishThinking();
 }
 
 //
-// VerticalDoorThinker::serialize
+// VerticalDoorThinker::statusChanged()
 //
-// Saves/loads VerticalDoorThinker thinkers.
+// Returns true if the door's status has changed since it was last saved
+// (stored in the protected current_status member).
 //
-void VerticalDoorThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << type << topheight << speed << direction << topwait
-       << topcountdown << line << lighttag << turbo;
-}
-
 bool VerticalDoorThinker::statusChanged()
 {
    if(type         == current_status.door_data.type         &&
@@ -336,41 +314,31 @@ bool VerticalDoorThinker::statusChanged()
    return true;
 }
 
-void VerticalDoorThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
+//
+// VerticalDoorThinker::loadStatusData
+//
+// Loads status from a net-safe struct.
+//
+void VerticalDoorThinker::loadStatusData(cs_sector_thinker_data_t *data)
 {
-   latest_status.door_data.net_id       = data->door_data.net_id;
-   latest_status.door_data.type         = data->door_data.type;
-   latest_status.door_data.topheight    = data->door_data.topheight;
-   latest_status.door_data.speed        = data->door_data.speed;
-   latest_status.door_data.direction    = data->door_data.direction;
-   latest_status.door_data.topwait      = data->door_data.topwait;
-   latest_status.door_data.topcountdown = data->door_data.topcountdown;
-   latest_status.door_data.line_number  = data->door_data.line_number;
-   latest_status.door_data.lighttag     = data->door_data.lighttag;
-   latest_status.door_data.turbo        = data->door_data.turbo;
-}
-
-void VerticalDoorThinker::loadStoredStatusUpdate()
-{
-   net_id       = latest_status.door_data.net_id;
-   type         = latest_status.door_data.type;
-   topheight    = latest_status.door_data.topheight;
-   speed        = latest_status.door_data.speed;
-   direction    = latest_status.door_data.direction;
-   topwait      = latest_status.door_data.topwait;
-   topcountdown = latest_status.door_data.topcountdown;
-   lighttag     = latest_status.door_data.lighttag;
-   turbo        = latest_status.door_data.turbo;
-
-   line = &lines[latest_status.door_data.line_number];
+   net_id       =        data->door_data.net_id;
+   type         =        data->door_data.type;
+   topheight    =        data->door_data.topheight;
+   speed        =        data->door_data.speed;
+   direction    =        data->door_data.direction;
+   topwait      =        data->door_data.topwait;
+   topcountdown =        data->door_data.topcountdown;
+   line         = &lines[data->door_data.line_number];
+   lighttag     =        data->door_data.lighttag;
+   turbo        =        data->door_data.turbo;
 }
 
 //
-// VerticalDoorThinker::netSerialize
+// VerticalDoorThinker::dumpStatusData
 //
-// Saves data into a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void VerticalDoorThinker::netSerialize(cs_sector_thinker_data_t *data)
+void VerticalDoorThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
    data->door_data.net_id       = net_id;
    data->door_data.type         = type;
@@ -385,35 +353,36 @@ void VerticalDoorThinker::netSerialize(cs_sector_thinker_data_t *data)
 }
 
 //
-// VerticalDoorThinker::netUpdate
+// VerticalDoorThinker::copyStatusData
 //
-// Updates from a net-safe struct.
+// Copies status data from one net-safe struct to another.
 //
-void VerticalDoorThinker::netUpdate(uint32_t index,
-                                    cs_sector_thinker_data_t *data)
+void VerticalDoorThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                         cs_sector_thinker_data_t *src)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+   dest->door_data.net_id       = src->door_data.net_id;
+   dest->door_data.type         = src->door_data.type;
+   dest->door_data.topheight    = src->door_data.topheight;
+   dest->door_data.speed        = src->door_data.speed;
+   dest->door_data.direction    = src->door_data.direction;
+   dest->door_data.topwait      = src->door_data.topwait;
+   dest->door_data.topcountdown = src->door_data.topcountdown;
+   dest->door_data.line_number  = src->door_data.line_number;
+   dest->door_data.lighttag     = src->door_data.lighttag;
+   dest->door_data.turbo        = src->door_data.turbo;
 }
 
 //
-// VerticalDoorThinker::loadStatusData
+// VerticalDoorThinker::serialize
 //
-// Updates from a net-safe struct.
+// Saves/loads VerticalDoorThinker thinkers.
 //
-void VerticalDoorThinker::loadStatusData(cs_sector_thinker_data_t *data)
+void VerticalDoorThinker::serialize(SaveArchive &arc)
 {
-   net_id       = data->door_data.net_id;
-   type         = data->door_data.type;
-   topheight    = data->door_data.topheight;
-   speed        = data->door_data.speed;
-   direction    = data->door_data.direction;
-   topwait      = data->door_data.topwait;
-   topcountdown = data->door_data.topcountdown;
-   lighttag     = data->door_data.lighttag;
-   turbo        = data->door_data.turbo;
+   Super::serialize(arc);
 
-   line = &lines[data->door_data.line_number];
+   arc << type << topheight << speed << direction << topwait
+       << topcountdown << line << lighttag << turbo;
 }
 
 //
@@ -438,6 +407,23 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
    // occurs, otherwise you get a doubled sound at the next downstroke.
    S_SquashSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
    return true;
+}
+
+void P_RemoveDoor(VerticalDoorThinker *door)
+{
+   if(door->isPredicting() || door->isRePredicting())
+   {
+      door->setInactive();
+      return;
+   }
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerRemoved(door);
+
+   NetSectorThinkers.remove(door);
+
+   door->sector->ceilingdata = NULL; //jff 2/22/98
+   door->removeThinker(); // unlink and free
 }
 
 ///////////////////////////////////////////////////////////////
@@ -574,7 +560,7 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
       raise = false;
       turbo = true;
       bounce = false;
-      P_DoorSequence(raise, turbo, bounce, door->sector); // haleyjd
+      P_DoorSequence(door, raise, turbo, bounce); // haleyjd
       break;
 
    case doorClose:
@@ -586,7 +572,7 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
       raise = false;
       turbo = false;
       bounce = false;
-      P_DoorSequence(raise, turbo, bounce, door->sector); // haleyjd
+      P_DoorSequence(door, raise, turbo, bounce); // haleyjd
       break;
 
    case closeThenOpen:
@@ -597,7 +583,7 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
       raise = false;
       turbo = false;
       bounce = false;
-      P_DoorSequence(raise, turbo, bounce, door->sector); // haleyjd
+      P_DoorSequence(door, raise, turbo, bounce); // haleyjd
       break;
 
    case blazeRaise:
@@ -615,7 +601,7 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
          make_sound = true;
 
       if(make_sound)
-         P_DoorSequence(raise, turbo, bounce, door->sector); // haleyjd
+         P_DoorSequence(door, raise, turbo, bounce); // haleyjd
 
       break;
 
@@ -634,7 +620,7 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
          make_sound = true;
 
       if(make_sound)
-         P_DoorSequence(raise, turbo, bounce, door->sector); // haleyjd
+         P_DoorSequence(door, raise, turbo, bounce); // haleyjd
 
       break;
       
@@ -802,10 +788,10 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 
    if(serverside)
    {
-      if(make_sound)
-         P_DoorSequence(raise, turbo, bounce, sec);
-
       door = P_SpawnManualDoor(line, sec, make_sound, raise, turbo, bounce);
+
+      if(make_sound)
+         P_DoorSequence(door, raise, turbo, bounce);
    }
 
    return 1;

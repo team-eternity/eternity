@@ -72,7 +72,7 @@ public:
 
       // [CG] Get a new Net ID.  If the thing came in with a Net ID, check that
       //      it's not already in use (error if it is).  Otherwise check the
-      //      stack for a recently-released Net ID.  Finally resort to creating
+      //      queue for a recently-released Net ID.  Finally resort to creating
       //      a new one.
       if(x->net_id != 0)
       {

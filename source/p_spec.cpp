@@ -83,10 +83,13 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#include "cs_main.h" // [CG] 09/18/11
-#include "cs_team.h" // [CG] 09/18/11
+#include "cs_main.h"      // [CG] 09/18/11
+#include "cs_team.h"      // [CG] 09/18/11
 #include "cs_announcer.h" // [CG] 02/10/12
-#include "sv_main.h"
+#include "cl_main.h"      // [CG] 04/02/12
+#include "cl_pred.h"      // [CG] 04/02/12
+#include "cl_spec.h"      // [CG] 04/02/12
+#include "sv_main.h"      // [CG] 04/02/12
 
 //
 // Animating textures and planes
@@ -256,33 +259,67 @@ void P_InitPicAnims(void)
 IMPLEMENT_THINKER_TYPE(SectorMovementThinker)
 
 //
-// SectorMovementThinker::storeCurrentStatus()
+// SectorMovementThinker::startThinking()
 //
-// Stores the current status.
+// Checks if a sector movement thinker should think, and if so sets it up for
+// thinking.
 //
-void SectorMovementThinker::storeCurrentStatus()
+bool SectorMovementThinker::startThinking()
 {
-   netSerialize(&current_status);
+   dumpStatusData(&current_status);
+
+   if(CS_CLIENT)
+   {
+      if(!prediction_index)
+         prediction_index = cl_current_world_index;
+
+      if(inactive && (inactive <= prediction_index))
+         return false;
+   }
+
+   return true;
 }
 
 //
-// SectorMovementThinker::storePreRePredictionStatus()
+// SectorMovementThinker::finishThinking()
 //
-// Stores the status before re-predicting.
+// Runs after a sector movement thinker finishes thinking.
 //
-void SectorMovementThinker::storePreRePredictionStatus()
+void SectorMovementThinker::finishThinking()
 {
-   netSerialize(&pre_reprediction_status);
+   if((CS_CLIENT) && (!repredicting))
+      savePredictedStatus();
+
+   if(CS_SERVER && net_id && statusChanged())
+      SV_BroadcastSectorThinkerStatus(this);
+
+   prediction_index = 0;
 }
 
 //
-// SectorMovementThinker::loadPreRePredictionStatus()
+// SectorMovementThinker::savePredictedStatus()
 //
-// Loads the status saved before re-predicting.
+// Stores a new predicted status.
 //
-void SectorMovementThinker::loadPreRePredictionStatus()
+void SectorMovementThinker::savePredictedStatus()
 {
-   loadStatusData(&pre_reprediction_status);
+   cs_queued_sector_thinker_data_t *qstd = estructalloc(
+      cs_queued_sector_thinker_data_t, 1
+   );
+
+   qstd->index = cl_current_world_index;
+   dumpStatusData(&qstd->data);
+   M_QueueInsert((mqueueitem_t *)qstd, &status_queue);
+}
+
+//
+// SectorMovementThinker::netSerialize()
+//
+// Serializes the current status into a net-safe struct.
+//
+void SectorMovementThinker::netSerialize(cs_sector_thinker_data_t *data)
+{
+   dumpStatusData(data);
 }
 
 //
@@ -296,8 +333,120 @@ void SectorMovementThinker::netUpdate(uint32_t index,
 {
    if(CS_CLIENT) // [CG] C/S clients only.
    {
-      latest_status_index = index;
-      storeStatusUpdate(data);
+      mqueueitem_t *mqitem = NULL;
+      cs_queued_sector_thinker_data_t *qstd = NULL;
+
+      M_QueueResetIterator(&status_queue);
+      while((mqitem = M_QueueIterator(&status_queue)))
+      {
+         mqueueitem_t *mqitem = NULL;
+         qstd = (cs_queued_sector_thinker_data_t *)mqitem;
+
+         if(qstd->index != index)
+            continue;
+
+         copyStatusData(&qstd->data, data);
+         M_QueueResetIterator(&status_queue);
+         return;
+      }
+
+      qstd = estructalloc(cs_queued_sector_thinker_data_t, 1);
+      qstd->index = index;
+      copyStatusData(&qstd->data, data);
+      M_QueueInsert((mqueueitem_t *)qstd, &status_queue);
+      M_QueueResetIterator(&status_queue);
+   }
+}
+
+//
+// SectorMovementThinker::clearOldUpdates()
+//
+// Clears outdated updates from the queue.
+//
+void SectorMovementThinker::clearOldUpdates(uint32_t index)
+{
+   if(CS_CLIENT) // [CG] C/S clients only.
+   {
+      mqueueitem_t *mqitem = NULL;
+      cs_queued_sector_thinker_data_t *qstd = NULL;
+
+      while((mqitem = M_QueuePeek(&status_queue)))
+      {
+         qstd = (cs_queued_sector_thinker_data_t *)mqitem;
+
+         if(qstd->index >= index)
+            return;
+
+         qstd = (cs_queued_sector_thinker_data_t *)M_QueuePop(&status_queue);
+         efree(qstd);
+      }
+   }
+}
+
+//
+// SectorMovementThinker::loadStatusFor()
+//
+// Loads the sector movement thinker's status for a given index.
+//
+void SectorMovementThinker::loadStatusFor(uint32_t index)
+{
+   mqueueitem_t *mqitem = NULL;
+   cs_queued_sector_thinker_data_t *previous_qstd = NULL, *qstd = NULL;
+
+   M_QueueResetIterator(&status_queue);
+   while((mqitem = M_QueueIterator(&status_queue)))
+   {
+      previous_qstd = qstd;
+      qstd = (cs_queued_sector_thinker_data_t *)mqitem;
+
+      if(qstd->index >= index)
+         break;
+   }
+   M_QueueResetIterator(&status_queue);
+
+   if(!qstd)
+   {
+      // I_Error("No status for SMT %u at %u.\n" net_id, index);
+      CS_LogSMT("%u/%u: No status for SMT %u at %u.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         net_id,
+         index
+      );
+   }
+   else if(previous_qstd)
+      loadStatusData(&previous_qstd->data);
+   else
+      loadStatusData(&qstd->data);
+}
+
+//
+// SectorMovementThinker::RePredict()
+//
+// Re-Predicts sector movement clientside.
+//
+void SectorMovementThinker::RePredict(uint32_t index)
+{
+   if(CS_CLIENT)
+   {
+      loadStatusFor(index);
+
+      CS_LogSMT(
+         "%u/%u: Predicting SMT %u at %u: %d/%d\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         net_id,
+         index,
+         this->sector->ceilingheight >> FRACBITS,
+         this->sector->floorheight >> FRACBITS
+      );
+
+      prediction_index = index;
+      repredicting = true;
+      cl_predicting_sectors = true;
+      Think();
+      repredicting = false;
+      cl_predicting_sectors = false;
    }
 }
 
@@ -306,14 +455,75 @@ void SectorMovementThinker::netUpdate(uint32_t index,
 //
 // Predicts sector movement clientside.
 //
-void SectorMovementThinker::Predict(uint32_t index)
+void SectorMovementThinker::Predict()
 {
    if(CS_CLIENT)
    {
-      prediction_index = index;
+      prediction_index = cl_current_world_index;
+      predicting = true;
+      cl_predicting_sectors = true;
+      CS_LogSMT(
+         "%u/%u (%u): SMT %u before prediction: %d/%d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         cl_commands_sent - 1,
+         net_id,
+         sector->ceilingheight >> FRACBITS,
+         sector->floorheight >> FRACBITS
+      );
+      loadStatusFor(cl_current_world_index);
       Think();
-      prediction_index = 0;
+      savePredictedStatus();
+      CS_LogSMT(
+         "%u/%u (%u): SMT %u after prediction: %d/%d.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         cl_commands_sent - 1,
+         net_id,
+         sector->ceilingheight >> FRACBITS,
+         sector->floorheight >> FRACBITS
+      );
+      predicting = false;
+      cl_predicting_sectors = false;
    }
+}
+
+//
+// SectorMovementThinker::setInactive()
+//
+// Sets the sector movement thinker as inactive at the current prediction
+// index.
+//
+void SectorMovementThinker::setInactive()
+{
+   if(CS_CLIENT)
+      inactive = prediction_index;
+}
+
+//
+// SectorMovementThinker::isPredicting()
+//
+// Returns true if the sector movement thinker is currently predicting.
+//
+bool SectorMovementThinker::isPredicting()
+{
+   if(predicting)
+      return true;
+
+   return false;
+}
+
+//
+// SectorMovementThinker::isRePredicting()
+//
+// Returns true if the sector movement thinker is currently predicting.
+//
+bool SectorMovementThinker::isRePredicting()
+{
+   if(repredicting)
+      return true;
+
+   return false;
 }
 
 //=============================================================================

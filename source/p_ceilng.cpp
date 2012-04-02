@@ -50,28 +50,37 @@ ceilinglist_t *activeceilings;
 //
 // haleyjd 09/27/06: Starts the appropriate sound sequence for a ceiling action.
 //
-void P_CeilingSequence(sector_t *s, int noiseLevel)
+void P_CeilingSequence(CeilingThinker *ceiling, int noiseLevel)
 {
-   if(silentmove(s))
+   if(silentmove(ceiling->sector))
       return;
 
-   if(s->sndSeqID >= 0)
-      S_StartSectorSequence(s, SEQ_CEILING);
-   else
+   if(ceiling->isRePredicting())
+      return;
+
+   if(ceiling->sector->sndSeqID < 0)
    {
       switch(noiseLevel)
       {
       case CNOISE_NORMAL:
-         S_StartSectorSequenceName(s, "EECeilingNormal", SEQ_ORIGIN_SECTOR_C);
+         S_StartSectorSequenceName(
+            ceiling->sector, "EECeilingNormal", SEQ_ORIGIN_SECTOR_C
+         );
          break;
       case CNOISE_SEMISILENT:
-         S_StartSectorSequenceName(s, "EECeilingSemiSilent", SEQ_ORIGIN_SECTOR_C);
+         S_StartSectorSequenceName(
+            ceiling->sector, "EECeilingSemiSilent", SEQ_ORIGIN_SECTOR_C
+         );
          break;
       case CNOISE_SILENT:
-         S_StartSectorSequenceName(s, "EECeilingSilent", SEQ_ORIGIN_SECTOR_C);
+         S_StartSectorSequenceName(
+            ceiling->sector, "EECeilingSilent", SEQ_ORIGIN_SECTOR_C
+         );
          break;
       }
    }
+   else
+      S_StartSectorSequence(ceiling->sector, SEQ_CEILING);
 }
 
 //
@@ -114,14 +123,8 @@ void CeilingThinker::Think()
 {
    result_e  res;
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
 
    if(inStasis)
       return;
@@ -147,10 +150,7 @@ void CeilingThinker::Think()
             // plain movers are just removed
          case raiseToHighest:
          case genCeiling:
-            if(serverside)
-               P_RemoveActiveCeiling(this);
-            else // [CG] Just set inactive if not serverside.
-               inactive = prediction_index;
+            P_RemoveActiveCeiling(this);
             break;
 
             // movers with texture change, change the texture then get removed
@@ -160,17 +160,14 @@ void CeilingThinker::Think()
             P_TransferSectorSpecial(sector, &special);
          case genCeilingChg:
             P_SetSectorCeilingPic(sector, texture);
-            if(serverside)
-               P_RemoveActiveCeiling(this);
-            else // [CG] Just set inactive if not serverside.
-               inactive = prediction_index;
+            P_RemoveActiveCeiling(this);
             break;
 
             // crushers reverse direction at the top
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
             if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
-               P_CeilingSequence(sector, CNOISE_SEMISILENT);
+               P_CeilingSequence(this, CNOISE_SEMISILENT);
          case genSilentCrusher:
          case genCrusher:
          case fastCrushAndRaise:
@@ -210,7 +207,7 @@ void CeilingThinker::Think()
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
             if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
-               P_CeilingSequence(sector, CNOISE_SEMISILENT);
+               P_CeilingSequence(this, CNOISE_SEMISILENT);
          case crushAndRaise: 
             speed = CEILSPEED;
          case fastCrushAndRaise:
@@ -225,10 +222,7 @@ void CeilingThinker::Think()
             P_TransferSectorSpecial(sector, &special);
          case genCeilingChg:
             P_SetSectorCeilingPic(sector, texture);
-            if(serverside)
-               P_RemoveActiveCeiling(this);
-            else // [CG] Just set inactive if not serverside.
-               inactive = prediction_index;
+            P_RemoveActiveCeiling(this);
             break;
 
             // all other case, just remove the active ceiling
@@ -237,10 +231,7 @@ void CeilingThinker::Think()
          case lowerToLowest:
          case lowerToMaxFloor:
          case genCeiling:
-            if(serverside)
-               P_RemoveActiveCeiling(this);
-            else // [CG] Just set inactive if not serverside.
-               inactive = prediction_index;
+            P_RemoveActiveCeiling(this);
             break;
             
          default:
@@ -274,28 +265,15 @@ void CeilingThinker::Think()
       break;
    } // end switch
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
+   finishThinking();
 }
 
 //
-// CeilingThinker::serialize
+// CeilingThinker::statusChanged()
 //
-// Saves and loads CeilingThinker thinkers.
+// Returns true if the ceiling's status has changed since it was last saved
+// (stored in the protected current_status member).
 //
-void CeilingThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << type << bottomheight << topheight << speed << oldspeed
-       << crush << special << texture << direction << inStasis << tag 
-       << olddirection;
-
-   // Reattach to active ceilings list
-   if(arc.isLoading())
-      P_AddActiveCeiling(this);
-}
-
 bool CeilingThinker::statusChanged()
 {
    if(type                == current_status.ceiling_data.type                &&
@@ -325,7 +303,7 @@ bool CeilingThinker::statusChanged()
 //
 // CeilingThinker::loadStatusData
 //
-// Updates from a net-safe struct.
+// Loads status from a net-safe struct.
 //
 void CeilingThinker::loadStatusData(cs_sector_thinker_data_t *data)
 {
@@ -349,74 +327,12 @@ void CeilingThinker::loadStatusData(cs_sector_thinker_data_t *data)
    olddirection        = data->ceiling_data.olddirection;
 }
 
-void CeilingThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
-{
-   latest_status.ceiling_data.net_id =
-      data->ceiling_data.net_id;
-   latest_status.ceiling_data.type =
-      data->ceiling_data.type;
-   latest_status.ceiling_data.bottomheight =
-      data->ceiling_data.bottomheight;
-   latest_status.ceiling_data.topheight =
-      data->ceiling_data.topheight;
-   latest_status.ceiling_data.speed =
-      data->ceiling_data.speed;
-   latest_status.ceiling_data.oldspeed =
-      data->ceiling_data.oldspeed;
-   latest_status.ceiling_data.crush =
-      data->ceiling_data.crush;
-   latest_status.ceiling_data.special.newspecial =
-      data->ceiling_data.special.newspecial;
-   latest_status.ceiling_data.special.flags =
-      data->ceiling_data.special.flags;
-   latest_status.ceiling_data.special.damage =
-      data->ceiling_data.special.damage;
-   latest_status.ceiling_data.special.damagemask =
-      data->ceiling_data.special.damagemask;
-   latest_status.ceiling_data.special.damagemod =
-      data->ceiling_data.special.damagemod;
-   latest_status.ceiling_data.special.damageflags =
-      data->ceiling_data.special.damageflags;
-   latest_status.ceiling_data.texture =
-      data->ceiling_data.texture;
-   latest_status.ceiling_data.direction =
-      data->ceiling_data.direction;
-   latest_status.ceiling_data.inStasis =
-      data->ceiling_data.inStasis;
-   latest_status.ceiling_data.tag =
-      data->ceiling_data.tag;
-   latest_status.ceiling_data.olddirection =
-      data->ceiling_data.olddirection;
-}
-
-void CeilingThinker::loadStoredStatusUpdate()
-{
-   net_id              = latest_status.ceiling_data.net_id;
-   type                = latest_status.ceiling_data.type;
-   bottomheight        = latest_status.ceiling_data.bottomheight;
-   topheight           = latest_status.ceiling_data.topheight;
-   speed               = latest_status.ceiling_data.speed;
-   oldspeed            = latest_status.ceiling_data.oldspeed;
-   crush               = latest_status.ceiling_data.crush;
-   special.newspecial  = latest_status.ceiling_data.special.newspecial;
-   special.flags       = latest_status.ceiling_data.special.flags;
-   special.damage      = latest_status.ceiling_data.special.damage;
-   special.damagemask  = latest_status.ceiling_data.special.damagemask;
-   special.damagemod   = latest_status.ceiling_data.special.damagemod;
-   special.damageflags = latest_status.ceiling_data.special.damageflags;
-   texture             = latest_status.ceiling_data.texture;
-   direction           = latest_status.ceiling_data.direction;
-   inStasis            = latest_status.ceiling_data.inStasis;
-   tag                 = latest_status.ceiling_data.tag;
-   olddirection        = latest_status.ceiling_data.olddirection;
-}
-
 //
-// CeilingThinker::netSerialize
+// CeilingThinker::dumpStatusData
 //
-// Saves data into a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void CeilingThinker::netSerialize(cs_sector_thinker_data_t *data)
+void CeilingThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
    data->ceiling_data.net_id              = net_id;
    data->ceiling_data.type                = type;
@@ -439,14 +355,53 @@ void CeilingThinker::netSerialize(cs_sector_thinker_data_t *data)
 }
 
 //
-// CeilingThinker::netUpdate
+// CeilingThinker::copyStatusData
 //
-// Updates from a net-safe struct.
+// Copies status data from one net-safe struct to another.
 //
-void CeilingThinker::netUpdate(uint32_t index, cs_sector_thinker_data_t *data)
+void CeilingThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                    cs_sector_thinker_data_t *src)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+   dest->ceiling_data.net_id              = src->ceiling_data.net_id;
+   dest->ceiling_data.type                = src->ceiling_data.type;
+   dest->ceiling_data.bottomheight        = src->ceiling_data.bottomheight;
+   dest->ceiling_data.topheight           = src->ceiling_data.topheight;
+   dest->ceiling_data.speed               = src->ceiling_data.speed;
+   dest->ceiling_data.oldspeed            = src->ceiling_data.oldspeed;
+   dest->ceiling_data.crush               = src->ceiling_data.crush;
+   dest->ceiling_data.special.newspecial  =
+      src->ceiling_data.special.newspecial;
+   dest->ceiling_data.special.flags       = src->ceiling_data.special.flags;
+   dest->ceiling_data.special.damage      = src->ceiling_data.special.damage;
+   dest->ceiling_data.special.damagemask  =
+      src->ceiling_data.special.damagemask;
+   dest->ceiling_data.special.damagemod   =
+      src->ceiling_data.special.damagemod;
+   dest->ceiling_data.special.damageflags =
+      src->ceiling_data.special.damageflags;
+   dest->ceiling_data.texture             = src->ceiling_data.texture;
+   dest->ceiling_data.direction           = src->ceiling_data.direction;
+   dest->ceiling_data.inStasis            = src->ceiling_data.inStasis;
+   dest->ceiling_data.tag                 = src->ceiling_data.tag;
+   dest->ceiling_data.olddirection        = src->ceiling_data.olddirection;
+}
+
+//
+// CeilingThinker::serialize
+//
+// Saves and loads CeilingThinker thinkers.
+//
+void CeilingThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << type << bottomheight << topheight << speed << oldspeed
+       << crush << special << texture << direction << inStasis << tag 
+       << olddirection;
+
+   // Reattach to active ceilings list
+   if(arc.isLoading())
+      P_AddActiveCeiling(this);
 }
 
 //
@@ -599,7 +554,7 @@ CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
    ceiling->type = type;
 
    // haleyjd 09/28/06: sound sequences
-   P_CeilingSequence(ceiling->sector, noise);
+   P_CeilingSequence(ceiling, noise);
 
    if(serverside)
    {
@@ -669,7 +624,7 @@ int P_ActivateInStasisCeiling(line_t *line)
             noise = CNOISE_NORMAL;
             break;
          }
-         P_CeilingSequence(ceiling->sector, noise);
+         P_CeilingSequence(ceiling, noise);
 
          //jff 4/5/98 return if activated
          rtn = 1;
@@ -739,10 +694,21 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
    ceilinglist_t *list = ceiling->list;
+
+   if(ceiling->isPredicting() || ceiling->isRePredicting())
+   {
+      ceiling->setInactive();
+      return;
+   }
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerRemoved(ceiling);
+
+   NetSectorThinkers.remove(ceiling);
+
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
    ceiling->removeThinker();
-   NetSectorThinkers.remove(ceiling);
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);

@@ -261,6 +261,24 @@ void CS_LogPlayerPosition(int playernum)
    );
 }
 
+void CS_LogPlayerPosition(int playernum, cs_player_position_t *position)
+{
+   CS_LogSMT(
+      "%u/%u: Position of %d: %5d/%5d/%5d %5d/%5d/%5d %3d %5d\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      playernum,
+      position->x     >> FRACBITS,
+      position->y     >> FRACBITS,
+      position->z     >> FRACBITS,
+      position->momx  >> FRACBITS,
+      position->momy  >> FRACBITS,
+      position->momz  >> FRACBITS,
+      position->angle / ANGLE_1,
+      position->pitch >> FRACBITS
+   );
+}
+
 void CS_PrintPlayerPosition(cs_player_position_t *position)
 {
    printf(

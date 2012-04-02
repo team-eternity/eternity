@@ -270,31 +270,7 @@ void Thinker::RunThinkers(void)
       if(CS_CLIENT)
       {
          if((thinker = thinker_cast<SectorMovementThinker *>(currentthinker)))
-         {
-            CS_LogSMT(
-               "%u/%u (%u): SMT %u before prediction: %d/%d.\n",
-               cl_latest_world_index,
-               cl_current_world_index,
-               cl_commands_sent - 1,
-               thinker->net_id,
-               thinker->sector->ceilingheight >> FRACBITS,
-               thinker->sector->floorheight >> FRACBITS
-            );
-            cl_predicting_sectors = true;
-            thinker->loadPreRePredictionStatus();
-            currentthinker->Think();
-            thinker->storePreRePredictionStatus();
-            cl_predicting_sectors = false;
-            CS_LogSMT(
-               "%u/%u (%u): SMT %u after prediction: %d/%d.\n",
-               cl_latest_world_index,
-               cl_current_world_index,
-               cl_commands_sent - 1,
-               thinker->net_id,
-               thinker->sector->ceilingheight >> FRACBITS,
-               thinker->sector->floorheight >> FRACBITS
-            );
-         }
+            thinker->Predict();
          else if(!(mo = thinker_cast<Mobj *>(currentthinker)))
             currentthinker->Think();
          else if(serverside && mo->player == NULL)
@@ -407,6 +383,29 @@ void P_Ticker(void)
    reset_viewz = false;  // sf
 
    Thinker::RunThinkers();
+
+   if(CS_CLIENT)
+   {
+      CL_SavePredictedSectorPositions();
+
+      CS_LogSMT(
+         "%u/%u: Predicting....\n",
+         cl_latest_world_index,
+         cl_current_world_index
+      );
+      CS_LogPlayerPosition(consoleplayer);
+      P_PlayerThink(&players[consoleplayer]);
+
+      if((!clients[consoleplayer].spectating) && (players[consoleplayer].mo))
+         players[consoleplayer].mo->Think();
+
+      CS_LogPlayerPosition(consoleplayer);
+      CS_LogSMT(
+         "%u/%u: Done predicting.\n",
+         cl_latest_world_index,
+         cl_current_world_index
+      );
+   }
 
    P_UpdateSpecials();
    P_RespawnSpecials();

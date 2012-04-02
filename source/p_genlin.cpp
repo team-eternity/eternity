@@ -258,7 +258,7 @@ manual_floor:
             }
          }
 
-         P_FloorSequence(floor->sector);
+         P_FloorSequence(floor);
 
          if(CS_SERVER)
          {
@@ -516,7 +516,7 @@ manual_ceiling:
             }
          }
          P_AddActiveCeiling(ceiling); // add this ceiling to the active list
-         P_CeilingSequence(ceiling->sector, CNOISE_NORMAL); // haleyjd 09/29/06
+         P_CeilingSequence(ceiling, CNOISE_NORMAL); // haleyjd 09/29/06
 
          if(CS_SERVER)
          {
@@ -705,7 +705,7 @@ manual_lift:
             break;
          }
 
-         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+         P_PlatSequence(plat, "EEPlatNormal"); // haleyjd
          P_AddActivePlat(plat, "EEPlatNormal"); // add this plat to the list of active plats
 
       }
@@ -849,7 +849,7 @@ manual_stair:
          sec->nextsec   = -1;
          sec->prevsec   = -1;
 
-         P_FloorSequence(floor->sector);
+         P_FloorSequence(floor);
          
          NetSectorThinkers.add(floor);
 
@@ -938,7 +938,7 @@ manual_stair:
                floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
                floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
-               P_FloorSequence(floor->sector);
+               P_FloorSequence(floor);
                
                NetSectorThinkers.add(floor);
 
@@ -1095,9 +1095,7 @@ manual_crusher:
 
          P_AddActiveCeiling(ceiling); // add to list of active ceilings
          // haleyjd 09/29/06
-         P_CeilingSequence(
-            ceiling->sector, Slnt ? CNOISE_SILENT : CNOISE_NORMAL
-         );
+         P_CeilingSequence(ceiling, Slnt ? CNOISE_SILENT : CNOISE_NORMAL);
 
          if(CS_SERVER)
          {
@@ -1258,7 +1256,7 @@ manual_door:
                turbo = door->turbo;
                bounce = false;
 
-               P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
+               P_DoorSequence(door, true, door->turbo, false); // haleyjd
             }
             break;
          case ODoor:
@@ -1275,7 +1273,7 @@ manual_door:
                raise = true;
                turbo = door->turbo;
                bounce = false;
-               P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
+               P_DoorSequence(door, true, door->turbo, false); // haleyjd
             }
             break;
          case CdODoor:
@@ -1287,7 +1285,7 @@ manual_door:
             raise = false;
             turbo = door->turbo;
             bounce = false;
-            P_DoorSequence(false, door->turbo, false, door->sector); // haleyjd
+            P_DoorSequence(door, false, door->turbo, false); // haleyjd
             break;
          case CDoor:
             door->topheight = P_FindLowestCeilingSurrounding(sec);
@@ -1301,7 +1299,7 @@ manual_door:
             raise = false;
             turbo = door->turbo;
             bounce = false;
-            P_DoorSequence(false, door->turbo, false, door->sector); // haleyjd
+            P_DoorSequence(door, false, door->turbo, false); // haleyjd
             break;
          
          // haleyjd: The following door types are parameterized only

@@ -54,15 +54,22 @@ bool P_ChangeSector(sector_t *, int);
 //
 // haleyjd 10/02/06: Starts a sound sequence for a floor action.
 //
-void P_FloorSequence(sector_t *s)
+void P_FloorSequence(SectorMovementThinker *thinker)
 {
-   if(silentmove(s))
+   if(silentmove(thinker->sector))
       return;
 
-   if(s->sndSeqID >= 0)
-      S_StartSectorSequence(s, SEQ_FLOOR);
+   if(thinker->isRePredicting())
+      return;
+
+   if(thinker->sector->sndSeqID < 0)
+   {
+      S_StartSectorSequenceName(
+         thinker->sector, "EEFloor", SEQ_ORIGIN_SECTOR_F
+      );
+   }
    else
-      S_StartSectorSequenceName(s, "EEFloor", SEQ_ORIGIN_SECTOR_F);
+      S_StartSectorSequence(thinker->sector, SEQ_FLOOR);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -480,14 +487,8 @@ void FloorMoveThinker::Think()
 {
    result_e      res;
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
 
    // haleyjd 10/13/05: resetting stairs
    if(type == genBuildStair || type == genWaitStair || type == genDelayStair)
@@ -500,7 +501,7 @@ void FloorMoveThinker::Think()
          floordestheight = resetHeight;
          type = genResetStair;
          
-         P_FloorSequence(sector);
+         P_FloorSequence(this);
       }
 
       // While stair is building, the delay timer is counting down
@@ -530,7 +531,7 @@ void FloorMoveThinker::Think()
             delayTimer = stepRaiseTime;
             
             if(sector->floorheight != floordestheight)
-               P_FloorSequence(sector);
+               P_FloorSequence(this);
          }
          if(CS_SERVER && net_id && statusChanged())
             SV_BroadcastSectorThinkerStatus(this);
@@ -606,10 +607,7 @@ void FloorMoveThinker::Think()
          }
       }
       
-      if(serverside)
-         P_RemoveFloor(this);
-      else // [CG] Just set the floor as inactive if not serverside.
-         inactive = prediction_index;
+      P_RemoveFloor(this);
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
@@ -644,36 +642,15 @@ void FloorMoveThinker::Think()
       // haleyjd: handled via sound sequences
    }
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
-}
-
-void P_RemoveFloor(FloorMoveThinker *floor)
-{
-   if(CS_SERVER)
-      SV_BroadcastSectorThinkerRemoved(floor);
-   else if(CS_CLIENT)
-      S_StopSectorSequence(floor->sector, false);
-
-   floor->sector->floordata = NULL; //jff 2/22/98
-   floor->removeThinker(); //remove this floor from list of movers
-   NetSectorThinkers.remove(floor);
+   finishThinking();
 }
 
 //
-// FloorMoveThinker::serialize
+// FloorMoveThinker::statusChanged()
 //
-// Saves/loads FloorMoveThinker thinkers.
+// Returns true if the floor's status has changed since it was last saved
+// (stored in the protected current_status member).
 //
-void FloorMoveThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << type << crush << direction << special << texture 
-       << floordestheight << speed << resetTime << resetHeight
-       << stepRaiseTime << delayTime << delayTimer;
-}
-
 bool FloorMoveThinker::statusChanged()
 {
    if(type                == current_status.floor_data.type                &&
@@ -700,99 +677,10 @@ bool FloorMoveThinker::statusChanged()
    return true;
 }
 
-void FloorMoveThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
-{
-   latest_status.floor_data.net_id =
-      data->floor_data.net_id;
-   latest_status.floor_data.type =
-      data->floor_data.type;
-   latest_status.floor_data.crush =
-      data->floor_data.crush;
-   latest_status.floor_data.direction =
-      data->floor_data.direction;
-   latest_status.floor_data.special.newspecial =
-      data->floor_data.special.newspecial;
-   latest_status.floor_data.special.flags =
-      data->floor_data.special.flags;
-   latest_status.floor_data.special.damage =
-      data->floor_data.special.damage;
-   latest_status.floor_data.special.damagemask =
-      data->floor_data.special.damagemask;
-   latest_status.floor_data.special.damagemod =
-      data->floor_data.special.damagemod;
-   latest_status.floor_data.special.damageflags =
-      data->floor_data.special.damageflags;
-   latest_status.floor_data.texture =
-      data->floor_data.texture;
-   latest_status.floor_data.floordestheight =
-      data->floor_data.floordestheight;
-   latest_status.floor_data.speed =
-      data->floor_data.speed;
-   latest_status.floor_data.resetTime =
-      data->floor_data.resetTime;
-   latest_status.floor_data.resetHeight =
-      data->floor_data.resetHeight;
-   latest_status.floor_data.stepRaiseTime =
-      data->floor_data.stepRaiseTime;
-   latest_status.floor_data.delayTime =
-      data->floor_data.delayTime;
-   latest_status.floor_data.delayTimer =
-      data->floor_data.delayTimer;
-}
-
-void FloorMoveThinker::loadStoredStatusUpdate()
-{
-   net_id              = latest_status.floor_data.net_id;
-   type                = latest_status.floor_data.type;
-   crush               = latest_status.floor_data.crush;
-   direction           = latest_status.floor_data.direction;
-   special.newspecial  = latest_status.floor_data.special.newspecial;
-   special.flags       = latest_status.floor_data.special.flags;
-   special.damage      = latest_status.floor_data.special.damage;
-   special.damagemask  = latest_status.floor_data.special.damagemask;
-   special.damagemod   = latest_status.floor_data.special.damagemod;
-   special.damageflags = latest_status.floor_data.special.damageflags;
-   texture             = latest_status.floor_data.texture;
-   floordestheight     = latest_status.floor_data.floordestheight;
-   speed               = latest_status.floor_data.speed;
-   resetTime           = latest_status.floor_data.resetTime;
-   resetHeight         = latest_status.floor_data.resetHeight;
-   stepRaiseTime       = latest_status.floor_data.stepRaiseTime;
-   delayTime           = latest_status.floor_data.delayTime;
-   delayTimer          = latest_status.floor_data.delayTimer;
-}
-
-//
-// FloorMoveThinker::netSerialize
-//
-// Saves data into a net-safe struct.
-//
-void FloorMoveThinker::netSerialize(cs_sector_thinker_data_t *data)
-{
-   data->floor_data.net_id              = net_id;
-   data->floor_data.type                = type;
-   data->floor_data.crush               = crush;
-   data->floor_data.direction           = direction;
-   data->floor_data.special.newspecial  = special.newspecial;
-   data->floor_data.special.flags       = special.flags;
-   data->floor_data.special.damage      = special.damage;
-   data->floor_data.special.damagemask  = special.damagemask;
-   data->floor_data.special.damagemod   = special.damagemod;
-   data->floor_data.special.damageflags = special.damageflags;
-   data->floor_data.texture             = texture;
-   data->floor_data.floordestheight     = floordestheight;
-   data->floor_data.speed               = speed;
-   data->floor_data.resetTime           = resetTime;
-   data->floor_data.resetHeight         = resetHeight;
-   data->floor_data.stepRaiseTime       = stepRaiseTime;
-   data->floor_data.delayTime           = delayTime;
-   data->floor_data.delayTimer          = delayTimer;
-}
-
 //
 // FloorMoveThinker::loadStatusData
 //
-// Updates from a net-safe struct.
+// Loads status from a net-safe struct.
 //
 void FloorMoveThinker::loadStatusData(cs_sector_thinker_data_t *data)
 {
@@ -817,15 +705,72 @@ void FloorMoveThinker::loadStatusData(cs_sector_thinker_data_t *data)
 }
 
 //
-// FloorMoveThinker::netUpdate
+// FloorMoveThinker::dumpStatusData
 //
-// Updates from a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void FloorMoveThinker::netUpdate(uint32_t index,
-                                 cs_sector_thinker_data_t *data)
+void FloorMoveThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+   data->floor_data.net_id              = net_id;
+   data->floor_data.type                = type;
+   data->floor_data.crush               = crush;
+   data->floor_data.direction           = direction;
+   data->floor_data.special.newspecial  = special.newspecial;
+   data->floor_data.special.flags       = special.flags;
+   data->floor_data.special.damage      = special.damage;
+   data->floor_data.special.damagemask  = special.damagemask;
+   data->floor_data.special.damagemod   = special.damagemod;
+   data->floor_data.special.damageflags = special.damageflags;
+   data->floor_data.texture             = texture;
+   data->floor_data.floordestheight     = floordestheight;
+   data->floor_data.speed               = speed;
+   data->floor_data.resetTime           = resetTime;
+   data->floor_data.resetHeight         = resetHeight;
+   data->floor_data.stepRaiseTime       = stepRaiseTime;
+   data->floor_data.delayTime           = delayTime;
+   data->floor_data.delayTimer          = delayTimer;
+}
+
+//
+// FloorMoveThinker::copyStatusData
+//
+// Copies status data from one net-safe struct to another.
+//
+void FloorMoveThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                      cs_sector_thinker_data_t *src)
+{
+   dest->floor_data.net_id              = src->floor_data.net_id;
+   dest->floor_data.type                = src->floor_data.type;
+   dest->floor_data.crush               = src->floor_data.crush;
+   dest->floor_data.direction           = src->floor_data.direction;
+   dest->floor_data.special.newspecial  = src->floor_data.special.newspecial;
+   dest->floor_data.special.flags       = src->floor_data.special.flags;
+   dest->floor_data.special.damage      = src->floor_data.special.damage;
+   dest->floor_data.special.damagemask  = src->floor_data.special.damagemask;
+   dest->floor_data.special.damagemod   = src->floor_data.special.damagemod;
+   dest->floor_data.special.damageflags = src->floor_data.special.damageflags;
+   dest->floor_data.texture             = src->floor_data.texture;
+   dest->floor_data.floordestheight     = src->floor_data.floordestheight;
+   dest->floor_data.speed               = src->floor_data.speed;
+   dest->floor_data.resetTime           = src->floor_data.resetTime;
+   dest->floor_data.resetHeight         = src->floor_data.resetHeight;
+   dest->floor_data.stepRaiseTime       = src->floor_data.stepRaiseTime;
+   dest->floor_data.delayTime           = src->floor_data.delayTime;
+   dest->floor_data.delayTimer          = src->floor_data.delayTimer;
+}
+
+//
+// FloorMoveThinker::serialize
+//
+// Saves/loads FloorMoveThinker thinkers.
+//
+void FloorMoveThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << type << crush << direction << special << texture 
+       << floordestheight << speed << resetTime << resetHeight
+       << stepRaiseTime << delayTime << delayTimer;
 }
 
 //
@@ -856,6 +801,23 @@ bool FloorMoveThinker::reTriggerVerticalDoor(bool player)
    return true;
 }
 
+void P_RemoveFloor(FloorMoveThinker *floor)
+{
+   if(floor->isPredicting() || floor->isRePredicting())
+   {
+      floor->setInactive();
+      return;
+   }
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerRemoved(floor);
+   else if(CS_CLIENT)
+      S_StopSectorSequence(floor->sector, false);
+
+   floor->sector->floordata = NULL; //jff 2/22/98
+   floor->removeThinker(); //remove this floor from list of movers
+   NetSectorThinkers.remove(floor);
+}
 
 IMPLEMENT_THINKER_TYPE(ElevatorThinker)
 
@@ -875,16 +837,10 @@ void ElevatorThinker::Think()
 {
    result_e      res;
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
    
-   if (direction < 0)      // moving down
+   if(direction < 0)      // moving down
    {
       //jff 4/7/98 reverse order of ceiling/floor
       res = T_MovePlane(sector, speed, ceilingdestheight, -1, 1, direction); // move floor
@@ -907,43 +863,21 @@ void ElevatorThinker::Think()
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
 
-      if(serverside)
-         P_RemoveElevator(this);
-      else // [CG] Just make inactive if not serverside.
-         inactive = prediction_index;
+      P_RemoveElevator(this);
       
       // make floor stop sound
       // haleyjd: handled through sound sequences
    }
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
-}
-
-void P_RemoveElevator(ElevatorThinker *elevator)
-{
-   if(CS_SERVER)
-      SV_BroadcastSectorThinkerRemoved(elevator);
-
-   elevator->sector->floordata = NULL;     //jff 2/22/98
-   elevator->sector->ceilingdata = NULL;   //jff 2/22/98
-   elevator->removeThinker();              // remove elevator from actives
-   NetSectorThinkers.remove(elevator);
+   finishThinking();
 }
 
 //
-// ElevatorThinker::serialize
+// ElevatorThinker::statusChanged()
 //
-// Saves/loads a ElevatorThinker thinker
+// Returns true if the elevator's status has changed since it was last saved
+// (stored in the protected current_status member).
 //
-void ElevatorThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << type << direction << floordestheight << ceilingdestheight 
-       << speed;
-}
-
 bool ElevatorThinker::statusChanged()
 {
    if(type              == current_status.elevator_data.type              &&
@@ -956,48 +890,6 @@ bool ElevatorThinker::statusChanged()
    }
 
    return true;
-}
-
-void ElevatorThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
-
-{
-   latest_status.elevator_data.net_id =
-      data->elevator_data.net_id;
-   latest_status.elevator_data.type =
-      data->elevator_data.type;
-   latest_status.elevator_data.direction =
-      data->elevator_data.direction;
-   latest_status.elevator_data.floordestheight =
-      data->elevator_data.floordestheight;
-   latest_status.elevator_data.ceilingdestheight =
-      data->elevator_data.ceilingdestheight;
-   latest_status.elevator_data.speed =
-      data->elevator_data.speed;
-}
-
-void ElevatorThinker::loadStoredStatusUpdate()
-{
-   net_id            = latest_status.elevator_data.net_id;
-   type              = latest_status.elevator_data.type;
-   direction         = latest_status.elevator_data.direction;
-   floordestheight   = latest_status.elevator_data.floordestheight;
-   ceilingdestheight = latest_status.elevator_data.ceilingdestheight;
-   speed             = latest_status.elevator_data.speed;
-}
-
-//
-// ElevatorThinker::netSerialize
-//
-// Saves data into a net-safe struct.
-//
-void ElevatorThinker::netSerialize(cs_sector_thinker_data_t *data)
-{
-   data->elevator_data.net_id            = net_id;
-   data->elevator_data.type              = type;
-   data->elevator_data.direction         = direction;
-   data->elevator_data.floordestheight   = floordestheight;
-   data->elevator_data.ceilingdestheight = ceilingdestheight;
-   data->elevator_data.speed             = speed;
 }
 
 //
@@ -1016,14 +908,65 @@ void ElevatorThinker::loadStatusData(cs_sector_thinker_data_t *data)
 }
 
 //
-// ElevatorThinker::netUpdate
+// ElevatorThinker::dumpStatusData
 //
-// Updates from a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void ElevatorThinker::netUpdate(uint32_t index, cs_sector_thinker_data_t *data)
+void ElevatorThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+   data->elevator_data.net_id            = net_id;
+   data->elevator_data.type              = type;
+   data->elevator_data.direction         = direction;
+   data->elevator_data.floordestheight   = floordestheight;
+   data->elevator_data.ceilingdestheight = ceilingdestheight;
+   data->elevator_data.speed             = speed;
+}
+
+//
+// ElevatorThinker::copyStatusData
+//
+// Copies status data from one net-safe struct to another.
+//
+void ElevatorThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                     cs_sector_thinker_data_t *src)
+{
+  dest->elevator_data.net_id            = src->elevator_data.net_id;
+  dest->elevator_data.type              = src->elevator_data.type;
+  dest->elevator_data.direction         = src->elevator_data.direction;
+  dest->elevator_data.floordestheight   = src->elevator_data.floordestheight;
+  dest->elevator_data.ceilingdestheight = src->elevator_data.ceilingdestheight;
+  dest->elevator_data.speed             = src->elevator_data.speed;
+}
+
+//
+// ElevatorThinker::serialize
+//
+// Saves/loads a ElevatorThinker thinker
+//
+void ElevatorThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << type << direction << floordestheight << ceilingdestheight 
+       << speed;
+}
+
+void P_RemoveElevator(ElevatorThinker *elevator)
+{
+   if(elevator->isPredicting() || elevator->isRePredicting())
+   {
+      elevator->setInactive();
+      return;
+   }
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerRemoved(elevator);
+
+   NetSectorThinkers.remove(elevator);
+
+   elevator->sector->floordata = NULL;     //jff 2/22/98
+   elevator->sector->ceilingdata = NULL;   //jff 2/22/98
+   elevator->removeThinker();              // remove elevator from actives
 }
 
 // haleyjd 10/07/06: Pillars by Joe :)
@@ -1040,14 +983,8 @@ void PillarThinker::Think()
 {
    bool result;
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
    
    // Move floor
    result  = (T_MovePlane(sector, floorSpeed, floordest, crush, 0, direction) == pastdest);
@@ -1058,42 +995,18 @@ void PillarThinker::Think()
    if(result)
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
-      if(serverside)
-         P_RemovePillar(this);
-      else // [CG] Just mark inactive if not serverside
-         inactive = prediction_index;
+      P_RemovePillar(this);
    }
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
-}
-
-void P_RemovePillar(PillarThinker *pillar)
-{
-   if(CS_SERVER)
-      SV_BroadcastSectorThinkerRemoved(pillar);
-
-   pillar->sector->floordata = NULL;
-   pillar->sector->ceilingdata = NULL;      
-   // TODO: notify scripts
-   //P_TagFinished(sector->tag);
-   pillar->removeThinker();
-   NetSectorThinkers.remove(pillar);
+   finishThinking();
 }
 
 //
-// PillarThinker::serialize
+// PillarThinker::statusChanged()
 //
-// Saves/loads a PillarThinker thinker.
+// Returns true if the pillar's status has changed since it was last saved
+// (stored in the protected current_status member).
 //
-void PillarThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << ceilingSpeed << floorSpeed << floordest 
-       << ceilingdest << direction << crush;
-}
-
 bool PillarThinker::statusChanged()
 {
    if(ceilingSpeed == current_status.pillar_data.ceilingSpeed &&
@@ -1109,48 +1022,10 @@ bool PillarThinker::statusChanged()
    return true;
 }
 
-void PillarThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
-{
-   latest_status.pillar_data.net_id       = data->pillar_data.net_id;
-   latest_status.pillar_data.ceilingSpeed = data->pillar_data.ceilingSpeed;
-   latest_status.pillar_data.floorSpeed   = data->pillar_data.floorSpeed;
-   latest_status.pillar_data.floordest    = data->pillar_data.floordest;
-   latest_status.pillar_data.ceilingdest  = data->pillar_data.ceilingdest;
-   latest_status.pillar_data.direction    = data->pillar_data.direction;
-   latest_status.pillar_data.crush        = data->pillar_data.crush;
-}
-
-void PillarThinker::loadStoredStatusUpdate()
-{
-   net_id       = latest_status.pillar_data.net_id;
-   ceilingSpeed = latest_status.pillar_data.ceilingSpeed;
-   floorSpeed   = latest_status.pillar_data.floorSpeed;
-   floordest    = latest_status.pillar_data.floordest;
-   ceilingdest  = latest_status.pillar_data.ceilingdest;
-   direction    = latest_status.pillar_data.direction;
-   crush        = latest_status.pillar_data.crush;
-}
-
-//
-// PillarThinker::netSerialize
-//
-// Saves data into a net-safe struct.
-//
-void PillarThinker::netSerialize(cs_sector_thinker_data_t *data)
-{
-   data->pillar_data.net_id       = net_id;
-   data->pillar_data.ceilingSpeed = ceilingSpeed;
-   data->pillar_data.floorSpeed   = floorSpeed;
-   data->pillar_data.floordest    = floordest;
-   data->pillar_data.ceilingdest  = ceilingdest;
-   data->pillar_data.direction    = direction;
-   data->pillar_data.crush        = crush;
-}
-
 //
 // PillarThinker::loadStatusData
 //
-// Updates from a net-safe struct.
+// Loads status from a net-safe struct.
 //
 void PillarThinker::loadStatusData(cs_sector_thinker_data_t *data)
 {
@@ -1164,14 +1039,68 @@ void PillarThinker::loadStatusData(cs_sector_thinker_data_t *data)
 }
 
 //
-// PillarThinker::netUpdate
+// PillarThinker::dumpStatusData
 //
-// Updates from a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void PillarThinker::netUpdate(uint32_t index, cs_sector_thinker_data_t *data)
+void PillarThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+   data->pillar_data.net_id       = net_id;
+   data->pillar_data.ceilingSpeed = ceilingSpeed;
+   data->pillar_data.floorSpeed   = floorSpeed;
+   data->pillar_data.floordest    = floordest;
+   data->pillar_data.ceilingdest  = ceilingdest;
+   data->pillar_data.direction    = direction;
+   data->pillar_data.crush        = crush;
+}
+
+//
+// PillarThinker::copyStatusData
+//
+// Copies status data from one net-safe struct to another.
+//
+void PillarThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                   cs_sector_thinker_data_t *src)
+{
+   dest->pillar_data.net_id       = src->pillar_data.net_id;
+   dest->pillar_data.ceilingSpeed = src->pillar_data.ceilingSpeed;
+   dest->pillar_data.floorSpeed   = src->pillar_data.floorSpeed;
+   dest->pillar_data.floordest    = src->pillar_data.floordest;
+   dest->pillar_data.ceilingdest  = src->pillar_data.ceilingdest;
+   dest->pillar_data.direction    = src->pillar_data.direction;
+   dest->pillar_data.crush        = src->pillar_data.crush;
+}
+
+//
+// PillarThinker::serialize
+//
+// Saves/loads a PillarThinker thinker.
+//
+void PillarThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << ceilingSpeed << floorSpeed << floordest 
+       << ceilingdest << direction << crush;
+}
+
+void P_RemovePillar(PillarThinker *pillar)
+{
+   if(pillar->isPredicting() || pillar->isRePredicting())
+   {
+      pillar->setInactive();
+      return;
+   }
+
+   if(CS_SERVER)
+      SV_BroadcastSectorThinkerRemoved(pillar);
+   NetSectorThinkers.remove(pillar);
+
+   pillar->sector->floordata = NULL;
+   pillar->sector->ceilingdata = NULL;      
+   // TODO: notify scripts
+   //P_TagFinished(sector->tag);
+   pillar->removeThinker();
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1432,7 +1361,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       break;
    }
 
-   P_FloorSequence(floor->sector);
+   P_FloorSequence(floor);
 
    if(serverside)
    {
@@ -1609,7 +1538,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
             
             texture = sec->floorpic;
 
-            P_FloorSequence(floor->sector);
+            P_FloorSequence(floor);
 
             NetSectorThinkers.add(floor);
 
@@ -1687,7 +1616,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
                   //jff 2/27/98 fix uninitialized crush field
                   if(!demo_compatibility)
                      floor->crush = (type == build8 ? -1 : 10);
-                  P_FloorSequence(floor->sector);
+                  P_FloorSequence(floor);
 
                   NetSectorThinkers.add(floor);
 
@@ -1890,7 +1819,7 @@ FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
    floor->texture = texture;
    P_ZeroSpecialTransfer(&(floor->special));
    floor->floordestheight = floordestheight;
-   P_FloorSequence(floor->sector);
+   P_FloorSequence(floor);
 
    if(serverside)
    {
@@ -1919,7 +1848,7 @@ FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
    floor->sector = sec;
    floor->speed = FLOORSPEED / 2;
    floor->floordestheight = floordestheight;
-   P_FloorSequence(floor->sector);
+   P_FloorSequence(floor);
 
    if(serverside)
    {
@@ -2027,7 +1956,7 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
       break;
    }
 
-   P_FloorSequence(elevator->sector);
+   P_FloorSequence(elevator);
 
    if(serverside)
    {
@@ -2138,7 +2067,7 @@ PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
    pillar->direction = 1;
    pillar->crush = crush;
    
-   P_FloorSequence(pillar->sector);
+   P_FloorSequence(pillar);
 
    if(serverside)
    {
@@ -2239,7 +2168,7 @@ PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
 
    pillar->direction = -1;
    
-   P_FloorSequence(pillar->sector);
+   P_FloorSequence(pillar);
 
    if(serverside)
    {
@@ -2281,14 +2210,21 @@ IMPLEMENT_THINKER_TYPE(FloorWaggleThinker)
 
 void P_RemoveFloorWaggle(FloorWaggleThinker *floor_waggle)
 {
+   if(floor_waggle->isPredicting() || floor_waggle->isRePredicting())
+   {
+      floor_waggle->setInactive();
+      return;
+   }
+
    if(CS_SERVER)
       SV_BroadcastSectorThinkerRemoved(floor_waggle);
+
+   NetSectorThinkers.remove(floor_waggle);
 
    floor_waggle->sector->floordata = NULL;
    // HEXEN_TODO: P_TagFinished
    // P_TagFinished(waggle->sector->tag);
    floor_waggle->removeThinker();
-   NetSectorThinkers.remove(floor_waggle);
 }
 
 //
@@ -2302,14 +2238,8 @@ void FloorWaggleThinker::Think()
    fixed_t dist;
    extern fixed_t FloatBobOffsets[64];
 
-   if(inactive)
+   if(!startThinking())
       return;
-
-   if(!prediction_index)
-      prediction_index = cl_current_world_index;
-
-   if(CS_SERVER)
-      SectorMovementThinker::storeCurrentStatus();
 
    switch(this->state)
    {
@@ -2333,10 +2263,7 @@ void FloorWaggleThinker::Think()
          T_MovePlane(this->sector, abs(dist), destheight, 8, 0, 
                      destheight >= this->sector->floorheight ? plat_down : plat_up);
 
-         if(serverside)
-            P_RemoveFloorWaggle(this);
-         else // [CG] Just set inactive if not serverside.
-            inactive = prediction_index;
+         P_RemoveFloorWaggle(this);
 
          return;
       }
@@ -2360,23 +2287,15 @@ void FloorWaggleThinker::Think()
    T_MovePlane(this->sector, abs(dist), destheight, 8, 0,
                destheight >= this->sector->floorheight ? plat_up : plat_down);
 
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
+   finishThinking();
 }
 
 //
-// FloorWaggleThinker::serialize
+// FloorWaggleThinker::statusChanged()
 //
-// Saves/loads a FloorWaggleThinker thinker.
+// Returns true if the floor waggle's status has changed since it was last
+// saved (stored in the protected current_status member).
 //
-void FloorWaggleThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   arc << originalHeight << accumulator << accDelta << targetScale
-       << scale << scaleDelta << ticker << state;
-}
-
 bool FloorWaggleThinker::statusChanged()
 {
    if(originalHeight == current_status.floorwaggle_data.originalHeight &&
@@ -2394,48 +2313,30 @@ bool FloorWaggleThinker::statusChanged()
    return true;
 }
 
-void FloorWaggleThinker::storeStatusUpdate(cs_sector_thinker_data_t *data)
-
+//
+// FloorWaggleThinker::loadStatusData
+//
+// Loads status from a net-safe struct.
+//
+void FloorWaggleThinker::loadStatusData(cs_sector_thinker_data_t *data)
 {
-   latest_status.floorwaggle_data.net_id =
-      data->floorwaggle_data.net_id;
-   latest_status.floorwaggle_data.originalHeight =
-      data->floorwaggle_data.originalHeight;
-   latest_status.floorwaggle_data.accumulator =
-      data->floorwaggle_data.accumulator;
-   latest_status.floorwaggle_data.accDelta =
-      data->floorwaggle_data.accDelta;
-   latest_status.floorwaggle_data.targetScale =
-      data->floorwaggle_data.targetScale;
-   latest_status.floorwaggle_data.scale =
-      data->floorwaggle_data.scale;
-   latest_status.floorwaggle_data.scaleDelta =
-      data->floorwaggle_data.scaleDelta;
-   latest_status.floorwaggle_data.ticker =
-      data->floorwaggle_data.ticker;
-   latest_status.floorwaggle_data.state =
-      data->floorwaggle_data.state;
-}
-
-void FloorWaggleThinker::loadStoredStatusUpdate()
-{
-   net_id         = latest_status.floorwaggle_data.net_id;
-   originalHeight = latest_status.floorwaggle_data.originalHeight;
-   accumulator    = latest_status.floorwaggle_data.accumulator;
-   accDelta       = latest_status.floorwaggle_data.accDelta;
-   targetScale    = latest_status.floorwaggle_data.targetScale;
-   scale          = latest_status.floorwaggle_data.scale;
-   scaleDelta     = latest_status.floorwaggle_data.scaleDelta;
-   ticker         = latest_status.floorwaggle_data.ticker;
-   state          = latest_status.floorwaggle_data.state;
+   net_id         = data->floorwaggle_data.net_id;
+   originalHeight = data->floorwaggle_data.originalHeight;
+   accumulator    = data->floorwaggle_data.accumulator;
+   accDelta       = data->floorwaggle_data.accDelta;
+   targetScale    = data->floorwaggle_data.targetScale;
+   scale          = data->floorwaggle_data.scale;
+   scaleDelta     = data->floorwaggle_data.scaleDelta;
+   ticker         = data->floorwaggle_data.ticker;
+   state          = data->floorwaggle_data.state;
 }
 
 //
-// FloorWaggleThinker::netSerialize
+// FloorWaggleThinker::dumpStatusData
 //
-// Saves data into a net-safe struct.
+// Serializes status data into a net-safe struct.
 //
-void FloorWaggleThinker::netSerialize(cs_sector_thinker_data_t *data)
+void FloorWaggleThinker::dumpStatusData(cs_sector_thinker_data_t *data)
 {
    data->floorwaggle_data.net_id         = net_id;
    data->floorwaggle_data.originalHeight = originalHeight;
@@ -2449,33 +2350,35 @@ void FloorWaggleThinker::netSerialize(cs_sector_thinker_data_t *data)
 }
 
 //
-// FloorWaggleThinker::netUpdate
+// FloorWaggleThinker::copyStatusData
 //
-// Updates from a net-safe struct.
+// Copies status data from one net-safe struct to another.
 //
-void FloorWaggleThinker::netUpdate(uint32_t index,
-                                   cs_sector_thinker_data_t *data)
+void FloorWaggleThinker::copyStatusData(cs_sector_thinker_data_t *dest,
+                                        cs_sector_thinker_data_t *src)
 {
-   SectorMovementThinker::netUpdate(index, data);
-   loadStatusData(data);
+  dest->floorwaggle_data.net_id         = src->floorwaggle_data.net_id;
+  dest->floorwaggle_data.originalHeight = src->floorwaggle_data.originalHeight;
+  dest->floorwaggle_data.accumulator    = src->floorwaggle_data.accumulator;
+  dest->floorwaggle_data.accDelta       = src->floorwaggle_data.accDelta;
+  dest->floorwaggle_data.targetScale    = src->floorwaggle_data.targetScale;
+  dest->floorwaggle_data.scale          = src->floorwaggle_data.scale;
+  dest->floorwaggle_data.scaleDelta     = src->floorwaggle_data.scaleDelta;
+  dest->floorwaggle_data.ticker         = src->floorwaggle_data.ticker;
+  dest->floorwaggle_data.state          = src->floorwaggle_data.state;
 }
 
 //
-// FloorWaggleThinker::loadStatusData
+// FloorWaggleThinker::serialize
 //
-// Updates from a net-safe struct.
+// Saves/loads a FloorWaggleThinker thinker.
 //
-void FloorWaggleThinker::loadStatusData(cs_sector_thinker_data_t *data)
+void FloorWaggleThinker::serialize(SaveArchive &arc)
 {
-   net_id         = data->floorwaggle_data.net_id;
-   originalHeight = data->floorwaggle_data.originalHeight;
-   accumulator    = data->floorwaggle_data.accumulator;
-   accDelta       = data->floorwaggle_data.accDelta;
-   targetScale    = data->floorwaggle_data.targetScale;
-   scale          = data->floorwaggle_data.scale;
-   scaleDelta     = data->floorwaggle_data.scaleDelta;
-   ticker         = data->floorwaggle_data.ticker;
-   state          = data->floorwaggle_data.state;
+   Super::serialize(arc);
+
+   arc << originalHeight << accumulator << accDelta << targetScale
+       << scale << scaleDelta << ticker << state;
 }
 
 //

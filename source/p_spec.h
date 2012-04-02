@@ -31,6 +31,8 @@
 // Required for: Thinker
 #include "p_tick.h"
 
+#include "m_queue.h" // [CG] Required for SectorMovementThinkers
+
 #include "cs_spec.h" // [CG] Required for SectorMovementThinkers
 
 struct line_t;
@@ -614,22 +616,33 @@ public:
 
 };
 
+struct cs_queued_sector_thinker_data_t
+{
+   mqueueitem_t mqitem;
+   uint32_t index;
+   cs_sector_thinker_data_t data;
+};
+
 // [CG] Base class for sector movement action types.
 class SectorMovementThinker : public SectorThinker
 {
    DECLARE_THINKER_TYPE(SectorMovementThinker, SectorThinker)
 
 protected:
+   bool predicting;
+   bool repredicting;
    uint32_t prediction_index;
-   uint32_t latest_status_index;
-   cs_sector_thinker_data_t latest_status;
    cs_sector_thinker_data_t current_status;
-   cs_sector_thinker_data_t pre_reprediction_status;
+   mqueue_t status_queue;
 
    virtual bool statusChanged() { return false; }
-   virtual void storeCurrentStatus();
    virtual void loadStatusData(cs_sector_thinker_data_t *data) {}
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data) {}
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data) {}
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src) {}
+   virtual bool startThinking();
+   virtual void finishThinking();
+   virtual void savePredictedStatus();
 
 public:
    uint32_t net_id;
@@ -637,14 +650,25 @@ public:
    uint32_t inactive;
 
    SectorMovementThinker()
-      : SectorThinker(), latest_status_index(0), net_id(0), removed(0),
-                         inactive(0) {}
-   virtual void loadStoredStatusUpdate() {}
-   virtual void netSerialize(cs_sector_thinker_data_t *data) {};
-   virtual void storePreRePredictionStatus();
-   virtual void loadPreRePredictionStatus();
+      : SectorThinker(), predicting(false), repredicting(false), net_id(0),
+                         removed(0), inactive(0)
+   {
+      M_QueueInit(&status_queue);
+   }
+
+   ~SectorMovementThinker() { M_QueueFree(&status_queue); }
+
+   virtual void netSerialize(cs_sector_thinker_data_t *data);
    virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
-   void Predict(uint32_t index);
+   virtual void logStatus(cs_sector_thinker_data_t *data) {}
+
+   void clearOldUpdates(uint32_t index);
+   void loadStatusFor(uint32_t index);
+   void RePredict(uint32_t index);
+   void Predict();
+   void setInactive();
+   bool isPredicting();
+   bool isRePredicting();
 };
 
 // p_switch
@@ -795,19 +819,15 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void logStatus(cs_sector_thinker_data_t *data);
 
    // Data Members
    fixed_t speed;
@@ -851,19 +871,14 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    int type;
@@ -926,19 +941,14 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    int type;
@@ -1001,19 +1011,14 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
 
    // Data Members
    int type;
@@ -1079,18 +1084,13 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
    
    // Data Members
    int type;
@@ -1111,18 +1111,13 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
    
    // Data Members
    int ceilingSpeed;
@@ -1155,18 +1150,13 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
-   virtual void storeStatusUpdate(cs_sector_thinker_data_t *data);
+   virtual void dumpStatusData(cs_sector_thinker_data_t *data);
+   virtual void copyStatusData(cs_sector_thinker_data_t *dest,
+                               cs_sector_thinker_data_t *src);
 
 public:
-   uint32_t net_id;
-   uint32_t removed;
-   uint32_t inactive;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void loadStoredStatusUpdate();
-   virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
    
    // Data Members
    fixed_t originalHeight;
@@ -1542,14 +1532,15 @@ void P_RemoveAllActivePlats(void);    // killough
 
 void P_ActivateInStasis(int tag);
 
-void P_PlatSequence(sector_t *s, const char *seqname);
+void P_PlatSequence(PlatThinker *plat, const char *seqname);
 
 PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                              plattype_e type);
 
 // p_doors
 
-void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haleyjd
+void P_DoorSequence(VerticalDoorThinker *door, bool raise, bool turbo,
+                    bool bounced); // haleyjd
 
 void P_RemoveDoor(VerticalDoorThinker *door);
 
@@ -1565,7 +1556,7 @@ VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec);
 VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
 // p_floor
-void P_FloorSequence(sector_t *s);
+void P_FloorSequence(SectorMovementThinker *thinker);
 
 void P_RemoveFloor(FloorMoveThinker *floor);
 
@@ -1611,7 +1602,7 @@ void P_RemoveActiveCeiling(CeilingThinker *c);
 
 int P_ActivateInStasisCeiling(line_t *line);
 
-void P_CeilingSequence(sector_t *s, int noiseLevel);
+void P_CeilingSequence(CeilingThinker *ceiling, int noiseLevel);
 
 Mobj *P_GetPushThing(int);                                // phares 3/23/98
 
