@@ -27,8 +27,8 @@
 #include "z_zone.h"
 #include "cs_netid.h"
 
-NetIDLookup<Mobj>                  NetActors;
-NetIDLookup<SectorMovementThinker> NetSectorThinkers;
+NetIDLookup<Mobj>          NetActors;
+NetIDLookup<SectorThinker> NetSectorThinkers;
 
 void CS_ClearNetIDs(void)
 {

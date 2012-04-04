@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -104,12 +104,12 @@ static void MN_InitSearchStr(void);
 void MN_InitMenus(void)
 {
    int i; // haleyjd
-   
+
    mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
    mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
    mn_wadname  = Z_Strdup("", PU_STATIC, 0);
    mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
-   
+
    // haleyjd: initialize via zone memory
    for(i = 0; i < SAVESLOTS; ++i)
    {
@@ -141,7 +141,7 @@ void MN_InitMenus(void)
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
-   V_DrawPatch(94, 2, &vbscreen, 
+   V_DrawPatch(94, 2, &vbscreen,
                PatchLoader::CacheName(wGlobalDir, "M_DOOM", PU_CACHE));
 }
 
@@ -196,8 +196,8 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
       return;
 
    lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
-   
-   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
+
+   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
       C_Printf(FC_ERROR "level not found\a\n");
    else
    {
@@ -233,7 +233,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       MN_StartMenu(mn_episode_override);
       return;
    }
-   
+
    if(GameModeInfo->id == commercial)
    {
       // determine startmap presence and origin
@@ -244,8 +244,8 @@ CONSOLE_COMMAND(mn_newgame, 0)
       // if lump not found or the game is modified and the
       // lump comes from the first loaded wad, consider it not
       // present -- FIXME: this assumes the resource wad is loaded first.
-      if(startMapLump < 0 || 
-         (modifiedgame && 
+      if(startMapLump < 0 ||
+         (modifiedgame &&
           lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
 
@@ -256,8 +256,8 @@ CONSOLE_COMMAND(mn_newgame, 0)
          if(use_startmap == -1)              // not asked yet
             MN_StartMenu(&menu_startmap);
          else
-         {  
-            // use start map 
+         {
+            // use start map
             G_DeferedInitNew((skill_t)(defaultskill - 1), "START");
             MN_ClearMenus();
          }
@@ -270,7 +270,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       // hack -- cut off thy flesh consumed if not retail
       if(GameModeInfo->id != retail)
          menu_episode.menuitems[3].type = it_end;
-      
+
       MN_StartMenu(&menu_episode);
    }
 }
@@ -297,7 +297,7 @@ void MN_QuitDoom(void)
       source = endmsg[quitmsgnum];
 
    psnprintf(quitmsg, sizeof(quitmsg), "%s\n\n%s", source, DEH_String("DOSY"));
-   
+
    MN_Question(quitmsg, "quit");
 }
 
@@ -316,7 +316,7 @@ CONSOLE_COMMAND(mn_quit, 0)
 
 static void MN_EpisodeDrawer()
 {
-   V_DrawPatch(54, 38, &vbscreen, 
+   V_DrawPatch(54, 38, &vbscreen,
                PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
 }
 
@@ -348,15 +348,15 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
       C_Printf("usage: mn_episode <epinum>\n");
       return;
    }
-   
+
    start_episode = Console.argv[0]->toInt();
-   
+
    if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
       MN_Alert("%s", DEH_String("SWSTRING"));
       return;
    }
-   
+
    MN_StartMenu(&menu_newgame);
 }
 
@@ -373,7 +373,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
 static void MN_openNewGameMenu(void)
 {
    extern menu_t menu_newgame; // actually just right below...
-   
+
    // start on defaultskill setting
    menu_newgame.selected = defaultskill - 1;
 }
@@ -383,9 +383,9 @@ static void MN_openNewGameMenu(void)
 //
 static void MN_DrawNewGame()
 {
-   V_DrawPatch(96, 14, &vbscreen, 
+   V_DrawPatch(96, 14, &vbscreen,
                PatchLoader::CacheName(wGlobalDir, "M_NEWG", PU_CACHE));
-   V_DrawPatch(54, 38, &vbscreen, 
+   V_DrawPatch(54, 38, &vbscreen,
                PatchLoader::CacheName(wGlobalDir, "M_SKILL", PU_CACHE));
 }
 
@@ -432,16 +432,16 @@ static void MN_DoNightmare(void)
       // start on first level of selected episode
       G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   
+
    MN_ClearMenus();
 }
 
 CONSOLE_COMMAND(newgame, cf_notnet)
 {
    int skill = gameskill;
-   
+
    // skill level is argv 0
-   
+
    if(Console.argc)
       skill = Console.argv[0]->toInt();
 
@@ -461,7 +461,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
          G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
-   {  
+   {
       // haleyjd 03/02/03: changed to use startOnNewMap config variable
       // start on newest level from wad
       G_DeferedInitNew((skill_t)skill, firstlevel);
@@ -471,7 +471,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
       // start on first level of selected episode
       G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
-   
+
    MN_ClearMenus();
 }
 
@@ -500,7 +500,7 @@ menu_t menu_startmap =
    NULL, NULL, NULL,     // pages
    40, 15,               // x,y offsets
    7,                    // starting item: start map
-   mf_leftaligned | mf_background, 
+   mf_leftaligned | mf_background,
 };
 
 const char *str_startmap[] = {"ask", "no", "yes"};
@@ -565,7 +565,7 @@ static menuitem_t mn_cs_demos_items[] =
    {it_end}
 };
 
-menu_t menu_demos = 
+menu_t menu_demos =
 {
    mn_demos_items,    // menu items
    NULL,              // previous page
@@ -579,7 +579,7 @@ menu_t menu_demos =
    mn_demo_pages,
 };
 
-menu_t menu_cs_demos = 
+menu_t menu_cs_demos =
 {
    mn_cs_demos_items, // menu items
    &menu_demos,       // previous page
@@ -673,7 +673,7 @@ static menuitem_t mn_wadiwad1_items[] =
    {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
    {it_gap},
    {it_info,     FC_GOLD "IWAD Paths - DOOM", NULL,               NULL, MENUITEM_CENTERED },
-   {it_gap}, 
+   {it_gap},
    {it_variable, "DOOM (SW):",          "iwad_doom_shareware",    NULL, MENUITEM_LALIGNED },
    {it_variable, "DOOM (Reg):",         "iwad_doom",              NULL, MENUITEM_LALIGNED },
    {it_variable, "Ultimate DOOM:",      "iwad_ultimate_doom",     NULL, MENUITEM_LALIGNED },
@@ -689,7 +689,7 @@ static menuitem_t mn_wadiwad2_items[] =
    {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
    {it_gap},
    {it_info,     FC_GOLD "IWAD Paths - Raven", NULL,              NULL, MENUITEM_CENTERED },
-   {it_gap}, 
+   {it_gap},
    {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic (Reg):",      "iwad_heretic",           NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      NULL, MENUITEM_LALIGNED },
@@ -701,7 +701,7 @@ static menuitem_t mn_wadiwad3_items[] =
    {it_title,    FC_GOLD "Wad Options", NULL,           "M_WADOPT"},
    {it_gap},
    {it_info,     FC_GOLD "IWAD Paths - Freedoom", NULL,  NULL, MENUITEM_CENTERED },
-   {it_gap}, 
+   {it_gap},
    {it_variable, "Freedoom:",          "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
    {it_variable, "Ultimate Freedoom:", "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
    {it_variable, "FreeDM:",            "iwad_freedm",    NULL, MENUITEM_LALIGNED },
@@ -711,12 +711,12 @@ static menuitem_t mn_wadiwad3_items[] =
 menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
-   NULL, 
+   NULL,
    &menu_wadmisc,               // pages
    &menu_loadwad,               // rootpage
    120, 15,                     // x,y offsets
    4,                           // starting item
-   mf_background,               // full screen 
+   mf_background,               // full screen
    NULL,
    mn_wad_names,
    mn_wad_pages,
@@ -782,7 +782,7 @@ VARIABLE_STRING(mn_wadname,  NULL,       UL);
 CONSOLE_VARIABLE(mn_wadname, mn_wadname,  0) {}
 
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
-{   
+{
    MN_StartMenu(&menu_loadwad);
 }
 
@@ -790,7 +790,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 {
    char *filename = NULL;
 
-   // haleyjd 03/12/06: this is much more resilient than the 
+   // haleyjd 03/12/06: this is much more resilient than the
    // chain of console commands that was used by SMMU
 
    // haleyjd: generalized to all shareware modes
@@ -866,7 +866,7 @@ static menuitem_t mn_gamesettings_items[] =
 menu_t menu_gamesettings =
 {
    mn_gamesettings_items,
-   NULL, 
+   NULL,
    &menu_advanced,               // pages
    &menu_gamesettings,           // rootpage
    164, 15,
@@ -882,12 +882,12 @@ VARIABLE_STRING(startlevel,    NULL,   9);
 CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
 {
    const char *newvalue;
-   
+
    if(!Console.argc)
       return;
-   
+
    newvalue = Console.argv[0]->constPtr();
-   
+
    // check for a valid level
    if(W_CheckNumForName(newvalue) == -1)
       MN_ErrorMsg("level not found");
@@ -929,7 +929,7 @@ static menuitem_t mn_advanced_items[] =
 menu_t menu_advanced =
 {
    mn_advanced_items,
-   &menu_gamesettings, 
+   &menu_gamesettings,
    &menu_dmflags,                // pages
    &menu_gamesettings,           // rootpage
    200, 15,
@@ -975,7 +975,7 @@ static menuitem_t mn_dmflags_items[] =
 menu_t menu_dmflags =
 {
    mn_dmflags_items,
-   &menu_advanced, 
+   &menu_advanced,
    &menu_chatmacros,   // pages
    &menu_gamesettings, // rootpage
    200, 15,
@@ -1012,12 +1012,12 @@ static void MN_DMFlagsDrawer(void)
    for(i = 2; i < 8; i++)
    {
       menuitem = &(menu_dmflags.menuitems[i]);
-                  
+
       V_FontWriteTextColored
         (
          menu_font,
          values[!(dmflags & (1<<(i-2)))],
-         (i == menu_dmflags.selected) ? 
+         (i == menu_dmflags.selected) ?
             GameModeInfo->selectColor : GameModeInfo->variableColor,
          menuitem->x + 20, menuitem->y
         );
@@ -1092,7 +1092,7 @@ static menuitem_t mn_chatmacros_items[] =
 menu_t menu_chatmacros =
 {
    mn_chatmacros_items,
-   &menu_dmflags, 
+   &menu_dmflags,
    NULL,                                 // pages
    &menu_gamesettings,                   // rootpage
    25, 15,                               // x, y offset
@@ -1112,6 +1112,40 @@ CONSOLE_COMMAND(mn_chatmacros, 0)
 
 /////////////////////////////////////////////////////////////////
 //
+// C/S Network Settings
+//
+
+static menuitem_t mn_cs_network_settings_items[] =
+{
+   {it_title,    FC_GOLD"Client/Server Network Settings"},
+   {it_gap},
+   {it_toggle,   "packet buffer",             "packet_buffer"},
+   {it_variable, "packet buffer size",        "packet_buffer_size"},
+   {it_toggle,   "reliable commands",         "reliable_commands"},
+   {it_variable, "command bundle size",       "command_bundle_size"},
+   {it_toggle,   "predict shots",             "predict_shots"},
+   {it_toggle,   "predict sector activation", "predict_sector_activation"},
+   {it_gap},
+   {it_end}
+};
+
+menu_t menu_cs_network_settings =
+{
+   mn_cs_network_settings_items,
+   NULL, NULL, NULL,                     // pages
+   150, 5,                               // x, y offset
+   2,                                    // chatmacro0 at start
+   mf_background,                        // full-screen
+   NULL,
+};
+
+CONSOLE_COMMAND(mn_clientservernetworkoptions, 0)
+{
+   MN_StartMenu(&menu_cs_network_settings);
+}
+
+/////////////////////////////////////////////////////////////////
+//
 // Player Setup
 //
 
@@ -1124,9 +1158,6 @@ static menuitem_t mn_player_items[] =
    {it_variable,       "player name",          "name"},
    {it_toggle,         "player colour",        "colour"},
    {it_toggle,         "handedness",           "lefthanded"},
-   {it_toggle,         "packet buffer",        "packet_buffer"},
-   {it_variable,       "packet buffer size",   "packet_buffer_size"},
-   {it_toggle,         "reliable commands",    "reliable_commands"},
    {it_toggle,         "player skin",          "skin"},
    {it_runcmd,         "skin viewer...",       "skinviewer"},
    {it_gap},
@@ -1161,17 +1192,17 @@ void MN_PlayerDrawer(void)
    // haleyjd 08/15/02
    if(!(sprdef->spriteframes))
       return;
-  
+
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[1];
-   
+
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
 
    w    = patch->width;
    h    = patch->height;
    toff = patch->topoffset;
    loff = patch->leftoffset;
-   
+
    V_DrawBox(SPRITEBOX_X, SPRITEBOX_Y, w + 16, h + 16);
 
    // haleyjd 01/12/04: changed translation handling
@@ -1214,22 +1245,22 @@ patch_t *patch_left, *patch_mid, *patch_right;
 
 void MN_SaveGame(void)
 {
-   int save_slot = 
+   int save_slot =
       (char **)(Console.command->variable->variable) - savegamenames;
-   
-   if(gamestate != GS_LEVEL) 
+
+   if(gamestate != GS_LEVEL)
       return; // only save in level
-   
+
    if(save_slot < 0 || save_slot >= SAVESLOTS)
       return; // sanity check
-   
+
    G_SaveGame(save_slot, savegamenames[save_slot]);
    MN_ClearMenus();
-   
+
    // haleyjd 02/23/02: restored from MBF
    if(quickSaveSlot == -2)
       quickSaveSlot = save_slot;
-   
+
    // haleyjd: keep track of valid saveslots
    savegamepresent[save_slot] = true;
 
@@ -1247,7 +1278,7 @@ void MN_CreateSaveCmds(void)
    //                    heap - see initializers above in MN_InitMenus
 
    int i;
-   
+
    for(i=0; i<SAVESLOTS; i++)  // haleyjd
    {
       command_t *save_command;
@@ -1262,10 +1293,10 @@ void MN_CreateSaveCmds(void)
       save_variable->min = 0;
       save_variable->max = SAVESTRINGSIZE;
       save_variable->defines = NULL;
-      
+
       // now the command
       save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
-      
+
       sprintf(tempstr, "savegame_%i", i);
       save_command->name = estrdup(tempstr);
       save_command->type = ct_variable;
@@ -1273,7 +1304,7 @@ void MN_CreateSaveCmds(void)
       save_command->variable = save_variable;
       save_command->handler = MN_SaveGame;
       save_command->netcmd = 0;
-      
+
       (C_AddCommand)(save_command); // hook into cmdlist
    }
 }
@@ -1287,7 +1318,7 @@ void MN_CreateSaveCmds(void)
 void MN_ReadSaveStrings(void)
 {
    int i;
-   
+
    for(i = 0; i < SAVESLOTS; i++)
    {
       char *name = NULL;    // killough 3/22/98
@@ -1328,20 +1359,20 @@ void MN_ReadSaveStrings(void)
 void MN_DrawLoadBox(int x, int y)
 {
    int i;
-   
+
    patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
    patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
    V_DrawPatch(x, y, &vbscreen, patch_left);
    x += patch_left->width;
-   
+
    for(i=0; i<24; i++)
    {
       V_DrawPatch(x, y, &vbscreen, patch_mid);
       x += patch_mid->width;
    }
-   
+
    V_DrawPatch(x, y, &vbscreen, patch_right);
 
    // haleyjd: make purgable
@@ -1394,12 +1425,12 @@ void MN_LoadGameDrawer(void)
 
    if(!emptystr)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
-   
+
    for(i = 0, y = 46; i < SAVESLOTS; ++i, y += 16) // haleyjd
    {
       MN_DrawLoadBox(45, y);
    }
-   
+
    // this is lame
    for(i = 0, y = 2; i < SAVESLOTS; ++i, y += 2)  // haleyjd
    {
@@ -1415,7 +1446,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
       MN_Alert("%s", DEH_String("LOADNET"));
       return;
    }
-   
+
    // haleyjd 02/23/02: restored from MBF
    if(demorecording) // killough 5/26/98: exclude during demo recordings
    {
@@ -1423,7 +1454,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
                "while recording a demo!\n\n"PRESSKEY);
       return;
    }
-   
+
    MN_ReadSaveStrings();  // get savegame descriptions
    MN_StartMenu(GameModeInfo->loadMenu);
 }
@@ -1433,12 +1464,12 @@ CONSOLE_COMMAND(mn_load, 0)
    char *name;     // killough 3/22/98
    int slot;
    size_t len;
-   
+
    if(Console.argc < 1)
       return;
-   
+
    slot = Console.argv[0]->toInt();
-   
+
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])
    {
@@ -1447,10 +1478,10 @@ CONSOLE_COMMAND(mn_load, 0)
    }
 
    len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-   
+
    G_SaveGameName(name, len, slot);
    G_LoadGame(name, slot, false);
-   
+
    MN_ClearMenus();
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
@@ -1463,7 +1494,7 @@ CONSOLE_COMMAND(mn_load, 0)
 CONSOLE_COMMAND(quickload, 0)
 {
    char tempstring[80];
-   
+
    if(netgame && !demoplayback)
    {
       MN_Alert("%s", DEH_String("QLOADNET"));
@@ -1482,8 +1513,8 @@ CONSOLE_COMMAND(quickload, 0)
       MN_Alert("%s", DEH_String("QSAVESPOT"));
       return;
    }
-   
-   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT, 
+
+   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT,
              savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qload");
 }
@@ -1494,7 +1525,7 @@ CONSOLE_COMMAND(qload, cf_hidden)
    size_t len;
 
    len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-   
+
    G_SaveGameName(name, len, quickSaveSlot);
    G_LoadGame(name, quickSaveSlot, false);
 }
@@ -1509,7 +1540,7 @@ CONSOLE_COMMAND(qload, cf_hidden)
 void MN_SaveGameDrawer(void)
 {
    int i, y;
-   
+
    for(i = 0, y = 46; i < SAVESLOTS; i++, y += 16) // haleyjd
    {
       MN_DrawLoadBox(45, y);
@@ -1538,7 +1569,7 @@ static menuitem_t mn_savegame_items[] =
    {it_end}
 };
 
-menu_t menu_savegame = 
+menu_t menu_savegame =
 {
    mn_savegame_items,
    NULL, NULL, NULL,                 // pages
@@ -1551,18 +1582,18 @@ menu_t menu_savegame =
 CONSOLE_COMMAND(mn_savegame, 0)
 {
    // haleyjd 02/23/02: restored from MBF
-   // killough 10/6/98: allow savegames during single-player demo 
+   // killough 10/6/98: allow savegames during single-player demo
    // playback
-   
+
    if(!usergame && (!demoplayback || netgame))
    {
       MN_Alert("%s", DEH_String("SAVEDEAD")); // Ty 03/27/98 - externalized
       return;
    }
-   
+
    if(gamestate != GS_LEVEL)
       return;    // only save in levels
-   
+
    MN_ReadSaveStrings();
 
    MN_StartMenu(GameModeInfo->saveMenu);
@@ -1579,10 +1610,10 @@ CONSOLE_COMMAND(quicksave, 0)
       S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
       return;
    }
-   
+
    if(gamestate != GS_LEVEL)
       return;
-  
+
    if(quickSaveSlot < 0)
    {
       quickSaveSlot = -2; // means to pick a slot now
@@ -1590,8 +1621,8 @@ CONSOLE_COMMAND(quicksave, 0)
       MN_StartMenu(GameModeInfo->saveMenu);
       return;
    }
-   
-   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT, 
+
+   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
              savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qsave");
 }
@@ -1652,27 +1683,28 @@ static menuitem_t mn_optionsp2_items[] =
    {it_title,  FC_GOLD "options",        NULL,             "M_OPTION"},
    {it_gap},
    {it_info,   FC_GOLD "multiplayer"},
-   {it_runcmd, "player setup",           "mn_player"  },
-   {it_runcmd, "game settings",          "mn_gset"    },
+   {it_runcmd, "player setup",           "mn_player"                     },
+   {it_runcmd, "game settings",          "mn_gset"                       },
+   {it_runcmd, "client/server options",  "mn_clientservernetworkoptions" },
    {it_gap},
    {it_info,   FC_GOLD "game files"},
-   {it_runcmd, "wad options",            "mn_loadwad" },
-   {it_runcmd, "demo settings",          "mn_demos"   },
-   {it_runcmd, "configuration",          "mn_config"  },
+   {it_runcmd, "wad options",            "mn_loadwad"                    },
+   {it_runcmd, "demo settings",          "mn_demos"                      },
+   {it_runcmd, "configuration",          "mn_config"                     },
    {it_gap},
    {it_info,   FC_GOLD "menus"},
-   {it_runcmd, "menu options",           "mn_menus"   },
-   {it_runcmd, "custom menu",            "mn_dynamenu _MN_Custom" },
+   {it_runcmd, "menu options",           "mn_menus"                      },
+   {it_runcmd, "custom menu",            "mn_dynamenu _MN_Custom"        },
    {it_gap},
    {it_info,   FC_GOLD "information"},
-   {it_runcmd, "about eternity",         "credits"    },
+   {it_runcmd, "about eternity",         "credits"                       },
    {it_end}
 };
 
 menu_t menu_options =
 {
    mn_options_items,
-   NULL, 
+   NULL,
    &menu_optionsp2,                      // pages
    &menu_options,                        // rootpage
    100, 15,                              // x,y offsets
@@ -1765,7 +1797,7 @@ static const char *legacyModes[] =
    "640x480",  // VGA
    "960x600",  // x3
    "960x720",  // x3 with aspect ratio correction
-   "1280x960", // x4 with aspect ratio correction  
+   "1280x960", // x4 with aspect ratio correction
    NULL
 };
 
@@ -1844,7 +1876,7 @@ static const char *sixteenNineModes[] =
 {
    "854x480",   // WVGA
    "1280x720",  // HD720
-   "1360x768",  
+   "1360x768",
    "1440x810",
    "1600x900",  // HD+
    "1920x1080", // HD1080
@@ -1853,7 +1885,7 @@ static const char *sixteenNineModes[] =
 };
 
 // FIXME/TODO: Not supported as menu choices yet:
-// 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
+// 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080
 // 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
 // These are not choices here because EE doesn't support them properly yet.
 // Weapons will float above the status bar in these aspect ratios.
@@ -1865,7 +1897,7 @@ static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
    fourThreeModes,   // 4:3 (standard CRT)
    threeTwoModes,    // 3:2 (similar to European TV)
    sixteenTenModes,  // 16:10, common LCD widescreen monitors
-   fiveThreeModes,   // 5:3 
+   fiveThreeModes,   // 5:3
    wsvgaModes,       // 128:75 (or 16:9.375), common netbook resolution
    sixteenNineModes  // 16:9, consumer HD widescreen TVs/monitors
 };
@@ -1938,10 +1970,10 @@ static void MN_BuildVidmodeTables(void)
 
       // set the mode description
       mn_vidmode_desc[i] = description.duplicate(PU_STATIC);
-      
+
       cmd  = "i_videomode ";
       cmd += description;
-      
+
       mn_vidmode_cmds[i] = cmd.duplicate(PU_STATIC);
    }
 
@@ -1954,8 +1986,8 @@ CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
    MN_BuildVidmodeTables();
 
-   MN_SetupBoxWidget("Choose a Video Mode", 
-                     (const char **)mn_vidmode_desc, 1, NULL, 
+   MN_SetupBoxWidget("Choose a Video Mode",
+                     (const char **)mn_vidmode_desc, 1, NULL,
                      (const char **)mn_vidmode_cmds);
    MN_ShowBoxWidget();
 }
@@ -2001,7 +2033,7 @@ static menuitem_t mn_video_items[] =
    {it_toggle,       "favorite screen mode",    "mn_favscreentype"     },
    //{it_runcmd,       "make default video mode", "i_default_videomode"  },
    {it_toggle,       "vertical sync",           "v_retrace"            },
-   {it_slider,       "gamma correction",        "gamma"                },   
+   {it_slider,       "gamma correction",        "gamma"                },
    {it_gap},
    {it_info,         FC_GOLD "Rendering"                               },
    {it_slider,       "screen size",             "screensize"           },
@@ -2038,16 +2070,16 @@ void MN_VideoModeDrawer(void)
    // don't draw anything before the menu has been initialized
    if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
       return;
-   
+
    sprdef = &sprites[states[frame]->sprite];
    // haleyjd 08/15/02
    if(!(sprdef->spriteframes))
       return;
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[0];
-   
+
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   
+
    // approximately center box on "translucency" item in menu
    y = menu_video.menuitems[13].y - 5;
    V_DrawBox(270, y, 20, 20);
@@ -2372,7 +2404,7 @@ extern int numJoysticks;
 static void MN_BuildJSTables(void)
 {
    static bool menu_built = false;
-   
+
    // don't build multiple times
    if(!menu_built)
    {
@@ -2380,14 +2412,14 @@ static void MN_BuildJSTables(void)
       char tempstr[20];
 
       // allocate arrays
-      mn_js_desc = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *), 
+      mn_js_desc = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
                                             PU_STATIC, NULL));
       mn_js_cmds = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
                                             PU_STATIC, NULL));
-      
+
       mn_js_desc[0] = "none";
       mn_js_cmds[0] = "i_joystick -1";
-            
+
       for(jsnum = 0; jsnum < numJoysticks; ++jsnum)
       {
          mn_js_desc[jsnum+1] = joysticks[jsnum].description;
@@ -2396,7 +2428,7 @@ static void MN_BuildJSTables(void)
       }
       mn_js_desc[numJoysticks + 1] = NULL;
       mn_js_cmds[numJoysticks + 1] = NULL;
-          
+
       menu_built = true;
    }
 }
@@ -2413,7 +2445,7 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
    else
       drv_name = "none";
 
-   psnprintf(title, sizeof(title), 
+   psnprintf(title, sizeof(title),
              "choose a joystick\n\n  current device:\n  %s",
              drv_name);
 
@@ -2452,7 +2484,7 @@ menu_t menu_joystick =
 };
 
 CONSOLE_COMMAND(mn_joymenu, 0)
-{   
+{
    MN_StartMenu(&menu_joystick);
 }
 
@@ -2541,7 +2573,7 @@ static menuitem_t mn_hud_pg3_items[] =
 menu_t menu_hud =
 {
    mn_hud_items,
-   NULL, 
+   NULL,
    &menu_hud_pg2,         // next page
    &menu_hud,             // rootpage
    200, 15,               // x,y offset
@@ -2596,7 +2628,7 @@ static void MN_HUDPg2Drawer(void)
 
    if(xhairnum >= 0 && crosshairs[xhairnum] != -1)
       patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[xhairnum], PU_CACHE);
-  
+
    // approximately center box on "crosshair" item in menu
    y = menu_hud_pg2.menuitems[3].y - 5;
    V_DrawBox(270, y, 24, 24);
@@ -2608,8 +2640,8 @@ static void MN_HUDPg2Drawer(void)
       int16_t to = patch->topoffset;
       int16_t lo = patch->leftoffset;
 
-      V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
-                    y + 12 - (h >> 1) + to, 
+      V_DrawPatchTL(270 + 12 - (w >> 1) + lo,
+                    y + 12 - (h >> 1) + to,
                     &vbscreen, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
@@ -2749,7 +2781,7 @@ static menuitem_t mn_automapportal_items[] =
    {it_end},
 };
 
-menu_t menu_automapcol1 = 
+menu_t menu_automapcol1 =
 {
    mn_automapcolbgl_items,
    NULL,                   // previous page
@@ -2763,7 +2795,7 @@ menu_t menu_automapcol1 =
    mn_automap_pages,
 };
 
-menu_t menu_automapcol2 = 
+menu_t menu_automapcol2 =
 {
    mn_automapcoldoor_items,
    &menu_automapcol1,       // previous page
@@ -2777,7 +2809,7 @@ menu_t menu_automapcol2 =
    mn_automap_pages,
 };
 
-menu_t menu_automapcol3 = 
+menu_t menu_automapcol3 =
 {
    mn_automapcolsprite_items,
    &menu_automapcol2,         // previous page
@@ -2791,7 +2823,7 @@ menu_t menu_automapcol3 =
    mn_automap_pages,
 };
 
-menu_t menu_automap4 = 
+menu_t menu_automap4 =
 {
    mn_automapportal_items,
    &menu_automapcol3,         // previous page
@@ -2868,7 +2900,7 @@ static menuitem_t mn_weapons_items[] =
 menu_t menu_weapons =
 {
    mn_weapons_items,
-   NULL, 
+   NULL,
    &menu_weapons_pref,                  // next page
    &menu_weapons,                       // rootpage
    200, 15,                             // x,y offset
@@ -2950,7 +2982,7 @@ static menu_t *mn_compat_pages[] =
 static menuitem_t mn_compat1_items[] =
 {
    { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
-   { it_gap },   
+   { it_gap },
    { it_info,   FC_GOLD "Players", NULL, NULL, MENUITEM_CENTERED        },
    { it_toggle, "God mode is not absolute",            "comp_god"       },
    { it_toggle, "Powerup cheats are time limited",     "comp_infcheat"  },
@@ -2968,11 +3000,11 @@ static menuitem_t mn_compat1_items[] =
    { it_end }
 
 };
- 
+
 static menuitem_t mn_compat2_items[] =
-{ 
+{
    { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
-   { it_gap },   
+   { it_gap },
    { it_info,   FC_GOLD "Simulation",    NULL, NULL, MENUITEM_CENTERED   },
    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff"    },
    { it_toggle, "Actors never fall off ledges",        "comp_falloff"    },
@@ -3340,7 +3372,7 @@ static menuitem_t mn_function_items[] =
    {it_gap},
    {it_info,    FC_GOLD "game functions",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "save game",            "mn_savegame"}, 
+   {it_binding, "save game",            "mn_savegame"},
    {it_binding, "load game",            "mn_loadgame"},
    {it_binding, "volume",               "mn_sound"},
    {it_binding, "toggle hud",           "hu_overlay /"},
@@ -3597,7 +3629,7 @@ menu_t menu_clientserverdemokeys =
    mn_binding_contentpages,
 };
 
-menu_t menu_clientserverdemocheckpointkeys = 
+menu_t menu_clientserverdemocheckpointkeys =
 {
    mn_clientserverdemocheckpointkeys_items,
    &menu_clientserverdemokeys,              // previous page
@@ -3709,7 +3741,7 @@ CONSOLE_COMMAND(mn_search, 0)
       while(curPage)
       {
          int j = 0;
-         menuitem_t *item; 
+         menuitem_t *item;
 
          // run through items
          while((item = &(curPage->menuitems[j++])))
@@ -3727,7 +3759,7 @@ CONSOLE_COMMAND(mn_search, 0)
             {
                pastLast = true;
                continue;
-            }            
+            }
             if(!pastLast)
                continue;
 
@@ -3861,10 +3893,10 @@ CONSOLE_COMMAND(skinviewer, 0)
 // multiplayer standards.
 //
 // This feature I had planned for quite some time, but never seemed to find the
-// drive to work on it. Because Toke appreciated everything old-school, I 
-// thought it would be good to introduce this feature in the 3.33.50 version 
-// which is dedicated to his memory. This is a complete emulation of DOOM's 
-// original, minimal menu system without any of the fluff or access to new 
+// drive to work on it. Because Toke appreciated everything old-school, I
+// thought it would be good to introduce this feature in the 3.33.50 version
+// which is dedicated to his memory. This is a complete emulation of DOOM's
+// original, minimal menu system without any of the fluff or access to new
 // features that the normal menus provide.
 //
 // To Toke: We still miss ya, buddy, but I know you're somewhere having fun and
@@ -3897,7 +3929,7 @@ void MN_LinkClassicMenus(int link)
 }
 
 VARIABLE_BOOLEAN(mn_classic_menus, NULL, yesno);
-CONSOLE_VARIABLE(mn_classic_menus, mn_classic_menus, 0) 
+CONSOLE_VARIABLE(mn_classic_menus, mn_classic_menus, 0)
 {
    MN_LinkClassicMenus(mn_classic_menus);
 }
@@ -3968,7 +4000,7 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatch(60, 38, &vbscreen, 
+   V_DrawPatch(60, 38, &vbscreen,
                PatchLoader::CacheName(wGlobalDir, "M_SVOL", PU_CACHE));
 }
 
@@ -3994,7 +4026,7 @@ CONSOLE_COMMAND(mn_old_sound, 0)
 // MN_AddMenus
 //
 // Adds all menu system commands to the console command chains.
-// 
+//
 void MN_AddMenus(void)
 {
    C_AddCommand(mn_newgame);
@@ -4002,7 +4034,7 @@ void MN_AddMenus(void)
    C_AddCommand(startlevel);
    C_AddCommand(use_startmap);
    C_AddCommand(mn_start_mapname); // haleyjd 05/14/06
-   
+
    C_AddCommand(mn_loadgame);
    C_AddCommand(mn_load);
    C_AddCommand(mn_savegame);
@@ -4021,10 +4053,10 @@ void MN_AddMenus(void)
    C_AddCommand(mn_dfplyrdrop);
    C_AddCommand(mn_dfrespsupr);
    C_AddCommand(mn_dfinstagib);
-   
+
    // different connect types
    C_AddCommand(mn_gset);
-   
+
    C_AddCommand(mn_options);
    C_AddCommand(mn_mouse);
    C_AddCommand(mn_video);
@@ -4039,6 +4071,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_hud);
    C_AddCommand(mn_status);
    C_AddCommand(mn_automap);
+   C_AddCommand(mn_clientservernetworkoptions);
 
    C_AddCommand(mn_movekeys);
    C_AddCommand(mn_advkeys);
@@ -4052,7 +4085,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_clientserverdemokeys);
    C_AddCommand(mn_clientserverdemocheckpointkeys);
    C_AddCommand(newgame);
-   
+
    // prompt messages
    C_AddCommand(mn_quit);
    C_AddCommand(mn_endgame);
@@ -4063,13 +4096,13 @@ void MN_AddMenus(void)
    C_AddCommand(mn_search);
 
    C_AddCommand(mn_config);
-   
+
    // haleyjd: quicksave, quickload
    C_AddCommand(quicksave);
    C_AddCommand(quickload);
    C_AddCommand(qsave);
    C_AddCommand(qload);
-   
+
    // haleyjd 04/15/02: SDL joystick devices
 #ifdef _SDL_VER
    C_AddCommand(mn_joysticks);
@@ -4082,10 +4115,10 @@ void MN_AddMenus(void)
    C_AddCommand(mn_classic_menus);
    C_AddCommand(mn_old_options);
    C_AddCommand(mn_old_sound);
-   
+
    // haleyjd: add Heretic-specific menus (in mn_htic.c)
    MN_AddHMenus();
-   
+
    MN_CreateSaveCmds();
 
    // haleyjd 03/11/06: file dialog cmds

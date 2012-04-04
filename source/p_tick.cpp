@@ -255,7 +255,6 @@ void Thinker::removeThinker()
 void Thinker::RunThinkers(void)
 {
    Mobj *mo;
-   SectorMovementThinker *thinker = NULL;
 
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
@@ -269,14 +268,13 @@ void Thinker::RunThinkers(void)
 
       if(CS_CLIENT)
       {
-         if((thinker = thinker_cast<SectorMovementThinker *>(currentthinker)))
-            thinker->Predict();
-         else if(!(mo = thinker_cast<Mobj *>(currentthinker)))
-            currentthinker->Think();
-         else if(serverside && mo->player == NULL)
-            currentthinker->Think();
-         else if(clientside && !sentient(mo))
-            currentthinker->Think();
+         if(!(thinker_cast<SectorMovementThinker *>(currentthinker)))
+         {
+            if(!(mo = thinker_cast<Mobj *>(currentthinker)))
+               currentthinker->Think();
+            else if(clientside && !sentient(mo))
+               currentthinker->Think();
+         }
       }
       else if(CS_SERVER)
       {
@@ -288,9 +286,6 @@ void Thinker::RunThinkers(void)
       else
          currentthinker->Think();
    }
-
-   if(CS_CLIENT)
-      cl_predicting_sectors = true;
 }
 
 //
@@ -360,16 +355,15 @@ void P_Ticker(void)
 
             if(CS_CLIENT)
             {
-               if(i == consoleplayer)
-                  CL_Predict();
-               else
+               if(i != consoleplayer)
+               {
                   CL_PlayerThink(i);
 
-               if(players[i].mo && ((i != consoleplayer) ||
-                                    (clients[i].spectating)))
-               {
-                  players[i].mo->Think();
+                  if(players[i].mo)
+                     players[i].mo->Think();
                }
+               else
+                  CL_Predict();
             }
             else
                P_PlayerThink(&players[i]);
@@ -383,29 +377,6 @@ void P_Ticker(void)
    reset_viewz = false;  // sf
 
    Thinker::RunThinkers();
-
-   if(CS_CLIENT)
-   {
-      CL_SavePredictedSectorPositions();
-
-      CS_LogSMT(
-         "%u/%u: Predicting....\n",
-         cl_latest_world_index,
-         cl_current_world_index
-      );
-      CS_LogPlayerPosition(consoleplayer);
-      P_PlayerThink(&players[consoleplayer]);
-
-      if((!clients[consoleplayer].spectating) && (players[consoleplayer].mo))
-         players[consoleplayer].mo->Think();
-
-      CS_LogPlayerPosition(consoleplayer);
-      CS_LogSMT(
-         "%u/%u: Done predicting.\n",
-         cl_latest_world_index,
-         cl_current_world_index
-      );
-   }
 
    P_UpdateSpecials();
    P_RespawnSpecials();
@@ -491,7 +462,7 @@ void ThinkerType::InitThinkerTypes()
 //
 // The object will automatically be added into the thinker factory list.
 //
-ThinkerType::ThinkerType(const char *pName) : name(pName), parent(NULL)
+ThinkerType::ThinkerType(const char *pName) : parent(NULL), name(pName)
 {
    unsigned int hashcode;
 

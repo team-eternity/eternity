@@ -1162,7 +1162,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 {
    int i;
    int secnum = sec - sectors;
-   FloorMoveThinker *floor = new FloorMoveThinker;
+   FloorMoveThinker *floor = new FloorMoveThinker(sec, line);
 
    floor->addThinker();
    sec->floordata = floor; //jff 2/22/98
@@ -1174,7 +1174,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
    {
    case lowerFloor:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight = P_FindHighestFloorSurrounding(sec);
       break;
@@ -1182,7 +1182,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       //jff 02/03/30 support lowering floor by 24 absolute
    case lowerFloor24:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight = 
          floor->sector->floorheight + 24 * FRACUNIT;
@@ -1191,7 +1191,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       //jff 02/03/30 support lowering floor by 32 absolute (fast)
    case lowerFloor32Turbo:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED*4;
       floor->floordestheight =
          floor->sector->floorheight + 32 * FRACUNIT;
@@ -1199,7 +1199,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case lowerFloorToLowest:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight = P_FindLowestFloorSurrounding(sec);
       break;
@@ -1207,7 +1207,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       //jff 02/03/30 support lowering floor to next lowest floor
    case lowerFloorToNearest:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight =
          P_FindNextLowestFloor(sec,floor->sector->floorheight);
@@ -1215,7 +1215,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case turboLower:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED * 4;
       floor->floordestheight = P_FindHighestFloorSurrounding(sec);
       if (floor->floordestheight != sec->floorheight)
@@ -1226,7 +1226,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       floor->crush = 10;
    case raiseFloor:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
       if(floor->floordestheight > sec->ceilingheight)
@@ -1237,7 +1237,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case raiseFloorTurbo:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED*4;
       floor->floordestheight =
          P_FindNextHighestFloor(sec,sec->floorheight);
@@ -1245,7 +1245,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case raiseFloorToNearest:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight =
          P_FindNextHighestFloor(sec,sec->floorheight);
@@ -1253,7 +1253,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case raiseFloor24:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight =
          floor->sector->floorheight + 24 * FRACUNIT;
@@ -1262,7 +1262,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       // jff 2/03/30 support straight raise by 32 (fast)
    case raiseFloor32Turbo:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED*4;
       floor->floordestheight =
          floor->sector->floorheight + 32 * FRACUNIT;
@@ -1270,7 +1270,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case raiseFloor512:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight =
          floor->sector->floorheight + 512 * FRACUNIT;
@@ -1278,7 +1278,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 
    case raiseFloor24AndChange:
       floor->direction = plat_up;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight =
          floor->sector->floorheight + 24 * FRACUNIT;
@@ -1295,7 +1295,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
          if(!comp[comp_model])  // killough 10/98
             minsize = 32000<<FRACBITS; //jff 3/13/98 no ovf
          floor->direction = plat_up;
-         floor->sector = sec;
+         // floor->sector = sec;
          floor->speed = FLOORSPEED;
          for (i = 0; i < sec->linecount; i++)
          {
@@ -1336,7 +1336,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
      
    case lowerAndChange:
       floor->direction = plat_down;
-      floor->sector = sec;
+      // floor->sector = sec;
       floor->speed = FLOORSPEED;
       floor->floordestheight = P_FindLowestFloorSurrounding(sec);
       floor->texture = sec->floorpic;
@@ -1358,6 +1358,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       }
       break;
    default:
+      floor->setSector(NULL);
       break;
    }
 
@@ -1507,11 +1508,11 @@ int EV_BuildStairs(line_t *line, stair_e type)
 
          if(serverside)
          {
-            floor = new FloorMoveThinker;
+            floor = new FloorMoveThinker(sec, line);
             floor->addThinker();
             sec->floordata = floor;
             floor->direction = 1;
-            floor->sector = sec;
+            // floor->sector = sec;
             floor->type = buildStair;   //jff 3/31/98 do not leave uninited
 
             // set up the speed and stepsize according to the stairs type
@@ -1604,12 +1605,12 @@ int EV_BuildStairs(line_t *line, stair_e type)
                   secnum = newsecnum;
 
                   // create and initialize a thinker for the next step
-                  floor = new FloorMoveThinker;
+                  floor = new FloorMoveThinker(sec, line);
                   floor->addThinker();
 
                   sec->floordata = floor; //jff 2/22/98
                   floor->direction = 1;
-                  floor->sector = sec;
+                  // floor->sector = sec;
                   floor->speed = speed;
                   floor->floordestheight = height;
                   floor->type = buildStair; //jff 3/31/98 do not leave uninited
@@ -1807,14 +1808,14 @@ int EV_DoDonut(line_t *line)
 FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
                                fixed_t floordestheight)
 {
-   FloorMoveThinker *floor = new FloorMoveThinker;
+   FloorMoveThinker *floor = new FloorMoveThinker(sec, line);
 
    floor->addThinker();
    sec->floordata = floor; //jff 2/22/98
    floor->type = donutRaise;
    floor->crush = -1;
    floor->direction = plat_up;
-   floor->sector = sec;
+   // floor->sector = sec;
    floor->speed = FLOORSPEED / 2;
    floor->texture = texture;
    P_ZeroSpecialTransfer(&(floor->special));
@@ -1838,14 +1839,14 @@ FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
 FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
                                    fixed_t floordestheight)
 {
-   FloorMoveThinker *floor = new FloorMoveThinker;
+   FloorMoveThinker *floor = new FloorMoveThinker(sec, line);
 
    floor->addThinker();
    sec->floordata = floor; //jff 2/22/98
    floor->type = lowerFloor;
    floor->crush = -1;
    floor->direction = plat_down;
-   floor->sector = sec;
+   // floor->sector = sec;
    floor->speed = FLOORSPEED / 2;
    floor->floordestheight = floordestheight;
    P_FloorSequence(floor);
@@ -1909,7 +1910,7 @@ int EV_DoElevator
 ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
                                  elevator_e elevtype)
 {
-   ElevatorThinker *elevator = new ElevatorThinker;
+   ElevatorThinker *elevator = new ElevatorThinker(sec, line);
 
    elevator->addThinker();
    sec->floordata = elevator; //jff 2/22/98
@@ -1922,7 +1923,7 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
    // elevator down to next floor
    case elevateDown:
       elevator->direction = plat_down;
-      elevator->sector = sec;
+      // elevator->sector = sec;
       elevator->speed = ELEVATORSPEED;
       elevator->floordestheight =
          P_FindNextLowestFloor(sec,sec->floorheight);
@@ -1933,7 +1934,7 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
    // elevator up to next floor
    case elevateUp:
       elevator->direction = plat_up;
-      elevator->sector = sec;
+      // elevator->sector = sec;
       elevator->speed = ELEVATORSPEED;
       elevator->floordestheight =
          P_FindNextHighestFloor(sec,sec->floorheight);
@@ -1943,7 +1944,7 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
 
    // elevator to floor height of activating switch's front sector
    case elevateCurrent:
-      elevator->sector = sec;
+      // elevator->sector = sec;
       elevator->speed = ELEVATORSPEED;
       elevator->floordestheight = line->frontsector->floorheight;
       elevator->ceilingdestheight =
@@ -1953,6 +1954,7 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
       break;
 
    default:
+      elevator->setSector(NULL);
       break;
    }
 
@@ -2027,13 +2029,13 @@ PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
                                   fixed_t height, fixed_t speed, int crush)
 {
    int destheight;
-   PillarThinker *pillar = new PillarThinker;
+   PillarThinker *pillar = new PillarThinker(sector, line);
 
    sector->floordata = pillar;
    sector->ceilingdata = pillar;
    pillar->addThinker();
-   pillar->sector = sector;
-   
+   // pillar->sector = sector;
+
    if(height == 0) // height == 0 so we meet in the middle
    {
       destheight = sector->floorheight + 
@@ -2133,12 +2135,12 @@ manual_pillar:
 PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
                                  fixed_t fdist, fixed_t cdist)
 {
-   PillarThinker *pillar = new PillarThinker;
+   PillarThinker *pillar = new PillarThinker(sector, line);
 
    sector->floordata   = pillar;
    sector->ceilingdata = pillar;
    pillar->addThinker();
-   pillar->sector = sector;
+   // pillar->sector = sector;
    
    if(fdist == 0) // floordist == 0 so we find the next lowest floor
       pillar->floordest = P_FindLowestFloorSurrounding(sector);
@@ -2436,7 +2438,7 @@ FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector,
                                        int height, int speed, int offset,
                                        int timer)
 {
-   FloorWaggleThinker *waggle = new FloorWaggleThinker;
+   FloorWaggleThinker *waggle = new FloorWaggleThinker(sector, line);
 
    sector->floordata = waggle;      
    waggle->addThinker();

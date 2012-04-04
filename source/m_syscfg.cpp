@@ -315,15 +315,6 @@ static default_t sysdefaults[] =
    // [CG] These are c/s defaults.
 
    DEFAULT_BOOL(
-      "predict_shots",
-      &cl_predict_shots,
-      NULL,
-      true,
-      default_t::wad_no,
-      "predict shot results"
-   ),
-
-   DEFAULT_BOOL(
       "packet_buffer",
       &cl_packet_buffer_enabled,
       NULL,
@@ -335,7 +326,7 @@ static default_t sysdefaults[] =
    DEFAULT_INT(
       "packet_buffer_size",
       &cl_packet_buffer_size,
-      NULL,
+      &default_cl_packet_buffer_size,
       2, 1, MAX_POSITIONS >> 1, default_t::wad_no,
       "how many TICs to buffer in the packet buffer, 0 - adaptive, other "
       "values are considered custom sizes"
@@ -350,13 +341,39 @@ static default_t sysdefaults[] =
       "send commands reliably"
    ),
 
+   DEFAULT_INT(
+      "command_bundle_size",
+      &cl_command_bundle_size,
+      &default_cl_command_bundle_size,
+      10, 2, MAX_COMMAND_BUNDLE_SIZE, default_t::wad_no,
+      "how many commands to bundle together if reliable_commands is disabled"
+   ),
+
+   DEFAULT_BOOL(
+      "predict_shots",
+      &cl_predict_shots,
+      &default_cl_predict_shots,
+      true,
+      default_t::wad_no,
+      "predict shot results"
+   ),
+
+   DEFAULT_BOOL(
+      "predict_sector_activation",
+      &cl_predict_sector_activation,
+      &default_cl_predict_sector_activation,
+      true,
+      default_t::wad_no,
+      "predict sector activation"
+   ),
+
    DEFAULT_BOOL(
       "debug_unlagged",
       &cl_debug_unlagged,
       &default_cl_debug_unlagged,
       false,
       default_t::wad_no,
-      "debug unlagged"
+      "enable unlagged debugging, spawns ghosts"
    ),
 
    DEFAULT_BOOL(
@@ -371,7 +388,7 @@ static default_t sysdefaults[] =
    DEFAULT_INT(
       "damage_screen_cap",
       &damage_screen_cap,
-      NULL,
+      &default_damage_screen_cap,
       NUMREDPALS, 0, NUMREDPALS, default_t::wad_no,
       "cap the damage screen intensity, 0 - no damage screen, 8 - full, "
       "original damage screen"

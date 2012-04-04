@@ -1942,9 +1942,12 @@ void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd)
    SV_LoadClientOptions(playernum);
    server_client->command_world_index = bufcmd->command.world_index;
    CS_CopyCommandToTiccmd(&ticcmd, &bufcmd->command);
-   CS_RunPlayerCommand(playernum, &ticcmd, true);
+   // [CG] Set the indices before actually running the command because line
+   //      activations may occur during that time, and the indices have to be
+   //      current.
    server_client->last_command_run_index = bufcmd->command.index;
    server_client->last_command_run_world_index = bufcmd->command.world_index;
+   CS_RunPlayerCommand(playernum, &ticcmd, true);
    SV_RestoreServerOptions();
 }
 
@@ -2220,7 +2223,7 @@ void SV_BroadcastSectorPosition(size_t sector_number)
    broadcast_packet(&position_message, sizeof(nm_sectorposition_t));
 }
 
-void SV_BroadcastSectorThinkerSpawned(SectorMovementThinker *thinker,
+void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker,
                                       cs_sector_thinker_spawn_data_t *data)
 {
    PlatThinker         *platform     = NULL;
@@ -2339,7 +2342,7 @@ void SV_BroadcastSectorThinkerSpawned(SectorMovementThinker *thinker,
    broadcast_packet(&message, sizeof(nm_sectorthinkerspawned_t));
 }
 
-void SV_BroadcastSectorThinkerStatus(SectorMovementThinker *thinker)
+void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker)
 {
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
@@ -2400,7 +2403,7 @@ void SV_BroadcastSectorThinkerStatus(SectorMovementThinker *thinker)
    broadcast_packet(&message, sizeof(nm_sectorthinkerstatus_t));
 }
 
-void SV_BroadcastSectorThinkerRemoved(SectorMovementThinker *thinker)
+void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker)
 {
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
@@ -2600,11 +2603,20 @@ static void build_line_packet(nm_lineactivated_t *line_message, Mobj *actor,
                               line_t *line, int side,
                               activation_type_e activation_type)
 {
+   uint32_t command_index = 0;
+
+   if(actor->player)
+   {
+      server_client_t *sc = &server_clients[actor->player - players];
+      command_index = sc->last_command_run_index;
+   }
+
    line_message->message_type = nm_lineactivated;
    line_message->world_index = sv_world_index;
    line_message->activation_type = activation_type;
    line_message->actor_net_id = actor->net_id;
    line_message->line_number = (line - lines);
+   line_message->command_index = command_index;
    line_message->side = side;
 }
 

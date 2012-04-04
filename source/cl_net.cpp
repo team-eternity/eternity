@@ -1391,16 +1391,18 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
       return;
    }
 
-   if(message->activation_type < 0 ||
-      message->activation_type >= at_max)
+   if((actor->player) && ((actor->player - players) == consoleplayer))
    {
-      doom_printf(
-         "Received an activate line message with an invalid activation type.\n"
-      );
+      CL_HandleLineActivation(message->line_number, message->command_index);
       return;
    }
 
-   if(message->activation_type == at_used)
+   cl_activating_line_from_message = true;
+   if(message->activation_type == at_crossed)
+      P_CrossSpecialLine(line, message->side, actor);
+   else if(message->activation_type == at_shot)
+      P_ShootSpecialLine(actor, line, message->side);
+   else if(message->activation_type == at_used)
    {
       if(P_UseSpecialLine(actor, line, message->side))
       {
@@ -1409,10 +1411,14 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
          );
       }
    }
-   else if(message->activation_type == at_crossed)
-      P_CrossSpecialLine(line, message->side, actor);
-   else if(message->activation_type == at_shot)
-      P_ShootSpecialLine(actor, line, message->side);
+   else
+   {
+      doom_printf(
+         "Received a line activated message with an invalid activation "
+         "type.\n"
+      );
+   }
+   cl_activating_line_from_message = false;
 }
 
 void CL_HandleMonsterActiveMessage(nm_monsteractive_t *message)
@@ -1687,7 +1693,7 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 
 void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
 {
-   SectorMovementThinker *thinker  = NULL;
+   SectorThinker *thinker  = NULL;
    
    if(!(thinker = NetSectorThinkers.lookup(message->net_id)))
    {

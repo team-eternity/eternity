@@ -33,6 +33,7 @@
 // from the THINGS lump.
 #include "doomdata.h"
 #include "doomdef.h"
+#include "d_player.h" // [CG] 04/03/2012
 // States are tied to finite states are
 //  tied to animation frames.
 // Needs precompiled tables/data structures.
@@ -169,6 +170,55 @@ public:
    // SoM: yes Quasar, this is entirely necessary
    int     groupid; // The group the sound originated in
 };
+
+// [CG] A struct used to store actor status.
+struct actor_status_t
+{
+   angle_t         angle;
+   spritenum_t     sprite;
+   int             frame;
+   fixed_t         floorz;
+   fixed_t         ceilingz;
+   fixed_t         dropoffz;
+   fixed_t         radius;
+   fixed_t         height; 
+   fixed_t         momx;
+   fixed_t         momy;
+   fixed_t         momz;
+   int             validcount;
+   int             tics;
+   unsigned int    flags;
+   unsigned int    flags2;
+   unsigned int    flags3;
+   unsigned int    flags4;
+   int             intflags;
+   int             health;
+   int16_t         movedir;
+   int16_t         movecount;
+   int16_t         strafecount;
+   int16_t         reactiontime;   
+   int16_t         threshold;
+   int16_t         pursuecount;
+   int16_t         gear;
+   bool            has_player;
+   int             playernum;
+   player_status_t player_status;
+   int16_t         lastlook;       
+   mapthing_t      spawnpoint;     
+   int             friction;
+   int             movefactor;
+   int             floatbob;
+   int             damage;
+   fixed_t         floorclip;
+   fixed_t         secfloorz;
+   fixed_t         secceilz;
+   fixed_t         passfloorz;
+   fixed_t         passceilz;
+   uint16_t        tid;
+};
+
+void P_StoreActorStatus(actor_status_t *status, Mobj *actor);
+void P_LoadActorStatus(Mobj *actor, actor_status_t *status);
 
 //
 // Map Object definition.

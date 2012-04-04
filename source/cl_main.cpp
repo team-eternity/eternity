@@ -108,6 +108,7 @@ bool cl_initial_spawn = true;
 bool cl_received_first_sync = false;
 bool cl_spawning_actor_from_message = false;
 bool cl_removing_actor_from_message = false;
+bool cl_activating_line_from_message = false;
 bool cl_setting_player_weapon_sprites = false;
 bool cl_handling_damaged_actor = false;
 bool cl_handling_damaged_actor_and_justhit = false;

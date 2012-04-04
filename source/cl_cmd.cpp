@@ -46,9 +46,6 @@
 #include "cl_net.h"
 #include "cl_buf.h"
 
-bool cl_predict_shots = true;
-bool default_cl_predict_shots = true;
-
 bool cl_packet_buffer_enabled = false;
 bool default_cl_packet_buffer_enabled = false;
 
@@ -58,6 +55,15 @@ unsigned int default_cl_packet_buffer_size = 0;
 bool cl_reliable_commands = false;
 bool default_cl_reliable_commands = false;
 
+unsigned int cl_command_bundle_size = 10;
+unsigned int default_cl_command_bundle_size = 10;
+
+bool cl_predict_shots = true;
+bool default_cl_predict_shots = true;
+
+bool cl_predict_sector_activation = true;
+bool default_cl_predict_sector_activation = true;
+
 unsigned int damage_screen_cap = NUMREDPALS;
 unsigned int default_damage_screen_cap = NUMREDPALS;
 
@@ -66,10 +72,6 @@ bool default_cl_debug_unlagged = false;
 
 bool cl_show_sprees = false;
 bool default_cl_show_sprees = false;
-
-// [CG] Shot result prediction.
-VARIABLE_TOGGLE(cl_predict_shots, &default_cl_predict_shots, yesno);
-CONSOLE_VARIABLE(predict_shots, cl_predict_shots, cf_netonly) {}
 
 // [CG] Packet buffer.
 VARIABLE_TOGGLE(cl_packet_buffer_enabled, &default_cl_packet_buffer_enabled,
@@ -96,6 +98,25 @@ CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
 // [CG] Send commands reliably.
 VARIABLE_TOGGLE(cl_reliable_commands, &default_cl_reliable_commands, onoff);
 CONSOLE_VARIABLE(reliable_commands, cl_reliable_commands, cf_netonly) {}
+
+// [CG] Command bundle size.
+VARIABLE_INT(
+   cl_command_bundle_size,
+   &default_cl_command_bundle_size,
+   2, MAX_COMMAND_BUNDLE_SIZE, NULL
+);
+CONSOLE_VARIABLE(command_bundle_size, cl_command_bundle_size, cf_netonly) {}
+
+// [CG] Shot result prediction.
+VARIABLE_TOGGLE(cl_predict_shots, &default_cl_predict_shots, yesno);
+CONSOLE_VARIABLE(predict_shots, cl_predict_shots, cf_netonly) {}
+
+// [CG] Sector activation prediction.
+VARIABLE_TOGGLE(
+   cl_predict_sector_activation, &default_cl_predict_sector_activation, yesno
+);
+CONSOLE_VARIABLE(predict_sector_activation, cl_predict_sector_activation,
+                 cf_netonly) {}
 
 // [CG] Unlagged debugging.
 VARIABLE_TOGGLE(cl_debug_unlagged, &default_cl_debug_unlagged, yesno);
@@ -272,10 +293,12 @@ void CL_AddCommands(void)
    C_AddCommand(show_netstats);
    C_AddCommand(show_timer);
    C_AddCommand(show_team);
-   C_AddCommand(predict_shots);
    C_AddCommand(packet_buffer);
    C_AddCommand(packet_buffer_size);
    C_AddCommand(reliable_commands);
+   C_AddCommand(command_bundle_size);
+   C_AddCommand(predict_shots);
+   C_AddCommand(predict_sector_activation);
    C_AddCommand(debug_unlagged);
    C_AddCommand(damage_screen_cap);
    C_AddCommand(disconnect);

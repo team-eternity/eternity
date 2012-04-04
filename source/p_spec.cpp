@@ -86,6 +86,7 @@
 #include "cs_main.h"      // [CG] 09/18/11
 #include "cs_team.h"      // [CG] 09/18/11
 #include "cs_announcer.h" // [CG] 02/10/12
+#include "cl_cmd.h"       // [CG] 04/04/12
 #include "cl_main.h"      // [CG] 04/02/12
 #include "cl_pred.h"      // [CG] 04/02/12
 #include "cl_spec.h"      // [CG] 04/02/12
@@ -254,276 +255,6 @@ void P_InitPicAnims(void)
    }
 
    Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
-}
-
-IMPLEMENT_THINKER_TYPE(SectorMovementThinker)
-
-//
-// SectorMovementThinker::startThinking()
-//
-// Checks if a sector movement thinker should think, and if so sets it up for
-// thinking.
-//
-bool SectorMovementThinker::startThinking()
-{
-   dumpStatusData(&current_status);
-
-   if(CS_CLIENT)
-   {
-      if(!prediction_index)
-         prediction_index = cl_current_world_index;
-
-      if(inactive && (inactive <= prediction_index))
-         return false;
-   }
-
-   return true;
-}
-
-//
-// SectorMovementThinker::finishThinking()
-//
-// Runs after a sector movement thinker finishes thinking.
-//
-void SectorMovementThinker::finishThinking()
-{
-   if((CS_CLIENT) && (!repredicting))
-      savePredictedStatus();
-
-   if(CS_SERVER && net_id && statusChanged())
-      SV_BroadcastSectorThinkerStatus(this);
-
-   prediction_index = 0;
-}
-
-//
-// SectorMovementThinker::savePredictedStatus()
-//
-// Stores a new predicted status.
-//
-void SectorMovementThinker::savePredictedStatus()
-{
-   cs_queued_sector_thinker_data_t *qstd = estructalloc(
-      cs_queued_sector_thinker_data_t, 1
-   );
-
-   qstd->index = cl_current_world_index;
-   dumpStatusData(&qstd->data);
-   M_QueueInsert((mqueueitem_t *)qstd, &status_queue);
-}
-
-//
-// SectorMovementThinker::netSerialize()
-//
-// Serializes the current status into a net-safe struct.
-//
-void SectorMovementThinker::netSerialize(cs_sector_thinker_data_t *data)
-{
-   dumpStatusData(data);
-}
-
-//
-// SectorMovementThinker::netUpdate()
-//
-// Updates the thinker with data from a net-safe struct.  Saves the update and
-// its index as well.
-//
-void SectorMovementThinker::netUpdate(uint32_t index,
-                                      cs_sector_thinker_data_t *data)
-{
-   if(CS_CLIENT) // [CG] C/S clients only.
-   {
-      mqueueitem_t *mqitem = NULL;
-      cs_queued_sector_thinker_data_t *qstd = NULL;
-
-      M_QueueResetIterator(&status_queue);
-      while((mqitem = M_QueueIterator(&status_queue)))
-      {
-         mqueueitem_t *mqitem = NULL;
-         qstd = (cs_queued_sector_thinker_data_t *)mqitem;
-
-         if(qstd->index != index)
-            continue;
-
-         copyStatusData(&qstd->data, data);
-         M_QueueResetIterator(&status_queue);
-         return;
-      }
-
-      qstd = estructalloc(cs_queued_sector_thinker_data_t, 1);
-      qstd->index = index;
-      copyStatusData(&qstd->data, data);
-      M_QueueInsert((mqueueitem_t *)qstd, &status_queue);
-      M_QueueResetIterator(&status_queue);
-   }
-}
-
-//
-// SectorMovementThinker::clearOldUpdates()
-//
-// Clears outdated updates from the queue.
-//
-void SectorMovementThinker::clearOldUpdates(uint32_t index)
-{
-   if(CS_CLIENT) // [CG] C/S clients only.
-   {
-      mqueueitem_t *mqitem = NULL;
-      cs_queued_sector_thinker_data_t *qstd = NULL;
-
-      while((mqitem = M_QueuePeek(&status_queue)))
-      {
-         qstd = (cs_queued_sector_thinker_data_t *)mqitem;
-
-         if(qstd->index >= index)
-            return;
-
-         qstd = (cs_queued_sector_thinker_data_t *)M_QueuePop(&status_queue);
-         efree(qstd);
-      }
-   }
-}
-
-//
-// SectorMovementThinker::loadStatusFor()
-//
-// Loads the sector movement thinker's status for a given index.
-//
-void SectorMovementThinker::loadStatusFor(uint32_t index)
-{
-   mqueueitem_t *mqitem = NULL;
-   cs_queued_sector_thinker_data_t *previous_qstd = NULL, *qstd = NULL;
-
-   M_QueueResetIterator(&status_queue);
-   while((mqitem = M_QueueIterator(&status_queue)))
-   {
-      previous_qstd = qstd;
-      qstd = (cs_queued_sector_thinker_data_t *)mqitem;
-
-      if(qstd->index >= index)
-         break;
-   }
-   M_QueueResetIterator(&status_queue);
-
-   if(!qstd)
-   {
-      // I_Error("No status for SMT %u at %u.\n" net_id, index);
-      CS_LogSMT("%u/%u: No status for SMT %u at %u.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         net_id,
-         index
-      );
-   }
-   else if(previous_qstd)
-      loadStatusData(&previous_qstd->data);
-   else
-      loadStatusData(&qstd->data);
-}
-
-//
-// SectorMovementThinker::RePredict()
-//
-// Re-Predicts sector movement clientside.
-//
-void SectorMovementThinker::RePredict(uint32_t index)
-{
-   if(CS_CLIENT)
-   {
-      loadStatusFor(index);
-
-      CS_LogSMT(
-         "%u/%u: Predicting SMT %u at %u: %d/%d\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         net_id,
-         index,
-         this->sector->ceilingheight >> FRACBITS,
-         this->sector->floorheight >> FRACBITS
-      );
-
-      prediction_index = index;
-      repredicting = true;
-      cl_predicting_sectors = true;
-      Think();
-      repredicting = false;
-      cl_predicting_sectors = false;
-   }
-}
-
-//
-// SectorMovementThinker::Predict()
-//
-// Predicts sector movement clientside.
-//
-void SectorMovementThinker::Predict()
-{
-   if(CS_CLIENT)
-   {
-      prediction_index = cl_current_world_index;
-      predicting = true;
-      cl_predicting_sectors = true;
-      CS_LogSMT(
-         "%u/%u (%u): SMT %u before prediction: %d/%d.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         cl_commands_sent - 1,
-         net_id,
-         sector->ceilingheight >> FRACBITS,
-         sector->floorheight >> FRACBITS
-      );
-      loadStatusFor(cl_current_world_index);
-      Think();
-      savePredictedStatus();
-      CS_LogSMT(
-         "%u/%u (%u): SMT %u after prediction: %d/%d.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         cl_commands_sent - 1,
-         net_id,
-         sector->ceilingheight >> FRACBITS,
-         sector->floorheight >> FRACBITS
-      );
-      predicting = false;
-      cl_predicting_sectors = false;
-   }
-}
-
-//
-// SectorMovementThinker::setInactive()
-//
-// Sets the sector movement thinker as inactive at the current prediction
-// index.
-//
-void SectorMovementThinker::setInactive()
-{
-   if(CS_CLIENT)
-      inactive = prediction_index;
-}
-
-//
-// SectorMovementThinker::isPredicting()
-//
-// Returns true if the sector movement thinker is currently predicting.
-//
-bool SectorMovementThinker::isPredicting()
-{
-   if(predicting)
-      return true;
-
-   return false;
-}
-
-//
-// SectorMovementThinker::isRePredicting()
-//
-// Returns true if the sector movement thinker is currently predicting.
-//
-bool SectorMovementThinker::isRePredicting()
-{
-   if(repredicting)
-      return true;
-
-   return false;
 }
 
 //=============================================================================
@@ -1673,7 +1404,10 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
    if(!P_CheckTag(line))  //jff 2/27/98 disallow zero tag on some types
       return;
 
-   current_game_type->handleActorCrossedSpecialLine(thing, line, side);
+   if(CL_PREDICTING_LINE_ACTIVATION(thing))
+      CL_StoreLineActivation(thing, line, side, at_crossed);
+   else
+      current_game_type->handleActorCrossedSpecialLine(thing, line, side);
 
    // Dispatch on the line special value to the line's action routine
    // If a once only function, and successful, clear the line special
@@ -2638,7 +2372,10 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
       break;
    }
 
-   current_game_type->handleActorShotSpecialLine(thing, line, side);
+   if(CL_PREDICTING_LINE_ACTIVATION(thing))
+      CL_StoreLineActivation(thing, line, side, at_shot);
+   else
+      current_game_type->handleActorShotSpecialLine(thing, line, side);
 }
 
         // sf: changed to enable_nuke for console
@@ -2655,6 +2392,9 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 void P_PlayerInSpecialSector(player_t *player)
 {
    sector_t *sector = player->mo->subsector->sector;
+
+   if(!serverside)
+      return;
 
    current_game_type->handlePlayerInSpecialSector(player);
 

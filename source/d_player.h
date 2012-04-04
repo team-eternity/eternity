@@ -86,6 +86,56 @@ typedef enum
 } cheat_t;
 
 
+// [CG] A struct to store current player status.
+struct player_status_t
+{
+   uint32_t      actor_net_id;
+   playerstate_t playerstate;
+   ticcmd_t      cmd;
+   fixed_t       viewz;
+   fixed_t       viewheight;
+   fixed_t       deltaviewheight;
+   fixed_t       bob;
+   fixed_t       pitch;
+   fixed_t       momx, momy;
+   int           health;
+   int           armorpoints;
+   int           armortype;
+   bool          hereticarmor;
+   int           powers[NUMPOWERS];
+   bool          cards[NUMCARDS];
+   bool          backpack;
+   int           frags[MAXPLAYERS];
+   int           totalfrags;
+   weapontype_t  readyweapon;
+   weapontype_t  pendingweapon;
+   int           weaponowned[NUMWEAPONS];
+   int           ammo[NUMAMMO];
+   int           maxammo[NUMAMMO];
+   int           weaponctrs[NUMWEAPONS][3];
+   int           extralight;
+   int           attackdown;
+   int           usedown;
+   int           cheats;
+   int           refire;
+   int           killcount;
+   int           itemcount;
+   int           secretcount;
+   bool          didsecret;
+   int           damagecount;
+   int           bonuscount;
+   int           fixedcolormap;
+   int           colormap;
+   pspdef_t      psprites[NUMPSPRITES];
+   int           curpsprite;
+   int           quake;
+   int           jumptime;
+   char          name[20];
+};
+
+void P_StorePlayerStatus(player_status_t *status, int playernum);
+void P_LoadPlayerStatus(int playernum, player_status_t *status);
+
 //
 // Extended player object info: player_t
 //

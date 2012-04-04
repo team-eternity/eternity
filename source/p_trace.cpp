@@ -48,6 +48,7 @@
 #include "cl_cmd.h"   // [CG] 09/18/11
 #include "cl_main.h"  // [CG] 02/04/12
 #include "cl_pred.h"  // [CG] 09/18/11
+#include "cl_spec.h"  // [CG] 04/04/11
 #include "sv_main.h"  // [CG] 09/18/11
 
 //=============================================================================
@@ -218,7 +219,10 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
       (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
    {
-      if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
+      if(CS_SHOULD_ACTIVATE_LINE(shootthing) &&
+         li->special &&
+         demo_version >= 329 &&
+         !comp[comp_planeshoot])
       {
          if(CS_SERVER)
             SV_BroadcastLineShot(shootthing, li, side);
@@ -397,7 +401,7 @@ static bool PTR_ShootTraverseComp(intercept_t *in)
       // haleyjd 03/13/05: move up point on line side check to here
       int lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
       
-      if(serverside && li->special)
+      if(CS_SHOULD_ACTIVATE_LINE(shootthing) && li->special)
       {
          P_ShootSpecialLine(shootthing, li, lineside);
          if(CS_SERVER)
@@ -533,7 +537,7 @@ static bool PTR_ShootTraverse(intercept_t *in)
          }
       }
       
-      if(serverside && !hitplane && li->special)
+      if(CS_SHOULD_ACTIVATE_LINE(shootthing) && !hitplane && li->special)
       {
          if(CS_SERVER)
             SV_BroadcastLineShot(shootthing, li, lineside);
@@ -663,16 +667,21 @@ static bool PTR_UseTraverse(intercept_t *in)
    if(P_PointOnLineSide(trace.originx, trace.originy,in->d.line) == 1)
       side = 1;
 
-   if(serverside && in->d.line->special)
+   if(CS_SHOULD_ACTIVATE_LINE(usething) && in->d.line->special)
    {
       if(CS_SERVER)
          SV_BroadcastLineUsed(usething, in->d.line, side);
 
       if(P_UseSpecialLine(usething, in->d.line, side))
       {
-         current_game_type->handleActorUsedSpecialLine(
-            usething, in->d.line, side
-         );
+         if(CL_PREDICTING_LINE_ACTIVATION(usething))
+            CL_StoreLineActivation(usething, in->d.line, side, at_shot);
+         else
+         {
+            current_game_type->handleActorUsedSpecialLine(
+               usething, in->d.line, side
+            );
+         }
       }
 
       //WAS can't use for than one special line in a row

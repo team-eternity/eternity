@@ -27,18 +27,30 @@
 #ifndef CL_CMD_H__
 #define CL_CMD_H__
 
-extern bool cl_predict_shots;
-extern bool default_cl_predict_shots;
 extern bool cl_packet_buffer_enabled;
 extern bool default_cl_packet_buffer_enabled;
+
 extern unsigned int cl_packet_buffer_size;
 extern unsigned int default_cl_packet_buffer_size;
+
 extern bool cl_reliable_commands;
 extern bool default_cl_reliable_commands;
+
+extern unsigned int cl_command_bundle_size;
+extern unsigned int default_cl_command_bundle_size;
+
+extern bool cl_predict_shots;
+extern bool default_cl_predict_shots;
+
+extern bool cl_predict_sector_activation;
+extern bool default_cl_predict_sector_activation;
+
 extern unsigned int damage_screen_cap;
 extern unsigned int default_damage_screen_cap;
+
 extern bool cl_debug_unlagged;
 extern bool default_cl_debug_unlagged;
+
 extern bool cl_show_sprees;
 extern bool default_cl_show_sprees;
 

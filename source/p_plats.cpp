@@ -155,19 +155,16 @@ void PlatThinker::Think()
       }
       else if(res == pastdest)
       {
-         CS_LogSMT("\t Passed destination.\n");
          S_StopSectorSequence(this->sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
          if(this->type!=toggleUpDn) //jff 3/14/98 toggle up down
          {                           // is silent, instant, no waiting
-            CS_LogSMT("\t Type is not toggleUpDn.\n");
             this->count = this->wait;
             this->status = waiting;
          }
          else // instant toggles go into stasis awaiting next activation
          {
-            CS_LogSMT("\t Type is toggleUpDn.\n");
             this->oldstatus = this->status;//jff 3/14/98 after action wait  
             this->status = in_stasis;      //for reactivation of toggle
          }
@@ -189,8 +186,6 @@ void PlatThinker::Think()
             }
          }
       }
-      else
-         CS_LogSMT("\t Within destination.\n");
 
       break;
 
@@ -198,19 +193,9 @@ void PlatThinker::Think()
       if(!--this->count)  // downcount and check for delay elapsed
       {
          if(this->sector->floorheight == this->low)
-         {
-            CS_LogSMT("\t Set status to 'up'.\n");
             this->status = up;     // if at bottom, start up
-         }
          else
-         {
-            CS_LogSMT(
-               "\t Set status to 'down' (%d, %d).\n",
-               this->sector->floorheight,
-               this->low
-            );
             this->status = down;   // if at top, start down
-         }
          
          // make plat start sound
          // haleyjd: changed for sound sequences
@@ -444,12 +429,12 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                              plattype_e type)
 {
    const char *seqname = NULL;
-   PlatThinker *plat = new PlatThinker;
+   PlatThinker *plat = new PlatThinker(sec, line);
 
    plat->addThinker();
    
    plat->type = type;
-   plat->sector = sec;
+   // plat->sector = sec;
    plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
    plat->crush = -1;
    plat->tag = line->tag;

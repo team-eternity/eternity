@@ -495,11 +495,11 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
 {
    int noise = CNOISE_NORMAL; // haleyjd 09/28/06
-   CeilingThinker *ceiling = new CeilingThinker;
+   CeilingThinker *ceiling = new CeilingThinker(sec, line);
 
    ceiling->addThinker();
    sec->ceilingdata = ceiling;               //jff 2/22/98
-   ceiling->sector = sec;
+   // ceiling->sector = sec;
    ceiling->crush = -1;
 
    // setup ceiling structure according to type of function

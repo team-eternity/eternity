@@ -96,6 +96,9 @@ struct event_t;
 // [CG] Number of positions we save for each player.
 #define MAX_POSITIONS (TICRATE * MAX_LATENCY)
 
+// [CG] Maximum command-bundle size.
+#define MAX_COMMAND_BUNDLE_SIZE ((MAX_POSITIONS) >> 1)
+
 // [CG] Maximum size of a transmitted string.  Does not include trailing \0.
 #define MAX_STRING_SIZE 255
 
@@ -107,12 +110,27 @@ struct event_t;
 
 // [CG] Used in p_trace to determine whether or not puffs/blood should be
 //      spawned.
-
 #define CL_SHOULD_PREDICT_SHOT(shooter) (clientside && ( \
    cl_predict_shots && \
    ((shooter)->net_id == players[consoleplayer].mo->net_id) \
 ))
 
+// [CG] Used to determine whether or not clients should predict a line
+//      activation.
+#define CS_SHOULD_ACTIVATE_LINE(actor) (serverside || ( \
+   cl_predict_sector_activation && \
+   ((actor)->net_id == players[consoleplayer].mo->net_id) \
+))
+
+// [CG] Used to determine whether or not a client is predicting a line
+//      activation.
+#define CL_PREDICTING_LINE_ACTIVATION(actor) ( \
+   CS_CLIENT && \
+   CS_SHOULD_ACTIVATE_LINE(actor) && \
+   (!cl_activating_line_from_message) \
+)
+
+// [CG] Used to determine if it's OK to spawn an actor.
 #define CS_SPAWN_ACTOR_OK (\
    serverside || \
    cl_spawning_actor_from_message || \
@@ -120,6 +138,7 @@ struct event_t;
    !cl_packet_buffer.synchronized() \
 )
 
+// [CG] Used to determine if it's OK to remove an actor.
 #define CS_REMOVE_ACTOR_OK (\
    serverside || \
    cl_removing_actor_from_message || \
@@ -767,6 +786,7 @@ typedef struct
    uint32_t actor_net_id;
    int32_t line_number;
    int32_t side;
+   uint32_t command_index;
 } nm_lineactivated_t;
 
 typedef struct

@@ -585,6 +585,13 @@ typedef enum
 // linedef and sector special data types
 //
 
+struct cs_queued_sector_thinker_data_t
+{
+   mqueueitem_t mqitem;
+   uint32_t index;
+   cs_sector_thinker_data_t data;
+};
+
 // haleyjd 10/13/2011: base class for sector action types
 class SectorThinker : public Thinker
 {
@@ -601,40 +608,30 @@ protected:
       ATTACH_LIGHT
    } attachpoint_e;
 
+   typedef enum
+   {
+      ACTIVATION_UNCONFIRMED,
+      ACTIVATION_AFFIRMATIVE,
+      ACTIVATION_NEGATIVE
+   } activation_status_e;
+
+   // [CG] Saved pre-activation sector information, used when the client
+   //      predicted a SectorThinker's creation but was wrong.
+   activation_status_e  activation_status;
+   uint32_t             activation_world_index;
+   uint32_t             activation_command_index;
+   sector_t            *pre_activation_sector;
+   line_t              *pre_activation_line;
+
+   // [CG] Clientside prediction information.
+   bool                     predicting;
+   bool                     repredicting;
+   uint32_t                 prediction_index;
+   cs_sector_thinker_data_t current_status;
+   mqueue_t                 status_queue;
+
    // Methods
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
-
-public:
-   SectorThinker() : Thinker(), sector(NULL) {};
-
-   // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player) { return false; }
-
-   // Data Members
-   sector_t *sector;
-
-};
-
-struct cs_queued_sector_thinker_data_t
-{
-   mqueueitem_t mqitem;
-   uint32_t index;
-   cs_sector_thinker_data_t data;
-};
-
-// [CG] Base class for sector movement action types.
-class SectorMovementThinker : public SectorThinker
-{
-   DECLARE_THINKER_TYPE(SectorMovementThinker, SectorThinker)
-
-protected:
-   bool predicting;
-   bool repredicting;
-   uint32_t prediction_index;
-   cs_sector_thinker_data_t current_status;
-   mqueue_t status_queue;
-
    virtual bool statusChanged() { return false; }
    virtual void loadStatusData(cs_sector_thinker_data_t *data) {}
    virtual void dumpStatusData(cs_sector_thinker_data_t *data) {}
@@ -642,33 +639,56 @@ protected:
                                cs_sector_thinker_data_t *src) {}
    virtual bool startThinking();
    virtual void finishThinking();
-   virtual void savePredictedStatus();
+   virtual void savePredictedStatus(uint32_t index);
 
 public:
+   // Data Members
    uint32_t net_id;
    uint32_t removed;
    uint32_t inactive;
+   line_t *line;
+   sector_t *sector;
 
-   SectorMovementThinker()
-      : SectorThinker(), predicting(false), repredicting(false), net_id(0),
-                         removed(0), inactive(0)
-   {
-      M_QueueInit(&status_queue);
-   }
+   // Constructors/Destructor
+   SectorThinker();
+   SectorThinker(sector_t *new_sector);
+   SectorThinker(sector_t *new_sector, line_t *new_line);
+   ~SectorThinker();
 
-   ~SectorMovementThinker() { M_QueueFree(&status_queue); }
-
+   // Virtual methods
+   virtual void serialize(SaveArchive &arc);
+   virtual bool reTriggerVerticalDoor(bool player);
    virtual void netSerialize(cs_sector_thinker_data_t *data);
    virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
-   virtual void logStatus(cs_sector_thinker_data_t *data) {}
+   virtual void logStatus(cs_sector_thinker_data_t *data);
 
+   // Non-virtual methods
    void clearOldUpdates(uint32_t index);
    void loadStatusFor(uint32_t index);
-   void RePredict(uint32_t index);
-   void Predict();
+   void rePredict(uint32_t index);
+   void Predict(uint32_t index);
    void setInactive();
    bool isPredicting();
    bool isRePredicting();
+   void setActivationIndex(uint32_t command_index, uint32_t world_index);
+   bool confirmActivation(line_t *ln, uint32_t command_index);
+   void checkActivationExpired();
+   bool activationExpired();
+   void Reset();
+   void setSector(sector_t *new_sector);
+   void setLine(line_t *new_line);
+};
+
+// [CG] Base class for sector movement action types.
+class SectorMovementThinker : public SectorThinker
+{
+   DECLARE_THINKER_TYPE(SectorMovementThinker, SectorThinker)
+
+public:
+   SectorMovementThinker() : SectorThinker() {}
+   SectorMovementThinker(sector_t *new_sector) : SectorThinker(new_sector) {}
+   SectorMovementThinker(sector_t *new_sector, line_t *new_line)
+      : SectorThinker(new_sector, new_line) {}
 };
 
 // p_switch
@@ -824,6 +844,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   PlatThinker()
+      : SectorMovementThinker() {}
+   PlatThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   PlatThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
@@ -876,6 +904,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   VerticalDoorThinker()
+      : SectorMovementThinker() {}
+   VerticalDoorThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   VerticalDoorThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
@@ -946,6 +982,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   CeilingThinker()
+      : SectorMovementThinker() {}
+   CeilingThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   CeilingThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
@@ -1016,6 +1060,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   FloorMoveThinker()
+      : SectorMovementThinker() {}
+   FloorMoveThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   FloorMoveThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
@@ -1089,6 +1141,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   ElevatorThinker()
+      : SectorMovementThinker() {}
+   ElevatorThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   ElevatorThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    
@@ -1116,6 +1176,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   PillarThinker()
+      : SectorMovementThinker() {}
+   PillarThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   PillarThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    
@@ -1155,6 +1223,14 @@ protected:
                                cs_sector_thinker_data_t *src);
 
 public:
+   // Constructors
+   FloorWaggleThinker()
+      : SectorMovementThinker() {}
+   FloorWaggleThinker(sector_t *new_sector)
+      : SectorMovementThinker(new_sector) {}
+   FloorWaggleThinker(sector_t *new_sector, line_t *new_line)
+      : SectorMovementThinker(new_sector, new_line) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    

@@ -61,6 +61,7 @@
 #include "v_misc.h"
 #include "v_video.h"
 
+#include "cl_cmd.h"  // [CG] 04/04/2012.
 #include "sv_main.h" // [CG] 09/17/11.
 
 
@@ -1563,7 +1564,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             if((oldside = P_PointOnLineSide(oldx, oldy, clip.spechit[clip.numspechit])) !=
                P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
             {
-               if(serverside)
+               if(CS_SHOULD_ACTIVATE_LINE(thing))
                {
                   if(CS_SERVER)
                   {

@@ -71,6 +71,7 @@ extern bool cl_initial_spawn;
 extern bool cl_received_first_sync;
 extern bool cl_spawning_actor_from_message;
 extern bool cl_removing_actor_from_message;
+extern bool cl_activating_line_from_message;
 extern bool cl_setting_player_weapon_sprites;
 extern bool cl_handling_damaged_actor;
 extern bool cl_handling_damaged_actor_and_justhit;

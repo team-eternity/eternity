@@ -35,7 +35,7 @@
 #define MAX_NETID_LOAD_FACTOR 0.7
 
 class Mobj;
-class SectorMovementThinker;
+class SectorThinker;
 
 struct NetID
 {
@@ -158,8 +158,8 @@ public:
 
 };
 
-extern NetIDLookup<Mobj>                  NetActors;
-extern NetIDLookup<SectorMovementThinker> NetSectorThinkers;
+extern NetIDLookup<Mobj>          NetActors;
+extern NetIDLookup<SectorThinker> NetSectorThinkers;
 
 void CS_ClearNetIDs(void);
 

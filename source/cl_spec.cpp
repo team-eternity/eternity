@@ -24,7 +24,11 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
+#include "doomstat.h"
 #include "doomtype.h"
+#include "m_dllist.h"
 #include "m_fixed.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -42,6 +46,18 @@ bool cl_setting_sector_positions = false;
 
 static int old_numsectors = 0;
 static uint32_t *cl_latest_sector_position_indices = NULL;
+
+struct stored_line_activation_t
+{
+   DLListItem<stored_line_activation_t> link;
+   int32_t type;
+   uint32_t command_index;
+   actor_status_t actor_status;
+   uint32_t line_number;
+   int8_t side;
+};
+
+DLListItem<stored_line_activation_t> *slas = NULL;
 
 void CL_InitSectorPositions()
 {
@@ -64,6 +80,13 @@ void CL_InitSectorPositions()
       cl_latest_sector_position_indices[i] = cl_latest_world_index;
       for(j = 0; j < MAX_POSITIONS; j++)
          CS_SaveSectorPosition(cl_latest_world_index + j, i);
+   }
+
+   while(slas)
+   {
+      stored_line_activation_t *sla = slas->dllObject;
+      slas->remove();
+      efree(sla);
    }
 }
 
@@ -130,20 +153,109 @@ void CL_LoadSectorPositionsAt(uint32_t index)
       CS_SetSectorPosition(i, index);
 }
 
-void CL_ActivateAllSectorMovementThinkers()
+void CL_StoreLineActivation(Mobj *actor, line_t *line, int side,
+                            activation_type_e type)
 {
-   NetIDToObject<SectorMovementThinker> *nito = NULL;
+   stored_line_activation_t *sla = NULL;
+
+   if(actor->net_id != players[consoleplayer].mo->net_id)
+      return;
+
+   sla->type = type;
+   sla->command_index = cl_commands_sent;
+   sla = estructalloc(stored_line_activation_t, 1);
+   P_StoreActorStatus(&sla->actor_status, actor);
+   sla->line_number = (line - lines);
+   sla->side = side;
+
+   sla->link.insert(sla, &slas);
+}
+
+void CL_HandleLineActivation(uint32_t line_number, uint32_t command_index)
+{
+   // [CG] It's OK not to check for overflow here because this is only called
+   //      from CL_HandleLineActivatedMessage which does perform the check.
+   line_t *line = lines + line_number;
+   stored_line_activation_t *sla = NULL;
+   NetIDToObject<SectorThinker> *nito = NULL;
+   DLListItem<stored_line_activation_t> *link = slas;
+   DLListItem<stored_line_activation_t> *next = NULL;
+
+   actor_status_t actor_status;
+
+   while((nito = NetSectorThinkers.iterate(nito)))
+   {
+      if(nito->object->confirmActivation(line, command_index))
+      {
+         while(link)
+         {
+            sla = link->dllObject;
+
+            if((sla->line_number != line_number) ||
+               (sla->command_index != command_index))
+            {
+               link = link->dllNext;
+               continue;
+            }
+
+            next = link->dllNext;
+            link->remove();
+            link = next;
+
+            if(players[consoleplayer].mo)
+            {
+               P_StoreActorStatus(&actor_status, players[consoleplayer].mo);
+               P_LoadActorStatus(players[consoleplayer].mo, &sla->actor_status);
+            }
+
+            if(sla->type == at_used)
+            {
+               current_game_type->handleActorUsedSpecialLine(
+                  players[consoleplayer].mo, line, sla->side
+               );
+            }
+            else if(sla->type == at_crossed)
+            {
+               current_game_type->handleActorCrossedSpecialLine(
+                  players[consoleplayer].mo, line, sla->side
+               );
+            }
+            else if(sla->type == at_shot)
+            {
+               current_game_type->handleActorShotSpecialLine(
+                  players[consoleplayer].mo, line, sla->side
+               );
+            }
+            else
+            {
+               doom_printf(
+                  "CL_HandleLineActivations: Invalid line activation type "
+                  "%d.\n",
+                  sla->type
+               );
+            }
+
+            if(players[consoleplayer].mo)
+               P_LoadActorStatus(players[consoleplayer].mo, &actor_status);
+         }
+      }
+   }
+}
+
+void CL_ActivateAllSectorThinkers()
+{
+   NetIDToObject<SectorThinker> *nito = NULL;
 
    while((nito = NetSectorThinkers.iterate(nito)))
       nito->object->inactive = 0;
 }
 
-void CL_SavePredictedSectorPositions()
+void CL_SavePredictedSectorPositions(uint32_t index)
 {
    int i;
 
    for(i = 0; i < numsectors; i++)
-      CS_SaveSectorPosition(cl_current_world_index, i);
+      CS_SaveSectorPosition(index, i);
 }
 
 void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,

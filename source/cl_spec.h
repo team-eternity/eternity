@@ -38,8 +38,11 @@ void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
                            sector_position_t *new_position);
 void CL_LoadLatestSectorPositions();
 void CL_LoadSectorPositionsAt(uint32_t index);
+void CL_StoreLineActivation(Mobj *actor, line_t *line, int side,
+                            activation_type_e type);
+void CL_HandleLineActivation(uint32_t line_number, uint32_t command_index);
 void CL_ActivateAllSectorMovementThinkers();
-void CL_SavePredictedSectorPositions();
+void CL_SavePredictedSectorPositions(uint32_t index);
 
 void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,
                       cs_sector_thinker_spawn_data_t *spawn_data);

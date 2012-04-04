@@ -531,7 +531,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
                                        vldoor_e type)
 {
-   VerticalDoorThinker *door = new VerticalDoorThinker;
+   VerticalDoorThinker *door = new VerticalDoorThinker(sec, line);
    bool make_sound = false;
    bool raise = false;
    bool turbo = true;
@@ -540,11 +540,11 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
    door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
 
-   door->sector = sec;
+   // door->sector = sec;
    door->type = type;
    door->topwait = VDOORWAIT;
    door->speed = VDOORSPEED;
-   door->line = line;  // jff 1/31/98 remember line that triggered us
+   // door->line = line;  // jff 1/31/98 remember line that triggered us
    door->lighttag = 0; // killough 10/98: no light effects with tagged doors
 
    // setup door parameters according to type of door
@@ -803,18 +803,18 @@ VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec,
                                        bool turbo, bool bounce)
 {
    // new door thinker
-   VerticalDoorThinker *door = new VerticalDoorThinker;
+   VerticalDoorThinker *door = new VerticalDoorThinker(sec, line);
 
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
    
-   door->sector = sec;
+   // door->sector = sec;
    door->direction = plat_up;
    door->speed = VDOORSPEED;
    door->turbo     = false;
    door->topwait = VDOORWAIT;
-   door->line = line; // jff 1/31/98 remember line that triggered us
+   // door->line = line; // jff 1/31/98 remember line that triggered us
 
    // killough 10/98: use gradual lighting changes if nonzero tag given
    door->lighttag = comp[comp_doorlight] ? 0 : line->tag; // killough 10/98
@@ -893,20 +893,20 @@ VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec,
 
 VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec)
 {
-   VerticalDoorThinker *door = new VerticalDoorThinker;
+   VerticalDoorThinker *door = new VerticalDoorThinker(sec);
    
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
    
-   door->sector = sec;
+   // door->sector = sec;
    door->direction = plat_stop;
    door->type = doorNormal;
    door->speed = VDOORSPEED;
    door->turbo        = false;
    door->topcountdown = 30 * 35;
-   door->line = NULL; // jff 1/31/98 remember line that triggered us
+   // door->line = NULL; // jff 1/31/98 remember line that triggered us
    door->lighttag = 0;  // killough 10/98: no lighting changes
 
    if(serverside)
@@ -929,14 +929,14 @@ VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec)
 //
 VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
-   VerticalDoorThinker *door = new VerticalDoorThinker;
+   VerticalDoorThinker *door = new VerticalDoorThinker(sec);
    
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
    
-   door->sector = sec;
+   // door->sector = sec;
    door->direction = plat_special; // haleyjd: changed from 2
    door->type         = doorRaiseIn;
    door->speed = VDOORSPEED;
@@ -945,7 +945,7 @@ VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
    door->topheight -= 4*FRACUNIT;
    door->topwait = VDOORWAIT;
    door->topcountdown = 5 * 60 * 35;
-   door->line = NULL; // jff 1/31/98 remember line that triggered us
+   // door->line = NULL; // jff 1/31/98 remember line that triggered us
    door->lighttag = 0;  // killough 10/98: no lighting changes
 
    if(serverside)

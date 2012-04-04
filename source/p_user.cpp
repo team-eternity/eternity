@@ -56,6 +56,7 @@
 
 #include "cs_position.h"
 #include "cs_main.h"  // [CG] 09/18/11
+#include "cs_netid.h" // [CG] 04/04/12
 #include "cs_score.h" // [CG] 03/09/11
 #include "cl_cmd.h"   // [CG] 10/19/11
 #include "cl_pred.h"  // [CG] 09/18/11
@@ -203,6 +204,126 @@ void P_IncrementPlayerPlayerKills(int sourcenum, int targetnum)
       cs_scoreboard->setClientNeedsRepainted(sourcenum);
       cs_scoreboard->setClientNeedsRepainted(targetnum);
    }
+}
+
+//
+// P_StorePlayerStatus
+//
+// Stores the player's status in a separate structure.
+//
+void P_StorePlayerStatus(player_status_t *status, int playernum)
+{
+   player_t *player = &players[playernum];
+
+   if(player->mo)
+      status->actor_net_id = player->mo->net_id;
+   else
+      status->actor_net_id = 0;
+
+   status->playerstate               = player->playerstate;
+   status->viewz                     = player->viewz;
+   status->viewheight                = player->viewheight;
+   status->deltaviewheight           = player->deltaviewheight;
+   status->bob                       = player->bob;
+   status->pitch                     = player->pitch;
+   status->momx                      = player->momx;
+   status->momy                      = player->momy;
+   status->health                    = player->health;
+   status->armorpoints               = player->armorpoints;
+   status->armortype                 = player->armortype;
+   status->hereticarmor              = player->hereticarmor;
+   status->backpack                  = player->backpack;
+   status->totalfrags                = player->totalfrags;
+   status->readyweapon               = player->readyweapon;
+   status->pendingweapon             = player->pendingweapon;
+   status->extralight                = player->extralight;
+   status->attackdown                = player->attackdown;
+   status->usedown                   = player->usedown;
+   status->cheats                    = player->cheats;
+   status->refire                    = player->refire;
+   status->killcount                 = player->killcount;
+   status->itemcount                 = player->itemcount;
+   status->secretcount               = player->secretcount;
+   status->didsecret                 = player->didsecret;
+   status->damagecount               = player->damagecount;
+   status->bonuscount                = player->bonuscount;
+   status->fixedcolormap             = player->fixedcolormap;
+   status->colormap                  = player->colormap;
+   status->quake                     = player->quake;
+   status->jumptime                  = player->jumptime;
+
+   memcpy(&status->cmd,        &player->cmd,        sizeof(player->cmd));
+   memcpy( status->powers,      player->powers,     sizeof(player->powers));
+   memcpy( status->cards,       player->cards,      sizeof(player->cards));
+   memcpy( status->frags,       player->frags,      sizeof(player->frags));
+   memcpy( status->ammo,        player->ammo,       sizeof(player->ammo));
+   memcpy( status->maxammo,     player->maxammo,    sizeof(player->maxammo));
+   memcpy( status->weaponctrs,  player->weaponctrs, sizeof(player->weaponctrs));
+   memcpy(
+      status->weaponowned, player->weaponowned, sizeof(player->weaponowned)
+   );
+
+   strcpy(status->name, player->name);
+}
+
+//
+// P_LoadPlayerStatus
+//
+// Loads the player's status from a separate structure.
+//
+void P_LoadPlayerStatus(int playernum, player_status_t *status)
+{
+   player_t *player = &players[playernum];
+
+   if(status->actor_net_id)
+      player->mo = NetActors.lookup(status->actor_net_id);
+   else
+      player->mo = NULL;
+
+   player->playerstate               = status->playerstate;
+   player->viewz                     = status->viewz;
+   player->viewheight                = status->viewheight;
+   player->deltaviewheight           = status->deltaviewheight;
+   player->bob                       = status->bob;
+   player->pitch                     = status->pitch;
+   player->momx                      = status->momx;
+   player->momy                      = status->momy;
+   player->health                    = status->health;
+   player->armorpoints               = status->armorpoints;
+   player->armortype                 = status->armortype;
+   player->hereticarmor              = status->hereticarmor;
+   player->backpack                  = status->backpack;
+   player->totalfrags                = status->totalfrags;
+   player->readyweapon               = status->readyweapon;
+   player->pendingweapon             = status->pendingweapon;
+   player->extralight                = status->extralight;
+   player->attackdown                = status->attackdown;
+   player->usedown                   = status->usedown;
+   player->cheats                    = status->cheats;
+   player->refire                    = status->refire;
+   player->killcount                 = status->killcount;
+   player->itemcount                 = status->itemcount;
+   player->secretcount               = status->secretcount;
+   player->didsecret                 = status->didsecret;
+   player->damagecount               = status->damagecount;
+   player->bonuscount                = status->bonuscount;
+   player->fixedcolormap             = status->fixedcolormap;
+   player->colormap                  = status->colormap;
+   player->quake                     = status->quake;
+   player->jumptime                  = status->jumptime;
+
+   memcpy(&player->cmd,        &status->cmd,        sizeof(status->cmd));
+   memcpy( player->powers,      status->powers,     sizeof(status->powers));
+   memcpy( player->cards,       status->cards,      sizeof(status->cards));
+   memcpy( player->frags,       status->frags,      sizeof(status->frags));
+   memcpy( player->ammo,        status->ammo,       sizeof(status->ammo));
+   memcpy( player->maxammo,     status->maxammo,    sizeof(status->maxammo));
+   memcpy( player->weaponctrs,  status->weaponctrs, sizeof(status->weaponctrs));
+   memcpy(
+      player->weaponowned, status->weaponowned, sizeof(status->weaponowned)
+   );
+
+   strcpy(player->name, status->name);
 }
 
 //

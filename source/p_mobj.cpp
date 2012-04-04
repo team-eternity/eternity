@@ -408,6 +408,112 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    return true;
 }
 
+void P_StoreActorStatus(actor_status_t *status, Mobj *actor)
+{
+   if(actor->player)
+   {
+      status->has_player = true;
+      status->playernum = actor->player - players;
+      P_StorePlayerStatus(&status->player_status, actor->player - players);
+   }
+   else
+   {
+      status->has_player = false;
+      status->playernum = -1;
+      memset(&status->player_status, 0, sizeof(player_status_t));
+   }
+
+   status->angle        = actor->angle;
+   status->sprite       = actor->sprite;
+   status->frame        = actor->frame;
+   status->floorz       = actor->floorz;
+   status->ceilingz     = actor->ceilingz;
+   status->dropoffz     = actor->dropoffz;
+   status->radius       = actor->radius;
+   status->height       = actor->height ;
+   status->momx         = actor->momx;
+   status->momy         = actor->momy;
+   status->momz         = actor->momz;
+   status->validcount   = actor->validcount;
+   status->tics         = actor->tics;
+   status->flags        = actor->flags;
+   status->flags2       = actor->flags2;
+   status->flags3       = actor->flags3;
+   status->flags4       = actor->flags4;
+   status->intflags     = actor->intflags;
+   status->health       = actor->health;
+   status->movedir      = actor->movedir;
+   status->movecount    = actor->movecount;
+   status->strafecount  = actor->strafecount;
+   status->reactiontime = actor->reactiontime;
+   status->threshold    = actor->threshold;
+   status->pursuecount  = actor->pursuecount;
+   status->gear         = actor->gear;
+   status->lastlook     = actor->lastlook;
+   status->friction     = actor->friction;
+   status->movefactor   = actor->movefactor;
+   status->floatbob     = actor->floatbob;
+   status->damage       = actor->damage;
+   status->floorclip    = actor->floorclip;
+   status->secfloorz    = actor->secfloorz;
+   status->secceilz     = actor->secceilz;
+   status->passfloorz   = actor->passfloorz;
+   status->passceilz    = actor->passceilz;
+   status->tid          = actor->tid;
+
+   memcpy(&status->spawnpoint, &actor->spawnpoint, sizeof(actor->spawnpoint));
+}
+
+void P_LoadActorStatus(Mobj *actor, actor_status_t *status)
+{
+   if(status->has_player)
+   {
+      P_LoadPlayerStatus(status->playernum, &status->player_status);
+      actor->player = &players[status->playernum];
+   }
+   else
+      actor->player = NULL;
+
+   actor->angle        = status->angle;
+   actor->sprite       = status->sprite;
+   actor->frame        = status->frame;
+   actor->floorz       = status->floorz;
+   actor->ceilingz     = status->ceilingz;
+   actor->dropoffz     = status->dropoffz;
+   actor->radius       = status->radius;
+   actor->height       = status->height ;
+   actor->momx         = status->momx;
+   actor->momy         = status->momy;
+   actor->momz         = status->momz;
+   actor->validcount   = status->validcount;
+   actor->tics         = status->tics;
+   actor->flags        = status->flags;
+   actor->flags2       = status->flags2;
+   actor->flags3       = status->flags3;
+   actor->flags4       = status->flags4;
+   actor->intflags     = status->intflags;
+   actor->health       = status->health;
+   actor->movedir      = status->movedir;
+   actor->movecount    = status->movecount;
+   actor->strafecount  = status->strafecount;
+   actor->reactiontime = status->reactiontime;
+   actor->threshold    = status->threshold;
+   actor->pursuecount  = status->pursuecount;
+   actor->gear         = status->gear;
+   actor->lastlook     = status->lastlook;
+   actor->friction     = status->friction;
+   actor->movefactor   = status->movefactor;
+   actor->floatbob     = status->floatbob;
+   actor->damage       = status->damage;
+   actor->floorclip    = status->floorclip;
+   actor->secfloorz    = status->secfloorz;
+   actor->secceilz     = status->secceilz;
+   actor->passfloorz   = status->passfloorz;
+   actor->passceilz    = status->passceilz;
+   actor->tid          = status->tid;
+
+   memcpy(&actor->spawnpoint, &status->spawnpoint, sizeof(status->spawnpoint));
+}
 
 //
 // P_ExplodeMissile

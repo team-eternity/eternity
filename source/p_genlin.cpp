@@ -96,13 +96,13 @@ manual_floor:
       rtn = 1;
       if(serverside)
       {
-         floor = new FloorMoveThinker;
+         floor = new FloorMoveThinker(sec, line);
          floor->addThinker();
          sec->floordata = floor;
          
          floor->crush = fd->crush;
          floor->direction = fd->direction ? plat_up : plat_down;
-         floor->sector = sec;
+         // floor->sector = sec;
          floor->texture = sec->floorpic;
          //jff 3/14/98 transfer old special field too
          P_SetupSpecialTransfer(sec, &(floor->special));
@@ -349,13 +349,13 @@ manual_ceiling:
       rtn = 1;
       if(serverside)
       {
-         ceiling = new CeilingThinker;
+         ceiling = new CeilingThinker(sec, line);
          ceiling->addThinker();
          sec->ceilingdata = ceiling; //jff 2/22/98
 
          ceiling->crush = cd->crush;
          ceiling->direction = cd->direction ? plat_up : plat_down;
-         ceiling->sector = sec;
+         // ceiling->sector = sec;
          ceiling->texture = sec->ceilingpic;
          //jff 3/14/98 change old field too
          P_SetupSpecialTransfer(sec, &(ceiling->special));
@@ -627,10 +627,10 @@ manual_lift:
       rtn = 1;
       if(serverside)
       {
-         plat = new PlatThinker;
+         plat = new PlatThinker(sec, line);
          plat->addThinker();
          
-         plat->sector = sec;
+         // plat->sector = sec;
          plat->sector->floordata = plat;
          plat->crush = -1;
          plat->tag = line->tag;
@@ -776,12 +776,12 @@ manual_stair:
 
       if(serverside)
       {
-         floor = new FloorMoveThinker;
+         floor = new FloorMoveThinker(sec, line);
          floor->addThinker();
          sec->floordata = floor;
 
          floor->direction = sd->direction ? plat_up : plat_down;
-         floor->sector = sec;
+         // floor->sector = sec;
 
          // setup speed of stair building
          switch(sd->speed_type)
@@ -909,13 +909,13 @@ manual_stair:
                
                sec = tsec;
                secnum = newsecnum;
-               floor = new FloorMoveThinker;
+               floor = new FloorMoveThinker(sec, line);
                
                floor->addThinker();
                
                sec->floordata = floor;
                floor->direction = sd->direction ? plat_up : plat_down;
-               floor->sector = sec;
+               // floor->sector = sec;
 
                // haleyjd 10/06/05: support synchronized stair raising
                if(sd->sync_value)
@@ -1059,12 +1059,12 @@ manual_crusher:
       rtn = 1;
       if(serverside)
       {
-         ceiling = new CeilingThinker;
+         ceiling = new CeilingThinker(sec, line);
          ceiling->addThinker();
          sec->ceilingdata = ceiling; //jff 2/22/98
          ceiling->crush = 10;
          ceiling->direction = plat_down;
-         ceiling->sector = sec;
+         // ceiling->sector = sec;
          ceiling->texture = sec->ceilingpic;
          // haleyjd: note: transfer isn't actually used by crushers...
          P_SetupSpecialTransfer(sec, &(ceiling->special));
@@ -1215,17 +1215,17 @@ manual_door:
          bool turbo = true;
          bool bounce = false;
 
-         door = new VerticalDoorThinker;
+         door = new VerticalDoorThinker(sec, line);
          door->addThinker();
          sec->ceilingdata = door; //jff 2/22/98
          
-         door->sector = sec;
+         // door->sector = sec;
          door->turbo  = false;
 
             door->topwait = dd->delay_value;
          door->speed   = dd->speed_value;
 
-         door->line = line; // jff 1/31/98 remember line that triggered us
+         // door->line = line; // jff 1/31/98 remember line that triggered us
 
          // killough 10/98: implement gradual lighting
          // haleyjd 02/28/05: support light changes from alternate tag
