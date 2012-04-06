@@ -52,13 +52,15 @@ SectorThinker::SectorThinker() : Thinker()
    {
       activation_status = ACTIVATION_UNCONFIRMED;
       activation_world_index = 0;
-      activation_command_index = cl_commands_sent;
+      activation_command_index = cl_commands_sent - 1;
+      activated_clientside = true;
    }
    else
    {
       activation_status = ACTIVATION_AFFIRMATIVE;
       activation_world_index = 0;
       activation_command_index = 0;
+      activated_clientside = false;
    }
 
    sector = NULL;
@@ -81,13 +83,15 @@ SectorThinker::SectorThinker(sector_t *new_sector) : Thinker()
    {
       activation_status = ACTIVATION_UNCONFIRMED;
       activation_world_index = 0;
-      activation_command_index = cl_commands_sent;
+      activation_command_index = cl_commands_sent - 1;
+      activated_clientside = true;
    }
    else
    {
       activation_status = ACTIVATION_AFFIRMATIVE;
       activation_world_index = 0;
       activation_command_index = 0;
+      activated_clientside = false;
    }
 
    sector = NULL;
@@ -106,20 +110,21 @@ SectorThinker::SectorThinker(sector_t *new_sector) : Thinker()
    setSector(new_sector);
 }
 
-SectorThinker::SectorThinker(sector_t *new_sector, line_t *new_line)
-   : Thinker()
+SectorThinker::SectorThinker(sector_t *new_sector, line_t *new_line) : Thinker()
 {
    if(CS_CLIENT)
    {
       activation_status = ACTIVATION_UNCONFIRMED;
       activation_world_index = 0;
-      activation_command_index = cl_commands_sent;
+      activation_command_index = cl_commands_sent - 1;
+      activated_clientside = true;
    }
    else
    {
       activation_status = ACTIVATION_AFFIRMATIVE;
       activation_world_index = 0;
       activation_command_index = 0;
+      activated_clientside = false;
    }
 
    sector = NULL;
@@ -155,13 +160,31 @@ SectorThinker::~SectorThinker()
 //
 void SectorThinker::serialize(SaveArchive &arc)
 {
+   int32_t astatus = activation_status;
+
    Super::serialize(arc);
 
    arc << sector;
+   arc << line;
+
+   arc << astatus
+       << activation_world_index
+       << activation_command_index
+       << predicting
+       << repredicting
+       << prediction_index
+       << net_id
+       << removed
+       << inactive;
+
+   serializeCurrentStatus(arc);
+   serializeStatusQueue(arc);
 
    // when reloading, attach to sector
    if(arc.isLoading())
    {
+      activation_status = (activation_status_e)astatus;
+
       switch(getAttachPoint())
       {
       case ATTACH_FLOOR:
@@ -204,38 +227,43 @@ void SectorThinker::netSerialize(cs_sector_thinker_data_t *data)
 }
 
 //
-// SectorThinker::netUpdate()
+// SectorThinker::insertStatus()
 //
-// Updates the thinker with data from a net-safe struct.  Saves the update and
-// its index as well.
+// Inserts a status into this sector thinker's status queue.
 //
-void SectorThinker::netUpdate(uint32_t index,
-                                      cs_sector_thinker_data_t *data)
+void SectorThinker::insertStatus(uint32_t index, cs_sector_thinker_data_t *data)
 {
    if(CS_CLIENT) // [CG] C/S clients only.
    {
-      mqueueitem_t *mqitem = NULL;
+      mqueue_t mqueue;
       cs_queued_sector_thinker_data_t *qstd = NULL;
+      cs_queued_sector_thinker_data_t *new_qstd = estructalloc(
+         cs_queued_sector_thinker_data_t, 1
+      );
 
+      M_QueueInit(&mqueue);
       M_QueueResetIterator(&status_queue);
-      while((mqitem = M_QueueIterator(&status_queue)))
+
+      new_qstd->index = index;
+      copyStatusData(&new_qstd->data, data);
+
+      while(!M_QueueIsEmpty(&status_queue))
       {
-         mqueueitem_t *mqitem = NULL;
-         qstd = (cs_queued_sector_thinker_data_t *)mqitem;
+         qstd = (cs_queued_sector_thinker_data_t *)M_QueuePeek(&status_queue);
 
-         if(qstd->index != index)
-            continue;
+         if(qstd->index > index)
+            break;
 
-         copyStatusData(&qstd->data, data);
-         M_QueueResetIterator(&status_queue);
-         return;
+         M_QueueInsert(M_QueuePop(&status_queue), &mqueue);
       }
 
-      qstd = estructalloc(cs_queued_sector_thinker_data_t, 1);
-      qstd->index = index;
-      copyStatusData(&qstd->data, data);
-      M_QueueInsert((mqueueitem_t *)qstd, &status_queue);
-      M_QueueResetIterator(&status_queue);
+      M_QueueInsert((mqueueitem_t *)new_qstd, &mqueue);
+
+      while(!M_QueueIsEmpty(&status_queue))
+         M_QueueInsert(M_QueuePop(&status_queue), &mqueue);
+
+      while(!M_QueueIsEmpty(&mqueue))
+         M_QueueInsert(M_QueuePop(&mqueue), &status_queue);
    }
 }
 
@@ -296,6 +324,30 @@ void SectorThinker::savePredictedStatus(uint32_t index)
 }
 
 //
+// SectorThinker::saveInitialSpawnStatus()
+//
+// Stores initial spawn status if activated clientside.
+//
+void SectorThinker::saveInitialSpawnStatus()
+{
+   if(activated_clientside && M_QueueIsEmpty(&status_queue))
+      savePredictedStatus(activation_command_index);
+}
+
+//
+// SectorThinker::wasActivatedClientside()
+//
+// Returns true if this sector thinker was activated clientside.
+//
+bool SectorThinker::wasActivatedClientside()
+{
+   if(activated_clientside)
+      return true;
+
+   return false;
+}
+
+//
 // SectorThinker::clearOldUpdates()
 //
 // Clears outdated updates from the queue.
@@ -343,13 +395,15 @@ void SectorThinker::loadStatusFor(uint32_t index)
 
    if(!qstd)
    {
-      // I_Error("No status for SMT %u at %u.\n" net_id, index);
+      saveInitialSpawnStatus();
+      /*
       CS_LogSMT("%u/%u: No status for SMT %u at %u.\n",
          cl_latest_world_index,
          cl_current_world_index,
          net_id,
          index
       );
+      */
    }
    else if(previous_qstd)
       loadStatusData(&previous_qstd->data);
@@ -366,6 +420,9 @@ void SectorThinker::rePredict(uint32_t index)
 {
    if(CS_CLIENT)
    {
+      if(index <= activation_command_index)
+         return;
+
       loadStatusFor(index);
 
       CS_LogSMT(
@@ -466,8 +523,8 @@ bool SectorThinker::isRePredicting()
    return false;
 }
 
-void SectorThinker::setActivationIndex(uint32_t command_index,
-                                       uint32_t world_index)
+void SectorThinker::setActivationIndexCutoff(uint32_t command_index,
+                                             uint32_t world_index)
 {
    if(!CS_CLIENT)
       return;

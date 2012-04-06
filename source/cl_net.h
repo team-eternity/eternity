@@ -86,6 +86,7 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message);
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message);
 void CL_HandleVoteMessage(nm_vote_t *message);
 void CL_HandleVoteResultMessage(nm_voteresult_t *message);
+void CL_HandleRNGSyncMessage(nm_rngsync_t *message);
 
 #endif
 

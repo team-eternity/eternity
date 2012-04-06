@@ -624,6 +624,7 @@ protected:
    line_t              *pre_activation_line;
 
    // [CG] Clientside prediction information.
+   bool                     activated_clientside;
    bool                     predicting;
    bool                     repredicting;
    uint32_t                 prediction_index;
@@ -632,6 +633,8 @@ protected:
 
    // Methods
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
+   virtual void serializeCurrentStatus(SaveArchive &arc) {}
+   virtual void serializeStatusQueue(SaveArchive &arc) {}
    virtual bool statusChanged() { return false; }
    virtual void loadStatusData(cs_sector_thinker_data_t *data) {}
    virtual void dumpStatusData(cs_sector_thinker_data_t *data) {}
@@ -640,10 +643,12 @@ protected:
    virtual bool startThinking();
    virtual void finishThinking();
    virtual void savePredictedStatus(uint32_t index);
+   virtual void saveInitialSpawnStatus();
 
 public:
    // Data Members
    uint32_t net_id;
+   uint32_t cl_net_id;
    uint32_t removed;
    uint32_t inactive;
    line_t *line;
@@ -659,10 +664,13 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void netSerialize(cs_sector_thinker_data_t *data);
-   virtual void netUpdate(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void logStatus(cs_sector_thinker_data_t *data);
+   virtual void Reset();
 
    // Non-virtual methods
+   void setActivatedClientside();
+   bool wasActivatedClientside();
    void clearOldUpdates(uint32_t index);
    void loadStatusFor(uint32_t index);
    void rePredict(uint32_t index);
@@ -670,11 +678,10 @@ public:
    void setInactive();
    bool isPredicting();
    bool isRePredicting();
-   void setActivationIndex(uint32_t command_index, uint32_t world_index);
+   void setActivationIndexCutoff(uint32_t command_index, uint32_t world_index);
    bool confirmActivation(line_t *ln, uint32_t command_index);
    void checkActivationExpired();
    bool activationExpired();
-   void Reset();
    void setSector(sector_t *new_sector);
    void setLine(line_t *new_line);
 };
@@ -739,7 +746,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int count;
    int maxlight;
@@ -796,7 +803,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int minlight;
    int maxlight;
@@ -816,7 +823,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    fixed_t lightlevel;
    fixed_t destlevel;
@@ -856,6 +863,8 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void logStatus(cs_sector_thinker_data_t *data);
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
 
    // Data Members
    fixed_t speed;
@@ -915,6 +924,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
 
    // Data Members
    int type;
@@ -993,6 +1004,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
 
    // Data Members
    int type;
@@ -1071,6 +1084,8 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
 
    // Data Members
    int type;
@@ -1151,7 +1166,9 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
+
    // Data Members
    int type;
    int direction;
@@ -1186,7 +1203,9 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
+
    // Data Members
    int ceilingSpeed;
    int floorSpeed;
@@ -1233,7 +1252,9 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+   virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void Reset();
+
    // Data Members
    fixed_t originalHeight;
    fixed_t accumulator;
@@ -1259,7 +1280,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    fixed_t dx, dy;      // (dx,dy) scroll speeds
    int affectee;        // Number of affected sidedef, sector, tag, or whatever
@@ -1291,7 +1312,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int friction;      // friction value (E800 = normal)
    int movefactor;    // inertia factor when adding to momentum
@@ -1310,7 +1331,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    enum
    {
@@ -1600,7 +1621,7 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 // p_plats
 
-void P_AddActivePlat(PlatThinker *plat, const char *seqname);
+void P_AddActivePlat(PlatThinker *plat);
 
 void P_RemoveActivePlat(PlatThinker *plat);
 
@@ -1610,22 +1631,12 @@ void P_ActivateInStasis(int tag);
 
 void P_PlatSequence(PlatThinker *plat, const char *seqname);
 
-PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
-                             plattype_e type);
-
 // p_doors
 
 void P_DoorSequence(VerticalDoorThinker *door, bool raise, bool turbo,
                     bool bounced); // haleyjd
 
 void P_RemoveDoor(VerticalDoorThinker *door);
-
-VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
-                                       vldoor_e type);
-
-VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec,
-                                       bool make_sound, bool raise, bool turbo,
-                                       bool bounce);
 
 VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec);
 
@@ -1642,29 +1653,7 @@ void P_RemovePillar(PillarThinker *pillar);
 
 void P_RemoveFloorWaggle(FloorWaggleThinker *floorwaggle);
 
-FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype);
-
-FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
-                               fixed_t floordestheight);
-
-FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
-                                   fixed_t floordestheight);
-
-ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
-                                 elevator_e elevtype);
-
-PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
-                                  fixed_t height, fixed_t speed, int crush);
-
-PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
-                                 fixed_t fdist, fixed_t cdist);
-
-FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector,
-                                       int height, int speed, int offset,
-                                       int timer);
 // p_ceilng
-
-CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 

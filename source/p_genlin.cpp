@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -50,6 +50,8 @@
 
 #include "cs_netid.h"
 #include "cs_spec.h"
+#include "cl_cmd.h"
+#include "cl_main.h"
 #include "sv_main.h"
 
 //////////////////////////////////////////////////////////
@@ -82,8 +84,8 @@ int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
-manual_floor:                
+
+manual_floor:
       // Do not start another function if floor already moving
       if(P_SectorActive(floor_special,sec))
       {
@@ -94,12 +96,12 @@ manual_floor:
 
       // new floor thinker
       rtn = 1;
-      if(serverside)
+      if(CS_SHOULD_SPAWN_SECTOR_THINKERS)
       {
          floor = new FloorMoveThinker(sec, line);
          floor->addThinker();
          sec->floordata = floor;
-         
+
          floor->crush = fd->crush;
          floor->direction = fd->direction ? plat_up : plat_down;
          // floor->sector = sec;
@@ -151,8 +153,8 @@ manual_floor:
             floor->floordestheight = sec->ceilingheight;
             break;
          case FbyST:
-            floor->floordestheight = 
-               (floor->sector->floorheight>>FRACBITS) + floor->direction * 
+            floor->floordestheight =
+               (floor->sector->floorheight>>FRACBITS) + floor->direction *
                (P_FindShortestTextureAround(secnum)>>FRACBITS);
             if(floor->floordestheight>32000)  //jff 3/13/98 prevent overflow
                floor->floordestheight=32000;    // wraparound in floor height
@@ -168,10 +170,10 @@ manual_floor:
             floor->floordestheight = floor->sector->floorheight +
                floor->direction * 32*FRACUNIT;
             break;
-         
+
             // haleyjd 05/07/04: parameterized extensions
             //         05/20/05: added FtoAbs, FInst
-         case FbyParam: 
+         case FbyParam:
             floor->floordestheight = floor->sector->floorheight +
                floor->direction * fd->height_value;
             break;
@@ -208,7 +210,7 @@ manual_floor:
                msec = (fd->target_type == FtoLnC || fd->target_type == FtoC)?
                   P_FindModelCeilingSector(floor->floordestheight,secnum) :
                   P_FindModelFloorSector(floor->floordestheight,secnum);
-               
+
                if(msec)
                {
                   floor->texture = msec->floorpic;
@@ -260,11 +262,16 @@ manual_floor:
 
          P_FloorSequence(floor);
 
-         if(CS_SERVER)
+         if(serverside)
          {
-            cs_sector_thinker_spawn_data_t spawn_data;
-            spawn_data.floor_spawn_data.make_sound = true;
-            SV_BroadcastSectorThinkerSpawned(floor, &spawn_data);
+            NetSectorThinkers.add(floor);
+
+            if(CS_SERVER)
+            {
+               cs_sector_thinker_spawn_data_t spawn_data;
+               spawn_data.floor_spawn_data.make_sound = true;
+               SV_BroadcastSectorThinkerSpawned(floor, &spawn_data);
+            }
          }
       }
       if(manual)
@@ -292,7 +299,7 @@ int EV_DoGenFloor(line_t *line)
    unsigned value = (unsigned int)line->special - GenFloorBase;
 
    // parse the bit fields in the line's special type
-   
+
    fd.crush        = ((value & FloorCrush) >> FloorCrushShift) ? 10 : -1;
    fd.change_type  = (value & FloorChange) >> FloorChangeShift;
    fd.target_type  = (value & FloorTarget) >> FloorTargetShift;
@@ -336,7 +343,7 @@ int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
    {
       sec = &sectors[secnum];
 
-manual_ceiling:                
+manual_ceiling:
       // Do not start another function if ceiling already moving
       if(P_SectorActive(ceiling_special, sec)) //jff 2/22/98
       {
@@ -347,7 +354,7 @@ manual_ceiling:
 
       // new ceiling thinker
       rtn = 1;
-      if(serverside)
+      if(CS_SHOULD_SPAWN_SECTOR_THINKERS)
       {
          ceiling = new CeilingThinker(sec, line);
          ceiling->addThinker();
@@ -448,7 +455,7 @@ manual_ceiling:
          default:
             break;
          }
-       
+
          if(ceiling->direction == plat_up)
             ceiling->topheight = targheight;
          else
@@ -461,7 +468,7 @@ manual_ceiling:
             {
                sector_t *msec;
 
-               // jff 5/23/98 find model with floor at target height if 
+               // jff 5/23/98 find model with floor at target height if
                // target is a floor type
                msec = (cd->target_type == CtoHnF || cd->target_type == CtoF) ?
                         P_FindModelFloorSector(targheight, secnum) :
@@ -518,11 +525,16 @@ manual_ceiling:
          P_AddActiveCeiling(ceiling); // add this ceiling to the active list
          P_CeilingSequence(ceiling, CNOISE_NORMAL); // haleyjd 09/29/06
 
-         if(CS_SERVER)
+         if(serverside)
          {
-            cs_sector_thinker_spawn_data_t spawn_data;
-            spawn_data.ceiling_spawn_data.noise = CNOISE_NORMAL;
-            SV_BroadcastSectorThinkerSpawned(ceiling, &spawn_data);
+            NetSectorThinkers.add(ceiling);
+
+            if(CS_SERVER)
+            {
+               cs_sector_thinker_spawn_data_t spawn_data;
+               spawn_data.ceiling_spawn_data.noise = CNOISE_NORMAL;
+               SV_BroadcastSectorThinkerSpawned(ceiling, &spawn_data);
+            }
          }
 
       }
@@ -549,7 +561,7 @@ int EV_DoGenCeiling(line_t *line)
    unsigned value = (unsigned int)line->special - GenCeilingBase;
 
    // parse the bit fields in the line's special type
-   
+
    cd.crush        = ((value & CeilingCrush) >> CeilingCrushShift) ? 10 : -1;
    cd.change_type  = (value & CeilingChange) >> CeilingChangeShift;
    cd.target_type  = (value & CeilingTarget) >> CeilingTargetShift;
@@ -583,7 +595,7 @@ int EV_DoGenLift(line_t *line)
    unsigned int value = (unsigned int)line->special - GenLiftBase;
 
    // parse the bit fields in the line's special type
-   
+
    int Targ = (value & LiftTarget) >> LiftTargetShift;
    int Dely = (value & LiftDelay) >> LiftDelayShift;
    int Sped = (value & LiftSpeed) >> LiftSpeedShift;
@@ -591,12 +603,12 @@ int EV_DoGenLift(line_t *line)
 
    secnum = -1;
    rtn = 0;
-   
+
    // Activate all <type> plats that are in_stasis
-   
+
    if(Targ==LnF2HnF)
       P_ActivateInStasis(line->tag);
-        
+
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
    if(Trig==PushOnce || Trig==PushMany)
@@ -612,7 +624,7 @@ int EV_DoGenLift(line_t *line)
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
+
 manual_lift:
       // Do not start another function if floor already moving
       if(P_SectorActive(floor_special, sec))
@@ -622,19 +634,19 @@ manual_lift:
          else
             return rtn;
       }
-      
+
       // Setup the plat thinker
       rtn = 1;
-      if(serverside)
+      if(CS_SHOULD_SPAWN_SECTOR_THINKERS)
       {
          plat = new PlatThinker(sec, line);
          plat->addThinker();
-         
+
          // plat->sector = sec;
          plat->sector->floordata = plat;
          plat->crush = -1;
          plat->tag = line->tag;
-         
+
          plat->type = genLift;
          plat->high = sec->floorheight;
          plat->status = down;
@@ -706,10 +718,26 @@ manual_lift:
          }
 
          P_PlatSequence(plat, "EEPlatNormal"); // haleyjd
-         P_AddActivePlat(plat, "EEPlatNormal"); // add this plat to the list of active plats
 
+         P_AddActivePlat(plat); // add this plat to the list of active plats
+
+         if(serverside)
+         {
+            NetSectorThinkers.add(plat);
+
+            if(CS_SERVER)
+            {
+               cs_sector_thinker_spawn_data_t spawn_data;
+               strncpy(
+                  spawn_data.platform_spawn_data.seqname,
+                  "EEPlatNormal",
+                  sizeof(spawn_data.platform_spawn_data.seqname)
+               );
+               SV_BroadcastSectorThinkerSpawned(plat, &spawn_data);
+            }
+         }
       }
-      
+
       if(manual)
          return rtn;
    }
@@ -734,15 +762,15 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    int  ok;
    int  rtn = 0;
    bool manual = false;
-    
+
    sector_t *sec;
    sector_t *tsec;
-   
+
    FloorMoveThinker *floor;
-   
+
    fixed_t  stairsize;
-   fixed_t  speed;  
-   
+   fixed_t  speed;
+
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 10/06/05: only line actions can be manual
    if(sd->trigger_type == PushOnce || sd->trigger_type == PushMany)
@@ -759,8 +787,8 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
-manual_stair:          
+
+manual_stair:
       //Do not start another function if floor already moving
       //jff 2/26/98 add special lockout condition to wait for entire
       //staircase to build before retriggering
@@ -770,11 +798,11 @@ manual_stair:
             return rtn;
          continue;
       }
-      
+
       // new floor thinker
       rtn = 1;
 
-      if(serverside)
+      if(CS_SHOULD_SPAWN_SECTOR_THINKERS)
       {
          floor = new FloorMoveThinker(sec, line);
          floor->addThinker();
@@ -841,7 +869,7 @@ manual_stair:
          // haleyjd 10/13/05: init reset and delay properties
          floor->resetTime     = sd->reset_value;
          floor->resetHeight   = sec->floorheight;
-         floor->delayTime     = sd->delay_value;      
+         floor->delayTime     = sd->delay_value;
          floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;
          floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
@@ -850,7 +878,7 @@ manual_stair:
          sec->prevsec   = -1;
 
          P_FloorSequence(floor);
-         
+
          NetSectorThinkers.add(floor);
 
          if(CS_SERVER)
@@ -861,7 +889,7 @@ manual_stair:
             SV_BroadcastSectorThinkerSpawned(floor, &spawn_data);
          }
 
-         osecnum = secnum;            // jff 3/4/98 preserve loop index  
+         osecnum = secnum;            // jff 3/4/98 preserve loop index
          // Find next sector to raise
          // 1.     Find 2-sided line with same sector side[0]
          // 2.     Other side is the next sector to raise
@@ -872,16 +900,16 @@ manual_stair:
             {
                if(!((sec->lines[i])->backsector))
                   continue;
-               
+
                tsec = (sec->lines[i])->frontsector;
                newsecnum = tsec-sectors;
-               
+
                if(secnum != newsecnum)
                   continue;
-               
+
                tsec = (sec->lines[i])->backsector;
                newsecnum = tsec - sectors;
-               
+
                if(!sd->ignore && tsec->floorpic != texture)
                   continue;
 
@@ -894,7 +922,7 @@ manual_stair:
                if(P_SectorActive(floor_special, tsec) || tsec->stairlock)
                   continue;
 
-               // jff 6/19/98 increase height AFTER continue        
+               // jff 6/19/98 increase height AFTER continue
                // killough 10/98: corrected use of demo compatibility flag
                if(demo_version >= 202)
                   height += floor->direction * stairsize;
@@ -906,13 +934,13 @@ manual_stair:
                tsec->prevsec = secnum;   // link next back
                tsec->nextsec = -1;       // set next forward link as end
                tsec->stairlock = -2;     // lock the step
-               
+
                sec = tsec;
                secnum = newsecnum;
                floor = new FloorMoveThinker(sec, line);
-               
+
                floor->addThinker();
-               
+
                sec->floordata = floor;
                floor->direction = sd->direction ? plat_up : plat_down;
                // floor->sector = sec;
@@ -920,13 +948,13 @@ manual_stair:
                // haleyjd 10/06/05: support synchronized stair raising
                if(sd->sync_value)
                {
-                  floor->speed = 
-                     D_abs(FixedMul(speed, 
+                  floor->speed =
+                     D_abs(FixedMul(speed,
                            FixedDiv(height - sec->floorheight, stairsize)));
                }
                else
                   floor->speed = speed;
-               
+
                floor->floordestheight = height;
                floor->crush = -1;
                floor->type = genBuildStair; // jff 3/31/98 do not leave uninited
@@ -934,12 +962,12 @@ manual_stair:
                // haleyjd 10/13/05: init reset and delay properties
                floor->resetTime     = sd->reset_value;
                floor->resetHeight   = sec->floorheight;
-               floor->delayTime     = sd->delay_value;      
-               floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
+               floor->delayTime     = sd->delay_value;
+               floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;
                floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
                P_FloorSequence(floor);
-               
+
                NetSectorThinkers.add(floor);
 
                if(CS_SERVER)
@@ -978,13 +1006,13 @@ int EV_DoGenStairs(line_t *line)
    unsigned    value = (unsigned int)line->special - GenStairsBase;
 
    // parse the bit fields in the line's special type
-   
+
    sd.ignore        = (value & StairIgnore) >> StairIgnoreShift;
    sd.direction     = (value & StairDirection) >> StairDirectionShift;
    sd.stepsize_type = (value & StairStep) >> StairStepShift;
    sd.speed_type    = (value & StairSpeed) >> StairSpeedShift;
    sd.trigger_type  = (value & TriggerType) >> TriggerTypeShift;
-   
+
    // haleyjd 10/06/05: generalized stairs don't support the following
    sd.sync_value     = 0;
    sd.delay_value    = 0;
@@ -1017,9 +1045,9 @@ int EV_DoGenCrusher(line_t *line)
    sector_t *sec;
    CeilingThinker *ceiling;
    unsigned int value = (unsigned int)line->special - GenCrusherBase;
-   
+
    // parse the bit fields in the line's special type
-   
+
    int Slnt = (value & CrusherSilent) >> CrusherSilentShift;
    int Sped = (value & CrusherSpeed) >> CrusherSpeedShift;
    int Trig = (value & TriggerType) >> TriggerTypeShift;
@@ -1038,14 +1066,14 @@ int EV_DoGenCrusher(line_t *line)
       manual = true;
       goto manual_crusher;
    }
-   
+
    secnum = -1;
    // if not manual do all sectors tagged the same as the line
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
-manual_crusher:                
+
+manual_crusher:
       // Do not start another function if ceiling already moving
       if(P_SectorActive(ceiling_special,sec)) //jff 2/22/98
       {
@@ -1057,7 +1085,7 @@ manual_crusher:
 
       // new ceiling thinker
       rtn = 1;
-      if(serverside)
+      if(CS_SHOULD_SPAWN_SECTOR_THINKERS)
       {
          ceiling = new CeilingThinker(sec, line);
          ceiling->addThinker();
@@ -1123,7 +1151,7 @@ Mobj *genDoorThing;
 // GenDoorRetrigger
 //
 // haleyjd 02/23/04: This function handles retriggering of certain
-// active generalized door types, a functionality which was neglected 
+// active generalized door types, a functionality which was neglected
 // in BOOM. To be retriggerable, the door must fit these criteria:
 // 1. The thinker on the sector must be a T_VerticalDoor
 // 2. The door type must be raise, not open or close
@@ -1139,7 +1167,7 @@ static int GenDoorRetrigger(Thinker *th, int trig)
    if(!(door = thinker_cast<VerticalDoorThinker *>(th)))
       return 0;
 
-   if(genDoorThing && 
+   if(genDoorThing &&
       (door->type == doorNormal || door->type == blazeRaise) &&
       trig == PushMany)
    {
@@ -1156,8 +1184,8 @@ static int GenDoorRetrigger(Thinker *th, int trig)
 // door types. Absorbs code from the below two functions and adds
 // the ability to pass in fully customized data. Values for the
 // speed and delay types that are outside the range representable
-// in BOOM generalized lines are used to indicate that full values 
-// are contained in the doordata structure and should be used 
+// in BOOM generalized lines are used to indicate that full values
+// are contained in the doordata structure and should be used
 // instead of the hardcoded generalized options.
 //
 // Parameters:
@@ -1171,6 +1199,10 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
    sector_t *sec;
    VerticalDoorThinker *door;
    bool manual = false;
+   bool make_sound = false;
+   bool raise = false;
+   bool turbo = false;
+   bool bounced = false;
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
@@ -1208,17 +1240,12 @@ manual_door:
 
       // new door thinker
       rtn = 1;
-      if(serverside)
+      if(CS_SHOULD_SPAWN_SECTOR_THINKERS)
       {
-         bool make_sound = false;
-         bool raise = false;
-         bool turbo = true;
-         bool bounce = false;
-
          door = new VerticalDoorThinker(sec, line);
          door->addThinker();
          sec->ceilingdata = door; //jff 2/22/98
-         
+
          // door->sector = sec;
          door->turbo  = false;
 
@@ -1232,10 +1259,10 @@ manual_door:
          if(dd->usealtlighttag)
             door->lighttag = dd->altlighttag;
          else
-            door->lighttag = !comp[comp_doorlight] && line && 
-               (line->special&6) == 6 && 
+            door->lighttag = !comp[comp_doorlight] && line &&
+               (line->special&6) == 6 &&
                line->special > GenLockedBase ? line->tag : 0;
-         
+
          // set kind of door, whether it opens then close, opens, closes etc.
          // assign target heights accordingly
          // haleyjd 05/04/04: fixed sound playing; was totally messed up!
@@ -1254,9 +1281,7 @@ manual_door:
                make_sound = true;
                raise = true;
                turbo = door->turbo;
-               bounce = false;
-
-               P_DoorSequence(door, true, door->turbo, false); // haleyjd
+               bounced = false;
             }
             break;
          case ODoor:
@@ -1272,8 +1297,7 @@ manual_door:
                make_sound = true;
                raise = true;
                turbo = door->turbo;
-               bounce = false;
-               P_DoorSequence(door, true, door->turbo, false); // haleyjd
+               bounced = false;
             }
             break;
          case CdODoor:
@@ -1284,8 +1308,7 @@ manual_door:
             make_sound = true;
             raise = false;
             turbo = door->turbo;
-            bounce = false;
-            P_DoorSequence(door, false, door->turbo, false); // haleyjd
+            bounced = false;
             break;
          case CDoor:
             door->topheight = P_FindLowestCeilingSurrounding(sec);
@@ -1298,10 +1321,9 @@ manual_door:
             make_sound = true;
             raise = false;
             turbo = door->turbo;
-            bounce = false;
-            P_DoorSequence(door, false, door->turbo, false); // haleyjd
+            bounced = false;
             break;
-         
+
          // haleyjd: The following door types are parameterized only
          case pDOdCDoor:
             // parameterized "raise in" type
@@ -1323,17 +1345,25 @@ manual_door:
             break;
          }
 
-         if(CS_SERVER)
-         {
-            cs_sector_thinker_spawn_data_t spawn_data;
-            spawn_data.door_spawn_data.make_sound = make_sound;
-            spawn_data.door_spawn_data.raise = raise;
-            spawn_data.door_spawn_data.turbo = turbo;
-            spawn_data.door_spawn_data.bounce = bounce;
-            SV_BroadcastSectorThinkerSpawned(door, &spawn_data);
-         }
+         if(make_sound)
+            P_DoorSequence(door, raise, turbo, bounced); // haleyjd
 
+         if(serverside)
+         {
+            NetSectorThinkers.add(door);
+
+            if(CS_SERVER)
+            {
+               cs_sector_thinker_spawn_data_t spawn_data;
+               spawn_data.door_spawn_data.make_sound = make_sound;
+               spawn_data.door_spawn_data.raise = raise;
+               spawn_data.door_spawn_data.turbo = turbo;
+               spawn_data.door_spawn_data.bounced = bounced;
+               SV_BroadcastSectorThinkerSpawned(door, &spawn_data);
+            }
+         }
       }
+
       if(manual)
          return rtn;
    }
@@ -1357,9 +1387,9 @@ int EV_DoGenLockedDoor(line_t *line)
    int speedType;
 
    // parse the bit fields in the line's special type
-   
+
    dd.delay_value = VDOORWAIT;
-   
+
    speedType = (value & LockedSpeed) >> LockedSpeedShift;
 
    // setup speed of door motion
@@ -1368,7 +1398,7 @@ int EV_DoGenLockedDoor(line_t *line)
    dd.kind         = (value & LockedKind ) >> LockedKindShift;
    dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
    dd.usealtlighttag = false;
-   
+
    return EV_DoParamDoor(line, line->tag, &dd);
 }
 
@@ -1389,9 +1419,9 @@ int EV_DoGenDoor(line_t* line)
    int delayType, speedType;
 
    // parse the bit fields in the line's special type
-   
+
    delayType = (value & DoorDelay) >> DoorDelayShift;
-   
+
    // setup delay for door remaining open/closed
    switch(delayType)
    {
@@ -1409,7 +1439,7 @@ int EV_DoGenDoor(line_t* line)
       dd.delay_value = 7*VDOORWAIT;
       break;
    }
-   
+
    speedType = (value & DoorSpeed) >> DoorSpeedShift;
 
    // setup speed of door motion
@@ -1480,7 +1510,7 @@ static int param_door_kinds[6] =
 //
 // Parses arguments for parameterized Door specials.
 //
-static bool pspec_Door(line_t *line, Mobj *thing, int *args, 
+static bool pspec_Door(line_t *line, Mobj *thing, int *args,
                           int16_t special, int trigger_type)
 {
    int kind;
@@ -1496,7 +1526,7 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
    // speed is always second parameter
    // value is eighths of a unit per tic
    dd.speed_value = args[1] * FRACUNIT / 8;
-  
+
    // all param doors support alternate light tagging
    dd.usealtlighttag = true;
 
@@ -1581,7 +1611,7 @@ static int fchgdata[7][2] =
 //
 // Parses arguments for parameterized Floor specials.
 //
-static bool pspec_Floor(line_t *line, int *args, int16_t special, 
+static bool pspec_Floor(line_t *line, int *args, int16_t special,
                            int trigger_type)
 {
    floordata_t fd = { 0 };
@@ -1627,7 +1657,7 @@ static bool pspec_Floor(line_t *line, int *args, int16_t special,
          fd.change_type  = 0;
       }
       break;
- 
+
       // (tag, change, crush)
    case 308: // Floor_RaiseToLowest -- special case, always instant
    case 322: // ToCeilingInstant
@@ -1732,7 +1762,7 @@ static int cchgdata[7][2] =
 //
 // Parses arguments for parameterized Ceiling specials.
 //
-static bool pspec_Ceiling(line_t *line, int *args, int16_t special, 
+static bool pspec_Ceiling(line_t *line, int *args, int16_t special,
                              int trigger_type)
 {
    ceilingdata_t cd = { 0 };
@@ -1779,7 +1809,7 @@ static bool pspec_Ceiling(line_t *line, int *args, int16_t special,
          cd.change_type  = 0;
       }
       break;
-      
+
       // (tag, change, crush)
    case 324: // Ceiling_ToHighestInstant -- special case, always instant
    case 331: // Ceiling_ToFloorInstant
@@ -1846,7 +1876,7 @@ static bool pspec_Ceiling(line_t *line, int *args, int16_t special,
 //
 // Parses arguments for parameterized Stair specials.
 //
-static bool pspec_Stairs(line_t *line, int *args, int16_t special, 
+static bool pspec_Stairs(line_t *line, int *args, int16_t special,
                             int trigger_type)
 {
    stairdata_t sd = { 0 };
@@ -1855,7 +1885,7 @@ static bool pspec_Stairs(line_t *line, int *args, int16_t special,
    sd.direction     = 0;
    sd.speed_type    = SpeedParam;
    sd.stepsize_type = StepSizeParam;
-   
+
    // haleyjd: eventually this will depend on the special type; right
    // now, all are set to not ignore texture differences
    sd.ignore        = 0;
@@ -1898,7 +1928,7 @@ static bool pspec_PolyDoor(int *args, int16_t special)
    polydoordata_t pdd = { 0 };
 
    pdd.polyObjNum = args[0]; // polyobject id
-   
+
    switch(special)
    {
    case 350: // Polyobj_DoorSlide
@@ -1955,7 +1985,7 @@ static bool pspec_PolyRotate(int *args, int16_t special)
 
    // Polyobj_(OR_)RotateRight have dir == -1
    prd.direction = (special == 354 || special == 355) ? -1 : 1;
-   
+
    // Polyobj_OR types have override set to true
    prd.overRide  = (special == 355 || special == 357);
 
@@ -1973,7 +2003,7 @@ static bool pspec_PolyRotate(int *args, int16_t special)
 static bool pspec_Pillar(line_t *line, int *args, int16_t special)
 {
    pillardata_t pd;
-   
+
    pd.tag   = args[0];
    pd.crush = 0;
 
@@ -2031,7 +2061,7 @@ static bool pspec_ACSExecute(line_t *line, int *args, int16_t special,
 // side:    Side of line activated. May be ignored.
 // reuse:   if action is repeatable
 //
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
                          int *args, int side, int spac, bool reuse)
 {
    bool success = false;
@@ -2238,7 +2268,7 @@ bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac)
       // clear special if line is not repeatable
       if(!reuse)
          line->special = 0;
-      
+
       // change switch textures where appropriate
       if(spac == SPAC_USE || spac == SPAC_IMPACT)
          P_ChangeSwitchTexture(line, reuse, side);
@@ -2265,7 +2295,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
 {
    line_t *l = NULL;
    int linenum = -1, texnum;
-   
+
    texnum = R_FindWall(texture);
    linenum = -1;
 
@@ -2501,7 +2531,7 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
    for(i = 0; i < numargs; ++i)
       args[i] = Console.argv[i + 1]->toInt();
 
-   P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0, 
+   P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0,
                        SPAC_CROSS, true);
 }
 

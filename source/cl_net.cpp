@@ -226,10 +226,10 @@ void CL_SendCommand(void)
 
    if(cl_reliable_commands)
       command_count = 1;
-   else if(cl_commands_sent < (COMMAND_BUNDLE_SIZE - 1))
+   else if(cl_commands_sent < (cl_command_bundle_size - 1))
       command_count = cl_commands_sent + 1;
    else
-      command_count = COMMAND_BUNDLE_SIZE;
+      command_count = cl_command_bundle_size;
 
    buffer_size =
       sizeof(nm_playercommand_t) + (sizeof(cs_cmd_t) * command_count);
@@ -257,6 +257,13 @@ void CL_SendCommand(void)
       send_unreliable_packet(buffer, buffer_size);
    }
 
+   CS_LogSMT(
+      "%u/%u: Sending command %u/%u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      cl_commands_sent,
+      world_index
+   );
    cl_commands_sent++;
    efree(buffer);
 }
@@ -512,7 +519,10 @@ void CL_HandleSyncMessage(nm_sync_t *message)
       cl_packet_buffer.enable();
 
    CS_UpdateQueueMessage();
-   CL_StoreLatestSectorPositionIndex();
+   if(cl_commands_sent)
+      CL_StoreLatestSectorPositionIndex(cl_commands_sent - 1);
+   else
+      CL_StoreLatestSectorPositionIndex(0);
 
    if(!cl_received_first_sync)
       cl_received_first_sync = true;
@@ -1596,6 +1606,7 @@ void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message)
 void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
 {
    sector_t *sector = NULL;
+   line_t *line = NULL;
 
    if((message->sector_number >= (unsigned int)numsectors))
    {
@@ -1607,36 +1618,54 @@ void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
       return;
    }
 
+   if(message->line_number >= 0)
+   {
+      if((message->line_number >= numlines))
+      {
+         doom_printf(
+            "Received a map special spawned message containing invalid sector "
+            "%d, ignoring.",
+            message->sector_number
+         );
+         return;
+      }
+      line = &lines[message->line_number];
+   }
+
    CS_LogSMT(
-      "%u/%u: Sector thinker spawned.\n",
+      "%u/%u: Sector thinker spawned (%u).\n",
       cl_latest_world_index,
-      cl_current_world_index
+      cl_current_world_index,
+      message->command_index
    );
 
    sector = &sectors[message->sector_number];
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
 
+   cl_spawning_sector_thinker_from_message = true;
    switch(message->type)
    {
       case st_platform:
-         CL_SpawnPlatform(sector, &message->data, &message->spawn_data);
+         CL_SpawnPlatform(message);
          break;
       case st_door:
-         CL_SpawnVerticalDoor(sector, &message->data, &message->spawn_data);
+         CL_SpawnVerticalDoor(message);
          break;
       case st_ceiling:
-         CL_SpawnCeiling(sector, &message->data, &message->spawn_data);
+         CL_SpawnCeiling(message);
          break;
       case st_floor:
-         CL_SpawnFloor(sector, &message->data, &message->spawn_data);
+         CL_SpawnFloor(message);
          break;
       case st_elevator:
-         CL_SpawnElevator(sector, &message->data, &message->spawn_data);
+         CL_SpawnElevator(message);
          break;
       case st_pillar:
-         CL_SpawnPillar(sector, &message->data, &message->spawn_data);
+         CL_SpawnPillar(message);
          break;
       case st_floorwaggle:
-         CL_SpawnFloorWaggle(sector, &message->data, &message->spawn_data);
+         CL_SpawnFloorWaggle(message);
          break;
       default:
          doom_printf(
@@ -1646,14 +1675,16 @@ void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
          );
          break;
    }
+   cl_spawning_sector_thinker_from_message = false;
 }
 
 void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
 {
    CS_LogSMT(
-      "%u/%u: Sector thinker status update.\n",
+      "%u/%u: Sector thinker status update (%u).\n",
       cl_latest_world_index,
-      cl_current_world_index
+      cl_current_world_index,
+      message->command_index
    );
 
    return;
@@ -1661,25 +1692,25 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
    switch(message->type)
    {
    case st_platform:
-      CL_UpdatePlatform(&message->data);
+      CL_UpdatePlatform(message->command_index, &message->data);
       break;
    case st_door:
-      CL_UpdateVerticalDoor(&message->data);
+      CL_UpdateVerticalDoor(message->command_index, &message->data);
       break;
    case st_ceiling:
-      CL_UpdateCeiling(&message->data);
+      CL_UpdateCeiling(message->command_index, &message->data);
       break;
    case st_floor:
-      CL_UpdateFloor(&message->data);
+      CL_UpdateFloor(message->command_index, &message->data);
       break;
    case st_elevator:
-      CL_UpdateElevator(&message->data);
+      CL_UpdateElevator(message->command_index, &message->data);
       break;
    case st_pillar:
-      CL_UpdatePillar(&message->data);
+      CL_UpdatePillar(message->command_index, &message->data);
       break;
    case st_floorwaggle:
-      CL_UpdateFloorWaggle(&message->data);
+      CL_UpdateFloorWaggle(message->command_index, &message->data);
       break;
    default:
       doom_printf(
@@ -1706,19 +1737,20 @@ void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
    }
 
    CS_LogSMT(
-      "%u/%u: SMT %u removed at %u.\n",
+      "%u/%u: SMT %u removed at %u/%u.\n",
       cl_latest_world_index,
       cl_current_world_index,
       message->net_id,
-      message->world_index
+      message->world_index,
+      message->command_index
    );
 
-   thinker->removed = message->world_index;
+   thinker->removed = message->command_index;
 }
 
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 {
-   int sector_number = message->sector_number;
+   int32_t sector_number = message->sector_number;
 
    if(sector_number >= numsectors)
    {
@@ -1730,11 +1762,24 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
       return;
    }
 
+   if(sector_number == _DEBUG_SECTOR)
+   {
+      CS_LogSMT(
+         "%u/%u: SPM: %u/%u (%d/%d).\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         message->world_index,
+         message->command_index,
+         message->sector_position.ceiling_height >> FRACBITS,
+         message->sector_position.floor_height >> FRACBITS
+      );
+   }
+
    CL_SaveSectorPosition(
-      message->world_index, message->sector_number, &message->sector_position
+      message->command_index, message->sector_number, &message->sector_position
    );
 
-   CL_StoreLatestSectorPositionIndex();
+   CL_StoreLatestSectorPositionIndex(message->command_index);
 }
 
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
@@ -1784,5 +1829,12 @@ void CL_HandleVoteResultMessage(nm_voteresult_t *message)
       doom_printf("Vote failed!");
 
    CL_CloseVote();
+}
+
+void CL_HandleRNGSyncMessage(nm_rngsync_t *message)
+{
+   rng.seed[pr_plats] = message->plat_seed;
+   rng.rndindex = message->rndindex;
+   rng.prndindex = message->prndindex;
 }
 

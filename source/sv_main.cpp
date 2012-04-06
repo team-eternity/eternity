@@ -193,6 +193,7 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
    case nm_announcerevent:
    case nm_vote:
    case nm_voteresult:
+   case nm_rngsync:
    case nm_ticfinished:
       break;
    case nm_clientrequest:
@@ -245,6 +246,7 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
       || message_type == nm_announcerevent
       || message_type == nm_vote
       || message_type == nm_voteresult
+      // || message_type == nm_rngsync
       // || message_type == nm_ticfinished
       || LOG_ALL_NETWORK_MESSAGES
       )
@@ -297,6 +299,7 @@ static void broadcast_packet(void *data, size_t data_size)
       send_packet(i, data, data_size);
 }
 
+#if 0
 static void broadcast_unreliable_packet(void *data, size_t data_size)
 {
    int i;
@@ -309,6 +312,7 @@ static void broadcast_unreliable_packet(void *data, size_t data_size)
          send_unreliable_packet(i, data, data_size);
    }
 }
+#endif
 
 static void broadcast_packet_excluding(int playernum, void *data,
                                        size_t data_size)
@@ -1520,7 +1524,7 @@ void SV_UpdateClientStatuses(void)
 
 void SV_BroadcastPlayerPositions(void)
 {
-   int i;
+   int i, j;
    nm_playerposition_t message;
    cs_player_position_t *pos;
    cs_misc_state_t *ms;
@@ -1552,7 +1556,13 @@ void SV_BroadcastPlayerPositions(void)
       message.last_index_run = sc->last_command_run_index;
       message.last_world_index_run = sc->last_command_run_world_index;
 
-      broadcast_unreliable_packet(&message, sizeof(nm_playerposition_t));
+      for(j = 1; j < MAX_CLIENTS; j++)
+      {
+         if(i == j)
+            send_unreliable_packet(j, &message, sizeof(nm_playerposition_t));
+         else
+            send_packet(j, &message, sizeof(nm_playerposition_t));
+      }
       client->floor_status = cs_fs_none;
    }
 }
@@ -2209,23 +2219,33 @@ void SV_BroadcastActorMiscState(Mobj *actor, int tic)
 
 void SV_BroadcastSectorPosition(size_t sector_number)
 {
+   int i;
+   server_client_t *sc = NULL;
    sector_t *sector = &sectors[sector_number];
-   nm_sectorposition_t position_message;
+   nm_sectorposition_t message;
 
-   position_message.message_type = nm_sectorposition;
-   position_message.world_index = sv_world_index;
-   position_message.sector_number = sector_number;
-   position_message.sector_position.world_index = sv_world_index;
-   position_message.sector_position.ceiling_height = sector->ceilingheight;
-   position_message.sector_position.floor_height = sector->floorheight;
-   position_message.sector_position.world_index = sv_world_index;
+   message.message_type = nm_sectorposition;
+   message.world_index = sv_world_index;
+   message.sector_number = sector_number;
+   message.sector_position.world_index = sv_world_index;
+   message.sector_position.ceiling_height = sector->ceilingheight;
+   message.sector_position.floor_height = sector->floorheight;
+   message.sector_position.world_index = sv_world_index;
 
-   broadcast_packet(&position_message, sizeof(nm_sectorposition_t));
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      sc = &server_clients[i];
+
+      message.command_index = sc->last_command_run_index;
+      send_packet(i, &message, sizeof(nm_sectorposition_t));
+   }
 }
 
 void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker,
                                       cs_sector_thinker_spawn_data_t *data)
 {
+   int i;
+   server_client_t     *sc           = NULL;
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
    CeilingThinker      *ceiling      = NULL;
@@ -2233,12 +2253,25 @@ void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker,
    ElevatorThinker     *elevator     = NULL;
    PillarThinker       *pillar       = NULL;
    FloorWaggleThinker  *floor_waggle = NULL;
+   uint32_t             net_id       = thinker->net_id;
 
    nm_sectorthinkerspawned_t message;
+
+   if(thinker->sector->ceilingdata == thinker)
+      message.ceiling_or_floor = 0;
+   else if(thinker->sector->floordata == thinker)
+      message.ceiling_or_floor = 1;
+   else
+      I_Error("Sector thinker %u is neither ceiling nor floor.\n", net_id);
 
    message.message_type = nm_sectorthinkerspawned;
    message.world_index = sv_world_index;
    message.sector_number = thinker->sector - sectors;
+
+   if(thinker->line)
+      message.line_number = thinker->line - lines;
+   else
+      message.line_number = -1;
 
    if((platform = dynamic_cast<PlatThinker *>(thinker)))
    {
@@ -2339,11 +2372,19 @@ void SV_BroadcastSectorThinkerSpawned(SectorThinker *thinker,
       return;
    }
 
-   broadcast_packet(&message, sizeof(nm_sectorthinkerspawned_t));
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      sc = &server_clients[i];
+
+      message.command_index = sc->last_command_run_index;
+      send_packet(i, &message, sizeof(nm_sectorthinkerspawned_t));
+   }
 }
 
 void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker)
 {
+   int i;
+   server_client_t     *sc           = NULL;
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
    CeilingThinker      *ceiling      = NULL;
@@ -2400,11 +2441,19 @@ void SV_BroadcastSectorThinkerStatus(SectorThinker *thinker)
       return;
    }
 
-   broadcast_packet(&message, sizeof(nm_sectorthinkerstatus_t));
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      sc = &server_clients[i];
+
+      message.command_index = sc->last_command_run_index;
+      send_packet(i, &message, sizeof(nm_sectorthinkerstatus_t));
+   }
 }
 
 void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker)
 {
+   int i;
+   server_client_t     *sc           = NULL;
    PlatThinker         *platform     = NULL;
    VerticalDoorThinker *door         = NULL;
    CeilingThinker      *ceiling      = NULL;
@@ -2436,12 +2485,18 @@ void SV_BroadcastSectorThinkerRemoved(SectorThinker *thinker)
    else
    {
       I_Error(
-         "SV_BroadcastSectorThinkerRemoved: sector movement thinker %u is of"
+         "SV_BroadcastSectorThinkerRemoved: sector movement thinker %u is of "
          "unknown type.\n", thinker->net_id
       );
    }
 
-   broadcast_packet(&message, sizeof(nm_sectorthinkerremoved_t));
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      sc = &server_clients[i];
+
+      message.command_index = sc->last_command_run_index;
+      send_packet(i, &message, sizeof(nm_sectorthinkerremoved_t));
+   }
 }
 
 void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source)
@@ -2753,6 +2808,19 @@ void SV_BroadcastClientStatuses(void)
 
       broadcast_packet(&status_message, sizeof(nm_clientstatus_t));
    }
+}
+
+void SV_BroadcastRNGSync()
+{
+   nm_rngsync_t message;
+
+   message.message_type = nm_rngsync;
+   message.world_index = sv_world_index;
+   message.plat_seed = rng.seed[pr_plats];
+   message.rndindex = rng.rndindex;
+   message.prndindex = rng.prndindex;
+
+   broadcast_packet(&message, sizeof(nm_rngsync_t));
 }
 
 void SV_BroadcastVote()
@@ -3168,7 +3236,10 @@ void SV_TryRunTics(void)
 
          SV_UpdateClientStatuses();
          if((gametic % TICRATE) == 0)
+         {
             SV_BroadcastClientStatuses();
+            SV_BroadcastRNGSync();
+         }
 
          if(gamestate == GS_LEVEL)
          {
@@ -3272,6 +3343,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_sectorthinkerremoved:
    case nm_announcerevent:
    case nm_voteresult:
+   case nm_rngsync:
    case nm_ticfinished:
       doom_printf(
          "Received invalid client message %s (%u)\n",

@@ -36,7 +36,7 @@ cs_cmd_t*             CL_GetCommandAtIndex(uint32_t index);
 cs_cmd_t*             CL_GetCurrentCommand();
 void                  CL_RunPredictedCommand();
 void                  CL_Predict();
-void                  CL_StoreLatestSectorPositionIndex();
+void                  CL_StoreLatestSectorPositionIndex(uint32_t index);
 uint32_t              CL_GetLatestSectorPositionIndex();
 void                  CL_StoreLastServerPosition(nm_playerposition_t *message);
 void                  CL_LoadLastServerPosition();

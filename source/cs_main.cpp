@@ -164,18 +164,14 @@ const char *network_message_names[nm_max_messages] = {
    "missile exploded",
    "cube spawned",
    "sector position",
-   "map special spawned",
-   "map special status",
-   "map special removed",
+   "sector thinker spawned",
+   "sector thinker status",
+   "sector thinker removed",
    "announcer event",
    "vote request",
    "vote",
    "vote result",
-#if 0
-   "special spawned",
-   "special status",
-   "special removed",
-#endif
+   "RNG sync",
    "tic finished",
 };
 

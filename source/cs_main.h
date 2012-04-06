@@ -66,15 +66,6 @@ struct event_t;
 //      seconds.
 #define MAX_LATENCY 3
 
-// [CG] The number of commands bundled together by the client to mitigate the
-//      effects of packet loss.
-// [CG] TODO: 56k can really only handle 14 command bundles TOTAL, so this
-//            should maybe be configurable... except that lowering it means you
-//            will skip more and be more difficult to hit... so maybe not?
-//            Requires testing.
-// [CG] Try 10 instead of 35 (TICRATE) here.
-#define COMMAND_BUNDLE_SIZE 10
-
 // [CG] The default port the server listens on if none is given.
 #define DEFAULT_PORT 10666
 
@@ -113,6 +104,13 @@ struct event_t;
 #define CL_SHOULD_PREDICT_SHOT(shooter) (clientside && ( \
    cl_predict_shots && \
    ((shooter)->net_id == players[consoleplayer].mo->net_id) \
+))
+
+// [CG] Used to determine whether or not clients should predict a sector
+//      thinker spawn.
+#define CS_SHOULD_SPAWN_SECTOR_THINKERS (serverside || ( \
+   cl_spawning_sector_thinker_from_message || \
+   cl_predict_sector_activation \
 ))
 
 // [CG] Used to determine whether or not clients should predict a line
@@ -213,12 +211,13 @@ typedef enum
    nm_sectorposition,          // (s => c) 34, Sector position
    nm_sectorthinkerspawned,    // (s => c) 35, Sector thinker spawned
    nm_sectorthinkerstatus,     // (s => c) 36, Sector thinker status
-   nm_sectorthinkerremoved,    // (s => c) 37, Sectorthinkerremoved
+   nm_sectorthinkerremoved,    // (s => c) 37, Sectorthinker removed
    nm_announcerevent,          // (s => c) 38, Announcer event
    nm_voterequest,             // (c => s) 39, Vote request
    nm_vote,                    // ( both ) 40, Client vote
    nm_voteresult,              // (s => c) 41, Vote result
-   nm_ticfinished,             // (s => c) 42, TIC is finished
+   nm_rngsync,                 // (s => c) 42, RNG sync
+   nm_ticfinished,             // (s => c) 43, TIC is finished
    nm_max_messages
 } network_message_e;
 
@@ -840,6 +839,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t command_index;
    uint32_t sector_number;
    sector_position_t sector_position;
 } nm_sectorposition_t;
@@ -848,8 +848,11 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t command_index;
    uint8_t type;
    uint32_t sector_number;
+   int32_t line_number;
+   uint8_t ceiling_or_floor; // [CG] 0 = ceiling, 1 = floor
    cs_sector_thinker_data_t data;
    cs_sector_thinker_spawn_data_t spawn_data;
 } nm_sectorthinkerspawned_t;
@@ -858,6 +861,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t command_index;
    uint8_t type;
    cs_sector_thinker_data_t data;
 } nm_sectorthinkerstatus_t;
@@ -866,6 +870,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t command_index;
    uint8_t type;
    uint32_t net_id;
 } nm_sectorthinkerremoved_t;
@@ -904,6 +909,15 @@ typedef struct
    uint32_t world_index;
    uint8_t passed;
 } nm_voteresult_t;
+
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint32_t plat_seed;
+   int32_t rndindex;
+   int32_t prndindex;
+} nm_rngsync_t;
 
 typedef struct
 {

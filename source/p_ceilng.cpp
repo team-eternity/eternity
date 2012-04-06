@@ -39,6 +39,7 @@
 #include "sounds.h"
 
 #include "cs_netid.h"
+#include "cl_cmd.h"
 #include "cl_main.h"
 #include "sv_main.h"
 
@@ -429,6 +430,31 @@ bool CeilingThinker::reTriggerVerticalDoor(bool player)
 }
 
 //
+// CeilingThinker::insertStatus()
+//
+// Inserts a status into this ceiling's status queue.
+//
+void CeilingThinker::insertStatus(uint32_t index,
+                                  cs_sector_thinker_data_t *data)
+{
+   SectorMovementThinker::insertStatus(index, data);
+   net_id = data->ceiling_data.net_id;
+}
+
+//
+// CeilingThinker::Reset()
+//
+// Resets a ceiling thinker's sector if it was created via an incorrect
+// prediction.
+//
+void CeilingThinker::Reset()
+{
+   SectorMovementThinker::Reset();
+   P_RemoveActiveCeiling(this);
+   CLNetSectorThinkers.remove(this);
+}
+
+//
 // EV_DoCeiling
 //
 // Move a ceiling up/down or start a crusher
@@ -440,6 +466,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 {
    int       secnum = -1;
    int       rtn = 0;
+   int       noise = CNOISE_NORMAL; // haleyjd 09/28/06
    sector_t  *sec;
    CeilingThinker *ceiling;
       
@@ -459,17 +486,16 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
    // [CG] Clients don't spawn ceilings themselves when lines are activated,
    //      but we have to inform the caller whether or not a thinker would have
    //      been created regardless.
-   if(!serverside)
+   if(!CS_SHOULD_SPAWN_SECTOR_THINKERS)
    {
-      if(rtn != 0)
-         return rtn;
-
-      while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+      if(rtn)
       {
-         if(!P_SectorActive(ceiling_special, &sectors[secnum]))
-            return 1;
+         while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+         {
+            if(!P_SectorActive(ceiling_special, &sectors[secnum]))
+               return 1;
+         }
       }
-
       return 0;
    }
 
@@ -484,81 +510,66 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
   
       // create a new ceiling thinker
       rtn = 1;
+      ceiling = new CeilingThinker(sec, line);
+      ceiling->addThinker();
+      sec->ceilingdata = ceiling;               //jff 2/22/98
+      // ceiling->sector = sec;
+      ceiling->crush = -1;
+  
+      // setup ceiling structure according to type of function
+      switch(type)
+      {
+      case fastCrushAndRaise:
+         ceiling->crush = 10;
+         ceiling->topheight = sec->ceilingheight;
+         ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED * 2;
+         break;
 
-      if(serverside)
-         ceiling = P_SpawnCeiling(line, sec, type);
-   }
+      case silentCrushAndRaise:
+         noise = CNOISE_SEMISILENT;
+      case crushAndRaise:
+         ceiling->crush = 10;
+         ceiling->topheight = sec->ceilingheight;
+      case lowerAndCrush:
+      case lowerToFloor:
+         ceiling->bottomheight = sec->floorheight;
+         if(type != lowerToFloor)
+            ceiling->bottomheight += 8*FRACUNIT;
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED;
+         break;
 
-   return rtn;
-}
-
-CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
-{
-   int noise = CNOISE_NORMAL; // haleyjd 09/28/06
-   CeilingThinker *ceiling = new CeilingThinker(sec, line);
-
-   ceiling->addThinker();
-   sec->ceilingdata = ceiling;               //jff 2/22/98
-   // ceiling->sector = sec;
-   ceiling->crush = -1;
-
-   // setup ceiling structure according to type of function
-   switch(type)
-   {
-   case fastCrushAndRaise:
-      ceiling->crush = 10;
-      ceiling->topheight = sec->ceilingheight;
-      ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED * 2;
-      break;
-
-   case silentCrushAndRaise:
-      noise = CNOISE_SEMISILENT;
-   case crushAndRaise:
-      ceiling->crush = 10;
-      ceiling->topheight = sec->ceilingheight;
-   case lowerAndCrush:
-   case lowerToFloor:
-      ceiling->bottomheight = sec->floorheight;
-      if(type != lowerToFloor)
-         ceiling->bottomheight += 8*FRACUNIT;
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED;
-      break;
-
-   case raiseToHighest:
-      ceiling->topheight = P_FindHighestCeilingSurrounding(sec);
-      ceiling->direction = plat_up;
-      ceiling->speed = CEILSPEED;
-      break;
-      
-   case lowerToLowest:
-      ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED;
-      break;
-      
-   case lowerToMaxFloor:
-      ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED;
-      break;
-      
-   default:
-      break;
-   }
- 
-   // add the ceiling to the active list
-   ceiling->tag = sec->tag;
-   ceiling->type = type;
-
-   // haleyjd 09/28/06: sound sequences
-   P_CeilingSequence(ceiling, noise);
-
-   if(serverside)
-   {
+      case raiseToHighest:
+         ceiling->topheight = P_FindHighestCeilingSurrounding(sec);
+         ceiling->direction = plat_up;
+         ceiling->speed = CEILSPEED;
+         break;
+         
+      case lowerToLowest:
+         ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED;
+         break;
+         
+      case lowerToMaxFloor:
+         ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED;
+         break;
+         
+      default:
+         break;
+      }
+    
+      // add the ceiling to the active list
+      ceiling->tag = sec->tag;
+      ceiling->type = type;
       P_AddActiveCeiling(ceiling);
+
+      // haleyjd 09/28/06: sound sequences
+      P_CeilingSequence(ceiling, noise);
 
       if(CS_SERVER)
       {
@@ -566,10 +577,9 @@ CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
          spawn_data.ceiling_spawn_data.noise = noise;
          SV_BroadcastSectorThinkerSpawned(ceiling, &spawn_data);
       }
+
    }
-
-
-   return ceiling;
+   return rtn;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -680,7 +690,10 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
    list->prev = &activeceilings;
    activeceilings = list;
 
-   NetSectorThinkers.add(ceiling);
+   if(serverside)
+      NetSectorThinkers.add(ceiling);
+   else
+      CLNetSectorThinkers.add(ceiling);
 }
 
 //

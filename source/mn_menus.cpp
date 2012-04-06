@@ -1117,7 +1117,7 @@ CONSOLE_COMMAND(mn_chatmacros, 0)
 
 static menuitem_t mn_cs_network_settings_items[] =
 {
-   {it_title,    FC_GOLD"Client/Server Network Settings"},
+   {it_title,    FC_RED"C/S Network Settings"},
    {it_gap},
    {it_toggle,   "packet buffer",             "packet_buffer"},
    {it_variable, "packet buffer size",        "packet_buffer_size"},

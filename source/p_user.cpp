@@ -911,9 +911,15 @@ void P_CheckPlayerButtons(int playernum)
       {
          player->usedown = true;
 
-         if(serverside && !client->spectating)
+         if((serverside && !client->spectating) || (
+               clientside &&
+               cl_predict_sector_activation &&
+               playernum == consoleplayer))
+         {
             P_UseLines(player);
-         else if(CS_SERVER && SV_HandleJoinRequest(playernum))
+         }
+
+         if(CS_SERVER && client->spectating && SV_HandleJoinRequest(playernum))
             SV_SpawnPlayer(player - players, false);
       }
    }

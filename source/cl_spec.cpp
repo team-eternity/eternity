@@ -102,7 +102,7 @@ void CL_CarrySectorPositions(uint32_t old_index)
    {
       old_pos = CS_GetSectorPosition(i, old_index);
 
-      for(j = old_index + 1; j <= cl_latest_world_index; j++)
+      for(j = old_index + 1; j < cl_commands_sent; j++)
       {
          new_pos = CS_GetSectorPosition(i, j);
 
@@ -114,8 +114,6 @@ void CL_CarrySectorPositions(uint32_t old_index)
          }
       }
    }
-
-   CL_StoreLatestSectorPositionIndex();
 }
 
 void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
@@ -127,17 +125,6 @@ void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
    pos->ceiling_height = new_position->ceiling_height;
    pos->floor_height   = new_position->floor_height;
 
-   if(sector_number == _DEBUG_SECTOR)
-   {
-      CS_LogSMT(
-         "%u/%u: SPM: %u (%d/%d).\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         pos->world_index,
-         pos->ceiling_height >> FRACBITS,
-         pos->floor_height >> FRACBITS
-      );
-   }
    cl_latest_sector_position_indices[sector_number] = index;
 }
 
@@ -161,6 +148,7 @@ void CL_StoreLineActivation(Mobj *actor, line_t *line, int side,
    if(actor->net_id != players[consoleplayer].mo->net_id)
       return;
 
+   sla = estructalloc(stored_line_activation_t, 1);
    sla->type = type;
    sla->command_index = cl_commands_sent;
    sla = estructalloc(stored_line_activation_t, 1);
@@ -183,7 +171,7 @@ void CL_HandleLineActivation(uint32_t line_number, uint32_t command_index)
 
    actor_status_t actor_status;
 
-   while((nito = NetSectorThinkers.iterate(nito)))
+   while((nito = CLNetSectorThinkers.iterate(nito)))
    {
       if(nito->object->confirmActivation(line, command_index))
       {
@@ -242,12 +230,15 @@ void CL_HandleLineActivation(uint32_t line_number, uint32_t command_index)
    }
 }
 
-void CL_ActivateAllSectorThinkers()
+void CL_ActivateAllSectorThinkers(uint32_t index)
 {
    NetIDToObject<SectorThinker> *nito = NULL;
 
    while((nito = NetSectorThinkers.iterate(nito)))
-      nito->object->inactive = 0;
+   {
+      if(nito->object->inactive >= index)
+         nito->object->inactive = 0;
+   }
 }
 
 void CL_SavePredictedSectorPositions(uint32_t index)
@@ -258,120 +249,278 @@ void CL_SavePredictedSectorPositions(uint32_t index)
       CS_SaveSectorPosition(index, i);
 }
 
-void CL_SpawnPlatform(sector_t *sector, cs_sector_thinker_data_t *data,
-                      cs_sector_thinker_spawn_data_t *spawn_data)
+static SectorThinker* CL_findSectorThinker(sector_t *sector, line_t *line,
+                                           uint8_t ceiling_or_floor)
 {
-   static char seqname[15];
-   PlatThinker *platform = new PlatThinker;
+   SectorThinker *thinker = NULL;
 
-   platform->addThinker();
-   platform->sector = sector;
-   platform->netUpdate(cl_latest_world_index, data);
-
-   P_AddActivePlat(platform, NULL);
-   strncpy(
-      seqname, spawn_data->platform_spawn_data.seqname, sizeof(seqname) - 1
-   );
-   seqname[sizeof(seqname) - 1] = '\0';
-   P_PlatSequence(platform, (const char *)seqname);
-}
-
-void CL_SpawnVerticalDoor(sector_t *sector, cs_sector_thinker_data_t *data,
-                          cs_sector_thinker_spawn_data_t *spawn_data)
-{
-   VerticalDoorThinker *door = new VerticalDoorThinker;
-
-   door->addThinker();
-   door->sector = sector;
-   door->netUpdate(cl_latest_world_index, data);
-
-   NetSectorThinkers.add(door);
-
-   if(spawn_data->door_spawn_data.make_sound)
+   if(ceiling_or_floor == 0)
+      thinker = (SectorThinker *)sector->ceilingdata;
+   else if(ceiling_or_floor == 1)
+      thinker = (SectorThinker *)sector->floordata;
+   else
    {
-      P_DoorSequence(
-         door,
-         spawn_data->door_spawn_data.raise,
-         spawn_data->door_spawn_data.turbo,
-         spawn_data->door_spawn_data.bounce
+      doom_printf(
+         "CL_findSectorThinker: Bad ceiling_or_floor value %u, "
+         "returning NULL.\n",
+         ceiling_or_floor
       );
    }
+
+   if(thinker && thinker->line && line)
+   {
+      if(thinker->line != line)
+         return NULL;
+   }
+
+   return thinker;
 }
 
-void CL_SpawnCeiling(sector_t *sector, cs_sector_thinker_data_t *data,
-                     cs_sector_thinker_spawn_data_t *spawn_data)
+void CL_SpawnPlatform(nm_sectorthinkerspawned_t *message)
 {
-   CeilingThinker *ceiling = new CeilingThinker;
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   PlatThinker *platform = NULL;
+   uint8_t cof = message->ceiling_or_floor;
 
-   ceiling->addThinker();
-   ceiling->sector = sector;
-   ceiling->netUpdate(cl_latest_world_index, data);
+   static char seqname[15];
 
-   P_AddActiveCeiling(ceiling);
-   P_CeilingSequence(ceiling, spawn_data->ceiling_spawn_data.noise);
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   platform = (PlatThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!platform)
+   {
+      CS_LogSMT(
+         "%u/%u: Spawning new platform.\n",
+         cl_latest_world_index,
+         cl_current_world_index
+      );
+      platform = new PlatThinker;
+      platform->sector = sector;
+      platform->addThinker();
+      platform->insertStatus(message->command_index, data);
+
+      P_AddActivePlat(platform);
+      strncpy(
+         seqname, spawn_data->platform_spawn_data.seqname, sizeof(seqname) - 1
+      );
+      seqname[sizeof(seqname) - 1] = '\0';
+      P_PlatSequence(platform, (const char *)seqname);
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(platform);
+      platform->insertStatus(message->command_index, data);
+   }
+
+   NetSectorThinkers.add(platform);
 }
 
-void CL_SpawnFloor(sector_t *sector, cs_sector_thinker_data_t *data,
-                   cs_sector_thinker_spawn_data_t *spawn_data)
+void CL_SpawnVerticalDoor(nm_sectorthinkerspawned_t *message)
 {
-   FloorMoveThinker *floor = new FloorMoveThinker;
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   VerticalDoorThinker *door = NULL;
+   uint8_t cof = message->ceiling_or_floor;
 
-   floor->addThinker();
-   floor->sector = sector;
-   floor->netUpdate(cl_latest_world_index, data);
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   door = (VerticalDoorThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!door)
+   {
+      VerticalDoorThinker *door = new VerticalDoorThinker;
+      door->addThinker();
+      door->sector = sector;
+      door->insertStatus(message->command_index, data);
+
+      if(spawn_data->door_spawn_data.make_sound)
+      {
+         P_DoorSequence(
+            door,
+            spawn_data->door_spawn_data.raise,
+            spawn_data->door_spawn_data.turbo,
+            spawn_data->door_spawn_data.bounced
+         );
+      }
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(door);
+      door->insertStatus(message->command_index, data);
+   }
+
+   NetSectorThinkers.add(door);
+}
+
+void CL_SpawnCeiling(nm_sectorthinkerspawned_t *message)
+{
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   CeilingThinker *ceiling = NULL;
+   uint8_t cof = message->ceiling_or_floor;
+
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   ceiling = (CeilingThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!ceiling)
+   {
+      ceiling = new CeilingThinker;
+      ceiling->addThinker();
+      ceiling->sector = sector;
+      ceiling->insertStatus(message->command_index, data);
+
+      P_AddActiveCeiling(ceiling);
+      P_CeilingSequence(ceiling, spawn_data->ceiling_spawn_data.noise);
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(ceiling);
+      ceiling->insertStatus(message->command_index, data);
+   }
+
+   NetSectorThinkers.add(ceiling);
+}
+
+void CL_SpawnFloor(nm_sectorthinkerspawned_t *message)
+{
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   FloorMoveThinker *floor = NULL;
+   uint8_t cof = message->ceiling_or_floor;
+
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   floor = (FloorMoveThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!floor)
+   {
+      floor = new FloorMoveThinker;
+      floor->addThinker();
+      floor->sector = sector;
+      floor->insertStatus(message->command_index, data);
+
+      if(spawn_data->floor_spawn_data.make_sound)
+         P_FloorSequence(floor);
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(floor);
+      floor->insertStatus(message->command_index, data);
+   }
 
    NetSectorThinkers.add(floor);
-
-   if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(floor);
 }
 
-void CL_SpawnElevator(sector_t *sector, cs_sector_thinker_data_t *data,
-                      cs_sector_thinker_spawn_data_t *spawn_data)
+void CL_SpawnElevator(nm_sectorthinkerspawned_t *message)
 {
-   ElevatorThinker *elevator = new ElevatorThinker;
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   ElevatorThinker *elevator = NULL;
+   uint8_t cof = message->ceiling_or_floor;
 
-   elevator->addThinker();
-   elevator->sector = sector;
-   elevator->netUpdate(cl_latest_world_index, data);
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   elevator = (ElevatorThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!elevator)
+   {
+      elevator = new ElevatorThinker;
+      elevator->addThinker();
+      elevator->sector = sector;
+      elevator->insertStatus(message->command_index, data);
+
+      if(spawn_data->floor_spawn_data.make_sound)
+         P_FloorSequence(elevator);
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(elevator);
+      elevator->insertStatus(message->command_index, data);
+   }
 
    NetSectorThinkers.add(elevator);
-
-   if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(elevator);
 }
 
-void CL_SpawnPillar(sector_t *sector, cs_sector_thinker_data_t *data,
-                    cs_sector_thinker_spawn_data_t *spawn_data)
+void CL_SpawnPillar(nm_sectorthinkerspawned_t *message)
 {
-   PillarThinker *pillar = new PillarThinker;
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   PillarThinker *pillar = NULL;
+   uint8_t cof = message->ceiling_or_floor;
 
-   pillar->addThinker();
-   pillar->sector = sector;
-   pillar->netUpdate(cl_latest_world_index, data);
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   pillar = (PillarThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!pillar)
+   {
+      PillarThinker *pillar = new PillarThinker;
+
+      pillar->addThinker();
+      pillar->sector = sector;
+      pillar->insertStatus(message->command_index, data);
+
+      if(spawn_data->floor_spawn_data.make_sound)
+         P_FloorSequence(pillar);
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(pillar);
+      pillar->insertStatus(message->command_index, data);
+   }
 
    NetSectorThinkers.add(pillar);
-
-   if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(pillar);
 }
 
-void CL_SpawnFloorWaggle(sector_t *sector, cs_sector_thinker_data_t *data,
-                         cs_sector_thinker_spawn_data_t *spawn_data)
+void CL_SpawnFloorWaggle(nm_sectorthinkerspawned_t *message)
 {
-   FloorWaggleThinker *floor_waggle = new FloorWaggleThinker;
+   cs_sector_thinker_data_t *data = &message->data;
+   cs_sector_thinker_spawn_data_t *spawn_data = &message->spawn_data;
+   sector_t *sector = &sectors[message->sector_number];
+   line_t *line = NULL;
+   FloorWaggleThinker *floor_waggle = NULL;
+   uint8_t cof = message->ceiling_or_floor;
 
-   floor_waggle->addThinker();
-   floor_waggle->sector = sector;
-   floor_waggle->netUpdate(cl_latest_world_index, data);
+   if(message->line_number >= 0)
+      line = &lines[message->line_number];
+
+   floor_waggle = (FloorWaggleThinker *)CL_findSectorThinker(sector, line, cof);
+   if(!floor_waggle)
+   {
+      FloorWaggleThinker *floor_waggle = new FloorWaggleThinker;
+
+      floor_waggle->addThinker();
+      floor_waggle->sector = sector;
+      floor_waggle->insertStatus(message->command_index, data);
+
+      if(spawn_data->floor_spawn_data.make_sound)
+         P_FloorSequence(floor_waggle);
+   }
+   else
+   {
+      CLNetSectorThinkers.remove(floor_waggle);
+      floor_waggle->insertStatus(message->command_index, data);
+   }
 
    NetSectorThinkers.add(floor_waggle);
-
-   if(spawn_data->floor_spawn_data.make_sound)
-      P_FloorSequence(floor_waggle);
 }
 
-void CL_UpdatePlatform(cs_sector_thinker_data_t *data)
+void CL_UpdatePlatform(uint32_t index, cs_sector_thinker_data_t *data)
 {
    PlatThinker *platform = NULL;
    SectorThinker *thinker = NULL;
@@ -382,10 +531,10 @@ void CL_UpdatePlatform(cs_sector_thinker_data_t *data)
    else if(!(platform = dynamic_cast<PlatThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a platform.", dt->net_id);
    else
-      platform->netUpdate(cl_latest_world_index, data);
+      platform->insertStatus(index, data);
 }
 
-void CL_UpdateVerticalDoor(cs_sector_thinker_data_t *data)
+void CL_UpdateVerticalDoor(uint32_t index, cs_sector_thinker_data_t *data)
 {
    VerticalDoorThinker *door = NULL;
    SectorThinker *thinker = NULL;
@@ -396,10 +545,10 @@ void CL_UpdateVerticalDoor(cs_sector_thinker_data_t *data)
    else if(!(door = dynamic_cast<VerticalDoorThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a door.", dt->net_id);
    else
-      door->netUpdate(cl_latest_world_index, data);
+      door->insertStatus(index, data);
 }
 
-void CL_UpdateCeiling(cs_sector_thinker_data_t *data)
+void CL_UpdateCeiling(uint32_t index, cs_sector_thinker_data_t *data)
 {
    CeilingThinker *ceiling = NULL;
    SectorThinker *thinker = NULL;
@@ -410,10 +559,10 @@ void CL_UpdateCeiling(cs_sector_thinker_data_t *data)
    else if(!(ceiling = dynamic_cast<CeilingThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a ceiling.", dt->net_id);
    else
-      ceiling->netUpdate(cl_latest_world_index, data);
+      ceiling->insertStatus(index, data);
 }
 
-void CL_UpdateFloor(cs_sector_thinker_data_t *data)
+void CL_UpdateFloor(uint32_t index, cs_sector_thinker_data_t *data)
 {
    FloorMoveThinker *floor = NULL;
    SectorThinker *thinker = NULL;
@@ -424,10 +573,10 @@ void CL_UpdateFloor(cs_sector_thinker_data_t *data)
    else if(!(floor = dynamic_cast<FloorMoveThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a floor.", dt->net_id);
    else
-      floor->netUpdate(cl_latest_world_index, data);
+      floor->insertStatus(index, data);
 }
 
-void CL_UpdateElevator(cs_sector_thinker_data_t *data)
+void CL_UpdateElevator(uint32_t index, cs_sector_thinker_data_t *data)
 {
    ElevatorThinker *elevator = NULL;
    SectorThinker *thinker = NULL;
@@ -438,10 +587,10 @@ void CL_UpdateElevator(cs_sector_thinker_data_t *data)
    else if(!(elevator = dynamic_cast<ElevatorThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a elevator.", dt->net_id);
    else
-      elevator->netUpdate(cl_latest_world_index, data);
+      elevator->insertStatus(index, data);
 }
 
-void CL_UpdatePillar(cs_sector_thinker_data_t *data)
+void CL_UpdatePillar(uint32_t index, cs_sector_thinker_data_t *data)
 {
    PillarThinker *pillar = NULL;
    SectorThinker *thinker = NULL;
@@ -452,10 +601,10 @@ void CL_UpdatePillar(cs_sector_thinker_data_t *data)
    else if(!(pillar = dynamic_cast<PillarThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a pillar.", dt->net_id);
    else
-      pillar->netUpdate(cl_latest_world_index, data);
+      pillar->insertStatus(index, data);
 }
 
-void CL_UpdateFloorWaggle(cs_sector_thinker_data_t *data)
+void CL_UpdateFloorWaggle(uint32_t index, cs_sector_thinker_data_t *data)
 {
    FloorWaggleThinker *floorwaggle = NULL;
    SectorThinker *thinker = NULL;
@@ -466,6 +615,6 @@ void CL_UpdateFloorWaggle(cs_sector_thinker_data_t *data)
    else if(!(floorwaggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a floor waggle.", dt->net_id);
    else
-      floorwaggle->netUpdate(cl_latest_world_index, data);
+      floorwaggle->insertStatus(index, data);
 }
 

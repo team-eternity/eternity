@@ -29,10 +29,12 @@
 
 NetIDLookup<Mobj>          NetActors;
 NetIDLookup<SectorThinker> NetSectorThinkers;
+NetIDLookup<SectorThinker> CLNetSectorThinkers;
 
 void CS_ClearNetIDs(void)
 {
    NetActors.clear();
    NetSectorThinkers.clear();
+   CLNetSectorThinkers.clear();
 }
 

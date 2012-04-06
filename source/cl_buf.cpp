@@ -189,6 +189,9 @@ void NetPacket::process()
    case nm_voteresult:
       CL_HandleVoteResultMessage((nm_voteresult_t *)data);
       break;
+   case nm_rngsync:
+      CL_HandleRNGSyncMessage((nm_rngsync_t *)data);
+      break;
    case nm_ticfinished:
       CL_SetLatestFinishedIndices(((nm_ticfinished_t *)data)->world_index);
       break;

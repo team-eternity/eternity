@@ -57,7 +57,7 @@ struct cs_door_spawn_data_t
    uint8_t make_sound;
    uint8_t raise;
    uint8_t turbo;
-   uint8_t bounce;
+   uint8_t bounced;
 };
 
 struct cs_ceiling_spawn_data_t
@@ -72,10 +72,10 @@ struct cs_floor_spawn_data_t
 
 union cs_sector_thinker_spawn_data_t
 {
-   cs_platform_spawn_data_t    platform_spawn_data;
-   cs_door_spawn_data_t        door_spawn_data;
-   cs_ceiling_spawn_data_t     ceiling_spawn_data;
-   cs_floor_spawn_data_t       floor_spawn_data;
+   cs_platform_spawn_data_t platform_spawn_data;
+   cs_door_spawn_data_t     door_spawn_data;
+   cs_ceiling_spawn_data_t  ceiling_spawn_data;
+   cs_floor_spawn_data_t    floor_spawn_data;
 };
 
 struct cs_platform_data_t

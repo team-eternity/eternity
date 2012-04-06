@@ -45,6 +45,7 @@
 
 #include "cs_main.h"  // [CG] 09/18/11
 #include "cs_netid.h" // [CG] 09/18/11
+#include "cs_spec.h"  // [CG] 04/05/12
 #include "cl_cmd.h"   // [CG] 09/18/11
 #include "cl_main.h"  // [CG] 02/04/12
 #include "cl_pred.h"  // [CG] 09/18/11
@@ -667,25 +668,53 @@ static bool PTR_UseTraverse(intercept_t *in)
    if(P_PointOnLineSide(trace.originx, trace.originy,in->d.line) == 1)
       side = 1;
 
-   if(CS_SHOULD_ACTIVATE_LINE(usething) && in->d.line->special)
+   if(in->d.line->special)
    {
-      if(CS_SERVER)
-         SV_BroadcastLineUsed(usething, in->d.line, side);
-
-      if(P_UseSpecialLine(usething, in->d.line, side))
+      if(!CS_SHOULD_ACTIVATE_LINE(usething))
       {
-         if(CL_PREDICTING_LINE_ACTIVATION(usething))
-            CL_StoreLineActivation(usething, in->d.line, side, at_shot);
-         else
-         {
-            current_game_type->handleActorUsedSpecialLine(
-               usething, in->d.line, side
-            );
-         }
+         CS_LogSMT(
+            "%u/%u: Actor %u not activating line %u: %d, %u/%u.\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            usething->net_id,
+            in->d.line - lines,
+            cl_predict_sector_activation,
+            usething->net_id,
+            players[consoleplayer].mo->net_id
+         );
       }
 
-      //WAS can't use for than one special line in a row
-      //jff 3/21/98 NOW multiple use allowed with enabling line flag
+      if(CS_SHOULD_ACTIVATE_LINE(usething))
+      {
+         CS_LogSMT(
+            "%u/%u: Actor %u activating line %u: %d, %u/%u.\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            usething->net_id,
+            in->d.line - lines,
+            cl_predict_sector_activation,
+            usething->net_id,
+            players[consoleplayer].mo->net_id
+         );
+
+         if(CS_SERVER)
+            SV_BroadcastLineUsed(usething, in->d.line, side);
+
+         if(P_UseSpecialLine(usething, in->d.line, side))
+         {
+            if(CL_PREDICTING_LINE_ACTIVATION(usething))
+               CL_StoreLineActivation(usething, in->d.line, side, at_shot);
+            else
+            {
+               current_game_type->handleActorUsedSpecialLine(
+                  usething, in->d.line, side
+               );
+            }
+         }
+
+         //WAS can't use for than one special line in a row
+         //jff 3/21/98 NOW multiple use allowed with enabling line flag
+      }
       return (!demo_compatibility && in->d.line->flags & ML_PASSUSE);
    }
    else

@@ -160,6 +160,7 @@ public:
 
 extern NetIDLookup<Mobj>          NetActors;
 extern NetIDLookup<SectorThinker> NetSectorThinkers;
+extern NetIDLookup<SectorThinker> CLNetSectorThinkers;
 
 void CS_ClearNetIDs(void);
 
