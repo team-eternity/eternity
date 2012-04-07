@@ -1752,12 +1752,13 @@ void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
    }
 
    CS_LogSMT(
-      "%u/%u: SMT %u removed at %u/%u.\n",
+      "%u/%u: SMT %u removed at %u/%u (%u).\n",
       cl_latest_world_index,
       cl_current_world_index,
       message->net_id,
       message->world_index,
-      message->command_index
+      message->command_index,
+      thinker->net_id
    );
 
    thinker->removed = message->command_index;

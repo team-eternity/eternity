@@ -137,13 +137,6 @@ static void CL_predictSectorThinkers(uint32_t index)
 
 static void CL_removeOldSectorThinkers(uint32_t last_sector_index)
 {
-   PlatThinker           *platform    = NULL;
-   VerticalDoorThinker   *door        = NULL;
-   CeilingThinker        *ceiling     = NULL;
-   FloorMoveThinker      *floor       = NULL;
-   ElevatorThinker       *elevator    = NULL;
-   PillarThinker         *pillar      = NULL;
-   FloorWaggleThinker    *waggle      = NULL;
    NetIDToObject<SectorThinker> *nito = NULL;
 
    while((nito = NetSectorThinkers.iterate(nito)))
@@ -158,32 +151,10 @@ static void CL_removeOldSectorThinkers(uint32_t last_sector_index)
             nito->object->removed,
             last_sector_index
          );
+         nito->object->Remove();
       }
       else
          continue;
-
-      if((platform = dynamic_cast<PlatThinker *>(nito->object)))
-         P_RemoveActivePlat(platform);
-      else if((door = dynamic_cast<VerticalDoorThinker *>(nito->object)))
-         P_RemoveDoor(door);
-      else if((ceiling = dynamic_cast<CeilingThinker *>(nito->object)))
-         P_RemoveActiveCeiling(ceiling);
-      else if((floor = dynamic_cast<FloorMoveThinker *>(nito->object)))
-         P_RemoveFloor(floor);
-      else if((elevator = dynamic_cast<ElevatorThinker *>(nito->object)))
-         P_RemoveElevator(elevator);
-      else if((pillar = dynamic_cast<PillarThinker *>(nito->object)))
-         P_RemovePillar(pillar);
-      else if((waggle = dynamic_cast<FloorWaggleThinker *>(nito->object)))
-         P_RemoveFloorWaggle(waggle);
-      else
-      {
-         I_Error(
-            "CL_RemoveOldSectorThinkers: "
-            "can't remove thinker %u: unknown type.\n",
-            nito->object->net_id
-         );
-      }
    }
 }
 

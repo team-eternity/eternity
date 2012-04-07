@@ -297,7 +297,7 @@ void CL_SpawnPlatform(nm_sectorthinkerspawned_t *message)
       platform = new PlatThinker;
       platform->sector = sector;
       platform->addThinker();
-      platform->insertStatus(message->command_index, data);
+      platform->saveInitialSpawnStatus(message->command_index, data);
 
       P_AddActivePlat(platform);
       strncpy(
@@ -309,7 +309,7 @@ void CL_SpawnPlatform(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(platform);
-      platform->insertStatus(message->command_index, data);
+      platform->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(platform);
@@ -333,7 +333,7 @@ void CL_SpawnVerticalDoor(nm_sectorthinkerspawned_t *message)
       VerticalDoorThinker *door = new VerticalDoorThinker;
       door->addThinker();
       door->sector = sector;
-      door->insertStatus(message->command_index, data);
+      door->saveInitialSpawnStatus(message->command_index, data);
 
       if(spawn_data->door_spawn_data.make_sound)
       {
@@ -348,7 +348,7 @@ void CL_SpawnVerticalDoor(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(door);
-      door->insertStatus(message->command_index, data);
+      door->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(door);
@@ -372,7 +372,7 @@ void CL_SpawnCeiling(nm_sectorthinkerspawned_t *message)
       ceiling = new CeilingThinker;
       ceiling->addThinker();
       ceiling->sector = sector;
-      ceiling->insertStatus(message->command_index, data);
+      ceiling->saveInitialSpawnStatus(message->command_index, data);
 
       P_AddActiveCeiling(ceiling);
       P_CeilingSequence(ceiling, spawn_data->ceiling_spawn_data.noise);
@@ -380,7 +380,7 @@ void CL_SpawnCeiling(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(ceiling);
-      ceiling->insertStatus(message->command_index, data);
+      ceiling->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(ceiling);
@@ -404,7 +404,7 @@ void CL_SpawnFloor(nm_sectorthinkerspawned_t *message)
       floor = new FloorMoveThinker;
       floor->addThinker();
       floor->sector = sector;
-      floor->insertStatus(message->command_index, data);
+      floor->saveInitialSpawnStatus(message->command_index, data);
 
       if(spawn_data->floor_spawn_data.make_sound)
          P_FloorSequence(floor);
@@ -412,7 +412,7 @@ void CL_SpawnFloor(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(floor);
-      floor->insertStatus(message->command_index, data);
+      floor->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(floor);
@@ -436,7 +436,7 @@ void CL_SpawnElevator(nm_sectorthinkerspawned_t *message)
       elevator = new ElevatorThinker;
       elevator->addThinker();
       elevator->sector = sector;
-      elevator->insertStatus(message->command_index, data);
+      elevator->saveInitialSpawnStatus(message->command_index, data);
 
       if(spawn_data->floor_spawn_data.make_sound)
          P_FloorSequence(elevator);
@@ -444,7 +444,7 @@ void CL_SpawnElevator(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(elevator);
-      elevator->insertStatus(message->command_index, data);
+      elevator->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(elevator);
@@ -469,7 +469,7 @@ void CL_SpawnPillar(nm_sectorthinkerspawned_t *message)
 
       pillar->addThinker();
       pillar->sector = sector;
-      pillar->insertStatus(message->command_index, data);
+      pillar->saveInitialSpawnStatus(message->command_index, data);
 
       if(spawn_data->floor_spawn_data.make_sound)
          P_FloorSequence(pillar);
@@ -477,7 +477,7 @@ void CL_SpawnPillar(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(pillar);
-      pillar->insertStatus(message->command_index, data);
+      pillar->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(pillar);
@@ -502,7 +502,7 @@ void CL_SpawnFloorWaggle(nm_sectorthinkerspawned_t *message)
 
       floor_waggle->addThinker();
       floor_waggle->sector = sector;
-      floor_waggle->insertStatus(message->command_index, data);
+      floor_waggle->saveInitialSpawnStatus(message->command_index, data);
 
       if(spawn_data->floor_spawn_data.make_sound)
          P_FloorSequence(floor_waggle);
@@ -510,7 +510,7 @@ void CL_SpawnFloorWaggle(nm_sectorthinkerspawned_t *message)
    else
    {
       CLNetSectorThinkers.remove(floor_waggle);
-      floor_waggle->insertStatus(message->command_index, data);
+      floor_waggle->saveInitialSpawnStatus(message->command_index, data);
    }
 
    NetSectorThinkers.add(floor_waggle);

@@ -431,8 +431,18 @@ void VerticalDoorThinker::insertStatus(uint32_t index,
 void VerticalDoorThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemoveDoor(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// VerticalDoorThinker::Remove()
+//
+// Removes a door thinker.
+//
+void VerticalDoorThinker::Remove()
+{
+   P_RemoveDoor(this);
 }
 
 void P_RemoveDoor(VerticalDoorThinker *door)

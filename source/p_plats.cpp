@@ -384,8 +384,18 @@ void PlatThinker::insertStatus(uint32_t index,
 void PlatThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemoveActivePlat(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// PlatThinker::Remove()
+//
+// Removes a platform thinker.
+//
+void PlatThinker::Remove()
+{
+   P_RemoveActivePlat(this);
 }
 
 //
@@ -542,6 +552,8 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       else
          CLNetSectorThinkers.add(plat);
 
+      P_PlatSequence(plat, seqname);
+
       if(CS_SERVER)
       {
          cs_sector_thinker_spawn_data_t spawn_data;
@@ -661,6 +673,8 @@ void P_RemoveActivePlat(PlatThinker *plat)
       plat->setInactive();
       return;
    }
+
+   printf("Removed platform %u.\n", plat->net_id);
 
    if(CS_SERVER)
       SV_BroadcastSectorThinkerRemoved(plat);

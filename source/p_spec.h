@@ -642,12 +642,10 @@ protected:
                                cs_sector_thinker_data_t *src) {}
    virtual bool startThinking();
    virtual void finishThinking();
-   virtual void saveInitialSpawnStatus();
 
 public:
    // Data Members
    uint32_t net_id;
-   uint32_t cl_net_id;
    uint32_t removed;
    uint32_t inactive;
    line_t *line;
@@ -665,8 +663,11 @@ public:
    virtual void netSerialize(cs_sector_thinker_data_t *data);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void savePredictedStatus(uint32_t index);
+   virtual void saveInitialSpawnStatus(uint32_t index,
+                                       cs_sector_thinker_data_t *data);
    virtual void logStatus(cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove() {}
 
    // Non-virtual methods
    void setActivatedClientside();
@@ -865,6 +866,7 @@ public:
    virtual void logStatus(cs_sector_thinker_data_t *data);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    fixed_t speed;
@@ -926,6 +928,7 @@ public:
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    int type;
@@ -1006,6 +1009,7 @@ public:
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    int type;
@@ -1086,6 +1090,7 @@ public:
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    int type;
@@ -1168,6 +1173,7 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    int type;
@@ -1205,6 +1211,7 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    int ceilingSpeed;
@@ -1254,6 +1261,7 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
+   virtual void Remove();
 
    // Data Members
    fixed_t originalHeight;

@@ -823,8 +823,18 @@ void FloorMoveThinker::insertStatus(uint32_t index,
 void FloorMoveThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemoveFloor(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// FloorMoveThinker::Remove()
+//
+// Removes a floor thinker.
+//
+void FloorMoveThinker::Remove()
+{
+   P_RemoveFloor(this);
 }
 
 void P_RemoveFloor(FloorMoveThinker *floor)
@@ -1000,8 +1010,18 @@ void ElevatorThinker::insertStatus(uint32_t index,
 void ElevatorThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemoveElevator(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// ElevatorThinker::Remove()
+//
+// Removes an elevator thinker.
+//
+void ElevatorThinker::Remove()
+{
+   P_RemoveElevator(this);
 }
 
 void P_RemoveElevator(ElevatorThinker *elevator)
@@ -1158,8 +1178,18 @@ void PillarThinker::insertStatus(uint32_t index,
 void PillarThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemovePillar(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// PillarThinker::Remove()
+//
+// Removes a pillar thinker.
+//
+void PillarThinker::Remove()
+{
+   P_RemovePillar(this);
 }
 
 void P_RemovePillar(PillarThinker *pillar)
@@ -2443,8 +2473,18 @@ void FloorWaggleThinker::insertStatus(uint32_t index,
 void FloorWaggleThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemoveFloorWaggle(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// FloorWaggleThinker::Remove()
+//
+// Removes a floor waggle thinker.
+//
+void FloorWaggleThinker::Remove()
+{
+   P_RemoveFloorWaggle(this);
 }
 
 //

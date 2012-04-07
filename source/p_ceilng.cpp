@@ -450,8 +450,18 @@ void CeilingThinker::insertStatus(uint32_t index,
 void CeilingThinker::Reset()
 {
    SectorMovementThinker::Reset();
-   P_RemoveActiveCeiling(this);
    CLNetSectorThinkers.remove(this);
+   Remove();
+}
+
+//
+// CeilingThinker::Remove()
+//
+// Removes a ceiling thinker.
+//
+void CeilingThinker::Remove()
+{
+   P_RemoveActiveCeiling(this);
 }
 
 //

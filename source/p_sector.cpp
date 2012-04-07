@@ -34,6 +34,7 @@
 #include "p_spec.h"
 #include "r_defs.h"
 
+#include "cs_netid.h"
 #include "cl_main.h"
 #include "cl_spec.h"
 #include "sv_main.h"
@@ -167,18 +168,7 @@ void SectorThinker::serialize(SaveArchive &arc)
    arc << sector;
    arc << line;
 
-   arc << astatus
-       << activation_world_index
-       << activation_command_index
-       << predicting
-       << repredicting
-       << prediction_index
-       << net_id
-       << removed
-       << inactive;
-
-   serializeCurrentStatus(arc);
-   serializeStatusQueue(arc);
+   arc << net_id;
 
    // when reloading, attach to sector
    if(arc.isLoading())
@@ -203,6 +193,9 @@ void SectorThinker::serialize(SaveArchive &arc)
       default:
          break;
       }
+
+      // [CG] Register Net ID.
+      NetSectorThinkers.add(this);
    }
 }
 
@@ -339,10 +332,20 @@ void SectorThinker::savePredictedStatus(uint32_t index)
 //
 // Stores initial spawn status if activated clientside.
 //
-void SectorThinker::saveInitialSpawnStatus()
+void SectorThinker::saveInitialSpawnStatus(uint32_t index,
+                                           cs_sector_thinker_data_t *data)
 {
-   if(activated_clientside && M_QueueIsEmpty(&status_queue))
-      savePredictedStatus(activation_command_index);
+   cs_queued_sector_thinker_data_t *qstd = estructalloc(
+      cs_queued_sector_thinker_data_t, 1
+   );
+
+   qstd->index = index;
+   copyStatusData(&qstd->data, data);
+
+   while(!M_QueueIsEmpty(&status_queue))
+      efree(M_QueuePop(&status_queue));
+
+   M_QueueInsert((mqueueitem_t *)qstd, &status_queue);
 }
 
 //
@@ -421,7 +424,8 @@ void SectorThinker::loadStatusFor(uint32_t index)
 
    if(!qstd)
    {
-      saveInitialSpawnStatus();
+      if(activated_clientside && M_QueueIsEmpty(&status_queue))
+         savePredictedStatus(activation_command_index);
       /*
       CS_LogSMT("%u/%u: No status for SMT %u at %u.\n",
          cl_latest_world_index,
