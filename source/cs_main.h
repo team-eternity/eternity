@@ -64,7 +64,7 @@ struct event_t;
 //      exceeds half of this it will be disconnected, even if none of the other
 //      connected peers have latencies <= (MAX_LATENCY / 2).  This is in
 //      seconds.
-#define MAX_LATENCY 3
+#define MAX_LATENCY 10
 
 // [CG] The default port the server listens on if none is given.
 #define DEFAULT_PORT 10666
@@ -508,6 +508,8 @@ typedef struct
    int32_t levelstarttic;
    int32_t basetic;
    int32_t leveltime;
+   uint32_t plat_seed;
+   int32_t platrndindex;
 } nm_sync_t;
 
 typedef struct
@@ -915,8 +917,7 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint32_t plat_seed;
-   int32_t rndindex;
-   int32_t prndindex;
+   int32_t platrndindex;
 } nm_rngsync_t;
 
 typedef struct

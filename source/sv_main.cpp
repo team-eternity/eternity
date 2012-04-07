@@ -1330,6 +1330,8 @@ void SV_SendSync(int playernum)
    message.levelstarttic = levelstarttic;
    message.basetic = basetic;
    message.leveltime = leveltime;
+   message.plat_seed = rng.seed[pr_plats];
+   message.platrndindex = rng.platrndindex;
    send_packet(playernum, &message, sizeof(nm_sync_t));
 }
 
@@ -2817,8 +2819,7 @@ void SV_BroadcastRNGSync()
    message.message_type = nm_rngsync;
    message.world_index = sv_world_index;
    message.plat_seed = rng.seed[pr_plats];
-   message.rndindex = rng.rndindex;
-   message.prndindex = rng.prndindex;
+   message.platrndindex = rng.platrndindex;
 
    broadcast_packet(&message, sizeof(nm_rngsync_t));
 }

@@ -85,12 +85,28 @@ int P_Random(pr_class_t pr_class)
    // much more unstable method by putting everything
    // except pr_misc into pr_all_in_one
 
-   compat = pr_class == pr_misc ?     // sf: moved here
-      (rng.prndindex = (rng.prndindex + 1) & 255) :
-      (rng.rndindex  = (rng.rndindex  + 1) & 255);
+   // [CG] C/S uses pr_plats for so that perpetual raise platforms can be
+   //      predicted during sector prediction.  Therefore in c/s mode, pr_plats
+   //      uses its own RNG index.
 
-   if(pr_class != pr_misc && !demo_insurance)      // killough 3/31/98
-      pr_class = pr_all_in_one;
+   if(clientserver)
+   {
+      if(pr_class == pr_misc)
+         compat = (rng.prndindex = (rng.prndindex + 1) & 255);
+      else if(pr_class == pr_plats)
+         compat = (rng.platrndindex = (rng.platrndindex + 1) & 255);
+      else
+         compat = (rng.rndindex = (rng.rndindex + 1) & 255);
+   }
+   else
+   {
+      compat = pr_class == pr_misc ?     // sf: moved here
+         (rng.prndindex = (rng.prndindex + 1) & 255) :
+         (rng.rndindex  = (rng.rndindex  + 1) & 255);
+
+      if(pr_class != pr_misc && !demo_insurance)      // killough 3/31/98
+         pr_class = pr_all_in_one;
+   }
 
    boom = rng.seed[pr_class];
 
@@ -108,8 +124,11 @@ int P_Random(pr_class_t pr_class)
    // since it's unnecessary for random shuffling otherwise
    // killough 9/29/98: but use basetic now instead of levelstarttic
 
-   if(demo_insurance)
-      boom += (gametic-basetic)*7;
+   if(!clientserver)
+   {
+      if(demo_insurance)
+         boom += (gametic-basetic)*7;
+   }
 
    return boom & 255;
 }
@@ -186,6 +205,7 @@ void M_ClearRandom(void)
    for(i = 0; i < NUMPRCLASS; ++i)       // go through each pr_class and set
       rng.seed[i] = seed *= 69069ul;     // each starting seed differently
    rng.prndindex = rng.rndindex = 0;     // clear two compatibility indices
+   rng.platrndindex = 0;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

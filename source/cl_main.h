@@ -82,18 +82,19 @@ extern cl_ghost_t cl_unlagged_ghosts[MAXPLAYERS];
 
 void  CL_Init(char *url);
 void  CL_InitAnnouncer();
-void  CL_InitPlayDemoMode(void);
-void  CL_InitNetworkMessageHash(void);
-void  CL_Reset(void);
-char* CL_GetUserAgent(void);
-void  CL_Connect(void);
-void  CL_Reconnect(void);
-void  CL_Disconnect(void);
+void  CL_InitPlayDemoMode();
+void  CL_InitNetworkMessageHash();
+void  CL_Reset();
+char* CL_GetUserAgent();
+void  CL_Connect();
+void  CL_Reconnect();
+void  CL_DeferDisconnect();
+void  CL_Disconnect();
 
 void  CL_SpawnLocalGhost(Mobj *actor);
 void  CL_SpawnRemoteGhost(unsigned int net_id, fixed_t x, fixed_t y, fixed_t z,
                           angle_t angle, unsigned int world_index);
-void  CL_SaveServerPassword(void);
+void  CL_SaveServerPassword();
 void  CL_MessageTeam(event_t *ev);
 void  CL_MessageServer(event_t *ev);
 void  CL_RCONMessage(event_t *ev);
@@ -108,7 +109,7 @@ Mobj* CL_SpawnPuff(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
 Mobj* CL_SpawnBlood(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
                     angle_t angle, int damage, Mobj *target);
 void  CL_RemoveMobj(Mobj *actor);
-void  CL_LoadWADs(void);
+void  CL_LoadWADs();
 bool  CL_SetMobjState(Mobj *mobj, statenum_t state);
 void  CL_PlayerThink(int playernum);
 Mobj* CL_SpawnMissile(Mobj *source, Mobj *target,
@@ -119,15 +120,15 @@ char* CL_ExtractServerMessage(nm_servermessage_t *message);
 char* CL_ExtractPlayerMessage(nm_playermessage_t *message);
 void  CL_SetActorNetID(Mobj *actor, unsigned int net_id);
 void  CL_HandleMessage(char *data, size_t data_length);
-void  CL_AdvancePlayerPositions(void);
-void  CL_ProcessNetworkMessages(void);
+void  CL_AdvancePlayerPositions();
+void  CL_ProcessNetworkMessages();
 void  CL_MoveCommands(unsigned int last_index, unsigned int position_index);
 void  CL_SetPsprite(player_t *player, int position, statenum_t stnum);
 void  CL_HandleDamagedMobj(Mobj *target, Mobj *source, int damage, int mod,
                            emod_t *emod, bool justhit);
-void  CL_SetLatestFinishedIndices(unsigned int index);
-void  CL_RunDemoTics(void);
-void  CL_TryRunTics(void);
+void  CL_SetLatestFinishedIndices(uint32_t index);
+void  CL_RunDemoTics();
+void  CL_TryRunTics();
 
 #endif
 

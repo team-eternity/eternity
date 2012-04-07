@@ -77,9 +77,9 @@ void CL_InitSectorPositions()
 
    for(i = 0; i < numsectors; i++)
    {
-      cl_latest_sector_position_indices[i] = cl_latest_world_index;
+      cl_latest_sector_position_indices[i] = cl_commands_sent;
       for(j = 0; j < MAX_POSITIONS; j++)
-         CS_SaveSectorPosition(cl_latest_world_index + j, i);
+         CS_SaveSectorPosition(cl_commands_sent + j, i);
    }
 
    while(slas)
@@ -90,29 +90,25 @@ void CL_InitSectorPositions()
    }
 }
 
-void CL_CarrySectorPositions(uint32_t old_index)
+void CL_CarrySectorPositions()
 {
    int i;
-   uint32_t j;
    sector_position_t *old_pos, *new_pos;
 
    CS_LogSMT("\n");
 
    for(i = 0; i < numsectors; i++)
    {
-      old_pos = CS_GetSectorPosition(i, old_index);
+      old_pos = CS_GetSectorPosition(i, cl_commands_sent - 1);
+      new_pos = CS_GetSectorPosition(i, cl_commands_sent);
 
-      for(j = old_index + 1; j < cl_commands_sent; j++)
+      if(new_pos->world_index != cl_commands_sent)
       {
-         new_pos = CS_GetSectorPosition(i, j);
-
-         if(new_pos->world_index != j)
-         {
-            new_pos->world_index = j;
-            new_pos->ceiling_height = old_pos->ceiling_height;
-            new_pos->floor_height = old_pos->floor_height;
-         }
+         new_pos->world_index = cl_commands_sent;
+         new_pos->ceiling_height = old_pos->ceiling_height;
+         new_pos->floor_height = old_pos->floor_height;
       }
+
    }
 }
 
@@ -121,7 +117,7 @@ void CL_SaveSectorPosition(uint32_t index, uint32_t sector_number,
 {
    sector_position_t *pos = CS_GetSectorPosition(sector_number, index);
 
-   pos->world_index    = new_position->world_index;
+   pos->world_index    = index;
    pos->ceiling_height = new_position->ceiling_height;
    pos->floor_height   = new_position->floor_height;
 

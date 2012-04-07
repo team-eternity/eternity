@@ -241,6 +241,14 @@ void CL_SendCommand(void)
    command_message->message_type = nm_playercommand;
    command_message->command_count = command_count;
 
+   CS_LogSMT(
+      "%u/%u: Sending command %u/%u.\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      cl_commands_sent,
+      world_index
+   );
+
    if(cl_reliable_commands)
    {
       CS_CopyCommand(dest_command, command);
@@ -257,13 +265,8 @@ void CL_SendCommand(void)
       send_unreliable_packet(buffer, buffer_size);
    }
 
-   CS_LogSMT(
-      "%u/%u: Sending command %u/%u.\n",
-      cl_latest_world_index,
-      cl_current_world_index,
-      cl_commands_sent,
-      world_index
-   );
+   CL_CarrySectorPositions();
+
    cl_commands_sent++;
    efree(buffer);
 }
@@ -315,6 +318,8 @@ void CL_SendCurrentStateRequest(void)
 {
    nm_clientrequest_t message;
 
+   doom_printf("Sending request for current game state");
+
    message.message_type = nm_clientrequest;
    message.request_type = scr_current_state;
 
@@ -324,6 +329,8 @@ void CL_SendCurrentStateRequest(void)
 void CL_SendSyncRequest(void)
 {
    nm_clientrequest_t message;
+
+   doom_printf("Sending synchronization request");
 
    message.message_type = nm_clientrequest;
    message.request_type = scr_sync;
@@ -427,6 +434,8 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
    unsigned int new_num = message->player_number;
    unsigned int mi = message->map_index;
 
+   doom_printf("Received initial state");
+
    // [CG] consoleplayer and displayplayer will both be zero at this point, so
    //      copy clients[0] and players[0] to "new_num" in their respective
    //      arrays.
@@ -485,6 +494,8 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       return;
    }
 
+   doom_printf("Received current game state");
+
    CL_LoadGame(cs_state_file_path);
 
    // [CG] Have to be "in-game" at this point.  This should be sent over
@@ -507,10 +518,13 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
 
 void CL_HandleSyncMessage(nm_sync_t *message)
 {
-   gametic          = message->gametic;
-   basetic          = message->basetic;
-   leveltime        = message->leveltime;
-   levelstarttic    = message->levelstarttic;
+   gametic            = message->gametic;
+   basetic            = message->basetic;
+   leveltime          = message->leveltime;
+   levelstarttic      = message->levelstarttic;
+   rng.seed[pr_plats] = message->plat_seed;
+   rng.platrndindex   = message->platrndindex;
+
    cl_current_world_index = cl_latest_world_index = message->world_index;
 
    cl_packet_buffer.setSynchronized(true);
@@ -520,9 +534,11 @@ void CL_HandleSyncMessage(nm_sync_t *message)
 
    CS_UpdateQueueMessage();
    if(cl_commands_sent)
-      CL_StoreLatestSectorPositionIndex(cl_commands_sent - 1);
+      CL_StoreLatestSectorStatusIndex(cl_commands_sent - 1);
    else
-      CL_StoreLatestSectorPositionIndex(0);
+      CL_StoreLatestSectorStatusIndex(0);
+
+   doom_printf("Synchronized!");
 
    if(!cl_received_first_sync)
       cl_received_first_sync = true;
@@ -557,6 +573,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 {
    cl_commands_sent = 0;
    cl_latest_world_index = cl_current_world_index = 0;
+   CL_InitPrediction();
    cl_packet_buffer.setSynchronized(false);
    CS_ReloadDefaults();
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
@@ -582,16 +599,13 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 
 void CL_HandleAuthResultMessage(nm_authresult_t *message)
 {
-   if(!message->authorization_successful)
+   if(message->authorization_successful)
    {
-      doom_printf("Authorization failed.");
-      return;
+      if(!CS_DEMOPLAY)
+         CL_SaveServerPassword();
+
+      doom_printf("Authorization succeeded.");
    }
-
-   if(!CS_DEMOPLAY)
-      CL_SaveServerPassword();
-
-   doom_printf("Authorization succeeded.");
 
    switch(message->authorization_level)
    {
@@ -1676,6 +1690,7 @@ void CL_HandleSectorThinkerSpawnedMessage(nm_sectorthinkerspawned_t *message)
          break;
    }
    cl_spawning_sector_thinker_from_message = false;
+   CL_StoreLatestSectorStatusIndex(message->command_index);
 }
 
 void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
@@ -1686,8 +1701,6 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
       cl_current_world_index,
       message->command_index
    );
-
-   return;
 
    switch(message->type)
    {
@@ -1718,8 +1731,10 @@ void CL_HandleSectorThinkerStatusMessage(nm_sectorthinkerstatus_t *message)
          "status message with invalid type %u, ignoring.",
          message->type
       );
-      break;
+      return;
    }
+
+   CL_StoreLatestSectorStatusIndex(message->command_index);
 }
 
 void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
@@ -1774,12 +1789,6 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
          message->sector_position.floor_height >> FRACBITS
       );
    }
-
-   CL_SaveSectorPosition(
-      message->command_index, message->sector_number, &message->sector_position
-   );
-
-   CL_StoreLatestSectorPositionIndex(message->command_index);
 }
 
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
@@ -1834,7 +1843,6 @@ void CL_HandleVoteResultMessage(nm_voteresult_t *message)
 void CL_HandleRNGSyncMessage(nm_rngsync_t *message)
 {
    rng.seed[pr_plats] = message->plat_seed;
-   rng.rndindex = message->rndindex;
-   rng.prndindex = message->prndindex;
+   rng.platrndindex = message->platrndindex;
 }
 

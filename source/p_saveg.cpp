@@ -770,7 +770,7 @@ void P_SetNewTarget(Mobj **mop, Mobj *targ)
 //
 static void P_ArchiveRNG(SaveArchive &arc)
 {
-   arc << rng.rndindex << rng.prndindex;
+   arc << rng.rndindex << rng.prndindex << rng.platrndindex;
 
    P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
 }

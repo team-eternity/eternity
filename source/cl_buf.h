@@ -121,6 +121,7 @@ public:
    void     add(char *data, uint32_t data_size);
    void     processPacketsForIndex(uint32_t index);
    void     processAllPackets();
+   void     clear();
 
    friend int CL_serviceNetwork(void *);
 

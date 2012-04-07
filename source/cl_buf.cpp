@@ -376,3 +376,18 @@ void NetPacketBuffer::processAllPackets()
    }
 }
 
+void NetPacketBuffer::clear()
+{
+   NetPacket *packet;
+
+   while(!packet_buffer.empty())
+   {
+      packet = packet_buffer.front();
+      packet_buffer.pop_front();
+      delete(packet);
+   }
+   m_needs_flushing = false;
+   m_needs_filling = false;
+   m_size = 0;
+}
+

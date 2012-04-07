@@ -642,7 +642,6 @@ protected:
                                cs_sector_thinker_data_t *src) {}
    virtual bool startThinking();
    virtual void finishThinking();
-   virtual void savePredictedStatus(uint32_t index);
    virtual void saveInitialSpawnStatus();
 
 public:
@@ -665,6 +664,7 @@ public:
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void netSerialize(cs_sector_thinker_data_t *data);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void savePredictedStatus(uint32_t index);
    virtual void logStatus(cs_sector_thinker_data_t *data);
    virtual void Reset();
 

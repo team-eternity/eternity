@@ -115,6 +115,8 @@ bool cl_handling_damaged_actor = false;
 bool cl_handling_damaged_actor_and_justhit = false;
 bool cl_setting_actor_state = false;
 
+static bool should_disconnect = false;
+
 cl_ghost_t cl_unlagged_ghosts[MAXPLAYERS];
 
 extern int levelTimeLimit;
@@ -131,7 +133,7 @@ extern wfileadd_t *wadfiles;
 struct seenstate_t;
 extern seenstate_t *seenstates;
 
-void CL_RunWorldUpdate(void)
+void CL_RunWorldUpdate()
 {
    cl_packet_buffer.processPacketsForIndex(++cl_current_world_index);
 
@@ -146,7 +148,7 @@ void CL_RunWorldUpdate(void)
    gametic++;
 }
 
-void CL_RunAllWorldUpdates(void)
+void CL_RunAllWorldUpdates()
 {
    uint32_t new_world_index = cl_latest_world_index;
 
@@ -234,14 +236,14 @@ void CL_InitAnnouncer()
       CS_UpdateTeamSpecificAnnouncers(clients[consoleplayer].team);
 }
 
-void CL_InitPlayDemoMode(void)
+void CL_InitPlayDemoMode()
 {
    CL_InitPrediction();
    CS_ZeroClients();
    CS_InitSectorPositions();
 }
 
-char* CL_GetUserAgent(void)
+char* CL_GetUserAgent()
 {
    qstring buffer;
    buffer.Printf(28, "emp-client/%u.%u.%u-%u", version / 100,
@@ -251,7 +253,7 @@ char* CL_GetUserAgent(void)
    return estrdup(buffer.constPtr());
 }
 
-void CL_Reset(void)
+void CL_Reset()
 {
    cl_current_world_index = 0;
    cl_latest_world_index = 0;
@@ -262,11 +264,12 @@ void CL_Reset(void)
    consoleplayer = displayplayer = 0;
    CS_InitPlayers();
    CS_ZeroClients();
+   CL_InitPrediction();
    memset(playeringame, 0, MAXPLAYERS * sizeof(bool));
    playeringame[0] = true;
 }
 
-void CL_Connect(void)
+void CL_Connect()
 {
    ENetEvent event;
    char *address = CS_IPToString(server_address->host);
@@ -330,7 +333,12 @@ void CL_Connect(void)
    }
 }
 
-void CL_Disconnect(void)
+void CL_DeferDisconnect()
+{
+   should_disconnect = true;
+}
+
+void CL_Disconnect()
 {
    if(net_peer == NULL)
    {
@@ -345,11 +353,12 @@ void CL_Disconnect(void)
       printf("Error saving demo: %s\n", cs_demo->getError());
 
    CL_Reset();
+   cl_packet_buffer.clear();
    C_SetConsole();
    doom_printf("Disconnected.");
 }
 
-void CL_SaveServerPassword(void)
+void CL_SaveServerPassword()
 {
    cs_client_password_json[(const char *)cs_server_url] = cs_server_password;
    CS_WriteJSON(cs_client_password_file, cs_client_password_json, true);
@@ -628,18 +637,14 @@ void CL_PlayerThink(int playernum)
    }
 }
 
-void CL_SetLatestFinishedIndices(unsigned int index)
+void CL_SetLatestFinishedIndices(uint32_t index)
 {
-   uint32_t saved_index = cl_latest_world_index;
-
    cl_latest_world_index = index;
 
    // [CG] This means we haven't even completed a single TIC yet, so ignore the
    //      piled up messages we're receiving.
    if(cl_current_world_index == 0)
       return;
-
-   CL_CarrySectorPositions(saved_index);
 
    // [CG] Can't flush during independent buffering.
    if(cl_packet_buffer.bufferingIndependently())
@@ -653,7 +658,7 @@ void CL_SetLatestFinishedIndices(unsigned int index)
       CL_RunAllWorldUpdates();
 }
 
-void CL_RunDemoTics(void)
+void CL_RunDemoTics()
 {
    int current_tic;
    static int new_tic;
@@ -735,7 +740,7 @@ void CL_RunDemoTics(void)
    } while((new_tic = I_GetTime()) <= current_tic);
 }
 
-void CL_TryRunTics(void)
+void CL_TryRunTics()
 {
    int current_tic;
    bool received_sync = cl_packet_buffer.synchronized();
@@ -760,6 +765,13 @@ void CL_TryRunTics(void)
    {
       while((!d_fastrefresh) && ((new_tic = I_GetTime()) == current_tic))
          I_Sleep(1);
+      return;
+   }
+
+   if(should_disconnect)
+   {
+      CL_Disconnect();
+      should_disconnect = false;
       return;
    }
 

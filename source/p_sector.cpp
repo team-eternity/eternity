@@ -257,10 +257,21 @@ void SectorThinker::insertStatus(uint32_t index, cs_sector_thinker_data_t *data)
          M_QueueInsert(M_QueuePop(&status_queue), &mqueue);
       }
 
+      CS_LogSMT(
+         "%u/%u: Inserted status %u at %u:\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         index,
+         cl_commands_sent - 1
+      );
+      logStatus(data);
+
       M_QueueInsert((mqueueitem_t *)new_qstd, &mqueue);
 
+      /*
       while(!M_QueueIsEmpty(&status_queue))
          M_QueueInsert(M_QueuePop(&status_queue), &mqueue);
+      */
 
       while(!M_QueueIsEmpty(&mqueue))
          M_QueueInsert(M_QueuePop(&mqueue), &status_queue);
@@ -359,6 +370,14 @@ void SectorThinker::clearOldUpdates(uint32_t index)
       mqueueitem_t *mqitem = NULL;
       cs_queued_sector_thinker_data_t *qstd = NULL;
 
+      CS_LogSMT(
+         "%u/%u: SMT %u has %u statuses.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         net_id,
+         status_queue.size
+      );
+
       while((mqitem = M_QueuePeek(&status_queue)))
       {
          qstd = (cs_queued_sector_thinker_data_t *)mqitem;
@@ -366,7 +385,14 @@ void SectorThinker::clearOldUpdates(uint32_t index)
          if(qstd->index >= index)
             return;
 
-         qstd = (cs_queued_sector_thinker_data_t *)M_QueuePop(&status_queue);
+         CS_LogSMT(
+            "%u/%u: Clearing old status %u.\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            qstd->index
+         );
+
+         M_QueuePop(&status_queue);
          efree(qstd);
       }
    }
@@ -420,10 +446,14 @@ void SectorThinker::rePredict(uint32_t index)
 {
    if(CS_CLIENT)
    {
-      if(index <= activation_command_index)
+      cs_sector_thinker_data_t data;
+
+      if(index < activation_command_index)
          return;
 
       loadStatusFor(index);
+      dumpStatusData(&data);
+      logStatus(&data);
 
       CS_LogSMT(
          "%u/%u: Re-predicting SMT %u at %u: %d/%d => ",
@@ -459,27 +489,33 @@ void SectorThinker::Predict(uint32_t index)
 {
    if(CS_CLIENT)
    {
+      fixed_t oldch = sector->ceilingheight;
+      fixed_t oldfh = sector->floorheight;
+      cs_sector_thinker_data_t data;
+
+      if(index < activation_command_index)
+         return;
+
       prediction_index = index;
       predicting = true;
       cl_predicting_sectors = true;
+      loadStatusFor(index);
+      dumpStatusData(&data);
+      Think();
+      savePredictedStatus(index);
       CS_LogSMT(
-         "%u/%u: Predicting SMT %u at %u (%u): %d/%d => ",
+         "%u/%u: Predicted SMT %u at %u (%u): %d/%d => %d/%d, status:\n",
          cl_latest_world_index,
          cl_current_world_index,
          net_id,
          index,
          cl_commands_sent - 1,
+         oldch >> FRACBITS,
+         oldfh >> FRACBITS,
          sector->ceilingheight >> FRACBITS,
          sector->floorheight >> FRACBITS
       );
-      loadStatusFor(index);
-      Think();
-      savePredictedStatus(index);
-      CS_LogSMT(
-         "%d/%d.\n",
-         sector->ceilingheight >> FRACBITS,
-         sector->floorheight >> FRACBITS
-      );
+      logStatus(&data);
       predicting = false;
       cl_predicting_sectors = false;
    }

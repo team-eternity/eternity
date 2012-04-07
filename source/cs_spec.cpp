@@ -42,13 +42,17 @@
 #include "sv_main.h"
 
 static int old_numsectors = 0;
+
+#if _SECTOR_PRED_DEBUG
 static bool opened_log_file = false;
 static FILE *specfd;
+#endif
 
 static sector_position_t **cs_sector_positions = NULL;
 
 void CS_LogSMT(const char *fmt, ...)
 {
+#if _SECTOR_PRED_DEBUG
    va_list args;
 
    if(CS_CLIENT && opened_log_file)
@@ -57,8 +61,10 @@ void CS_LogSMT(const char *fmt, ...)
       vfprintf(specfd, fmt, args);
       va_end(args);
    }
+#endif
 }
 
+#if _SECTOR_PRED_DEBUG
 static void CS_closeSpecLog(void)
 {
    if(CS_CLIENT && opened_log_file)
@@ -67,12 +73,14 @@ static void CS_closeSpecLog(void)
       M_CloseFile(specfd);
    }
 }
+#endif
 
 void CS_InitSectorPositions(void)
 {
    int i;
    uint32_t index;
 
+#if _SECTOR_PRED_DEBUG
    if(CS_CLIENT && (!opened_log_file))
    {
       specfd = M_OpenFile("E:/Code/eecs/codeblocks/bin/Debug/spec.log", "wb");
@@ -83,6 +91,7 @@ void CS_InitSectorPositions(void)
 
       opened_log_file = true;
    }
+#endif
 
    if(cs_sector_positions != NULL)
    {

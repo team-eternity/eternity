@@ -346,7 +346,7 @@ void PlatThinker::logStatus(cs_sector_thinker_data_t *data)
 {
    CS_LogSMT(
       "\tSpeed:     %d | Low:        %d | High:  %d | Wait: %d | Count: %d\n"
-      "\tStatus:    %d | Old Status: %d | Crush: %d | Tag:  %d | Type:  %d\n"
+      "\tStatus:    %d | Old Status: %d | Crush: %d  | Tag:  %d   | Type:  %d\n"
       "\tCeiling: %d | Floor:      %d\n",
       data->platform_data.speed >> FRACBITS,
       data->platform_data.low >> FRACBITS,
@@ -515,7 +515,6 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
 
          plat->wait = 35*PLATWAIT;
          plat->status = (P_Random(pr_plats) & 1) ? down : up;
-
          seqname = "EEPlatNormal";
          break;
 
