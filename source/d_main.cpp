@@ -897,6 +897,7 @@ enum
    BASE_ENVIRON,
    BASE_WORKING,
    BASE_EXEDIR,
+   BASE_BASEPARENT, // for user dir only
    BASE_NUMBASE
 };
 
@@ -1114,6 +1115,17 @@ static void D_SetUserPath()
          source = BASE_EXEDIR;
    }
 
+   // try /user under the base path's immediate parent directory
+   if(res != BASE_ISGOOD)
+   {
+      size_t len = M_StringAlloca(&userdir, 1, 8, basepath);
+
+      psnprintf(userdir, len, "%s/../user", basepath);
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_BASEPARENT;
+   }
+
    // last straw: use base path - may not work as it is not guaranteed to be a
    // writable location
    if(res != BASE_ISGOOD)
@@ -1135,6 +1147,9 @@ static void D_SetUserPath()
       break;
    case BASE_EXEDIR:
       s = "to executable directory";
+      break;
+   case BASE_BASEPARENT:
+      s = "to basepath/../user";
       break;
    default:
       s = "to base directory (warning: writes may fail!)"; // ???
