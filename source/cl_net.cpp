@@ -1761,7 +1761,7 @@ void CL_HandleSectorThinkerRemovedMessage(nm_sectorthinkerremoved_t *message)
       thinker->net_id
    );
 
-   thinker->removed = message->command_index;
+   thinker->removal_index = message->command_index;
 }
 
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)

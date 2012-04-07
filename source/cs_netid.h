@@ -156,6 +156,11 @@ public:
       return netid_map.tableIterator(nito);
    }
 
+   uint32_t getSize()
+   {
+      return netids_assigned;
+   }
+
 };
 
 extern NetIDLookup<Mobj>          NetActors;

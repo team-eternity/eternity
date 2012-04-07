@@ -674,8 +674,6 @@ void P_RemoveActivePlat(PlatThinker *plat)
       return;
    }
 
-   printf("Removed platform %u.\n", plat->net_id);
-
    if(CS_SERVER)
       SV_BroadcastSectorThinkerRemoved(plat);
 

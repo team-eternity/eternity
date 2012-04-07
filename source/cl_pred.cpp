@@ -54,6 +54,9 @@ static uint32_t latest_server_command_server_index;
 static uint32_t latest_sector_status_index;
 static uint32_t last_sector_status_index_predicted;
 
+static uint32_t smtcount = 0;
+static SectorThinker **deadsmts = NULL;
+
 static void CL_runPlayerCommand(uint32_t index, bool think)
 {
    ticcmd_t ticcmd;
@@ -137,24 +140,45 @@ static void CL_predictSectorThinkers(uint32_t index)
 
 static void CL_removeOldSectorThinkers(uint32_t last_sector_index)
 {
+   uint32_t i, j, size;
    NetIDToObject<SectorThinker> *nito = NULL;
+
+   size = NetSectorThinkers.getSize();
+
+   if(!size)
+      return;
+
+   if(smtcount != size)
+   {
+      smtcount = size;
+      deadsmts = erealloc(
+         SectorThinker **, deadsmts, sizeof(SectorThinker *) * smtcount
+      );
+   }
+
+   i = 0;
 
    while((nito = NetSectorThinkers.iterate(nito)))
    {
-      if(nito->object->removed && (nito->object->removed < last_sector_index))
+      if((nito->object->removal_index) &&
+         (nito->object->removal_index < last_sector_index))
       {
-         CS_LogSMT(
-            "%u/%u: Removing SMT %u (%u < %u).\n",
-            cl_latest_world_index,
-            cl_current_world_index,
-            nito->object->net_id,
-            nito->object->removed,
-            last_sector_index
-         );
-         nito->object->Remove();
+         deadsmts[i] = nito->object;
+         i++;
       }
-      else
-         continue;
+   }
+
+   for(j = 0; j < i; j++)
+   {
+      CS_LogSMT(
+         "%u/%u: Removing SMT %u (%u < %u).\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         deadsmts[j]->net_id,
+         deadsmts[j]->removal_index,
+         last_sector_index
+      );
+      deadsmts[j]->Remove();
    }
 }
 

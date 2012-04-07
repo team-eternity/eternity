@@ -646,7 +646,7 @@ protected:
 public:
    // Data Members
    uint32_t net_id;
-   uint32_t removed;
+   uint32_t removal_index;
    uint32_t inactive;
    line_t *line;
    sector_t *sector;

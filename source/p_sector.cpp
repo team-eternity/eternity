@@ -53,7 +53,10 @@ SectorThinker::SectorThinker() : Thinker()
    {
       activation_status = ACTIVATION_UNCONFIRMED;
       activation_world_index = 0;
-      activation_command_index = cl_commands_sent - 1;
+      if(cl_commands_sent)
+         activation_command_index = cl_commands_sent - 1;
+      else
+         activation_command_index = 0;
       activated_clientside = true;
    }
    else
@@ -72,7 +75,7 @@ SectorThinker::SectorThinker() : Thinker()
    predicting = false;
    repredicting = false;
    net_id = 0;
-   removed = 0;
+   removal_index = 0;
    inactive = 0;
 
    M_QueueInit(&status_queue);
@@ -84,7 +87,10 @@ SectorThinker::SectorThinker(sector_t *new_sector) : Thinker()
    {
       activation_status = ACTIVATION_UNCONFIRMED;
       activation_world_index = 0;
-      activation_command_index = cl_commands_sent - 1;
+      if(cl_commands_sent)
+         activation_command_index = cl_commands_sent - 1;
+      else
+         activation_command_index = 0;
       activated_clientside = true;
    }
    else
@@ -103,7 +109,7 @@ SectorThinker::SectorThinker(sector_t *new_sector) : Thinker()
    predicting = false;
    repredicting = false;
    net_id = 0;
-   removed = 0;
+   removal_index = 0;
    inactive = 0;
 
    M_QueueInit(&status_queue);
@@ -117,7 +123,10 @@ SectorThinker::SectorThinker(sector_t *new_sector, line_t *new_line) : Thinker()
    {
       activation_status = ACTIVATION_UNCONFIRMED;
       activation_world_index = 0;
-      activation_command_index = cl_commands_sent - 1;
+      if(cl_commands_sent)
+         activation_command_index = cl_commands_sent - 1;
+      else
+         activation_command_index = 0;
       activated_clientside = true;
    }
    else
@@ -136,7 +145,7 @@ SectorThinker::SectorThinker(sector_t *new_sector, line_t *new_line) : Thinker()
    predicting = false;
    repredicting = false;
    net_id = 0;
-   removed = 0;
+   removal_index = 0;
    inactive = 0;
 
    M_QueueInit(&status_queue);
@@ -165,10 +174,10 @@ void SectorThinker::serialize(SaveArchive &arc)
 
    Super::serialize(arc);
 
+   arc << net_id;
+
    arc << sector;
    arc << line;
-
-   arc << net_id;
 
    // when reloading, attach to sector
    if(arc.isLoading())
