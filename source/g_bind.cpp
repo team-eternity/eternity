@@ -140,7 +140,8 @@ public:
    const char* getKeyName() const { return hidden_key_name; }
    const char* getActionName() const { return hidden_action_name; }
    const bool isRepeatable() const { return repeatable; }
-   const bool isPressed() const { return pressed; }
+   const bool isPressed() const { if(pressed) return true; return false; }
+   const bool isReleased() const { if(!pressed) return true; return false; }
    void press() { pressed = true; }
    void release() { pressed = false; }
    input_action_category_e getCategory() const { return category; }
@@ -300,9 +301,9 @@ public:
          activate(ev);
       else if(kb->isDeactivateOnly())
          deactivate(ev);
-      else if(ev->type == ev_keydown)
+      else if((ev->type == ev_keydown) && (!kb->isPressed()))
          activate(ev);
-      else if(ev->type == ev_keyup)
+      else if((ev->type == ev_keyup) && (!kb->isReleased()))
          deactivate(ev);
       else
          return false;
@@ -399,6 +400,7 @@ public:
       : InputAction(new_name, new_category)
    {
       var = new_variable;
+      *var = 0;
    }
 
    VariableInputAction(const char *new_name,
@@ -407,9 +409,10 @@ public:
       : InputAction(new_name, new_category, new_repeatable)
    {
       var = new_variable;
+      *var = 0;
    }
 
-   void activate(event_t *ev) { (*var)++; }
+   void activate(event_t *ev) { (*var)++; } 
    void deactivate(event_t *ev) { if(*var) { (*var)--; } }
    bool active() { if(*var) { return true; } return false; }
 };
