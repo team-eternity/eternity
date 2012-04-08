@@ -144,6 +144,11 @@ public:
 
       return ptrArray[index];
    }
+
+   typedef T *iterator;
+
+   T *begin() const { return ptrArray; }
+   T *end()   const { return ptrArray + length; }
 };
 
 //
@@ -230,6 +235,33 @@ public:
          this->resize(this->length ? this->length : 32); // double array size
       this->ptrArray[this->length] = newItem;
       ++this->length;
+   }
+
+   //
+   // addNew
+   //
+   // Adds a new zero-initialized item to the end of the collection.
+   //
+   T &addNew()
+   {
+      if(this->length >= this->numalloc)
+         this->resize(this->length ? this->length : 32);
+      memset(&(this->ptrArray[this->length]), 0, sizeof(T));
+      
+      return this->ptrArray[this->length++];
+   }
+
+   //
+   // pop
+   //
+   // davidph 11/23/11: Returns the last item and decrements the length.
+   //
+   const T &pop()
+   {
+      if(!this->ptrArray || !this->length)
+         I_Error("PODCollection::pop: array underflow\n");
+      
+      return this->ptrArray[--this->length];
    }
 };
 

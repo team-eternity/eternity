@@ -103,7 +103,7 @@ mqueueitem_t* M_QueuePop(mqueue_t *queue)
 // or NULL once the end is reached. The iterator can be reset
 // using M_QueueResetIterator.
 //
-mqueueitem_t *M_QueueIterator(mqueue_t *queue)
+mqueueitem_t* M_QueueIterator(mqueue_t *queue)
 {
    if(queue->rover == NULL)
       return NULL;

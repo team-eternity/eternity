@@ -82,21 +82,14 @@ extern vfont_t *menu_font_normal;
 #define G_addCommandAction(n) \
    names_to_actions.addObject(new CommandInputAction(n))
 
-#define G_addRepeatableVariableAction(n, c) \
-   names_to_actions.addObject(new VariableInputAction(#n, c, &action_##n, true))
-
-#define G_addRepeatableFunctionAction(n, c, f) \
-   names_to_actions.addObject(new FunctionInputAction(#n, c, &f, true))
-
-#define G_addRepeatableCommandAction(n) \
-   names_to_actions.addObject(new CommandInputAction(n, true))
+#define G_addFunctionAction(n, c, f) \
+   names_to_actions.addObject(new FunctionInputAction(#n, c, &f))
 
 class KeyBind : public ZoneObject
 {
 private:
    char *hidden_key_name;
    char *hidden_action_name;
-   bool repeatable;
    bool pressed;
    unsigned short flags;
    input_action_category_e category;
@@ -116,18 +109,7 @@ public:
 
    KeyBind(const char *new_key_name, const char *new_action_name,
            unsigned short new_flags)
-      : ZoneObject(), repeatable(false), pressed(false), flags(new_flags)
-   {
-      hidden_key_name = estrdup(new_key_name);
-      hidden_action_name = estrdup(new_action_name);
-      keys_to_actions_key = (const char *)hidden_key_name;
-      actions_to_keys_key = (const char *)hidden_action_name;
-   }
-
-   KeyBind(const char *new_key_name, const char *new_action_name,
-           unsigned short new_flags, bool new_repeatable)
-      : ZoneObject(), repeatable(new_repeatable), pressed(false),
-        flags(new_flags)
+      : ZoneObject(), pressed(false), flags(new_flags)
    {
       hidden_key_name = estrdup(new_key_name);
       hidden_action_name = estrdup(new_action_name);
@@ -143,8 +125,8 @@ public:
 
    const char* getKeyName() const { return hidden_key_name; }
    const char* getActionName() const { return hidden_action_name; }
-   const bool isRepeatable() const { return repeatable; }
-   const bool isPressed() const { return pressed; }
+   const bool isPressed() const { if(pressed) return true; return false; }
+   const bool isReleased() const { if(!pressed) return true; return false; }
    void press() { pressed = true; }
    void release() { pressed = false; }
    input_action_category_e getCategory() const { return category; }
@@ -239,7 +221,6 @@ class InputAction : public ZoneObject
 protected:
    char *hidden_name;
    input_action_category_e category;
-   bool repeatable;
    char *bound_keys_description;
 
 public:
@@ -247,16 +228,7 @@ public:
    const char *key;
 
    InputAction(const char *new_name, input_action_category_e new_category)
-      : ZoneObject(), category(new_category), repeatable(false)
-   {
-      hidden_name = estrdup(new_name);
-      key = hidden_name;
-      bound_keys_description = estrdup("none");
-   }
-
-   InputAction(const char *new_name, input_action_category_e new_category,
-               bool new_repeatable)
-      : ZoneObject(), category(new_category), repeatable(new_repeatable)
+      : ZoneObject(), category(new_category)
    {
       hidden_name = estrdup(new_name);
       key = hidden_name;
@@ -304,9 +276,9 @@ public:
          activate(ev);
       else if(kb->isDeactivateOnly())
          deactivate(ev);
-      else if(ev->type == ev_keydown)
+      else if((ev->type == ev_keydown) && (!kb->isPressed()))
          activate(ev);
-      else if(ev->type == ev_keyup)
+      else if((ev->type == ev_keyup) && (!kb->isReleased()))
          deactivate(ev);
       else
          return false;
@@ -322,7 +294,6 @@ public:
 
    char *getName() const { return hidden_name; }
    input_action_category_e const getCategory() { return category; }
-   bool isRepeatable() const { return repeatable; }
    virtual void activate(event_t *ev) {}
    virtual void deactivate(event_t *ev) {}
    virtual void print() const { C_Printf("%s\n", getName()); }
@@ -352,15 +323,6 @@ public:
       callback = new_callback;
    }
 
-   OneShotFunctionInputAction(const char *new_name,
-                              input_action_category_e new_category,
-                              void(*new_callback)(event_t *ev),
-                              bool new_repeatable)
-      : InputAction(new_name, new_category, new_repeatable)
-   {
-      callback = new_callback;
-   }
-
    void activate(event_t *ev) { callback(ev); }
 };
 
@@ -374,15 +336,6 @@ public:
                        input_action_category_e new_category,
                        void(*new_callback)(event_t *ev))
       : InputAction(new_name, new_category)
-   {
-      callback = new_callback;
-   }
-
-   FunctionInputAction(const char *new_name,
-                       input_action_category_e new_category,
-                       void(*new_callback)(event_t *ev),
-                       bool new_repeatable)
-      : InputAction(new_name, new_category, new_repeatable)
    {
       callback = new_callback;
    }
@@ -403,14 +356,7 @@ public:
       : InputAction(new_name, new_category)
    {
       var = new_variable;
-   }
-
-   VariableInputAction(const char *new_name,
-                       input_action_category_e new_category,
-                       int *new_variable, bool new_repeatable)
-      : InputAction(new_name, new_category, new_repeatable)
-   {
-      var = new_variable;
+      *var = 0;
    }
 
    void activate(event_t *ev) { (*var)++; }
@@ -423,9 +369,6 @@ class CommandInputAction : public InputAction
 public:
    CommandInputAction(const char *new_name)
       : InputAction(new_name, kac_command) {}
-
-   CommandInputAction(const char *new_name, bool new_repeatable)
-      : InputAction(new_name, kac_command, new_repeatable) {}
 
    void activate(event_t *ev) { if(!consoleactive) C_RunTextCmd(getName()); }
 
@@ -602,9 +545,7 @@ static void G_createBind(InputKey *key, InputAction *action,
       return;
    }
 
-   kb = new KeyBind(
-      key->getName(), action->getName(), flags, action->isRepeatable()
-   );
+   kb = new KeyBind(key->getName(), action->getName(), flags);
    kb->setCategory(action->getCategory());
    actions_to_keys.addObject(kb);
    keys_to_actions.addObject(kb);
@@ -882,32 +823,32 @@ void G_InitKeyBindings(void)
    G_addVariableAction(menu_pageup,   kac_menu);
    G_addVariableAction(menu_pagedown, kac_menu);
    G_addVariableAction(menu_contents, kac_menu);
-   G_addRepeatableVariableAction(menu_up,   kac_menu);
-   G_addRepeatableVariableAction(menu_down, kac_menu);
+   G_addVariableAction(menu_up,       kac_menu);
+   G_addVariableAction(menu_down,     kac_menu);
 
    // Automap-class actions
-   G_addRepeatableFunctionAction(map_right,   kac_map, AM_HandlerRight);
-   G_addRepeatableFunctionAction(map_left,    kac_map, AM_HandlerLeft);
-   G_addRepeatableFunctionAction(map_up,      kac_map, AM_HandlerUp);
-   G_addRepeatableFunctionAction(map_down,    kac_map, AM_HandlerDown);
-   G_addRepeatableFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
-   G_addRepeatableFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
-   G_addVariableAction(map_toggle, kac_map);
-   G_addVariableAction(map_gobig,  kac_map);
-   G_addVariableAction(map_follow, kac_map);
-   G_addVariableAction(map_mark,   kac_map);
-   G_addVariableAction(map_clear,  kac_map);
-   G_addVariableAction(map_grid,   kac_map);
+   G_addFunctionAction(map_right,   kac_map, AM_HandlerRight);
+   G_addFunctionAction(map_left,    kac_map, AM_HandlerLeft);
+   G_addFunctionAction(map_up,      kac_map, AM_HandlerUp);
+   G_addFunctionAction(map_down,    kac_map, AM_HandlerDown);
+   G_addFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
+   G_addFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
+   G_addVariableAction(map_toggle,  kac_map);
+   G_addVariableAction(map_gobig,   kac_map);
+   G_addVariableAction(map_follow,  kac_map);
+   G_addVariableAction(map_mark,    kac_map);
+   G_addVariableAction(map_clear,   kac_map);
+   G_addVariableAction(map_grid,    kac_map);
 
    // Console-class actions
-   G_addVariableAction(console_pageup,   kac_console);
-   G_addVariableAction(console_pagedown, kac_console);
-   G_addVariableAction(console_toggle,   kac_console);
-   G_addVariableAction(console_tab,      kac_console);
-   G_addVariableAction(console_enter,    kac_console);
-   G_addVariableAction(console_up,       kac_console);
-   G_addVariableAction(console_down,     kac_console);
-   G_addRepeatableVariableAction(console_backspace, kac_console);
+   G_addVariableAction(console_pageup,    kac_console);
+   G_addVariableAction(console_pagedown,  kac_console);
+   G_addVariableAction(console_toggle,    kac_console);
+   G_addVariableAction(console_tab,       kac_console);
+   G_addVariableAction(console_enter,     kac_console);
+   G_addVariableAction(console_up,        kac_console);
+   G_addVariableAction(console_down,      kac_console);
+   G_addVariableAction(console_backspace, kac_console);
 
    // [CG] C/S messaging actions
    G_addOneShotFunctionAction(message_all,    kac_player, CS_MessageAll);
@@ -1040,12 +981,6 @@ bool G_KeyResponder(event_t *ev, int categories)
       }
       else if(ev->type == ev_keydown)
       {
-         if(kb->isPressed() && !kb->isRepeatable())
-         {
-            kb->press();
-            continue;
-         }
-
          if(kb->isReleaseOnly())
          {
             kb->press();

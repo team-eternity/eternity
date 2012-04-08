@@ -75,6 +75,7 @@
 #include "i_video.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_collection.h"
 #include "m_misc.h"
 #include "m_swap.h"
 #include "m_syscfg.h"
@@ -934,6 +935,7 @@ enum
    BASE_ENVIRON,
    BASE_WORKING,
    BASE_EXEDIR,
+   BASE_BASEPARENT, // for user dir only
    BASE_NUMBASE
 };
 
@@ -1151,6 +1153,17 @@ static void D_SetUserPath()
          source = BASE_EXEDIR;
    }
 
+   // try /user under the base path's immediate parent directory
+   if(res != BASE_ISGOOD)
+   {
+      size_t len = M_StringAlloca(&userdir, 1, 8, basepath);
+
+      psnprintf(userdir, len, "%s/../user", basepath);
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_BASEPARENT;
+   }
+
    // last straw: use base path - may not work as it is not guaranteed to be a
    // writable location
    if(res != BASE_ISGOOD)
@@ -1172,6 +1185,9 @@ static void D_SetUserPath()
       break;
    case BASE_EXEDIR:
       s = "to executable directory";
+      break;
+   case BASE_BASEPARENT:
+      s = "to basepath/../user";
       break;
    default:
       s = "to base directory (warning: writes may fail!)"; // ???
@@ -1727,9 +1743,7 @@ static void D_DiskMetaData(void)
 
 // doomwadpaths is an array of paths, the decomposition of the DOOMWADPATH
 // environment variable
-static char **doomwadpaths;
-static int numdoomwadpaths;
-static int numdoomwadpaths_alloc;
+static PODCollection<char *> doomwadpaths;
 
 //
 // D_AddDoomWadPath
@@ -1738,16 +1752,7 @@ static int numdoomwadpaths_alloc;
 //
 static void D_AddDoomWadPath(const char *path)
 {
-   int numalloc = numdoomwadpaths_alloc;
-
-   if(numdoomwadpaths >= numalloc)
-   {
-      numalloc = numalloc ? numalloc * 2 : 8;
-      doomwadpaths = erealloc(char **, doomwadpaths, numalloc * sizeof(*doomwadpaths));
-      numdoomwadpaths_alloc = numalloc;
-   }
-   doomwadpaths[numdoomwadpaths] = estrdup(path);
-   ++numdoomwadpaths;
+   doomwadpaths.add(estrdup(path));
 }
 
 // haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
@@ -1761,8 +1766,7 @@ static void D_AddDoomWadPath(const char *path)
 // D_ParseDoomWadPath
 //
 // Looks for the DOOMWADPATH environment variable. If it is defined, then
-// doomwadpaths will consist of the decomposed variable, and numdoomwadpaths
-// will contain the number of paths parsed from it.
+// doomwadpaths will consist of the components of the decomposed variable.
 //
 static void D_ParseDoomWadPath(void)
 {
@@ -1814,10 +1818,9 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
    qstring qstr;
    char *concat  = NULL;
    char *currext = NULL;
+   size_t numpaths = doomwadpaths.getLength();
 
-   qstr.initCreate();
-
-   for(int i = 0; i < numdoomwadpaths; ++i)
+   for(size_t i = 0; i < numpaths ; ++i)
    {
       struct stat sbuf;
 
@@ -2463,7 +2466,7 @@ char *FindIWADFile(void)
    // haleyjd 01/01/11: support for DOOMWADPATH
    D_ParseDoomWadPath();
 
-   if(numdoomwadpaths) // If at least one path is specified...
+   if(doomwadpaths.getLength()) // If at least one path is specified...
    {
       if(customiwad) // -iwad was used with a file name?
       {

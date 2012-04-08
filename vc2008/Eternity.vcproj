@@ -5417,6 +5417,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Cam"
+				>
+				<File
+					RelativePath="..\source\cam_sight.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\cam_sight.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

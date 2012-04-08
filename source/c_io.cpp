@@ -475,7 +475,7 @@ bool C_Responder(event_t *ev)
    
    if(action_console_backspace)
    {
-      action_console_backspace = false;
+      // action_console_backspace = false;
 
       inputtext.Delc();
       
