@@ -334,7 +334,7 @@ menu_t menu_episode =
    mn_episode_items,           // menu items
    NULL, NULL, NULL,           // pages
    48, 63,                     // x, y offsets
-   2,                          // select episode 1
+   0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
    MN_EpisodeDrawer            // drawer
 };
@@ -404,7 +404,7 @@ menu_t menu_newgame =
    mn_newgame_items,   // menu items
    NULL, NULL, NULL,   // pages
    48, 63,             // x,y offsets
-   6,                        // starting item (overridden by open method)
+   0,                        // starting item (overridden by open method)
    mf_skullmenu|mf_emulated, // is a skull menu
    MN_DrawNewGame,     // drawer method
    NULL, NULL,         // toc

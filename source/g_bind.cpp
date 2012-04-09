@@ -63,7 +63,7 @@ extern vfont_t *menu_font_normal;
 
 #define NUM_KEYS 256
 #define MAX_LOAD_FACTOR 0.7
-#define INITIAL_KEY_ACTION_CHAIN_SIZE 128
+#define INITIAL_KEY_ACTION_CHAIN_SIZE 127
 
 #define G_addKey(number, name) \
    keys[number] = new InputKey(number, #name); \
@@ -72,27 +72,20 @@ extern vfont_t *menu_font_normal;
 #define G_addVariableAction(n, c) \
    names_to_actions.addObject(new VariableInputAction(#n, c, &action_##n))
 
-#define G_addFunctionAction(n, c, f) \
-   names_to_actions.addObject(new FunctionInputAction(#n, c, &f))
+#define G_addOneShotFunctionAction(n, c, f) \
+   names_to_actions.addObject(new OneShotFunctionInputAction(#n, c, &f))
 
 #define G_addCommandAction(n) \
    names_to_actions.addObject(new CommandInputAction(n))
 
-#define G_addRepeatableVariableAction(n, c) \
-   names_to_actions.addObject(new VariableInputAction(#n, c, &action_##n, true))
-
-#define G_addRepeatableFunctionAction(n, c, f) \
-   names_to_actions.addObject(new FunctionInputAction(#n, c, &f, true))
-
-#define G_addRepeatableCommandAction(n) \
-   names_to_actions.addObject(new CommandInputAction(n, true))
+#define G_addFunctionAction(n, c, f) \
+   names_to_actions.addObject(new FunctionInputAction(#n, c, &f))
 
 class KeyBind : public ZoneObject
 {
 private:
    char *hidden_key_name;
    char *hidden_action_name;
-   bool repeatable;
    bool pressed;
    unsigned short flags;
    input_action_category_e category;
@@ -112,18 +105,7 @@ public:
 
    KeyBind(const char *new_key_name, const char *new_action_name,
            unsigned short new_flags)
-      : ZoneObject(), repeatable(false), pressed(false), flags(new_flags)
-   {
-      hidden_key_name = estrdup(new_key_name);
-      hidden_action_name = estrdup(new_action_name);
-      keys_to_actions_key = (const char *)hidden_key_name;
-      actions_to_keys_key = (const char *)hidden_action_name;
-   }
-
-   KeyBind(const char *new_key_name, const char *new_action_name,
-           unsigned short new_flags, bool new_repeatable)
-      : ZoneObject(), flags(new_flags), repeatable(new_repeatable),
-        pressed(false)
+      : ZoneObject(), pressed(false), flags(new_flags)
    {
       hidden_key_name = estrdup(new_key_name);
       hidden_action_name = estrdup(new_action_name);
@@ -137,15 +119,15 @@ public:
       efree(hidden_action_name);
    }
 
-   char* getKeyName() const { return hidden_key_name; }
-   char* getActionName() const { return hidden_action_name; }
-   bool isRepeatable() const { return repeatable; }
-   bool isPressed() const { return pressed; }
+   const char* getKeyName() const { return hidden_key_name; }
+   const char* getActionName() const { return hidden_action_name; }
+   const bool isPressed() const { if(pressed) return true; return false; }
+   const bool isReleased() const { if(!pressed) return true; return false; }
    void press() { pressed = true; }
    void release() { pressed = false; }
    input_action_category_e getCategory() const { return category; }
    void setCategory(input_action_category_e new_cat) { category = new_cat; }
-   unsigned short getFlags() const { return flags; }
+   const unsigned short getFlags() const { return flags; }
 
    bool isNormal()
    {
@@ -186,6 +168,22 @@ public:
 
       return false;
    }
+
+   bool keyIs(const char *key_name)
+   {
+      if(!strcmp(hidden_key_name, key_name))
+         return true;
+
+      return false;
+   }
+
+   bool actionIs(const char *action_name)
+   {
+      if(!strcmp(hidden_action_name, action_name))
+         return true;
+
+      return false;
+   }
 };
 
 class InputKey : public ZoneObject
@@ -219,7 +217,6 @@ class InputAction : public ZoneObject
 protected:
    char *hidden_name;
    input_action_category_e category;
-   bool repeatable;
    char *bound_keys_description;
 
 public:
@@ -227,16 +224,7 @@ public:
    const char *key;
 
    InputAction(const char *new_name, input_action_category_e new_category)
-      : ZoneObject(), category(new_category), repeatable(false)
-   {
-      hidden_name = estrdup(new_name);
-      key = hidden_name;
-      bound_keys_description = estrdup("none");
-   }
-
-   InputAction(const char *new_name, input_action_category_e new_category,
-               bool new_repeatable)
-      : ZoneObject(), category(new_category), repeatable(new_repeatable)
+      : ZoneObject(), category(new_category)
    {
       hidden_name = estrdup(new_name);
       key = hidden_name;
@@ -284,9 +272,9 @@ public:
          activate(ev);
       else if(kb->isDeactivateOnly())
          deactivate(ev);
-      else if(ev->type == ev_keydown)
+      else if((ev->type == ev_keydown) && (!kb->isPressed()))
          activate(ev);
-      else if(ev->type == ev_keyup)
+      else if((ev->type == ev_keyup) && (!kb->isReleased()))
          deactivate(ev);
       else
          return false;
@@ -302,7 +290,6 @@ public:
 
    char *getName() const { return hidden_name; }
    input_action_category_e const getCategory() { return category; }
-   bool isRepeatable() const { return repeatable; }
    virtual void activate(event_t *ev) {}
    virtual void deactivate(event_t *ev) {}
    virtual void print() const { C_Printf("%s\n", getName()); }
@@ -332,15 +319,6 @@ public:
       callback = new_callback;
    }
 
-   OneShotFunctionInputAction(const char *new_name,
-                              input_action_category_e new_category,
-                              void(*new_callback)(event_t *ev),
-                              bool new_repeatable)
-      : InputAction(new_name, new_category, new_repeatable)
-   {
-      callback = new_callback;
-   }
-
    void activate(event_t *ev) { callback(ev); }
 };
 
@@ -354,15 +332,6 @@ public:
                        input_action_category_e new_category,
                        void(*new_callback)(event_t *ev))
       : InputAction(new_name, new_category)
-   {
-      callback = new_callback;
-   }
-
-   FunctionInputAction(const char *new_name,
-                       input_action_category_e new_category,
-                       void(*new_callback)(event_t *ev),
-                       bool new_repeatable)
-      : InputAction(new_name, new_category, new_repeatable)
    {
       callback = new_callback;
    }
@@ -383,17 +352,10 @@ public:
       : InputAction(new_name, new_category)
    {
       var = new_variable;
+      *var = 0;
    }
 
-   VariableInputAction(const char *new_name,
-                       input_action_category_e new_category,
-                       int *new_variable, bool new_repeatable)
-      : InputAction(new_name, new_category, new_repeatable)
-   {
-      var = new_variable;
-   }
-
-   void activate(event_t *ev) { (*var)++; }
+   void activate(event_t *ev) { (*var)++; } 
    void deactivate(event_t *ev) { if(*var) { (*var)--; } }
    bool active() { if(*var) { return true; } return false; }
 };
@@ -403,9 +365,6 @@ class CommandInputAction : public InputAction
 public:
    CommandInputAction(const char *new_name)
       : InputAction(new_name, kac_command) {}
-
-   CommandInputAction(const char *new_name, bool new_repeatable)
-      : InputAction(new_name, kac_command, new_repeatable) {}
 
    void activate(event_t *ev) { if(!consoleactive) C_RunTextCmd(getName()); }
 
@@ -582,9 +541,7 @@ static void G_createBind(InputKey *key, InputAction *action,
       return;
    }
 
-   kb = new KeyBind(
-      key->getName(), action->getName(), flags, action->isRepeatable()
-   );
+   kb = new KeyBind(key->getName(), action->getName(), flags);
    kb->setCategory(action->getCategory());
    actions_to_keys.addObject(kb);
    keys_to_actions.addObject(kb);
@@ -627,15 +584,12 @@ static void G_bindKeyToAction(InputKey *key, const char *action_name,
    char *real_action_name = (char *)action_name;
 
    if(action_name[0] == '+')
-   {
       flags |= KeyBind::activate_only;
-      real_action_name++;
-   }
    else if(action_name[0] == '-')
-   {
       flags |= KeyBind::deactivate_only;
+
+   if(flags & (KeyBind::activate_only | KeyBind::deactivate_only))
       real_action_name++;
-   }
 
    if(!(action = names_to_actions.objectForKey(real_action_name)))
    {
@@ -651,7 +605,8 @@ static void G_bindKeyToAction(InputKey *key, const char *action_name,
 //
 // Bind a key to one or more actions.
 //
-static void G_bindKeyToActions(const char *key_name, const qstring &action_names)
+static void G_bindKeyToActions(const char *key_name,
+                               const qstring &action_names)
 {
    unsigned short flags = 0;
    size_t key_name_length = strlen(key_name);
@@ -864,32 +819,32 @@ void G_InitKeyBindings(void)
    G_addVariableAction(menu_pageup,   kac_menu);
    G_addVariableAction(menu_pagedown, kac_menu);
    G_addVariableAction(menu_contents, kac_menu);
-   G_addRepeatableVariableAction(menu_up,   kac_menu);
-   G_addRepeatableVariableAction(menu_down, kac_menu);
+   G_addVariableAction(menu_up,       kac_menu);
+   G_addVariableAction(menu_down,     kac_menu);
 
    // Automap-class actions
-   G_addRepeatableFunctionAction(map_right,   kac_map, AM_HandlerRight);
-   G_addRepeatableFunctionAction(map_left,    kac_map, AM_HandlerLeft);
-   G_addRepeatableFunctionAction(map_up,      kac_map, AM_HandlerUp);
-   G_addRepeatableFunctionAction(map_down,    kac_map, AM_HandlerDown);
-   G_addRepeatableFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
-   G_addRepeatableFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
-   G_addVariableAction(map_toggle, kac_map);
-   G_addVariableAction(map_gobig,  kac_map);
-   G_addVariableAction(map_follow, kac_map);
-   G_addVariableAction(map_mark,   kac_map);
-   G_addVariableAction(map_clear,  kac_map);
-   G_addVariableAction(map_grid,   kac_map);
+   G_addFunctionAction(map_right,   kac_map, AM_HandlerRight);
+   G_addFunctionAction(map_left,    kac_map, AM_HandlerLeft);
+   G_addFunctionAction(map_up,      kac_map, AM_HandlerUp);
+   G_addFunctionAction(map_down,    kac_map, AM_HandlerDown);
+   G_addFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
+   G_addFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
+   G_addVariableAction(map_toggle,  kac_map);
+   G_addVariableAction(map_gobig,   kac_map);
+   G_addVariableAction(map_follow,  kac_map);
+   G_addVariableAction(map_mark,    kac_map);
+   G_addVariableAction(map_clear,   kac_map);
+   G_addVariableAction(map_grid,    kac_map);
 
    // Console-class actions
-   G_addVariableAction(console_pageup,   kac_console);
-   G_addVariableAction(console_pagedown, kac_console);
-   G_addVariableAction(console_toggle,   kac_console);
-   G_addVariableAction(console_tab,      kac_console);
-   G_addVariableAction(console_enter,    kac_console);
-   G_addVariableAction(console_up,       kac_console);
-   G_addVariableAction(console_down,     kac_console);
-   G_addRepeatableVariableAction(console_backspace, kac_console);
+   G_addVariableAction(console_pageup,    kac_console);
+   G_addVariableAction(console_pagedown,  kac_console);
+   G_addVariableAction(console_toggle,    kac_console);
+   G_addVariableAction(console_tab,       kac_console);
+   G_addVariableAction(console_enter,     kac_console);
+   G_addVariableAction(console_up,        kac_console);
+   G_addVariableAction(console_down,      kac_console);
+   G_addVariableAction(console_backspace, kac_console);
 
    for(i = 0; i < CMDCHAINS; i++)
    {
@@ -1009,15 +964,18 @@ bool G_KeyResponder(event_t *ev, int categories)
       if(ev->type == ev_keyup)
       {
          if(kb->isPressOnly())
+         {
+            kb->release();
             continue;
+         }
       }
       else if(ev->type == ev_keydown)
       {
-         if(kb->isPressed() && !kb->isRepeatable())
-            continue;
-
          if(kb->isReleaseOnly())
+         {
+            kb->press();
             continue;
+         }
       }
 
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
@@ -1029,7 +987,10 @@ bool G_KeyResponder(event_t *ev, int categories)
       if((categories & action->getCategory()) == 0)
          continue;
 
-      processed_event = action->handleEvent(ev, kb);
+      if(!processed_event)
+         processed_event = action->handleEvent(ev, kb);
+      else
+         action->handleEvent(ev, kb);
    }
 
    return processed_event;
@@ -1080,7 +1041,6 @@ bool G_BindResponder(event_t *ev)
    KeyBind *kb = NULL;
    InputAction *action = NULL;
    bool found_bind = false;
-   size_t action_name_length = strlen(binding_action);
    DLListItem<KeyBind> *binds = NULL;
 
    if(ev->type != ev_keydown)
@@ -1123,7 +1083,7 @@ bool G_BindResponder(event_t *ev)
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
          continue;
 
-      if(!(strncasecmp(binding_action, action->getName(), action_name_length)))
+      if(!(strcasecmp(binding_action, action->getName())))
       {
          found_bind = true;
          G_removeBind(&kb);
@@ -1208,6 +1168,7 @@ void G_LoadDefaults(void)
 void G_SaveDefaults(void)
 {
    FILE *file;
+   bool in_bind;
    InputKey *key = NULL;
    KeyBind *kb = NULL;
 
@@ -1223,24 +1184,22 @@ void G_SaveDefaults(void)
    // write key bindings
    while((key = names_to_keys.tableIterator(key)))
    {
-      bool found_bind = false;
-
+      // Skip uppercase alphabetical keys.
       if(strlen(key->getName()) == 1 && isalpha(*key->getName()) &&
                                         isupper(*key->getName()))
          continue;
 
+      // [CG] Write normal binds first.
+      in_bind = false;
       while((kb = keys_to_actions.keyIterator(kb, key->getName())))
       {
-         if(!found_bind)
-         {
-            if(kb->isPressOnly())
-               fprintf(file, "bind +%s \"", key->getName());
-            else if(kb->isReleaseOnly())
-               fprintf(file, "bind -%s \"", key->getName());
-            else
-               fprintf(file, "bind %s \"", key->getName());
+         if(kb->isPressOnly() || kb->isReleaseOnly())
+            continue;
 
-            found_bind = true;
+         if(!in_bind)
+         {
+            fprintf(file, "bind %s \"", key->getName());
+            in_bind = true;
          }
          else
             fprintf(file, ";");
@@ -1253,7 +1212,59 @@ void G_SaveDefaults(void)
             fprintf(file, "%s", kb->getActionName());
       }
 
-      if(found_bind)
+      if(in_bind)
+         fprintf(file, "\"\n");
+
+      // [CG] Now write press-only binds.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(!kb->isPressOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind +%s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
+         fprintf(file, "\"\n");
+
+      // [CG] Finally write release-only binds.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(!kb->isReleaseOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind -%s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
          fprintf(file, "\"\n");
    }
 
@@ -1272,18 +1283,13 @@ void G_SaveDefaults(void)
 //
 CONSOLE_COMMAND(bind, 0)
 {
-   if(Console.argc >= 2)
-   {
-      G_bindKeyToActions(Console.argv[0]->constPtr(), *(Console.argv[1]));
-   }
-   else if(Console.argc == 1)
+   if(Console.argc == 1)
    {
       InputKey *key = NULL;
       InputAction *action = NULL;
       KeyBind *kb = NULL;
       const char *key_name = Console.argv[0]->constPtr();
       bool found_bind = false;
-
 
       if(!(key = names_to_keys.objectForKey(key_name)))
       {
@@ -1305,7 +1311,12 @@ CONSOLE_COMMAND(bind, 0)
 
          found_bind = true;
       }
+
+      if(!found_bind)
+         C_Printf("%s is not bound.\n", key->getName());
    }
+   else if(Console.argc == 2)
+      G_bindKeyToActions(Console.argv[0]->constPtr(), *(Console.argv[1]));
    else
       C_Printf("usage: bind key <action>\n");
 }

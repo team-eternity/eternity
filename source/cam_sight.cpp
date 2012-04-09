@@ -50,12 +50,8 @@ struct camsight_t
    fixed_t openbottom;  // bottom of linedef silhouette
    fixed_t openrange;   // height of opening
 
-   PODCollection<intercept_t> *intercepts;
+   PODCollection<intercept_t> intercepts;
 };
-
-// This collection acts like a stack of camsight objects, for fully
-// re-entrant behavior.
-static PODCollection<camsight_t> cameratraces;
 
 //
 // CAM_LineOpening
@@ -145,6 +141,8 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
 
    offset = y * bmapwidth + x;
 
+   // TODO: Need to check polyobject lines here.
+
    offset = *(blockmap + offset);
    list = blockmaplump + offset;
 
@@ -181,7 +179,7 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
          return false; // stop checking
 
       // store the line for later intersection testing
-      cam.intercepts->addNew().d.line = ld;
+      cam.intercepts.addNew().d.line = ld;
    }
 
    return true; // everything was checked
@@ -194,20 +192,18 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
 //
 static bool CAM_SightTraverseIntercepts(camsight_t &cam)
 {
-   size_t       count;
-   fixed_t      dist;
-   divline_t    dl;
-   PODCollection<intercept_t>::iterator scan;
-   PODCollection<intercept_t>::iterator end;
-   PODCollection<intercept_t>::iterator in;
+   size_t    count;
+   fixed_t   dist;
+   divline_t dl;
+   PODCollection<intercept_t>::iterator scan, end, in;
 
-   count = cam.intercepts->getLength();
-   end   = cam.intercepts->end();
+   count = cam.intercepts.getLength();
+   end   = cam.intercepts.end();
 
    //
    // calculate intercept distance
    //
-   for(scan = cam.intercepts->begin(); scan < end; scan++)
+   for(scan = cam.intercepts.begin(); scan < end; scan++)
    {
       P_MakeDivline(scan->d.line, &dl);
       scan->frac = P_InterceptVector(&cam.trace, &dl);
@@ -222,7 +218,7 @@ static bool CAM_SightTraverseIntercepts(camsight_t &cam)
    {
       dist = D_MAXINT;
 
-      for(scan = cam.intercepts->begin(); scan < end; scan++)
+      for(scan = cam.intercepts.begin(); scan < end; scan++)
       {
          if(scan->frac < dist)
          {
@@ -231,10 +227,13 @@ static bool CAM_SightTraverseIntercepts(camsight_t &cam)
          }
       }
 
-      if(!CAM_SightTraverse(cam, in))
-         return false; // don't bother going farther
+      if(in)
+      {
+         if(!CAM_SightTraverse(cam, in))
+            return false; // don't bother going farther
 
-      in->frac = D_MAXINT;
+         in->frac = D_MAXINT;
+      }
    }
 
    return true; // everything was traversed
@@ -250,7 +249,7 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
 {
    fixed_t xt1, yt1, xt2, yt2;
    fixed_t xstep, ystep;
-   fixed_t partial;
+   fixed_t partialx, partialy;
    fixed_t xintercept, yintercept;
    int     mapx, mapy, mapxstep, mapystep;
 		
@@ -286,58 +285,127 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
    if(xt2 > xt1)
    {
       mapxstep = 1;
-      partial  = FRACUNIT - ((cam.cx >> MAPBTOFRAC) & (FRACUNIT - 1));
+      partialx = FRACUNIT - ((cam.cx >> MAPBTOFRAC) & (FRACUNIT - 1));
       ystep    = FixedDiv(cam.ty - cam.cy, abs(cam.tx - cam.cx));
    }
    else if(xt2 < xt1)
    {
       mapxstep = -1;
-      partial  = (cam.cx >> MAPBTOFRAC) & (FRACUNIT - 1);
+      partialx = (cam.cx >> MAPBTOFRAC) & (FRACUNIT - 1);
       ystep    = FixedDiv(cam.ty - cam.cy, abs(cam.tx - cam.cx));
    }
    else
    {
       mapxstep = 0;
-      partial  = FRACUNIT;
+      partialx = FRACUNIT;
       ystep    = 256*FRACUNIT;
    }	
 
-   yintercept = (cam.cy >> MAPBTOFRAC) + FixedMul(partial, ystep);
+   yintercept = (cam.cy >> MAPBTOFRAC) + FixedMul(partialx, ystep);
 	
    if(yt2 > yt1)
    {
       mapystep = 1;
-      partial  = FRACUNIT - ((cam.cy >> MAPBTOFRAC) & (FRACUNIT - 1));
+      partialy = FRACUNIT - ((cam.cy >> MAPBTOFRAC) & (FRACUNIT - 1));
       xstep    = FixedDiv(cam.tx - cam.cx, abs(cam.ty - cam.cy));
    }
    else if(yt2 < yt1)
    {
       mapystep = -1;
-      partial  = (cam.cy >> MAPBTOFRAC) & (FRACUNIT - 1);
+      partialy = (cam.cy >> MAPBTOFRAC) & (FRACUNIT - 1);
       xstep    = FixedDiv(cam.tx - cam.cx, abs(cam.ty - cam.cy));
    }
    else
    {
       mapystep = 0;
-      partial  = FRACUNIT;
+      partialy = FRACUNIT;
       xstep    = 256*FRACUNIT;
    }	
 
-   xintercept = (cam.cx >> MAPBTOFRAC) + FixedMul(partial, xstep);
+   xintercept = (cam.cx >> MAPBTOFRAC) + FixedMul(partialy, xstep);
+
+   // From ZDoom (usable under ZDoom code license):
+   // [RH] Fix for traces that pass only through blockmap corners. In that case,
+   // xintercept and yintercept can both be set ahead of mapx and mapy, so the
+   // for loop would never advance anywhere.
+
+   if(abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
+   {
+      if(ystep < 0)
+         partialx = FRACUNIT - partialx;
+      if(xstep < 0)
+         partialy = FRACUNIT - partialy;
+      if(partialx == partialy)
+      {
+         xintercept = xt1 << FRACBITS;
+         yintercept = yt1 << FRACBITS;
+      }
+   }
 	
    // step through map blocks
    // Count is present to prevent a round off error from skipping the break
    mapx = xt1;
    mapy = yt1;
 	
-   for(int count = 0; count < 64; count++)
+   for(int count = 0; count < 100; count++)
    {
       if(!CAM_SightBlockLinesIterator(cam, mapx, mapy))
          return false;	// early out
 		
-      if(mapx == xt2 && mapy == yt2)
+      if((mapxstep | mapystep) == 0)
          break;
 
+#if 1
+      // From ZDoom (usable under the ZDoom code license):
+      // This is the fix for the "Anywhere Moo" bug, which caused monsters to
+      // occasionally see the player through an arbitrary number of walls in
+      // Doom 1.2, and persisted into Heretic, Hexen, and some versions of 
+      // ZDoom.
+      switch((((yintercept >> FRACBITS) == mapy) << 1) | 
+              ((xintercept >> FRACBITS) == mapx))
+      {
+      case 0: 
+         // Neither xintercept nor yintercept match!
+         // Continuing won't make things any better, so we might as well stop.
+         count = 100;
+         break;
+      case 1: 
+         // xintercept matches
+         xintercept += xstep;
+         mapy += mapystep;
+         if(mapy == yt2)
+            mapystep = 0;
+         break;
+      case 2: 
+         // yintercept matches
+         yintercept += ystep;
+         mapx += mapxstep;
+         if(mapx == xt2)
+            mapxstep = 0;
+         break;
+      case 3: 
+         // xintercept and yintercept both match
+         // The trace is exiting a block through its corner. Not only does the
+         // block being entered need to be checked (which will happen when this
+         // loop continues), but the other two blocks adjacent to the corner
+         // also need to be checked.
+         if(!CAM_SightBlockLinesIterator(cam, mapx + mapxstep, mapy) ||
+            !CAM_SightBlockLinesIterator(cam, mapx, mapy + mapystep))
+         {
+            return false;
+         }
+         xintercept += xstep;
+         yintercept += ystep;
+         mapx += mapxstep;
+         mapy += mapystep;
+         if(mapx == xt2)
+            mapxstep = 0;
+         if(mapy == yt2)
+            mapystep = 0;
+         break;
+      }
+#else
+      // Original code - this fails to account for all cases.
       if((yintercept >> FRACBITS) == mapy)
       {
          yintercept += ystep;
@@ -348,6 +416,7 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
          xintercept += xstep;
          mapy += mapystep;
       }
+#endif
    }
 
    //
@@ -377,10 +446,7 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz,
 	
    if(!(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
-      PODCollection<intercept_t> newIntercepts;
-
-      // push a new camera trace
-      camsight_t &newCam = cameratraces.addNew();
+      camsight_t newCam;
 
       //
       // check precisely
@@ -392,12 +458,8 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz,
       newCam.sightzstart = cz;
       newCam.topslope    = (tz + theight) - newCam.sightzstart;
       newCam.bottomslope = tz - newCam.sightzstart;
-      newCam.intercepts  = &newIntercepts;
 
       result = CAM_SightPathTraverse(newCam);
-
-      // remove the camera trace
-      cameratraces.pop();
    }
 
    return result;

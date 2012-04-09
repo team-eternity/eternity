@@ -1425,7 +1425,7 @@ bool MN_Responder(event_t *ev)
    if(action_menu_up)
    {
       bool cancelsnd = false;
-      action_menu_up = false;
+      // action_menu_up = false;
       
       // skip gaps
       do
@@ -1470,7 +1470,7 @@ bool MN_Responder(event_t *ev)
    if(action_menu_down)
    {
       bool cancelsnd = false;
-      action_menu_down = false;
+      // action_menu_down = false;
       
       do
       {
@@ -1589,7 +1589,7 @@ bool MN_Responder(event_t *ev)
    if(action_menu_left)
    {
       menuitem_t *menuitem;
-      action_menu_left = false;
+      // action_menu_left = false;
       
       // haleyjd 10/07/05: if ctrl is down, go to previous menu
       if(ctrldown)
@@ -1654,7 +1654,7 @@ bool MN_Responder(event_t *ev)
    if(action_menu_right)
    {
       menuitem_t *menuitem;
-      action_menu_right = false;
+      // action_menu_right = false;
       
       // haleyjd 10/07/05: if ctrl is down, go to next menu
       if(ctrldown)
