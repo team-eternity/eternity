@@ -961,6 +961,11 @@ size_t qstring::replaceNotOf(const char *filter, char repl)
    return QStrReplaceInternal(this, repl);
 }
 
+//=============================================================================
+//
+// File Path Specific Routines
+//
+
 //
 // qstring::normalizeSlashes
 //
@@ -977,6 +982,78 @@ qstring &qstring::normalizeSlashes()
    index = strlen(buffer);
 
    return *this;
+}
+
+//
+// qstring::pathConcatenate
+//
+// Concatenate a C string assuming the qstring's current contents are a file
+// path. Slashes will be normalized.
+//
+qstring &qstring::pathConcatenate(const char *addend)
+{
+   // Only add a slash if this is not the initial path component.
+   if(index > 0)
+      *this += '/';
+
+   *this += addend;
+   normalizeSlashes();
+
+   return *this;
+}
+
+//
+// qstring::addDefaultExtension
+//
+// Similar to M_AddDefaultExtension, but for qstrings.
+// Note: an empty string will not be modified.
+//
+qstring &qstring::addDefaultExtension(const char *ext)
+{
+   char *p = buffer;
+
+   if(p && index > 0)
+   {
+      p = p + index - 1;  // no need to seek for \0 here
+      while(p-- > buffer && *p != '/' && *p != '\\')
+      {
+         if(*p == '.')
+            return *this; // has an extension already.
+      }
+      if(*ext != '.') // need a dot?
+         *this += '.';
+      *this += ext;   // add the extension
+   }
+
+   return *this;
+}
+
+//
+// qstring::extractFileBase
+//
+// Similar to M_ExtractFileBase, but for qstrings.
+// This one is not limited to 8 character file names, and will include any
+// file extension, however, so it is not strictly equivalent.
+//
+void qstring::extractFileBase(qstring &dest)
+{
+   dest = "";
+
+   if(buffer)
+   {
+      const char *src = buffer + index - 1;
+
+      // back up until a \ or the start
+      while(src != buffer && 
+            *(src - 1) != ':' &&
+            *(src - 1) != '\\' &&
+            *(src - 1) != '/')
+      {
+         --src;
+      }
+
+      dest = src;
+   }
 }
 
 //=============================================================================

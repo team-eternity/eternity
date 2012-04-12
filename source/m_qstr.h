@@ -153,7 +153,12 @@ public:
    // Substring Replacements
    size_t   replace(const char *filter, char repl);
    size_t   replaceNotOf(const char *filter, char repl);
+   
+   // File Path Utilities
    qstring &normalizeSlashes();
+   qstring &pathConcatenate(const char *addend);
+   qstring &addDefaultExtension(const char *ext);
+   void     extractFileBase(qstring &dest);
 
    // Zone strdup wrappers
    char *duplicate(int tag) const;

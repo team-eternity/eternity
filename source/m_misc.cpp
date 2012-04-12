@@ -36,6 +36,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "hal/i_platform.h"
 
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -2144,22 +2145,38 @@ char *M_AddDefaultExtension(char *path, const char *ext)
 void M_NormalizeSlashes(char *str)
 {
    char *p;
+   char useSlash      = '/'; // The slash type to use for normalization.
+   char replaceSlash = '\\'; // The kind of slash to replace.
+   bool isUNC = false;
+
+   if(ee_current_platform == EE_PLATFORM_WINDOWS)
+   {
+      // This is an UNC path; it should use backslashes.
+      // NB: We check for both in the event one was changed earlier by mistake.
+      if(strlen(str) > 2 && 
+         ((str[0] == '\\' || str[0] == '/') && str[0] == str[1]))
+      {
+         useSlash = '\\';
+         replaceSlash = '/';
+         isUNC = true;
+      }
+   }
    
-   // Convert all backslashes to slashes
+   // Convert all replaceSlashes to useSlashes
    for(p = str; *p; p++)
    {
-      if(*p == '\\')
-         *p = '/';
+      if(*p == replaceSlash)
+         *p = useSlash;
    }
 
    // Remove trailing slashes
-   while(p > str && *--p == '/')
+   while(p > str && *--p == useSlash)
       *p = 0;
 
    // Collapse multiple slashes
-   for(p = str; (*str++ = *p); )
-      if(*p++ == '/')
-         while(*p == '/')
+   for(p = str + (isUNC ? 2 : 0); (*str++ = *p); )
+      if(*p++ == useSlash)
+         while(*p == useSlash)
             p++;
 }
 

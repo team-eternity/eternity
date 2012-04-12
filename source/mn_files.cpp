@@ -552,11 +552,8 @@ char *wad_directory; // directory where user keeps wads
 VARIABLE_STRING(wad_directory,  NULL,          1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 {
-   char *a;
-
    // normalize slashes
-   for(a = wad_directory; *a; ++a)
-      if(*a == '\\') *a = '/';
+   M_NormalizeSlashes(wad_directory);
 }
 
 static mndir_t mn_diskdir;
