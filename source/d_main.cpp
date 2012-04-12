@@ -1801,7 +1801,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
    char *currext = NULL;
    size_t numpaths = doomwadpaths.getLength();
 
-   for(size_t i = 0; i < numpaths ; ++i)
+   for(size_t i = 0; i < numpaths ; i++)
    {
       struct stat sbuf;
       
@@ -1809,7 +1809,6 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
       qstr += '/';
       qstr += filename;
       qstr.normalizeSlashes();
-      qstr.rstrip('/');
 
       // See if the file exists as-is
       if(!stat(qstr.constPtr(), &sbuf)) // check for existence
@@ -1997,7 +1996,7 @@ static char *D_IWADPathForIWADParam(const char *iwad)
    iwadpathmatch_t *cur = iwadMatchers;
    
    // If the name starts with a slash, step forward one
-   char *tmpname = Z_Strdupa(*iwad == '/' ? iwad + 1 : iwad);
+   char *tmpname = Z_Strdupa((*iwad == '/' || *iwad == '\\') ? iwad + 1 : iwad);
    
    // Truncate at any extension
    char *dotpos = strrchr(tmpname, '.');
@@ -2313,10 +2312,12 @@ char *FindIWADFile(void)
    // specification was used, start off by trying base/game/game.wad
    if(gamepathset && !basename)
    {
-      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath, 
-                                  myargv[gamepathparm]);
-
-      psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, myargv[gamepathparm]);
+      qstring tempGameIWAD;
+      
+      tempGameIWAD = basegamepath;
+      tempGameIWAD.pathConcatenate(myargv[gamepathparm]);
+      tempGameIWAD.addDefaultExtension(".wad");
+      gameiwad = tempGameIWAD.duplicateAuto();
 
       if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
          basename = gameiwad;
@@ -2355,10 +2356,11 @@ char *FindIWADFile(void)
             }
          }
       }
-      else if(!strchr(iwad, ':') && !strchr(iwad, '/'))
+      else if(!strchr(iwad, ':') && !strchr(iwad, '/') && !strchr(iwad, '\\'))
       {
          M_StringAlloca(&customiwad, 1, 8, iwad);
          M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
+         M_NormalizeSlashes(customiwad);
       }
    }
    else if(!gamepathset) // try wad picker
@@ -2469,7 +2471,7 @@ char *FindIWADFile(void)
             {
                if(!customiwad)
                   return printf("Looking for %s\n", iwad), iwad; // killough 8/8/98
-               else if((p = strrchr(iwad,'/')))
+               else if((p = strrchr(iwad, '/')) || (p = strrchr(iwad, '\\')))
                {
                   *p=0;
                   strcat(iwad, customiwad);
