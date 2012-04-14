@@ -33,6 +33,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
+#include "c_batch.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -1952,6 +1953,8 @@ void G_Ticker(void)
    
    // call other tickers
    C_NetTicker();        // sf: console network commands
+   G_InputActionTicker();  // [CG] Tick input actions.
+   C_CommandBatchTicker(); // [CG] Tick command batches.
    if(inwipe)
       Wipe_Ticker();
 

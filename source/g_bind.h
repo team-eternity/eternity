@@ -39,16 +39,17 @@ enum input_action_category_e
    kac_max,
 };
 
-void        G_InitKeyBindings(void);
+void        G_InitKeyBindings();
 bool        G_KeyResponder(event_t *ev, int categories);
+void        G_InputActionTicker();
 void        G_EditBinding(const char *action);
 const char* G_BoundKeys(const char *action_name);
 const char* G_FirstBoundKey(const char *action_name);
-void        G_ClearKeyStates(void);
-void        G_LoadDefaults(void);
-void        G_SaveDefaults(void);
-void        G_Bind_AddCommands(void);
-void        G_BindDrawer(void);
+void        G_ClearKeyStates();
+void        G_LoadDefaults();
+void        G_SaveDefaults();
+void        G_Bind_AddCommands();
+void        G_BindDrawer();
 bool        G_BindResponder(event_t *ev);
 
 // action variables

@@ -1,6 +1,6 @@
 
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+# Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcproj", "{233045E2-53A6-4579-A272-3D3CF6D97405}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D431963B-F2D5-4BA6-9D01-4A942FC63E96} = {D431963B-F2D5-4BA6-9D01-4A942FC63E96}
