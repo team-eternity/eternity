@@ -1970,6 +1970,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_bdlist.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\m_buffer.h"
 						>
 					</File>
