@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -166,7 +166,7 @@ void VerticalDoorThinker::Think()
                type = doorNormal;   // door acts just like normal 1 DR door now
             P_DoorSequence(this, true, turbo, false); // haleyjd
             break;
-            
+
          default:
             break;
          }
@@ -225,7 +225,7 @@ void VerticalDoorThinker::Think()
          case blazeClose:
          case doorClose:      // Close types do not bounce, merely wait
             break;
-            
+
          default:             // other types bounce off the obstruction
             direction = plat_up;
             P_DoorSequence(this, true, false, true); // haleyjd
@@ -254,14 +254,14 @@ void VerticalDoorThinker::Think()
             direction = plat_stop; // wait at top with delay
             topcountdown = topwait;
             break;
-            
+
          case closeThenOpen:  // close and close/open doors are done
          case blazeOpen:
          case doorOpen:
             S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             P_RemoveDoor(this);
             break;
-            
+
          default:
             break;
          }
@@ -276,7 +276,7 @@ void VerticalDoorThinker::Think()
          case doorOpen:      // Open types do not bounce, merely wait
          case blazeOpen:
             break;
-            
+
          default:             // other types bounce off the obstruction
             direction = plat_down;
             P_DoorSequence(this, false, false, true); // haleyjd
@@ -293,6 +293,32 @@ void VerticalDoorThinker::Think()
 }
 
 //
+// VerticalDoorThinker::statusesEqual()
+//
+// Returns true if the the two statuses are equal.
+//
+bool VerticalDoorThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                        cs_sector_thinker_data_t *two)
+{
+   cs_door_data_t *dd_one = &one->door_data;
+   cs_door_data_t *dd_two = &two->door_data;
+
+   if(dd_one->type         == dd_two->type         &&
+      dd_one->topheight    == dd_two->topheight    &&
+      dd_one->speed        == dd_two->speed        &&
+      dd_one->direction    == dd_two->direction    &&
+      dd_one->topwait      == dd_two->topwait      &&
+      dd_one->topcountdown == dd_two->topcountdown &&
+      dd_one->lighttag     == dd_two->lighttag     &&
+      dd_one->turbo        == dd_two->turbo)
+   {
+      return true;
+   }
+
+   return false;
+}
+
+//
 // VerticalDoorThinker::statusChanged()
 //
 // Returns true if the door's status has changed since it was last saved
@@ -305,11 +331,12 @@ bool VerticalDoorThinker::statusChanged()
       speed        == current_status.door_data.speed        &&
       direction    == current_status.door_data.direction    &&
       topwait      == current_status.door_data.topwait      &&
-      topcountdown == current_status.door_data.topcountdown &&
+      // topcountdown == current_status.door_data.topcountdown &&
       lighttag     == current_status.door_data.lighttag     &&
       turbo        == current_status.door_data.turbo)
    {
-      return false;
+      if(CS_SERVER || topcountdown == current_status.door_data.topcountdown)
+         return false;
    }
 
    return true;
@@ -410,6 +437,25 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
    return true;
 }
 
+void VerticalDoorThinker::logStatus(cs_sector_thinker_data_t *data)
+{
+   CS_LogSMT(
+      "\tType:    %3d | Topheight:    %3d | Speed:     %3d | Direction: %3d\n"
+      "\tTopwait: %3d | Topcountdown: %3d | Lighttag:  %3d | Turbo:     %3u\n"
+      "\tCeiling: %3d | Floor: %3d\n",
+      data->door_data.type,
+      data->door_data.topheight >> FRACBITS,
+      data->door_data.speed >> FRACBITS,
+      data->door_data.direction,
+      data->door_data.topwait,
+      data->door_data.topcountdown,
+      data->door_data.lighttag,
+      data->door_data.turbo,
+      sector->ceilingheight >> FRACBITS,
+      sector->floorheight >> FRACBITS
+   );
+}
+
 //
 // VerticalDoorThinker::insertStatus()
 //
@@ -480,7 +526,7 @@ void P_RemoveDoor(VerticalDoorThinker *door)
 int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
 {
    player_t *p = thing->player;
-   
+
    if(!p)          // only players can open locked doors
       return 0;
 
@@ -502,7 +548,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
    case 135:
       if(!p->cards[it_redcard] && !p->cards[it_redskull])
       {
-         const char *msg = (GameModeInfo->type == Game_Heretic) 
+         const char *msg = (GameModeInfo->type == Game_Heretic)
                            ? DEH_String("HPD_GREENO") : DEH_String("PD_REDO");
          player_printf(p, "%s", msg);  // Ty 03/27/98 - externalized
          S_StartSound(p->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
@@ -638,7 +684,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
             bounced = false;
          }
          break;
-         
+
       default:
          break;
       }
@@ -685,10 +731,10 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    bool raise = false;
    bool turbo = false;
    bool bounced = false;
-   
+
    //  Check for locks
    player = thing->player;
-   
+
    switch(line->special)
    {
    case 26: // Blue Lock
@@ -747,10 +793,10 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 
    // haleyjd: adapted cph's prboom fix for demo compatibility and
    //          corruption of thinkers
-   // Two bugs: 
+   // Two bugs:
    // 1. DOOM used any thinker that was on a door
-   // 2. DOOM assumed the thinker was a T_VerticalDoor thinker, and 
-   //    this bug was even still in Eternity -- fixed when not in 
+   // 2. DOOM assumed the thinker was a T_VerticalDoor thinker, and
+   //    this bug was even still in Eternity -- fixed when not in
    //    demo_compatibility (only VerticalDoorThinker::reTriggerVerticalDoor
    //    will actually do anything outside of demo_compatibility mode)
 
@@ -764,7 +810,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       if(!secThinker)
          secThinker = thinker_cast<SectorMovementThinker *>(sec->lightingdata);
    }
-   
+
    // if door already has a thinker, use it
    if(secThinker)
    {
@@ -777,11 +823,11 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       case  117:
          return secThinker->reTriggerVerticalDoor(!!thing->player);
       }
-      
+
       // haleyjd 01/22/12: never start multiple thinkers on a door sector.
       // This bug has been here since the beginning, and got especially bad
       // in Strife. In Vanilla DOOM, door types 31-34 and 118 can fall through
-      // here and cause the sector to become jammed as multiple thinkers fight 
+      // here and cause the sector to become jammed as multiple thinkers fight
       // for control.
       if(full_demo_version >= make_full_version(340, 22))
          return 0; // sector is busy.
@@ -813,9 +859,9 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    door = new VerticalDoorThinker(sec, line);
 
    door->addThinker();
-   
+
    sec->ceilingdata = door; //jff 2/22/98
-   
+
    // door->sector = sec;
    door->direction = plat_up;
    door->speed = VDOORSPEED;
@@ -825,7 +871,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 
    // killough 10/98: use gradual lighting changes if nonzero tag given
    door->lighttag = comp[comp_doorlight] ? 0 : line->tag; // killough 10/98
-   
+
    // set the type of door from the activating linedef type
    switch(line->special)
    {
@@ -861,7 +907,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       door->lighttag = 0;   // killough 10/98
       break;
    }
-   
+
    // find the top and bottom of the movement range
    door->topheight = P_FindLowestCeilingSurrounding(sec);
    door->topheight -= 4*FRACUNIT;
@@ -909,12 +955,12 @@ VerticalDoorThinker* P_SpawnDoorCloseIn30 (sector_t* sec)
       return NULL;
 
    door = new VerticalDoorThinker(sec);
-   
+
    door->addThinker();
-   
+
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
-   
+
    // door->sector = sec;
    door->direction = plat_stop;
    door->type = doorNormal;
@@ -950,10 +996,10 @@ VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
    door = new VerticalDoorThinker(sec);
 
    door->addThinker();
-   
+
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
-   
+
    // door->sector = sec;
    door->direction = plat_special; // haleyjd: changed from 2
    door->type         = doorRaiseIn;

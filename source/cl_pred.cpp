@@ -45,6 +45,7 @@ bool cl_predicting = false;
 
 static bool prediction_enabled = true;
 
+static bool should_repredict_sectors = false;
 static cs_cmd_t local_commands[MAX_POSITIONS];
 static cs_player_position_t latest_server_position;
 static cs_floor_status_e latest_floor_status;
@@ -108,23 +109,15 @@ static void CL_checkPredictedSectorThinkerActivations()
    }
 }
 
-static void CL_rePredictSectorThinkers(uint32_t index, bool save_status)
+static void CL_rePredictSectorThinkers(uint32_t index)
 {
    NetIDToObject<SectorThinker> *nito = NULL;
 
    while((nito = NetSectorThinkers.iterate(nito)))
-   {
       nito->object->rePredict(index);
-      if(save_status)
-         nito->object->savePredictedStatus(index);
-   }
 
    while((nito = CLNetSectorThinkers.iterate(nito)))
-   {
       nito->object->rePredict(index);
-      if(save_status)
-         nito->object->savePredictedStatus(index);
-   }
 }
 
 static void CL_predictSectorThinkers(uint32_t index)
@@ -190,6 +183,7 @@ static void CL_loadLatestPlayerPosition()
 
 void CL_InitPrediction()
 {
+   should_repredict_sectors = false;
    latest_floor_status = cs_fs_none;
    latest_server_command_command_index = 0;
    latest_server_command_client_index = 0;
@@ -218,7 +212,6 @@ void CL_RunPredictedCommand()
 
 void CL_Predict()
 {
-   bool save_status = false;
    uint32_t command_index, sector_status_index;
 
    CL_checkPredictedSectorThinkerActivations();
@@ -234,6 +227,7 @@ void CL_Predict()
    sector_status_index = latest_sector_status_index + 1;
    command_index = latest_server_command_command_index + 1;
 
+   /*
    if(last_sector_status_index_predicted < latest_sector_status_index)
    {
       CS_LogSMT(
@@ -245,18 +239,40 @@ void CL_Predict()
          command_index
       );
 
-      save_status = true;
+      cl_setting_sector_positions = true;
+      CL_LoadSectorPositionsAt(latest_sector_status_index);
+      cl_setting_sector_positions = false;
+
+      for(; sector_status_index < command_index; sector_status_index++)
+         CL_rePredictSectorThinkers(sector_status_index);
+
+      last_sector_status_index_predicted = latest_sector_status_index;
+   }
+   */
+
+   if(should_repredict_sectors)
+   {
+      CS_LogSMT(
+         "%u/%u: Re-predicting SMTs for %u TICs (%u => %u).\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         (command_index - sector_status_index),
+         sector_status_index,
+         command_index
+      );
 
       cl_setting_sector_positions = true;
       CL_LoadSectorPositionsAt(latest_sector_status_index);
       cl_setting_sector_positions = false;
 
       for(; sector_status_index < command_index; sector_status_index++)
-         CL_rePredictSectorThinkers(sector_status_index, save_status);
+         CL_rePredictSectorThinkers(sector_status_index);
 
-      CL_clearOldSectorThinkerUpdates(last_sector_status_index_predicted);
-      last_sector_status_index_predicted = latest_sector_status_index;
+      should_repredict_sectors = false;
    }
+
+   if(command_index > 2)
+      CL_clearOldSectorThinkerUpdates(command_index - 1);
 
    if(!clients[consoleplayer].spectating)
       CL_loadLatestPlayerPosition();
@@ -291,7 +307,7 @@ void CL_Predict()
 
    for(; command_index < (cl_commands_sent - 1); command_index++)
    {
-      CL_rePredictSectorThinkers(command_index, save_status);
+      CL_rePredictSectorThinkers(command_index);
 
       if(!clients[consoleplayer].spectating)
       {
@@ -332,6 +348,7 @@ void CL_StoreLatestSectorStatusIndex(uint32_t index)
       index
    );
    latest_sector_status_index = index;
+   should_repredict_sectors = true;
 }
 
 void CL_StoreLastServerPosition(nm_playerposition_t *message)

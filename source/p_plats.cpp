@@ -215,6 +215,31 @@ void PlatThinker::Think()
 }
 
 //
+// PlatThinker::statusesEqual()
+//
+// Returns true if the statuses are equal.
+//
+bool PlatThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                cs_sector_thinker_data_t *two)
+{
+   if(one->platform_data.speed     == two->platform_data.speed     &&
+      one->platform_data.low       == two->platform_data.low       &&
+      one->platform_data.high      == two->platform_data.high      &&
+      one->platform_data.wait      == two->platform_data.wait      &&
+      one->platform_data.count     == two->platform_data.count     &&
+      one->platform_data.status    == two->platform_data.status    &&
+      one->platform_data.oldstatus == two->platform_data.oldstatus &&
+      one->platform_data.crush     == two->platform_data.crush     &&
+      one->platform_data.tag       == two->platform_data.tag       &&
+      one->platform_data.type      == two->platform_data.type)
+   {
+      return true;
+   }
+
+   return false;
+}
+
+//
 // PlatThinker::statusChanged()
 //
 // Returns true if the platform's status has changed since it was last saved
@@ -424,16 +449,16 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
    case perpetualRaise:
       P_ActivateInStasis(line->tag);
       break;
-      
+
    case toggleUpDn:
       P_ActivateInStasis(line->tag);
       rtn=1;
       break;
-      
+
    default:
       break;
    }
-      
+
    // act on all sectors tagged the same as the activating linedef
    while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
    {

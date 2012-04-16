@@ -1182,7 +1182,6 @@ void G_SaveDefaults(void)
    InputKey *key = NULL;
    KeyBind *kb = NULL;
    alias_t *alias = NULL;
-   CommandBatch *batch = NULL;
 
    if(!cfg_file)         // check defaults have been loaded
       return;
@@ -1289,12 +1288,7 @@ void G_SaveDefaults(void)
    }
 
    // write batches
-   while((batch = C_CommandBatchIterator(batch)))
-   {
-      fprintf(
-         file, "batch %s \"%s\"\n", batch->getName(), batch->getCommands()
-      );
-   }
+   // C_SaveCommandBatches(file);
 
    fclose(file);
 }

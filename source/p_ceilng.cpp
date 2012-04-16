@@ -270,35 +270,38 @@ void CeilingThinker::Think()
 }
 
 //
-// CeilingThinker::statusChanged()
+// CeilingThinker::statusesEqual()
 //
-// Returns true if the ceiling's status has changed since it was last saved
-// (stored in the protected current_status member).
+// Returns true if the the two statuses are equal.
 //
-bool CeilingThinker::statusChanged()
+bool CeilingThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                   cs_sector_thinker_data_t *two)
 {
-   if(type                == current_status.ceiling_data.type                &&
-      bottomheight        == current_status.ceiling_data.bottomheight        &&
-      topheight           == current_status.ceiling_data.topheight           &&
-      speed               == current_status.ceiling_data.speed               &&
-      oldspeed            == current_status.ceiling_data.oldspeed            &&
-      crush               == current_status.ceiling_data.crush               &&
-      special.newspecial  == current_status.ceiling_data.special.newspecial  &&
-      special.flags       == current_status.ceiling_data.special.flags       &&
-      special.damage      == current_status.ceiling_data.special.damage      &&
-      special.damagemask  == current_status.ceiling_data.special.damagemask  &&
-      special.damagemod   == current_status.ceiling_data.special.damagemod   &&
-      special.damageflags == current_status.ceiling_data.special.damageflags &&
-      texture             == current_status.ceiling_data.texture             &&
-      direction           == current_status.ceiling_data.direction           &&
-      inStasis            == current_status.ceiling_data.inStasis            &&
-      tag                 == current_status.ceiling_data.tag                 &&
-      olddirection        == current_status.ceiling_data.olddirection)
+   cs_ceiling_data_t *cd_one = &one->ceiling_data;
+   cs_ceiling_data_t *cd_two = &two->ceiling_data;
+
+   if(cd_one->type                == cd_two->type                &&
+      cd_one->bottomheight        == cd_two->bottomheight        &&
+      cd_one->topheight           == cd_two->topheight           &&
+      cd_one->speed               == cd_two->speed               &&
+      cd_one->oldspeed            == cd_two->oldspeed            &&
+      cd_one->crush               == cd_two->crush               &&
+      cd_one->special.newspecial  == cd_two->special.newspecial  &&
+      cd_one->special.flags       == cd_two->special.flags       &&
+      cd_one->special.damage      == cd_two->special.damage      &&
+      cd_one->special.damagemask  == cd_two->special.damagemask  &&
+      cd_one->special.damagemod   == cd_two->special.damagemod   &&
+      cd_one->special.damageflags == cd_two->special.damageflags &&
+      cd_one->texture             == cd_two->texture             &&
+      cd_one->direction           == cd_two->direction           &&
+      cd_one->inStasis            == cd_two->inStasis            &&
+      cd_one->tag                 == cd_two->tag                 &&
+      cd_one->olddirection        == cd_two->olddirection)
    {
-      return false;
+      return true;
    }
 
-   return true;
+   return false;
 }
 
 //

@@ -31,8 +31,6 @@
 // Required for: Thinker
 #include "p_tick.h"
 
-#include "m_queue.h" // [CG] Required for SectorMovementThinkers
-
 #include "cs_spec.h" // [CG] Required for SectorMovementThinkers
 
 struct line_t;
@@ -585,11 +583,12 @@ typedef enum
 // linedef and sector special data types
 //
 
-struct cs_queued_sector_thinker_data_t
+struct cs_stored_sector_thinker_data_t
 {
-   mqueueitem_t mqitem;
    uint32_t index;
    cs_sector_thinker_data_t data;
+   cs_stored_sector_thinker_data_t *prev;
+   cs_stored_sector_thinker_data_t *next;
 };
 
 // haleyjd 10/13/2011: base class for sector action types
@@ -624,22 +623,24 @@ protected:
    line_t              *pre_activation_line;
 
    // [CG] Clientside prediction information.
-   bool                     activated_clientside;
-   bool                     predicting;
-   bool                     repredicting;
-   uint32_t                 prediction_index;
-   cs_sector_thinker_data_t current_status;
-   mqueue_t                 status_queue;
+   bool                             activated_clientside;
+   bool                             predicting;
+   bool                             repredicting;
+   uint32_t                         prediction_index;
+   cs_sector_thinker_data_t         current_status;
+   cs_stored_sector_thinker_data_t *stored_statuses;
 
    // Methods
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
    virtual void serializeCurrentStatus(SaveArchive &arc) {}
    virtual void serializeStatusQueue(SaveArchive &arc) {}
-   virtual bool statusChanged() { return false; }
    virtual void loadStatusData(cs_sector_thinker_data_t *data) {}
    virtual void dumpStatusData(cs_sector_thinker_data_t *data) {}
    virtual void copyStatusData(cs_sector_thinker_data_t *dest,
                                cs_sector_thinker_data_t *src) {}
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two) { return false; }
+   virtual bool statusChanged();
    virtual bool startThinking();
    virtual void finishThinking();
 
@@ -845,6 +846,8 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);
@@ -908,6 +911,8 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);
@@ -926,6 +931,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+   virtual void logStatus(cs_sector_thinker_data_t *data);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
    virtual void Reset();
    virtual void Remove();
@@ -989,11 +995,12 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
-   virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);
    virtual void copyStatusData(cs_sector_thinker_data_t *dest,
                                cs_sector_thinker_data_t *src);
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
 
 public:
    // Constructors
@@ -1070,6 +1077,8 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);
@@ -1154,7 +1163,8 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
-   virtual bool statusChanged();
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);
    virtual void copyStatusData(cs_sector_thinker_data_t *dest,
@@ -1192,7 +1202,8 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
-   virtual bool statusChanged();
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);
    virtual void copyStatusData(cs_sector_thinker_data_t *dest,
@@ -1242,6 +1253,8 @@ protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual bool statusesEqual(cs_sector_thinker_data_t *one,
+                              cs_sector_thinker_data_t *two);
    virtual bool statusChanged();
    virtual void loadStatusData(cs_sector_thinker_data_t *data);
    virtual void dumpStatusData(cs_sector_thinker_data_t *data);

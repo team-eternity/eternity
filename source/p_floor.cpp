@@ -647,6 +647,41 @@ void FloorMoveThinker::Think()
 }
 
 //
+// FloorMoveThinker::statusesEqual()
+//
+// Returns true if the statuses are equal.
+//
+bool FloorMoveThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                     cs_sector_thinker_data_t *two)
+{
+   cs_floor_data_t *fd_one = &one->floor_data;
+   cs_floor_data_t *fd_two = &two->floor_data;
+
+   if(fd_one->type                == fd_two->type                &&
+      fd_one->crush               == fd_two->crush               &&
+      fd_one->direction           == fd_two->direction           &&
+      fd_one->special.newspecial  == fd_two->special.newspecial  &&
+      fd_one->special.flags       == fd_two->special.flags       &&
+      fd_one->special.damage      == fd_two->special.damage      &&
+      fd_one->special.damagemask  == fd_two->special.damagemask  &&
+      fd_one->special.damagemod   == fd_two->special.damagemod   &&
+      fd_one->special.damageflags == fd_two->special.damageflags &&
+      fd_one->texture             == fd_two->texture             &&
+      fd_one->floordestheight     == fd_two->floordestheight     &&
+      fd_one->speed               == fd_two->speed               &&
+      fd_one->resetTime           == fd_two->resetTime           &&
+      fd_one->resetHeight         == fd_two->resetHeight         &&
+      fd_one->stepRaiseTime       == fd_two->stepRaiseTime       &&
+      fd_one->delayTime           == fd_two->delayTime           &&
+      fd_one->delayTimer          == fd_two->delayTimer)
+   {
+      return true;
+   }
+
+   return false;
+}
+
+//
 // FloorMoveThinker::statusChanged()
 //
 // Returns true if the floor's status has changed since it was last saved
@@ -666,13 +701,20 @@ bool FloorMoveThinker::statusChanged()
       texture             == current_status.floor_data.texture             &&
       floordestheight     == current_status.floor_data.floordestheight     &&
       speed               == current_status.floor_data.speed               &&
-      resetTime           == current_status.floor_data.resetTime           &&
+      // resetTime           == current_status.floor_data.resetTime           &&
       resetHeight         == current_status.floor_data.resetHeight         &&
       stepRaiseTime       == current_status.floor_data.stepRaiseTime       &&
-      delayTime           == current_status.floor_data.delayTime           &&
+      // delayTime           == current_status.floor_data.delayTime           &&
       delayTimer          == current_status.floor_data.delayTimer)
    {
-      return false;
+      if(CS_SERVER)
+         return false;
+
+      if(resetTime == current_status.floor_data.resetTime &&
+         delayTime == current_status.floor_data.delayTime)
+      {
+         return false;
+      }
    }
 
    return true;
@@ -911,23 +953,26 @@ void ElevatorThinker::Think()
 }
 
 //
-// ElevatorThinker::statusChanged()
+// ElevatorThinker::statusesEqual()
 //
-// Returns true if the elevator's status has changed since it was last saved
-// (stored in the protected current_status member).
+// Returns true if the statuses are equal.
 //
-bool ElevatorThinker::statusChanged()
+bool ElevatorThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                    cs_sector_thinker_data_t *two)
 {
-   if(type              == current_status.elevator_data.type              &&
-      direction         == current_status.elevator_data.direction         &&
-      floordestheight   == current_status.elevator_data.floordestheight   &&
-      ceilingdestheight == current_status.elevator_data.ceilingdestheight &&
-      speed             == current_status.elevator_data.speed)
+   cs_elevator_data_t *ed_one = &one->elevator_data;
+   cs_elevator_data_t *ed_two = &two->elevator_data;
+
+   if(ed_one->type              == ed_two->type              &&
+      ed_one->direction         == ed_two->direction         &&
+      ed_one->floordestheight   == ed_two->floordestheight   &&
+      ed_one->ceilingdestheight == ed_two->ceilingdestheight &&
+      ed_one->speed             == ed_two->speed)
    {
-      return false;
+      return true;
    }
 
-   return true;
+   return false;
 }
 
 //
@@ -1075,12 +1120,12 @@ void PillarThinker::Think()
 }
 
 //
-// PillarThinker::statusChanged()
+// PillarThinker::statusesEqual()
 //
-// Returns true if the pillar's status has changed since it was last saved
-// (stored in the protected current_status member).
+// Returns true if the statuses are equal.
 //
-bool PillarThinker::statusChanged()
+bool PillarThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                  cs_sector_thinker_data_t *two)
 {
    if(ceilingSpeed == current_status.pillar_data.ceilingSpeed &&
       floorSpeed   == current_status.pillar_data.floorSpeed   &&
@@ -2362,6 +2407,32 @@ void FloorWaggleThinker::Think()
 }
 
 //
+// FloorWaggleThinker::statusesEqual()
+//
+// Returns true if the statuses are equal.
+//
+bool FloorWaggleThinker::statusesEqual(cs_sector_thinker_data_t *one,
+                                       cs_sector_thinker_data_t *two)
+{
+   cs_floorwaggle_data_t *fwd_one = &one->floorwaggle_data;
+   cs_floorwaggle_data_t *fwd_two = &two->floorwaggle_data;
+
+   if(fwd_one->originalHeight == fwd_two->originalHeight &&
+      fwd_one->accumulator    == fwd_two->accumulator    &&
+      fwd_one->accDelta       == fwd_two->accDelta       &&
+      fwd_one->targetScale    == fwd_two->targetScale    &&
+      fwd_one->scale          == fwd_two->scale          &&
+      fwd_one->scaleDelta     == fwd_two->scaleDelta     &&
+      fwd_one->ticker         == fwd_two->ticker         &&
+      fwd_one->state          == fwd_two->state)
+   {
+      return true;
+   }
+
+   return false;
+}
+
+//
 // FloorWaggleThinker::statusChanged()
 //
 // Returns true if the floor waggle's status has changed since it was last
@@ -2375,10 +2446,11 @@ bool FloorWaggleThinker::statusChanged()
       targetScale    == current_status.floorwaggle_data.targetScale    &&
       scale          == current_status.floorwaggle_data.scale          &&
       scaleDelta     == current_status.floorwaggle_data.scaleDelta     &&
-      ticker         == current_status.floorwaggle_data.ticker         &&
+      // ticker         == current_status.floorwaggle_data.ticker         &&
       state          == current_status.floorwaggle_data.state)
    {
-      return false;
+      if(CS_SERVER || ticker == current_status.floorwaggle_data.ticker)
+         return false;
    }
 
    return true;
