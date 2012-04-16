@@ -29,13 +29,41 @@
 #include "c_batch.h"
 #include "c_runcmd.h"
 #include "e_hash.h"
+#include "m_dllist.h"
+#include "m_qstr.h"
+
+const static float max_load_factor = 0.7f;
+
+class CommandBatch : public ZoneObject
+{
+private:
+   char *name;
+   char *commands;
+   char *current_command;
+   qstring command_buffer;
+   unsigned int delay;
+   bool finished;
+
+   unsigned int parseWait(const char *token);
+
+public:
+   DLListItem<CommandBatch> links;
+   DLListItem<CommandBatch> finished_links;
+   const char *key;
+
+   CommandBatch(const char *new_name, const char *new_commands);
+   ~CommandBatch();
+
+   const char* getName() const;
+   const char* getCommands() const;
+   bool isFinished();
+   void run();
+};
 
 class CommandBatches : public ZoneObject
 {
-
 private:
    const static short initial_batch_count = 31;
-   const static float load_factor = 0.7f;
 
    EHashTable<CommandBatch, ENCStringHashKey, &CommandBatch::key,
               &CommandBatch::links> command_batches;
@@ -54,7 +82,7 @@ public:
       CommandBatch *batch = new CommandBatch(name, commands);
 
       command_batches.addObject(batch);
-      if(command_batches.getLoadFactor() > load_factor)
+      if(command_batches.getLoadFactor() > max_load_factor)
          command_batches.rebuild(command_batches.getNumChains() * 2);
    }
 
@@ -80,17 +108,14 @@ public:
       // [CG] Clean up finished batches first.
       while((batch = command_batches.tableIterator(batch)))
       {
-         if(!batch->isFinished())
-            continue;
-
-         batch->finished_links.insert(batch, &finished_batches);
+         if(batch->isFinished())
+            batch->finished_links.insert(batch, &finished_batches);
       }
 
       while(finished_batches)
       {
          batch = finished_batches->dllObject;
          finished_batches->remove();
-
          command_batches.removeObject(batch);
          delete(batch);
       }
@@ -182,6 +207,9 @@ void CommandBatch::run()
             current_command++;
          }
 
+         // [CG] Eat trailing semi-colon;
+         current_command++;
+
          // [CG] Check for a wait command.
          if((wait = parseWait(command_buffer.constPtr())))
          {
@@ -190,8 +218,6 @@ void CommandBatch::run()
          }
          else if(command_buffer.length())
             C_RunTextCmd(command_buffer.constPtr());
-
-         current_command++;
       }
       else
       {
@@ -263,6 +289,14 @@ const char* C_GetCommandBatch(const char *name)
    return (const char *)batch->variable->variable;
 }
 
+bool C_CommandIsBatch(const char *name)
+{
+   if(C_GetCommandBatch(name))
+      return true;
+
+   return false;
+}
+
 void C_CommandBatchTicker()
 {
    command_batches.Tick();
@@ -271,5 +305,17 @@ void C_CommandBatchTicker()
 CommandBatch* C_CommandBatchIterator(CommandBatch *batch)
 {
    return saved_command_batches.batchIterator(batch);
+}
+
+void C_SaveCommandBatches(FILE *file)
+{
+   CommandBatch *batch = NULL;
+
+   while((batch = saved_command_batches.batchIterator(batch)))
+   {
+      fprintf(
+         file, "batch %s \"%s\"\n", batch->getName(), batch->getCommands()
+      );
+   }
 }
 

@@ -90,9 +90,10 @@ class KeyBind : public ZoneObject
 private:
    char *hidden_key_name;
    char *hidden_action_name;
+   int key_number;
+   input_action_category_e category;
    bool pressed;
    unsigned short flags;
-   input_action_category_e category;
 
 public:
    static short const activate_only   = 1; // key only activates the action
@@ -107,9 +108,11 @@ public:
    const char *keys_to_actions_key;
    const char *actions_to_keys_key;
 
-   KeyBind(const char *new_key_name, const char *new_action_name,
+   KeyBind(int new_key_number, const char *new_key_name,
+           const char *new_action_name, input_action_category_e new_category,
            unsigned short new_flags)
-      : ZoneObject(), pressed(false), flags(new_flags)
+      : ZoneObject(), key_number(new_key_number), category(new_category),
+        pressed(false), flags(new_flags)
    {
       hidden_key_name = estrdup(new_key_name);
       hidden_action_name = estrdup(new_action_name);
@@ -123,6 +126,7 @@ public:
       efree(hidden_action_name);
    }
 
+   int getKeyNumber() const { return key_number; }
    const char* getKeyName() const { return hidden_key_name; }
    const char* getActionName() const { return hidden_action_name; }
    const bool isPressed() const { if(pressed) return true; return false; }
@@ -130,7 +134,6 @@ public:
    void press() { pressed = true; }
    void release() { pressed = false; }
    input_action_category_e getCategory() const { return category; }
-   void setCategory(input_action_category_e new_cat) { category = new_cat; }
    const unsigned short getFlags() const { return flags; }
 
    bool isNormal()
@@ -261,25 +264,25 @@ public:
       if(kb->isPressOnly())
       {
          if(kb->isDeactivateOnly())
-            deactivate(ev);
+            deactivate(kb, ev);
          else
-            activate(ev);
+            activate(kb, ev);
       }
       else if(kb->isReleaseOnly())
       {
          if(kb->isDeactivateOnly())
-            deactivate(ev);
+            deactivate(kb, ev);
          else
-            activate(ev);
+            activate(kb, ev);
       }
       else if(kb->isActivateOnly())
-         activate(ev);
+         activate(kb, ev);
       else if(kb->isDeactivateOnly())
-         deactivate(ev);
-      else if((ev->type == ev_keydown) && (!kb->isPressed()))
-         activate(ev);
-      else if((ev->type == ev_keyup) && (!kb->isReleased()))
-         deactivate(ev);
+         deactivate(kb, ev);
+      else if((ev->type == ev_keydown) && mayActivate(kb))
+         activate(kb, ev);
+      else if((ev->type == ev_keyup) && mayDeactivate(kb))
+         deactivate(kb, ev);
       else
          return false;
 
@@ -291,15 +294,27 @@ public:
       return true;
    }
 
-
    char *getName() const { return hidden_name; }
    input_action_category_e const getCategory() { return category; }
-   virtual void activate(event_t *ev) {}
-   virtual void deactivate(event_t *ev) {}
+   virtual void activate(KeyBind *kb, event_t *ev) {}
+   virtual void deactivate(KeyBind *kb, event_t *ev) {}
    virtual void print() const { C_Printf("%s\n", getName()); }
    virtual bool active() { return false; }
-   char *getDescription() const { return bound_keys_description; }
+   virtual bool mayActivate(KeyBind *kb)
+   {
+      if(kb->isPressed())
+         return false;
 
+      return true;
+   }
+   virtual bool mayDeactivate(KeyBind *kb)
+   {
+      if(kb->isReleased())
+         return false;
+
+      return true;
+   }
+   char *getDescription() const { return bound_keys_description; }
    void setDescription(const char *new_description)
    {
       if(bound_keys_description)
@@ -307,6 +322,7 @@ public:
 
       bound_keys_description = estrdup(new_description);
    }
+   virtual void Think() {}
 };
 
 class OneShotFunctionInputAction : public InputAction
@@ -323,7 +339,7 @@ public:
       callback = new_callback;
    }
 
-   void activate(event_t *ev) { callback(ev); }
+   void activate(KeyBind *kb, event_t *ev) { callback(ev); }
 };
 
 class FunctionInputAction : public InputAction
@@ -340,8 +356,8 @@ public:
       callback = new_callback;
    }
 
-   void activate(event_t *ev) { callback(ev); }
-   void deactivate(event_t *ev) { callback(ev); }
+   void activate(KeyBind *kb, event_t *ev) { callback(ev); }
+   void deactivate(KeyBind *kb, event_t *ev) { callback(ev); }
 };
 
 class VariableInputAction : public InputAction
@@ -359,18 +375,75 @@ public:
       *var = 0;
    }
 
-   void activate(event_t *ev) { (*var)++; }
-   void deactivate(event_t *ev) { if(*var) { (*var)--; } }
+   void activate(KeyBind *kb, event_t *ev) { (*var)++; }
+   void deactivate(KeyBind *kb, event_t *ev) { if(*var) { (*var)--; } }
    bool active() { if(*var) { return true; } return false; }
 };
 
 class CommandInputAction : public InputAction
 {
+protected:
+   uint32_t activation_count;
+   bool activated_from_key[NUM_KEYS];
+
 public:
    CommandInputAction(const char *new_name)
-      : InputAction(new_name, kac_command) {}
+      : InputAction(new_name, kac_command), activation_count(0) {}
 
-   void activate(event_t *ev) { if(!consoleactive) C_RunTextCmd(getName()); }
+   bool mayActivate(KeyBind *kb) { return true; }
+
+   bool isBatchCommand()
+   {
+      if(C_CommandIsBatch(hidden_name))
+         return true;
+
+      return false;
+   }
+
+   void activate(KeyBind *kb, event_t *ev)
+   {
+      int key_number = kb->getKeyNumber();
+
+      if(!activated_from_key[key_number])
+      {
+         activated_from_key[key_number] = true;
+         activation_count++;
+
+         // [CG] Batches have to be activated on keypress.
+         if(isBatchCommand())
+            C_RunTextCmd(hidden_name);
+      }
+   }
+
+   void deactivate(KeyBind *kb, event_t *ev)
+   {
+      if(kb)
+      {
+         activated_from_key[kb->getKeyNumber()] = false;
+         if(activation_count)
+            activation_count--;
+      }
+      else
+      {
+         memset(activated_from_key, 0, sizeof(bool) * NUM_KEYS);
+         activation_count = 0;
+      }
+   }
+
+   void Think()
+   {
+      if(consoleactive)
+         return;
+
+      if(!activation_count)
+         return;
+
+      // [CG] Batches have their own ticker
+      if(isBatchCommand())
+         return;
+
+      C_RunTextCmd(getName());
+   }
 
    void print() const { /* Do not print in the action list */ }
 };
@@ -545,8 +618,13 @@ static void G_createBind(InputKey *key, InputAction *action,
       return;
    }
 
-   kb = new KeyBind(key->getName(), action->getName(), flags);
-   kb->setCategory(action->getCategory());
+   kb = new KeyBind(
+      key->getNumber(),
+      key->getName(),
+      action->getName(),
+      action->getCategory(),
+      flags
+   );
    actions_to_keys.addObject(kb);
    keys_to_actions.addObject(kb);
 
@@ -682,7 +760,7 @@ static void G_bindKeyToActions(const char *key_name,
 //
 // Set up keys, actions, hashtables, and other various things.
 //
-void G_InitKeyBindings(void)
+void G_InitKeyBindings()
 {
    int i;
    qstring key_name;
@@ -905,11 +983,11 @@ const char* G_FirstBoundKey(const char *action_name)
 }
 
 //
-// G_ClearKeyStates(void)
+// G_ClearKeyStates
 //
 // "Releases" all keys.
 //
-void G_ClearKeyStates(void)
+void G_ClearKeyStates()
 {
    KeyBind *kb = NULL;
    InputAction *action = NULL;
@@ -918,7 +996,7 @@ void G_ClearKeyStates(void)
       kb->release();
 
    while((action = names_to_actions.tableIterator(action)))
-      action->deactivate(NULL);
+      action->deactivate(NULL, NULL);
 }
 
 //
@@ -1006,6 +1084,19 @@ bool G_KeyResponder(event_t *ev, int categories)
    return processed_event;
 }
 
+//
+// G_InputActionTicker
+//
+// Runs input action thinkers, used for CommandInputActions
+//
+void G_InputActionTicker()
+{
+   InputAction *action = NULL;
+
+   while((action = names_to_actions.tableIterator(action)))
+      action->Think();
+}
+
 //===========================================================================
 //
 // Binding selection widget
@@ -1020,7 +1111,7 @@ bool G_KeyResponder(event_t *ev, int categories)
 //
 // Draw the prompt box
 //
-void G_BindDrawer(void)
+void G_BindDrawer()
 {
    const char *msg = "\n -= input new key =- \n";
    int x, y, width, height;
@@ -1127,7 +1218,7 @@ void G_EditBinding(const char *action_name)
 
 // default script:
 
-void G_LoadDefaults(void)
+void G_LoadDefaults()
 {
    char *temp = NULL;
    size_t len;
@@ -1175,7 +1266,7 @@ void G_LoadDefaults(void)
       G_updateBoundKeyDescription(action);
 }
 
-void G_SaveDefaults(void)
+void G_SaveDefaults()
 {
    FILE *file;
    bool in_bind;
@@ -1287,8 +1378,8 @@ void G_SaveDefaults(void)
       alias = alias->next;
    }
 
-   // write batches
-   // C_SaveCommandBatches(file);
+   // Save command batches
+   C_SaveCommandBatches(file);
 
    fclose(file);
 }

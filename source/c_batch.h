@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Charles Gunyon
@@ -27,40 +27,12 @@
 #ifndef C_BATCH__
 #define C_BATCH__
 
-#include "m_dllist.h"
-#include "m_qstr.h"
-
-class CommandBatch : public ZoneObject
-{
-private:
-   char *name;
-   char *commands;
-   char *current_command;
-   qstring command_buffer;
-   unsigned int delay;
-   bool finished;
-
-   unsigned int parseWait(const char *token);
-
-public:
-   DLListItem<CommandBatch> links;
-   DLListItem<CommandBatch> finished_links;
-   const char *key;
-
-   CommandBatch(const char *new_name, const char *new_commands);
-   ~CommandBatch();
-
-   const char* getName() const;
-   const char* getCommands() const;
-   bool isFinished();
-   void run();
-};
-
 void          C_ActivateCommandBatch();
 void          C_AddCommandBatch(const char *name, const char *commands);
 const char*   C_GetCommandBatch(const char *name);
 void          C_CommandBatchTicker();
-CommandBatch* C_CommandBatchIterator(CommandBatch *batch);
+bool          C_CommandIsBatch(const char *name);
+void          C_SaveCommandBatches(FILE *file);
 
 #endif
 

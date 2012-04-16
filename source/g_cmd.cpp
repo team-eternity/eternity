@@ -88,12 +88,12 @@ CONSOLE_COMMAND(batch, 0)
 {
    if(Console.argc == 1)
    {
-      const char *batch = C_GetCommandBatch(Console.argv[0]->constPtr());
+      const char *batch_cmds = C_GetCommandBatch(Console.argv[0]->constPtr());
 
-      if(!batch)
+      if(!batch_cmds)
          doom_printf("No such batch %s.", Console.argv[0]->constPtr());
       else
-         doom_printf("%s -> %s", Console.argv[0]->constPtr(), batch);
+         doom_printf("%s -> %s", Console.argv[0]->constPtr(), batch_cmds);
    }
    else if(Console.argc == 2)
    {
@@ -1627,6 +1627,7 @@ void G_AddCommands(void)
    C_AddCommand(autorun);
    C_AddCommand(runiswalk);
    C_AddCommand(m_resetcomments);
+   C_AddCommand(batch);
 
    // [CG] 01/29/2012: Spectate previous, next and self
    C_AddCommand(spectate_prev);
