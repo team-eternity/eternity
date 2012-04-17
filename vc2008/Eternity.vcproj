@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../eedeps/msvc/lib/Release/archive_static.lib ../eedeps/msvc/lib/Release/libbz2.lib ../eedeps/msvc/lib/Release/zlib.lib ../eedeps/msvc/lib/Release/enet.lib ../eedeps/msvc/lib/Release/libcurl.lib ../eedeps/msvc/lib/Release/libeay32.lib ../eedeps/msvc/lib/Release/ssleay32.lib ./Debug/snes_spc.lib ./Debug/libpng.lib ../eedeps/msvc/lib/SDL/SDL.lib ../eedeps/msvc/lib/SDL/SDL_mixer.lib ../eedeps/msvc/lib/SDL/SDL_net.lib ../eedeps/msvc/lib/SDL/SDLmain.lib ws2_32.lib wldap32.lib winmm.lib opengl32.lib user32.lib advapi32.lib"
+				AdditionalDependencies="../eedeps/msvc/lib/Release/zlib.lib ../eedeps/msvc/lib/Release/enet.lib ../eedeps/msvc/lib/Release/libcurl.lib ../eedeps/msvc/lib/Release/libeay32.lib ../eedeps/msvc/lib/Release/ssleay32.lib ./Debug/snes_spc.lib ./Debug/libpng.lib ../eedeps/msvc/lib/SDL/SDL.lib ../eedeps/msvc/lib/SDL/SDL_mixer.lib ../eedeps/msvc/lib/SDL/SDL_net.lib ../eedeps/msvc/lib/SDL/SDL_ttf.lib ../eedeps/msvc/lib/SDL/SDLmain.lib ws2_32.lib wldap32.lib winmm.lib opengl32.lib user32.lib advapi32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -175,7 +175,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../eedeps/msvc/lib/Debug/archive_static.lib ../eedeps/msvc/lib/Debug/libbz2.lib ../eedeps/msvc/lib/Debug/zlib.lib ../eedeps/msvc/lib/Debug/enet.lib ../eedeps/msvc/lib/Debug/libcurl.lib ../eedeps/msvc/lib/Debug/libeay32.lib ../eedeps/msvc/lib/Debug/ssleay32.lib ./Debug/snes_spc.lib ./Debug/libpng.lib ../eedeps/msvc/lib/SDL/SDL.lib ../eedeps/msvc/lib/SDL/SDL_mixer.lib ../eedeps/msvc/lib/SDL/SDL_net.lib ../eedeps/msvc/lib/SDL/SDLmain.lib ws2_32.lib wldap32.lib winmm.lib opengl32.lib user32.lib advapi32.lib $(NOINHERIT)"
+				AdditionalDependencies="../eedeps/msvc/lib/Debug/zlib.lib ../eedeps/msvc/lib/Debug/enet.lib ../eedeps/msvc/lib/Debug/libcurl.lib ../eedeps/msvc/lib/Debug/libeay32.lib ../eedeps/msvc/lib/Debug/ssleay32.lib ./Debug/snes_spc.lib ./Debug/libpng.lib ../eedeps/msvc/lib/SDL/SDL.lib ../eedeps/msvc/lib/SDL/SDL_mixer.lib ../eedeps/msvc/lib/SDL/SDL_net.lib ../eedeps/msvc/lib/SDL/SDL_ttf.lib ../eedeps/msvc/lib/SDL/SDLmain.lib ws2_32.lib wldap32.lib winmm.lib opengl32.lib user32.lib advapi32.lib $(NOINHERIT)"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -1458,6 +1458,18 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\g_coop.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\g_ctf.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\g_dmatch.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\g_dmflag.cpp"
 						>
 						<FileConfiguration
@@ -1523,12 +1535,28 @@
 							/>
 						</FileConfiguration>
 					</File>
+					<File
+						RelativePath="..\source\g_type.cpp"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="G_ Headers"
 					>
 					<File
 						RelativePath="..\Source\g_bind.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\g_coop.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\g_ctf.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\g_dmatch.h"
 						>
 					</File>
 					<File
@@ -1541,6 +1569,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\g_gfs.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\g_type.h"
 						>
 					</File>
 				</Filter>
@@ -3637,6 +3669,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_font.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\sdl\i_input.cpp"
 						>
 						<FileConfiguration
@@ -3962,6 +3998,10 @@
 					>
 					<File
 						RelativePath="..\Source\Win32\i_fnames.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\i_font.h"
 						>
 					</File>
 					<File
@@ -5196,15 +5236,19 @@
 						>
 					</File>
 					<File
-						RelativePath="..\source\cs_ctf.cpp"
-						>
-					</File>
-					<File
 						RelativePath="..\source\cs_demo.cpp"
 						>
 					</File>
 					<File
+						RelativePath="..\source\cs_hisb.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\cs_hud.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_lowsb.cpp"
 						>
 					</File>
 					<File

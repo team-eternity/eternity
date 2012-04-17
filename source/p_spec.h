@@ -28,6 +28,8 @@
 
 // HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
+#include "m_bdlist.h" // [CG] Required for SectorMovementThinkers
+
 // Required for: Thinker
 #include "p_tick.h"
 
@@ -587,8 +589,24 @@ struct cs_stored_sector_thinker_data_t
 {
    uint32_t index;
    cs_sector_thinker_data_t data;
-   cs_stored_sector_thinker_data_t *prev;
-   cs_stored_sector_thinker_data_t *next;
+};
+
+class SMTStatusList
+{
+protected:
+   uint32_t size;
+   BDListItem<cs_stored_sector_thinker_data_t> stored_statuses_head;
+
+public:
+   SMTStatusList();
+   ~SMTStatusList();
+   uint32_t getSize();
+   void     Clear();
+   void     clearBefore(uint32_t index);
+   void     clearAfter(uint32_t index);
+   void     Insert(cs_stored_sector_thinker_data_t *data);
+
+   cs_stored_sector_thinker_data_t* getStatusAt(uint32_t index);
 };
 
 // haleyjd 10/13/2011: base class for sector action types
@@ -623,12 +641,12 @@ protected:
    line_t              *pre_activation_line;
 
    // [CG] Clientside prediction information.
-   bool                             activated_clientside;
-   bool                             predicting;
-   bool                             repredicting;
-   uint32_t                         prediction_index;
-   cs_sector_thinker_data_t         current_status;
-   cs_stored_sector_thinker_data_t *stored_statuses;
+   bool                     activated_clientside;
+   bool                     predicting;
+   bool                     repredicting;
+   uint32_t                 prediction_index;
+   cs_sector_thinker_data_t current_status;
+   SMTStatusList            stored_statuses;
 
    // Methods
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }

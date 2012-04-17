@@ -1664,7 +1664,6 @@ void G_AddCommands(void)
    C_AddCommand(display_target_names);
    C_AddCommand(toggle);
    C_AddCommand(switch_weapons_while_firing);
-   C_AddCommand(batch);
 
    // [CG] C/S demo controls.
    C_AddCommand(cs_demo_folder_path);

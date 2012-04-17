@@ -2397,11 +2397,14 @@ char *FindIWADFile(void)
             }
          }
       }
-      else if(!strchr(iwad, ':') && !strchr(iwad, '/') && !strchr(iwad, '\\'))
+      else if(!CS_CLIENT)
       {
-         M_StringAlloca(&customiwad, 1, 8, buf);
-         M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), buf), ".wad");
-         M_NormalizeSlashes(customiwad);
+         if(!strchr(iwad, ':') && !strchr(iwad, '/') && !strchr(iwad, '\\'))
+         {
+            M_StringAlloca(&customiwad, 1, 8, buf);
+            M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), buf), ".wad");
+            M_NormalizeSlashes(customiwad);
+         }
       }
    }
    else if((!clientserver) && (!gamepathset)) // try wad picker

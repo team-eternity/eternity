@@ -41,6 +41,179 @@
 
 //=============================================================================
 //
+// SMTStatusList class methods
+//
+
+typedef BDListItem<cs_stored_sector_thinker_data_t> stored_status_t;
+
+SMTStatusList::SMTStatusList()
+{
+   size = 0;
+   stored_status_t::Init(stored_statuses_head);
+}
+
+SMTStatusList::~SMTStatusList()
+{
+   Clear();
+}
+
+uint32_t SMTStatusList::getSize()
+{
+   return size;
+}
+
+void SMTStatusList::Clear()
+{
+   stored_status_t *sst;
+
+   while(stored_statuses_head.bdNext != &stored_statuses_head)
+   {
+      sst = stored_statuses_head.bdNext;
+      sst->remove();
+      CS_LogSMT(
+         "%u/%u: SMTStatusList::Clear: Removing old status at %u.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         sst->bdObject->index
+      );
+      efree(sst->bdObject);
+      efree(sst);
+      size--;
+   }
+}
+
+void SMTStatusList::clearBefore(uint32_t index)
+{
+   stored_status_t *sst, *removed_sst;
+
+   for(sst = stored_statuses_head.bdNext;
+       sst != &stored_statuses_head;
+       sst = sst->bdNext)
+   {
+      if(sst->bdObject->index < index)
+      {
+         removed_sst = sst;
+         sst->remove(&sst);
+         CS_LogSMT(
+            "%u/%u: SMTStatusList::clearAfter: Removing old status at %u.\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            removed_sst->bdObject->index
+         );
+         efree(removed_sst->bdObject);
+         efree(removed_sst);
+         size--;
+      }
+   }
+}
+
+void SMTStatusList::clearAfter(uint32_t index)
+{
+   stored_status_t *sst, *removed_sst;
+
+   for(sst = stored_statuses_head.bdNext;
+       sst != &stored_statuses_head;
+       sst = sst->bdNext)
+   {
+      if(sst->bdObject->index > index)
+      {
+         removed_sst = sst;
+         sst->remove(&sst);
+         CS_LogSMT(
+            "%u/%u: SMTStatusList::clearAfter: Removing dead status at %u.\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            removed_sst->bdObject->index
+         );
+         efree(removed_sst->bdObject);
+         efree(removed_sst);
+         size--;
+      }
+   }
+}
+
+void SMTStatusList::Insert(cs_stored_sector_thinker_data_t *data)
+{
+   stored_status_t *sst;
+
+   if((!data->index) || (data->index == 1))
+      Clear();
+   else
+      clearAfter(data->index - 1);
+
+   if(!size)
+   {
+      CS_LogSMT(
+         "%u/%u: SMTStatusList::Insert: Inserting 1st status at %u.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         data->index
+      );
+   }
+   else
+   {
+      CS_LogSMT(
+         "%u/%u: SMTStatusList::Insert: Appending new status at %u.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         data->index
+      );
+   }
+
+   sst = estructalloc(stored_status_t, 1);
+   sst->insert(data, stored_statuses_head);
+   sst->bdObject = data;
+
+   if((size > 1) && (sst->bdPrev->bdObject->index != data->index - 1))
+   {
+      I_Error(
+         "%u/%u: SMTStatusList::Insert: Missing status at %u!\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         data->index - 1
+      );
+   }
+
+   size++;
+}
+
+cs_stored_sector_thinker_data_t* SMTStatusList::getStatusAt(uint32_t index)
+{
+   stored_status_t *sst;
+
+   for(sst = stored_statuses_head.bdNext;
+       sst != &stored_statuses_head;
+       sst = sst->bdNext)
+   {
+      if(sst->bdObject->index == index)
+         return sst->bdObject;
+
+      if(sst->bdObject->index > index)
+      {
+         I_Error(
+            "%u/%u: SMTStatusList::getStatusList: Missing status for %u!\n",
+            cl_latest_world_index,
+            cl_current_world_index,
+            index
+         );
+      }
+   }
+
+   if(sst->bdObject->index > index)
+   {
+      I_Error(
+         "%u/%u: SMTStatusList::getStatusList: Missing status for %u!\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         index
+      );
+   }
+
+   return NULL;
+}
+
+//=============================================================================
+//
 // SectorThinker class methods
 //
 
@@ -73,7 +246,6 @@ SectorThinker::SectorThinker() : Thinker()
    predicting = false;
    repredicting = false;
    prediction_index = 0;
-   stored_statuses = NULL;
 
    net_id = 0;
    removal_index = 0;
@@ -109,7 +281,6 @@ SectorThinker::SectorThinker(sector_t *new_sector) : Thinker()
    predicting = false;
    repredicting = false;
    prediction_index = 0;
-   stored_statuses = NULL;
 
    net_id = 0;
    removal_index = 0;
@@ -146,7 +317,6 @@ SectorThinker::SectorThinker(sector_t *new_sector, line_t *new_line) : Thinker()
    predicting = false;
    repredicting = false;
    prediction_index = 0;
-   stored_statuses = NULL;
 
    net_id = 0;
    removal_index = 0;
@@ -160,22 +330,11 @@ SectorThinker::SectorThinker(sector_t *new_sector, line_t *new_line) : Thinker()
 
 SectorThinker::~SectorThinker()
 {
-   cs_stored_sector_thinker_data_t *sstd = NULL;
-
    if(pre_activation_sector)
       efree(pre_activation_sector);
 
    if(pre_activation_line)
       efree(pre_activation_line);
-
-   while(stored_statuses)
-   {
-      sstd = stored_statuses->next;
-      efree(stored_statuses);
-      stored_statuses = sstd;
-      if(stored_statuses)
-         stored_statuses->prev = NULL;
-   }
 }
 
 //
@@ -249,110 +408,13 @@ void SectorThinker::netSerialize(cs_sector_thinker_data_t *data)
 void SectorThinker::insertStatus(uint32_t index, cs_sector_thinker_data_t *data)
 {
    cs_stored_sector_thinker_data_t *sstd = NULL;
-   cs_stored_sector_thinker_data_t *nsstd = NULL;
-   cs_stored_sector_thinker_data_t *psstd = NULL;
 
-   if(!CS_CLIENT) // [CG] C/S clients only.
-      return;
-
-   if(!stored_statuses)
+   if(CS_CLIENT) // [CG] C/S clients only.
    {
-      CS_LogSMT("%u/%u: insertStatus: Inserting 1st status at %u.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         index
-      );
-
-      stored_statuses = estructalloc(cs_stored_sector_thinker_data_t, 1);
-      stored_statuses->index = index;
-      copyStatusData(&stored_statuses->data, data);
-      stored_statuses->prev = NULL;
-      stored_statuses->next = NULL;
-      return;
-   }
-
-   // [CG] Search for a status with the target index.  All statuses after the
-   //      target index will be overwritten anyway, so once it's found, break
-   //      and chop it off.
-   psstd = sstd = stored_statuses;
-   while(sstd)
-   {
-      if(sstd->index >= index)
-         break;
-      psstd = sstd;
-      sstd = sstd->next;
-   }
-
-   // [CG] If we got to the end of the list without finding the target index
-   //      and the last status' index wasn't (index - 1), we're missing
-   //      statuses and that is very bad.  We should never be inserting gaps
-   //      into the status list.  Error out in this case.
-   if(psstd->index != (index - 1))
-   {
-      I_Error(
-         "%u/%u: SMT %u missing status at %u (activated at %u) (%u/%u)!\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         net_id,
-         index - 1,
-         activation_command_index,
-         psstd ? psstd->index : 0,
-         sstd ? sstd->index : 0
-      );
-   }
-
-   // [CG] If a status currently exists for this index, check its data.  If the
-   //      data is equal, there's no need to do anything, so return.  Otherwise
-   //      set its data and free all subsequent statuses.
-   if(sstd)
-   {
-      if(statusesEqual(&sstd->data, data))
-      {
-         CS_LogSMT("%u/%u: insertStatus: Statuses equal at %u.\n",
-            cl_latest_world_index,
-            cl_current_world_index,
-            index
-         );
-         return;
-      }
-
-      CS_LogSMT("%u/%u: insertStatus: Setting status at %u.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         index
-      );
-
-      copyStatusData(&sstd->data, data);
-      nsstd = sstd->next;
-      sstd->next = NULL;
-      sstd = nsstd;
-
-      while(sstd)
-      {
-         CS_LogSMT("%u/%u: insertStatus: Removing old status at %u.\n",
-            cl_latest_world_index,
-            cl_current_world_index,
-            sstd->index
-         );
-         nsstd = sstd->next;
-         efree(sstd);
-         sstd = nsstd;
-      }
-   }
-   else
-   {
-      CS_LogSMT("%u/%u: insertStatus: Appending new status at %u.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         index
-      );
-      // [CG] Otherwise just append the new status to the list.
       sstd = estructalloc(cs_stored_sector_thinker_data_t, 1);
       sstd->index = index;
       copyStatusData(&sstd->data, data);
-      sstd->prev = psstd;
-      sstd->next = NULL;
-      psstd->next = sstd;
+      stored_statuses.Insert(sstd);
    }
 }
 
@@ -435,29 +497,11 @@ void SectorThinker::savePredictedStatus(uint32_t index)
 void SectorThinker::saveInitialSpawnStatus(uint32_t index,
                                            cs_sector_thinker_data_t *data)
 {
-   cs_stored_sector_thinker_data_t *sstd = stored_statuses;
-   cs_stored_sector_thinker_data_t *nsstd = NULL;
-
-   // [CG] Clear out the status list.
-   while(sstd)
+   if(CS_CLIENT) // [CG] C/S clients only.
    {
-      CS_LogSMT("%u/%u: saveInitialSpawnStatus: Removing old status at %u.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         sstd->index
-      );
-      nsstd = sstd->next;
-      efree(sstd);
-      sstd = nsstd;
-      if(sstd)
-         sstd->prev = NULL;
+      stored_statuses.Clear();
+      insertStatus(index, data);
    }
-
-   stored_statuses = estructalloc(cs_stored_sector_thinker_data_t, 1);
-   stored_statuses->index = index;
-   copyStatusData(&stored_statuses->data, data);
-   stored_statuses->prev = NULL;
-   stored_statuses->next = NULL;
 }
 
 //
@@ -480,26 +524,8 @@ bool SectorThinker::wasActivatedClientside()
 //
 void SectorThinker::clearOldUpdates(uint32_t index)
 {
-   cs_stored_sector_thinker_data_t *sstd = stored_statuses;
-   cs_stored_sector_thinker_data_t *nsstd = NULL;
-
-   if(!CS_CLIENT) // [CG] C/S clients only.
-      return;
-
-   while((sstd) && (sstd->index < index))
-   {
-      CS_LogSMT("%u/%u: clearOldUpdates: Removing old status at %u.\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         sstd->index
-      );
-
-      nsstd = sstd->next;
-      efree(sstd);
-      sstd = nsstd;
-      if(sstd)
-         sstd->prev = NULL;
-   }
+   if(CS_CLIENT) // [CG] C/S clients only.
+      stored_statuses.clearBefore(index);
 }
 
 //
@@ -509,46 +535,24 @@ void SectorThinker::clearOldUpdates(uint32_t index)
 //
 void SectorThinker::loadStatusFor(uint32_t index)
 {
-   cs_stored_sector_thinker_data_t *sstd = NULL;
-
-   if(!CS_CLIENT) // [CG] C/S clients only.
-      return;
-
-   if(!stored_statuses)
+   if(CS_CLIENT) // [CG] C/S clients only.
    {
-      if(!activated_clientside)
-         I_Error("SMT %u has no stored statuses.\n", net_id);
-
-      savePredictedStatus(activation_command_index - 1);
-      return;
-   }
-
-   for(sstd = stored_statuses; sstd; sstd = sstd->next)
-   {
-      if(sstd->index == (index - 1))
+      if(!stored_statuses.getSize())
       {
-         CS_LogSMT("%u/%u: Loading status at %u.\n",
-            cl_latest_world_index,
-            cl_current_world_index,
-            sstd->index
-         );
-         loadStatusData(&sstd->data);
-         break;
+         if(!activated_clientside)
+            I_Error("SMT %u has no stored statuses.\n", net_id);
+
+         savePredictedStatus(activation_command_index - 1);
+         return;
       }
 
-      if(sstd->index > (index - 1))
-      {
-         I_Error(
-            "%u/%u: SMT %u missing status at %u (activated at %u) "
-            "(%u)!\n",
-            cl_latest_world_index,
-            cl_current_world_index,
-            net_id,
-            index - 1,
-            activation_command_index,
-            sstd ? sstd->index : 0
-         );
-      }
+      CS_LogSMT(
+         "%u/%u: Loading status for %u.\n",
+         cl_latest_world_index,
+         cl_current_world_index,
+         index
+      );
+      loadStatusData(&stored_statuses.getStatusAt(index - 1)->data);
    }
 }
 
@@ -559,7 +563,7 @@ void SectorThinker::loadStatusFor(uint32_t index)
 //
 void SectorThinker::rePredict(uint32_t index)
 {
-   if(CS_CLIENT)
+   if(CS_CLIENT) // [CG] C/S clients only.
    {
       fixed_t oldch = sector->ceilingheight;
       fixed_t oldfh = sector->floorheight;
@@ -602,7 +606,7 @@ void SectorThinker::rePredict(uint32_t index)
 //
 void SectorThinker::Predict(uint32_t index)
 {
-   if(CS_CLIENT)
+   if(CS_CLIENT) // [CG] C/S clients only.
    {
       fixed_t oldch = sector->ceilingheight;
       fixed_t oldfh = sector->floorheight;
@@ -644,7 +648,7 @@ void SectorThinker::Predict(uint32_t index)
 //
 void SectorThinker::setInactive()
 {
-   if(CS_CLIENT)
+   if(CS_CLIENT) // [CG] C/S clients only.
    {
       inactive = prediction_index;
       CS_LogSMT(
