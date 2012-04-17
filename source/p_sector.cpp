@@ -199,15 +199,12 @@ cs_stored_sector_thinker_data_t* SMTStatusList::getStatusAt(uint32_t index)
       }
    }
 
-   if(sst->bdObject->index > index)
-   {
-      I_Error(
-         "%u/%u: SMTStatusList::getStatusList: Missing status for %u!\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         index
-      );
-   }
+   I_Error(
+      "%u/%u: SMTStatusList::getStatusList: Missing status for %u!\n",
+      cl_latest_world_index,
+      cl_current_world_index,
+      index
+   );
 
    return NULL;
 }
@@ -414,6 +411,28 @@ void SectorThinker::insertStatus(uint32_t index, cs_sector_thinker_data_t *data)
       sstd = estructalloc(cs_stored_sector_thinker_data_t, 1);
       sstd->index = index;
       copyStatusData(&sstd->data, data);
+      stored_statuses.Insert(sstd);
+   }
+}
+
+//
+// SectorThinker::insertStatusFromServer()
+//
+// Inserts a status into this sector thinker's status queue.  Since this status
+// is from the server, it voids any other saved statuses, so they're all
+// cleared before the new statuses is saved.
+//
+void SectorThinker::insertStatusFromServer(uint32_t index,
+                                           cs_sector_thinker_data_t *data)
+{
+   cs_stored_sector_thinker_data_t *sstd = NULL;
+
+   if(CS_CLIENT) // [CG] C/S clients only.
+   {
+      sstd = estructalloc(cs_stored_sector_thinker_data_t, 1);
+      sstd->index = index;
+      copyStatusData(&sstd->data, data);
+      stored_statuses.Clear();
       stored_statuses.Insert(sstd);
    }
 }

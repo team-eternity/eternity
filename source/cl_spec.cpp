@@ -527,7 +527,7 @@ void CL_UpdatePlatform(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(platform = dynamic_cast<PlatThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a platform.", dt->net_id);
    else
-      platform->insertStatus(index, data);
+      platform->insertStatusFromServer(index, data);
 }
 
 void CL_UpdateVerticalDoor(uint32_t index, cs_sector_thinker_data_t *data)
@@ -541,7 +541,7 @@ void CL_UpdateVerticalDoor(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(door = dynamic_cast<VerticalDoorThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a door.", dt->net_id);
    else
-      door->insertStatus(index, data);
+      door->insertStatusFromServer(index, data);
 }
 
 void CL_UpdateCeiling(uint32_t index, cs_sector_thinker_data_t *data)
@@ -555,7 +555,7 @@ void CL_UpdateCeiling(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(ceiling = dynamic_cast<CeilingThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a ceiling.", dt->net_id);
    else
-      ceiling->insertStatus(index, data);
+      ceiling->insertStatusFromServer(index, data);
 }
 
 void CL_UpdateFloor(uint32_t index, cs_sector_thinker_data_t *data)
@@ -569,7 +569,7 @@ void CL_UpdateFloor(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(floor = dynamic_cast<FloorMoveThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a floor.", dt->net_id);
    else
-      floor->insertStatus(index, data);
+      floor->insertStatusFromServer(index, data);
 }
 
 void CL_UpdateElevator(uint32_t index, cs_sector_thinker_data_t *data)
@@ -583,7 +583,7 @@ void CL_UpdateElevator(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(elevator = dynamic_cast<ElevatorThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a elevator.", dt->net_id);
    else
-      elevator->insertStatus(index, data);
+      elevator->insertStatusFromServer(index, data);
 }
 
 void CL_UpdatePillar(uint32_t index, cs_sector_thinker_data_t *data)
@@ -597,7 +597,7 @@ void CL_UpdatePillar(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(pillar = dynamic_cast<PillarThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a pillar.", dt->net_id);
    else
-      pillar->insertStatus(index, data);
+      pillar->insertStatusFromServer(index, data);
 }
 
 void CL_UpdateFloorWaggle(uint32_t index, cs_sector_thinker_data_t *data)
@@ -611,6 +611,6 @@ void CL_UpdateFloorWaggle(uint32_t index, cs_sector_thinker_data_t *data)
    else if(!(floorwaggle = dynamic_cast<FloorWaggleThinker *>(thinker)))
       doom_printf("Sector thinker %u is not a floor waggle.", dt->net_id);
    else
-      floorwaggle->insertStatus(index, data);
+      floorwaggle->insertStatusFromServer(index, data);
 }
 

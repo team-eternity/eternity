@@ -681,6 +681,8 @@ public:
    virtual bool reTriggerVerticalDoor(bool player);
    virtual void netSerialize(cs_sector_thinker_data_t *data);
    virtual void insertStatus(uint32_t index, cs_sector_thinker_data_t *data);
+   virtual void insertStatusFromServer(uint32_t index,
+                                       cs_sector_thinker_data_t *data);
    virtual void savePredictedStatus(uint32_t index);
    virtual void saveInitialSpawnStatus(uint32_t index,
                                        cs_sector_thinker_data_t *data);
