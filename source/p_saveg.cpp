@@ -684,7 +684,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       char *className = NULL;
       size_t len;
       unsigned int idx = 1; // Start at index 1, as 0 means NULL
-      ThinkerType *thinkerType;
+      Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
       // allocate thinker table
@@ -702,7 +702,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
          arc.ArchiveLString(className, len);
 
          // Find the ThinkerType matching this name
-         if(!(thinkerType = ThinkerType::FindType(className)))
+         if(!(thinkerType = RTTIObject::Type::FindType<Thinker::Type>(className)))
          {
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
@@ -715,7 +715,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
 
          // Create a thinker of the appropriate type and load it
-         newThinker = thinkerType->newThinker();
+         newThinker = thinkerType->newObject();
          newThinker->serialize(arc);
 
          // Put it in the table

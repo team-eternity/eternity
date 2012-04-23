@@ -1158,6 +1158,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_rtti.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_sound.cpp"
 						>
 						<FileConfiguration
@@ -1321,6 +1325,10 @@
 					</File>
 					<File
 						RelativePath="..\source\e_player.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_rtti.h"
 						>
 					</File>
 					<File
