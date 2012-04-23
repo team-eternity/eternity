@@ -283,7 +283,7 @@ const char* C_GetCommandBatch(const char *name)
 {
    command_t *batch = C_GetCmdForName(name);
 
-   if(!batch)
+   if((!batch) || (!batch->variable))
       return NULL;
 
    return (const char *)batch->variable->variable;
