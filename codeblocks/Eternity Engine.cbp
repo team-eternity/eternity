@@ -264,6 +264,7 @@
 		<Unit filename="..\source\gl\gl_projection.cpp" />
 		<Unit filename="..\source\gl\gl_texture.cpp" />
 		<Unit filename="..\source\gl\gl_vars.cpp" />
+		<Unit filename="..\source\hal\i_platform.cpp" />
 		<Unit filename="..\source\hal\i_video.cpp" />
 		<Unit filename="..\source\hi_stuff.cpp" />
 		<Unit filename="..\source\hu_frags.cpp" />

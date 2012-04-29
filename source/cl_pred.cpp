@@ -210,6 +210,15 @@ void CL_RunPredictedCommand()
    CL_runPlayerCommand(cl_commands_sent - 1, false);
 }
 
+/*
+ * [CG] TODO:
+ *      - Send command indices along with sector position messages
+ *        - Store sector positions along with SMT statuses, for loading the
+ *          consistent world before (re-)predicting
+ *      - If PPMs are behind SMT status messages or sector position messages,
+ *        don't re-predict.
+ */
+
 void CL_Predict()
 {
    uint32_t command_index, sector_status_index;
@@ -226,29 +235,6 @@ void CL_Predict()
 
    sector_status_index = latest_sector_status_index + 1;
    command_index = latest_server_command_command_index + 1;
-
-   /*
-   if(last_sector_status_index_predicted < latest_sector_status_index)
-   {
-      CS_LogSMT(
-         "%u/%u: Re-predicting SMTs for %u TICs (%u => %u).\n",
-         cl_latest_world_index,
-         cl_current_world_index,
-         (command_index - sector_status_index),
-         sector_status_index,
-         command_index
-      );
-
-      cl_setting_sector_positions = true;
-      CL_LoadSectorPositionsAt(latest_sector_status_index);
-      cl_setting_sector_positions = false;
-
-      for(; sector_status_index < command_index; sector_status_index++)
-         CL_rePredictSectorThinkers(sector_status_index);
-
-      last_sector_status_index_predicted = latest_sector_status_index;
-   }
-   */
 
    if(should_repredict_sectors)
    {
