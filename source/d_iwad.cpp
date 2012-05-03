@@ -261,7 +261,7 @@ char *D_FindWADByName(char *name)
    // Absolute path?
 
    if(M_FileExists(name))
-      return name;
+      return estrdup(name);
 
    BuildIWADDirList();
 

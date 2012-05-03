@@ -53,6 +53,7 @@
 #include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"       // SoM 3/12/2002: moved unistd stuff into d_io.h
+#include "d_iwad.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "doomdef.h"
@@ -2316,12 +2317,12 @@ char* SetIWAD(const char *new_iwad)
 {
    static bool first_time = true;
 
-   if(!first_time)
+   if(iwad && !first_time)
       efree(iwad);
+   else
+      first_time = false;
 
    iwad = estrdup(new_iwad);
-
-   first_time = false;
 
    return iwad;
 }
@@ -2384,7 +2385,10 @@ char *FindIWADFile(void)
       if(WadFileStatus(buf, &isdir))
       {
          if(!isdir)
+         {
+            printf("%s is not a folder\n", buf);
             return SetIWAD(buf);
+         }
          else
          {
             for(i = 0; i < nstandard_iwads; i++)
@@ -2419,6 +2423,22 @@ char *FindIWADFile(void)
          M_NormalizeSlashes(baseiwad);
          return baseiwad;
       }
+   }
+
+   if(CS_SERVER)
+   {
+      // [CG] Look in all specified IWAD folders, as well as user/wads.
+      char *temp_iwad = D_FindWADByName((char *)basename);
+
+      if(temp_iwad)
+      {
+         char *iwadx = SetIWAD(temp_iwad);
+
+         efree(temp_iwad);
+         return iwadx;
+      }
+      else
+         return NULL;
    }
 
    for(j = 0; j < (gamepathset ? 3 : 2); j++)
