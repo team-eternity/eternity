@@ -62,9 +62,9 @@ Thinker thinkercap;
 Thinker thinkerclasscap[NUMTHCLASS];
 
 // 
-// RootThinkerType
+// Thinker::StaticType
 //
-// haleyjd 11/14/11: This one is special and is for the Thinker class itself.
+// haleyjd 11/14/11: Custom RTTI
 //
 IMPLEMENT_RTTI_TYPE(Thinker)
 

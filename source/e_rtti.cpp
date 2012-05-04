@@ -29,14 +29,11 @@
 #include "d_dehtbl.h"
 #include "i_system.h"
 
-
 #define NUMTTYPECHAINS 31
-
 
 RTTIObject::Type RTTIObject::StaticType("RTTIObject", NULL);
 
 RTTIObject::Type **RTTIObject::Type::rttiTypes;
-
 
 //
 // RTTIObject::Type::FindType

@@ -175,32 +175,11 @@ extern bool reset_viewz;
 //
 // DECLARE_THINKER_TYPE
 //
-// Use this macro once per Thinker descendant, inside the class definition.
-// Two public members are declared:
-//   static ThinkerType *StaticType
-//   * This reference to a ThinkerType instance is initialized by the constructor
-//     of the corresponding ThinkerType descendant to point to the type for this
-//     Thinker class. For example, Mobj::StaticType will point to the singleton
-//     instance of MobjType.
-//   virtual ThinkerType *getDynamicType() const;
-//   * This method of Thinker will return the StaticType member, which in the
-//     context of each individual class, is the instance representing the 
-//     actual type of the object (the parent instances of StaticType are hidden
-//     in each descendant scope).
-//
 #define DECLARE_THINKER_TYPE(name, inherited) DECLARE_RTTI_TYPE(name, inherited)
    
 //
 // IMPLEMENT_THINKER_TYPE
 //
-// Use this macro once per Thinker descendant. Best placed near the Think 
-// routine.
-// Example:
-//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
-//   This defines FireFlickerThinkerType, which constructs a ThinkerType parent
-//   with "FireFlickerThinker" as its name member and which returns a new FireFlickerThinker
-//   instance via its newThinker virtual method.
-// 
 #define IMPLEMENT_THINKER_TYPE(name) IMPLEMENT_RTTI_TYPE(name)
 
 #endif
