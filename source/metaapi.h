@@ -47,7 +47,6 @@ enum
 extern int metaerrno;
 
 class metaTablePimpl;
-class MetaTable;
 
 //
 // MetaObject
@@ -65,7 +64,6 @@ protected:
    char *key_name; // storage pointer for key (alloc'd string)
 
    friend class metaTablePimpl;
-   friend class MetaTable;
 
 public:
    // Constructors/Destructor
@@ -73,6 +71,8 @@ public:
    MetaObject(const char *pKey);
    MetaObject(const MetaObject &other);
    virtual ~MetaObject();
+
+   void setType();
 
    const char *getKey() const { return key_name; }
 

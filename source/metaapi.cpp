@@ -174,6 +174,18 @@ const char *MetaObject::toString() const
    return qstr.constPtr();
 }
 
+//
+// MetaObject::setType
+//
+// This will set the MetaObject's internal type to its class name. This is
+// really only for use by MetaTable but calling it yourself wouldn't screw
+// anything up. It's just redundant.
+//
+void MetaObject::setType()
+{
+   type = getClassName();
+}
+
 //=============================================================================
 //
 // Metaobject Specializations
@@ -607,7 +619,7 @@ void MetaTable::addObject(MetaObject *object)
    }
 
    // Initialize type name
-   object->type = object->getClassName();
+   object->setType();
 
    // Add the object to the key table
    pImpl->keyhash.addObject(object);
