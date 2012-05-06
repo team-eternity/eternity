@@ -2606,20 +2606,28 @@ void G_DoNewGame (void)
 
 class MetaSpeedSet : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaSpeedSet, MetaObject)
+
 protected:
    int mobjType;            // the type this speedset is for
    int normalSpeed;         // the normal speed of this thing type
    int fastSpeed;           // -fast speed
 
 public:
-   // Constructor
+   // Default constructor
+   MetaSpeedSet() 
+      : MetaObject(), mobjType(-1), normalSpeed(0), fastSpeed(0)
+   {
+   }
+
+   // Parameterized constructor
    MetaSpeedSet(int pMobjType, int pNormalSpeed, int pFastSpeed) 
-      : MetaObject("MetaSpeedSet", "speedset"), mobjType(pMobjType), 
+      : MetaObject("speedset"), mobjType(pMobjType), 
         normalSpeed(pNormalSpeed), fastSpeed(pFastSpeed)
    {
    }
 
-   // Copy Constructor
+   // Copy constructor
    MetaSpeedSet(const MetaSpeedSet &other) : MetaObject(other) 
    {
       this->mobjType    = other.mobjType;
@@ -2656,6 +2664,8 @@ public:
    
    void setSpeeds(int normal, int fast) { normalSpeed = normal; fastSpeed = fast; }
 };
+
+IMPLEMENT_RTTI_TYPE(MetaSpeedSet)
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {

@@ -84,7 +84,7 @@ public:
    //
    // Like qstring::getBuffer, but casts to const to enforce safety.
    //
-   const char *constPtr() { return checkBuffer(); }
+   const char *constPtr() const { return buffer ? buffer : ""; }
 
    //
    // qstring::length

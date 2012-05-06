@@ -825,6 +825,14 @@ static void E_ThingFrame(const char *data, const char *fieldname,
    *target = index;
 }
 
+//=============================================================================
+//
+// MetaState Management
+//
+
+// Warning: likely to get lost as there's no module for metastates currently!
+IMPLEMENT_RTTI_TYPE(MetaState)
+
 //
 // E_AddMetaState
 //
@@ -878,8 +886,9 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
    return ret;
 }
 
+//=============================================================================
 //
-// MOD states
+// MOD States
 //
 
 //

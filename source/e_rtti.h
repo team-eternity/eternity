@@ -25,7 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #ifndef E_RTTI_H__
-#define R_RTTI_H__
+#define E_RTTI_H__
 
 #include "z_zone.h"
 
@@ -122,6 +122,16 @@ public:
    bool isInstanceOf(const Type *type) const
    {
       return (getDynamicType() == type);
+   }
+
+   //
+   // isInstanceOf(const char *className)
+   //
+   // Returns true if the object's actual type matches the passed-in name.
+   //
+   bool isInstanceOf(const char *className) const 
+   {
+      return !strcmp(getClassName(), className);
    }
 
    //

@@ -25,46 +25,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef METAQSTRING_H__
-#define METAQSTRING_H__
+#include "metaqstring.h"
 
-#include "metaadapter.h"
-#include "m_qstr.h"
-
-class MetaQString : public MetaAdapter<qstring>
-{
-   // NB: MetaAdapter is transparent to RTTI
-   DECLARE_RTTI_TYPE(MetaQString, MetaObject)
-
-public:
-   MetaQString() : MetaAdapter<qstring>()
-   {
-   }
-
-   MetaQString(const char *key) : MetaAdapter<qstring>(key)
-   {
-   }
-
-   MetaQString(const char *key, const qstring &initValue)
-      : MetaAdapter<qstring>(key, initValue)
-   {
-   }
-
-   MetaQString(const char *key, const char *value)
-      : MetaAdapter<qstring>(key)
-   {
-      containedObject = value;
-   }
-
-   MetaQString(const MetaQString &other) : MetaAdapter<qstring>(other) {}
-
-   // Virtuals
-   MetaObject *clone()    const { return new MetaQString(*this);     }
-   const char *toString() const { return containedObject.constPtr(); }
-};
-
-#endif
+// Bothersome statics. Blah, I say.
+IMPLEMENT_RTTI_TYPE(MetaQString)
 
 // EOF
-
 

@@ -62,19 +62,29 @@ int metaerrno = 0;
 // MetaObject Methods
 //
 
+IMPLEMENT_RTTI_TYPE(MetaObject)
+
 //
-// MetaObject(metatypename_t type, char *key)
+// MetaObject Default Constructor
+//
+// Not recommended for use. This exists because use of DECLARE_RTTI_OBJECT
+// requires it.
+//
+MetaObject::MetaObject()
+   : RTTIObject(), links(), typelinks(), type(), key()
+{
+   key = key_name = estrdup("default"); // TODO: GUID?
+}
+
+//
+// MetaObject(const char *pKey)
 //
 // Constructor for MetaObject when type and/or key are known.
 //
-MetaObject::MetaObject(metatypename_t pType, const char *pKey) 
-   : ZoneObject(), links(), typelinks(), type(), key()
+MetaObject::MetaObject(const char *pKey) 
+   : RTTIObject(), links(), typelinks(), type(), key()
 {
-   type_name = pType;   
-   key_name  = estrdup(pKey); // key_name is managed by the metaobject
-
-   key  = key_name;
-   type = type_name;
+   key = key_name = estrdup(pKey); // key_name is managed by the metaobject
 }
 
 //
@@ -83,16 +93,13 @@ MetaObject::MetaObject(metatypename_t pType, const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : ZoneObject(), links(), typelinks(), type(), key()
+   : RTTIObject(), links(), typelinks(), type(), key()
 {
-   type_name = other.type_name;
-
    if(key_name && key_name != other.key_name)
       efree(key_name);
    key_name = estrdup(other.key_name);
 
-   key  = key_name;
-   type = type_name;
+   key = key_name;
 }
 
 //
@@ -107,7 +114,6 @@ MetaObject::~MetaObject()
       efree(key_name);
 
    key_name  = NULL;
-   type_name = NULL;
 }
 
 //
@@ -168,18 +174,6 @@ const char *MetaObject::toString() const
    return qstr.constPtr();
 }
 
-//
-// MetaObject::isKindOf
-//
-// Custom RTTI for metaobjects, still useful because C++ RTTI doesn't
-// guarantee anything about the way typeid() works, and metaobject type names
-// may be very significant in the future in Aeon scripting.
-//
-bool MetaObject::isKindOf(metatypename_t type) const
-{
-   return !strcmp(type_name, type);
-}
-
 //=============================================================================
 //
 // Metaobject Specializations
@@ -194,13 +188,15 @@ bool MetaObject::isKindOf(metatypename_t type) const
 // Integer
 //
 
+IMPLEMENT_RTTI_TYPE(MetaInteger)
+
 //
 // MetaInteger(char *, int)
 //
 // Key/Value Constructor
 //
 MetaInteger::MetaInteger(const char *key, int i)
-   : MetaObject("MetaInteger", key), value(i)
+   : MetaObject(key), value(i)
 {
 }
 
@@ -245,11 +241,13 @@ const char *MetaInteger::toString() const
 // Double
 //
 
+IMPLEMENT_RTTI_TYPE(MetaDouble)
+
 //
 // MetaDouble(char *, double)
 //
 MetaDouble::MetaDouble(const char *key, double d) 
-   : MetaObject("MetaDouble", key), value(d)
+   : MetaObject(key), value(d)
 {
 }
 
@@ -295,13 +293,22 @@ const char *MetaDouble::toString() const
 // metastrings created with these APIs assume ownership of the string. 
 //
 
+IMPLEMENT_RTTI_TYPE(MetaString)
+
+//
+// MetaString Default Constructor
+//
+MetaString::MetaString() : MetaObject()
+{
+   this->value = estrdup("");
+}
+
 //
 // MetaString(char *, const char *)
 //
 // Key/Value Constructor
 //
-MetaString::MetaString(const char *key, const char *s)
-   : MetaObject("MetaString", key)
+MetaString::MetaString(const char *key, const char *s) : MetaObject(key)
 {
    this->value = estrdup(s);
 }
@@ -411,12 +418,21 @@ public:
    }
 };
 
+IMPLEMENT_RTTI_TYPE(MetaTable)
+
 //
-// MetaTable()
+// MetaTable Default Constructor
 //
-// Default Constructor
+MetaTable::MetaTable() : MetaObject()
+{
+   // Construct the private implementation object that holds our dual hashes
+   pImpl = new metaTablePimpl();
+}
+
 //
-MetaTable::MetaTable(const char *name) : MetaObject("MetaTable", name)
+// MetaTable(name)
+//
+MetaTable::MetaTable(const char *name) : MetaObject(name)
 {
    // Construct the private implementation object that holds our dual hashes
    pImpl = new metaTablePimpl();
@@ -427,8 +443,7 @@ MetaTable::MetaTable(const char *name) : MetaObject("MetaTable", name)
 //
 // Copy constructor
 //
-MetaTable::MetaTable(const MetaTable &other) 
-  : MetaObject("MetaTable", other.key_name)
+MetaTable::MetaTable(const MetaTable &other) : MetaObject(other.key_name)
 {
    pImpl = new metaTablePimpl();
    copyTableFrom(&other);
@@ -481,7 +496,7 @@ bool MetaTable::hasKey(const char *key)
 //
 // Returns true or false if an object of the same type is in the metatable.
 //
-bool MetaTable::hasType(metatypename_t type)
+bool MetaTable::hasType(const char *type)
 {
    return (pImpl->typehash.objectForKey(type) != NULL);
 }
@@ -493,7 +508,7 @@ bool MetaTable::hasType(metatypename_t type)
 // and type, and it is the same object. This is naturally slower as it must
 // search down the key hash chain for a type match.
 //
-bool MetaTable::hasKeyAndType(const char *key, metatypename_t type)
+bool MetaTable::hasKeyAndType(const char *key, const char *type)
 {
    MetaObject *obj = NULL;
    bool found = false;
@@ -501,7 +516,7 @@ bool MetaTable::hasKeyAndType(const char *key, metatypename_t type)
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
       // for each object that matches the key, test the type
-      if(obj->isKindOf(type))
+      if(obj->isInstanceOf(type))
       {
          found = true;
          break;
@@ -532,7 +547,7 @@ int MetaTable::countOfKey(const char *key)
 //
 // Returns the count of objects in the metatable with the given type.
 //
-int MetaTable::countOfType(metatypename_t type)
+int MetaTable::countOfType(const char *type)
 {
    MetaObject *obj = NULL;
    int count = 0;
@@ -548,14 +563,14 @@ int MetaTable::countOfType(metatypename_t type)
 //
 // As above, but satisfying both conditions at once.
 //
-int MetaTable::countOfKeyAndType(const char *key, metatypename_t type)
+int MetaTable::countOfKeyAndType(const char *key, const char *type)
 {
    MetaObject *obj = NULL;
    int count = 0;
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
-      if(obj->isKindOf(type))
+      if(obj->isInstanceOf(type))
          ++count;
    }
 
@@ -590,6 +605,9 @@ void MetaTable::addObject(MetaObject *object)
 
       pImpl->keyhash.rebuild(metaPrimes[i]);
    }
+
+   // Initialize type name
+   object->type = object->getClassName();
 
    // Add the object to the key table
    pImpl->keyhash.addObject(object);
@@ -642,7 +660,7 @@ MetaObject *MetaTable::getObject(const char *key)
 // Returns the first object found in the metatable which matches the type. 
 // Returns NULL if no such object exists.
 //
-MetaObject *MetaTable::getObjectType(metatypename_t type)
+MetaObject *MetaTable::getObjectType(const char *type)
 {
    return pImpl->typehash.objectForKey(type);
 }
@@ -652,13 +670,13 @@ MetaObject *MetaTable::getObjectType(metatypename_t type)
 //
 // As above, but satisfying both conditions at once.
 //
-MetaObject *MetaTable::getObjectKeyAndType(const char *key, metatypename_t type)
+MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
 {
    MetaObject *obj = NULL;
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
-      if(obj->isKindOf(type))
+      if(obj->isInstanceOf(type))
          break;
    }
 
@@ -692,11 +710,11 @@ MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key)
 // Similar to above, but this returns the next object which also matches
 // the specified type.
 //
-MetaObject *MetaTable::getNextType(MetaObject *object, metatypename_t type)
+MetaObject *MetaTable::getNextType(MetaObject *object, const char *type)
 {
    // As above, allow using the same type as the current object
    if(object && !type)
-      type = object->getType();
+      type = object->getClassName();
 
    return pImpl->typehash.keyIterator(object, type);
 }
@@ -706,7 +724,7 @@ MetaObject *MetaTable::getNextType(MetaObject *object, metatypename_t type)
 //
 // As above, but satisfying both conditions at once.
 //
-MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, metatypename_t type)
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, const char *type)
 {
    MetaObject *obj = object;
 
@@ -717,12 +735,12 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, me
          key = object->getKey();
 
       if(!type)
-         type = object->getType();
+         type = object->getClassName();
    }
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
-      if(obj->isKindOf(type))
+      if(obj->isInstanceOf(type))
          break;
    }
 

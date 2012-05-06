@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2009 James Haley
+// Copyright(C) 2012 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,8 +35,9 @@
 // MetaAdapter<T>
 //
 // Primary class for adapting non-MetaObject-descendant objects to behave as
-// metatable properties. The only requirement exacted on type T is that it
-// be directly copyable - either a POD, or an object with a copy constructor.
+// metatable properties. The only requirements exacted on type T are that it
+// have a default constructor and be directly copyable - either a POD, or an
+// object with a copy constructor.
 //
 // The primary means of external object adaptation is forwarding of method 
 // calls and operators through the star and arrow operator overloads, which 
@@ -51,16 +52,23 @@ protected:
    T containedObject;
 
 public:
-   MetaAdapter(metatypename_t className, const char *key)
-      : MetaObject(className, key), containedObject()
+   // Default constructor
+   MetaAdapter() : MetaObject(), containedObject()
    {
    }
 
-   MetaAdapter(metatypename_t className, const char *key, const T &initValue)
-      : MetaObject(className, key), containedObject(initValue)
+   // Forwarding constructor, key only
+   MetaAdapter(const char *key) : MetaObject(key), containedObject()
    {
    }
 
+   // Forwarding constructor, key and default initial value for contained object
+   MetaAdapter(const char *key, const T &initValue)
+      : MetaObject(key), containedObject(initValue)
+   {
+   }
+
+   // Copy constructor
    MetaAdapter(const MetaAdapter<T> &other)
       : MetaObject(other), containedObject(other.containedObject)
    {

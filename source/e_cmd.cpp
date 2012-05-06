@@ -192,7 +192,7 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
    {
       C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
                FC_NORMAL "%s", 
-               obj->getKey(), obj->getType(), obj->toString());
+               obj->getKey(), obj->getClassName(), obj->toString());
    }
 }
 

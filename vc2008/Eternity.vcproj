@@ -5173,6 +5173,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\source\metaqstring.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\source\metaqstring.h"
 					>
 				</File>
