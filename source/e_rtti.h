@@ -43,12 +43,15 @@ public:
    class Type
    {
    private:
+      enum { NUMTYPECHAINS = 31 };
+
       // addType is invoked by the constructor and places the type into a
       // global hash table for lookups by class name.
       void addType();
 
-      Type *next;              // next type on the same hash chain
-      static Type **rttiTypes; // hash table
+      Type *next; // next type on the same hash chain
+      
+      static Type *rttiTypes[NUMTYPECHAINS]; // hash table
 
    protected:
       // The constructor is always protected, but the type being proxied is

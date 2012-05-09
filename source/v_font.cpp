@@ -28,9 +28,6 @@
 // different modules.  This provides a uniform interface for all fonts
 // and makes the addition of more fonts easier.
 //
-// TODO: Add support for rect-blit fonts stored in a single image.
-//       Will require masked block drawing functions.
-//
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"

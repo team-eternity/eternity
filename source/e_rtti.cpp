@@ -29,18 +29,17 @@
 #include "d_dehtbl.h"
 #include "i_system.h"
 
-#define NUMTTYPECHAINS 31
 
 RTTIObject::Type RTTIObject::StaticType("RTTIObject", NULL);
 
-RTTIObject::Type **RTTIObject::Type::rttiTypes;
+RTTIObject::Type *RTTIObject::Type::rttiTypes[NUMTYPECHAINS];
 
 //
 // RTTIObject::Type::FindType
 //
 RTTIObject::Type *RTTIObject::Type::FindType(const char *pName)
 {
-   unsigned int hashcode = D_HashTableKeyCase(pName) % NUMTTYPECHAINS;
+   unsigned int hashcode = D_HashTableKeyCase(pName) % NUMTYPECHAINS;
    Type *chain = rttiTypes[hashcode];
 
    while(chain && strcmp(chain->name, pName))
@@ -56,15 +55,12 @@ void RTTIObject::Type::addType()
 {
    unsigned int hashcode;
 
-   if(!rttiTypes)
-      rttiTypes = ecalloc(Type **, NUMTTYPECHAINS, sizeof(Type *));
-
    // Types must be singletons with unique names.
    if(FindType(name))
       I_Error("RTTIObject::Type: duplicate class registered with name '%s'\n", name);
 
    // Add it to the hash table; order is unimportant.
-   hashcode = D_HashTableKeyCase(name) % NUMTTYPECHAINS;
+   hashcode = D_HashTableKeyCase(name) % NUMTYPECHAINS;
    this->next = rttiTypes[hashcode];
    rttiTypes[hashcode] = this;
 }
