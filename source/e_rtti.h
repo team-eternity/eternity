@@ -224,6 +224,20 @@ name::Type name::StaticType(#name, &Super::StaticType);
 // Inspired by ZDoom :P
 #define RUNTIME_CLASS(cls) (&cls::StaticType)
 
+//
+// runtime_cast
+//
+// This is the most general equivalent of dynamic_cast which uses the custom 
+// RTTI system instead of C++'s built-in typeid structures.
+//
+template<typename T> inline T runtime_cast(RTTIObject *robj)
+{
+   typedef typename eeprestd::remove_pointer<T>::type base_type;
+
+   return (robj && robj->isDescendantOf(&base_type::StaticType)) ?
+      static_cast<T>(robj) : NULL;
+}
+
 #endif //E_RTTI_H__
 
 // EOF
