@@ -937,7 +937,7 @@ void G_DoPlayDemo(void)
    M_ExtractFileBase(defdemoname, basename);         // killough
    
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = wGlobalDir.CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   if((lumpnum = wGlobalDir.checkNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -950,7 +950,7 @@ void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC)); // killough
+   demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1708,13 +1708,13 @@ uint64_t G_Signature(WadDirectory *dir)
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = dir->CheckNumForName(gamemapname);
+   lump = dir->checkNumForName(gamemapname);
    
-   if(lump != -1 && (i = lump + 10) < dir->GetNumLumps())
+   if(lump != -1 && (i = lump + 10) < dir->getNumLumps())
    {
       do
       {
-         s = s * 2 + dir->LumpLength(i);
+         s = s * 2 + dir->lumpLength(i);
       }
       while(--i > lump);
    }
@@ -3249,7 +3249,7 @@ void G_TimeDemo(const char *name, bool showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(wGlobalDir.CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
+   if(wGlobalDir.checkNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;

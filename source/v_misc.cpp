@@ -487,7 +487,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    if(tnum < 0 || tnum >= numflats)   
       src = R_GetLinearBuffer(badtex);
    else
-      src = (byte *)(wGlobalDir.CacheLumpNum(firstflat + tnum, PU_CACHE));
+      src = (byte *)(wGlobalDir.cacheLumpNum(firstflat + tnum, PU_CACHE));
 
    back_dest->TileBlock64(back_dest, src);
 }
@@ -519,7 +519,7 @@ void V_InitMisc(void)
    // this only ever needs to be done once
    if(!flexTranInit)
    {
-      byte *palette = (byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC));
+      byte *palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
       V_InitFlexTranTable(palette);
       Z_ChangeTag(palette, PU_CACHE);
    }

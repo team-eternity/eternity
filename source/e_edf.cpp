@@ -1111,7 +1111,7 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
 {
    if(ln >= 0) // terminal case - lumpnum is -1
    {
-      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
       // recurse on next item
       E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);

@@ -120,7 +120,7 @@ void D_OpenLump(DWFILE *infile, int lumpnum)
    // haleyjd 04/03/03: added origsize field for D_Ungetc
    memset(infile, 0, sizeof(*infile));
    infile->size = infile->origsize = W_LumpLength(lumpnum);
-   infile->inp = infile->lump = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
+   infile->inp = infile->lump = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
    infile->lumpnum = lumpnum;
    infile->type = DWF_LUMP;
 }

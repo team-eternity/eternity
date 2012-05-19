@@ -198,17 +198,17 @@ protected:
    void       *data;      // user data (mainly for w_levels code)
 
    // Protected methods
-   void InitLumpHash();
-   void InitResources();
-   void AddInfoPtr(lumpinfo_t *infoptr);
-   void CoalesceMarkedResource(const char *start_marker, 
+   void initLumpHash();
+   void initResources();
+   void addInfoPtr(lumpinfo_t *infoptr);
+   void coalesceMarkedResource(const char *start_marker, 
                                const char *end_marker, 
                                int li_namespace);
-   openwad_t OpenFile(const char *name, int filetype);
-   bool AddFile(const char *name, int li_namespace, int filetype,
+   openwad_t openFile(const char *name, int filetype);
+   bool addFile(const char *name, int li_namespace, int filetype,
                 FILE *file = NULL, size_t baseoffset = 0);
-   void FreeDirectoryLumps();  // haleyjd 06/27/09
-   void FreeDirectoryAllocs(); // haleyjd 06/06/10
+   void freeDirectoryLumps();  // haleyjd 06/27/09
+   void freeDirectoryAllocs(); // haleyjd 06/06/10
 
    // Utilities
    static int          IsMarker(const char *marker, const char *name);
@@ -216,34 +216,34 @@ protected:
 
 public:
    // Public methods
-   void        InitMultipleFiles(wfileadd_t *files);
-   int         CheckNumForName(const char *name, 
+   void        initMultipleFiles(wfileadd_t *files);
+   int         checkNumForName(const char *name, 
                                int li_namespace = lumpinfo_t::ns_global);
-   int         CheckNumForNameNSG(const char *name, int li_namespace);
-   int         GetNumForName(const char *name);
-   lumpinfo_t *GetLumpNameChain(const char *name);
+   int         checkNumForNameNSG(const char *name, int li_namespace);
+   int         getNumForName(const char *name);
+   lumpinfo_t *getLumpNameChain(const char *name);
    // sf: add a new wad file after the game has already begun
-   int         AddNewFile(const char *filename);
+   int         addNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
-   int         AddNewPrivateFile(const char *filename);
-   int         AddDirectory(const char *dirpath);
-   int         LumpLength(int lump);
-   void        ReadLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
-   int         ReadLumpHeader(int lump, void *dest, size_t size);
-   void       *CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
-   void       *CacheLumpName(const char *name, int tag, 
+   int         addNewPrivateFile(const char *filename);
+   int         addDirectory(const char *dirpath);
+   int         lumpLength(int lump);
+   void        readLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
+   int         readLumpHeader(int lump, void *dest, size_t size);
+   void       *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
+   void       *cacheLumpName(const char *name, int tag, 
                              WadLumpLoader *lfmt = NULL);
-   void        Close(); // haleyjd 03/09/11
+   void        close(); // haleyjd 03/09/11
 
    // Accessors
-   int   GetType() const  { return type; }
-   void  SetType(int i)   { type = i;    }
-   void *GetData() const  { return data; }
-   void  SetData(void *d) { data = d;    }
+   int   getType() const  { return type; }
+   void  setType(int i)   { type = i;    }
+   void *getData() const  { return data; }
+   void  setData(void *d) { data = d;    }
    
    // Read-only properties
-   int          GetNumLumps() const { return numlumps; }
-   lumpinfo_t **GetLumpInfo() const { return lumpinfo; }
+   int          getNumLumps() const { return numlumps; }
+   lumpinfo_t **getLumpInfo() const { return lumpinfo; }
 };
 
 extern WadDirectory wGlobalDir; // the global wad directory

@@ -1084,7 +1084,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
+   music->data = wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);   
 
    if(music->data)
    {

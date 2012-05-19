@@ -1293,7 +1293,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    }
 
    // load the lump
-   vm->data = (byte *)(wGlobalDir.CacheLumpNum(lump, PU_LEVEL));
+   vm->data = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_LEVEL));
 
    rover = (int32_t *)vm->data;
 

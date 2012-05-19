@@ -323,7 +323,7 @@ static void R_InitSpriteDefs(char **namelist)
    size_t numentries = lastspritelump - firstspritelump + 1;
    rsprhash_s *hash;
    unsigned int i;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
    if(!numentries || !*namelist)
       return;

@@ -196,7 +196,7 @@ void V_InitColorTranslation(void)
 {
   register const crdef_t *p;
   for (p=crdefs; p->name; p++)
-    *p->map1 = *p->map2 = (byte *)(wGlobalDir.CacheLumpName(p->name, PU_STATIC));
+    *p->map1 = *p->map2 = (byte *)(wGlobalDir.cacheLumpName(p->name, PU_STATIC));
 }
 
 //
@@ -690,16 +690,16 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
    void *source;
    patch_t *patch;
-   int len = wGlobalDir.LumpLength(lumpnum);
+   int len = wGlobalDir.lumpLength(lumpnum);
 
    switch(len)
    {
    case 4096:  // 64x64 flat
-      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
+      source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBackgroundCached((byte *)source, dest);
       break;
    case 64000: // 320x200 linear
-      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
+      source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBlockFS(dest, (byte *)source);
       break;
    default:    // anything else is treated like a patch (let god sort it out)

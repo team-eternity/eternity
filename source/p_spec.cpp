@@ -179,7 +179,7 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = (animdef_t *)wGlobalDir.CacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = (animdef_t *)wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC);
 
    lastanim = anims;
    for(i=0 ; animdefs[i].istexture != -1 ; i++)

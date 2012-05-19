@@ -128,7 +128,7 @@ bool F_Responder(event_t *event)
    {
       // restore normal palette and kick out to title screen
       finalestage = 4;
-      I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
+      I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
       return true;
    }
    
@@ -678,11 +678,11 @@ void F_DrawUnderwater(void)
       {
          byte *palette;
 
-         palette = (byte *)wGlobalDir.CacheLumpName("E2PAL", PU_CACHE);
+         palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
 
          V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                     (byte *)wGlobalDir.CacheLumpName("E2END", PU_CACHE));
+                     (byte *)wGlobalDir.cacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
       // fall through
@@ -695,7 +695,7 @@ void F_DrawUnderwater(void)
    case 4:
       Console.enabled = true;
       V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                  (byte *)wGlobalDir.CacheLumpName("TITLE", PU_CACHE));
+                  (byte *)wGlobalDir.cacheLumpName("TITLE", PU_CACHE));
       break;
    }
 }
@@ -723,7 +723,7 @@ static void F_InitDemonScroller(void)
    V_InitVBufferFrom(&vbuf, 320, 400, 320, video.bitdepth, DemonBuffer);
    
    if(lsize2 == 64000) // raw screen
-      wGlobalDir.ReadLump(lnum2, DemonBuffer);
+      wGlobalDir.readLump(lnum2, DemonBuffer);
    else
    {
       patch_t *p = PatchLoader::CacheNum(wGlobalDir, lnum2, PU_CACHE);
@@ -731,7 +731,7 @@ static void F_InitDemonScroller(void)
    }
 
    if(lsize1 == 64000) // raw screen
-      wGlobalDir.ReadLump(lnum1, DemonBuffer + 64000);
+      wGlobalDir.readLump(lnum1, DemonBuffer + 64000);
    else
    {
       patch_t *p = PatchLoader::CacheNum(wGlobalDir, lnum1, PU_CACHE);
@@ -810,7 +810,7 @@ static void F_FinaleEndDrawer(void)
       break;
    case FINALE_HTIC_CREDITS:
       V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT,
-                  (byte *)wGlobalDir.CacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
+                  (byte *)wGlobalDir.cacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();

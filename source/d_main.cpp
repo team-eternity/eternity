@@ -366,7 +366,7 @@ void D_Display(void)
          
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-         I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
+         I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
       
       oldgamestate = wipegamestate = gamestate;
          
@@ -3083,7 +3083,7 @@ static void D_ProcessDehInWad(int i)
 {
    if(i >= 0)
    {
-      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
       D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
@@ -3778,7 +3778,7 @@ static void D_DoomInit(void)
    D_GameAutoloadWads();
 
    startupmsg("W_Init", "Init WADfiles.");
-   wGlobalDir.InitMultipleFiles(wadfiles);
+   wGlobalDir.initMultipleFiles(wadfiles);
    usermsg("");  // gap
 
    // Check for -file in shareware
@@ -4182,8 +4182,8 @@ void D_NewWadLumps(FILE *handle)
 {
    int i, format;
    char wad_firstlevel[9];
-   int numlumps = wGlobalDir.GetNumLumps();
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   int numlumps = wGlobalDir.getNumLumps();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
    memset(wad_firstlevel, 0, 9);
 
@@ -4259,7 +4259,7 @@ void usermsg(const char *s, ...)
 bool D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
-   if(wGlobalDir.AddNewFile(s))
+   if(wGlobalDir.addNewFile(s))
       return false;
    modifiedgame = true;
    D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads

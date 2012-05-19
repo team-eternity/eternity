@@ -239,7 +239,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
       bool mapPresent = true;
-      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
       // if lump not found or the game is modified and the
       // lump comes from the first loaded wad, consider it not

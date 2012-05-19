@@ -164,7 +164,7 @@ static void C_initBackdrop(void)
          csize    = W_LumpLength(clumpnum);
 
          colormap = emalloc(byte *, csize);
-         wGlobalDir.ReadLump(clumpnum, colormap);
+         wGlobalDir.readLump(clumpnum, colormap);
          
          V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
          efree(colormap);

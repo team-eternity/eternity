@@ -460,7 +460,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    video.pixelsize = 1;
    
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SDLSetPaletteDirect((byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE));
+   I_SDLSetPaletteDirect((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
 
    return false;
 }
