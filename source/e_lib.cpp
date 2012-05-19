@@ -1336,7 +1336,7 @@ byte *E_ParseTranslation(const char *str, int tag)
 {
    int i;
    qstring tokenbuf;
-   byte *translation = ecalloctag(byte *, 1, 256, tag);
+   byte *translation = ecalloctag(byte *, 1, 256, tag, NULL);
    tr_pstate_t parserstate;
 
    tokenbuf.initCreate();

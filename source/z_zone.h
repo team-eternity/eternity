@@ -142,8 +142,8 @@ void  Z_SysFree(void *p);
 #define ecalloc(type, n1, n2) \
    static_cast<type>((Z_Calloc)(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
 
-#define ecalloctag(type, n1, n2, tag) \
-   static_cast<type>((Z_Calloc)(n1, n2, tag, 0, __FILE__, __LINE__))
+#define ecalloctag(type, n1, n2, tag, user) \
+   static_cast<type>((Z_Calloc)(n1, n2, tag, user, __FILE__, __LINE__))
 
 #define erealloc(type, p, n) \
    static_cast<type>((Z_Realloc)(p, n, PU_STATIC, 0, __FILE__, __LINE__))
