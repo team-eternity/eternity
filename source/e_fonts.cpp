@@ -351,7 +351,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
       size = w * h;
    }
    else
-      font->data = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
+      font->data = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
    // check for proper dimensions
    for(i = 5; i <= 32; ++i)

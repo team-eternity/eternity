@@ -105,8 +105,8 @@ static manageddir_t *W_addManagedDir(const char *filename)
    newdir->name = estrdup(filename);
 
    // set type information
-   newdir->waddir.SetType(WadDirectory::MANAGED); // mark as managed
-   newdir->waddir.SetData(newdir); // opaque pointer back to parent
+   newdir->waddir.setType(WadDirectory::MANAGED); // mark as managed
+   newdir->waddir.setData(newdir); // opaque pointer back to parent
 
    // add it to the hash table
    w_dirhash.addObject(newdir);
@@ -124,7 +124,7 @@ static void W_delManagedDir(manageddir_t *dir)
    WadDirectory &waddir = dir->waddir;
 
    // close the wad file if it is open
-   waddir.Close();
+   waddir.close();
 
    // remove managed directory from the hash table
    w_dirhash.removeObject(dir);
@@ -156,7 +156,7 @@ static bool W_openWadFile(manageddir_t *dir)
 {
    bool ret;
    
-   if((ret = !!dir->waddir.AddNewPrivateFile(dir->name)))
+   if((ret = !!dir->waddir.addNewPrivateFile(dir->name)))
       D_AddFile(dir->name, lumpinfo_t::ns_global, NULL, 0, 1);
 
    return ret;
@@ -246,9 +246,9 @@ WadDirectory *W_GetManagedWad(const char *filename)
 const char *W_GetManagedDirFN(WadDirectory *waddir)
 {
    const char *name = NULL;
-   void *data = waddir->GetData();
+   void *data = waddir->getData();
 
-   if(data && waddir->GetType() == WadDirectory::MANAGED)
+   if(data && waddir->getType() == WadDirectory::MANAGED)
       name = ((manageddir_t *)data)->name;
 
    return name;
@@ -266,8 +266,8 @@ char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 {
    int i;
    char *name = NULL;
-   int          numlumps = dir->GetNumLumps();
-   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   int          numlumps = dir->getNumLumps();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
    for(i = 0; i < numlumps; ++i)
    {
@@ -310,8 +310,8 @@ wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
    wadlevel_t *levels = NULL;
    int numlevels;
    int numlevelsalloc;
-   int          numlumps = dir->GetNumLumps();
-   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   int          numlumps = dir->getNumLumps();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
    // start out with a small set of levels
    numlevels = 0;
@@ -359,9 +359,9 @@ wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
 wadlevel_t *W_FindLevelInDir(WadDirectory *waddir, const char *name)
 {
    wadlevel_t *retlevel = NULL, *curlevel = NULL;
-   void *data = waddir->GetData();
+   void *data = waddir->getData();
 
-   if(data && waddir->GetType() == WadDirectory::MANAGED)
+   if(data && waddir->getType() == WadDirectory::MANAGED)
    {
       // get the managed directory
       manageddir_t *dir = (manageddir_t *)data;
@@ -443,10 +443,10 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
       return;
    }
 
-   void *data = dir->GetData();
+   void *data = dir->getData();
 
    // Find the first map in the wad file
-   if(data && dir->GetType() == WadDirectory::MANAGED)
+   if(data && dir->getType() == WadDirectory::MANAGED)
    {
       // if levelname is valid, try to find that particular map
       if(levelname && W_FindLevelInDir(dir, levelname))

@@ -105,7 +105,7 @@ int PatchLoader::getErrorMode() const
 //
 patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
 {
-   return static_cast<patch_t *>(dir.CacheLumpNum(lumpnum, tag, &patchFmt));
+   return static_cast<patch_t *>(dir.cacheLumpNum(lumpnum, tag, &patchFmt));
 }
 
 //
@@ -118,7 +118,7 @@ patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag)
    int lumpnum;
    patch_t *ret;
 
-   if((lumpnum = dir.CheckNumForName(name)) >= 0)
+   if((lumpnum = dir.checkNumForName(name)) >= 0)
       ret = PatchLoader::CacheNum(dir, lumpnum, tag);
    else
       ret = GetDefaultPatch(tag);

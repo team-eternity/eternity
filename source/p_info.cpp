@@ -243,7 +243,7 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    lumpinfo_t  *lump;
    int glumpnum;
 
@@ -485,7 +485,7 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 //
 void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
    lumpinfo_t  *lump;
    int glumpnum;
 
@@ -495,7 +495,7 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
 
    limode = LI_MODE_GLOBAL;
 
-   lump = dir->GetLumpNameChain("EMAPINFO");
+   lump = dir->getLumpNameChain("EMAPINFO");
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
@@ -531,13 +531,13 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
    // problem and to use qstring to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = dir->LumpLength(lumpnum)))
+   if(!(size = dir->lumpLength(lumpnum)))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
-   dir->ReadLump(lumpnum, lump);
+   dir->readLump(lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
@@ -1074,7 +1074,7 @@ static void P_LoadInterTextLump(void)
       
       str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
       
-      wGlobalDir.ReadLump(lumpNum, str);
+      wGlobalDir.readLump(lumpNum, str);
       
       // null-terminate the string
       str[lumpLen] = '\0';

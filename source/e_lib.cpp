@@ -164,7 +164,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t *lump, *inclump;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    int includinglumpnum;
    int i;
 
@@ -315,7 +315,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    int i;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
    // haleyjd 03/18/10: deprecation warning
    E_EDFLoggedWarning(0, "Warning: include_prev is deprecated\n");
@@ -792,7 +792,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      palette = (byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC));
+      palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
 
       *(int *)result = V_FindBestColor(palette, r, g, b);
 

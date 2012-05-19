@@ -337,7 +337,7 @@ void P_InitParticleEffects(void)
    byte *palette;
    struct particleColorList *pc = particleColors;
 
-   palette = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
+   palette = (byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC);
 
    // match particle colors to best fit and write back to
    // static variables

@@ -588,7 +588,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    video.pixelsize = 1;
 
    // Set initial palette
-   SetPalette((byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE));
+   SetPalette((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
 
    return false;
 }

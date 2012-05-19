@@ -723,7 +723,7 @@ static void ST_doPaletteStuff(void)
    if(palette != st_palette)
    {
       st_palette = palette;
-      pal = (byte *)wGlobalDir.CacheLumpNum(lu_palette, PU_CACHE) + palette*768;
+      pal = (byte *)wGlobalDir.cacheLumpNum(lu_palette, PU_CACHE) + palette*768;
       I_SetPalette(pal);
    }
 }
@@ -1309,7 +1309,7 @@ static void ST_Stop(void)
 {
    if(st_stopped)
       return;
-   I_SetPalette((byte *)(wGlobalDir.CacheLumpNum(lu_palette, PU_CACHE)));   
+   I_SetPalette((byte *)(wGlobalDir.cacheLumpNum(lu_palette, PU_CACHE)));   
    st_stopped = true;
 }
 

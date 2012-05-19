@@ -50,7 +50,7 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
       return NULL;
 
    // cache the lump
-   rover = buffer = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
+   rover = buffer = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
    // get sizes
    xsize = SwapLong(*(int32_t *)rover);

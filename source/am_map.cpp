@@ -619,7 +619,7 @@ static void AM_loadPics(void)
    if((lumpnum = W_CheckNumForName("AUTOPAGE")) != -1)
    {
       int size = W_LumpLength(lumpnum);
-      byte *autopage = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
+      byte *autopage = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
       int height = size / SCREENWIDTH;
 
       // allocate backdrop

@@ -145,7 +145,7 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
 
       // haleyjd: this should always be called (if lump is already loaded,
       // wGlobalDir.CacheLumpNum handles that for us).
-      data = (byte *)wGlobalDir.CacheLumpNum(lump, PU_STATIC);
+      data = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
 
       // Check the header, and ensure this is a valid sound
       if(data[0] != 0x03 || data[1] != 0x00)
@@ -857,7 +857,7 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
    if(lump == -1)
       lump = W_GetNumForName(GameModeInfo->defSoundName);
    
-   wGlobalDir.CacheLumpNum(lump, PU_CACHE);
+   wGlobalDir.cacheLumpNum(lump, PU_CACHE);
 }
 
 //

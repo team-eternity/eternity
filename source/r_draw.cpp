@@ -1059,7 +1059,7 @@ void R_InitTranslationTables(void)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 
-      translationtables[i] = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_RENDERER));
+      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_RENDERER));
    }
 }
 

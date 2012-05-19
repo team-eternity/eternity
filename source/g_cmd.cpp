@@ -288,7 +288,7 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(wGlobalDir.CheckNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
+   if(wGlobalDir.checkNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
    {
       C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
       return;

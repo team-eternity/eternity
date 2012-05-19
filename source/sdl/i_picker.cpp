@@ -95,10 +95,10 @@ static void I_Pick_LoadGfx(void)
 {
    int lumpnum;
 
-   if((lumpnum = pickwad.CheckNumForName("FRAME")) != -1)
+   if((lumpnum = pickwad.checkNumForName("FRAME")) != -1)
    {
       VPNGImage png;
-      void *lump = pickwad.CacheLumpNum(lumpnum, PU_STATIC);
+      void *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
       
       if(png.readImage(lump))
       {
@@ -122,10 +122,10 @@ static void I_Pick_LoadIWAD(int num)
 
    lumpname = iwadPicNames[num];
 
-   if((lumpnum = pickwad.CheckNumForName(lumpname)) != -1)
+   if((lumpnum = pickwad.checkNumForName(lumpname)) != -1)
    {
       VPNGImage png;
-      void *lump = pickwad.CacheLumpNum(lumpnum, PU_STATIC);
+      void *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
 
       if(png.readImage(lump))
       {
@@ -157,7 +157,7 @@ static bool I_Pick_OpenWad(void)
    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   if(pickwad.AddNewFile(filename))
+   if(pickwad.addNewFile(filename))
       return false;
 
    return true;
@@ -174,7 +174,7 @@ static bool I_Pick_OpenWad(void)
 static void I_Pick_FreeWad(void)
 {
    // close the wad file if it is open
-   pickwad.Close();
+   pickwad.close();
 }
 
 static void I_Pick_FreeImages(void)
