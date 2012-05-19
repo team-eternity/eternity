@@ -1048,7 +1048,7 @@ void R_InitTranslationTables(void)
    numtranslations = TRANSLATIONCOLOURS + numtlumps;
 
    // allocate the array of pointers
-   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER);
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)

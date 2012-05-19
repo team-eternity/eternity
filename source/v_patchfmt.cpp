@@ -45,6 +45,7 @@ patch_t *PatchLoader::GetDefaultPatch(int tag)
 {
    static bool firsttime;
    static byte patchdata[4];
+   static void *dumbUser;    // must pass a user in case tag == PU_CACHE
    
    if(firsttime)
    {
@@ -53,7 +54,7 @@ patch_t *PatchLoader::GetDefaultPatch(int tag)
       firsttime = false;
    }
 
-   return V_LinearToPatch(patchdata, 2, 2, NULL, tag);
+   return V_LinearToPatch(patchdata, 2, 2, NULL, tag, &dumbUser);
 }
 
 //
