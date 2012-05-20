@@ -2543,13 +2543,13 @@ CONSOLE_COMMAND(mn_hud, 0)
 
 static menuitem_t mn_statusbar_items[] =
 {
-   {it_title,      FC_GOLD "status bar",           NULL,           "m_stat"},
+   {it_title,      FC_GOLD "Status Bar",           NULL,           "M_STATUS"},
    {it_gap},
    {it_toggle,     "numbers always red",           "st_rednum"},
    {it_toggle,     "percent sign grey",            "st_graypct"},
    {it_toggle,     "single key display",           "st_singlekey"},
    {it_gap},
-   {it_info,       FC_GOLD "status bar colours"},
+   {it_info,       FC_GOLD "Status Bar Colors"},
    {it_variable,   "ammo ok percentage",           "ammo_yellow"},
    {it_variable,   "ammo low percentage",          "ammo_red"},
    {it_gap},
