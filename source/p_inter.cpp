@@ -364,6 +364,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       return;
 
    // Identify by sprite.
+   // INVENTORY-TODO: inventory.
+   /*
    switch(pickupfx[special->sprite])
    {
       // armor
@@ -825,6 +827,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // I_Error("P_SpecialThing: Unknown gettable thing");
       return;      // killough 12/98: suppress error message
    }
+   */
 
    // sf: display message using player_printf
    if(message)

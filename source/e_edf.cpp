@@ -1253,61 +1253,8 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
 //
 static void E_ProcessItems(cfg_t *cfg)
 {
-   static int oldnumsprites;
-   int i, numnew, numpickups;
-
-   E_EDFLogPuts("\t* Processing pickup items\n");
-
-   // allocate and initialize pickup effects array
-   // haleyjd 11/21/11: allow multiple runs
-   numnew = NUMSPRITES - oldnumsprites;
-   if(numnew > 0)
-   {
-      pickupfx = erealloc(int *, pickupfx, NUMSPRITES * sizeof(int));
-      for(i = oldnumsprites; i < NUMSPRITES; i++)
-         pickupfx[i] = PFX_NONE;
-      oldnumsprites = NUMSPRITES;
-   }
-
-   // sanity check
-   if(!pickupfx)
-      E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
-   
-   // load pickupfx
-   numpickups = cfg_size(cfg, SEC_PICKUPFX);
-   E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
-   for(i = 0; i < numpickups; ++i)
-   {
-      int fxnum, sprnum;
-      cfg_t *sec = cfg_getnsec(cfg, SEC_PICKUPFX, i);
-      const char *title = cfg_title(sec);
-      const char *pfx = cfg_getstr(sec, ITEM_PICKUPFX);
-
-      // validate the sprite name given in the section title and
-      // resolve to a sprite number (hashed)
-      sprnum = E_SpriteNumForName(title);
-
-      if(sprnum == -1)
-      {
-         // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
-         E_EDFLoggedWarning(2,
-            "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
-            title);
-         sprnum = blankSpriteNum;
-      }
-
-      // find the proper pickup effect number (linear search)
-      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, pfx);
-      if(fxnum == PFX_NUMFX)
-      {
-         E_EDFLoggedErr(2, "E_ProcessItems: invalid pickup effect: '%s'\n", pfx);
-      }
-      
-      E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
-                     title, sprnum, pfx, fxnum);
-
-      pickupfx[sprnum] = fxnum;
-   }
+   unsigned int numpickups = cfg_size(cfg, SEC_PICKUPFX);
+   E_EDFLogPrintf("\t* %d pickup item(s) ignored (obsolete)\n", numpickups);
 }
 
 // haleyjd 04/13/08: this replaces S_sfx[0].

@@ -1,4 +1,368 @@
 ================================================================================
+Changes since Eternity Engine v3.40.20
+================================================================================
+--------------------------------------------------------------------------------
+05/19/12
+
+I have finally gotten around to renaming all the methods of WadDirectory to
+conform to Eternity's style guidelines for static and non-static class methods.
+
+Note that development is now gearing up on inventory-branch to finish the work
+earlier began on edf3-branch.
+
+--------------------------------------------------------------------------------
+05/18/12
+
+Not long after adding PatchLoader::GetDefaultPatch, I realized that it was 
+incorrect via allowing allocation of patches at PU_CACHE without passing in an
+owner pointer for them. If Eternity ever actually freed PU_CACHE blocks
+(currently such are never freed unless system malloc() returns NULL, which is
+an extreme rarity on modern operating systems and machines), this would have
+caused a Z_ChangeTag or Z_Free error about missing owners for cacheable blocks.
+
+The solution is to assign such cached default patches a dummy user, since there
+is no cache pointer for them to use in the WAD system, and the user will never
+be accessed or used for anything anyways - GetDefaultPatch returns a newly
+allocated dummy patch on each call regardless. The dummy user is just a static
+void pointer declared inside PatchLoader::GetDefaultPatch, which is passed down
+to Z_Calloc via the ecalloctag macro in V_LinearToPatch.
+
+--------------------------------------------------------------------------------
+05/09/12
+
+I have added runtime_cast<T> for provision of a generic dynamic_cast equivalent
+for RTTIObject descendants. Thinkers should continue to use thinker_cast,
+however, since it additionally checks if the object is removed before returning
+a non-NULL pointer value.
+
+--------------------------------------------------------------------------------
+05/08/12
+
+The rttiTypes hash chains don't need to be dynamically allocated at runtime; 
+instead they can be part of the static array. I have no idea why I chose to
+implement them this way in the original ThinkerType code.
+
+--------------------------------------------------------------------------------
+05/07/12
+
+The ZDoom code license (aka BSD) has been added into the source code itself at
+the top of modules that contain ZDoom code, and in some cases, directly above
+the section that contains the code when it is limited to one section of a given
+file.
+
+--------------------------------------------------------------------------------
+05/06/12
+
+The entire MetaObject hierarchy is now retrofitted to take advantage of 
+inheritance from RTTIObject, replacing the limited MetaObject::isKindOf facility
+with full RTTI.
+
+--------------------------------------------------------------------------------
+05/03/12
+
+In preparation for application of RTTIObject to the MetaObject hierarchy, I have
+added thorough documentation to the module and its header.
+
+--------------------------------------------------------------------------------
+04/22/12
+
+Ladna fixed one more problem caused by command batches which assumed all
+commands have a variable_t and could cause a segmentation violation when certain
+console commands were executed via a keybinding.
+
+I have merged in DavidPH's patch to convert ThinkerType into RTTIObject, a 
+generic ZoneObject descendant which offers all inheriting types the same custom
+RTTI functionalities of the previous implementation. This will allow other
+ZoneObjects to have factory construction, fast runtime casting, and inheritance
+reflection capabilities.  This will more than likely be applied to the 
+MetaObject hierarchy almost immediately.
+
+At essel's recommendation I have changed the defaults of several variables, 
+including d_fastrefresh, to offer better out-of-the-box behavior of the engine.
+Most of these settings are ones which modernize the behavior of the program or
+avoid some common glitches under Windows.
+
+--------------------------------------------------------------------------------
+04/16/12
+
+By popular demand, I have added a BDListItem<T> template class which offers
+generic bi-directional double-linked list functionality in a vein similar to
+DLListItem<T>'s non-bi-directional linkage ability.
+
+--------------------------------------------------------------------------------
+04/14/12
+
+Ladna fixed MORE keybinding bugs, and added command batches.
+
+--------------------------------------------------------------------------------
+04/11/12
+
+M_NormalizeSlashes now has support for UNC paths, which are used in SMB 
+networking (ie., \\host\path) - such paths are notable for not supporting use
+of POSIX path component separator characters.
+
+I have also added numerous file path manipulation routines to qstring:
+
+  * pathConcatenate
+  
+    This will concatenate two strings assuming they are path components, adding
+    in the proper separator and then calling normalizeSlashes to ensure that
+    there are no redundant separators.
+    
+  * addDefaultExtension
+  
+    If the string does not seem to end with a filename extension already, this
+    routine will concatenate a provided default extension with the string.
+    
+  * extractFileBase
+  
+    This routine will return the last component of a path, which is either a 
+    file name or the most-derived directory.
+    
+I rewrote some code in d_main to test out these routines and to clean up the
+code in question.
+
+--------------------------------------------------------------------------------
+04/08/12
+
+Ladna has fixed yet more keybinding issues, and has tweaked the concept of
+repeatability so that it applies in a universally consistent manner.
+
+--------------------------------------------------------------------------------
+04/07/12
+
+My recent change to the main menus required the default items to be changed.
+
+An additional fallback behavior has been added to the /user directory before
+the game gives up and tries to write to /base, which is checking for the
+base/../user directory's existence first. Under Windows at least, this will
+almost always find the user directory without it having to be explicitly 
+specified alongside an explicitly specified base.
+
+So now, for example, assuming this directory structure:
+
+  /base
+  /user
+  /vc2008
+  
+then this command line:
+
+  vc2008> debug\eternity.exe -base ../base
+  
+will find the user directory which is one level up from the vc2008 directory.
+Notably this is how the Visual Studio environment launches the program, so this
+is of particular use to me ;)
+
+Ladna identified and fixed some more glitches in his new keybindings system.
+
+I have rewritten the DOOMWADPATH code in d_main to use a PODCollection<char *>
+instead of an ad hoc reallocating array.
+
+--------------------------------------------------------------------------------
+04/01/12
+
+I eliminated the stack used in cam_sight, as it was unnecessary and was wrong,
+since it ran the risk of iterator invalidation if the stack was reallocated
+during recursive execution.
+
+The ZDoom Anywhere Moo fixes have been applied to the LOS check algorithm.
+
+--------------------------------------------------------------------------------
+03/31/12
+
+I have added a new module, cam_sight.cpp, for holding "camera" line-of-sight
+checking, which has no effect on the playsim and is fully re-entrant. This 
+should be suitable for allowing the external view cam in "cool demo" mode to
+test whether or not it can still see the player from its viewpoint.
+
+Because it is based directly on the early Doom 1.2/Heretic tracer-based LOS
+algorithm, it still needs ZDoom's fix for the "Anywhere Moo" bug applied to it,
+otherwise it will arbitrarily see through walls in certain cases.
+
+As part of this project, I have added STL-compatible iterator semantics to
+BaseCollection<T>, so that all EE collections now have begin() and end() 
+methods, and an ::iterator typedef.
+
+--------------------------------------------------------------------------------
+03/29/12
+
+Ladna merged in some of his new m_queue functions from CS branch.
+
+--------------------------------------------------------------------------------
+03/22/12
+
+DavidPH contributed another patch eliminating all instances in GCC of warnings
+about char * variables being assigned the values of character constants at
+compile time.
+
+After printz reported strange behavior out of EHashTable after its rebuild
+method had been called, whereby lookups would suddenly start to fail for objects
+known to have been in the table before the rebuild, I immediately caught a 
+glaring logical error that has been present in this code since its original
+conception in C - objects would be linked into the wrong chains during the
+rebuild process courtesy of an incorrect assumption that objects which started
+out in the same chain under the previous hash table size would end up in the
+same chains together under the new hash table size.
+
+This is tantamount to stating that if A % C == B % C, then A % D == B % D for
+any A, B, C, D. If this were true, then the entire universe would likely 
+collapse into a singularity :P  The fix requires an O(N) lookaside of hash
+table chain end pointers to be temporarily allocated for the rebuild process,
+instead of always inserting objects at the end of the current chain being
+rebuilt.
+
+--------------------------------------------------------------------------------
+03/19/12
+
+I had to make another minor correction to the logic in PODCollection, as my
+previous change had an off-by-one error, again noticed by printz.
+
+--------------------------------------------------------------------------------
+03/12/12
+
+DavidPH fixed a problem in the CMake script which caused the OpenGL library to
+be searched for repeatedly, and Ladna merged in the patch.
+
+--------------------------------------------------------------------------------
+03/10/12
+
+My earlier change to enable the autoaim setting to disable autoaiming of tracers
+didn't take into account the fact that P_AimLineAttack *must* be called before
+P_LineAttack, otherwise undefined and unexpected behaviors are possible. It is
+therefore now called even if autoaim is off, but the results of its call are
+ignored in that case.
+
+A critical error in PODCollection::assign was caught by printz, who noticed that
+it didn't reallocate properly. This was capable of causing crashes when code
+was added to the engine assigning PODCollections to each other.
+
+--------------------------------------------------------------------------------
+02/29/12
+
+Long-standing end-user request fulfilled: drag-and-drop support for a single 
+.LMP file, which will be unconditionally treated as if it is a demo to load
+and play in singledemo mode.
+
+I fixed a bug where -playdemo would not autostart the demo. This was a result of
+code that is an ugly mess in d_main.cpp, doing the same thing in two different
+locations. BOOM Team... >_<
+
+--------------------------------------------------------------------------------
+02/21/12
+
+Drawing of the Select Episode and New Game menus in DOOM has been made 100%
+vanilla-compatible.
+
+--------------------------------------------------------------------------------
+02/18/12
+
+While passing over the P_ChangeThingHeights routine, I just happened to realize
+it had a bug where it would restore a thing's original or "correct 3D" height
+even if the thing's height was equal to *neither* of those values; ie., a 
+monster that has died or has been crushed.
+
+BOOM's use_traditional_menu option is no more. It has been utterly stamped out,
+and Eternity instead now always uses the traditional main menu, which is 100%
+vanilla compatible.
+
+--------------------------------------------------------------------------------
+02/11/12
+
+I have eliminated a problem caused by earlier changes to M_Responder which
+caused all alphanumeric input to be double-echoed into input fields such as the
+save game menu.
+
+Savegames were still accidentally being saved into /base/<game> instead of
+/user/<game>.
+
+A long-standing TODO has been eliminated via changing the game border to redraw
+every frame, removing the requirement of erasing all HUD graphics and recopying
+dirty portions from the game border back buffer. "redrawborder" is no more!
+
+The menu shouldn't capture key-up events; otherwise, strange things happen when
+you transition from in-game to menus or vice versa, involving such things as the
+player continuing to run without any buttons being held down.
+
+Ladna is making some changes to keybindings to improve the non-repeatable
+behavior of some menu actions.
+
+--------------------------------------------------------------------------------
+02/06/12
+
+Ladna found a rare crashing problem when the game would try to flash the IO disk
+indicator during the process of changing resolutions.
+
+--------------------------------------------------------------------------------
+02/05/12
+
+I have added support for substitution of a runtime-generated 4-pixel 
+checkerboard graphic when screen patches are found to be missing from the wad
+directory.
+
+A lot of code in the engine still does independent checks or caches lump numbers
+however, so for this feature to be of universal benefit, all of those code
+points will need to be refactored eventually. Screen patches are one of the
+last resources which the game engine will not tolerate when missing. It would
+help Hexen and Strife development go a lot faster later if this is eliminated
+as a factor.
+
+Partially at Ladna's request and with several other peoples' suggestions taken
+into mind, I have split Eternity's /base directory into /base and /user,
+following the design of idTech 2, with /base retaining all read-only files such
+as WADs, EDFs, etc., and with writable files moving into /user as their 
+preferred location - CFGs, CSCs, save games, DAT files, screenshots, etc.
+
+This is of massive benefit to CS branch, and also to the Linux install process.
+
+-user is now supported as a command-line parameter, and the environment var
+ETERNITYUSER can point to a global path to use.
+
+--------------------------------------------------------------------------------
+02/04/12
+
+Ladna has pretty much finished his new keybindings system.
+
+I made a change to qstring::charAt so that it can again be this-const.
+
+Due to increasing difficulties with merges and trunk development, edf3-branch
+has been prematurely terminated and merged back into trunk, without inventory
+completed. Development of those features will soon resume on a new 
+inventory-branch which I intend to keep on task.
+
+--------------------------------------------------------------------------------
+01/31/12
+
+Ladna has started work on back-porting and redesigning his enhanced key binding
+features from cs-branch into trunk.
+
+Ladna also added an enhanced spy mode (F12 in co-op) which allows scanning 
+through the player bi-directionally.
+
+--------------------------------------------------------------------------------
+01/30/12
+
+M_StrCaseStr needed to use the portable pstrnlen rather than strnlen, which is
+not standard and isn't available on some flavors of GCC.
+
+Polyobject static init line types 348 and 349 needed to be supported as implicit
+ExtraData linedef specials when used directly in DOOM-format maps. They're not
+technically parameterized lines at runtime and that's why they weren't 
+previously being handled.
+
+--------------------------------------------------------------------------------
+01/25/12
+
+Ladna imported some mouse acceleration, sensitivity, and reading code from CS
+branch.
+
+--------------------------------------------------------------------------------
+12/30/11
+
+In an attempt to resolve the strange bright white initial appearance of EE's
+frame buffer when starting up in OpenGL mode, I added code to initialize PBO 0
+to all-black.
+
+================================================================================
 Changes since Eternity Engine v3.40.15
 ================================================================================
 --------------------------------------------------------------------------------
