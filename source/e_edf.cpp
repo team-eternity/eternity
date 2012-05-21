@@ -115,7 +115,7 @@
 #define ITEM_PLAYERSPRITE "playersprite"
 #define ITEM_BLANKSPRITE  "blanksprite"
 
-// Sprite pick-up effects
+// Sprite pick-up effects (obsolete)
 #define SEC_PICKUPFX  "pickupitem"
 #define ITEM_PICKUPFX "effect"
 
@@ -145,77 +145,6 @@
 // sprite variables (global)
 
 int blankSpriteNum;
-
-// pickup variables
-
-// pickup effect names (these are currently searched linearly)
-// matching enum values are defined in e_edf.h
-
-const char *pickupnames[PFX_NUMFX] =
-{
-   "PFX_NONE",
-   "PFX_GREENARMOR",
-   "PFX_BLUEARMOR",
-   "PFX_POTION",
-   "PFX_ARMORBONUS",
-   "PFX_SOULSPHERE",
-   "PFX_MEGASPHERE",
-   "PFX_BLUEKEY",
-   "PFX_YELLOWKEY",
-   "PFX_REDKEY",
-   "PFX_BLUESKULL",
-   "PFX_YELLOWSKULL",
-   "PFX_REDSKULL",
-   "PFX_STIMPACK",
-   "PFX_MEDIKIT",
-   "PFX_INVULNSPHERE",
-   "PFX_BERZERKBOX",
-   "PFX_INVISISPHERE",
-   "PFX_RADSUIT",
-   "PFX_ALLMAP",
-   "PFX_LIGHTAMP",
-   "PFX_CLIP",
-   "PFX_CLIPBOX",
-   "PFX_ROCKET",
-   "PFX_ROCKETBOX",
-   "PFX_CELL",
-   "PFX_CELLPACK",
-   "PFX_SHELL",
-   "PFX_SHELLBOX",
-   "PFX_BACKPACK",
-   "PFX_BFG",
-   "PFX_CHAINGUN",
-   "PFX_CHAINSAW",
-   "PFX_LAUNCHER",
-   "PFX_PLASMA",
-   "PFX_SHOTGUN",
-   "PFX_SSG",
-   "PFX_HGREENKEY",
-   "PFX_HBLUEKEY",
-   "PFX_HYELLOWKEY",
-   "PFX_HPOTION",
-   "PFX_SILVERSHIELD",
-   "PFX_ENCHANTEDSHIELD",
-   "PFX_BAGOFHOLDING",
-   "PFX_HMAP",
-   "PFX_GWNDWIMPY",
-   "PFX_GWNDHEFTY",
-   "PFX_MACEWIMPY",
-   "PFX_MACEHEFTY",
-   "PFX_CBOWWIMPY",
-   "PFX_CBOWHEFTY",
-   "PFX_BLSRWIMPY",
-   "PFX_BLSRHEFTY",
-   "PFX_PHRDWIMPY",
-   "PFX_PHRDHEFTY",
-   "PFX_SKRDWIMPY",
-   "PFX_SKRDHEFTY",
-   "PFX_TOTALINVIS",
-};
-
-// pickupfx lookup table used in P_TouchSpecialThing (is allocated
-// with size NUMSPRITES)
-int *pickupfx = NULL;
 
 // function prototypes for libConfuse callbacks (aka EDF functions)
 
@@ -257,7 +186,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 // EDF libConfuse option structures
 //
 
-// sprite-based pickup items
+// sprite-based pickup items (obsolete)
 static cfg_opt_t pickup_opts[] =
 {
    CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
@@ -1250,6 +1179,8 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
 // Allocates the pickupfx array used in P_TouchSpecialThing,
 // and loads all pickupitem definitions, using the sprite hash
 // table to resolve what sprite owns the specified effect.
+//
+// Note: Obsoleted by EDF inventory.
 //
 static void E_ProcessItems(cfg_t *cfg)
 {

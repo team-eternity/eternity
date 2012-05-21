@@ -359,10 +359,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    if(toucher->health <= 0)
       return;
 
-   // haleyjd 05/11/03: EDF pickups modifications
-   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
-      return;
-
    // Identify by sprite.
    // INVENTORY-TODO: inventory.
    /*
