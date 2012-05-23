@@ -1,0 +1,30 @@
+===============================================================================
+This log contains a summary  of changes performed on inventory-branch to 
+add dynamic inventory and weapons support. inventory-branch spans SVN revisions
+from 2030 to ????.
+===============================================================================
+-------------------------------------------------------------------------------
+05/21/2012
+
+I removed all the dead code for pickupfx that resulted from the previous
+revision and merged in changes from trunk.
+
+-------------------------------------------------------------------------------
+05/20/2012
+
+I have kicked off inventory-branch with the previously planned redaction of the
+pickup effects array feature in EDF used to bind item effects to sprite names.
+It was determined that no extant working modifications for Eternity made use of
+this misfeature, and so removing it will not represent a compatibility issue.
+For now it is still syntactically accepted, and could in fact be restored in
+the future if I find it easy enough, but right now I'm not making special plans
+to accomodate it.
+
+This has disabled all SPECIAL item behaviors on this branch for the time being.
+You are still able to collect items, but they do nothing - no effects, no
+messages, no palette flash, and no sound. All of these are basic inventory item
+properties that need to be retrieved from EDF.
+
+===============================================================================
+EOF
+===============================================================================
