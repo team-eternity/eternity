@@ -38,6 +38,7 @@
 #include "e_hash.h"
 #include "e_lib.h"
 #include "e_inventory.h"
+#include "e_metaitems.h"
 
 static unsigned int numInventoryDefs;
 
@@ -126,6 +127,9 @@ cfg_opt_t edf_invdelta_opts[] =
 // inv_pstack: used by recursive E_ProcessInventory to track inheritance
 static inventory_t **inv_pstack  = NULL;
 static unsigned int inv_pindex  = 0;
+
+// Properties for meta item classes
+IMPLEMENT_RTTI_TYPE(MetaGiveItem)
 
 //=============================================================================
 //

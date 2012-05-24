@@ -1316,6 +1316,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\e_metaitems.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\e_metastate.h"
 						>
 					</File>

@@ -134,6 +134,9 @@ int UnknownThingType;
 // Pain/Death Properties
 #define ITEM_TNG_BLOODCOLOR   "bloodcolor"
 #define ITEM_TNG_NUKESPEC     "nukespecial"
+
+// Inventory Items and Drops
+#define ITEM_TNG_GIVEITEM     "giveitem"
 #define ITEM_TNG_DROPTYPE     "droptype"
 
 // Flags
@@ -176,20 +179,20 @@ int UnknownThingType;
 
 static dehflags_t particlefx[] =
 {
-   { "ROCKET",         FX_ROCKET },
-   { "GRENADE",        FX_GRENADE },
-   { "FLIES",          FX_FLIES },
-   { "BFG",            FX_BFG },
-   { "FLIESONDEATH",   FX_FLIESONDEATH },
-   { "DRIP",           FX_DRIP },
-   { "REDFOUNTAIN",    FX_REDFOUNTAIN },
-   { "GREENFOUNTAIN",  FX_GREENFOUNTAIN },
-   { "BLUEFOUNTAIN",   FX_BLUEFOUNTAIN },
+   { "ROCKET",         FX_ROCKET         },
+   { "GRENADE",        FX_GRENADE        },
+   { "FLIES",          FX_FLIES          },
+   { "BFG",            FX_BFG            },
+   { "FLIESONDEATH",   FX_FLIESONDEATH   },
+   { "DRIP",           FX_DRIP           },
+   { "REDFOUNTAIN",    FX_REDFOUNTAIN    },
+   { "GREENFOUNTAIN",  FX_GREENFOUNTAIN  },
+   { "BLUEFOUNTAIN",   FX_BLUEFOUNTAIN   },
    { "YELLOWFOUNTAIN", FX_YELLOWFOUNTAIN },
    { "PURPLEFOUNTAIN", FX_PURPLEFOUNTAIN },
-   { "BLACKFOUNTAIN",  FX_BLACKFOUNTAIN },
-   { "WHITEFOUNTAIN",  FX_WHITEFOUNTAIN },
-   { NULL,             0 }
+   { "BLACKFOUNTAIN",  FX_BLACKFOUNTAIN  },
+   { "WHITEFOUNTAIN",  FX_WHITEFOUNTAIN  },
+   { NULL,             0                 }
 };
 
 static dehflagset_t particle_flags =
@@ -452,6 +455,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_OBIT2,         "NONE",    CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_BLOODCOLOR,    0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_NUKESPEC,      "NULL",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_GIVEITEM,      "",        CFGF_MULTI               ), \
    CFG_STR(   ITEM_TNG_DROPTYPE,      "NONE",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_CFLAGS,        "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_ADDFLAGS,      "",        CFGF_NONE                ), \
@@ -1097,6 +1101,11 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
    }
 }
 
+//=============================================================================
+//
+// DECORATE States
+//
+
 //
 // E_IsMobjInfoDescendantOf
 //
@@ -1153,29 +1162,28 @@ void E_SplitTypeAndState(char *src, char **type, char **state)
 //
 static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
 {
-   int i;
-
-   for(i = 0; i < dso->numgotos; ++i)
+   for(int i = 0; i < dso->numgotos; i++)
    {
       mobjinfo_t *type = NULL;
-      state_t *state;
-      statenum_t statenum;
-      char *statename = NULL;
+      state_t    *state;
+      statenum_t  statenum;
+      char       *statename = NULL;
+      egoto_t    *theGoto = &(dso->gotos[i]);
 
       // see if the label contains a colon, and if so, it may be an
       // access to an inherited state
-      char *colon = strchr(dso->gotos[i].label, ':');
+      char *colon = strchr(theGoto->label, ':');
 
       if(colon)
       {
          char *typestr = NULL;
 
-         E_SplitTypeAndState(dso->gotos[i].label, &typestr, &statename);
+         E_SplitTypeAndState(theGoto->label, &typestr, &statename);
 
          if(!(typestr && statename))
          {
             // error, set to null state
-            *(dso->gotos[i].nextstate) = NullStateNum;
+            *(theGoto->nextstate) = NullStateNum;
             continue;
          }
 
@@ -1192,13 +1200,13 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
          // thingtype - it may be a state acquired through inheritance, for
          // example, and is thus not defined within the thingtype's state block.
          type = mi;
-         statename = dso->gotos[i].label;
+         statename = theGoto->label;
       }
 
       if(!type)
       {
          // error; set to null state and continue
-         *(dso->gotos[i].nextstate) = NullStateNum;
+         *(theGoto->nextstate) = NullStateNum;
          continue;
       }
 
@@ -1206,21 +1214,21 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
       if(!(state = E_GetStateForMobjInfo(type, statename)))
       {
          // error; set to null state and continue
-         *(dso->gotos[i].nextstate) = NullStateNum;
+         *(theGoto->nextstate) = NullStateNum;
          continue;
       }
 
-      statenum = state->index + dso->gotos[i].offset;
+      statenum = state->index + theGoto->offset;
 
       if(statenum < 0 || statenum >= NUMSTATES)
       {
          // error; set to null state and continue
-         *(dso->gotos[i].nextstate) = NullStateNum;
+         *(theGoto->nextstate) = NullStateNum;
          continue;
       }
 
       // resolve the goto
-      *(dso->gotos[i].nextstate) = statenum;
+      *(theGoto->nextstate) = statenum;
    }
 }
 
@@ -1232,25 +1240,24 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
 //
 static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
 {
-   int i;
-
-   for(i = 0; i < dso->numstates; ++i)
+   for(int i = 0; i < dso->numstates; i++)
    {
       int *nativefield;
+      edecstate_t *decState = &(dso->states[i]);
       
       // first see if this is a native state
-      if((nativefield = E_GetNativeStateLoc(mi, dso->states[i].label)))
-         *nativefield = dso->states[i].state->index;
+      if((nativefield = E_GetNativeStateLoc(mi, decState->label)))
+         *nativefield = decState->state->index;
       else
       {
          MetaState *msnode;
 
          // there is not a matching native field, so add the state as a 
          // metastate
-         if((msnode = E_GetMetaState(mi, dso->states[i].label)))
-            msnode->setValue(dso->states[i].state);
+         if((msnode = E_GetMetaState(mi, decState->label)))
+            msnode->setValue(decState->state);
          else
-            E_AddMetaState(mi, dso->states[i].state, dso->states[i].label);
+            E_AddMetaState(mi, decState->state, decState->label);
       }
    }
 }
@@ -1263,17 +1270,16 @@ static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
 //
 static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
 {
-   int i;
-
-   for(i = 0; i < dso->numkillstates; ++i)
+   for(int i = 0; i < dso->numkillstates; i++)
    {
       int *nativefield;
+      ekillstate_t *killState = &(dso->killstates[i]);
 
       // first see if this is a native state
-      if((nativefield = E_GetNativeStateLoc(mi, dso->killstates[i].killname)))
+      if((nativefield = E_GetNativeStateLoc(mi, killState->killname)))
          *nativefield = NullStateNum;
       else
-         E_RemoveMetaState(mi, dso->killstates[i].killname);
+         E_RemoveMetaState(mi, killState->killname);
    }
 }
 
@@ -1344,6 +1350,7 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
    }
 }
 
+//=============================================================================
 //
 // Damage Factors
 //
@@ -1415,7 +1422,10 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    return 0;
 }
 
+//=============================================================================
+//
 // Thing type inheritance code -- 01/27/04
+//
 
 // thing_hitlist: keeps track of what thingtypes are initialized
 static byte *thing_hitlist = NULL;
@@ -1539,6 +1549,11 @@ static void E_CopyThing(int num, int pnum)
    // force doomednum of inheriting type to -1
    this_mi->doomednum = -1;
 }
+
+//=============================================================================
+//
+// Primary Processing
+//
 
 // IS_SET: this macro tests whether or not a particular field should
 // be set. When applying deltas, we should not retrieve defaults.
