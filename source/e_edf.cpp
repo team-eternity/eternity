@@ -115,10 +115,6 @@
 #define ITEM_PLAYERSPRITE "playersprite"
 #define ITEM_BLANKSPRITE  "blanksprite"
 
-// Sprite pick-up effects (obsolete)
-#define SEC_PICKUPFX  "pickupitem"
-#define ITEM_PICKUPFX "effect"
-
 // Cast call
 #define SEC_CAST             "castinfo"
 #define ITEM_CAST_TYPE       "type"
@@ -186,7 +182,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 // EDF libConfuse option structures
 //
 
-// sprite-based pickup items (obsolete)
+// sprite-based pickup items (for compatibility only)
 static cfg_opt_t pickup_opts[] =
 {
    CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
@@ -1171,21 +1167,6 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
    }
    E_EDFLogPrintf("\t\tSet sprite %s(#%d) as blank sprite\n", str, sprnum);
    blankSpriteNum = sprnum;
-}
-
-//
-// E_ProcessItems
-//
-// Allocates the pickupfx array used in P_TouchSpecialThing,
-// and loads all pickupitem definitions, using the sprite hash
-// table to resolve what sprite owns the specified effect.
-//
-// Note: Obsoleted by EDF inventory.
-//
-static void E_ProcessItems(cfg_t *cfg)
-{
-   unsigned int numpickups = cfg_size(cfg, SEC_PICKUPFX);
-   E_EDFLogPrintf("\t* %d pickup item(s) ignored (obsolete)\n", numpickups);
 }
 
 // haleyjd 04/13/08: this replaces S_sfx[0].

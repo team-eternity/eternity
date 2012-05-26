@@ -29,6 +29,7 @@
 
 #include "d_dehtbl.h" // for dehflags parsing
 #include "doomtype.h"
+#include "info.h"
 #include "metaapi.h"
 
 #define NEED_EDF_DEFINITIONS
@@ -39,6 +40,7 @@
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_metaitems.h"
+#include "e_sprite.h"
 
 static unsigned int numInventoryDefs;
 
@@ -84,6 +86,7 @@ static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
 #define ITEM_INVENTORY_RESPAWNTICS    "respawntics"
 #define ITEM_INVENTORY_GIVEQUEST      "givequest"
 #define ITEM_INVENTORY_FLAGS          "flags"
+#define ITEM_INVENTORY_COMPATNAME     "compatname"
 
 // Class-specific fields
 #define ITEM_HEALTH_AMOUNT            "health.amount"
@@ -109,6 +112,7 @@ static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
    CFG_INT(ITEM_INVENTORY_RESPAWNTICS,         0, CFGF_NONE ), \
    CFG_INT(ITEM_INVENTORY_GIVEQUEST,          -1, CFGF_NONE ), \
    CFG_STR(ITEM_INVENTORY_FLAGS,              "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_COMPATNAME,       NULL, CFGF_NONE ), \
    CFG_INT(ITEM_HEALTH_AMOUNT,                 0, CFGF_NONE ), \
    CFG_INT(ITEM_HEALTH_MAXAMOUNT,              0, CFGF_NONE ), \
    CFG_STR(ITEM_HEALTH_LOWMESSAGE,            "", CFGF_NONE ), \
@@ -135,21 +139,96 @@ static unsigned int inv_pindex  = 0;
 // Properties for meta item classes
 IMPLEMENT_RTTI_TYPE(MetaGiveItem)
 
+//
+// Compatibility stuff
+//
+
+// pickup effect names (these are currently searched linearly)
+// matching enum values are defined in e_inventory.h
+
+const char *pickupnames[PFX_NUMFX] =
+{
+   "PFX_NONE",
+   "PFX_GREENARMOR",
+   "PFX_BLUEARMOR",
+   "PFX_POTION",
+   "PFX_ARMORBONUS",
+   "PFX_SOULSPHERE",
+   "PFX_MEGASPHERE",
+   "PFX_BLUEKEY",
+   "PFX_YELLOWKEY",
+   "PFX_REDKEY",
+   "PFX_BLUESKULL",
+   "PFX_YELLOWSKULL",
+   "PFX_REDSKULL",
+   "PFX_STIMPACK",
+   "PFX_MEDIKIT",
+   "PFX_INVULNSPHERE",
+   "PFX_BERZERKBOX",
+   "PFX_INVISISPHERE",
+   "PFX_RADSUIT",
+   "PFX_ALLMAP",
+   "PFX_LIGHTAMP",
+   "PFX_CLIP",
+   "PFX_CLIPBOX",
+   "PFX_ROCKET",
+   "PFX_ROCKETBOX",
+   "PFX_CELL",
+   "PFX_CELLPACK",
+   "PFX_SHELL",
+   "PFX_SHELLBOX",
+   "PFX_BACKPACK",
+   "PFX_BFG",
+   "PFX_CHAINGUN",
+   "PFX_CHAINSAW",
+   "PFX_LAUNCHER",
+   "PFX_PLASMA",
+   "PFX_SHOTGUN",
+   "PFX_SSG",
+   "PFX_HGREENKEY",
+   "PFX_HBLUEKEY",
+   "PFX_HYELLOWKEY",
+   "PFX_HPOTION",
+   "PFX_SILVERSHIELD",
+   "PFX_ENCHANTEDSHIELD",
+   "PFX_BAGOFHOLDING",
+   "PFX_HMAP",
+   "PFX_GWNDWIMPY",
+   "PFX_GWNDHEFTY",
+   "PFX_MACEWIMPY",
+   "PFX_MACEHEFTY",
+   "PFX_CBOWWIMPY",
+   "PFX_CBOWHEFTY",
+   "PFX_BLSRWIMPY",
+   "PFX_BLSRHEFTY",
+   "PFX_PHRDWIMPY",
+   "PFX_PHRDHEFTY",
+   "PFX_SKRDWIMPY",
+   "PFX_SKRDHEFTY",
+   "PFX_TOTALINVIS",
+};
+
 //=============================================================================
 //
 // Inventory Hashing 
 //
 
-#define NUMINVCHAINS 307
+#define NUMINVCHAINS 257
 
 // hash by name
 static EHashTable<inventory_t, ENCStringHashKey,
-                  &inventory_t::name, &inventory_t::namelinks> inv_namehash(NUMINVCHAINS);
+                  &inventory_t::name, 
+                  &inventory_t::namelinks> inv_namehash(NUMINVCHAINS);
 
 // hash by ID number
 static EHashTable<inventory_t, EIntHashKey,
-                  &inventory_t::numkey, &inventory_t::numlinks> inv_numhash(NUMINVCHAINS);
+                  &inventory_t::numkey, 
+                  &inventory_t::numlinks> inv_numhash(NUMINVCHAINS);
 
+// hash for pickupitem compatibility
+static EHashTable<inventory_t, EIntHashKey,
+                  &inventory_t::compatNum, 
+                  &inventory_t::compatlinks> inv_comphash(NUMINVCHAINS);
 
 //
 // E_InventoryForID
@@ -202,6 +281,16 @@ inventory_t *E_GetInventoryForName(const char *name)
    return inv;
 }
 
+//
+// E_InventoryForCompatNum
+//
+// Returns an inventory definition given a pickupitem compatibility number.
+//
+inventory_t *E_InventoryForCompatNum(int pickupeffect)
+{
+   return inv_comphash.objectForKey(pickupeffect);
+}
+
 //=============================================================================
 //
 // Pre-Processing
@@ -241,11 +330,13 @@ void E_CollectInventory(cfg_t *cfg)
    // build hash tables
    E_EDFLogPuts("\t\tBuilding inventory hash tables\n");
    
-   // cycle through the thingtypes defined in the cfg
+   // cycle through the inventory items defined in the cfg
    for(i = 0; i < numInventory; i++)
    {
       cfg_t *invcfg = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
-      const char *name = cfg_title(invcfg);
+      const char *name       = cfg_title(invcfg);
+      const char *compatName = cfg_getstr(invcfg, ITEM_INVENTORY_COMPATNAME);
+      int compatNum = E_StrToNumLinear(pickupnames, PFX_NUMFX, compatName);
 
       // This is a new inventory, whether or not one already exists by this name
       // in the hash table. For subsequent addition of EDF inventory defs at 
@@ -263,6 +354,13 @@ void E_CollectInventory(cfg_t *cfg)
       // create ID number and add to hash table
       inv->numkey = currentID++;
       inv_numhash.addObject(inv);
+
+      // check for compatibility number
+      if(compatNum > 0 && compatNum < PFX_NUMFX)
+      {
+         inv->compatNum = compatNum;
+         inv_comphash.addObject(inv);
+      }
    }
 }
 
@@ -332,10 +430,12 @@ static void E_ResetInventoryPStack()
 static void E_CopyInventory(inventory_t *child, inventory_t *parent)
 {
    // save out fields that shouldn't be overwritten
-   DLListItem<inventory_t> namelinks = child->namelinks;
-   DLListItem<inventory_t> numlinks  = child->numlinks;
+   DLListItem<inventory_t> namelinks   = child->namelinks;
+   DLListItem<inventory_t> numlinks    = child->numlinks;
+   DLListItem<inventory_t> compatlinks = child->compatlinks;
    char *name      = child->name;
    int   numkey    = child->numkey;
+   int   compatNum = child->compatNum;
    bool  processed = child->processed;
    MetaTable *meta = child->meta;
 
@@ -355,12 +455,14 @@ static void E_CopyInventory(inventory_t *child, inventory_t *parent)
    memcpy(child, parent, sizeof(inventory_t));
 
    // restore saved fields
-   child->namelinks = namelinks;
-   child->numlinks  = numlinks;
-   child->name      = name;
-   child->numkey    = numkey;
-   child->processed = processed;
-   child->meta      = meta;
+   child->namelinks   = namelinks;
+   child->numlinks    = numlinks;
+   child->compatlinks = compatlinks;
+   child->name        = name;
+   child->numkey      = numkey;
+   child->compatNum   = compatNum;
+   child->processed   = processed;
+   child->meta        = meta;
    
    // normalize special fields
    
@@ -394,7 +496,7 @@ static void E_CopyInventory(inventory_t *child, inventory_t *parent)
 #define IS_SET(name) ((def && !inherits) || cfg_size(invsec, (name)) > 0)
 
 //
-// Inventory Subclass Field Processing Routines
+// Inventory Class Processing Routines
 //
 
 //
@@ -447,7 +549,8 @@ static ClassFuncPtr inventoryClasses[INV_CLASS_NUMCLASSES] =
 // For every class the inventory implements, fields will be added by the above
 // processing methods.
 //
-void E_applyInventoryClasses(inventory_t *inv, cfg_t *invsec, bool def, bool inherits)
+static void E_applyInventoryClasses(inventory_t *inv, cfg_t *invsec, bool def, 
+                                    bool inherits)
 {
    unsigned int numClasses = cfg_size(invsec, ITEM_INVENTORY_CLASS);
 
@@ -508,7 +611,8 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
          cfg_t *parent_invsec;
          
          // resolve parent inventory def
-         inventory_t *parent = E_GetInventoryForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
+         inventory_t *parent = 
+            E_GetInventoryForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
 
          // check against cyclic inheritance
          if(!E_CheckInventoryInherit(parent))
@@ -543,7 +647,7 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
 
    // field processing
    
-   if(IS_SET(ITEM_INVENTORY_CLASS))
+   if(cfg_size(invsec, ITEM_INVENTORY_CLASS) > 0)
       E_applyInventoryClasses(inv, invsec, def, inherits);
 
    if(IS_SET(ITEM_INVENTORY_AMOUNT))
@@ -660,6 +764,90 @@ void E_ProcessInventoryDeltas(cfg_t *cfg)
 
       E_EDFLogPrintf("\t\tApplied inventorydelta #%d to %s(#%d)\n",
                      i, inv->name, inv->numkey);
+   }
+}
+
+//=============================================================================
+//
+// Compatibility Stuff
+//
+
+// pickupfx lookup table used in P_TouchSpecialThing (is allocated
+// with size NUMSPRITES)
+inventory_t **pickupfx = NULL;
+
+//
+// E_ProcessItems
+//
+// Allocates the pickupfx array used in P_TouchSpecialThing,
+// and loads all pickupitem definitions, using the sprite hash
+// table to resolve what sprite owns the specified effect.
+//
+void E_ProcessItems(cfg_t *cfg)
+{
+   static int oldnumsprites;
+   int i, numnew, numpickups;
+
+   E_EDFLogPuts("\t* Processing compatibility pickup items\n");
+
+   // allocate and initialize pickup effects array
+   // haleyjd 11/21/11: allow multiple runs
+   numnew = NUMSPRITES - oldnumsprites;
+   if(numnew > 0)
+   {
+      pickupfx = erealloc(inventory_t **, pickupfx, NUMSPRITES * sizeof(inventory_t *));
+      for(i = oldnumsprites; i < NUMSPRITES; i++)
+         pickupfx[i] = NULL;
+      oldnumsprites = NUMSPRITES;
+   }
+
+   // sanity check
+   if(!pickupfx)
+      E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
+   
+   // load pickupfx
+   numpickups = cfg_size(cfg, SEC_PICKUPFX);
+   E_EDFLogPrintf("\t\t%d compatibility pickup item(s) defined\n", numpickups);
+
+   for(i = 0; i < numpickups; ++i)
+   {
+      int fxnum, sprnum;
+      cfg_t *sec = cfg_getnsec(cfg, SEC_PICKUPFX, i);
+      const char *title = cfg_title(sec);
+      const char *pfx = cfg_getstr(sec, ITEM_PICKUPFX);
+      inventory_t *inv;
+
+      // validate the sprite name given in the section title and
+      // resolve to a sprite number (hashed)
+      sprnum = E_SpriteNumForName(title);
+
+      if(sprnum == -1)
+      {
+         // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
+         E_EDFLoggedWarning(2,
+            "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
+            title);
+         continue;
+      }
+
+      // find the proper pickup effect number (linear search)
+      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, pfx);
+
+      // find the proper inventory item to associate with it
+      inv = E_InventoryForCompatNum(fxnum);
+
+      if(inv)
+      {
+         E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
+                        title, sprnum, pfx, fxnum);
+         pickupfx[sprnum] = inv;
+      }
+      else
+      {
+         E_EDFLogPrintf("\t\tClearing pickup effect for sprite %s(#%d)\n",
+                        title, sprnum);
+         pickupfx[sprnum] = NULL;
+      }
    }
 }
 

@@ -66,6 +66,7 @@ struct inventory_t
 {
    // hash links
    DLListItem<inventory_t> namelinks;
+   DLListItem<inventory_t> compatlinks;
    DLListItem<inventory_t> numlinks;
 
    // basic properties
@@ -83,8 +84,9 @@ struct inventory_t
    unsigned int flags;   // basic inventory flags
 
    // fields needed for EDF identification and hashing
-   char *name;           // buffer for name
+   char *name;           // buffer for name   
    int   numkey;         // ID number
+   int   compatNum;      // for pickupitem compatibility
    inventory_t *parent;  // parent record for inheritance
    bool  processed;      // if true, has been processed
    MetaTable *meta;      // metatable
@@ -95,6 +97,7 @@ inventory_t *E_InventoryForID(int idnum);
 inventory_t *E_GetInventoryForID(int idnum);
 inventory_t *E_InventoryForName(const char *name);
 inventory_t *E_GetInventoryForName(const char *name);
+inventory_t *E_InventoryForCompatNum(int pickupeffect);
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -108,7 +111,81 @@ void E_CollectInventory(cfg_t *cfg);
 void E_ProcessInventoryDefs(cfg_t *cfg);
 void E_ProcessInventoryDeltas(cfg_t *cfg);
 
+// Sprite pick-up effects (compatibility only)
+#define SEC_PICKUPFX  "pickupitem"
+#define ITEM_PICKUPFX "effect"
+void E_ProcessItems(cfg_t *cfg);
+
 #endif
+
+// Old stuff, strictly for compatibility
+
+// pickup effects enumeration
+
+enum
+{
+   PFX_NONE,
+   PFX_GREENARMOR,
+   PFX_BLUEARMOR,
+   PFX_POTION,
+   PFX_ARMORBONUS,
+   PFX_SOULSPHERE,
+   PFX_MEGASPHERE,
+   PFX_BLUEKEY,
+   PFX_YELLOWKEY,
+   PFX_REDKEY,
+   PFX_BLUESKULL,
+   PFX_YELLOWSKULL,
+   PFX_REDSKULL,
+   PFX_STIMPACK,
+   PFX_MEDIKIT,
+   PFX_INVULNSPHERE,
+   PFX_BERZERKBOX,
+   PFX_INVISISPHERE,
+   PFX_RADSUIT,
+   PFX_ALLMAP,
+   PFX_LIGHTAMP,
+   PFX_CLIP,
+   PFX_CLIPBOX,
+   PFX_ROCKET,
+   PFX_ROCKETBOX,
+   PFX_CELL,
+   PFX_CELLPACK,
+   PFX_SHELL,
+   PFX_SHELLBOX,
+   PFX_BACKPACK,
+   PFX_BFG,
+   PFX_CHAINGUN,
+   PFX_CHAINSAW,
+   PFX_LAUNCHER,
+   PFX_PLASMA,
+   PFX_SHOTGUN,
+   PFX_SSG,
+   PFX_HGREENKEY,
+   PFX_HBLUEKEY,
+   PFX_HYELLOWKEY,
+   PFX_HPOTION,
+   PFX_SILVERSHIELD,
+   PFX_ENCHANTEDSHIELD,
+   PFX_BAGOFHOLDING,
+   PFX_HMAP,
+   PFX_GWNDWIMPY,
+   PFX_GWNDHEFTY,
+   PFX_MACEWIMPY,
+   PFX_MACEHEFTY,
+   PFX_CBOWWIMPY,
+   PFX_CBOWHEFTY,
+   PFX_BLSRWIMPY,
+   PFX_BLSRHEFTY,
+   PFX_PHRDWIMPY,
+   PFX_PHRDHEFTY,
+   PFX_SKRDWIMPY,
+   PFX_SKRDHEFTY,
+   PFX_TOTALINVIS,
+   PFX_NUMFX
+};
+
+extern inventory_t **pickupfx;
 
 #endif
 
