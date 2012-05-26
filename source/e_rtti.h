@@ -221,8 +221,7 @@ private:
 #define IMPLEMENT_RTTI_TYPE(name) \
 name::Type name::StaticType(#name, &Super::StaticType);
 
-// Inspired by ZDoom :P
-#define RUNTIME_CLASS(cls) (&cls::StaticType)
+#define RTTI(cls) (&cls::StaticType)
 
 //
 // runtime_cast

@@ -36,8 +36,8 @@
 #include "Confuse/confuse.h"
 #include "e_edf.h"
 #include "e_hash.h"
-#include "e_lib.h"
 #include "e_inventory.h"
+#include "e_lib.h"
 #include "e_metaitems.h"
 
 static unsigned int numInventoryDefs;
@@ -86,7 +86,9 @@ static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
 #define ITEM_INVENTORY_FLAGS          "flags"
 
 // Class-specific fields
-#define ITEM_INVENTORY_HEALTHLOW      "health.lowmessage"
+#define ITEM_HEALTH_AMOUNT            "health.amount"
+#define ITEM_HEALTH_MAXAMOUNT         "health.maxamount"
+#define ITEM_HEALTH_LOWMESSAGE        "health.lowmessage"
 
 #define ITEM_DELTA_NAME               "name"
 
@@ -95,19 +97,21 @@ static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
 //
 
 #define INVENTORY_FIELDS \
-   CFG_STR(ITEM_INVENTORY_CLASS,          "None", CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_AMOUNT,              0, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,           0, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,      0, CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_ICON,               "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_PICKUPMESSAGE,      "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_PICKUPSOUND,        "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_PICKUPFLASH,        "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_USESOUND,           "", CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_RESPAWNTICS,         0, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_GIVEQUEST,          -1, CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_FLAGS,              "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_HEALTHLOW,          "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_CLASS,          "None", CFGF_MULTI), \
+   CFG_INT(ITEM_INVENTORY_AMOUNT,              0, CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,           0, CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,      0, CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_ICON,               "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_PICKUPMESSAGE,      "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_PICKUPSOUND,        "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_PICKUPFLASH,        "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_USESOUND,           "", CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_RESPAWNTICS,         0, CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_GIVEQUEST,          -1, CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_FLAGS,              "", CFGF_NONE ), \
+   CFG_INT(ITEM_HEALTH_AMOUNT,                 0, CFGF_NONE ), \
+   CFG_INT(ITEM_HEALTH_MAXAMOUNT,              0, CFGF_NONE ), \
+   CFG_STR(ITEM_HEALTH_LOWMESSAGE,            "", CFGF_NONE ), \
    CFG_END()
 
 cfg_opt_t edf_inv_opts[] =
@@ -416,18 +420,64 @@ static void E_processHealthProperties(inventory_t *inv, cfg_t *invsec,
    if(def && !inherits)
       inv->flags |= INVF_AUTOACTIVATE;
 
+   // amount - amount of health given by the pickup
+   if(IS_SET(ITEM_HEALTH_AMOUNT))
+      E_MetaIntFromCfgInt(inv->meta, invsec, ITEM_HEALTH_AMOUNT);
+
+   // maxamount - limit of healing ability for this item
+   if(IS_SET(ITEM_HEALTH_MAXAMOUNT))
+      E_MetaIntFromCfgInt(inv->meta, invsec, ITEM_HEALTH_MAXAMOUNT);
+
    // lowmessage (may be a BEX string if prefixed with $)
-   if(IS_SET(ITEM_INVENTORY_HEALTHLOW))
-      E_MetaStringFromCfgString(inv->meta, invsec, ITEM_INVENTORY_HEALTHLOW);
+   if(IS_SET(ITEM_HEALTH_LOWMESSAGE))
+      E_MetaStringFromCfgString(inv->meta, invsec, ITEM_HEALTH_LOWMESSAGE);
 }
 
-typedef void (*SubClassFuncPtr)(inventory_t *, cfg_t *, bool, bool);
+typedef void (*ClassFuncPtr)(inventory_t *, cfg_t *, bool, bool);
 
-static SubClassFuncPtr inventorySubClasses[INV_CLASS_NUMCLASSES] = 
+static ClassFuncPtr inventoryClasses[INV_CLASS_NUMCLASSES] = 
 {
    E_processNone,
    E_processHealthProperties
 };
+
+//
+// E_applyInventoryClasses
+//
+// For every class the inventory implements, fields will be added by the above
+// processing methods.
+//
+void E_applyInventoryClasses(inventory_t *inv, cfg_t *invsec, bool def, bool inherits)
+{
+   unsigned int numClasses = cfg_size(invsec, ITEM_INVENTORY_CLASS);
+
+   for(unsigned int i = 0; i < numClasses; i++)
+   {
+      const char *classname = cfg_getnstr(invsec, ITEM_INVENTORY_CLASS, i);
+      int classtype = E_StrToNumLinear(inventoryClassNames, INV_CLASS_NUMCLASSES, classname);
+
+      if(classtype == INV_CLASS_NUMCLASSES)
+      {
+         E_EDFLoggedWarning(2, "Warning: unknown inventory class '%s'\n", classname);
+         classtype = INV_CLASS_NONE;
+      }
+
+#ifdef RANGECHECK
+      if(classtype < 0 || classtype >= INV_CLASS_NUMCLASSES)
+      {
+         // internal sanity check
+         E_EDFLoggedErr(2, "E_ProcessInventory: internal error - bad classtype %d\n", 
+                        classtype);
+      }
+#endif
+
+      // record this class in the metatable
+      inv->meta->addInt("classtype", classtype);
+
+      // process fields for this class
+      inventoryClasses[classtype](inv, invsec, def, inherits);
+   }
+}
 
 //
 // E_ProcessInventory
@@ -494,26 +544,7 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
    // field processing
    
    if(IS_SET(ITEM_INVENTORY_CLASS))
-   {
-      const char *classname = cfg_getstr(invsec, ITEM_INVENTORY_CLASS);
-      int classtype = E_StrToNumLinear(inventoryClassNames, INV_CLASS_NUMCLASSES, classname);
-
-      if(classtype == INV_CLASS_NUMCLASSES)
-      {
-         E_EDFLoggedWarning(2, "Warning: unknown inventory class %s\n", classname);
-         classtype = INV_CLASS_NONE;
-      }
-
-      inv->classtype = classtype;
-   }
-
-#ifdef RANGECHECK
-   if(inv->classtype < 0 || inv->classtype >= INV_CLASS_NUMCLASSES)
-      E_EDFLoggedErr(2, "E_ProcessInventory: internal error - bad classtype %d\n", inv->classtype);
-#endif
-
-   // process subclass fields
-   inventorySubClasses[inv->classtype](inv, invsec, def, inherits);
+      E_applyInventoryClasses(inv, invsec, def, inherits);
 
    if(IS_SET(ITEM_INVENTORY_AMOUNT))
       inv->amount = cfg_getint(invsec, ITEM_INVENTORY_AMOUNT);

@@ -71,7 +71,7 @@ IMPLEMENT_RTTI_TYPE(MetaObject)
 // requires it.
 //
 MetaObject::MetaObject()
-   : RTTIObject(), links(), typelinks(), type(), key()
+   : Super(), links(), typelinks(), type(), key()
 {
    key = key_name = estrdup("default"); // TODO: GUID?
 }
@@ -82,7 +82,7 @@ MetaObject::MetaObject()
 // Constructor for MetaObject when type and/or key are known.
 //
 MetaObject::MetaObject(const char *pKey) 
-   : RTTIObject(), links(), typelinks(), type(), key()
+   : Super(), links(), typelinks(), type(), key()
 {
    key = key_name = estrdup(pKey); // key_name is managed by the metaobject
 }
@@ -93,7 +93,7 @@ MetaObject::MetaObject(const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), type(), key()
+   : Super(), links(), typelinks(), type(), key()
 {
    if(key_name && key_name != other.key_name)
       efree(key_name);
@@ -689,6 +689,24 @@ MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
       if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+
+//
+// MetaTable::getObjectKeyAndType(const char *, MetaObject::Type *)
+//
+// Overload that takes a pointer to a runtime type.
+//
+MetaObject *MetaTable::getObjectKeyAndType(const char *key, MetaObject::Type *rt)
+{
+   MetaObject *obj = NULL;
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(rt))
          break;
    }
 

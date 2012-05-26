@@ -46,18 +46,18 @@ protected:
 
 public:
    // Default constructor
-   MetaGiveItem() : MetaObject(), inventory(NULL)
+   MetaGiveItem() : Super(), inventory(NULL)
    {
    }
 
    // Parameterized constructor
    MetaGiveItem(const char *key, inventory_t *pInv) 
-      : MetaObject(key), inventory(pInv)
+      : Super(key), inventory(pInv)
    {
    }
 
    // Copy constructor
-   MetaGiveItem(const MetaGiveItem &other) : MetaObject(other)
+   MetaGiveItem(const MetaGiveItem &other) : Super(other)
    {
       this->inventory = other.inventory;
    }

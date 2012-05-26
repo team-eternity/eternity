@@ -63,6 +63,7 @@ int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 // MetaTable adapter utilities
 class  MetaTable;
 void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop);
 
 #endif
 

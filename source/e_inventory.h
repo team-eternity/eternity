@@ -69,7 +69,6 @@ struct inventory_t
    DLListItem<inventory_t> numlinks;
 
    // basic properties
-   int   classtype;      // inventory item class
    int   amount;         // amount given on pickup
    int   maxAmount;      // maximum amount that can be carried
    int   interHubAmount; // amount that persists between hubs or non-hub levels

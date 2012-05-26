@@ -4,6 +4,36 @@ add dynamic inventory and weapons support. inventory-branch spans SVN revisions
 from 2030 to ????.
 ===============================================================================
 -------------------------------------------------------------------------------
+05/25/2012
+
+After realizing the various problems that implementation of multiple effects
+per inventory definition would have if implemented in the way that I started
+yesterday, I rewrote that work immediately and have changed the inventory
+definition itself so that it is capable of compositing the effects of multiple
+inventory "classes" via use of the MetaTable in the precise way that it was
+originally conceived - the addition of class types to an inventory definition
+is exactly the same as the amalgamation of multiple prototypes in JavaScript.
+
+To allow this, I have to depart from the ZDoom model further than planned and
+disambiguate the semantically important and non-universal fields of each 
+type. For example, in ZDoom, the Health class reuses the generic inventory
+amount and maxamount to mean different things. Eternity instead now has two
+additional fields known as health.amount and health.maxamount, which only
+ever affect the action of the inventory definition on health. Amount and
+maxamount in the inventory base structure are only for controlling the carrying
+capacity of non-instant-use inventory items.
+
+-------------------------------------------------------------------------------
+05/24/2012
+
+With an eye toward changing the design of inventory to allow multiple effects
+to be applied with the collection or giving of a single item, I have defined a
+new MetaObject called MetaGiveItem. My plan is to allow any number of these
+records to attach to a thingtype or sprite. I added a giveitem property to the
+EDF thingtype record, with the CFGF_MULTI flag set to allow any number of them
+to be defined.
+
+-------------------------------------------------------------------------------
 05/21/2012
 
 I removed all the dead code for pickupfx that resulted from the previous

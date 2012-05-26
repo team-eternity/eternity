@@ -890,6 +890,18 @@ void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
 }
 
 //
+// E_MetaIntFromCfgInt
+//
+// Utility function.
+// Adds a MetaInteger property to the passed-in table with the same name and
+// value as the cfg_t property
+//
+void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   meta->setInt(prop, cfg_getint(cfg, prop));
+}
+
+//
 // E_GetHeredocLine
 //
 // Finds the start of the next line in the string, and modifies the string with

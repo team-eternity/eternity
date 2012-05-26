@@ -41,7 +41,9 @@
 #include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "e_lib.h"
+#include "e_metaitems.h"
 #include "e_metastate.h"
 #include "e_mod.h"
 #include "e_sound.h"
@@ -455,7 +457,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_OBIT2,         "NONE",    CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_BLOODCOLOR,    0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_NUKESPEC,      "NULL",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_GIVEITEM,      "",        CFGF_MULTI               ), \
+   CFG_STR(   ITEM_TNG_GIVEITEM,      "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_DROPTYPE,      "NONE",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_CFLAGS,        "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_ADDFLAGS,      "",        CFGF_NONE                ), \
@@ -869,7 +871,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
    MetaObject *obj;
 
-   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
 }
 
@@ -884,7 +886,7 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
    MetaObject *obj = NULL;
    MetaState  *ret = NULL;
    
-   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       ret = static_cast<MetaState *>(obj);
 
    return ret;
@@ -1098,6 +1100,59 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 
          E_RemoveMetaState(mi, E_ModFieldName(base, mod));
       }
+   }
+}
+
+//=============================================================================
+//
+// Give Items 
+//
+// haleyjd 05/24/2012: A giveitem determines the inventory effect that a thing
+// types has when collected via the MF_SPECIAL pickup mechanism.
+//
+
+//
+// E_setGiveItem
+//
+// Set the giveitem metaproperty.
+//
+static void E_setGiveItem(mobjinfo_t *mi, const char *inventoryName)
+{
+   inventory_t *inv = E_InventoryForName(inventoryName);
+
+   if(inv)
+   {
+      // if one exists already, override it; otherwise, create one.
+      MetaObject *obj;
+
+      if((obj = mi->meta->getObjectKeyAndType("giveitem", RTTI(MetaGiveItem))))
+      {
+         MetaGiveItem *giveItem = static_cast<MetaGiveItem *>(obj);
+         giveItem->setValue(inv);
+      }
+      else
+         mi->meta->addObject(new MetaGiveItem("giveitem", inv));
+   }
+   else
+   {
+      E_EDFLoggedWarning(2, "Warning: thing '%s': unknown giveitem '%s'\n", 
+                         mi->name, inventoryName);
+   }
+}
+
+//
+// E_removeGiveItem
+//
+// Removes the giveitem metaproperty.
+//
+static void E_removeGiveItem(mobjinfo_t *mi)
+{
+   MetaObject *obj;
+
+   if((obj = mi->meta->getObjectKeyAndType("giveitem", RTTI(MetaGiveItem))))
+   {
+      mi->meta->removeObject(obj);
+      delete obj;
    }
 }
 
@@ -1584,6 +1639,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool inherits = false;
    bool cflags   = false;
    bool hasbtype = false;
+   mobjinfo_t *thisInfo = mobjinfo[i];
 
    // if thingsec is NULL, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is
@@ -1611,7 +1667,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          {
             E_EDFLoggedErr(2, 
                "E_ProcessThing: cyclic inheritance detected in thing '%s'\n",
-               mobjinfo[i]->name);
+               thisInfo->name);
          }
          
          // add to inheritance stack
@@ -1626,13 +1682,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          E_CopyThing(i, pnum);
 
          // haleyjd 06/19/09: keep track of parent explicitly
-         mobjinfo[i]->parent = mobjinfo[pnum];
+         thisInfo->parent = mobjinfo[pnum];
          
          // we inherit, so treat defaults as no value
          inherits = true;
       }
       else
-         mobjinfo[i]->parent = NULL; // 6/19/09: no parent.
+         thisInfo->parent = NULL; // 6/19/09: no parent.
 
       // mark this thingtype as processed
       thing_hitlist[i] = 1;
@@ -1649,15 +1705,15 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          basicttype_t *basicType = &BasicThingTypes[tempint];
 
-         mobjinfo[i]->flags  = basicType->flags;
-         mobjinfo[i]->flags2 = basicType->flags2;
-         mobjinfo[i]->flags3 = basicType->flags3;
+         thisInfo->flags  = basicType->flags;
+         thisInfo->flags2 = basicType->flags2;
+         thisInfo->flags3 = basicType->flags3;
 
          if(basicType->spawnstate &&
             (tempint = E_StateNumForName(basicType->spawnstate)) >= 0)
-            mobjinfo[i]->spawnstate = tempint;
+            thisInfo->spawnstate = tempint;
          else if(!inherits) // don't init to default if the thingtype inherits
-            mobjinfo[i]->spawnstate = NullStateNum;
+            thisInfo->spawnstate = NullStateNum;
 
          hasbtype = true; // mobjinfo has a basictype set
       }
@@ -1665,7 +1721,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    // process doomednum
    if(IS_SET(ITEM_TNG_DOOMEDNUM))
-      mobjinfo[i]->doomednum = cfg_getint(thingsec, ITEM_TNG_DOOMEDNUM);
+      thisInfo->doomednum = cfg_getint(thingsec, ITEM_TNG_DOOMEDNUM);
 
    // ******************************** STATES ********************************
 
@@ -1673,87 +1729,76 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET_BT(ITEM_TNG_SPAWNSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SPAWNSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_SPAWNSTATE, i, 
-                   &(mobjinfo[i]->spawnstate));
+      E_ThingFrame(tempstr, ITEM_TNG_SPAWNSTATE, i, &(thisInfo->spawnstate));
    }
 
    // process seestate
    if(IS_SET(ITEM_TNG_SEESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_SEESTATE, i,
-                   &(mobjinfo[i]->seestate));
+      E_ThingFrame(tempstr, ITEM_TNG_SEESTATE, i, &(thisInfo->seestate));
    }
 
    // process painstate
    if(IS_SET(ITEM_TNG_PAINSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_PAINSTATE, i,
-                   &(mobjinfo[i]->painstate));
+      E_ThingFrame(tempstr, ITEM_TNG_PAINSTATE, i, &(thisInfo->painstate));
    }
 
    // process meleestate
    if(IS_SET(ITEM_TNG_MELEESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MELEESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_MELEESTATE, i,
-                   &(mobjinfo[i]->meleestate));
+      E_ThingFrame(tempstr, ITEM_TNG_MELEESTATE, i, &(thisInfo->meleestate));
    }
 
    // process missilestate
    if(IS_SET(ITEM_TNG_MISSILESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MISSILESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_MISSILESTATE, i,
-                   &(mobjinfo[i]->missilestate));
+      E_ThingFrame(tempstr, ITEM_TNG_MISSILESTATE, i, &(thisInfo->missilestate));
    }
 
    // process deathstate
    if(IS_SET(ITEM_TNG_DEATHSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEATHSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_DEATHSTATE, i,
-                   &(mobjinfo[i]->deathstate));
+      E_ThingFrame(tempstr, ITEM_TNG_DEATHSTATE, i, &(thisInfo->deathstate));
    }
 
    // process xdeathstate
    if(IS_SET(ITEM_TNG_XDEATHSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_XDEATHSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_XDEATHSTATE, i,
-                   &(mobjinfo[i]->xdeathstate));
+      E_ThingFrame(tempstr, ITEM_TNG_XDEATHSTATE, i, &(thisInfo->xdeathstate));
    }
 
    // process raisestate
    if(IS_SET(ITEM_TNG_RAISESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_RAISESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_RAISESTATE, i,
-                   &(mobjinfo[i]->raisestate));
+      E_ThingFrame(tempstr, ITEM_TNG_RAISESTATE, i, &(thisInfo->raisestate));
    }
 
    // 08/07/04: process crashstate
    if(IS_SET(ITEM_TNG_CRASHSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_CRASHSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_CRASHSTATE, i,
-                   &(mobjinfo[i]->crashstate));
+      E_ThingFrame(tempstr, ITEM_TNG_CRASHSTATE, i, &(thisInfo->crashstate));
    }
 
    // 03/19/11: process active/inactive states
    if(IS_SET(ITEM_TNG_ACTIVESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_ACTIVESTATE, i, 
-                   &(mobjinfo[i]->activestate));
+      E_ThingFrame(tempstr, ITEM_TNG_ACTIVESTATE, i, &(thisInfo->activestate));
    }
 
    if(IS_SET(ITEM_TNG_INACTIVESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_INACTIVESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_INACTIVESTATE, i,
-                   &(mobjinfo[i]->inactivestate));
+      E_ThingFrame(tempstr, ITEM_TNG_INACTIVESTATE, i, &(thisInfo->inactivestate));
    }
 
    // ******************************** SOUNDS ********************************
@@ -1762,74 +1807,67 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_SEESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i,
-                   &(mobjinfo[i]->seesound));
+      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i, &(thisInfo->seesound));
    }
 
    // process attacksound
    if(IS_SET(ITEM_TNG_ATKSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ATKSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i,
-                   &(mobjinfo[i]->attacksound));
+      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i, &(thisInfo->attacksound));
    }
 
    // process painsound
    if(IS_SET(ITEM_TNG_PAINSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i,
-                   &(mobjinfo[i]->painsound));
+      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i, &(thisInfo->painsound));
    }
 
    // process deathsound
    if(IS_SET(ITEM_TNG_DEATHSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEATHSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i,
-                   &(mobjinfo[i]->deathsound));
+      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i, &(thisInfo->deathsound));
    }
 
    // process activesound
    if(IS_SET(ITEM_TNG_ACTIVESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i,
-                   &(mobjinfo[i]->activesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i, &(thisInfo->activesound));
    }
 
    // 3/19/11: process activatesound/deactivatesound
    if(IS_SET(ITEM_TNG_ACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i,
-                   &(mobjinfo[i]->activatesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i, &(thisInfo->activatesound));
    }
 
    if(IS_SET(ITEM_TNG_DEACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i,
-                   &(mobjinfo[i]->deactivatesound));
+      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i, &(thisInfo->deactivatesound));
    }
 
    // ******************************* METRICS ********************************
 
    // process spawnhealth
    if(IS_SET(ITEM_TNG_SPAWNHEALTH))
-      mobjinfo[i]->spawnhealth = cfg_getint(thingsec, ITEM_TNG_SPAWNHEALTH);
+      thisInfo->spawnhealth = cfg_getint(thingsec, ITEM_TNG_SPAWNHEALTH);
 
    // process reactiontime
    if(IS_SET(ITEM_TNG_REACTTIME))
-      mobjinfo[i]->reactiontime = cfg_getint(thingsec, ITEM_TNG_REACTTIME);
+      thisInfo->reactiontime = cfg_getint(thingsec, ITEM_TNG_REACTTIME);
 
    // process painchance
    if(IS_SET(ITEM_TNG_PAINCHANCE))
-      mobjinfo[i]->painchance = cfg_getint(thingsec, ITEM_TNG_PAINCHANCE);
+      thisInfo->painchance = cfg_getint(thingsec, ITEM_TNG_PAINCHANCE);
 
    // process speed
    if(IS_SET(ITEM_TNG_SPEED))
-      mobjinfo[i]->speed = cfg_getint(thingsec, ITEM_TNG_SPEED);
+      thisInfo->speed = cfg_getint(thingsec, ITEM_TNG_SPEED);
 
    // 07/13/03: process fastspeed
    // get the fastspeed and, if non-zero, add the thing
@@ -1839,74 +1877,74 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    {
       tempint = cfg_getint(thingsec, ITEM_TNG_FASTSPEED);         
       if(tempint)
-         G_SpeedSetAddThing(i, mobjinfo[i]->speed, tempint);
+         G_SpeedSetAddThing(i, thisInfo->speed, tempint);
    }
 
    // process radius
    if(IS_SET(ITEM_TNG_RADIUS))
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_RADIUS);
-      mobjinfo[i]->radius = (int)(tempfloat * FRACUNIT);
+      thisInfo->radius = (int)(tempfloat * FRACUNIT);
    }
 
    // process height
    if(IS_SET(ITEM_TNG_HEIGHT))
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_HEIGHT);
-      mobjinfo[i]->height = (int)(tempfloat * FRACUNIT);
+      thisInfo->height = (int)(tempfloat * FRACUNIT);
    }
 
    // 07/06/05: process correct 3D thing height
    if(IS_SET(ITEM_TNG_C3DHEIGHT))
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
-      mobjinfo[i]->c3dheight = (int)(tempfloat * FRACUNIT);
+      thisInfo->c3dheight = (int)(tempfloat * FRACUNIT);
    }
 
    // process mass
    if(IS_SET(ITEM_TNG_MASS))
-      mobjinfo[i]->mass = cfg_getint(thingsec, ITEM_TNG_MASS);
+      thisInfo->mass = cfg_getint(thingsec, ITEM_TNG_MASS);
 
    // 09/23/09: respawn properties
    if(IS_SET(ITEM_TNG_RESPAWNTIME))
-      mobjinfo[i]->respawntime = cfg_getint(thingsec, ITEM_TNG_RESPAWNTIME);
+      thisInfo->respawntime = cfg_getint(thingsec, ITEM_TNG_RESPAWNTIME);
 
    if(IS_SET(ITEM_TNG_RESPCHANCE))
-      mobjinfo[i]->respawnchance = cfg_getint(thingsec, ITEM_TNG_RESPCHANCE);
+      thisInfo->respawnchance = cfg_getint(thingsec, ITEM_TNG_RESPCHANCE);
 
    // process damage
    if(IS_SET(ITEM_TNG_DAMAGE))
-      mobjinfo[i]->damage = cfg_getint(thingsec, ITEM_TNG_DAMAGE);
+      thisInfo->damage = cfg_getint(thingsec, ITEM_TNG_DAMAGE);
 
    // 09/22/06: process topdamage 
    if(IS_SET(ITEM_TNG_TOPDAMAGE))
-      mobjinfo[i]->topdamage = cfg_getint(thingsec, ITEM_TNG_TOPDAMAGE);
+      thisInfo->topdamage = cfg_getint(thingsec, ITEM_TNG_TOPDAMAGE);
 
    // 09/23/06: process topdamagemask
    if(IS_SET(ITEM_TNG_TOPDMGMASK))
-      mobjinfo[i]->topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
+      thisInfo->topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
 
    // process translucency
    if(IS_SET(ITEM_TNG_TRANSLUC))
-      mobjinfo[i]->translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
+      thisInfo->translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
 
    // process bloodcolor
    if(IS_SET(ITEM_TNG_BLOODCOLOR))
-      mobjinfo[i]->bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
+      thisInfo->bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
 
    // 05/23/08: process alphavelocity
    if(IS_SET(ITEM_TNG_AVELOCITY))
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_AVELOCITY);
-      mobjinfo[i]->alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
+      thisInfo->alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
    }
 
    // 11/22/09: scaling properties
    if(IS_SET(ITEM_TNG_XSCALE))
-      mobjinfo[i]->xscale = (float)cfg_getfloat(thingsec, ITEM_TNG_XSCALE);
+      thisInfo->xscale = (float)cfg_getfloat(thingsec, ITEM_TNG_XSCALE);
 
    if(IS_SET(ITEM_TNG_YSCALE))
-      mobjinfo[i]->yscale = (float)cfg_getfloat(thingsec, ITEM_TNG_YSCALE);
+      thisInfo->yscale = (float)cfg_getfloat(thingsec, ITEM_TNG_YSCALE);
 
    // ********************************* FLAGS ********************************
 
@@ -1916,16 +1954,17 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_CFLAGS);
       if(*tempstr == '\0')
       {
-         mobjinfo[i]->flags = mobjinfo[i]->flags2 = mobjinfo[i]->flags3 = 0;
+         thisInfo->flags = thisInfo->flags2 = 
+            thisInfo->flags3 = thisInfo->flags4 = 0;
       }
       else
       {
          int *results = deh_ParseFlagsCombined(tempstr);
 
-         mobjinfo[i]->flags  = results[0];
-         mobjinfo[i]->flags2 = results[1];
-         mobjinfo[i]->flags3 = results[2];
-         mobjinfo[i]->flags4 = results[3];
+         thisInfo->flags  = results[0];
+         thisInfo->flags2 = results[1];
+         thisInfo->flags3 = results[2];
+         thisInfo->flags4 = results[3];
          
          cflags = true; // values were set from cflags
       }
@@ -1938,9 +1977,9 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS);
          if(*tempstr == '\0')
-            mobjinfo[i]->flags = 0;
+            thisInfo->flags = 0;
          else
-            mobjinfo[i]->flags = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE1);
+            thisInfo->flags = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE1);
       }
       
       // process flags2
@@ -1948,9 +1987,9 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS2);
          if(*tempstr == '\0')
-            mobjinfo[i]->flags2 = 0;
+            thisInfo->flags2 = 0;
          else
-            mobjinfo[i]->flags2 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE2);
+            thisInfo->flags2 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE2);
       }
 
       // process flags3
@@ -1958,9 +1997,9 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS3);
          if(*tempstr == '\0')
-            mobjinfo[i]->flags3 = 0;
+            thisInfo->flags3 = 0;
          else
-            mobjinfo[i]->flags3 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE3);
+            thisInfo->flags3 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE3);
       }
 
       // process flags4
@@ -1968,9 +2007,9 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS4);
          if(*tempstr == '\0')
-            mobjinfo[i]->flags4 = 0;
+            thisInfo->flags4 = 0;
          else
-            mobjinfo[i]->flags4 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE4);
+            thisInfo->flags4 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE4);
       }
    }
 
@@ -1984,10 +2023,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          
       results = deh_ParseFlagsCombined(tempstr);
 
-      mobjinfo[i]->flags  |= results[0];
-      mobjinfo[i]->flags2 |= results[1];
-      mobjinfo[i]->flags3 |= results[2];
-      mobjinfo[i]->flags4 |= results[3];
+      thisInfo->flags  |= results[0];
+      thisInfo->flags2 |= results[1];
+      thisInfo->flags3 |= results[2];
+      thisInfo->flags4 |= results[3];
    }
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
@@ -1998,10 +2037,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       results = deh_ParseFlagsCombined(tempstr);
 
-      mobjinfo[i]->flags  &= ~(results[0]);
-      mobjinfo[i]->flags2 &= ~(results[1]);
-      mobjinfo[i]->flags3 &= ~(results[2]);
-      mobjinfo[i]->flags4 &= ~(results[3]);
+      thisInfo->flags  &= ~(results[0]);
+      thisInfo->flags2 &= ~(results[1]);
+      thisInfo->flags3 &= ~(results[2]);
+      thisInfo->flags4 &= ~(results[3]);
    }
 
    // 07/13/03: process nukespecial
@@ -2015,11 +2054,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          E_EDFLoggedErr(2, 
             "E_ProcessThing: thing '%s': bad nukespecial '%s'\n",
-            mobjinfo[i]->name, tempstr);
+            thisInfo->name, tempstr);
       }
       
       if(dp->cptr != NULL)
-         mobjinfo[i]->nukespec = dp->cptr;
+         thisInfo->nukespec = dp->cptr;
    }
 
    // 07/13/03: process particlefx
@@ -2027,9 +2066,22 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PARTICLEFX);
       if(*tempstr == '\0')
-         mobjinfo[i]->particlefx = 0;
+         thisInfo->particlefx = 0;
       else
-         mobjinfo[i]->particlefx = E_ParseFlags(tempstr, &particle_flags);
+         thisInfo->particlefx = E_ParseFlags(tempstr, &particle_flags);
+   }
+
+   // **************************** INVENTORY ITEMS ***************************
+
+   // 05/25/12: process giveitem
+   if(IS_SET(ITEM_TNG_GIVEITEM))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_GIVEITEM);
+      
+      if(strcasecmp(tempstr, "NONE"))
+         E_setGiveItem(thisInfo, tempstr);
+      else
+         E_removeGiveItem(thisInfo);
    }
       
    // 07/13/03: process droptype
@@ -2037,7 +2089,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DROPTYPE);
       if(!strcasecmp(tempstr, "NONE"))
-         mobjinfo[i]->droptype = -1;
+         thisInfo->droptype = -1;
       else
       {
          tempint = E_ThingNumForName(tempstr);
@@ -2046,11 +2098,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          {
             // haleyjd 05/31/06: demoted to warning
             E_EDFLoggedWarning(2, "Warning: thing '%s': bad drop type '%s'\n",
-                               mobjinfo[i]->name, tempstr);
+                               thisInfo->name, tempstr);
             tempint = UnknownThingType;
          }
 
-         mobjinfo[i]->droptype = tempint;
+         thisInfo->droptype = tempint;
       }
    }
 
@@ -2068,7 +2120,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       else
          mod = E_DamageTypeForName(tempstr); // it is a name
 
-      mobjinfo[i]->mod = mod->num; // mobjinfo stores the numeric key
+      thisInfo->mod = mod->num; // mobjinfo stores the numeric key
    }
 
    // 07/13/03: process obituaries
@@ -2076,33 +2128,33 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    {
       // if this is a delta or the thing type inherited obits
       // from its parent, we need to free any old obituary
-      if((!def || inherits) && mobjinfo[i]->obituary)
-         efree(mobjinfo[i]->obituary);
+      if((!def || inherits) && thisInfo->obituary)
+         efree(thisInfo->obituary);
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT1);
       if(strcasecmp(tempstr, "NONE"))
-         mobjinfo[i]->obituary = estrdup(tempstr);
+         thisInfo->obituary = estrdup(tempstr);
       else
-         mobjinfo[i]->obituary = NULL;
+         thisInfo->obituary = NULL;
    }
 
    if(IS_SET(ITEM_TNG_OBIT2))
    {
       // if this is a delta or the thing type inherited obits
       // from its parent, we need to free any old obituary
-      if((!def || inherits) && mobjinfo[i]->meleeobit)
-         efree(mobjinfo[i]->meleeobit);
+      if((!def || inherits) && thisInfo->meleeobit)
+         efree(thisInfo->meleeobit);
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT2);
       if(strcasecmp(tempstr, "NONE"))
-         mobjinfo[i]->meleeobit = estrdup(tempstr);
+         thisInfo->meleeobit = estrdup(tempstr);
       else
-         mobjinfo[i]->meleeobit = NULL;
+         thisInfo->meleeobit = NULL;
    }
 
    // 01/12/04: process translation
    if(IS_SET(ITEM_TNG_COLOR))
-      mobjinfo[i]->colour = cfg_getint(thingsec, ITEM_TNG_COLOR);
+      thisInfo->colour = cfg_getint(thingsec, ITEM_TNG_COLOR);
 
    // 08/01/04: process dmgspecial
    if(IS_SET(ITEM_TNG_DMGSPECIAL))
@@ -2116,17 +2168,17 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          E_EDFLoggedErr(2, 
             "E_ProcessThing: thing '%s': invalid dmgspecial '%s'\n",
-            mobjinfo[i]->name, tempstr);
+            thisInfo->name, tempstr);
       }
 
-      mobjinfo[i]->dmgspecial = tempint;
+      thisInfo->dmgspecial = tempint;
    }
 
    // 09/26/04: process alternate sprite
    if(IS_SET(ITEM_TNG_SKINSPRITE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SKINSPRITE);
-      mobjinfo[i]->altsprite = E_SpriteNumForName(tempstr);
+      thisInfo->altsprite = E_SpriteNumForName(tempstr);
    }
 
    // 06/11/08: process defaultsprite (for skin handling)
@@ -2135,48 +2187,48 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEFSPRITE);
 
       if(tempstr)
-         mobjinfo[i]->defsprite = E_SpriteNumForName(tempstr);
+         thisInfo->defsprite = E_SpriteNumForName(tempstr);
       else
-         mobjinfo[i]->defsprite = -1;
+         thisInfo->defsprite = -1;
    }
 
 
    // 06/05/08: process custom-damage painstates
    if(IS_SET(ITEM_TNG_PAINSTATES))
    {
-      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PAINSTATES, mobjinfo[i],
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PAINSTATES, thisInfo,
                                 E_DTS_MODE_OVERWRITE, E_DTS_FIELD_PAIN);
    }
    if(IS_SET(ITEM_TNG_PNSTATESADD))
    {
-      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PNSTATESADD, mobjinfo[i],
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PNSTATESADD, thisInfo,
                                 E_DTS_MODE_ADD, E_DTS_FIELD_PAIN);
    }
    if(IS_SET(ITEM_TNG_PNSTATESREM))
    {
-      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PNSTATESREM, mobjinfo[i],
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PNSTATESREM, thisInfo,
                                 E_DTS_MODE_REMOVE, E_DTS_FIELD_PAIN);
    }
 
    // 06/05/08: process custom-damage deathstates
    if(IS_SET(ITEM_TNG_DEATHSTATES))
    {
-      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DEATHSTATES, mobjinfo[i],
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DEATHSTATES, thisInfo,
                                 E_DTS_MODE_OVERWRITE, E_DTS_FIELD_DEATH);
    }
    if(IS_SET(ITEM_TNG_DTHSTATESADD))
    {
-      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESADD, mobjinfo[i],
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESADD, thisInfo,
                                 E_DTS_MODE_ADD, E_DTS_FIELD_DEATH);
    }
    if(IS_SET(ITEM_TNG_DTHSTATESREM))
    {
-      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESREM, mobjinfo[i],
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESREM, thisInfo,
                                 E_DTS_MODE_REMOVE, E_DTS_FIELD_DEATH);
    }
 
    // 10/11/09: process damagefactors
-   E_ProcessDamageFactors(mobjinfo[i], thingsec);
+   E_ProcessDamageFactors(thisInfo, thingsec);
 
    // 01/17/07: process acs_spawndata
    if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)

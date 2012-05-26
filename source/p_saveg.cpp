@@ -643,7 +643,7 @@ static void P_RemoveAllThinkers(void)
    {
       Thinker *next = th->next;
 
-      if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+      if(th->isInstanceOf(RTTI(Mobj)))
          th->removeThinker();
       else
          delete th;

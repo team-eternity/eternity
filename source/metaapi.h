@@ -195,6 +195,7 @@ public:
    MetaObject *getObjectType(const char *type);
    // * By Key AND Type
    MetaObject *getObjectKeyAndType(const char *key, const char *type);
+   MetaObject *getObjectKeyAndType(const char *key, MetaObject::Type *rt);
 
    // Iterators
    MetaObject *getNextObject(MetaObject *object, const char *key);
