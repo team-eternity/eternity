@@ -2,6 +2,7 @@
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
+// Copyright(C) 2012 David Hill
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -58,10 +59,31 @@ enum
 }; 
 
 //
+// acs_op
+//
+typedef enum acs_op_e
+{
+   #define ACS_OP(OP,ARGC) ACS_OP_##OP,
+   #include "acs_op.h"
+   #undef ACS_OP
+
+   ACS_OPMAX
+} acs_op_t;
+
+//
 // Structures
 //
 
 class ACSThinker;
+
+//
+// acs_opdata
+//
+typedef struct acs_opdata_s
+{
+   acs_op_t op;
+   int args;
+} acs_opdata_t;
 
 //
 // acscript
@@ -71,10 +93,15 @@ class ACSThinker;
 //
 typedef struct acscript_s
 {
-   int number;  // the number of this script in ACS itself
-   int numArgs; // number of arguments this script wants
-   int *code;   // bytecode entry point
-   bool isOpen; // if true, is an open script
+   int number;
+   int numArgs;
+   int type;
+
+   union
+   {
+      uint32_t codeIndex;
+      int32_t *codePtr;
+   };
 
    ACSThinker *threads;
 } acscript_t;
@@ -111,7 +138,7 @@ public:
    int internalNum;           // internal script number
 
    // virtual machine data
-   int *ip;                   // instruction pointer
+   int32_t *ip;               // instruction pointer
    int stack[ACS_STACK_LEN];  // value stack
    int stp;                   // stack pointer
    int locals[ACS_NUMLOCALS]; // local variables and arguments
@@ -119,9 +146,9 @@ public:
    int sdata;                 // special data for state
    
    // info copied from acscript and acsvm
-   int  *code;                // entry point
-   byte *data;                // base code pointer for jumps
-   char **stringtable;        // strings
+   int32_t *code;             // entry point
+   int32_t *data;             // base code pointer for jumps
+   const char **stringtable;  // strings
    qstring *printBuffer;      // buffer for message printing
    acscript_t *acscript;      // for convenience of access
    struct acsvm_s *vm;        // for convenience of access
@@ -165,13 +192,19 @@ struct deferredacs_t
 //
 typedef struct acsvm_s
 {
-   byte       *data;         // ACS lump; jumps are relative to this
-   char       **stringtable; // self-explanatory, yes?
-   qstring    *printBuffer;  // used for message printing
-   acscript_t *scripts;      // the scripts...
-   int        numScripts;    // ... and how many there are.
-   bool    loaded;        // for static VMs, if it's valid or not
-   int        id;            // vm id number
+   // bytecode info
+   int32_t     *code;       // ACS code; jumps are relative to this
+   unsigned int numCode;
+   const char **strings;    // the string table
+   unsigned int numStrings;
+   acscript_t  *scripts;    // the scripts
+   unsigned int numScripts;
+   bool         loaded;     // for static VMs, if it's valid or not
+   uint32_t     id;         // vm id number
+
+   // interpreter info
+   qstring *printBuffer;    // used for message printing
+
 } acsvm_t;
 
 
@@ -181,6 +214,7 @@ void ACS_Init(void);
 void ACS_NewGame(void);
 void ACS_InitLevel(void);
 void ACS_LoadScript(acsvm_t *vm, int lump);
+void ACS_LoadScriptACS0(acsvm_t *vm, int lump, byte *data);
 void ACS_LoadLevelScript(int lump);
 void ACS_RunDeferredScripts(void);
 bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
@@ -194,6 +228,8 @@ void ACS_PrepareForLoad(void);
 void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
+
+extern acs_opdata_t ACSopdata[ACS_OPMAX];
 
 extern int ACS_thingtypes[ACS_NUM_THINGTYPES];
 extern int ACSmapvars[32];
