@@ -420,24 +420,58 @@ static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 
 // Interpreter Macros
 
-#define PUSH(x)   stack[stp++] = (x)
-#define POP()     stack[--stp]
-#define PEEK()    stack[stp-1]
-#define DECSTP()  --stp
-#define DECSTP2() stp -= 2
-#define DECSTP3() stp -= 3
-#define DECSTP4() stp -= 4
-#define DECSTP5() stp -= 5
+// This sure would be nice to enable! (But maybe a better check?)
+#if defined(__GNUC__)
+#define COMPGOTO
+#endif
+
+#define PUSH(x)   (*stp++ = (x))
+#define POP()     (*--stp)
+#define PEEK()    (*(stp-1))
+#define DECSTP()  (--stp)
 
 #define IPCURR()  (*ip)
 #define IPNEXT()  (*ip++)
 
-// for binary operations: ++ and -- mess these up
-#define ST_OP1      stack[stp-2]
-#define ST_OP2      stack[stp-1]
-#define ST_BINOP(x) stack[stp-2] = (x); --stp
+#define STACK_AT(x) (*(stp-(x)))
 
-#define STACK_AT(x) stack[stp-(x)]
+// for binary operations: ++ and -- mess these up
+#define ST_BINOP(OP) temp = POP(); STACK_AT(1) = (STACK_AT(1) OP temp)
+#define ST_BINOP_EQ(OP) temp = POP(); STACK_AT(1) OP temp
+
+#define DIVOP_EQ(VAR, OP) \
+   if(!(temp = POP())) \
+   { \
+      doom_printf(FC_ERROR "ACS Error: divide by zero\a"); \
+      action = ACTION_ENDSCRIPT; \
+      goto action_end; \
+   } \
+   (VAR) OP temp
+
+#define BRANCH_COUNT() \
+   if(++count > 500000) \
+   { \
+      doom_printf(FC_ERROR "ACS Error: terminated runaway script\a"); \
+      action = ACTION_ENDSCRIPT; \
+      goto action_end; \
+   }
+
+// Uses do...while for convenience of use.
+#define BRANCHOP(TARGET) \
+   do \
+   { \
+      ip = this->data + (TARGET); \
+      BRANCH_COUNT(); \
+   } \
+   while(0)
+
+#ifdef COMPGOTO
+#define OPCODE(OP) acs_op_##OP
+#define NEXTOP() goto *ops[IPNEXT()]
+#else
+#define OPCODE(OP) case ACS_OP_##OP
+#define NEXTOP() break
+#endif
 
 // script states for T_ACSThinker
 enum
@@ -457,12 +491,20 @@ IMPLEMENT_THINKER_TYPE(ACSThinker)
 //
 void ACSThinker::Think()
 {
+#ifdef COMPGOTO
+   static const void *const ops[ACS_OPMAX] =
+   {
+      #define ACS_OP(OP,ARGC) &&acs_op_##OP,
+      #include "acs_op.h"
+      #undef ACS_OP
+   };
+#endif
+
    // cache vm data in local vars for efficiency
-   register int *ip    = this->ip;
-   register int stp    = this->stp;    
-   register int *stack = this->stack;
-   int action = ACTION_RUN;
-   int opcode, temp, count = 0;
+   register int32_t *ip  = this->ip;
+   register int32_t *stp = this->stack + this->stp;
+   int action = ACTION_RUN, count = 0;
+   int32_t opcode, temp;
 
    // should the script terminate?
    if(this->sreg == ACS_STATE_TERMINATE)
@@ -478,515 +520,507 @@ void ACSThinker::Think()
       --this->delay;
       return;
    }
-  
-   // run opcodes until action != ACTION_RUN
-   do
+
+   // run opcodes until a terminating instruction is reached
+#ifdef COMPGOTO
+   NEXTOP();
+#else
+   for(;;) switch(IPNEXT())
+#endif
    {
-      // count instructions to end unbounded loops
-      ++count;
-      
-      opcode = IPNEXT();
-      switch(opcode)
+   OPCODE(NOP):
+      NEXTOP();
+
+      // Special Commands
+   OPCODE(LINESPEC):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
+                       this->lineSide, temp, stp);
+      NEXTOP();
+   OPCODE(LINESPEC_IMM):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
+                       this->lineSide, temp, ip);
+      ip += temp; // consume args
+      NEXTOP();
+
+      // SET
+   OPCODE(SET_LOCALVAR):
+      this->locals[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_MAPVAR):
+      ACSmapvars[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_WORLDVAR):
+      ACSworldvars[IPNEXT()] = POP();
+      NEXTOP();
+
+      // GET
+   OPCODE(GET_IMM):
+      PUSH(IPNEXT());
+      NEXTOP();
+   OPCODE(GET_LOCALVAR):
+      PUSH(this->locals[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_MAPVAR):
+      PUSH(ACSmapvars[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_WORLDVAR):
+      PUSH(ACSworldvars[IPNEXT()]);
+      NEXTOP();
+
+      // Binary Ops
+      // ADD
+   OPCODE(ADD_STACK):
+      ST_BINOP_EQ(+=);
+      NEXTOP();
+   OPCODE(ADD_LOCALVAR):
+      this->locals[IPNEXT()] += POP();
+      NEXTOP();
+   OPCODE(ADD_MAPVAR):
+      ACSmapvars[IPNEXT()] += POP();
+      NEXTOP();
+   OPCODE(ADD_WORLDVAR):
+      ACSworldvars[IPNEXT()] += POP();
+      NEXTOP();
+
+      // AND
+   OPCODE(AND_STACK):
+      ST_BINOP_EQ(&=);
+      NEXTOP();
+
+      // CMP
+   OPCODE(CMP_EQ):
+      ST_BINOP(==);
+      NEXTOP();
+   OPCODE(CMP_NE):
+      ST_BINOP(!=);
+      NEXTOP();
+   OPCODE(CMP_LT):
+      ST_BINOP(<);
+      NEXTOP();
+   OPCODE(CMP_GT):
+      ST_BINOP(>);
+      NEXTOP();
+   OPCODE(CMP_LE):
+      ST_BINOP(<=);
+      NEXTOP();
+   OPCODE(CMP_GE):
+      ST_BINOP(>=);
+      NEXTOP();
+
+      // DEC
+   OPCODE(DEC_LOCALVAR):
+      --this->locals[IPNEXT()];
+      NEXTOP();
+   OPCODE(DEC_MAPVAR):
+      --ACSmapvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(DEC_WORLDVAR):
+      --ACSworldvars[IPNEXT()];
+      NEXTOP();
+
+      // DIV
+   OPCODE(DIV_STACK):
+      DIVOP_EQ(STACK_AT(1), /=);
+      NEXTOP();
+   OPCODE(DIV_LOCALVAR):
+      DIVOP_EQ(this->locals[IPNEXT()], /=);
+      NEXTOP();
+   OPCODE(DIV_MAPVAR):
+      DIVOP_EQ(ACSmapvars[IPNEXT()], /=);
+      NEXTOP();
+   OPCODE(DIV_WORLDVAR):
+      DIVOP_EQ(ACSworldvars[IPNEXT()], /=);
+      NEXTOP();
+
+      // INC
+   OPCODE(INC_LOCALVAR):
+      ++this->locals[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_MAPVAR):
+      ++ACSmapvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_WORLDVAR):
+      ++ACSworldvars[IPNEXT()];
+      NEXTOP();
+
+      // IOR
+   OPCODE(IOR_STACK):
+      ST_BINOP_EQ(|=);
+      NEXTOP();
+
+      // LSH
+   OPCODE(LSH_STACK):
+      ST_BINOP_EQ(<<=);
+      NEXTOP();
+
+      // MOD
+   OPCODE(MOD_STACK):
+      DIVOP_EQ(STACK_AT(1), %=);
+      NEXTOP();
+   OPCODE(MOD_LOCALVAR):
+      DIVOP_EQ(this->locals[IPNEXT()], %=);
+      NEXTOP();
+   OPCODE(MOD_MAPVAR):
+      DIVOP_EQ(ACSmapvars[IPNEXT()], %=);
+      NEXTOP();
+   OPCODE(MOD_WORLDVAR):
+      DIVOP_EQ(ACSworldvars[IPNEXT()], %=);
+      NEXTOP();
+
+      // MUL
+   OPCODE(MUL_STACK):
+      ST_BINOP_EQ(*=);
+      NEXTOP();
+   OPCODE(MUL_LOCALVAR):
+      this->locals[IPNEXT()] *= POP();
+      NEXTOP();
+   OPCODE(MUL_MAPVAR):
+      ACSmapvars[IPNEXT()] *= POP();
+      NEXTOP();
+   OPCODE(MUL_WORLDVAR):
+      ACSworldvars[IPNEXT()] *= POP();
+      NEXTOP();
+
+      // RSH
+   OPCODE(RSH_STACK):
+      ST_BINOP_EQ(>>=);
+      NEXTOP();
+
+      // SUB
+   OPCODE(SUB_STACK):
+      ST_BINOP_EQ(-=);
+      NEXTOP();
+   OPCODE(SUB_LOCALVAR):
+      this->locals[IPNEXT()] -= POP();
+      NEXTOP();
+   OPCODE(SUB_MAPVAR):
+      ACSmapvars[IPNEXT()] -= POP();
+      NEXTOP();
+   OPCODE(SUB_WORLDVAR):
+      ACSworldvars[IPNEXT()] -= POP();
+      NEXTOP();
+
+      // XOR
+   OPCODE(XOR_STACK):
+      ST_BINOP_EQ(^=);
+      NEXTOP();
+
+      // Unary Ops
+   OPCODE(NEGATE_STACK):
+      STACK_AT(1) = -STACK_AT(1);
+      NEXTOP();
+
+      // Logical Ops
+   OPCODE(LOGAND_STACK):
+      ST_BINOP(&&);
+      NEXTOP();
+   OPCODE(LOGIOR_STACK):
+      ST_BINOP(||);
+      NEXTOP();
+   OPCODE(LOGNOT_STACK):
+      STACK_AT(1) = !STACK_AT(1);
+      NEXTOP();
+
+      // Branching
+   OPCODE(BRANCH_CASE):
+      if(PEEK() == IPNEXT()) // compare top of stack against op+1
       {
-      case ACS_OP_NOP:
-         break;
-      case ACS_OP_SCRIPT_TERMINATE:
-         action = ACTION_ENDSCRIPT;
-         break;
-      case ACS_OP_SCRIPT_SUSPEND:
-         this->sreg = ACS_STATE_SUSPEND;
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_GET_IMM:
-         PUSH(IPNEXT());
-         break;
-      case ACS_OP_LINESPEC:
-         opcode = IPNEXT(); // read special
-         temp = IPNEXT(); // read argcount
-         ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
-                          this->lineSide, temp, &stack[stp - temp]);
-         stp -= temp; // consume args
-         break;
-      case ACS_OP_LINESPEC_IMM:
-         opcode = IPNEXT(); // read special
-         temp = IPNEXT(); // read argcount
-         ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
-                          this->lineSide, temp, ip);
-         ip += temp; // consume args
-         break;
-      case ACS_OP_ADD_STACK:
-         ST_BINOP(ST_OP1 + ST_OP2);
-         break;
-      case ACS_OP_SUB_STACK:
-         ST_BINOP(ST_OP1 - ST_OP2);
-         break;
-      case ACS_OP_MUL_STACK:
-         ST_BINOP(ST_OP1 * ST_OP2);
-         break;
-      case ACS_OP_DIV_STACK:
-         if(!(temp = ST_OP2))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ST_BINOP(ST_OP1 / temp);
-         break;
-      case ACS_OP_MOD_STACK:
-         if(!(temp = ST_OP2))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ST_BINOP(ST_OP1 % temp);
-         break;
-      case ACS_OP_CMP_EQ:
-         ST_BINOP(ST_OP1 == ST_OP2);
-         break;
-      case ACS_OP_CMP_NE:
-         ST_BINOP(ST_OP1 != ST_OP2);
-         break;
-      case ACS_OP_CMP_LT:
-         ST_BINOP(ST_OP1 < ST_OP2);
-         break;
-      case ACS_OP_CMP_GT:
-         ST_BINOP(ST_OP1 > ST_OP2);
-         break;
-      case ACS_OP_CMP_LE:
-         ST_BINOP(ST_OP1 <= ST_OP2);
-         break;
-      case ACS_OP_CMP_GE:
-         ST_BINOP(ST_OP1 >= ST_OP2);
-         break;
-      case ACS_OP_SET_LOCALVAR:
-         this->locals[IPNEXT()] = POP();
-         break;
-      case ACS_OP_SET_MAPVAR:
-         ACSmapvars[IPNEXT()] = POP();
-         break;
-      case ACS_OP_SET_WORLDVAR:
-         ACSworldvars[IPNEXT()] = POP();
-         break;
-      case ACS_OP_GET_LOCALVAR:
-         PUSH(this->locals[IPNEXT()]);
-         break;
-      case ACS_OP_GET_MAPVAR:
-         PUSH(ACSmapvars[IPNEXT()]);
-         break;
-      case ACS_OP_GET_WORLDVAR:
-         PUSH(ACSworldvars[IPNEXT()]);
-         break;
-      case ACS_OP_ADD_LOCALVAR:
-         this->locals[IPNEXT()] += POP();
-         break;
-      case ACS_OP_ADD_MAPVAR:
-         ACSmapvars[IPNEXT()] += POP();
-         break;
-      case ACS_OP_ADD_WORLDVAR:
-         ACSworldvars[IPNEXT()] += POP();
-         break;
-      case ACS_OP_SUB_LOCALVAR:
-         this->locals[IPNEXT()] -= POP();
-         break;
-      case ACS_OP_SUB_MAPVAR:
-         ACSmapvars[IPNEXT()] -= POP();
-         break;
-      case ACS_OP_SUB_WORLDVAR:
-         ACSworldvars[IPNEXT()] -= POP();
-         break;
-      case ACS_OP_MUL_LOCALVAR:
-         this->locals[IPNEXT()] *= POP();
-         break;
-      case ACS_OP_MUL_MAPVAR:
-         ACSmapvars[IPNEXT()] *= POP();
-         break;
-      case ACS_OP_MUL_WORLDVAR:
-         ACSworldvars[IPNEXT()] *= POP();
-         break;
-      case ACS_OP_DIV_LOCALVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         this->locals[IPNEXT()] /= temp;
-         break;
-      case ACS_OP_DIV_MAPVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSmapvars[IPNEXT()] /= temp;
-         break;
-      case ACS_OP_DIV_WORLDVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSworldvars[IPNEXT()] /= temp;
-         break;
-      case ACS_OP_MOD_LOCALVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         this->locals[IPNEXT()] %= temp;
-         break;
-      case ACS_OP_MOD_MAPVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSmapvars[IPNEXT()] %= temp;
-         break;
-      case ACS_OP_MOD_WORLDVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSworldvars[IPNEXT()] %= temp;
-         break;
-      case ACS_OP_INC_LOCALVAR:
-         this->locals[IPNEXT()] += 1;
-         break;
-      case ACS_OP_INC_MAPVAR:
-         ACSmapvars[IPNEXT()] += 1;
-         break;
-      case ACS_OP_INC_WORLDVAR:
-         ACSworldvars[IPNEXT()] += 1;
-         break;
-      case ACS_OP_DEC_LOCALVAR:
-         this->locals[IPNEXT()] -= 1;
-         break;
-      case ACS_OP_DEC_MAPVAR:
-         ACSmapvars[IPNEXT()] -= 1;
-         break;
-      case ACS_OP_DEC_WORLDVAR:
-         ACSworldvars[IPNEXT()] -= 1;
-         break;
-      case ACS_OP_BRANCH_IMM:
-         ip = (int *)(this->data + IPCURR());
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case ACS_OP_BRANCH_NOTZERO:
-         if(POP())
-            ip = (int *)(this->data + IPCURR());
-         else
-            ++ip;
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case ACS_OP_STACK_DROP:
-         DECSTP();
-         break;
-      case ACS_OP_DELAY:
-         this->delay = POP();
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_DELAY_IMM:
-         this->delay = IPNEXT();
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_RANDOM:
-         {
-            int min, max;
-            max = POP();
-            min = POP();
-
-            PUSH(P_RangeRandom(pr_script, min, max));
-         }
-         break;
-      case ACS_OP_RANDOM_IMM:
-         {
-            int min, max;
-            min = IPNEXT();
-            max = IPNEXT();
-
-            PUSH(P_RangeRandom(pr_script, min, max));
-         }
-         break;
-      case ACS_OP_THINGCOUNT:
-         temp = POP(); // get tid
-         temp = ACS_countThings(POP(), temp);
-         PUSH(temp);
-         break;
-      case ACS_OP_THINGCOUNT_IMM:
-         temp = IPNEXT(); // get type
-         temp = ACS_countThings(temp, IPNEXT());
-         PUSH(temp);
-         break;
-      case ACS_OP_TAGWAIT:
-         this->sreg  = ACS_STATE_WAITTAG;
-         this->sdata = POP(); // get sector tag
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_TAGWAIT_IMM:
-         this->sreg  = ACS_STATE_WAITTAG;
-         this->sdata = IPNEXT(); // get sector tag
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_POLYWAIT:
-         this->sreg  = ACS_STATE_WAITPOLY;
-         this->sdata = POP(); // get poly tag
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_POLYWAIT_IMM:
-         this->sreg  = ACS_STATE_WAITPOLY;
-         this->sdata = IPNEXT(); // get poly tag
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_CHANGEFLOOR:
-         temp = POP(); // get flat string index
-         P_ChangeFloorTex(this->stringtable[temp], POP()); // get tag
-         break;
-      case ACS_OP_CHANGEFLOOR_IMM:
-         temp = *ip++; // get tag
-         P_ChangeFloorTex(this->stringtable[IPNEXT()], temp);
-         break;
-      case ACS_OP_CHANGECEILING:
-         temp = POP(); // get flat string index
-         P_ChangeCeilingTex(this->stringtable[temp], POP()); // get tag
-         break;
-      case ACS_OP_CHANGECEILING_IMM:
-         temp = IPNEXT(); // get tag
-         P_ChangeCeilingTex(this->stringtable[IPNEXT()], temp);
-         break;
-      case ACS_OP_SCRIPT_RESTART:
-         ip = this->code;
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case ACS_OP_LOGAND_STACK:
-         ST_BINOP(ST_OP1 && ST_OP2);
-         break;
-      case ACS_OP_LOGIOR_STACK:
-         ST_BINOP(ST_OP1 || ST_OP2);
-         break;
-      case ACS_OP_AND_STACK:
-         ST_BINOP(ST_OP1 & ST_OP2);
-         break;
-      case ACS_OP_IOR_STACK:
-         ST_BINOP(ST_OP1 | ST_OP2);
-         break;
-      case ACS_OP_XOR_STACK:
-         ST_BINOP(ST_OP1 ^ ST_OP2);
-         break;
-      case ACS_OP_LOGNOT_STACK:
-         temp = POP();
-         PUSH(!temp);
-         break;
-      case ACS_OP_LSH_STACK:
-         ST_BINOP(ST_OP1 << ST_OP2);
-         break;
-      case ACS_OP_RSH_STACK:
-         ST_BINOP(ST_OP1 >> ST_OP2);
-         break;
-      case ACS_OP_NEGATE_STACK:
-         temp = POP();
-         PUSH(-temp);
-         break;
-      case ACS_OP_BRANCH_ZERO:
-         if(!(POP()))
-            ip = (int *)(this->data + IPCURR());
-         else
-            ++ip;
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case ACS_OP_LINESIDE:
-         PUSH(this->lineSide);
-         break;
-      case ACS_OP_SCRIPTWAIT:
-         this->sreg  = ACS_STATE_WAITSCRIPT;
-         this->sdata = POP(); // get script num
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_SCRIPTWAIT_IMM:
-         this->sreg  = ACS_STATE_WAITSCRIPT;
-         this->sdata = IPNEXT(); // get script num
-         action = ACTION_STOP;
-         break;
-      case ACS_OP_CLEARLINESPECIAL:
-         if(this->line)
-            this->line->special = 0;
-         break;
-      case ACS_OP_BRANCH_CASE:
-         if(PEEK() == IPNEXT()) // compare top of stack against op+1
-         {
-            DECSTP(); // take the value off the stack
-            ip = (int *)(this->data + IPCURR()); // jump to op+2
-         }
-         else
-            ++ip; // increment past offset at op+2, leave value on stack
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case ACS_OP_STARTPRINT:
-         this->printBuffer->clear();
-         break;
-      case ACS_OP_ENDPRINT:
-         if(this->trigger && this->trigger->player)
-            player_printf(this->trigger->player, this->printBuffer->constPtr());
-         else
-            player_printf(&players[consoleplayer], this->printBuffer->constPtr());
-         break;
-      case ACS_OP_PRINTSTRING:
-         this->printBuffer->concat(this->stringtable[POP()]);
-         break;
-      case ACS_OP_PRINTINT:
-         {
-            char buffer[33];
-            this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
-         }
-         break;
-      case ACS_OP_PRINTCHAR:
-         *this->printBuffer += (char)POP();
-         break;
-      case ACS_OP_PLAYERCOUNT:
-         PUSH(ACS_countPlayers());
-         break;
-      case ACS_OP_GAMETYPE:
-         PUSH(GameType);
-         break;
-      case ACS_OP_GAMESKILL:
-         PUSH(gameskill);
-         break;
-      case ACS_OP_TIMER:
-         PUSH(leveltime);
-         break;
-      case ACS_OP_SECTORSOUND:
-         {
-            PointThinker *src = NULL;
-            int vol            = POP();
-            int strnum         = POP();
-
-            // if script started from a line, use the frontsector's sound origin
-            if(this->line)
-               src = &(this->line->frontsector->soundorg);
-
-            S_StartSoundNameAtVolume(src, this->stringtable[strnum], vol, 
-                                     ATTN_NORMAL, CHAN_AUTO);
-         }
-         break;
-      case ACS_OP_AMBIENTSOUND:
-         {
-            int vol    = POP();
-            int strnum = POP();
-
-            S_StartSoundNameAtVolume(NULL, this->stringtable[strnum], vol, 
-                                     ATTN_NORMAL, CHAN_AUTO);
-         }
-         break;
-      case ACS_OP_SOUNDSEQUENCE:
-         {
-            sector_t *sec;
-            int strnum = POP();
-
-            if(this->line && (sec = this->line->frontsector))
-            {
-               S_StartSectorSequenceName(sec, this->stringtable[strnum], 
-                                         SEQ_ORIGIN_SECTOR_F);
-            }
-            /*
-            FIXME
-            else
-            {
-               S_StartSequenceName(NULL, vm->stringtable[strnum], 
-                                   SEQ_ORIGIN_OTHER, -1);
-            }
-            */
-         }
-         break;
-      case ACS_OP_SETLINETEXTURE:
-         {
-            int pos, side, tag, strnum;
-
-            strnum = POP();
-            pos    = POP();
-            side   = POP();
-            tag    = POP();
-
-            P_ChangeLineTex(this->stringtable[strnum], pos, side, tag, false);
-         }
-         break;
-      case ACS_OP_SETLINEBLOCKING:
-         {
-            int tag, block;
-
-            block = POP();
-            tag   = POP();
-
-            ACS_setLineBlocking(tag, block);
-         }
-         break;
-      case ACS_OP_SETLINESPECIAL:
-         {
-            int tag;
-            int16_t spec;
-            int args[NUMLINEARGS];
-
-            for(temp = 5; temp > 0; --temp)
-               args[temp-1] = POP();
-            spec = POP();
-            tag  = POP();
-
-            ACS_setLineSpecial(spec, args, tag);
-         }
-         break;
-      case ACS_OP_THINGSOUND:
-         {
-            int vol    = POP();
-            int strnum = POP();
-            int tid    = POP();
-            Mobj *mo = NULL;
-
-            while((mo = P_FindMobjFromTID(tid, mo, NULL)))
-            {
-               S_StartSoundNameAtVolume(mo, this->stringtable[strnum], vol,
-                                        ATTN_NORMAL, CHAN_AUTO);
-            }
-         }
-         break;
-      case ACS_OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
-         break;
-      default:
-         // unknown opcode, must stop execution
-         doom_printf(FC_ERROR "ACS Error: unknown opcode %d\a", opcode);
-         action = ACTION_ENDSCRIPT;
-         break;
+         DECSTP(); // take the value off the stack
+         BRANCHOP(IPCURR()); // jump to op+2
       }
-   } 
-   while(action == ACTION_RUN);
+      else
+         ++ip; // increment past offset at op+2, leave value on stack
+      NEXTOP();
+   OPCODE(BRANCH_IMM):
+      BRANCHOP(IPCURR());
+      NEXTOP();
+   OPCODE(BRANCH_NOTZERO):
+      if(POP())
+         BRANCHOP(IPCURR());
+      else
+         ++ip;
+      NEXTOP();
+   OPCODE(BRANCH_ZERO):
+      if(!POP())
+         BRANCHOP(IPCURR());
+      else
+         ++ip;
+      NEXTOP();
 
+      // Stack Control
+   OPCODE(STACK_DROP):
+      DECSTP();
+      NEXTOP();
+
+      // Script Control
+   OPCODE(SCRIPT_RESTART):
+      ip = this->code;
+      BRANCH_COUNT();
+      NEXTOP();
+   OPCODE(SCRIPT_SUSPEND):
+      this->sreg = ACS_STATE_SUSPEND;
+      action = ACTION_STOP;
+      goto action_end;
+   OPCODE(SCRIPT_TERMINATE):
+      action = ACTION_ENDSCRIPT;
+      goto action_end;
+
+      // Printing
+   OPCODE(STARTPRINT):
+      this->printBuffer->clear();
+      NEXTOP();
+   OPCODE(ENDPRINT):
+      if(this->trigger && this->trigger->player)
+         player_printf(this->trigger->player, this->printBuffer->constPtr());
+      else
+         player_printf(&players[consoleplayer], this->printBuffer->constPtr());
+      NEXTOP();
+   OPCODE(ENDPRINTBOLD):
+      HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
+      NEXTOP();
+   OPCODE(PRINTSTRING):
+      this->printBuffer->concat(this->stringtable[POP()]);
+      NEXTOP();
+   OPCODE(PRINTINT):
+      {
+         char buffer[33];
+         this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
+      }
+      NEXTOP();
+   OPCODE(PRINTCHAR):
+      *this->printBuffer += (char)POP();
+      NEXTOP();
+
+      // Miscellaneous
+
+   OPCODE(DELAY):
+      this->delay = POP();
+      action = ACTION_STOP;
+      goto action_end;
+   OPCODE(DELAY_IMM):
+      this->delay = IPNEXT();
+      action = ACTION_STOP;
+      goto action_end;
+
+   OPCODE(RANDOM):
+      {
+         int min, max;
+         max = POP();
+         min = POP();
+
+         PUSH(P_RangeRandom(pr_script, min, max));
+      }
+      NEXTOP();
+   OPCODE(RANDOM_IMM):
+      {
+         int min, max;
+         min = IPNEXT();
+         max = IPNEXT();
+
+         PUSH(P_RangeRandom(pr_script, min, max));
+      }
+      NEXTOP();
+
+   OPCODE(THINGCOUNT):
+      temp = POP(); // get tid
+      temp = ACS_countThings(POP(), temp);
+      PUSH(temp);
+      NEXTOP();
+   OPCODE(THINGCOUNT_IMM):
+      temp = IPNEXT(); // get type
+      temp = ACS_countThings(temp, IPNEXT());
+      PUSH(temp);
+      NEXTOP();
+
+   OPCODE(TAGWAIT):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = POP(); // get sector tag
+      action = ACTION_STOP;
+      goto action_end;
+   OPCODE(TAGWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = IPNEXT(); // get sector tag
+      action = ACTION_STOP;
+      goto action_end;
+
+   OPCODE(POLYWAIT):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = POP(); // get poly tag
+      action = ACTION_STOP;
+      goto action_end;
+   OPCODE(POLYWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = IPNEXT(); // get poly tag
+      action = ACTION_STOP;
+      goto action_end;
+
+   OPCODE(CHANGEFLOOR):
+      temp = POP(); // get flat string index
+      P_ChangeFloorTex(this->stringtable[temp], POP()); // get tag
+      NEXTOP();
+   OPCODE(CHANGEFLOOR_IMM):
+      temp = *ip++; // get tag
+      P_ChangeFloorTex(this->stringtable[IPNEXT()], temp);
+      NEXTOP();
+
+   OPCODE(CHANGECEILING):
+      temp = POP(); // get flat string index
+      P_ChangeCeilingTex(this->stringtable[temp], POP()); // get tag
+      NEXTOP();
+   OPCODE(CHANGECEILING_IMM):
+      temp = IPNEXT(); // get tag
+      P_ChangeCeilingTex(this->stringtable[IPNEXT()], temp);
+      NEXTOP();
+
+   OPCODE(LINESIDE):
+      PUSH(this->lineSide);
+      NEXTOP();
+
+   OPCODE(SCRIPTWAIT):
+      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sdata = POP(); // get script num
+      action = ACTION_STOP;
+      goto action_end;
+   OPCODE(SCRIPTWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sdata = IPNEXT(); // get script num
+      action = ACTION_STOP;
+      goto action_end;
+
+   OPCODE(CLEARLINESPECIAL):
+      if(this->line)
+         this->line->special = 0;
+      NEXTOP();
+
+   OPCODE(PLAYERCOUNT):
+      PUSH(ACS_countPlayers());
+      NEXTOP();
+
+   OPCODE(GAMETYPE):
+      PUSH(GameType);
+      NEXTOP();
+
+   OPCODE(GAMESKILL):
+      PUSH(gameskill);
+      NEXTOP();
+
+   OPCODE(TIMER):
+      PUSH(leveltime);
+      NEXTOP();
+
+   OPCODE(SECTORSOUND):
+      {
+         PointThinker *src;
+         int vol    = POP();
+         int strnum = POP();
+
+         // if script started from a line, use the frontsector's sound origin
+         if(this->line)
+            src = &(this->line->frontsector->soundorg);
+         else
+            src = NULL;
+
+         S_StartSoundNameAtVolume(src, this->stringtable[strnum], vol, 
+                                  ATTN_NORMAL, CHAN_AUTO);
+      }
+      NEXTOP();
+
+   OPCODE(AMBIENTSOUND):
+      {
+         int vol    = POP();
+         int strnum = POP();
+
+         S_StartSoundNameAtVolume(NULL, this->stringtable[strnum], vol, 
+                                  ATTN_NORMAL, CHAN_AUTO);
+      }
+      NEXTOP();
+
+   OPCODE(SOUNDSEQUENCE):
+      {
+         sector_t *sec;
+         int strnum = POP();
+
+         if(this->line && (sec = this->line->frontsector))
+         {
+            S_StartSectorSequenceName(sec, this->stringtable[strnum], 
+                                      SEQ_ORIGIN_SECTOR_F);
+         }
+         /*
+         FIXME
+         else
+         {
+            S_StartSequenceName(NULL, vm->stringtable[strnum], 
+                                SEQ_ORIGIN_OTHER, -1);
+         }
+         */
+      }
+      NEXTOP();
+
+   OPCODE(SETLINETEXTURE):
+      {
+         int strnum = POP();
+         int pos    = POP();
+         int side   = POP();
+         int tag    = POP();
+
+         P_ChangeLineTex(this->stringtable[strnum], pos, side, tag, false);
+      }
+      NEXTOP();
+
+   OPCODE(SETLINEBLOCKING):
+      {
+         int block = POP();
+         int tag   = POP();
+
+         ACS_setLineBlocking(tag, block);
+      }
+      NEXTOP();
+
+   OPCODE(SETLINESPECIAL):
+      {
+         int tag;
+         int16_t spec;
+         int args[NUMLINEARGS];
+
+         for(temp = 5; temp > 0; --temp)
+            args[temp-1] = POP();
+         spec = POP();
+         tag  = POP();
+
+         ACS_setLineSpecial(spec, args, tag);
+      }
+      NEXTOP();
+
+   OPCODE(THINGSOUND):
+      {
+         int vol    = POP();
+         int strnum = POP();
+         int tid    = POP();
+         Mobj *mo   = NULL;
+
+         while((mo = P_FindMobjFromTID(tid, mo, NULL)))
+         {
+            S_StartSoundNameAtVolume(mo, this->stringtable[strnum], vol,
+                                     ATTN_NORMAL, CHAN_AUTO);
+         }
+      }
+      NEXTOP();
+
+#ifndef COMPGOTO
+   default:
+      // unknown opcode, must stop execution
+      doom_printf(FC_ERROR "ACS Error: unknown opcode %d\a", opcode);
+      action = ACTION_ENDSCRIPT;
+      goto action_end;
+#endif
+   }
+
+action_end:
    // check for special actions flagged in loop above
    switch(action)
    {
@@ -997,7 +1031,7 @@ void ACSThinker::Think()
    default:
       // copy fields back into script
       this->ip  = ip;
-      this->stp = stp;
+      this->stp = stp - this->stack;
       break;
    }
 }
