@@ -92,30 +92,42 @@ static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
 #define ITEM_HEALTH_AMOUNT            "health.amount"
 #define ITEM_HEALTH_MAXAMOUNT         "health.maxamount"
 #define ITEM_HEALTH_LOWMESSAGE        "health.lowmessage"
+#define ITEM_LOWMSG_VALUE             "value"
+#define ITEM_LOWMSG_MESSAGE           "message"
 
 #define ITEM_DELTA_NAME               "name"
+
+//
+// lowmessage mvprop options
+//
+static cfg_opt_t lowmsg_opts[] =
+{
+   CFG_INT(ITEM_LOWMSG_VALUE,    0, CFGF_NONE),
+   CFG_STR(ITEM_LOWMSG_MESSAGE, "", CFGF_NONE),
+   CFG_END()
+};
 
 //
 // Inventory Options
 //
 
 #define INVENTORY_FIELDS \
-   CFG_STR(ITEM_INVENTORY_CLASS,          "None", CFGF_MULTI), \
-   CFG_INT(ITEM_INVENTORY_AMOUNT,              0, CFGF_NONE ), \
-   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,           0, CFGF_NONE ), \
-   CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,      0, CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_ICON,               "", CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_PICKUPMESSAGE,      "", CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_PICKUPSOUND,        "", CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_PICKUPFLASH,        "", CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_USESOUND,           "", CFGF_NONE ), \
-   CFG_INT(ITEM_INVENTORY_RESPAWNTICS,         0, CFGF_NONE ), \
-   CFG_INT(ITEM_INVENTORY_GIVEQUEST,          -1, CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_FLAGS,              "", CFGF_NONE ), \
-   CFG_STR(ITEM_INVENTORY_COMPATNAME,       NULL, CFGF_NONE ), \
-   CFG_INT(ITEM_HEALTH_AMOUNT,                 0, CFGF_NONE ), \
-   CFG_INT(ITEM_HEALTH_MAXAMOUNT,              0, CFGF_NONE ), \
-   CFG_STR(ITEM_HEALTH_LOWMESSAGE,            "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_CLASS,           "None", CFGF_MULTI), \
+   CFG_INT(ITEM_INVENTORY_AMOUNT,               0, CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,            0, CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,       0, CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_ICON,                "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_PICKUPMESSAGE,       "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_PICKUPSOUND,         "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_PICKUPFLASH,         "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_USESOUND,            "", CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_RESPAWNTICS,          0, CFGF_NONE ), \
+   CFG_INT(ITEM_INVENTORY_GIVEQUEST,           -1, CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_FLAGS,               "", CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_COMPATNAME,        NULL, CFGF_NONE ), \
+   CFG_INT(ITEM_HEALTH_AMOUNT,                  0, CFGF_NONE ), \
+   CFG_INT(ITEM_HEALTH_MAXAMOUNT,               0, CFGF_NONE ), \
+   CFG_MVPROP(ITEM_HEALTH_LOWMESSAGE, lowmsg_opts, CFGF_NONE ), \
    CFG_END()
 
 cfg_opt_t edf_inv_opts[] =
@@ -530,9 +542,13 @@ static void E_processHealthProperties(inventory_t *inv, cfg_t *invsec,
    if(IS_SET(ITEM_HEALTH_MAXAMOUNT))
       E_MetaIntFromCfgInt(inv->meta, invsec, ITEM_HEALTH_MAXAMOUNT);
 
-   // lowmessage (may be a BEX string if prefixed with $)
    if(IS_SET(ITEM_HEALTH_LOWMESSAGE))
-      E_MetaStringFromCfgString(inv->meta, invsec, ITEM_HEALTH_LOWMESSAGE);
+   {
+      cfg_t *lowsec = cfg_getmvprop(invsec, ITEM_HEALTH_LOWMESSAGE);
+
+      E_MetaIntFromCfgInt(inv->meta, lowsec, ITEM_LOWMSG_VALUE);
+      E_MetaStringFromCfgString(inv->meta, invsec, ITEM_LOWMSG_MESSAGE);
+   }
 }
 
 typedef void (*ClassFuncPtr)(inventory_t *, cfg_t *, bool, bool);
@@ -542,6 +558,25 @@ static ClassFuncPtr inventoryClasses[INV_CLASS_NUMCLASSES] =
    E_processNone,
    E_processHealthProperties
 };
+
+//
+// E_addMetaClass
+//
+// Add a class to the metatable, provided it hasn't been added already.
+//
+static void E_addMetaClass(inventory_t *inv, int classtype)
+{
+   MetaObject *obj = NULL;
+
+   while((obj = inv->meta->getNextKeyAndType(obj, "classtype", "MetaInteger")))
+   {
+      MetaInteger *mInt = static_cast<MetaInteger *>(obj);
+      if(mInt->getValue() == classtype)
+         return;
+   }
+
+   inv->meta->addInt("classtype", classtype);
+}
 
 //
 // E_applyInventoryClasses
@@ -575,7 +610,7 @@ static void E_applyInventoryClasses(inventory_t *inv, cfg_t *invsec, bool def,
 #endif
 
       // record this class in the metatable
-      inv->meta->addInt("classtype", classtype);
+      E_addMetaClass(inv, classtype);
 
       // process fields for this class
       inventoryClasses[classtype](inv, invsec, def, inherits);

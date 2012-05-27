@@ -4,6 +4,28 @@ add dynamic inventory and weapons support. inventory-branch spans SVN revisions
 from 2030 to ????.
 ===============================================================================
 -------------------------------------------------------------------------------
+05/26/2012
+
+I have reimplemented the pickupitem array in terms of a mapping from sprites
+to inventory_t definitions, partially enabled through the prior changes to
+inventory definitions. This will be used to support attachment of sprites to
+pickup effects for compatibility purposes.
+
+I changed the default value of giveitem in the thingtype options to "NONE" to
+avoid 161 warnings from EDF about a missing inventory type "".
+
+I have also modified the addition of classtype properties to the inventory
+metatable to avoid duplicate classes, as the classtype metaproperty will be
+used to drive the giving of actual effects and inventory items to the player
+in P_TouchSpecialThing via metaproperty iteration.
+
+After looking at the ZDoom wiki again, I noticed I had omitted support for the
+lowmessage value, which determines how little health you must have before you
+will be given the lowmessage instead of the normal pickup message for the item.
+I resolved this by changing health.message into a multi-valued property with
+fields value and message.
+
+-------------------------------------------------------------------------------
 05/25/2012
 
 After realizing the various problems that implementation of multiple effects

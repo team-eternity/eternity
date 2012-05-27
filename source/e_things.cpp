@@ -457,7 +457,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_OBIT2,         "NONE",    CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_BLOODCOLOR,    0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_NUKESPEC,      "NULL",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_GIVEITEM,      "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_GIVEITEM,      "NONE",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_DROPTYPE,      "NONE",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_CFLAGS,        "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_ADDFLAGS,      "",        CFGF_NONE                ), \
