@@ -2,6 +2,7 @@
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
+// Copyright(C) 2012 David Hill
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +23,8 @@
 // Original 100% GPL ACS Interpreter
 //
 // By James Haley
+//
+// Improved by David Hill
 //
 //----------------------------------------------------------------------------
 
@@ -66,113 +69,6 @@ enum
    ACS_STATE_TERMINATE,  // will be stopped on next thinking turn
 };
 
-// opcode IDs
-enum
-{
-   /*   0 */ OP_NOP,
-   /*   1 */ OP_TERMINATE,
-   /*   2 */ OP_SUSPEND,
-   /*   3 */ OP_PUSHNUMBER,
-   /*   4 */ OP_LINESPEC1,
-   /*   5 */ OP_LINESPEC2,
-   /*   6 */ OP_LINESPEC3,
-   /*   7 */ OP_LINESPEC4,
-   /*   8 */ OP_LINESPEC5,
-   /*   9 */ OP_LINESPEC1_IMM,
-   /*  10 */ OP_LINESPEC2_IMM,
-   /*  11 */ OP_LINESPEC3_IMM,
-   /*  12 */ OP_LINESPEC4_IMM,
-   /*  13 */ OP_LINESPEC5_IMM,
-   /*  14 */ OP_ADD,
-   /*  15 */ OP_SUB,
-   /*  16 */ OP_MUL,
-   /*  17 */ OP_DIV,
-   /*  18 */ OP_MOD,
-   /*  19 */ OP_EQUAL,
-   /*  20 */ OP_NOTEQUAL,
-   /*  21 */ OP_LESS,
-   /*  22 */ OP_GREATER,
-   /*  23 */ OP_LESSOREQUAL,
-   /*  24 */ OP_GREATEROREQUAL,
-   /*  25 */ OP_ASSIGNSCRIPTVAR,
-   /*  26 */ OP_ASSIGNMAPVAR,
-   /*  27 */ OP_ASSIGNWORLDVAR,
-   /*  28 */ OP_PUSHSCRIPTVAR,
-   /*  29 */ OP_PUSHMAPVAR,
-   /*  30 */ OP_PUSHWORLDVAR,
-   /*  31 */ OP_ADDSCRIPTVAR,
-   /*  32 */ OP_ADDMAPVAR,
-   /*  33 */ OP_ADDWORLDVAR,
-   /*  34 */ OP_SUBSCRIPTVAR,
-   /*  35 */ OP_SUBMAPVAR,
-   /*  36 */ OP_SUBWORLDVAR,
-   /*  37 */ OP_MULSCRIPTVAR,
-   /*  38 */ OP_MULMAPVAR,
-   /*  39 */ OP_MULWORLDVAR,
-   /*  40 */ OP_DIVSCRIPTVAR,
-   /*  41 */ OP_DIVMAPVAR,
-   /*  42 */ OP_DIVWORLDVAR,
-   /*  43 */ OP_MODSCRIPTVAR,
-   /*  44 */ OP_MODMAPVAR,
-   /*  45 */ OP_MODWORLDVAR,
-   /*  46 */ OP_INCSCRIPTVAR,
-   /*  47 */ OP_INCMAPVAR,
-   /*  48 */ OP_INCWORLDVAR,
-   /*  49 */ OP_DECSCRIPTVAR,
-   /*  50 */ OP_DECMAPVAR,
-   /*  51 */ OP_DECWORLDVAR,
-   /*  52 */ OP_BRANCH,
-   /*  53 */ OP_BRANCHNOTZERO,
-   /*  54 */ OP_DECSTP,
-   /*  55 */ OP_DELAY,
-   /*  56 */ OP_DELAY_IMM,
-   /*  57 */ OP_RANDOM,
-   /*  58 */ OP_RANDOM_IMM,
-   /*  59 */ OP_THINGCOUNT,
-   /*  60 */ OP_THINGCOUNT_IMM,
-   /*  61 */ OP_TAGWAIT,
-   /*  62 */ OP_TAGWAIT_IMM,
-   /*  63 */ OP_POLYWAIT,
-   /*  64 */ OP_POLYWAIT_IMM,
-   /*  65 */ OP_CHANGEFLOOR,
-   /*  66 */ OP_CHANGEFLOOR_IMM,
-   /*  67 */ OP_CHANGECEILING,
-   /*  68 */ OP_CHANGECEILING_IMM,
-   /*  69 */ OP_RESTART,
-   /*  70 */ OP_LOGICALAND,
-   /*  71 */ OP_LOGICALOR,
-   /*  72 */ OP_BITWISEAND,
-   /*  73 */ OP_BITWISEOR,
-   /*  74 */ OP_BITWISEXOR,
-   /*  75 */ OP_LOGICALNOT,
-   /*  76 */ OP_SHIFTLEFT,
-   /*  77 */ OP_SHIFTRIGHT,
-   /*  78 */ OP_NEGATE,
-   /*  79 */ OP_BRANCHZERO,
-   /*  80 */ OP_LINESIDE,
-   /*  81 */ OP_SCRIPTWAIT,
-   /*  82 */ OP_SCRIPTWAIT_IMM,
-   /*  83 */ OP_CLEARLINESPECIAL,
-   /*  84 */ OP_CASEJUMP,
-   /*  85 */ OP_STARTPRINT,
-   /*  86 */ OP_ENDPRINT,
-   /*  87 */ OP_PRINTSTRING,
-   /*  88 */ OP_PRINTINT,
-   /*  89 */ OP_PRINTCHAR,
-   /*  90 */ OP_PLAYERCOUNT,
-   /*  91 */ OP_GAMETYPE,
-   /*  92 */ OP_GAMESKILL,
-   /*  93 */ OP_TIMER,
-   /*  94 */ OP_SECTORSOUND,
-   /*  95 */ OP_AMBIENTSOUND,
-   /*  96 */ OP_SOUNDSEQUENCE,
-   /*  97 */ OP_SETLINETEXTURE,
-   /*  98 */ OP_SETLINEBLOCKING,
-   /*  99 */ OP_SETLINESPECIAL,
-   /* 100 */ OP_THINGSOUND,
-   /* 101 */ OP_ENDPRINTBOLD,
-};
-
 //
 // Static Variables
 //
@@ -191,6 +87,13 @@ static int numACSVMsAlloc; // number of vm pointers allocated
 //
 // Global Variables
 //
+
+acs_opdata_t ACSopdata[ACS_OPMAX] =
+{
+   #define ACS_OP(OP,ARGC) {ACS_OP_##OP, ARGC},
+   #include "acs_op.h"
+   #undef ACS_OP
+};
 
 // ACS_thingtypes:
 // This array translates from ACS spawn numbers to internal thingtype indices.
@@ -267,7 +170,7 @@ static void ACS_removeThread(ACSThinker *script)
 //
 static void ACS_scriptFinished(ACSThinker *script)
 {
-   int i;
+   unsigned int i;
    acsvm_t *vm          = script->vm;
    acscript_t *acscript = script->acscript;
    ACSThinker *th;
@@ -330,12 +233,12 @@ static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
    newScript->delay = TICRATE;
 
    // set ip to entry point
-   newScript->ip = acs->code;
+   newScript->ip = acs->codePtr;
 
    // copy in some important data
-   newScript->code        = acs->code;
-   newScript->data        = vm->data;
-   newScript->stringtable = vm->stringtable;
+   newScript->code        = acs->codePtr;
+   newScript->data        = vm->code;
+   newScript->stringtable = vm->strings;
    newScript->printBuffer = vm->printBuffer;
    newScript->acscript    = acs;
    newScript->vm          = vm;
@@ -357,9 +260,9 @@ static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
 //
 // Currently uses a linear search, since the set is small and fixed-size.
 //
-int ACS_indexForNum(acsvm_t *vm, int num)
+unsigned int ACS_indexForNum(acsvm_t *vm, int num)
 {
-   int idx;
+   unsigned int idx;
 
    for(idx = 0; idx < vm->numScripts; ++idx)
       if(vm->scripts[idx].number == num)
@@ -372,40 +275,17 @@ int ACS_indexForNum(acsvm_t *vm, int num)
 // ACS_execLineSpec
 //
 // Executes a line special that has been encoded in the script with
-// operands on the stack.
+// immediate operands or on the stack.
 //
 static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
-                             int arg0, int arg1, int arg2, int arg3, int arg4)
-{
-   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-
-   args[0] = arg0;
-   args[1] = arg1;
-   args[2] = arg2;
-   args[3] = arg3;
-   args[4] = arg4;
-
-   // translate line specials & args for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
-}
-
-//
-// ACS_execLineSpecImm
-//
-// Executes a line special that has been encoded in the script with
-// immediate operands.
-//
-static void ACS_execLineSpecImm(line_t *l, Mobj *mo, int16_t spec, int side,
-                                int argc, int *argv)
+                             int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i = argc;
 
    // args follow instruction in the code from first to last
    for(; i > 0; --i)
-      args[argc-i] = SwapLong(*argv++);
+      args[argc-i] = *argv++;
 
    // translate line specials & args for Hexen maps
    P_ConvertHexenLineSpec(&spec, args);
@@ -549,8 +429,8 @@ static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 #define DECSTP4() stp -= 4
 #define DECSTP5() stp -= 5
 
-#define IPCURR()  SwapLong(*ip)
-#define IPNEXT()  SwapLong(*ip++)
+#define IPCURR()  (*ip)
+#define IPNEXT()  (*ip++)
 
 // for binary operations: ++ and -- mess these up
 #define ST_OP1      stack[stp-2]
@@ -608,88 +488,42 @@ void ACSThinker::Think()
       opcode = IPNEXT();
       switch(opcode)
       {
-      case OP_NOP:
+      case ACS_OP_NOP:
          break;
-      case OP_TERMINATE:
+      case ACS_OP_SCRIPT_TERMINATE:
          action = ACTION_ENDSCRIPT;
          break;
-      case OP_SUSPEND:
+      case ACS_OP_SCRIPT_SUSPEND:
          this->sreg = ACS_STATE_SUSPEND;
          action = ACTION_STOP;
          break;
-      case OP_PUSHNUMBER:
+      case ACS_OP_GET_IMM:
          PUSH(IPNEXT());
          break;
-      case OP_LINESPEC1:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(1), 0, 0, 0, 0);
-         DECSTP();
+      case ACS_OP_LINESPEC:
+         opcode = IPNEXT(); // read special
+         temp = IPNEXT(); // read argcount
+         ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
+                          this->lineSide, temp, &stack[stp - temp]);
+         stp -= temp; // consume args
          break;
-      case OP_LINESPEC2:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(2), STACK_AT(1), 0, 0, 0);
-         DECSTP2();
+      case ACS_OP_LINESPEC_IMM:
+         opcode = IPNEXT(); // read special
+         temp = IPNEXT(); // read argcount
+         ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
+                          this->lineSide, temp, ip);
+         ip += temp; // consume args
          break;
-      case OP_LINESPEC3:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(3), STACK_AT(2), STACK_AT(1), 0, 0);
-         DECSTP3();
-         break;
-      case OP_LINESPEC4:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1), 0);
-         DECSTP4();
-         break;
-      case OP_LINESPEC5:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(5), STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1));
-         DECSTP5();
-         break;
-      case OP_LINESPEC1_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp, 
-                             this->lineSide, 1, ip);
-         ++ip; // skip past arg
-         break;
-      case OP_LINESPEC2_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 2, ip);
-         ip += 2; // skip past args
-         break;
-      case OP_LINESPEC3_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 3, ip);
-         ip += 3; // skip past args
-         break;
-      case OP_LINESPEC4_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 4, ip);
-         ip += 4; // skip past args
-         break;
-      case OP_LINESPEC5_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 5, ip);
-         ip += 5; // skip past args
-         break;
-      case OP_ADD:
+      case ACS_OP_ADD_STACK:
          ST_BINOP(ST_OP1 + ST_OP2);
          break;
-      case OP_SUB:
+      case ACS_OP_SUB_STACK:
          ST_BINOP(ST_OP1 - ST_OP2);
          break;
-      case OP_MUL:
+      case ACS_OP_MUL_STACK:
          ST_BINOP(ST_OP1 * ST_OP2);
          break;
-      case OP_DIV:
+      case ACS_OP_DIV_STACK:
          if(!(temp = ST_OP2))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -698,7 +532,7 @@ void ACSThinker::Think()
          }
          ST_BINOP(ST_OP1 / temp);
          break;
-      case OP_MOD:
+      case ACS_OP_MOD_STACK:
          if(!(temp = ST_OP2))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -707,70 +541,70 @@ void ACSThinker::Think()
          }
          ST_BINOP(ST_OP1 % temp);
          break;
-      case OP_EQUAL:
+      case ACS_OP_CMP_EQ:
          ST_BINOP(ST_OP1 == ST_OP2);
          break;
-      case OP_NOTEQUAL:
+      case ACS_OP_CMP_NE:
          ST_BINOP(ST_OP1 != ST_OP2);
          break;
-      case OP_LESS:
+      case ACS_OP_CMP_LT:
          ST_BINOP(ST_OP1 < ST_OP2);
          break;
-      case OP_GREATER:
+      case ACS_OP_CMP_GT:
          ST_BINOP(ST_OP1 > ST_OP2);
          break;
-      case OP_LESSOREQUAL:
+      case ACS_OP_CMP_LE:
          ST_BINOP(ST_OP1 <= ST_OP2);
          break;
-      case OP_GREATEROREQUAL:
+      case ACS_OP_CMP_GE:
          ST_BINOP(ST_OP1 >= ST_OP2);
          break;
-      case OP_ASSIGNSCRIPTVAR:
+      case ACS_OP_SET_LOCALVAR:
          this->locals[IPNEXT()] = POP();
          break;
-      case OP_ASSIGNMAPVAR:
+      case ACS_OP_SET_MAPVAR:
          ACSmapvars[IPNEXT()] = POP();
          break;
-      case OP_ASSIGNWORLDVAR:
+      case ACS_OP_SET_WORLDVAR:
          ACSworldvars[IPNEXT()] = POP();
          break;
-      case OP_PUSHSCRIPTVAR:
+      case ACS_OP_GET_LOCALVAR:
          PUSH(this->locals[IPNEXT()]);
          break;
-      case OP_PUSHMAPVAR:
+      case ACS_OP_GET_MAPVAR:
          PUSH(ACSmapvars[IPNEXT()]);
          break;
-      case OP_PUSHWORLDVAR:
+      case ACS_OP_GET_WORLDVAR:
          PUSH(ACSworldvars[IPNEXT()]);
          break;
-      case OP_ADDSCRIPTVAR:
+      case ACS_OP_ADD_LOCALVAR:
          this->locals[IPNEXT()] += POP();
          break;
-      case OP_ADDMAPVAR:
+      case ACS_OP_ADD_MAPVAR:
          ACSmapvars[IPNEXT()] += POP();
          break;
-      case OP_ADDWORLDVAR:
+      case ACS_OP_ADD_WORLDVAR:
          ACSworldvars[IPNEXT()] += POP();
          break;
-      case OP_SUBSCRIPTVAR:
+      case ACS_OP_SUB_LOCALVAR:
          this->locals[IPNEXT()] -= POP();
          break;
-      case OP_SUBMAPVAR:
+      case ACS_OP_SUB_MAPVAR:
          ACSmapvars[IPNEXT()] -= POP();
          break;
-      case OP_SUBWORLDVAR:
+      case ACS_OP_SUB_WORLDVAR:
          ACSworldvars[IPNEXT()] -= POP();
          break;
-      case OP_MULSCRIPTVAR:
+      case ACS_OP_MUL_LOCALVAR:
          this->locals[IPNEXT()] *= POP();
          break;
-      case OP_MULMAPVAR:
+      case ACS_OP_MUL_MAPVAR:
          ACSmapvars[IPNEXT()] *= POP();
          break;
-      case OP_MULWORLDVAR:
+      case ACS_OP_MUL_WORLDVAR:
          ACSworldvars[IPNEXT()] *= POP();
          break;
-      case OP_DIVSCRIPTVAR:
+      case ACS_OP_DIV_LOCALVAR:
          if(!(temp = POP()))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -779,7 +613,7 @@ void ACSThinker::Think()
          }
          this->locals[IPNEXT()] /= temp;
          break;
-      case OP_DIVMAPVAR:
+      case ACS_OP_DIV_MAPVAR:
          if(!(temp = POP()))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -788,7 +622,7 @@ void ACSThinker::Think()
          }
          ACSmapvars[IPNEXT()] /= temp;
          break;
-      case OP_DIVWORLDVAR:
+      case ACS_OP_DIV_WORLDVAR:
          if(!(temp = POP()))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -797,7 +631,7 @@ void ACSThinker::Think()
          }
          ACSworldvars[IPNEXT()] /= temp;
          break;
-      case OP_MODSCRIPTVAR:
+      case ACS_OP_MOD_LOCALVAR:
          if(!(temp = POP()))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -806,7 +640,7 @@ void ACSThinker::Think()
          }
          this->locals[IPNEXT()] %= temp;
          break;
-      case OP_MODMAPVAR:
+      case ACS_OP_MOD_MAPVAR:
          if(!(temp = POP()))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -815,7 +649,7 @@ void ACSThinker::Think()
          }
          ACSmapvars[IPNEXT()] %= temp;
          break;
-      case OP_MODWORLDVAR:
+      case ACS_OP_MOD_WORLDVAR:
          if(!(temp = POP()))
          {
             doom_printf(FC_ERROR "ACS Error: divide by zero\a");
@@ -824,25 +658,25 @@ void ACSThinker::Think()
          }
          ACSworldvars[IPNEXT()] %= temp;
          break;
-      case OP_INCSCRIPTVAR:
+      case ACS_OP_INC_LOCALVAR:
          this->locals[IPNEXT()] += 1;
          break;
-      case OP_INCMAPVAR:
+      case ACS_OP_INC_MAPVAR:
          ACSmapvars[IPNEXT()] += 1;
          break;
-      case OP_INCWORLDVAR:
+      case ACS_OP_INC_WORLDVAR:
          ACSworldvars[IPNEXT()] += 1;
          break;
-      case OP_DECSCRIPTVAR:
+      case ACS_OP_DEC_LOCALVAR:
          this->locals[IPNEXT()] -= 1;
          break;
-      case OP_DECMAPVAR:
+      case ACS_OP_DEC_MAPVAR:
          ACSmapvars[IPNEXT()] -= 1;
          break;
-      case OP_DECWORLDVAR:
+      case ACS_OP_DEC_WORLDVAR:
          ACSworldvars[IPNEXT()] -= 1;
          break;
-      case OP_BRANCH:
+      case ACS_OP_BRANCH_IMM:
          ip = (int *)(this->data + IPCURR());
          if(count >= 500000)
          {
@@ -850,7 +684,7 @@ void ACSThinker::Think()
             action = ACTION_ENDSCRIPT;
          }
          break;
-      case OP_BRANCHNOTZERO:
+      case ACS_OP_BRANCH_NOTZERO:
          if(POP())
             ip = (int *)(this->data + IPCURR());
          else
@@ -861,18 +695,18 @@ void ACSThinker::Think()
             action = ACTION_ENDSCRIPT;
          }
          break;
-      case OP_DECSTP:
+      case ACS_OP_STACK_DROP:
          DECSTP();
          break;
-      case OP_DELAY:
+      case ACS_OP_DELAY:
          this->delay = POP();
          action = ACTION_STOP;
          break;
-      case OP_DELAY_IMM:
+      case ACS_OP_DELAY_IMM:
          this->delay = IPNEXT();
          action = ACTION_STOP;
          break;
-      case OP_RANDOM:
+      case ACS_OP_RANDOM:
          {
             int min, max;
             max = POP();
@@ -881,7 +715,7 @@ void ACSThinker::Think()
             PUSH(P_RangeRandom(pr_script, min, max));
          }
          break;
-      case OP_RANDOM_IMM:
+      case ACS_OP_RANDOM_IMM:
          {
             int min, max;
             min = IPNEXT();
@@ -890,53 +724,53 @@ void ACSThinker::Think()
             PUSH(P_RangeRandom(pr_script, min, max));
          }
          break;
-      case OP_THINGCOUNT:
+      case ACS_OP_THINGCOUNT:
          temp = POP(); // get tid
          temp = ACS_countThings(POP(), temp);
          PUSH(temp);
          break;
-      case OP_THINGCOUNT_IMM:
+      case ACS_OP_THINGCOUNT_IMM:
          temp = IPNEXT(); // get type
          temp = ACS_countThings(temp, IPNEXT());
          PUSH(temp);
          break;
-      case OP_TAGWAIT:
+      case ACS_OP_TAGWAIT:
          this->sreg  = ACS_STATE_WAITTAG;
          this->sdata = POP(); // get sector tag
          action = ACTION_STOP;
          break;
-      case OP_TAGWAIT_IMM:
+      case ACS_OP_TAGWAIT_IMM:
          this->sreg  = ACS_STATE_WAITTAG;
          this->sdata = IPNEXT(); // get sector tag
          action = ACTION_STOP;
          break;
-      case OP_POLYWAIT:
+      case ACS_OP_POLYWAIT:
          this->sreg  = ACS_STATE_WAITPOLY;
          this->sdata = POP(); // get poly tag
          action = ACTION_STOP;
          break;
-      case OP_POLYWAIT_IMM:
+      case ACS_OP_POLYWAIT_IMM:
          this->sreg  = ACS_STATE_WAITPOLY;
          this->sdata = IPNEXT(); // get poly tag
          action = ACTION_STOP;
          break;
-      case OP_CHANGEFLOOR:
+      case ACS_OP_CHANGEFLOOR:
          temp = POP(); // get flat string index
          P_ChangeFloorTex(this->stringtable[temp], POP()); // get tag
          break;
-      case OP_CHANGEFLOOR_IMM:
+      case ACS_OP_CHANGEFLOOR_IMM:
          temp = *ip++; // get tag
          P_ChangeFloorTex(this->stringtable[IPNEXT()], temp);
          break;
-      case OP_CHANGECEILING:
+      case ACS_OP_CHANGECEILING:
          temp = POP(); // get flat string index
          P_ChangeCeilingTex(this->stringtable[temp], POP()); // get tag
          break;
-      case OP_CHANGECEILING_IMM:
+      case ACS_OP_CHANGECEILING_IMM:
          temp = IPNEXT(); // get tag
          P_ChangeCeilingTex(this->stringtable[IPNEXT()], temp);
          break;
-      case OP_RESTART:
+      case ACS_OP_SCRIPT_RESTART:
          ip = this->code;
          if(count >= 500000)
          {
@@ -944,36 +778,36 @@ void ACSThinker::Think()
             action = ACTION_ENDSCRIPT;
          }
          break;
-      case OP_LOGICALAND:
+      case ACS_OP_LOGAND_STACK:
          ST_BINOP(ST_OP1 && ST_OP2);
          break;
-      case OP_LOGICALOR:
+      case ACS_OP_LOGIOR_STACK:
          ST_BINOP(ST_OP1 || ST_OP2);
          break;
-      case OP_BITWISEAND:
+      case ACS_OP_AND_STACK:
          ST_BINOP(ST_OP1 & ST_OP2);
          break;
-      case OP_BITWISEOR:
+      case ACS_OP_IOR_STACK:
          ST_BINOP(ST_OP1 | ST_OP2);
          break;
-      case OP_BITWISEXOR:
+      case ACS_OP_XOR_STACK:
          ST_BINOP(ST_OP1 ^ ST_OP2);
          break;
-      case OP_LOGICALNOT:
+      case ACS_OP_LOGNOT_STACK:
          temp = POP();
          PUSH(!temp);
          break;
-      case OP_SHIFTLEFT:
+      case ACS_OP_LSH_STACK:
          ST_BINOP(ST_OP1 << ST_OP2);
          break;
-      case OP_SHIFTRIGHT:
+      case ACS_OP_RSH_STACK:
          ST_BINOP(ST_OP1 >> ST_OP2);
          break;
-      case OP_NEGATE:
+      case ACS_OP_NEGATE_STACK:
          temp = POP();
          PUSH(-temp);
          break;
-      case OP_BRANCHZERO:
+      case ACS_OP_BRANCH_ZERO:
          if(!(POP()))
             ip = (int *)(this->data + IPCURR());
          else
@@ -984,24 +818,24 @@ void ACSThinker::Think()
             action = ACTION_ENDSCRIPT;
          }
          break;
-      case OP_LINESIDE:
+      case ACS_OP_LINESIDE:
          PUSH(this->lineSide);
          break;
-      case OP_SCRIPTWAIT:
+      case ACS_OP_SCRIPTWAIT:
          this->sreg  = ACS_STATE_WAITSCRIPT;
          this->sdata = POP(); // get script num
          action = ACTION_STOP;
          break;
-      case OP_SCRIPTWAIT_IMM:
+      case ACS_OP_SCRIPTWAIT_IMM:
          this->sreg  = ACS_STATE_WAITSCRIPT;
          this->sdata = IPNEXT(); // get script num
          action = ACTION_STOP;
          break;
-      case OP_CLEARLINESPECIAL:
+      case ACS_OP_CLEARLINESPECIAL:
          if(this->line)
             this->line->special = 0;
          break;
-      case OP_CASEJUMP:
+      case ACS_OP_BRANCH_CASE:
          if(PEEK() == IPNEXT()) // compare top of stack against op+1
          {
             DECSTP(); // take the value off the stack
@@ -1015,40 +849,40 @@ void ACSThinker::Think()
             action = ACTION_ENDSCRIPT;
          }
          break;
-      case OP_STARTPRINT:
+      case ACS_OP_STARTPRINT:
          this->printBuffer->clear();
          break;
-      case OP_ENDPRINT:
+      case ACS_OP_ENDPRINT:
          if(this->trigger && this->trigger->player)
             player_printf(this->trigger->player, this->printBuffer->constPtr());
          else
             player_printf(&players[consoleplayer], this->printBuffer->constPtr());
          break;
-      case OP_PRINTSTRING:
+      case ACS_OP_PRINTSTRING:
          this->printBuffer->concat(this->stringtable[POP()]);
          break;
-      case OP_PRINTINT:
+      case ACS_OP_PRINTINT:
          {
             char buffer[33];
             this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
          }
          break;
-      case OP_PRINTCHAR:
+      case ACS_OP_PRINTCHAR:
          *this->printBuffer += (char)POP();
          break;
-      case OP_PLAYERCOUNT:
+      case ACS_OP_PLAYERCOUNT:
          PUSH(ACS_countPlayers());
          break;
-      case OP_GAMETYPE:
+      case ACS_OP_GAMETYPE:
          PUSH(GameType);
          break;
-      case OP_GAMESKILL:
+      case ACS_OP_GAMESKILL:
          PUSH(gameskill);
          break;
-      case OP_TIMER:
+      case ACS_OP_TIMER:
          PUSH(leveltime);
          break;
-      case OP_SECTORSOUND:
+      case ACS_OP_SECTORSOUND:
          {
             PointThinker *src = NULL;
             int vol            = POP();
@@ -1062,7 +896,7 @@ void ACSThinker::Think()
                                      ATTN_NORMAL, CHAN_AUTO);
          }
          break;
-      case OP_AMBIENTSOUND:
+      case ACS_OP_AMBIENTSOUND:
          {
             int vol    = POP();
             int strnum = POP();
@@ -1071,7 +905,7 @@ void ACSThinker::Think()
                                      ATTN_NORMAL, CHAN_AUTO);
          }
          break;
-      case OP_SOUNDSEQUENCE:
+      case ACS_OP_SOUNDSEQUENCE:
          {
             sector_t *sec;
             int strnum = POP();
@@ -1091,7 +925,7 @@ void ACSThinker::Think()
             */
          }
          break;
-      case OP_SETLINETEXTURE:
+      case ACS_OP_SETLINETEXTURE:
          {
             int pos, side, tag, strnum;
 
@@ -1103,7 +937,7 @@ void ACSThinker::Think()
             P_ChangeLineTex(this->stringtable[strnum], pos, side, tag, false);
          }
          break;
-      case OP_SETLINEBLOCKING:
+      case ACS_OP_SETLINEBLOCKING:
          {
             int tag, block;
 
@@ -1113,7 +947,7 @@ void ACSThinker::Think()
             ACS_setLineBlocking(tag, block);
          }
          break;
-      case OP_SETLINESPECIAL:
+      case ACS_OP_SETLINESPECIAL:
          {
             int tag;
             int16_t spec;
@@ -1127,7 +961,7 @@ void ACSThinker::Think()
             ACS_setLineSpecial(spec, args, tag);
          }
          break;
-      case OP_THINGSOUND:
+      case ACS_OP_THINGSOUND:
          {
             int vol    = POP();
             int strnum = POP();
@@ -1141,7 +975,7 @@ void ACSThinker::Think()
             }
          }
          break;
-      case OP_ENDPRINTBOLD:
+      case ACS_OP_ENDPRINTBOLD:
          HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
          break;
       default:
@@ -1282,75 +1116,32 @@ void ACS_InitLevel(void)
 //
 void ACS_LoadScript(acsvm_t *vm, int lump)
 {
-   int32_t *rover;
-   int i, numstrings;
+   byte *data;
 
    // zero length or too-short lump?
-   if(W_LumpLength(lump) < 6)
+   if(W_LumpLength(lump) < 4)
    {
-      vm->data = NULL;
+      vm->code = NULL;
       return;
    }
 
    // load the lump
-   vm->data = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_LEVEL));
+   data = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_LEVEL));
 
-   rover = (int32_t *)vm->data;
-
-   // check magic id string: currently supports Hexen format only
-   if(SwapLong(*rover++) != 0x00534341) // "ACS\0"
-      return;
-
-   // set rover to information table
-   rover = (int32_t *)(vm->data + SwapLong(*rover));
-
-   // read number of scripts
-   vm->numScripts = SwapLong(*rover++);
-
-   if(vm->numScripts <= 0) // no scripts defined?
-      return;
-
-   // allocate scripts array
-   vm->scripts = estructalloctag(acscript_t, vm->numScripts, PU_LEVEL);
-
-   vm->loaded = true;
-
-   // read script information entries
-   for(i = 0; i < vm->numScripts; ++i)
+   switch(SwapLong(*(int32_t *)data))
    {
-      vm->scripts[i].number  = SwapLong(*rover++); // read script number
-      vm->scripts[i].code    = (int *)(vm->data + SwapLong(*rover++)); // set entry pt
-      vm->scripts[i].numArgs = SwapLong(*rover++); // number of args
-
-      // handle open scripts: scripts > 1000 should start at the
-      // beginning of the level      
-      if(vm->scripts[i].number >= 1000)
-      {
-         vm->scripts[i].number -= 1000;
-         vm->scripts[i].isOpen = true;
-      }
-   }
-
-   // we are now positioned at the string table; read number of strings
-   numstrings = SwapLong(*rover++);
-
-   // allocate string table
-   if(numstrings > 0)
-   {
-      vm->stringtable = (char **)(Z_Malloc(numstrings * sizeof(char *), 
-                                          PU_LEVEL, NULL));
-      
-      // set string pointers
-      for(i = 0; i < numstrings; ++i)
-         vm->stringtable[i] = (char *)(vm->data + SwapLong(*rover++));
+   case 0x00534341: // TODO: macro
+      ACS_LoadScriptACS0(vm, lump, data);
+      break;
    }
 
    // haleyjd 06/30/09: open scripts must be started *here*, not above.
-   for(i = 0; i < vm->numScripts; ++i)
+   for(acscript_t *end = vm->scripts+vm->numScripts,
+       *itr = vm->scripts; itr != end; ++itr)
    {
-      if(vm->scripts[i].isOpen)
-         ACS_runOpenScript(vm, &(vm->scripts[i]), i, vm->id);
-   }   
+      if(itr->type)
+         ACS_runOpenScript(vm, itr, itr - vm->scripts, vm->id);
+   }
 }
 
 //
@@ -1424,7 +1215,7 @@ void ACS_RunDeferredScripts(void)
    DLListItem<deferredacs_t> *cur = acsDeferred, *next;
    ACSThinker *newScript = NULL;
    ACSThinker *rover = NULL;
-   int internalNum;
+   unsigned int internalNum;
 
    while(cur)
    {
@@ -1499,7 +1290,8 @@ bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
    acscript_t   *scrData;
    ACSThinker *newScript, *rover;
    bool foundScripts = false;
-   int i, internalNum;
+   unsigned int internalNum;
+   int i;
 
    // ACS must be active on the current map or we do nothing
    if(!vm->loaded)
@@ -1544,15 +1336,15 @@ bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
 
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;
-   newScript->ip          = scrData->code;
+   newScript->ip          = scrData->codePtr;
    newScript->line        = line;
    newScript->lineSide    = side;
    P_SetTarget<Mobj>(&newScript->trigger, mo);
 
    // copy in some important data
-   newScript->code        = scrData->code;
-   newScript->data        = vm->data;
-   newScript->stringtable = vm->stringtable;
+   newScript->code        = scrData->codePtr;
+   newScript->data        = vm->code;
+   newScript->stringtable = vm->strings;
    newScript->printBuffer = vm->printBuffer;
    newScript->acscript    = scrData;
    newScript->vm          = vm;
@@ -1608,7 +1400,7 @@ bool ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 
    if(mapnum > 0 && mapnum == gamemap)
    {
-      int internalNum;
+      unsigned int internalNum;
 
       if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
@@ -1659,7 +1451,7 @@ bool ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 
    if(mapnum > 0 && mapnum == gamemap)
    {
-      int internalNum;
+      unsigned int internalNum;
 
       if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
@@ -1705,7 +1497,8 @@ bool ACS_SuspendScript(int scrnum, int mapnum)
 //
 void ACS_PrepareForLoad(void)
 {
-   int i, j;
+   int i;
+   unsigned int j;
 
    for(i = 0; i < numACSVMs; ++i)
    {
@@ -1734,9 +1527,9 @@ void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset)
    // reinitialize pointers
    th->vm          = acsVMs[th->vmID];
    th->acscript    = &(th->vm->scripts[th->internalNum]);
-   th->code        = th->acscript->code;
-   th->data        = th->vm->data;
-   th->stringtable = th->vm->stringtable;
+   th->code        = th->acscript->codePtr;
+   th->data        = th->vm->code;
+   th->stringtable = th->vm->strings;
    th->printBuffer = th->vm->printBuffer;
 
    // note: line and trigger pointers are restored in p_saveg.c

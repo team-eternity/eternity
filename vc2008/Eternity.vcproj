@@ -221,6 +221,10 @@
 				Name="ACS_"
 				>
 				<File
+					RelativePath="..\source\acs_acs0.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\source\acs_intr.cpp"
 					>
 					<FileConfiguration
@@ -244,6 +248,10 @@
 				</File>
 				<File
 					RelativePath="..\source\acs_intr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\acs_op.h"
 					>
 				</File>
 			</Filter>
