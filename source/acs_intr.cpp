@@ -1497,7 +1497,8 @@ bool ACS_SuspendScript(int scrnum, int mapnum)
 //
 void ACS_PrepareForLoad(void)
 {
-   int i, j;
+   int i;
+   unsigned int j;
 
    for(i = 0; i < numACSVMs; ++i)
    {
