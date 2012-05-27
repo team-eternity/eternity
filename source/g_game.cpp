@@ -2672,7 +2672,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
    MetaObject *o;
    mobjinfo_t *mi = mobjinfo[thingtype];
 
-   if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+   if((o = mi->meta->getObjectKeyAndType("speedset", RTTI(MetaSpeedSet))))
    {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }
@@ -2709,7 +2709,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType("speedset", RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
@@ -2723,7 +2723,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType("speedset", RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }

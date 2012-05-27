@@ -568,7 +568,7 @@ static void E_addMetaClass(inventory_t *inv, int classtype)
 {
    MetaObject *obj = NULL;
 
-   while((obj = inv->meta->getNextKeyAndType(obj, "classtype", "MetaInteger")))
+   while((obj = inv->meta->getNextKeyAndType(obj, "classtype", RTTI(MetaInteger))))
    {
       MetaInteger *mInt = static_cast<MetaInteger *>(obj);
       if(mInt->getValue() == classtype)

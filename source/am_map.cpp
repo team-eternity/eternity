@@ -1798,7 +1798,6 @@ static void AM_drawWalls(void)
                }
             }
          } // end else if
-      
       }
    }
 

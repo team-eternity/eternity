@@ -201,6 +201,8 @@ public:
    MetaObject *getNextObject(MetaObject *object, const char *key);
    MetaObject *getNextType(MetaObject *object, const char *type);
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, 
+                                 const MetaObject::Type *type);
    MetaObject *tableIterator(MetaObject *object) const;
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects

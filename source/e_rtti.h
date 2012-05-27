@@ -94,7 +94,7 @@ public:
       {
          Type *type = FindType(pName);
 
-         if(!T::Class::StaticType.isAncestorOf(type))
+         if(!type || !T::Class::StaticType.isAncestorOf(type))
             return NULL;
 
          return static_cast<T *>(type);

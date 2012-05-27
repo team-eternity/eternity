@@ -678,27 +678,10 @@ MetaObject *MetaTable::getObjectType(const char *type)
 }
 
 //
-// MetaTable::getObjectKeyAndType
-//
-// As above, but satisfying both conditions at once.
-//
-MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
-{
-   MetaObject *obj = NULL;
-
-   while((obj = pImpl->keyhash.keyIterator(obj, key)))
-   {
-      if(obj->isInstanceOf(type))
-         break;
-   }
-
-   return obj;
-}
-
-//
 // MetaTable::getObjectKeyAndType(const char *, MetaObject::Type *)
 //
-// Overload that takes a pointer to a runtime type.
+// As above, but searching for an object which satisfies both the key and type
+// requirements simultaneously.
 //
 MetaObject *MetaTable::getObjectKeyAndType(const char *key, MetaObject::Type *rt)
 {
@@ -711,6 +694,21 @@ MetaObject *MetaTable::getObjectKeyAndType(const char *key, MetaObject::Type *rt
    }
 
    return obj;
+}
+
+//
+// MetaTable::getObjectKeyAndType
+//
+// Overload accepting a class name.
+//
+MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
+{
+   MetaObject::Type *rttiType;
+
+   if(!(rttiType = MetaObject::Type::FindType<MetaObject::Type>(type)))
+      I_Error("MetaTable::getObjectKeyAndType: %s is not a MetaObject!\n", type);
+
+   return getObjectKeyAndType(key, rttiType);
 }
 
 //
@@ -754,10 +752,11 @@ MetaObject *MetaTable::getNextType(MetaObject *object, const char *type)
 //
 // As above, but satisfying both conditions at once.
 //
-MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, const char *type)
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, 
+                                         const MetaObject::Type *type)
 {
    MetaObject *obj = object;
-
+   
    if(object)
    {
       // As above, allow NULL in either key or type to mean "same as current"
@@ -765,8 +764,12 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
          key = object->getKey();
 
       if(!type)
-         type = object->getClassName();
+         type = object->getDynamicType();
    }
+#ifdef RANGECHECK
+   else if(!(key && type))
+      I_Error("MetaTable::getNextKeyAndType: illegal arguments\n");
+#endif
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
@@ -778,6 +781,22 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
 }
 
 //
+// MetaTable::getNextKeyAndType
+//
+// Overload accepting a class name.
+//
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, 
+                                         const char *type)
+{
+   MetaObject::Type *rttiType = NULL;
+
+   if(type && !(rttiType = MetaObject::Type::FindType<MetaObject::Type>(type)))
+      I_Error("MetaTable::getNextKeyAndType: %s is not a MetaObject!\n", type);
+
+   return getNextKeyAndType(object, key, rttiType);
+}
+
+//
 // MetaTable::tableIterator
 //
 // Iterates on all objects in the metatable, regardless of key or type.
@@ -786,8 +805,6 @@ MetaObject *MetaTable::tableIterator(MetaObject *object) const
 {
    return pImpl->keyhash.tableIterator(object);
 }
-
-
 
 //
 // MetaTable::addInt
@@ -817,7 +834,7 @@ int MetaTable::getInt(const char *key, int defValue)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaInteger))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaInteger))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -839,10 +856,10 @@ void MetaTable::setInt(const char *key, int newValue)
 {
    MetaObject *obj;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaInteger))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaInteger))))
       addInt(key, newValue);
    else
-      static_cast<MetaInteger*>(obj)->value = newValue;
+      static_cast<MetaInteger *>(obj)->value = newValue;
 }
 
 //
@@ -862,7 +879,7 @@ int MetaTable::removeInt(const char *key)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaInteger))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaInteger))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return 0;
@@ -906,7 +923,7 @@ double MetaTable::getDouble(const char *key, double defValue)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaDouble))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaDouble))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -928,7 +945,7 @@ void MetaTable::setDouble(const char *key, double newValue)
 {
    MetaObject *obj;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaDouble))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaDouble))))
       addDouble(key, newValue);
    else
       static_cast<MetaDouble *>(obj)->value = newValue;
@@ -951,7 +968,7 @@ double MetaTable::removeDouble(const char *key)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaDouble))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaDouble))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return 0.0;
@@ -993,7 +1010,7 @@ const char *MetaTable::getString(const char *key, const char *defValue)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaString))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaString))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -1015,7 +1032,7 @@ void MetaTable::setString(const char *key, const char *newValue)
 {
    MetaObject *obj;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaString))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaString))))
       addString(key, newValue);
    else
       static_cast<MetaString *>(obj)->setValue(newValue);
@@ -1042,7 +1059,7 @@ char *MetaTable::removeString(const char *key)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaString))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaString))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return NULL;
@@ -1079,7 +1096,7 @@ void MetaTable::removeStringNR(const char *key)
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndType(key, METATYPE(MetaString))))
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaString))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return;
