@@ -2503,6 +2503,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_inventory.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_lights.cpp"
 						>
 						<FileConfiguration
@@ -3048,6 +3052,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_inter.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_inventory.h"
 						>
 					</File>
 					<File
@@ -5156,6 +5164,10 @@
 				>
 				<File
 					RelativePath="..\source\metaadapter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\metaalgorithms.h"
 					>
 				</File>
 				<File

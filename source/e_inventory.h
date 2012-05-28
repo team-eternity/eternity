@@ -34,15 +34,17 @@ class MetaTable;
 // Inventory flags
 enum
 {
-   INVF_AUTOACTIVATE    = 0x00000001,
-   INVF_UNDROPPABLE     = 0x00000002,
-   INVF_INVBAR          = 0x00000004,
-   INVF_HUBPOWER        = 0x00000008,
-   INVF_PERSISTENTPOWER = 0x00000010,
-   INVF_ALWAYSPICKUP    = 0x00000020,
-   INVF_KEEPDEPLETED    = 0x00000040,
-   INVF_ADDITIVETIME    = 0x00000080,
-   INVF_UNTOSSABLE      = 0x00000100
+   INVF_AUTOACTIVATE    = 0x00000001, // Activates immediately when acquired
+   INVF_UNDROPPABLE     = 0x00000002, // Can't be dropped
+   INVF_INVBAR          = 0x00000004, // Is displayed in inventory bar
+   INVF_HUBPOWER        = 0x00000008, // Power lasts for current cluster
+   INVF_PERSISTENTPOWER = 0x00000010, // Power is kept between levels
+   INVF_ALWAYSPICKUP    = 0x00000020, // Item is picked up even if unneeded
+   INVF_PICKUPIFANY     = 0x00000040, // Item picked up if any one effect passes
+   INVF_KEEPDEPLETED    = 0x00000080, // Item remains in inventory with amount 0
+   INVF_ADDITIVETIME    = 0x00000100, // Power timer is increased w/each collect
+   INVF_UNTOSSABLE      = 0x00000200, // Can't be removed even w/console command
+   INVF_LOUDPICKUPSOUND = 0x00000400  // Pickup sound is played with ATTN_NONE
 
    // Possible TODOs:
    // INV_BIGPOWERUP  - redundant with flags value

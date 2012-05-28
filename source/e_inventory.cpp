@@ -54,9 +54,11 @@ static dehflags_t inventoryflags[] =
    { "HUBPOWER",        INVF_HUBPOWER        },
    { "PERSISTENTPOWER", INVF_PERSISTENTPOWER },
    { "ALWAYSPICKUP",    INVF_ALWAYSPICKUP    },
+   { "PICKUPIFANY",     INVF_PICKUPIFANY     },
    { "KEEPDEPLETED",    INVF_KEEPDEPLETED    },
    { "ADDITIVETIME",    INVF_ADDITIVETIME    },
    { "UNTOSSABLE",      INVF_UNTOSSABLE      },
+   { "LOUDPICKUPSOUND", INVF_LOUDPICKUPSOUND },
    { NULL,              0                    }
 };
 
@@ -86,16 +88,21 @@ static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
 #define ITEM_INVENTORY_RESPAWNTICS    "respawntics"
 #define ITEM_INVENTORY_GIVEQUEST      "givequest"
 #define ITEM_INVENTORY_FLAGS          "flags"
+#define ITEM_INVENTORY_RESTRICTEDTO   "restrictedto"
+#define ITEM_INVENTORY_FORBIDDENTO    "forbiddento"
 #define ITEM_INVENTORY_COMPATNAME     "compatname"
 
+// Delta section name field
+#define ITEM_DELTA_NAME               "name"
+
 // Class-specific fields
+
+// Health
 #define ITEM_HEALTH_AMOUNT            "health.amount"
 #define ITEM_HEALTH_MAXAMOUNT         "health.maxamount"
 #define ITEM_HEALTH_LOWMESSAGE        "health.lowmessage"
 #define ITEM_LOWMSG_VALUE             "value"
 #define ITEM_LOWMSG_MESSAGE           "message"
-
-#define ITEM_DELTA_NAME               "name"
 
 //
 // lowmessage mvprop options
@@ -363,7 +370,7 @@ void E_CollectInventory(cfg_t *cfg)
       // add to name hash
       inv_namehash.addObject(inv);
 
-      // create ID number and add to hash table
+      // create unique ID number and add to hash table
       inv->numkey = currentID++;
       inv_numhash.addObject(inv);
 
@@ -724,7 +731,9 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
          inv->flags = E_ParseFlags(tempstr, &inventory_flagset);
    }
    
-   // TODO: addflags/remflags   
+   // TODO: addflags/remflags
+
+   // TODO: player class restrictions
 }
 
 //
