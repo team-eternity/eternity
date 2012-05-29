@@ -31,6 +31,7 @@
 #include "doomtype.h"
 #include "info.h"
 #include "metaapi.h"
+#include "p_inventory.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -132,6 +133,8 @@ static cfg_opt_t lowmsg_opts[] =
    CFG_INT(ITEM_INVENTORY_GIVEQUEST,           -1, CFGF_NONE ), \
    CFG_STR(ITEM_INVENTORY_FLAGS,               "", CFGF_NONE ), \
    CFG_STR(ITEM_INVENTORY_COMPATNAME,        NULL, CFGF_NONE ), \
+   CFG_STR(ITEM_INVENTORY_RESTRICTEDTO,        "", CFGF_MULTI), \
+   CFG_STR(ITEM_INVENTORY_FORBIDDENTO,         "", CFGF_MULTI), \
    CFG_INT(ITEM_HEALTH_AMOUNT,                  0, CFGF_NONE ), \
    CFG_INT(ITEM_HEALTH_MAXAMOUNT,               0, CFGF_NONE ), \
    CFG_MVPROP(ITEM_HEALTH_LOWMESSAGE, lowmsg_opts, CFGF_NONE ), \
@@ -157,6 +160,7 @@ static unsigned int inv_pindex  = 0;
 
 // Properties for meta item classes
 IMPLEMENT_RTTI_TYPE(MetaGiveItem)
+IMPLEMENT_RTTI_TYPE(MetaInventoryClass)
 
 //
 // Compatibility stuff
@@ -571,18 +575,22 @@ static ClassFuncPtr inventoryClasses[INV_CLASS_NUMCLASSES] =
 //
 // Add a class to the metatable, provided it hasn't been added already.
 //
-static void E_addMetaClass(inventory_t *inv, int classtype)
+static void E_addMetaClass(inventory_t *inv, int classType)
 {
    MetaObject *obj = NULL;
+   MetaObject::Type *type = RTTI(MetaInventoryClass);
+   InventoryGeneric *invClass;
+   
+   invClass = InventoryGeneric::GetInventoryInstance(classType);
 
-   while((obj = inv->meta->getNextKeyAndType(obj, "classtype", RTTI(MetaInteger))))
+   while((obj = inv->meta->getNextKeyAndType(obj, "classtype", type)))
    {
-      MetaInteger *mInt = static_cast<MetaInteger *>(obj);
-      if(mInt->getValue() == classtype)
+      MetaInventoryClass *mClass = static_cast<MetaInventoryClass *>(obj);
+      if(mClass->getValue() == invClass)
          return;
    }
 
-   inv->meta->addInt("classtype", classtype);
+   inv->meta->addObject(new MetaInventoryClass("classtype", invClass));
 }
 
 //
@@ -733,7 +741,12 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
    
    // TODO: addflags/remflags
 
-   // TODO: player class restrictions
+   // player class restrictions
+   if(cfg_size(invsec, ITEM_INVENTORY_RESTRICTEDTO) > 0)
+      ;
+
+   if(cfg_size(invsec, ITEM_INVENTORY_FORBIDDENTO) > 0)
+      ;
 }
 
 //

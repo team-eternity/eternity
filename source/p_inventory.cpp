@@ -77,11 +77,9 @@ public:
    // Call the inventory class object's canCollect method to see if the
    // player needs this effect or not.
    //
-   bool checkClass(MetaInteger &metaInt)
+   bool checkClass(MetaInventoryClass &metaClass)
    {
-      // We've been passed one of the classtypes from the MetaTable
-      int classType = metaInt.getValue(); 
-      return InstanceForInventoryClass[classType]->canCollect(params);
+      return metaClass.getValue()->canCollect(params);
    }
 };
 
@@ -170,6 +168,17 @@ bool InventoryGeneric::TouchItem(Mobj *collector, Mobj *item)
    }
 
    return result;
+}
+
+//
+// InventoryGeneric::GetInventoryInstance
+//
+// Return a pointer to the inventory implementation class singleton for a given
+// EDF inventory class number.
+//
+InventoryGeneric *InventoryGeneric::GetInventoryInstance(int classType)
+{
+   return InstanceForInventoryClass[classType];
 }
 
 // EOF

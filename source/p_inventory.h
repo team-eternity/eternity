@@ -61,6 +61,7 @@ public:
    // Statics
    static bool GiveItem(Mobj *collector, inventory_t *inv);
    static bool TouchItem(Mobj *collector, Mobj *item);
+   static InventoryGeneric *GetInventoryInstance(int classType);
 };
 
 class InventoryHealth : public InventoryGeneric

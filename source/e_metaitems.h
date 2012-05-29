@@ -31,6 +31,8 @@
 #include "metaapi.h"
 #include "e_inventory.h"
 
+class InventoryGeneric;
+
 //
 // MetaGiveItem
 //
@@ -71,6 +73,44 @@ public:
 
    // toString - virtual method for nice display of metastate properties.
    virtual const char *toString() const { return inventory->name; }
+};
+
+//
+// MetaInventoryClass
+//
+// Stores a pointer to the inventory class instance in the inventory metatable.
+//
+class MetaInventoryClass : public MetaObject
+{
+   DECLARE_RTTI_TYPE(MetaInventoryClass, MetaObject)
+
+protected:
+   InventoryGeneric *inventoryClass;
+
+public:
+   // Default constructor
+   MetaInventoryClass() : Super(), inventoryClass(NULL)
+   {
+   }
+
+   // Parameterized constructor
+   MetaInventoryClass(const char *key, InventoryGeneric *invClass) 
+      : Super(key), inventoryClass(invClass)
+   {
+   }
+
+   // Copy constructor
+   MetaInventoryClass(const MetaInventoryClass &other) : Super(other)
+   {
+      this->inventoryClass = other.inventoryClass;
+   }
+   
+   // Accessors
+   InventoryGeneric *getValue() const   { return inventoryClass; }
+   void setValue(InventoryGeneric *inv) { inventoryClass = inv;  }
+
+   // Clone - virtual copy constructor
+   virtual MetaObject *clone() const { return new MetaInventoryClass(*this); }
 };
 
 #endif
