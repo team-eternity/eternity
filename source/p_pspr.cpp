@@ -201,8 +201,7 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
    // haleyjd 04/05/07: codepointer rewrite -- use same prototype for
    // all codepointers by getting player and psp from mo->player. This
    // requires stashing the "position" parameter in player_t, however.
-
-   player->curpsprite = position;
+   // 5/29/12: see below...
 
    do
    {
@@ -237,6 +236,10 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       if(state->action)
       {
          P_SetupPlayerGunAction(player, psp);
+
+         // haleyjd 05/29/12: this must be set before every action call, due to
+         // the possibility of recursive calls to P_SetPsprite.
+         player->curpsprite = position;
 
          state->action(player->mo);
          
