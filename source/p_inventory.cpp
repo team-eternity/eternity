@@ -28,14 +28,15 @@
 
 #include "e_inventory.h"
 #include "e_metaitems.h"
+#include "i_system.h"
 #include "metaapi.h"
 #include "metaalgorithms.h"
 #include "p_inventory.h"
 #include "p_mobj.h"
 
 // Inventory class singletons
-static InventoryGeneric inventoryGenericObj;
-static InventoryHealth  inventoryHealthObj;
+static InventoryGeneric inventoryGenericObj("InventoryGeneric");
+static InventoryHealth  inventoryHealthObj ("InventoryHealth" );
 
 // Inventory classtype to instance lookup
 static InventoryGeneric *InstanceForInventoryClass[INV_CLASS_NUMCLASSES] =
@@ -50,6 +51,18 @@ static InventoryGeneric *InstanceForInventoryClass[INV_CLASS_NUMCLASSES] =
 //
 // Base class for all inventory effects
 //
+
+//
+// InventoryGeneric::IsValidPlayerClass
+//
+// Check to see if the collector is in the restrictedto list, and not in the
+// forbiddento list.
+//
+bool InventoryGeneric::IsValidPlayerClass(pickupdata_t &params)
+{
+   // TODO
+   return true;
+}
 
 //
 // InventoryGeneric::canCollect
@@ -67,9 +80,7 @@ class CheckFunctor
 public:
    InventoryGeneric::pickupdata_t &params;
 
-   CheckFunctor(InventoryGeneric::pickupdata_t &pParams) : params(pParams)
-   {
-   }
+   CheckFunctor(InventoryGeneric::pickupdata_t &pParams) : params(pParams) {}
 
    //
    // checkClass
@@ -114,10 +125,11 @@ bool InventoryGeneric::CheckForCollect(pickupdata_t &params)
 //
 bool InventoryGeneric::GiveItem(Mobj *collector, inventory_t *item)
 {
-   bool result = false;
+   bool gaveItem = false;
 
+   // TODO
 
-   return result;
+   return gaveItem;
 }
 
 //
@@ -128,7 +140,7 @@ bool InventoryGeneric::GiveItem(Mobj *collector, inventory_t *item)
 //
 bool InventoryGeneric::TouchItem(Mobj *collector, Mobj *item)
 {
-   bool        result   = false;
+   bool        pickedUp = false;
    MetaTable  *itemMeta = item->info->meta;
    MetaObject *obj;
 
@@ -144,8 +156,8 @@ bool InventoryGeneric::TouchItem(Mobj *collector, Mobj *item)
       // Check for player class restrictions. The item may change its behavior
       // if the collector does not fall within them (or it may deny pickup
       // altogether). We'll record the findings of this operation in the
-      // parameter structure for reference below.
-      /*TODO*/;
+      // "data" parameter structure for reference below.
+      data.validPClass = IsValidPlayerClass(data);
 
       // Check for basic collection capability, ie.:
       // * If it's ALWAYSPICKUP - it may not help, but we'll still grab it
@@ -155,19 +167,25 @@ bool InventoryGeneric::TouchItem(Mobj *collector, Mobj *item)
       {
          // If fell within class restrictions, apply full effects
          // Else, apply restricted effects
-         /*TODO*/;
+         if(data.validPClass)
+            /*TODO*/;
+         else
+            /*TODO*/;
 
-         // Provided collection is successful, do general item stuff:
-         // * Palette flash
-         // * Message
-         // * COUNTITEM flag
-         // * GiveQuest
-         // * Remove the item?
-         /*TODO*/;
+         // Provided collection is successful, do general item stuff
+         if(pickedUp)
+         {
+            // * Palette flash
+            // * Message
+            // * COUNTITEM flag
+            // * GiveQuest
+            // * Remove the item?
+            /*TODO*/;
+         }
       }
    }
 
-   return result;
+   return pickedUp;
 }
 
 //
@@ -178,6 +196,12 @@ bool InventoryGeneric::TouchItem(Mobj *collector, Mobj *item)
 //
 InventoryGeneric *InventoryGeneric::GetInventoryInstance(int classType)
 {
+   if(classType < 0 || classType >= INV_CLASS_NUMCLASSES)
+   {
+      I_Error("InventoryGeneric::GetInventoryInstance: invalid classType %d\n",
+              classType);
+   }
+
    return InstanceForInventoryClass[classType];
 }
 

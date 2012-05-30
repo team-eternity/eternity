@@ -163,6 +163,14 @@ IMPLEMENT_RTTI_TYPE(MetaGiveItem)
 IMPLEMENT_RTTI_TYPE(MetaInventoryClass)
 
 //
+// MetaInventoryClass::toString
+//
+const char *MetaInventoryClass::toString() const
+{
+   return inventoryClass->getName();
+}
+
+//
 // Compatibility stuff
 //
 

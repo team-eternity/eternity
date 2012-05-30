@@ -27,24 +27,25 @@
 #ifndef P_INVENTORY_H__
 #define P_INVENTORY_H__
 
-class Mobj;
+class  CheckFunctor;
 struct inventory_t;
-
-class CheckFunctor;
+class  Mobj;
 
 class InventoryGeneric
 {
 public:
    struct pickupdata_t
    {
-      Mobj        *collector; // object acquiring the item
-      Mobj        *item;      // object being picked up (may be NULL)
-      inventory_t *inv;       // inventory definition
+      Mobj        *collector;   // object acquiring the item
+      Mobj        *item;        // object being picked up (may be NULL)
+      inventory_t *inv;         // inventory definition
+      bool         validPClass; // collector passed pclass restrictions
    };
 
 protected:
    // Statics
    static bool CheckForCollect(pickupdata_t &params);
+   static bool IsValidPlayerClass(pickupdata_t &params);
 
    // Virtuals
    virtual bool canCollect(pickupdata_t &params); // see if can collect
@@ -54,18 +55,29 @@ protected:
    virtual bool tryCollect(Mobj *collector);      // first chance to pickup
    virtual bool tryCollectAgain(Mobj *collector); // last chance to pickup
    */
+
+   // Data
+   const char *const name;
    
+   // Friends
    friend class CheckFunctor;
 
 public:
+   InventoryGeneric(const char *pName) : name(pName) {}
+
    // Statics
    static bool GiveItem(Mobj *collector, inventory_t *inv);
    static bool TouchItem(Mobj *collector, Mobj *item);
    static InventoryGeneric *GetInventoryInstance(int classType);
+
+   // Fixed methods
+   const char *getName() const { return name; }
 };
 
 class InventoryHealth : public InventoryGeneric
 {
+public:
+   InventoryHealth(const char *pName) : InventoryGeneric(pName) {}
 };
 
 #endif

@@ -111,6 +111,8 @@ public:
 
    // Clone - virtual copy constructor
    virtual MetaObject *clone() const { return new MetaInventoryClass(*this); }
+   
+   virtual const char *toString() const;
 };
 
 #endif
