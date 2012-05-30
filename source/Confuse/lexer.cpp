@@ -351,7 +351,7 @@ static int lexer_state_string(lexerstate_t *ls)
    case '"':
       if(ls->stringtype == 1) // double-quoted string, end it
       {
-         mytext = qstr.getBuffer();
+         mytext = qstr.constPtr();
          ret = CFGT_STR;
       }
       else
@@ -360,7 +360,7 @@ static int lexer_state_string(lexerstate_t *ls)
    case '\'':
       if(ls->stringtype == 2) // single-quoted string, end it
       {               
-         mytext = qstr.getBuffer();
+         mytext = qstr.constPtr();
          ret = CFGT_STR;
       }
       else
@@ -389,7 +389,7 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
    {
       // any special character ends an unquoted string
       --bufferpos; // put it back
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
       
       return CFGT_STR; // return a string token
    }
@@ -424,7 +424,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
    if(ls->c == c && *bufferpos == '@')
    {
       ++bufferpos; // move forward past @
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
 
       return CFGT_STR; // return a string token
    }
@@ -600,7 +600,7 @@ include:
       // EOF after unquoted string -- return the string, next
       // call will return EOF
       --bufferpos;
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
       return CFGT_STR;
 
    default:      

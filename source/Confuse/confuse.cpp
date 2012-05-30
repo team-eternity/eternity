@@ -700,16 +700,18 @@ enum
 
 static int cfg_parse_internal(cfg_t *cfg, int level)
 {
-   int state = STATE_EXPECT_OPTION, next_state = STATE_EXPECT_OPTION;
-   char *opttitle = 0;
-   cfg_opt_t *opt = 0;
+   int          state         = STATE_EXPECT_OPTION;
+   int          next_state    = STATE_EXPECT_OPTION;
+   char        *opttitle      = 0;
+   cfg_opt_t   *opt           = 0;
    cfg_value_t *val;
-   cfg_bool_t append_value;
-   cfg_opt_t funcopt = CFG_STR(0,0,0);
-   cfg_bool_t found_func = cfg_false; // haleyjd
-   int tok;
-   int skip_token = 0;     // haleyjd
-   int propindex = 0;      // haleyjd: for multi-value properties
+   cfg_bool_t   append_value;
+   cfg_opt_t    funcopt       = CFG_STR(0,0,0);
+   cfg_bool_t   found_func    = cfg_false; // haleyjd
+   cfg_bool_t   list_nobraces = cfg_false; // haleyjd
+   int          tok;
+   int          skip_token    = 0;     // haleyjd
+   int          propindex     = 0;     // haleyjd: for multi-value properties
    
    while(1)
    {
@@ -861,15 +863,11 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
 
       case STATE_EXPECT_LISTBRACE: /* expecting an opening brace for a list option */
          if(tok != '{')
-         {
-            cfg_error(cfg, _("missing opening brace for option '%s'\n"),
-               opt->name);
-            return STATE_ERROR;
-         }
+            list_nobraces = cfg_true;
          /* haleyjd 12/23/06: set unquoted string state */
          if(is_set(CFGF_STRSPACE, opt->flags))
             lexer_set_unquoted_spaces(cfg_true);
-         state = STATE_EXPECT_VALUE;
+         state      = STATE_EXPECT_VALUE;
          next_state = STATE_EXPECT_LISTNEXT;
          break;
          
@@ -884,6 +882,13 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          {
             lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = STATE_EXPECT_OPTION;
+         }
+         else if(list_nobraces)
+         {
+            /* haleyjd 05/30/12: allow lists with no braces */
+            list_nobraces = cfg_false;
+            skip_token    = 1;
+            state         = STATE_EXPECT_OPTION;
          }
          else
          {
