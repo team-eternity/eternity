@@ -4,6 +4,103 @@ add dynamic inventory and weapons support. inventory-branch spans SVN revisions
 from 2030 to ????.
 ===============================================================================
 -------------------------------------------------------------------------------
+05/30/2012
+
+The libConfuse lexer was still calling qstring::getBuffer to put its value into
+the const char *mytext, so I changed all of these calls to qstring::constPtr
+while I was looking over the module.
+
+For the purpose of applying them toward the restrictedto and forbiddento fields
+of the EDF inventory record, I have modified the libConfuse parser state
+machine to allow CFG_LIST items to omit the formerly required braces. This 
+will allow indefinite-length lists to use the same apparent syntax as MVPROPs,
+which have the disadvantage of not allowing an arbitrary number of arguments.
+
+Example:
+
+   forbiddento Fighter, Cleric
+   
+This would mean the same as the successively more verbose options:
+
+   forbiddento { Fighter, Cleric }
+   forbiddento = { Fighter, Cleric }
+   
+This also automatically applies to addition lists, although the += is required
+in that case as it would otherwise be considered a straight assignment:
+
+   forbiddento += Mage
+
+-------------------------------------------------------------------------------
+05/29/2012
+
+Merged from trunk to pull in the critical fix to logic in p_pspr identified by
+Xaser during Hacx testing.
+
+With a tornado bearing down on OKC, I made an emergency half-finished commit 
+containing code for a name in each descendant-class instance of 
+InventoryGeneric, primarily for use from MetaInventoryClass::toString.
+
+The ever-growing skeletal code for executing item pickups has also grown
+significantly and now calls to the not-yet-functional IsValidPlayerClass that
+will check the collector against any class restrictions in the inventory def,
+and has additional control flow in place for calling functions that do not
+exist yet but are planned.
+
+-------------------------------------------------------------------------------
+05/28/2012
+
+Added inventory flags PICKUPIFANY and LOUDPICKUPSOUND. The former allows an
+inventory type to specify that an item giving it should be collected if the
+collector can benefit from any one or more of its effects. The alternatives are
+ALWAYSPICKUP, matching ZDoom, which means that the item will be collected even
+if none of its effects can be applied, and the application of neither of these
+flags results in an inventory item for which all effects must be applicable
+before it can be collected (or it must fit into the inventory, at least).
+
+The latter flag seems to be a newer feature in ZDoom that makes item pickup
+sounds play without attenuation. I guess this is handy if you'd like to make
+a Cyberdemon Sphere or something? :P
+
+Added fields restrictedto and forbiddento, to match ZDoom with the ability to
+control the acquisition of inventory items by player class, which will be 
+needed for Hexen support. There is no processing code for these fields yet.
+
+Added the p_inventory module to house code for the actual giving, taking,
+dropping, etc. of inventory items by Mobj instances at runtime.
+
+In the process, I also wrote some new generic algorithm code which applies to
+MetaTables, including the template functions MetaForEach, MetaPredicateAny,
+and MetaPredicateAll.
+
+The first runs a given method on a given object, passing the method each 
+item in the table matching the indicated key and type.
+
+The second two will call the method on the object again for each matching
+item in the table, but only until the callback method returns false in the All
+case or true in the Any case. These are short-circuiting logic functions, 
+hence the 'predicate' in their names.
+
+I changed the storage of inventory classes in the inventory item MetaTable so
+that a MetaInventoryClass object is created that points directly to the static
+singleton instance that is instantiated in p_inventory.cpp that corresponds to
+that EDF inventory class. This reduces the need for extraneous indirections and
+lookups in the p_inventory code.
+
+-------------------------------------------------------------------------------
+05/27/2012
+
+Merged from trunk to pull in some patches by DavidPH (see trunk changelog).
+
+I added overloads to several methods of MetaTable which take a MetaObject::Type
+pointer instead of a type name, allowing significantly faster type comparisons.
+As a result, I changed most of the instances of METATYPE() in the engine into
+RTTI() macros.
+
+I also noticed that DavidPH's templated version of the RTTIObject::Type method
+FindType would crash if the call to the non-templated version of the function
+returned NULL for a query against a non-existent type, and fixed it.
+
+-------------------------------------------------------------------------------
 05/26/2012
 
 I have reimplemented the pickupitem array in terms of a mapping from sprites
