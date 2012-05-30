@@ -878,7 +878,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             state = STATE_EXPECT_VALUE;
             next_state = STATE_EXPECT_LISTNEXT;
          } 
-         else if(tok == '}')
+         else if(!list_nobraces && tok == '}')
          {
             lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = STATE_EXPECT_OPTION;
