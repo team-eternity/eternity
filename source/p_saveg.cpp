@@ -1253,18 +1253,9 @@ void P_ArchiveButtons(SaveArchive &arc)
 // haleyjd 07/06/09: ACS Save/Load
 //
 
-void P_ArchiveACS(void)
+void P_ArchiveACS(SaveArchive &arc)
 {
-   // save map vars
-   // save world vars
-   // TODO: save deferred scripts
-}
-
-void P_UnArchiveACS(void)
-{
-   // load map vars
-   // load world vars (TODO: not on hub transfer)
-   // TODO: load deferred scripts (TODO: not on hub transfer)
+   ACS_Archive(arc);
 }
 
 //============================================================================
@@ -1390,6 +1381,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_ArchiveScripts(arc);   // sf: archive scripts
       P_ArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
+      P_ArchiveACS(arc);            // davidph 05/30/12
 
       P_DeNumberThinkers();
 
@@ -1582,9 +1574,6 @@ void P_LoadGame(const char *filename)
       // haleyjd 04/14/03: load dmflags
       arc << dmflags;
 
-      // haleyjd 07/06/09: prepare ACS for loading
-      ACS_PrepareForLoad();
-
       // dearchive all the modifications
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
@@ -1595,6 +1584,7 @@ void P_LoadGame(const char *filename)
       P_ArchiveScripts(arc);        // sf: scripting
       P_UnArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
+      P_ArchiveACS(arc);            // davidph 05/30/12
 
       P_FreeThinkerTable();
 
