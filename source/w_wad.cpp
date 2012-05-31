@@ -796,6 +796,9 @@ void WadDirectory::initResources() // sf
    // haleyjd 01/12/04: add translation markers
    coalesceMarkedResource("T_START", "T_END", lumpinfo_t::ns_translations);
 
+   // davidph 05/29/12: add acs markers
+   coalesceMarkedResource("A_START", "A_END", lumpinfo_t::ns_acs);
+
    // set up caching
    // sf: caching now done in the lumpinfo_t's
    

@@ -72,13 +72,16 @@ static acs0_opdata_t const ACS0opdata[ACS0_OPMAX] =
 //
 // ACS_readStringACS0
 //
-static char *ACS_readStringACS0(byte *dataBegin, byte *dataEnd)
+static const char *ACS_readStringACS0(byte *dataBegin, byte *dataEnd)
 {
    char *begin = (char *)dataBegin, *end = (char *)dataEnd, *itr = begin;
    char *str;
 
    // Find either a null-terminator or the end of the lump.
    while(itr != end && *itr) ++itr;
+
+   // If it's an empty string, don't bother with Z_Malloc.
+   if (itr == begin) return "";
 
    str = (char *)Z_Malloc(itr - begin + 1, PU_LEVEL, NULL);
    memcpy(str, begin, itr - begin);
@@ -113,7 +116,7 @@ static bool ACS_touchScriptACS0(bool *begin, bool *end)
 //
 // ACS_traceScriptACS0
 //
-static void ACS_traceScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data,
+static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
                                 bool *codeTouched, uint32_t index,
                                 uint32_t &jumpCount)
 {
@@ -139,10 +142,7 @@ static void ACS_traceScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data,
          return;
 
       // Determine how many internal codes this counts for.
-      if (opdata->opdata && opdata->opdata->args != -1)
-         vm->numCode += opdata->opdata->args + 1;
-
-      else switch (op)
+      switch (op)
       {
       case ACS0_OP_LINESPEC1_IMM:
       case ACS0_OP_LINESPEC2_IMM:
@@ -153,10 +153,14 @@ static void ACS_traceScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data,
          break;
 
       default:
+         // Direct translation.
 #ifdef RANGECHECK
-         // This line should never be reached.
-         I_Error("Unknown translation for opcode. opcode %i", (int)op);
+         // This should never happen.
+         if (!opdata->opdata || opdata->opdata->args == -1)
+            I_Error("Unknown translation for opcode. opcode %i", (int)op);
 #endif
+
+         vm->numCode += opdata->opdata->args + 1;
          break;
       }
 
@@ -192,7 +196,7 @@ static void ACS_traceScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data,
 //
 // ACS_translateScriptACS0
 //
-static void ACS_translateScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data,
+static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
                                     bool *codeTouched, int32_t *codeIndexMap,
                                     uint32_t jumpCount)
 {
@@ -272,11 +276,18 @@ static void ACS_translateScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data
          *jumpItr++ = codePtr + 2;
          goto case_direct;
 
+      case ACS0_OP_CHANGEFLOOR_IMM:
+      case ACS0_OP_CHANGECEILING_IMM:
+         *codePtr++ = opdata->opdata->op;
+         *codePtr++ = SwapLong(*++rover);
+         *codePtr++ = SwapLong(*++rover) + vm->strings; // tag string
+         break;
+
       default: case_direct:
          // Direct translation.
 #ifdef RANGECHECK
          // This should never happen.
-         if (!opdata->opdata)
+         if (!opdata->opdata || opdata->opdata->args == -1)
             I_Error("Unknown translation for opcode. opcode %i", (int)op);
 #endif
 
@@ -318,12 +329,12 @@ static void ACS_translateScriptACS0(acsvm_t *vm, uint32_t lumpLength, byte *data
 //
 // ACS_LoadScriptACS0
 //
-void ACS_LoadScriptACS0(acsvm_t *vm, int lump, byte *data)
+void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
 {
    int32_t *codeIndexMap;
    bool *codeTouched;
    uint32_t jumpCount = 0;
-   uint32_t lumpLength = wGlobalDir.lumpLength(lump);
+   uint32_t lumpLength = dir->lumpLength(lump);
    uint32_t lumpAvail; // Used in bounds checking.
    int32_t *rover;
    uint32_t tableIndex;
@@ -383,10 +394,12 @@ void ACS_LoadScriptACS0(acsvm_t *vm, int lump, byte *data)
    if (tableIndex > lumpLength - (vm->numStrings * 4)) return;
 
    // Read strings.
-   vm->strings = (const char **)Z_Malloc(vm->numStrings * sizeof(char *), PU_LEVEL, NULL);
+   ACSVM::GlobalNumStrings += vm->numStrings;
+   ACSVM::GlobalStrings = (const char **)Z_Realloc(ACSVM::GlobalStrings,
+      ACSVM::GlobalNumStrings * sizeof(const char *), PU_LEVEL, NULL);
 
-   for(const char **end = vm->strings + vm->numStrings,
-       **itr = vm->strings; itr != end; ++itr)
+   for(const char **itr = ACSVM::GlobalStrings + vm->strings,
+       **end = itr + vm->numStrings; itr != end; ++itr)
    {
       tableIndex = SwapLong(*rover++);
 

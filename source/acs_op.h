@@ -112,6 +112,7 @@
    ACS_OP(PRINTCHAR, 0)
 
    // Miscellaneous
+   ACS_OP(TAGSTRING, 0)
    ACS_OP(DELAY, 0)
    ACS_OP(DELAY_IMM, 1)
    ACS_OP(RANDOM, 0)

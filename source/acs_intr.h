@@ -36,13 +36,17 @@
 class  qstring;
 class  Mobj;
 struct line_t;
+class  WadDirectory;
 
 //
 // Defines
 //
 
 #define ACS_STACK_LEN      128 
-#define ACS_NUMLOCALS      10
+#define ACS_NUM_LOCALVARS  10
+#define ACS_NUM_MAPVARS    32
+#define ACS_NUM_WORLDVARS  64
+#define ACS_NUM_GLOBALVARS 64
 #define ACS_NUM_THINGTYPES 256
 
 //
@@ -75,6 +79,7 @@ typedef enum acs_op_e
 //
 
 class ACSThinker;
+class ACSVM;
 
 //
 // acs_opdata
@@ -133,31 +138,30 @@ public:
    ACSThinker  *nextthread;
 
    // script info
-   int vmID;                  // vm id number
-   int scriptNum;             // script number in ACS itself
-   int internalNum;           // internal script number
+   uint32_t     vmID;                 // vm id number
+   int          scriptNum;            // script number in ACS itself
+   unsigned int internalNum;          // internal script number
 
    // virtual machine data
-   int32_t *ip;               // instruction pointer
-   int stack[ACS_STACK_LEN];  // value stack
-   int stp;                   // stack pointer
-   int locals[ACS_NUMLOCALS]; // local variables and arguments
-   int sreg;                  // state register
-   int sdata;                 // special data for state
-   
+   int32_t *ip;                       // instruction pointer
+   int32_t stack[ACS_STACK_LEN];      // value stack
+   int32_t stp;                       // stack pointer
+   int32_t locals[ACS_NUM_LOCALVARS]; // local variables and arguments
+   int32_t sreg;                      // state register
+   int32_t sdata;                     // special data for state
+
    // info copied from acscript and acsvm
-   int32_t *code;             // entry point
-   int32_t *data;             // base code pointer for jumps
-   const char **stringtable;  // strings
-   qstring *printBuffer;      // buffer for message printing
-   acscript_t *acscript;      // for convenience of access
-   struct acsvm_s *vm;        // for convenience of access
+   int32_t    *code;                  // entry point
+   int32_t    *data;                  // base code pointer for jumps
+   qstring    *printBuffer;           // buffer for message printing
+   acscript_t *acscript;              // for convenience of access
+   ACSVM      *vm;                    // for convenience of access
 
    // misc
-   int    delay;              // counter for script delays
-   Mobj *trigger;           // thing that activated
-   line_t *line;              // line that activated
-   int    lineSide;           // line side of activation
+   int32_t delay;                     // counter for script delays
+   Mobj   *trigger;                   // thing that activated
+   line_t *line;                      // line that activated
+   int     lineSide;                  // line side of activation
 };
 
 // deferred action types
@@ -185,27 +189,44 @@ struct deferredacs_t
 };
 
 //
-// acsvm
+// ACSVM
 //
 // haleyjd 06/24/08: I am rewriting the interpreter to be modular in hopes of
 // eventual support for ZDoomish features such as ACS libraries.
 //
-typedef struct acsvm_s
+class ACSVM : public ZoneObject
 {
+public:
+   ACSVM(int tag = PU_STATIC);
+   ~ACSVM();
+
+   // Resets the VM to an uninitialized state. Only useful for static VMs.
+   void reset();
+
    // bytecode info
-   int32_t     *code;       // ACS code; jumps are relative to this
+   int32_t     *code;                 // ACS code; jumps are relative to this
    unsigned int numCode;
-   const char **strings;    // the string table
+   unsigned int strings;              // offset into global table
    unsigned int numStrings;
-   acscript_t  *scripts;    // the scripts
+   acscript_t  *scripts;              // the scripts
    unsigned int numScripts;
-   bool         loaded;     // for static VMs, if it's valid or not
-   uint32_t     id;         // vm id number
+   bool         loaded;               // for static VMs, if it's valid or not
+   uint32_t     id;                   // vm id number
+   int          lump;                 // lump bytecode was loaded from
 
    // interpreter info
-   qstring *printBuffer;    // used for message printing
+   qstring *printBuffer;              // used for message printing
+   int32_t *mapvtab[ACS_NUM_MAPVARS]; // pointers into vm mapvars
+   int32_t  mapvars[ACS_NUM_MAPVARS];
 
-} acsvm_t;
+   // global bytecode info
+   static const char **GlobalStrings;
+   static unsigned int GlobalNumStrings;
+   static const char *GetString(uint32_t strnum)
+   {
+      return strnum < GlobalNumStrings ? GlobalStrings[strnum] : "";
+   }
+};
 
 
 // Global function prototypes
@@ -213,18 +234,18 @@ typedef struct acsvm_s
 void ACS_Init(void);
 void ACS_NewGame(void);
 void ACS_InitLevel(void);
-void ACS_LoadScript(acsvm_t *vm, int lump);
-void ACS_LoadScriptACS0(acsvm_t *vm, int lump, byte *data);
-void ACS_LoadLevelScript(int lump);
+void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump);
+void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data);
+void ACS_LoadLevelScript(WadDirectory *dir, int lump);
 void ACS_RunDeferredScripts(void);
-bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
+bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
                        Mobj *mo, line_t *line, int side,
                        ACSThinker **scr, bool always);
-bool ACS_StartScript(int scrnum, int map, int *args, Mobj *mo, 
+bool ACS_StartScript(int scrnum, int map, int *args, Mobj *mo,
                      line_t *line, int side, ACSThinker **scr, bool always);
 bool ACS_TerminateScript(int srcnum, int mapnum);
 bool ACS_SuspendScript(int scrnum, int mapnum);
-void ACS_PrepareForLoad(void);
+void ACS_Archive(SaveArchive &arc);
 void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
@@ -232,7 +253,6 @@ void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 extern acs_opdata_t ACSopdata[ACS_OPMAX];
 
 extern int ACS_thingtypes[ACS_NUM_THINGTYPES];
-extern int ACSmapvars[32];
 extern int ACSworldvars[64];
 
 #endif

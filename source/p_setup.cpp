@@ -2521,8 +2521,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    else if(LevelInfo.acsScriptLump)
       acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);
 
-   if(acslumpnum != -1)
-      ACS_LoadLevelScript(acslumpnum);
+   ACS_LoadLevelScript(dir, acslumpnum);
 }
 
 //

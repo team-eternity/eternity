@@ -74,7 +74,8 @@ struct lumpinfo_t
       ns_colormaps,
       ns_translations,
       ns_fonts,
-      ns_demos
+      ns_demos,
+      ns_acs,
    };
    int li_namespace;
    
