@@ -2867,36 +2867,35 @@ void P_RemoveThingTID(Mobj *mo)
 //
 Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
 {
-   switch(tid)
-   {
-   // Reserved TIDs
-   case 0:   // zero is "no tid"
-      return NULL;
-
-   case -1:  // players are -1 through -4
-   case -2:
-   case -3:
-   case -4:
-      {
-         int pnum = abs(tid) - 1;
-
-         return !rover && playeringame[pnum] ? players[pnum].mo : NULL;
-      }
-
-   case -10: // script trigger object (may be NULL, which is fine)
-      return (!rover && trigger) ? trigger : NULL;
-
    // Normal TIDs
-   default:
-      if(tid < 0)
-         return NULL;
-
+   if(tid > 0)
+   {
       rover = rover ? rover->tid_next : tidhash[tid % TIDCHAINS];
 
       while(rover && rover->tid != tid)
          rover = rover->tid_next;
 
       return rover;
+   }
+
+   // Reserved TIDs
+   switch(tid)
+   {
+   case 0:   // script trigger object (may be NULL, which is fine)
+      return !rover ? trigger : NULL;
+
+   case -1:  // players are -1 through -4
+   case -2:
+   case -3:
+   case -4:
+      {
+         int pnum = -tid - 1;
+
+         return !rover && playeringame[pnum] ? players[pnum].mo : NULL;
+      }
+
+   default:
+      return NULL;
    }
 }
 

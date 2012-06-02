@@ -75,6 +75,16 @@ typedef enum acs_op_e
 } acs_op_t;
 
 //
+enum
+{
+   ACS_THINGVAR_X,
+   ACS_THINGVAR_Y,
+   ACS_THINGVAR_Z,
+
+   ACS_THINGVARMAX
+};
+
+//
 // Structures
 //
 
@@ -253,7 +263,8 @@ void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 extern acs_opdata_t ACSopdata[ACS_OPMAX];
 
 extern int ACS_thingtypes[ACS_NUM_THINGTYPES];
-extern int ACSworldvars[64];
+extern int32_t ACSworldvars[ACS_NUM_WORLDVARS];
+extern int32_t ACSglobalvars[ACS_NUM_GLOBALVARS];
 
 #endif
 
