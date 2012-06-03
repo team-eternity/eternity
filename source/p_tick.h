@@ -138,6 +138,24 @@ void P_Ticker(void);
 extern Thinker thinkercap;  // Both the head and tail of the thinker list
 
 //
+// P_NextThinker
+//
+// davidph 06/02/12: Finds the next Thinker of the specified type.
+//
+template<typename T> T *P_NextThinker(T *th)
+{
+   Thinker *itr;
+
+   for(itr = th ? th : thinkercap.next; itr != &thinkercap; itr = itr->next)
+   {
+      if((th = thinker_cast<T *>(itr)))
+         return th;
+   }
+
+   return NULL;
+}
+
+//
 // P_SetTarget
 //
 // killough 11/98

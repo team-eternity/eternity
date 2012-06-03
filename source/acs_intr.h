@@ -49,6 +49,8 @@ class  WadDirectory;
 #define ACS_NUM_GLOBALVARS 64
 #define ACS_NUM_THINGTYPES 256
 
+#define ACS_FUNCARG ACSThinker *thread, uint32_t argc, const int32_t *args, int32_t *&retn
+
 //
 // Misc. Enums
 //
@@ -74,7 +76,34 @@ typedef enum acs_op_e
    ACS_OPMAX
 } acs_op_t;
 
-//
+// CALLFUNC indexes.
+enum acs_funcnum_t
+{
+   ACS_FUNC_NOP,
+   ACS_FUNC_ActivatorSound,
+   ACS_FUNC_AmbientSound,
+   ACS_FUNC_AmbientSoundLocal,
+   ACS_FUNC_ChangeCeiling,
+   ACS_FUNC_ChangeFloor,
+   ACS_FUNC_Random,
+   ACS_FUNC_SectorSound,
+   ACS_FUNC_SetLineBlocking,
+   ACS_FUNC_SetLineMonsterBlocking,
+   ACS_FUNC_SetLineSpecial,
+   ACS_FUNC_SetLineTexture,
+   ACS_FUNC_SetMusic,
+   ACS_FUNC_SetMusicLocal,
+   ACS_FUNC_SetThingSpecial,
+   ACS_FUNC_SoundSequence,
+   ACS_FUNC_SpawnPoint,
+   ACS_FUNC_SpawnSpot,
+   ACS_FUNC_ThingCount,
+   ACS_FUNC_ThingSound,
+
+   ACS_FUNCMAX
+};
+
+// thing variables.
 enum
 {
    ACS_THINGVAR_X,
@@ -90,6 +119,8 @@ enum
 
 class ACSThinker;
 class ACSVM;
+
+typedef void (*acs_func_t)(ACS_FUNCARG);
 
 //
 // acs_opdata
@@ -260,6 +291,7 @@ void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
 
+extern acs_func_t ACSfunc[ACS_FUNCMAX];
 extern acs_opdata_t ACSopdata[ACS_OPMAX];
 
 extern int ACS_thingtypes[ACS_NUM_THINGTYPES];

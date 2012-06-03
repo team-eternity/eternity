@@ -30,8 +30,6 @@
 #include "w_wad.h"
 #include "doomstat.h"
 
-#include <stddef.h>
-
 
 //----------------------------------------------------------------------------|
 // Types                                                                      |
@@ -210,14 +208,19 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          vm->numCode += 4; // GAMETYPE + GET_IMM + CMP_EQ
          break;
 
-      case ACS0_OP_SETMUSIC_ST:
-         vm->numCode += opdata->opdata->args + 4; // GET_IMM GET_IMM
-
       default:
+         // Translation to CALLFUNC.
+         if(opdata->opdata->op == ACS_OP_CALLFUNC_IMM)
+         {
+            // Adds the func and argc arguments.
+            vm->numCode += opdata->args + 3;
+            break;
+         }
+
          // Direct translation.
 #ifdef RANGECHECK
          // This should never happen.
-         if (opdata->opdata->args == -1)
+         if(opdata->opdata->args == -1)
             I_Error("Unknown translation for opcode. opcode %i", (int)op);
 #endif
 
@@ -252,6 +255,57 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
 
       index = indexNext;
    }
+}
+
+//
+// ACS_translateFuncACS0
+//
+// Translates an ACS0 opdata into a CALLFUNC func/argc pair.
+//
+static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata)
+{
+   acs_funcnum_t func;
+   uint32_t argc;
+
+   #define CASE(OP,FUNC,ARGC) \
+      case ACS0_OP_##OP: func = ACS_FUNC_##FUNC; argc = ARGC; break
+   #define CASE_IMM(OP,FUNC,ARGC) \
+      case ACS0_OP_##OP##_IMM: CASE(OP, FUNC, ARGC)
+
+   switch(opdata->op)
+   {
+   CASE(ACTIVATORSOUND,         ActivatorSound,         2);
+   CASE(AMBIENTSOUND,           AmbientSound,           2);
+   CASE(AMBIENTSOUNDLOCAL,      AmbientSoundLocal,      2);
+   CASE(SECTORSOUND,            SectorSound,            2);
+   CASE(SETLINEBLOCKING,        SetLineBlocking,        2);
+   CASE(SETLINEMONSTERBLOCKING, SetLineMonsterBlocking, 2);
+   CASE(SETLINESPECIAL,         SetLineSpecial,         7);
+   CASE(SETLINETEXTURE,         SetLineTexture,         4);
+   CASE(SETMUSIC_ST,            SetMusic,               1);
+   CASE(SETTHINGSPECIAL,        SetThingSpecial,        7);
+   CASE(SOUNDSEQUENCE,          SoundSequence,          1);
+   CASE(THINGSOUND,             ThingSound,             3);
+
+   CASE_IMM(CHANGECEILING, ChangeCeiling, 2);
+   CASE_IMM(CHANGEFLOOR,   ChangeFloor,   2);
+   case ACS0_OP_RANDOM_IMM_BYTE:
+   CASE_IMM(RANDOM,        Random,        2);
+   CASE_IMM(SETMUSIC,      SetMusic,      3);
+   CASE_IMM(SETMUSICLOCAL, SetMusicLocal, 3);
+   CASE_IMM(SPAWNPOINT,    SpawnPoint,    6);
+   CASE_IMM(SPAWNSPOT,     SpawnSpot,     4);
+   CASE_IMM(THINGCOUNT,    ThingCount,    2);
+
+   default: *codePtr++ = ACS_OP_KILL; return;
+   }
+
+   #undef CASE_IMM
+   #undef CASE
+
+   *codePtr++ = opdata->opdata->op;
+   *codePtr++ = func;
+   *codePtr++ = argc;
 }
 
 //
@@ -387,13 +441,14 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
 
       case ACS0_OP_CHANGEFLOOR_IMM:
       case ACS0_OP_CHANGECEILING_IMM:
-         *codePtr++ = opdata->opdata->op;
+         ACS_translateFuncACS0(codePtr, opdata);
          *codePtr++ = SwapLong(*++rover);
          *codePtr++ = SwapLong(*++rover) + vm->strings; // tag string
+         for(int i = opdata->args - 2; i--;)
+            *codePtr++ = SwapLong(*++rover);
          break;
 
       case ACS0_OP_DELAY_IMM_BYTE:
-      case ACS0_OP_RANDOM_IMM_BYTE:
          brover = (byte *)++rover;
          *codePtr++ = opdata->opdata->op;
          for(int i = opdata->args; i--;)
@@ -412,33 +467,36 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          *codePtr++ = ACS_OP_CMP_EQ;
          break;
 
-      case ACS0_OP_SETMUSIC_IMM:
-      case ACS0_OP_SETMUSICLOCAL_IMM:
-         *codePtr++ = opdata->opdata->op;
-         *codePtr++ = SwapLong(*++rover) + vm->strings; // tag string
-         *codePtr++ = SwapLong(*++rover);
-         *codePtr++ = SwapLong(*++rover);
+      case ACS0_OP_RANDOM_IMM_BYTE:
+         brover = (byte *)++rover;
+         ACS_translateFuncACS0(codePtr, opdata);
+         for(int i = opdata->args; i--;)
+            *codePtr++ = *brover++;
          break;
 
-      case ACS0_OP_SETMUSIC_ST:
-         *codePtr++ = ACS_OP_GET_IMM;
-         *codePtr++ = 0;
-         *codePtr++ = ACS_OP_GET_IMM;
-         *codePtr++ = 0;
-         *codePtr++ = opdata->opdata->op;
+      case ACS0_OP_SETMUSIC_IMM:
+      case ACS0_OP_SETMUSICLOCAL_IMM:
+      case ACS0_OP_SPAWNPOINT_IMM:
+      case ACS0_OP_SPAWNSPOT_IMM:
+         ACS_translateFuncACS0(codePtr, opdata);
+         *codePtr++ = SwapLong(*++rover) + vm->strings; // tag string
+         for(int i = opdata->args - 1; i--;)
+            *codePtr++ = SwapLong(*++rover);
          break;
 
       default: case_direct:
          // Direct translation.
-#ifdef RANGECHECK
-         // This should never happen.
-         if (opdata->opdata->args == -1)
-            I_Error("Unknown translation for opcode. opcode %i", (int)op);
-#endif
+         if(opdata->opdata->op == ACS_OP_CALLFUNC ||
+            opdata->opdata->op == ACS_OP_CALLFUNC_IMM)
+         {
+            ACS_translateFuncACS0(codePtr, opdata);
+         }
+         else
+            *codePtr++ = opdata->opdata->op;
 
-         *codePtr++ = opdata->opdata->op;
          for(int i = opdata->args; i--;)
             *codePtr++ = SwapLong(*++rover);
+
          break;
       }
    }

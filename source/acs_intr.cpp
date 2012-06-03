@@ -32,29 +32,19 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
-#include "c_io.h"
 #include "doomstat.h"
-#include "e_exdata.h"
-#include "e_things.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_qstr.h"
-#include "m_random.h"
 #include "m_swap.h"
 #include "p_info.h"
 #include "p_maputl.h"
-#include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "r_data.h"
-#include "r_defs.h"
 #include "r_state.h"
-#include "s_sndseq.h"
 #include "v_misc.h"
-#include "v_video.h"
 #include "w_wad.h"
 
 //
@@ -293,46 +283,6 @@ static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
 }
 
 //
-// ACS_countThings
-//
-// Returns a count of all things that match the supplied criteria.
-// If type or tid are zero, that particular criterion is not applied.
-//
-static int ACS_countThings(int type, int tid)
-{
-   Thinker *th;
-   int count = 0;
-
-   // don't bother counting if no valid search is specified
-   if(!(type || tid))
-      return 0;
-   
-   // translate ACS thing type ids to true types
-   if(type < 0 || type >= ACS_NUM_THINGTYPES)
-      return 0;
-
-   type = ACS_thingtypes[type];
-   
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
-         {
-            // don't count killable things that are dead
-            if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
-               mo->health <= 0)
-               continue;
-            ++count;
-         }
-      }
-   }
-
-   return count;
-}
-
-//
 // ACS_countPlayers
 //
 // Returns a count of active players.
@@ -362,147 +312,6 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_Z: return thing->z;
    default: return 0;
    }
-}
-
-// ZDoom blocking types
-enum
-{
-   BLOCK_NOTHING,
-   BLOCK_CREATURES,
-   BLOCK_EVERYTHING,
-   BLOCK_RAILING,
-   BLOCK_PLAYERS,
-   BLOCK_MONSTERS_OFF,
-   BLOCK_MONSTERS_ON,
-};
-
-//
-// ACS_setLineBlocking
-//
-// Toggles the blocking flag on all tagged lines.
-//
-static void ACS_setLineBlocking(int tag, int block)
-{
-   line_t *l;
-   int linenum = -1;
-
-   while((l = P_FindLine(tag, &linenum)) != NULL)
-   {
-      switch(block)
-      {
-      case BLOCK_NOTHING:
-         // clear the flags
-         l->flags    &= ~ML_BLOCKING;
-         l->extflags &= ~EX_ML_BLOCKALL;
-         break;
-      case BLOCK_CREATURES:
-         l->extflags &= ~EX_ML_BLOCKALL;
-         l->flags |= ML_BLOCKING;
-         break;
-      case BLOCK_EVERYTHING: // ZDoom extension - block everything
-         l->flags    |= ML_BLOCKING;
-         l->extflags |= EX_ML_BLOCKALL;
-         break;
-      case BLOCK_MONSTERS_OFF:
-         l->flags &= ~ML_BLOCKMONSTERS;
-         break;
-      case BLOCK_MONSTERS_ON:
-         l->flags |= ML_BLOCKMONSTERS;
-         break;
-      default: // Others not implemented yet :P
-         break;
-      }
-   }
-}
-
-//
-// ACS_setLineSpecial
-//
-// Sets all tagged lines' complete parameterized specials.
-//
-static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
-{
-   line_t *l;
-   int linenum = -1;
-
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   while((l = P_FindLine(tag, &linenum)) != NULL)
-   {
-      l->special = spec;
-      memcpy(l->args, args, 5 * sizeof(int));
-   }
-}
-
-//
-// ACS_setThingSpecial
-//
-// Sets all tagged things' complete parameterized specials.
-//
-static void ACS_setThingSpecial(int16_t spec, int *args, int tid)
-{
-   Mobj *mo = NULL;
-
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   while((mo = P_FindMobjFromTID(tid, mo, NULL)))
-   {
-      //mo->special = spec;
-      memcpy(mo->args, args, 5 * sizeof(int));
-   }
-}
-
-//
-// ACS_spawn
-//
-static bool ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
-                      int tid, angle_t angle)
-{
-   Mobj *mo;
-   if(type != -1 && (mo = P_SpawnMobj(x, y, z, type)))
-   {
-      if(tid) P_AddThingTID(mo, tid);
-      mo->angle = angle;
-      return true;
-   }
-   else
-      return false;
-}
-
-//
-// ACS_spawnMobj
-//
-static void ACS_spawnMobj(const int32_t *args, int32_t *&retn)
-{
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
-   fixed_t x     = args[1];
-   fixed_t y     = args[2];
-   fixed_t z     = args[3];
-   int     tid   = args[4];
-   angle_t angle = args[5] << 24;
-
-   *retn++ = ACS_spawn(type, x, y, z, tid, angle);
-}
-
-//
-// ACS_spawnSpot
-//
-static void ACS_spawnSpot(const int32_t *args, int32_t *&retn)
-{
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
-   int     spotid = args[1];
-   int     tid    = args[2];
-   angle_t angle  = args[3] << 24;
-   Mobj   *spot   = NULL;
-
-   *retn = 0;
-
-   while((spot = P_FindMobjFromTID(spotid, spot, NULL)))
-      *retn += ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle);
-
-   ++retn;
 }
 
 
@@ -622,18 +431,29 @@ void ACSThinker::Think()
       goto action_endscript;
 
       // Special Commands
+   OPCODE(CALLFUNC):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      ACSfunc[opcode](this, temp, stp, stp);
+      NEXTOP();
+   OPCODE(CALLFUNC_IMM):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      ACSfunc[opcode](this, temp, ip, stp);
+      ip += temp; // consume args
+      NEXTOP();
+
    OPCODE(LINESPEC):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
       stp -= temp; // consume args
-      ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
-                       this->lineSide, temp, stp);
+      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
       NEXTOP();
    OPCODE(LINESPEC_IMM):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
-      ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
-                       this->lineSide, temp, ip);
+      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, ip);
       ip += temp; // consume args
       NEXTOP();
 
@@ -914,6 +734,22 @@ void ACSThinker::Think()
       NEXTOP();
 
       // Script Control
+   OPCODE(DELAY):
+      this->delay = POP();
+      goto action_stop;
+   OPCODE(DELAY_IMM):
+      this->delay = IPNEXT();
+      goto action_stop;
+
+   OPCODE(POLYWAIT):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = POP(); // get poly tag
+      goto action_stop;
+   OPCODE(POLYWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = IPNEXT(); // get poly tag
+      goto action_stop;
+
    OPCODE(SCRIPT_RESTART):
       ip = this->code;
       BRANCH_COUNT();
@@ -923,6 +759,24 @@ void ACSThinker::Think()
       goto action_stop;
    OPCODE(SCRIPT_TERMINATE):
       goto action_endscript;
+
+   OPCODE(TAGWAIT):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = POP(); // get sector tag
+      goto action_stop;
+   OPCODE(TAGWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = IPNEXT(); // get sector tag
+      goto action_stop;
+
+   OPCODE(SCRIPTWAIT):
+      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sdata = POP(); // get script num
+      goto action_stop;
+   OPCODE(SCRIPTWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sdata = IPNEXT(); // get script num
+      goto action_stop;
 
       // Printing
    OPCODE(STARTPRINT):
@@ -987,23 +841,26 @@ void ACSThinker::Think()
    OPCODE(ACTIVATORHEALTH):
       PUSH(trigger ? trigger->health : 0);
       NEXTOP();
-   OPCODE(ACTIVATORSOUND):
-      // If trigger is null, turn into ambient sound as in ZDoom.
-      stp -= 2; //                                       sound    vol
-      S_StartSoundNameAtVolume(trigger, ACSVM::GetString(stp[0]), stp[1],
-                               ATTN_NORMAL, CHAN_AUTO);
+
+   OPCODE(CLEARLINESPECIAL):
+      if(this->line)
+         this->line->special = 0;
       NEXTOP();
 
-   OPCODE(AMBIENTSOUND):
-      stp -= 2; //                                    sound    vol
-      S_StartSoundNameAtVolume(NULL, ACSVM::GetString(stp[0]), stp[1],
-                               ATTN_NORMAL, CHAN_AUTO);
+   OPCODE(GAMESKILL):
+      PUSH(gameskill);
       NEXTOP();
-   OPCODE(AMBIENTSOUNDLOCAL):
-      stp -= 2;
-      if(trigger == players[displayplayer].mo) //        sound    vol
-         S_StartSoundNameAtVolume(NULL, ACSVM::GetString(stp[0]), stp[1],
-                                  ATTN_NORMAL, CHAN_AUTO);
+
+   OPCODE(GAMETYPE):
+      PUSH(GameType);
+      NEXTOP();
+
+   OPCODE(LINESIDE):
+      PUSH(this->lineSide);
+      NEXTOP();
+
+   OPCODE(PLAYERCOUNT):
+      PUSH(ACS_countPlayers());
       NEXTOP();
 
    OPCODE(SETGRAVITY):
@@ -1013,227 +870,12 @@ void ACSThinker::Think()
       LevelInfo.gravity = IPNEXT() / 800;
       NEXTOP();
 
-   OPCODE(SETLINEBLOCKING):
-      stp -= 2;
-      ACS_setLineBlocking(stp[0], stp[1]);
-      NEXTOP();
-   OPCODE(SETLINEMONSTERBLOCKING):
-      stp -= 2;
-      ACS_setLineBlocking(stp[0], BLOCK_MONSTERS_OFF + !!stp[1]);
-      NEXTOP();
-   OPCODE(SETLINESPECIAL):
-      stp -= 7; //       tag     args   special
-      ACS_setLineSpecial(stp[1], stp+2, stp[0]);
-      NEXTOP();
-   OPCODE(SETLINETEXTURE):
-      stp -= 4; //                     texture  pos     side    tag
-      P_ChangeLineTex(ACSVM::GetString(stp[3]), stp[2], stp[1], stp[0], false);
-      NEXTOP();
-
-   OPCODE(SETMUSIC):
-      stp -= 3;
-      S_ChangeMusicName(ACSVM::GetString(stp[0]), 1);
-      NEXTOP();
-   OPCODE(SETMUSIC_IMM):
-      S_ChangeMusicName(ACSVM::GetString(ip[0]), 1);
-      ip += 3;
-      NEXTOP();
-  OPCODE(SETMUSICLOCAL):
-      stp -= 3;
-      if(trigger == players[consoleplayer].mo)
-         S_ChangeMusicName(ACSVM::GetString(stp[0]), 1);
-      NEXTOP();
-   OPCODE(SETMUSICLOCAL_IMM):
-      if(trigger == players[consoleplayer].mo)
-         S_ChangeMusicName(ACSVM::GetString(ip[0]), 1);
-      ip += 3;
-      NEXTOP();
-
-   OPCODE(SETTHINGSPECIAL):
-      stp -= 7; //       tag     args   special
-      ACS_setThingSpecial(stp[1], stp+2, stp[0]);
-      NEXTOP();
-
-   OPCODE(SPAWN):
-      stp -= 6;
-      ACS_spawnMobj(stp, stp);
-      NEXTOP();
-   OPCODE(SPAWN_IMM):
-      ACS_spawnMobj(ip, stp);
-      ip += 6;
-      NEXTOP();
-
-   OPCODE(SPAWNSPOT):
-      stp -= 4;
-      ACS_spawnSpot(stp, stp);
-      NEXTOP();
-   OPCODE(SPAWNSPOT_IMM):
-      ACS_spawnSpot(ip, stp);
-      ip += 4;
-      NEXTOP();
-
    OPCODE(TAGSTRING):
       if((uint32_t)PEEK() < vm->strings) PEEK() += vm->strings;
       NEXTOP();
 
-   OPCODE(DELAY):
-      this->delay = POP();
-      goto action_stop;
-   OPCODE(DELAY_IMM):
-      this->delay = IPNEXT();
-      goto action_stop;
-
-   OPCODE(RANDOM):
-      {
-         int min, max;
-         max = POP();
-         min = POP();
-
-         PUSH(P_RangeRandom(pr_script, min, max));
-      }
-      NEXTOP();
-   OPCODE(RANDOM_IMM):
-      {
-         int min, max;
-         min = IPNEXT();
-         max = IPNEXT();
-
-         PUSH(P_RangeRandom(pr_script, min, max));
-      }
-      NEXTOP();
-
-   OPCODE(THINGCOUNT):
-      temp = POP(); // get tid
-      temp = ACS_countThings(POP(), temp);
-      PUSH(temp);
-      NEXTOP();
-   OPCODE(THINGCOUNT_IMM):
-      temp = IPNEXT(); // get type
-      temp = ACS_countThings(temp, IPNEXT());
-      PUSH(temp);
-      NEXTOP();
-
-   OPCODE(TAGWAIT):
-      this->sreg  = ACS_STATE_WAITTAG;
-      this->sdata = POP(); // get sector tag
-      goto action_stop;
-   OPCODE(TAGWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITTAG;
-      this->sdata = IPNEXT(); // get sector tag
-      goto action_stop;
-
-   OPCODE(POLYWAIT):
-      this->sreg  = ACS_STATE_WAITPOLY;
-      this->sdata = POP(); // get poly tag
-      goto action_stop;
-   OPCODE(POLYWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITPOLY;
-      this->sdata = IPNEXT(); // get poly tag
-      goto action_stop;
-
-   OPCODE(CHANGEFLOOR):
-      temp = POP(); // get flat string index
-      P_ChangeFloorTex(ACSVM::GetString(temp), POP()); // get tag
-      NEXTOP();
-   OPCODE(CHANGEFLOOR_IMM):
-      temp = *ip++; // get tag
-      P_ChangeFloorTex(ACSVM::GetString(IPNEXT()), temp);
-      NEXTOP();
-
-   OPCODE(CHANGECEILING):
-      temp = POP(); // get flat string index
-      P_ChangeCeilingTex(ACSVM::GetString(temp), POP()); // get tag
-      NEXTOP();
-   OPCODE(CHANGECEILING_IMM):
-      temp = IPNEXT(); // get tag
-      P_ChangeCeilingTex(ACSVM::GetString(IPNEXT()), temp);
-      NEXTOP();
-
-   OPCODE(LINESIDE):
-      PUSH(this->lineSide);
-      NEXTOP();
-
-   OPCODE(SCRIPTWAIT):
-      this->sreg  = ACS_STATE_WAITSCRIPT;
-      this->sdata = POP(); // get script num
-      goto action_stop;
-   OPCODE(SCRIPTWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITSCRIPT;
-      this->sdata = IPNEXT(); // get script num
-      goto action_stop;
-
-   OPCODE(CLEARLINESPECIAL):
-      if(this->line)
-         this->line->special = 0;
-      NEXTOP();
-
-   OPCODE(PLAYERCOUNT):
-      PUSH(ACS_countPlayers());
-      NEXTOP();
-
-   OPCODE(GAMETYPE):
-      PUSH(GameType);
-      NEXTOP();
-
-   OPCODE(GAMESKILL):
-      PUSH(gameskill);
-      NEXTOP();
-
    OPCODE(TIMER):
       PUSH(leveltime);
-      NEXTOP();
-
-   OPCODE(SECTORSOUND):
-      {
-         PointThinker *src;
-         int vol    = POP();
-         int strnum = POP();
-
-         // if script started from a line, use the frontsector's sound origin
-         if(this->line)
-            src = &(this->line->frontsector->soundorg);
-         else
-            src = NULL;
-
-         S_StartSoundNameAtVolume(src, ACSVM::GetString(strnum), vol,
-                                  ATTN_NORMAL, CHAN_AUTO);
-      }
-      NEXTOP();
-
-   OPCODE(SOUNDSEQUENCE):
-      {
-         sector_t *sec;
-         int strnum = POP();
-
-         if(this->line && (sec = this->line->frontsector))
-         {
-            S_StartSectorSequenceName(sec, ACSVM::GetString(strnum),
-                                      SEQ_ORIGIN_SECTOR_F);
-         }
-         /*
-         FIXME
-         else
-         {
-            S_StartSequenceName(NULL, ACSVM::GetString(strnum),
-                                SEQ_ORIGIN_OTHER, -1);
-         }
-         */
-      }
-      NEXTOP();
-
-   OPCODE(THINGSOUND):
-      {
-         int vol    = POP();
-         int strnum = POP();
-         int tid    = POP();
-         Mobj *mo   = NULL;
-
-         while((mo = P_FindMobjFromTID(tid, mo, NULL)))
-         {
-            S_StartSoundNameAtVolume(mo, ACSVM::GetString(strnum), vol,
-                                     ATTN_NORMAL, CHAN_AUTO);
-         }
-      }
       NEXTOP();
 
 #ifndef COMPGOTO
