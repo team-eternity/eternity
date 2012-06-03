@@ -32,26 +32,19 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
-#include "c_io.h"
 #include "doomstat.h"
-#include "e_exdata.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_qstr.h"
-#include "m_random.h"
 #include "m_swap.h"
-#include "p_mobj.h"
+#include "p_info.h"
+#include "p_maputl.h"
 #include "p_saveg.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "r_data.h"
-#include "r_defs.h"
 #include "r_state.h"
-#include "s_sndseq.h"
 #include "v_misc.h"
-#include "v_video.h"
 #include "w_wad.h"
 
 //
@@ -106,7 +99,10 @@ unsigned int ACSVM::GlobalNumStrings = 0;
 int ACS_thingtypes[ACS_NUM_THINGTYPES];
 
 // world variables
-int ACSworldvars[64];
+int32_t ACSworldvars[ACS_NUM_WORLDVARS];
+
+// global variables
+int32_t ACSglobalvars[ACS_NUM_GLOBALVARS];
 
 //
 // Static Functions
@@ -287,46 +283,6 @@ static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
 }
 
 //
-// ACS_countThings
-//
-// Returns a count of all things that match the supplied criteria.
-// If type or tid are zero, that particular criterion is not applied.
-//
-static int ACS_countThings(int type, int tid)
-{
-   Thinker *th;
-   int count = 0;
-
-   // don't bother counting if no valid search is specified
-   if(!(type || tid))
-      return 0;
-   
-   // translate ACS thing type ids to true types
-   if(type < 0 || type >= ACS_NUM_THINGTYPES)
-      return 0;
-
-   type = ACS_thingtypes[type];
-   
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
-         {
-            // don't count killable things that are dead
-            if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
-               mo->health <= 0)
-               continue;
-            ++count;
-         }
-      }
-   }
-
-   return count;
-}
-
-//
 // ACS_countPlayers
 //
 // Returns a count of active players.
@@ -342,66 +298,19 @@ static int ACS_countPlayers(void)
    return count;
 }
 
-// ZDoom blocking types
-enum
+//
+// ACS_getThingVar
+//
+static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
 {
-   BLOCK_NOTHING,
-   BLOCK_CREATURES,
-   BLOCK_EVERYTHING,
-   BLOCK_RAILING,
-   BLOCK_PLAYERS
-};
+   if(!thing) return 0;
 
-//
-// ACS_setLineBlocking
-//
-// Toggles the blocking flag on all tagged lines.
-//
-static void ACS_setLineBlocking(int tag, int block)
-{
-   line_t *l;
-   int linenum = -1;
-
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   switch(var)
    {
-      switch(block)
-      {
-      case BLOCK_NOTHING:
-         // clear the flags
-         l->flags    &= ~ML_BLOCKING;
-         l->extflags &= ~EX_ML_BLOCKALL;
-         break;
-      case BLOCK_CREATURES:
-         l->extflags &= ~EX_ML_BLOCKALL;
-         l->flags |= ML_BLOCKING;
-         break;
-      case BLOCK_EVERYTHING: // ZDoom extension - block everything
-         l->flags    |= ML_BLOCKING;
-         l->extflags |= EX_ML_BLOCKALL;
-         break;
-      default: // Others not implemented yet :P
-         break;
-      }
-   }
-}
-
-//
-// ACS_setLineSpecial
-//
-// Sets all tagged lines' complete parameterized specials.
-//
-static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
-{
-   line_t *l;
-   int linenum = -1;
-
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   while((l = P_FindLine(tag, &linenum)) != NULL)
-   {
-      l->special = spec;
-      memcpy(l->args, args, 5 * sizeof(int));
+   case ACS_THINGVAR_X: return thing->x;
+   case ACS_THINGVAR_Y: return thing->y;
+   case ACS_THINGVAR_Z: return thing->z;
+   default: return 0;
    }
 }
 
@@ -422,6 +331,7 @@ static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 #define POP()     (*--stp)
 #define PEEK()    (*(stp-1))
 #define DECSTP()  (--stp)
+#define INCSTP()  (++stp)
 
 #define IPCURR()  (*ip)
 #define IPNEXT()  (*ip++)
@@ -432,21 +342,21 @@ static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 #define ST_BINOP(OP) temp = POP(); STACK_AT(1) = (STACK_AT(1) OP temp)
 #define ST_BINOP_EQ(OP) temp = POP(); STACK_AT(1) OP temp
 
-#define DIVOP_EQ(VAR, OP) \
-   if(!(temp = POP())) \
+#define DIV_CHECK(VAL) \
+   if(!(VAL)) \
    { \
       doom_printf(FC_ERROR "ACS Error: divide by zero\a"); \
-      action = ACTION_ENDSCRIPT; \
-      goto action_end; \
+      goto action_endscript; \
    } \
-   (VAR) OP temp
+
+
+#define DIVOP_EQ(VAR, OP) DIV_CHECK(temp = POP()); (VAR) OP temp
 
 #define BRANCH_COUNT() \
    if(++count > 500000) \
    { \
       doom_printf(FC_ERROR "ACS Error: terminated runaway script\a"); \
-      action = ACTION_ENDSCRIPT; \
-      goto action_end; \
+      goto action_endscript; \
    }
 
 // Uses do...while for convenience of use.
@@ -465,14 +375,6 @@ static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 #define OPCODE(OP) case ACS_OP_##OP
 #define NEXTOP() break
 #endif
-
-// script states for T_ACSThinker
-enum
-{
-   ACTION_RUN,       // default: keep running opcodes
-   ACTION_STOP,      // stop execution for current tic
-   ACTION_ENDSCRIPT, // end script execution on cmd or error
-};
 
 IMPLEMENT_THINKER_TYPE(ACSThinker)
 
@@ -496,7 +398,7 @@ void ACSThinker::Think()
    // cache vm data in local vars for efficiency
    register int32_t *ip  = this->ip;
    register int32_t *stp = this->stack + this->stp;
-   int action = ACTION_RUN, count = 0;
+   int count = 0;
    int32_t opcode, temp;
 
    // should the script terminate?
@@ -524,19 +426,34 @@ void ACSThinker::Think()
    OPCODE(NOP):
       NEXTOP();
 
+   OPCODE(KILL):
+      doom_printf(FC_ERROR "ACS Error: KILL at %d\a", (int)(ip - data - 1));
+      goto action_endscript;
+
       // Special Commands
+   OPCODE(CALLFUNC):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      ACSfunc[opcode](this, temp, stp, stp);
+      NEXTOP();
+   OPCODE(CALLFUNC_IMM):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      ACSfunc[opcode](this, temp, ip, stp);
+      ip += temp; // consume args
+      NEXTOP();
+
    OPCODE(LINESPEC):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
       stp -= temp; // consume args
-      ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
-                       this->lineSide, temp, stp);
+      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
       NEXTOP();
    OPCODE(LINESPEC_IMM):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
-      ACS_execLineSpec(this->line, this->trigger, (int16_t)opcode,
-                       this->lineSide, temp, ip);
+      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, ip);
       ip += temp; // consume args
       NEXTOP();
 
@@ -549,6 +466,9 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(SET_WORLDVAR):
       ACSworldvars[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_GLOBALVAR):
+      ACSglobalvars[IPNEXT()] = POP();
       NEXTOP();
 
       // GET
@@ -564,6 +484,21 @@ void ACSThinker::Think()
    OPCODE(GET_WORLDVAR):
       PUSH(ACSworldvars[IPNEXT()]);
       NEXTOP();
+   OPCODE(GET_GLOBALVAR):
+      PUSH(ACSglobalvars[IPNEXT()]);
+      NEXTOP();
+
+   OPCODE(GET_THINGVAR):
+      {
+         Mobj *mo = P_FindMobjFromTID(STACK_AT(1), NULL, trigger);
+         STACK_AT(1) = ACS_getThingVar(mo, IPNEXT());
+      }
+      NEXTOP();
+
+      // GETARR
+   OPCODE(GETARR_IMM):
+      for(temp = IPNEXT(); temp--;) PUSH(IPNEXT());
+      NEXTOP();
 
       // Binary Ops
       // ADD
@@ -578,6 +513,9 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(ADD_WORLDVAR):
       ACSworldvars[IPNEXT()] += POP();
+      NEXTOP();
+   OPCODE(ADD_GLOBALVAR):
+      ACSglobalvars[IPNEXT()] += POP();
       NEXTOP();
 
       // AND
@@ -615,6 +553,9 @@ void ACSThinker::Think()
    OPCODE(DEC_WORLDVAR):
       --ACSworldvars[IPNEXT()];
       NEXTOP();
+   OPCODE(DEC_GLOBALVAR):
+      --ACSglobalvars[IPNEXT()];
+      NEXTOP();
 
       // DIV
    OPCODE(DIV_STACK):
@@ -629,6 +570,12 @@ void ACSThinker::Think()
    OPCODE(DIV_WORLDVAR):
       DIVOP_EQ(ACSworldvars[IPNEXT()], /=);
       NEXTOP();
+   OPCODE(DIV_GLOBALVAR):
+      DIVOP_EQ(ACSglobalvars[IPNEXT()], /=);
+      NEXTOP();
+   OPCODE(DIVX_STACK):
+      DIV_CHECK(temp = POP()); STACK_AT(1) = FixedDiv(STACK_AT(1), temp);
+      NEXTOP();
 
       // INC
    OPCODE(INC_LOCALVAR):
@@ -639,6 +586,9 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(INC_WORLDVAR):
       ++ACSworldvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_GLOBALVAR):
+      ++ACSglobalvars[IPNEXT()];
       NEXTOP();
 
       // IOR
@@ -664,6 +614,9 @@ void ACSThinker::Think()
    OPCODE(MOD_WORLDVAR):
       DIVOP_EQ(ACSworldvars[IPNEXT()], %=);
       NEXTOP();
+   OPCODE(MOD_GLOBALVAR):
+      DIVOP_EQ(ACSglobalvars[IPNEXT()], %=);
+      NEXTOP();
 
       // MUL
    OPCODE(MUL_STACK):
@@ -677,6 +630,12 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(MUL_WORLDVAR):
       ACSworldvars[IPNEXT()] *= POP();
+      NEXTOP();
+   OPCODE(MUL_GLOBALVAR):
+      ACSglobalvars[IPNEXT()] *= POP();
+      NEXTOP();
+   OPCODE(MULX_STACK):
+      temp = POP(); STACK_AT(1) = FixedMul(STACK_AT(1), temp);
       NEXTOP();
 
       // RSH
@@ -696,6 +655,9 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(SUB_WORLDVAR):
       ACSworldvars[IPNEXT()] -= POP();
+      NEXTOP();
+   OPCODE(SUB_GLOBALVAR):
+      ACSglobalvars[IPNEXT()] -= POP();
       NEXTOP();
 
       // XOR
@@ -717,6 +679,18 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(LOGNOT_STACK):
       STACK_AT(1) = !STACK_AT(1);
+      NEXTOP();
+
+      // Trigonometry Ops
+   OPCODE(TRIG_COS):
+      STACK_AT(1) = finecosine[(angle_t)(STACK_AT(1) << FRACBITS) >> ANGLETOFINESHIFT];
+      NEXTOP();
+   OPCODE(TRIG_SIN):
+      STACK_AT(1) = finesine[(angle_t)(STACK_AT(1) << FRACBITS) >> ANGLETOFINESHIFT];
+      NEXTOP();
+   OPCODE(TRIG_VECTORANGLE):
+      DECSTP();
+      STACK_AT(1) = P_PointToAngle(0, 0, STACK_AT(1), STACK_AT(0));
       NEXTOP();
 
       // Branching
@@ -746,22 +720,63 @@ void ACSThinker::Think()
       NEXTOP();
 
       // Stack Control
+   OPCODE(STACK_COPY):
+      STACK_AT(0) = STACK_AT(1);
+      INCSTP();
+      NEXTOP();
    OPCODE(STACK_DROP):
       DECSTP();
       NEXTOP();
+   OPCODE(STACK_SWAP):
+      temp = STACK_AT(1);
+      STACK_AT(1) = STACK_AT(2);
+      STACK_AT(2) = temp;
+      NEXTOP();
 
       // Script Control
+   OPCODE(DELAY):
+      this->delay = POP();
+      goto action_stop;
+   OPCODE(DELAY_IMM):
+      this->delay = IPNEXT();
+      goto action_stop;
+
+   OPCODE(POLYWAIT):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = POP(); // get poly tag
+      goto action_stop;
+   OPCODE(POLYWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = IPNEXT(); // get poly tag
+      goto action_stop;
+
    OPCODE(SCRIPT_RESTART):
       ip = this->code;
       BRANCH_COUNT();
       NEXTOP();
    OPCODE(SCRIPT_SUSPEND):
       this->sreg = ACS_STATE_SUSPEND;
-      action = ACTION_STOP;
-      goto action_end;
+      goto action_stop;
    OPCODE(SCRIPT_TERMINATE):
-      action = ACTION_ENDSCRIPT;
-      goto action_end;
+      goto action_endscript;
+
+   OPCODE(TAGWAIT):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = POP(); // get sector tag
+      goto action_stop;
+   OPCODE(TAGWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = IPNEXT(); // get sector tag
+      goto action_stop;
+
+   OPCODE(SCRIPTWAIT):
+      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sdata = POP(); // get script num
+      goto action_stop;
+   OPCODE(SCRIPTWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sdata = IPNEXT(); // get script num
+      goto action_stop;
 
       // Printing
    OPCODE(STARTPRINT):
@@ -776,261 +791,111 @@ void ACSThinker::Think()
    OPCODE(ENDPRINTBOLD):
       HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
       NEXTOP();
-   OPCODE(PRINTSTRING):
-      this->printBuffer->concat(ACSVM::GetString(POP()));
+   OPCODE(PRINTCHAR):
+      *this->printBuffer += (char)POP();
+      NEXTOP();
+   OPCODE(PRINTFIXED):
+      {
+         // %E worst case: -1.52587e-05 == 12 + NUL
+         // %F worst case: -0.000106811 == 12 + NUL
+         // %F worst case: -32768.9     ==  8 + NUL
+         // %G is probably maximally P+6+1.
+         char buffer[13];
+         sprintf(buffer, "%G", M_FixedToDouble(POP()));
+         this->printBuffer->concat(buffer);
+      }
       NEXTOP();
    OPCODE(PRINTINT):
       {
-         char buffer[33];
+         // %i worst case: -2147483648 == 11 + NUL
+         char buffer[12];
          this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
       }
       NEXTOP();
-   OPCODE(PRINTCHAR):
-      *this->printBuffer += (char)POP();
+   OPCODE(PRINTNAME):
+      temp = POP();
+      switch(temp)
+      {
+      case 0:
+         this->printBuffer->concat(players[consoleplayer].name);
+         break;
+
+      default:
+         if(temp > 0 && temp <= MAXPLAYERS)
+            this->printBuffer->concat(players[temp - 1].name);
+         break;
+      }
+      NEXTOP();
+   OPCODE(PRINTSTRING):
+      this->printBuffer->concat(ACSVM::GetString(POP()));
       NEXTOP();
 
       // Miscellaneous
 
-   OPCODE(TAGSTRING):
-      if((uint32_t)PEEK() < vm->strings) PEEK() += vm->strings;
+   OPCODE(ACTIVATORARMOR):
+      PUSH(trigger && trigger->player ? trigger->player->armorpoints : 0);
       NEXTOP();
-
-   OPCODE(DELAY):
-      this->delay = POP();
-      action = ACTION_STOP;
-      goto action_end;
-   OPCODE(DELAY_IMM):
-      this->delay = IPNEXT();
-      action = ACTION_STOP;
-      goto action_end;
-
-   OPCODE(RANDOM):
-      {
-         int min, max;
-         max = POP();
-         min = POP();
-
-         PUSH(P_RangeRandom(pr_script, min, max));
-      }
+   OPCODE(ACTIVATORFRAGS):
+      PUSH(trigger && trigger->player ? trigger->player->totalfrags : 0);
       NEXTOP();
-   OPCODE(RANDOM_IMM):
-      {
-         int min, max;
-         min = IPNEXT();
-         max = IPNEXT();
-
-         PUSH(P_RangeRandom(pr_script, min, max));
-      }
+   OPCODE(ACTIVATORHEALTH):
+      PUSH(trigger ? trigger->health : 0);
       NEXTOP();
-
-   OPCODE(THINGCOUNT):
-      temp = POP(); // get tid
-      temp = ACS_countThings(POP(), temp);
-      PUSH(temp);
-      NEXTOP();
-   OPCODE(THINGCOUNT_IMM):
-      temp = IPNEXT(); // get type
-      temp = ACS_countThings(temp, IPNEXT());
-      PUSH(temp);
-      NEXTOP();
-
-   OPCODE(TAGWAIT):
-      this->sreg  = ACS_STATE_WAITTAG;
-      this->sdata = POP(); // get sector tag
-      action = ACTION_STOP;
-      goto action_end;
-   OPCODE(TAGWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITTAG;
-      this->sdata = IPNEXT(); // get sector tag
-      action = ACTION_STOP;
-      goto action_end;
-
-   OPCODE(POLYWAIT):
-      this->sreg  = ACS_STATE_WAITPOLY;
-      this->sdata = POP(); // get poly tag
-      action = ACTION_STOP;
-      goto action_end;
-   OPCODE(POLYWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITPOLY;
-      this->sdata = IPNEXT(); // get poly tag
-      action = ACTION_STOP;
-      goto action_end;
-
-   OPCODE(CHANGEFLOOR):
-      temp = POP(); // get flat string index
-      P_ChangeFloorTex(ACSVM::GetString(temp), POP()); // get tag
-      NEXTOP();
-   OPCODE(CHANGEFLOOR_IMM):
-      temp = *ip++; // get tag
-      P_ChangeFloorTex(ACSVM::GetString(IPNEXT()), temp);
-      NEXTOP();
-
-   OPCODE(CHANGECEILING):
-      temp = POP(); // get flat string index
-      P_ChangeCeilingTex(ACSVM::GetString(temp), POP()); // get tag
-      NEXTOP();
-   OPCODE(CHANGECEILING_IMM):
-      temp = IPNEXT(); // get tag
-      P_ChangeCeilingTex(ACSVM::GetString(IPNEXT()), temp);
-      NEXTOP();
-
-   OPCODE(LINESIDE):
-      PUSH(this->lineSide);
-      NEXTOP();
-
-   OPCODE(SCRIPTWAIT):
-      this->sreg  = ACS_STATE_WAITSCRIPT;
-      this->sdata = POP(); // get script num
-      action = ACTION_STOP;
-      goto action_end;
-   OPCODE(SCRIPTWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITSCRIPT;
-      this->sdata = IPNEXT(); // get script num
-      action = ACTION_STOP;
-      goto action_end;
 
    OPCODE(CLEARLINESPECIAL):
       if(this->line)
          this->line->special = 0;
       NEXTOP();
 
-   OPCODE(PLAYERCOUNT):
-      PUSH(ACS_countPlayers());
+   OPCODE(GAMESKILL):
+      PUSH(gameskill);
       NEXTOP();
 
    OPCODE(GAMETYPE):
       PUSH(GameType);
       NEXTOP();
 
-   OPCODE(GAMESKILL):
-      PUSH(gameskill);
+   OPCODE(LINESIDE):
+      PUSH(this->lineSide);
+      NEXTOP();
+
+   OPCODE(PLAYERCOUNT):
+      PUSH(ACS_countPlayers());
+      NEXTOP();
+
+   OPCODE(SETGRAVITY):
+      LevelInfo.gravity = POP() / 800;
+      NEXTOP();
+   OPCODE(SETGRAVITY_IMM):
+      LevelInfo.gravity = IPNEXT() / 800;
+      NEXTOP();
+
+   OPCODE(TAGSTRING):
+      if((uint32_t)PEEK() < vm->strings) PEEK() += vm->strings;
       NEXTOP();
 
    OPCODE(TIMER):
       PUSH(leveltime);
       NEXTOP();
 
-   OPCODE(SECTORSOUND):
-      {
-         PointThinker *src;
-         int vol    = POP();
-         int strnum = POP();
-
-         // if script started from a line, use the frontsector's sound origin
-         if(this->line)
-            src = &(this->line->frontsector->soundorg);
-         else
-            src = NULL;
-
-         S_StartSoundNameAtVolume(src, ACSVM::GetString(strnum), vol,
-                                  ATTN_NORMAL, CHAN_AUTO);
-      }
-      NEXTOP();
-
-   OPCODE(AMBIENTSOUND):
-      {
-         int vol    = POP();
-         int strnum = POP();
-
-         S_StartSoundNameAtVolume(NULL, ACSVM::GetString(strnum), vol,
-                                  ATTN_NORMAL, CHAN_AUTO);
-      }
-      NEXTOP();
-
-   OPCODE(SOUNDSEQUENCE):
-      {
-         sector_t *sec;
-         int strnum = POP();
-
-         if(this->line && (sec = this->line->frontsector))
-         {
-            S_StartSectorSequenceName(sec, ACSVM::GetString(strnum),
-                                      SEQ_ORIGIN_SECTOR_F);
-         }
-         /*
-         FIXME
-         else
-         {
-            S_StartSequenceName(NULL, ACSVM::GetString(strnum),
-                                SEQ_ORIGIN_OTHER, -1);
-         }
-         */
-      }
-      NEXTOP();
-
-   OPCODE(SETLINETEXTURE):
-      {
-         int strnum = POP();
-         int pos    = POP();
-         int side   = POP();
-         int tag    = POP();
-
-         P_ChangeLineTex(ACSVM::GetString(strnum), pos, side, tag, false);
-      }
-      NEXTOP();
-
-   OPCODE(SETLINEBLOCKING):
-      {
-         int block = POP();
-         int tag   = POP();
-
-         ACS_setLineBlocking(tag, block);
-      }
-      NEXTOP();
-
-   OPCODE(SETLINESPECIAL):
-      {
-         int tag;
-         int16_t spec;
-         int args[NUMLINEARGS];
-
-         for(temp = 5; temp > 0; --temp)
-            args[temp-1] = POP();
-         spec = POP();
-         tag  = POP();
-
-         ACS_setLineSpecial(spec, args, tag);
-      }
-      NEXTOP();
-
-   OPCODE(THINGSOUND):
-      {
-         int vol    = POP();
-         int strnum = POP();
-         int tid    = POP();
-         Mobj *mo   = NULL;
-
-         while((mo = P_FindMobjFromTID(tid, mo, NULL)))
-         {
-            S_StartSoundNameAtVolume(mo, ACSVM::GetString(strnum), vol,
-                                     ATTN_NORMAL, CHAN_AUTO);
-         }
-      }
-      NEXTOP();
-
 #ifndef COMPGOTO
    default:
       // unknown opcode, must stop execution
       doom_printf(FC_ERROR "ACS Error: unknown opcode %d\a", opcode);
-      action = ACTION_ENDSCRIPT;
-      goto action_end;
+      goto action_endscript;
 #endif
    }
 
-action_end:
-   // check for special actions flagged in loop above
-   switch(action)
-   {
-   case ACTION_ENDSCRIPT:
-      // end the script
-      ACS_stopScript(this, this->acscript);
-      break;
-   default:
-      // copy fields back into script
-      this->ip  = ip;
-      this->stp = stp - this->stack;
-      break;
-   }
+action_endscript:
+   // end the script
+   ACS_stopScript(this, this->acscript);
+   return;
+
+action_stop:
+   // copy fields back into script
+   this->ip  = ip;
+   this->stp = stp - this->stack;
+   return;
 }
 
 //
@@ -1145,6 +1010,9 @@ void ACS_NewGame(void)
 
    // clear out the world variables
    memset(ACSworldvars, 0, sizeof(ACSworldvars));
+
+   // clear out the global variables
+   memset(ACSglobalvars, 0, sizeof(ACSglobalvars));
 
    // clear out deferred scripts
    cur = acsDeferred;
@@ -1661,6 +1529,9 @@ void ACS_Archive(SaveArchive &arc)
 
    // Archive world variables. (TODO: not load on hub transfer?)
    P_ArchiveArray(arc, ACSworldvars, ACS_NUM_WORLDVARS);
+
+   // Archive global variables.
+   P_ArchiveArray(arc, ACSglobalvars, ACS_NUM_GLOBALVARS);
 
    // Archive deferred scripts. (TODO: not load on hub transfer?)
    if(arc.isSaving())

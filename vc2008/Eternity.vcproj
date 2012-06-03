@@ -225,6 +225,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\source\acs_func.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\source\acs_intr.cpp"
 					>
 					<FileConfiguration
