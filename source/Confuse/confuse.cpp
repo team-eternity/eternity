@@ -382,17 +382,64 @@ static cfg_value_t *cfg_addval(cfg_opt_t *opt)
    return opt->values[opt->nvalues++];
 }
 
-static cfg_opt_t *cfg_dupopts(cfg_opt_t *opts)
+int cfg_numopts(cfg_opt_t *opts)
 {
    int n;
-   cfg_opt_t *dupopts;
-   
+
    for(n = 0; opts[n].name; n++) /* do nothing */ ;
 
-   ++n;
+   return n;
+}
+
+static cfg_opt_t *cfg_dupopts(cfg_opt_t *opts)
+{
+   int n = cfg_numopts(opts) + 1;
+   cfg_opt_t *dupopts;
+   
    dupopts = estructalloc(cfg_opt_t, n);
    memcpy(dupopts, opts, n * sizeof(cfg_opt_t));
    return dupopts;
+}
+
+static cfg_opt_t *cfg_dupopt_array(cfg_opt_t *opts)
+{
+   int i;
+   cfg_opt_t *dupopts;
+   int n = cfg_numopts(opts);
+
+   dupopts = estructalloc(cfg_opt_t, n+1);
+   memcpy(dupopts, opts, n * sizeof(cfg_opt_t));
+
+   for(i = 0; i < n; i++)
+   {
+      dupopts[i].flags |= CFGF_ALLOCATED;
+      dupopts[i].name = estrdup(opts[i].name);
+      if(opts[i].sdef)
+         dupopts[i].sdef = opts[i].sdef ? estrdup(opts[i].sdef) : NULL;
+      if(opts[i].subopts)
+         dupopts[i].subopts = cfg_dupopt_array(opts[i].subopts);
+   }
+
+   return dupopts;
+}
+
+static void cfg_free_opt_array(cfg_opt_t *opts)
+{
+   int i;
+
+   if(!is_set(CFGF_ALLOCATED, opts[0].flags))
+      return;
+
+   for(i = 0; opts[i].name; i++)
+   {
+      efree(const_cast<char *>(opts[i].name));
+      if(opts[i].sdef)
+         efree(const_cast<char *>(opts[i].sdef));
+      if(opts[i].subopts)
+         cfg_free_opt_array(opts[i].subopts);
+   }
+
+   efree(opts);
 }
 
 int cfg_parse_boolean(const char *s)
@@ -1079,7 +1126,7 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
    memset(cfg, 0, sizeof(cfg_t));
 
    cfg->name     = "root";
-   cfg->opts     = opts;
+   cfg->opts     = cfg_dupopt_array(opts);
    cfg->flags    = flags;
    cfg->filename = 0;
    cfg->line     = 0;
@@ -1198,7 +1245,10 @@ void cfg_free(cfg_t *cfg)
       efree(const_cast<char *>(cfg->title));
    }
    else
+   {
+      cfg_free_opt_array(cfg->opts);
       efree(cfg->filename);
+   }
    
    efree(cfg);
 }
