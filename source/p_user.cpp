@@ -164,6 +164,10 @@ void P_CalcHeight(player_t *player)
          player->bob = MAXBOB;
    }
 
+   // haleyjd 06/05/12: flying players
+   if(player->mo->flags4 & MF4_FLY && !onground)
+      player->bob = FRACUNIT / 2;
+
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
@@ -239,8 +243,11 @@ void P_MovePlayer(player_t* player)
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
-   onground = mo->z <= mo->floorz ||
-      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ);
+   // 06/05/12: flying players
+   onground = 
+      mo->z <= mo->floorz ||
+      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ) ||
+      (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
    //
@@ -394,6 +401,32 @@ static void P_HereticCurrent(player_t *player)
 
       if(sec->hticPushType >= 20 && sec->hticPushType <= 39)
          P_Thrust(player, sec->hticPushAngle, sec->hticPushForce);
+   }
+}
+
+//
+// P_PlayerFlight
+//
+static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+{
+   if(cmd->upmove == -32768)
+      P_PlayerStopFlight(player);
+   else if(cmd->upmove != 0)
+   {
+      // clamp
+      if(cmd->upmove < -768)
+         cmd->upmove = -768;
+      else if(cmd->upmove > 768)
+         cmd->upmove = 768;
+
+      if(player->powers[pw_flight] && !(player->mo->flags & MF4_FLY))
+         P_PlayerStartFlight(player);
+      // TODO:
+      // else
+      // * If have a flight-granting powerup, activate it now
+
+      if(player->mo->flags4 & MF4_FLY)
+         player->mo->momz = cmd->upmove << 9;
    }
 }
 
@@ -691,6 +724,9 @@ void P_PlayerStartFlight(player_t *player)
    player->mo->flags4 |= MF4_FLY;
    player->mo->flags  |= MF_NOGRAVITY;
 
+   // TODO: stop screaming if falling
+
+   // FIXME: needed?
    if(player->mo->z <= player->mo->floorz)
       player->flyheight = 10;
 }

@@ -610,7 +610,8 @@ void P_XYMovement(Mobj* mo)
    
    // no friction when airborne
    // haleyjd: OVER_UNDER
-   if(mo->z > mo->floorz && 
+   // 06/5/12: flying players
+   if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
       (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
@@ -635,7 +636,7 @@ void P_XYMovement(Mobj* mo)
    {
       // if in a walking frame, stop moving
 
-      // haleyjd 09/29/07: cleared fixme on gross hack
+      // haleyjd 09/29/07: use E_PlayerInWalkingState
       // killough 10/98:
       // Don't affect main player when voodoo dolls stop, except in old demos:
 
@@ -713,6 +714,10 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    // Decrease viewheight for a moment
    // after hitting the ground (hard),
    // and utter appropriate sound.
+
+   // haleyjd 06/05/12: not when flying
+   if(mo->flags4 & MF4_FLY)
+      return;
 
    mo->player->deltaviewheight = mo->momz >> 3;
    mo->player->jumptime = 10;
@@ -907,9 +912,13 @@ floater:
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
    }
 
+   // haleyjd 06/05/12: flying players
+   if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->floorz)
+      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+
    // clip movement
 
-   if (mo->z <= mo->floorz)
+   if(mo->z <= mo->floorz)
    {
       // hit the floor
 
