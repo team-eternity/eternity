@@ -899,7 +899,8 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          HU_FragsUpdate();
       }
 
-      target->flags &= ~MF_SOLID;
+      target->flags  &= ~MF_SOLID;
+      P_PlayerStopFlight(target->player);  // haleyjd: stop flying
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
 

@@ -661,6 +661,7 @@ enum
    MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
    MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
    MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
+   MF4_FLY            = 0x00000100  // Actor is flying
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

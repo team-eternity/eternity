@@ -681,6 +681,34 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
       player->attacker = attacker;
 }
 
+//
+// P_PlayerStartFlight
+//
+// Call this to start the player flying.
+//
+void P_PlayerStartFlight(player_t *player)
+{
+   player->mo->flags4 |= MF4_FLY;
+   player->mo->flags  |= MF_NOGRAVITY;
+
+   if(player->mo->z <= player->mo->floorz)
+      player->flyheight = 10;
+}
+
+//
+// P_PlayerStopFlight
+//
+// Call this to make the player stop flying.
+//
+void P_PlayerStopFlight(player_t *player)
+{
+   if(full_demo_version < make_full_version(340, 23))
+      return;
+
+   player->mo->flags4 &= ~MF4_FLY;
+   player->mo->flags  &= ~MF_NOGRAVITY;
+}
+
 #ifndef EE_NO_SMALL_SUPPORT
 // Small native functions for player stuff
 
