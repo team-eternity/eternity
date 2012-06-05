@@ -42,12 +42,21 @@ class  WadDirectory;
 // Defines
 //
 
-#define ACS_STACK_LEN      128 
+#define ACS_STACK_LEN      128
 #define ACS_NUM_LOCALVARS  10
 #define ACS_NUM_MAPVARS    32
+#define ACS_NUM_MAPARRS    32
 #define ACS_NUM_WORLDVARS  64
+#define ACS_NUM_WORLDARRS  64
 #define ACS_NUM_GLOBALVARS 64
+#define ACS_NUM_GLOBALARRS 64
 #define ACS_NUM_THINGTYPES 256
+
+// ACS array constants
+#define ACS_PAGESIZE 1024
+#define ACS_BLOCKSIZE 512
+#define ACS_REGIONSIZE 512
+#define ACS_ARRDATASIZE 16
 
 #define ACS_FUNCARG ACSThinker *thread, uint32_t argc, const int32_t *args, int32_t *&retn
 
@@ -121,6 +130,51 @@ class ACSThinker;
 class ACSVM;
 
 typedef void (*acs_func_t)(ACS_FUNCARG);
+
+//
+// ACSArray
+//
+// Stores an "array" with a logical size of 2^32, but is actually only
+// allocated as needed.
+//
+class ACSArray
+{
+private:
+   typedef int32_t val_t;
+   typedef val_t  page_t[ACS_PAGESIZE];
+   typedef page_t *block_t[ACS_BLOCKSIZE];
+   typedef block_t *region_t[ACS_REGIONSIZE];
+   typedef region_t *arrdata_t[ACS_ARRDATASIZE];
+
+   void archiveArrdata(SaveArchive &arc, arrdata_t *arrdata);
+   void archiveRegion(SaveArchive &arc, region_t *region);
+   void archiveBlock(SaveArchive &arc, block_t *block);
+   void archivePage(SaveArchive &arc, page_t *page);
+   void archiveVal(SaveArchive &arc, val_t *val);
+
+   arrdata_t &getArrdata() {return arrdata;}
+   region_t &getRegion(uint32_t addr);
+   block_t &getBlock(uint32_t addr);
+   page_t &getPage(uint32_t addr);
+   val_t &getVal(uint32_t addr)
+   {
+      return getPage(addr / ACS_PAGESIZE)[addr % ACS_PAGESIZE];
+   }
+
+   arrdata_t arrdata;
+
+public:
+   ACSArray() {memset(arrdata, 0, sizeof(arrdata));}
+   ~ACSArray() {clear();}
+
+   void clear();
+
+   val_t &at(uint32_t addr) {return getVal(addr);}
+
+   val_t &operator [] (uint32_t addr) {return getVal(addr);}
+
+   void archive(SaveArchive &arc);
+};
 
 //
 // acs_opdata
@@ -245,20 +299,22 @@ public:
    void reset();
 
    // bytecode info
-   int32_t     *code;                 // ACS code; jumps are relative to this
+   int32_t     *code;                  // ACS code; jumps are relative to this
    unsigned int numCode;
-   unsigned int strings;              // offset into global table
+   unsigned int strings;               // offset into global table
    unsigned int numStrings;
-   acscript_t  *scripts;              // the scripts
+   acscript_t  *scripts;               // the scripts
    unsigned int numScripts;
-   bool         loaded;               // for static VMs, if it's valid or not
-   uint32_t     id;                   // vm id number
-   int          lump;                 // lump bytecode was loaded from
+   bool         loaded;                // for static VMs, if it's valid or not
+   uint32_t     id;                    // vm id number
+   int          lump;                  // lump bytecode was loaded from
 
    // interpreter info
-   qstring *printBuffer;              // used for message printing
-   int32_t *mapvtab[ACS_NUM_MAPVARS]; // pointers into vm mapvars
-   int32_t  mapvars[ACS_NUM_MAPVARS];
+   qstring  *printBuffer;              // used for message printing
+   int32_t  *mapvtab[ACS_NUM_MAPVARS]; // pointers into vm mapvars
+   int32_t   mapvars[ACS_NUM_MAPVARS];
+   ACSArray *mapatab[ACS_NUM_MAPARRS]; // pointers into vm maparrs
+   ACSArray  maparrs[ACS_NUM_MAPARRS];
 
    // global bytecode info
    static const char **GlobalStrings;
@@ -295,8 +351,11 @@ extern acs_func_t ACSfunc[ACS_FUNCMAX];
 extern acs_opdata_t ACSopdata[ACS_OPMAX];
 
 extern int ACS_thingtypes[ACS_NUM_THINGTYPES];
+
 extern int32_t ACSworldvars[ACS_NUM_WORLDVARS];
+extern ACSArray ACSworldarrs[ACS_NUM_WORLDARRS];
 extern int32_t ACSglobalvars[ACS_NUM_GLOBALVARS];
+extern ACSArray ACSglobalarrs[ACS_NUM_GLOBALARRS];
 
 #endif
 

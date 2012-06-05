@@ -100,9 +100,11 @@ int ACS_thingtypes[ACS_NUM_THINGTYPES];
 
 // world variables
 int32_t ACSworldvars[ACS_NUM_WORLDVARS];
+ACSArray ACSworldarrs[ACS_NUM_WORLDARRS];
 
 // global variables
 int32_t ACSglobalvars[ACS_NUM_GLOBALVARS];
+ACSArray ACSglobalarrs[ACS_NUM_GLOBALARRS];
 
 //
 // Static Functions
@@ -342,6 +344,8 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
 #define ST_BINOP(OP) temp = POP(); STACK_AT(1) = (STACK_AT(1) OP temp)
 #define ST_BINOP_EQ(OP) temp = POP(); STACK_AT(1) OP temp
 
+#define AR_BINOP(VAR, OP) temp = POP(); (VAR)[POP()] OP temp
+
 #define DIV_CHECK(VAL) \
    if(!(VAL)) \
    { \
@@ -470,6 +474,15 @@ void ACSThinker::Think()
    OPCODE(SET_GLOBALVAR):
       ACSglobalvars[IPNEXT()] = POP();
       NEXTOP();
+   OPCODE(SET_MAPARR):
+      AR_BINOP(*vm->mapatab[IPNEXT()], =);
+      NEXTOP();
+   OPCODE(SET_WORLDARR):
+      AR_BINOP(ACSworldarrs[IPNEXT()], =);
+      NEXTOP();
+   OPCODE(SET_GLOBALARR):
+      AR_BINOP(ACSglobalarrs[IPNEXT()], =);
+      NEXTOP();
 
       // GET
    OPCODE(GET_IMM):
@@ -486,6 +499,15 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(GET_GLOBALVAR):
       PUSH(ACSglobalvars[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_MAPARR):
+      STACK_AT(1) = vm->mapatab[IPNEXT()]->at(STACK_AT(1));
+      NEXTOP();
+   OPCODE(GET_WORLDARR):
+      STACK_AT(1) = ACSworldarrs[IPNEXT()][STACK_AT(1)];
+      NEXTOP();
+   OPCODE(GET_GLOBALARR):
+      STACK_AT(1) = ACSglobalarrs[IPNEXT()][STACK_AT(1)];
       NEXTOP();
 
    OPCODE(GET_THINGVAR):
@@ -516,6 +538,15 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(ADD_GLOBALVAR):
       ACSglobalvars[IPNEXT()] += POP();
+      NEXTOP();
+   OPCODE(ADD_MAPARR):
+      AR_BINOP(*vm->mapatab[IPNEXT()], +=);
+      NEXTOP();
+   OPCODE(ADD_WORLDARR):
+      AR_BINOP(ACSworldarrs[IPNEXT()], +=);
+      NEXTOP();
+   OPCODE(ADD_GLOBALARR):
+      AR_BINOP(ACSglobalarrs[IPNEXT()], +=);
       NEXTOP();
 
       // AND
@@ -556,6 +587,15 @@ void ACSThinker::Think()
    OPCODE(DEC_GLOBALVAR):
       --ACSglobalvars[IPNEXT()];
       NEXTOP();
+   OPCODE(DEC_MAPARR):
+      --vm->mapatab[IPNEXT()]->at(POP());
+      NEXTOP();
+   OPCODE(DEC_WORLDARR):
+      --ACSworldarrs[IPNEXT()][POP()];
+      NEXTOP();
+   OPCODE(DEC_GLOBALARR):
+      --ACSglobalarrs[IPNEXT()][POP()];
+      NEXTOP();
 
       // DIV
    OPCODE(DIV_STACK):
@@ -573,6 +613,15 @@ void ACSThinker::Think()
    OPCODE(DIV_GLOBALVAR):
       DIVOP_EQ(ACSglobalvars[IPNEXT()], /=);
       NEXTOP();
+   OPCODE(DIV_MAPARR):
+      DIVOP_EQ(vm->mapatab[IPNEXT()]->at(POP()), /=);
+      NEXTOP();
+   OPCODE(DIV_WORLDARR):
+      DIVOP_EQ(ACSworldarrs[IPNEXT()][POP()], /=);
+      NEXTOP();
+   OPCODE(DIV_GLOBALARR):
+      DIVOP_EQ(ACSglobalarrs[IPNEXT()][POP()], /=);
+      NEXTOP();
    OPCODE(DIVX_STACK):
       DIV_CHECK(temp = POP()); STACK_AT(1) = FixedDiv(STACK_AT(1), temp);
       NEXTOP();
@@ -589,6 +638,15 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(INC_GLOBALVAR):
       ++ACSglobalvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_MAPARR):
+      ++vm->mapatab[IPNEXT()]->at(POP());
+      NEXTOP();
+   OPCODE(INC_WORLDARR):
+      ++ACSworldarrs[IPNEXT()][POP()];
+      NEXTOP();
+   OPCODE(INC_GLOBALARR):
+      ++ACSglobalarrs[IPNEXT()][POP()];
       NEXTOP();
 
       // IOR
@@ -617,6 +675,15 @@ void ACSThinker::Think()
    OPCODE(MOD_GLOBALVAR):
       DIVOP_EQ(ACSglobalvars[IPNEXT()], %=);
       NEXTOP();
+   OPCODE(MOD_MAPARR):
+      DIVOP_EQ(vm->mapatab[IPNEXT()]->at(POP()), %=);
+      NEXTOP();
+   OPCODE(MOD_WORLDARR):
+      DIVOP_EQ(ACSworldarrs[IPNEXT()][POP()], %=);
+      NEXTOP();
+   OPCODE(MOD_GLOBALARR):
+      DIVOP_EQ(ACSglobalarrs[IPNEXT()][POP()], %=);
+      NEXTOP();
 
       // MUL
    OPCODE(MUL_STACK):
@@ -633,6 +700,15 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(MUL_GLOBALVAR):
       ACSglobalvars[IPNEXT()] *= POP();
+      NEXTOP();
+   OPCODE(MUL_MAPARR):
+      AR_BINOP(*vm->mapatab[IPNEXT()], *=);
+      NEXTOP();
+   OPCODE(MUL_WORLDARR):
+      AR_BINOP(ACSworldarrs[IPNEXT()], *=);
+      NEXTOP();
+   OPCODE(MUL_GLOBALARR):
+      AR_BINOP(ACSglobalarrs[IPNEXT()], *=);
       NEXTOP();
    OPCODE(MULX_STACK):
       temp = POP(); STACK_AT(1) = FixedMul(STACK_AT(1), temp);
@@ -658,6 +734,15 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(SUB_GLOBALVAR):
       ACSglobalvars[IPNEXT()] -= POP();
+      NEXTOP();
+   OPCODE(SUB_MAPARR):
+      AR_BINOP(*vm->mapatab[IPNEXT()], -=);
+      NEXTOP();
+   OPCODE(SUB_WORLDARR):
+      AR_BINOP(ACSworldarrs[IPNEXT()], -=);
+      NEXTOP();
+   OPCODE(SUB_GLOBALARR):
+      AR_BINOP(ACSglobalarrs[IPNEXT()], -=);
       NEXTOP();
 
       // XOR
@@ -871,7 +956,7 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(TAGSTRING):
-      if((uint32_t)PEEK() < vm->strings) PEEK() += vm->strings;
+      STACK_AT(1) += vm->strings;
       NEXTOP();
 
    OPCODE(TIMER):
@@ -957,6 +1042,87 @@ void ACSThinker::deSwizzle()
 }
 
 //
+// ACSArray::clear
+//
+// Frees all of the associated memory, effectively resetting all values to 0.
+//
+void ACSArray::clear()
+{
+   // Iterate over every region in arrdata.
+   for(region_t **regionItr = arrdata, **regionEnd = regionItr + ACS_ARRDATASIZE;
+       regionItr != regionEnd; ++regionItr)
+   {
+      // If this region isn't allocated, skip it.
+      if(!*regionItr) continue;
+
+      // Iterate over every block in the region. (**regionItr is region_t AKA block_t*[])
+      for(block_t **blockItr = **regionItr, **blockEnd = blockItr + ACS_REGIONSIZE;
+          blockItr != blockEnd; ++blockItr)
+      {
+         // If this block isn't allocated, skip it.
+         if(!*blockItr) continue;
+
+         // Iterate over every page in the block. (**blockItr is block_t AKA page_t*[])
+         for(page_t **pageItr = **blockItr, **pageEnd = pageItr + ACS_BLOCKSIZE;
+             pageItr != pageEnd; ++pageItr)
+         {
+            // If this page is allocated, free it.
+            if(*pageItr) Z_Free(*pageItr);
+         }
+
+         // Free the block.
+         Z_Free(*blockItr);
+      }
+
+      // Free the region.
+      Z_Free(*regionItr);
+      *regionItr = NULL;
+   }
+}
+
+//
+// ACSArray::getRegion
+//
+ACSArray::region_t &ACSArray::getRegion(uint32_t addr)
+{
+   // Find the requested region.
+   region_t *&region = getArrdata()[addr];
+
+   // If not allocated yet, do so.
+   if(!region) region = estructalloc(region_t, 1);
+
+   return *region;
+}
+
+//
+// ACSArray::getBlock
+//
+ACSArray::block_t &ACSArray::getBlock(uint32_t addr)
+{
+   // Find the requested block.
+   block_t *&block = getRegion(addr / ACS_REGIONSIZE)[addr % ACS_REGIONSIZE];
+
+   // If not allocated yet, do so.
+   if(!block) block = estructalloc(block_t, 1);
+
+   return *block;
+}
+
+//
+// ACSArray::getPage
+//
+ACSArray::page_t &ACSArray::getPage(uint32_t addr)
+{
+   // Find the requested page.
+   page_t *&page = getBlock(addr / ACS_BLOCKSIZE)[addr % ACS_BLOCKSIZE];
+
+   // If not allocated yet, do so.
+   if(!page) page = estructalloc(page_t, 1);
+
+   return *page;
+}
+
+//
 // ACSVM::ACSVM
 //
 ACSVM::ACSVM(int tag) : ZoneObject()
@@ -979,9 +1145,16 @@ ACSVM::~ACSVM()
 void ACSVM::reset()
 {
    for(int i = ACS_NUM_MAPVARS; i--;)
+   {
+      mapvars[i] = 0;
       mapvtab[i] = &mapvars[i];
+   }
 
-   memset(mapvars, 0, sizeof(mapvars));
+   for(int i = ACS_NUM_MAPARRS; i--;)
+   {
+      maparrs[i].clear();
+      mapatab[i] = &maparrs[i];
+   }
 
    numCode    = 0;
    numStrings = 0;
@@ -1490,6 +1663,15 @@ bool ACS_SuspendScript(int scrnum, int mapnum)
 //
 
 //
+// SaveArchive << ACSArray
+//
+static SaveArchive &operator << (SaveArchive &arc, ACSArray &arr)
+{
+   arr.archive(arc);
+   return arc;
+}
+
+//
 // SaveArchive << deferredacs_t
 //
 static SaveArchive &operator << (SaveArchive &arc, deferredacs_t &dacs)
@@ -1497,6 +1679,124 @@ static SaveArchive &operator << (SaveArchive &arc, deferredacs_t &dacs)
    arc << dacs.scriptNum << dacs.vmID << dacs.targetMap << dacs.type;
    P_ArchiveArray(arc, dacs.args, NUMLINEARGS);
    return arc;
+}
+
+//
+// ACSArray::archiveArrdata
+//
+void ACSArray::archiveArrdata(SaveArchive &arc, arrdata_t *arrdata)
+{
+   bool hasRegion;
+
+   // Archive every region.
+   for(region_t **regionItr = *arrdata, **regionEnd = regionItr + ACS_ARRDATASIZE;
+       regionItr != regionEnd; ++regionItr)
+   {
+      // Determine if there is a region to archive.
+      if(arc.isSaving())
+         hasRegion = *regionItr;
+
+      arc << hasRegion;
+
+      // If so, archive it.
+      if(hasRegion)
+      {
+         // If loading, need to allocate the region.
+         if(arc.isLoading())
+            *regionItr = estructalloc(region_t, 1);
+
+         archiveRegion(arc, *regionItr);
+      }
+   }
+}
+
+//
+// ACSArray::archiveRegion
+//
+void ACSArray::archiveRegion(SaveArchive &arc, region_t *region)
+{
+   bool hasBlock;
+
+   // Archive every block in the region.
+   for(block_t **blockItr = *region, **blockEnd = blockItr + ACS_REGIONSIZE;
+       blockItr != blockEnd; ++blockItr)
+   {
+      // Determine if there is a block to archive.
+      if(arc.isSaving())
+         hasBlock = *blockItr;
+
+      arc << hasBlock;
+
+      // If so, archive it.
+      if(hasBlock)
+      {
+         // If loading, need to allocate the block.
+         if(arc.isLoading())
+            *blockItr = estructalloc(block_t, 1);
+
+         archiveBlock(arc, *blockItr);
+      }
+   }
+}
+
+//
+// ACSArray::archiveBlock
+//
+void ACSArray::archiveBlock(SaveArchive &arc, block_t *block)
+{
+   bool hasPage;
+
+   // Archive every page in the block.
+   for(page_t **pageItr = *block, **pageEnd = pageItr + ACS_BLOCKSIZE;
+       pageItr != pageEnd; ++pageItr)
+   {
+      // Determine if there is a page to archive.
+      if(arc.isSaving())
+         hasPage = *pageItr;
+
+      arc << hasPage;
+
+      // If so, archive it.
+      if(!hasPage)
+      {
+         // If loading, need to allocate the page first.
+         if(arc.isLoading())
+            *pageItr = estructalloc(page_t, 1);
+
+         archivePage(arc, *pageItr);
+      }
+   }
+}
+
+//
+// ACSArray::archivePage
+//
+void ACSArray::archivePage(SaveArchive &arc, page_t *page)
+{
+   for(val_t *valItr = *page, *valEnd = valItr + ACS_PAGESIZE;
+       valItr != valEnd; ++valItr)
+   {
+      archiveVal(arc, valItr);
+   }
+}
+
+//
+// ACSArray::archiveVal
+//
+void ACSArray::archiveVal(SaveArchive &arc, val_t *val)
+{
+   arc << *val;
+}
+
+//
+// ACSArray::archive
+//
+void ACSArray::archive(SaveArchive &arc)
+{
+   if(arc.isLoading())
+      clear();
+
+   archiveArrdata(arc, &arrdata);
 }
 
 //
@@ -1525,13 +1825,16 @@ void ACS_Archive(SaveArchive &arc)
    for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
    {
       P_ArchiveArray(arc, (*vm)->mapvars, ACS_NUM_MAPVARS);
+      P_ArchiveArray(arc, (*vm)->maparrs, ACS_NUM_MAPARRS);
    }
 
    // Archive world variables. (TODO: not load on hub transfer?)
    P_ArchiveArray(arc, ACSworldvars, ACS_NUM_WORLDVARS);
+   P_ArchiveArray(arc, ACSworldarrs, ACS_NUM_WORLDARRS);
 
    // Archive global variables.
    P_ArchiveArray(arc, ACSglobalvars, ACS_NUM_GLOBALVARS);
+   P_ArchiveArray(arc, ACSglobalarrs, ACS_NUM_GLOBALARRS);
 
    // Archive deferred scripts. (TODO: not load on hub transfer?)
    if(arc.isSaving())
