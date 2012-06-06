@@ -49,6 +49,7 @@
 #include "m_cheat.h"
 #include "p_inter.h"
 #include "p_setup.h"
+#include "p_user.h"
 #include "r_data.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -876,6 +877,17 @@ CONSOLE_COMMAND(buddha, cf_notnet|cf_level)
                "Immortality on" : "Immortality off");
 }
 
+CONSOLE_COMMAND(fly, cf_notnet|cf_level)
+{
+   player_t *p = &players[consoleplayer];
+
+   if(!(p->mo->flags4 & MF4_FLY))
+      P_PlayerStartFlight(p, true);
+   else
+      P_PlayerStopFlight(p);
+
+}
+
 extern void A_Fall(Mobj *);
 extern void A_PainDie(Mobj *);
 
@@ -962,6 +974,7 @@ void Cheat_AddCommands()
    C_AddCommand(god);
    C_AddCommand(noclip);
    C_AddCommand(buddha);
+   C_AddCommand(fly);
    C_AddCommand(nuke);
 }
 
