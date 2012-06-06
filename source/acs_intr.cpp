@@ -1694,7 +1694,7 @@ void ACSArray::archiveArrdata(SaveArchive &arc, arrdata_t *arrdata)
    {
       // Determine if there is a region to archive.
       if(arc.isSaving())
-         hasRegion = *regionItr;
+         hasRegion = *regionItr != NULL;
 
       arc << hasRegion;
 
@@ -1723,7 +1723,7 @@ void ACSArray::archiveRegion(SaveArchive &arc, region_t *region)
    {
       // Determine if there is a block to archive.
       if(arc.isSaving())
-         hasBlock = *blockItr;
+         hasBlock = *blockItr != NULL;
 
       arc << hasBlock;
 
@@ -1752,12 +1752,12 @@ void ACSArray::archiveBlock(SaveArchive &arc, block_t *block)
    {
       // Determine if there is a page to archive.
       if(arc.isSaving())
-         hasPage = *pageItr;
+         hasPage = *pageItr != NULL;
 
       arc << hasPage;
 
       // If so, archive it.
-      if(!hasPage)
+      if(hasPage)
       {
          // If loading, need to allocate the page first.
          if(arc.isLoading())
