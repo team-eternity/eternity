@@ -63,7 +63,7 @@ struct ticcmd_t
 {
    int8_t  forwardmove; // *2048 for move
    int8_t  sidemove;    // *2048 for move
-   int16_t upmove;      // haleyjd: flight
+   int8_t  fly;         // haleyjd: flight
    int16_t look;        // haleyjd: <<16 for look delta
    int16_t angleturn;   // <<16 for angle delta
    int16_t consistency; // checks for net game

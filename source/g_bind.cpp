@@ -484,6 +484,9 @@ int action_mlook;       // mlook activation
 int action_lookup;      // key-look up
 int action_lookdown;    // key-look down
 int action_center;      // key-look centerview
+int action_flyup;       // fly up
+int action_flydown;     // fly down
+int action_flycenter;   // fly "center"
 int action_weapon1;     // select weapon 1
 int action_weapon2;     // select weapon 2
 int action_weapon3;     // select weapon 3

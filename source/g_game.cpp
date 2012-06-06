@@ -234,6 +234,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    int newweapon;            // phares
    int look = 0; 
    int mlook = 0;
+   int flyheight = 0;
    static int prevmlook = 0;
    ticcmd_t *base;
    double tmousex, tmousey;     // local mousex, mousey
@@ -535,6 +536,17 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          look = -32767;
    }
 
+   // haleyjd 06/05/12: flight
+   if(action_flyup)
+      flyheight = FLIGHT_IMPULSE_AMT;
+   if(action_flydown)
+      flyheight = -FLIGHT_IMPULSE_AMT;
+   if(action_flycenter)
+   {
+      flyheight = FLIGHT_CENTER;
+      look = -32768;
+   }
+
    if(strafe)
       side += (int)(tmousex * 2.0);
    else
@@ -553,6 +565,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->forwardmove += forward;
    cmd->sidemove += side;
    cmd->look = look;
+   cmd->fly = flyheight;
 
    // special buttons
    if(sendpause)

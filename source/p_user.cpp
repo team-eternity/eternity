@@ -229,6 +229,39 @@ void P_CalcHeight(player_t *player)
 }
 
 //
+// P_PlayerFlight
+//
+// haleyjd 06/05/12: flying logic for players
+//
+static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+{
+   int fly = cmd->fly;
+
+   if(fly && player->powers[pw_flight])
+   {
+      if(fly != FLIGHT_CENTER)
+      {
+         player->flyheight = fly * 2;
+
+         if(!(player->mo->flags4 & MF4_FLY))
+            P_PlayerStartFlight(player, false);
+      }
+      else
+         P_PlayerStopFlight(player);
+   }
+   // TODO:
+   // else
+   // * If have a flight-granting powerup, activate it now
+
+   if(player->mo->flags4 & MF4_FLY)
+   {
+      player->mo->momz = player->flyheight * FRACUNIT;
+      if(player->flyheight)
+         player->flyheight /= 2;
+   }
+}
+
+//
 // P_MovePlayer
 //
 // Adds momentum if the player is not in the air
@@ -286,6 +319,9 @@ void P_MovePlayer(player_t* player)
       if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);
    }
+
+   // haleyjd 06/05/12: flight
+   P_PlayerFlight(player, cmd);
 }
 
 #define ANG5 (ANG90/18)
@@ -401,32 +437,6 @@ static void P_HereticCurrent(player_t *player)
 
       if(sec->hticPushType >= 20 && sec->hticPushType <= 39)
          P_Thrust(player, sec->hticPushAngle, sec->hticPushForce);
-   }
-}
-
-//
-// P_PlayerFlight
-//
-static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
-{
-   if(cmd->upmove == -32768)
-      P_PlayerStopFlight(player);
-   else if(cmd->upmove != 0)
-   {
-      // clamp
-      if(cmd->upmove < -768)
-         cmd->upmove = -768;
-      else if(cmd->upmove > 768)
-         cmd->upmove = 768;
-
-      if(player->powers[pw_flight] && !(player->mo->flags & MF4_FLY))
-         P_PlayerStartFlight(player);
-      // TODO:
-      // else
-      // * If have a flight-granting powerup, activate it now
-
-      if(player->mo->flags4 & MF4_FLY)
-         player->mo->momz = cmd->upmove << 9;
    }
 }
 
@@ -675,6 +685,12 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
+   if(player->powers[pw_flight] > 0) // haleyjd 06/05/12
+   {
+      if(!--player->powers[pw_flight])
+         P_PlayerStopFlight(player);
+   }
+
    if(player->damagecount)
       player->damagecount--;
 
@@ -719,16 +735,18 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
 //
 // Call this to start the player flying.
 //
-void P_PlayerStartFlight(player_t *player)
+void P_PlayerStartFlight(player_t *player, bool thrustup)
 {
+   if(full_demo_version < make_full_version(340, 23))
+      return;
+
    player->mo->flags4 |= MF4_FLY;
    player->mo->flags  |= MF_NOGRAVITY;
 
-   // TODO: stop screaming if falling
+   if(thrustup && player->mo->z <= player->mo->floorz)
+      player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
-   // FIXME: needed?
-   if(player->mo->z <= player->mo->floorz)
-      player->flyheight = 10;
+   // TODO: stop screaming if falling
 }
 
 //

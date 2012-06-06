@@ -161,8 +161,8 @@ struct player_t
   
    int            quake;         // If > 0, player is experiencing an earthquake
    int            jumptime;      // If > 0, player can't jump again yet
-   int            flyheight;     // Player flight
-
+   int            flyheight;     // haleyjd 06/05/12: flying
+   
    // Player name
    char           name[20];
 };

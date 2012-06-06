@@ -335,6 +335,10 @@ typedef enum {
 #define ORIG_FRICTION_FACTOR   2048        // original value
 #define FRICTION_FLY           0xEB00      // haleyjd: Raven flying player
 
+// haleyjd 06/05/12: flying
+#define FLIGHT_CENTER      -8
+#define FLIGHT_IMPULSE_AMT  5
+
 // sf: some useful macros
 //
 // isExMy  }
