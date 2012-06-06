@@ -881,7 +881,7 @@ CONSOLE_COMMAND(fly, cf_notnet|cf_level)
 {
    player_t *p = &players[consoleplayer];
 
-   if(!(p->mo->flags4 & MF4_FLY))
+   if(!(p->powers[pw_flight]))
    {
       p->powers[pw_flight] = -1;
       P_PlayerStartFlight(p, true);
@@ -891,6 +891,8 @@ CONSOLE_COMMAND(fly, cf_notnet|cf_level)
       p->powers[pw_flight] = 0;
       P_PlayerStopFlight(p);
    }
+
+   doom_printf(p->powers[pw_flight] ? "Flight on" : "Flight off");
 }
 
 extern void A_Fall(Mobj *);
