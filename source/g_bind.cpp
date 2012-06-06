@@ -874,6 +874,9 @@ void G_InitKeyBindings()
    G_addVariableAction(lookup,     kac_player);
    G_addVariableAction(lookdown,   kac_player);
    G_addVariableAction(center,     kac_player);
+   G_addVariableAction(flyup,      kac_player);
+   G_addVariableAction(flydown,    kac_player);
+   G_addVariableAction(flycenter,  kac_player);
    G_addVariableAction(weapon1,    kac_player);
    G_addVariableAction(weapon2,    kac_player);
    G_addVariableAction(weapon3,    kac_player);

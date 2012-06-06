@@ -3069,11 +3069,13 @@ static menuitem_t mn_advkeys_items[] =
    {it_info,  FC_GOLD "advanced movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
    {it_binding,      "jump",            "jump"},
-   {it_gap},
    {it_binding,      "mlook on",        "mlook"},
    {it_binding,      "look up",         "lookup"},
    {it_binding,      "look down",       "lookdown"},
    {it_binding,      "center view",     "center"},
+   {it_binding,      "fly up",          "flyup"},
+   {it_binding,      "fly down",        "flydown"},
+   {it_binding,      "fly center",      "flycenter"},
    {it_end}
 };
 
