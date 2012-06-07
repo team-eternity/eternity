@@ -164,6 +164,10 @@ void P_CalcHeight(player_t *player)
          player->bob = MAXBOB;
    }
 
+   // haleyjd 06/05/12: flying players
+   if(player->mo->flags4 & MF4_FLY && !onground)
+      player->bob = FRACUNIT / 2;
+
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
@@ -225,6 +229,39 @@ void P_CalcHeight(player_t *player)
 }
 
 //
+// P_PlayerFlight
+//
+// haleyjd 06/05/12: flying logic for players
+//
+static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+{
+   int fly = cmd->fly;
+
+   if(fly && player->powers[pw_flight])
+   {
+      if(fly != FLIGHT_CENTER)
+      {
+         player->flyheight = fly * 2;
+
+         if(!(player->mo->flags4 & MF4_FLY))
+            P_PlayerStartFlight(player, false);
+      }
+      else
+         P_PlayerStopFlight(player);
+   }
+   // TODO:
+   // else
+   // * If have a flight-granting powerup, activate it now
+
+   if(player->mo->flags4 & MF4_FLY)
+   {
+      player->mo->momz = player->flyheight * FRACUNIT;
+      if(player->flyheight)
+         player->flyheight /= 2;
+   }
+}
+
+//
 // P_MovePlayer
 //
 // Adds momentum if the player is not in the air
@@ -239,8 +276,11 @@ void P_MovePlayer(player_t* player)
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
-   onground = mo->z <= mo->floorz ||
-      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ);
+   // 06/05/12: flying players
+   onground = 
+      mo->z <= mo->floorz ||
+      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ) ||
+      (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
    //
@@ -279,6 +319,9 @@ void P_MovePlayer(player_t* player)
       if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);
    }
+
+   // haleyjd 06/05/12: flight
+   P_PlayerFlight(player, cmd);
 }
 
 #define ANG5 (ANG90/18)
@@ -642,6 +685,12 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
+   if(player->powers[pw_flight] > 0) // haleyjd 06/05/12
+   {
+      if(!--player->powers[pw_flight])
+         P_PlayerStopFlight(player);
+   }
+
    if(player->damagecount)
       player->damagecount--;
 
@@ -679,6 +728,39 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
       P_SetTarget<Mobj>(&player->attacker, attacker);
    else
       player->attacker = attacker;
+}
+
+//
+// P_PlayerStartFlight
+//
+// Call this to start the player flying.
+//
+void P_PlayerStartFlight(player_t *player, bool thrustup)
+{
+   if(full_demo_version < make_full_version(340, 23))
+      return;
+
+   player->mo->flags4 |= MF4_FLY;
+   player->mo->flags  |= MF_NOGRAVITY;
+
+   if(thrustup && player->mo->z <= player->mo->floorz)
+      player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
+
+   // TODO: stop screaming if falling
+}
+
+//
+// P_PlayerStopFlight
+//
+// Call this to make the player stop flying.
+//
+void P_PlayerStopFlight(player_t *player)
+{
+   if(full_demo_version < make_full_version(340, 23))
+      return;
+
+   player->mo->flags4 &= ~MF4_FLY;
+   player->mo->flags  &= ~MF_NOGRAVITY;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

@@ -138,6 +138,10 @@ floater:
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
    }
 
+   // haleyjd 06/05/12: flying players
+   if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->floorz)
+      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+
    // clip movement
    
    if(mo->z <= mo->floorz)

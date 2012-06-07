@@ -484,6 +484,9 @@ int action_mlook;       // mlook activation
 int action_lookup;      // key-look up
 int action_lookdown;    // key-look down
 int action_center;      // key-look centerview
+int action_flyup;       // fly up
+int action_flydown;     // fly down
+int action_flycenter;   // fly "center"
 int action_weapon1;     // select weapon 1
 int action_weapon2;     // select weapon 2
 int action_weapon3;     // select weapon 3
@@ -871,6 +874,9 @@ void G_InitKeyBindings()
    G_addVariableAction(lookup,     kac_player);
    G_addVariableAction(lookdown,   kac_player);
    G_addVariableAction(center,     kac_player);
+   G_addVariableAction(flyup,      kac_player);
+   G_addVariableAction(flydown,    kac_player);
+   G_addVariableAction(flycenter,  kac_player);
    G_addVariableAction(weapon1,    kac_player);
    G_addVariableAction(weapon2,    kac_player);
    G_addVariableAction(weapon3,    kac_player);
