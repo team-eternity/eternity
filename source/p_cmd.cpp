@@ -231,9 +231,9 @@ const char *str_bfglook[] = { "off", "on", "fixedgun" };
 VARIABLE_INT(bfglook,   NULL,                   0, 2, str_bfglook);
 CONSOLE_NETVAR(bfglook, bfglook, cf_server, netcmd_bfglook) {}
 
-// davidph 06/06/12
+// davidph 06/06/12 -- haleyjd 06/07/12: promoted to netvar since sync-critical
 VARIABLE_TOGGLE(pitchedflight, &default_pitchedflight, onoff)
-CONSOLE_VARIABLE(p_pitchedflight, pitchedflight, 0) {}
+CONSOLE_NETVAR(p_pitchedflight, pitchedflight, cf_server, netcmd_pitchedflight) {}
 
 // 'auto exit' variables
 

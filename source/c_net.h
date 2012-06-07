@@ -64,8 +64,9 @@ enum
   netcmd_nukage,
   netcmd_timelimit,
   netcmd_fraglimit,
-  netcmd_dmflags,    // haleyjd 04/14/03
-  netcmd_dogjumping, // haleyjd 11/06/05
+  netcmd_dmflags,       // haleyjd 04/14/03
+  netcmd_dogjumping,    // haleyjd 11/06/05
+  netcmd_pitchedflight, // haleyjd 06/07/12
   netcmd_comp_0,
   netcmd_comp_1,
   netcmd_comp_2,
@@ -94,7 +95,7 @@ enum
   netcmd_comp_25,   //          plane shooting
   netcmd_comp_26,   //          special failure
   netcmd_comp_27,   //          ninja spawn
-  NUMNETCMDS,
+  NUMNETCMDS
 };
 
 void C_InitPlayerName(void); // haleyjd

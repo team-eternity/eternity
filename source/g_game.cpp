@@ -70,6 +70,7 @@
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "hu_stuff.h"
 #include "hu_frags.h" // haleyjd
 #include "r_data.h"
@@ -1051,6 +1052,9 @@ void G_DoPlayDemo(void)
       default_allowmlook = allowmlook;
       allowmlook = 0;
 
+      // haleyjd 06/07/12: for the sake of Heretic/Hexen demos only
+      pitchedflight = false;
+
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
 
@@ -1267,7 +1271,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
       {
          demo_p++;
-         demo_p++;
+         demo_p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
       }
       
       if(demo_version >= 335)
@@ -2595,6 +2599,9 @@ void G_ReloadDefaults(void)
    
    // killough 3/31/98, 4/5/98: demo sync insurance
    demo_insurance = default_demo_insurance == 1;
+
+   // haleyjd 06/07/12: pitchedflight has default
+   pitchedflight = default_pitchedflight;
    
    G_ScrambleRand();
 }
@@ -2946,8 +2953,11 @@ byte *G_WriteOptions(byte *demoptr)
 
    // haleyjd 04/06/05: allowmlook is sync critical
    *demoptr++ = allowmlook; // byte 60
+
+   // haleyjd 06/07/12: pitchedflight
+   *demoptr++ = pitchedflight; // byte 61
    
-   // CURRENT BYTES LEFT: 3
+   // CURRENT BYTES LEFT: 2
 
    //----------------
    // Padding at end
@@ -3043,7 +3053,14 @@ byte *G_ReadOptions(byte *demoptr)
       if(demo_version >= 333)
       {
          // haleyjd 04/06/05: allowmlook is sync-critical
-         allowmlook = *demoptr; // Remember: ADD INCREMENT :)
+         allowmlook = *demoptr++; 
+      }
+
+      if(full_demo_version >= make_full_version(340, 23))
+      {
+         // haleyjd 06/07/12: pitchedflight
+         pitchedflight = (*demoptr ? true : false); 
+         // Remember: ADD INCREMENT :)
       }
    }
    else  // defaults for versions <= 2.02
@@ -3070,11 +3087,13 @@ byte *G_ReadOptions(byte *demoptr)
       dog_jumping = 0;                  // killough 10/98
       monkeys = 0;
       
-      default_autoaim = autoaim;
+      default_autoaim = autoaim; // FIXME: err?
       autoaim = 1;
 
-      default_allowmlook = allowmlook;
+      default_allowmlook = allowmlook; // FIXME: err??
       allowmlook = 0;
+
+      pitchedflight = false;
    }
   
    return target;
@@ -3124,6 +3143,7 @@ void G_SetOldDemoOptions(void)
    autoaim               = 1;
    default_allowmlook    = allowmlook;
    allowmlook            = 0;
+   pitchedflight         = false; // haleyjd 06/07/12
 }
 
 //
