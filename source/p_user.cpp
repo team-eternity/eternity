@@ -30,6 +30,7 @@
 
 #include "a_small.h"
 #include "c_net.h"
+#include "c_runcmd.h"
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_gi.h"
@@ -59,6 +60,9 @@
 
 bool onground; // whether player is on ground or in air
 
+bool pitchedflight = true;
+bool default_pitchedflight = true;
+
 //
 // P_SetDisplayPlayer
 //
@@ -78,11 +82,19 @@ void P_SetDisplayPlayer(int new_displayplayer)
 // P_Thrust
 // Moves the given origin along a given angle.
 //
-
-void P_Thrust(player_t* player,angle_t angle,fixed_t move)
+// davidph 06/06/12: Added pitch.
+//
+void P_Thrust(player_t *player, angle_t angle, angle_t pitch, fixed_t move)
 {
-  player->mo->momx += FixedMul(move,finecosine[angle >>= ANGLETOFINESHIFT]);
-  player->mo->momy += FixedMul(move,finesine[angle]);
+   if(pitch)
+   {
+      pitch >>= ANGLETOFINESHIFT;
+      player->mo->momz -= FixedMul(move, finesine[pitch]);
+      move = FixedMul(move, finecosine[pitch]);
+   }
+
+   player->mo->momx += FixedMul(move, finecosine[angle >>= ANGLETOFINESHIFT]);
+   player->mo->momy += FixedMul(move, finesine[angle]);
 }
 
 //
@@ -95,11 +107,20 @@ void P_Thrust(player_t* player,angle_t angle,fixed_t move)
 // occur on conveyors, unless the player walks on one, and bobbing should be
 // reduced at a regular rate, even on ice (where the player coasts).
 //
-void P_Bob(player_t *player, angle_t angle, fixed_t move)
+// davidph 06/06/12: Added pitch. (Though only used to determine the true move.)
+//
+void P_Bob(player_t *player, angle_t angle, angle_t pitch, fixed_t move)
 {
    // e6y
    if(demo_version < 203)
       return;
+
+   if(pitch)
+   {
+      pitch >>= ANGLETOFINESHIFT;
+    //player->momz -= FixedMul(move, finesine[pitch]);
+      move = FixedMul(move, finecosine[pitch]);
+   }
 
    player->momx += FixedMul(move,finecosine[angle >>= ANGLETOFINESHIFT]);
    player->momy += FixedMul(move,finesine[angle]);
@@ -255,9 +276,11 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
 
    if(player->mo->flags4 & MF4_FLY)
    {
-      player->mo->momz = player->flyheight * FRACUNIT;
       if(player->flyheight)
+      {
+         player->mo->momz = player->flyheight * FRACUNIT;
          player->flyheight /= 2;
+      }
    }
 }
 
@@ -303,16 +326,22 @@ void P_MovePlayer(player_t* player)
          int bobfactor =
             friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
 
+         // davidph 06/06/12: pitch-to-fly
+         fixed_t pitch = player->pitch;
+
+         if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
+            pitch = 0;
+
          if (cmd->forwardmove)
          {
-            P_Bob(player,mo->angle,cmd->forwardmove*bobfactor);
-            P_Thrust(player,mo->angle,cmd->forwardmove*movefactor);
+            P_Bob(player,mo->angle,pitch,cmd->forwardmove*bobfactor);
+            P_Thrust(player,mo->angle,pitch,cmd->forwardmove*movefactor);
          }
          
          if (cmd->sidemove)
          {
-            P_Bob(player,mo->angle-ANG90,cmd->sidemove*bobfactor);
-            P_Thrust(player,mo->angle-ANG90,cmd->sidemove*movefactor);
+            P_Bob(player,mo->angle-ANG90,0,cmd->sidemove*bobfactor);
+            P_Thrust(player,mo->angle-ANG90,0,cmd->sidemove*movefactor);
          }
       }
 
@@ -436,7 +465,7 @@ static void P_HereticCurrent(player_t *player)
       sector_t *sec = m->m_sector;
 
       if(sec->hticPushType >= 20 && sec->hticPushType <= 39)
-         P_Thrust(player, sec->hticPushAngle, sec->hticPushForce);
+         P_Thrust(player, sec->hticPushAngle, 0, sec->hticPushForce);
    }
 }
 

@@ -47,6 +47,7 @@
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_spec.h"
+#include "p_user.h"
 #include "r_draw.h"
 #include "v_misc.h"
 
@@ -230,6 +231,10 @@ const char *str_bfglook[] = { "off", "on", "fixedgun" };
 VARIABLE_INT(bfglook,   NULL,                   0, 2, str_bfglook);
 CONSOLE_NETVAR(bfglook, bfglook, cf_server, netcmd_bfglook) {}
 
+// davidph 06/06/12
+VARIABLE_TOGGLE(pitchedflight, &default_pitchedflight, onoff)
+CONSOLE_VARIABLE(p_pitchedflight, pitchedflight, 0) {}
+
 // 'auto exit' variables
 
 VARIABLE_INT(levelTimeLimit,    NULL,           0, 100,         NULL);
@@ -390,6 +395,7 @@ void P_AddCommands(void)
    C_AddCommand(nukage);
    C_AddCommand(weapspeed);
    C_AddCommand(bfglook);
+   C_AddCommand(p_pitchedflight);
    
    C_AddCommand(fast);
    C_AddCommand(nomonsters);

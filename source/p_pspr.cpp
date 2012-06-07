@@ -45,6 +45,7 @@
 #include "p_pspr.h"
 #include "p_skin.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "r_main.h"
 #include "r_segs.h"
 #include "r_things.h"
@@ -69,8 +70,6 @@ int default_weapon_speed = 6;
 #define WEAPONTOP    (FRACUNIT*32)
 
 #define BFGCELLS bfgcells        /* Ty 03/09/98 externalized in p_inter.c */
-
-extern void P_Thrust(player_t *, angle_t, fixed_t);
 
 // The following array holds the recoil values         // phares
 // haleyjd 08/18/08: recoil moved into weaponinfo
@@ -871,7 +870,7 @@ static void A_FireSomething(player_t* player, int adder)
       if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
          (weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
-         P_Thrust(player, ANG180 + player->mo->angle,
+         P_Thrust(player, ANG180 + player->mo->angle, 0,
                   2048*weaponinfo[player->readyweapon].recoil); // phares
       }
    }
@@ -1122,7 +1121,7 @@ void A_FireOldBFG(Mobj *mo)
    // WEAPON_FIXME: recoil for classic BFG
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle,
+      P_Thrust(player, ANG180 + mo->angle, 0,
                512*weaponinfo[wp_plasma].recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
