@@ -1464,12 +1464,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          if(thing->z + thing->height > clip.ceilingz)
          {
             thing->momz = -8*FRACUNIT;
+            thing->intflags |= MIF_CLEARMOMZ;
             return false;
          }
          else if(thing->z < clip.floorz && 
                  clip.floorz - clip.dropoffz > 24*FRACUNIT) // TODO: dropoff max
          {
             thing->momz = 8*FRACUNIT;
+            thing->intflags |= MIF_CLEARMOMZ;
             return false;
          }
       }

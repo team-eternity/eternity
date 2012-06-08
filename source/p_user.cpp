@@ -276,6 +276,12 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
 
    if(player->mo->flags4 & MF4_FLY)
    {
+      if(player->mo->intflags & MIF_CLEARMOMZ)
+      {
+         player->mo->momz = 0;
+         player->mo->intflags &= ~MIF_CLEARMOMZ;
+      }
+
       if(player->flyheight)
       {
          player->mo->momz = player->flyheight * FRACUNIT;
