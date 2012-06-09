@@ -66,6 +66,7 @@
 #include "p_enemy.h"
 #include "p_map.h"
 #include "p_partcl.h"
+#include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_sky.h"
@@ -267,6 +268,9 @@ default_t defaults[] =
 
    DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
+
+   DEFAULT_BOOL("p_pitchedflight", &default_pitchedflight, &pitchedflight, true, default_t::wad_yes, 
+                "1 to enable flying in the direction you are looking"),
    
    // no color changes on status bar
    DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, default_t::wad_yes,

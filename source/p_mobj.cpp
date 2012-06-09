@@ -969,6 +969,11 @@ floater:
          return;
       }
    }
+   else if(mo->flags4 & MF4_FLY)
+   {
+      // davidph 06/06/12: Objects in flight need to have air friction.
+      mo->momz = FixedMul(mo->momz, FRICTION_FLY);
+   }
    else if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
    {
       if(!mo->momz)
