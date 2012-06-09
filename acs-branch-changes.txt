@@ -1,0 +1,110 @@
+===============================================================================
+This log contains a summary of changes performed on trunk and acs-branch to add
+more features to Eternity's ACS engine, including compatibility with ZDoom's
+extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
+activity spans from 2045 to 2074.
+===============================================================================
+-------------------------------------------------------------------------------
+06/08/2012
+
+Added ACSE/e loading. All chunks except FUNC/FNAM and STRE are supported.
+
+In this loader, all chunks are additive. For instance, multiple STRL chunks
+will be combined into a single table. Other than that, this should be entirely
+compatible with ZDoom with regards to features internally supported.
+
+This is the first commit on acs-branch itself and the creation of this file.
+
+-------------------------------------------------------------------------------
+06/05/2012
+
+Added ACS arrays. For world/global arrays, these work like ZDoom's, allowing
+arbitrary index access and zero-initializing. Unlike ZDoom, map arrays work the
+same way as world/global ones. This simplifies the code and provides what I
+consider a valuable feature.
+
+Also, fixed a really shameful mistake in TAGSTRING. The intention was to permit
+double-tagging but the result was that tagging didn't work under certain common
+circumstances. (Hence shameful.)
+
+-------------------------------------------------------------------------------
+06/03/2012
+
+Added CALLFUNC/CALLFUNC_IMM as a way to move instructions out of the core loop.
+It also serves as the base for implementing ZDoom's CALLFUNC.
+
+CALLFUNC_IMM showcases another advantage of the loader: The ability to pre-tag
+immediate operands as strings meaning that these two instructions also reduce
+code duplication.
+
+Aside from helping the core loop fit in cache better, there is another reason
+for moving things out of it. File-size/line-count. I, DavidPH, find very large
+source files to be intimidating. And there are a lot of instructions left to
+add. Therefore, I am taking measures early to prevent gigantor.cpp.
+
+-------------------------------------------------------------------------------
+06/02/2012
+
+Added ZDoom instructions up to and including TAGSTRING. I want to note right
+now that this was the only actual goal of the changes.
+
+Not all of the instructions could be implemented at this time (though more than
+I originally expected), and for that reason (and others), the KILL instruction
+was added. It is used to terminate the script with an error message.
+
+Of the added instructions, there were no intentional semantic changes, aside
+from TAGSTRING. However, an important ability of the loader has been applied.
+Translation of instructions to other instructions (as in GET_THINGX) or even
+sequences of instructions (as in GAMETYPE_SINGLEPLAYER).
+
+As a side note, the instructions named OPCODExxx are ones which are not
+implemented in ZDoom or otherwise lack proper definitions.
+
+-------------------------------------------------------------------------------
+05/31/2012
+
+Added libraries. This includes LOADACS with A_START/A_END and turning "map"
+variables into VM-local. Because it is now a proper class, acsvm_t is now ACSVM
+and can therefore stand tall and proud among Eternity's other classes.
+
+The LOADACS parser is not strictly compliant to what ZDoom would accept, but
+it's probably more forgiving than what an actual inter-port standard would
+specify. The real deviation from ZDoom is the use of a single global string
+table rather than separate tables for each VM. This will have serious
+implications with regards to the TAGSTRING instruction, but any proper usage
+of the instruction will continue to work. (Such as by ZDoom's acc and DH-acc.)
+
+Also, added save/load of ACS information that at least works for non-hubs. This
+is an improvement over the old code which didn't.
+
+Finally, at the request of Quasar, ACS loading now uses a WadDirectory it is
+given rather than assuming it should use the global directory.
+
+-------------------------------------------------------------------------------
+05/27/2012
+
+Rewrote the interpreter to be more efficient and compact in general. Most
+notably, it is now capable of being direct-threaded when compiling with GCC.
+(And could be adapted to do so for any other compiler with support for computed
+goto.) It also reduces code duplication by using macros.
+
+The only semantic change from this is that instruction-counting has been turned
+into branch-counting. This is for two reasons. Firstly, it reduces overhead in
+the interpreter by not having to increment count on every iteration, only when
+branching. Secondly, because 500K instructions is not enough for advanced
+initialization scripts or even some intensive game-logic.
+
+-------------------------------------------------------------------------------
+05/27/2012
+
+Rewrote the entire ACS loading mechanism so that the input file is actually
+processed and translated. This eliminates various run-time complications and
+inefficiencies, such as the need to do byte-swapping.
+
+It also makes it possible to feed disparate bytecode containers into the same
+interpreter code, which will be useful when Eternity begins its own extensions.
+
+===============================================================================
+EOF
+===============================================================================
+

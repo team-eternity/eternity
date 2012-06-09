@@ -225,7 +225,8 @@ static void ACS_runOpenScript(ACSVM *vm, acscript_t *acs, int iNum, int vmID)
    newScript->delay = TICRATE;
 
    // set ip to entry point
-   newScript->ip = acs->codePtr;
+   newScript->ip     = acs->codePtr;
+   newScript->locals = (int32_t *)Z_Calloc(acs->numVars, sizeof(int32_t), PU_LEVEL, NULL);
 
    // copy in some important data
    newScript->code        = acs->codePtr;
@@ -997,8 +998,7 @@ void ACSThinker::serialize(SaveArchive &arc)
        << delay << lineSide;
 
    // Arrays
-   P_ArchiveArray<int>(arc, stack,  ACS_STACK_LEN);
-   P_ArchiveArray<int>(arc, locals, ACS_NUM_LOCALVARS);
+   P_ArchiveArray<int32_t>(arc, stack, ACS_STACK_LEN);
 
    // Pointers
    if(arc.isSaving())
@@ -1026,7 +1026,12 @@ void ACSThinker::serialize(SaveArchive &arc)
       // This will restore all the various data structure pointers such as
       // prev/next thread, stringtable, code/data, printBuffer, vm, etc.
       ACS_RestartSavedScript(this, ipnum);
+
+      locals = (int32_t *)Z_Calloc(acscript->numVars, sizeof(int32_t), PU_LEVEL, NULL);
    }
+
+   // Do this here to have access to acscript on load.
+   P_ArchiveArray<int32_t>(arc, locals, acscript->numVars);
 }
 
 //
@@ -1127,6 +1132,7 @@ ACSArray::page_t &ACSArray::getPage(uint32_t addr)
 //
 ACSVM::ACSVM(int tag) : ZoneObject()
 {
+   ChangeTag(tag);
    printBuffer = new qstring(qstring::basesize);
    reset();
 }
@@ -1140,6 +1146,34 @@ ACSVM::~ACSVM()
 }
 
 //
+// ACSVM::findMapVar
+//
+int32_t *ACSVM::findMapVar(const char *name)
+{
+   for(unsigned int i = ACS_NUM_MAPVARS; i--;)
+   {
+      if(mapvnam[i] && !strcasecmp(mapvnam[i], name))
+         return &mapvars[i];
+   }
+
+   return NULL;
+}
+
+//
+// ACSVM::findMapArr
+//
+ACSArray *ACSVM::findMapArr(const char *name)
+{
+   for(unsigned int i = ACS_NUM_MAPARRS; i--;)
+   {
+      if(mapanam[i] && !strcasecmp(mapanam[i], name))
+         return &maparrs[i];
+   }
+
+   return NULL;
+}
+
+//
 // ACSVM::reset
 //
 void ACSVM::reset()
@@ -1148,19 +1182,34 @@ void ACSVM::reset()
    {
       mapvars[i] = 0;
       mapvtab[i] = &mapvars[i];
+
+      mapvnam[i] = NULL;
    }
 
    for(int i = ACS_NUM_MAPARRS; i--;)
    {
       maparrs[i].clear();
       mapatab[i] = &maparrs[i];
+
+      mapanam[i] = NULL;
+      mapalen[i] = 0;
+      mapahas[i] = false;
    }
 
+   code       = NULL;
    numCode    = 0;
+   strings    = 0;
    numStrings = 0;
+   scripts    = NULL;
    numScripts = 0;
    loaded     = false;
    lump       = -1;
+
+   exports    = NULL;
+   numExports = 0;
+   imports    = NULL;
+   importVMs  = NULL;
+   numImports = 0;
 }
 
 //
@@ -1217,6 +1266,29 @@ void ACS_InitLevel(void)
 //
 // ACS_LoadScript
 //
+ACSVM *ACS_LoadScript(WadDirectory *dir, int lump)
+{
+   ACSVM *vm;
+
+   if(lump == -1) return NULL;
+
+   // If the lump has already been loaded, don't reload it.
+   for(ACSVM **itr = acsVMs.begin(), **end = acsVMs.end(); itr != end; ++itr)
+   {
+      if ((*itr)->lump == lump)
+         return *itr;
+   }
+
+   vm = new ACSVM(PU_LEVEL);
+
+   ACS_LoadScript(vm, dir, lump);
+
+   return vm;
+}
+
+//
+// ACS_LoadScript
+//
 void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
 {
    byte *data;
@@ -1235,10 +1307,18 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
    // load the lump
    data = (byte *)(dir->cacheLumpNum(lump, PU_LEVEL));
 
-   switch(SwapLong(*(int32_t *)data))
+   switch(SwapULong(*(uint32_t *)data))
    {
-   case 0x00534341: // TODO: macro
+   case ACS_CHUNKID('A', 'C', 'S', '\0'):
       ACS_LoadScriptACS0(vm, dir, lump, data);
+      break;
+
+   case ACS_CHUNKID('A', 'C', 'S', 'E'):
+      ACS_LoadScriptACSE(vm, dir, lump, data);
+      break;
+
+   case ACS_CHUNKID('A', 'C', 'S', 'e'):
+      ACS_LoadScriptACSe(vm, dir, lump, data);
       break;
    }
 
@@ -1246,7 +1326,7 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
    for(acscript_t *end = vm->scripts+vm->numScripts,
        *itr = vm->scripts; itr != end; ++itr)
    {
-      if(itr->type)
+      if(itr->type == ACS_STYPE_OPEN)
          ACS_runOpenScript(vm, itr, itr - vm->scripts, vm->id);
    }
 }
@@ -1258,7 +1338,6 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
 //
 static void ACS_loadScripts(WadDirectory *dir, int lump)
 {
-   ACSVM *vm;
    const char *itr, *end;
    char lumpname[9], *nameItr, *const nameEnd = lumpname+8;
 
@@ -1281,21 +1360,8 @@ static void ACS_loadScripts(WadDirectory *dir, int lump)
       // Discard excess letters.
       while(itr != end && !isspace(*itr)) ++itr;
 
-      if((lump = dir->checkNumForName(lumpname, lumpinfo_t::ns_acs)) == -1)
-         continue;
-
-      // If the lump has already been loaded, don't reload it.
-      for(ACSVM **itr = acsVMs.begin(), **end = acsVMs.end(); itr != end; ++itr)
-      {
-         if ((*itr)->lump == lump)
-            goto vm_loaded;
-      }
-
-      vm = new ACSVM(PU_LEVEL);
-
-      ACS_LoadScript(vm, dir, lump);
-
-   vm_loaded:;
+      if((lump = dir->checkNumForName(lumpname, lumpinfo_t::ns_acs)) != -1)
+         ACS_LoadScript(dir, lump);
    }
 }
 
@@ -1463,8 +1529,7 @@ bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
    acscript_t   *scrData;
    ACSThinker *newScript, *rover;
    bool foundScripts = false;
-   unsigned int internalNum;
-   int i;
+   unsigned int internalNum, i;
 
    // ACS must be active on the current map or we do nothing
    if(!vm->loaded)
@@ -1510,6 +1575,8 @@ bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;
    newScript->ip          = scrData->codePtr;
+   newScript->locals      = (int32_t *)Z_Calloc(scrData->numVars, sizeof(int32_t),
+                                                PU_LEVEL, NULL);
    newScript->line        = line;
    newScript->lineSide    = side;
    P_SetTarget<Mobj>(&newScript->trigger, mo);

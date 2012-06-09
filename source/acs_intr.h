@@ -43,7 +43,7 @@ class  WadDirectory;
 //
 
 #define ACS_STACK_LEN      128
-#define ACS_NUM_LOCALVARS  10
+#define ACS_NUM_LOCALVARS  20
 #define ACS_NUM_MAPVARS    32
 #define ACS_NUM_MAPARRS    32
 #define ACS_NUM_WORLDVARS  64
@@ -60,6 +60,8 @@ class  WadDirectory;
 
 #define ACS_FUNCARG ACSThinker *thread, uint32_t argc, const int32_t *args, int32_t *&retn
 
+#define ACS_CHUNKID(A,B,C,D) (((A) << 0) | ((B) << 8) | ((C) << 16) | ((D) << 24))
+
 //
 // Misc. Enums
 //
@@ -71,7 +73,7 @@ enum
    ACS_MODE_DOOM = 0x00000001,
    ACS_MODE_HTIC = 0x00000002,
    ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
-}; 
+};
 
 //
 // acs_op
@@ -110,6 +112,15 @@ enum acs_funcnum_t
    ACS_FUNC_ThingSound,
 
    ACS_FUNCMAX
+};
+
+// script types
+enum acs_stype_t
+{
+   ACS_STYPE_CLOSED,
+   ACS_STYPE_OPEN,
+
+   ACS_STYPEMAX
 };
 
 // thing variables.
@@ -179,11 +190,11 @@ public:
 //
 // acs_opdata
 //
-typedef struct acs_opdata_s
+struct acs_opdata_t
 {
    acs_op_t op;
    int args;
-} acs_opdata_t;
+};
 
 //
 // acscript
@@ -193,9 +204,11 @@ typedef struct acs_opdata_s
 //
 typedef struct acscript_s
 {
-   int number;
-   int numArgs;
-   int type;
+   int32_t     number;  // the script's number; negative means named
+   uint32_t    numArgs; // expected arguments
+   uint16_t    numVars; // local variable count
+   uint16_t    flags;   // script flags
+   acs_stype_t type;    // script type
 
    union
    {
@@ -203,6 +216,7 @@ typedef struct acscript_s
       int32_t *codePtr;
    };
 
+   ACSVM      *vm;      // VM the script is associated with
    ACSThinker *threads;
 } acscript_t;
 
@@ -226,7 +240,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
-   
+
    // Data Members
    // thread links
    ACSThinker **prevthread;
@@ -241,7 +255,7 @@ public:
    int32_t *ip;                       // instruction pointer
    int32_t stack[ACS_STACK_LEN];      // value stack
    int32_t stp;                       // stack pointer
-   int32_t locals[ACS_NUM_LOCALVARS]; // local variables and arguments
+   int32_t *locals;                   // local variables and arguments
    int32_t sreg;                      // state register
    int32_t sdata;                     // special data for state
 
@@ -275,7 +289,7 @@ enum
 struct deferredacs_t
 {
    DLListItem<deferredacs_t> link; // list links
-   
+
    int  scriptNum;         // ACS script number to execute
    int  vmID;              // id # of vm on which to execute the script
    int  targetMap;         // target map number
@@ -295,6 +309,9 @@ public:
    ACSVM(int tag = PU_STATIC);
    ~ACSVM();
 
+   int32_t *findMapVar(const char *name);
+   ACSArray *findMapArr(const char *name);
+
    // Resets the VM to an uninitialized state. Only useful for static VMs.
    void reset();
 
@@ -305,6 +322,8 @@ public:
    unsigned int numStrings;
    acscript_t  *scripts;               // the scripts
    unsigned int numScripts;
+   const char **scriptNames;           // script names
+   unsigned int numScriptNames;
    bool         loaded;                // for static VMs, if it's valid or not
    uint32_t     id;                    // vm id number
    int          lump;                  // lump bytecode was loaded from
@@ -315,6 +334,18 @@ public:
    int32_t   mapvars[ACS_NUM_MAPVARS];
    ACSArray *mapatab[ACS_NUM_MAPARRS]; // pointers into vm maparrs
    ACSArray  maparrs[ACS_NUM_MAPARRS];
+
+   // loader info (not valid post-loading)
+   // should this be a separate struct, freed after loading?
+   const char **exports;                  // exported variables
+   unsigned int numExports;               // number of exports
+   const char **imports;                  // imported lump names
+   ACSVM      **importVMs;                // imported VMs
+   unsigned int numImports;               // number of imports
+   const char  *mapvnam[ACS_NUM_MAPVARS]; // map variable names
+   const char  *mapanam[ACS_NUM_MAPARRS]; // map array names
+   uint32_t     mapalen[ACS_NUM_MAPARRS]; // map array lengths
+   bool         mapahas[ACS_NUM_MAPARRS]; // if true, index is declared as array
 
    // global bytecode info
    static const char **GlobalStrings;
@@ -331,8 +362,14 @@ public:
 void ACS_Init(void);
 void ACS_NewGame(void);
 void ACS_InitLevel(void);
+ACSVM *ACS_LoadScript(WadDirectory *dir, int lump);
 void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump);
 void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data);
+void ACS_LoadScriptACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+                        uint32_t tableOffset = 4);
+void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+                        uint32_t tableOffset = 4);
+void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool compressed);
 void ACS_LoadLevelScript(WadDirectory *dir, int lump);
 void ACS_RunDeferredScripts(void);
 bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
