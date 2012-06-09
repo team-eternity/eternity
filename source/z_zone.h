@@ -82,17 +82,18 @@
 // PU - purge tags.
 enum 
 {
-   PU_FREE,     // block is free
-   PU_STATIC,   // block is static (remains until explicitly freed)
+   PU_FREE,      // block is free
+   PU_STATIC,    // block is static (remains until explicitly freed)
+   PU_PERMANENT, // haleyjd 06/09/12: block cannot be freed or re-tagged
 
    // domain-specific allocation lifetimes
 
-   PU_SOUND,    // currently unused
-   PU_MUSIC,    // currently unused
-   PU_RENDERER, // haleyjd 06/29/08: for data allocated via R_Init
-   PU_AUTO,     // haleyjd 07/08/10: automatic allocation
-   PU_LEVEL,    // allocation belongs to level (freed at next level load)
-   PU_OBJECT,   // haleyjd 04/01/11: for ZoneObject
+   PU_SOUND,     // currently unused
+   PU_MUSIC,     // currently unused
+   PU_RENDERER,  // haleyjd 06/29/08: for data allocated via R_Init
+   PU_AUTO,      // haleyjd 07/08/10: automatic allocation
+   PU_LEVEL,     // allocation belongs to level (freed at next level load)
+   PU_OBJECT,    // haleyjd 04/01/11: for ZoneObject
 
    // cache levels
 
