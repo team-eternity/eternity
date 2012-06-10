@@ -213,27 +213,21 @@ static void ACS_stopScript(ACSThinker *script, acscript_t *acscript)
 // Starts an open script (a script indicated to start at the beginning of
 // the level).
 //
-static void ACS_runOpenScript(ACSVM *vm, acscript_t *acs, int iNum, int vmID)
+static void ACS_runOpenScript(ACSVM *vm, acscript_t *acs)
 {
    ACSThinker *newScript = new ACSThinker;
-
-   newScript->vmID        = vmID;
-   newScript->scriptNum   = acs->number;
-   newScript->internalNum = iNum;
 
    // open scripts wait one second before running
    newScript->delay = TICRATE;
 
    // set ip to entry point
-   newScript->ip     = acs->codePtr;
-   newScript->locals = (int32_t *)Z_Calloc(acs->numVars, sizeof(int32_t), PU_LEVEL, NULL);
+   newScript->ip        = acs->codePtr;
+   newScript->numLocals = acs->numVars;
+   newScript->locals    = estructalloctag(int32_t, newScript->numLocals, PU_LEVEL);
 
    // copy in some important data
-   newScript->code        = acs->codePtr;
-   newScript->data        = vm->code;
-   newScript->printBuffer = vm->printBuffer;
-   newScript->acscript    = acs;
-   newScript->vm          = vm;
+   newScript->acscript = acs;
+   newScript->vm       = vm;
 
    // set up thinker
    newScript->addThinker();
@@ -322,6 +316,15 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
 // Global Functions
 //
 
+//
+// ACSThinker::ACSThinker
+//
+ACSThinker::ACSThinker()
+{
+   numCalls = 0;
+   callPtr = calls = NULL;
+}
+
 
 // Interpreter Macros
 
@@ -368,7 +371,7 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
 #define BRANCHOP(TARGET) \
    do \
    { \
-      ip = this->data + (TARGET); \
+      ip = vm->code + (TARGET); \
       BRANCH_COUNT(); \
    } \
    while(0)
@@ -406,6 +409,8 @@ void ACSThinker::Think()
    int count = 0;
    int32_t opcode, temp;
 
+   qstring *printBuffer = NULL;
+
    // should the script terminate?
    if(this->sreg == ACS_STATE_TERMINATE)
       ACS_stopScript(this, this->acscript);
@@ -432,7 +437,7 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(KILL):
-      doom_printf(FC_ERROR "ACS Error: KILL at %d\a", (int)(ip - data - 1));
+      doom_printf(FC_ERROR "ACS Error: KILL at %d\a", (int)(ip - vm->code - 1));
       goto action_endscript;
 
       // Special Commands
@@ -780,6 +785,49 @@ void ACSThinker::Think()
       NEXTOP();
 
       // Branching
+   OPCODE(BRANCH_CALL):
+      {
+         ACSFunc *func;
+         uint32_t funcnum = IPNEXT();
+
+         BRANCH_COUNT();
+
+         if(funcnum >= vm->numFuncs)
+         {
+            doom_printf(FC_ERROR "ACS Error: CALL out of range: %d\a", (int)funcnum);
+            goto action_endscript;
+         }
+
+         // Ensure there's enough space for the call frame.
+         if((size_t)(callPtr - calls) >= numCalls)
+         {
+            size_t callPtrTemp = callPtr - calls;
+            numCalls += ACS_NUM_CALLS;
+            calls = (acs_call_t *)Z_Realloc(calls, numCalls * sizeof(acs_call_t),
+                                            PU_LEVEL, NULL);
+            callPtr = &calls[callPtrTemp];
+         }
+
+         func = vm->funcptrs[funcnum];
+
+         callPtr->ip          = ip;
+         callPtr->numLocals   = numLocals;
+         callPtr->locals      = locals;
+         callPtr->printBuffer = printBuffer;
+         callPtr->vm          = vm;
+
+         ip          = func->codePtr;
+         numLocals   = func->numVars;
+         locals      = estructalloc(int32_t, numLocals);
+         printBuffer = NULL;
+         vm          = func->vm;
+
+         for(unsigned int i = func->numArgs; i--;)
+            locals[i] = POP();
+
+         ++callPtr;
+      }
+      NEXTOP();
    OPCODE(BRANCH_CASE):
       if(PEEK() == IPNEXT()) // compare top of stack against op+1
       {
@@ -797,6 +845,19 @@ void ACSThinker::Think()
          BRANCHOP(IPCURR());
       else
          ++ip;
+      NEXTOP();
+   OPCODE(BRANCH_RETURN):
+      --callPtr;
+
+      efree(locals);
+      delete printBuffer;
+
+      ip          = callPtr->ip;
+      numLocals   = callPtr->numLocals;
+      locals      = callPtr->locals;
+      printBuffer = callPtr->printBuffer;
+      vm          = callPtr->vm;
+
       NEXTOP();
    OPCODE(BRANCH_ZERO):
       if(!POP())
@@ -837,7 +898,7 @@ void ACSThinker::Think()
       goto action_stop;
 
    OPCODE(SCRIPT_RESTART):
-      ip = this->code;
+      ip = acscript->codePtr;
       BRANCH_COUNT();
       NEXTOP();
    OPCODE(SCRIPT_SUSPEND):
@@ -866,19 +927,22 @@ void ACSThinker::Think()
 
       // Printing
    OPCODE(STARTPRINT):
-      this->printBuffer->clear();
+      if(!printBuffer)
+         printBuffer = new qstring(qstring::basesize, PU_LEVEL);
+      else
+         printBuffer->clear();
       NEXTOP();
    OPCODE(ENDPRINT):
       if(this->trigger && this->trigger->player)
-         player_printf(this->trigger->player, this->printBuffer->constPtr());
+         player_printf(trigger->player, printBuffer->constPtr());
       else
-         player_printf(&players[consoleplayer], this->printBuffer->constPtr());
+         player_printf(&players[consoleplayer], printBuffer->constPtr());
       NEXTOP();
    OPCODE(ENDPRINTBOLD):
-      HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
+      HU_CenterMsgTimedColor(printBuffer->constPtr(), FC_GOLD, 20*35);
       NEXTOP();
    OPCODE(PRINTCHAR):
-      *this->printBuffer += (char)POP();
+      *printBuffer += (char)POP();
       NEXTOP();
    OPCODE(PRINTFIXED):
       {
@@ -888,14 +952,14 @@ void ACSThinker::Think()
          // %G is probably maximally P+6+1.
          char buffer[13];
          sprintf(buffer, "%G", M_FixedToDouble(POP()));
-         this->printBuffer->concat(buffer);
+         printBuffer->concat(buffer);
       }
       NEXTOP();
    OPCODE(PRINTINT):
       {
          // %i worst case: -2147483648 == 11 + NUL
          char buffer[12];
-         this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
+         printBuffer->concat(M_Itoa(POP(), buffer, 10));
       }
       NEXTOP();
    OPCODE(PRINTNAME):
@@ -903,17 +967,17 @@ void ACSThinker::Think()
       switch(temp)
       {
       case 0:
-         this->printBuffer->concat(players[consoleplayer].name);
+         printBuffer->concat(players[consoleplayer].name);
          break;
 
       default:
          if(temp > 0 && temp <= MAXPLAYERS)
-            this->printBuffer->concat(players[temp - 1].name);
+            printBuffer->concat(players[temp - 1].name);
          break;
       }
       NEXTOP();
    OPCODE(PRINTSTRING):
-      this->printBuffer->concat(ACSVM::GetString(POP()));
+      printBuffer->concat(ACSVM::GetString(POP()));
       NEXTOP();
 
       // Miscellaneous
@@ -975,75 +1039,16 @@ void ACSThinker::Think()
 action_endscript:
    // end the script
    ACS_stopScript(this, this->acscript);
-   return;
+   goto function_end;
 
 action_stop:
    // copy fields back into script
    this->ip  = ip;
    this->stp = stp - this->stack;
-   return;
-}
+   goto function_end;
 
-//
-// ACSThinker::serialize
-//
-// Saves/loads a ACSThinker.
-//
-void ACSThinker::serialize(SaveArchive &arc)
-{
-   Super::serialize(arc);
-
-   // Basic properties
-   arc << vmID << scriptNum << internalNum << stp << sreg << sdata 
-       << delay << lineSide;
-
-   // Arrays
-   P_ArchiveArray<int32_t>(arc, stack, ACS_STACK_LEN);
-
-   // Pointers
-   if(arc.isSaving())
-   {
-      unsigned int tempIp, tempLine, tempTrigger;
-
-      // Save instruction pointer, line pointer, and trigger
-      tempIp      = ip - code;
-      tempLine    = line ? line - lines + 1 : 0;
-      tempTrigger = P_NumForThinker(trigger);
-      
-      arc << tempIp << tempLine << tempTrigger;
-   }
-   else
-   {
-      unsigned int ipnum, linenum;
-      
-      // Restore line pointer; IP is restored in ACS_RestartSavedScript,
-      // and trigger must be restored in deswizzle() after all thinkers
-      // have been spawned.
-      arc << ipnum << linenum << triggerSwizzle;
-
-      line = linenum ? &lines[linenum - 1] : NULL;
-
-      // This will restore all the various data structure pointers such as
-      // prev/next thread, stringtable, code/data, printBuffer, vm, etc.
-      ACS_RestartSavedScript(this, ipnum);
-
-      locals = (int32_t *)Z_Calloc(acscript->numVars, sizeof(int32_t), PU_LEVEL, NULL);
-   }
-
-   // Do this here to have access to acscript on load.
-   P_ArchiveArray<int32_t>(arc, locals, acscript->numVars);
-}
-
-//
-// ACSThinker::deSwizzle
-//
-// Fixes up the trigger reference in a ACSThinker.
-//
-void ACSThinker::deSwizzle()
-{
-   Mobj *mo = thinker_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
-   P_SetNewTarget(&trigger, mo);
-   triggerSwizzle = 0;
+function_end:
+   delete printBuffer;
 }
 
 //
@@ -1133,7 +1138,6 @@ ACSArray::page_t &ACSArray::getPage(uint32_t addr)
 ACSVM::ACSVM(int tag) : ZoneObject()
 {
    ChangeTag(tag);
-   printBuffer = new qstring(qstring::basesize);
    reset();
 }
 
@@ -1142,7 +1146,20 @@ ACSVM::ACSVM(int tag) : ZoneObject()
 //
 ACSVM::~ACSVM()
 {
-   delete printBuffer;
+}
+
+//
+// ACSVM::findFunction
+//
+ACSFunc *ACSVM::findFunction(const char *name)
+{
+   for(unsigned int i = numFuncNames; i--;)
+   {
+      if(i < numFuncs && funcs[i].codeIndex && !strcasecmp(funcNames[i], name))
+         return &funcs[i];
+   }
+
+   return NULL;
 }
 
 //
@@ -1327,7 +1344,7 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
        *itr = vm->scripts; itr != end; ++itr)
    {
       if(itr->type == ACS_STYPE_OPEN)
-         ACS_runOpenScript(vm, itr, itr - vm->scripts, vm->id);
+         ACS_runOpenScript(vm, itr);
    }
 }
 
@@ -1572,8 +1589,6 @@ bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
    // setup the new script thinker
    newScript = new ACSThinker;
 
-   newScript->scriptNum   = scrnum;
-   newScript->internalNum = internalNum;
    newScript->ip          = scrData->codePtr;
    newScript->locals      = (int32_t *)Z_Calloc(scrData->numVars, sizeof(int32_t),
                                                 PU_LEVEL, NULL);
@@ -1582,9 +1597,6 @@ bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
    P_SetTarget<Mobj>(&newScript->trigger, mo);
 
    // copy in some important data
-   newScript->code        = scrData->codePtr;
-   newScript->data        = vm->code;
-   newScript->printBuffer = vm->printBuffer;
    newScript->acscript    = scrData;
    newScript->vm          = vm;
 
@@ -1730,11 +1742,64 @@ bool ACS_SuspendScript(int scrnum, int mapnum)
 //
 
 //
+// SaveArchive << ACSVM *
+//
+static SaveArchive &operator << (SaveArchive &arc, ACSVM *&vm)
+{
+   uint32_t vmID;
+
+   if(arc.isSaving())
+      vmID = vm->id;
+
+   arc << vmID;
+
+   if(arc.isLoading())
+      vm = acsVMs[vmID];
+
+   return arc;
+}
+
+//
 // SaveArchive << ACSArray
 //
 static SaveArchive &operator << (SaveArchive &arc, ACSArray &arr)
 {
    arr.archive(arc);
+   return arc;
+}
+
+//
+// SaveArchive << acs_call_t
+//
+static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
+{
+   bool hasPrintBuffer;
+   uint32_t ipTemp;
+
+   if(arc.isSaving())
+   {
+      hasPrintBuffer = call.printBuffer != NULL;
+      ipTemp = call.ip - call.vm->code;
+   }
+
+   arc << ipTemp << call.numLocals << hasPrintBuffer << call.vm;
+
+   call.ip = call.vm->code + ipTemp;
+
+   if(arc.isLoading())
+      call.locals = (int32_t *)Z_Malloc(call.numLocals * sizeof(int32_t), PU_LEVEL, NULL);
+
+   P_ArchiveArray(arc, call.locals, call.numLocals);
+
+   // Save the print buffer, if any.
+   if(hasPrintBuffer)
+   {
+      if(arc.isLoading())
+         call.printBuffer = new qstring(qstring::basesize, PU_LEVEL);
+
+      call.printBuffer->archive(arc);
+   }
+
    return arc;
 }
 
@@ -1867,6 +1932,76 @@ void ACSArray::archive(SaveArchive &arc)
 }
 
 //
+// ACSThinker::serialize
+//
+// Saves/loads a ACSThinker.
+//
+void ACSThinker::serialize(SaveArchive &arc)
+{
+   uint32_t acscriptIndex, callPtrIndex, ipIndex, lineIndex;
+
+   Super::serialize(arc);
+
+   // Pointer-to-Index
+   if(arc.isSaving())
+   {
+      acscriptIndex = acscript - vm->scripts;
+
+      callPtrIndex = callPtr - calls;
+
+      ipIndex = ip - vm->code;
+
+      lineIndex = line ? line - lines + 1 : 0;
+
+      triggerSwizzle = P_NumForThinker(trigger);
+   }
+
+   // Basic properties
+   arc << ipIndex << stp << numLocals << sreg << sdata << callPtrIndex
+       << acscriptIndex << vm << delay << triggerSwizzle << lineIndex << lineSide;
+
+   // Allocations/Index-to-Pointer
+   if(arc.isLoading())
+   {
+      acscript = vm->scripts + acscriptIndex;
+
+      numCalls = callPtrIndex;
+      calls    = estructalloctag(acs_call_t, numCalls, PU_LEVEL);
+      callPtr  = calls + callPtrIndex;
+
+      ip = vm->code + ipIndex;
+
+      line = lineIndex ? &lines[lineIndex - 1] : NULL;
+
+      locals = estructalloctag(int32_t, numLocals, PU_LEVEL);
+   }
+
+   // Arrays
+   P_ArchiveArray(arc, stack, ACS_STACK_LEN);
+   P_ArchiveArray(arc, locals, numLocals);
+   P_ArchiveArray(arc, calls, callPtrIndex);
+
+   // Post-load insertion into the environment.
+   if(arc.isLoading())
+   {
+      // add the thread
+      ACS_addThread(this, acscript);
+   }
+}
+
+//
+// ACSThinker::deSwizzle
+//
+// Fixes up the trigger reference in a ACSThinker.
+//
+void ACSThinker::deSwizzle()
+{
+   Mobj *mo = thinker_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
+   P_SetNewTarget(&trigger, mo);
+   triggerSwizzle = 0;
+}
+
+//
 // ACS_Archive
 //
 void ACS_Archive(SaveArchive &arc)
@@ -1924,33 +2059,6 @@ void ACS_Archive(SaveArchive &arc)
 
    for(dacs = acsDeferred; dacs; dacs = dacs->dllNext)
       arc << *dacs->dllObject;
-}
-
-//
-// ACS_RestartSavedScript
-//
-// Fixes up an ACSThinker loaded from a savegame.
-//
-void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset)
-{
-   // nullify list links for safety
-   th->prevthread = NULL;
-   th->nextthread = NULL;
-
-   // reinitialize pointers
-   th->vm          = acsVMs[th->vmID];
-   th->acscript    = &(th->vm->scripts[th->internalNum]);
-   th->code        = th->acscript->codePtr;
-   th->data        = th->vm->code;
-   th->printBuffer = th->vm->printBuffer;
-
-   // note: line and trigger pointers are restored in p_saveg.c
-
-   // restore ip to be relative to new codebase (saved value is offset)
-   th->ip = th->code + ipOffset;
-
-   // add the thread
-   ACS_addThread(th, th->acscript);
 }
 
 // EOF

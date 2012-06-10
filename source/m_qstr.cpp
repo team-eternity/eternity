@@ -39,6 +39,7 @@
 #include "m_qstr.h"
 #include "m_misc.h"       // for M_Strupr/M_Strlwr
 #include "m_strcasestr.h" // for M_StrCaseStr
+#include "p_saveg.h"
 #include "d_io.h"         // for strcasecmp
 
 const size_t qstring::npos = ((size_t) -1);
@@ -1193,6 +1194,31 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
    index = strlen(buffer);
 
    return returnval;
+}
+
+//=============================================================================
+//
+// Archiving
+//
+
+//
+// qstring::archive
+//
+// davidph 06/10/12: Handles archiving a qstring with proper state information.
+//
+void qstring::archive(SaveArchive &arc)
+{
+   uint32_t indexTemp;
+
+   arc.ArchiveLString(buffer, size);
+
+   if(arc.isSaving())
+      indexTemp = index;
+
+   arc << indexTemp;
+
+   if(arc.isLoading())
+      index = indexTemp;
 }
 
 // EOF

@@ -5,6 +5,24 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/10/2012
+
+Added ACS functions, compatible with ZDoom's, but using a separate call stack.
+Perhaps the most obvious benefit is the ability to delay while in a function,
+and subsequently to save in such a state. As usual, it should otherwise be
+compatible with any existing script that doesn't use bizarre bytecode/assembly
+hacks that depend on internal implementation details.
+
+Another point worth noting about Eternity's CALL/RETURN is that it allows an
+arbitrary number of return values.
+
+I have also reduced the number of ACSVM/acscript_t members copied into
+ACSThinker to reduce code duplication and complexity. I understand why this was
+being done at the time, but with the transition to C++, the incentive to do so
+has been mostly lost due to C++'s implicit this. And cases where it would be
+done so for efficiency should be done in the interpreter function itself.
+
+-------------------------------------------------------------------------------
 06/08/2012
 
 Added ACSE/e loading. All chunks except FUNC/FNAM and STRE are supported.

@@ -310,6 +310,52 @@ static void ACS_chunkerASTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 }
 
 //
+// ACS_chunkerFNAM
+//
+// Function names.
+//
+static void ACS_chunkerFNAM(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+                            uint32_t chunkLength)
+{
+   if(chunkID != ACS_CHUNKID_FNAM) return;
+
+   ACS_chunkerString(vm->funcNames, vm->numFuncNames, chunkData, chunkLength, false);
+}
+
+//
+// ACS_chunkerFUNC
+//
+// Function pointers.
+//
+static void ACS_chunkerFUNC(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+                            uint32_t chunkLength)
+{
+   if(chunkID != ACS_CHUNKID_FUNC) return;
+
+   uint32_t numFuncs = chunkLength / 8;
+
+   // Read scripts.
+   vm->numFuncs += numFuncs;
+   vm->funcs = (ACSFunc *)Z_Realloc(vm->funcs, vm->numFuncs * sizeof(ACSFunc),
+                                    PU_LEVEL, NULL);
+
+   for(ACSFunc *end = vm->funcs + vm->numFuncs,
+       *itr = end - numFuncs; itr != end; ++itr)
+   {
+      itr->numArgs   = *(uint8_t *)(chunkData + 0);
+      itr->numVars   = *(uint8_t *)(chunkData + 1);
+      itr->numRetn   = *(uint8_t *)(chunkData + 2);
+      itr->codeIndex = SwapLong(*(uint32_t *)(chunkData + 4));
+      itr->vm        = vm;
+
+      if(itr->numVars < itr->numArgs)
+         itr->numVars = itr->numArgs;
+
+      chunkData += 8;
+   }
+}
+
+//
 // ACS_chunkerLOAD
 //
 static void ACS_chunkerLOAD(ACSVM *vm, uint32_t chunkID, byte *chunkData,
@@ -686,6 +732,8 @@ void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
 void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
                               uint32_t tableLength, bool fakeACS0)
 {
+   ACSFunc *func;
+
    // AINI - Map Array Init
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerAINI);
 
@@ -696,10 +744,10 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerASTR);
 
    // FNAM - Function Names
-   // TODO
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerFNAM);
 
    // FUNC - Functions
-   // TODO
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerFUNC);
 
    // MEXP - Map Variable/Array Export
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerMEXP);
@@ -771,7 +819,26 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerMIMP);
 
    // Process functions.
-   // TODO
+   vm->funcptrs = (ACSFunc **)Z_Malloc(vm->numFuncs * sizeof(ACSFunc *), PU_LEVEL, NULL);
+   for(unsigned int i = vm->numFuncs; i--;)
+   {
+      vm->funcptrs[i] = &vm->funcs[i];
+
+      // If the function already has an address (or no name exists for it), we're done.
+      if(vm->funcptrs[i]->codeIndex || i >= vm->numFuncNames)
+         continue;
+
+      // Search through all of the imported VMs for the function.
+      for(ACSVM **itrVM = vm->importVMs,
+          **endVM = itrVM + vm->numImports; itrVM != endVM; ++itrVM)
+      {
+         if(*itrVM && (func = (*itrVM)->findFunction(vm->funcNames[i])))
+         {
+            vm->funcptrs[i] = func;
+            break;
+         }
+      }
+   }
 }
 
 // EOF

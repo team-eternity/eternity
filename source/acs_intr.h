@@ -43,6 +43,7 @@ class  WadDirectory;
 //
 
 #define ACS_STACK_LEN      128
+#define ACS_NUM_CALLS      16
 #define ACS_NUM_LOCALVARS  20
 #define ACS_NUM_MAPVARS    32
 #define ACS_NUM_MAPARRS    32
@@ -197,6 +198,26 @@ struct acs_opdata_t
 };
 
 //
+// ACSFunc
+//
+// Like acscript below, but for user-defined functions.
+//
+class ACSFunc
+{
+public:
+   uint8_t numArgs; // argument count
+   uint8_t numVars; // variable count
+   uint8_t numRetn; // return count
+   ACSVM *vm;       // VM the function is from
+
+   union
+   {
+      uint32_t codeIndex;
+      int32_t *codePtr;
+   };
+};
+
+//
 // acscript
 //
 // An actual script entity as read from the ACS lump's entry table,
@@ -221,6 +242,20 @@ typedef struct acscript_s
 } acscript_t;
 
 //
+// acs_call_t
+//
+// Stores a call-frame for ACS execution.
+//
+struct acs_call_t
+{
+   int32_t *ip;
+   int32_t *locals;
+   uint32_t numLocals;
+   qstring *printBuffer;
+   ACSVM   *vm;
+};
+
+//
 // acsthinker
 //
 // A thinker which runs a script.
@@ -237,6 +272,8 @@ protected:
    void Think();
 
 public:
+   ACSThinker();
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
@@ -246,25 +283,21 @@ public:
    ACSThinker **prevthread;
    ACSThinker  *nextthread;
 
-   // script info
-   uint32_t     vmID;                 // vm id number
-   int          scriptNum;            // script number in ACS itself
-   unsigned int internalNum;          // internal script number
-
    // virtual machine data
-   int32_t *ip;                       // instruction pointer
-   int32_t stack[ACS_STACK_LEN];      // value stack
-   int32_t stp;                       // stack pointer
-   int32_t *locals;                   // local variables and arguments
-   int32_t sreg;                      // state register
-   int32_t sdata;                     // special data for state
+   int32_t    *ip;                    // instruction pointer
+   int32_t     stack[ACS_STACK_LEN];  // value stack
+   int32_t     stp;                   // stack pointer
+   int32_t    *locals;                // local variables and arguments
+   uint32_t    numLocals;             // number of local variables
+   int32_t     sreg;                  // state register
+   int32_t     sdata;                 // special data for state
+   acs_call_t *calls;                 // call frames
+   acs_call_t *callPtr;               // current call frame
+   uint32_t    numCalls;              // number of call frames
 
    // info copied from acscript and acsvm
-   int32_t    *code;                  // entry point
-   int32_t    *data;                  // base code pointer for jumps
-   qstring    *printBuffer;           // buffer for message printing
-   acscript_t *acscript;              // for convenience of access
-   ACSVM      *vm;                    // for convenience of access
+   acscript_t *acscript;              // the script being executed
+   ACSVM      *vm;                    // the current execution environment
 
    // misc
    int32_t delay;                     // counter for script delays
@@ -309,6 +342,8 @@ public:
    ACSVM(int tag = PU_STATIC);
    ~ACSVM();
 
+   ACSFunc *findFunction(const char *name);
+
    int32_t *findMapVar(const char *name);
    ACSArray *findMapArr(const char *name);
 
@@ -329,11 +364,13 @@ public:
    int          lump;                  // lump bytecode was loaded from
 
    // interpreter info
-   qstring  *printBuffer;              // used for message printing
+   ACSFunc **funcptrs;                 // pointers into vm funcdat
+   ACSFunc  *funcs;                    // functions local to this vm
+   uint32_t  numFuncs;                 // number of functions
    int32_t  *mapvtab[ACS_NUM_MAPVARS]; // pointers into vm mapvars
-   int32_t   mapvars[ACS_NUM_MAPVARS];
+   int32_t   mapvars[ACS_NUM_MAPVARS]; // map variables local to this vm
    ACSArray *mapatab[ACS_NUM_MAPARRS]; // pointers into vm maparrs
-   ACSArray  maparrs[ACS_NUM_MAPARRS];
+   ACSArray  maparrs[ACS_NUM_MAPARRS]; // map arrays local to this vm
 
    // loader info (not valid post-loading)
    // should this be a separate struct, freed after loading?
@@ -342,6 +379,8 @@ public:
    const char **imports;                  // imported lump names
    ACSVM      **importVMs;                // imported VMs
    unsigned int numImports;               // number of imports
+   const char **funcNames;                // function names
+   unsigned int numFuncNames;             // number of function names
    const char  *mapvnam[ACS_NUM_MAPVARS]; // map variable names
    const char  *mapanam[ACS_NUM_MAPARRS]; // map array names
    uint32_t     mapalen[ACS_NUM_MAPARRS]; // map array lengths
@@ -380,7 +419,6 @@ bool ACS_StartScript(int scrnum, int map, int *args, Mobj *mo,
 bool ACS_TerminateScript(int srcnum, int mapnum);
 bool ACS_SuspendScript(int scrnum, int mapnum);
 void ACS_Archive(SaveArchive &arc);
-void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
 

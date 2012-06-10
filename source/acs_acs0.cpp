@@ -221,6 +221,14 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          vm->numCode += 4; // GAMETYPE + GET_IMM + CMP_EQ
          break;
 
+      case ACS0_OP_BRANCH_CALLDISCARD:
+         vm->numCode += opdata->opdata->args + 1 + 1; // DROP
+         break;
+
+      case ACS0_OP_BRANCH_RETURNVOID:
+         vm->numCode += opdata->opdata->args + 1 + 2; // GET_IMM 0
+         break;
+
       default:
          // Translation to CALLFUNC.
          if(opdata->opdata->op == ACS_OP_CALLFUNC_IMM)
@@ -539,6 +547,18 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
             *codePtr++ = SwapLong(*rover++);
          break;
 
+      case ACS0_OP_BRANCH_CALLDISCARD:
+         *codePtr++ = ACS_OP_BRANCH_CALL;
+         *codePtr++ = SwapLong(*rover++);
+         *codePtr++ = ACS_OP_STACK_DROP;
+         break;
+
+      case ACS0_OP_BRANCH_RETURNVOID:
+         *codePtr++ = ACS_OP_GET_IMM;
+         *codePtr++ = 0;
+         *codePtr++ = ACS_OP_BRANCH_RETURN;
+         break;
+
       default: case_direct:
          // Direct translation.
          if(opdata->opdata->op == ACS_OP_CALLFUNC ||
@@ -706,10 +726,18 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
 
    vm->numCode = 1; // Start at 1 so that 0 is an invalid index.
 
-   // Find where there is code by tracing potential execution paths.
+   // Find where there is code by tracing potential execution paths...
    codeTouched = ecalloc(bool *, lumpLength, sizeof(bool));
-   for(acscript_t *end = vm->scripts + vm->numScripts,
-       *itr = vm->scripts; itr != end; ++itr)
+
+   // ... from scripts.
+   for(acscript_t *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+   {
+      ACS_traceScriptACS0(vm, lumpLength, data, codeTouched, itr->codeIndex,
+                          jumpCount, compressed);
+   }
+
+   // ... from functions.
+   for(ACSFunc *itr = vm->funcs, *end = itr + vm->numFuncs; itr!= end; ++itr)
    {
       ACS_traceScriptACS0(vm, lumpLength, data, codeTouched, itr->codeIndex,
                           jumpCount, compressed);
@@ -726,8 +754,16 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
    efree(codeTouched);
 
    // Process script indexes.
-   for(acscript_t *end = vm->scripts + vm->numScripts,
-       *itr = vm->scripts; itr != end; ++itr)
+   for(acscript_t *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+   {
+      if(itr->codeIndex < lumpLength)
+         itr->codePtr = vm->code + codeIndexMap[itr->codeIndex];
+      else
+         itr->codePtr = vm->code;
+   }
+
+   // Process function indexes.
+   for(ACSFunc *itr = vm->funcs, *end = itr + vm->numFuncs; itr!= end; ++itr)
    {
       if(itr->codeIndex < lumpLength)
          itr->codePtr = vm->code + codeIndexMap[itr->codeIndex];
