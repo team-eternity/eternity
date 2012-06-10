@@ -138,7 +138,7 @@ void  Z_SysFree(void *p);
 #define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
 
 #define emalloc(type, n) \
-   static_cast<type>((Z_Calloc)(1, n, PU_STATIC, 0, __FILE__, __LINE__))
+   static_cast<type>((Z_Malloc)(n, PU_STATIC, 0, __FILE__, __LINE__))
 
 #define ecalloc(type, n1, n2) \
    static_cast<type>((Z_Calloc)(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))

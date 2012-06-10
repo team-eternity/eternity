@@ -39,7 +39,9 @@ PatchLoader PatchLoader::patchFmt;
 // PatchLoader::GetDefaultPatch
 //
 // haleyjd 02/05/12: static, returns a default patch graphic to use in 
-// place of a missing patch.
+// place of a missing patch. The graphic is allocated using the PU_PERMANENT
+// zone tag (as of 06/09/12) so that client code cannot free or change the
+// tag of the data even if it tries (which it generally will).
 //
 patch_t *PatchLoader::GetDefaultPatch()
 {
