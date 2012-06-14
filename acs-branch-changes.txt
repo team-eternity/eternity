@@ -7,7 +7,11 @@ activity spans from 2045 to 2074.
 -------------------------------------------------------------------------------
 06/14/2012
 
-Added instructions up to PLAYERCLASS, as much as possible.
+Added instructions up to LSH_GLOBALARR, as much as possible.
+
+Cleaned up the interpreter loop by using a macro to generate most of the binary
+operator instructions. One could argue this makes it more difficult to follow,
+but I find the repetition distracting.
 
 Moved printBuffer into ACSThinker, so that it doesn't get lost every time
 there's a delay.

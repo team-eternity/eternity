@@ -472,8 +472,8 @@ static void ACS_setThingVar(Mobj *thing, uint32_t var, int32_t val)
 
 // Interpreter Macros
 
-// This sure would be nice to enable! (But maybe a better check?)
-#if defined(__GNUC__)
+// Don't use COMPGOTO if RANGECHECK is enabled, so that there's a default case.
+#if defined(__GNUC__) && !defined(RANGECHECK)
 #define COMPGOTO
 #endif
 
@@ -494,6 +494,32 @@ static void ACS_setThingVar(Mobj *thing, uint32_t var, int32_t val)
 
 #define AR_BINOP(VAR, OP) temp = POP(); (VAR)[POP()] OP temp
 
+#define BINOP_GROUP(NAME, OP) \
+   OPCODE(NAME##_STACK): \
+      ST_BINOP_EQ(OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_LOCALVAR): \
+      this->locals[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPVAR): \
+      *vm->mapvtab[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDVAR): \
+      ACSworldvars[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALVAR): \
+      ACSglobalvars[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPARR): \
+      AR_BINOP(*vm->mapatab[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDARR): \
+      AR_BINOP(ACSworldarrs[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALARR): \
+      AR_BINOP(ACSglobalarrs[IPNEXT()], OP); \
+      NEXTOP();
+
 #define DIV_CHECK(VAL) \
    if(!(VAL)) \
    { \
@@ -503,6 +529,32 @@ static void ACS_setThingVar(Mobj *thing, uint32_t var, int32_t val)
 
 
 #define DIVOP_EQ(VAR, OP) DIV_CHECK(temp = POP()); (VAR) OP temp
+
+#define DIVOP_GROUP(NAME, OP) \
+   OPCODE(NAME##_STACK): \
+      DIVOP_EQ(STACK_AT(1), OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_LOCALVAR): \
+      DIVOP_EQ(this->locals[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPVAR): \
+      DIVOP_EQ(*vm->mapvtab[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDVAR): \
+      DIVOP_EQ(ACSworldvars[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALVAR): \
+      DIVOP_EQ(ACSglobalvars[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPARR): \
+      DIVOP_EQ(vm->mapatab[IPNEXT()]->at(POP()), OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDARR): \
+      DIVOP_EQ(ACSworldarrs[IPNEXT()][POP()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALARR): \
+      DIVOP_EQ(ACSglobalarrs[IPNEXT()][POP()], OP); \
+      NEXTOP();
 
 #define BRANCH_COUNT() \
    if(++count > 500000) \
@@ -715,35 +767,10 @@ void ACSThinker::Think()
 
       // Binary Ops
       // ADD
-   OPCODE(ADD_STACK):
-      ST_BINOP_EQ(+=);
-      NEXTOP();
-   OPCODE(ADD_LOCALVAR):
-      this->locals[IPNEXT()] += POP();
-      NEXTOP();
-   OPCODE(ADD_MAPVAR):
-      *vm->mapvtab[IPNEXT()] += POP();
-      NEXTOP();
-   OPCODE(ADD_WORLDVAR):
-      ACSworldvars[IPNEXT()] += POP();
-      NEXTOP();
-   OPCODE(ADD_GLOBALVAR):
-      ACSglobalvars[IPNEXT()] += POP();
-      NEXTOP();
-   OPCODE(ADD_MAPARR):
-      AR_BINOP(*vm->mapatab[IPNEXT()], +=);
-      NEXTOP();
-   OPCODE(ADD_WORLDARR):
-      AR_BINOP(ACSworldarrs[IPNEXT()], +=);
-      NEXTOP();
-   OPCODE(ADD_GLOBALARR):
-      AR_BINOP(ACSglobalarrs[IPNEXT()], +=);
-      NEXTOP();
+      BINOP_GROUP(ADD, +=);
 
       // AND
-   OPCODE(AND_STACK):
-      ST_BINOP_EQ(&=);
-      NEXTOP();
+      BINOP_GROUP(AND, &=);
 
       // CMP
    OPCODE(CMP_EQ):
@@ -789,30 +816,7 @@ void ACSThinker::Think()
       NEXTOP();
 
       // DIV
-   OPCODE(DIV_STACK):
-      DIVOP_EQ(STACK_AT(1), /=);
-      NEXTOP();
-   OPCODE(DIV_LOCALVAR):
-      DIVOP_EQ(this->locals[IPNEXT()], /=);
-      NEXTOP();
-   OPCODE(DIV_MAPVAR):
-      DIVOP_EQ(*vm->mapvtab[IPNEXT()], /=);
-      NEXTOP();
-   OPCODE(DIV_WORLDVAR):
-      DIVOP_EQ(ACSworldvars[IPNEXT()], /=);
-      NEXTOP();
-   OPCODE(DIV_GLOBALVAR):
-      DIVOP_EQ(ACSglobalvars[IPNEXT()], /=);
-      NEXTOP();
-   OPCODE(DIV_MAPARR):
-      DIVOP_EQ(vm->mapatab[IPNEXT()]->at(POP()), /=);
-      NEXTOP();
-   OPCODE(DIV_WORLDARR):
-      DIVOP_EQ(ACSworldarrs[IPNEXT()][POP()], /=);
-      NEXTOP();
-   OPCODE(DIV_GLOBALARR):
-      DIVOP_EQ(ACSglobalarrs[IPNEXT()][POP()], /=);
-      NEXTOP();
+      DIVOP_GROUP(DIV, /=);
    OPCODE(DIVX_STACK):
       DIV_CHECK(temp = POP()); STACK_AT(1) = FixedDiv(STACK_AT(1), temp);
       NEXTOP();
@@ -841,105 +845,28 @@ void ACSThinker::Think()
       NEXTOP();
 
       // IOR
-   OPCODE(IOR_STACK):
-      ST_BINOP_EQ(|=);
-      NEXTOP();
+      BINOP_GROUP(IOR, |=);
 
       // LSH
-   OPCODE(LSH_STACK):
-      ST_BINOP_EQ(<<=);
-      NEXTOP();
+      BINOP_GROUP(LSH, <<=);
 
       // MOD
-   OPCODE(MOD_STACK):
-      DIVOP_EQ(STACK_AT(1), %=);
-      NEXTOP();
-   OPCODE(MOD_LOCALVAR):
-      DIVOP_EQ(this->locals[IPNEXT()], %=);
-      NEXTOP();
-   OPCODE(MOD_MAPVAR):
-      DIVOP_EQ(*vm->mapvtab[IPNEXT()], %=);
-      NEXTOP();
-   OPCODE(MOD_WORLDVAR):
-      DIVOP_EQ(ACSworldvars[IPNEXT()], %=);
-      NEXTOP();
-   OPCODE(MOD_GLOBALVAR):
-      DIVOP_EQ(ACSglobalvars[IPNEXT()], %=);
-      NEXTOP();
-   OPCODE(MOD_MAPARR):
-      DIVOP_EQ(vm->mapatab[IPNEXT()]->at(POP()), %=);
-      NEXTOP();
-   OPCODE(MOD_WORLDARR):
-      DIVOP_EQ(ACSworldarrs[IPNEXT()][POP()], %=);
-      NEXTOP();
-   OPCODE(MOD_GLOBALARR):
-      DIVOP_EQ(ACSglobalarrs[IPNEXT()][POP()], %=);
-      NEXTOP();
+      DIVOP_GROUP(MOD, %=);
 
       // MUL
-   OPCODE(MUL_STACK):
-      ST_BINOP_EQ(*=);
-      NEXTOP();
-   OPCODE(MUL_LOCALVAR):
-      this->locals[IPNEXT()] *= POP();
-      NEXTOP();
-   OPCODE(MUL_MAPVAR):
-      *vm->mapvtab[IPNEXT()] *= POP();
-      NEXTOP();
-   OPCODE(MUL_WORLDVAR):
-      ACSworldvars[IPNEXT()] *= POP();
-      NEXTOP();
-   OPCODE(MUL_GLOBALVAR):
-      ACSglobalvars[IPNEXT()] *= POP();
-      NEXTOP();
-   OPCODE(MUL_MAPARR):
-      AR_BINOP(*vm->mapatab[IPNEXT()], *=);
-      NEXTOP();
-   OPCODE(MUL_WORLDARR):
-      AR_BINOP(ACSworldarrs[IPNEXT()], *=);
-      NEXTOP();
-   OPCODE(MUL_GLOBALARR):
-      AR_BINOP(ACSglobalarrs[IPNEXT()], *=);
-      NEXTOP();
+      BINOP_GROUP(MUL, *=);
    OPCODE(MULX_STACK):
       temp = POP(); STACK_AT(1) = FixedMul(STACK_AT(1), temp);
       NEXTOP();
 
       // RSH
-   OPCODE(RSH_STACK):
-      ST_BINOP_EQ(>>=);
-      NEXTOP();
+      BINOP_GROUP(RSH, >>=);
 
       // SUB
-   OPCODE(SUB_STACK):
-      ST_BINOP_EQ(-=);
-      NEXTOP();
-   OPCODE(SUB_LOCALVAR):
-      this->locals[IPNEXT()] -= POP();
-      NEXTOP();
-   OPCODE(SUB_MAPVAR):
-      *vm->mapvtab[IPNEXT()] -= POP();
-      NEXTOP();
-   OPCODE(SUB_WORLDVAR):
-      ACSworldvars[IPNEXT()] -= POP();
-      NEXTOP();
-   OPCODE(SUB_GLOBALVAR):
-      ACSglobalvars[IPNEXT()] -= POP();
-      NEXTOP();
-   OPCODE(SUB_MAPARR):
-      AR_BINOP(*vm->mapatab[IPNEXT()], -=);
-      NEXTOP();
-   OPCODE(SUB_WORLDARR):
-      AR_BINOP(ACSworldarrs[IPNEXT()], -=);
-      NEXTOP();
-   OPCODE(SUB_GLOBALARR):
-      AR_BINOP(ACSglobalarrs[IPNEXT()], -=);
-      NEXTOP();
+      BINOP_GROUP(SUB, -=);
 
       // XOR
-   OPCODE(XOR_STACK):
-      ST_BINOP_EQ(^=);
-      NEXTOP();
+      BINOP_GROUP(XOR, ^=);
 
       // Unary Ops
    OPCODE(NEGATE_STACK):
