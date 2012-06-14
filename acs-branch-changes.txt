@@ -5,6 +5,24 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/13/2012
+
+Added instructions up to ENDPRINTLOG, as much as possible.
+
+Changed handling of activator-getter instructions to translate to GET_THINGVAR.
+I don't see any need to keep them in the core loop like that. And it's not like
+the extra GET_IMM is that costly.
+
+A special word about the extra THINGVARs. They are commented as unexposed
+because they are subject to arbitrary change. Get/SetActorProperty is from
+ZDoom so ZDoom gets to decide what the APROP values are. While I admit that
+warnings of "undefined behavior" never seem to stop people, that doesn't mean
+I'll do anything about mods that break from ignoring this warning.
+
+Also, ACSe loading was not correct with regards to certain instructions having
+compressed arguments. And RETURN instructions needed to terminate tracing.
+
+-------------------------------------------------------------------------------
 06/10/2012
 
 Added ACS functions, compatible with ZDoom's, but using a separate call stack.

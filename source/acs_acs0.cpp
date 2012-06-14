@@ -38,8 +38,8 @@
 typedef enum acs0_op_e
 {
    // ZDoom was first, so their extensions are what will be used for ACS0 lumps.
-   #define ACSE_OP(OPDATA,OP,ARGC) ACS0_OP(OPDATA, OP, ARGC)
-   #define ACS0_OP(OPDATA,OP,ARGC) ACS0_OP_##OP,
+   #define ACSE_OP(OPDATA,OP,ARGC,COMP) ACS0_OP(OPDATA, OP, ARGC, COMP)
+   #define ACS0_OP(OPDATA,OP,ARGC,COMP) ACS0_OP_##OP,
    #include "acs_op.h"
    #undef ACS0_OP
 
@@ -51,6 +51,7 @@ typedef struct acs0_opdata_s
    acs_opdata_t const *opdata;
    acs0_op_t op;
    int args;
+   bool compressed;
 } acs0_opdata_t;
 
 
@@ -60,7 +61,7 @@ typedef struct acs0_opdata_s
 
 static acs0_opdata_t const ACS0opdata[ACS0_OPMAX] =
 {
-   #define ACS0_OP(OPDATA,OP,ARGC) {&ACSopdata[ACS_OP_##OPDATA], ACS0_OP_##OP, ARGC},
+   #define ACS0_OP(OPDATA,OP,ARGC,COMP) {&ACSopdata[ACS_OP_##OPDATA], ACS0_OP_##OP, ARGC, COMP},
    #include "acs_op.h"
    #undef ACS0_OP
 };
@@ -172,11 +173,34 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          break;
 
       case ACS0_OP_GETARR_IMM_BYTE:
-         indexNext = index + opSize + *(data + index + opSize) + 1;
+         // Set indexNext to after the op.
+         indexNext = index + opSize;
+
+         // Need room for the get count.
+         if(indexNext > lumpLength-4) return;
+
+         // Read number of gets.
+         indexNext += data[indexNext] + 1;
+
+         break;
+
+      case ACS0_OP_BRANCH_CASETABLE:
+         // Set indexNext to after the op plus alignment.
+         indexNext = (index + opSize + 3) & ~3;
+
+         // Need room for the case count.
+         if(indexNext > lumpLength-4) return;
+
+         // Read the number of cases.
+         indexNext += (SwapULong(*(uint32_t *)(data + indexNext)) * 8) + 4;
+
          break;
 
       default:
-         indexNext = index + opSize + (opdata->args * 4);
+         if(compressed && opdata->compressed)
+            indexNext = index + opSize + opdata->args;
+         else
+            indexNext = index + opSize + (opdata->args * 4);
          break;
       }
 
@@ -207,11 +231,23 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
       case ACS0_OP_GET_THINGX:
       case ACS0_OP_GET_THINGY:
       case ACS0_OP_GET_THINGZ:
+      case ACS0_OP_GET_THINGFLOORZ:
+      case ACS0_OP_GET_THINGANGLE:
          vm->numCode += opdata->args + 2;
          break;
 
       case ACS0_OP_GETARR_IMM_BYTE:
          vm->numCode += *(data + index + opSize) + 2;
+         break;
+
+      case ACS0_OP_ACTIVATORHEALTH:
+      case ACS0_OP_ACTIVATORARMOR:
+      case ACS0_OP_ACTIVATORFRAGS:
+      case ACS0_OP_BRANCH_RETURNVOID:
+      case ACS0_OP_PLAYERNUMBER:
+      case ACS0_OP_ACTIVATORTID:
+      case ACS0_OP_SIGILPIECES:
+         vm->numCode += opdata->opdata->args + 1 + 2; // GET_IMM 0
          break;
 
       case ACS0_OP_GAMETYPE_ONEFLAGCTF:
@@ -225,8 +261,10 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          vm->numCode += opdata->opdata->args + 1 + 1; // DROP
          break;
 
-      case ACS0_OP_BRANCH_RETURNVOID:
-         vm->numCode += opdata->opdata->args + 1 + 2; // GET_IMM 0
+      case ACS0_OP_BRANCH_CASETABLE:
+         vm->numCode += 2;
+         // More alignment stuff.
+         vm->numCode += SwapULong(*(uint32_t *)(((uintptr_t)data + index + opSize + 3) & ~3)) * 2;
          break;
 
       default:
@@ -234,7 +272,7 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          if(opdata->opdata->op == ACS_OP_CALLFUNC_IMM)
          {
             // Adds the func and argc arguments.
-            vm->numCode += opdata->args + 3;
+            vm->numCode += opdata->args + 1 + 2;
             break;
          }
 
@@ -253,6 +291,8 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
       switch(op)
       {
       case ACS0_OP_SCRIPT_TERMINATE:
+      case ACS0_OP_BRANCH_RETURN:
+      case ACS0_OP_BRANCH_RETURNVOID:
          return;
 
       case ACS0_OP_BRANCH_IMM:
@@ -273,6 +313,25 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          ACS_traceScriptACS0(vm, lumpLength, data, codeTouched,
                              SwapLong(*(int32_t *)(data + index + opSize + 4)),
                              jumpCount, compressed);
+         break;
+
+      case ACS0_OP_BRANCH_CASETABLE:
+         {
+            uint32_t jumps, *rover;
+
+            rover = (uint32_t *)(data + index + opSize);
+            // And alignment again.
+            rover = (uint32_t *)(((uintptr_t)rover + 3) & ~3);
+            jumps = SwapULong(*rover++);
+
+            jumpCount += jumps;
+
+            // Trace all of the jump targets.
+            // Start by incrementing rover to point to address.
+            for(++rover; jumps--; rover += 2)
+               ACS_traceScriptACS0(vm, lumpLength, data, codeTouched,
+                                   SwapULong(*rover), jumpCount, compressed);
+         }
          break;
       }
 
@@ -300,6 +359,8 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE(ACTIVATORSOUND,         ActivatorSound,         2);
    CASE(AMBIENTSOUND,           AmbientSound,           2);
    CASE(AMBIENTSOUNDLOCAL,      AmbientSoundLocal,      2);
+   CASE(GETSECTORCEILINGZ,      GetSectorCeilingZ,      3);
+   CASE(GETSECTORFLOORZ,        GetSectorFloorZ,        3);
    CASE(SECTORSOUND,            SectorSound,            2);
    CASE(SETLINEBLOCKING,        SetLineBlocking,        2);
    CASE(SETLINEMONSTERBLOCKING, SetLineMonsterBlocking, 2);
@@ -308,6 +369,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE(SETMUSIC_ST,            SetMusic,               1);
    CASE(SETTHINGSPECIAL,        SetThingSpecial,        7);
    CASE(SOUNDSEQUENCE,          SoundSequence,          1);
+   CASE(THINGPROJECTILE,        ThingProjectile,        7);
    CASE(THINGSOUND,             ThingSound,             3);
 
    CASE_IMM(CHANGECEILING, ChangeCeiling, 2);
@@ -320,7 +382,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE_IMM(SPAWNSPOT,     SpawnSpot,     4);
    CASE_IMM(THINGCOUNT,    ThingCount,    2);
 
-   default: *codePtr++ = ACS_OP_KILL; return;
+   default: opdata = &ACS0opdata[ACS_OP_KILL]; CASE(NOP, NOP, 0);
    }
 
    #undef CASE_IMM
@@ -329,6 +391,35 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    *codePtr++ = opdata->opdata->op;
    *codePtr++ = func;
    *codePtr++ = argc;
+}
+
+//
+// ACS_translateThingVarACS0
+//
+// Translates an ACS0 opdata into a THINGVAR to access.
+//
+static int32_t ACS_translateThingVarACS0(const acs0_opdata_t *opdata)
+{
+   #define CASE(OP,VAR) case ACS0_OP_##OP: return ACS_THINGVAR_##VAR
+
+   switch(opdata->op)
+   {
+   CASE(ACTIVATORARMOR,  Armor);
+   CASE(ACTIVATORFRAGS,  Frags);
+   CASE(ACTIVATORHEALTH, Health);
+   CASE(ACTIVATORTID,    TID);
+   CASE(GET_THINGANGLE,  Angle);
+   CASE(GET_THINGFLOORZ, FloorZ);
+   CASE(GET_THINGX,      X);
+   CASE(GET_THINGY,      Y);
+   CASE(GET_THINGZ,      Z);
+   CASE(PLAYERNUMBER,    PlayerNumber);
+   CASE(SIGILPIECES,     SigilPieces);
+
+   default: return ACS_THINGVARMAX;
+   }
+
+   #undef CASE
 }
 
 //
@@ -414,8 +505,17 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          codeIndex += opSize + *(data + codeIndex + opSize) + 1;
          break;
 
+      case ACS0_OP_BRANCH_CASETABLE:
+         // Alignment, as in the equivalent switch above.
+         codeIndex = (codeIndex + opSize + 3) & ~3;
+         codeIndex = codeIndex + (SwapULong(*(uint32_t *)(data + codeIndex)) * 8) + 4;
+         break;
+
       default:
-         codeIndex += opSize + (opdata->args * 4);
+         if(compressed && opdata->compressed)
+            codeIndex += opSize + opdata->args;
+         else
+            codeIndex += opSize + (opdata->args * 4);
          break;
       }
 
@@ -443,6 +543,13 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          *codePtr++ = temp;
          while(temp--)
             *codePtr++ = SwapLong(*rover++);
+         break;
+
+      case ACS0_OP_LINESPEC5_RET:
+         temp = op - ACS0_OP_LINESPEC5_RET + 5;
+         *codePtr++ = opdata->opdata->op;
+         *codePtr++ = SwapLong(*rover++);
+         *codePtr++ = temp;
          break;
 
       case ACS0_OP_LINESPEC1_IMM_BYTE:
@@ -479,8 +586,10 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
       case ACS0_OP_GET_THINGX:
       case ACS0_OP_GET_THINGY:
       case ACS0_OP_GET_THINGZ:
+      case ACS0_OP_GET_THINGFLOORZ:
+      case ACS0_OP_GET_THINGANGLE:
          *codePtr++ = opdata->opdata->op;
-         *codePtr++ = ACS_THINGVAR_X + (op - ACS0_OP_GET_THINGX);
+         *codePtr++ = ACS_translateThingVarACS0(opdata);
          break;
 
       case ACS0_OP_GETARR_IMM_BYTE:
@@ -518,6 +627,17 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
             *codePtr++ = *brover++;
          break;
 
+      case ACS0_OP_ACTIVATORHEALTH:
+      case ACS0_OP_ACTIVATORARMOR:
+      case ACS0_OP_ACTIVATORFRAGS:
+      case ACS0_OP_PLAYERNUMBER:
+      case ACS0_OP_ACTIVATORTID:
+         *codePtr++ = ACS_OP_GET_IMM;
+         *codePtr++ = 0;
+         *codePtr++ = opdata->opdata->op;
+         *codePtr++ = ACS_translateThingVarACS0(opdata);
+         break;
+
       case ACS0_OP_GAMETYPE_ONEFLAGCTF:
          *codePtr++ = ACS_OP_GET_IMM;
          *codePtr++ = 0;
@@ -548,15 +668,34 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          break;
 
       case ACS0_OP_BRANCH_CALLDISCARD:
-         *codePtr++ = ACS_OP_BRANCH_CALL;
-         *codePtr++ = SwapLong(*rover++);
+         *codePtr++ = opdata->opdata->op;
+         if(compressed)
+            *codePtr++ = *(byte *)rover;
+         else
+            *codePtr++ = SwapLong(*rover);
          *codePtr++ = ACS_OP_STACK_DROP;
          break;
 
       case ACS0_OP_BRANCH_RETURNVOID:
          *codePtr++ = ACS_OP_GET_IMM;
          *codePtr++ = 0;
-         *codePtr++ = ACS_OP_BRANCH_RETURN;
+         *codePtr++ = opdata->opdata->op;
+         break;
+
+      case ACS0_OP_BRANCH_CASETABLE:
+         // Align rover.
+         rover = (int32_t *)(((uintptr_t)rover + 3) & ~3);
+         temp = SwapLong(*rover++);
+
+         *codePtr++ = opdata->opdata->op;
+         *codePtr++ = temp;
+
+         while(temp--)
+         {
+            *codePtr++ = SwapLong(*rover++);
+            *jumpItr++ = codePtr;
+            *codePtr++ = SwapLong(*rover++);
+         }
          break;
 
       default: case_direct:
@@ -569,8 +708,17 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          else
             *codePtr++ = opdata->opdata->op;
 
-         for(int i = opdata->args; i--;)
-            *codePtr++ = SwapLong(*rover++);
+         if(compressed && opdata->compressed)
+         {
+            brover = (byte *)rover;
+            for(int i = opdata->args; i--;)
+               *codePtr++ = *brover++;
+         }
+         else
+         {
+            for(int i = opdata->args; i--;)
+               *codePtr++ = SwapLong(*rover++);
+         }
 
          break;
       }

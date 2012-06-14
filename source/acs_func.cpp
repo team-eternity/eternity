@@ -37,6 +37,7 @@
 #include "e_things.h"
 #include "m_random.h"
 #include "p_spec.h"
+#include "r_state.h"
 #include "s_sndseq.h"
 #include "doomstat.h"
 
@@ -97,6 +98,38 @@ static void ACS_funcChangeCeiling(ACS_FUNCARG)
 static void ACS_funcChangeFloor(ACS_FUNCARG)
 {
    P_ChangeFloorTex(ACSVM::GetString(args[1]), args[0]);
+}
+
+//
+// ACS_funcGetSectorCeilingZ
+//
+static void ACS_funcGetSectorCeilingZ(ACS_FUNCARG)
+{
+   int secnum = P_FindSectorFromTag(args[0], -1);
+
+   if(secnum >= 0)
+   {
+      // TODO/FIXME: sloped sectors
+      *retn++ = sectors[secnum].ceilingheight;
+   }
+   else
+      *retn++ = 0;
+}
+
+//
+// ACS_funcGetSectorFloorZ
+//
+static void ACS_funcGetSectorFloorZ(ACS_FUNCARG)
+{
+   int secnum = P_FindSectorFromTag(args[0], -1);
+
+   if(secnum >= 0)
+   {
+      // TODO/FIXME: sloped sectors
+      *retn++ = sectors[secnum].floorheight;
+   }
+   else
+      *retn++ = 0;
 }
 
 //
@@ -280,18 +313,18 @@ static void ACS_funcSoundSequence(ACS_FUNCARG)
 //
 // ACS_spawn
 //
-static bool ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
-                      int tid, angle_t angle)
+static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
+                       int tid, angle_t angle)
 {
    Mobj *mo;
    if(type != -1 && (mo = P_SpawnMobj(x, y, z, type)))
    {
       if(tid) P_AddThingTID(mo, tid);
       mo->angle = angle;
-      return true;
+      return mo;
    }
    else
-      return false;
+      return NULL;
 }
 
 //
@@ -306,7 +339,7 @@ static void ACS_funcSpawnPoint(ACS_FUNCARG)
    int     tid   = args[4];
    angle_t angle = args[5] << 24;
 
-   *retn++ = ACS_spawn(type, x, y, z, tid, angle);
+   *retn++ = !!ACS_spawn(type, x, y, z, tid, angle);
 }
 
 //
@@ -323,7 +356,7 @@ static void ACS_funcSpawnSpot(ACS_FUNCARG)
    *retn = 0;
 
    while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
-      *retn += ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle);
+      *retn += !!ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle);
 
    ++retn;
 }
@@ -361,6 +394,47 @@ counted:
 }
 
 //
+// ACS_funcThingProjectile
+//
+static void ACS_funcThingProjectile(ACS_FUNCARG)
+{
+   int32_t spotid  = args[0];
+   int32_t type    = args[1];
+   angle_t angle   = args[2] << 24;
+   int32_t speed   = args[3] * 8;
+   int32_t vspeed  = args[4] * 8;
+   bool    gravity = args[5];
+   int32_t tid     = args[6];
+   Mobj   *spot    = NULL, *mo;
+   fixed_t momx    = speed * finecosine[angle >> ANGLETOFINESHIFT];
+   fixed_t momy    = speed * finesine[  angle >> ANGLETOFINESHIFT];
+   fixed_t momz    = vspeed << FRACBITS;
+
+   if(type < 0 || type >= ACS_NUM_THINGTYPES)
+      return;
+
+   type = ACS_thingtypes[type];
+
+   while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
+   {
+      if(!(mo = ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle)))
+         continue;
+
+      if(mo->info->seesound)
+         S_StartSound(mo, mo->info->seesound);
+
+      P_SetTarget<Mobj>(&mo->target, spot);
+
+      mo->momx = momx;
+      mo->momy = momy;
+      mo->momz = momz;
+
+      mo->flags &= ~MF_NOGRAVITY;
+      if(gravity) mo->flags2 |= MF2_LOGRAV;
+   }
+}
+
+//
 // ACS_funcThingSound
 //
 static void ACS_funcThingSound(ACS_FUNCARG)
@@ -382,6 +456,8 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcAmbientSoundLocal,
    ACS_funcChangeCeiling,
    ACS_funcChangeFloor,
+   ACS_funcGetSectorCeilingZ,
+   ACS_funcGetSectorFloorZ,
    ACS_funcRandom,
    ACS_funcSectorSound,
    ACS_funcSetLineBlocking,
@@ -395,6 +471,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSpawnPoint,
    ACS_funcSpawnSpot,
    ACS_funcThingCount,
+   ACS_funcThingProjectile,
    ACS_funcThingSound,
 };
 

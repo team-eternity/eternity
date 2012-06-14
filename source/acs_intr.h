@@ -97,6 +97,8 @@ enum acs_funcnum_t
    ACS_FUNC_AmbientSoundLocal,
    ACS_FUNC_ChangeCeiling,
    ACS_FUNC_ChangeFloor,
+   ACS_FUNC_GetSectorCeilingZ,
+   ACS_FUNC_GetSectorFloorZ,
    ACS_FUNC_Random,
    ACS_FUNC_SectorSound,
    ACS_FUNC_SetLineBlocking,
@@ -110,6 +112,7 @@ enum acs_funcnum_t
    ACS_FUNC_SpawnPoint,
    ACS_FUNC_SpawnSpot,
    ACS_FUNC_ThingCount,
+   ACS_FUNC_ThingProjectile,
    ACS_FUNC_ThingSound,
 
    ACS_FUNCMAX
@@ -124,9 +127,71 @@ enum acs_stype_t
    ACS_STYPEMAX
 };
 
-// thing variables.
+// Level variables.
 enum
 {
+   ACS_LEVELVAR_ParTime        = 0,
+   ACS_LEVELVAR_ClusterNumber  = 1,
+   ACS_LEVELVAR_LevelNumber    = 2,
+   ACS_LEVELVAR_TotalSecrets   = 3,
+   ACS_LEVELVAR_FoundSecrets   = 4,
+   ACS_LEVELVAR_TotalItems     = 5,
+   ACS_LEVELVAR_FoundItems     = 6,
+   ACS_LEVELVAR_TotalMonsters  = 7,
+   ACS_LEVELVAR_KilledMonsters = 8,
+   ACS_LEVELVAR_SuckTime       = 9,
+
+   ACS_LEVELVARMAX
+};
+
+// Thing variables.
+enum
+{
+   ACS_THINGVAR_Health       =  0,
+   ACS_THINGVAR_Speed        =  1,
+   ACS_THINGVAR_Damage       =  2,
+   ACS_THINGVAR_Alpha        =  3,
+   ACS_THINGVAR_RenderStyle  =  4,
+   ACS_THINGVAR_SeeSound     =  5,
+   ACS_THINGVAR_AttackSound  =  6,
+   ACS_THINGVAR_PainSound    =  7,
+   ACS_THINGVAR_DeathSound   =  8,
+   ACS_THINGVAR_ActiveSound  =  9,
+   ACS_THINGVAR_Ambush       = 10,
+   ACS_THINGVAR_Invulnerable = 11,
+   ACS_THINGVAR_JumpZ        = 12,
+   ACS_THINGVAR_ChaseGoal    = 13,
+   ACS_THINGVAR_Frightened   = 14,
+   ACS_THINGVAR_Gravity      = 15,
+   ACS_THINGVAR_Friendly     = 16,
+   ACS_THINGVAR_SpawnHealth  = 17,
+   ACS_THINGVAR_Dropped      = 18,
+   ACS_THINGVAR_NoTarget     = 19,
+   ACS_THINGVAR_Species      = 20,
+   ACS_THINGVAR_NameTag      = 21,
+   ACS_THINGVAR_Score        = 22,
+   ACS_THINGVAR_NoTrigger    = 23,
+   ACS_THINGVAR_DamageFactor = 24,
+   ACS_THINGVAR_MasterTID    = 25,
+   ACS_THINGVAR_TargetTID    = 26,
+   ACS_THINGVAR_TracerTID    = 27,
+   ACS_THINGVAR_WaterLevel   = 28,
+   ACS_THINGVAR_ScaleX       = 29,
+   ACS_THINGVAR_ScaleY       = 30,
+   ACS_THINGVAR_Dormant      = 31,
+   ACS_THINGVAR_Mass         = 32,
+   ACS_THINGVAR_Accuracy     = 33,
+   ACS_THINGVAR_Stamina      = 34,
+
+   // Unexposed variables.
+   ACS_THINGVAR_Angle,
+   ACS_THINGVAR_Armor,
+   ACS_THINGVAR_CeilingZ,
+   ACS_THINGVAR_FloorZ,
+   ACS_THINGVAR_Frags,
+   ACS_THINGVAR_PlayerNumber,
+   ACS_THINGVAR_SigilPieces,
+   ACS_THINGVAR_TID,
    ACS_THINGVAR_X,
    ACS_THINGVAR_Y,
    ACS_THINGVAR_Z,
@@ -272,7 +337,9 @@ protected:
    void Think();
 
 public:
-   ACSThinker();
+   ACSThinker() : result(0), calls(NULL), callPtr(NULL), numCalls(0)
+   {
+   }
 
    // Methods
    virtual void serialize(SaveArchive &arc);
@@ -284,6 +351,7 @@ public:
    ACSThinker  *nextthread;
 
    // virtual machine data
+   int32_t     result;                // user-defined result of the thread
    int32_t    *ip;                    // instruction pointer
    int32_t     stack[ACS_STACK_LEN];  // value stack
    int32_t     stp;                   // stack pointer

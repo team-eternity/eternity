@@ -32,6 +32,7 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "c_runcmd.h"
 #include "doomstat.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -263,8 +264,8 @@ unsigned int ACS_indexForNum(ACSVM *vm, int num)
 // Executes a line special that has been encoded in the script with
 // immediate operands or on the stack.
 //
-static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
-                             int argc, int *argv)
+static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
+                                int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i = argc;
@@ -276,7 +277,7 @@ static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
    // translate line specials & args for Hexen maps
    P_ConvertHexenLineSpec(&spec, args);
 
-   P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
+   return P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
 }
 
 //
@@ -296,6 +297,53 @@ static int ACS_countPlayers(void)
 }
 
 //
+// ACS_getCVar
+//
+static int32_t ACS_getCVar(const char *name)
+{
+   command_t *command;
+   variable_t *var;
+
+   command = C_GetCmdForName(name);
+
+   if(!command || !(var = command->variable))
+      return 0;
+
+   switch(var->type)
+   {
+   case vt_int: return *(int *)var->variable;
+   case vt_float: return M_DoubleToFixed(*(double *)var->variable);
+   case vt_string: return 0; // TODO: DynaStrings
+   case vt_chararray: return 0; // TODO: DynaStrings
+   case vt_toggle: return *(bool *)var->variable;
+   }
+
+   return 0;
+}
+
+//
+// ACS_getLevelVar
+//
+static int32_t ACS_getLevelVar(uint32_t var)
+{
+   switch(var)
+   {
+   case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
+   case ACS_LEVELVAR_ClusterNumber:  return 0;
+   case ACS_LEVELVAR_LevelNumber:    return 0;
+   case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
+   case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
+   case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
+   case ACS_LEVELVAR_FoundItems:     return players[consoleplayer].itemcount;
+   case ACS_LEVELVAR_TotalMonsters:  return wminfo.maxkills;
+   case ACS_LEVELVAR_KilledMonsters: return players[consoleplayer].killcount;
+   case ACS_LEVELVAR_SuckTime:       return 1;
+
+   default: return 0;
+   }
+}
+
+//
 // ACS_getThingVar
 //
 static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
@@ -304,10 +352,115 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
 
    switch(var)
    {
-   case ACS_THINGVAR_X: return thing->x;
-   case ACS_THINGVAR_Y: return thing->y;
-   case ACS_THINGVAR_Z: return thing->z;
+   case ACS_THINGVAR_Health:       return thing->health;
+   case ACS_THINGVAR_Speed:        return thing->info->speed;
+   case ACS_THINGVAR_Damage:       return thing->damage;
+   case ACS_THINGVAR_Alpha:        return thing->translucency;
+   case ACS_THINGVAR_RenderStyle:  return 0;
+   case ACS_THINGVAR_SeeSound:     return 0;
+   case ACS_THINGVAR_AttackSound:  return 0;
+   case ACS_THINGVAR_PainSound:    return 0;
+   case ACS_THINGVAR_DeathSound:   return 0;
+   case ACS_THINGVAR_ActiveSound:  return 0;
+   case ACS_THINGVAR_Ambush:       return !!(thing->flags & MF_AMBUSH);
+   case ACS_THINGVAR_Invulnerable: return !!(thing->flags2 & MF2_INVULNERABLE);
+   case ACS_THINGVAR_JumpZ:        return 0;
+   case ACS_THINGVAR_ChaseGoal:    return 0;
+   case ACS_THINGVAR_Frightened:   return 0;
+   case ACS_THINGVAR_Friendly:     return !!(thing->flags & MF_FRIEND);
+   case ACS_THINGVAR_SpawnHealth:  return thing->info->spawnhealth;
+   case ACS_THINGVAR_Dropped:      return !!(thing->flags & MF_DROPPED);
+   case ACS_THINGVAR_NoTarget:     return 0;
+   case ACS_THINGVAR_Species:      return 0;
+   case ACS_THINGVAR_NameTag:      return 0;
+   case ACS_THINGVAR_Score:        return 0;
+   case ACS_THINGVAR_NoTrigger:    return 0;
+   case ACS_THINGVAR_DamageFactor: return 0;
+   case ACS_THINGVAR_MasterTID:    return 0;
+   case ACS_THINGVAR_TargetTID:    return thing->target ? thing->target->tid : 0;
+   case ACS_THINGVAR_TracerTID:    return thing->tracer ? thing->tracer->tid : 0;
+   case ACS_THINGVAR_WaterLevel:   return 0;
+   case ACS_THINGVAR_ScaleX:       return M_FloatToFixed(thing->xscale);
+   case ACS_THINGVAR_ScaleY:       return M_FloatToFixed(thing->yscale);
+   case ACS_THINGVAR_Dormant:      return !!(thing->flags2 & MF2_DORMANT);
+   case ACS_THINGVAR_Mass:         return thing->info->mass;
+   case ACS_THINGVAR_Accuracy:     return 0;
+   case ACS_THINGVAR_Stamina:      return 0;
+
+   case ACS_THINGVAR_Angle:        return thing->angle >> 16;
+   case ACS_THINGVAR_Armor:        return thing->player ? thing->player->armorpoints : 0;
+   case ACS_THINGVAR_CeilingZ:     return thing->ceilingz;
+   case ACS_THINGVAR_FloorZ:       return thing->floorz;
+   case ACS_THINGVAR_Frags:        return thing->player ? thing->player->totalfrags : 0;
+   case ACS_THINGVAR_PlayerNumber: return thing->player ? thing->player - players : -1;
+   case ACS_THINGVAR_SigilPieces:  return 0;
+   case ACS_THINGVAR_TID:          return thing->tid;
+   case ACS_THINGVAR_X:            return thing->x;
+   case ACS_THINGVAR_Y:            return thing->y;
+   case ACS_THINGVAR_Z:            return thing->z;
+
    default: return 0;
+   }
+}
+
+//
+// ACS_setThingVar
+//
+static void ACS_setThingVar(Mobj *thing, uint32_t var, int32_t val)
+{
+   switch(var)
+   {
+   case ACS_THINGVAR_Health:       thing->health = val; break;
+   case ACS_THINGVAR_Speed:        break;
+   case ACS_THINGVAR_Damage:       thing->damage = val; break;
+   case ACS_THINGVAR_Alpha:        thing->translucency = val; break;
+   case ACS_THINGVAR_RenderStyle:  break;
+   case ACS_THINGVAR_SeeSound:     break;
+   case ACS_THINGVAR_AttackSound:  break;
+   case ACS_THINGVAR_PainSound:    break;
+   case ACS_THINGVAR_DeathSound:   break;
+   case ACS_THINGVAR_ActiveSound:  break;
+   case ACS_THINGVAR_Ambush:       if(val) thing->flags |=  MF_AMBUSH;
+                                   else    thing->flags &= ~MF_AMBUSH; break;
+   case ACS_THINGVAR_Invulnerable: if(val) thing->flags2 |=  MF2_INVULNERABLE;
+                                   else    thing->flags2 &= ~MF2_INVULNERABLE; break;
+   case ACS_THINGVAR_JumpZ:        break;
+   case ACS_THINGVAR_ChaseGoal:    break;
+   case ACS_THINGVAR_Frightened:   break;
+   case ACS_THINGVAR_Friendly:     if(val) thing->flags |=  MF_FRIEND;
+                                   else    thing->flags &= ~MF_FRIEND; break;
+   case ACS_THINGVAR_SpawnHealth:  break;
+   case ACS_THINGVAR_Dropped:      if(val) thing->flags |=  MF_DROPPED;
+                                   else    thing->flags &= ~MF_DROPPED; break;
+   case ACS_THINGVAR_NoTarget:     break;
+   case ACS_THINGVAR_Species:      break;
+   case ACS_THINGVAR_NameTag:      break;
+   case ACS_THINGVAR_Score:        break;
+   case ACS_THINGVAR_NoTrigger:    break;
+   case ACS_THINGVAR_DamageFactor: break;
+   case ACS_THINGVAR_MasterTID:    break;
+   case ACS_THINGVAR_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, 0, 0)); break;
+   case ACS_THINGVAR_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, 0, 0)); break;
+   case ACS_THINGVAR_WaterLevel:   break;
+   case ACS_THINGVAR_ScaleX:       thing->xscale = M_FixedToFloat(val); break;
+   case ACS_THINGVAR_ScaleY:       thing->yscale = M_FixedToFloat(val); break;
+   case ACS_THINGVAR_Dormant:      if(val) thing->flags2 |=  MF2_DORMANT;
+                                   else    thing->flags2 &= ~MF2_DORMANT; break;
+   case ACS_THINGVAR_Mass:         break;
+   case ACS_THINGVAR_Accuracy:     break;
+   case ACS_THINGVAR_Stamina:      break;
+
+   case ACS_THINGVAR_Angle:        thing->angle = val << 16; break;
+   case ACS_THINGVAR_Armor:        break;
+   case ACS_THINGVAR_CeilingZ:     break;
+   case ACS_THINGVAR_FloorZ:       break;
+   case ACS_THINGVAR_Frags:        break;
+   case ACS_THINGVAR_PlayerNumber: break;
+   case ACS_THINGVAR_SigilPieces:  break;
+   case ACS_THINGVAR_TID:          P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
+   case ACS_THINGVAR_X:            thing->x = val; break;
+   case ACS_THINGVAR_Y:            thing->y = val; break;
+   case ACS_THINGVAR_Z:            thing->z = val; break;
    }
 }
 
@@ -315,15 +468,6 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
 //
 // Global Functions
 //
-
-//
-// ACSThinker::ACSThinker
-//
-ACSThinker::ACSThinker()
-{
-   numCalls = 0;
-   callPtr = calls = NULL;
-}
 
 
 // Interpreter Macros
@@ -407,7 +551,8 @@ void ACSThinker::Think()
    register int32_t *ip  = this->ip;
    register int32_t *stp = this->stack + this->stp;
    int count = 0;
-   int32_t opcode, temp;
+   uint32_t opcode;
+   int32_t temp;
 
    qstring *printBuffer = NULL;
 
@@ -466,8 +611,18 @@ void ACSThinker::Think()
       ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, ip);
       ip += temp; // consume args
       NEXTOP();
+   OPCODE(LINESPEC_RET):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      temp = ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      PUSH(temp);
+      NEXTOP();
 
       // SET
+   OPCODE(SET_RESULT):
+      result = POP();
+      NEXTOP();
    OPCODE(SET_LOCALVAR):
       this->locals[IPNEXT()] = POP();
       NEXTOP();
@@ -488,6 +643,18 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(SET_GLOBALARR):
       AR_BINOP(ACSglobalarrs[IPNEXT()], =);
+      NEXTOP();
+
+   OPCODE(SET_THINGARR):
+      {
+         temp    = POP();
+         opcode  = POP();
+         int tid = POP();
+         Mobj *mo = NULL;
+
+         while((mo = P_FindMobjFromTID(tid, NULL, trigger)))
+            ACS_setThingVar(mo, opcode, temp);
+      }
       NEXTOP();
 
       // GET
@@ -517,10 +684,19 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(GET_THINGVAR):
-      {
-         Mobj *mo = P_FindMobjFromTID(STACK_AT(1), NULL, trigger);
-         STACK_AT(1) = ACS_getThingVar(mo, IPNEXT());
-      }
+      STACK_AT(1) = ACS_getThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT());
+      NEXTOP();
+   OPCODE(GET_THINGARR):
+      temp = POP();
+      STACK_AT(1) = ACS_getThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), temp);
+      NEXTOP();
+
+   OPCODE(GET_LEVELARR):
+      STACK_AT(1) = ACS_getLevelVar(STACK_AT(1));
+      NEXTOP();
+
+   OPCODE(GET_CVAR):
+      STACK_AT(1) = ACS_getCVar(ACSVM::GetString(STACK_AT(1)));
       NEXTOP();
 
       // GETARR
@@ -788,13 +964,13 @@ void ACSThinker::Think()
    OPCODE(BRANCH_CALL):
       {
          ACSFunc *func;
-         uint32_t funcnum = IPNEXT();
+         opcode = IPNEXT();
 
          BRANCH_COUNT();
 
-         if(funcnum >= vm->numFuncs)
+         if(opcode >= vm->numFuncs)
          {
-            doom_printf(FC_ERROR "ACS Error: CALL out of range: %d\a", (int)funcnum);
+            doom_printf(FC_ERROR "ACS Error: CALL out of range: %d\a", (int)opcode);
             goto action_endscript;
          }
 
@@ -808,7 +984,7 @@ void ACSThinker::Think()
             callPtr = &calls[callPtrTemp];
          }
 
-         func = vm->funcptrs[funcnum];
+         func = vm->funcptrs[opcode];
 
          callPtr->ip          = ip;
          callPtr->numLocals   = numLocals;
@@ -817,13 +993,13 @@ void ACSThinker::Think()
          callPtr->vm          = vm;
 
          ip          = func->codePtr;
-         numLocals   = func->numVars;
+         numLocals   = func->numVars + func->numArgs;
          locals      = estructalloc(int32_t, numLocals);
          printBuffer = NULL;
          vm          = func->vm;
 
-         for(unsigned int i = func->numArgs; i--;)
-            locals[i] = POP();
+         for(temp = func->numArgs; temp--;)
+            locals[temp] = POP();
 
          ++callPtr;
       }
@@ -836,6 +1012,42 @@ void ACSThinker::Think()
       }
       else
          ++ip; // increment past offset at op+2, leave value on stack
+      NEXTOP();
+   OPCODE(BRANCH_CASETABLE):
+      {
+         // Case data is a series if value-address pairs.
+         typedef int32_t case_t[2];
+         case_t *caseBegin, *caseEnd, *caseItr;
+
+         temp = IPNEXT(); // Number of cases.
+
+         caseBegin = (case_t *)ip;
+         caseEnd = caseBegin + temp;
+
+         ip = (int32_t *)caseEnd;
+
+         // Search for matching case using binary search.
+         if(temp) for(;;)
+         {
+            temp = caseEnd - caseBegin;
+            caseItr = caseBegin + (temp / 2);
+
+            if((*caseItr)[0] == PEEK())
+            {
+               DECSTP();
+               BRANCHOP((*caseItr)[1]);
+               break;
+            }
+
+            // If true, this was the last case to try.
+            if(temp == 1) break;
+
+            if((*caseItr)[0] < PEEK())
+               caseBegin = caseItr;
+            else
+               caseEnd = caseItr;
+         }
+      }
       NEXTOP();
    OPCODE(BRANCH_IMM):
       BRANCHOP(IPCURR());
@@ -941,6 +1153,9 @@ void ACSThinker::Think()
    OPCODE(ENDPRINTBOLD):
       HU_CenterMsgTimedColor(printBuffer->constPtr(), FC_GOLD, 20*35);
       NEXTOP();
+   OPCODE(ENDPRINTLOG):
+      printf("%s\n", printBuffer->constPtr());
+      NEXTOP();
    OPCODE(PRINTCHAR):
       *printBuffer += (char)POP();
       NEXTOP();
@@ -982,16 +1197,6 @@ void ACSThinker::Think()
 
       // Miscellaneous
 
-   OPCODE(ACTIVATORARMOR):
-      PUSH(trigger && trigger->player ? trigger->player->armorpoints : 0);
-      NEXTOP();
-   OPCODE(ACTIVATORFRAGS):
-      PUSH(trigger && trigger->player ? trigger->player->totalfrags : 0);
-      NEXTOP();
-   OPCODE(ACTIVATORHEALTH):
-      PUSH(trigger ? trigger->health : 0);
-      NEXTOP();
-
    OPCODE(CLEARLINESPECIAL):
       if(this->line)
          this->line->special = 0;
@@ -1005,6 +1210,16 @@ void ACSThinker::Think()
       PUSH(GameType);
       NEXTOP();
 
+   OPCODE(GETSCREENHEIGHT):
+      PUSH(video.height);
+      NEXTOP();
+   OPCODE(GETSCREENWIDTH):
+      PUSH(video.width);
+      NEXTOP();
+
+   OPCODE(LINEOFFSETY):
+      PUSH(line ? sides[line->sidenum[0]].rowoffset >> FRACBITS : 0);
+      NEXTOP();
    OPCODE(LINESIDE):
       PUSH(this->lineSide);
       NEXTOP();
@@ -1020,6 +1235,9 @@ void ACSThinker::Think()
       LevelInfo.gravity = IPNEXT() / 800;
       NEXTOP();
 
+   OPCODE(STRLEN):
+      STACK_AT(1) = strlen(ACSVM::GetString(STACK_AT(1)));
+      NEXTOP();
    OPCODE(TAGSTRING):
       STACK_AT(1) += vm->strings;
       NEXTOP();
