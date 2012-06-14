@@ -99,6 +99,7 @@ enum acs_funcnum_t
    ACS_FUNC_ChangeFloor,
    ACS_FUNC_GetSectorCeilingZ,
    ACS_FUNC_GetSectorFloorZ,
+   ACS_FUNC_GetSectorLightLevel,
    ACS_FUNC_Random,
    ACS_FUNC_SectorSound,
    ACS_FUNC_SetLineBlocking,
@@ -107,11 +108,15 @@ enum acs_funcnum_t
    ACS_FUNC_SetLineTexture,
    ACS_FUNC_SetMusic,
    ACS_FUNC_SetMusicLocal,
+   ACS_FUNC_SetThingPosition,
    ACS_FUNC_SetThingSpecial,
    ACS_FUNC_SoundSequence,
    ACS_FUNC_SpawnPoint,
+   ACS_FUNC_SpawnProjectile,
    ACS_FUNC_SpawnSpot,
+   ACS_FUNC_SpawnSpotAngle,
    ACS_FUNC_ThingCount,
+   ACS_FUNC_ThingCountName,
    ACS_FUNC_ThingProjectile,
    ACS_FUNC_ThingSound,
 
@@ -251,6 +256,8 @@ public:
    val_t &operator [] (uint32_t addr) {return getVal(addr);}
 
    void archive(SaveArchive &arc);
+
+   void print(qstring *printBuffer, uint32_t offset, uint32_t length = 0xFFFFFFFF);
 };
 
 //
@@ -337,7 +344,8 @@ protected:
    void Think();
 
 public:
-   ACSThinker() : result(0), calls(NULL), callPtr(NULL), numCalls(0)
+   ACSThinker() : result(0), calls(NULL), callPtr(NULL), numCalls(0),
+                  printBuffer(NULL)
    {
    }
 
@@ -362,6 +370,7 @@ public:
    acs_call_t *calls;                 // call frames
    acs_call_t *callPtr;               // current call frame
    uint32_t    numCalls;              // number of call frames
+   qstring    *printBuffer;           // print buffer
 
    // info copied from acscript and acsvm
    acscript_t *acscript;              // the script being executed

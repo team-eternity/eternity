@@ -33,10 +33,15 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "d_gi.h"
 #include "e_exdata.h"
 #include "e_things.h"
 #include "m_random.h"
+#include "p_map.h"
+#include "p_map3d.h"
+#include "p_maputl.h"
 #include "p_spec.h"
+#include "r_main.h"
 #include "r_state.h"
 #include "s_sndseq.h"
 #include "doomstat.h"
@@ -130,6 +135,16 @@ static void ACS_funcGetSectorFloorZ(ACS_FUNCARG)
    }
    else
       *retn++ = 0;
+}
+
+//
+// ACS_funcGetSectorLightLevel
+//
+static void ACS_funcGetSectorLightLevel(ACS_FUNCARG)
+{
+   int secnum = P_FindSectorFromTag(args[0], -1);
+
+   *retn++ = secnum >= 0 ? sectors[secnum].lightlevel : 0;
 }
 
 //
@@ -275,6 +290,72 @@ static void ACS_funcSetMusicLocal(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSetThingPosition
+//
+static void ACS_funcSetThingPosition(ACS_FUNCARG)
+{
+   int32_t tid = args[0];
+   fixed_t x   = args[1];
+   fixed_t y   = args[2];
+   fixed_t z   = args[3];
+   bool    fog = args[4];
+   Mobj   *mo, *fogmo;
+
+   if((mo = P_FindMobjFromTID(tid, NULL, thread->trigger)))
+   {
+      fixed_t oldx = mo->x;
+      fixed_t oldy = mo->y;
+      fixed_t oldz = mo->z;
+
+      mo->z = z;
+
+      if(P_CheckPositionExt(mo, x, y))
+      {
+         subsector_t *newsubsec;
+
+         newsubsec = R_PointInSubsector(x, y);
+
+         // Set new position.
+         P_UnsetThingPosition(mo);
+
+         mo->floorz = mo->dropoffz = newsubsec->sector->floorheight;
+         mo->ceilingz = newsubsec->sector->ceilingheight;
+         mo->passfloorz = mo->secfloorz = mo->floorz;
+         mo->passceilz = mo->secceilz = mo->ceilingz;
+
+         mo->x = x;
+         mo->y = y;
+
+         P_SetThingPosition(mo);
+
+         // Handle fog.
+         if(fog)
+         {
+            // Teleport fog at source...
+            fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
+                                E_SafeThingType(GameModeInfo->teleFogType));
+            S_StartSound(fogmo, GameModeInfo->teleSound);
+
+            // ... and destination.
+            fogmo = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
+                                E_SafeThingType(GameModeInfo->teleFogType));
+            S_StartSound(fogmo, GameModeInfo->teleSound);
+         }
+
+         *retn++ = 1;
+      }
+      else
+      {
+         mo->z = oldz;
+
+         *retn++ = 0;
+      }
+   }
+   else
+      *retn++ = 0;
+}
+
+//
 // ACS_funcSetThingSpecial
 //
 static void ACS_funcSetThingSpecial(ACS_FUNCARG)
@@ -328,6 +409,38 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
 }
 
 //
+// ACS_spawnProjectile
+//
+static Mobj *ACS_spawnProjectile(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
+                                 fixed_t momx, fixed_t momy, fixed_t momz, int tid,
+                                 Mobj *target, angle_t angle, bool gravity)
+{
+   Mobj *mo;
+
+   if((mo = ACS_spawn(type, x, y, z, tid, angle)))
+   {
+      if(mo->info->seesound)
+         S_StartSound(mo, mo->info->seesound);
+
+      P_SetTarget<Mobj>(&mo->target, target);
+
+      mo->momx = momx;
+      mo->momy = momy;
+      mo->momz = momz;
+
+      if(gravity)
+      {
+         mo->flags &= ~MF_NOGRAVITY;
+         mo->flags2 |= MF2_LOGRAV;
+      }
+      else
+         mo->flags |= MF_NOGRAVITY;
+   }
+
+   return mo;
+}
+
+//
 // ACS_funcSpawnPoint
 //
 static void ACS_funcSpawnPoint(ACS_FUNCARG)
@@ -340,6 +453,28 @@ static void ACS_funcSpawnPoint(ACS_FUNCARG)
    angle_t angle = args[5] << 24;
 
    *retn++ = !!ACS_spawn(type, x, y, z, tid, angle);
+}
+
+//
+// ACS_funcSpawnProjectile
+//
+static void ACS_funcSpawnProjectile(ACS_FUNCARG)
+{
+   int32_t    spotid  = args[0];
+   mobjtype_t type    = E_ThingNumForName(ACSVM::GetString(args[1]));
+   angle_t    angle   = args[2] << 24;
+   int32_t    speed   = args[3] * 8;
+   int32_t    vspeed  = args[4] * 8;
+   bool       gravity = args[5];
+   int32_t    tid     = args[6];
+   Mobj      *spot    = NULL;
+   fixed_t    momx    = speed * finecosine[angle >> ANGLETOFINESHIFT];
+   fixed_t    momy    = speed * finesine[  angle >> ANGLETOFINESHIFT];
+   fixed_t    momz    = vspeed << FRACBITS;
+
+   while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
+      ACS_spawnProjectile(type, spot->x, spot->y, spot->z, momx, momy, momz,
+                          tid, spot, angle, gravity);
 }
 
 //
@@ -362,35 +497,91 @@ static void ACS_funcSpawnSpot(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSpawnSpotAngle
+//
+static void ACS_funcSpawnSpotAngle(ACS_FUNCARG)
+{
+   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
+   int     spotid = args[1];
+   int     tid    = args[2];
+   Mobj   *spot   = NULL;
+
+   *retn = 0;
+
+   while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
+      *retn += !!ACS_spawn(type, spot->x, spot->y, spot->z, tid, spot->angle);
+
+   ++retn;
+}
+
+//
+// ACS_thingCount
+//
+static int32_t ACS_thingCount(mobjtype_t type, int32_t tid)
+{
+   Mobj *mo = NULL;
+   int count = 0;
+
+   if(tid)
+   {
+      while((mo = P_FindMobjFromTID(tid, mo, NULL)))
+      {
+         if(type == 0 || mo->type == type)
+         {
+            // don't count killable things that are dead
+            if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
+               mo->health <= 0)
+               continue;
+            ++count;
+         }
+      }
+   }
+   else
+   {
+      while((mo = P_NextThinker(mo)))
+      {
+         if(type == 0 || mo->type == type)
+         {
+            // don't count killable things that are dead
+            if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
+               mo->health <= 0)
+               continue;
+            ++count;
+         }
+      }
+   }
+
+   return count;
+}
+
+//
 // ACS_funcThingCount
 //
 static void ACS_funcThingCount(ACS_FUNCARG)
 {
    int32_t type = args[0];
    int32_t tid  = args[1];
-   Mobj *mo = NULL;
-   int count = 0;
 
-   // translate ACS thing type ids to true types
-   if(type < 0 || type >= ACS_NUM_THINGTYPES)
-      goto counted;
+   if(type <= 0 || type >= ACS_NUM_THINGTYPES)
+      type = 0;
+   else
+      type = ACS_thingtypes[type];
 
-   type = ACS_thingtypes[type];
+   *retn++ = ACS_thingCount(type, tid);
+}
 
-   while((mo = P_NextThinker(mo)))
-   {
-      if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
-      {
-         // don't count killable things that are dead
-         if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
-            mo->health <= 0)
-            continue;
-         ++count;
-      }
-   }
+//
+// ACS_funcThingCountName
+//
+static void ACS_funcThingCountName(ACS_FUNCARG)
+{
+   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
+   int32_t    tid  = args[1];
 
-counted:
-   *retn++ = count;
+   if(type == -1)
+      type = 0;
+
+   *retn++ = ACS_thingCount(type, tid);
 }
 
 //
@@ -405,7 +596,7 @@ static void ACS_funcThingProjectile(ACS_FUNCARG)
    int32_t vspeed  = args[4] * 8;
    bool    gravity = args[5];
    int32_t tid     = args[6];
-   Mobj   *spot    = NULL, *mo;
+   Mobj   *spot    = NULL;
    fixed_t momx    = speed * finecosine[angle >> ANGLETOFINESHIFT];
    fixed_t momy    = speed * finesine[  angle >> ANGLETOFINESHIFT];
    fixed_t momz    = vspeed << FRACBITS;
@@ -416,22 +607,8 @@ static void ACS_funcThingProjectile(ACS_FUNCARG)
    type = ACS_thingtypes[type];
 
    while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
-   {
-      if(!(mo = ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle)))
-         continue;
-
-      if(mo->info->seesound)
-         S_StartSound(mo, mo->info->seesound);
-
-      P_SetTarget<Mobj>(&mo->target, spot);
-
-      mo->momx = momx;
-      mo->momy = momy;
-      mo->momz = momz;
-
-      mo->flags &= ~MF_NOGRAVITY;
-      if(gravity) mo->flags2 |= MF2_LOGRAV;
-   }
+      ACS_spawnProjectile(type, spot->x, spot->y, spot->z, momx, momy, momz,
+                          tid, spot, angle, gravity);
 }
 
 //
@@ -458,6 +635,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcChangeFloor,
    ACS_funcGetSectorCeilingZ,
    ACS_funcGetSectorFloorZ,
+   ACS_funcGetSectorLightLevel,
    ACS_funcRandom,
    ACS_funcSectorSound,
    ACS_funcSetLineBlocking,
@@ -466,11 +644,15 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSetLineTexture,
    ACS_funcSetMusic,
    ACS_funcSetMusicLocal,
+   ACS_funcSetThingPosition,
    ACS_funcSetThingSpecial,
    ACS_funcSoundSequence,
    ACS_funcSpawnPoint,
+   ACS_funcSpawnProjectile,
    ACS_funcSpawnSpot,
+   ACS_funcSpawnSpotAngle,
    ACS_funcThingCount,
+   ACS_funcThingCountName,
    ACS_funcThingProjectile,
    ACS_funcThingSound,
 };

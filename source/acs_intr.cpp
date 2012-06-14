@@ -554,8 +554,6 @@ void ACSThinker::Think()
    uint32_t opcode;
    int32_t temp;
 
-   qstring *printBuffer = NULL;
-
    // should the script terminate?
    if(this->sreg == ACS_STATE_TERMINATE)
       ACS_stopScript(this, this->acscript);
@@ -645,6 +643,17 @@ void ACSThinker::Think()
       AR_BINOP(ACSglobalarrs[IPNEXT()], =);
       NEXTOP();
 
+   OPCODE(SET_THINGVAR):
+      {
+         temp    = POP();
+         opcode  = IPNEXT();
+         int tid = POP();
+         Mobj *mo = NULL;
+
+         while((mo = P_FindMobjFromTID(tid, NULL, trigger)))
+            ACS_setThingVar(mo, opcode, temp);
+      }
+      NEXTOP();
    OPCODE(SET_THINGARR):
       {
          temp    = POP();
@@ -1156,6 +1165,18 @@ void ACSThinker::Think()
    OPCODE(ENDPRINTLOG):
       printf("%s\n", printBuffer->constPtr());
       NEXTOP();
+   OPCODE(PRINTMAPARRAY):
+      stp -= 2;
+      vm->mapatab[stp[1]]->print(printBuffer, stp[0]);
+      NEXTOP();
+   OPCODE(PRINTWORLDARRAY):
+      stp -= 2;
+      ACSworldarrs[stp[1]].print(printBuffer, stp[0]);
+      NEXTOP();
+   OPCODE(PRINTGLOBALARRAY):
+      stp -= 2;
+      ACSglobalarrs[stp[1]].print(printBuffer, stp[0]);
+      NEXTOP();
    OPCODE(PRINTCHAR):
       *printBuffer += (char)POP();
       NEXTOP();
@@ -1164,7 +1185,7 @@ void ACSThinker::Think()
          // %E worst case: -1.52587e-05 == 12 + NUL
          // %F worst case: -0.000106811 == 12 + NUL
          // %F worst case: -32768.9     ==  8 + NUL
-         // %G is probably maximally P+6+1.
+         // %G is probably maximally P+6+1. (Actually, plus longer exponent.)
          char buffer[13];
          sprintf(buffer, "%G", M_FixedToDouble(POP()));
          printBuffer->concat(buffer);
@@ -1265,8 +1286,7 @@ action_stop:
    this->stp = stp - this->stack;
    goto function_end;
 
-function_end:
-   delete printBuffer;
+function_end:;
 }
 
 //
@@ -1348,6 +1368,16 @@ ACSArray::page_t &ACSArray::getPage(uint32_t addr)
    if(!page) page = estructalloc(page_t, 1);
 
    return *page;
+}
+
+//
+// ACSArray::print
+//
+void ACSArray::print(qstring *printBuffer, uint32_t offset, uint32_t length)
+{
+   length += offset; // use length as end
+   for(char val; offset != length && (val = (char)getVal(offset)); ++offset)
+      *printBuffer += val;
 }
 
 //

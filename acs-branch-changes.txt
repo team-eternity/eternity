@@ -5,6 +5,14 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/14/2012
+
+Added instructions up to PLAYERCLASS, as much as possible.
+
+Moved printBuffer into ACSThinker, so that it doesn't get lost every time
+there's a delay.
+
+-------------------------------------------------------------------------------
 06/13/2012
 
 Added instructions up to ENDPRINTLOG, as much as possible.
