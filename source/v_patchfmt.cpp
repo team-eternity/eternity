@@ -39,22 +39,23 @@ PatchLoader PatchLoader::patchFmt;
 // PatchLoader::GetDefaultPatch
 //
 // haleyjd 02/05/12: static, returns a default patch graphic to use in 
-// place of a missing patch.
+// place of a missing patch. The graphic is allocated using the PU_PERMANENT
+// zone tag (as of 06/09/12) so that client code cannot free or change the
+// tag of the data even if it tries (which it generally will).
 //
-patch_t *PatchLoader::GetDefaultPatch(int tag)
+patch_t *PatchLoader::GetDefaultPatch()
 {
-   static bool firsttime;
-   static byte patchdata[4];
-   static void *dumbUser;    // must pass a user in case tag == PU_CACHE
-   
-   if(firsttime)
+   static patch_t *defaultPatch = NULL;
+
+   if(!defaultPatch)
    {
+      byte patchdata[4];
       patchdata[0] = patchdata[3] = GameModeInfo->blackIndex;
       patchdata[1] = patchdata[2] = GameModeInfo->whiteIndex;
-      firsttime = false;
+      defaultPatch = V_LinearToPatch(patchdata, 2, 2, NULL, PU_PERMANENT);
    }
 
-   return V_LinearToPatch(patchdata, 2, 2, NULL, tag, &dumbUser);
+   return defaultPatch;
 }
 
 //
@@ -121,7 +122,7 @@ patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag)
    if((lumpnum = dir.checkNumForName(name)) >= 0)
       ret = PatchLoader::CacheNum(dir, lumpnum, tag);
    else
-      ret = GetDefaultPatch(tag);
+      ret = GetDefaultPatch();
 
    return ret;
 }

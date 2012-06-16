@@ -379,25 +379,16 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 // state names, and for some pointers, global state names are not allowed.
 //
 
-// static utilities
-
-typedef struct jumpinfo_s
+//
+// E_GetJumpInfo
+//
+// Returns the target state given an initial type and label text. Assuming that
+// the text does not contain a :: operator, the information returned will be 
+// the ordinary plain state named by the input string. Otherwise, both the mobjinfo
+// and statename may be redirected.
+//
+state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 {
-   mobjinfo_t *mi;  // mobjinfo the jump is relative to
-   const char *statename; // state name or label
-} jumpinfo_t;
-
-//
-// E_getJumpInfo
-//
-// Returns the target mobjtype and jump label/state name, given an initial
-// type and label text. Assuming that the text does not contain a :: operator,
-// the information returned will be the same information passed in. Otherwise,
-// both the mobjinfo and statename may be redirected.
-//
-static jumpinfo_t E_getJumpInfo(mobjinfo_t *mi, const char *arg)
-{
-   jumpinfo_t ji;
    char *temparg = Z_Strdupa(arg);
    char *colon   = strchr(temparg, ':');
 
@@ -406,45 +397,31 @@ static jumpinfo_t E_getJumpInfo(mobjinfo_t *mi, const char *arg)
    // if the statename does not contain a colon, there is no potential for 
    // redirection.
    if(!colon)
-   {
-      ji.mi = mi;
-      ji.statename = temparg;
-      return ji;
-   }
+      return E_GetStateForMobjInfo(mi, arg);
 
    // split temparg at the :: operator
    E_SplitTypeAndState(temparg, &type, &statename);
 
    // if both are not valid, we can't do this sort of operation
    if(!(type && statename))
-   {
-      ji.mi = mi;
-      ji.statename = temparg;
-      return ji;
-   }
+      return E_GetStateForMobjInfo(mi, arg);
 
    // Check for super::, which is an explicit reference to the parent type;
    // Otherwise, treat the left side as a thingtype EDF class name.
    if(!strcasecmp(type, "super") && mi->parent)
-      ji.mi = mi->parent;
+      mi = mi->parent;
    else
    {
       int thingtype = E_ThingNumForName(type);
       
       // non-existent thingtype is an error, no jump will happen
       if(thingtype == -1)
-      {
-         ji.mi = mi;
-         ji.statename = "";
-         return ji;
-      }
+         return NULL;
       else
-         ji.mi = mobjinfo[thingtype];
+         mi = mobjinfo[thingtype];
    }
 
-   ji.statename = statename;
-
-   return ji;
+   return E_GetStateForMobjInfo(mi, statename);
 }
 
 //
@@ -471,11 +448,7 @@ state_t *E_ArgAsStateLabel(Mobj *mo, int index)
 
    // if not a number, this is a state label
    if(end && *end != '\0')
-   {
-      jumpinfo_t ji = E_getJumpInfo(mo->info, arg);
-
-      return E_GetStateForMobjInfo(ji.mi, ji.statename);
-   }
+      return E_GetJumpInfo(mo->info, arg);
    else
    {
       long idx = state->index + num;
