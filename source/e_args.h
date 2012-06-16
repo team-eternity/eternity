@@ -33,6 +33,7 @@
 #include "m_fixed.h"
 
 struct edf_string_t;
+struct mobjinfo_t;
 struct sfxinfo_t;
 struct state_t;
 
@@ -104,6 +105,8 @@ sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index);
 int           E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue);
+
+state_t      *E_GetJumpInfo(mobjinfo_t *mi, const char *arg);
 
 #endif
 
