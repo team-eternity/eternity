@@ -898,7 +898,7 @@ void AM_HandlerRight(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev && (ev->type == ev_keydown))
+      if(ev->type == ev_keydown)
       {
          m_paninc.x = FTOM(F_PANINC);
          am_key_handled = true;
@@ -917,7 +917,7 @@ void AM_HandlerLeft(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev && (ev->type == ev_keydown))
+      if(ev->type == ev_keydown)
       {
          m_paninc.x = -FTOM(F_PANINC);
          am_key_handled = true;
@@ -936,7 +936,7 @@ void AM_HandlerUp(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev && (ev->type == ev_keydown))
+      if(ev->type == ev_keydown)
       {
          m_paninc.y = FTOM(F_PANINC);
          am_key_handled = true;
@@ -955,7 +955,7 @@ void AM_HandlerDown(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev && (ev->type == ev_keydown))
+      if(ev->type == ev_keydown)
       {
          m_paninc.y = -FTOM(F_PANINC);
          am_key_handled = true;
@@ -974,7 +974,7 @@ void AM_HandlerZoomout(event_t *ev)
 {
    if(automapactive)
    {
-      if(ev && (ev->type == ev_keydown))
+      if(ev->type == ev_keydown)
       {
          mtof_zoommul = M_ZOOMOUT;
          ftom_zoommul = M_ZOOMIN;
@@ -997,7 +997,7 @@ void AM_HandlerZoomin(event_t *ev)
 {
    if(automapactive)
    {
-      if(ev && (ev->type == ev_keydown))
+      if(ev->type == ev_keydown)
       {
          mtof_zoommul = M_ZOOMIN;
          ftom_zoommul = M_ZOOMOUT;
