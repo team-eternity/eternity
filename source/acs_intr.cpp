@@ -44,6 +44,7 @@
 #include "p_maputl.h"
 #include "p_saveg.h"
 #include "p_spec.h"
+#include "r_data.h"
 #include "r_state.h"
 #include "v_misc.h"
 #include "w_wad.h"
@@ -344,6 +345,70 @@ static int32_t ACS_getLevelVar(uint32_t var)
 }
 
 //
+// ACS_chkThingVar
+//
+static bool ACS_chkThingVar(Mobj *thing, uint32_t var, int32_t val)
+{
+   if(!thing) return false;
+
+   switch(var)
+   {
+   case ACS_THINGVAR_Health:       return thing->health == val;
+   case ACS_THINGVAR_Speed:        return thing->info->speed == val;
+   case ACS_THINGVAR_Damage:       return thing->damage == val;
+   case ACS_THINGVAR_Alpha:        return thing->translucency == val;
+   case ACS_THINGVAR_RenderStyle:  return false;
+   case ACS_THINGVAR_SeeSound:     return false;
+   case ACS_THINGVAR_AttackSound:  return false;
+   case ACS_THINGVAR_PainSound:    return false;
+   case ACS_THINGVAR_DeathSound:   return false;
+   case ACS_THINGVAR_ActiveSound:  return false;
+   case ACS_THINGVAR_Ambush:       return !!(thing->flags & MF_AMBUSH) == !!val;
+   case ACS_THINGVAR_Invulnerable: return !!(thing->flags2 & MF2_INVULNERABLE) == !!val;
+   case ACS_THINGVAR_JumpZ:        return false;
+   case ACS_THINGVAR_ChaseGoal:    return false;
+   case ACS_THINGVAR_Frightened:   return false;
+   case ACS_THINGVAR_Friendly:     return !!(thing->flags & MF_FRIEND) == !!val;
+   case ACS_THINGVAR_SpawnHealth:  return thing->info->spawnhealth == val;
+   case ACS_THINGVAR_Dropped:      return !!(thing->flags & MF_DROPPED) == !!val;
+   case ACS_THINGVAR_NoTarget:     return false;
+   case ACS_THINGVAR_Species:      return false;
+   case ACS_THINGVAR_NameTag:      return false;
+   case ACS_THINGVAR_Score:        return false;
+   case ACS_THINGVAR_NoTrigger:    return false;
+   case ACS_THINGVAR_DamageFactor: return false;
+   case ACS_THINGVAR_MasterTID:    return false;
+   case ACS_THINGVAR_TargetTID:    return thing->target ? thing->target->tid == val : false;
+   case ACS_THINGVAR_TracerTID:    return thing->tracer ? thing->tracer->tid == val : false;
+   case ACS_THINGVAR_WaterLevel:   return false;
+   case ACS_THINGVAR_ScaleX:       return M_FloatToFixed(thing->xscale) == val;
+   case ACS_THINGVAR_ScaleY:       return M_FloatToFixed(thing->yscale) == val;
+   case ACS_THINGVAR_Dormant:      return !!(thing->flags2 & MF2_DORMANT) == !!val;
+   case ACS_THINGVAR_Mass:         return thing->info->mass == val;
+   case ACS_THINGVAR_Accuracy:     return false;
+   case ACS_THINGVAR_Stamina:      return false;
+
+   case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
+   case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
+   case ACS_THINGVAR_CeilingTexture: return thing->subsector->sector->ceilingpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_CeilingZ:       return thing->ceilingz == val;
+   case ACS_THINGVAR_FloorTexture:   return thing->subsector->sector->floorpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_FloorZ:         return thing->floorz == val;
+   case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags == val : false;
+   case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel == val;
+   case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 == val : false;
+   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players == val : false;
+   case ACS_THINGVAR_SigilPieces:    return false;
+   case ACS_THINGVAR_TID:            return thing->tid == val;
+   case ACS_THINGVAR_X:              return thing->x == val;
+   case ACS_THINGVAR_Y:              return thing->y == val;
+   case ACS_THINGVAR_Z:              return thing->z == val;
+
+   default: return false;
+   }
+}
+
+//
 // ACS_getThingVar
 //
 static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
@@ -387,17 +452,21 @@ static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_Accuracy:     return 0;
    case ACS_THINGVAR_Stamina:      return 0;
 
-   case ACS_THINGVAR_Angle:        return thing->angle >> 16;
-   case ACS_THINGVAR_Armor:        return thing->player ? thing->player->armorpoints : 0;
-   case ACS_THINGVAR_CeilingZ:     return thing->ceilingz;
-   case ACS_THINGVAR_FloorZ:       return thing->floorz;
-   case ACS_THINGVAR_Frags:        return thing->player ? thing->player->totalfrags : 0;
-   case ACS_THINGVAR_PlayerNumber: return thing->player ? thing->player - players : -1;
-   case ACS_THINGVAR_SigilPieces:  return 0;
-   case ACS_THINGVAR_TID:          return thing->tid;
-   case ACS_THINGVAR_X:            return thing->x;
-   case ACS_THINGVAR_Y:            return thing->y;
-   case ACS_THINGVAR_Z:            return thing->z;
+   case ACS_THINGVAR_Angle:          return thing->angle >> 16;
+   case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints : 0;
+   case ACS_THINGVAR_CeilingTexture: return 0;
+   case ACS_THINGVAR_CeilingZ:       return thing->ceilingz;
+   case ACS_THINGVAR_FloorTexture:   return 0;
+   case ACS_THINGVAR_FloorZ:         return thing->floorz;
+   case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags : 0;
+   case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel;
+   case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 : 0;
+   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players : -1;
+   case ACS_THINGVAR_SigilPieces:    return 0;
+   case ACS_THINGVAR_TID:            return thing->tid;
+   case ACS_THINGVAR_X:              return thing->x;
+   case ACS_THINGVAR_Y:              return thing->y;
+   case ACS_THINGVAR_Z:              return thing->z;
 
    default: return 0;
    }
@@ -450,17 +519,21 @@ static void ACS_setThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_Accuracy:     break;
    case ACS_THINGVAR_Stamina:      break;
 
-   case ACS_THINGVAR_Angle:        thing->angle = val << 16; break;
-   case ACS_THINGVAR_Armor:        break;
-   case ACS_THINGVAR_CeilingZ:     break;
-   case ACS_THINGVAR_FloorZ:       break;
-   case ACS_THINGVAR_Frags:        break;
-   case ACS_THINGVAR_PlayerNumber: break;
-   case ACS_THINGVAR_SigilPieces:  break;
-   case ACS_THINGVAR_TID:          P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
-   case ACS_THINGVAR_X:            thing->x = val; break;
-   case ACS_THINGVAR_Y:            thing->y = val; break;
-   case ACS_THINGVAR_Z:            thing->z = val; break;
+   case ACS_THINGVAR_Angle:          thing->angle = val << 16; break;
+   case ACS_THINGVAR_Armor:          break;
+   case ACS_THINGVAR_CeilingTexture: break;
+   case ACS_THINGVAR_CeilingZ:       break;
+   case ACS_THINGVAR_FloorTexture:   break;
+   case ACS_THINGVAR_FloorZ:         break;
+   case ACS_THINGVAR_Frags:          break;
+   case ACS_THINGVAR_LightLevel:     break;
+   case ACS_THINGVAR_Pitch:          if(thing->player) thing->player->pitch = val << 16; break;
+   case ACS_THINGVAR_PlayerNumber:   break;
+   case ACS_THINGVAR_SigilPieces:    break;
+   case ACS_THINGVAR_TID:            P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
+   case ACS_THINGVAR_X:              thing->x = val; break;
+   case ACS_THINGVAR_Y:              thing->y = val; break;
+   case ACS_THINGVAR_Z:              thing->z = val; break;
    }
 }
 
@@ -765,6 +838,12 @@ void ACSThinker::Think()
       for(temp = IPNEXT(); temp--;) PUSH(IPNEXT());
       NEXTOP();
 
+      // CHK
+   OPCODE(CHK_THINGVAR):
+      temp = POP();
+      STACK_AT(1) = ACS_chkThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT(), temp);
+      NEXTOP();
+
       // Binary Ops
       // ADD
       BINOP_GROUP(ADD, +=);
@@ -869,6 +948,9 @@ void ACSThinker::Think()
       BINOP_GROUP(XOR, ^=);
 
       // Unary Ops
+   OPCODE(INVERT_STACK):
+      STACK_AT(1) = ~STACK_AT(1);
+      NEXTOP();
    OPCODE(NEGATE_STACK):
       STACK_AT(1) = -STACK_AT(1);
       NEXTOP();
@@ -1123,6 +1205,20 @@ void ACSThinker::Think()
          // %i worst case: -2147483648 == 11 + NUL
          char buffer[12];
          printBuffer->concat(M_Itoa(POP(), buffer, 10));
+      }
+      NEXTOP();
+   OPCODE(PRINTINT_BIN):
+      {
+         // %B worst case: 11111111111111111111111111111111 == 32 + NUL
+         char buffer[33];
+         printBuffer->concat(M_Itoa(POP(), buffer, 2));
+      }
+      NEXTOP();
+   OPCODE(PRINTINT_HEX):
+      {
+         // %x worst case: FFFFFFFF == 8 + NUL
+         char buffer[9];
+         printBuffer->concat(M_Itoa(POP(), buffer, 16));
       }
       NEXTOP();
    OPCODE(PRINTNAME):

@@ -33,14 +33,20 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "d_event.h"
 #include "d_gi.h"
+#include "e_args.h"
 #include "e_exdata.h"
+#include "e_mod.h"
+#include "e_states.h"
 #include "e_things.h"
 #include "m_random.h"
+#include "p_inter.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_spec.h"
+#include "r_data.h"
 #include "r_main.h"
 #include "r_state.h"
 #include "s_sndseq.h"
@@ -89,6 +95,67 @@ static void ACS_funcAmbientSoundLocal(ACS_FUNCARG)
       S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 }
 
+// Flags for ClassifyThing.
+enum
+{
+   THINGCLASS_NONE       = 0x00000000,
+   THINGCLASS_WORLD      = 0x00000001,
+   THINGCLASS_PLAYER     = 0x00000002,
+   THINGCLASS_BOT        = 0x00000004,
+   THINGCLASS_VOODOODOLL = 0x00000008,
+   THINGCLASS_MONSTER    = 0x00000010,
+   THINGCLASS_ALIVE      = 0x00000020,
+   THINGCLASS_DEAD       = 0x00000040,
+   THINGCLASS_MISSILE    = 0x00000080,
+   THINGCLASS_GENERIC    = 0x00000100,
+};
+
+//
+// ACS_funcClassifyThing
+//
+static void ACS_funcClassifyThing(ACS_FUNCARG)
+{
+   int32_t tid = args[0];
+   int32_t result;
+   Mobj   *mo;
+
+   mo = P_FindMobjFromTID(tid, NULL, thread->trigger);
+
+   if(mo)
+   {
+      result = 0;
+
+      if(mo->player)
+      {
+         result |= THINGCLASS_PLAYER;
+
+         if(mo->player->mo != mo)
+            result |= THINGCLASS_VOODOODOLL;
+      }
+
+      if(mo->flags & MF_MISSILE)
+         result |= THINGCLASS_MISSILE;
+      else if(mo->flags3 & MF3_KILLABLE || mo->flags & MF_COUNTKILL)
+         result |= THINGCLASS_MONSTER;
+      else
+         result |= THINGCLASS_GENERIC;
+
+      if(mo->health > 0)
+         result |= THINGCLASS_ALIVE;
+      else
+         result |= THINGCLASS_DEAD;
+   }
+   else
+   {
+      if(tid)
+         result = THINGCLASS_NONE;
+      else
+         result = THINGCLASS_WORLD;
+   }
+
+   *retn++ = result;
+}
+
 //
 // ACS_funcChangeCeiling
 //
@@ -103,6 +170,121 @@ static void ACS_funcChangeCeiling(ACS_FUNCARG)
 static void ACS_funcChangeFloor(ACS_FUNCARG)
 {
    P_ChangeFloorTex(ACSVM::GetString(args[1]), args[0]);
+}
+
+// GetPlayerInput inputs.
+enum
+{
+   INPUT_OLDBUTTONS     =  0,
+   INPUT_BUTTONS        =  1,
+   INPUT_PITCH          =  2,
+   INPUT_YAW            =  3,
+   INPUT_ROLL           =  4,
+   INPUT_FORWARDMOVE    =  5,
+   INPUT_SIDEMOVE       =  6,
+   INPUT_UPMOVE         =  7,
+   MODINPUT_OLDBUTTONS  =  8,
+   MODINPUT_BUTTONS     =  9,
+   MODINPUT_PITCH       = 10,
+   MODINPUT_YAW         = 11,
+   MODINPUT_ROLL        = 12,
+   MODINPUT_FORWARDMOVE = 13,
+   MODINPUT_SIDEMOVE    = 14,
+   MODINPUT_UPMOVE      = 15,
+};
+
+// INPUT_BUTTON buttons.
+enum
+{
+   BUTTON_ATTACK     = 0x00000001,
+   BUTTON_USE        = 0x00000002,
+   BUTTON_JUMP       = 0x00000004,
+   BUTTON_CROUCH     = 0x00000008,
+   BUTTON_TURN180    = 0x00000010,
+   BUTTON_ALTATTACK  = 0x00000020,
+   BUTTON_RELOAD     = 0x00000040,
+   BUTTON_ZOOM       = 0x00000080,
+   BUTTON_SPEED      = 0x00000100,
+   BUTTON_STRAFE     = 0x00000200,
+   BUTTON_MOVERIGHT  = 0x00000400,
+   BUTTON_MOVELEFT   = 0x00000800,
+   BUTTON_BACK       = 0x00001000,
+   BUTTON_FORWARD    = 0x00002000,
+   BUTTON_RIGHT      = 0x00004000,
+   BUTTON_LEFT       = 0x00008000,
+   BUTTON_LOOKUP     = 0x00010000,
+   BUTTON_LOOKDOWN   = 0x00020000,
+   BUTTON_MOVEUP     = 0x00040000,
+   BUTTON_MOVEDOWN   = 0x00080000,
+   BUTTON_SHOWSCORES = 0x00100000,
+   BUTTON_USER1      = 0x00200000,
+   BUTTON_USER2      = 0x00400000,
+   BUTTON_USER3      = 0x00800000,
+   BUTTON_USER4      = 0x01000000,
+};
+
+//
+// ACS_funcGetPlayerInput
+//
+static void ACS_funcGetPlayerInput(ACS_FUNCARG)
+{
+   int32_t   pnum   = args[0];
+   int32_t   input  = args[1];
+   int32_t   result;
+   player_t *player;
+
+   if(pnum == -1 && thread->trigger)
+      player = thread->trigger->player;
+   else if(pnum >= 0 && pnum < MAXPLAYERS)
+      player = &players[pnum];
+   else
+      player = NULL;
+
+   if(player) switch(input)
+   {
+   case MODINPUT_BUTTONS:
+   case INPUT_BUTTONS:
+      result = 0;
+
+      if(player->cmd.buttons & BT_ATTACK)
+         result |= BUTTON_ATTACK;
+
+      if(player->cmd.buttons & BT_USE)
+         result |= BUTTON_USE;
+
+      if(player->cmd.actions & AC_JUMP)
+         result |= BUTTON_JUMP;
+
+      break;
+
+   case MODINPUT_PITCH:
+   case INPUT_PITCH:
+      result = player->cmd.look;
+      break;
+
+   case MODINPUT_YAW:
+   case INPUT_YAW:
+      result = player->cmd.angleturn;
+      break;
+
+   case MODINPUT_FORWARDMOVE:
+   case INPUT_FORWARDMOVE:
+      result = player->cmd.forwardmove * 2048;
+      break;
+
+   case MODINPUT_SIDEMOVE:
+   case INPUT_SIDEMOVE:
+      result = player->cmd.sidemove * 2048;
+      break;
+
+   default:
+      result = 0;
+      break;
+   }
+   else
+      result = 0;
+
+   *retn++ = result;
 }
 
 //
@@ -153,6 +335,99 @@ static void ACS_funcGetSectorLightLevel(ACS_FUNCARG)
 static void ACS_funcRandom(ACS_FUNCARG)
 {
    *retn++ = P_RangeRandom(pr_script, args[0], args[1]);
+}
+
+// ReplaceTextures flags
+enum
+{
+   RETEX_NOT_BOTTOM = 0x01,
+   RETEX_NOT_MID    = 0x02,
+   RETEX_NOT_TOP    = 0x04,
+   RETEX_NOT_FLOOR  = 0x08,
+   RETEX_NOT_CEIL   = 0x10,
+
+   RETEX_NOT_LINE   = RETEX_NOT_BOTTOM|RETEX_NOT_MID|RETEX_NOT_TOP,
+   RETEX_NOT_SECTOR = RETEX_NOT_FLOOR|RETEX_NOT_CEIL,
+};
+
+//
+// ACS_funcReplaceTextures
+//
+static void ACS_funcReplaceTextures(ACS_FUNCARG)
+{
+   int      oldtex = R_FindWall(ACSVM::GetString(args[0]));
+   int      newtex = R_FindWall(ACSVM::GetString(args[1]));
+   uint32_t flags  = args[2];
+
+   // If doing anything to lines.
+   if((flags & RETEX_NOT_LINE) != RETEX_NOT_LINE)
+   {
+      for(side_t *side = sides, *end = side + numsides; side != end; ++side)
+      {
+         if(!(flags & RETEX_NOT_BOTTOM) && side->bottomtexture == oldtex)
+            side->bottomtexture = newtex;
+
+         if(!(flags & RETEX_NOT_MID) && side->midtexture == oldtex)
+            side->midtexture = newtex;
+
+         if(!(flags & RETEX_NOT_TOP) && side->toptexture == oldtex)
+            side->toptexture = newtex;
+      }
+   }
+
+   // If doing anything to sectors.
+   if((flags & RETEX_NOT_SECTOR) != RETEX_NOT_SECTOR)
+   {
+      for(sector_t *sector = sectors, *end = sector + numsectors; sector != end; ++sector)
+      {
+         if(!(flags & RETEX_NOT_FLOOR) && sector->floorpic == oldtex)
+            sector->floorpic = newtex;
+
+         if(!(flags & RETEX_NOT_CEIL) && sector->ceilingpic == oldtex)
+            sector->ceilingpic = newtex;
+      }
+   }
+}
+
+// sector damage flags
+enum
+{
+   SECDAM_PLAYERS          = 0x01,
+   SECDAM_NONPLAYERS       = 0x02,
+   SECDAM_IN_AIR           = 0x04,
+   SECDAM_SUBCLASS_PROTECT = 0x08,
+};
+
+//
+// ACS_funcSectorDamage
+//
+static void ACS_funcSectorDamage(ACS_FUNCARG)
+{
+   int32_t   tag    = args[0];
+   int32_t   damage = args[1];
+   int       mod    = E_DamageTypeNumForName(ACSVM::GetString(args[2]));
+   uint32_t  flags  = args[4];
+   int       secnum = -1;
+   sector_t *sector;
+
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector = &sectors[secnum];
+
+      for(Mobj *mo = sector->thinglist; mo; mo = mo->snext)
+      {
+         if(mo->player && !(flags & SECDAM_PLAYERS))
+            continue;
+
+         if(!mo->player && !(flags & SECDAM_NONPLAYERS))
+            continue;
+
+         if(mo->z != mo->floorz && !(flags & SECDAM_IN_AIR))
+            continue;
+
+         P_DamageMobj(mo, NULL, NULL, damage, mod);
+      }
+   }
 }
 
 //
@@ -378,6 +653,37 @@ static void ACS_funcSetThingSpecial(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSetThingState
+//
+static void ACS_funcSetThingState(ACS_FUNCARG)
+{
+   int32_t     tid       = args[0];
+   const char *statename = ACSVM::GetString(args[1]);
+   statenum_t  statenum  = E_StateNumForName(statename);
+   state_t    *state;
+   int32_t     count     = 0;
+   Mobj       *mo        = NULL;
+
+   while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
+   {
+      // Look for the named state for that type.
+      if((state = E_GetJumpInfo(mo->info, statename)))
+      {
+         P_SetMobjState(mo, state->index);
+         ++count;
+      }
+      // Otherwise, fall back to the global name.
+      else if(statenum >= 0)
+      {
+         P_SetMobjState(mo, statenum);
+         ++count;
+      }
+   }
+
+   *retn++ = count;
+}
+
+//
 // ACS_funcSoundSequence
 //
 static void ACS_funcSoundSequence(ACS_FUNCARG)
@@ -585,6 +891,87 @@ static void ACS_funcThingCountName(ACS_FUNCARG)
 }
 
 //
+// ACS_thingCountSector
+//
+static int32_t ACS_thingCountSector(int32_t tag, mobjtype_t type, int32_t tid)
+{
+   sector_t *sector;
+   int count = 0;
+   int secnum = -1;
+
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector = &sectors[secnum];
+
+      for(Mobj *mo = sector->thinglist; mo; mo = mo->snext)
+      {
+         if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
+         {
+            // don't count killable things that are dead
+            if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
+               mo->health <= 0)
+               continue;
+            ++count;
+         }
+      }
+   }
+
+   return count;
+}
+
+//
+// ACS_funcThingCountNameSector
+//
+static void ACS_funcThingCountNameSector(ACS_FUNCARG)
+{
+   int32_t    tag  = args[0];
+   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[1]));
+   int32_t    tid  = args[2];
+
+   if(type == -1)
+      type = 0;
+
+   *retn++ = ACS_thingCountSector(tag, type, tid);
+}
+
+//
+// ACS_funcThingCountSector
+//
+static void ACS_funcThingCountSector(ACS_FUNCARG)
+{
+   int32_t tag  = args[0];
+   int32_t type = args[1];
+   int32_t tid  = args[2];
+
+   if(type <= 0 || type >= ACS_NUM_THINGTYPES)
+      type = 0;
+   else
+      type = ACS_thingtypes[type];
+
+   *retn++ = ACS_thingCountSector(tag, type, tid);
+}
+
+//
+// ACS_funcThingDamage
+//
+static void ACS_funcThingDamage(ACS_FUNCARG)
+{
+   int32_t tid    = args[0];
+   int32_t damage = args[1];
+   int     mod    = E_DamageTypeNumForName(ACSVM::GetString(args[2]));
+   Mobj   *mo     = NULL;
+   int32_t count  = 0;
+
+   while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
+   {
+      P_DamageMobj(mo, NULL, NULL, damage, mod);
+      ++count;
+   }
+
+   *retn++ = count;
+}
+
+//
 // ACS_funcThingProjectile
 //
 static void ACS_funcThingProjectile(ACS_FUNCARG)
@@ -633,10 +1020,14 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcAmbientSoundLocal,
    ACS_funcChangeCeiling,
    ACS_funcChangeFloor,
+   ACS_funcClassifyThing,
+   ACS_funcGetPlayerInput,
    ACS_funcGetSectorCeilingZ,
    ACS_funcGetSectorFloorZ,
    ACS_funcGetSectorLightLevel,
    ACS_funcRandom,
+   ACS_funcReplaceTextures,
+   ACS_funcSectorDamage,
    ACS_funcSectorSound,
    ACS_funcSetLineBlocking,
    ACS_funcSetLineMonsterBlocking,
@@ -646,6 +1037,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSetMusicLocal,
    ACS_funcSetThingPosition,
    ACS_funcSetThingSpecial,
+   ACS_funcSetThingState,
    ACS_funcSoundSequence,
    ACS_funcSpawnPoint,
    ACS_funcSpawnProjectile,
@@ -653,6 +1045,9 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSpawnSpotAngle,
    ACS_funcThingCount,
    ACS_funcThingCountName,
+   ACS_funcThingCountNameSector,
+   ACS_funcThingCountSector,
+   ACS_funcThingDamage,
    ACS_funcThingProjectile,
    ACS_funcThingSound,
 };

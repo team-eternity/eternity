@@ -5,6 +5,16 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/19/2012
+
+Added instructions up to, but not including, CALLFUNC. Stopping here because
+adding CALLFUNC means adding all of ZDoom's CALLFUNC functions.
+
+I am making a conscious decision here to not emulate movement buttons for
+GetPlayerInput. ZDoom itself doesn't even promise to set them. Maybe this will
+change with client-server. Then again, maybe not.
+
+-------------------------------------------------------------------------------
 06/14/2012
 
 Added instructions up to LSH_GLOBALARR, as much as possible.

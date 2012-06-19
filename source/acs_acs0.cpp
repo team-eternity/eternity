@@ -354,9 +354,13 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE(ACTIVATORSOUND,         ActivatorSound,         2);
    CASE(AMBIENTSOUND,           AmbientSound,           2);
    CASE(AMBIENTSOUNDLOCAL,      AmbientSoundLocal,      2);
+   CASE(CLASSIFYTHING,          ClassifyThing,          1);
+   CASE(GETPLAYERINPUT,         GetPlayerInput,         2);
    CASE(GETSECTORCEILINGZ,      GetSectorCeilingZ,      3);
    CASE(GETSECTORFLOORZ,        GetSectorFloorZ,        3);
    CASE(GETSECTORLIGHTLEVEL,    GetSectorLightLevel,    1);
+   CASE(REPLACETEXTURES,        ReplaceTextures,        3);
+   CASE(SECTORDAMAGE,           SectorDamage,           5);
    CASE(SECTORSOUND,            SectorSound,            2);
    CASE(SETLINEBLOCKING,        SetLineBlocking,        2);
    CASE(SETLINEMONSTERBLOCKING, SetLineMonsterBlocking, 2);
@@ -365,10 +369,14 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE(SETMUSIC_ST,            SetMusic,               1);
    CASE(SETTHINGPOSITION,       SetThingPosition,       5);
    CASE(SETTHINGSPECIAL,        SetThingSpecial,        7);
+   CASE(SETTHINGSTATE,          SetThingState,          3);
    CASE(SOUNDSEQUENCE,          SoundSequence,          1);
    CASE(SPAWNPROJECTILE,        SpawnProjectile,        7);
    CASE(SPAWNSPOTANGLE,         SpawnSpotAngle,         3);
    CASE(THINGCOUNTNAME,         ThingCountName,         2);
+   CASE(THINGCOUNTNAMESECTOR,   ThingCountNameSector,   3);
+   CASE(THINGCOUNTSECTOR,       ThingCountSector,       3);
+   CASE(THINGDAMAGE,            ThingDamage,            3);
    CASE(THINGPROJECTILE,        ThingProjectile,        7);
    CASE(THINGSOUND,             ThingSound,             3);
 
@@ -404,19 +412,24 @@ static int32_t ACS_translateThingVarACS0(const acs0_opdata_t *opdata)
 
    switch(opdata->op)
    {
-   CASE(ACTIVATORARMOR,    Armor);
-   CASE(ACTIVATORFRAGS,    Frags);
-   CASE(ACTIVATORHEALTH,   Health);
-   CASE(ACTIVATORTID,      TID);
-   CASE(GET_THINGANGLE,    Angle);
-   CASE(GET_THINGCEILINGZ, CeilingZ);
-   CASE(GET_THINGFLOORZ,   FloorZ);
-   CASE(GET_THINGX,        X);
-   CASE(GET_THINGY,        Y);
-   CASE(GET_THINGZ,        Z);
-   CASE(PLAYERNUMBER,      PlayerNumber);
-   CASE(SET_THINGANGLE,    Angle);
-   CASE(SIGILPIECES,       SigilPieces);
+   CASE(ACTIVATORARMOR,          Armor);
+   CASE(ACTIVATORFRAGS,          Frags);
+   CASE(ACTIVATORHEALTH,         Health);
+   CASE(ACTIVATORTID,            TID);
+   CASE(CHK_THINGCEILINGTEXTURE, CeilingTexture);
+   CASE(CHK_THINGFLOORTEXTURE,   FloorTexture);
+   CASE(GET_THINGANGLE,          Angle);
+   CASE(GET_THINGCEILINGZ,       CeilingZ);
+   CASE(GET_THINGFLOORZ,         FloorZ);
+   CASE(GET_THINGLIGHTLEVEL,     LightLevel);
+   CASE(GET_THINGPITCH,          Pitch);
+   CASE(GET_THINGX,              X);
+   CASE(GET_THINGY,              Y);
+   CASE(GET_THINGZ,              Z);
+   CASE(PLAYERNUMBER,            PlayerNumber);
+   CASE(SET_THINGANGLE,          Angle);
+   CASE(SET_THINGPITCH,          Pitch);
+   CASE(SIGILPIECES,             SigilPieces);
 
    default: return ACS_THINGVARMAX;
    }
@@ -592,6 +605,11 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
       case ACS0_OP_GET_THINGANGLE:
       case ACS0_OP_SET_THINGANGLE:
       case ACS0_OP_GET_THINGCEILINGZ:
+      case ACS0_OP_GET_THINGPITCH:
+      case ACS0_OP_SET_THINGPITCH:
+      case ACS0_OP_CHK_THINGCEILINGTEXTURE:
+      case ACS0_OP_CHK_THINGFLOORTEXTURE:
+      case ACS0_OP_GET_THINGLIGHTLEVEL:
          *codePtr++ = opdata->opdata->op;
          *codePtr++ = ACS_translateThingVarACS0(opdata);
          break;
