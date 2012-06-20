@@ -441,7 +441,7 @@ void A_StartScript(Mobj *actor)
       args[0] = E_ArgAsInt(actor->state->args, 2, 0);
       args[1] = E_ArgAsInt(actor->state->args, 3, 0);
       args[2] = E_ArgAsInt(actor->state->args, 4, 0);      
-      ACS_StartScript(scriptnum, gamemap, args, actor, NULL, 0, NULL, true);
+      ACS_ExecuteScriptNumber(NULL, scriptnum, args, 5, 0, NULL, NULL, 0, gamemap);
    }
 }
 

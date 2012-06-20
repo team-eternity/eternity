@@ -5,6 +5,29 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/20/2012
+
+Added named script handling. Also renamed acscript_t to ACSScript. I know the S
+is redundant, but ACScript only looks right when not next to any other class
+from the module.
+
+I've removed the ACS_StuffVM functions, because script numbers need to be
+considered global, not per-VM. Also rewrite ACS_ExecuteScript (formerly
+ACS_StartScript) to take an argc, allowing for arbitrary argument counts.
+
+Looking up a script by number now uses an EHashTable. When building the table,
+only the first script with a given number from a given VM is used. This
+emulates Hexen's lookup and will possibly improve lookup time slightly by not
+including duplicate numbers.
+
+Also added ACSString to store metadata about ACS strings. Including a fast
+lookup for named scripts, eliminating the runtime cost of "calling" a named
+script over a numbered script.
+
+I also fixed the reading of string literals to process escapes like ZDoom.
+However, unlike ZDoom, the user is not exposed to the unprocessed string.
+
+-------------------------------------------------------------------------------
 06/19/2012
 
 Added instructions up to, but not including, CALLFUNC. Stopping here because

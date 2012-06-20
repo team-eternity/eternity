@@ -117,11 +117,10 @@ static void ACS_chunkScriptACSE(ACSVM *vm, byte *tableData, uint32_t tableLength
 //
 // Reads a string table. Returns number of strings read.
 //
-static uint32_t ACS_chunkerString(const char **&outStrings, unsigned &outNumStrings,
+static uint32_t ACS_chunkerString(ACSString **&outStrings, unsigned &outNumStrings,
                                   byte *chunkData, uint32_t chunkLength, bool junk)
 {
-   char *stringData;
-   uint32_t numStrings, stringBase, stringSize, stringIndex;
+   uint32_t numStrings, stringBase, stringIndex;
    uint32_t *rover = (uint32_t *)chunkData;
 
    if(junk)
@@ -152,28 +151,20 @@ static uint32_t ACS_chunkerString(const char **&outStrings, unsigned &outNumStri
    // Need space for string pointers.
    if(chunkLength < stringBase) return 0;
 
-   // And this is how much data.
-   stringSize = chunkLength - stringBase;
-
-   // Allocate storage for all of the strings. Pointers will point here.
-   stringData = (char *)Z_Malloc(stringSize+1, PU_LEVEL, NULL);
-   memcpy(stringData, chunkData + stringBase, stringSize);
-   stringData[stringSize] = 0; // Ensure null terminator.
-
    // Read strings.
    outNumStrings += numStrings;
-   outStrings = (const char **)Z_Realloc(outStrings,
-      outNumStrings * sizeof(const char *), PU_LEVEL, NULL);
+   outStrings = (ACSString **)Z_Realloc(outStrings,
+      outNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
 
-   for(const char **end = outStrings + outNumStrings,
+   for(ACSString **end = outStrings + outNumStrings,
        **itr = end - numStrings; itr != end; ++itr)
    {
       stringIndex = SwapLong(*rover++);
 
       if (stringIndex < chunkLength && stringIndex >= stringBase)
-         *itr = stringData + (stringIndex - stringBase);
+         *itr = ACS_LoadStringACS0(chunkData + stringIndex, chunkData + chunkLength);
       else
-         *itr = "";
+         *itr = ACS_LoadStringACS0(chunkData + chunkLength, chunkData + chunkLength);
    }
 
    return numStrings;
@@ -519,7 +510,7 @@ static void ACS_chunkerSFLG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
       chunkData += 4;
 
       // Set the flags for any relevant script.
-      for(acscript_t *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+      for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
       {
          if(itr->number == number)
             itr->flags = flags;
@@ -554,13 +545,13 @@ static void ACS_chunkerSPTR8(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 
    // Read scripts.
    vm->numScripts += numScripts;
-   vm->scripts = (acscript_t *)Z_Realloc(vm->scripts,
-      vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL);
+   vm->scripts = (ACSScript *)Z_Realloc(vm->scripts,
+      vm->numScripts * sizeof(ACSScript), PU_LEVEL, NULL);
 
-   for(acscript_t *end = vm->scripts + vm->numScripts,
+   for(ACSScript *end = vm->scripts + vm->numScripts,
        *itr = end - numScripts; itr != end; ++itr)
    {
-      memset(itr, 0, sizeof(acscript_t));
+      memset(itr, 0, sizeof(ACSScript));
 
       itr->number    = SwapShort(*(int16_t *)(chunkData + 0));
       itr->type      = ACS_getScriptTypeACSE(*(uint8_t *)(chunkData + 2));
@@ -588,13 +579,13 @@ static void ACS_chunkerSPTR12(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 
    // Read scripts.
    vm->numScripts += numScripts;
-   vm->scripts = (acscript_t *)Z_Realloc(vm->scripts,
-      vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL);
+   vm->scripts = (ACSScript *)Z_Realloc(vm->scripts,
+      vm->numScripts * sizeof(ACSScript), PU_LEVEL, NULL);
 
-   for(acscript_t *end = vm->scripts + vm->numScripts,
+   for(ACSScript *end = vm->scripts + vm->numScripts,
        *itr = end - numScripts; itr != end; ++itr)
    {
-      memset(itr, 0, sizeof(acscript_t));
+      memset(itr, 0, sizeof(ACSScript));
 
       itr->number    = SwapShort(*(int16_t *)(chunkData + 0));
       itr->type      = ACS_getScriptTypeACSE(SwapShort(*(uint16_t *)(chunkData + 2)));
@@ -645,7 +636,7 @@ static void ACS_chunkerSVCT(ACSVM *vm, uint32_t chunkID, byte *chunkData,
       chunkData += 4;
 
       // Set the variable count for any relevant script.
-      for(acscript_t *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+      for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
       {
          if(itr->number == number)
          {
@@ -785,12 +776,12 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    // the indexes of map-variables.
    for(unsigned int i = vm->numExports; i--;)
    {
-      if(!vm->exports[i] || !vm->exports[i][0]) continue;
+      if(!vm->exports[i]->data.s || !vm->exports[i]->data.s[0]) continue;
 
       if(i < ACS_NUM_MAPARRS && vm->mapahas[i])
-         vm->mapanam[i] = vm->exports[i];
+         vm->mapanam[i] = vm->exports[i]->data.s;
       else if(i < ACS_NUM_MAPVARS)
-         vm->mapvnam[i] = vm->exports[i];
+         vm->mapvnam[i] = vm->exports[i]->data.s;
    }
 
    // LOAD - Library Loading
@@ -832,7 +823,7 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
       for(ACSVM **itrVM = vm->importVMs,
           **endVM = itrVM + vm->numImports; itrVM != endVM; ++itrVM)
       {
-         if(*itrVM && (func = (*itrVM)->findFunction(vm->funcNames[i])))
+         if(*itrVM && (func = (*itrVM)->findFunction(vm->funcNames[i]->data.s)))
          {
             vm->funcptrs[i] = func;
             break;

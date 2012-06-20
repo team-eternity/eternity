@@ -26,6 +26,7 @@
 #include "acs_intr.h"
 
 #include "i_system.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "w_wad.h"
 #include "doomstat.h"
@@ -70,27 +71,6 @@ static acs0_opdata_t const ACS0opdata[ACS0_OPMAX] =
 //----------------------------------------------------------------------------|
 // Static Functions                                                           |
 //
-
-//
-// ACS_readStringACS0
-//
-static const char *ACS_readStringACS0(byte *dataBegin, byte *dataEnd)
-{
-   char *begin = (char *)dataBegin, *end = (char *)dataEnd, *itr = begin;
-   char *str;
-
-   // Find either a null-terminator or the end of the lump.
-   while(itr != end && *itr) ++itr;
-
-   // If it's an empty string, don't bother with Z_Malloc.
-   if (itr == begin) return "";
-
-   str = (char *)Z_Malloc(itr - begin + 1, PU_LEVEL, NULL);
-   memcpy(str, begin, itr - begin);
-   str[itr - begin] = 0;
-
-   return str;
-}
 
 //
 // ACS_touchScriptACS0
@@ -832,10 +812,9 @@ void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
    tableIndex += 8 + (vm->numScripts * 12);
 
    // Read scripts.
-   vm->scripts = estructalloctag(acscript_t, vm->numScripts, PU_LEVEL);
+   vm->scripts = estructalloctag(ACSScript, vm->numScripts, PU_LEVEL);
 
-   for(acscript_t *end = vm->scripts + vm->numScripts,
-       *itr = vm->scripts; itr != end; ++itr)
+   for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
    {
       itr->number    = SwapLong(*rover++);
       itr->codeIndex = SwapLong(*rover++);
@@ -865,18 +844,18 @@ void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
 
    // Read strings.
    ACSVM::GlobalNumStrings += vm->numStrings;
-   ACSVM::GlobalStrings = (const char **)Z_Realloc(ACSVM::GlobalStrings,
-      ACSVM::GlobalNumStrings * sizeof(const char *), PU_LEVEL, NULL);
+   ACSVM::GlobalStrings = (ACSString **)Z_Realloc(ACSVM::GlobalStrings,
+      ACSVM::GlobalNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
 
-   for(const char **itr = ACSVM::GlobalStrings + vm->strings,
-       **end = itr + vm->numStrings; itr != end; ++itr)
+   for(ACSString **end = ACSVM::GlobalStrings + ACSVM::GlobalNumStrings,
+       **itr = end - vm->numStrings; itr != end; ++itr)
    {
       tableIndex = SwapLong(*rover++);
 
       if (tableIndex < lumpLength)
-         *itr = ACS_readStringACS0(data + tableIndex, data + lumpLength);
+         *itr = ACS_LoadStringACS0(data + tableIndex, data + lumpLength);
       else
-         *itr = "";
+         *itr = ACS_LoadStringACS0(data + lumpLength, data + lumpLength);
    }
 
    // Read code.
@@ -900,7 +879,7 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
    codeTouched = ecalloc(bool *, lumpLength, sizeof(bool));
 
    // ... from scripts.
-   for(acscript_t *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+   for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
    {
       ACS_traceScriptACS0(vm, lumpLength, data, codeTouched, itr->codeIndex,
                           jumpCount, compressed);
@@ -924,12 +903,18 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
    efree(codeTouched);
 
    // Process script indexes.
-   for(acscript_t *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+   for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
    {
       if(itr->codeIndex < lumpLength)
          itr->codePtr = vm->code + codeIndexMap[itr->codeIndex];
       else
          itr->codePtr = vm->code;
+
+      // And names, too!
+      if(itr->number < 0 && (uint32_t)(-itr->number - 1) < vm->numScriptNames)
+         itr->name = vm->scriptNames[-itr->number - 1]->data.s;
+      else
+         itr->name = "";
    }
 
    // Process function indexes.
@@ -942,6 +927,97 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
    }
 
    efree(codeIndexMap);
+}
+
+//
+// ACS_LoadStringACS0
+//
+ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end)
+{
+   ACSString *string;
+   qstring buf;
+   const byte *itr = begin;
+   char *str, c;
+
+   // Find either a null-terminator or the end of the lump.
+   while(itr != end && *itr)
+   {
+      // Process escapes.
+      if(*itr == '\\')
+      {
+         // If it's at the end of data, just append the backslash and break.
+         if(++itr == end || !*itr)
+         {
+            buf += '\\';
+            break;
+         }
+
+         switch(*itr)
+         {
+         default:
+         case '\\':
+            buf += *itr++;
+            break;
+
+         case 'a': buf += '\a';   break;
+         case 'b': buf += '\b';   break;
+         case 'c': buf += '\x1C'; break; // ZDoom color escape
+         case 'f': buf += '\f';   break;
+         case 'r': buf += '\r';   break;
+         case 'n': buf += '\n';   break;
+         case 't': buf += '\t';   break;
+         case 'v': buf += '\v';   break;
+
+         case '0': case '1': case '2': case '3':
+         case '4': case '5': case '6': case '7':
+            c = 0;
+
+            for(int i = 3; i--;)
+            {
+               if(itr != end && *itr >= '0' && *itr <= '7')
+                  c = c << 3 | (*itr++ - '0');
+               else
+                  break;
+            }
+
+            buf += c;
+            break;
+
+         case 'x':
+            c = 0; ++itr;
+
+            for(int i = 2; i--;)
+            {
+               if(itr == end) break;
+
+               if(*itr >= '0' && *itr <= '9')
+                  c = c << 4 | (*itr++ - '0');
+               else if(*itr >= 'A' && *itr <= 'F')
+                  c = c << 4 | (*itr++ - 'A' + 10);
+               else if(*itr >= 'a' && *itr <= 'a')
+                  c = c << 4 | (*itr++ - 'a' + 10);
+               else
+                  break;
+            }
+
+            buf += c;
+            break;
+         }
+      }
+      else
+         buf += *itr++;
+   }
+
+   // Yes, allocating the string with the container.
+   string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + buf.length() + 1, PU_LEVEL, NULL);
+   string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
+   string->data.l = buf.length() + 1;
+
+   // Copy the buffer into the new string.
+   buf.copyInto(str, buf.length());
+   str[buf.length()] = 0;
+
+   return string;
 }
 
 // EOF

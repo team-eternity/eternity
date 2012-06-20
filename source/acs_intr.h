@@ -59,6 +59,10 @@ class  WadDirectory;
 #define ACS_REGIONSIZE 512
 #define ACS_ARRDATASIZE 16
 
+// ACS string constants
+// padding when header is allocated with payload
+#define ACS_STRING_SIZE_PADDED ((sizeof(ACSString) + 7) & ~7)
+
 #define ACS_FUNCARG ACSThinker *thread, uint32_t argc, const int32_t *args, int32_t *&retn
 
 #define ACS_CHUNKID(A,B,C,D) (((A) << 0) | ((B) << 8) | ((C) << 16) | ((D) << 24))
@@ -74,6 +78,12 @@ enum
    ACS_MODE_DOOM = 0x00000001,
    ACS_MODE_HTIC = 0x00000002,
    ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
+};
+
+// ACS_Execute flags
+enum
+{
+   ACS_EXECUTE_ALWAYS = 0x00000001,
 };
 
 //
@@ -220,6 +230,7 @@ enum
 // Structures
 //
 
+class ACSScript;
 class ACSThinker;
 class ACSVM;
 
@@ -273,6 +284,25 @@ public:
 };
 
 //
+// ACSString
+//
+// Stores information about a VM string.
+//
+class ACSString
+{
+public:
+   struct Data
+   {
+      const char *s; // the actual string
+      uint32_t    l; // allocated size
+   } data;
+
+   // metadata
+   ACSScript  *script; // script this strijng is a name of, if any
+   uint32_t    length; // null-terminated length
+};
+
+//
 // acs_opdata
 //
 struct acs_opdata_t
@@ -284,7 +314,7 @@ struct acs_opdata_t
 //
 // ACSFunc
 //
-// Like acscript below, but for user-defined functions.
+// Like ACSScript below, but for user-defined functions.
 //
 class ACSFunc
 {
@@ -292,7 +322,7 @@ public:
    uint8_t numArgs; // argument count
    uint8_t numVars; // variable count
    uint8_t numRetn; // return count
-   ACSVM *vm;       // VM the function is from
+   ACSVM  *vm;      // VM the function is from
 
    union
    {
@@ -302,18 +332,22 @@ public:
 };
 
 //
-// acscript
+// ACSScript
 //
 // An actual script entity as read from the ACS lump's entry table,
 // augmented with basic runtime data.
 //
-typedef struct acscript_s
+class ACSScript
 {
+public:
+   const char *name;    // script's name, if any
    int32_t     number;  // the script's number; negative means named
    uint32_t    numArgs; // expected arguments
    uint16_t    numVars; // local variable count
    uint16_t    flags;   // script flags
    acs_stype_t type;    // script type
+   ACSVM      *vm;      // VM the script is from
+   ACSThinker *threads;
 
    union
    {
@@ -321,9 +355,9 @@ typedef struct acscript_s
       int32_t *codePtr;
    };
 
-   ACSVM      *vm;      // VM the script is associated with
-   ACSThinker *threads;
-} acscript_t;
+   DLListItem<ACSScript> nameLinks;
+   DLListItem<ACSScript> numberLinks;
+};
 
 //
 // acs_call_t
@@ -385,8 +419,8 @@ public:
    qstring    *printBuffer;           // print buffer
 
    // info copied from acscript and acsvm
-   acscript_t *acscript;              // the script being executed
-   ACSVM      *vm;                    // the current execution environment
+   ACSScript *script;                 // the script being executed
+   ACSVM     *vm;                     // the current execution environment
 
    // misc
    int32_t delay;                     // counter for script delays
@@ -412,11 +446,10 @@ struct deferredacs_t
 {
    DLListItem<deferredacs_t> link; // list links
 
-   int  scriptNum;         // ACS script number to execute
-   int  vmID;              // id # of vm on which to execute the script
-   int  targetMap;         // target map number
-   int  type;              // type of action to perform...
-   int  args[NUMLINEARGS]; // additional arguments from linedef
+   int32_t scriptNum;         // ACS script number to execute
+   int     targetMap;         // target map number
+   int     type;              // type of action to perform...
+   int32_t args[NUMLINEARGS]; // additional arguments from linedef
 };
 
 //
@@ -444,9 +477,9 @@ public:
    unsigned int numCode;
    unsigned int strings;               // offset into global table
    unsigned int numStrings;
-   acscript_t  *scripts;               // the scripts
+   ACSScript   *scripts;               // the scripts
    unsigned int numScripts;
-   const char **scriptNames;           // script names
+   ACSString  **scriptNames;           // script names
    unsigned int numScriptNames;
    bool         loaded;                // for static VMs, if it's valid or not
    uint32_t     id;                    // vm id number
@@ -463,12 +496,12 @@ public:
 
    // loader info (not valid post-loading)
    // should this be a separate struct, freed after loading?
-   const char **exports;                  // exported variables
+   ACSString  **exports;                  // exported variables
    unsigned int numExports;               // number of exports
    const char **imports;                  // imported lump names
    ACSVM      **importVMs;                // imported VMs
    unsigned int numImports;               // number of imports
-   const char **funcNames;                // function names
+   ACSString  **funcNames;                // function names
    unsigned int numFuncNames;             // number of function names
    const char  *mapvnam[ACS_NUM_MAPVARS]; // map variable names
    const char  *mapanam[ACS_NUM_MAPARRS]; // map array names
@@ -476,11 +509,22 @@ public:
    bool         mapahas[ACS_NUM_MAPARRS]; // if true, index is declared as array
 
    // global bytecode info
-   static const char **GlobalStrings;
+   static ACSString  **GlobalStrings;
    static unsigned int GlobalNumStrings;
    static const char *GetString(uint32_t strnum)
    {
-      return strnum < GlobalNumStrings ? GlobalStrings[strnum] : "";
+      return strnum < GlobalNumStrings ? GlobalStrings[strnum]->data.s : "";
+   }
+   static uint32_t GetStringLength(uint32_t strnum)
+   {
+      return strnum < GlobalNumStrings ? GlobalStrings[strnum]->length : 0;
+   }
+
+   static ACSScript *FindScriptByNumber(int32_t scrnum);
+   static ACSScript *FindScriptByName(const char *name);
+   static ACSScript *FindScriptByString(uint32_t strnum)
+   {
+      return strnum < GlobalNumStrings ? GlobalStrings[strnum]->script : NULL;
    }
 };
 
@@ -498,15 +542,21 @@ void ACS_LoadScriptACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
 void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset = 4);
 void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool compressed);
+ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end);
 void ACS_LoadLevelScript(WadDirectory *dir, int lump);
-void ACS_RunDeferredScripts(void);
-bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
-                       Mobj *mo, line_t *line, int side,
-                       ACSThinker **scr, bool always);
-bool ACS_StartScript(int scrnum, int map, int *args, Mobj *mo,
-                     line_t *line, int side, ACSThinker **scr, bool always);
-bool ACS_TerminateScript(int srcnum, int mapnum);
-bool ACS_SuspendScript(int scrnum, int mapnum);
+void ACS_RunDeferredScripts();
+bool ACS_ExecuteScript(ACSThinker **thread, ACSScript *script, int32_t *argv, uint32_t argc,
+                       int flags, Mobj *trigger, line_t *line, int lineSide);
+bool ACS_ExecuteScriptNumber(ACSThinker **thread, int32_t number, int32_t *argv, uint32_t argc,
+                             int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum);
+bool ACS_ExecuteScriptName(ACSThinker **thread, const char *name, int32_t *argv, uint32_t argc,
+                           int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum);
+bool ACS_TerminateScript(ACSScript *script);
+bool ACS_TerminateScriptNumber(int32_t number, int mapnum);
+bool ACS_TerminateScriptName(const char *name, int mapnum);
+bool ACS_SuspendScript(ACSScript *script);
+bool ACS_SuspendScriptNumber(int32_t number, int mapnum);
+bool ACS_SuspendScriptName(const char *name, int mapnum);
 void ACS_Archive(SaveArchive &arc);
 
 // extern vars.

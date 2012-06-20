@@ -34,6 +34,7 @@
 #include "acs_intr.h"
 #include "c_runcmd.h"
 #include "doomstat.h"
+#include "e_hash.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_collection.h"
@@ -77,6 +78,14 @@ static ACSVM acsLevelScriptVM;
 
 static PODCollection<ACSVM *> acsVMs;
 
+// scripts-by-number
+EHashTable<ACSScript, EIntHashKey, &ACSScript::number, &ACSScript::numberLinks>
+acsScriptsByNumber;
+
+// scripts-by-name
+EHashTable<ACSScript, ENCStringHashKey, &ACSScript::name, &ACSScript::nameLinks>
+acsScriptsByName;
+
 
 //
 // Global Variables
@@ -90,7 +99,7 @@ acs_opdata_t ACSopdata[ACS_OPMAX] =
 };
 
 
-const char **ACSVM::GlobalStrings = NULL;
+ACSString  **ACSVM::GlobalStrings = NULL;
 unsigned int ACSVM::GlobalNumStrings = 0;
 
 // ACS_thingtypes:
@@ -123,28 +132,26 @@ static void ACS_addVirtualMachine(ACSVM *vm)
    acsVMs.add(vm);
 }
 
-static bool ACS_addDeferredScriptVM(ACSVM *vm, int scrnum, int mapnum, 
-                                    int type, int args[5]);
-
 //
 // ACS_addThread
 //
 // Adds a thinker as a thread on the given script.
 //
-static void ACS_addThread(ACSThinker *script, acscript_t *acscript)
+static void ACS_addThread(ACSThinker *thread)
 {
-   ACSThinker *next = acscript->threads;
+   ACSScript *script = thread->script;
+   ACSThinker *next = script->threads;
 
-   if((script->nextthread = next))
-      next->prevthread = &script->nextthread;
-   script->prevthread = &acscript->threads;
-   acscript->threads = script;
+   if((thread->nextthread = next))
+      next->prevthread = &thread->nextthread;
+   thread->prevthread = &script->threads;
+   script->threads = thread;
 }
 
 //
 // ACS_removeThread
 //
-// Removes a thinker from the acscript thread list.
+// Removes a thinker from the script thread list.
 //
 static void ACS_removeThread(ACSThinker *script)
 {
@@ -162,15 +169,15 @@ static void ACS_removeThread(ACSThinker *script)
 // same VM which are waiting on this one. All threads of the specified
 // script must be terminated first.
 //
-static void ACS_scriptFinished(ACSThinker *script)
+static void ACS_scriptFinished(ACSThinker *thread)
 {
    unsigned int i;
-   ACSVM      *vm       = script->vm;
-   acscript_t *acscript = script->acscript;
+   ACSVM      *vm     = thread->vm;
+   ACSScript  *script = thread->script;
    ACSThinker *th;
 
    // first check that all threads of the same script have terminated
-   if(acscript->threads)
+   if(script->threads)
       return; // nope
 
    // find scripts waiting on this one (same VM only)
@@ -182,7 +189,7 @@ static void ACS_scriptFinished(ACSThinker *script)
       for(th = vm->scripts[i].threads; th; th = th->nextthread)
       {
          if(th->sreg  == ACS_STATE_WAITSCRIPT &&
-            th->sdata == acscript->number)
+            th->sdata == script->number)
          {
             // wake up the script
             th->sreg  = ACS_STATE_RUNNING;
@@ -197,16 +204,16 @@ static void ACS_scriptFinished(ACSThinker *script)
 //
 // Ultimately terminates the script and removes its thinker.
 //
-static void ACS_stopScript(ACSThinker *script, acscript_t *acscript)
+static void ACS_stopScript(ACSThinker *thread)
 {
-   ACS_removeThread(script);
-   
+   ACS_removeThread(thread);
+
    // notify waiting scripts that this script has ended
-   ACS_scriptFinished(script);
+   ACS_scriptFinished(thread);
 
-   P_SetTarget<Mobj>(&script->trigger, NULL);
+   P_SetTarget<Mobj>(&thread->trigger, NULL);
 
-   script->removeThinker();
+   thread->removeThinker();
 }
 
 //
@@ -215,7 +222,7 @@ static void ACS_stopScript(ACSThinker *script, acscript_t *acscript)
 // Starts an open script (a script indicated to start at the beginning of
 // the level).
 //
-static void ACS_runOpenScript(ACSVM *vm, acscript_t *acs)
+static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
 {
    ACSThinker *newScript = new ACSThinker;
 
@@ -228,35 +235,15 @@ static void ACS_runOpenScript(ACSVM *vm, acscript_t *acs)
    newScript->locals    = estructalloctag(int32_t, newScript->numLocals, PU_LEVEL);
 
    // copy in some important data
-   newScript->acscript = acs;
-   newScript->vm       = vm;
+   newScript->script = acs;
+   newScript->vm     = vm;
 
    // set up thinker
    newScript->addThinker();
 
    // mark as running
    newScript->sreg = ACS_STATE_RUNNING;
-   ACS_addThread(newScript, acs);
-}
-
-//
-// ACS_indexForNum
-//
-// Returns the index of the script in the "scripts" array given its number
-// from within the script itself. Returns vm->numScripts if no such script
-// exists.
-//
-// Currently uses a linear search, since the set is small and fixed-size.
-//
-unsigned int ACS_indexForNum(ACSVM *vm, int num)
-{
-   unsigned int idx;
-
-   for(idx = 0; idx < vm->numScripts; ++idx)
-      if(vm->scripts[idx].number == num)
-         break;
-
-   return idx;
+   ACS_addThread(newScript);
 }
 
 //
@@ -681,7 +668,7 @@ void ACSThinker::Think()
 
    // should the script terminate?
    if(this->sreg == ACS_STATE_TERMINATE)
-      ACS_stopScript(this, this->acscript);
+      ACS_stopScript(this);
 
    // is the script running?
    if(this->sreg != ACS_STATE_RUNNING)
@@ -1128,7 +1115,7 @@ void ACSThinker::Think()
       goto action_stop;
 
    OPCODE(SCRIPT_RESTART):
-      ip = acscript->codePtr;
+      ip = script->codePtr;
       BRANCH_COUNT();
       NEXTOP();
    OPCODE(SCRIPT_SUSPEND):
@@ -1280,7 +1267,7 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(STRLEN):
-      STACK_AT(1) = strlen(ACSVM::GetString(STACK_AT(1)));
+      STACK_AT(1) = ACSVM::GetStringLength(STACK_AT(1));
       NEXTOP();
    OPCODE(TAGSTRING):
       STACK_AT(1) += vm->strings;
@@ -1300,7 +1287,7 @@ void ACSThinker::Think()
 
 action_endscript:
    // end the script
-   ACS_stopScript(this, this->acscript);
+   ACS_stopScript(this);
    goto function_end;
 
 action_stop:
@@ -1426,7 +1413,7 @@ ACSFunc *ACSVM::findFunction(const char *name)
 {
    for(unsigned int i = numFuncNames; i--;)
    {
-      if(i < numFuncs && funcs[i].codeIndex && !strcasecmp(funcNames[i], name))
+      if(i < numFuncs && funcs[i].codeIndex && !strcasecmp(funcNames[i]->data.s, name))
          return &funcs[i];
    }
 
@@ -1459,6 +1446,22 @@ ACSArray *ACSVM::findMapArr(const char *name)
    }
 
    return NULL;
+}
+
+//
+// ACSVM::FindScriptByNumber
+//
+ACSScript *ACSVM::FindScriptByNumber(int32_t scrnum)
+{
+   return acsScriptsByNumber.objectForKey(scrnum);
+}
+
+//
+// ACSVM::FindScriptByName
+//
+ACSScript *ACSVM::FindScriptByName(const char *name)
+{
+   return acsScriptsByName.objectForKey(name);
 }
 
 //
@@ -1611,8 +1614,7 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
    }
 
    // haleyjd 06/30/09: open scripts must be started *here*, not above.
-   for(acscript_t *end = vm->scripts+vm->numScripts,
-       *itr = vm->scripts; itr != end; ++itr)
+   for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
    {
       if(itr->type == ACS_STYPE_OPEN)
          ACS_runOpenScript(vm, itr);
@@ -1661,6 +1663,11 @@ static void ACS_loadScripts(WadDirectory *dir, int lump)
 //
 void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 {
+   // Start at 1 so that number of chains is never 0.
+   unsigned int numScriptsByNumber = 1, numScriptsByName = 1;
+
+   acsScriptsByNumber.destroy();
+   acsScriptsByName.destroy();
    acsVMs.makeEmpty();
 
    // load the level script, if any
@@ -1683,16 +1690,69 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       lump = lumpinfo[lump]->next;
    }
 
+   // Haha, not really! Now we have to process script names.
+
+   // For this round, just tally the number of scripts.
+   for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(ACSScript *s = (*vm)->scripts, *sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
+      {
+         if(s->number < 0)
+            ++numScriptsByName;
+         else
+            ++numScriptsByNumber;
+      }
+   }
+
+   acsScriptsByNumber.initialize(numScriptsByNumber);
+   acsScriptsByName.initialize(numScriptsByName);
+
+   // Now actually add them to the tables.
+   for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(ACSScript *s = (*vm)->scripts, *sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
+      {
+         if(s->number < 0)
+            acsScriptsByName.addObject(s);
+         else
+         {
+            ACSScript *olds = acsScriptsByNumber.objectForKey(s->number);
+
+            // If there already exists a script by that number...
+            if(olds)
+            {
+               // ... and it's from the same VM, keep the first one.
+               // Otherwise, only keep the newest.
+               if(olds->vm != s->vm)
+               {
+                  acsScriptsByNumber.removeObject(olds);
+                  acsScriptsByNumber.addObject(s);
+               }
+            }
+            else
+               acsScriptsByNumber.addObject(s);
+         }
+      }
+   }
+
+   // Pre-search scripts for strings. This makes named scripts faster than numbered!
+   // Also precalculate the length, since we're precalculating.
+   for(ACSString **itr = ACSVM::GlobalStrings,
+       **end = itr + ACSVM::GlobalNumStrings; itr != end; ++itr)
+   {
+      (*itr)->script = ACSVM::FindScriptByName((*itr)->data.s);
+      (*itr)->length = strlen((*itr)->data.s);
+   }
 }
 
 //
-// ACS_addDeferredScriptVM
+// ACS_addDeferredScript
 //
 // Adds a deferred script that will be executed when the indicated
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
-static bool ACS_addDeferredScriptVM(ACSVM *vm, int scrnum, int mapnum, 
-                                    int type, int args[NUMLINEARGS])
+static bool ACS_addDeferredScript(int32_t number, int mapnum, int type,
+                                  int32_t *argv, uint32_t argc)
 {
    DLListItem<deferredacs_t> *cur = acsDeferred;
    deferredacs_t *newdacs;
@@ -1702,7 +1762,7 @@ static bool ACS_addDeferredScriptVM(ACSVM *vm, int scrnum, int mapnum,
    {
       deferredacs_t *dacs = cur->dllObject;
 
-      if(dacs->targetMap == mapnum && dacs->scriptNum == scrnum)
+      if(dacs->targetMap == mapnum && dacs->scriptNum == number)
          return false;
 
       cur = cur->dllNext;
@@ -1712,16 +1772,14 @@ static bool ACS_addDeferredScriptVM(ACSVM *vm, int scrnum, int mapnum,
    newdacs = estructalloc(deferredacs_t, 1);
 
    // set script number
-   newdacs->scriptNum = scrnum; 
-
-   // set vm id #
-   newdacs->vmID = vm->id;
+   newdacs->scriptNum = number;
 
    // set action type
    newdacs->type = type;
 
    // set args
-   memcpy(newdacs->args, args, 5 * sizeof(int));
+   for(unsigned int i = 0; i < NUMLINEARGS; ++i)
+      newdacs->args[i] = i < argc ? argv[i] : 0;
 
    // record target map number
    newdacs->targetMap = mapnum;
@@ -1737,62 +1795,34 @@ static bool ACS_addDeferredScriptVM(ACSVM *vm, int scrnum, int mapnum,
 //
 // Runs scripts that have been deferred for the current map
 //
-void ACS_RunDeferredScripts(void)
+void ACS_RunDeferredScripts()
 {
    DLListItem<deferredacs_t> *cur = acsDeferred, *next;
-   ACSThinker *newScript = NULL;
-   ACSThinker *rover = NULL;
-   unsigned int internalNum;
+   ACSThinker *newThread = NULL;
 
    while(cur)
    {
-      ACSVM *vm;
       deferredacs_t *dacs = cur->dllObject;
 
-      next = cur->dllNext; 
-
-      vm = acsVMs[dacs->vmID];
+      next = cur->dllNext;
 
       if(dacs->targetMap == gamemap)
       {
          switch(dacs->type)
          {
          case ACS_DEFERRED_EXECUTE:
-            ACS_StartScriptVM(vm, dacs->scriptNum, 0, dacs->args, NULL, NULL, 0, 
-                              &newScript, false);
-            if(newScript)
-               newScript->delay = TICRATE;
+            ACS_ExecuteScriptNumber(&newThread, dacs->scriptNum, dacs->args, NUMLINEARGS,
+                                    0, NULL, NULL, 0, dacs->targetMap);
+            if(newThread)
+               newThread->delay = TICRATE;
             break;
+
          case ACS_DEFERRED_SUSPEND:
-            if((internalNum = ACS_indexForNum(vm, dacs->scriptNum)) != vm->numScripts)
-            {
-               acscript_t *script = &(vm->scripts[internalNum]);
-               rover = script->threads;
-
-               while(rover)
-               {
-                  if(rover->sreg != ACS_STATE_STOPPED &&
-                     rover->sreg != ACS_STATE_TERMINATE)
-                     rover->sreg = ACS_STATE_SUSPEND;
-
-                  rover = rover->nextthread;
-               }
-            }
+            ACS_SuspendScriptNumber(dacs->scriptNum, dacs->targetMap);
             break;
+
          case ACS_DEFERRED_TERMINATE:
-            if((internalNum = ACS_indexForNum(vm, dacs->scriptNum)) != vm->numScripts)
-            {
-               acscript_t *script = &(vm->scripts[internalNum]);
-               rover = script->threads;
-
-               while(rover)
-               {
-                  if(rover->sreg != ACS_STATE_STOPPED)
-                     rover->sreg = ACS_STATE_TERMINATE;
-
-                  rover = rover->nextthread;
-               }
-            }
+            ACS_TerminateScriptNumber(dacs->scriptNum, dacs->targetMap);
             break;
          }
 
@@ -1806,205 +1836,206 @@ void ACS_RunDeferredScripts(void)
 }
 
 //
-// ACS_StartScriptVM
+// ACS_ExecuteScript
 //
-// Standard method for starting an ACS script.
+// Attempts to execute the given script.
 //
-bool ACS_StartScriptVM(ACSVM *vm, int scrnum, int map, int *args,
-                       Mobj *mo, line_t *line, int side,
-                       ACSThinker **scr, bool always)
+bool ACS_ExecuteScript(ACSThinker **thread, ACSScript *script, int32_t *argv, uint32_t argc,
+                       int flags, Mobj *trigger, line_t *line, int lineSide)
 {
-   acscript_t   *scrData;
-   ACSThinker *newScript, *rover;
+   ACSThinker *newThread;
    bool foundScripts = false;
-   unsigned int internalNum, i;
+   unsigned int i;
 
-   // ACS must be active on the current map or we do nothing
-   if(!vm->loaded)
-      return false;
+   // If a value is to be returned in thread, it should be determinate.
+   if(thread)
+      *thread = NULL;
 
-   // should the script be deferred to a different map?
-   if(map > 0 && map != gamemap)
-      return ACS_addDeferredScriptVM(vm, scrnum, map, ACS_DEFERRED_EXECUTE, args);
+   if(!script) return false;
 
-   // look for the script
-   if((internalNum = ACS_indexForNum(vm, scrnum)) == vm->numScripts)
-   {
-      // tink!
-      doom_printf(FC_ERROR "ACS_StartScript: no such script %d\a\n", scrnum);
-      return false;
-   }
-
-   scrData = &(vm->scripts[internalNum]);
-
-   rover = scrData->threads;
-
-   while(rover)
+   for(ACSThinker *itr = script->threads; itr; itr = itr->nextthread)
    {
       // if the script is suspended, restart it
-      if(rover->sreg == ACS_STATE_SUSPEND)
+      if(itr->sreg == ACS_STATE_SUSPEND)
       {
          foundScripts = true;
-         rover->sreg = ACS_STATE_RUNNING;
+         itr->sreg = ACS_STATE_RUNNING;
       }
-
-      rover = rover->nextthread;
    }
 
    // if not an always-execute action and we restarted a stopped script,
    // then we return true now.
    // otherwise, return false for failure.
-   if(!always && scrData->threads)
+   if(!(flags & ACS_EXECUTE_ALWAYS) && script->threads)
       return foundScripts;
 
    // setup the new script thinker
-   newScript = new ACSThinker;
+   newThread = new ACSThinker;
 
-   newScript->ip          = scrData->codePtr;
-   newScript->locals      = (int32_t *)Z_Calloc(scrData->numVars, sizeof(int32_t),
-                                                PU_LEVEL, NULL);
-   newScript->line        = line;
-   newScript->lineSide    = side;
-   P_SetTarget<Mobj>(&newScript->trigger, mo);
+   newThread->ip       = script->codePtr;
+   newThread->locals   = estructalloctag(int32_t, script->numVars, PU_LEVEL);
+   newThread->line     = line;
+   newThread->lineSide = lineSide;
+   P_SetTarget<Mobj>(&newThread->trigger, trigger);
 
    // copy in some important data
-   newScript->acscript    = scrData;
-   newScript->vm          = vm;
+   newThread->script   = script;
+   newThread->vm       = script->vm;
 
    // copy arguments into first N local variables
-   for(i = 0; i < scrData->numArgs; ++i)
-      newScript->locals[i] = args[i];
+   for(i = 0; i < script->numArgs; ++i)
+      newThread->locals[i] = i < argc ? argv[i] : 0;
 
    // attach the thinker
-   newScript->addThinker();
+   newThread->addThinker();
 
-   // add as a thread of the acscript
-   ACS_addThread(newScript, scrData);
-	
+   // add as a thread of the script
+   ACS_addThread(newThread);
+
    // mark as running
-   newScript->sreg  = ACS_STATE_RUNNING;
-   newScript->sdata = 0;
+   newThread->sreg  = ACS_STATE_RUNNING;
+   newThread->sdata = 0;
 
    // return pointer to new script in *scr if not null
-   if(scr)
-      *scr = newScript;
-	
+   if(thread)
+      *thread = newThread;
+
    return true;
 }
 
 //
-// ACS_StartScript
+// ACS_ExecuteScriptNumber
 //
-// Convenience routine; starts a script in the levelscript vm.
+// Attempts to execute the numbered script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
 //
-bool ACS_StartScript(int scrnum, int map, int *args, 
-                     Mobj *mo, line_t *line, int side,
-                     ACSThinker **scr, bool always)
+bool ACS_ExecuteScriptNumber(ACSThinker **thread, int32_t number, int32_t *argv, uint32_t argc,
+                             int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum)
 {
-   return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
-                            line, side, scr, always);
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_ExecuteScript(thread, ACSVM::FindScriptByNumber(number), argv, argc,
+                               flags, trigger, line, lineSide);
+   else
+      return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_EXECUTE, argv, argc);
 }
 
 //
-// ACS_TerminateScriptVM
+// ACS_ExecuteScriptName
 //
-// Attempts to terminate the given script. If the mapnum doesn't match the
+// Attempts to execute the named script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-bool ACS_TerminateScriptVM(ACSVM *vm, int scrnum, int mapnum)
+bool ACS_ExecuteScriptName(ACSThinker **thread, const char *name, int32_t *argv, uint32_t argc,
+                           int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum)
 {
-   bool ret = false;
-   int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-
-   // ACS must be active on the current map or we do nothing
-   if(!vm->loaded)
-      return false;
-
-   if(mapnum > 0 && mapnum == gamemap)
-   {
-      unsigned int internalNum;
-
-      if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
-      {
-         acscript_t *script = &(vm->scripts[internalNum]);
-         ACSThinker *rover = script->threads;
-
-         while(rover)
-         {
-            if(rover->sreg != ACS_STATE_STOPPED)
-            {
-               rover->sreg = ACS_STATE_TERMINATE;
-               ret = true;
-            }
-            rover = rover->nextthread;
-         }
-      }
-   }
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_ExecuteScript(thread, ACSVM::FindScriptByName(name), argv, argc,
+                               flags, trigger, line, lineSide);
    else
-      ret = ACS_addDeferredScriptVM(vm, scrnum, mapnum, ACS_DEFERRED_TERMINATE, foo);
-
-   return ret;
+      return false; // TODO
 }
 
 //
 // ACS_TerminateScript
 //
-// Convenience routine; terminates a level script.
+// Attempts to terminate the given script.
 //
-bool ACS_TerminateScript(int scrnum, int mapnum)
+bool ACS_TerminateScript(ACSScript *script)
 {
-   return ACS_TerminateScriptVM(&acsLevelScriptVM, scrnum, mapnum);
-}
-
-//
-// ACS_SuspendScriptVM
-//
-// Attempts to suspend the given script. If the mapnum doesn't match the
-// current gamemap, the action will be deferred.
-//
-bool ACS_SuspendScriptVM(ACSVM *vm, int scrnum, int mapnum)
-{
-   int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    bool ret = false;
 
-   // ACS must be active on the current map or we do nothing
-   if(!vm->loaded)
-      return false;
+   if(!script) return false;
 
-   if(mapnum > 0 && mapnum == gamemap)
+   for(ACSThinker *thread = script->threads; thread; thread = thread->nextthread)
    {
-      unsigned int internalNum;
-
-      if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
+      if(thread->sreg != ACS_STATE_STOPPED)
       {
-         acscript_t *script = &(vm->scripts[internalNum]);
-         ACSThinker *rover = script->threads;
-
-         while(rover)
-         {
-            if(rover->sreg != ACS_STATE_STOPPED &&
-               rover->sreg != ACS_STATE_TERMINATE)
-            {
-               rover->sreg = ACS_STATE_SUSPEND;
-               ret = true;
-            }
-         }
+         thread->sreg = ACS_STATE_TERMINATE;
+         ret = true;
       }
    }
-   else
-      ret = ACS_addDeferredScriptVM(vm, scrnum, mapnum, ACS_DEFERRED_SUSPEND, foo);
 
    return ret;
 }
 
 //
+// ACS_TerminateScriptNumber
+//
+// Attempts to terminate the numbered script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_TerminateScriptNumber(int32_t number, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_TerminateScript(ACSVM::FindScriptByNumber(number));
+   else
+      return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_TERMINATE, NULL, 0);
+}
+
+//
+// ACS_TerminateScriptName
+//
+// Attempts to terminate the named script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_TerminateScriptName(const char *name, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_TerminateScript(ACSVM::FindScriptByName(name));
+   else
+      return false; // TODO
+}
+
+//
 // ACS_SuspendScript
 //
-// Convenience routine; suspends a level script.
+// Attempts to suspend the given script.
 //
-bool ACS_SuspendScript(int scrnum, int mapnum)
+bool ACS_SuspendScript(ACSScript *script)
 {
-   return ACS_SuspendScriptVM(&acsLevelScriptVM, scrnum, mapnum);
+   bool ret = false;
+
+   if(!script) return false;
+
+   for(ACSThinker *thread = script->threads; thread; thread = thread->nextthread)
+   {
+      if(thread->sreg != ACS_STATE_STOPPED &&
+         thread->sreg != ACS_STATE_TERMINATE)
+      {
+         thread->sreg = ACS_STATE_SUSPEND;
+         ret = true;
+      }
+   }
+
+   return ret;
+}
+
+//
+// ACS_SuspendScriptNumber
+//
+// Attempts to suspend the numbered script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_SuspendScriptNumber(int32_t number, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_SuspendScript(ACSVM::FindScriptByNumber(number));
+   else
+      return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_SUSPEND, NULL, 0);
+}
+
+//
+// ACS_SuspendScriptName
+//
+// Attempts to suspend the named script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_SuspendScriptName(const char *name, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_SuspendScript(ACSVM::FindScriptByName(name));
+   else
+      return false; // TODO
 }
 
 //=============================================================================
@@ -2079,7 +2110,7 @@ static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
 //
 static SaveArchive &operator << (SaveArchive &arc, deferredacs_t &dacs)
 {
-   arc << dacs.scriptNum << dacs.vmID << dacs.targetMap << dacs.type;
+   arc << dacs.scriptNum << dacs.targetMap << dacs.type;
    P_ArchiveArray(arc, dacs.args, NUMLINEARGS);
    return arc;
 }
@@ -2209,14 +2240,14 @@ void ACSArray::archive(SaveArchive &arc)
 //
 void ACSThinker::serialize(SaveArchive &arc)
 {
-   uint32_t acscriptIndex, callPtrIndex, ipIndex, lineIndex;
+   uint32_t scriptIndex, callPtrIndex, ipIndex, lineIndex;
 
    Super::serialize(arc);
 
    // Pointer-to-Index
    if(arc.isSaving())
    {
-      acscriptIndex = acscript - vm->scripts;
+      scriptIndex = script - vm->scripts;
 
       callPtrIndex = callPtr - calls;
 
@@ -2229,12 +2260,12 @@ void ACSThinker::serialize(SaveArchive &arc)
 
    // Basic properties
    arc << ipIndex << stp << numLocals << sreg << sdata << callPtrIndex
-       << acscriptIndex << vm << delay << triggerSwizzle << lineIndex << lineSide;
+       << scriptIndex << vm << delay << triggerSwizzle << lineIndex << lineSide;
 
    // Allocations/Index-to-Pointer
    if(arc.isLoading())
    {
-      acscript = vm->scripts + acscriptIndex;
+      script = vm->scripts + scriptIndex;
 
       numCalls = callPtrIndex;
       calls    = estructalloctag(acs_call_t, numCalls, PU_LEVEL);
@@ -2256,7 +2287,7 @@ void ACSThinker::serialize(SaveArchive &arc)
    if(arc.isLoading())
    {
       // add the thread
-      ACS_addThread(this, acscript);
+      ACS_addThread(this);
    }
 }
 
@@ -2286,7 +2317,7 @@ void ACS_Archive(SaveArchive &arc)
    {
       for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
       {
-         for(acscript_t *s = (*vm)->scripts,
+         for(ACSScript *s = (*vm)->scripts,
              *sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
          {
             s->threads = NULL;

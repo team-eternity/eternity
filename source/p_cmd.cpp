@@ -364,8 +364,8 @@ CONSOLE_COMMAND(puke, cf_notnet)
    for(i = 1; i < Console.argc; ++i)
       args[i - 1] = Console.argv[i]->toInt();
 
-   ACS_StartScript(Console.argv[0]->toInt(), gamemap, args,
-                   players[Console.cmdsrc].mo, NULL, 0, NULL, true);
+   ACS_ExecuteScriptNumber(NULL, Console.argv[0]->toInt(), args, 5,
+                           ACS_EXECUTE_ALWAYS, NULL, NULL, 0, gamemap);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)

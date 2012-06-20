@@ -1901,16 +1901,11 @@ static bool pspec_ACSExecute(line_t *line, int *args, int16_t special,
                                 int side, Mobj *thing)
 {
    int snum, mnum;
-   int script_args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
+   snum = args[0];
+   mnum = args[1];
 
-   snum           = args[0];
-   mnum           = args[1];
-   script_args[0] = args[2]; // transfer last three line args to script args
-   script_args[1] = args[3];
-   script_args[2] = args[4];
-
-   return ACS_StartScript(snum, mnum, script_args, thing, line, side, NULL, false);
+   return ACS_ExecuteScriptNumber(NULL, snum, args+2, 3, 0, thing, line, side, mnum);
 }
 
 //
@@ -2009,10 +2004,10 @@ bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
       success = pspec_ACSExecute(line, args, special, side, thing);
       break;
    case 366: // ACS_Suspend
-      success = ACS_SuspendScript(args[0], args[1]);
+      success = ACS_SuspendScriptNumber(args[0], args[1]);
       break;
    case 367: // ACS_Terminate
-      success = ACS_TerminateScript(args[0], args[1]);
+      success = ACS_TerminateScriptNumber(args[0], args[1]);
       break;
    case 368: // Light_RaiseByValue
       success = !!EV_SetLight(line, args[0], setlight_add, args[1]);
