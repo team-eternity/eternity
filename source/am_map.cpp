@@ -149,12 +149,12 @@ typedef struct islope_s
 #define R ((8*PLAYERRADIUS)/7)
 mline_t player_arrow[] =
 {
-  { { -R+R/8, 0 }, { R, 0 } }, // -----
-  { { R, 0 }, { R-R/2, R/4 } },  // ----->
-  { { R, 0 }, { R-R/2, -R/4 } },
-  { { -R+R/8, 0 }, { -R-R/8, R/4 } }, // >---->
-  { { -R+R/8, 0 }, { -R-R/8, -R/4 } },
-  { { -R+3*R/8, 0 }, { -R+R/8, R/4 } }, // >>--->
+  { { -R+R/8,   0 }, {  R,      0   } }, // -----
+  { {  R,       0 }, {  R-R/2,  R/4 } }, // ----->
+  { {  R,       0 }, {  R-R/2, -R/4 } },
+  { { -R+R/8,   0 }, { -R-R/8,  R/4 } }, // >---->
+  { { -R+R/8,   0 }, { -R-R/8, -R/4 } },
+  { { -R+3*R/8, 0 }, { -R+R/8,  R/4 } }, // >>--->
   { { -R+3*R/8, 0 }, { -R+R/8, -R/4 } }
 };
 #undef R
@@ -163,54 +163,47 @@ mline_t player_arrow[] =
 #define R ((8*PLAYERRADIUS)/7)
 mline_t cheat_player_arrow[] =
 { // killough 3/22/98: He's alive, Jim :)
-  { { -R+R/8, 0 }, { R, 0 } }, // -----
-  { { R, 0 }, { R-R/2, R/4 } },  // ----->
-  { { R, 0 }, { R-R/2, -R/4 } },
-  { { -R+R/8, 0 }, { -R-R/8, R/4 } }, // >---->
-  { { -R+R/8, 0 }, { -R-R/8, -R/4 } },
-  { { -R+3*R/8, 0 }, { -R+R/8, R/4 } }, // >>--->
-  { { -R+3*R/8, 0 }, { -R+R/8, -R/4 } },
-  { { -R/10-R/6, R/4}, {-R/10-R/6, -R/4} },  // J
-  { { -R/10-R/6, -R/4}, {-R/10-R/6-R/8, -R/4} },
-  { { -R/10-R/6-R/8, -R/4}, {-R/10-R/6-R/8, -R/8} },
-  { { -R/10, R/4}, {-R/10, -R/4}},           // F
-  { { -R/10, R/4}, {-R/10+R/8, R/4}},
-  { { -R/10+R/4, R/4}, {-R/10+R/4, -R/4}},   // F
-  { { -R/10+R/4, R/4}, {-R/10+R/4+R/8, R/4}},
+  { { -R+R/8,         0   }, {  R,             0   } }, // -----
+  { {  R,             0   }, {  R-R/2,         R/4 } }, // ----->
+  { {  R,             0   }, {  R-R/2,        -R/4 } },
+  { { -R+R/8,         0   }, { -R-R/8,         R/4 } }, // >---->
+  { { -R+R/8,         0   }, { -R-R/8,        -R/4 } },
+  { { -R+3*R/8,       0   }, { -R+R/8,         R/4 } }, // >>--->
+  { { -R+3*R/8,       0   }, { -R+R/8,        -R/4 } },
+  { { -R/10-R/6,      R/4 }, { -R/10-R/6,     -R/4 } }, // J
+  { { -R/10-R/6,     -R/4 }, { -R/10-R/6-R/8, -R/4 } },
+  { { -R/10-R/6-R/8, -R/4 }, { -R/10-R/6-R/8, -R/8 } },
+  { { -R/10,          R/4 }, { -R/10,         -R/4 } }, // F
+  { { -R/10,          R/4 }, { -R/10+R/8,      R/4 } },
+  { { -R/10+R/4,      R/4 }, { -R/10+R/4,     -R/4 } }, // F
+  { { -R/10+R/4,      R/4 }, { -R/10+R/4+R/8,  R/4 } },
 };
 #undef R
 #define NUMCHEATPLYRLINES (sizeof(cheat_player_arrow)/sizeof(mline_t))
 
 mline_t triangle_guy[] =
 {
-  { { -.867, -.5 }, {  .867,  -.5 } },
-  { {  .867, -.5 }, {     0,  1.0 } },
-  { {     0, 1.0 }, { -.867,  -.5 } }
+  { { -0.867, -0.5 }, {  0.867, -0.5 } },
+  { {  0.867, -0.5 }, {  0.0,    1.0 } },
+  { {  0.0,    1.0 }, { -0.867, -0.5 } }
 };
-#undef R
 #define NUMTRIANGLEGUYLINES (sizeof(triangle_guy)/sizeof(mline_t))
 
 //jff 1/5/98 new symbol for keys on automap
-#define R (1.0)
 mline_t cross_mark[] =
 {
-  { { -R, 0 }, { R, 0} },
-  { { 0, -R }, { 0, R } },
+  { { -1.0,  0.0 }, { 1.0, 0.0 } },
+  { {  0.0, -1.0 }, { 0.0, 1.0 } },
 };
-#undef R
 #define NUMCROSSMARKLINES (sizeof(cross_mark)/sizeof(mline_t))
 //jff 1/5/98 end of new symbol
 
-#define TTG_MINUSP5 ((fixed_t)(-.5 * R))
-#define TTG_MINUSP7 ((fixed_t)(-.7 * R))
-#define TTG_P7      ((fixed_t)( .7 * R))
 mline_t thintriangle_guy[] =
 {
-  { { -.5, -.7 }, { 1.0,   0 } },
-  { { 1.0,   0 }, { -.5,  .7 } },
-  { { -.5,  .7 }, { -.5, -.7 } }
+  { { -0.5, -0.7 }, {  1.0,  0.0 } },
+  { {  1.0,  0.0 }, { -0.5,  0.7 } },
+  { { -0.5,  0.7 }, { -0.5, -0.7 } }
 };
-#undef R
 #define NUMTHINTRIANGLEGUYLINES (sizeof(thintriangle_guy)/sizeof(mline_t))
 
 int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*

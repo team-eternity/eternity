@@ -110,10 +110,10 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
 // Stop the sound. Necessary to prevent runaway chainsaw,
 // and to stop rocket launches when an explosion occurs.
 //
-void I_StopSound(int handle)
+void I_StopSound(int handle, int id)
 {
    if(snd_init)
-      i_sounddriver->StopSound(handle);
+      i_sounddriver->StopSound(handle, id);
 }
 
 //

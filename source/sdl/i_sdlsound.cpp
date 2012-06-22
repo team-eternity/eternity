@@ -732,13 +732,6 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    static unsigned int id = 1;
    int handle;
 
-   // haleyjd: turns out this is too simplistic. see below.
-   /*
-   // SoM: reimplement hardware channel wrap-around
-   if(++handle >= MAX_CHANNELS)
-      handle = 0;
-   */
-
    // haleyjd 06/03/06: look for an unused hardware channel
    for(handle = 0; handle < numChannels; ++handle)
    {
@@ -768,14 +761,15 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
 // Stop the sound. Necessary to prevent runaway chainsaw,
 // and to stop rocket launches when an explosion occurs.
 //
-static void I_SDLStopSound(int handle)
+static void I_SDLStopSound(int handle, int id)
 {
 #ifdef RANGECHECK
    if(handle < 0 || handle >= MAX_CHANNELS)
       I_Error("I_SDLStopSound: handle out of range\n");
 #endif
    
-   channelinfo[handle].shouldstop = true;
+   if(channelinfo[handle].idnum == (unsigned int)id)
+      channelinfo[handle].shouldstop = true;
 }
 
 //
@@ -790,7 +784,7 @@ static int I_SDLSoundIsPlaying(int handle)
       I_Error("I_SDLSoundIsPlaying: handle out of range\n");
 #endif
  
-   return (channelinfo[handle].data != NULL);
+   return !channelinfo[handle].shouldstop && channelinfo[handle].data;
 }
 
 //
