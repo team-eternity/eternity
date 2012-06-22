@@ -1900,12 +1900,7 @@ static bool pspec_Pillar(line_t *line, int *args, int16_t special)
 static bool pspec_ACSExecute(line_t *line, int *args, int16_t special,
                                 int side, Mobj *thing)
 {
-   int snum, mnum;
-
-   snum = args[0];
-   mnum = args[1];
-
-   return ACS_ExecuteScriptNumber(NULL, snum, args+2, 3, 0, thing, line, side, mnum);
+   return ACS_ExecuteScriptNumber(args[0], args[1], 0, args+2, 3, thing, line, side);
 }
 
 //

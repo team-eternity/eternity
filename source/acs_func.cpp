@@ -41,11 +41,13 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "m_random.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_spec.h"
+#include "p_xenemy.h"
 #include "r_data.h"
 #include "r_main.h"
 #include "r_state.h"
@@ -93,6 +95,135 @@ static void ACS_funcAmbientSoundLocal(ACS_FUNCARG)
 
    if(thread->trigger == players[displayplayer].mo)
       S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+}
+
+//
+// ACS_funcChangeCeiling
+//
+static void ACS_funcChangeCeiling(ACS_FUNCARG)
+{
+   P_ChangeCeilingTex(ACSVM::GetString(args[1]), args[0]);
+}
+
+//
+// ACS_funcChangeFloor
+//
+static void ACS_funcChangeFloor(ACS_FUNCARG)
+{
+   P_ChangeFloorTex(ACSVM::GetString(args[1]), args[0]);
+}
+
+//
+// ACS_funcCheckSight
+//
+static void ACS_funcCheckSight(ACS_FUNCARG)
+{
+   int32_t tid1 = args[0];
+   int32_t tid2 = args[1];
+   Mobj   *mo1  = NULL;
+   Mobj   *mo2  = NULL;
+
+   while((mo1 = P_FindMobjFromTID(tid1, mo1, thread->trigger)))
+   {
+      while((mo2 = P_FindMobjFromTID(tid2, mo2, thread->trigger)))
+      {
+         if(P_CheckSight(mo1, mo2))
+         {
+            *retn++ = 1;
+            return;
+         }
+      }
+   }
+
+   *retn++ = 0;
+}
+
+//
+// ACS_funcCheckThingType
+//
+static void ACS_funcCheckThingType(ACS_FUNCARG)
+{
+   Mobj *mo = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+
+   if(mo)
+      *retn++ = E_ThingNumForName(ACSVM::GetString(args[1])) == mo->type;
+   else
+      *retn++ = 0;
+}
+
+//
+// ACS_ChkThingVar
+//
+bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
+{
+   if(!thing) return false;
+
+   switch(var)
+   {
+   case ACS_THINGVAR_Health:       return thing->health == val;
+   case ACS_THINGVAR_Speed:        return thing->info->speed == val;
+   case ACS_THINGVAR_Damage:       return thing->damage == val;
+   case ACS_THINGVAR_Alpha:        return thing->translucency == val;
+   case ACS_THINGVAR_RenderStyle:  return false;
+   case ACS_THINGVAR_SeeSound:     return false;
+   case ACS_THINGVAR_AttackSound:  return false;
+   case ACS_THINGVAR_PainSound:    return false;
+   case ACS_THINGVAR_DeathSound:   return false;
+   case ACS_THINGVAR_ActiveSound:  return false;
+   case ACS_THINGVAR_Ambush:       return !!(thing->flags & MF_AMBUSH) == !!val;
+   case ACS_THINGVAR_Invulnerable: return !!(thing->flags2 & MF2_INVULNERABLE) == !!val;
+   case ACS_THINGVAR_JumpZ:        return false;
+   case ACS_THINGVAR_ChaseGoal:    return false;
+   case ACS_THINGVAR_Frightened:   return false;
+   case ACS_THINGVAR_Friendly:     return !!(thing->flags & MF_FRIEND) == !!val;
+   case ACS_THINGVAR_SpawnHealth:  return thing->info->spawnhealth == val;
+   case ACS_THINGVAR_Dropped:      return !!(thing->flags & MF_DROPPED) == !!val;
+   case ACS_THINGVAR_NoTarget:     return false;
+   case ACS_THINGVAR_Species:      return false;
+   case ACS_THINGVAR_NameTag:      return false;
+   case ACS_THINGVAR_Score:        return false;
+   case ACS_THINGVAR_NoTrigger:    return false;
+   case ACS_THINGVAR_DamageFactor: return false;
+   case ACS_THINGVAR_MasterTID:    return false;
+   case ACS_THINGVAR_TargetTID:    return thing->target ? thing->target->tid == val : false;
+   case ACS_THINGVAR_TracerTID:    return thing->tracer ? thing->tracer->tid == val : false;
+   case ACS_THINGVAR_WaterLevel:   return false;
+   case ACS_THINGVAR_ScaleX:       return M_FloatToFixed(thing->xscale) == val;
+   case ACS_THINGVAR_ScaleY:       return M_FloatToFixed(thing->yscale) == val;
+   case ACS_THINGVAR_Dormant:      return !!(thing->flags2 & MF2_DORMANT) == !!val;
+   case ACS_THINGVAR_Mass:         return thing->info->mass == val;
+   case ACS_THINGVAR_Accuracy:     return false;
+   case ACS_THINGVAR_Stamina:      return false;
+
+   case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
+   case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
+   case ACS_THINGVAR_CeilingTexture: return thing->subsector->sector->ceilingpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_CeilingZ:       return thing->ceilingz == val;
+   case ACS_THINGVAR_FloorTexture:   return thing->subsector->sector->floorpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_FloorZ:         return thing->floorz == val;
+   case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags == val : false;
+   case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel == val;
+   case ACS_THINGVAR_MomX:           return thing->momx == val;
+   case ACS_THINGVAR_MomY:           return thing->momy == val;
+   case ACS_THINGVAR_MomZ:           return thing->momz == val;
+   case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 == val : false;
+   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players == val : false;
+   case ACS_THINGVAR_SigilPieces:    return false;
+   case ACS_THINGVAR_TID:            return thing->tid == val;
+   case ACS_THINGVAR_X:              return thing->x == val;
+   case ACS_THINGVAR_Y:              return thing->y == val;
+   case ACS_THINGVAR_Z:              return thing->z == val;
+
+   default: return false;
+   }
+}
+
+//
+// ACS_funcChkThingVar
+//
+static void ACS_funcChkThingVar(ACS_FUNCARG)
+{
+   *retn++ = ACS_ChkThingVar(P_FindMobjFromTID(args[0], NULL, thread->trigger), args[1], args[2]);
 }
 
 // Flags for ClassifyThing.
@@ -157,19 +288,38 @@ static void ACS_funcClassifyThing(ACS_FUNCARG)
 }
 
 //
-// ACS_funcChangeCeiling
+// ACS_funcExecuteScriptAlwaysName
 //
-static void ACS_funcChangeCeiling(ACS_FUNCARG)
+static void ACS_funcExecuteScriptAlwaysName(ACS_FUNCARG)
 {
-   P_ChangeCeilingTex(ACSVM::GetString(args[1]), args[0]);
+   *retn++ = ACS_ExecuteScriptString(args[0], args[1], ACS_EXECUTE_ALWAYS, args+2, argc-2,
+                                     thread->trigger, thread->line, thread->lineSide);
 }
 
 //
-// ACS_funcChangeFloor
+// ACS_funcExecuteScriptName
 //
-static void ACS_funcChangeFloor(ACS_FUNCARG)
+static void ACS_funcExecuteScriptName(ACS_FUNCARG)
 {
-   P_ChangeFloorTex(ACSVM::GetString(args[1]), args[0]);
+   *retn++ = ACS_ExecuteScriptString(args[0], args[1], 0, args+2, argc-2,
+                                     thread->trigger, thread->line, thread->lineSide);
+}
+
+//
+// ACS_funcExecuteScriptResultName
+//
+static void ACS_funcExecuteScriptResultName(ACS_FUNCARG)
+{
+   ACSThinker *newThread;
+
+   ACS_ExecuteScriptString(args[0], gamemap, ACS_EXECUTE_ALWAYS|ACS_EXECUTE_IMMEDIATE,
+                           args+1, argc-1, thread->trigger, thread->line,
+                           thread->lineSide, &newThread);
+
+   if(newThread)
+      *retn++ = newThread->result;
+   else
+      *retn++ = 0;
 }
 
 // GetPlayerInput inputs.
@@ -288,6 +438,32 @@ static void ACS_funcGetPlayerInput(ACS_FUNCARG)
 }
 
 //
+// ACS_funcGetPolyobjX
+//
+static void ACS_funcGetPolyobjX(ACS_FUNCARG)
+{
+   polyobj_t *po = Polyobj_GetForNum(args[0]);
+
+   if(po)
+      *retn++ = po->centerPt.x;
+   else
+      *retn++ = 0x7FFF0000;
+}
+
+//
+// ACS_funcGetPolyobjY
+//
+static void ACS_funcGetPolyobjY(ACS_FUNCARG)
+{
+   polyobj_t *po = Polyobj_GetForNum(args[0]);
+
+   if(po)
+      *retn++ = po->centerPt.y;
+   else
+      *retn++ = 0x7FFF0000;
+}
+
+//
 // ACS_funcGetSectorCeilingZ
 //
 static void ACS_funcGetSectorCeilingZ(ACS_FUNCARG)
@@ -327,6 +503,115 @@ static void ACS_funcGetSectorLightLevel(ACS_FUNCARG)
    int secnum = P_FindSectorFromTag(args[0], -1);
 
    *retn++ = secnum >= 0 ? sectors[secnum].lightlevel : 0;
+}
+
+//
+// ACS_GetThingVar
+//
+int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
+{
+   if(!thing) return 0;
+
+   switch(var)
+   {
+   case ACS_THINGVAR_Health:       return thing->health;
+   case ACS_THINGVAR_Speed:        return thing->info->speed;
+   case ACS_THINGVAR_Damage:       return thing->damage;
+   case ACS_THINGVAR_Alpha:        return thing->translucency;
+   case ACS_THINGVAR_RenderStyle:  return 0;
+   case ACS_THINGVAR_SeeSound:     return 0;
+   case ACS_THINGVAR_AttackSound:  return 0;
+   case ACS_THINGVAR_PainSound:    return 0;
+   case ACS_THINGVAR_DeathSound:   return 0;
+   case ACS_THINGVAR_ActiveSound:  return 0;
+   case ACS_THINGVAR_Ambush:       return !!(thing->flags & MF_AMBUSH);
+   case ACS_THINGVAR_Invulnerable: return !!(thing->flags2 & MF2_INVULNERABLE);
+   case ACS_THINGVAR_JumpZ:        return 0;
+   case ACS_THINGVAR_ChaseGoal:    return 0;
+   case ACS_THINGVAR_Frightened:   return 0;
+   case ACS_THINGVAR_Friendly:     return !!(thing->flags & MF_FRIEND);
+   case ACS_THINGVAR_SpawnHealth:  return thing->info->spawnhealth;
+   case ACS_THINGVAR_Dropped:      return !!(thing->flags & MF_DROPPED);
+   case ACS_THINGVAR_NoTarget:     return 0;
+   case ACS_THINGVAR_Species:      return 0;
+   case ACS_THINGVAR_NameTag:      return 0;
+   case ACS_THINGVAR_Score:        return 0;
+   case ACS_THINGVAR_NoTrigger:    return 0;
+   case ACS_THINGVAR_DamageFactor: return 0;
+   case ACS_THINGVAR_MasterTID:    return 0;
+   case ACS_THINGVAR_TargetTID:    return thing->target ? thing->target->tid : 0;
+   case ACS_THINGVAR_TracerTID:    return thing->tracer ? thing->tracer->tid : 0;
+   case ACS_THINGVAR_WaterLevel:   return 0;
+   case ACS_THINGVAR_ScaleX:       return M_FloatToFixed(thing->xscale);
+   case ACS_THINGVAR_ScaleY:       return M_FloatToFixed(thing->yscale);
+   case ACS_THINGVAR_Dormant:      return !!(thing->flags2 & MF2_DORMANT);
+   case ACS_THINGVAR_Mass:         return thing->info->mass;
+   case ACS_THINGVAR_Accuracy:     return 0;
+   case ACS_THINGVAR_Stamina:      return 0;
+
+   case ACS_THINGVAR_Angle:          return thing->angle >> 16;
+   case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints : 0;
+   case ACS_THINGVAR_CeilingTexture: return 0;
+   case ACS_THINGVAR_CeilingZ:       return thing->ceilingz;
+   case ACS_THINGVAR_FloorTexture:   return 0;
+   case ACS_THINGVAR_FloorZ:         return thing->floorz;
+   case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags : 0;
+   case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel;
+   case ACS_THINGVAR_MomX:           return thing->momx;
+   case ACS_THINGVAR_MomY:           return thing->momy;
+   case ACS_THINGVAR_MomZ:           return thing->momz;
+   case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 : 0;
+   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players : -1;
+   case ACS_THINGVAR_SigilPieces:    return 0;
+   case ACS_THINGVAR_TID:            return thing->tid;
+   case ACS_THINGVAR_X:              return thing->x;
+   case ACS_THINGVAR_Y:              return thing->y;
+   case ACS_THINGVAR_Z:              return thing->z;
+
+   default: return 0;
+   }
+}
+
+//
+// ACS_funcGetThingVar
+//
+static void ACS_funcGetThingVar(ACS_FUNCARG)
+{
+   *retn++ = ACS_GetThingVar(P_FindMobjFromTID(args[0], NULL, thread->trigger), args[1]);
+}
+
+//
+// ACS_funcRadiusQuake
+//
+static void ACS_funcRadiusQuake(ACS_FUNCARG)
+{
+   int32_t     tid          = args[0];
+   int32_t     intensity    = args[1];
+   int32_t     duration     = args[2];
+   int32_t     damageRadius = args[3];
+   int32_t     quakeRadius  = args[4];
+   const char *snd          = ACSVM::GetString(args[5]);
+   Mobj       *mo           = NULL;
+
+   while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
+   {
+      QuakeThinker *qt;
+
+      qt = new QuakeThinker;
+      qt->addThinker();
+
+      qt->intensity    = intensity;
+      qt->duration     = duration;
+      qt->damageRadius = damageRadius;
+      qt->quakeRadius  = quakeRadius;
+
+      qt->x       = mo->x;
+      qt->y       = mo->y;
+      qt->z       = mo->z;
+      qt->groupid = mo->groupid;
+
+      S_StartSoundNameAtVolume(qt, snd, 127, ATTN_NORMAL, CHAN_AUTO);
+   }
 }
 
 //
@@ -448,6 +733,36 @@ static void ACS_funcSectorSound(ACS_FUNCARG)
    S_StartSoundNameAtVolume(src, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 }
 
+//
+// ACS_funcSetActivator
+//
+static void ACS_funcSetActivator(ACS_FUNCARG)
+{
+   P_SetTarget(&thread->trigger, P_FindMobjFromTID(args[0], NULL, NULL));
+
+   *retn++ = !!thread->trigger;
+}
+
+//
+// ACS_funcSetActivatorToTarget
+//
+static void ACS_funcSetActivatorToTarget(ACS_FUNCARG)
+{
+   Mobj *mo = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+
+   if(mo)
+   {
+      if(mo->target)
+         P_SetTarget(&thread->trigger, mo->target);
+      else
+         P_SetTarget(&thread->trigger, mo);
+
+      *retn++ = 1;
+   }
+   else
+      *retn++ = 0;
+}
+
 // ZDoom blocking types
 enum
 {
@@ -562,6 +877,47 @@ static void ACS_funcSetMusicLocal(ACS_FUNCARG)
 {
    if(thread->trigger == players[consoleplayer].mo)
       S_ChangeMusicName(ACSVM::GetString(args[0]), 1);
+}
+
+//
+// ACS_funcSetSkyDelta
+//
+static void ACS_funcSetSkyDelta(ACS_FUNCARG)
+{
+   switch(args[0])
+   {
+   case 1: LevelInfo.skyDelta  = args[1] >> FRACBITS; break;
+   case 2: LevelInfo.sky2Delta = args[1] >> FRACBITS; break;
+   }
+}
+
+//
+// ACS_funcSetThingMomentum
+//
+static void ACS_funcSetThingMomentum(ACS_FUNCARG)
+{
+   int32_t tid  = args[0];
+   fixed_t momx = args[1];
+   fixed_t momy = args[2];
+   fixed_t momz = args[3];
+   bool    add  = args[4];
+   Mobj   *mo   = NULL;
+
+   while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
+   {
+      if(add)
+      {
+         mo->momx += momx;
+         mo->momy += momy;
+         mo->momz += momz;
+      }
+      else
+      {
+         mo->momx = momx;
+         mo->momy = momy;
+         mo->momz = momz;
+      }
+   }
 }
 
 //
@@ -684,6 +1040,90 @@ static void ACS_funcSetThingState(ACS_FUNCARG)
 }
 
 //
+// ACS_SetThingVar
+//
+void ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val)
+{
+   if(!thing) return;
+
+   switch(var)
+   {
+   case ACS_THINGVAR_Health:       thing->health = val; break;
+   case ACS_THINGVAR_Speed:        break;
+   case ACS_THINGVAR_Damage:       thing->damage = val; break;
+   case ACS_THINGVAR_Alpha:        thing->translucency = val; break;
+   case ACS_THINGVAR_RenderStyle:  break;
+   case ACS_THINGVAR_SeeSound:     break;
+   case ACS_THINGVAR_AttackSound:  break;
+   case ACS_THINGVAR_PainSound:    break;
+   case ACS_THINGVAR_DeathSound:   break;
+   case ACS_THINGVAR_ActiveSound:  break;
+   case ACS_THINGVAR_Ambush:       if(val) thing->flags |=  MF_AMBUSH;
+                                   else    thing->flags &= ~MF_AMBUSH; break;
+   case ACS_THINGVAR_Invulnerable: if(val) thing->flags2 |=  MF2_INVULNERABLE;
+                                   else    thing->flags2 &= ~MF2_INVULNERABLE; break;
+   case ACS_THINGVAR_JumpZ:        break;
+   case ACS_THINGVAR_ChaseGoal:    break;
+   case ACS_THINGVAR_Frightened:   break;
+   case ACS_THINGVAR_Friendly:     if(val) thing->flags |=  MF_FRIEND;
+                                   else    thing->flags &= ~MF_FRIEND; break;
+   case ACS_THINGVAR_SpawnHealth:  break;
+   case ACS_THINGVAR_Dropped:      if(val) thing->flags |=  MF_DROPPED;
+                                   else    thing->flags &= ~MF_DROPPED; break;
+   case ACS_THINGVAR_NoTarget:     break;
+   case ACS_THINGVAR_Species:      break;
+   case ACS_THINGVAR_NameTag:      break;
+   case ACS_THINGVAR_Score:        break;
+   case ACS_THINGVAR_NoTrigger:    break;
+   case ACS_THINGVAR_DamageFactor: break;
+   case ACS_THINGVAR_MasterTID:    break;
+   case ACS_THINGVAR_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, 0, 0)); break;
+   case ACS_THINGVAR_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, 0, 0)); break;
+   case ACS_THINGVAR_WaterLevel:   break;
+   case ACS_THINGVAR_ScaleX:       thing->xscale = M_FixedToFloat(val); break;
+   case ACS_THINGVAR_ScaleY:       thing->yscale = M_FixedToFloat(val); break;
+   case ACS_THINGVAR_Dormant:      if(val) thing->flags2 |=  MF2_DORMANT;
+                                   else    thing->flags2 &= ~MF2_DORMANT; break;
+   case ACS_THINGVAR_Mass:         break;
+   case ACS_THINGVAR_Accuracy:     break;
+   case ACS_THINGVAR_Stamina:      break;
+
+   case ACS_THINGVAR_Angle:          thing->angle = val << 16; break;
+   case ACS_THINGVAR_Armor:          break;
+   case ACS_THINGVAR_CeilingTexture: break;
+   case ACS_THINGVAR_CeilingZ:       break;
+   case ACS_THINGVAR_FloorTexture:   break;
+   case ACS_THINGVAR_FloorZ:         break;
+   case ACS_THINGVAR_Frags:          break;
+   case ACS_THINGVAR_LightLevel:     break;
+   case ACS_THINGVAR_MomX:           thing->momx = val; break;
+   case ACS_THINGVAR_MomY:           thing->momy = val; break;
+   case ACS_THINGVAR_MomZ:           thing->momz = val; break;
+   case ACS_THINGVAR_Pitch:          if(thing->player) thing->player->pitch = val << 16; break;
+   case ACS_THINGVAR_PlayerNumber:   break;
+   case ACS_THINGVAR_SigilPieces:    break;
+   case ACS_THINGVAR_TID:            P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
+   case ACS_THINGVAR_X:              thing->x = val; break;
+   case ACS_THINGVAR_Y:              thing->y = val; break;
+   case ACS_THINGVAR_Z:              thing->z = val; break;
+   }
+}
+
+//
+// ACS_funcSetThingVar
+//
+static void ACS_funcSetThingVar(ACS_FUNCARG)
+{
+   int32_t  tid = args[0];
+   uint32_t var = args[1];
+   int32_t  val = args[2];
+   Mobj    *mo = NULL;
+
+   while((mo = P_FindMobjFromTID(tid, NULL, thread->trigger)))
+      ACS_SetThingVar(mo, var, val);
+}
+
+//
 // ACS_funcSoundSequence
 //
 static void ACS_funcSoundSequence(ACS_FUNCARG)
@@ -698,14 +1138,32 @@ static void ACS_funcSoundSequence(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSoundSequenceThing
+//
+static void ACS_funcSoundSequenceThing(ACS_FUNCARG)
+{
+   Mobj *mo = P_FindMobjFromTID(args[0], NULL, NULL);
+   S_StartSequenceName(mo, ACSVM::GetString(args[1]), SEQ_ORIGIN_OTHER, -1);
+}
+
+//
 // ACS_spawn
 //
 static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
-                       int tid, angle_t angle)
+                       int tid, angle_t angle, bool forced)
 {
    Mobj *mo;
    if(type != -1 && (mo = P_SpawnMobj(x, y, z, type)))
    {
+      // If not forcing spawn, check that the position is OK.
+      if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y))
+      {
+         // And if not, unmake the Mobj.
+         mo->state = NULL;
+         mo->removeThinker();
+         return NULL;
+      }
+
       if(tid) P_AddThingTID(mo, tid);
       mo->angle = angle;
       return mo;
@@ -723,7 +1181,7 @@ static Mobj *ACS_spawnProjectile(mobjtype_t type, fixed_t x, fixed_t y, fixed_t 
 {
    Mobj *mo;
 
-   if((mo = ACS_spawn(type, x, y, z, tid, angle)))
+   if((mo = ACS_spawn(type, x, y, z, tid, angle, true)))
    {
       if(mo->info->seesound)
          S_StartSound(mo, mo->info->seesound);
@@ -747,18 +1205,34 @@ static Mobj *ACS_spawnProjectile(mobjtype_t type, fixed_t x, fixed_t y, fixed_t 
 }
 
 //
+// ACS_spawnPoint
+//
+static void ACS_spawnPoint(ACS_FUNCARG, bool forced)
+{
+   mobjtype_t type  = E_ThingNumForName(ACSVM::GetString(args[0]));
+   fixed_t    x     = args[1];
+   fixed_t    y     = args[2];
+   fixed_t    z     = args[3];
+   int        tid   = args[4];
+   angle_t    angle = args[5] << 24;
+
+   *retn++ = !!ACS_spawn(type, x, y, z, tid, angle, forced);
+}
+
+//
 // ACS_funcSpawnPoint
 //
 static void ACS_funcSpawnPoint(ACS_FUNCARG)
 {
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
-   fixed_t x     = args[1];
-   fixed_t y     = args[2];
-   fixed_t z     = args[3];
-   int     tid   = args[4];
-   angle_t angle = args[5] << 24;
+   ACS_spawnPoint(thread, argc, args, retn, false);
+}
 
-   *retn++ = !!ACS_spawn(type, x, y, z, tid, angle);
+//
+// ACS_funcSpawnPointForced
+//
+static void ACS_funcSpawnPointForced(ACS_FUNCARG)
+{
+   ACS_spawnPoint(thread, argc, args, retn, true);
 }
 
 //
@@ -784,20 +1258,54 @@ static void ACS_funcSpawnProjectile(ACS_FUNCARG)
 }
 
 //
-// ACS_funcSpawnSpot
+// ACS_spawnSpot
 //
-static void ACS_funcSpawnSpot(ACS_FUNCARG)
+static void ACS_spawnSpot(ACS_FUNCARG, bool forced)
 {
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
-   int     spotid = args[1];
-   int     tid    = args[2];
-   angle_t angle  = args[3] << 24;
-   Mobj   *spot   = NULL;
+   mobjtype_t type   = E_ThingNumForName(ACSVM::GetString(args[0]));
+   int        spotid = args[1];
+   int        tid    = args[2];
+   angle_t    angle  = args[3] << 24;
+   Mobj      *spot   = NULL;
 
    *retn = 0;
 
    while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
-      *retn += !!ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle);
+      *retn += !!ACS_spawn(type, spot->x, spot->y, spot->z, tid, angle, forced);
+
+   ++retn;
+}
+
+//
+// ACS_funcSpawnSpot
+//
+static void ACS_funcSpawnSpot(ACS_FUNCARG)
+{
+   ACS_spawnSpot(thread, argc, args, retn, false);
+}
+
+//
+// ACS_funcSpawnSpotForced
+//
+static void ACS_funcSpawnSpotForced(ACS_FUNCARG)
+{
+   ACS_spawnSpot(thread, argc, args, retn, true);
+}
+
+//
+// ACS_spawnSpotAngle
+//
+static void ACS_spawnSpotAngle(ACS_FUNCARG, bool forced)
+{
+   mobjtype_t type   = E_ThingNumForName(ACSVM::GetString(args[0]));
+   int        spotid = args[1];
+   int        tid    = args[2];
+   Mobj      *spot   = NULL;
+
+   *retn = 0;
+
+   while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
+      *retn += !!ACS_spawn(type, spot->x, spot->y, spot->z, tid, spot->angle, forced);
 
    ++retn;
 }
@@ -807,17 +1315,31 @@ static void ACS_funcSpawnSpot(ACS_FUNCARG)
 //
 static void ACS_funcSpawnSpotAngle(ACS_FUNCARG)
 {
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
-   int     spotid = args[1];
-   int     tid    = args[2];
-   Mobj   *spot   = NULL;
+   ACS_spawnSpotAngle(thread, argc, args, retn, false);
+}
 
-   *retn = 0;
+//
+// ACS_funcSpawnSpotAngleForced
+//
+static void ACS_funcSpawnSpotAngleForced(ACS_FUNCARG)
+{
+   ACS_spawnSpotAngle(thread, argc, args, retn, true);
+}
 
-   while((spot = P_FindMobjFromTID(spotid, spot, thread->trigger)))
-      *retn += !!ACS_spawn(type, spot->x, spot->y, spot->z, tid, spot->angle);
+//
+// ACS_funcSuspendScriptName
+//
+static void ACS_funcSuspendScriptName(ACS_FUNCARG)
+{
+   *retn++ = ACS_SuspendScriptString(args[0], args[1]);
+}
 
-   ++retn;
+//
+// ACS_funcTerminateScriptName
+//
+static void ACS_funcTerminateScriptName(ACS_FUNCARG)
+{
+   *retn++ = ACS_TerminateScriptString(args[0], args[1]);
 }
 
 //
@@ -1020,29 +1542,50 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcAmbientSoundLocal,
    ACS_funcChangeCeiling,
    ACS_funcChangeFloor,
+   ACS_funcCheckSight,
+   ACS_funcCheckThingType,
+   ACS_funcChkThingVar,
    ACS_funcClassifyThing,
+   ACS_funcExecuteScriptName,
+   ACS_funcExecuteScriptAlwaysName,
+   ACS_funcExecuteScriptResultName,
    ACS_funcGetPlayerInput,
+   ACS_funcGetPolyobjX,
+   ACS_funcGetPolyobjY,
    ACS_funcGetSectorCeilingZ,
    ACS_funcGetSectorFloorZ,
    ACS_funcGetSectorLightLevel,
+   ACS_funcGetThingVar,
    ACS_funcRandom,
+   ACS_funcRadiusQuake,
    ACS_funcReplaceTextures,
    ACS_funcSectorDamage,
    ACS_funcSectorSound,
+   ACS_funcSetActivator,
+   ACS_funcSetActivatorToTarget,
    ACS_funcSetLineBlocking,
    ACS_funcSetLineMonsterBlocking,
    ACS_funcSetLineSpecial,
    ACS_funcSetLineTexture,
    ACS_funcSetMusic,
    ACS_funcSetMusicLocal,
+   ACS_funcSetSkyDelta,
+   ACS_funcSetThingMomentum,
    ACS_funcSetThingPosition,
    ACS_funcSetThingSpecial,
    ACS_funcSetThingState,
+   ACS_funcSetThingVar,
    ACS_funcSoundSequence,
+   ACS_funcSoundSequenceThing,
    ACS_funcSpawnPoint,
+   ACS_funcSpawnPointForced,
    ACS_funcSpawnProjectile,
    ACS_funcSpawnSpot,
+   ACS_funcSpawnSpotForced,
    ACS_funcSpawnSpotAngle,
+   ACS_funcSpawnSpotAngleForced,
+   ACS_funcSuspendScriptName,
+   ACS_funcTerminateScriptName,
    ACS_funcThingCount,
    ACS_funcThingCountName,
    ACS_funcThingCountNameSector,

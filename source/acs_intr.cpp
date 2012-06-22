@@ -45,7 +45,6 @@
 #include "p_maputl.h"
 #include "p_saveg.h"
 #include "p_spec.h"
-#include "r_data.h"
 #include "r_state.h"
 #include "v_misc.h"
 #include "w_wad.h"
@@ -331,199 +330,6 @@ static int32_t ACS_getLevelVar(uint32_t var)
    }
 }
 
-//
-// ACS_chkThingVar
-//
-static bool ACS_chkThingVar(Mobj *thing, uint32_t var, int32_t val)
-{
-   if(!thing) return false;
-
-   switch(var)
-   {
-   case ACS_THINGVAR_Health:       return thing->health == val;
-   case ACS_THINGVAR_Speed:        return thing->info->speed == val;
-   case ACS_THINGVAR_Damage:       return thing->damage == val;
-   case ACS_THINGVAR_Alpha:        return thing->translucency == val;
-   case ACS_THINGVAR_RenderStyle:  return false;
-   case ACS_THINGVAR_SeeSound:     return false;
-   case ACS_THINGVAR_AttackSound:  return false;
-   case ACS_THINGVAR_PainSound:    return false;
-   case ACS_THINGVAR_DeathSound:   return false;
-   case ACS_THINGVAR_ActiveSound:  return false;
-   case ACS_THINGVAR_Ambush:       return !!(thing->flags & MF_AMBUSH) == !!val;
-   case ACS_THINGVAR_Invulnerable: return !!(thing->flags2 & MF2_INVULNERABLE) == !!val;
-   case ACS_THINGVAR_JumpZ:        return false;
-   case ACS_THINGVAR_ChaseGoal:    return false;
-   case ACS_THINGVAR_Frightened:   return false;
-   case ACS_THINGVAR_Friendly:     return !!(thing->flags & MF_FRIEND) == !!val;
-   case ACS_THINGVAR_SpawnHealth:  return thing->info->spawnhealth == val;
-   case ACS_THINGVAR_Dropped:      return !!(thing->flags & MF_DROPPED) == !!val;
-   case ACS_THINGVAR_NoTarget:     return false;
-   case ACS_THINGVAR_Species:      return false;
-   case ACS_THINGVAR_NameTag:      return false;
-   case ACS_THINGVAR_Score:        return false;
-   case ACS_THINGVAR_NoTrigger:    return false;
-   case ACS_THINGVAR_DamageFactor: return false;
-   case ACS_THINGVAR_MasterTID:    return false;
-   case ACS_THINGVAR_TargetTID:    return thing->target ? thing->target->tid == val : false;
-   case ACS_THINGVAR_TracerTID:    return thing->tracer ? thing->tracer->tid == val : false;
-   case ACS_THINGVAR_WaterLevel:   return false;
-   case ACS_THINGVAR_ScaleX:       return M_FloatToFixed(thing->xscale) == val;
-   case ACS_THINGVAR_ScaleY:       return M_FloatToFixed(thing->yscale) == val;
-   case ACS_THINGVAR_Dormant:      return !!(thing->flags2 & MF2_DORMANT) == !!val;
-   case ACS_THINGVAR_Mass:         return thing->info->mass == val;
-   case ACS_THINGVAR_Accuracy:     return false;
-   case ACS_THINGVAR_Stamina:      return false;
-
-   case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
-   case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
-   case ACS_THINGVAR_CeilingTexture: return thing->subsector->sector->ceilingpic == R_FindWall(ACSVM::GetString(val));
-   case ACS_THINGVAR_CeilingZ:       return thing->ceilingz == val;
-   case ACS_THINGVAR_FloorTexture:   return thing->subsector->sector->floorpic == R_FindWall(ACSVM::GetString(val));
-   case ACS_THINGVAR_FloorZ:         return thing->floorz == val;
-   case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags == val : false;
-   case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel == val;
-   case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 == val : false;
-   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players == val : false;
-   case ACS_THINGVAR_SigilPieces:    return false;
-   case ACS_THINGVAR_TID:            return thing->tid == val;
-   case ACS_THINGVAR_X:              return thing->x == val;
-   case ACS_THINGVAR_Y:              return thing->y == val;
-   case ACS_THINGVAR_Z:              return thing->z == val;
-
-   default: return false;
-   }
-}
-
-//
-// ACS_getThingVar
-//
-static int32_t ACS_getThingVar(Mobj *thing, uint32_t var)
-{
-   if(!thing) return 0;
-
-   switch(var)
-   {
-   case ACS_THINGVAR_Health:       return thing->health;
-   case ACS_THINGVAR_Speed:        return thing->info->speed;
-   case ACS_THINGVAR_Damage:       return thing->damage;
-   case ACS_THINGVAR_Alpha:        return thing->translucency;
-   case ACS_THINGVAR_RenderStyle:  return 0;
-   case ACS_THINGVAR_SeeSound:     return 0;
-   case ACS_THINGVAR_AttackSound:  return 0;
-   case ACS_THINGVAR_PainSound:    return 0;
-   case ACS_THINGVAR_DeathSound:   return 0;
-   case ACS_THINGVAR_ActiveSound:  return 0;
-   case ACS_THINGVAR_Ambush:       return !!(thing->flags & MF_AMBUSH);
-   case ACS_THINGVAR_Invulnerable: return !!(thing->flags2 & MF2_INVULNERABLE);
-   case ACS_THINGVAR_JumpZ:        return 0;
-   case ACS_THINGVAR_ChaseGoal:    return 0;
-   case ACS_THINGVAR_Frightened:   return 0;
-   case ACS_THINGVAR_Friendly:     return !!(thing->flags & MF_FRIEND);
-   case ACS_THINGVAR_SpawnHealth:  return thing->info->spawnhealth;
-   case ACS_THINGVAR_Dropped:      return !!(thing->flags & MF_DROPPED);
-   case ACS_THINGVAR_NoTarget:     return 0;
-   case ACS_THINGVAR_Species:      return 0;
-   case ACS_THINGVAR_NameTag:      return 0;
-   case ACS_THINGVAR_Score:        return 0;
-   case ACS_THINGVAR_NoTrigger:    return 0;
-   case ACS_THINGVAR_DamageFactor: return 0;
-   case ACS_THINGVAR_MasterTID:    return 0;
-   case ACS_THINGVAR_TargetTID:    return thing->target ? thing->target->tid : 0;
-   case ACS_THINGVAR_TracerTID:    return thing->tracer ? thing->tracer->tid : 0;
-   case ACS_THINGVAR_WaterLevel:   return 0;
-   case ACS_THINGVAR_ScaleX:       return M_FloatToFixed(thing->xscale);
-   case ACS_THINGVAR_ScaleY:       return M_FloatToFixed(thing->yscale);
-   case ACS_THINGVAR_Dormant:      return !!(thing->flags2 & MF2_DORMANT);
-   case ACS_THINGVAR_Mass:         return thing->info->mass;
-   case ACS_THINGVAR_Accuracy:     return 0;
-   case ACS_THINGVAR_Stamina:      return 0;
-
-   case ACS_THINGVAR_Angle:          return thing->angle >> 16;
-   case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints : 0;
-   case ACS_THINGVAR_CeilingTexture: return 0;
-   case ACS_THINGVAR_CeilingZ:       return thing->ceilingz;
-   case ACS_THINGVAR_FloorTexture:   return 0;
-   case ACS_THINGVAR_FloorZ:         return thing->floorz;
-   case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags : 0;
-   case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel;
-   case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 : 0;
-   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players : -1;
-   case ACS_THINGVAR_SigilPieces:    return 0;
-   case ACS_THINGVAR_TID:            return thing->tid;
-   case ACS_THINGVAR_X:              return thing->x;
-   case ACS_THINGVAR_Y:              return thing->y;
-   case ACS_THINGVAR_Z:              return thing->z;
-
-   default: return 0;
-   }
-}
-
-//
-// ACS_setThingVar
-//
-static void ACS_setThingVar(Mobj *thing, uint32_t var, int32_t val)
-{
-   switch(var)
-   {
-   case ACS_THINGVAR_Health:       thing->health = val; break;
-   case ACS_THINGVAR_Speed:        break;
-   case ACS_THINGVAR_Damage:       thing->damage = val; break;
-   case ACS_THINGVAR_Alpha:        thing->translucency = val; break;
-   case ACS_THINGVAR_RenderStyle:  break;
-   case ACS_THINGVAR_SeeSound:     break;
-   case ACS_THINGVAR_AttackSound:  break;
-   case ACS_THINGVAR_PainSound:    break;
-   case ACS_THINGVAR_DeathSound:   break;
-   case ACS_THINGVAR_ActiveSound:  break;
-   case ACS_THINGVAR_Ambush:       if(val) thing->flags |=  MF_AMBUSH;
-                                   else    thing->flags &= ~MF_AMBUSH; break;
-   case ACS_THINGVAR_Invulnerable: if(val) thing->flags2 |=  MF2_INVULNERABLE;
-                                   else    thing->flags2 &= ~MF2_INVULNERABLE; break;
-   case ACS_THINGVAR_JumpZ:        break;
-   case ACS_THINGVAR_ChaseGoal:    break;
-   case ACS_THINGVAR_Frightened:   break;
-   case ACS_THINGVAR_Friendly:     if(val) thing->flags |=  MF_FRIEND;
-                                   else    thing->flags &= ~MF_FRIEND; break;
-   case ACS_THINGVAR_SpawnHealth:  break;
-   case ACS_THINGVAR_Dropped:      if(val) thing->flags |=  MF_DROPPED;
-                                   else    thing->flags &= ~MF_DROPPED; break;
-   case ACS_THINGVAR_NoTarget:     break;
-   case ACS_THINGVAR_Species:      break;
-   case ACS_THINGVAR_NameTag:      break;
-   case ACS_THINGVAR_Score:        break;
-   case ACS_THINGVAR_NoTrigger:    break;
-   case ACS_THINGVAR_DamageFactor: break;
-   case ACS_THINGVAR_MasterTID:    break;
-   case ACS_THINGVAR_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, 0, 0)); break;
-   case ACS_THINGVAR_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, 0, 0)); break;
-   case ACS_THINGVAR_WaterLevel:   break;
-   case ACS_THINGVAR_ScaleX:       thing->xscale = M_FixedToFloat(val); break;
-   case ACS_THINGVAR_ScaleY:       thing->yscale = M_FixedToFloat(val); break;
-   case ACS_THINGVAR_Dormant:      if(val) thing->flags2 |=  MF2_DORMANT;
-                                   else    thing->flags2 &= ~MF2_DORMANT; break;
-   case ACS_THINGVAR_Mass:         break;
-   case ACS_THINGVAR_Accuracy:     break;
-   case ACS_THINGVAR_Stamina:      break;
-
-   case ACS_THINGVAR_Angle:          thing->angle = val << 16; break;
-   case ACS_THINGVAR_Armor:          break;
-   case ACS_THINGVAR_CeilingTexture: break;
-   case ACS_THINGVAR_CeilingZ:       break;
-   case ACS_THINGVAR_FloorTexture:   break;
-   case ACS_THINGVAR_FloorZ:         break;
-   case ACS_THINGVAR_Frags:          break;
-   case ACS_THINGVAR_LightLevel:     break;
-   case ACS_THINGVAR_Pitch:          if(thing->player) thing->player->pitch = val << 16; break;
-   case ACS_THINGVAR_PlayerNumber:   break;
-   case ACS_THINGVAR_SigilPieces:    break;
-   case ACS_THINGVAR_TID:            P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
-   case ACS_THINGVAR_X:              thing->x = val; break;
-   case ACS_THINGVAR_Y:              thing->y = val; break;
-   case ACS_THINGVAR_Z:              thing->z = val; break;
-   }
-}
-
 
 //
 // Global Functions
@@ -708,6 +514,16 @@ void ACSThinker::Think()
       ACSfunc[opcode](this, temp, ip, stp);
       ip += temp; // consume args
       NEXTOP();
+   OPCODE(CALLFUNC_ZD):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+   {
+      int32_t *oldstp = stp;
+      ACSfunc[opcode](this, temp, stp, stp);
+      if(stp == oldstp) *stp++ = 0; // must always return at least one byte
+   }
+      NEXTOP();
 
    OPCODE(LINESPEC):
       opcode = IPNEXT(); // read special
@@ -763,18 +579,7 @@ void ACSThinker::Think()
          Mobj *mo = NULL;
 
          while((mo = P_FindMobjFromTID(tid, NULL, trigger)))
-            ACS_setThingVar(mo, opcode, temp);
-      }
-      NEXTOP();
-   OPCODE(SET_THINGARR):
-      {
-         temp    = POP();
-         opcode  = POP();
-         int tid = POP();
-         Mobj *mo = NULL;
-
-         while((mo = P_FindMobjFromTID(tid, NULL, trigger)))
-            ACS_setThingVar(mo, opcode, temp);
+            ACS_SetThingVar(mo, opcode, temp);
       }
       NEXTOP();
 
@@ -804,12 +609,23 @@ void ACSThinker::Think()
       STACK_AT(1) = ACSglobalarrs[IPNEXT()][STACK_AT(1)];
       NEXTOP();
 
-   OPCODE(GET_THINGVAR):
-      STACK_AT(1) = ACS_getThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT());
+   OPCODE(GET_STRINGARR):
+      temp   = POP();
+      opcode = POP();
+      if(opcode < ACSVM::GlobalNumStrings)
+      {
+         ACSString *string = ACSVM::GlobalStrings[opcode];
+         if((uint32_t)temp < string->data.l)
+            PUSH(string->data.s[temp]);
+         else
+            PUSH(0);
+      }
+      else
+         PUSH(0);
       NEXTOP();
-   OPCODE(GET_THINGARR):
-      temp = POP();
-      STACK_AT(1) = ACS_getThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), temp);
+
+   OPCODE(GET_THINGVAR):
+      STACK_AT(1) = ACS_GetThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT());
       NEXTOP();
 
    OPCODE(GET_LEVELARR):
@@ -828,7 +644,7 @@ void ACSThinker::Think()
       // CHK
    OPCODE(CHK_THINGVAR):
       temp = POP();
-      STACK_AT(1) = ACS_chkThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT(), temp);
+      STACK_AT(1) = ACS_ChkThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT(), temp);
       NEXTOP();
 
       // Binary Ops
@@ -1196,15 +1012,15 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(PRINTINT_BIN):
       {
-         // %B worst case: 11111111111111111111111111111111 == 32 + NUL
-         char buffer[33];
+         // %B worst case: -10000000000000000000000000000000 == 33 + NUL
+         char buffer[34];
          printBuffer->concat(M_Itoa(POP(), buffer, 2));
       }
       NEXTOP();
    OPCODE(PRINTINT_HEX):
       {
-         // %x worst case: FFFFFFFF == 8 + NUL
-         char buffer[9];
+         // %x worst case: -80000000 == 9 + NUL
+         char buffer[10];
          printBuffer->concat(M_Itoa(POP(), buffer, 16));
       }
       NEXTOP();
@@ -1752,7 +1568,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
 static bool ACS_addDeferredScript(int32_t number, int mapnum, int type,
-                                  int32_t *argv, uint32_t argc)
+                                  const int32_t *argv, uint32_t argc)
 {
    DLListItem<deferredacs_t> *cur = acsDeferred;
    deferredacs_t *newdacs;
@@ -1811,8 +1627,9 @@ void ACS_RunDeferredScripts()
          switch(dacs->type)
          {
          case ACS_DEFERRED_EXECUTE:
-            ACS_ExecuteScriptNumber(&newThread, dacs->scriptNum, dacs->args, NUMLINEARGS,
-                                    0, NULL, NULL, 0, dacs->targetMap);
+            ACS_ExecuteScriptNumber(dacs->scriptNum, dacs->targetMap, 0,
+                                    dacs->args, NUMLINEARGS, NULL, NULL, 0,
+                                    &newThread);
             if(newThread)
                newThread->delay = TICRATE;
             break;
@@ -1840,8 +1657,9 @@ void ACS_RunDeferredScripts()
 //
 // Attempts to execute the given script.
 //
-bool ACS_ExecuteScript(ACSThinker **thread, ACSScript *script, int32_t *argv, uint32_t argc,
-                       int flags, Mobj *trigger, line_t *line, int lineSide)
+bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
+                       uint32_t argc, Mobj *trigger, line_t *line, int lineSide,
+                       ACSThinker **thread)
 {
    ACSThinker *newThread;
    bool foundScripts = false;
@@ -1896,6 +1714,9 @@ bool ACS_ExecuteScript(ACSThinker **thread, ACSScript *script, int32_t *argv, ui
    newThread->sreg  = ACS_STATE_RUNNING;
    newThread->sdata = 0;
 
+   if(flags & ACS_EXECUTE_IMMEDIATE)
+      newThread->exec();
+
    // return pointer to new script in *scr if not null
    if(thread)
       *thread = newThread;
@@ -1909,14 +1730,18 @@ bool ACS_ExecuteScript(ACSThinker **thread, ACSScript *script, int32_t *argv, ui
 // Attempts to execute the numbered script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-bool ACS_ExecuteScriptNumber(ACSThinker **thread, int32_t number, int32_t *argv, uint32_t argc,
-                             int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum)
+bool ACS_ExecuteScriptNumber(int32_t number, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, ACSThinker **thread)
 {
    if(mapnum == 0 || mapnum == gamemap)
-      return ACS_ExecuteScript(thread, ACSVM::FindScriptByNumber(number), argv, argc,
-                               flags, trigger, line, lineSide);
+      return ACS_ExecuteScript(ACSVM::FindScriptByNumber(number), flags,
+                               argv, argc, trigger, line, lineSide, thread);
    else
+   {
+      if(thread) *thread = NULL;
       return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_EXECUTE, argv, argc);
+   }
 }
 
 //
@@ -1925,14 +1750,37 @@ bool ACS_ExecuteScriptNumber(ACSThinker **thread, int32_t number, int32_t *argv,
 // Attempts to execute the named script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-bool ACS_ExecuteScriptName(ACSThinker **thread, const char *name, int32_t *argv, uint32_t argc,
-                           int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum)
+bool ACS_ExecuteScriptName(const char *name, int mapnum, int flags,
+                           const int32_t *argv, uint32_t argc, Mobj *trigger,
+                           line_t *line, int lineSide, ACSThinker **thread)
 {
    if(mapnum == 0 || mapnum == gamemap)
-      return ACS_ExecuteScript(thread, ACSVM::FindScriptByName(name), argv, argc,
-                               flags, trigger, line, lineSide);
+      return ACS_ExecuteScript(ACSVM::FindScriptByName(name), flags,
+                               argv, argc, trigger, line, lineSide, thread);
    else
+   {
+      if(thread) *thread = NULL;
       return false; // TODO
+   }
+}
+
+//
+// ACS_ExecuteScriptString
+//
+// Like above, but using an ACS string index.
+//
+bool ACS_ExecuteScriptString(uint32_t strnum, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, ACSThinker **thread)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_ExecuteScript(ACSVM::FindScriptByString(strnum), flags,
+                               argv, argc, trigger, line, lineSide, thread);
+   else
+   {
+      if(thread) *thread = NULL;
+      return false; // TODO
+   }
 }
 
 //
@@ -1987,6 +1835,19 @@ bool ACS_TerminateScriptName(const char *name, int mapnum)
 }
 
 //
+// ACS_TerminateScriptString
+//
+// Like above, but using an ACS string index.
+//
+bool ACS_TerminateScriptString(uint32_t strnum, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_TerminateScript(ACSVM::FindScriptByString(strnum));
+   else
+      return false; // TODO
+}
+
+//
 // ACS_SuspendScript
 //
 // Attempts to suspend the given script.
@@ -2034,6 +1895,19 @@ bool ACS_SuspendScriptName(const char *name, int mapnum)
 {
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_SuspendScript(ACSVM::FindScriptByName(name));
+   else
+      return false; // TODO
+}
+
+//
+// ACS_SuspendScriptString
+//
+// Like above, but using an ACS string index.
+//
+bool ACS_SuspendScriptString(uint32_t strnum, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_SuspendScript(ACSVM::FindScriptByString(strnum));
    else
       return false; // TODO
 }

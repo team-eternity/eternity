@@ -96,6 +96,27 @@ static bool ACS_touchScriptACS0(bool *begin, bool *end)
 }
 
 //
+// ACS_traceFuncACS0
+//
+// Determines how many internal codes a CALLFUNC function counts for. In
+// particular, in the event it is translated to something else.
+//
+static uint32_t ACS_traceFuncACS0(uint32_t func, uint32_t argc)
+{
+   switch(func)
+   {
+   case   9: // ACS_FUNC_GetThingMomX
+   case  10: // ACS_FUNC_GetThingMomY
+   case  11: // ACS_FUNC_GetThingMomZ
+      if(argc == 1)
+         return 2;
+      break;
+   }
+
+   return 3;
+}
+
+//
 // ACS_traceScriptACS0
 //
 static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
@@ -176,6 +197,13 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
 
          break;
 
+      case ACS0_OP_CALLFUNC:
+         if(compressed)
+            indexNext = index + opSize + 3;
+         else
+            indexNext = index + opSize + 8;
+         break;
+
       default:
          if(compressed && opdata->compressed)
             indexNext = index + opSize + opdata->args;
@@ -240,6 +268,21 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          vm->numCode += 2;
          // More alignment stuff.
          vm->numCode += SwapULong(*(uint32_t *)(((uintptr_t)data + index + opSize + 3) & ~3)) * 2;
+         break;
+
+      case ACS0_OP_CALLFUNC:
+         if(compressed)
+         {
+            uint8_t  argc = data[index + opSize];
+            uint16_t func = SwapUShort(*(uint16_t *)(data + index + opSize + 1));
+            vm->numCode += ACS_traceFuncACS0(func, argc);
+         }
+         else
+         {
+            uint32_t argc = SwapULong(*(uint32_t *)(data + index + opSize + 0));
+            uint32_t func = SwapULong(*(uint32_t *)(data + index + opSize + 4));
+            vm->numCode += ACS_traceFuncACS0(func, argc);
+         }
          break;
 
       default:
@@ -317,15 +360,109 @@ static void ACS_traceScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
 //
 // ACS_translateFuncACS0
 //
+// Translates a ZDoom CALLFUNC function to either an internal CALLFUNC function
+// or other internal instruction.
+//
+static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t argc)
+{
+   acs_funcnum_t funcnum;
+
+   // Handle special translations here to keep the switch below clean.
+   switch(func)
+   {
+   case   9: // ACS_FUNC_GetThingMomX
+   case  10: // ACS_FUNC_GetThingMomY
+   case  11: // ACS_FUNC_GetThingMomZ
+      if(argc == 1)
+      {
+         *codePtr++ = ACS_OP_GET_THINGVAR;
+         *codePtr++ = ACS_THINGVAR_MomX + (func - 9);
+         return;
+      }
+      break;
+
+   case  15: // ACS_FUNC_GetChar
+      if(argc == 2)
+      {
+         *codePtr++ = ACS_OP_GET_STRINGARR;
+         return;
+      }
+      break;
+   }
+
+   switch(func)
+   {
+   default:
+      *codePtr++ = ACS_OP_KILL;
+      *codePtr++ = 0;
+      *codePtr++ = 0;
+      return;
+
+   case   0: funcnum = ACS_FUNC_NOP;                     break;
+ //case   1: funcnum = ACS_FUNC_GetLineUDMFInt;          break;
+ //case   2: funcnum = ACS_FUNC_GetLineUDMFFixed;        break;
+ //case   3: funcnum = ACS_FUNC_GetThingUDMFInt;         break;
+ //case   4: funcnum = ACS_FUNC_GetThingUDMFFixed;       break;
+ //case   5: funcnum = ACS_FUNC_GetSectorUDMFInt;        break;
+ //case   6: funcnum = ACS_FUNC_GetSectorUDMFFixed;      break;
+ //case   7: funcnum = ACS_FUNC_GetSideUDMFInt;          break;
+ //case   8: funcnum = ACS_FUNC_GetSideUDMFFixed;        break;
+ //case   9: funcnum = ACS_FUNC_GetThingMomX;            break;
+ //case  10: funcnum = ACS_FUNC_GetThingMomY;            break;
+ //case  11: funcnum = ACS_FUNC_GetThingMomZ;            break;
+   case  12: funcnum = ACS_FUNC_SetActivator;            break;
+   case  13: funcnum = ACS_FUNC_SetActivatorToTarget;    break;
+ //case  14: funcnum = ACS_FUNC_GetThingViewHeight;      break;
+ //case  15: funcnum = ACS_FUNC_GetChar;                 break;
+ //case  16: funcnum = ACS_FUNC_GetAirSupply;            break;
+ //case  17: funcnum = ACS_FUNC_SetAirSupply;            break;
+   case  18: funcnum = ACS_FUNC_SetSkyDelta;             break;
+ //case  19: funcnum = ACS_FUNC_GetArmorType;            break;
+   case  20: funcnum = ACS_FUNC_SpawnSpotForced;         break;
+   case  21: funcnum = ACS_FUNC_SpawnSpotAngleForced;    break;
+   case  22: funcnum = ACS_FUNC_ChkThingVar;             break;
+   case  23: funcnum = ACS_FUNC_SetThingMomentum;        break;
+ //case  24: funcnum = ACS_FUNC_SetUserVar;              break;
+ //case  25: funcnum = ACS_FUNC_GetUserVar;              break;
+   case  26: funcnum = ACS_FUNC_RadiusQuake;             break;
+   case  27: funcnum = ACS_FUNC_CheckThingType;          break;
+ //case  28: funcnum = ACS_FUNC_SetUserArr;              break;
+ //case  29: funcnum = ACS_FUNC_GetUserArr;              break;
+   case  30: funcnum = ACS_FUNC_SoundSequenceThing;      break;
+ //case  31: funcnum = ACS_FUNC_SoundSequenceSector;     break;
+ //case  32: funcnum = ACS_FUNC_SoundSequencePolyobj;    break;
+   case  33: funcnum = ACS_FUNC_GetPolyobjX;             break;
+   case  34: funcnum = ACS_FUNC_GetPolyobjY;             break;
+   case  35: funcnum = ACS_FUNC_CheckSight;              break;
+   case  36: funcnum = ACS_FUNC_SpawnPointForced;        break;
+ //case  37: funcnum = ACS_FUNC_AnnouncerSound;          break;
+ //case  38: funcnum = ACS_FUNC_SetPointer;              break;
+   case  39: funcnum = ACS_FUNC_ExecuteScriptName;       break;
+   case  40: funcnum = ACS_FUNC_SuspendScriptName;       break;
+   case  41: funcnum = ACS_FUNC_TerminateScriptName;     break;
+ //case  42: funcnum = ACS_FUNC_ExecuteScriptLockedName; break;
+ //case  43: funcnum = ACS_FUNC_ExecuteScriptDoorName;   break;
+   case  44: funcnum = ACS_FUNC_ExecuteScriptResultName; break;
+   case  45: funcnum = ACS_FUNC_ExecuteScriptAlwaysName; break;
+   }
+
+   *codePtr++ = ACS_OP_CALLFUNC_ZD;
+   *codePtr++ = funcnum;
+   *codePtr++ = argc;
+}
+
+//
+// ACS_translateFuncACS0
+//
 // Translates an ACS0 opdata into a CALLFUNC func/argc pair.
 //
 static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata)
 {
-   acs_funcnum_t func;
+   acs_funcnum_t funcnum;
    uint32_t argc;
 
    #define CASE(OP,FUNC,ARGC) \
-      case ACS0_OP_##OP: func = ACS_FUNC_##FUNC; argc = ARGC; break
+      case ACS0_OP_##OP: funcnum = ACS_FUNC_##FUNC; argc = ARGC; break
    #define CASE_IMM(OP,FUNC,ARGC) \
       case ACS0_OP_##OP##_IMM: CASE(OP, FUNC, ARGC)
 
@@ -336,6 +473,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE(AMBIENTSOUNDLOCAL,      AmbientSoundLocal,      2);
    CASE(CLASSIFYTHING,          ClassifyThing,          1);
    CASE(GETPLAYERINPUT,         GetPlayerInput,         2);
+   CASE(GET_THINGARR,           GetThingVar,            2);
    CASE(GETSECTORCEILINGZ,      GetSectorCeilingZ,      3);
    CASE(GETSECTORFLOORZ,        GetSectorFloorZ,        3);
    CASE(GETSECTORLIGHTLEVEL,    GetSectorLightLevel,    1);
@@ -350,6 +488,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE(SETTHINGPOSITION,       SetThingPosition,       5);
    CASE(SETTHINGSPECIAL,        SetThingSpecial,        7);
    CASE(SETTHINGSTATE,          SetThingState,          3);
+   CASE(SET_THINGARR,           SetThingVar,            3);
    CASE(SOUNDSEQUENCE,          SoundSequence,          1);
    CASE(SPAWNPROJECTILE,        SpawnProjectile,        7);
    CASE(SPAWNSPOTANGLE,         SpawnSpotAngle,         3);
@@ -377,7 +516,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    #undef CASE
 
    *codePtr++ = opdata->opdata->op;
-   *codePtr++ = func;
+   *codePtr++ = funcnum;
    *codePtr++ = argc;
 }
 
@@ -504,6 +643,13 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
          // Alignment, as in the equivalent switch above.
          codeIndex = (codeIndex + opSize + 3) & ~3;
          codeIndex = codeIndex + (SwapULong(*(uint32_t *)(data + codeIndex)) * 8) + 4;
+         break;
+
+      case ACS0_OP_CALLFUNC:
+         if(compressed)
+            codeIndex += opSize + 3;
+         else
+            codeIndex += opSize + 8;
          break;
 
       default:
@@ -698,6 +844,18 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
             *jumpItr++ = codePtr;
             *codePtr++ = SwapLong(*rover++);
          }
+         break;
+
+      case ACS0_OP_CALLFUNC:
+         if(compressed)
+         {
+            brover = (uint8_t *)rover;
+            uint8_t  argc = *brover++;
+            uint16_t func = SwapUShort(*(uint16_t *)brover);
+            ACS_translateFuncACS0(codePtr, func, argc);
+         }
+         else
+            ACS_translateFuncACS0(codePtr, SwapLong(rover[1]), SwapLong(rover[0]));
          break;
 
       default: case_direct:

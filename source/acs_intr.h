@@ -83,7 +83,8 @@ enum
 // ACS_Execute flags
 enum
 {
-   ACS_EXECUTE_ALWAYS = 0x00000001,
+   ACS_EXECUTE_ALWAYS    = 0x00000001,
+   ACS_EXECUTE_IMMEDIATE = 0x00000002,
 };
 
 //
@@ -107,29 +108,50 @@ enum acs_funcnum_t
    ACS_FUNC_AmbientSoundLocal,
    ACS_FUNC_ChangeCeiling,
    ACS_FUNC_ChangeFloor,
+   ACS_FUNC_CheckSight,
+   ACS_FUNC_CheckThingType,
+   ACS_FUNC_ChkThingVar,
    ACS_FUNC_ClassifyThing,
+   ACS_FUNC_ExecuteScriptName,
+   ACS_FUNC_ExecuteScriptAlwaysName,
+   ACS_FUNC_ExecuteScriptResultName,
    ACS_FUNC_GetPlayerInput,
+   ACS_FUNC_GetPolyobjX,
+   ACS_FUNC_GetPolyobjY,
+   ACS_FUNC_GetThingVar,
    ACS_FUNC_GetSectorCeilingZ,
    ACS_FUNC_GetSectorFloorZ,
    ACS_FUNC_GetSectorLightLevel,
    ACS_FUNC_Random,
+   ACS_FUNC_RadiusQuake,
    ACS_FUNC_ReplaceTextures,
    ACS_FUNC_SectorDamage,
    ACS_FUNC_SectorSound,
+   ACS_FUNC_SetActivator,
+   ACS_FUNC_SetActivatorToTarget,
    ACS_FUNC_SetLineBlocking,
    ACS_FUNC_SetLineMonsterBlocking,
    ACS_FUNC_SetLineSpecial,
    ACS_FUNC_SetLineTexture,
    ACS_FUNC_SetMusic,
    ACS_FUNC_SetMusicLocal,
+   ACS_FUNC_SetSkyDelta,
+   ACS_FUNC_SetThingMomentum,
    ACS_FUNC_SetThingPosition,
    ACS_FUNC_SetThingSpecial,
    ACS_FUNC_SetThingState,
+   ACS_FUNC_SetThingVar,
    ACS_FUNC_SoundSequence,
+   ACS_FUNC_SoundSequenceThing,
    ACS_FUNC_SpawnPoint,
+   ACS_FUNC_SpawnPointForced,
    ACS_FUNC_SpawnProjectile,
    ACS_FUNC_SpawnSpot,
+   ACS_FUNC_SpawnSpotForced,
    ACS_FUNC_SpawnSpotAngle,
+   ACS_FUNC_SpawnSpotAngleForced,
+   ACS_FUNC_SuspendScriptName,
+   ACS_FUNC_TerminateScriptName,
    ACS_FUNC_ThingCount,
    ACS_FUNC_ThingCountName,
    ACS_FUNC_ThingCountNameSector,
@@ -215,6 +237,9 @@ enum
    ACS_THINGVAR_FloorZ,
    ACS_THINGVAR_Frags,
    ACS_THINGVAR_LightLevel,
+   ACS_THINGVAR_MomX,
+   ACS_THINGVAR_MomY,
+   ACS_THINGVAR_MomZ,
    ACS_THINGVAR_Pitch,
    ACS_THINGVAR_PlayerNumber,
    ACS_THINGVAR_SigilPieces,
@@ -399,6 +424,9 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
 
+   // Invokes bytecode execution.
+   void exec() { Think(); }
+
    // Data Members
    // thread links
    ACSThinker **prevthread;
@@ -545,19 +573,31 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
 ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end);
 void ACS_LoadLevelScript(WadDirectory *dir, int lump);
 void ACS_RunDeferredScripts();
-bool ACS_ExecuteScript(ACSThinker **thread, ACSScript *script, int32_t *argv, uint32_t argc,
-                       int flags, Mobj *trigger, line_t *line, int lineSide);
-bool ACS_ExecuteScriptNumber(ACSThinker **thread, int32_t number, int32_t *argv, uint32_t argc,
-                             int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum);
-bool ACS_ExecuteScriptName(ACSThinker **thread, const char *name, int32_t *argv, uint32_t argc,
-                           int flags, Mobj *trigger, line_t *line, int lineSide, int mapnum);
+bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
+                       uint32_t argc, Mobj *trigger, line_t *line, int lineSide,
+                       ACSThinker **thread = NULL);
+bool ACS_ExecuteScriptNumber(int32_t number, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, ACSThinker **thread = NULL);
+bool ACS_ExecuteScriptName(const char *name, int mapnum, int flags,
+                           const int32_t *argv, uint32_t argc, Mobj *trigger,
+                           line_t *line, int lineSide, ACSThinker **thread = NULL);
+bool ACS_ExecuteScriptString(uint32_t strnum, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, ACSThinker **thread = NULL);
 bool ACS_TerminateScript(ACSScript *script);
 bool ACS_TerminateScriptNumber(int32_t number, int mapnum);
 bool ACS_TerminateScriptName(const char *name, int mapnum);
+bool ACS_TerminateScriptString(uint32_t strnum, int mapnum);
 bool ACS_SuspendScript(ACSScript *script);
 bool ACS_SuspendScriptNumber(int32_t number, int mapnum);
 bool ACS_SuspendScriptName(const char *name, int mapnum);
+bool ACS_SuspendScriptString(uint32_t strnum, int mapnum);
 void ACS_Archive(SaveArchive &arc);
+
+bool    ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val);
+int32_t ACS_GetThingVar(Mobj *thing, uint32_t var);
+void    ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val);
 
 // extern vars.
 

@@ -1189,7 +1189,7 @@ void P_StartLineScript(line_t *line, Mobj *thing)
    }
    else // haleyjd 03/20/11: Defer to ACS if there is no Small level script
 #endif
-      ACS_ExecuteScriptNumber(NULL, line->tag, line->args, NUMLINEARGS, 0, thing, line, 0, gamemap);
+      ACS_ExecuteScriptNumber(line->tag, gamemap, 0, line->args, NUMLINEARGS, thing, line, 0);
 }
 
 //=============================================================================

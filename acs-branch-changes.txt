@@ -5,6 +5,20 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/22/2012
+
+Added ZDoom's CALLFUNC instruction. And added as many of the related functions
+as I could, even if some are handled by translating to other instructions.
+
+I also re-rewrote the interface to ACS_ExecuteScript so that thread was an
+optional parameter and mapnum would be next to scriptnum/name like for
+ACS_Suspend/TerminateScript.
+
+Moved ACS_OP_GET/SET_THINGARR to ACS_FUNC_Get/SetThingVar, since they clearly
+met the criteria for being moved there. (Calls external function and takes all
+stack args.)
+
+-------------------------------------------------------------------------------
 06/20/2012
 
 Added named script handling. Also renamed acscript_t to ACSScript. I know the S
