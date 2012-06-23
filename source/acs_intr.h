@@ -305,6 +305,7 @@ public:
 
    void archive(SaveArchive &arc);
 
+   bool copyString(uint32_t offset, uint32_t length, uint32_t strnum, uint32_t stroff);
    void print(qstring *printBuffer, uint32_t offset, uint32_t length = 0xFFFFFFFF);
 };
 

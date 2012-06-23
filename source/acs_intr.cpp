@@ -1015,13 +1015,25 @@ void ACSThinker::Think()
       stp -= 2;
       vm->mapatab[stp[1]]->print(printBuffer, stp[0]);
       NEXTOP();
+   OPCODE(PRINTMAPRANGE):
+      stp -= 4;
+      vm->mapatab[stp[1]]->print(printBuffer, stp[0] + stp[2], stp[3]);
+      NEXTOP();
    OPCODE(PRINTWORLDARRAY):
       stp -= 2;
       ACSworldarrs[stp[1]].print(printBuffer, stp[0]);
       NEXTOP();
+   OPCODE(PRINTWORLDRANGE):
+      stp -= 4;
+      ACSworldarrs[stp[1]].print(printBuffer, stp[0] + stp[2], stp[3]);
+      NEXTOP();
    OPCODE(PRINTGLOBALARRAY):
       stp -= 2;
       ACSglobalarrs[stp[1]].print(printBuffer, stp[0]);
+      NEXTOP();
+   OPCODE(PRINTGLOBALRANGE):
+      stp -= 4;
+      ACSglobalarrs[stp[1]].print(printBuffer, stp[0] + stp[2], stp[3]);
       NEXTOP();
    OPCODE(PRINTCHAR):
       *printBuffer += (char)POP();
@@ -1116,6 +1128,21 @@ void ACSThinker::Think()
       LevelInfo.gravity = IPNEXT() / 800;
       NEXTOP();
 
+   OPCODE(STRCPYMAP):
+      stp -= 6;
+      temp = vm->mapatab[stp[1]]->copyString(stp[0] + stp[2], stp[3], stp[4], stp[5]);
+      PUSH(temp);
+      NEXTOP();
+   OPCODE(STRCPYWORLD):
+      stp -= 6;
+      temp = ACSworldarrs[stp[1]].copyString(stp[0] + stp[2], stp[3], stp[4], stp[5]);
+      PUSH(temp);
+      NEXTOP();
+   OPCODE(STRCPYGLOBAL):
+      stp -= 6;
+      temp = ACSglobalarrs[stp[1]].copyString(stp[0] + stp[2], stp[3], stp[4], stp[5]);
+      PUSH(temp);
+      NEXTOP();
    OPCODE(STRLEN):
       STACK_AT(1) = ACSVM::GetStringLength(STACK_AT(1));
       NEXTOP();
@@ -1228,6 +1255,36 @@ ACSArray::page_t &ACSArray::getPage(uint32_t addr)
    if(!page) page = estructalloc(page_t, 1);
 
    return *page;
+}
+
+//
+// ACSArray::copyString
+//
+bool ACSArray::copyString(uint32_t offset, uint32_t length,
+                          uint32_t strnum, uint32_t stroff)
+{
+   if(strnum >= ACSVM::GlobalNumStrings) return false;
+
+   ACSString::Data &strdat = ACSVM::GlobalStrings[strnum]->data;
+
+   if(stroff > strdat.l) return false;
+
+   const char *string = strdat.s + stroff;
+
+   length += offset; // use length as end
+   while(*string)
+   {
+      if(offset == length) return false;
+      getVal(offset++) = *string++;
+   }
+
+   if(offset != length)
+   {
+      getVal(offset) = 0;
+      return true;
+   }
+   else
+      return false;
 }
 
 //

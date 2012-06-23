@@ -5,6 +5,14 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+06/23/2012
+
+Added PRINT*RANGE and STRCPY* instructions. This brings Eternity up to the
+current instruction count of ZDoom. All that's left now is to hunt down any
+bugs in the currently implemented instructions. Filling in missing ones is left
+as a task for trunk as the relevant back-ends are added.
+
+-------------------------------------------------------------------------------
 06/22/2012
 
 Added ZDoom's CALLFUNC instruction. And added as many of the related functions
