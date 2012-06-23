@@ -37,6 +37,7 @@
 #include "e_hash.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "m_buffer.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_qstr.h"
@@ -66,6 +67,31 @@ enum
 };
 
 //
+// Case sensitive, pre-lengthed string key.
+//
+class ACSStringHashKey
+{
+public:
+   typedef ACSString::Data basic_type;
+   typedef ACSString::Data param_type;
+
+   static unsigned int HashCode(param_type input)
+   {
+      unsigned int hash = 0;
+
+      for(const char *itr = input.s, *end = itr + input.l; itr != end; ++itr)
+         hash = hash * 5 + *itr;
+
+      return hash;
+   }
+
+   static bool Compare(param_type first, param_type second)
+   {
+      return first.l == second.l && !memcmp(first.s, second.s, first.l);
+   }
+};
+
+//
 // Static Variables
 //
 
@@ -85,6 +111,9 @@ acsScriptsByNumber;
 EHashTable<ACSScript, ENCStringHashKey, &ACSScript::name, &ACSScript::nameLinks>
 acsScriptsByName;
 
+// DynaString lookup
+EHashTable<ACSString, ACSStringHashKey, &ACSString::data, &ACSString::dataLinks>
+acsStrings;
 
 //
 // Global Variables
@@ -100,6 +129,8 @@ acs_opdata_t ACSopdata[ACS_OPMAX] =
 
 ACSString  **ACSVM::GlobalStrings = NULL;
 unsigned int ACSVM::GlobalNumStrings = 0;
+unsigned int ACSVM::GlobalAllocStrings = 0;
+unsigned int ACSVM::GlobalNumStringsBase = 0;
 
 // ACS_thingtypes:
 // This array translates from ACS spawn numbers to internal thingtype indices.
@@ -977,6 +1008,9 @@ void ACSThinker::Think()
    OPCODE(ENDPRINTLOG):
       printf("%s\n", printBuffer->constPtr());
       NEXTOP();
+   OPCODE(ENDPRINTSTRING):
+      PUSH(ACSVM::AddString(printBuffer->constPtr(), printBuffer->length()));
+      NEXTOP();
    OPCODE(PRINTMAPARRAY):
       stp -= 2;
       vm->mapatab[stp[1]]->print(printBuffer, stp[0]);
@@ -1265,6 +1299,48 @@ ACSArray *ACSVM::findMapArr(const char *name)
 }
 
 //
+// ACSVM::AddString
+//
+uint32_t ACSVM::AddString(const char *s, uint32_t l)
+{
+   ACSString::Data data = {s, l};
+   ACSString *string;
+
+   // If no existing string with that data...
+   if(!(string = acsStrings.objectForKey(data)))
+   {
+      char *str;
+
+      // Make new string.
+      string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + l + 1, PU_LEVEL, NULL);
+      string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
+      string->data.l = l;
+
+      memcpy(str, s, l);
+      str[l] = 0;
+
+      // Set metadata.
+      string->script = acsScriptsByName.objectForKey(string->data.s);
+      string->length = strlen(string->data.s);
+      string->number = GlobalNumStrings;
+
+      // Make room in global array.
+      if(GlobalNumStrings == GlobalAllocStrings)
+      {
+         GlobalAllocStrings += GlobalAllocStrings > 64 ? GlobalAllocStrings : 64;
+         GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
+            GlobalNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+      }
+
+      // Add to global array.
+      GlobalStrings[GlobalNumStrings++] = string;
+      acsStrings.addObject(string);
+   }
+
+   return string->number;
+}
+
+//
 // ACSVM::FindScriptByNumber
 //
 ACSScript *ACSVM::FindScriptByNumber(int32_t scrnum)
@@ -1484,6 +1560,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 
    acsScriptsByNumber.destroy();
    acsScriptsByName.destroy();
+   acsStrings.destroy();
    acsVMs.makeEmpty();
 
    // load the level script, if any
@@ -1551,6 +1628,17 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       }
    }
 
+   // Process strings.
+
+   // During loading, alloc is the same as num.
+   ACSVM::GlobalAllocStrings = ACSVM::GlobalNumStrings;
+
+   // Save this number for saving.
+   ACSVM::GlobalNumStringsBase = ACSVM::GlobalNumStrings;
+
+   // +1 to prevent 0 chains.
+   acsStrings.initialize(ACSVM::GlobalNumStrings + 1);
+
    // Pre-search scripts for strings. This makes named scripts faster than numbered!
    // Also precalculate the length, since we're precalculating.
    for(ACSString **itr = ACSVM::GlobalStrings,
@@ -1558,6 +1646,11 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    {
       (*itr)->script = ACSVM::FindScriptByName((*itr)->data.s);
       (*itr)->length = strlen((*itr)->data.s);
+      (*itr)->number = itr - ACSVM::GlobalStrings;
+
+      // Also, add to DynaString lookup, if no existing string with that data.
+      if(!acsStrings.objectForKey((*itr)->data))
+         acsStrings.addObject(*itr);
    }
 }
 
@@ -2178,6 +2271,60 @@ void ACSThinker::deSwizzle()
 }
 
 //
+// ACSVM::ArchiveStrings
+//
+void ACSVM::ArchiveStrings(SaveArchive &arc)
+{
+   ACSString *string;
+   uint32_t size;
+   char *str;
+
+   if(arc.isSaving())
+   {
+      // Write the number of strings to save.
+      arc << (size = GlobalNumStrings - GlobalNumStringsBase);
+
+      // Write the strings.
+      for(unsigned int i = GlobalNumStringsBase; i != GlobalNumStrings; ++i)
+         arc.WriteLString(GlobalStrings[i]->data.s, GlobalStrings[i]->data.l);
+   }
+   else
+   {
+      // Read the number of strings to load.
+      arc << size;
+
+      // Allocate space for the pointers.
+      GlobalAllocStrings = GlobalNumStrings + size;
+      GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
+         GlobalAllocStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+
+      // Read the strings.
+      while(GlobalNumStrings != GlobalAllocStrings)
+      {
+         // Read string size.
+         arc << size;
+
+         // Make new string.
+         string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + size + 1, PU_LEVEL, NULL);
+         string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
+         string->data.l = size;
+
+         arc.getLoadFile()->Read(str, size);
+         str[size] = 0;
+
+         // Set metadata.
+         string->script = acsScriptsByName.objectForKey(string->data.s);
+         string->length = strlen(string->data.s);
+         string->number = GlobalNumStrings;
+
+         // Add to global array.
+         GlobalStrings[GlobalNumStrings++] = string;
+         acsStrings.addObject(string);
+      }
+   }
+}
+
+//
 // ACS_Archive
 //
 void ACS_Archive(SaveArchive &arc)
@@ -2235,6 +2382,9 @@ void ACS_Archive(SaveArchive &arc)
 
    for(dacs = acsDeferred; dacs; dacs = dacs->dllNext)
       arc << *dacs->dllObject;
+
+   // Archive DynaStrings.
+   ACSVM::ArchiveStrings(arc);
 }
 
 // EOF

@@ -18,6 +18,10 @@ Moved ACS_OP_GET/SET_THINGARR to ACS_FUNC_Get/SetThingVar, since they clearly
 met the criteria for being moved there. (Calls external function and takes all
 stack args.)
 
+And then suddenly, most of a day passed and I added DynaStrings and the
+ENDPRINTSTRING instruction. (AKA, SAVESTRING or StrParam.) Unlike ZDoom's,
+Eternity's DynaStrings do not expire. Instead, they are reused when possible.
+
 -------------------------------------------------------------------------------
 06/20/2012
 

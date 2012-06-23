@@ -1169,7 +1169,7 @@ ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end)
    // Yes, allocating the string with the container.
    string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + buf.length() + 1, PU_LEVEL, NULL);
    string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
-   string->data.l = buf.length() + 1;
+   string->data.l = buf.length();
 
    // Copy the buffer into the new string.
    buf.copyInto(str, buf.length());

@@ -325,6 +325,9 @@ public:
    // metadata
    ACSScript  *script; // script this strijng is a name of, if any
    uint32_t    length; // null-terminated length
+   uint32_t    number; // index into global array
+
+   DLListItem<ACSString> dataLinks;
 };
 
 //
@@ -537,8 +540,10 @@ public:
    bool         mapahas[ACS_NUM_MAPARRS]; // if true, index is declared as array
 
    // global bytecode info
-   static ACSString  **GlobalStrings;
-   static unsigned int GlobalNumStrings;
+   static ACSString  **GlobalStrings;        // string table
+   static unsigned int GlobalNumStrings;     // used count
+   static unsigned int GlobalAllocStrings;   // allocated count
+   static unsigned int GlobalNumStringsBase; // beyond lay DynaStrings
    static const char *GetString(uint32_t strnum)
    {
       return strnum < GlobalNumStrings ? GlobalStrings[strnum]->data.s : "";
@@ -547,6 +552,10 @@ public:
    {
       return strnum < GlobalNumStrings ? GlobalStrings[strnum]->length : 0;
    }
+
+   static uint32_t AddString(const char *s, uint32_t l);
+
+   static void ArchiveStrings(SaveArchive &arc);
 
    static ACSScript *FindScriptByNumber(int32_t scrnum);
    static ACSScript *FindScriptByName(const char *name);
