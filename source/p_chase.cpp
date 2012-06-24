@@ -309,68 +309,97 @@ int walkcam_active = 0;
 void P_WalkTicker(void)
 {
    ticcmd_t *walktic = &netcmds[consoleplayer][(gametic/ticdup)%BACKUPTICS];
+   int look   = walktic->look;
+   int fly    = walktic->fly;
+   angle_t fwan, san;
 
    walkcamera.angle += walktic->angleturn << 16;
    
-   // moving forward
-   walkcamera.x += FixedMul((ORIG_FRICTION/4) * walktic->forwardmove,
-      finecosine[walkcamera.angle >> ANGLETOFINESHIFT]);
-   walkcamera.y += FixedMul((ORIG_FRICTION/4) * walktic->forwardmove,
-      finesine[walkcamera.angle >> ANGLETOFINESHIFT]);
-
-   // strafing
-   walkcamera.x += FixedMul((ORIG_FRICTION/6) * walktic->sidemove,
-      finecosine[(walkcamera.angle-ANG90) >> ANGLETOFINESHIFT]);
-   walkcamera.y += FixedMul((ORIG_FRICTION/6) * walktic->sidemove,
-      finesine[(walkcamera.angle-ANG90) >> ANGLETOFINESHIFT]);
-
-   {
-      // haleyjd: FIXME -- this could be optimized by only
-      // doing a traversal when the camera actually moves, rather
-      // than every frame, naively
-      subsector_t *subsec = 
-         R_PointInSubsector(walkcamera.x, walkcamera.y);
-      
-      // keep on the ground
-      walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
-      
-      // haleyjd: handle deep water appropriately
-      walkcamera.heightsec = subsec->sector->heightsec;
-   }
-
    // looking up/down 
    // haleyjd: this is the same as new code in p_user.c, but for walkcam
+   if(look)
    {
-      int look = walktic->look;
-
-      if(look)
+      // test for special centerview value
+      if(look == -32768)
+         walkcamera.pitch = 0;
+      else
       {
-         // test for special centerview value
-         if(look == -32768)
-            walkcamera.pitch = 0;
-         else
-         {
-            walkcamera.pitch -= look << 16;
-            if(walkcamera.pitch < -ANGLE_1*32)
-               walkcamera.pitch = -ANGLE_1*32;
-            else if(walkcamera.pitch > ANGLE_1*32)
-               walkcamera.pitch = ANGLE_1*32;
-         }
+         walkcamera.pitch -= look << 16;
+         if(walkcamera.pitch < -ANGLE_1*32)
+            walkcamera.pitch = -ANGLE_1*32;
+         else if(walkcamera.pitch > ANGLE_1*32)
+            walkcamera.pitch = ANGLE_1*32;
       }
-   } // end local block
+   }
+
+   if(fly == FLIGHT_CENTER)
+      walkcamera.flying = false;
+   else if(fly)
+   {
+      walkcamera.z += 2 * fly * FRACUNIT;
+      walkcamera.flying = true;
+   }
+
+   if(walkcamera.flying && walkcamera.pitch)
+   {
+      angle_t an = static_cast<angle_t>(walkcamera.pitch);
+      an >>= ANGLETOFINESHIFT;
+      walkcamera.z -= FixedMul((ORIG_FRICTION/4)*walktic->forwardmove, finesine[an]);
+   }
+
+   // moving forward
+   fwan = walkcamera.angle;
+   fwan >>= ANGLETOFINESHIFT;
+   walkcamera.x += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finecosine[fwan]);
+   walkcamera.y += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finesine[fwan]);
+
+   // strafing
+   san = walkcamera.angle - ANG90;
+   san >>= ANGLETOFINESHIFT;
+   walkcamera.x += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finecosine[san]);
+   walkcamera.y += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finesine[san]);
+
+   // haleyjd: FIXME -- this could be optimized by only
+   // doing a traversal when the camera actually moves, rather
+   // than every frame, naively
+   subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
+
+   // haleyjd: handle deep water appropriately
+   walkcamera.heightsec = subsec->sector->heightsec;
+
+   if(!walkcamera.flying)
+   {
+      // keep on the ground
+      walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
+   }
+
+   {
+      fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
+      fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
+      
+      if(walkcamera.z > maxheight)
+         walkcamera.z = maxheight;
+      if(walkcamera.z < minheight)
+         walkcamera.z = minheight;
+   }
 }
 
 void P_ResetWalkcam(void)
 {
-   walkcamera.x = playerstarts[0].x << FRACBITS;
-   walkcamera.y = playerstarts[0].y << FRACBITS;
-   walkcamera.angle = R_WadToAngle(playerstarts[0].angle);
+   sector_t *sec;
+   walkcamera.x      = playerstarts[0].x << FRACBITS;
+   walkcamera.y      = playerstarts[0].y << FRACBITS;
+   walkcamera.angle  = R_WadToAngle(playerstarts[0].angle);
+   walkcamera.pitch  = 0;
+   walkcamera.flying = false;
+   
    // haleyjd
-   walkcamera.heightsec =
-      R_PointInSubsector(walkcamera.x, walkcamera.y)->sector->heightsec;
+   sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
+   walkcamera.heightsec = sec->heightsec;
+   walkcamera.z = sec->floorheight + 41*FRACUNIT;
 }
 
-VARIABLE_BOOLEAN(walkcam_active, NULL,              onoff);
+VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
    if(!Console.argc)
