@@ -57,13 +57,14 @@
 // script states for sreg
 enum
 {
-   ACS_STATE_STOPPED,    // not running
-   ACS_STATE_RUNNING,    // currently running
-   ACS_STATE_SUSPEND,    // suspended by instruction
-   ACS_STATE_WAITTAG,    // waiting on a tag
-   ACS_STATE_WAITSCRIPT, // waiting on a script
-   ACS_STATE_WAITPOLY,   // waiting on a polyobject
-   ACS_STATE_TERMINATE,  // will be stopped on next thinking turn
+   ACS_STATE_STOPPED,          // not running
+   ACS_STATE_RUNNING,          // currently running
+   ACS_STATE_SUSPEND,          // suspended by instruction
+   ACS_STATE_WAITTAG,          // waiting on a tag
+   ACS_STATE_WAITSCRIPTNUMBER, // waiting on a numbered script
+   ACS_STATE_WAITSCRIPTNAME,   // waiting on a named script
+   ACS_STATE_WAITPOLY,         // waiting on a polyobject
+   ACS_STATE_TERMINATE,        // will be stopped on next thinking turn
 };
 
 //
@@ -199,29 +200,38 @@ static void ACS_removeThread(ACSThinker *script)
 //
 static void ACS_scriptFinished(ACSThinker *thread)
 {
-   unsigned int i;
-   ACSVM      *vm     = thread->vm;
-   ACSScript  *script = thread->script;
+   ACSScript  *s, *sEnd;
    ACSThinker *th;
+   ACSVM     **vm, **vmEnd;
 
    // first check that all threads of the same script have terminated
-   if(script->threads)
+   if(thread->script->threads)
       return; // nope
 
-   // find scripts waiting on this one (same VM only)
-   
-   // loop on vm scripts array
-   for(i = 0; i < vm->numScripts; ++i)
+   // find scripts waiting on this one (any VM)
+
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
    {
-      // loop on threads list for each script
-      for(th = vm->scripts[i].threads; th; th = th->nextthread)
+      // loop on vm scripts array
+      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
       {
-         if(th->sreg  == ACS_STATE_WAITSCRIPT &&
-            th->sdata == script->number)
+         // loop on threads list for each script
+         for(th = s->threads; th; th = th->nextthread)
          {
-            // wake up the script
-            th->sreg  = ACS_STATE_RUNNING;
-            th->sdata = 0;
+            // Check for waiting on a numbered script.
+            if(th->sreg  == ACS_STATE_WAITSCRIPTNUMBER &&
+               th->sdata == thread->script->number)
+            {
+               th->sreg  = ACS_STATE_RUNNING;
+               th->sdata = 0;
+            }
+            // And the same for named scripts.
+            else if(th->sreg == ACS_STATE_WAITSCRIPTNAME && thread->script->name &&
+                    !strcasecmp(ACSVM::GetString(th->sdata), thread->script->name))
+            {
+               th->sreg  = ACS_STATE_RUNNING;
+               th->sdata = 0;
+            }
          }
       }
    }
@@ -979,12 +989,21 @@ void ACSThinker::Think()
       goto action_stop;
 
    OPCODE(SCRIPTWAIT):
-      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sreg  = ACS_STATE_WAITSCRIPTNUMBER;
       this->sdata = POP(); // get script num
       goto action_stop;
    OPCODE(SCRIPTWAIT_IMM):
-      this->sreg  = ACS_STATE_WAITSCRIPT;
+      this->sreg  = ACS_STATE_WAITSCRIPTNUMBER;
       this->sdata = IPNEXT(); // get script num
+      goto action_stop;
+
+   OPCODE(SCRIPTWAITNAME):
+      this->sreg  = ACS_STATE_WAITSCRIPTNAME;
+      this->sdata = POP(); // get script name
+      goto action_stop;
+   OPCODE(SCRIPTWAITNAME_IMM):
+      this->sreg  = ACS_STATE_WAITSCRIPTNAME;
+      this->sdata = IPNEXT(); // get script name
       goto action_stop;
 
       // Printing

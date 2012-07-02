@@ -11,6 +11,11 @@ Rewrote deferredacs_t into ACSDeferred, a full-fledged self-contained class for
 deferring ACS actions. The primary benefit simply being the ability to defer
 named-script actions.
 
+Also added the ability for scripts to wait on named scripts, although the code
+cannot yet be invoked by the user since the ACSE instruction set is governed by
+ZDoom. Furthermore, it is possible to wait on a numbered script from any VM,
+rather than only the VM of the waiting script.
+
 -------------------------------------------------------------------------------
 06/23/2012
 
