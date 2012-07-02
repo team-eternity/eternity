@@ -461,27 +461,72 @@ public:
    int     lineSide;                  // line side of activation
 };
 
-// deferred action types
-enum
+//
+// ACSDeferred
+//
+// This class keeps track of ACS actions to be taken on other maps.
+//
+class ACSDeferred : public ZoneObject
 {
-   ACS_DEFERRED_EXECUTE,
-   ACS_DEFERRED_SUSPEND,
-   ACS_DEFERRED_TERMINATE,
-};
+private:
+   // deferred action types
+   enum
+   {
+      EXECUTE_NUMBER,
+      EXECUTE_NAME,
+      SUSPEND_NUMBER,
+      SUSPEND_NAME,
+      TERMINATE_NUMBER,
+      TERMINATE_NAME,
+   };
 
-//
-// deferredacs_t
-//
-// This struct keeps track of scripts to be executed on other maps.
-//
-struct deferredacs_t
-{
-   DLListItem<deferredacs_t> link; // list links
+   ACSDeferred() : type(-1), name(NULL), argv(NULL)
+   {
+      link.insert(this, &list);
+   }
 
-   int32_t scriptNum;         // ACS script number to execute
-   int     targetMap;         // target map number
-   int     type;              // type of action to perform...
-   int32_t args[NUMLINEARGS]; // additional arguments from linedef
+   ACSDeferred(int pType, int32_t pNumber, char *pName, int pMapnum,
+               int pFlags, int32_t *pArgv, uint32_t pArgc)
+      : type(pType), number(pNumber), name(pName), mapnum(pMapnum),
+        flags(pFlags), argv(pArgv), argc(pArgc)
+   {
+      link.insert(this, &list);
+   }
+
+   ~ACSDeferred();
+
+   void archive(SaveArchive &arc);
+   void execute();
+
+   int      type;   // type of action to perform
+   int32_t  number; // ACS script number
+   char    *name;   // ACS script name
+   int      mapnum; // target map number
+   int      flags;  // execute flags
+   int32_t *argv;   // argument vector
+   uint32_t argc;   // argument count
+
+   DLListItem<ACSDeferred> link;         // list links
+   static DLListItem<ACSDeferred> *list; // deferred actions list
+
+   static bool IsDeferredNumber(int32_t number, int mapnum);
+   static bool IsDeferredName(const char *name, int mapnum);
+
+public:
+   static bool DeferExecuteNumber(int32_t number, int mapnum, int flags,
+                                  const int32_t *argv, uint32_t argc);
+   static bool DeferExecuteName(const char *name, int mapnum, int flags,
+                                const int32_t *argv, uint32_t argc);
+
+   static bool DeferSuspendNumber(int32_t number, int mapnum);
+   static bool DeferSuspendName(const char *name, int mapnum);
+
+   static bool DeferTerminateNumber(int32_t number, int mapnum);
+   static bool DeferTerminateName(const char *name, int mapnum);
+
+   static void ArchiveAll(SaveArchive &arc);
+   static void ExecuteAll();
+   static void ClearAll();
 };
 
 //

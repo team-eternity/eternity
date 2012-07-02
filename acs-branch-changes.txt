@@ -5,6 +5,13 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+07/01/2012
+
+Rewrote deferredacs_t into ACSDeferred, a full-fledged self-contained class for
+deferring ACS actions. The primary benefit simply being the ability to defer
+named-script actions.
+
+-------------------------------------------------------------------------------
 06/23/2012
 
 Added PRINT*RANGE and STRCPY* instructions. This brings Eternity up to the

@@ -95,9 +95,6 @@ public:
 // Static Variables
 //
 
-// deferred scripts
-static DLListItem<deferredacs_t> *acsDeferred;
-
 // haleyjd 06/24/08: level script vm for ACS
 static ACSVM acsLevelScriptVM;
 
@@ -126,6 +123,7 @@ acs_opdata_t ACSopdata[ACS_OPMAX] =
    #undef ACS_OP
 };
 
+DLListItem<ACSDeferred> *ACSDeferred::list = NULL;
 
 ACSString  **ACSVM::GlobalStrings = NULL;
 unsigned int ACSVM::GlobalNumStrings = 0;
@@ -1298,6 +1296,210 @@ void ACSArray::print(qstring *printBuffer, uint32_t offset, uint32_t length)
 }
 
 //
+// ACSDeferred::~ACSDeferred
+//
+ACSDeferred::~ACSDeferred()
+{
+   link.remove();
+
+   Z_Free(name);
+   Z_Free(argv);
+}
+
+//
+// ACSDeferred::execute
+//
+void ACSDeferred::execute()
+{
+   ACSThinker *thread;
+
+   // If no action to perform yet, just return.
+   if(gamemap != mapnum)
+      return;
+
+   switch(type)
+   {
+   case EXECUTE_NUMBER:
+      ACS_ExecuteScriptNumber(number, mapnum, flags, argv, argc, NULL, NULL, 0, &thread);
+      if(thread)
+         thread->delay = TICRATE;
+      break;
+
+   case EXECUTE_NAME:
+      ACS_ExecuteScriptName(name, mapnum, flags, argv, argc, NULL, NULL, 0, &thread);
+      if(thread)
+         thread->delay = TICRATE;
+      break;
+
+   case SUSPEND_NUMBER:
+      ACS_SuspendScriptNumber(number, mapnum);
+      break;
+
+   case SUSPEND_NAME:
+      ACS_SuspendScriptName(name, mapnum);
+      break;
+
+   case TERMINATE_NUMBER:
+      ACS_TerminateScriptNumber(number, mapnum);
+      break;
+
+   case TERMINATE_NAME:
+      ACS_TerminateScriptName(name, mapnum);
+      break;
+   }
+
+   // The action has been done, there is now no reason to continue existing.
+   delete this;
+}
+
+//
+// ACSDeferred::ExecuteAll
+//
+void ACSDeferred::ExecuteAll()
+{
+   DLListItem<ACSDeferred> *item, *next = list;
+
+   while((item = next))
+   {
+      next = item->dllNext;
+      item->dllObject->execute();
+   }
+}
+
+//
+// ACSDeferred::ClearAll
+//
+void ACSDeferred::ClearAll()
+{
+   while(list)
+      delete list->dllObject;
+}
+
+//
+// ACSDeferred::IsDeferredNumber
+//
+bool ACSDeferred::IsDeferredNumber(int32_t number, int mapnum)
+{
+   for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
+   {
+      ACSDeferred *dacs = item->dllObject;
+      if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
+         !dacs->name && dacs->number == number)
+         return true;
+   }
+
+   return false;
+}
+
+//
+// ACSDeferred::IsDeferredName
+//
+bool ACSDeferred::IsDeferredName(const char *name, int mapnum)
+{
+   for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
+   {
+      ACSDeferred *dacs = item->dllObject;
+      if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
+         dacs->name && !strcasecmp(dacs->name, name))
+         return true;
+   }
+
+   return false;
+}
+
+//
+// ACSDeferred::DeferExecuteNumber
+//
+bool ACSDeferred::DeferExecuteNumber(int32_t number, int mapnum, int flags,
+                                     const int32_t *argv, uint32_t argc)
+{
+   if(!(flags & ACS_EXECUTE_ALWAYS) && IsDeferredNumber(number, mapnum))
+      return false;
+
+   const size_t size = sizeof(int32_t) * argc;
+   int32_t *newArgv = (int32_t *)memcpy(Z_Malloc(size, PU_STATIC, NULL), argv, size);
+
+   new ACSDeferred(EXECUTE_NUMBER, number, NULL, mapnum, flags, newArgv, argc);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferExecuteName
+//
+bool ACSDeferred::DeferExecuteName(const char *name, int mapnum, int flags,
+                                   const int32_t *argv, uint32_t argc)
+{
+   if(!(flags & ACS_EXECUTE_ALWAYS) && IsDeferredName(name, mapnum))
+      return false;
+
+   char *newName = Z_Strdup(name, PU_STATIC, NULL);
+
+   const size_t size = sizeof(int32_t) * argc;
+   int32_t *newArgv = (int32_t *)memcpy(Z_Malloc(size, PU_STATIC, NULL), argv, size);
+
+   new ACSDeferred(EXECUTE_NAME, -1, newName, mapnum, flags, newArgv, argc);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferSuspendNumber
+//
+bool ACSDeferred::DeferSuspendNumber(int32_t number, int mapnum)
+{
+   if(IsDeferredNumber(number, mapnum))
+      return false;
+
+   new ACSDeferred(SUSPEND_NUMBER, number, NULL, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferSuspendName
+//
+bool ACSDeferred::DeferSuspendName(const char *name, int mapnum)
+{
+   if(IsDeferredName(name, mapnum))
+      return false;
+
+   char *newName = Z_Strdup(name, PU_STATIC, NULL);
+
+   new ACSDeferred(SUSPEND_NAME, -1, newName, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferTerminateNumber
+//
+bool ACSDeferred::DeferTerminateNumber(int32_t number, int mapnum)
+{
+   if(IsDeferredNumber(number, mapnum))
+      return false;
+
+   new ACSDeferred(TERMINATE_NUMBER, number, NULL, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferTerminateName
+//
+bool ACSDeferred::DeferTerminateName(const char *name, int mapnum)
+{
+   if(IsDeferredName(name, mapnum))
+      return false;
+
+   char *newName = Z_Strdup(name, PU_STATIC, NULL);
+
+   new ACSDeferred(TERMINATE_NAME, -1, newName, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
 // ACSVM::ACSVM
 //
 ACSVM::ACSVM(int tag) : ZoneObject()
@@ -1468,8 +1670,6 @@ void ACS_Init(void)
 //
 void ACS_NewGame(void)
 {
-   DLListItem<deferredacs_t> *cur, *next;
-
    // clear out the world variables
    memset(ACSworldvars, 0, sizeof(ACSworldvars));
 
@@ -1477,17 +1677,7 @@ void ACS_NewGame(void)
    memset(ACSglobalvars, 0, sizeof(ACSglobalvars));
 
    // clear out deferred scripts
-   cur = acsDeferred;
-
-   while(cur)
-   {
-      next = cur->dllNext;
-      cur->remove();      
-      efree(cur->dllObject);
-      cur = next;
-   }
-
-   acsDeferred = NULL;
+   ACSDeferred::ClearAll();
 }
 
 //
@@ -1712,94 +1902,13 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 }
 
 //
-// ACS_addDeferredScript
-//
-// Adds a deferred script that will be executed when the indicated
-// gamemap is reached. Currently supports maps of MAPxy name structure.
-//
-static bool ACS_addDeferredScript(int32_t number, int mapnum, int type,
-                                  const int32_t *argv, uint32_t argc)
-{
-   DLListItem<deferredacs_t> *cur = acsDeferred;
-   deferredacs_t *newdacs;
-
-   // check to make sure the script isn't already scheduled
-   while(cur)
-   {
-      deferredacs_t *dacs = cur->dllObject;
-
-      if(dacs->targetMap == mapnum && dacs->scriptNum == number)
-         return false;
-
-      cur = cur->dllNext;
-   }
-
-   // allocate a new deferredacs_t
-   newdacs = estructalloc(deferredacs_t, 1);
-
-   // set script number
-   newdacs->scriptNum = number;
-
-   // set action type
-   newdacs->type = type;
-
-   // set args
-   for(unsigned int i = 0; i < NUMLINEARGS; ++i)
-      newdacs->args[i] = i < argc ? argv[i] : 0;
-
-   // record target map number
-   newdacs->targetMap = mapnum;
-
-   // add it to the linked list
-   newdacs->link.insert(newdacs, &acsDeferred);
-
-   return true;
-}
-
-//
 // ACS_RunDeferredScripts
 //
 // Runs scripts that have been deferred for the current map
 //
 void ACS_RunDeferredScripts()
 {
-   DLListItem<deferredacs_t> *cur = acsDeferred, *next;
-   ACSThinker *newThread = NULL;
-
-   while(cur)
-   {
-      deferredacs_t *dacs = cur->dllObject;
-
-      next = cur->dllNext;
-
-      if(dacs->targetMap == gamemap)
-      {
-         switch(dacs->type)
-         {
-         case ACS_DEFERRED_EXECUTE:
-            ACS_ExecuteScriptNumber(dacs->scriptNum, dacs->targetMap, 0,
-                                    dacs->args, NUMLINEARGS, NULL, NULL, 0,
-                                    &newThread);
-            if(newThread)
-               newThread->delay = TICRATE;
-            break;
-
-         case ACS_DEFERRED_SUSPEND:
-            ACS_SuspendScriptNumber(dacs->scriptNum, dacs->targetMap);
-            break;
-
-         case ACS_DEFERRED_TERMINATE:
-            ACS_TerminateScriptNumber(dacs->scriptNum, dacs->targetMap);
-            break;
-         }
-
-         // unhook and delete this deferred script
-         cur->remove();
-         efree(dacs);
-      }
-
-      cur = next;
-   }
+   ACSDeferred::ExecuteAll();
 }
 
 //
@@ -1890,7 +1999,7 @@ bool ACS_ExecuteScriptNumber(int32_t number, int mapnum, int flags,
    else
    {
       if(thread) *thread = NULL;
-      return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_EXECUTE, argv, argc);
+      return ACSDeferred::DeferExecuteNumber(number, mapnum, flags, argv, argc);
    }
 }
 
@@ -1910,7 +2019,7 @@ bool ACS_ExecuteScriptName(const char *name, int mapnum, int flags,
    else
    {
       if(thread) *thread = NULL;
-      return false; // TODO
+      return ACSDeferred::DeferExecuteName(name, mapnum, flags, argv, argc);
    }
 }
 
@@ -1929,7 +2038,7 @@ bool ACS_ExecuteScriptString(uint32_t strnum, int mapnum, int flags,
    else
    {
       if(thread) *thread = NULL;
-      return false; // TODO
+      return ACSDeferred::DeferExecuteName(ACSVM::GetString(strnum), mapnum, flags, argv, argc);
    }
 }
 
@@ -1967,7 +2076,7 @@ bool ACS_TerminateScriptNumber(int32_t number, int mapnum)
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_TerminateScript(ACSVM::FindScriptByNumber(number));
    else
-      return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_TERMINATE, NULL, 0);
+      return ACSDeferred::DeferTerminateNumber(number, mapnum);
 }
 
 //
@@ -1981,7 +2090,7 @@ bool ACS_TerminateScriptName(const char *name, int mapnum)
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_TerminateScript(ACSVM::FindScriptByName(name));
    else
-      return false; // TODO
+      return ACSDeferred::DeferTerminateName(name, mapnum);
 }
 
 //
@@ -1994,7 +2103,7 @@ bool ACS_TerminateScriptString(uint32_t strnum, int mapnum)
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_TerminateScript(ACSVM::FindScriptByString(strnum));
    else
-      return false; // TODO
+      return ACSDeferred::DeferTerminateName(ACSVM::GetString(strnum), mapnum);
 }
 
 //
@@ -2032,7 +2141,7 @@ bool ACS_SuspendScriptNumber(int32_t number, int mapnum)
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_SuspendScript(ACSVM::FindScriptByNumber(number));
    else
-      return ACS_addDeferredScript(number, mapnum, ACS_DEFERRED_SUSPEND, NULL, 0);
+      return ACSDeferred::DeferSuspendNumber(number, mapnum);
 }
 
 //
@@ -2046,7 +2155,7 @@ bool ACS_SuspendScriptName(const char *name, int mapnum)
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_SuspendScript(ACSVM::FindScriptByName(name));
    else
-      return false; // TODO
+      return ACSDeferred::DeferSuspendName(name, mapnum);
 }
 
 //
@@ -2059,7 +2168,7 @@ bool ACS_SuspendScriptString(uint32_t strnum, int mapnum)
    if(mapnum == 0 || mapnum == gamemap)
       return ACS_SuspendScript(ACSVM::FindScriptByString(strnum));
    else
-      return false; // TODO
+      return ACSDeferred::DeferSuspendName(ACSVM::GetString(strnum), mapnum);
 }
 
 //=============================================================================
@@ -2126,16 +2235,6 @@ static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
       call.printBuffer->archive(arc);
    }
 
-   return arc;
-}
-
-//
-// SaveArchive << deferredacs_t
-//
-static SaveArchive &operator << (SaveArchive &arc, deferredacs_t &dacs)
-{
-   arc << dacs.scriptNum << dacs.targetMap << dacs.type;
-   P_ArchiveArray(arc, dacs.args, NUMLINEARGS);
    return arc;
 }
 
@@ -2328,6 +2427,53 @@ void ACSThinker::deSwizzle()
 }
 
 //
+// ACSDeferred::archive
+//
+void ACSDeferred::archive(SaveArchive &arc)
+{
+   size_t len = 0;
+
+   arc << type << number << mapnum << flags << argc;
+
+   arc.ArchiveLString(name, len);
+
+   if(arc.isLoading())
+      argv = estructalloc(int32_t, argc);
+
+   P_ArchiveArray(arc, argv, argc);
+}
+
+//
+// ACSDeferred::ArchiveAll
+//
+void ACSDeferred::ArchiveAll(SaveArchive &arc)
+{
+   DLListItem<ACSDeferred> *item;
+   uint32_t size;
+
+   if(arc.isSaving())
+   {
+      size = 0;
+      for(item = list; item; item = item->dllNext)
+         ++size;
+   }
+
+   arc << size;
+
+   if(arc.isLoading())
+   {
+      while(list)
+         delete list->dllObject;
+
+      while(size--)
+         new ACSDeferred;
+   }
+
+   for(item = list; item; item = item->dllNext)
+      item->dllObject->archive(arc);
+}
+
+//
 // ACSVM::ArchiveStrings
 //
 void ACSVM::ArchiveStrings(SaveArchive &arc)
@@ -2386,9 +2532,6 @@ void ACSVM::ArchiveStrings(SaveArchive &arc)
 //
 void ACS_Archive(SaveArchive &arc)
 {
-   DLListItem<deferredacs_t> *dacs;
-   uint32_t size;
-
    // any OPEN script threads created during ACS_LoadLevelScript have
    // been destroyed, so clear out the threads list of all scripts
    if(arc.isLoading())
@@ -2419,26 +2562,7 @@ void ACS_Archive(SaveArchive &arc)
    P_ArchiveArray(arc, ACSglobalarrs, ACS_NUM_GLOBALARRS);
 
    // Archive deferred scripts. (TODO: not load on hub transfer?)
-   if(arc.isSaving())
-   {
-      for(size = 0, dacs = acsDeferred; dacs; dacs = dacs->dllNext)
-         ++size;
-   }
-
-   arc << size;
-
-   if(arc.isLoading())
-   {
-      while(size--)
-      {
-         deferredacs_t *dacsItem;
-         dacsItem = estructalloc(deferredacs_t, 1);
-         dacsItem->link.insert(dacsItem, &acsDeferred);
-      }
-   }
-
-   for(dacs = acsDeferred; dacs; dacs = dacs->dllNext)
-      arc << *dacs->dllObject;
+   ACSDeferred::ArchiveAll(arc);
 
    // Archive DynaStrings.
    ACSVM::ArchiveStrings(arc);
