@@ -5,6 +5,14 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+07/02/2012
+
+Added GET_FUNCP and BRANCH_CALL (the old BRANCH_CALL is now BRANCH_CALL_IMM).
+
+I know I said I was done adding instructions, but this became an option and I
+had to go for it.
+
+-------------------------------------------------------------------------------
 07/01/2012
 
 Rewrote deferredacs_t into ACSDeferred, a full-fledged self-contained class for

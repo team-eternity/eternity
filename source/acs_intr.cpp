@@ -131,6 +131,9 @@ unsigned int ACSVM::GlobalNumStrings = 0;
 unsigned int ACSVM::GlobalAllocStrings = 0;
 unsigned int ACSVM::GlobalNumStringsBase = 0;
 
+ACSFunc    **ACSVM::GlobalFuncs = NULL;
+unsigned int ACSVM::GlobalNumFuncs = 0;
+
 // ACS_thingtypes:
 // This array translates from ACS spawn numbers to internal thingtype indices.
 // ACS spawn numbers are specified via EDF and are gamemode-dependent. EDF takes
@@ -510,6 +513,7 @@ void ACSThinker::Think()
    int count = 0;
    uint32_t opcode;
    int32_t temp;
+   ACSFunc *func;
 
    // should the script terminate?
    if(this->sreg == ACS_STATE_TERMINATE)
@@ -625,6 +629,10 @@ void ACSThinker::Think()
       // GET
    OPCODE(GET_IMM):
       PUSH(IPNEXT());
+      NEXTOP();
+   OPCODE(GET_FUNCP):
+      opcode = IPNEXT();
+      PUSH(opcode < vm->numFuncs ? vm->funcptrs[opcode]->number : 0);
       NEXTOP();
    OPCODE(GET_LOCALVAR):
       PUSH(this->locals[IPNEXT()]);
@@ -822,17 +830,21 @@ void ACSThinker::Think()
 
       // Branching
    OPCODE(BRANCH_CALL):
+      opcode = POP();
+      func = ACSVM::FindFunction(opcode);
+      goto acs_op_call;
+   OPCODE(BRANCH_CALL_IMM):
+      opcode = IPNEXT();
+      func = opcode < vm->numFuncs ? vm->funcptrs[opcode] : NULL;
+   acs_op_call:
       {
-         ACSFunc *func;
-         opcode = IPNEXT();
-
-         BRANCH_COUNT();
-
-         if(opcode >= vm->numFuncs)
+         if(!func)
          {
             doom_printf(FC_ERROR "ACS Error: CALL out of range: %d\a", (int)opcode);
             goto action_endscript;
          }
+
+         BRANCH_COUNT();
 
          // Ensure there's enough space for the call frame.
          if((size_t)(callPtr - calls) >= numCalls)
@@ -843,8 +855,6 @@ void ACSThinker::Think()
                                             PU_LEVEL, NULL);
             callPtr = &calls[callPtrTemp];
          }
-
-         func = vm->funcptrs[opcode];
 
          callPtr->ip          = ip;
          callPtr->numLocals   = numLocals;
@@ -1821,6 +1831,10 @@ static void ACS_loadScripts(WadDirectory *dir, int lump)
 //
 void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 {
+   ACSFunc   *func, *funcEnd;
+   ACSScript *s,    *sEnd;
+   ACSVM    **vm,  **vmEnd;
+
    // Start at 1 so that number of chains is never 0.
    unsigned int numScriptsByNumber = 1, numScriptsByName = 1;
 
@@ -1852,9 +1866,9 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    // Haha, not really! Now we have to process script names.
 
    // For this round, just tally the number of scripts.
-   for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
    {
-      for(ACSScript *s = (*vm)->scripts, *sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
+      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
       {
          if(s->number < 0)
             ++numScriptsByName;
@@ -1867,9 +1881,9 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    acsScriptsByName.initialize(numScriptsByName);
 
    // Now actually add them to the tables.
-   for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
    {
-      for(ACSScript *s = (*vm)->scripts, *sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
+      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
       {
          if(s->number < 0)
             acsScriptsByName.addObject(s);
@@ -1917,6 +1931,41 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       // Also, add to DynaString lookup, if no existing string with that data.
       if(!acsStrings.objectForKey((*itr)->data))
          acsStrings.addObject(*itr);
+   }
+
+   // Process GlobalFuncs.
+   // Unlike strings, this array is not a direct combining of all the VMs.
+
+   // Count the number of defined functions, leaving 0 to mean no function.
+   ACSVM::GlobalNumFuncs = 1;
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(func = (*vm)->funcs, funcEnd = func + (*vm)->numFuncs; func != funcEnd; ++func)
+      {
+         if(func->codePtr != (*vm)->code)
+            ++ACSVM::GlobalNumFuncs;
+      }
+   }
+
+   // Allocate the array.
+   ACSVM::GlobalFuncs = (ACSFunc **)Z_Malloc(ACSVM::GlobalNumFuncs * sizeof(ACSFunc *),
+                                             PU_LEVEL, NULL);
+
+   // Build the array, the first element being no function.
+   ACSVM::GlobalNumFuncs = 0;
+   ACSVM::GlobalFuncs[ACSVM::GlobalNumFuncs++] = NULL;
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(func = (*vm)->funcs, funcEnd = func + (*vm)->numFuncs; func != funcEnd; ++func)
+      {
+         if(func->codePtr != (*vm)->code)
+         {
+            func->number = ACSVM::GlobalNumFuncs;
+            ACSVM::GlobalFuncs[ACSVM::GlobalNumFuncs++] = func;
+         }
+         else
+            func->number = 0;
+      }
    }
 }
 

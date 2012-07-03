@@ -348,10 +348,11 @@ struct acs_opdata_t
 class ACSFunc
 {
 public:
-   uint8_t numArgs; // argument count
-   uint8_t numVars; // variable count
-   uint8_t numRetn; // return count
-   ACSVM  *vm;      // VM the function is from
+   uint32_t number;  // number in GlobalFuncs array
+   uint8_t  numArgs; // argument count
+   uint8_t  numVars; // variable count
+   uint8_t  numRetn; // return count
+   ACSVM   *vm;      // VM the function is from
 
    union
    {
@@ -602,6 +603,13 @@ public:
    static uint32_t AddString(const char *s, uint32_t l);
 
    static void ArchiveStrings(SaveArchive &arc);
+
+   static ACSFunc    **GlobalFuncs;
+   static unsigned int GlobalNumFuncs;
+   static ACSFunc *FindFunction(uint32_t funcnum)
+   {
+      return funcnum < GlobalNumFuncs ? GlobalFuncs[funcnum] : NULL;
+   }
 
    static ACSScript *FindScriptByNumber(int32_t scrnum);
    static ACSScript *FindScriptByName(const char *name);
