@@ -1119,7 +1119,7 @@ static void ACS_funcSetThingVar(ACS_FUNCARG)
    int32_t  val = args[2];
    Mobj    *mo = NULL;
 
-   while((mo = P_FindMobjFromTID(tid, NULL, thread->trigger)))
+   while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
       ACS_SetThingVar(mo, var, val);
 }
 
@@ -1390,12 +1390,12 @@ static void ACS_funcThingCount(ACS_FUNCARG)
    int32_t type = args[0];
    int32_t tid  = args[1];
 
-   if(type <= 0 || type >= ACS_NUM_THINGTYPES)
-      type = 0;
+   if(type == 0)
+      *retn++ = ACS_thingCount(0, tid);
+   else if(type > 0 && type < ACS_NUM_THINGTYPES)
+      *retn++ = ACS_thingCount(ACS_thingtypes[type], tid);
    else
-      type = ACS_thingtypes[type];
-
-   *retn++ = ACS_thingCount(type, tid);
+      *retn++ = 0;
 }
 
 //
@@ -1405,9 +1405,6 @@ static void ACS_funcThingCountName(ACS_FUNCARG)
 {
    mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
    int32_t    tid  = args[1];
-
-   if(type == -1)
-      type = 0;
 
    *retn++ = ACS_thingCount(type, tid);
 }
@@ -1450,9 +1447,6 @@ static void ACS_funcThingCountNameSector(ACS_FUNCARG)
    mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[1]));
    int32_t    tid  = args[2];
 
-   if(type == -1)
-      type = 0;
-
    *retn++ = ACS_thingCountSector(tag, type, tid);
 }
 
@@ -1465,12 +1459,12 @@ static void ACS_funcThingCountSector(ACS_FUNCARG)
    int32_t type = args[1];
    int32_t tid  = args[2];
 
-   if(type <= 0 || type >= ACS_NUM_THINGTYPES)
-      type = 0;
+   if(type == 0)
+      *retn++ = ACS_thingCountSector(tag, 0, tid);
+   else if(type > 0 && type < ACS_NUM_THINGTYPES)
+      *retn++ = ACS_thingCountSector(tag, ACS_thingtypes[type], tid);
    else
-      type = ACS_thingtypes[type];
-
-   *retn++ = ACS_thingCountSector(tag, type, tid);
+      *retn++ = 0;
 }
 
 //

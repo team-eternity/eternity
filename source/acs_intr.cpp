@@ -621,7 +621,7 @@ void ACSThinker::Think()
          int tid = POP();
          Mobj *mo = NULL;
 
-         while((mo = P_FindMobjFromTID(tid, NULL, trigger)))
+         while((mo = P_FindMobjFromTID(tid, mo, trigger)))
             ACS_SetThingVar(mo, opcode, temp);
       }
       NEXTOP();
@@ -663,7 +663,7 @@ void ACSThinker::Think()
       {
          ACSString *string = ACSVM::GlobalStrings[opcode];
          if((uint32_t)temp < string->data.l)
-            PUSH(string->data.s[temp]);
+            PUSH(string->data.s[(uint32_t)temp]);
          else
             PUSH(0);
       }
@@ -1549,10 +1549,16 @@ ACSVM::~ACSVM()
 //
 ACSFunc *ACSVM::findFunction(const char *name)
 {
-   for(unsigned int i = numFuncNames; i--;)
+   // Look through all of this VM's functions.
+   for(unsigned int i = numFuncNames < numFuncs ? numFuncNames : numFuncs; i--;)
    {
-      if(i < numFuncs && funcs[i].codeIndex && !strcasecmp(funcNames[i]->data.s, name))
+      // Check for matching name, but don't match if it's an external function.
+      // Note that this check changes once the VM is loaded.
+      if((loaded ? (funcs[i].codePtr != code) : (funcs[i].codeIndex != 0)) &&
+         !strcasecmp(funcNames[i]->data.s, name))
+      {
          return &funcs[i];
+      }
    }
 
    return NULL;

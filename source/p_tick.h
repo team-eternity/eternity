@@ -146,7 +146,7 @@ template<typename T> T *P_NextThinker(T *th)
 {
    Thinker *itr;
 
-   for(itr = th ? th : thinkercap.next; itr != &thinkercap; itr = itr->next)
+   for(itr = th ? th->next : thinkercap.next; itr != &thinkercap; itr = itr->next)
    {
       if((th = thinker_cast<T *>(itr)))
          return th;

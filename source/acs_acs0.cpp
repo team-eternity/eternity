@@ -1046,6 +1046,9 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
    // ... from functions.
    for(ACSFunc *itr = vm->funcs, *end = itr + vm->numFuncs; itr!= end; ++itr)
    {
+      // Functions with code index 0 are extern.
+      if(itr->codeIndex == 0) continue;
+
       ACS_traceScriptACS0(vm, lumpLength, data, codeTouched, itr->codeIndex,
                           jumpCount, compressed);
    }
