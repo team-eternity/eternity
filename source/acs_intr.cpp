@@ -272,6 +272,9 @@ static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
 
    // set ip to entry point
    newScript->ip        = acs->codePtr;
+   newScript->numStack  = ACS_NUM_STACK * 2;
+   newScript->stack     = estructalloctag(int32_t, newScript->numStack, PU_LEVEL);
+   newScript->stackPtr  = 0;
    newScript->numLocals = acs->numVars;
    newScript->locals    = estructalloctag(int32_t, newScript->numLocals, PU_LEVEL);
 
@@ -509,7 +512,7 @@ void ACSThinker::Think()
 
    // cache vm data in local vars for efficiency
    register int32_t *ip  = this->ip;
-   register int32_t *stp = this->stack + this->stp;
+   register int32_t *stp = this->stack + this->stackPtr;
    int count = 0;
    uint32_t opcode;
    int32_t temp;
@@ -856,6 +859,14 @@ void ACSThinker::Think()
             callPtr = &calls[callPtrTemp];
          }
 
+         // Ensure there's enough stack space.
+         if(numStack - (stackPtr = stp - stack) < ACS_NUM_STACK)
+         {
+            numStack = stackPtr + ACS_NUM_STACK * 2;
+            stack = (int32_t *)Z_Realloc(stack, numStack * sizeof(int32_t), PU_LEVEL, NULL);
+            stp = stack + stackPtr;
+         }
+
          callPtr->ip          = ip;
          callPtr->numLocals   = numLocals;
          callPtr->locals      = locals;
@@ -929,6 +940,12 @@ void ACSThinker::Think()
          ++ip;
       NEXTOP();
    OPCODE(BRANCH_RETURN):
+      // If there are no call frames, silently turn this into a terminate.
+      // This handles both erroneous RETURN instructions and allows for easier
+      // calling of arbitrary ACS functions.
+      if(callPtr == calls)
+         goto action_endscript;
+
       --callPtr;
 
       efree(locals);
@@ -1197,7 +1214,7 @@ action_endscript:
 action_stop:
    // copy fields back into script
    this->ip  = ip;
-   this->stp = stp - this->stack;
+   this->stackPtr = stp - this->stack;
    goto function_end;
 
 function_end:;
@@ -2023,10 +2040,14 @@ bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
    // setup the new script thinker
    newThread = new ACSThinker;
 
-   newThread->ip       = script->codePtr;
-   newThread->locals   = estructalloctag(int32_t, script->numVars, PU_LEVEL);
-   newThread->line     = line;
-   newThread->lineSide = lineSide;
+   newThread->ip        = script->codePtr;
+   newThread->numStack  = ACS_NUM_STACK * 2;
+   newThread->stack     = estructalloctag(int32_t, newThread->numStack, PU_LEVEL);
+   newThread->stackPtr  = 0;
+   newThread->numLocals = script->numVars;
+   newThread->locals    = estructalloctag(int32_t, newThread->numLocals, PU_LEVEL);
+   newThread->line      = line;
+   newThread->lineSide  = lineSide;
    P_SetTarget<Mobj>(&newThread->trigger, trigger);
 
    // copy in some important data
@@ -2456,7 +2477,7 @@ void ACSThinker::serialize(SaveArchive &arc)
    }
 
    // Basic properties
-   arc << ipIndex << stp << numLocals << sreg << sdata << callPtrIndex
+   arc << ipIndex << stackPtr << numLocals << sreg << sdata << callPtrIndex
        << scriptIndex << vm << delay << triggerSwizzle << lineIndex << lineSide;
 
    // Allocations/Index-to-Pointer
@@ -2472,11 +2493,14 @@ void ACSThinker::serialize(SaveArchive &arc)
 
       line = lineIndex ? &lines[lineIndex - 1] : NULL;
 
+      numStack = stackPtr + ACS_NUM_STACK;
+      stack = estructalloctag(int32_t, numStack, PU_LEVEL);
+
       locals = estructalloctag(int32_t, numLocals, PU_LEVEL);
    }
 
    // Arrays
-   P_ArchiveArray(arc, stack, ACS_STACK_LEN);
+   P_ArchiveArray(arc, stack, stackPtr);
    P_ArchiveArray(arc, locals, numLocals);
    P_ArchiveArray(arc, calls, callPtrIndex);
 

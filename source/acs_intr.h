@@ -42,7 +42,7 @@ class  WadDirectory;
 // Defines
 //
 
-#define ACS_STACK_LEN      128
+#define ACS_NUM_STACK      128
 #define ACS_NUM_CALLS      16
 #define ACS_NUM_LOCALVARS  20
 #define ACS_NUM_MAPVARS    32
@@ -438,28 +438,29 @@ public:
    ACSThinker  *nextthread;
 
    // virtual machine data
-   int32_t     result;                // user-defined result of the thread
-   int32_t    *ip;                    // instruction pointer
-   int32_t     stack[ACS_STACK_LEN];  // value stack
-   int32_t     stp;                   // stack pointer
-   int32_t    *locals;                // local variables and arguments
-   uint32_t    numLocals;             // number of local variables
-   int32_t     sreg;                  // state register
-   int32_t     sdata;                 // special data for state
-   acs_call_t *calls;                 // call frames
-   acs_call_t *callPtr;               // current call frame
-   uint32_t    numCalls;              // number of call frames
-   qstring    *printBuffer;           // print buffer
+   int32_t     result;      // user-defined result of the thread
+   int32_t    *ip;          // instruction pointer
+   int32_t    *stack;       // value stack
+   uint32_t    stackPtr;    // stack pointer
+   uint32_t    numStack;    // stack size
+   int32_t    *locals;      // local variables and arguments
+   uint32_t    numLocals;   // number of local variables
+   int32_t     sreg;        // state register
+   int32_t     sdata;       // special data for state
+   acs_call_t *calls;       // call frames
+   acs_call_t *callPtr;     // current call frame
+   uint32_t    numCalls;    // number of call frames
+   qstring    *printBuffer; // print buffer
 
    // info copied from acscript and acsvm
-   ACSScript *script;                 // the script being executed
-   ACSVM     *vm;                     // the current execution environment
+   ACSScript *script;       // the script being executed
+   ACSVM     *vm;           // the current execution environment
 
    // misc
-   int32_t delay;                     // counter for script delays
-   Mobj   *trigger;                   // thing that activated
-   line_t *line;                      // line that activated
-   int     lineSide;                  // line side of activation
+   int32_t delay;           // counter for script delays
+   Mobj   *trigger;         // thing that activated
+   line_t *line;            // line that activated
+   int     lineSide;        // line side of activation
 };
 
 //

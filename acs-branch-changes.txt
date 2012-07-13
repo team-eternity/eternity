@@ -5,6 +5,17 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+07/13/2012
+
+Added a check to BRANCH_RETURN to terminate if there are no call frames left.
+Aside from the obvious crash-prevention, it will also allow the engine to call
+arbitrary ACS functions.
+
+Similarly, added a check to BRANCH_CALL to make sure there is enough stack
+space based on ACS_NUM_STACK and if not, allocate more. This effectively resets
+that limit for each function allowing more recursion.
+
+-------------------------------------------------------------------------------
 07/04/2012
 
 Fixed miscellaneous bugs.
@@ -15,7 +26,7 @@ Fixed miscellaneous bugs.
   * ThingCount, when passed an invalid type, needed to always return 0.
   * P_NextThinker needed to use th->next instead of returning th.
   * This one was merely a potential issue for when we start to really dig into
-    that 64-bit address space, but when accessing a characetr from an ACSString
+    that 64-bit address space, but when accessing a character from an ACSString
     via temp, it should be cast to uint32_t first so that it can't sign extend.
 
 -------------------------------------------------------------------------------
