@@ -763,7 +763,7 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
       case ACS0_OP_CHANGECEILING_IMM:
          ACS_translateFuncACS0(codePtr, opdata);
          *codePtr++ = SwapLong(*rover++);
-         *codePtr++ = SwapLong(*rover++) + vm->strings; // tag string
+         *codePtr++ = vm->getStringIndex(SwapLong(*rover++)); // tag string
          for(int i = opdata->args - 2; i--;)
             *codePtr++ = SwapLong(*rover++);
          break;
@@ -810,7 +810,7 @@ static void ACS_translateScriptACS0(ACSVM *vm, uint32_t lumpLength, byte *data,
       case ACS0_OP_SPAWNPOINT_IMM:
       case ACS0_OP_SPAWNSPOT_IMM:
          ACS_translateFuncACS0(codePtr, opdata);
-         *codePtr++ = SwapLong(*rover++) + vm->strings; // tag string
+         *codePtr++ = vm->getStringIndex(SwapLong(*rover++)); // tag string
          for(int i = opdata->args - 1; i--;)
             *codePtr++ = SwapLong(*rover++);
          break;
@@ -1001,12 +1001,9 @@ void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
    if (tableIndex > lumpLength - (vm->numStrings * 4)) return;
 
    // Read strings.
-   ACSVM::GlobalNumStrings += vm->numStrings;
-   ACSVM::GlobalStrings = (ACSString **)Z_Realloc(ACSVM::GlobalStrings,
-      ACSVM::GlobalNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+   vm->strings = (uint32_t *)Z_Malloc(vm->numStrings * sizeof(uint32_t), PU_LEVEL, NULL);
 
-   for(ACSString **end = ACSVM::GlobalStrings + ACSVM::GlobalNumStrings,
-       **itr = end - vm->numStrings; itr != end; ++itr)
+   for(uint32_t *itr = vm->strings, *end = itr + vm->numStrings; itr != end; ++itr)
    {
       tableIndex = SwapLong(*rover++);
 
@@ -1015,6 +1012,10 @@ void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
       else
          *itr = ACS_LoadStringACS0(data + lumpLength, data + lumpLength);
    }
+
+   // The first part of the global string table must match VM-0 for compatibility.
+   if(vm->id == 0 && ACSVM::GlobalNumStrings < vm->numStrings)
+      vm->addStrings();
 
    // Read code.
    ACS_LoadScriptCodeACS0(vm, data, lumpLength, false);
@@ -1073,7 +1074,7 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
 
       // And names, too!
       if(itr->number < 0 && (uint32_t)(-itr->number - 1) < vm->numScriptNames)
-         itr->name = vm->scriptNames[-itr->number - 1]->data.s;
+         itr->name = ACSVM::GlobalStrings[vm->scriptNames[-itr->number - 1]]->data.s;
       else
          itr->name = "";
    }
@@ -1093,12 +1094,13 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
 //
 // ACS_LoadStringACS0
 //
-ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end)
+// Returns the index into GlobalStrings.
+//
+uint32_t ACS_LoadStringACS0(const byte *begin, const byte *end)
 {
-   ACSString *string;
    qstring buf;
    const byte *itr = begin;
-   char *str, c;
+   char c;
 
    // Find either a null-terminator or the end of the lump.
    while(itr != end && *itr)
@@ -1169,16 +1171,7 @@ ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end)
          buf += *itr++;
    }
 
-   // Yes, allocating the string with the container.
-   string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + buf.length() + 1, PU_LEVEL, NULL);
-   string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
-   string->data.l = buf.length();
-
-   // Copy the buffer into the new string.
-   buf.copyInto(str, buf.length());
-   str[buf.length()] = 0;
-
-   return string;
+   return ACSVM::AddString(buf.constPtr(), buf.length());
 }
 
 // EOF

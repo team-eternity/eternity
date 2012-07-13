@@ -15,6 +15,15 @@ Similarly, added a check to BRANCH_CALL to make sure there is enough stack
 space based on ACS_NUM_STACK and if not, allocate more. This effectively resets
 that limit for each function allowing more recursion.
 
+And then ACSString loading was rewritten so that everything goes through
+AddString. This does inter-module and inter-chunk string folding and makes more
+strings available to DynaStrings.
+
+The only trick is that GlobalStrings is made to match VM-0's strings.
+
+Also fixed a crippling copy-paste bug in AddString where it would realloc using
+GlobalNumStrings instead of GlobalAllocStrings.
+
 -------------------------------------------------------------------------------
 07/04/2012
 

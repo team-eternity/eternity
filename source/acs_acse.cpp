@@ -117,8 +117,8 @@ static void ACS_chunkScriptACSE(ACSVM *vm, byte *tableData, uint32_t tableLength
 //
 // Reads a string table. Returns number of strings read.
 //
-static uint32_t ACS_chunkerString(ACSString **&outStrings, unsigned &outNumStrings,
-                                  byte *chunkData, uint32_t chunkLength, bool junk)
+static void ACS_chunkerString(uint32_t *&outStrings, unsigned int &outNumStrings,
+                              byte *chunkData, uint32_t chunkLength, bool junk)
 {
    uint32_t numStrings, stringBase, stringIndex;
    uint32_t *rover = (uint32_t *)chunkData;
@@ -126,7 +126,7 @@ static uint32_t ACS_chunkerString(ACSString **&outStrings, unsigned &outNumStrin
    if(junk)
    {
       // Need space for string count.
-      if(chunkLength < 12) return 0;
+      if(chunkLength < 12) return;
 
       // Read number of strings. (Before and after is unused data.)
       ++rover;
@@ -139,7 +139,7 @@ static uint32_t ACS_chunkerString(ACSString **&outStrings, unsigned &outNumStrin
    else
    {
       // Need space for string count.
-      if(chunkLength < 4) return 0;
+      if(chunkLength < 4) return;
 
       // Read number of strings.
       numStrings = SwapULong(*rover++);
@@ -149,15 +149,15 @@ static uint32_t ACS_chunkerString(ACSString **&outStrings, unsigned &outNumStrin
    }
 
    // Need space for string pointers.
-   if(chunkLength < stringBase) return 0;
+   if(chunkLength < stringBase) return;
 
    // Read strings.
    outNumStrings += numStrings;
-   outStrings = (ACSString **)Z_Realloc(outStrings,
-      outNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+   outStrings = (uint32_t *)Z_Realloc(outStrings, outNumStrings * sizeof(uint32_t),
+                                      PU_LEVEL, NULL);
 
-   for(ACSString **end = outStrings + outNumStrings,
-       **itr = end - numStrings; itr != end; ++itr)
+   for(uint32_t *end = outStrings + outNumStrings,
+       *itr = end - numStrings; itr != end; ++itr)
    {
       stringIndex = SwapLong(*rover++);
 
@@ -166,8 +166,6 @@ static uint32_t ACS_chunkerString(ACSString **&outStrings, unsigned &outNumStrin
       else
          *itr = ACS_LoadStringACS0(chunkData + chunkLength, chunkData + chunkLength);
    }
-
-   return numStrings;
 }
 
 //
@@ -295,7 +293,7 @@ static void ACS_chunkerASTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
       {
          ACSArray *arr = &vm->maparrs[var];
          for(uint32_t i = vm->mapalen[var]; i--;)
-            arr->at(i) += vm->strings;
+            arr->at(i) = vm->getStringIndex(arr->at(i));
       }
    }
 }
@@ -483,7 +481,7 @@ static void ACS_chunkerMSTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
    {
       var = SwapULong(*itr++);
       if(var < ACS_NUM_MAPVARS)
-         vm->mapvars[var] += vm->strings;
+         vm->mapvars[var] = vm->getStringIndex(vm->mapvars[var]);
    }
 }
 
@@ -609,8 +607,7 @@ static void ACS_chunkerSTRL(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 {
    if(chunkID != ACS_CHUNKID_STRL) return;
 
-   vm->numStrings += ACS_chunkerString(ACSVM::GlobalStrings, ACSVM::GlobalNumStrings,
-                                       chunkData, chunkLength, true);
+   ACS_chunkerString(vm->strings, vm->numStrings, chunkData, chunkLength, true);
 }
 
 //
@@ -725,6 +722,18 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
 {
    ACSFunc *func;
 
+   // Strings first so they get the right global indexes in VM-0.
+
+   // STRE - String Literals Encrypted
+   // TODO (is this deprecated?)
+
+   // STRL - String Literals
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerSTRL);
+
+   // The first part of the global string table must match VM-0 for compatibility.
+   if(vm->id == 0 && ACSVM::GlobalNumStrings < vm->numStrings)
+      vm->addStrings();
+
    // AINI - Map Array Init
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerAINI);
 
@@ -761,12 +770,6 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    // SFLG - Script Flags
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerSFLG);
 
-   // STRE - String Literals Encrypted
-   // TODO (is this deprecated?)
-
-   // STRL - String Literals
-   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerSTRL);
-
    // SVCT - Script Variable Count
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerSVCT);
 
@@ -776,12 +779,14 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    // the indexes of map-variables.
    for(unsigned int i = vm->numExports; i--;)
    {
-      if(!vm->exports[i]->data.s || !vm->exports[i]->data.s[0]) continue;
+      ACSString *name = ACSVM::GlobalStrings[vm->exports[i]];
+
+      if(!name->data.s || !name->data.s[0]) continue;
 
       if(i < ACS_NUM_MAPARRS && vm->mapahas[i])
-         vm->mapanam[i] = vm->exports[i]->data.s;
+         vm->mapanam[i] = name->data.s;
       else if(i < ACS_NUM_MAPVARS)
-         vm->mapvnam[i] = vm->exports[i]->data.s;
+         vm->mapvnam[i] = name->data.s;
    }
 
    // LOAD - Library Loading
@@ -819,11 +824,13 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
       if(vm->funcptrs[i]->codeIndex || i >= vm->numFuncNames)
          continue;
 
+      ACSString *funcname = ACSVM::GlobalStrings[vm->funcNames[i]];
+
       // Search through all of the imported VMs for the function.
       for(ACSVM **itrVM = vm->importVMs,
           **endVM = itrVM + vm->numImports; itrVM != endVM; ++itrVM)
       {
-         if(*itrVM && (func = (*itrVM)->findFunction(vm->funcNames[i]->data.s)))
+         if(*itrVM && (func = (*itrVM)->findFunction(funcname->data.s)))
          {
             vm->funcptrs[i] = func;
             break;

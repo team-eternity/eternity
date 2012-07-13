@@ -543,10 +543,19 @@ public:
    ACSVM(int tag = PU_STATIC);
    ~ACSVM();
 
+   // Used by the loader to sync the global strings to the VM's strings.
+   void addStrings();
+
    ACSFunc *findFunction(const char *name);
 
    int32_t *findMapVar(const char *name);
    ACSArray *findMapArr(const char *name);
+
+   // Converts a local index to a global index, or returns the original number.
+   uint32_t getStringIndex(uint32_t strnum)
+   {
+      return strnum < numStrings ? strings[strnum] : strnum;
+   }
 
    // Resets the VM to an uninitialized state. Only useful for static VMs.
    void reset();
@@ -554,11 +563,11 @@ public:
    // bytecode info
    int32_t     *code;                  // ACS code; jumps are relative to this
    unsigned int numCode;
-   unsigned int strings;               // offset into global table
+   uint32_t    *strings;               // indexes into global table
    unsigned int numStrings;
    ACSScript   *scripts;               // the scripts
    unsigned int numScripts;
-   ACSString  **scriptNames;           // script names
+   uint32_t    *scriptNames;           // script names
    unsigned int numScriptNames;
    bool         loaded;                // for static VMs, if it's valid or not
    uint32_t     id;                    // vm id number
@@ -573,14 +582,13 @@ public:
    ACSArray *mapatab[ACS_NUM_MAPARRS]; // pointers into vm maparrs
    ACSArray  maparrs[ACS_NUM_MAPARRS]; // map arrays local to this vm
 
-   // loader info (not valid post-loading)
-   // should this be a separate struct, freed after loading?
-   ACSString  **exports;                  // exported variables
+   // loader info
+   uint32_t    *exports;                  // exported variables
    unsigned int numExports;               // number of exports
    const char **imports;                  // imported lump names
    ACSVM      **importVMs;                // imported VMs
    unsigned int numImports;               // number of imports
-   ACSString  **funcNames;                // function names
+   uint32_t    *funcNames;                // function names
    unsigned int numFuncNames;             // number of function names
    const char  *mapvnam[ACS_NUM_MAPVARS]; // map variable names
    const char  *mapanam[ACS_NUM_MAPARRS]; // map array names
@@ -634,7 +642,7 @@ void ACS_LoadScriptACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
 void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset = 4);
 void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool compressed);
-ACSString *ACS_LoadStringACS0(const byte *begin, const byte *end);
+uint32_t ACS_LoadStringACS0(const byte *begin, const byte *end);
 void ACS_LoadLevelScript(WadDirectory *dir, int lump);
 void ACS_RunDeferredScripts();
 bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,

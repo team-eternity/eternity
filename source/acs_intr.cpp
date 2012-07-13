@@ -1191,7 +1191,7 @@ void ACSThinker::Think()
       STACK_AT(1) = ACSVM::GetStringLength(STACK_AT(1));
       NEXTOP();
    OPCODE(TAGSTRING):
-      STACK_AT(1) += vm->strings;
+      STACK_AT(1) = vm->getStringIndex(STACK_AT(1));
       NEXTOP();
 
    OPCODE(TIMER):
@@ -1562,6 +1562,24 @@ ACSVM::~ACSVM()
 }
 
 //
+// ACSVM::addStrings
+//
+void ACSVM::addStrings()
+{
+   // Make sure there is enough space.
+   if(GlobalAllocStrings < numStrings)
+   {
+      GlobalAllocStrings = numStrings;
+      GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
+         GlobalNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+   }
+
+   // Set the missing global entries to ours.
+   for(; GlobalNumStrings < numStrings; ++GlobalNumStrings)
+      GlobalStrings[GlobalNumStrings] = GlobalStrings[strings[GlobalNumStrings]];
+}
+
+//
 // ACSVM::findFunction
 //
 ACSFunc *ACSVM::findFunction(const char *name)
@@ -1572,7 +1590,7 @@ ACSFunc *ACSVM::findFunction(const char *name)
       // Check for matching name, but don't match if it's an external function.
       // Note that this check changes once the VM is loaded.
       if((loaded ? (funcs[i].codePtr != code) : (funcs[i].codeIndex != 0)) &&
-         !strcasecmp(funcNames[i]->data.s, name))
+         !strcasecmp(GlobalStrings[funcNames[i]]->data.s, name))
       {
          return &funcs[i];
       }
@@ -1631,7 +1649,11 @@ uint32_t ACSVM::AddString(const char *s, uint32_t l)
       str[l] = 0;
 
       // Set metadata.
-      string->script = acsScriptsByName.objectForKey(string->data.s);
+      if(acsScriptsByName.isInitialized())
+         string->script = acsScriptsByName.objectForKey(string->data.s);
+      else
+         string->script = NULL;
+
       string->length = strlen(string->data.s);
       string->number = GlobalNumStrings;
 
@@ -1640,7 +1662,7 @@ uint32_t ACSVM::AddString(const char *s, uint32_t l)
       {
          GlobalAllocStrings += GlobalAllocStrings > 64 ? GlobalAllocStrings : 64;
          GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
-            GlobalNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+            GlobalAllocStrings * sizeof(ACSString *), PU_LEVEL, NULL);
       }
 
       // Add to global array.
@@ -1692,7 +1714,7 @@ void ACSVM::reset()
 
    code       = NULL;
    numCode    = 0;
-   strings    = 0;
+   strings    = NULL;
    numStrings = 0;
    scripts    = NULL;
    numScripts = 0;
@@ -1742,6 +1764,7 @@ void ACS_InitLevel(void)
    acsLevelScriptVM.reset();
 
    ACSVM::GlobalStrings = NULL;
+   ACSVM::GlobalAllocStrings = 0;
    ACSVM::GlobalNumStrings = 0;
 }
 
@@ -1776,7 +1799,6 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
    byte *data;
 
    ACS_addVirtualMachine(vm);
-   vm->strings = ACSVM::GlobalNumStrings;
    vm->lump    = lump;
 
    // zero length or too-short lump?
@@ -1866,6 +1888,8 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    acsStrings.destroy();
    acsVMs.makeEmpty();
 
+   acsStrings.initialize(32);
+
    // load the level script, if any
    if(lump != -1)
       ACS_LoadScript(&acsLevelScriptVM, dir, lump);
@@ -1939,21 +1963,15 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    // Save this number for saving.
    ACSVM::GlobalNumStringsBase = ACSVM::GlobalNumStrings;
 
-   // +1 to prevent 0 chains.
-   acsStrings.initialize(ACSVM::GlobalNumStrings + 1);
+   // Rebuild the hash so it has good performance at runtime.
+   if(acsStrings.getNumItems() > acsStrings.getNumChains())
+      acsStrings.rebuild(acsStrings.getNumItems());
 
    // Pre-search scripts for strings. This makes named scripts faster than numbered!
-   // Also precalculate the length, since we're precalculating.
    for(ACSString **itr = ACSVM::GlobalStrings,
        **end = itr + ACSVM::GlobalNumStrings; itr != end; ++itr)
    {
       (*itr)->script = ACSVM::FindScriptByName((*itr)->data.s);
-      (*itr)->length = strlen((*itr)->data.s);
-      (*itr)->number = itr - ACSVM::GlobalStrings;
-
-      // Also, add to DynaString lookup, if no existing string with that data.
-      if(!acsStrings.objectForKey((*itr)->data))
-         acsStrings.addObject(*itr);
    }
 
    // Process GlobalFuncs.
