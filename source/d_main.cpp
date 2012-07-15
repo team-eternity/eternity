@@ -343,8 +343,6 @@ void D_Display(void)
    if(nodrawers)                // for comparative timing / profiling
       return;
 
-   D_drawWings();
-
    if(setsizeneeded)            // change the view size if needed
    {
       R_ExecuteSetViewSize();
@@ -356,6 +354,10 @@ void D_Display(void)
    if(gamestate != wipegamestate &&
       !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
       Wipe_StartScreen();
+
+   // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
+   // created by drawing patches 4:3 in higher aspect ratios.
+   D_drawWings();
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)

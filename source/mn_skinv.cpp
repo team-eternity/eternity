@@ -327,14 +327,14 @@ static void MN_SkinInstructions(void)
 {
    const char *msg = FC_GOLD "skin viewer";
 
-   void (*textfunc)(vfont_t *, const char *, int, int) = 
+   void (*textfunc)(vfont_t *, const char *, int, int, VBuffer *) = 
       GameModeInfo->flags & GIF_SHADOWTITLES ? 
         V_FontWriteTextShadowed : V_FontWriteText;
 
    // draw a title at the top, too
 
    textfunc(menu_font_big, msg, 
-            160 - V_FontStringWidth(menu_font_big, msg)/2, 8);
+            160 - V_FontStringWidth(menu_font_big, msg)/2, 8, &vbscreen);
 
    // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
    // it with one call to V_FontWriteText instead of five.

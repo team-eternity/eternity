@@ -33,6 +33,7 @@
 #include "m_dllist.h"
 
 struct patch_t;
+struct VBuffer;
 
 enum
 {
@@ -90,10 +91,13 @@ struct vfont_t
    int patchnumoffset;       // used during font loading only
 };
 
-void    V_FontWriteText(vfont_t *font, const char *s, int x, int y);
-void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
-void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
-void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
+void    V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen = NULL);
+void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y,
+                               VBuffer *screen = NULL);
+void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
+                              VBuffer *screen = NULL);
+void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y, 
+                                VBuffer *screen = NULL);
 int     V_FontStringHeight(vfont_t *font, const char *s);
 int     V_FontStringWidth(vfont_t *font, const char *s);
 int     V_FontCharWidth(vfont_t *font, char pChar);
