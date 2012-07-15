@@ -88,6 +88,7 @@
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_stuff.h"
+#include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
@@ -304,6 +305,35 @@ static void D_showMemStats(void)
 }
 #endif
 
+static void D_drawWings()
+{
+   int wingwidth;
+
+   if(vbscreen.width <= 640 || vbscreen.height <= 400 ||
+      static_cast<float>(vbscreen.width) / vbscreen.height <= 4.0f/3.0f)
+      return;
+
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+
+   switch(gamestate)
+   {
+   case GS_LEVEL:
+      if(scaledviewheight != 200)
+      {
+         int ycoord = vbscreen.y1lookup[SCREENHEIGHT-1-GameModeInfo->StatusBar->height];
+         int blockheight = vbscreen.y2lookup[SCREENHEIGHT-1] - ycoord + 1;
+         
+         V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 
+                      0, ycoord, wingwidth, blockheight);
+         V_ColorBlock(&vbscreen, GameModeInfo->blackIndex,
+                      vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
+      }
+      break;
+   default:
+      break;
+   }
+}
+
 //
 // D_Display
 //  draw current display, possibly wiping it from the previous
@@ -312,6 +342,8 @@ void D_Display(void)
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
+
+   D_drawWings();
 
    if(setsizeneeded)            // change the view size if needed
    {

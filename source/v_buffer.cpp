@@ -244,9 +244,9 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
    vb->needfree = false;
    vb->freelookups = false;
 
-   V_SetupBufferFuncs(vb, DRAWTYPE_UNSCALED);
-
    VB_SetData(vb, parent->data + y * parent->pitch + x * parent->pixelsize);
+
+   V_SetupBufferFuncs(vb, DRAWTYPE_UNSCALED);
 }
 
 //

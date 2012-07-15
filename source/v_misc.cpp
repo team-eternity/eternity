@@ -395,8 +395,35 @@ VBuffer vbscreen;    // vbscreen encapsulates the primary video surface
 VBuffer backscreen1; // backscreen1 is a temporary buffer for in_lude, border
 VBuffer backscreen2; // backscreen2 is a temporary buffer for screenshots
 VBuffer backscreen3; // backscreen3 is a temporary buffer for f_wipe
+VBuffer subscreen43; // provides a 4:3 sub-surface on vbscreen
 
 static bool vbscreenneedsfree = false;
+
+//
+// V_initSubScreen43
+//
+// Initialize a 4:3 subscreen on top of the vbscreen VBuffer.
+//
+static void V_initSubScreen43()
+{
+   int subwidth;
+   int offset;
+
+   if(vbscreen.width > 640 && vbscreen.height > 400 &&
+      static_cast<float>(vbscreen.width) / vbscreen.height > 4.0f/3.0f)
+   {
+      subwidth = vbscreen.height * 4 / 3;
+      offset   = (vbscreen.width - subwidth) / 2;
+   }
+   else
+   {
+      subwidth = vbscreen.width;
+      offset   = 0;
+   }
+
+   V_InitSubVBuffer(&subscreen43, &vbscreen, offset, 0, subwidth, vbscreen.height);
+   V_SetScaling(&subscreen43, SCREENWIDTH, SCREENHEIGHT);
+}
 
 //
 // V_InitScreenVBuffer
@@ -409,6 +436,7 @@ static void V_InitScreenVBuffer(void)
       V_FreeVBuffer(&backscreen1);
       V_FreeVBuffer(&backscreen2);
       V_FreeVBuffer(&backscreen3);
+      V_FreeVBuffer(&subscreen43);
    }
    else
       vbscreenneedsfree = true;
@@ -426,6 +454,9 @@ static void V_InitScreenVBuffer(void)
                      video.bitdepth, video.screens[2]);
    V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, 
                      video.bitdepth, video.screens[3]);
+
+   // Init subscreen43
+   V_initSubScreen43();
 }
 
 extern void I_SetPrimaryBuffer(void);
