@@ -151,7 +151,7 @@ enum
 //
 void MN_DrawSmallPtr(int x, int y)
 {
-   V_DrawPatch(x, y, &vbscreen, 
+   V_DrawPatch(x, y, &subscreen43, 
                PatchLoader::CacheNum(wGlobalDir, smallptrs[smallptr_idx], PU_CACHE));
 }
 
@@ -266,23 +266,23 @@ static int MN_DrawSlider(int x, int y, int pct)
       y += yamt / 2;
    }
   
-   V_DrawPatch(draw_x, y, &vbscreen, slider_gfx[slider_left]);
+   V_DrawPatch(draw_x, y, &subscreen43, slider_gfx[slider_left]);
    draw_x += wl;
   
    for(i = 0; i < SLIDE_PATCHES; ++i)
    {
-      V_DrawPatch(draw_x, y, &vbscreen, slider_gfx[slider_mid]);
+      V_DrawPatch(draw_x, y, &subscreen43, slider_gfx[slider_mid]);
       draw_x += wm - 1;
    }
    
-   V_DrawPatch(draw_x, y, &vbscreen, slider_gfx[slider_right]);
+   V_DrawPatch(draw_x, y, &subscreen43, slider_gfx[slider_right]);
   
    // find position to draw slider patch
    
    slider_width = (wm - 1) * SLIDE_PATCHES;
    draw_x = wl + (pct * (slider_width - ws)) / 100;
    
-   V_DrawPatch(x + draw_x, y, &vbscreen, slider_gfx[slider_slider]);
+   V_DrawPatch(x + draw_x, y, &subscreen43, slider_gfx[slider_slider]);
 
    // haleyjd: set slider gfx purgable
    Z_ChangeTag(slider_gfx[slider_left],   PU_CACHE);
@@ -306,22 +306,22 @@ static void MN_DrawThermo(int x, int y, int thermWidth, int thermDot)
    int xx, i;
 
    xx = x;
-   V_DrawPatch(xx, y, &vbscreen,
+   V_DrawPatch(xx, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_THERML", PU_CACHE));
    
    xx += 8;
    
    for(i = 0; i < thermWidth; ++i)
    {
-      V_DrawPatch(xx, y, &vbscreen,
+      V_DrawPatch(xx, y, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "M_THERMM", PU_CACHE));
       xx += 8;
    }
    
-   V_DrawPatch(xx, y, &vbscreen,
+   V_DrawPatch(xx, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_THERMR", PU_CACHE));
    
-   V_DrawPatch((x + 8) + thermDot*8, y, &vbscreen,
+   V_DrawPatch((x + 8) + thermDot*8, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_THERMO", PU_CACHE));
 }
 
@@ -398,7 +398,7 @@ static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
       // haleyjd 06/27/11: No can do, due to weird CR lumps from BOOM :/
       //V_DrawPatchTranslated(x, y, &vbscreen, patch, colrngs[color], 0);
 
-      V_DrawPatch(x, y, &vbscreen, patch);
+      V_DrawPatch(x, y, &subscreen43, patch);
 
 
       // haleyjd 05/16/04: hack for traditional menu support;
@@ -428,11 +428,11 @@ static int MN_titleDescription(menuitem_t *item)
    if(!(drawing_menu->flags & mf_skullmenu) &&
       GameModeInfo->flags & GIF_SHADOWTITLES)
    {
-      V_FontWriteTextShadowed(menu_font_big, text, x, item->y);
+      V_FontWriteTextShadowed(menu_font_big, text, x, item->y, &subscreen43);
    }
    else
    {
-      V_FontWriteText(menu_font_big, text, x, item->y);
+      V_FontWriteText(menu_font_big, text, x, item->y, &subscreen43);
    }
       
    return V_FontStringHeight(menu_font_big, text);
@@ -467,7 +467,7 @@ static void MN_genericDescription(menuitem_t *item,
    // write description
    if(item->flags & MENUITEM_BIGFONT)
    {
-      V_FontWriteText(menu_font_big, item->description, x, y);
+      V_FontWriteText(menu_font_big, item->description, x, y, &subscreen43);
       *item_height = V_FontStringHeight(menu_font_big, item->description);
    }
    else
@@ -679,7 +679,7 @@ static void MN_drawItemSlider(menuitem_t *item, int color, int alignment,
             box_h = text_h + 8;
 
             V_DrawBox(box_x, box_y, box_w, box_h);
-            V_FontWriteText(menu_font, doublebuf, text_x, text_y);
+            V_FontWriteText(menu_font, doublebuf, text_x, text_y, &subscreen43);
          }
       }
    }
@@ -745,12 +745,12 @@ static void MN_drawItemAutomap(menuitem_t *item, int color, int alignment,
    }
          
    // draw it         
-   V_DrawBlock(ix + GAP, iy - 1, &vbscreen, BLOCK_SIZE, BLOCK_SIZE, block);
+   V_DrawBlock(ix + GAP, iy - 1, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
    // draw patch w/cross         
    if(!amcolor)
    {
-      V_DrawPatch(ix + GAP + 1, iy, &vbscreen, 
+      V_DrawPatch(ix + GAP + 1, iy, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
    }
 }
@@ -943,7 +943,7 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
          item_y = menu->y - 5 + itemnum * 16; // fixed-height items
       }
 
-      V_DrawPatch(item_x, item_y, &vbscreen,
+      V_DrawPatch(item_x, item_y, &subscreen43,
          PatchLoader::CacheNum(wGlobalDir, skulls[(menutime / BLINK_TIME) % 2], PU_CACHE));
    }
    else
@@ -951,11 +951,11 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
       // haleyjd 02/04/06: draw small pointers
 
       // draw left pointer
-      V_DrawPatch(smallptr_coords[0][0], smallptr_coords[0][1], &vbscreen,
+      V_DrawPatch(smallptr_coords[0][0], smallptr_coords[0][1], &subscreen43,
          PatchLoader::CacheNum(wGlobalDir, smallptrs[smallptr_idx], PU_CACHE));
 
       // draw right pointer
-      V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &vbscreen, 
+      V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &subscreen43, 
          PatchLoader::CacheNum(wGlobalDir, 
                                smallptrs[(NUMSMALLPTRS - smallptr_idx) % NUMSMALLPTRS],
                                PU_CACHE));
@@ -1987,7 +1987,7 @@ static void MN_InitFonts(void)
 //
 void MN_WriteText(const char *s, int x, int y)
 {
-   V_FontWriteText(menu_font, s, x, y);
+   V_FontWriteText(menu_font, s, x, y, &subscreen43);
 }
 
 //
@@ -1998,7 +1998,7 @@ void MN_WriteText(const char *s, int x, int y)
 //
 void MN_WriteTextColored(const char *s, int colour, int x, int y)
 {
-   V_FontWriteTextColored(menu_font, s, colour, x, y);
+   V_FontWriteTextColored(menu_font, s, colour, x, y, &subscreen43);
 }
 
 //

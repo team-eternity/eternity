@@ -99,25 +99,25 @@ void V_DrawBox(int x, int y, int w, int h)
    int i, j;
    
    // top rows
-   V_DrawPatch(x, y, &vbscreen, bgp[0]);    // ul
+   V_DrawPatch(x, y, &subscreen43, bgp[0]);    // ul
    for(j = x+xs; j < x+w-xs; j += xs)       // uc
-      V_DrawPatch(j, y, &vbscreen, bgp[1]);
-   V_DrawPatchShadowed(j, y, &vbscreen, bgp[2], NULL, 65536);    // ur
+      V_DrawPatch(j, y, &subscreen43, bgp[1]);
+   V_DrawPatchShadowed(j, y, &subscreen43, bgp[2], NULL, 65536);    // ur
    
    // middle rows
    for(i = y+ys; i < y+h-ys; i += ys)
    {
-      V_DrawPatch(x, i, &vbscreen, bgp[3]);    // cl
+      V_DrawPatch(x, i, &subscreen43, bgp[3]);    // cl
       for(j = x+xs; j < x+w-xs; j += xs)       // cc
-         V_DrawPatch(j, i, &vbscreen, bgp[4]);
-      V_DrawPatchShadowed(j, i, &vbscreen, bgp[5], NULL, 65536);    // cr
+         V_DrawPatch(j, i, &subscreen43, bgp[4]);
+      V_DrawPatchShadowed(j, i, &subscreen43, bgp[5], NULL, 65536);    // cr
    }
    
    // bottom row
-   V_DrawPatchShadowed(x, i, &vbscreen, bgp[6], NULL, 65536);
+   V_DrawPatchShadowed(x, i, &subscreen43, bgp[6], NULL, 65536);
    for(j = x+xs; j < x+w-xs; j += xs)
-      V_DrawPatchShadowed(j, i, &vbscreen, bgp[7], NULL, 65536);
-   V_DrawPatchShadowed(j, i, &vbscreen, bgp[8], NULL, 65536);
+      V_DrawPatchShadowed(j, i, &subscreen43, bgp[7], NULL, 65536);
+   V_DrawPatchShadowed(j, i, &subscreen43, bgp[8], NULL, 65536);
 }
 
 void V_InitBox(void)
@@ -170,7 +170,7 @@ void V_DrawLoading(void)
    font = E_FontForName("ee_smallfont");
    
    V_FontWriteText(font, loading_message, (SCREENWIDTH/2)-30, 
-                   (SCREENHEIGHT/2)-20);
+                   (SCREENHEIGHT/2)-20, &subscreen43);
   
    x = ((SCREENWIDTH/2)-45);
    y = (SCREENHEIGHT/2);
@@ -178,10 +178,10 @@ void V_DrawLoading(void)
 
    // White line
    if(linelen > 0)
-      V_ColorBlockScaled(&vbscreen, (byte)white, x, y, linelen, 1);
+      V_ColorBlockScaled(&subscreen43, (byte)white, x, y, linelen, 1);
    // Black line
    if(linelen < 90)
-      V_ColorBlockScaled(&vbscreen, (byte)black, x + linelen, y, 90 - linelen, 1);
+      V_ColorBlockScaled(&subscreen43, (byte)black, x + linelen, y, 90 - linelen, 1);
 
    I_FinishUpdate();
 }

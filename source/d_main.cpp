@@ -315,9 +315,8 @@ static void D_drawWings()
 
    wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
 
-   switch(gamestate)
+   if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-   case GS_LEVEL:
       if(scaledviewheight != 200)
       {
          int ycoord = vbscreen.y1lookup[SCREENHEIGHT-1-GameModeInfo->StatusBar->height];
@@ -328,9 +327,12 @@ static void D_drawWings()
          V_ColorBlock(&vbscreen, GameModeInfo->blackIndex,
                       vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
       }
-      break;
-   default:
-      break;
+   }
+   else
+   {
+      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+                   0, wingwidth, vbscreen.height);
    }
 }
 
@@ -525,11 +527,11 @@ void D_PageDrawer(void)
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
       // haleyjd 08/15/02: handle Heretic pages
-      V_DrawFSBackground(&vbscreen, l);
+      V_DrawFSBackground(&subscreen43, l);
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
-         V_DrawPatch(4, 160, &vbscreen, 
+         V_DrawPatch(4, 160, &subscreen43, 
                      PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
       }
    }

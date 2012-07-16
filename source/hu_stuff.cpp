@@ -397,7 +397,7 @@ static void HU_MessageDraw(hu_widget_t *widget)
       
       // haleyjd 06/04/05: use V_FontWriteTextColored like it should.
       // Color codes within strings will still override the default.
-      V_FontWriteTextColored(hud_font, msg, mess_colour, x, y);
+      V_FontWriteTextColored(hud_font, msg, mess_colour, x, y, &subscreen43);
    }
 }
 
@@ -495,7 +495,7 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
    // be sure the patch is loaded
    pw->patch = PatchLoader::CacheName(wGlobalDir, pw->patchname, PU_CACHE);
 
-   V_DrawPatchTL(pw->x, pw->y, &vbscreen, pw->patch, pw->color, pw->tl_level);
+   V_DrawPatchTL(pw->x, pw->y, &subscreen43, pw->patch, pw->color, pw->tl_level);
 }
 
 //
@@ -658,9 +658,12 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
    if(tw->message && (!tw->cleartic || leveltime < tw->cleartic))
    {
       if(tw->color)
-         V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, tw->x, tw->y);
+      {
+         V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, 
+                                tw->x, tw->y, &subscreen43);
+      }
       else
-         V_FontWriteText(tw->font, tw->message, tw->x, tw->y);
+         V_FontWriteText(tw->font, tw->message, tw->x, tw->y, &subscreen43);
    }
 }
 
@@ -937,9 +940,9 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
       drawy = scaledwindowy + (scaledviewheight - h) / 2;
   
    if(pal == notargetcolour)
-      V_DrawPatchTL(drawx, drawy, &vbscreen, patch, pal, FTRANLEVEL);
+      V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
    else
-      V_DrawPatchTranslated(drawx, drawy, &vbscreen, patch, pal, false);
+      V_DrawPatchTranslated(drawx, drawy, &subscreen43, patch, pal, false);
 }
 
 //

@@ -106,16 +106,16 @@ static void MN_HMainMenuDrawer(void)
    int skullIndex;
 
    // draw M_HTIC
-   V_DrawPatch(88, 0, &vbscreen, 
+   V_DrawPatch(88, 0, &subscreen43, 
       PatchLoader::CacheName(wGlobalDir, "M_HTIC", PU_CACHE));
 
    // draw spinning skulls
    skullIndex = (menutime / 3) % NUM_HSKULL;
 
-   V_DrawPatch(40, 10, &vbscreen,
+   V_DrawPatch(40, 10, &subscreen43,
       PatchLoader::CacheNum(wGlobalDir, HSkullLumpNums[17-skullIndex], PU_CACHE));
 
-   V_DrawPatch(232, 10, &vbscreen,
+   V_DrawPatch(232, 10, &subscreen43,
       PatchLoader::CacheNum(wGlobalDir, HSkullLumpNums[skullIndex], PU_CACHE));
 }
 
@@ -251,14 +251,15 @@ static void MN_HSaveDrawer(void)
    const char *title = "save game";
 
    V_FontWriteText(menu_font_big, title, 
-                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10);
+                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
+                   &subscreen43);
 
    x = HSAVEGAME_BOX_X;
    y = HSAVEGAME_BOX_Y;
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, 
+      V_DrawPatch(x, y, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }
@@ -317,14 +318,15 @@ static void MN_HLoadDrawer(void)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
 
    V_FontWriteText(menu_font_big, title, 
-                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10);
+                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10, 
+                   &subscreen43);
 
    x = HLOADGAME_BOX_X;
    y = HLOADGAME_BOX_Y;
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, 
+      V_DrawPatch(x, y, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }

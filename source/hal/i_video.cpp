@@ -517,10 +517,7 @@ static void I_ResetScreen(void)
    
    // Redraw cached intermission buffer if needed
    if(gamestate == GS_INTERMISSION)
-   {
       IN_DrawBackground();
-      V_CopyRect(0, 0, &backscreen1, SCREENWIDTH, SCREENHEIGHT, 0, 0, &vbscreen);
-   }
 
    // haleyjd: reset wipe engine
    Wipe_ScreenReset();

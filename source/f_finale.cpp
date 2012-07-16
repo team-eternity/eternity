@@ -281,7 +281,7 @@ void F_TextWrite(void)
       patch_t *pic;
       
       pic = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
-      V_DrawPatch(0, 0, &vbscreen, pic);
+      V_DrawPatch(0, 0, &subscreen43, pic);
    }
 
    // draw some of the text onto the screen
@@ -322,7 +322,7 @@ void F_TextWrite(void)
       if(cy + h > SCREENHEIGHT)
          break; // haleyjd: break if text off bottom
 
-      V_DrawPatch(cx, cy, &vbscreen, f_font->fontgfx[c]);
+      V_DrawPatch(cx, cy, &subscreen43, f_font->fontgfx[c]);
       
       cx += w;
    }
@@ -558,7 +558,8 @@ bool F_CastResponder(event_t* ev)
 void F_CastPrint(const char *text)
 {
    V_FontWriteText(f_font, text, 
-                   160 - V_FontStringWidth(f_font, text) / 2, 180);
+                   160 - V_FontStringWidth(f_font, text) / 2, 180,
+                   &subscreen43);
 }
 
 
@@ -579,7 +580,7 @@ void F_CastDrawer(void)
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawPatch(0, 0, &vbscreen, 
+   V_DrawPatch(0, 0, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
    
    if(cast->name)
@@ -611,7 +612,7 @@ void F_CastDrawer(void)
    
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
-   V_DrawPatchTranslated(160, 170, &vbscreen, patch, translate, flip);      
+   V_DrawPatchTranslated(160, 170, &subscreen43, patch, translate, flip);      
 }
 
 //
@@ -637,16 +638,16 @@ void F_BunnyScroll(void)
               
    // ANYRES
    if(scrolled > 0)
-      V_DrawPatchGeneral(320 - scrolled, 0, &vbscreen, p2, false);
+      V_DrawPatchGeneral(320 - scrolled, 0, &subscreen43, p2, false);
    if(scrolled < 320)
-      V_DrawPatchGeneral(-scrolled, 0, &vbscreen, p1, false);
+      V_DrawPatchGeneral(-scrolled, 0, &subscreen43, p1, false);
       
    if(finalecount < 1130)
       return;
    if(finalecount < 1180)
    {
       V_DrawPatch((SCREENWIDTH - 13 * 8) / 2,
-                  (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
+                  (SCREENHEIGHT - 8 * 8) / 2, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "END0", PU_CACHE));
       laststage = 0;
       return;
@@ -663,7 +664,7 @@ void F_BunnyScroll(void)
    
    sprintf(name,"END%i", stage);
    V_DrawPatch((SCREENWIDTH - 13 * 8) / 2, 
-               (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
+               (SCREENHEIGHT - 8 * 8) / 2, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, name, PU_CACHE));
 }
 
@@ -681,7 +682,7 @@ void F_DrawUnderwater(void)
          palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
 
-         V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
+         V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
                      (byte *)wGlobalDir.cacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
@@ -694,7 +695,7 @@ void F_DrawUnderwater(void)
    
    case 4:
       Console.enabled = true;
-      V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
+      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
                   (byte *)wGlobalDir.cacheLumpName("TITLE", PU_CACHE));
       break;
    }
@@ -754,7 +755,7 @@ void F_DemonScroll(void)
    // show first screen for a while
    if(finalecount < 70)
    {
-      V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,DemonBuffer+64000);
+      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,DemonBuffer+64000);
       nextscroll = finalecount;
       yval = 0;
       return;
@@ -764,7 +765,7 @@ void F_DemonScroll(void)
    {
       // scroll up one line at a time until only the top screen
       // shows
-      V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
+      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
                   DemonBuffer + 64000 - yval);
       
       if(finalecount >= nextscroll)
@@ -776,7 +777,7 @@ void F_DemonScroll(void)
    else
    {
       // finished scrolling
-      V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,DemonBuffer);
+      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,DemonBuffer);
    }
 }
 
@@ -794,22 +795,22 @@ static void F_FinaleEndDrawer(void)
    switch(LevelInfo.finaleType)
    {
    case FINALE_DOOM_CREDITS:
-      V_DrawPatch(0, 0, &vbscreen, 
+      V_DrawPatch(0, 0, &subscreen43, 
          PatchLoader::CacheName(wGlobalDir, sw ? "HELP2" : "CREDIT", PU_CACHE));
       break;
    case FINALE_DOOM_DEIMOS:
-      V_DrawPatch(0,0,&vbscreen, 
+      V_DrawPatch(0,0,&subscreen43, 
          PatchLoader::CacheName(wGlobalDir, "VICTORY2",PU_CACHE));
       break;
    case FINALE_DOOM_BUNNY:
       F_BunnyScroll();
       break;
    case FINALE_DOOM_MARINE:
-      V_DrawPatch(0,0,&vbscreen,
+      V_DrawPatch(0,0,&subscreen43,
          PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
-      V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT,
+      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT,
                   (byte *)wGlobalDir.cacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
       break;
    case FINALE_HTIC_WATER:
