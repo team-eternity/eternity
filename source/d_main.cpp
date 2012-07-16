@@ -317,7 +317,7 @@ static void D_drawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledviewheight != 200)
+      if(scaledviewheight != 200 || automapactive)
       {
          int ycoord = vbscreen.y1lookup[SCREENHEIGHT-1-GameModeInfo->StatusBar->height];
          int blockheight = vbscreen.y2lookup[SCREENHEIGHT-1] - ycoord + 1;
