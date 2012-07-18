@@ -309,7 +309,7 @@ static void D_drawWings()
 {
    int wingwidth;
 
-   if(vbscreen.width <= 640 || vbscreen.height <= 400 ||
+   if((vbscreen.width <= 640 && vbscreen.height <= 400) ||
       static_cast<float>(vbscreen.width) / vbscreen.height <= 4.0f/3.0f)
       return;
 
@@ -319,13 +319,14 @@ static void D_drawWings()
    {
       if(scaledviewheight != 200 || automapactive)
       {
-         int ycoord = vbscreen.y1lookup[SCREENHEIGHT-1-GameModeInfo->StatusBar->height];
-         int blockheight = vbscreen.y2lookup[SCREENHEIGHT-1] - ycoord + 1;
+         unsigned int bottom   = SCREENHEIGHT - 1;
+         unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
          
-         V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 
-                      0, ycoord, wingwidth, blockheight);
-         V_ColorBlock(&vbscreen, GameModeInfo->blackIndex,
-                      vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
+         int ycoord      = vbscreen.y1lookup[bottom - statbarh];
+         int blockheight = vbscreen.y2lookup[bottom] - ycoord + 1;
+
+         R_VideoEraseScaled(0, ycoord, wingwidth, blockheight);
+         R_VideoEraseScaled(vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
       }
    }
    else

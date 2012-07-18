@@ -409,16 +409,16 @@ static void V_initSubScreen43()
    int subwidth;
    int offset;
 
-   if(vbscreen.width > 640 && vbscreen.height > 400 &&
-      static_cast<float>(vbscreen.width) / vbscreen.height > 4.0f/3.0f)
-   {
-      subwidth = vbscreen.height * 4 / 3;
-      offset   = (vbscreen.width - subwidth) / 2;
-   }
-   else
+   if((vbscreen.width <= 640 && vbscreen.height <= 400) ||
+      static_cast<float>(vbscreen.width) / vbscreen.height <= 4.0f/3.0f)
    {
       subwidth = vbscreen.width;
       offset   = 0;
+   }
+   else
+   {
+      subwidth = vbscreen.height * 4 / 3;
+      offset   = (vbscreen.width - subwidth) / 2;
    }
 
    V_InitSubVBuffer(&subscreen43, &vbscreen, offset, 0, subwidth, vbscreen.height);
