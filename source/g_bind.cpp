@@ -726,7 +726,7 @@ void G_BindDrawer(void)
    V_DrawBox(x - 4, y - 4, width + 8, height + 8);
 
    // write text in box   
-   V_FontWriteText(menu_font_normal, msg, x, y);
+   V_FontWriteText(menu_font_normal, msg, x, y, &subscreen43);
 }
 
 //
