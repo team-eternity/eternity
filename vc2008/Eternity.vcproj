@@ -1078,6 +1078,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_gameprops.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\e_hash.cpp"
 						>
 						<FileConfiguration
@@ -1309,6 +1313,10 @@
 					</File>
 					<File
 						RelativePath="..\source\e_fonts.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_gameprops.h"
 						>
 					</File>
 					<File
