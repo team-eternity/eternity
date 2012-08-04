@@ -334,7 +334,7 @@ void I_Quit(void)
 
    IFNOTFATAL(M_SaveDefaults());
    IFNOTFATAL(M_SaveSysConfig());
-   IFNOTFATAL(G_SaveDefaults()); // haleyjd
+   IFNOTFATAL(key_bindings.saveKeyBindings()); // haleyjd
    
 #ifdef _MSC_VER
    // Under Visual C++, the console window likes to rudely slam

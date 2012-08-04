@@ -824,7 +824,8 @@ bool AM_Responder(event_t *ev)
    {
       AM_resetActions();
 
-      G_KeyResponder(ev, kac_map, true); // haleyjd 07/07/04: dynamic bindings
+      // haleyjd 07/07/04: dynamic bindings
+      key_bindings.handleKeyEvent(ev, kac_map);
 
       if(action_map_toggle)
       {
@@ -838,7 +839,8 @@ bool AM_Responder(event_t *ev)
       return false;
    }
 
-   if(!G_KeyResponder(ev, kac_map, true)) // haleyjd 07/07/04: dynamic bindings
+   // haleyjd 07/07/04: dynamic bindings
+   if(!key_bindings.handleKeyEvent(ev, kac_map))
       return false;
 
    if(action_map_toggle)

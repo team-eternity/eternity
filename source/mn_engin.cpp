@@ -491,7 +491,7 @@ static void MN_genericDescription(menuitem_t *item,
 static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
                                int desc_width)
 {
-   const char *boundkeys = G_BoundKeys(item->data);
+   const char *boundkeys = key_bindings.getBoundKeys(item->data);
    int x = item->x;
    int y = item->y;
 
@@ -851,7 +851,7 @@ static const char *MN_variableHelp(menuitem_t *item, char *msgbuffer)
       return "Press escape to cancel";
    else
    {
-      const char *key = G_FirstBoundKey("menu_confirm");
+      const char *key = key_bindings.getFirstBoundKey("menu_confirm");
       psnprintf(msgbuffer, 64, "Press %s to change", key);
       return msgbuffer;
    }
@@ -870,7 +870,7 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
    if(item->var->type == vt_toggle ||
       (item->var->type == vt_int && item->var->max - item->var->min == 1))
    {
-      const char *key = G_FirstBoundKey("menu_confirm");
+      const char *key = key_bindings.getFirstBoundKey("menu_confirm");
       psnprintf(msgbuffer, 64, "press %s to change", key);
       return msgbuffer;
    }
@@ -885,7 +885,7 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
 //
 static const char *MN_runcmdHelp(menuitem_t *item, char *msgbuffer)
 {
-   const char *key = G_FirstBoundKey("menu_confirm");
+   const char *key = key_bindings.getFirstBoundKey("menu_confirm");
    psnprintf(msgbuffer, 64, "press %s to execute", key);
    return msgbuffer;
 }
@@ -990,7 +990,7 @@ static void MN_drawPageIndicator(bool next)
    }
 
    // get name of first key bound to the prev or next menu action
-   key = G_FirstBoundKey(actionname);
+   key = key_bindings.getFirstBoundKey(actionname);
 
    // replace pgup / pgdn with prettier names, since they are the defaults
    if(!strcasecmp(key, speckeyname))
@@ -1287,7 +1287,7 @@ bool MN_Responder(event_t *ev)
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
-   G_KeyResponder(ev, kac_menu, true);
+   key_bindings.handleKeyEvent(ev, kac_menu);
 
    // haleyjd 10/07/05
    if(ev->data1 == KEYD_RCTRL)

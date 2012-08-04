@@ -674,7 +674,7 @@ void G_DoLoadLevel(void)
    sendpause = sendsave = false;
    paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
-   G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
+   key_bindings.reset(); // haleyjd 05/20/05: all bindings off
 
    // killough: make -timedemo work on multilevel demos
    // Move to end of function to minimize noise -- killough 2/22/98:
@@ -734,7 +734,7 @@ bool G_Responder(event_t* ev)
       }
 
       // [CG] 01/29/12: Respond to command events.
-      if(G_KeyResponder(ev, kac_command, false))
+      if(key_bindings.handleKeyEvent(ev, kac_command))
          return true;
 
       // killough 10/98:
@@ -780,11 +780,11 @@ bool G_Responder(event_t* ev)
       if(ev->data1 == key_pause) // phares
          C_RunTextCmd("pause");
       else
-         G_KeyResponder(ev, kac_player | kac_command, false); // haleyjd
+         key_bindings.handleKeyEvent(ev, kac_player | kac_command); // haleyjd
       return true;    // eat key down events
       
    case ev_keyup:
-      G_KeyResponder(ev, kac_player | kac_command, false);   // haleyjd
+      key_bindings.handleKeyEvent(ev, kac_player | kac_command);   // haleyjd
       return false;   // always let key up events filter down
       
    case ev_mouse:
@@ -1978,8 +1978,8 @@ void G_Ticker(void)
    
    // call other tickers
    C_NetTicker();        // sf: console network commands
-   G_InputActionTicker();  // [CG] Tick input actions.
-   C_CommandBatchTicker(); // [CG] Tick command batches.
+   key_bindings.runInputActions();// [CG] Tick input actions.
+   C_CommandBatchTicker();        // [CG] Tick command batches.
    if(inwipe)
       Wipe_Ticker();
 

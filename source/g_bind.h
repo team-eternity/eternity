@@ -32,6 +32,9 @@
 #ifndef G_BIND_H__
 #define G_BIND_H__
 
+#include "e_hash.h"
+#include "mn_engin.h"
+
 #define KBSS_NUM_KEYS 256
 #define KBSS_INITIAL_KEY_ACTION_CHAIN_SIZE 127
 #define KBSS_MAX_LOAD_FACTOR 0.7
@@ -187,6 +190,7 @@ public:
 
    static int getCategoryIndex(int category);
 
+   void         initialize();
    void         setKeyBindingsFile(const char *filename);
    void         setBindingAction(const char *new_binding_action);
    const char*  getBindingAction();
@@ -218,10 +222,6 @@ void        G_EditBinding(const char *action_name);
 void        G_Bind_AddCommands();
 void        G_BindDrawer();
 bool        G_BindResponder(event_t *ev);
-
-menuwidget_t KeyBindingsSubSystem::binding_widget = {
-   G_BindDrawer, G_BindResponder, NULL, true
-};
 
 // action variables
 

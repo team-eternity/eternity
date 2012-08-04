@@ -199,7 +199,8 @@ void D_ProcessEvents(void)
    //     time soon =)
    // if (gamemode != commercial || W_CheckNumForName("map01") >= 0)
 
-   G_EnableKeys(); // [CG] Re-enable keys that were disabled this TIC.
+   // [CG] Re-enable keys that were disabled this TIC.
+   key_bindings.reEnableKeys();
 
    for(; eventtail != eventhead; eventtail = (eventtail+1) & (MAXEVENTS-1))
    {
@@ -3921,7 +3922,7 @@ static void D_DoomInit(void)
 
    // haleyjd: this SHOULD be late enough...
    startupmsg("G_LoadDefaults", "Init keybindings.");
-   G_LoadDefaults();
+   key_bindings.loadKeyBindings();
 
    //
    // CONSOLE_FIXME: This may not be the best time for scripts.

@@ -46,8 +46,6 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
-#include "e_hash.h"
-#include "mn_engin.h"
 #include "g_bind.h"
 #include "g_game.h"
 #include "i_system.h"
@@ -62,6 +60,10 @@
 
 extern vfont_t *menu_font_normal;
 
+menuwidget_t KeyBindingsSubSystem::binding_widget = {
+   G_BindDrawer, G_BindResponder, NULL, true
+};
+
 #define addKey(number, name) \
    keys[number] = new InputKey(number, #name); \
    names_to_keys->addObject(*keys[number])
@@ -71,6 +73,8 @@ extern vfont_t *menu_font_normal;
 
 #define addCommandAction(n) \
    names_to_actions->addObject(new CommandInputAction(n))
+
+KeyBindingsSubSystem key_bindings;
 
 KeyBind::KeyBind(int new_key_number, const char *new_key_name,
                  const char *new_action_name,
@@ -694,6 +698,29 @@ const char* KeyBindingsSubSystem::getBindingAction()
 
 KeyBindingsSubSystem::KeyBindingsSubSystem()
 {
+   names_to_keys = new EHashTable<
+      InputKey, ENCStringHashKey, &InputKey::key, &InputKey::links
+   >(KBSS_NUM_KEYS);
+
+   names_to_actions = new EHashTable<
+      InputAction, ENCStringHashKey, &InputAction::key, &InputAction::links
+   >(KBSS_NUM_KEYS);
+
+   keys_to_actions = new EHashTable<
+      KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
+      &KeyBind::key_to_action_links
+   >(KBSS_NUM_KEYS);
+
+   actions_to_keys = new EHashTable<
+      KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
+      &KeyBind::action_to_key_links
+   >(KBSS_NUM_KEYS);
+
+   cfg_file = NULL;
+}
+
+void KeyBindingsSubSystem::initialize()
+{
    int i;
    qstring key_name;
    command_t *command;
@@ -867,26 +894,6 @@ KeyBindingsSubSystem::KeyBindingsSubSystem()
       for(command = cmdroots[i]; command; command = command->next)
          addCommandAction(command->name);
    }
-
-   names_to_keys = new EHashTable<
-      InputKey, ENCStringHashKey, &InputKey::key, &InputKey::links
-   >(KBSS_NUM_KEYS);
-
-   names_to_actions = new EHashTable<
-      InputAction, ENCStringHashKey, &InputAction::key, &InputAction::links
-   >(KBSS_NUM_KEYS);
-
-   keys_to_actions = new EHashTable<
-      KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
-      &KeyBind::key_to_action_links
-   >(KBSS_NUM_KEYS);
-
-   actions_to_keys = new EHashTable<
-      KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
-      &KeyBind::action_to_key_links
-   >(KBSS_NUM_KEYS);
-
-   cfg_file = NULL;
 }
 
 const char* KeyBindingsSubSystem::getBoundKeys(const char *action_name)
