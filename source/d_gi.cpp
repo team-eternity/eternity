@@ -1454,8 +1454,11 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
 // W_InitMultipleFiles (and is done so immediately afterward), in order to
 // account for any PWADs loaded.
 //
+// 07/15/2012: Added runtime adjustment of blackIndex and whiteIndex.
+//
 void D_InitGMIPostWads(void)
 {
+   byte *palette;
    gamemodeinfo_t *gi = GameModeInfo;
    missioninfo_t  *mi = gi->missionInfo;
 
@@ -1464,6 +1467,13 @@ void D_InitGMIPostWads(void)
    // * if MI_DEMOIFDEMO4 IS set, then only if DEMO4 actually exists.
    if(!(mi->flags & MI_DEMOIFDEMO4) || W_CheckNumForName("DEMO4") >= 0)
       OVERRIDE(demoStates, NULL);
+
+   palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
+
+   GameModeInfo->blackIndex = V_FindBestColor(palette, 0,   0,   0);
+   GameModeInfo->whiteIndex = V_FindBestColor(palette, 255, 255, 255);
+
+   Z_ChangeTag(palette, PU_CACHE);
 }
 
 // EOF

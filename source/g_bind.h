@@ -243,6 +243,7 @@ extern int action_strafe;
 extern int action_flip;
 extern int action_jump;
 extern int action_autorun;
+
 extern int action_mlook;
 extern int action_center;
 extern int action_weapon1;
@@ -257,7 +258,10 @@ extern int action_weapon9;
 extern int action_nextweapon;
 extern int action_weaponup;
 extern int action_weapondown;
+
+
 extern int action_frags;
+
 extern int action_menu_help;
 extern int action_menu_toggle;
 extern int action_menu_setup;
@@ -270,6 +274,7 @@ extern int action_menu_right;
 extern int action_menu_pageup;
 extern int action_menu_pagedown;
 extern int action_menu_contents;
+
 extern int action_map_toggle;
 extern int action_map_right;
 extern int action_map_left;
@@ -282,6 +287,7 @@ extern int action_map_follow;
 extern int action_map_mark;
 extern int action_map_clear;
 extern int action_map_grid;
+
 extern int action_console_pageup;
 extern int action_console_pagedown;
 extern int action_console_toggle;

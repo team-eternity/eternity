@@ -733,6 +733,7 @@ bool G_Responder(event_t* ev)
          return true;
       }
 
+
       // [CG] 01/29/12: Respond to command events.
       if(key_bindings.handleKeyEvent(ev, kac_command))
          return true;
@@ -778,7 +779,9 @@ bool G_Responder(event_t* ev)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
+      {
          C_RunTextCmd("pause");
+      }
       else
          key_bindings.handleKeyEvent(ev, kac_player | kac_command); // haleyjd
       return true;    // eat key down events
@@ -786,7 +789,6 @@ bool G_Responder(event_t* ev)
    case ev_keyup:
       key_bindings.handleKeyEvent(ev, kac_player | kac_command);   // haleyjd
       return false;   // always let key up events filter down
-      
    case ev_mouse:
       mousebuttons[0] = !!(ev->data1 & 1);
       mousebuttons[1] = !!(ev->data1 & 2);

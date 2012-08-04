@@ -327,14 +327,14 @@ static void MN_SkinInstructions(void)
 {
    const char *msg = FC_GOLD "skin viewer";
 
-   void (*textfunc)(vfont_t *, const char *, int, int) = 
+   void (*textfunc)(vfont_t *, const char *, int, int, VBuffer *) = 
       GameModeInfo->flags & GIF_SHADOWTITLES ? 
         V_FontWriteTextShadowed : V_FontWriteText;
 
    // draw a title at the top, too
 
    textfunc(menu_font_big, msg, 
-            160 - V_FontStringWidth(menu_font_big, msg)/2, 8);
+            160 - V_FontStringWidth(menu_font_big, msg)/2, 8, &subscreen43);
 
    // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
    // it with one call to V_FontWriteText instead of five.
@@ -348,7 +348,8 @@ static void MN_SkinInstructions(void)
                FC_GRAY "x" FC_RED " = gib\n"
                FC_GRAY "space" FC_RED " = respawn, "
                FC_GRAY "h" FC_RED " = half-speed\n"
-               FC_GRAY "toggle or previous" FC_RED " = exit", 4, INSTR_Y);
+               FC_GRAY "toggle or previous" FC_RED " = exit", 
+               4, INSTR_Y, &subscreen43);
 }
 
 //
@@ -415,7 +416,7 @@ static void MN_SkinDrawer(void)
 
    // draw the sprite, with color translation and proper flipping
    // 01/12/04: changed translation handling
-   V_DrawPatchTranslatedLit(160, 120, &vbscreen, patch, translate, 
+   V_DrawPatchTranslatedLit(160, 120, &subscreen43, patch, translate, 
                             colormaps[0] + 256 * lighttouse, flip);
 }
 

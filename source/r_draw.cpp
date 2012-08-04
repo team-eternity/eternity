@@ -1143,7 +1143,8 @@ void R_FillBackScreen(void)
    int offset = border->offset;
    int size   = border->size;
 
-   if(scaledviewwidth == SCREENWIDTH)
+   //if(scaledviewwidth == SCREENWIDTH)
+   if(scaledviewheight == SCREENHEIGHT)
       return;
 
    // haleyjd 08/16/02: some restructuring to use GameModeInfo
@@ -1220,7 +1221,16 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
    }
 
    V_BlitVBuffer(&vbscreen, x, y, &backscreen1, x, y, w, h);
-} 
+}
+
+void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
+{
+   if(x + w > static_cast<unsigned int>(vbscreen.width) || 
+      y + h > static_cast<unsigned int>(vbscreen.height))
+      return;
+
+   V_BlitVBuffer(&vbscreen, x, y, &backscreen1, x, y, w, h);
+}
 
 //
 // R_DrawViewBorder

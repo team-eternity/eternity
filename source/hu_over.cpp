@@ -124,7 +124,7 @@ void HU_LoadFont(void)
 void HU_WriteText(const char *s, int x, int y)
 {
    if(hu_fontloaded)
-      V_FontWriteText(hud_overfont, s, x, y);
+      V_FontWriteText(hud_overfont, s, x, y, &subscreen43);
 }
 
 //
@@ -174,7 +174,7 @@ static void HU_TextBar(char *s, size_t len, int pct)
          addchar = 127 - (pct*5)/BARSIZE;
          pct = 0;
       }
-      psnprintf(s, len, "%s%c", s, addchar);
+      psnprintf(s, len, "%s%c", s, addchar); // FIXME: undefined behavior
    }
 }
 
@@ -217,6 +217,7 @@ void HU_DrawHealth(int x, int y)
    HU_TextBar(tempstr, sizeof(tempstr), players[displayplayer].health);
    
    // append the percentage itself
+   // FIXME: undefined behavior
    psnprintf(tempstr, sizeof(tempstr), 
              "%s %i", tempstr, players[displayplayer].health);
    
@@ -254,6 +255,7 @@ void HU_DrawArmor(int x, int y)
              players[displayplayer].armorpoints);
   
   // append the percentage itself
+  // FIXME: undefined behavior
   psnprintf(tempstr, sizeof(tempstr), "%s %i", tempstr,
 	    players[displayplayer].armorpoints);
   
@@ -284,11 +286,12 @@ void HU_DrawAmmo(int x, int y)
    if(lmaxammo)
    {
       HU_TextBar(tempstr, sizeof(tempstr), (100 * playerammo) / lmaxammo);
+      // FIXME: undefined behavior
       psnprintf(tempstr, sizeof(tempstr), "%s %i/%i", 
                 tempstr, playerammo, playermaxammo);
    }
    else // fist or chainsaw
-      psnprintf(tempstr, sizeof(tempstr), "%sN/A", tempstr);
+      psnprintf(tempstr, sizeof(tempstr), "%sN/A", tempstr); // FIXME: undefined behavior
    
    HU_WriteText(tempstr, x, y);
 }
@@ -315,6 +318,7 @@ void HU_DrawWeapons(int x, int y)
       {
          // got it
          fontcolour = weapcolour(i);
+         // FIXME: undefined behavior
          psnprintf(tempstr, sizeof(tempstr), "%s%c%i ", tempstr,
                    fontcolour, i+1);
       }
@@ -343,7 +347,7 @@ void HU_DrawKeys(int x, int y)
       if(players[displayplayer].cards[i])
       {
          // got that key
-         V_DrawPatch(x, y, &vbscreen, keys[i]);
+         V_DrawPatch(x, y, &subscreen43, keys[i]);
          x += 11;
       }
    }

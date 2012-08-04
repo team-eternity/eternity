@@ -197,13 +197,13 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b);
 // V_CacheBlock
 // Copies a block of pixels from the source linear buffer into the destination
 // linear buffer.
-void V_CacheBlock(int x, int y, int width, int height, byte *src,
-                  byte *bdest);
+void V_CacheBlock(int x, int y, int width, int height, byte *src, byte *bdest);
 
 extern VBuffer vbscreen;
 extern VBuffer backscreen1;
 extern VBuffer backscreen2;
 extern VBuffer backscreen3;
+extern VBuffer subscreen43;
 
 #endif
 

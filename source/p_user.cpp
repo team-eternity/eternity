@@ -340,14 +340,14 @@ void P_MovePlayer(player_t* player)
 
          if (cmd->forwardmove)
          {
-            P_Bob(player,mo->angle,pitch,cmd->forwardmove*bobfactor);
-            P_Thrust(player,mo->angle,pitch,cmd->forwardmove*movefactor);
+            P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
+            P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
          
          if (cmd->sidemove)
          {
-            P_Bob(player,mo->angle-ANG90,0,cmd->sidemove*bobfactor);
-            P_Thrust(player,mo->angle-ANG90,0,cmd->sidemove*movefactor);
+            P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
+            P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
 

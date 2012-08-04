@@ -151,7 +151,7 @@ static void ST_drawInvNum(int num, int x, int y)
    {
       if(num < -9)
       {
-         V_DrawPatch(x - 26, y + 1, &vbscreen, 
+         V_DrawPatch(x - 26, y + 1, &subscreen43, 
                      PatchLoader::CacheName(wGlobalDir, "LAME", PU_CACHE));
          return;
       }
@@ -160,17 +160,20 @@ static void ST_drawInvNum(int num, int x, int y)
    }
 
    if(!num)
-      V_DrawPatch(x - 9, y, &vbscreen, invnums[0]);
+      V_DrawPatch(x - 9, y, &subscreen43, invnums[0]);
 
    while(num && numdigits--)
    {
       x -= 9;
-      V_DrawPatch(x, y, &vbscreen, invnums[num%10]);
+      V_DrawPatch(x, y, &subscreen43, invnums[num%10]);
       num /= 10;
    }
    
    if(neg)
-      V_DrawPatch(x - 18, y, &vbscreen, PatchLoader::CacheName(wGlobalDir, "NEGNUM", PU_CACHE));
+   {
+      V_DrawPatch(x - 18, y, &subscreen43, 
+                  PatchLoader::CacheName(wGlobalDir, "NEGNUM", PU_CACHE));
+   }
 }
 
 //
@@ -181,19 +184,19 @@ static void ST_drawInvNum(int num, int x, int y)
 static void ST_drawBackground(void)
 {
    // draw the background
-   V_DrawPatch(0, 158, &vbscreen, PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE));
+   V_DrawPatch(0, 158, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE));
    
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
    if(plyr->cheats & CF_GODMODE)
    {
-      V_DrawPatch(16,  167, &vbscreen, PatchLoader::CacheName(wGlobalDir, "GOD1", PU_CACHE));
-      V_DrawPatch(287, 167, &vbscreen, PatchLoader::CacheName(wGlobalDir, "GOD2", PU_CACHE));
+      V_DrawPatch(16,  167, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GOD1", PU_CACHE));
+      V_DrawPatch(287, 167, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GOD2", PU_CACHE));
    }
    
    // draw the tops of the faces
-   V_DrawPatch(0,   148, &vbscreen, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
-   V_DrawPatch(290, 148, &vbscreen, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
+   V_DrawPatch(0,   148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
+   V_DrawPatch(290, 148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
 }
 
 #define SHADOW_BOX_WIDTH  16
@@ -212,19 +215,19 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
                
-   realx = vbscreen.x1lookup[cx1];
-   realy = vbscreen.y1lookup[cy1];
-   w     = vbscreen.x2lookup[cx2] - realx + 1;
-   h     = vbscreen.y2lookup[cy2] - realy + 1;
+   realx = subscreen43.x1lookup[cx1];
+   realy = subscreen43.y1lookup[cy1];
+   w     = subscreen43.x2lookup[cx2] - realx + 1;
+   h     = subscreen43.y2lookup[cy2] - realy + 1;
 
-   dest = vbscreen.data + realy * vbscreen.pitch + realx;
+   dest = subscreen43.data + realy * subscreen43.pitch + realx;
 
    mapstep = mapdir * (16 << FRACBITS) / w;
 
 #ifdef RANGECHECK
    // sanity check
-   if(realx < 0 || realx + w > vbscreen.width ||
-      realy < 0 || realy + h > vbscreen.height)
+   if(realx < 0 || realx + w > subscreen43.width ||
+      realy < 0 || realy + h > subscreen43.height)
    {
       I_Error("ST_BlockDrawerS: block exceeds buffer boundaries.\n");
    }
@@ -244,7 +247,7 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
          mapnum += mapstep;
       }
 
-      dest += vbscreen.pitch;
+      dest += subscreen43.pitch;
    }
 }
 
@@ -287,17 +290,17 @@ static void ST_drawLifeChain(void)
 
    // draw the chain -- links repeat every 17 pixels, so we
    // wrap the chain back to the starting position every 17
-   V_DrawPatch(2 + (chainpos%17), y, &vbscreen, 
+   V_DrawPatch(2 + (chainpos%17), y, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "CHAIN", PU_CACHE));
    
    // draw the gem (17 is the far left pos., 273 is max)   
    // TODO: fix life gem for multiplayer modes
-   V_DrawPatch(17 + chainpos, y, &vbscreen, 
+   V_DrawPatch(17 + chainpos, y, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "LIFEGEM2", PU_CACHE));
    
    // draw face patches to cover over spare ends of chain
-   V_DrawPatch(0,   190, &vbscreen, PatchLoader::CacheName(wGlobalDir, "LTFACE", PU_CACHE));
-   V_DrawPatch(276, 190, &vbscreen, PatchLoader::CacheName(wGlobalDir, "RTFACE", PU_CACHE));
+   V_DrawPatch(0,   190, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFACE", PU_CACHE));
+   V_DrawPatch(276, 190, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFACE", PU_CACHE));
    
    // use the colormap to shadow the ends of the chain
    ST_chainShadow();
@@ -325,7 +328,7 @@ static void ST_drawStatBar(void)
       break;
    }
 
-   V_DrawPatch(34, 160, &vbscreen, statbar);
+   V_DrawPatch(34, 160, &subscreen43, statbar);
 
    // TODO: inventory stuff
 
@@ -349,11 +352,11 @@ static void ST_drawStatBar(void)
 
    // draw key icons
    if(plyr->cards[it_yellowcard])
-      V_DrawPatch(153, 164, &vbscreen, PatchLoader::CacheName(wGlobalDir, "YKEYICON", PU_CACHE));
+      V_DrawPatch(153, 164, &subscreen43, PatchLoader::CacheName(wGlobalDir, "YKEYICON", PU_CACHE));
    if(plyr->cards[it_redcard])
-      V_DrawPatch(153, 172, &vbscreen, PatchLoader::CacheName(wGlobalDir, "GKEYICON", PU_CACHE));
+      V_DrawPatch(153, 172, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GKEYICON", PU_CACHE));
    if(plyr->cards[it_bluecard])
-      V_DrawPatch(153, 180, &vbscreen, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
+      V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
    // TODO: ammo icon stuff
    // draw ammo amount

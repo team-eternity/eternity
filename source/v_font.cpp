@@ -101,7 +101,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 // fonts which center their characters within uniformly spaced blocks
 // have been added or absorbed from other code.
 //
-void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
+void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen)
 {
    patch_t *patch = NULL;   // patch for current character -OR-
    byte    *src   = NULL;   // source char for linear font
@@ -114,6 +114,9 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    byte *color = NULL;      // current color range translation tbl
    bool tl = false;         // current translucency state
    bool useAltMap = false;  // using alternate colormap source?
+
+   if(!screen)
+      screen = &vbscreen;
 
    if(font->color)
    {
@@ -242,25 +245,21 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          int ly = (c >> 5) * font->lsize;
          src = font->data + ly * (font->lsize << 5) + lx;
 
-         V_DrawMaskedBlockTR(tx, cy, &vbscreen, font->lsize, font->lsize,
+         V_DrawMaskedBlockTR(tx, cy, screen, font->lsize, font->lsize,
                              font->lsize << 5, src, color);
       }
       else
       {
          // draw character
          if(tl)
-            V_DrawPatchTL(tx, cy, &vbscreen, patch, color, FTRANLEVEL);
+            V_DrawPatchTL(tx, cy, screen, patch, color, FTRANLEVEL);
          else
          {
             // haleyjd 10/04/05: text shadowing
             if(shadowChar)
-            {
-               //char *cm = (char *)(colormaps[0] + 33*256);
-               //V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, FRACUNIT*2/3);
-               V_DrawPatchShadowed(tx, cy, &vbscreen, patch, color, FRACUNIT);
-            }
+               V_DrawPatchShadowed(tx, cy, screen, patch, color, FRACUNIT);
             else
-               V_DrawPatchTranslated(tx, cy, &vbscreen, patch, color, false);
+               V_DrawPatchTranslated(tx, cy, screen, patch, color, false);
          }
       }
       
@@ -280,7 +279,8 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
 //
 // Write text in a particular colour.
 //
-void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y)
+void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y,
+                            VBuffer *screen)
 {
    if(color < 0 || color >= CR_LIMIT)
    {
@@ -291,7 +291,7 @@ void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int 
    fixedColor  = true;
    fixedColNum = color;
 
-   V_FontWriteText(font, s, x, y);
+   V_FontWriteText(font, s, x, y, screen);
 }
 
 //
@@ -299,10 +299,11 @@ void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int 
 //
 // Write text using a specified colormap.
 //
-void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map)
+void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
+                           VBuffer *screen)
 {
    altMap = map;
-   V_FontWriteText(font, s, x, y);
+   V_FontWriteText(font, s, x, y, screen);
 }
 
 //
@@ -310,10 +311,11 @@ void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map
 //
 // Write text with a shadow effect.
 //
-void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y)
+void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
+                             VBuffer *screen)
 {
    shadowChar = true;
-   V_FontWriteText(font, s, x, y);
+   V_FontWriteText(font, s, x, y, screen);
 }
 
 //

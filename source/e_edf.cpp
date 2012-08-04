@@ -96,18 +96,20 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+
 #include "e_args.h"
+#include "e_fonts.h"
+#include "e_gameprops.h"
+#include "e_inventory.h"
+#include "e_mod.h"
+#include "e_player.h"
 #include "e_sound.h"
 #include "e_sprite.h"
+#include "e_states.h"
 #include "e_string.h"
 #include "e_things.h"
-#include "e_states.h"
 #include "e_ttypes.h"
 #include "mn_emenu.h"
-#include "e_player.h"
-#include "e_mod.h"
-#include "e_fonts.h"
-#include "e_inventory.h"
 
 // EDF Keywords used by features implemented in this module
 
@@ -313,6 +315,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_MENU,        edf_menu_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
@@ -1806,6 +1809,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessStateDeltas(cfg);       // see e_states.cpp
    E_ProcessThingDeltas(cfg);       // see e_things.cpp
    E_ProcessInventoryDeltas(cfg);   // see e_inventory.cpp
+
+   // 07/19/12: game properties
+   E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
 
    // post-processing routines
    E_SetThingDefaultSprites();

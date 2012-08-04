@@ -1265,6 +1265,9 @@ int action_jump;        // jump
 int action_mlook;       // mlook activation
 int action_lookup;      // key-look up
 int action_lookdown;    // key-look down
+int action_flyup;       // fly upwards
+int action_flydown;     // fly downwards
+int action_flycenter;   // fly straight ahead
 int action_center;      // key-look centerview
 int action_weapon1;     // select weapon 1
 int action_weapon2;     // select weapon 2

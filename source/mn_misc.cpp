@@ -113,7 +113,7 @@ static void WriteCenteredText(char *message)
       {
          buffer = qstr.constPtr();
          x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
-         V_FontWriteText(menu_font_normal, buffer, x, y);         
+         V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);         
          qstr.clear(); // clear buffer
          y += menu_font_normal->absh; // next line
       }
@@ -126,7 +126,7 @@ static void WriteCenteredText(char *message)
    // dont forget the last line.. prob. not \n terminated
    buffer = qstr.constPtr();
    x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
-   V_FontWriteText(menu_font_normal, buffer, x, y);   
+   V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);   
 }
 
 void MN_PopupDrawer(void)
@@ -419,26 +419,26 @@ void MN_DrawCredits(void)
 
    y = GameModeInfo->creditY;
    str = FC_ABSCENTER FC_HI "The Eternity Engine";
-   V_FontWriteTextShadowed(menu_font_big, str, 0, y);
+   V_FontWriteTextShadowed(menu_font_big, str, 0, y, &subscreen43);
    y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
 
    // draw info categories
    for(i = 0; i < NUMCATS; ++i)
    {
-      V_FontWriteText(menu_font_normal, cat_strs[i], 
-                      line_x + (cat_width - 
-                                V_FontStringWidth(menu_font_normal, 
-                                                  cat_strs[i])), 
-                                                  y);
+      int catStrWidth = V_FontStringWidth(menu_font_normal, cat_strs[i]);
 
-      V_FontWriteText(menu_font_normal, val_strs[i], line_x + cat_width + 16, y);
+      V_FontWriteText(menu_font_normal, cat_strs[i], 
+                      line_x + (cat_width - catStrWidth), y, &subscreen43);
+
+      V_FontWriteText(menu_font_normal, val_strs[i], line_x + cat_width + 16, y,
+                      &subscreen43);
 
       y += V_FontStringHeight(menu_font_normal, val_strs[i]);
    }
 
    V_FontWriteText(menu_font_normal, 
                    FC_ABSCENTER "Copyright 2012 Team Eternity et al.\n"
-                   "http://doomworld.com/eternity/", 0, y);
+                   "http://doomworld.com/eternity/", 0, y, &subscreen43);
 }
 
 void MN_HelpDrawer(void)
@@ -453,7 +453,7 @@ void MN_HelpDrawer(void)
       int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
 
       // haleyjd 05/18/09: use smart background drawer
-      V_DrawFSBackground(&vbscreen, lumpnum);
+      V_DrawFSBackground(&subscreen43, lumpnum);
    }
 }
 
@@ -576,7 +576,7 @@ void MN_MapColourDrawer(void)
    x = (SCREENWIDTH  - patch->width ) / 2;
    y = (SCREENHEIGHT - patch->height) / 2;
    
-   V_DrawPatch(x, y, &vbscreen, patch);
+   V_DrawPatch(x, y, &subscreen43, patch);
    
    x += 4 + 8 * (selected_colour % 16);
    y += 4 + 8 * (selected_colour / 16);
@@ -592,11 +592,11 @@ void MN_MapColourDrawer(void)
          block[v*BLOCK_SIZE + u] = selected_colour;
   
    // draw block
-   V_DrawBlock(x, y, &vbscreen, BLOCK_SIZE, BLOCK_SIZE, block);
+   V_DrawBlock(x, y, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
    if(!selected_colour)
    {
-      V_DrawPatch(x+1, y+1, &vbscreen, 
+      V_DrawPatch(x+1, y+1, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
    }
 }

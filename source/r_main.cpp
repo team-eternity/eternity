@@ -598,15 +598,23 @@ void R_SetupViewScaling(void)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = video.width;
-      viewheight = video.height;
+      viewwidth        = video.width;
+      viewheight       = video.height;
+   }
+   else if(setblocks == 10)                               // haleyjd 07/18/2012
+   {
+      scaledviewwidth  = SCREENWIDTH;
+      scaledviewheight = SCREENHEIGHT - GameModeInfo->StatusBar->height;
+      viewwidth        = video.width;
+      viewheight       = video.y2lookup[scaledviewheight - 1] + 1;
    }
    else
    {
+      int st_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
       int x1, x2, y1, y2;
 
       scaledviewwidth  = setblocks * 32;
-      scaledviewheight = (setblocks * 168 / 10) & ~7;     // killough 11/98
+      scaledviewheight = (setblocks * st_y / 10) & ~7;     // killough 11/98
 
       // SoM: phased out realxarray in favor of the *lookup tables.
       // w = x2 - x1 + 1
@@ -616,7 +624,7 @@ void R_SetupViewScaling(void)
       if(scaledviewwidth == SCREENWIDTH)
          y1 = 0;
       else
-         y1 = (SCREENHEIGHT - GameModeInfo->StatusBar->height - scaledviewheight) >> 1;
+         y1 = (st_y - scaledviewheight) >> 1;
 
       y2 = y1 + scaledviewheight - 1;
 
