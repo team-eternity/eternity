@@ -1,6 +1,7 @@
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 Simon Howard, James Haley
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,6 +20,12 @@
 //--------------------------------------------------------------------------
 //
 // Key Bindings
+//
+// Rewritten to support press/release/activate/deactivate only bindings,
+// as well as to allow a key to be bound to multiple actions in the same
+// key action category.
+//
+// By Charles Gunyon
 //
 //----------------------------------------------------------------------------
 
@@ -39,15 +46,158 @@ enum input_action_category_e
    kac_max,
 };
 
-void        G_InitKeyBindings();
-bool        G_KeyResponder(event_t *ev, int categories);
-void        G_InputActionTicker();
-void        G_EditBinding(const char *action);
-const char* G_BoundKeys(const char *action_name);
-const char* G_FirstBoundKey(const char *action_name);
-void        G_ClearKeyStates();
-void        G_LoadDefaults();
-void        G_SaveDefaults();
+class KeyBind : public ZoneObject
+{
+private:
+   char *hidden_key_name;
+   char *hidden_action_name;
+   int key_number;
+   input_action_category_e category;
+   bool pressed;
+   unsigned short flags;
+
+public:
+   static short const activate_only   = 1; // key only activates the action
+   static short const deactivate_only = 2; // key only deactivates the action
+   static short const press_only      = 4; // only triggered by a key press
+   static short const release_only    = 8; // only triggered by a key release
+
+   DLListItem<KeyBind> key_to_action_links;
+   DLListItem<KeyBind> action_to_key_links;
+   DLListItem<KeyBind> unbind_links;
+
+   const char *keys_to_actions_key;
+   const char *actions_to_keys_key;
+
+   KeyBind(int new_key_number, const char *new_key_name,
+           const char *new_action_name, input_action_category_e new_category,
+           unsigned short new_flags);
+   ~KeyBind();
+
+   int                     getKeyNumber()                    const;
+   const char*             getKeyName()                      const;
+   const char*             getActionName()                   const;
+   bool                    isPressed()                       const;
+   bool                    isReleased()                      const;
+   void                    press();
+   void                    release();
+   input_action_category_e getCategory()                     const;
+   bool                    getFlags()                        const;
+   bool                    isNormal()                        const;
+   bool                    isActivateOnly()                  const;
+   bool                    isDeactivateOnly()                const;
+   bool                    isPressOnly()                     const;
+   bool                    isReleaseOnly()                   const;
+   bool                    keyIs(const char *key_name)       const;
+   bool                    actionIs(const char *action_name) const;
+
+};
+
+class InputKey : public ZoneObject
+{
+private:
+   char *hidden_name;
+   int number;
+   bool disabled;
+
+public:
+   DLListItem<InputKey> links;
+   const char *key;
+
+   InputKey(int new_number, const char *new_name);
+   ~InputKey();
+   const char* getName()    const;
+   int         getNumber()  const;
+   bool        isDisabled() const;
+   void        disable();
+   void        enable();
+
+};
+
+//
+// InputAction
+//
+class InputAction : public ZoneObject
+{
+protected:
+   char *hidden_name;
+   input_action_category_e category;
+   char *bound_keys_description;
+
+public:
+   DLListItem<InputAction> links;
+   const char *key;
+
+   InputAction(const char *new_name, input_action_category_e new_category);
+   ~InputAction();
+
+   bool                    handleEvent(event_t *ev, KeyBind *kb);
+   const char*             getName()                                    const;
+   input_action_category_e getCategory()                                const;
+   const char*             getDescription()                             const;
+   void                    setDescription(const char *new_description);
+
+   virtual void            activate(KeyBind *kb, event_t *ev);
+   virtual void            deactivate(KeyBind *kb, event_t *ev);
+   virtual void            print()                                      const;
+   virtual bool            isActive()                                   const;
+   virtual bool            mayActivate(KeyBind *kb)                     const;
+   virtual bool            mayDeactivate(KeyBind *kb)                   const;
+   virtual void            Think();
+
+};
+
+class KeyBindingsSubSystem
+{
+private:
+
+   InputKey *keys[NUM_KEYS];
+
+   EHashTable<InputKey, ENCStringHashKey, &InputKey::key,
+              &InputKey::links> names_to_keys(NUM_KEYS);
+   EHashTable<InputAction, ENCStringHashKey, &InputAction::key,
+              &InputAction::links> names_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
+   EHashTable<KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
+              &KeyBind::key_to_action_links> keys_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
+   EHashTable<KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
+              &KeyBind::action_to_key_links> actions_to_keys(INITIAL_KEY_ACTION_CHAIN_SIZE);
+
+   // name of configuration file to read from/write to.
+   char *cfg_file = NULL;
+
+   // name of action we are editing
+   const char *binding_action;
+
+   int getCategoryIndex(int category);
+   void updateBoundKeyDescription(InputAction *action);
+   void createBind(InputKey *key, InputAction *action, unsigned short flags);
+   void removeBind(KeyBind **kb);
+   void bindKeyToAction(InputKey *key, const char *action_name,
+                        unsigned short flags);
+   void bindKeyToActions(const char *key_name, const qstring &action_names);
+
+public:
+   menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
+
+   KeyBindingsSubSystem();
+
+   void        setKeyBindingsFile(const char *filename);
+   void        setBindingAction(const char *new_binding_action);
+   const char* getBindingAction();
+   const char* getBoundKeys(const char *action_name);
+   const char* getFirstBoundKey(const char *action_name);
+   void        reEnableKeys();
+   void        reset();
+   bool        handleKeyEvent(event_t *ev, int categories);
+   void        runInputActions();
+   void        loadKeyBindings();
+   void        saveKeyBindings();
+
+};
+
+extern KeyBindingsSubSystem key_bindings;
+
+void        G_EditBinding(const char *action_name)
 void        G_Bind_AddCommands();
 void        G_BindDrawer();
 bool        G_BindResponder(event_t *ev);
@@ -100,6 +250,12 @@ extern int action_menu_pageup;
 extern int action_menu_pagedown;
 extern int action_menu_contents;
 extern int action_map_toggle;
+extern int action_map_right;
+extern int action_map_left;
+extern int action_map_up;
+extern int action_map_down;
+extern int action_map_zoomin;
+extern int action_map_zoomout;
 extern int action_map_gobig;
 extern int action_map_follow;
 extern int action_map_mark;

@@ -82,245 +82,292 @@ extern vfont_t *menu_font_normal;
 #define G_addFunctionAction(n, c, f) \
    names_to_actions.addObject(new FunctionInputAction(#n, c, &f))
 
-class KeyBind : public ZoneObject
+KeyBind::KeyBind(int new_key_number, const char *new_key_name,
+                 const char *new_action_name,
+                 input_action_category_e new_category,
+                 unsigned short new_flags)
+   : ZoneObject(), key_number(new_key_number), category(new_category),
+     pressed(false), flags(new_flags)
 {
-private:
-   char *hidden_key_name;
-   char *hidden_action_name;
-   int key_number;
-   input_action_category_e category;
-   bool pressed;
-   unsigned short flags;
+   hidden_key_name = estrdup(new_key_name);
+   hidden_action_name = estrdup(new_action_name);
+   keys_to_actions_key = (const char *)hidden_key_name;
+   actions_to_keys_key = (const char *)hidden_action_name;
+}
 
-public:
-   static short const activate_only   = 1; // key only activates the action
-   static short const deactivate_only = 2; // key only deactivates the action
-   static short const press_only      = 4; // only triggered by a key press
-   static short const release_only    = 8; // only triggered by a key release
-
-   DLListItem<KeyBind> key_to_action_links;
-   DLListItem<KeyBind> action_to_key_links;
-   DLListItem<KeyBind> unbind_links;
-
-   const char *keys_to_actions_key;
-   const char *actions_to_keys_key;
-
-   KeyBind(int new_key_number, const char *new_key_name,
-           const char *new_action_name, input_action_category_e new_category,
-           unsigned short new_flags)
-      : ZoneObject(), key_number(new_key_number), category(new_category),
-        pressed(false), flags(new_flags)
-   {
-      hidden_key_name = estrdup(new_key_name);
-      hidden_action_name = estrdup(new_action_name);
-      keys_to_actions_key = (const char *)hidden_key_name;
-      actions_to_keys_key = (const char *)hidden_action_name;
-   }
-
-   ~KeyBind()
-   {
-      efree(hidden_key_name);
-      efree(hidden_action_name);
-   }
-
-   int getKeyNumber() const { return key_number; }
-   const char* getKeyName() const { return hidden_key_name; }
-   const char* getActionName() const { return hidden_action_name; }
-   const bool isPressed() const { if(pressed) return true; return false; }
-   const bool isReleased() const { if(!pressed) return true; return false; }
-   void press() { pressed = true; }
-   void release() { pressed = false; }
-   input_action_category_e getCategory() const { return category; }
-   const unsigned short getFlags() const { return flags; }
-
-   bool isNormal()
-   {
-      if(flags == 0)
-         return true;
-
-      return false;
-   }
-
-   bool isActivateOnly()
-   {
-      if(flags & activate_only)
-         return true;
-
-      return false;
-   }
-
-   bool isDeactivateOnly()
-   {
-      if(flags & deactivate_only)
-         return true;
-
-      return false;
-   }
-
-   bool isPressOnly()
-   {
-      if(flags & press_only)
-         return true;
-
-      return false;
-   }
-
-   bool isReleaseOnly()
-   {
-      if(flags & release_only)
-         return true;
-
-      return false;
-   }
-
-   bool keyIs(const char *key_name)
-   {
-      if(!strcmp(hidden_key_name, key_name))
-         return true;
-
-      return false;
-   }
-
-   bool actionIs(const char *action_name)
-   {
-      if(!strcmp(hidden_action_name, action_name))
-         return true;
-
-      return false;
-   }
-};
-
-class InputKey : public ZoneObject
+KeyBind::~KeyBind()
 {
-private:
-   char *hidden_name;
-   int number;
-public:
-   DLListItem<InputKey> links;
-   const char *key;
+   efree(hidden_key_name);
+   efree(hidden_action_name);
+}
 
-   InputKey(int new_number, const char *new_name)
-      : ZoneObject()
-   {
-      number = new_number;
-      hidden_name = estrdup(new_name);
-      key = (const char *)hidden_name;
-   }
-
-   ~InputKey() { efree(hidden_name); }
-
-   char* getName() const { return hidden_name; }
-   int getNumber() const { return number; }
-};
-
-//
-// InputAction
-//
-class InputAction : public ZoneObject
+int KeyBind::getKeyNumber() const
 {
-protected:
-   char *hidden_name;
-   input_action_category_e category;
-   char *bound_keys_description;
+   return key_number;
+}
 
-public:
-   DLListItem<InputAction> links;
-   const char *key;
+const char* KeyBind::getKeyName() const
+{
+   return hidden_key_name;
+}
 
-   InputAction(const char *new_name, input_action_category_e new_category)
-      : ZoneObject(), category(new_category)
+const char* KeyBind::getActionName() const
+{
+   return hidden_action_name;
+}
+
+const bool KeyBind::isPressed() const
+{
+   if(pressed)
+      return true;
+
+   return false;
+}
+
+const bool KeyBind::isReleased() const
+{
+   if(!pressed)
+      return true;
+
+   return false;
+}
+
+void KeyBind::press()
+{
+   pressed = true;
+}
+
+void KeyBind::release()
+{
+   pressed = false;
+}
+
+input_action_category_e KeyBind::getCategory() const
+{
+   return category;
+}
+
+const unsigned short KeyBind::getFlags() const
+{
+   return flags;
+}
+
+bool KeyBind::isNormal()
+{
+   if(flags == 0)
+      return true;
+
+   return false;
+}
+
+bool KeyBind::isActivateOnly()
+{
+   if(flags & activate_only)
+      return true;
+
+   return false;
+}
+
+bool KeyBind::isDeactivateOnly()
+{
+   if(flags & deactivate_only)
+      return true;
+
+   return false;
+}
+
+bool KeyBind::isPressOnly()
+{
+   if(flags & press_only)
+      return true;
+
+   return false;
+}
+
+bool KeyBind::isReleaseOnly()
+{
+   if(flags & release_only)
+      return true;
+
+   return false;
+}
+
+bool KeyBind::keyIs(const char *key_name)
+{
+   if(!strcmp(hidden_key_name, key_name))
+      return true;
+
+   return false;
+}
+
+bool KeyBind::actionIs(const char *action_name)
+{
+   if(!strcmp(hidden_action_name, action_name))
+      return true;
+
+   return false;
+}
+
+InputKey::InputKey(int new_number, const char *new_name)
+   : ZoneObject()
+{
+   number = new_number;
+   hidden_name = estrdup(new_name);
+   disabled = false;
+   key = (const char *)hidden_name;
+}
+
+InputKey::~InputKey()
+{
+   efree(hidden_name);
+}
+
+const char* InputKey::getName() const
+{
+   return hidden_name;
+}
+
+int InputKey::getNumber() const
+{
+   return number;
+}
+
+bool InputKey::isDisabled() const
+{
+   return disabled;
+}
+
+void InputKey::disable()      
+{
+   disabled = true;
+}
+
+void InputKey::enable()      
+{
+   disabled = false;
+}
+
+InputAction::InputAction(const char *new_name,
+                         input_action_category_e new_category)
+   : ZoneObject(), category(new_category)
+{
+   hidden_name = estrdup(new_name);
+   key = hidden_name;
+   bound_keys_description = estrdup("none");
+}
+
+InputAction::~InputAction()
+{
+   efree(bound_keys_description);
+   efree(hidden_name);
+}
+
+bool InputAction::handleEvent(event_t *ev, KeyBind *kb)
+{
+   /*
+    |---------------------------------------------------------------------|
+    | activate   | nothing    | bind +y "+left" | isPO && isAO            |
+    | deactivate | nothing    | bind +u "-left" | isPO && isDO            |
+    | activate   | nothing    | bind +i "left"  | isPO && (!isAO || isDO) |
+    | nothing    | activate   | bind -o "+left" | isRO && isAO            |
+    | nothing    | deactivate | bind -p "-left" | isRO && isDO            |
+    | nothing    | activate   | bind -h "left"  | isRO && !(isAO || isDO) |
+    | activate   | activate   | bind j "+left"  | isAO                    |
+    | deactivate | deactivate | bind k "-left"  | isDO                    |
+    | activate   | deactivate | bind l "left"   | isN                     |
+    | deactivate | activate   | ...             | n/a                     |
+    |---------------------------------------------------------------------|
+   */
+
+   if(kb->isPressOnly())
    {
-      hidden_name = estrdup(new_name);
-      key = hidden_name;
-      bound_keys_description = estrdup("none");
-   }
-
-   ~InputAction()
-   {
-      efree(bound_keys_description);
-      efree(hidden_name);
-   }
-
-   bool handleEvent(event_t *ev, KeyBind *kb)
-   {
-      /*
-       |---------------------------------------------------------------------|
-       | activate   | nothing    | bind +y "+left" | isPO && isAO            |
-       | deactivate | nothing    | bind +u "-left" | isPO && isDO            |
-       | activate   | nothing    | bind +i "left"  | isPO && (!isAO || isDO) |
-       | nothing    | activate   | bind -o "+left" | isRO && isAO            |
-       | nothing    | deactivate | bind -p "-left" | isRO && isDO            |
-       | nothing    | activate   | bind -h "left"  | isRO && !(isAO || isDO) |
-       | activate   | activate   | bind j "+left"  | isAO                    |
-       | deactivate | deactivate | bind k "-left"  | isDO                    |
-       | activate   | deactivate | bind l "left"   | isN                     |
-       | deactivate | activate   | ...             | n/a                     |
-       |---------------------------------------------------------------------|
-      */
-
-      if(kb->isPressOnly())
-      {
-         if(kb->isDeactivateOnly())
-            deactivate(kb, ev);
-         else
-            activate(kb, ev);
-      }
-      else if(kb->isReleaseOnly())
-      {
-         if(kb->isDeactivateOnly())
-            deactivate(kb, ev);
-         else
-            activate(kb, ev);
-      }
-      else if(kb->isActivateOnly())
-         activate(kb, ev);
-      else if(kb->isDeactivateOnly())
-         deactivate(kb, ev);
-      else if((ev->type == ev_keydown) && mayActivate(kb))
-         activate(kb, ev);
-      else if((ev->type == ev_keyup) && mayDeactivate(kb))
+      if(kb->isDeactivateOnly())
          deactivate(kb, ev);
       else
-         return false;
-
-      if(ev->type == ev_keydown)
-         kb->press();
-      else if(ev->type == ev_keyup)
-         kb->release();
-
-      return true;
+         activate(kb, ev);
    }
-
-   char *getName() const { return hidden_name; }
-   input_action_category_e const getCategory() { return category; }
-   virtual void activate(KeyBind *kb, event_t *ev) {}
-   virtual void deactivate(KeyBind *kb, event_t *ev) {}
-   virtual void print() const { C_Printf("%s\n", getName()); }
-   virtual bool active() { return false; }
-   virtual bool mayActivate(KeyBind *kb)
+   else if(kb->isReleaseOnly())
    {
-      if(kb->isPressed())
-         return false;
-
-      return true;
+      if(kb->isDeactivateOnly())
+         deactivate(kb, ev);
+      else
+         activate(kb, ev);
    }
-   virtual bool mayDeactivate(KeyBind *kb)
-   {
-      if(kb->isReleased())
-         return false;
+   else if(kb->isActivateOnly())
+      activate(kb, ev);
+   else if(kb->isDeactivateOnly())
+      deactivate(kb, ev);
+   else if((ev->type == ev_keydown) && mayActivate(kb))
+      activate(kb, ev);
+   else if((ev->type == ev_keyup) && mayDeactivate(kb))
+      deactivate(kb, ev);
+   else
+      return false;
 
-      return true;
-   }
-   char *getDescription() const { return bound_keys_description; }
-   void setDescription(const char *new_description)
-   {
-      if(bound_keys_description)
-         efree(bound_keys_description);
+   if(ev->type == ev_keydown)
+      kb->press();
+   else if(ev->type == ev_keyup)
+      kb->release();
 
-      bound_keys_description = estrdup(new_description);
-   }
-   virtual void Think() {}
-};
+   return true;
+}
+
+const char* InputAction::getName() const
+{
+   return hidden_name;
+}
+
+input_action_category_e const InputAction::getCategory()
+{
+   return category;
+}
+
+const char* InputAction::getDescription() const
+{
+   return bound_keys_description;
+}
+
+void InputAction::setDescription(const char *new_description)
+{
+   if(bound_keys_description)
+      efree(bound_keys_description);
+
+   bound_keys_description = estrdup(new_description);
+}
+
+virtual void InputAction::activate(KeyBind *kb, event_t *ev) {}
+
+virtual void InputAction::deactivate(KeyBind *kb, event_t *ev) {}
+
+virtual void InputAction::print() const
+{
+   C_Printf("%s\n", getName());
+}
+
+virtual bool InputAction::isActive()
+{
+   return false;
+}
+
+virtual bool InputAction::mayActivate(KeyBind *kb)
+{
+   if(kb->isPressed())
+      return false;
+
+   // [CG] TODO: Repeat rate handling goes here.
+
+   return true;
+}
+
+virtual bool InputAction::mayDeactivate(KeyBind *kb)
+{
+   if(kb->isReleased())
+      return false;
+
+   return true;
+}
+
+virtual void InputAction::Think() {}
 
 class OneShotFunctionInputAction : public InputAction
 {
@@ -445,101 +492,7 @@ public:
    void print() const { /* Do not print in the action list */ }
 };
 
-static InputKey *keys[NUM_KEYS];
-
-static EHashTable<InputKey, ENCStringHashKey, &InputKey::key,
-                  &InputKey::links> names_to_keys(NUM_KEYS);
-static EHashTable<InputAction, ENCStringHashKey, &InputAction::key,
-                  &InputAction::links> names_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
-static EHashTable<KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
-                  &KeyBind::key_to_action_links> keys_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
-static EHashTable<KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
-                  &KeyBind::action_to_key_links> actions_to_keys(INITIAL_KEY_ACTION_CHAIN_SIZE);
-
-// name of configuration file to read from/write to.
-static char *cfg_file = NULL;
-
-// assorted keybindings menu data structures.
-menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
-static const char *binding_action; // name of action we are editing
-
-// Action variables
-// These variables are asserted as positive values when the action
-// they represent has been performed by the player via key pressing.
-
-// Game Actions -- These are handled in g_game.c
-int action_forward;     // forward movement
-int action_backward;    // backward movement
-int action_left;        // left movement
-int action_right;       // right movement
-int action_moveleft;    // key-strafe left
-int action_moveright;   // key-strafe right
-int action_use;         // object activation
-int action_speed;       // running
-int action_attack;      // firing current weapon
-int action_strafe;      // strafe in any direction
-int action_flip;        // 180 degree turn
-int action_jump;        // jump
-int action_mlook;       // mlook activation
-int action_lookup;      // key-look up
-int action_lookdown;    // key-look down
-int action_center;      // key-look centerview
-int action_flyup;       // fly up
-int action_flydown;     // fly down
-int action_flycenter;   // fly "center"
-int action_weapon1;     // select weapon 1
-int action_weapon2;     // select weapon 2
-int action_weapon3;     // select weapon 3
-int action_weapon4;     // select weapon 4
-int action_weapon5;     // select weapon 5
-int action_weapon6;     // select weapon 6
-int action_weapon7;     // select weapon 7
-int action_weapon8;     // select weapon 8
-int action_weapon9;     // select weapon 9
-int action_nextweapon;  // toggle to next-favored weapon
-int action_weaponup;    // haleyjd: next weapon in order
-int action_weapondown;  // haleyjd: prev weapon in order
-int action_frags;       // show frags
-int action_autorun;     // autorun
-
-// Menu Actions -- handled by MN_Responder
-int action_menu_help;
-int action_menu_toggle;
-int action_menu_setup;
-int action_menu_up;
-int action_menu_down;
-int action_menu_confirm;
-int action_menu_previous;
-int action_menu_left;
-int action_menu_right;
-int action_menu_pageup;
-int action_menu_pagedown;
-int action_menu_contents;
-
-// AutoMap Actions -- handled by AM_Responder
-int action_map_toggle;
-int action_map_gobig;
-int action_map_follow;
-int action_map_mark;
-int action_map_clear;
-int action_map_grid;
-
-// Console Actions -- handled by C_Responder
-int action_console_pageup;
-int action_console_pagedown;
-int action_console_toggle;
-int action_console_tab;
-int action_console_enter;
-int action_console_up;
-int action_console_down;
-int action_console_backspace;
-
-//
-// G_categoryIndex
-//
-// Translate category flags into a category index.
-//
-static int G_categoryIndex(int category)
+int KeyBindingsSubSystem::getCategoryIndex(int category)
 {
    int i, shifted;
 
@@ -553,12 +506,7 @@ static int G_categoryIndex(int category)
    }
 }
 
-//
-// G_updateBoundKeyDescription
-//
-// Update an action's ascii description of the keys bound to it.
-//
-static void G_updateBoundKeyDescription(InputAction *action)
+void KeyBindingsSubSystem::updateBoundKeyDescription(InputAction *action)
 {
    qstring description;
    KeyBind *kb = NULL;
@@ -579,21 +527,15 @@ static void G_updateBoundKeyDescription(InputAction *action)
       action->setDescription("none");
 }
 
-//
-//
-// G_createBind
-//
-// Create a new KeyBind.
-//
-static void G_createBind(InputKey *key, InputAction *action,
-                         unsigned short flags)
+void KeyBindingsSubSystem::createBind(InputKey *key, InputAction *action,
+                                      unsigned short flags)
 {
    KeyBind *kb = NULL;
    const char *aname = action->getName();
    size_t aname_len = strlen(aname);
 
-   // Check if this key is already bound to this action, as there's no sense in
-   // duplicate binds.
+   // Check if this key is already bound to this action, as there's no sense
+   // in duplicate binds.
    while((kb = keys_to_actions.keyIterator(kb, key->getName())))
    {
       const char *kb_aname;
@@ -637,14 +579,10 @@ static void G_createBind(InputKey *key, InputAction *action,
    G_updateBoundKeyDescription(action);
 }
 
-//
-// G_removeBind
-//
-// Remove a KeyBind.
-//
-static void G_removeBind(KeyBind **kb)
+void KeyBindingsSubSystem::removeBind(KeyBind **kb)
 {
-   InputAction *action = names_to_actions.objectForKey((*kb)->getActionName());
+   InputAction *action =
+      names_to_actions.objectForKey((*kb)->getActionName());
 
    keys_to_actions.removeObject(*kb);
    actions_to_keys.removeObject(*kb);
@@ -654,13 +592,9 @@ static void G_removeBind(KeyBind **kb)
       G_updateBoundKeyDescription(action);
 }
 
-//
-// G_bindKeyToAction
-//
-// Bind a key to an action.
-//
-static void G_bindKeyToAction(InputKey *key, const char *action_name,
-                              unsigned short flags)
+void KeyBindingsSubSystem::bindKeyToAction(InputKey *key,
+                                           const char *action_name,
+                                           unsigned short flags)
 {
    InputAction *action = NULL;
    char *real_action_name = (char *)action_name;
@@ -682,13 +616,8 @@ static void G_bindKeyToAction(InputKey *key, const char *action_name,
    G_createBind(key, action, flags);
 }
 
-//
-// G_bindKeyToActions
-//
-// Bind a key to one or more actions.
-//
-static void G_bindKeyToActions(const char *key_name,
-                               const qstring &action_names)
+void KeyBindingsSubSystem::bindKeyToActions(const char *key_name,
+                                            const qstring &action_names)
 {
    unsigned short flags = 0;
    size_t key_name_length = strlen(key_name);
@@ -755,12 +684,25 @@ static void G_bindKeyToActions(const char *key_name,
       G_bindKeyToAction(key, token.constPtr(), flags);
 }
 
-//
-// G_InitKeyBindings
-//
-// Set up keys, actions, hashtables, and other various things.
-//
-void G_InitKeyBindings()
+void KeyBindingsSubSystem::setKeyBindingsFile(const char *filename)
+{
+   if(cfg_file)
+      efree(cfg_file);
+
+   cfg_file = estrdup(filename);
+}
+
+void KeyBindingsSubSystem::setBindingAction(const char *new_binding_action)
+{
+   binding_action = new_binding_action;
+}
+
+const char* KeyBindingsSubSystem::getBindingAction()
+{
+   return binding_action;
+}
+
+KeyBindingsSubSystem::KeyBindingsSubSystem()
 {
    int i;
    qstring key_name;
@@ -908,12 +850,18 @@ void G_InitKeyBindings()
    G_addVariableAction(menu_down,     kac_menu);
 
    // Automap-class actions
-   G_addFunctionAction(map_right,   kac_map, AM_HandlerRight);
-   G_addFunctionAction(map_left,    kac_map, AM_HandlerLeft);
-   G_addFunctionAction(map_up,      kac_map, AM_HandlerUp);
-   G_addFunctionAction(map_down,    kac_map, AM_HandlerDown);
-   G_addFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
-   G_addFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
+   // G_addFunctionAction(map_right,   kac_map, AM_HandlerRight);
+   // G_addFunctionAction(map_left,    kac_map, AM_HandlerLeft);
+   // G_addFunctionAction(map_up,      kac_map, AM_HandlerUp);
+   // G_addFunctionAction(map_down,    kac_map, AM_HandlerDown);
+   // G_addFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
+   // G_addFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
+   G_addVariableAction(map_right,   kac_map);
+   G_addVariableAction(map_left,    kac_map);
+   G_addVariableAction(map_up,      kac_map);
+   G_addVariableAction(map_down,    kac_map);
+   G_addVariableAction(map_zoomin,  kac_map);
+   G_addVariableAction(map_zoomout, kac_map);
    G_addVariableAction(map_toggle,  kac_map);
    G_addVariableAction(map_gobig,   kac_map);
    G_addVariableAction(map_follow,  kac_map);
@@ -938,12 +886,7 @@ void G_InitKeyBindings()
    }
 }
 
-//
-// G_BoundKeys
-//
-// Get an ascii description of all keys bound to a particular action.
-//
-const char* G_BoundKeys(const char *action_name)
+const char* KeyBindingsSubSystem::getBoundKeys(const char *action_name)
 {
    InputAction *action = names_to_actions.objectForKey(action_name);
 
@@ -956,12 +899,7 @@ const char* G_BoundKeys(const char *action_name)
    return action->getDescription();
 }
 
-//
-// G_FirstBoundKey
-//
-// Get an ascii description of the first key bound to a particular action.
-//
-const char* G_FirstBoundKey(const char *action_name)
+const char* KeyBindingsSubSystem::getFirstBoundKey(const char *action_name)
 {
    InputKey *key = NULL;
    KeyBind *kb = NULL;
@@ -979,15 +917,19 @@ const char* G_FirstBoundKey(const char *action_name)
    return key->getName();
 }
 
-//
-// G_ClearKeyStates
-//
-// "Releases" all keys.
-//
-void G_ClearKeyStates()
+void KeyBindingsSubSystem::reEnableKeys()
+{
+   for(int i = 0; i < NUM_KEYS; ++i)
+      keys[i]->enable();
+}
+
+
+void KeyBindingsSubSystem::reset()
 {
    KeyBind *kb = NULL;
    InputAction *action = NULL;
+
+   reEnableKeys();
 
    while((kb = keys_to_actions.tableIterator(kb)))
       kb->release();
@@ -996,12 +938,7 @@ void G_ClearKeyStates()
       action->deactivate(NULL, NULL);
 }
 
-//
-// G_KeyResponder
-//
-// The main driver function for the entire key binding system.
-//
-bool G_KeyResponder(event_t *ev, int categories)
+bool KeyBindingsSubSystem::handleKeyEvent(event_t *ev, int categories)
 {
    static bool ctrldown;
    static bool altdown;
@@ -1046,21 +983,16 @@ bool G_KeyResponder(event_t *ev, int categories)
 
    while((kb = keys_to_actions.keyIterator(kb, key->getName())))
    {
-      if(ev->type == ev_keyup)
+      if((ev->type == ev_keyup) && (kb->isPressOnly()))
       {
-         if(kb->isPressOnly())
-         {
-            kb->release();
-            continue;
-         }
+         kb->release();
+         continue;
       }
-      else if(ev->type == ev_keydown)
+
+      if((ev->type == ev_keydown) && (kb->isReleaseOnly()))
       {
-         if(kb->isReleaseOnly())
-         {
-            kb->press();
-            continue;
-         }
+         kb->press();
+         continue;
       }
 
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
@@ -1069,30 +1001,274 @@ bool G_KeyResponder(event_t *ev, int categories)
          continue;
       }
 
-      if((categories & action->getCategory()) == 0)
-         continue;
+      printf(
+         "%d: Categories/Action Category: %d/%d.\n",
+         gametic,
+         categories,
+         action->getCategory()
+      );
 
-      if(!processed_event)
-         processed_event = action->handleEvent(ev, kb);
-      else
-         action->handleEvent(ev, kb);
+      if((categories & action->getCategory()) == 0)
+      {
+         printf("Skipping action.\n");
+         continue;
+      }
+
+      if(!key->isDisabled())
+      {
+         if(!processed_event)
+            processed_event = action->handleEvent(ev, kb);
+         else
+            action->handleEvent(ev, kb);
+      }
+
    }
+
+   if(processed_event)
+      key->disable();
 
    return processed_event;
 }
 
-//
-// G_InputActionTicker
-//
-// Runs input action thinkers, used for CommandInputActions
-//
-void G_InputActionTicker()
+void KeyBindingsSubSystem::runInputActions()
 {
    InputAction *action = NULL;
 
    while((action = names_to_actions.tableIterator(action)))
       action->Think();
 }
+
+void KeyBindingsSubSystem::loadKeyBindings()
+{
+   char *temp = NULL;
+   size_t len;
+   DWFILE dwfile, *file = &dwfile;
+   InputAction *action = NULL;
+
+   len = M_StringAlloca(&temp, 1, 18, usergamepath);
+
+   // haleyjd 11/23/06: use basegamepath
+   // haleyjd 08/29/09: allow use_doom_config override
+   if(GameModeInfo->type == Game_DOOM && use_doom_config)
+      psnprintf(temp, len, "%s/doom/keys.csc", userpath);
+   else
+      psnprintf(temp, len, "%s/keys.csc", usergamepath);
+
+
+   setKeyBindingsFile(temp);
+
+   if(access(cfg_file, R_OK))
+   {
+      C_Printf("keys.csc not found, using defaults\n");
+      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
+   }
+   else
+      D_OpenFile(file, cfg_file, "r");
+
+   if(!D_IsOpen(file))
+      I_Error("G_LoadDefaults: couldn't open default key bindings\n");
+
+   // haleyjd 03/08/06: test for zero length
+   if(!D_IsLump(file) && D_FileLength(file) == 0)
+   {
+      // try the lump because the file is zero-length...
+      C_Printf("keys.csc is zero length, trying KEYDEFS\n");
+      D_Fclose(file);
+      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
+      if(!D_IsOpen(file) || D_FileLength(file) == 0)
+         I_Error("G_LoadDefaults: KEYDEFS lump is empty\n");
+   }
+
+   C_RunScript(file);
+
+   D_Fclose(file);
+
+   while((action = names_to_actions.tableIterator(action)))
+      G_updateBoundKeyDescription(action);
+}
+
+void KeyBindingsSubSystem::saveKeyBindings()
+{
+   FILE *file;
+   bool in_bind;
+   InputKey *key = NULL;
+   KeyBind *kb = NULL;
+
+   if(!cfg_file)         // check defaults have been loaded
+      return;
+
+   if(!(file = fopen(cfg_file, "w")))
+   {
+      C_Printf(FC_ERROR"Couldn't open keys.csc for write access.\n");
+      return;
+   }
+
+   // write key bindings
+   while((key = names_to_keys.tableIterator(key)))
+   {
+      // Skip uppercase alphabetical keys.
+      if(strlen(key->getName()) == 1 && isalpha(*key->getName()) &&
+                                        isupper(*key->getName()))
+         continue;
+
+      // [CG] Write normal binds first.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(kb->isPressOnly() || kb->isReleaseOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind %s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
+         fprintf(file, "\"\n");
+
+      // [CG] Now write press-only binds.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(!kb->isPressOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind +%s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
+         fprintf(file, "\"\n");
+
+      // [CG] Finally write release-only binds.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(!kb->isReleaseOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind -%s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
+         fprintf(file, "\"\n");
+   }
+
+   // Save command batches
+   C_SaveCommandBatches(file);
+
+   fclose(file);
+}
+
+// Action variables
+// These variables are asserted as positive values when the action
+// they represent has been performed by the player via key pressing.
+
+// Game Actions -- These are handled in g_game.c
+int action_forward;     // forward movement
+int action_backward;    // backward movement
+int action_left;        // left movement
+int action_right;       // right movement
+int action_moveleft;    // key-strafe left
+int action_moveright;   // key-strafe right
+int action_use;         // object activation
+int action_speed;       // running
+int action_attack;      // firing current weapon
+int action_strafe;      // strafe in any direction
+int action_flip;        // 180 degree turn
+int action_jump;        // jump
+int action_mlook;       // mlook activation
+int action_lookup;      // key-look up
+int action_lookdown;    // key-look down
+int action_center;      // key-look centerview
+int action_weapon1;     // select weapon 1
+int action_weapon2;     // select weapon 2
+int action_weapon3;     // select weapon 3
+int action_weapon4;     // select weapon 4
+int action_weapon5;     // select weapon 5
+int action_weapon6;     // select weapon 6
+int action_weapon7;     // select weapon 7
+int action_weapon8;     // select weapon 8
+int action_weapon9;     // select weapon 9
+int action_nextweapon;  // toggle to next-favored weapon
+int action_weaponup;    // haleyjd: next weapon in order
+int action_weapondown;  // haleyjd: prev weapon in order
+int action_frags;       // show frags
+int action_autorun;     // autorun
+
+// Menu Actions -- handled by MN_Responder
+int action_menu_help;
+int action_menu_toggle;
+int action_menu_setup;
+int action_menu_up;
+int action_menu_down;
+int action_menu_confirm;
+int action_menu_previous;
+int action_menu_left;
+int action_menu_right;
+int action_menu_pageup;
+int action_menu_pagedown;
+int action_menu_contents;
+
+// AutoMap Actions -- handled by AM_Responder
+int action_map_right;
+int action_map_left;
+int action_map_up;
+int action_map_down;
+int action_map_zoomin;
+int action_map_zoomout;
+int action_map_toggle;
+int action_map_gobig;
+int action_map_follow;
+int action_map_mark;
+int action_map_clear;
+int action_map_grid;
+
+// Console Actions -- handled by C_Responder
+int action_console_pageup;
+int action_console_pagedown;
+int action_console_toggle;
+int action_console_tab;
+int action_console_enter;
+int action_console_up;
+int action_console_down;
+int action_console_backspace;
 
 //===========================================================================
 //
@@ -1214,163 +1390,6 @@ void G_EditBinding(const char *action_name)
 //===========================================================================
 
 // default script:
-
-void G_LoadDefaults()
-{
-   char *temp = NULL;
-   size_t len;
-   DWFILE dwfile, *file = &dwfile;
-   InputAction *action = NULL;
-
-   len = M_StringAlloca(&temp, 1, 18, usergamepath);
-
-   // haleyjd 11/23/06: use basegamepath
-   // haleyjd 08/29/09: allow use_doom_config override
-   if(GameModeInfo->type == Game_DOOM && use_doom_config)
-      psnprintf(temp, len, "%s/doom/keys.csc", userpath);
-   else
-      psnprintf(temp, len, "%s/keys.csc", usergamepath);
-
-   cfg_file = estrdup(temp);
-
-   if(access(cfg_file, R_OK))
-   {
-      C_Printf("keys.csc not found, using defaults\n");
-      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
-   }
-   else
-      D_OpenFile(file, cfg_file, "r");
-
-   if(!D_IsOpen(file))
-      I_Error("G_LoadDefaults: couldn't open default key bindings\n");
-
-   // haleyjd 03/08/06: test for zero length
-   if(!D_IsLump(file) && D_FileLength(file) == 0)
-   {
-      // try the lump because the file is zero-length...
-      C_Printf("keys.csc is zero length, trying KEYDEFS\n");
-      D_Fclose(file);
-      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
-      if(!D_IsOpen(file) || D_FileLength(file) == 0)
-         I_Error("G_LoadDefaults: KEYDEFS lump is empty\n");
-   }
-
-   C_RunScript(file);
-
-   D_Fclose(file);
-
-   while((action = names_to_actions.tableIterator(action)))
-      G_updateBoundKeyDescription(action);
-}
-
-void G_SaveDefaults()
-{
-   FILE *file;
-   bool in_bind;
-   InputKey *key = NULL;
-   KeyBind *kb = NULL;
-
-   if(!cfg_file)         // check defaults have been loaded
-      return;
-
-   if(!(file = fopen(cfg_file, "w")))
-   {
-      C_Printf(FC_ERROR"Couldn't open keys.csc for write access.\n");
-      return;
-   }
-
-   // write key bindings
-   while((key = names_to_keys.tableIterator(key)))
-   {
-      // Skip uppercase alphabetical keys.
-      if(strlen(key->getName()) == 1 && isalpha(*key->getName()) &&
-                                        isupper(*key->getName()))
-         continue;
-
-      // [CG] Write normal binds first.
-      in_bind = false;
-      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
-      {
-         if(kb->isPressOnly() || kb->isReleaseOnly())
-            continue;
-
-         if(!in_bind)
-         {
-            fprintf(file, "bind %s \"", key->getName());
-            in_bind = true;
-         }
-         else
-            fprintf(file, ";");
-
-         if(kb->isActivateOnly())
-            fprintf(file, "+%s", kb->getActionName());
-         else if(kb->isDeactivateOnly())
-            fprintf(file, "-%s", kb->getActionName());
-         else
-            fprintf(file, "%s", kb->getActionName());
-      }
-
-      if(in_bind)
-         fprintf(file, "\"\n");
-
-      // [CG] Now write press-only binds.
-      in_bind = false;
-      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
-      {
-         if(!kb->isPressOnly())
-            continue;
-
-         if(!in_bind)
-         {
-            fprintf(file, "bind +%s \"", key->getName());
-            in_bind = true;
-         }
-         else
-            fprintf(file, ";");
-
-         if(kb->isActivateOnly())
-            fprintf(file, "+%s", kb->getActionName());
-         else if(kb->isDeactivateOnly())
-            fprintf(file, "-%s", kb->getActionName());
-         else
-            fprintf(file, "%s", kb->getActionName());
-      }
-
-      if(in_bind)
-         fprintf(file, "\"\n");
-
-      // [CG] Finally write release-only binds.
-      in_bind = false;
-      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
-      {
-         if(!kb->isReleaseOnly())
-            continue;
-
-         if(!in_bind)
-         {
-            fprintf(file, "bind -%s \"", key->getName());
-            in_bind = true;
-         }
-         else
-            fprintf(file, ";");
-
-         if(kb->isActivateOnly())
-            fprintf(file, "+%s", kb->getActionName());
-         else if(kb->isDeactivateOnly())
-            fprintf(file, "-%s", kb->getActionName());
-         else
-            fprintf(file, "%s", kb->getActionName());
-      }
-
-      if(in_bind)
-         fprintf(file, "\"\n");
-   }
-
-   // Save command batches
-   C_SaveCommandBatches(file);
-
-   fclose(file);
-}
 
 //=============================================================================
 //

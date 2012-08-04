@@ -734,7 +734,7 @@ bool G_Responder(event_t* ev)
       }
 
       // [CG] 01/29/12: Respond to command events.
-      if(G_KeyResponder(ev, kac_command))
+      if(G_KeyResponder(ev, kac_command, false))
          return true;
 
       // killough 10/98:
@@ -780,11 +780,11 @@ bool G_Responder(event_t* ev)
       if(ev->data1 == key_pause) // phares
          C_RunTextCmd("pause");
       else
-         G_KeyResponder(ev, kac_player | kac_command); // haleyjd
+         G_KeyResponder(ev, kac_player | kac_command, false); // haleyjd
       return true;    // eat key down events
       
    case ev_keyup:
-      G_KeyResponder(ev, kac_player | kac_command);   // haleyjd
+      G_KeyResponder(ev, kac_player | kac_command, false);   // haleyjd
       return false;   // always let key up events filter down
       
    case ev_mouse:

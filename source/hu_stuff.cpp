@@ -1199,7 +1199,7 @@ static bool HU_ChatRespond(event_t *ev)
    static bool shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
-   G_KeyResponder(ev, kac_hud);
+   G_KeyResponder(ev, kac_hud, true);
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);

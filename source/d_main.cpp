@@ -199,6 +199,8 @@ void D_ProcessEvents(void)
    //     time soon =)
    // if (gamemode != commercial || W_CheckNumForName("map01") >= 0)
 
+   G_EnableKeys(); // [CG] Re-enable keys that were disabled this TIC.
+
    for(; eventtail != eventhead; eventtail = (eventtail+1) & (MAXEVENTS-1))
    {
       event_t *evt = events + eventtail;

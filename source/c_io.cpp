@@ -333,7 +333,7 @@ bool C_Responder(event_t *ev)
       return false;
 
    // haleyjd 05/29/06: dynamic console bindings
-   G_KeyResponder(ev, kac_console);
+   G_KeyResponder(ev, kac_console, true);
    
    if(ev->data1 == KEYD_RSHIFT)
    {

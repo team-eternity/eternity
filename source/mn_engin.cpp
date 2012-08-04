@@ -1287,7 +1287,7 @@ bool MN_Responder(event_t *ev)
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
-   G_KeyResponder(ev, kac_menu);
+   G_KeyResponder(ev, kac_menu, true);
 
    // haleyjd 10/07/05
    if(ev->data1 == KEYD_RCTRL)
