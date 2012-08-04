@@ -32,6 +32,10 @@
 #ifndef G_BIND_H__
 #define G_BIND_H__
 
+#define KBSS_NUM_KEYS 256
+#define KBSS_INITIAL_KEY_ACTION_CHAIN_SIZE 127
+#define KBSS_MAX_LOAD_FACTOR 0.7
+
 // haleyjd 07/03/04: key binding classes
 // [CG] Renamed to key binding "category" to avoid collision with C++ keyword.
 enum input_action_category_e
@@ -74,22 +78,22 @@ public:
            unsigned short new_flags);
    ~KeyBind();
 
-   int                     getKeyNumber()                    const;
-   const char*             getKeyName()                      const;
-   const char*             getActionName()                   const;
-   bool                    isPressed()                       const;
-   bool                    isReleased()                      const;
-   void                    press();
-   void                    release();
-   input_action_category_e getCategory()                     const;
-   bool                    getFlags()                        const;
-   bool                    isNormal()                        const;
-   bool                    isActivateOnly()                  const;
-   bool                    isDeactivateOnly()                const;
-   bool                    isPressOnly()                     const;
-   bool                    isReleaseOnly()                   const;
-   bool                    keyIs(const char *key_name)       const;
-   bool                    actionIs(const char *action_name) const;
+   int                           getKeyNumber()                    const;
+   const char*                   getKeyName()                      const;
+   const char*                   getActionName()                   const;
+   const bool                    isPressed()                       const;
+   const bool                    isReleased()                      const;
+   void                          press();
+   void                          release();
+   const input_action_category_e getCategory()                     const;
+   const unsigned short          getFlags()                        const;
+   bool                          isNormal()                        const;
+   bool                          isActivateOnly()                  const;
+   bool                          isDeactivateOnly()                const;
+   bool                          isPressOnly()                     const;
+   bool                          isReleaseOnly()                   const;
+   bool                          keyIs(const char *key_name)       const;
+   bool                          actionIs(const char *action_name) const;
 
 };
 
@@ -131,19 +135,19 @@ public:
    InputAction(const char *new_name, input_action_category_e new_category);
    ~InputAction();
 
-   bool                    handleEvent(event_t *ev, KeyBind *kb);
-   const char*             getName()                                    const;
-   input_action_category_e getCategory()                                const;
-   const char*             getDescription()                             const;
-   void                    setDescription(const char *new_description);
+   bool                          handleEvent(event_t *ev, KeyBind *kb);
+   const char*                   getName()                             const;
+   const input_action_category_e getCategory()                         const;
+   const char*                   getDescription()                      const;
+   void                          setDescription(const char *new_description);
 
-   virtual void            activate(KeyBind *kb, event_t *ev);
-   virtual void            deactivate(KeyBind *kb, event_t *ev);
-   virtual void            print()                                      const;
-   virtual bool            isActive()                                   const;
-   virtual bool            mayActivate(KeyBind *kb)                     const;
-   virtual bool            mayDeactivate(KeyBind *kb)                   const;
-   virtual void            Think();
+   virtual void                  activate(KeyBind *kb, event_t *ev);
+   virtual void                  deactivate(KeyBind *kb, event_t *ev);
+   virtual void                  print()                               const;
+   virtual bool                  isActive()                            const;
+   virtual bool                  mayActivate(KeyBind *kb)              const;
+   virtual bool                  mayDeactivate(KeyBind *kb)            const;
+   virtual void                  Think();
 
 };
 
@@ -151,56 +155,73 @@ class KeyBindingsSubSystem
 {
 private:
 
-   InputKey *keys[NUM_KEYS];
+   InputKey *keys[KBSS_NUM_KEYS];
 
    EHashTable<InputKey, ENCStringHashKey, &InputKey::key,
-              &InputKey::links> names_to_keys(NUM_KEYS);
+              &InputKey::links> *names_to_keys;
+
    EHashTable<InputAction, ENCStringHashKey, &InputAction::key,
-              &InputAction::links> names_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
+              &InputAction::links> *names_to_actions;
+
    EHashTable<KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
-              &KeyBind::key_to_action_links> keys_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
+              &KeyBind::key_to_action_links> *keys_to_actions;
+
    EHashTable<KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
-              &KeyBind::action_to_key_links> actions_to_keys(INITIAL_KEY_ACTION_CHAIN_SIZE);
+              &KeyBind::action_to_key_links> *actions_to_keys;
 
    // name of configuration file to read from/write to.
-   char *cfg_file = NULL;
+   char *cfg_file;
 
    // name of action we are editing
    const char *binding_action;
 
-   int getCategoryIndex(int category);
    void updateBoundKeyDescription(InputAction *action);
-   void createBind(InputKey *key, InputAction *action, unsigned short flags);
-   void removeBind(KeyBind **kb);
    void bindKeyToAction(InputKey *key, const char *action_name,
                         unsigned short flags);
-   void bindKeyToActions(const char *key_name, const qstring &action_names);
 
 public:
-   menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
+
+   static menuwidget_t binding_widget;
 
    KeyBindingsSubSystem();
 
-   void        setKeyBindingsFile(const char *filename);
-   void        setBindingAction(const char *new_binding_action);
-   const char* getBindingAction();
-   const char* getBoundKeys(const char *action_name);
-   const char* getFirstBoundKey(const char *action_name);
-   void        reEnableKeys();
-   void        reset();
-   bool        handleKeyEvent(event_t *ev, int categories);
-   void        runInputActions();
-   void        loadKeyBindings();
-   void        saveKeyBindings();
+   static int getCategoryIndex(int category);
+
+   void         setKeyBindingsFile(const char *filename);
+   void         setBindingAction(const char *new_binding_action);
+   const char*  getBindingAction();
+   const char*  getBoundKeys(const char *action_name);
+   const char*  getFirstBoundKey(const char *action_name);
+   void         reEnableKeys();
+   void         reset();
+   bool         handleKeyEvent(event_t *ev, int categories);
+   void         runInputActions();
+   void         loadKeyBindings();
+   void         saveKeyBindings();
+   InputKey*    getKey(int index);
+   InputKey*    getKey(const char *key_name);
+   InputAction* getAction(const char *action_name);
+   KeyBind*     keyBindIterator(KeyBind *kb);
+   KeyBind*     keyBindIterator(KeyBind *kb, const char *key_name);
+   InputAction* actionIterator(InputAction *action);
+   void         removeBind(KeyBind **kb);
+   void         createBind(InputKey *key, InputAction *action,
+                           unsigned short flags);
+   void         bindKeyToActions(const char *key_name,
+                                 const qstring &action_names);
 
 };
 
 extern KeyBindingsSubSystem key_bindings;
 
-void        G_EditBinding(const char *action_name)
+void        G_EditBinding(const char *action_name);
 void        G_Bind_AddCommands();
 void        G_BindDrawer();
 bool        G_BindResponder(event_t *ev);
+
+menuwidget_t KeyBindingsSubSystem::binding_widget = {
+   G_BindDrawer, G_BindResponder, NULL, true
+};
 
 // action variables
 
