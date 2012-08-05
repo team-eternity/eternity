@@ -252,6 +252,13 @@ static void ACS_stopScript(ACSThinker *thread)
    // notify waiting scripts that this script has ended
    ACS_scriptFinished(thread);
 
+   // Free the print buffers.
+   for(qstring **itr = thread->printStack, **end = itr + thread->numPrints; itr != end; ++itr)
+      delete *itr;
+
+   // And the print buffer stack itself.
+   Z_Free(thread->printStack);
+
    P_SetTarget<Mobj>(&thread->trigger, NULL);
 
    thread->removeThinker();
@@ -867,17 +874,15 @@ void ACSThinker::Think()
             stp = stack + stackPtr;
          }
 
-         callPtr->ip          = ip;
-         callPtr->numLocals   = numLocals;
-         callPtr->locals      = locals;
-         callPtr->printBuffer = printBuffer;
-         callPtr->vm          = vm;
+         callPtr->ip        = ip;
+         callPtr->numLocals = numLocals;
+         callPtr->locals    = locals;
+         callPtr->vm        = vm;
 
-         ip          = func->codePtr;
-         numLocals   = func->numVars + func->numArgs;
-         locals      = estructalloc(int32_t, numLocals);
-         printBuffer = NULL;
-         vm          = func->vm;
+         ip        = func->codePtr;
+         numLocals = func->numVars + func->numArgs;
+         locals    = estructalloc(int32_t, numLocals);
+         vm        = func->vm;
 
          for(temp = func->numArgs; temp--;)
             locals[temp] = POP();
@@ -949,13 +954,11 @@ void ACSThinker::Think()
       --callPtr;
 
       efree(locals);
-      delete printBuffer;
 
-      ip          = callPtr->ip;
-      numLocals   = callPtr->numLocals;
-      locals      = callPtr->locals;
-      printBuffer = callPtr->printBuffer;
-      vm          = callPtr->vm;
+      ip        = callPtr->ip;
+      numLocals = callPtr->numLocals;
+      locals    = callPtr->locals;
+      vm        = callPtr->vm;
 
       NEXTOP();
    OPCODE(BRANCH_ZERO):
@@ -1035,25 +1038,26 @@ void ACSThinker::Think()
 
       // Printing
    OPCODE(STARTPRINT):
-      if(!printBuffer)
-         printBuffer = new qstring(qstring::basesize, PU_LEVEL);
-      else
-         printBuffer->clear();
+      pushPrint();
       NEXTOP();
    OPCODE(ENDPRINT):
       if(this->trigger && this->trigger->player)
          player_printf(trigger->player, printBuffer->constPtr());
       else
          player_printf(&players[consoleplayer], printBuffer->constPtr());
+      popPrint();
       NEXTOP();
    OPCODE(ENDPRINTBOLD):
       HU_CenterMsgTimedColor(printBuffer->constPtr(), FC_GOLD, 20*35);
+      popPrint();
       NEXTOP();
    OPCODE(ENDPRINTLOG):
       printf("%s\n", printBuffer->constPtr());
+      popPrint();
       NEXTOP();
    OPCODE(ENDPRINTSTRING):
       PUSH(ACSVM::AddString(printBuffer->constPtr(), printBuffer->length()));
+      popPrint();
       NEXTOP();
    OPCODE(PRINTMAPARRAY):
       stp -= 2;
@@ -1218,6 +1222,53 @@ action_stop:
    goto function_end;
 
 function_end:;
+}
+
+//
+// ACSThinker::popPrint
+//
+void ACSThinker::popPrint()
+{
+   // Decrement printPtr, but keep the disposed buffer for use later.
+   if(printPtr != printStack)
+   {
+      if(--printPtr != printStack)
+         printBuffer = *(printPtr - 1);
+      else
+         printBuffer = *printPtr;
+   }
+   else
+      printBuffer = *printPtr;
+}
+
+//
+// ACSThinker::pushPrint
+//
+void ACSThinker::pushPrint()
+{
+   uint32_t printIndex = printPtr - printStack;
+
+   // Make room for the new buffer.
+   if(printIndex == numPrints)
+   {
+      numPrints += ACS_NUM_PRINTS;
+      printStack = (qstring **)Z_Realloc(printStack, numPrints * sizeof(qstring *),
+                                         PU_LEVEL, NULL);
+      printPtr = &printStack[printIndex];
+
+      // Nullify the newly allocated pointers.
+      for(qstring **itr = printPtr, **end = printStack + numPrints; itr != end; ++itr)
+         *itr = NULL;
+   }
+
+   qstring *&print = *printPtr++;
+
+   if(!print)
+      print = new qstring(qstring::basesize, PU_LEVEL);
+   else
+      print->clear();
+
+   printBuffer = print;
 }
 
 //
@@ -2321,16 +2372,12 @@ static SaveArchive &operator << (SaveArchive &arc, ACSArray &arr)
 //
 static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
 {
-   bool hasPrintBuffer;
    uint32_t ipTemp;
 
    if(arc.isSaving())
-   {
-      hasPrintBuffer = call.printBuffer != NULL;
       ipTemp = call.ip - call.vm->code;
-   }
 
-   arc << ipTemp << call.numLocals << hasPrintBuffer << call.vm;
+   arc << ipTemp << call.numLocals << call.vm;
 
    call.ip = call.vm->code + ipTemp;
 
@@ -2338,15 +2385,6 @@ static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
       call.locals = (int32_t *)Z_Malloc(call.numLocals * sizeof(int32_t), PU_LEVEL, NULL);
 
    P_ArchiveArray(arc, call.locals, call.numLocals);
-
-   // Save the print buffer, if any.
-   if(hasPrintBuffer)
-   {
-      if(arc.isLoading())
-         call.printBuffer = new qstring(qstring::basesize, PU_LEVEL);
-
-      call.printBuffer->archive(arc);
-   }
 
    return arc;
 }
@@ -2476,7 +2514,7 @@ void ACSArray::archive(SaveArchive &arc)
 //
 void ACSThinker::serialize(SaveArchive &arc)
 {
-   uint32_t scriptIndex, callPtrIndex, ipIndex, lineIndex;
+   uint32_t scriptIndex, callPtrIndex, printIndex, ipIndex, lineIndex;
 
    Super::serialize(arc);
 
@@ -2487,6 +2525,8 @@ void ACSThinker::serialize(SaveArchive &arc)
 
       callPtrIndex = callPtr - calls;
 
+      printIndex = printPtr - printStack;
+
       ipIndex = ip - vm->code;
 
       lineIndex = line ? line - lines + 1 : 0;
@@ -2495,7 +2535,7 @@ void ACSThinker::serialize(SaveArchive &arc)
    }
 
    // Basic properties
-   arc << ipIndex << stackPtr << numLocals << sreg << sdata << callPtrIndex
+   arc << ipIndex << stackPtr << numLocals << sreg << sdata << callPtrIndex << printIndex
        << scriptIndex << vm << delay << triggerSwizzle << lineIndex << lineSide;
 
    // Allocations/Index-to-Pointer
@@ -2506,6 +2546,11 @@ void ACSThinker::serialize(SaveArchive &arc)
       numCalls = callPtrIndex;
       calls    = estructalloctag(acs_call_t, numCalls, PU_LEVEL);
       callPtr  = calls + callPtrIndex;
+
+      numPrints   = printIndex;
+      printStack  = estructalloctag(qstring *, numPrints, PU_LEVEL);
+      printPtr    = printStack + printIndex;
+      printBuffer = printIndex ? *(printPtr - 1) : *printPtr;
 
       ip = vm->code + ipIndex;
 
@@ -2521,6 +2566,14 @@ void ACSThinker::serialize(SaveArchive &arc)
    P_ArchiveArray(arc, stack, stackPtr);
    P_ArchiveArray(arc, locals, numLocals);
    P_ArchiveArray(arc, calls, callPtrIndex);
+
+   for(qstring **itr = printStack, **end = printPtr; itr != end; ++itr)
+   {
+      if(arc.isLoading())
+         *itr = new qstring(0, PU_LEVEL);
+
+      (*itr)->archive(arc);
+   }
 
    // Post-load insertion into the environment.
    if(arc.isLoading())

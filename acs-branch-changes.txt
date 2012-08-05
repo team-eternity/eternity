@@ -5,6 +5,14 @@ extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
+08/05/2012
+
+Changed print buffer management to use a stack. STARTPRINT pushes to the stack
+and ENDPRINT* pops the stack. This should ensure full compatibility with ZDoom
+semantics with the benefit that function call doesn't affect the buffer, which
+enables custom printing subroutines.
+
+-------------------------------------------------------------------------------
 07/13/2012
 
 Added a check to BRANCH_RETURN to terminate if there are no call frames left.

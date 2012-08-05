@@ -44,6 +44,7 @@ class  WadDirectory;
 
 #define ACS_NUM_STACK      128
 #define ACS_NUM_CALLS      16
+#define ACS_NUM_PRINTS     4
 #define ACS_NUM_LOCALVARS  20
 #define ACS_NUM_MAPVARS    32
 #define ACS_NUM_MAPARRS    32
@@ -399,7 +400,6 @@ struct acs_call_t
    int32_t *ip;
    int32_t *locals;
    uint32_t numLocals;
-   qstring *printBuffer;
    ACSVM   *vm;
 };
 
@@ -421,7 +421,7 @@ protected:
 
 public:
    ACSThinker() : result(0), calls(NULL), callPtr(NULL), numCalls(0),
-                  printBuffer(NULL)
+                  printStack(NULL), printPtr(NULL), numPrints(0), printBuffer(NULL)
    {
    }
 
@@ -431,6 +431,9 @@ public:
 
    // Invokes bytecode execution.
    void exec() { Think(); }
+
+   void pushPrint();
+   void popPrint();
 
    // Data Members
    // thread links
@@ -450,6 +453,9 @@ public:
    acs_call_t *calls;       // call frames
    acs_call_t *callPtr;     // current call frame
    uint32_t    numCalls;    // number of call frames
+   qstring   **printStack;  // print buffers
+   qstring   **printPtr;    // current print buffer
+   uint32_t    numPrints;   // number of print buffers
    qstring    *printBuffer; // print buffer
 
    // info copied from acscript and acsvm
