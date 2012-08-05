@@ -444,6 +444,8 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
  //case  43: funcnum = ACS_FUNC_ExecuteScriptDoorName;   break;
    case  44: funcnum = ACS_FUNC_ExecuteScriptResultName; break;
    case  45: funcnum = ACS_FUNC_ExecuteScriptAlwaysName; break;
+   case  46: funcnum = ACS_FUNC_UniqueTID;               break;
+   case  47: funcnum = ACS_FUNC_IsTIDUsed;               break;
    }
 
    *codePtr++ = ACS_OP_CALLFUNC_ZD;

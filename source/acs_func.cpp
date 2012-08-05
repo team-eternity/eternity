@@ -581,6 +581,14 @@ static void ACS_funcGetThingVar(ACS_FUNCARG)
 }
 
 //
+// ACS_funcIsTIDUsed
+//
+static void ACS_funcIsTIDUsed(ACS_FUNCARG)
+{
+   *retn++ = !!P_FindMobjFromTID(args[0], NULL, NULL);
+}
+
+//
 // ACS_funcRadiusQuake
 //
 static void ACS_funcRadiusQuake(ACS_FUNCARG)
@@ -1528,6 +1536,38 @@ static void ACS_funcThingSound(ACS_FUNCARG)
       S_StartSoundNameAtVolume(mo, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 }
 
+//
+// ACS_funcUniqueTID
+//
+static void ACS_funcUniqueTID(ACS_FUNCARG)
+{
+   int32_t  tid = argc > 0 ? args[0] : 0;
+   uint32_t max = argc > 1 ? args[1] : 0;
+
+   // Start point of 0 means random. How about outside the int16_t range?
+   // We also don't trust no negative TIDs 'round these here parts.
+   if(!tid || tid < 0)
+      tid = P_RangeRandomEx(pr_script, 0x8000, 0x7FFFFFFF);
+
+   while(P_FindMobjFromTID(tid, NULL, NULL))
+   {
+      // Don't overflow the tid. Again, we don't take kindly to negative TIDs.
+      if(tid == 0x7FFFFFFF)
+         tid = 1;
+      else
+         ++tid;
+
+      // Avoid infinite loops.
+      if(!--max)
+      {
+         tid = 0;
+         break;
+      }
+   }
+
+   *retn++ = tid;
+}
+
 acs_func_t ACSfunc[ACS_FUNCMAX] =
 {
    ACS_funcNOP,
@@ -1550,6 +1590,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcGetSectorFloorZ,
    ACS_funcGetSectorLightLevel,
    ACS_funcGetThingVar,
+   ACS_funcIsTIDUsed,
    ACS_funcRandom,
    ACS_funcRadiusQuake,
    ACS_funcReplaceTextures,
@@ -1587,6 +1628,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcThingDamage,
    ACS_funcThingProjectile,
    ACS_funcThingSound,
+   ACS_funcUniqueTID,
 };
 
 // EOF

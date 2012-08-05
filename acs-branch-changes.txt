@@ -12,6 +12,8 @@ and ENDPRINT* pops the stack. This should ensure full compatibility with ZDoom
 semantics with the benefit that function call doesn't affect the buffer, which
 enables custom printing subroutines.
 
+Also added ZDoom's UniqueTID and IsTIDUsed functions.
+
 -------------------------------------------------------------------------------
 07/13/2012
 

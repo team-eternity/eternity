@@ -123,6 +123,7 @@ enum acs_funcnum_t
    ACS_FUNC_GetSectorCeilingZ,
    ACS_FUNC_GetSectorFloorZ,
    ACS_FUNC_GetSectorLightLevel,
+   ACS_FUNC_IsTIDUsed,
    ACS_FUNC_Random,
    ACS_FUNC_RadiusQuake,
    ACS_FUNC_ReplaceTextures,
@@ -160,6 +161,7 @@ enum acs_funcnum_t
    ACS_FUNC_ThingDamage,
    ACS_FUNC_ThingProjectile,
    ACS_FUNC_ThingSound,
+   ACS_FUNC_UniqueTID,
 
    ACS_FUNCMAX
 };
