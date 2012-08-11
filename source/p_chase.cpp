@@ -25,17 +25,20 @@
 //
 //--------------------------------------------------------------------------
 
+#include <algorithm>
 #include "z_zone.h"
 
 #include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "cam_sight.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "g_game.h"
 #include "info.h"
+#include "m_collection.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -426,8 +429,120 @@ CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 camera_t followcam;
 static Mobj *followtarget;
 
+//
+// VertexDistanceCompare
+//
+// Predicate functor for finding the most distant vertex.
+//
+class VertexDistanceCompare
+{
+public:
+   fixed_t targetx;
+   fixed_t targety;
+
+   bool operator ()(vertex_t *a, vertex_t *b)
+   {
+      fixed_t distA = P_AproxDistance((targetx - a->x), (targety - a->y));
+      fixed_t distB = P_AproxDistance((targetx - b->x), (targety - b->y));
+
+      return (distA > distB);
+   }
+};
+
+//
+// P_LocateFollowCam
+//
+// Find a suitable location for the followcam by finding the furthest vertex
+// in its sector from which it is visible, using CAM_CheckSight, which is
+// guaranteed to never disturb the state of the game engine.
+//
+void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
+{
+   VertexDistanceCompare predicate;
+   PODCollection<vertex_t *> vertexes;
+   sector_t *sec = target->subsector->sector;
+
+   // Get all vertexes in the target's sector within 256 units
+   for(int i = 0; i < sec->linecount; i++)
+   {
+      vertex_t *v1 = sec->lines[i]->v1;
+      vertex_t *v2 = sec->lines[i]->v2;
+
+      if(P_AproxDistance(v1->x - target->x, v1->y - target->y) <= 256*FRACUNIT)
+         vertexes.add(v1);
+      if(P_AproxDistance(v2->x - target->x, v2->y - target->y) <= 256*FRACUNIT)
+         vertexes.add(v2);
+   }
+
+   predicate.targetx = target->x;
+   predicate.targety = target->y;
+
+   // Sort by distance from the target, with the furthest vertex first.
+   std::sort(vertexes.begin(), vertexes.end(), predicate);
+
+   // Find the furthest one from which the target is visible
+   for(PODCollection<vertex_t *>::iterator vitr = vertexes.begin();
+       vitr != vertexes.end();
+       vitr++)
+   {
+      vertex_t *v = *vitr;
+
+      if(CAM_CheckSight(v->x, v->y, sec->floorheight, 41*FRACUNIT,
+                        target->x, target->y, target->z, target->height))
+      {
+
+         angle_t ang = P_PointToAngle(v->x, v->y, target->x, target->y);
+
+         // Push coordinates in slightly toward the target
+         destX = v->x + 10 * finecosine[ang >> ANGLETOFINESHIFT];
+         destY = v->y + 10 * finesine[ang >> ANGLETOFINESHIFT];
+
+         return; // We've found our location
+      }                   
+   }
+
+   // If we got here, somehow the target isn't visible... (shouldn't happen)
+   // Use the target's coordinates.
+   destX = target->x;
+   destY = target->y;
+}
+
+//
+// P_setFollowPitch
+//
+static void P_setFollowPitch()
+{
+   fixed_t zabs = abs(followtarget->z - followcam.z);
+
+   if(zabs <= 41*FRACUNIT)
+   {
+      followcam.pitch = 0;
+      return;
+   }
+
+   fixed_t fixedang;
+   double  zdist;
+   bool    camlower = (followcam.z < followtarget->z);
+   double  xydist = M_FixedToDouble(P_AproxDistance(followtarget->x - followcam.x,
+                                                    followtarget->y - followcam.y));
+
+   zdist    = M_FixedToDouble(zabs);
+   fixedang = (fixed_t)(atan2(zdist, xydist) * (ANG180 / PI));
+      
+   if(fixedang > ANGLE_1 * 32)
+      fixedang = ANGLE_1 * 32;
+
+   followcam.pitch = camlower ? -fixedang : fixedang;
+}
+
+//
+// P_SetFollowCam
+//
+// Locate the followcam at the indicated location, looking at the target.
+//
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 {
+   const double PI = 3.14159265;
    subsector_t *subsec;
 
    followcam.x = x;
@@ -440,19 +555,21 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
    subsec = R_PointInSubsector(followcam.x, followcam.y);
    followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
    followcam.heightsec = subsec->sector->heightsec;
+
+   P_setFollowPitch();
 }
 
-void P_FollowCamOff(void)
+void P_FollowCamOff()
 {
    P_SetTarget<Mobj>(&followtarget, NULL);
 }
 
-void P_FollowCamTicker(void)
+bool P_FollowCamTicker()
 {
    subsector_t *subsec;
 
    if(!followtarget)
-      return;
+      return false;
 
    followcam.angle = P_PointToAngle(followcam.x, followcam.y,
                                     followtarget->x, followtarget->y);
@@ -460,6 +577,12 @@ void P_FollowCamTicker(void)
    subsec = R_PointInSubsector(followcam.x, followcam.y);
    followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
    followcam.heightsec = subsec->sector->heightsec;
+   P_setFollowPitch();
+
+   // still visible?
+   return CAM_CheckSight(followcam.x, followcam.y, followcam.z, 41*FRACUNIT,
+                         followtarget->x, followtarget->y, followtarget->z,
+                         followtarget->height);
 }
 
 void P_Chase_AddCommands(void)

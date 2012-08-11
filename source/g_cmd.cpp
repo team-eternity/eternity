@@ -289,7 +289,14 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
 
 // 'cool' demo
 
-VARIABLE_BOOLEAN(cooldemo, NULL,            onoff);
+const char *cooldemo_modes[] =
+{
+   "off",
+   "random",
+   "follow"
+};
+
+VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
 ///////////////////////////////////////////////////

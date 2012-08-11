@@ -208,7 +208,7 @@ void *statcopy;       // for statistics driver
 
 int keylookspeed = 5;
 
-int cooldemo = false;
+int cooldemo = 0;
 int cooldemo_tics;      // number of tics until changing view
 
 void G_CoolViewPoint();
@@ -1793,14 +1793,19 @@ static void G_CameraTicker(void)
    else if((chasecam_active = (camera == &chasecam)))
       P_ChaseTicker();
    else if(camera == &followcam)
-      P_FollowCamTicker();
+   {
+      if(!P_FollowCamTicker())
+         cooldemo_tics = 0; // force refresh
+   }
 
    // cooldemo countdown   
    if(demoplayback && cooldemo)
    {
-      // force refresh on death of displayed player
-      if(players[displayplayer].health <= 0)
+      // force refresh on death (or rebirth in follow mode) of displayed player
+      if(players[displayplayer].health <= 0 ||
+         (cooldemo == 2 && camera != &followcam))
          cooldemo_tics = 0;
+
 
       if(cooldemo_tics)
          cooldemo_tics--;
@@ -3437,12 +3442,15 @@ extern camera_t intercam;
 //
 // Change to new viewpoint
 //
-void G_CoolViewPoint(void)
+void G_CoolViewPoint()
 {
    int viewtype;
    int old_displayplayer = displayplayer;
 
-   viewtype = M_Random() % 3;
+   if(cooldemo == 2) // always followcam?
+      viewtype = 2;
+   else
+      viewtype = M_Random() % 3;
    
    // pick the next player
    do
@@ -3482,14 +3490,13 @@ void G_CoolViewPoint(void)
    }
    else if(viewtype == 2) // camera view
    {
-      // sometimes check out the player's enemies
-      Mobj *spot = players[displayplayer].attacker;
+      fixed_t x, y;
 
-      // no enemy? check out the player's current location then.
-      if(!spot || spot->health <= 0)
-         spot = players[displayplayer].mo;
+      // check out the player's enemies
+      Mobj *spot = players[displayplayer].mo;
 
-      P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
+      P_LocateFollowCam(spot, x, y);
+      P_SetFollowCam(x, y, spot);
       
       camera = &followcam;
    }
