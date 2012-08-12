@@ -650,6 +650,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\d_files.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\d_gi.cpp"
 						>
 						<FileConfiguration
@@ -811,6 +815,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\d_event.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\d_files.h"
 						>
 					</File>
 					<File
@@ -3692,28 +3700,6 @@
 					</File>
 					<File
 						RelativePath="..\source\sdl\i_input.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\source\Win32\i_iwad.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"

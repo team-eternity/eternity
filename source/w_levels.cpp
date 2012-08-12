@@ -28,6 +28,7 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
@@ -49,9 +50,6 @@
 //
 
 extern int defaultskill;
-
-void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               int privatedir);
 
 void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir);
 

@@ -38,6 +38,7 @@
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
 
 #include "c_io.h"
+#include "d_files.h"
 #include "m_argv.h"
 #include "m_collection.h"
 #include "m_hash.h"
@@ -95,8 +96,6 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 //
 // LUMP BASED ROUTINES.
 //
-
-void D_NewWadLumps(FILE *handle);
 
 //
 // W_addInfoPtr

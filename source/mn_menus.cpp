@@ -29,12 +29,12 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -48,6 +48,7 @@
 #include "g_game.h"
 #include "hu_over.h"
 #include "hu_stuff.h" // haleyjd
+#include "i_system.h"
 #include "i_video.h"
 #include "m_misc.h"
 #include "m_random.h"
