@@ -1806,7 +1806,6 @@ static void G_CameraTicker(void)
          (cooldemo == 2 && camera != &followcam))
          cooldemo_tics = 0;
 
-
       if(cooldemo_tics)
          cooldemo_tics--;
       else
@@ -3488,11 +3487,9 @@ void G_CoolViewPoint()
       chasecam_active = true;
       P_ChaseStart();
    }
-   else if(viewtype == 2) // camera view
+   else if(viewtype == 2) // follow camera view
    {
       fixed_t x, y;
-
-      // check out the player's enemies
       Mobj *spot = players[displayplayer].mo;
 
       P_LocateFollowCam(spot, x, y);
@@ -3501,7 +3498,7 @@ void G_CoolViewPoint()
       camera = &followcam;
    }
   
-   // pic a random number of tics until changing the viewpoint
+   // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
 
