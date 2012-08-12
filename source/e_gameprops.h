@@ -1,5 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
+// Emacs style mode select -*- C++ -*-
+//----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
 //
@@ -17,20 +17,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Line of sight checking for cameras
+// EDF Gamemode Properties
 //
-//-----------------------------------------------------------------------------
+// Allows editing of select properties from the GameModeInfo structure.
+//
+// James Haley
+//
+//----------------------------------------------------------------------------
 
-#ifndef CAM_SIGHT_H__
-#define CAM_SIGHT_H__
+#ifndef E_GAMEPROPS_H__
+#define E_GAMEPROPS_H__
 
-#include "m_fixed.h"
+// EDF-Only Definitions
+#ifdef NEED_EDF_DEFINITIONS
 
-bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
-                    fixed_t tx, fixed_t ty, fixed_t tz, fixed_t theight);
+// Game properties section name
+#define EDF_SEC_GAMEPROPS "gameproperties"
+
+extern cfg_opt_t edf_game_opts[];
+
+void E_ProcessGameProperties(cfg_t *cfg);
+
+#endif
 
 #endif
 

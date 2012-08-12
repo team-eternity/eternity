@@ -30,7 +30,6 @@
 #include "z_zone.h"
 #include "i_system.h"
 
-#include "c_batch.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -67,32 +66,6 @@ extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 extern int automlook;
 extern int invert_mouse;
 extern int keylookspeed;
-
-////////////////////////////////////////////////////////////////////////
-//
-// Command batches
-//
-
-CONSOLE_COMMAND(batch, 0)
-{
-   if(Console.argc == 1)
-   {
-      const char *batch_cmds = C_GetCommandBatch(Console.argv[0]->constPtr());
-
-      if(!batch_cmds)
-         doom_printf("No such batch %s.", Console.argv[0]->constPtr());
-      else
-         doom_printf("%s -> %s", Console.argv[0]->constPtr(), batch_cmds);
-   }
-   else if(Console.argc == 2)
-   {
-      C_AddCommandBatch(
-         Console.argv[0]->constPtr(), Console.argv[1]->constPtr()
-      );
-   }
-   else
-      doom_printf("usage: batch \"cmd1;cmd2;cmdN\"");
-}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -316,7 +289,14 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
 
 // 'cool' demo
 
-VARIABLE_BOOLEAN(cooldemo, NULL,            onoff);
+const char *cooldemo_modes[] =
+{
+   "off",
+   "random",
+   "follow"
+};
+
+VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
 ///////////////////////////////////////////////////
@@ -976,7 +956,6 @@ void G_AddCommands(void)
    C_AddCommand(autorun);
    C_AddCommand(runiswalk);
    C_AddCommand(m_resetcomments);
-   C_AddCommand(batch);
 
    // [CG] 01/29/2012: Spectate previous, next and self
    C_AddCommand(spectate_prev);

@@ -125,11 +125,16 @@ void SaveArchive::ArchiveLString(char *&str, size_t &len)
 {
    if(savefile)
    {
-      if(!len)
-         len = strlen(str) + 1;
+      if(str)
+      {
+         if(!len)
+            len = strlen(str) + 1;
 
-      savefile->WriteUint32((uint32_t)len); // FIXME: size_t
-      savefile->Write(str, len);
+         savefile->WriteUint32((uint32_t)len); // FIXME: size_t
+         savefile->Write(str, len);
+      }
+      else
+         savefile->WriteUint32(0);
    }
    else
    {

@@ -33,7 +33,6 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
-#include "c_batch.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -175,6 +174,7 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
+bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -208,7 +208,7 @@ void *statcopy;       // for statistics driver
 
 int keylookspeed = 5;
 
-int cooldemo = false;
+int cooldemo = 0;
 int cooldemo_tics;      // number of tics until changing view
 
 void G_CoolViewPoint();
@@ -669,6 +669,7 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
+   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
@@ -714,6 +715,9 @@ bool G_Responder(event_t* ev)
       return true;
    }
 
+   if(G_KeyResponder(ev, kac_cmd))
+      return true;
+
    // any other key pops up menu if in demos
    //
    // killough 8/2/98: enable automap in -timedemo demos
@@ -732,10 +736,6 @@ bool G_Responder(event_t* ev)
             S_ResumeSound();
          return true;
       }
-
-      // [CG] 01/29/12: Respond to command events.
-      if(G_KeyResponder(ev, kac_command))
-         return true;
 
       // killough 10/98:
       // Don't pop up menu, if paused in middle
@@ -778,13 +778,21 @@ bool G_Responder(event_t* ev)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
+      {
          C_RunTextCmd("pause");
+      }
       else
-         G_KeyResponder(ev, kac_player | kac_command); // haleyjd
+      {
+         if(ev->data1 < NUMKEYS)
+            gamekeydown[ev->data1] = true;         
+         G_KeyResponder(ev, kac_game); // haleyjd
+      }
       return true;    // eat key down events
       
    case ev_keyup:
-      G_KeyResponder(ev, kac_player | kac_command);   // haleyjd
+      if(ev->data1 < NUMKEYS)
+         gamekeydown[ev->data1] = false;
+      G_KeyResponder(ev, kac_game);   // haleyjd
       return false;   // always let key up events filter down
       
    case ev_mouse:
@@ -1785,13 +1793,17 @@ static void G_CameraTicker(void)
    else if((chasecam_active = (camera == &chasecam)))
       P_ChaseTicker();
    else if(camera == &followcam)
-      P_FollowCamTicker();
+   {
+      if(!P_FollowCamTicker())
+         cooldemo_tics = 0; // force refresh
+   }
 
    // cooldemo countdown   
    if(demoplayback && cooldemo)
    {
-      // force refresh on death of displayed player
-      if(players[displayplayer].health <= 0)
+      // force refresh on death (or rebirth in follow mode) of displayed player
+      if(players[displayplayer].health <= 0 ||
+         (cooldemo == 2 && camera != &followcam))
          cooldemo_tics = 0;
 
       if(cooldemo_tics)
@@ -1978,8 +1990,6 @@ void G_Ticker(void)
    
    // call other tickers
    C_NetTicker();        // sf: console network commands
-   G_InputActionTicker();  // [CG] Tick input actions.
-   C_CommandBatchTicker(); // [CG] Tick command batches.
    if(inwipe)
       Wipe_Ticker();
 
@@ -3431,12 +3441,15 @@ extern camera_t intercam;
 //
 // Change to new viewpoint
 //
-void G_CoolViewPoint(void)
+void G_CoolViewPoint()
 {
    int viewtype;
    int old_displayplayer = displayplayer;
 
-   viewtype = M_Random() % 3;
+   if(cooldemo == 2) // always followcam?
+      viewtype = 2;
+   else
+      viewtype = M_Random() % 3;
    
    // pick the next player
    do
@@ -3474,21 +3487,18 @@ void G_CoolViewPoint(void)
       chasecam_active = true;
       P_ChaseStart();
    }
-   else if(viewtype == 2) // camera view
+   else if(viewtype == 2) // follow camera view
    {
-      // sometimes check out the player's enemies
-      Mobj *spot = players[displayplayer].attacker;
+      fixed_t x, y;
+      Mobj *spot = players[displayplayer].mo;
 
-      // no enemy? check out the player's current location then.
-      if(!spot || spot->health <= 0)
-         spot = players[displayplayer].mo;
-
-      P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
+      P_LocateFollowCam(spot, x, y);
+      P_SetFollowCam(x, y, spot);
       
       camera = &followcam;
    }
   
-   // pic a random number of tics until changing the viewpoint
+   // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
 

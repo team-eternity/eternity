@@ -353,10 +353,10 @@ static void MN_FileDrawer(void)
 
    // draw color rect -- must manually scale coordinates
    // SoM: w = x2 - x1 + 1
-   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex,
-                video.x1lookup[bleft], video.y1lookup[btop], 
-                video.x2lookup[bleft + w - 1] - video.x1lookup[bleft] + 1,
-                video.y2lookup[btop + h - 1] - video.y1lookup[btop] + 1);
+   V_ColorBlock(&subscreen43, GameModeInfo->blackIndex,
+                subscreen43.x1lookup[bleft], subscreen43.y1lookup[btop], 
+                subscreen43.x2lookup[bleft + w - 1] - subscreen43.x1lookup[bleft] + 1,
+                subscreen43.y2lookup[btop + h - 1] - subscreen43.y1lookup[btop] + 1);
 
    // draw the dialog title
    if(help_description)

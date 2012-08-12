@@ -38,6 +38,8 @@
 
 #include "z_zone.h"
 
+class SaveArchive;
+
 class qstring : public ZoneObject
 {
 private:
@@ -196,6 +198,9 @@ public:
    qstring &operator += (const qstring &other);
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
+
+   // Archiving
+   void archive(SaveArchive &arc);
 };
 
 #endif

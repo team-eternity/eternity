@@ -88,6 +88,7 @@
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_stuff.h"
+#include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
@@ -305,6 +306,45 @@ static void D_showMemStats(void)
 #endif
 
 //
+// D_drawWings
+//
+// haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
+// status bar while it is visible. This is necessary when drawing patches at
+// 4:3 aspect ratio over widescreen video modes.
+//
+static void D_drawWings()
+{
+   int wingwidth;
+
+   if((vbscreen.width <= 640 && vbscreen.height <= 400) ||
+      static_cast<float>(vbscreen.width) / vbscreen.height <= 4.0f/3.0f)
+      return;
+
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+
+   if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
+   {
+      if(scaledviewheight != 200 || automapactive)
+      {
+         unsigned int bottom   = SCREENHEIGHT - 1;
+         unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
+         
+         int ycoord      = vbscreen.y1lookup[bottom - statbarh];
+         int blockheight = vbscreen.y2lookup[bottom] - ycoord + 1;
+
+         R_VideoEraseScaled(0, ycoord, wingwidth, blockheight);
+         R_VideoEraseScaled(vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
+      }
+   }
+   else
+   {
+      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+                   0, wingwidth, vbscreen.height);
+   }
+}
+
+//
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
@@ -324,6 +364,10 @@ void D_Display(void)
    if(gamestate != wipegamestate &&
       !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
       Wipe_StartScreen();
+
+   // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
+   // created by drawing patches 4:3 in higher aspect ratios.
+   D_drawWings();
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
@@ -383,7 +427,7 @@ void D_Display(void)
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
          
-         V_DrawPatch(x, y, &vbscreen, patch);
+         V_DrawPatch(x, y, &subscreen43, patch);
       }
 
       if(inwipe)
@@ -491,11 +535,11 @@ void D_PageDrawer(void)
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
       // haleyjd 08/15/02: handle Heretic pages
-      V_DrawFSBackground(&vbscreen, l);
+      V_DrawFSBackground(&subscreen43, l);
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
-         V_DrawPatch(4, 160, &vbscreen, 
+         V_DrawPatch(4, 160, &subscreen43, 
                      PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
       }
    }
@@ -762,32 +806,6 @@ char *D_DoomExeDir(void)
    }
 
    return base;
-}
-
-//
-// D_DoomExeName
-//
-// killough 10/98: return the name of the program the exe was invoked as
-//
-char *D_DoomExeName(void)
-{
-   static char *name;    // cache multiple requests
-
-   if(!name)
-   {
-      char *p = myargv[0] + strlen(myargv[0]);
-      int i = 0;
-
-      while(p > myargv[0] && p[-1] != '/' && p[-1] != '\\' && p[-1] != ':')
-         p--;
-      while(p[i] && p[i] != '.')
-         i++;
-
-      name = ecalloc(char *, 1, i + 1);
-
-      strncpy(name, p, i);
-   }
-   return name;
 }
 
 //=============================================================================
@@ -2594,20 +2612,18 @@ static void D_InitPaths(void)
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
    {
       // hack for DOOM modes: optional use of /doom config
-      size_t len = strlen(userpath) + strlen("/doom") +
-                   strlen(D_DoomExeName()) + 8;
+      size_t len = strlen(userpath) + strlen("/doom/eternity.cfg");
       basedefault = emalloc(char *, len);
 
-      psnprintf(basedefault, len, "%s/doom/%s.cfg",
-                userpath, D_DoomExeName());
+      psnprintf(basedefault, len, "%s/doom/eternity.cfg", userpath);
    }
    else
    {
-      size_t len = strlen(usergamepath) + strlen(D_DoomExeName()) + 8;
+      size_t len = strlen(usergamepath) + strlen("/eternity.cfg");
 
       basedefault = emalloc(char *, len);
 
-      psnprintf(basedefault, len, "%s/%s.cfg", usergamepath, D_DoomExeName());
+      psnprintf(basedefault, len, "%s/eternity.cfg", usergamepath);
    }
 
    // haleyjd 11/23/06: set basesavegame here, and use usergamepath
@@ -3551,9 +3567,7 @@ static void D_DoomInit(void)
 
    // killough 10/98: set default savename based on executable's name
    // haleyjd 08/28/03: must be done BEFORE bex hash chain init!
-   char *tmpsavegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
-   psnprintf(tmpsavegamename, 16, "%.4ssav", D_DoomExeName());
-   savegamename = tmpsavegamename;
+   savegamename = estrdup("etersav");
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
@@ -3603,7 +3617,7 @@ static void D_DoomInit(void)
    if(devparm)
    {
       printf(D_DEVSTR);
-      v_ticker = true;  // turn on the fps ticker
+      v_ticker = 1;  // turn on the fps ticker
    }
 
    // haleyjd 03/10/03: Load GFS Wads

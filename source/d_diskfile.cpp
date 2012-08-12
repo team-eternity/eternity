@@ -97,8 +97,8 @@ diskfile_t *D_OpenDiskFile(const char *filename)
    uint32_t temp;
 
    // allocate a diskfile structure and internal fields
-   df  = ecalloc(diskfile_t *,    1, sizeof(diskfile_t));
-   dfi = ecalloc(diskfileint_t *, 1, sizeof(diskfileint_t));
+   df  = estructalloc(diskfile_t,    1);
+   dfi = estructalloc(diskfileint_t, 1);
 
    df->opaque = dfi;
 
@@ -114,7 +114,7 @@ diskfile_t *D_OpenDiskFile(const char *filename)
    dfi->numfiles = SwapBigULong(temp);
 
    // allocate directory
-   dfi->entries = ecalloc(diskentry_t *, dfi->numfiles, sizeof(diskentry_t));
+   dfi->entries = estructalloc(diskentry_t, dfi->numfiles);
 
    // read directory entries
    if(!D_readDiskFileDirectory(dfi))
@@ -134,7 +134,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 {
    size_t i;
    diskwad_t wad;
-   diskfileint_t *dfi = (diskfileint_t *)(df->opaque);
+   diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
    char *name = estrdup(filename);
 
    memset(&wad, 0, sizeof(wad));
@@ -173,7 +173,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 {
    size_t i, len;
-   diskfileint_t *dfi = (diskfileint_t *)(df->opaque);
+   diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
    diskentry_t *entry = NULL;
    void *buffer;
 
@@ -218,7 +218,7 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 //
 void D_CloseDiskFile(diskfile_t *df, bool closefile)
 {
-   diskfileint_t *dfi = (diskfileint_t *)(df->opaque);
+   diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
 
    if(dfi)
    {

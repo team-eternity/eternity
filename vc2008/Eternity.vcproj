@@ -225,6 +225,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\source\acs_acse.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\source\acs_func.cpp"
 					>
 				</File>
@@ -1078,6 +1082,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_gameprops.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\e_hash.cpp"
 						>
 						<FileConfiguration
@@ -1309,6 +1317,10 @@
 					</File>
 					<File
 						RelativePath="..\source\e_fonts.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_gameprops.h"
 						>
 					</File>
 					<File

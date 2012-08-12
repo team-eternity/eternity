@@ -432,7 +432,7 @@ static int I_PCSSoundID(int handle)
    return handle;
 }
 
-static void I_PCSStopSound(int handle)
+static void I_PCSStopSound(int handle, int id)
 {
    if(!pcs_initialised)
       return;

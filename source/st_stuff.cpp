@@ -335,13 +335,13 @@ static void ST_refreshBackground(void)
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, ST_FY, &vbscreen, sbar);
+      V_DrawPatch(ST_X, ST_FY, &subscreen43, sbar);
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
       if(GameType != gt_single)
       {
-         V_DrawPatchTranslated(ST_FX, ST_FY, &vbscreen, faceback,
+         V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
                NULL, 
@@ -898,17 +898,17 @@ static void ST_DoomFSDrawer(void)
    // draw graphics
 
    // health
-   V_DrawPatchTL(ST_FSGFX_X, 152, &vbscreen, fs_health, NULL, ST_ALPHA);
+   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
    
    // armor
    if(plyr->armortype == 2)
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &vbscreen, fs_armorb, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
    else
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &vbscreen, fs_armorg, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
 
    // ammo
    if((ammo = weaponinfo[w_ready.data].ammo) < NUMAMMO)
-      V_DrawPatchTL(256, ST_FS_BY, &vbscreen, fs_ammo[ammo], NULL, ST_ALPHA);
+      V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[ammo], NULL, ST_ALPHA);
 
 
    // draw common number widgets (always refresh since no background)

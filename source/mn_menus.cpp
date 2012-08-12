@@ -141,7 +141,7 @@ void MN_InitMenus(void)
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
-   V_DrawPatch(94, 2, &vbscreen, 
+   V_DrawPatch(94, 2, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_DOOM", PU_CACHE));
 }
 
@@ -316,7 +316,7 @@ CONSOLE_COMMAND(mn_quit, 0)
 
 static void MN_EpisodeDrawer()
 {
-   V_DrawPatch(54, 38, &vbscreen, 
+   V_DrawPatch(54, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
 }
 
@@ -383,9 +383,9 @@ static void MN_openNewGameMenu(void)
 //
 static void MN_DrawNewGame()
 {
-   V_DrawPatch(96, 14, &vbscreen, 
+   V_DrawPatch(96, 14, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_NEWG", PU_CACHE));
-   V_DrawPatch(54, 38, &vbscreen, 
+   V_DrawPatch(54, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_SKILL", PU_CACHE));
 }
 
@@ -973,14 +973,14 @@ static void MN_DMFlagsDrawer(void)
          values[!(dmflags & (1<<(i-2)))],
          (i == menu_dmflags.selected) ? 
             GameModeInfo->selectColor : GameModeInfo->variableColor,
-         menuitem->x + 20, menuitem->y
+         menuitem->x + 20, menuitem->y, &subscreen43
         );
    }
 
    menuitem = &(menu_dmflags.menuitems[9]);
    // draw dmflags value
    psnprintf(buf, sizeof(buf), FC_GOLD "%lu", dmflags);
-   V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y);
+   V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y, &subscreen43);
 }
 
 static void toggle_dm_flag(unsigned int flag)
@@ -1130,7 +1130,7 @@ void MN_PlayerDrawer(void)
       (
        SPRITEBOX_X + 8 + loff,
        SPRITEBOX_Y + 8 + toff,
-       &vbscreen,
+       &subscreen43,
        patch,
        players[consoleplayer].colormap ?
           translationtables[(players[consoleplayer].colormap - 1)] :
@@ -1284,16 +1284,16 @@ void MN_DrawLoadBox(int x, int y)
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
    patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
-   V_DrawPatch(x, y, &vbscreen, patch_left);
+   V_DrawPatch(x, y, &subscreen43, patch_left);
    x += patch_left->width;
    
    for(i=0; i<24; i++)
    {
-      V_DrawPatch(x, y, &vbscreen, patch_mid);
+      V_DrawPatch(x, y, &subscreen43, patch_mid);
       x += patch_mid->width;
    }
    
-   V_DrawPatch(x, y, &vbscreen, patch_right);
+   V_DrawPatch(x, y, &subscreen43, patch_right);
 
    // haleyjd: make purgable
    Z_ChangeTag(patch_left,  PU_CACHE);
@@ -2002,7 +2002,7 @@ void MN_VideoModeDrawer(void)
    // approximately center box on "translucency" item in menu
    y = menu_video.menuitems[13].y - 5;
    V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &vbscreen, patch, NULL, FTRANLEVEL);
+   V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
 }
 
 CONSOLE_COMMAND(mn_video, 0)
@@ -2526,7 +2526,7 @@ static void MN_HUDPg2Drawer(void)
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 
-                    &vbscreen, patch, colrngs[CR_RED], FTRANLEVEL);
+                    &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 
@@ -3675,13 +3675,13 @@ static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 
 static void MN_OldOptionsDrawer(void)
 {
-   V_DrawPatch(108, 15, &vbscreen,
+   V_DrawPatch(108, 15, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_OPTTTL", PU_CACHE));
 
-   V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
+   V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, msgNames[showMessages], PU_CACHE));
 
-   V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
+   V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, detailNames[0], PU_CACHE));
 }
 
@@ -3721,7 +3721,7 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatch(60, 38, &vbscreen, 
+   V_DrawPatch(60, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_SVOL", PU_CACHE));
 }
 
