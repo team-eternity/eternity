@@ -1306,7 +1306,7 @@ static void HU_CoordTick(hu_widget_t *widget)
    }
    plyr = &players[displayplayer];
 
-   AM_Coordinates(plyr->mo, &x, &y, &z);
+   AM_Coordinates(plyr->mo, x, y, z);
 
    if(tw == &coordx_widget)
    {

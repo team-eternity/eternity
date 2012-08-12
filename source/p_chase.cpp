@@ -542,7 +542,6 @@ static void P_setFollowPitch()
 //
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 {
-   const double PI = 3.14159265;
    subsector_t *subsec;
 
    followcam.x = x;
