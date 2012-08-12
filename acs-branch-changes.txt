@@ -1,7 +1,7 @@
 ===============================================================================
 This log contains a summary of changes performed on trunk and acs-branch to add
 more features to Eternity's ACS engine, including compatibility with ZDoom's
-extensions. acs-branch spans SVN revisions from 2080 to ????. Related trunk
+extensions. acs-branch spans SVN revisions from 2080 to 2129. Related trunk
 activity spans from 2045 to 2074.
 ===============================================================================
 -------------------------------------------------------------------------------
