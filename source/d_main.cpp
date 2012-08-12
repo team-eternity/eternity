@@ -305,6 +305,13 @@ static void D_showMemStats(void)
 }
 #endif
 
+//
+// D_drawWings
+//
+// haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
+// status bar while it is visible. This is necessary when drawing patches at
+// 4:3 aspect ratio over widescreen video modes.
+//
 static void D_drawWings()
 {
    int wingwidth;
@@ -420,7 +427,7 @@ void D_Display(void)
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
          
-         V_DrawPatch(x, y, &vbscreen, patch);
+         V_DrawPatch(x, y, &subscreen43, patch);
       }
 
       if(inwipe)
@@ -799,32 +806,6 @@ char *D_DoomExeDir(void)
    }
 
    return base;
-}
-
-//
-// D_DoomExeName
-//
-// killough 10/98: return the name of the program the exe was invoked as
-//
-char *D_DoomExeName(void)
-{
-   static char *name;    // cache multiple requests
-
-   if(!name)
-   {
-      char *p = myargv[0] + strlen(myargv[0]);
-      int i = 0;
-
-      while(p > myargv[0] && p[-1] != '/' && p[-1] != '\\' && p[-1] != ':')
-         p--;
-      while(p[i] && p[i] != '.')
-         i++;
-
-      name = ecalloc(char *, 1, i + 1);
-
-      strncpy(name, p, i);
-   }
-   return name;
 }
 
 //=============================================================================
@@ -2631,20 +2612,18 @@ static void D_InitPaths(void)
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
    {
       // hack for DOOM modes: optional use of /doom config
-      size_t len = strlen(userpath) + strlen("/doom") +
-                   strlen(D_DoomExeName()) + 8;
+      size_t len = strlen(userpath) + strlen("/doom/eternity.cfg");
       basedefault = emalloc(char *, len);
 
-      psnprintf(basedefault, len, "%s/doom/%s.cfg",
-                userpath, D_DoomExeName());
+      psnprintf(basedefault, len, "%s/doom/eternity.cfg", userpath);
    }
    else
    {
-      size_t len = strlen(usergamepath) + strlen(D_DoomExeName()) + 8;
+      size_t len = strlen(usergamepath) + strlen("/eternity.cfg");
 
       basedefault = emalloc(char *, len);
 
-      psnprintf(basedefault, len, "%s/%s.cfg", usergamepath, D_DoomExeName());
+      psnprintf(basedefault, len, "%s/eternity.cfg", usergamepath);
    }
 
    // haleyjd 11/23/06: set basesavegame here, and use usergamepath
@@ -3588,9 +3567,7 @@ static void D_DoomInit(void)
 
    // killough 10/98: set default savename based on executable's name
    // haleyjd 08/28/03: must be done BEFORE bex hash chain init!
-   char *tmpsavegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
-   psnprintf(tmpsavegamename, 16, "%.4ssav", D_DoomExeName());
-   savegamename = tmpsavegamename;
+   savegamename = estrdup("etersav");
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
@@ -3640,7 +3617,7 @@ static void D_DoomInit(void)
    if(devparm)
    {
       printf(D_DEVSTR);
-      v_ticker = true;  // turn on the fps ticker
+      v_ticker = 1;  // turn on the fps ticker
    }
 
    // haleyjd 03/10/03: Load GFS Wads
