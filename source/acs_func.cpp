@@ -908,7 +908,7 @@ static void ACS_funcSetThingMomentum(ACS_FUNCARG)
    fixed_t momx = args[1];
    fixed_t momy = args[2];
    fixed_t momz = args[3];
-   bool    add  = args[4];
+   bool    add  = args[4] ? true : false;
    Mobj   *mo   = NULL;
 
    while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
@@ -937,7 +937,7 @@ static void ACS_funcSetThingPosition(ACS_FUNCARG)
    fixed_t x   = args[1];
    fixed_t y   = args[2];
    fixed_t z   = args[3];
-   bool    fog = args[4];
+   bool    fog = args[4] ? true : false;
    Mobj   *mo, *fogmo;
 
    if((mo = P_FindMobjFromTID(tid, NULL, thread->trigger)))
@@ -1253,7 +1253,7 @@ static void ACS_funcSpawnProjectile(ACS_FUNCARG)
    angle_t    angle   = args[2] << 24;
    int32_t    speed   = args[3] * 8;
    int32_t    vspeed  = args[4] * 8;
-   bool       gravity = args[5];
+   bool       gravity = args[5] ? true : false;
    int32_t    tid     = args[6];
    Mobj      *spot    = NULL;
    fixed_t    momx    = speed * finecosine[angle >> ANGLETOFINESHIFT];
@@ -1505,7 +1505,7 @@ static void ACS_funcThingProjectile(ACS_FUNCARG)
    angle_t angle   = args[2] << 24;
    int32_t speed   = args[3] * 8;
    int32_t vspeed  = args[4] * 8;
-   bool    gravity = args[5];
+   bool    gravity = args[5] ? true : false;
    int32_t tid     = args[6];
    Mobj   *spot    = NULL;
    fixed_t momx    = speed * finecosine[angle >> ANGLETOFINESHIFT];
