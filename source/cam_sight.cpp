@@ -547,9 +547,9 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
       newCam.cy          = cy;
       newCam.tx          = tx;
       newCam.ty          = ty;
-      newCam.sightzstart = cz;
-      newCam.topslope    = (tz + theight) - newCam.sightzstart;
+      newCam.sightzstart = cz + cheight - (cheight >> 2);
       newCam.bottomslope = tz - newCam.sightzstart;
+      newCam.topslope    = newCam.bottomslope + theight;
       newCam.validlines  = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       newCam.validpolys  = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
 
