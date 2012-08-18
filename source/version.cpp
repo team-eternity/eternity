@@ -41,7 +41,7 @@ const char version_name[] = "Midgard";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.40.22 \"Midgard\"";
+const char ee_wmCaption[] = "Eternity Engine v3.40.24 \"Midgard\"";
 #endif
             
 // haleyjd: Eternity release history

@@ -366,58 +366,6 @@
 					RelativePath="..\Source\a_small.h"
 					>
 				</File>
-				<File
-					RelativePath="..\Source\amx.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\amx.h"
-					>
-				</File>
-				<File
-					RelativePath="..\Source\amxcore.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\osdefs.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="C_"
@@ -795,10 +743,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\d_dehtbl.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Source\d_dialog.h"
 						>
 					</File>
 					<File

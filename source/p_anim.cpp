@@ -186,7 +186,7 @@ void P_InitLightning(void)
    }
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 static cell AMX_NATIVE_CALL sm_lightning(AMX *amx, cell *params)
 {
    if(gamestate != GS_LEVEL)

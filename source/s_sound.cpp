@@ -1545,7 +1545,7 @@ void S_AddCommands(void)
   C_AddCommand(s_hidefmusic);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small native functions
 //

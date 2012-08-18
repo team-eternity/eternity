@@ -971,7 +971,7 @@ void C_InstaPopup(void)
       Console.current_target = Console.current_height = 0;
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small native functions
 //

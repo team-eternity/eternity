@@ -2913,7 +2913,7 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
    }
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small natives
 //

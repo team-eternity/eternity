@@ -1993,7 +1993,7 @@ void G_Ticker(void)
    if(inwipe)
       Wipe_Ticker();
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // haleyjd 03/15/03: execute scheduled Small callbacks
    SM_ExecuteCallbacks();
 #endif
@@ -3502,7 +3502,7 @@ void G_CoolViewPoint()
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 
 //
 // Small native functions
