@@ -50,6 +50,7 @@
 #include "d_event.h"
 #include "d_files.h"
 #include "d_gi.h"
+#include "d_io.h"
 #include "d_iwad.h"
 #include "d_net.h"
 #include "doomstat.h"
