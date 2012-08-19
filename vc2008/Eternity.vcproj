@@ -52,7 +52,7 @@
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_AEONJS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib ../js/vc2008/Release/js32.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib ../js/vc2008/Debug/js32.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -5146,6 +5146,78 @@
 					RelativePath="..\source\cam_sight.h"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="Aeon"
+				>
+				<Filter
+					Name="Aeon Headers"
+					>
+					<File
+						RelativePath="..\source\ae_engine.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ae_jscfgw32.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ae_jsengine.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Aeon Source"
+					>
+					<File
+						RelativePath="..\source\ae_engine.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ae_jsengine.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="js"
+					>
+					<File
+						RelativePath="..\js\src\jsapi.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jscompat.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jsconfig.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jscpucfg.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jslong.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jsotypes.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jspubtd.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jstypes.h"
+						>
+					</File>
+					<File
+						RelativePath="..\js\src\jsutil.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
