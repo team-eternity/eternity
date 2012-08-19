@@ -28,6 +28,8 @@
 #ifndef AE_ENGINE_H__
 #define AE_ENGINE_H__
 
+#include "z_zone.h"
+
 class qstring;
 
 class AeonEngine
@@ -41,21 +43,20 @@ public:
    virtual bool evaluateString(const char *name, const char *script) = 0;
    virtual bool evaluateFile(const char *filename) = 0;
 
-   class CompiledScript
+   class CompiledScript : public ZoneObject
    {
    public:
       virtual ~CompiledScript() {}
+      virtual bool execute() = 0;
+      virtual bool executeWithResult(qstring &qstr) = 0;
+      virtual bool executeWithResult(int &i) = 0;
+      virtual bool executeWithResult(unsigned int &ui) = 0;
+      virtual bool executeWithResult(double &d) = 0;
+      virtual bool executeWithResult(bool &b) = 0;
    };
 
    virtual CompiledScript *compileString(const char *name, const char *script) = 0;
    virtual CompiledScript *compileFile(const char *filename) = 0;
-
-   virtual bool executeCompiledScript(CompiledScript *cs) = 0;
-   virtual bool executeCompiledScriptWithResult(CompiledScript *cs, qstring &qstr) = 0;
-   virtual bool executeCompiledScriptWithResult(CompiledScript *cs, int &i) = 0;
-   virtual bool executeCompiledScriptWithResult(CompiledScript *cs, unsigned int &ui) = 0;
-   virtual bool executeCompiledScriptWithResult(CompiledScript *cs, double &d) = 0;
-   virtual bool executeCompiledScriptWithResult(CompiledScript *cs, bool &b) = 0;
 
    class Value
    {

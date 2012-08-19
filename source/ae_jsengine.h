@@ -52,18 +52,18 @@ public:
       friend class AeonJSEngine;
       JSCompiledScriptPimpl *pImpl;
    public:
+      CompiledScript();
       ~CompiledScript();
+      bool execute();
+      bool executeWithResult(qstring &qstr);
+      bool executeWithResult(int &i);
+      bool executeWithResult(unsigned int &ui);
+      bool executeWithResult(double &d);
+      bool executeWithResult(bool &b);
    };
 
    CompiledScript *compileString(const char *name, const char *script);
    CompiledScript *compileFile(const char *filename);
-
-   bool executeCompiledScript(CompiledScript *cs);
-   bool executeCompiledScriptWithResult(CompiledScript *cs, qstring &qstr);
-   bool executeCompiledScriptWithResult(CompiledScript *cs, int &i);
-   bool executeCompiledScriptWithResult(CompiledScript *cs, unsigned int &ui);
-   bool executeCompiledScriptWithResult(CompiledScript *cs, double &d);
-   bool executeCompiledScriptWithResult(CompiledScript *cs, bool &b);
 
    class Value : public AeonEngine::Value
    {
