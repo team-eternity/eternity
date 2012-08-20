@@ -36,6 +36,8 @@
 // JSAPI Configuration
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 #include "ae_jscfgw32.h"
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+#include "ae_jscfglinux.h"
 #endif
 
 // JSAPI

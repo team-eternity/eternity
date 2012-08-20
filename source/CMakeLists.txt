@@ -30,8 +30,9 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
         ADD_DEFINITIONS (-D_DEBUG -DRANGECHECK -DINSTRUMENTED -DZONEIDCHECK)
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
-ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
+ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE)
+ADD_DEFINITIONS (-DHAVE_SPCLIB)
+ADD_DEFINITIONS (-DEE_FEATURE_AEONJS)
 IF (GL_LIBRARY)
         ADD_DEFINITIONS (-DEE_FEATURE_OPENGL)
 ENDIF (GL_LIBRARY)
@@ -40,18 +41,6 @@ ENDIF (GL_LIBRARY)
 IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         ADD_DEFINITIONS (-DLINUX)
 ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-
-IF (WIN32)
-        ADD_DEFINITIONS (-DEE_CDROM_SUPPORT)
-ENDIF (WIN32)
-
-## Small does not work on 64bit systems. The most reliable way
-## to determine if we are building on a 64bit system is to
-## check the size of a pointer - it is 8 bytes under
-## 64bit *NIX and 64bit Windows.
-IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
-        ADD_DEFINITIONS (-DEE_NO_SMALL_SUPPORT)
-ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 IF (WIN32)
         IF (MSVC)
@@ -90,6 +79,8 @@ IF (NOT WIN32)
         SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
 ENDIF (NOT WIN32)
 
+include_directories("${CMAKE_BINARY_DIR}")
+
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
@@ -99,7 +90,7 @@ ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_
 IF (GL_LIBRARY)
         TARGET_LINK_LIBRARIES (eternity ${GL_LIBRARY})
 ENDIF (GL_LIBRARY)
-TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc js)
 INSTALL (TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
