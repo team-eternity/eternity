@@ -237,6 +237,8 @@ CONSOLE_COMMAND(mn_newgame, 0)
    
    if(GameModeInfo->id == commercial)
    {
+// haleyjd 08/19/2012: startmap is currently deprecated, may return later
+#ifdef EE_STARTMAP_PROMPT
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
       bool mapPresent = true;
@@ -249,7 +251,6 @@ CONSOLE_COMMAND(mn_newgame, 0)
          (modifiedgame && 
           lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
-
 
       // dont use new game menu if not needed
       if(!(modifiedgame && startOnNewMap) && use_startmap && mapPresent)
@@ -264,6 +265,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          }
       }
       else
+#endif
          MN_StartMenu(&menu_newgame);
    }
    else
