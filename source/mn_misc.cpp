@@ -376,10 +376,11 @@ static const char *val_strs[NUMCATS] =
    "James Haley\nStephen McGranahan\nDavid Hill\n",
    
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n"
+   /*
    FC_HI "MBF " FC_NORMAL " by Lee Killough\n"
-   FC_HI "BOOM" FC_NORMAL " by Team TNT\n",
+   FC_HI "BOOM" FC_NORMAL " by Team TNT\n"*/,
 
-   "Sven Ruthner",
+   "Michael Mancuso\nSven Ruthner\n",
    "Joe Kennedy\nJulian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
 };
 
