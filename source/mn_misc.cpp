@@ -354,27 +354,30 @@ static void MN_FindHelpScreens(void)
    AddHelpScreen(DEH_String("HELP2")); 
 }
 
-#define NUMCATS 5
+enum
+{
+   CAT_PROGRAMMING,
+   CAT_BASEDON,
+   CAT_GRAPHICS,
+   CAT_SPECIALTHANKS,
+   NUMCATS
+};
 
 static const char *cat_strs[NUMCATS] =
 {
    FC_HI "Programming:",
    FC_HI "Based On:",
    FC_HI "Graphics:",
-   FC_HI "Start Map:",
    FC_HI "Special Thanks:",
 };
 
 static const char *val_strs[NUMCATS] =
 {
-   "James Haley\nStephen McGranahan\n",
+   "James Haley\nStephen McGranahan\nDavid Hill\n",
    
-   FC_HI "SMMU" FC_NORMAL " by Simon Howard\n"
-   FC_HI "MBF " FC_NORMAL " by Lee Killough\n"
-   FC_HI "BOOM" FC_NORMAL " by Team TNT\n",
+   FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
 
-   "Sven Ruthner",
-   "Derek MacDonald",
+   "Michael Mancuso\nSven Ruthner\n",
    "Joe Kennedy\nJulian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
 };
 
