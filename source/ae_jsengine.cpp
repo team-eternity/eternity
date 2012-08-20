@@ -107,7 +107,7 @@ static JSFunctionSpec global_funcs[] =
 //
 // Aeon_JS_evaluateFile
 //
-// Load and compile a file in one shot.
+// Compile and execute a file in one shot.
 //
 static JSBool Aeon_JS_evaluateFile(JSContext *cx, JSObject *obj,
                                    const char *filename, jsval *rval)
