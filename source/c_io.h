@@ -34,6 +34,7 @@ void C_Drawer(void);
 bool C_Responder(event_t* ev);
 void C_Update(void);
 
+void C_VPrintf(const char *s, va_list va);
 void C_Printf(const char *s, ...);
 void C_Puts(const char *s);
 void C_Separator(void);

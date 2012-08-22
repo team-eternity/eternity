@@ -64,15 +64,6 @@ public:
 
    CompiledScript *compileString(const char *name, const char *script);
    CompiledScript *compileFile(const char *filename);
-
-   class Value : public AeonEngine::Value
-   {
-   private:
-      friend class AeonJSEngine;
-      JSValuePimpl *pImpl;
-   public:
-      ~Value();
-   };
 };
 
 #endif

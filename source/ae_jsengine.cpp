@@ -30,6 +30,8 @@
 #include "z_zone.h"
 
 #include "ae_jsengine.h"
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "hal/i_platform.h"
 #include "m_qstr.h"
 
@@ -59,17 +61,28 @@ static JSObject  *gGlobal;
 // JS Global Object
 //
 
+//
+// Aeon_JS_globalEnumerate
+//
+// Lazy enumeration for the ECMA standard classes.
+// Doing this is said to lower memory usage.
+//
 static JSBool Aeon_JS_globalEnumerate(JSContext *cx, JSObject *obj)
 {
    return JS_EnumerateStandardClasses(cx, obj);
 }
 
+//
+// Aeon_JS_globalResolve
+//
+// Lazy resolution for the ECMA standard classes.
+//
 static JSBool Aeon_JS_globalResolve(JSContext *cx, JSObject *obj, jsval id,
                                     uintN flags, JSObject **objp)
 {
    if((flags & JSRESOLVE_ASSIGNING) == 0)
    {
-      JSBool resolved;
+      JSBool resolved = JS_FALSE;
 
       if(!JS_ResolveStandardClass(cx, obj, id, &resolved))
          return JS_FALSE;
@@ -84,6 +97,9 @@ static JSBool Aeon_JS_globalResolve(JSContext *cx, JSObject *obj, jsval id,
    return JS_TRUE;
 }
 
+//
+// global_class
+//
 static JSClass global_class =
 {
    "global",                                   // name
@@ -193,8 +209,6 @@ void JSCompiledScriptPimpl::init(JSContext *pcx, JSScript *pScript)
       JS_AddNamedRoot(cx, &obj, "JSCompiledScriptPimpl::init");
 }
 
-#define ValidCompiledScript(s) ((s)->obj && (s)->script)
-
 //
 // JSCompiledScriptPimpl::execute
 //
@@ -204,7 +218,7 @@ bool JSCompiledScriptPimpl::execute(jsval *rval)
 {
    bool result = false;
 
-   if(ValidCompiledScript(this))
+   if(cx && script)
    {
       if(JS_ExecuteScript(cx, gGlobal, script, rval) == JS_TRUE)
          result = true;
@@ -254,10 +268,12 @@ bool AeonJSEngine::CompiledScript::executeWithResult(qstring &qstr)
    if(pImpl->execute(&rval))
    {
       JSString *jstr = JS_ValueToString(pImpl->cx, rval);
-      if(jstr)
+      if(jstr && 
+         JS_AddNamedRoot(pImpl->cx, &jstr, "CompiledScript::executeWithResult"))
       {
          qstr = JS_GetStringBytes(jstr);
          result = true;
+         JS_RemoveRoot(pImpl->cx, &jstr);
       }
    }
 
@@ -356,6 +372,12 @@ bool AeonJSEngine::CompiledScript::executeWithResult(bool &b)
 // to provide support for ECMAScript 3 (aka JavaScript).
 //
 
+static void AeonJSErrorReporter(JSContext *cx, const char *message, 
+                                JSErrorReport *report)
+{
+   /* TODO */
+}
+
 //
 // AeonJSEngine::initEngine
 //
@@ -365,6 +387,8 @@ bool AeonJSEngine::initEngine()
 {
    if(!(gRuntime = JS_NewRuntime(AEON_JS_RUNTIME_HEAP_SIZE)))
       return false;
+
+   // TODO: Set context callback
 
    if(!(gContext = JS_NewContext(gRuntime, AEON_JS_STACK_CHUNK_SIZE)))
       return false;

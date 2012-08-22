@@ -34,6 +34,10 @@ class qstring;
 
 class AeonEngine
 {
+protected:
+   static int outputMode;
+   static FILE *outStream;
+
 public:
    virtual ~AeonEngine() {}
 
@@ -58,10 +62,19 @@ public:
    virtual CompiledScript *compileString(const char *name, const char *script) = 0;
    virtual CompiledScript *compileFile(const char *filename) = 0;
 
-   class Value
+   static void InitOutput();
+   static void LogPrintf(const char *message, ...);
+   static void LogPuts(const char *message);
+
+   // Error/Warning output modes
+   enum
    {
-   public:
-      virtual ~Value() {}
+      OUTPUT_CONSOLE, // use game console
+      OUTPUT_STDOUT,  // use stdout stream
+      OUTPUT_STDERR,  // use stderr stream
+      OUTPUT_FILE,    // use a log file
+      OUTPUT_SILENT,  // no output
+      OUTPUT_NUMMODES
    };
 };
 

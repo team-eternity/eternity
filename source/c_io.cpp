@@ -776,6 +776,23 @@ static void C_AdjustLineBreaks(char *str)
 static void C_AppendToLog(const char *text);
 
 //
+// C_VPrintf
+//
+void C_VPrintf(const char *s, va_list va)
+{
+   char tempstr[1024];
+
+   pvsnprintf(tempstr, sizeof(tempstr), s, va);
+
+   // haleyjd: write this message to the log if one is open
+   C_AppendToLog(tempstr); 
+   
+   C_AdjustLineBreaks(tempstr); // haleyjd
+   
+   C_AddMessage(tempstr);
+}
+
+//
 // C_Printf
 //
 // Write some text 'printf' style to the console.
@@ -787,7 +804,6 @@ static void C_AppendToLog(const char *text);
 //
 void C_Printf(const char *s, ...)
 {
-   char tempstr[1024];
    va_list args;
 
    // haleyjd: sanity check
@@ -795,15 +811,8 @@ void C_Printf(const char *s, ...)
       return;
    
    va_start(args, s);
-   pvsnprintf(tempstr, sizeof(tempstr), s, args);
+   C_VPrintf(s, args);
    va_end(args);
-
-   // haleyjd: write this message to the log if one is open
-   C_AppendToLog(tempstr); 
-   
-   C_AdjustLineBreaks(tempstr); // haleyjd
-   
-   C_AddMessage(tempstr);
 }
 
 // haleyjd 01/24/03: got rid of C_WriteText, added real C_Puts from
