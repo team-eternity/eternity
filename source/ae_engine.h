@@ -32,8 +32,17 @@
 
 class qstring;
 
+//
+// AeonEngine
+//
+// This is the abstract base class of all scripting language interpreters
+// implementing the Aeon API.
+//
 class AeonEngine
 {
+private:
+   static void InitOutput();
+
 protected:
    static int outputMode;
    static FILE *outStream;
@@ -62,7 +71,6 @@ public:
    virtual CompiledScript *compileString(const char *name, const char *script) = 0;
    virtual CompiledScript *compileFile(const char *filename) = 0;
 
-   static void InitOutput();
    static void LogPrintf(const char *message, ...);
    static void LogPuts(const char *message);
 

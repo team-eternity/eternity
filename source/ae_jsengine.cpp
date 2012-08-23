@@ -45,6 +45,9 @@
 // JSAPI
 #include "../js/src/jsapi.h"
 
+// Other AeonJS modules
+#include "ae_jsutils.h"
+
 //============================================================================
 //
 // Private Routines and Data
@@ -115,11 +118,6 @@ static JSClass global_class =
    JSCLASS_NO_OPTIONAL_MEMBERS                 // getObjectOps etc.
 };
 
-static JSFunctionSpec global_funcs[] =
-{
-   JS_FS_END
-};
-
 //
 // Aeon_JS_evaluateFile
 //
@@ -152,6 +150,75 @@ static JSBool Aeon_JS_evaluateFile(JSContext *cx, JSObject *obj,
 
    return ok;
 }
+
+//============================================================================
+//
+// Aeon Namespace Natives
+//
+// These native methods are for manipulating the state of the API itself.
+//
+
+//
+// AeonJS_GC
+//
+// Signal an unconditional garbage collection pass.
+//
+static JSBool AeonJS_GC(JSContext *cx, uintN argc, jsval *vp)
+{
+   JS_GC(cx);
+
+   JS_SET_RVAL(cx, vp, JSVAL_VOID);
+   return JS_TRUE;
+}
+
+//
+// AeonJS_MaybeGC
+//
+// Perform garbage collection only if it is needed.
+//
+static JSBool AeonJS_MaybeGC(JSContext *cx, uintN argc, jsval *vp)
+{
+   JS_MaybeGC(cx);
+
+   JS_SET_RVAL(cx, vp, JSVAL_VOID);
+   return JS_TRUE;
+}
+
+static JSBool AeonJS_LogPrint(JSContext *cx, uintN argc, jsval *vp)
+{
+   jsval *argv = JS_ARGV(cx, vp);
+
+   if(argc >= 1)
+   {
+      const char *msg = AeonJS_GetStringBytesSafe(cx, argv[0], &argv[0]);
+      AeonEngine::LogPuts(msg);
+   }
+
+   JS_SET_RVAL(cx, vp, JSVAL_VOID);
+   return JS_TRUE;
+}
+
+static JSClass aeonJSClass =
+{
+   "Aeon",
+   JS_PropertyStub,
+   JS_PropertyStub,
+   JS_PropertyStub,
+   JS_PropertyStub,
+   JS_EnumerateStub,
+   JS_ResolveStub,
+   JS_ConvertStub,
+   JS_FinalizeStub,
+   JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static JSFunctionSpec aeonJSMethods[] =
+{
+   JS_FN("GC",       AeonJS_GC,       0, 0, 0),
+   JS_FN("maybeGC",  AeonJS_MaybeGC,  0, 0, 0),
+   JS_FN("logPrint", AeonJS_LogPrint, 1, 0, 0),
+   JS_FS_END
+};
 
 //============================================================================
 //
@@ -375,30 +442,79 @@ bool AeonJSEngine::CompiledScript::executeWithResult(bool &b)
 static void AeonJSErrorReporter(JSContext *cx, const char *message, 
                                 JSErrorReport *report)
 {
-   /* TODO */
+   if(!report)
+   {
+      AeonEngine::LogPuts(message);
+      return;
+   }
+
+   qstring temp;
+   qstring msg;
+   
+   if(report->filename)
+   {
+      temp.Printf(0, "In file %s ", report->filename);
+      msg += temp;
+   }
+   if(report->lineno)
+   {
+      temp.Printf(0, "@ line %u, ", report->lineno);
+      msg += temp;
+   }
+   if(JSREPORT_IS_WARNING(report->flags))
+      msg += "Warning: ";
+   else
+      msg += "Error: ";
+   
+   msg += message;
+
+   if(report->linebuf)
+   {
+      temp.Printf(0, "\nContext: %s", report->linebuf);
+      msg += report->linebuf;
+   }
+
+   AeonEngine::LogPuts(msg.constPtr());
+}
+
+//
+// AeonJS_ContextCallback
+//
+// Callback function to be invoked whenever a new context is created by the
+// jsapi. Sets the error reporting function and ensures that the engine is
+// configured to use the latest supported ECMA spec.
+//
+static JSBool AeonJS_ContextCallback(JSContext *cx, uintN contextOp)
+{
+   if(contextOp == JSCONTEXT_NEW)
+   {
+      JS_SetErrorReporter(cx, AeonJSErrorReporter);
+      JS_SetVersion(cx, JSVERSION_LATEST);
+   }
 }
 
 //
 // AeonJSEngine::initEngine
 //
-// Initialize core components of the JSAPI
+// Initialize core components of the jsapi
 //
 bool AeonJSEngine::initEngine()
 {
+   // Create the JSRuntime
    if(!(gRuntime = JS_NewRuntime(AEON_JS_RUNTIME_HEAP_SIZE)))
       return false;
 
-   // TODO: Set context callback
-
+   // Set context callback
+   JS_SetContextCallback(gRuntime, AeonJS_ContextCallback);
+   
+   // Create a global execution context
    if(!(gContext = JS_NewContext(gRuntime, AEON_JS_STACK_CHUNK_SIZE)))
       return false;
 
+   // Create the JavaScript global object and initialize it
    if(!(gGlobal = JS_NewObject(gContext, &global_class, NULL, NULL)))
       return false;
-
    JS_SetGlobalObject(gContext, gGlobal);
-   if(!JS_DefineFunctions(gContext, gGlobal, global_funcs))
-      return false;
 
    return true;
 }

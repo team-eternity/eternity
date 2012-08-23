@@ -5165,6 +5165,10 @@
 						RelativePath="..\source\ae_jsengine.h"
 						>
 					</File>
+					<File
+						RelativePath="..\source\ae_jsutils.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="Aeon Source"
@@ -5175,6 +5179,10 @@
 					</File>
 					<File
 						RelativePath="..\source\ae_jsengine.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ae_jsutils.cpp"
 						>
 					</File>
 				</Filter>

@@ -58,6 +58,13 @@ static const char *outputModeNames[] =
 //
 void AeonEngine::InitOutput()
 {
+   static bool firsttime = true;
+
+   if(!firsttime) // one time only.
+      return;
+
+   firsttime = false;
+
    // check for command line argument
    int p;
    qstring filename;
@@ -101,6 +108,9 @@ void AeonEngine::LogPrintf(const char *message, ...)
    va_list va;
 
    va_start(va, message);
+
+   // make sure log system is initialized
+   InitOutput();
    
    switch(outputMode)
    {
@@ -129,6 +139,9 @@ void AeonEngine::LogPrintf(const char *message, ...)
 void AeonEngine::LogPuts(const char *message)
 {
    size_t len = 0;
+
+   // make sure log system is initialized
+   InitOutput();
 
    switch(outputMode)
    {
