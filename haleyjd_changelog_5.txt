@@ -2,6 +2,51 @@
 Changes since Eternity Engine v3.40.20
 ================================================================================
 --------------------------------------------------------------------------------
+08/26/12
+
+Final code changes in prep for 3.40.25 'Midgard' release:
+
+* HUD messages will now be centered in all games if the game is running in a
+  widescreen video mode. This just looks better.
+  
+* The Master Levels runtime loader is now finally available from the WAD options
+  menu.
+  
+* A new page has been added to the video options menu to support configuration
+  of the HAL video driver, software screen surface bitdepth, and OpenGL
+  backend options.
+
+--------------------------------------------------------------------------------
+08/19/12
+
+With Small removed, the start map has been disabled again until such time it is
+replaced with a better map possibly using ACS and/or Aeon.
+
+DavidPH and esselfortium have been added to the in-game credits screen.
+
+--------------------------------------------------------------------------------
+08/18/12
+
+ConSiGno found a bug in the use of CAM_CheckSight for monsters which had them
+looking for the player out of their feet. If they had a ledge in front of them,
+you'd be invisible because of this. Fixed by making the same height adjustments
+used in the normal line-of-sight code - this was a consequence of the code
+originally being designed to handle point cameras only :P
+
+Spring cleaning is underway:
+
+* Small is gone for good; I have removed the AMX modules and much of the engine
+  interface code, with the exception of natives and other code segments which
+  may later be adapted to work with the Aeon API instead.
+
+* Deleted dead files from the EE project space: d_dialog, z_zone.cpp, old
+  build directories for DJGPP and MinGW, DJGPP DOS code, etc.
+  
+* Finally got rid of the dead and unsupportable Visual Studio 6 project files.
+
+* Killed off all extinct #define values in the VC2008 project.
+
+--------------------------------------------------------------------------------
 08/12/12
 
 I eliminated the D_DoomExeName function; everywhere it was previously invoked is
