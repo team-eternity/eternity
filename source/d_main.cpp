@@ -513,8 +513,7 @@ static void D_drawWings()
 {
    int wingwidth;
 
-   if((vbscreen.width <= 640 && vbscreen.height <= 400) ||
-      static_cast<float>(vbscreen.width) / vbscreen.height <= 4.0f/3.0f)
+   if(vbscreen.getVirtualAspectRatio() <= 4.0/3.0)
       return;
 
    wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
