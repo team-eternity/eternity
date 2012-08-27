@@ -43,18 +43,13 @@
 // JSAPI
 #include "../js/src/jsapi.h"
 
-//============================================================================
 //
-// String Utilities
-//
-
-//
-// AeonJS_GetStringBytesSafe
+// AeonJS_SafeGetStringBytes
 //
 // Takes some of the pain out of converting jsval to JSString by handling
 // return value checks and GC rooting. "root" is NOT an optional parameter!
 //
-const char *AeonJS_GetStringBytesSafe(JSContext *cx, jsval value, jsval *root)
+const char *AeonJS_SafeGetStringBytes(JSContext *cx, jsval value, jsval *root)
 {
    const char *retval = "";
    JSString   *jstr   = JS_ValueToString(cx, value);
@@ -66,6 +61,21 @@ const char *AeonJS_GetStringBytesSafe(JSContext *cx, jsval value, jsval *root)
    }
 
    return retval;
+}
+
+//
+// AeonJS_SafeInstanceOf
+//
+// Test if a jsval is an object, and if so, if it is an instance of the
+// provided JSClass.
+//
+bool AeonJS_SafeInstanceOf(JSContext *cx, JSClass *jsClass, jsval val)
+{
+   JSObject *obj;
+
+   return (JSVAL_IS_OBJECT(val) && 
+           (obj = JSVAL_TO_OBJECT(val)) &&
+           JS_InstanceOf(cx, obj, jsClass, NULL));
 }
 
 #endif

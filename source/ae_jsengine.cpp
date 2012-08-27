@@ -190,7 +190,7 @@ static JSBool AeonJS_LogPrint(JSContext *cx, uintN argc, jsval *vp)
 
    if(argc >= 1)
    {
-      const char *msg = AeonJS_GetStringBytesSafe(cx, argv[0], &argv[0]);
+      const char *msg = AeonJS_SafeGetStringBytes(cx, argv[0], &argv[0]);
       AeonEngine::LogPuts(msg);
    }
 

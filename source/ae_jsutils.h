@@ -30,7 +30,9 @@
 
 #ifdef EE_FEATURE_AEONJS
 
-const char *AeonJS_GetStringBytesSafe(JSContext *cx, jsval value, jsval *root);
+const char *AeonJS_SafeGetStringBytes(JSContext *cx, jsval value, jsval *root);
+bool        AeonJS_SafeInstanceOf(JSContext *cx, JSClass *jsClass, jsval val);
+
 
 //
 // AeonJS_GetPrivate
