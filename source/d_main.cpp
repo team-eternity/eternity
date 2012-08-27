@@ -1463,19 +1463,15 @@ void D_InitPaths()
    // killough 10/98
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
    {
-      // hack for DOOM modes: optional use of /doom config
-      size_t len = strlen(userpath) + strlen("/doom/eternity.cfg");
-      basedefault = emalloc(char *, len);
-
-      psnprintf(basedefault, len, "%s/doom/eternity.cfg", userpath);
+      qstring tmp(userpath);
+      tmp.pathConcatenate("/doom/eternity.cfg");
+      basedefault = tmp.duplicate(PU_STATIC);
    }
    else
    {
-      size_t len = strlen(usergamepath) + strlen("/eternity.cfg");
-
-      basedefault = emalloc(char *, len);
-
-      psnprintf(basedefault, len, "%s/eternity.cfg", usergamepath);
+      qstring tmp(usergamepath);
+      tmp.pathConcatenate("/eternity.cfg");
+      basedefault = tmp.duplicate(PU_STATIC);
    }
 
    // haleyjd 11/23/06: set basesavegame here, and use usergamepath

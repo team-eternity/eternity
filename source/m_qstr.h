@@ -68,6 +68,12 @@ public:
       copy(other);
    }
 
+   explicit qstring(const char *cstr)
+      : ZoneObject(), buffer(NULL), index(0), size(0)
+   {
+      copy(cstr);
+   }
+
    ~qstring() { freeBuffer(); }
 
    // Basic Property Getters
