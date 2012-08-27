@@ -60,6 +60,9 @@ struct VBuffer
 
    // Only change this if you want memory leaks and/or crashes :P
    bool needfree;
+
+   double getRealAspectRatio()    const;
+   double getVirtualAspectRatio() const;
 }; 
 
 // V_InitVBuffer

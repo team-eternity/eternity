@@ -150,6 +150,7 @@ static dehflags_t gmi_flags[] =
    { "SKILL5RESPAWN",  GIF_SKILL5RESPAWN  },
    { "SKILL5WARNING",  GIF_SKILL5WARNING  },
    { "HUDSTATBARNAME", GIF_HUDSTATBARNAME },
+   { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
    { NULL,             0                  }
 };
 

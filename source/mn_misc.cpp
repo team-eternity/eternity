@@ -373,7 +373,7 @@ static const char *cat_strs[NUMCATS] =
 
 static const char *val_strs[NUMCATS] =
 {
-   "James Haley\nStephen McGranahan\nDavid Hill\n",
+   "James Haley\nStephen McGranahan\nCharles Gunyon\nDavid Hill\n",
    
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
 
@@ -440,8 +440,8 @@ void MN_DrawCredits(void)
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2012 Team Eternity et al.\n"
-                   "http://doomworld.com/eternity/", 0, y, &subscreen43);
+                   FC_ABSCENTER "Copyright 2012 Team Eternity et al.", 
+                   0, y, &subscreen43);
 }
 
 void MN_HelpDrawer(void)

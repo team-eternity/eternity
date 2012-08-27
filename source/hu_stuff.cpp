@@ -390,10 +390,13 @@ static void HU_MessageDraw(hu_widget_t *widget)
       int x = 0;
       char *msg = mw->messages[i];
 
-      // haleyjd 12/26/02: center messages in Heretic
-      // FIXME/TODO: make this an option in DOOM?
-      if(GameModeInfo->type == Game_Heretic)
+      // haleyjd 12/26/02: center messages in proper gamemodes
+      // haleyjd 08/26/12: center also if in widescreen modes
+      if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
+         vbscreen.getVirtualAspectRatio() > 4.0/3.0)
+      {
          x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
+      }
       
       // haleyjd 06/04/05: use V_FontWriteTextColored like it should.
       // Color codes within strings will still override the default.
