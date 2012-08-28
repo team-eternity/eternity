@@ -533,6 +533,40 @@ qstring &qstring::truncate(size_t pos)
 
 //=============================================================================
 //
+// Stream Insertion Operators
+//
+
+qstring &qstring::operator << (const qstring &other)
+{
+   return concat(other);
+}
+
+qstring &qstring::operator << (const char *other)
+{
+   return concat(other);
+}
+
+qstring &qstring::operator << (char ch)
+{
+   return Putc(ch);
+}
+
+qstring &qstring::operator << (int i)
+{
+   char buf[33];
+   M_Itoa(i, buf, 10);
+   return concat(buf);
+}
+
+qstring &qstring::operator << (double d)
+{
+   char buf[1079];
+   psnprintf(buf, sizeof(buf), "%f", d);
+   return concat(buf);
+}
+
+//=============================================================================
+//
 // Comparison Functions
 //
 
@@ -1150,9 +1184,9 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'f':
             case 'g':
             case 'G':
-               // extremely excessive, but it's possible according to fcvt
+               // extremely excessive, but it's possible 
                dummydbl = va_arg(va1, double);
-               charcount += 626; 
+               charcount += 1078; 
                pctstate = false;
                break;
             case 'c': // Character

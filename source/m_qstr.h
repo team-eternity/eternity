@@ -204,6 +204,11 @@ public:
    qstring &operator += (const qstring &other);
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
+   qstring &operator << (const qstring &other);
+   qstring &operator << (const char    *other);
+   qstring &operator << (char   ch);
+   qstring &operator << (int    i);
+   qstring &operator << (double d);
 
    // Archiving
    void archive(SaveArchive &arc);
