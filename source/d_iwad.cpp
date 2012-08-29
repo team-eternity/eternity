@@ -153,9 +153,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
       struct stat sbuf;
       
       qstr = doomwadpaths[i];
-      qstr += '/';
-      qstr += filename;
-      qstr.normalizeSlashes();
+      qstr.pathConcatenate(filename);
 
       // See if the file exists as-is
       if(!stat(qstr.constPtr(), &sbuf)) // check for existence

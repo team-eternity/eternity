@@ -409,7 +409,7 @@ static void V_initSubScreen43()
    int subwidth;
    int offset;
 
-   if(vbscreen.getVirtualAspectRatio() <= 4.0/3.0)
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
    {
       subwidth = vbscreen.width;
       offset   = 0;

@@ -513,7 +513,7 @@ static void D_drawWings()
 {
    int wingwidth;
 
-   if(vbscreen.getVirtualAspectRatio() <= 4.0/3.0)
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
       return;
 
    wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;

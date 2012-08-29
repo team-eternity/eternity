@@ -393,7 +393,7 @@ static void HU_MessageDraw(hu_widget_t *widget)
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
       if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
-         vbscreen.getVirtualAspectRatio() > 4.0/3.0)
+         vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
       {
          x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
       }

@@ -509,7 +509,6 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
       qstring msg_no_tabs;
       va_list va;
 
-      msg_no_tabs.initCreate();
       msg_no_tabs = msg;
       msg_no_tabs.replace("\t", ' ');
 

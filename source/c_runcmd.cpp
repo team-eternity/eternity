@@ -1099,7 +1099,7 @@ qstring &C_NextTab(qstring &key)
    if(thistab >= numtabs)
    {
       thistab = -1;
-       return origkey;
+      return origkey;
    }
    else
    {   
@@ -1135,8 +1135,7 @@ qstring &C_PrevTab(qstring &key)
    }
    else
    {
-      returnstr = tabs[thistab]->name;
-      returnstr += ' ';
+      returnstr << tabs[thistab]->name << ' ';
       return returnstr;
    }
 }
@@ -1570,8 +1569,7 @@ void C_RunScript(DWFILE *dwfile)
          continue;
 #endif
       default:                // anything else starts a command
-         qstr.clear();
-         qstr += c;
+         qstr.clear() << c;
          state = CSC_COMMAND;
          continue;
       }
