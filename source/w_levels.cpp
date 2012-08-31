@@ -511,10 +511,7 @@ void W_EnumerateMasterLevels(bool forceRefresh)
 //
 // Command handling for displaying the Master Levels menu widget.
 // If allowexit is false, the menu filebox widget will not allow
-// an exit via menu_toggle or menu_previous actions. This is required
-// when bringing the menu back up after the intermission, because
-// otherwise the player would get stuck (this is done in G_WorldDone
-// if "inmasterlevels" is true).
+// an exit via menu_toggle or menu_previous actions.
 //
 void W_DoMasterLevels(bool allowexit)
 {

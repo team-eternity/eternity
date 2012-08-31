@@ -44,6 +44,7 @@
 #include "g_game.h"
 #include "hu_over.h"
 #include "i_video.h"
+#include "m_collection.h"
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
@@ -1152,11 +1153,60 @@ int hide_menu = 0;      // hide the menu for a duration of time
 int menutime = 0;
 
 // menu widget for alternate drawer + responder
-menuwidget_t *current_menuwidget = NULL; 
+menuwidget_t *current_menuwidget = NULL;
+PODCollection<menuwidget_t *> menuwidget_stack;
 
 int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
 static void MN_InitFonts(void);
+
+//
+// MN_PushWidget
+//
+// Push a new widget onto the widget stack
+//
+void MN_PushWidget(menuwidget_t *widget)
+{
+   menuwidget_stack.add(widget);
+   if(current_menuwidget)
+      widget->prev = current_menuwidget;
+   current_menuwidget = widget;
+}
+
+//
+// MN_PopWidget
+//
+// Back up one widget on the stack
+//
+void MN_PopWidget()
+{
+   size_t len;
+
+   // Pop the top widget off.
+   if(menuwidget_stack.getLength() > 0)
+      menuwidget_stack.pop();
+
+   if(current_menuwidget)
+      current_menuwidget->prev = NULL;
+
+   // If there's still an active widget, return to it.
+   // Otherwise, cancel out.
+   if((len = menuwidget_stack.getLength()) > 0)
+      current_menuwidget = menuwidget_stack[len - 1];
+   else
+      current_menuwidget = NULL;
+}
+
+void MN_ClearWidgetStack()
+{
+   menuwidget_stack.clear();
+   current_menuwidget = NULL;
+}
+
+size_t MN_NumActiveWidgets()
+{
+   return menuwidget_stack.getLength();
+}
 
 //
 // MN_SetBackground
@@ -1891,6 +1941,7 @@ void MN_ClearMenus(void)
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
+   MN_ClearWidgetStack();  // haleyjd 08/31/12: make sure widget stack is empty
 }
 
 CONSOLE_COMMAND(mn_clearmenus, 0)
@@ -2161,7 +2212,7 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    if(action_menu_toggle || action_menu_previous)
    {
       action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL;
+      MN_PopWidget();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
@@ -2190,7 +2241,7 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    if(action_menu_confirm)
    {
       action_menu_confirm = false;
-      current_menuwidget = NULL;
+      MN_PopWidget();
 
       switch(box->type)
       {
@@ -2269,7 +2320,7 @@ void MN_SetupBoxWidget(const char *title, const char **item_names,
 //
 void MN_ShowBoxWidget(void)
 {
-   current_menuwidget = &(menu_box_widget.widget);
+   MN_PushWidget(&(menu_box_widget.widget));
 }
 
 //
@@ -2308,7 +2359,7 @@ static void MN_ShowContents(void)
    if(rover) // only if valid (should always be...)
       menu_box_widget.selection_idx = i;
 
-   current_menuwidget = &(menu_box_widget.widget);
+   MN_PushWidget(&(menu_box_widget.widget));
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
 }

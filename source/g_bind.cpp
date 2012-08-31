@@ -746,7 +746,7 @@ bool G_BindResponder(event_t *ev)
       return false;
    
    // got a key - close box
-   current_menuwidget = NULL;
+   MN_PopWidget();
 
    if(action_menu_toggle) // cancel
    {
@@ -785,7 +785,7 @@ menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
 //
 void G_EditBinding(const char *action)
 {
-   current_menuwidget = &binding_widget;
+   MN_PushWidget(&binding_widget);
    binding_action = action;
 }
 

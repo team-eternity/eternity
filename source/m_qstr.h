@@ -182,6 +182,7 @@ public:
    const char *strRChr(char c) const;
    size_t      findFirstOf(char c) const;
    size_t      findFirstNotOf(char c) const;
+   size_t      findLastOf(char c) const;
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
 

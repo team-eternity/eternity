@@ -154,13 +154,20 @@ struct menu_t
 // MN_Drawer. Also events caught by MN_Responder are
 // sent to current_menuwidget->responder
 
-typedef struct menuwidget_s
+struct menuwidget_t
 {
   void (*drawer)();
   bool (*responder)(event_t *ev);
   void (*ticker)();   // haleyjd 05/29/06
-  bool fullscreen; // haleyjd: optimization for fullscreen widgets
-} menuwidget_t;
+  bool fullscreen;    // haleyjd: optimization for fullscreen widgets
+  
+  menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
+};
+
+// haleyjd 08/31/12: A proper widget stack
+void   MN_PushWidget(menuwidget_t *widget);
+void   MN_PopWidget();
+size_t MN_NumActiveWidgets();
 
 // responder for events
 

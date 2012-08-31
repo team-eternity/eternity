@@ -37,6 +37,7 @@
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "in_lude.h"
+#include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
 #include "p_info.h"
@@ -2138,14 +2139,34 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    mapName = NULL;
    nextMapName = NULL;
 
-   if(LevelInfo.useEDFInterName)
+   if(LevelInfo.useEDFInterName || inmasterlevels)
    {
       char nameBuffer[24];
       const char *basename;
 
       // set current map
-      psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
-      mapName = E_StringForName(nameBuffer);
+      if(inmasterlevels)
+      {
+         // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
+         qstring buffer;
+         qstring lvname;
+
+         lvname << FC_ABSCENTER << LevelInfo.levelName;
+         if(V_FontStringWidth(in_bigfont, lvname.constPtr()) > 320)
+         {
+            size_t lastSpace = lvname.findLastOf(' ');
+            if(lastSpace != qstring::npos)
+               *lvname.bufferAt(lastSpace) = '\n';
+         }
+
+         buffer << "{EE_MLEV_" << lvname << "}";
+         mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1);
+      }
+      else
+      {
+         psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
+         mapName = E_StringForName(nameBuffer);
+      }
 
       // are we going to a secret level?
       basename = wbs->gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;

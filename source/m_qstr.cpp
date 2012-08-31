@@ -803,6 +803,34 @@ size_t qstring::findFirstNotOf(char c) const
 }
 
 //
+// qstring::findLastOf
+//
+// Find the last occurrance of a character in the qstring which matches
+// the provided character. Returns qstring::npos if not found.
+//
+size_t qstring::findLastOf(char c) const
+{
+   const char *rover;
+   bool found = false;
+   
+   if(!buffer || !index)
+      return npos;
+   
+   rover = buffer + index - 1;
+   do
+   {
+      if(*rover == c)
+      {
+         found = true;
+         break;
+      }
+   }
+   while((rover == buffer) ? false : (--rover, true));
+
+   return found ? rover - buffer : npos;
+}
+
+//
 // qstring::findSubStr
 //
 // Calls strstr on the qstring. If the passed-in string is found, then the
