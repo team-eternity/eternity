@@ -62,13 +62,17 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 // Managed wad directory structure.
 // This adds hashability to a WadDirectory object.
 //
-struct manageddir_t
+class ManagedDirectory : public WadDirectory
 {
-   DLListItem<manageddir_t> links; // links
-   char                    *name;  // name
+public:
+   DLListItem<ManagedDirectory> links; // links
+   
+   char       *name;   // name
+   wadlevel_t *levels; // enumerated levels
 
-   WadDirectory  waddir; // directory
-   wadlevel_t   *levels; // enumerated levels
+   ManagedDirectory() : WadDirectory(), links(), name(NULL), levels(NULL)
+   {
+   }
 };
 
 //=============================================================================
@@ -77,8 +81,8 @@ struct manageddir_t
 //
 
 // hash table
-static EHashTable<manageddir_t, EStringHashKey, 
-                  &manageddir_t::name, &manageddir_t::links> w_dirhash(31);
+static EHashTable<ManagedDirectory, EStringHashKey, 
+                  &ManagedDirectory::name, &ManagedDirectory::links> w_dirhash(31);
 
 //=============================================================================
 //
@@ -90,21 +94,21 @@ static EHashTable<manageddir_t, EStringHashKey,
 //
 // Adds a new managed wad directory. Returns the new directory object.
 //
-static manageddir_t *W_addManagedDir(const char *filename)
+static ManagedDirectory *W_addManagedDir(const char *filename)
 {
-   manageddir_t *newdir = NULL;
+   ManagedDirectory *newdir = NULL;
 
    // make sure there isn't one by this name already
    if(w_dirhash.objectForKey(filename))
       return NULL;
 
-   newdir = ecalloc(manageddir_t *, 1, sizeof(manageddir_t));
+   newdir = new ManagedDirectory;
 
    newdir->name = estrdup(filename);
 
    // set type information
-   newdir->waddir.setType(WadDirectory::MANAGED); // mark as managed
-   newdir->waddir.setData(newdir); // opaque pointer back to parent
+   newdir->setType(WadDirectory::MANAGED); // mark as managed
+   newdir->setData(newdir); // opaque pointer back to parent
 
    // add it to the hash table
    w_dirhash.addObject(newdir);
@@ -117,12 +121,10 @@ static manageddir_t *W_addManagedDir(const char *filename)
 //
 // Destroys a managed directory
 //
-static void W_delManagedDir(manageddir_t *dir)
+static void W_delManagedDir(ManagedDirectory *dir)
 {
-   WadDirectory &waddir = dir->waddir;
-
    // close the wad file if it is open
-   waddir.close();
+   dir->close();
 
    // remove managed directory from the hash table
    w_dirhash.removeObject(dir);
@@ -141,8 +143,8 @@ static void W_delManagedDir(manageddir_t *dir)
       dir->levels = NULL;
    }
 
-   // free directory
-   efree(dir);
+   // free the directory object
+   delete dir;
 }
 
 //
@@ -150,11 +152,11 @@ static void W_delManagedDir(manageddir_t *dir)
 //
 // Tries to open a wad file. Returns true if successful, and false otherwise.
 //
-static bool W_openWadFile(manageddir_t *dir)
+static bool W_openWadFile(ManagedDirectory *dir)
 {
    bool ret;
    
-   if((ret = !!dir->waddir.addNewPrivateFile(dir->name)))
+   if((ret = !!dir->addNewPrivateFile(dir->name)))
       D_AddFile(dir->name, lumpinfo_t::ns_global, NULL, 0, 1);
 
    return ret;
@@ -173,7 +175,7 @@ static bool W_openWadFile(manageddir_t *dir)
 //
 WadDirectory *W_AddManagedWad(const char *filename)
 {
-   manageddir_t *newdir = NULL;
+   ManagedDirectory *newdir = NULL;
 
    // Haha, yeah right, you wanker :P
    // At least be smart enough to ju4r3z if nothing else.
@@ -193,10 +195,10 @@ WadDirectory *W_AddManagedWad(const char *filename)
    }
 
    // 10/23/10: enumerate all levels in the directory
-   newdir->levels = W_FindAllMapsInLevelWad(&newdir->waddir);
+   newdir->levels = W_FindAllMapsInLevelWad(newdir);
 
    // success!
-   return &(newdir->waddir);
+   return newdir;
 }
 
 //
@@ -206,7 +208,7 @@ WadDirectory *W_AddManagedWad(const char *filename)
 //
 bool W_CloseManagedWad(const char *filename)
 {
-   manageddir_t *dir = NULL;
+   ManagedDirectory *dir = NULL;
    bool retcode = false;
 
    if((dir = w_dirhash.objectForKey(filename)))
@@ -226,13 +228,7 @@ bool W_CloseManagedWad(const char *filename)
 //
 WadDirectory *W_GetManagedWad(const char *filename)
 {
-   manageddir_t *dir = NULL;
-   WadDirectory *waddir = NULL;
-
-   if((dir = w_dirhash.objectForKey(filename)))
-      waddir = &(dir->waddir);
-
-   return waddir;
+   return w_dirhash.objectForKey(filename);
 }
 
 //
@@ -244,10 +240,12 @@ WadDirectory *W_GetManagedWad(const char *filename)
 const char *W_GetManagedDirFN(WadDirectory *waddir)
 {
    const char *name = NULL;
-   void *data = waddir->getData();
 
-   if(data && waddir->getType() == WadDirectory::MANAGED)
-      name = ((manageddir_t *)data)->name;
+   if(waddir->getType() == WadDirectory::MANAGED)
+   {
+      ManagedDirectory *mdir = static_cast<ManagedDirectory *>(waddir);
+      name = mdir->name;
+   }
 
    return name;
 }
@@ -357,12 +355,11 @@ wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
 wadlevel_t *W_FindLevelInDir(WadDirectory *waddir, const char *name)
 {
    wadlevel_t *retlevel = NULL, *curlevel = NULL;
-   void *data = waddir->getData();
 
-   if(data && waddir->getType() == WadDirectory::MANAGED)
+   if(waddir->getType() == WadDirectory::MANAGED)
    {
       // get the managed directory
-      manageddir_t *dir = (manageddir_t *)data;
+      ManagedDirectory *dir = static_cast<ManagedDirectory *>(waddir);
       curlevel = dir->levels;
 
       // loop on the levels list so long as the header names are valid
@@ -441,16 +438,17 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
       return;
    }
 
-   void *data = dir->getData();
-
    // Find the first map in the wad file
-   if(data && dir->getType() == WadDirectory::MANAGED)
+   if(dir->getType() == WadDirectory::MANAGED)
    {
       // if levelname is valid, try to find that particular map
       if(levelname && W_FindLevelInDir(dir, levelname))
          mapname = levelname;
       else
-         mapname = ((manageddir_t *)data)->levels[0].header;
+      {
+         ManagedDirectory *mdir = static_cast<ManagedDirectory *>(dir);
+         mapname = mdir->levels[0].header;
+      }
    }
    else
       mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));

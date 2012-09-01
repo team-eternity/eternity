@@ -27,6 +27,8 @@
 #ifndef W_WAD_H__
 #define W_WAD_H__
 
+#include "z_zone.h"
+
 //
 // TYPES
 //
@@ -111,11 +113,11 @@ struct lumpinfo_t
 struct wfileadd_t
 {
    const char *filename; // name of file
-   int li_namespace;     // if not 0, special namespace to add file under
-   FILE *f;              // pointer to file handle if this is a subfile
-   size_t baseoffset;    // base offset if this is a subfile
-   int privatedir;       // if not 0, has a private directory
-   bool directory;       // if true, is an on-disk directory
+   int     li_namespace; // if not 0, special namespace to add file under
+   FILE   *f;            // pointer to file handle if this is a subfile
+   size_t  baseoffset;   // base offset if this is a subfile
+   int     privatedir;   // if not 0, has a private directory
+   bool    directory;    // if true, is an on-disk directory
 };
 
 //
@@ -156,7 +158,7 @@ public:
 // Adding this allows a level of indirection to be added to the wad system,
 // letting us have wads that are not part of the master directory.
 //
-class WadDirectory
+class WadDirectory : public ZoneObject
 {
 public:
    // directory types
@@ -216,6 +218,12 @@ protected:
    static unsigned int LumpNameHash(const char *s);
 
 public:
+   WadDirectory()
+      : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(0), infoptrs(NULL),
+        numallocs(0), numallocsa(0), type(0), data(NULL)
+   {
+   }
+
    // Public methods
    void        initMultipleFiles(wfileadd_t *files);
    int         checkNumForName(const char *name, 
