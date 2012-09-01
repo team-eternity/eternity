@@ -40,7 +40,7 @@ struct edf_string_t
    int  numkey;        // number for hashing
 };
 
-edf_string_t *E_CreateString(const char *, const char *, int);
+edf_string_t *E_CreateString(const char *value, const char *key, int num);
 edf_string_t *E_StringForName(const char *key);
 edf_string_t *E_GetStringForName(const char *key);
 edf_string_t *E_StringForNum(int num);

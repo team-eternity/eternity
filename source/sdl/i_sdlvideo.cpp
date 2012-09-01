@@ -468,43 +468,5 @@ bool SDLVideoDriver::InitGraphicsMode()
 // The one and only global instance of the SDL video driver.
 SDLVideoDriver i_sdlvideodriver;
 
-//----------------------------------------------------------------------------
-//
-// $Log: i_video.c,v $
-// Revision 1.12  1998/05/03  22:40:35  killough
-// beautification
-//
-// Revision 1.11  1998/04/05  00:50:53  phares
-// Joystick support, Main Menu re-ordering
-//
-// Revision 1.10  1998/03/23  03:16:10  killough
-// Change to use interrupt-driver keyboard IO
-//
-// Revision 1.9  1998/03/09  07:13:35  killough
-// Allow CTRL-BRK during game init
-//
-// Revision 1.8  1998/03/02  11:32:22  killough
-// Add pentium blit case, make -nodraw work totally
-//
-// Revision 1.7  1998/02/23  04:29:09  killough
-// BLIT tuning
-//
-// Revision 1.6  1998/02/09  03:01:20  killough
-// Add vsync for flicker-free blits
-//
-// Revision 1.5  1998/02/03  01:33:01  stan
-// Moved __djgpp_nearptr_enable() call from I_video.c to i_main.c
-//
-// Revision 1.4  1998/02/02  13:33:30  killough
-// Add support for -noblit
-//
-// Revision 1.3  1998/01/26  19:23:31  phares
-// First rev with no ^Ms
-//
-// Revision 1.2  1998/01/26  05:59:14  killough
-// New PPro blit routine
-//
-// Revision 1.1.1.1  1998/01/19  14:02:50  rand
-// Lee's Jan 19 sources
-//
-//----------------------------------------------------------------------------
+// EOF
+

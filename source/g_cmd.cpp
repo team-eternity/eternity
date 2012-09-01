@@ -28,11 +28,11 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_files.h"
 #include "d_gi.h"     // haleyjd: gamemode pertinent info
 #include "d_io.h"
 #include "d_mod.h"
@@ -44,6 +44,8 @@
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "i_system.h"
+#include "i_video.h"
 #include "m_misc.h"
 #include "m_shots.h"
 #include "m_random.h"
@@ -60,8 +62,6 @@
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
-
-extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 
 extern int automlook;
 extern int invert_mouse;
@@ -289,7 +289,14 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
 
 // 'cool' demo
 
-VARIABLE_BOOLEAN(cooldemo, NULL,            onoff);
+const char *cooldemo_modes[] =
+{
+   "off",
+   "random",
+   "follow"
+};
+
+VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
 ///////////////////////////////////////////////////

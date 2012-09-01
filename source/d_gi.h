@@ -185,6 +185,7 @@ enum
    GIF_SKILL5RESPAWN  = 0x00001000, // monsters respawn by default on skill 5
    GIF_SKILL5WARNING  = 0x00002000, // display menu warning for skill 5
    GIF_HUDSTATBARNAME = 0x00004000, // HUD positions level name above status bar
+   GIF_CENTERHUDMSG   = 0x00008000, // HUD messages are centered by default
 };
 
 // Game mode handling - identify IWAD version

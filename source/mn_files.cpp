@@ -49,6 +49,7 @@
 #include "m_misc.h"
 #include "mn_engin.h"
 #include "mn_files.h"
+#include "mn_misc.h"
 #include "r_data.h"
 #include "s_sound.h"
 #include "v_font.h"
@@ -421,6 +422,18 @@ static void MN_FileDrawer(void)
 }
 
 //
+// MN_doExitFileWidget
+//
+// When allow_exit flag is false, call D_StartTitle
+//
+static void MN_doExitFileWidget()
+{
+   MN_PopWidget();  // cancel widget
+   MN_ClearMenus();
+   D_StartTitle();
+}
+
+//
 // MN_FileResponder
 //
 // Responds to events for the file selection dialog widget. Uses
@@ -483,15 +496,24 @@ static bool MN_FileResponder(event_t *ev)
    if(action_menu_toggle || action_menu_previous)
    {
       // When allow_exit flag is false, call D_StartTitle
+      /*
       if(!allow_exit)
       {
          MN_ClearMenus();
          D_StartTitle();
       }
-
+      */
       action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL; // cancel widget
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      if(!allow_exit)
+      {
+         MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
+                         MN_doExitFileWidget);
+      }
+      else
+      {
+         MN_PopWidget(); // cancel widget
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      }
       return true;
    }
   
@@ -509,7 +531,7 @@ static bool MN_FileResponder(event_t *ev)
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
       if(select_dismiss)
-         current_menuwidget = NULL; // cancel widget
+         MN_PopWidget(); // cancel widget
       return true;
    }
 
@@ -580,11 +602,12 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 
    selected_item      = 0;
    mn_currentdir      = &mn_diskdir;
-   current_menuwidget = &file_selector;
    help_description   = "select wad file:";
    variable_name      = "mn_wadname";
    select_dismiss     = true;
    allow_exit         = true;
+
+   MN_PushWidget(&file_selector);
 }
 
 //
@@ -601,11 +624,12 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
 
    selected_item      = 0;
    mn_currentdir      = dir;
-   current_menuwidget = &file_selector;
    help_description   = title;
    variable_name      = command;
    select_dismiss     = dismissOnSelect;
    allow_exit         = allowExit;
+
+   MN_PushWidget(&file_selector);
 }
 
 //=============================================================================
@@ -679,11 +703,12 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
 
    selected_item = 0;
    mn_currentdir = &mn_diskdir;
-   current_menuwidget = &file_selector;
    help_description = "select music to play:";
    variable_name = "s_playmusic";
    select_dismiss = false;
    allow_exit     = true;
+
+   MN_PushWidget(&file_selector);
 }
 
 CONSOLE_COMMAND(mn_selectflat, 0)
@@ -719,11 +744,12 @@ CONSOLE_COMMAND(mn_selectflat, 0)
       selected_item = curnum;
    
    mn_currentdir = &mn_diskdir;
-   current_menuwidget = &file_selector;
    help_description = "select background:";
    variable_name = "mn_background";
    select_dismiss = false;
    allow_exit     = true;
+
+   MN_PushWidget(&file_selector);
 }
 
 void MN_File_AddCommands(void)

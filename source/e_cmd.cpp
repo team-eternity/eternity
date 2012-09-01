@@ -464,7 +464,7 @@ void E_AddCommands(void)
    C_AddCommand(e_linedef);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 
 //
 // Script functions

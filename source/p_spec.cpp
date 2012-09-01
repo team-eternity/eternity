@@ -1164,32 +1164,8 @@ bool P_WasSecret(sector_t *sec)
 //
 void P_StartLineScript(line_t *line, Mobj *thing)
 {
-#ifndef EE_NO_SMALL_SUPPORT
-   if(levelScriptLoaded)
-   {
-      SmallContext_t *useContext;
-      SmallContext_t newContext;
-
-      // possibly create a child context for the Levelscript
-      useContext = SM_CreateChildContext(curLSContext, &newContext);
-
-      // set invocation data
-      useContext->invocationData.invokeType = SC_INVOKE_LINE;
-      useContext->invocationData.trigger = thing;
-      useContext->invocationData.line = line;
-
-      // execute
-      SM_ExecScriptByNumV(&useContext->smallAMX, line->tag);
-
-      // clear invocation
-      SM_ClearInvocation(useContext);
-
-      // destroy any child context that might have been created
-      SM_DestroyChildContext(useContext);         
-   }
-   else // haleyjd 03/20/11: Defer to ACS if there is no Small level script
-#endif
-      ACS_StartScript(line->tag, gamemap, line->args, thing, line, 0, NULL, false);
+   ACS_ExecuteScriptNumber(line->tag, gamemap, 0, line->args, NUMLINEARGS, 
+                           thing, line, 0);
 }
 
 //=============================================================================
@@ -5143,7 +5119,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    }
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small Natives
 //

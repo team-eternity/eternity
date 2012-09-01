@@ -1470,9 +1470,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, userpath, D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 1, userpath, "/tmpetern.cfg");
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", userpath, D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmpetern.cfg", userpath);
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
@@ -1486,10 +1486,11 @@ void M_SaveDefaultFile(defaultfile_t *df)
    // killough 10/98: use executable's name
 
    if(config_help && !df->helpHeader &&
-      fprintf(f,";%s.cfg format:\n"
+      fprintf(f,
+              ";eternity.cfg format:\n"
               ";[min-max(default)] description of variable\n"
               ";* at end indicates variable is settable in wads\n"
-              ";variable   value\n\n", D_DoomExeName()) == EOF)
+              ";variable   value\n\n") == EOF)
    {
       M_defaultFileWriteError(df, tmpfile);
       return;

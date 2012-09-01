@@ -397,10 +397,6 @@ extern void       ST_AddCommands(void);        // st_stuff
 extern void        V_AddCommands(void);        // v_misc
 extern void        W_AddCommands(void);        // w_levels -- haleyjd
 
-#ifndef EE_NO_SMALL_SUPPORT
-extern void       SM_AddCommands(void);        // a_small  -- haleyjd
-#endif
-
 void C_AddCommands()
 {
   C_AddCommand(version);
@@ -446,13 +442,9 @@ void C_AddCommands()
   ST_AddCommands();
   V_AddCommands();
   W_AddCommands();
-  
-#ifndef EE_NO_SMALL_SUPPORT
-  SM_AddCommands();
-#endif
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 {
    return version;

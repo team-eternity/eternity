@@ -190,7 +190,7 @@ static bool MN_SkinResponder(event_t *ev)
       // kill the widget
       skview_metadeaths.clear();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-      current_menuwidget = NULL;
+      MN_PopWidget();
       return true;
    }
 
@@ -505,7 +505,7 @@ void MN_InitSkinViewer(void)
    MN_initMetaDeaths();
 
    // set the widget
-   current_menuwidget = &skinviewer;
+   MN_PushWidget(&skinviewer);
 }
 
 // EOF

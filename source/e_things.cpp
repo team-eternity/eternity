@@ -904,9 +904,7 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 
    namebuffer.clearOrCreate(64);
 
-   namebuffer  = base;
-   namebuffer += '.'; 
-   namebuffer += mod->name;
+   namebuffer << base << '.' << mod->name;
 
    return namebuffer.constPtr();
 }

@@ -2,6 +2,260 @@
 Changes since Eternity Engine v3.40.20
 ================================================================================
 --------------------------------------------------------------------------------
+08/26/12
+
+Final code changes in prep for 3.40.25 'Midgard' release:
+
+* HUD messages will now be centered in all games if the game is running in a
+  widescreen video mode. This just looks better.
+  
+* The Master Levels runtime loader is now finally available from the WAD options
+  menu.
+  
+* A new page has been added to the video options menu to support configuration
+  of the HAL video driver, software screen surface bitdepth, and OpenGL
+  backend options.
+
+--------------------------------------------------------------------------------
+08/19/12
+
+With Small removed, the start map has been disabled again until such time it is
+replaced with a better map possibly using ACS and/or Aeon.
+
+DavidPH and esselfortium have been added to the in-game credits screen.
+
+--------------------------------------------------------------------------------
+08/18/12
+
+ConSiGno found a bug in the use of CAM_CheckSight for monsters which had them
+looking for the player out of their feet. If they had a ledge in front of them,
+you'd be invisible because of this. Fixed by making the same height adjustments
+used in the normal line-of-sight code - this was a consequence of the code
+originally being designed to handle point cameras only :P
+
+Spring cleaning is underway:
+
+* Small is gone for good; I have removed the AMX modules and much of the engine
+  interface code, with the exception of natives and other code segments which
+  may later be adapted to work with the Aeon API instead.
+
+* Deleted dead files from the EE project space: d_dialog, z_zone.cpp, old
+  build directories for DJGPP and MinGW, DJGPP DOS code, etc.
+  
+* Finally got rid of the dead and unsupportable Visual Studio 6 project files.
+
+* Killed off all extinct #define values in the VC2008 project.
+
+--------------------------------------------------------------------------------
+08/12/12
+
+I eliminated the D_DoomExeName function; everywhere it was previously invoked is
+now hardcoded to use "eternity" or a portion of it such as eter/etern. Code in
+d_diskfile now uses estructalloc where appropriate, and static_cast is used in
+preference to C-style casts.
+
+After previous discussion with DavidPH, we have merged acs-branch back to trunk,
+as it is more or less complete at this point. Any additional follow-up work will
+be completed on trunk, unless it becomes major enough to warrant a new branch,
+naturally.
+
+--------------------------------------------------------------------------------
+08/11/12
+
+With CAM_CheckSight finished, I was able to employ it in its originally 
+envisioned role to enhance the followcam mode of the SMMU-inherited "cool demo"
+feature.
+
+The followcam will now be spawned at the furthest-away vertex in the player's
+sector that is within 256 units of the player and from which the player is
+visible, courtesy of CAM_CheckSight. In addition, the view will cancel once the
+player moves out of sight of the followcam. It will also pitch up and down to
+look at the player when a significant vertical height difference exists.
+
+Other small changes made included changing some annoying instances of pointers
+used for pass by reference in the automap into actual C++ references, resulting
+in much cleaner syntax within those functions.
+
+--------------------------------------------------------------------------------
+08/07/12
+
+I have finally finished up CAM_CheckSight, the fast, re-entrant, and side effect
+free variant of P_CheckSight, based on the original Doom 1.2 tracer-like 
+algorithm for which source is available through Heretic and Hexen. Adjustments
+required to finish it off included the following:
+
+   * Support for polyobjects
+   * Support for deep water blocking sight across the water boundary
+   * Tracking of touched lines and polyobjects without changing validcount
+     (which would constitute a potential side effect on the playsim).
+
+CAM_CheckSight is now unconditionally called down to by P_CheckSight if demo
+version is >= 3.40.24. If this is found to create any real compatibility issues,
+it may need a comp var, but I'd rather avoid it frankly.
+
+--------------------------------------------------------------------------------
+07/19/12
+
+I have added support for editing of limited properties of the GameModeInfo
+structure and its subordinate mission info structure in EDF in the form of the
+gameproperties block. Each gameproperties block is treated like a delta and is
+applied over the native defaults in order of definition.
+
+--------------------------------------------------------------------------------
+07/18/12
+
+In order to, by numerous requests, be more like other ports and fill in the
+wings of the 4:3 status bar with the small-screen-size border instead of a 
+simple black rect, I have rewritten portions of R_ExecuteSetViewSize and
+added a new R_VideoEraseScaled function. Amongst other things, this allows
+the Heretic status bar to look at least half decent in 4:3 over widescreen.
+
+I also corrected a problem found by DavidPH where screenmodes with *either*
+width or height, but not both, less than 640 and 400 respectively, would be
+treated as if they were legacy 16:10-in-4:3 modes.
+
+The keybinding widget had been missed and was still drawing text in widescreen,
+over a text box drawn in 4:3 (found by CSonicGo).
+
+--------------------------------------------------------------------------------
+07/15/12
+
+Support has finally been added for the long-planned correction of screen patches
+to draw in 4:3 aspect ratio while the game is running in widescreen modes via
+creation of a sub-VBuffer which is attached to the vbscreen, sharing its pixel
+data but with a smaller width and an offset such that it draws the smaller 4:3
+screen centered over the 16:10, 16:9, etc framebuffer.
+
+--------------------------------------------------------------------------------
+06/24/12
+
+The SMMU walkcam now has the ability to fly. Pressing fly up while in walkcam
+mode will put the camera in flying mode. It is bound to 4 units above the floor
+and 8 units below the ceiling while flying. It always pitch flies also, 
+regardless of the value of p_pitchedflight.
+
+--------------------------------------------------------------------------------
+06/21/12
+
+I have reformatted the automap models in am_map while thinking again about how
+they might be generalized and supported through EDF.
+
+I have applied some minor tweaks to the sound engine to address some things I
+have heard come up on occasion that seem like bugs.
+
+--------------------------------------------------------------------------------
+06/16/12
+
+Due to continuing problems and the possibility of an upcoming release, I have
+been forced reluctantly to revert Ladna's new keybinding system. In order for
+him to possibly continue work on it in the future, I have split it off first
+into a new branch, kb-branch.
+
+--------------------------------------------------------------------------------
+06/15/12
+
+I have rewritten E_GetJumpInfo and made it global, allowing DavidPH to use it
+on acs-branch for implementing ACS state sets. This means that Eternity will
+support idioms such as setting state to ThingType::StateLabel constructs within
+ACS.
+
+--------------------------------------------------------------------------------
+06/10/12
+
+I have changed emalloc back to using Z_Malloc instead of Z_Calloc, chiefly at
+DavidPH's request.
+
+--------------------------------------------------------------------------------
+06/09/12
+
+As an ultimate solution to the problems raised by addition of a default patch
+taking the place of missing screen patches, I have defined a new zone memory
+tag, PU_PERMANENT. Memory given this tag can be passed to Z_Free or Z_ChangeTag,
+but neither function will be allowed to mutate such a zone block; they will
+silently return instead. This means it is possible to allocate zone memory which
+can be invisibly immutable, which is precisely what is needed for the default 
+screen patch.
+
+--------------------------------------------------------------------------------
+06/07/12
+
+DavidPH added optional pitched flight mechanics, where looking up or down while
+flying will cause the player to fly in the direction he/she is looking. This is
+strictly optional because it is not authentic to the Raven play mechanics, and
+disrupts the ability I much treasure to "rain down retribution from above with 
+utter impunity" that the Wings of Wrath otherwise grant by letting you fly level
+while looking downward.
+
+--------------------------------------------------------------------------------
+06/06/12
+
+Added a fly console command, which acts like a powerup cheat by giving the
+player pw_flight. Added keybinding actions for flying up, down, and dropping to
+the ground ("flight center"). Flight actions are now recorded and played back
+in demos and are transmitted between nodes during netplay.
+
+DavidPH, who now has direct SVN access as an official member of Team Eternity,
+fixed some issues in saving of ACSArray values.
+
+--------------------------------------------------------------------------------
+06/05/12
+
+I have started work on support for player flight, compatible with Heretic and
+Hexen's gameplay mechanics.
+
+--------------------------------------------------------------------------------
+06/04/12
+
+DavidPH added support for ACS arrays.
+
+--------------------------------------------------------------------------------
+06/03/12
+
+Applied one more patch from DavidPH, this one adding preliminary work toward
+CALLFUNC support.
+
+--------------------------------------------------------------------------------
+06/02/12
+
+Applied yet another patch from DavidPH which has begun support for ACSE 
+bytecode, additional ZDoom extensions within the ACS0 bytecode format, TAGSTRING 
+support, better behavior in response to illegal opcodes, and a rewrite of 
+P_FindMobjFromTID to enable ZDoom-compatible behavior, treating 0 as meaning
+the trigger object (note this would break any legacy Small scripts depending on
+_TID_TRIGGER irrevocably, but ask me if I care).
+
+--------------------------------------------------------------------------------
+05/30/12
+
+Applied another patch from DavidPH which adds support for ZDoom's LOADACS lump,
+A_START/A_END namespace in wads, introduces more separation between the ACS 
+virtual machine and the ACSThinker class, further develops the ACS savegame
+code, and more.
+
+--------------------------------------------------------------------------------
+05/29/12
+
+Xaser found a major problem in P_SetPsprite caused by my failure to account for
+recursion - this could cause codepointers called on psprites to reference the
+wrong psprite, as curpsprite is a singleton member of the player_t structure.
+
+--------------------------------------------------------------------------------
+05/27/12
+
+Applied several patches from DavidPH:
+
+* ACS0 dedicated loader with code tracer
+* CMake debug build flags
+* Support for a direct-threaded ACS interpreter loop when compiled under GCC
+
+--------------------------------------------------------------------------------
+05/20/12
+
+TheGreenHerring requested that the M_STAT resource in eternity.wad be
+de-conflicted with the BOOM resource of the same name, due to the fact that the
+contained text is no longer the same.
+
+--------------------------------------------------------------------------------
 05/19/12
 
 I have finally gotten around to renaming all the methods of WadDirectory to

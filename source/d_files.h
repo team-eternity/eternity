@@ -20,19 +20,41 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//
-//    Routines for IWAD location, version identification, and loading.
-//    Split out of d_main.cpp 08/12/12.
+//    Code for loading data files, particularly PWADs.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef D_IWAD_H__
-#define D_IWAD_H__
+#ifndef D_FILES_H__
+#define D_FILES_H__
 
-extern bool freedoom;
+struct gfs_t;
 
-char *D_FindInDoomWadPath(const char *filename, const char *extension);
-void D_IdentifyVersion();
+struct wfileadd_t;
+extern wfileadd_t *wadfiles;     // killough 11/98
+extern char firstlevel[9];
+
+// WAD Files
+void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
+               int privatedir);
+void D_AddDirectory(const char *dir);
+void D_ListWads();
+void D_NewWadLumps(FILE *handle);
+bool D_AddNewFile(const char *s);
+
+// GFS Scripts
+void D_ProcessGFSDeh(gfs_t *gfs);
+void D_ProcessGFSWads(gfs_t *gfs);
+void D_ProcessGFSCsc(gfs_t *gfs);
+
+// Drag-and-Drop Support
+void D_LooseWads();
+void D_LooseDehs();
+gfs_t *D_LooseGFS();
+const char *D_LooseDemo();
+bool D_LooseEDF(char **buffer);
+
+// EDF
+void D_LoadEDF(gfs_t *gfs);
 
 #endif
 

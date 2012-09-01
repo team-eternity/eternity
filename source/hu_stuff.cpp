@@ -226,7 +226,7 @@ void HU_Start(void)
       }
    }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDStart");
@@ -246,7 +246,7 @@ void HU_Drawer(void)
    int i;
    hu_widget_t *widget;
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDPreDraw");
@@ -390,10 +390,13 @@ static void HU_MessageDraw(hu_widget_t *widget)
       int x = 0;
       char *msg = mw->messages[i];
 
-      // haleyjd 12/26/02: center messages in Heretic
-      // FIXME/TODO: make this an option in DOOM?
-      if(GameModeInfo->type == Game_Heretic)
+      // haleyjd 12/26/02: center messages in proper gamemodes
+      // haleyjd 08/26/12: center also if in widescreen modes
+      if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
+         vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
+      {
          x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
+      }
       
       // haleyjd 06/04/05: use V_FontWriteTextColored like it should.
       // Color codes within strings will still override the default.
@@ -1306,7 +1309,7 @@ static void HU_CoordTick(hu_widget_t *widget)
    }
    plyr = &players[displayplayer];
 
-   AM_Coordinates(plyr->mo, &x, &y, &z);
+   AM_Coordinates(plyr->mo, x, y, z);
 
    if(tw == &coordx_widget)
    {
@@ -1497,7 +1500,7 @@ void HU_AddCommands(void)
    HU_OverAddCommands();
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Script functions
 //

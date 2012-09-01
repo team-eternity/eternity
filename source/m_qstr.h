@@ -38,6 +38,8 @@
 
 #include "z_zone.h"
 
+class SaveArchive;
+
 class qstring : public ZoneObject
 {
 private:
@@ -64,6 +66,12 @@ public:
       : ZoneObject(), buffer(NULL), index(0), size(0)
    {
       copy(other);
+   }
+
+   explicit qstring(const char *cstr)
+      : ZoneObject(), buffer(NULL), index(0), size(0)
+   {
+      copy(cstr);
    }
 
    ~qstring() { freeBuffer(); }
@@ -174,6 +182,7 @@ public:
    const char *strRChr(char c) const;
    size_t      findFirstOf(char c) const;
    size_t      findFirstNotOf(char c) const;
+   size_t      findLastOf(char c) const;
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
 
@@ -196,6 +205,14 @@ public:
    qstring &operator += (const qstring &other);
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
+   qstring &operator << (const qstring &other);
+   qstring &operator << (const char    *other);
+   qstring &operator << (char   ch);
+   qstring &operator << (int    i);
+   qstring &operator << (double d);
+
+   // Archiving
+   void archive(SaveArchive &arc);
 };
 
 #endif

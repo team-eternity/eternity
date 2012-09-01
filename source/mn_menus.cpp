@@ -29,12 +29,12 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -48,6 +48,7 @@
 #include "g_game.h"
 #include "hu_over.h"
 #include "hu_stuff.h" // haleyjd
+#include "i_system.h"
 #include "i_video.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -236,6 +237,8 @@ CONSOLE_COMMAND(mn_newgame, 0)
    
    if(GameModeInfo->id == commercial)
    {
+// haleyjd 08/19/2012: startmap is currently deprecated, may return later
+#ifdef EE_STARTMAP_PROMPT
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
       bool mapPresent = true;
@@ -248,7 +251,6 @@ CONSOLE_COMMAND(mn_newgame, 0)
          (modifiedgame && 
           lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
-
 
       // dont use new game menu if not needed
       if(!(modifiedgame && startOnNewMap) && use_startmap && mapPresent)
@@ -263,6 +265,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          }
       }
       else
+#endif
          MN_StartMenu(&menu_newgame);
    }
    else
@@ -570,8 +573,8 @@ extern menu_t menu_wadiwads3;
 
 static const char *mn_wad_names[] =
 {
-   "File Selection",
-   "Misc Settings",
+   "File Selection / Master Levels",
+   "Misc Settings / Autoloads",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
    "IWAD Paths - Freedoom",
@@ -590,15 +593,20 @@ static menu_t *mn_wad_pages[] =
 
 static menuitem_t mn_loadwad_items[] =
 {
-   {it_title,    FC_GOLD "Load Wad",       NULL,               "M_WAD"},
+   {it_title,    FC_GOLD "Load Wad",       NULL,                "M_WAD"},
    {it_gap},
    {it_info,     FC_GOLD "File Selection", NULL,                NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "Wad name:",              "mn_wadname" },
-   {it_variable, "Wad directory:",         "wad_directory" },
-   {it_runcmd,   "Select wad...",          "mn_selectwad" },
+   {it_variable, "Wad name:",              "mn_wadname",        NULL, MENUITEM_LALIGNED },
+   {it_variable, "Wad directory:",         "wad_directory",     NULL, MENUITEM_LALIGNED },
+   {it_runcmd,   "Select wad...",          "mn_selectwad",      NULL, MENUITEM_LALIGNED },
    {it_gap},
    {it_runcmd,   "Load wad",               "mn_loadwaditem",    NULL, MENUITEM_CENTERED },
+   {it_gap},
+   {it_info,     FC_GOLD "Master Levels",  NULL,                NULL, MENUITEM_CENTERED },
+   {it_gap},
+   {it_variable, "Master Levels dir:",     "master_levels_dir", NULL, MENUITEM_LALIGNED },
+   {it_runcmd,   "Play Master Levels...",  "w_masterlevels",    NULL, MENUITEM_LALIGNED },
    {it_end},
 };
 
@@ -774,7 +782,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       MN_ErrorMsg("Failed to load wad file");
 }
 
-/////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Multiplayer Game settings
 //
@@ -1920,6 +1928,7 @@ extern menu_t menu_video;
 extern menu_t menu_sysvideo;
 extern menu_t menu_video_pg2;
 extern menu_t menu_particles;
+extern menu_t menu_vidadv;
 
 static const char *mn_vidpage_names[] =
 {
@@ -1927,6 +1936,7 @@ static const char *mn_vidpage_names[] =
    "System / Console / Screenshots",
    "Screen Wipe",
    "Particles",
+   "Advanced",
    NULL
 };
 
@@ -1936,6 +1946,7 @@ static menu_t *mn_vidpage_menus[] =
    &menu_sysvideo,
    &menu_video_pg2,
    &menu_particles,
+   &menu_vidadv,
    NULL
 };
 
@@ -1946,19 +1957,18 @@ static menuitem_t mn_video_items[] =
    {it_title,        FC_GOLD "Video Options",           NULL, "m_video"},
    {it_gap},
    {it_info,         FC_GOLD "Mode"                                    },
-   {it_runcmd,       "choose a mode...",        "mn_vidmode"           },
-   {it_variable,     "video mode",              "i_videomode"          },
-   {it_toggle,       "favorite aspect ratio",   "mn_favaspectratio"    },
-   {it_toggle,       "favorite screen mode",    "mn_favscreentype"     },
-   //{it_runcmd,       "make default video mode", "i_default_videomode"  },
-   {it_toggle,       "vertical sync",           "v_retrace"            },
-   {it_slider,       "gamma correction",        "gamma"                },   
+   {it_runcmd,       "Choose a mode...",        "mn_vidmode"           },
+   {it_variable,     "Video mode",              "i_videomode"          },
+   {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
+   {it_toggle,       "Vertical sync",           "v_retrace"            },
+   {it_slider,       "Gamma correction",        "gamma"                },   
    {it_gap},
    {it_info,         FC_GOLD "Rendering"                               },
-   {it_slider,       "screen size",             "screensize"           },
-   {it_toggle,       "hom detector flashes",    "r_homflash"           },
-   {it_toggle,       "translucency",            "r_trans"              },
-   {it_variable,     "translucency percentage", "r_tranpct"            },
+   {it_slider,       "Screen size",             "screensize"           },
+   {it_toggle,       "HOM detector flashes",    "r_homflash"           },
+   {it_toggle,       "Translucency",            "r_trans"              },
+   {it_variable,     "Translucency percentage", "r_tranpct"            },
    {it_end}
 };
 
@@ -2015,20 +2025,20 @@ static menuitem_t mn_sysvideo_items[] =
    {it_title,    FC_GOLD "Video Options",   NULL, "m_video"},
    {it_gap},
    {it_info,     FC_GOLD "System"},
-   {it_toggle,   "textmode startup",        "textmode_startup"},
+   {it_toggle,   "Textmode startup",        "textmode_startup"},
 #ifdef _SDL_VER
-   {it_toggle,   "wait at exit",            "i_waitatexit"},
-   {it_toggle,   "show endoom",             "i_showendoom"},
-   {it_variable, "endoom delay",            "i_endoomdelay"},
+   {it_toggle,   "Wait at exit",            "i_waitatexit"},
+   {it_toggle,   "Show ENDOOM",             "i_showendoom"},
+   {it_variable, "ENDOOM delay",            "i_endoomdelay"},
 #endif
    {it_gap},
    {it_info,     FC_GOLD "Console"},
-   {it_variable, "console speed",           "c_speed"},
-   {it_variable, "console height",          "c_height"},
+   {it_variable, "Console speed",           "c_speed"},
+   {it_variable, "Console height",          "c_height"},
    {it_gap},
    {it_info,     FC_GOLD "Screenshots"},
-   {it_toggle,   "screenshot format",       "shot_type"},
-   {it_toggle,   "gamma correct shots",     "shot_gamma"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_end}
 };
 
@@ -2051,11 +2061,11 @@ static menuitem_t mn_video_page2_items[] =
    {it_title,   FC_GOLD "Video Options",    NULL, "m_video"},
    {it_gap},
    {it_info,    FC_GOLD "Screen Wipe"},
-   {it_toggle,  "wipe type",                "wipetype"},
-   {it_toggle,  "game waits",               "wipewait"},
+   {it_toggle,  "Wipe type",                "wipetype"},
+   {it_toggle,  "Game waits",               "wipewait"},
    {it_gap},
    {it_info,    FC_GOLD "Misc."},
-   {it_toggle,  "loading disk icon",       "v_diskicon"},
+   {it_toggle,  "Loading disk icon",       "v_diskicon"},
    {it_end}
 };
 
@@ -2096,7 +2106,7 @@ menu_t menu_particles =
 {
    mn_particles_items,   // menu items
    &menu_video_pg2,      // previous page
-   NULL,                 // next page
+   &menu_vidadv,         // next page
    &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
@@ -2106,11 +2116,44 @@ menu_t menu_particles =
    mn_vidpage_menus
 };
 
-
 CONSOLE_COMMAND(mn_particle, 0)
 {
    MN_StartMenu(&menu_particles);
 }
+
+// Advanced video option items
+static menuitem_t mn_vidadv_items[] =
+{
+   { it_title,    FC_GOLD "Video Options",    NULL,                "m_video" },
+   { it_gap },
+   { it_info,     FC_GOLD "Advanced"},
+   { it_toggle,   "Video driver",             "i_videodriverid"    },
+   { it_variable, "Software bitdepth",        "i_softbitdepth"     },
+   { it_gap },
+   { it_info,     FC_GOLD "OpenGL"},
+   { it_variable, "GL color depth",           "gl_colordepth"      },
+   { it_toggle,   "Texture filtering",        "gl_filter_type"     },
+   { it_toggle,   "Texture format",           "gl_texture_format"  },
+   { it_toggle,   "Use extensions",           "gl_use_extensions"  },
+   { it_toggle,   "Use ARB pixelbuffers",     "gl_arb_pixelbuffer" },
+   { it_end }
+};
+
+
+// Advanced video options
+menu_t menu_vidadv =
+{
+   mn_vidadv_items,      // menu items
+   &menu_particles,      // previous page
+   NULL,                 // next page
+   &menu_video,          // rootpage
+   200, 15,              // x,y offset
+   3,                    // start on first selectable
+   mf_background,        // full-screen menu
+   NULL,
+   mn_vidpage_names,
+   mn_vidpage_menus
+};
 
 
 /////////////////////////////////////////////////////////////////

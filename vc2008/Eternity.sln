@@ -1,21 +1,13 @@
 
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcproj", "{233045E2-53A6-4579-A272-3D3CF6D97405}"
-	ProjectSection(ProjectDependencies) = postProject
-		{D431963B-F2D5-4BA6-9D01-4A942FC63E96} = {D431963B-F2D5-4BA6-9D01-4A942FC63E96}
-		{8B8CBCA2-21D3-4C23-A397-A4D084F649D3} = {8B8CBCA2-21D3-4C23-A397-A4D084F649D3}
-		{EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2} = {EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2}
-	EndProjectSection
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcxproj", "{233045E2-53A6-4579-A272-3D3CF6D97405}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snes_spc", "snes_spc.vcproj", "{8B8CBCA2-21D3-4C23-A397-A4D084F649D3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snes_spc", "snes_spc.vcxproj", "{8B8CBCA2-21D3-4C23-A397-A4D084F649D3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "zlib.vcproj", "{EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "zlib.vcxproj", "{EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "libpng.vcproj", "{D431963B-F2D5-4BA6-9D01-4A942FC63E96}"
-	ProjectSection(ProjectDependencies) = postProject
-		{EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2} = {EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "libpng.vcxproj", "{D431963B-F2D5-4BA6-9D01-4A942FC63E96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

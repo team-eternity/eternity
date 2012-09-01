@@ -961,6 +961,9 @@ bool KeyBindingsSubSystem::handleKeyEvent(event_t *ev, int categories)
    if(ev->data1 >= KBSS_NUM_KEYS)
       return false;
 
+   // got a key - close box
+   MN_PopWidget();
+
    // Check for ctrl/alt keys.
    if(ev->data1 == KEYD_RCTRL)
       ctrldown = (ev->type == ev_keydown);
@@ -1434,6 +1437,7 @@ void G_EditBinding(const char *action_name)
 {
    current_menuwidget = &key_bindings.binding_widget;
    key_bindings.setBindingAction(action_name);
+   MN_PushWidget(&key_bindings.binding_widget);
 }
 
 //===========================================================================

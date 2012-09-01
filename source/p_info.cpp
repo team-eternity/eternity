@@ -73,6 +73,7 @@
 #include "p_setup.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 extern char gamemapname[9];
@@ -1444,6 +1445,10 @@ static void P_ClearLevelVars(void)
       psnprintf(nextsecret, sizeof(nextsecret), "MAP%02d", curmetainfo->nextsecret);
       LevelInfo.nextSecret = nextsecret;
    }
+
+   // haleyjd 08/31/12: Master Levels mode hacks
+   if(inmasterlevels)
+      LevelInfo.interPic = "INTRMLEV";
 }
 
 int default_weaponowned[NUMWEAPONS];

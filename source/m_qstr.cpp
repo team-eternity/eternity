@@ -39,6 +39,7 @@
 #include "m_qstr.h"
 #include "m_misc.h"       // for M_Strupr/M_Strlwr
 #include "m_strcasestr.h" // for M_StrCaseStr
+#include "p_saveg.h"
 #include "d_io.h"         // for strcasecmp
 
 const size_t qstring::npos = ((size_t) -1);
@@ -532,6 +533,40 @@ qstring &qstring::truncate(size_t pos)
 
 //=============================================================================
 //
+// Stream Insertion Operators
+//
+
+qstring &qstring::operator << (const qstring &other)
+{
+   return concat(other);
+}
+
+qstring &qstring::operator << (const char *other)
+{
+   return concat(other);
+}
+
+qstring &qstring::operator << (char ch)
+{
+   return Putc(ch);
+}
+
+qstring &qstring::operator << (int i)
+{
+   char buf[33];
+   M_Itoa(i, buf, 10);
+   return concat(buf);
+}
+
+qstring &qstring::operator << (double d)
+{
+   char buf[1079];
+   psnprintf(buf, sizeof(buf), "%f", d);
+   return concat(buf);
+}
+
+//=============================================================================
+//
 // Comparison Functions
 //
 
@@ -763,6 +798,34 @@ size_t qstring::findFirstNotOf(char c) const
       }
       ++rover;
    }
+
+   return found ? rover - buffer : npos;
+}
+
+//
+// qstring::findLastOf
+//
+// Find the last occurrance of a character in the qstring which matches
+// the provided character. Returns qstring::npos if not found.
+//
+size_t qstring::findLastOf(char c) const
+{
+   const char *rover;
+   bool found = false;
+   
+   if(!buffer || !index)
+      return npos;
+   
+   rover = buffer + index - 1;
+   do
+   {
+      if(*rover == c)
+      {
+         found = true;
+         break;
+      }
+   }
+   while((rover == buffer) ? false : (--rover, true));
 
    return found ? rover - buffer : npos;
 }
@@ -1149,9 +1212,9 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'f':
             case 'g':
             case 'G':
-               // extremely excessive, but it's possible according to fcvt
+               // extremely excessive, but it's possible 
                dummydbl = va_arg(va1, double);
-               charcount += 626; 
+               charcount += 1078; 
                pctstate = false;
                break;
             case 'c': // Character
@@ -1193,6 +1256,31 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
    index = strlen(buffer);
 
    return returnval;
+}
+
+//=============================================================================
+//
+// Archiving
+//
+
+//
+// qstring::archive
+//
+// davidph 06/10/12: Handles archiving a qstring with proper state information.
+//
+void qstring::archive(SaveArchive &arc)
+{
+   uint32_t indexTemp;
+
+   arc.ArchiveLString(buffer, size);
+
+   if(arc.isSaving())
+      indexTemp = index;
+
+   arc << indexTemp;
+
+   if(arc.isLoading())
+      index = indexTemp;
 }
 
 // EOF

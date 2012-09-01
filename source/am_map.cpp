@@ -950,19 +950,19 @@ static void AM_doFollowPlayer(void)
 
 int map_point_coordinates;
 
-void AM_Coordinates(const Mobj *mo, fixed_t *x, fixed_t *y, fixed_t *z)
+void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
    if(followplayer || !map_point_coordinates)
    {
-      *x = mo->x;
-      *y = mo->y;
-      *z = mo->z;
+      x = mo->x;
+      y = mo->y;
+      z = mo->z;
    }
    else
    {
-      *x = M_DoubleToFixed(m_x + m_w / 2);
-      *y = M_DoubleToFixed(m_y + m_h / 2);
-      *z = R_PointInSubsector(*x, *y)->sector->floorheight;
+      x = M_DoubleToFixed(m_x + m_w / 2);
+      y = M_DoubleToFixed(m_y + m_h / 2);
+      z = R_PointInSubsector(x, y)->sector->floorheight;
    }
 }
 
@@ -1888,16 +1888,16 @@ static void AM_drawNodeLines(int bspnum)
 //
 // haleyjd 01/24/03: made static
 //
-static void AM_rotate(double *x, double *y, angle_t a)
+static void AM_rotate(double &x, double &y, angle_t a)
 {
    double tmpx;
 
    // a little magic: a * (PI / ANG180) converts angle_t to radians
    double angle = (double)a * 1.4629180792671596811e-9;
 
-   tmpx = *x * cos(angle) - *y * sin(angle);
-   *y   = *x * sin(angle) + *y * cos(angle);
-   *x = tmpx;
+   tmpx = x * cos(angle) - y * sin(angle);
+   y    = x * sin(angle) + y * cos(angle);
+   x = tmpx;
 }
 
 //
@@ -1933,7 +1933,7 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
       }
 
       if(angle)
-         AM_rotate(&l.a.x, &l.a.y, angle);
+         AM_rotate(l.a.x, l.a.y, angle);
 
       l.a.x += fx;
       l.a.y += fy;
@@ -1948,7 +1948,7 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
       }
 
       if(angle)
-         AM_rotate(&l.b.x, &l.b.y, angle);
+         AM_rotate(l.b.x, l.b.y, angle);
 
       l.b.x += fx;
       l.b.y += fy;
