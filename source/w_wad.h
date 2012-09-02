@@ -243,6 +243,8 @@ public:
 
    lumpinfo_t *getLumpNameChain(const char *name);
 
+   const char *getLumpFileName(int lump);
+
    // Accessors
    int   getType() const  { return type; }
    void  setType(int i)   { type = i;    }

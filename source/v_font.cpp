@@ -479,9 +479,9 @@ int16_t V_FontMaxWidth(vfont_t *font)
 void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2)
 {
    // get full message width and height
-   bool fitsWidth = false;
-   int fullWidth  = V_FontStringWidth(font, msg);
-   int fullHeight = V_FontStringHeight(font, msg);
+   bool fitsWidth  = false;
+   int  fullWidth  = V_FontStringWidth(font, msg);
+   int  fullHeight = V_FontStringHeight(font, msg);
 
    // fits within the width?
    if(x1 + fullWidth <= x2)
@@ -564,9 +564,9 @@ void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y
 void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, int y2)
 {
    // get full message width and height
-   bool fitsWidth = false;
-   int fullWidth  = V_FontStringWidth(font, msg.constPtr());
-   int fullHeight = V_FontStringHeight(font, msg.constPtr());
+   bool fitsWidth  = false;
+   int  fullWidth  = V_FontStringWidth(font, msg.constPtr());
+   int  fullHeight = V_FontStringHeight(font, msg.constPtr());
 
    // fits within the width?
    if(x1 + fullWidth <= x2)

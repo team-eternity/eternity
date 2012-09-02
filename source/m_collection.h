@@ -273,21 +273,36 @@ public:
 //
 template<typename T> class Collection : public BaseCollection<T>
 {
+protected:
+   const T *prototype; // An unowned object of type T that serves as a prototype
+
 public:
    // Basic constructor
-   Collection() : BaseCollection<T>()
+   Collection() : BaseCollection<T>(), prototype(NULL)
    {
    }
    
    // Parameterized constructor
    Collection(size_t initSize, int zoneTag = PU_STATIC) 
-      : BaseCollection<T>(zoneTag)
+      : BaseCollection<T>(zoneTag), prototype(NULL)
    {
       this->resize(initSize);
    }
    
    // Destructor
    ~Collection() { this->clear(); }
+
+   //
+   // setPrototype
+   //
+   // Set the pointer to a prototype object of type T that can be used
+   // for construction of new items in the collection without constant
+   // instantiation of temporaries just for the purpose of passing into
+   // methods of this class.
+   // Ownership of the prototype is *not* assumed by the collection.
+   //
+   void setPrototype(const T *pPrototype) { prototype = pPrototype; }
+   const T *getPrototype() const { return prototype };
 
    //
    // clear
@@ -333,10 +348,36 @@ public:
       if(this->length >= this->numalloc)
          this->resize(this->length ? this->length : 32); // double array size
       
-      // copy construct new item
+      // placement copy construct new item
       ::new (&this->ptrArray[this->length]) T(newItem);
       
       ++this->length;
+   }
+
+   //
+   // add
+   //
+   // Adds a new item to the end of the collection, using the
+   // prototype as the copy source - the prototype must be valid!
+   //
+   void add()
+   {
+      if(!prototype)
+         I_Error("Collection::add: invalid prototype object\n");
+
+      add(*prototype);
+   }
+
+   //
+   // addNew
+   //
+   // Adds a new item to the end of the collection, using the prototype
+   // as the copy source - must have a valid prototype!
+   //
+   T &addNew()
+   {
+      add();
+      return this->ptrArray[this->length - 1];
    }
 };
 

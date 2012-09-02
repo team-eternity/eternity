@@ -43,6 +43,7 @@
 #include "m_collection.h"
 #include "m_hash.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "p_skin.h"
 #include "s_sound.h"
@@ -105,6 +106,22 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 class WadDirectoryPimpl : public ZoneObject
 {
 public:
+   static qstring FnPrototype;
+   static Collection<qstring> SourceFileNames;
+
+   static void AddFileName(const char *fn)
+   {
+      SourceFileNames.setPrototype(&FnPrototype);
+      SourceFileNames.addNew() << fn;
+   }
+
+   static const char *FileNameForSource(size_t source)
+   {
+      if(source >= SourceFileNames.getLength())
+         return NULL;
+      return SourceFileNames[source].constPtr();
+   }
+
    PODCollection<lumpinfo_t *> infoptrs;
 
    WadDirectoryPimpl()
@@ -112,6 +129,9 @@ public:
    {
    }
 };
+
+qstring             WadDirectoryPimpl::FnPrototype;
+Collection<qstring> WadDirectoryPimpl::SourceFileNames;
 
 //=============================================================================
 //
@@ -415,6 +435,9 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
    }
+
+   // haleyjd: push source filename
+   WadDirectoryPimpl::AddFileName(openData.filename);
 
    // haleyjd: increment source
    ++source;
@@ -777,6 +800,19 @@ lumpinfo_t *W_GetLumpNameChain(const char *name)
    return wGlobalDir.getLumpNameChain(name);
 }
 
+//
+// WadDirectory::getLumpFileName
+//
+// Get the filename of the file from which a particular lump came.
+//
+const char *WadDirectory::getLumpFileName(int lump)
+{
+   if(lump < 0 || lump >= numlumps)
+      return NULL;
+
+   size_t lumpIdx = static_cast<size_t>(lump);
+   return WadDirectoryPimpl::FileNameForSource(lumpinfo[lumpIdx]->source);
+}
 
 //
 // W_InitLumpHash
