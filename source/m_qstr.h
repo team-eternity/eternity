@@ -210,6 +210,9 @@ public:
    qstring &operator << (char   ch);
    qstring &operator << (int    i);
    qstring &operator << (double d);
+   
+   char       &operator [] (size_t idx);
+   const char &operator [] (size_t idx) const;
 
    // Archiving
    void archive(SaveArchive &arc);

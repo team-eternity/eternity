@@ -1892,8 +1892,6 @@ static void WI_loadData(void)
    int   i, j;
    char name[9];
 
-   WI_DrawBackground();         // killough 11/98
-
 #if 0
    // UNUSED
    if(GameModeInfo->id == commercial)
@@ -1903,10 +1901,6 @@ static void WI_loadData(void)
          *pic = colormaps[256*25 + *pic];
    }
 #endif
-
-   // haleyjd 06/17/06: no longer needed:
-   // killough 4/26/98: free lnames here (it was freed too early in Doom)
-   // Z_Free(lnames);
 
    if(GameModeInfo->id == commercial)
    {
@@ -2152,12 +2146,8 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
          qstring lvname;
 
          lvname << FC_ABSCENTER << LevelInfo.levelName;
-         if(V_FontStringWidth(in_bigfont, lvname.constPtr()) > 320)
-         {
-            size_t lastSpace = lvname.findLastOf(' ');
-            if(lastSpace != qstring::npos)
-               *lvname.bufferAt(lastSpace) = '\n';
-         }
+
+         V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
 
          buffer << "{EE_MLEV_" << lvname << "}";
          mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1);

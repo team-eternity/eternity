@@ -516,10 +516,6 @@ static void I_ResetScreen(void)
    
    // Reset palette
    ST_Start();
-   
-   // Redraw cached intermission buffer if needed
-   if(gamestate == GS_INTERMISSION)
-      IN_DrawBackground();
 
    // haleyjd: reset wipe engine
    Wipe_ScreenReset();

@@ -25,7 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #ifdef _MSC_VER
-// for Visual C++:
+// for Visual C++: 
 #include "Win32/i_opndir.h"
 #else
 // for SANE compilers:
@@ -974,8 +974,7 @@ void WadDirectory::readLump(int lump, void *dest, WadLumpLoader *lfmt)
 // W_ReadLumpHeader
 //
 // haleyjd 08/30/02: Inspired by DOOM Legacy, this function is for when you
-// just need a small piece of data from the beginning of a lump. There's hardly
-// any use reading in the whole thing in that case.
+// just need a small piece of data from the beginning of a lump.
 //
 int WadDirectory::readLumpHeader(int lump, void *dest, size_t size)
 {
@@ -1102,6 +1101,8 @@ void WadDirectory::freeDirectoryAllocs()
    // free each lumpinfo_t allocation
    for(i = 0; i < len; i++)
       efree(pImpl->infoptrs[i]);
+
+   pImpl->infoptrs.clear();
 }
 
 //

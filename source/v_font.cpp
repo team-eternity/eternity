@@ -35,6 +35,7 @@
 #include "c_io.h"
 #include "d_gi.h"
 #include "doomstat.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "r_patch.h"
 #include "v_font.h"
@@ -467,6 +468,166 @@ int16_t V_FontMaxWidth(vfont_t *font)
    }
 
    return w;
+}
+
+//
+// V_FontFitTextToRect
+//
+// Modify text so that it fits within a given rect, based on the width and height
+// of characters in the provided font.
+//
+void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2)
+{
+   // get full message width and height
+   bool fitsWidth = false;
+   int fullWidth  = V_FontStringWidth(font, msg);
+   int fullHeight = V_FontStringHeight(font, msg);
+
+   // fits within the width?
+   if(x1 + fullWidth <= x2)
+   {
+      fitsWidth = true;
+
+      // fits within the height?
+      if(y1 + fullHeight <= y2)
+         return; // no modification necessary.
+   }
+
+   // Adjust for width first, if needed.
+   if(!fitsWidth)
+   {
+      char *rover = msg;
+      char *currentBreakPos = NULL;
+      int width = 0;
+      int widthSinceLastBreak = 0;
+
+      while(*rover)
+      {
+         int charWidth = V_FontCharWidth(font, *rover);
+         width += charWidth;
+         widthSinceLastBreak += charWidth;
+
+         if(*rover == ' ')
+         {
+            currentBreakPos = rover;
+            widthSinceLastBreak = 0;
+         }
+         else if(*rover == '\n')
+         {
+            currentBreakPos = NULL;
+            width = widthSinceLastBreak = 0;
+         }
+
+         if(x1 + width > x2) // need to break
+         {
+            if(currentBreakPos)
+            {
+               *currentBreakPos = '\n';
+               width = widthSinceLastBreak;
+            }
+            currentBreakPos = NULL;
+         }
+         ++rover;
+      }
+
+      // recalculate the full height for the modified string
+      fullHeight = V_FontStringHeight(font, msg);
+   }
+
+   // Adjust for height, if needed
+   if(y1 + fullHeight > y2)
+   {
+      char *rover = msg + strlen(msg) - 1;
+      
+      // Clip off lines until it fits.
+      while(rover != msg && y1 + fullHeight > y2)
+      {
+         if(*rover == '\n')
+         {
+            *rover = '\0';
+            fullHeight -= font->cy;
+         }
+         --rover;
+      }
+   }
+}
+
+//
+// V_FontFitTextToRect
+//
+// Modify text so that it fits within a given rect, based on the width and height
+// of characters in the provided font.
+//
+// Variant for qstrings. There are functions in the class that make the process
+// more efficient for height clipping purposes.
+//
+void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, int y2)
+{
+   // get full message width and height
+   bool fitsWidth = false;
+   int fullWidth  = V_FontStringWidth(font, msg.constPtr());
+   int fullHeight = V_FontStringHeight(font, msg.constPtr());
+
+   // fits within the width?
+   if(x1 + fullWidth <= x2)
+   {
+      fitsWidth = true;
+
+      // fits within the height?
+      if(y1 + fullHeight <= y2)
+         return; // no modification necessary.
+   }
+
+   // Adjust for width first, if needed.
+   if(!fitsWidth)
+   {
+      size_t currentBreakPos = 0;
+      int width = 0;
+      int widthSinceLastBreak = 0;
+
+      for(size_t i = 0; i < msg.length(); i++)
+      {
+         char c = msg[i];
+         int  charWidth = V_FontCharWidth(font, c);
+
+         width += charWidth;
+         widthSinceLastBreak += charWidth;
+
+         if(c == ' ')
+         {
+            widthSinceLastBreak = 0;
+            currentBreakPos = i;
+         }
+         else if(c == '\n')
+         {
+            width = widthSinceLastBreak = 0;
+            currentBreakPos = 0;
+         }
+
+         if(x1 + width > x2) // need to break
+         {
+            if(currentBreakPos)
+            {
+               msg[currentBreakPos] = '\n';
+               width = widthSinceLastBreak;
+            }
+            currentBreakPos = 0;
+         }
+      }
+
+      // recalculate the full height for the modified string
+      fullHeight = V_FontStringHeight(font, msg.constPtr());
+   }
+
+   // Clip off lines until it fits.
+   while(y1 + fullHeight > y2)
+   {
+      size_t lastSlashN = msg.findLastOf('\n');
+      if(lastSlashN == qstring::npos)
+         break; // Oh well...
+      msg.truncate(lastSlashN);
+      fullHeight -= font->cy;
+   }
 }
 
 // EOF

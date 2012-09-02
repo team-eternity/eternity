@@ -174,6 +174,33 @@ char *qstring::bufferAt(size_t idx)
    return idx < size ? buffer + idx : NULL;
 }
 
+//
+// qstring::operator []
+//
+// Read-write variant.
+//
+char &qstring::operator [] (size_t idx)
+{
+   if(idx >= size)
+      I_Error("qstring::operator []: index out of range\n");
+
+   return buffer[idx];
+}
+
+//
+// qstring::operator []
+//
+// Read-only variant.
+//
+const char &qstring::operator [] (size_t idx) const
+{
+   if(idx >= size)
+      I_Error("qstring::operator []: index out of range\n");
+
+   return buffer[idx];
+}
+
+
 //=============================================================================
 //
 // Basic String Ops
