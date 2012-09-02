@@ -1433,7 +1433,7 @@ void P_LoadGame(const char *filename)
 
       G_SetGameMap(); // get gameepisode, map
 
-      // start out g_dir pointing at w_GlobalDir again
+      // start out g_dir pointing at wGlobalDir again
       g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
@@ -1453,7 +1453,7 @@ void P_LoadGame(const char *filename)
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears
          // for a missing wad.
-         // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
+         // Note: set d_dir as well, so G_InitNew won't overwrite with wGlobalDir!
          if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
             g_dir = d_dir = dir;
 

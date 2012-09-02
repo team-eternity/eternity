@@ -1447,7 +1447,7 @@ static void P_ClearLevelVars(void)
    }
 
    // haleyjd 08/31/12: Master Levels mode hacks
-   if(inmasterlevels)
+   if(inmasterlevels && GameModeInfo->type == Game_DOOM)
       LevelInfo.interPic = "INTRMLEV";
 }
 
