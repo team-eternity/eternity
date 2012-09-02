@@ -93,9 +93,53 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
    },
 };
 
+//=============================================================================
+//
+// WadDirectoryPimpl
+//
+
+//
+// haleyjd 09/01/12: private implementation object for hidden portions of the
+// WadDirectory class.
+//
+class WadDirectoryPimpl : public ZoneObject
+{
+public:
+   PODCollection<lumpinfo_t *> infoptrs;
+
+   WadDirectoryPimpl()
+      : ZoneObject(), infoptrs()
+   {
+   }
+};
+
+//=============================================================================
+//
+// WadDirectory
 //
 // LUMP BASED ROUTINES.
 //
+
+//
+// WadDirectory Constructor
+//
+WadDirectory::WadDirectory()
+ : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(0), type(0), data(NULL)
+{
+   pImpl = new WadDirectoryPimpl;
+}
+
+//
+// Destructor
+//
+WadDirectory::~WadDirectory()
+{
+   if(pImpl)
+   {
+      delete pImpl;
+      pImpl = NULL;
+   }
+}
 
 //
 // W_addInfoPtr
@@ -106,17 +150,7 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 //
 void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 {
-   // reallocate if necessary
-   if(numallocs >= numallocsa)
-   {
-      numallocsa = numallocsa ? numallocsa * 2 : 32;
-
-      infoptrs = erealloc(lumpinfo_t **, infoptrs, numallocsa * sizeof(lumpinfo_t *));
-   }
-   
-   // add it
-   infoptrs[numallocs] = infoptr;
-   ++numallocs;
+   pImpl->infoptrs.add(infoptr);
 }
 
 //
@@ -1063,19 +1097,11 @@ void WadDirectory::freeDirectoryLumps()
 //
 void WadDirectory::freeDirectoryAllocs()
 {
-   int i;
-
-   if(!infoptrs)
-      return;
+   size_t i, len = pImpl->infoptrs.getLength();
 
    // free each lumpinfo_t allocation
-   for(i = 0; i < numallocs; ++i)
-      efree(infoptrs[i]);
-
-   // free the allocation tracking table
-   efree(infoptrs);
-   infoptrs = NULL;
-   numallocs = numallocsa = 0;
+   for(i = 0; i < len; i++)
+      efree(pImpl->infoptrs[i]);
 }
 
 //
