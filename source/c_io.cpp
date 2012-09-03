@@ -107,7 +107,6 @@ char *c_fontname;
 
 static void C_initBackdrop(void)
 {
-   patch_t *patch;
    const char *lumpname;
    int lumpnum, cmapnum = 16;
    bool darken = true;
@@ -136,21 +135,25 @@ static void C_initBackdrop(void)
    V_SetScaling(&cback, SCREENWIDTH, SCREENHEIGHT);
    
    lumpnum = W_GetNumForName(lumpname);
-   patch   = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
-
+   
    // haleyjd 03/30/08: support linear fullscreen graphics
    if(W_LumpLength(lumpnum) == 64000)
    {
-      V_DrawBlockFS(&cback, (byte *)patch);
+      byte *block = static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+
+      V_DrawBlockFS(&cback, block);
 
       if(darken)
       {
          V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
                         0, 0, video.width, video.height, FRACUNIT/2);
       }
+      
+      Z_ChangeTag(block, PU_CACHE);
    }
    else
    {
+      patch_t *patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
       if(darken)
       {
          byte *colormap;
@@ -171,9 +174,9 @@ static void C_initBackdrop(void)
       }
       else
          V_DrawPatchFS(&cback, patch);
+      
+      Z_ChangeTag(patch, PU_CACHE);
    }
-
-   Z_ChangeTag(patch, PU_CACHE);
 }
 
 // input_point is the leftmost point of the inputtext which

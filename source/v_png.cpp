@@ -36,6 +36,7 @@
 #include "v_misc.h"
 #include "v_png.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 // Need libpng
 #include "png.h"
@@ -603,13 +604,29 @@ byte *VPNGImage::getAs24Bit() const
    return pImpl->getAs24Bit();
 }
 
+patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
+{
+   patch_t *patch  = NULL;
+   void    *pal    = wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC);
+   byte    *linear = getAs8Bit(static_cast<byte *>(pal));
+   int      w      = static_cast<int>(getWidth());
+   int      h      = static_cast<int>(getHeight());
+
+   patch = V_LinearToPatch(linear, w, h, size, tag, user);
+
+   efree(linear);
+   Z_ChangeTag(pal, PU_CACHE);
+
+   return patch;
+}
+
 //=============================================================================
 //
 // Static Methods
 //
 
 //
-// VPNGImage::CheckPngFormat
+// VPNGImage::CheckPNGFormat
 //
 // Static method.
 // Returns true if the block appears to be a PNG based on the magic signature.
@@ -617,6 +634,37 @@ byte *VPNGImage::getAs24Bit() const
 bool VPNGImage::CheckPNGFormat(const void *data)
 {
    return !png_sig_cmp((png_const_bytep)data, 0, 8);
+}
+
+//
+// VPNGImage::LoadAsPatch
+//
+// Load a PNG image and convert it to patch_t format.
+//
+patch_t *VPNGImage::LoadAsPatch(int lumpnum, int tag, void **user, size_t *size)
+{   
+   patch_t *patch = NULL;
+   int len;
+  
+   if((len = wGlobalDir.lumpLength(lumpnum)) > 8)
+   {
+      VPNGImage png;
+      byte *buffer = ecalloc(byte *, 1, len);
+      wGlobalDir.readLump(lumpnum, buffer);
+      if(png.readImage(buffer))
+         patch = png.getAsPatch(tag, user);
+      efree(buffer);
+   }
+
+   return patch;
+}
+
+patch_t *VPNGImage::LoadAsPatch(const char *lumpname, int tag, void **user,
+                                size_t *size)
+{
+   int lumpnum = wGlobalDir.checkNumForName(lumpname);
+
+   return lumpnum >= 0 ? LoadAsPatch(lumpnum, tag, user, size) : NULL;
 }
 
 // EOF

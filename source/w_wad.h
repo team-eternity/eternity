@@ -129,27 +129,24 @@ struct wfileadd_t
 class WadLumpLoader
 {
 public:
+      // Error modes enumeration
+   typedef enum
+   {
+      CODE_OK,    // Proceed
+      CODE_NOFMT, // OK, but don't call formatData
+      CODE_FATAL  // Fatal error
+   } Code;
+
    // verifyData should do format checking and return true if the data is valid,
-   // and false otherwise. If verifyData returns false, formatData is not called
-   // under any circumstance.
-   virtual bool verifyData(const void *data, size_t size) const { return true; }
+   // and false otherwise. If verifyData returns anything other than CODE_OK, 
+   // formatData is not called under any circumstance.
+   virtual Code verifyData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
-   // be done once only and not every time the lump is retrieved from the wad
-   // file. Return false if an error occurs, and true otherwise.
-   virtual bool formatData(void *data, size_t size) const { return true; }
+   // be done once only and not every time the lump is referenced/used. 
+   virtual Code formatData(lumpinfo_t *lump) const { return CODE_OK; }
 
-   // Error modes enumeration
-   enum
-   {
-      EM_IGNORE, // Ignore any error
-      EM_FATAL   // Fatal error on failure
-   };
-
-   // getErrorMode tells the wad file code how to respond to a failure in the
-   // verification or formatting routines. Return one of the codes above.
-   virtual int getErrorMode() const { return EM_IGNORE; }
 };
 
 class WadDirectoryPimpl;

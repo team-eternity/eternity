@@ -1673,6 +1673,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\source\in_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\in_stats.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Source\wi_stuff.cpp"
 					>
 					<FileConfiguration

@@ -34,15 +34,17 @@ struct patch_t;
 class PatchLoader : public WadLumpLoader
 {
 private:
+   static size_t   DefaultPatchSize;
    static patch_t *GetDefaultPatch();
+   
+   bool checkData(void *data, size_t size) const;
 
 public:
    // A global instance of PatchLoader for passing to WadDirectory methods
    static PatchLoader patchFmt;
 
-   virtual bool verifyData(const void *data, size_t size) const;
-   virtual bool formatData(void *data, size_t size) const;
-   virtual int  getErrorMode() const;
+   virtual Code verifyData(lumpinfo_t *lump) const;
+   virtual Code formatData(lumpinfo_t *lump) const;
 
    static patch_t *CacheName(WadDirectory &dir, const char *name, int tag);
    static patch_t *CacheNum(WadDirectory &dir, int lumpnum, int tag);

@@ -1919,6 +1919,30 @@ int M_FileLength(FILE *f)
    return (int)len;
 }
 
+//
+// M_LoadStringFromFile
+//
+// haleyjd 09/02/12: Like M_ReadFile, but assumes the contents are a string
+// and therefore null terminates the buffer.
+//
+char *M_LoadStringFromFile(const char *filename)
+{
+   FILE *f   = NULL;
+   char *buf = NULL;
+   int   len = 0;
+   
+   if(!(f = fopen(filename, "rb")))
+      return NULL;
+
+   // allocate at length + 1 for null termination
+   len = M_FileLength(f);
+   buf = ecalloc(char *, 1, len + 1);
+   fread(buf, 1, len, f);
+   fclose(f);
+
+   return buf;
+}
+
 //=============================================================================
 //
 // Portable non-standard libc functions and misc string operations

@@ -488,8 +488,6 @@ static void V_DrawMaskedColumn(column_t *column)
    }
 }
 
-
-
 static void V_DrawMaskedColumnUnscaled(column_t *column)
 {
    for(;column->topdelta != 0xff; column = (column_t *)((byte *)column + column->length + 4))

@@ -104,6 +104,8 @@ enum
 
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */
 
+// killough 3/22/98: add file/line info
+
 void *(Z_Malloc)(size_t size, int tag, void **ptr, const char *, int);
 void  (Z_Free)(void *ptr, const char *, int);
 void  (Z_FreeTags)(int lowtag, int hightag, const char *, int);
@@ -116,8 +118,8 @@ void   Z_FreeAlloca(void);
 void *(Z_Alloca)(size_t n, const char *file, int line);
 void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line);
 char *(Z_Strdupa)(const char *s, const char *file, int line);
-void  (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info
-int   (Z_CheckTag)(void *,const char *,int);
+void  (Z_CheckHeap)(const char *, int);   
+int   (Z_CheckTag)(void *, const char *, int);
 
 void *Z_SysMalloc(size_t size);
 void *Z_SysCalloc(size_t n1, size_t n2);

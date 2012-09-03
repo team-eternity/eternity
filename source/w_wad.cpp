@@ -975,34 +975,40 @@ int W_LumpLength(int lump)
 void WadDirectory::readLump(int lump, void *dest, WadLumpLoader *lfmt)
 {
    size_t c;
-   lumpinfo_t *l;
+   lumpinfo_t *lptr;
    
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::ReadLump: %d >= numlumps\n", lump);
 
-   l = lumpinfo[lump];
+   lptr = lumpinfo[lump];
 
    // killough 1/31/98: Reload hack (-wart) removed
 
-   c = LumpHandlers[l->type].readLump(l, dest, l->size);
-   if(c < l->size)
+   c = LumpHandlers[lptr->type].readLump(lptr, dest, lptr->size);
+   if(c < lptr->size)
    {
       I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n", 
-              (int)c, (int)l->size, lump);
+              (int)c, (int)lptr->size, lump);
    }
 
    // haleyjd 06/26/11: Apply lump formatting/preprocessing if provided
    if(lfmt)
    {
-      bool success   = false;
-      int  errorMode = lfmt->getErrorMode();
+      WadLumpLoader::Code code = lfmt->verifyData(lptr);
 
-      if(lfmt->verifyData(dest, l->size) && lfmt->formatData(dest, l->size))
-         success = true;
-
-      // Lump formatter wants us to handle errors by bombing out?
-      if(!success && errorMode == WadLumpLoader::EM_FATAL)
-         I_Error("WadDirectory::readLump: lump %d is malformed\n", lump);
+      switch(code)
+      {
+      case WadLumpLoader::CODE_OK:
+         // When OK is returned, do formatting
+         code = lfmt->formatData(lptr);
+         break;
+      default:
+         break;
+      }
+ 
+      // Does the formatter want us to bomb out in response to an error?
+      if(code == WadLumpLoader::CODE_FATAL) 
+         I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
    }
 }
 
