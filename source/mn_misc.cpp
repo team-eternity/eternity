@@ -253,7 +253,11 @@ void MN_Question(const char *message, const char *command)
    
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
-   
+
+   // If a widget we popped up over is fullscreen, so are we, since
+   // we'll call down to its drawer. Otherwise, not.
+   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
+
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_message_command = command;
@@ -275,6 +279,10 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
    
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
+
+   // If a widget we popped up over is fullscreen, so are we, since
+   // we'll call down to its drawer. Otherwise, not.
+   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
    
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;

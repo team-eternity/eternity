@@ -496,18 +496,12 @@ static bool MN_FileResponder(event_t *ev)
    if(action_menu_toggle || action_menu_previous)
    {
       // When allow_exit flag is false, call D_StartTitle
-      /*
-      if(!allow_exit)
-      {
-         MN_ClearMenus();
-         D_StartTitle();
-      }
-      */
       action_menu_toggle = action_menu_previous = false;
       if(!allow_exit)
       {
          MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
                          MN_doExitFileWidget);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
       }
       else
       {

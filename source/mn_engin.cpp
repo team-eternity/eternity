@@ -1154,7 +1154,7 @@ int menutime = 0;
 
 // menu widget for alternate drawer + responder
 menuwidget_t *current_menuwidget = NULL;
-PODCollection<menuwidget_t *> menuwidget_stack;
+static PODCollection<menuwidget_t *> menuwidget_stack;
 
 int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
@@ -1197,12 +1197,24 @@ void MN_PopWidget()
       current_menuwidget = NULL;
 }
 
+//
+// MN_ClearWidgetStack
+//
+// Called when the menu system is closing. Let's make sure all widgets have
+// been popped before then, since they won't be there when we come back to
+// the menus later.
+//
 void MN_ClearWidgetStack()
 {
    menuwidget_stack.clear();
    current_menuwidget = NULL;
 }
 
+//
+// MN_NumActiveWidgets
+//
+// Return the number of widgets currently on the stack.
+//
 size_t MN_NumActiveWidgets()
 {
    return menuwidget_stack.getLength();
