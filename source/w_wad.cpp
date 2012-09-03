@@ -552,6 +552,9 @@ int WadDirectory::addDirectory(const char *dirpath)
       }
    }
 
+   // push source filename
+   WadDirectoryPimpl::AddFileName(dirpath);
+
    // increment source
    ++source;
 
