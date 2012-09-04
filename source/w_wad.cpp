@@ -429,8 +429,10 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
       if(filetype == ADDSUBFILE)
          lump_p->position += baseoffset;
       
-      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
+      lump_p->data = NULL;                         // killough 1/31/98
       lump_p->li_namespace = li_namespace;         // killough 4/17/98
+
+      memset(lump_p->cache, 0, sizeof(lump_p->cache)); // haleyjd 9/03/12
       
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
@@ -1053,14 +1055,19 @@ int W_ReadLumpHeader(int lump, void *dest, size_t size)
 //
 void *WadDirectory::cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
 {
+   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+
+   if(lfmt)
+      fmt = lfmt->formatIndex();
+
    // haleyjd 08/14/02: again, should not be RANGECHECK only
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::CacheLumpNum: %i >= numlumps\n", lump);
    
-   if(!(lumpinfo[lump]->cache))      // read the lump in
+   if(!(lumpinfo[lump]->cache[fmt]))      // read the lump in
    {
       readLump(lump, 
-               Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache)), 
+               Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache[fmt])), 
                lfmt);
    }
    else
@@ -1069,13 +1076,13 @@ void *WadDirectory::cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
       // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that 
       // must be done using Z_ChangeTag explicitly)
       
-      int oldtag = Z_CheckTag(lumpinfo[lump]->cache);
+      int oldtag = Z_CheckTag(lumpinfo[lump]->cache[fmt]);
 
       if(tag < oldtag) 
-         Z_ChangeTag(lumpinfo[lump]->cache, tag);
+         Z_ChangeTag(lumpinfo[lump]->cache[fmt], tag);
    }
    
-   return lumpinfo[lump]->cache;
+   return lumpinfo[lump]->cache[fmt];
 }
 
 //
@@ -1120,15 +1127,18 @@ uint32_t W_LumpCheckSum(int lumpnum)
 //
 void WadDirectory::freeDirectoryLumps()
 {
-   int i;
+   int i, j;
    lumpinfo_t **li = lumpinfo;
 
    for(i = 0; i < numlumps; ++i)
    {
-      if(li[i]->cache)
+      for(j = 0; j != lumpinfo_t::fmt_maxfmts; j++)
       {
-         Z_Free(li[i]->cache);
-         li[i]->cache = NULL;
+         if(li[i]->cache[j])
+         {
+            Z_Free(li[i]->cache[j]);
+            li[i]->cache[j] = NULL;
+         }
       }
    }
 }

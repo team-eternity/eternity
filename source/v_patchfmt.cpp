@@ -118,23 +118,24 @@ bool PatchLoader::checkData(void *data, size_t size) const
 //
 WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
 {
-   if(!checkData(lump->cache, lump->size))
+   lumpinfo_t::lumpformat fmt = formatIndex();
+
+   if(!checkData(lump->cache[fmt], lump->size))
    {
       // Maybe it's a PNG?
-      if(lump->size > 8 && VPNGImage::CheckPNGFormat(lump->cache))
+      if(lump->size > 8 && VPNGImage::CheckPNGFormat(lump->cache[fmt]))
       {
-         int curTag = Z_CheckTag(lump->cache);
-         Z_Free(lump->cache);
-         lump->cache = VPNGImage::LoadAsPatch(lump->selfindex, curTag, &lump->cache);
-         if(lump->cache)
+         int curTag = Z_CheckTag(lump->cache[fmt]);
+         Z_Free(lump->cache[fmt]);
+         VPNGImage::LoadAsPatch(lump->selfindex, curTag, &lump->cache[fmt]);
+         if(lump->cache[fmt])
             return CODE_NOFMT;
       }
 
       // Return default patch.
-      if(lump->cache)
-         Z_Free(lump->cache);
-      lump->cache = GetDefaultPatch();
-      lump->size  = DefaultPatchSize;
+      if(lump->cache[fmt])
+         Z_Free(lump->cache[fmt]);
+      lump->cache[fmt] = GetDefaultPatch();
       return CODE_NOFMT;
    }
 
@@ -148,7 +149,8 @@ WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
 //
 WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
 {
-   patch_t *patch = static_cast<patch_t *>(lump->cache);
+   lumpinfo_t::lumpformat fmt = formatIndex();
+   patch_t *patch = static_cast<patch_t *>(lump->cache[fmt]);
 
    patch->width      = SwapShort(patch->width);
    patch->height     = SwapShort(patch->height);

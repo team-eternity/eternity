@@ -80,8 +80,16 @@ struct lumpinfo_t
       ns_acs,
    };
    int li_namespace;
+
+   // haleyjd 09/03/12: lump cache formats
+   typedef enum
+   {
+      fmt_default, // always used for the raw untranslated lump data
+      fmt_patch,   // converted to a patch
+      fmt_maxfmts  // number of formats
+   } lumpformat;
    
-   void *cache;  //sf
+   void *cache[fmt_maxfmts];  //sf
 
    // haleyjd: lump type
    enum
@@ -147,6 +155,9 @@ public:
    // be done once only and not every time the lump is referenced/used. 
    virtual Code formatData(lumpinfo_t *lump) const { return CODE_OK; }
 
+   // formatIndex specifies an alternate cache pointer to use for resources
+   // converted out of their native lump format by the loader.
+   virtual lumpinfo_t::lumpformat formatIndex() const { return lumpinfo_t::fmt_default; }
 };
 
 class WadDirectoryPimpl;

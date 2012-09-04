@@ -45,6 +45,7 @@ public:
 
    virtual Code verifyData(lumpinfo_t *lump) const;
    virtual Code formatData(lumpinfo_t *lump) const;
+   virtual lumpinfo_t::lumpformat formatIndex() const { return lumpinfo_t::fmt_patch; }
 
    static patch_t *CacheName(WadDirectory &dir, const char *name, int tag);
    static patch_t *CacheNum(WadDirectory &dir, int lumpnum, int tag);
