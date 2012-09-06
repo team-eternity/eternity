@@ -1087,8 +1087,7 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 // haleyjd: ??? ;)
 //
 static void Egg(void)
-{
-   extern void HU_CenterMessageTimed(const char *s, int tics);
+{   
    int x, y;
    extern unsigned char egg[];
 
@@ -1102,9 +1101,9 @@ static void Egg(void)
       }
    }
 
-   HU_CenterMessageTimed(FC_BROWN FC_ABSCENTER "my hair looks much too\n"
-                         "dark in this pic.\noh well, have fun!\n-- fraggle",
-                         6 * TICRATE);
+   V_FontWriteText(hud_overfont, 
+                   FC_BROWN "my hair looks much too\n"
+                   "dark in this pic.\n"
+                   "oh well, have fun!\n-- fraggle", 160, 168, &cback);
 }
-
 // EOF
