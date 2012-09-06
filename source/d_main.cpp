@@ -2210,6 +2210,10 @@ static void D_DoomInit(void)
    // haleyjd 08/20/07: queue autoload dir dehs
    D_GameAutoloadDEH();
 
+   // jff 4/24/98 load color translation lumps
+   // haleyjd 09/06/12: need to do this before EDF
+   V_InitColorTranslation(); 
+
    // haleyjd 09/11/03: All EDF and DeHackEd processing is now
    // centralized here, in order to allow EDF to load from wads.
    // As noted in comments, the other DEH functions above now add
@@ -2230,9 +2234,7 @@ static void D_DoomInit(void)
 
    // Process the DeHackEd queue, then free it
    D_ProcessDEHQueue();
-
-   V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
-
+   
    // haleyjd: moved down turbo to here for player class support
    if((p = M_CheckParm("-turbo")))
    {

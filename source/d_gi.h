@@ -318,7 +318,7 @@ typedef struct gamemodeinfo_s
    giborder_t *border;        // pointer to a game border
 
    // HU / Video / Console stuff
-   byte **defTextTrans;       // default text color rng for msgs
+   int defTextTrans;          // default text color rng for msgs
    int colorNormal;           // color # for normal messages
    int colorHigh;             // color # for highlighted messages
    int colorError;            // color # for error messages

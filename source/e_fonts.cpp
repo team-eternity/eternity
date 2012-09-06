@@ -32,6 +32,7 @@
 #include "i_system.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "f_finale.h"
 #include "hu_over.h"
@@ -42,6 +43,7 @@
 #include "v_misc.h"
 #include "v_patch.h"
 #include "v_patchfmt.h"
+#include "v_video.h"
 #include "w_wad.h"
 
 #include "e_lib.h"
@@ -68,11 +70,27 @@
 #define ITEM_FONT_UPPER  "uppercase"
 #define ITEM_FONT_CENTER "blockcentered"
 #define ITEM_FONT_POFFS  "patchnumoffset"
+#define ITEM_FONT_COLORD "defaultcolor"
+#define ITEM_FONT_COLORN "normalcolor"
+#define ITEM_FONT_COLORH "highlightcolor"
+#define ITEM_FONT_COLORE "errorcolor"
+#define ITEM_FONT_COLORS "colortables"
 
 #define ITEM_FILTER_CHARS "chars"
 #define ITEM_FILTER_START "start"
 #define ITEM_FILTER_END   "end"
 #define ITEM_FILTER_MASK  "mask"
+
+#define ITEM_COLOR_BRICK  "brick"
+#define ITEM_COLOR_TAN    "tan"
+#define ITEM_COLOR_GRAY   "gray"
+#define ITEM_COLOR_GREEN  "green"
+#define ITEM_COLOR_BROWN  "brown"
+#define ITEM_COLOR_GOLD   "gold"
+#define ITEM_COLOR_RED    "red"
+#define ITEM_COLOR_BLUE   "blue"
+#define ITEM_COLOR_ORANGE "orange"
+#define ITEM_COLOR_YELLOW "yellow"
 
 static cfg_opt_t filter_opts[] =
 {
@@ -80,6 +98,35 @@ static cfg_opt_t filter_opts[] =
    CFG_STR(ITEM_FILTER_START, "", CFGF_NONE),
    CFG_STR(ITEM_FILTER_END,   "", CFGF_NONE),
    CFG_STR(ITEM_FILTER_MASK,  "", CFGF_NONE),
+   CFG_END()
+};
+
+static const char *fontcolornames[CR_LIMIT] =
+{
+   ITEM_COLOR_BRICK,
+   ITEM_COLOR_TAN,
+   ITEM_COLOR_GRAY,
+   ITEM_COLOR_GREEN,
+   ITEM_COLOR_BROWN,
+   ITEM_COLOR_GOLD,
+   ITEM_COLOR_RED,
+   ITEM_COLOR_BLUE,
+   ITEM_COLOR_ORANGE,
+   ITEM_COLOR_YELLOW
+};
+
+static cfg_opt_t color_opts[] =
+{
+   CFG_STR(ITEM_COLOR_BRICK,  "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_TAN,    "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_GRAY,   "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_GREEN,  "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_BROWN,  "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_GOLD,   "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_RED,    "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_BLUE,   "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_ORANGE, "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_YELLOW, "", CFGF_NONE),
    CFG_END()
 };
 
@@ -97,6 +144,11 @@ cfg_opt_t edf_font_opts[] =
    CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),   
    CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE),
    CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE),
+   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE),
+   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE),
+   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE),
+   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE),
+   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE),
 
    CFG_BOOL(ITEM_FONT_COLOR,  cfg_false,  CFGF_NONE),
    CFG_BOOL(ITEM_FONT_UPPER,  cfg_false,  CFGF_NONE),
@@ -623,6 +675,50 @@ void E_LoadPatchFont(vfont_t *font)
    }
 }
 
+//
+// E_setFontColor
+//
+static void E_setFontColor(cfg_t *sec, vfont_t *font, const char *name,
+                           int vfont_t::*field, int gamemodeinfo_t::*gmiField)
+{
+   int color = E_StrToNumLinear(fontcolornames, CR_LIMIT, cfg_getstr(sec, name));
+   if(color >= 0 && color < CR_LIMIT)
+      font->*field = color;
+   else
+      font->*field = GameModeInfo->*gmiField;
+}
+
+//
+// E_loadTranslation
+//
+static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
+{
+   if(index >= 0 && index < CR_LIMIT)
+   {
+      font->colrngs[index] = colrngs[index]; // start out with global colrng
+
+      // defaults are all blank
+      if(strlen(lumpname) == 0)
+         return;
+
+      int lumpnum = 
+         wGlobalDir.checkNumForNameNSG(lumpname, lumpinfo_t::ns_translations);
+      if(lumpnum >= 0)
+      {
+         if(wGlobalDir.lumpLength(lumpnum) >= 256)
+         {
+            font->colrngs[index] = 
+               static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+         }
+      }
+      else
+      {
+         // Try parsing it as a color translation string
+         font->colrngs[index] = E_ParseTranslation(lumpname, PU_STATIC);
+      }
+   }
+}
+
 //=============================================================================
 //
 // EDF Processing
@@ -740,6 +836,49 @@ static void E_ProcessFont(cfg_t *sec)
    // process blockcentered flag
    if(IS_SET(sec, ITEM_FONT_CENTER))
       font->centered = (cfg_getbool(sec, ITEM_FONT_CENTER) == cfg_true);
+
+   // haleyjd 09/06/12: colors
+   if(IS_SET(sec, ITEM_FONT_COLORD))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORD,
+         &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
+   }
+
+   if(IS_SET(sec, ITEM_FONT_COLORN))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORN, 
+         &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
+   }
+   
+   if(IS_SET(sec, ITEM_FONT_COLORH))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORH, 
+         &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
+   }
+
+   if(IS_SET(sec, ITEM_FONT_COLORE))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORE, 
+         &vfont_t::colorError, &gamemodeinfo_t::colorError);
+   }
+
+   // haleyjd 09/06/12: translation tables
+   if(cfg_size(sec, ITEM_FONT_COLORS) > 0)
+   {
+      cfg_t *colors = cfg_getsec(sec, ITEM_FONT_COLORS);
+
+      for(int col = 0; col < CR_LIMIT; col++)
+      {
+         const char *fieldname = fontcolornames[col];
+         E_loadTranslation(font, col, cfg_getstr(colors, fontcolornames[col]));
+      }
+   }
+   else if(def)
+   {
+      // When defining, adapt defaults for all colors if none were specified
+      for(int col = 0; col < CR_LIMIT; col++)
+         E_loadTranslation(font, col, "");
+   }
 
    // process linear lump - if defined, this is a linear font automatically
    if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)

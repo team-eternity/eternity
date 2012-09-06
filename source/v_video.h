@@ -56,9 +56,6 @@ extern byte *cr_blue_status; //killough 2/28/98
 extern byte *cr_orange;
 extern byte *cr_yellow;
 
-// array of pointers to color translation tables
-extern byte *colrngs[];
-
 // symbolic indices into color translation table pointer array
 typedef enum
 {
@@ -76,9 +73,11 @@ typedef enum
 } crange_idx_e;
 //jff 1/16/98 end palette color range additions
 
+// array of pointers to color translation tables
+extern byte *colrngs[CR_LIMIT];
+
 #define CR_DEFAULT CR_RED   /* default value for out of range colors */
 
-extern int  dirtybox[4];
 extern byte gammatable[5][256];
 extern int  usegamma;
 

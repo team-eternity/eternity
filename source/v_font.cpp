@@ -121,17 +121,15 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
 
    if(font->color)
    {
+      // haleyjd 03/27/03: use fixedColor if it was set, else use default,
+      // which may come from GameModeInfo.
       if(fixedColor)
-      {
-         // haleyjd 03/27/03: use fixedColor if it was set
-         color = (byte *)colrngs[fixedColNum];
+      {         
+         color = font->colrngs[fixedColNum];
          fixedColor = false;
       }
       else
-      {
-         // haleyjd: get default text color from GameModeInfo
-         color = *(GameModeInfo->defTextTrans); // Note: ptr to ptr
-      }
+         color = font->colrngs[font->colorDefault];
    }
    
    // haleyjd 10/04/05: support alternate colormap sources
@@ -156,47 +154,44 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       // color and control codes
       if(c >= TEXT_COLOR_MIN)
       {
-         if(c == TEXT_CONTROL_TRANS) // translucency toggle
+         switch(c)
          {
+         case TEXT_CONTROL_TRANS: // translucency toggle
             tl ^= true;
-         }
-         else if(c == TEXT_CONTROL_SHADOW) // shadow toggle
-         {
+            break;
+         case TEXT_CONTROL_SHADOW: // shadow toggle
             shadowChar ^= true;
-         }
-         else if(c == TEXT_CONTROL_ABSCENTER) // abscenter toggle
-         {
+            break;
+         case TEXT_CONTROL_ABSCENTER: // abscenter toggle
             absCentered ^= true;
-         }
-         else if(font->color && !useAltMap) // not all fonts support translations
-         {
-            int colnum;
-            
-            // haleyjd: allow use of gamemode-dependent defaults
-            switch(c)
+            break;
+         default:
+            if(font->color && !useAltMap) // not all fonts support translations
             {
-            case TEXT_COLOR_NORMAL:
-               colnum = GameModeInfo->colorNormal;
-               break;
-            case TEXT_COLOR_HI:
-               colnum = GameModeInfo->colorHigh;
-               break;
-            case TEXT_COLOR_ERROR:
-               colnum = GameModeInfo->colorError;
-               break;
-            default:
-               colnum = c - 128;
-               break;
-            }
+               int colnum;
 
-            // check that colrng number is within bounds
-            if(colnum < 0 || colnum >= CR_LIMIT)
-            {
-               C_Printf("V_FontWriteText: invalid color %i\n", colnum);
-               continue;
+               // haleyjd: allow use of gamemode-dependent defaults
+               switch(c)
+               {
+               case TEXT_COLOR_NORMAL:
+                  colnum = font->colorNormal;
+                  break;
+               case TEXT_COLOR_HI:
+                  colnum = font->colorHigh;
+                  break;
+               case TEXT_COLOR_ERROR:
+                  colnum = font->colorError;
+                  break;
+               default:
+                  colnum = c - 128;
+                  break;
+               }
+
+               // check that colrng number is within bounds
+               if(colnum >= 0 && colnum < CR_LIMIT)
+                  color = font->colrngs[colnum];
             }
-            else
-               color = (byte *)colrngs[colnum];
+            break;
          }
          continue;
       }
@@ -208,13 +203,13 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
          cx =  cx * 40;
          continue;
       }
-      if(c == '\n')
+      else if(c == '\n')
       {
          cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
          cy += font->cy;
          continue;
       }
-      if(c == '\a') // don't draw BELs in linear fonts
+      else if(c == '\a') // don't draw BELs in linear fonts
          continue;
       
       // normalize character

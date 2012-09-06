@@ -31,6 +31,7 @@
 #include "doomtype.h"
 #include "r_defs.h"
 #include "m_dllist.h"
+#include "v_video.h"  // required for CR_LIMIT
 
 struct patch_t;
 class  qstring;
@@ -67,22 +68,28 @@ struct vfont_t
    unsigned int end;   // last character in font
    unsigned int size;  // number of characters in font
 
-   int cy;    // step amount for \n
-   int space; // step for blank space
-   int dw;    // width delta (can move characters together)
-   int absh;  // absolute maximum height of any character
+   int   cy;           // step amount for \n
+   int   space;        // step for blank space
+   int   dw;           // width delta (can move characters together)
+   int   absh;         // absolute maximum height of any character
 
-   bool color;    // supports color translations?
-   bool upper;    // uses uppercase only?
-   bool centered; // characters are centered in position?
+   bool  color;        // supports color translations?
+   bool  upper;        // uses uppercase only?
+   bool  centered;     // characters are centered in position?
 
-   patch_t **fontgfx; // graphics patches for font (not owned)
+   patch_t **fontgfx;  // graphics patches for font (not owned)
 
-   int cw;  // constant width, used only when centering is on
+   int   cw;           // constant width, used only when centering is on
    
-   bool linear;  // linear graphic lump?
-   byte    *data;   // data for linear graphic
-   int     lsize;   // character size in linear graphic
+   bool  linear;       // linear graphic lump?
+   byte *data;         // data for linear graphic
+   int   lsize;        // character size in linear graphic
+
+   int   colorDefault;       // default font color
+   int   colorNormal;        // normal font color
+   int   colorHigh;          // highlighted font color
+   int   colorError;         // error font color
+   byte *colrngs[CR_LIMIT];  // color translation tables
 
    int  num;                 // numeric id
    char name[129];           // EDF mnemonic

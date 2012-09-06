@@ -48,7 +48,6 @@
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
 // SoM: Moved. See cb_video_t
 // byte *screens[5];
-int  dirtybox[4];
 
 //jff 2/18/98 palette color ranges for translation
 //jff 4/24/98 now pointers set to predefined lumps to allow overloading
@@ -688,8 +687,8 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 //
 void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
-   void *source;
-   patch_t *patch;
+   void    *source = NULL;
+   patch_t *patch  = NULL;
    int len = wGlobalDir.lumpLength(lumpnum);
 
    switch(len)

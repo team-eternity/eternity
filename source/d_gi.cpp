@@ -852,7 +852,7 @@ static gamemodeinfo_t giDoomSW =
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -946,7 +946,7 @@ static gamemodeinfo_t giDoomReg =
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1040,7 +1040,7 @@ static gamemodeinfo_t giDoomRetail =
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1134,7 +1134,7 @@ static gamemodeinfo_t giDoomCommercial =
    DM2BRDRFLAT,      // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1228,7 +1228,7 @@ static gamemodeinfo_t giHereticSW =
    HSWBRDRFLAT,      // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1326,7 +1326,7 @@ static gamemodeinfo_t giHereticReg =
    HREGBRDRFLAT,     // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
