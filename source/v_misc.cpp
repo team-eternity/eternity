@@ -565,18 +565,53 @@ VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
 
 CONSOLE_COMMAND(v_modelist, 0)
 {
-   /*
-   videomode_t* videomode = videomodes;
-   
-   C_Printf(FC_HI "video modes:\n");
-   
-   while(videomode->description)
+}
+
+CONSOLE_COMMAND(v_fontcolors, 0)
+{
+   vfont_t *font;
+   byte    *colors;
+   FILE    *f;
+   qstring  path;
+   const char *fontName;
+
+   if(Console.argc != 2)
    {
-      C_Printf("%i: %s\n",(int)(videomode-videomodes),
-               videomode->description);
-      ++videomode;
+      C_Puts(FC_ERROR "Usage: v_fontcolors fontname filename");
+      return;
    }
-   */
+   
+   fontName = Console.argv[0]->constPtr();
+   if(!(font = E_FontForName(fontName)))
+   {
+      C_Printf(FC_ERROR "Unknown font %s", fontName);
+      return;
+   }
+
+   if(!(colors = V_FontGetUsedColors(font)))
+   {
+      C_Puts(FC_ERROR "Cannot get used colors for this font");
+      return;
+   }
+
+   path = userpath;
+   path.pathConcatenate(Console.argv[1]->constPtr());
+
+   if((f = fopen(path.constPtr(), "w")))
+   {
+      fprintf(f, "Font %s uses the following colors:\n", fontName);
+      for(int i = 0; i < 256; i++)
+      {
+         if(colors[i] == 1)
+            fprintf(f, "%d\n", i);
+      }
+      fclose(f);
+      C_Printf(FC_HI "Wrote output to %s", path.constPtr());
+   }
+   else
+      C_Puts(FC_ERROR "Could not open file for output");
+
+   efree(colors);
 }
 
 CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}
@@ -584,6 +619,7 @@ CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}
 void V_AddCommands(void)
 {
    C_AddCommand(v_modelist);
+   C_AddCommand(v_fontcolors);
    C_AddCommand(v_ticker);
 }
 

@@ -698,11 +698,77 @@ void MN_SelectColour(const char *variable_name)
    selected_colour = *(int *)colour_command->variable->variable;
 }
 
+//=============================================================================
+//
+// Font Test Widget
+//
+
+static vfont_t *testfont; // font to test
+
+static void MN_fontTestDrawer()
+{
+   int totalHeight = SCREENHEIGHT - testfont->absh * 2;
+   int itemHeight  = totalHeight / 10;   
+   int x = 160 - V_FontStringWidth(testfont, "ABCDEFGHIJKL")/2;
+   int y = testfont->absh;
+
+   V_DrawBackground(mn_background_flat, &vbscreen);
+   
+   for(int i = 0; i < CR_LIMIT; i++)
+   {
+      V_FontWriteTextColored(testfont, "ABCDEFGHIJKL", i, x, y);
+      y += itemHeight;
+   }
+}
+
+static bool MN_fontTestResponder(event_t *ev)
+{
+   if(action_menu_toggle || action_menu_previous)
+   {
+      // exit widget
+      action_menu_toggle = action_menu_previous = false;
+      MN_PopWidget();
+   }
+
+   return true;
+}
+
+static menuwidget_t fonttest_widget = 
+{
+   MN_fontTestDrawer, 
+   MN_fontTestResponder, 
+   NULL, 
+   true
+};
+
+CONSOLE_COMMAND(mn_testfont, 0)
+{
+   vfont_t *font;
+   const char *fontName;
+
+   if(Console.argc != 1)
+   {
+      C_Puts(FC_ERROR "Usage: mn_testfont fontname");
+      return;
+   }
+   
+   fontName = Console.argv[0]->constPtr();
+   if(!(font = E_FontForName(fontName)))
+   {
+      C_Printf(FC_ERROR "Unknown font %s\n", fontName);
+      return;
+   }
+
+   testfont = font;
+   MN_PushWidget(&fonttest_widget);
+}
+
 
 void MN_AddMiscCommands(void)
 {
    C_AddCommand(credits);
    C_AddCommand(help);
+   C_AddCommand(mn_testfont);
 }
 
 // EOF

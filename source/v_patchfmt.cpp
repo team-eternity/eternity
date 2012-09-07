@@ -72,8 +72,7 @@ bool PatchLoader::checkData(void *data, size_t size) const
    if(size < 8)
       return false; // invalid header
 
-   patch_t *patch  = static_cast<patch_t *>(data);
-   byte    *bp     = static_cast<byte    *>(data);
+   patch_t *patch  = static_cast<patch_t *>(data);   
    short    width  = SwapShort(patch->width);
    short    height = SwapShort(patch->height);
 
@@ -95,15 +94,16 @@ bool PatchLoader::checkData(void *data, size_t size) const
          return false; // offset lies outside the data
 
       // Verify the series of posts at that offset
-      column_t *col = reinterpret_cast<column_t *>(bp + offset);
-      while(col->topdelta != 0xff)
+      byte *base  = reinterpret_cast<byte *>(patch);
+      byte *rover = base + offset;
+      while(*rover != 0xff)
       {
-         byte *nextPost = reinterpret_cast<byte *>(col) + col->length + 4;
+         byte *nextPost = rover + *(rover + 1) + 4;
 
-         if(nextPost >= bp + size)
+         if(nextPost >= base + size)
             return false; // Unterminated series of posts, or too long
 
-         col = reinterpret_cast<column_t *>(nextPost);
+         rover = nextPost;
       }
    }
 
@@ -189,6 +189,37 @@ patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag)
       ret = GetDefaultPatch();
 
    return ret;
+}
+
+//
+// PatchLoader::GetUsedColors
+//
+// Utility method. Sets pal[index] to 1 for every color that is used in the
+// given patch graphic. You should allocate and initialize pal as a 256-byte
+// array before calling this; it won't be touched outside the used color
+// indices, allowing multiple calls to this function to composite the range
+// of used colors in multiple patches.
+//
+void PatchLoader::GetUsedColors(patch_t *patch, byte *pal)
+{
+   int16_t width = patch->width;
+
+   for(int i = 0; i < width; i++)
+   {
+      size_t  offset = static_cast<size_t>(patch->columnofs[i]);
+      byte   *rover  = reinterpret_cast<byte *>(patch) + offset;
+
+      while(*rover != 0xff)
+      {
+         int   count  = *(rover + 1);
+         byte *source = rover + 3;
+         
+         while(count--)
+            pal[*source++] = 1;
+
+         rover = source + 1;
+      }
+   }
 }
 
 // EOF

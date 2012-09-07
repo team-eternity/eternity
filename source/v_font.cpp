@@ -40,6 +40,7 @@
 #include "r_patch.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -623,6 +624,28 @@ void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, in
       msg.truncate(lastSlashN);
       fullHeight -= font->cy;
    }
+}
+
+//
+// V_FontGetUsedColors
+//
+// Determines all of the colors that are used by patches in a
+// patch font. Linear fonts are not supported here yet.
+//
+byte *V_FontGetUsedColors(vfont_t *font)
+{
+   if(font->linear) // not supported yet...
+      return NULL;
+
+   byte *colorsUsed = ecalloc(byte *, 1, 256);
+
+   for(unsigned int i = 0; i < font->size; i++)
+   {
+      if(font->fontgfx[i])
+         PatchLoader::GetUsedColors(font->fontgfx[i], colorsUsed);
+   }
+
+   return colorsUsed;
 }
 
 // EOF

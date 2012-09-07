@@ -49,6 +49,8 @@ public:
 
    static patch_t *CacheName(WadDirectory &dir, const char *name, int tag);
    static patch_t *CacheNum(WadDirectory &dir, int lumpnum, int tag);
+   
+   static void GetUsedColors(patch_t *patch, byte *pal);
 };
 
 #endif

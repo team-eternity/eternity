@@ -115,6 +115,8 @@ int16_t V_FontMaxWidth(vfont_t *font);
 void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2);
 void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, int y2);
 
+byte *V_FontGetUsedColors(vfont_t *font);
+
 #endif
 
 // EOF
