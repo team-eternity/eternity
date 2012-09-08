@@ -1339,8 +1339,6 @@ byte *E_ParseTranslation(const char *str, int tag)
    byte *translation = ecalloctag(byte *, 1, 256, tag, NULL);
    tr_pstate_t parserstate;
 
-   tokenbuf.initCreate();
-
    // initialize to monotonically increasing sequence (identity translation)
    for(i = 0; i < 256; i++)
       translation[i] = i;

@@ -704,6 +704,7 @@ void MN_SelectColour(const char *variable_name)
 //
 
 static vfont_t *testfont; // font to test
+static qstring  teststr;  // string for test
 
 static void MN_fontTestDrawer()
 {
@@ -728,6 +729,7 @@ static bool MN_fontTestResponder(event_t *ev)
       // exit widget
       action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
+      teststr.freeBuffer();
    }
 
    return true;
@@ -746,9 +748,9 @@ CONSOLE_COMMAND(mn_testfont, 0)
    vfont_t *font;
    const char *fontName;
 
-   if(Console.argc != 1)
+   if(Console.argc != 2)
    {
-      C_Puts(FC_ERROR "Usage: mn_testfont fontname");
+      C_Puts(FC_ERROR "Usage: mn_testfont fontname message");
       return;
    }
    
@@ -760,6 +762,7 @@ CONSOLE_COMMAND(mn_testfont, 0)
    }
 
    testfont = font;
+   teststr  = *Console.argv[1];
    MN_PushWidget(&fonttest_widget);
 }
 

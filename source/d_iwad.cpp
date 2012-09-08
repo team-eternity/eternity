@@ -299,7 +299,7 @@ static void D_LoadDiskFilePWAD(void)
 //
 // Gets a single line of input from the metadata.txt resource.
 //
-static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
+static bool D_metaGetLine(qstring &qstr, const char *input, int *idx)
 {
    int i = *idx;
 
@@ -307,7 +307,7 @@ static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
    if(input[i] == '\0')
       return false;
 
-   qstr->clear();
+   qstr.clear();
 
    while(input[i] != '\n' && input[i] != '\0')
    {
@@ -315,10 +315,10 @@ static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
       {
          // make \n sequence into a \n character
          ++i;
-         *qstr += '\n';
+         qstr += '\n';
       }
       else if(input[i] != '\r')
-         *qstr += input[i];
+         qstr += input[i];
 
       ++i;
    }
@@ -347,7 +347,6 @@ static void D_DiskMetaData(void)
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    diskwad_t wad;
    qstring buffer;
-   qstring *qstr = &buffer;
 
    if(!diskpwad)
       return;
@@ -376,41 +375,38 @@ static void D_DiskMetaData(void)
 
    // parse it
 
-   // setup qstring
-   qstr->initCreate();
-
    // get first line, which is an episode id
-   D_metaGetLine(qstr, metatext, &index);
+   D_metaGetLine(buffer, metatext, &index);
 
    // get episode name
-   if(D_metaGetLine(qstr, metatext, &index))
-      GameModeInfo->versionName = qstr->duplicate(PU_STATIC);
+   if(D_metaGetLine(buffer, metatext, &index))
+      GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
 
    // get end text
-   if(D_metaGetLine(qstr, metatext, &index))
-      endtext = qstr->duplicate(PU_STATIC);
+   if(D_metaGetLine(buffer, metatext, &index))
+      endtext = buffer.duplicate(PU_STATIC);
 
    // get next level after secret
-   if(D_metaGetLine(qstr, metatext, &index))
-      exitreturn = qstr->toInt();
+   if(D_metaGetLine(buffer, metatext, &index))
+      exitreturn = buffer.toInt();
 
    // skip next line (wad name)
-   D_metaGetLine(qstr, metatext, &index);
+   D_metaGetLine(buffer, metatext, &index);
 
    // get secret level
-   if(D_metaGetLine(qstr, metatext, &index))
-      secretlevel = qstr->toInt();
+   if(D_metaGetLine(buffer, metatext, &index))
+      secretlevel = buffer.toInt();
 
    // get levels
-   while(D_metaGetLine(qstr, metatext, &index))
+   while(D_metaGetLine(buffer, metatext, &index))
    {
       switch(linenum)
       {
       case 0: // levelname
-         levelname = qstr->duplicate(PU_STATIC);
+         levelname = buffer.duplicate(PU_STATIC);
          break;
       case 1: // music number
-         musicnum = mus_runnin + qstr->toInt() - 1;
+         musicnum = mus_runnin + buffer.toInt() - 1;
 
          if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
             musicname = S_music[musicnum].name;
@@ -418,7 +414,7 @@ static void D_DiskMetaData(void)
             musicname = "";
          break;
       case 2: // partime (final field)
-         partime = qstr->toInt();
+         partime = buffer.toInt();
 
          // create a metainfo object for LevelInfo
          P_CreateMetaInfo(levelnum, levelname, partime, musicname, 

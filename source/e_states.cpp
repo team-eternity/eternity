@@ -1032,9 +1032,6 @@ static void E_ProcessCmpState(const char *value, int i)
    char *curtoken = NULL;
    int tok_index = 0, j;
 
-   // first things first, we have to initialize the qstring
-   buffer.initCreate();
-
    // initialize tokenizer variables
    in_action = false;
    early_args_found = false;

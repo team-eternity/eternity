@@ -1709,10 +1709,6 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
    qstring tokenbuffer;
    const char *inputstr = input;
 
-   // create line and token buffers
-   linebuffer.initCreate();
-   tokenbuffer.initCreate();
-
    // initialize pstate structure
    ps.index       = 0;
    ps.linenum     = 0;

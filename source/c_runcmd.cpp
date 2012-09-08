@@ -1512,9 +1512,6 @@ void C_RunScript(DWFILE *dwfile)
    int state = CSC_NONE;
    char c;
 
-   // initialize and allocate the qstring
-   qstr.initCreate();
-
    // parse script
    while((c = D_Fgetc(dwfile)) != EOF)
    {

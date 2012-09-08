@@ -548,9 +548,6 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 
    rover = lump;
 
-   // create the line buffer
-   line.initCreate();
-   
    while(*rover)
    {
       if(*rover == '\n') // end of line
@@ -778,10 +775,6 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
    // haleyjd 03/12/05: seriously restructured to remove possible
    // overflow of static buffer and bad kludges used to separate
    // the variable and value tokens -- now uses qstring.
-
-   // create qstrings to hold the tokens
-   var.initCreate();
-   value.initCreate();
 
    while((c = *rover++))
    {
@@ -1728,7 +1721,7 @@ const char *P_GetMusInfoMusic(const char *mapname, int number)
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
-   char *fn = estrdup(wadfile);
+   char *fn = Z_Strdupa(wadfile);
    char *dotloc = NULL;
    byte *buffer = NULL;
 
@@ -1924,8 +1917,6 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    tmplpstate_t state;
    qstring tokenbuffer;
    char *ret = NULL;
-
-   tokenbuffer.initCreate();
 
    state.text          = text;
    state.len           = len;

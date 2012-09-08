@@ -284,8 +284,6 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
    qstring qstr;
    bool errorflag = false;
 
-   qstr.initCreate();
-
    while(*c)
    {
       switch(state)

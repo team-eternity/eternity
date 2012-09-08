@@ -468,7 +468,6 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
       va_end(va2);
    }
 
-   msg_no_tabs.initCreate();
    msg_no_tabs = msg;
    msg_no_tabs.replace("\t", ' ');
 

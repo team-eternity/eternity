@@ -59,9 +59,13 @@ const size_t qstring::basesize = 32;
 //
 qstring &qstring::createSize(size_t pSize)
 {
-   buffer = erealloc(char *, buffer, pSize);
-   size   = pSize;
-   index  = 0;
+   // Don't realloc if not needed
+   if(!buffer || size < pSize)
+   {
+      buffer = erealloc(char *, buffer, pSize);
+      size   = pSize;
+      index  = 0;
+   }
    memset(buffer, 0, size);
 
    return *this;
@@ -587,7 +591,7 @@ qstring &qstring::operator << (int i)
 
 qstring &qstring::operator << (double d)
 {
-   char buf[1079];
+   char buf[1079]; // srsly...
    psnprintf(buf, sizeof(buf), "%f", d);
    return concat(buf);
 }
