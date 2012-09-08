@@ -710,14 +710,14 @@ static void MN_fontTestDrawer()
 {
    int totalHeight = SCREENHEIGHT - testfont->absh * 2;
    int itemHeight  = totalHeight / 10;   
-   int x = 160 - V_FontStringWidth(testfont, "ABCDEFGHIJKL")/2;
+   int x = 160 - V_FontStringWidth(testfont, teststr.constPtr())/2;
    int y = testfont->absh;
 
    V_DrawBackground(mn_background_flat, &vbscreen);
    
    for(int i = 0; i < CR_LIMIT; i++)
    {
-      V_FontWriteTextColored(testfont, "ABCDEFGHIJKL", i, x, y);
+      V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
       y += itemHeight;
    }
 }
@@ -748,9 +748,9 @@ CONSOLE_COMMAND(mn_testfont, 0)
    vfont_t *font;
    const char *fontName;
 
-   if(Console.argc != 2)
+   if(Console.argc < 1)
    {
-      C_Puts(FC_ERROR "Usage: mn_testfont fontname message");
+      C_Puts(FC_ERROR "Usage: mn_testfont fontname [message]");
       return;
    }
    
@@ -761,8 +761,12 @@ CONSOLE_COMMAND(mn_testfont, 0)
       return;
    }
 
-   testfont = font;
-   teststr  = *Console.argv[1];
+   if(Console.argc >= 2)
+      teststr = *Console.argv[1];
+   else
+      teststr = "ABCDEFGHIJKL";
+
+   testfont = font;   
    MN_PushWidget(&fonttest_widget);
 }
 
