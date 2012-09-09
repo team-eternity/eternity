@@ -32,6 +32,17 @@
 
 struct wbstartstruct_t;
 
+// record types
+enum
+{
+   INSTAT_KILLS,
+   INSTAT_ITEMS,
+   INSTAT_SECRETS,
+   INSTAT_TIME,
+   INSTAT_FRAGS,
+   INSTAT_NUMTYPES
+};
+
 struct in_stat_t
 {
    DLListItem<in_stat_t> links; // hash links
@@ -45,6 +56,7 @@ struct in_stat_t
 };
 
 class INStatsMgrPimpl;
+class qstring;
 
 class INStatsManager
 {
@@ -57,6 +69,7 @@ protected:
    static INStatsManager singleton;
 
    void loadStats();
+   in_stat_t *findScore(const qstring &key, int type);
 
 public:
    static void Init();

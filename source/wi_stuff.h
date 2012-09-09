@@ -42,6 +42,8 @@ typedef enum
 // haleyjd: DOOM intermission object
 extern interfns_t DoomIntermission;
 
+int WI_FragSum(int playernum);
+
 #endif
 
 //----------------------------------------------------------------------------

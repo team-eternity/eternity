@@ -37,6 +37,7 @@
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "w_wad.h"
+#include "wi_stuff.h"
 
 // Global Singleton Instance
 INStatsManager INStatsManager::singleton;
@@ -62,23 +63,12 @@ public:
       FIELD_NUMFIELDS
    };
 
-   // record types
-   enum
-   {
-      RECORD_KILLS,
-      RECORD_ITEMS,
-      RECORD_SECRETS,
-      RECORD_TIME,
-      RECORD_FRAGS,
-      RECORD_NUMTYPES
-   };
-
    void parseCSVLine(char *&line, Collection<qstring> &output);
    void parseCSVScores(char *input);
 };
 
 // Names for record types
-static const char *recordTypeNames[INStatsMgrPimpl::RECORD_NUMTYPES] =
+static const char *recordTypeNames[INSTAT_NUMTYPES] =
 {
    "kills",
    "items",
@@ -159,20 +149,24 @@ void INStatsMgrPimpl::parseCSVScores(char *input)
 
       if(fields.getLength() >= FIELD_NUMFIELDS)
       {
-         in_stat_t *newStats = estructalloc(in_stat_t, 1);
-
-         newStats->levelkey   = fields[FIELD_LEVELKEY  ].duplicate(PU_STATIC);
-         newStats->playername = fields[FIELD_PLAYERNAME].duplicate(PU_STATIC);
-         newStats->skill      = fields[FIELD_SKILL     ].toInt();
-         newStats->value      = fields[FIELD_VALUE     ].toInt();
-         newStats->maxValue   = fields[FIELD_MAXVALUE  ].toInt();
-         
-         int recordType = E_StrToNumLinear(recordTypeNames, RECORD_NUMTYPES, 
+         int recordType = E_StrToNumLinear(recordTypeNames, INSTAT_NUMTYPES, 
                                            fields[FIELD_RECORDTYPE].constPtr());
-         newStats->recordType = recordType;
 
-         // add to hash tables
-         statsByLevelKey.addObject(newStats);
+         if(recordType < INSTAT_NUMTYPES)
+         {
+            in_stat_t *newStats = estructalloc(in_stat_t, 1);
+
+            newStats->levelkey   = fields[FIELD_LEVELKEY  ].duplicate(PU_STATIC);
+            newStats->playername = fields[FIELD_PLAYERNAME].duplicate(PU_STATIC);
+            newStats->skill      = fields[FIELD_SKILL     ].toInt();
+            newStats->value      = fields[FIELD_VALUE     ].toInt();
+            newStats->maxValue   = fields[FIELD_MAXVALUE  ].toInt();
+
+            newStats->recordType = recordType;
+
+            // add to hash tables
+            statsByLevelKey.addObject(newStats);
+         }
       }
    }
 }
@@ -260,14 +254,50 @@ struct wbstartstruct_t
 };
 */
 
+/*
+      FIELD_LEVELKEY,
+      FIELD_PLAYERNAME,
+      FIELD_SKILL,
+      FIELD_RECORDTYPE,   
+      FIELD_VALUE,
+      FIELD_MAXVALUE,
+*/
+
+//
+// INStatsManager::findScore
+//
+// Find a particular score for the given level key and score type.
+//
+in_stat_t *INStatsManager::findScore(const qstring &key, int type)
+{
+   in_stat_t *itr = NULL;
+   while((itr = pImpl->statsByLevelKey.keyIterator(itr, key.constPtr())))
+   {
+      if(itr->recordType == type)
+         return itr;
+   }
+
+   return NULL;
+}
+
+/*
+      INSTAT_KILLS,
+      INSTAT_ITEMS,
+      INSTAT_SECRETS,
+      INSTAT_TIME,
+      INSTAT_FRAGS,
+      INSTAT_NUMTYPES
+*/
+
 //
 // INStatsManager::recordStats
 //
 // Add stats for a particular level.
 //
-void INStatsManager::recordStats(const wbstartstruct_t *stats)
+void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
 {
-   const wbplayerstruct_t *playerData = &stats->plyr[stats->pnum];
+   const wbplayerstruct_t *playerData = &wbstats->plyr[wbstats->pnum];
+   int   scores[INSTAT_NUMTYPES];
 
    int levelLump    = g_dir->checkNumForName(gamemapname);
    const char *fn   = g_dir->getLumpFileName(levelLump);
@@ -277,11 +307,28 @@ void INStatsManager::recordStats(const wbstartstruct_t *stats)
    if(!fn)
       return;   
 
+   // not playing??
+   if(!playerData->in)
+      return;
+
+   // copy data from wbstats/playerData to scores array
+   scores[INSTAT_KILLS  ] = playerData->skills;
+   scores[INSTAT_ITEMS  ] = playerData->sitems;
+   scores[INSTAT_SECRETS] = playerData->ssecret;
+   scores[INSTAT_TIME   ] = playerData->stime;
+   scores[INSTAT_FRAGS  ] = WI_FragSum(wbstats->pnum);
+
    // construct the unique key for this level
    levelkey << fn << "::" << gamemapname;
 
-   // iterate over any existing records for this map and update them
-   // if appropriate
+   for(int i = 0; i < INSTAT_NUMTYPES; i++)
+   {
+      in_stat_t *instat;
+
+      if((instat = findScore(levelkey, i)))
+      {
+      }
+   }
 }
 
 // EOF
