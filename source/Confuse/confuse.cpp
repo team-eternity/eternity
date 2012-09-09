@@ -707,6 +707,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
    cfg_bool_t append_value;
    cfg_opt_t funcopt = CFG_STR(0,0,0);
    cfg_bool_t found_func = cfg_false; // haleyjd
+   cfg_bool_t   list_nobraces = cfg_false; // haleyjd
    int tok;
    int skip_token = 0;     // haleyjd
    int propindex = 0;      // haleyjd: for multi-value properties
@@ -836,9 +837,12 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_VALUE: /* expecting an option value */
          if(tok == '}' && is_set(CFGF_LIST, opt->flags))
          {
-            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
-            state = 0;
-            break;
+            if(!list_nobraces)
+            {
+               lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
+               state = STATE_EXPECT_OPTION;
+               break;
+            }
          }
          
          if(tok != CFGT_STR)
@@ -862,9 +866,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_LISTBRACE: /* expecting an opening brace for a list option */
          if(tok != '{')
          {
-            cfg_error(cfg, _("missing opening brace for option '%s'\n"),
-               opt->name);
-            return STATE_ERROR;
+            list_nobraces = cfg_true;
+            skip_token = 1;
          }
          /* haleyjd 12/23/06: set unquoted string state */
          if(is_set(CFGF_STRSPACE, opt->flags))
@@ -880,10 +883,17 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             state = STATE_EXPECT_VALUE;
             next_state = STATE_EXPECT_LISTNEXT;
          } 
-         else if(tok == '}')
+         else if(!list_nobraces && tok == '}')
          {
             lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = STATE_EXPECT_OPTION;
+         }
+         else if(list_nobraces)
+         {
+            /* haleyjd 05/30/12: allow lists with no braces */
+            list_nobraces = cfg_false;
+            skip_token    = 1;
+            state         = STATE_EXPECT_OPTION;
          }
          else
          {

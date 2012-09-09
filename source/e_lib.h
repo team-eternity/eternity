@@ -64,6 +64,10 @@ int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 class  MetaTable;
 void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
 
+// Advanced libConfuse utilities
+class qstring;
+void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output);
+
 #endif
 
 const char *E_BuildDefaultFn(const char *filename);

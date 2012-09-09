@@ -1086,17 +1086,17 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 //
 // haleyjd: ??? ;)
 //
-static void Egg(void)
+static void Egg()
 {   
    int x, y;
-   extern unsigned char egg[];
+   byte *egg = static_cast<byte *>(wGlobalDir.cacheLumpName("SFRAGGLE", PU_CACHE));
 
    for(x = 0; x < video.width; ++x)
    {
       for(y = 0; y < video.height; ++y)
       {
-         unsigned char *s = egg + ((y % 44 * 42) + (x % 42));
-         if(*s != 247)
+         byte *s = egg + ((y % 44 * 42) + (x % 42));
+         if(*s)
             cback.data[y * video.width + x] = *s;
       }
    }

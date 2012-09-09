@@ -1394,6 +1394,30 @@ byte *E_ParseTranslation(const char *str, int tag)
    return translation;
 }
 
+//
+// E_CfgListToCommaString
+//
+// Concatenates all values in a CFGF_LIST CFG_STR option into a single
+// string of comma-delimited values.
+//
+void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output)
+{
+   unsigned int numopts = cfg_size(sec, optname);
+   
+   output.clear();
+
+   for(unsigned int i = 0; i < numopts; i++)
+   {
+      const char *str = cfg_getnstr(sec, optname, i);
+
+      if(str)
+         output += str;
+
+      if(i != numopts - 1 && output[output.length() - 1] != ',')
+         output += ',';
+   }
+}
+
 // EOF
 
 

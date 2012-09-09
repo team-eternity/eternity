@@ -142,6 +142,9 @@ void  Z_SysFree(void *p);
 #define emalloc(type, n) \
    static_cast<type>((Z_Malloc)(n, PU_STATIC, 0, __FILE__, __LINE__))
 
+#define emalloctag(type, n1, tag, user) \
+   static_cast<type>((Z_Malloc)(n1, tag, user, __FILE__, __LINE__))
+
 #define ecalloc(type, n1, n2) \
    static_cast<type>((Z_Calloc)(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
 

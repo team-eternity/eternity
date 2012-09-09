@@ -38,7 +38,9 @@
 #include "hu_over.h"
 #include "hu_stuff.h"
 #include "in_lude.h"
+#include "m_qstr.h"
 #include "mn_engin.h"
+#include "r_draw.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patch.h"
@@ -117,16 +119,16 @@ static const char *fontcolornames[CR_LIMIT] =
 
 static cfg_opt_t color_opts[] =
 {
-   CFG_STR(ITEM_COLOR_BRICK,  "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_TAN,    "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_GRAY,   "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_GREEN,  "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_BROWN,  "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_GOLD,   "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_RED,    "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_BLUE,   "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_ORANGE, "", CFGF_NONE),
-   CFG_STR(ITEM_COLOR_YELLOW, "", CFGF_NONE),
+   CFG_STR(ITEM_COLOR_BRICK,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_TAN,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GRAY,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GREEN,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BROWN,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GOLD,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_RED,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BLUE,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_ORANGE, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_YELLOW, "", CFGF_LIST),
    CFG_END()
 };
 
@@ -701,6 +703,13 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
       if(strlen(lumpname) == 0)
          return;
 
+      // identity map?
+      if(!strcasecmp(lumpname, "@identity"))
+      {
+         font->colrngs[index] = R_GetIdentityMap();
+         return;
+      }
+
       int lumpnum = 
          wGlobalDir.checkNumForNameNSG(lumpname, lumpinfo_t::ns_translations);
       if(lumpnum >= 0)
@@ -838,24 +847,28 @@ static void E_ProcessFont(cfg_t *sec)
       font->centered = (cfg_getbool(sec, ITEM_FONT_CENTER) == cfg_true);
 
    // haleyjd 09/06/12: colors
+   // default color
    if(IS_SET(sec, ITEM_FONT_COLORD))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORD,
          &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
    }
 
+   // normal color
    if(IS_SET(sec, ITEM_FONT_COLORN))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORN, 
          &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
    }
    
+   // high color
    if(IS_SET(sec, ITEM_FONT_COLORH))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORH, 
          &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
    }
 
+   // error color
    if(IS_SET(sec, ITEM_FONT_COLORE))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORE, 
@@ -869,8 +882,12 @@ static void E_ProcessFont(cfg_t *sec)
 
       for(int col = 0; col < CR_LIMIT; col++)
       {
+         qstring translation;
          const char *fieldname = fontcolornames[col];
-         E_loadTranslation(font, col, cfg_getstr(colors, fontcolornames[col]));
+         
+         E_CfgListToCommaString(colors, fontcolornames[col], translation);
+
+         E_loadTranslation(font, col, translation.constPtr());
       }
    }
    else if(def)
