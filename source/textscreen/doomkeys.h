@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1996 Id Software, Inc.

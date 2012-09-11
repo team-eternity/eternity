@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -181,10 +181,9 @@ void startupmsg(const char *func, const char *desc)
 // Events can be discarded if no responder claims them
 //
 
-#define MAXEVENTS 64
-
-static event_t events[MAXEVENTS];
-static int eventhead, eventtail;
+static event_t *events = NULL;
+static event_t *current_event = NULL;
+static size_t event_queue_size = 64;
 
 //
 // D_PostEvent
@@ -192,8 +191,21 @@ static int eventhead, eventtail;
 //
 void D_PostEvent(event_t *ev)
 {
-   events[eventhead++] = *ev;
-   eventhead &= MAXEVENTS-1;
+   if(!events)
+   {
+      events = ecalloc(event_t *, sizeof(event_t), event_queue_size);
+      current_event = events;
+   }
+
+   memcpy(current_event, ev, sizeof(event_t));
+
+   if((current_event - events) == (event_queue_size - 1))
+   {
+      event_queue_size *= 2;
+      events = ecalloc(event_t *, sizeof(event_t), event_queue_size);
+   }
+
+   current_event++;
 }
 
 //
@@ -202,6 +214,7 @@ void D_PostEvent(event_t *ev)
 //
 void D_ProcessEvents(void)
 {
+   size_t event_count = current_event - events;
    // IF STORE DEMO, DO NOT ACCEPT INPUT
    // sf: I don't think SMMU is going to be played in any store any
    //     time soon =)
@@ -210,13 +223,11 @@ void D_ProcessEvents(void)
    // [CG] Re-enable keys that were disabled this TIC.
    key_bindings.reEnableKeys();
 
-   for(; eventtail != eventhead; eventtail = (eventtail+1) & (MAXEVENTS-1))
+   for(current_event = events; event_count > 0; event_count--)
    {
-      event_t *evt = events + eventtail;
-
-      if(!MN_Responder(evt))
-         if(!C_Responder(evt))
-            G_Responder(evt);
+      if(!MN_Responder(current_event))
+         if(!C_Responder(current_event))
+            G_Responder(current_event);
    }
 }
 
