@@ -302,7 +302,7 @@ public:
    // Ownership of the prototype is *not* assumed by the collection.
    //
    void setPrototype(const T *pPrototype) { prototype = pPrototype; }
-   const T *getPrototype() const { return prototype };
+   const T *getPrototype() const { return prototype; }
 
    //
    // clear
