@@ -2284,32 +2284,35 @@ static void D_DoomInit(void)
       D_SetGraphicsMode();
    }
 
-   startupmsg("R_Init","Init DOOM refresh daemon");
+   startupmsg("R_Init", "Init DOOM refresh daemon");
    R_Init();
 
-   startupmsg("P_Init","Init Playloop state.");
+   startupmsg("P_Init", "Init Playloop state.");
    P_Init();
 
-   startupmsg("HU_Init","Setting up heads up display.");
+   startupmsg("HU_Init", "Setting up heads up display.");
    HU_Init();
 
-   startupmsg("ST_Init","Init status bar.");
+   startupmsg("ST_Init", "Init status bar.");
    ST_Init();
 
-   startupmsg("MN_Init","Init menu.");
+   startupmsg("MN_Init", "Init menu.");
    MN_Init();
+
+   startupmsg("IN_Init", "Init intermission.");
+   IN_Init(); // haleyjd 09/10/12
 
    startupmsg("F_Init", "Init finale.");
    F_Init();
 
-   startupmsg("S_Init","Setting up sound.");
+   startupmsg("S_Init", "Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
 
    //
    // NETCODE_FIXME: Netgame check.
    //
 
-   startupmsg("D_CheckNetGame","Check netgame status.");
+   startupmsg("D_CheckNetGame", "Check netgame status.");
    D_CheckNetGame();
 
    // haleyjd 04/10/03: set coop gametype

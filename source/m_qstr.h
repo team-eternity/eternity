@@ -43,11 +43,13 @@ class SaveArchive;
 class qstring : public ZoneObject
 {
 private:
+   char    local[16];
    char   *buffer;
    size_t  index;
    size_t  size;
    
-   char   *checkBuffer();
+   bool isLocal() const { return (buffer == local); }
+   void unLocalize(size_t pSize);
 
 public:
    static const size_t npos;
@@ -55,22 +57,28 @@ public:
 
    // Constructors / Destructor
    qstring(size_t startSize = 0, int tag = PU_STATIC) 
-      : ZoneObject(), buffer(NULL), index(0), size(0)
+      : ZoneObject(), index(0), size(16)
    {
       ChangeTag(tag);
+      buffer = local;
+      memset(local, 0, sizeof(local));
       if(startSize)
          initCreateSize(startSize);
    }
 
    qstring(const qstring &other) 
-      : ZoneObject(), buffer(NULL), index(0), size(0)
+      : ZoneObject(), index(0), size(16)
    {
+      buffer = local;
+      memset(local, 0, sizeof(local));
       copy(other);
    }
 
    explicit qstring(const char *cstr)
-      : ZoneObject(), buffer(NULL), index(0), size(0)
+      : ZoneObject(), index(0), size(16)
    {
+      buffer = local;
+      memset(local, 0, sizeof(local));
       copy(cstr);
    }
 
@@ -85,14 +93,14 @@ public:
    // cached, and is not meant for writing into (although it is safe to do so, it
    // circumvents the encapsulation and security of this structure).
    //
-   char *getBuffer() { return checkBuffer(); }
+   char *getBuffer() { return buffer; }
 
    //
    // qstring::constPtr
    //
    // Like qstring::getBuffer, but casts to const to enforce safety.
    //
-   const char *constPtr() const { return buffer ? buffer : ""; }
+   const char *constPtr() const { return buffer; }
 
    //
    // qstring::length

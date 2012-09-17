@@ -67,6 +67,17 @@ public:
    void parseCSVScores(char *input);
 };
 
+// Field names for CSV header
+static const char *fieldNames[INStatsMgrPimpl::FIELD_NUMFIELDS] =
+{
+   "levelkey",
+   "playername",
+   "skill",
+   "recordtype",
+   "value",
+   "maxvalue"
+};
+
 // Names for record types
 static const char *recordTypeNames[INSTAT_NUMTYPES] =
 {
@@ -77,6 +88,11 @@ static const char *recordTypeNames[INSTAT_NUMTYPES] =
    "frags"
 };
 
+//
+// INStatsMgrPimpl::parseCSVLine
+//
+// Parse a single line of the CSV input file.
+//
 void INStatsMgrPimpl::parseCSVLine(char *&line, Collection<qstring> &output)
 {
    char *rover  = line;
@@ -134,6 +150,11 @@ void INStatsMgrPimpl::parseCSVLine(char *&line, Collection<qstring> &output)
       line = rover;     // we are at the end.
 }
 
+//
+// INStatsMgrPimpl::parseCSVScores
+//
+// Parse the CSV input file used to save top scores.
+//
 void INStatsMgrPimpl::parseCSVScores(char *input)
 {
    Collection<qstring> fields;
@@ -172,7 +193,7 @@ void INStatsMgrPimpl::parseCSVScores(char *input)
 }
 
 //
-// Constructor
+// INStatsManager Constructor
 //
 INStatsManager::INStatsManager()
 {
@@ -209,59 +230,69 @@ void INStatsManager::loadStats()
    }
 }
 
-/*
-struct wbplayerstruct_t
+static void MakeCSVValue(qstring &qstr, const char *input, bool comma)
 {
-  bool        in;     // whether the player is in game
-    
-  // Player stats, kills, collected items etc.
-  int         skills;
-  int         sitems;
-  int         ssecret;
-  int         stime; 
-  int         frags[4];
-  int         score;  // current score on entry, modified on return
-  
-};
+   qstr.clear();
+   qstr << '"' << input << '"';
+   if(comma)
+      qstr << ',';
+}
 
-struct wbstartstruct_t
+//
+// INStatsManager::saveStats
+//
+// Save the high scores table back to file as CSV data.
+//
+void INStatsManager::saveStats()
 {
-  int         epsd;   // episode # (0-2)
+   in_stat_t *stat = NULL;   
+   qstring path;
+   qstring value;
+   FILE *f;
+   int i;
+   
+   path = usergamepath;
+   path.pathConcatenate("stats.csv");
 
-  // if true, splash the secret level
-  bool        didsecret;
+   if(!(f = fopen(path.constPtr(), "w")))
+      return; // woops...
 
-  // haleyjd: if player is going to secret map
-  bool        gotosecret;
-    
-  // previous and next levels, origin 0
-  int         last;
-  int         next;   
-    
-  int         maxkills;
-  int         maxitems;
-  int         maxsecret;
-  int         maxfrags;
+   // Write the header row first
+   for(i = 0; i < INStatsMgrPimpl::FIELD_NUMFIELDS; i++)
+   {
+      fputs(fieldNames[i], f);
+      fputc(i == INStatsMgrPimpl::FIELD_MAXVALUE ? '\n' : ',', f);
+   }
 
-  // the par time
-  int         partime;
-    
-  // index of this player in game
-  int         pnum;   
+   while((stat = pImpl->statsByLevelKey.tableIterator(stat)))
+   {
+      // levelkey
+      MakeCSVValue(value, stat->levelkey, true);
+      fputs(value.constPtr(), f);
 
-  wbplayerstruct_t    plyr[MAXPLAYERS];
+      // playername
+      MakeCSVValue(value, stat->playername, true);
+      fputs(value.constPtr(), f);
 
-};
-*/
+      // skill
+      value.clear() << stat->skill << ',';
+      fputs(value.constPtr(), f);
 
-/*
-      FIELD_LEVELKEY,
-      FIELD_PLAYERNAME,
-      FIELD_SKILL,
-      FIELD_RECORDTYPE,   
-      FIELD_VALUE,
-      FIELD_MAXVALUE,
-*/
+      // recordtype
+      MakeCSVValue(value, recordTypeNames[stat->recordType], true);
+      fputs(value.constPtr(), f);
+
+      // value
+      value.clear() << stat->value << ',';
+      fputs(value.constPtr(), f);
+
+      // maxvalue
+      value.clear() << stat->maxValue << '\n';
+      fputs(value.constPtr(), f);
+   }
+
+   fclose(f);
+}
 
 //
 // INStatsManager::findScore
@@ -271,6 +302,7 @@ struct wbstartstruct_t
 in_stat_t *INStatsManager::findScore(const qstring &key, int type)
 {
    in_stat_t *itr = NULL;
+
    while((itr = pImpl->statsByLevelKey.keyIterator(itr, key.constPtr())))
    {
       if(itr->recordType == type)
@@ -280,14 +312,25 @@ in_stat_t *INStatsManager::findScore(const qstring &key, int type)
    return NULL;
 }
 
-/*
-      INSTAT_KILLS,
-      INSTAT_ITEMS,
-      INSTAT_SECRETS,
-      INSTAT_TIME,
-      INSTAT_FRAGS,
-      INSTAT_NUMTYPES
-*/
+//
+// INStatsManager::addScore
+//
+// Add a new score to the table.
+//
+void INStatsManager::addScore(const char *levelkey, int score, int maxscore, 
+                              int scoretype, int pnum)
+{
+   in_stat_t *newStat = estructalloc(in_stat_t, 1);
+
+   newStat->levelkey   = estrdup(levelkey);
+   newStat->value      = score;
+   newStat->maxValue   = maxscore;
+   newStat->recordType = scoretype;
+   newStat->skill      = gameskill;
+   newStat->playername = estrdup(players[pnum].name);
+   
+   pImpl->statsByLevelKey.addObject(newStat);
+}
 
 //
 // INStatsManager::recordStats
@@ -297,11 +340,11 @@ in_stat_t *INStatsManager::findScore(const qstring &key, int type)
 void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
 {
    const wbplayerstruct_t *playerData = &wbstats->plyr[wbstats->pnum];
-   int   scores[INSTAT_NUMTYPES];
-
-   int levelLump    = g_dir->checkNumForName(gamemapname);
-   const char *fn   = g_dir->getLumpFileName(levelLump);
+   int levelLump  = g_dir->checkNumForName(gamemapname);
+   const char *fn = g_dir->getLumpFileName(levelLump);
    qstring levelkey;
+   int   scores[INSTAT_NUMTYPES];
+   int   maxscores[INSTAT_NUMTYPES];
 
    // really should not happen.
    if(!fn)
@@ -311,12 +354,27 @@ void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
    if(!playerData->in)
       return;
 
+   // cheated?
+   if(players[wbstats->pnum].cheats & CF_CHEATED)
+      return;
+
+   // demo?
+   if(demoplayback)
+      return;
+
    // copy data from wbstats/playerData to scores array
    scores[INSTAT_KILLS  ] = playerData->skills;
    scores[INSTAT_ITEMS  ] = playerData->sitems;
    scores[INSTAT_SECRETS] = playerData->ssecret;
    scores[INSTAT_TIME   ] = playerData->stime;
-   scores[INSTAT_FRAGS  ] = WI_FragSum(wbstats->pnum);
+   scores[INSTAT_FRAGS  ] = players[wbstats->pnum].totalfrags;
+
+   // Setup the maxscores array too
+   maxscores[INSTAT_KILLS  ] = wbstats->maxkills;
+   maxscores[INSTAT_ITEMS  ] = wbstats->maxitems;
+   maxscores[INSTAT_SECRETS] = wbstats->maxsecret;
+   maxscores[INSTAT_TIME   ] = wbstats->partime;   // Actually a minimum, of sorts.
+   maxscores[INSTAT_FRAGS  ] = -1;                 // There's no max for frags.
 
    // construct the unique key for this level
    levelkey << fn << "::" << gamemapname;
@@ -327,7 +385,24 @@ void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
 
       if((instat = findScore(levelkey, i)))
       {
+         // If we're not playing on the same or a better skill level, this
+         // score can't replace the old one.
+         if(gameskill < instat->skill)
+            continue;
+
+         // For most categories, a higher score wins. Time is an exception.
+         if(i == INSTAT_TIME ? 
+            scores[i] < instat->value : scores[i] > instat->value)
+         {
+            // This player has the new high score!
+            instat->value    = scores[i];
+            instat->maxValue = maxscores[i];
+            E_ReplaceString(instat->playername, 
+                            estrdup(players[wbstats->pnum].name));
+         }
       }
+      else
+         addScore(levelkey.constPtr(), scores[i], maxscores[i], i, wbstats->pnum);
    }
 }
 

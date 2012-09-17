@@ -47,12 +47,12 @@ struct in_stat_t
 {
    DLListItem<in_stat_t> links; // hash links
 
-   const char *levelkey;   // filename::levelname
-   const char *playername; // player who set the record
-   int skill;              // skill level of the record
-   int recordType;         // type of record
-   int value;              // value of the record
-   int maxValue;           // maximum, if any for this type
+   char *levelkey;   // filename::levelname
+   char *playername; // player who set the record
+   int skill;        // skill level of the record
+   int recordType;   // type of record
+   int value;        // value of the record
+   int maxValue;     // maximum, if any for this type
 };
 
 class INStatsMgrPimpl;
@@ -70,12 +70,15 @@ protected:
 
    void loadStats();
    in_stat_t *findScore(const qstring &key, int type);
+   void addScore(const char *levelkey, int score, int maxscore, 
+                 int scoretype, int pnum);
 
 public:
    static void Init();
    static INStatsManager &Get() { return singleton; }
 
    void recordStats(const wbstartstruct_t *stats);
+   void saveStats();
 };
 
 #endif

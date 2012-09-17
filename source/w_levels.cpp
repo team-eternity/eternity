@@ -540,7 +540,7 @@ void W_EnumerateMasterLevels(bool forceRefresh)
 //
 // Command handling for displaying the Master Levels menu widget.
 // If allowexit is false, the menu filebox widget will not allow
-// an exit via menu_toggle or menu_previous actions.
+// an immediate exit via menu_toggle or menu_previous actions.
 //
 void W_DoMasterLevels(bool allowexit)
 {

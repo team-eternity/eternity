@@ -1022,7 +1022,7 @@ static void WI_drawShowNextLoc(void)
 // Args:    none
 // Returns: void
 //
-static void WI_drawNoState(void)
+static void WI_drawNoState()
 {
    snl_pointeron = true;
    WI_drawShowNextLoc();
@@ -1035,7 +1035,7 @@ static void WI_drawNoState(void)
 // Args:    playernum -- the player to be calculated
 // Returns: the total frags for this player
 //
-int WI_FragSum(int playernum)
+static int WI_fragSum(int playernum)
 {
    int i, numfrags = 0;
     
@@ -1136,7 +1136,7 @@ static void WI_updateDeathmatchStats(void)
                   dm_frags[i][j] = plrs[i].frags[j];
             }
             
-            dm_totals[i] = WI_FragSum(i);
+            dm_totals[i] = WI_fragSum(i);
          }
       }
   
@@ -1173,7 +1173,7 @@ static void WI_updateDeathmatchStats(void)
                   stillticking = true;
                }
             }
-            dm_totals[i] = WI_FragSum(i);
+            dm_totals[i] = WI_fragSum(i);
             
             if(dm_totals[i] > 999)
                dm_totals[i] = 999;
@@ -1340,7 +1340,7 @@ static void WI_initNetgameStats(void)
       
       cnt_kills[i] = cnt_items[i] = cnt_secret[i] = cnt_frags[i] = 0;
       
-      dofrags += WI_FragSum(i);
+      dofrags += WI_fragSum(i);
    }
    
    dofrags = !!dofrags; // set to true or false - did we have frags?
@@ -1393,7 +1393,7 @@ static void WI_updateNetgameStats(void)
          cnt_secret[i] = wbs->maxsecret ? 
             (plrs[i].ssecret * 100) / wbs->maxsecret : 100;
          if(dofrags)
-            cnt_frags[i] = WI_FragSum(i);  // we had frags
+            cnt_frags[i] = WI_fragSum(i);  // we had frags
       }
       S_StartSound(NULL, sfx_barexp);  // bang
       ng_state = 10;
@@ -1492,7 +1492,7 @@ static void WI_updateNetgameStats(void)
          
          cnt_frags[i] += 1;
          
-         if(cnt_frags[i] >= (fsum = WI_FragSum(i)))
+         if(cnt_frags[i] >= (fsum = WI_fragSum(i)))
             cnt_frags[i] = fsum;
          else
             stillticking = true;
