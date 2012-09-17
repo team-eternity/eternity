@@ -60,8 +60,6 @@ protected:
    DLListItem<MetaObject> typelinks; // links by type
    const char *key;                  // primary hash key
    const char *type;                 // type hash key
-   
-   char *key_name; // storage pointer for key (alloc'd string)
 
    friend class metaTablePimpl;
 
@@ -74,7 +72,7 @@ public:
 
    void setType();
 
-   const char *getKey() const { return key_name; }
+   const char *getKey() const { return key; }
 
    // Virtual Methods
    virtual MetaObject *clone() const;

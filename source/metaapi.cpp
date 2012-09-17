@@ -29,6 +29,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomtype.h"
+#include "m_collection.h"
 #include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
@@ -59,6 +60,67 @@ int metaerrno = 0;
 
 //=============================================================================
 //
+// Key Interning
+//
+// MetaObject key strings are interned here, for efficiency. It is possible to
+// look up the ID of an interned key and then use that ID in subsequent lookups
+// instead of the key.
+//
+
+struct metakey_t
+{
+   DLListItem<metakey_t> links; // hash links
+   char   *key;                 // key name
+   size_t  index;               // numeric index
+};
+
+// Hash table of keys by their name
+static EHashTable<metakey_t, ENCStringHashKey, &metakey_t::key, &metakey_t::links>
+   metaKeyHash;
+
+// Collection of all key objects
+static PODCollection<metakey_t> metaKeys;
+
+//
+// MetaKey
+//
+// If the given key string is already interned, the metakey_t structure that
+// stores it will be returned. If not, it will be added to the collection of
+// keys and hashed by name.
+//
+static metakey_t &MetaKey(const char *key)
+{
+   metakey_t *keyObj;
+
+   // Do we already have this key?
+   if(!(keyObj = metaKeyHash.objectForKey(key)))
+   {
+      keyObj = &metaKeys.addNew();
+      keyObj->key   = estrdup(key);
+      keyObj->index = metaKeys.getLength() - 1;
+
+      // hash it
+      metaKeyHash.addObject(keyObj);
+   }
+
+   return *keyObj;
+}
+
+//
+// MetaKeyForIndex
+//
+// Given a key index, get the key.
+//
+static metakey_t &MetaKeyForIndex(size_t index)
+{
+   if(index >= metaKeys.getLength())
+      I_Error("MetaKeyForIndex: illegal key index requested\n");
+
+   return metaKeys[index];
+}
+
+//=============================================================================
+//
 // MetaObject Methods
 //
 
@@ -71,9 +133,9 @@ IMPLEMENT_RTTI_TYPE(MetaObject)
 // requires it.
 //
 MetaObject::MetaObject()
-   : RTTIObject(), links(), typelinks(), type(), key()
+   : RTTIObject(), links(), typelinks(), type()
 {
-   key = key_name = estrdup("default"); // TODO: GUID?
+   key = MetaKey("default").key; // TODO: GUID?
 }
 
 //
@@ -82,9 +144,9 @@ MetaObject::MetaObject()
 // Constructor for MetaObject when type and/or key are known.
 //
 MetaObject::MetaObject(const char *pKey) 
-   : RTTIObject(), links(), typelinks(), type(), key()
+   : RTTIObject(), links(), typelinks(), type()
 {
-   key = key_name = estrdup(pKey); // key_name is managed by the metaobject
+   key = MetaKey(pKey).key;
 }
 
 //
@@ -93,13 +155,8 @@ MetaObject::MetaObject(const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), type(), key()
-{
-   if(key_name && key_name != other.key_name)
-      efree(key_name);
-   key_name = estrdup(other.key_name);
-
-   key = key_name;
+   : RTTIObject(), links(), typelinks(), type(), key(other.key)
+{   
 }
 
 //
@@ -109,11 +166,6 @@ MetaObject::MetaObject(const MetaObject &other)
 //
 MetaObject::~MetaObject()
 {
-   // key_name is managed by the metaobject
-   if(key_name)
-      efree(key_name);
-
-   key_name  = NULL;
 }
 
 //
@@ -455,7 +507,7 @@ MetaTable::MetaTable(const char *name) : MetaObject(name)
 //
 // Copy constructor
 //
-MetaTable::MetaTable(const MetaTable &other) : MetaObject(other.key_name)
+MetaTable::MetaTable(const MetaTable &other) : MetaObject(other)
 {
    pImpl = new metaTablePimpl();
    copyTableFrom(&other);
@@ -489,7 +541,7 @@ MetaObject *MetaTable::clone() const
 //
 const char *MetaTable::toString() const
 {
-   return key_name;
+   return key;
 }
 
 //
