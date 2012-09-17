@@ -2705,17 +2705,21 @@ public:
 
 IMPLEMENT_RTTI_TYPE(MetaSpeedSet)
 
+// Speedset key cache for fast lookups
+static MetaKeyIndex speedsetKey("speedset");
+
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
-   mobjinfo_t *mi = mobjinfo[thingtype];
+   MetaTable  *meta = mobjinfo[thingtype]->meta;
+   size_t metaKey = speedsetKey.getIndex();
 
-   if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+   if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
    {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }
    else
-      mi->meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
+      meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
 
 // killough 4/10/98: New function to fix bug which caused Doom
@@ -2726,6 +2730,7 @@ void G_SetFastParms(int fast_pending)
    static int fast = 0;            // remembers fast state
    int i;
    MetaObject *o;
+   size_t metaKey = speedsetKey.getIndex();
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2747,7 +2752,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
@@ -2761,7 +2766,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }

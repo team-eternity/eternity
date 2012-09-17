@@ -62,9 +62,7 @@ int metaerrno = 0;
 //
 // Key Interning
 //
-// MetaObject key strings are interned here, for efficiency. It is possible to
-// look up the ID of an interned key and then use that ID in subsequent lookups
-// instead of the key.
+// MetaObject key strings are interned here, for space efficiency. 
 //
 
 struct metakey_t
@@ -72,6 +70,7 @@ struct metakey_t
    DLListItem<metakey_t> links; // hash links
    char   *key;                 // key name
    size_t  index;               // numeric index
+   unsigned int unmodHC;        // unmodulated hash key
 };
 
 // Hash table of keys by their name
@@ -96,11 +95,12 @@ static metakey_t &MetaKey(const char *key)
    if(!(keyObj = metaKeyHash.objectForKey(key)))
    {
       keyObj = &metaKeys.addNew();
-      keyObj->key   = estrdup(key);
-      keyObj->index = metaKeys.getLength() - 1;
+      keyObj->key     = estrdup(key);
+      keyObj->index   = metaKeys.getLength() - 1;
+      keyObj->unmodHC = ENCStringHashKey::HashCode(key);
 
       // hash it
-      metaKeyHash.addObject(keyObj);
+      metaKeyHash.addObject(keyObj, keyObj->unmodHC);
    }
 
    return *keyObj;
@@ -135,7 +135,10 @@ IMPLEMENT_RTTI_TYPE(MetaObject)
 MetaObject::MetaObject()
    : RTTIObject(), links(), typelinks(), type()
 {
-   key = MetaKey("default").key; // TODO: GUID?
+   metakey_t &keyObj = MetaKey("default"); // TODO: GUID?
+
+   key    = keyObj.key;
+   keyIdx = keyObj.index;
 }
 
 //
@@ -146,7 +149,10 @@ MetaObject::MetaObject()
 MetaObject::MetaObject(const char *pKey) 
    : RTTIObject(), links(), typelinks(), type()
 {
-   key = MetaKey(pKey).key;
+   metakey_t &keyObj = MetaKey(pKey);
+
+   key    = keyObj.key;
+   keyIdx = keyObj.index;
 }
 
 //
@@ -155,7 +161,8 @@ MetaObject::MetaObject(const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), type(), key(other.key)
+   : RTTIObject(), links(), typelinks(), type(), 
+     key(other.key), keyIdx(other.keyIdx)
 {   
 }
 
@@ -673,8 +680,10 @@ void MetaTable::addObject(MetaObject *object)
    // Initialize type name
    object->setType();
 
-   // Add the object to the key table
-   pImpl->keyhash.addObject(object);
+   // Add the object to the key table.
+   // haleyjd 09/17/2012: use the precomputed unmodulated hash code for the
+   // MetaObject's interned key.
+   pImpl->keyhash.addObject(object, MetaKeyForIndex(object->getKeyIdx()).unmodHC);
 
    // Add the object to the type table, which is static in size
    pImpl->typehash.addObject(object);
@@ -719,7 +728,18 @@ MetaObject *MetaTable::getObject(const char *key)
 }
 
 //
-// MetaGetObjectType
+// MetaTable::getObject
+//
+// Overload taking a MetaObject interned key index.
+//
+MetaObject *MetaTable::getObject(size_t keyIndex)
+{
+   metakey_t &keyObj = MetaKeyForIndex(keyIndex);
+   return pImpl->keyhash.objectForKey(keyObj.key, keyObj.unmodHC);
+}
+
+//
+// MetaTable::getObjectType
 //
 // Returns the first object found in the metatable which matches the type. 
 // Returns NULL if no such object exists.
@@ -748,6 +768,42 @@ MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
 }
 
 //
+// MetaTable::getObjectKeyAndType
+//
+// Overload taking a MetaObject interned key index and RTTIObject::Type
+// instance.
+//
+MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, 
+                                           const MetaObject::Type *type)
+{
+   metakey_t  &keyObj = MetaKeyForIndex(keyIndex);
+   MetaObject *obj    = NULL;
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+   
+   return obj;
+}
+
+//
+// MetaTable::getObjectKeyAndType
+//
+// Overload taking a MetaObject interned key index.
+//
+MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, const char *type)
+{
+   MetaObject::Type *rttiType = FindTypeCls<MetaObject>(type);
+
+   if(!rttiType)
+      return NULL;
+
+   return getObjectKeyAndType(keyIndex, rttiType);
+}
+
+//
 // MetaTable::getNextObject
 //
 // Returns the next object with the same key, or the first such object
@@ -763,9 +819,26 @@ MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key)
    // If no key is provided but object is valid, get the next object with the 
    // same key as the current one.
    if(object && !key)
+   {
+      unsigned int hc = MetaKeyForIndex(object->getKeyIdx()).unmodHC;
       key = object->getKey();
 
-   return pImpl->keyhash.keyIterator(object, key);
+      return pImpl->keyhash.keyIterator(object, key, hc);
+   }
+   else
+      return pImpl->keyhash.keyIterator(object, key);
+}
+
+//
+// MetaTable::getNextObject
+//
+// Overload taking a MetaObject interned key index.
+//
+MetaObject *MetaTable::getNextObject(MetaObject *object, size_t keyIndex)
+{
+   metakey_t &keyObj = MetaKeyForIndex(keyIndex);
+
+   return pImpl->keyhash.keyIterator(object, keyObj.key, keyObj.unmodHC);
 }
 
 //
@@ -803,6 +876,32 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
    }
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+
+//
+// MetaTable::getNextKeyAndType
+//
+// Overload taking a MetaObject interned key index.
+//
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type)
+{
+   MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow NULL in type to mean "same as current"
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
    {
       if(obj->isInstanceOf(type))
          break;
@@ -1171,6 +1270,22 @@ void MetaTable::clearTable()
 
       delete obj;
    }
+}
+
+//
+// MetaTable Statics
+//
+
+//
+// MetaTable::IndexForKey
+//
+// This will intern the passed-in key string if it has not been interned
+// already (consider it pre-caching, if you will). The index of that
+// interned string will be returned.
+//
+size_t MetaTable::IndexForKey(const char *key)
+{
+   return MetaKey(key).index;
 }
 
 // EOF
