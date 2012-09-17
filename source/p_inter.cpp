@@ -1315,9 +1315,9 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(mod != MOD_UNKNOWN)
    {
       MetaTable *meta = target->info->meta;
-      double df = meta->getDouble(E_ModFieldName("damagefactor", emod), 1.0);
+      fixed_t df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
          
-      damage = (int)(damage * df);
+      damage = (damage * df) / FRACUNIT;
    }
 
    // Some close combat weapons should not

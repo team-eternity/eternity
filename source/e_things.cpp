@@ -865,7 +865,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
    MetaObject *obj;
 
-   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
 }
 
@@ -880,7 +880,7 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
    MetaObject *obj = NULL;
    MetaState  *ret = NULL;
    
-   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       ret = static_cast<MetaState *>(obj);
 
    return ret;
@@ -895,16 +895,14 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 // E_ModFieldName
 //
 // Constructs the appropriate label name for a metaproperty that
-// uses a mod name as a prefix.
+// uses a mod name as a suffix.
 // Don't cache the return value.
 //
 const char *E_ModFieldName(const char *base, emod_t *mod)
 {
    static qstring namebuffer;
 
-   namebuffer.clearOrCreate(64);
-
-   namebuffer << base << '.' << mod->name;
+   namebuffer.clear() << base << '.' << mod->name;
 
    return namebuffer.constPtr();
 }
@@ -1368,8 +1366,10 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
       // we don't add damage factors for the unknown damage type
       if(mod->num != 0)
       {
-         info->meta->setDouble(E_ModFieldName("damagefactor", mod),
-                               cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR));
+         double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
+         int    dfi = static_cast<int>(M_DoubleToFixed(df));
+
+         info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
       }
    }
 }

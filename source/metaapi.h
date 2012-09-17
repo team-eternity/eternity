@@ -195,6 +195,7 @@ public:
    // * By Type
    MetaObject *getObjectType(const char *type);
    // * By Key AND Type
+   MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(const char *key, const char *type);
    MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
@@ -211,6 +212,7 @@ public:
    
    // Signed integer
    void addInt(const char *key, int value);
+   int  getInt(size_t keyIndex, int defValue);
    int  getInt(const char *key, int defValue);
    void setInt(const char *key, int newValue);
    int  removeInt(const char *key);

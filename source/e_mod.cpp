@@ -39,6 +39,7 @@
 #include "d_dehtbl.h"
 #include "d_io.h"
 #include "doomtype.h"
+#include "metaapi.h"
 
 //
 // damagetype options
@@ -91,6 +92,10 @@ static int edf_alloc_modnum = D_MAXINT;
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
    e_mod_namehash.addObject(*mod);
+
+   // cache dfKeyIndex for use in metatables
+   mod->dfKeyIndex = 
+      MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
 }
 
 // need forward declaration for E_AutoAllocModNum
