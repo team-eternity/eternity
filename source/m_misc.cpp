@@ -322,7 +322,7 @@ default_t defaults[] =
    DEFAULT_INT("show_messages", &showMessages, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable message display"),
 
-   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_no,
+   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_no,
                "messages colour"),
 
    // killough 3/6/98: preserve autorun across games
@@ -692,13 +692,13 @@ default_t defaults[] =
    DEFAULT_BOOL("hu_showcoords", &hu_showcoords, NULL, true, default_t::wad_yes,
                 "display player/pointer coordinates on automap"),
    
-   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap level time widget"),
 
-   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap level name widget"),
    
-   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap coordinates widget"),
    
    // below is red
@@ -773,7 +773,7 @@ default_t defaults[] =
    DEFAULT_INT("obituaries",&obituaries, NULL, 0, 0, 1, default_t::wad_yes,
                "obituaries on/off"),
    
-   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_LIMIT-1, default_t::wad_no,
+   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_BUILTIN, default_t::wad_no,
                "obituaries colour"),
    
    DEFAULT_INT("draw_particles",&drawparticles, NULL, 0, 0, 1, default_t::wad_yes,

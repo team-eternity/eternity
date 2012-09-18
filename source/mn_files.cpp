@@ -304,7 +304,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
 
 static mndir_t *mn_currentdir;
 
-static void MN_FileDrawer(void);
+static void MN_FileDrawer();
 static bool MN_FileResponder(event_t *ev);
 
 // file selector is handled using a menu widget
@@ -325,7 +325,7 @@ static bool allow_exit = true;
 // graphical widget in the game engine so far. Significantly different
 // than it was in SMMU 3.30.
 //
-static void MN_FileDrawer(void)
+static void MN_FileDrawer()
 {
    int i;
    int bbot, btop, bleft, bright, w, h; // color box coords and dimensions

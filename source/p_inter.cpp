@@ -1315,9 +1315,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(mod != MOD_UNKNOWN)
    {
       MetaTable *meta = target->info->meta;
-      fixed_t df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
-         
-      damage = (damage * df) / FRACUNIT;
+      int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
+
+      // Only apply if not FRACUNIT, due to the chance this might alter
+      // the compatibility characteristics of extreme DEH/BEX damage.
+      if(df != FRACUNIT)
+         damage = (damage * df) / FRACUNIT;
    }
 
    // Some close combat weapons should not

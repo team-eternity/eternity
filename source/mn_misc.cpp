@@ -709,13 +709,13 @@ static qstring  teststr;  // string for test
 static void MN_fontTestDrawer()
 {
    int totalHeight = SCREENHEIGHT - testfont->absh * 2;
-   int itemHeight  = totalHeight / 10;   
+   int itemHeight  = totalHeight / (CR_BUILTIN + 1);   
    int x = 160 - V_FontStringWidth(testfont, teststr.constPtr())/2;
    int y = testfont->absh;
 
    V_DrawBackground(mn_background_flat, &vbscreen);
    
-   for(int i = 0; i < CR_LIMIT; i++)
+   for(int i = 0; i <= CR_BUILTIN; i++)
    {
       V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
       y += itemHeight;

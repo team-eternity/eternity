@@ -83,16 +83,20 @@
 #define ITEM_FILTER_END   "end"
 #define ITEM_FILTER_MASK  "mask"
 
-#define ITEM_COLOR_BRICK  "brick"
-#define ITEM_COLOR_TAN    "tan"
-#define ITEM_COLOR_GRAY   "gray"
-#define ITEM_COLOR_GREEN  "green"
-#define ITEM_COLOR_BROWN  "brown"
-#define ITEM_COLOR_GOLD   "gold"
-#define ITEM_COLOR_RED    "red"
-#define ITEM_COLOR_BLUE   "blue"
-#define ITEM_COLOR_ORANGE "orange"
-#define ITEM_COLOR_YELLOW "yellow"
+#define ITEM_COLOR_BRICK   "brick"
+#define ITEM_COLOR_TAN     "tan"
+#define ITEM_COLOR_GRAY    "gray"
+#define ITEM_COLOR_GREEN   "green"
+#define ITEM_COLOR_BROWN   "brown"
+#define ITEM_COLOR_GOLD    "gold"
+#define ITEM_COLOR_RED     "red"
+#define ITEM_COLOR_BLUE    "blue"
+#define ITEM_COLOR_ORANGE  "orange"
+#define ITEM_COLOR_YELLOW  "yellow"
+#define ITEM_COLOR_CUSTOM1 "custom1"
+#define ITEM_COLOR_CUSTOM2 "custom2"
+#define ITEM_COLOR_CUSTOM3 "custom3"
+#define ITEM_COLOR_CUSTOM4 "custom4"
 
 static cfg_opt_t filter_opts[] =
 {
@@ -114,21 +118,29 @@ static const char *fontcolornames[CR_LIMIT] =
    ITEM_COLOR_RED,
    ITEM_COLOR_BLUE,
    ITEM_COLOR_ORANGE,
-   ITEM_COLOR_YELLOW
+   ITEM_COLOR_YELLOW,
+   ITEM_COLOR_CUSTOM1,
+   ITEM_COLOR_CUSTOM2,
+   ITEM_COLOR_CUSTOM3,
+   ITEM_COLOR_CUSTOM4
 };
 
 static cfg_opt_t color_opts[] =
 {
-   CFG_STR(ITEM_COLOR_BRICK,  "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_TAN,    "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_GRAY,   "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_GREEN,  "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_BROWN,  "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_GOLD,   "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_RED,    "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_BLUE,   "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_ORANGE, "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_YELLOW, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BRICK,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_TAN,     "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GRAY,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GREEN,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BROWN,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GOLD,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_RED,     "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BLUE,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_ORANGE,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_YELLOW,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM1, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM2, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM3, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM4, "", CFGF_LIST),
    CFG_END()
 };
 

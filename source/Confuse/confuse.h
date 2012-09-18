@@ -79,6 +79,14 @@ typedef enum cfg_type_t cfg_type_t;
 #define CFG_FILE_ERROR -1
 #define CFG_PARSE_ERROR 1
 
+/** Dialects - haleyjd */
+enum cfg_dialect_t
+{
+   CFG_DIALECT_DELTA,   /**< original dialect */
+   CFG_DIALECT_ALFHEIM, /**< treats ':' characters as assignments */
+   CFG_NUMDIALECTS      /**< keep this last */
+};
+
 #define is_set(f, x) ((f & x) == f)
 
 typedef union cfg_value_t cfg_value_t;

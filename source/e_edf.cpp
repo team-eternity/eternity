@@ -338,6 +338,7 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_FONT_INTRB,     "ee_bigfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_INTRBN,    "ee_bignumfont",   CFGF_NONE),
    CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
+   CFG_FUNC("setdialect",       E_SetDialect),
    CFG_FUNC("include",          E_Include),
    CFG_FUNC("lumpinclude",      E_LumpInclude),
    CFG_FUNC("include_prev",     E_IncludePrev),    // DEPRECATED

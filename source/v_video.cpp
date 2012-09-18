@@ -65,7 +65,7 @@ byte *cr_orange;
 byte *cr_yellow;
 
 //jff 4/24/98 initialize this at runtime
-byte *colrngs[10];
+byte *colrngs[CR_LIMIT];
 
 // Now where did these came from?
 byte gammatable[5][256] =
@@ -193,9 +193,13 @@ static const crdef_t crdefs[] =
 // killough 5/2/98: tiny engine driven by table above
 void V_InitColorTranslation(void)
 {
-  register const crdef_t *p;
-  for (p=crdefs; p->name; p++)
-    *p->map1 = *p->map2 = (byte *)(wGlobalDir.cacheLumpName(p->name, PU_STATIC));
+   register const crdef_t *p;
+   for(p = crdefs; p->name; p++)
+      *p->map1 = *p->map2 = (byte *)(wGlobalDir.cacheLumpName(p->name, PU_STATIC));
+
+   // haleyjd: init custom color slots too
+   for(int i = CR_CUSTOM1; i <= CR_MAXCUSTOM; i++)
+      colrngs[i] = R_GetIdentityMap();
 }
 
 //

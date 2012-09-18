@@ -211,6 +211,41 @@ int E_CheckRoot(cfg_t *cfg, const char *data, int size)
 // Parser File/Lump Include Callback Functions
 //
 
+// External names for dialects
+static const char *dialectNames[CFG_NUMDIALECTS] =
+{
+   "DELTA",  // Original dialect
+   "ALFHEIM" // Adds ':' as an alternate assignment operator (like CSS and JSON)
+};
+
+//
+// E_SetDialect
+//
+// Changes the parser dialect. This setting applies upward on the include
+// stack, so including a file that does not explicitly set its own dialect will
+// cause it to be treated as the same dialect as the including file.
+//
+int E_SetDialect(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
+{
+   int dialect;
+
+   if(argc != 1)
+   {
+      cfg_error(cfg, "wrong number of args to setdialect()\n");
+      return 1;
+   }
+
+   dialect = E_StrToNumLinear(dialectNames, CFG_NUMDIALECTS, argv[0]);
+   if(dialect == CFG_NUMDIALECTS)
+   {
+      cfg_error(cfg, "invalid libConfuse dialect %s\n", argv[0]);
+      return 1;
+   }
+
+   cfg_lexer_set_dialect((cfg_dialect_t)dialect);
+   return 0;
+}
+
 //
 // E_Include
 //
