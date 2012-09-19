@@ -463,7 +463,7 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
    {
       // any special character ends an unquoted string
       --bufferpos; // put it back
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
       
       return CFGT_STR; // return a string token
    }
@@ -620,7 +620,7 @@ static int lexer_state_none(lexerstate_t *ls)
       if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
       {
          mytext = ":";
-         ret    = '='; // Treat like an '=' token
+         ret    = ':'; 
       }
       else
       {

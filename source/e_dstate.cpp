@@ -959,7 +959,7 @@ static void doKeyword(pstate_t *ps)
    {
       state_t *state = states[DSP.currentstate - 1];
       int kwdcode = E_StrToNumLinear(decorate_kwds, NUMDECKWDS, 
-                                     ps->tokenbuffer->getBuffer());
+                                     ps->tokenbuffer->constPtr());
 
       switch(kwdcode)
       {

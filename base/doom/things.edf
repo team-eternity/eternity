@@ -1,5 +1,8 @@
+//
 // EDF for Eternity Engine v3.40.21
-//  Thing type definitions for Doom gamemodes.
+//
+// Thing type definitions for Doom gamemodes.
+//
 
 thingtype DoomPlayer 
 {

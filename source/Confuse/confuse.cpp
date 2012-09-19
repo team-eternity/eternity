@@ -795,7 +795,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             }
             append_value = cfg_true;
          } 
-         else if(tok != '=')
+         else if(tok != '=' && tok != ':')
          {
             // haleyjd 09/26/09: move forward anyway, and don't read a token.
             // This makes ='s optional!
