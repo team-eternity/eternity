@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
 // Heads up 'overlay' for fullscreen
 //
@@ -41,6 +41,7 @@
 #include "hu_frags.h"
 #include "hu_over.h"
 #include "hu_stuff.h"
+#include "m_qstr.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_setup.h"
@@ -54,40 +55,45 @@
 
 // internal for other defines:
 
-#define _wc_pammo(w)    ( weaponinfo[w].ammo == am_noammo ? 0 : \
-                          players[displayplayer].ammo[weaponinfo[w].ammo])
-#define _wc_mammo(w)    ( weaponinfo[w].ammo == am_noammo ? 0 : \
-                          players[displayplayer].maxammo[weaponinfo[w].ammo])
+#define hu_player (players[displayplayer])
 
+#define wc_pammo(w) \
+   (weaponinfo[w].ammo == am_noammo ? 0 : hu_player.ammo[weaponinfo[w].ammo])
 
-#define weapcolour(w)   ( !_wc_mammo(w) ? *FC_GRAY :    \
-        _wc_pammo(w) < ( (_wc_mammo(w) * ammo_red) / 100) ? *FC_RED :    \
-        _wc_pammo(w) < ( (_wc_mammo(w) * ammo_yellow) / 100) ? *FC_GOLD : \
-                          *FC_GREEN );
+#define wc_noammo(w) \
+   (hu_player.ammo[weaponinfo[w].ammo] < weaponinfo[w].ammopershot)
+
+#define wc_mammo(w) \
+   (weaponinfo[w].ammo == am_noammo ? 0 : hu_player.maxammo[weaponinfo[w].ammo])
+
+#define weapcolor(w)                                                \
+   (!wc_mammo(w)  ? *FC_GRAY    :                                   \
+     wc_noammo(w) ? *FC_CUSTOM1 :                                   \
+     wc_pammo(w) < ((wc_mammo(w) * ammo_red)    / 100) ? *FC_RED  : \
+     wc_pammo(w) < ((wc_mammo(w) * ammo_yellow) / 100) ? *FC_GOLD : \
+     *FC_GREEN )
 
 // the amount of ammo the displayplayer has left 
-
-#define playerammo _wc_pammo(players[displayplayer].readyweapon)
+#define playerammo    wc_pammo(hu_player.readyweapon)
 
 // the maximum amount the player could have for current weapon
-
-#define playermaxammo _wc_mammo(players[displayplayer].readyweapon)
+#define playermaxammo wc_mammo(hu_player.readyweapon)
 
 // set up an overlay_t
 
-#define setol(o,a,b) \
-   { \
+#define setol(o, a, b)    \
+   do {                   \
       overlay[o].x = (a); \
       overlay[o].y = (b); \
-   }
+   } while(0)
 
 #define HUDCOLOUR FC_GRAY
 
 int hud_overlaystyle = 1;
-int hud_enabled = 1;
-int hud_hidestatus = 0;
+int hud_enabled      = 1;
+int hud_hidestatus   = 0;
 
-///////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Heads Up Font
 //
@@ -97,7 +103,7 @@ int hud_hidestatus = 0;
 // most ports
 
 // haleyjd 02/25/09: hud font set by EDF:
-char *hud_overfontname;
+char    *hud_overfontname;
 vfont_t *hud_overfont;
 static bool hu_fontloaded = false;
 
@@ -107,7 +113,7 @@ static bool hu_fontloaded = false;
 // Loads the heads-up font. The naming scheme for the lumps is
 // not very consistent, so this is relatively complicated.
 //
-void HU_LoadFont(void)
+void HU_LoadFont()
 {
    if(!(hud_overfont = E_FontForName(hud_overfontname)))
       I_Error("HU_LoadFont: bad EDF hu_font name %s\n", hud_overfontname);
@@ -151,10 +157,13 @@ int HU_StringHeight(const char *s)
 
 #define BARSIZE 15
 
-// create a string containing the text 'bar' which graphically
-// show %age of ammo/health/armor etc left
-
-static void HU_TextBar(char *s, size_t len, int pct)
+//
+// HU_TextBar
+//
+// Create a string containing the text 'bar' which graphically show percentage
+// of ammo/health/armor/etc. left.
+//
+static void HU_TextBar(qstring &s, int pct)
 {
    if(pct > 100)
       pct = 100;
@@ -171,14 +180,14 @@ static void HU_TextBar(char *s, size_t len, int pct)
       }
       else
       {
-         addchar = 127 - (pct*5)/BARSIZE;
+         addchar = 127 - (pct * 5) / BARSIZE;
          pct = 0;
       }
-      psnprintf(s, len, "%s%c", s, addchar); // FIXME: undefined behavior
+      s << static_cast<char>(addchar);
    }
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Drawer
 //
@@ -189,162 +198,143 @@ static void HU_TextBar(char *s, size_t len, int pct)
 // the offset of percentage bars from the starting text
 #define GAP 40
 
-/////////////////////////
 //
-// draw health
+// HU_DrawHealth
 //
-
 void HU_DrawHealth(int x, int y)
 {
-   char tempstr[128];
-   int fontcolour;
+   qstring tempstr;
+   int fontcolor;
    
-   memset(tempstr, 0, 128);
-
    HU_WriteText(HUDCOLOUR "Health", x, y);
-   x += GAP;               // leave a gap between name and bar
+   x += GAP; // leave a gap between name and bar
    
    // decide on the colour first
-   fontcolour =
-      players[displayplayer].health < health_red ? *FC_RED :
-      players[displayplayer].health < health_yellow ? *FC_GOLD :
-      players[displayplayer].health <= health_green ? *FC_GREEN :
+   fontcolor =
+      hu_player.health < health_red    ? *FC_RED   :
+      hu_player.health < health_yellow ? *FC_GOLD  :
+      hu_player.health <= health_green ? *FC_GREEN :
       *FC_BLUE;
   
-   psnprintf(tempstr, sizeof(tempstr), "%c", fontcolour);
+   //psnprintf(tempstr, sizeof(tempstr), "%c", fontcolor);
+   tempstr << static_cast<char>(fontcolor);
 
    // now make the actual bar
-   HU_TextBar(tempstr, sizeof(tempstr), players[displayplayer].health);
+   HU_TextBar(tempstr, hu_player.health);
    
    // append the percentage itself
-   // FIXME: undefined behavior
-   psnprintf(tempstr, sizeof(tempstr), 
-             "%s %i", tempstr, players[displayplayer].health);
+   tempstr << " " << hu_player.health;
    
    // write it
-   HU_WriteText(tempstr, x, y);
+   HU_WriteText(tempstr.constPtr(), x, y);
 }
 
-/////////////////////////////
-//
-// Draw Armour.
-// very similar to drawhealth.
-//
 
+//
+// HU_DrawArmor
+//
+// Very similar to drawhealth.
+//
 void HU_DrawArmor(int x, int y)
 {
-  char tempstr[128];
-  int fontcolour;
+   qstring tempstr;
+   int fontcolor;
 
-  memset(tempstr, 0, 128);
+   // title first
+   HU_WriteText(HUDCOLOUR "Armor", x, y);
+   x += GAP; // leave a gap between name and bar
 
-  // title first
-  HU_WriteText(HUDCOLOUR "Armor", x, y);
-  x += GAP;              // leave a gap between name and bar
-  
-  // decide on colour
-  fontcolour =
-    players[displayplayer].armorpoints < armor_red ? *FC_RED :
-    players[displayplayer].armorpoints < armor_yellow ? *FC_GOLD :
-    players[displayplayer].armorpoints <= armor_green ? *FC_GREEN :
-    *FC_BLUE;
-  psnprintf(tempstr, sizeof(tempstr), "%c", fontcolour);
-  
-  // make the bar
-  HU_TextBar(tempstr, sizeof(tempstr), 
-             players[displayplayer].armorpoints);
-  
-  // append the percentage itself
-  // FIXME: undefined behavior
-  psnprintf(tempstr, sizeof(tempstr), "%s %i", tempstr,
-	    players[displayplayer].armorpoints);
-  
-  HU_WriteText(tempstr, x, y);
+   // decide on colour
+   fontcolor =
+      hu_player.armorpoints < armor_red    ? *FC_RED   :
+      hu_player.armorpoints < armor_yellow ? *FC_GOLD  :
+      hu_player.armorpoints <= armor_green ? *FC_GREEN :
+      *FC_BLUE;
+
+   tempstr << static_cast<char>(fontcolor);
+
+   // make the bar
+   HU_TextBar(tempstr, hu_player.armorpoints);
+
+   // append the percentage itself
+   tempstr << " " << hu_player.armorpoints;
+
+   HU_WriteText(tempstr.constPtr(), x, y);
 }
 
-////////////////////////////
+//
+// HU_DrawAmmo
 //
 // Drawing Ammo
 //
-
 void HU_DrawAmmo(int x, int y)
 {
-   char tempstr[128];
-   int fontcolour;
+   qstring tempstr;
+   int fontcolor;
    int lmaxammo;
-   
-   memset(tempstr, 0, sizeof(tempstr));
    
    HU_WriteText(HUDCOLOUR "Ammo", x, y);
    x += GAP;
    
-   fontcolour = weapcolour(players[displayplayer].readyweapon);
-   psnprintf(tempstr, sizeof(tempstr), "%c", fontcolour);
+   fontcolor = weapcolor(hu_player.readyweapon);
+   
+   tempstr << static_cast<char>(fontcolor);
    
    lmaxammo = playermaxammo;
 
    if(lmaxammo)
    {
-      HU_TextBar(tempstr, sizeof(tempstr), (100 * playerammo) / lmaxammo);
-      // FIXME: undefined behavior
-      psnprintf(tempstr, sizeof(tempstr), "%s %i/%i", 
-                tempstr, playerammo, playermaxammo);
+      HU_TextBar(tempstr, (100 * playerammo) / lmaxammo);
+      tempstr << " " << playerammo << "/" << playermaxammo;
    }
    else // fist or chainsaw
-      psnprintf(tempstr, sizeof(tempstr), "%sN/A", tempstr); // FIXME: undefined behavior
+      tempstr << "N/A";
    
-   HU_WriteText(tempstr, x, y);
+   HU_WriteText(tempstr.constPtr(), x, y);
 }
 
-//////////////////////////////
 //
+// HU_DrawWeapons
+// 
 // Weapons List
 //
-
 void HU_DrawWeapons(int x, int y)
 {
-   char tempstr[128];
-   int i;
-   int fontcolour;
+   qstring tempstr;
+   int fontcolor;
    
-   memset(tempstr, 0, 128);
-   
-   HU_WriteText(HUDCOLOUR "Weapons", x, y);    // draw then leave a gap
+   HU_WriteText(HUDCOLOUR "Weapons", x, y);  // draw then leave a gap
    x += GAP;
   
-   for(i=0; i<NUMWEAPONS; i++)
+   for(int i = 0; i < NUMWEAPONS; i++)
    {
-      if(players[displayplayer].weaponowned[i])
+      if(hu_player.weaponowned[i])
       {
          // got it
-         fontcolour = weapcolour(i);
-         // FIXME: undefined behavior
-         psnprintf(tempstr, sizeof(tempstr), "%s%c%i ", tempstr,
-                   fontcolour, i+1);
+         fontcolor = weapcolor(i);
+         tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
       }
    }
    
-   HU_WriteText(tempstr, x, y);    // draw it
+   HU_WriteText(tempstr.constPtr(), x, y);  // draw it
 }
-
-////////////////////////////////
-//
-// Draw the keys
-//
 
 extern patch_t *keys[NUMCARDS+3];
 
+//
+// HU_DrawKeys
+//
+// Draw the keys
+//
 void HU_DrawKeys(int x, int y)
 {
-   int i;
-   
    HU_WriteText(HUDCOLOUR "Keys", x, y);    // draw then leave a gap
    x += GAP;
    
    // haleyjd 10/09/05: don't show double keys in Heretic
-   for(i = 0; i < GameModeInfo->numHUDKeys; ++i)
+   for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(players[displayplayer].cards[i])
+      if(hu_player.cards[i])
       {
          // got that key
          V_DrawPatch(x, y, &subscreen43, keys[i]);
@@ -353,48 +343,41 @@ void HU_DrawKeys(int x, int y)
    }
 }
 
-///////////////////////////////
+//
+// HU_DrawFrag
 //
 // Draw the Frags
-
+//
 void HU_DrawFrag(int x, int y)
 {
-  char tempstr[64];
+   qstring tempstr;
 
-  memset(tempstr, 0, 64);
+   HU_WriteText(HUDCOLOUR "Frags", x, y); // draw then leave a gap
+   x += GAP;
 
-  HU_WriteText(HUDCOLOUR "Frags", x, y);    // draw then leave a gap
-  x += GAP;
-  
-  sprintf(tempstr, HUDCOLOUR "%i", players[displayplayer].totalfrags);
-  HU_WriteText(tempstr, x, y);        
+   tempstr << HUDCOLOUR << hu_player.totalfrags;
+   HU_WriteText(tempstr.constPtr(), x, y);
 }
 
-///////////////////////////////////////
 //
-// draw the status (number of kills etc)
+// HU_DrawStatus
 //
-
+// Draw the status (number of kills etc)
+//
 void HU_DrawStatus(int x, int y)
 {
-  char tempstr[128];
-
-  memset(tempstr, 0, 128);
-
-  HU_WriteText(HUDCOLOUR "Status", x, y); // draw, leave a gap
-  x += GAP;
+   qstring tempstr;
+   
+   HU_WriteText(HUDCOLOUR "Status", x, y); // draw, leave a gap
+   x += GAP;
   
-  // haleyjd 06/14/06: restored original colors to K/I/S
-  psnprintf(tempstr, sizeof(tempstr),
-	    FC_RED  "K" FC_GREEN " %i/%i "
-	    FC_BLUE "I" FC_GREEN " %i/%i "
-	    FC_GOLD "S" FC_GREEN " %i/%i ",
-	    players[displayplayer].killcount, totalkills,
-	    players[displayplayer].itemcount, totalitems,
-	    players[displayplayer].secretcount, totalsecret
-	   );
+   // haleyjd 06/14/06: restored original colors to K/I/S
+   tempstr 
+      << FC_RED  "K " FC_GREEN << hu_player.killcount   << "/" << totalkills << " " 
+      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << "/" << totalitems << " " 
+      << FC_GOLD "S " FC_GREEN << hu_player.secretcount << "/" << totalsecret;
   
-  HU_WriteText(tempstr, x, y);
+   HU_WriteText(tempstr.constPtr(), x, y);
 }
 
 // all overlay modules
@@ -445,10 +428,8 @@ void HU_OverlaySetup(void)
    {      
    case 0: // 0: 'off'
    case 4: // 4: 'graphical' -- haleyjd 01/11/05: this is handled by status bar
-      for(i = 0; i < NUMOVERLAY; ++i)
-      {
+      for(i = 0; i < NUMOVERLAY; ++i)         
          setol(i, -1, -1); // turn it off
-      }
       break;
       
    case 1: // 1:'bottom left' style
@@ -492,25 +473,26 @@ void HU_OverlaySetup(void)
       setol(ol_armor, SCREENWIDTH-138, 8);
       setol(ol_weap, SCREENWIDTH-138, 184);
       setol(ol_ammo, SCREENWIDTH-138, 192);
+      
       if(GameType == gt_dm)  // if dm, put frags in place of keys
-      {
          setol(ol_frag, 0, 192);
-      }
       else
-      {
          setol(ol_key, 0, 192);
-      }
+
       if(!hud_hidestatus)
          setol(ol_status, 0, 184);
       break;
    }
 }
 
-////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // heart of the overlay really.
 // draw the overlay, deciding which bits to draw and where
 
+//
+// HU_OverlayDraw
+//
 void HU_OverlayDraw(void)
 {
    int i;
@@ -545,8 +527,8 @@ CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
 
 void HU_OverAddCommands()
 {
-  C_AddCommand(hu_overlay);
-  C_AddCommand(hu_hidesecrets);
+   C_AddCommand(hu_overlay);
+   C_AddCommand(hu_hidesecrets);
 }
 
 // EOF

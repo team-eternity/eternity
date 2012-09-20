@@ -724,21 +724,22 @@ enum
 // haleyjd: parser state structure
 struct cfg_pstate_t
 {
-   int   state;
-   int   next_state;
-   char *opttitle;
-   bool  append_value;
-   bool  found_func;
-   bool  list_nobraces;
-   int   tok;
-   int   skip_token;
-   int   propindex;
+   int   state;          // current state
+   int   next_state;     // next state to visit, in some circumstances
+   char *opttitle;       // cached option title, for sections
+   bool  append_value;   // += has been used for assignment
+   bool  found_func;     // found "lookfor" function
+   bool  list_nobraces;  // list has been defined without braces
+   int   tok;            // current token value
+   int   skip_token;     // skip the next token if > 0
+   int   propindex;      // index within current mvprop option
    
-   cfg_opt_t   *opt;
-   cfg_value_t *val;
-   cfg_opt_t    funcopt;
+   cfg_opt_t   *opt;     // current option
+   cfg_value_t *val;     // current value
+   cfg_opt_t    funcopt; // dummy option, for function call parsing
 };
 
+// Forward declaration required for recursion.
 static int cfg_parse_internal(cfg_t *cfg, int level);
 
 //
@@ -752,14 +753,14 @@ static void cfg_init_pstate(cfg_pstate_t *pstate)
    pstate->funcopt.type = CFGT_STR;
 }
 
-// haleyjd: parser state function signature
+// haleyjd: parser state handler function signature
 typedef int (*cfg_pstate_func)(cfg_t *, int, cfg_pstate_t &);
 
 //
 // haleyjd: parser states
 //
-// Because cfg_parse_internal was too long and messy, I have broken it up like
-// EE's other FSA parsers.
+// Because cfg_parse_internal was too long and messy, I have broken it up into
+// discrete state handlers as with EE's other FSA parsers.
 //
 
 //
@@ -776,8 +777,9 @@ static int cfg_pstate_expectoption(cfg_t *cfg, int level, cfg_pstate_t &pstate)
          cfg_error(cfg, "unexpected closing brace\n");
          return STATE_ERROR;
       }
-      return STATE_EOF;
+      return STATE_EOF; // End of a list or section
    }
+
    if(pstate.tok != CFGT_STR)
    {
       cfg_error(cfg, "unexpected token '%s'\n", mytext);
@@ -789,22 +791,26 @@ static int cfg_pstate_expectoption(cfg_t *cfg, int level, cfg_pstate_t &pstate)
 
    switch(pstate.opt->type)
    {
-   case CFGT_SEC:
-      if(is_set(CFGF_TITLE, pstate.opt->flags))
+   case CFGT_SEC: // Section
+      if(is_set(CFGF_TITLE, pstate.opt->flags)) // requires title?
          pstate.state = STATE_EXPECT_TITLE;
       else
          pstate.state = STATE_EXPECT_SECBRACE;
       break;
-   case CFGT_FUNC:
+
+   case CFGT_FUNC: // Function call
       pstate.state = STATE_EXPECT_PAREN;
       break;
+
    case CFGT_FLAG: // haleyjd: flag options, which are simple keywords
       if(cfg_setopt(cfg, pstate.opt, mytext) == 0)
          return STATE_ERROR;
       // remain in STATE_EXPECT_OPTION
       break;
-   default:
+
+   default: // List or ordinary scalar option
       pstate.state = STATE_EXPECT_ASSIGN;
+      break;
    }
 
    return STATE_CONTINUE;
@@ -814,19 +820,19 @@ static int cfg_pstate_expectoption(cfg_t *cfg, int level, cfg_pstate_t &pstate)
 // cfg_pstate_expectassign
 //
 // Expecting an assignment: '=', '+=', or, if in "Alfheim" dialect or 
-// higher, ':'
+// higher, ':' (such are not treated as tokens otherwise).
 // '=' and ':' are strictly optional.
 //
 static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
 {
    pstate.append_value = false;
-   if(pstate.tok == '+')
+
+   if(pstate.tok == '+') // Append to list?
    {
       if(!is_set(CFGF_LIST, pstate.opt->flags))
       {
-         cfg_error(cfg,
-            "attempt to append to non-list option %s\n",
-            pstate.opt->name);
+         cfg_error(cfg, "attempt to append to non-list option %s\n", 
+                   pstate.opt->name);
          return STATE_ERROR;
       }
       pstate.append_value = true;
@@ -838,7 +844,7 @@ static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       pstate.skip_token = 1;
    }
 
-   if(pstate.opt->type == CFGT_MVPROP) // haleyjd
+   if(pstate.opt->type == CFGT_MVPROP) // haleyjd: multi-valued properties
    {
       pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
       pstate.opttitle = 0;
@@ -859,12 +865,14 @@ static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
    }
    else if(is_set(CFGF_LIST, pstate.opt->flags))
    {
+      // Start list
       if(!pstate.append_value)
          cfg_free_value(pstate.opt);
       pstate.state = STATE_EXPECT_LISTBRACE;
    }
    else
    {
+      // Ordinary scalar option
       pstate.state      = STATE_EXPECT_VALUE;
       pstate.next_state = STATE_EXPECT_OPTION;
    }
@@ -879,6 +887,7 @@ static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
 //
 static int cfg_pstate_expectvalue(cfg_t *cfg, int level, cfg_pstate_t &pstate)
 {
+   // End of list?
    if(pstate.tok == '}' && is_set(CFGF_LIST, pstate.opt->flags))
    {
       if(!pstate.list_nobraces)
@@ -920,7 +929,8 @@ static int cfg_pstate_expectlistbrace(cfg_t *cfg, int level, cfg_pstate_t &pstat
       pstate.list_nobraces = true;
       pstate.skip_token = 1;
    }
-   /* haleyjd 12/23/06: set unquoted string state */
+
+   // haleyjd 12/23/06: set unquoted string state
    if(is_set(CFGF_STRSPACE, pstate.opt->flags))
       lexer_set_unquoted_spaces(true);
    
@@ -943,12 +953,12 @@ static int cfg_pstate_expectlistnext(cfg_t *cfg, int level, cfg_pstate_t &pstate
    } 
    else if(!pstate.list_nobraces && pstate.tok == '}')
    {
-      lexer_set_unquoted_spaces(false); /* haleyjd */
+      lexer_set_unquoted_spaces(false);   // haleyjd
       pstate.state = STATE_EXPECT_OPTION;
    }
    else if(pstate.list_nobraces)
    {
-      /* haleyjd 05/30/12: allow lists with no braces */
+      // haleyjd 05/30/12: allow lists with no braces
       pstate.list_nobraces = false;
       pstate.skip_token    = 1;
       pstate.state         = STATE_EXPECT_OPTION;
@@ -976,13 +986,16 @@ static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate
       return STATE_ERROR;
    }
 
+   // Get new value
    pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
    pstate.opttitle = 0;
    if(!pstate.val)
       return STATE_ERROR;
 
+   // Recursively parse the interior of the section
    if(cfg_parse_internal(pstate.val->section, level+1) != STATE_EOF)
       return STATE_ERROR;
+
    cfg->line = pstate.val->section->line;
    pstate.state = STATE_EXPECT_OPTION;
 
@@ -1032,8 +1045,7 @@ static int cfg_pstate_expectparen(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       }
       else
       {
-         cfg_error(cfg, "missing parenthesis for function '%s'\n",
-            pstate.opt->name);
+         cfg_error(cfg, "missing parenthesis for function '%s'\n", pstate.opt->name);
          return STATE_ERROR;
       }
    }
@@ -1054,6 +1066,7 @@ static int cfg_pstate_expectargument(cfg_t *cfg, int level, cfg_pstate_t &pstate
       int ret = call_function(cfg, pstate.opt, &pstate.funcopt);
       if(ret != 0)
          return STATE_ERROR;
+      
       // haleyjd 09/30/05: check for LOOKFORFUNC flag
       if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
       {
@@ -1091,6 +1104,7 @@ static int cfg_pstate_expectargnext(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       int ret = call_function(cfg, pstate.opt, &pstate.funcopt);
       if(ret != 0)
          return STATE_ERROR;
+
       // haleyjd 01/14/04: check for LOOKFORFUNC flag
       if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
       {
@@ -1106,8 +1120,7 @@ static int cfg_pstate_expectargnext(cfg_t *cfg, int level, cfg_pstate_t &pstate)
    }
    else 
    {
-      cfg_error(cfg, "syntax error in call of function '%s'\n",
-         pstate.opt->name);
+      cfg_error(cfg, "syntax error in call of function '%s'\n", pstate.opt->name);
       return STATE_ERROR;
    }
 
@@ -1136,11 +1149,14 @@ static int cfg_pstate_expectlookfor(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       if(!strcmp(mytext, cfg->lookfor))
          pstate.found_func = true;
    }
+
+   // Found the "lookfor" function?
    if(pstate.found_func == true)
    {
       pstate.opt = cfg_getopt(cfg, mytext);
       if(pstate.opt == 0)
          return STATE_ERROR;
+
       if(pstate.opt->type == CFGT_FUNC)
          pstate.state = STATE_EXPECT_PAREN; // parse the function call
       else
