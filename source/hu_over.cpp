@@ -61,7 +61,8 @@
    (weaponinfo[w].ammo == am_noammo ? 0 : hu_player.ammo[weaponinfo[w].ammo])
 
 #define wc_noammo(w) \
-   (hu_player.ammo[weaponinfo[w].ammo] < weaponinfo[w].ammopershot)
+   (weaponinfo[w].ammo == am_noammo ? 0 : \
+    (hu_player.ammo[weaponinfo[w].ammo] < weaponinfo[w].ammopershot))
 
 #define wc_mammo(w) \
    (weaponinfo[w].ammo == am_noammo ? 0 : hu_player.maxammo[weaponinfo[w].ammo])
