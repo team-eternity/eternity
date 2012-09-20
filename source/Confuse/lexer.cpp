@@ -36,9 +36,6 @@
 
 #include "confuse.h"
 
-#define _(str) str
-#define N_(str) str
-
 // file include stack
 
 #define MAX_INCLUDE_DEPTH 16

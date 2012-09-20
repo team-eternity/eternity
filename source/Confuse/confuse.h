@@ -61,21 +61,22 @@ typedef enum cfg_type_t cfg_type_t;
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
 /** Flags. */
-#define CFGF_NONE          0
-#define CFGF_MULTI         1 /**< option may be specified multiple times */
-#define CFGF_LIST          2 /**< option is a list */
-#define CFGF_NOCASE        4 /**< configuration file is case insensitive */
-#define CFGF_TITLE         8 /**< option has a title (only applies to section) */
-#define CFGF_ALLOCATED    16
-#define CFGF_RESET        32
-#define CFGF_DEFINIT      64
+#define CFGF_NONE        0x00000000
+#define CFGF_MULTI       0x00000001 /**< option may be specified multiple times */
+#define CFGF_LIST        0x00000002 /**< option is a list */
+#define CFGF_NOCASE      0x00000004 /**< configuration file is case insensitive */
+#define CFGF_TITLE       0x00000008 /**< option has a title (only applies to section) */
+#define CFGF_ALLOCATED   0x00000010
+#define CFGF_RESET       0x00000020
+#define CFGF_DEFINIT     0x00000040
 // haleyjd: custom flags
-#define CFGF_LOOKFORFUNC 128 /**< will do nothing until "lookfor" function is found */
-#define CFGF_STRSPACE    256 /**< unquoted strings within this section may contain spaces */
-#define CFGF_SIGNPREFIX  512 /**< CFGT_FLAG items expect a + or - prefix on the property */
+#define CFGF_LOOKFORFUNC 0x00000080 /**< will do nothing until "lookfor" function is found */
+#define CFGF_STRSPACE    0x00000100 /**< unquoted strings within this section may contain spaces */
+#define CFGF_SIGNPREFIX  0x00000200 /**< CFGT_FLAG items expect a + or - prefix on the property */
+#define CFGF_TITLEPROPS  0x00000400 /**< MVPROP with this flag defines the section's title properties */
 
 /** Return codes from cfg_parse(). */
-#define CFG_SUCCESS 0
+#define CFG_SUCCESS     0
 #define CFG_FILE_ERROR -1
 #define CFG_PARSE_ERROR 1
 
@@ -89,9 +90,10 @@ enum cfg_dialect_t
 
 #define is_set(f, x) ((f & x) == f)
 
-typedef union cfg_value_t cfg_value_t;
-typedef struct cfg_opt_t cfg_opt_t;
-typedef struct cfg_t cfg_t;
+union  cfg_value_t;
+struct cfg_opt_t;
+struct cfg_t;
+
 typedef int cfg_flag_t;
 
 /** Function prototype used by CFGT_FUNC options.
@@ -324,7 +326,8 @@ struct cfg_opt_t
 #define CFG_STRFUNC(name, def, func) \
    {name, CFGT_STRFUNC, 0, 0, CFGF_NONE, 0, 0, def, false, 0, func, 0, 0}
 
-/** Initialize a multi-valued property option.
+/** 
+ * Initialize a multi-valued property option.
  *
  * @param name The name of the option.
  * @param opts Array of options in order they must appear listed.
@@ -333,7 +336,22 @@ struct cfg_opt_t
 #define CFG_MVPROP(name, opts, flags) \
    {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, false, 0, 0, 0, 0}
 
-/** Initialize a flag property option.
+/**
+ * Initialize an MVPROP which serves to define the parent section's title
+ * properties, which are an arbitrary number of items which must be defined,
+ * separated by commas, after a ':' which follows the section's title.
+ * Title properties must be retrieved using cfg_gettitleprops; they cannot
+ * be returned by cfg_getmvprop etc. This option type only has meaning inside
+ * a CFG_SEC which includes CFGF_TITLE in its flags.
+ * @param opts Array of options in order they must appear listed.
+ * @param flags Similar to CFG_MVPROP. CFGF_TITLEPROPS is implied.
+ */
+#define CFG_TPROPS(opts, flags) \
+   {"#title", CFGT_MVPROP, 0, 0, (flags)|CFGF_TITLEPROPS, opts, \
+    0, 0, false, 0, 0, 0, 0 }
+
+/** 
+ * Initialize a flag property option.
  */
 #define CFG_FLAG(name, def, flags) \
    {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, false, 0, 0, 0, 0}
@@ -341,7 +359,8 @@ struct cfg_opt_t
 #define CFG_FLAG_CB(name, def, flags, cb) \
    {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, false, 0, 0, 0, cb}
 
-/** Terminate list of options. This must be the last initializer in
+/** 
+ * Terminate list of options. This must be the last initializer in
  * the option list.
  */
 #define CFG_END() \
