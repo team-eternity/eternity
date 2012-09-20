@@ -81,14 +81,14 @@ static void lexer_error(cfg_t *cfg, const char *msg)
 // haleyjd 12/23/06: if true, unquoted strings can contain spaces
 // at the moment. Defaults to false.
 
-static cfg_bool_t unquoted_spaces = cfg_false;
+static bool unquoted_spaces = false;
 
 //
 // lexer_set_unquoted_spaces
 //
 // Toggles the behavior of spaces inside unquoted strings.
 //
-void lexer_set_unquoted_spaces(cfg_bool_t us)
+void lexer_set_unquoted_spaces(bool us)
 {
    unquoted_spaces = us;
 }
@@ -168,7 +168,7 @@ void lexer_reset(void)
 
    // reset lexer variables
    mytext = NULL;
-   unquoted_spaces = cfg_false;
+   unquoted_spaces = false;
    currentDialect  = CFG_DIALECT_DELTA;
 
    // free qstring buffer

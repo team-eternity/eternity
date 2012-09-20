@@ -164,9 +164,9 @@ cfg_opt_t edf_font_opts[] =
    CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE),
    CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE),
 
-   CFG_BOOL(ITEM_FONT_COLOR,  cfg_false,  CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_UPPER,  cfg_false,  CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_CENTER, cfg_false,  CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE),
    
    CFG_END()
 };
@@ -848,15 +848,15 @@ static void E_ProcessFont(cfg_t *sec)
 
    // process colorable flag
    if(IS_SET(sec, ITEM_FONT_COLOR))
-      font->color = (cfg_getbool(sec, ITEM_FONT_COLOR) == cfg_true);
+      font->color = cfg_getbool(sec, ITEM_FONT_COLOR);
 
    // process uppercase flag
    if(IS_SET(sec, ITEM_FONT_UPPER))
-      font->upper = (cfg_getbool(sec, ITEM_FONT_UPPER) == cfg_true);
+      font->upper = cfg_getbool(sec, ITEM_FONT_UPPER);
 
    // process blockcentered flag
    if(IS_SET(sec, ITEM_FONT_CENTER))
-      font->centered = (cfg_getbool(sec, ITEM_FONT_CENTER) == cfg_true);
+      font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
 
    // haleyjd 09/06/12: colors
    // default color

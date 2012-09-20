@@ -207,7 +207,7 @@ double cfg_getfloat(cfg_t *cfg, const char *name)
    return cfg_getnfloat(cfg, name, 0);
 }
 
-cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
+bool cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    
@@ -223,10 +223,10 @@ cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
       }
    }
    else
-      return cfg_false;
+      return false;
 }
 
-cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name)
+bool cfg_getbool(cfg_t *cfg, const char *name)
 {
    return cfg_getnbool(cfg, name, 0);
 }
@@ -562,7 +562,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
             return 0;
          }
       }
-      val->boolean = (cfg_bool_t)b;
+      val->boolean = !!b;
       break;
    case CFGT_FLAG: // haleyjd
       if(opt->cb)
@@ -704,10 +704,10 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
    char *opttitle = 0;
    cfg_opt_t *opt = 0;
    cfg_value_t *val;
-   cfg_bool_t append_value;
+   bool append_value;
    cfg_opt_t funcopt = CFG_STR(0,0,0);
-   cfg_bool_t found_func = cfg_false; // haleyjd
-   cfg_bool_t   list_nobraces = cfg_false; // haleyjd
+   bool found_func = false; // haleyjd
+   bool list_nobraces = false; // haleyjd
    int tok;
    int skip_token = 0;     // haleyjd
    int propindex = 0;      // haleyjd: for multi-value properties
@@ -783,7 +783,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          break;
 
       case STATE_EXPECT_ASSIGN: /* expecting an equal sign or plus-equal sign */
-         append_value = cfg_false;
+         append_value = false;
          if(tok == '+')
          {
             if(!is_set(CFGF_LIST, opt->flags))
@@ -793,7 +793,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
                   opt->name);
                return STATE_ERROR;
             }
-            append_value = cfg_true;
+            append_value = true;
          } 
          else if(tok != '=' && tok != ':')
          {
@@ -839,7 +839,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          {
             if(!list_nobraces)
             {
-               lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
+               lexer_set_unquoted_spaces(false); /* haleyjd */
                state = STATE_EXPECT_OPTION;
                break;
             }
@@ -866,12 +866,12 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_LISTBRACE: /* expecting an opening brace for a list option */
          if(tok != '{')
          {
-            list_nobraces = cfg_true;
+            list_nobraces = true;
             skip_token = 1;
          }
          /* haleyjd 12/23/06: set unquoted string state */
          if(is_set(CFGF_STRSPACE, opt->flags))
-            lexer_set_unquoted_spaces(cfg_true);
+            lexer_set_unquoted_spaces(true);
          state = STATE_EXPECT_VALUE;
          next_state = STATE_EXPECT_LISTNEXT;
          break;
@@ -885,13 +885,13 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          } 
          else if(!list_nobraces && tok == '}')
          {
-            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
+            lexer_set_unquoted_spaces(false); /* haleyjd */
             state = STATE_EXPECT_OPTION;
          }
          else if(list_nobraces)
          {
             /* haleyjd 05/30/12: allow lists with no braces */
-            list_nobraces = cfg_false;
+            list_nobraces = false;
             skip_token    = 1;
             state         = STATE_EXPECT_OPTION;
          }
@@ -968,7 +968,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             // haleyjd 09/30/05: check for LOOKFORFUNC flag
             if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
             {
-               found_func = cfg_false;
+               found_func = false;
                state = STATE_EXPECT_LOOKFOR; // go to new "lookfor" state
             }
             else
@@ -997,7 +997,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             // haleyjd 01/14/04: check for LOOKFORFUNC flag
             if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
             {
-               found_func = cfg_false;
+               found_func = false;
                state = STATE_EXPECT_LOOKFOR; // go to new "lookfor" state
             }
             else
@@ -1022,14 +1022,14 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          if(is_set(CFGF_NOCASE, cfg->flags))
          {
             if(!strcasecmp(mytext, cfg->lookfor))
-               found_func = cfg_true;
+               found_func = true;
          }
          else
          {
             if(!strcmp(mytext, cfg->lookfor))
-               found_func = cfg_true;
+               found_func = true;
          }
-         if(found_func == cfg_true)
+         if(found_func == true)
          {
             opt = cfg_getopt(cfg, mytext);
             if(opt == 0)
@@ -1304,7 +1304,7 @@ void cfg_setfloat(cfg_t *cfg, const char *name, double value)
    cfg_setnfloat(cfg, name, value, 0);
 }
 
-void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
+void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, bool value,
                       unsigned int index)
 {
    cfg_value_t *val;
@@ -1314,7 +1314,7 @@ void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
    val->boolean = value;
 }
 
-void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value, 
+void cfg_setnbool(cfg_t *cfg, const char *name, bool value, 
                   unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
@@ -1323,7 +1323,7 @@ void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value,
       cfg_opt_setnbool(cfg, opt, value, index);
 }
 
-void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value)
+void cfg_setbool(cfg_t *cfg, const char *name, bool value)
 {
    cfg_setnbool(cfg, name, value, 0);
 }
@@ -1370,7 +1370,7 @@ static void cfg_addlist_internal(cfg_t *cfg, cfg_opt_t *opt,
          cfg_opt_setnfloat(cfg, opt, va_arg(ap, double), opt->nvalues);
          break;
       case CFGT_BOOL:
-         cfg_opt_setnbool(cfg, opt, (cfg_bool_t)va_arg(ap, int), opt->nvalues);
+         cfg_opt_setnbool(cfg, opt, !!va_arg(ap, int), opt->nvalues);
          break;
       case CFGT_STR:
          cfg_opt_setnstr(cfg, opt, va_arg(ap, char *), opt->nvalues);
@@ -1418,28 +1418,28 @@ void cfg_addlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...)
 // libConfuse callback functions, which use an argc/argv system.
 
 static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
-                                    unsigned int nvalues, void *array)
+                                    unsigned int nvalues, void *values)
 {
    const cfg_type_t type = opt->type; // haleyjd: a little compiler sugar ;)
    unsigned int i;
-   int        *intptr    = 0;
-   double     *doubleptr = 0;
-   cfg_bool_t *boolptr   = 0;
-   const char **strptr   = 0;
+   int         *intptr    = 0;
+   double      *doubleptr = 0;
+   bool        *boolptr   = 0;
+   const char **strptr    = 0;
 
    switch(type)
    {
    case CFGT_INT:
-      intptr = (int *)array;
+      intptr = (int *)values;
       break;
    case CFGT_FLOAT:
-      doubleptr = (double *)array;
+      doubleptr = (double *)values;
       break;
    case CFGT_BOOL:
-      boolptr = (cfg_bool_t *)array;
+      boolptr = (bool *)values;
       break;
    case CFGT_STR:
-      strptr = (const char **)array;
+      strptr = (const char **)values;
       break;
    default:
       return;

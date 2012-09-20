@@ -148,16 +148,14 @@ typedef int (*cfg_func_t)(cfg_t *cfg, cfg_opt_t *opt,
 typedef int (*cfg_callback_t)(cfg_t *cfg, cfg_opt_t *opt,
                               const char *value, void *result);
 
-/** Boolean values. */
-typedef enum {cfg_false, cfg_true} cfg_bool_t;
-
 /** Error reporting function. */
 typedef void (*cfg_errfunc_t)(cfg_t *cfg, const char *fmt, va_list ap);
 
 /** Lexer open callback */
 typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
 
-/** Data structure holding information about a "section". Sections can
+/** 
+ * Data structure holding information about a "section". Sections can
  * be nested. A section has a list of options (strings, numbers,
  * booleans or other sections) grouped together.
  */
@@ -183,48 +181,51 @@ struct cfg_t
    cfg_t *displaced;       /**< haleyjd: pointer to a displaced section */
 };
 
-/** Data structure holding the value of a fundamental option value.
+/** 
+ * Data structure holding the value of a fundamental option value.
  */
 union cfg_value_t 
 {
-   int number;             /**< integer value */
-   double fpnumber;        /**< floating point value */
-   cfg_bool_t boolean;     /**< boolean value */
-   char *string;           /**< string value */
-   cfg_t *section;         /**< section value */
+   int    number;      /**< integer value */
+   double fpnumber;    /**< floating point value */
+   bool   boolean;     /**< boolean value */
+   char  *string;      /**< string value */
+   cfg_t *section;     /**< section value */
 };
 
-/** Data structure holding information about an option. The value(s)
+/** 
+ * Data structure holding information about an option. The value(s)
  * are stored as an array of fundamental values (strings, numbers).
  */
 struct cfg_opt_t
 {
-   const char *name;       /**< The name of the option */
-   cfg_type_t type;        /**< Type of option */
-   unsigned int nvalues;   /**< Number of values parsed */
-   cfg_value_t **values;   /**< Array of found values */
-   cfg_flag_t flags;       /**< Flags */
-   cfg_opt_t *subopts;     /**< Suboptions (only applies to sections) */
-   int idef;               /**< Default integer value */
-   const char *sdef;       /**< Default string value */
-   cfg_bool_t bdef;        /**< Default boolean value */
-   double fpdef;           /**< Default value for CFGT_FLOAT options */
-                                /* (blargh!, I want a union here, but
-                                 * unions can't be statically initialized) */
-   cfg_func_t func;        /**< Function callback for CFGT_FUNC options */
-   void *simple_value;     /**< Pointer to user-specified variable to
-                                * store simple values (created with the
-                                * CFG_SIMPLE_* initializers) */
-   cfg_callback_t cb;      /**< Value parsing callback function */
+   const char   *name;         /**< The name of the option */
+   cfg_type_t    type;         /**< Type of option */
+   unsigned int  nvalues;      /**< Number of values parsed */
+   cfg_value_t **values;       /**< Array of found values */
+   cfg_flag_t    flags;        /**< Flags */
+   cfg_opt_t    *subopts;      /**< Suboptions (only applies to sections) */
+   int           idef;         /**< Default integer value */
+   const char   *sdef;         /**< Default string value */
+   bool          bdef;         /**< Default boolean value */
+   double        fpdef;        /**< Default value for CFGT_FLOAT options 
+                                  * (blargh!, I want a union here, but
+                                  * unions can't be statically initialized) */
+   cfg_func_t    func;         /**< Function callback for CFGT_FUNC options */
+   void         *simple_value; /**< Pointer to user-specified variable to
+                                  * store simple values (created with the
+                                  * CFG_SIMPLE_* initializers) */
+   cfg_callback_t cb;          /**< Value parsing callback function */
 };
 
-/** Initialize a string option
+/** 
+ * Initialize a string option
  */
 #define CFG_STR(name, def, flags)  \
-   {name, CFGT_STR, 0, 0, flags, 0, 0, def, cfg_false, 0, 0, 0, 0}
+   {name, CFGT_STR, 0, 0, flags, 0, 0, def, false, 0, 0, 0, 0}
 
 #define CFG_STR_CB(name, def, flags, cb)  \
-   {name, CFGT_STR, 0, 0, flags, 0, 0, def, cfg_false, 0, 0, 0, cb}
+   {name, CFGT_STR, 0, 0, flags, 0, 0, def, false, 0, 0, 0, cb}
 
 /** Initialize a "simple" string option.
  *
@@ -252,34 +253,34 @@ struct cfg_opt_t
  *
  */
 #define CFG_SIMPLE_STR(name, value)  \
-   {name, CFGT_STR, 0, 0, CFGF_NONE, 0, 0, 0, cfg_false, 0, 0, value, 0}
+   {name, CFGT_STR, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
 
 /** Initialize an integer option
  */
 #define CFG_INT(name, def, flags)  \
-   {name, CFGT_INT, 0, 0, flags, 0, def, 0, cfg_false, 0, 0, 0, 0}
+   {name, CFGT_INT, 0, 0, flags, 0, def, 0, false, 0, 0, 0, 0}
 
 #define CFG_INT_CB(name, def, flags, cb) \
-   {name, CFGT_INT, 0, 0, flags, 0, def, 0, cfg_false, 0, 0, 0, cb}
+   {name, CFGT_INT, 0, 0, flags, 0, def, 0, false, 0, 0, 0, cb}
 
 /** Initialize a "simple" integer option.
  */
 #define CFG_SIMPLE_INT(name, value)  \
-   {name, CFGT_INT, 0, 0, CFGF_NONE, 0, 0, 0, cfg_false, 0, 0, value, 0}
+   {name, CFGT_INT, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
 
 /** Initialize a floating point option
  */
 #define CFG_FLOAT(name, def, flags) \
-   {name, CFGT_FLOAT, 0, 0, flags, 0, 0, 0, cfg_false, (double)def, 0, 0, 0}
+   {name, CFGT_FLOAT, 0, 0, flags, 0, 0, 0, false, (double)def, 0, 0, 0}
 
 #define CFG_FLOAT_CB(name, def, flags, cb) \
-   {name, CFGT_FLOAT, 0, 0, flags, 0, 0, 0, cfg_false, (double)def, 0, 0, cb}
+   {name, CFGT_FLOAT, 0, 0, flags, 0, 0, 0, false, (double)def, 0, 0, cb}
 
 /** Initialize a "simple" floating point option (see documentation for
  * CFG_SIMPLE_STR for more information).
  */
 #define CFG_SIMPLE_FLOAT(name, value) \
-   {name, CFGT_FLOAT, 0, 0, CFGF_NONE, 0, 0, 0, cfg_false, 0, 0, value, 0}
+   {name, CFGT_FLOAT, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
 
 /** Initialize a boolean option
  */
@@ -292,7 +293,7 @@ struct cfg_opt_t
 /** Initialize a "simple" boolean option.
  */
 #define CFG_SIMPLE_BOOL(name, value) \
-   {name, CFGT_BOOL, 0, 0, CFGF_NONE, 0, 0, 0, cfg_false, 0, 0, value, 0}
+   {name, CFGT_BOOL, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
 
 /** Initialize a section
  *
@@ -304,7 +305,7 @@ struct cfg_opt_t
  * cfg_gettsec() function)
  */
 #define CFG_SEC(name, opts, flags) \
-   {name, CFGT_SEC, 0, 0, flags, opts, 0, 0, cfg_false, 0, 0, 0, 0}
+   {name, CFGT_SEC, 0, 0, flags, opts, 0, 0, false, 0, 0, 0, 0}
 
 /** Initialize a function
  * @param name The name of the option
@@ -313,7 +314,7 @@ struct cfg_opt_t
  * @see cfg_func_t
  */
 #define CFG_FUNC(name, func) \
-   {name, CFGT_FUNC, 0, 0, CFGF_NONE, 0, 0, 0, cfg_false, 0, func, 0, 0}
+   {name, CFGT_FUNC, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, func, 0, 0}
 
 /** Initialize a function-valued string option.
  * @param name The name of the option.
@@ -321,7 +322,7 @@ struct cfg_opt_t
  * @param func The callback function.
  */
 #define CFG_STRFUNC(name, def, func) \
-   {name, CFGT_STRFUNC, 0, 0, CFGF_NONE, 0, 0, def, cfg_false, 0, func, 0, 0}
+   {name, CFGT_STRFUNC, 0, 0, CFGF_NONE, 0, 0, def, false, 0, func, 0, 0}
 
 /** Initialize a multi-valued property option.
  *
@@ -330,21 +331,21 @@ struct cfg_opt_t
  * @param flags Similar to CFG_SEC. Titles are not supported however.
  */
 #define CFG_MVPROP(name, opts, flags) \
-   {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, cfg_false, 0, 0, 0, 0}
+   {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, false, 0, 0, 0, 0}
 
 /** Initialize a flag property option.
  */
 #define CFG_FLAG(name, def, flags) \
-   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, cfg_false, 0, 0, 0, 0}
+   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, false, 0, 0, 0, 0}
 
 #define CFG_FLAG_CB(name, def, flags, cb) \
-   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, cfg_false, 0, 0, 0, cb}
+   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, false, 0, 0, 0, cb}
 
 /** Terminate list of options. This must be the last initializer in
  * the option list.
  */
 #define CFG_END() \
-   {0, CFGT_NONE, 0, 0, CFGF_NONE, 0, 0, 0, cfg_false, 0, 0, 0, 0}
+   {0, CFGT_NONE, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, 0, 0}
 
 /** Create and initialize a cfg_t structure. This should be the first
  * function called when setting up the parsing of a configuration
@@ -476,9 +477,9 @@ char *cfg_getstrdup(cfg_t *cfg, const char *name);
  * @return The requested value is returned. If the option was not set
  * in the configuration file, the default value given in the
  * corresponding cfg_opt_t structure is returned. If no option is found
- * with that name, cfg_error is called and cfg_false is returned.
+ * with that name, cfg_error is called and false is returned.
  */
-cfg_bool_t    cfg_getbool(cfg_t *cfg, const char *name);
+bool          cfg_getbool(cfg_t *cfg, const char *name);
 
 /** Returns the value of a section option. The returned value is
  * another cfg_t structure that can be used in following calls to
@@ -555,7 +556,7 @@ const char *  cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index);
  * @param index Index of values. Zero based.
  * @see cfg_getstr
  */
-cfg_bool_t     cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index);
+bool          cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index);
 
 /** Indexed version of cfg_getsec().
  *
@@ -707,7 +708,7 @@ void cfg_setfloat(cfg_t *cfg, const char *name, double value);
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
+void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, bool value,
                       unsigned int index);
 
 /** Set a value of a boolean option given its name.
@@ -719,7 +720,7 @@ void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value,
+void cfg_setnbool(cfg_t *cfg, const char *name, bool value,
                   unsigned int index);
 
 /** Set a value of a boolean option given its name.
@@ -728,7 +729,7 @@ void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value,
  * @param name The name of the option.
  * @param value The value to set.
  */
-void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value);
+void cfg_setbool(cfg_t *cfg, const char *name, bool value);
 
 /** Set a value of a string option.
  *
