@@ -58,11 +58,14 @@
 // Statics
 //
 
+// Overlay drawer callback prototype
+typedef void (*OverlayDrawer)(int, int);
+
 // overlay structure
 struct overlay_t
 {
    int x, y;
-   void (*drawer)(int x, int y);
+   OverlayDrawer drawer;
 };
 
 // overlay enumeration
@@ -78,8 +81,25 @@ enum
    NUMOVERLAY
 };
 
+static void HU_drawStatus (int x, int y);
+static void HU_drawHealth (int x, int y);
+static void HU_drawArmor  (int x, int y);
+static void HU_drawWeapons(int x, int y);
+static void HU_drawAmmo   (int x, int y);
+static void HU_drawKeys   (int x, int y);
+static void HU_drawFrags  (int x, int y);
+
 // all overlay modules
-static overlay_t overlay[NUMOVERLAY];
+static overlay_t overlay[NUMOVERLAY] =
+{
+   { 0, 0, HU_drawStatus  }, // ol_status
+   { 0, 0, HU_drawHealth  }, // ol_health
+   { 0, 0, HU_drawArmor   }, // ol_armor
+   { 0, 0, HU_drawWeapons }, // ol_weap
+   { 0, 0, HU_drawAmmo    }, // ol_ammo
+   { 0, 0, HU_drawKeys    }, // ol_key
+   { 0, 0, HU_drawFrags   }, // ol_frag
+};
 
 // HUD styles
 enum
@@ -397,11 +417,11 @@ static void HU_drawKeys(int x, int y)
 }
 
 //
-// HU_drawFrag
+// HU_drawFrags
 //
 // Draw the Frags
 //
-static void HU_drawFrag(int x, int y)
+static void HU_drawFrags(int x, int y)
 {
    qstring tempstr;
 
@@ -439,17 +459,8 @@ static void HU_drawStatus(int x, int y)
 static void HU_overlaySetup()
 {
    int i, x, y;
-   
-   // setup the drawers
-   overlay[ol_health].drawer = HU_drawHealth;
-   overlay[ol_ammo  ].drawer = HU_drawAmmo;
-   overlay[ol_weap  ].drawer = HU_drawWeapons;
-   overlay[ol_armor ].drawer = HU_drawArmor;
-   overlay[ol_key   ].drawer = HU_drawKeys;
-   overlay[ol_frag  ].drawer = HU_drawFrag;
-   overlay[ol_status].drawer = HU_drawStatus;
 
-   // now decide where to put all the widgets
+   // decide where to put all the widgets
    
    for(i = 0; i < NUMOVERLAY; i++)
       overlay[i].x = 1;       // turn em all on
@@ -572,7 +583,7 @@ void HU_OverlayDraw()
   
    HU_overlaySetup();
    
-   for(int i = 0; i < NUMOVERLAY; ++i)
+   for(int i = 0; i < NUMOVERLAY; i++)
    {
       if(overlay[i].x != -1)
          overlay[i].drawer(overlay[i].x, overlay[i].y);
