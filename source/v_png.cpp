@@ -673,14 +673,207 @@ patch_t *VPNGImage::LoadAsPatch(const char *lumpname, int tag, void **user,
 // PNG Writer
 //
 
+// PNG writing private data structure
+struct pngwrite_t
+{
+   FILE *outf;
+   bool  errorFlag;
+   int   errnoVal;
+};
+
+//
+// V_pngDataWrite
+//
+// File writing callback for libpng.
+//
+static void V_pngDataWrite(png_structp pngptr, png_bytep data, png_size_t len)
+{
+   pngwrite_t *iodata = static_cast<pngwrite_t *>(png_get_io_ptr(pngptr));
+
+   if(fwrite(data, 1, len, iodata->outf) != len)
+   {
+      iodata->errorFlag = true;
+      iodata->errnoVal  = errno;
+   }
+}
+
+//
+// V_pngDataFlush
+//
+// Flush callback for libpng.
+//
+static void V_pngDataFlush(png_structp pngptr)
+{
+   pngwrite_t *iodata = static_cast<pngwrite_t *>(png_get_io_ptr(pngptr));
+ 
+   if(fflush(iodata->outf) != 0)
+   {
+      iodata->errorFlag = true;
+      iodata->errnoVal  = errno;
+   }
+}
+
+//
+// V_pngWriteWarning
+//
+// Warning message callback for libpng.
+//
+static void V_pngWriteWarning(png_structp pngptr, png_const_charp warningMsg)
+{
+   C_Printf(FC_ERROR "libpng warning: %s", warningMsg);
+}
+
+//
+// V_pngWriteError
+//
+// Error callback for libpng. An exception will be thrown so that control
+// jumps back to V_WritePNG without returning through libpng.
+//
+static void V_pngWriteError(png_structp pngptr, png_const_charp errorMsg)
+{
+   C_Printf(FC_ERROR "libpng error: %s", errorMsg);
+
+   throw 0;
+}
+
+//
+// V_pngRemoveFile
+//
+// Closes and removes the PNG file if an error occurs.
+//
+static void V_pngRemoveFile(pngwrite_t *writeData, const char *filename)
+{
+   if(writeData->outf)
+   {
+      fclose(writeData->outf);
+      writeData->outf = NULL;
+      if(writeData->errorFlag)
+      {
+         int error = writeData->errnoVal;
+         C_Printf(FC_ERROR "V_pngRemoveFile: IO error: %s\a", 
+                  error ? strerror(error) : "unknown error");
+      }
+   }
+
+   // Try to remove it.
+   if(remove(filename) != 0)
+   {
+      C_Printf(FC_ERROR "V_pngRemoveFile: error deleting bad PNG file: %s\a",
+               errno ? strerror(errno) : "unknown error");
+   }
+}
+
 //
 // V_WritePNG
 //
 // Write a linear graphic as a PNG file.
 //
-bool V_WritePNG(byte *linear, int w, int h, const char *filename)
+bool V_WritePNG(byte *linear, int width, int height, const char *filename)
 {
-   return true;
+   ZAutoBuffer palcache;
+   png_structp pngStruct;
+   png_infop   pngInfo;
+   png_colorp  pngPalette;
+   pngwrite_t  writeData;
+   bool        libpngError = false;
+   bool        retval;
+      
+   byte  *palette;
+   byte **rowpointers;
+
+   // Load palette
+   wGlobalDir.cacheLumpAuto("PLAYPAL", palcache);
+   palette = palcache.getAs<byte *>();
+
+   // Open file for output
+   if(!(writeData.outf = fopen(filename, "wb")))
+   {
+      C_Printf(FC_ERROR "V_WritePNG: could not open %s for write\a", filename);
+      return false;
+   }
+   writeData.errorFlag = false;
+   writeData.errnoVal  = 0;
+
+   // Create the libpng write struct
+   if(!(pngStruct = 
+        png_create_write_struct(PNG_LIBPNG_VER_STRING, &writeData,
+                                V_pngWriteError, V_pngWriteWarning)))
+   {
+      V_pngRemoveFile(&writeData, filename);
+      return false;
+   }
+
+   // Create the libpng info struct
+   if(!(pngInfo = png_create_info_struct(pngStruct)))
+   {
+      png_destroy_write_struct(&pngStruct, NULL);
+      V_pngRemoveFile(&writeData, filename);
+      return false;
+   }
+
+   // Allocate row pointers and palette
+   rowpointers = ecalloc(byte **,    height, sizeof(byte *));
+   pngPalette  = ecalloc(png_colorp, 256,    sizeof(png_color));
+
+   try
+   {
+      // Set write functions
+      png_set_write_fn(pngStruct, &writeData, V_pngDataWrite, V_pngDataFlush);
+
+      // Set IHDR data
+      png_set_IHDR(pngStruct, pngInfo, width, height, 8, PNG_COLOR_TYPE_PALETTE,
+                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, 
+                   PNG_FILTER_TYPE_DEFAULT);
+
+      // Copy palette
+      for(int color = 0; color < 256; color++)
+      {
+         pngPalette[color].red   = palette[color * 3 + 0];
+         pngPalette[color].green = palette[color * 3 + 1];
+         pngPalette[color].blue  = palette[color * 3 + 2];
+      }
+      png_set_PLTE(pngStruct, pngInfo, pngPalette, 256);
+
+      // Write info
+      png_write_info(pngStruct, pngInfo);
+
+      // Set packing and swapping attributes as needed
+      png_set_packing(pngStruct);
+      png_set_packswap(pngStruct);
+
+      // Set row pointers
+      for(int row = 0; row < height; row++)
+         rowpointers[row] = &linear[row * width];
+
+      // Write image
+      png_write_image(pngStruct, rowpointers);
+
+      // Write end
+      png_write_end(pngStruct, pngInfo);
+   }
+   catch(...)
+   {
+      libpngError = true;
+   }
+
+   // Remove the file if something went wrong.
+   if(libpngError || writeData.errorFlag)
+   {
+      V_pngRemoveFile(&writeData, filename);
+      retval = false;
+   }
+   else
+   {
+      fclose(writeData.outf);
+      retval = true;
+   }
+
+   // Clean up.
+   png_destroy_write_struct(&pngStruct, &pngInfo);
+   efree(rowpointers);
+   efree(pngPalette);
+
+   return retval;
 }
 
 // EOF

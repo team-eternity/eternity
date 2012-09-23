@@ -1098,6 +1098,20 @@ void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 }
 
 //
+// WadDirectory::cacheLumpAuto
+//
+// Cache a copy of a lump into a ZAutoBuffer.
+//
+void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer)
+{
+   int    lumpnum = getNumForName(name);
+   size_t size    = lumpinfo[lumpnum]->size;
+
+   buffer.alloc(size, false);
+   readLump(lumpnum, buffer.get());
+}
+
+//
 // WadDirectory::writeLump
 //
 // Write out a lump to a physical file.
