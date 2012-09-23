@@ -429,11 +429,13 @@ static int MN_titleDescription(menuitem_t *item)
    if(!(drawing_menu->flags & mf_skullmenu) &&
       GameModeInfo->flags & GIF_SHADOWTITLES)
    {
-      V_FontWriteTextShadowed(menu_font_big, text, x, item->y, &subscreen43);
+      V_FontWriteTextShadowed(menu_font_big, text, x, item->y, &subscreen43,
+                              GameModeInfo->titleColor);
    }
    else
    {
-      V_FontWriteText(menu_font_big, text, x, item->y, &subscreen43);
+      V_FontWriteTextColored(menu_font_big, text, GameModeInfo->titleColor,
+                             x, item->y, &subscreen43);
    }
       
    return V_FontStringHeight(menu_font_big, text);
@@ -1059,22 +1061,25 @@ void MN_DrawMenu(menu_t *menu)
 
    for(itemnum = 0; menu->menuitems[itemnum].type != it_end; ++itemnum)
    {
+      menuitem_t *mi = &menu->menuitems[itemnum];
       int item_height;
       int item_color;
 
       // choose item colour based on selected item
-
-      item_color = menu->selected == itemnum &&
-         !(menu->flags & mf_skullmenu) ? 
-            GameModeInfo->selectColor : GameModeInfo->unselectColor;
+      if(mi->type == it_info)
+         item_color = GameModeInfo->infoColor;
+      else
+      {
+         if(menu->selected == itemnum && !(menu->flags & mf_skullmenu))
+            item_color = GameModeInfo->selectColor;
+         else
+            item_color = GameModeInfo->unselectColor;
+      }
       
       // draw item
-
-      item_height = MN_DrawMenuItem(&menu->menuitems[itemnum],
-                                    menu->x, y, item_color);
+      item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
       
       // if selected item, draw skull / pointer next to it
-
       if(menu->selected == itemnum)
          MN_drawPointer(menu, y, itemnum, item_height);
       

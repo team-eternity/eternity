@@ -105,7 +105,7 @@ void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, i
 void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
                               VBuffer *screen = NULL);
 void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y, 
-                                VBuffer *screen = NULL);
+                                VBuffer *screen = NULL, int color = -1);
 int     V_FontStringHeight(vfont_t *font, const char *s);
 int     V_FontStringWidth(vfont_t *font, const char *s);
 int     V_FontCharWidth(vfont_t *font, char pChar);

@@ -198,7 +198,7 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 {
    int i;
 
-   for(i = 0; i < dir->numfiles; ++i)
+   for(i = 0; i < dir->numfiles; i++)
    {
       if(!strcasecmp(filename, (dir->filenames)[i]))
          break;
@@ -216,10 +216,8 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 //
 void MN_ClearDirectory(mndir_t *dir)
 {
-   int i;
-   
    // clear all alloced files   
-   for(i = 0; i < dir->numfiles; ++i)
+   for(int i = 0; i < dir->numfiles; i++)
    {
       efree((dir->filenames)[i]);
       (dir->filenames)[i] = NULL;
@@ -616,12 +614,12 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
    if(dir->numfiles < 1)
       return;
 
-   selected_item      = 0;
-   mn_currentdir      = dir;
-   help_description   = title;
-   variable_name      = command;
-   select_dismiss     = dismissOnSelect;
-   allow_exit         = allowExit;
+   selected_item    = 0;
+   mn_currentdir    = dir;
+   help_description = title;
+   variable_name    = command;
+   select_dismiss   = dismissOnSelect;
+   allow_exit       = allowExit;
 
    MN_PushWidget(&file_selector);
 }
@@ -695,12 +693,12 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    // sort the list
    MN_sortFiles(&mn_diskdir);
 
-   selected_item = 0;
-   mn_currentdir = &mn_diskdir;
+   selected_item    = 0;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select music to play:";
-   variable_name = "s_playmusic";
-   select_dismiss = false;
-   allow_exit     = true;
+   variable_name    = "s_playmusic";
+   select_dismiss   = false;
+   allow_exit       = true;
 
    MN_PushWidget(&file_selector);
 }
@@ -716,7 +714,7 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    MN_addFile(&mn_diskdir, "default");
 
    // run through flats
-   for(i = flatstart; i < flatstop; ++i)
+   for(i = flatstart; i < flatstop; i++)
    {
       // size must be exactly 64x64
       if(textures[i]->width == 64 && textures[i]->height == 64)
@@ -737,11 +735,11 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    if((curnum = MN_findFile(&mn_diskdir, mn_background)) != mn_diskdir.numfiles)
       selected_item = curnum;
    
-   mn_currentdir = &mn_diskdir;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select background:";
-   variable_name = "mn_background";
-   select_dismiss = false;
-   allow_exit     = true;
+   variable_name    = "mn_background";
+   select_dismiss   = false;
+   allow_exit       = true;
 
    MN_PushWidget(&file_selector);
 }

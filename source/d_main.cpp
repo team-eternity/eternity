@@ -503,13 +503,34 @@ static void D_showMemStats(void)
 #endif
 
 //
-// D_drawWings
+// D_DrawPillars
+//
+// Will draw pillars for pillarboxing the 4:3 subscreen.
+//
+void D_DrawPillars()
+{
+   int wingwidth;
+   
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
+      return;
+   
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   if(wingwidth <= 0)
+         return;
+
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+                0, wingwidth, vbscreen.height);
+}
+
+//
+// D_DrawWings
 //
 // haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
 // status bar while it is visible. This is necessary when drawing patches at
 // 4:3 aspect ratio over widescreen video modes.
 //
-static void D_drawWings()
+void D_DrawWings()
 {
    int wingwidth;
 
@@ -517,6 +538,10 @@ static void D_drawWings()
       return;
 
    wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+
+   // safety check
+   if(wingwidth <= 0)
+      return;
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
@@ -563,7 +588,7 @@ void D_Display(void)
 
    // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
    // created by drawing patches 4:3 in higher aspect ratios.
-   D_drawWings();
+   D_DrawWings();
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)

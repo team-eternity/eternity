@@ -50,6 +50,7 @@
 #include "v_misc.h"
 #include "w_wad.h"
 #include "w_hacks.h"
+#include "z_auto.h"
 
 //
 // GLOBALS
@@ -1094,6 +1095,27 @@ void *WadDirectory::cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
 void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt)
 {
    return cacheLumpNum(getNumForName(name), tag, lfmt);
+}
+
+//
+// WadDirectory::writeLump
+//
+// Write out a lump to a physical file.
+//
+bool WadDirectory::writeLump(const char *lumpname, const char *destpath)
+{
+   int    lumpnum;
+   size_t size;
+   
+   if((lumpnum = checkNumForName(lumpname)) >= 0 && 
+      (size    = lumpinfo[lumpnum]->size  ) >  0)
+   {
+      ZAutoBuffer lumpData(size, false);
+      readLump(lumpnum, lumpData.get());
+      return M_WriteFile(destpath, lumpData.get(), size);
+   }
+   else
+      return false;
 }
 
 // Predefined lumps removed -- sf

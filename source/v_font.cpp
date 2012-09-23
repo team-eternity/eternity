@@ -309,9 +309,15 @@ void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map
 // Write text with a shadow effect.
 //
 void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
-                             VBuffer *screen)
+                             VBuffer *screen, int color)
 {
    shadowChar = true;
+   if(color >= 0 && color < CR_LIMIT)
+   {
+      fixedColor  = true;
+      fixedColNum = color;
+   }
+   
    V_FontWriteText(font, s, x, y, screen);
 }
 

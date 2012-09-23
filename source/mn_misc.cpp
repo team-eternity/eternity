@@ -467,6 +467,8 @@ void MN_DrawCredits(void)
                    0, y, &subscreen43);
 }
 
+extern menuwidget_t helpscreen_widget; // actually just below...
+
 void MN_HelpDrawer(void)
 {
    if(helpscreens[viewing_helpscreen].Drawer)
@@ -477,6 +479,11 @@ void MN_HelpDrawer(void)
    {
       // haleyjd: support raw lumps
       int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
+
+      // if the screen is larger than 4:3, we need to draw pillars ourselves,
+      // as D_Display won't be able to know if this widget is fullscreen or not
+      // in time to do it as usual.
+      D_DrawPillars();
 
       // haleyjd 05/18/09: use smart background drawer
       V_DrawFSBackground(&subscreen43, lumpnum);

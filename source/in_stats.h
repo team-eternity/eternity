@@ -69,7 +69,6 @@ protected:
    static INStatsManager singleton;
 
    void loadStats();
-   in_stat_t *findScore(const qstring &key, int type);
    void addScore(const char *levelkey, int score, int maxscore, 
                  int scoretype, int pnum);
 
@@ -77,6 +76,10 @@ public:
    static void Init();
    static INStatsManager &Get() { return singleton; }
 
+   in_stat_t *findScore(const qstring &key, int type);
+   void getLevelKey(qstring &outstr);
+   void getLevelKey(qstring &outstr, const char *mapName);
+   void getLevelKey(qstring &outstr, const char *path, const char *mapName);
    void recordStats(const wbstartstruct_t *stats);
    void saveStats();
 };

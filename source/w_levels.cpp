@@ -597,16 +597,46 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
 }
 
 //
+// Utility commands
+//
+// Yeah, they're here because there's no real other place :P
+//
+
+// Write out a lump
+CONSOLE_COMMAND(w_writelump, 0)
+{
+   qstring filename;
+   const char *lumpname;
+
+   if(Console.argc < 1)
+   {
+      C_Puts("Usage: w_writelump lumpname");
+      return;
+   }
+
+   lumpname = Console.argv[0]->constPtr();
+   filename = usergamepath;
+   filename.pathConcatenate(lumpname);
+   filename.addDefaultExtension(".lmp");
+
+   wGlobalDir.writeLump(lumpname, filename.constPtr());
+}
+
+//
 // W_AddCommands
 //
-// Adds all managed wad directory and Master Levels commands. Note that the
-// master_levels_dir cvar is in g_cmd along with the IWAD settings, because it
-// needs to use some of the same code they use for path verification.
+// Adds all managed wad directory and Master Levels commands, as well as some
+// misc utilities related to wad files. Note that the master_levels_dir cvar 
+// is in g_cmd along with the IWAD settings, because it needs to use some of 
+// the same code they use for path verification.
 //
 void W_AddCommands(void)
 {
    C_AddCommand(w_masterlevels);
    C_AddCommand(w_startlevel);
+
+   // Utils
+   C_AddCommand(w_writelump);
 }
 
 // EOF

@@ -247,6 +247,7 @@ public:
    int   readLumpHeader(int lump, void *dest, size_t size);
    void *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
    void *cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt = NULL);
+   bool  writeLump(const char *lumpname, const char *destpath);
    void  close(); // haleyjd 03/09/11
 
    lumpinfo_t *getLumpNameChain(const char *name);

@@ -37,6 +37,7 @@
 #include "v_png.h"
 #include "v_video.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 // Need libpng
 #include "png.h"
@@ -648,12 +649,11 @@ patch_t *VPNGImage::LoadAsPatch(int lumpnum, int tag, void **user, size_t *size)
   
    if((len = wGlobalDir.lumpLength(lumpnum)) > 8)
    {
-      VPNGImage png;
-      byte *buffer = ecalloc(byte *, 1, len);
-      wGlobalDir.readLump(lumpnum, buffer);
-      if(png.readImage(buffer))
+      VPNGImage   png;
+      ZAutoBuffer buffer(len, true);
+      wGlobalDir.readLump(lumpnum, buffer.get());
+      if(png.readImage(buffer.get()))
          patch = png.getAsPatch(tag, user);
-      efree(buffer);
    }
 
    return patch;

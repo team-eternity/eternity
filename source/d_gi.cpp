@@ -847,6 +847,8 @@ static gamemodeinfo_t giDoomSW =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
@@ -941,6 +943,8 @@ static gamemodeinfo_t giDoomReg =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
@@ -1035,6 +1039,8 @@ static gamemodeinfo_t giDoomRetail =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
@@ -1129,6 +1135,8 @@ static gamemodeinfo_t giDoomCommercial =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DM2BRDRFLAT,      // borderFlat
@@ -1223,6 +1231,8 @@ static gamemodeinfo_t giHereticSW =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HSWBRDRFLAT,      // borderFlat
@@ -1321,6 +1331,8 @@ static gamemodeinfo_t giHereticReg =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HREGBRDRFLAT,     // borderFlat

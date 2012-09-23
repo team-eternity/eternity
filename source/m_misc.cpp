@@ -1841,7 +1841,7 @@ default_t *M_FindDefaultForCVar(variable_t *var)
 //
 // killough 9/98: rewritten to use stdio and to flash disk icon
 //
-bool M_WriteFile(char const *name, void *source, unsigned int length)
+bool M_WriteFile(char const *name, void *source, size_t length)
 {
    FILE *fp;
    bool result;

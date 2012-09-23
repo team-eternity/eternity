@@ -60,11 +60,13 @@ extern camera_t *camera;
 // BASE LEVEL
 //
 
-void D_PageTicker(void);
-void D_PageDrawer(void);
-void D_AdvanceDemo(void);
-void D_StartTitle(void);
-void D_DoomMain(void);
+void D_PageTicker();
+void D_PageDrawer();
+void D_DrawPillars();
+void D_DrawWings();
+void D_AdvanceDemo();
+void D_StartTitle();
+void D_DoomMain();
 
 // sf: display a message to the player: either in text mode or graphics
 void usermsg(const char *s, ...);

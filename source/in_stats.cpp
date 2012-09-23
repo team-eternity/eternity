@@ -27,28 +27,57 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_player.h"
 #include "doomstat.h"
 #include "e_hash.h"
 #include "e_lib.h"
 #include "g_game.h"
+#include "hal/i_platform.h"
 #include "in_stats.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "v_misc.h"
 #include "w_wad.h"
 #include "wi_stuff.h"
 
 // Global Singleton Instance
 INStatsManager INStatsManager::singleton;
 
+// 
+// A hash key with file system case sensitivity properties.
+//
+class INFSStringHashKey
+{
+public:
+   typedef const char *basic_type;
+   typedef const char *param_type;
+
+   static unsigned int HashCode(const char *input)
+   {
+      return EE_PLATFORM_TEST(EE_PLATF_CSFS) 
+               ? D_HashTableKeyCase(input) : D_HashTableKey(input);
+   }
+
+   static bool Compare(const char *first, const char *second)
+   {
+      return EE_PLATFORM_TEST(EE_PLATF_CSFS) 
+               ? !strcmp(first, second) : !strcasecmp(first, second);
+   }
+};
+
+
 //
 // Private Implementation Object
 //
-class INStatsMgrPimpl : public ZoneObject
+class INStatsMgrPimpl
 {
 public:
-   EHashTable<in_stat_t, EStringHashKey, 
+   static INStatsMgrPimpl singleton;
+
+   EHashTable<in_stat_t, INFSStringHashKey, 
               &in_stat_t::levelkey, &in_stat_t::links> statsByLevelKey;
 
    // expected fields
@@ -66,6 +95,9 @@ public:
    void parseCSVLine(char *&line, Collection<qstring> &output);
    void parseCSVScores(char *input);
 };
+
+// Singleton for the INStatsManager's private implementation
+INStatsMgrPimpl INStatsMgrPimpl::singleton;
 
 // Field names for CSV header
 static const char *fieldNames[INStatsMgrPimpl::FIELD_NUMFIELDS] =
@@ -197,7 +229,8 @@ void INStatsMgrPimpl::parseCSVScores(char *input)
 //
 INStatsManager::INStatsManager()
 {
-   pImpl = new INStatsMgrPimpl;
+   // NB: just taking the address, order of construction won't matter.
+   pImpl = &INStatsMgrPimpl::singleton;
 }
 
 //
@@ -232,8 +265,7 @@ void INStatsManager::loadStats()
 
 static void MakeCSVValue(qstring &qstr, const char *input, bool comma)
 {
-   qstr.clear();
-   qstr << '"' << input << '"';
+   qstr.clear() << '"' << input << '"';
    if(comma)
       qstr << ',';
 }
@@ -333,22 +365,72 @@ void INStatsManager::addScore(const char *levelkey, int score, int maxscore,
 }
 
 //
+// INStatsManager::getLevelKey
+//
+// Create the semi-unique key for the current level.
+//
+void INStatsManager::getLevelKey(qstring &outstr)
+{
+   int levelLump  = g_dir->checkNumForName(gamemapname);
+   const char *fn = g_dir->getLumpFileName(levelLump);
+
+   // really should not happen.
+   if(!fn)
+      return;   
+
+   // construct the unique key for this level
+   outstr << fn << "::" << qstring(gamemapname).toUpper();
+}
+
+//
+// INStatsManager::getLevelKey
+//
+// Create the semi-unique key for a given level. In order for this
+// to work, the wad being referenced must have been actually loaded
+// via -file or some other loading mechanism.
+//
+void INStatsManager::getLevelKey(qstring &outstr, const char *mapName)
+{
+   int levelLump  = wGlobalDir.checkNumForName(mapName);
+   const char *fn = wGlobalDir.getLumpFileName(levelLump);
+
+   if(!fn)
+      return;
+
+   // build it
+   outstr << fn << "::" << qstring(mapName).toUpper();
+}
+
+//
+// INStatsManager::makeKey
+//
+// Make a key from a path and a lump name, even if the wad's not loaded.
+//
+void INStatsManager::getLevelKey(qstring &outstr, 
+                                 const char *path, const char *mapName)
+{
+   outstr = path;
+   outstr.normalizeSlashes();
+   outstr << "::" << qstring(mapName).toUpper();
+}
+
+//
 // INStatsManager::recordStats
 //
 // Add stats for a particular level.
 //
 void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
 {
-   const wbplayerstruct_t *playerData = &wbstats->plyr[wbstats->pnum];
-   int levelLump  = g_dir->checkNumForName(gamemapname);
-   const char *fn = g_dir->getLumpFileName(levelLump);
    qstring levelkey;
    int   scores[INSTAT_NUMTYPES];
    int   maxscores[INSTAT_NUMTYPES];
+   const wbplayerstruct_t *playerData = &wbstats->plyr[wbstats->pnum];
 
-   // really should not happen.
-   if(!fn)
-      return;   
+   getLevelKey(levelkey);
+
+   // really shouldn't happen
+   if(levelkey == "")
+      return;
 
    // not playing??
    if(!playerData->in)
@@ -376,8 +458,6 @@ void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
    maxscores[INSTAT_TIME   ] = wbstats->partime;   // Actually a minimum, of sorts.
    maxscores[INSTAT_FRAGS  ] = -1;                 // There's no max for frags.
 
-   // construct the unique key for this level
-   levelkey << fn << "::" << gamemapname;
 
    for(int i = 0; i < INSTAT_NUMTYPES; i++)
    {
@@ -390,11 +470,14 @@ void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
          if(gameskill < instat->skill)
             continue;
 
-         // For most categories, a higher score wins. Time is an exception.
-         if(i == INSTAT_TIME ? 
-            scores[i] < instat->value : scores[i] > instat->value)
+         // * For most categories, a higher score wins. Time is an exception.
+         // * A tie wins if it is achieved on a higher skill level.
+         if((gameskill > instat->skill && scores[i] == instat->value) ||
+            (i == INSTAT_TIME ? 
+             scores[i] < instat->value : scores[i] > instat->value))
          {
             // This player has the new high score!
+            instat->skill    = gameskill;
             instat->value    = scores[i];
             instat->maxValue = maxscores[i];
             E_ReplaceString(instat->playername, 
@@ -404,6 +487,110 @@ void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
       else
          addScore(levelkey.constPtr(), scores[i], maxscores[i], i, wbstats->pnum);
    }
+}
+
+//=============================================================================
+//
+// Useful score formatting data
+//
+
+// Short skill names
+static const char *short_skills[] =
+{
+   "ITYTD",
+   "HNTR",
+   "HMP",
+   "UV",
+   "NM"
+};
+
+static const char *pretty_names[] =
+{
+   FC_ERROR "Kills   " FC_NORMAL,
+   FC_ERROR "Items   " FC_NORMAL,
+   FC_ERROR "Secrets " FC_NORMAL,
+   FC_ERROR "Time    " FC_NORMAL,
+   FC_ERROR "Frags   " FC_NORMAL
+};
+
+#define pretty_skill \
+   "\n" FC_HI " Skill  " FC_NORMAL
+
+#define pretty_by \
+   "\n" FC_HI " Set By " FC_NORMAL
+
+static const char *IN_formatTics(int tics)
+{
+   static char buffer[16];
+   int h, m, s;
+
+   s =  tics / TICRATE;
+   h =  s / 3600;
+   s -= h * 3600;
+   m =  s / 60;
+   s -= m * 60;
+
+   psnprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", h, m, s);
+   return buffer;
+}
+
+//=============================================================================
+//
+// Console Commands
+//
+
+CONSOLE_COMMAND(mapscores, cf_level)
+{
+   INStatsManager &statsMgr = INStatsManager::Get();
+   qstring levelkey, descr;
+
+   if(Console.argc < 1)       // current level
+      statsMgr.getLevelKey(levelkey);
+   else if(Console.argc == 1) // a named level (must be loaded)
+      statsMgr.getLevelKey(levelkey, Console.argv[0]->constPtr());
+   else if(Console.argc >= 2) // absolute filepath::map
+   {
+      statsMgr.getLevelKey(levelkey, 
+         Console.argv[0]->constPtr(),
+         Console.argv[1]->constPtr());
+   }
+
+   if(levelkey == "")
+      return;
+
+   for(int i = 0; i < INSTAT_NUMTYPES; i++)
+   {
+      in_stat_t *stat;
+
+      if((stat = statsMgr.findScore(levelkey, i)))
+      {
+         descr.clear() << pretty_names[stat->recordType];
+
+         switch(stat->recordType)
+         {
+         case INSTAT_TIME:
+            descr << IN_formatTics(stat->value);
+            if(stat->maxValue > 0)
+               descr << " (Par: " << IN_formatTics(stat->maxValue) << ")";
+            break;
+         case INSTAT_FRAGS:
+            descr << stat->value;
+            break;
+         default:
+            descr << stat->value << FC_HI "/" FC_NORMAL << stat->maxValue;
+            break;
+         }
+
+         descr << pretty_skill << short_skills[stat->skill];
+         descr << pretty_by    << stat->playername;
+         C_Puts(descr.constPtr());
+      }
+   }
+}
+
+void IN_Stats_AddCommands()
+{
+   C_AddCommand(mapscores);
 }
 
 // EOF

@@ -33,7 +33,7 @@
 // MISC
 //
 
-bool  M_WriteFile(const char *name, void *source, unsigned int length);
+bool  M_WriteFile(const char *name, void *source, size_t length);
 int   M_ReadFile(const char *name, byte **buffer);
 char *M_LoadStringFromFile(const char *filename);
 void  M_LoadOptions(void);                             // killough 11/98
