@@ -71,6 +71,8 @@ public:
                                void **user = NULL, size_t *size = NULL);
 };
 
+bool V_WritePNG(byte *linear, int width, int height, const char *filename);
+
 #endif
 
 // EOF

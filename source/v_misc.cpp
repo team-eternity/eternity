@@ -35,6 +35,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "i_video.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
@@ -42,6 +43,7 @@
 #include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -616,11 +618,37 @@ CONSOLE_COMMAND(v_fontcolors, 0)
 
 CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}
 
+// Dump a patch to file as a PNG. This involves a *lot* of code.
+CONSOLE_COMMAND(v_dumppatch, 0)
+{
+   qstring filename;
+   const char *lump;
+   int fillcolor;
+
+   if(Console.argc < 3)
+   {
+      C_Puts("Usage: v_dumppatch lumpname filename fillcolor");
+      return;
+   }
+
+   lump = Console.argv[0]->constPtr();
+   filename = usergamepath;
+   filename.pathConcatenate(Console.argv[1]->constPtr());
+   filename.addDefaultExtension(".png");
+
+   fillcolor = Console.argv[2]->toInt();
+   if(fillcolor < 0 || fillcolor >= 255)
+      fillcolor = 247;
+
+   V_WritePatchAsPNG(lump, filename.constPtr(), static_cast<byte>(fillcolor));
+}
+
 void V_AddCommands(void)
 {
    C_AddCommand(v_modelist);
    C_AddCommand(v_fontcolors);
    C_AddCommand(v_ticker);
+   C_AddCommand(v_dumppatch);
 }
 
 // EOF

@@ -1098,17 +1098,26 @@ void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 }
 
 //
-// WadDirectory::cacheLumpAuto
+// WadDirectory::cacheLumpNumAuto
 //
-// Cache a copy of a lump into a ZAutoBuffer.
+// Cache a copy of a lump into a ZAutoBuffer, by lump num.
 //
-void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer)
+void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer)
 {
-   int    lumpnum = getNumForName(name);
-   size_t size    = lumpinfo[lumpnum]->size;
+   size_t size = lumpinfo[lumpnum]->size;
 
    buffer.alloc(size, false);
    readLump(lumpnum, buffer.get());
+}
+
+//
+// WadDirectory::cacheLumpAuto
+//
+// Cache a copy of a lump into a ZAutoBuffer, by lump name.
+//
+void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer)
+{
+   cacheLumpAuto(getNumForName(name), buffer);
 }
 
 //

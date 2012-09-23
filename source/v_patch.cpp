@@ -27,10 +27,16 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "c_io.h"
 #include "m_swap.h"
 #include "r_patch.h"
 #include "v_block.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_png.h"
 #include "v_video.h"
+#include "w_wad.h"
+#include "z_auto.h"
 
 // patch rendering globals -- like dc_ in r_draw.c
 static cb_patch_column_t patchcol;
@@ -848,6 +854,59 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
    // voila!
    return p;
 }
+
+//
+// V_WritePatchAsPNG
+//
+// Does what it says on the box.
+//
+bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor)
+{
+   int lumpnum;
+   ZAutoBuffer patch;
+   byte *data;
+   byte *linear;
+   int width, height;
+
+   // make sure it exists
+   if((lumpnum = wGlobalDir.checkNumForName(lump)) < 0)
+   {
+      C_Printf(FC_ERROR "No such lump %s", lump);
+      return false;
+   }
+   
+   // cache the target lump into an autobuffer. We want to do it this way here,
+   // versus loading it normally, because we don't want to deal with caching of
+   // formatted lumps, substitution of the default patch, etc
+   wGlobalDir.cacheLumpAuto(lumpnum, patch);
+   if(!(data = patch.getAs<byte *>()))
+   {
+      C_Printf(FC_ERROR "Failed to load lump %s", lump);
+      return false;
+   }
+
+   // verify and format the patch data
+   if(!PatchLoader::VerifyAndFormat(data, patch.getSize()))
+   {
+      C_Printf(FC_ERROR "Lump %s is not a valid patch", lump);
+      return false;
+   }
+
+   // convert to linear
+   linear = V_PatchToLinear(reinterpret_cast<patch_t *>(data), false, fillcolor, 
+                            &width, &height);
+
+   // Finally, write out the linear as a PNG.
+   bool res;
+   if((res = V_WritePNG(linear, width, height, filename)))
+      C_Printf("Wrote patch %s to file %s", lump, filename);
+   else
+      C_Printf(FC_ERROR "Write of patch %s to file %s failed", lump, filename);
+
+   efree(linear);
+   return res;
+}
+ 
 
 // EOF
 

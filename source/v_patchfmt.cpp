@@ -143,14 +143,13 @@ WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
 }
 
 //
-// PatchLoader::formatData
+// PatchLoader::formatRaw
 //
 // Format the patch_t header by swapping the short and long integer fields.
 //
-WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
+void PatchLoader::formatRaw(void *data) const
 {
-   lumpinfo_t::lumpformat fmt = formatIndex();
-   patch_t *patch = static_cast<patch_t *>(lump->cache[fmt]);
+   patch_t *patch = static_cast<patch_t *>(data);
 
    patch->width      = SwapShort(patch->width);
    patch->height     = SwapShort(patch->height);
@@ -159,8 +158,34 @@ WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
 
    for(int i = 0; i < patch->width; i++)
       patch->columnofs[i] = SwapLong(patch->columnofs[i]);
+}
 
+//
+// PatchLoader::formatData
+//
+// Call formatRaw on the lump's patch-format cache.
+//
+WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
+{
+   formatRaw(lump->cache[formatIndex()]);
    return CODE_OK;
+}
+
+//
+// PatchLoader::VerifyAndFormat
+//
+// Static utility for use outside of w_wad code; verifies the format without
+// doing any possible substitutions (PNG -> patch, default patch, etc.) and
+// then, if it's valid, formats it.
+//
+bool PatchLoader::VerifyAndFormat(void *data, size_t size)
+{
+   if(patchFmt.checkData(data, size))
+   {
+      patchFmt.formatRaw(data);
+      return true;
+   }
+   return false;
 }
 
 //
