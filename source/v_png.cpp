@@ -165,9 +165,10 @@ bool VPNGImagePimpl::readImage(const void *data)
       return false;
    }
 
-   // TODO: Warning - the concept of throwing an exception through libpng is
-   // still untested. One of the libpng authors claims it should work, in lieu
-   // of using setjmp/longjmp. Need to feed it a bad PNG to see what happens.
+   // DONE: I have successfully tested the concept of throwing an exception 
+   // through libpng. One of the libpng authors claimed it should work, in lieu
+   // of using setjmp/longjmp. I have fed EE some bad PNGs and the exception
+   // propagates past the C calls on the stack and ends up here without incident.
    try
    {
       // set read function, since we are reading from a data source in memory
@@ -284,7 +285,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    }
    catch(...)
    {
-      readSuccess = false;
+       readSuccess = false;
    }
 
    // Done, cleanup.
@@ -465,7 +466,7 @@ VPNGImage::VPNGImage() : ZoneObject()
 {
    // pImpl object is a POD, so use calloc to create it and
    // initialize all fields to zero
-   pImpl = ecalloc(VPNGImagePimpl *, 1, sizeof(VPNGImagePimpl));
+   pImpl = estructalloc(VPNGImagePimpl, 1);
 }
 
 //
@@ -665,6 +666,21 @@ patch_t *VPNGImage::LoadAsPatch(const char *lumpname, int tag, void **user,
    int lumpnum = wGlobalDir.checkNumForName(lumpname);
 
    return lumpnum >= 0 ? LoadAsPatch(lumpnum, tag, user, size) : NULL;
+}
+
+//=============================================================================
+//
+// PNG Writer
+//
+
+//
+// V_WritePNG
+//
+// Write a linear graphic as a PNG file.
+//
+bool V_WritePNG(byte *linear, int w, int h, const char *filename)
+{
+   return true;
 }
 
 // EOF
