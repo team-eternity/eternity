@@ -155,7 +155,7 @@ cfg_opt_t edf_font_opts[] =
    CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE),
    CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE),
    CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),   
+   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),
    CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE),
    CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE),
