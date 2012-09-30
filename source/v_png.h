@@ -31,6 +31,7 @@
 #include "z_zone.h"
 
 struct patch_t;
+class  WadDirectory;
 
 // Forward declare private implementation class
 class VPNGImagePimpl;
@@ -46,6 +47,8 @@ public:
 
    // Methods
    bool readImage(const void *data);
+   bool readFromLump(WadDirectory &dir, int lumpnum);
+   bool readFromLump(WadDirectory &dir, const char *lumpname);
  
    // accessors
    uint32_t  getWidth()      const;

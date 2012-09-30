@@ -31,6 +31,7 @@
 
 #include "z_zone.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "doomtype.h"
 #include "v_misc.h"
@@ -78,6 +79,8 @@ public:
 
    // Methods
    bool  readImage(const void *data);
+   bool  readFromLumpNum(WadDirectory &dir, int lump);
+   bool  readFromLumpName(WadDirectory &dir, const char *name);
    void  freeImage();
    byte *getAs8Bit(const byte *outpal) const;
    byte *getAs24Bit() const;
@@ -299,6 +302,35 @@ bool VPNGImagePimpl::readImage(const void *data)
 }
 
 //
+// VPNGImagePimpl::readFromLumpNum
+//
+// Read a PNG resource from a lump, by number.
+//
+bool VPNGImagePimpl::readFromLumpNum(WadDirectory &dir, int lump)
+{
+   ZAutoBuffer lumpBuffer;
+   bool result = false;
+
+   if(lump >= 0)
+   {
+      dir.cacheLumpAuto(lump, lumpBuffer);
+      result = readImage(lumpBuffer.get());
+   }
+
+   return result;
+}
+
+//
+// VPNGImagePimpl::readFromLumpName
+//
+// Read a PNG resource from a lump, by name.
+//
+bool VPNGImagePimpl::readFromLumpName(WadDirectory &dir, const char *name)
+{
+   return readFromLumpNum(dir, dir.checkNumForName(name));
+}
+
+//
 // VPNGImagePimpl::freeImage
 //
 // Free everything allocated for the PNG
@@ -498,6 +530,27 @@ bool VPNGImage::readImage(const void *data)
 }
 
 //
+// VPNGImage::readFromLump
+//
+// Calls readImage after caching the given lump number in the given
+// wad directory. Overload for lump numbers.
+//
+bool VPNGImage::readFromLump(WadDirectory &dir, int lumpnum)
+{
+   return pImpl->readFromLumpNum(dir, lumpnum);
+}
+
+//
+// VPNGImage::readFromLump
+//
+// Overload for lump names.
+//
+bool VPNGImage::readFromLump(WadDirectory &dir, const char *lumpname)
+{
+   return pImpl->readFromLumpName(dir, lumpname);
+}
+
+//
 // Accessors
 //
 // These are implemented in here, rather than as inlines, so that the pImpl
@@ -608,16 +661,15 @@ byte *VPNGImage::getAs24Bit() const
 
 patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
 {
+   AutoPalette pal(wGlobalDir);
    patch_t *patch  = NULL;
-   void    *pal    = wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC);
-   byte    *linear = getAs8Bit(static_cast<byte *>(pal));
+   byte    *linear = getAs8Bit(pal.get());
    int      w      = static_cast<int>(getWidth());
    int      h      = static_cast<int>(getHeight());
 
    patch = V_LinearToPatch(linear, w, h, size, tag, user);
 
    efree(linear);
-   Z_ChangeTag(pal, PU_CACHE);
 
    return patch;
 }
@@ -770,7 +822,7 @@ static void V_pngRemoveFile(pngwrite_t *writeData, const char *filename)
 //
 bool V_WritePNG(byte *linear, int width, int height, const char *filename)
 {
-   ZAutoBuffer palcache;
+   AutoPalette palcache(wGlobalDir);
    png_structp pngStruct;
    png_infop   pngInfo;
    png_colorp  pngPalette;
@@ -782,8 +834,7 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
    byte **rowpointers;
 
    // Load palette
-   wGlobalDir.cacheLumpAuto("PLAYPAL", palcache);
-   palette = palcache.getAs<byte *>();
+   palette = palcache.get();
 
    // Open file for output
    if(!(writeData.outf = fopen(filename, "wb")))

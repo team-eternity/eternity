@@ -60,6 +60,7 @@
 #include "z_zone.h"
 
 #include "a_small.h"
+#include "autopalette.h"
 #include "c_runcmd.h"
 #include "d_main.h"
 #include "doomstat.h"
@@ -334,20 +335,16 @@ static void P_GenVelocities(void)
 
 void P_InitParticleEffects(void)
 {
-   byte *palette;
+   AutoPalette palette(wGlobalDir);
    struct particleColorList *pc = particleColors;
-
-   palette = (byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC);
 
    // match particle colors to best fit and write back to
    // static variables
    while(pc->color)
    {
-      *(pc->color) = V_FindBestColor(palette, pc->r, pc->g, pc->b);
+      *(pc->color) = V_FindBestColor(palette.get(), pc->r, pc->g, pc->b);
       pc++;
    }
-
-   Z_ChangeTag(palette, PU_CACHE);
 
    P_GenVelocities();
 }

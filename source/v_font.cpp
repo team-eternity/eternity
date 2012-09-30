@@ -234,7 +234,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       // check against screen bounds
       // haleyjd 12/29/05: text is now clipped by patch drawing code
       
-      if(font->linear)
+      if(font->linear && font->data)
       {
          // TODO: translucent masked block support
          // TODO: shadowed linear?

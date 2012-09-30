@@ -33,6 +33,7 @@
 #include "e_lib.h"
 #include "e_edf.h"
 
+#include "autopalette.h"
 #include "d_dehtbl.h"
 #include "d_dwfile.h"
 #include "d_io.h"
@@ -813,7 +814,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
    if(*endptr != '\0')
    {
-      byte *palette;
+      AutoPalette pal(wGlobalDir);
       int r, g, b;
 
       if(sscanf(value, "%d %d %d", &r, &g, &b) != 3)
@@ -827,11 +828,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
-
-      *(int *)result = V_FindBestColor(palette, r, g, b);
-
-      Z_ChangeTag(palette, PU_CACHE);
+      *(int *)result = V_FindBestColor(pal.get(), r, g, b);
    }
    else if(errno == ERANGE) 
    {

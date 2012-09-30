@@ -30,6 +30,8 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "autopalette.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
@@ -45,6 +47,7 @@
 #include "v_misc.h"
 #include "v_patch.h"
 #include "v_patchfmt.h"
+#include "v_png.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -67,6 +70,7 @@
 #define ITEM_FONT_CW     "centerwidth"
 #define ITEM_FONT_LFMT   "linearformat"
 #define ITEM_FONT_LLUMP  "linearlump"
+#define ITEM_FONT_REQUAN "requantize"
 #define ITEM_FONT_FILTER "filter"
 #define ITEM_FONT_COLOR  "colorable"
 #define ITEM_FONT_UPPER  "uppercase"
@@ -167,6 +171,7 @@ cfg_opt_t edf_font_opts[] =
    CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE),
    CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE),
    CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE),
    
    CFG_END()
 };
@@ -176,13 +181,15 @@ enum
 {
    FONT_FMT_LINEAR,
    FONT_FMT_PATCH,
+   FONT_FMT_PNG,
    NUM_FONT_FMTS
 };
 
-static const char *fontfmts[] =
+static const char *fontfmts[NUM_FONT_FMTS] =
 {
    "linear",  // a linear block of pixel data; the default format.
-   "patch"    // a DOOM patch, which will be converted to linear.
+   "patch",   // a DOOM patch, which will be converted to linear.
+   "png"      // a PNG graphic
 };
 
 #define NUMFONTCHAINS 31
@@ -307,7 +314,8 @@ static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
       // run down the chain
       while(rover)
       {
-         if(rover != font && rover->linear && rover->data == data)
+         if(rover != font && rover->linear && rover->data &&
+            rover->data == data)
             return true; // is used
          rover = rover->namenext;
       }
@@ -386,9 +394,10 @@ static void E_DisposePatches(vfont_t *font)
 // Populates a pre-allocated vfont_t with information on a linear font 
 // graphic.
 //
-static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
+static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
+                             bool requantize)
 {
-   int w, h, size, i, lumpnum;
+   int w = 0, h = 0, size = 0, i, lumpnum;
    bool foundsize = false;
 
    // in case this font was changed from patch to block:
@@ -405,7 +414,27 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 
    size = W_LumpLength(lumpnum);
 
-   if(fmt == FONT_FMT_PATCH)
+   if(fmt == FONT_FMT_PNG)
+   {
+      // convert PNG to linear
+      VPNGImage fontpng;
+
+      if(fontpng.readFromLump(wGlobalDir, lumpnum))
+      {
+         AutoPalette pal(wGlobalDir);
+         bool is8Bit256    = (fontpng.getBitDepth() == 8 && 
+                              fontpng.getNumColors() == 256);
+         bool doRequantize = (!is8Bit256 || requantize);
+
+         font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : NULL);
+
+         w = static_cast<int>(fontpng.getWidth());
+         h = static_cast<int>(fontpng.getHeight());
+
+         size = w * h;
+      }
+   }
+   else if(fmt == FONT_FMT_PATCH)
    {
       // convert patch to linear
       patch_t *p = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
@@ -431,7 +460,12 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    }
    
    if(!foundsize)
-      E_EDFLoggedErr(2, "E_LoadLinearFont: invalid lump dimensions\n");
+   {
+      E_EDFLoggedWarning(2, "Invalid lump dimensions for linear font %s\n", name);
+      if(!E_IsLinearLumpUsed(font, font->data))
+         efree(font->data);
+      font->data = NULL; // This font won't be able to draw, too bad.
+   }
 
    font->start = 0;
    font->end   = 127;
@@ -912,6 +946,7 @@ static void E_ProcessFont(cfg_t *sec)
    // process linear lump - if defined, this is a linear font automatically
    if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)
    {
+      bool requantize = false;
       int format;
       const char *fmtstr;
       tempstr = cfg_getstr(sec, ITEM_FONT_LLUMP);
@@ -924,7 +959,10 @@ static void E_ProcessFont(cfg_t *sec)
       if(format == NUM_FONT_FMTS)
          E_EDFLoggedErr(2, "E_ProcessFont: invalid linear format '%s'\n", fmtstr);
 
-      E_LoadLinearFont(font, tempstr, format);
+      // check for requantization flag (for PNGs)
+      requantize = cfg_getbool(sec, ITEM_FONT_REQUAN);
+
+      E_LoadLinearFont(font, tempstr, format, requantize);
    }
    else
    {

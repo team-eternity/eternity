@@ -4432,6 +4432,10 @@
 					Filter="h;hpp;hxx;hm;inl"
 					>
 					<File
+						RelativePath="..\source\autopalette.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\info.h"
 						>
 					</File>

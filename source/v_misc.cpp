@@ -28,6 +28,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -551,9 +552,8 @@ void V_InitMisc(void)
    // this only ever needs to be done once
    if(!flexTranInit)
    {
-      byte *palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
-      V_InitFlexTranTable(palette);
-      Z_ChangeTag(palette, PU_CACHE);
+      AutoPalette palette(wGlobalDir);
+      V_InitFlexTranTable(palette.get());      
    }
 }
 
