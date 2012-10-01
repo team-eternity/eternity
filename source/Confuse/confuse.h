@@ -603,16 +603,16 @@ cfg_t *       cfg_gettsec(cfg_t *cfg, const char *name, const char *title);
  */
 const char *  cfg_title(cfg_t *cfg);
 
-/** Return a displaced section. A displaced section occurs when more than
+/** 
+ * Return a displaced section. A displaced section occurs when more than
  * one section in the same option with the same name has been defined.
- *
  * @param cfg The configuration file context.
  * @return Returns a displaced section, or 0 if there is none.
  */
 cfg_t *       cfg_displaced(cfg_t *cfg);
 
-/** Indexed version of cfg_getmvprop().
- *
+/** 
+ * Indexed version of cfg_getmvprop().
  * @param cfg The configuration file context.
  * @param name The name of the option.
  * @param index Index of values. Zero based.
@@ -620,7 +620,15 @@ cfg_t *       cfg_displaced(cfg_t *cfg);
  */
 cfg_t *       cfg_getnmvprop(cfg_t *cfg, const char *name, unsigned int index);
 
-
+/**
+ * Return a pointer to the anonymous multi-valued property that is flagged
+ * as CFGF_TITLEPROPS inside the given cfg_t. This MVPROP holds the values of
+ * any options that are specified following a colon after the section's title.
+ * @param cfg The configuration file context.
+ * @return Context holding the title property values.
+ * @see cfg_getmvprop
+ */
+cfg_t *       cfg_gettitleprops(cfg_t *cfg);
 
 extern const char *confuse_copyright;
 extern const char *confuse_version;

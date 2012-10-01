@@ -1,10 +1,15 @@
-// EDF for Eternity Engine v3.40.21
-//  Thing types define monsters, fireballs, decorations, etc.
-//  Thing types may be defined elsewhere, and order is unimportant.
-//  User-defined thing types should use DeHackEd numbers greater
-//  than 10000 in all cases, to remain compatible with future versions
-//  of Eternity. See the EDF documentation for important information on
-//  the format of thing type fields.
+// 
+// things.edf
+// 
+// EDF for Eternity Engine v3.40.27
+//
+// thingtypes define monsters, fireballs, decorations, etc.
+// thingtypes may be defined elsewhere, and order is unimportant.
+// User-defined thing types should use DeHackEd numbers greater
+// than 10000 in all cases, to remain compatible with future versions
+// of Eternity. See the EDF documentation for important information on
+// the format of thingtype fields.
+//
 
 // Doom Thing Types ------------------------------------------------------------
 
@@ -31,19 +36,15 @@ includeifenabled("heretic/things.edf", "HERETIC")
 // shared by all gamemodes.
 //
 
-thingtype TeleportSpot 
+thingtype TeleportSpot : Mobj, 14, 42
 {
-  doomednum   14
-  dehackednum 42
-  flags       NOSECTOR|NOBLOCKMAP
+  flags NOSECTOR|NOBLOCKMAP
 }
 
 // BOOM Objects ----------------------------------------------------------------
 
-thingtype BoomPushPoint 
+thingtype BoomPushPoint : Mobj, 5001, 138
 {
-  doomednum   5001
-  dehackednum 138
   spawnstate  S_TNT1
   radius      0.0001220703125 // haleyjd: very odd values...
   height      0.0001220703125
@@ -51,10 +52,8 @@ thingtype BoomPushPoint
   flags       NOBLOCKMAP
 }
 
-thingtype BoomPullPoint 
+thingtype BoomPullPoint : Mobj, 5002, 139
 {
-  doomednum   5002
-  dehackednum 139
   spawnstate  S_TNT1
   radius      0.0001220703125 // haleyjd: very odd values...
   height      0.0001220703125
@@ -64,10 +63,8 @@ thingtype BoomPullPoint
 
 // MBF Objects -----------------------------------------------------------------
 
-thingtype MBFHelperDog 
+thingtype MBFHelperDog : Mobj, 888, 140
 {
-  doomednum   888
-  dehackednum 140
   spawnstate  S_DOGS_STND
   spawnhealth 500
   seestate    S_DOGS_RUN1
@@ -92,10 +89,8 @@ thingtype MBFHelperDog
 
 // SMMU Objects ----------------------------------------------------------------
 
-thingtype SMMUCameraSpot 
+thingtype SMMUCameraSpot : Mobj, 5003, 143
 {
-  doomednum   5003
-  dehackednum 143
   spawnstate  S_TNT1
   mass        10
   flags       NOBLOCKMAP
@@ -103,18 +98,16 @@ thingtype SMMUCameraSpot
 
 // Eternity Engine Objects -----------------------------------------------------
 
-thingtype Unknown 
+thingtype Unknown : Mobj, 5005
 {
-  doomednum   5005
   spawnstate  S_UNKNOWN
   radius      32.0
   height      56.0
   cflags      NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype EESkyboxCam 
+thingtype EESkyboxCam : Mobj, 5006
 {
-  doomednum   5006
   spawnstate  S_TNT1
   radius      10.0
   height      10.0
@@ -128,25 +121,22 @@ thingtype EEParticleFountain
   height     0.0
 }
 
-thingtype EETerrainLavaSplash 
+thingtype EETerrainLavaSplash : Mobj, -1, 145
 {
-  dehackednum 145
   spawnstate  S_LAVASPLASH1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
-thingtype EETerrainLavaSmoke 
+thingtype EETerrainLavaSmoke : Mobj, -1, 146
 {
-  dehackednum  146
   spawnstate   S_LAVASMOKE1
   cflags       NOBLOCKMAP|NOGRAVITY|NOSPLASH
   translucency 26624
 
 }
 
-thingtype EETerrainWaterSplash 
+thingtype EETerrainWaterSplash : Mobj, -1, 147
 {
-  dehackednum 147
   spawnstate  S_SPLASH1
   deathstate  S_SPLASHX
   radius      2.0
@@ -154,16 +144,14 @@ thingtype EETerrainWaterSplash
   cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
 }
 
-thingtype EETerrainWaterBase 
+thingtype EETerrainWaterBase : Mobj, -1, 148
 {
-  dehackednum 148
   spawnstate  S_SPLASHBASE1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
-thingtype EETerrainSludgeChunk 
+thingtype EETerrainSludgeChunk : Mobj, -1, 149
 {
-  dehackednum 149
   spawnstate  S_SLUDGE1
   deathstate  S_SLUDGEX
   radius      2.0
@@ -172,17 +160,14 @@ thingtype EETerrainSludgeChunk
   cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
 }
 
-thingtype EETerrainSludgeBase 
+thingtype EETerrainSludgeBase : Mobj, -1, 150
 {
-  dehackednum 150
   spawnstate  S_SLUDGEBASE1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
-thingtype EEParticleDrip 
+thingtype EEParticleDrip : Mobj, 5007, 151
 {
-  doomednum   5007
-  dehackednum 151
   spawnstate  S_TNT1
   radius      1.0
   height      1.0
@@ -192,107 +177,88 @@ thingtype EEParticleDrip
 
 // Hexen compatible map spots for scripting
 
-thingtype EEMapSpot 
+thingtype EEMapSpot : Mobj, 9001, 152
 {
-  doomednum   9001
-  dehackednum 152
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEMapSpotGravity 
+thingtype EEMapSpotGravity : Mobj, 9013, 153
 {
-  doomednum   9013
-  dehackednum 153
   spawnstate  S_TNT1
   cflags      DONTDRAW|NOSPLASH
 }
 
 // Polyobject spots
 
-thingtype EEPolyObjAnchor 
+thingtype EEPolyObjAnchor : Mobj, 9300, 154
 {
-  doomednum   9300
-  dehackednum 154
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEPolyObjSpawnSpot 
+thingtype EEPolyObjSpawnSpot : Mobj, 9301, 155
 {
-  doomednum   9301
-  dehackednum 155
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEPolyObjSpawnSpotCrush 
+thingtype EEPolyObjSpawnSpotCrush : Mobj, 9302, 156
 {
-  doomednum   9302
-  dehackednum 156
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEPolyObjSpawnSpotDamage
+thingtype EEPolyObjSpawnSpotDamage : Mobj, 9303, 157
 {
-  doomednum   9303
-  dehackednum 157
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Ambience object
 
-thingtype EEAmbience 
+thingtype EEAmbience : Mobj, 14065
 {
-  doomednum  14065
   spawnstate S_EE_AMBIENCE_SPAWN
   cflags     NOBLOCKMAP|NOGRAVITY
 }
 
 // Music Changer
 
-thingtype EEMusicChanger
+thingtype EEMusicChanger : Mobj, 14165
 {
-  doomednum  14165
   spawnstate S_TNT1
   cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Environmental Sequence Point
 
-thingtype EEEnviroSequence 
+thingtype EEEnviroSequence : Mobj, 1300
 {
-  doomednum  1300
   spawnstate S_TNT1
   cflags     NOBLOCKMAP|NOGRAVITY
 }
 
 // Sector Sequence Override
 
-thingtype EESectorSequence 
+thingtype EESectorSequence : Mobj, 1500
 {
-  doomednum  1500
   spawnstate S_TNT1
   cflags     NOBLOCKMAP|NOGRAVITY
 }
 
 // What's this??? o_O
 
-thingtype EERavenObj 
+thingtype EERavenObj : Unknown, 5008
 {
-  inherits   Unknown
-  doomednum  5008
   skinsprite EERV
 }
 
 // Doom Builder's 3D mode camera spots often get left in maps.
 // Let's define an Unknown object with the default DoomEdNum.
 
-thingtype DoomBuilderCameraSpot
+thingtype DoomBuilderCameraSpot : Unknown
 {
-  inherits     Unknown
   translucency 33%
 }
 

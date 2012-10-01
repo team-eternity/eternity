@@ -35,6 +35,11 @@
 #include "confuse.h"
 #include "lexer.h"
 
+//=============================================================================
+//
+// Globals
+//
+
 // haleyjd 03/08/03: Modifications for Eternity
 // #define PACKAGE_VERSION "Eternity version"
 // #define PACKAGE_STRING  "libConfuse"
@@ -44,6 +49,11 @@
 const char *confuse_version   = "Eternity version";
 const char *confuse_copyright = "libConfuse by Martin Hedenfalk <mhe@home.se>";
 const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
+
+//=============================================================================
+//
+// Utilities
+//
 
 #if defined(NDEBUG)
 #define cfg_assert(test) ((void)0)
@@ -88,6 +98,11 @@ static char *cfg_strndup(const char *s, size_t n)
    return r;
 }
 
+//=============================================================================
+//
+// Option Retrieval
+//
+
 cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
 {
    int i;
@@ -123,10 +138,6 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
    
    for(i = 0; sec->opts[i].name; i++)
    {
-      // haleyjd 09/19/12: skip any CFGF_TITLEPROPS options here.
-      if(is_set(CFGF_TITLEPROPS, sec->opts[i].flags))
-         continue;
-
       if(is_set(CFGF_NOCASE, sec->flags))
       {
          if(strcasecmp(sec->opts[i].name, name) == 0)
@@ -152,7 +163,7 @@ cfg_opt_t *cfg_gettitleopt(cfg_t *cfg)
    // search for the first MVPROP which is flagged as TITLEPROPS
    for(int i = 0; cfg->opts[i].name; i++)
    {
-      if(is_set(CFGF_TITLEPROPS, cfg->flags) &&
+      if(is_set(CFGF_TITLEPROPS, cfg->opts[i].flags) &&
          cfg->opts[i].type == CFGT_MVPROP)
          return &cfg->opts[i];
    }
@@ -393,6 +404,35 @@ signed int cfg_getflag(cfg_t *cfg, const char *name)
    return cfg_getnflag(cfg, name, 0);
 }
 
+//
+// cfg_gettitleprops
+//
+// haleyjd 09/30/12: Retrieve title properties for a section, if it has such.
+// The title properties are an effectively anonymous MVPROP which is specified
+// in the header of the section's definition following the title, as such:
+//
+//    secoptname title : opt, opt, opt, ...
+//    {
+//       normal section opts
+//    }
+//
+cfg_t *cfg_gettitleprops(cfg_t *cfg)
+{
+   cfg_opt_t *opt = cfg_gettitleopt(cfg);
+
+   if(opt)
+   {
+      cfg_assert(opt->type == CFGT_MVPROP);
+      cfg_assert(opt->values);
+      return opt->values[0]->section;
+   }
+   return 0;
+}
+
+//=============================================================================
+//
+// Internal Value Maintenance
+//
 
 static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
@@ -634,6 +674,11 @@ void cfg_free_value(cfg_opt_t *opt)
    opt->nvalues = 0;
 }
 
+//=============================================================================
+//
+// Callbacks
+//
+
 cfg_errfunc_t cfg_set_error_function(cfg_t *cfg, cfg_errfunc_t errfunc)
 {
    cfg_errfunc_t old;
@@ -702,6 +747,11 @@ static int call_function(cfg_t *cfg, cfg_opt_t *opt, cfg_opt_t *funcopt)
    return ret;
 }
 
+//=============================================================================
+//
+// Parser
+//
+
 // haleyjd 04/03/08: state enumeration
 enum
 {
@@ -733,6 +783,11 @@ struct cfg_pstate_t
    int   tok;            // current token value
    int   skip_token;     // skip the next token if > 0
    int   propindex;      // index within current mvprop option
+
+   // Data needed to parse title options
+   cfg_value_t *titleParentVal; // remembered parent section value
+   cfg_opt_t   *backupOpt;      // remembered option
+   int          mv_exit_state;  // state to return to from MVPROPS loop
    
    cfg_opt_t   *opt;     // current option
    cfg_value_t *val;     // current value
@@ -860,8 +915,9 @@ static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       // must have at least one valid option
       cfg_assert(pstate.opt->type != CFGT_NONE);
 
-      pstate.state      = STATE_EXPECT_VALUE;
-      pstate.next_state = STATE_EXPECT_PROPNEXT;
+      pstate.state         = STATE_EXPECT_VALUE;
+      pstate.next_state    = STATE_EXPECT_PROPNEXT;
+      pstate.mv_exit_state = STATE_EXPECT_OPTION;
    }
    else if(is_set(CFGF_LIST, pstate.opt->flags))
    {
@@ -979,25 +1035,84 @@ static int cfg_pstate_expectlistnext(cfg_t *cfg, int level, cfg_pstate_t &pstate
 //
 static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate)
 {
-   if(pstate.tok != '{')
+   // Found title options indicator?
+   if(pstate.tok == ':')
    {
-      cfg_error(cfg, "missing opening brace for section '%s'\n",
-         pstate.opt->name);
-      return STATE_ERROR;
+      cfg_t     *titleParentCfg;
+      cfg_opt_t *titlePropsOpt;
+
+      // Must *not* be returning from parsing a previous title option sequence
+      if(pstate.titleParentVal)
+      {
+         cfg_error(cfg, "multiple title option sets are not allowed\n");
+         return STATE_ERROR;
+      }
+
+      // Remember the current option
+      pstate.backupOpt = pstate.opt;
+
+      // Get the parent section (the one we were about to parse)
+      pstate.titleParentVal = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+      if(!pstate.titleParentVal)
+         return STATE_ERROR;
+
+      titleParentCfg = pstate.titleParentVal->section;
+
+      // Find an MVPROP option in the parent section that is CFGF_TITLEPROPS
+      if(!(titlePropsOpt = cfg_gettitleopt(titleParentCfg)))
+         return STATE_ERROR;
+
+      // Add its value to the parent section
+      pstate.val = cfg_setopt(titleParentCfg, titlePropsOpt, 
+                              estrdup(titlePropsOpt->name));
+      if(!pstate.val || !pstate.val->section || !pstate.val->section->opts)
+         return STATE_ERROR;
+
+      // Parse the MVPROP that follows
+      pstate.propindex = 0;
+      pstate.opt = &(pstate.val->section->opts[pstate.propindex++]);
+      pstate.state         = STATE_EXPECT_VALUE;
+      pstate.next_state    = STATE_EXPECT_PROPNEXT;
+      pstate.mv_exit_state = STATE_EXPECT_SECBRACE; // Return here when finished
    }
+   else
+   {
+      // Restore backed up option if needed
+      if(pstate.backupOpt)
+      {
+         pstate.opt = pstate.backupOpt;
+         pstate.backupOpt = 0;
+      }
 
-   // Get new value
-   pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
-   pstate.opttitle = 0;
-   if(!pstate.val)
-      return STATE_ERROR;
+      if(pstate.tok != '{')
+      {
+         cfg_error(cfg, "missing opening brace for section '%s'\n",
+            pstate.opt->name);
+         return STATE_ERROR;
+      }
 
-   // Recursively parse the interior of the section
-   if(cfg_parse_internal(pstate.val->section, level+1) != STATE_EOF)
-      return STATE_ERROR;
+      // Did we just return from parsing title options?
+      if(pstate.titleParentVal)
+      {
+         pstate.val = pstate.titleParentVal;
+         pstate.titleParentVal = 0;
+      }
+      else
+      {
+         // Get new value
+         pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+         pstate.opttitle = 0;
+         if(!pstate.val)
+            return STATE_ERROR;
+      }
 
-   cfg->line = pstate.val->section->line;
-   pstate.state = STATE_EXPECT_OPTION;
+      // Recursively parse the interior of the section
+      if(cfg_parse_internal(pstate.val->section, level+1) != STATE_EOF)
+         return STATE_ERROR;
+
+      cfg->line = pstate.val->section->line;
+      pstate.state = STATE_EXPECT_OPTION;
+   }
 
    return STATE_CONTINUE;
 }
@@ -1184,7 +1299,7 @@ static int cfg_pstate_expectpropnext(cfg_t *cfg, int level, cfg_pstate_t &pstate
       pstate.opt = &(pstate.val->section->opts[pstate.propindex++]);
 
       if(pstate.opt->type == CFGT_NONE) // reached CFG_END?
-         pstate.state = STATE_EXPECT_OPTION;
+         pstate.state = pstate.mv_exit_state;
       else
       {
          pstate.state      = STATE_EXPECT_VALUE;
@@ -1194,7 +1309,7 @@ static int cfg_pstate_expectpropnext(cfg_t *cfg, int level, cfg_pstate_t &pstate
    else
    {
       pstate.skip_token = 1; // reprocess the current token
-      pstate.state = STATE_EXPECT_OPTION;
+      pstate.state = pstate.mv_exit_state;
    }
    
    return STATE_CONTINUE;
@@ -1416,7 +1531,10 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    return cfg_lexer_include(cfg, data, argv[0], -1);
 }
 
+//=============================================================================
+//
 // haleyjd 04/03/08: added cfg_t value-setting functions from libConfuse 2.0
+//
 
 static cfg_value_t *cfg_getval(cfg_opt_t *opt, unsigned int index)
 {
