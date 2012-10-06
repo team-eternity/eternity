@@ -1080,6 +1080,29 @@ int R_TranslationNumForName(const char *name)
    return result;
 }
 
+//
+// R_GetIdentityMap
+//
+// haleyjd 09/08/12: Returns a pointer to the identity translation.
+// There is one global shared copy of it, which can neither be freed 
+// nor have its tag changed. If you really want/need your own copy 
+// of it for some reason, get it and then memcpy it into your own 
+// buffer.
+//
+byte *R_GetIdentityMap()
+{
+   static byte *identityMap;
+
+   if(!identityMap)
+   {
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      for(int i = 0; i < 256; i++)
+         identityMap[i] = i;
+   }
+
+   return identityMap;
+}
+
 ////////////////////////////////////////////////////////////////
 // SoM: moved span drawers to r_span.c
 ////////////////////////////////////////////////////////////////

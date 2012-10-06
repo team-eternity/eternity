@@ -158,6 +158,25 @@ public:
    {
       return type->isAncestorOf(getDynamicType());
    }
+
+   //
+   // Forwarding statics for Type class utilities
+   //
+
+   static Type *FindType(const char *pName)
+   {
+      return Type::FindType(pName);
+   }
+
+   template<typename T> T *FindType(const char *pName)
+   {
+      return Type::FindType<T>(pName);
+   }
+
+   template<typename T> typename T::Type *FindTypeCls(const char *pName)
+   {
+      return Type::FindType<typename T::Type>(pName);
+   }
 };
 
 //
@@ -221,8 +240,7 @@ private:
 #define IMPLEMENT_RTTI_TYPE(name) \
 name::Type name::StaticType(#name, &Super::StaticType);
 
-// Inspired by ZDoom :P
-#define RUNTIME_CLASS(cls) (&cls::StaticType)
+#define RTTI(cls) (&cls::StaticType)
 
 //
 // runtime_cast

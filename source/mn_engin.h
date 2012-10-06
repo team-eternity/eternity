@@ -154,13 +154,20 @@ struct menu_t
 // MN_Drawer. Also events caught by MN_Responder are
 // sent to current_menuwidget->responder
 
-typedef struct menuwidget_s
+struct menuwidget_t
 {
   void (*drawer)();
   bool (*responder)(event_t *ev);
   void (*ticker)();   // haleyjd 05/29/06
-  bool fullscreen; // haleyjd: optimization for fullscreen widgets
-} menuwidget_t;
+  bool fullscreen;    // haleyjd: optimization for fullscreen widgets
+  
+  menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
+};
+
+// haleyjd 08/31/12: A proper widget stack
+void   MN_PushWidget(menuwidget_t *widget);
+void   MN_PopWidget();
+size_t MN_NumActiveWidgets();
 
 // responder for events
 
@@ -190,8 +197,6 @@ void MN_Init(void);
 void MN_StartControlPanel(void);
 
 void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
-
-void MN_DrawBackground(char *patch, byte *screen);  // killough 11/98
 
 void MN_DrawCredits(void);    // killough 11/98
 

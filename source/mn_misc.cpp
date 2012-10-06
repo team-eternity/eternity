@@ -68,6 +68,12 @@ static bool popupMenuActive;
 static char        popup_message[1024];
 static const char *popup_message_command; // console command to run
 
+static void MN_PopupDrawer();
+static bool MN_PopupResponder(event_t *ev);
+
+// widget for popup message alternate draw
+menuwidget_t popup_widget = { MN_PopupDrawer, MN_PopupResponder };
+
 //
 // haleyjd 07/27/05: not all questions should have to run console
 // commands. It's inefficient.
@@ -96,6 +102,7 @@ static void WriteCenteredText(char *message)
    char *rover;
    const char *buffer;
    int x, y;
+   int w, h;
 
    qstr.clearOrCreate(128);
    
@@ -103,9 +110,16 @@ static void WriteCenteredText(char *message)
    // use one buffer and increase the size as neccesary
    // haleyjd 02/22/04: qstring handles this for us now
 
-   y = (SCREENHEIGHT - V_FontStringHeight(menu_font_normal, popup_message)) / 2;
+   w = V_FontStringWidth(menu_font_normal, popup_message);
+   h = V_FontStringHeight(menu_font_normal, popup_message);
+
+   x = (SCREENWIDTH  - w) / 2;
+   y = (SCREENHEIGHT - h) / 2;
    qstr.clear();
    rover = message;
+
+   if(popup_widget.prev) // up over another widget?
+      V_DrawBox(x - 8, y - 8, w + 16, h + 16);
 
    while(*rover)
    {
@@ -131,6 +145,10 @@ static void WriteCenteredText(char *message)
 
 void MN_PopupDrawer(void)
 {
+   // haleyjd 08/31/12: If we popped up over another widget, draw it.
+   if(popup_widget.prev && popup_widget.prev->drawer)
+      popup_widget.prev->drawer();
+   
    WriteCenteredText(popup_message);
 }
 
@@ -154,7 +172,7 @@ bool MN_PopupResponder(event_t *ev)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         current_menuwidget = NULL;
+         MN_PopWidget();
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
       }
       break;
@@ -176,7 +194,7 @@ bool MN_PopupResponder(event_t *ev)
             C_RunTextCmd(popup_message_command);
          }
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
-         current_menuwidget = NULL;  // kill message
+         MN_PopWidget();  // kill message
       }
       if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
       {
@@ -185,7 +203,7 @@ bool MN_PopupResponder(event_t *ev)
          action_menu_toggle = action_menu_previous = false;
          menuactive = popupMenuActive;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
-         current_menuwidget = NULL; // kill message
+         MN_PopWidget(); // kill message
       }
       break;
       
@@ -195,9 +213,6 @@ bool MN_PopupResponder(event_t *ev)
    
    return true; // always eat key
 }
-
-// widget for popup message alternate draw
-menuwidget_t popup_widget = {MN_PopupDrawer, MN_PopupResponder};
 
 //
 // MN_Alert
@@ -215,7 +230,7 @@ void MN_Alert(const char *message, ...)
    MN_ActivateMenu();
    
    // hook in widget so message will be displayed
-   current_menuwidget = &popup_widget;
+   MN_PushWidget(&popup_widget);
    popup_message_type = popup_alert;
    
    va_start(args, message);
@@ -237,8 +252,12 @@ void MN_Question(const char *message, const char *command)
    MN_ActivateMenu();
    
    // hook in widget so message will be displayed
-   current_menuwidget = &popup_widget;
-   
+   MN_PushWidget(&popup_widget);
+
+   // If a widget we popped up over is fullscreen, so are we, since
+   // we'll call down to its drawer. Otherwise, not.
+   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
+
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_message_command = command;
@@ -259,7 +278,11 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
    MN_ActivateMenu();
    
    // hook in widget so message will be displayed
-   current_menuwidget = &popup_widget;
+   MN_PushWidget(&popup_widget);
+
+   // If a widget we popped up over is fullscreen, so are we, since
+   // we'll call down to its drawer. Otherwise, not.
+   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
    
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
@@ -444,6 +467,8 @@ void MN_DrawCredits(void)
                    0, y, &subscreen43);
 }
 
+extern menuwidget_t helpscreen_widget; // actually just below...
+
 void MN_HelpDrawer(void)
 {
    if(helpscreens[viewing_helpscreen].Drawer)
@@ -454,6 +479,11 @@ void MN_HelpDrawer(void)
    {
       // haleyjd: support raw lumps
       int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
+
+      // if the screen is larger than 4:3, we need to draw pillars ourselves,
+      // as D_Display won't be able to know if this widget is fullscreen or not
+      // in time to do it as usual.
+      D_DrawPillars();
 
       // haleyjd 05/18/09: use smart background drawer
       V_DrawFSBackground(&subscreen43, lumpnum);
@@ -506,7 +536,7 @@ bool MN_HelpResponder(event_t *ev)
 
       // cancel helpscreen
 cancel:
-      current_menuwidget = NULL;
+      MN_PopWidget();
       // haleyjd 05/29/06: maintain previous menu activation state
       if(!help_prev_menuactive)
          menuactive = false;
@@ -528,7 +558,7 @@ CONSOLE_COMMAND(help, 0)
    MN_FindHelpScreens();        // search for help screens
    
    // hook in widget to display menu
-   current_menuwidget = &helpscreen_widget;
+   MN_PushWidget(&helpscreen_widget);
    
    // start on first screen
    viewing_helpscreen = 0;
@@ -543,7 +573,7 @@ CONSOLE_COMMAND(credits, 0)
    MN_FindCreditScreens();        // search for help screens
    
    // hook in widget to display menu
-   current_menuwidget = &helpscreen_widget;
+   MN_PushWidget(&helpscreen_widget);
    
    // start on first screen
    viewing_helpscreen = 0;
@@ -634,7 +664,7 @@ bool MN_MapColourResponder(event_t *ev)
    {
       // cancel colour selection
       action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL;
+      MN_PopWidget();
       return true;
    }
 
@@ -648,7 +678,7 @@ bool MN_MapColourResponder(event_t *ev)
       
       // kill selector
       action_menu_confirm = false;
-      current_menuwidget = NULL;
+      MN_PopWidget();
       return true;
    }
 
@@ -670,9 +700,81 @@ menuwidget_t colour_widget =
 
 void MN_SelectColour(const char *variable_name)
 {
-   current_menuwidget = &colour_widget;
+   MN_PushWidget(&colour_widget);
    colour_command = C_GetCmdForName(variable_name);
    selected_colour = *(int *)colour_command->variable->variable;
+}
+
+//=============================================================================
+//
+// Font Test Widget
+//
+
+static vfont_t *testfont; // font to test
+static qstring  teststr;  // string for test
+
+static void MN_fontTestDrawer()
+{
+   int totalHeight = SCREENHEIGHT - testfont->absh * 2;
+   int itemHeight  = totalHeight / (CR_BUILTIN + 1);   
+   int x = 160 - V_FontStringWidth(testfont, teststr.constPtr())/2;
+   int y = testfont->absh;
+
+   V_DrawBackground(mn_background_flat, &vbscreen);
+   
+   for(int i = 0; i <= CR_BUILTIN; i++)
+   {
+      V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
+      y += itemHeight;
+   }
+}
+
+static bool MN_fontTestResponder(event_t *ev)
+{
+   if(action_menu_toggle || action_menu_previous)
+   {
+      // exit widget
+      action_menu_toggle = action_menu_previous = false;
+      MN_PopWidget();
+      teststr.freeBuffer();
+   }
+
+   return true;
+}
+
+static menuwidget_t fonttest_widget = 
+{
+   MN_fontTestDrawer, 
+   MN_fontTestResponder, 
+   NULL, 
+   true
+};
+
+CONSOLE_COMMAND(mn_testfont, 0)
+{
+   vfont_t *font;
+   const char *fontName;
+
+   if(Console.argc < 1)
+   {
+      C_Puts(FC_ERROR "Usage: mn_testfont fontname [message]");
+      return;
+   }
+   
+   fontName = Console.argv[0]->constPtr();
+   if(!(font = E_FontForName(fontName)))
+   {
+      C_Printf(FC_ERROR "Unknown font %s\n", fontName);
+      return;
+   }
+
+   if(Console.argc >= 2)
+      teststr = *Console.argv[1];
+   else
+      teststr = "ABCDEFGHIJKL";
+
+   testfont = font;   
+   MN_PushWidget(&fonttest_widget);
 }
 
 
@@ -680,6 +782,7 @@ void MN_AddMiscCommands(void)
 {
    C_AddCommand(credits);
    C_AddCommand(help);
+   C_AddCommand(mn_testfont);
 }
 
 // EOF

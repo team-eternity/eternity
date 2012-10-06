@@ -39,6 +39,7 @@
 #include "e_things.h" 
 #include "g_game.h"
 #include "in_lude.h"
+#include "in_stats.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -49,9 +50,6 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "v_video.h"
-
-
-
 
 // Globals
 
@@ -267,6 +265,9 @@ void IN_DrawBackground(void)
 //
 void IN_Start(wbstartstruct_t *wbstartstruct)
 {
+   // haleyjd 09/10/12: record high scores
+   INStatsManager::Get().recordStats(wbstartstruct);
+   
    // haleyjd 03/24/05: allow skipping stats intermission
    if(LevelInfo.killStats)
    {
@@ -289,6 +290,29 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    InterFuncs = GameModeInfo->interfuncs;
 
    InterFuncs->Start(wbstartstruct);
+}
+
+//
+// IN_shutDown
+//
+// atexit handler.
+//
+static void IN_shutDown()
+{
+   INStatsManager::Get().saveStats();
+}
+
+//
+// IN_Init
+//
+// Called at startup.
+//
+void IN_Init()
+{
+   // haleyjd 09/10/12: Initialize the statistics manager.
+   INStatsManager::Init();
+
+   atexit(IN_shutDown);
 }
 
 // EOF

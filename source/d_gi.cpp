@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
@@ -847,12 +848,14 @@ static gamemodeinfo_t giDoomSW =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -941,12 +944,14 @@ static gamemodeinfo_t giDoomReg =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1035,12 +1040,14 @@ static gamemodeinfo_t giDoomRetail =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1129,12 +1136,14 @@ static gamemodeinfo_t giDoomCommercial =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DM2BRDRFLAT,      // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1223,12 +1232,14 @@ static gamemodeinfo_t giHereticSW =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HSWBRDRFLAT,      // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1321,12 +1332,14 @@ static gamemodeinfo_t giHereticReg =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HREGBRDRFLAT,     // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1458,7 +1471,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
 //
 void D_InitGMIPostWads(void)
 {
-   byte *palette;
+   AutoPalette pal(wGlobalDir);
    gamemodeinfo_t *gi = GameModeInfo;
    missioninfo_t  *mi = gi->missionInfo;
 
@@ -1468,12 +1481,8 @@ void D_InitGMIPostWads(void)
    if(!(mi->flags & MI_DEMOIFDEMO4) || W_CheckNumForName("DEMO4") >= 0)
       OVERRIDE(demoStates, NULL);
 
-   palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
-
-   GameModeInfo->blackIndex = V_FindBestColor(palette, 0,   0,   0);
-   GameModeInfo->whiteIndex = V_FindBestColor(palette, 255, 255, 255);
-
-   Z_ChangeTag(palette, PU_CACHE);
+   GameModeInfo->blackIndex = V_FindBestColor(pal.get(), 0,   0,   0);
+   GameModeInfo->whiteIndex = V_FindBestColor(pal.get(), 255, 255, 255);
 }
 
 // EOF

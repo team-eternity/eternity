@@ -28,6 +28,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -35,6 +36,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "i_video.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
@@ -42,6 +44,7 @@
 #include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -409,7 +412,7 @@ static void V_initSubScreen43()
    int subwidth;
    int offset;
 
-   if(vbscreen.getVirtualAspectRatio() <= 4.0/3.0)
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
    {
       subwidth = vbscreen.width;
       offset   = 0;
@@ -549,9 +552,8 @@ void V_InitMisc(void)
    // this only ever needs to be done once
    if(!flexTranInit)
    {
-      byte *palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
-      V_InitFlexTranTable(palette);
-      Z_ChangeTag(palette, PU_CACHE);
+      AutoPalette palette(wGlobalDir);
+      V_InitFlexTranTable(palette.get());      
    }
 }
 
@@ -565,26 +567,88 @@ VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
 
 CONSOLE_COMMAND(v_modelist, 0)
 {
-   /*
-   videomode_t* videomode = videomodes;
-   
-   C_Printf(FC_HI "video modes:\n");
-   
-   while(videomode->description)
+}
+
+CONSOLE_COMMAND(v_fontcolors, 0)
+{
+   vfont_t *font;
+   byte    *colors;
+   FILE    *f;
+   qstring  path;
+   const char *fontName;
+
+   if(Console.argc != 2)
    {
-      C_Printf("%i: %s\n",(int)(videomode-videomodes),
-               videomode->description);
-      ++videomode;
+      C_Puts(FC_ERROR "Usage: v_fontcolors fontname filename");
+      return;
    }
-   */
+   
+   fontName = Console.argv[0]->constPtr();
+   if(!(font = E_FontForName(fontName)))
+   {
+      C_Printf(FC_ERROR "Unknown font %s", fontName);
+      return;
+   }
+
+   if(!(colors = V_FontGetUsedColors(font)))
+   {
+      C_Puts(FC_ERROR "Cannot get used colors for this font");
+      return;
+   }
+
+   path = userpath;
+   path.pathConcatenate(Console.argv[1]->constPtr());
+
+   if((f = fopen(path.constPtr(), "w")))
+   {
+      fprintf(f, "Font %s uses the following colors:\n", fontName);
+      for(int i = 0; i < 256; i++)
+      {
+         if(colors[i] == 1)
+            fprintf(f, "%d\n", i);
+      }
+      fclose(f);
+      C_Printf(FC_HI "Wrote output to %s", path.constPtr());
+   }
+   else
+      C_Puts(FC_ERROR "Could not open file for output");
+
+   efree(colors);
 }
 
 CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}
 
+// Dump a patch to file as a PNG. This involves a *lot* of code.
+CONSOLE_COMMAND(v_dumppatch, 0)
+{
+   qstring filename;
+   const char *lump;
+   int fillcolor;
+
+   if(Console.argc < 3)
+   {
+      C_Puts("Usage: v_dumppatch lumpname filename fillcolor");
+      return;
+   }
+
+   lump = Console.argv[0]->constPtr();
+   filename = usergamepath;
+   filename.pathConcatenate(Console.argv[1]->constPtr());
+   filename.addDefaultExtension(".png");
+
+   fillcolor = Console.argv[2]->toInt();
+   if(fillcolor < 0 || fillcolor >= 255)
+      fillcolor = 247;
+
+   V_WritePatchAsPNG(lump, filename.constPtr(), static_cast<byte>(fillcolor));
+}
+
 void V_AddCommands(void)
 {
    C_AddCommand(v_modelist);
+   C_AddCommand(v_fontcolors);
    C_AddCommand(v_ticker);
+   C_AddCommand(v_dumppatch);
 }
 
 // EOF

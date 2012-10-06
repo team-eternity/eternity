@@ -31,9 +31,12 @@
 #include "r_patch.h"
 #include "v_patch.h"
 #include "v_patchfmt.h"
+#include "v_png.h"
 
 // A global instance of PatchLoader for passing to WadDirectory methods
 PatchLoader PatchLoader::patchFmt;
+
+size_t PatchLoader::DefaultPatchSize;
 
 //
 // PatchLoader::GetDefaultPatch
@@ -52,30 +55,101 @@ patch_t *PatchLoader::GetDefaultPatch()
       byte patchdata[4];
       patchdata[0] = patchdata[3] = GameModeInfo->blackIndex;
       patchdata[1] = patchdata[2] = GameModeInfo->whiteIndex;
-      defaultPatch = V_LinearToPatch(patchdata, 2, 2, NULL, PU_PERMANENT);
+      defaultPatch = V_LinearToPatch(patchdata, 2, 2, &DefaultPatchSize, PU_PERMANENT);
    }
 
    return defaultPatch;
 }
 
 //
-// PatchLoader::verifyData
+// PatchLoader::checkData
 //
-// Not implemented yet; should do formatting verification on a patch lump.
+// Check the format of patch_t data for validity
 //
-bool PatchLoader::verifyData(const void *date, size_t size) const
+bool PatchLoader::checkData(void *data, size_t size) const
 {
+   // Must be at least as large as the header.
+   if(size < 8)
+      return false; // invalid header
+
+   patch_t *patch  = static_cast<patch_t *>(data);   
+   short    width  = SwapShort(patch->width);
+   short    height = SwapShort(patch->height);
+
+   // Need valid width and height
+   if(width < 0 || height < 0)
+      return false; // invalid graphic size
+
+   // Number of bytes needed for columnofs
+   size_t numBytesNeeded = width * sizeof(int32_t);
+   if(size - 8 < numBytesNeeded)
+      return false; // invalid columnofs table size
+
+   // Verify all columns
+   for(int i = 0; i < width; i++)
+   {
+      size_t offset = static_cast<size_t>(SwapLong(patch->columnofs[i]));
+
+      if(offset >= size)
+         return false; // offset lies outside the data
+
+      // Verify the series of posts at that offset
+      byte *base  = reinterpret_cast<byte *>(patch);
+      byte *rover = base + offset;
+      while(*rover != 0xff)
+      {
+         byte *nextPost = rover + *(rover + 1) + 4;
+
+         if(nextPost >= base + size)
+            return false; // Unterminated series of posts, or too long
+
+         rover = nextPost;
+      }
+   }
+
+   // Patch is valid!
    return true;
 }
 
 //
-// PatchLoader::formatData
+// PatchLoader::verifyData
+//
+// Do formatting verification on a patch lump.
+//
+WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
+{
+   lumpinfo_t::lumpformat fmt = formatIndex();
+
+   if(!checkData(lump->cache[fmt], lump->size))
+   {
+      // Maybe it's a PNG?
+      if(lump->size > 8 && VPNGImage::CheckPNGFormat(lump->cache[fmt]))
+      {
+         int curTag = Z_CheckTag(lump->cache[fmt]);
+         Z_Free(lump->cache[fmt]);
+         VPNGImage::LoadAsPatch(lump->selfindex, curTag, &lump->cache[fmt]);
+         if(lump->cache[fmt])
+            return CODE_NOFMT;
+      }
+
+      // Return default patch.
+      if(lump->cache[fmt])
+         Z_Free(lump->cache[fmt]);
+      lump->cache[fmt] = GetDefaultPatch();
+      return CODE_NOFMT;
+   }
+
+   return CODE_OK;
+}
+
+//
+// PatchLoader::formatRaw
 //
 // Format the patch_t header by swapping the short and long integer fields.
 //
-bool PatchLoader::formatData(void *data, size_t size) const
+void PatchLoader::formatRaw(void *data) const
 {
-   patch_t *patch = (patch_t *)data;
+   patch_t *patch = static_cast<patch_t *>(data);
 
    patch->width      = SwapShort(patch->width);
    patch->height     = SwapShort(patch->height);
@@ -84,19 +158,34 @@ bool PatchLoader::formatData(void *data, size_t size) const
 
    for(int i = 0; i < patch->width; i++)
       patch->columnofs[i] = SwapLong(patch->columnofs[i]);
-
-   return true;
 }
 
 //
-// PatchLoader::getErrorMode
+// PatchLoader::formatData
 //
-// For now, errors will be ignored, but this should be changed in the future
-// as is appropriate to prevent crashes.
+// Call formatRaw on the lump's patch-format cache.
 //
-int PatchLoader::getErrorMode() const 
+WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
 {
-   return EM_IGNORE;
+   formatRaw(lump->cache[formatIndex()]);
+   return CODE_OK;
+}
+
+//
+// PatchLoader::VerifyAndFormat
+//
+// Static utility for use outside of w_wad code; verifies the format without
+// doing any possible substitutions (PNG -> patch, default patch, etc.) and
+// then, if it's valid, formats it.
+//
+bool PatchLoader::VerifyAndFormat(void *data, size_t size)
+{
+   if(patchFmt.checkData(data, size))
+   {
+      patchFmt.formatRaw(data);
+      return true;
+   }
+   return false;
 }
 
 //
@@ -125,6 +214,37 @@ patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag)
       ret = GetDefaultPatch();
 
    return ret;
+}
+
+//
+// PatchLoader::GetUsedColors
+//
+// Utility method. Sets pal[index] to 1 for every color that is used in the
+// given patch graphic. You should allocate and initialize pal as a 256-byte
+// array before calling this; it won't be touched outside the used color
+// indices, allowing multiple calls to this function to composite the range
+// of used colors in multiple patches.
+//
+void PatchLoader::GetUsedColors(patch_t *patch, byte *pal)
+{
+   int16_t width = patch->width;
+
+   for(int i = 0; i < width; i++)
+   {
+      size_t  offset = static_cast<size_t>(patch->columnofs[i]);
+      byte   *rover  = reinterpret_cast<byte *>(patch) + offset;
+
+      while(*rover != 0xff)
+      {
+         int   count  = *(rover + 1);
+         byte *source = rover + 3;
+         
+         while(count--)
+            pal[*source++] = 1;
+
+         rover = source + 1;
+      }
+   }
 }
 
 // EOF

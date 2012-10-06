@@ -1673,6 +1673,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\source\in_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\in_stats.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Source\wi_stuff.cpp"
 					>
 					<FileConfiguration
@@ -4294,6 +4302,10 @@
 				Name="Z_"
 				>
 				<File
+					RelativePath="..\source\z_auto.h"
+					>
+				</File>
+				<File
 					RelativePath="..\source\z_native.cpp"
 					>
 					<FileConfiguration
@@ -4419,6 +4431,10 @@
 					Name="Misc Headers"
 					Filter="h;hpp;hxx;hm;inl"
 					>
+					<File
+						RelativePath="..\source\autopalette.h"
+						>
+					</File>
 					<File
 						RelativePath="..\Source\info.h"
 						>

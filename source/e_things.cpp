@@ -155,6 +155,11 @@ int UnknownThingType;
 #define ITEM_TNG_XSCALE       "xscale"
 #define ITEM_TNG_YSCALE       "yscale"
 
+// Title properties
+#define ITEM_TNG_TITLE_SUPER     "superclass"
+#define ITEM_TNG_TITLE_DOOMEDNUM "doomednum"
+#define ITEM_TNG_TITLE_DEHNUM    "dehackednum"
+
 // ACS Spawn Data Sub-Block
 #define ITEM_TNG_ACS_SPAWN    "acs_spawndata"
 #define ITEM_TNG_ACS_NUM      "num"
@@ -382,6 +387,15 @@ static basicttype_t BasicThingTypes[] =
 // Thing Type Options
 //
 
+// title properties
+static cfg_opt_t thing_tprops[] =
+{
+   CFG_STR(ITEM_TNG_TITLE_SUPER,      0, CFGF_NONE),
+   CFG_INT(ITEM_TNG_TITLE_DOOMEDNUM, -1, CFGF_NONE),
+   CFG_INT(ITEM_TNG_TITLE_DEHNUM,    -1, CFGF_NONE),
+   CFG_END()
+};
+
 // acs spawndata sub-section
 static cfg_opt_t acs_data[] =
 {
@@ -473,6 +487,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 cfg_opt_t edf_thing_opts[] =
 {
+   CFG_TPROPS(thing_tprops,       CFGF_NOCASE),
    CFG_STR(ITEM_TNG_INHERITS,  0, CFGF_NONE),
    THINGTYPE_FIELDS
 };
@@ -734,8 +749,10 @@ void E_CollectThings(cfg_t *cfg)
    // cycle through the thingtypes defined in the cfg
    for(i = 0; i < numthingtypes; i++)
    {
-      cfg_t *thingcfg = cfg_getnsec(cfg, EDF_SEC_THING, i);
-      const char *name = cfg_title(thingcfg);
+      cfg_t *thingcfg   = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      const char *name  = cfg_title(thingcfg);
+      cfg_t *titleprops = NULL;
+      int dehnum = -1;
 
       // This is a new mobjinfo, whether or not one already exists by this name
       // in the hash table. For subsequent addition of EDF thingtypes at runtime,
@@ -750,9 +767,21 @@ void E_CollectThings(cfg_t *cfg)
       // add to name hash
       thing_namehash.addObject(mi);
 
+      // check for titleprops definition first
+      if(cfg_size(thingcfg, "#title") > 0)
+      {
+         titleprops = cfg_gettitleprops(thingcfg);
+         if(titleprops)
+            dehnum = cfg_getint(titleprops, ITEM_TNG_TITLE_DEHNUM);
+      }
+
+      // If undefined, check the legacy value inside the section
+      if(dehnum == -1)
+         dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM);
+
       // process dehackednum and add thing to dehacked hash table,
       // if appropriate
-      if((mi->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
+      if((mi->dehnum = dehnum) >= 0)
          thing_dehhash.addObject(mi);
 
       // set generation
@@ -865,7 +894,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
    MetaObject *obj;
 
-   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
 }
 
@@ -880,7 +909,7 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
    MetaObject *obj = NULL;
    MetaState  *ret = NULL;
    
-   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       ret = static_cast<MetaState *>(obj);
 
    return ret;
@@ -895,18 +924,14 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 // E_ModFieldName
 //
 // Constructs the appropriate label name for a metaproperty that
-// uses a mod name as a prefix.
+// uses a mod name as a suffix.
 // Don't cache the return value.
 //
 const char *E_ModFieldName(const char *base, emod_t *mod)
 {
    static qstring namebuffer;
 
-   namebuffer.clearOrCreate(64);
-
-   namebuffer  = base;
-   namebuffer += '.'; 
-   namebuffer += mod->name;
+   namebuffer.clear() << base << '.' << mod->name;
 
    return namebuffer.constPtr();
 }
@@ -1370,8 +1395,10 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
       // we don't add damage factors for the unknown damage type
       if(mod->num != 0)
       {
-         info->meta->setDouble(E_ModFieldName("damagefactor", mod),
-                               cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR));
+         double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
+         int    dfi = static_cast<int>(M_DoubleToFixed(df));
+
+         info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
       }
    }
 }
@@ -1540,6 +1567,63 @@ static void E_CopyThing(int num, int pnum)
    this_mi->doomednum = -1;
 }
 
+struct thingtitleprops_t
+{
+   const char *superclass;
+   int dehackednum;
+   int doomednum;
+};
+
+//
+// E_getThingTitleProps
+//
+// Retrieve all the values in the thing's title properties, if such
+// are defined.
+//
+void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
+{
+   cfg_t *titleprops;
+
+   if(def && cfg_size(thingsec, "#title") > 0 && 
+      (titleprops = cfg_gettitleprops(thingsec)))
+   {
+      props.superclass  = cfg_getstr(titleprops, ITEM_TNG_TITLE_SUPER);
+      props.dehackednum = cfg_getint(titleprops, ITEM_TNG_TITLE_DEHNUM);
+      props.doomednum   = cfg_getint(titleprops, ITEM_TNG_TITLE_DOOMEDNUM);
+   }
+   else
+   {
+      props.superclass  = NULL;
+      props.dehackednum = -1;
+      props.doomednum   = -1;
+   }
+}
+
+//
+// E_resolveParentThingType
+//
+// Get the mobjinfo index for the thing's superclass thingtype.
+//
+static int E_resolveParentThingType(cfg_t *thingsec, 
+                                    const thingtitleprops_t &props)
+{
+   int pnum = -1;
+
+   // check title props first
+   if(props.superclass)
+   {
+      // "Mobj" is currently a dummy value and means it is just a plain 
+      // thing not inheriting from anything else. Maybe in the future it
+      // could designate specialized native subclasses of Mobj as well?
+      if(strcasecmp(props.superclass, "Mobj"))
+         pnum = E_GetThingNumForName(props.superclass);
+   }
+   else // resolve parent thingtype through legacy "inherits" field
+      pnum = E_GetThingNumForName(cfg_getstr(thingsec, ITEM_TNG_INHERITS));
+
+   return pnum;
+}
+
 // IS_SET: this macro tests whether or not a particular field should
 // be set. When applying deltas, we should not retrieve defaults.
 // 01/27/04: Also, if inheritance is taking place, we should not
@@ -1569,6 +1653,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool inherits = false;
    bool cflags   = false;
    bool hasbtype = false;
+   thingtitleprops_t titleprops;
 
    // if thingsec is NULL, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is
@@ -1576,20 +1661,26 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(!thingsec)
       return; 
 
+   // Retrieve title properties
+   E_getThingTitleProps(thingsec, titleprops, def);
+
    // 01/27/04: added inheritance -- not in deltas
    if(def)
    {
+      int pnum = -1;
+
       // if this thingtype is already processed via recursion due to
       // inheritance, don't process it again
       if(thing_hitlist[i])
          return;
+
+      if(titleprops.superclass || cfg_size(thingsec, ITEM_TNG_INHERITS) > 0)
+         pnum = E_resolveParentThingType(thingsec, titleprops);
       
-      if(cfg_size(thingsec, ITEM_TNG_INHERITS) > 0)
+      if(pnum >= 0)
       {
          cfg_t *parent_tngsec;
-
-         // resolve parent thingtype
-         int pnum = E_GetThingNumForName(cfg_getstr(thingsec, ITEM_TNG_INHERITS));
+         int pnum = E_resolveParentThingType(thingsec, titleprops);
 
          // check against cyclic inheritance
          if(!E_CheckThingInherit(pnum))
@@ -1649,7 +1740,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
 
    // process doomednum
-   if(IS_SET(ITEM_TNG_DOOMEDNUM))
+   // haleyjd 09/30/12: allow preferential definition by title properties
+   if(titleprops.doomednum != -1)
+      mobjinfo[i]->doomednum = titleprops.doomednum;
+   else if(IS_SET(ITEM_TNG_DOOMEDNUM))
       mobjinfo[i]->doomednum = cfg_getint(thingsec, ITEM_TNG_DOOMEDNUM);
 
    // ******************************** STATES ********************************

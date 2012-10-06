@@ -190,7 +190,7 @@ static bool MN_SkinResponder(event_t *ev)
       // kill the widget
       skview_metadeaths.clear();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-      current_menuwidget = NULL;
+      MN_PopWidget();
       return true;
    }
 
@@ -325,29 +325,34 @@ extern vfont_t *menu_font_normal;
 //
 static void MN_SkinInstructions(void)
 {
-   const char *msg = FC_GOLD "skin viewer";
+   const char *msg = FC_RED "skin viewer";
 
-   void (*textfunc)(vfont_t *, const char *, int, int, VBuffer *) = 
-      GameModeInfo->flags & GIF_SHADOWTITLES ? 
-        V_FontWriteTextShadowed : V_FontWriteText;
+   int x = 160 - V_FontStringWidth(menu_font_big, msg) / 2;
+   int y = 8;
+   int color = GameModeInfo->titleColor;
 
    // draw a title at the top, too
-
-   textfunc(menu_font_big, msg, 
-            160 - V_FontStringWidth(menu_font_big, msg)/2, 8, &subscreen43);
+   if(GameModeInfo->flags & GIF_SHADOWTITLES)
+   {
+      V_FontWriteTextShadowed(menu_font_big, msg, x, y, &subscreen43, color);
+   }
+   else
+   {
+      V_FontWriteTextColored(menu_font_big, msg, color, x, y, &subscreen43);
+   }
 
    // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
    // it with one call to V_FontWriteText instead of five.
    V_FontWriteText(menu_font_normal, 
-               "instructions:\n"
-               FC_GRAY "left" FC_RED " = rotate left, "
+               "Instructions:\n"
+               FC_GRAY "left"  FC_RED " = rotate left, "
                FC_GRAY "right" FC_RED " = rotate right\n"
-               FC_GRAY "ctrl" FC_RED " = fire, "
-               FC_GRAY "p" FC_RED " = pain, "
-               FC_GRAY "d" FC_RED " = die, "
-               FC_GRAY "x" FC_RED " = gib\n"
+               FC_GRAY "ctrl"  FC_RED " = fire, "
+               FC_GRAY "p"     FC_RED " = pain, "
+               FC_GRAY "d"     FC_RED " = die, "
+               FC_GRAY "x"     FC_RED " = gib\n"
                FC_GRAY "space" FC_RED " = respawn, "
-               FC_GRAY "h" FC_RED " = half-speed\n"
+               FC_GRAY "h"     FC_RED " = half-speed\n"
                FC_GRAY "toggle or previous" FC_RED " = exit", 
                4, INSTR_Y, &subscreen43);
 }
@@ -505,7 +510,7 @@ void MN_InitSkinViewer(void)
    MN_initMetaDeaths();
 
    // set the widget
-   current_menuwidget = &skinviewer;
+   MN_PushWidget(&skinviewer);
 }
 
 // EOF

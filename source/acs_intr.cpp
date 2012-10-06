@@ -2550,7 +2550,7 @@ void ACSThinker::serialize(SaveArchive &arc)
       numPrints   = printIndex;
       printStack  = estructalloctag(qstring *, numPrints, PU_LEVEL);
       printPtr    = printStack + printIndex;
-      printBuffer = printIndex ? *(printPtr - 1) : *printPtr;
+      printBuffer = printIndex ? *(printPtr - 1) : NULL;
 
       ip = vm->code + ipIndex;
 

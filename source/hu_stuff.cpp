@@ -393,7 +393,7 @@ static void HU_MessageDraw(hu_widget_t *widget)
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
       if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
-         vbscreen.getVirtualAspectRatio() > 4.0/3.0)
+         vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
       {
          x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
       }
@@ -1432,10 +1432,10 @@ const char english_shiftxform[] =
 //
 
 VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
-VARIABLE_INT(mess_colour,       NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(mess_colour,       NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
-VARIABLE_INT(obcolour,          NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(obcolour,          NULL, 0, CR_BUILTIN,    textcolours);
 VARIABLE_INT(crosshairnum,      NULL, 0, CROSSHAIRS-1,  cross_str);
 VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
 VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
@@ -1443,9 +1443,9 @@ VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
 // haleyjd 02/12/06: lost/new hud options
 VARIABLE_TOGGLE(hu_showtime,    NULL,                   yesno);
 VARIABLE_TOGGLE(hu_showcoords,  NULL,                   yesno);
-VARIABLE_INT(hu_timecolor,      NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(hu_timecolor,      NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);

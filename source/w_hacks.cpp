@@ -46,6 +46,12 @@ struct w_dirhack_t
 // Hack Handler Functions
 //
 
+//
+// W_doGothic2Hack
+//
+// Gothic DM 2 has a strangely constructed run of flats which break the
+// BOOM namespace coalescence algorithm. Fortunately, it's easily fixed.
+//
 static void W_doGothic2Hack(filelump_t *fileinfo, int numlumps)
 {
    filelump_t *lump = NULL;

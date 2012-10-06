@@ -30,18 +30,25 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "autopalette.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "f_finale.h"
 #include "hu_over.h"
 #include "hu_stuff.h"
 #include "in_lude.h"
+#include "m_qstr.h"
 #include "mn_engin.h"
+#include "r_draw.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patch.h"
 #include "v_patchfmt.h"
+#include "v_png.h"
+#include "v_video.h"
 #include "w_wad.h"
 
 #include "e_lib.h"
@@ -63,16 +70,37 @@
 #define ITEM_FONT_CW     "centerwidth"
 #define ITEM_FONT_LFMT   "linearformat"
 #define ITEM_FONT_LLUMP  "linearlump"
+#define ITEM_FONT_REQUAN "requantize"
 #define ITEM_FONT_FILTER "filter"
 #define ITEM_FONT_COLOR  "colorable"
 #define ITEM_FONT_UPPER  "uppercase"
 #define ITEM_FONT_CENTER "blockcentered"
 #define ITEM_FONT_POFFS  "patchnumoffset"
+#define ITEM_FONT_COLORD "defaultcolor"
+#define ITEM_FONT_COLORN "normalcolor"
+#define ITEM_FONT_COLORH "highlightcolor"
+#define ITEM_FONT_COLORE "errorcolor"
+#define ITEM_FONT_COLORS "colortables"
 
 #define ITEM_FILTER_CHARS "chars"
 #define ITEM_FILTER_START "start"
 #define ITEM_FILTER_END   "end"
 #define ITEM_FILTER_MASK  "mask"
+
+#define ITEM_COLOR_BRICK   "brick"
+#define ITEM_COLOR_TAN     "tan"
+#define ITEM_COLOR_GRAY    "gray"
+#define ITEM_COLOR_GREEN   "green"
+#define ITEM_COLOR_BROWN   "brown"
+#define ITEM_COLOR_GOLD    "gold"
+#define ITEM_COLOR_RED     "red"
+#define ITEM_COLOR_BLUE    "blue"
+#define ITEM_COLOR_ORANGE  "orange"
+#define ITEM_COLOR_YELLOW  "yellow"
+#define ITEM_COLOR_CUSTOM1 "custom1"
+#define ITEM_COLOR_CUSTOM2 "custom2"
+#define ITEM_COLOR_CUSTOM3 "custom3"
+#define ITEM_COLOR_CUSTOM4 "custom4"
 
 static cfg_opt_t filter_opts[] =
 {
@@ -80,6 +108,43 @@ static cfg_opt_t filter_opts[] =
    CFG_STR(ITEM_FILTER_START, "", CFGF_NONE),
    CFG_STR(ITEM_FILTER_END,   "", CFGF_NONE),
    CFG_STR(ITEM_FILTER_MASK,  "", CFGF_NONE),
+   CFG_END()
+};
+
+static const char *fontcolornames[CR_LIMIT] =
+{
+   ITEM_COLOR_BRICK,
+   ITEM_COLOR_TAN,
+   ITEM_COLOR_GRAY,
+   ITEM_COLOR_GREEN,
+   ITEM_COLOR_BROWN,
+   ITEM_COLOR_GOLD,
+   ITEM_COLOR_RED,
+   ITEM_COLOR_BLUE,
+   ITEM_COLOR_ORANGE,
+   ITEM_COLOR_YELLOW,
+   ITEM_COLOR_CUSTOM1,
+   ITEM_COLOR_CUSTOM2,
+   ITEM_COLOR_CUSTOM3,
+   ITEM_COLOR_CUSTOM4
+};
+
+static cfg_opt_t color_opts[] =
+{
+   CFG_STR(ITEM_COLOR_BRICK,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_TAN,     "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GRAY,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GREEN,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BROWN,   "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_GOLD,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_RED,     "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_BLUE,    "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_ORANGE,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_YELLOW,  "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM1, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM2, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM3, "", CFGF_LIST),
+   CFG_STR(ITEM_COLOR_CUSTOM4, "", CFGF_LIST),
    CFG_END()
 };
 
@@ -94,13 +159,19 @@ cfg_opt_t edf_font_opts[] =
    CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE),
    CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE),
    CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),   
+   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),
    CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE),
    CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE),
+   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE),
+   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE),
+   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE),
+   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE),
+   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE),
 
-   CFG_BOOL(ITEM_FONT_COLOR,  cfg_false,  CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_UPPER,  cfg_false,  CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_CENTER, cfg_false,  CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE),
+   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE),
    
    CFG_END()
 };
@@ -110,13 +181,15 @@ enum
 {
    FONT_FMT_LINEAR,
    FONT_FMT_PATCH,
+   FONT_FMT_PNG,
    NUM_FONT_FMTS
 };
 
-static const char *fontfmts[] =
+static const char *fontfmts[NUM_FONT_FMTS] =
 {
    "linear",  // a linear block of pixel data; the default format.
-   "patch"    // a DOOM patch, which will be converted to linear.
+   "patch",   // a DOOM patch, which will be converted to linear.
+   "png"      // a PNG graphic
 };
 
 #define NUMFONTCHAINS 31
@@ -241,7 +314,8 @@ static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
       // run down the chain
       while(rover)
       {
-         if(rover != font && rover->linear && rover->data == data)
+         if(rover != font && rover->linear && rover->data &&
+            rover->data == data)
             return true; // is used
          rover = rover->namenext;
       }
@@ -320,9 +394,10 @@ static void E_DisposePatches(vfont_t *font)
 // Populates a pre-allocated vfont_t with information on a linear font 
 // graphic.
 //
-static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
+static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
+                             bool requantize)
 {
-   int w, h, size, i, lumpnum;
+   int w = 0, h = 0, size = 0, i, lumpnum;
    bool foundsize = false;
 
    // in case this font was changed from patch to block:
@@ -339,7 +414,27 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 
    size = W_LumpLength(lumpnum);
 
-   if(fmt == FONT_FMT_PATCH)
+   if(fmt == FONT_FMT_PNG)
+   {
+      // convert PNG to linear
+      VPNGImage fontpng;
+
+      if(fontpng.readFromLump(wGlobalDir, lumpnum))
+      {
+         AutoPalette pal(wGlobalDir);
+         bool is8Bit256    = (fontpng.getBitDepth() == 8 && 
+                              fontpng.getNumColors() == 256);
+         bool doRequantize = (!is8Bit256 || requantize);
+
+         font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : NULL);
+
+         w = static_cast<int>(fontpng.getWidth());
+         h = static_cast<int>(fontpng.getHeight());
+
+         size = w * h;
+      }
+   }
+   else if(fmt == FONT_FMT_PATCH)
    {
       // convert patch to linear
       patch_t *p = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
@@ -365,7 +460,12 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    }
    
    if(!foundsize)
-      E_EDFLoggedErr(2, "E_LoadLinearFont: invalid lump dimensions\n");
+   {
+      E_EDFLoggedWarning(2, "Invalid lump dimensions for linear font %s\n", name);
+      if(!E_IsLinearLumpUsed(font, font->data))
+         efree(font->data);
+      font->data = NULL; // This font won't be able to draw, too bad.
+   }
 
    font->start = 0;
    font->end   = 127;
@@ -623,6 +723,57 @@ void E_LoadPatchFont(vfont_t *font)
    }
 }
 
+//
+// E_setFontColor
+//
+static void E_setFontColor(cfg_t *sec, vfont_t *font, const char *name,
+                           int vfont_t::*field, int gamemodeinfo_t::*gmiField)
+{
+   int color = E_StrToNumLinear(fontcolornames, CR_LIMIT, cfg_getstr(sec, name));
+   if(color >= 0 && color < CR_LIMIT)
+      font->*field = color;
+   else
+      font->*field = GameModeInfo->*gmiField;
+}
+
+//
+// E_loadTranslation
+//
+static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
+{
+   if(index >= 0 && index < CR_LIMIT)
+   {
+      font->colrngs[index] = colrngs[index]; // start out with global colrng
+
+      // defaults are all blank
+      if(strlen(lumpname) == 0)
+         return;
+
+      // identity map?
+      if(!strcasecmp(lumpname, "@identity"))
+      {
+         font->colrngs[index] = R_GetIdentityMap();
+         return;
+      }
+
+      int lumpnum = 
+         wGlobalDir.checkNumForNameNSG(lumpname, lumpinfo_t::ns_translations);
+      if(lumpnum >= 0)
+      {
+         if(wGlobalDir.lumpLength(lumpnum) >= 256)
+         {
+            font->colrngs[index] = 
+               static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+         }
+      }
+      else
+      {
+         // Try parsing it as a color translation string
+         font->colrngs[index] = E_ParseTranslation(lumpname, PU_STATIC);
+      }
+   }
+}
+
 //=============================================================================
 //
 // EDF Processing
@@ -731,19 +882,71 @@ static void E_ProcessFont(cfg_t *sec)
 
    // process colorable flag
    if(IS_SET(sec, ITEM_FONT_COLOR))
-      font->color = (cfg_getbool(sec, ITEM_FONT_COLOR) == cfg_true);
+      font->color = cfg_getbool(sec, ITEM_FONT_COLOR);
 
    // process uppercase flag
    if(IS_SET(sec, ITEM_FONT_UPPER))
-      font->upper = (cfg_getbool(sec, ITEM_FONT_UPPER) == cfg_true);
+      font->upper = cfg_getbool(sec, ITEM_FONT_UPPER);
 
    // process blockcentered flag
    if(IS_SET(sec, ITEM_FONT_CENTER))
-      font->centered = (cfg_getbool(sec, ITEM_FONT_CENTER) == cfg_true);
+      font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
+
+   // haleyjd 09/06/12: colors
+   // default color
+   if(IS_SET(sec, ITEM_FONT_COLORD))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORD,
+         &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
+   }
+
+   // normal color
+   if(IS_SET(sec, ITEM_FONT_COLORN))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORN, 
+         &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
+   }
+   
+   // high color
+   if(IS_SET(sec, ITEM_FONT_COLORH))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORH, 
+         &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
+   }
+
+   // error color
+   if(IS_SET(sec, ITEM_FONT_COLORE))
+   {
+      E_setFontColor(sec, font, ITEM_FONT_COLORE, 
+         &vfont_t::colorError, &gamemodeinfo_t::colorError);
+   }
+
+   // haleyjd 09/06/12: translation tables
+   if(cfg_size(sec, ITEM_FONT_COLORS) > 0)
+   {
+      cfg_t *colors = cfg_getsec(sec, ITEM_FONT_COLORS);
+
+      for(int col = 0; col < CR_LIMIT; col++)
+      {
+         qstring translation;
+         const char *fieldname = fontcolornames[col];
+         
+         E_CfgListToCommaString(colors, fontcolornames[col], translation);
+
+         E_loadTranslation(font, col, translation.constPtr());
+      }
+   }
+   else if(def)
+   {
+      // When defining, adapt defaults for all colors if none were specified
+      for(int col = 0; col < CR_LIMIT; col++)
+         E_loadTranslation(font, col, "");
+   }
 
    // process linear lump - if defined, this is a linear font automatically
    if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)
    {
+      bool requantize = false;
       int format;
       const char *fmtstr;
       tempstr = cfg_getstr(sec, ITEM_FONT_LLUMP);
@@ -756,7 +959,10 @@ static void E_ProcessFont(cfg_t *sec)
       if(format == NUM_FONT_FMTS)
          E_EDFLoggedErr(2, "E_ProcessFont: invalid linear format '%s'\n", fmtstr);
 
-      E_LoadLinearFont(font, tempstr, format);
+      // check for requantization flag (for PNGs)
+      requantize = cfg_getbool(sec, ITEM_FONT_REQUAN);
+
+      E_LoadLinearFont(font, tempstr, format, requantize);
    }
    else
    {
