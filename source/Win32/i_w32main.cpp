@@ -28,9 +28,7 @@
 
 #include "../hal/i_platform.h"
 
-#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
-#error i_w32main.cpp is for Windows only
-#endif
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 
 #include <windows.h>
 #include "SDL_syswm.h"
@@ -93,4 +91,7 @@ void I_DisableSysMenu(void)
    }
 }
 
+#endif
+
 // EOF
+

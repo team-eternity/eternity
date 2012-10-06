@@ -27,7 +27,9 @@
 //-----------------------------------------------------------------------------
 
 #include "../z_zone.h"   /* memory allocation wrappers -- killough */
-#include "../i_system.h"
+
+// Need platform defines
+#include "i_platform.h"
 
 #include "../am_map.h"
 #include "../c_runcmd.h"
@@ -35,6 +37,7 @@
 #include "../d_main.h"
 #include "../doomstat.h"
 #include "../f_wipe.h"
+#include "../i_system.h"
 #include "../i_video.h"
 #include "../in_lude.h"
 #include "../m_argv.h"
@@ -281,8 +284,6 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
    qstring qstr;
    bool errorflag = false;
 
-   qstr.initCreate();
-
    while(*c)
    {
       switch(state)
@@ -457,18 +458,18 @@ static bool I_InitGraphicsMode(void)
       // Reset renderer field of view
       R_ResetFOV(video.width, video.height);
 
-#ifdef _MSC_VER
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
       // Win32 specific hack: disable system menu
       I_DisableSysMenu();
 #endif
 
-      V_Init();                // initialize high-level video
+      V_Init();                 // initialize high-level video
 
-      in_graphics_mode = true; // now in graphics mode
-      in_textmode = false;     // no longer in text mode
-      setsizeneeded = true;    // should initialize screen size
+      in_graphics_mode = true;  // now in graphics mode
+      in_textmode      = false; // no longer in text mode
+      setsizeneeded    = true;  // should initialize screen size
 
-      I_InitDiskFlash();       // initialize disk flasher
+      I_InitDiskFlash();        // initialize disk flasher
    }
 
    return result;
@@ -490,10 +491,9 @@ static void I_ResetScreen(void)
    disk_icon = 0;
 
    // Switch out of old graphics mode
-   // haleyjd 10/15/05: WOOPS!
    if(in_graphics_mode)
    {
-      i_video_driver->ShutdownGraphicsPartway();
+      i_video_driver->ShutdownGraphicsPartway(); // haleyjd 10/15/05: WOOPS!
       in_graphics_mode = false;
       in_textmode = true;
    }
@@ -514,10 +514,6 @@ static void I_ResetScreen(void)
    
    // Reset palette
    ST_Start();
-   
-   // Redraw cached intermission buffer if needed
-   if(gamestate == GS_INTERMISSION)
-      IN_DrawBackground();
 
    // haleyjd: reset wipe engine
    Wipe_ScreenReset();

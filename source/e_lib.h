@@ -46,6 +46,7 @@ void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap);
 int E_CheckRoot(cfg_t *cfg, const char *data, int size);
 
 // function callbacks
+int E_SetDialect (cfg_t *, cfg_opt_t *, int, const char **);
 int E_Include    (cfg_t *, cfg_opt_t *, int, const char **);
 int E_LumpInclude(cfg_t *, cfg_opt_t *, int, const char **);
 int E_IncludePrev(cfg_t *, cfg_opt_t *, int, const char **);
@@ -64,6 +65,10 @@ int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 class  MetaTable;
 void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop);
+
+// Advanced libConfuse utilities
+class qstring;
+void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output);
 
 #endif
 

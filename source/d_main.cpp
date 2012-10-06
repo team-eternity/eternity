@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //  DOOM main program (D_DoomMain) and game loop, plus functions to
@@ -38,10 +38,8 @@
 
 #include "z_zone.h"
 
-#include "hal/i_picker.h"
 #include "hal/i_platform.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -49,13 +47,12 @@
 #include "c_runcmd.h"
 #include "d_deh.h"      // Ty 04/08/98 - Externalizations
 #include "d_dehtbl.h"
-#include "d_diskfile.h"
 #include "d_event.h"
+#include "d_files.h"
 #include "d_gi.h"
-#include "d_io.h"       // SoM 3/12/2002: moved unistd stuff into d_io.h
-#include "d_main.h"
+#include "d_io.h"
+#include "d_iwad.h"
 #include "d_net.h"
-#include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_edf.h"
@@ -63,30 +60,26 @@
 #include "e_player.h"
 #include "f_finale.h"
 #include "f_wipe.h"
-#include "g_bind.h"     // haleyjd
+#include "g_bind.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
 #include "hu_stuff.h"
-#include "i_system.h"
 #include "i_sound.h"
+#include "i_system.h"
 #include "i_video.h"
 #include "in_lude.h"
 #include "m_argv.h"
-#include "m_collection.h"
 #include "m_misc.h"
-#include "m_swap.h"
 #include "m_syscfg.h"
+#include "m_qstr.h"
 #include "mn_engin.h"
 #include "p_chase.h"
-#include "p_info.h"
 #include "p_setup.h"
-#include "p_skin.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_patch.h"
 #include "s_sound.h"
-#include "sounds.h"
 #include "st_stuff.h"
 #include "v_block.h"
 #include "v_font.h"
@@ -96,10 +89,6 @@
 #include "version.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
-
-// haleyjd 11/09/09: wadfiles made a structure.
-// note: needed extern in g_game.c
-wfileadd_t *wadfiles;
 
 // killough 10/98: preloaded files
 #define MAXLOADFILES 2
@@ -143,7 +132,6 @@ bool advancedemo;
 extern bool timingdemo, singledemo, demoplayback, fastdemo; // killough
 
 char    *basedefault;             // default file
-char    *baseiwad;                // jff 3/23/98: iwad directory
 char    *basesavegame;            // killough 2/16/98: savegame directory
 
 char    *basepath;                // haleyjd 11/23/06: path of "base" directory
@@ -152,13 +140,30 @@ char    *basegamepath;            // haleyjd 11/23/06: path of base/game directo
 char    *userpath;                // haleyjd 02/05/12: path of "user" directory
 char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
 
-// set from iwad: level to start new games from
-char firstlevel[9] = "";
-
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd);
 void D_DoAdvanceDemo(void);
+
+void usermsg(const char *s, ...)
+{
+   static char msg[1024];
+   va_list v;
+   
+   va_start(v,s);
+   pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
+   va_end(v);
+   
+   if(in_textmode)
+   {
+      puts(msg);
+   }
+   else
+   {
+      C_Puts(msg);
+      C_Update();
+   }
+}
 
 //sf:
 void startupmsg(const char *func, const char *desc)
@@ -176,8 +181,10 @@ void startupmsg(const char *func, const char *desc)
 // Events can be discarded if no responder claims them
 //
 
-event_t events[MAXEVENTS];
-int eventhead, eventtail;
+#define MAXEVENTS 64
+
+static event_t events[MAXEVENTS];
+static int eventhead, eventtail;
 
 //
 // D_PostEvent
@@ -212,302 +219,21 @@ void D_ProcessEvents(void)
 
 //=============================================================================
 //
-// Display
-//
-// All drawing starts here.
-//
-
-// wipegamestate can be set to -1 to force a wipe on the next draw
-
-gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
-gamestate_t wipegamestate = GS_DEMOSCREEN;
-void        R_ExecuteSetViewSize(void);
-camera_t    *camera;
-extern bool setsizeneeded;
-int         wipewait;        // haleyjd 10/09/07
-
-bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
-
-//
-// D_showFPS
-//
-static void D_showDrawnFPS(void)
-{
-   static unsigned int lastms, accms, frames;
-   unsigned int curms;
-   static int lastfps;
-   vfont_t *font;
-   char msg[64];
-   
-   accms += (curms = I_GetTicks()) - lastms;
-   lastms = curms;
-   ++frames;
-
-   if(accms >= 1000)
-   {
-      lastfps = frames * 1000 / accms;
-      frames = 0;
-      accms -= 1000;
-   }
-
-   font = E_FontForName("ee_smallfont");
-   psnprintf(msg, 64, "DFPS: %d", lastfps);
-   V_FontWriteText(font, msg, 5, 20);
-}
-
-#ifdef INSTRUMENTED
-struct cachelevelprint_t
-{
-   int cachelevel;
-   const char *name;
-};
-static cachelevelprint_t cachelevels[] =
-{
-   { PU_STATIC,   "static: " },
-   { PU_RENDERER, "render: " },
-   { PU_LEVEL,    " level: " },
-   { PU_CACHE,    " cache: " },
-   { PU_MAX,      " total: " }
-};
-#define NUMCACHELEVELSTOPRINT (sizeof(cachelevels) / sizeof(cachelevelprint_t))
-
-static void D_showMemStats(void)
-{
-   vfont_t *font;
-   size_t total_memory = 0;
-   double s;
-   char buffer[1024];
-   int i;
-
-   for(i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
-      total_memory += memorybytag[cachelevels[i].cachelevel];
-   s = 100.0 / total_memory;
-
-   font = E_FontForName("ee_consolefont");   
-   // draw the labels
-   for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
-   {
-      int tag = cachelevels[i].cachelevel;
-      if(tag != PU_MAX)
-      {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
-                   cachelevels[i].name,
-                   memorybytag[tag], memorybytag[tag] * s);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
-      }
-      else
-      {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
-                   cachelevels[i].name, total_memory, 100.0f);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
-      }
-   }
-}
-#endif
-
-//
-// D_drawWings
-//
-// haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
-// status bar while it is visible. This is necessary when drawing patches at
-// 4:3 aspect ratio over widescreen video modes.
-//
-static void D_drawWings()
-{
-   int wingwidth;
-
-   if((vbscreen.width <= 640 && vbscreen.height <= 400) ||
-      static_cast<float>(vbscreen.width) / vbscreen.height <= 4.0f/3.0f)
-      return;
-
-   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
-
-   if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
-   {
-      if(scaledviewheight != 200 || automapactive)
-      {
-         unsigned int bottom   = SCREENHEIGHT - 1;
-         unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
-         
-         int ycoord      = vbscreen.y1lookup[bottom - statbarh];
-         int blockheight = vbscreen.y2lookup[bottom] - ycoord + 1;
-
-         R_VideoEraseScaled(0, ycoord, wingwidth, blockheight);
-         R_VideoEraseScaled(vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
-      }
-   }
-   else
-   {
-      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
-      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
-                   0, wingwidth, vbscreen.height);
-   }
-}
-
-//
-// D_Display
-//  draw current display, possibly wiping it from the previous
-//
-void D_Display(void)
-{
-   if(nodrawers)                // for comparative timing / profiling
-      return;
-
-   if(setsizeneeded)            // change the view size if needed
-   {
-      R_ExecuteSetViewSize();
-      R_FillBackScreen();       // redraw backscreen
-   }
-
-   // save the current screen if about to wipe
-   // no melting consoles
-   if(gamestate != wipegamestate &&
-      !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
-      Wipe_StartScreen();
-
-   // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
-   // created by drawing patches 4:3 in higher aspect ratios.
-   D_drawWings();
-
-   // haleyjd: optimization for fullscreen menu drawing -- no
-   // need to do all this if the menus are going to cover it up :)
-   if(!MN_CheckFullScreen())
-   {
-      switch(gamestate)                // do buffered drawing
-      {
-      case GS_LEVEL:
-         // see if the border needs to be initially drawn
-         if(oldgamestate != GS_LEVEL)
-            R_FillBackScreen();    // draw the pattern into the back screen
-         
-         if(automapactive)
-         {
-            AM_Drawer();
-         }
-         else
-         {
-            R_DrawViewBorder();    // redraw border
-            R_RenderPlayerView (&players[displayplayer], camera);
-         }
-         
-         ST_Drawer(scaledviewheight == 200);  // killough 11/98
-         HU_Drawer();
-         break;
-      case GS_INTERMISSION:
-         IN_Drawer();
-         break;
-      case GS_FINALE:
-         F_Drawer();
-         break;
-      case GS_DEMOSCREEN:
-         D_PageDrawer();
-         break;
-      case GS_CONSOLE:
-         break;
-      default:
-         break;
-      }
-         
-      // clean up border stuff
-      if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-         I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
-      
-      oldgamestate = wipegamestate = gamestate;
-         
-      // draw pause pic
-      if(paused && !walkcam_active) // sf: not if walkcam active for
-      {                             // frads taking screenshots
-         const char *lumpname = GameModeInfo->pausePatch; 
-         
-         // haleyjd 03/12/03: changed to work
-         // in heretic, and with user pause patches
-         patch_t *patch = PatchLoader::CacheName(wGlobalDir, lumpname, PU_CACHE);
-         int width = patch->width;
-         int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
-         // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindowy);
-         
-         V_DrawPatch(x, y, &subscreen43, patch);
-      }
-
-      if(inwipe)
-      {
-         bool wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
-         
-         // about to start wiping; if wipewait is enabled, save everything 
-         // that was just drawn
-         if(wait)
-         {
-            Wipe_SaveEndScreen();
-            
-            do
-            {
-               int starttime = I_GetTime();
-               int tics = 0;
-               
-               Wipe_Drawer();
-               
-               do
-               {
-                  tics = I_GetTime() - starttime;
-
-                  // haleyjd 06/16/09: sleep to avoid hogging 100% CPU
-                  I_Sleep(1);
-               }
-               while(!tics);
-               
-               Wipe_Ticker();
-               
-               C_Drawer();
-               MN_Drawer();
-               NetUpdate();
-               if(v_ticker)
-                  V_FPSDrawer();
-               I_FinishUpdate();
-               
-               if(inwipe)
-                  Wipe_BlitEndScreen();
-            }
-            while(inwipe);
-         }
-         else
-            Wipe_Drawer();
-      }
-
-      C_Drawer();
-
-   } // if(!MN_CheckFullScreen())
-
-   // menus go directly to the screen
-   MN_Drawer();         // menu is drawn even on top of everything
-   NetUpdate();         // send out any new accumulation
-   
-   //sf : now system independent
-   if(v_ticker)
-      V_FPSDrawer();
-
-   if(d_drawfps)
-      D_showDrawnFPS();
-
-#ifdef INSTRUMENTED
-   if(printstats)
-      D_showMemStats();
-#endif
-   
-   // sf: wipe changed: runs alongside the rest of the game rather
-   //     than in its own loop
-   
-   I_FinishUpdate();              // page flip or blit buffer
-}
-
-//=============================================================================
-//
 //  DEMO LOOP
 //
 
 static int demosequence;         // killough 5/2/98: made static
 static int pagetic;
 static const char *pagename;
+
+//
+// D_AdvanceDemo
+// Called after each demo or intro demosequence finishes
+//
+void D_AdvanceDemo(void)
+{
+   advancedemo = true;
+}
 
 //
 // D_PageTicker
@@ -545,15 +271,6 @@ void D_PageDrawer(void)
    }
    else
       MN_DrawCredits();
-}
-
-//
-// D_AdvanceDemo
-// Called after each demo or intro demosequence finishes
-//
-void D_AdvanceDemo(void)
-{
-   advancedemo = true;
 }
 
 // killough 11/98: functions to perform demo sequences
@@ -692,81 +409,316 @@ void D_StartTitle(void)
 
 //=============================================================================
 //
-// WAD File Loading
+// Display
+//
+// All drawing starts here.
 //
 
-static int numwadfiles, numwadfiles_alloc;
+// wipegamestate can be set to -1 to force a wipe on the next draw
+
+gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
+gamestate_t wipegamestate = GS_DEMOSCREEN;
+void        R_ExecuteSetViewSize(void);
+camera_t    *camera;
+extern bool setsizeneeded;
+int         wipewait;        // haleyjd 10/09/07
+
+bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
 
 //
-// D_reAllocFiles
+// D_showFPS
 //
-// haleyjd 12/24/11: resize the wadfiles array
-//
-static void D_reAllocFiles()
+static void D_showDrawnFPS(void)
 {
-   // sf: allocate for +2 for safety
-   if(numwadfiles + 2 >= numwadfiles_alloc)
-   {
-      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
+   static unsigned int lastms, accms, frames;
+   unsigned int curms;
+   static int lastfps;
+   vfont_t *font;
+   char msg[64];
+   
+   accms += (curms = I_GetTicks()) - lastms;
+   lastms = curms;
+   ++frames;
 
-      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
+   if(accms >= 1000)
+   {
+      lastfps = frames * 1000 / accms;
+      frames = 0;
+      accms -= 1000;
+   }
+
+   font = E_FontForName("ee_smallfont");
+   psnprintf(msg, 64, "DFPS: %d", lastfps);
+   V_FontWriteText(font, msg, 5, 20);
+}
+
+#ifdef INSTRUMENTED
+struct cachelevelprint_t
+{
+   int cachelevel;
+   const char *name;
+};
+static cachelevelprint_t cachelevels[] =
+{
+   { PU_STATIC,   "static: " },
+   { PU_RENDERER, "render: " },
+   { PU_LEVEL,    " level: " },
+   { PU_CACHE,    " cache: " },
+   { PU_MAX,      " total: " }
+};
+#define NUMCACHELEVELSTOPRINT (sizeof(cachelevels) / sizeof(cachelevelprint_t))
+
+static void D_showMemStats(void)
+{
+   vfont_t *font;
+   size_t total_memory = 0;
+   double s;
+   char buffer[1024];
+   int i;
+
+   for(i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+      total_memory += memorybytag[cachelevels[i].cachelevel];
+   s = 100.0 / total_memory;
+
+   font = E_FontForName("ee_consolefont");   
+   // draw the labels
+   for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
+   {
+      int tag = cachelevels[i].cachelevel;
+      if(tag != PU_MAX)
+      {
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
+                   cachelevels[i].name,
+                   memorybytag[tag], memorybytag[tag] * s);
+         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+      }
+      else
+      {
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
+                   cachelevels[i].name, total_memory, 100.0f);
+         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+      }
+   }
+}
+#endif
+
+//
+// D_DrawPillars
+//
+// Will draw pillars for pillarboxing the 4:3 subscreen.
+//
+void D_DrawPillars()
+{
+   int wingwidth;
+   
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
+      return;
+   
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   if(wingwidth <= 0)
+         return;
+
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+                0, wingwidth, vbscreen.height);
+}
+
+//
+// D_DrawWings
+//
+// haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
+// status bar while it is visible. This is necessary when drawing patches at
+// 4:3 aspect ratio over widescreen video modes.
+//
+void D_DrawWings()
+{
+   int wingwidth;
+
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
+      return;
+
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+
+   // safety check
+   if(wingwidth <= 0)
+      return;
+
+   if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
+   {
+      if(scaledviewheight != 200 || automapactive)
+      {
+         unsigned int bottom   = SCREENHEIGHT - 1;
+         unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
+         
+         int ycoord      = vbscreen.y1lookup[bottom - statbarh];
+         int blockheight = vbscreen.y2lookup[bottom] - ycoord + 1;
+
+         R_VideoEraseScaled(0, ycoord, wingwidth, blockheight);
+         R_VideoEraseScaled(vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
+      }
+   }
+   else
+   {
+      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+                   0, wingwidth, vbscreen.height);
    }
 }
 
 //
-// D_AddFile
+// D_Display
+//  draw current display, possibly wiping it from the previous
 //
-// Rewritten by Lee Killough
-//
-// killough 11/98: remove limit on number of files
-// haleyjd 05/28/10: added f and baseoffset parameters for subfile support.
-//
-void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               int privatedir)
+void D_Display(void)
 {
-   D_reAllocFiles();
+   if(nodrawers)                // for comparative timing / profiling
+      return;
 
-   wadfiles[numwadfiles].filename     = estrdup(file);
-   wadfiles[numwadfiles].li_namespace = li_namespace;
-   wadfiles[numwadfiles].f            = fp;
-   wadfiles[numwadfiles].baseoffset   = baseoffset;
-   wadfiles[numwadfiles].privatedir   = privatedir;
-   wadfiles[numwadfiles].directory    = false;
+   if(setsizeneeded)            // change the view size if needed
+   {
+      R_ExecuteSetViewSize();
+      R_FillBackScreen();       // redraw backscreen
+   }
 
-   wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
+   // save the current screen if about to wipe
+   // no melting consoles
+   if(gamestate != wipegamestate &&
+      !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
+      Wipe_StartScreen();
 
-   ++numwadfiles;
-}
+   // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
+   // created by drawing patches 4:3 in higher aspect ratios.
+   D_DrawWings();
 
-//
-// D_AddDirectory
-//
-// haleyjd 12/24/11: add a directory to be loaded as if it's a wad file
-//
-void D_AddDirectory(const char *dir)
-{
-   D_reAllocFiles();
+   // haleyjd: optimization for fullscreen menu drawing -- no
+   // need to do all this if the menus are going to cover it up :)
+   if(!MN_CheckFullScreen())
+   {
+      switch(gamestate)                // do buffered drawing
+      {
+      case GS_LEVEL:
+         // see if the border needs to be initially drawn
+         if(oldgamestate != GS_LEVEL)
+            R_FillBackScreen();    // draw the pattern into the back screen
+         
+         if(automapactive)
+         {
+            AM_Drawer();
+         }
+         else
+         {
+            R_DrawViewBorder();    // redraw border
+            R_RenderPlayerView (&players[displayplayer], camera);
+         }
+         
+         ST_Drawer(scaledviewheight == 200);  // killough 11/98
+         HU_Drawer();
+         break;
+      case GS_INTERMISSION:
+         IN_Drawer();
+         break;
+      case GS_FINALE:
+         F_Drawer();
+         break;
+      case GS_DEMOSCREEN:
+         D_PageDrawer();
+         break;
+      case GS_CONSOLE:
+         break;
+      default:
+         break;
+      }
+         
+      // clean up border stuff
+      if(gamestate != oldgamestate && gamestate != GS_LEVEL)
+         I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
+      
+      oldgamestate = wipegamestate = gamestate;
+         
+      // draw pause pic
+      if(paused && !walkcam_active) // sf: not if walkcam active for
+      {                             // frads taking screenshots
+         const char *lumpname = GameModeInfo->pausePatch; 
+         
+         // haleyjd 03/12/03: changed to work
+         // in heretic, and with user pause patches
+         patch_t *patch = PatchLoader::CacheName(wGlobalDir, lumpname, PU_CACHE);
+         int width = patch->width;
+         int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
+         // SoM 2-4-04: ANYRES
+         int y = 4 + (automapactive ? 0 : scaledwindowy);
+         
+         V_DrawPatch(x, y, &subscreen43, patch);
+      }
 
-   wadfiles[numwadfiles].filename     = estrdup(dir);
-   wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
-   wadfiles[numwadfiles].f            = NULL;
-   wadfiles[numwadfiles].baseoffset   = 0;
-   wadfiles[numwadfiles].privatedir   = 0;
-   wadfiles[numwadfiles].directory    = true;
+      if(inwipe)
+      {
+         bool wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
+         
+         // about to start wiping; if wipewait is enabled, save everything 
+         // that was just drawn
+         if(wait)
+         {
+            Wipe_SaveEndScreen();
+            
+            do
+            {
+               int starttime = I_GetTime();
+               int tics = 0;
+               
+               Wipe_Drawer();
+               
+               do
+               {
+                  tics = I_GetTime() - starttime;
 
-   wadfiles[numwadfiles+1].filename = NULL;
+                  // haleyjd 06/16/09: sleep to avoid hogging 100% CPU
+                  I_Sleep(1);
+               }
+               while(!tics);
+               
+               Wipe_Ticker();
+               
+               C_Drawer();
+               MN_Drawer();
+               NetUpdate();
+               if(v_ticker)
+                  V_FPSDrawer();
+               I_FinishUpdate();
+               
+               if(inwipe)
+                  Wipe_BlitEndScreen();
+            }
+            while(inwipe);
+         }
+         else
+            Wipe_Drawer();
+      }
 
-   ++numwadfiles;
-}
+      C_Drawer();
 
-//sf: console command to list loaded files
-void D_ListWads(void)
-{
-   int i;
-   C_Printf(FC_HI "Loaded WADs:\n");
+   } // if(!MN_CheckFullScreen())
 
-   for(i = 0; i < numwadfiles; i++)
-      C_Printf("%s\n", wadfiles[i].filename);
+   // menus go directly to the screen
+   MN_Drawer();         // menu is drawn even on top of everything
+   NetUpdate();         // send out any new accumulation
+   
+   //sf : now system independent
+   if(v_ticker)
+      V_FPSDrawer();
+
+   if(d_drawfps)
+      D_showDrawnFPS();
+
+#ifdef INSTRUMENTED
+   if(printstats)
+      D_showMemStats();
+#endif
+   
+   // sf: wipe changed: runs alongside the rest of the game rather
+   //     than in its own loop
+   
+   I_FinishUpdate();              // page flip or blit buffer
 }
 
 //=============================================================================
@@ -1179,10 +1131,10 @@ static void D_SetUserPath()
 }
 
 // haleyjd 8/18/07: if true, the game path has been set
-static bool gamepathset;
+bool gamepathset;
 
 // haleyjd 8/19/07: index of the game name as specified on the command line
-static int gamepathparm;
+int gamepathparm;
 
 //
 // D_VerifyGamePath
@@ -1313,7 +1265,7 @@ static void D_SetGamePath()
 //
 // Looks for an optional root.edf file in base/game
 //
-static char *D_CheckGameEDF()
+char *D_CheckGameEDF()
 {
    struct stat sbuf;
    char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
@@ -1333,7 +1285,7 @@ static char *D_CheckGameEDF()
 // haleyjd 12/24/11: Looks for an optional music directory in base/game,
 // provided that s_hidefmusic is enabled.
 //
-static void D_CheckGameMusic()
+void D_CheckGameMusic()
 {
    if(s_hidefmusic)
    {
@@ -1477,1081 +1429,6 @@ static void D_CloseAutoloadDir(void)
 }
 
 //=============================================================================
-//
-// Disk File Handling
-//
-// haleyjd 05/28/10
-//
-
-// known .disk types
-enum
-{
-   DISK_DOOM,
-   DISK_DOOM2
-};
-
-static bool havediskfile;    // if true, -disk loaded a file
-static bool havediskiwad;    // if true, an IWAD was found in the disk file
-static const char *diskpwad; // PWAD name (or substring) to look for
-static diskfile_t *diskfile; // diskfile object (see d_diskfile.c)
-static diskwad_t   diskiwad; // diskwad object for iwad
-static int disktype;         // type of disk file
-
-//
-// D_CheckDiskFileParm
-//
-// haleyjd 05/28/10: Looks for -disk and sets up diskfile loading.
-//
-static void D_CheckDiskFileParm(void)
-{
-   int p;
-   const char *fn;
-
-   if((p = M_CheckParm("-disk")) && p < myargc - 1)
-   {
-      havediskfile = true;
-
-      // get diskfile name
-      fn = myargv[p + 1];
-
-      // have a pwad name as well?
-      if(p < myargc - 2 && *(myargv[p + 2]) != '-')
-         diskpwad = myargv[p + 2];
-
-      // open the diskfile
-      diskfile = D_OpenDiskFile(fn);
-   }
-}
-
-//
-// D_FindDiskFileIWAD
-//
-// Finds an IWAD in a disk file.
-// If this fails, the disk file will be closed.
-//
-static void D_FindDiskFileIWAD(void)
-{
-   diskiwad = D_FindWadInDiskFile(diskfile, "doom");
-
-   if(diskiwad.f)
-   {
-      havediskiwad = true;
-
-      if(strstr(diskiwad.name, "doom2.wad"))
-         disktype = DISK_DOOM2;
-      else
-         disktype = DISK_DOOM;
-   }
-   else
-   {
-      // close it up, we can't use it
-      D_CloseDiskFile(diskfile, true);
-      diskfile     = NULL;
-      diskpwad     = NULL;
-      havediskfile = false;
-      havediskiwad = false;
-   }
-}
-
-//
-// D_LoadDiskFileIWAD
-//
-// Loads an IWAD from the disk file.
-//
-static void D_LoadDiskFileIWAD(void)
-{
-   if(diskiwad.f)
-      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, 0);
-   else
-      I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
-}
-
-//
-// D_LoadDiskFilePWAD
-//
-// Loads a PWAD from the disk file.
-//
-static void D_LoadDiskFilePWAD(void)
-{
-   diskwad_t wad = D_FindWadInDiskFile(diskfile, diskpwad);
-
-   if(wad.f)
-   {
-      if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, 0);
-   }
-}
-
-//
-// D_metaGetLine
-//
-// Gets a single line of input from the metadata.txt resource.
-//
-static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
-{
-   int i = *idx;
-
-   // if empty at start, we are finished
-   if(input[i] == '\0')
-      return false;
-
-   qstr->clear();
-
-   while(input[i] != '\n' && input[i] != '\0')
-   {
-      if(input[i] == '\\' && input[i+1] == 'n')
-      {
-         // make \n sequence into a \n character
-         ++i;
-         *qstr += '\n';
-      }
-      else if(input[i] != '\r')
-         *qstr += input[i];
-
-      ++i;
-   }
-
-   if(input[i] == '\n')
-      ++i;
-
-   // write back input position
-   *idx = i;
-
-   return true;
-}
-
-//
-// D_DiskMetaData
-//
-// Handles metadata in the disk file.
-//
-static void D_DiskMetaData(void)
-{
-   char *name  = NULL, *metatext = NULL;
-   const char *slash = NULL;
-   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
-   int slen = 0, index = 0;
-   int partime = 0, musicnum = 0;
-   int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
-   diskwad_t wad;
-   qstring buffer;
-   qstring *qstr = &buffer;
-
-   if(!diskpwad)
-      return;
-
-   // find the wad to get the canonical resource name
-   wad = D_FindWadInDiskFile(diskfile, diskpwad);
-
-   // return if not found, or if this is metadata for the IWAD
-   if(!wad.f || strstr(wad.name, "doom"))
-      return;
-
-   // construct the metadata filename
-   M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
-   
-   if(!(slash = strrchr(wad.name, '\\')))
-      return;
-
-   slen = slash - wad.name;
-   ++slen;
-   strncpy(name, wad.name, slen);
-   strcpy(name + slen, "metadata.txt");
-
-   // load it up
-   if(!(metatext = (char *)(D_CacheDiskFileResource(diskfile, name, true))))
-      return;
-
-   // parse it
-
-   // setup qstring
-   qstr->initCreate();
-
-   // get first line, which is an episode id
-   D_metaGetLine(qstr, metatext, &index);
-
-   // get episode name
-   if(D_metaGetLine(qstr, metatext, &index))
-      GameModeInfo->versionName = qstr->duplicate(PU_STATIC);
-
-   // get end text
-   if(D_metaGetLine(qstr, metatext, &index))
-      endtext = qstr->duplicate(PU_STATIC);
-
-   // get next level after secret
-   if(D_metaGetLine(qstr, metatext, &index))
-      exitreturn = qstr->toInt();
-
-   // skip next line (wad name)
-   D_metaGetLine(qstr, metatext, &index);
-
-   // get secret level
-   if(D_metaGetLine(qstr, metatext, &index))
-      secretlevel = qstr->toInt();
-
-   // get levels
-   while(D_metaGetLine(qstr, metatext, &index))
-   {
-      switch(linenum)
-      {
-      case 0: // levelname
-         levelname = qstr->duplicate(PU_STATIC);
-         break;
-      case 1: // music number
-         musicnum = mus_runnin + qstr->toInt() - 1;
-
-         if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
-            musicname = S_music[musicnum].name;
-         else
-            musicname = "";
-         break;
-      case 2: // partime (final field)
-         partime = qstr->toInt();
-
-         // create a metainfo object for LevelInfo
-         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
-                          levelnum == secretlevel ? exitreturn : 0,
-                          levelnum == exitreturn - 1 ? secretlevel : 0,
-                          levelnum == secretlevel - 1, 
-                          (levelnum == secretlevel - 1) ? endtext : NULL);
-         break;
-      }
-      ++linenum;
-
-      if(linenum == 3)
-      {
-         levelnum++;
-         linenum = 0;
-      }
-   }
-
-   // done with metadata resource
-   efree(metatext);
-}
-
-//=============================================================================
-//
-// DOOMWADPATH support
-//
-// haleyjd 12/31/10: A standard evolved later for DOOMWADPATH, in preference to
-// use of DOOMWADDIR, which could only specify a single path. DOOMWADPATH is 
-// like the standard system path, except for wads. When looking for a file on
-// the DOOMWADPATH, the paths in the variable will be tried in the order they
-// are specified.
-//
-
-// doomwadpaths is an array of paths, the decomposition of the DOOMWADPATH
-// environment variable
-static PODCollection<char *> doomwadpaths;
-
-//
-// D_AddDoomWadPath
-//
-// Adds a path to doomwadpaths.
-//
-static void D_AddDoomWadPath(const char *path)
-{
-   doomwadpaths.add(estrdup(path));
-}
-
-// haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-#define DOOMWADPATHSEP ';'
-#else
-#define DOOMWADPATHSEP ':'
-#endif
-
-//
-// D_ParseDoomWadPath
-//
-// Looks for the DOOMWADPATH environment variable. If it is defined, then
-// doomwadpaths will consist of the components of the decomposed variable.
-//
-static void D_ParseDoomWadPath(void)
-{
-   const char *dwp;
-
-   if((dwp = getenv("DOOMWADPATH")))
-   {
-      char *tempdwp = Z_Strdupa(dwp);
-      char *rover   = tempdwp;
-      char *currdir = tempdwp;
-      int   dirlen  = 0;
-
-      while(*rover)
-      {
-         // Found the end of a path?
-         // Add the string from the prior one (or the beginning) to here as
-         // a separate path.
-         if(*rover == DOOMWADPATHSEP)
-         {
-            *rover = '\0'; // replace ; or : with a null terminator
-            if(dirlen)
-               D_AddDoomWadPath(currdir);
-            dirlen = 0;
-            currdir = rover + 1; // start of next path is the next char
-         }
-         else
-            ++dirlen; // Length is tracked so that we don't add any 0-length paths
-
-         ++rover;
-      }
-
-      // Add the last path if necessary (it's either the only one, or the final
-      // one, which is probably not followed by a semicolon).
-      if(dirlen)
-         D_AddDoomWadPath(currdir);
-   }
-}
-
-//
-// D_FindInDoomWadPath
-//
-// Looks for a file in each path extracted from DOOMWADPATH in the order the
-// paths were defined. A normalized concatenation of the path and the filename
-// will be returned which must be freed by the calling code, if the file is
-// found. Otherwise NULL is returned.
-//
-char *D_FindInDoomWadPath(const char *filename, const char *extension)
-{
-   qstring qstr;
-   char *concat  = NULL;
-   char *currext = NULL;
-   size_t numpaths = doomwadpaths.getLength();
-
-   for(size_t i = 0; i < numpaths ; i++)
-   {
-      struct stat sbuf;
-      
-      qstr = doomwadpaths[i];
-      qstr += '/';
-      qstr += filename;
-      qstr.normalizeSlashes();
-
-      // See if the file exists as-is
-      if(!stat(qstr.constPtr(), &sbuf)) // check for existence
-      {
-         if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
-         {
-            concat = qstr.duplicate(PU_STATIC);
-            break; // done.
-         }
-      }
-
-      // See if the file could benefit from having the default extension
-      // added to it.
-      if(extension && (currext = qstr.bufferAt(qstr.length() - 4))) 
-      {
-         if(strcasecmp(currext, extension)) // Doesn't already have it?
-         {
-            qstr += extension;
-
-            if(!stat(qstr.constPtr(), &sbuf)) // exists?
-            {
-               if(!S_ISDIR(sbuf.st_mode)) // not a dir?
-               {
-                  concat = qstr.duplicate(PU_STATIC);
-                  break; // done.
-               }
-            }
-         }
-      }
-   }
-
-   return concat;
-}
-
-//=============================================================================
-//
-// IWAD Detection / Verification Code
-//
-
-int iwad_choice; // haleyjd 03/19/10: remember choice
-
-// variable-for-index lookup for D_DoIWADMenu
-static char **iwadVarForNum[NUMPICKIWADS] =
-{
-   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
-   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
-   &gi_path_hacx,                                      // HACX
-   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
-   &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
-};
-
-//
-// D_DoIWADMenu
-//
-// Crazy fancy graphical IWAD choosing menu.
-// Paths are stored in the system.cfg file, and only the games with paths
-// stored can be picked from the menu.
-// This feature is only available for SDL builds.
-//
-static const char *D_DoIWADMenu(void)
-{
-   const char *iwadToUse = NULL;
-
-#ifdef _SDL_VER
-   bool haveIWADs[NUMPICKIWADS];
-   int i, choice = -1;
-   bool foundone = false;
-
-   // populate haveIWADs array based on system.cfg variables
-   for(i = 0; i < NUMPICKIWADS; ++i)
-   {
-      if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
-         foundone = true;
-   }
-
-   if(foundone) // at least one IWAD must be specified!
-   {
-      startupmsg("D_DoIWADMenu", "Init IWAD choice subsystem.");
-      choice = I_Pick_DoPicker(haveIWADs, iwad_choice);
-   }
-
-   if(choice >= 0)
-   {
-      iwad_choice = choice;               // 03/19/10: remember selection
-      iwadToUse = *iwadVarForNum[choice];
-   }
-#endif
-
-   return iwadToUse;
-}
-
-// Match modes for iwadpathmatch 
-enum
-{
-   MATCH_NONE,
-   MATCH_GAME,
-   MATCH_IWAD
-};
-
-//
-// iwadpathmatch
-//
-// This structure is used for finding an IWAD path variable that is the
-// best match for a -game or -iwad string. A predefined priority is imposed
-// on the IWAD variables so that the "best" version of the game available
-// is chosen.
-//
-struct iwadpathmatch_t
-{
-   int         mode;         // Mode for this entry: -game, or -iwad
-   const char *name;         // The -game or -iwad substring matched
-   char      **iwadpaths[3]; // IWAD path variables to check when this matches,
-                             // in order of precedence from greatest to least.
-};
-
-static iwadpathmatch_t iwadMatchers[] =
-{
-   // -game matches:
-   { MATCH_GAME, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_GAME, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_GAME, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
-
-   // -iwad matches 
-   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
-   { MATCH_IWAD, "doom1",     { &gi_path_doomsw, NULL,             NULL            } },
-   { MATCH_IWAD, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_fdoomu } },
-   { MATCH_IWAD, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_IWAD, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_IWAD, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw, NULL,             NULL            } },
-   { MATCH_IWAD, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
-   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
-   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
-   { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
-   
-   // Terminating entry
-   { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
-};
-
-//
-// D_IWADPathForGame
-//
-// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
-// -game parameter. Returns NULL if none found.
-//
-static char *D_IWADPathForGame(const char *game)
-{
-   iwadpathmatch_t *cur = iwadMatchers;
-
-   while(cur->mode != MATCH_NONE)
-   {
-      if(cur->mode == MATCH_GAME) // is a -game matcher?
-      {
-         if(!strcasecmp(cur->name, game)) // should be an exact match
-         {
-            for(int i = 0; i < 3; ++i) // try each path in order
-            {
-               if(!cur->iwadpaths[i]) // no more valid paths to try
-                  break;
-
-               if(**(cur->iwadpaths[i]) != '\0')
-                  return *(cur->iwadpaths[i]); // got one!
-            }
-         }
-      }
-      ++cur; // try the next entry
-   }
-
-   return NULL; // nothing was found
-}
-
-//
-// D_IWADPathForIWADParam
-//
-// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
-// -iwad parameter. Returns NULL if none found.
-//
-static char *D_IWADPathForIWADParam(const char *iwad)
-{
-   iwadpathmatch_t *cur = iwadMatchers;
-   
-   // If the name starts with a slash, step forward one
-   char *tmpname = Z_Strdupa((*iwad == '/' || *iwad == '\\') ? iwad + 1 : iwad);
-   
-   // Truncate at any extension
-   char *dotpos = strrchr(tmpname, '.');
-   if(dotpos)
-      *dotpos = '\0';
-
-   while(cur->mode != MATCH_NONE)
-   {
-      if(cur->mode == MATCH_IWAD) // is a -iwad matcher?
-      {
-         if(!strcasecmp(cur->name, tmpname)) // should be an exact match
-         {
-            for(int i = 0; i < 3; ++i) // try each path in order
-            {
-               if(!cur->iwadpaths[i]) // no more valid paths to try
-                  break;
-
-               if(**(cur->iwadpaths[i]) != '\0')
-                  return *(cur->iwadpaths[i]); // got one!
-            }
-         }
-      }
-      ++cur; // try the next entry
-   }
-
-   return NULL; // nothing was found
-}
-
-// macros for CheckIWAD
-
-#define isMapExMy(name) \
-   ((name)[0] == 'E' && (name)[2] == 'M' && !(name)[4])
-
-#define isMapMAPxy(name) \
-   ((name)[0] == 'M' && (name)[1] == 'A' && (name)[2] == 'P' && !(name)[5])
-
-#define isCAV(name) \
-   ((name)[0] == 'C' && (name)[1] == 'A' && (name)[2] == 'V' && !(name)[7])
-
-#define isMC(name) \
-   ((name)[0] == 'M' && (name)[1] == 'C' && !(name)[3])
-
-// haleyjd 10/13/05: special stuff for FreeDOOM :)
-static bool freedoom = false;
-
-//
-// CheckIWAD
-//
-// Verify a file is indeed tagged as an IWAD
-// Scan its lumps for levelnames and return gamemode as indicated
-// Detect missing wolf levels in DOOM II
-//
-// The filename to check is passed in iwadname, the gamemode detected is
-// returned in gmode, hassec returns the presence of secret levels
-//
-// jff 4/19/98 Add routine to test IWAD for validity and determine
-// the gamemode from it. Also note if DOOM II, whether secret levels exist
-//
-// killough 11/98:
-// Rewritten to considerably simplify
-// Added Final Doom support (thanks to Joel Murdoch)
-//
-static void CheckIWAD(const char *iwadname,
-                      GameMode_t *gmode,
-                      GameMission_t *gmission,  // joel 10/17/98 Final DOOM fix
-                      bool *hassec)
-{
-   FILE *fp;
-   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
-   int raven = 0, sosr = 0;
-   filelump_t lump;
-   wadinfo_t header;
-   const char *n = lump.name;
-
-   if(!(fp = fopen(iwadname, "rb")))
-      I_Error("Can't open IWAD: %s\n", iwadname);
-
-   // read IWAD header
-   if(fread(&header, sizeof header, 1, fp) < 1 ||
-      strncmp(header.identification, "IWAD", 4))
-   {
-      // haleyjd 06/06/09: do not error out here, due to some bad tools
-      // resetting peoples' IWADs to PWADs. Only error if it is also 
-      // not a PWAD.
-      if(strncmp(header.identification, "PWAD", 4))
-         I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
-      else
-         usermsg("Warning: IWAD tag not present: %s\n", iwadname);
-   }
-
-   fseek(fp, SwapLong(header.infotableofs), SEEK_SET);
-
-   // Determine game mode from levels present
-   // Must be a full set for whichever mode is present
-   // Lack of wolf-3d levels also detected here
-
-   header.numlumps = SwapLong(header.numlumps);
-
-   for(; header.numlumps; header.numlumps--)
-   {
-      if(!fread(&lump, sizeof(lump), 1, fp))
-         break;
-
-      if(isMapExMy(n))
-      {
-         if(n[1] == '4')
-            ++ud;
-         else if(n[1] == '3' || n[1] == '2')
-            ++rg;
-         else if(n[1] == '1')
-            ++sw;
-      }
-      else if(isMapMAPxy(n))
-      {
-         ++cm;
-         sc += (n[3] == '3' && (n[4] == '1' || n[4] == '2'));
-      }
-      else if(isCAV(n))
-         ++tnt;
-      else if(isMC(n))
-         ++plut;
-      else if(!strncmp(n, "ADVISOR",  7) || 
-              !strncmp(n, "TINTTAB",  7) || 
-              !strncmp(n, "SNDCURVE", 8))
-      {
-         ++raven;
-      }
-      else if(!strncmp(n, "EXTENDED", 8))
-         ++sosr;
-      else if(!strncmp(n, "FREEDOOM", 8))
-         freedoom = true;
-      else if(!strncmp(n, "HACX-R", 6))
-         ++hacx;
-   }
-
-   fclose(fp);
-
-   *hassec = false;
-
-   // haleyjd 10/09/05: "Raven mode" detection
-   if(raven == 3)
-   {
-      // TODO: Hexen
-      *gmission = heretic;
-
-      if(rg >= 18)
-      {
-         // require both E4 and EXTENDED lump for SoSR
-         if(sosr && ud >= 9)
-            *gmission = hticsosr;
-         *gmode = hereticreg;
-      }
-      else if(sw >= 9)
-         *gmode = hereticsw;
-      else
-         *gmode = indetermined;
-   }
-   else
-   {
-      *gmission = doom;
-
-      if(cm >= 30 || (cm && !rg))
-      {
-         if(freedoom) // FreeDoom is meant to be Doom II, not TNT
-            *gmission = doom2;
-         else
-         {
-            if(tnt >= 4)
-               *gmission = pack_tnt;
-            else if(plut >= 8)
-               *gmission = pack_plut;
-            else if(hacx)
-               *gmission = pack_hacx;
-            else
-               *gmission = doom2;
-         }
-         *hassec = (sc >= 2) || hacx;
-         *gmode = commercial;
-      }
-      else if(ud >= 9)
-         *gmode = retail;
-      else if(rg >= 18)
-         *gmode = registered;
-      else if(sw >= 9)
-         *gmode = shareware;
-      else
-         *gmode = indetermined;
-   }
-}
-
-//
-// WadFileStatus
-//
-// jff 4/19/98 Add routine to check a pathname for existence as
-// a file or directory. If neither append .wad and check if it
-// exists as a file then. Else return non-existent.
-//
-static bool WadFileStatus(char *filename, bool *isdir)
-{
-   struct stat sbuf;
-   int i;
-
-   *isdir = false;                //default is directory to false
-   if(!filename || !*filename)    //if path NULL or empty, doesn't exist
-      return false;
-
-   if(!stat(filename,&sbuf))      //check for existence
-   {
-      *isdir=S_ISDIR(sbuf.st_mode); //if it does, set whether a dir or not
-      return true;                  //return does exist
-   }
-
-   i = strlen(filename);          //get length of path
-   if(i >= 4)
-      if(!strncasecmp(filename + i - 4, ".wad", 4))
-         return false;            //if already ends in .wad, not found
-
-   strcat(filename,".wad");       //try it with .wad added
-   if(!stat(filename,&sbuf))      //if it exists then
-   {
-      if(S_ISDIR(sbuf.st_mode))   //but is a dir, then say we didn't find it
-         return false;
-      return true;                //otherwise return file found, w/ .wad added
-   }
-   filename[i] = 0;               //remove .wad
-   return false;                  //and report doesn't exist
-}
-
-// jff 4/19/98 list of standard IWAD names
-static const char *const standard_iwads[]=
-{
-   // Official IWADs
-   "/doom2.wad",     // DOOM II
-   "/doom2f.wad",    // DOOM II, French Version
-   "/plutonia.wad",  // Final DOOM: Plutonia
-   "/tnt.wad",       // Final DOOM: TNT
-   "/doom.wad",      // Registered/Ultimate DOOM
-   "/doomu.wad",     // CPhipps - allow doomu.wad
-   "/doom1.wad",     // Shareware DOOM
-   "/heretic.wad",   // Heretic  -- haleyjd 10/10/05
-   "/heretic1.wad",  // Shareware Heretic
-
-   // Unofficial IWADs
-   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
-   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
-   "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
-   "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
-   "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
-};
-
-static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
-
-//
-// FindIWADFile
-//
-// Search in all the usual places until an IWAD is found.
-//
-// The global baseiwad contains either a full IWAD file specification
-// or a directory to look for an IWAD in, or the name of the IWAD desired.
-//
-// The global standard_iwads lists the standard IWAD names
-//
-// The result of search is returned in baseiwad, or set blank if none found
-//
-// IWAD search algorithm:
-//
-// Set customiwad blank
-// If -iwad present set baseiwad to normalized path from -iwad parameter
-//  If baseiwad is an existing file, thats it
-//  If baseiwad is an existing dir, try appending all standard iwads
-//  If haven't found it, and no : or / is in baseiwad,
-//   append .wad if missing and set customiwad to baseiwad
-//
-// Look in . for customiwad if set, else all standard iwads
-//
-// Look in DoomExeDir. for customiwad if set, else all standard iwads
-//
-// If $DOOMWADDIR is an existing file
-//  If customiwad is not set, thats it
-//  else replace filename with customiwad, if exists thats it
-// If $DOOMWADDIR is existing dir, try customiwad if set, else standard iwads
-//
-// If $HOME is an existing file
-//  If customiwad is not set, thats it
-//  else replace filename with customiwad, if exists thats it
-// If $HOME is an existing dir, try customiwad if set, else standard iwads
-//
-// IWAD not found
-//
-// jff 4/19/98 Add routine to search for a standard or custom IWAD in one
-// of the standard places. Returns a blank string if not found.
-//
-// killough 11/98: simplified, removed error-prone cut-n-pasted code
-//
-char *FindIWADFile(void)
-{
-   static const char *envvars[] = { "DOOMWADDIR", "HOME" };
-   static char *iwad = NULL;
-   char *customiwad = NULL;
-   char *gameiwad = NULL;
-   bool isdir = false;
-   int i, j;
-   char *p;
-   const char *basename = NULL;
-
-   //jff 3/24/98 get -iwad parm if specified else use .
-   if((i = M_CheckParm("-iwad")) && i < myargc - 1)
-      basename = myargv[i + 1];
-   else
-      basename = G_GFSCheckIWAD(); // haleyjd 04/16/03: GFS support
-
-   // haleyjd 08/19/07: if -game was used and neither -iwad nor a GFS iwad
-   // specification was used, start off by trying base/game/game.wad
-   if(gamepathset && !basename)
-   {
-      qstring tempGameIWAD;
-      
-      tempGameIWAD = basegamepath;
-      tempGameIWAD.pathConcatenate(myargv[gamepathparm]);
-      tempGameIWAD.addDefaultExtension(".wad");
-      gameiwad = tempGameIWAD.duplicateAuto();
-
-      if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
-         basename = gameiwad;
-      else                        
-      {
-         // haleyjd 12/31/10: base/game/game.wad doesn't exist;
-         // try matching against appropriate configured IWAD path(s)
-         char *cfgpath = D_IWADPathForGame(myargv[gamepathparm]);
-         if(cfgpath && !access(cfgpath, R_OK))
-            basename = cfgpath;
-      }
-   }
-      
-   //jff 3/24/98 get -iwad parm if specified else use .
-   if(basename)
-   {
-      baseiwad = estrdup(basename);
-      M_NormalizeSlashes(baseiwad);
-
-      iwad = ecalloc(char *, 1, strlen(baseiwad) + 1024);
-      strcpy(iwad, baseiwad);
-      
-      if(WadFileStatus(iwad, &isdir))
-      {
-         if(!isdir)
-            return iwad;
-         else
-         {
-            for(i = 0; i < nstandard_iwads; i++)
-            {
-               int n = strlen(iwad);
-               strcat(iwad, standard_iwads[i]);
-               if(WadFileStatus(iwad, &isdir) && !isdir)
-                  return iwad;
-               iwad[n] = 0; // reset iwad length to former
-            }
-         }
-      }
-      else if(!strchr(iwad, ':') && !strchr(iwad, '/') && !strchr(iwad, '\\'))
-      {
-         M_StringAlloca(&customiwad, 1, 8, iwad);
-         M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
-         M_NormalizeSlashes(customiwad);
-      }
-   }
-   else if(!gamepathset) // try wad picker
-   {
-      const char *name = D_DoIWADMenu();
-      if(name && *name)
-      {
-         baseiwad = estrdup(name);
-         M_NormalizeSlashes(baseiwad);
-         return baseiwad;
-      }
-   }
-
-   for(j = 0; j < (gamepathset ? 3 : 2); j++)
-   {
-      switch(j)
-      {
-      case 0:
-      case 1:
-         if(iwad)
-            efree(iwad);
-         iwad = ecalloc(char *, 1, strlen(D_DoomExeDir()) + 1024);
-         strcpy(iwad, j ? D_DoomExeDir() : ".");
-         break;
-      case 2:
-         // haleyjd: try basegamepath too when -game was used
-         if(iwad)
-            efree(iwad);
-         iwad = ecalloc(char *, 1, strlen(basegamepath) + 1024);
-         strcpy(iwad, basegamepath);
-         break;
-      }
-
-      M_NormalizeSlashes(iwad);
-
-       // sf: only show 'looking in' for devparm
-      if(devparm)
-         printf("Looking in %s\n",iwad);   // killough 8/8/98
-
-      if(customiwad)
-      {
-         strcat(iwad, customiwad);
-         if(WadFileStatus(iwad, &isdir) && !isdir)
-            return iwad;
-      }
-      else
-      {
-         for(i = 0; i < nstandard_iwads; i++)
-         {
-            int n = strlen(iwad);
-            strcat(iwad, standard_iwads[i]);
-            if(WadFileStatus(iwad, &isdir) && !isdir)
-               return iwad;
-            iwad[n] = 0; // reset iwad length to former
-         }
-      }
-   }
-
-   // haleyjd 12/31/10: Try finding a match amongst configured IWAD paths
-   if(customiwad)
-   {
-      char *cfgpath = D_IWADPathForIWADParam(customiwad);
-      if(cfgpath && !access(cfgpath, R_OK))
-      {
-         if(iwad)
-            efree(iwad);
-         iwad = estrdup(cfgpath);
-         return iwad;
-      }
-   }
-
-   // haleyjd 01/01/11: support for DOOMWADPATH
-   D_ParseDoomWadPath();
-
-   if(doomwadpaths.getLength()) // If at least one path is specified...
-   {
-      if(customiwad) // -iwad was used with a file name?
-      {
-         if(iwad)
-            efree(iwad);
-         if((iwad = D_FindInDoomWadPath(customiwad, ".wad")))
-            return iwad;
-      }
-      else
-      {
-         // Try all the standard iwad names in the normal order
-         for(i = 0; i < nstandard_iwads; i++)
-         {
-            if(iwad)
-               efree(iwad);
-            if((iwad = D_FindInDoomWadPath(standard_iwads[i], ".wad")))
-               return iwad;
-         }
-      }
-   }
-
-   for(i = 0; i < sizeof envvars / sizeof *envvars; i++)
-   {
-      if((p = getenv(envvars[i])))
-      {
-         if(iwad)
-            efree(iwad);
-         iwad = ecalloc(char *, 1, sizeof(p) + 1024);
-         M_NormalizeSlashes(strcpy(iwad, p));
-         if(WadFileStatus(iwad, &isdir))
-         {
-            if(!isdir)
-            {
-               if(!customiwad)
-                  return printf("Looking for %s\n", iwad), iwad; // killough 8/8/98
-               else if((p = strrchr(iwad, '/')) || (p = strrchr(iwad, '\\')))
-               {
-                  *p=0;
-                  strcat(iwad, customiwad);
-                  printf("Looking for %s\n",iwad);  // killough 8/8/98
-                  if(WadFileStatus(iwad, &isdir) && !isdir)
-                     return iwad;
-               }
-            }
-            else
-            {
-               if(devparm)       // sf: devparm only
-                  printf("Looking in %s\n",iwad);  // killough 8/8/98
-               if(customiwad)
-               {
-                  if(WadFileStatus(strcat(iwad, customiwad), &isdir) && !isdir)
-                     return iwad;
-               }
-               else
-               {
-                  for(i = 0; i < nstandard_iwads; i++)
-                  {
-                     int n = strlen(iwad);
-                     strcat(iwad, standard_iwads[i]);
-                     if(WadFileStatus(iwad, &isdir) && !isdir)
-                        return iwad;
-                     iwad[n] = 0; // reset iwad length to former
-                  }
-               } // end else (!*customiwad)
-            } // end else (isdir)
-         } // end if(WadFileStatus(...))
-      } // end if((p = getenv(...)))
-   } // end for
-
-   // haleyjd 01/17/11: be sure iwad return string is valid...
-   if(!iwad)
-      iwad = emalloc(char *, 1);
-
-   *iwad = 0;
-   return iwad;
-}
-
-//
-// D_LoadResourceWad
-//
-// haleyjd 03/10/03: moved eternity.wad loading to this function
-//
-static void D_LoadResourceWad(void)
-{
-   char *filestr = NULL;
-   size_t len = M_StringAlloca(&filestr, 1, 20, basegamepath);
-
-   psnprintf(filestr, len, "%s/eternity.wad", basegamepath);
-
-   // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.wad
-   if(access(filestr, R_OK))
-      psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
-
-   M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, 0);
-
-   modifiedgame = false; // reset, ignoring smmu.wad etc.
-}
 
 static const char *game_name; // description of iwad
 
@@ -2562,7 +1439,7 @@ static const char *game_name; // description of iwad
 // played at startup. "iwad" may be NULL. GameModeInfo must be initialized prior
 // to calling this.
 //
-static void D_SetGameName(const char *iwad)
+void D_SetGameName(const char *iwad)
 {
    // get appropriate name for the gamemode/mission
    game_name = GameModeInfo->versionName;
@@ -2598,7 +1475,7 @@ static void D_SetGameName(const char *iwad)
 // Initializes important file paths, including the game path, config
 // path, and save path.
 //
-static void D_InitPaths(void)
+void D_InitPaths()
 {
    int i;
 
@@ -2611,19 +1488,15 @@ static void D_InitPaths(void)
    // killough 10/98
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
    {
-      // hack for DOOM modes: optional use of /doom config
-      size_t len = strlen(userpath) + strlen("/doom/eternity.cfg");
-      basedefault = emalloc(char *, len);
-
-      psnprintf(basedefault, len, "%s/doom/eternity.cfg", userpath);
+      qstring tmp(userpath);
+      tmp.pathConcatenate("/doom/eternity.cfg");
+      basedefault = tmp.duplicate(PU_STATIC);
    }
    else
    {
-      size_t len = strlen(usergamepath) + strlen("/eternity.cfg");
-
-      basedefault = emalloc(char *, len);
-
-      psnprintf(basedefault, len, "%s/eternity.cfg", usergamepath);
+      qstring tmp(usergamepath);
+      tmp.pathConcatenate("/eternity.cfg");
+      basedefault = tmp.duplicate(PU_STATIC);
    }
 
    // haleyjd 11/23/06: set basesavegame here, and use usergamepath
@@ -2643,156 +1516,6 @@ static void D_InitPaths(void)
       else
          puts("Error: -save path does not exist, using game path");  // killough 8/8/98
    }
-}
-
-//
-// IdentifyDisk
-//
-// haleyjd 05/31/10: IdentifyVersion subroutine for dealing with disk files.
-//
-static void IdentifyDisk(void)
-{
-   GameMode_t    gamemode;
-   GameMission_t gamemission;
-
-   printf("IWAD found: %s\n", diskiwad.name);
-
-   // haleyjd: hardcoded for now
-   if(disktype == DISK_DOOM2)
-   {
-      gamemode      = commercial;
-      gamemission   = pack_disk;
-      haswolflevels = true;
-   }
-   else
-   {
-      gamemode    = retail;
-      gamemission = doom;
-   }
-
-   // setup gameModeInfo
-   D_SetGameModeInfo(gamemode, gamemission);
-
-   // haleyjd: load metadata from diskfile
-   D_DiskMetaData();
-
-   // set and display version name
-   D_SetGameName(NULL);
-
-   // initialize game/data paths
-   D_InitPaths();
-
-   // haleyjd 03/10/03: add eternity.wad before the IWAD, at request of
-   // fraggle -- this allows better compatibility with new IWADs
-   D_LoadResourceWad();
-
-   // load disk IWAD
-   D_LoadDiskFileIWAD();
-
-   // haleyjd: load disk file pwad here, if one was specified
-   if(diskpwad)
-      D_LoadDiskFilePWAD();
-
-   // 12/24/11: check for game folder hi-def music
-   D_CheckGameMusic();
-
-   // done with the diskfile structure
-   D_CloseDiskFile(diskfile, false);
-   diskfile = NULL;
-}
-
-//
-// IdentifyIWAD
-//
-// haleyjd 05/31/10: IdentifyVersion subroutine for dealing with normal IWADs.
-//
-static void IdentifyIWAD(void)
-{
-   char *iwad;
-   GameMode_t    gamemode;
-   GameMission_t gamemission;
-
-   iwad = FindIWADFile();
-
-   if(iwad && *iwad)
-   {
-      printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
-
-      CheckIWAD(iwad,
-                &gamemode,
-                &gamemission,   // joel 10/16/98 gamemission added
-                &haswolflevels);
-
-      // setup GameModeInfo
-      D_SetGameModeInfo(gamemode, gamemission);
-
-      // set and display version name
-      D_SetGameName(iwad);
-
-      // initialize game/data paths
-      D_InitPaths();
-
-      // haleyjd 03/10/03: add eternity.wad before the IWAD, at request of
-      // fraggle -- this allows better compatibility with new IWADs
-      D_LoadResourceWad();
-
-      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
-
-      // 12/24/11: check for game folder hi-def music
-      D_CheckGameMusic();
-
-      // done with iwad string
-      efree(iwad);
-   }
-   else
-   {
-      // haleyjd 08/20/07: improved error message for n00bs
-      I_Error("\nIWAD not found!\n"
-              "To specify an IWAD, try one of the following:\n"
-              "* Configure IWAD file paths in base/system.cfg\n"
-              "* Use -iwad\n"
-              "* Set the DOOMWADDIR or DOOMWADPATH environment variables.\n"
-              "* Place an IWAD in the working directory.\n"
-              "* Place an IWAD file under the appropriate game folder of\n"
-              "  the base directory and use the -game parameter.\n");
-   }
-}
-
-//
-// IdentifyVersion
-//
-// Set the location of the defaults file and the savegame root
-// Locate and validate an IWAD file
-// Determine gamemode from the IWAD
-//
-// supports IWADs with custom names. Also allows the -iwad parameter to
-// specify which iwad is being searched for if several exist in one dir.
-// The -iwad parm may specify:
-//
-// 1) a specific pathname, which must exist (.wad optional)
-// 2) or a directory, which must contain a standard IWAD,
-// 3) or a filename, which must be found in one of the standard places:
-//   a) current dir,
-//   b) exe dir
-//   c) $DOOMWADDIR
-//   d) or $HOME
-//
-// jff 4/19/98 rewritten to use a more advanced search algorithm
-//
-void IdentifyVersion(void)
-{
-   // haleyjd 05/28/10: check for -disk parameter
-   D_CheckDiskFileParm();
-
-   // if we loaded one, try finding an IWAD in it
-   if(havediskfile)
-      D_FindDiskFileIWAD();
-
-   // locate the IWAD and determine game mode from it
-   if(havediskiwad)
-      IdentifyDisk();
-   else
-      IdentifyIWAD();
 }
 
 //=============================================================================
@@ -3117,311 +1840,6 @@ static void D_ProcessDehInWads(void)
 
 //=============================================================================
 //
-// haleyjd 03/10/03: GFS functions
-//
-
-static void D_ProcessGFSDeh(gfs_t *gfs)
-{
-   int i;
-   char *filename = NULL;
-
-   for(i = 0; i < gfs->numdehs; ++i)
-   {
-      if(gfs->filepath)
-      {
-         filename = M_SafeFilePath(gfs->filepath, gfs->dehnames[i]);
-      }
-      else
-      {
-         filename = Z_Strdupa(gfs->dehnames[i]);
-         M_NormalizeSlashes(filename);
-      }
-
-      if(access(filename, F_OK))
-         I_Error("Couldn't open .deh or .bex %s\n", filename);
-
-      D_QueueDEH(filename, 0); // haleyjd: queue it
-   }
-}
-
-static void D_ProcessGFSWads(gfs_t *gfs)
-{
-   int i;
-   char *filename = NULL;
-
-   // haleyjd 09/30/08: don't load GFS wads in shareware gamemodes
-   if(GameModeInfo->flags & GIF_SHAREWARE)
-   {
-      startupmsg("D_ProcessGFSWads", "ignoring GFS wad files");
-      return;
-   }
-
-   // haleyjd 06/21/04: GFS should mark modified game when wads are added!
-   if(gfs->numwads > 0)
-      modifiedgame = true;
-
-   for(i = 0; i < gfs->numwads; ++i)
-   {
-      if(gfs->filepath)
-      {
-         filename = M_SafeFilePath(gfs->filepath, gfs->wadnames[i]);
-      }
-      else
-      {
-         filename = Z_Strdupa(gfs->wadnames[i]);
-         M_NormalizeSlashes(filename);
-      }
-
-      if(access(filename, F_OK))
-         I_Error("Couldn't open WAD file %s\n", filename);
-
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
-   }
-}
-
-static void D_ProcessGFSCsc(gfs_t *gfs)
-{
-   int i;
-   char *filename = NULL;
-
-   for(i = 0; i < gfs->numcsc; ++i)
-   {
-      if(gfs->filepath)
-      {
-         filename = M_SafeFilePath(gfs->filepath, gfs->cscnames[i]);
-      }
-      else
-      {
-         filename = Z_Strdupa(gfs->cscnames[i]);
-         M_NormalizeSlashes(filename);
-      }
-
-      if(access(filename, F_OK))
-         I_Error("Couldn't open CSC file %s\n", filename);
-
-      C_RunScriptFromFile(filename);
-   }
-}
-
-//=============================================================================
-//
-// EDF Loading
-//
-
-//
-// D_LooseEDF
-//
-// Looks for a loose EDF file on the command line, to support
-// drag-and-drop.
-//
-static bool D_LooseEDF(char **buffer)
-{
-   int i;
-   const char *dot;
-
-   for(i = 1; i < myargc; ++i)
-   {
-      // stop at first param with '-' or '@'
-      if(myargv[i][0] == '-' || myargv[i][0] == '@')
-         break;
-
-      // get extension (search from right end)
-      dot = strrchr(myargv[i], '.');
-
-      // check extension
-      if(!dot || strncasecmp(dot, ".edf", 4))
-         continue;
-
-      *buffer = Z_Strdupa(myargv[i]);
-      return true; // process only the first EDF found
-   }
-
-   return false;
-}
-
-//
-// D_LoadEDF
-//
-// Identifies the root EDF file, and then calls E_ProcessEDF.
-//
-static void D_LoadEDF(gfs_t *gfs)
-{
-   int i;
-   char *edfname = NULL;
-   const char *shortname = NULL;
-
-   // command line takes utmost precedence
-   if((i = M_CheckParm("-edf")) && i < myargc - 1)
-   {
-      // command-line EDF file found
-      edfname = Z_Strdupa(myargv[i + 1]);
-      M_NormalizeSlashes(edfname);
-   }
-   else if(gfs && (shortname = G_GFSCheckEDF()))
-   {
-      // GFS specified an EDF file
-      // haleyjd 09/10/11: bug fix - don't assume gfs->filepath is valid
-      if(gfs->filepath)
-         edfname = M_SafeFilePath(gfs->filepath, shortname);
-      else
-      {
-         edfname = Z_Strdupa(shortname);
-         M_NormalizeSlashes(edfname);
-      }
-   }
-   else
-   {
-      // use default
-      if(!D_LooseEDF(&edfname)) // check for loose files (drag and drop)
-      {
-         char *fn;
-
-         // haleyjd 08/20/07: check for root.edf in base/game first
-         if((fn = D_CheckGameEDF()))
-            edfname = fn;
-         else
-            edfname = M_SafeFilePath(basepath, "root.edf");
-
-         // disable other game modes' definitions implicitly ONLY
-         // when using the default root.edf
-         // also, allow command line toggle
-         if(!M_CheckParm("-edfenables"))
-         {
-            if(GameModeInfo->type == Game_Heretic)
-               E_EDFSetEnableValue("DOOM", 0);
-            else
-               E_EDFSetEnableValue("HERETIC", 0);
-         }
-      }
-   }
-
-   E_ProcessEDF(edfname);
-
-   // haleyjd FIXME: temporary hacks
-   D_InitWeaponInfo();
-}
-
-//=============================================================================
-//
-// loose file support functions -- these enable drag-and-drop support
-// for Windows and possibly other OSes
-//
-
-static void D_LooseWads(void)
-{
-   int i;
-   const char *dot;
-   char *filename;
-
-   for(i = 1; i < myargc; ++i)
-   {
-      // stop at first param with '-' or '@'
-      if(myargv[i][0] == '-' || myargv[i][0] == '@')
-         break;
-
-      // get extension (search from right end)
-      dot = strrchr(myargv[i], '.');
-
-      // check extension
-      if(!dot || strncasecmp(dot, ".wad", 4))
-         continue;
-
-      // add it
-      filename = Z_Strdupa(myargv[i]);
-      M_NormalizeSlashes(filename);
-      modifiedgame = true;
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
-   }
-}
-
-static void D_LooseDehs(void)
-{
-   int i;
-   const char *dot;
-   char *filename;
-
-   for(i = 1; i < myargc; ++i)
-   {
-      // stop at first param with '-' or '@'
-      if(myargv[i][0] == '-' || myargv[i][0] == '@')
-         break;
-
-      // get extension (search from right end)
-      dot = strrchr(myargv[i], '.');
-
-      // check extension
-      if(!dot || (strncasecmp(dot, ".deh", 4) &&
-                  strncasecmp(dot, ".bex", 4)))
-         continue;
-
-      // add it
-      filename = Z_Strdupa(myargv[i]);
-      M_NormalizeSlashes(filename);
-      D_QueueDEH(filename, 0);
-   }
-}
-
-static gfs_t *D_LooseGFS(void)
-{
-   int i;
-   const char *dot;
-
-   for(i = 1; i < myargc; ++i)
-   {
-      // stop at first param with '-' or '@'
-      if(myargv[i][0] == '-' || myargv[i][0] == '@')
-         break;
-
-      // get extension (search from right end)
-      dot = strrchr(myargv[i], '.');
-
-      // check extension
-      if(!dot || strncasecmp(dot, ".gfs", 4))
-         continue;
-
-      printf("Found loose GFS file %s\n", myargv[i]);
-
-      // process only the first GFS found
-      return G_LoadGFS(myargv[i]);
-   }
-
-   return NULL;
-}
-
-//
-// D_LooseDemo
-//
-// Looks for a loose LMP file on the command line, to support
-// drag-and-drop for demos.
-//
-static const char *D_LooseDemo()
-{
-   int i;
-   const char *dot;
-   const char *ret = NULL;
-
-   for(i = 1; i < myargc; ++i)
-   {
-      // stop at first param with '-' or '@'
-      if(myargv[i][0] == '-' || myargv[i][0] == '@')
-         break;
-
-      // get extension (search from right end)
-      dot = strrchr(myargv[i], '.');
-
-      // check extension
-      if(!dot || strncasecmp(dot, ".lmp", 4))
-         continue;
-      
-      ret = myargv[i];
-      break; // process only the first demo found
-   }
-
-   return ret;
-}
-
-//=============================================================================
-//
 // Primary Initialization Routines
 //
 
@@ -3571,7 +1989,7 @@ static void D_DoomInit(void)
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
-   IdentifyVersion();
+   D_IdentifyVersion();
    printf("\n"); // gap
 
    modifiedgame = false;
@@ -3817,6 +2235,10 @@ static void D_DoomInit(void)
    // haleyjd 08/20/07: queue autoload dir dehs
    D_GameAutoloadDEH();
 
+   // jff 4/24/98 load color translation lumps
+   // haleyjd 09/06/12: need to do this before EDF
+   V_InitColorTranslation(); 
+
    // haleyjd 09/11/03: All EDF and DeHackEd processing is now
    // centralized here, in order to allow EDF to load from wads.
    // As noted in comments, the other DEH functions above now add
@@ -3837,9 +2259,7 @@ static void D_DoomInit(void)
 
    // Process the DeHackEd queue, then free it
    D_ProcessDEHQueue();
-
-   V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
-
+   
    // haleyjd: moved down turbo to here for player class support
    if((p = M_CheckParm("-turbo")))
    {
@@ -3889,32 +2309,35 @@ static void D_DoomInit(void)
       D_SetGraphicsMode();
    }
 
-   startupmsg("R_Init","Init DOOM refresh daemon");
+   startupmsg("R_Init", "Init DOOM refresh daemon");
    R_Init();
 
-   startupmsg("P_Init","Init Playloop state.");
+   startupmsg("P_Init", "Init Playloop state.");
    P_Init();
 
-   startupmsg("HU_Init","Setting up heads up display.");
+   startupmsg("HU_Init", "Setting up heads up display.");
    HU_Init();
 
-   startupmsg("ST_Init","Init status bar.");
+   startupmsg("ST_Init", "Init status bar.");
    ST_Init();
 
-   startupmsg("MN_Init","Init menu.");
+   startupmsg("MN_Init", "Init menu.");
    MN_Init();
+
+   startupmsg("IN_Init", "Init intermission.");
+   IN_Init(); // haleyjd 09/10/12
 
    startupmsg("F_Init", "Init finale.");
    F_Init();
 
-   startupmsg("S_Init","Setting up sound.");
+   startupmsg("S_Init", "Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
 
    //
    // NETCODE_FIXME: Netgame check.
    //
 
-   startupmsg("D_CheckNetGame","Check netgame status.");
+   startupmsg("D_CheckNetGame", "Check netgame status.");
    D_CheckNetGame();
 
    // haleyjd 04/10/03: set coop gametype
@@ -3978,11 +2401,7 @@ static void D_DoomInit(void)
    if(in_textmode)
       D_SetGraphicsMode();
 
-#ifndef EE_NO_SMALL_SUPPORT
-   // initialize Small, load game scripts; 01/07/07: init ACS
-   SM_InitSmall();
-   SM_InitGameScript();
-#endif
+   // Initialize ACS
    ACS_Init();
 
    // haleyjd: updated for eternity
@@ -4172,114 +2591,6 @@ void D_DoomMain(void)
       // haleyjd 12/06/06: garbage-collect all alloca blocks
       Z_FreeAlloca();
    }
-}
-
-//=============================================================================
-//
-// SMMU Runtime WAD File Loading
-//
-
-// re init everything after loading a wad
-
-void D_ReInitWadfiles(void)
-{
-   R_FreeData();
-   E_ProcessNewEDF();      // haleyjd 03/24/10: process any new EDF lumps
-   XL_ParseHexenScripts(); // haleyjd 03/27/11: process Hexen scripts
-   D_ProcessDEHQueue();    // haleyjd 09/12/03: run any queued DEHs
-   R_Init();
-   P_Init();
-}
-
-// FIXME: various parts of this routine need tightening up
-void D_NewWadLumps(FILE *handle)
-{
-   int i, format;
-   char wad_firstlevel[9];
-   int numlumps = wGlobalDir.getNumLumps();
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-
-   memset(wad_firstlevel, 0, 9);
-
-   for(i = 0; i < numlumps; ++i)
-   {
-      if(lumpinfo[i]->file != handle)
-         continue;
-
-      // haleyjd: changed check for "THINGS" lump to a fullblown
-      // P_CheckLevel call -- this should fix some problems with
-      // some crappy wads that have partial levels sitting around
-
-      if((format = P_CheckLevel(&wGlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
-      {
-         char *name = lumpinfo[i]->name;
-
-         // ignore ones called 'start' as these are checked elsewhere
-         if((!*wad_firstlevel && strcmp(name, "START")) ||
-            strncmp(name, wad_firstlevel, 8) < 0)
-            strncpy(wad_firstlevel, name, 8);
-
-         // haleyjd: move up to the level's last lump
-         i += (format == LEVEL_FORMAT_HEXEN ? 11 : 10);
-         continue;
-      }
-
-      // new sound
-      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
-      {
-         S_Chgun();
-         continue;
-      }
-
-      // haleyjd 03/26/11: sounds are not handled here any more
-      // haleyjd 04/10/11: music is not handled here now either
-
-      // skins
-      if(!strncmp(lumpinfo[i]->name, "S_SKIN", 6))
-      {
-         P_ParseSkin(i);
-         continue;
-      }
-   }
-
-   if(*wad_firstlevel && (!*firstlevel ||
-      strncmp(wad_firstlevel, firstlevel, 8) < 0)) // a new first level?
-      strcpy(firstlevel, wad_firstlevel);
-}
-
-void usermsg(const char *s, ...)
-{
-   static char msg[1024];
-   va_list v;
-   
-   va_start(v,s);
-   pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
-   va_end(v);
-   
-   if(in_textmode)
-   {
-      puts(msg);
-   }
-   else
-   {
-      C_Puts(msg);
-      C_Update();
-   }
-}
-
-// add a new .wad file
-// returns true if successfully loaded
-
-bool D_AddNewFile(const char *s)
-{
-   Console.showprompt = false;
-   if(wGlobalDir.addNewFile(s))
-      return false;
-   modifiedgame = true;
-   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads
-   C_SetConsole();
-   D_ReInitWadfiles();
-   return true;
 }
 
 //============================================================================

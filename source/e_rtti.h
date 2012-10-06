@@ -158,6 +158,25 @@ public:
    {
       return type->isAncestorOf(getDynamicType());
    }
+
+   //
+   // Forwarding statics for Type class utilities
+   //
+
+   static Type *FindType(const char *pName)
+   {
+      return Type::FindType(pName);
+   }
+
+   template<typename T> T *FindType(const char *pName)
+   {
+      return Type::FindType<T>(pName);
+   }
+
+   template<typename T> typename T::Type *FindTypeCls(const char *pName)
+   {
+      return Type::FindType<typename T::Type>(pName);
+   }
 };
 
 //

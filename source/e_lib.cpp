@@ -33,6 +33,7 @@
 #include "e_lib.h"
 #include "e_edf.h"
 
+#include "autopalette.h"
 #include "d_dehtbl.h"
 #include "d_dwfile.h"
 #include "d_io.h"
@@ -210,6 +211,41 @@ int E_CheckRoot(cfg_t *cfg, const char *data, int size)
 //
 // Parser File/Lump Include Callback Functions
 //
+
+// External names for dialects
+static const char *dialectNames[CFG_NUMDIALECTS] =
+{
+   "DELTA",  // Original dialect
+   "ALFHEIM" // Adds ':' as an alternate assignment operator (like CSS and JSON)
+};
+
+//
+// E_SetDialect
+//
+// Changes the parser dialect. This setting applies upward on the include
+// stack, so including a file that does not explicitly set its own dialect will
+// cause it to be treated as the same dialect as the including file.
+//
+int E_SetDialect(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
+{
+   int dialect;
+
+   if(argc != 1)
+   {
+      cfg_error(cfg, "wrong number of args to setdialect()\n");
+      return 1;
+   }
+
+   dialect = E_StrToNumLinear(dialectNames, CFG_NUMDIALECTS, argv[0]);
+   if(dialect == CFG_NUMDIALECTS)
+   {
+      cfg_error(cfg, "invalid libConfuse dialect %s\n", argv[0]);
+      return 1;
+   }
+
+   cfg_lexer_set_dialect((cfg_dialect_t)dialect);
+   return 0;
+}
 
 //
 // E_Include
@@ -778,7 +814,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
    if(*endptr != '\0')
    {
-      byte *palette;
+      AutoPalette pal(wGlobalDir);
       int r, g, b;
 
       if(sscanf(value, "%d %d %d", &r, &g, &b) != 3)
@@ -792,11 +828,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      palette = (byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC));
-
-      *(int *)result = V_FindBestColor(palette, r, g, b);
-
-      Z_ChangeTag(palette, PU_CACHE);
+      *(int *)result = V_FindBestColor(pal.get(), r, g, b);
    }
    else if(errno == ERANGE) 
    {
@@ -1351,8 +1383,6 @@ byte *E_ParseTranslation(const char *str, int tag)
    byte *translation = ecalloctag(byte *, 1, 256, tag, NULL);
    tr_pstate_t parserstate;
 
-   tokenbuf.initCreate();
-
    // initialize to monotonically increasing sequence (identity translation)
    for(i = 0; i < 256; i++)
       translation[i] = i;
@@ -1406,6 +1436,30 @@ byte *E_ParseTranslation(const char *str, int tag)
    }
 
    return translation;
+}
+
+//
+// E_CfgListToCommaString
+//
+// Concatenates all values in a CFGF_LIST CFG_STR option into a single
+// string of comma-delimited values.
+//
+void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output)
+{
+   unsigned int numopts = cfg_size(sec, optname);
+   
+   output.clear();
+
+   for(unsigned int i = 0; i < numopts; i++)
+   {
+      const char *str = cfg_getnstr(sec, optname, i);
+
+      if(str)
+         output += str;
+
+      if(i != numopts - 1 && output[output.length() - 1] != ',')
+         output += ',';
+   }
 }
 
 // EOF

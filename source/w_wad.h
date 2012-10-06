@@ -27,6 +27,10 @@
 #ifndef W_WAD_H__
 #define W_WAD_H__
 
+#include "z_zone.h"
+
+class ZAutoBuffer;
+
 //
 // TYPES
 //
@@ -78,8 +82,16 @@ struct lumpinfo_t
       ns_acs,
    };
    int li_namespace;
+
+   // haleyjd 09/03/12: lump cache formats
+   typedef enum
+   {
+      fmt_default, // always used for the raw untranslated lump data
+      fmt_patch,   // converted to a patch
+      fmt_maxfmts  // number of formats
+   } lumpformat;
    
-   void *cache;  //sf
+   void *cache[fmt_maxfmts];  //sf
 
    // haleyjd: lump type
    enum
@@ -111,11 +123,11 @@ struct lumpinfo_t
 struct wfileadd_t
 {
    const char *filename; // name of file
-   int li_namespace;     // if not 0, special namespace to add file under
-   FILE *f;              // pointer to file handle if this is a subfile
-   size_t baseoffset;    // base offset if this is a subfile
-   int privatedir;       // if not 0, has a private directory
-   bool directory;       // if true, is an on-disk directory
+   int     li_namespace; // if not 0, special namespace to add file under
+   FILE   *f;            // pointer to file handle if this is a subfile
+   size_t  baseoffset;   // base offset if this is a subfile
+   int     privatedir;   // if not 0, has a private directory
+   bool    directory;    // if true, is an on-disk directory
 };
 
 //
@@ -127,28 +139,30 @@ struct wfileadd_t
 class WadLumpLoader
 {
 public:
+      // Error modes enumeration
+   typedef enum
+   {
+      CODE_OK,    // Proceed
+      CODE_NOFMT, // OK, but don't call formatData
+      CODE_FATAL  // Fatal error
+   } Code;
+
    // verifyData should do format checking and return true if the data is valid,
-   // and false otherwise. If verifyData returns false, formatData is not called
-   // under any circumstance.
-   virtual bool verifyData(const void *data, size_t size) const { return true; }
+   // and false otherwise. If verifyData returns anything other than CODE_OK, 
+   // formatData is not called under any circumstance.
+   virtual Code verifyData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
-   // be done once only and not every time the lump is retrieved from the wad
-   // file. Return false if an error occurs, and true otherwise.
-   virtual bool formatData(void *data, size_t size) const { return true; }
+   // be done once only and not every time the lump is referenced/used. 
+   virtual Code formatData(lumpinfo_t *lump) const { return CODE_OK; }
 
-   // Error modes enumeration
-   enum
-   {
-      EM_IGNORE, // Ignore any error
-      EM_FATAL   // Fatal error on failure
-   };
-
-   // getErrorMode tells the wad file code how to respond to a failure in the
-   // verification or formatting routines. Return one of the codes above.
-   virtual int getErrorMode() const { return EM_IGNORE; }
+   // formatIndex specifies an alternate cache pointer to use for resources
+   // converted out of their native lump format by the loader.
+   virtual lumpinfo_t::lumpformat formatIndex() const { return lumpinfo_t::fmt_default; }
 };
+
+class WadDirectoryPimpl;
 
 //
 // haleyjd 03/01/09: Wad Directory structure
@@ -156,7 +170,7 @@ public:
 // Adding this allows a level of indirection to be added to the wad system,
 // letting us have wads that are not part of the master directory.
 //
-class WadDirectory
+class WadDirectory : public ZoneObject
 {
 public:
    // directory types
@@ -177,6 +191,9 @@ public:
    static int IWADSource;   // source # of the global IWAD file
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
+private:
+   WadDirectoryPimpl *pImpl; // private implementation object
+
 protected:
    // openwad structure - this is for return from WadDirectory::OpenFile
    struct openwad_t
@@ -192,9 +209,6 @@ protected:
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
    int        numlumps;   // number of lumps
    int        ispublic;   // if false, don't call D_NewWadLumps
-   lumpinfo_t **infoptrs; // 06/06/10: track all allocations
-   int        numallocs;  // number of entries in the infoptrs table
-   int        numallocsa; // number of entries allocated for the infoptrs table   
    int        type;       // directory type
    void       *data;      // user data (mainly for w_levels code)
 
@@ -216,25 +230,33 @@ protected:
    static unsigned int LumpNameHash(const char *s);
 
 public:
+   WadDirectory();
+   ~WadDirectory();
+
    // Public methods
-   void        initMultipleFiles(wfileadd_t *files);
-   int         checkNumForName(const char *name, 
-                               int li_namespace = lumpinfo_t::ns_global);
-   int         checkNumForNameNSG(const char *name, int li_namespace);
-   int         getNumForName(const char *name);
-   lumpinfo_t *getLumpNameChain(const char *name);
+   void  initMultipleFiles(wfileadd_t *files);
+   int   checkNumForName(const char *name, int li_namespace = lumpinfo_t::ns_global);
+   int   checkNumForNameNSG(const char *name, int li_namespace);
+   int   getNumForName(const char *name);
+   
    // sf: add a new wad file after the game has already begun
-   int         addNewFile(const char *filename);
+   int   addNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
-   int         addNewPrivateFile(const char *filename);
-   int         addDirectory(const char *dirpath);
-   int         lumpLength(int lump);
-   void        readLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
-   int         readLumpHeader(int lump, void *dest, size_t size);
-   void       *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
-   void       *cacheLumpName(const char *name, int tag, 
-                             WadLumpLoader *lfmt = NULL);
-   void        close(); // haleyjd 03/09/11
+   int   addNewPrivateFile(const char *filename);
+   int   addDirectory(const char *dirpath);
+   int   lumpLength(int lump);
+   void  readLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
+   int   readLumpHeader(int lump, void *dest, size_t size);
+   void *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
+   void *cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt = NULL);
+   void  cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer);
+   void  cacheLumpAuto(const char *name, ZAutoBuffer &buffer);
+   bool  writeLump(const char *lumpname, const char *destpath);
+   void  close(); // haleyjd 03/09/11
+
+   lumpinfo_t *getLumpNameChain(const char *name);
+
+   const char *getLumpFileName(int lump);
 
    // Accessors
    int   getType() const  { return type; }

@@ -1,6 +1,7 @@
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2010 James Haley
+// Copyright(C) 2012 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,28 +17,42 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Lexer header for custom libConfuse lexer.
+// DESCRIPTION:
+//   Auto-caching of PLAYPAL lump
 //
 //-----------------------------------------------------------------------------
 
-#ifndef LEXER_H__
-#define LEXER_H__
+#ifndef AUTOPALETTE_H__
+#define AUTOPALETTE_H__
 
-extern const char *mytext; // haleyjd
-struct DWFILE;
+#include "doomtype.h"
+#include "w_wad.h"
 
-int   mylex(cfg_t *cfg);
-int   lexer_init(cfg_t *cfg, DWFILE *);
-void  lexer_reset(void);
-void  lexer_set_unquoted_spaces(bool);
-char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len);
-char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *len);
-int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *fname, int lumpnum);
-int   cfg_lexer_source_type(cfg_t *cfg);
-void  cfg_lexer_set_dialect(cfg_dialect_t dialect);
+class AutoPalette
+{
+protected:
+   byte *palette;
+
+   // Not copyable.
+   AutoPalette(const AutoPalette &other) {} 
+
+public:
+   AutoPalette(WadDirectory &dir)
+   {
+      palette = static_cast<byte *>(dir.cacheLumpName("PLAYPAL", PU_STATIC));
+   }
+
+   ~AutoPalette()
+   {
+      Z_ChangeTag(palette, PU_CACHE);
+   }
+
+   byte *get() const { return palette; }
+   
+   byte operator [] (size_t index) const { return palette[index]; }
+};
 
 #endif
 

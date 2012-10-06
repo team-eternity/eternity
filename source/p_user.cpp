@@ -798,7 +798,7 @@ void P_PlayerStopFlight(player_t *player)
    player->mo->flags  &= ~MF_NOGRAVITY;
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 // Small native functions for player stuff
 
 static cell AMX_NATIVE_CALL sm_getplayername(AMX *amx, cell *params)

@@ -44,6 +44,7 @@
 #include "g_game.h"
 #include "hu_over.h"
 #include "i_video.h"
+#include "m_collection.h"
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
@@ -428,11 +429,13 @@ static int MN_titleDescription(menuitem_t *item)
    if(!(drawing_menu->flags & mf_skullmenu) &&
       GameModeInfo->flags & GIF_SHADOWTITLES)
    {
-      V_FontWriteTextShadowed(menu_font_big, text, x, item->y, &subscreen43);
+      V_FontWriteTextShadowed(menu_font_big, text, x, item->y, &subscreen43,
+                              GameModeInfo->titleColor);
    }
    else
    {
-      V_FontWriteText(menu_font_big, text, x, item->y, &subscreen43);
+      V_FontWriteTextColored(menu_font_big, text, GameModeInfo->titleColor,
+                             x, item->y, &subscreen43);
    }
       
    return V_FontStringHeight(menu_font_big, text);
@@ -1058,22 +1061,25 @@ void MN_DrawMenu(menu_t *menu)
 
    for(itemnum = 0; menu->menuitems[itemnum].type != it_end; ++itemnum)
    {
+      menuitem_t *mi = &menu->menuitems[itemnum];
       int item_height;
       int item_color;
 
       // choose item colour based on selected item
-
-      item_color = menu->selected == itemnum &&
-         !(menu->flags & mf_skullmenu) ? 
-            GameModeInfo->selectColor : GameModeInfo->unselectColor;
+      if(mi->type == it_info)
+         item_color = GameModeInfo->infoColor;
+      else
+      {
+         if(menu->selected == itemnum && !(menu->flags & mf_skullmenu))
+            item_color = GameModeInfo->selectColor;
+         else
+            item_color = GameModeInfo->unselectColor;
+      }
       
       // draw item
-
-      item_height = MN_DrawMenuItem(&menu->menuitems[itemnum],
-                                    menu->x, y, item_color);
+      item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
       
       // if selected item, draw skull / pointer next to it
-
       if(menu->selected == itemnum)
          MN_drawPointer(menu, y, itemnum, item_height);
       
@@ -1152,11 +1158,72 @@ int hide_menu = 0;      // hide the menu for a duration of time
 int menutime = 0;
 
 // menu widget for alternate drawer + responder
-menuwidget_t *current_menuwidget = NULL; 
+menuwidget_t *current_menuwidget = NULL;
+static PODCollection<menuwidget_t *> menuwidget_stack;
 
 int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
 static void MN_InitFonts(void);
+
+//
+// MN_PushWidget
+//
+// Push a new widget onto the widget stack
+//
+void MN_PushWidget(menuwidget_t *widget)
+{
+   menuwidget_stack.add(widget);
+   if(current_menuwidget)
+      widget->prev = current_menuwidget;
+   current_menuwidget = widget;
+}
+
+//
+// MN_PopWidget
+//
+// Back up one widget on the stack
+//
+void MN_PopWidget()
+{
+   size_t len;
+
+   // Pop the top widget off.
+   if(menuwidget_stack.getLength() > 0)
+      menuwidget_stack.pop();
+
+   if(current_menuwidget)
+      current_menuwidget->prev = NULL;
+
+   // If there's still an active widget, return to it.
+   // Otherwise, cancel out.
+   if((len = menuwidget_stack.getLength()) > 0)
+      current_menuwidget = menuwidget_stack[len - 1];
+   else
+      current_menuwidget = NULL;
+}
+
+//
+// MN_ClearWidgetStack
+//
+// Called when the menu system is closing. Let's make sure all widgets have
+// been popped before then, since they won't be there when we come back to
+// the menus later.
+//
+void MN_ClearWidgetStack()
+{
+   menuwidget_stack.clear();
+   current_menuwidget = NULL;
+}
+
+//
+// MN_NumActiveWidgets
+//
+// Return the number of widgets currently on the stack.
+//
+size_t MN_NumActiveWidgets()
+{
+   return menuwidget_stack.getLength();
+}
 
 //
 // MN_SetBackground
@@ -1891,6 +1958,7 @@ void MN_ClearMenus(void)
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
+   MN_ClearWidgetStack();  // haleyjd 08/31/12: make sure widget stack is empty
 }
 
 CONSOLE_COMMAND(mn_clearmenus, 0)
@@ -2161,7 +2229,7 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    if(action_menu_toggle || action_menu_previous)
    {
       action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL;
+      MN_PopWidget();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
@@ -2190,7 +2258,7 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    if(action_menu_confirm)
    {
       action_menu_confirm = false;
-      current_menuwidget = NULL;
+      MN_PopWidget();
 
       switch(box->type)
       {
@@ -2269,7 +2337,7 @@ void MN_SetupBoxWidget(const char *title, const char **item_names,
 //
 void MN_ShowBoxWidget(void)
 {
-   current_menuwidget = &(menu_box_widget.widget);
+   MN_PushWidget(&(menu_box_widget.widget));
 }
 
 //
@@ -2308,7 +2376,7 @@ static void MN_ShowContents(void)
    if(rover) // only if valid (should always be...)
       menu_box_widget.selection_idx = i;
 
-   current_menuwidget = &(menu_box_widget.widget);
+   MN_PushWidget(&(menu_box_widget.widget));
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
 }

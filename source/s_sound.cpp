@@ -1405,8 +1405,7 @@ musicinfo_t *S_MusicForName(const char *name)
    }
    else // name is unprefixed; try with prefix first, then without.
    {
-      tempname = GameModeInfo->musPrefix;
-      tempname.concat(name);
+      tempname.clear() << GameModeInfo->musPrefix << name;
       tempname.toUpper();
       lumpnum = W_CheckNumForName(tempname.constPtr());
 
@@ -1435,34 +1434,6 @@ musicinfo_t *S_MusicForName(const char *name)
    return mus;
 }
 
-/*
-void S_UpdateMusic(const char *lumpname)
-{
-   musicinfo_t *music;
-   const char *musname;
-   int prefixlen;
-   
-   // haleyjd 04/10/11: rewritten completely
-   prefixlen = strlen(GameModeInfo->musPrefix);
-   if(prefixlen && strlen(lumpname) > prefixlen)
-      musname = lumpname + prefixlen;
-   else
-      musname = lumpname;
-   
-   // check if one already in the table first
-   music = S_MusicForName(musname);
-   
-   if(!music) // not found in list?
-   {
-      // build a new musicinfo_t
-      music = ecalloc(musicinfo_t *, 1 ,sizeof(*music));
-      music->name = estrdup(musname);
-      
-      // hook into hash list
-      S_HookMusic(music);
-   }
-}
-*/
 //=============================================================================
 //
 // Console Commands
@@ -1545,7 +1516,7 @@ void S_AddCommands(void)
   C_AddCommand(s_hidefmusic);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small native functions
 //

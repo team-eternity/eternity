@@ -107,7 +107,6 @@ char *c_fontname;
 
 static void C_initBackdrop(void)
 {
-   patch_t *patch;
    const char *lumpname;
    int lumpnum, cmapnum = 16;
    bool darken = true;
@@ -136,21 +135,25 @@ static void C_initBackdrop(void)
    V_SetScaling(&cback, SCREENWIDTH, SCREENHEIGHT);
    
    lumpnum = W_GetNumForName(lumpname);
-   patch   = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
-
+   
    // haleyjd 03/30/08: support linear fullscreen graphics
    if(W_LumpLength(lumpnum) == 64000)
    {
-      V_DrawBlockFS(&cback, (byte *)patch);
+      byte *block = static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+
+      V_DrawBlockFS(&cback, block);
 
       if(darken)
       {
          V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
                         0, 0, video.width, video.height, FRACUNIT/2);
       }
+      
+      Z_ChangeTag(block, PU_CACHE);
    }
    else
    {
+      patch_t *patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
       if(darken)
       {
          byte *colormap;
@@ -171,9 +174,9 @@ static void C_initBackdrop(void)
       }
       else
          V_DrawPatchFS(&cback, patch);
+      
+      Z_ChangeTag(patch, PU_CACHE);
    }
-
-   Z_ChangeTag(patch, PU_CACHE);
 }
 
 // input_point is the leftmost point of the inputtext which
@@ -971,7 +974,7 @@ void C_InstaPopup(void)
       Console.current_target = Console.current_height = 0;
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small native functions
 //
@@ -1083,25 +1086,24 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 //
 // haleyjd: ??? ;)
 //
-static void Egg(void)
-{
-   extern void HU_CenterMessageTimed(const char *s, int tics);
+static void Egg()
+{   
    int x, y;
-   extern unsigned char egg[];
+   byte *egg = static_cast<byte *>(wGlobalDir.cacheLumpName("SFRAGGLE", PU_CACHE));
 
    for(x = 0; x < video.width; ++x)
    {
       for(y = 0; y < video.height; ++y)
       {
-         unsigned char *s = egg + ((y % 44 * 42) + (x % 42));
-         if(*s != 247)
+         byte *s = egg + ((y % 44 * 42) + (x % 42));
+         if(*s)
             cback.data[y * video.width + x] = *s;
       }
    }
 
-   HU_CenterMessageTimed(FC_BROWN FC_ABSCENTER "my hair looks much too\n"
-                         "dark in this pic.\noh well, have fun!\n-- fraggle",
-                         6 * TICRATE);
+   V_FontWriteText(hud_overfont, 
+                   FC_BROWN "my hair looks much too\n"
+                   "dark in this pic.\n"
+                   "oh well, have fun!\n-- fraggle", 160, 168, &cback);
 }
-
 // EOF

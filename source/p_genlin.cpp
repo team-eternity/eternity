@@ -2173,7 +2173,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
    }
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small Natives
 //
@@ -2394,7 +2394,7 @@ void P_AddGenLineCommands(void)
    C_AddCommand(p_linespec);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small Param Line Special Wrappers
 //

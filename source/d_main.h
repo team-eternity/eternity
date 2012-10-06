@@ -33,11 +33,7 @@
 extern skill_t startskill;
 extern char *startlevel;
 
-void D_ListWads(void);
-void D_ReInitWadfiles(void);
-void D_NewWadLumps(FILE *handle);
-bool D_AddNewFile(const char *s);
-
+void D_SetGameName(const char *iwad);
 
 char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir
 extern char *basesavegame;      // killough 2/16/98: savegame path
@@ -59,20 +55,18 @@ void D_PostEvent(event_t* ev);
 
 struct camera_t;
 extern camera_t *camera;
-extern char firstlevel[9];       // sf: first level of new wads
-
-struct wfileadd_t;
-extern wfileadd_t *wadfiles;     // killough 11/98
 
 //
 // BASE LEVEL
 //
 
-void D_PageTicker(void);
-void D_PageDrawer(void);
-void D_AdvanceDemo(void);
-void D_StartTitle(void);
-void D_DoomMain(void);
+void D_PageTicker();
+void D_PageDrawer();
+void D_DrawPillars();
+void D_DrawWings();
+void D_AdvanceDemo();
+void D_StartTitle();
+void D_DoomMain();
 
 // sf: display a message to the player: either in text mode or graphics
 void usermsg(const char *s, ...);

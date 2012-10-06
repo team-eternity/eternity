@@ -2197,7 +2197,7 @@ static void P_PreZoneFreeLevel(void)
    //==============================================
    // Scripting
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // haleyjd 03/15/03: clear levelscript callbacks
    SM_RemoveCallbacks(SC_VM_LEVELSCRIPT);
 #endif
@@ -2508,11 +2508,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_ResetChasecam();
    else
       camera = NULL;        // camera off
-
-#ifndef EE_NO_SMALL_SUPPORT
-   // haleyjd 03/15/03: load and initialize any level scripts
-   SM_InitLevelScript();
-#endif
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo

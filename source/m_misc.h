@@ -33,13 +33,14 @@
 // MISC
 //
 
-bool M_WriteFile(const char *name, void *source, unsigned int length);
-int  M_ReadFile(const char *name, byte **buffer);
-void M_LoadOptions(void);                             // killough 11/98
+bool  M_WriteFile(const char *name, void *source, size_t length);
+int   M_ReadFile(const char *name, byte **buffer);
+char *M_LoadStringFromFile(const char *filename);
+void  M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions, as well as
 // some misc string routines that really don't fit anywhere else. Some of these
-// default to the standard implementation if its existence is verifiable 
+// default to the platform implementation if its existence is verifiable 
 // (see d_keywds.h)
 
 char *M_Strupr(char *string);

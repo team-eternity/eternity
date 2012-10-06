@@ -469,5 +469,30 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
    }
 }
 
+//
+// VBuffer::getRealAspectRatio
+//
+// Returns the ratio of width / height.
+//
+fixed_t VBuffer::getRealAspectRatio() const
+{
+   return width * FRACUNIT / height;
+}
+
+//
+// VBuffer::getVirtualAspectRatio
+//
+// As above, but lies if the screen is in a "legacy" 16:10 mode
+// (320x200 or 640x400).
+//
+fixed_t VBuffer::getVirtualAspectRatio() const
+{
+   if((width == 320 && height == 200) ||
+      (width == 640 && height == 400))
+      return 4 * FRACUNIT / 3;
+   else
+      return getRealAspectRatio();
+}
+
 // EOF
 

@@ -25,6 +25,12 @@
 //
 //--------------------------------------------------------------------------
 
+#ifdef _MSC_VER
+// EE cannot link with the debug CRT due to SDL, so according to MSDN, we
+// need to define this value, to stop the STL from using _Debug_message.
+#define _HAS_ITERATOR_DEBUGGING 0
+#endif
+
 #include <algorithm>
 #include "z_zone.h"
 
@@ -593,7 +599,7 @@ void P_Chase_AddCommands(void)
    C_AddCommand(walkcam);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 {
    int cam_onoff = (int)params[1];

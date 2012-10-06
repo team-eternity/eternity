@@ -52,7 +52,7 @@
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_NO_SMALL_SUPPORT"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -148,7 +148,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32;..\libpng"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_NO_SMALL_SUPPORT"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -364,58 +364,6 @@
 				</File>
 				<File
 					RelativePath="..\Source\a_small.h"
-					>
-				</File>
-				<File
-					RelativePath="..\Source\amx.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\amx.h"
-					>
-				</File>
-				<File
-					RelativePath="..\Source\amxcore.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\osdefs.h"
 					>
 				</File>
 			</Filter>
@@ -650,6 +598,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\d_files.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\d_gi.cpp"
 						>
 						<FileConfiguration
@@ -794,10 +746,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\Source\d_dialog.h"
-						>
-					</File>
-					<File
 						RelativePath="..\source\d_diskfile.h"
 						>
 					</File>
@@ -811,6 +759,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\d_event.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\d_files.h"
 						>
 					</File>
 					<File
@@ -1722,6 +1674,14 @@
 				</File>
 				<File
 					RelativePath="..\Source\in_lude.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\in_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\in_stats.h"
 					>
 				</File>
 				<File
@@ -3725,28 +3685,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\source\Win32\i_iwad.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\Source\sdl\i_main.cpp"
 						>
 						<FileConfiguration
@@ -4376,6 +4314,10 @@
 				Name="Z_"
 				>
 				<File
+					RelativePath="..\source\z_auto.h"
+					>
+				</File>
+				<File
 					RelativePath="..\source\z_native.cpp"
 					>
 					<FileConfiguration
@@ -4501,6 +4443,10 @@
 					Name="Misc Headers"
 					Filter="h;hpp;hxx;hm;inl"
 					>
+					<File
+						RelativePath="..\source\autopalette.h"
+						>
+					</File>
 					<File
 						RelativePath="..\Source\info.h"
 						>

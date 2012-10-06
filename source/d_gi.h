@@ -185,6 +185,7 @@ enum
    GIF_SKILL5RESPAWN  = 0x00001000, // monsters respawn by default on skill 5
    GIF_SKILL5WARNING  = 0x00002000, // display menu warning for skill 5
    GIF_HUDSTATBARNAME = 0x00004000, // HUD positions level name above status bar
+   GIF_CENTERHUDMSG   = 0x00008000, // HUD messages are centered by default
 };
 
 // Game mode handling - identify IWAD version
@@ -289,35 +290,37 @@ typedef struct gamemodeinfo_s
    
    // demo state information
    const demostate_t *demoStates; // demostates table
-   int titleTics;             // length of time to show title
-   int advisorTics;           // for Heretic, len. to show advisory
-   int pageTics;              // length of general demo state pages
-   int titleMusNum;           // music number to use for title
+   int titleTics;                 // length of time to show title
+   int advisorTics;               // for Heretic, len. to show advisory
+   int pageTics;                  // length of general demo state pages
+   int titleMusNum;               // music number to use for title
 
    // menu stuff
    const char *menuBackground;   // name of menu background flat
    const char *creditBackground; // name of dynamic credit bg flat
-   int   creditY;             // y coord for credit text
-   int   creditTitleStep;     // step-down from credit title
+   int   creditY;                // y coord for credit text
+   int   creditTitleStep;        // step-down from credit title
    gimenucursor_t *menuCursor;   // pointer to the big menu cursor
-   menu_t *mainMenu;          // pointer to main menu structure
-   menu_t *saveMenu;          // pointer to save menu structure
-   menu_t *loadMenu;          // pointer to load menu structure
-   menu_t *newGameMenu;       // pointer to new game menu structure
-   int *menuSounds;           // menu sound indices
-   int transFrame;            // frame DEH # used on video menu
-   int skvAtkSound;           // skin viewer attack sound
-   int unselectColor;         // color of unselected menu item text
-   int selectColor;           // color of selected menu item text
-   int variableColor;         // color of variable text
-   int menuOffset;            // an amount to subtract from menu y coords
+   menu_t *mainMenu;             // pointer to main menu structure
+   menu_t *saveMenu;             // pointer to save menu structure
+   menu_t *loadMenu;             // pointer to load menu structure
+   menu_t *newGameMenu;          // pointer to new game menu structure
+   int *menuSounds;              // menu sound indices
+   int transFrame;               // frame DEH # used on video menu
+   int skvAtkSound;              // skin viewer attack sound
+   int unselectColor;            // color of unselected menu item text
+   int selectColor;              // color of selected menu item text
+   int variableColor;            // color of variable text
+   int titleColor;               // color of title strings
+   int infoColor;                // color of it_info items
+   int menuOffset;               // an amount to subtract from menu y coords
 
    // border stuff
    const char *borderFlat;    // name of flat to fill backscreen
    giborder_t *border;        // pointer to a game border
 
    // HU / Video / Console stuff
-   byte **defTextTrans;       // default text color rng for msgs
+   int defTextTrans;          // default text color rng for msgs
    int colorNormal;           // color # for normal messages
    int colorHigh;             // color # for highlighted messages
    int colorError;            // color # for error messages

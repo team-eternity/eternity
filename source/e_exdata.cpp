@@ -1394,9 +1394,6 @@ static int16_t E_ProcessGenSpec(const char *value)
    int t, forc = 0, tok_index = 0;
    int16_t trigger;
 
-   // first things first, we have to initialize the qstring
-   buffer.initCreate();
-
    // get special name (starts at beginning, ends at '[')
    // and convert to base trigger type
    NEXTTOKEN();

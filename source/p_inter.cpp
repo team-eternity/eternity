@@ -1314,9 +1314,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(mod != MOD_UNKNOWN)
    {
       MetaTable *meta = target->info->meta;
-      double df = meta->getDouble(E_ModFieldName("damagefactor", emod), 1.0);
-         
-      damage = (int)(damage * df);
+      int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
+
+      // Only apply if not FRACUNIT, due to the chance this might alter
+      // the compatibility characteristics of extreme DEH/BEX damage.
+      if(df != FRACUNIT)
+         damage = (damage * df) / FRACUNIT;
    }
 
    // Some close combat weapons should not
@@ -1667,7 +1670,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
    }
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small natives
 //

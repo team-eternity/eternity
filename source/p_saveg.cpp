@@ -887,50 +887,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
 // higher architecture. ::sighs::
 //
 
-// haleyjd 05/24/04: Small savegame support!
-
-//
-// P_ArchiveSmallAMX
-//
-// Saves the size and contents of a Small AMX's data segment, or
-// restores it to the saved state.
-// When loading:
-// The existing data segment will be checked for size consistency
-// with the archived one, and it'll bomb out if there's a conflict.
-// This will avoid most problems with maps that have had their
-// scripts recompiled since last being used.
-//
-#ifndef EE_NO_SMALL_SUPPORT
-static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
-{
-   uint32_t amx_size = 0, arch_amx_size;
-   long temp_size = 0;
-   byte *data;
-
-   // get both size of and pointer to data segment
-   data = SM_GetAMXDataSegment(amx, &temp_size);
-
-   amx_size = (uint32_t)temp_size;
-
-   // read/write the size
-   if(arc.isSaving())
-   {
-      arc << amx_size;
-
-      // write the data segment
-      arc.getSaveFile()->Write(data, amx_size);
-   }
-   else
-   {
-      arc << arch_amx_size;
-      if(arch_amx_size != amx_size)
-         I_Error("P_ArchiveSmallAMX: data segment consistency error\n");
-
-      arc.getLoadFile()->Read(data, arch_amx_size);
-   }
-}
-#endif
-
+#if 0
 //
 // P_ArchiveCallbacks
 //
@@ -947,7 +904,7 @@ static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
 //
 static void P_ArchiveCallbacks(SaveArchive &arc)
 {
-#ifndef EE_NO_SMALL_SUPPORT
+
    int callback_count = 0;
    
    if(arc.isSaving())
@@ -996,7 +953,6 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
          SM_LinkCallback(newCallback);
       }
    }
-#endif
 }
 
 //=============================================================================
@@ -1013,7 +969,6 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 //
 void P_ArchiveScripts(SaveArchive &arc)
 {
-#ifndef EE_NO_SMALL_SUPPORT
    bool haveGameScript = false, haveLevelScript = false;
 
    if(arc.isSaving())
@@ -1045,8 +1000,8 @@ void P_ArchiveScripts(SaveArchive &arc)
    P_ArchiveCallbacks(arc);
 
    // TODO: execute load game event callbacks?
-#endif
 }
+#endif
 
 //============================================================================
 //
@@ -1383,7 +1338,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);    // killough 1/18/98: save RNG information
       P_ArchiveMap(arc);    // killough 1/22/98: save automap information
-      P_ArchiveScripts(arc);   // sf: archive scripts
       P_ArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
@@ -1479,7 +1433,7 @@ void P_LoadGame(const char *filename)
 
       G_SetGameMap(); // get gameepisode, map
 
-      // start out g_dir pointing at w_GlobalDir again
+      // start out g_dir pointing at wGlobalDir again
       g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
@@ -1499,7 +1453,7 @@ void P_LoadGame(const char *filename)
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears
          // for a missing wad.
-         // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
+         // Note: set d_dir as well, so G_InitNew won't overwrite with wGlobalDir!
          if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
             g_dir = d_dir = dir;
 
@@ -1586,7 +1540,6 @@ void P_LoadGame(const char *filename)
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);            // killough 1/18/98: load RNG information
       P_ArchiveMap(arc);            // killough 1/22/98: load automap information
-      P_ArchiveScripts(arc);        // sf: scripting
       P_UnArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
@@ -1596,7 +1549,7 @@ void P_LoadGame(const char *filename)
       uint8_t cmarker;
       arc << cmarker;
       if(cmarker != 0xE6)
-         I_FatalError(I_ERR_KILL, "Bad savegame: last byte is 0x%x\n", cmarker);
+         I_Error("Bad savegame: last byte is 0x%x\n", cmarker);
 
       // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
       Z_CheckHeap(); 
@@ -1604,7 +1557,7 @@ void P_LoadGame(const char *filename)
    catch(...)
    {
       // FIXME/TODO: I hate fatal errors, don't know what to do right now.
-      I_FatalError(I_ERR_KILL, "P_LoadGame: Savegame read error\n");
+      I_Error("P_LoadGame: Savegame read error\n");
    }
 
    loadfile.Close();

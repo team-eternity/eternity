@@ -30,7 +30,7 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -1705,7 +1705,7 @@ AMX_NATIVE_INFO local_Natives[] =
    { NULL, NULL }
 };
 
-#endif // EE_NO_SMALL_SUPPORT
+#endif 
 
 // EOF
 

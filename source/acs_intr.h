@@ -327,7 +327,7 @@ public:
    } data;
 
    // metadata
-   ACSScript  *script; // script this strijng is a name of, if any
+   ACSScript  *script; // script this string is a name of, if any
    uint32_t    length; // null-terminated length
    uint32_t    number; // index into global array
 
@@ -406,7 +406,7 @@ struct acs_call_t
 };
 
 //
-// acsthinker
+// ACSThinker
 //
 // A thinker which runs a script.
 //

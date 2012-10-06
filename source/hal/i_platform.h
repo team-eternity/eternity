@@ -32,6 +32,7 @@
 #define EE_PLATFORM_FREEBSD 2
 #define EE_PLATFORM_MACOSX  3
 #define EE_PLATFORM_UNKNOWN 4
+#define EE_PLATFORM_MAX     5
 
 #if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
 #define EE_CURRENT_PLATFORM EE_PLATFORM_WINDOWS
@@ -51,7 +52,7 @@
 #define EE_COMPILER_CYGWIN  0x00000002
 #define EE_COMPILER_MINGW   0x00000004
 #define EE_COMPILER_GCC     0x00000008
-#define EE_COMPILER_UNKNOWN 0x00000010,
+#define EE_COMPILER_UNKNOWN 0x00000010
 
 // Mask to match any Windows compiler
 #define EE_COMPILER_WINDOWS (EE_COMPILER_MSVC | EE_COMPILER_CYGWIN | EE_COMPILER_MINGW)
@@ -71,8 +72,26 @@
 #define EE_CURRENT_COMPILER EE_COMPILER_UNKNOWN
 #endif
 
+// Runtime reflections of current platform and compiler values
 extern int ee_current_platform;
 extern int ee_current_compiler;
+
+//
+// Platform characteristics
+//
+
+// platform flags
+enum
+{
+   EE_PLATF_CSFS = 0x00000001 // Case-sensitive file system(s)
+};
+
+// Flags for each platform
+extern int ee_platform_flags[EE_PLATFORM_MAX];
+
+// Test platform flags against a set of flag values
+#define EE_PLATFORM_TEST(flags) \
+   ((ee_platform_flags[ee_current_platform] & (flags)) == (flags))
 
 #endif
 

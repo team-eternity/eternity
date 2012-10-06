@@ -37,6 +37,7 @@
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "in_lude.h"
+#include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
 #include "p_info.h"
@@ -1021,7 +1022,7 @@ static void WI_drawShowNextLoc(void)
 // Args:    none
 // Returns: void
 //
-static void WI_drawNoState(void)
+static void WI_drawNoState()
 {
    snl_pointeron = true;
    WI_drawShowNextLoc();
@@ -1891,8 +1892,6 @@ static void WI_loadData(void)
    int   i, j;
    char name[9];
 
-   WI_DrawBackground();         // killough 11/98
-
 #if 0
    // UNUSED
    if(GameModeInfo->id == commercial)
@@ -1902,10 +1901,6 @@ static void WI_loadData(void)
          *pic = colormaps[256*25 + *pic];
    }
 #endif
-
-   // haleyjd 06/17/06: no longer needed:
-   // killough 4/26/98: free lnames here (it was freed too early in Doom)
-   // Z_Free(lnames);
 
    if(GameModeInfo->id == commercial)
    {
@@ -2138,14 +2133,30 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    mapName = NULL;
    nextMapName = NULL;
 
-   if(LevelInfo.useEDFInterName)
+   if(LevelInfo.useEDFInterName || inmasterlevels)
    {
       char nameBuffer[24];
       const char *basename;
 
       // set current map
-      psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
-      mapName = E_StringForName(nameBuffer);
+      if(inmasterlevels)
+      {
+         // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
+         qstring buffer;
+         qstring lvname;
+
+         lvname << FC_ABSCENTER << FC_GOLD << LevelInfo.levelName;
+
+         V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
+
+         buffer << "{EE_MLEV_" << lvname << "}";
+         mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1);
+      }
+      else
+      {
+         psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
+         mapName = E_StringForName(nameBuffer);
+      }
 
       // are we going to a secret level?
       basename = wbs->gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
