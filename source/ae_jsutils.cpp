@@ -50,6 +50,8 @@
 //
 // Takes some of the pain out of converting jsval to JSString by handling
 // return value checks and GC rooting. "root" is NOT an optional parameter!
+// This version is for use inside JSNative/JSFastNative callbacks where
+// the string can be rooted to an argument or return value.
 //
 const char *AeonJS::SafeGetStringBytes(JSContext *cx, jsval value, jsval *root)
 {
@@ -61,6 +63,25 @@ const char *AeonJS::SafeGetStringBytes(JSContext *cx, jsval value, jsval *root)
       *root  = STRING_TO_JSVAL(jstr);
       retval = JS_GetStringBytes(jstr);
    }
+
+   return retval;
+}
+
+//
+// AeonJS::SafeGetStringBytes
+//
+// Overload taking a reference to an AutoNamedRoot object. For use in
+// contexts where value roots are not available, such as when dealing with
+// JSAPI return values from JS_EvaluateString etc.
+//
+const char *AeonJS::SafeGetStringBytes(JSContext *cx, jsval value, 
+                                       AeonJS::AutoNamedRoot &root)
+{
+   const char *retval = "";
+   JSString   *jstr   = JS_ValueToString(cx, value);
+
+   if(root.init(cx, jstr, "AeonJS::SafeGetStringBytes"))
+      retval = JS_GetStringBytes(jstr);
 
    return retval;
 }

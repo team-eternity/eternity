@@ -188,10 +188,7 @@ static JSBool AeonJS_LogPrint(JSContext *cx, uintN argc, jsval *vp)
    jsval *argv = JS_ARGV(cx, vp);
 
    if(argc >= 1)
-   {
-      const char *msg = AeonJS::SafeGetStringBytes(cx, argv[0], &argv[0]);
-      AeonEngine::LogPuts(msg);
-   }
+      AeonEngine::LogPuts(AeonJS::SafeGetStringBytes(cx, argv[0], &argv[0]));
 
    JS_SET_RVAL(cx, vp, JSVAL_VOID);
    return JS_TRUE;
@@ -320,12 +317,8 @@ bool AeonJSEngine::CompiledScript::executeWithResult(qstring &qstr)
    if(pImpl->execute(&rval))
    {
       AeonJS::AutoNamedRoot root;
-      JSString *jstr = JS_ValueToString(pImpl->cx, rval);      
-      if(root.init(pImpl->cx, jstr, "CompiledScript::executeWithResult"))
-      {
-         qstr = JS_GetStringBytes(jstr);
-         result = true;
-      }
+      qstr   = AeonJS::SafeGetStringBytes(pImpl->cx, rval, root);
+      result = true;
    }
 
    return result;
@@ -556,9 +549,7 @@ bool AeonJSEngine::evaluateStringLogResult(const char *name, const char *script)
    result = JS_EvaluateScript(gContext, gGlobal, script, strlen(script), name,
                               0, &rval);
 
-   JSString *jstr = JS_ValueToString(gContext, rval);
-   if(root.init(gContext, jstr, "AeonJSEngine::evaluateStringLogResult"))
-      AeonEngine::LogPuts(JS_GetStringBytes(jstr));
+   AeonEngine::LogPuts(AeonJS::SafeGetStringBytes(gContext, rval, root));
 
    return (result == JS_TRUE);
 }

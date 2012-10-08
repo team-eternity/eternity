@@ -119,6 +119,8 @@ namespace AeonJS
          return res;
       }
    };
+
+   const char *SafeGetStringBytes(JSContext *cx, jsval value, AutoNamedRoot &root);
 }
 
 #endif
