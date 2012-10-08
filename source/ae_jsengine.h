@@ -44,6 +44,7 @@ public:
    void shutDown();
 
    bool evaluateString(const char *name, const char *script);
+   bool evaluateStringLogResult(const char *name, const char *script);
    bool evaluateFile(const char *filename);
 
    class CompiledScript : public AeonEngine::CompiledScript

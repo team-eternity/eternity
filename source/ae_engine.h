@@ -51,9 +51,10 @@ public:
    virtual ~AeonEngine() {}
 
    virtual bool initEngine() = 0;
-   virtual void shutDown() = 0;
+   virtual void shutDown()   = 0;
 
    virtual bool evaluateString(const char *name, const char *script) = 0;
+   virtual bool evaluateStringLogResult(const char *name, const char *script) = 0;
    virtual bool evaluateFile(const char *filename) = 0;
 
    class CompiledScript : public ZoneObject

@@ -30,29 +30,111 @@
 
 #ifdef EE_FEATURE_AEONJS
 
-const char *AeonJS_SafeGetStringBytes(JSContext *cx, jsval value, jsval *root);
-bool        AeonJS_SafeInstanceOf(JSContext *cx, JSClass *jsClass, jsval val);
-
-
-//
-// AeonJS_GetPrivate
-//
-// Retrieve the private data pointer from a particular JSObject
-//
-template<typename T> inline T *AeonJS_GetPrivate(JSContext *cx, JSObject *obj)
+namespace AeonJS
 {
-   return static_cast<T *>(JS_GetPrivate(cx, obj));
-}
+   const char *SafeGetStringBytes(JSContext *cx, jsval value, jsval *root);
+   bool        SafeInstanceOf(JSContext *cx, JSClass *jsClass, jsval val);
 
-//
-// AeonJS_GetThisPrivate
-//
-// Retrieve the private data pointer from the "this" object on which a native
-// method was invoked, in particular, inside a JSFastNative.
-//
-template<typename T> inline T *AeonJS_GetThisPrivate(JSContext *cx, jsval *vp)
-{
-   return static_cast<T *>(JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp)));
+
+   //
+   // AeonJS::GetPrivate
+   //
+   // Retrieve the private data pointer from a particular JSObject
+   //
+   template<typename T> inline T *GetPrivate(JSContext *cx, JSObject *obj)
+   {
+      return static_cast<T *>(JS_GetPrivate(cx, obj));
+   }
+
+   //
+   // AeonJS::GetThisPrivate
+   //
+   // Retrieve the private data pointer from the "this" object on which a native
+   // method was invoked, in particular, inside a JSFastNative.
+   //
+   template<typename T> inline T *GetThisPrivate(JSContext *cx, jsval *vp)
+   {
+      return static_cast<T *>(JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp)));
+   }
+
+   //
+   // AutoNamedRoot
+   //
+   // This object keeps track of a named JS GC root and will release it when
+   // the object is destroyed - useful for tying GC roots to C++ stack frames.
+   // Either use the full constructor, or call init() when you have an object
+   // to root. The AutoNamedRoot is not reusable; subsequent calls to init()
+   // will fail with a false return value. Test isValid() before using!
+   //
+   class AutoNamedRoot
+   {
+   private:
+      JSContext  *cx;
+      void      **root;
+      AutoNamedRoot(const AutoNamedRoot &other) {} // Not copyable.
+
+   public:
+      AutoNamedRoot() : cx(NULL), root(NULL) {}
+      
+      AutoNamedRoot(JSContext *pcx, void **proot, const char *name)
+         : cx(pcx), root(proot)
+      {         
+         if(!JS_AddNamedRoot(cx, root, name))
+            root = NULL;
+      }
+      
+      ~AutoNamedRoot()
+      {
+         if(root)
+         {
+            JS_RemoveRoot(cx, root);
+            root = NULL;
+         }
+      }
+   
+      // JS rooting can potentially fail, so ALWAYS check this!
+      bool isValid() const { return root != NULL; }
+      
+      // Call to late-initialize an AutoNamedRoot
+      bool init(JSContext *pcx, void **proot, const char *name)
+      {
+         bool res = false;
+
+         // Cannot root a NULL value; useful for rooting the return
+         // value of a JSAPI call without having to separately check it
+         // for a non-NULL return value first.
+         if(!(proot && *proot))
+            res = false;
+         else if(!isValid())
+         {
+
+            cx   = pcx;
+            root = proot;
+            if(JS_AddNamedRoot(cx, root, name))
+               res = true;
+            else
+            {
+               root = NULL;
+               res  = false;
+            }
+         }
+       
+         return res;
+      }
+
+      // Overloads to avoid casting bullshit. This wouldn't be necessary
+      // if C++'s treatment of void ** made any sense.
+
+      bool init(JSContext *pcx, JSObject **obj, const char *name)
+      {
+         return init(pcx, reinterpret_cast<void **>(obj), name);
+      }
+
+      bool init(JSContext *pcx, JSString **str, const char *name)
+      {
+         return init(pcx, reinterpret_cast<void **>(str), name);
+      }
+   };
 }
 
 #endif

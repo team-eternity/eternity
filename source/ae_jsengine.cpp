@@ -127,7 +127,7 @@ static JSBool Aeon_JS_evaluateFile(JSContext *cx, JSObject *obj,
                                    const char *filename, jsval *rval)
 {
    JSScript *script = NULL;
-   JSObject *gcroot = NULL;
+   void     *gcroot = NULL;
    JSBool ok = JS_FALSE;
    uint32 oldopts;
 
@@ -138,11 +138,10 @@ static JSBool Aeon_JS_evaluateFile(JSContext *cx, JSObject *obj,
    {
       if((gcroot = JS_NewScriptObject(cx, script)))
       {
-         if(JS_AddNamedRoot(cx, &gcroot, "Aeon_JS_evaluateFile"))
-         {
+         AeonJS::AutoNamedRoot root(cx, &gcroot, "Aeon_JS_evaluateFile");
+         
+         if(root.isValid())
             ok = JS_ExecuteScript(cx, obj, script, rval);
-            JS_RemoveRoot(cx, &gcroot);
-         }
       }
    }
 
@@ -190,7 +189,7 @@ static JSBool AeonJS_LogPrint(JSContext *cx, uintN argc, jsval *vp)
 
    if(argc >= 1)
    {
-      const char *msg = AeonJS_SafeGetStringBytes(cx, argv[0], &argv[0]);
+      const char *msg = AeonJS::SafeGetStringBytes(cx, argv[0], &argv[0]);
       AeonEngine::LogPuts(msg);
    }
 
@@ -201,6 +200,7 @@ static JSBool AeonJS_LogPrint(JSContext *cx, uintN argc, jsval *vp)
 static JSClass aeonJSClass =
 {
    "Aeon",
+   0,
    JS_PropertyStub,
    JS_PropertyStub,
    JS_PropertyStub,
@@ -239,28 +239,12 @@ public:
    JSContext *cx;
    JSObject  *obj;
    JSScript  *script;
-   JSCompiledScriptPimpl() : cx(NULL), obj(NULL), script(NULL) {}
-   ~JSCompiledScriptPimpl();
+   AeonJS::AutoNamedRoot root;
+   JSCompiledScriptPimpl() : cx(NULL), obj(NULL), script(NULL), root() {}
    void init(JSContext *pcx, JSScript *pScript);
 
    bool execute(jsval *rval);
 };
-
-//
-// JSCompiledScriptPimpl Destructor
-//
-// Remove the GC root for the compiled script so that it can be garbage
-// collected.
-//
-JSCompiledScriptPimpl::~JSCompiledScriptPimpl()
-{
-   if(cx && obj)
-      JS_RemoveRoot(cx, &obj);
-
-   cx     = NULL;
-   obj    = NULL;
-   script = NULL;
-}
 
 //
 // JSCompiledScriptPimpl::init
@@ -272,8 +256,9 @@ void JSCompiledScriptPimpl::init(JSContext *pcx, JSScript *pScript)
 {
    cx     = pcx;
    script = pScript;
+      
    if((obj = JS_NewScriptObject(cx, script)))
-      JS_AddNamedRoot(cx, &obj, "JSCompiledScriptPimpl::init");
+      root.init(cx, &obj, "JSCompiledScriptPimpl::init");
 }
 
 //
@@ -334,13 +319,12 @@ bool AeonJSEngine::CompiledScript::executeWithResult(qstring &qstr)
 
    if(pImpl->execute(&rval))
    {
-      JSString *jstr = JS_ValueToString(pImpl->cx, rval);
-      if(jstr && 
-         JS_AddNamedRoot(pImpl->cx, &jstr, "CompiledScript::executeWithResult"))
+      AeonJS::AutoNamedRoot root;
+      JSString *jstr = JS_ValueToString(pImpl->cx, rval);      
+      if(root.init(pImpl->cx, &jstr, "CompiledScript::executeWithResult"))
       {
          qstr = JS_GetStringBytes(jstr);
          result = true;
-         JS_RemoveRoot(pImpl->cx, &jstr);
       }
    }
 
@@ -491,6 +475,8 @@ static JSBool AeonJS_ContextCallback(JSContext *cx, uintN contextOp)
       JS_SetErrorReporter(cx, AeonJSErrorReporter);
       JS_SetVersion(cx, JSVERSION_LATEST);
    }
+
+   return JS_TRUE;
 }
 
 //
@@ -553,6 +539,27 @@ bool AeonJSEngine::evaluateString(const char *name, const char *script)
    result = JS_EvaluateScript(gContext, gGlobal, script, strlen(script), name,
                               0, &rval);
    
+   return (result == JS_TRUE);
+}
+
+//
+// AeonJSEngine::evaluateStringLogResult
+//
+// Evaluate a string as a one-shot script, and echo the result to the Aeon log.
+//
+bool AeonJSEngine::evaluateStringLogResult(const char *name, const char *script)
+{
+   jsval  rval;
+   JSBool result;
+   AeonJS::AutoNamedRoot root;
+
+   result = JS_EvaluateScript(gContext, gGlobal, script, strlen(script), name,
+                              0, &rval);
+
+   JSString *jstr = JS_ValueToString(gContext, rval);
+   if(root.init(gContext, &jstr, "AeonJSEngine::evaluateStringLogResult"))
+      AeonEngine::LogPuts(JS_GetStringBytes(jstr));
+
    return (result == JS_TRUE);
 }
 
