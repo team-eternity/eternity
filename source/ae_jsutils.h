@@ -69,17 +69,17 @@ namespace AeonJS
    class AutoNamedRoot
    {
    private:
-      JSContext  *cx;
-      void      **root;
+      JSContext *cx;
+      void      *root;
       AutoNamedRoot(const AutoNamedRoot &other) {} // Not copyable.
 
    public:
       AutoNamedRoot() : cx(NULL), root(NULL) {}
       
-      AutoNamedRoot(JSContext *pcx, void **proot, const char *name)
-         : cx(pcx), root(proot)
+      AutoNamedRoot(JSContext *pcx, void *ptr, const char *name)
+         : cx(pcx), root(ptr)
       {         
-         if(!JS_AddNamedRoot(cx, root, name))
+         if(!JS_AddNamedRoot(cx, &root, name))
             root = NULL;
       }
       
@@ -87,7 +87,7 @@ namespace AeonJS
       {
          if(root)
          {
-            JS_RemoveRoot(cx, root);
+            JS_RemoveRoot(cx, &root);
             root = NULL;
          }
       }
@@ -96,21 +96,18 @@ namespace AeonJS
       bool isValid() const { return root != NULL; }
       
       // Call to late-initialize an AutoNamedRoot
-      bool init(JSContext *pcx, void **proot, const char *name)
+      bool init(JSContext *pcx, void *ptr, const char *name)
       {
          bool res = false;
 
          // Cannot root a NULL value; useful for rooting the return
          // value of a JSAPI call without having to separately check it
          // for a non-NULL return value first.
-         if(!(proot && *proot))
-            res = false;
-         else if(!isValid())
+         if(ptr && !isValid())
          {
-
             cx   = pcx;
-            root = proot;
-            if(JS_AddNamedRoot(cx, root, name))
+            root = ptr;
+            if(JS_AddNamedRoot(cx, &root, name))
                res = true;
             else
             {
@@ -120,19 +117,6 @@ namespace AeonJS
          }
        
          return res;
-      }
-
-      // Overloads to avoid casting bullshit. This wouldn't be necessary
-      // if C++'s treatment of void ** made any sense.
-
-      bool init(JSContext *pcx, JSObject **obj, const char *name)
-      {
-         return init(pcx, reinterpret_cast<void **>(obj), name);
-      }
-
-      bool init(JSContext *pcx, JSString **str, const char *name)
-      {
-         return init(pcx, reinterpret_cast<void **>(str), name);
       }
    };
 }

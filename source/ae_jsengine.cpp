@@ -258,7 +258,7 @@ void JSCompiledScriptPimpl::init(JSContext *pcx, JSScript *pScript)
    script = pScript;
       
    if((obj = JS_NewScriptObject(cx, script)))
-      root.init(cx, &obj, "JSCompiledScriptPimpl::init");
+      root.init(cx, obj, "JSCompiledScriptPimpl::init");
 }
 
 //
@@ -321,7 +321,7 @@ bool AeonJSEngine::CompiledScript::executeWithResult(qstring &qstr)
    {
       AeonJS::AutoNamedRoot root;
       JSString *jstr = JS_ValueToString(pImpl->cx, rval);      
-      if(root.init(pImpl->cx, &jstr, "CompiledScript::executeWithResult"))
+      if(root.init(pImpl->cx, jstr, "CompiledScript::executeWithResult"))
       {
          qstr = JS_GetStringBytes(jstr);
          result = true;
@@ -557,7 +557,7 @@ bool AeonJSEngine::evaluateStringLogResult(const char *name, const char *script)
                               0, &rval);
 
    JSString *jstr = JS_ValueToString(gContext, rval);
-   if(root.init(gContext, &jstr, "AeonJSEngine::evaluateStringLogResult"))
+   if(root.init(gContext, jstr, "AeonJSEngine::evaluateStringLogResult"))
       AeonEngine::LogPuts(JS_GetStringBytes(jstr));
 
    return (result == JS_TRUE);
