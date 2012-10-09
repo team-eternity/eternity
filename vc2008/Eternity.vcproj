@@ -1998,6 +1998,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_proxy.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_qstr.h"
 						>
 					</File>
@@ -5179,6 +5183,10 @@
 					</File>
 					<File
 						RelativePath="..\source\ae_jsengine.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ae_jsprivate.h"
 						>
 					</File>
 					<File
