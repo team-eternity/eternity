@@ -46,7 +46,16 @@
 #include "../js/src/jsapi.h"
 
 // Other AeonJS modules
+#include "ae_jsprivate.h"
 #include "ae_jsutils.h"
+
+//============================================================================
+//
+// Global Data
+//
+
+// RTTI Proxy for AeonJS::PrivateData
+IMPLEMENT_RTTI_TYPE(AeonJS::PrivateData)
 
 //============================================================================
 //
