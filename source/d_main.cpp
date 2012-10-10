@@ -82,6 +82,7 @@
 #include "p_info.h"
 #include "p_setup.h"
 #include "p_skin.h"
+#include "py_inter.h"   // [KS] Scripting support
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_patch.h"
@@ -3500,6 +3501,9 @@ static void D_DoomInit(void)
 
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
+
+   // [KS] Initialize Python early so we can error immediately if wrong verion
+   AeonInterpreter::Initialize (basepath);
 
    // haleyjd 03/10/03: GFS support
    // haleyjd 11/22/03: support loose GFS on the command line too

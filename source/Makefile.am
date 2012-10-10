@@ -57,6 +57,7 @@ p_saveg.h      p_setup.cpp    p_setup.h      p_sight.cpp    p_skin.cpp     p_ski
 p_slopes.cpp   p_slopes.h     p_spec.cpp     p_spec.h       p_switch.cpp   p_telept.cpp \
 p_things.cpp   p_tick.cpp     p_tick.h       p_trace.cpp    p_user.cpp     p_user.h \
 p_xenemy.cpp   p_xenemy.h     polyobj.cpp    polyobj.h      psnprntf.cpp   psnprntf.h \
+py_inter.cpp   py_inter.h \
 r_bsp.cpp      r_bsp.h        r_data.cpp     r_data.h       r_defs.h       r_draw.cpp \
 r_draw.h       r_drawl.cpp    r_drawl.h      r_drawq.cpp    r_dynseg.h     r_main.cpp \
 r_main.h       r_plane.cpp    r_pcheck.h     r_drawq.h      r_dynseg.cpp   r_plane.h \
@@ -75,5 +76,5 @@ w_hacks.cpp    w_hacks.h      w_levels.cpp   w_levels.h     w_wad.cpp      w_wad
 xl_scripts.cpp xl_scripts.h \
 z_native.cpp   z_zone.h
 
-eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer -lSDL_net sdl/libsdlet.a\
+eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lpython32 -lSDL_mixer -lSDL_net sdl/libsdlet.a\
 Confuse/libetconfuse.a textscreen/libtextscreen.a hal/libhalet.a

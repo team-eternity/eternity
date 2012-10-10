@@ -109,6 +109,8 @@
 #include "e_fonts.h"
 #include "e_inventory.h"
 
+#include "py_inter.h"
+
 // EDF Keywords used by features implemented in this module
 
 // Sprite variables
@@ -325,6 +327,7 @@ static cfg_opt_t edf_opts[] =
    CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
    CFG_INT_CB(ITEM_INTERTL,     0,                 CFGF_NONE, E_TranslucCB),
    CFG_STR(ITEM_MN_EPISODE,     NULL,              CFGF_NONE),
+   CFG_MVPROP(ITEM_AEON_MODS,   edf_script_opts,   CFGF_MULTI|CFGF_NOCASE), // [KS] Python support
    CFG_STR(ITEM_FONT_HUD,       "ee_smallfont",    CFGF_NONE),
    CFG_STR(ITEM_FONT_HUDO,      "ee_hudfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_MENU,      "ee_menufont",     CFGF_NONE),
@@ -1183,6 +1186,7 @@ static const char *edf_lumpnames[] =
    "ESNDSEQ",
    "ESNDINFO",
    "EFONTS",
+   "ESCRIPTS",
    NULL
 };
 
@@ -1752,6 +1756,10 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    
    // process strings
    E_ProcessStrings(cfg);
+
+   // [KS] Process script import names first
+   AeonInterpreter::ProcessScriptMappings (cfg);
+   AeonInterpreter::RunInitScripts ();
 
    // process sprites
    E_ProcessSprites(cfg);

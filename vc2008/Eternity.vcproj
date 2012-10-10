@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib python32.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -174,12 +174,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib python32_d.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="true"
+				AssemblyDebug="1"
 				ProgramDatabaseFile=".\Debug/Eternity.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
@@ -5156,6 +5157,42 @@
 					RelativePath="..\source\metaqstring.h"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="Python"
+				>
+				<Filter
+					Name="Python Headers"
+					>
+					<File
+						RelativePath="..\source\py_inter.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\py_module_base.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\py_module_level.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Python Sources"
+					>
+					<File
+						RelativePath="..\source\py_inter.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\py_module_base.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\py_module_level.cpp"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Cam"

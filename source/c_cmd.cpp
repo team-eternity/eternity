@@ -389,6 +389,7 @@ extern void       MN_AddCommands(void);        // mn_menu
 extern void      net_AddCommands(void);        // d_net
 extern void        P_AddCommands(void);        // p_cmd
 extern void P_AddGenLineCommands(void);        // p_genlin -- haleyjd
+extern void       Py_AddCommands(void);        // py_inter -- Kate
 extern void       PE_AddCommands(void);        // p_enemy  -- haleyjd
 extern void        R_AddCommands(void);        // r_main
 extern void        S_AddCommands(void);        // s_sound
@@ -439,6 +440,7 @@ void C_AddCommands()
   net_AddCommands();
   P_AddCommands();
   P_AddGenLineCommands();
+  Py_AddCommands();  // Kate
   PE_AddCommands();  // haleyjd
   R_AddCommands();
   S_AddCommands();

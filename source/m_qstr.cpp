@@ -717,7 +717,7 @@ const char *qstring::strRChr(char c) const
 // Finds the first occurance of a character in the qstring and returns its 
 // position. Returns qstring_npos if not found.
 //
-size_t qstring::findFirstOf(char c) const
+size_t qstring::findFirstOf(char c, size_t pos) const
 {
    const char *rover;
    bool found = false;
@@ -725,7 +725,7 @@ size_t qstring::findFirstOf(char c) const
    if(!buffer)
       return npos;
    
-   rover = buffer;
+   rover = buffer + pos;
    while(*rover)
    {
       if(*rover == c)

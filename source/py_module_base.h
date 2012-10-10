@@ -1,7 +1,7 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2012 Kate Stone
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,46 +20,47 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//  IO. Deals with the differences between VC++ and other languages.
+//
+//   Base "eternity" module, houses internal functions and the built-in
+//   submodules.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_IO_H__
-#define __D_IO_H__
+#ifndef __PY_MOD_BASE_H__
+#define __PY_MOD_BASE_H__
 
-// SoM 3/12/2002: Take all of this out of the source files themselves
+#include "py_inter.h"
+#include "v_misc.h"
 
-#ifdef _MSC_VER
+PyObject* init_AeonMod_base ();
 
-   #include <direct.h>
-   #include <io.h>
-   #define F_OK 0
-   #define W_OK 2
-   #define R_OK 4
-   #ifndef S_ISDIR
-      #define S_ISDIR(x) (((x & S_IFDIR)==S_IFDIR)?1:0)
-   #endif
-   #ifndef PATH_MAX
-      #define PATH_MAX _MAX_PATH
-   #endif
+class TextPrinter : public PyObject, public ZoneObject
+{
+   PyPP_Header;
 
-#else
-#include <unistd.h>
+   const char* color;
+   qstring *buffer;
+
+   TextPrinter (const char* color = FC_NORMAL, PyTypeObject* T = &Type)
+   {
+      this->ob_type = T;
+      _Py_NewReference(this);
+
+      buffer = new qstring ();
+      this->color = color;
+   };
+
+   virtual ~TextPrinter() { delete buffer; };
+   static void PyDestructor(PyObject *obj)
+   {
+      TextPrinter* me = (TextPrinter*) obj;
+      delete me;
+   };
+
+public:
+   static PyObject* write (PyObject*, PyObject*);
+};
+
 #endif
 
-#ifdef LINUX
-   #ifdef __FreeBSD__ // [Kate] Yeeaah...
-   #include <limits.h>
-   #else
-   #include <linux/limits.h>
-   #endif
-#endif
-
-#endif
-
-//----------------------------------------------------------------------------
-//
-// $Log: d_io.h,v $
-//
-//
-//----------------------------------------------------------------------------
+// EOF

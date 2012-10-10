@@ -52,6 +52,13 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
+   qstring(const char* initString, int tag = PU_STATIC) 
+      : ZoneObject(), buffer(NULL), index(0), size(0)
+   {
+      ChangeTag(tag);
+      concat (initString);
+   }
+
    qstring(size_t startSize = 0, int tag = PU_STATIC) 
       : ZoneObject(), buffer(NULL), index(0), size(0)
    {
@@ -172,7 +179,7 @@ public:
    // Searching/Substring Finding Routines
    const char *strChr(char c) const;
    const char *strRChr(char c) const;
-   size_t      findFirstOf(char c) const;
+   size_t      findFirstOf(char c, size_t pos=0) const;
    size_t      findFirstNotOf(char c) const;
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;

@@ -57,6 +57,7 @@
 #include "p_tick.h"
 #include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
 #include "p_user.h"
+#include "py_module_level.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -1169,6 +1170,16 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
 
 IMPLEMENT_THINKER_TYPE(Mobj)
 
+Mobj::~Mobj()
+{
+   // Dereference our linked proxy
+   if (this->aeonproxy)
+   {
+      this->aeonproxy->owner = NULL;
+      Py_CLEAR (this->aeonproxy);
+   }
+}
+
 //
 // P_MobjThinker
 //
@@ -1465,6 +1476,8 @@ void Mobj::serialize(SaveArchive &arc)
       enemyNum  = P_NumForThinker(lastenemy);
 
       arc << targetNum << tracerNum << enemyNum;
+
+      aeonproxy->serialize (arc);
    }
    else // Loading
    {
@@ -1511,6 +1524,9 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
+
+      aeonproxy = new MobjProxy (this);
+      aeonproxy->serialize (arc);
    }
 }
 
@@ -1704,6 +1720,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       else
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
+
+   mobj->aeonproxy = new MobjProxy (mobj);
 
    return mobj;
 }

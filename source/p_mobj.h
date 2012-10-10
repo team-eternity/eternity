@@ -43,6 +43,7 @@
 struct msecnode_t;
 struct player_t;
 struct skin_t;
+class MobjProxy;
 
 // Defines
 
@@ -205,6 +206,8 @@ protected:
    void Think();
 
 public:   
+   ~Mobj ();
+
    // Virtual methods (overridables)
    // Inherited from Thinker:
    virtual void updateThinker();
@@ -371,6 +374,8 @@ public:
    // anyone?)
    Mobj *dummyto;
 #endif
+
+   MobjProxy *aeonproxy;
 };
 
 // External declarations (formerly in p_local.h) -- killough 5/2/98
