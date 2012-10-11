@@ -28,9 +28,14 @@
 #ifndef AE_ENGINE_H__
 #define AE_ENGINE_H__
 
-#include "z_zone.h"
+#include "e_rtti.h"
 
 class qstring;
+
+namespace Aeon
+{
+   class EvalContextPimpl;
+}
 
 //
 // AeonEngine
@@ -57,6 +62,38 @@ public:
    virtual bool evaluateStringLogResult(const char *name, const char *script) = 0;
    virtual bool evaluateFile(const char *filename) = 0;
 
+   // EvalContext is a wrapper around an object in whose context code
+   // can be executed.
+   class EvalContext : public RTTIObject
+   {
+      DECLARE_RTTI_TYPE(EvalContext, RTTIObject)
+
+   private:
+      friend class Aeon::EvalContextPimpl;
+      typedef Aeon::EvalContextPimpl PimplType;
+      Aeon::EvalContextPimpl *pImpl;
+
+   protected:
+      AeonEngine *engine;
+
+   public:
+      EvalContext();
+      EvalContext(const char *pName, AeonEngine *pEngine);
+      virtual ~EvalContext();
+
+      void setEngine(AeonEngine *pEngine) { engine = pEngine; }
+
+      static EvalContext *Find  (const char *name, AeonEngine *e = NULL);
+      static EvalContext *Define(const char *name, AeonEngine *e);
+   };
+
+   // Must override if descendent AeonEngine supports EvalContext!
+   virtual EvalContext::Type *evalContextRTTIType() const
+   {
+      return RTTI(EvalContext);
+   }
+
+   // CompiledScript is a wrapper around a callable script object.
    class CompiledScript : public ZoneObject
    {
    public:

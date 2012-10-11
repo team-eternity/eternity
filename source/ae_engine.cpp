@@ -30,9 +30,11 @@
 #include "ae_engine.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "e_hash.h"
 #include "e_lib.h"
 #include "m_argv.h"
 #include "m_qstr.h"
+#include "m_qstrkeys.h"
 
 //============================================================================
 //
@@ -159,6 +161,103 @@ void AeonEngine::LogPuts(const char *message)
    default:
       break;
    }
+}
+
+//=============================================================================
+//
+// Evaluation Contexts
+//
+// The particulars of this class are implemented in each Aeon engine, but 
+// certain base functionalities such as lookup of contexts by name (with or 
+// without qualification by the parent AeonEngine object) are implemented here.
+//
+
+IMPLEMENT_RTTI_TYPE(AeonEngine::EvalContext)
+
+//
+// Private Implementation Class
+//
+class Aeon::EvalContextPimpl : public ZoneObject
+{
+public:
+   // Instance vars
+   AeonEngine::EvalContext *parent;
+   qstring name;
+   DLListItem<EvalContextPimpl> links;
+
+   EvalContextPimpl(AeonEngine::EvalContext *pParent) 
+      : parent(pParent), name(), links() 
+   {
+   }
+};
+
+// Global hash table of evaluation context objects
+static EHashTable<Aeon::EvalContextPimpl, EQStrHashKey, 
+                  &Aeon::EvalContextPimpl::name, &Aeon::EvalContextPimpl::links>
+                  GlobalContextHash(131);
+
+//
+// Default Constructor
+//
+AeonEngine::EvalContext::EvalContext()
+   : Super(), engine(NULL)
+{
+   pImpl = new PimplType(this);
+}
+
+//
+// Initializing Constructor
+//
+AeonEngine::EvalContext::EvalContext(const char *pName, AeonEngine *pEngine)
+   : Super(), engine(pEngine)
+{
+   pImpl = new PimplType(this);
+   pImpl->name = pName;
+}
+
+//
+// AeonEngine::EvalContext::Find
+//
+// Find an already existent evaluation context.
+//
+AeonEngine::EvalContext *
+AeonEngine::EvalContext::Find(const char *name, AeonEngine *e)
+{
+   EvalContext *ret  = NULL;
+   PimplType   *eval = NULL;
+
+   while((eval = GlobalContextHash.keyIterator(eval, name)))
+   {
+      if(!e || e == eval->parent->engine)
+      {
+         ret = eval->parent;
+         break;
+      }
+   }
+
+   return ret;
+}
+
+//
+// AeonEngine::EvalContext::Define
+//
+// Define a new evaluation context.
+//
+AeonEngine::EvalContext *
+AeonEngine::EvalContext::Define(const char *name, AeonEngine *e)
+{
+   EvalContext *newCtx = NULL;
+
+   if(!(newCtx = Find(name, e)))
+   {
+      newCtx = e->evalContextRTTIType()->newObject();
+      newCtx->pImpl->name = name;
+      newCtx->engine = e;
+
+      GlobalContextHash.addObject(newCtx->pImpl);
+   }
+
+   return newCtx;
 }
 
 // EOF
