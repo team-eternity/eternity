@@ -248,7 +248,7 @@ public:
    //
    item_type *chainForKey(param_key_type key) const
    {
-      return chainForKey(UNMODKEY, key_type::HashCode(key));
+      return chainForKey(key, key_type::HashCode(key));
    }
 
    //
