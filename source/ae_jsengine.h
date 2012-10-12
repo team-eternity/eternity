@@ -32,26 +32,29 @@
 
 #include "ae_engine.h"
 
+class qstring;
 class JSCompiledScriptPimpl;
-class JSValuePimpl;
 
-class AeonJSEngine : public AeonEngine
+namespace AeonJS
 {
-public:
-   ~AeonJSEngine() {}
+   bool InitEngine();
+   void ShutDown();
 
-   bool initEngine();
-   void shutDown();
+   bool EvaluateString(const char *name, const char *script);
+   bool EvaluateStringLogResult(const char *name, const char *script);
+   bool EvaluateFile(const char *filename);
 
-   bool evaluateString(const char *name, const char *script);
-   bool evaluateStringLogResult(const char *name, const char *script);
-   bool evaluateFile(const char *filename);
+   /*
+   bool EvaluateInContext(EvalContext &ctx, const char *name, const char *script);
+   bool EvaluateInContext(EvalContext &ctx, const char *filename);
+   */
 
-   class CompiledScript : public AeonEngine::CompiledScript
+   // JS Compiled Script
+   class CompiledScript : public ZoneObject
    {
    private:
-      friend class AeonJSEngine;
       JSCompiledScriptPimpl *pImpl;
+
    public:
       CompiledScript();
       ~CompiledScript();
@@ -61,11 +64,11 @@ public:
       bool executeWithResult(unsigned int &ui);
       bool executeWithResult(double &d);
       bool executeWithResult(bool &b);
-   };
 
-   CompiledScript *compileString(const char *name, const char *script);
-   CompiledScript *compileFile(const char *filename);
-};
+      static CompiledScript *CompileString(const char *name, const char *script);
+      static CompiledScript *CompileFile(const char *filename);
+   };
+}
 
 #endif
 

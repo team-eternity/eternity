@@ -228,7 +228,7 @@ static JSFunctionSpec aeonJSMethods[] =
 
 //============================================================================
 //
-// AeonJSEngine::CompiledScript
+// AeonJS::CompiledScript
 //
 // Proxy object for a unit of compiled bytecode, which can be cached and run
 // repeatedly.
@@ -286,17 +286,17 @@ bool JSCompiledScriptPimpl::execute(jsval *rval)
 }
 
 //
-// AeonJSEngine::CompiledScript Constructor
+// AeonJS::CompiledScript Constructor
 //
-AeonJSEngine::CompiledScript::CompiledScript() : AeonEngine::CompiledScript()
+AeonJS::CompiledScript::CompiledScript() : ZoneObject()
 {
    pImpl = new JSCompiledScriptPimpl;
 }
 
 //
-// AeonJSEngine::CompiledScript Destructor
+// AeonJS::CompiledScript Destructor
 //
-AeonJSEngine::CompiledScript::~CompiledScript()
+AeonJS::CompiledScript::~CompiledScript()
 {
    if(pImpl)
    {
@@ -306,9 +306,9 @@ AeonJSEngine::CompiledScript::~CompiledScript()
 }
 
 //
-// AeonJSEngine::CompiledScript::execute
+// AeonJS::CompiledScript::execute
 //
-bool AeonJSEngine::CompiledScript::execute()
+bool AeonJS::CompiledScript::execute()
 {
    jsval rval;
 
@@ -316,9 +316,9 @@ bool AeonJSEngine::CompiledScript::execute()
 }
 
 //
-// AeonJSEngine::CompiledScript::executeWithResult
+// AeonJS::CompiledScript::executeWithResult
 //
-bool AeonJSEngine::CompiledScript::executeWithResult(qstring &qstr)
+bool AeonJS::CompiledScript::executeWithResult(qstring &qstr)
 {
    bool result = false;
    jsval rval;
@@ -334,9 +334,9 @@ bool AeonJSEngine::CompiledScript::executeWithResult(qstring &qstr)
 }
 
 //
-// AeonJSEngine::CompiledScript::executeWithResult
+// AeonJS::CompiledScript::executeWithResult
 //
-bool AeonJSEngine::CompiledScript::executeWithResult(int &i)
+bool AeonJS::CompiledScript::executeWithResult(int &i)
 {
    bool result = false;
    jsval rval;
@@ -355,9 +355,9 @@ bool AeonJSEngine::CompiledScript::executeWithResult(int &i)
 }
 
 //
-// AeonJSEngine::CompiledScript::executeWithResult
+// AeonJS::CompiledScript::executeWithResult
 //
-bool AeonJSEngine::CompiledScript::executeWithResult(unsigned int &ui)
+bool AeonJS::CompiledScript::executeWithResult(unsigned int &ui)
 {
    bool result = false;
    jsval rval;
@@ -376,9 +376,9 @@ bool AeonJSEngine::CompiledScript::executeWithResult(unsigned int &ui)
 }
 
 //
-// AeonJSEngine::CompiledScript::executeWithResult
+// AeonJS::CompiledScript::executeWithResult
 //
-bool AeonJSEngine::CompiledScript::executeWithResult(double &d)
+bool AeonJS::CompiledScript::executeWithResult(double &d)
 {
    bool result = false;
    jsval rval;
@@ -397,9 +397,9 @@ bool AeonJSEngine::CompiledScript::executeWithResult(double &d)
 }
 
 //
-// AeonJSEngine::CompiledScript::executeWithResult
+// AeonJS::CompiledScript::executeWithResult
 //
-bool AeonJSEngine::CompiledScript::executeWithResult(bool &b)
+bool AeonJS::CompiledScript::executeWithResult(bool &b)
 {
    bool result = false;
    jsval rval;
@@ -419,10 +419,10 @@ bool AeonJSEngine::CompiledScript::executeWithResult(bool &b)
 
 //============================================================================
 //
-// AeonJSEngine
+// AeonJS Engine
 //
-// Concrete implementation of AeonEngine interfacing with SpiderMonkey 1.8.0,
-// to provide support for ECMAScript 3 (aka JavaScript).
+// Interfacing with SpiderMonkey 1.8.0 to provide support for ECMAScript 3 
+// (aka JavaScript).
 //
 
 static void AeonJSErrorReporter(JSContext *cx, const char *message, 
@@ -482,11 +482,11 @@ static JSBool AeonJS_ContextCallback(JSContext *cx, uintN contextOp)
 }
 
 //
-// AeonJSEngine::initEngine
+// AeonJS::InitEngine
 //
 // Initialize core components of the jsapi
 //
-bool AeonJSEngine::initEngine()
+bool AeonJS::InitEngine()
 {
    // Create the JSRuntime
    if(!(gRuntime = JS_NewRuntime(AEON_JS_RUNTIME_HEAP_SIZE)))
@@ -508,11 +508,11 @@ bool AeonJSEngine::initEngine()
 }
 
 //
-// AeonJSEngine::shutDown
+// AeonJS::ShutDown
 //
 // Destroy and shutdown the js32 library.
 //
-void AeonJSEngine::shutDown()
+void AeonJS::ShutDown()
 {
    if(gContext)
    {
@@ -529,11 +529,11 @@ void AeonJSEngine::shutDown()
 }
 
 //
-// AeonJSEngine::evaluateString
+// AeonJS::EvaluateString
 //
 // Evaluate a string as a one-shot script.
 //
-bool AeonJSEngine::evaluateString(const char *name, const char *script)
+bool AeonJS::EvaluateString(const char *name, const char *script)
 {
    jsval  rval;
    JSBool result;
@@ -545,15 +545,15 @@ bool AeonJSEngine::evaluateString(const char *name, const char *script)
 }
 
 //
-// AeonJSEngine::evaluateStringLogResult
+// AeonJS::EvaluateStringLogResult
 //
 // Evaluate a string as a one-shot script, and echo the result to the Aeon log.
 //
-bool AeonJSEngine::evaluateStringLogResult(const char *name, const char *script)
+bool AeonJS::EvaluateStringLogResult(const char *name, const char *script)
 {
    jsval  rval;
    JSBool result;
-   AeonJS::AutoNamedRoot root;
+   AutoNamedRoot root;
 
    result = JS_EvaluateScript(gContext, gGlobal, script, strlen(script), name,
                               0, &rval);
@@ -564,11 +564,11 @@ bool AeonJSEngine::evaluateStringLogResult(const char *name, const char *script)
 }
 
 //
-// AeonJSEngine::evaluateFile
+// AeonJS::EvaluateFile
 //
 // Evaluate a file as a one-shot script.
 //
-bool AeonJSEngine::evaluateFile(const char *filename)
+bool AeonJS::EvaluateFile(const char *filename)
 {
    jsval  rval;
    JSBool result;
@@ -579,14 +579,14 @@ bool AeonJSEngine::evaluateFile(const char *filename)
 }
 
 //
-// AeonJSEngine::compileString
+// AeonJS::CompileString
 //
 // Compile the provided string data as a script and return it wrapped in a 
 // persistent CompiledScript object. This object can then be executed 
 // repeatedly. Returns NULL on failure.
 //
-AeonJSEngine::CompiledScript *AeonJSEngine::compileString(const char *name, 
-                                                          const char *script)
+AeonJS::CompiledScript *
+AeonJS::CompiledScript::CompileString(const char *name, const char *script)
 {
    CompiledScript *ret = NULL;
    JSScript *s;
@@ -601,13 +601,13 @@ AeonJSEngine::CompiledScript *AeonJSEngine::compileString(const char *name,
 }
 
 //
-// AeonJSEngine::compileFile
+// AeonJS::CompileFile
 //
 // Compile the provided disk file as a script and return it wrapped in a 
 // persistent CompiledScript object. This object can then be executed 
 // repeatedly. Returns NULL on failure.
 //
-AeonJSEngine::CompiledScript *AeonJSEngine::compileFile(const char *filename)
+AeonJS::CompiledScript *AeonJS::CompiledScript::CompileFile(const char *filename)
 {
    CompiledScript *ret = NULL;
    JSScript *s;

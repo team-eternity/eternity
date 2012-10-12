@@ -30,19 +30,17 @@
 #include "ae_engine.h"
 #include "c_io.h"
 #include "doomstat.h"
-#include "e_hash.h"
 #include "e_lib.h"
 #include "m_argv.h"
 #include "m_qstr.h"
-#include "m_qstrkeys.h"
 
 //============================================================================
 //
 // Warning / Error Logging
 //
 
-int   AeonEngine::outputMode = AeonEngine::OUTPUT_CONSOLE;
-FILE *AeonEngine::outStream;
+static int   outputMode = AeonEngine::OUTPUT_CONSOLE;
+static FILE *outStream;
 
 static const char *outputModeNames[] =
 {
@@ -54,11 +52,11 @@ static const char *outputModeNames[] =
 };
 
 //
-// AeonEngine::InitOutput
+// AeonInitOutput
 //
 // Sets up the logging system for scripting warnings and errors.
 //
-void AeonEngine::InitOutput()
+static void AeonInitOutput()
 {
    static bool firsttime = true;
 
@@ -73,25 +71,25 @@ void AeonEngine::InitOutput()
 
    if((p = M_CheckParm("-aeonout")) && p < myargc - 1)
    {
-      outputMode = E_StrToNumLinear(outputModeNames, OUTPUT_NUMMODES, 
+      outputMode = E_StrToNumLinear(outputModeNames, AeonEngine::OUTPUT_NUMMODES, 
                                     myargv[p + 1]);
-      if(outputMode == OUTPUT_NUMMODES)
-         outputMode = OUTPUT_CONSOLE;
+      if(outputMode == AeonEngine::OUTPUT_NUMMODES)
+         outputMode = AeonEngine::OUTPUT_CONSOLE;
    }
 
    switch(outputMode)
    {
-   case OUTPUT_CONSOLE:
-   case OUTPUT_SILENT:
+   case AeonEngine::OUTPUT_CONSOLE:
+   case AeonEngine::OUTPUT_SILENT:
       // nothing special is required for these
       break;
-   case OUTPUT_STDOUT:
+   case AeonEngine::OUTPUT_STDOUT:
       outStream = stdout;
       break;
-   case OUTPUT_STDERR:
+   case AeonEngine::OUTPUT_STDERR:
       outStream = stderr;
       break;
-   case OUTPUT_FILE:
+   case AeonEngine::OUTPUT_FILE:
       filename = userpath;
       filename.pathConcatenate("aeonlog.txt");
       if(!(outStream = fopen(filename.constPtr(), "a")))
@@ -112,7 +110,7 @@ void AeonEngine::LogPrintf(const char *message, ...)
    va_start(va, message);
 
    // make sure log system is initialized
-   InitOutput();
+   AeonInitOutput();
    
    switch(outputMode)
    {
@@ -143,7 +141,7 @@ void AeonEngine::LogPuts(const char *message)
    size_t len = 0;
 
    // make sure log system is initialized
-   InitOutput();
+   AeonInitOutput();
 
    switch(outputMode)
    {
@@ -161,103 +159,6 @@ void AeonEngine::LogPuts(const char *message)
    default:
       break;
    }
-}
-
-//=============================================================================
-//
-// Evaluation Contexts
-//
-// The particulars of this class are implemented in each Aeon engine, but 
-// certain base functionalities such as lookup of contexts by name (with or 
-// without qualification by the parent AeonEngine object) are implemented here.
-//
-
-IMPLEMENT_RTTI_TYPE(AeonEngine::EvalContext)
-
-//
-// Private Implementation Class
-//
-class Aeon::EvalContextPimpl : public ZoneObject
-{
-public:
-   // Instance vars
-   AeonEngine::EvalContext *parent;
-   qstring name;
-   DLListItem<EvalContextPimpl> links;
-
-   EvalContextPimpl(AeonEngine::EvalContext *pParent) 
-      : parent(pParent), name(), links() 
-   {
-   }
-};
-
-// Global hash table of evaluation context objects
-static EHashTable<Aeon::EvalContextPimpl, EQStrHashKey, 
-                  &Aeon::EvalContextPimpl::name, &Aeon::EvalContextPimpl::links>
-                  GlobalContextHash(131);
-
-//
-// Default Constructor
-//
-AeonEngine::EvalContext::EvalContext()
-   : Super(), engine(NULL)
-{
-   pImpl = new PimplType(this);
-}
-
-//
-// Initializing Constructor
-//
-AeonEngine::EvalContext::EvalContext(const char *pName, AeonEngine *pEngine)
-   : Super(), engine(pEngine)
-{
-   pImpl = new PimplType(this);
-   pImpl->name = pName;
-}
-
-//
-// AeonEngine::EvalContext::Find
-//
-// Find an already existent evaluation context.
-//
-AeonEngine::EvalContext *
-AeonEngine::EvalContext::Find(const char *name, AeonEngine *e)
-{
-   EvalContext *ret  = NULL;
-   PimplType   *eval = NULL;
-
-   while((eval = GlobalContextHash.keyIterator(eval, name)))
-   {
-      if(!e || e == eval->parent->engine)
-      {
-         ret = eval->parent;
-         break;
-      }
-   }
-
-   return ret;
-}
-
-//
-// AeonEngine::EvalContext::Define
-//
-// Define a new evaluation context.
-//
-AeonEngine::EvalContext *
-AeonEngine::EvalContext::Define(const char *name, AeonEngine *e)
-{
-   EvalContext *newCtx = NULL;
-
-   if(!(newCtx = Find(name, e)))
-   {
-      newCtx = e->evalContextRTTIType()->newObject();
-      newCtx->pImpl->name = name;
-      newCtx->engine = e;
-
-      GlobalContextHash.addObject(newCtx->pImpl);
-   }
-
-   return newCtx;
 }
 
 // EOF

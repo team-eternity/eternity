@@ -220,7 +220,7 @@ public:
    }
 
    //
-   // chainForKey(EHashUnmodKey, unsigned int)
+   // chainForKey(param_key_type key, unsigned int)
    //
    // Returns the first object on the hash chain used by the given
    // unmodulated hash code, or NULL if that hash chain is empty. The
@@ -240,7 +240,7 @@ public:
    }
 
    //
-   // chainForKey(key_type&)
+   // chainForKey(param_key_type&)
    //
    // Returns the first object on the hash chain used by the given key, or NULL
    // if that hash chain is empty. The object returned does not necessarily 
@@ -248,7 +248,7 @@ public:
    //
    item_type *chainForKey(param_key_type key) const
    {
-      return chainForKey(UNMODKEY, key_type::HashCode(key));
+      return chainForKey(key, key_type::HashCode(key));
    }
 
    //
