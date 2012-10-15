@@ -5178,6 +5178,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\ae_jsapi.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\ae_jscfgw32.h"
 						>
 					</File>

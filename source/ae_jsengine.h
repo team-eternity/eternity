@@ -30,7 +30,7 @@
 
 #ifdef EE_FEATURE_AEONJS
 
-#include "ae_engine.h"
+#include "z_zone.h"
 
 class qstring;
 class JSEvalContextPimpl;

@@ -29,20 +29,11 @@
 
 #include "z_zone.h"
 
-#include "ae_jsengine.h"
-#include "hal/i_platform.h"
 #include "m_qstr.h"
 
-// JSAPI Configuration
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-#include "ae_jscfgw32.h"
-#elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
-#include "ae_jscfglinux.h"
-#endif
-
-// JSAPI
-#include "../js/src/jsapi.h"
-
+// AeonJS headers
+#include "ae_jsapi.h"
+#include "ae_jsengine.h"
 #include "ae_jsutils.h"
 
 //
