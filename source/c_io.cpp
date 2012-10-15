@@ -206,7 +206,12 @@ static void C_initMessageBuffer()
       messages[i] = &msgtext[i * LINELENGTH];
 }
 
-void C_Init(void)
+//
+// C_Init
+//
+// Primary console initialization.
+//
+void C_Init()
 {
    // haleyjd: initialize console qstrings
    inputtext.createSize(100);
@@ -214,24 +219,38 @@ void C_Init(void)
    // haleyjd: initialize console message buffer
    C_initMessageBuffer();
 
-   Console.enabled = true;
-
-   if(!(c_font = E_FontForName(c_fontname)))
-      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
+   Console.enabled = false;
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
    
    C_AddCommands();
-   C_updateInputPoint();
    
    // haleyjd
    G_InitKeyBindings();   
 }
 
-// called every tic
+//
+// C_InitMore
+//
+// haleyjd 10/15/12: Post-InitMultipleFiles initialization
+//
+void C_InitMore()
+{
+   Console.enabled = true;
 
-void C_Ticker(void)
+   if(!(c_font = E_FontForName(c_fontname)))
+      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
+   
+   C_updateInputPoint();
+}
+
+//
+// C_Ticker
+//
+// Called every tic
+//
+void C_Ticker()
 {
    Console.showprompt = true;
    
@@ -508,7 +527,7 @@ bool C_Responder(event_t *ev)
 // although it would complicate the scrolling logic.
 //
 
-void C_Drawer(void)
+void C_Drawer()
 {
    int y;
    int count;
@@ -598,7 +617,7 @@ void C_Drawer(void)
 // useful for functions that get input without using the gameloop
 // eg. serial code
 
-void C_Update(void)
+void C_Update()
 {
    if(!nodrawers)
    {
@@ -623,7 +642,7 @@ void C_Update(void)
 //
 // haleyjd 05/30/11: message buffer made more efficient.
 //
-static void C_ScrollUp(void)
+static void C_ScrollUp()
 {
    if(message_last == message_pos)
       message_pos++;   
@@ -916,7 +935,7 @@ void C_OpenConsoleLog(qstring *filename)
 //
 // haleyjd 09/07/03: true console logging
 //
-void C_CloseConsoleLog(void)
+void C_CloseConsoleLog()
 {
    if(console_log)
       fclose(console_log);
@@ -955,7 +974,7 @@ static void C_AppendToLog(const char *text)
 
 // put smmu into console mode
 
-void C_SetConsole(void)
+void C_SetConsole()
 {
    gamestate = GS_CONSOLE;
    gameaction = ga_nothing;
@@ -969,14 +988,14 @@ void C_SetConsole(void)
 
 // make the console go up
 
-void C_Popup(void)
+void C_Popup()
 {
    Console.current_target = 0;
 }
 
 // make the console disappear
 
-void C_InstaPopup(void)
+void C_InstaPopup()
 {
    // haleyjd 10/20/08: no popup in GS_CONSOLE gamestate!
    if(gamestate != GS_CONSOLE)

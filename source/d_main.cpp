@@ -41,6 +41,7 @@
 #include "hal/i_platform.h"
 
 #include "acs_intr.h"
+#include "ae_engine.h"
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
@@ -2187,6 +2188,13 @@ static void D_DoomInit(void)
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
 
+   // haleyjd 10/15/12: primary C_Init early
+   startupmsg("C_Init", "Init console.");
+   C_Init();
+
+   // haleyjd 10/15/12: initialize Aeon
+   AeonEngine::InitEngines();
+
    // haleyjd 01/11/09: process affinity mask stuff
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
    {
@@ -2293,13 +2301,14 @@ static void D_DoomInit(void)
    }
    // End new startup strings
 
-   startupmsg("V_InitMisc","Init miscellaneous video patches.");
+   startupmsg("V_InitMisc", "Init miscellaneous video patches.");
    V_InitMisc();
 
-   startupmsg("C_Init","Init console.");
-   C_Init();
+   // haleyjd 10/15/12: finish console initialization
+   startupmsg("C_InitMore", "Init console video.");
+   C_InitMore();
 
-   startupmsg("I_Init","Setting up machine state.");
+   startupmsg("I_Init", "Setting up machine state.");
    I_Init();
 
    // devparm override of early set graphics mode

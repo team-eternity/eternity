@@ -28,20 +28,21 @@
 struct event_t;
 class qstring;
 
-void C_Init(void);
-void C_Ticker(void);
-void C_Drawer(void);
+void C_Init();
+void C_InitMore();
+void C_Ticker();
+void C_Drawer();
 bool C_Responder(event_t* ev);
-void C_Update(void);
+void C_Update();
 
 void C_VPrintf(const char *s, va_list va);
 void C_Printf(const char *s, ...);
 void C_Puts(const char *s);
 void C_Separator(void);
 
-void C_SetConsole(void);
-void C_Popup(void);
-void C_InstaPopup(void);
+void C_SetConsole();
+void C_Popup();
+void C_InstaPopup();
 
 // haleyjd
 void C_OpenConsoleLog(qstring *filename);

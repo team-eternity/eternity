@@ -28,9 +28,12 @@
 #include "z_zone.h"
 
 #include "ae_engine.h"
+#include "ae_jsengine.h"
 #include "c_io.h"
+#include "d_main.h"
 #include "doomstat.h"
 #include "e_lib.h"
+#include "i_system.h"
 #include "m_argv.h"
 #include "m_qstr.h"
 
@@ -159,6 +162,22 @@ void AeonEngine::LogPuts(const char *message)
    default:
       break;
    }
+}
+
+//
+// AeonEngine::InitEngines
+//
+// Initialize all scripting engines. Call once at startup.
+//
+void AeonEngine::InitEngines() 
+{
+   // ECMAScript 3, aka JavaScript - SpiderMonkey 1.8.0
+#ifdef EE_FEATURE_AEONJS
+   if(AeonJS::InitEngine())
+      startupmsg("AeonEngine::InitEngines", "Init JSAPI.");      
+   else
+      I_Error("AeonEngine::InitEngines: JSAPI initialization failed!\n");
+#endif
 }
 
 // EOF

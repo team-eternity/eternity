@@ -48,6 +48,8 @@ namespace AeonEngine
       OUTPUT_SILENT,  // no output
       OUTPUT_NUMMODES
    };
+
+   void InitEngines(); // Initialize all scripting engines
 }
 
 #endif
