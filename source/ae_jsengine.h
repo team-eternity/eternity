@@ -33,21 +33,34 @@
 #include "ae_engine.h"
 
 class qstring;
+class JSEvalContextPimpl;
 class JSCompiledScriptPimpl;
+
+struct JSScript;
+struct JSClass;
+struct JSObject;
+struct JSContext;
 
 namespace AeonJS
 {
    bool InitEngine();
    void ShutDown();
 
-   bool EvaluateString(const char *name, const char *script);
-   bool EvaluateStringLogResult(const char *name, const char *script);
-   bool EvaluateFile(const char *filename);
+   // JS Evaluation Context
+   class EvalContext : public ZoneObject
+   {
+   private:
+      JSEvalContextPimpl *pImpl;
 
-   /*
-   bool EvaluateInContext(EvalContext &ctx, const char *name, const char *script);
-   bool EvaluateInContext(EvalContext &ctx, const char *filename);
-   */
+   public:
+      EvalContext();
+      ~EvalContext();
+
+      bool setGlobal(JSClass *globalClass);
+
+      JSContext *getContext() const;
+      JSObject  *getGlobal()  const;
+   };
 
    // JS Compiled Script
    class CompiledScript : public ZoneObject
@@ -55,9 +68,15 @@ namespace AeonJS
    private:
       JSCompiledScriptPimpl *pImpl;
 
+   protected:
+      void setScript(JSScript *pScript);
+
    public:
       CompiledScript();
       ~CompiledScript();
+
+      void changeContext(EvalContext *pEvalCtx);
+
       bool execute();
       bool executeWithResult(qstring &qstr);
       bool executeWithResult(int &i);
@@ -65,9 +84,19 @@ namespace AeonJS
       bool executeWithResult(double &d);
       bool executeWithResult(bool &b);
 
-      static CompiledScript *CompileString(const char *name, const char *script);
-      static CompiledScript *CompileFile(const char *filename);
+      static CompiledScript *CompileString(const char *name, const char *script,
+                                           EvalContext *evalCtx = NULL);
+      static CompiledScript *CompileFile(const char *filename, EvalContext *evalCtx = NULL);
    };
+
+   bool EvaluateString(const char *name, const char *script, 
+                       EvalContext *ctx = NULL);
+   bool EvaluateStringLogResult(const char *name, const char *script,
+                                EvalContext *ctx = NULL);
+   bool EvaluateFile(const char *filename, EvalContext *ctx = NULL);
+
+   bool EvaluateInSandbox(const char *name, const char *script);
+   bool EvaluateInSandbox(const char *filename);
 }
 
 #endif

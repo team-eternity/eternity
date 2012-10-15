@@ -120,6 +120,32 @@ namespace AeonJS
       }
    };
 
+   //
+   // AutoContext
+   //
+   // This object keeps track of a JSContext and will destroy it when the
+   // object is destroyed.
+   //
+   class AutoContext
+   {
+   public:
+      JSContext *ctx;
+
+      AutoContext(JSRuntime *rt, size_t stackChunkSize)
+      {
+         ctx = JS_NewContext(rt, stackChunkSize);
+      }
+
+      ~AutoContext()
+      {
+         if(ctx)
+         {
+            JS_DestroyContext(ctx);
+            ctx = NULL;
+         }
+      }
+   };
+
    const char *SafeGetStringBytes(JSContext *cx, jsval value, AutoNamedRoot &root);
 }
 

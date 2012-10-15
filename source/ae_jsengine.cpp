@@ -49,6 +49,8 @@
 #include "ae_jsprivate.h"
 #include "ae_jsutils.h"
 
+using namespace AeonJS;
+
 //============================================================================
 //
 // Global Data
@@ -65,10 +67,149 @@ IMPLEMENT_RTTI_TYPE(AeonJS::PrivateData)
 #define AEON_JS_RUNTIME_HEAP_SIZE 64L * 1024L * 1024L
 #define AEON_JS_STACK_CHUNK_SIZE  8192
 
-static JSRuntime *gRuntime;
-static JSContext *gContext;
-static JSObject  *gGlobal;
+static JSRuntime   *gRuntime;
+static EvalContext *gEvalContext;
 
+//=============================================================================
+//
+// JS Evaluation Context
+//
+// An evaluation context consists of a JSContext and a JSObject instance which
+// serves as that context's global object.
+//
+
+//
+// JavaScript sandbox class
+//
+
+// Enumeration callback
+static JSBool AeonJS_sandboxEnumerate(JSContext *cx, JSObject *obj)
+{
+   jsval v;
+   JSBool b;
+
+   if(!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
+      return JS_FALSE;
+
+   return !b || JS_EnumerateStandardClasses(cx, obj);
+}
+
+// Resolution callback
+static JSBool AeonJS_sandboxResolve(JSContext *cx, JSObject *obj, jsval id, 
+                                    uintN flags, JSObject **objp)
+{
+   jsval v;
+   JSBool b, resolved;
+
+   if(!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
+      return JS_FALSE;
+   
+   if(b && !(flags & JSRESOLVE_ASSIGNING)) 
+   {
+      if(!JS_ResolveStandardClass(cx, obj, id, &resolved))
+         return JS_FALSE;
+
+      if(resolved) 
+      {
+         *objp = obj;
+         return JS_TRUE;
+      }
+   }
+
+   *objp = NULL;
+   return JS_TRUE;
+}
+
+// Sandbox JSClass
+static JSClass sandbox_class =
+{
+   "sandbox",
+   JSCLASS_NEW_RESOLVE,
+   JS_PropertyStub,
+   JS_PropertyStub,
+   JS_PropertyStub,
+   JS_PropertyStub,
+   AeonJS_sandboxEnumerate,
+   (JSResolveOp)AeonJS_sandboxResolve,
+   JS_ConvertStub,
+   JS_FinalizeStub,
+   JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+// EvalContext - Private implementation object
+class JSEvalContextPimpl : public ZoneObject
+{
+public:
+   AutoContext  autoContext;
+   JSObject    *global;
+
+   JSEvalContextPimpl()
+      : ZoneObject(), autoContext(gRuntime, AEON_JS_STACK_CHUNK_SIZE), 
+        global(NULL)
+   {
+   }
+};
+
+//
+// EvalContext Constructor
+//
+AeonJS::EvalContext::EvalContext() : ZoneObject()
+{
+   pImpl = new JSEvalContextPimpl();
+}
+
+//
+// EvalContext Destructor
+//
+AeonJS::EvalContext::~EvalContext()
+{
+   if(pImpl)
+   {
+      delete pImpl;
+      pImpl = NULL;
+   }
+}
+
+//
+// EvalContext::setGlobal
+//
+// Instantiate an object of the indicated JSClass as the global object of the
+// contained JSContext.
+//
+bool AeonJS::EvalContext::setGlobal(JSClass *globalClass)
+{
+   JSContext *ctx = pImpl->autoContext.ctx;
+
+   if(ctx && (pImpl->global = JS_NewObject(ctx, globalClass, NULL, NULL)))
+   {
+      JS_SetGlobalObject(ctx, pImpl->global);
+      return true;
+   }
+   else
+      return false;
+}
+
+//
+// EvalContext::getContext
+//
+// Get the JSContext for this evaluation context.
+//
+JSContext *AeonJS::EvalContext::getContext() const
+{
+   return pImpl->autoContext.ctx;
+}
+
+//
+// EvalContext::getGlobal
+//
+// Get a pointer to the global object instance for this evaluation context.
+//
+JSObject *AeonJS::EvalContext::getGlobal() const
+{
+   return pImpl->global;
+}
+
+//=============================================================================
 //
 // JS Global Object
 //
@@ -147,7 +288,7 @@ static JSBool Aeon_JS_evaluateFile(JSContext *cx, JSObject *obj,
    {
       if((gcroot = JS_NewScriptObject(cx, script)))
       {
-         AeonJS::AutoNamedRoot root(cx, &gcroot, "Aeon_JS_evaluateFile");
+         AutoNamedRoot root(cx, &gcroot, "Aeon_JS_evaluateFile");
          
          if(root.isValid())
             ok = JS_ExecuteScript(cx, obj, script, rval);
@@ -242,30 +383,15 @@ static JSFunctionSpec aeonJSMethods[] =
 class JSCompiledScriptPimpl : public ZoneObject
 {
 public:
-   JSContext *cx;
-   JSObject  *obj;
-   JSScript  *script;
-   AeonJS::AutoNamedRoot root;
-   JSCompiledScriptPimpl() : cx(NULL), obj(NULL), script(NULL), root() {}
-   void init(JSContext *pcx, JSScript *pScript);
+   EvalContext  *evalCtx;
+   JSObject     *obj;
+   JSScript     *script;
+   AutoNamedRoot root;
+
+   JSCompiledScriptPimpl() : evalCtx(NULL), obj(NULL), script(NULL), root() {}
 
    bool execute(jsval *rval);
 };
-
-//
-// JSCompiledScriptPimpl::init
-//
-// Initialize a compiled script by adding its script object and making
-// it a GC root.
-//
-void JSCompiledScriptPimpl::init(JSContext *pcx, JSScript *pScript)
-{
-   cx     = pcx;
-   script = pScript;
-      
-   if((obj = JS_NewScriptObject(cx, script)))
-      root.init(cx, obj, "JSCompiledScriptPimpl::init");
-}
 
 //
 // JSCompiledScriptPimpl::execute
@@ -274,11 +400,13 @@ void JSCompiledScriptPimpl::init(JSContext *pcx, JSScript *pScript)
 //
 bool JSCompiledScriptPimpl::execute(jsval *rval)
 {
-   bool result = false;
+   JSContext *cx     = evalCtx->getContext();
+   JSObject  *global = evalCtx->getGlobal();
+   bool       result = false;
 
    if(cx && script)
    {
-      if(JS_ExecuteScript(cx, gGlobal, script, rval) == JS_TRUE)
+      if(JS_ExecuteScript(cx, global, script, rval) == JS_TRUE)
          result = true;
    }
 
@@ -291,6 +419,9 @@ bool JSCompiledScriptPimpl::execute(jsval *rval)
 AeonJS::CompiledScript::CompiledScript() : ZoneObject()
 {
    pImpl = new JSCompiledScriptPimpl;
+
+   // Default to the global evaluation context
+   pImpl->evalCtx = gEvalContext;
 }
 
 //
@@ -303,6 +434,31 @@ AeonJS::CompiledScript::~CompiledScript()
       delete pImpl;
       pImpl = NULL;
    }
+}
+
+//
+// CompiledScript::changeContext
+//
+// Change the script to use a different context.
+//
+void AeonJS::CompiledScript::changeContext(EvalContext *pEvalCtx)
+{
+   pImpl->evalCtx = pEvalCtx;
+}
+
+//
+// CompiledScript::setScript
+//
+// Protected method; initialize a compiled script by adding its
+// script object and making it a GC root.
+//
+void AeonJS::CompiledScript::setScript(JSScript *pScript)
+{
+   JSContext *cx = pImpl->evalCtx->getContext();
+   pImpl->script = pScript;
+      
+   if((pImpl->obj = JS_NewScriptObject(cx, pImpl->script)))
+      pImpl->root.init(cx, pImpl->obj, "JSCompiledScriptPimpl::init");
 }
 
 //
@@ -325,8 +481,8 @@ bool AeonJS::CompiledScript::executeWithResult(qstring &qstr)
 
    if(pImpl->execute(&rval))
    {
-      AeonJS::AutoNamedRoot root;
-      qstr   = AeonJS::SafeGetStringBytes(pImpl->cx, rval, root);
+      AutoNamedRoot root;
+      qstr   = SafeGetStringBytes(pImpl->evalCtx->getContext(), rval, root);
       result = true;
    }
 
@@ -344,7 +500,7 @@ bool AeonJS::CompiledScript::executeWithResult(int &i)
    if(pImpl->execute(&rval))
    {
       int32 res = 0;
-      if(JS_ValueToECMAInt32(pImpl->cx, rval, &res))
+      if(JS_ValueToECMAInt32(pImpl->evalCtx->getContext(), rval, &res))
       {
          i = static_cast<int>(res);
          result = true;
@@ -365,7 +521,7 @@ bool AeonJS::CompiledScript::executeWithResult(unsigned int &ui)
    if(pImpl->execute(&rval))
    {
       uint32 res = 0;
-      if(JS_ValueToECMAUint32(pImpl->cx, rval, &res))
+      if(JS_ValueToECMAUint32(pImpl->evalCtx->getContext(), rval, &res))
       {
          ui = static_cast<unsigned int>(res);
          result = true;
@@ -386,7 +542,7 @@ bool AeonJS::CompiledScript::executeWithResult(double &d)
    if(pImpl->execute(&rval))
    {
       jsdouble res = 0.0;
-      if(JS_ValueToNumber(pImpl->cx, rval, &res))
+      if(JS_ValueToNumber(pImpl->evalCtx->getContext(), rval, &res))
       {
          d = static_cast<double>(res);
          result = true;
@@ -407,7 +563,7 @@ bool AeonJS::CompiledScript::executeWithResult(bool &b)
    if(pImpl->execute(&rval))
    {
       JSBool res = JS_FALSE;
-      if(JS_ValueToBoolean(pImpl->cx, rval, &res))
+      if(JS_ValueToBoolean(pImpl->evalCtx->getContext(), rval, &res))
       {
          b = (res == JS_TRUE);
          result = true;
@@ -415,6 +571,60 @@ bool AeonJS::CompiledScript::executeWithResult(bool &b)
    }
 
    return result;   
+}
+
+//
+// CompiledScript::CompileString
+//
+// Compile the provided string data as a script and return it wrapped in a 
+// persistent CompiledScript object. This object can then be executed 
+// repeatedly. Returns NULL on failure.
+//
+AeonJS::CompiledScript *
+AeonJS::CompiledScript::CompileString(const char *name, const char *script, 
+                                      EvalContext *evalCtx)
+{
+   CompiledScript *ret = NULL;
+   JSScript *s;
+
+   if(!evalCtx)
+      evalCtx = gEvalContext;
+
+   if((s = JS_CompileScript(evalCtx->getContext(), evalCtx->getGlobal(), 
+                            script, strlen(script), name, 0)))
+   {
+      ret = new CompiledScript();
+      ret->changeContext(evalCtx);
+      ret->setScript(s);
+   }
+
+   return ret;
+}
+
+//
+// CompiledScript::CompileFile
+//
+// Compile the provided disk file as a script and return it wrapped in a 
+// persistent CompiledScript object. This object can then be executed 
+// repeatedly. Returns NULL on failure.
+//
+CompiledScript *AeonJS::CompiledScript::CompileFile(const char *filename, 
+                                                    EvalContext *evalCtx)
+{
+   CompiledScript *ret = NULL;
+   JSScript *s;
+
+   if(!evalCtx)
+      evalCtx = gEvalContext;
+
+   if((s = JS_CompileFile(evalCtx->getContext(), evalCtx->getGlobal(), filename)))
+   {
+      ret = new CompiledScript();
+      ret->changeContext(evalCtx);
+      ret->setScript(s);
+   }
+
+   return ret;
 }
 
 //============================================================================
@@ -425,7 +635,7 @@ bool AeonJS::CompiledScript::executeWithResult(bool &b)
 // (aka JavaScript).
 //
 
-static void AeonJSErrorReporter(JSContext *cx, const char *message, 
+static void AeonJS_ErrorReporter(JSContext *cx, const char *message, 
                                 JSErrorReport *report)
 {
    if(!report)
@@ -474,7 +684,7 @@ static JSBool AeonJS_ContextCallback(JSContext *cx, uintN contextOp)
 {
    if(contextOp == JSCONTEXT_NEW)
    {
-      JS_SetErrorReporter(cx, AeonJSErrorReporter);
+      JS_SetErrorReporter(cx, AeonJS_ErrorReporter);
       JS_SetVersion(cx, JSVERSION_LATEST);
    }
 
@@ -495,14 +705,12 @@ bool AeonJS::InitEngine()
    // Set context callback
    JS_SetContextCallback(gRuntime, AeonJS_ContextCallback);
    
-   // Create a global execution context
-   if(!(gContext = JS_NewContext(gRuntime, AEON_JS_STACK_CHUNK_SIZE)))
-      return false;
+   // Create the default global execution context
+   gEvalContext = new EvalContext();
 
    // Create the JavaScript global object and initialize it
-   if(!(gGlobal = JS_NewObject(gContext, &global_class, NULL, NULL)))
+   if(!gEvalContext->setGlobal(&global_class))
       return false;
-   JS_SetGlobalObject(gContext, gGlobal);
 
    return true;
 }
@@ -514,10 +722,10 @@ bool AeonJS::InitEngine()
 //
 void AeonJS::ShutDown()
 {
-   if(gContext)
+   if(gEvalContext)
    {
-      JS_DestroyContext(gContext);
-      gContext = NULL;
+      delete gEvalContext;
+      gEvalContext = NULL;
    }
 
    if(gRuntime)
@@ -533,13 +741,17 @@ void AeonJS::ShutDown()
 //
 // Evaluate a string as a one-shot script.
 //
-bool AeonJS::EvaluateString(const char *name, const char *script)
+bool AeonJS::EvaluateString(const char *name, const char *script, 
+                            EvalContext *ctx)
 {
    jsval  rval;
    JSBool result;
 
-   result = JS_EvaluateScript(gContext, gGlobal, script, strlen(script), name,
-                              0, &rval);
+   if(!ctx)
+      ctx = gEvalContext;
+
+   result = JS_EvaluateScript(ctx->getContext(), ctx->getGlobal(), script, 
+                              strlen(script), name, 0, &rval);
    
    return (result == JS_TRUE);
 }
@@ -549,16 +761,23 @@ bool AeonJS::EvaluateString(const char *name, const char *script)
 //
 // Evaluate a string as a one-shot script, and echo the result to the Aeon log.
 //
-bool AeonJS::EvaluateStringLogResult(const char *name, const char *script)
+bool AeonJS::EvaluateStringLogResult(const char *name, const char *script, 
+                                     EvalContext *ctx)
 {
+   JSContext *cx;
    jsval  rval;
    JSBool result;
    AutoNamedRoot root;
 
-   result = JS_EvaluateScript(gContext, gGlobal, script, strlen(script), name,
-                              0, &rval);
+   if(!ctx)
+      ctx = gEvalContext;
 
-   AeonEngine::LogPuts(AeonJS::SafeGetStringBytes(gContext, rval, root));
+   cx = ctx->getContext();
+
+   result = JS_EvaluateScript(cx, ctx->getGlobal(), 
+                              script, strlen(script), name, 0, &rval);
+
+   AeonEngine::LogPuts(AeonJS::SafeGetStringBytes(cx, rval, root));
 
    return (result == JS_TRUE);
 }
@@ -568,58 +787,50 @@ bool AeonJS::EvaluateStringLogResult(const char *name, const char *script)
 //
 // Evaluate a file as a one-shot script.
 //
-bool AeonJS::EvaluateFile(const char *filename)
+bool AeonJS::EvaluateFile(const char *filename, EvalContext *ctx)
 {
    jsval  rval;
    JSBool result;
 
-   result = Aeon_JS_evaluateFile(gContext, gGlobal, filename, &rval);
+   if(!ctx)
+      ctx = gEvalContext;
+
+   result = Aeon_JS_evaluateFile(ctx->getContext(), ctx->getGlobal(), 
+                                 filename, &rval);
 
    return (result == JS_TRUE);
 }
 
 //
-// AeonJS::CompileString
+// AeonJS::EvaluateInSandbox
 //
-// Compile the provided string data as a script and return it wrapped in a 
-// persistent CompiledScript object. This object can then be executed 
-// repeatedly. Returns NULL on failure.
+// Execute a string as a one-shot script inside a sandbox.
 //
-AeonJS::CompiledScript *
-AeonJS::CompiledScript::CompileString(const char *name, const char *script)
+bool AeonJS::EvaluateInSandbox(const char *name, const char *script)
 {
-   CompiledScript *ret = NULL;
-   JSScript *s;
+   EvalContext sandbox;
 
-   if((s = JS_CompileScript(gContext, gGlobal, script, strlen(script), name, 0)))
-   {
-      ret = new CompiledScript;
-      ret->pImpl->init(gContext, s);
-   }
+   if(!sandbox.setGlobal(&sandbox_class))
+      return false;
 
-   return ret;
+   return EvaluateString(name, script, &sandbox);
 }
 
 //
-// AeonJS::CompileFile
+// AeonJS::EvaluateInSandbox
 //
-// Compile the provided disk file as a script and return it wrapped in a 
-// persistent CompiledScript object. This object can then be executed 
-// repeatedly. Returns NULL on failure.
+// Disk file overload.
 //
-AeonJS::CompiledScript *AeonJS::CompiledScript::CompileFile(const char *filename)
+bool AeonJS::EvaluateInSandbox(const char *filename)
 {
-   CompiledScript *ret = NULL;
-   JSScript *s;
+   EvalContext sandbox;
 
-   if((s = JS_CompileFile(gContext, gGlobal, filename)))
-   {
-      ret = new CompiledScript;
-      ret->pImpl->init(gContext, s);
-   }
+   if(!sandbox.setGlobal(&sandbox_class))
+      return false;
 
-   return ret;
+   return EvaluateFile(filename, &sandbox);
 }
+
 
 #endif // EE_FEATURE_AEONJS
 
