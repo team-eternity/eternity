@@ -670,37 +670,39 @@ CompiledScript *AeonJS::CompiledScript::CompileFile(const char *filename,
 static void AeonJS_ErrorReporter(JSContext *cx, const char *message, 
                                 JSErrorReport *report)
 {
+   qstring msg;
+   bool    addedFile = false;
+
+   // Use error color if outputting to console
+   if(AeonEngine::LogOutputMode() == AeonEngine::OUTPUT_CONSOLE)
+      msg = FC_ERROR; 
+
    if(!report)
    {
-      AeonEngine::LogPuts(message);
+      msg << message;
+      AeonEngine::LogPuts(msg.constPtr());
       return;
    }
-
-   qstring temp;
-   qstring msg;
    
    if(report->filename)
    {
-      temp.Printf(0, "In file %s ", report->filename);
-      msg += temp;
+      msg << "In file " << report->filename;
+      addedFile = true;
+
+      if(report->lineno)
+         msg << " @ line " << static_cast<int>(report->lineno);
    }
-   if(report->lineno)
-   {
-      temp.Printf(0, "@ line %u, ", report->lineno);
-      msg += temp;
-   }
+   if(addedFile)
+      msg << ":\n";
    if(JSREPORT_IS_WARNING(report->flags))
-      msg += "Warning: ";
+      msg << "Warning: ";
    else
-      msg += "Error: ";
+      msg << "Error: ";
    
-   msg += message;
+   msg << message;
 
    if(report->linebuf)
-   {
-      temp.Printf(0, "\nContext: %s", report->linebuf);
-      msg += report->linebuf;
-   }
+      msg << "\nContext: " << report->linebuf;
 
    AeonEngine::LogPuts(msg.constPtr());
 }
@@ -949,7 +951,7 @@ void AeonJS::ConsoleHook::addInputLine(const qstring &inputLine)
          if(cs->executeWithResult(result))
          {
             if(result != "undefined")
-               C_Printf(FC_HI "%s", result.constPtr());
+               C_Printf(FC_BRICK "%s", result.constPtr());
          }
          delete cs;
       }

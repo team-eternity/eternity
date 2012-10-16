@@ -165,6 +165,16 @@ void AeonEngine::LogPuts(const char *message)
 }
 
 //
+// AeonEngine::LogOutputMode
+//
+// Returns the Aeon log output mode.
+//
+int AeonEngine::LogOutputMode()
+{
+   return outputMode;
+}
+
+//
 // AeonEngine::InitEngines
 //
 // Initialize all scripting engines. Call once at startup.

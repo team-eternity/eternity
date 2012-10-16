@@ -51,6 +51,8 @@ namespace AeonEngine
       OUTPUT_NUMMODES
    };
 
+   int LogOutputMode();
+
    void InitEngines(); // Initialize all scripting engines
 
    // ConsoleHook - base class for scripting engine console hooks
