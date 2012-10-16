@@ -49,6 +49,11 @@ void C_OpenConsoleLog(qstring *filename);
 void C_CloseConsoleLog(void);
 void C_DumpMessages(qstring *filename);
 
+// haleyjd 10/15/12: AEON - Console hook interface
+namespace AeonEngine { class ConsoleHook; }
+void C_SetConsoleHook(AeonEngine::ConsoleHook *pHook);
+void C_ClearConsoleHook();
+
 // sf 9/99: made a #define
 #define consoleactive (Console.current_height || gamestate == GS_CONSOLE)
 #define c_moving      (Console.current_height != Console.current_target)

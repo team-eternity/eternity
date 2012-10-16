@@ -180,5 +180,24 @@ void AeonEngine::InitEngines()
 #endif
 }
 
+//=============================================================================
+//
+// Console Hook
+//
+// The AeonEngine::ConsoleHook class serves as a virtual base class to the
+// various languages' console hooks.
+//
+
+//
+// ConsoleHook::exitHook
+//
+// Virtual method; call this implementation from child classes to put the
+// console back into its native command interpreter mode.
+//
+void AeonEngine::ConsoleHook::exitHook()
+{
+   C_ClearConsoleHook();
+}
+
 // EOF
 

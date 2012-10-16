@@ -31,10 +31,12 @@
 #ifdef EE_FEATURE_AEONJS
 
 #include "z_zone.h"
+#include "ae_engine.h"
 
 class qstring;
 class JSEvalContextPimpl;
 class JSCompiledScriptPimpl;
+class JSConsoleHookPimpl;
 
 struct JSScript;
 struct JSClass;
@@ -97,6 +99,23 @@ namespace AeonJS
 
    bool EvaluateInSandbox(const char *name, const char *script);
    bool EvaluateInSandbox(const char *filename);
+
+   // JS Console Hook
+   class ConsoleHook : public AeonEngine::ConsoleHook
+   {
+   private:
+      JSConsoleHookPimpl *pImpl;
+
+   public:
+      ConsoleHook();
+
+      virtual void activateHook();
+      virtual void addInputLine(const qstring &inputLine);
+      virtual void getInputPrompt(qstring &prompt);
+      virtual void exitHook();
+
+      static ConsoleHook *curJSHook;
+   };
 }
 
 #endif

@@ -28,6 +28,8 @@
 #ifndef AE_ENGINE_H__
 #define AE_ENGINE_H__
 
+class qstring;
+
 //
 // AeonEngine Namespace
 //
@@ -50,6 +52,18 @@ namespace AeonEngine
    };
 
    void InitEngines(); // Initialize all scripting engines
+
+   // ConsoleHook - base class for scripting engine console hooks
+   class ConsoleHook
+   {
+   public:
+      ConsoleHook() {}
+
+      virtual void activateHook() {}
+      virtual void addInputLine(const qstring &inputLine) {}
+      virtual void getInputPrompt(qstring &prompt)        {}
+      virtual void exitHook(); // Call your parent!
+   };
 }
 
 #endif

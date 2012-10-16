@@ -32,6 +32,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "m_qstr.h"
+#include "v_misc.h"
 
 // AeonJS modules
 #include "ae_engine.h"
@@ -49,6 +50,8 @@ using namespace AeonJS;
 
 // RTTI Proxy for AeonJS::PrivateData
 IMPLEMENT_RTTI_TYPE(AeonJS::PrivateData)
+
+AeonJS::ConsoleHook *AeonJS::ConsoleHook::curJSHook;
 
 //============================================================================
 //
@@ -335,6 +338,23 @@ static JSBool AeonJS_LogPrint(JSContext *cx, uintN argc, jsval *vp)
    return JS_TRUE;
 }
 
+static JSBool AeonJS_ExitShell(JSContext *cx, uintN argc, jsval *vp)
+{
+   // Must be in console hook.
+   if(!AeonJS::ConsoleHook::curJSHook)
+   {
+      JSString *str = 
+         JS_NewStringCopyZ(cx, "Aeon Exception: exitShell: not in hook");
+      JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+      return JS_FALSE;
+   }
+
+   AeonJS::ConsoleHook::curJSHook->exitHook();
+   
+   JS_SET_RVAL(cx, vp, JSVAL_VOID);
+   return JS_TRUE;
+}
+
 static JSClass aeonJSClass =
 {
    "Aeon",
@@ -352,11 +372,32 @@ static JSClass aeonJSClass =
 
 static JSFunctionSpec aeonJSMethods[] =
 {
-   JS_FN("GC",       AeonJS_GC,       0, 0, 0),
-   JS_FN("maybeGC",  AeonJS_MaybeGC,  0, 0, 0),
-   JS_FN("logPrint", AeonJS_LogPrint, 1, 0, 0),
+   JS_FN("GC",        AeonJS_GC,        0, 0, 0),
+   JS_FN("maybeGC",   AeonJS_MaybeGC,   0, 0, 0),
+   JS_FN("logPrint",  AeonJS_LogPrint,  1, 0, 0),
+   JS_FN("exitShell", AeonJS_ExitShell, 0, 0, 0),
    JS_FS_END
 };
+
+//
+// AeonJS_CreateAeonObject
+//
+// Create the Aeon object as a property of the global.
+//
+bool AeonJS_CreateAeonObject(EvalContext *evalCtx)
+{
+   JSContext *cx     = evalCtx->getContext();
+   JSObject  *global = evalCtx->getGlobal();
+   JSObject  *obj;
+
+   if(!(obj = JS_DefineObject(cx, global, "Aeon", &aeonJSClass, NULL, JSPROP_PERMANENT)))
+      return false;
+
+   if(!JS_DefineFunctions(cx, obj, aeonJSMethods))
+      return false;
+
+   return true;
+}
 
 //============================================================================
 //
@@ -703,6 +744,10 @@ bool AeonJS::InitEngine()
    if(!gEvalContext->setGlobal(&global_class))
       return false;
 
+   // Create Aeon object
+   if(!AeonJS_CreateAeonObject(gEvalContext))
+      return false;
+
    return true;
 }
 
@@ -822,6 +867,111 @@ bool AeonJS::EvaluateInSandbox(const char *filename)
    return EvaluateFile(filename, &sandbox);
 }
 
+//=============================================================================
+//
+// JavaScript Console Hook
+//
+// Allows interactive input of JS at the console.
+//
+
+// Private implementation
+class JSConsoleHookPimpl : public ZoneObject
+{
+public:
+   int     lineno;    // current line number
+   int     startline; // starting line number
+   qstring buffer;    // input buffer
+
+   JSConsoleHookPimpl()
+      : lineno(0), startline(0), buffer()
+   {
+   }
+};
+
+//
+// ConsoleHook Constructor
+//
+AeonJS::ConsoleHook::ConsoleHook()
+   : AeonEngine::ConsoleHook()
+{
+   pImpl = new JSConsoleHookPimpl();
+}
+
+//
+// ConsoleHook::activateHook
+//
+// Boot the JS console hook.
+//
+void AeonJS::ConsoleHook::activateHook()
+{
+   pImpl->lineno = pImpl->startline = 0;
+   pImpl->buffer.clear();
+
+   curJSHook = this;
+}
+
+//
+// ConsoleHook::exitHook
+//
+// Leaving the JS console hook.
+//
+void AeonJS::ConsoleHook::exitHook()
+{
+   AeonEngine::ConsoleHook::exitHook();
+   curJSHook = NULL;
+}
+
+//
+// ConsoleHook::addInputLine
+//
+// Receive and digest a line of input from the console. If the buffer has
+// accumulated into a compilable unit of code, it will be executed.
+//
+void AeonJS::ConsoleHook::addInputLine(const qstring &inputLine)
+{
+   pImpl->buffer << inputLine << '\n';
+   ++pImpl->lineno;
+
+   JSContext *cx     = gEvalContext->getContext();
+   JSObject  *global = gEvalContext->getGlobal();
+
+   if(JS_BufferIsCompilableUnit(cx, global, pImpl->buffer.constPtr(), 
+                                pImpl->buffer.length()))
+   {
+      CompiledScript *cs;
+
+      // Clear any exception
+      JS_ClearPendingException(gEvalContext->getContext());
+
+      if((cs = CompiledScript::CompileString("console", pImpl->buffer.constPtr())))
+      {
+         qstring result;
+         if(cs->executeWithResult(result))
+         {
+            if(result != "undefined")
+               C_Printf(FC_HI "%s", result.constPtr());
+         }
+         delete cs;
+      }
+
+      // Clear any exception
+      JS_ClearPendingException(gEvalContext->getContext());
+
+      pImpl->lineno = pImpl->startline = 0;
+      pImpl->buffer.clear();
+   }
+}
+
+//
+// ConsoleHook::getInputPrompt
+//
+// Return a string to the console to use as the console command prompt in place
+// of the usual prompt, while the hook is active.
+//
+void AeonJS::ConsoleHook::getInputPrompt(qstring &prompt)
+{
+   prompt = (pImpl->lineno == pImpl->startline) ? FC_HI "js> " FC_NORMAL : "";
+}
 
 #endif // EE_FEATURE_AEONJS
 

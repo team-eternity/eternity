@@ -32,32 +32,33 @@
 
 #include "z_zone.h"
 
-#include "d_io.h" // SoM 3/14/2002: MSCV++
+#include "a_small.h" // haleyjd
+#include "ae_engine.h"
+#include "ae_jsengine.h"
 #include "c_io.h"
-#include "c_runcmd.h"
 #include "c_net.h"
-
+#include "c_runcmd.h"
 #include "d_event.h"
+#include "d_gi.h"
+#include "d_io.h" // SoM 3/14/2002: MSCV++
 #include "d_main.h"
 #include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
 #include "i_system.h"
 #include "i_video.h"
-#include "v_video.h"
-#include "v_font.h"
-#include "doomstat.h"
-#include "w_wad.h"
-#include "s_sound.h"
-#include "d_gi.h"
-#include "g_bind.h"
-#include "a_small.h" // haleyjd
-#include "e_fonts.h"
 #include "m_qstr.h"
+#include "s_sound.h"
 #include "v_block.h"
+#include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 #define MESSAGES 512
 // keep the last 32 typed commands
@@ -98,14 +99,52 @@ static bool cbackneedfree = false;
 vfont_t *c_font;
 char *c_fontname;
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
-// Main Console functions
+// Console Hook Management
 //
-// ticker, responder, drawer, init etc.
+// haleyjd: Console hooks allow Aeon scripting engines to take over the
+// interpretation of commands entered in the console. When they are done, they
+// call C_ClearConsoleHook to return the console to its native mode.
 //
 
-static void C_initBackdrop(void)
+// haleyjd 10/15/12: AEON - Currently active console hook, if any
+static AeonEngine::ConsoleHook *hook;
+
+//
+// C_SetConsoleHook
+//
+// Activate an AeonEngine console hook.
+//
+void C_SetConsoleHook(AeonEngine::ConsoleHook *pHook)
+{
+   // If we're already in a hook, we need to exit that one first.
+   if(hook)
+      hook->exitHook();
+
+   hook = pHook;
+   hook->activateHook();
+}
+
+//
+// C_ClearConsoleHook
+//
+// Call this from within the hook when it detects an exit condition (ie.,
+// such as having a native exit() function called by a command).
+//
+void C_ClearConsoleHook()
+{
+   hook = NULL;
+}
+
+//=============================================================================
+//
+// Main Console Functions
+//
+// Ticker, responder, drawer, init etc.
+//
+
+static void C_initBackdrop()
 {
    const char *lumpname;
    int lumpnum, cmapnum = 16;
@@ -302,16 +341,21 @@ void C_Ticker()
 //
 static void C_addToHistory(qstring *s)
 {
-   const char *a_prompt;
+   qstring a_prompt;
    
    // display the command in console
-   // hrmm wtf does this do? I dunno.
-   if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
-      a_prompt = altprompt;
+   if(hook)
+      hook->getInputPrompt(a_prompt);
    else
-      a_prompt = inputprompt;
+   {
+      // hrmm wtf does this do? I dunno.
+      if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
+         a_prompt = altprompt;
+      else
+         a_prompt = inputprompt;
+   }
    
-   C_Printf("%s%s\n", a_prompt, s->constPtr());
+   C_Printf("%s%s\n", a_prompt.constPtr(), s->constPtr());
    
    // check for nothing typed or just spaces
    if(s->findFirstNotOf(' ') == qstring::npos)
@@ -407,7 +451,7 @@ bool C_Responder(event_t *ev)
    //
    
    // tab-completion
-   if(action_console_tab)
+   if(action_console_tab && !hook)
    {
       // set inputtext to next or previous in
       // tab-completion list depending on whether
@@ -425,14 +469,20 @@ bool C_Responder(event_t *ev)
 
       C_addToHistory(&inputtext); // add to history
       
-      if(inputtext == "r0x0rz delux0rz")
-         Egg(); // shh!
-      
-      // run the command
-      Console.cmdtype = c_typed;
-      C_RunTextCmd(inputtext.constPtr());
-      
-      C_InitTab();            // reset tab completion
+      // haleyjd 10/15/12: AEON - if a hook is active, feed it the input.
+      if(hook)
+         hook->addInputLine(inputtext);
+      else
+      {
+         if(inputtext == "r0x0rz delux0rz")
+            Egg(); // shh!
+
+         // run the command
+         Console.cmdtype = c_typed;
+         C_RunTextCmd(inputtext.constPtr());
+
+         C_InitTab();            // reset tab completion
+      }
       
       inputtext.clear(); // clear inputtext now
       C_updateInputPoint();    // reset scrolling
@@ -593,22 +643,27 @@ void C_Drawer()
    if(Console.current_height > c_font->absh && Console.showprompt && 
       message_pos == message_last)
    {
-      const char *a_prompt;
-      char tempstr[LINELENGTH];
+      qstring a_prompt;
+      qstring tempstr;
       
       // if we are scrolled back, dont draw the input line
       if(message_pos == message_last)
       {
-         if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
-            a_prompt = altprompt;
+         // haleyjd 10/15/12: AEON - is a console hook active?
+         if(hook)
+            hook->getInputPrompt(a_prompt);
          else
-            a_prompt = inputprompt;
+         {
+            if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
+               a_prompt = altprompt;
+            else
+               a_prompt = inputprompt;
+         }
 
-         psnprintf(tempstr, sizeof(tempstr), 
-                   "%s%s_", a_prompt, input_point);
+         tempstr << a_prompt << input_point << '_';
       }
       
-      V_FontWriteText(c_font, tempstr, 1, 
+      V_FontWriteText(c_font, tempstr.constPtr(), 1, 
                       Console.current_height - c_font->absh - 1);
    }
 }
@@ -1134,4 +1189,5 @@ static void Egg()
                    "dark in this pic.\n"
                    "oh well, have fun!\n-- fraggle", 160, 168, &cback);
 }
+
 // EOF

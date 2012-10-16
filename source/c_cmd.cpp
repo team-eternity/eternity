@@ -34,6 +34,8 @@
 #include "z_zone.h"
 
 #include "a_small.h"    // haleyjd
+#include "ae_engine.h"
+#include "ae_jsengine.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -50,7 +52,10 @@ char *verdate_hack = (char *)version_date;
 char *vername_hack = (char *)version_name;
 char *vertime_hack = (char *)version_time;
 
-               /************* constants *************/
+//=============================================================================
+//
+// Constants
+//
 
 // version
 CONST_INT(version);
@@ -68,7 +73,11 @@ CONSOLE_CONST(ver_time, vertime_hack);
 CONST_STRING(vername_hack);
 CONSOLE_CONST(ver_name, vername_hack);
 
-                /************* aliases ***************/
+//=============================================================================
+//
+// Aliases
+//
+
 CONSOLE_COMMAND(alias, 0)
 {
    alias_t *alias;
@@ -117,6 +126,11 @@ CONSOLE_COMMAND(alias, 0)
 // %opt for aliases
 CONST_STRING(cmdoptions);
 CONSOLE_CONST(opt, cmdoptions);
+
+//=============================================================================
+//
+// Basic Console, Command, and CVar Manipulation
+//
 
 // command list
 CONSOLE_COMMAND(cmdlist, 0)
@@ -206,32 +220,6 @@ CONSOLE_COMMAND(flood, 0)
 }
 
 CONSOLE_COMMAND(quote, 0) {}
-
-// haleyjd: dumplog command to write out the console to file
-
-CONSOLE_COMMAND(dumplog, 0)
-{
-   if(!Console.argc)
-      C_Printf("usage: dumplog filename\n");
-   else
-      C_DumpMessages(Console.argv[0]);
-}
-
-// haleyjd 09/07/03: true console logging commands
-
-CONSOLE_COMMAND(openlog, 0)
-{
-   if(!Console.argc)
-      C_Printf("usage: openlog filename\n");
-   else
-      C_OpenConsoleLog(Console.argv[0]);
-}
-
-CONSOLE_COMMAND(closelog, 0)
-{
-   C_CloseConsoleLog();
-}
-
 
 // SoM: omg why didn't we have this before?
 CONSOLE_COMMAND(cvarhelp, 0)
@@ -372,7 +360,56 @@ CONSOLE_COMMAND(cvarhelp, 0)
    C_Printf("Variable %s not found\n", name);
 }
 
-        /******** add commands *******/
+//=============================================================================
+//
+// Console Logging
+//
+
+// haleyjd: dumplog command to write out the console to file
+
+CONSOLE_COMMAND(dumplog, 0)
+{
+   if(!Console.argc)
+      C_Printf("usage: dumplog filename\n");
+   else
+      C_DumpMessages(Console.argv[0]);
+}
+
+// haleyjd 09/07/03: true console logging commands
+
+CONSOLE_COMMAND(openlog, 0)
+{
+   if(!Console.argc)
+      C_Printf("usage: openlog filename\n");
+   else
+      C_OpenConsoleLog(Console.argv[0]);
+}
+
+CONSOLE_COMMAND(closelog, 0)
+{
+   C_CloseConsoleLog();
+}
+
+//=============================================================================
+//
+// Aeon Console Hooks
+//
+
+#ifdef EE_FEATURE_AEONJS
+static AeonJS::ConsoleHook jsConsoleHook;
+#endif
+
+CONSOLE_COMMAND(aeon_jsshell, cf_notnet)
+{
+#ifdef EE_FEATURE_AEONJS
+   C_SetConsoleHook(&jsConsoleHook);
+#endif
+}
+
+//=============================================================================
+//
+// Add Commands
+//
 
 // command-adding functions in other modules
 
@@ -417,6 +454,9 @@ void C_AddCommands()
   C_AddCommand(dumplog); // haleyjd
   C_AddCommand(openlog);
   C_AddCommand(closelog);
+
+  // Add console hooks
+  C_AddCommand(aeon_jsshell);
 
   // SoM: I can never remember the values for a console variable
   C_AddCommand(cvarhelp);
