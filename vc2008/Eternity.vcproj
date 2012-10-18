@@ -5190,6 +5190,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\ae_jsnatives.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\ae_jsprivate.h"
 						>
 					</File>
@@ -5207,6 +5211,10 @@
 					</File>
 					<File
 						RelativePath="..\source\ae_jsengine.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ae_jsnatives.cpp"
 						>
 					</File>
 					<File
