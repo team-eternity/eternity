@@ -74,6 +74,8 @@ namespace AeonJS
       // Initialize a native by name within the given context and object.
       static NativeInitCode InitByName(const char *name, 
                                        JSContext *cx, JSObject *obj);
+
+      static NativeInitCode EnumerateAll(JSContext *cx, JSObject *obj);
    };
 }
 

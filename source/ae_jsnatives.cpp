@@ -30,6 +30,7 @@
 #include "m_qstr.h"
 
 // Aeon Engine Includes
+#include "ae_jsapi.h"
 #include "ae_jsnatives.h"
 
 //============================================================================
@@ -40,17 +41,15 @@
 // memory- and time-efficient lazy property resolution.
 //
 
-typedef AeonJS::Native Native;
-
 // Static hash table
-Native *Native::chains[NUMCHAINS];
+AeonJS::Native *AeonJS::Native::chains[NUMCHAINS];
 
 //
 // AeonJS::Native::add
 //
 // Add an instance to the class's static hash table when it is constructed.
 //
-void Native::add()
+void AeonJS::Native::add()
 {
    unsigned int hc = qstring::HashCodeCaseStatic(name) % NUMCHAINS;
 
@@ -64,8 +63,8 @@ void Native::add()
 // Lookup the native by name and then initialize it within a specific JS 
 // context and object.
 //
-AeonJS::NativeInitCode Native::InitByName(const char *name, 
-                                          JSContext *cx, JSObject *obj)
+AeonJS::NativeInitCode AeonJS::Native::InitByName(const char *name, 
+                                                  JSContext *cx, JSObject *obj)
 {
    unsigned int hc = qstring::HashCodeCaseStatic(name) % NUMCHAINS;
    Native *cur = chains[hc];
@@ -74,6 +73,46 @@ AeonJS::NativeInitCode Native::InitByName(const char *name,
       cur = cur->next;
 
    return cur ? cur->init(cx, obj) : NOSUCHPROPERTY;
+}
+
+//
+// AeonJS::Native::EnumerateAll
+//
+// Add all lazy-resolved natives to the context/object that haven't
+// already been added, "just-in-time" for enumeration of the context
+// globals.
+//
+AeonJS::NativeInitCode AeonJS::Native::EnumerateAll(JSContext *cx, JSObject *obj)
+{
+   NativeInitCode ret = RESOLVED;
+
+   // Run down each hash chain
+   for(int i = 0; i < NUMCHAINS; i++)
+   {
+      Native *cur = chains[i];
+
+      while(cur)
+      {
+         JSBool found = JS_FALSE;
+         if(!JS_AlreadyHasOwnProperty(cx, obj, cur->name, &found))
+         {
+            ret = RESOLUTIONERROR; // JSAPI error
+            break;
+         }
+         else if(!found) // Not already defined?
+         {
+            NativeInitCode initCode = cur->init(cx, obj);
+            if(initCode == RESOLUTIONERROR)
+            {
+               ret = initCode; // JSAPI error in init callback
+               break;
+            }
+         } 
+         cur = cur->next;
+      }
+   }
+
+   return ret;
 }
 
 // EOF

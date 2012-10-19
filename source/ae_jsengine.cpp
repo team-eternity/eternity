@@ -38,6 +38,7 @@
 #include "ae_engine.h"
 #include "ae_jsapi.h"
 #include "ae_jsengine.h"
+#include "ae_jsnatives.h"
 #include "ae_jsprivate.h"
 #include "ae_jsutils.h"
 
@@ -211,12 +212,13 @@ JSObject *AeonJS::EvalContext::getGlobal() const
 //
 // Aeon_JS_globalEnumerate
 //
-// Lazy enumeration for the ECMA standard classes.
+// Lazy enumeration for the ECMA standard classes and Aeon API.
 // Doing this is said to lower memory usage.
 //
 static JSBool Aeon_JS_globalEnumerate(JSContext *cx, JSObject *obj)
 {
-   return JS_EnumerateStandardClasses(cx, obj);
+   return (JS_EnumerateStandardClasses(cx, obj) &&
+           Native::EnumerateAll(cx, obj) == RESOLVED);
 }
 
 //
@@ -232,12 +234,29 @@ static JSBool Aeon_JS_globalResolve(JSContext *cx, JSObject *obj, jsval id,
       JSBool resolved = JS_FALSE;
 
       if(!JS_ResolveStandardClass(cx, obj, id, &resolved))
-         return JS_FALSE;
+         return JS_FALSE; // JSAPI Error
 
       if(resolved)
       {
          *objp = obj;
          return JS_TRUE;
+      }
+      else if(JSVAL_IS_STRING(id))
+      {
+         // Check Aeon classes
+         JSString   *idstr = JSVAL_TO_STRING(id);
+         const char *name  = JS_GetStringBytes(idstr);
+         
+         switch(Native::InitByName(name, cx, obj))
+         {
+         case RESOLVED:
+            *objp = obj;
+            break;
+         case NOSUCHPROPERTY:
+            break; // That's fine, return true below.
+         case RESOLUTIONERROR:
+            return JS_FALSE;
+         }
       }
    }
 
@@ -357,7 +376,7 @@ static JSBool AeonJS_ExitShell(JSContext *cx, uintN argc, jsval *vp)
 
 static JSClass aeonJSClass =
 {
-   "Aeon",
+   "AeonClass",
    0,
    JS_PropertyStub,
    JS_PropertyStub,
@@ -384,20 +403,20 @@ static JSFunctionSpec aeonJSMethods[] =
 //
 // Create the Aeon object as a property of the global.
 //
-bool AeonJS_CreateAeonObject(EvalContext *evalCtx)
+AeonJS::NativeInitCode AeonJS_CreateAeonObject(JSContext *cx, JSObject *global)
 {
-   JSContext *cx     = evalCtx->getContext();
-   JSObject  *global = evalCtx->getGlobal();
    JSObject  *obj;
 
    if(!(obj = JS_DefineObject(cx, global, "Aeon", &aeonJSClass, NULL, JSPROP_PERMANENT)))
-      return false;
+      return AeonJS::RESOLUTIONERROR;
 
    if(!JS_DefineFunctions(cx, obj, aeonJSMethods))
-      return false;
+      return AeonJS::RESOLUTIONERROR;
 
-   return true;
+   return AeonJS::RESOLVED;
 }
+
+static AeonJS::Native aeonGlobalNative("Aeon", AeonJS_CreateAeonObject);
 
 //============================================================================
 //
@@ -744,10 +763,6 @@ bool AeonJS::InitEngine()
 
    // Create the JavaScript global object and initialize it
    if(!gEvalContext->setGlobal(&global_class))
-      return false;
-
-   // Create Aeon object
-   if(!AeonJS_CreateAeonObject(gEvalContext))
       return false;
 
    return true;
