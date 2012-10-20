@@ -87,7 +87,7 @@ namespace AeonJS
       bool executeWithResult(bool &b);
 
       static CompiledScript *CompileString(const char *name, const char *script,
-                                           EvalContext *evalCtx = NULL);
+                                           unsigned int lineno, EvalContext *evalCtx = NULL);
       static CompiledScript *CompileFile(const char *filename, EvalContext *evalCtx = NULL);
    };
 
@@ -116,6 +116,9 @@ namespace AeonJS
 
       static ConsoleHook *curJSHook;
    };
+
+   // Add AeonJS-specific console commands
+   void AddCommands();
 }
 
 #endif

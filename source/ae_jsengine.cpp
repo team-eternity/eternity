@@ -633,7 +633,7 @@ bool AeonJS::CompiledScript::executeWithResult(bool &b)
 //
 AeonJS::CompiledScript *
 AeonJS::CompiledScript::CompileString(const char *name, const char *script, 
-                                      EvalContext *evalCtx)
+                                      unsigned int lineno, EvalContext *evalCtx)
 {
    CompiledScript *ret = NULL;
    JSScript *s;
@@ -642,7 +642,7 @@ AeonJS::CompiledScript::CompileString(const char *name, const char *script,
       evalCtx = gEvalContext;
 
    if((s = JS_CompileScript(evalCtx->getContext(), evalCtx->getGlobal(), 
-                            script, strlen(script), name, 0)))
+                            script, strlen(script), name, lineno)))
    {
       ret = new CompiledScript();
       ret->changeContext(evalCtx);
@@ -715,8 +715,6 @@ static void AeonJS_ErrorReporter(JSContext *cx, const char *message,
       msg << ":\n";
    if(JSREPORT_IS_WARNING(report->flags))
       msg << "Warning: ";
-   else
-      msg << "Error: ";
    
    msg << message;
 
@@ -895,9 +893,9 @@ bool AeonJS::EvaluateInSandbox(const char *filename)
 class JSConsoleHookPimpl : public ZoneObject
 {
 public:
-   int     lineno;    // current line number
-   int     startline; // starting line number
-   qstring buffer;    // input buffer
+   unsigned int lineno;    // current line number
+   unsigned int startline; // starting line number
+   qstring      buffer;    // input buffer
 
    JSConsoleHookPimpl()
       : lineno(0), startline(0), buffer()
@@ -921,7 +919,7 @@ AeonJS::ConsoleHook::ConsoleHook()
 //
 void AeonJS::ConsoleHook::activateHook()
 {
-   pImpl->lineno = pImpl->startline = 0;
+   pImpl->lineno = pImpl->startline = 1;
    pImpl->buffer.clear();
 
    curJSHook = this;
@@ -960,7 +958,8 @@ void AeonJS::ConsoleHook::addInputLine(const qstring &inputLine)
       // Clear any exception
       JS_ClearPendingException(gEvalContext->getContext());
 
-      if((cs = CompiledScript::CompileString("console", pImpl->buffer.constPtr())))
+      if((cs = CompiledScript::CompileString("console", pImpl->buffer.constPtr(), 
+                                             pImpl->startline)))
       {
          qstring result;
          if(cs->executeWithResult(result))
@@ -974,7 +973,7 @@ void AeonJS::ConsoleHook::addInputLine(const qstring &inputLine)
       // Clear any exception
       JS_ClearPendingException(gEvalContext->getContext());
 
-      pImpl->lineno = pImpl->startline = 0;
+      pImpl->lineno = pImpl->startline = 1;
       pImpl->buffer.clear();
    }
 }
@@ -988,6 +987,30 @@ void AeonJS::ConsoleHook::addInputLine(const qstring &inputLine)
 void AeonJS::ConsoleHook::getInputPrompt(qstring &prompt)
 {
    prompt = (pImpl->lineno == pImpl->startline) ? FC_HI "js> " FC_NORMAL : "";
+}
+
+//=============================================================================
+//
+// Console Commands
+//
+
+CONSOLE_COMMAND(js, cf_notnet)
+{
+   if(Console.argc < 1)
+   {
+      C_Puts("Usage: js <code>");
+      return;
+   }
+
+   AeonJS::EvaluateStringLogResult("console", Console.args.constPtr(),
+                                   gEvalContext);
+
+   JS_ClearPendingException(gEvalContext->getContext());
+}
+
+void AeonJS::AddCommands()
+{
+   C_AddCommand(js);
 }
 
 #endif // EE_FEATURE_AEONJS

@@ -462,6 +462,9 @@ void C_AddCommands()
   C_AddCommand(cvarhelp);
   
   // add commands in other modules
+#ifdef EE_FEATURE_AEONJS
+  AeonJS::AddCommands();
+#endif
   AM_AddCommands();
   Cheat_AddCommands();
   D_AddCommands();
