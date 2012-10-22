@@ -97,7 +97,7 @@ void AeonInterpreter::Initialize (const char* basepath)
    PyImport_AppendInittab("level",     init_AeonMod_level);
 
    // It is a fatal error if this fails, but it shouldn't as long as there is
-   // a Python32.dll in the current directory, or in the system.
+   // a Python33.dll in the current directory, or in the system.
    Py_Initialize ();
 
    // Print the exact version so we know what we're initializing for debugging
@@ -109,7 +109,7 @@ void AeonInterpreter::Initialize (const char* basepath)
    
    for (int i = 0; builtin_mods[i] != NULL; i++)
    {
-      internalModule = PyImport_ImportModuleLevel (const_cast<char*>(builtin_mods[i]), Globals, Globals, Py_None, -1);
+      internalModule = PyImport_ImportModuleLevel (const_cast<char*>(builtin_mods[i]), Globals, Globals, Py_None, 0);
 
       if (!internalModule)
       {

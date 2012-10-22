@@ -32,12 +32,12 @@
 #include "py_module_base.h"
 #include "v_misc.h"
 
-typedef PODCollection<qstring> QStringCollection;
+typedef Collection<qstring> QStringCollection;
 
-QStringCollection SplitDotNames (qstring &name)
+QStringCollection* SplitDotNames (qstring& name)
 {
    qstring* path = new qstring (name);
-   QStringCollection pathList;
+   QStringCollection* pathList = new QStringCollection();
 
    size_t pos = name.findFirstOf ('.');
 
@@ -46,11 +46,11 @@ QStringCollection SplitDotNames (qstring &name)
       qstring* left = new qstring ();
       left->copy (*path);
       left->truncate (pos);
-      pathList.add (*left);
+      pathList->add (*left);
 
       pos = name.findFirstOf ('.', pos + 1);
    }
-   pathList.add (*path);
+   pathList->add (*path);
 
    return pathList;
 }
@@ -198,14 +198,14 @@ static PyObject* Import (PyObject* module, PyObject* args, PyObject* kwargs)
    PyObject* base = NULL;
    PyObject* sub = NULL;
 
-   QStringCollection modules = SplitDotNames (qstring (name));
+   QStringCollection *modules = SplitDotNames (qstring (name));
 
    qstring moduleName;
    PyObject* currentModule;
 
-   for (size_t i = 0; i < modules.getLength (); i++)
+   for (size_t i = 0; i < modules->getLength (); i++)
    {
-      moduleName = modules[i];
+      moduleName = modules->at(i);
 
       currentModule = AeonInterpreter::LumpImport (moduleName.constPtr ());
 
@@ -225,6 +225,8 @@ static PyObject* Import (PyObject* module, PyObject* args, PyObject* kwargs)
          sub = currentModule;
       }
    }
+
+   delete modules;
 
    if (fromlist == Py_None)
       return base;
