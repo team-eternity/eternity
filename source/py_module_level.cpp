@@ -289,7 +289,7 @@ PyObject *MobjProxyIterator::Next (PyObject *obj)
    self->current = self->current->next; 
    while (self->current != &thinkercap)
    {
-      if (self->current->isDescendantOf (RUNTIME_CLASS (Mobj)) && !self->current->isRemoved ())
+      if (self->current->isDescendantOf (RTTIObject::Type::FindType("Mobj")) && !self->current->isRemoved ())
       {
          Mobj *thing = (Mobj *) self->current;
          Py_INCREF (thing->aeonproxy);

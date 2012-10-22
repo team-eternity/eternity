@@ -149,11 +149,11 @@ Collection<HashData> AeonInterpreter::SeenInits;
 
 bool AeonInterpreter::CheckMarkedScript (int lumpnum)
 {
-   int scriptLength = wGlobalDir.LumpLength(lumpnum);
+   int scriptLength = wGlobalDir.lumpLength(lumpnum);
    char* scriptString = emalloc (char*, (scriptLength + 1) * sizeof (char));
    qstring script;
 
-   wGlobalDir.ReadLump (lumpnum, scriptString);
+   wGlobalDir.readLump (lumpnum, scriptString);
    script.copy (scriptString);
    efree (scriptString);
 
@@ -196,11 +196,11 @@ PyObject* AeonInterpreter::LumpImport (const char* name)
       return NULL;
    }
 
-   lumpnum = wGlobalDir.GetNumForName (mapping->lumpname);
-   scriptLength = wGlobalDir.LumpLength(lumpnum);
+   lumpnum = wGlobalDir.getNumForName (mapping->lumpname);
+   scriptLength = wGlobalDir.lumpLength(lumpnum);
    script = emalloc (char*, (scriptLength + 1) * sizeof (char));
 
-   wGlobalDir.ReadLump (lumpnum, script);
+   wGlobalDir.readLump (lumpnum, script);
    formattedScript.copy (script);
    efree (script);
 
@@ -238,11 +238,11 @@ PyObject* AeonInterpreter::LumpImport (const char* name)
 
 bool AeonInterpreter::RunScriptLump (int lumpnum, const char* name)
 {
-   int scriptLength = wGlobalDir.LumpLength(lumpnum);
+   int scriptLength = wGlobalDir.lumpLength(lumpnum);
    char* script = emalloc (char*, (scriptLength + 1) * sizeof (char));
    qstring formattedScript = qstring ();
 
-   wGlobalDir.ReadLump (lumpnum, script);
+   wGlobalDir.readLump (lumpnum, script);
    formattedScript.copy (script);
    efree (script);
 
@@ -289,7 +289,7 @@ void AeonInterpreter::RunInitScripts ()
 
    int count = 0;
    lumpinfo_t* root = W_GetLumpNameChain("AEONINIT");
-   lumpinfo_t** lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t** lumpinfo = wGlobalDir.getLumpInfo();
    int i = root->index;
 
    do

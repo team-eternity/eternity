@@ -56,13 +56,6 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(const char* initString, int tag = PU_STATIC) 
-      : ZoneObject(), buffer(NULL), index(0), size(0)
-   {
-      ChangeTag(tag);
-      concat (initString);
-   }
-
    qstring(size_t startSize = 0, int tag = PU_STATIC) 
       : ZoneObject(), index(0), size(16)
    {

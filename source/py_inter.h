@@ -64,7 +64,7 @@ protected:
 
 public:
    MetaBoolean(const char *key, bool t)
-      : MetaObject("MetaBoolean", key), value(t) {};
+      : MetaObject(key), value(t) {};
    MetaBoolean(const MetaBoolean &other)
       : MetaObject(other)
    {
