@@ -266,7 +266,7 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
 
    // allocate at lump->size + 1 for null termination
    lumpdata = ecalloc(char *, 1, lump->size + 1);
-   dir.ReadLump(lump->selfindex, lumpdata);
+   dir.readLump(lump->selfindex, lumpdata);
 
    XLTokenizer tokenizer = XLTokenizer(lumpdata);
 
@@ -282,7 +282,7 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
 //
 void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
 {
-   lumpinfo_t **lumpinfo = dir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = dir.getLumpInfo();
 
    // Recurse to parse next lump on the chain first
    if(curlump->next != -1)
@@ -301,8 +301,8 @@ void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
 //
 void XLParser::parseAll(WadDirectory &dir)
 {
-   lumpinfo_t **lumpinfo = dir.GetLumpInfo();
-   lumpinfo_t  *root     = dir.GetLumpNameChain(lumpname);
+   lumpinfo_t **lumpinfo = dir.getLumpInfo();
+   lumpinfo_t  *root     = dir.getLumpNameChain(lumpname);
    if(root->index >= 0)
       parseLumpRecursive(dir, lumpinfo[root->index]);
 }
@@ -314,9 +314,9 @@ void XLParser::parseAll(WadDirectory &dir)
 //
 void XLParser::parseNew(WadDirectory &dir)
 {
-   int lumpnum = dir.CheckNumForName(lumpname);
+   int lumpnum = dir.checkNumForName(lumpname);
    if(lumpnum >= 0)
-      parseLump(dir, dir.GetLumpInfo()[lumpnum]);
+      parseLump(dir, dir.getLumpInfo()[lumpnum]);
 }
 
 //=============================================================================
@@ -495,7 +495,7 @@ void XLSndInfoParser::doStateExpectMusLump(XLTokenizer &token)
 
       // Lump must exist
       if(muslump.length() <= 8 &&
-         waddir->CheckNumForName(muslump.constPtr()) != -1)
+         waddir->checkNumForName(muslump.constPtr()) != -1)
       {
          P_AddSndInfoMusic(musicmapnum, muslump.constPtr());
 
@@ -528,7 +528,7 @@ void XLSndInfoParser::doStateExpectSndLump(XLTokenizer &token)
       // unknown keywords in the lump. Thanks to ZDoom for defining such a 
       // clean, context-free, grammar-based language with delimiters :>
       if(soundlump.length() <= 8 &&
-         waddir->CheckNumForName(soundlump.constPtr()) != -1)
+         waddir->checkNumForName(soundlump.constPtr()) != -1)
       {
          sfxinfo_t *sfx;
 
@@ -676,8 +676,8 @@ void XLMusInfoParser::doStateExpectMapNum(XLTokenizer &token)
 void XLMusInfoParser::pushMusInfoDef()
 {
    if(mapnum >= 0 &&
-      waddir->CheckNumForName(mapname.constPtr())  >= 0 &&
-      waddir->CheckNumForName(lumpname.constPtr()) >= 0)
+      waddir->checkNumForName(mapname.constPtr())  >= 0 &&
+      waddir->checkNumForName(lumpname.constPtr()) >= 0)
    {
       P_AddMusInfoMusic(mapname.constPtr(), mapnum, lumpname.constPtr());
    }

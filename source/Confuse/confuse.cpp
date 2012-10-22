@@ -1,7 +1,7 @@
 /* Configuration file parser -*- tab-width: 4; -*-
  *
  * Copyright (c) 2002-2003, Martin Hedenfalk <mhe@home.se>
- * Modifications for Eternity Copyright (c) 2005 James Haley
+ * Modifications for Eternity Copyright (c) 2012 James Haley
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -35,17 +35,25 @@
 #include "confuse.h"
 #include "lexer.h"
 
+//=============================================================================
+//
+// Globals
+//
+
 // haleyjd 03/08/03: Modifications for Eternity
 // #define PACKAGE_VERSION "Eternity version"
 // #define PACKAGE_STRING  "libConfuse"
 
 // haleyjd: removed ENABLE_NLS
-#define _(str) str
-#define N_(str) str
 
 const char *confuse_version   = "Eternity version";
 const char *confuse_copyright = "libConfuse by Martin Hedenfalk <mhe@home.se>";
 const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
+
+//=============================================================================
+//
+// Utilities
+//
 
 #if defined(NDEBUG)
 #define cfg_assert(test) ((void)0)
@@ -90,6 +98,11 @@ static char *cfg_strndup(const char *s, size_t n)
    return r;
 }
 
+//=============================================================================
+//
+// Option Retrieval
+//
+
 cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
 {
    int i;
@@ -110,7 +123,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
          secname = cfg_strndup(name, len);
          sec = cfg_getsec(sec, secname);
          if(sec == 0)
-            cfg_error(cfg, _("no such option '%s'\n"), secname);
+            cfg_error(cfg, "no such option '%s'\n", secname);
          efree(secname);
          if(sec == 0)
             return 0;
@@ -136,7 +149,26 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
             return &sec->opts[i];
       }
    }
-   cfg_error(cfg, _("no such option '%s'\n"), name);
+   cfg_error(cfg, "no such option '%s'\n", name);
+   return 0;
+}
+
+//
+// cfg_gettitleopt
+//
+// haleyjd 09/19/12
+//
+cfg_opt_t *cfg_gettitleopt(cfg_t *cfg)
+{
+   // search for the first MVPROP which is flagged as TITLEPROPS
+   for(int i = 0; cfg->opts[i].name; i++)
+   {
+      if(is_set(CFGF_TITLEPROPS, cfg->opts[i].flags) &&
+         cfg->opts[i].type == CFGT_MVPROP)
+         return &cfg->opts[i];
+   }
+   
+   cfg_error(cfg, "section '%s' does not define title properties\n", cfg->name);
    return 0;
 }
 
@@ -207,7 +239,7 @@ double cfg_getfloat(cfg_t *cfg, const char *name)
    return cfg_getnfloat(cfg, name, 0);
 }
 
-cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
+bool cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    
@@ -223,10 +255,10 @@ cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
       }
    }
    else
-      return cfg_false;
+      return false;
 }
 
-cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name)
+bool cfg_getbool(cfg_t *cfg, const char *name)
 {
    return cfg_getnbool(cfg, name, 0);
 }
@@ -372,6 +404,35 @@ signed int cfg_getflag(cfg_t *cfg, const char *name)
    return cfg_getnflag(cfg, name, 0);
 }
 
+//
+// cfg_gettitleprops
+//
+// haleyjd 09/30/12: Retrieve title properties for a section, if it has such.
+// The title properties are an effectively anonymous MVPROP which is specified
+// in the header of the section's definition following the title, as such:
+//
+//    secoptname title : opt, opt, opt, ...
+//    {
+//       normal section opts
+//    }
+//
+cfg_t *cfg_gettitleprops(cfg_t *cfg)
+{
+   cfg_opt_t *opt = cfg_gettitleopt(cfg);
+
+   if(opt)
+   {
+      cfg_assert(opt->type == CFGT_MVPROP);
+      cfg_assert(opt->values);
+      return opt->values[0]->section;
+   }
+   return 0;
+}
+
+//=============================================================================
+//
+// Internal Value Maintenance
+//
 
 static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
@@ -476,14 +537,14 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
          val->number = strtol(value, &endptr, 0);
          if(*endptr != '\0')
          {            
-            cfg_error(cfg, _("invalid integer value '%s' for option '%s'\n"),
+            cfg_error(cfg, "invalid integer value '%s' for option '%s'\n",
                       value, opt->name);
             return 0;
          }
          if(errno == ERANGE) 
          {
             cfg_error(cfg,
-               _("integer value '%s' for option '%s' is out of range\n"),
+               "integer value '%s' for option '%s' is out of range\n",
                value, opt->name);
             return 0;
          }
@@ -502,14 +563,14 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
          if(*endptr != '\0')
          {
             cfg_error(cfg,
-               _("invalid floating point value for option '%s'\n"),
+               "invalid floating point value for option '%s'\n",
                opt->name);
             return 0;
          }
          if(errno == ERANGE)
          {
             cfg_error(cfg,
-               _("floating point value for option '%s' is out of range\n"),
+               "floating point value for option '%s' is out of range\n",
                opt->name);
             return 0;
          }
@@ -557,12 +618,12 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
          b = cfg_parse_boolean(value);
          if(b == -1)
          {
-            cfg_error(cfg, _("invalid boolean value for option '%s'\n"),
+            cfg_error(cfg, "invalid boolean value for option '%s'\n",
                opt->name);
             return 0;
          }
       }
-      val->boolean = (cfg_bool_t)b;
+      val->boolean = !!b;
       break;
    case CFGT_FLAG: // haleyjd
       if(opt->cb)
@@ -612,6 +673,11 @@ void cfg_free_value(cfg_opt_t *opt)
    opt->values = 0;
    opt->nvalues = 0;
 }
+
+//=============================================================================
+//
+// Callbacks
+//
 
 cfg_errfunc_t cfg_set_error_function(cfg_t *cfg, cfg_errfunc_t errfunc)
 {
@@ -681,6 +747,11 @@ static int call_function(cfg_t *cfg, cfg_opt_t *opt, cfg_opt_t *funcopt)
    return ret;
 }
 
+//=============================================================================
+//
+// Parser
+//
+
 // haleyjd 04/03/08: state enumeration
 enum
 {
@@ -696,370 +767,616 @@ enum
    STATE_EXPECT_ARGNEXT,   // state 9
    STATE_EXPECT_LOOKFOR,   // state 10
    STATE_EXPECT_PROPNEXT,  // state 11
+
+   CFG_NUM_PSTATES
 };
 
+// haleyjd: parser state structure
+struct cfg_pstate_t
+{
+   int   state;          // current state
+   int   next_state;     // next state to visit, in some circumstances
+   char *opttitle;       // cached option title, for sections
+   bool  append_value;   // += has been used for assignment
+   bool  found_func;     // found "lookfor" function
+   bool  list_nobraces;  // list has been defined without braces
+   int   tok;            // current token value
+   int   skip_token;     // skip the next token if > 0
+   int   propindex;      // index within current mvprop option
+
+   // Data needed to parse title options
+   cfg_value_t *titleParentVal; // remembered parent section value
+   cfg_opt_t   *backupOpt;      // remembered option
+   int          mv_exit_state;  // state to return to from MVPROPS loop
+   
+   cfg_opt_t   *opt;     // current option
+   cfg_value_t *val;     // current value
+   cfg_opt_t    funcopt; // dummy option, for function call parsing
+};
+
+// Forward declaration required for recursion.
+static int cfg_parse_internal(cfg_t *cfg, int level);
+
+//
+// cfg_init_pstate
+//
+// Initialize parser state variables.
+//
+static void cfg_init_pstate(cfg_pstate_t *pstate)
+{
+   memset(pstate, 0, sizeof(*pstate));
+   pstate->funcopt.type = CFGT_STR;
+}
+
+// haleyjd: parser state handler function signature
+typedef int (*cfg_pstate_func)(cfg_t *, int, cfg_pstate_t &);
+
+//
+// haleyjd: parser states
+//
+// Because cfg_parse_internal was too long and messy, I have broken it up into
+// discrete state handlers as with EE's other FSA parsers.
+//
+
+//
+// cfg_pstate_expectoption
+//
+// Expecting an option.
+//
+static int cfg_pstate_expectoption(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok == '}')
+   {
+      if(level == 0)
+      {
+         cfg_error(cfg, "unexpected closing brace\n");
+         return STATE_ERROR;
+      }
+      return STATE_EOF; // End of a list or section
+   }
+
+   if(pstate.tok != CFGT_STR)
+   {
+      cfg_error(cfg, "unexpected token '%s'\n", mytext);
+      return STATE_ERROR;
+   }         
+
+   if((pstate.opt = cfg_getopt(cfg, mytext)) == 0) // haleyjd
+      return STATE_ERROR;
+
+   switch(pstate.opt->type)
+   {
+   case CFGT_SEC: // Section
+      if(is_set(CFGF_TITLE, pstate.opt->flags)) // requires title?
+         pstate.state = STATE_EXPECT_TITLE;
+      else
+         pstate.state = STATE_EXPECT_SECBRACE;
+      break;
+
+   case CFGT_FUNC: // Function call
+      pstate.state = STATE_EXPECT_PAREN;
+      break;
+
+   case CFGT_FLAG: // haleyjd: flag options, which are simple keywords
+      if(cfg_setopt(cfg, pstate.opt, mytext) == 0)
+         return STATE_ERROR;
+      // remain in STATE_EXPECT_OPTION
+      break;
+
+   default: // List or ordinary scalar option
+      pstate.state = STATE_EXPECT_ASSIGN;
+      break;
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectassign
+//
+// Expecting an assignment: '=', '+=', or, if in "Alfheim" dialect or 
+// higher, ':' (such are not treated as tokens otherwise).
+// '=' and ':' are strictly optional.
+//
+static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   pstate.append_value = false;
+
+   if(pstate.tok == '+') // Append to list?
+   {
+      if(!is_set(CFGF_LIST, pstate.opt->flags))
+      {
+         cfg_error(cfg, "attempt to append to non-list option %s\n", 
+                   pstate.opt->name);
+         return STATE_ERROR;
+      }
+      pstate.append_value = true;
+   } 
+   else if(pstate.tok != '=' && pstate.tok != ':')
+   {
+      // haleyjd 09/26/09: move forward anyway, and don't read a token.
+      // This makes ='s optional!
+      pstate.skip_token = 1;
+   }
+
+   if(pstate.opt->type == CFGT_MVPROP) // haleyjd: multi-valued properties
+   {
+      pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+      pstate.opttitle = 0;
+      if(!pstate.val || !pstate.val->section || !pstate.val->section->opts)
+         return STATE_ERROR;
+
+      // start at opts[0]
+      pstate.propindex = 0;
+
+      // set the new option
+      pstate.opt = &(pstate.val->section->opts[pstate.propindex++]);
+
+      // must have at least one valid option
+      cfg_assert(pstate.opt->type != CFGT_NONE);
+
+      pstate.state         = STATE_EXPECT_VALUE;
+      pstate.next_state    = STATE_EXPECT_PROPNEXT;
+      pstate.mv_exit_state = STATE_EXPECT_OPTION;
+   }
+   else if(is_set(CFGF_LIST, pstate.opt->flags))
+   {
+      // Start list
+      if(!pstate.append_value)
+         cfg_free_value(pstate.opt);
+      pstate.state = STATE_EXPECT_LISTBRACE;
+   }
+   else
+   {
+      // Ordinary scalar option
+      pstate.state      = STATE_EXPECT_VALUE;
+      pstate.next_state = STATE_EXPECT_OPTION;
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectvalue
+//
+// Expecting a value for the option.
+//
+static int cfg_pstate_expectvalue(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   // End of list?
+   if(pstate.tok == '}' && is_set(CFGF_LIST, pstate.opt->flags))
+   {
+      if(!pstate.list_nobraces)
+      {
+         lexer_set_unquoted_spaces(false); /* haleyjd */
+         pstate.state = STATE_EXPECT_OPTION;
+         return STATE_CONTINUE;
+      }
+   }
+
+   if(pstate.tok != CFGT_STR)
+   {
+      cfg_error(cfg, "unexpected token '%s'\n", mytext);
+      return STATE_ERROR;
+   }
+
+   // haleyjd 04/03/08: function-valued options: the name of the
+   // function being called will become the value of the option.
+   // The arguments are provided to the callback function as usual.
+   if(pstate.opt->type == CFGT_STRFUNC)
+      pstate.next_state = STATE_EXPECT_PAREN;
+
+   if(cfg_setopt(cfg, pstate.opt, mytext) == 0)
+      return STATE_ERROR;
+
+   pstate.state = pstate.next_state;
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectlistbrace
+//
+// Expecting an optional curly brace delimiting the beginning of a list.
+//
+static int cfg_pstate_expectlistbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok != '{')
+   {
+      pstate.list_nobraces = true;
+      pstate.skip_token = 1;
+   }
+
+   // haleyjd 12/23/06: set unquoted string state
+   if(is_set(CFGF_STRSPACE, pstate.opt->flags))
+      lexer_set_unquoted_spaces(true);
+   
+   pstate.state      = STATE_EXPECT_VALUE;
+   pstate.next_state = STATE_EXPECT_LISTNEXT;
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectlistnext
+//
+// Expecting ',' or the end of the list.
+//
+static int cfg_pstate_expectlistnext(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok == ',')
+   {
+      pstate.state      = STATE_EXPECT_VALUE;
+      pstate.next_state = STATE_EXPECT_LISTNEXT;
+   } 
+   else if(!pstate.list_nobraces && pstate.tok == '}')
+   {
+      lexer_set_unquoted_spaces(false);   // haleyjd
+      pstate.state = STATE_EXPECT_OPTION;
+   }
+   else if(pstate.list_nobraces)
+   {
+      // haleyjd 05/30/12: allow lists with no braces
+      pstate.list_nobraces = false;
+      pstate.skip_token    = 1;
+      pstate.state         = STATE_EXPECT_OPTION;
+   }
+   else
+   {
+      cfg_error(cfg, "unexpected token '%s'\n", mytext);
+      return STATE_ERROR;
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectsecbrace
+//
+// Expecting a curly brace delimiting the start of a section.
+//
+static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   // Found title options indicator?
+   if(pstate.tok == ':')
+   {
+      cfg_t     *titleParentCfg;
+      cfg_opt_t *titlePropsOpt;
+
+      // Must *not* be returning from parsing a previous title option sequence
+      if(pstate.titleParentVal)
+      {
+         cfg_error(cfg, "multiple title option sets are not allowed\n");
+         return STATE_ERROR;
+      }
+
+      // Remember the current option
+      pstate.backupOpt = pstate.opt;
+
+      // Get the parent section (the one we were about to parse)
+      pstate.titleParentVal = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+      if(!pstate.titleParentVal)
+         return STATE_ERROR;
+
+      titleParentCfg = pstate.titleParentVal->section;
+
+      // Find an MVPROP option in the parent section that is CFGF_TITLEPROPS
+      if(!(titlePropsOpt = cfg_gettitleopt(titleParentCfg)))
+         return STATE_ERROR;
+
+      // Add its value to the parent section
+      pstate.val = cfg_setopt(titleParentCfg, titlePropsOpt, 
+                              estrdup(titlePropsOpt->name));
+      if(!pstate.val || !pstate.val->section || !pstate.val->section->opts)
+         return STATE_ERROR;
+
+      // Parse the MVPROP that follows
+      pstate.propindex = 0;
+      pstate.opt = &(pstate.val->section->opts[pstate.propindex++]);
+      pstate.state         = STATE_EXPECT_VALUE;
+      pstate.next_state    = STATE_EXPECT_PROPNEXT;
+      pstate.mv_exit_state = STATE_EXPECT_SECBRACE; // Return here when finished
+   }
+   else
+   {
+      // Restore backed up option if needed
+      if(pstate.backupOpt)
+      {
+         pstate.opt = pstate.backupOpt;
+         pstate.backupOpt = 0;
+      }
+
+      if(pstate.tok != '{')
+      {
+         cfg_error(cfg, "missing opening brace for section '%s'\n",
+            pstate.opt->name);
+         return STATE_ERROR;
+      }
+
+      // Did we just return from parsing title options?
+      if(pstate.titleParentVal)
+      {
+         pstate.val = pstate.titleParentVal;
+         pstate.titleParentVal = 0;
+      }
+      else
+      {
+         // Get new value
+         pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+         pstate.opttitle = 0;
+         if(!pstate.val)
+            return STATE_ERROR;
+      }
+
+      // Recursively parse the interior of the section
+      if(cfg_parse_internal(pstate.val->section, level+1) != STATE_EOF)
+         return STATE_ERROR;
+
+      cfg->line = pstate.val->section->line;
+      pstate.state = STATE_EXPECT_OPTION;
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expecttitle
+//
+// Expecting a title for a section which carries the CFGF_TITLE flag.
+//
+static int cfg_pstate_expecttitle(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok != CFGT_STR)
+   {
+      cfg_error(cfg, "missing title for section '%s'\n", pstate.opt->name);
+      return STATE_ERROR;
+   }
+   else
+      pstate.opttitle = estrdup(mytext);
+   
+   pstate.state = STATE_EXPECT_SECBRACE;   
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectparen
+//
+// Expecting an opening parenthesis for a function call.
+//
+static int cfg_pstate_expectparen(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok != '(')
+   {
+      // haleyjd: function-valued options may have no parameter list.
+      // If so, however, we must skip reading the next token of input,
+      // since we already ate it.
+      if(pstate.opt->type == CFGT_STRFUNC)
+      {
+         int ret = call_function(cfg, pstate.opt, &pstate.funcopt);
+         if(ret != 0)
+            return STATE_ERROR;
+
+         pstate.state = STATE_EXPECT_OPTION;
+         pstate.skip_token = 1; // reprocess the current token
+         return STATE_CONTINUE;
+      }
+      else
+      {
+         cfg_error(cfg, "missing parenthesis for function '%s'\n", pstate.opt->name);
+         return STATE_ERROR;
+      }
+   }
+
+   pstate.state = STATE_EXPECT_ARGUMENT;
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectargument
+//
+// Expecting the next argument, or the end of the argument list.
+//
+static int cfg_pstate_expectargument(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok == ')')
+   {
+      int ret = call_function(cfg, pstate.opt, &pstate.funcopt);
+      if(ret != 0)
+         return STATE_ERROR;
+      
+      // haleyjd 09/30/05: check for LOOKFORFUNC flag
+      if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
+      {
+         pstate.found_func = false;
+         pstate.state = STATE_EXPECT_LOOKFOR; // go to new "lookfor" state
+      }
+      else
+         pstate.state = STATE_EXPECT_OPTION;
+   }
+   else if(pstate.tok == CFGT_STR)
+   {
+      pstate.val = cfg_addval(&pstate.funcopt);
+      pstate.val->string = estrdup(mytext);
+      pstate.state = STATE_EXPECT_ARGNEXT;
+   } 
+   else 
+   {
+      cfg_error(cfg, "syntax error in call of function '%s'\n",
+         pstate.opt->name);
+      return STATE_ERROR;
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectargnext
+//
+// Expecting a comma or the end of the argument list.
+//
+static int cfg_pstate_expectargnext(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   if(pstate.tok == ')')
+   {
+      int ret = call_function(cfg, pstate.opt, &pstate.funcopt);
+      if(ret != 0)
+         return STATE_ERROR;
+
+      // haleyjd 01/14/04: check for LOOKFORFUNC flag
+      if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
+      {
+         pstate.found_func = false;
+         pstate.state = STATE_EXPECT_LOOKFOR; // go to new "lookfor" state
+      }
+      else
+         pstate.state = STATE_EXPECT_OPTION;
+   }
+   else if(pstate.tok == ',')
+   {
+      pstate.state = STATE_EXPECT_ARGUMENT;
+   }
+   else 
+   {
+      cfg_error(cfg, "syntax error in call of function '%s'\n", pstate.opt->name);
+      return STATE_ERROR;
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectlookfor
+//
+// Eternity extension. Enables #ifdef/#endif-style function pairs by causing
+// the parser to skip ahead through any number and type of tokens until the
+// "lookfor" function is identified in the token stream.
+//
+static int cfg_pstate_expectlookfor(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   // haleyjd 01/16/04: special state which looks for the "lookfor" function, 
+   // allowing ifdef-type stuff which ignores everything until the function is 
+   // encountered
+   if(is_set(CFGF_NOCASE, cfg->flags))
+   {
+      if(!strcasecmp(mytext, cfg->lookfor))
+         pstate.found_func = true;
+   }
+   else
+   {
+      if(!strcmp(mytext, cfg->lookfor))
+         pstate.found_func = true;
+   }
+
+   // Found the "lookfor" function?
+   if(pstate.found_func == true)
+   {
+      pstate.opt = cfg_getopt(cfg, mytext);
+      if(pstate.opt == 0)
+         return STATE_ERROR;
+
+      if(pstate.opt->type == CFGT_FUNC)
+         pstate.state = STATE_EXPECT_PAREN; // parse the function call
+      else
+      {
+         cfg_error(cfg, "internal error\n");
+         return STATE_ERROR;
+      }
+   }
+
+   return STATE_CONTINUE;
+}
+
+//
+// cfg_pstate_expectpropnext
+//
+// Eternity extension. Expecting ',' or the end of the property list within a
+// multi-valued property, which is a form of braceless section.
+//
+static int cfg_pstate_expectpropnext(cfg_t *cfg, int level, cfg_pstate_t &pstate)
+{
+   // haleyjd 09/26/09: step to next value for a multi-value property
+   if(pstate.tok == ',')
+   {
+      // step to next option in the section
+      pstate.opt = &(pstate.val->section->opts[pstate.propindex++]);
+
+      if(pstate.opt->type == CFGT_NONE) // reached CFG_END?
+         pstate.state = pstate.mv_exit_state;
+      else
+      {
+         pstate.state      = STATE_EXPECT_VALUE;
+         pstate.next_state = STATE_EXPECT_PROPNEXT;
+      }
+   } 
+   else
+   {
+      pstate.skip_token = 1; // reprocess the current token
+      pstate.state = pstate.mv_exit_state;
+   }
+   
+   return STATE_CONTINUE;
+}
+
+// haleyjd 09/19/12: parser state table
+static cfg_pstate_func cfg_pstates[CFG_NUM_PSTATES] =
+{
+   cfg_pstate_expectoption,    // expecting an option name
+   cfg_pstate_expectassign,    // expecting an equal or plus-equal sign
+   cfg_pstate_expectvalue,     // expecting an option value
+   cfg_pstate_expectlistbrace, // expecting an opening brace for a list option
+   cfg_pstate_expectlistnext,  // expecting a separator for a list option, or closing (list) brace
+   cfg_pstate_expectsecbrace,  // expecting an opening brace for a section
+   cfg_pstate_expecttitle,     // expecting a title for a section 
+   cfg_pstate_expectparen,     // expecting a opening parenthesis for a function
+   cfg_pstate_expectargument,  // expecting a function parameter or closing paren
+   cfg_pstate_expectargnext,   // expecting a comma in a function or a closing paren
+   cfg_pstate_expectlookfor,   // expecting a "lookfor" function; everything else is ignored
+   cfg_pstate_expectpropnext   // expecting next value in a multi-valued property
+};
+
+//
+// cfg_parse_internal
+//
 static int cfg_parse_internal(cfg_t *cfg, int level)
 {
-   int state = STATE_EXPECT_OPTION, next_state = STATE_EXPECT_OPTION;
-   char *opttitle = 0;
-   cfg_opt_t *opt = 0;
-   cfg_value_t *val;
-   cfg_bool_t append_value;
-   cfg_opt_t funcopt = CFG_STR(0,0,0);
-   cfg_bool_t found_func = cfg_false; // haleyjd
-   int tok;
-   int skip_token = 0;     // haleyjd
-   int propindex = 0;      // haleyjd: for multi-value properties
+   cfg_pstate_t pstate;
+
+   // initialize parser state
+   cfg_init_pstate(&pstate);
    
    while(1)
    {
+      int ret;
+
       // haleyjd: possibly skip reading new tokens
-      if(skip_token == 0)
-         tok = mylex(cfg); // haleyjd: use custom lexer
+      if(pstate.skip_token == 0)
+         pstate.tok = mylex(cfg); // haleyjd: use custom lexer
       else
-         --skip_token;
+         --pstate.skip_token;
       
-      if(tok == 0)
-      {
-         /* lexer.l should have called cfg_error */
+      if(pstate.tok == 0) // lexer should have called cfg_error
          return STATE_ERROR;
-      }
       
-      if(tok == EOF)
+      if(pstate.tok == EOF)
       {
-         if(state != STATE_EXPECT_OPTION)
+         if(pstate.state != STATE_EXPECT_OPTION)
          {
             // haleyjd: catch EOF while in lookfor state
-            if(state == STATE_EXPECT_LOOKFOR) 
+            if(pstate.state == STATE_EXPECT_LOOKFOR) 
                cfg_error(cfg, "missing closing conditional function\n");
             else
-               cfg_error(cfg, _("premature end of file\n"));
+               cfg_error(cfg, "premature end of file\n");
             return STATE_ERROR;
          }
          return STATE_EOF;
       }
 
-      switch(state)
-      {
-      case STATE_EXPECT_OPTION: /* expecting an option name */
-         if(tok == '}')
-         {
-            if(level == 0)
-            {
-               cfg_error(cfg, _("unexpected closing brace\n"));
-               return STATE_ERROR;
-            }
-            return STATE_EOF;
-         }
-         if(tok != CFGT_STR)
-         {
-            cfg_error(cfg, _("unexpected token '%s'\n"), mytext);
-            return STATE_ERROR;
-         }         
-         
-         if((opt = cfg_getopt(cfg, mytext)) == 0) // haleyjd
-            return STATE_ERROR;
-         
-         switch(opt->type)
-         {
-         case CFGT_SEC:
-            if(is_set(CFGF_TITLE, opt->flags))
-               state = STATE_EXPECT_TITLE;
-            else
-               state = STATE_EXPECT_SECBRACE;
-            break;
-         case CFGT_FUNC:
-            state = STATE_EXPECT_PAREN;
-            break;
-         case CFGT_FLAG: // haleyjd: flag options, which are simple keywords
-            if(cfg_setopt(cfg, opt, mytext) == 0)
-               return STATE_ERROR;
-            // remain in STATE_EXPECT_OPTION
-            break;
-         default:
-            state = STATE_EXPECT_ASSIGN;
-         }
-         break;
-
-      case STATE_EXPECT_ASSIGN: /* expecting an equal sign or plus-equal sign */
-         append_value = cfg_false;
-         if(tok == '+')
-         {
-            if(!is_set(CFGF_LIST, opt->flags))
-            {
-               cfg_error(cfg,
-                  _("attempt to append to non-list option %s\n"),
-                  opt->name);
-               return STATE_ERROR;
-            }
-            append_value = cfg_true;
-         } 
-         else if(tok != '=')
-         {
-            // haleyjd 09/26/09: move forward anyway, and don't read a token.
-            // This makes ='s optional!
-            skip_token = 1;
-         }
-
-         if(opt->type == CFGT_MVPROP) // haleyjd
-         {
-            val = cfg_setopt(cfg, opt, opttitle);
-            opttitle = 0;
-            if(!val || !val->section || !val->section->opts)
-               return STATE_ERROR;
-
-            // start at opts[0]
-            propindex = 0;
-
-            // set the new option
-            opt = &(val->section->opts[propindex++]);
-
-            // must have at least one valid option
-            cfg_assert(opt->type != CFGT_NONE);
-
-            state = STATE_EXPECT_VALUE;
-            next_state = STATE_EXPECT_PROPNEXT;
-         }
-         else if(is_set(CFGF_LIST, opt->flags))
-         {
-            if(!append_value)
-               cfg_free_value(opt);
-            state = STATE_EXPECT_LISTBRACE;
-         }
-         else
-         {
-            state = STATE_EXPECT_VALUE;
-            next_state = STATE_EXPECT_OPTION;
-         }
-         break;
-
-      case STATE_EXPECT_VALUE: /* expecting an option value */
-         if(tok == '}' && is_set(CFGF_LIST, opt->flags))
-         {
-            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
-            state = 0;
-            break;
-         }
-         
-         if(tok != CFGT_STR)
-         {
-            cfg_error(cfg, _("unexpected token '%s'\n"), mytext);
-            return STATE_ERROR;
-         }
-
-         // haleyjd 04/03/08: function-valued options: the name of the
-         // function being called will become the value of the option.
-         // The arguments are provided to the callback function as usual.
-         if(opt->type == CFGT_STRFUNC)
-            next_state = STATE_EXPECT_PAREN;
-         
-         if(cfg_setopt(cfg, opt, mytext) == 0)
-            return STATE_ERROR;
-
-         state = next_state;
-         break;
-
-      case STATE_EXPECT_LISTBRACE: /* expecting an opening brace for a list option */
-         if(tok != '{')
-         {
-            cfg_error(cfg, _("missing opening brace for option '%s'\n"),
-               opt->name);
-            return STATE_ERROR;
-         }
-         /* haleyjd 12/23/06: set unquoted string state */
-         if(is_set(CFGF_STRSPACE, opt->flags))
-            lexer_set_unquoted_spaces(cfg_true);
-         state = STATE_EXPECT_VALUE;
-         next_state = STATE_EXPECT_LISTNEXT;
-         break;
-         
-      case STATE_EXPECT_LISTNEXT: /* expecting a separator for a list option, or
-                                   * closing (list) brace */
-         if(tok == ',')
-         {
-            state = STATE_EXPECT_VALUE;
-            next_state = STATE_EXPECT_LISTNEXT;
-         } 
-         else if(tok == '}')
-         {
-            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
-            state = STATE_EXPECT_OPTION;
-         }
-         else
-         {
-            cfg_error(cfg, _("unexpected token '%s'\n"), mytext);
-            return STATE_ERROR;
-         }
-         break;
-
-      case STATE_EXPECT_SECBRACE: /* expecting an opening brace for a section */
-         if(tok != '{')
-         {
-            cfg_error(cfg, _("missing opening brace for section '%s'\n"),
-               opt->name);
-            return STATE_ERROR;
-         }
-         
-         val = cfg_setopt(cfg, opt, opttitle);
-         opttitle = 0;
-         if(!val)
-            return STATE_ERROR;
-         
-         if(cfg_parse_internal(val->section, level+1) != STATE_EOF)
-            return STATE_ERROR;
-         cfg->line = val->section->line;
-         state = STATE_EXPECT_OPTION;
-         break;
-
-      case STATE_EXPECT_TITLE: /* expecting a title for a section */
-         if(tok != CFGT_STR)
-         {
-            cfg_error(cfg, _("missing title for section '%s'\n"),
-                      opt->name);
-            return STATE_ERROR;
-         }
-         else
-            opttitle = estrdup(mytext);
-         state = STATE_EXPECT_SECBRACE;
-         break;
-
-      case STATE_EXPECT_PAREN: /* expecting a opening parenthesis for a function */
-         if(tok != '(')
-         {
-            // haleyjd: function-valued options may have no parameter list.
-            // If so, however, we must skip reading the next token of input,
-            // since we already ate it.
-            if(opt->type == CFGT_STRFUNC)
-            {
-               int ret = call_function(cfg, opt, &funcopt);
-               if(ret != 0)
-                  return STATE_ERROR;
-
-               state = STATE_EXPECT_OPTION;
-               skip_token = 1; // reprocess the current token
-               break;
-            }
-            else
-            {
-               cfg_error(cfg, _("missing parenthesis for function '%s'\n"),
-                         opt->name);
-               return STATE_ERROR;
-            }
-         }
-         state = STATE_EXPECT_ARGUMENT;
-         break;
-
-      case STATE_EXPECT_ARGUMENT: /* expecting a function parameter or closing paren*/
-         if(tok == ')')
-         {
-            int ret = call_function(cfg, opt, &funcopt);
-            if(ret != 0)
-               return STATE_ERROR;
-            // haleyjd 09/30/05: check for LOOKFORFUNC flag
-            if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
-            {
-               found_func = cfg_false;
-               state = STATE_EXPECT_LOOKFOR; // go to new "lookfor" state
-            }
-            else
-               state = STATE_EXPECT_OPTION;
-         }
-         else if(tok == CFGT_STR)
-         {
-            val = cfg_addval(&funcopt);
-            val->string = estrdup(mytext);
-            state = STATE_EXPECT_ARGNEXT;
-         } 
-         else 
-         {
-            cfg_error(cfg, _("syntax error in call of function '%s'\n"),
-                      opt->name);
-            return STATE_ERROR;
-         }
-         break;
-
-      case STATE_EXPECT_ARGNEXT: /* expecting a comma in a function or a closing paren */
-         if(tok == ')')
-         {
-            int ret = call_function(cfg, opt, &funcopt);
-            if(ret != 0)
-               return STATE_ERROR;
-            // haleyjd 01/14/04: check for LOOKFORFUNC flag
-            if(is_set(CFGF_LOOKFORFUNC, cfg->flags))
-            {
-               found_func = cfg_false;
-               state = STATE_EXPECT_LOOKFOR; // go to new "lookfor" state
-            }
-            else
-               state = STATE_EXPECT_OPTION;
-         }
-         else if(tok == ',')
-         {
-            state = STATE_EXPECT_ARGUMENT;
-         }
-         else 
-         {
-            cfg_error(cfg, _("syntax error in call of function '%s'\n"),
-                      opt->name);
-            return STATE_ERROR;
-         }
-         break;
-
-      case STATE_EXPECT_LOOKFOR:
-         // haleyjd 01/16/04: special state which looks for the
-         // "lookfor" function, allowing ifdef-type stuff which
-         // ignores everything until the function is encountered
-         if(is_set(CFGF_NOCASE, cfg->flags))
-         {
-            if(!strcasecmp(mytext, cfg->lookfor))
-               found_func = cfg_true;
-         }
-         else
-         {
-            if(!strcmp(mytext, cfg->lookfor))
-               found_func = cfg_true;
-         }
-         if(found_func == cfg_true)
-         {
-            opt = cfg_getopt(cfg, mytext);
-            if(opt == 0)
-               return STATE_ERROR;
-            if(opt->type == CFGT_FUNC)
-               state = STATE_EXPECT_PAREN; // parse the function call
-            else
-            {
-               cfg_error(cfg, "internal error\n");
-               return STATE_ERROR;
-            }
-         }
-         break;
-
-      case STATE_EXPECT_PROPNEXT:
-         // haleyjd 09/26/09: step to next value for a multi-value property
-         if(tok == ',')
-         {
-            // step to next option in the section
-            opt = &(val->section->opts[propindex++]);
-
-            if(opt->type == CFGT_NONE) // reached CFG_END?
-               state = STATE_EXPECT_OPTION;
-            else
-            {
-               state = STATE_EXPECT_VALUE;
-               next_state = STATE_EXPECT_PROPNEXT;
-            }
-         } 
-         else
-         {
-            skip_token = 1; // reprocess the current token
-            state = STATE_EXPECT_OPTION;
-         }
-         break;
-
-      default:
-         /* missing state, internal error, abort */
+#ifdef RANGECHECK
+      // missing state, internal error, abort
+      if(pstate.state < 0 || pstate.state >= CFG_NUM_PSTATES)
          cfg_assert(0);
-      }
+#endif
+
+      if((ret = cfg_pstates[pstate.state](cfg, level, pstate)) != STATE_CONTINUE)
+         return ret;
    }
 
    return STATE_EOF;
@@ -1107,7 +1424,7 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
    cfg->filename = cfg_tilde_expand(filename);
    if(cfg->filename == 0)
    {
-      cfg_error(cfg, _("%s: can't expand home directory\n"), filename);
+      cfg_error(cfg, "%s: can't expand home directory\n", filename);
       return CFG_FILE_ERROR;
    }
 
@@ -1204,7 +1521,7 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(argc != 1)      
    {
-      cfg_error(cfg, _("wrong number of arguments to cfg_include()\n"));
+      cfg_error(cfg, "wrong number of arguments to cfg_include()\n");
       return 1;
    }
 
@@ -1214,7 +1531,10 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    return cfg_lexer_include(cfg, data, argv[0], -1);
 }
 
+//=============================================================================
+//
 // haleyjd 04/03/08: added cfg_t value-setting functions from libConfuse 2.0
+//
 
 static cfg_value_t *cfg_getval(cfg_opt_t *opt, unsigned int index)
 {
@@ -1294,7 +1614,7 @@ void cfg_setfloat(cfg_t *cfg, const char *name, double value)
    cfg_setnfloat(cfg, name, value, 0);
 }
 
-void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
+void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, bool value,
                       unsigned int index)
 {
    cfg_value_t *val;
@@ -1304,7 +1624,7 @@ void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
    val->boolean = value;
 }
 
-void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value, 
+void cfg_setnbool(cfg_t *cfg, const char *name, bool value, 
                   unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
@@ -1313,7 +1633,7 @@ void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value,
       cfg_opt_setnbool(cfg, opt, value, index);
 }
 
-void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value)
+void cfg_setbool(cfg_t *cfg, const char *name, bool value)
 {
    cfg_setnbool(cfg, name, value, 0);
 }
@@ -1360,7 +1680,7 @@ static void cfg_addlist_internal(cfg_t *cfg, cfg_opt_t *opt,
          cfg_opt_setnfloat(cfg, opt, va_arg(ap, double), opt->nvalues);
          break;
       case CFGT_BOOL:
-         cfg_opt_setnbool(cfg, opt, (cfg_bool_t)va_arg(ap, int), opt->nvalues);
+         cfg_opt_setnbool(cfg, opt, !!va_arg(ap, int), opt->nvalues);
          break;
       case CFGT_STR:
          cfg_opt_setnstr(cfg, opt, va_arg(ap, char *), opt->nvalues);
@@ -1408,28 +1728,28 @@ void cfg_addlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...)
 // libConfuse callback functions, which use an argc/argv system.
 
 static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
-                                    unsigned int nvalues, void *array)
+                                    unsigned int nvalues, void *values)
 {
    const cfg_type_t type = opt->type; // haleyjd: a little compiler sugar ;)
    unsigned int i;
-   int        *intptr    = 0;
-   double     *doubleptr = 0;
-   cfg_bool_t *boolptr   = 0;
-   const char **strptr   = 0;
+   int         *intptr    = 0;
+   double      *doubleptr = 0;
+   bool        *boolptr   = 0;
+   const char **strptr    = 0;
 
    switch(type)
    {
    case CFGT_INT:
-      intptr = (int *)array;
+      intptr = (int *)values;
       break;
    case CFGT_FLOAT:
-      doubleptr = (double *)array;
+      doubleptr = (double *)values;
       break;
    case CFGT_BOOL:
-      boolptr = (cfg_bool_t *)array;
+      boolptr = (bool *)values;
       break;
    case CFGT_STR:
-      strptr = (const char **)array;
+      strptr = (const char **)values;
       break;
    default:
       return;

@@ -1246,7 +1246,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+            else if(th->isInstanceOf(RTTI(Mobj)))
             {
                if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
                   return true;
@@ -1293,7 +1293,7 @@ bool P_HelpFriend(Mobj *actor)
    {
       Mobj *mo;
       
-      if(!th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+      if(!th->isInstanceOf(RTTI(Mobj)))
          continue;
          
       mo = static_cast<Mobj *>(th);
@@ -1457,58 +1457,7 @@ static argkeywd_t psskwds =
 //
 void A_PlayerStartScript(Mobj *mo)
 {
-#ifndef EE_NO_SMALL_SUPPORT
-   SmallContext_t *rootContext, *useContext;
-   SmallContext_t newContext;
-   int scriptnum, selectvm;
-   player_t *player;
-   pspdef_t *psp;
-   cell params[3];
-
-   if(!(player = mo->player))
-      return;
-
-   psp = &player->psprites[player->curpsprite];
-
-   scriptnum = E_ArgAsInt(psp->state->args, 0, 0);
-   selectvm  = E_ArgAsKwd(psp->state->args, 1, &psskwds, 0);
-   params[0] = (cell)(E_ArgAsInt(psp->state->args, 2, 0));
-   params[1] = (cell)(E_ArgAsInt(psp->state->args, 3, 0));
-   params[2] = (cell)(E_ArgAsInt(psp->state->args, 4, 0));
-
-   // determine root context to use
-   switch(selectvm)
-   {
-   default:
-   case 0: // game script
-      if(!gameScriptLoaded)
-         return;
-      rootContext = curGSContext;
-      break;
-   case 1: // level script
-      if(!levelScriptLoaded)
-         return;
-      rootContext = curLSContext;
-      break;
-   }
-
-   // possibly create a child context for the selected VM
-   useContext = SM_CreateChildContext(rootContext, &newContext);
-
-   // set invocation data
-   useContext->invocationData.invokeType = SC_INVOKE_PLAYER;
-   useContext->invocationData.playernum = (int)(player - players);
-   useContext->invocationData.trigger = mo;
-
-   // execute
-   SM_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
-
-   // clear invocation data
-   SM_ClearInvocation(useContext);
-
-   // destroy any child context that might have been created
-   SM_DestroyChildContext(useContext);
-#endif
+   // FIXME: support ACS, Aeon here
 }
 
 //

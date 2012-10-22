@@ -391,57 +391,15 @@ void A_StartScript(Mobj *actor)
    
    if(selectvm < 2)
    {
-#ifndef EE_NO_SMALL_SUPPORT
-      SmallContext_t *rootContext, *useContext;
-      SmallContext_t newContext;
-      cell params[3];
-
-      params[0] = (cell)(E_ArgAsInt(actor->state->args, 2, 0));
-      params[1] = (cell)(E_ArgAsInt(actor->state->args, 3, 0));
-      params[2] = (cell)(E_ArgAsInt(actor->state->args, 4, 0));
-
-      // determine root context to use
-      switch(selectvm)
-      {
-      default:
-      case 0: // game script
-         if(!gameScriptLoaded)
-            return;
-         rootContext = curGSContext;
-         break;
-      case 1: // level script
-         if(!levelScriptLoaded)
-            return;
-         rootContext = curLSContext;
-         break;
-      }
-
-      // possibly create a child context for the selected VM
-      useContext = SM_CreateChildContext(rootContext, &newContext);
-
-      // set invocation data
-      useContext->invocationData.invokeType = SC_INVOKE_THING;
-      useContext->invocationData.trigger = actor;
-
-      // execute
-      SM_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
-
-      // clear invocation data
-      SM_ClearInvocation(useContext);
-
-      // destroy any child context that might have been created
-      SM_DestroyChildContext(useContext);
-#else
       /* nothing */ ;
-#endif
    }
    else
    {
-      int args[5] = { 0, 0, 0, 0, 0 };
+      int args[3] = { 0, 0, 0 };
       args[0] = E_ArgAsInt(actor->state->args, 2, 0);
       args[1] = E_ArgAsInt(actor->state->args, 3, 0);
-      args[2] = E_ArgAsInt(actor->state->args, 4, 0);      
-      ACS_StartScript(scriptnum, gamemap, args, actor, NULL, 0, NULL, true);
+      args[2] = E_ArgAsInt(actor->state->args, 4, 0);
+      ACS_ExecuteScriptNumber(scriptnum, gamemap, 0, args, 3, NULL, NULL, 0);
    }
 }
 

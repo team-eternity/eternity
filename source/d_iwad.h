@@ -1,12 +1,12 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2012 James Haley
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,25 +15,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//     Find IWAD and initialise according to IWAD type.
+//
+//    Routines for IWAD location, version identification, and loading.
+//    Split out of d_main.cpp 08/12/12.
 //
 //-----------------------------------------------------------------------------
 
+#ifndef D_IWAD_H__
+#define D_IWAD_H__
 
-#ifndef __D_IWAD__
-#define __D_IWAD__
+extern bool freedoom;
 
-char *D_FindWADByName(char *filename);
-char *D_TryFindWADByName(char *filename);
-char *D_FindIWAD(const char *const *iwads, int numiwads);
-
-#if 0
-void D_FindInstalledIWADs(const char *const *iwads);
-#endif
+char *D_FindInDoomWadPath(const char *filename, const char *extension);
+void D_IdentifyVersion();
 
 #endif
+
+// EOF
 

@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Handles WAD file header, directory, lump I/O.
@@ -25,7 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #ifdef _MSC_VER
-// for Visual C++:
+// for Visual C++: 
 #include "Win32/i_opndir.h"
 #else
 // for SANE compilers:
@@ -38,16 +38,19 @@
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
 
 #include "c_io.h"
+#include "d_files.h"
 #include "m_argv.h"
 #include "m_collection.h"
 #include "m_hash.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "p_skin.h"
 #include "s_sound.h"
 #include "v_misc.h"
 #include "w_wad.h"
 #include "w_hacks.h"
+#include "z_auto.h"
 
 //
 // GLOBALS
@@ -92,11 +95,72 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
    },
 };
 
+//=============================================================================
+//
+// WadDirectoryPimpl
+//
+
+//
+// haleyjd 09/01/12: private implementation object for hidden portions of the
+// WadDirectory class.
+//
+class WadDirectoryPimpl : public ZoneObject
+{
+public:
+   static qstring FnPrototype;
+   static Collection<qstring> SourceFileNames;
+
+   static void AddFileName(const char *fn)
+   {
+      SourceFileNames.setPrototype(&FnPrototype);
+      SourceFileNames.addNew() << fn;
+   }
+
+   static const char *FileNameForSource(size_t source)
+   {
+      if(source >= SourceFileNames.getLength())
+         return NULL;
+      return SourceFileNames[source].constPtr();
+   }
+
+   PODCollection<lumpinfo_t *> infoptrs;
+
+   WadDirectoryPimpl()
+      : ZoneObject(), infoptrs()
+   {
+   }
+};
+
+qstring             WadDirectoryPimpl::FnPrototype;
+Collection<qstring> WadDirectoryPimpl::SourceFileNames;
+
+//=============================================================================
+//
+// WadDirectory
 //
 // LUMP BASED ROUTINES.
 //
 
-void D_NewWadLumps(FILE *handle);
+//
+// WadDirectory Constructor
+//
+WadDirectory::WadDirectory()
+ : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(0), type(0), data(NULL)
+{
+   pImpl = new WadDirectoryPimpl;
+}
+
+//
+// Destructor
+//
+WadDirectory::~WadDirectory()
+{
+   if(pImpl)
+   {
+      delete pImpl;
+      pImpl = NULL;
+   }
+}
 
 //
 // W_addInfoPtr
@@ -105,19 +169,9 @@ void D_NewWadLumps(FILE *handle);
 // added to a waddir_t's lumpinfo directory, or else these allocations get
 // orphaned when freeing a private wad directory. Oops! ;)
 //
-void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
+void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 {
-   // reallocate if necessary
-   if(numallocs >= numallocsa)
-   {
-      numallocsa = numallocsa ? numallocsa * 2 : 32;
-
-      infoptrs = erealloc(lumpinfo_t **, infoptrs, numallocsa * sizeof(lumpinfo_t *));
-   }
-   
-   // add it
-   infoptrs[numallocs] = infoptr;
-   ++numallocs;
+   pImpl->infoptrs.add(infoptr);
 }
 
 //
@@ -126,7 +180,7 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
 // haleyjd 04/06/11: For normal wad files, the file needs to be found and 
 // opened.
 //
-WadDirectory::openwad_t WadDirectory::OpenFile(const char *name, int filetype)
+WadDirectory::openwad_t WadDirectory::openFile(const char *name, int filetype)
 {
    openwad_t openData;
    char *filename = NULL;
@@ -196,7 +250,7 @@ WadDirectory::openwad_t WadDirectory::OpenFile(const char *name, int filetype)
 // Reload hack removed by Lee Killough
 // killough 1/31/98: static, const
 //
-bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
+bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
                            FILE *file, size_t baseoffset)
 {
    wadinfo_t    header;
@@ -221,7 +275,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       doHacks = true;
       // fall through
    case ADDPRIVATE: // WAD being loaded into a private directory object
-      openData = OpenFile(name, filetype);
+      openData = openFile(name, filetype);
       if(openData.error)
          return openData.errorRet; // return immediately if an error occurred
       break;
@@ -348,7 +402,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps
-   AddInfoPtr(newlumps);
+   addInfoPtr(newlumps);
    
    // update IWAD handle? 
    // haleyjd: Must be a public wad file.
@@ -376,12 +430,17 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       if(filetype == ADDSUBFILE)
          lump_p->position += baseoffset;
       
-      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
+      lump_p->data = NULL;                         // killough 1/31/98
       lump_p->li_namespace = li_namespace;         // killough 4/17/98
+
+      memset(lump_p->cache, 0, sizeof(lump_p->cache)); // haleyjd 9/03/12
       
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
    }
+
+   // haleyjd: push source filename
+   WadDirectoryPimpl::AddFileName(openData.filename);
 
    // haleyjd: increment source
    ++source;
@@ -410,7 +469,7 @@ struct dirfile_t
 //
 // Add an on-disk file directory to the WadDirectory.
 //
-int WadDirectory::AddDirectory(const char *dirpath)
+int WadDirectory::addDirectory(const char *dirpath)
 {
    DIR    *dir;
    dirent *ent;
@@ -461,7 +520,7 @@ int WadDirectory::AddDirectory(const char *dirpath)
    {
       // recurse into subdirectories first.
       if(files[i].isdir)
-         totalcount += AddDirectory(files[i].fullfn);
+         totalcount += addDirectory(files[i].fullfn);
    }
 
    // No lumps to add for this directory?
@@ -477,7 +536,7 @@ int WadDirectory::AddDirectory(const char *dirpath)
    newlumps = estructalloc(lumpinfo_t, localcount);
    
    // keep track of this allocation of lumps
-   AddInfoPtr(newlumps);
+   addInfoPtr(newlumps);
 
    for(i = 0, globallump = startlump; i < fileslen; i++)
    {
@@ -495,6 +554,9 @@ int WadDirectory::AddDirectory(const char *dirpath)
          lumpinfo[globallump++] = lump;
       }
    }
+
+   // push source filename
+   WadDirectoryPimpl::AddFileName(dirpath);
 
    // increment source
    ++source;
@@ -523,7 +585,7 @@ int WadDirectory::IsMarker(const char *marker, const char *name)
 //
 // killough 4/17/98: add namespace tags
 //
-void WadDirectory::CoalesceMarkedResource(const char *start_marker,
+void WadDirectory::coalesceMarkedResource(const char *start_marker,
                                           const char *end_marker, 
                                           int li_namespace)
 {
@@ -591,7 +653,7 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
    {
       lumpinfo_t *newlump = ecalloc(lumpinfo_t *, 1, sizeof(lumpinfo_t));
       int lNumLumps = this->numlumps;
-      AddInfoPtr(newlump); // haleyjd: track it
+      addInfoPtr(newlump); // haleyjd: track it
       this->lumpinfo[lNumLumps] = newlump;
       this->lumpinfo[lNumLumps]->size = 0;  // killough 3/20/98: force size to be 0
       this->lumpinfo[lNumLumps]->li_namespace = lumpinfo_t::ns_global;   // killough 4/17/98
@@ -643,7 +705,7 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
 //
 // haleyjd 03/01/09: added InDir version.
 //
-int WadDirectory::CheckNumForName(const char *name, int li_namespace)
+int WadDirectory::checkNumForName(const char *name, int li_namespace)
 {
    // Hash function maps the name to one of possibly numlump chains.
    // It has been tuned so that the average chain length never exceeds 2.
@@ -671,7 +733,7 @@ int WadDirectory::CheckNumForName(const char *name, int li_namespace)
 //
 int W_CheckNumForName(register const char *name)
 {
-   return wGlobalDir.CheckNumForName(name);
+   return wGlobalDir.checkNumForName(name);
 }
 
 //
@@ -681,7 +743,7 @@ int W_CheckNumForName(register const char *name)
 //
 int W_CheckNumForNameNS(register const char *name, register int li_namespace)
 {
-   return wGlobalDir.CheckNumForName(name, li_namespace);
+   return wGlobalDir.checkNumForName(name, li_namespace);
 }
 
 //
@@ -690,14 +752,14 @@ int W_CheckNumForNameNS(register const char *name, register int li_namespace)
 // haleyjd 02/15/10: Looks in specified namespace and if not found, then looks
 // in the global namespace.
 //
-int WadDirectory::CheckNumForNameNSG(const char *name, int ns)
+int WadDirectory::checkNumForNameNSG(const char *name, int ns)
 {
    int num = -1;
    int curnamespace = ns;
 
    do
    {
-      num = CheckNumForName(name, curnamespace);
+      num = checkNumForName(name, curnamespace);
    }
    while(num < 0 && curnamespace == ns ? curnamespace = lumpinfo_t::ns_global, 1 : 0);
 
@@ -709,17 +771,17 @@ int WadDirectory::CheckNumForNameNSG(const char *name, int ns)
 //
 // Calls W_CheckNumForName, but bombs out if not found.
 //
-int WadDirectory::GetNumForName(const char* name)     // killough -- const added
+int WadDirectory::getNumForName(const char* name)     // killough -- const added
 {
-   int i = CheckNumForName(name);
+   int i = checkNumForName(name);
    if(i == -1)
-      I_Error("WadDirectory::GetNumForName: %.8s not found!\n", name); // killough .8 added
+      I_Error("WadDirectory::getNumForName: %.8s not found!\n", name); // killough .8 added
    return i;
 }
 
 int W_GetNumForName(const char *name)
 {
-   return wGlobalDir.GetNumForName(name);
+   return wGlobalDir.getNumForName(name);
 }
 
 //
@@ -728,7 +790,7 @@ int W_GetNumForName(const char *name)
 // haleyjd 03/18/10: routine for getting the lumpinfo hash chain for lumps of a
 // given name, to replace code segments doing this in several different places.
 //
-lumpinfo_t *WadDirectory::GetLumpNameChain(const char *name)
+lumpinfo_t *WadDirectory::getLumpNameChain(const char *name)
 {
    return lumpinfo[LumpNameHash(name) % (unsigned int)numlumps];
 }
@@ -741,16 +803,29 @@ lumpinfo_t *WadDirectory::GetLumpNameChain(const char *name)
 //
 lumpinfo_t *W_GetLumpNameChain(const char *name)
 {
-   return wGlobalDir.GetLumpNameChain(name);
+   return wGlobalDir.getLumpNameChain(name);
 }
 
+//
+// WadDirectory::getLumpFileName
+//
+// Get the filename of the file from which a particular lump came.
+//
+const char *WadDirectory::getLumpFileName(int lump)
+{
+   if(lump < 0 || lump >= numlumps)
+      return NULL;
+
+   size_t lumpIdx = static_cast<size_t>(lump);
+   return WadDirectoryPimpl::FileNameForSource(lumpinfo[lumpIdx]->source);
+}
 
 //
 // W_InitLumpHash
 //
 // killough 1/31/98: Initialize lump hash table
 //
-void WadDirectory::InitLumpHash()
+void WadDirectory::initLumpHash()
 {
    int i;
    
@@ -779,28 +854,31 @@ void WadDirectory::InitLumpHash()
 //
 // W_InitResources
 //
-void WadDirectory::InitResources() // sf
+void WadDirectory::initResources() // sf
 {
    //jff 1/23/98
    // get all the sprites and flats into one marked block each
    // killough 1/24/98: change interface to use M_START/M_END explicitly
    // killough 4/17/98: Add namespace tags to each entry
    
-   CoalesceMarkedResource("S_START", "S_END", lumpinfo_t::ns_sprites);
+   coalesceMarkedResource("S_START", "S_END", lumpinfo_t::ns_sprites);
    
-   CoalesceMarkedResource("F_START", "F_END", lumpinfo_t::ns_flats);
+   coalesceMarkedResource("F_START", "F_END", lumpinfo_t::ns_flats);
 
    // killough 4/4/98: add colormap markers
-   CoalesceMarkedResource("C_START", "C_END", lumpinfo_t::ns_colormaps);
+   coalesceMarkedResource("C_START", "C_END", lumpinfo_t::ns_colormaps);
    
    // haleyjd 01/12/04: add translation markers
-   CoalesceMarkedResource("T_START", "T_END", lumpinfo_t::ns_translations);
+   coalesceMarkedResource("T_START", "T_END", lumpinfo_t::ns_translations);
+
+   // davidph 05/29/12: add acs markers
+   coalesceMarkedResource("A_START", "A_END", lumpinfo_t::ns_acs);
 
    // set up caching
    // sf: caching now done in the lumpinfo_t's
    
    // killough 1/31/98: initialize lump hash table
-   InitLumpHash();
+   initLumpHash();
 }
 
 //
@@ -813,7 +891,7 @@ void WadDirectory::InitResources() // sf
 // Lump names can appear multiple times.
 // The name searcher looks backwards, so a later file overrides earlier ones.
 //
-void WadDirectory::InitMultipleFiles(wfileadd_t *files)
+void WadDirectory::initMultipleFiles(wfileadd_t *files)
 {
    wfileadd_t *curfile;
 
@@ -839,10 +917,10 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
          // 04/07/11: Merged AddFile and AddSubFile
          // 12/24/11: Support for physical file system directories
          if(curfile->directory)
-            AddDirectory(curfile->filename);
+            addDirectory(curfile->filename);
          else
          {
-            AddFile(curfile->filename, curfile->li_namespace,
+            addFile(curfile->filename, curfile->li_namespace,
                     curfile->baseoffset ? ADDSUBFILE : ADDWADFILE, 
                     curfile->baseoffset ? curfile->f : NULL,
                     curfile->baseoffset);
@@ -855,25 +933,25 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
    if(!numlumps)
       I_Error("WadDirectory::InitMultipleFiles: no files found\n");
    
-   InitResources();
+   initResources();
 }
 
-int WadDirectory::AddNewFile(const char *filename)
+int WadDirectory::addNewFile(const char *filename)
 {
-   if(AddFile(filename, lumpinfo_t::ns_global, ADDWADFILE))
+   if(addFile(filename, lumpinfo_t::ns_global, ADDWADFILE))
       return true;
-   InitResources();         // reinit lump lookups etc
+   initResources();         // reinit lump lookups etc
    return false;
 }
 
-int WadDirectory::AddNewPrivateFile(const char *filename)
+int WadDirectory::addNewPrivateFile(const char *filename)
 {
-   if(!AddFile(filename, lumpinfo_t::ns_global, ADDPRIVATE))
+   if(!addFile(filename, lumpinfo_t::ns_global, ADDPRIVATE))
       return false;
 
    // there is no resource coalescence on this particular brand of private
    // wad file, so just call W_InitLumpHash.
-   InitLumpHash();
+   initLumpHash();
 
    return true;
 }
@@ -883,7 +961,7 @@ int WadDirectory::AddNewPrivateFile(const char *filename)
 //
 // Returns the buffer size needed to load the given lump.
 //
-int WadDirectory::LumpLength(int lump)
+int WadDirectory::lumpLength(int lump)
 {
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::LumpLength: %i >= numlumps\n", lump);
@@ -892,7 +970,7 @@ int WadDirectory::LumpLength(int lump)
 
 int W_LumpLength(int lump)
 {
-   return wGlobalDir.LumpLength(lump);
+   return wGlobalDir.lumpLength(lump);
 }
 
 //
@@ -900,37 +978,43 @@ int W_LumpLength(int lump)
 //
 // Loads the lump into the given buffer, which must be >= W_LumpLength().
 //
-void WadDirectory::ReadLump(int lump, void *dest, WadLumpLoader *lfmt)
+void WadDirectory::readLump(int lump, void *dest, WadLumpLoader *lfmt)
 {
    size_t c;
-   lumpinfo_t *l;
+   lumpinfo_t *lptr;
    
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::ReadLump: %d >= numlumps\n", lump);
 
-   l = lumpinfo[lump];
+   lptr = lumpinfo[lump];
 
    // killough 1/31/98: Reload hack (-wart) removed
 
-   c = LumpHandlers[l->type].readLump(l, dest, l->size);
-   if(c < l->size)
+   c = LumpHandlers[lptr->type].readLump(lptr, dest, lptr->size);
+   if(c < lptr->size)
    {
-      I_Error("WadDirectory::ReadLump: only read %d of %d on lump %d\n", 
-              (int)c, (int)l->size, lump);
+      I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n", 
+              (int)c, (int)lptr->size, lump);
    }
 
    // haleyjd 06/26/11: Apply lump formatting/preprocessing if provided
    if(lfmt)
    {
-      bool success   = false;
-      int  errorMode = lfmt->getErrorMode();
+      WadLumpLoader::Code code = lfmt->verifyData(lptr);
 
-      if(lfmt->verifyData(dest, l->size) && lfmt->formatData(dest, l->size))
-         success = true;
-
-      // Lump formatter wants us to handle errors by bombing out?
-      if(!success && errorMode == WadLumpLoader::EM_FATAL)
-         I_Error("WadDirectory::ReadLump: lump %d is malformed\n", lump);
+      switch(code)
+      {
+      case WadLumpLoader::CODE_OK:
+         // When OK is returned, do formatting
+         code = lfmt->formatData(lptr);
+         break;
+      default:
+         break;
+      }
+ 
+      // Does the formatter want us to bomb out in response to an error?
+      if(code == WadLumpLoader::CODE_FATAL) 
+         I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
    }
 }
 
@@ -938,23 +1022,22 @@ void WadDirectory::ReadLump(int lump, void *dest, WadLumpLoader *lfmt)
 // W_ReadLumpHeader
 //
 // haleyjd 08/30/02: Inspired by DOOM Legacy, this function is for when you
-// just need a small piece of data from the beginning of a lump. There's hardly
-// any use reading in the whole thing in that case.
+// just need a small piece of data from the beginning of a lump.
 //
-int WadDirectory::ReadLumpHeader(int lump, void *dest, size_t size)
+int WadDirectory::readLumpHeader(int lump, void *dest, size_t size)
 {
    lumpinfo_t *l;
    void *data;
    
    if(lump < 0 || lump >= numlumps)
-      I_Error("WadDirectory::ReadLumpHeader: %d >= numlumps\n", lump);
+      I_Error("WadDirectory::readLumpHeader: %d >= numlumps\n", lump);
 
    l = lumpinfo[lump];
 
    if(l->size < size || l->size == 0)
       return 0;
 
-   data = CacheLumpNum(lump, PU_CACHE);
+   data = cacheLumpNum(lump, PU_CACHE);
 
    memcpy(dest, data, size);
    
@@ -963,7 +1046,7 @@ int WadDirectory::ReadLumpHeader(int lump, void *dest, size_t size)
 
 int W_ReadLumpHeader(int lump, void *dest, size_t size)
 {
-   return wGlobalDir.ReadLumpHeader(lump, dest, size);
+   return wGlobalDir.readLumpHeader(lump, dest, size);
 }
 
 //
@@ -971,16 +1054,21 @@ int W_ReadLumpHeader(int lump, void *dest, size_t size)
 //
 // killough 4/25/98: simplified
 //
-void *WadDirectory::CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
+void *WadDirectory::cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
 {
+   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+
+   if(lfmt)
+      fmt = lfmt->formatIndex();
+
    // haleyjd 08/14/02: again, should not be RANGECHECK only
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::CacheLumpNum: %i >= numlumps\n", lump);
    
-   if(!(lumpinfo[lump]->cache))      // read the lump in
+   if(!(lumpinfo[lump]->cache[fmt]))      // read the lump in
    {
-      ReadLump(lump, 
-               Z_Malloc(LumpLength(lump), tag, &(lumpinfo[lump]->cache)), 
+      readLump(lump, 
+               Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache[fmt])), 
                lfmt);
    }
    else
@@ -989,13 +1077,13 @@ void *WadDirectory::CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
       // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that 
       // must be done using Z_ChangeTag explicitly)
       
-      int oldtag = Z_CheckTag(lumpinfo[lump]->cache);
+      int oldtag = Z_CheckTag(lumpinfo[lump]->cache[fmt]);
 
       if(tag < oldtag) 
-         Z_ChangeTag(lumpinfo[lump]->cache, tag);
+         Z_ChangeTag(lumpinfo[lump]->cache[fmt], tag);
    }
    
-   return lumpinfo[lump]->cache;
+   return lumpinfo[lump]->cache[fmt];
 }
 
 //
@@ -1004,9 +1092,53 @@ void *WadDirectory::CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
 // haleyjd 06/26/11: Restored to status as a method of WadDirectory instead of
 // being a macro, as it needs to take an optional parameter now.
 //
-void *WadDirectory::CacheLumpName(const char *name, int tag, WadLumpLoader *lfmt)
+void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt)
 {
-   return CacheLumpNum(GetNumForName(name), tag, lfmt);
+   return cacheLumpNum(getNumForName(name), tag, lfmt);
+}
+
+//
+// WadDirectory::cacheLumpNumAuto
+//
+// Cache a copy of a lump into a ZAutoBuffer, by lump num.
+//
+void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer)
+{
+   size_t size = lumpinfo[lumpnum]->size;
+
+   buffer.alloc(size, false);
+   readLump(lumpnum, buffer.get());
+}
+
+//
+// WadDirectory::cacheLumpAuto
+//
+// Cache a copy of a lump into a ZAutoBuffer, by lump name.
+//
+void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer)
+{
+   cacheLumpAuto(getNumForName(name), buffer);
+}
+
+//
+// WadDirectory::writeLump
+//
+// Write out a lump to a physical file.
+//
+bool WadDirectory::writeLump(const char *lumpname, const char *destpath)
+{
+   int    lumpnum;
+   size_t size;
+   
+   if((lumpnum = checkNumForName(lumpname)) >= 0 && 
+      (size    = lumpinfo[lumpnum]->size  ) >  0)
+   {
+      ZAutoBuffer lumpData(size, false);
+      readLump(lumpnum, lumpData.get());
+      return M_WriteFile(destpath, lumpData.get(), size);
+   }
+   else
+      return false;
 }
 
 // Predefined lumps removed -- sf
@@ -1019,8 +1151,8 @@ void *WadDirectory::CacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 //
 uint32_t W_LumpCheckSum(int lumpnum)
 {
-   uint8_t  *lump    = (uint8_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
-   uint32_t  lumplen = (uint32_t )(W_LumpLength(lumpnum));
+   uint8_t  *lump    = (uint8_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE));
+   uint32_t  lumplen = (uint32_t )(wGlobalDir.lumpLength(lumpnum));
 
    return HashData(HashData::CRC32, lump, lumplen).getDigestPart(0);
 }
@@ -1038,17 +1170,20 @@ uint32_t W_LumpCheckSum(int lumpnum)
 // corruption would occur at a seemingly random time after an 
 // arbitrary Z_Malloc call freed the cached resources.
 //
-void WadDirectory::FreeDirectoryLumps()
+void WadDirectory::freeDirectoryLumps()
 {
-   int i;
+   int i, j;
    lumpinfo_t **li = lumpinfo;
 
    for(i = 0; i < numlumps; ++i)
    {
-      if(li[i]->cache)
+      for(j = 0; j != lumpinfo_t::fmt_maxfmts; j++)
       {
-         Z_Free(li[i]->cache);
-         li[i]->cache = NULL;
+         if(li[i]->cache[j])
+         {
+            Z_Free(li[i]->cache[j]);
+            li[i]->cache[j] = NULL;
+         }
       }
    }
 }
@@ -1059,41 +1194,35 @@ void WadDirectory::FreeDirectoryLumps()
 // haleyjd 06/06/10
 // Frees all lumpinfo_t's allocated for a wad directory.
 //
-void WadDirectory::FreeDirectoryAllocs()
+void WadDirectory::freeDirectoryAllocs()
 {
-   int i;
-
-   if(!infoptrs)
-      return;
+   size_t i, len = pImpl->infoptrs.getLength();
 
    // free each lumpinfo_t allocation
-   for(i = 0; i < numallocs; ++i)
-      efree(infoptrs[i]);
+   for(i = 0; i < len; i++)
+      efree(pImpl->infoptrs[i]);
 
-   // free the allocation tracking table
-   efree(infoptrs);
-   infoptrs = NULL;
-   numallocs = numallocsa = 0;
+   pImpl->infoptrs.clear();
 }
 
 //
-// WadDirectory::Close
+// WadDirectory::close
 //
 // haleyjd 03/09/11: Abstracted out of I_Pick_CloseWad and W_delManagedDir.
 //
-void WadDirectory::Close()
+void WadDirectory::close()
 {
    // close the wad file if it is open; public directories can't be closed
    if(lumpinfo && !ispublic)
    {
       // free all resources loaded from the wad
-      FreeDirectoryLumps();
+      freeDirectoryLumps();
 
       if(lumpinfo[0]->file)
          fclose(lumpinfo[0]->file);
 
       // free all lumpinfo_t's allocated for the wad
-      FreeDirectoryAllocs();
+      freeDirectoryAllocs();
 
       // free the private wad directory
       Z_Free(lumpinfo);

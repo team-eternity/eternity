@@ -1,0 +1,183 @@
+// Emacs style mode select   -*- C++ -*-
+//-----------------------------------------------------------------------------
+//
+// Copyright(C) 2012 James Haley
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//-----------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//      Resource archive file formats
+//
+//-----------------------------------------------------------------------------
+
+#include "z_zone.h"
+
+#include "m_qstr.h"
+#include "w_formats.h"
+
+enum
+{
+   EXT_WAD,
+   EXT_PKE,
+   EXT_PK3,
+   EXT_ZIP,
+   EXT_LMP,
+   EXT_NUMEXTENSIONS
+};
+
+// Default extensions to try when a file is not found, in order.
+static const char *W_defaultExtensions[] =
+{
+   ".wad",
+   ".pke", // Recommended extension for EE-specific mods
+   ".pk3",
+   ".zip",
+   ".lmp"
+};
+
+//
+// W_TryOpenFile
+//
+// Tries to open a file using the given filename first. If that fails, it
+// will try all of the available default extensions. Returns the open file
+// if it was found (NULL if not), and sets filename equal to the filename
+// that was successfully opened, with slashes normalized and the default
+// extension added if one was needed.
+//
+FILE *W_TryOpenFile(qstring &filename)
+{
+   FILE *f = NULL;
+   qstring basefn;
+
+   filename.normalizeSlashes();
+   basefn = filename;
+
+   // Try opening without an added extension first
+   if((f = fopen(basefn.constPtr(), "rb")) == NULL)
+   {
+      // Try default extensions
+      for(int i = 0; i < EXT_NUMEXTENSIONS; i++)
+      {
+         basefn = filename;
+         basefn.addDefaultExtension(W_defaultExtensions[i]);
+         if((f = fopen(basefn.constPtr(), "rb")))
+         {
+            filename = basefn;
+            break;
+         }
+      }
+   }
+
+   return f;      
+}
+
+typedef bool (*FormatFunc)(FILE *, long);
+
+//
+// W_isWadFile
+//
+// Detect an id IWAD or PWAD file, as used in DOOM itself and its direct spawn,
+// Heretic, Hexen, and Strife, as well as in numerous other games directly,
+// such as RoTT, Amulets and Armor, Bloodmasters, etc. It also formed the 
+// basis of the GRP (Duke3D) and PAK (Quake) formats.
+//
+static bool W_isWadFile(FILE *f, long len)
+{
+   bool result = false;
+
+   if(len >= 12)
+   {
+      char header[4];
+
+      if(!fseek(f, 0, SEEK_SET) && fread(header, 1, 4, f) == 4)
+      {
+         if(!memcmp(header, "IWAD", 4) || !memcmp(header, "PWAD", 4))
+            result = true;
+      }
+      fseek(f, 0, SEEK_SET);
+   }
+
+   return result;
+}
+
+#define ZIP_LOCAL_FILE_HEADER_LEN 30
+
+//
+// W_isZipFile
+//
+// Detect a ZIP archive, originally defined by the PKZip archive tool
+// and now used pretty much everywhere. Forms the basis of id Tech 3 and up
+// "pack" formats PK3 and PK4, as well as being the underlying format of
+// many other domain-specific archives such as Java JARs.
+//
+static bool W_isZipFile(FILE *f, long len)
+{
+   bool result = false;
+
+   if(len >= ZIP_LOCAL_FILE_HEADER_LEN)
+   {
+      char header[4];
+
+      if(!fseek(f, 0, SEEK_SET) && fread(header, 1, 4, f) == 4)
+      {
+         if(!memcmp(header, "PK\x3\x4", 4))
+            result = true;
+      }
+      fseek(f, 0, SEEK_SET);
+   }
+
+   return result;
+}
+
+//
+// W_isFile
+//
+// This one is a dummy which always returns true; if no other format could be
+// positively detected first, we treat the file as an ordinary flat physical
+// file. It's the lowest priority predicate as a result.
+//
+static bool W_isFile(FILE *f, long len)
+{
+   return true;
+}
+
+static FormatFunc formatFuncs[W_FORMAT_MAX] = 
+{
+   W_isWadFile, // W_FORMAT_WAD
+   W_isZipFile, // W_FORMAT_ZIP
+   W_isFile,    // W_FORMAT_FILE
+};
+
+//
+// W_DetermineFileFormat
+//
+// Determine what format a file added with -iwad, -file, etc. is in according
+// to the file's internal metadata (we do not trust file extensions for this
+// purpose).
+//
+WResourceFmt W_DetermineFileFormat(FILE *f, long len)
+{
+   int fmt = W_FORMAT_WAD;
+
+   while(!formatFuncs[fmt](f, len))
+      ++fmt;
+
+   return static_cast<WResourceFmt>(fmt);      
+}
+
+// EOF
+

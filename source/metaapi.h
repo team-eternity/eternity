@@ -29,11 +29,8 @@
 #ifndef METAAPI_H__
 #define METAAPI_H__
 
-#include "z_zone.h"
+#include "e_rtti.h"
 #include "m_dllist.h"
-
-// A metatypename is just a string constant.
-typedef const char *metatypename_t;
 
 // METATYPE macro - make a string from a typename
 #define METATYPE(t) #t
@@ -54,32 +51,30 @@ class metaTablePimpl;
 //
 // MetaObject
 //
-class MetaObject : public ZoneObject
+class MetaObject : public RTTIObject
 {
+   DECLARE_RTTI_TYPE(MetaObject, RTTIObject)
+
 protected:
    DLListItem<MetaObject> links;     // links by key
    DLListItem<MetaObject> typelinks; // links by type
-   const char *type;                 // type hash key
    const char *key;                  // primary hash key
-   
-   metatypename_t type_name; // storage pointer for type (static string)
-   char *key_name;           // storage pointer for key  (alloc'd string)
-
-   // Protected Methods
-   void setType(metatypename_t t) { type_name = t; type = type_name; }
+   const char *type;                 // type hash key
+   size_t      keyIdx;               // index of interned key
 
    friend class metaTablePimpl;
 
 public:
    // Constructors/Destructor
-   MetaObject(metatypename_t pType, const char *pKey);
+   MetaObject();
+   MetaObject(const char *pKey);
    MetaObject(const MetaObject &other);
    virtual ~MetaObject();
 
-   // RTTI Methods
-   bool isKindOf(metatypename_t) const;
-   metatypename_t getType() const { return type_name; }
-   const char   * getKey()  const { return key_name;  }
+   void setType();
+
+   const char *getKey() const    { return key;    }
+   size_t      getKeyIdx() const { return keyIdx; }
 
    // Virtual Methods
    virtual MetaObject *clone() const;
@@ -90,10 +85,13 @@ public:
 
 class MetaInteger : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaInteger, MetaObject)
+
 protected:
    int value;
 
 public:
+   MetaInteger() : MetaObject(), value(0) {}
    MetaInteger(const char *key, int i);
    MetaInteger(const MetaInteger &other);
 
@@ -110,10 +108,13 @@ public:
 
 class MetaDouble : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaDouble, MetaObject)
+
 protected:
    double value;
 
 public:
+   MetaDouble() : MetaObject(), value(0.0) {}
    MetaDouble(const char *key, double d);
    MetaDouble(const MetaDouble &other);
 
@@ -130,10 +131,13 @@ public:
 
 class MetaString : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaString, MetaObject)
+
 protected:
    char *value;
 
 public:
+   MetaString();
    MetaString(const char *key, const char *s);
    MetaString(const MetaString &other);
    virtual ~MetaString();
@@ -153,10 +157,13 @@ public:
 
 class MetaTable : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaTable, MetaObject)
+
 private:
    metaTablePimpl *pImpl;
 
 public:
+   MetaTable();
    MetaTable(const char *name);
    MetaTable(const MetaTable &other);
    virtual ~MetaTable();
@@ -167,13 +174,13 @@ public:
 
    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
    bool hasKey(const char *key);
-   bool hasType(metatypename_t type);
-   bool hasKeyAndType(const char *key, metatypename_t type);
+   bool hasType(const char *type);
+   bool hasKeyAndType(const char *key, const char *type);
 
    // Count functions.
    int countOfKey(const char *key);
-   int countOfType(metatypename_t type);
-   int countOfKeyAndType(const char *key, metatypename_t type);
+   int countOfType(const char *type);
+   int countOfKeyAndType(const char *key, const char *type);
 
    // Add/Remove Objects
    void addObject(MetaObject *object);
@@ -184,21 +191,28 @@ public:
    // Find objects in the table:
    // * By Key
    MetaObject *getObject(const char *key);
+   MetaObject *getObject(size_t keyIndex);
    // * By Type
-   MetaObject *getObjectType(metatypename_t type);
+   MetaObject *getObjectType(const char *type);
    // * By Key AND Type
-   MetaObject *getObjectKeyAndType(const char *key, metatypename_t type);
+   MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type);
+   MetaObject *getObjectKeyAndType(const char *key, const char *type);
+   MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type);
+   MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
 
    // Iterators
    MetaObject *getNextObject(MetaObject *object, const char *key);
-   MetaObject *getNextType(MetaObject *object, metatypename_t type);
-   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, metatypename_t type);
+   MetaObject *getNextObject(MetaObject *object, size_t keyIndex);
+   MetaObject *getNextType(MetaObject *object, const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type);
    MetaObject *tableIterator(MetaObject *object) const;
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects
    
    // Signed integer
    void addInt(const char *key, int value);
+   int  getInt(size_t keyIndex, int defValue);
    int  getInt(const char *key, int defValue);
    void setInt(const char *key, int newValue);
    int  removeInt(const char *key);
@@ -222,6 +236,39 @@ public:
 
    // Clearing
    void clearTable();
+
+   // Statics
+   static size_t IndexForKey(const char *key);
+};
+
+//
+// MetaKeyIndex
+//
+// This class can be used as a static key proxy. The first time it is used, it
+// will intern the provided key in the MetaObject key interning table. From
+// then on, it will return the cached index.
+//
+class MetaKeyIndex
+{
+protected:
+   const char *key;
+   size_t keyIndex;
+   bool   haveIndex;
+
+public:
+   MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) 
+   {
+   }
+
+   size_t getIndex() 
+   { 
+      if(!haveIndex)
+      {
+         keyIndex  = MetaTable::IndexForKey(key);
+         haveIndex = true;
+      }
+      return keyIndex;
+   }
 };
 
 #endif

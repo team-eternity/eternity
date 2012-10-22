@@ -96,18 +96,20 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+
 #include "e_args.h"
+#include "e_fonts.h"
+#include "e_gameprops.h"
+#include "e_inventory.h"
+#include "e_mod.h"
+#include "e_player.h"
 #include "e_sound.h"
 #include "e_sprite.h"
+#include "e_states.h"
 #include "e_string.h"
 #include "e_things.h"
-#include "e_states.h"
 #include "e_ttypes.h"
 #include "mn_emenu.h"
-#include "e_player.h"
-#include "e_mod.h"
-#include "e_fonts.h"
-#include "e_inventory.h"
 
 #include "py_inter.h"
 
@@ -276,9 +278,9 @@ static cfg_opt_t cast_sound_opts[] =
 
 static cfg_opt_t cast_opts[] =
 {
-   CFG_STR(ITEM_CAST_TYPE, NULL, CFGF_NONE),
-   CFG_STR(ITEM_CAST_NAME, "unknown", CFGF_NONE),
-   CFG_BOOL(ITEM_CAST_SA,  cfg_false, CFGF_NONE),
+   CFG_STR(ITEM_CAST_TYPE,  NULL,            CFGF_NONE),
+   CFG_STR(ITEM_CAST_NAME,  "unknown",       CFGF_NONE),
+   CFG_BOOL(ITEM_CAST_SA,   false,           CFGF_NONE),
    CFG_SEC(ITEM_CAST_SOUND, cast_sound_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_END()
 };
@@ -315,6 +317,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_MENU,        edf_menu_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
@@ -338,6 +341,7 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_FONT_INTRB,     "ee_bigfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_INTRBN,    "ee_bignumfont",   CFGF_NONE),
    CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
+   CFG_FUNC("setdialect",       E_SetDialect),
    CFG_FUNC("include",          E_Include),
    CFG_FUNC("lumpinclude",      E_LumpInclude),
    CFG_FUNC("include_prev",     E_IncludePrev),    // DEPRECATED
@@ -468,7 +472,6 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
       va_end(va2);
    }
 
-   msg_no_tabs.initCreate();
    msg_no_tabs = msg;
    msg_no_tabs.replace("\t", ' ');
 
@@ -509,7 +512,6 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
       qstring msg_no_tabs;
       va_list va;
 
-      msg_no_tabs.initCreate();
       msg_no_tabs = msg;
       msg_no_tabs.replace("\t", ' ');
 
@@ -1114,7 +1116,7 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
 {
    if(ln >= 0) // terminal case - lumpnum is -1
    {
-      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
       // recurse on next item
       E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);
@@ -1486,7 +1488,7 @@ static void E_ProcessCast(cfg_t *cfg)
          castorder[i].name = estrdup(tempstr); // store provided value
 
       // get stopattack flag (used by player)
-      castorder[i].stopattack = (cfg_getbool(castsec, ITEM_CAST_SA) == cfg_true);
+      castorder[i].stopattack = cfg_getbool(castsec, ITEM_CAST_SA);
 
       // process sound blocks (up to four will be processed)
       tempint = cfg_size(castsec, ITEM_CAST_SOUND);
@@ -1814,6 +1816,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessStateDeltas(cfg);       // see e_states.cpp
    E_ProcessThingDeltas(cfg);       // see e_things.cpp
    E_ProcessInventoryDeltas(cfg);   // see e_inventory.cpp
+
+   // 07/19/12: game properties
+   E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
 
    // post-processing routines
    E_SetThingDefaultSprites();

@@ -346,7 +346,7 @@ static texturelump_t *R_InitTextureLump(const char *lname, bool required)
       byte *temp;
 
       tlump->maxoff      = W_LumpLength(tlump->lumpnum);
-      tlump->data = temp = (byte *)(wGlobalDir.CacheLumpNum(tlump->lumpnum, PU_STATIC));
+      tlump->data = temp = (byte *)(wGlobalDir.cacheLumpNum(tlump->lumpnum, PU_STATIC));
       tlump->numtextures = TEXINT(temp);
       tlump->directory   = temp;
    }
@@ -626,7 +626,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
 //
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
-   byte      *src = (byte *)(wGlobalDir.CacheLumpNum(component->lump, PU_CACHE));
+   byte      *src = (byte *)(wGlobalDir.cacheLumpNum(component->lump, PU_CACHE));
    int       destoff, srcoff, deststep, srcxstep, srcystep;
    int       xstart, ystart, xstop, ystop;
    int       width, height, wcount, hcount;
@@ -1064,7 +1064,7 @@ static int *R_LoadPNames(void)
 
    // Load the patch names from pnames.lmp.
    name[8] = 0;
-   names = (char *)wGlobalDir.CacheLumpName("PNAMES", PU_STATIC);
+   names = (char *)wGlobalDir.cacheLumpName("PNAMES", PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
@@ -1174,7 +1174,7 @@ static void R_AddFlats(void)
    int       i;
    byte      flatsize;
    uint16_t  width, height;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
    for(i = 0; i < numflats; ++i)
    {
@@ -1512,7 +1512,7 @@ void R_LoadDoom1(void)
    lumplen = W_LumpLength(lumpnum);
    lump    = ecalloc(char *, 1, lumplen + 1);
    
-   wGlobalDir.ReadLump(lumpnum, lump);
+   wGlobalDir.readLump(lumpnum, lump);
    
    rover = lump;
    numconvs = 0;

@@ -666,6 +666,7 @@ enum
    MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
    MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
    MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
+   MF4_FLY            = 0x00000100  // Actor is flying
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -687,6 +688,7 @@ enum
    MIF_NOTOUCH     = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies
    MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
+   MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
 };
 
 #endif

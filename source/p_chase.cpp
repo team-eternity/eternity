@@ -25,17 +25,26 @@
 //
 //--------------------------------------------------------------------------
 
+#ifdef _MSC_VER
+// EE cannot link with the debug CRT due to SDL, so according to MSDN, we
+// need to define this value, to stop the STL from using _Debug_message.
+#define _HAS_ITERATOR_DEBUGGING 0
+#endif
+
+#include <algorithm>
 #include "z_zone.h"
 
 #include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "cam_sight.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "g_game.h"
 #include "info.h"
+#include "m_collection.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -309,68 +318,97 @@ int walkcam_active = 0;
 void P_WalkTicker(void)
 {
    ticcmd_t *walktic = &netcmds[consoleplayer][(gametic/ticdup)%BACKUPTICS];
+   int look   = walktic->look;
+   int fly    = walktic->fly;
+   angle_t fwan, san;
 
    walkcamera.angle += walktic->angleturn << 16;
    
-   // moving forward
-   walkcamera.x += FixedMul((ORIG_FRICTION/4) * walktic->forwardmove,
-      finecosine[walkcamera.angle >> ANGLETOFINESHIFT]);
-   walkcamera.y += FixedMul((ORIG_FRICTION/4) * walktic->forwardmove,
-      finesine[walkcamera.angle >> ANGLETOFINESHIFT]);
-
-   // strafing
-   walkcamera.x += FixedMul((ORIG_FRICTION/6) * walktic->sidemove,
-      finecosine[(walkcamera.angle-ANG90) >> ANGLETOFINESHIFT]);
-   walkcamera.y += FixedMul((ORIG_FRICTION/6) * walktic->sidemove,
-      finesine[(walkcamera.angle-ANG90) >> ANGLETOFINESHIFT]);
-
-   {
-      // haleyjd: FIXME -- this could be optimized by only
-      // doing a traversal when the camera actually moves, rather
-      // than every frame, naively
-      subsector_t *subsec = 
-         R_PointInSubsector(walkcamera.x, walkcamera.y);
-      
-      // keep on the ground
-      walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
-      
-      // haleyjd: handle deep water appropriately
-      walkcamera.heightsec = subsec->sector->heightsec;
-   }
-
    // looking up/down 
    // haleyjd: this is the same as new code in p_user.c, but for walkcam
+   if(look)
    {
-      int look = walktic->look;
-
-      if(look)
+      // test for special centerview value
+      if(look == -32768)
+         walkcamera.pitch = 0;
+      else
       {
-         // test for special centerview value
-         if(look == -32768)
-            walkcamera.pitch = 0;
-         else
-         {
-            walkcamera.pitch -= look << 16;
-            if(walkcamera.pitch < -ANGLE_1*32)
-               walkcamera.pitch = -ANGLE_1*32;
-            else if(walkcamera.pitch > ANGLE_1*32)
-               walkcamera.pitch = ANGLE_1*32;
-         }
+         walkcamera.pitch -= look << 16;
+         if(walkcamera.pitch < -ANGLE_1*32)
+            walkcamera.pitch = -ANGLE_1*32;
+         else if(walkcamera.pitch > ANGLE_1*32)
+            walkcamera.pitch = ANGLE_1*32;
       }
-   } // end local block
+   }
+
+   if(fly == FLIGHT_CENTER)
+      walkcamera.flying = false;
+   else if(fly)
+   {
+      walkcamera.z += 2 * fly * FRACUNIT;
+      walkcamera.flying = true;
+   }
+
+   if(walkcamera.flying && walkcamera.pitch)
+   {
+      angle_t an = static_cast<angle_t>(walkcamera.pitch);
+      an >>= ANGLETOFINESHIFT;
+      walkcamera.z -= FixedMul((ORIG_FRICTION/4)*walktic->forwardmove, finesine[an]);
+   }
+
+   // moving forward
+   fwan = walkcamera.angle;
+   fwan >>= ANGLETOFINESHIFT;
+   walkcamera.x += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finecosine[fwan]);
+   walkcamera.y += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finesine[fwan]);
+
+   // strafing
+   san = walkcamera.angle - ANG90;
+   san >>= ANGLETOFINESHIFT;
+   walkcamera.x += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finecosine[san]);
+   walkcamera.y += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finesine[san]);
+
+   // haleyjd: FIXME -- this could be optimized by only
+   // doing a traversal when the camera actually moves, rather
+   // than every frame, naively
+   subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
+
+   // haleyjd: handle deep water appropriately
+   walkcamera.heightsec = subsec->sector->heightsec;
+
+   if(!walkcamera.flying)
+   {
+      // keep on the ground
+      walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
+   }
+
+   {
+      fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
+      fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
+      
+      if(walkcamera.z > maxheight)
+         walkcamera.z = maxheight;
+      if(walkcamera.z < minheight)
+         walkcamera.z = minheight;
+   }
 }
 
 void P_ResetWalkcam(void)
 {
-   walkcamera.x = playerstarts[0].x << FRACBITS;
-   walkcamera.y = playerstarts[0].y << FRACBITS;
-   walkcamera.angle = R_WadToAngle(playerstarts[0].angle);
+   sector_t *sec;
+   walkcamera.x      = playerstarts[0].x << FRACBITS;
+   walkcamera.y      = playerstarts[0].y << FRACBITS;
+   walkcamera.angle  = R_WadToAngle(playerstarts[0].angle);
+   walkcamera.pitch  = 0;
+   walkcamera.flying = false;
+   
    // haleyjd
-   walkcamera.heightsec =
-      R_PointInSubsector(walkcamera.x, walkcamera.y)->sector->heightsec;
+   sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
+   walkcamera.heightsec = sec->heightsec;
+   walkcamera.z = sec->floorheight + 41*FRACUNIT;
 }
 
-VARIABLE_BOOLEAN(walkcam_active, NULL,              onoff);
+VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
    if(!Console.argc)
@@ -397,6 +435,117 @@ CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 camera_t followcam;
 static Mobj *followtarget;
 
+//
+// VertexDistanceCompare
+//
+// Predicate functor for finding the most distant vertex.
+//
+class VertexDistanceCompare
+{
+public:
+   fixed_t targetx;
+   fixed_t targety;
+
+   bool operator ()(vertex_t *a, vertex_t *b)
+   {
+      fixed_t distA = P_AproxDistance((targetx - a->x), (targety - a->y));
+      fixed_t distB = P_AproxDistance((targetx - b->x), (targety - b->y));
+
+      return (distA > distB);
+   }
+};
+
+//
+// P_LocateFollowCam
+//
+// Find a suitable location for the followcam by finding the furthest vertex
+// in its sector from which it is visible, using CAM_CheckSight, which is
+// guaranteed to never disturb the state of the game engine.
+//
+void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
+{
+   VertexDistanceCompare predicate;
+   PODCollection<vertex_t *> vertexes;
+   sector_t *sec = target->subsector->sector;
+
+   // Get all vertexes in the target's sector within 256 units
+   for(int i = 0; i < sec->linecount; i++)
+   {
+      vertex_t *v1 = sec->lines[i]->v1;
+      vertex_t *v2 = sec->lines[i]->v2;
+
+      if(P_AproxDistance(v1->x - target->x, v1->y - target->y) <= 256*FRACUNIT)
+         vertexes.add(v1);
+      if(P_AproxDistance(v2->x - target->x, v2->y - target->y) <= 256*FRACUNIT)
+         vertexes.add(v2);
+   }
+
+   predicate.targetx = target->x;
+   predicate.targety = target->y;
+
+   // Sort by distance from the target, with the furthest vertex first.
+   std::sort(vertexes.begin(), vertexes.end(), predicate);
+
+   // Find the furthest one from which the target is visible
+   for(PODCollection<vertex_t *>::iterator vitr = vertexes.begin();
+       vitr != vertexes.end();
+       vitr++)
+   {
+      vertex_t *v = *vitr;
+
+      if(CAM_CheckSight(v->x, v->y, sec->floorheight, 41*FRACUNIT,
+                        target->x, target->y, target->z, target->height))
+      {
+
+         angle_t ang = P_PointToAngle(v->x, v->y, target->x, target->y);
+
+         // Push coordinates in slightly toward the target
+         destX = v->x + 10 * finecosine[ang >> ANGLETOFINESHIFT];
+         destY = v->y + 10 * finesine[ang >> ANGLETOFINESHIFT];
+
+         return; // We've found our location
+      }                   
+   }
+
+   // If we got here, somehow the target isn't visible... (shouldn't happen)
+   // Use the target's coordinates.
+   destX = target->x;
+   destY = target->y;
+}
+
+//
+// P_setFollowPitch
+//
+static void P_setFollowPitch()
+{
+   fixed_t zabs = abs(followtarget->z - followcam.z);
+
+   if(zabs <= 41*FRACUNIT)
+   {
+      followcam.pitch = 0;
+      return;
+   }
+
+   fixed_t fixedang;
+   double  zdist;
+   bool    camlower = (followcam.z < followtarget->z);
+   double  xydist = M_FixedToDouble(P_AproxDistance(followtarget->x - followcam.x,
+                                                    followtarget->y - followcam.y));
+
+   zdist    = M_FixedToDouble(zabs);
+   fixedang = (fixed_t)(atan2(zdist, xydist) * (ANG180 / PI));
+      
+   if(fixedang > ANGLE_1 * 32)
+      fixedang = ANGLE_1 * 32;
+
+   followcam.pitch = camlower ? -fixedang : fixedang;
+}
+
+//
+// P_SetFollowCam
+//
+// Locate the followcam at the indicated location, looking at the target.
+//
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 {
    subsector_t *subsec;
@@ -411,19 +560,21 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
    subsec = R_PointInSubsector(followcam.x, followcam.y);
    followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
    followcam.heightsec = subsec->sector->heightsec;
+
+   P_setFollowPitch();
 }
 
-void P_FollowCamOff(void)
+void P_FollowCamOff()
 {
    P_SetTarget<Mobj>(&followtarget, NULL);
 }
 
-void P_FollowCamTicker(void)
+bool P_FollowCamTicker()
 {
    subsector_t *subsec;
 
    if(!followtarget)
-      return;
+      return false;
 
    followcam.angle = P_PointToAngle(followcam.x, followcam.y,
                                     followtarget->x, followtarget->y);
@@ -431,6 +582,12 @@ void P_FollowCamTicker(void)
    subsec = R_PointInSubsector(followcam.x, followcam.y);
    followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
    followcam.heightsec = subsec->sector->heightsec;
+   P_setFollowPitch();
+
+   // still visible?
+   return CAM_CheckSight(followcam.x, followcam.y, followcam.z, 41*FRACUNIT,
+                         followtarget->x, followtarget->y, followtarget->z,
+                         followtarget->height);
 }
 
 void P_Chase_AddCommands(void)
@@ -442,7 +599,7 @@ void P_Chase_AddCommands(void)
    C_AddCommand(walkcam);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 {
    int cam_onoff = (int)params[1];

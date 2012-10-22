@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2009 James Haley
+// Copyright(C) 2012 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //
-//   MetaQString adapter class for storage of qstrings as metatable properites.
+//   MetaQString adapter class for storage of qstrings as metatable properties.
 //
 //-----------------------------------------------------------------------------
 
@@ -33,18 +33,25 @@
 
 class MetaQString : public MetaAdapter<qstring>
 {
+   // NB: MetaAdapter is transparent to RTTI
+   DECLARE_RTTI_TYPE(MetaQString, MetaObject)
+
 public:
-   MetaQString(const char *key) : MetaAdapter<qstring>("MetaQString", key)
+   MetaQString() : MetaAdapter<qstring>()
+   {
+   }
+
+   MetaQString(const char *key) : MetaAdapter<qstring>(key)
    {
    }
 
    MetaQString(const char *key, const qstring &initValue)
-      : MetaAdapter<qstring>("MetaQString", key, initValue)
+      : MetaAdapter<qstring>(key, initValue)
    {
    }
 
    MetaQString(const char *key, const char *value)
-      : MetaAdapter<qstring>("MetaQString", key)
+      : MetaAdapter<qstring>(key)
    {
       containedObject = value;
    }

@@ -79,7 +79,9 @@ typedef enum
   // haleyjd 03/18/03: infinite ammo
   CF_INFAMMO          = 8,
   // haleyjd 12/29/10: immortality cheat
-  CF_IMMORTAL         = 0x10
+  CF_IMMORTAL         = 0x10,
+  // haleyjd 09/10/12: used any score-cancelling cheat
+  CF_CHEATED          = 0x20
 } cheat_t;
 
 
@@ -88,7 +90,7 @@ typedef enum
 //
 struct player_t
 {
-   Mobj        *mo;
+   Mobj          *mo;
    playerclass_t *pclass;      // haleyjd 09/27/07: player class
    skin_t        *skin;        // skin
    playerstate_t  playerstate; // live, dead, reborn, etc.
@@ -160,9 +162,9 @@ struct player_t
    int            curpsprite;    // haleyjd 04/05/07: for codeptr rewrite
   
    int            quake;         // If > 0, player is experiencing an earthquake
-
    int            jumptime;      // If > 0, player can't jump again yet
-
+   int            flyheight;     // haleyjd 06/05/12: flying
+   
    // Player name
    char           name[20];
 };

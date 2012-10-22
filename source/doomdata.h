@@ -45,7 +45,8 @@
 
 // Lump order in a map WAD: each map needs a couple of lumps
 // to provide a complete scene geometry description.
-enum {
+enum 
+{
   ML_LABEL,             // A separator, name, ExMx or MAPxx
   ML_THINGS,            // Monsters, items..
   ML_LINEDEFS,          // LineDefs, from editing
@@ -74,9 +75,9 @@ struct mapsidedef_s
 {
   int16_t textureoffset;
   int16_t rowoffset;
-  char  toptexture[8];
-  char  bottomtexture[8];
-  char  midtexture[8];
+  char    toptexture[8];
+  char    bottomtexture[8];
+  char    midtexture[8];
   int16_t sector;  // Front sector, towards viewer.
 };
 

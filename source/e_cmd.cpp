@@ -192,7 +192,7 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
    {
       C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
                FC_NORMAL "%s", 
-               obj->getKey(), obj->getType(), obj->toString());
+               obj->getKey(), obj->getClassName(), obj->toString());
    }
 }
 
@@ -464,7 +464,7 @@ void E_AddCommands(void)
    C_AddCommand(e_linedef);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 
 //
 // Script functions

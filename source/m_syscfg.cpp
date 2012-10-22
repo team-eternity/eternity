@@ -185,11 +185,11 @@ static default_t sysdefaults[] =
                "Volume of environmental sound sequences"),
 
    // haleyjd 12/24/11
-   DEFAULT_BOOL("s_hidefmusic", &s_hidefmusic, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("s_hidefmusic", &s_hidefmusic, NULL, true, default_t::wad_no,
                 "use hi-def music if available"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 3, default_t::wad_no,
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 3, 0, 3, default_t::wad_no,
                "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
    
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
@@ -230,7 +230,7 @@ static default_t sysdefaults[] =
                0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
                "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
-   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
 
 #ifdef _SDL_VER
@@ -254,7 +254,7 @@ static default_t sysdefaults[] =
 #endif
 
 #ifdef _MSC_VER
-   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 1, 0, 1, default_t::wad_no,
                "1 to disable Windows system menu for alt+space compatibility"),
 #endif
 

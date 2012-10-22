@@ -46,6 +46,9 @@ struct emod_t
    bool obitIsBexString;
    bool selfObitIsBexString;
    bool sourceless;
+
+   // For faster damagetype lookups in metatables
+   size_t dfKeyIndex;
 };
 
 emod_t *E_DamageTypeForName(const char *name);

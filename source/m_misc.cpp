@@ -66,6 +66,7 @@
 #include "p_enemy.h"
 #include "p_map.h"
 #include "p_partcl.h"
+#include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_sky.h"
@@ -267,6 +268,9 @@ default_t defaults[] =
 
    DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
+
+   DEFAULT_BOOL("p_pitchedflight", &default_pitchedflight, &pitchedflight, true, default_t::wad_yes, 
+                "1 to enable flying in the direction you are looking"),
    
    // no color changes on status bar
    DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, default_t::wad_yes,
@@ -318,7 +322,7 @@ default_t defaults[] =
    DEFAULT_INT("show_messages", &showMessages, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable message display"),
 
-   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_no,
+   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_no,
                "messages colour"),
 
    // killough 3/6/98: preserve autorun across games
@@ -688,13 +692,13 @@ default_t defaults[] =
    DEFAULT_BOOL("hu_showcoords", &hu_showcoords, NULL, true, default_t::wad_yes,
                 "display player/pointer coordinates on automap"),
    
-   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap level time widget"),
 
-   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap level name widget"),
    
-   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap coordinates widget"),
    
    // below is red
@@ -769,7 +773,7 @@ default_t defaults[] =
    DEFAULT_INT("obituaries",&obituaries, NULL, 0, 0, 1, default_t::wad_yes,
                "obituaries on/off"),
    
-   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_LIMIT-1, default_t::wad_no,
+   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_BUILTIN, default_t::wad_no,
                "obituaries colour"),
    
    DEFAULT_INT("draw_particles",&drawparticles, NULL, 0, 0, 1, default_t::wad_yes,
@@ -1466,9 +1470,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, userpath, D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 1, userpath, "/tmpetern.cfg");
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", userpath, D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmpetern.cfg", userpath);
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
@@ -1482,10 +1486,11 @@ void M_SaveDefaultFile(defaultfile_t *df)
    // killough 10/98: use executable's name
 
    if(config_help && !df->helpHeader &&
-      fprintf(f,";%s.cfg format:\n"
+      fprintf(f,
+              ";eternity.cfg format:\n"
               ";[min-max(default)] description of variable\n"
               ";* at end indicates variable is settable in wads\n"
-              ";variable   value\n\n", D_DoomExeName()) == EOF)
+              ";variable   value\n\n") == EOF)
    {
       M_defaultFileWriteError(df, tmpfile);
       return;
@@ -1627,7 +1632,7 @@ void M_LoadOptions(void)
    if((lump = W_CheckNumForName("OPTIONS")) != -1)
    {
       int size = W_LumpLength(lump), buflen = 0;
-      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.CacheLumpNum(lump, PU_STATIC));
+      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.cacheLumpNum(lump, PU_STATIC));
       while (size > 0)
       {
          int len = 0;
@@ -1836,7 +1841,7 @@ default_t *M_FindDefaultForCVar(variable_t *var)
 //
 // killough 9/98: rewritten to use stdio and to flash disk icon
 //
-bool M_WriteFile(char const *name, void *source, unsigned int length)
+bool M_WriteFile(char const *name, void *source, size_t length)
 {
    FILE *fp;
    bool result;
@@ -1912,6 +1917,30 @@ int M_FileLength(FILE *f)
    fseek(f, curpos, SEEK_SET);
 
    return (int)len;
+}
+
+//
+// M_LoadStringFromFile
+//
+// haleyjd 09/02/12: Like M_ReadFile, but assumes the contents are a string
+// and therefore null terminates the buffer.
+//
+char *M_LoadStringFromFile(const char *filename)
+{
+   FILE *f   = NULL;
+   char *buf = NULL;
+   int   len = 0;
+   
+   if(!(f = fopen(filename, "rb")))
+      return NULL;
+
+   // allocate at length + 1 for null termination
+   len = M_FileLength(f);
+   buf = ecalloc(char *, 1, len + 1);
+   fread(buf, 1, len, f);
+   fclose(f);
+
+   return buf;
 }
 
 //=============================================================================

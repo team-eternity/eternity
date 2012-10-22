@@ -24,6 +24,12 @@ ENDIF (COMMAND cmake_policy)
 
 ################################################################################
 ######################### Set Project Source  ##################################
+
+# Some debugging defines.
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        ADD_DEFINITIONS (-D_DEBUG -DRANGECHECK -DINSTRUMENTED -DZONEIDCHECK)
+ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
 ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
 ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
 IF (GL_LIBRARY)

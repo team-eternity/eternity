@@ -22,59 +22,20 @@
 #ifndef P_TICK_H__
 #define P_TICK_H__
 
-#include "z_zone.h"
+#include "e_rtti.h"
 
 class SaveArchive;
 class Thinker;
-
-//
-// Thinker Factory / RTTI Class
-//
-// haleyjd 12/07/10: The save game code needs to be able to construct thinkers
-// of any class without resort to a gigantic switch statement. This calls for
-// a factory pattern.
-//
-class ThinkerType
-{
-private:
-   static ThinkerType **thinkerTypes;
-
-protected:
-   friend class Thinker;
-
-   ThinkerType *parent;
-   ThinkerType *next;
-   const char  *name;
-
-   // getParentType is a pure virtual method that is ideally called only once
-   // at startup; the result is then cached in the parent member.
-   virtual ThinkerType *getParentType() const = 0;
-
-public:
-   ThinkerType(const char *pName);
-
-   // newThinker is a pure virtual method that must be overridden by a child 
-   // class to construct a specific type of thinker
-   virtual Thinker *newThinker() const = 0;
-
-   // FindType is a static method that will find the ThinkerType given the
-   // name of a Thinker-descendent class (ie., "FireFlickerThinker"). The returned
-   // object can then be used to construct a new instance of that type by 
-   // calling the newThinker method. The instance can then be fed to the
-   // serialization mechanism.
-   static ThinkerType *FindType(const char *pName); // find a type in the list
-
-   // Setup routine called from Thinker::InitThinkers
-   static void InitThinkerTypes();
-};
 
 //
 // Thinker
 //
 // Doubly linked list of actors.
 //
-class Thinker : public ZoneObject
+class Thinker : public RTTIObject
 {
+   DECLARE_RTTI_TYPE(Thinker, RTTIObject)
+
 private:
    // Private implementation details - Methods
    void removeDelayed(); 
@@ -104,7 +65,7 @@ protected:
 public:
    // Constructor
    Thinker() 
-      : ZoneObject(), references(0), removed(false), ordinal(0), prev(NULL),
+      : Super(), references(0), removed(false), ordinal(0), prev(NULL),
         next(NULL), cprev(NULL), cnext(NULL)
    {
       ChangeTag(PU_LEVEL);
@@ -140,28 +101,6 @@ public:
    virtual void deSwizzle() {}
    virtual bool shouldSerialize() const { return !removed;  }
    
-   // RTTI
-   static  ThinkerType *StaticType;
-   virtual const ThinkerType *getDynamicType() const { return StaticType; }
-   const char *getClassName() const { return getDynamicType()->name; }
-   
-   bool isInstanceOf(const ThinkerType *type) const 
-   { 
-      return (getDynamicType() == type); 
-   }
-
-   bool isDescendantOf(const ThinkerType *type) const
-   {
-      const ThinkerType *myType = getDynamicType();
-      while(myType)
-      {
-         if(myType == type)
-            return true;
-         myType = myType->parent;
-      }
-      return false;
-   }
-   
    // Data Members
 
    Thinker *prev;
@@ -187,7 +126,7 @@ template<typename T> inline T thinker_cast(Thinker *th)
 {
    typedef typename eeprestd::remove_pointer<T>::type base_type;
 
-   return (th && !th->isRemoved() && th->isDescendantOf(base_type::StaticType)) ?
+   return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(th) : NULL;
 }
 
@@ -197,6 +136,24 @@ template<typename T> inline T thinker_cast(Thinker *th)
 void P_Ticker(void);
 
 extern Thinker thinkercap;  // Both the head and tail of the thinker list
+
+//
+// P_NextThinker
+//
+// davidph 06/02/12: Finds the next Thinker of the specified type.
+//
+template<typename T> T *P_NextThinker(T *th)
+{
+   Thinker *itr;
+
+   for(itr = th ? th->next : thinkercap.next; itr != &thinkercap; itr = itr->next)
+   {
+      if((th = thinker_cast<T *>(itr)))
+         return th;
+   }
+
+   return NULL;
+}
 
 //
 // P_SetTarget
@@ -236,56 +193,12 @@ extern bool reset_viewz;
 //
 // DECLARE_THINKER_TYPE
 //
-// Use this macro once per Thinker descendant, inside the class definition.
-// Two public members are declared:
-//   static ThinkerType *StaticType
-//   * This reference to a ThinkerType instance is initialized by the constructor
-//     of the corresponding ThinkerType descendant to point to the type for this
-//     Thinker class. For example, Mobj::StaticType will point to the singleton
-//     instance of MobjType.
-//   virtual ThinkerType *getDynamicType() const;
-//   * This method of Thinker will return the StaticType member, which in the
-//     context of each individual class, is the instance representing the 
-//     actual type of the object (the parent instances of StaticType are hidden
-//     in each descendant scope).
-//
-#define DECLARE_THINKER_TYPE(name, inherited) \
-public: \
-   typedef inherited Super; \
-   static ThinkerType *StaticType; \
-   virtual const ThinkerType *getDynamicType() const { return StaticType; } \
-private:
+#define DECLARE_THINKER_TYPE(name, inherited) DECLARE_RTTI_TYPE(name, inherited)
    
 //
 // IMPLEMENT_THINKER_TYPE
 //
-// Use this macro once per Thinker descendant. Best placed near the Think 
-// routine.
-// Example:
-//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
-//   This defines FireFlickerThinkerType, which constructs a ThinkerType parent
-//   with "FireFlickerThinker" as its name member and which returns a new FireFlickerThinker
-//   instance via its newThinker virtual method.
-// 
-#define IMPLEMENT_THINKER_TYPE(name) \
-class name ## Type : public ThinkerType \
-{ \
-protected: \
-   static name ## Type global ## name ## Type ; \
-   typedef name Class; \
-   virtual ThinkerType *getParentType() const { return Class::Super::StaticType; } \
-public: \
-   name ## Type() : ThinkerType( #name ) \
-   { \
-     name :: StaticType = this; \
-   } \
-   virtual Thinker *newThinker() const { return new name ; } \
-}; \
-name ## Type name ## Type :: global ## name ## Type; \
-ThinkerType * name :: StaticType;
-
-// Inspired by ZDoom :P
-#define RUNTIME_CLASS(cls) (cls::StaticType)
+#define IMPLEMENT_THINKER_TYPE(name) IMPLEMENT_RTTI_TYPE(name)
 
 #endif
 

@@ -62,24 +62,11 @@ Thinker thinkercap;
 Thinker thinkerclasscap[NUMTHCLASS];
 
 // 
-// RootThinkerType
+// Thinker::StaticType
 //
-// haleyjd 11/14/11: This one is special and is for the Thinker class itself.
+// haleyjd 11/14/11: Custom RTTI
 //
-class RootThinkerType : public ThinkerType
-{ 
-protected: 
-   static RootThinkerType globalRootThinkerType;
-   virtual ThinkerType *getParentType() const { return NULL; }
-public:
-   RootThinkerType() : ThinkerType("Thinker") 
-   {
-      Thinker::StaticType = this;
-   }
-   virtual Thinker *newThinker() const { return new Thinker; }
-};
-RootThinkerType RootThinkerType::globalRootThinkerType;
-ThinkerType *Thinker::StaticType;
+IMPLEMENT_RTTI_TYPE(Thinker)
 
 //
 // P_InitThinkers
@@ -92,9 +79,6 @@ void Thinker::InitThinkers(void)
       thinkerclasscap[i].cprev = thinkerclasscap[i].cnext = &thinkerclasscap[i];
    
    thinkercap.prev = thinkercap.next  = &thinkercap;
-
-   // haleyjd 11/14/11: initialize ThinkerType classes
-   ThinkerType::InitThinkerTypes();
 }
 
 //
@@ -320,89 +304,6 @@ void P_Ticker(void)
       P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
    
    P_RunEffects(); // haleyjd: run particle effects
-}
-
-//=============================================================================
-//
-// Thinker RTTI and Factory
-//
-// haleyjd 12/18/10: The functions and methods below here help the savegame
-// code create new thinkers.
-// 
-// haleyjd 11/19/11: ThinkerType now also facilitates a custom RTTI solution 
-// for the Thinker class hierarchy.
-//
-
-#define NUMTTYPECHAINS 31
-
-// thinkerTypes - this is a hash table of all the ThinkerType global objects.
-ThinkerType **ThinkerType::thinkerTypes;
-
-//
-// ThinkerType::FindType
-//
-// Static global method.
-// Find a ThinkerType in the list by name. Reimplemented with a hash table as of
-// 11/19/11 in order to support maximum efficiency during runtime searches by 
-// name. Returns NULL if no such type exists (or it hasn't been registered yet).
-//
-ThinkerType *ThinkerType::FindType(const char *pName)
-{
-   unsigned int hashcode = D_HashTableKeyCase(pName) % NUMTTYPECHAINS;
-   ThinkerType *chain = thinkerTypes[hashcode];
-
-   while(chain && strcmp(chain->name, pName))
-      chain = chain->next;
-
-   return chain;
-}
-
-//
-// ThinkerType::InitThinkerTypes
-//
-// Static method.
-// Called from Thinker::InitThinkers to initialize the parent field of all
-// ThinkerType instances. Obviously this is well after C++ construction has
-// finished for global objects, to avoid problems with order of constructor
-// calls.
-//
-void ThinkerType::InitThinkerTypes()
-{
-   static bool firsttime = true;
-
-   if(!firsttime) // One time only.
-      return;
-
-   firsttime = false;
-
-   // Set parent class pointers
-   for(int i = 0; i < NUMTTYPECHAINS; i++)
-   {
-      for(ThinkerType *curType = thinkerTypes[i]; curType; curType = curType->next)
-         curType->parent = curType->getParentType();
-   }
-}
-
-// 
-// ThinkerType Constructor
-//
-// The object will automatically be added into the thinker factory list.
-//
-ThinkerType::ThinkerType(const char *pName) : name(pName), parent(NULL)
-{
-   unsigned int hashcode;
-
-   if(!thinkerTypes)
-      thinkerTypes = ecalloc(ThinkerType **, NUMTTYPECHAINS, sizeof(ThinkerType *));
-
-   // ThinkerTypes must be singletons with unique names.
-   if(FindType(pName))
-      I_Error("ThinkerType: duplicate class registered with name '%s'\n", pName);
-
-   // Add it to the hash table; order is unimportant.
-   hashcode = D_HashTableKeyCase(name) % NUMTTYPECHAINS;
-   this->next = thinkerTypes[hashcode];
-   thinkerTypes[hashcode] = this;   
 }
 
 //----------------------------------------------------------------------------

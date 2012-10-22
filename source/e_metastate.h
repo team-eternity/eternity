@@ -39,17 +39,23 @@
 //
 class MetaState : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaState, MetaObject)
+
 protected:
    state_t *state;      // the state
 
 public:
-   // Constructor
-   MetaState(const char *key, state_t *pState) 
-      : MetaObject("MetaState", key), state(pState)
+   // Default constructor
+   MetaState() : MetaObject(), state(NULL)
    {
    }
 
-   // Copy Constructor
+   // Parameterized constructor
+   MetaState(const char *key, state_t *pState) : MetaObject(key), state(pState)
+   {
+   }
+
+   // Copy constructor
    MetaState(const MetaState &other) : MetaObject(other)
    {
       this->state = other.state;

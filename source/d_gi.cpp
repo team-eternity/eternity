@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
@@ -142,7 +143,7 @@
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
-    GIF_HASMADMELEE)
+    GIF_HASMADMELEE | GIF_CENTERHUDMSG)
 
 // globals
 
@@ -847,12 +848,14 @@ static gamemodeinfo_t giDoomSW =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -941,12 +944,14 @@ static gamemodeinfo_t giDoomReg =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1035,12 +1040,14 @@ static gamemodeinfo_t giDoomRetail =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1129,12 +1136,14 @@ static gamemodeinfo_t giDoomCommercial =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DM2BRDRFLAT,      // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1223,12 +1232,14 @@ static gamemodeinfo_t giHereticSW =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HSWBRDRFLAT,      // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1321,12 +1332,14 @@ static gamemodeinfo_t giHereticReg =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HREGBRDRFLAT,     // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1454,8 +1467,11 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
 // W_InitMultipleFiles (and is done so immediately afterward), in order to
 // account for any PWADs loaded.
 //
+// 07/15/2012: Added runtime adjustment of blackIndex and whiteIndex.
+//
 void D_InitGMIPostWads(void)
 {
+   AutoPalette pal(wGlobalDir);
    gamemodeinfo_t *gi = GameModeInfo;
    missioninfo_t  *mi = gi->missionInfo;
 
@@ -1464,6 +1480,9 @@ void D_InitGMIPostWads(void)
    // * if MI_DEMOIFDEMO4 IS set, then only if DEMO4 actually exists.
    if(!(mi->flags & MI_DEMOIFDEMO4) || W_CheckNumForName("DEMO4") >= 0)
       OVERRIDE(demoStates, NULL);
+
+   GameModeInfo->blackIndex = V_FindBestColor(pal.get(), 0,   0,   0);
+   GameModeInfo->whiteIndex = V_FindBestColor(pal.get(), 255, 255, 255);
 }
 
 // EOF

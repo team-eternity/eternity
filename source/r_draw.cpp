@@ -1048,7 +1048,7 @@ void R_InitTranslationTables(void)
    numtranslations = TRANSLATIONCOLOURS + numtlumps;
 
    // allocate the array of pointers
-   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER);
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)
@@ -1059,7 +1059,7 @@ void R_InitTranslationTables(void)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 
-      translationtables[i] = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_RENDERER));
+      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_RENDERER));
    }
 }
 
@@ -1078,6 +1078,29 @@ int R_TranslationNumForName(const char *name)
       result = lumpnum - markernum + TRANSLATIONCOLOURS;
 
    return result;
+}
+
+//
+// R_GetIdentityMap
+//
+// haleyjd 09/08/12: Returns a pointer to the identity translation.
+// There is one global shared copy of it, which can neither be freed 
+// nor have its tag changed. If you really want/need your own copy 
+// of it for some reason, get it and then memcpy it into your own 
+// buffer.
+//
+byte *R_GetIdentityMap()
+{
+   static byte *identityMap;
+
+   if(!identityMap)
+   {
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      for(int i = 0; i < 256; i++)
+         identityMap[i] = i;
+   }
+
+   return identityMap;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1143,7 +1166,8 @@ void R_FillBackScreen(void)
    int offset = border->offset;
    int size   = border->size;
 
-   if(scaledviewwidth == SCREENWIDTH)
+   //if(scaledviewwidth == SCREENWIDTH)
+   if(scaledviewheight == SCREENHEIGHT)
       return;
 
    // haleyjd 08/16/02: some restructuring to use GameModeInfo
@@ -1220,7 +1244,16 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
    }
 
    V_BlitVBuffer(&vbscreen, x, y, &backscreen1, x, y, w, h);
-} 
+}
+
+void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
+{
+   if(x + w > static_cast<unsigned int>(vbscreen.width) || 
+      y + h > static_cast<unsigned int>(vbscreen.height))
+      return;
+
+   V_BlitVBuffer(&vbscreen, x, y, &backscreen1, x, y, w, h);
+}
 
 //
 // R_DrawViewBorder

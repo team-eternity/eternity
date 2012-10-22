@@ -59,6 +59,8 @@
 
 #define FRAGNUMX 175
 
+extern bool gamekeydown[NUMKEYS]; // g_game.c
+
 player_t *sortedplayers[MAXPLAYERS];
 
 int num_players;
@@ -104,12 +106,13 @@ void HU_FragsDrawer(void)
          sortedplayers[i]->name);
       
       V_FontWriteText(hud_font, tempstr, 
-                      NAMEX - V_FontStringWidth(hud_font, tempstr), y);
+                      NAMEX - V_FontStringWidth(hud_font, tempstr), y,
+                      &subscreen43);
       
       // box behind frag pic
       // haleyjd 01/12/04: changed translation handling
 
-      V_DrawPatchTranslated(FRAGNUMX, y, &vbscreen,
+      V_DrawPatchTranslated(FRAGNUMX, y, &subscreen43,
                             PatchLoader::CacheName(wGlobalDir, "HU_FRGBX", PU_CACHE),
                             sortedplayers[i]->colormap ?
                             translationtables[(sortedplayers[i]->colormap - 1)] :
@@ -117,7 +120,8 @@ void HU_FragsDrawer(void)
       // draw the frags
       psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
       V_FontWriteText(hud_font, tempstr, 
-                      FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y);
+                      FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y,
+                      &subscreen43);
       y += 10;
    }
 

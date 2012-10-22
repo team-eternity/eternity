@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "cam_sight.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_bbox.h"
@@ -323,6 +324,12 @@ static bool P_CrossBSPNode(int bspnum, register los_t *los)
 
 bool P_CheckSight(Mobj *t1, Mobj *t2)
 {
+   if(full_demo_version >= make_full_version(340, 24))
+   {
+      return CAM_CheckSight(t1->x, t1->y, t1->z, t1->height,
+                            t2->x, t2->y, t2->z, t2->height);
+   }
+
    const sector_t *s1 = t1->subsector->sector;
    const sector_t *s2 = t2->subsector->sector;
    int pnum = (s1-sectors)*numsectors + (s2-sectors);

@@ -27,6 +27,10 @@
 #ifndef CAM_SIGHT_H__
 #define CAM_SIGHT_H__
 
+#include "m_fixed.h"
+
+bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
+                    fixed_t tx, fixed_t ty, fixed_t tz, fixed_t theight);
 
 #endif
 

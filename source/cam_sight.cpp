@@ -19,6 +19,37 @@
 //
 //--------------------------------------------------------------------------
 //
+// For portions of code under the ZDoom Source Distribution License:
+//
+// Copyright 1998-2012 Randy Heit  All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions 
+// are met:
+//
+// 1. Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//
+// 3. The name of the author may not be used to endorse or promote products
+//    derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//--------------------------------------------------------------------------
+//
 // DESCRIPTION:
 //      Line of sight checking for cameras
 //
@@ -26,10 +57,12 @@
 
 #include "z_zone.h"
 
+#include "e_exdata.h"
 #include "m_collection.h"
 #include "m_fixed.h"
 #include "p_maputl.h"
 #include "p_setup.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
@@ -50,7 +83,12 @@ struct camsight_t
    fixed_t openbottom;  // bottom of linedef silhouette
    fixed_t openrange;   // height of opening
 
+   // Intercepts vector
    PODCollection<intercept_t> intercepts;
+
+   // linedef validcount substitute
+   byte *validlines;
+   byte *validpolys;
 };
 
 //
@@ -129,19 +167,79 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
    return true; // keep going
 }
 
+static bool CAM_SightCheckLine(camsight_t &cam, int linenum)
+{
+   line_t *ld = &lines[linenum];
+   int s1, s2;
+   divline_t dl;
+
+   cam.validlines[linenum >> 3] |= 1 << (linenum & 7);
+
+   s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &cam.trace);
+   s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &cam.trace);
+   if(s1 == s2)
+      return true; // line isn't crossed
+
+   P_MakeDivline(ld, &dl);
+   s1 = P_PointOnDivlineSide(cam.trace.x, cam.trace.y, &dl);
+   s2 = P_PointOnDivlineSide(cam.trace.x + cam.trace.dx, 
+                             cam.trace.y + cam.trace.dy, &dl);
+   if(s1 == s2)
+      return true; // line isn't crossed
+
+   // try to early out the check
+   if(!ld->backsector)
+      return false; // stop checking
+
+   // haleyjd: block-all lines block sight
+   if(ld->extflags & EX_ML_BLOCKALL)
+      return false; // can't see through it
+
+   // store the line for later intersection testing
+   cam.intercepts.addNew().d.line = ld;
+
+   return true;
+}
+
 //
 // CAM_SightBlockLinesIterator
 //
 static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
 {
-   int        offset;
-   int       *list;
-   int        s1, s2;
-   divline_t  dl;
+   int  offset;
+   int *list;
+   DLListItem<polymaplink_t> *plink;
 
    offset = y * bmapwidth + x;
 
-   // TODO: Need to check polyobject lines here.
+   // Check polyobjects first
+   // haleyjd 02/22/06: consider polyobject lines
+   plink = polyblocklinks[offset];
+
+   while(plink)
+   {
+      polyobj_t *po = plink->dllObject->po;
+      int polynum = po - PolyObjects;
+
+       // if polyobj hasn't been checked
+      if(!(cam.validpolys[polynum >> 3] & (1 << (polynum & 7))))
+      {
+         cam.validpolys[polynum >> 3] |= 1 << (polynum & 7);
+         
+         for(int i = 0; i < po->numLines; ++i)
+         {
+            int linenum = po->lines[i] - lines;
+
+            if(cam.validlines[linenum >> 3] & (1 << (linenum & 7)))
+               continue; // line has already been checked
+
+            if(!CAM_SightCheckLine(cam, po->lines[i] - lines))
+               return false;
+         }
+      }
+      plink = plink->dllNext;
+   }
+
 
    offset = *(blockmap + offset);
    list = blockmaplump + offset;
@@ -151,35 +249,16 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
 
    for(; *list != -1; list++)
    {
-      line_t *ld;
+      int linenum = *list;
       
-      if(*list >= numlines)
+      if(linenum >= numlines)
          continue;
 
-      ld = &lines[*list];
-      if(ld->validcount == validcount)
+      if(cam.validlines[linenum >> 3] & (1 << (linenum & 7)))
          continue; // line has already been checked
 
-      ld->validcount = validcount;
-
-      s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &cam.trace);
-      s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &cam.trace);
-      if(s1 == s2)
-         continue; // line isn't crossed
-
-      P_MakeDivline(ld, &dl);
-      s1 = P_PointOnDivlineSide(cam.trace.x, cam.trace.y, &dl);
-      s2 = P_PointOnDivlineSide(cam.trace.x + cam.trace.dx, 
-                                cam.trace.y + cam.trace.dy, &dl);
-      if(s1 == s2)
-         continue; // line isn't crossed
-
-      // try to early out the check
-      if(!ld->backsector)
-         return false; // stop checking
-
-      // store the line for later intersection testing
-      cam.intercepts.addNew().d.line = ld;
+      if(!CAM_SightCheckLine(cam, linenum))
+         return false;
    }
 
    return true; // everything was checked
@@ -253,8 +332,6 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
    fixed_t xintercept, yintercept;
    int     mapx, mapy, mapxstep, mapystep;
 		
-   ++validcount;
-
    if(((cam.cx - bmaporgx) & (MAPBLOCKSIZE - 1)) == 0)
       cam.cx += FRACUNIT; // don't side exactly on a line
    
@@ -431,22 +508,37 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
 // Returns true if a straight line between the camera location and a
 // thing's coordinates is unobstructed.
 //
-bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, 
+bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
                     fixed_t tx, fixed_t ty, fixed_t tz, fixed_t theight)
 {
+   sector_t *csec, *tsec;
    int s1, s2, pnum;
    bool result = false;
 
    //
    // check for trivial rejection
    //
-   s1   = R_PointInSubsector(cx, cy)->sector - sectors;
-   s2   = R_PointInSubsector(tx, ty)->sector - sectors;
+   s1   = (csec = R_PointInSubsector(cx, cy)->sector) - sectors;
+   s2   = (tsec = R_PointInSubsector(tx, ty)->sector) - sectors;
    pnum = s1 * numsectors + s2;
 	
    if(!(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
       camsight_t newCam;
+
+      // killough 4/19/98: make fake floors and ceilings block monster view
+      if((csec->heightsec != -1 &&
+          ((cz + cheight <= sectors[csec->heightsec].floorheight &&
+            tz >= sectors[csec->heightsec].floorheight) ||
+           (cz >= sectors[csec->heightsec].ceilingheight &&
+            tz + cheight <= sectors[csec->heightsec].ceilingheight)))
+         ||
+         (tsec->heightsec != -1 &&
+          ((tz + theight <= sectors[tsec->heightsec].floorheight &&
+            cz >= sectors[tsec->heightsec].floorheight) ||
+           (tz >= sectors[tsec->heightsec].ceilingheight &&
+            cz + theight <= sectors[tsec->heightsec].ceilingheight))))
+         return false;
 
       //
       // check precisely
@@ -455,11 +547,16 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz,
       newCam.cy          = cy;
       newCam.tx          = tx;
       newCam.ty          = ty;
-      newCam.sightzstart = cz;
-      newCam.topslope    = (tz + theight) - newCam.sightzstart;
+      newCam.sightzstart = cz + cheight - (cheight >> 2);
       newCam.bottomslope = tz - newCam.sightzstart;
+      newCam.topslope    = newCam.bottomslope + theight;
+      newCam.validlines  = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
+      newCam.validpolys  = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
 
       result = CAM_SightPathTraverse(newCam);
+
+      efree(newCam.validlines);
+      efree(newCam.validpolys);
    }
 
    return result;

@@ -31,8 +31,11 @@
 #include "doomtype.h"
 #include "r_defs.h"
 #include "m_dllist.h"
+#include "v_video.h"  // required for CR_LIMIT
 
 struct patch_t;
+class  qstring;
+struct VBuffer;
 
 enum
 {
@@ -65,22 +68,28 @@ struct vfont_t
    unsigned int end;   // last character in font
    unsigned int size;  // number of characters in font
 
-   int cy;    // step amount for \n
-   int space; // step for blank space
-   int dw;    // width delta (can move characters together)
-   int absh;  // absolute maximum height of any character
+   int   cy;           // step amount for \n
+   int   space;        // step for blank space
+   int   dw;           // width delta (can move characters together)
+   int   absh;         // absolute maximum height of any character
 
-   bool color;    // supports color translations?
-   bool upper;    // uses uppercase only?
-   bool centered; // characters are centered in position?
+   bool  color;        // supports color translations?
+   bool  upper;        // uses uppercase only?
+   bool  centered;     // characters are centered in position?
 
-   patch_t **fontgfx; // graphics patches for font (not owned)
+   patch_t **fontgfx;  // graphics patches for font (not owned)
 
-   int cw;  // constant width, used only when centering is on
+   int   cw;           // constant width, used only when centering is on
    
-   bool linear;  // linear graphic lump?
-   byte    *data;   // data for linear graphic
-   int     lsize;   // character size in linear graphic
+   bool  linear;       // linear graphic lump?
+   byte *data;         // data for linear graphic
+   int   lsize;        // character size in linear graphic
+
+   int   colorDefault;       // default font color
+   int   colorNormal;        // normal font color
+   int   colorHigh;          // highlighted font color
+   int   colorError;         // error font color
+   byte *colrngs[CR_LIMIT];  // color translation tables
 
    int  num;                 // numeric id
    char name[129];           // EDF mnemonic
@@ -90,15 +99,23 @@ struct vfont_t
    int patchnumoffset;       // used during font loading only
 };
 
-void    V_FontWriteText(vfont_t *font, const char *s, int x, int y);
-void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
-void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
-void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
+void    V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen = NULL);
+void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y,
+                               VBuffer *screen = NULL);
+void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
+                              VBuffer *screen = NULL);
+void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y, 
+                                VBuffer *screen = NULL, int color = -1);
 int     V_FontStringHeight(vfont_t *font, const char *s);
 int     V_FontStringWidth(vfont_t *font, const char *s);
 int     V_FontCharWidth(vfont_t *font, char pChar);
 void    V_FontSetAbsCentered(void);
 int16_t V_FontMaxWidth(vfont_t *font);
+
+void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2);
+void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, int y2);
+
+byte *V_FontGetUsedColors(vfont_t *font);
 
 #endif
 

@@ -101,7 +101,10 @@ struct cb_patch_column_t  // It's cardboard now, bitches!
 byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height);
 
-patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, int tag);
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, 
+                         int tag, void **user = NULL);
+
+bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor);
 
 #endif
 

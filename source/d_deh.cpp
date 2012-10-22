@@ -321,6 +321,7 @@ dehflags_t deh_mobjflags[] =
   {"SYNCHRONIZED",     0x00000020, 3}, // spawn state tics are not randomized
   {"NORANDOMIZE",      0x00000040, 3}, // missile spawn and death not randomized
   {"BRIGHT",           0x00000080, 3}, // actor is always fullbright
+  {"FLY",              0x00000100, 3}, // actor is flying
 
   { NULL,              0 }             // NULL terminator
 };

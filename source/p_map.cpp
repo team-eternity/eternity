@@ -258,7 +258,11 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
-   if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) 
+   if(mo->flags4 & MF4_FLY)
+   {
+      friction = FRICTION_FLY;
+   }
+   else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) 
       && (demo_version >= 203 || (mo->player && !compatibility)) &&
       variable_friction)
    {
@@ -1448,9 +1452,29 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          return ret;
          
       // mobj must lower to fit
-      if((clip.floatok = true, !(thing->flags & MF_TELEPORT) &&
-          clip.ceilingz - thing->z < thing->height))
+      clip.floatok = true;
+      if(!(thing->flags & MF_TELEPORT) && !(thing->flags4 & MF4_FLY) &&
+         clip.ceilingz - thing->z < thing->height)
          return ret;          
+
+      // haleyjd 06/05/12: flying players - move up or down the lower/upper areas
+      // of lines that are contacted when the player presses into them
+      if(thing->flags4 & MF4_FLY)
+      {
+         if(thing->z + thing->height > clip.ceilingz)
+         {
+            thing->momz = -8*FRACUNIT;
+            thing->intflags |= MIF_CLEARMOMZ;
+            return false;
+         }
+         else if(thing->z < clip.floorz && 
+                 clip.floorz - clip.dropoffz > 24*FRACUNIT) // TODO: dropoff max
+         {
+            thing->momz = 8*FRACUNIT;
+            thing->intflags |= MIF_CLEARMOMZ;
+            return false;
+         }
+      }
 
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {

@@ -73,6 +73,7 @@
 #include "p_setup.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 extern char gamemapname[9];
@@ -243,7 +244,7 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    lumpinfo_t  *lump;
    int glumpnum;
 
@@ -485,7 +486,7 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 //
 void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
    lumpinfo_t  *lump;
    int glumpnum;
 
@@ -495,7 +496,7 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
 
    limode = LI_MODE_GLOBAL;
 
-   lump = dir->GetLumpNameChain("EMAPINFO");
+   lump = dir->getLumpNameChain("EMAPINFO");
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
@@ -531,13 +532,13 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
    // problem and to use qstring to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = dir->LumpLength(lumpnum)))
+   if(!(size = dir->lumpLength(lumpnum)))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
-   dir->ReadLump(lumpnum, lump);
+   dir->readLump(lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
@@ -547,9 +548,6 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 
    rover = lump;
 
-   // create the line buffer
-   line.initCreate();
-   
    while(*rover)
    {
       if(*rover == '\n') // end of line
@@ -777,10 +775,6 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
    // haleyjd 03/12/05: seriously restructured to remove possible
    // overflow of static buffer and bad kludges used to separate
    // the variable and value tokens -- now uses qstring.
-
-   // create qstrings to hold the tokens
-   var.initCreate();
-   value.initCreate();
 
    while((c = *rover++))
    {
@@ -1074,7 +1068,7 @@ static void P_LoadInterTextLump(void)
       
       str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
       
-      wGlobalDir.ReadLump(lumpNum, str);
+      wGlobalDir.readLump(lumpNum, str);
       
       // null-terminate the string
       str[lumpLen] = '\0';
@@ -1444,6 +1438,10 @@ static void P_ClearLevelVars(void)
       psnprintf(nextsecret, sizeof(nextsecret), "MAP%02d", curmetainfo->nextsecret);
       LevelInfo.nextSecret = nextsecret;
    }
+
+   // haleyjd 08/31/12: Master Levels mode hacks
+   if(inmasterlevels && GameModeInfo->type == Game_DOOM)
+      LevelInfo.interPic = "INTRMLEV";
 }
 
 int default_weaponowned[NUMWEAPONS];
@@ -1723,7 +1721,7 @@ const char *P_GetMusInfoMusic(const char *mapname, int number)
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
-   char *fn = estrdup(wadfile);
+   char *fn = Z_Strdupa(wadfile);
    char *dotloc = NULL;
    byte *buffer = NULL;
 
@@ -1919,8 +1917,6 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    tmplpstate_t state;
    qstring tokenbuffer;
    char *ret = NULL;
-
-   tokenbuffer.initCreate();
 
    state.text          = text;
    state.len           = len;

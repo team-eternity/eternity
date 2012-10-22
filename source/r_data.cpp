@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
@@ -132,10 +133,10 @@ void R_InitColormaps(void)
    numcolormaps      = lastcolormaplump - firstcolormaplump;
    colormaps = (lighttable_t **)(Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0));
    
-   colormaps[0] = (lighttable_t *)(wGlobalDir.CacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
+   colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
    
    for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = (lighttable_t *)(wGlobalDir.CacheLumpNum(i + firstcolormaplump, PU_RENDERER));
+      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum(i + firstcolormaplump, PU_RENDERER));
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -212,11 +213,12 @@ void R_InitTranMap(int progress)
    // If a translucency filter map lump is present, use it
    
    if(lump != -1)  // Set a pointer to the translucency filter maps.
-      main_tranmap = (byte *)(wGlobalDir.CacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
+      main_tranmap = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
    else
    {
       // Compose a default transparent filter map based on PLAYPAL.
-      unsigned char *playpal = (unsigned char *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
+      AutoPalette pal(wGlobalDir);
+      byte *playpal = pal.get();
       
       char *fname = NULL;
       unsigned int fnamesize;
@@ -329,8 +331,6 @@ void R_InitTranMap(int progress)
       
       if(cachefp)              // killough 11/98: fix filehandle leak
          fclose(cachefp);
-
-      Z_ChangeTag(playpal, PU_CACHE);
    }
 }
 
@@ -468,7 +468,7 @@ void R_PrecacheLevel(void)
             int16_t *sflump = sprites[i].spriteframes[j].lump;
             int k = 7;
             do
-               wGlobalDir.CacheLumpNum(firstspritelump + sflump[k], PU_CACHE);
+               wGlobalDir.cacheLumpNum(firstspritelump + sflump[k], PU_CACHE);
             while(--k >= 0);
          }
       }

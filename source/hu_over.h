@@ -22,42 +22,21 @@
 #ifndef HU_OVER_H__
 #define HU_OVER_H__
 
-    /*************** heads up font **************/
+struct vfont_t;
 
-void HU_LoadFont(void);
+// heads up font
+void HU_LoadFont();
 void HU_WriteText(const char *s, int x, int y);
 int  HU_StringWidth(const char *s);
 int  HU_StringHeight(const char *s);
 
-extern char *hud_overfontname;
+extern char    *hud_overfontname;
+extern vfont_t *hud_overfont;
 
-    /************** overlay drawing ***************/
-
-typedef struct overlay_s overlay_t;
-
-struct overlay_s
-{
-  int x, y;
-  void (*drawer)(int x, int y);
-};
-
-enum
-{
-  ol_status,
-  ol_health,
-  ol_armor,
-  ol_weap,
-  ol_ammo,
-  ol_key,
-  ol_frag,
-  NUMOVERLAY
-};
-
-extern overlay_t overlay[NUMOVERLAY];
-
-void HU_OverlayDraw(void);
-void HU_ToggleHUD(void);
-void HU_DisableHUD(void);
+// overlay interface
+void HU_OverlayDraw();
+void HU_ToggleHUD();
+void HU_DisableHUD();
 
 extern int hud_overlaystyle;
 extern int hud_enabled;
@@ -66,3 +45,4 @@ extern int hud_hidestatus;
 #endif
 
 // EOF
+
