@@ -4251,6 +4251,10 @@
 					Name="W_ Headers"
 					>
 					<File
+						RelativePath="..\source\w_formats.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\w_hacks.h"
 						>
 					</File>
@@ -4262,10 +4266,18 @@
 						RelativePath="..\Source\w_wad.h"
 						>
 					</File>
+					<File
+						RelativePath="..\source\w_zip.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="W_ Source"
 					>
+					<File
+						RelativePath="..\source\w_formats.cpp"
+						>
+					</File>
 					<File
 						RelativePath="..\source\w_hacks.cpp"
 						>
@@ -4295,6 +4307,10 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\w_zip.cpp"
+						>
 					</File>
 				</Filter>
 			</Filter>
