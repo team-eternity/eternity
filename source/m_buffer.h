@@ -118,7 +118,9 @@ protected:
 
 public:
    bool OpenFile(const char *filename, size_t pLen, int pEndian);
+   bool OpenExisting(FILE *f, size_t pLen, int pEndian);
 
+   int  Seek(long offset, int origin);
    bool Read(void *dest, size_t size);
    bool ReadSint32(int32_t  &num);
    bool ReadUint32(uint32_t &num);

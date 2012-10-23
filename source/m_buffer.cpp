@@ -372,6 +372,42 @@ bool InBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
 }
 
 //
+// InBuffer::OpenExisting
+//
+// Attach the input buffer to an already open file.
+//
+bool InBuffer::OpenExisting(FILE *pf, size_t pLen, int pEndian)
+{
+   if(!(f = pf))
+      return false;
+
+   InitBuffer(pLen, pEndian);
+   readlen = 0;
+   atEOF = false;
+   return true;
+}
+
+//
+// InBuffer::Seek
+//
+// Seeks inside the file via fseek, and then clears the internal buffer.
+//
+int InBuffer::Seek(long offset, int origin)
+{
+   int ret = fseek(f, offset, origin);
+
+   if(!ret)
+   {
+      memset(buffer, 0, pLen);
+      readlen = 0;
+      idx = 0;
+      atEOF = false;
+   }
+
+   return ret;
+}
+
+//
 // InBuffer::ReadFile
 //
 // Read the buffer's amount of data from the file or as much as is left.
