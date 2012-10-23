@@ -28,71 +28,10 @@
 
 #include "c_io.h"
 #include "doomstat.h"
-#include "py_inter.h"
-#include "py_module_base.h"
+#include "ae_pyinter.h"
+#include "ae_pymodule_base.h"
+#include "ae_pyutils.h"
 #include "v_misc.h"
-
-typedef Collection<qstring> QStringCollection;
-
-QStringCollection* SplitDotNames (qstring& name)
-{
-   qstring* path = new qstring (name);
-   QStringCollection* pathList = new QStringCollection();
-
-   size_t pos = name.findFirstOf ('.');
-
-   while (pos != qstring::npos)
-   {
-      qstring* left = new qstring ();
-      left->copy (*path);
-      left->truncate (pos);
-      pathList->add (*left);
-
-      pos = name.findFirstOf ('.', pos + 1);
-   }
-   pathList->add (*path);
-
-   return pathList;
-}
-
-// This is used by TextPrinter for buffering. Returns a two-item list
-// (left, right), or NULL if middle is not present in str.
-
-QStringCollection* Partition (qstring& str, char middle)
-{
-   QStringCollection *pair = NULL;
-   qstring *left, *right;
-
-   size_t pos = str.findFirstOf (middle);
-
-   if (pos != qstring::npos)
-   {
-      pos++; // Stick the middle on the left side of the string.
-
-      pair = new QStringCollection (2);
-
-      if (pos < (str.length () - 1))
-      {
-         left = new qstring ();
-         left->copy (str);
-         left->truncate (pos);
-         pair->add (*left);
-
-         right = new qstring (str.getBuffer () + pos);
-         pair->add (*right);
-      }
-      else
-      {
-         pair->add (str);
-
-         qstring *dummy = new qstring ();
-         pair->add (*dummy);
-      }
-   }
-
-   return pair;
-}
-
 
 // CLASSES ====================================================================
 
@@ -198,7 +137,7 @@ static PyObject* Import (PyObject* module, PyObject* args, PyObject* kwargs)
    PyObject* base = NULL;
    PyObject* sub = NULL;
 
-   QStringCollection *modules = SplitDotNames (qstring (name));
+   QStringCollection *modules = Split (qstring (name), '.');
 
    qstring moduleName;
    PyObject* currentModule;
@@ -207,7 +146,7 @@ static PyObject* Import (PyObject* module, PyObject* args, PyObject* kwargs)
    {
       moduleName = modules->at(i);
 
-      currentModule = AeonInterpreter::LumpImport (moduleName.constPtr ());
+      currentModule = AeonPython::LumpImport (moduleName.constPtr ());
 
       if (base == NULL)
       {

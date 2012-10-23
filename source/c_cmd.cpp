@@ -34,6 +34,8 @@
 #include "z_zone.h"
 
 #include "a_small.h"    // haleyjd
+#include "ae_engine.h"
+#include "ae_pyinter.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -50,7 +52,10 @@ char *verdate_hack = (char *)version_date;
 char *vername_hack = (char *)version_name;
 char *vertime_hack = (char *)version_time;
 
-               /************* constants *************/
+//=============================================================================
+//
+// Constants
+//
 
 // version
 CONST_INT(version);
@@ -68,7 +73,11 @@ CONSOLE_CONST(ver_time, vertime_hack);
 CONST_STRING(vername_hack);
 CONSOLE_CONST(ver_name, vername_hack);
 
-                /************* aliases ***************/
+//=============================================================================
+//
+// Aliases
+//
+
 CONSOLE_COMMAND(alias, 0)
 {
    alias_t *alias;
@@ -117,6 +126,11 @@ CONSOLE_COMMAND(alias, 0)
 // %opt for aliases
 CONST_STRING(cmdoptions);
 CONSOLE_CONST(opt, cmdoptions);
+
+//=============================================================================
+//
+// Basic Console, Command, and CVar Manipulation
+//
 
 // command list
 CONSOLE_COMMAND(cmdlist, 0)
@@ -206,32 +220,6 @@ CONSOLE_COMMAND(flood, 0)
 }
 
 CONSOLE_COMMAND(quote, 0) {}
-
-// haleyjd: dumplog command to write out the console to file
-
-CONSOLE_COMMAND(dumplog, 0)
-{
-   if(!Console.argc)
-      C_Printf("usage: dumplog filename\n");
-   else
-      C_DumpMessages(Console.argv[0]);
-}
-
-// haleyjd 09/07/03: true console logging commands
-
-CONSOLE_COMMAND(openlog, 0)
-{
-   if(!Console.argc)
-      C_Printf("usage: openlog filename\n");
-   else
-      C_OpenConsoleLog(Console.argv[0]);
-}
-
-CONSOLE_COMMAND(closelog, 0)
-{
-   C_CloseConsoleLog();
-}
-
 
 // SoM: omg why didn't we have this before?
 CONSOLE_COMMAND(cvarhelp, 0)
@@ -372,7 +360,56 @@ CONSOLE_COMMAND(cvarhelp, 0)
    C_Printf("Variable %s not found\n", name);
 }
 
-        /******** add commands *******/
+//=============================================================================
+//
+// Console Logging
+//
+
+// haleyjd: dumplog command to write out the console to file
+
+CONSOLE_COMMAND(dumplog, 0)
+{
+   if(!Console.argc)
+      C_Printf("usage: dumplog filename\n");
+   else
+      C_DumpMessages(Console.argv[0]);
+}
+
+// haleyjd 09/07/03: true console logging commands
+
+CONSOLE_COMMAND(openlog, 0)
+{
+   if(!Console.argc)
+      C_Printf("usage: openlog filename\n");
+   else
+      C_OpenConsoleLog(Console.argv[0]);
+}
+
+CONSOLE_COMMAND(closelog, 0)
+{
+   C_CloseConsoleLog();
+}
+
+//=============================================================================
+//
+// Aeon Console Hooks
+//
+
+#ifdef EE_FEATURE_AEONPY
+static AeonPython::ConsoleHook pyConsoleHook;
+#endif
+
+CONSOLE_COMMAND(aeon_pyshell, cf_notnet)
+{
+#ifdef EE_FEATURE_AEONPY
+   C_SetConsoleHook(&pyConsoleHook);
+#endif
+}
+
+//=============================================================================
+//
+// Add Commands
+//
 
 // command-adding functions in other modules
 
@@ -391,7 +428,6 @@ extern void      net_AddCommands();        // d_net
 extern void        P_AddCommands();        // p_cmd
 extern void P_AddGenLineCommands();        // p_genlin -- haleyjd
 extern void       PE_AddCommands();        // p_enemy  -- haleyjd
-extern void       Py_AddCommands();        // py_inter -- Kate
 extern void        R_AddCommands();        // r_main
 extern void        S_AddCommands();        // s_sound
 extern void     S_AddSeqCommands();        // s_sndseq -- haleyjd
@@ -419,10 +455,16 @@ void C_AddCommands()
   C_AddCommand(openlog);
   C_AddCommand(closelog);
 
+  // Add console hooks
+  C_AddCommand(aeon_pyshell);
+
   // SoM: I can never remember the values for a console variable
   C_AddCommand(cvarhelp);
   
   // add commands in other modules
+#ifdef EE_FEATURE_AEONPY
+  AeonPython::AddCommands();
+#endif
   AM_AddCommands();
   Cheat_AddCommands();
   D_AddCommands();
@@ -438,7 +480,6 @@ void C_AddCommands()
   net_AddCommands();
   P_AddCommands();
   P_AddGenLineCommands();
-  Py_AddCommands();  // Kate
   PE_AddCommands();  // haleyjd
   R_AddCommands();
   S_AddCommands();

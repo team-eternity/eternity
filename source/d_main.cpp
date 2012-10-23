@@ -41,6 +41,7 @@
 #include "hal/i_platform.h"
 
 #include "acs_intr.h"
+#include "ae_engine.h"
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
@@ -76,7 +77,6 @@
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_setup.h"
-#include "py_inter.h"   // [KS] Scripting support
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_patch.h"
@@ -1936,9 +1936,6 @@ static void D_DoomInit(void)
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
 
-   // [KS] Initialize Python early so we can error immediately if wrong verion
-   AeonInterpreter::Initialize (basepath);
-
    // haleyjd 03/10/03: GFS support
    // haleyjd 11/22/03: support loose GFS on the command line too
    if((p = M_CheckParm("-gfs")) && p < myargc - 1)
@@ -2191,6 +2188,13 @@ static void D_DoomInit(void)
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
 
+   // haleyjd 10/15/12: primary C_Init early
+   startupmsg("C_Init", "Init console.");
+   C_Init();
+
+   // haleyjd 10/15/12: initialize Aeon
+   AeonEngine::InitEngines(basepath);
+
    // haleyjd 01/11/09: process affinity mask stuff
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
    {
@@ -2297,13 +2301,14 @@ static void D_DoomInit(void)
    }
    // End new startup strings
 
-   startupmsg("V_InitMisc","Init miscellaneous video patches.");
+   startupmsg("V_InitMisc", "Init miscellaneous video patches.");
    V_InitMisc();
 
-   startupmsg("C_Init","Init console.");
-   C_Init();
+   // haleyjd 10/15/12: finish console initialization
+   startupmsg("C_InitMore", "Init console video.");
+   C_InitMore();
 
-   startupmsg("I_Init","Setting up machine state.");
+   startupmsg("I_Init", "Setting up machine state.");
    I_Init();
 
    // devparm override of early set graphics mode

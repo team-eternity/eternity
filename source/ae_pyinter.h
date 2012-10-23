@@ -33,6 +33,7 @@
 #include "Python.h"
 
 #include "Confuse/confuse.h"
+#include "ae_engine.h"
 #include "e_edf.h"
 #include "e_hash.h"
 #include "metaapi.h"
@@ -93,14 +94,16 @@ public:
 // any.
 
 #ifdef NEED_EDF_DEFINITIONS
-#define ITEM_AEON_MODS "scriptmodule"
-#define ITEM_AEON_MOD_LUMP "lump"
-#define ITEM_AEON_MOD_NAME "modulename"
+#define ITEM_AEONPY_MODS "scriptmodule"
+#define ITEM_AEONPY_MOD_LUMP "lump"
+#define ITEM_AEONPY_MOD_NAME "modulename"
 
-extern cfg_opt_t edf_script_opts[];
+extern cfg_opt_t edf_pyscript_opts[];
 
 void E_ProcessScriptNames (cfg_t*);
 #endif
+
+class PyConsoleHookPriv;
 
 class AeonScriptMapping : public ZoneObject
 {
@@ -131,7 +134,7 @@ public:
 typedef EHashTable<AeonScriptMapping, EStringHashKey, &AeonScriptMapping::modulename, &AeonScriptMapping::links> EAeonScriptMap;
 typedef EHashTable<AeonCachedModule,  EStringHashKey, &AeonCachedModule::modname,     &AeonCachedModule::links>  EAeonModuleCache;
 
-class AeonInterpreter
+class AeonPython
 {
    static PyObject* Builtins;        // Module
 
@@ -158,6 +161,26 @@ public:
    static bool CheckMarkedScript (int);
 
    static PyObject* LumpImport (const char*);
+
+   // Other
+   static void AddCommands ();
+
+   // Python Console Hook
+   class ConsoleHook : public AeonEngine::ConsoleHook
+   {
+   private:
+      PyConsoleHookPriv *priv;
+
+   public:
+      ConsoleHook();
+
+      virtual void activateHook();
+      virtual void addInputLine(const qstring &inputLine);
+      virtual void getInputPrompt(qstring &prompt);
+      virtual void exitHook();
+
+      static ConsoleHook *curPyHook;
+   };
 };
 
 #endif // __PY_INTER_H__

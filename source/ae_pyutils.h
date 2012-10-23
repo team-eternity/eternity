@@ -21,46 +21,19 @@
 //
 // DESCRIPTION:
 //
-//   Base "eternity" module, houses internal functions and the built-in
-//   submodules.
+//   Various miscellaneous functions for use with Python.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __PY_MOD_BASE_H__
-#define __PY_MOD_BASE_H__
+#ifndef __PY_UTILS_H__
+#define __PY_UTILS_H__
 
-#include "py_inter.h"
-#include "v_misc.h"
+#include "m_collection.h"
+#include "m_qstr.h"
 
-PyObject* init_AeonMod_base ();
+typedef Collection<qstring> QStringCollection;
 
-class TextPrinter : public PyObject, public ZoneObject
-{
-   PyPP_Header;
+QStringCollection* Split (qstring& name, const char splitchar);
+QStringCollection* Partition (qstring& str, char middle);
 
-   const char* color;
-   qstring *buffer;
-
-   TextPrinter (const char* color = FC_NORMAL, PyTypeObject* T = &Type)
-   {
-      this->ob_type = T;
-      _Py_NewReference(this);
-
-      buffer = new qstring ();
-      this->color = color;
-   };
-
-   virtual ~TextPrinter() { delete buffer; };
-   static void PyDestructor(PyObject *obj)
-   {
-      TextPrinter* me = (TextPrinter*) obj;
-      delete me;
-   };
-
-public:
-   static PyObject* write (PyObject*, PyObject*);
-};
-
-#endif
-
-// EOF
+#endif // __PY_UTILS_H__

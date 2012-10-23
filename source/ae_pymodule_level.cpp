@@ -27,8 +27,8 @@
 
 #include "doomstat.h"
 #include "e_things.h"
-#include "py_inter.h"
-#include "py_module_level.h"
+#include "ae_pyinter.h"
+#include "ae_pymodule_level.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
 

@@ -57,7 +57,7 @@
 #include "p_tick.h"
 #include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
 #include "p_user.h"
-#include "py_module_level.h"
+#include "ae_pymodule_level.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_pcheck.h"

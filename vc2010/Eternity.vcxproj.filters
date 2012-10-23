@@ -1,0 +1,1541 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{c1f51a81-be11-4d89-8d54-3dc165b1d21c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ACS_">
+      <UniqueIdentifier>{1fc2f30f-9d6a-422e-b20c-667e917b0f41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AM_">
+      <UniqueIdentifier>{0f32a6f6-db79-422c-9c1e-ce92aed9caa7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AMX">
+      <UniqueIdentifier>{39ac819e-5bb3-47d5-91d1-4467eb7c74a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\C_">
+      <UniqueIdentifier>{223e4bd4-5343-41c5-a100-f008ed1d7f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\C_\C_ Source">
+      <UniqueIdentifier>{8e439653-f850-40e1-a68d-1d8313ad99ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\C_\C_ Headers">
+      <UniqueIdentifier>{11d002c0-f4fa-452d-813b-852556867534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Confuse">
+      <UniqueIdentifier>{bf2a5a2e-ae64-45c5-a1f3-8e7d0e653bdc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\D_">
+      <UniqueIdentifier>{e0a9070f-c46d-4a57-87f3-897d5dc817f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\D_\D_ Source">
+      <UniqueIdentifier>{a8f1ec59-278b-4570-95a7-4e97ceee73e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\D_\D_ Headers">
+      <UniqueIdentifier>{2ee29805-d30d-413e-be14-c7c1c84fbb85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\doom">
+      <UniqueIdentifier>{13fa835d-69eb-411c-b97a-25b25ecf1ab8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\E_">
+      <UniqueIdentifier>{26ccc7b5-831a-44b6-9ddc-f6a7937f6e60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\E_\E_ Source">
+      <UniqueIdentifier>{ebc2da2d-af0b-45bf-bf7a-e9385fdf3639}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\E_\E_ Headers">
+      <UniqueIdentifier>{0fa0c1d1-a4bb-4451-a478-4dc34d44237b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\F_">
+      <UniqueIdentifier>{c52bb86f-0d41-42f0-866c-2b3391c226c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\G_">
+      <UniqueIdentifier>{5d02d533-6a8f-47c9-b31d-cce280cab5eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\G_\G_ Source">
+      <UniqueIdentifier>{cd29de79-3787-45ef-b475-5675bbc58bad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\G_\G_ Headers">
+      <UniqueIdentifier>{7f2664f1-860c-444b-a3a4-847f731e5f85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HU_">
+      <UniqueIdentifier>{8675b4fa-e220-4da7-9cbe-152b4979dc64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HU_\HU_ Source">
+      <UniqueIdentifier>{51538daa-ba4a-4b7a-828a-0e32e512278e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HU_\HU_ Headers">
+      <UniqueIdentifier>{d9f9b2cb-df5f-49ec-b448-c0c12f3d9a41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\IN">
+      <UniqueIdentifier>{f6e3a906-3936-4b49-8dc8-b006cfed445b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\M_">
+      <UniqueIdentifier>{7601c9a1-dffd-47e0-8b67-ff3fb07a4556}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\M_\M_ Source">
+      <UniqueIdentifier>{027b31f8-ea79-4800-bf1a-882dacd251af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\M_\M_ Headers">
+      <UniqueIdentifier>{466798b4-28ca-46ba-901c-0a9d0ec07168}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Mn_">
+      <UniqueIdentifier>{05be7020-e9f0-4388-9971-190b3d93e0c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Mn_\Mn_ Source">
+      <UniqueIdentifier>{5e063617-757e-45eb-aa27-322c446f5604}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Mn_\Mn_ Headers">
+      <UniqueIdentifier>{777bf65b-8881-465a-a383-1b9917cb59c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\P_">
+      <UniqueIdentifier>{28b32940-7125-4571-8bac-1d8be33da81e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\P_\P_ Source">
+      <UniqueIdentifier>{75fa696a-672a-4b7d-b754-9ecb5dce66ba}</UniqueIdentifier>
+      <Extensions>c</Extensions>
+    </Filter>
+    <Filter Include="Source Files\P_\P_ Headers">
+      <UniqueIdentifier>{7cb24cd8-9cb3-4058-a98c-81484edd1ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\R_">
+      <UniqueIdentifier>{35b0cba7-02fa-47b3-b273-96e0a54a0511}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\R_\R_ Source">
+      <UniqueIdentifier>{ae62b21d-8545-4cd6-994c-8cc4646c3ef7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\R_\R_ Headers">
+      <UniqueIdentifier>{14e5043e-0c4d-40f8-b58d-b86cb4c104c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\S_">
+      <UniqueIdentifier>{3f70de05-fe12-4e62-b96e-0f09c9ed8dd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SDL">
+      <UniqueIdentifier>{e867606f-2830-4a71-a9ed-613bca548ca0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SDL\SDL Source">
+      <UniqueIdentifier>{a8884dd6-112f-4dca-a785-bf4ffe713904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SDL\SDL Headers">
+      <UniqueIdentifier>{5d652e2b-b7f7-4e92-a6ec-df0932fb2775}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ST_">
+      <UniqueIdentifier>{7e7bbef2-e081-47f2-8b8b-52766d5613ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\V_">
+      <UniqueIdentifier>{9c094360-1c5d-472e-8868-3ebb35b833d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\V_\V_ Source">
+      <UniqueIdentifier>{ddef4def-cf0e-4961-a679-47adc2396189}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\V_\V_ Headers">
+      <UniqueIdentifier>{62342714-1ed8-40cc-a34b-55af25b69a0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\W_">
+      <UniqueIdentifier>{b8feef3e-221e-44c3-90f4-6f4e2a49f1ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\W_\W_ Headers">
+      <UniqueIdentifier>{63e0a421-7486-444b-a128-a4407c7a46e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\W_\W_ Source">
+      <UniqueIdentifier>{d0fb855c-8b94-453d-85e0-ead535800ac4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Z_">
+      <UniqueIdentifier>{e714df9a-655b-44c8-ba2a-d77a4bb4158a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Misc">
+      <UniqueIdentifier>{eada750c-25c6-459c-9ff3-04b77d58c52e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Misc\Misc Source">
+      <UniqueIdentifier>{f2b02440-117d-4cef-9dac-fb8a4f67e6cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Misc\Misc Headers">
+      <UniqueIdentifier>{22a5e3ad-f0d5-4ef1-81f1-925629a76b87}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Source Files\TXT_">
+      <UniqueIdentifier>{8c751913-88bd-4b80-9ced-e4ccf94b3d8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TXT_\TXT Source">
+      <UniqueIdentifier>{a0261425-2040-4b76-a700-e135a6c88e54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TXT_\TXT Headers">
+      <UniqueIdentifier>{8f871e46-4490-47b5-a620-2e5cb032f4a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\A_">
+      <UniqueIdentifier>{dd054b84-c936-46ad-b5fe-33e3feda57c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\A_\A_ Source">
+      <UniqueIdentifier>{828d998e-8dde-441c-9c25-8347e3155b0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\A_\A_ Headers">
+      <UniqueIdentifier>{1c30498c-c2ad-4403-8b3b-3d89b8753074}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\XL_">
+      <UniqueIdentifier>{0de9717a-920c-4d29-8dee-f257312f9524}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HAL">
+      <UniqueIdentifier>{46d183a6-6f67-464c-9ebe-1e14d4143d24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HAL\HAL Source">
+      <UniqueIdentifier>{670159e8-18b5-41b4-bc75-2995ecffa507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HAL\HAL Headers">
+      <UniqueIdentifier>{8778371c-e9f7-4f6c-b7e8-915c32dcc386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GL">
+      <UniqueIdentifier>{5ed8d0d5-bc71-481b-afb2-d7d75b37644c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GL\GL Source">
+      <UniqueIdentifier>{9739fe3c-1486-4f1e-a07d-ed253ed960cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GL\GL Headers">
+      <UniqueIdentifier>{f1868838-de12-4fe0-8fad-282a773bfa3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MetaAPI">
+      <UniqueIdentifier>{6f21f59d-84da-4c08-b6f4-64c85a739f29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Cam">
+      <UniqueIdentifier>{8829def7-7238-4f48-9d17-c38f542f3188}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{8118b104-a743-4782-8760-2903c5a4d2fe}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Aeon">
+      <UniqueIdentifier>{8259d822-fd2e-4710-b202-ffdf0408fae6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon\Python">
+      <UniqueIdentifier>{b2f3b0e4-31e8-415a-b724-f09625c80982}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon\Python\Python Headers">
+      <UniqueIdentifier>{3392817a-038a-42d2-a8a2-4f7ae234ce3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon\Python\Python Sources">
+      <UniqueIdentifier>{c8a14b18-7746-4a48-a7f2-937170cea5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon\Aeon Source">
+      <UniqueIdentifier>{12e1e947-68cc-497f-9601-bda8010b66dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon\Aeon Headers">
+      <UniqueIdentifier>{7eae80f4-8f73-49ad-955b-bb0304b9ad01}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\acs_acs0.cpp">
+      <Filter>Source Files\ACS_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\acs_acse.cpp">
+      <Filter>Source Files\ACS_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\acs_func.cpp">
+      <Filter>Source Files\ACS_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\acs_intr.cpp">
+      <Filter>Source Files\ACS_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\am_color.cpp">
+      <Filter>Source Files\AM_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\am_map.cpp">
+      <Filter>Source Files\AM_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\a_fixed.cpp">
+      <Filter>Source Files\AMX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\a_small.cpp">
+      <Filter>Source Files\AMX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\c_batch.cpp">
+      <Filter>Source Files\C_\C_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\c_cmd.cpp">
+      <Filter>Source Files\C_\C_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\c_io.cpp">
+      <Filter>Source Files\C_\C_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\c_net.cpp">
+      <Filter>Source Files\C_\C_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\c_runcmd.cpp">
+      <Filter>Source Files\C_\C_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Confuse\confuse.cpp">
+      <Filter>Source Files\Confuse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Confuse\lexer.cpp">
+      <Filter>Source Files\Confuse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_deh.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_dehtbl.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\d_diskfile.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\d_files.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_gi.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_io.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_items.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\d_iwad.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_main.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\d_net.cpp">
+      <Filter>Source Files\D_\D_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\doomdef.cpp">
+      <Filter>Source Files\doom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\doomstat.cpp">
+      <Filter>Source Files\doom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\dstrings.cpp">
+      <Filter>Source Files\doom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_args.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_cmd.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_dstate.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_edf.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_exdata.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_fonts.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_gameprops.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_hash.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_inventory.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_lib.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_mod.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_player.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_rtti.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_sound.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_sprite.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_states.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_string.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_things.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\e_ttypes.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\f_finale.cpp">
+      <Filter>Source Files\F_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\f_wipe.cpp">
+      <Filter>Source Files\F_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\g_bind.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\g_cmd.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\g_dmflag.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\g_game.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\g_gfs.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\hu_frags.cpp">
+      <Filter>Source Files\HU_\HU_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\hu_over.cpp">
+      <Filter>Source Files\HU_\HU_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\hu_stuff.cpp">
+      <Filter>Source Files\HU_\HU_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\hi_stuff.cpp">
+      <Filter>Source Files\IN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\in_lude.cpp">
+      <Filter>Source Files\IN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\in_stats.cpp">
+      <Filter>Source Files\IN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\wi_stuff.cpp">
+      <Filter>Source Files\IN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_argv.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_bbox.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_buffer.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_cheat.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_fcvt.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_hash.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_misc.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_qstr.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_queue.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\m_random.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_shots.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_strcasestr.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_syscfg.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_vector.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\mn_emenu.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\mn_engin.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\mn_files.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\mn_htic.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\mn_menus.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\mn_misc.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\mn_skinv.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_anim.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_ceilng.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_chase.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_cmd.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_doors.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_enemy.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_floor.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_genlin.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_hubs.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_info.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_inter.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_lights.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_map.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_map3d.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_maputl.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_mobj.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_mobjcol.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_partcl.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_plats.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portal.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_pspr.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_saveg.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_sector.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_setup.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_sight.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_skin.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_slopes.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_spec.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_switch.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_telept.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_things.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_tick.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_trace.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_user.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_xenemy.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\polyobj.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_bsp.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_data.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_draw.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\r_drawl.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\r_drawq.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\r_dynseg.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_main.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_plane.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_portal.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_ripple.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_segs.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_sky.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\r_span.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\r_textur.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\r_things.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\r_voxels.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\s_sndseq.cpp">
+      <Filter>Source Files\S_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\s_sound.cpp">
+      <Filter>Source Files\S_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sounds.cpp">
+      <Filter>Source Files\S_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_cpu.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_exception.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Win32\i_fnames.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_input.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sdl\i_main.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sdl\i_net.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_opndir.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_pcsound.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_picker.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdlgl2d.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdlmusic.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdlsound.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdlvideo.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sdl\i_sound.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sdl\i_system.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_w32main.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sdl\mmus2mid.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sdl\ser_main.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\st_hbar.cpp">
+      <Filter>Source Files\ST_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\st_lib.cpp">
+      <Filter>Source Files\ST_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\st_stuff.cpp">
+      <Filter>Source Files\ST_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\v_block.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\v_buffer.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\v_font.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\v_misc.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\v_patch.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\v_patchfmt.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\v_png.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\v_video.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\w_formats.cpp">
+      <Filter>Source Files\W_\W_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\w_hacks.cpp">
+      <Filter>Source Files\W_\W_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\w_levels.cpp">
+      <Filter>Source Files\W_\W_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\w_wad.cpp">
+      <Filter>Source Files\W_\W_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\w_zip.cpp">
+      <Filter>Source Files\W_\W_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\z_native.cpp">
+      <Filter>Source Files\Z_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\info.cpp">
+      <Filter>Source Files\Misc\Misc Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\psnprntf.cpp">
+      <Filter>Source Files\Misc\Misc Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\tables.cpp">
+      <Filter>Source Files\Misc\Misc Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\version.cpp">
+      <Filter>Source Files\Misc\Misc Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_button.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_checkbox.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_desktop.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_dropdown.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_gui.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_inputbox.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_io.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_label.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_radiobutton.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_scrollpane.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_sdl.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_separator.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_spinctrl.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_strut.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_table.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_widget.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_window.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_window_action.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_common.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_counters.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_decorate.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_doom.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_general.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_heretic.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_hexen.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_scripts.cpp">
+      <Filter>Source Files\XL_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hal\i_platform.cpp">
+      <Filter>Source Files\HAL\HAL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hal\i_video.cpp">
+      <Filter>Source Files\HAL\HAL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\gl\gl_init.cpp">
+      <Filter>Source Files\GL\GL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\gl\gl_primitives.cpp">
+      <Filter>Source Files\GL\GL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\gl\gl_projection.cpp">
+      <Filter>Source Files\GL\GL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\gl\gl_texture.cpp">
+      <Filter>Source Files\GL\GL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\gl\gl_vars.cpp">
+      <Filter>Source Files\GL\GL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\metaapi.cpp">
+      <Filter>Source Files\MetaAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\metaqstring.cpp">
+      <Filter>Source Files\MetaAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_sight.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ae_engine.cpp">
+      <Filter>Source Files\Aeon\Aeon Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ae_pyinter.cpp">
+      <Filter>Source Files\Aeon\Python\Python Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ae_pymodule_base.cpp">
+      <Filter>Source Files\Aeon\Python\Python Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ae_pymodule_level.cpp">
+      <Filter>Source Files\Aeon\Python\Python Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ae_pyutils.cpp">
+      <Filter>Source Files\Aeon\Python\Python Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\acs_intr.h">
+      <Filter>Source Files\ACS_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\acs_op.h">
+      <Filter>Source Files\ACS_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\am_map.h">
+      <Filter>Source Files\AM_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\a_small.h">
+      <Filter>Source Files\AMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\c_batch.h">
+      <Filter>Source Files\C_\C_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\c_io.h">
+      <Filter>Source Files\C_\C_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\c_net.h">
+      <Filter>Source Files\C_\C_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\c_runcmd.h">
+      <Filter>Source Files\C_\C_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Confuse\confuse.h">
+      <Filter>Source Files\Confuse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Confuse\lexer.h">
+      <Filter>Source Files\Confuse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_deh.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_dehtbl.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\d_diskfile.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\d_dwfile.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_englsh.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_event.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\d_files.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_french.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_gi.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_io.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_items.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\d_iwad.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_keywds.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_main.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_mod.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_net.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_player.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_textur.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_think.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\d_ticcmd.h">
+      <Filter>Source Files\D_\D_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\dhticstr.h">
+      <Filter>Source Files\doom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\doomdata.h">
+      <Filter>Source Files\doom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\doomdef.h">
+      <Filter>Source Files\doom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\doomstat.h">
+      <Filter>Source Files\doom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\doomtype.h">
+      <Filter>Source Files\doom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\dstrings.h">
+      <Filter>Source Files\doom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_args.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_dstate.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_edf.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_exdata.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_fonts.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_gameprops.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_hash.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_hashkeys.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_inventory.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_lib.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_metastate.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_mod.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_player.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_rtti.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_sound.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_sprite.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_states.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_string.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_things.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\e_ttypes.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\f_finale.h">
+      <Filter>Source Files\F_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\f_wipe.h">
+      <Filter>Source Files\F_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\g_bind.h">
+      <Filter>Source Files\G_\G_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\g_dmflag.h">
+      <Filter>Source Files\G_\G_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\g_game.h">
+      <Filter>Source Files\G_\G_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\g_gfs.h">
+      <Filter>Source Files\G_\G_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Hu_frags.h">
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Hu_over.h">
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Hu_stuff.h">
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\hi_stuff.h">
+      <Filter>Source Files\IN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\in_lude.h">
+      <Filter>Source Files\IN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\in_stats.h">
+      <Filter>Source Files\IN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\wi_stuff.h">
+      <Filter>Source Files\IN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_argv.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_bbox.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_bdlist.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_buffer.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_cheat.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_collection.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_dllist.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_fcvt.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_fixed.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_hash.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_misc.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_qstr.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_qstrkeys.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_queue.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_random.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_shots.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_strcasestr.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\m_swap.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_syscfg.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_vector.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\mn_emenu.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\mn_engin.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\mn_files.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\mn_htic.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\mn_menus.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\mn_misc.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\linkoffs.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_anim.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_chase.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_enemy.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_hubs.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_info.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_inter.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_map.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_map3d.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_maputl.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_mobj.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_mobjcol.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_partcl.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portal.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_pspr.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_saveg.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_setup.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_skin.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_slopes.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_spec.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_tick.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_user.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_xenemy.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\polyobj.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_bsp.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_data.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_defs.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_draw.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_drawl.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_drawq.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_dynseg.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_lighting.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_main.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_patch.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_pcheck.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_plane.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_portal.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_ripple.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_segs.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_sky.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_state.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\r_things.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_voxels.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_sndseq.h">
+      <Filter>Source Files\S_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\s_sound.h">
+      <Filter>Source Files\S_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\sounds.h">
+      <Filter>Source Files\S_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Win32\i_fnames.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\i_net.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Win32\i_opndir.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\sdl\i_sdlgl2d.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\sdl\i_sdlvideo.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\i_sound.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\i_system.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\sdl\mmus2mid.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\st_lib.h">
+      <Filter>Source Files\ST_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\st_stuff.h">
+      <Filter>Source Files\ST_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\v_block.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\v_buffer.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\v_font.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\v_misc.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\v_patch.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\v_patchfmt.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\v_png.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\v_video.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\w_formats.h">
+      <Filter>Source Files\W_\W_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\w_hacks.h">
+      <Filter>Source Files\W_\W_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\w_levels.h">
+      <Filter>Source Files\W_\W_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\w_wad.h">
+      <Filter>Source Files\W_\W_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\w_zip.h">
+      <Filter>Source Files\W_\W_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\z_auto.h">
+      <Filter>Source Files\Z_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\z_zone.h">
+      <Filter>Source Files\Z_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autopalette.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\info.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Win32\inttypes.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\precpp11.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\psnprntf.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Win32\stdint.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\tables.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\version.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\textscreen.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_button.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_checkbox.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_desktop.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_dropdown.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\textscreen\txt_font.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_gui.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_inputbox.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_io.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_label.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\textscreen\txt_main.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_radiobutton.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_scrollpane.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_sdl.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_separator.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_spinctrl.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_strut.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_table.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_widget.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_window.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_window_action.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\a_common.h">
+      <Filter>Source Files\A_\A_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\a_doom.h">
+      <Filter>Source Files\A_\A_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_scripts.h">
+      <Filter>Source Files\XL_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hal\i_picker.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hal\i_platform.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\i_video.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gl\gl_includes.h">
+      <Filter>Source Files\GL\GL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gl\gl_init.h">
+      <Filter>Source Files\GL\GL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gl\gl_primitives.h">
+      <Filter>Source Files\GL\GL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gl\gl_projection.h">
+      <Filter>Source Files\GL\GL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gl\gl_texture.h">
+      <Filter>Source Files\GL\GL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gl\gl_vars.h">
+      <Filter>Source Files\GL\GL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\metaadapter.h">
+      <Filter>Source Files\MetaAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\metaapi.h">
+      <Filter>Source Files\MetaAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\metaqstring.h">
+      <Filter>Source Files\MetaAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\cam_sight.h">
+      <Filter>Source Files\Cam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ae_engine.h">
+      <Filter>Source Files\Aeon\Aeon Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_proxy.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ae_pyinter.h">
+      <Filter>Source Files\Aeon\Python\Python Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ae_pymodule_base.h">
+      <Filter>Source Files\Aeon\Python\Python Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ae_pymodule_level.h">
+      <Filter>Source Files\Aeon\Python\Python Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ae_pyutils.h">
+      <Filter>Source Files\Aeon\Python\Python Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\ee.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Eternity.rc" />
+  </ItemGroup>
+</Project>

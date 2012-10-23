@@ -29,7 +29,7 @@
 #define __PYMOD_LEVEL_H__
 
 #include "doomstat.h"
-#include "py_inter.h"
+#include "ae_pyinter.h"
 
 class SaveArchive;
 class Mobj;

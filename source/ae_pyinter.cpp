@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef EE_FEATURE_AEONPY
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -33,9 +35,9 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "py_inter.h"
-#include "py_module_base.h"
-#include "py_module_level.h"
+#include "ae_pyinter.h"
+#include "ae_pymodule_base.h"
+#include "ae_pymodule_level.h"
 #include "w_wad.h"
 
 // Helper functions
@@ -50,14 +52,14 @@ wchar_t* charToWChar (char* string)
    return newstr;
 }
 
-// AeonInterpreter
+// AeonPython
 
-PyObject* AeonInterpreter::Builtins;
+PyObject* AeonPython::Builtins;
 
-PyObject* AeonInterpreter::Globals;
-PyObject* AeonInterpreter::ConsoleGlobals;
+PyObject* AeonPython::Globals;
+PyObject* AeonPython::ConsoleGlobals;
 
-EAeonScriptMap AeonInterpreter::ScriptMap;
+EAeonScriptMap AeonPython::ScriptMap;
 
 const char* builtin_mods[] =
 {
@@ -74,7 +76,7 @@ const char* builtin_mods[] =
    NULL
 };
 
-void AeonInterpreter::Initialize (const char* basepath)
+void AeonPython::Initialize (const char* basepath)
 {
    // Initialize our hash tables.
    ModuleCache.initialize (389);
@@ -145,9 +147,9 @@ void AeonInterpreter::Initialize (const char* basepath)
    PySys_SetObject ("stderr", (PyObject *) new TextPrinter (FC_ERROR));
 }
 
-Collection<HashData> AeonInterpreter::SeenInits;
+Collection<HashData> AeonPython::SeenInits;
 
-bool AeonInterpreter::CheckMarkedScript (int lumpnum)
+bool AeonPython::CheckMarkedScript (int lumpnum)
 {
    int scriptLength = wGlobalDir.lumpLength(lumpnum);
    char* scriptString = emalloc (char*, (scriptLength + 1) * sizeof (char));
@@ -170,9 +172,9 @@ bool AeonInterpreter::CheckMarkedScript (int lumpnum)
    return false;
 }
 
-EAeonModuleCache AeonInterpreter::ModuleCache;
+EAeonModuleCache AeonPython::ModuleCache;
 
-PyObject* AeonInterpreter::LumpImport (const char* name)
+PyObject* AeonPython::LumpImport (const char* name)
 {
    PyObject* module;
    int lumpnum;
@@ -236,7 +238,7 @@ PyObject* AeonInterpreter::LumpImport (const char* name)
 // Runs a script in the top-level namespace. Returns true if the script
 // executed and exited without an error, false otherwise.
 
-bool AeonInterpreter::RunScriptLump (int lumpnum, const char* name)
+bool AeonPython::RunScriptLump (int lumpnum, const char* name)
 {
    int scriptLength = wGlobalDir.lumpLength(lumpnum);
    char* script = emalloc (char*, (scriptLength + 1) * sizeof (char));
@@ -279,7 +281,7 @@ bool AeonInterpreter::RunScriptLump (int lumpnum, const char* name)
 
 // Runs AEONINIT scripts to set up the Python interpreter environment.
 
-void AeonInterpreter::RunInitScripts ()
+void AeonPython::RunInitScripts ()
 {
    if(W_CheckNumForName("AEONINIT") == -1)
    {
@@ -314,28 +316,28 @@ void AeonInterpreter::RunInitScripts ()
 
 // multi-value property options for scriptmodule
 
-cfg_opt_t edf_script_opts[] =
+cfg_opt_t edf_pyscript_opts[] =
 {
-   CFG_STR(ITEM_AEON_MOD_LUMP, "", CFGF_NONE),
-   CFG_STR(ITEM_AEON_MOD_NAME, "", CFGF_NONE),
+   CFG_STR(ITEM_AEONPY_MOD_LUMP, "", CFGF_NONE),
+   CFG_STR(ITEM_AEONPY_MOD_NAME, "", CFGF_NONE),
    CFG_END()
 };
 
 // Maps script lumps to names for use with the import statement.
 
-void AeonInterpreter::ProcessScriptMappings (cfg_t *cfg)
+void AeonPython::ProcessScriptMappings (cfg_t *cfg)
 {
    unsigned int i;
-   unsigned int numScripts = cfg_size(cfg, ITEM_AEON_MODS);
+   unsigned int numScripts = cfg_size(cfg, ITEM_AEONPY_MODS);
 
    E_EDFLogPuts ("\t* Processing script names\n");
 
    for(i = 0; i < numScripts; ++i)
    {
-      cfg_t *props = cfg_getnmvprop(cfg, ITEM_AEON_MODS, i);
+      cfg_t *props = cfg_getnmvprop(cfg, ITEM_AEONPY_MODS, i);
       AeonScriptMapping* map = new AeonScriptMapping
-         (cfg_getstr(props, ITEM_AEON_MOD_NAME),
-          cfg_getstr(props, ITEM_AEON_MOD_LUMP));
+         (cfg_getstr(props, ITEM_AEONPY_MOD_NAME),
+          cfg_getstr(props, ITEM_AEONPY_MOD_LUMP));
 
       // scriptmodule "test" = lump is 'test', module is 'test'.
       if (!strlen (map->modulename))
@@ -356,7 +358,156 @@ void AeonInterpreter::ProcessScriptMappings (cfg_t *cfg)
    E_EDFLogPrintf ("\t\t%d script%s.\n", numScripts, (numScripts == 1)? "" : "s");
 }
 
-// Console support ------------------------------------------------------------
+// Console hook support -------------------------------------------------------
+
+bool CheckIncomplete (qstring source)
+{
+	qstring src1;
+	qstring src2;
+	src1.copy (source);
+	src2.copy (source);
+	src1 += "\n";
+	src2 += "\n\n";
+	PyCompilerFlags flags = { PyCF_DONT_IMPLY_DEDENT };
+	PyObject *code = NULL;
+	PyObject *code1 = NULL;
+	PyObject *code2 = NULL;
+	PyObject *errtype1 = NULL;
+	PyObject *errtype2 = NULL;
+	PyObject *errvalue1 = NULL;
+	PyObject *errvalue2 = NULL;
+	PyObject *errtb1 = NULL;
+	PyObject *errtb2 = NULL;
+	PyObject *lineno1 = NULL;
+	PyObject *lineno2 = NULL;
+	bool result = false;
+
+	code = Py_CompileStringFlags (source.constPtr (), "<input>", Py_single_input, &flags);
+	if (!code)
+	{
+		if (!PyErr_ExceptionMatches (PyExc_SyntaxError))
+			goto returnresult;
+
+		code1 = Py_CompileStringFlags (src1.constPtr (), "<input>", Py_single_input, &flags);
+		PyErr_Fetch (&errtype1, &errvalue1, &errtb1);
+		PyErr_NormalizeException (&errtype1, &errvalue1, &errtb1);
+
+		code2 = Py_CompileStringFlags (src2.constPtr (), "<input>", Py_single_input, &flags);
+		PyErr_Fetch (&errtype2, &errvalue2, &errtb2);
+		PyErr_NormalizeException (&errtype2, &errvalue2, &errtb2);
+
+		if (!errvalue1)
+			goto returnresult;
+
+		lineno1 = PyObject_GetAttrString (errvalue1, "lineno");
+		if (errvalue2)
+		{
+			lineno2 = PyObject_GetAttrString (errvalue2, "lineno");
+		}
+		if (!lineno1 || !lineno2)
+			goto returnresult;
+		
+		if (PyObject_RichCompareBool (lineno1, lineno2, Py_NE))
+			result = true;
+	}
+	
+returnresult:
+	PyErr_Clear ();
+	Py_XDECREF (code); Py_XDECREF (code1); Py_XDECREF (code2);
+
+	Py_XDECREF (errtype1);  Py_XDECREF (errtype2);
+	Py_XDECREF (errvalue1); Py_XDECREF (errvalue2);
+	Py_XDECREF (errtb1);    Py_XDECREF (errtb2);
+	Py_XDECREF (lineno1);   Py_XDECREF (lineno2);
+
+	return result;
+}
+
+AeonPython::ConsoleHook *AeonPython::ConsoleHook::curPyHook;
+
+class PyConsoleHookPriv : public ZoneObject
+{
+public:
+	unsigned int lineno;      // current line number
+	unsigned int startline;   // starting line number
+	unsigned int returncount; // number of times return was hit
+	qstring      buffer;      // input buffer
+
+	PyConsoleHookPriv()
+		: lineno(0), startline(0), buffer()
+	{
+	}
+};
+
+AeonPython::ConsoleHook::ConsoleHook ()
+	: AeonEngine::ConsoleHook ()
+{
+	priv = new PyConsoleHookPriv();
+}
+
+void AeonPython::ConsoleHook::activateHook ()
+{
+	priv->lineno = priv->startline = 1;
+	priv->buffer.clear ();
+
+	curPyHook = this;
+}
+
+void AeonPython::ConsoleHook::exitHook ()
+{
+	AeonEngine::ConsoleHook::exitHook ();
+	curPyHook = NULL;
+}
+
+void AeonPython::ConsoleHook::addInputLine (const qstring &inputLine)
+{
+	if (inputLine.length () == 0 && priv->lineno == 1)
+	{
+		exitHook ();
+		return;
+	}
+	priv->buffer << inputLine << '\n';
+	++priv->lineno;
+   
+	qstring src;
+	src.copy (priv->buffer);
+	src.rstrip ('\n');
+	if (inputLine.length () == 0 || (priv->lineno == 2 && !CheckIncomplete (src)))
+	{
+		PyObject *cs;
+
+		cs = Py_CompileString (priv->buffer.constPtr (), "<input>", Py_single_input);
+      
+		if (cs)
+		{
+			if (!PyEval_EvalCode (cs, AeonPython::ConsoleGlobals, AeonPython::ConsoleGlobals))
+			{
+				PyErr_Print ();
+			}
+
+			Py_DECREF (cs);
+		}
+		else
+		{
+			C_Printf(FC_ERROR "Traceback (most recent call last):");
+			PyErr_Print ();
+		}
+
+		// Clear any exception
+		PyErr_Clear ();
+
+		priv->returncount = 0;
+		priv->lineno = priv->startline = 1;
+		priv->buffer.clear();
+	}
+}
+
+void AeonPython::ConsoleHook::getInputPrompt (qstring &prompt)
+{
+   prompt = (priv->lineno == priv->startline) ? FC_HI ">>> " FC_NORMAL : FC_HI "... " FC_NORMAL;
+}
+
+// Console commands -----------------------------------------------------------
 
 CONSOLE_COMMAND (py, cf_notnet)
 {
@@ -375,7 +526,7 @@ CONSOLE_COMMAND (py, cf_notnet)
       return;
    }
 
-   PyObject* result = PyEval_EvalCode (compiledScript, AeonInterpreter::ConsoleGlobals, AeonInterpreter::ConsoleGlobals);
+   PyObject* result = PyEval_EvalCode (compiledScript, AeonPython::ConsoleGlobals, AeonPython::ConsoleGlobals);
    Py_DECREF (compiledScript);
 
    if (!result)
@@ -445,8 +596,8 @@ CONSOLE_COMMAND (pyfile, cf_notnet)
    }
 
    PyObject* result = PyEval_EvalCode (compiledScript,
-      AeonInterpreter::ConsoleGlobals,
-      AeonInterpreter::ConsoleGlobals);
+      AeonPython::ConsoleGlobals,
+      AeonPython::ConsoleGlobals);
    Py_DECREF (compiledScript);
 
    if (!result)
@@ -459,8 +610,10 @@ CONSOLE_COMMAND (pyfile, cf_notnet)
    Py_DECREF (result);
 }
 
-void Py_AddCommands ()
+void AeonPython::AddCommands ()
 {
    C_AddCommand(py);
    C_AddCommand(pyfile);
 }
+
+#endif // EE_FEATURE_AEONPY
