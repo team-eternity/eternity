@@ -287,7 +287,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 
    // Allocate directory
    numLumps = zcd.numEntriesTotal;
-   lumps    = ecalloc(Lump **, numLumps, sizeof(Lump *));
+   lumps    = ecalloc(Lump *, numLumps + 1, sizeof(Lump));
 
    return true;
 }
@@ -300,6 +300,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 //
 bool ZipFile::readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip)
 {
+   qstring namestr;
    ZIPCentralDirEntry entry;
 
    if(!centralDirReader.readFields(entry, fin))
@@ -347,11 +348,12 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip)
    }
    
    // Save and normalize the name
-   lump.name.copy(name, entry.nameLength);
-   lump.name.toLower();
-   lump.name.replace("\\", '/');
+   namestr.copy(name, entry.nameLength);
+   namestr.toLower();
+   namestr.replace("\\", '/');
 
    // Save important directory information
+   lump.name       = namestr.duplicate(PU_STATIC);
    lump.gpFlags    = entry.gpFlags;
    lump.method     = entry.method;
    lump.compressed = entry.compressed;
@@ -382,8 +384,20 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
   
    for(int i = 0; i < numLumps; i++)
    {
-      // TODO: read each lump
+      Lump &lump   = lumps[lumpidx];
+      bool skipped = false;
+      
+      if(readCentralDirEntry(fin, lump, skipped))
+      {
+         if(!skipped)
+            ++lumpidx; // advance if not skipped
+      }
+      else
+         return false; // an error occurred
    }
+
+   // Adjust numLumps to omit skipped lumps
+   numLumps = lumpidx;
 
    return true;
 }

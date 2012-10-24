@@ -55,28 +55,20 @@ public:
       LF_CALCOFFSET = 0x00000001 // Needs true data offset calculated
    };
 
-   class Lump : public ZoneObject
+   struct Lump
    {
-   public:
-      int      gpFlags;    // GP flags from zip directory entry
-      int      flags;      // internal flags
-      int      method;     // compression method
-      uint32_t compressed; // compressed size
-      uint32_t size;       // uncompressed size
-      long     offset;     // file offset
-      qstring  name;       // full name
-
-      Lump()
-         : ZoneObject(),
-           gpFlags(0), flags(0), method(0), compressed(0), size(0),
-           offset(0), name()
-      {
-      }
+      int       gpFlags;    // GP flags from zip directory entry
+      int       flags;      // internal flags
+      int       method;     // compression method
+      uint32_t  compressed; // compressed size
+      uint32_t  size;       // uncompressed size
+      long      offset;     // file offset
+      char     *name;       // full name
    };
 
 protected:
-   Lump **lumps;
-   int    numLumps;
+   Lump *lumps;
+   int   numLumps;
 
    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
    bool readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip);

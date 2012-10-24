@@ -53,8 +53,8 @@ void BufferedFileBase::InitBuffer(size_t pLen, int pEndian)
 //
 // BufferedFileBase::Tell
 //
-// Gives the current file offset, minus any data that might be currently
-// pending in an output buffer.
+// Gives the current file offset; this does not account for any data that might
+// be currently pending in an output buffer.
 //
 long BufferedFileBase::Tell()
 {
@@ -398,7 +398,7 @@ int InBuffer::Seek(long offset, int origin)
 
    if(!ret)
    {
-      memset(buffer, 0, pLen);
+      memset(buffer, 0, len);
       readlen = 0;
       idx = 0;
       atEOF = false;
