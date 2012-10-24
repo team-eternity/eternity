@@ -37,21 +37,38 @@ struct ZIPEndOfCentralDir;
 class ZipFile : public ZoneObject
 {
 public:
+   // Compression methods (definition does not imply support)
+   enum 
+   {
+      METHOD_STORED  = 0,
+      METHOD_SHRINK  = 1,
+      METHOD_IMPLODE = 6,
+      METHOD_DEFLATE = 8,
+      METHOD_BZIP2   = 12,
+      METHOD_LZMA    = 14,
+      METHOD_PPMD    = 98
+   };
+
+   // Lump flags
+   enum
+   {
+      LF_CALCOFFSET = 0x00000001 // Needs true data offset calculated
+   };
+
    class Lump : public ZoneObject
    {
-   protected:
-      int      gpflags;        // GP flags from zip directory entry
-      int      flags;          // internal flags
-      byte     method;         // compression method
-      uint32_t compressedSize; // compressed size
-      uint32_t size;           // uncompressed size
-      long     offset;         // file offset
-      qstring  name;           // full name
-
    public:
+      int      gpFlags;    // GP flags from zip directory entry
+      int      flags;      // internal flags
+      int      method;     // compression method
+      uint32_t compressed; // compressed size
+      uint32_t size;       // uncompressed size
+      long     offset;     // file offset
+      qstring  name;       // full name
+
       Lump()
          : ZoneObject(),
-           gpflags(0), flags(0), method(0), compressedSize(0), size(0),
+           gpFlags(0), flags(0), method(0), compressed(0), size(0),
            offset(0), name()
       {
       }
@@ -62,7 +79,7 @@ protected:
    int    numLumps;
 
    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
-   bool readCentralDirEntry(byte *&dir, Lump &lump);
+   bool readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip);
    bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
 
 public:

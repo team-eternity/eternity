@@ -316,8 +316,8 @@ qstring &qstring::Delc()
 //
 qstring &qstring::concat(const char *str)
 {
-   unsigned int cursize = size;
-   unsigned int newsize = index + strlen(str) + 1;
+   size_t cursize = size;
+   size_t newsize = index + strlen(str) + 1;
 
    if(newsize > cursize)
       grow(newsize - cursize);
@@ -404,6 +404,28 @@ qstring &qstring::copy(const char *str)
       clear();
    
    return concat(str);
+}
+
+//
+// qstring::copy
+//
+// Copies at most count bytes from the C string into the qstring.
+//
+qstring &qstring::copy(const char *str, size_t count)
+{
+   if(index > 0)
+      clear();
+
+   size_t newsize = count + 1;
+
+   if(newsize > size)
+      grow(newsize - size);
+
+   strncpy(buffer, str, count);
+
+   index = strlen(buffer);
+
+   return *this;
 }
 
 //

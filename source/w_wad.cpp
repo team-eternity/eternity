@@ -545,6 +545,7 @@ int WadDirectory::addDirectory(const char *dirpath)
          lumpinfo_t *lump = &newlumps[usinglump++];
          
          M_ExtractFileBase(files[i].fullfn, lump->name);
+         M_Strupr(lump->name);
          lump->li_namespace = lumpinfo_t::ns_global; // TODO
          lump->type         = lumpinfo_t::lump_file;
          lump->lfn          = estrdup(files[i].fullfn);

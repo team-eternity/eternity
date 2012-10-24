@@ -26,8 +26,10 @@
 
 #include "z_zone.h"
 
+#include "m_misc.h"
 #include "m_qstr.h"
 #include "w_formats.h"
+#include "w_wad.h"
 
 enum
 {
@@ -177,6 +179,78 @@ WResourceFmt W_DetermineFileFormat(FILE *f, long len)
       ++fmt;
 
    return static_cast<WResourceFmt>(fmt);      
+}
+
+//
+// W_LumpNameFromFilePath
+//
+// Creates a lump name given a filepath.
+//
+void W_LumpNameFromFilePath(const char *input, char output[9])
+{
+   // Strip off the path, and remove any extension
+   M_ExtractFileBase(input, output);
+
+   // Convert to uppercase
+   M_Strupr(output);
+}
+
+struct namespace_matcher_t
+{
+   const char *prefix;
+   int li_namespace;
+};
+
+static namespace_matcher_t matchers[] =
+{
+   { "acs/",          lumpinfo_t::ns_acs          },
+   { "colormaps/",    lumpinfo_t::ns_colormaps    },
+   { "demos/",        lumpinfo_t::ns_demos        }, // EE extension
+   { "flats/",        lumpinfo_t::ns_flats        },   
+   { "sprites/",      lumpinfo_t::ns_sprites      },
+   { "translations/", lumpinfo_t::ns_translations }, // EE extension
+
+   { NULL,            -1                          }  // keep this last
+
+   // TODO ??
+   /*
+   { "graphics/",     lumpinfo_t::ns_graphics     },
+   { "hires/",        lumpinfo_t::ns_hires        },
+   { "music/",        lumpinfo_t::ns_music        },
+   { "patches/",      lumpinfo_t::ns_patches      },
+   { "sounds/",       lumpinfo_t::ns_sounds       },
+   { "textures/",     lumpinfo_t::ns_textures     },
+   { "voices/",       lumpinfo_t::ns_voices       },
+   { "voxels/",       lumpinfo_t::ns_voxels       },
+   */
+};
+
+//
+// W_NamespaceForFilePath
+//
+// Given a relative filepath (such as from a zip), determine a lump namespace.
+// Returns -1 if the path should not be exposed with a short lump name.
+//
+int W_NamespaceForFilePath(const char *path)
+{
+   int li_namespace = -1;
+   namespace_matcher_t *matcher = matchers;
+
+   while(matcher->prefix)
+   {
+      if(!strncmp(path, matcher->prefix, strlen(matcher->prefix)))
+      {
+         li_namespace = matcher->li_namespace;
+         break;
+      }
+      ++matcher;
+   }
+
+   // if the file is in the top-level directory, it is global
+   if(li_namespace == -1 && !strchr(path, '/'))
+      li_namespace = lumpinfo_t::ns_global;
+
+   return li_namespace;
 }
 
 // EOF

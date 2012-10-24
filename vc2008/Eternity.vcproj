@@ -2022,6 +2022,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_structio.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_swap.h"
 						>
 					</File>

@@ -27,10 +27,14 @@
 #include "z_auto.h"
 
 #include "m_buffer.h"
+#include "m_structio.h"
 #include "m_swap.h"
 #include "w_zip.h"
 
 #include "../zlib/zlib.h"
+
+#define MEMBER16 MUint16Descriptor
+#define MEMBER32 MUint32Descriptor
 
 // Internal ZIP file structures
 
@@ -39,45 +43,61 @@
 
 struct ZIPLocalFileHeader
 {
-   uint32_t signature;         // Must be PK\x3\x4
-   uint16_t extractVersion;    // Version needed to extract
-   uint16_t gpFlags;           // General purpose flags
-   uint16_t compressionMethod; // Compression method
-   uint16_t fileTime;          // DOS file modification time
-   uint16_t fileDate;          // DOS file modification date
-   uint32_t crc32;             // Checksum
-   uint32_t compressedSize;    // Compressed file size
-   uint32_t uncompressedSize;  // Uncompressed file size
-   uint16_t nameLength;        // Length of file name following struct
-   uint16_t extraLength;       // Length of "extra" field following name
+   uint32_t signature;    // Must be PK\x3\x4
+   uint16_t extrVersion;  // Version needed to extract
+   uint16_t gpFlags;      // General purpose flags
+   uint16_t method;       // Compression method
+   uint16_t fileTime;     // DOS file modification time
+   uint16_t fileDate;     // DOS file modification date
+   uint32_t crc32;        // Checksum
+   uint32_t compressed;   // Compressed file size
+   uint32_t uncompressed; // Uncompressed file size
+   uint16_t nameLength;   // Length of file name following struct
+   uint16_t extraLength;  // Length of "extra" field following name
 
    // Following structure:
    // const char *filename;
    // const char *extra;
 };
+
+typedef ZIPLocalFileHeader ZLFH_t;
+
+static MEMBER16<ZLFH_t, &ZLFH_t::extraLength > lfExtraLength (NULL);
+static MEMBER16<ZLFH_t, &ZLFH_t::nameLength  > lfNameLength  (&lfExtraLength);
+static MEMBER32<ZLFH_t, &ZLFH_t::uncompressed> lfUncompressed(&lfNameLength);
+static MEMBER32<ZLFH_t, &ZLFH_t::compressed  > lfCompressed  (&lfUncompressed);
+static MEMBER32<ZLFH_t, &ZLFH_t::crc32       > lfCrc32       (&lfCompressed);
+static MEMBER16<ZLFH_t, &ZLFH_t::fileDate    > lfFileDate    (&lfCrc32);
+static MEMBER16<ZLFH_t, &ZLFH_t::fileTime    > lfFileTime    (&lfFileDate);
+static MEMBER16<ZLFH_t, &ZLFH_t::method      > lfMethod      (&lfFileTime);
+static MEMBER16<ZLFH_t, &ZLFH_t::gpFlags     > lfGPFlags     (&lfMethod);
+static MEMBER16<ZLFH_t, &ZLFH_t::extrVersion > lfExtrVersion (&lfGPFlags);
+static MEMBER32<ZLFH_t, &ZLFH_t::signature   > lfSignature   (&lfExtrVersion);
+
+static MStructReader<ZIPLocalFileHeader> localFileReader(&lfSignature);
 
 #define ZIP_CENTRAL_DIR_SIG  "PK\x1\x2"
 #define ZIP_CENTRAL_DIR_SIZE 46
 
 struct ZIPCentralDirEntry
 {
-   uint32_t signature;         // Must be "PK\x1\2"
-   uint16_t madeByVersion;     // Version "made by"
-   uint16_t extractVersion;    // Version needed to extract
-   uint16_t gpFlags;           // General purpose flags
-   uint16_t compressionMethod; // Compression method
-   uint16_t fileTime;          // DOS file modification time
-   uint16_t fileDate;          // DOS file modification date
-   uint32_t crc32;             // Checksum
-   uint32_t compressedSize;    // Compressed file size
-   uint32_t uncompressedSize;  // Uncompressed file size
-   uint16_t nameLength;        // Length of name following structure
-   uint16_t extraLength;       // Length of extra field following name
-   uint16_t fileCommentLength; // Length of comment following extra
-   uint16_t diskNumStart;      // Starting disk # for file
-   uint16_t internalAttribs;   // Internal file attribute bitflags
-   uint32_t externalAttribs;   // External file attribute bitflags
-   uint32_t localHeaderOffset; // Offset to ZIPLocalFileHeader
+   uint32_t signature;     // Must be "PK\x1\2"
+   uint16_t madeByVersion; // Version "made by"
+   uint16_t extrVersion;   // Version needed to extract
+   uint16_t gpFlags;       // General purpose flags
+   uint16_t method;        // Compression method
+   uint16_t fileTime;      // DOS file modification time
+   uint16_t fileDate;      // DOS file modification date
+   uint32_t crc32;         // Checksum
+   uint32_t compressed;    // Compressed file size
+   uint32_t uncompressed;  // Uncompressed file size
+   uint16_t nameLength;    // Length of name following structure
+   uint16_t extraLength;   // Length of extra field following name
+   uint16_t commentLength; // Length of comment following extra
+   uint16_t diskStartNum;  // Starting disk # for file
+   uint16_t intAttribs;    // Internal file attribute bitflags
+   uint32_t extAttribs;    // External file attribute bitflags
+   uint32_t localOffset;   // Offset to ZIPLocalFileHeader
 
    // Following structure:
    // const char *filename;
@@ -85,24 +105,60 @@ struct ZIPCentralDirEntry
    // const char *comment;
 };
 
+typedef ZIPCentralDirEntry ZCDE_t;
+
+static MEMBER32<ZCDE_t, &ZCDE_t::localOffset  > cdLocalOffset  (NULL);
+static MEMBER32<ZCDE_t, &ZCDE_t::extAttribs   > cdExtAttribs   (&cdLocalOffset);
+static MEMBER16<ZCDE_t, &ZCDE_t::intAttribs   > cdIntAttribs   (&cdExtAttribs);
+static MEMBER16<ZCDE_t, &ZCDE_t::diskStartNum > cdDiskStartNum (&cdIntAttribs);
+static MEMBER16<ZCDE_t, &ZCDE_t::commentLength> cdCommentLength(&cdDiskStartNum);
+static MEMBER16<ZCDE_t, &ZCDE_t::extraLength  > cdExtraLength  (&cdCommentLength);
+static MEMBER16<ZCDE_t, &ZCDE_t::nameLength   > cdNameLength   (&cdExtraLength);
+static MEMBER32<ZCDE_t, &ZCDE_t::uncompressed > cdUncompressed (&cdNameLength);
+static MEMBER32<ZCDE_t, &ZCDE_t::compressed   > cdCompressed   (&cdUncompressed);
+static MEMBER32<ZCDE_t, &ZCDE_t::crc32        > cdCrc32        (&cdCompressed);
+static MEMBER16<ZCDE_t, &ZCDE_t::fileDate     > cdFileDate     (&cdCrc32);
+static MEMBER16<ZCDE_t, &ZCDE_t::fileTime     > cdFileTime     (&cdFileDate);
+static MEMBER16<ZCDE_t, &ZCDE_t::method       > cdMethod       (&cdFileTime);
+static MEMBER16<ZCDE_t, &ZCDE_t::gpFlags      > cdGPFlags      (&cdMethod);
+static MEMBER16<ZCDE_t, &ZCDE_t::extrVersion  > cdExtrVersion  (&cdGPFlags);
+static MEMBER16<ZCDE_t, &ZCDE_t::madeByVersion> cdMadeByVersion(&cdExtrVersion);
+static MEMBER32<ZCDE_t, &ZCDE_t::signature    > cdSignature    (&cdMadeByVersion);
+
+static MStructReader<ZIPCentralDirEntry> centralDirReader(&cdSignature);
+
 #define ZIP_END_OF_DIR_SIG  "PK\x5\x6"
 #define ZIP_END_OF_DIR_SIZE 22
 
 struct ZIPEndOfCentralDir
 {
-   uint32_t signature;         // Must be "PK\x5\6"
-   uint16_t diskNum;           // Disk number (NB: multi-partite zips are NOT supported)
-   uint16_t centralDirDiskNum; // Disk number containing the central directory
-   uint16_t numEntriesOnDisk;  // Number of entries on this disk
-   uint16_t numEntriesTotal;   // Total entries in the central directory
-   uint32_t centralDirSize;    // Central directory size in bytes
-   uint32_t centralDirOffset;  // Offset of central directory
-   uint16_t zipCommentLength;  // Length of following zip file comment
+   uint32_t signature;        // Must be "PK\x5\6"
+   uint16_t diskNum;          // Disk number (NB: multi-partite zips are NOT supported)
+   uint16_t centralDirDiskNo; // Disk number containing the central directory
+   uint16_t numEntriesOnDisk; // Number of entries on this disk
+   uint16_t numEntriesTotal;  // Total entries in the central directory
+   uint32_t centralDirSize;   // Central directory size in bytes
+   uint32_t centralDirOffset; // Offset of central directory
+   uint16_t zipCommentLength; // Length of following zip file comment
 
    // Following structure:
    // const char *comment;
 };
 
+typedef ZIPEndOfCentralDir ZECD_t;
+
+static MEMBER16<ZECD_t, &ZECD_t::zipCommentLength> endZipCommentLength(NULL);
+static MEMBER32<ZECD_t, &ZECD_t::centralDirOffset> endCentralDirOffset(&endZipCommentLength);
+static MEMBER32<ZECD_t, &ZECD_t::centralDirSize  > endCentralDirSize  (&endCentralDirOffset);
+static MEMBER16<ZECD_t, &ZECD_t::numEntriesTotal > endNumEntriesTotal (&endCentralDirSize);
+static MEMBER16<ZECD_t, &ZECD_t::numEntriesOnDisk> endNumEntriesOnDisk(&endNumEntriesTotal);
+static MEMBER16<ZECD_t, &ZECD_t::centralDirDiskNo> endCentralDirDiskNo(&endNumEntriesOnDisk);
+static MEMBER16<ZECD_t, &ZECD_t::diskNum         > endDiskNum         (&endCentralDirDiskNo);
+static MEMBER32<ZECD_t, &ZECD_t::signature       > endSignature       (&endDiskNum);
+
+static MStructReader<ZIPEndOfCentralDir> endCentralDirReader(&endSignature);
+
+#define ZF_ENCRYPTED   0x01
 #define BUFREADCOMMENT 0x400
 
 template<typename T> static inline T zipmin(T a, T b) 
@@ -218,25 +274,15 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 
    if(fin.Seek(centralDirEnd, SEEK_SET))
       return false;
-   
-   bool readSuccess = 
-      fin.ReadUint32(zcd.signature        ) &&
-      fin.ReadUint16(zcd.diskNum          ) &&
-      fin.ReadUint16(zcd.centralDirDiskNum) &&
-      fin.ReadUint16(zcd.numEntriesOnDisk ) &&
-      fin.ReadUint16(zcd.numEntriesTotal  ) &&
-      fin.ReadUint32(zcd.centralDirSize   ) &&
-      fin.ReadUint32(zcd.centralDirOffset ) &&
-      fin.ReadUint16(zcd.zipCommentLength );
 
-   if(!readSuccess)
+   if(!endCentralDirReader.readFields(zcd, fin))
       return false;
 
    // Basic sanity checks
 
    // Multi-disk zips aren't supported
    if(zcd.numEntriesTotal != zcd.numEntriesOnDisk ||
-      zcd.diskNum != 0 || zcd.centralDirDiskNum != 0)
+      zcd.diskNum != 0 || zcd.centralDirDiskNo != 0)
       return false;
 
    // Allocate directory
@@ -246,65 +292,76 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
    return true;
 }
 
-// FIXME/TODO: Borrowed directly from p_setup.cpp; should be shared.
-
-// haleyjd 10/30/10: Read a little-endian short without alignment assumptions
-#define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
-
-// haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
-#define read32_le(b, t) \
-   ((b)[0] | \
-    ((t)((b)[1]) <<  8) | \
-    ((t)((b)[2]) << 16) | \
-    ((t)((b)[3]) << 24))
-
-static uint16_t GetDirUShort(byte *&dir)
-{
-   uint16_t val = SwapUShort(read16_le(dir, uint16_t));
-   dir += 2;
-   return val;
-}
-
-static uint32_t GetDirULong(byte *&dir)
-{
-   uint32_t val = SwapULong(read32_le(dir, uint32_t));
-   dir += 4;
-   return val;
-}
-
 //
 // ZipFile::readCentralDirEntry
 //
 // Protected method.
 // Read a single entry from the central directory.
 //
-bool ZipFile::readCentralDirEntry(byte *&dir, Lump &lump)
+bool ZipFile::readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip)
 {
    ZIPCentralDirEntry entry;
 
-   entry.signature = GetDirULong(dir);
+   if(!centralDirReader.readFields(entry, fin))
+      return false;
+
+   // verify signature
    if(memcmp(&entry.signature, ZIP_CENTRAL_DIR_SIG, 4))
-      return false; // failed signature check
+      return false;
 
-   entry.madeByVersion     = GetDirUShort(dir);
-   entry.extractVersion    = GetDirUShort(dir);
-   entry.gpFlags           = GetDirUShort(dir);
-   entry.compressionMethod = GetDirUShort(dir);
-   entry.fileTime          = GetDirUShort(dir);
-   entry.fileDate          = GetDirUShort(dir);
-   entry.crc32             = GetDirULong(dir);
-   entry.compressedSize    = GetDirULong(dir);
-   entry.uncompressedSize  = GetDirULong(dir);
-   entry.nameLength        = GetDirUShort(dir);
-   entry.extraLength       = GetDirUShort(dir);
-   entry.fileCommentLength = GetDirUShort(dir);
-   entry.diskNumStart      = GetDirUShort(dir);
-   entry.internalAttribs   = GetDirUShort(dir);
-   entry.externalAttribs   = GetDirULong(dir);
-   entry.localHeaderOffset = GetDirULong(dir);
+   // Read out the name, entry, and comment together.
+   // This will position the InBuffer at the next directory entry.
+   size_t totalStrLen = 
+      entry.nameLength + entry.extraLength + entry.commentLength;
+   ZAutoBuffer nameBuffer(totalStrLen + 1, true);
+   char *name = nameBuffer.getAs<char *>();
 
-   // TODO: extract the needed information
+   if(!fin.Read(name, totalStrLen))
+      return false;
+
+   // skip bogus unnamed entries and directories
+   if(!entry.nameLength ||
+      (name[entry.nameLength - 1] == '/' && entry.uncompressed == 0))
+   {
+      skip = true;
+      return true;
+   }
+
+   // check for supported compression method
+   // TODO: support some additional methods
+   switch(entry.method)
+   {
+   case METHOD_STORED:
+   case METHOD_DEFLATE:
+      break;
+   default:
+      skip = true; // unsupported method
+      return true;
+   }
+
+   // check against encryption (bit 0 of general purpose flags == 1)
+   if(entry.gpFlags & ZF_ENCRYPTED)
+   {
+      skip = true;
+      return true;
+   }
    
+   // Save and normalize the name
+   lump.name.copy(name, entry.nameLength);
+   lump.name.toLower();
+   lump.name.replace("\\", '/');
+
+   // Save important directory information
+   lump.gpFlags    = entry.gpFlags;
+   lump.method     = entry.method;
+   lump.compressed = entry.compressed;
+   lump.size       = entry.uncompressed;
+   lump.offset     = entry.localOffset;
+
+   // Lump will need true offset to file data calculated the first time it is
+   // read from the file.
+   lump.flags |= LF_CALCOFFSET;
+
    return true;
 }
 
@@ -319,22 +376,10 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
    int lumpidx   = 0; // current index into lumps[]
    int skipLumps = 0; // number of lumps skipped
 
-   // verify size is a valid directory length
-   // (NB: this is a minimum size check, the best that can be done here).
-   if(size / ZIP_CENTRAL_DIR_SIZE < static_cast<uint32_t>(numLumps))
-      return false;
-
    // seek to start of directory
    if(fin.Seek(offset, SEEK_SET))
       return false;
-
-   // read the whole directory in one chunk, because it's easier.
-   ZAutoBuffer buf(size, false);
-   byte *directory = buf.getAs<byte *>();
-   
-   if(!fin.Read(directory, size))
-      return false;
-
+  
    for(int i = 0; i < numLumps; i++)
    {
       // TODO: read each lump

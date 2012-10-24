@@ -157,6 +157,7 @@ public:
 
    // Copying and Swapping
    qstring &copy(const char *str);
+   qstring &copy(const char *str, size_t count);
    qstring &copy(const qstring &src);
    char    *copyInto(char *dest, size_t size) const;
    qstring &copyInto(qstring &dest) const;
