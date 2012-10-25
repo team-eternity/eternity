@@ -78,42 +78,11 @@ static EvalContext *gEvalContext;
 //
 
 // Enumeration callback
-static JSBool AeonJS_sandboxEnumerate(JSContext *cx, JSObject *obj)
-{
-   jsval v;
-   JSBool b;
-
-   if(!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
-      return JS_FALSE;
-
-   return !b || JS_EnumerateStandardClasses(cx, obj);
-}
+static JSBool Aeon_JS_globalEnumerate(JSContext *cx, JSObject *obj);
 
 // Resolution callback
-static JSBool AeonJS_sandboxResolve(JSContext *cx, JSObject *obj, jsval id, 
-                                    uintN flags, JSObject **objp)
-{
-   jsval v;
-   JSBool b, resolved;
-
-   if(!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
-      return JS_FALSE;
-   
-   if(b && !(flags & JSRESOLVE_ASSIGNING)) 
-   {
-      if(!JS_ResolveStandardClass(cx, obj, id, &resolved))
-         return JS_FALSE;
-
-      if(resolved) 
-      {
-         *objp = obj;
-         return JS_TRUE;
-      }
-   }
-
-   *objp = NULL;
-   return JS_TRUE;
-}
+static JSBool Aeon_JS_globalResolve(JSContext *cx, JSObject *obj, jsval id, 
+                                    uintN flags, JSObject **objp);
 
 // Sandbox JSClass
 static JSClass sandbox_class =
@@ -124,8 +93,8 @@ static JSClass sandbox_class =
    JS_PropertyStub,
    JS_PropertyStub,
    JS_PropertyStub,
-   AeonJS_sandboxEnumerate,
-   (JSResolveOp)AeonJS_sandboxResolve,
+   Aeon_JS_globalEnumerate,
+   (JSResolveOp)Aeon_JS_globalResolve,
    JS_ConvertStub,
    JS_FinalizeStub,
    JSCLASS_NO_OPTIONAL_MEMBERS
