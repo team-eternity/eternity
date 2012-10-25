@@ -29,7 +29,6 @@
 
 #include "z_zone.h"
 #include "doomtype.h"
-#include "m_qstr.h"
 
 class InBuffer;
 struct ZIPEndOfCentralDir;
@@ -63,22 +62,30 @@ public:
       uint32_t  compressed; // compressed size
       uint32_t  size;       // uncompressed size
       long      offset;     // file offset
-      char     *name;       // full name
+      char     *name;       // full name 
+      ZipFile  *file;       // parent zipfile
+
+      void setAddress(InBuffer &fin);
+      void read(void *buffer);
    };
 
 protected:
-   Lump *lumps;
-   int   numLumps;
+   Lump *lumps;    // directory
+   int   numLumps; // directory size
+   FILE *file;     // physical disk file
 
    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
    bool readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip);
    bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
 
 public:
-   ZipFile() : ZoneObject(), lumps(NULL), numLumps(0) {}
+   ZipFile() : ZoneObject(), lumps(NULL), numLumps(0), file(NULL) {}
    ~ZipFile();
 
    bool readFromFile(FILE *f);
+
+   ZipFile::Lump &getLump(int lumpNum);
+   FILE          *getFile() const { return file; }
 };
 
 #endif

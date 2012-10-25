@@ -82,6 +82,8 @@ void BufferedFileBase::Close()
       efree(buffer);
       buffer = NULL;
    }
+
+   ownFile = false;
 }
 
 //
@@ -184,6 +186,8 @@ bool OutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
 
    InitBuffer(pLen, pEndian);
 
+   ownFile = true;
+
    return true;
 }
 
@@ -223,19 +227,12 @@ void OutBuffer::Close()
    {
      if(f)
         Flush();
-      
-     BufferedFileBase::Close();
    }
-   catch(BufferedIOException)
+   catch(...)
    {
-      // if it didn't close, close it now. 
-      // CPP_FIXME: should really use a proper RAII idiom
-      if(f)
-         BufferedFileBase::Close();
-
-      // propagate the exception
-      throw; 
    }
+      
+   BufferedFileBase::Close();
 }
 
 //
@@ -368,6 +365,8 @@ bool InBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
    InitBuffer(pLen, pEndian);
    readlen = 0;
    atEOF = false;
+   ownFile = true;
+
    return true;
 }
 
@@ -384,6 +383,8 @@ bool InBuffer::OpenExisting(FILE *pf, size_t pLen, int pEndian)
    InitBuffer(pLen, pEndian);
    readlen = 0;
    atEOF = false;
+   ownFile = false;
+
    return true;
 }
 
@@ -463,6 +464,48 @@ bool InBuffer::Read(void *dest, size_t size)
          lReadAmt = lBytesToRead;
 
       memcpy(lDest, &(buffer[idx]), lReadAmt);
+
+      idx += lReadAmt;
+      lDest += lReadAmt;
+      lBytesToRead -= lReadAmt;
+   }
+
+   return true;
+}
+
+//
+// InBuffer::Read
+//
+// Attempt to read 'size' amount of bytes from the file. Reads are done from the physical
+// medium in chunks of the buffer's length. Returns the amount actually read in amtRead.
+//
+bool InBuffer::Read(void *dest, size_t size, size_t &amtRead)
+{
+   byte *lDest = (byte *)dest;
+   size_t lReadAmt;
+   size_t lBytesToRead = size;
+
+   amtRead = 0;
+
+   while(lBytesToRead)
+   {
+      lReadAmt = readlen - idx;
+
+      if(!lReadAmt) // nothing left in the buffer?
+      {
+         if(!ReadFile()) // try to read more
+         {
+            if(!readlen) // nothing was read? uh oh!
+               return false;
+         }
+         lReadAmt = readlen;
+      }
+
+      if(lBytesToRead < lReadAmt)
+         lReadAmt = lBytesToRead;
+
+      memcpy(lDest, &(buffer[idx]), lReadAmt);
+      amtRead += lReadAmt;
 
       idx += lReadAmt;
       lDest += lReadAmt;

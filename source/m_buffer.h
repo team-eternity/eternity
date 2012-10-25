@@ -59,10 +59,29 @@ protected:
    size_t idx;    // current index
    int endian;    // endianness indicator
    bool throwing; // throws exceptions on IO errors
+   bool ownFile;  // buffer owns the file
    
    void InitBuffer(size_t pLen, int pEndian);
 
 public:
+   BufferedFileBase() 
+      : f(NULL), buffer(NULL), len(0), idx(0), endian(0), throwing(false),
+        ownFile(false)
+   {
+   }
+
+   virtual ~BufferedFileBase()
+   {
+      if(ownFile && f)
+         fclose(f);
+
+      if(buffer)
+      {
+         efree(buffer);
+         buffer = NULL;
+      }
+   }
+
    long Tell();
    virtual void Close();
 
@@ -117,11 +136,16 @@ protected:
    bool ReadFile();
 
 public:
+   InBuffer() : BufferedFileBase(), readlen(0), atEOF(false)
+   {
+   }
+
    bool OpenFile(const char *filename, size_t pLen, int pEndian);
    bool OpenExisting(FILE *f, size_t pLen, int pEndian);
 
    int  Seek(long offset, int origin);
    bool Read(void *dest, size_t size);
+   bool Read(void *dest, size_t size, size_t &amtRead);
    bool ReadSint32(int32_t  &num);
    bool ReadUint32(uint32_t &num);
    bool ReadSint16(int16_t  &num);

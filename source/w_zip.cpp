@@ -26,7 +26,9 @@
 
 #include "z_auto.h"
 
+#include "i_system.h"
 #include "m_buffer.h"
+#include "m_qstr.h"
 #include "m_structio.h"
 #include "m_swap.h"
 #include "w_zip.h"
@@ -296,7 +298,11 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 // ZipFile::readCentralDirEntry
 //
 // Protected method.
-// Read a single entry from the central directory.
+// Read a single entry from the central directory. "skip" will be set
+// to true if, on a true return value, the lump should not be exposed to
+// the world (ie., it's a directory, it's encrypted, etc.). If false is
+// returned, an IO or format verification error occurred and loading
+// should be aborted.
 //
 bool ZipFile::readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip)
 {
@@ -364,6 +370,9 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip)
    // read from the file.
    lump.flags |= LF_CALCOFFSET;
 
+   // Remember our parent ZipFile
+   lump.file = this;
+
    return true;
 }
 
@@ -425,7 +434,7 @@ bool ZipFile::readFromFile(FILE *f)
    InBuffer reader;
    ZIPEndOfCentralDir zcd;
 
-   reader.OpenExisting(f, 0x10000, InBuffer::LENDIAN);
+   reader.OpenExisting(f, 0x4000, InBuffer::LENDIAN);
 
    // read in the end-of-central-directory structure
    if(!readEndOfCentralDir(reader, zcd))
@@ -438,7 +447,132 @@ bool ZipFile::readFromFile(FILE *f)
    // sort the directory
    qsort(lumps, numLumps, sizeof(ZipFile::Lump), ZIP_LumpSortCB);
 
+   // remember our disk file
+   file = f;
+
    return true;
+}
+
+ZipFile::Lump &ZipFile::getLump(int lumpNum)
+{
+   if(lumpNum < 0 || lumpNum >= numLumps)
+      I_Error("ZipFile::getLump: %d >= numLumps\n", lumpNum);
+
+   return lumps[lumpNum];
+}
+
+//=============================================================================
+//
+// ZipFile::Lump Methods
+//
+// The structure is a POD, but supports various methods.
+//
+
+//
+// Lump Readers
+//
+
+//
+// ZIP_ReadStored
+//
+// Read a stored zip file (stored == uncompressed, flat data)
+//
+static bool ZIP_ReadStored(InBuffer &fin, void *buffer, size_t len)
+{
+   return fin.Read(buffer, len);
+}
+
+//
+// ZIPDeflateReader
+//
+// This class wraps up all zlib functionality into a nice little package
+//
+class ZIPDeflateReader
+{
+protected:
+   InBuffer &fin;      // input buffered file
+   z_stream  zlStream; // zlib data structure
+
+   void buffer()
+   {
+   }
+
+public:
+   ZIPDeflateReader(InBuffer &pFin) : fin(pFin)
+   {
+      buffer();
+   }
+
+   ~ZIPDeflateReader()
+   {
+   }
+
+   long read(void *buffer, size_t len)
+   {
+      // TODO
+      return 0;
+   }
+};
+
+//
+// ZIP_ReadDeflated
+//
+// Read a deflated file (deflate == zlib compression algorithm)
+//
+static bool ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
+{
+   // TODO
+   return true;
+}
+
+//
+// ZipFile::Lump::setAddress
+//
+// The first time a lump is read from a zip, there is a need to calculate the
+// offset to the actual file data, because it is preceded by a local file
+// header with unique geometry.
+//
+void ZipFile::Lump::setAddress(InBuffer &fin)
+{
+   ZIPLocalFileHeader lfh;
+
+   if(!(flags & LF_CALCOFFSET))
+      return;
+
+   if(fin.Seek(offset, SEEK_SET))
+      I_Error("ZipFile::Lump::setAddress: could not seek in file\n");
+
+   if(!localFileReader.readFields(lfh, fin))
+      I_Error("ZipFile::Lump::setAddress: could not read local file header\n");
+
+   // calculate total length of the local file header and advance offset
+   offset += (ZIP_LOCAL_FILE_SIZE + lfh.nameLength + lfh.extraLength);
+
+   // clear LF_CALCOFFSET flag
+   flags &= ~LF_CALCOFFSET;
+}
+
+void ZipFile::Lump::read(void *buffer)
+{
+   InBuffer reader;
+
+   reader.OpenExisting(file->getFile(), 0x4000, InBuffer::LENDIAN);
+
+   // Calculate an offset beyond the lump's local file header, if such hasn't
+   // been done already. This will modify Lump::offset. If we call this, we
+   // are already in reading position, so don't seek or the InBuffer will dump
+   // its buffer unnecessarily.
+   if(flags & LF_CALCOFFSET)
+      setAddress(reader);
+   else
+   {
+      if(reader.Seek(offset, SEEK_SET))
+         I_Error("ZipFile::Lump::read: count not seek to lump\n");
+   }
+
+   // TODO
+
+   return;
 }
 
 // EOF
