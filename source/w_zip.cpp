@@ -403,6 +403,19 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 }
 
 //
+// ZIP_LumpSortCB
+//
+// qsort callback; sort the lumps using strcmp.
+//
+static int ZIP_LumpSortCB(const void *va, const void *vb)
+{
+   const ZipFile::Lump *lumpA = static_cast<const ZipFile::Lump *>(va);
+   const ZipFile::Lump *lumpB = static_cast<const ZipFile::Lump *>(vb);
+
+   return strcmp(lumpA->name, lumpB->name);
+}
+
+//
 // ZipFile::readFromFile
 //
 // Extracts the directory from a physical ZIP file.
@@ -422,7 +435,8 @@ bool ZipFile::readFromFile(FILE *f)
    if(!readCentralDirectory(reader, zcd.centralDirOffset, zcd.centralDirSize))
       return false;
 
-   // TODO: More
+   // sort the directory
+   qsort(lumps, numLumps, sizeof(ZipFile::Lump), ZIP_LumpSortCB);
 
    return true;
 }
