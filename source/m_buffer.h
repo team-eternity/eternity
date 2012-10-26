@@ -146,6 +146,7 @@ public:
    int  Seek(long offset, int origin);
    bool Read(void *dest, size_t size);
    bool Read(void *dest, size_t size, size_t &amtRead);
+   bool Skip(size_t skipAmt);
    bool ReadSint32(int32_t  &num);
    bool ReadUint32(uint32_t &num);
    bool ReadSint16(int16_t  &num);

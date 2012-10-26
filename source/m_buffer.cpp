@@ -516,6 +516,40 @@ bool InBuffer::Read(void *dest, size_t size, size_t &amtRead)
 }
 
 //
+// InBuffer::Skip
+//
+// Skip a given number of bytes forward.
+//
+bool InBuffer::Skip(size_t skipAmt)
+{
+   size_t lReadAmt;
+   size_t lBytesToRead = skipAmt;
+
+   while(lBytesToRead)
+   {
+      lReadAmt = readlen - idx;
+
+      if(!lReadAmt) // nothing left in the buffer?
+      {
+         if(!ReadFile()) // try to read more
+         {
+            if(!readlen) // nothing was read? uh oh!
+               return false;
+         }
+         lReadAmt = readlen;
+      }
+
+      if(lBytesToRead < lReadAmt)
+         lReadAmt = lBytesToRead;
+
+      idx += lReadAmt;
+      lBytesToRead -= lReadAmt;
+   }
+
+   return true;
+}
+
+//
 // InBuffer::ReadUint32
 //
 // Read a uint32 value from the input file.

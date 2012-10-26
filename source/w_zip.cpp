@@ -477,10 +477,13 @@ ZipFile::Lump &ZipFile::getLump(int lumpNum)
 //
 // Read a stored zip file (stored == uncompressed, flat data)
 //
-static bool ZIP_ReadStored(InBuffer &fin, void *buffer, size_t len)
+static void ZIP_ReadStored(InBuffer &fin, void *buffer, uint32_t len)
 {
-   return fin.Read(buffer, len);
+   if(!fin.Read(buffer, len))
+      I_Error("ZIP_ReadStored: failed to read stored file\n");
 }
+
+#define DEFLATE_BUFF_SIZE 4096
 
 //
 // ZIPDeflateReader
@@ -490,27 +493,65 @@ static bool ZIP_ReadStored(InBuffer &fin, void *buffer, size_t len)
 class ZIPDeflateReader
 {
 protected:
-   InBuffer &fin;      // input buffered file
-   z_stream  zlStream; // zlib data structure
+   InBuffer &fin;       // input buffered file
+   z_stream  zlStream;  // zlib data structure
+   bool      atEOF;     // hit EOF in InBuffer::Read
+   
+   byte deflateBuffer[DEFLATE_BUFF_SIZE]; // buffer for input to zlib
 
    void buffer()
    {
+      size_t bytesRead;
+
+      fin.Read(deflateBuffer, DEFLATE_BUFF_SIZE, bytesRead);
+
+      if(bytesRead != DEFLATE_BUFF_SIZE)
+         atEOF = true;
+
+      zlStream.next_in  = deflateBuffer;
+      zlStream.avail_in = bytesRead;
    }
 
 public:
-   ZIPDeflateReader(InBuffer &pFin) : fin(pFin)
+   ZIPDeflateReader(InBuffer &pFin) 
+      : fin(pFin), zlStream(), atEOF(false)
    {
+      int code;
+      
+      zlStream.zalloc = NULL;
+      zlStream.zfree  = NULL;
+
       buffer();
+      
+      if((code = inflateInit2(&zlStream, -MAX_WBITS)) != Z_OK)
+         I_Error("ZIPDeflateReader: inflateInit2 failed with code %d\n", code);
    }
 
    ~ZIPDeflateReader()
    {
+      inflateEnd(&zlStream);
    }
 
-   long read(void *buffer, size_t len)
+   void read(void *outbuffer, uint32_t len)
    {
-      // TODO
-      return 0;
+      int code;
+
+      zlStream.next_out  = static_cast<Bytef *>(outbuffer);
+      zlStream.avail_out = static_cast<uInt>(len);
+
+      do
+      {
+         code = inflate(&zlStream, Z_SYNC_FLUSH);
+         if(zlStream.avail_in == 0 && !atEOF)
+            buffer();
+      }
+      while(code == Z_OK && zlStream.avail_out);
+
+      if(code != Z_OK && code != Z_STREAM_END)
+         I_Error("ZIPDeflateReader::read: invalid deflate stream\n");
+
+      if(zlStream.avail_out != 0)
+         I_Error("ZIPDeflateReader::read: truncated stream\n");
    }
 };
 
@@ -519,10 +560,11 @@ public:
 //
 // Read a deflated file (deflate == zlib compression algorithm)
 //
-static bool ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
+static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 {
-   // TODO
-   return true;
+   ZIPDeflateReader reader(fin);
+
+   reader.read(buffer, len);
 }
 
 //
@@ -545,8 +587,14 @@ void ZipFile::Lump::setAddress(InBuffer &fin)
    if(!localFileReader.readFields(lfh, fin))
       I_Error("ZipFile::Lump::setAddress: could not read local file header\n");
 
+   size_t skipSize = lfh.nameLength + lfh.extraLength;
+
+   // skip over name and extra
+   if(skipSize > 0 && !fin.Skip(skipSize))
+      I_Error("ZipFile::Lump::setAddress: could not seek past name\n");
+
    // calculate total length of the local file header and advance offset
-   offset += (ZIP_LOCAL_FILE_SIZE + lfh.nameLength + lfh.extraLength);
+   offset += (ZIP_LOCAL_FILE_SIZE + skipSize);
 
    // clear LF_CALCOFFSET flag
    flags &= ~LF_CALCOFFSET;
@@ -570,9 +618,17 @@ void ZipFile::Lump::read(void *buffer)
          I_Error("ZipFile::Lump::read: count not seek to lump\n");
    }
 
-   // TODO
-
-   return;
+   switch(method)
+   {
+   case METHOD_STORED:
+      ZIP_ReadStored(reader, buffer, size);
+      break;
+   case METHOD_DEFLATE:
+      ZIP_ReadDeflated(reader, buffer, size);
+      break;
+   default:
+      break;
+   }
 }
 
 // EOF
