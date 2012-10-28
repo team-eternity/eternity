@@ -246,7 +246,7 @@ protected:
 
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
    int        numlumps;   // number of lumps
-   int        ispublic;   // if false, don't call D_NewWadLumps
+   bool       ispublic;   // if false, don't call D_NewWadLumps
    int        type;       // directory type
    void       *data;      // user data (mainly for w_levels code)
 

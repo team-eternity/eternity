@@ -90,7 +90,7 @@ static void D_reAllocFiles()
 // haleyjd 05/28/10: added f and baseoffset parameters for subfile support.
 //
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               int privatedir)
+               bool privatedir)
 {
    unsigned int flags;
 
@@ -215,7 +215,7 @@ void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, false);
    }
 }
 
@@ -273,7 +273,7 @@ void D_LooseWads()
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, false);
    }
 }
 
@@ -543,7 +543,7 @@ bool D_AddNewFile(const char *s)
    if(!wGlobalDir.addNewFile(s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads
+   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, false);   // add to the list of wads
    C_SetConsole();
    D_reInitWadfiles();
    return true;

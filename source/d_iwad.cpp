@@ -273,7 +273,7 @@ static void D_FindDiskFileIWAD(void)
 static void D_LoadDiskFileIWAD(void)
 {
    if(diskiwad.f)
-      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, 0);
+      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, false);
    else
       I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
@@ -290,7 +290,7 @@ static void D_LoadDiskFilePWAD(void)
    if(wad.f)
    {
       if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, 0);
+         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, false);
    }
 }
 
@@ -1127,7 +1127,7 @@ static void D_loadResourceWad()
       psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, 0);
+   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, false);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1221,7 +1221,7 @@ static void D_identifyIWAD(void)
       // fraggle -- this allows better compatibility with new IWADs
       D_loadResourceWad();
 
-      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
+      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, false);
 
       // 12/24/11: check for game folder hi-def music
       D_CheckGameMusic();

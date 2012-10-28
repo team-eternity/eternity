@@ -153,7 +153,7 @@ Collection<qstring> WadDirectoryPimpl::SourceFileNames;
 // WadDirectory Constructor
 //
 WadDirectory::WadDirectory()
- : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(0), type(0), data(NULL)
+ : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(false), type(0), data(NULL)
 {
    pImpl = new WadDirectoryPimpl;
 }
