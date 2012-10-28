@@ -27,6 +27,8 @@
 #ifndef W_HACKS_H__
 #define W_HACKS_H__
 
+struct filelump_t;
+
 void W_CheckDirectoryHacks(const HashData &hash, filelump_t *fileinfo, int numlumps);
 
 #endif

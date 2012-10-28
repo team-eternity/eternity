@@ -28,10 +28,25 @@
 #define W_ZIP_H__
 
 #include "z_zone.h"
-#include "doomtype.h"
 
-class InBuffer;
+class  InBuffer;
 struct ZIPEndOfCentralDir;
+class  ZipFile;
+
+struct ZipLump
+{
+   int       gpFlags;    // GP flags from zip directory entry
+   int       flags;      // internal flags
+   int       method;     // compression method
+   uint32_t  compressed; // compressed size
+   uint32_t  size;       // uncompressed size
+   long      offset;     // file offset
+   char     *name;       // full name 
+   ZipFile  *file;       // parent zipfile
+
+   void setAddress(InBuffer &fin);
+   void read(void *buffer);
+};
 
 class ZipFile : public ZoneObject
 {
@@ -54,28 +69,13 @@ public:
       LF_CALCOFFSET = 0x00000001 // Needs true data offset calculated
    };
 
-   struct Lump
-   {
-      int       gpFlags;    // GP flags from zip directory entry
-      int       flags;      // internal flags
-      int       method;     // compression method
-      uint32_t  compressed; // compressed size
-      uint32_t  size;       // uncompressed size
-      long      offset;     // file offset
-      char     *name;       // full name 
-      ZipFile  *file;       // parent zipfile
-
-      void setAddress(InBuffer &fin);
-      void read(void *buffer);
-   };
-
 protected:
-   Lump *lumps;    // directory
-   int   numLumps; // directory size
-   FILE *file;     // physical disk file
+   ZipLump *lumps;    // directory
+   int      numLumps; // directory size
+   FILE    *file;     // physical disk file
 
    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
-   bool readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip);
+   bool readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip);
    bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
 
 public:
@@ -84,8 +84,10 @@ public:
 
    bool readFromFile(FILE *f);
 
-   ZipFile::Lump &getLump(int lumpNum);
-   FILE          *getFile() const { return file; }
+   ZipLump &getLump(int lumpNum);
+   int      getNumLumps() const { return numLumps; }   
+   FILE    *getFile()     const { return file;     }
+
 };
 
 #endif

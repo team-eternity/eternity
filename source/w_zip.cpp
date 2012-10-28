@@ -289,7 +289,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 
    // Allocate directory
    numLumps = zcd.numEntriesTotal;
-   lumps    = ecalloc(Lump *, numLumps + 1, sizeof(Lump));
+   lumps    = ecalloc(ZipLump *, numLumps + 1, sizeof(ZipLump));
 
    return true;
 }
@@ -304,7 +304,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 // returned, an IO or format verification error occurred and loading
 // should be aborted.
 //
-bool ZipFile::readCentralDirEntry(InBuffer &fin, Lump &lump, bool &skip)
+bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 {
    qstring namestr;
    ZIPCentralDirEntry entry;
@@ -393,8 +393,8 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
   
    for(int i = 0; i < numLumps; i++)
    {
-      Lump &lump   = lumps[lumpidx];
-      bool skipped = false;
+      ZipLump &lump    = lumps[lumpidx];
+      bool     skipped = false;
       
       if(readCentralDirEntry(fin, lump, skipped))
       {
@@ -418,8 +418,8 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 //
 static int ZIP_LumpSortCB(const void *va, const void *vb)
 {
-   const ZipFile::Lump *lumpA = static_cast<const ZipFile::Lump *>(va);
-   const ZipFile::Lump *lumpB = static_cast<const ZipFile::Lump *>(vb);
+   const ZipLump *lumpA = static_cast<const ZipLump *>(va);
+   const ZipLump *lumpB = static_cast<const ZipLump *>(vb);
 
    return strcmp(lumpA->name, lumpB->name);
 }
@@ -445,7 +445,7 @@ bool ZipFile::readFromFile(FILE *f)
       return false;
 
    // sort the directory
-   qsort(lumps, numLumps, sizeof(ZipFile::Lump), ZIP_LumpSortCB);
+   qsort(lumps, numLumps, sizeof(ZipLump), ZIP_LumpSortCB);
 
    // remember our disk file
    file = f;
@@ -453,7 +453,7 @@ bool ZipFile::readFromFile(FILE *f)
    return true;
 }
 
-ZipFile::Lump &ZipFile::getLump(int lumpNum)
+ZipLump &ZipFile::getLump(int lumpNum)
 {
    if(lumpNum < 0 || lumpNum >= numLumps)
       I_Error("ZipFile::getLump: %d >= numLumps\n", lumpNum);
@@ -568,17 +568,17 @@ static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 }
 
 //
-// ZipFile::Lump::setAddress
+// ZipLump::setAddress
 //
 // The first time a lump is read from a zip, there is a need to calculate the
 // offset to the actual file data, because it is preceded by a local file
 // header with unique geometry.
 //
-void ZipFile::Lump::setAddress(InBuffer &fin)
+void ZipLump::setAddress(InBuffer &fin)
 {
    ZIPLocalFileHeader lfh;
 
-   if(!(flags & LF_CALCOFFSET))
+   if(!(flags & ZipFile::LF_CALCOFFSET))
       return;
 
    if(fin.Seek(offset, SEEK_SET))
@@ -597,10 +597,15 @@ void ZipFile::Lump::setAddress(InBuffer &fin)
    offset += (ZIP_LOCAL_FILE_SIZE + skipSize);
 
    // clear LF_CALCOFFSET flag
-   flags &= ~LF_CALCOFFSET;
+   flags &= ~ZipFile::LF_CALCOFFSET;
 }
 
-void ZipFile::Lump::read(void *buffer)
+//
+// ZipLump::read
+//
+// Read a zip lump out of the zip file.
+//
+void ZipLump::read(void *buffer)
 {
    InBuffer reader;
 
@@ -610,7 +615,7 @@ void ZipFile::Lump::read(void *buffer)
    // been done already. This will modify Lump::offset. If we call this, we
    // are already in reading position, so don't seek or the InBuffer will dump
    // its buffer unnecessarily.
-   if(flags & LF_CALCOFFSET)
+   if(flags & ZipFile::LF_CALCOFFSET)
       setAddress(reader);
    else
    {
@@ -618,12 +623,13 @@ void ZipFile::Lump::read(void *buffer)
          I_Error("ZipFile::Lump::read: count not seek to lump\n");
    }
 
+   // Read the file according to its indicated storage method.
    switch(method)
    {
-   case METHOD_STORED:
+   case ZipFile::METHOD_STORED:
       ZIP_ReadStored(reader, buffer, size);
       break;
-   case METHOD_DEFLATE:
+   case ZipFile::METHOD_DEFLATE:
       ZIP_ReadDeflated(reader, buffer, size);
       break;
    default:

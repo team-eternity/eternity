@@ -29,7 +29,9 @@
 
 #include "z_zone.h"
 
-class ZAutoBuffer;
+class  ZAutoBuffer;
+class  ZipFile;
+struct ZipLump;
 
 //
 // TYPES
@@ -47,6 +49,26 @@ struct filelump_t
   int  filepos;
   int  size;
   char name[8];
+};
+
+// A direct lump can be read from its archive with C FILE IO facilities.
+struct directlump_t
+{
+   FILE *file;       // for a direct lump, a pointer to the file it is in
+   size_t position;  // for direct and memory lumps, offset into file/buffer
+};
+  
+// A memory lump is loaded in a buffer in RAM and just needs to be memcpy'd.
+struct memorylump_t
+{
+   const void *data; // for a memory lump, a pointer to its static memory buffer
+   size_t position;  // for direct and memory lumps, offset into file/buffer
+};
+
+// A ZIP lump is managed by a ZipFile instance.
+struct ziplump_t
+{
+   ZipLump *zipLump; // pointer to zip lump instance
 };
 
 //
@@ -98,18 +120,22 @@ struct lumpinfo_t
       lump_direct,  // lump accessed via stdio (physical file)
       lump_memory,  // lump is a memory buffer
       lump_file,    // lump is a directory file; must be opened to use
+      lump_zip,     // lump is inside a zip file
       lump_numtypes
    }; 
    int type;
 
    int source; // haleyjd: unique id # for source of this lump
    
-   // haleyjd: physical lump data
-   
-   FILE *file;       // for a direct lump, a pointer to the file it is in
-   const void *data; // for a memory lump, a pointer to its static memory buffer
-   size_t position;  // for direct and memory lumps, offset into file/buffer
-   const char *lfn;  // long file name, where relevant
+   // haleyjd: physical lump data (guarded union)
+   union
+   {
+      directlump_t direct;
+      memorylump_t memory;
+      ziplump_t    zip;
+   };
+
+   const char *lfn;  // long file name, where relevant   
 };
 
 //

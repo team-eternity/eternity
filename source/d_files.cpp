@@ -460,7 +460,7 @@ static void D_reInitWadfiles()
 }
 
 // FIXME: various parts of this routine need tightening up
-void D_NewWadLumps(FILE *handle)
+void D_NewWadLumps(int source)
 {
    int i, format;
    char wad_firstlevel[9];

@@ -48,8 +48,10 @@
 #include "p_skin.h"
 #include "s_sound.h"
 #include "v_misc.h"
-#include "w_wad.h"
+#include "w_formats.h"
 #include "w_hacks.h"
+#include "w_wad.h"
+#include "w_zip.h"
 #include "z_auto.h"
 
 //
@@ -68,10 +70,10 @@ int WadDirectory::ResWADSource = -1; // haleyjd: track handle of first wad added
 // different types
 //
 
-typedef struct lumptype_s
+struct lumptype_t
 {
    size_t (*readLump)(lumpinfo_t *, void *, size_t);
-} lumptype_t;
+};
 
 static size_t W_DirectReadLump(lumpinfo_t *, void *, size_t);
 static size_t W_MemoryReadLump(lumpinfo_t *, void *, size_t);
@@ -421,16 +423,16 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
    {
       this->lumpinfo[i] = lump_p;
       lump_p->type      = lumpinfo_t::lump_direct; // haleyjd
-      lump_p->file      = openData.handle;
-      lump_p->position  = (size_t)(SwapLong(fileinfo->filepos));
       lump_p->size      = (size_t)(SwapLong(fileinfo->size));
       lump_p->source    = source; // haleyjd
 
+      lump_p->direct.file     = openData.handle;
+      lump_p->direct.position = (size_t)(SwapLong(fileinfo->filepos));
+
       // for subfiles, add baseoffset to the lump offset
       if(filetype == ADDSUBFILE)
-         lump_p->position += baseoffset;
+         lump_p->direct.position += baseoffset;
       
-      lump_p->data = NULL;                         // killough 1/31/98
       lump_p->li_namespace = li_namespace;         // killough 4/17/98
 
       memset(lump_p->cache, 0, sizeof(lump_p->cache)); // haleyjd 9/03/12
@@ -443,6 +445,7 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
    WadDirectoryPimpl::AddFileName(openData.filename);
 
    // haleyjd: increment source
+   int curSource = source;
    ++source;
    
    if(fileinfo2free)
@@ -452,7 +455,7 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
       return true; // no error (note opposite return value semantics 9_9)
 
    if(this->ispublic)
-      D_NewWadLumps(openData.handle);
+      D_NewWadLumps(curSource);
    
    return false; // no error
 }
@@ -1219,8 +1222,9 @@ void WadDirectory::close()
       // free all resources loaded from the wad
       freeDirectoryLumps();
 
-      if(lumpinfo[0]->file)
-         fclose(lumpinfo[0]->file);
+      if(lumpinfo[0]->type == lumpinfo_t::lump_direct &&
+         lumpinfo[0]->direct.file)
+         fclose(lumpinfo[0]->direct.file);
 
       // free all lumpinfo_t's allocated for the wad
       freeDirectoryAllocs();
@@ -1246,11 +1250,12 @@ void WadDirectory::close()
 static size_t W_DirectReadLump(lumpinfo_t *l, void *dest, size_t size)
 {
    size_t ret;
+   directlump_t &direct = l->direct;
 
    // killough 10/98: Add flashing disk indicator
    I_BeginRead();
-   fseek(l->file, l->position, SEEK_SET);
-   ret = fread(dest, 1, size, l->file);
+   fseek(direct.file, direct.position, SEEK_SET);
+   ret = fread(dest, 1, size, direct.file);
    I_EndRead();
 
    return ret;
@@ -1262,8 +1267,10 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest, size_t size)
 
 static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
 {
+   memorylump_t &memory = l->memory;
+
    // killough 1/31/98: predefined lump data
-   memcpy(dest, (byte *)(l->data) + l->position, size);
+   memcpy(dest, (byte *)(memory.data) + memory.position, size);
 
    return size;
 }
