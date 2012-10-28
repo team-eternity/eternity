@@ -471,7 +471,7 @@ void D_NewWadLumps(int source)
 
    for(i = 0; i < numlumps; ++i)
    {
-      if(lumpinfo[i]->file != handle)
+      if(lumpinfo[i]->source != source)
          continue;
 
       // haleyjd: changed check for "THINGS" lump to a fullblown
