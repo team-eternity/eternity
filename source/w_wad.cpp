@@ -451,10 +451,6 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
    return true;
 }
 
-// Directory file addition callback type
-typedef bool (WadDirectory::* AddFileCB)(WadDirectory::openwad_t &, 
-                                         wfileadd_t &, int);
-
 //
 // WadDirectory::addFile
 //
@@ -468,6 +464,9 @@ typedef bool (WadDirectory::* AddFileCB)(WadDirectory::openwad_t &,
 //
 bool WadDirectory::addFile(wfileadd_t &addInfo)
 {
+   // Directory file addition callback type
+   typedef bool (WadDirectory::* AddFileCB)(openwad_t &, wfileadd_t &, int);
+   
    static AddFileCB fileadders[W_FORMAT_MAX] =
    {
       &WadDirectory::addWadFile,   // W_FORMAT_WAD
