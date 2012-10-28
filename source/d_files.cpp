@@ -521,7 +521,7 @@ void D_NewWadLumps(int source)
 bool D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
-   if(wGlobalDir.addNewFile(s))
+   if(!wGlobalDir.addNewFile(s))
       return false;
    modifiedgame = true;
    D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads

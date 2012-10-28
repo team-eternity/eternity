@@ -157,10 +157,7 @@ static bool I_Pick_OpenWad(void)
    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   if(pickwad.addNewFile(filename))
-      return false;
-
-   return true;
+   return pickwad.addNewFile(filename);
 }
 
 //

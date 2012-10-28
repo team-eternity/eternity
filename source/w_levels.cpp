@@ -168,7 +168,7 @@ bool ManagedDirectory::openWadFile()
 {
    bool ret;
    
-   if((ret = !!addNewPrivateFile(name)))
+   if((ret = addNewPrivateFile(name)))
       D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, 1);
 
    return ret;

@@ -226,7 +226,6 @@ protected:
       const char *filename; // possibly altered filename
       FILE *handle;         // FILE handle
       bool error;           // true if an error occured
-      bool errorRet;        // code to return from AddFile
    };
 
    static int source;     // unique source ID for each wad file
@@ -265,9 +264,9 @@ public:
    int   getNumForName(const char *name);
    
    // sf: add a new wad file after the game has already begun
-   int   addNewFile(const char *filename);
+   bool  addNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
-   int   addNewPrivateFile(const char *filename);
+   bool  addNewPrivateFile(const char *filename);
    int   addDirectory(const char *dirpath);
    int   lumpLength(int lump);
    void  readLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);

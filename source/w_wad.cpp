@@ -72,12 +72,13 @@ int WadDirectory::ResWADSource = -1; // haleyjd: track handle of first wad added
 
 struct lumptype_t
 {
-   size_t (*readLump)(lumpinfo_t *, void *, size_t);
+   size_t (*readLump)(lumpinfo_t *, void *);
 };
 
-static size_t W_DirectReadLump(lumpinfo_t *, void *, size_t);
-static size_t W_MemoryReadLump(lumpinfo_t *, void *, size_t);
-static size_t W_FileReadLump  (lumpinfo_t *, void *, size_t);
+static size_t W_DirectReadLump(lumpinfo_t *, void *);
+static size_t W_MemoryReadLump(lumpinfo_t *, void *);
+static size_t W_FileReadLump  (lumpinfo_t *, void *);
+static size_t W_ZipReadLump   (lumpinfo_t *, void *);
 
 static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 {
@@ -94,6 +95,11 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
    // directory file lump
    {
       W_FileReadLump,
+   },
+
+   // zip file lump
+   {
+      W_ZipReadLump,
    },
 };
 
@@ -177,7 +183,7 @@ void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 }
 
 //
-// WadDirectory::OpenFile
+// WadDirectory::openFile
 //
 // haleyjd 04/06/11: For normal wad files, the file needs to be found and 
 // opened.
@@ -206,7 +212,6 @@ WadDirectory::openwad_t WadDirectory::openFile(const char *name, int filetype)
          C_Printf(FC_ERROR "Couldn't open %s\n", filename);
          openData.filename = filename;
          openData.error    = true;
-         openData.errorRet = false;
          return openData;
       }
 
@@ -214,7 +219,6 @@ WadDirectory::openwad_t WadDirectory::openFile(const char *name, int filetype)
       {
          openData.filename = filename;
          openData.error    = true;
-         openData.errorRet = false;
          return openData; // sf: no errors
       }
 
@@ -230,14 +234,13 @@ WadDirectory::openwad_t WadDirectory::openFile(const char *name, int filetype)
             C_Printf(FC_ERROR "Couldn't open %s\n", name);
             openData.filename = filename;
             openData.error    = true;
-            openData.errorRet = true;
             return openData; // error
          }
       }
    }
 
    openData.filename = filename;
-   openData.error = openData.errorRet = false;
+   openData.error = false;
    return openData;
 }
 
@@ -279,7 +282,7 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
    case ADDPRIVATE: // WAD being loaded into a private directory object
       openData = openFile(name, filetype);
       if(openData.error)
-         return openData.errorRet; // return immediately if an error occurred
+         return false; // return immediately if an error occurred
       break;
    case ADDSUBFILE: // WAD file contained inside a larger disk file
       doHacks = false;
@@ -452,12 +455,12 @@ bool WadDirectory::addFile(const char *name, int li_namespace, int filetype,
       efree(fileinfo2free); // killough
    
    if(filetype == ADDPRIVATE)
-      return true; // no error (note opposite return value semantics 9_9)
+      return true; // no error
 
    if(this->ispublic)
       D_NewWadLumps(curSource);
    
-   return false; // no error
+   return true; // no error
 }
 
 struct dirfile_t
@@ -940,15 +943,15 @@ void WadDirectory::initMultipleFiles(wfileadd_t *files)
    initResources();
 }
 
-int WadDirectory::addNewFile(const char *filename)
+bool WadDirectory::addNewFile(const char *filename)
 {
-   if(addFile(filename, lumpinfo_t::ns_global, ADDWADFILE))
-      return true;
+   if(!addFile(filename, lumpinfo_t::ns_global, ADDWADFILE))
+      return false;
    initResources();         // reinit lump lookups etc
-   return false;
+   return true;
 }
 
-int WadDirectory::addNewPrivateFile(const char *filename)
+bool WadDirectory::addNewPrivateFile(const char *filename)
 {
    if(!addFile(filename, lumpinfo_t::ns_global, ADDPRIVATE))
       return false;
@@ -994,7 +997,7 @@ void WadDirectory::readLump(int lump, void *dest, WadLumpLoader *lfmt)
 
    // killough 1/31/98: Reload hack (-wart) removed
 
-   c = LumpHandlers[lptr->type].readLump(lptr, dest, lptr->size);
+   c = LumpHandlers[lptr->type].readLump(lptr, dest);
    if(c < lptr->size)
    {
       I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n", 
@@ -1247,8 +1250,9 @@ void WadDirectory::close()
 // difference.
 //
 
-static size_t W_DirectReadLump(lumpinfo_t *l, void *dest, size_t size)
+static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
 {
+   size_t size = l->size;
    size_t ret;
    directlump_t &direct = l->direct;
 
@@ -1265,8 +1269,9 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest, size_t size)
 // Memory lumps -- lumps that are held in a static memory buffer
 //
 
-static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
+static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest)
 {
+   size_t size = l->size;
    memorylump_t &memory = l->memory;
 
    // killough 1/31/98: predefined lump data
@@ -1280,9 +1285,10 @@ static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
 // not kept open except when being read.
 //
 
-static size_t W_FileReadLump(lumpinfo_t *l, void *dest, size_t size)
+static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
 {
    FILE *f;
+   size_t size     = l->size;
    size_t sizeread = 0;
 
    if((f = fopen(l->lfn, "rb")))
@@ -1295,6 +1301,20 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest, size_t size)
    }
    
    return sizeread;
+}
+
+//
+// ZIP lumps -- files embedded inside a ZIP archive. The ZipFile
+// and ZipLump classes take care of all the specifics.
+//
+
+static size_t W_ZipReadLump(lumpinfo_t *l, void *dest)
+{
+   l->zip.zipLump->read(dest);
+
+   // if I_Error wasn't invoked, we can assume the full read was
+   // successful.
+   return l->size;
 }
 
 //----------------------------------------------------------------------------
