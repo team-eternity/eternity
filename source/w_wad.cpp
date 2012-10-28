@@ -441,6 +441,21 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
 }
 
 //
+// WadDirectory::addZipFile
+//
+// Add a zip file into the directory.
+//
+bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
+                              int startlump)
+{
+   return true;
+}
+
+// Directory file addition callback type
+typedef bool (WadDirectory::* AddFileCB)(WadDirectory::openwad_t &, 
+                                         wfileadd_t &, int);
+
+//
 // WadDirectory::addFile
 //
 // All files are optional, but at least one file must be found (PWAD, if all 
@@ -453,6 +468,13 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
 //
 bool WadDirectory::addFile(wfileadd_t &addInfo)
 {
+   static AddFileCB fileadders[W_FORMAT_MAX] =
+   {
+      &WadDirectory::addWadFile,   // W_FORMAT_WAD
+      &WadDirectory::addZipFile,   // W_FORMAT_ZIP
+      &WadDirectory::addSingleFile // W_FORMAT_FILE
+   };
+   
    openwad_t openData;
    int       startlump;
    int       curSource = source;
@@ -488,29 +510,16 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
    // Remember where we started off at in lumpinfo[]
    startlump = this->numlumps;
 
-   // Branch on determined archive format
-   switch(openData.format)
+   // Call the appropriate file directory addition routine for this format
+#ifdef RANGECHECK
+   if(openData.format < 0 || openData.format >= W_FORMAT_MAX)
+      I_Error("WadDirectory::addFile: invalid file format %d\n", openData.format);
+#endif
+
+   if(!(this->*fileadders[openData.format])(openData, addInfo, startlump))
    {
-   case W_FORMAT_FILE: // plain disk file
-      if(!addSingleFile(openData, addInfo, startlump))
-      {
-         handleOpenError(openData, addInfo, openData.filename);
-         return false;
-      }
-      break;
-   case W_FORMAT_WAD:  // wad file
-      if(!addWadFile(openData, addInfo, startlump))
-      {
-         handleOpenError(openData, addInfo, openData.filename);
-         return false;
-      }
-      break;
-   case W_FORMAT_ZIP:  // zip file
-      // TODO
-      break;
-   default:
-      I_Error("WadDirectory::adFile: unknown file format %d\n", openData.format);
-      break;
+      handleOpenError(openData, addInfo, openData.filename);
+      return false;
    }
 
    // haleyjd: push source filename

@@ -263,6 +263,7 @@ protected:
    lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);
    bool addSingleFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addWadFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
+   bool addZipFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addFile(wfileadd_t &addInfo);
    void freeDirectoryLumps();  // haleyjd 06/27/09
    void freeDirectoryAllocs(); // haleyjd 06/06/10
