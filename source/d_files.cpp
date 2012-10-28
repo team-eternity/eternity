@@ -44,6 +44,7 @@
 #include "r_main.h"
 #include "s_sound.h"
 #include "v_misc.h"
+#include "w_formats.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
 
@@ -91,14 +92,31 @@ static void D_reAllocFiles()
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir)
 {
+   unsigned int flags;
+
    D_reAllocFiles();
 
    wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
-   wadfiles[numwadfiles].privatedir   = privatedir;
-   wadfiles[numwadfiles].directory    = false;
+   wadfiles[numwadfiles].requiredFmt  = -1;
+   
+   // haleyjd 10/27/12: setup flags
+   flags = WFA_ALLOWINEXACTFN | WFA_OPENFAILFATAL | WFA_ALLOWHACKS;
+
+   // adding a subfile?
+   if(fp)
+   {
+      wadfiles[numwadfiles].requiredFmt = W_FORMAT_WAD;
+      flags |= (WFA_SUBFILE | WFA_REQUIREFORMAT);
+   }
+
+   // private directory?
+   if(privatedir)
+      flags |= WFA_PRIVATE;
+
+   wadfiles[numwadfiles].flags = flags;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
@@ -118,8 +136,9 @@ void D_AddDirectory(const char *dir)
    wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
    wadfiles[numwadfiles].f            = NULL;
    wadfiles[numwadfiles].baseoffset   = 0;
-   wadfiles[numwadfiles].privatedir   = 0;
-   wadfiles[numwadfiles].directory    = true;
+
+   // haleyjd 10/27/12: flags
+   wadfiles[numwadfiles].flags = WFA_OPENFAILFATAL | WFA_DIRECTORY;
 
    wadfiles[numwadfiles+1].filename = NULL;
 

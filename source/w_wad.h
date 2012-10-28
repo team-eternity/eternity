@@ -138,6 +138,18 @@ struct lumpinfo_t
    const char *lfn;  // long file name, where relevant   
 };
 
+// Flags for wfileadd_t
+enum WFileAddFlags
+{
+   WFA_ALLOWINEXACTFN = 0x0001, // Filename can be modified with AddDefaultExtension
+   WFA_OPENFAILFATAL  = 0x0002, // Failure to open file is fatal
+   WFA_PRIVATE        = 0x0004, // Loading into a private directory
+   WFA_SUBFILE        = 0x0008, // Loading a physical subfile
+   WFA_REQUIREFORMAT  = 0x0010, // A specific archive format is required for this load
+   WFA_DIRECTORY      = 0x0020, // Loading a physical disk directory
+   WFA_ALLOWHACKS     = 0x0040, // Allow application of wad directory hacks
+};
+
 //
 // haleyjd 10/09/09: wfileadd_t
 //
@@ -147,12 +159,13 @@ struct lumpinfo_t
 //
 struct wfileadd_t
 {
-   const char *filename; // name of file
+   const char *filename; // name of file as specified by end user
    int     li_namespace; // if not 0, special namespace to add file under
-   FILE   *f;            // pointer to file handle if this is a subfile
+   FILE   *f;            // pointer to file handle, IFF this is a subfile
    size_t  baseoffset;   // base offset if this is a subfile
-   int     privatedir;   // if not 0, has a private directory
-   bool    directory;    // if true, is an on-disk directory
+   int     requiredFmt;  // required file format, if any (-1 if none)
+
+   unsigned int flags;   // flags
 };
 
 //
@@ -226,6 +239,7 @@ protected:
       const char *filename; // possibly altered filename
       FILE *handle;         // FILE handle
       bool error;           // true if an error occured
+      int  format;          // detected file format
    };
 
    static int source;     // unique source ID for each wad file
@@ -243,9 +257,13 @@ protected:
    void coalesceMarkedResource(const char *start_marker, 
                                const char *end_marker, 
                                int li_namespace);
-   openwad_t openFile(const char *name, int filetype);
-   bool addFile(const char *name, int li_namespace, int filetype,
-                FILE *file = NULL, size_t baseoffset = 0);
+   void handleOpenError(openwad_t &openInfo, wfileadd_t &addInfo,
+                        const char *filename);
+   openwad_t openFile(wfileadd_t &addInfo);
+   lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);
+   bool addSingleFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
+   bool addWadFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
+   bool addFile(wfileadd_t &addInfo);
    void freeDirectoryLumps();  // haleyjd 06/27/09
    void freeDirectoryAllocs(); // haleyjd 06/06/10
 

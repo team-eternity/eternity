@@ -60,7 +60,7 @@ static const char *W_defaultExtensions[] =
 // that was successfully opened, with slashes normalized and the default
 // extension added if one was needed.
 //
-FILE *W_TryOpenFile(qstring &filename)
+FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
 {
    FILE *f = NULL;
    qstring basefn;
@@ -69,7 +69,7 @@ FILE *W_TryOpenFile(qstring &filename)
    basefn = filename;
 
    // Try opening without an added extension first
-   if((f = fopen(basefn.constPtr(), "rb")) == NULL)
+   if((f = fopen(basefn.constPtr(), "rb")) == NULL && allowInexact)
    {
       // Try default extensions
       for(int i = 0; i < EXT_NUMEXTENSIONS; i++)
@@ -97,26 +97,20 @@ typedef bool (*FormatFunc)(FILE *, long);
 // such as RoTT, Amulets and Armor, Bloodmasters, etc. It also formed the 
 // basis of the GRP (Duke3D) and PAK (Quake) formats.
 //
-static bool W_isWadFile(FILE *f, long len)
+static bool W_isWadFile(FILE *f, long baseoffset)
 {
    bool result = false;
+   char header[12];
 
-   if(len >= 12)
+   if(!fseek(f, baseoffset, SEEK_SET) && fread(header, 1, 12, f) == 12)
    {
-      char header[4];
-
-      if(!fseek(f, 0, SEEK_SET) && fread(header, 1, 4, f) == 4)
-      {
-         if(!memcmp(header, "IWAD", 4) || !memcmp(header, "PWAD", 4))
-            result = true;
-      }
-      fseek(f, 0, SEEK_SET);
+      if(!memcmp(header, "IWAD", 4) || !memcmp(header, "PWAD", 4))
+         result = true;
    }
+   fseek(f, baseoffset, SEEK_SET);
 
    return result;
 }
-
-#define ZIP_LOCAL_FILE_HEADER_LEN 30
 
 //
 // W_isZipFile
@@ -126,21 +120,17 @@ static bool W_isWadFile(FILE *f, long len)
 // "pack" formats PK3 and PK4, as well as being the underlying format of
 // many other domain-specific archives such as Java JARs.
 //
-static bool W_isZipFile(FILE *f, long len)
+static bool W_isZipFile(FILE *f, long baseoffset)
 {
    bool result = false;
+   char header[30];
 
-   if(len >= ZIP_LOCAL_FILE_HEADER_LEN)
+   if(!fseek(f, baseoffset, SEEK_SET) && fread(header, 1, 30, f) == 30)
    {
-      char header[4];
-
-      if(!fseek(f, 0, SEEK_SET) && fread(header, 1, 4, f) == 4)
-      {
-         if(!memcmp(header, "PK\x3\x4", 4))
-            result = true;
-      }
-      fseek(f, 0, SEEK_SET);
+      if(!memcmp(header, "PK\x3\x4", 4))
+         result = true;
    }
+   fseek(f, baseoffset, SEEK_SET);
 
    return result;
 }
@@ -152,7 +142,7 @@ static bool W_isZipFile(FILE *f, long len)
 // positively detected first, we treat the file as an ordinary flat physical
 // file. It's the lowest priority predicate as a result.
 //
-static bool W_isFile(FILE *f, long len)
+static bool W_isFile(FILE *f, long baseoffset)
 {
    return true;
 }
@@ -171,11 +161,11 @@ static FormatFunc formatFuncs[W_FORMAT_MAX] =
 // to the file's internal metadata (we do not trust file extensions for this
 // purpose).
 //
-WResourceFmt W_DetermineFileFormat(FILE *f, long len)
+WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset)
 {
    int fmt = W_FORMAT_WAD;
 
-   while(!formatFuncs[fmt](f, len))
+   while(!formatFuncs[fmt](f, baseoffset))
       ++fmt;
 
    return static_cast<WResourceFmt>(fmt);      

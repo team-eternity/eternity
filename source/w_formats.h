@@ -29,7 +29,7 @@
 
 class qstring;
 
-FILE *W_TryOpenFile(qstring &filename);
+FILE *W_TryOpenFile(qstring &filename, bool allowInexact);
 
 typedef enum
 {
@@ -40,7 +40,7 @@ typedef enum
    W_FORMAT_MAX   // Keep this last
 } WResourceFmt;
 
-WResourceFmt W_DetermineFileFormat(FILE *f, long len);
+WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset);
 
 void W_LumpNameFromFilePath(const char *input, char output[9]);
 int  W_NamespaceForFilePath(const char *path);

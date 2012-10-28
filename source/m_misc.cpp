@@ -1907,7 +1907,7 @@ int M_ReadFile(char const *name, byte **buffer)
 // haleyjd 03/09/06: made global
 // haleyjd 01/04/10: use fseek/ftell
 //
-int M_FileLength(FILE *f)
+long M_FileLength(FILE *f)
 {
    long curpos, len;
 
@@ -1916,7 +1916,7 @@ int M_FileLength(FILE *f)
    len = ftell(f);
    fseek(f, curpos, SEEK_SET);
 
-   return (int)len;
+   return len;
 }
 
 //
@@ -1929,7 +1929,7 @@ char *M_LoadStringFromFile(const char *filename)
 {
    FILE *f   = NULL;
    char *buf = NULL;
-   int   len = 0;
+   long  len = 0;
    
    if(!(f = fopen(filename, "rb")))
       return NULL;
@@ -1937,7 +1937,7 @@ char *M_LoadStringFromFile(const char *filename)
    // allocate at length + 1 for null termination
    len = M_FileLength(f);
    buf = ecalloc(char *, 1, len + 1);
-   fread(buf, 1, len, f);
+   fread(buf, 1, static_cast<size_t>(len), f);
    fclose(f);
 
    return buf;

@@ -95,10 +95,11 @@ static char *bufferpos; // position in buffer
 
 static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 {
-   size_t  foo, size; 
+   size_t  foo;
+   size_t  size; 
    char   *buffer;
    
-   size   = D_FileLength(dwfile);
+   size   = static_cast<size_t>(D_FileLength(dwfile));
    buffer = emalloc(char *, size + 1);
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
@@ -117,7 +118,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    return buffer;
 }
 
-static void lexer_free_buffer(void)
+static void lexer_free_buffer()
 {
    if(lexbuffer)
       efree(lexbuffer);

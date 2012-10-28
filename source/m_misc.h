@@ -52,7 +52,7 @@ int   M_CountNumLines(const char *str);
 // haleyjd: moved a number of these here from w_wad module.
 
 void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
-int   M_FileLength(FILE *f);
+long  M_FileLength(FILE *f);
 void  M_ExtractFileBase(const char *, char *);               // killough
 char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98

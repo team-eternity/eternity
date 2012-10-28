@@ -194,7 +194,7 @@ size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file)
 //
 // haleyjd 03/08/06: returns the length of the file.
 //
-size_t D_FileLength(DWFILE *file)
+long D_FileLength(DWFILE *file)
 {
    return (file->type == DWF_FILE) ?
              M_FileLength((FILE *)(file->inp)) : file->origsize;
