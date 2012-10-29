@@ -28,8 +28,10 @@
 #define W_ZIP_H__
 
 #include "z_zone.h"
+#include "m_dllist.h"
 
 class  InBuffer;
+class  WadDirectory;
 struct ZIPEndOfCentralDir;
 class  ZipFile;
 
@@ -74,20 +76,22 @@ protected:
    int      numLumps; // directory size
    FILE    *file;     // physical disk file
 
+   DLListItem<ZipFile> links; // links for use by WadDirectory
+
    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
    bool readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip);
    bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
 
 public:
-   ZipFile() : ZoneObject(), lumps(NULL), numLumps(0), file(NULL) {}
+   ZipFile() : ZoneObject(), lumps(NULL), numLumps(0), file(NULL), links() {}
    ~ZipFile();
 
    bool readFromFile(FILE *f);
 
+   void     linkTo(DLListItem<ZipFile> **head);
    ZipLump &getLump(int lumpNum);
    int      getNumLumps() const { return numLumps; }   
    FILE    *getFile()     const { return file;     }
-
 };
 
 #endif

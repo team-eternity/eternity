@@ -161,7 +161,7 @@ default_t defaults[] =
                "precache sounds at startup"),
   
    // killough 10/98
-   DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("disk_icon", &disk_icon, NULL, 0, 0, 1, default_t::wad_no, 
                "1 to enable flashing icon during disk IO"),
   
    // killough 2/21/98

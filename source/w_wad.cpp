@@ -32,6 +32,8 @@
 #include <dirent.h>
 #endif
 
+#include <memory>
+
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
@@ -41,6 +43,7 @@
 #include "d_files.h"
 #include "m_argv.h"
 #include "m_collection.h"
+#include "m_dllist.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_qstr.h"
@@ -115,15 +118,22 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 class WadDirectoryPimpl : public ZoneObject
 {
 public:
+   // Static collection of source filenames
    static qstring FnPrototype;
    static Collection<qstring> SourceFileNames;
 
+   //
+   // Add a source filename
+   //
    static void AddFileName(const char *fn)
    {
       SourceFileNames.setPrototype(&FnPrototype);
       SourceFileNames.addNew() << fn;
    }
 
+   //
+   // Get a filename for a source number
+   //
    static const char *FileNameForSource(size_t source)
    {
       if(source >= SourceFileNames.getLength())
@@ -131,10 +141,11 @@ public:
       return SourceFileNames[source].constPtr();
    }
 
-   PODCollection<lumpinfo_t *> infoptrs;
+   PODCollection<lumpinfo_t *>  infoptrs; // lumpinfo_t allocations
+   DLListItem<ZipFile>         *zipFiles; // zip files attached to this waddir
 
    WadDirectoryPimpl()
-      : ZoneObject(), infoptrs()
+      : ZoneObject(), infoptrs(), zipFiles(NULL)
    {
    }
 };
@@ -187,7 +198,7 @@ void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 //
 // Protected method to handle errors during archive file open.
 //
-void WadDirectory::handleOpenError(openwad_t &openInfo, wfileadd_t &addInfo,
+void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
                                    const char *filename)
 {
    if(addInfo.flags & WFA_OPENFAILFATAL)
@@ -200,7 +211,7 @@ void WadDirectory::handleOpenError(openwad_t &openInfo, wfileadd_t &addInfo,
          C_Printf(FC_ERROR "Couldn't open %s\n", filename);
    }
 
-   openInfo.error = true;
+   openData.error = true;
 }
 
 //
@@ -448,6 +459,57 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
 bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
                               int startlump)
 {
+   std::auto_ptr<ZipFile> zip(new ZipFile());
+   int         numZipLumps;
+   lumpinfo_t *lump_p;
+
+   // Read in the ZIP file's header and directory information
+   if(!zip->readFromFile(openData.handle))
+   {
+      handleOpenError(openData, addInfo, openData.filename);
+      return false;
+   }
+
+   if(!(numZipLumps = zip->getNumLumps()))
+   {
+      // load was successful, but this zip file is useless.
+      return true;
+   }
+
+   // Allocate lumpinfo_t structures for the zip file's internal file lumps
+   lump_p = reAllocLumpInfo(numZipLumps, startlump);
+
+   // Initialize the wad directory copies of the zip lumps
+   for(int i = startlump; i < numlumps; i++, lump_p++)
+   {
+      ZipLump &zipLump = zip->getLump(i - startlump);
+
+      lumpinfo[i]    = lump_p;
+      lump_p->type   = lumpinfo_t::lump_zip;
+      lump_p->size   = zipLump.size;
+      lump_p->source = source;
+
+      // setup for zip file IO
+      lump_p->zip.zipLump = &zipLump;
+
+      // Initialize short name, if found appropriate to do so. Lumps that are
+      // not given a short name or namespace here will not be hashed by
+      // WadDirectory::initLumpHash.
+      int li_namespace;
+      if((li_namespace = W_NamespaceForFilePath(zipLump.name)) != -1)
+      {
+         lump_p->li_namespace = li_namespace;
+         W_LumpNameFromFilePath(zipLump.name, lump_p->name);
+      }
+
+      // Copy lfn
+      lump_p->lfn = estrdup(zipLump.name);
+   }
+
+   // Hook the ZipFile instance into the WadDirectory's list of zips
+   zip->linkTo(&pImpl->zipFiles);
+
+   zip.release(); // don't destroy the ZipFile
    return true;
 }
 
@@ -923,6 +985,10 @@ void WadDirectory::initLumpHash()
    {                                           // hash function:
       unsigned int j;
 
+      // haleyjd 10/28/12: if lump name is empty, do not add it into the hash.
+      if(!(lumpinfo[i]->name[0]))
+         continue;
+
       j = LumpNameHash(lumpinfo[i]->name) % (unsigned int)numlumps;
       lumpinfo[i]->next = lumpinfo[j]->index;     // Prepend to list
       lumpinfo[j]->index = i;
@@ -999,9 +1065,7 @@ void WadDirectory::initMultipleFiles(wfileadd_t *files)
          if(curfile->flags & WFA_DIRECTORY)
             addDirectory(curfile->filename);
          else
-         {
             addFile(*curfile);
-         }
       }
 
       ++curfile;
@@ -1281,6 +1345,10 @@ void WadDirectory::freeDirectoryLumps()
             li[i]->cache[j] = NULL;
          }
       }
+
+      // free long filenames
+      if(li[i]->lfn)
+         efree(li[i]->lfn);
    }
 }
 

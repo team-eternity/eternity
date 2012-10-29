@@ -135,7 +135,7 @@ struct lumpinfo_t
       ziplump_t    zip;
    };
 
-   const char *lfn;  // long file name, where relevant   
+   char *lfn;  // long file name, where relevant   
 };
 
 // Flags for wfileadd_t
@@ -257,7 +257,7 @@ protected:
    void coalesceMarkedResource(const char *start_marker, 
                                const char *end_marker, 
                                int li_namespace);
-   void handleOpenError(openwad_t &openInfo, wfileadd_t &addInfo,
+   void handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
                         const char *filename);
    openwad_t openFile(wfileadd_t &addInfo);
    lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);

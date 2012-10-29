@@ -259,6 +259,27 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
 //
 ZipFile::~ZipFile()
 {
+   if(lumps && numLumps)
+   {
+      // free lump names
+      for(int i = 0; i < numLumps; i++)
+      {
+         if(lumps[i].name)
+            efree(lumps[i].name);
+      }
+
+      // free the lump directory
+      efree(lumps);
+      lumps    = NULL;
+      numLumps = 0;
+   }
+
+   // close the disk file if it is open
+   if(file)
+   {
+      fclose(file);
+      file = NULL;
+   }
 }
 
 //
@@ -434,6 +455,9 @@ bool ZipFile::readFromFile(FILE *f)
    InBuffer reader;
    ZIPEndOfCentralDir zcd;
 
+   // remember our disk file
+   file = f;
+
    reader.OpenExisting(f, 0x4000, InBuffer::LENDIAN);
 
    // read in the end-of-central-directory structure
@@ -445,12 +469,20 @@ bool ZipFile::readFromFile(FILE *f)
       return false;
 
    // sort the directory
-   qsort(lumps, numLumps, sizeof(ZipLump), ZIP_LumpSortCB);
-
-   // remember our disk file
-   file = f;
+   if(numLumps > 1)
+      qsort(lumps, numLumps, sizeof(ZipLump), ZIP_LumpSortCB);
 
    return true;
+}
+
+//
+// ZipFile::linkTo
+//
+// Link the ZipFile instance into a wad directory's list of zips.
+//
+void ZipFile::linkTo(DLListItem<ZipFile> **head)
+{
+   links.insert(this, head);
 }
 
 ZipLump &ZipFile::getLump(int lumpNum)

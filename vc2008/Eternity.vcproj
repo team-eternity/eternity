@@ -174,11 +174,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib opengl32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				IgnoreAllDefaultLibraries="true"
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Eternity.pdb"
 				SubSystem="1"

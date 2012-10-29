@@ -183,6 +183,13 @@ void W_LumpNameFromFilePath(const char *input, char output[9])
 
    // Convert to uppercase
    M_Strupr(output);
+
+   // Change '^' to '\' for benefit of sprite frames
+   for(int i = 0; i < 8; i++)
+   {
+      if(output[i] == '^')
+         output[i] = '\\';
+   }
 }
 
 struct namespace_matcher_t
