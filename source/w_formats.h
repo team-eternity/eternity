@@ -42,7 +42,7 @@ typedef enum
 
 WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset);
 
-void W_LumpNameFromFilePath(const char *input, char output[9]);
+void W_LumpNameFromFilePath(const char *input, char output[9], int li_namespace);
 int  W_NamespaceForFilePath(const char *path);
 
 #endif

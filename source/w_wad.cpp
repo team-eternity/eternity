@@ -499,7 +499,7 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
       if((li_namespace = W_NamespaceForFilePath(zipLump.name)) != -1)
       {
          lump_p->li_namespace = li_namespace;
-         W_LumpNameFromFilePath(zipLump.name, lump_p->name);
+         W_LumpNameFromFilePath(zipLump.name, lump_p->name, li_namespace);
       }
 
       // Copy lfn

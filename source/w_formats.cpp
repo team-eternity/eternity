@@ -176,7 +176,7 @@ WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset)
 //
 // Creates a lump name given a filepath.
 //
-void W_LumpNameFromFilePath(const char *input, char output[9])
+void W_LumpNameFromFilePath(const char *input, char output[9], int li_namespace)
 {
    // Strip off the path, and remove any extension
    M_ExtractFileBase(input, output);
@@ -185,10 +185,13 @@ void W_LumpNameFromFilePath(const char *input, char output[9])
    M_Strupr(output);
 
    // Change '^' to '\' for benefit of sprite frames
-   for(int i = 0; i < 8; i++)
+   if(li_namespace == lumpinfo_t::ns_sprites)
    {
-      if(output[i] == '^')
-         output[i] = '\\';
+      for(int i = 0; i < 8; i++)
+      {
+         if(output[i] == '^')
+            output[i] = '\\';
+      }
    }
 }
 
