@@ -69,7 +69,7 @@ public:
    // this descriptor represents.
    bool readField(S &structure, InBuffer &fin)
    {
-      return fin.ReadUint16(structure.*field);
+      return fin.readUint16(structure.*field);
    }
 };
 
@@ -88,7 +88,7 @@ public:
    // this descriptor represents.
    bool readField(S &structure, InBuffer &fin)
    {
-      return fin.ReadUint32(structure.*field);
+      return fin.readUint32(structure.*field);
    }
 };
 

@@ -130,29 +130,23 @@ public:
 //
 class InBuffer : public BufferedFileBase
 {
-protected:
-   size_t readlen; // amount actually read (may be less than len)
-   bool atEOF;
-   bool ReadFile();
-
 public:
-   InBuffer() : BufferedFileBase(), readlen(0), atEOF(false)
+   InBuffer() : BufferedFileBase()
    {
    }
 
-   bool OpenFile(const char *filename, size_t pLen, int pEndian);
-   bool OpenExisting(FILE *f, size_t pLen, int pEndian);
+   bool openFile(const char *filename, int pEndian);
+   bool openExisting(FILE *f, int pEndian);
 
-   int  Seek(long offset, int origin);
-   bool Read(void *dest, size_t size);
-   bool Read(void *dest, size_t size, size_t &amtRead);
-   bool Skip(size_t skipAmt);
-   bool ReadSint32(int32_t  &num);
-   bool ReadUint32(uint32_t &num);
-   bool ReadSint16(int16_t  &num);
-   bool ReadUint16(uint16_t &num);
-   bool ReadSint8 (int8_t   &num);
-   bool ReadUint8 (uint8_t  &num);
+   int    seek(long offset, int origin);
+   size_t read(void *dest, size_t size);
+   int    skip(size_t skipAmt);
+   bool   readSint32(int32_t  &num);
+   bool   readUint32(uint32_t &num);
+   bool   readSint16(int16_t  &num);
+   bool   readUint16(uint16_t &num);
+   bool   readSint8 (int8_t   &num);
+   bool   readUint8 (uint8_t  &num);
 };
 
 #endif

@@ -181,9 +181,6 @@ void W_LumpNameFromFilePath(const char *input, char output[9], int li_namespace)
    // Strip off the path, and remove any extension
    M_ExtractFileBase(input, output);
 
-   // Convert to uppercase
-   M_Strupr(output);
-
    // Change '^' to '\' for benefit of sprite frames
    if(li_namespace == lumpinfo_t::ns_sprites)
    {
@@ -207,6 +204,9 @@ static namespace_matcher_t matchers[] =
    { "colormaps/",    lumpinfo_t::ns_colormaps    },
    { "demos/",        lumpinfo_t::ns_demos        }, // EE extension
    { "flats/",        lumpinfo_t::ns_flats        },   
+   { "graphics/",     lumpinfo_t::ns_global       }, // Treated as global in EE
+   { "music/",        lumpinfo_t::ns_global       }, // Treated as global in EE
+   { "sounds/",       lumpinfo_t::ns_global       }, // Treated as global in EE
    { "sprites/",      lumpinfo_t::ns_sprites      },
    { "translations/", lumpinfo_t::ns_translations }, // EE extension
 
@@ -214,11 +214,8 @@ static namespace_matcher_t matchers[] =
 
    // TODO ??
    /*
-   { "graphics/",     lumpinfo_t::ns_graphics     },
    { "hires/",        lumpinfo_t::ns_hires        },
-   { "music/",        lumpinfo_t::ns_music        },
    { "patches/",      lumpinfo_t::ns_patches      },
-   { "sounds/",       lumpinfo_t::ns_sounds       },
    { "textures/",     lumpinfo_t::ns_textures     },
    { "voices/",       lumpinfo_t::ns_voices       },
    { "voxels/",       lumpinfo_t::ns_voxels       },

@@ -2681,7 +2681,7 @@ void ACSVM::ArchiveStrings(SaveArchive &arc)
          string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
          string->data.l = size;
 
-         arc.getLoadFile()->Read(str, size);
+         arc.getLoadFile()->read(str, size);
          str[size] = 0;
 
          // Set metadata.

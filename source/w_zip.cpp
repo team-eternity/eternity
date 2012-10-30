@@ -208,7 +208,7 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
    long    uMaxBack  = 0;
    long    uPosFound = 0;
 
-   if(fin.Seek(0, SEEK_END))
+   if(fin.seek(0, SEEK_END))
       return false;
 
    FileSize  = fin.Tell();
@@ -227,9 +227,11 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
       uReadPos  = FileSize - uBackRead;
       uReadSize = zipmin<long>(BUFREADCOMMENT + 4, FileSize - uReadPos);
 
-      if(fin.Seek(uReadPos, SEEK_SET))
+      if(fin.seek(uReadPos, SEEK_SET))
          return false;
-      if(!fin.Read(buf, static_cast<size_t>(uReadSize)))
+
+      size_t sizeReadSize = static_cast<size_t>(uReadSize);
+      if(fin.read(buf, sizeReadSize) != sizeReadSize)
          return false;
 
       for(long i = uReadSize - 3; (i--) > 0; )
@@ -295,7 +297,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
    if(!ZIP_FindEndOfCentralDir(fin, centralDirEnd) || !centralDirEnd)
       return false; 
 
-   if(fin.Seek(centralDirEnd, SEEK_SET))
+   if(fin.seek(centralDirEnd, SEEK_SET))
       return false;
 
    if(!endCentralDirReader.readFields(zcd, fin))
@@ -344,7 +346,7 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
    ZAutoBuffer nameBuffer(totalStrLen + 1, true);
    char *name = nameBuffer.getAs<char *>();
 
-   if(!fin.Read(name, totalStrLen))
+   if(fin.read(name, totalStrLen) != totalStrLen)
       return false;
 
    // skip bogus unnamed entries and directories
@@ -409,7 +411,7 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
    int skipLumps = 0; // number of lumps skipped
 
    // seek to start of directory
-   if(fin.Seek(offset, SEEK_SET))
+   if(fin.seek(offset, SEEK_SET))
       return false;
   
    for(int i = 0; i < numLumps; i++)
@@ -458,7 +460,7 @@ bool ZipFile::readFromFile(FILE *f)
    // remember our disk file
    file = f;
 
-   reader.OpenExisting(f, 0x4000, InBuffer::LENDIAN);
+   reader.openExisting(f, InBuffer::LENDIAN);
 
    // read in the end-of-central-directory structure
    if(!readEndOfCentralDir(reader, zcd))
@@ -511,7 +513,7 @@ ZipLump &ZipFile::getLump(int lumpNum)
 //
 static void ZIP_ReadStored(InBuffer &fin, void *buffer, uint32_t len)
 {
-   if(!fin.Read(buffer, len))
+   if(fin.read(buffer, len) != len)
       I_Error("ZIP_ReadStored: failed to read stored file\n");
 }
 
@@ -535,7 +537,7 @@ protected:
    {
       size_t bytesRead;
 
-      fin.Read(deflateBuffer, DEFLATE_BUFF_SIZE, bytesRead);
+      bytesRead = fin.read(deflateBuffer, DEFLATE_BUFF_SIZE);
 
       if(bytesRead != DEFLATE_BUFF_SIZE)
          atEOF = true;
@@ -613,7 +615,7 @@ void ZipLump::setAddress(InBuffer &fin)
    if(!(flags & ZipFile::LF_CALCOFFSET))
       return;
 
-   if(fin.Seek(offset, SEEK_SET))
+   if(fin.seek(offset, SEEK_SET))
       I_Error("ZipFile::Lump::setAddress: could not seek in file\n");
 
    if(!localFileReader.readFields(lfh, fin))
@@ -622,7 +624,7 @@ void ZipLump::setAddress(InBuffer &fin)
    size_t skipSize = lfh.nameLength + lfh.extraLength;
 
    // skip over name and extra
-   if(skipSize > 0 && !fin.Skip(skipSize))
+   if(skipSize > 0 && fin.skip(skipSize))
       I_Error("ZipFile::Lump::setAddress: could not seek past name\n");
 
    // calculate total length of the local file header and advance offset
@@ -641,7 +643,7 @@ void ZipLump::read(void *buffer)
 {
    InBuffer reader;
 
-   reader.OpenExisting(file->getFile(), 0x4000, InBuffer::LENDIAN);
+   reader.openExisting(file->getFile(), InBuffer::LENDIAN);
 
    // Calculate an offset beyond the lump's local file header, if such hasn't
    // been done already. This will modify Lump::offset. If we call this, we
@@ -651,7 +653,7 @@ void ZipLump::read(void *buffer)
       setAddress(reader);
    else
    {
-      if(reader.Seek(offset, SEEK_SET))
+      if(reader.seek(offset, SEEK_SET))
          I_Error("ZipFile::Lump::read: count not seek to lump\n");
    }
 
