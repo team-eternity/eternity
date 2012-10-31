@@ -148,6 +148,7 @@ enum WFileAddFlags
    WFA_REQUIREFORMAT  = 0x0010, // A specific archive format is required for this load
    WFA_DIRECTORY      = 0x0020, // Loading a physical disk directory
    WFA_ALLOWHACKS     = 0x0040, // Allow application of wad directory hacks
+   WFA_INMEMORY       = 0x0080, // Archive is in memory
 };
 
 //
@@ -163,6 +164,8 @@ struct wfileadd_t
    int     li_namespace; // if not 0, special namespace to add file under
    FILE   *f;            // pointer to file handle, IFF this is a subfile
    size_t  baseoffset;   // base offset if this is a subfile
+   void   *memory;       // memory buffer, IFF archive is in memory
+   size_t  size;         // size of buffer, IFF archive is in memory
    int     requiredFmt;  // required file format, if any (-1 if none)
 
    unsigned int flags;   // flags
@@ -237,9 +240,11 @@ protected:
    struct openwad_t
    {
       const char *filename; // possibly altered filename
-      FILE *handle;         // FILE handle
-      bool error;           // true if an error occured
-      int  format;          // detected file format
+      FILE   *handle;       // FILE handle
+      void   *base;         // Base for in-memory wads
+      size_t  size;         // Size for in-memory wads
+      bool    error;        // true if an error occured
+      int     format;       // detected file format
    };
 
    static int source;     // unique source ID for each wad file
@@ -257,11 +262,13 @@ protected:
    void coalesceMarkedResource(const char *start_marker, 
                                const char *end_marker, 
                                int li_namespace);
+   void incrementSource(openwad_t &openData);
    void handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
                         const char *filename);
    openwad_t openFile(wfileadd_t &addInfo);
    lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);
    bool addSingleFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
+   bool addMemoryWad(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addWadFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addZipFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addFile(wfileadd_t &addInfo);
@@ -287,6 +294,7 @@ public:
    // haleyjd 06/15/10: special private wad file support
    bool  addNewPrivateFile(const char *filename);
    int   addDirectory(const char *dirpath);
+   bool  addInMemoryWad(void *buffer, size_t size);
    int   lumpLength(int lump);
    void  readLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
    int   readLumpHeader(int lump, void *dest, size_t size);

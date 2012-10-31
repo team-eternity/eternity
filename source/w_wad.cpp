@@ -194,6 +194,20 @@ void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 }
 
 //
+// WadDirectory::incrementSource
+//
+// Add the source filename and increment the static source counter.
+//
+void WadDirectory::incrementSource(openwad_t &openData)
+{
+   // haleyjd: push source filename
+   WadDirectoryPimpl::AddFileName(openData.filename);
+
+   // haleyjd: increment source
+   ++source;
+}
+
+//
 // WadDirectory::handleOpenError
 //
 // Protected method to handle errors during archive file open.
@@ -307,6 +321,82 @@ bool WadDirectory::addSingleFile(openwad_t &openData, wfileadd_t &addInfo,
 
    strncpy(lump_p->name, singleinfo.name, 8);
 
+   incrementSource(openData);
+
+   return true;
+}
+
+//
+// WadDirectory::addMemoryWad
+//
+// haleyjd 10/31/12: Add an id wadlink file stored in memory into the directory.
+//
+bool WadDirectory::addMemoryWad(openwad_t &openData, wfileadd_t &addInfo,
+                                int startlump)
+{
+   // haleyjd 04/07/11
+   wadinfo_t    header;
+   ZAutoBuffer  fileinfo2free; // killough
+   filelump_t  *fileinfo; 
+   size_t       length;
+   size_t       info_offset;
+   lumpinfo_t  *lump_p;
+
+   // Read in the header
+   memcpy(&header, openData.base, sizeof(header));
+
+   header.numlumps     = SwapLong(header.numlumps);
+   header.infotableofs = SwapLong(header.infotableofs);
+
+   // allocate enough fileinfo_t's to hold the wad directory
+   length = header.numlumps * sizeof(filelump_t);
+  
+   fileinfo2free.alloc(length, true);              // killough
+   fileinfo = fileinfo2free.getAs<filelump_t *>();
+
+   info_offset = static_cast<size_t>(header.infotableofs);
+
+   // seek to the directory
+   if(info_offset + header.numlumps * sizeof(filelump_t)  > openData.size)
+   {
+      if(addInfo.flags & WFA_OPENFAILFATAL)
+         I_Error("Failed reading directory for in-memory file\n");
+      else
+      {
+         if(in_textmode)
+            printf("Failed reading directory for in-memory file\n");
+         else
+            C_Printf(FC_ERROR "Failed reading directory for in-memory file\n");
+         return false;
+      }
+   }
+
+   // read it in.
+   byte *directoryBase = static_cast<byte *>(openData.base) + info_offset;
+   memcpy(fileinfo, directoryBase, header.numlumps * sizeof(filelump_t));
+
+   // Add lumpinfo_t's for all lumps in the wad file
+   lump_p = reAllocLumpInfo(header.numlumps, startlump);
+
+   // Merge into the directory
+   for(int i = startlump; i < numlumps; i++, lump_p++, fileinfo++)
+   {
+      lumpinfo[i]    = lump_p;
+      lump_p->type   = lumpinfo_t::lump_memory; // haleyjd
+      lump_p->size   = (size_t)(SwapLong(fileinfo->size));
+      lump_p->source = source; // haleyjd
+
+      // setup for memory IO
+      lump_p->memory.data     = openData.base;
+      lump_p->memory.position = (size_t)(SwapLong(fileinfo->filepos));
+      
+      lump_p->li_namespace = addInfo.li_namespace;     // killough 4/17/98
+
+      strncpy(lump_p->name, fileinfo->name, 8);
+   }
+
+   incrementSource(openData);
+
    return true;
 }
 
@@ -329,6 +419,10 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
    size_t       length;
    long         info_offset;
    lumpinfo_t  *lump_p;
+
+   // check for in-memory wads
+   if(addInfo.flags & WFA_INMEMORY)
+      return addMemoryWad(openData, addInfo, startlump);
 
    // haleyjd: seek to baseoffset first when loading a subfile
    if(addInfo.flags & WFA_SUBFILE)
@@ -448,6 +542,11 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
       strncpy(lump_p->name, fileinfo->name, 8);
    }
 
+   if(ispublic)
+      D_NewWadLumps(source);
+
+   incrementSource(openData);
+
    return true;
 }
 
@@ -509,6 +608,11 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
    // Hook the ZipFile instance into the WadDirectory's list of zips
    zip->linkTo(&pImpl->zipFiles);
 
+   incrementSource(openData);
+
+   // Check for embedded wad files
+   zip->checkForWadFiles(*this);
+
    zip.release(); // don't destroy the ZipFile
    return true;
 }
@@ -538,11 +642,10 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
    
    openwad_t openData;
    int       startlump;
-   int       curSource = source;
 
    // When loading a subfile, the physical file is already open.
    if(addInfo.flags & WFA_SUBFILE)
-   {
+   {      
       openData.filename = addInfo.filename;
       openData.handle   = addInfo.f;
 
@@ -556,6 +659,13 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       }
       openData.format = W_FORMAT_WAD;
    }
+   else if(addInfo.flags & WFA_INMEMORY)
+   {
+      openData.base     = addInfo.memory;
+      openData.size     = addInfo.size;
+      openData.filename = "memory";
+      openData.format   = W_FORMAT_WAD; // wad handler will deal with this.
+   }
    else
    {
       // Open the physical archive file and determine its format
@@ -564,12 +674,16 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
          return false; 
    }
 
-   // Show adding message if at startup and not a private directory
-   if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic && in_textmode)
+   // Show adding message if at startup and not a private directory or 
+   // in-memory wad
+   if(!(addInfo.flags & (WFA_PRIVATE|WFA_INMEMORY)) && 
+      this->ispublic && in_textmode)
+   {
       printf(" adding %s\n", openData.filename);   // killough 8/8/98
+   }
 
    // Remember where we started off at in lumpinfo[]
-   startlump = this->numlumps;
+   startlump = numlumps;
 
    // Call the appropriate file directory addition routine for this format
 #ifdef RANGECHECK
@@ -582,18 +696,6 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       handleOpenError(openData, addInfo, openData.filename);
       return false;
    }
-
-   // haleyjd: push source filename
-   WadDirectoryPimpl::AddFileName(openData.filename);
-
-   // haleyjd: increment source
-   ++source;
-   
-   if(addInfo.flags & WFA_PRIVATE)
-      return true; // no error
-
-   if(this->ispublic)
-      D_NewWadLumps(curSource);
    
    return true; // no error
 }
@@ -707,6 +809,28 @@ int WadDirectory::addDirectory(const char *dirpath)
       printf(" adding directory %s\n", dirpath);
 
    return totalcount + localcount;
+}
+
+//
+// WadDirectory::addInMemoryWad
+//
+// Externally trigger addition of a wad file that is loaded completely
+// into memory.
+//
+bool WadDirectory::addInMemoryWad(void *buffer, size_t size)
+{
+   wfileadd_t addInfo;
+
+   memset(&addInfo, 0, sizeof(addInfo));
+
+   addInfo.memory = buffer;
+   addInfo.size   = size;
+   addInfo.flags  = WFA_OPENFAILFATAL | WFA_INMEMORY;
+
+   if(!ispublic)
+      addInfo.flags |= WFA_PRIVATE;
+
+   return addFile(addInfo);
 }
 
 // jff 1/23/98 Create routines to reorder the master directory

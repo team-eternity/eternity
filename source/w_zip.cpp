@@ -31,6 +31,7 @@
 #include "m_qstr.h"
 #include "m_structio.h"
 #include "m_swap.h"
+#include "w_wad.h"
 #include "w_zip.h"
 
 #include "../zlib/zlib.h"
@@ -261,6 +262,7 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
 //
 ZipFile::~ZipFile()
 {
+   // free the directory
    if(lumps && numLumps)
    {
       // free lump names
@@ -274,6 +276,21 @@ ZipFile::~ZipFile()
       efree(lumps);
       lumps    = NULL;
       numLumps = 0;
+   }
+
+   // free zipwads
+   if(wads)
+   {
+      DLListItem<ZipWad> *rover = wads;
+      while(rover)
+      {
+         ZipWad *zw = rover->dllObject;
+         rover = rover->dllNext;
+
+         efree(zw->buffer); // free the in-memory wad file
+         efree(zw);         // free the ZipWad structure
+      }
+      wads = NULL;
    }
 
    // close the disk file if it is open
@@ -396,6 +413,11 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
    // Remember our parent ZipFile
    lump.file = this;
 
+   // Is this lump an embedded wad file?
+   const char *dotpos = strrchr(lump.name, '.');
+   if(dotpos && !strncmp(dotpos, ".wad", 4))
+      lump.flags |= LF_ISEMBEDDEDWAD;
+
    return true;
 }
 
@@ -475,6 +497,38 @@ bool ZipFile::readFromFile(FILE *f)
       qsort(lumps, numLumps, sizeof(ZipLump), ZIP_LumpSortCB);
 
    return true;
+}
+
+//
+// ZipFile::checkForWadFiles
+//
+// Find all lumps that were marked as LF_ISEMBEDDEDWAD, load them into memory,
+// and then add them to the same directory to which this zip file belongs.
+//
+void ZipFile::checkForWadFiles(WadDirectory &parentDir)
+{
+   for(int i = 0; i < numLumps; i++)
+   {
+      if(!(lumps[i].flags & LF_ISEMBEDDEDWAD))
+         continue;
+
+      // will not consider any lump less than 28 in size 
+      // (valid wad header, plus at least one lump in the directory)
+      if(lumps[i].size < 28)
+         continue;
+
+      ZipWad *zipwad = estructalloc(ZipWad, 1);
+
+      zipwad->size   = static_cast<size_t>(lumps[i].size);
+      zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, NULL);
+
+      lumps[i].read(zipwad->buffer);
+
+      parentDir.addInMemoryWad(zipwad->buffer, zipwad->size);
+
+      // remember this zipwad
+      zipwad->links.insert(zipwad, &wads);
+   }
 }
 
 //
@@ -585,7 +639,7 @@ public:
          I_Error("ZIPDeflateReader::read: invalid deflate stream\n");
 
       if(zlStream.avail_out != 0)
-         I_Error("ZIPDeflateReader::read: truncated stream\n");
+         I_Error("ZIPDeflateReader::read: truncated deflate stream\n");
    }
 };
 
@@ -616,16 +670,20 @@ void ZipLump::setAddress(InBuffer &fin)
       return;
 
    if(fin.seek(offset, SEEK_SET))
-      I_Error("ZipFile::Lump::setAddress: could not seek in file\n");
+      I_Error("ZipLump::setAddress: could not seek to '%s'\n", name);
 
    if(!localFileReader.readFields(lfh, fin))
-      I_Error("ZipFile::Lump::setAddress: could not read local file header\n");
+      I_Error("ZipLump::setAddress: could not read local header for '%s'\n", name);
+
+   // verify signature
+   if(memcmp(&lfh.signature, ZIP_LOCAL_FILE_SIG, 4))
+      I_Error("ZipLump::setAddress: invalid local signature for '%s'\n", name);
 
    size_t skipSize = lfh.nameLength + lfh.extraLength;
 
    // skip over name and extra
    if(skipSize > 0 && fin.skip(skipSize))
-      I_Error("ZipFile::Lump::setAddress: could not seek past name\n");
+      I_Error("ZipLump::setAddress: could not skip local name for '%s'\n", name);
 
    // calculate total length of the local file header and advance offset
    offset += (ZIP_LOCAL_FILE_SIZE + skipSize);
@@ -646,15 +704,14 @@ void ZipLump::read(void *buffer)
    reader.openExisting(file->getFile(), InBuffer::LENDIAN);
 
    // Calculate an offset beyond the lump's local file header, if such hasn't
-   // been done already. This will modify Lump::offset. If we call this, we
-   // are already in reading position, so don't seek or the InBuffer will dump
-   // its buffer unnecessarily.
+   // been done already. This will modify Lump::offset. Note if we call this,
+   // we'll end up in reading position, so a seek is unnecessary then.
    if(flags & ZipFile::LF_CALCOFFSET)
       setAddress(reader);
    else
    {
       if(reader.seek(offset, SEEK_SET))
-         I_Error("ZipFile::Lump::read: count not seek to lump\n");
+         I_Error("ZipLump::read: could not seek to lump '%s'\n", name);
    }
 
    // Read the file according to its indicated storage method.
@@ -667,6 +724,9 @@ void ZipLump::read(void *buffer)
       ZIP_ReadDeflated(reader, buffer, size);
       break;
    default:
+      // shouldn't happen; files with other methods are removed from the directory
+      I_Error("ZipLump::read: internal error - unsupported compression type %d\n",
+              method);
       break;
    }
 }

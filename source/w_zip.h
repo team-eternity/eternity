@@ -50,6 +50,14 @@ struct ZipLump
    void read(void *buffer);
 };
 
+struct ZipWad
+{
+   void   *buffer;
+   size_t  size;
+
+   DLListItem<ZipWad> links;
+};
+
 class ZipFile : public ZoneObject
 {
 public:
@@ -68,7 +76,8 @@ public:
    // Lump flags
    enum
    {
-      LF_CALCOFFSET = 0x00000001 // Needs true data offset calculated
+      LF_CALCOFFSET    = 0x00000001, // Needs true data offset calculated
+      LF_ISEMBEDDEDWAD = 0x00000002  // Is an embedded WAD file
    };
 
 protected:
@@ -78,15 +87,23 @@ protected:
 
    DLListItem<ZipFile> links; // links for use by WadDirectory
 
+   DLListItem<ZipWad> *wads;  // wads loaded from inside the zip
+
    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
    bool readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip);
    bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
 
 public:
-   ZipFile() : ZoneObject(), lumps(NULL), numLumps(0), file(NULL), links() {}
+   ZipFile() 
+      : ZoneObject(), lumps(NULL), numLumps(0), file(NULL), links(), wads(NULL) 
+   {
+   }
+   
    ~ZipFile();
 
    bool readFromFile(FILE *f);
+
+   void checkForWadFiles(WadDirectory &parentDir);
 
    void     linkTo(DLListItem<ZipFile> **head);
    ZipLump &getLump(int lumpNum);
