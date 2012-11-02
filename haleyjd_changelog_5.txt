@@ -1,4 +1,472 @@
 ================================================================================
+Changes since Eternity Engine v3.40.25
+================================================================================
+--------------------------------------------------------------------------------
+10/31/12
+
+With addition of support for WAD files embedded in ZIPs, zip support in Eternity
+is effectively 100% complete, and initial testing has turned up no issues so
+far.
+
+I am prepping for Alfheim release, and aiming for a November 3rd release date.
+
+--------------------------------------------------------------------------------
+10/29/12
+
+ZIP support is now largely complete; the only major missing feature versus ZDoom
+is support for embedded WAD files, and that should be upcoming shortly in the
+next couple of days since Eternity already has support for memory lumps inside
+its WadDirectory VFS.
+
+Following up on more trouble with STL trying to use _Debug_message in Visual
+C++, I determined that some old tweaks SoM made to the project back when we
+still compiled with Visual C++ 6.0 had persisted into the VC2008 project, and
+were the cause of this trouble.
+
+Removing msvcrt.lib from explicit dependencies, and re-enabling the option to
+use "Default Libraries", took care of this problem. Eternity now uses the debug
+CRT when built in DEBUG mode and does not experience any issues in linking with
+STL and other std-namespace templates (our use of it is still extremely limited
+and will remain so for the foreseeable future, but there are a couple of places
+it has proven useful, such as the use of <algorithm> in p_chase.cpp to sort 
+collections of vertices).
+
+disk_icon now defaults to off, due to the continued severe problems it causes
+on MacOS X, likely due to a glitch in SDL on that platform.
+
+InBuffer has been rewritten to drop the concept of using an input buffer, as my
+algorithm has turned out to only work when no more is read from the file than is
+actually available to read - otherwise it breaks down into an infinite loop. I
+can't see the difficulty in crafting a proper input buffering mechanism as being
+worth the very small advantage, if ANY, that it provides on top of OS IO buffers
+and any buffering that is already implemented inside the C stdio library.
+
+--------------------------------------------------------------------------------
+10/28/12
+
+Applied printz's patch for enhanced MacOS X support, including his GUI-based
+integrated frontend.
+
+--------------------------------------------------------------------------------
+10/22/12 - 10/27/12
+
+I have taken a short break from work on js-branch to introduce support for .ZIP
+files as a first-class supported data archive format, matching support in ZDoom.
+
+Eternity's recommended extension for such files intended as Eternity-specific
+modifications is .pke - use of .pk3 is heavily disrecommended due to potential
+for confusion with both Quake 3 and ZDoom modifications. Any extension is
+supported, however.
+
+When using -file, and not specifying an extension, .pke, .pk3, and .zip will
+be tried, in that order, after trying .wad first.
+
+--------------------------------------------------------------------------------
+10/12/12
+
+Trunk work is a bit more scarce right now due to ongoing work on the Aeon
+branches - js-branch and python-branch.
+
+I somehow left the string "UNMODKEY" in part of e_hash.h in a method that is
+currently not used. Because Visual C++ pre-emptively discards unused portions
+of templates without even testing them for syntax errors, this flew under the
+radar until somebody tried to compile it in GCC. GCC is always the savior when
+it comes to this kind of error, since it parses templates whether they are used
+or not.
+
+--------------------------------------------------------------------------------
+09/30/12
+
+Added an AutoPalette class which loads the PLAYPAL lump at initialization, and
+sets the lump to PU_CACHE when it is destroyed. This replaces repeated code at
+multiple points in the game engine to temporarily load the PLAYPAL lump, with
+the need to call Z_ChangeTag(PU_CACHE) at every single return point.
+
+Added VPNGImage::readFromLump, and introduced support into EDF linear fonts for
+PNG-format resources.
+
+Support is now complete in EDF Alfheim dialect for section title properties,
+which are a form of multi-valued property which anonymously follows a named
+section's title, with a colon between the two, as such:
+
+   thingtype Foo : Bar, 10010, -1
+   {
+      ...
+   }
+   
+By utilizing this feature on thingtypes, it is now possible to specify, in
+fixed order, the inherited thingtype, the DoomEd number, and the DeHackEd 
+number. As with all mvprops, fields can be left off at the end, but not in the
+middle. If the thingtype does not inherit, but you need to specify a DoomEd 
+number, use "Mobj" as the inherited type name - this is a generic standin
+which means that the thingtype does not really inherit from anything.
+
+--------------------------------------------------------------------------------
+09/24/12
+
+With some help from essel, I've extracted the "mid" font that is used on DOOM
+CREDIT screens and added it to eternity.wad and fonts.edf, with some custom-made
+translations on top of the ones that were already available from the CREDIT
+resources. It is available for editor use in DOOM and DOOM II gamemodes.
+
+--------------------------------------------------------------------------------
+09/23/12
+
+I used some invalid PNGs to test the fail-proofness of Eternity's PNG code as
+well as to verify that the concept of throwing a C++ exception through libpng to
+unwind the stack, in preference to its intended method of using longjmp, works
+as expected.
+
+Added WadDirectory::cacheLumpAuto, which loads a given lump into a ZAutoBuffer
+object rather than the wad directory cache.
+
+Added V_WritePNG, and V_WritePatchAsPNG. These support a new v_dumppatch 
+command, which can be used to extract patch-format resources as .PNG files from
+within Eternity. esselfortium suggested that this is a sign that Eternity is
+becoming "SladEE" :P
+
+--------------------------------------------------------------------------------
+09/22/12
+
+Massive changes:
+
+* Completed in_stats module. Scores for levels can be viewed using the new
+  mapscores console command, and it can be queried multiple ways, using the
+  map name and wad filename to determine what map you want to see scores for
+  if you're not interested in the one that you're currently playing.
+  
+  As part of this, I added platform flag values to i_platform in the HAL; the
+  only current one controls whether or not file paths are treated as being case
+  sensitive on the current platform, for where this decision must be made at
+  runtime.
+  
+  The exitlevel console command will also now mark all players in the game as
+  "cheaters", simply so that the stats module will not record statistics.
+  
+* Menu changes:
+  
+  + Titles and info items now have their color appropriately determined at
+    runtime by fields stored in GameModeInfo, rather than being baked into
+    menuitem strings at compile-time.
+    
+  + Fullscreen widgets now have wings drawn for them by the menu code, since
+    D_drawWings is unable to make the decision on whether to draw them or not
+    in time for it to apply uniformly. As a result, D_DrawPillars was split out
+    of D_drawWings as a globally available subroutine in d_main.
+    
+  + Skin drawer title is now properly colorized and shadowed. As a result, 
+    shadowed text can now also be color remapped.
+    
+* Added a ZAutoBuffer class, which grants a zone-allocated memory buffer a 
+  stack-based lifetime, for automatic release at the end of the scope. Already
+  adapted some code in v_png to use it, and I expect to slowly convert other
+  places where multiple efree() calls are made at different return points to
+  use this instead.
+  
+* Added WadDirectory::writeLump method, and a w_writelump console command which
+  can be used to dump any lump in the wad directory to file, without any
+  conversions applied.
+
+--------------------------------------------------------------------------------
+09/20/12
+
+I have finally gotten around to rewriting the BOOM HUD code from SMMU, chiefly
+needed to avoid undefined sprintf behavior and to improve security of the code.
+It now uses qstring throughout instead of stack string buffers.
+
+Taking advantage of the custom color translation capability for fonts, I added
+a dark gray custom translation for the BOOM HUD font and modified the HUD to
+use this color for weapons which are completely out of ammo (as determined by
+the ammo-per-shot value), largely matching the behavior added to PrBoom-Plus.
+
+--------------------------------------------------------------------------------
+09/19/12
+
+cfg_parse_internal has finally been dissolved into a series of state handler
+routines and a table of function pointers to them indexed by state number,
+matching the majority of Eternity's other finite state machine parsers.
+
+--------------------------------------------------------------------------------
+09/18/12
+
+Up to four custom color translations, above and beyond the ten built-in colors
+as determined by the BOOM team, can now be specified on each EDF font. If not
+specified, these translations default to identity translations, and they do not
+have any corresponding lumps in eternity.wad.
+
+EDF string syntax has been extended in two critical manners:
+* \x is now supported for specification of hexadecimal character constants, as
+  such: "\x89" - this is an alternative method of specifying embedded color
+  and text property control characters.
+  
+* Adjacent string literals - "Hello, " "world!" - will now be coalesced into a
+  single token by the tokenizer, as in high-level languages like C++.
+  
+EDF also now supports the notion of a language dialect, and the active dialect
+may be manipulated within EDF via use of the setdialect() function. Values
+accepted by this function currently include:
+
+* "DELTA" - this indicates the original EDF dialect, including backward
+  compatibility to v3.31 and any extensions made since then until now.
+  
+* "ALFHEIM - In Alfheim or higher dialect, colons - ':' - are now special
+  characters, supported as an alternative CSS/JSON style of assignment operator,
+  as well as in other special contexts.
+  
+--------------------------------------------------------------------------------
+09/16/12 - 09/17/12
+
+Loading and saving of player scores to and from a CSV file is now functional.
+
+qstring has been enhanced with short string optimization. Strings shorter than
+16 characters will be stored in a local array instead of in a heap allocation,
+drastically reducing the number of small fragmentary heap allocations,
+particularly during EDF parsing. There is a trade-off however, as the logic in
+qstring is not compatible with the typical implementation pattern of SSO which
+abuses unions (in ways I will note are standards violations, too). qstring is
+a larger type and therefore fewer of them will fit into cache. However, since
+we NEVER EVER pass qstrings by value (under penalty of death!), I am hoping
+this proves to be insignificant.
+
+In another improvement made to reduce string allocations, MetaObject keys are
+now interned. Taken in combination with new changes made to EHashTable to 
+support passing in of cached unmodulated keys (ie. the result of the hash
+function call but not taken modulus the table size yet), it is now possible to
+cache MetaObject property hash lookups, making resolution of properties much
+faster.
+
+MetaKeyIndex is a new class provided for the purpose of caching the hashed
+value of a MetaObject key.
+
+Adapted change of RUNTIME_CLASS macro into RTTI from the currently defunct
+inventory-branch (which WILL be rehabilitated eventually, pending some changes
+which are now ongoing).
+
+RTTIObject now contains static methods which forward to RTTIObject::Type for
+resolution of type names. These are strictly for convenience, as they require
+fewer scoping operators to access.
+
+Damage factors now use fixed_t instead of float, in order to prevent any
+introduction of floating-point platform-specific non-repeatability, which would
+fragment demo sync.
+
+--------------------------------------------------------------------------------
+09/09/12
+
+esselfortium has provided significant improvements to several of the big font
+experimental color translations. The BOOM HUD font now has translations in
+Heretic as well, making the BOOM HUD functional (however inappropriate it may
+be, thematically speaking) within that game.
+
+Added emalloctag to match ecalloctag.
+
+The ability to have braceless lists in EDF has been readapted and fixed from the
+currently defunct inventory-branch, where it is currently implemented but
+apparently broken.
+
+Added an @identity keyword for font translations - when this is used as a value,
+an identity translation will be generated for that particular color slot. The
+identity translation is a monotonically increasing table of numbers from 0 to
+255, which has no effect when applied as a translation.
+
+Added a new EDF util function, E_CfgListToCommaString. It collapses a cfg_list
+option into a comma-separated value string, with the options in list order.
+
+fraggle's head, as displayed by the 'r0x0rz delux0rz' easter egg, is now stored
+as a lump in eternity.wad instead of being embedded inside the executable.
+
+At request of Kate, I have recolored the level title text on the intermission
+screen when in Master Levels mode in order to provide better contrast - it is
+now gold instead of gray.
+
+Additional work has been carried out on the statistics/high scores module.
+
+--------------------------------------------------------------------------------
+09/08/12
+
+Most calls to qstring::initCreate have been eliminated, since they became
+unnecessary when checkBuffer() and proper C++ RAII were added to the class.
+This has just been legacy code, a hold-over from the C codebase.
+
+I have extended the mn_testfont command to accept an optional string as well as
+a font name, so all characters of a font can be exercised by providing different
+test messages.
+
+--------------------------------------------------------------------------------
+09/07/12
+
+Utilities have been added which determine what colors in the palette are used by
+a particular patch, and, via repeated application of the former, determine all
+of the colors used by the patches within a font. The new v_fontcolors command
+takes a font name and an output file name and will dump the list of used colors
+in the named font to that file. This is exceptionally useful for creation of
+hand-tweaked color translations.
+
+mn_testfont is also provided, which takes a font name and displays a test string
+in that font in each supported translation, in the form of a menu widget.
+
+Experimental translations have been added for the DOOM big font, now that 
+support for colors can be extended to such fonts.
+
+--------------------------------------------------------------------------------
+09/06/12
+
+EDF fonts are now capable of overriding font color properties, including the 
+default color of a font, and of providing a partial or complete set of 
+translation tables which apply only to that font. Translations can be supplied
+either within EDF in the form of ZDoom translation language strings, or via
+lump names within the T_START/T_END namespace.
+
+--------------------------------------------------------------------------------
+09/05/12
+
+Since rendering of text to VBuffers has been possible for a while now, I have
+restored the functioning of fraggle's console easter egg to its behavior in
+SMMU, where it drew text in the HUD font directly onto the console background
+buffer (it did this in SMMU by hacking the screens array temporarily, an idiom
+which has not been applicable in Eternity for several years now).
+
+--------------------------------------------------------------------------------
+09/04/12
+
+In order to more fluidly deal with some issues raised by the addition of
+automatic conversion and substitution of patches in the prior revision, I have
+revised WadDirectory to allow multiple caches per lump, each one other than the
+default being for purposes of storing conversions to a specific format. Right
+now the only such alternate cache is for conversion to patch_t format.
+
+--------------------------------------------------------------------------------
+09/03/12
+
+All patches are now format-verified at load time. If they are found to be
+incorrect, the engine will check to see if they are actually .PNG files, and if
+so, they'll be loaded and converted into patches just-in-time. If this check
+fails, the patch lump will be permanently replaced by a copy of the default
+patch used for missing resources.
+
+For support of the above, I added code to VPNGImage to convert PNGs to patches.
+
+Significant changes were also required to the WadLumpLoader class hierarchy as
+a result of the above.
+
+Began work on a module which can track top score statistics for any levels, IWAD
+or PWAD.
+
+When a question widget pops up over a fullscreen widget, it needs to be treated
+as a fullscreen widget - this adjustment is made on the fly when pushing the
+question widget onto the widget stack.
+
+When the advanced filebox widget asks a question of the user, a sound will now
+be made matching the rest of the menu system.
+
+Made the widget stack static to mn_engin.cpp.
+
+Directories must be added to the list of source file names in WadDirectory or
+the Collection indices get out of sync with source IDs.
+
+--------------------------------------------------------------------------------
+09/02/12
+
+Doing some cleanup work on Master Levels enhancements, a new V_FontFitTextToRect
+routine is available which can wrap text against a hard right boundary and clip
+it to a specified height. This ought to really come in handy later for Strife,
+as my implementation of it has learned from all of Rogue's mistakes and is both
+more efficient and significantly less buggy.
+
+Another Midgard regression was identified whereby the fade-out from a level to
+the intermission would slam up the intermission background and then do the fade,
+which looked very weird. This was a result of removing intermission background
+caching but failing to remove Lee's calls to WI_DrawBackground that were made
+outside of the drawing loop during intermission initialization.
+
+Version has been bumped to 3.40.27, and the next release name has been decided
+upon as "Alfheim", another of the worlds of Norse cosmology - the home of the
+elves, fairy folk, and other mystical beings of light.
+
+Collection<T> now supports setting a prototype object of type T which can be
+used to invoke copy constructors when adding objects to the collection. This 
+allows introduction of add() and addNew() methods matching PODCollection, but
+without introducing the requirement of possession of a default unparameterized
+constructor by type T, which I find undesirable as many of our non-POD types
+already don't have such a constructor.
+
+More methods in w_levels.cpp have been moved into the ManagedDirectory class
+because they access parts of it which should be encapsulated.
+
+A lookup of loaded wad filenames by wad directory source ID is now kept by
+WadDirectory.
+
+--------------------------------------------------------------------------------
+09/01/12
+
+manageddir_t has been converted into a proper subclass of WadDirectory, and no
+longer allocates WadDirectory instances without properly constructing them as
+a result (I figure this was only working so long as WadDirectory did not have
+any virtual methods in it, nor contain any other non-POD objects).
+
+As a result of that change, WadDirectory has also been made a descendant of 
+ZoneObject, so as to allow instrumented and tagged usage of operator new for 
+managed directories.
+
+Continuing on this line of work, I also added a pImpl class for WadDirectory 
+and used it to contain a reimplementation of the infoptrs reallocating array
+using PODCollection.
+
+--------------------------------------------------------------------------------
+08/31/12
+
+Applied some long-planned enhancements to native Master Levels support:
+
+* An INTRMLEV lump is provided which displays the DOOM II intermission bg 
+  recolored to white and gray, matching somewhat the pencil sketch look of the
+  Master Levels box art.
+  
+* Appropriate level names will now be displayed in the intermission, provided 
+  the text files were available for load.
+  
+* The Master Levels selection menu will prompt before exiting the menus. This
+  required modification of the menu widget system to function on a proper stack
+  of widgets rather than only being able to have one active widget tracked at
+  a time.
+
+--------------------------------------------------------------------------------
+08/29/12
+
+Some users found trouble compiling Eternity in debug mode, as it would complain
+that _Debug_message was not found. MSDN seems to indicate this is a result of
+not linking with the msvcrtd library, and that you should define 
+_HAS_ITERATOR_DEBUGGING to 0 in order to avoid this. I am a bit confused, as I
+thought that EE did link with the debug CRT now... needs more investigation.
+
+--------------------------------------------------------------------------------
+08/28/12
+
+Frustrated with lack of a + operator in qstring (which is by design, for reasons
+of efficiency - we do not pass qstrings by value, ever), I devised an 
+alternative which avoids the problem - operator << is now supported with 
+overloads for most basic types and for qstring instances, allowing streamed
+insertion. Since most qstring methods return qstring &, they can also be used
+within the streams.
+
+Another Midgard glitch was detected on Linux, where there is apparently greater
+susceptibility under GCC to mismatches between runtime and compiled floating
+point values (which is always a possibility everywhere). 4.0/3.0 as compiled was
+not comparing equal to or less than 4.0/3.0 as computed at runtime, resulting in
+misapplication of widescreen semantics and a crash in D_drawWings.
+
+--------------------------------------------------------------------------------
+08/27/12
+
+Almost predictably, a heap corruption problem was identified immediately after
+Midgard launch by Gez and several others. The length calculation of the malloc
+for basepath has always been one character too small (no room for \0 left), so
+this was writing one byte past the end of the block. If the block was padded
+out enough, this remained undetectable.
+
+Fixed by rewriting the code in question to use qstring, to achieve secure file
+path concatenation as used in the majority of Eternity's code.
+
+================================================================================
 Changes since Eternity Engine v3.40.20
 ================================================================================
 --------------------------------------------------------------------------------
