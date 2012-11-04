@@ -283,10 +283,11 @@ typedef struct gamemodeinfo_s
    int flags;                 // game mode flags
    
    // startup stuff
-   const char *versionName;   // descriptive version name
-   const char *freeVerName;   // FreeDoom override name, if such exists
-   const char *startupBanner; // startup banner text   
-   char **iwadPath;           // iwad path variable
+   const char *versionName;       // descriptive version name
+   const char *freeVerName;       // FreeDoom override name, if such exists
+   const char *bfgEditionName;    // BFG Edition override name, if exists
+   const char *startupBanner;     // startup banner text   
+   char **iwadPath;               // iwad path variable
    
    // demo state information
    const demostate_t *demoStates; // demostates table

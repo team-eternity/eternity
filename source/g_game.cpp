@@ -1585,14 +1585,14 @@ static void G_DoWorldDone(void)
    // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists
    // in the wad directory, and if so, use it. Otherwise, return to the Master
    // Levels selection menu.
-   if(inmasterlevels)
+   if(inmanageddir)
    {
       wadlevel_t *level = W_FindLevelInDir(g_dir, gamemapname);
 
-      if(!level)
+      if(!level && inmanageddir == MD_MASTERLEVELS)
       {
          gameaction = ga_nothing;
-         inmasterlevels = false;
+         inmanageddir = MD_NONE;
          W_DoMasterLevels(false);
          return;
       }
@@ -2418,7 +2418,7 @@ void G_WorldDone(void)
    // haleyjd 10/24/10: if in Master Levels mode, just return from here now.
    // The choice of whether to go to another level or show the Master Levels
    // menu is taken care of in G_DoWorldDone.
-   if(inmasterlevels)
+   if(inmanageddir == MD_MASTERLEVELS)
       return;
 
    if(secretexit)
@@ -2508,7 +2508,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 
    // haleyjd 06/16/10: default to NULL
    d_dir = NULL;
-   inmasterlevels = false;
+   inmanageddir = MD_NONE;
    
    gameaction = ga_newgame;
 }

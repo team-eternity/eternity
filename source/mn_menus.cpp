@@ -37,6 +37,7 @@
 #include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "d_iwad.h"
 #include "d_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
@@ -70,12 +71,14 @@
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
 extern menu_t menu_main;
 extern menu_t menu_episode;
+extern menu_t menu_d2episode;
 extern menu_t menu_startmap;
 
 // Blocky mode, has default, 0 = high, 1 = normal
@@ -266,7 +269,10 @@ CONSOLE_COMMAND(mn_newgame, 0)
       }
       else
 #endif
-         MN_StartMenu(&menu_newgame);
+         if(bfgedition && (w_norestpath && *w_norestpath))
+            MN_StartMenu(&menu_d2episode);
+         else
+            MN_StartMenu(&menu_newgame);
    }
    else
    {
@@ -325,10 +331,10 @@ static void MN_EpisodeDrawer()
 
 static menuitem_t mn_episode_items[] =
 {
-   { it_runcmd, "knee deep in the dead", "mn_episode 1",  "M_EPI1" },
-   { it_runcmd, "the shores of hell",    "mn_episode 2",  "M_EPI2" },
-   { it_runcmd, "inferno!",              "mn_episode 3",  "M_EPI3" },
-   { it_runcmd, "thy flesh consumed",    "mn_episode 4",  "M_EPI4" },
+   { it_runcmd, "Knee Deep in the Dead", "mn_episode 1",  "M_EPI1" },
+   { it_runcmd, "The Shores of Hell",    "mn_episode 2",  "M_EPI2" },
+   { it_runcmd, "Inferno",               "mn_episode 3",  "M_EPI3" },
+   { it_runcmd, "Thy Flesh Consumed",    "mn_episode 4",  "M_EPI4" },
    { it_end }
 };
 
@@ -362,6 +368,28 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
    
    MN_StartMenu(&menu_newgame);
 }
+
+//=============================================================================
+//
+// BFG Edition No Rest for the Living Special Support
+//
+
+static menuitem_t mn_dm2ep_items[] =
+{
+   { it_runcmd, "Hell on Earth",          "mn_episode 1",  "M_EPI1" },
+   { it_runcmd, "No Rest for the Living", "mn_episode 2",  "M_EPI2" },
+   { it_end }
+};
+
+menu_t menu_d2episode =
+{
+   mn_dm2ep_items,             // menu items
+   NULL, NULL, NULL,           // pages
+   48, 63,                     // x, y offsets
+   0,                          // select episode 1
+   mf_skullmenu | mf_emulated, // skull menu
+   MN_EpisodeDrawer            // drawer
+};
 
 //=============================================================================
 //
@@ -433,7 +461,10 @@ static void MN_DoNightmare(void)
    else
    {
       // start on first level of selected episode
-      G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
+      if(bfgedition && start_episode == 2)
+         W_DoNR4TLStart();
+      else
+         G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
    
    MN_ClearMenus();
@@ -472,7 +503,10 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    else
    {
       // start on first level of selected episode
-      G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
+      if(bfgedition && start_episode == 2)
+         W_DoNR4TLStart();
+      else
+         G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    
    MN_ClearMenus();
@@ -577,7 +611,7 @@ static const char *mn_wad_names[] =
    "Misc Settings / Autoloads",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
-   "IWAD Paths - Freedoom",
+   "IWAD Paths - Freedoom / Mission Packs",
    NULL
 };
 
@@ -667,6 +701,10 @@ static menuitem_t mn_wadiwad3_items[] =
    {it_variable, "Freedoom:",             "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
    {it_variable, "Ultimate Freedoom:",    "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
    {it_variable, "FreeDM:",               "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_gap},
+   {it_info,     "Mission Packs",           NULL,            NULL, MENUITEM_CENTERED },
+   {it_gap}, 
+   {it_variable, "No Rest for the Living:", "w_norestpath",  NULL, MENUITEM_LALIGNED },
    {it_end}
 };
 

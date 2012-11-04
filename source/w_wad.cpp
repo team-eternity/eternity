@@ -514,7 +514,9 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
          ResWADSource = source;
 
       // haleyjd 07/13/09: only track the first IWAD found
-      if(IWADSource < 0 && !strncmp(header.identification, "IWAD", 4))
+      // haleyjd 11/03/12: Status as the IWAD is now determined by how the file
+      // was added to the game (ie., -iwad or -disk, vs. -file, autoloads, etc.)
+      if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
          IWADSource = source;
    }
 

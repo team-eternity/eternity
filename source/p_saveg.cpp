@@ -1258,7 +1258,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       // haleyjd 06/16/10: save "inmasterlevels" state
       int tempskill = (int)gameskill;
       
-      arc << compatibility << tempskill << inmasterlevels;
+      arc << compatibility << tempskill << inmanageddir;
    
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
@@ -1415,7 +1415,7 @@ void P_LoadGame(const char *filename)
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
       int tempskill;
-      arc << compatibility << tempskill << inmasterlevels;
+      arc << compatibility << tempskill << inmanageddir;
 
       gameskill = (skill_t)tempskill;
       
@@ -1459,6 +1459,11 @@ void P_LoadGame(const char *filename)
 
          // done with temporary file name
          efree(fn);
+
+         // 11/04/12: Since we loaded a managed directory wad, initialize the
+         // mission. This will take care of any special data loading 
+         // requirements, such as metadata for NR4TL.
+         W_InitManagedMission(inmanageddir);
       }
    
       // killough 3/16/98, 12/98: check lump name checksum

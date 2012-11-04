@@ -372,6 +372,11 @@ CONSOLE_COMMAND(cvarhelp, 0)
    C_Printf("Variable %s not found\n", name);
 }
 
+CONSOLE_COMMAND(c_popup, 0)
+{
+   C_InstaPopup();
+}
+
         /******** add commands *******/
 
 // command-adding functions in other modules
@@ -417,6 +422,7 @@ void C_AddCommands()
   C_AddCommand(dumplog); // haleyjd
   C_AddCommand(openlog);
   C_AddCommand(closelog);
+  C_AddCommand(c_popup);
 
   // SoM: I can never remember the values for a console variable
   C_AddCommand(cvarhelp);

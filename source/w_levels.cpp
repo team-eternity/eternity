@@ -30,6 +30,7 @@
 #include "c_runcmd.h"
 #include "d_files.h"
 #include "d_gi.h"
+#include "d_iwad.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "doomtype.h"
@@ -169,7 +170,7 @@ bool ManagedDirectory::openWadFile()
    bool ret;
    
    if((ret = addNewPrivateFile(name)))
-      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, true);
+      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, true, false);
 
    return ret;
 }
@@ -417,7 +418,7 @@ wadlevel_t *W_FindLevelInDir(WadDirectory *waddir, const char *name)
 
 // globals
 char *w_masterlevelsdirname;
-bool inmasterlevels;            // true if we are playing master levels
+int   inmanageddir;          // non-zero if we are playing a managed dir level
 
 // statics
 static mndir_t masterlevelsdir; // menu file loader directory structure
@@ -498,8 +499,8 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
    MN_ClearMenus();
    G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), mapname, dir);
 
-   // set inmasterlevels - this is even saved in savegames :)
-   inmasterlevels = true;
+   // set inmanageddir - this is even saved in savegames :)
+   inmanageddir = MD_MASTERLEVELS;
 }
 
 //
@@ -562,6 +563,107 @@ void W_DoMasterLevels(bool allowexit)
 
 //=============================================================================
 //
+// No Rest for the Living
+//
+// 11/04/12: The PC version of NR4TL, released along with DOOM 3: BFG Edition,
+// can be configured to load as an additional episode with DOOM 2.
+//
+
+// globals
+char *w_norestpath;
+
+//
+// W_loadNR4TL
+//
+// Loads No Rest for the Living as a managed wad.
+//
+static WadDirectory *W_loadNR4TL()
+{
+   int len = 0;
+   WadDirectory *dir = NULL;
+   
+   if(!w_norestpath || !*w_norestpath)
+      return NULL;
+
+   // make sure it wasn't already opened
+   if((dir = W_GetManagedWad(w_norestpath)))
+      return dir;
+
+   // otherwise, add it now
+   return W_AddManagedWad(w_norestpath);
+}
+
+//
+// W_doNR4TLStart
+//
+// Command handling for starting the NR4TL episode.
+//
+void W_DoNR4TLStart()
+{
+   static bool firsttime = true;
+
+   WadDirectory *dir = NULL;
+   const char *mapname = NULL;
+
+   // Try to load the NR4TL wad file
+   if(!(dir = W_loadNR4TL()))
+   {
+      if(menuactive)
+         MN_ErrorMsg("Could not load wad");
+      else
+         C_Printf(FC_ERROR "Could not load %s\n", w_norestpath);
+      return;
+   }
+
+   // Initialize the mission
+   W_InitManagedMission(MD_NR4TL);
+
+   // Start playing it!
+   MN_ClearMenus();
+   G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), "MAP01", dir);
+
+   // set inmanageddir
+   inmanageddir = MD_NR4TL;
+}
+
+//=============================================================================
+//
+// Mission Initialization
+//
+
+static void W_initNR4TL()
+{
+   static bool firsttime = true;
+
+   // Load metadata
+   if(firsttime)
+   {
+      D_MissionMetaData("ENRVMETA", MD_NR4TL);
+      firsttime = false;
+   }
+}
+
+//
+// W_InitManagedMission
+//
+// haleyjd 11/04/12: Managed directory mission packs need certain init tasks
+// performed for them any time they get loaded, whether that happens here or
+// from the savegame module.
+//
+void W_InitManagedMission(int mission)
+{
+   switch(mission)
+   {
+   case MD_NR4TL:
+      W_initNR4TL();
+      break;
+   default:
+      break;
+   }
+}
+
+//=============================================================================
+//
 // Console Commands
 //
 
@@ -594,6 +696,16 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
       levelname = Console.argv[1]->constPtr();
 
    W_doMasterLevelsStart(Console.argv[0]->constPtr(), levelname);
+}
+
+//
+// w_playnorest
+//
+// Start playing No Rest for the Living
+//
+CONSOLE_COMMAND(w_playnorest, 0)
+{
+   W_DoNR4TLStart();
 }
 
 //
@@ -634,6 +746,7 @@ void W_AddCommands(void)
 {
    C_AddCommand(w_masterlevels);
    C_AddCommand(w_startlevel);
+   C_AddCommand(w_playnorest);
 
    // Utils
    C_AddCommand(w_writelump);

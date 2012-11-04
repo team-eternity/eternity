@@ -35,7 +35,7 @@ extern char firstlevel[9];
 
 // WAD Files
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               bool privatedir);
+               bool privatedir, bool iwad);
 void D_AddDirectory(const char *dir);
 void D_ListWads();
 void D_NewWadLumps(int source);

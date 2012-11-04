@@ -149,6 +149,8 @@ typedef struct metainfo_s
    int nextsecret;        // next secret #, only used if non-0
    bool finale;           // if true, sets LevelInfo.endOfGame
    const char *intertext; // only used if finale is true
+   const char *interpic;  // interpic, if not NULL
+   int mission;           // if non-zero, only applies during a mission pack
 } metainfo_t;
 
 static int nummetainfo, nummetainfoalloc;
@@ -904,6 +906,7 @@ static void P_InfoDefaultLevelName(void)
    bool deh_modified   = false;
    bool synth_type     = false;
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
+   int  d2upperbound   = 32;
 
    // if we have a current metainfo, use its level name
    if(curmetainfo)
@@ -912,7 +915,14 @@ static void P_InfoDefaultLevelName(void)
       return;
    }
 
-   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
+   // haleyjd 11/03/12: in pack_disk, we have 33 map names.
+   // This is also allowed for subsitution through BEX mnemonic HUSTR_33.
+   if(DEH_StringChanged("HUSTR_33") ||
+      (GameModeInfo->id == commercial && 
+       GameModeInfo->missionInfo->id == pack_disk))
+      d2upperbound = 33;
+
+   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
    {
       // DOOM II
       bexname = missionInfo->id == pack_tnt  ? HU_TITLET :
@@ -1375,8 +1385,17 @@ static void P_ClearLevelVars(void)
    LevelInfo.nextLevelPic    = NULL;
    LevelInfo.nextSecretPic   = NULL;
    LevelInfo.creator         = "unknown";
-   LevelInfo.interPic        = GameModeInfo->interPic;
-   LevelInfo.partime         = curmetainfo ? curmetainfo->partime : -1;
+
+   if(curmetainfo) // metadata-overridable intermission defaults
+   {
+      LevelInfo.interPic = curmetainfo->interpic;
+      LevelInfo.partime  = curmetainfo->partime;
+   }
+   else
+   {
+      LevelInfo.interPic = GameModeInfo->interPic;
+      LevelInfo.partime  = -1;
+   }
 
    LevelInfo.colorMap        = "COLORMAP";
    LevelInfo.outdoorFog      = NULL;
@@ -1440,7 +1459,7 @@ static void P_ClearLevelVars(void)
    }
 
    // haleyjd 08/31/12: Master Levels mode hacks
-   if(inmasterlevels && GameModeInfo->type == Game_DOOM)
+   if(inmanageddir == MD_MASTERLEVELS && GameModeInfo->type == Game_DOOM)
       LevelInfo.interPic = "INTRMLEV";
 }
 
@@ -1492,12 +1511,13 @@ static void P_InitWeapons(void)
 //
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
-   int i;
    metainfo_t *mi = NULL;
 
-   for(i = 0; i < nummetainfo; ++i)
+   for(int i = 0; i < nummetainfo; i++)
    {
-      if(metainfo[i].level == mapnum)
+      // Check for map number match, and mission match, if a mission
+      // is required to be active in order to use this metadata.
+      if(metainfo[i].level == mapnum && metainfo[i].mission == inmanageddir)
       {
          mi = &metainfo[i];
          break;
@@ -1516,7 +1536,8 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 // possible PWAD(s) that originate from certain console versions of DOOM.
 //
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, bool finale, const char *intertext)
+                      int next, int secr, bool finale, const char *intertext,
+                      int mission, const char *interpic)
 {
    metainfo_t *mi;
 
@@ -1536,6 +1557,8 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    mi->nextsecret = secr;
    mi->finale     = finale;
    mi->intertext  = intertext;
+   mi->mission    = mission;
+   mi->interpic   = interpic;
 
    ++nummetainfo;
 }

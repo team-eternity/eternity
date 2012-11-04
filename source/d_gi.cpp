@@ -105,6 +105,10 @@
 #define FNAME_DOOM_R    "FreeDoom version"
 #define FNAME_DOOM2     "FreeDoom II version"
 
+// BFG Edition override names
+#define BFGNAME_DOOM    "Ultimate DOOM BFG Edition version"
+#define BFGNAME_DOOM2   "DOOM II BFG Edition version"
+
 // Startup banners
 #define BANNER_DOOM_SW   "DOOM Shareware Startup"
 #define BANNER_DOOM_REG  "DOOM Registered Startup"
@@ -120,7 +124,6 @@
 
 // Default intermission pics
 #define INTERPIC_DOOM    "INTERPIC"
-#define INTERPIC_DISK    "DMENUPIC"
 
 // Default finales caused by Teleport_EndGame special
 #define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
@@ -722,7 +725,7 @@ static missioninfo_t gmDisk =
    NULL,            // creditBackgroundOR
    CONBACK_DISK,    // consoleBackOR
    NULL,            // demoStatesOR
-   INTERPIC_DISK,   // interPicOR
+   NULL,            // interPicOR
    DiskExitRules,   // exitRulesOR
 };
 
@@ -824,6 +827,7 @@ static gamemodeinfo_t giDoomSW =
    
    VNAME_DOOM_SW,    // versionName
    FNAME_DOOM_SW,    // freeVerName
+   NULL,             // bfgEditionName
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
    
@@ -920,6 +924,7 @@ static gamemodeinfo_t giDoomReg =
    
    VNAME_DOOM_REG,   // versionName
    FNAME_DOOM_R,     // freeVerName
+   NULL,             // bfgEditionName
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
    
@@ -1016,6 +1021,7 @@ static gamemodeinfo_t giDoomRetail =
    
    VNAME_DOOM_RET,   // versionName
    FNAME_DOOM_R,     // freeVerName
+   BFGNAME_DOOM,     // bfgEditionName
    BANNER_DOOM_RET,  // startupBanner
    &gi_path_doomu,   // iwadPath
    
@@ -1112,6 +1118,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    VNAME_DOOM2,      // versionName
    FNAME_DOOM2,      // freeVerName
+   BFGNAME_DOOM2,    // bfgEditionName
    BANNER_DOOM2,     // startupBanner
    &gi_path_doom2,   // iwadPath
 
@@ -1208,6 +1215,7 @@ static gamemodeinfo_t giHereticSW =
 
    VNAME_HTIC_SW,    // versionName
    NULL,             // freeVerName
+   NULL,             // bfgEditionName
    BANNER_HTIC_SW,   // startupBanner
    &gi_path_hticsw,  // iwadPath
 
@@ -1308,6 +1316,7 @@ static gamemodeinfo_t giHereticReg =
    
    VNAME_HTIC_REG,   // versionName
    NULL,             // freeVerName
+   NULL,             // bfgEditionName
    BANNER_HTIC_REG,  // startupBanner
    &gi_path_hticreg, // iwadPath
 

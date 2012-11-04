@@ -501,6 +501,7 @@ VARIABLE_STRING(gi_path_fdoomu,  NULL, UL);
 VARIABLE_STRING(gi_path_freedm,  NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
+VARIABLE_STRING(w_norestpath,          NULL, UL);
 
 static bool G_TestIWADPath(char *path)
 {
@@ -589,6 +590,11 @@ CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)
 {
    if(G_TestIWADPath(w_masterlevelsdirname))
       W_EnumerateMasterLevels(true);
+}
+
+CONSOLE_VARIABLE(w_norestpath, w_norestpath, cf_allowblank)
+{
+   G_TestIWADPath(w_norestpath);
 }
 
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
@@ -984,6 +990,8 @@ void G_AddCommands(void)
    C_AddCommand(iwad_freedoomu);
    C_AddCommand(iwad_freedm);
    C_AddCommand(master_levels_dir);
+   C_AddCommand(w_norestpath);
+
    C_AddCommand(use_doom_config);
 
    G_AddChatMacros();

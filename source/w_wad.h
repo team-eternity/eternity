@@ -149,6 +149,7 @@ enum WFileAddFlags
    WFA_DIRECTORY      = 0x0020, // Loading a physical disk directory
    WFA_ALLOWHACKS     = 0x0040, // Allow application of wad directory hacks
    WFA_INMEMORY       = 0x0080, // Archive is in memory
+   WFA_ISIWADFILE     = 0x0100, // Archive is the main IWAD file
 };
 
 //

@@ -30,9 +30,11 @@
 #define D_IWAD_H__
 
 extern bool freedoom;
+extern bool bfgedition;
 
 char *D_FindInDoomWadPath(const char *filename, const char *extension);
 void D_IdentifyVersion();
+void D_MissionMetaData(const char *lump, int mission);
 
 #endif
 

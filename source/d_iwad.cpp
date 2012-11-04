@@ -47,7 +47,9 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 // D_FIXME:
 extern bool gamepathset;
@@ -273,7 +275,7 @@ static void D_FindDiskFileIWAD(void)
 static void D_LoadDiskFileIWAD(void)
 {
    if(diskiwad.f)
-      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, false);
+      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, false, true);
    else
       I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
@@ -290,7 +292,7 @@ static void D_LoadDiskFilePWAD(void)
    if(wad.f)
    {
       if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, false);
+         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, false, false);
    }
 }
 
@@ -333,54 +335,26 @@ static bool D_metaGetLine(qstring &qstr, const char *input, int *idx)
 }
 
 //
-// D_DiskMetaData
+// D_parseMetaData
 //
-// Handles metadata in the disk file.
+// Parse a metadata resource
 //
-static void D_DiskMetaData(void)
+static void D_parseMetaData(const char *metatext, int mission)
 {
-   char *name  = NULL, *metatext = NULL;
-   const char *slash = NULL;
-   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
-   int slen = 0, index = 0;
-   int partime = 0, musicnum = 0;
-   int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
-   diskwad_t wad;
    qstring buffer;
-
-   if(!diskpwad)
-      return;
-
-   // find the wad to get the canonical resource name
-   wad = D_FindWadInDiskFile(diskfile, diskpwad);
-
-   // return if not found, or if this is metadata for the IWAD
-   if(!wad.f || strstr(wad.name, "doom"))
-      return;
-
-   // construct the metadata filename
-   M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
+   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
+   int partime = 0, musicnum = 0, index = 0;
+   int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    
-   if(!(slash = strrchr(wad.name, '\\')))
-      return;
-
-   slen = slash - wad.name;
-   ++slen;
-   strncpy(name, wad.name, slen);
-   strcpy(name + slen, "metadata.txt");
-
-   // load it up
-   if(!(metatext = (char *)(D_CacheDiskFileResource(diskfile, name, true))))
-      return;
-
-   // parse it
-
    // get first line, which is an episode id
    D_metaGetLine(buffer, metatext, &index);
 
    // get episode name
    if(D_metaGetLine(buffer, metatext, &index))
-      GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
+   {
+      if(mission == MD_NONE) // Not when playing as a mission pack
+         GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
+   }
 
    // get end text
    if(D_metaGetLine(buffer, metatext, &index))
@@ -421,7 +395,8 @@ static void D_DiskMetaData(void)
                           levelnum == secretlevel ? exitreturn : 0,
                           levelnum == exitreturn - 1 ? secretlevel : 0,
                           levelnum == secretlevel - 1, 
-                          (levelnum == secretlevel - 1) ? endtext : NULL);
+                          (levelnum == secretlevel - 1) ? endtext : NULL,
+                          mission, "DMENUPIC");
          break;
       }
       ++linenum;
@@ -432,9 +407,67 @@ static void D_DiskMetaData(void)
          linenum = 0;
       }
    }
+}
+
+//
+// D_DiskMetaData
+//
+// Handles metadata in the disk file.
+//
+static void D_DiskMetaData()
+{
+   char *name  = NULL, *metatext = NULL;
+   const char *slash = NULL;
+   int slen = 0;
+   diskwad_t wad;
+
+   if(!diskpwad)
+      return;
+
+   // find the wad to get the canonical resource name
+   wad = D_FindWadInDiskFile(diskfile, diskpwad);
+
+   // return if not found, or if this is metadata for the IWAD
+   if(!wad.f || strstr(wad.name, "doom"))
+      return;
+
+   // construct the metadata filename
+   M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
+   
+   if(!(slash = strrchr(wad.name, '\\')))
+      return;
+
+   slen = slash - wad.name;
+   ++slen;
+   strncpy(name, wad.name, slen);
+   strcpy(name + slen, "metadata.txt");
+
+   // load it up
+   if(!(metatext = (char *)(D_CacheDiskFileResource(diskfile, name, true))))
+      return;
+
+   // parse it
+   D_parseMetaData(metatext, MD_NONE);
 
    // done with metadata resource
    efree(metatext);
+}
+
+//
+// D_MissionMetaData
+//
+// haleyjd 11/04/12: Load metadata for a mission pack wad file.
+//
+void D_MissionMetaData(const char *lump, int mission)
+{
+   int lumpnum  = wGlobalDir.getNumForName(lump);
+   int lumpsize = wGlobalDir.lumpLength(lumpnum);
+   ZAutoBuffer metabuffer(lumpsize + 1, true);
+   char *metatext = metabuffer.getAs<char *>();
+
+   wGlobalDir.readLump(lumpnum, metatext);
+
+   D_parseMetaData(metatext, mission);
 }
 
 //=============================================================================
@@ -636,6 +669,20 @@ static char *D_IWADPathForIWADParam(const char *iwad)
 // haleyjd 10/13/05: special stuff for FreeDOOM :)
 bool freedoom = false;
 
+// haleyjd 11/03/12: special stuff for BFG Edition IWADs
+bool bfgedition = false;
+
+//
+// lumpnamecmp
+//
+// Compare a possibly non-null-terminated lump name against a static
+// character string of no more than 8 characters.
+//
+static int lumpnamecmp(const char *lumpname, const char *str)
+{
+   return strncmp(lumpname, str, strlen(str));
+}
+
 //
 // D_checkIWAD
 //
@@ -660,7 +707,7 @@ static void D_checkIWAD(const char *iwadname,
                         bool *hassec)
 {
    FILE *fp;
-   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
+   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0, bfg = 0;
    int raven = 0, sosr = 0;
    filelump_t lump;
    wadinfo_t header;
@@ -713,18 +760,28 @@ static void D_checkIWAD(const char *iwadname,
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(!strncmp(n, "ADVISOR",  7) || 
-              !strncmp(n, "TINTTAB",  7) || 
-              !strncmp(n, "SNDCURVE", 8))
+      else if(!lumpnamecmp(n, "ADVISOR") || 
+              !lumpnamecmp(n, "TINTTAB") || 
+              !lumpnamecmp(n, "SNDCURVE"))
       {
          ++raven;
       }
-      else if(!strncmp(n, "EXTENDED", 8))
+      else if(!lumpnamecmp(n, "EXTENDED"))
          ++sosr;
-      else if(!strncmp(n, "FREEDOOM", 8))
+      else if(!lumpnamecmp(n, "FREEDOOM"))
          freedoom = true;
-      else if(!strncmp(n, "HACX-R", 6))
+      else if(!lumpnamecmp(n, "HACX-R"))
          ++hacx;
+      else if(!lumpnamecmp(n, "M_ACPT"  ) || // haleyjd 11/03/12: BFG Edition
+              !lumpnamecmp(n, "M_CAN"   ) ||
+              !lumpnamecmp(n, "M_EXITO" ) ||
+              !lumpnamecmp(n, "M_CHG"   ) ||
+              !lumpnamecmp(n, "DMENUPIC"))
+      {
+        ++bfg;
+        if(bfg >= 5) // demand all 5 new lumps for safety.
+           bfgedition = true;
+      }
    }
 
    fclose(fp);
@@ -755,8 +812,10 @@ static void D_checkIWAD(const char *iwadname,
 
       if(cm >= 30 || (cm && !rg))
       {
-         if(freedoom) // FreeDoom is meant to be Doom II, not TNT
+         if(freedoom)        // FreeDoom is meant to be Doom II, not TNT
             *gmission = doom2;
+         else if(bfgedition) // BFG Edition - Behaves same as XBox 360 disk version
+            *gmission = pack_disk;
          else
          {
             if(tnt >= 4)
@@ -842,6 +901,8 @@ static const char *const standard_iwads[]=
    "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
    "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
    "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
+   "/bfgdoom.wad",   // BFG Edition UDoom IWAD  -- haleyjd 11/03/12
+   "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD  -- haleyjd 11/03/12
 };
 
 static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
@@ -1127,7 +1188,7 @@ static void D_loadResourceWad()
       psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, false);
+   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, false, false);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1221,7 +1282,7 @@ static void D_identifyIWAD(void)
       // fraggle -- this allows better compatibility with new IWADs
       D_loadResourceWad();
 
-      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, false);
+      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, false, true);
 
       // 12/24/11: check for game folder hi-def music
       D_CheckGameMusic();

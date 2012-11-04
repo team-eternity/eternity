@@ -27,7 +27,8 @@
 void P_LoadLevelInfo(int lumpnum, const char *lvname);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, bool finale, const char *intertext);
+                      int next, int secr, bool finale, const char *intertext,
+                      int mission, const char *interpic);
 
 void P_AddSndInfoMusic(int mapnum, const char *lumpname);
 const char *P_GetSndInfoMusic(int mapnum);

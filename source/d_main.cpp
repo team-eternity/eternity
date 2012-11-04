@@ -1353,7 +1353,7 @@ static void D_GameAutoloadWads(void)
          if(strstr(direntry->d_name, ".wad"))
          {
             fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
-            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, false);
+            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, false, false);
          }
       }
       
@@ -1465,6 +1465,10 @@ void D_SetGameName(const char *iwad)
    // haleyjd 03/07/10: Special FreeDoom overrides :)
    if(freedoom && GameModeInfo->freeVerName)
       game_name = GameModeInfo->freeVerName;
+
+   // haleyjd 11/03/12: BFG Edition overrides
+   if(bfgedition && GameModeInfo->bfgEditionName)
+      game_name = GameModeInfo->bfgEditionName;
 
    puts(game_name);
 }
@@ -1728,7 +1732,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, false);
+                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, false, false);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -2067,7 +2071,7 @@ static void D_DoomInit(void)
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, false);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, false, false);
          }
       }
    }
@@ -2097,7 +2101,7 @@ static void D_DoomInit(void)
       strncpy(file, demosource, len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, false);
+      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, false, false);
       usermsg("Playing demo %s\n", file);
    }
 
