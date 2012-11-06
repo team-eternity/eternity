@@ -58,7 +58,7 @@ extern bool unicodeinput;
 extern int audio_buffers;
 #endif
 
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
+#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
 extern unsigned int process_affinity_mask;
 #endif
 
@@ -251,7 +251,7 @@ static default_t sysdefaults[] =
 
 #endif
 
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
+#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
    DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, default_t::wad_no, 
                "process affinity mask - warning: expert setting only!"),
 #endif

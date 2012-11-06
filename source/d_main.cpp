@@ -2192,7 +2192,7 @@ static void D_DoomInit(void)
    M_LoadDefaults();              // load before initing other systems
 
    // haleyjd 01/11/09: process affinity mask stuff
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
+#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
    {
       extern void I_SetAffinityMask(void);
 

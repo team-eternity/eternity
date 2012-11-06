@@ -38,7 +38,7 @@
 #define EE_CURRENT_PLATFORM EE_PLATFORM_WINDOWS
 #elif defined(__FreeBSD__)
 #define EE_CURRENT_PLATFORM EE_PLATFORM_FREEBSD
-#elif defined(__MACOSX__)
+#elif defined(__MACOSX__) || defined(__APPLE__)
 #define EE_CURRENT_PLATFORM EE_PLATFORM_MACOSX
 #elif defined(LINUX) || defined(__GNUC__)
 // Note guesses Linux if LINUX not defined but compiling with GCC and was not

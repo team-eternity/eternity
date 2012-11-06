@@ -458,7 +458,7 @@ static bool I_InitGraphicsMode(void)
       // Reset renderer field of view
       R_ResetFOV(video.width, video.height);
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+#ifdef _MSC_VER
       // Win32 specific hack: disable system menu
       I_DisableSysMenu();
 #endif
