@@ -270,8 +270,15 @@ void D_LooseWads()
       // get extension (search from right end)
       dot = strrchr(myargv[i], '.');
 
-      // check extension
-      if(!dot || strncasecmp(dot, ".wad", 4))
+      // check for extension
+      if(!dot)
+         continue;
+
+      // allow any supported archive extension
+      if(strncasecmp(dot, ".wad", 4) &&
+         strncasecmp(dot, ".pke", 4) &&
+         strncasecmp(dot, ".pk3", 4) &&
+         strncasecmp(dot, ".zip", 4))
          continue;
 
       // add it
