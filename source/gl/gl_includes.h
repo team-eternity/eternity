@@ -39,7 +39,7 @@
  #endif
  #include <windows.h>
 #endif
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__APPLE__)
  #include <OpenGL/gl.h>  /* Header File For The OpenGL Library */
 #elif defined(__MACOS__)
  #include <gl.h>         /* Header File For The OpenGL Library */
