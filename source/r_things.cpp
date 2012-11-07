@@ -1720,7 +1720,7 @@ static void R_DEBUGDumpDrawSegs(int firstds, int lastds)
    size_t delim = 0xDB00B1E5;
    
    fwrite(&delim, sizeof(size_t), 1, f);
-   fwrite(drawsegs, sizeof(drawseg_t), lastds - firstds + 1, f);
+   fwrite(ds, sizeof(drawseg_t), lastds - firstds + 1, f);
    fflush(f);
 }
 
