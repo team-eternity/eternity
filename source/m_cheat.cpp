@@ -53,6 +53,7 @@
 #include "r_data.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
@@ -456,6 +457,9 @@ static void cheat_clev(const void *arg)
    const char *buf = (const char *)arg;
    char mapname[9];
    int epsd, map, lumpnum;
+   bool foundit = false;
+   WadDirectory *levelDir = g_dir; // 11/06/12: look in g_dir first
+   int mission = inmanageddir;     // save current value of managed mission
 
    // return silently on nonsense input
    if(buf[0] < '0' || buf[0] > '9' ||
@@ -481,8 +485,6 @@ static void cheat_clev(const void *arg)
    }
 
    // haleyjd: check mapname for existence and validity as a map
-   bool foundit = false;
-   WadDirectory *levelDir = g_dir; // 11/06/12: look in g_dir first
    do
    {
       lumpnum = levelDir->checkNumForName(mapname);
@@ -508,6 +510,10 @@ static void cheat_clev(const void *arg)
    doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
    G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
+   
+   // restore mission if appropriate
+   if(levelDir != &wGlobalDir)
+      inmanageddir = mission;
 }
 
 // 'mypos' for player position
