@@ -35,6 +35,7 @@
 #include "doomstat.h"
 #include "doomtype.h"
 #include "e_hash.h"
+#include "g_game.h"
 #include "m_dllist.h"
 #include "m_misc.h"
 #include "mn_engin.h"
@@ -51,8 +52,6 @@
 //
 
 extern int defaultskill;
-
-void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir);
 
 //=============================================================================
 //

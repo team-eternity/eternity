@@ -481,9 +481,21 @@ static void cheat_clev(const void *arg)
    }
 
    // haleyjd: check mapname for existence and validity as a map
-   lumpnum = W_CheckNumForName(mapname);
+   bool foundit = false;
+   WadDirectory *levelDir = g_dir; // 11/06/12: look in g_dir first
+   do
+   {
+      lumpnum = levelDir->checkNumForName(mapname);
 
-   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
+      if(lumpnum != -1 && P_CheckLevel(levelDir, lumpnum) != LEVEL_FORMAT_INVALID)
+      {
+         foundit = true;
+         break; // got one!
+      }
+   }
+   while(levelDir != &wGlobalDir && (levelDir = &wGlobalDir));
+
+   if(!foundit)
    {
       doom_printf("%s not found or is not a valid map", mapname);
       return;
@@ -495,7 +507,7 @@ static void cheat_clev(const void *arg)
 
    doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
-   G_DeferedInitNewNum(gameskill, epsd, map);
+   G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
 }
 
 // 'mypos' for player position

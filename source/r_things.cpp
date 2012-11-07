@@ -1701,6 +1701,28 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    R_DrawVisSprite(spr, spr->x1, spr->x2);
 }
 
+//
+// haleyjd 11/06/12: DEBUG: Drawsegs dump
+//
+static void R_DEBUGDumpDrawSegs(int firstds, int lastds)
+{
+   static FILE *f = NULL;
+
+   if(!f)
+   {
+      f = fopen("/home/ryan/.eternity/base/drawsegs.dmp", "wb");
+      if(!f)
+         I_Error("Couldn't create the dump file, dude!\n");
+   }
+
+   drawseg_t *ds = drawsegs + firstds;
+
+   size_t delim = 0xDB00B1E5;
+   
+   fwrite(&delim, sizeof(size_t), 1, f);
+   fwrite(drawsegs, sizeof(drawseg_t), lastds - firstds + 1, f);
+   fflush(f);
+}
 
 //
 // R_DrawPostBSP
@@ -1771,6 +1793,9 @@ void R_DrawPostBSP(void)
          // Modified by Lee Killough:
          // (pointer check was originally nonportable
          // and buggy, by going past LEFT end of array):
+
+         // DEBUG: Drawsegs Dump
+         R_DEBUGDumpDrawSegs(firstds, lastds);
 
          for(ds=drawsegs + lastds ; ds-- > drawsegs + firstds; )  // new -- killough
             if(ds->maskedtexturecol)
