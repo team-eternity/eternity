@@ -35,6 +35,16 @@
 //  Feel free to customize this file to suit your needs
 //
 
+// TODO:
+//
+// * Backspace (delete) key for removing file entries
+// * Warn user on overwriting demo at "start game" moment, not entry moment
+// * Options to copy the whole parameter list to clipboard (not by selecting
+//   directly)
+// * Full help instead of Internet link
+// * Correct menu bar
+// * Some artwork background
+
 #include <SDL.h>
 #import "SDLMain.h"
 #import "ELDumpConsole.h"
@@ -493,6 +503,21 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 }
 
 //
+// tableView:setObjectValue:forTableColumn:row:
+//
+// Allow renaming -file entries
+//
+-(void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject
+  forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
+{
+   // set value to pwadArray element
+   [pwadArray replaceObjectAtIndex:rowIndex withObject:[NSURL
+                                                      URLWithString:[anObject
+                                                stringByExpandingTildeInPath]]];
+   [self updateParameters:aTableView];
+}
+
+//
 // addPwad:
 //
 -(IBAction)addPwad:(id)sender
@@ -829,7 +854,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 		NSURL *wURL = nil;
 		NSString *path, *root, *oldroot;
 		NSMutableArray *pathArray = [[NSMutableArray alloc] initWithCapacity:0];
-		
+
 		for(pathPosition = 0;; pathPosition++)
 		{
 			oldroot = nil;
@@ -839,8 +864,8 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 				path = [wURL path];
 				root = [[path pathComponents] objectAtIndex:pathPosition];
 				
-				if(oldroot && [root caseInsensitiveCompare:oldroot] 
-               != NSOrderedSame)
+				if(pathPosition + 1 >= [[path pathComponents] count] || (oldroot && [root caseInsensitiveCompare:oldroot]
+               != NSOrderedSame))
 				{
 					goto foundOut;
 				}
@@ -890,8 +915,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 				[gfsOut appendString:path];
 				[gfsOut appendString:@"\"\n"];
 			}
-			else if([extension caseInsensitiveCompare:@"wad"] == NSOrderedSame ||
-					[extension caseInsensitiveCompare:@"lmp"] == NSOrderedSame)
+			else // any other extension defaults to wadfile
 			{
 				[gfsOut appendString:@"wadfile = \""];
 				[gfsOut appendString:path];
@@ -927,7 +951,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 		{
 			if([parmRsp count] == 0)
 			{
-				NSString *rstr = [[NSMutableString alloc] init];
+				NSMutableString *rstr = [[NSMutableString alloc] init];
 				
 				[rstr appendString:@"@"];
 				[rstr appendString:path];
@@ -1007,22 +1031,18 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 				[sparmExec addObject:@"-exec"];
 			[sparmExec addObject:path];
 		}
-		else if([extension caseInsensitiveCompare:@"wad"] == NSOrderedSame ||
-				[extension caseInsensitiveCompare:@"lmp"] == NSOrderedSame ||
-            [extension caseInsensitiveCompare:@"zip"] == NSOrderedSame ||
-              [extension caseInsensitiveCompare:@"pk3"] == NSOrderedSame ||
-              [extension caseInsensitiveCompare:@"pke"] == NSOrderedSame)
-		{
-			if([sparmFile count] == 0)
-				[sparmFile addObject:@"-file"];
-			[sparmFile addObject:path];
-		}
 		else if([extension caseInsensitiveCompare:@"gfs"] == NSOrderedSame)
 		{
 			if([sparmGfs count] == 0)
 				[sparmGfs addObject:@"-gfs"];
 			[sparmGfs addObject:path];
 		}
+      else  // any other extension defaults to -file
+      {
+         if([sparmFile count] == 0)
+				[sparmFile addObject:@"-file"];
+			[sparmFile addObject:path];
+      }
 	}
 	[parmPwad addObjectsFromArray:sparmGfs];
 	[parmPwad addObjectsFromArray:sparmFile];
