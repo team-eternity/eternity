@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 45;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,6 +13,9 @@
 		FA16D39915E01A3A002318D1 /* acs_acse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA16D39815E01A3A002318D1 /* acs_acse.cpp */; };
 		FA16D3A015E01B82002318D1 /* d_files.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA16D39E15E01B82002318D1 /* d_files.cpp */; };
 		FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1F567F158BB857006F8063 /* OpenGL.framework */; };
+		FA1F5682158BB857006F8063 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1F5681158BB857006F8063 /* SDL.framework */; };
+		FA1F5684158BB857006F8063 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1F5683158BB857006F8063 /* SDL_mixer.framework */; };
+		FA1F5686158BB857006F8063 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1F5685158BB857006F8063 /* SDL_net.framework */; };
 		FA1F572F158BC3F4006F8063 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5716158BC3F4006F8063 /* png.c */; };
 		FA1F5730158BC3F4006F8063 /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F571A158BC3F4006F8063 /* pngerror.c */; };
 		FA1F5731158BC3F4006F8063 /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F571B158BC3F4006F8063 /* pngget.c */; };
@@ -62,6 +65,9 @@
 		FA88983C1628C4660025048A /* in_stats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88983A1628C4660025048A /* in_stats.cpp */; };
 		FA889950162984C20025048A /* i_platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88994E162984C20025048A /* i_platform.cpp */; };
 		FA889951162984C20025048A /* i_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88994F162984C20025048A /* i_video.cpp */; };
+		FA930382158DD15700FD0C80 /* SDL.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA1F5681158BB857006F8063 /* SDL.framework */; };
+		FA930383158DD15700FD0C80 /* SDL_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA1F5683158BB857006F8063 /* SDL_mixer.framework */; };
+		FA930384158DD15700FD0C80 /* SDL_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA1F5685158BB857006F8063 /* SDL_net.framework */; };
 		FAAC1890163DC8DE004791CB /* w_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAAC188C163DC8DE004791CB /* w_formats.cpp */; };
 		FAAC1891163DC8DE004791CB /* w_zip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAAC188E163DC8DE004791CB /* w_zip.cpp */; };
 		FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */ = {isa = PBXBuildFile; fileRef = FAB103DB15911F4E00393DE3 /* DumpConsole.xib */; };
@@ -274,9 +280,6 @@
 		FABF5F01158C710400C49E93 /* Eternity.icns in Resources */ = {isa = PBXBuildFile; fileRef = FABF5F00158C710400C49E93 /* Eternity.icns */; };
 		FABF5F09158C78F300C49E93 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FABF5F08158C78F300C49E93 /* SDLMain.m */; };
 		FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FABF5FFF158C8F6300C49E93 /* Credits.rtf */; };
-		FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; settings = {ATTRIBUTES = (Required, ); }; };
-		FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
-		FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -300,6 +303,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				FA930382158DD15700FD0C80 /* SDL.framework in CopyFiles */,
+				FA930383158DD15700FD0C80 /* SDL_mixer.framework in CopyFiles */,
+				FA930384158DD15700FD0C80 /* SDL_net.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -497,6 +503,9 @@
 		FA16D46D15E01E96002318D1 /* wi_stuff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wi_stuff.h; path = ../../wi_stuff.h; sourceTree = SOURCE_ROOT; };
 		FA16D46E15E01E96002318D1 /* z_zone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = z_zone.h; path = ../../z_zone.h; sourceTree = SOURCE_ROOT; };
 		FA1F567F158BB857006F8063 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
+		FA1F5681158BB857006F8063 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = /Library/Frameworks/SDL.framework; sourceTree = "<absolute>"; };
+		FA1F5683158BB857006F8063 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = /Library/Frameworks/SDL_mixer.framework; sourceTree = "<absolute>"; };
+		FA1F5685158BB857006F8063 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = /Library/Frameworks/SDL_net.framework; sourceTree = "<absolute>"; };
 		FA1F5716158BC3F4006F8063 /* png.c */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.c; name = png.c; path = ../../../libpng/png.c; sourceTree = SOURCE_ROOT; };
 		FA1F5717158BC3F4006F8063 /* png.h */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.h; path = png.h; sourceTree = "<group>"; };
 		FA1F5718158BC3F4006F8063 /* pngconf.h */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.h; path = pngconf.h; sourceTree = "<group>"; };
@@ -781,9 +790,6 @@
 		FABF5F07158C78F300C49E93 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
 		FABF5F08158C78F300C49E93 /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
 		FABF5FFF158C8F6300C49E93 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
-		FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
-		FAEA89EB164DB9F400E9F874 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
-		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -793,9 +799,9 @@
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */,
-				FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */,
-				FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */,
-				FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */,
+				FA1F5682158BB857006F8063 /* SDL.framework in Frameworks */,
+				FA1F5684158BB857006F8063 /* SDL_mixer.framework in Frameworks */,
+				FA1F5686158BB857006F8063 /* SDL_net.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -848,10 +854,8 @@
 				FAB104A5159146E500393DE3 /* Cocoa.framework */,
 				FAB104AA1591470800393DE3 /* OpenGL.framework */,
 			);
-			indentWidth = 3;
 			name = EternityLaunch;
 			sourceTree = "<group>";
-			tabWidth = 3;
 		};
 		29B97315FDCFA39411CA2CEA /* Code */ = {
 			isa = PBXGroup;
@@ -882,12 +886,12 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FAEA89EC164DB9F400E9F874 /* SDL.framework */,
-				FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */,
-				FAEA89EB164DB9F400E9F874 /* SDL_net.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 				FA1F567F158BB857006F8063 /* OpenGL.framework */,
+				FA1F5681158BB857006F8063 /* SDL.framework */,
+				FA1F5683158BB857006F8063 /* SDL_mixer.framework */,
+				FA1F5685158BB857006F8063 /* SDL_net.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1495,11 +1499,8 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-				LastUpgradeCheck = 0450;
-			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "EternityLaunch" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -1829,7 +1830,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					/System/Library/Frameworks/Cocoa.framework,
@@ -1837,9 +1837,9 @@
 					/Library/Frameworks/SDL_net.framework,
 					/Library/Frameworks/SDL_mixer.framework,
 					/Library/Frameworks/SDL.framework,
-					/Library/Frameworks,
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1855,7 +1855,7 @@
 					_CRT_SECURE_NO_WARNINGS,
 					_CRT_NONSTDC_NO_WARNINGS,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
 					/Developer/Headers/FlatCarbon,
 					/Library/Frameworks/SDL.framework/Headers,
@@ -1867,10 +1867,8 @@
 				);
 				INFOPLIST_FILE = "EternityLaunch-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				MACH_O_TYPE = mh_execute;
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = "Eternity Engine";
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.5;
 			};
 			name = Debug;
 		};
@@ -1879,7 +1877,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
 					/System/Library/Frameworks/Cocoa.framework,
@@ -1887,7 +1884,6 @@
 					/Library/Frameworks/SDL_net.framework,
 					/Library/Frameworks/SDL_mixer.framework,
 					/Library/Frameworks/SDL.framework,
-					/Library/Frameworks,
 				);
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
@@ -1906,7 +1902,7 @@
 					NDEBUG,
 					R_LINKEDPORTALS,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
 					/Developer/Headers/FlatCarbon,
 					/Library/Frameworks/SDL.framework/Headers,
@@ -1923,10 +1919,8 @@
 				);
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACH_O_TYPE = mh_execute;
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "Eternity Engine";
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.5;
 			};
 			name = Release;
 		};
@@ -1940,7 +1934,8 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -1952,7 +1947,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				SDKROOT = macosx;
+				PREBINDING = NO;
+				SDKROOT = macosx10.5;
 			};
 			name = Release;
 		};
@@ -1962,6 +1958,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1973,8 +1970,9 @@
 					"-framework",
 					AppKit,
 				);
+				PREBINDING = NO;
 				PRODUCT_NAME = EternityBase;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.5;
 			};
 			name = Debug;
 		};
@@ -1984,6 +1982,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
@@ -1994,8 +1993,8 @@
 					"-framework",
 					AppKit,
 				);
+				PREBINDING = NO;
 				PRODUCT_NAME = EternityBase;
-				SDKROOT = macosx;
 				ZERO_LINK = NO;
 			};
 			name = Release;

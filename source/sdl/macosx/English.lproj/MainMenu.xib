@@ -13,7 +13,7 @@
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<integer value="810"/>
-			<integer value="372"/>
+			<integer value="371"/>
 			<integer value="29"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -1339,6 +1339,7 @@
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
+				<string key="NSWindowContentMinSize">{525, 429}</string>
 				<object class="NSView" key="NSWindowView" id="439893737">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -2657,6 +2658,7 @@
 					<int key="NSViewLayerContentsRedrawPolicy">2</int>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
+				<string key="NSMinSize">{525, 451}</string>
 				<string key="NSMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSFrameAutosaveName">EternityLaunchMainWindow</string>
 			</object>
@@ -3843,11 +3845,11 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">addPwad:</string>
+						<string key="label">addIwad:</string>
 						<reference key="source" ref="1021"/>
 						<reference key="destination" ref="896244967"/>
 					</object>
-					<int key="connectionID">977</int>
+					<int key="connectionID">978</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -5920,7 +5922,9 @@
 					<string>371.IBWindowTemplateEditedContentRect</string>
 					<string>371.NSWindowTemplate.visibleAtLaunch</string>
 					<string>371.editorWindowContentRectSynchronizationRect</string>
+					<string>371.windowTemplate.hasMinSize</string>
 					<string>371.windowTemplate.maxSize</string>
+					<string>371.windowTemplate.minSize</string>
 					<string>372.IBPluginDependency</string>
 					<string>375.IBPluginDependency</string>
 					<string>376.IBEditorWindowLastContentRect</string>
@@ -6356,7 +6360,9 @@
 					<string>{{67, 226}, {557, 429}}</string>
 					<integer value="1"/>
 					<string>{{33, 99}, {480, 360}}</string>
+					<boolean value="YES"/>
 					<string>{3.40282e+38, 3.40282e+38}</string>
+					<string>{525, 429}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{378, 641}, {83, 43}}</string>
@@ -6919,7 +6925,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">977</int>
+			<int key="maxID">978</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -6932,6 +6938,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>addAllRecentPwads:</string>
+							<string>addIwad:</string>
 							<string>addPwad:</string>
 							<string>choosePlayDemo:</string>
 							<string>chooseRecordDemo:</string>
@@ -6963,6 +6970,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -6999,6 +7007,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>addAllRecentPwads:</string>
+							<string>addIwad:</string>
 							<string>addPwad:</string>
 							<string>choosePlayDemo:</string>
 							<string>chooseRecordDemo:</string>
@@ -7032,6 +7041,10 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<object class="IBActionInfo">
 								<string key="name">addAllRecentPwads:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">addIwad:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">

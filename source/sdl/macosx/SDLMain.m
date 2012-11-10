@@ -1,26 +1,39 @@
-/*   SDLMain.m - main entry point for our Cocoa-ized SDL app
-       Initial Version: Darrell Walisser <dwaliss1@purdue.edu>
-       Non-NIB-Code & other changes: Max Horn <max@quendi.de>
+// Emacs style mode select -*- C++ -*-
+//----------------------------------------------------------------------------
+//
+// Copyright(C) 2012 Ioan Chera
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//----------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//
+// Source file for front-end interface
+//
+//----------------------------------------------------------------------------
 
-    Feel free to customize this file to suit your needs
-*/
-/*
-Copyright (C) 2012  Ioan Chera
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 
- */
+//
+// FILE BASED ON:
+//
+//   SDLMain.m - main entry point for our Cocoa-ized SDL app
+//     Initial Version: Darrell Walisser <dwaliss1@purdue.edu>
+//		Non-NIB-Code & other changes: Max Horn <max@quendi.de>
+//
+//  Feel free to customize this file to suit your needs
+//
 
 #include <SDL.h>
 #import "SDLMain.h"
@@ -28,20 +41,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
 #include <sys/param.h> /* for MAXPATHLEN */
 #include <unistd.h>
 
-/* For some reaon, Apple removed setAppleMenu from the headers in 10.4,
- but the method still is there and works. To avoid warnings, we declare
- it ourselves here. */
+//
+// For some reaon, Apple removed setAppleMenu from the headers in 10.4,
+// but the method still is there and works. To avoid warnings, we declare
+// it ourselves here.
+//
+//
 @interface NSApplication(SDL_Missing_Methods)
 - (void)setAppleMenu:(NSMenu *)menu;
 @end
 
-/* Use this flag to determine whether we use SDLMain.nib or not */
-#define		SDL_USE_NIB_FILE	1
 
-/* Use this flag to determine whether we use CPS (docking) or not */
-#define		SDL_USE_CPS		1
+//
+// Use this flag to determine whether we use CPS (docking) or not
+//
+//#define		SDL_USE_CPS		1
 #ifdef SDL_USE_CPS
-/* Portions of CPS.h */
+//
+// Portions of CPS.h
+//
 typedef struct CPSProcessSerNum
 {
 	UInt32		lo;
@@ -49,68 +67,75 @@ typedef struct CPSProcessSerNum
 } CPSProcessSerNum;
 
 extern OSErr	CPSGetCurrentProcess( CPSProcessSerNum *psn);
-extern OSErr 	CPSEnableForegroundOperation( CPSProcessSerNum *psn, UInt32 _arg2, UInt32 _arg3, UInt32 _arg4, UInt32 _arg5);
+extern OSErr 	CPSEnableForegroundOperation( CPSProcessSerNum *psn, UInt32 
+                                            _arg2, UInt32 _arg3, UInt32 _arg4, 
+                                            UInt32 _arg5);
 extern OSErr	CPSSetFrontProcess( CPSProcessSerNum *psn);
 
-#endif /* SDL_USE_CPS */
+#endif // SDL_USE_CPS
 
 static int    gArgc;
 static char  **gArgv;
 static BOOL   gFinderLaunch;
 static BOOL   gCalledAppMainline = FALSE;
-static BOOL gSDLStarted;	// IOAN 16.06.2012
+static BOOL gSDLStarted;	// IOAN 20120616
 
-static NSString *getApplicationName(void)
-{
-    const NSDictionary *dict;
-    NSString *appName = 0;
-
-    /* Determine the application name */
-    dict = (const NSDictionary *)CFBundleGetInfoDictionary(CFBundleGetMainBundle());
-    if (dict)
-        appName = [dict objectForKey: @"CFBundleName"];
-    
-    if (![appName length])
-        appName = [[NSProcessInfo processInfo] processName];
-
-    return appName;
-}
-
-#if SDL_USE_NIB_FILE
-/* A helper category for NSString */
-@interface NSString (ReplaceSubString)
-- (NSString *)stringByReplacingRange:(NSRange)aRange with:(NSString *)aString;
-@end
-#endif
-
-// IOAN 16.06.2012: changed from a category to a subclass
+//
+// IOAN 20120616: changed from a category to a subclass
+//
+// NSMyApplication: derived class
+//
 @interface NSMyApplication : NSApplication
 - (void)terminateSDL:(id)sender;
 @end
 
 @implementation NSMyApplication : NSApplication
+
+//
+// terminate:
+//
+// Called when application is ending. Issue SDL ending if game started.
+//
 - (void)terminate:(id)sender
 {
-	if(gSDLStarted)
+	if(gCalledAppMainline)
 		[self terminateSDL:sender];
 	else
 		[super terminate:sender];
 }
-/* Invoked from the Quit menu item */
-- (void)terminateSDL:(id)sender	// IOAN 16.06.2012: changed SDL name
+
+//
+// terminateSDL:
+//
+// Invoked from the Quit menu item. Equivalent to Eternity quit.
+// FIXME: make it quit instantly.
+//
+- (void)terminateSDL:(id)sender	// IOAN 20120616: changed SDL name
 {
-    /* Post a SDL_QUIT event */
-    SDL_Event event;
-    event.type = SDL_QUIT;
-    SDL_PushEvent(&event);
+    // Post a SDL_QUIT event
+	exit(-1);
+	//
+   // SDL_Event event;
+   // event.type = SDL_QUIT;
+   // SDL_PushEvent(&event);
+   
 }
 @end
 
-/* The main class of the application, the application's delegate */
+//
+// SDLMain
+//
+// The main class of the application, the application's delegate
+//
 @implementation SDLMain
 
 @synthesize window;
 
+//
+// dealloc
+//
+// Free memory
+//
 -(void)dealloc
 {
 	[iwadSet release];
@@ -143,13 +168,20 @@ static NSString *getApplicationName(void)
 	[super dealloc];
 }
 
+//
+// init
+//
+// Initialize members
+//
 -(id)init
 {
 	if([super init])
 	{
 		fileMan = [NSFileManager defaultManager];
 		iwadSet = [[NSMutableSet alloc] initWithCapacity:0];
-		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", nil];
+		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
+                   @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
+                   @"pke", @"zip", nil];
 		iwadPopMenu = [[NSMenu alloc] initWithTitle:@"Choose IWAD"];
 		pwadArray = [[NSMutableArray alloc] initWithCapacity:0];
 		
@@ -157,21 +189,26 @@ static NSString *getApplicationName(void)
 		[noIwadAlert addButtonWithTitle:@"Choose IWAD"];
 		[noIwadAlert addButtonWithTitle:@"Cancel"];
 		[noIwadAlert setMessageText:@"No IWAD file prepared."];
-		[noIwadAlert setInformativeText:@"You need to choose a main game WAD before playing Eternity."];
+		[noIwadAlert setInformativeText:
+       @"You need to choose a main game WAD before playing Eternity."];
 		[noIwadAlert setAlertStyle:NSInformationalAlertStyle];
 		
 		badIwadAlert = [[NSAlert alloc] init];
 		[badIwadAlert addButtonWithTitle:@"Try Another"];
 		[badIwadAlert addButtonWithTitle:@"Cancel"];
 		[badIwadAlert setMessageText:@"Selected file is not a valid IWAD file."];
-		[badIwadAlert setInformativeText:@"You cannot load patch WAD (PWAD) files," 
-		 " or the selected file may be corrupted or invalid. You need to load a main WAD that comes shipped with the game."];
+		[badIwadAlert setInformativeText:
+       @"You cannot load patch WAD (PWAD) files," 
+		 " or the selected file may be corrupted or invalid. You need to load a "
+       "main WAD that comes shipped with the game."];
 		[badIwadAlert setAlertStyle:NSInformationalAlertStyle];
 		
 		nothingForGfsAlert = [[NSAlert alloc] init];
 		[nothingForGfsAlert addButtonWithTitle:@"OK"];
-		[nothingForGfsAlert setMessageText:@"There are no files to list in a GFS."];
-		[nothingForGfsAlert setInformativeText:@"A GFS needs to refer to an IWAD and/or to a set of add-on files."];
+		[nothingForGfsAlert setMessageText:
+       @"There are no files to list in a GFS."];
+		[nothingForGfsAlert setInformativeText:
+       @"A GFS needs to refer to an IWAD and/or to a set of add-on files."];
 		[nothingForGfsAlert setAlertStyle:NSInformationalAlertStyle];
 		
 		parmRsp = [[NSMutableArray alloc] initWithCapacity:0];
@@ -204,9 +241,6 @@ static NSString *getApplicationName(void)
 //
 -(void)initNibData
 {
-	NSSize size = {525, 429};
-	[window setContentMinSize:size];
-	
 	[iwadPopUp setMenu:iwadPopMenu];
 	[self loadDefaults];
 }
@@ -214,190 +248,35 @@ static NSString *getApplicationName(void)
 //
 // setupWorkingDirectory:
 //
-// Set the working directory to the .app's parent directory
+// Set the working directory to the .app's directory 
+// (IOAN 20121104: don't use parent directory as in original)
 //
 - (void) setupWorkingDirectory:(BOOL)shouldChdir
 {
-    if (shouldChdir)
-    {
-        char parentdir[MAXPATHLEN];
-        CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-        CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
-        if (CFURLGetFileSystemRepresentation(url2, 1, (UInt8 *)parentdir, MAXPATHLEN)) {
-            chdir(parentdir);   /* chdir to the binary app's parent */
-        }
-        CFRelease(url);
-        CFRelease(url2);
-    }
+	NSString *bundlepath = [[NSBundle mainBundle] bundlePath];
+	
+	chdir([bundlepath cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
-#if SDL_USE_NIB_FILE
+
 
 //
-// fixMenu:withAppName:
+// Catch document open requests...this lets us notice files when the app
+//  was launched by double-clicking a document, or when a document was
+//  dragged/dropped on the app's icon. You need to have a
+//  CFBundleDocumentsType section in your Info.plist to get this message,
+//  apparently.
 //
-// Fix menu to contain the real app name instead of "SDL App"
+// Files are added to gArgv, so to the app, they'll look like command line
+//  arguments. Previously, apps launched from the finder had nothing but
+//  an argv[0].
 //
-- (void)fixMenu:(NSMenu *)aMenu withAppName:(NSString *)appName
-{
-    NSRange aRange;
-    NSEnumerator *enumerator;
-    NSMenuItem *menuItem;
-
-    aRange = [[aMenu title] rangeOfString:@"SDL App"];
-    if (aRange.length != 0)
-        [aMenu setTitle: [[aMenu title] stringByReplacingRange:aRange with:appName]];
-
-    enumerator = [[aMenu itemArray] objectEnumerator];
-    while ((menuItem = [enumerator nextObject]))
-    {
-        aRange = [[menuItem title] rangeOfString:@"SDL App"];
-        if (aRange.length != 0)
-            [menuItem setTitle: [[menuItem title] stringByReplacingRange:aRange with:appName]];
-        if ([menuItem hasSubmenu])
-            [self fixMenu:[menuItem submenu] withAppName:appName];
-    }
-}
-
-#else
-
+// This message may be received multiple times to open several docs on launch.
 //
-// setApplicationMenu
+// This message is ignored once the app's mainline has been called.
 //
-static void setApplicationMenu(void)
-{
-    /* warning: this code is very odd */
-    NSMenu *appleMenu;
-    NSMenuItem *menuItem;
-    NSString *title;
-    NSString *appName;
-    
-    appName = getApplicationName();
-    appleMenu = [[NSMenu alloc] initWithTitle:@""];
-    
-    /* Add menu items */
-    title = [@"About " stringByAppendingString:appName];
-    [appleMenu addItemWithTitle:title action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""];
-
-    [appleMenu addItem:[NSMenuItem separatorItem]];
-
-    title = [@"Hide " stringByAppendingString:appName];
-    [appleMenu addItemWithTitle:title action:@selector(hide:) keyEquivalent:@"h"];
-
-    menuItem = (NSMenuItem *)[appleMenu addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"];
-    [menuItem setKeyEquivalentModifierMask:(NSAlternateKeyMask|NSCommandKeyMask)];
-
-    [appleMenu addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
-
-    [appleMenu addItem:[NSMenuItem separatorItem]];
-
-    title = [@"Quit " stringByAppendingString:appName];
-    [appleMenu addItemWithTitle:title action:@selector(terminate:) keyEquivalent:@"q"];
-
-    
-    /* Put menu into the menubar */
-    menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    [menuItem setSubmenu:appleMenu];
-    [[NSApp mainMenu] addItem:menuItem];
-
-    /* Tell the application object that this is now the application menu */
-    [NSApp setAppleMenu:appleMenu];
-
-    /* Finally give up our references to the objects */
-    [appleMenu release];
-    [menuItem release];
-}
-
-//
-// setupWindowMenu
-//
-// Create a window menu
-//
-static void setupWindowMenu(void)
-{
-    NSMenu      *windowMenu;
-    NSMenuItem  *windowMenuItem;
-    NSMenuItem  *menuItem;
-
-    windowMenu = [[NSMenu alloc] initWithTitle:@"Window"];
-    
-    /* "Minimize" item */
-    menuItem = [[NSMenuItem alloc] initWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"];
-    [windowMenu addItem:menuItem];
-    [menuItem release];
-    
-    /* Put menu into the menubar */
-    windowMenuItem = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
-    [windowMenuItem setSubmenu:windowMenu];
-    [[NSApp mainMenu] addItem:windowMenuItem];
-    
-    /* Tell the application object that this is now the window menu */
-    [NSApp setWindowsMenu:windowMenu];
-
-    /* Finally give up our references to the objects */
-    [windowMenu release];
-    [windowMenuItem release];
-}
-
-//
-// CustomApplicationMain
-//
-// Replacement for NSApplicationMain
-//
-static void CustomApplicationMain (int argc, char **argv)
-{
-    NSAutoreleasePool	*pool = [[NSAutoreleasePool alloc] init];
-    SDLMain				*sdlMain;
-
-    /* Ensure the application object is initialised */
-    [NSMyApplication sharedApplication];
-    
-#ifdef SDL_USE_CPS
-    {
-        CPSProcessSerNum PSN;
-        /* Tell the dock about us */
-        if (!CPSGetCurrentProcess(&PSN))
-            if (!CPSEnableForegroundOperation(&PSN,0x03,0x3C,0x2C,0x1103))
-                if (!CPSSetFrontProcess(&PSN))
-                    [NSMyApplication sharedApplication];
-    }
-#endif /* SDL_USE_CPS */
-
-    /* Set up the menubar */
-    [NSApp setMainMenu:[[NSMenu alloc] init]];
-    setApplicationMenu();
-    setupWindowMenu();
-
-    /* Create SDLMain and make it the app delegate */
-    sdlMain = [[SDLMain alloc] init];
-    [NSApp setDelegate:sdlMain];
-    
-    /* Start the main event loop */
-    [NSApp run];
-    
-    [sdlMain release];
-    [pool release];
-}
-
-#endif
-
-
-/*
- * Catch document open requests...this lets us notice files when the app
- *  was launched by double-clicking a document, or when a document was
- *  dragged/dropped on the app's icon. You need to have a
- *  CFBundleDocumentsType section in your Info.plist to get this message,
- *  apparently.
- *
- * Files are added to gArgv, so to the app, they'll look like command line
- *  arguments. Previously, apps launched from the finder had nothing but
- *  an argv[0].
- *
- * This message may be received multiple times to open several docs on launch.
- *
- * This message is ignored once the app's mainline has been called.
- */
-- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
+- (BOOL)application:(NSApplication *)theApplication 
+           openFile:(NSString *)filename
 {
 	NSString *ext;
 	
@@ -406,9 +285,11 @@ static void CustomApplicationMain (int argc, char **argv)
 	
 	for(ext in pwadTypes)
 	{
-		if([[filename pathExtension] caseInsensitiveCompare:ext] == NSOrderedSame)
+		if([[filename pathExtension] caseInsensitiveCompare:ext] 
+         == NSOrderedSame)
 		{
-			[self addIwadOrPwad:[NSURL fileURLWithPath:filename]];
+         [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
+         [self updateParameters:self];
 			return YES;
 		}
 	}
@@ -424,13 +305,14 @@ static void CustomApplicationMain (int argc, char **argv)
     /* Set the working directory to the .app's parent directory */
     [self setupWorkingDirectory:gFinderLaunch];
 
-#if SDL_USE_NIB_FILE
-    /* Set the main menu to contain the real app name instead of "SDL App" */
-    [self fixMenu:[NSApp mainMenu] withAppName:getApplicationName()];
-#endif
+    // IOAN 20121104: no need to fix the menu
 
 	return;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//// GRAPHIC USER INTERFACE SECTION
+///////////////////////////////////////////////////////////////////////////////
 
 //
 // windowWillClose:
@@ -441,7 +323,10 @@ static void CustomApplicationMain (int argc, char **argv)
 {
 	if(!gSDLStarted)
 		[self updateParameters:self];
-	[self saveDefaults];
+	
+	// Save GUI configurations
+	[self saveDefaults];	// FIXME: get user configurations into the preferences, 
+                        // don't read them from bundle
 	if(!gSDLStarted)
 	{
 		[NSApp terminate:window];
@@ -451,7 +336,8 @@ static void CustomApplicationMain (int argc, char **argv)
 //
 // chooseIwadAlertDidEnd:returnCode:contextInfo:
 //
--(void)chooseIwadAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
+-(void)chooseIwadAlertDidEnd:(NSAlert *)alert 
+               returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
 {
 	if(returnCode == NSAlertFirstButtonReturn)
 	{
@@ -469,20 +355,27 @@ static void CustomApplicationMain (int argc, char **argv)
 {
 	if([iwadPopUp numberOfItems] < 1)
 	{
+		// No IWAD selected: look for a GFS anyway
 		NSURL *wURL;
 		for(wURL in pwadArray)
-			if ([[[wURL path] pathExtension] caseInsensitiveCompare:@"gfs"] == NSOrderedSame) {
-				goto iwadMightBe;
+			if ([[[wURL path] pathExtension] caseInsensitiveCompare:@"gfs"] 
+             == NSOrderedSame) 
+         {
+				goto iwadMightBe;	// Found a GFS. It might contain an IWAD, 
+                              // so go ahead.
 			}
 		
+		// Prompt the user to select an IWAD file
 		[noIwadAlert beginSheetModalForWindow:[self window] modalDelegate:self 
-						 didEndSelector:@selector(chooseIwadAlertDidEnd:returnCode:contextInfo:) contextInfo:nil];
+      didEndSelector:@selector(chooseIwadAlertDidEnd:returnCode:contextInfo:) 
+                                contextInfo:nil];
 		
 		return;
 	}
 iwadMightBe:
 	
-	[self updateParameters:sender];
+	[self updateParameters:sender];	// Update parameters. 
+                                    // FIXME: do it in real-time
 
 	gArgc = [param count] + 1;
 	
@@ -502,49 +395,22 @@ iwadMightBe:
 		
 		strcpy(gArgv[i], [compon UTF8String]);
 		i++;
-//		[compon getCString:gArgv[i++] maxLength:len encoding:NSASCIIStringEncoding];
 	}
 	
 	// Start console
 //	[console startLogging];
 	
 	
-	
-	
 	int status;
 	gCalledAppMainline = TRUE;
-	gSDLStarted = YES;	// IOAN 16.06.2012
+	gSDLStarted = YES;	// IOAN 20120616
 	[window close];
 	
     status = SDL_main (gArgc, gArgv);
 	
 //	[console showInstantLog];
-    /* We're done, thank you for playing */
+// We're done, thank you for playing
     exit(status);
-}
-
-//
-// URLPointsToIwad:
-//
-// Verify the header
-//
--(BOOL)URLPointsToIwad:(NSURL *)wURL
-{
-	NSFileHandle *iwadFile = [NSFileHandle fileHandleForReadingAtPath:[wURL path]];
-	NSData *headerData = [iwadFile readDataOfLength:4];
-	NSString *headerString = [[NSString alloc] initWithData:headerData encoding:NSASCIIStringEncoding];
-	
-	BOOL answer = YES;
-	
-	if(![headerString isEqualToString:@"IWAD"])
-	{
-		answer = NO;
-	}
-
-	// Leave the rest to Eternity (only check the header label)
-	
-	[headerString release];
-	return answer;
 }
 
 //
@@ -556,7 +422,6 @@ iwadMightBe:
 	if(![iwadSet containsObject:wURL])
 	{
 		[iwadSet addObject:wURL];
-		[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:wURL];
 		
 		NSString *iwadString = [[wURL path] stringByAbbreviatingWithTildeInPath];
 		
@@ -564,8 +429,10 @@ iwadMightBe:
 		ind = [iwadPopUp numberOfItems] - 1;
 		[[[iwadPopUp menu] itemAtIndex:ind] setToolTip:iwadString];
 		[[[iwadPopUp menu] itemAtIndex:ind] setRepresentedObject:wURL];
-		[[[iwadPopUp menu] itemAtIndex:ind] setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadString]];
-		[[[iwadPopUp menu] itemAtIndex:ind] setAction:@selector(updateParameters:)];
+		[[[iwadPopUp menu] itemAtIndex:ind] 
+       setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadString]];
+		[[[iwadPopUp menu] itemAtIndex:ind] 
+       setAction:@selector(updateParameters:)];
 		[[[iwadPopUp menu] itemAtIndex:ind] setTarget:self];
 		
 		[iwadPopUp selectItemAtIndex:ind];
@@ -603,7 +470,8 @@ iwadMightBe:
 //
 // tableView:objectValueForTableColumn:row:
 //
--(id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
+-(id)tableView:(NSTableView *)aTableView 
+objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
 	id returnValue=nil;
 	NSString *columnIdentifer = [aTableColumn identifier];
@@ -640,14 +508,33 @@ iwadMightBe:
 }
 
 //
+// addIwad:
+//
+-(IBAction)addIwad:(id)sender
+{
+	NSOpenPanel *panel = [NSOpenPanel openPanel];
+	[panel setAllowsMultipleSelection:true];
+	[panel setCanChooseFiles:true];
+	[panel setCanChooseDirectories:false];
+	[panel beginSheetForDirectory:nil file:nil types:pwadTypes
+                  modalForWindow:[NSApp mainWindow] modalDelegate:self
+                  didEndSelector:@selector(addIwadEnded:returnCode:contextInfo:)
+                     contextInfo:nil];
+}
+
+//
 // addAllRecentPwads:
 //
 -(IBAction)addAllRecentPwads:(id)sender
 {
 	NSURL *wURL;
 	
-	for(wURL in [[NSDocumentController sharedDocumentController] recentDocumentURLs])
-		[self addIwadOrPwad:wURL];
+	for(wURL 
+       in [[NSDocumentController sharedDocumentController] recentDocumentURLs])
+   {
+      [self doAddPwadFromURL:wURL];
+      [self updateParameters:self];
+   }
 }
 
 //
@@ -658,7 +545,8 @@ iwadMightBe:
 	if(menuItem == fileClose || menuItem == fileCloseAll)
 			return [pwadArray count] > 0;
 	if(menuItem == fileOpenAllRecent)
-			return [[[NSDocumentController sharedDocumentController] recentDocumentURLs] count] > 0;
+			return [[[NSDocumentController sharedDocumentController] 
+                  recentDocumentURLs] count] > 0;
 	
 	
 	return YES;
@@ -670,32 +558,39 @@ iwadMightBe:
 -(void)doAddPwadFromURL:(NSURL *)wURL
 {
 	[pwadArray addObject:wURL];
-	[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:wURL];
+	[[NSDocumentController sharedDocumentController] 
+    noteNewRecentDocumentURL:wURL];
 	
 	if(pwadView)
 		[pwadView reloadData];
-}
-
-//
-// addIwadOrPwad:
-//
--(void)addIwadOrPwad:(NSURL *)wURL
-{
-	if ([self URLPointsToIwad:wURL])
-	{
-		[self doAddIwadFromURL:wURL];
-	}
-	else
-	{
-		[self doAddPwadFromURL:wURL];
-	}
-	[self updateParameters:self];
 }
 	
 //
 // addPwadEnded:returnCode:contextInfo:
 //
--(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info
+-(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code 
+        contextInfo:(void *)info
+{
+	if(code == NSCancelButton)
+	{
+		return;
+	}
+	
+	// Look thru the array to locate the PWAD and put that on.
+	NSURL *openCandidate;
+	
+	for(openCandidate in [panel URLs])
+	{
+      [self doAddPwadFromURL:openCandidate];
+      [self updateParameters:self];
+	}
+}
+
+//
+// addIwadEnded:returnCode:contextInfo:
+//
+-(void)addIwadEnded:(NSOpenPanel *)panel returnCode:(int)code 
+        contextInfo:(void *)info
 {
 	if(code == NSCancelButton)
 	{
@@ -707,7 +602,8 @@ iwadMightBe:
 	
 	for(openCandidate in [panel URLs])
 	{
-		[self addIwadOrPwad:openCandidate];
+      [self doAddIwadFromURL:openCandidate];
+      [self updateParameters:self];
 	}
 }
 
@@ -736,7 +632,8 @@ iwadMightBe:
 			[pwadArray removeObjectAtIndex:0];
 			[self updateParameters:sender];
 			[pwadView reloadData];
-			[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
+			[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:0] 
+               byExtendingSelection:NO];
 			
 			[pwadView scrollRowToVisible:0];
 		}
@@ -753,10 +650,12 @@ iwadMightBe:
 	
 		if([[pwadView selectedRowIndexes] count] < 1)
 			dest = [pwadView numberOfRows] - 1;
-		else if ([[pwadView selectedRowIndexes] count] >= 1)
-			dest = [pwadView selectedRow] - [[pwadView selectedRowIndexes] count] + 1;
+		else // if ([[pwadView selectedRowIndexes] count] >= 1)
+			dest = [pwadView selectedRow] - [[pwadView selectedRowIndexes] count] 
+         + 1;
 	
-		[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:dest] byExtendingSelection:NO];
+		[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:dest] 
+            byExtendingSelection:NO];
 		[pwadView scrollRowToVisible:dest];
 	}
 	
@@ -770,14 +669,17 @@ iwadMightBe:
 	NSSavePanel *panel = [NSSavePanel savePanel];
 	NSArray *types = [NSArray arrayWithObject:@"lmp"];
 	[panel setAllowedFileTypes:types];
-	[panel beginSheetForDirectory:nil file:nil modalForWindow:[NSApp mainWindow] modalDelegate:self 
-				   didEndSelector:@selector(chooseRecordDidEnd:returnCode:contextInfo:) contextInfo:nil];
+	[panel beginSheetForDirectory:nil file:nil modalForWindow:[NSApp mainWindow] 
+                   modalDelegate:self 
+         didEndSelector:@selector(chooseRecordDidEnd:returnCode:contextInfo:) 
+                     contextInfo:nil];
 }
 
 //
 // chooseRecordDidEnd:returnCode:contextInfo:
 //
--(void)chooseRecordDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
+-(void)chooseRecordDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode 
+              contextInfo:(void *)contextInfo
 {
 	if(returnCode == NSCancelButton)
 	{
@@ -801,7 +703,7 @@ iwadMightBe:
 	NSArray *types = [NSArray arrayWithObject:@"lmp"];
 	[panel beginSheetForDirectory:nil file:nil types:types
 				   modalForWindow:[NSApp mainWindow] modalDelegate:self
-				   didEndSelector:@selector(choosePlayDidEnd:returnCode:contextInfo:)
+            didEndSelector:@selector(choosePlayDidEnd:returnCode:contextInfo:)
 					  contextInfo:nil];
 }
 
@@ -810,7 +712,8 @@ iwadMightBe:
 //
 // Write into the text field the file name
 //
--(void)choosePlayDidEnd:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info
+-(void)choosePlayDidEnd:(NSOpenPanel *)panel returnCode:(int)code 
+            contextInfo:(void *)info
 {
 	if(code == NSCancelButton)
 	{
@@ -882,7 +785,8 @@ iwadMightBe:
 	
 	if([iwadPopUp numberOfItems] == 0 && [pwadArray count] == 0)
 	{
-		[nothingForGfsAlert beginSheetModalForWindow:[self window] modalDelegate:self 
+		[nothingForGfsAlert beginSheetModalForWindow:[self window] 
+                                     modalDelegate:self 
 							   didEndSelector:NULL contextInfo:nil];
 		return;
 	}
@@ -890,8 +794,10 @@ iwadMightBe:
 	NSSavePanel *panel = [NSSavePanel savePanel];
 	NSArray *types = [NSArray arrayWithObject:@"gfs"];
 	[panel setAllowedFileTypes:types];
-	[panel beginSheetForDirectory:nil file:nil modalForWindow:[NSApp mainWindow] modalDelegate:self 
-				   didEndSelector:@selector(saveAsGFSDidEnd:returnCode:contextInfo:) contextInfo:nil];
+	[panel beginSheetForDirectory:nil file:nil modalForWindow:[NSApp mainWindow] 
+                   modalDelegate:self 
+            didEndSelector:@selector(saveAsGFSDidEnd:returnCode:contextInfo:) 
+                     contextInfo:nil];
 }
 
 //
@@ -899,7 +805,8 @@ iwadMightBe:
 //
 // Save parameters into a GFS
 //
--(void)saveAsGFSDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
+-(void)saveAsGFSDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode 
+           contextInfo:(void *)contextInfo
 {
 	if(returnCode == NSCancelButton)
 	{
@@ -911,7 +818,8 @@ iwadMightBe:
 	if([iwadPopUp numberOfItems] > 0)
 	{
 		[gfsOut appendString:@"iwad = \""];
-		[gfsOut appendString:[[[iwadPopUp selectedItem] representedObject] path]];
+		[gfsOut appendString:[[[iwadPopUp selectedItem] representedObject] 
+                            path]];
 		[gfsOut appendString:@"\"\n"];
 	}
 	
@@ -925,18 +833,21 @@ iwadMightBe:
 		for(pathPosition = 0;; pathPosition++)
 		{
 			oldroot = nil;
+         root = nil;
 			for(wURL in pwadArray)
 			{
 				path = [wURL path];
 				root = [[path pathComponents] objectAtIndex:pathPosition];
 				
-				if(oldroot && [root caseInsensitiveCompare:oldroot] != NSOrderedSame)
+				if(oldroot && [root caseInsensitiveCompare:oldroot] 
+               != NSOrderedSame)
 				{
 					goto foundOut;
 				}
 				oldroot = root;
 			}
-			[pathArray addObject:root];
+         if(root!=nil)
+            [pathArray addObject:root];
 		}
 	foundOut:
 		path = [NSString pathWithComponents:pathArray];
@@ -990,7 +901,8 @@ iwadMightBe:
 
 		[pathArray release];
 	}
-	[gfsOut writeToURL:[panel URL] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+	[gfsOut writeToURL:[panel URL] atomically:YES encoding:NSUTF8StringEncoding 
+                error:NULL];
 	[gfsOut release];
 }
 
@@ -1001,7 +913,8 @@ iwadMightBe:
 {
 	[parmRsp removeAllObjects];
 	// This is more complex, so divide it further
-	// pwadTypes = [NSArray arrayWithObjects:@"cfg", @"bex", @"deh", @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", nil];
+	// pwadTypes = [NSArray arrayWithObjects:@"cfg", @"bex", @"deh", @"edf", 
+   // @"csc", @"wad", @"gfs", @"rsp", @"lmp", nil];
 	
 	NSUInteger i;
 	NSString *extension, *path;
@@ -1037,7 +950,8 @@ iwadMightBe:
 		[parmIwad removeAllObjects];
 	else {
 		[parmIwad setArray:[NSArray arrayWithObjects:@"-iwad", 
-							[[[iwadPopUp selectedItem] representedObject] path], nil]];
+							[[[iwadPopUp selectedItem] representedObject] path], 
+                          nil]];
 	}
 }
 
@@ -1048,9 +962,12 @@ iwadMightBe:
 {
 	[parmPwad removeAllObjects];
 	// This is more complex, so divide it further
-	// pwadTypes = [NSArray arrayWithObjects:@"cfg", @"bex", @"deh", @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", nil];
+   // pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
+   //             @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
+   ///             @"pke", @"zip", nil];
 	
-	NSMutableArray *sparmConfig, *sparmDeh, *sparmEdf, *sparmExec, *sparmFile, *sparmGfs;
+	NSMutableArray *sparmConfig, *sparmDeh, *sparmEdf, *sparmExec, *sparmFile, 
+      *sparmGfs;
 	sparmConfig = [[NSMutableArray alloc] initWithCapacity:0];
 	sparmDeh    = [[NSMutableArray alloc] initWithCapacity:0];
 	sparmEdf    = [[NSMutableArray alloc] initWithCapacity:0];
@@ -1091,7 +1008,10 @@ iwadMightBe:
 			[sparmExec addObject:path];
 		}
 		else if([extension caseInsensitiveCompare:@"wad"] == NSOrderedSame ||
-				[extension caseInsensitiveCompare:@"lmp"] == NSOrderedSame)
+				[extension caseInsensitiveCompare:@"lmp"] == NSOrderedSame ||
+            [extension caseInsensitiveCompare:@"zip"] == NSOrderedSame ||
+              [extension caseInsensitiveCompare:@"pk3"] == NSOrderedSame ||
+              [extension caseInsensitiveCompare:@"pke"] == NSOrderedSame)
 		{
 			if([sparmFile count] == 0)
 				[sparmFile addObject:@"-file"];
@@ -1126,11 +1046,13 @@ iwadMightBe:
 {
 	NSUInteger i, j;
 	NSRange shit, shit2;
-	NSMutableString *aggr = [[NSMutableString alloc] init], *comp2 = [[NSMutableString alloc] init];
+	NSMutableString *aggr = [[NSMutableString alloc] init], *comp2 
+      = [[NSMutableString alloc] init];
 	BOOL quittest;
 	
 	[parmOthers setArray:[[otherField stringValue] 
-						  componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+						  componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	
 	
 	NSString *token;
@@ -1139,14 +1061,16 @@ iwadMightBe:
 		token = [parmOthers objectAtIndex:i];
 		if([token length] > 0 && [token characterAtIndex:0] == '\"')
 		{
-			[aggr appendString:[[parmOthers objectAtIndex:i] substringFromIndex:1]];
+			[aggr appendString:[[parmOthers objectAtIndex:i] 
+                             substringFromIndex:1]];
 			j = i;
 			shit.location = j;
 			for(++i; i < [parmOthers count]; ++i)
 			{
 				quittest = NO;
 				[comp2 setString:[parmOthers objectAtIndex:i]];
-				if([comp2 length] > 0 && [comp2 characterAtIndex:[comp2 length] - 1] == '\"')
+				if([comp2 length] > 0 && [comp2 characterAtIndex:[comp2 length] 
+                                      - 1] == '\"')
 				{
 					shit2.location = [comp2 length] - 1;
 					shit2.length = 1;
@@ -1178,7 +1102,8 @@ iwadMightBe:
 	{
 		[parmWarp addObject:@"-warp"];
 		[parmWarp addObjectsFromArray:[[warpField stringValue] 
-									   componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                           componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 
@@ -1192,7 +1117,8 @@ iwadMightBe:
 	{
 		[parmSkill addObject:@"-skill"];
 		[parmSkill addObjectsFromArray:[[skillField stringValue] 
-									   componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                        componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 
@@ -1279,7 +1205,8 @@ iwadMightBe:
 	{
 		[parmFragLimit addObject:@"-frags"];
 		[parmFragLimit addObjectsFromArray:[[fragField stringValue] 
-									   componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                           componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 
@@ -1293,7 +1220,8 @@ iwadMightBe:
 	{
 		[parmTimeLimit addObject:@"-timer"];
 		[parmTimeLimit addObjectsFromArray:[[timeField stringValue] 
-											componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                           componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 
@@ -1307,7 +1235,8 @@ iwadMightBe:
 	{
 		[parmTurbo addObject:@"-turbo"];
 		[parmTurbo addObjectsFromArray:[[turboField stringValue] 
-											componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                           componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 
@@ -1321,7 +1250,8 @@ iwadMightBe:
 	{
 		[parmDmflags addObject:@"-dmflags"];
 		[parmDmflags addObjectsFromArray:[[dmflagField stringValue] 
-										componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                           componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 
@@ -1335,7 +1265,8 @@ iwadMightBe:
 	{
 		[parmNet addObject:@"-net"];
 		[parmNet addObjectsFromArray:[[netField stringValue] 
-										  componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+                           componentsSeparatedByCharactersInSet:[NSCharacterSet 
+                                          whitespaceAndNewlineCharacterSet]]];
 	}
 }
 		 
@@ -1479,7 +1410,8 @@ iwadMightBe:
 		[archArr addObject:[URI relativeString]];
 	
 	[defaults setObject:archArr forKey:@"iwadSet"];
-	[defaults setInteger:[iwadPopUp indexOfSelectedItem] forKey:@"iwadPopUpIndex"];
+	[defaults setInteger:[iwadPopUp indexOfSelectedItem] 
+                 forKey:@"iwadPopUpIndex"];
 	// PWAD array
 	[archArr removeAllObjects];
 	for(URI in pwadArray)
@@ -1543,12 +1475,16 @@ iwadMightBe:
 		
 		archArr = [defaults stringArrayForKey:@"iwadSet"];
 		for(archStr in archArr)
-			[self addIwadOrPwad:[NSURL URLWithString:archStr]];
+      {
+         [self doAddIwadFromURL:[NSURL URLWithString:archStr]];
+      }
 		[iwadPopUp selectItemAtIndex:[defaults integerForKey:@"iwadPopUpIndex"]];
 		// PWAD array
 		archArr = [defaults stringArrayForKey:@"pwadArray"];
 		for(archStr in archArr)
-			[self addIwadOrPwad:[NSURL URLWithString:archStr]];
+      {
+         [self doAddPwadFromURL:[NSURL URLWithString:archStr]];
+      }
 		[pwadView reloadData];
 			 
 		// Other parameters
@@ -1594,52 +1530,9 @@ iwadMightBe:
 //
 -(IBAction)goGetHelp:(id)sender
 {
-	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://eternity.youfailit.net/index.php?title=List_of_command_line_parameters"]];
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL 
+   URLWithString:@"http://eternity.youfailit.net/index.php?title=List_of_command_line_parameters"]];
 }
-@end
-
-//
-// NSString (ReplaceSubString)
-//
-// From original SDLMain.m, I don't know what it does or why it's here...
-//
-@implementation NSString (ReplaceSubString)
-
-- (NSString *)stringByReplacingRange:(NSRange)aRange with:(NSString *)aString
-{
-    unsigned int bufferSize;
-    unsigned int selfLen = [self length];
-    unsigned int aStringLen = [aString length];
-    unichar *buffer;
-    NSRange localRange;
-    NSString *result;
-
-    bufferSize = selfLen + aStringLen - aRange.length;
-    buffer = (unichar *)NSAllocateMemoryPages(bufferSize*sizeof(unichar));
-    
-    /* Get first part into buffer */
-    localRange.location = 0;
-    localRange.length = aRange.location;
-    [self getCharacters:buffer range:localRange];
-    
-    /* Get middle part into buffer */
-    localRange.location = 0;
-    localRange.length = aStringLen;
-    [aString getCharacters:(buffer+aRange.location) range:localRange];
-     
-    /* Get last part into buffer */
-    localRange.location = aRange.location + aRange.length;
-    localRange.length = selfLen - localRange.location;
-    [self getCharacters:(buffer+aRange.location+aStringLen) range:localRange];
-    
-    /* Build output string */
-    result = [NSString stringWithCharacters:buffer length:bufferSize];
-    
-    NSDeallocateMemoryPages(buffer, bufferSize);
-    
-    return result;
-}
-
 @end
 
 //
@@ -1694,15 +1587,17 @@ int main (int argc, char **argv)
         gArgc = argc;
         gArgv = (char **) SDL_malloc(sizeof (char *) * (argc+1));
         for (i = 0; i <= argc; i++)
+		{
             gArgv[i] = argv[i];
+		}
         gFinderLaunch = NO;
     }
 
-#if SDL_USE_NIB_FILE
     NSMyApplicationMain (argc, argv);
-#else
-    CustomApplicationMain (argc, argv);
-#endif
+
     return 0;
 }
+
+// EOF
+
 
