@@ -10,6 +10,7 @@
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */; };
 		FA16D39915E01A3A002318D1 /* acs_acse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA16D39815E01A3A002318D1 /* acs_acse.cpp */; };
 		FA16D3A015E01B82002318D1 /* d_files.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA16D39E15E01B82002318D1 /* d_files.cpp */; };
 		FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1F567F158BB857006F8063 /* OpenGL.framework */; };
@@ -315,6 +316,8 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELFileViewDataSource.h; sourceTree = "<group>"; };
+		FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELFileViewDataSource.m; sourceTree = "<group>"; };
 		FA16D39815E01A3A002318D1 /* acs_acse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = acs_acse.cpp; path = ../../acs_acse.cpp; sourceTree = SOURCE_ROOT; };
 		FA16D39E15E01B82002318D1 /* d_files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_files.cpp; path = ../../d_files.cpp; sourceTree = SOURCE_ROOT; };
 		FA16D3BC15E01E96002318D1 /* a_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_common.h; path = ../../a_common.h; sourceTree = SOURCE_ROOT; };
@@ -1086,6 +1089,8 @@
 				256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */,
 				FAB103E01591214400393DE3 /* ELDumpConsole.h */,
 				FAB103E11591214400393DE3 /* ELDumpConsole.m */,
+				FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */,
+				FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */,
 			);
 			name = Main;
 			sourceTree = "<group>";
@@ -1792,6 +1797,7 @@
 				FA889951162984C20025048A /* i_video.cpp in Sources */,
 				FAAC1890163DC8DE004791CB /* w_formats.cpp in Sources */,
 				FAAC1891163DC8DE004791CB /* w_zip.cpp in Sources */,
+				FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

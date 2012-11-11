@@ -48,6 +48,7 @@
 #include <SDL.h>
 #import "SDLMain.h"
 #import "ELDumpConsole.h"
+#import "ELFileViewDataSource.h"
 #include <sys/param.h> /* for MAXPATHLEN */
 #include <unistd.h>
 
@@ -139,7 +140,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 @implementation SDLMain
 
-@synthesize window;
+@synthesize window, pwadArray;
 
 //
 // dealloc
@@ -152,6 +153,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	[pwadTypes release];
 	[iwadPopMenu release];
 	[pwadArray release];
+   
 	[noIwadAlert release];
 	[badIwadAlert release];
 	[nothingForGfsAlert release];
@@ -247,11 +249,17 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 // initNibData
 //
-// Added after Nib got loaded
+// Added after Nib got loaded. Generic initialization that wouldn't go in init
 //
 -(void)initNibData
 {
 	[iwadPopUp setMenu:iwadPopMenu];
+   // Allow file list view to accept Finder files
+   [pwadView registerForDraggedTypes:[NSArray
+                                 arrayWithObjects:NSFilenamesPboardType, nil]];
+   // Set array for data source
+   [fileViewDataSource setArray:pwadArray];
+   
 	[self loadDefaults];
 }
 
@@ -463,58 +471,6 @@ iwadMightBe:
 		
 		[self updateParameters:[iwadPopUp selectedItem]];
 	}
-}
-
-//
-// numberOfRowsInTableView:
-//
--(NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
-{
-	
-	NSInteger count=0;
-	if (pwadArray)
-		count=[pwadArray count];
-	return count;
-}
-
-//
-// tableView:objectValueForTableColumn:row:
-//
--(id)tableView:(NSTableView *)aTableView 
-objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
-{
-	id returnValue=nil;
-	NSString *columnIdentifer = [aTableColumn identifier];
-	
-	NSURL *pwadURL = [pwadArray objectAtIndex:rowIndex];
-	NSString *pwadString = [pwadURL path];
-	
-	if ([columnIdentifer isEqualToString:@"pwadIcon"]) 
-	{
-		returnValue = [[NSWorkspace sharedWorkspace] iconForFile:pwadString];
-	}
-	else
-	{
-		NSString *niceName = [pwadString stringByAbbreviatingWithTildeInPath];
-		returnValue = niceName;
-	}
-
-	return returnValue;
-}
-
-//
-// tableView:setObjectValue:forTableColumn:row:
-//
-// Allow renaming -file entries
-//
--(void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject
-  forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
-{
-   // set value to pwadArray element
-   [pwadArray replaceObjectAtIndex:rowIndex withObject:[NSURL
-                                                      URLWithString:[anObject
-                                                stringByExpandingTildeInPath]]];
-   [self updateParameters:aTableView];
 }
 
 //
@@ -1350,6 +1306,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 		
 		// put ellipsis for too long names: BEFORE last slash and AFTER a slash.
 		// option ; (…)
+      
 		len = [compon length];
 		if(len > 20)
 		{
@@ -1427,7 +1384,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 	NSURL *URI;
 	NSMutableArray *archArr = [[NSMutableArray alloc] init];
 	for(URI in iwadSet)
-		[archArr addObject:[URI relativeString]];
+		[archArr addObject:[URI path]];
 	
 	[defaults setObject:archArr forKey:@"iwadSet"];
 	[defaults setInteger:[iwadPopUp indexOfSelectedItem] 
@@ -1435,7 +1392,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 	// PWAD array
 	[archArr removeAllObjects];
 	for(URI in pwadArray)
-		[archArr addObject:[URI relativeString]];
+		[archArr addObject:[URI path]];
 	
 	[defaults setObject:archArr forKey:@"pwadArray"];
 	
@@ -1496,14 +1453,14 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 		archArr = [defaults stringArrayForKey:@"iwadSet"];
 		for(archStr in archArr)
       {
-         [self doAddIwadFromURL:[NSURL URLWithString:archStr]];
+         [self doAddIwadFromURL:[NSURL fileURLWithPath:archStr]];
       }
 		[iwadPopUp selectItemAtIndex:[defaults integerForKey:@"iwadPopUpIndex"]];
 		// PWAD array
 		archArr = [defaults stringArrayForKey:@"pwadArray"];
 		for(archStr in archArr)
       {
-         [self doAddPwadFromURL:[NSURL URLWithString:archStr]];
+         [self doAddPwadFromURL:[NSURL fileURLWithPath:archStr]];
       }
 		[pwadView reloadData];
 			 

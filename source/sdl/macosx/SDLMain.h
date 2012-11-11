@@ -41,7 +41,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class ELDumpConsole;
+@class ELDumpConsole, ELFileViewDataSource;
 
 //
 // SDLMain
@@ -54,6 +54,7 @@
 	NSMutableSet *iwadSet;
 	NSFileManager *fileMan;
 	ELDumpConsole *console;
+   IBOutlet ELFileViewDataSource *fileViewDataSource; // data source for pwadView
 	
 	IBOutlet NSMenuItem *fileClose, *fileCloseAll, *fileOpenAllRecent;
 	IBOutlet NSButton *saveAsGFS;
@@ -62,7 +63,8 @@
 	IBOutlet NSPopUpButton *iwadPopUp, *gameTypePopUp;
 	IBOutlet NSTableView *pwadView;
 	IBOutlet NSTextField *recordDemoField, *playDemoField;
-	IBOutlet NSTextField *warpField, *skillField, *fragField, *timeField, *turboField, *dmflagField, *netField;	// heh
+	IBOutlet NSTextField *warpField, *skillField, *fragField, *timeField,
+      *turboField, *dmflagField, *netField;	// heh
 	IBOutlet NSTextField *otherField;
 	IBOutlet NSButton *respawn, *fast, *nomons, *vanilla, *timedemo, *fastdemo;
 	IBOutlet NSTextField *infoDisplay;
@@ -76,29 +78,36 @@
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray, *param;
 	
-	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp, *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo,
-		*parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags, *parmNet;
+	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp,
+      *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo,
+		*parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags,
+      *parmNet;
 }
 @property (assign) IBOutlet NSWindow *window;
+@property (readonly) NSMutableArray *pwadArray;
 
 -(id)init;
 -(void)dealloc;
 -(void)initNibData;
 -(IBAction)launchGame:(id)sender;
 -(void)doAddIwadFromURL:(NSURL *)wURL;
--(void)chooseIwadAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
+-(void)chooseIwadAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode
+                 contextInfo:(void *)contextInfo;
 -(IBAction)removeIwad:(id)sender;
 -(IBAction)addPwad:(id)sender;
 -(IBAction)addIwad:(id)sender;
 -(IBAction)addAllRecentPwads:(id)sender;
 -(void)doAddPwadFromURL:(NSURL *)wURL;
--(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info;
+-(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void
+                                                                        *)info;
 -(IBAction)removeAllPwads:(id)sender;
 -(IBAction)removePwad:(id)sender;
 -(IBAction)chooseRecordDemo:(id)sender;
--(void)chooseRecordDidEnd:(NSSavePanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
+-(void)chooseRecordDidEnd:(NSSavePanel *)sheet returnCode:(int)returnCode
+              contextInfo:(void *)contextInfo;
 -(IBAction)choosePlayDemo:(id)sender;
--(void)choosePlayDidEnd:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info;
+-(void)choosePlayDidEnd:(NSOpenPanel *)panel returnCode:(int)code
+            contextInfo:(void *)info;
 -(IBAction)clearPlayDemo:(id)sender;
 -(IBAction)clearRecordDemo:(id)sender;
 -(IBAction)clearNetwork:(id)sender;
@@ -115,7 +124,7 @@
 -(IBAction)updateParmSkill:(id)sender;	// called by text field
 -(IBAction)updateParmFlags:(id)sender;	// called by any check box
 -(IBAction)updateParmRecord:(id)sender;	// called by text field
--(IBAction)updateParmPlayDemo:(id)sender;	// called by text field and its check boxes
+-(IBAction)updateParmPlayDemo:(id)sender;	// called by text field, check boxes
 -(IBAction)updateParmGameType:(id)sender;	// called by pop-up menu command
 -(IBAction)updateParmFragLimit:(id)sender;
 -(IBAction)updateParmTimeLimit:(id)sender;
