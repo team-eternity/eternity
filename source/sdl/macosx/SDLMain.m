@@ -416,7 +416,7 @@ iwadMightBe:
 	}
 	
 	// Start console
-//	[console startLogging];
+	[console startLogging];
 	
 	
 	int status;
@@ -428,6 +428,7 @@ iwadMightBe:
 	
 //	[console showInstantLog];
 // We're done, thank you for playing
+   if(status == 0)   // only exit if it's all ok
     exit(status);
 }
 

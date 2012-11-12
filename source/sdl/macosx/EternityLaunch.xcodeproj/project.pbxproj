@@ -1852,7 +1852,7 @@
 				GCC_PREFIX_HEADER = EternityLaunch_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					R_LINKEDPORTALS,
-					NDEBUG,
+					_DEBUG,
 					_CONSOLE,
 					_SDL_VER,
 					HAVE_SPCLIB,
@@ -1860,6 +1860,10 @@
 					HAVE_STDINT_H,
 					_CRT_SECURE_NO_WARNINGS,
 					_CRT_NONSTDC_NO_WARNINGS,
+					RANGECHECK,
+					INSTRUMENTED,
+					ZONEIDCHECK,
+					R_PORTALS,
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
@@ -1946,7 +1950,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 			};
 			name = Debug;
 		};
@@ -1958,7 +1962,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 			};
 			name = Release;
 		};

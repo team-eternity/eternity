@@ -54,7 +54,7 @@
 	NSMutableSet *iwadSet;
 	NSFileManager *fileMan;
 	ELDumpConsole *console;
-   IBOutlet ELFileViewDataSource *fileViewDataSource; // data source for pwadView
+   IBOutlet ELFileViewDataSource *fileViewDataSource; //data source for pwadView
 	
 	IBOutlet NSMenuItem *fileClose, *fileCloseAll, *fileOpenAllRecent;
 	IBOutlet NSButton *saveAsGFS;

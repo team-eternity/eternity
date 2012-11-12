@@ -29,14 +29,14 @@
 
 
 @interface ELDumpConsole : NSWindowController {
-	IBOutlet NSTextView *textView;
+	IBOutlet NSTextField *textField;
 	NSMutableString *log;
 	NSAttributedString *attrStr;
-	NSFileHandle *outHandle;
+	NSFileHandle *outHandle, *inHandle;
+   NSPipe *pipe;
 }
 
 @property (assign) NSMutableString *log;
-@property (assign) NSTextView *textView;
 
 -(id)initWithWindowNibName:(NSString *)windowNibName;
 -(void)dealloc;

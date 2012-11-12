@@ -29,14 +29,15 @@
 
 
 @implementation ELDumpConsole
-@synthesize log, textView;
+@synthesize log;
 
 -(id)initWithWindowNibName:(NSString *)windowNibName
 {
 	if([super initWithWindowNibName:windowNibName])
 	{
 		log = [[NSMutableString alloc] init];
-		outHandle = [NSFileHandle fileHandleWithStandardOutput];
+      
+		
 	}
 	
 	return self;
@@ -45,6 +46,7 @@
 -(void)dealloc
 {
 	[log release];
+   
 	[super dealloc];
 }
 
@@ -52,38 +54,34 @@
 {
 	[[self window] makeKeyAndOrderFront:self];
 	
+   pipe = [NSPipe pipe];
+   outHandle = [pipe fileHandleForWriting];
+   inHandle = [pipe fileHandleForReading];
+   dup2([outHandle fileDescriptor], fileno(stdout));
+   
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(dataReady:)
 												 name:NSFileHandleReadCompletionNotification
-											   object:outHandle];
+											   object:inHandle];
 	
-	[outHandle readInBackgroundAndNotify];
+	[inHandle readInBackgroundAndNotify];
 }
 
 
 -(void)dataReady:(NSNotification *)notification
 {
+   [inHandle readInBackgroundAndNotify];
 	NSData *data = [[notification userInfo]
 					objectForKey:NSFileHandleNotificationDataItem];
-	NSFileHandle *handle = [notification object];
+   
 	if([data length])
 	{
 		NSString *string = [[NSString alloc] initWithData:data
 												 encoding:NSUTF8StringEncoding];
 		[log appendString:string];
 		[string release];
-		
-		attrStr = [[NSAttributedString alloc] initWithString:log];
-		
-		[[textView textStorage] beginEditing];
-		[[textView textStorage] setAttributedString:attrStr];
-		[[textView textStorage] endEditing];
-		
-		[attrStr release];
-		
-		[textView scrollRangeToVisible:NSMakeRange([[textView string] length], 0)];
-		
-		[handle readInBackgroundAndNotify];
+		[textField setStringValue:log];
+
 	}
 	else
 	{
@@ -93,28 +91,6 @@
 		 name:NSFileHandleReadCompletionNotification
 		 object:[notification object]];
 	}
-}
-
--(void)showInstantLog
-{
-	[outHandle seekToFileOffset:0];
-	
-	NSData *data = [outHandle readDataToEndOfFile];
-	
-	NSString *string = [[NSString alloc] initWithData:data
-											 encoding:NSUTF8StringEncoding];
-	
-	attrStr = [[NSAttributedString alloc] initWithString:string];
-	
-	[string release];
-	
-	[[textView textStorage] beginEditing];
-	[[textView textStorage] setAttributedString:attrStr];
-	[[textView textStorage] endEditing];
-	
-	[attrStr release];
-	
-	[textView scrollRangeToVisible:NSMakeRange([[textView string] length], 0)];
 }
 @end
 
