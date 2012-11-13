@@ -165,7 +165,6 @@
 		FABF5DE1158BF42800C49E93 /* p_enemy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D12158BF42800C49E93 /* p_enemy.cpp */; };
 		FABF5DE2158BF42800C49E93 /* p_floor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D13158BF42800C49E93 /* p_floor.cpp */; };
 		FABF5DE3158BF42800C49E93 /* p_genlin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D14158BF42800C49E93 /* p_genlin.cpp */; };
-		FABF5DE4158BF42800C49E93 /* p_henemy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D15158BF42800C49E93 /* p_henemy.cpp */; };
 		FABF5DE5158BF42800C49E93 /* p_hubs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D16158BF42800C49E93 /* p_hubs.cpp */; };
 		FABF5DE6158BF42800C49E93 /* p_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D17158BF42800C49E93 /* p_info.cpp */; };
 		FABF5DE7158BF42800C49E93 /* p_inter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D18158BF42800C49E93 /* p_inter.cpp */; };
@@ -350,7 +349,6 @@
 		FA16D3D715E01E96002318D1 /* d_ticcmd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_ticcmd.h; path = ../../d_ticcmd.h; sourceTree = SOURCE_ROOT; };
 		FA16D3D815E01E96002318D1 /* doomdata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomdata.h; path = ../../doomdata.h; sourceTree = SOURCE_ROOT; };
 		FA16D3D915E01E96002318D1 /* doomdef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomdef.h; path = ../../doomdef.h; sourceTree = SOURCE_ROOT; };
-		FA16D3DA15E01E96002318D1 /* doomkeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomkeys.h; path = ../../textscreen/doomkeys.h; sourceTree = SOURCE_ROOT; };
 		FA16D3DB15E01E96002318D1 /* doomstat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomstat.h; path = ../../doomstat.h; sourceTree = SOURCE_ROOT; };
 		FA16D3DC15E01E96002318D1 /* doomtype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomtype.h; path = ../../doomtype.h; sourceTree = SOURCE_ROOT; };
 		FA16D3DD15E01E96002318D1 /* dstrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dstrings.h; path = ../../dstrings.h; sourceTree = SOURCE_ROOT; };
@@ -387,8 +385,6 @@
 		FA16D3FC15E01E96002318D1 /* hu_frags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_frags.h; path = ../../hu_frags.h; sourceTree = SOURCE_ROOT; };
 		FA16D3FD15E01E96002318D1 /* hu_over.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_over.h; path = ../../hu_over.h; sourceTree = SOURCE_ROOT; };
 		FA16D3FE15E01E96002318D1 /* hu_stuff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_stuff.h; path = ../../hu_stuff.h; sourceTree = SOURCE_ROOT; };
-		FA16D3FF15E01E96002318D1 /* i_fnames.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_fnames.h; path = ../../Win32/i_fnames.h; sourceTree = SOURCE_ROOT; };
-		FA16D40015E01E96002318D1 /* i_opndir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_opndir.h; path = ../../Win32/i_opndir.h; sourceTree = SOURCE_ROOT; };
 		FA16D40115E01E96002318D1 /* i_picker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_picker.h; path = ../../hal/i_picker.h; sourceTree = SOURCE_ROOT; };
 		FA16D40215E01E96002318D1 /* i_platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_platform.h; path = ../../hal/i_platform.h; sourceTree = SOURCE_ROOT; };
 		FA16D40315E01E96002318D1 /* i_sdlgl2d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_sdlgl2d.h; path = ../i_sdlgl2d.h; sourceTree = SOURCE_ROOT; };
@@ -396,7 +392,6 @@
 		FA16D40515E01E96002318D1 /* i_system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_system.h; path = ../../i_system.h; sourceTree = SOURCE_ROOT; };
 		FA16D40615E01E96002318D1 /* i_video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_video.h; path = ../../i_video.h; sourceTree = SOURCE_ROOT; };
 		FA16D40715E01E96002318D1 /* info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = info.h; path = ../../info.h; sourceTree = SOURCE_ROOT; };
-		FA16D40815E01E96002318D1 /* inttypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = inttypes.h; path = ../../Win32/inttypes.h; sourceTree = SOURCE_ROOT; };
 		FA16D40915E01E96002318D1 /* lexer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lexer.h; path = ../../Confuse/lexer.h; sourceTree = SOURCE_ROOT; };
 		FA16D40A15E01E96002318D1 /* m_bbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_bbox.h; path = ../../m_bbox.h; sourceTree = SOURCE_ROOT; };
 		FA16D40B15E01E96002318D1 /* m_bdlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_bdlist.h; path = ../../m_bdlist.h; sourceTree = SOURCE_ROOT; };
@@ -462,10 +457,8 @@
 		FA16D44715E01E96002318D1 /* r_voxels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_voxels.h; path = ../../r_voxels.h; sourceTree = SOURCE_ROOT; };
 		FA16D44815E01E96002318D1 /* s_sndseq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_sndseq.h; path = ../../s_sndseq.h; sourceTree = SOURCE_ROOT; };
 		FA16D44915E01E96002318D1 /* s_sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_sound.h; path = ../../s_sound.h; sourceTree = SOURCE_ROOT; };
-		FA16D44A15E01E96002318D1 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SDLMain.h; path = ../../SDLMain.h; sourceTree = SOURCE_ROOT; };
 		FA16D44B15E01E96002318D1 /* sounds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sounds.h; path = ../../sounds.h; sourceTree = SOURCE_ROOT; };
 		FA16D44C15E01E96002318D1 /* st_lib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = st_lib.h; path = ../../st_lib.h; sourceTree = SOURCE_ROOT; };
-		FA16D44D15E01E96002318D1 /* stdint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stdint.h; path = ../../Win32/stdint.h; sourceTree = SOURCE_ROOT; };
 		FA16D44E15E01E96002318D1 /* textscreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textscreen.h; path = ../../textscreen/textscreen.h; sourceTree = SOURCE_ROOT; };
 		FA16D44F15E01E96002318D1 /* txt_button.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = txt_button.h; path = ../../textscreen/txt_button.h; sourceTree = SOURCE_ROOT; };
 		FA16D45015E01E96002318D1 /* txt_checkbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = txt_checkbox.h; path = ../../textscreen/txt_checkbox.h; sourceTree = SOURCE_ROOT; };
@@ -673,7 +666,6 @@
 		FABF5D12158BF42800C49E93 /* p_enemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_enemy.cpp; path = ../../p_enemy.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D13158BF42800C49E93 /* p_floor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_floor.cpp; path = ../../p_floor.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D14158BF42800C49E93 /* p_genlin.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_genlin.cpp; path = ../../p_genlin.cpp; sourceTree = SOURCE_ROOT; };
-		FABF5D15158BF42800C49E93 /* p_henemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_henemy.cpp; path = ../../p_henemy.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D16158BF42800C49E93 /* p_hubs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_hubs.cpp; path = ../../p_hubs.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D17158BF42800C49E93 /* p_info.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_info.cpp; path = ../../p_info.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D18158BF42800C49E93 /* p_inter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_inter.cpp; path = ../../p_inter.cpp; sourceTree = SOURCE_ROOT; };
@@ -784,6 +776,35 @@
 		FABF5F07158C78F300C49E93 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
 		FABF5F08158C78F300C49E93 /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
 		FABF5FFF158C8F6300C49E93 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		FACACB2B16521F9E0091AF2E /* a_small.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_small.h; path = ../../a_small.h; sourceTree = "<group>"; };
+		FACACB30165220590091AF2E /* confuse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = confuse.h; path = ../../Confuse/confuse.h; sourceTree = "<group>"; };
+		FACACB3416527F270091AF2E /* d_deh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_deh.h; path = ../../d_deh.h; sourceTree = "<group>"; };
+		FACACB3516527F4F0091AF2E /* d_gi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_gi.h; path = ../../d_gi.h; sourceTree = "<group>"; };
+		FACACB3816527FC10091AF2E /* dhticstr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dhticstr.h; path = ../../dhticstr.h; sourceTree = "<group>"; };
+		FACACB3C165280BF0091AF2E /* e_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_args.h; path = ../../e_args.h; sourceTree = "<group>"; };
+		FACACB3E1652813A0091AF2E /* f_wipe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = f_wipe.h; path = ../../f_wipe.h; sourceTree = "<group>"; };
+		FACACB461652EE1E0091AF2E /* hi_stuff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hi_stuff.h; path = ../../hi_stuff.h; sourceTree = "<group>"; };
+		FACACB471652EE360091AF2E /* in_lude.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = in_lude.h; path = ../../in_lude.h; sourceTree = "<group>"; };
+		FACACB4B1652EEEB0091AF2E /* m_argv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_argv.h; path = ../../m_argv.h; sourceTree = "<group>"; };
+		FACACB4C1652EEEB0091AF2E /* m_fixed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_fixed.h; path = ../../m_fixed.h; sourceTree = "<group>"; };
+		FACACB501652EFB90091AF2E /* mn_emenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_emenu.h; path = ../../mn_emenu.h; sourceTree = "<group>"; };
+		FACACB541652F1170091AF2E /* linkoffs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linkoffs.h; path = ../../linkoffs.h; sourceTree = "<group>"; };
+		FACACB551652F1170091AF2E /* p_anim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_anim.h; path = ../../p_anim.h; sourceTree = "<group>"; };
+		FACACB561652F1170091AF2E /* p_mobj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_mobj.h; path = ../../p_mobj.h; sourceTree = "<group>"; };
+		FACACB571652F1170091AF2E /* p_portal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portal.h; path = ../../p_portal.h; sourceTree = "<group>"; };
+		FACACB5B1652F2660091AF2E /* r_bsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_bsp.h; path = ../../r_bsp.h; sourceTree = "<group>"; };
+		FACACB5C1652F2660091AF2E /* r_defs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_defs.h; path = ../../r_defs.h; sourceTree = "<group>"; };
+		FACACB5D1652F2660091AF2E /* r_main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_main.h; path = ../../r_main.h; sourceTree = "<group>"; };
+		FACACB5E1652F2660091AF2E /* r_portal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_portal.h; path = ../../r_portal.h; sourceTree = "<group>"; };
+		FACACB641652F4FF0091AF2E /* i_net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_net.h; path = ../../i_net.h; sourceTree = "<group>"; };
+		FACACB651652F53A0091AF2E /* i_sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_sound.h; path = ../../i_sound.h; sourceTree = "<group>"; };
+		FACACB671652F5A80091AF2E /* st_stuff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = st_stuff.h; path = ../../st_stuff.h; sourceTree = "<group>"; };
+		FACACB6B1652F8B60091AF2E /* v_block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_block.h; path = ../../v_block.h; sourceTree = "<group>"; };
+		FACACB741652FC510091AF2E /* precpp11.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = precpp11.h; path = ../../precpp11.h; sourceTree = "<group>"; };
+		FACACB751652FC980091AF2E /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tables.h; path = ../../tables.h; sourceTree = "<group>"; };
+		FACACB761652FC980091AF2E /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = version.h; path = ../../version.h; sourceTree = "<group>"; };
+		FACACB7E165300FA0091AF2E /* xl_scripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xl_scripts.h; path = ../../xl_scripts.h; sourceTree = "<group>"; };
+		FACACB87165301C70091AF2E /* metaadapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaadapter.h; path = ../../metaadapter.h; sourceTree = "<group>"; };
 		FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
 		FAEA89EB164DB9F400E9F874 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
 		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
@@ -898,185 +919,6 @@
 		FA16D3BB15E01E68002318D1 /* Headers */ = {
 			isa = PBXGroup;
 			children = (
-				FA16D3BC15E01E96002318D1 /* a_common.h */,
-				FA16D3BD15E01E96002318D1 /* a_doom.h */,
-				FA16D3BE15E01E96002318D1 /* acs_intr.h */,
-				FA16D3BF15E01E96002318D1 /* acs_op.h */,
-				FA16D3C015E01E96002318D1 /* am_map.h */,
-				FA16D3C115E01E96002318D1 /* c_batch.h */,
-				FA16D3C215E01E96002318D1 /* c_io.h */,
-				FA16D3C315E01E96002318D1 /* c_net.h */,
-				FA16D3C415E01E96002318D1 /* c_runcmd.h */,
-				FA16D3C515E01E96002318D1 /* cam_sight.h */,
-				FA16D3C615E01E96002318D1 /* d_dehtbl.h */,
-				FA16D3C715E01E96002318D1 /* d_diskfile.h */,
-				FA16D3C815E01E96002318D1 /* d_dwfile.h */,
-				FA16D3C915E01E96002318D1 /* d_englsh.h */,
-				FA16D3CA15E01E96002318D1 /* d_event.h */,
-				FA16D3CB15E01E96002318D1 /* d_files.h */,
-				FA16D3CC15E01E96002318D1 /* d_french.h */,
-				FA16D3CD15E01E96002318D1 /* d_io.h */,
-				FA16D3CE15E01E96002318D1 /* d_items.h */,
-				FA16D3CF15E01E96002318D1 /* d_iwad.h */,
-				FA16D3D015E01E96002318D1 /* d_keywds.h */,
-				FA16D3D115E01E96002318D1 /* d_main.h */,
-				FA16D3D215E01E96002318D1 /* d_mod.h */,
-				FA16D3D315E01E96002318D1 /* d_net.h */,
-				FA16D3D415E01E96002318D1 /* d_player.h */,
-				FA16D3D515E01E96002318D1 /* d_textur.h */,
-				FA16D3D615E01E96002318D1 /* d_think.h */,
-				FA16D3D715E01E96002318D1 /* d_ticcmd.h */,
-				FA16D3D815E01E96002318D1 /* doomdata.h */,
-				FA16D3D915E01E96002318D1 /* doomdef.h */,
-				FA16D3DA15E01E96002318D1 /* doomkeys.h */,
-				FA16D3DB15E01E96002318D1 /* doomstat.h */,
-				FA16D3DC15E01E96002318D1 /* doomtype.h */,
-				FA16D3DD15E01E96002318D1 /* dstrings.h */,
-				FA16D3DE15E01E96002318D1 /* e_dstate.h */,
-				FA16D3DF15E01E96002318D1 /* e_edf.h */,
-				FA16D3E015E01E96002318D1 /* e_exdata.h */,
-				FA16D3E115E01E96002318D1 /* e_fonts.h */,
-				FA16D3E215E01E96002318D1 /* e_gameprops.h */,
-				FA16D3E315E01E96002318D1 /* e_hash.h */,
-				FA16D3E415E01E96002318D1 /* e_hashkeys.h */,
-				FA16D3E515E01E96002318D1 /* e_inventory.h */,
-				FA16D3E615E01E96002318D1 /* e_lib.h */,
-				FA16D3E715E01E96002318D1 /* e_metastate.h */,
-				FA16D3E815E01E96002318D1 /* e_mod.h */,
-				FA16D3E915E01E96002318D1 /* e_player.h */,
-				FA16D3EA15E01E96002318D1 /* e_rtti.h */,
-				FA16D3EB15E01E96002318D1 /* e_sound.h */,
-				FA16D3EC15E01E96002318D1 /* e_sprite.h */,
-				FA16D3ED15E01E96002318D1 /* e_states.h */,
-				FA16D3EE15E01E96002318D1 /* e_string.h */,
-				FA16D3EF15E01E96002318D1 /* e_things.h */,
-				FA16D3F015E01E96002318D1 /* e_ttypes.h */,
-				FA16D3F115E01E96002318D1 /* f_finale.h */,
-				FA16D3F215E01E96002318D1 /* g_bind.h */,
-				FA16D3F315E01E96002318D1 /* g_dmflag.h */,
-				FA16D3F415E01E96002318D1 /* g_game.h */,
-				FA16D3F515E01E96002318D1 /* g_gfs.h */,
-				FA16D3F615E01E96002318D1 /* gl_includes.h */,
-				FA16D3F715E01E96002318D1 /* gl_init.h */,
-				FA16D3F815E01E96002318D1 /* gl_primitives.h */,
-				FA16D3F915E01E96002318D1 /* gl_projection.h */,
-				FA16D3FA15E01E96002318D1 /* gl_texture.h */,
-				FA16D3FB15E01E96002318D1 /* gl_vars.h */,
-				FA16D3FC15E01E96002318D1 /* hu_frags.h */,
-				FA16D3FD15E01E96002318D1 /* hu_over.h */,
-				FA16D3FE15E01E96002318D1 /* hu_stuff.h */,
-				FA16D3FF15E01E96002318D1 /* i_fnames.h */,
-				FA16D40015E01E96002318D1 /* i_opndir.h */,
-				FA16D40115E01E96002318D1 /* i_picker.h */,
-				FA16D40215E01E96002318D1 /* i_platform.h */,
-				FA16D40315E01E96002318D1 /* i_sdlgl2d.h */,
-				FA16D40415E01E96002318D1 /* i_sdlvideo.h */,
-				FA16D40515E01E96002318D1 /* i_system.h */,
-				FA16D40615E01E96002318D1 /* i_video.h */,
-				FA16D40715E01E96002318D1 /* info.h */,
-				FA16D40815E01E96002318D1 /* inttypes.h */,
-				FA16D40915E01E96002318D1 /* lexer.h */,
-				FA16D40A15E01E96002318D1 /* m_bbox.h */,
-				FA16D40B15E01E96002318D1 /* m_bdlist.h */,
-				FA16D40C15E01E96002318D1 /* m_buffer.h */,
-				FA16D40D15E01E96002318D1 /* m_cheat.h */,
-				FA16D40E15E01E96002318D1 /* m_collection.h */,
-				FA16D40F15E01E96002318D1 /* m_dllist.h */,
-				FA16D41015E01E96002318D1 /* m_fcvt.h */,
-				FA16D41115E01E96002318D1 /* m_hash.h */,
-				FA16D41215E01E96002318D1 /* m_misc.h */,
-				FA16D41315E01E96002318D1 /* m_qstr.h */,
-				FA16D41415E01E96002318D1 /* m_qstrkeys.h */,
-				FA16D41515E01E96002318D1 /* m_queue.h */,
-				FA16D41615E01E96002318D1 /* m_random.h */,
-				FA16D41715E01E96002318D1 /* m_shots.h */,
-				FA16D41815E01E96002318D1 /* m_strcasestr.h */,
-				FA16D41915E01E96002318D1 /* m_swap.h */,
-				FA16D41A15E01E96002318D1 /* m_syscfg.h */,
-				FA16D41B15E01E96002318D1 /* m_vector.h */,
-				FA16D41C15E01E96002318D1 /* metaapi.h */,
-				FA16D41D15E01E96002318D1 /* metaqstring.h */,
-				FA16D41E15E01E96002318D1 /* mmus2mid.h */,
-				FA16D41F15E01E96002318D1 /* mn_engin.h */,
-				FA16D42015E01E96002318D1 /* mn_files.h */,
-				FA16D42115E01E96002318D1 /* mn_htic.h */,
-				FA16D42215E01E96002318D1 /* mn_menus.h */,
-				FA16D42315E01E96002318D1 /* mn_misc.h */,
-				FA16D42415E01E96002318D1 /* p_chase.h */,
-				FA16D42515E01E96002318D1 /* p_enemy.h */,
-				FA16D42615E01E96002318D1 /* p_hubs.h */,
-				FA16D42715E01E96002318D1 /* p_info.h */,
-				FA16D42815E01E96002318D1 /* p_inter.h */,
-				FA16D42915E01E96002318D1 /* p_map.h */,
-				FA16D42A15E01E96002318D1 /* p_map3d.h */,
-				FA16D42B15E01E96002318D1 /* p_maputl.h */,
-				FA16D42C15E01E96002318D1 /* p_mobjcol.h */,
-				FA16D42D15E01E96002318D1 /* p_partcl.h */,
-				FA16D42E15E01E96002318D1 /* p_pspr.h */,
-				FA16D42F15E01E96002318D1 /* p_saveg.h */,
-				FA16D43015E01E96002318D1 /* p_setup.h */,
-				FA16D43115E01E96002318D1 /* p_skin.h */,
-				FA16D43215E01E96002318D1 /* p_slopes.h */,
-				FA16D43315E01E96002318D1 /* p_spec.h */,
-				FA16D43415E01E96002318D1 /* p_tick.h */,
-				FA16D43515E01E96002318D1 /* p_user.h */,
-				FA16D43615E01E96002318D1 /* p_xenemy.h */,
-				FA16D43715E01E96002318D1 /* polyobj.h */,
-				FA16D43815E01E96002318D1 /* psnprntf.h */,
-				FA16D43915E01E96002318D1 /* r_data.h */,
-				FA16D43A15E01E96002318D1 /* r_draw.h */,
-				FA16D43B15E01E96002318D1 /* r_drawl.h */,
-				FA16D43C15E01E96002318D1 /* r_drawq.h */,
-				FA16D43D15E01E96002318D1 /* r_dynseg.h */,
-				FA16D43E15E01E96002318D1 /* r_lighting.h */,
-				FA16D43F15E01E96002318D1 /* r_patch.h */,
-				FA16D44015E01E96002318D1 /* r_pcheck.h */,
-				FA16D44115E01E96002318D1 /* r_plane.h */,
-				FA16D44215E01E96002318D1 /* r_ripple.h */,
-				FA16D44315E01E96002318D1 /* r_segs.h */,
-				FA16D44415E01E96002318D1 /* r_sky.h */,
-				FA16D44515E01E96002318D1 /* r_state.h */,
-				FA16D44615E01E96002318D1 /* r_things.h */,
-				FA16D44715E01E96002318D1 /* r_voxels.h */,
-				FA16D44815E01E96002318D1 /* s_sndseq.h */,
-				FA16D44915E01E96002318D1 /* s_sound.h */,
-				FA16D44A15E01E96002318D1 /* SDLMain.h */,
-				FA16D44B15E01E96002318D1 /* sounds.h */,
-				FA16D44C15E01E96002318D1 /* st_lib.h */,
-				FA16D44D15E01E96002318D1 /* stdint.h */,
-				FA16D44E15E01E96002318D1 /* textscreen.h */,
-				FA16D44F15E01E96002318D1 /* txt_button.h */,
-				FA16D45015E01E96002318D1 /* txt_checkbox.h */,
-				FA16D45115E01E96002318D1 /* txt_desktop.h */,
-				FA16D45215E01E96002318D1 /* txt_dropdown.h */,
-				FA16D45315E01E96002318D1 /* txt_font.h */,
-				FA16D45415E01E96002318D1 /* txt_gui.h */,
-				FA16D45515E01E96002318D1 /* txt_inputbox.h */,
-				FA16D45615E01E96002318D1 /* txt_io.h */,
-				FA16D45715E01E96002318D1 /* txt_label.h */,
-				FA16D45815E01E96002318D1 /* txt_main.h */,
-				FA16D45915E01E96002318D1 /* txt_radiobutton.h */,
-				FA16D45A15E01E96002318D1 /* txt_scrollpane.h */,
-				FA16D45B15E01E96002318D1 /* txt_sdl.h */,
-				FA16D45C15E01E96002318D1 /* txt_separator.h */,
-				FA16D45D15E01E96002318D1 /* txt_spinctrl.h */,
-				FA16D45E15E01E96002318D1 /* txt_strut.h */,
-				FA16D45F15E01E96002318D1 /* txt_table.h */,
-				FA16D46015E01E96002318D1 /* txt_widget.h */,
-				FA16D46115E01E96002318D1 /* txt_window_action.h */,
-				FA16D46215E01E96002318D1 /* txt_window.h */,
-				FA16D46315E01E96002318D1 /* v_buffer.h */,
-				FA16D46415E01E96002318D1 /* v_font.h */,
-				FA16D46515E01E96002318D1 /* v_misc.h */,
-				FA16D46615E01E96002318D1 /* v_patch.h */,
-				FA16D46715E01E96002318D1 /* v_patchfmt.h */,
-				FA16D46815E01E96002318D1 /* v_png.h */,
-				FA16D46915E01E96002318D1 /* v_video.h */,
-				FA16D46A15E01E96002318D1 /* w_hacks.h */,
-				FA16D46B15E01E96002318D1 /* w_levels.h */,
-				FA16D46C15E01E96002318D1 /* w_wad.h */,
-				FA16D46D15E01E96002318D1 /* wi_stuff.h */,
-				FA16D46E15E01E96002318D1 /* z_zone.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -1225,29 +1067,148 @@
 		FA1F5791158BC579006F8063 /* Eternity */ = {
 			isa = PBXGroup;
 			children = (
+				FACACB2716521E950091AF2E /* Source Files */,
 				FA16D3BB15E01E68002318D1 /* Headers */,
-				FA88984D1628C5170025048A /* autopalette.h */,
-				FABF5CB4158BF42800C49E93 /* a_common.cpp */,
-				FABF5CB5158BF42800C49E93 /* a_counters.cpp */,
-				FABF5CB6158BF42800C49E93 /* a_decorate.cpp */,
-				FABF5CB7158BF42800C49E93 /* a_doom.cpp */,
-				FABF5CB8158BF42800C49E93 /* a_fixed.cpp */,
-				FABF5CB9158BF42800C49E93 /* a_general.cpp */,
-				FABF5CBA158BF42800C49E93 /* a_heretic.cpp */,
-				FABF5CBB158BF42800C49E93 /* a_hexen.cpp */,
-				FABF5CBC158BF42800C49E93 /* a_small.cpp */,
+			);
+			name = Eternity;
+			sourceTree = "<group>";
+		};
+		FA8216B2164712B100FF998A /* Eternity companions */ = {
+			isa = PBXGroup;
+			children = (
+				FA82164B1647128900FF998A /* base */,
+				FA8216751647128900FF998A /* COPYING */,
+				FA8216761647128900FF998A /* docs */,
+				FA8216871647128900FF998A /* user */,
+			);
+			name = "Eternity companions";
+			sourceTree = "<group>";
+		};
+		FACACB2716521E950091AF2E /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB7A1652FDA80091AF2E /* A_ */,
+				FACACB2816521ECE0091AF2E /* ACS_ */,
+				FACACB2916521EF40091AF2E /* AM_ */,
+				FACACB2A16521F470091AF2E /* AMX */,
+				FACACB2C16521FAA0091AF2E /* C_ */,
+				FACACB88165301F40091AF2E /* Cam */,
+				FACACB2F165220180091AF2E /* Confuse */,
+				FACACB3116527E970091AF2E /* D_ */,
+				FACACB3616527F790091AF2E /* doom */,
+				FACACB391652802D0091AF2E /* E_ */,
+				FACACB3D165281000091AF2E /* F_ */,
+				FACACB3F1652ED510091AF2E /* G_ */,
+				FACACB821653014C0091AF2E /* GL_ */,
+				FACACB7F165301040091AF2E /* HAL */,
+				FACACB421652ED8A0091AF2E /* HU_ */,
+				FACACB451652EDDB0091AF2E /* IN */,
+				FACACB481652EE6D0091AF2E /* M_ */,
+				FACACB861653019A0091AF2E /* MetaAPI */,
+				FACACB711652FBC50091AF2E /* Misc */,
+				FACACB4D1652EF4E0091AF2E /* Mn_ */,
+				FACACB511652EFDB0091AF2E /* P_ */,
+				FACACB581652F1900091AF2E /* R_ */,
+				FACACB5F1652F2B50091AF2E /* S_ */,
+				FACACB601652F3070091AF2E /* SDL */,
+				FACACB661652F5650091AF2E /* ST_ */,
+				FACACB771652FCA80091AF2E /* TXT_ */,
+				FACACB681652F5B20091AF2E /* V_ */,
+				FACACB6C1652F8E00091AF2E /* W_ */,
+				FACACB7D165300D20091AF2E /* XL_ */,
+				FACACB701652FB9A0091AF2E /* Z_ */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		FACACB2816521ECE0091AF2E /* ACS_ */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CBD158BF42800C49E93 /* acs_acs0.cpp */,
 				FA16D39815E01A3A002318D1 /* acs_acse.cpp */,
 				FABF5CBE158BF42800C49E93 /* acs_func.cpp */,
 				FABF5CBF158BF42800C49E93 /* acs_intr.cpp */,
+				FA16D3BE15E01E96002318D1 /* acs_intr.h */,
+				FA16D3BF15E01E96002318D1 /* acs_op.h */,
+			);
+			name = ACS_;
+			sourceTree = "<group>";
+		};
+		FACACB2916521EF40091AF2E /* AM_ */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CC0158BF42800C49E93 /* am_color.cpp */,
 				FABF5CC1158BF42800C49E93 /* am_map.cpp */,
+				FA16D3C015E01E96002318D1 /* am_map.h */,
+			);
+			name = AM_;
+			sourceTree = "<group>";
+		};
+		FACACB2A16521F470091AF2E /* AMX */ = {
+			isa = PBXGroup;
+			children = (
+				FABF5CB8158BF42800C49E93 /* a_fixed.cpp */,
+				FABF5CBC158BF42800C49E93 /* a_small.cpp */,
+				FACACB2B16521F9E0091AF2E /* a_small.h */,
+			);
+			name = AMX;
+			sourceTree = "<group>";
+		};
+		FACACB2C16521FAA0091AF2E /* C_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB2D16521FE10091AF2E /* C_ Source */,
+				FACACB2E16521FF20091AF2E /* C_ Headers */,
+			);
+			name = C_;
+			sourceTree = "<group>";
+		};
+		FACACB2D16521FE10091AF2E /* C_ Source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CC4158BF42800C49E93 /* c_batch.cpp */,
 				FABF5CC5158BF42800C49E93 /* c_cmd.cpp */,
 				FABF5CC6158BF42800C49E93 /* c_io.cpp */,
 				FABF5CC7158BF42800C49E93 /* c_net.cpp */,
 				FABF5CC8158BF42800C49E93 /* c_runcmd.cpp */,
-				FABF5CC9158BF42800C49E93 /* cam_sight.cpp */,
+			);
+			name = "C_ Source";
+			sourceTree = "<group>";
+		};
+		FACACB2E16521FF20091AF2E /* C_ Headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA16D3C115E01E96002318D1 /* c_batch.h */,
+				FA16D3C215E01E96002318D1 /* c_io.h */,
+				FA16D3C315E01E96002318D1 /* c_net.h */,
+				FA16D3C415E01E96002318D1 /* c_runcmd.h */,
+			);
+			name = "C_ Headers";
+			sourceTree = "<group>";
+		};
+		FACACB2F165220180091AF2E /* Confuse */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB30165220590091AF2E /* confuse.h */,
+				FABF5D5A158BF42800C49E93 /* confuse.cpp */,
+				FABF5D5B158BF42800C49E93 /* lexer.cpp */,
+				FA16D40915E01E96002318D1 /* lexer.h */,
+			);
+			name = Confuse;
+			sourceTree = "<group>";
+		};
+		FACACB3116527E970091AF2E /* D_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB3216527E9F0091AF2E /* D_ source */,
+				FACACB3316527F000091AF2E /* D_ headers */,
+			);
+			name = D_;
+			sourceTree = "<group>";
+		};
+		FACACB3216527E9F0091AF2E /* D_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CCA158BF42800C49E93 /* d_deh.cpp */,
 				FABF5CCB158BF42800C49E93 /* d_dehtbl.cpp */,
 				FABF5CCD158BF42800C49E93 /* d_diskfile.cpp */,
@@ -1258,19 +1219,75 @@
 				FABF5CD1158BF42800C49E93 /* d_iwad.cpp */,
 				FABF5CD2158BF42800C49E93 /* d_main.cpp */,
 				FABF5CD3158BF42800C49E93 /* d_net.cpp */,
+			);
+			name = "D_ source";
+			sourceTree = "<group>";
+		};
+		FACACB3316527F000091AF2E /* D_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB3416527F270091AF2E /* d_deh.h */,
+				FA16D3C615E01E96002318D1 /* d_dehtbl.h */,
+				FA16D3C715E01E96002318D1 /* d_diskfile.h */,
+				FA16D3C815E01E96002318D1 /* d_dwfile.h */,
+				FA16D3C915E01E96002318D1 /* d_englsh.h */,
+				FA16D3CA15E01E96002318D1 /* d_event.h */,
+				FA16D3CB15E01E96002318D1 /* d_files.h */,
+				FA16D3CC15E01E96002318D1 /* d_french.h */,
+				FACACB3516527F4F0091AF2E /* d_gi.h */,
+				FA16D3CD15E01E96002318D1 /* d_io.h */,
+				FA16D3CE15E01E96002318D1 /* d_items.h */,
+				FA16D3CF15E01E96002318D1 /* d_iwad.h */,
+				FA16D3D015E01E96002318D1 /* d_keywds.h */,
+				FA16D3D115E01E96002318D1 /* d_main.h */,
+				FA16D3D215E01E96002318D1 /* d_mod.h */,
+				FA16D3D315E01E96002318D1 /* d_net.h */,
+				FA16D3D415E01E96002318D1 /* d_player.h */,
+				FA16D3D515E01E96002318D1 /* d_textur.h */,
+				FA16D3D615E01E96002318D1 /* d_think.h */,
+				FA16D3D715E01E96002318D1 /* d_ticcmd.h */,
+			);
+			name = "D_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB3616527F790091AF2E /* doom */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB3816527FC10091AF2E /* dhticstr.h */,
+				FA16D3D815E01E96002318D1 /* doomdata.h */,
 				FABF5CD4158BF42800C49E93 /* doomdef.cpp */,
+				FA16D3D915E01E96002318D1 /* doomdef.h */,
 				FABF5CD5158BF42800C49E93 /* doomstat.cpp */,
+				FA16D3DB15E01E96002318D1 /* doomstat.h */,
+				FA16D3DC15E01E96002318D1 /* doomtype.h */,
 				FABF5CD6158BF42800C49E93 /* dstrings.cpp */,
+				FA16D3DD15E01E96002318D1 /* dstrings.h */,
+			);
+			name = doom;
+			sourceTree = "<group>";
+		};
+		FACACB391652802D0091AF2E /* E_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB3A165280390091AF2E /* E_ source */,
+				FACACB3B165280A00091AF2E /* E_ headers */,
+			);
+			name = E_;
+			sourceTree = "<group>";
+		};
+		FACACB3A165280390091AF2E /* E_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CD7158BF42800C49E93 /* e_args.cpp */,
 				FABF5CD8158BF42800C49E93 /* e_cmd.cpp */,
 				FABF5CD9158BF42800C49E93 /* e_dstate.cpp */,
 				FABF5CDA158BF42800C49E93 /* e_edf.cpp */,
 				FABF5CDB158BF42800C49E93 /* e_exdata.cpp */,
 				FABF5CDC158BF42800C49E93 /* e_fonts.cpp */,
+				FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */,
 				FABF5CDD158BF42800C49E93 /* e_hash.cpp */,
 				FABF5CDE158BF42800C49E93 /* e_inventory.cpp */,
 				FABF5CDF158BF42800C49E93 /* e_lib.cpp */,
-				FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */,
 				FABF5CE0158BF42800C49E93 /* e_mod.cpp */,
 				FABF5CE1158BF42800C49E93 /* e_player.cpp */,
 				FABF5CE2158BF42800C49E93 /* e_rtti.cpp */,
@@ -1280,21 +1297,136 @@
 				FABF5CE6158BF42800C49E93 /* e_string.cpp */,
 				FABF5CE7158BF42800C49E93 /* e_things.cpp */,
 				FABF5CE8158BF42800C49E93 /* e_ttypes.cpp */,
-				FABF5CE9158BF42800C49E93 /* f_finale.cpp */,
+			);
+			name = "E_ source";
+			sourceTree = "<group>";
+		};
+		FACACB3B165280A00091AF2E /* E_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB3C165280BF0091AF2E /* e_args.h */,
+				FA16D3DE15E01E96002318D1 /* e_dstate.h */,
+				FA16D3DF15E01E96002318D1 /* e_edf.h */,
+				FA16D3E015E01E96002318D1 /* e_exdata.h */,
+				FA16D3E115E01E96002318D1 /* e_fonts.h */,
+				FA16D3E215E01E96002318D1 /* e_gameprops.h */,
+				FA16D3E315E01E96002318D1 /* e_hash.h */,
+				FA16D3E415E01E96002318D1 /* e_hashkeys.h */,
+				FA16D3E515E01E96002318D1 /* e_inventory.h */,
+				FA16D3E615E01E96002318D1 /* e_lib.h */,
+				FA16D3E715E01E96002318D1 /* e_metastate.h */,
+				FA16D3E815E01E96002318D1 /* e_mod.h */,
+				FA16D3E915E01E96002318D1 /* e_player.h */,
+				FA16D3EA15E01E96002318D1 /* e_rtti.h */,
+				FA16D3EB15E01E96002318D1 /* e_sound.h */,
+				FA16D3EC15E01E96002318D1 /* e_sprite.h */,
+				FA16D3ED15E01E96002318D1 /* e_states.h */,
+				FA16D3EE15E01E96002318D1 /* e_string.h */,
+				FA16D3EF15E01E96002318D1 /* e_things.h */,
+				FA16D3F015E01E96002318D1 /* e_ttypes.h */,
+			);
+			name = "E_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB3D165281000091AF2E /* F_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB3E1652813A0091AF2E /* f_wipe.h */,
 				FABF5CEA158BF42800C49E93 /* f_wipe.cpp */,
+				FABF5CE9158BF42800C49E93 /* f_finale.cpp */,
+				FA16D3F115E01E96002318D1 /* f_finale.h */,
+			);
+			name = F_;
+			sourceTree = "<group>";
+		};
+		FACACB3F1652ED510091AF2E /* G_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB411652ED5F0091AF2E /* G_ headers */,
+				FACACB401652ED570091AF2E /* G_ source */,
+			);
+			name = G_;
+			sourceTree = "<group>";
+		};
+		FACACB401652ED570091AF2E /* G_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CEB158BF42800C49E93 /* g_bind.cpp */,
 				FABF5CEC158BF42800C49E93 /* g_cmd.cpp */,
 				FABF5CED158BF42800C49E93 /* g_dmflag.cpp */,
 				FABF5CEE158BF42800C49E93 /* g_game.cpp */,
 				FABF5CEF158BF42800C49E93 /* g_gfs.cpp */,
-				FABF5CF0158BF42800C49E93 /* hi_stuff.cpp */,
+			);
+			name = "G_ source";
+			sourceTree = "<group>";
+		};
+		FACACB411652ED5F0091AF2E /* G_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA16D3F215E01E96002318D1 /* g_bind.h */,
+				FA16D3F315E01E96002318D1 /* g_dmflag.h */,
+				FA16D3F415E01E96002318D1 /* g_game.h */,
+				FA16D3F515E01E96002318D1 /* g_gfs.h */,
+			);
+			name = "G_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB421652ED8A0091AF2E /* HU_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB441652EDAE0091AF2E /* HU_ headers */,
+				FACACB431652ED9A0091AF2E /* HU_ source */,
+			);
+			name = HU_;
+			sourceTree = "<group>";
+		};
+		FACACB431652ED9A0091AF2E /* HU_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CF1158BF42800C49E93 /* hu_frags.cpp */,
 				FABF5CF2158BF42800C49E93 /* hu_over.cpp */,
 				FABF5CF3158BF42800C49E93 /* hu_stuff.cpp */,
+			);
+			name = "HU_ source";
+			sourceTree = "<group>";
+		};
+		FACACB441652EDAE0091AF2E /* HU_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA16D3FC15E01E96002318D1 /* hu_frags.h */,
+				FA16D3FD15E01E96002318D1 /* hu_over.h */,
+				FA16D3FE15E01E96002318D1 /* hu_stuff.h */,
+			);
+			name = "HU_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB451652EDDB0091AF2E /* IN */ = {
+			isa = PBXGroup;
+			children = (
+				FABF5CF0158BF42800C49E93 /* hi_stuff.cpp */,
+				FACACB461652EE1E0091AF2E /* hi_stuff.h */,
 				FABF5CF4158BF42800C49E93 /* in_lude.cpp */,
+				FACACB471652EE360091AF2E /* in_lude.h */,
 				FA88983A1628C4660025048A /* in_stats.cpp */,
 				FA88983B1628C4660025048A /* in_stats.h */,
-				FABF5CF5158BF42800C49E93 /* info.cpp */,
+				FABF5D56158BF42800C49E93 /* wi_stuff.cpp */,
+				FA16D46D15E01E96002318D1 /* wi_stuff.h */,
+			);
+			name = IN;
+			sourceTree = "<group>";
+		};
+		FACACB481652EE6D0091AF2E /* M_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB4A1652EE7F0091AF2E /* M_ headers */,
+				FACACB491652EE7A0091AF2E /* M_ source */,
+			);
+			name = M_;
+			sourceTree = "<group>";
+		};
+		FACACB491652EE7A0091AF2E /* M_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5CF6158BF42800C49E93 /* m_argv.cpp */,
 				FABF5CF7158BF42800C49E93 /* m_bbox.cpp */,
 				FABF5CF8158BF42800C49E93 /* m_buffer.cpp */,
@@ -1307,11 +1439,52 @@
 				FABF5CFF158BF42800C49E93 /* m_random.cpp */,
 				FABF5D00158BF42800C49E93 /* m_shots.cpp */,
 				FABF5D01158BF42800C49E93 /* m_strcasestr.cpp */,
-				FAAC1892163DC8F2004791CB /* m_structio.h */,
 				FABF5D02158BF42800C49E93 /* m_syscfg.cpp */,
 				FABF5D03158BF42800C49E93 /* m_vector.cpp */,
-				FABF5D04158BF42800C49E93 /* metaapi.cpp */,
-				FABF5D05158BF42800C49E93 /* metaqstring.cpp */,
+			);
+			name = "M_ source";
+			sourceTree = "<group>";
+		};
+		FACACB4A1652EE7F0091AF2E /* M_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB4B1652EEEB0091AF2E /* m_argv.h */,
+				FA16D40A15E01E96002318D1 /* m_bbox.h */,
+				FA16D40B15E01E96002318D1 /* m_bdlist.h */,
+				FA16D40C15E01E96002318D1 /* m_buffer.h */,
+				FA16D40D15E01E96002318D1 /* m_cheat.h */,
+				FA16D40E15E01E96002318D1 /* m_collection.h */,
+				FA16D40F15E01E96002318D1 /* m_dllist.h */,
+				FA16D41015E01E96002318D1 /* m_fcvt.h */,
+				FACACB4C1652EEEB0091AF2E /* m_fixed.h */,
+				FA16D41115E01E96002318D1 /* m_hash.h */,
+				FA16D41215E01E96002318D1 /* m_misc.h */,
+				FA16D41315E01E96002318D1 /* m_qstr.h */,
+				FA16D41415E01E96002318D1 /* m_qstrkeys.h */,
+				FA16D41515E01E96002318D1 /* m_queue.h */,
+				FA16D41615E01E96002318D1 /* m_random.h */,
+				FA16D41715E01E96002318D1 /* m_shots.h */,
+				FA16D41815E01E96002318D1 /* m_strcasestr.h */,
+				FAAC1892163DC8F2004791CB /* m_structio.h */,
+				FA16D41915E01E96002318D1 /* m_swap.h */,
+				FA16D41A15E01E96002318D1 /* m_syscfg.h */,
+				FA16D41B15E01E96002318D1 /* m_vector.h */,
+			);
+			name = "M_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB4D1652EF4E0091AF2E /* Mn_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB4F1652EF940091AF2E /* Mn_ headers */,
+				FACACB4E1652EF750091AF2E /* Mn_ source */,
+			);
+			name = Mn_;
+			sourceTree = "<group>";
+		};
+		FACACB4E1652EF750091AF2E /* Mn_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D06158BF42800C49E93 /* mn_emenu.cpp */,
 				FABF5D07158BF42800C49E93 /* mn_engin.cpp */,
 				FABF5D08158BF42800C49E93 /* mn_files.cpp */,
@@ -1319,6 +1492,35 @@
 				FABF5D0A158BF42800C49E93 /* mn_menus.cpp */,
 				FABF5D0B158BF42800C49E93 /* mn_misc.cpp */,
 				FABF5D0C158BF42800C49E93 /* mn_skinv.cpp */,
+			);
+			name = "Mn_ source";
+			sourceTree = "<group>";
+		};
+		FACACB4F1652EF940091AF2E /* Mn_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB501652EFB90091AF2E /* mn_emenu.h */,
+				FA16D41F15E01E96002318D1 /* mn_engin.h */,
+				FA16D42015E01E96002318D1 /* mn_files.h */,
+				FA16D42115E01E96002318D1 /* mn_htic.h */,
+				FA16D42215E01E96002318D1 /* mn_menus.h */,
+				FA16D42315E01E96002318D1 /* mn_misc.h */,
+			);
+			name = "Mn_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB511652EFDB0091AF2E /* P_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB531652EFE70091AF2E /* P_ headers */,
+				FACACB521652EFE30091AF2E /* P_ source */,
+			);
+			name = P_;
+			sourceTree = "<group>";
+		};
+		FACACB521652EFE30091AF2E /* P_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D0D158BF42800C49E93 /* p_anim.cpp */,
 				FABF5D0E158BF42800C49E93 /* p_ceilng.cpp */,
 				FABF5D0F158BF42800C49E93 /* p_chase.cpp */,
@@ -1327,7 +1529,6 @@
 				FABF5D12158BF42800C49E93 /* p_enemy.cpp */,
 				FABF5D13158BF42800C49E93 /* p_floor.cpp */,
 				FABF5D14158BF42800C49E93 /* p_genlin.cpp */,
-				FABF5D15158BF42800C49E93 /* p_henemy.cpp */,
 				FABF5D16158BF42800C49E93 /* p_hubs.cpp */,
 				FABF5D17158BF42800C49E93 /* p_info.cpp */,
 				FABF5D18158BF42800C49E93 /* p_inter.cpp */,
@@ -1356,7 +1557,53 @@
 				FABF5D2F158BF42800C49E93 /* p_user.cpp */,
 				FABF5D30158BF42800C49E93 /* p_xenemy.cpp */,
 				FABF5D31158BF42800C49E93 /* polyobj.cpp */,
-				FABF5D32158BF42800C49E93 /* psnprntf.cpp */,
+			);
+			name = "P_ source";
+			sourceTree = "<group>";
+		};
+		FACACB531652EFE70091AF2E /* P_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB541652F1170091AF2E /* linkoffs.h */,
+				FACACB551652F1170091AF2E /* p_anim.h */,
+				FA16D42415E01E96002318D1 /* p_chase.h */,
+				FA16D42515E01E96002318D1 /* p_enemy.h */,
+				FA16D42615E01E96002318D1 /* p_hubs.h */,
+				FA16D42715E01E96002318D1 /* p_info.h */,
+				FA16D42815E01E96002318D1 /* p_inter.h */,
+				FA16D42915E01E96002318D1 /* p_map.h */,
+				FA16D42A15E01E96002318D1 /* p_map3d.h */,
+				FA16D42B15E01E96002318D1 /* p_maputl.h */,
+				FACACB561652F1170091AF2E /* p_mobj.h */,
+				FA16D42C15E01E96002318D1 /* p_mobjcol.h */,
+				FA16D42D15E01E96002318D1 /* p_partcl.h */,
+				FACACB571652F1170091AF2E /* p_portal.h */,
+				FA16D42E15E01E96002318D1 /* p_pspr.h */,
+				FA16D42F15E01E96002318D1 /* p_saveg.h */,
+				FA16D43015E01E96002318D1 /* p_setup.h */,
+				FA16D43115E01E96002318D1 /* p_skin.h */,
+				FA16D43215E01E96002318D1 /* p_slopes.h */,
+				FA16D43315E01E96002318D1 /* p_spec.h */,
+				FA16D43415E01E96002318D1 /* p_tick.h */,
+				FA16D43515E01E96002318D1 /* p_user.h */,
+				FA16D43615E01E96002318D1 /* p_xenemy.h */,
+				FA16D43715E01E96002318D1 /* polyobj.h */,
+			);
+			name = "P_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB581652F1900091AF2E /* R_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB5A1652F19B0091AF2E /* R_ header */,
+				FACACB591652F1960091AF2E /* R_ source */,
+			);
+			name = R_;
+			sourceTree = "<group>";
+		};
+		FACACB591652F1960091AF2E /* R_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D33158BF42800C49E93 /* r_bsp.cpp */,
 				FABF5D34158BF42800C49E93 /* r_data.cpp */,
 				FABF5D35158BF42800C49E93 /* r_draw.cpp */,
@@ -1373,13 +1620,124 @@
 				FABF5D40158BF42800C49E93 /* r_textur.cpp */,
 				FABF5D41158BF42800C49E93 /* r_things.cpp */,
 				FABF5D42158BF42800C49E93 /* r_voxels.cpp */,
+			);
+			name = "R_ source";
+			sourceTree = "<group>";
+		};
+		FACACB5A1652F19B0091AF2E /* R_ header */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB5B1652F2660091AF2E /* r_bsp.h */,
+				FA16D43915E01E96002318D1 /* r_data.h */,
+				FACACB5C1652F2660091AF2E /* r_defs.h */,
+				FA16D43A15E01E96002318D1 /* r_draw.h */,
+				FA16D43B15E01E96002318D1 /* r_drawl.h */,
+				FA16D43C15E01E96002318D1 /* r_drawq.h */,
+				FA16D43D15E01E96002318D1 /* r_dynseg.h */,
+				FA16D43E15E01E96002318D1 /* r_lighting.h */,
+				FACACB5D1652F2660091AF2E /* r_main.h */,
+				FA16D43F15E01E96002318D1 /* r_patch.h */,
+				FA16D44015E01E96002318D1 /* r_pcheck.h */,
+				FA16D44115E01E96002318D1 /* r_plane.h */,
+				FACACB5E1652F2660091AF2E /* r_portal.h */,
+				FA16D44215E01E96002318D1 /* r_ripple.h */,
+				FA16D44315E01E96002318D1 /* r_segs.h */,
+				FA16D44415E01E96002318D1 /* r_sky.h */,
+				FA16D44515E01E96002318D1 /* r_state.h */,
+				FA16D44615E01E96002318D1 /* r_things.h */,
+				FA16D44715E01E96002318D1 /* r_voxels.h */,
+			);
+			name = "R_ header";
+			sourceTree = "<group>";
+		};
+		FACACB5F1652F2B50091AF2E /* S_ */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D43158BF42800C49E93 /* s_sndseq.cpp */,
 				FABF5D44158BF42800C49E93 /* s_sound.cpp */,
 				FABF5D45158BF42800C49E93 /* sounds.cpp */,
+				FA16D44815E01E96002318D1 /* s_sndseq.h */,
+				FA16D44915E01E96002318D1 /* s_sound.h */,
+				FA16D44B15E01E96002318D1 /* sounds.h */,
+			);
+			name = S_;
+			sourceTree = "<group>";
+		};
+		FACACB601652F3070091AF2E /* SDL */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB631652F4740091AF2E /* SDL headers */,
+				FACACB621652F46A0091AF2E /* SDL source */,
+			);
+			name = SDL;
+			sourceTree = "<group>";
+		};
+		FACACB611652F3C30091AF2E /* non-Windows */ = {
+			isa = PBXGroup;
+			children = (
+				FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */,
+			);
+			name = "non-Windows";
+			sourceTree = "<group>";
+		};
+		FACACB621652F46A0091AF2E /* SDL source */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB611652F3C30091AF2E /* non-Windows */,
+				FABF5D75158BF42800C49E93 /* i_input.cpp */,
+				FABF5D76158BF42800C49E93 /* i_main.cpp */,
+				FABF5D77158BF42800C49E93 /* i_net.cpp */,
+				FABF5D78158BF42800C49E93 /* i_pcsound.cpp */,
+				FABF5D79158BF42800C49E93 /* i_picker.cpp */,
+				FABF5D7A158BF42800C49E93 /* i_sdlgl2d.cpp */,
+				FABF5D7B158BF42800C49E93 /* i_sdlmusic.cpp */,
+				FABF5D7C158BF42800C49E93 /* i_sdlsound.cpp */,
+				FABF5D7D158BF42800C49E93 /* i_sound.cpp */,
+				FABF5D7E158BF42800C49E93 /* i_system.cpp */,
+				FABF5D7F158BF42800C49E93 /* i_sdlvideo.cpp */,
+				FABF5D80158BF42800C49E93 /* mmus2mid.cpp */,
+				FABF5D81158BF42800C49E93 /* ser_main.cpp */,
+			);
+			name = "SDL source";
+			sourceTree = "<group>";
+		};
+		FACACB631652F4740091AF2E /* SDL headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB641652F4FF0091AF2E /* i_net.h */,
+				FA16D40315E01E96002318D1 /* i_sdlgl2d.h */,
+				FA16D40415E01E96002318D1 /* i_sdlvideo.h */,
+				FACACB651652F53A0091AF2E /* i_sound.h */,
+				FA16D40515E01E96002318D1 /* i_system.h */,
+				FA16D41E15E01E96002318D1 /* mmus2mid.h */,
+			);
+			name = "SDL headers";
+			sourceTree = "<group>";
+		};
+		FACACB661652F5650091AF2E /* ST_ */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D46158BF42800C49E93 /* st_hbar.cpp */,
 				FABF5D47158BF42800C49E93 /* st_lib.cpp */,
+				FA16D44C15E01E96002318D1 /* st_lib.h */,
 				FABF5D48158BF42800C49E93 /* st_stuff.cpp */,
-				FABF5D49158BF42800C49E93 /* tables.cpp */,
+				FACACB671652F5A80091AF2E /* st_stuff.h */,
+			);
+			name = ST_;
+			sourceTree = "<group>";
+		};
+		FACACB681652F5B20091AF2E /* V_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB6A1652F5C00091AF2E /* V_ headers */,
+				FACACB691652F5BB0091AF2E /* V_ source */,
+			);
+			name = V_;
+			sourceTree = "<group>";
+		};
+		FACACB691652F5BB0091AF2E /* V_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D4A158BF42800C49E93 /* v_block.cpp */,
 				FABF5D4B158BF42800C49E93 /* v_buffer.cpp */,
 				FABF5D4C158BF42800C49E93 /* v_font.cpp */,
@@ -1388,20 +1746,113 @@
 				FABF5D4F158BF42800C49E93 /* v_patchfmt.cpp */,
 				FABF5D50158BF42800C49E93 /* v_png.cpp */,
 				FABF5D51158BF42800C49E93 /* v_video.cpp */,
-				FABF5D52158BF42800C49E93 /* version.cpp */,
+			);
+			name = "V_ source";
+			sourceTree = "<group>";
+		};
+		FACACB6A1652F5C00091AF2E /* V_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB6B1652F8B60091AF2E /* v_block.h */,
+				FA16D46315E01E96002318D1 /* v_buffer.h */,
+				FA16D46415E01E96002318D1 /* v_font.h */,
+				FA16D46515E01E96002318D1 /* v_misc.h */,
+				FA16D46615E01E96002318D1 /* v_patch.h */,
+				FA16D46715E01E96002318D1 /* v_patchfmt.h */,
+				FA16D46815E01E96002318D1 /* v_png.h */,
+				FA16D46915E01E96002318D1 /* v_video.h */,
+			);
+			name = "V_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB6C1652F8E00091AF2E /* W_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB6E1652F8EB0091AF2E /* W_ headers */,
+				FACACB6D1652F8E70091AF2E /* W_ source */,
+			);
+			name = W_;
+			sourceTree = "<group>";
+		};
+		FACACB6D1652F8E70091AF2E /* W_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D53158BF42800C49E93 /* w_hacks.cpp */,
 				FABF5D54158BF42800C49E93 /* w_levels.cpp */,
 				FABF5D55158BF42800C49E93 /* w_wad.cpp */,
 				FAAC188C163DC8DE004791CB /* w_formats.cpp */,
-				FAAC188D163DC8DE004791CB /* w_formats.h */,
 				FAAC188E163DC8DE004791CB /* w_zip.cpp */,
+			);
+			name = "W_ source";
+			sourceTree = "<group>";
+		};
+		FACACB6E1652F8EB0091AF2E /* W_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FAAC188D163DC8DE004791CB /* w_formats.h */,
+				FA16D46A15E01E96002318D1 /* w_hacks.h */,
+				FA16D46B15E01E96002318D1 /* w_levels.h */,
+				FA16D46C15E01E96002318D1 /* w_wad.h */,
 				FAAC188F163DC8DE004791CB /* w_zip.h */,
-				FABF5D56158BF42800C49E93 /* wi_stuff.cpp */,
-				FABF5D57158BF42800C49E93 /* xl_scripts.cpp */,
+			);
+			name = "W_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB701652FB9A0091AF2E /* Z_ */ = {
+			isa = PBXGroup;
+			children = (
 				FA88984C1628C4DA0025048A /* z_auto.h */,
 				FABF5D58158BF42800C49E93 /* z_native.cpp */,
-				FABF5D5A158BF42800C49E93 /* confuse.cpp */,
-				FABF5D5B158BF42800C49E93 /* lexer.cpp */,
+				FA16D46E15E01E96002318D1 /* z_zone.h */,
+			);
+			name = Z_;
+			sourceTree = "<group>";
+		};
+		FACACB711652FBC50091AF2E /* Misc */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB731652FBDA0091AF2E /* Misc headers */,
+				FACACB721652FBD50091AF2E /* Misc source */,
+			);
+			name = Misc;
+			sourceTree = "<group>";
+		};
+		FACACB721652FBD50091AF2E /* Misc source */ = {
+			isa = PBXGroup;
+			children = (
+				FABF5CF5158BF42800C49E93 /* info.cpp */,
+				FABF5D32158BF42800C49E93 /* psnprntf.cpp */,
+				FABF5D49158BF42800C49E93 /* tables.cpp */,
+				FABF5D52158BF42800C49E93 /* version.cpp */,
+			);
+			name = "Misc source";
+			sourceTree = "<group>";
+		};
+		FACACB731652FBDA0091AF2E /* Misc headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA88984D1628C5170025048A /* autopalette.h */,
+				FA16D40715E01E96002318D1 /* info.h */,
+				FACACB741652FC510091AF2E /* precpp11.h */,
+				FA16D43815E01E96002318D1 /* psnprntf.h */,
+				FACACB751652FC980091AF2E /* tables.h */,
+				FACACB761652FC980091AF2E /* version.h */,
+			);
+			name = "Misc headers";
+			sourceTree = "<group>";
+		};
+		FACACB771652FCA80091AF2E /* TXT_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB791652FCBF0091AF2E /* TXT_ headers */,
+				FACACB781652FCB90091AF2E /* TXT_ source */,
+			);
+			name = TXT_;
+			sourceTree = "<group>";
+		};
+		FACACB781652FCB90091AF2E /* TXT_ source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D5C158BF42800C49E93 /* txt_button.c */,
 				FABF5D5D158BF42800C49E93 /* txt_checkbox.c */,
 				FABF5D5E158BF42800C49E93 /* txt_desktop.c */,
@@ -1420,40 +1871,160 @@
 				FABF5D6B158BF42800C49E93 /* txt_widget.c */,
 				FABF5D6C158BF42800C49E93 /* txt_window.c */,
 				FABF5D6D158BF42800C49E93 /* txt_window_action.c */,
+			);
+			name = "TXT_ source";
+			sourceTree = "<group>";
+		};
+		FACACB791652FCBF0091AF2E /* TXT_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA16D44E15E01E96002318D1 /* textscreen.h */,
+				FA16D44F15E01E96002318D1 /* txt_button.h */,
+				FA16D45015E01E96002318D1 /* txt_checkbox.h */,
+				FA16D45115E01E96002318D1 /* txt_desktop.h */,
+				FA16D45215E01E96002318D1 /* txt_dropdown.h */,
+				FA16D45315E01E96002318D1 /* txt_font.h */,
+				FA16D45415E01E96002318D1 /* txt_gui.h */,
+				FA16D45515E01E96002318D1 /* txt_inputbox.h */,
+				FA16D45615E01E96002318D1 /* txt_io.h */,
+				FA16D45715E01E96002318D1 /* txt_label.h */,
+				FA16D45815E01E96002318D1 /* txt_main.h */,
+				FA16D45915E01E96002318D1 /* txt_radiobutton.h */,
+				FA16D45A15E01E96002318D1 /* txt_scrollpane.h */,
+				FA16D45B15E01E96002318D1 /* txt_sdl.h */,
+				FA16D45C15E01E96002318D1 /* txt_separator.h */,
+				FA16D45D15E01E96002318D1 /* txt_spinctrl.h */,
+				FA16D45E15E01E96002318D1 /* txt_strut.h */,
+				FA16D45F15E01E96002318D1 /* txt_table.h */,
+				FA16D46015E01E96002318D1 /* txt_widget.h */,
+				FA16D46115E01E96002318D1 /* txt_window_action.h */,
+				FA16D46215E01E96002318D1 /* txt_window.h */,
+			);
+			name = "TXT_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB7A1652FDA80091AF2E /* A_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB7C1652FDB30091AF2E /* A_ headers */,
+				FACACB7B1652FDAE0091AF2E /* A_ source */,
+			);
+			name = A_;
+			sourceTree = "<group>";
+		};
+		FACACB7B1652FDAE0091AF2E /* A_ source */ = {
+			isa = PBXGroup;
+			children = (
+				FABF5CB4158BF42800C49E93 /* a_common.cpp */,
+				FABF5CB5158BF42800C49E93 /* a_counters.cpp */,
+				FABF5CB6158BF42800C49E93 /* a_decorate.cpp */,
+				FABF5CB7158BF42800C49E93 /* a_doom.cpp */,
+				FABF5CB9158BF42800C49E93 /* a_general.cpp */,
+				FABF5CBA158BF42800C49E93 /* a_heretic.cpp */,
+				FABF5CBB158BF42800C49E93 /* a_hexen.cpp */,
+			);
+			name = "A_ source";
+			sourceTree = "<group>";
+		};
+		FACACB7C1652FDB30091AF2E /* A_ headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA16D3BC15E01E96002318D1 /* a_common.h */,
+				FA16D3BD15E01E96002318D1 /* a_doom.h */,
+			);
+			name = "A_ headers";
+			sourceTree = "<group>";
+		};
+		FACACB7D165300D20091AF2E /* XL_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB7E165300FA0091AF2E /* xl_scripts.h */,
+				FABF5D57158BF42800C49E93 /* xl_scripts.cpp */,
+			);
+			name = XL_;
+			sourceTree = "<group>";
+		};
+		FACACB7F165301040091AF2E /* HAL */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB811653011A0091AF2E /* HAL headers */,
+				FACACB80165301150091AF2E /* HAL source */,
+			);
+			name = HAL;
+			sourceTree = "<group>";
+		};
+		FACACB80165301150091AF2E /* HAL source */ = {
+			isa = PBXGroup;
+			children = (
 				FA88994E162984C20025048A /* i_platform.cpp */,
 				FA88994F162984C20025048A /* i_video.cpp */,
+			);
+			name = "HAL source";
+			sourceTree = "<group>";
+		};
+		FACACB811653011A0091AF2E /* HAL headers */ = {
+			isa = PBXGroup;
+			children = (
+				FA16D40115E01E96002318D1 /* i_picker.h */,
+				FA16D40215E01E96002318D1 /* i_platform.h */,
+				FA16D40615E01E96002318D1 /* i_video.h */,
+			);
+			name = "HAL headers";
+			sourceTree = "<group>";
+		};
+		FACACB821653014C0091AF2E /* GL_ */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB851653016A0091AF2E /* GL headers */,
+				FACACB83165301570091AF2E /* GL Source */,
+			);
+			name = GL_;
+			sourceTree = "<group>";
+		};
+		FACACB83165301570091AF2E /* GL Source */ = {
+			isa = PBXGroup;
+			children = (
 				FABF5D70158BF42800C49E93 /* gl_init.cpp */,
 				FABF5D71158BF42800C49E93 /* gl_primitives.cpp */,
 				FABF5D72158BF42800C49E93 /* gl_projection.cpp */,
 				FABF5D73158BF42800C49E93 /* gl_texture.cpp */,
 				FABF5D74158BF42800C49E93 /* gl_vars.cpp */,
-				FABF5D75158BF42800C49E93 /* i_input.cpp */,
-				FABF5D76158BF42800C49E93 /* i_main.cpp */,
-				FABF5D77158BF42800C49E93 /* i_net.cpp */,
-				FABF5D78158BF42800C49E93 /* i_pcsound.cpp */,
-				FABF5D79158BF42800C49E93 /* i_picker.cpp */,
-				FABF5D7A158BF42800C49E93 /* i_sdlgl2d.cpp */,
-				FABF5D7B158BF42800C49E93 /* i_sdlmusic.cpp */,
-				FABF5D7C158BF42800C49E93 /* i_sdlsound.cpp */,
-				FABF5D7D158BF42800C49E93 /* i_sound.cpp */,
-				FABF5D7E158BF42800C49E93 /* i_system.cpp */,
-				FABF5D7F158BF42800C49E93 /* i_sdlvideo.cpp */,
-				FABF5D80158BF42800C49E93 /* mmus2mid.cpp */,
-				FABF5D81158BF42800C49E93 /* ser_main.cpp */,
-				FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */,
 			);
-			name = Eternity;
+			name = "GL Source";
 			sourceTree = "<group>";
 		};
-		FA8216B2164712B100FF998A /* Eternity companions */ = {
+		FACACB851653016A0091AF2E /* GL headers */ = {
 			isa = PBXGroup;
 			children = (
-				FA82164B1647128900FF998A /* base */,
-				FA8216751647128900FF998A /* COPYING */,
-				FA8216761647128900FF998A /* docs */,
-				FA8216871647128900FF998A /* user */,
+				FA16D3F615E01E96002318D1 /* gl_includes.h */,
+				FA16D3F715E01E96002318D1 /* gl_init.h */,
+				FA16D3F815E01E96002318D1 /* gl_primitives.h */,
+				FA16D3F915E01E96002318D1 /* gl_projection.h */,
+				FA16D3FA15E01E96002318D1 /* gl_texture.h */,
+				FA16D3FB15E01E96002318D1 /* gl_vars.h */,
 			);
-			name = "Eternity companions";
+			name = "GL headers";
+			sourceTree = "<group>";
+		};
+		FACACB861653019A0091AF2E /* MetaAPI */ = {
+			isa = PBXGroup;
+			children = (
+				FACACB87165301C70091AF2E /* metaadapter.h */,
+				FABF5D04158BF42800C49E93 /* metaapi.cpp */,
+				FA16D41C15E01E96002318D1 /* metaapi.h */,
+				FABF5D05158BF42800C49E93 /* metaqstring.cpp */,
+				FA16D41D15E01E96002318D1 /* metaqstring.h */,
+			);
+			name = MetaAPI;
+			sourceTree = "<group>";
+		};
+		FACACB88165301F40091AF2E /* Cam */ = {
+			isa = PBXGroup;
+			children = (
+				FABF5CC9158BF42800C49E93 /* cam_sight.cpp */,
+				FA16D3C515E01E96002318D1 /* cam_sight.h */,
+			);
+			name = Cam;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1680,7 +2251,6 @@
 				FABF5DE1158BF42800C49E93 /* p_enemy.cpp in Sources */,
 				FABF5DE2158BF42800C49E93 /* p_floor.cpp in Sources */,
 				FABF5DE3158BF42800C49E93 /* p_genlin.cpp in Sources */,
-				FABF5DE4158BF42800C49E93 /* p_henemy.cpp in Sources */,
 				FABF5DE5158BF42800C49E93 /* p_hubs.cpp in Sources */,
 				FABF5DE6158BF42800C49E93 /* p_info.cpp in Sources */,
 				FABF5DE7158BF42800C49E93 /* p_inter.cpp in Sources */,
