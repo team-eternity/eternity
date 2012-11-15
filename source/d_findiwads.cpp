@@ -298,6 +298,7 @@ static void D_addSteamPaths(Collection<qstring> &paths)
          qstring &newPath = paths.addNew();
          
          newPath = str;
+         newPath.pathConcatenate("\\steamapps\\common");
          newPath.pathConcatenate(steamInstallSubDirs[i]);
       }
    }
