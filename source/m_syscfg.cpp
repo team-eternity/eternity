@@ -28,6 +28,7 @@
 
 #include "z_zone.h"
 #include "doomstat.h"
+#include "d_iwad.h"
 #include "d_main.h"
 #include "d_gi.h"
 #include "gl/gl_vars.h"
@@ -74,6 +75,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_DOOM          "iwad_doom"
 #define ITEM_IWAD_ULTIMATE_DOOM "iwad_ultimate_doom"
 #define ITEM_IWAD_DOOM2         "iwad_doom2"
+#define ITEM_IWAD_BFGDOOM2      "iwad_bfgdoom2"
 #define ITEM_IWAD_TNT           "iwad_tnt"
 #define ITEM_IWAD_PLUTONIA      "iwad_plutonia"
 #define ITEM_IWAD_HACX          "iwad_hacx"
@@ -98,6 +100,9 @@ static default_t sysdefaults[] =
 
    // IWAD paths
 
+   DEFAULT_BOOL("d_scaniwads", &d_scaniwads, NULL, true, default_t::wad_no,
+                "1 to scan common locations for IWADs"),
+
    DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", default_t::wad_no,
                "IWAD path for DOOM Shareware"),
 
@@ -109,6 +114,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, NULL, "", default_t::wad_no,
                "IWAD path for DOOM 2"),
+
+   DEFAULT_STR(ITEM_IWAD_BFGDOOM2, &gi_path_bfgdoom2, NULL, "", default_t::wad_no,
+               "IWAD path for DOOM 2, BFG Edition"),
 
    DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, NULL, "", default_t::wad_no,
                "IWAD path for Final DOOM: TNT - Evilution"),
@@ -262,8 +270,7 @@ static default_t sysdefaults[] =
 #endif
 
    // last entry
-   { NULL, dt_integer, NULL, NULL, NULL, NULL, 0.0f, false, { 0, 0 }, default_t::wad_no,
-     NULL, M_ZEROFIELDS }
+   DEFAULT_END()
 };
 
 //

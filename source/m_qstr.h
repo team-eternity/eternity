@@ -175,6 +175,7 @@ public:
    qstring &normalizeSlashes();
    qstring &pathConcatenate(const char *addend);
    qstring &addDefaultExtension(const char *ext);
+   qstring &removeFileSpec();
    void     extractFileBase(qstring &dest);
 
    // Zone strdup wrappers
@@ -194,11 +195,13 @@ public:
    size_t      findLastOf(char c) const;
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
+   size_t      find(const char *s, size_t pos = 0) const;
 
    // Stripping and Truncation
    qstring &lstrip(char c);
    qstring &rstrip(char c);
    qstring &truncate(size_t pos);
+   qstring &erase(size_t pos, size_t n = npos);
 
    // Special Formatting 
    qstring &makeQuoted();

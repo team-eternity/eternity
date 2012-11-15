@@ -865,7 +865,7 @@ default_t defaults[] =
    DEFAULT_BOOL("donut_emulation", &donut_emulation, NULL, false, default_t::wad_no,
                 "emulate undefined EV_DoDonut behavior"),
    
-   DEFAULT_INT("wipewait",&wipewait, NULL, 2, 0, 2, default_t::wad_no,
+   DEFAULT_INT("wipewait",&wipewait, NULL, 1, 0, 2, default_t::wad_no,
                "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"),
    
    DEFAULT_INT("wipetype",&wipetype, NULL, 1, 0, 2, default_t::wad_yes,
@@ -881,8 +881,7 @@ default_t defaults[] =
 #endif
 
    // last entry
-   { NULL, dt_integer, NULL, NULL, NULL, NULL, 0.0f, false, { 0, 0 }, default_t::wad_no,
-     NULL, M_ZEROFIELDS }
+   DEFAULT_END()
 };
 
 //

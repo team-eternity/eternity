@@ -570,6 +570,44 @@ qstring &qstring::truncate(size_t pos)
    return *this;
 }
 
+//
+// qstring::erase
+//
+// std::string-compatible erasure function.
+//
+qstring &qstring::erase(size_t pos, size_t n)
+{
+   // truncate handles the case of n == qstring::npos
+   if(!n)
+      return *this;
+   else if(n == npos)
+      return truncate(pos);
+
+   // pos must be between 0 and qstr->index - 1
+   if(pos >= index)
+      I_Error("qstring::erase: position out of range\n");
+
+   size_t endPos = pos + n;
+   if(endPos > index)
+      endPos = index;
+
+   char *to   = buffer + pos;
+   char *from = buffer + endPos;
+   char *end  = buffer + index;
+
+   while(to != end)
+   {
+      *to = *from;
+      ++to;
+      if(from != end)
+         ++from;
+   }
+
+   index -= (endPos - pos);
+   return *this;
+}
+
+
 //=============================================================================
 //
 // Stream Insertion Operators
@@ -883,6 +921,23 @@ const char *qstring::findSubStrNoCase(const char *substr) const
    return M_StrCaseStr(buffer, substr);
 }
 
+//
+// qstring::find
+//
+// std::string-compatible find function.
+//
+size_t qstring::find(const char *s, size_t pos) const
+{
+   // pos must be between 0 and index - 1
+   if(pos >= index)
+      I_Error("qstring::find: position out of range\n");
+
+   char *base   = buffer + pos;
+   char *substr = strstr(base, s);
+   
+   return substr ? substr - buffer : npos;
+}
+
 //=============================================================================
 //
 // Conversion Functions
@@ -1108,6 +1163,25 @@ qstring &qstring::addDefaultExtension(const char *ext)
          *this += '.';
       *this += ext;   // add the extension
    }
+
+   return *this;
+}
+
+//
+// qstring::removeFileSpec
+//
+// Removes a filespec from a path.
+// If called on a path without a file, the last path component is removed.
+//
+qstring &qstring::removeFileSpec()
+{
+   size_t lastSlash;
+
+   lastSlash = findLastOf('/');
+   if(lastSlash == npos)
+      lastSlash = findLastOf('\\');
+   if(lastSlash != npos)
+      truncate(lastSlash);
 
    return *this;
 }

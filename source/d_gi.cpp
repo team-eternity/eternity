@@ -615,6 +615,7 @@ char *gi_path_doomsw;
 char *gi_path_doomreg;
 char *gi_path_doomu;
 char *gi_path_doom2;
+char *gi_path_bfgdoom2;
 char *gi_path_tnt;
 char *gi_path_plut;
 char *gi_path_hacx;

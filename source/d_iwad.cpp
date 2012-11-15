@@ -35,6 +35,8 @@
 #include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "d_findiwads.h"
+#include "d_iwad.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "g_game.h"
@@ -57,6 +59,7 @@ extern int  gamepathparm;
 void D_InitPaths();
 void D_CheckGameMusic();
 
+bool d_scaniwads;                     // haleyjd 11/15/12
 
 static char *baseiwad;                // jff 3/23/98: iwad directory
 
@@ -188,6 +191,30 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
    }
 
    return concat;
+}
+
+//
+// D_GetNumDoomWadPaths
+//
+// Returns the number of path components loaded from DOOMWADPATH
+//
+size_t D_GetNumDoomWadPaths()
+{
+   return doomwadpaths.getLength();
+}
+
+//
+// D_GetDoomWadPath
+//
+// Returns the DOOMWADPATH entry at index i.
+// Returns NULL if i is not a valid index.
+//
+char *D_GetDoomWadPath(size_t i)
+{
+   if(i >= doomwadpaths.getLength())
+      return NULL;
+
+   return doomwadpaths[i];
 }
 
 //=============================================================================
@@ -480,11 +507,12 @@ int iwad_choice; // haleyjd 03/19/10: remember choice
 // variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[NUMPICKIWADS] =
 {
-   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
-   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
-   &gi_path_hacx,                                      // HACX
-   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
-   &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
+   &gi_path_doomsw, &gi_path_doomreg,  &gi_path_doomu,  // Doom 1
+   &gi_path_doom2,  &gi_path_bfgdoom2,                  // Doom 2
+   &gi_path_tnt,    &gi_path_plut,                      // Final Doom
+   &gi_path_hacx,                                       // HACX
+   &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
+   &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // FreeDoom
 };
 
 //
@@ -554,30 +582,31 @@ struct iwadpathmatch_t
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
-   { MATCH_GAME, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_GAME, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_GAME, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
+   { MATCH_GAME, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
+   { MATCH_GAME, "doom",      { &gi_path_doomu,    &gi_path_doomreg,  &gi_path_doomsw } },
+   { MATCH_GAME, "tnt",       { &gi_path_tnt,      NULL,              NULL            } },
+   { MATCH_GAME, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
+   { MATCH_GAME, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
+   { MATCH_GAME, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  &gi_path_hticsw } },
 
    // -iwad matches 
-   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
-   { MATCH_IWAD, "doom1",     { &gi_path_doomsw, NULL,             NULL            } },
-   { MATCH_IWAD, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_fdoomu } },
-   { MATCH_IWAD, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_IWAD, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_IWAD, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw, NULL,             NULL            } },
-   { MATCH_IWAD, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
-   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
-   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
-   { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
+   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
+   { MATCH_IWAD, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
+   { MATCH_IWAD, "doomu",     { &gi_path_doomu,    &gi_path_fdoomu,   NULL            } },
+   { MATCH_IWAD, "doom1",     { &gi_path_doomsw,   NULL,              NULL            } },
+   { MATCH_IWAD, "doom",      { &gi_path_doomu,    &gi_path_doomreg,  &gi_path_fdoomu } },
+   { MATCH_IWAD, "tnt",       { &gi_path_tnt,      NULL,              NULL            } },
+   { MATCH_IWAD, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
+   { MATCH_IWAD, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
+   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   NULL,              NULL            } },
+   { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  NULL            } },
+   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,    NULL,              NULL            } },
+   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu,   NULL,              NULL            } },
+   { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
+   { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
    
    // Terminating entry
-   { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
+   { MATCH_NONE, NULL,        { NULL,              NULL,              NULL            } }
 };
 
 //
@@ -684,7 +713,7 @@ static int lumpnamecmp(const char *lumpname, const char *str)
 }
 
 //
-// D_checkIWAD
+// D_CheckIWAD
 //
 // Verify a file is indeed tagged as an IWAD
 // Scan its lumps for levelnames and return gamemode as indicated
@@ -702,9 +731,7 @@ static int lumpnamecmp(const char *lumpname, const char *str)
 //
 // joel 10/17/98 Final DOOM fix: added gmission
 //
-static void D_checkIWAD(const char *iwadname, 
-                        GameMode_t *gmode, GameMission_t *gmission, 
-                        bool *hassec)
+void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
 {
    FILE *fp;
    int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0, bfg = 0;
@@ -714,7 +741,12 @@ static void D_checkIWAD(const char *iwadname,
    const char *n = lump.name;
 
    if(!(fp = fopen(iwadname, "rb")))
-      I_Error("Can't open IWAD: %s\n", iwadname);
+   {
+      if(version.flags & IWADF_FATALNOTOPEN)
+         I_Error("Can't open IWAD: %s\n", iwadname);
+      version.error = true;
+      return;
+   }
 
    // read IWAD header
    if(fread(&header, sizeof header, 1, fp) < 1 ||
@@ -724,8 +756,15 @@ static void D_checkIWAD(const char *iwadname,
       // resetting peoples' IWADs to PWADs. Only error if it is also 
       // not a PWAD.
       if(strncmp(header.identification, "PWAD", 4))
-         I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
-      else
+      {
+         if(version.flags & IWADF_FATALNOTWAD)
+            I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
+
+         version.error = true;
+         fclose(fp);
+         return;
+      }
+      else if(version.flags & IWADF_FATALNOTWAD)
          usermsg("Warning: IWAD tag not present: %s\n", iwadname);
    }
 
@@ -769,7 +808,7 @@ static void D_checkIWAD(const char *iwadname,
       else if(!lumpnamecmp(n, "EXTENDED"))
          ++sosr;
       else if(!lumpnamecmp(n, "FREEDOOM"))
-         freedoom = true;
+         *version.freedoom = true;
       else if(!lumpnamecmp(n, "HACX-R"))
          ++hacx;
       else if(!lumpnamecmp(n, "M_ACPT"  ) || // haleyjd 11/03/12: BFG Edition
@@ -780,64 +819,64 @@ static void D_checkIWAD(const char *iwadname,
       {
         ++bfg;
         if(bfg >= 5) // demand all 5 new lumps for safety.
-           bfgedition = true;
+           *version.bfgedition = true;
       }
    }
 
    fclose(fp);
 
-   *hassec = false;
+   *version.hassec = false;
 
    // haleyjd 10/09/05: "Raven mode" detection
    if(raven == 3)
    {
       // TODO: Hexen
-      *gmission = heretic;
+      *version.gmission = heretic;
 
       if(rg >= 18)
       {
          // require both E4 and EXTENDED lump for SoSR
          if(sosr && ud >= 9)
-            *gmission = hticsosr;
-         *gmode = hereticreg;
+            *version.gmission = hticsosr;
+         *version.gmode = hereticreg;
       }
       else if(sw >= 9)
-         *gmode = hereticsw;
+         *version.gmode = hereticsw;
       else
-         *gmode = indetermined;
+         *version.gmode = indetermined;
    }
    else
    {
-      *gmission = doom;
+      *version.gmission = doom;
 
       if(cm >= 30 || (cm && !rg))
       {
-         if(freedoom)        // FreeDoom is meant to be Doom II, not TNT
-            *gmission = doom2;
-         else if(bfgedition) // BFG Edition - Behaves same as XBox 360 disk version
-            *gmission = pack_disk;
+         if(*version.freedoom) // FreeDoom is meant to be Doom II, not TNT
+            *version.gmission = doom2;
+         else if(*version.bfgedition) // BFG Edition - Behaves same as XBox 360 disk version
+            *version.gmission = pack_disk;
          else
          {
             if(tnt >= 4)
-               *gmission = pack_tnt;
+               *version.gmission = pack_tnt;
             else if(plut >= 8)
-               *gmission = pack_plut;
+               *version.gmission = pack_plut;
             else if(hacx)
-               *gmission = pack_hacx;
+               *version.gmission = pack_hacx;
             else
-               *gmission = doom2;
+               *version.gmission = doom2;
          }
-         *hassec = (sc >= 2) || hacx;
-         *gmode = commercial;
+         *version.hassec = (sc >= 2) || hacx;
+         *version.gmode = commercial;
       }
       else if(ud >= 9)
-         *gmode = retail;
+         *version.gmode = retail;
       else if(rg >= 18)
-         *gmode = registered;
+         *version.gmode = registered;
       else if(sw >= 9)
-         *gmode = shareware;
+         *version.gmode = shareware;
       else
-         *gmode = indetermined;
+         *version.gmode = indetermined;
    }
 }
 
@@ -882,7 +921,7 @@ static bool WadFileStatus(char *filename, bool *isdir)
 }
 
 // jff 4/19/98 list of standard IWAD names
-static const char *const standard_iwads[]=
+const char *const standard_iwads[]=
 {
    // Official IWADs
    "/doom2.wad",     // DOOM II
@@ -905,7 +944,7 @@ static const char *const standard_iwads[]=
    "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD  -- haleyjd 11/03/12
 };
 
-static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
+int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
 
 //
 // D_findIWADFile
@@ -959,6 +998,20 @@ static char *D_findIWADFile()
    int i, j;
    char *p;
    const char *basename = NULL;
+
+   // haleyjd 01/01/11: support for DOOMWADPATH
+   D_parseDoomWadPath();
+
+   // haleyjd 11/15/12: if so marked, scan for IWADs. This is a one-time
+   // only operation unless the user resets the value of d_scaniwads.
+   // This will populate as many of the gi_path_* IWADs and w_* mission 
+   // packs as can be found amongst likely locations. User settings are
+   // never overwritten by this process.
+   if(d_scaniwads)
+   {
+      D_FindIWADs();
+      d_scaniwads = false;
+   }
 
    //jff 3/24/98 get -iwad parm if specified else use .
    if((i = M_CheckParm("-iwad")) && i < myargc - 1)
@@ -1089,9 +1142,6 @@ static char *D_findIWADFile()
          return iwad;
       }
    }
-
-   // haleyjd 01/01/11: support for DOOMWADPATH
-   D_parseDoomWadPath();
 
    if(doomwadpaths.getLength()) // If at least one path is specified...
    {
@@ -1264,10 +1314,20 @@ static void D_identifyIWAD(void)
 
    if(iwad && *iwad)
    {
+      iwadcheck_t version;
+
       printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
 
+      version.gmode      = &gamemode;
+      version.gmission   = &gamemission;
+      version.hassec     = &haswolflevels;
+      version.freedoom   = &freedoom;
+      version.bfgedition = &bfgedition;
+      version.error      = false;
+      version.flags      = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;
+
       // joel 10/16/98 gamemission added
-      D_checkIWAD(iwad, &gamemode, &gamemission, &haswolflevels);
+      D_CheckIWAD(iwad, version);
 
       // setup GameModeInfo
       D_SetGameModeInfo(gamemode, gamemission);

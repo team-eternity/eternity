@@ -1,7 +1,7 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
+// Emacs style mode select -*- C++ -*-
+//----------------------------------------------------------------------------
 //
-// Copyright(C) 2009 James Haley
+// Copyright(C) 2012 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,35 +19,18 @@
 //
 //----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Startup IWAD picker.
+// Code for automated location of users' IWAD files and important PWADs.
+// Some code is derived from Chocolate Doom, by Simon Howard, used under
+// terms of the GPLv2.
 //
-//-----------------------------------------------------------------------------
+// James Haley
+//
+//----------------------------------------------------------------------------
 
-#ifndef I_PICKER_H__
-#define I_PICKER_H__
+#ifndef D_FINDIWADS_H__
+#define D_FINDIWADS_H__
 
-// picker iwad enumeration
-enum
-{
-   IWAD_DOOMSW,
-   IWAD_DOOMREG,
-   IWAD_DOOMU,
-   IWAD_DOOM2,
-   IWAD_BFGDOOM2,
-   IWAD_TNT,
-   IWAD_PLUT,
-   IWAD_HACX,
-   IWAD_HTICSW,
-   IWAD_HTICREG,
-   IWAD_HTICSOSR,
-   IWAD_FREEDOOM,
-   IWAD_FREEDOOMU,
-   IWAD_FREEDM,
-   NUMPICKIWADS
-};
-
-int I_Pick_DoPicker(bool haveIWADs[], int startchoice);
+void D_FindIWADs();
 
 #endif
 

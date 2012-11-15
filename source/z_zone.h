@@ -164,6 +164,9 @@ void  Z_SysFree(void *p);
 
 #define efree(p)   (Z_Free)(p, __FILE__, __LINE__)
 
+// Get the size of a static array
+#define earrlen(a) (sizeof(a) / sizeof(*a))
+
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 

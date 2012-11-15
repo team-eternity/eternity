@@ -398,6 +398,7 @@ extern char *gi_path_doomsw;
 extern char *gi_path_doomreg;
 extern char *gi_path_doomu;
 extern char *gi_path_doom2;
+extern char *gi_path_bfgdoom2;
 extern char *gi_path_tnt;
 extern char *gi_path_plut;
 extern char *gi_path_hacx;
