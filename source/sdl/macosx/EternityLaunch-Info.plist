@@ -28,5 +28,40 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSMyApplication</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>Eternity.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Doom Data File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>wad</string>
+				<string>pke</string>
+				<string>pk3</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>eternityuser</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>Eternity.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Eternity User Package</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSTypeIsPackage</key>
+			<true/>
+		</dict>
+	</array>
 </dict>
 </plist>

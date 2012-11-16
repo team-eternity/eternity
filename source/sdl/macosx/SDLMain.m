@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- Objective-C -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Ioan Chera
@@ -85,6 +85,7 @@ extern OSErr	CPSSetFrontProcess( CPSProcessSerNum *psn);
 
 #endif // SDL_USE_CPS
 
+static int status;   // SDL MAINLINE EXIT STATUS
 static int    gArgc;
 static char  **gArgv;
 static BOOL   gFinderLaunch;
@@ -107,6 +108,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 // Called when application is ending. Issue SDL ending if game started.
 //
+/*
 - (void)terminate:(id)sender
 {
 	if(gCalledAppMainline)
@@ -114,7 +116,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	else
 		[super terminate:sender];
 }
-
+*/
 //
 // terminateSDL:
 //
@@ -260,7 +262,30 @@ static BOOL gSDLStarted;	// IOAN 20120616
    // Set array for data source
    [fileViewDataSource setArray:pwadArray];
    
+   // Setup notification
+   [self setupTextFieldNotification];
+   
 	[self loadDefaults];
+}
+
+//
+// setupTextFieldNotification
+//
+-(void)setupTextFieldNotification
+{
+   NSNotificationCenter *centre = [NSNotificationCenter defaultCenter];
+   
+   NSTextField *field;
+   NSArray *fieldArray = [NSArray arrayWithObjects:recordDemoField,
+                          playDemoField, warpField, skillField, fragField,
+                          timeField, turboField, dmflagField, netField,
+                          otherField, nil];
+   
+   for(field in fieldArray)
+   {
+      [centre addObserver:textFieldDelegate selector:@selector(textDidChange:)
+                  name:NSTextDidChangeNotification object:field];
+   }
 }
 
 //
@@ -416,10 +441,8 @@ iwadMightBe:
 	}
 	
 	// Start console
-	[console startLogging];
+//	[console startLogging];
 	
-	
-	int status;
 	gCalledAppMainline = TRUE;
 	gSDLStarted = YES;	// IOAN 20120616
 	[window close];

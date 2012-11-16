@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- Objective-C -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Ioan Chera

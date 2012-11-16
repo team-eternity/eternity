@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- Objective-C -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Ioan Chera
@@ -41,7 +41,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class ELDumpConsole, ELFileViewDataSource;
+@class ELDumpConsole, ELFileViewDataSource, ELTextFieldDelegate;
 
 //
 // SDLMain
@@ -62,12 +62,16 @@
 	IBOutlet NSTabView *tabView;
 	IBOutlet NSPopUpButton *iwadPopUp, *gameTypePopUp;
 	IBOutlet NSTableView *pwadView;
+   
 	IBOutlet NSTextField *recordDemoField, *playDemoField;
 	IBOutlet NSTextField *warpField, *skillField, *fragField, *timeField,
       *turboField, *dmflagField, *netField;	// heh
 	IBOutlet NSTextField *otherField;
+   
 	IBOutlet NSButton *respawn, *fast, *nomons, *vanilla, *timedemo, *fastdemo;
 	IBOutlet NSTextField *infoDisplay;
+   
+   IBOutlet ELTextFieldDelegate *textFieldDelegate;   // the notif. delegate
 	
 //	IBOutlet NSButton *launchButton;
 	
@@ -89,6 +93,7 @@
 -(id)init;
 -(void)dealloc;
 -(void)initNibData;
+-(void)setupTextFieldNotification;
 -(IBAction)launchGame:(id)sender;
 -(void)doAddIwadFromURL:(NSURL *)wURL;
 -(void)chooseIwadAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode

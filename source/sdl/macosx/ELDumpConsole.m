@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- Objective-C -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Ioan Chera
@@ -52,12 +52,17 @@
 
 -(void)startLogging
 {
+
 	[[self window] makeKeyAndOrderFront:self];
 	
    pipe = [NSPipe pipe];
    outHandle = [pipe fileHandleForWriting];
    inHandle = [pipe fileHandleForReading];
+  
    dup2([outHandle fileDescriptor], fileno(stdout));
+   
+   
+
    
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(dataReady:)
@@ -73,7 +78,7 @@
    [inHandle readInBackgroundAndNotify];
 	NSData *data = [[notification userInfo]
 					objectForKey:NSFileHandleNotificationDataItem];
-   
+//   char line[81];
 	if([data length])
 	{
 		NSString *string = [[NSString alloc] initWithData:data
@@ -81,7 +86,8 @@
 		[log appendString:string];
 		[string release];
 		[textField setStringValue:log];
-
+//      [string getCString:line maxLength:80 encoding:NSUTF8StringEncoding];
+//      NSLog(string);
 	}
 	else
 	{
