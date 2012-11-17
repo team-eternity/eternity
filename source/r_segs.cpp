@@ -86,6 +86,7 @@ static void R_LogMaskedSegRange(drawseg_t *ds, int x1, int x2)
          fprintf(f, "%d-%d:seg=%lu,line=%lu,fs=%lu,bs=%lu\n", 
                  x1, x2, (unsigned long)segno, (unsigned long)lineno, 
                  (unsigned long)fsno, (unsigned long)bsno);
+         fflush(f);
       }
    }
 }
