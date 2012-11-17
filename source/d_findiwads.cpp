@@ -187,8 +187,6 @@ static registry_value_t cdUninstallValues[] =
       "UninstallString"
    },
 
-   // WANTED: any registry key created by the mythical Hexen 95 installer?
-
    // terminating entry
    { NULL, NULL, NULL }
 };
@@ -228,6 +226,22 @@ static const char *steamInstallSubDirs[] =
    "hexen deathkings of the dark citadel\\base",
    "heretic shadow of the serpent riders\\base",
    "DOOM 3 BFG Edition\\base\\wads",
+};
+
+// Master Levels
+// Special thanks to Gez for getting the installation path.
+// (NB: as above, add "steamapps\\common\\")
+static const char *steamMasterLevelsPath = "Master Levels of Doom\\master\\wads";
+
+// Hexen 95, from the Towers of Darkness collection.
+// Special thanks to GreyGhost for finding the registry keys it creates.
+// TODO: There's no code to load this right now, since EE doesn't support 
+// Hexen as of yet. Consider it ground work for the future.
+static registry_value_t hexen95Value =
+{
+   HKEY_LOCAL_MACHINE,
+   "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\hexen95.exe",
+   "Path"
 };
 
 //
@@ -306,6 +320,7 @@ static void D_addSteamPaths(Collection<qstring> &paths)
 
 #endif
 
+// Default DOS install paths for IWADs
 static const char *dosInstallPaths[] =
 {
    "\\doom2",
@@ -317,11 +332,13 @@ static const char *dosInstallPaths[] =
    "\\doomsw",
    "\\heretic",
    "\\hexen",
-
-   // WANTED: default Strife install path?
-   // WANTED: default Master Levels path?
-   // WANTED: default DKotDC path?
+   "\\strife"
 };
+
+// Default DOS install paths for add-ons.
+// Special thanks to GreyGhost for confirming these:
+static const char *masterLevelsDOSPath = "\\master\\wads";
+static const char *dkotdcDOSPath       = "\\hexendk"; // TODO: not used yet
 
 //
 // D_addDOSPaths
@@ -636,6 +653,45 @@ static void D_checkForNoRest()
       w_norestpath = nrvpath.duplicate(PU_STATIC);
 }
 
+//
+// D_findMasterLevels
+//
+// There are two different places we can find the Master Levels; the default
+// DOS install path, and, if we have registry scanning enabled, the Steam
+// install directory. The latter is preferred when it is available.
+//
+static void D_findMasterLevels()
+{
+   qstring str;
+   struct stat sbuf;
+
+   // Need no Master Levels path already configured
+   if(!PATHEMPTY(w_masterlevelsdirname))
+      return;
+
+#ifdef EE_FEATURE_REGISTRYSCAN
+   // Check for the Steam install path
+   if(D_getRegistryString(steamInstallValue, str))
+   {
+      str.pathConcatenate("\\steamapps\\common");
+      str.pathConcatenate(steamMasterLevelsPath);
+
+      if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+      {
+         w_masterlevelsdirname = str.duplicate(PU_STATIC);
+
+         // Got it.
+         return;
+      }
+   }
+#endif
+
+   // Check for the default DOS path
+   str = masterLevelsDOSPath;
+   if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+      w_masterlevelsdirname = str.duplicate(PU_STATIC);
+}
+
 //=============================================================================
 //
 // Global Interface
@@ -666,7 +722,9 @@ void D_FindIWADs()
    D_checkForNoRest(); // NR4TL
 
    // TODO: DKotDC, when Hexen is supported
-   // TODO: Master Levels detection?
+   
+   // Master Levels detection
+   D_findMasterLevels();
 }
 
 // EOF
