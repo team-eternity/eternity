@@ -279,6 +279,7 @@
 		FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
 		FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
+		FAEDFC0116584F2A00A779F9 /* Delete_octagon.png in Resources */ = {isa = PBXBuildFile; fileRef = FAEDFC0016584F2A00A779F9 /* Delete_octagon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -826,6 +827,7 @@
 		FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
 		FAEA89EB164DB9F400E9F874 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
 		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
+		FAEDFC0016584F2A00A779F9 /* Delete_octagon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Delete_octagon.png; path = Resources/Delete_octagon.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -909,6 +911,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				FAEDFC0016584F2A00A779F9 /* Delete_octagon.png */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
 				FABF5F00158C710400C49E93 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */,
@@ -2133,6 +2136,7 @@
 				FA82169F1647128A00FF998A /* COPYING in Resources */,
 				FA8216A01647128A00FF998A /* docs in Resources */,
 				FA8216A11647128A00FF998A /* user in Resources */,
+				FAEDFC0116584F2A00A779F9 /* Delete_octagon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

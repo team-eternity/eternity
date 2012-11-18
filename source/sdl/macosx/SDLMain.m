@@ -321,22 +321,22 @@ static BOOL gSDLStarted;	// IOAN 20120616
 - (BOOL)application:(NSApplication *)theApplication 
            openFile:(NSString *)filename
 {
-	NSString *ext;
-	
 	if (gCalledAppMainline)
 		return NO;	// ignore this document, it's too late within the game
-	
-	for(ext in pwadTypes)
-	{
-		if([[filename pathExtension] caseInsensitiveCompare:ext] 
-         == NSOrderedSame)
-		{
-         [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
-         [self updateParameters:self];
-			return YES;
-		}
-	}
-	return NO;
+   
+   // FIXME: Use an ID or something more fixed to identify the user type.
+   NSString *eeUserExt = @"eternityuser";
+
+   if([[filename pathExtension] isEqualToString:eeUserExt])
+   {
+      // TODO: User file.
+   }
+   else
+   {
+      [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
+      [self updateParameters:self];
+   }
+   return YES;
 }
 
 //
