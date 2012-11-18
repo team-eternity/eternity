@@ -606,7 +606,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       y2 = y1 + (maskedcolumn.scale * tcol->len) - 1;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
-      column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);
+      column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewheight)
