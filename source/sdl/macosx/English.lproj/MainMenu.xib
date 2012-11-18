@@ -1416,6 +1416,7 @@
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {239, 25}}</string>
 									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<string key="NSReuseIdentifierKey">_NS:9</string>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="194439146">
@@ -1434,49 +1435,16 @@
 										<string key="NSKeyEquivalent"/>
 										<int key="NSPeriodicDelay">400</int>
 										<int key="NSPeriodicInterval">75</int>
-										<object class="NSMenuItem" key="NSMenuItem" id="301011823">
-											<reference key="NSMenu" ref="687956810"/>
-											<string key="NSTitle">Item 1</string>
-											<string key="NSKeyEquiv"/>
-											<int key="NSKeyEquivModMask">1048576</int>
-											<int key="NSMnemonicLoc">2147483647</int>
-											<int key="NSState">1</int>
-											<reference key="NSOnImage" ref="35465992"/>
-											<reference key="NSMixedImage" ref="502551668"/>
-											<string key="NSAction">_popUpItemAction:</string>
-											<reference key="NSTarget" ref="194439146"/>
-										</object>
+										<nil key="NSMenuItem"/>
 										<bool key="NSMenuItemRespectAlignment">YES</bool>
 										<object class="NSMenu" key="NSMenu" id="687956810">
 											<string key="NSTitle">OtherViews</string>
 											<object class="NSMutableArray" key="NSMenuItems">
 												<bool key="EncodedWithXMLCoder">YES</bool>
-												<reference ref="301011823"/>
-												<object class="NSMenuItem" id="662169512">
-													<reference key="NSMenu" ref="687956810"/>
-													<string key="NSTitle">Item 2</string>
-													<string key="NSKeyEquiv"/>
-													<int key="NSKeyEquivModMask">1048576</int>
-													<int key="NSMnemonicLoc">2147483647</int>
-													<reference key="NSOnImage" ref="35465992"/>
-													<reference key="NSMixedImage" ref="502551668"/>
-													<string key="NSAction">_popUpItemAction:</string>
-													<reference key="NSTarget" ref="194439146"/>
-												</object>
-												<object class="NSMenuItem" id="581094746">
-													<reference key="NSMenu" ref="687956810"/>
-													<string key="NSTitle">Item 3</string>
-													<string key="NSKeyEquiv"/>
-													<int key="NSKeyEquivModMask">1048576</int>
-													<int key="NSMnemonicLoc">2147483647</int>
-													<reference key="NSOnImage" ref="35465992"/>
-													<reference key="NSMixedImage" ref="502551668"/>
-													<string key="NSAction">_popUpItemAction:</string>
-													<reference key="NSTarget" ref="194439146"/>
-												</object>
 											</object>
 											<reference key="NSMenuFont" ref="297986072"/>
 										</object>
+										<int key="NSSelectedIndex">-1</int>
 										<int key="NSPreferredEdge">1</int>
 										<bool key="NSUsesItemFromMenu">YES</bool>
 										<bool key="NSAltersState">YES</bool>
@@ -1603,7 +1571,7 @@
 						<reference ref="463884090"/>
 						<reference ref="206107860"/>
 					</object>
-					<object class="NSMutableArray" key="NSToolbarIBDefaultItems">
+					<object class="NSArray" key="NSToolbarIBDefaultItems">
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<reference ref="290491096"/>
 						<reference ref="657637909"/>
@@ -2767,6 +2735,7 @@
 												<string key="NSFrame">{{17, 11}, {263, 22}}</string>
 												<reference key="NSSuperview" ref="546806116"/>
 												<reference key="NSWindow"/>
+												<reference key="NSNextKeyView" ref="612149919"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSTextFieldCell" key="NSCell" id="79799225">
 													<int key="NSCellFlags">-1805517311</int>
@@ -3566,6 +3535,30 @@
 						<reference key="destination" ref="879792570"/>
 					</object>
 					<int key="connectionID">987</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">userPopUp</string>
+						<reference key="source" ref="1021"/>
+						<reference key="destination" ref="620611729"/>
+					</object>
+					<int key="connectionID">1063</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">addUser:</string>
+						<reference key="source" ref="1021"/>
+						<reference key="destination" ref="846589123"/>
+					</object>
+					<int key="connectionID">1064</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">removeUser:</string>
+						<reference key="source" ref="1021"/>
+						<reference key="destination" ref="206107860"/>
+					</object>
+					<int key="connectionID">1065</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
@@ -6248,26 +6241,8 @@
 						<reference key="object" ref="687956810"/>
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="581094746"/>
-							<reference ref="662169512"/>
-							<reference ref="301011823"/>
 						</object>
 						<reference key="parent" ref="194439146"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1044</int>
-						<reference key="object" ref="301011823"/>
-						<reference key="parent" ref="687956810"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1045</int>
-						<reference key="object" ref="662169512"/>
-						<reference key="parent" ref="687956810"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1046</int>
-						<reference key="object" ref="581094746"/>
-						<reference key="parent" ref="687956810"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">1060</int>
@@ -6300,9 +6275,6 @@
 					<string>1041.IBPluginDependency</string>
 					<string>1042.IBPluginDependency</string>
 					<string>1043.IBPluginDependency</string>
-					<string>1044.IBPluginDependency</string>
-					<string>1045.IBPluginDependency</string>
-					<string>1046.IBPluginDependency</string>
 					<string>1047.IBPluginDependency</string>
 					<string>1060.IBPluginDependency</string>
 					<string>1061.IBPluginDependency</string>
@@ -6625,9 +6597,6 @@
 						<reference key="dict.sortedKeys" ref="0"/>
 						<reference key="dict.values" ref="0"/>
 					</object>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7190,7 +7159,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1062</int>
+			<int key="maxID">1065</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7243,6 +7212,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>addAllRecentPwads:</string>
 							<string>addIwad:</string>
 							<string>addPwad:</string>
+							<string>addUser:</string>
 							<string>choosePlayDemo:</string>
 							<string>chooseRecordDemo:</string>
 							<string>clearNetwork:</string>
@@ -7253,6 +7223,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>removeAllPwads:</string>
 							<string>removeIwad:</string>
 							<string>removePwad:</string>
+							<string>removeUser:</string>
 							<string>saveAsGFS:</string>
 							<string>updateParameters:</string>
 							<string>updateParmDmflags:</string>
@@ -7271,6 +7242,8 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 						</object>
 						<object class="NSArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -7308,6 +7281,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>addAllRecentPwads:</string>
 							<string>addIwad:</string>
 							<string>addPwad:</string>
+							<string>addUser:</string>
 							<string>choosePlayDemo:</string>
 							<string>chooseRecordDemo:</string>
 							<string>clearNetwork:</string>
@@ -7318,6 +7292,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>removeAllPwads:</string>
 							<string>removeIwad:</string>
 							<string>removePwad:</string>
+							<string>removeUser:</string>
 							<string>saveAsGFS:</string>
 							<string>updateParameters:</string>
 							<string>updateParmDmflags:</string>
@@ -7346,6 +7321,10 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">addPwad:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">addUser:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -7386,6 +7365,10 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">removePwad:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">removeUser:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -7479,6 +7462,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>timeField</string>
 							<string>timedemo</string>
 							<string>turboField</string>
+							<string>userPopUp</string>
 							<string>vanilla</string>
 							<string>warpField</string>
 							<string>window</string>
@@ -7510,6 +7494,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>NSTextField</string>
 							<string>NSButton</string>
 							<string>NSTextField</string>
+							<string>NSPopUpButton</string>
 							<string>NSButton</string>
 							<string>NSTextField</string>
 							<string>NSWindow</string>
@@ -7544,6 +7529,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>timeField</string>
 							<string>timedemo</string>
 							<string>turboField</string>
+							<string>userPopUp</string>
 							<string>vanilla</string>
 							<string>warpField</string>
 							<string>window</string>
@@ -7649,6 +7635,10 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<object class="IBToOneOutletInfo">
 								<string key="name">turboField</string>
 								<string key="candidateClassName">NSTextField</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">userPopUp</string>
+								<string key="candidateClassName">NSPopUpButton</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">vanilla</string>

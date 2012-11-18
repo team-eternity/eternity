@@ -153,8 +153,10 @@ static BOOL gSDLStarted;	// IOAN 20120616
 {
 	[iwadSet release];
 	[pwadTypes release];
+   [eeUserExt release];
 	[iwadPopMenu release];
 	[pwadArray release];
+   [userSet release];
    
 	[noIwadAlert release];
 	[badIwadAlert release];
@@ -196,8 +198,10 @@ static BOOL gSDLStarted;	// IOAN 20120616
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
                    @"pke", @"zip", nil];
+      eeUserExt = [[NSString alloc] initWithString:@"eternityuser"];
 		iwadPopMenu = [[NSMenu alloc] initWithTitle:@"Choose IWAD"];
 		pwadArray = [[NSMutableArray alloc] initWithCapacity:0];
+      userSet = [[NSMutableSet alloc] initWithCapacity:0];
 		
 		noIwadAlert = [[NSAlert alloc] init];
 		[noIwadAlert addButtonWithTitle:@"Choose IWAD"];
@@ -323,13 +327,11 @@ static BOOL gSDLStarted;	// IOAN 20120616
 {
 	if (gCalledAppMainline)
 		return NO;	// ignore this document, it's too late within the game
-   
-   // FIXME: Use an ID or something more fixed to identify the user type.
-   NSString *eeUserExt = @"eternityuser";
 
    if([[filename pathExtension] isEqualToString:eeUserExt])
    {
       // TODO: User file.
+      [self doAddUserFromURL:[NSURL fileURLWithPath:filename]];
    }
    else
    {
@@ -454,6 +456,87 @@ iwadMightBe:
    if(status == 0)   // only exit if it's all ok
     exit(status);
 }
+
+//
+// doAddUserFromURL:
+//
+-(void)doAddUserFromURL:(NSURL *)wURL
+{
+	NSInteger ind;
+	if(![userSet containsObject:wURL])
+	{
+		[userSet addObject:wURL];
+		
+		NSString *userString = [[wURL path] lastPathComponent];
+		
+		[userPopUp addItemWithTitle:userString];
+		ind = [userPopUp numberOfItems] - 1;
+		[[[userPopUp menu] itemAtIndex:ind] setToolTip:userString];
+		[[[userPopUp menu] itemAtIndex:ind] setRepresentedObject:wURL];
+      
+      // Don't set action yet
+//		[[[iwadPopUp menu] itemAtIndex:ind]
+//       setAction:@selector(updateParameters:)];
+//		[[[iwadPopUp menu] itemAtIndex:ind] setTarget:self];
+		
+		[userPopUp selectItemAtIndex:ind];
+	}
+}
+
+//
+// addUserEnded:returnCode:contextInfo:
+//
+-(void)addUserEnded:(NSOpenPanel *)panel returnCode:(int)code
+        contextInfo:(void *)info
+{
+	if(code == NSCancelButton)
+	{
+		return;
+	}
+	
+	// Look thru the array to locate the IWAD and put that on.
+	NSURL *openCandidate;
+	
+	for(openCandidate in [panel URLs])
+	{
+      [self doAddUserFromURL:openCandidate];
+//      [self updateParameters:self];
+	}
+}
+
+//
+// addUser:
+//
+-(IBAction)addUser:(id)sender
+{
+	NSOpenPanel *panel = [NSOpenPanel openPanel];
+	[panel setAllowsMultipleSelection:true];
+	[panel setCanChooseFiles:true];
+	[panel setCanChooseDirectories:true];
+	[panel beginSheetForDirectory:nil file:nil types:[NSArray
+                                                     arrayWithObject:eeUserExt]
+                  modalForWindow:[NSApp mainWindow] modalDelegate:self
+                  didEndSelector:@selector(addUserEnded:returnCode:contextInfo:)
+                     contextInfo:nil];
+}
+
+//
+// removeUser:
+//
+-(IBAction)removeUser:(id)sender
+{
+	if([userPopUp numberOfItems] > 0)
+	{
+		NSURL *userURL = [[userPopUp selectedItem] representedObject];
+		
+		[userPopUp removeItemAtIndex:[userPopUp indexOfSelectedItem]];
+		[userSet removeObject:userURL];
+		
+//		[self updateParameters:[iwadPopUp selectedItem]];
+	}
+}
+
+// FIXME: unify all IWAD and user add/remove controls, they're too similar.
 
 //
 // doAddIwadFromURL:
@@ -1400,27 +1483,31 @@ iwadMightBe:
 	
 	// Let's go.
 	[defaults setBool:YES forKey:@"Saved."];
+   
+   // Block to save URLs from a given collection with compatible path text
+   void (^saveURLsFromCollection)(id, NSString *) = ^(id aURLCollection,
+                                                      NSString *aString)
+   {
+      NSURL *URL;
+      NSMutableArray *archArr = [NSMutableArray array];
+      for(URL in aURLCollection)
+         [archArr addObject:[URL path]];
+      [defaults setObject:archArr forKey:aString];
+   };
 	
 	// IWAD list
-	
-	// need to save: URL array
-	// IWAD set man!
-	NSURL *URI;
-	NSMutableArray *archArr = [[NSMutableArray alloc] init];
-	for(URI in iwadSet)
-		[archArr addObject:[URI path]];
-	
-	[defaults setObject:archArr forKey:@"iwadSet"];
+   saveURLsFromCollection(iwadSet, @"iwadSet");
+   
+   // Index of selected item
 	[defaults setInteger:[iwadPopUp indexOfSelectedItem] 
                  forKey:@"iwadPopUpIndex"];
+   
 	// PWAD array
-	[archArr removeAllObjects];
-	for(URI in pwadArray)
-		[archArr addObject:[URI path]];
-	
-	[defaults setObject:archArr forKey:@"pwadArray"];
-	
-	[archArr release];
+   saveURLsFromCollection(pwadArray, @"pwadArray");
+      
+   // User set
+   saveURLsFromCollection(userSet, @"userSet");
+   
 	// Other parameters
 	[defaults setObject:[otherField stringValue] forKey:@"otherField"];
 	// Warp
@@ -1466,26 +1553,27 @@ iwadMightBe:
 	if([defaults boolForKey:@"Saved."])
 	{
 		// Let's go.
-		
-		// IWAD list
-		
-		// need to save: URL array
-		// IWAD set man!
-		NSArray *archArr;
-		NSString *archStr;
-		
-		archArr = [defaults stringArrayForKey:@"iwadSet"];
-		for(archStr in archArr)
+      
+      // block to load URLs from a list
+      void (^loadURLsFromKey)(NSString *, SEL) = ^(NSString *aKey, SEL aMessage)
       {
-         [self doAddIwadFromURL:[NSURL fileURLWithPath:archStr]];
-      }
+         NSArray *archArr;
+         NSString *archStr;
+         
+         archArr = [defaults stringArrayForKey:aKey];
+         for(archStr in archArr)
+         {
+            [self performSelector:aMessage
+                       withObject:[NSURL URLWithString:archStr]];
+         }
+      };
+		
+		// IWAD set
+      loadURLsFromKey(@"iwadSet", @selector(doAddIwadFromURL:));
 		[iwadPopUp selectItemAtIndex:[defaults integerForKey:@"iwadPopUpIndex"]];
-		// PWAD array
-		archArr = [defaults stringArrayForKey:@"pwadArray"];
-		for(archStr in archArr)
-      {
-         [self doAddPwadFromURL:[NSURL fileURLWithPath:archStr]];
-      }
+
+      // PWAD array
+      loadURLsFromKey(@"pwadArray", @selector(doAddPwadFromURL:));
 		[pwadView reloadData];
 			 
 		// Other parameters

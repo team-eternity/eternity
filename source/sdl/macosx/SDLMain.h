@@ -51,7 +51,6 @@
 @interface SDLMain : NSObject
 {
 	IBOutlet NSWindow *window;
-	NSMutableSet *iwadSet;
 	NSFileManager *fileMan;
 	ELDumpConsole *console;
    IBOutlet ELFileViewDataSource *fileViewDataSource; //data source for pwadView
@@ -61,6 +60,7 @@
 	
 	IBOutlet NSTabView *tabView;
 	IBOutlet NSPopUpButton *iwadPopUp, *gameTypePopUp;
+   IBOutlet NSPopUpButton *userPopUp;  // user (player) configuration list
 	IBOutlet NSTableView *pwadView;
    
 	IBOutlet NSTextField *recordDemoField, *playDemoField;
@@ -79,8 +79,11 @@
 	
 	NSAlert *noIwadAlert, *badIwadAlert, *nothingForGfsAlert;
 	
+   NSString *eeUserExt;
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray, *param;
+  	NSMutableSet *iwadSet;  // set of IWADs
+   NSMutableSet *userSet;  // set of user configurations
 	
 	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp,
       *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo,
@@ -95,6 +98,11 @@
 -(void)initNibData;
 -(void)setupTextFieldNotification;
 -(IBAction)launchGame:(id)sender;
+-(void)doAddUserFromURL:(NSURL *)wURL;
+-(void)addUserEnded:(NSOpenPanel *)panel returnCode:(int)code
+        contextInfo:(void *)info;
+-(IBAction)addUser:(id)sender;
+-(IBAction)removeUser:(id)sender;
 -(void)doAddIwadFromURL:(NSURL *)wURL;
 -(void)chooseIwadAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode
                  contextInfo:(void *)contextInfo;
