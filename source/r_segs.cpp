@@ -55,42 +55,6 @@ cb_seg_t    segclip;
 lighttable_t **walllights;
 static float  *maskedtexturecol;
 
-// DEBUG
-#include "m_qstr.h"
-
-//
-// jhaley 20121117: DEBUG, TEMP
-//
-static void R_LogMaskedSegRange(drawseg_t *ds, int x1, int x2)
-{
-   static FILE *f;
-   extern char *userpath;
-
-   if(!f)
-   {
-      qstring str;
-      str = userpath;
-      str.pathConcatenate("maskedsegs.log");
-      f = fopen(str.constPtr(), "w");
-   }
-   if(f)
-   {
-      if(!ds->curline)
-         fprintf(f, "NULL ds->curline!\n"); // WAT?!
-      else
-      {
-         size_t segno  = ds->curline - segs;
-         size_t lineno = ds->curline->linedef     ? ds->curline->linedef     - lines   : (size_t)-1;
-         size_t fsno   = ds->curline->frontsector ? ds->curline->frontsector - sectors : (size_t)-1;
-         size_t bsno   = ds->curline->backsector  ? ds->curline->backsector  - sectors : (size_t)-1;
-         fprintf(f, "%d-%d:seg=%lu,line=%lu,fs=%lu,bs=%lu\n", 
-                 x1, x2, (unsigned long)segno, (unsigned long)lineno, 
-                 (unsigned long)fsno, (unsigned long)bsno);
-         fflush(f);
-      }
-   }
-}
-
 //
 // R_RenderMaskedSegRange
 //
@@ -105,9 +69,6 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    float    texmidf;
    line_t  *linedef;
    lighttable_t **wlight;
-
-   // DEBUG 20121117
-   R_LogMaskedSegRange(ds, x1, x2);
 
    // Calculate light table.
    // Use different light tables
