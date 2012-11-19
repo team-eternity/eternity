@@ -57,6 +57,8 @@ void qstring::unLocalize(size_t pSize)
       buffer = ecalloc(char *, 1, pSize);
       size   = pSize;
       strcpy(buffer, local);
+
+      memset(local, 0, basesize);
    }
 }
 
@@ -248,8 +250,11 @@ qstring &qstring::grow(size_t len)
    {
       size_t newsize = size + len;
 
-      if(isLocal() && newsize > basesize)
-         unLocalize(newsize);
+      if(isLocal()) // are we local?
+      {
+         if(newsize > basesize) // can we stay local?
+            unLocalize(newsize);
+      }
       else
       {
          buffer = erealloc(char *, buffer, newsize);

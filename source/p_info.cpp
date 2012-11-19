@@ -872,24 +872,32 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 #define HU_TITLET (mapnamest[gamemap-1])
 #define HU_TITLEH (mapnamesh[(gameepisode-1)*9+gamemap-1])
 
+enum SynthType_e
+{
+   SYNTH_NEWLEVEL,    // "new level"
+   SYNTH_HIDDENLEVEL, // "hidden level"
+   SYNTH_NUMTYPES
+};
+
+static const char *synthNames[SYNTH_NUMTYPES] =
+{
+   "%s: new level",
+   "%s: hidden level"
+};
+
 //
 // SynthLevelName
 //
 // Makes up a level name for new maps and Heretic secrets.
 // Moved here from hu_stuff.c
 //
-// secret == true  -> Heretic hidden map
-// secret == false -> Just a plain new level
-//
-static void SynthLevelName(bool secret)
+static void SynthLevelName(SynthType_e levelNameType)
 {
    // haleyjd 12/14/01: halved size of this string, max length
    // is deterministic since gamemapname is 8 chars long
    static char newlevelstr[25];
 
-   sprintf(newlevelstr, 
-           secret ? "%s: hidden level" : "%s: new level", 
-           gamemapname);
+   sprintf(newlevelstr, synthNames[levelNameType], gamemapname);
    
    LevelInfo.levelName = newlevelstr;
 }
@@ -902,11 +910,12 @@ static void SynthLevelName(bool secret)
 //
 static void P_InfoDefaultLevelName(void)
 {
-   const char *bexname = NULL;
-   bool deh_modified   = false;
-   bool synth_type     = false;
-   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
-   int  d2upperbound   = 32;
+   const char    *bexname      = NULL;
+   bool           deh_modified = false;
+   SynthType_e    synthType    = SYNTH_NEWLEVEL;
+   int            d2upperbound = 32;
+   missioninfo_t *missionInfo  = GameModeInfo->missionInfo;
+   
 
    // if we have a current metainfo, use its level name
    if(curmetainfo)
@@ -942,7 +951,7 @@ static void P_InfoDefaultLevelName(void)
          if(maxEpisode == 1 || gameepisode < maxEpisode)
             bexname = HU_TITLEH;            
          else
-            synth_type = true; // put "hidden level"
+            synthType = SYNTH_HIDDENLEVEL; // put "hidden level"
       }
       else // DOOM
          bexname = HU_TITLE;         
@@ -952,7 +961,7 @@ static void P_InfoDefaultLevelName(void)
       deh_modified = DEH_StringChanged(bexname);
 
    if((newlevel && !deh_modified) || !bexname)
-      SynthLevelName(synth_type);
+      SynthLevelName(synthType);
    else
       LevelInfo.levelName = DEH_String(bexname);
 }
