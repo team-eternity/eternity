@@ -276,10 +276,7 @@ bool I_MidiRPCInitServer()
       serverInit = true;
    }
    else
-   {
       DEBUGOUT("CreateProcess failed to start midiproc");
-      printf("Last error: %d\n", GetLastError());
-   }
 
    return !!result;
 }
