@@ -27,12 +27,12 @@
 
 #ifdef EE_FEATURE_MIDIRPC
 
-#include <sys/stat.h>
 #include <windows.h>
 #include "../../midiproc/midiproc.h"
 
-#ifdef _DEBUG
-#include <stdio.h>
+#include "../m_qstr.h"
+
+#if defined(_DEBUG) && defined(EE_RPC_DEBUG)
 #define DEBUGOUT(s) puts(s)
 #else
 #define DEBUGOUT(s)
@@ -246,34 +246,40 @@ bool I_MidiRPCResumeSong()
 bool I_MidiRPCInitServer()
 {
    struct stat sbuf;
-   char filename[MAX_PATH*2];
+   char filename[MAX_PATH+1];
 
    memset(filename, 0, sizeof(filename));
    GetModuleFileName(NULL, filename, MAX_PATH);
 
-   // remove filename
-   for(char *c = filename + MAX_PATH; (*c != '\\' && *c != '/'); c--)
-      *c = '\0';
+   qstring module;
 
-   // add midiproc.exe filename
-   strcat(filename, "midiproc.exe");
+   module = filename;
+   module.removeFileSpec();
+   module.pathConcatenate("midiproc.exe");
+   DEBUGOUT(module.constPtr());
 
    // Look for executable file
-   if(stat(filename, &sbuf))
+   if(stat(module.constPtr(), &sbuf))
    {
       DEBUGOUT("Could not find midiproc");
       return false;
    }
 
    si.cb = sizeof(si);
-   
-   BOOL result = CreateProcess(NULL, "\"midiproc.exe\"", NULL, NULL, FALSE,
+
+   BOOL result = CreateProcess(module.constPtr(), NULL, NULL, NULL, FALSE,
                                0, NULL, NULL, &si, &pi);
 
    if(result)
+   {
+      DEBUGOUT("RPC server started");
       serverInit = true;
+   }
    else
+   {
       DEBUGOUT("CreateProcess failed to start midiproc");
+      printf("Last error: %d\n", GetLastError());
+   }
 
    return !!result;
 }
@@ -318,6 +324,7 @@ bool I_MidiRPCInitClient()
       return false;
    }
 
+   DEBUGOUT("RPC client initialized");
    clientInit = true;
 
    return true;
