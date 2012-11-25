@@ -618,9 +618,6 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
          len--;
       }
    }
-
-   // haleyjd 11/18/12: fill out one pad byte with the previous pixel value
-   *dest = *(dest - 1);
 }
 
 //
@@ -856,7 +853,7 @@ static void FinishTexture(texture_t *tex)
    int        x, y, i, colcount;
    texcol_t   *col, *tcol;
    byte       *maskp;
-   
+
    Z_ChangeTag(tex->buffer, PU_CACHE);
    
    if(!tempmask.mask)
@@ -871,7 +868,7 @@ static void FinishTexture(texture_t *tex)
    // Allocate column pointers
    tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
    
-   // Build the columsn based on mask info
+   // Build the columns based on mask info
    maskp = tempmask.buffer;
 
    for(x = 0; x < tex->width; x++)
