@@ -1500,14 +1500,17 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 
    case 40:
       // RaiseCeilingLowerFloor
-      if(P_ClearSwitchOnFail())
+      if(demo_compatibility)
       {
          EV_DoCeiling(line, raiseToHighest);
          EV_DoFloor(line, lowerFloorToLowest); //jff 02/12/98 doesn't work
          line->special = 0;
       }
-      else if(EV_DoCeiling(line, raiseToHighest))
-         line->special = 0;
+      else
+      {
+         if(EV_DoCeiling(line, raiseToHighest) || P_ClearSwitchOnFail())
+            line->special = 0;
+      }
       break;
 
    case 44:
