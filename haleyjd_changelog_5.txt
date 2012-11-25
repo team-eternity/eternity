@@ -1,6 +1,204 @@
 ================================================================================
+Changes since Eternity Engine v3.40.30
+================================================================================
+--------------------------------------------------------------------------------
+11/24/12
+
+CSG discovered a few days ago that a bit of code I added to the texture system
+while fixing Ryan's crash in order to try to fill out the texture pad bytes with
+the nearest valid pixel's color was an overcorrection. It would result in extra
+pixels invading nearby patches in multipatch textures where the patches are not
+rendered in a left-to-right top-to-bottom fashion, which cannot be relied upon
+even in textures where it would have made sense for the patches to have been
+added in that order.
+
+I am preparing for a new release, v3.40.32 "Gungnir". Gungnir is the spear of
+Odin, the mighty weapon with which he was said to be destined to fight the fell 
+wolf Fenrir at the battle of Ragnarok, before being devoured whole by the same, 
+and then almost immediately avenged by his son, Vitharr, who would take up the 
+weapon himself.
+
+--------------------------------------------------------------------------------
+11/23/12
+
+After doing a ton of research on different possible solutions to the long-
+standing problem of not having an independent MIDI volume control while running
+under any version of Windows from Vista up, I settled on a multiple process 
+model whereby EE would communicate with a second child process setup to play
+MIDI.
+
+After researching the various means of doing IPC on Windows, I settled on 
+experimenting with RPC, and found it to be both extremely simple and stable.
+I have written a "midiproc" server, otherwise known as MidiRPC, and have added
+client code to Eternity to invoke this server when playing MIDI (or MUS, after
+it has been converted to MIDI).
+
+Support for the RPC MIDI server is conditionally enabled on the define value
+EE_FEATURE_MIDIRPC. In addition, if the midiproc.exe file is not found, or for
+whatever reason it cannot be invoked by CreateProcess, EE will fall back on
+playing MIDI locally as always.
+
+i_sdlmusic.cpp is now an unholy mess, though. The need to introduce an
+additional level of abstraction to the music system by format being played is
+becoming rapidly obvious, so, expect this to be heavily refined in an upcoming
+version. What's there now works well enough for the next release, however.
+
+--------------------------------------------------------------------------------
+11/18/12
+
+Using the results of Ryan's crash logs, I was able to identify the issue as
+overdraw being caused by the y1 and y2 column bound values not being in perfect
+mathematical harmony with the value of fracstep, as calculated in the process
+of rendering 2S linedefs in R_DrawNewMaskedColumn. Unfortunately, because 
+Cardboard must rely on a mix of fixed and floating point math in this process,
+it is impossible to guarantee these values will always result in completely
+within-bounds access to the column data.
+
+It was the strict randomized memory allocator of OpenBSD which enabled Ryan to
+trip over this problem in the first place, as it is likely occurring on other
+platforms as well and simply failing to cause an access violation due to never
+crossing a page boundary or otherwise leaving the application's allocated
+address space.
+
+There were two possible approaches to fixing this:
+
+* Bounds checking could have been added to all column drawers to ensure that
+  the value of frac never exceeded the upper bound. However, this would have
+  not only required a prediction-missable branch to be added to every drawer,
+  but would also have required the upper bound of the column to be propagated
+  down to the drawers (it is currently not available information at this stage
+  in drawing).
+  
+  I determined that the potential efficiency drawbacks together with the amount
+  of code that would have to change ruled this solution out.
+  
+* Expanding the Cardboard texture buffers to contain extra space at the end, in
+  order to tolerate the up to one additional pixel access that this problem
+  causes. This may increase texture memory usage significantly, since most 
+  textures are already at a power-of-two buffer size and therefore their being
+  expanded by even one byte may cause an entire additional page to be allocated
+  to Eternity's heap.
+  
+  I felt the memory exchange is worth the cost to avoid the potential speed
+  problems that would result from the first solution, and therefore implemented
+  this as a workaround.
+  
+Some questions came up about whether or not the "New Level" feature of
+SynthLevelName was working correctly. After determining that it seems to be
+working exactly as designed, I rewrote it anyway to eliminate an old issue of
+a boolean being used as a parameter where an enum would be more appropriate, so
+that the value passed in is descriptive as to what semantics it will invoke.
+
+Kate found a huge glitch in qstring whereby a localized qstring could fall
+through the test in qstring::grow() and try to call realloc on the pointer value
+of its local array member.
+
+Through some divine prank, the zone allocator was recognizing the local array
+address as being the origin of a valid zone block (the qstring object's block 
+itself!), and was reallocating it. Of course, this completely corrupted the
+qstring object's state so, when Collection<qstring> would try to destroy it
+later, the game would crash in ~qstring() trying to free memory overwritten with
+the value 0xFEEEFEEE (the realloc call caused the qstring's zone block to be
+shrunk, leaving the space it formerly occupied overwritten by the debug CRT with
+this guard value).
+
+This particular instance has been fixed, but, at some point I need to add an
+additional debug check in Z_Realloc for blocks with PU_OBJECT tag, as they 
+could never be the valid target of a realloc anyway.
+
+--------------------------------------------------------------------------------
+11/17/12
+
+With the assistance of Gez and DWF user GreyGhost, I added additional paths to
+the d_findiwads module:
+
+* Master Levels location can now be detected from either the Steam install
+  location or the default DOS install directory (\MASTER\WADS).
+  
+* Hexen 95's install registry key is stored in the file, for later use once
+  Hexen is supported.
+  
+* Added default DOS install locations for DKotDC and Strife, which are also not
+  really used yet but will come in handy later.
+  
+More temporary debugging code has been added (and then removed) for Ryan's
+benefit, in an attempt to further home in on the cause of his crash.
+
+--------------------------------------------------------------------------------
+11/15/12
+
+Added support for a separate path for the BFG Edition DOOM II IWAD, since it
+differs significantly enough that users may want to be able to use either it or
+the original (added by explicit user request).
+
+Started work on code to automatically find IWAD and mission pack paths and 
+populate the variables stored in system.cfg with them. On Windows, EE can be
+optionally built to scan the registry for install paths of the DoD Trilogy,
+Collector's Edition, Steam install paths, etc. It will also naturally scan all
+paths enumerated by DOOMWADDIR, DOOMWADPATH, or HOME, as well as all subdirs of
+the /base and /user directories, the current working directory, the executable
+directory, and on Linux, standard IWAD locations for that platform.
+
+--------------------------------------------------------------------------------
+11/06/12
+
+With CSG's help, I cleaned up the situation of mixed-up #ifdefs for WIN32 versus
+_MSC_VER and he was able to get Eternity compiled under MinGW again. With the
+proper version MinGW being used, this makes it possible to run EE on as early
+as Windows 95 without any hacks being applied as was previously necessary if
+MSVC++ 2005 or later were attempted as the compiler for that target.
+
+Applied the __APPLE__ fix for the OpenGL backend (needed to be tested for in
+addition to the __MACOSX__ define, which is evidently not such a reliable
+platform define for Apple after all).
+
+IDCLEV now preferentially works within mission packs, by user request, so that
+it is possible to warp inside NR4TL or Master Levels' TEETH.WAD. The current
+managed directory will be checked for the destination level first; if it exists,
+you'll visit that level. If not, you'll return to playing the ordinary IWAD or
+any loaded PWAD level that has replaced it in the global directory.
+
+Ryan has finally managed to nail down a crash that has occasionally been dogging
+him and possibly some users on Linux with a reproducible case in NR4TL MAP01.
+Something involving the 2S lines in the starting area of this map is hitting a
+bug that crashes the game in R_QDrawColumn. I have been doing some commits of
+heavy debug logging code for him to run that should help nail it down further,
+as the issue absolutely cannot currently be replicated elsewhere, neither in 
+Windows nor in 64-bit Arch Linux by DavidPH.
+
+--------------------------------------------------------------------------------
+11/05/12
+
+Added support for drag-and-dropping of zip/pke/pk3-extension archives onto the
+Eternity executable (just a matter of testing for those extensions in addition
+to .wad).
+
+================================================================================
 Changes since Eternity Engine v3.40.25
 ================================================================================
+--------------------------------------------------------------------------------
+11/04/12
+
+Due to some server problems, the release was delayed by one day. I used the
+extra time to rush in support for BFG Edition's slightly altered IWAD file (it
+is based on the XBox 360 version, with additional censorship of Wolf3D-related
+materials), including the ability to load No Rest for the Living as a managed
+wad file.
+
+As a result of the latter, I have extended the system used for Master Levels 
+loading into a generic "managed mission pack" system. The "inmasterlevels"
+variable that gets saved into savegames is now "inmanageddir" and holds the
+enumeration value of the current mission in effect, rather than being a simple 
+boolean.
+
+NR4TL metadata is included in eternity.wad as an ENRVMETA lump. It's the only
+real way to appropriately support it, and allows the code earlier written for
+loading the 360 .disk files to be reused toward the purpose of supporting 
+mission packs. Use of metadata resources by end-user mods is not currently 
+supported and the format is not being published for such use (EMAPINFO is more
+general and should continue to be used - Hexen MAPINFO will additionally be
+supported, eventually).
+
 --------------------------------------------------------------------------------
 10/31/12
 
