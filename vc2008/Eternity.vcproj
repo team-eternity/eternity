@@ -5211,6 +5211,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="EV_"
+				>
+				<File
+					RelativePath="..\source\ev_specials.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\ev_specials.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
