@@ -1393,12 +1393,6 @@ BOOM_WRCROSSLINE(BuildStairsUp8, 0);
 BOOM_WRCROSSLINE(BuildStairsTurbo16, 0);
 
 /*
-         case 244: //jff 3/6/98 make fit within DCK's 256 linedef types
-            // killough 2/16/98: WR silent teleporter (linedef-linedef kind)
-            EV_SilentLineTeleport(line, side, thing, false);
-            break;
-*/
-/*
 void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 {
    //jff 02/04/98 add check here for generalized lindef types
@@ -1520,7 +1514,6 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
       ok = 0;
       switch(line->special)
       {
-      case 244:     //jff 3/6/98 make fit within DCK's 256 linedef types
       case 263:     //jff 4/14/98 silent thing,line,line rev types
       case 265:     //            reversed types
       case 267:
