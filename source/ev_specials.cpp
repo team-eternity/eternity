@@ -27,6 +27,7 @@
 #include "z_zone.h"
 
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_mobj.h"
@@ -126,6 +127,11 @@ inline static bool P_ClearSwitchOnFail(void)
    return demo_compatibility || (demo_version >= 335 && comp[comp_special]);
 }
 
+inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
+{
+   return (action->type->flags | action->flags);
+}
+
 //=============================================================================
 //
 // DOOM Activation Helpers - Preambles and Post-Actions
@@ -138,6 +144,8 @@ inline static bool P_ClearSwitchOnFail(void)
 //
 bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
 {
+   unsigned int flags = EV_CompositeActionFlags(action);
+
    // DOOM-style specials require an actor and a line
    REQUIRE_ACTOR(activation->actor);
    REQUIRE_LINE(activation->line);
@@ -153,7 +161,7 @@ bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
 
    // Check if action only allows player
    // jff 3/5/98 add ability of monsters etc. to use teleporters
-   if(!activation->actor->player && !(action->flags & EV_PREALLOWMONSTERS))
+   if(!activation->actor->player && !(flags & EV_PREALLOWMONSTERS))
       return false;
 
    // jff 2/27/98 disallow zero tag on some types
@@ -163,11 +171,11 @@ bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
       return false;
 
    // check for first-side-only activation
-   if(activation->side && (action->flags & EV_PREFIRSTSIDEONLY))
+   if(activation->side && (flags & EV_PREFIRSTSIDEONLY))
       return false;
 
    // line type is *only* for monsters?
-   if(activation->actor->player && (action->flags & EV_PREMONSTERSONLY))
+   if(activation->actor->player && (flags & EV_PREMONSTERSONLY))
       return false;
 
    return true;
@@ -182,11 +190,13 @@ bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
 bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
                           specialactivation_t *activation)
 {
-   if(action->flags & EV_POSTCLEARSPECIAL)
+   unsigned int flags = EV_CompositeActionFlags(action);
+
+   if(flags & EV_POSTCLEARSPECIAL)
    {
       bool clearSpecial = (result || P_ClearSwitchOnFail());
 
-      if(clearSpecial || (action->flags & EV_POSTCLEARALWAYS))
+      if(clearSpecial || (flags & EV_POSTCLEARALWAYS))
          activation->line->special = 0;
    }
 
@@ -1388,6 +1398,124 @@ WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
 //
 
 
+//
+// EV_ActionForLineSpecial
+//
+// Given a special number, obtain the corresponding ev_action_t structure,
+// within the currently defined set of bindings.
+//
+ev_action_t *EV_ActionForNumber(int special)
+{
+   return NULL; // TODO
+}
+
+//=============================================================================
+//
+// Activation
+//
+
+//
+// EV_CheckSpac
+//
+// Checks against the activation characteristics of the action to see if this
+// method of activating the line is allowed.
+//
+static bool EV_CheckSpac(ev_action_t *action, specialactivation_t *activation)
+{
+   if(action->type->activation >= 0) // specific type for this action?
+   {
+      return action->type->activation == activation->spac;
+   }
+   else // activation ability is determined by the linedef
+   {
+      Mobj   *thing = activation->actor;
+      line_t *line  = activation->line;
+      int     flags = 0;
+
+      REQUIRE_ACTOR(thing);
+      REQUIRE_LINE(line);
+
+      // check player / monster / missile enable flags
+      if(thing->player)                   // treat as player?
+         flags |= EX_ML_PLAYER;
+      if(thing->flags3 & MF3_SPACMISSILE) // treat as missile?
+         flags |= EX_ML_MISSILE;
+      if(thing->flags3 & MF3_SPACMONSTER) // treat as monster?
+         flags |= EX_ML_MONSTER;
+
+      if(!(line->extflags & flags))
+         return false;
+
+      // check 1S only flag -- if set, must be activated from first side
+      if((line->extflags & EX_ML_1SONLY) && activation->side != 0)
+         return false;
+
+      // check activation flags -- can we activate this line this way?
+      switch(activation->spac)
+      {
+      case SPAC_CROSS:
+         flags = EX_ML_CROSS;
+         break;
+      case SPAC_USE:
+         flags = EX_ML_USE;
+         break;
+      case SPAC_IMPACT:
+         flags = EX_ML_IMPACT;
+         break;
+      case SPAC_PUSH:
+         flags = EX_ML_PUSH;
+         break;
+      }
+
+      return (line->extflags & flags) != 0;
+   }
+}
+
+//
+// EV_ActivateSpecialLine
+//
+// Shared logic for all types of line activation
+//
+bool EV_ActivateSpecialLine(ev_action_t *action, specialactivation_t *activation)
+{
+   // check for special activation
+   if(!EV_CheckSpac(action, activation))
+      return false;
+
+   // execute pre-amble action
+   if(!action->type->pre(action, activation))
+      return false;
+
+   bool result = action->action(action, activation);
+
+   // execute the post-action routine
+   return action->type->post(action, result, activation);
+}
+
+//
+// EV_CrossSpecialLine
+//
+// A line has been activated by an Mobj physically crossing it.
+//
+bool EV_CrossSpecialLine(line_t *line, int side, Mobj *thing)
+{
+   ev_action_t *action;
+   specialactivation_t activation;
+
+   // get action
+   if(!(action = EV_ActionForNumber(line->special)))
+      return false;
+   
+   // setup activation
+   activation.actor = thing;
+   activation.args  = line->args;
+   activation.line  = line;
+   activation.side  = side;
+   activation.spac  = SPAC_CROSS;
+   activation.tag   = line->tag;
+
+   return EV_ActivateSpecialLine(action, &activation);
+}
 
 /*
 void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
