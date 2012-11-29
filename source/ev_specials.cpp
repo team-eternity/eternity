@@ -166,6 +166,10 @@ bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
    if(activation->side && (action->flags & EV_PREFIRSTSIDEONLY))
       return false;
 
+   // line type is *only* for monsters?
+   if(activation->actor->player && (action->flags & EV_PREMONSTERSONLY))
+      return false;
+
    return true;
 }
 
@@ -431,6 +435,9 @@ static bool EV_ActionTeleport(ev_action_t *action,
    // case 39: (W1)
    // case 97: (WR)
    // TELEPORT!
+   // case 125: (W1)
+   // case 126: (WR)
+   // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
    return !!EV_Teleport(activation->line, activation->side, activation->actor);
 }
@@ -685,22 +692,6 @@ static bool EV_ActionSecretExit(ev_action_t *action,
 }
 
 //
-// EV_ActionTeleportMonsterOnly
-//
-static bool EV_ActionTeleportMonsterOnly(ev_action_t *action,
-                                         specialactivation_t *activation)
-{
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
-
-   // case 125: (W1)
-   // case 126: (WR)
-   // TELEPORT MonsterONLY.
-   return (!thing->player && EV_Teleport(line, side, thing));
-}
-
-//
 // EV_ActionRaiseFloorTurbo
 //
 static bool EV_ActionRaiseFloorTurbo(ev_action_t *action,
@@ -821,6 +812,9 @@ static bool EV_ActionSilentTeleport(ev_action_t *action,
    // case 207: (W1 - BOOM Extended)
    // case 208: (WR - BOOM Extended)
    // killough 2/16/98: W1 silent teleporter (normal kind)
+   // case 268: (W1 - BOOM Extended)
+   // case 269: (WR - BOOM Extended)
+   // jff 4/14/98 add monster-only silent
    return !!EV_SilentTeleport(line, side, thing);
 }
 
@@ -914,6 +908,10 @@ static bool EV_ActionSilentLineTeleport(ev_action_t *action,
    // case 244: (WR - BOOM Extended)
    // jff 3/6/98 make fit within DCK's 256 linedef types
    // killough 2/16/98: W1 silent teleporter (linedef-linedef kind)
+   // case 266: (W1 - BOOM Extended)
+   // case 267: (WR - BOOM Extended)
+   // jff 4/14/98 add monster-only silent line-line
+
    return !!EV_SilentLineTeleport(line, side, thing, false);
 }
 
@@ -928,53 +926,12 @@ static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action,
    Mobj   *thing = activation->actor;
 
    // case 262: (W1 - BOOM Extended)
+   // case 263: (WR - BOOM Extended)
    // jff 4/14/98 add silent line-line reversed
-   return !!EV_SilentLineTeleport(line, side, thing, true);
-}
-
-//
-// EV_ActionSilentLineTRMonster
-//
-static bool EV_ActionSilentLineTRMonster(ev_action_t *action,
-                                         specialactivation_t *activation)
-{
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
-   
    // case 264: (W1 - BOOM Extended)
+   // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return (!thing->player && EV_SilentLineTeleport(line, side, thing, true));
-}
-
-//
-// EV_ActionSilentLineTeleMonster
-//
-static bool EV_ActionSilentLineTeleMonster(ev_action_t *action,
-                                           specialactivation_t *activation)
-{
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
-   
-   // case 266: (W1 - BOOM Extended)
-   // jff 4/14/98 add monster-only silent line-line
-   return (!thing->player && EV_SilentLineTeleport(line, side, thing, false));
-}
-
-//
-// EV_ActionSilentTeleportMonster
-//
-static bool EV_ActionSilentTeleportMonster(ev_action_t *action,
-                                           specialactivation_t *activation)
-{
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
-
-   // case 268: (W1 - BOOM Extended)
-   // jff 4/14/98 add monster-only silent
-   return (!thing->player && EV_SilentTeleport(line, side, thing));
+   return !!EV_SilentLineTeleport(line, side, thing, true);
 }
 
 //
@@ -988,409 +945,449 @@ static bool EV_ActionPlatToggleUpDown(ev_action_t *action,
    return !!EV_DoPlat(activation->line, toggleUpDn, 0);
 }
 
+//
+// EV_ActionStartLineScript
+//
+// SMMU script activation linedefs (now adapted to work for ACS)
+//
+static bool EV_ActionStartLineScript(ev_action_t *action,
+                                     specialactivation_t *activation)
+{
+   P_StartLineScript(activation->line, activation->actor);
+   return true;
+}
+
+//=============================================================================
+//
+// Action Types
+//
+
+// DOOM-Style Action Types
+
+// WR-Type lines may be crossed multiple times
+static ev_actiontype_t WRAction =
+{
+   SPAC_CROSS,           // line must be crossed
+   EV_DOOMPreCrossLine,  // pre-activation callback
+   EV_DOOMPostCrossLine, // post-activation callback
+   0                     // no default flags
+};
+
+// W1-Type lines may be activated once. Semantics are implemented in the 
+// post-cross callback to implement compatibility behaviors regarding the 
+// premature clearing of specials crossed from the wrong side or without
+// successful activation having occurred.
+static ev_actiontype_t W1Action =
+{
+   SPAC_CROSS,           // line must be crossed
+   EV_DOOMPreCrossLine,  // pre-activation callback
+   EV_DOOMPostCrossLine, // post-activation callback
+   EV_POSTCLEARSPECIAL   // special will be cleared after activation
+};
+
+
 //=============================================================================
 //
 // DOOM Line Actions
 //
 
 // Macro to declare a DOOM-style W1 line action
-#define DOOM_W1CROSSLINE(name, flags)    \
-   static ev_action_t actionW1 ## name = \
-   {                                     \
-      SPAC_CROSS,                        \
-      EV_DOOMPreCrossLine,               \
-      EV_Action ## name,                 \
-      EV_DOOMPostCrossLine,              \
-      (flags) | EV_POSTCLEARSPECIAL,     \
-      0                                  \
+#define W1LINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &W1Action,                             \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
    }
 
 // Macro to declare a DOOM-style WR line action
-#define DOOM_WRCROSSLINE(name, flags)    \
-   static ev_action_t actionWR ## name = \
-   {                                     \
-      SPAC_CROSS,                        \
-      EV_DOOMPreCrossLine,               \
-      EV_Action ## name,                 \
-      EV_DOOMPostCrossLine,              \
-      flags,                             \
-      0                                  \
-   }
-
-// jff 1/29/98 added new linedef types to fill all functions out so that
-// all have varieties SR, S1, WR, W1
-
-// killough 1/31/98: "factor out" compatibility test, by adding inner switch 
-// qualified by compatibility flag. relax test to demo_compatibility
-
-// killough 2/16/98: Fix problems with W1 types being cleared too early
-
-// Macro to declare a BOOM extended W1 line action
-#define BOOM_W1CROSSLINE(name, flags)    \
-   static ev_action_t actionW1 ## name = \
-   {                                     \
-      SPAC_CROSS,                        \
-      EV_DOOMPreCrossLine,               \
-      EV_Action ## name,                 \
-      EV_DOOMPostCrossLine,              \
-      (flags) | EV_POSTCLEARSPECIAL,     \
-      200                                \
-   }
-
-// Macro to declare a BOOM extended WR line action
-#define BOOM_WRCROSSLINE(name, flags)    \
-   static ev_action_t actionWR ## name = \
-   {                                     \
-      SPAC_CROSS,                        \
-      EV_DOOMPreCrossLine,               \
-      EV_Action ## name,                 \
-      EV_DOOMPostCrossLine,              \
-      flags,                             \
-      200                                \
+#define WRLINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &WRAction,                             \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
    }
 
 // DOOM Line Type 2 - W1 Open Door
-DOOM_W1CROSSLINE(OpenDoor, 0);
+W1LINE(W1OpenDoor, OpenDoor, 0, 0);
 
 // DOOM Line Type 3 - W1 Close Door
-DOOM_W1CROSSLINE(CloseDoor, 0);
+W1LINE(W1CloseDoor, CloseDoor, 0, 0);
 
 // DOOM Line Type 4 - W1 Raise Door
-DOOM_W1CROSSLINE(RaiseDoor, EV_PREALLOWMONSTERS);
+W1LINE(W1RaiseDoor, RaiseDoor, EV_PREALLOWMONSTERS, 0);
 
 // DOOM Line Type 5 - W1 Raise Floor
-DOOM_W1CROSSLINE(RaiseFloor, 0);
+W1LINE(W1RaiseFloor, RaiseFloor, 0, 0);
 
 // DOOM Line Type 6 - W1 Ceiling Fast Crush and Raise
-DOOM_W1CROSSLINE(FastCeilCrushRaise, 0);
+W1LINE(W1FastCeilCrushRaise, FastCeilCrushRaise, 0, 0);
 
 // DOOM Line Type 8 - W1 Build Stairs Up 8
-DOOM_W1CROSSLINE(BuildStairsUp8, 0);
+W1LINE(W1BuildStairsUp8, BuildStairsUp8, 0, 0);
 
 // DOOM Line Type 10 - W1 Plat Down-Wait-Up-Stay
-DOOM_W1CROSSLINE(PlatDownWaitUpStay, EV_PREALLOWMONSTERS);
+W1LINE(W1PlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS, 0);
 
 // DOOM Line Type 12 - W1 Light Turn On
-DOOM_W1CROSSLINE(LightTurnOn, EV_PREALLOWZEROTAG);
+W1LINE(W1LightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 13 - W1 Light Turn On 255
-DOOM_W1CROSSLINE(LightTurnOn255, EV_PREALLOWZEROTAG);
+W1LINE(W1LightTurnOn255, LightTurnOn255, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 16 - W1 Close Door, Open in 30
-DOOM_W1CROSSLINE(CloseDoor30, 0);
+W1LINE(W1CloseDoor30, CloseDoor30, 0, 0);
 
 // DOOM Line Type 17 - W1 Start Light Strobing
-DOOM_W1CROSSLINE(StartLightStrobing, EV_PREALLOWZEROTAG);
+W1LINE(W1StartLightStrobing, StartLightStrobing, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 19 - W1 Lower Floor
-DOOM_W1CROSSLINE(LowerFloor, 0);
+W1LINE(W1LowerFloor, LowerFloor, 0, 0);
 
 // DOOM Line Type 22 - W1 Plat Raise to Nearest and Change
-DOOM_W1CROSSLINE(PlatRaiseNearestChange, 0);
+W1LINE(W1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
 
 // DOOM Line Type 25 - W1 Ceiling Crush and Raise
-DOOM_W1CROSSLINE(CeilingCrushAndRaise, 0);
+W1LINE(W1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
 
 // DOOM Line Type 30 - W1 Floor Raise To Texture
-DOOM_W1CROSSLINE(FloorRaiseToTexture, 0);
+W1LINE(W1FloorRaiseToTexture, FloorRaiseToTexture, 0, 0);
 
 // DOOM Line Type 35 - W1 Lights Very Dark
-DOOM_W1CROSSLINE(LightsVeryDark, EV_PREALLOWZEROTAG);
+W1LINE(W1LightsVeryDark, LightsVeryDark, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 36 - W1 Lower Floor Turbo
-DOOM_W1CROSSLINE(LowerFloorTurbo, 0);
+W1LINE(W1LowerFloorTurbo, LowerFloorTurbo, 0, 0);
 
 // DOOM Line Type 37 - W1 Floor Lower and Change
-DOOM_W1CROSSLINE(FloorLowerAndChange, 0);
+W1LINE(W1FloorLowerAndChange, FloorLowerAndChange, 0, 0);
 
 // DOOM Line Type 38 - W1 Floor Lower to Lowest
-DOOM_W1CROSSLINE(FloorLowerToLowest, 0);
+W1LINE(W1FloorLowerToLowest, FloorLowerToLowest, 0, 0);
 
 // DOOM Line Type 39 - W1 Teleport
-DOOM_W1CROSSLINE(Teleport, EV_PREALLOWMONSTERS | EV_PREALLOWZEROTAG);
+W1LINE(W1Teleport, Teleport, EV_PREALLOWMONSTERS | EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 40 - W1 Raise Ceiling Lower Floor (only raises ceiling)
-DOOM_W1CROSSLINE(RaiseCeilingLowerFloor, 0);
+W1LINE(W1RaiseCeilingLowerFloor, RaiseCeilingLowerFloor, 0, 0);
 
 // DOOM Line Type 44 - W1 Ceiling Crush
-DOOM_W1CROSSLINE(CeilingLowerAndCrush, 0);
+W1LINE(W1CeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
 
 // DOOM Line Type 52 - WR Exit Level
-DOOM_WRCROSSLINE(ExitLevel, EV_PREALLOWZEROTAG);
+WRLINE(WRExitLevel, ExitLevel, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 53 - W1 Perpetual Platform Raise
-DOOM_W1CROSSLINE(PlatPerpetualRaise, 0);
+W1LINE(W1PlatPerpetualRaise, PlatPerpetualRaise, 0, 0);
 
 // DOOM Line Type 54 - W1 Platform Stop
-DOOM_W1CROSSLINE(PlatStop, 0);
+W1LINE(W1PlatStop, PlatStop, 0, 0);
 
 // DOOM Line Type 56 - W1 Floor Raise & Crush
-DOOM_W1CROSSLINE(FloorRaiseCrush, 0);
+W1LINE(W1FloorRaiseCrush, FloorRaiseCrush, 0, 0);
 
 // DOOM Line Type 57 - W1 Ceiling Crush Stop
-DOOM_W1CROSSLINE(CeilingCrushStop, 0);
+W1LINE(W1CeilingCrushStop, CeilingCrushStop, 0, 0);
 
 // DOOM Line Type 58 - W1 Raise Floor 24
-DOOM_W1CROSSLINE(RaiseFloor24, 0);
+W1LINE(W1RaiseFloor24, RaiseFloor24, 0, 0);
 
 // DOOM Line Type 59 - W1 Raise Floor 24 and Change
-DOOM_W1CROSSLINE(RaiseFloor24Change, 0);
+W1LINE(W1RaiseFloor24Change, RaiseFloor24Change, 0, 0);
 
 // DOOM Line Type 72 - WR Ceiling Crush
-DOOM_WRCROSSLINE(CeilingLowerAndCrush, 0);
+WRLINE(WRCeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
 
 // DOOM Line Type 73 - WR Ceiling Crush and Raise
-DOOM_WRCROSSLINE(CeilingCrushAndRaise, 0);
+WRLINE(WRCeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
 
 // DOOM Line Type 74 - WR Ceiling Crush Stop
-DOOM_WRCROSSLINE(CeilingCrushStop, 0);
+WRLINE(WRCeilingCrushStop, CeilingCrushStop, 0, 0);
 
 // DOOM Line Type 75 - WR Door Close
-DOOM_WRCROSSLINE(CloseDoor, 0);
+WRLINE(WRCloseDoor, CloseDoor, 0, 0);
 
 // DOOM Line Type 76 - WR Close Door 30
-DOOM_WRCROSSLINE(CloseDoor30, 0);
+WRLINE(WRCloseDoor30, CloseDoor30, 0, 0);
 
 // DOOM Line Type 77 - WR Fast Ceiling Crush & Raise
-DOOM_WRCROSSLINE(FastCeilCrushRaise, 0);
+WRLINE(WRFastCeilCrushRaise, FastCeilCrushRaise, 0, 0);
 
 // DOOM Line Type 79 - WR Lights Very Dark
-DOOM_WRCROSSLINE(LightsVeryDark, EV_PREALLOWZEROTAG);
+WRLINE(WRLightsVeryDark, LightsVeryDark, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 80 - WR Light Turn On - Brightest Near
-DOOM_WRCROSSLINE(LightTurnOn, EV_PREALLOWZEROTAG);
+WRLINE(WRLightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 81 - WR Light Turn On 255
-DOOM_WRCROSSLINE(LightTurnOn255, EV_PREALLOWZEROTAG);
+WRLINE(WRLightTurnOn255, LightTurnOn255, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 82 - WR Lower Floor To Lowest
-DOOM_WRCROSSLINE(FloorLowerToLowest, 0);
+WRLINE(WRFloorLowerToLowest, FloorLowerToLowest, 0, 0);
 
 // DOOM Line Type 83 - WR Lower Floor
-DOOM_WRCROSSLINE(LowerFloor, 0);
+WRLINE(WRLowerFloor, LowerFloor, 0, 0);
 
 // DOOM Line Type 84 - WR Floor Lower and Change
-DOOM_WRCROSSLINE(FloorLowerAndChange, 0);
+WRLINE(WRFloorLowerAndChange, FloorLowerAndChange, 0, 0);
 
 // DOOM Line Type 86 - WR Open Door
-DOOM_WRCROSSLINE(OpenDoor, 0);
+WRLINE(WROpenDoor, OpenDoor, 0, 0);
 
 // DOOM Line Type 87 - WR Plat Perpetual Raise
-DOOM_WRCROSSLINE(PlatPerpetualRaise, 0);
+WRLINE(WRPlatPerpetualRaise, PlatPerpetualRaise, 0, 0);
 
 // DOOM Line Type 88 - WR Plat DWUS
-DOOM_WRCROSSLINE(PlatDownWaitUpStay, EV_PREALLOWMONSTERS);
+WRLINE(WRPlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS, 0);
 
 // DOOM Line Type 89 - WR Platform Stop
-DOOM_WRCROSSLINE(PlatStop, 0);
+WRLINE(WRPlatStop, PlatStop, 0, 0);
 
 // DOOM Line Type 90 - WR Raise Door
-DOOM_WRCROSSLINE(RaiseDoor, 0);
+WRLINE(WRRaiseDoor, RaiseDoor, 0, 0);
 
 // DOOM Line Type 91 - WR Raise Floor
-DOOM_WRCROSSLINE(RaiseFloor, 0);
+WRLINE(WRRaiseFloor, RaiseFloor, 0, 0);
 
 // DOOM Line Type 92 - WR Raise Floor 24
-DOOM_WRCROSSLINE(RaiseFloor24, 0);
+WRLINE(WRRaiseFloor24, RaiseFloor24, 0, 0);
 
 // DOOM Line Type 93 - WR Raise Floor 24 and Change
-DOOM_WRCROSSLINE(RaiseFloor24Change, 0);
+WRLINE(WRRaiseFloor24Change, RaiseFloor24Change, 0, 0);
 
 // DOOM Line Type 94 - WR Raise Floor and Crush
-DOOM_WRCROSSLINE(FloorRaiseCrush, 0);
+WRLINE(WRFloorRaiseCrush, FloorRaiseCrush, 0, 0);
 
 // DOOM Line Type 95 - WR Plat Raise to Nearest & Change
-DOOM_WRCROSSLINE(PlatRaiseNearestChange, 0);
+WRLINE(WRPlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
 
 // DOOM Line Type 96 - WR Floor Raise to Texture
-DOOM_WRCROSSLINE(FloorRaiseToTexture, 0);
+WRLINE(WRFloorRaiseToTexture, FloorRaiseToTexture, 0, 0);
 
 // DOOM Line Type 97 - WR Teleport
-DOOM_WRCROSSLINE(Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS);
+WRLINE(WRTeleport, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 0);
 
 // DOOM Line Type 98 - WR Lower Floor Turbo
-DOOM_WRCROSSLINE(LowerFloorTurbo, 0);
+WRLINE(WRLowerFloorTurbo, LowerFloorTurbo, 0, 0);
 
 // DOOM Line Type 100 - W1 Build Stairs Turbo 16
-DOOM_W1CROSSLINE(BuildStairsTurbo16, 0);
+W1LINE(W1BuildStairsTurbo16, BuildStairsTurbo16, 0, 0);
 
 // DOOM Line Type 104 - W1 Turn Lights Off in Sector
-DOOM_W1CROSSLINE(TurnTagLightsOff, EV_PREALLOWZEROTAG);
+W1LINE(W1TurnTagLightsOff, TurnTagLightsOff, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 105 - WR Door Blaze Raise
-DOOM_WRCROSSLINE(DoorBlazeRaise, 0);
+WRLINE(WRDoorBlazeRaise, DoorBlazeRaise, 0, 0);
 
 // DOOM Line Type 106 - WR Door Blaze Open
-DOOM_WRCROSSLINE(DoorBlazeOpen, 0);
+WRLINE(WRDoorBlazeOpen, DoorBlazeOpen, 0, 0);
 
 // DOOM Line Type 107 - WR Door Blaze Close
-DOOM_WRCROSSLINE(DoorBlazeClose, 0);
+WRLINE(WRDoorBlazeClose, DoorBlazeClose, 0, 0);
 
 // DOOM Line Type 108 - W1 Blazing Door Raise
-DOOM_W1CROSSLINE(DoorBlazeRaise, 0);
+W1LINE(W1DoorBlazeRaise, DoorBlazeRaise, 0, 0);
 
 // DOOM Line Type 109 - W1 Blazing Door Open
-DOOM_W1CROSSLINE(DoorBlazeOpen, 0);
+W1LINE(W1DoorBlazeOpen, DoorBlazeOpen, 0, 0);
 
 // DOOM Line Type 110 - W1 Blazing Door Close
-DOOM_W1CROSSLINE(DoorBlazeClose, 0);
+W1LINE(W1DoorBlazeClose, DoorBlazeClose, 0, 0);
 
 // DOOM Line Type 119 - W1 Raise Floor to Nearest Floor
-DOOM_W1CROSSLINE(FloorRaiseToNearest, 0);
+W1LINE(W1FloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
 
 // DOOM Line Type 120 - WR Plat Blaze DWUS
-DOOM_WRCROSSLINE(PlatBlazeDWUS, 0);
+WRLINE(WRPlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
 
 // DOOM Line Type 121 - W1 Plat Blaze Down-Wait-Up-Stay
-DOOM_W1CROSSLINE(PlatBlazeDWUS, 0);
+W1LINE(W1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
 
 // DOOM Line Type 124 - WR Secret Exit
-DOOM_WRCROSSLINE(SecretExit, EV_PREALLOWZEROTAG);
+WRLINE(WRSecretExit, SecretExit, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 125 - W1 Teleport Monsters Only
 // jff 3/5/98 add ability of monsters etc. to use teleporters
-DOOM_W1CROSSLINE(TeleportMonsterOnly, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS);
+W1LINE(W1TeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 0);
 
 // DOOM Line Type 126 - WR Teleport Monsters Only
-DOOM_WRCROSSLINE(TeleportMonsterOnly, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS);
+WRLINE(WRTeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 0);
 
 // DOOM Line Type 128 - WR Raise Floor to Nearest Floor
-DOOM_WRCROSSLINE(FloorRaiseToNearest, 0);
+WRLINE(WRFloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
 
 // DOOM Line Type 129 - WR Raise Floor Turbo
-DOOM_WRCROSSLINE(RaiseFloorTurbo, 0);
+WRLINE(WRRaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
 
 // DOOM Line Type 130 - W1 Raise Floor Turbo
-DOOM_W1CROSSLINE(RaiseFloorTurbo, 0);
+W1LINE(W1RaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
 
 // DOOM Line Type 141 - W1 Ceiling Silent Crush & Raise
-DOOM_W1CROSSLINE(SilentCrushAndRaise, 0);
+W1LINE(W1SilentCrushAndRaise, SilentCrushAndRaise, 0, 0);
 
 // BOOM Extended Line Type 142 - W1 Raise Floor 512
-BOOM_W1CROSSLINE(RaiseFloor512, 0);
+W1LINE(W1RaiseFloor512, RaiseFloor512, 0, 200);
 
 // BOOM Extended Line Type 143 - W1 Plat Raise 24 and Change
-BOOM_W1CROSSLINE(PlatRaise24Change, 0);
+W1LINE(W1PlatRaise24Change, PlatRaise24Change, 0, 200);
 
 // BOOM Extended Line Type 144 - W1 Plat Raise 32 and Change
-BOOM_W1CROSSLINE(PlatRaise32Change, 0);
+W1LINE(W1PlatRaise32Change, PlatRaise32Change, 0, 200);
 
 // BOOM Extended Line Type 145 - W1 Ceiling Lower to Floor
-BOOM_W1CROSSLINE(CeilingLowerToFloor, 0);
+W1LINE(W1CeilingLowerToFloor, CeilingLowerToFloor, 0, 200);
 
 // BOOM Extended Line Type 146 - W1 Donut
-BOOM_W1CROSSLINE(DoDonut, 0);
+W1LINE(W1DoDonut, DoDonut, 0, 200);
 
 // BOOM Extended Line Type 147 - WR Raise Floor 512
-BOOM_WRCROSSLINE(RaiseFloor512, 0);
+WRLINE(WRRaiseFloor512, RaiseFloor512, 0, 200);
 
 // BOOM Extended Line Type 148 - WR Raise Floor 24 and Change
-BOOM_WRCROSSLINE(PlatRaise24Change, 0);
+WRLINE(WRPlatRaise24Change, PlatRaise24Change, 0, 200);
 
 // BOOM Extended Line Type 149 - WR Raise Floor 32 and Change
-BOOM_WRCROSSLINE(PlatRaise32Change, 0);
+WRLINE(WRPlatRaise32Change, PlatRaise32Change, 0, 200);
 
 // BOOM Extended Line Type 150 - WR Start Slow Silent Crusher
-BOOM_WRCROSSLINE(SilentCrushAndRaise, 0);
+WRLINE(WRSilentCrushAndRaise, SilentCrushAndRaise, 0, 200);
 
 // BOOM Extended Line Type 151 - WR Raise Ceiling, Lower Floor
-BOOM_WRCROSSLINE(BOOMRaiseCeilingLowerFloor, 0);
+WRLINE(WRRaiseCeilingLowerFloor, BOOMRaiseCeilingLowerFloor, 0, 200);
 
 // BOOM Extended Line Type 152 - WR Lower Ceiling to Floor
-BOOM_WRCROSSLINE(CeilingLowerToFloor, 0);
+WRLINE(WRCeilingLowerToFloor, CeilingLowerToFloor, 0, 200);
 
 // BOOM Extended Line Type 153 - W1 Change Texture/Type
-BOOM_W1CROSSLINE(ChangeOnly, 0);
+W1LINE(W1ChangeOnly, ChangeOnly, 0, 200);
 
 // BOOM Extended Line Type 154 - WR Change Texture/Type
 // jff 3/16/98 renumber 216->154
-BOOM_WRCROSSLINE(ChangeOnly, 0);
+WRLINE(WRChangeOnly, ChangeOnly, 0, 200);
 
 // BOOM Extended Line Type 155 - WR Lower Pillar, Raise Donut
-BOOM_WRCROSSLINE(DoDonut, 0);
+WRLINE(WRDoDonut, DoDonut, 0, 200);
 
 // BOOM Extended Line Type 156 - WR Start Lights Strobing
-BOOM_WRCROSSLINE(StartLightStrobing, EV_PREALLOWZEROTAG);
+WRLINE(WRStartLightStrobing, StartLightStrobing, EV_PREALLOWZEROTAG, 200);
 
 // BOOM Extended Line Type 157 - WR Lights to Dimmest Near
-BOOM_WRCROSSLINE(TurnTagLightsOff, EV_PREALLOWZEROTAG);
+WRLINE(WRTurnTagLightsOff, TurnTagLightsOff, EV_PREALLOWZEROTAG, 200);
 
 // BOOM Extended Line Type 199 - W1 Ceiling Lower to Lowest Surr. Ceiling
-BOOM_W1CROSSLINE(CeilingLowerToLowest, 0);
+W1LINE(W1CeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
 
 // BOOM Extended Line Type 200 - W1 Ceiling Lower to Max Floor
-BOOM_W1CROSSLINE(CeilingLowerToMaxFloor, 0);
+W1LINE(W1CeilingLowerToMaxFloor, CeilingLowerToMaxFloor, 0, 200);
 
 // BOOM Extended Line Type 201 - WR Lower Ceiling to Lowest Surr. Ceiling
-BOOM_WRCROSSLINE(CeilingLowerToLowest, 0);
+WRLINE(WRCeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
 
 // BOOM Extended Line Type 202 - WR Lower Ceiling to Max Floor
-BOOM_WRCROSSLINE(CeilingLowerToMaxFloor, 0);
+WRLINE(WRCeilingLowerToMaxFloor, CeilingLowerToMaxFloor, 0, 200);
 
 // BOOM Extended Line Type 207 - W1 Silent Teleport
-BOOM_W1CROSSLINE(SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS);
+W1LINE(W1SilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 208 - WR Silent Teleport
-BOOM_WRCROSSLINE(SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS);
+WRLINE(WRSilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 212 - WR Plat Toggle Floor Instant C/F
-BOOM_WRCROSSLINE(PlatToggleUpDown, 0);
+WRLINE(WRPlatToggleUpDown, PlatToggleUpDown, 0, 200);
 
 // BOOM Extended Line Type 219 - W1 Floor Lower to Next Lower Neighbor
-BOOM_W1CROSSLINE(FloorLowerToNearest, 0);
+W1LINE(W1FloorLowerToNearest, FloorLowerToNearest, 0, 200);
 
 // BOOM Extended Line Type 220 - WR Floor Lower to Next Lower Neighbor
-BOOM_WRCROSSLINE(FloorLowerToNearest, 0);
+WRLINE(WRFloorLowerToNearest, FloorLowerToNearest, 0, 200);
 
 // BOOM Extended Line Type 227 - W1 Raise Elevator to Next Floor
-BOOM_W1CROSSLINE(ElevatorUp, 0);
+W1LINE(W1ElevatorUp, ElevatorUp, 0, 200);
 
 // BOOM Extended Line Type 228 - WR Raise Elevator to Next Floor
-BOOM_WRCROSSLINE(ElevatorUp, 0);
+WRLINE(WRElevatorUp, ElevatorUp, 0, 200);
 
 // BOOM Extended Line Type 231 - W1 Lower Elevator to Next Floor
-BOOM_W1CROSSLINE(ElevatorDown, 0);
+W1LINE(W1ElevatorDown, ElevatorDown, 0, 200);
 
 // BOOM Extended Line Type 232 - WR Lower Elevator to Next Floor
-BOOM_WRCROSSLINE(ElevatorDown, 0);
+WRLINE(WRElevatorDown, ElevatorDown, 0, 200);
 
 // BOOM Extended Line Type 235 - W1 Elevator to Current Floor
-BOOM_W1CROSSLINE(ElevatorCurrent, 0);
+W1LINE(W1ElevatorCurrent, ElevatorCurrent, 0, 200);
 
 // BOOM Extended Line Type 236 - WR Elevator to Current Floor
-BOOM_WRCROSSLINE(ElevatorCurrent, 0);
+WRLINE(WRElevatorCurrent, ElevatorCurrent, 0, 200);
 
 // BOOM Extended Line Type 239 - W1 Change Texture/Type Numeric
-BOOM_W1CROSSLINE(ChangeOnlyNumeric, 0);
+W1LINE(W1ChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
 
 // BOOM Extended Line Type 240 - WR Change Texture/Type Numeric
-BOOM_WRCROSSLINE(ChangeOnlyNumeric, 0);
+WRLINE(WRChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
 
 // BOOM Extended Line Type 243 - W1 Silent Teleport Line-to-Line
-BOOM_W1CROSSLINE(SilentLineTeleport, EV_PREALLOWMONSTERS);
+W1LINE(W1SilentLineTeleport, SilentLineTeleport, EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 244 - WR Silent Teleport Line-to-Line
-BOOM_WRCROSSLINE(SilentLineTeleport, EV_PREALLOWMONSTERS);
+WRLINE(WRSilentLineTleeport, SilentLineTeleport, EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 262 - W1 Silent Teleport Line-to-Line Reversed
-BOOM_W1CROSSLINE(SilentLineTeleportReverse, EV_PREALLOWMONSTERS);
+W1LINE(W1SilentLineTeleportReverse, SilentLineTeleportReverse, EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 263 - WR Silent Teleport Line-to-Line Reversed
+WRLINE(WRSilentLineTeleportReverse, SilentLineTeleportReverse, EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 264 - W1 Silent Line Teleport Monsters Only Reversed
-BOOM_W1CROSSLINE(SilentLineTRMonster, EV_PREALLOWMONSTERS);
+W1LINE(W1SilentLineTRMonsters, SilentLineTeleportReverse, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
+
+// BOOM Extended Line Type 265 - WR Silent Line Teleport Monsters Only Reversed
+WRLINE(WRSilentLineTRMonsters, SilentLineTeleportReverse, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
 
 // BOOM Extended Line Type 266 - W1 Silent Line Teleport Monsters Only
-BOOM_W1CROSSLINE(SilentLineTeleMonster, EV_PREALLOWMONSTERS);
+W1LINE(W1SilentLineTeleMonsters, SilentLineTeleport, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
+
+// BOOM Extended Line Type 267 - WR Silent Line Teleport Monsters Only
+WRLINE(WRSilentLineTeleMonsters, SilentLineTeleport, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
 
 // BOOM Extended Line Type 268 - W1 Silent Teleport Monster Only
-BOOM_W1CROSSLINE(SilentTeleportMonster, EV_PREALLOWMONSTERS);
+W1LINE(W1SilentTeleportMonsters, SilentTeleport, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
+
+// BOOM Extended Line Type 269 - WR Silent Teleport Monster Only
+WRLINE(WRSilentTeleportMonsters, SilentTeleport, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
 
 // BOOM Extended Line Type 256 - WR Build Stairs Up 8
 // jff 3/16/98 renumber 153->256
-BOOM_WRCROSSLINE(BuildStairsUp8, 0);
+WRLINE(WRBuildStairsUp8, BuildStairsUp8, 0, 200);
 
 // BOOM Extended Line Type 257 - WR Build Stairs Up Turbo 16
 // jff 3/16/98 renumber 154->257
-BOOM_WRCROSSLINE(BuildStairsTurbo16, 0);
+WRLINE(WRBuildStairsTurbo16, BuildStairsTurbo16, 0, 200);
+
+// SMMU Extended Line Type 273 - WR Start Script One-Way
+WRLINE(WRStartLineScript1S, StartLineScript, EV_PREFIRSTSIDEONLY | EV_PREALLOWZEROTAG, 300);
+
+// SMMU Extended Line Type 274 - W1 Start Script
+W1LINE(W1StartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
+
+// SMMU Extended Line Type 275 - W1 Start Script One-Way
+W1LINE(W1StartLineScript1S, StartLineScript, EV_PREFIRSTSIDEONLY | EV_PREALLOWZEROTAG, 300);
+
+// SMMU Extended Line Type 280 - WR Start Script
+WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
+
+//=============================================================================
+//
+// Special Bindings
+//
+// Each level type (DOOM, Heretic, Strife, Hexen) has its own set of line 
+// specials. Heretic and Strife's sets are based on DOOM's with certain 
+// additions (many of which conflict with BOOM extensions).
+//
+
+
 
 /*
 void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
@@ -1509,83 +1506,9 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
       }
    }
 
-   if(!thing->player)
-   {
-      ok = 0;
-      switch(line->special)
-      {
-      case 263:     //jff 4/14/98 silent thing,line,line rev types
-      case 265:     //            reversed types
-      case 267:
-      case 269:
-         ok = 1;
-         break;
-      }
-      if(!ok)
-         return;
-   }
-
    // Dispatch on the line special value to the line's action routine
    // If a once only function, and successful, clear the line special
 
-   switch(line->special)
-   {
-   default:
-      if(!demo_compatibility)
-      {
-         switch (line->special)
-         {
-            // Extended walk once triggers
-           
-            //jff 1/29/98 end of added W1 linedef types
-            
-            // Extended walk many retriggerable
-            
-            //jff 1/29/98 added new linedef types to fill all functions
-            //out so that all have varieties SR, S1, WR, W1
-
-         case 263: //jff 4/14/98 add silent line-line reversed
-            EV_SilentLineTeleport(line, side, thing, true);
-            break;
-            
-         case 265: //jff 4/14/98 add monster-only silent line-line reversed
-            if(!thing->player)
-               EV_SilentLineTeleport(line, side, thing, true);
-            break;
-            
-         case 267: //jff 4/14/98 add monster-only silent line-line
-            if(!thing->player)
-               EV_SilentLineTeleport(line, side, thing, false);
-            break;
-            
-         case 269: //jff 4/14/98 add monster-only silent
-            if(!thing->player)
-               EV_SilentTeleport(line, side, thing);
-            break;
-            //jff 1/29/98 end of added WR linedef types
-            
-            // scripting ld types
-            
-            // repeatable            
-         case 273:  // WR start script 1-way
-            if(side)
-               break;            
-         case 280:  // WR start script
-            P_StartLineScript(line, thing);
-            break;
-                        
-            // once-only triggers            
-         case 275:  // W1 start script 1-way
-            if(side)
-               break;            
-         case 274:  // W1 start script
-            P_StartLineScript(line, thing);
-            line->special = 0;        // clear trigger
-            break;
-         }
-      }
-      break;
-   }
 }
 */
 

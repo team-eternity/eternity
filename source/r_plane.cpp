@@ -1163,7 +1163,7 @@ static void do_draw_plane(visplane_t *pl)
          if(column.y1 <= column.y2)
          {
             column.source = R_GetRawColumn(texture,
-               ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
+               ((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT);
             
             colfunc();
          }
@@ -1255,18 +1255,9 @@ static void do_draw_plane(visplane_t *pl)
                plane.fixedunitx = plane.fixedunity = FRACUNIT;
             else
             {
-               // haleyjd: commented out for TEST
-               /*
-#ifdef __APPLE__
-               plane.fixedunitx = (float)(1 << (30 - rw));
-               plane.fixedunity = (float)(1 << (30 - rh));
-#else
-               */
                plane.fixedunitx = (float)(1 << (32 - rw));
                plane.fixedunity = (float)(1 << span.yshift);
-/*#endif*/
             }
-
          }
       }
        

@@ -348,8 +348,6 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    }
 }
 
-extern void P_StartLineScript(line_t *line, Mobj *thing);
-
 //
 // P_UseSpecialLine
 //

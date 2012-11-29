@@ -1495,6 +1495,8 @@ bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
 bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
                          int *args, int side, int spac, bool reuse);
 
+extern void P_StartLineScript(line_t *line, Mobj *thing);
+
 #endif
 
 //----------------------------------------------------------------------------

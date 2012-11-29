@@ -35,11 +35,12 @@ class  Mobj;
 enum EVActionFlags
 {
    EV_PREALLOWMONSTERS = 0x00000001, // Preamble should allow non-players
-   EV_PREALLOWZEROTAG  = 0x00000002, // Preamble should allow zero tag
-   EV_PREFIRSTSIDEONLY = 0x00000004, // Disallow activation from back side
+   EV_PREMONSTERSONLY  = 0x00000002, // Preamble should only allow monsters
+   EV_PREALLOWZEROTAG  = 0x00000004, // Preamble should allow zero tag
+   EV_PREFIRSTSIDEONLY = 0x00000008, // Disallow activation from back side
    
-   EV_POSTCLEARSPECIAL = 0x00000008, // Clear special after activation
-   EV_POSTCLEARALWAYS  = 0x00000010, // Always clear special
+   EV_POSTCLEARSPECIAL = 0x00000010, // Clear special after activation
+   EV_POSTCLEARALWAYS  = 0x00000020, // Always clear special
 };
 
 // Data related to a special activation.
@@ -76,28 +77,43 @@ typedef bool (*EVPostFunc)(ev_action_t *, bool, specialactivation_t *);
 //
 // EVActionFunc
 //
-// All actions must adhere to this call signature. Most arguments are optional
-// and must be checked for validity.
+// All actions must adhere to this call signature. Most members of the 
+// specialactivation structure are optional and must be checked for validity.
 //
 typedef bool (*EVActionFunc)(ev_action_t *, specialactivation_t *);
 
-struct ev_action_t
+//
+// ev_actiontype_t
+//
+// This structure represents a distinct type of action, for example a DOOM
+// cross-type action.
+//
+struct ev_actiontype_t
 {
    int          activation; // activation type of this special, if restricted
    EVPreFunc    pre;        // pre-action callback
-   EVActionFunc action;     // action function
    EVPostFunc   post;       // post-action callback
+   unsigned int flags;      // flags; the action may add additional flags.
+};
+
+struct ev_action_t
+{
+   ev_actiontype_t *type;   // actiontype structure
+   EVActionFunc action;     // action function
    unsigned int flags;      // action flags
    int          minversion; // minimum demo version
 };
 
-// Attaches a line special action to a specific action number in the indicated
+// Binds a line special action to a specific action number in the indicated
 // game type.
-struct gamelinespecial_t
+struct ev_binding_t
 {
    int gameType;        // game to which this entry applies
    int actionNumber;    // line action number
    ev_action_t *action; // the actual action to execute
+
+   ev_binding_t *next;  // next on hash chain
+   ev_binding_t *first; // first on hash chain at this slot
 };
 
 #endif
