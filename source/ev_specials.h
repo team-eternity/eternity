@@ -43,8 +43,8 @@ enum EVActionFlags
    EV_POSTCLEARALWAYS  = 0x00000020, // Always clear special
 };
 
-// Data related to a special activation.
-struct specialactivation_t
+// Data related to an instance of a special activation.
+struct ev_instance_t
 {
    Mobj   *actor; // actor, if any
    line_t *line;  // line, if any
@@ -62,7 +62,7 @@ struct specialactivation_t
 // special is activated. Most arguments are optional and must be checked for
 // validity.
 //
-typedef bool (*EVPreFunc)(ev_action_t *, specialactivation_t *);
+typedef bool (*EVPreFunc)(ev_action_t *, ev_instance_t *);
 
 //
 // EVPostFunc
@@ -72,7 +72,7 @@ typedef bool (*EVPreFunc)(ev_action_t *, specialactivation_t *);
 // parameter. Most other parameters are optional and must be checked for
 // validity.
 //
-typedef bool (*EVPostFunc)(ev_action_t *, bool, specialactivation_t *);
+typedef bool (*EVPostFunc)(ev_action_t *, bool, ev_instance_t *);
 
 //
 // EVActionFunc
@@ -80,7 +80,7 @@ typedef bool (*EVPostFunc)(ev_action_t *, bool, specialactivation_t *);
 // All actions must adhere to this call signature. Most members of the 
 // specialactivation structure are optional and must be checked for validity.
 //
-typedef bool (*EVActionFunc)(ev_action_t *, specialactivation_t *);
+typedef bool (*EVActionFunc)(ev_action_t *, ev_instance_t *);
 
 //
 // ev_actiontype_t

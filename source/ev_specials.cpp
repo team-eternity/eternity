@@ -142,40 +142,40 @@ inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
 //
 // This function is used as the preamble to all DOOM cross-type line specials.
 //
-bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
+static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
 
    // DOOM-style specials require an actor and a line
-   REQUIRE_ACTOR(activation->actor);
-   REQUIRE_LINE(activation->line);
+   REQUIRE_ACTOR(instance->actor);
+   REQUIRE_LINE(instance->line);
 
    // Things that should never trigger lines
-   if(!activation->actor->player)
+   if(!instance->actor->player)
    {
       // haleyjd: changed to check against MF2_NOCROSS flag instead of 
       // switching on type.
-      if(activation->actor->flags2 & MF2_NOCROSS)
+      if(instance->actor->flags2 & MF2_NOCROSS)
          return false;
    }
 
    // Check if action only allows player
    // jff 3/5/98 add ability of monsters etc. to use teleporters
-   if(!activation->actor->player && !(flags & EV_PREALLOWMONSTERS))
+   if(!instance->actor->player && !(flags & EV_PREALLOWMONSTERS))
       return false;
 
    // jff 2/27/98 disallow zero tag on some types
    // killough 11/98: compatibility option:
-   if(!(activation->tag || comp[comp_zerotags] || 
+   if(!(instance->tag || comp[comp_zerotags] || 
         (action->flags & EV_PREALLOWZEROTAG)))
       return false;
 
-   // check for first-side-only activation
-   if(activation->side && (flags & EV_PREFIRSTSIDEONLY))
+   // check for first-side-only instance
+   if(instance->side && (flags & EV_PREFIRSTSIDEONLY))
       return false;
 
    // line type is *only* for monsters?
-   if(activation->actor->player && (flags & EV_PREMONSTERSONLY))
+   if(instance->actor->player && (flags & EV_PREMONSTERSONLY))
       return false;
 
    return true;
@@ -187,8 +187,8 @@ bool EV_DOOMPreCrossLine(ev_action_t *action, specialactivation_t *activation)
 // This function is used as the post-action for all DOOM cross-type line
 // specials.
 //
-bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
-                          specialactivation_t *activation)
+static bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
+                                 ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
 
@@ -197,7 +197,7 @@ bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
       bool clearSpecial = (result || P_ClearSwitchOnFail());
 
       if(clearSpecial || (flags & EV_POSTCLEARALWAYS))
-         activation->line->special = 0;
+         instance->line->special = 0;
    }
 
    return result;
@@ -211,236 +211,216 @@ bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
 //
 // EV_ActionOpenDoor
 //
-static bool EV_ActionOpenDoor(ev_action_t *action, 
-                              specialactivation_t *activation)
+static bool EV_ActionOpenDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 2:  (W1)
    // case 86: (WR)
    // Open Door
-   return !!EV_DoDoor(activation->line, doorOpen);
+   return !!EV_DoDoor(instance->line, doorOpen);
 }
 
 //
 // EV_ActionCloseDoor
 //
-static bool EV_ActionCloseDoor(ev_action_t *action,
-                               specialactivation_t *activation)
+static bool EV_ActionCloseDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 3:  (W1)
    // case 75: (WR)
    // Close Door
-   return !!EV_DoDoor(activation->line, doorClose);
+   return !!EV_DoDoor(instance->line, doorClose);
 }
 
 //
 // EV_ActionRaiseDoor
 //
-static bool EV_ActionRaiseDoor(ev_action_t *action,
-                               specialactivation_t *activation)
+static bool EV_ActionRaiseDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case  4: (W1)
    // case 90: (WR)
    // Raise Door
-   return !!EV_DoDoor(activation->line, doorNormal);
+   return !!EV_DoDoor(instance->line, doorNormal);
 }
 
 //
 // EV_ActionRaiseFloor
 //
-static bool EV_ActionRaiseFloor(ev_action_t *action,
-                                specialactivation_t *activation)
+static bool EV_ActionRaiseFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case  5: (W1)
    // case 91: (WR)
    // Raise Floor
-   return !!EV_DoFloor(activation->line, raiseFloor);
+   return !!EV_DoFloor(instance->line, raiseFloor);
 }
 
 //
 // EV_ActionFastCeilCrushRaise
 //
-static bool EV_ActionFastCeilCrushRaise(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionFastCeilCrushRaise(ev_action_t *action, ev_instance_t *instance)
 {
    // case 6:  (W1)
    // case 77: (WR)
    // Fast Ceiling Crush & Raise
-   return !!EV_DoCeiling(activation->line, fastCrushAndRaise);
+   return !!EV_DoCeiling(instance->line, fastCrushAndRaise);
 }
 
 //
 // EV_ActionBuildStairsUp8
 //
-static bool EV_ActionBuildStairsUp8(ev_action_t *action, 
-                                    specialactivation_t *activation)
+static bool EV_ActionBuildStairsUp8(ev_action_t *action, ev_instance_t *instance)
 {
    // case 8:   (W1)
    // case 256: (WR - BOOM Extended)
    // Build Stairs
-   return !!EV_BuildStairs(activation->line, build8);
+   return !!EV_BuildStairs(instance->line, build8);
 }
 
 //
 // EV_ActionPlatDownWaitUpStay
 //
-static bool EV_ActionPlatDownWaitUpStay(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionPlatDownWaitUpStay(ev_action_t *action, ev_instance_t *instance)
 {
    // case 10: (W1)
    // case 88: (WR)
    // PlatDownWaitUp
-   return !!EV_DoPlat(activation->line, downWaitUpStay, 0);
+   return !!EV_DoPlat(instance->line, downWaitUpStay, 0);
 }
 
 //
 // EV_ActionLightTurnOn
 //
-static bool EV_ActionLightTurnOn(ev_action_t *action,
-                                 specialactivation_t *activation)
+static bool EV_ActionLightTurnOn(ev_action_t *action, ev_instance_t *instance)
 {
    // case 12: (W1)
    // case 80: (WR)
    // Light Turn On - brightest near
-   return !!EV_LightTurnOn(activation->line, 0);
+   return !!EV_LightTurnOn(instance->line, 0);
 }
 
 //
 // EV_ActionLightTurnOn255
 //
-static bool EV_ActionLightTurnOn255(ev_action_t *action,
-                                    specialactivation_t *activation)
+static bool EV_ActionLightTurnOn255(ev_action_t *action, ev_instance_t *instance)
 {
    // case 13: (W1)
    // case 81: (WR)
    // Light Turn On 255
-   return !!EV_LightTurnOn(activation->line, 255);
+   return !!EV_LightTurnOn(instance->line, 255);
 }
 
 //
 // EV_ActionCloseDoor30
 //
-static bool EV_ActionCloseDoor30(ev_action_t *action,
-                                 specialactivation_t *activation)
+static bool EV_ActionCloseDoor30(ev_action_t *action, ev_instance_t *instance)
 {
    // case 16: (W1)
    // case 76: (WR)
    // Close Door 30
-   return !!EV_DoDoor(activation->line, closeThenOpen);
+   return !!EV_DoDoor(instance->line, closeThenOpen);
 }
 
 //
 // EV_ActionStartLightStrobing
 //
-static bool EV_ActionStartLightStrobing(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionStartLightStrobing(ev_action_t *action, ev_instance_t *instance)
 {
    // case 17:  (W1)
    // case 156: (WR - BOOM Extended)
    // Start Light Strobing
-   return !!EV_StartLightStrobing(activation->line);
+   return !!EV_StartLightStrobing(instance->line);
 }
 
 //
 // EV_ActionLowerFloor
 //
-static bool EV_ActionLowerFloor(ev_action_t *action,
-                                specialactivation_t *activation)
+static bool EV_ActionLowerFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 19: (W1)
    // case 83: (WR)
    // Lower Floor
-   return !!EV_DoFloor(activation->line, lowerFloor);
+   return !!EV_DoFloor(instance->line, lowerFloor);
 }
 
 //
 // EV_ActionPlatRaiseNearestChange
 //
-static bool EV_ActionPlatRaiseNearestChange(ev_action_t *action,
-                                            specialactivation_t *activation)
+static bool EV_ActionPlatRaiseNearestChange(ev_action_t *action, ev_instance_t *instance)
 {
    // case 22: (W1)
    // case 95: (WR)
    // Raise floor to nearest height and change texture
-   return !!EV_DoPlat(activation->line, raiseToNearestAndChange, 0);
+   return !!EV_DoPlat(instance->line, raiseToNearestAndChange, 0);
 }
 
 //
 // EV_ActionCeilingCrushAndRaise
 //
-static bool EV_ActionCeilingCrushAndRaise(ev_action_t *action,
-                                          specialactivation_t *activation)
+static bool EV_ActionCeilingCrushAndRaise(ev_action_t *action, ev_instance_t *instance)
 {
    // case 25: (W1)
    // case 73: (WR)
    // Ceiling Crush and Raise
-   return !!EV_DoCeiling(activation->line, crushAndRaise);
+   return !!EV_DoCeiling(instance->line, crushAndRaise);
 }
 
 //
 // EV_ActionFloorRaiseToTexture
 //
-static bool EV_ActionFloorRaiseToTexture(ev_action_t *action,
-                                         specialactivation_t *activation)
+static bool EV_ActionFloorRaiseToTexture(ev_action_t *action, ev_instance_t *instance)
 {
    // case 30: (W1)
    // case 96: (WR)
    // Raise floor to shortest texture height on either side of lines.
-   return !!EV_DoFloor(activation->line, raiseToTexture);
+   return !!EV_DoFloor(instance->line, raiseToTexture);
 }
 
 //
 // EV_ActionLightsVeryDark
 //
-static bool EV_ActionLightsVeryDark(ev_action_t *action,
-                                    specialactivation_t *activation)
+static bool EV_ActionLightsVeryDark(ev_action_t *action, ev_instance_t *instance)
 {
    // case 35: (W1)
    // case 79: (WR)
    // Lights Very Dark
-   return !!EV_LightTurnOn(activation->line, 35);
+   return !!EV_LightTurnOn(instance->line, 35);
 }
 
 //
 // EV_ActionLowerFloorTurbo
 //
-static bool EV_ActionLowerFloorTurbo(ev_action_t *action,
-                                     specialactivation_t *activation)
+static bool EV_ActionLowerFloorTurbo(ev_action_t *action, ev_instance_t *instance)
 {
    // case 36: (W1)
    // case 98: (WR)
    // Lower Floor (TURBO)
-   return !!EV_DoFloor(activation->line, turboLower);
+   return !!EV_DoFloor(instance->line, turboLower);
 }
 
 //
 // EV_ActionFloorLowerAndChange
 //
-static bool EV_ActionFloorLowerAndChange(ev_action_t *action,
-                                         specialactivation_t *activation)
+static bool EV_ActionFloorLowerAndChange(ev_action_t *action, ev_instance_t *instance)
 {
    // case 37: (W1)
    // case 84: (WR)
    // LowerAndChange
-   return !!EV_DoFloor(activation->line, lowerAndChange);
+   return !!EV_DoFloor(instance->line, lowerAndChange);
 }
 
 //
 // EV_ActionFloorLowerToLowest
 //
-static bool EV_ActionFloorLowerToLowest(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionFloorLowerToLowest(ev_action_t *action, ev_instance_t *instance)
 {
    // case 38: (W1)
    // case 82: (WR)
    // Lower Floor To Lowest
-   return !!EV_DoFloor(activation->line, lowerFloorToLowest);
+   return !!EV_DoFloor(instance->line, lowerFloorToLowest);
 }
 
 //
 // EV_ActionTeleport
 //
-static bool EV_ActionTeleport(ev_action_t *action, 
-                              specialactivation_t *activation)
+static bool EV_ActionTeleport(ev_action_t *action, ev_instance_t *instance)
 {
    // case 39: (W1)
    // case 97: (WR)
@@ -449,7 +429,7 @@ static bool EV_ActionTeleport(ev_action_t *action,
    // case 126: (WR)
    // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
-   return !!EV_Teleport(activation->line, activation->side, activation->actor);
+   return !!EV_Teleport(instance->line, instance->side, instance->actor);
 }
 
 //
@@ -461,10 +441,9 @@ static bool EV_ActionTeleport(ev_action_t *action,
 // try to lower the floor, but, it won't work. This is done for strict
 // compatibility in case it somehow has an unpredictable playsim side effect.
 //
-static bool EV_ActionRaiseCeilingLowerFloor(ev_action_t *action,
-                                            specialactivation_t *activation)
+static bool EV_ActionRaiseCeilingLowerFloor(ev_action_t *action, ev_instance_t *instance)
 {
-   line_t *line = activation->line;
+   line_t *line = instance->line;
 
    // case 40: (W1)
    // RaiseCeilingLowerFloor
@@ -485,15 +464,15 @@ static bool EV_ActionRaiseCeilingLowerFloor(ev_action_t *action,
 // This version on the other hand works unconditionally, and is a BOOM
 // extension.
 //
-static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action,
-                                                specialactivation_t *activation)
+static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action, 
+                                                ev_instance_t *instance)
 {
    // case 151: (WR - BOOM Extended)
    // RaiseCeilingLowerFloor
    // 151 WR  EV_DoCeiling(raiseToHighest),
    //         EV_DoFloor(lowerFloortoLowest)
-   EV_DoCeiling(activation->line, raiseToHighest);
-   EV_DoFloor(activation->line, lowerFloorToLowest);
+   EV_DoCeiling(instance->line, raiseToHighest);
+   EV_DoFloor(instance->line, lowerFloorToLowest);
 
    return true;
 }
@@ -502,22 +481,20 @@ static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action,
 //
 // EV_ActionCeilingLowerAndCrush
 //
-static bool EV_ActionCeilingLowerAndCrush(ev_action_t *action,
-                                          specialactivation_t *activation)
+static bool EV_ActionCeilingLowerAndCrush(ev_action_t *action, ev_instance_t *instance)
 {
    // case 44: (W1)
    // case 72: (WR)
    // Ceiling Crush
-   return !!EV_DoCeiling(activation->line, lowerAndCrush);
+   return !!EV_DoCeiling(instance->line, lowerAndCrush);
 }
 
 //
 // EV_ActionExitLevel
 //
-static bool EV_ActionExitLevel(ev_action_t *action,
-                               specialactivation_t *activation)
+static bool EV_ActionExitLevel(ev_action_t *action, ev_instance_t *instance)
 {
-   Mobj *thing = activation->actor;
+   Mobj *thing = instance->actor;
 
    // case 52:
    // EXIT!
@@ -531,166 +508,152 @@ static bool EV_ActionExitLevel(ev_action_t *action,
 //
 // EV_ActionPlatPerpetualRaise
 //
-static bool EV_ActionPlatPerpetualRaise(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionPlatPerpetualRaise(ev_action_t *action, ev_instance_t *instance)
 {
    // case 53: (W1)
    // case 87: (WR)
    // Perpetual Platform Raise
-   return !!EV_DoPlat(activation->line, perpetualRaise, 0);
+   return !!EV_DoPlat(instance->line, perpetualRaise, 0);
 }
 
 //
 // EV_ActionPlatStop
 //
-static bool EV_ActionPlatStop(ev_action_t *action,
-                              specialactivation_t *activation)
+static bool EV_ActionPlatStop(ev_action_t *action, ev_instance_t *instance)
 {
    // case 54: (W1)
    // case 89: (WR)
    // Platform Stop
-   return !!EV_StopPlat(activation->line);
+   return !!EV_StopPlat(instance->line);
 }
 
 //
 // EV_ActionFloorRaiseCrush
 //
-static bool EV_ActionFloorRaiseCrush(ev_action_t *action,
-                                     specialactivation_t *activation)
+static bool EV_ActionFloorRaiseCrush(ev_action_t *action, ev_instance_t *instance)
 {
    // case 56: (W1)
    // case 94: (WR)
    // Raise Floor Crush
-   return !!EV_DoFloor(activation->line, raiseFloorCrush);
+   return !!EV_DoFloor(instance->line, raiseFloorCrush);
 }
 
 //
 // EV_ActionCeilingCrushStop
 //
-static bool EV_ActionCeilingCrushStop(ev_action_t *action,
-                                      specialactivation_t *activation)
+static bool EV_ActionCeilingCrushStop(ev_action_t *action, ev_instance_t *instance)
 {
    // case 57: (W1)
    // case 74: (WR)
    // Ceiling Crush Stop
-   return !!EV_CeilingCrushStop(activation->line);
+   return !!EV_CeilingCrushStop(instance->line);
 }
 
 //
 // EV_ActionRaiseFloor24
 //
-static bool EV_ActionRaiseFloor24(ev_action_t *action,
-                                  specialactivation_t *activation)
+static bool EV_ActionRaiseFloor24(ev_action_t *action, ev_instance_t *instance)
 {
    // case 58: (W1)
    // case 92: (WR)
    // Raise Floor 24
-   return !!EV_DoFloor(activation->line, raiseFloor24);
+   return !!EV_DoFloor(instance->line, raiseFloor24);
 }
 
 //
 // EV_ActionRaiseFloor24Change
 //
-static bool EV_ActionRaiseFloor24Change(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionRaiseFloor24Change(ev_action_t *action, ev_instance_t *instance)
 {
    // case 59: (W1)
    // case 93: (WR)
    // Raise Floor 24 And Change
-   return !!EV_DoFloor(activation->line, raiseFloor24AndChange);
+   return !!EV_DoFloor(instance->line, raiseFloor24AndChange);
 }
 
 //
 // EV_ActionBuildStairsTurbo16
 //
-static bool EV_ActionBuildStairsTurbo16(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionBuildStairsTurbo16(ev_action_t *action, ev_instance_t *instance)
 {
    // case 100: (W1)
    // case 257: (WR - BOOM Extended)
    // Build Stairs Turbo 16
-   return !!EV_BuildStairs(activation->line, turbo16);
+   return !!EV_BuildStairs(instance->line, turbo16);
 }
 
 //
 // EV_ActionTurnTagLightsOff
 //
-static bool EV_ActionTurnTagLightsOff(ev_action_t *action,
-                                      specialactivation_t *activation)
+static bool EV_ActionTurnTagLightsOff(ev_action_t *action, ev_instance_t *instance)
 {
    // case 104: (W1)
    // case 157: (WR - BOOM Extended)
    // Turn lights off in sector(tag)
-   return !!EV_TurnTagLightsOff(activation->line);
+   return !!EV_TurnTagLightsOff(instance->line);
 }
 
 //
 // EV_ActionDoorBlazeRaise
 //
-static bool EV_ActionDoorBlazeRaise(ev_action_t *action,
-                                    specialactivation_t *activation)
+static bool EV_ActionDoorBlazeRaise(ev_action_t *action, ev_instance_t *instance)
 {
    // case 105: (WR)
    // case 108: (W1)
    // Blazing Door Raise (faster than TURBO!)
-   return !!EV_DoDoor(activation->line, blazeRaise);
+   return !!EV_DoDoor(instance->line, blazeRaise);
 }
 
 //
 // EV_ActionDoorBlazeOpen
 //
-static bool EV_ActionDoorBlazeOpen(ev_action_t *action,
-                                   specialactivation_t *activation)
+static bool EV_ActionDoorBlazeOpen(ev_action_t *action, ev_instance_t *instance)
 {
    // case 106: (WR)
    // case 109: (W1)
    // Blazing Door Open (faster than TURBO!)
-   return !!EV_DoDoor(activation->line, blazeOpen);
+   return !!EV_DoDoor(instance->line, blazeOpen);
 }
 
 //
 // EV_ActionDoorBlazeClose
 //
-static bool EV_ActionDoorBlazeClose(ev_action_t *action,
-                                    specialactivation_t *activation)
+static bool EV_ActionDoorBlazeClose(ev_action_t *action, ev_instance_t *instance)
 {
    // case 107: (WR)
    // case 110: (W1)
    // Blazing Door Close (faster than TURBO!)
-   return !!EV_DoDoor(activation->line, blazeClose);
+   return !!EV_DoDoor(instance->line, blazeClose);
 }
 
 //
 // EV_ActionFloorRaiseToNearest
 //
-static bool EV_ActionFloorRaiseToNearest(ev_action_t *action,
-                                         specialactivation_t *activation)
+static bool EV_ActionFloorRaiseToNearest(ev_action_t *action, ev_instance_t *instance)
 {
    // case 119: (W1)
    // case 128: (WR)
    // Raise floor to nearest surr. floor
-   return !!EV_DoFloor(activation->line, raiseFloorToNearest);
+   return !!EV_DoFloor(instance->line, raiseFloorToNearest);
 }
 
 //
 // EV_ActionPlatBlazeDWUS
 //
-static bool EV_ActionPlatBlazeDWUS(ev_action_t *action,
-                                   specialactivation_t *activation)
+static bool EV_ActionPlatBlazeDWUS(ev_action_t *action, ev_instance_t *instance)
 {
    // case 120: (WR)
    // case 121: (W1)
    // Blazing PlatDownWaitUpStay
-   return !!EV_DoPlat(activation->line, blazeDWUS, 0);
+   return !!EV_DoPlat(instance->line, blazeDWUS, 0);
 }
 
 //
 // EV_ActionSecretExit
 //
-static bool EV_ActionSecretExit(ev_action_t *action,
-                                specialactivation_t *activation)
+static bool EV_ActionSecretExit(ev_action_t *action, ev_instance_t *instance)
 {
-   Mobj *thing = activation->actor;
+   Mobj *thing = instance->actor;
 
    // case 124:
    // Secret EXIT
@@ -704,120 +667,110 @@ static bool EV_ActionSecretExit(ev_action_t *action,
 //
 // EV_ActionRaiseFloorTurbo
 //
-static bool EV_ActionRaiseFloorTurbo(ev_action_t *action,
-                                     specialactivation_t *activation)
+static bool EV_ActionRaiseFloorTurbo(ev_action_t *action, ev_instance_t *instance)
 {
    // case 129: (WR)
    // case 130: (W1)
    // Raise Floor Turbo
-   return !!EV_DoFloor(activation->line, raiseFloorTurbo);
+   return !!EV_DoFloor(instance->line, raiseFloorTurbo);
 }
 
 //
 // EV_ActionSilentCrushAndRaise
 //
-static bool EV_ActionSilentCrushAndRaise(ev_action_t *action,
-                                         specialactivation_t *activation)
+static bool EV_ActionSilentCrushAndRaise(ev_action_t *action, ev_instance_t *instance)
 {
    // case 141: (W1)
    // case 150: (WR - BOOM Extended)
    // Silent Ceiling Crush & Raise
-   return !!EV_DoCeiling(activation->line, silentCrushAndRaise);
+   return !!EV_DoCeiling(instance->line, silentCrushAndRaise);
 }
 
 //
 // EV_ActionRaiseFloor512
 //
-static bool EV_ActionRaiseFloor512(ev_action_t *action,
-                                   specialactivation_t *activation)
+static bool EV_ActionRaiseFloor512(ev_action_t *action, ev_instance_t *instance)
 {
    // case 142: (W1 - BOOM Extended)
    // case 147: (WR - BOOM Extended)
    // Raise Floor 512
-   return !!EV_DoFloor(activation->line, raiseFloor512);
+   return !!EV_DoFloor(instance->line, raiseFloor512);
 }
 
 //
 // EV_ActionPlatRaise24Change
 //
-static bool EV_ActionPlatRaise24Change(ev_action_t *action,
-                                       specialactivation_t *activation)
+static bool EV_ActionPlatRaise24Change(ev_action_t *action, ev_instance_t *instance)
 {
    // case 143: (W1 - BOOM Extended)
    // case 148: (WR - BOOM Extended)
    // Raise Floor 24 and change
-   return !!EV_DoPlat(activation->line, raiseAndChange, 24);
+   return !!EV_DoPlat(instance->line, raiseAndChange, 24);
 }
 
 //
 // EV_ActionPlatRaise32Change
 //
-static bool EV_ActionPlatRaise32Change(ev_action_t *action,
-                                       specialactivation_t *activation)
+static bool EV_ActionPlatRaise32Change(ev_action_t *action, ev_instance_t *instance)
 {
    // case 144: (W1 - BOOM Extended)
    // case 149: (WR - BOOM Extended)
    // Raise Floor 32 and change
-   return !!EV_DoPlat(activation->line, raiseAndChange, 32);
+   return !!EV_DoPlat(instance->line, raiseAndChange, 32);
 }
 
 //
 // EV_ActionCeilingLowerToFloor
 //
-static bool EV_ActionCeilingLowerToFloor(ev_action_t *action,
-                                         specialactivation_t *activation)
+static bool EV_ActionCeilingLowerToFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 145: (W1 - BOOM Extended)
    // case 152: (WR - BOOM Extended)
    // Lower Ceiling to Floor
-   return !!EV_DoCeiling(activation->line, lowerToFloor);
+   return !!EV_DoCeiling(instance->line, lowerToFloor);
 }
 
 //
 // EV_ActionDoDonut
 //
-static bool EV_ActionDoDonut(ev_action_t *action, 
-                             specialactivation_t *activation)
+static bool EV_ActionDoDonut(ev_action_t *action, ev_instance_t *instance)
 {
    // case 146: (W1 - BOOM Extended)
    // case 155: (WR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return !!EV_DoDonut(activation->line);
+   return !!EV_DoDonut(instance->line);
 }
 
 //
 // EV_ActionCeilingLowerToLowest
 //
-static bool EV_ActionCeilingLowerToLowest(ev_action_t *action,
-                                          specialactivation_t *activation)
+static bool EV_ActionCeilingLowerToLowest(ev_action_t *action, ev_instance_t *instance)
 {
    // case 199: (W1 - BOOM Extended)
    // case 201: (WR - BOOM Extended)
    // Lower ceiling to lowest surrounding ceiling
-   return !!EV_DoCeiling(activation->line, lowerToLowest);
+   return !!EV_DoCeiling(instance->line, lowerToLowest);
 }
 
 //
 // EV_ActionCeilingLowerToMaxFloor
 //
-static bool EV_ActionCeilingLowerToMaxFloor(ev_action_t *action,
-                                            specialactivation_t *activation)
+static bool EV_ActionCeilingLowerToMaxFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 200: (W1 - BOOM Extended)
    // case 202: (WR - BOOM Extended)
    // Lower ceiling to highest surrounding floor
-   return !!EV_DoCeiling(activation->line, lowerToMaxFloor);
+   return !!EV_DoCeiling(instance->line, lowerToMaxFloor);
 }
 
 //
 // EV_ActionSilentTeleport
 //
-static bool EV_ActionSilentTeleport(ev_action_t *action,
-                                    specialactivation_t *activation)
+static bool EV_ActionSilentTeleport(ev_action_t *action, ev_instance_t *instance)
 {
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   Mobj   *thing = instance->actor;
 
    // case 207: (W1 - BOOM Extended)
    // case 208: (WR - BOOM Extended)
@@ -831,88 +784,81 @@ static bool EV_ActionSilentTeleport(ev_action_t *action,
 //
 // EV_ActionChangeOnly
 //
-static bool EV_ActionChangeOnly(ev_action_t *action,
-                                specialactivation_t *activation)
+static bool EV_ActionChangeOnly(ev_action_t *action, ev_instance_t *instance)
 {
    // jff 3/16/98 renumber 215->153
    // jff 3/15/98 create texture change no motion type
    // case 153: (W1 - BOOM Extended)
    // case 154: (WR - BOOM Extended)
    // Texture/Type Change Only (Trig)
-   return !!EV_DoChange(activation->line, trigChangeOnly);
+   return !!EV_DoChange(instance->line, trigChangeOnly);
 }
 
 //
 // EV_ActionChangeOnlyNumeric
 //
-static bool EV_ActionChangeOnlyNumeric(ev_action_t *action,
-                                       specialactivation_t *activation)
+static bool EV_ActionChangeOnlyNumeric(ev_action_t *action, ev_instance_t *instance)
 {
    //jff 3/15/98 create texture change no motion type
    // case 239: (W1 - BOOM Extended)
    // case 240: (WR - BOOM Extended)
    // Texture/Type Change Only (Numeric)
-   return !!EV_DoChange(activation->line, numChangeOnly);
+   return !!EV_DoChange(instance->line, numChangeOnly);
 }
 
 //
 // EV_ActionFloorLowerToNearest
 //
-static bool EV_ActionFloorLowerToNearest(ev_action_t *action,
-                                         specialactivation_t *activation)
+static bool EV_ActionFloorLowerToNearest(ev_action_t *action, ev_instance_t *instance)
 {
    // case 219: (W1 - BOOM Extended)
    // case 220: (WR - BOOM Extended)
    // Lower floor to next lower neighbor
-   return !!EV_DoFloor(activation->line, lowerFloorToNearest);
+   return !!EV_DoFloor(instance->line, lowerFloorToNearest);
 }
 
 //
 // EV_ActionElevatorUp
 //
-static bool EV_ActionElevatorUp(ev_action_t *action,
-                                specialactivation_t *activation)
+static bool EV_ActionElevatorUp(ev_action_t *action, ev_instance_t *instance)
 {
    // case 227: (W1 - BOOM Extended)
    // case 228: (WR - BOOM Extended)
    // Raise elevator next floor
-   return !!EV_DoElevator(activation->line, elevateUp);
+   return !!EV_DoElevator(instance->line, elevateUp);
 }
 
 //
 // EV_ActionElevatorDown
 //
-static bool EV_ActionElevatorDown(ev_action_t *action,
-                                  specialactivation_t *activation)
+static bool EV_ActionElevatorDown(ev_action_t *action, ev_instance_t *instance)
 {
    // case 231: (W1 - BOOM Extended)
    // case 232: (WR - BOOM Extended)
    // Lower elevator next floor
-   return !!EV_DoElevator(activation->line, elevateDown);
+   return !!EV_DoElevator(instance->line, elevateDown);
 
 }
 
 //
 // EV_ActionElevatorCurrent
 //
-static bool EV_ActionElevatorCurrent(ev_action_t *action,
-                                     specialactivation_t *activation)
+static bool EV_ActionElevatorCurrent(ev_action_t *action, ev_instance_t *instance)
 {
    // case 235: (W1 - BOOM Extended)
    // case 236: (WR - BOOM Extended)
    // Elevator to current floor
-   return !!EV_DoElevator(activation->line, elevateCurrent);
+   return !!EV_DoElevator(instance->line, elevateCurrent);
 }
 
 //
 // EV_ActionSilentLineTeleport
 //
-static bool EV_ActionSilentLineTeleport(ev_action_t *action,
-                                        specialactivation_t *activation)
+static bool EV_ActionSilentLineTeleport(ev_action_t *action, ev_instance_t *instance)
 {
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   Mobj   *thing = instance->actor;
   
    // case 243: (W1 - BOOM Extended)
    // case 244: (WR - BOOM Extended)
@@ -928,12 +874,12 @@ static bool EV_ActionSilentLineTeleport(ev_action_t *action,
 //
 // EV_ActionSilentLineTeleportReverse
 //
-static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action,
-                                               specialactivation_t *activation)
+static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action, 
+                                               ev_instance_t *instance)
 {
-   line_t *line  = activation->line;
-   int     side  = activation->side;
-   Mobj   *thing = activation->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   Mobj   *thing = instance->actor;
 
    // case 262: (W1 - BOOM Extended)
    // case 263: (WR - BOOM Extended)
@@ -947,24 +893,84 @@ static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action,
 //
 // EV_ActionPlatToggleUpDown
 //
-static bool EV_ActionPlatToggleUpDown(ev_action_t *action,
-                                      specialactivation_t *activation)
+static bool EV_ActionPlatToggleUpDown(ev_action_t *action, ev_instance_t *instance)
 {
    // jff 3/14/98 create instant toggle floor type
    // case 212: (WR - BOOM Extended)
-   return !!EV_DoPlat(activation->line, toggleUpDn, 0);
+   return !!EV_DoPlat(instance->line, toggleUpDn, 0);
 }
 
 //
 // EV_ActionStartLineScript
 //
-// SMMU script activation linedefs (now adapted to work for ACS)
+// SMMU script instance linedefs (now adapted to work for ACS)
 //
-static bool EV_ActionStartLineScript(ev_action_t *action,
-                                     specialactivation_t *activation)
+static bool EV_ActionStartLineScript(ev_action_t *action, ev_instance_t *instance)
 {
-   P_StartLineScript(activation->line, activation->actor);
+   P_StartLineScript(instance->line, instance->actor);
    return true;
+}
+
+//
+// BOOM Generalized Actions
+//
+
+//
+// EV_ActionGenFloor
+//
+static bool EV_ActionGenFloor(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_DoGenFloor(instance->line);
+}
+
+//
+// EV_ActionGenCeiling
+//
+static bool EV_ActionGenCeiling(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_DoGenCeiling(instance->line);
+}
+
+//
+// EV_ActionGenDoor
+//
+static bool EV_ActionGenDoor(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_DoGenDoor(instance->line);
+}
+
+//
+// EV_ActionGenLockedDoor
+//
+static bool EV_ActionGenLockedDoor(ev_action_t *action, ev_instance_t *instance)
+{
+   // FIXME:
+   genDoorThing = instance->actor;
+   return !!EV_DoGenLockedDoor(instance->line);
+}
+
+//
+// EV_ActionGenLift
+//
+static bool EV_ActionGenLift(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_DoGenLift(instance->line);
+}
+
+//
+// EV_ActionGenStairs
+//
+static bool EV_ActionGenStairs(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_DoGenStairs(instance->line);
+}
+
+//
+// EV_ActionGenCrusher
+//
+static bool EV_ActionGenCrusher(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_DoGenCrusher(instance->line);
 }
 
 //=============================================================================
@@ -978,21 +984,21 @@ static bool EV_ActionStartLineScript(ev_action_t *action,
 static ev_actiontype_t WRAction =
 {
    SPAC_CROSS,           // line must be crossed
-   EV_DOOMPreCrossLine,  // pre-activation callback
-   EV_DOOMPostCrossLine, // post-activation callback
+   EV_DOOMPreCrossLine,  // pre-instance callback
+   EV_DOOMPostCrossLine, // post-instance callback
    0                     // no default flags
 };
 
 // W1-Type lines may be activated once. Semantics are implemented in the 
 // post-cross callback to implement compatibility behaviors regarding the 
 // premature clearing of specials crossed from the wrong side or without
-// successful activation having occurred.
+// successful instance having occurred.
 static ev_actiontype_t W1Action =
 {
    SPAC_CROSS,           // line must be crossed
-   EV_DOOMPreCrossLine,  // pre-activation callback
-   EV_DOOMPostCrossLine, // post-activation callback
-   EV_POSTCLEARSPECIAL   // special will be cleared after activation
+   EV_DOOMPreCrossLine,  // pre-instance callback
+   EV_DOOMPostCrossLine, // post-instance callback
+   EV_POSTCLEARSPECIAL   // special will be cleared after instance
 };
 
 
@@ -1417,19 +1423,19 @@ ev_action_t *EV_ActionForNumber(int special)
 //
 // EV_CheckSpac
 //
-// Checks against the activation characteristics of the action to see if this
+// Checks against the instance characteristics of the action to see if this
 // method of activating the line is allowed.
 //
-static bool EV_CheckSpac(ev_action_t *action, specialactivation_t *activation)
+static bool EV_CheckSpac(ev_action_t *action, ev_instance_t *instance)
 {
    if(action->type->activation >= 0) // specific type for this action?
    {
-      return action->type->activation == activation->spac;
+      return action->type->activation == instance->spac;
    }
-   else // activation ability is determined by the linedef
+   else // instance ability is determined by the linedef
    {
-      Mobj   *thing = activation->actor;
-      line_t *line  = activation->line;
+      Mobj   *thing = instance->actor;
+      line_t *line  = instance->line;
       int     flags = 0;
 
       REQUIRE_ACTOR(thing);
@@ -1447,11 +1453,11 @@ static bool EV_CheckSpac(ev_action_t *action, specialactivation_t *activation)
          return false;
 
       // check 1S only flag -- if set, must be activated from first side
-      if((line->extflags & EX_ML_1SONLY) && activation->side != 0)
+      if((line->extflags & EX_ML_1SONLY) && instance->side != 0)
          return false;
 
-      // check activation flags -- can we activate this line this way?
-      switch(activation->spac)
+      // check instance flags -- can we activate this line this way?
+      switch(instance->spac)
       {
       case SPAC_CROSS:
          flags = EX_ML_CROSS;
@@ -1474,22 +1480,22 @@ static bool EV_CheckSpac(ev_action_t *action, specialactivation_t *activation)
 //
 // EV_ActivateSpecialLine
 //
-// Shared logic for all types of line activation
+// Shared logic for all types of line instance
 //
-bool EV_ActivateSpecialLine(ev_action_t *action, specialactivation_t *activation)
+bool EV_ActivateSpecialLine(ev_action_t *action, ev_instance_t *instance)
 {
-   // check for special activation
-   if(!EV_CheckSpac(action, activation))
+   // check for special instance
+   if(!EV_CheckSpac(action, instance))
       return false;
 
    // execute pre-amble action
-   if(!action->type->pre(action, activation))
+   if(!action->type->pre(action, instance))
       return false;
 
-   bool result = action->action(action, activation);
+   bool result = action->action(action, instance);
 
    // execute the post-action routine
-   return action->type->post(action, result, activation);
+   return action->type->post(action, result, instance);
 }
 
 //
@@ -1500,21 +1506,21 @@ bool EV_ActivateSpecialLine(ev_action_t *action, specialactivation_t *activation
 bool EV_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 {
    ev_action_t *action;
-   specialactivation_t activation;
+   ev_instance_t instance;
 
    // get action
    if(!(action = EV_ActionForNumber(line->special)))
       return false;
    
-   // setup activation
-   activation.actor = thing;
-   activation.args  = line->args;
-   activation.line  = line;
-   activation.side  = side;
-   activation.spac  = SPAC_CROSS;
-   activation.tag   = line->tag;
+   // setup instance
+   instance.actor = thing;
+   instance.args  = line->args;
+   instance.line  = line;
+   instance.side  = side;
+   instance.spac  = SPAC_CROSS;
+   instance.tag   = line->tag;
 
-   return EV_ActivateSpecialLine(action, &activation);
+   return EV_ActivateSpecialLine(action, &instance);
 }
 
 /*
