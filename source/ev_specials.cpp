@@ -26,15 +26,18 @@
 
 #include "z_zone.h"
 
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_mobj.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_state.h"
+#include "s_sound.h"
 
 // Call to require a valid actor
 #define REQUIRE_ACTOR(actor) \
@@ -56,27 +59,11 @@ int P_CheckTag(line_t *line)
 
    switch (line->special)
    {
-   case 1:   // Manual door specials
-   
-   case 11:  // Exits
-   
-   case 26:
-   case 27:
-   case 28:
-  
-   case 31:
-   case 32:
-   case 33:
-   case 34:
-   
    case 48:  // Scrolling walls
    case 51:
    
    case 85:
 
-   case 117:
-   case 118:
-   
    case 138:
    case 139:  // Lighting specials
    
@@ -547,6 +534,7 @@ static bool EV_ActionFastCeilCrushRaise(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionBuildStairsUp8(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 7:   (S1)
    // case 8:   (W1)
    // case 256: (WR - BOOM Extended)
    // Build Stairs
@@ -785,6 +773,28 @@ static bool EV_ActionExitLevel(ev_action_t *action, ev_instance_t *instance)
 }
 
 //
+// EV_ActionSwitchExitLevel
+//
+// This version of level exit logic is used for switch-type exits.
+//
+static bool EV_ActionSwitchExitLevel(ev_action_t *action, ev_instance_t *instance)
+{
+   Mobj *thing = instance->actor;
+
+   // case 11:
+   // Exit level
+   // killough 10/98: prevent zombies from exiting levels
+   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   {
+      S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
+      return false;
+   }
+
+   G_ExitLevel();
+   return true;
+}
+
+//
 // EV_ActionPlatPerpetualRaise
 //
 static bool EV_ActionPlatPerpetualRaise(ev_action_t *action, ev_instance_t *instance)
@@ -1014,6 +1024,7 @@ static bool EV_ActionCeilingLowerToFloor(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionDoDonut(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 9:   (S1)
    // case 146: (W1 - BOOM Extended)
    // case 155: (WR - BOOM Extended)
    // Lower Pillar, Raise Donut
@@ -1206,8 +1217,9 @@ static bool EV_ActionVerticalDoor(ev_action_t *action, ev_instance_t *instance)
    // case 34:  -- Yellow locked door open
    // case 117: -- Blazing door raise
    // case 118: -- Blazing door open
+   
    // TODO: move special-specific logic out of EV_VerticalDoor to here,
-   // or to preamble function.
+   // or to preamble function. Or, break up function altogether.
 
    return !!EV_VerticalDoor(instance->line, instance->actor);
 }
@@ -1270,12 +1282,12 @@ static ev_actiontype_t W1ActionType =
 };
 
 // SR-Type lines may be activated multiple times by using them.
-static ev_actiontype_t SRDRActionType =
+static ev_actiontype_t SRActionType =
 {
-   SPAC_CROSS,           // line must be used
+   SPAC_USE,             // line must be used
    EV_DOOMPreUseLine,    // pre-activation callback
    EV_DOOMPostUseLine,   // post-activation callback
-   0                     // TODO
+   EV_POSTCHANGESWITCH   // change switch texture
 };
 
 // S1-Type lines may be activated once, by using them.
@@ -1284,7 +1296,19 @@ static ev_actiontype_t S1ActionType =
    SPAC_USE,             // line must be used
    EV_DOOMPreUseLine,    // pre-activation callback
    EV_DOOMPostUseLine,   // post-activation callback
-   EV_POSTCLEARSPECIAL
+   EV_POSTCHANGESWITCH | EV_POSTCLEARSPECIAL // change switch and clear special
+};
+
+// DR-Type lines may be activated repeatedly by pushing; the main distinctions
+// from switch-types are that switch textures are not changed and the sector
+// target is always the line's backsector. Therefore the tag can be zero, and
+// when not zero, is recycled by BOOM to allow a special lighting effect.
+static ev_actiontype_t DRActionType =
+{
+   SPAC_USE,             // line must be used
+   EV_DOOMPreUseLine,    // pre-activation callback
+   EV_DOOMPostUseLine,   // post-activation callback
+   EV_PREALLOWZEROTAG    // tags are never used for activation purposes
 };
 
 
@@ -1323,6 +1347,27 @@ static ev_actiontype_t BoomGenActionType =
       version                                \
    }
 
+#define S1LINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &S1ActionType,                         \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
+   }
+
+#define DRLINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &DRActionType,                         \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
+   }
+
+// DOOM Line Type 1 - DR Raise Door
+DRLINE(DRRaiseDoor, VerticalDoor, EV_PREALLOWMONSTERS, 0);
+
 // DOOM Line Type 2 - W1 Open Door
 W1LINE(W1OpenDoor, OpenDoor, 0, 0);
 
@@ -1338,11 +1383,20 @@ W1LINE(W1RaiseFloor, RaiseFloor, 0, 0);
 // DOOM Line Type 6 - W1 Ceiling Fast Crush and Raise
 W1LINE(W1FastCeilCrushRaise, FastCeilCrushRaise, 0, 0);
 
+// DOOM Line Type 7 - S1 Build Stairs Up 8
+S1LINE(S1BuildStairsUp8, BuildStairsUp8, 0, 0);
+
 // DOOM Line Type 8 - W1 Build Stairs Up 8
 W1LINE(W1BuildStairsUp8, BuildStairsUp8, 0, 0);
 
+// DOOM Line Type 9 - S1 Donut
+S1LINE(S1DoDonut, DoDonut, 0, 0);
+
 // DOOM Line Type 10 - W1 Plat Down-Wait-Up-Stay
 W1LINE(W1PlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS, 0);
+
+// DOOM Line Type 11 - S1 Exit Level
+S1LINE(S1ExitLevel, SwitchExitLevel, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 12 - W1 Light Turn On
 W1LINE(W1LightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG, 0);
@@ -1365,8 +1419,33 @@ W1LINE(W1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
 // DOOM Line Type 25 - W1 Ceiling Crush and Raise
 W1LINE(W1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
 
+// DOOM Line Type 26 - DR Raise Door Blue Key
+DRLINE(DRRaiseDoorBlue, VerticalDoor, 0, 0);
+
+// DOOM Line Type 27 - DR Raise Door Yellow Key
+DRLINE(DRRaiseDoorYellow, VerticalDoor, 0, 0);
+
+// DOOM Line Type 28 - DR Raise Door Red Key
+DRLINE(DRRaiseDoorRed, VerticalDoor, 0, 0);
+
 // DOOM Line Type 30 - W1 Floor Raise To Texture
 W1LINE(W1FloorRaiseToTexture, FloorRaiseToTexture, 0, 0);
+
+// DOOM Line Type 31 - D1 Open Door
+DRLINE(D1OpenDoor, VerticalDoor, 0, 0);
+
+// DOOM Line Type 32 - D1 Open Door Blue Key
+// FIXME / TODO: Due to a combination of problems between this
+// special and EV_VerticalDoor, monsters think they can open types
+// 32 through 34 and therefore stick to them. Needs a comp var fix.
+DRLINE(D1OpenDoorBlue, VerticalDoor, EV_PREALLOWMONSTERS, 0);
+
+// DOOM Line Type 33 - D1 Open Door Red Key
+// FIXME / TODO: See above.
+DRLINE(D1OpenDoorRed, VerticalDoor, EV_PREALLOWMONSTERS, 0);
+
+// DOOM Line Type 34 - D1 Open Door Yellow Key
+DRLINE(D1OpenDoorYellow, VerticalDoor, EV_PREALLOWMONSTERS, 0);
 
 // DOOM Line Type 35 - W1 Lights Very Dark
 W1LINE(W1LightsVeryDark, LightsVeryDark, EV_PREALLOWZEROTAG, 0);
@@ -1508,6 +1587,12 @@ W1LINE(W1DoorBlazeOpen, DoorBlazeOpen, 0, 0);
 
 // DOOM Line Type 110 - W1 Blazing Door Close
 W1LINE(W1DoorBlazeClose, DoorBlazeClose, 0, 0);
+
+// DOOM Line Type 117 - DR Door Blaze Raise
+DRLINE(DRDoorBlazeRaise, VerticalDoor, 0, 0);
+
+// DOOM Line Type 118 - D1 Door Blaze Open
+DRLINE(D1DoorBlazeOpen, VerticalDoor, 0, 0);
 
 // DOOM Line Type 119 - W1 Raise Floor to Nearest Floor
 W1LINE(W1FloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
@@ -1693,30 +1778,11 @@ WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
 /*
 bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
-   // haleyjd: param lines make sidedness decisions on their own
-   bool is_param = E_IsParamSpecial(line->special);
-
-   if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
-      return false;
-
-
-   // haleyjd 02/28/05: parameterized specials
-   if(is_param)
-      return P_ActivateParamLine(line, thing, side, SPAC_USE);
-    
    // Switches that other things can activate.
    if(!thing->player)
    {
-      // never open secret doors
-      if(line->flags & ML_SECRET)
-         return false;
-      
       switch(line->special)
       {
-      case 1:         // MANUAL DOOR RAISE
-      case 32:        // MANUAL BLUE           - haleyjd 01/23/12: !?!!?!??!?!!
-      case 33:        // MANUAL RED            - This is why monsters get stuck on key doors...
-      case 34:        // MANUAL YELLOW
          //jff 3/5/98 add ability to use teleporters for monsters
       case 195:       // switch teleporters
       case 174:
@@ -1729,38 +1795,11 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       }
    }
 
-   if(!P_CheckTag(line))  //jff 2/27/98 disallow zero tag on some types
-      return false;
-
    // Dispatch to handler according to linedef type
    switch(line->special)
    {
      // Switches (non-retriggerable)
-   case 7:
-      // Build Stairs
-      if(EV_BuildStairs(line,build8))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-
-   case 9:
-      // Change Donut
-      if (EV_DoDonut(line))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-        
-   case 11:
-      // Exit level
-      // killough 10/98: prevent zombies from exiting levels
-      if(thing->player && thing->player->health <= 0 && 
-         !comp[comp_zombie])
-      {
-         S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
-         return false;
-      }
-      P_ChangeSwitchTexture(line,0,0);
-      G_ExitLevel ();
-      break;
-        
+       
    case 14:
       // Raise Floor 32 and change texture
       if (EV_DoPlat(line,raiseAndChange,32))
@@ -2566,8 +2605,6 @@ static int EV_GenActivationType(int16_t special)
 {
    return (special & TriggerType) >> TriggerTypeShift;
 }
-
-
 
 //
 // EV_ActionForInstance
