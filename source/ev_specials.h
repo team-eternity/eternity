@@ -41,17 +41,21 @@ enum EVActionFlags
    
    EV_POSTCLEARSPECIAL = 0x00000010, // Clear special after activation
    EV_POSTCLEARALWAYS  = 0x00000020, // Always clear special
+   EV_POSTCHANGESWITCH = 0x00000040, // Changes switch texture if successful
+   EV_POSTCHANGEALWAYS = 0x00000080, // Changes switch texture even if fails
 };
 
 // Data related to an instance of a special activation.
 struct ev_instance_t
 {
-   Mobj   *actor; // actor, if any
-   line_t *line;  // line, if any
-   int    *args;  // arguments (may point to line->args
-   int     tag;   // tag (may == line->tag or line->args[0])
-   int     side;  // side of activation
-   int     spac;  // special activation type
+   Mobj   *actor;   // actor, if any
+   line_t *line;    // line, if any
+   int    *args;    // arguments (may point to line->args
+   int     tag;     // tag (may == line->tag or line->args[0])
+   int     side;    // side of activation
+   int     spac;    // special activation type
+   int     gentype; // generalized type, if is generalized (-1 otherwise)
+   int     genspac; // generalized activation type, if generalized
 };
 
 //

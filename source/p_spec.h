@@ -112,6 +112,18 @@ struct side_t;
 #define TriggerType           0x0007
 #define TriggerTypeShift      0
 
+// haleyjd: Generalized type enumeration
+enum
+{
+   GenTypeFloor,
+   GenTypeCeiling,
+   GenTypeDoor,
+   GenTypeLocked,
+   GenTypeLift,
+   GenTypeStairs,
+   GenTypeCrusher
+};
+
 // define masks and shifts for the floor type fields
 
 #define FloorCrush            0x1000
