@@ -60,7 +60,6 @@ int P_CheckTag(line_t *line)
    switch (line->special)
    {
    case 48:  // Scrolling walls
-   case 51:
    
    case 85:
 
@@ -491,6 +490,7 @@ static bool EV_ActionOpenDoor(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionCloseDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 3:  (W1)
+   // case 50: (S1)
    // case 75: (WR)
    // Close Door
    return !!EV_DoDoor(instance->line, doorClose);
@@ -502,6 +502,7 @@ static bool EV_ActionCloseDoor(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionRaiseDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case  4: (W1)
+   // case 29: (S1)
    // case 90: (WR)
    // Raise Door
    return !!EV_DoDoor(instance->line, doorNormal);
@@ -547,6 +548,7 @@ static bool EV_ActionBuildStairsUp8(ev_action_t *action, ev_instance_t *instance
 static bool EV_ActionPlatDownWaitUpStay(ev_action_t *action, ev_instance_t *instance)
 {
    // case 10: (W1)
+   // case 21: (S1)
    // case 88: (WR)
    // PlatDownWaitUp
    return !!EV_DoPlat(instance->line, downWaitUpStay, 0);
@@ -612,6 +614,7 @@ static bool EV_ActionLowerFloor(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionPlatRaiseNearestChange(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 20: (S1)
    // case 22: (W1)
    // case 95: (WR)
    // Raise floor to nearest height and change texture
@@ -624,6 +627,7 @@ static bool EV_ActionPlatRaiseNearestChange(ev_action_t *action, ev_instance_t *
 static bool EV_ActionCeilingCrushAndRaise(ev_action_t *action, ev_instance_t *instance)
 {
    // case 25: (W1)
+   // case 49: (S1)
    // case 73: (WR)
    // Ceiling Crush and Raise
    return !!EV_DoCeiling(instance->line, crushAndRaise);
@@ -678,6 +682,7 @@ static bool EV_ActionFloorLowerAndChange(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionFloorLowerToLowest(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 23: (S1)
    // case 38: (W1)
    // case 82: (WR)
    // Lower Floor To Lowest
@@ -920,6 +925,7 @@ static bool EV_ActionDoorBlazeClose(ev_action_t *action, ev_instance_t *instance
 //
 static bool EV_ActionFloorRaiseToNearest(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 18:  (S1)
    // case 119: (W1)
    // case 128: (WR)
    // Raise floor to nearest surr. floor
@@ -944,12 +950,34 @@ static bool EV_ActionSecretExit(ev_action_t *action, ev_instance_t *instance)
 {
    Mobj *thing = instance->actor;
 
-   // case 124:
+   // case 124: (W1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
    if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
       G_SecretExitLevel();
 
+   return true;
+}
+
+//
+// EV_ActionSwitchSecretExit
+//
+// This variant of secret exit action is used by switches.
+//
+static bool EV_ActionSwitchSecretExit(ev_action_t *action, ev_instance_t *instance)
+{
+   Mobj *thing = instance->actor;
+
+   // case 51: (S1)
+   // Secret EXIT
+   // killough 10/98: prevent zombies from exiting levels
+   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   {
+      S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
+      return false;
+   }
+
+   G_SecretExitLevel();
    return true;
 }
 
@@ -991,6 +1019,7 @@ static bool EV_ActionRaiseFloor512(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionPlatRaise24Change(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 15:  (S1)
    // case 143: (W1 - BOOM Extended)
    // case 148: (WR - BOOM Extended)
    // Raise Floor 24 and change
@@ -1002,6 +1031,7 @@ static bool EV_ActionPlatRaise24Change(ev_action_t *action, ev_instance_t *insta
 //
 static bool EV_ActionPlatRaise32Change(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 14:  (S1)
    // case 144: (W1 - BOOM Extended)
    // case 149: (WR - BOOM Extended)
    // Raise Floor 32 and change
@@ -1013,6 +1043,7 @@ static bool EV_ActionPlatRaise32Change(ev_action_t *action, ev_instance_t *insta
 //
 static bool EV_ActionCeilingLowerToFloor(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 41:  (S1)
    // case 145: (W1 - BOOM Extended)
    // case 152: (WR - BOOM Extended)
    // Lower Ceiling to Floor
@@ -1404,17 +1435,35 @@ W1LINE(W1LightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG, 0);
 // DOOM Line Type 13 - W1 Light Turn On 255
 W1LINE(W1LightTurnOn255, LightTurnOn255, EV_PREALLOWZEROTAG, 0);
 
+// DOOM Line Type 14 - S1 Plat Raise 32 and Change
+S1LINE(S1PlatRaise32Change, PlatRaise32Change, 0, 0);
+
+// DOOM Line Type 15 - S1 Plat Raise 24 and Change
+S1LINE(S1PlatRaise24Change, PlatRaise24Change, 0, 0);
+
 // DOOM Line Type 16 - W1 Close Door, Open in 30
 W1LINE(W1CloseDoor30, CloseDoor30, 0, 0);
 
 // DOOM Line Type 17 - W1 Start Light Strobing
 W1LINE(W1StartLightStrobing, StartLightStrobing, EV_PREALLOWZEROTAG, 0);
 
+// DOOM Line Type 18 - S1 Raise Floor to Next Highest Floor
+S1LINE(S1FloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
+
 // DOOM Line Type 19 - W1 Lower Floor
 W1LINE(W1LowerFloor, LowerFloor, 0, 0);
 
+// DOOM Line Type 20 - S1 Plat Raise to Nearest and Change
+S1LINE(S1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+
+// DOOM Line Type 21 - S1 Plat Down Wait Up Stay
+S1LINE(S1PlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
+
 // DOOM Line Type 22 - W1 Plat Raise to Nearest and Change
 W1LINE(W1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+
+// DOOM Line Type 23 - S1 Floor Lower to Lowest
+S1LINE(S1FloorLowerToLowest, FloorLowerToLowest, 0, 0);
 
 // DOOM Line Type 25 - W1 Ceiling Crush and Raise
 W1LINE(W1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
@@ -1427,6 +1476,9 @@ DRLINE(DRRaiseDoorYellow, VerticalDoor, 0, 0);
 
 // DOOM Line Type 28 - DR Raise Door Red Key
 DRLINE(DRRaiseDoorRed, VerticalDoor, 0, 0);
+
+// DOOM Line Type 29 - S1 Raise Door
+S1LINE(S1RaiseDoor, RaiseDoor, 0, 0);
 
 // DOOM Line Type 30 - W1 Floor Raise To Texture
 W1LINE(W1FloorRaiseToTexture, FloorRaiseToTexture, 0, 0);
@@ -1465,8 +1517,20 @@ W1LINE(W1Teleport, Teleport, EV_PREALLOWMONSTERS | EV_PREALLOWZEROTAG, 0);
 // DOOM Line Type 40 - W1 Raise Ceiling Lower Floor (only raises ceiling)
 W1LINE(W1RaiseCeilingLowerFloor, RaiseCeilingLowerFloor, 0, 0);
 
+// DOOM Line Type 41 - S1 Ceiling Lower to Floor
+S1LINE(S1CeilingLowerToFloor, CeilingLowerToFloor, 0, 0);
+
 // DOOM Line Type 44 - W1 Ceiling Crush
 W1LINE(W1CeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
+
+// DOOM Line Type 49 - S1 Ceiling Crush And Raise
+S1LINE(S1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
+
+// DOOM Line Type 50 - S1 Close Door
+S1LINE(S1CloseDoor, CloseDoor, 0, 0);
+
+// DOOM Line Type 51 - S1 Secret Exit
+S1LINE(S1SecretExit, SwitchSecretExit, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 52 - WR Exit Level
 WRLINE(WRExitLevel, ExitLevel, EV_PREALLOWZEROTAG, 0);
@@ -1799,89 +1863,16 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
    switch(line->special)
    {
      // Switches (non-retriggerable)
-       
-   case 14:
-      // Raise Floor 32 and change texture
-      if (EV_DoPlat(line,raiseAndChange,32))
+     
+  case 55:
+      // Raise Floor Crush
+      if (EV_DoFloor(line,raiseFloorCrush))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
-   case 15:
-      // Raise Floor 24 and change texture
-      if (EV_DoPlat(line,raiseAndChange,24))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 18:
-      // Raise Floor to next highest floor
-      if (EV_DoFloor(line, raiseFloorToNearest))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-        
-   case 20:
-      // Raise Plat next highest floor and change texture
-      if (EV_DoPlat(line,raiseToNearestAndChange,0))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 21:
-      // PlatDownWaitUpStay
-      if (EV_DoPlat(line,downWaitUpStay,0))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 23:
-      // Lower Floor to Lowest
-      if (EV_DoFloor(line,lowerFloorToLowest))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-        
-   case 29:
-      // Raise Door
-      if (EV_DoDoor(line,doorNormal))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 41:
-      // Lower Ceiling to Floor
-      if (EV_DoCeiling(line,lowerToFloor))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
+
    case 71:
       // Turbo Lower Floor
       if (EV_DoFloor(line,turboLower))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 49:
-      // Ceiling Crush And Raise
-      if (EV_DoCeiling(line,crushAndRaise))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 50:
-      // Close Door
-      if (EV_DoDoor(line,doorClose))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-        
-   case 51:
-      // Secret EXIT
-      // killough 10/98: prevent zombies from exiting levels
-      if(thing->player && thing->player->health <= 0 &&
-         !comp[comp_zombie])
-      {
-         S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
-         return false;
-      }
-      P_ChangeSwitchTexture(line,0,0);
-      G_SecretExitLevel ();
-      break;
-        
-   case 55:
-      // Raise Floor Crush
-      if (EV_DoFloor(line,raiseFloorCrush))
          P_ChangeSwitchTexture(line,0,0);
       break;
       
