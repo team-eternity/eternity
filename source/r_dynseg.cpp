@@ -258,7 +258,7 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static void R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
+static bool R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
 {
    double a1 = lseg->v2->fy - lseg->v1->fy;
    double b1 = lseg->v1->fx - lseg->v2->fx;
@@ -277,10 +277,12 @@ static void R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
    //        If so I'll need my own R_PointOnSide routine with some
    //        epsilon values.
    if(d == 0.0) 
-      I_Error("R_IntersectPoint: lines are parallel\n");
+      return false;
 
    *x = (float)((b1 * c2 - b2 * c1) / d);
    *y = (float)((a2 * c1 - a1 * c2) / d);
+
+   return true;
 }
 
 //
@@ -348,20 +350,29 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
          dynaseg_t *nds;
          vertex_t  *nv = R_GetFreeDynaVertex();
 
-         R_IntersectPoint(lseg, bsp, &nv->fx, &nv->fy);
+         if(R_IntersectPoint(lseg, bsp, &nv->fx, &nv->fy))
+         {
+            // also set fixed-point coordinates
+            nv->x = M_FloatToFixed(nv->fx);
+            nv->y = M_FloatToFixed(nv->fy);
 
-         // also set fixed-point coordinates
-         nv->x = M_FloatToFixed(nv->fx);
-         nv->y = M_FloatToFixed(nv->fy);
+            // create new dynaseg from nv to seg->v2
+            nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
 
-         // create new dynaseg from nv to seg->v2
-         nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
+            // alter current seg to run from seg->v1 to nv
+            lseg->v2 = nv;
 
-         // alter current seg to run from seg->v1 to nv
-         lseg->v2 = nv;
-
-         // recurse to split v2 side
-         R_SplitLine(nds, bsp->children[side_v2]);
+            // recurse to split v2 side
+            R_SplitLine(nds, bsp->children[side_v2]);
+         }
+         else
+         {
+            // Classification failed (this really should not happen, but, math
+            // on computers is not ideal...). Return the dynavertex and do
+            // nothing here; the seg will be classified on v1 side for lack of
+            // anything better to do with it.
+            R_FreeDynaVertex(nv);
+         }
       }
 
       // continue on v1 side
