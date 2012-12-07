@@ -217,16 +217,10 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 //
 void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 {
-   double t;
    double dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
    double dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
  
-   if(dx == 0.0 && dy == 0.0)
-      t = 0;
-   else
-      t = sqrt((dx * dx) + (dy * dy));
-
-   lseg->offset = (float)t;
+   lseg->offset = static_cast<float>(sqrt(dx * dx + dy * dy));
 }
 
 //
@@ -244,8 +238,8 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.sidedef = proto->seg.sidedef;
 
    // vertices
-   ret->seg.v1      = v1;
-   ret->seg.v2      = v2;
+   ret->seg.v1 = v1;
+   ret->seg.v2 = v2;
 
    // calculate texture offset
    R_DynaSegOffset(&ret->seg, proto->seg.linedef, 0);
