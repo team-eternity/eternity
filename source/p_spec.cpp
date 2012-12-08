@@ -104,10 +104,10 @@ typedef struct anim_s
 
 struct animdef_s
 {
-   char istexture;            //jff 3/23/98 make char for comparison
-   char endname[9];           //  if false, it is a flat
-   char startname[9];
-   int  speed;
+   uint8_t istexture;      // 0xff terminates; if false, it is a flat
+   char    endname[9];           
+   char    startname[9];
+   int     speed;
 }; //jff 3/23/98 pack to read from memory
 
 typedef struct animdef_s animdef_t;
@@ -182,7 +182,7 @@ void P_InitPicAnims(void)
    animdefs = (animdef_t *)wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC);
 
    lastanim = anims;
-   for(i=0 ; animdefs[i].istexture != -1 ; i++)
+   for(i = 0; animdefs[i].istexture != 0xff; i++)
    {
       flags = TF_ANIMATED;
       
@@ -195,7 +195,7 @@ void P_InitPicAnims(void)
          maxanims = newmax;
       }
 
-      if (animdefs[i].istexture)
+      if(animdefs[i].istexture)
       {
          // different episode ?
          if(R_CheckForWall(animdefs[i].startname) == -1)
