@@ -1951,12 +1951,13 @@ static void AM_drawNodeLines(int bspnum)
 
    while(!(bspnum & NF_SUBSECTOR))
    {
-      node_t *bsp = &nodes[bspnum];
+      node_t  *bsp   = &nodes[bspnum];
+      fnode_t *fnode = &fnodes[bspnum];
 
-      l.a.x = bsp->fx;
-      l.a.y = bsp->fy;
-      l.b.x = bsp->fx + bsp->fdx;
-      l.b.y = bsp->fy + bsp->fdy;
+      l.a.x = fnode->fx;
+      l.a.y = fnode->fy;
+      l.b.x = fnode->fx + fnode->fdx;
+      l.b.y = fnode->fy + fnode->fdy;
 
       AM_drawMline(&l, mapcolor_frnd);
 

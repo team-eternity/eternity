@@ -252,8 +252,11 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static bool R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
+static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
 {
+   // get the fnode for the node
+   fnode_t *bsp = &fnodes[node - nodes];
+
    double a1 = lseg->v2->fy - lseg->v1->fy;
    double b1 = lseg->v1->fx - lseg->v2->fx;
    double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
@@ -287,7 +290,7 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
 // from the partition line. If the distance is too small, we may decide to
 // change our idea of sidedness.
 //
-inline static double R_PartitionDistance(double x, double y, node_t *node)
+inline static double R_PartitionDistance(double x, double y, fnode_t *node)
 {
    return fabs((node->a * x + node->b * y + node->c) / node->len);
 }
@@ -304,16 +307,17 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 {
    while(!(bspnum & NF_SUBSECTOR))
    {
-      node_t *bsp = &nodes[bspnum];
-      seg_t  *lseg = &dseg->seg;
+      node_t  *bsp   = &nodes[bspnum];
+      fnode_t *fnode = &fnodes[bspnum];
+      seg_t   *lseg  = &dseg->seg;
 
       // test vertices against node line
       int side_v1 = R_PointOnSide(lseg->v1->x, lseg->v1->y, bsp);
       int side_v2 = R_PointOnSide(lseg->v2->x, lseg->v2->y, bsp);
 
       // get distance of vertices from partition line
-      double dist_v1 = R_PartitionDistance(lseg->v1->fx, lseg->v1->fy, bsp);
-      double dist_v2 = R_PartitionDistance(lseg->v2->fx, lseg->v2->fy, bsp);
+      double dist_v1 = R_PartitionDistance(lseg->v1->fx, lseg->v1->fy, fnode);
+      double dist_v2 = R_PartitionDistance(lseg->v2->fx, lseg->v2->fy, fnode);
 
       // If the distances are less than epsilon, consider the points as being
       // on the same side as the polyobj origin. Why? People like to build

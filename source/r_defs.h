@@ -444,14 +444,24 @@ struct seg_t
 //
 struct node_t
 {
-  fixed_t  x,  y, dx, dy;        // Partition line.
-  fixed_t  bbox[2][4];           // Bounding box for each child.
-  int      children[2];          // If NF_SUBSECTOR its a subsector.
+   fixed_t x, y, dx, dy; // Partition line.
+   fixed_t bbox[2][4];   // Bounding box for each child.
+   int     children[2];  // If NF_SUBSECTOR, it's a subsector.
+};
 
-  double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
-  double a, b, c;                // haleyjd 05/20/08: coefficients for
-                                 //  general form of partition line 
-  double len;                    //  length of partition line, for normalization
+// 
+// fnode
+//
+// haleyjd 12/07/12: The fnode structure holds floating-point general line 
+// equation coefficients and float versions of partition line coordinates and
+// lengths. It is kept separate from node_t for purposes of not causing that
+// structure to become cache inefficient.
+//
+struct fnode_t
+{
+   double fx, fy, fdx, fdy; // haleyjd 05/16/08: float versions
+   double a, b, c;          // haleyjd 05/20/08: coefficients for general line equation
+   double len;              // length of partition line, for normalization
 };
 
 //

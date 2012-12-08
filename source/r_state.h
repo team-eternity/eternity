@@ -35,6 +35,7 @@
 struct camera_t;
 struct line_t;
 struct node_t;
+struct fnode_t;
 struct player_t;
 struct sector_t;
 struct seg_t;
@@ -95,6 +96,7 @@ extern subsector_t      *subsectors;
 
 extern int              numnodes;
 extern node_t           *nodes;
+extern fnode_t          *fnodes;
 
 extern int              numlines;
 extern line_t           *lines;
