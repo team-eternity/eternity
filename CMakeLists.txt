@@ -395,9 +395,12 @@ IF (NOT HAVE_STDINT_H)
                 INCLUDE_DIRECTORIES (${CMAKE_SOURCE_DIR}/source/win32/)
         ENDIF (MSVC)
 ENDIF (NOT HAVE_STDINT_H)
+
+CHECK_INCLUDE_FILES (GL/gl.h HAVE_GL_GL_H)
+
 ################################################################################
 ######################### Find Needed Libs #####################################
-IF (NOT GL_LIBRARY_SEARCHED)
+IF (HAVE_GL_GL_H AND NOT GL_LIBRARY_SEARCHED)
         MESSAGE (STATUS "Looking for OpenGL")
         FIND_LIBRARY (GL_LIBRARY GL)
         IF (GL_LIBRARY)
@@ -406,7 +409,7 @@ IF (NOT GL_LIBRARY_SEARCHED)
                 MESSAGE (STATUS "Looking for OpenGL - not found")
         ENDIF (GL_LIBRARY)
         SET (GL_LIBRARY_SEARCHED TRUE CACHE INTERNAL "")
-ENDIF (NOT GL_LIBRARY_SEARCHED)
+ENDIF (HAVE_GL_GL_H AND NOT GL_LIBRARY_SEARCHED)
 
 FIND_PACKAGE (SDL REQUIRED)
 INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
