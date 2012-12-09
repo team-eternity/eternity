@@ -487,7 +487,9 @@ static void R_CalcFragmentCenterPoints(polyobj_t *poly)
       // iterate on subsector rpolyobj_t lists
       while(link)
       {
-         R_FragmentCenterPoint(link->dllObject);
+         rpolyobj_t *rpo = link->dllObject;
+         if(rpo->polyobj == poly)
+            R_FragmentCenterPoint(rpo);
          link = link->dllNext;
       }
    }
