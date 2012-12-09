@@ -422,6 +422,78 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 }
 
 //
+// R_FragmentCenterPoint
+//
+// haleyjd 12/09/12: My original sorting method is insufficient because it 
+// considered the polyobject center point to be a proper judge of z depth for
+// every fragment. This new solution is an interim, until BSP trees are added.
+//
+static void R_FragmentCenterPoint(rpolyobj_t *rpo)
+{
+   dynaseg_t *rover = rpo->dynaSegs;
+   double x, y;
+   int vcount = 0;
+
+   x = y = 0.0;
+
+   while(rover)
+   {
+      // only add in the v1 vertices, for speed
+      vertex_t *v = rover->seg.v1;
+      ++vcount;
+
+      x += v->fx;
+      y += v->fy;
+
+      rover = rover->subnext;
+   }
+
+   // calculate average coordinates
+   x /= vcount;
+   y /= vcount;
+
+   // convert to fixed point
+   rpo->cx = M_DoubleToFixed(x);
+   rpo->cy = M_DoubleToFixed(y);
+}
+
+//
+// R_CalcFragmentCenterPoints
+//
+// Find all the polyobjects' fragments and calculate their center points.
+// See above for an explanation. This is temporary code, an interim solution
+// until we start using BSP trees for polyobjects and dynamic sectors.
+//
+static void R_CalcFragmentCenterPoints(polyobj_t *poly)
+{
+   // a bad polyobject should never have been attached in the first place
+   if(poly->flags & POF_ISBAD)
+      return;
+
+   // not attached?
+   if(!(poly->flags & POF_ATTACHED))
+      return;
+   
+   // no dynaseg-containing subsecs?
+   if(!poly->dynaSubsecs || !poly->numDSS)
+      return;
+
+   // iterate over stored subsector pointers
+   for(int i = 0; i < poly->numDSS; ++i)
+   {
+      subsector_t *ss = poly->dynaSubsecs[i];
+      DLListItem<rpolyobj_t> *link = ss->polyList;
+      
+      // iterate on subsector rpolyobj_t lists
+      while(link)
+      {
+         R_FragmentCenterPoint(link->dllObject);
+         link = link->dllNext;
+      }
+   }
+}
+
+//
 // R_AttachPolyObject
 //
 // Generates dynamic segs for a single polyobject.
@@ -459,6 +531,9 @@ void R_AttachPolyObject(polyobj_t *poly)
       // The dynasegs are stored in the subsectors in which they finally end up.
       R_SplitLine(idseg, numnodes - 1);
    }
+
+   // haleyjd 12/09/12: calculate center points for every fragment
+   R_CalcFragmentCenterPoints(poly);
 
    poly->flags |= POF_ATTACHED;
 }
