@@ -52,38 +52,10 @@
 /*
 int P_CheckTag(line_t *line)
 {
-   // killough 11/98: compatibility option:
-   
-   if(comp[comp_zerotags] || line->tag)
-      return 1;
-
    switch (line->special)
    {
    case 48:  // Scrolling walls
-   
    case 85:
-
-   case 138:
-   case 139:  // Lighting specials
-  
-   case 192:
-   case 193:  
-   case 194:
-   case 195:  // Thing teleporters
-   case 197:
-   case 198:
-
-   case 209:
-   case 210:
-   
-   case 273:
-   case 274:   // W1
-   case 275:
-   case 276:   // SR
-   case 277:   // S1
-   case 278:   // GR
-   case 279:   // G1
-   case 280:   // WR -- haleyjd
       return 1;
    }
 
@@ -289,8 +261,70 @@ static bool EV_DOOMPostUseLine(ev_action_t *action, bool result,
    {
       if(result || (flags & EV_POSTCHANGEALWAYS))
       {
-         int useAgain = !(flags & EV_POSTCLEARSPECIAL);
-         P_ChangeSwitchTexture(instance->line, useAgain, instance->side);
+         int useAgain   = !(flags & EV_POSTCLEARSPECIAL);
+         int changeSide = (flags & EV_POSTCHANGESIDED) ? instance->side : 0;
+         P_ChangeSwitchTexture(instance->line, useAgain, changeSide);
+      }
+   }
+
+   // FIXME/TODO: ideally we return result; the vanilla code always returns true
+   // if the line action was *attempted*, not if it succeeded. Fixing this will
+   // require a new comp flag.
+   
+   //return result;
+   return true; // temporary
+}
+
+//
+// EV_DOOMPreShootLine
+//
+// Pre-activation semantics for DOOM gun-type actions
+//
+static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
+{
+   unsigned int flags = EV_CompositeActionFlags(action);
+
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+
+   // actor and line are required
+   REQUIRE_ACTOR(thing);
+   REQUIRE_LINE(line);
+
+   if(!thing->player)
+   {
+      // Check if special allows monsters
+      if(!(flags & EV_PREALLOWMONSTERS))
+         return false;
+   }
+
+   // check for zero tag
+   if(!(instance->tag || comp[comp_zerotags] || (flags & EV_PREALLOWZEROTAG)))
+      return false;
+
+   return true;
+}
+
+//
+// EV_DOOMPostShootLine
+//
+// Post-activation semantics for DOOM-style use line actions.
+//
+static bool EV_DOOMPostShootLine(ev_action_t *action, bool result, 
+                                 ev_instance_t *instance)
+{
+   unsigned int flags = EV_CompositeActionFlags(action);
+
+   // check for switch texture changes
+   if(flags & EV_POSTCHANGESWITCH)
+   {
+      // Non-BOOM gun line types may clear their special even if they fail
+      if(result || (flags & EV_POSTCHANGEALWAYS) || 
+         (action->minversion < 200 && P_ClearSwitchOnFail()))
+      {
+         int useAgain   = !(flags & EV_POSTCLEARSPECIAL);
+         int changeSide = (flags & EV_POSTCHANGESIDED) ? instance->side : 0;
+         P_ChangeSwitchTexture(instance->line, useAgain, changeSide);
       }
    }
 
@@ -458,7 +492,13 @@ static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
       }
    }
 
-   return result;
+   // FIXME/TODO: P_Cross and P_Shoot have always been void, and P_UseSpecialLine
+   // just returns true if an action is attempted, not if it succeeds. Until a
+   // comp var is added, we return true from here instead of forwarding on the
+   // result.
+   
+   //return result;
+   return true; // temporary
 }
 
 //=============================================================================
@@ -472,6 +512,8 @@ static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
 static bool EV_ActionOpenDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case   2: (W1)
+   // case  46: (GR)
+   // case  61: (SR)
    // case  86: (WR)
    // case 103: (S1)
    // Open Door
@@ -484,6 +526,7 @@ static bool EV_ActionOpenDoor(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionCloseDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 3:  (W1)
+   // case 42: (SR)
    // case 50: (S1)
    // case 75: (WR)
    // Close Door
@@ -497,6 +540,7 @@ static bool EV_ActionRaiseDoor(ev_action_t *action, ev_instance_t *instance)
 {
    // case  4: (W1)
    // case 29: (S1)
+   // case 63: (SR)
    // case 90: (WR)
    // Raise Door
    return !!EV_DoDoor(instance->line, doorNormal);
@@ -508,6 +552,8 @@ static bool EV_ActionRaiseDoor(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionRaiseFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case   5: (W1)
+   // case  24: (G1)
+   // case  64: (SR)
    // case  91: (WR)
    // case 101: (S1)
    // Raise Floor
@@ -522,6 +568,7 @@ static bool EV_ActionFastCeilCrushRaise(ev_action_t *action, ev_instance_t *inst
    // case   6: (W1)
    // case  77: (WR)
    // case 164: (S1 - BOOM Extended)
+   // case 183: (SR - BOOM Extended)
    // Fast Ceiling Crush & Raise
    return !!EV_DoCeiling(instance->line, fastCrushAndRaise);
 }
@@ -534,6 +581,7 @@ static bool EV_ActionBuildStairsUp8(ev_action_t *action, ev_instance_t *instance
    // case 7:   (S1)
    // case 8:   (W1)
    // case 256: (WR - BOOM Extended)
+   // case 258: (SR - BOOM Extended)
    // Build Stairs
    return !!EV_BuildStairs(instance->line, build8);
 }
@@ -545,6 +593,7 @@ static bool EV_ActionPlatDownWaitUpStay(ev_action_t *action, ev_instance_t *inst
 {
    // case 10: (W1)
    // case 21: (S1)
+   // case 62: (SR)
    // case 88: (WR)
    // PlatDownWaitUp
    return !!EV_DoPlat(instance->line, downWaitUpStay, 0);
@@ -558,6 +607,7 @@ static bool EV_ActionLightTurnOn(ev_action_t *action, ev_instance_t *instance)
    // case  12: (W1)
    // case  80: (WR)
    // case 169: (S1 - BOOM Extended)
+   // case 192: (SR - BOOM Extended)
    // Light Turn On - brightest near
    return !!EV_LightTurnOn(instance->line, 0);
 }
@@ -567,8 +617,9 @@ static bool EV_ActionLightTurnOn(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionLightTurnOn255(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 13: (W1)
-   // case 81: (WR)
+   // case  13: (W1)
+   // case  81: (WR)
+   // case 138: (SR)
    // Light Turn On 255
    return !!EV_LightTurnOn(instance->line, 255);
 }
@@ -581,6 +632,7 @@ static bool EV_ActionCloseDoor30(ev_action_t *action, ev_instance_t *instance)
    // case  16: (W1)
    // case  76: (WR)
    // case 175: (S1 - BOOM Extended)
+   // case 196: (SR - BOOM Extended)
    // Close Door 30
    return !!EV_DoDoor(instance->line, closeThenOpen);
 }
@@ -593,6 +645,7 @@ static bool EV_ActionStartLightStrobing(ev_action_t *action, ev_instance_t *inst
    // case  17: (W1)
    // case 156: (WR - BOOM Extended)
    // case 172: (S1 - BOOM Extended)
+   // case 193: (SR - BOOM Extended)
    // Start Light Strobing
    return !!EV_StartLightStrobing(instance->line);
 }
@@ -603,6 +656,7 @@ static bool EV_ActionStartLightStrobing(ev_action_t *action, ev_instance_t *inst
 static bool EV_ActionLowerFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case  19: (W1)
+   // case  45: (SR)
    // case  83: (WR)
    // case 102: (S1)
    // Lower Floor
@@ -616,6 +670,8 @@ static bool EV_ActionPlatRaiseNearestChange(ev_action_t *action, ev_instance_t *
 {
    // case 20: (S1)
    // case 22: (W1)
+   // case 47: (G1)
+   // case 68: (SR)
    // case 95: (WR)
    // Raise floor to nearest height and change texture
    return !!EV_DoPlat(instance->line, raiseToNearestAndChange, 0);
@@ -626,9 +682,10 @@ static bool EV_ActionPlatRaiseNearestChange(ev_action_t *action, ev_instance_t *
 //
 static bool EV_ActionCeilingCrushAndRaise(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 25: (W1)
-   // case 49: (S1)
-   // case 73: (WR)
+   // case  25: (W1)
+   // case  49: (S1)
+   // case  73: (WR)
+   // case 184: (SR - BOOM Extended)
    // Ceiling Crush and Raise
    return !!EV_DoCeiling(instance->line, crushAndRaise);
 }
@@ -641,6 +698,7 @@ static bool EV_ActionFloorRaiseToTexture(ev_action_t *action, ev_instance_t *ins
    // case  30: (W1)
    // case  96: (WR)
    // case 158: (S1 - BOOM Extended)
+   // case 176: (SR - BOOM Extended)
    // Raise floor to shortest texture height on either side of lines.
    return !!EV_DoFloor(instance->line, raiseToTexture);
 }
@@ -652,6 +710,7 @@ static bool EV_ActionLightsVeryDark(ev_action_t *action, ev_instance_t *instance
 {
    // case  35: (W1)
    // case  79: (WR)
+   // case 139: (SR)
    // case 170: (S1 - BOOM Extended)
    // Lights Very Dark
    return !!EV_LightTurnOn(instance->line, 35);
@@ -663,6 +722,7 @@ static bool EV_ActionLightsVeryDark(ev_action_t *action, ev_instance_t *instance
 static bool EV_ActionLowerFloorTurbo(ev_action_t *action, ev_instance_t *instance)
 {
    // case 36: (W1)
+   // case 70: (SR)
    // case 71: (S1)
    // case 98: (WR)
    // Lower Floor (TURBO)
@@ -677,6 +737,7 @@ static bool EV_ActionFloorLowerAndChange(ev_action_t *action, ev_instance_t *ins
    // case  37: (W1)
    // case  84: (WR)
    // case 159: (S1 - BOOM Extended)
+   // case 177: (SR - BOOM Extended)
    // LowerAndChange
    return !!EV_DoFloor(instance->line, lowerAndChange);
 }
@@ -688,6 +749,7 @@ static bool EV_ActionFloorLowerToLowest(ev_action_t *action, ev_instance_t *inst
 {
    // case 23: (S1)
    // case 38: (W1)
+   // case 60: (SR)
    // case 82: (WR)
    // Lower Floor To Lowest
    return !!EV_DoFloor(instance->line, lowerFloorToLowest);
@@ -701,6 +763,7 @@ static bool EV_ActionTeleport(ev_action_t *action, ev_instance_t *instance)
    // case  39: (W1)
    // case  97: (WR)
    // case 174: (S1 - BOOM Extended)
+   // case 195: (SR - BOOM Extended)
    // TELEPORT!
    // case 125: (W1)
    // case 126: (WR)
@@ -765,6 +828,7 @@ static bool EV_ActionBOOMRaiseCeilingOrLowerFloor(ev_action_t *action,
                                                   ev_instance_t *instance)
 {
    // case 166: (S1 - BOOM Extended)
+   // case 186: (SR - BOOM Extended)
    // Raise ceiling, Lower floor
    return (EV_DoCeiling(instance->line, raiseToHighest) ||
            EV_DoFloor(instance->line, lowerFloorToLowest));
@@ -778,6 +842,7 @@ static bool EV_ActionCeilingLowerAndCrush(ev_action_t *action, ev_instance_t *in
    // case  44: (W1)
    // case  72: (WR)
    // case 167: (S1 - BOOM Extended)
+   // case 187: (SR - BOOM Extended)
    // Ceiling Crush
    return !!EV_DoCeiling(instance->line, lowerAndCrush);
 }
@@ -789,7 +854,7 @@ static bool EV_ActionExitLevel(ev_action_t *action, ev_instance_t *instance)
 {
    Mobj *thing = instance->actor;
 
-   // case 52:
+   // case  52: (W1)
    // EXIT!
    // killough 10/98: prevent zombies from exiting levels
    if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
@@ -821,6 +886,23 @@ static bool EV_ActionSwitchExitLevel(ev_action_t *action, ev_instance_t *instanc
 }
 
 //
+// EV_ActionGunExitLevel
+//
+// This version of level exit logic is used for gun-type exits.
+//
+static bool EV_ActionGunExitLevel(ev_action_t *action, ev_instance_t *instance)
+{
+   Mobj *thing = instance->actor;
+
+   // case 197: (G1 - BOOM Extended)
+   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+      return false;
+
+   G_ExitLevel();
+   return true;
+}
+
+//
 // EV_ActionPlatPerpetualRaise
 //
 static bool EV_ActionPlatPerpetualRaise(ev_action_t *action, ev_instance_t *instance)
@@ -828,6 +910,7 @@ static bool EV_ActionPlatPerpetualRaise(ev_action_t *action, ev_instance_t *inst
    // case  53: (W1)
    // case  87: (WR)
    // case 162: (S1 - BOOM Extended)
+   // case 181: (SR - BOOM Extended)
    // Perpetual Platform Raise
    return !!EV_DoPlat(instance->line, perpetualRaise, 0);
 }
@@ -840,6 +923,7 @@ static bool EV_ActionPlatStop(ev_action_t *action, ev_instance_t *instance)
    // case  54: (W1)
    // case  89: (WR)
    // case 163: (S1 - BOOM Extended)
+   // case 182: (SR - BOOM Extended)
    // Platform Stop
    return !!EV_StopPlat(instance->line);
 }
@@ -851,6 +935,7 @@ static bool EV_ActionFloorRaiseCrush(ev_action_t *action, ev_instance_t *instanc
 {
    // case 55: (S1)
    // case 56: (W1)
+   // case 65: (SR)
    // case 94: (WR)
    // Raise Floor Crush
    return !!EV_DoFloor(instance->line, raiseFloorCrush);
@@ -864,6 +949,7 @@ static bool EV_ActionCeilingCrushStop(ev_action_t *action, ev_instance_t *instan
    // case  57: (W1)
    // case  74: (WR)
    // case 168: (S1 - BOOM Extended)
+   // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
    return !!EV_CeilingCrushStop(instance->line);
 }
@@ -876,6 +962,7 @@ static bool EV_ActionRaiseFloor24(ev_action_t *action, ev_instance_t *instance)
    // case  58: (W1)
    // case  92: (WR)
    // case 161: (S1 - BOOM Extended)
+   // case 180: (SR - BOOM Extended)
    // Raise Floor 24
    return !!EV_DoFloor(instance->line, raiseFloor24);
 }
@@ -888,6 +975,7 @@ static bool EV_ActionRaiseFloor24Change(ev_action_t *action, ev_instance_t *inst
    // case  59: (W1)
    // case  93: (WR)
    // case 160: (S1 - BOOM Extended)
+   // case 179: (SR - BOOM Extended)
    // Raise Floor 24 And Change
    return !!EV_DoFloor(instance->line, raiseFloor24AndChange);
 }
@@ -900,6 +988,7 @@ static bool EV_ActionBuildStairsTurbo16(ev_action_t *action, ev_instance_t *inst
    // case 100: (W1)
    // case 127: (S1)
    // case 257: (WR - BOOM Extended)
+   // case 259: (SR - BOOM Extended)
    // Build Stairs Turbo 16
    return !!EV_BuildStairs(instance->line, turbo16);
 }
@@ -912,6 +1001,7 @@ static bool EV_ActionTurnTagLightsOff(ev_action_t *action, ev_instance_t *instan
    // case 104: (W1)
    // case 157: (WR - BOOM Extended)
    // case 173: (S1 - BOOM Extended)
+   // case 194: (SR - BOOM Extended)
    // Turn lights off in sector(tag)
    return !!EV_TurnTagLightsOff(instance->line);
 }
@@ -924,6 +1014,7 @@ static bool EV_ActionDoorBlazeRaise(ev_action_t *action, ev_instance_t *instance
    // case 105: (WR)
    // case 108: (W1)
    // case 111: (S1)
+   // case 114: (SR)
    // Blazing Door Raise (faster than TURBO!)
    return !!EV_DoDoor(instance->line, blazeRaise);
 }
@@ -936,6 +1027,7 @@ static bool EV_ActionDoorBlazeOpen(ev_action_t *action, ev_instance_t *instance)
    // case 106: (WR)
    // case 109: (W1)
    // case 112: (S1)
+   // case 115: (SR)
    // Blazing Door Open (faster than TURBO!)
    return !!EV_DoDoor(instance->line, blazeOpen);
 }
@@ -948,6 +1040,7 @@ static bool EV_ActionDoorBlazeClose(ev_action_t *action, ev_instance_t *instance
    // case 107: (WR)
    // case 110: (W1)
    // case 113: (S1)
+   // case 116: (SR)
    // Blazing Door Close (faster than TURBO!)
    return !!EV_DoDoor(instance->line, blazeClose);
 }
@@ -957,7 +1050,8 @@ static bool EV_ActionDoorBlazeClose(ev_action_t *action, ev_instance_t *instance
 //
 static bool EV_ActionFloorRaiseToNearest(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 18:  (S1)
+   // case  18: (S1)
+   // case  69: (SR)
    // case 119: (W1)
    // case 128: (WR)
    // Raise floor to nearest surr. floor
@@ -972,6 +1066,7 @@ static bool EV_ActionPlatBlazeDWUS(ev_action_t *action, ev_instance_t *instance)
    // case 120: (WR)
    // case 121: (W1)
    // case 122: (S1)
+   // case 123: (SR)
    // Blazing PlatDownWaitUpStay
    return !!EV_DoPlat(instance->line, blazeDWUS, 0);
 }
@@ -1015,6 +1110,23 @@ static bool EV_ActionSwitchSecretExit(ev_action_t *action, ev_instance_t *instan
 }
 
 //
+// EV_ActionGunSecretExit
+//
+// This variant of secret exit action is used by impact specials.
+//
+static bool EV_ActionGunSecretExit(ev_action_t *action, ev_instance_t *instance)
+{
+   Mobj *thing = instance->actor;
+
+   // case 198: (G1 - BOOM Extended)
+   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+      return false;
+
+   G_SecretExitLevel();
+   return true;
+}
+
+//
 // EV_ActionRaiseFloorTurbo
 //
 static bool EV_ActionRaiseFloorTurbo(ev_action_t *action, ev_instance_t *instance)
@@ -1022,6 +1134,7 @@ static bool EV_ActionRaiseFloorTurbo(ev_action_t *action, ev_instance_t *instanc
    // case 129: (WR)
    // case 130: (W1)
    // case 131: (S1)
+   // case 132: (SR)
    // Raise Floor Turbo
    return !!EV_DoFloor(instance->line, raiseFloorTurbo);
 }
@@ -1034,6 +1147,7 @@ static bool EV_ActionSilentCrushAndRaise(ev_action_t *action, ev_instance_t *ins
    // case 141: (W1)
    // case 150: (WR - BOOM Extended)
    // case 165: (S1 - BOOM Extended)
+   // case 185: (SR - BOOM Extended)
    // Silent Ceiling Crush & Raise
    return !!EV_DoCeiling(instance->line, silentCrushAndRaise);
 }
@@ -1046,6 +1160,7 @@ static bool EV_ActionRaiseFloor512(ev_action_t *action, ev_instance_t *instance)
    // case 140: (S1)
    // case 142: (W1 - BOOM Extended)
    // case 147: (WR - BOOM Extended)
+   // case 178: (SR - BOOM Extended)
    // Raise Floor 512
    return !!EV_DoFloor(instance->line, raiseFloor512);
 }
@@ -1055,7 +1170,8 @@ static bool EV_ActionRaiseFloor512(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionPlatRaise24Change(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 15:  (S1)
+   // case  15: (S1)
+   // case  66: (SR)
    // case 143: (W1 - BOOM Extended)
    // case 148: (WR - BOOM Extended)
    // Raise Floor 24 and change
@@ -1067,7 +1183,8 @@ static bool EV_ActionPlatRaise24Change(ev_action_t *action, ev_instance_t *insta
 //
 static bool EV_ActionPlatRaise32Change(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 14:  (S1)
+   // case  14: (S1)
+   // case  67: (SR)
    // case 144: (W1 - BOOM Extended)
    // case 149: (WR - BOOM Extended)
    // Raise Floor 32 and change
@@ -1080,6 +1197,7 @@ static bool EV_ActionPlatRaise32Change(ev_action_t *action, ev_instance_t *insta
 static bool EV_ActionCeilingLowerToFloor(ev_action_t *action, ev_instance_t *instance)
 {
    // case 41:  (S1)
+   // case 43:  (SR)
    // case 145: (W1 - BOOM Extended)
    // case 152: (WR - BOOM Extended)
    // Lower Ceiling to Floor
@@ -1094,6 +1212,7 @@ static bool EV_ActionDoDonut(ev_action_t *action, ev_instance_t *instance)
    // case 9:   (S1)
    // case 146: (W1 - BOOM Extended)
    // case 155: (WR - BOOM Extended)
+   // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
    return !!EV_DoDonut(instance->line);
 }
@@ -1106,6 +1225,7 @@ static bool EV_ActionCeilingLowerToLowest(ev_action_t *action, ev_instance_t *in
    // case 199: (W1 - BOOM Extended)
    // case 201: (WR - BOOM Extended)
    // case 203: (S1 - BOOM Extended)
+   // case 205: (SR - BOOM Extended)
    // Lower ceiling to lowest surrounding ceiling
    return !!EV_DoCeiling(instance->line, lowerToLowest);
 }
@@ -1118,6 +1238,7 @@ static bool EV_ActionCeilingLowerToMaxFloor(ev_action_t *action, ev_instance_t *
    // case 200: (W1 - BOOM Extended)
    // case 202: (WR - BOOM Extended)
    // case 204: (S1 - BOOM Extended)
+   // case 206: (SR - BOOM Extended)
    // Lower ceiling to highest surrounding floor
    return !!EV_DoCeiling(instance->line, lowerToMaxFloor);
 }
@@ -1134,6 +1255,7 @@ static bool EV_ActionSilentTeleport(ev_action_t *action, ev_instance_t *instance
    // case 207: (W1 - BOOM Extended)
    // case 208: (WR - BOOM Extended)
    // case 209: (S1 - BOOM Extended)
+   // case 210: (SR - BOOM Extended)
    // killough 2/16/98: W1 silent teleporter (normal kind)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
@@ -1151,6 +1273,7 @@ static bool EV_ActionChangeOnly(ev_action_t *action, ev_instance_t *instance)
    // case 153: (W1 - BOOM Extended)
    // case 154: (WR - BOOM Extended)
    // case 189: (S1 - BOOM Extended)
+   // case 190: (SR - BOOM Extended)
    // Texture/Type Change Only (Trig)
    return !!EV_DoChange(instance->line, trigChangeOnly);
 }
@@ -1161,8 +1284,10 @@ static bool EV_ActionChangeOnly(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionChangeOnlyNumeric(ev_action_t *action, ev_instance_t *instance)
 {
    //jff 3/15/98 create texture change no motion type
+   // case  78: (SR - BOOM Extended)
    // case 239: (W1 - BOOM Extended)
    // case 240: (WR - BOOM Extended)
+   // case 241: (S1 - BOOM Extended)
    // Texture/Type Change Only (Numeric)
    return !!EV_DoChange(instance->line, numChangeOnly);
 }
@@ -1174,6 +1299,8 @@ static bool EV_ActionFloorLowerToNearest(ev_action_t *action, ev_instance_t *ins
 {
    // case 219: (W1 - BOOM Extended)
    // case 220: (WR - BOOM Extended)
+   // case 221: (S1 - BOOM Extended)
+   // case 222: (SR - BOOM Extended)
    // Lower floor to next lower neighbor
    return !!EV_DoFloor(instance->line, lowerFloorToNearest);
 }
@@ -1185,6 +1312,8 @@ static bool EV_ActionElevatorUp(ev_action_t *action, ev_instance_t *instance)
 {
    // case 227: (W1 - BOOM Extended)
    // case 228: (WR - BOOM Extended)
+   // case 229: (S1 - BOOM Extended)
+   // case 230: (SR - BOOM Extended)
    // Raise elevator next floor
    return !!EV_DoElevator(instance->line, elevateUp);
 }
@@ -1196,6 +1325,8 @@ static bool EV_ActionElevatorDown(ev_action_t *action, ev_instance_t *instance)
 {
    // case 231: (W1 - BOOM Extended)
    // case 232: (WR - BOOM Extended)
+   // case 233: (S1 - BOOM Extended)
+   // case 234: (SR - BOOM Extended)
    // Lower elevator next floor
    return !!EV_DoElevator(instance->line, elevateDown);
 
@@ -1208,6 +1339,8 @@ static bool EV_ActionElevatorCurrent(ev_action_t *action, ev_instance_t *instanc
 {
    // case 235: (W1 - BOOM Extended)
    // case 236: (WR - BOOM Extended)
+   // case 237: (S1 - BOOM Extended)
+   // case 238: (SR - BOOM Extended)
    // Elevator to current floor
    return !!EV_DoElevator(instance->line, elevateCurrent);
 }
@@ -1257,6 +1390,7 @@ static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action,
 static bool EV_ActionPlatToggleUpDown(ev_action_t *action, ev_instance_t *instance)
 {
    // jff 3/14/98 create instant toggle floor type
+   // case 211: (SR - BOOM Extended)
    // case 212: (WR - BOOM Extended)
    return !!EV_DoPlat(instance->line, toggleUpDn, 0);
 }
@@ -1300,8 +1434,11 @@ static bool EV_ActionVerticalDoor(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionDoLockedDoor(ev_action_t *action, ev_instance_t *instance)
 {
+   // case  99: (SR) BlzOpenDoor BLUE
    // case 133: (S1) BlzOpenDoor BLUE
+   // case 134: (SR) BlzOpenDoor RED
    // case 135: (S1) BlzOpenDoor RED
+   // case 136: (SR) BlzOpenDoor YELLOW
    // case 137: (S1) BlzOpenDoor YELLOW
 
    // TODO: move special-specific logic out of EV_DoLockedDoor
@@ -1396,6 +1533,24 @@ static ev_actiontype_t DRActionType =
    EV_PREALLOWZEROTAG    // tags are never used for activation purposes
 };
 
+// GR-Type lines may be activated multiple times by hitscan attacks
+// FIXME/TODO: In Raven and Rogue games, projectiles activate them as well.
+static ev_actiontype_t GRActionType =
+{
+   SPAC_IMPACT,          // line must be hit
+   EV_DOOMPreShootLine,  // pre-activation callback
+   EV_DOOMPostShootLine, // post-activation callback (same as use)
+   EV_POSTCHANGESWITCH   // change switch texture
+};
+
+// G1-Type lines may be activated once, by a hitscan attack.
+static ev_actiontype_t G1ActionType = 
+{
+   SPAC_IMPACT,          // line must be hit
+   EV_DOOMPreShootLine,  // pre-activation callback
+   EV_DOOMPostShootLine, // post-activation callback
+   EV_POSTCHANGESWITCH | EV_POSTCLEARSPECIAL // change switch and clear special
+};
 
 // BOOM Generalized Action Type (there is but one)
 
@@ -1432,6 +1587,7 @@ static ev_actiontype_t BoomGenActionType =
       version                                \
    }
 
+// Macro to declare a DOOM-style S1 line action
 #define S1LINE(name, action, flags, version) \
    static ev_action_t name =                 \
    {                                         \
@@ -1441,10 +1597,41 @@ static ev_actiontype_t BoomGenActionType =
       version                                \
    }
 
+// Macro to declare a DOOM-style SR line action
+#define SRLINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &SRActionType,                         \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
+   }
+
+// Macro to declare a DOOM-style DR line action
 #define DRLINE(name, action, flags, version) \
    static ev_action_t name =                 \
    {                                         \
       &DRActionType,                         \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
+   }
+
+// Macro to declare a DOOM-style G1 line action
+#define G1LINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &G1ActionType,                         \
+      EV_Action ## action,                   \
+      flags,                                 \
+      version                                \
+   }
+
+// Macro to declare a DOOM-style GR line action
+#define GRLINE(name, action, flags, version) \
+   static ev_action_t name =                 \
+   {                                         \
+      &GRActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
       version                                \
@@ -1519,6 +1706,9 @@ W1LINE(W1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
 // DOOM Line Type 23 - S1 Floor Lower to Lowest
 S1LINE(S1FloorLowerToLowest, FloorLowerToLowest, 0, 0);
 
+// DOOM Line Type 24 - G1 Raise Floor to Highest Adjacent
+G1LINE(G1RaiseFloor, RaiseFloor, 0, 0);
+
 // DOOM Line Type 25 - W1 Ceiling Crush and Raise
 W1LINE(W1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
 
@@ -1574,8 +1764,23 @@ W1LINE(W1RaiseCeilingLowerFloor, RaiseCeilingLowerFloor, 0, 0);
 // DOOM Line Type 41 - S1 Ceiling Lower to Floor
 S1LINE(S1CeilingLowerToFloor, CeilingLowerToFloor, 0, 0);
 
+// DOOM Line Type 42 - SR Close Door
+SRLINE(SRCloseDoor, CloseDoor, 0, 0);
+
+// DOOM Line Type 43 - SR Lower Ceiling to Floor
+SRLINE(SRCeilingLowerToFloor, CeilingLowerToFloor, 0, 0);
+
 // DOOM Line Type 44 - W1 Ceiling Crush
 W1LINE(W1CeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
+
+// DOOM Line Type 45 - SR Floor Lower to Surr. Floor 
+SRLINE(SRLowerFloor, LowerFloor, 0, 0);
+
+// DOOM Line Type 46 - GR Open Door
+GRLINE(GROpenDoor, OpenDoor, EV_PREALLOWMONSTERS | EV_POSTCHANGEALWAYS, 0);
+
+// DOOM Line Type 47 - G1 Plat Raise to Nearest and Change
+G1LINE(G1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
 
 // DOOM Line Type 49 - S1 Ceiling Crush And Raise
 S1LINE(S1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
@@ -1610,6 +1815,39 @@ W1LINE(W1RaiseFloor24, RaiseFloor24, 0, 0);
 // DOOM Line Type 59 - W1 Raise Floor 24 and Change
 W1LINE(W1RaiseFloor24Change, RaiseFloor24Change, 0, 0);
 
+// DOOM Line Type 60 - SR Lower Floor to Lowest
+SRLINE(SRFloorLowerToLowest, FloorLowerToLowest, 0, 0);
+
+// DOOM Line Type 61 - SR Open Door
+SRLINE(SROpenDoor, OpenDoor, 0, 0);
+
+// DOOM Line Type 62 - SR Plat Down Wait Up Stay
+SRLINE(SRPlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
+
+// DOOM Line Type 63 - SR Raise Door
+SRLINE(SRRaiseDoor, RaiseDoor, 0, 0);
+
+// DOOM Line Type 64 - SR Raise Floor to Ceiling
+SRLINE(SRRaiseFloor, RaiseFloor, 0, 0);
+
+// DOOM Line Type 65 - SR Raise Floor and Crush
+SRLINE(SRFloorRaiseCrush, FloorRaiseCrush, 0, 0);
+
+// DOOM Line Type 66 - SR Plat Raise 24 and Change
+SRLINE(SRPlatRaise24Change, PlatRaise24Change, 0, 0);
+
+// DOOM Line Type 67 - SR Plat Raise 32 and Change
+SRLINE(SRPlatRaise32Change, PlatRaise32Change, 0, 0);
+
+// DOOM Line Type 68 - SR Plat Raise to Nearest and Change
+SRLINE(SRPlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+
+// DOOM Line Type 69 - SR Floor Raise to Next Highest Floor
+SRLINE(SRFloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
+
+// DOOM Line Type 70 - SR Lower Floor Turbo
+SRLINE(SRLowerFloorTurbo, LowerFloorTurbo, 0, 0);
+
 // DOOM Line Type 71 - S1 Lower Floor Turbo
 S1LINE(S1LowerFloorTurbo, LowerFloorTurbo, 0, 0);
 
@@ -1630,6 +1868,9 @@ WRLINE(WRCloseDoor30, CloseDoor30, 0, 0);
 
 // DOOM Line Type 77 - WR Fast Ceiling Crush & Raise
 WRLINE(WRFastCeilCrushRaise, FastCeilCrushRaise, 0, 0);
+
+// BOOM Extended Line Type 78 - SR Change Texture/Type Only (Numeric)
+SRLINE(SRChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
 
 // DOOM Line Type 79 - WR Lights Very Dark
 WRLINE(WRLightsVeryDark, LightsVeryDark, EV_PREALLOWZEROTAG, 0);
@@ -1688,6 +1929,9 @@ WRLINE(WRTeleport, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 0);
 // DOOM Line Type 98 - WR Lower Floor Turbo
 WRLINE(WRLowerFloorTurbo, LowerFloorTurbo, 0, 0);
 
+// DOOM Line Type 99 - SR Blaze Open Door Blue Key
+SRLINE(SRDoorBlazeOpenBlue, DoLockedDoor, 0, 0);
+
 // DOOM Line Type 100 - W1 Build Stairs Turbo 16
 W1LINE(W1BuildStairsTurbo16, BuildStairsTurbo16, 0, 0);
 
@@ -1730,6 +1974,15 @@ S1LINE(S1DoorBlazeOpen, DoorBlazeOpen, 0, 0);
 // DOOM Line Type 113 - S1 Blazing Door Close
 S1LINE(S1DoorBlazeClose, DoorBlazeClose, 0, 0);
 
+// DOOM Line Type 114 - SR Blazing Door Raise
+SRLINE(SRDoorBlazeRaise, DoorBlazeRaise, 0, 0);
+
+// DOOM Line Type 115 - SR Blazing Door Open
+SRLINE(SRDoorBlazeOpen, DoorBlazeOpen, 0, 0);
+
+// DOOM Line Type 116 - SR Blazing Door Close
+SRLINE(SRDoorBlazeClose, DoorBlazeClose, 0, 0);
+
 // DOOM Line Type 117 - DR Door Blaze Raise
 DRLINE(DRDoorBlazeRaise, VerticalDoor, 0, 0);
 
@@ -1747,6 +2000,9 @@ W1LINE(W1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
 
 // DOOM Line Type 122 - S1 Plat Blaze Down-Wait-Up-Stay
 S1LINE(S1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
+
+// DOOM Line Type 123 - SR Plat Blaze Down-Wait-Up-Stay
+SRLINE(SRPlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
 
 // DOOM Line Type 124 - WR Secret Exit
 WRLINE(WRSecretExit, SecretExit, EV_PREALLOWZEROTAG, 0);
@@ -1773,14 +2029,29 @@ W1LINE(W1RaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
 // DOOM Line Type 131 - S1 Raise Floor Turbo
 S1LINE(S1RaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
 
+// DOOM Line Type 132 - SR Raise Floor Turbo
+SRLINE(SRRaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
+
 // DOOM Line Type 133 - S1 Door Blaze Open Blue Key
 S1LINE(S1DoorBlazeOpenBlue, DoLockedDoor, 0, 0);
+
+// DOOM Line Type 134 - SR Door Blaze Open Red Key
+SRLINE(SRDoorBlazeOpenRed, DoLockedDoor, 0, 0);
 
 // DOOM Line Type 135 - S1 Door Blaze Open Red Key
 S1LINE(S1DoorBlazeOpenRed, DoLockedDoor, 0, 0);
 
+// DOOM Line Type 136 - SR Door BLaze Open Yellow Key
+SRLINE(SRDoorBlazeOpenYellow, DoLockedDoor, 0, 0);
+
 // DOOM Line Type 137 - S1 Door Blaze Open Yellow Key
 S1LINE(S1DoorBlazeOpenYellow, DoLockedDoor, 0, 0);
+
+// DOOM Line Type 138 - SR Light Turn On 255
+SRLINE(SRLightTurnOn255, LightTurnOn255, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 0);
+
+// DOOM Line Type 139 - SR Light Turn Off (35)
+SRLINE(SRLightsVeryDark, LightsVeryDark, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 0);
 
 // DOOM Line Type 140 - S1 Raise Floor 512
 S1LINE(S1RaiseFloor512, RaiseFloor512, 0, 0);
@@ -1893,8 +2164,75 @@ S1LINE(S1Teleport, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
 // BOOM Extended Line Type 175 - S1 Door Close 30, then Open
 S1LINE(S1CloseDoor30, CloseDoor30, 0, 200);
 
+// BOOM Extended Line Type 176 - SR Floor Raise to Texture
+SRLINE(SRFloorRaiseToTexture, FloorRaiseToTexture, 0, 200);
+
+// BOOM Extended Line Type 177 - SR Floor Lower and Change
+SRLINE(SRFloorLowerAndChange, FloorLowerAndChange, 0, 200);
+
+// BOOM Extended Line Type 178 - SR Raise Floor 512
+SRLINE(SRRaiseFloor512, RaiseFloor512, 0, 200);
+
+// BOOM Extended Line Type 179 - SR Raise Floor 24 and Change
+SRLINE(SRRaiseFloor24Change, RaiseFloor24Change, 0, 200);
+
+// BOOM Extended Line Type 180 - SR Raise Floor 24
+SRLINE(SRRaiseFloor24, RaiseFloor24, 0, 200);
+
+// BOOM Extended Line Type 181 - SR Plat Perpetual Raise
+SRLINE(SRPlatPerpetualRaise, PlatPerpetualRaise, 0, 200);
+
+// BOOM Extended Line Type 182 - SR Plat Stop
+SRLINE(SRPlatStop, PlatStop, 0, 200);
+
+// BOOM Extended Line Type 183 - SR Fast Ceiling Crush and Raise
+SRLINE(SRFastCeilCrushRaise, FastCeilCrushRaise, 0, 200);
+
+// BOOM Extended Line Type 184 - SR Ceiling Crush and Raise
+SRLINE(SRCeilingCrushAndRaise, CeilingCrushAndRaise, 0, 200);
+
+// BOOM Extended Line Type 185 - SR Silent Crush and Raise
+SRLINE(SRSilentCrushAndRaise, SilentCrushAndRaise, 0, 200);
+
+// BOOM Extended Line Type 186 - SR Raise Ceiling -OR- Lower Floor
+// NB: This line is also bugged, like its 166 S1 counterpart.
+SRLINE(SRBOOMRaiseCeilingOrLowerFloor, BOOMRaiseCeilingOrLowerFloor, 0, 200);
+
+// BOOM Extended Line Type 187 - SR Ceiling Lower and Crush
+SRLINE(SRCeilingLowerAndCrush, CeilingLowerAndCrush, 0, 200);
+
+// BOOM Extended Line Type 188 - SR Ceiling Crush Stop
+SRLINE(SRCeilingCrushStop, CeilingCrushStop, 0, 200);
+
 // BOOM Extended Line Type 189 - S1 Change Texture Only
 S1LINE(S1ChangeOnly, ChangeOnly, 0, 200);
+
+// BOOM Extended Line Type 190 - SR Change Texture/Type Only
+SRLINE(SRChangeOnly, ChangeOnly, 0, 200);
+
+// BOOM Extended Line Type 191 - SR Lower Pillar, Raise Donut
+SRLINE(SRDoDonut, DoDonut, 0, 200);
+
+// BOOM Extended Line Type 192 - SR Lights to Brightest Neighbor
+SRLINE(SRLightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 193 - SR Start Lights Strobing
+SRLINE(SRStartLightStrobing, StartLightStrobing, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 194 - SR Lights to Dimmest Near
+SRLINE(SRTurnTagLightsOff, TurnTagLightsOff, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 195 - SR Teleport
+SRLINE(SRTeleport, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 196 - SR Close Door, Open in 30
+SRLINE(SRCloseDoor30, CloseDoor30, 0, 200);
+
+// BOOM Extended Line Type 197 - G1 Exit Level
+G1LINE(G1ExitLevel, GunExitLevel, EV_PREALLOWZEROTAG, 200);
+
+// BOOM Extended Line Type 198 - G1 Secret Exit
+G1LINE(G1SecretExit, GunSecretExit, EV_PREALLOWZEROTAG, 200);
 
 // BOOM Extended Line Type 199 - W1 Ceiling Lower to Lowest Surr. Ceiling
 W1LINE(W1CeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
@@ -1914,6 +2252,12 @@ S1LINE(S1CeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
 // BOOM Extended Line Type 204 - S1 Ceiling Lower to Highest Surr. Floor
 S1LINE(S1CeilingLowerToMaxFloor, CeilingLowerToMaxFloor, 0, 200);
 
+// BOOM Extended Line Type 205 - SR Ceiling Lower to Lowest Surr. Ceiling
+SRLINE(SRCeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
+
+// BOOM Extended Line Type 206 - SR CeilingLower to Highest Surr. Floor
+SRLINE(SRCeilingLowerToMaxFloor, CeilingLowerToMaxFloor, 0, 200);
+
 // BOOM Extended Line Type 207 - W1 Silent Teleport
 W1LINE(W1SilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
 
@@ -1922,6 +2266,13 @@ WRLINE(WRSilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTER
 
 // BOOM Extended Line Type 209 - S1 Silent Teleport
 S1LINE(S1SilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 210 - SR Silent Teleport
+SRLINE(SRSilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 211 - SSR Plat Toggle Floor Instant C/F
+// jff 3/14/98 create instant toggle floor type
+SRLINE(SRPlatToggleUpDown, PlatToggleUpDown, 0, 200);
 
 // BOOM Extended Line Type 212 - WR Plat Toggle Floor Instant C/F
 WRLINE(WRPlatToggleUpDown, PlatToggleUpDown, 0, 200);
@@ -1932,11 +2283,23 @@ W1LINE(W1FloorLowerToNearest, FloorLowerToNearest, 0, 200);
 // BOOM Extended Line Type 220 - WR Floor Lower to Next Lower Neighbor
 WRLINE(WRFloorLowerToNearest, FloorLowerToNearest, 0, 200);
 
+// BOOM Extended Line Type 221 - S1 Floor Lower to Next Lower Neighbor
+S1LINE(S1FloorLowerToNearest, FloorLowerToNearest, 0, 200);
+
+// BOOM Extended Line Type 222 - SR FLoor Lower to Next Lower Neighbor
+SRLINE(SRFloorLowerToNearest, FloorLowerToNearest, 0, 200);
+
 // BOOM Extended Line Type 227 - W1 Raise Elevator to Next Floor
 W1LINE(W1ElevatorUp, ElevatorUp, 0, 200);
 
 // BOOM Extended Line Type 228 - WR Raise Elevator to Next Floor
 WRLINE(WRElevatorUp, ElevatorUp, 0, 200);
+
+// BOOM Extended Line Type 229 - S1 Raise Elevator to Next Floor
+S1LINE(S1ElevatorUp, ElevatorUp, 0, 200);
+
+// BOOM Extended Line Type 230 - SR Raise Elevator to Next Floor
+SRLINE(SRElevatorUp, ElevatorUp, 0, 200);
 
 // BOOM Extended Line Type 231 - W1 Lower Elevator to Next Floor
 W1LINE(W1ElevatorDown, ElevatorDown, 0, 200);
@@ -1944,11 +2307,23 @@ W1LINE(W1ElevatorDown, ElevatorDown, 0, 200);
 // BOOM Extended Line Type 232 - WR Lower Elevator to Next Floor
 WRLINE(WRElevatorDown, ElevatorDown, 0, 200);
 
+// BOOM Extended Line Type 233 - S1 Lower Elevator to Next Floor
+S1LINE(S1ElevatorDown, ElevatorDown, 0, 200);
+
+// BOOM Extended Line Type 234 - SR Lower Elevator to Next Floor
+SRLINE(SRElevatorDown, ElevatorDown, 0, 200);
+
 // BOOM Extended Line Type 235 - W1 Elevator to Current Floor
 W1LINE(W1ElevatorCurrent, ElevatorCurrent, 0, 200);
 
 // BOOM Extended Line Type 236 - WR Elevator to Current Floor
 WRLINE(WRElevatorCurrent, ElevatorCurrent, 0, 200);
+
+// BOOM Extended Line Type 237 - S1 Elevator to Current Floor
+S1LINE(S1ElevatorCurrent, ElevatorCurrent, 0, 200);
+
+// BOOM Extended Line Type 238 - SR Elevator to Current Floor
+SRLINE(SRElevatorCurrent, ElevatorCurrent, 0, 200);
 
 // BOOM Extended Line Type 239 - W1 Change Texture/Type Numeric
 W1LINE(W1ChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
@@ -1956,11 +2331,28 @@ W1LINE(W1ChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
 // BOOM Extended Line Type 240 - WR Change Texture/Type Numeric
 WRLINE(WRChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
 
+// BOOM Extended Line Type 241 - S1 Change Only, Numeric Model
+S1LINE(S1ChangeOnlyNumeric, ChangeOnlyNumeric, 0, 200);
+
 // BOOM Extended Line Type 243 - W1 Silent Teleport Line-to-Line
 W1LINE(W1SilentLineTeleport, SilentLineTeleport, EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 244 - WR Silent Teleport Line-to-Line
-WRLINE(WRSilentLineTleeport, SilentLineTeleport, EV_PREALLOWMONSTERS, 200);
+WRLINE(WRSilentLineTeleport, SilentLineTeleport, EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 256 - WR Build Stairs Up 8
+// jff 3/16/98 renumber 153->256
+WRLINE(WRBuildStairsUp8, BuildStairsUp8, 0, 200);
+
+// BOOM Extended Line Type 257 - WR Build Stairs Up Turbo 16
+// jff 3/16/98 renumber 154->257
+WRLINE(WRBuildStairsTurbo16, BuildStairsTurbo16, 0, 200);
+
+// BOOM Extended Line Type 258 - SR Build Stairs Up 8
+SRLINE(SRBuildStairsUp8, BuildStairsUp8, 0, 200);
+
+// BOOM Extended Line Type 259 - SR Build Stairs Up Turbo 16
+SRLINE(SRBuildStairsTurbo16, BuildStairsTurbo16, 0, 200);
 
 // BOOM Extended Line Type 262 - W1 Silent Teleport Line-to-Line Reversed
 W1LINE(W1SilentLineTeleportReverse, SilentLineTeleportReverse, EV_PREALLOWMONSTERS, 200);
@@ -1986,14 +2378,6 @@ W1LINE(W1SilentTeleportMonsters, SilentTeleport, EV_PREALLOWMONSTERS | EV_PREMON
 // BOOM Extended Line Type 269 - WR Silent Teleport Monster Only
 WRLINE(WRSilentTeleportMonsters, SilentTeleport, EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 200);
 
-// BOOM Extended Line Type 256 - WR Build Stairs Up 8
-// jff 3/16/98 renumber 153->256
-WRLINE(WRBuildStairsUp8, BuildStairsUp8, 0, 200);
-
-// BOOM Extended Line Type 257 - WR Build Stairs Up Turbo 16
-// jff 3/16/98 renumber 154->257
-WRLINE(WRBuildStairsTurbo16, BuildStairsTurbo16, 0, 200);
-
 // SMMU Extended Line Type 273 - WR Start Script One-Way
 WRLINE(WRStartLineScript1S, StartLineScript, EV_PREFIRSTSIDEONLY | EV_PREALLOWZEROTAG, 300);
 
@@ -2003,455 +2387,20 @@ W1LINE(W1StartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
 // SMMU Extended Line Type 275 - W1 Start Script One-Way
 W1LINE(W1StartLineScript1S, StartLineScript, EV_PREFIRSTSIDEONLY | EV_PREALLOWZEROTAG, 300);
 
+// SMMU Extended Line Type 276 - SR Start Script
+SRLINE(SRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 300);
+
+// SMMU Extended Line Type 277 - S1 Start Script
+S1LINE(S1StartLineScript, StartLineScript, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 300);
+
+// SMMU Extended Line Type 278 - GR Start Script
+GRLINE(GRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 300);
+
+// SMMU Extended Line Type 279 - G1 Start Script
+G1LINE(G1StartLineScript, StartLineScript, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 300);
+
 // SMMU Extended Line Type 280 - WR Start Script
 WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
-
-/*
-bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
-{
-   // Switches that other things can activate.
-   if(!thing->player)
-   {
-      switch(line->special)
-      {
-         //jff 3/5/98 add ability to use teleporters for monsters
-      case 195:       // switch teleporters
-      case 210:       // silent switch teleporters
-      case 209:
-         break;
-         
-      default:
-         return false;
-      }
-   }
-
-   // Dispatch to handler according to linedef type
-   switch(line->special)
-   {
-     // Switches (non-retriggerable)
-
-      // killough 1/31/98: factored out compatibility check;
-      // added inner switch, relaxed check to demo_compatibility
-
-   default:
-      if(!demo_compatibility)
-      {
-         switch(line->special)
-         {
-            //jff 1/29/98 added linedef types to fill all functions out so that
-            // all possess SR, S1, WR, W1 types
-            
-         case 241: //jff 3/15/98 create texture change no motion type
-            // Texture Change Only (Numeric)
-            // 241 S1 Change Texture/Type Only
-            if (EV_DoChange(line,numChangeOnly))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-
-         case 221:
-            // Lower floor to next lowest floor
-            // 221 S1 Lower Floor To Nearest Floor
-            if (EV_DoFloor(line,lowerFloorToNearest))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 229:
-            // Raise elevator next floor
-            // 229 S1 Raise Elevator next floor
-            if (EV_DoElevator(line,elevateUp))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 233:
-            // Lower elevator next floor
-            // 233 S1 Lower Elevator next floor
-            if (EV_DoElevator(line,elevateDown))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 237:
-            // Elevator to current floor
-            // 237 S1 Elevator to current floor
-            if (EV_DoElevator(line,elevateCurrent))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-            
-            // jff 1/29/98 end of added S1 linedef types
-            
-            //jff 1/29/98 added linedef types to fill all functions out so that
-            // all possess SR, S1, WR, W1 types
-            
-         case 78: //jff 3/15/98 create texture change no motion type
-            // Texture Change Only (Numeric)
-            // 78 SR Change Texture/Type Only
-            if (EV_DoChange(line,numChangeOnly))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-
-         case 176:
-            // Raise Floor to shortest lower texture
-            // 176 SR  EV_DoFloor(raiseToTexture), CSW(1)
-            if (EV_DoFloor(line,raiseToTexture))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 177:
-            // Raise Floor to shortest lower texture
-            // 177 SR  EV_DoFloor(lowerAndChange)
-            if (EV_DoFloor(line,lowerAndChange))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 178:
-            // Raise Floor 512
-            // 178 SR  EV_DoFloor(raiseFloor512)
-            if (EV_DoFloor(line,raiseFloor512))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 179:
-            // Raise Floor 24 and change
-            // 179 SR  EV_DoFloor(raiseFloor24AndChange)
-            if (EV_DoFloor(line,raiseFloor24AndChange))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 180:
-            // Raise Floor 24
-            // 180 SR  EV_DoFloor(raiseFloor24)
-            if (EV_DoFloor(line,raiseFloor24))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-
-         case 181:
-            // Moving floor min n to max n
-            // 181 SR  EV_DoPlat(perpetualRaise,0)
-            EV_DoPlat(line,perpetualRaise,0);
-            P_ChangeSwitchTexture(line,1,0);
-            break;
-
-         case 182:
-            // Stop Moving floor
-            // 182 SR  EV_DoPlat(perpetualRaise,0)
-            EV_StopPlat(line);
-            P_ChangeSwitchTexture(line,1,0);
-            break;
-
-         case 183:
-            // Start fast crusher
-            // 183 SR  EV_DoCeiling(fastCrushAndRaise)
-            if (EV_DoCeiling(line,fastCrushAndRaise))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 184:
-            // Start slow crusher
-            // 184 SR  EV_DoCeiling(crushAndRaise)
-            if(EV_DoCeiling(line,crushAndRaise))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 185:
-            // Start slow silent crusher
-            // 185 SR  EV_DoCeiling(silentCrushAndRaise)
-            if (EV_DoCeiling(line,silentCrushAndRaise))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 186:
-            // Raise ceiling, Lower floor
-            // 186 SR EV_DoCeiling(raiseToHighest), EV_DoFloor(lowerFloortoLowest)
-            if(EV_DoCeiling(line, raiseToHighest) ||
-               EV_DoFloor(line, lowerFloorToLowest))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-
-         case 187:
-            // Lower floor and Crush
-            // 187 SR EV_DoCeiling(lowerAndCrush)
-            if (EV_DoCeiling(line, lowerAndCrush))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-
-         case 188:
-            // Stop crusher
-            // 188 SR EV_CeilingCrushStop()
-            if (EV_CeilingCrushStop(line))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 190: //jff 3/15/98 create texture change no motion type
-            // Texture Change Only (Trigger)
-            // 190 SR Change Texture/Type Only
-            if (EV_DoChange(line,trigChangeOnly))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 191:
-            // Lower Pillar, Raise Donut
-            // 191 SR  EV_DoDonut()
-            if (EV_DoDonut(line))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 192:
-            // Lights to brightest neighbor sector
-            // 192 SR  EV_LightTurnOn(0)
-            EV_LightTurnOn(line,0);
-            P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 193:
-            // Start Lights Strobing
-            // 193 SR  EV_StartLightStrobing()
-            EV_StartLightStrobing(line);
-            P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 194:
-            // Lights to Dimmest Near
-            // 194 SR  EV_TurnTagLightsOff()
-            EV_TurnTagLightsOff(line);
-            P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 195:
-            // Teleport
-            // 195 SR  EV_Teleport(side,thing)
-            if (EV_Teleport(line,side,thing))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 196:
-            // Close Door, Open in 30 secs
-            // 196 SR  EV_DoDoor(close30ThenOpen)
-            if (EV_DoDoor(line, closeThenOpen))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 205:
-            // Lower ceiling to lowest surrounding ceiling
-            // 205 SR EV_DoCeiling(lowerToLowest)
-            if (EV_DoCeiling(line,lowerToLowest))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 206:
-            // Lower ceiling to highest surrounding floor
-            // 206 SR EV_DoCeiling(lowerToMaxFloor)
-            if (EV_DoCeiling(line,lowerToMaxFloor))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 210:
-            // killough 1/31/98: silent teleporter
-            //jff 210 SR SilentTeleport 
-            if (EV_SilentTeleport(line, side, thing))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 211: //jff 3/14/98 create instant toggle floor type
-            // Toggle Floor Between C and F Instantly
-            // 211 SR Toggle Floor Instant
-            if (EV_DoPlat(line,toggleUpDn,0))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 222:
-            // Lower floor to next lowest floor
-            // 222 SR Lower Floor To Nearest Floor
-            if (EV_DoFloor(line,lowerFloorToNearest))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 230:
-            // Raise elevator next floor
-            // 230 SR Raise Elevator next floor
-            if (EV_DoElevator(line,elevateUp))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 234:
-            // Lower elevator next floor
-            // 234 SR Lower Elevator next floor
-            if (EV_DoElevator(line,elevateDown))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 238:
-            // Elevator to current floor
-            // 238 SR Elevator to current floor
-            if (EV_DoElevator(line,elevateCurrent))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 258:
-            // Build stairs, step 8
-            // 258 SR EV_BuildStairs(build8)
-            if (EV_BuildStairs(line,build8))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            
-         case 259:
-            // Build stairs, step 16
-            // 259 SR EV_BuildStairs(turbo16)
-            if (EV_BuildStairs(line,turbo16))
-               P_ChangeSwitchTexture(line,1,0);
-            break;
-            // 1/29/98 jff end of added SR linedef types
-            
-            // sf: scripting
-         case 277: // S1 start script
-            line->special = 0;
-         case 276: // SR start script
-            P_ChangeSwitchTexture(line, (line->special ? 1 : 0), 0);
-            P_StartLineScript(line, thing);
-            break;            
-         }
-      }
-      break;
-
-      // Buttons (retriggerable switches)
-   case 42:
-      // Close Door
-      if (EV_DoDoor(line,doorClose))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-        
-   case 43:
-      // Lower Ceiling to Floor
-      if (EV_DoCeiling(line,lowerToFloor))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-        
-   case 45:
-      // Lower Floor to Surrounding floor height
-      if (EV_DoFloor(line,lowerFloor))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 60:
-      // Lower Floor to Lowest
-      if (EV_DoFloor(line,lowerFloorToLowest))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 61:
-      // Open Door
-      if (EV_DoDoor(line,doorOpen))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 62:
-      // PlatDownWaitUpStay
-      if (EV_DoPlat(line,downWaitUpStay,1))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 63:
-      // Raise Door
-      if (EV_DoDoor(line,doorNormal))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 64:
-      // Raise Floor to ceiling
-      if (EV_DoFloor(line,raiseFloor))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 66:
-      // Raise Floor 24 and change texture
-      if (EV_DoPlat(line,raiseAndChange,24))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 67:
-      // Raise Floor 32 and change texture
-      if (EV_DoPlat(line,raiseAndChange,32))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 65:
-      // Raise Floor Crush
-      if (EV_DoFloor(line,raiseFloorCrush))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 68:
-      // Raise Plat to next highest floor and change texture
-      if (EV_DoPlat(line,raiseToNearestAndChange,0))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 69:
-      // Raise Floor to next highest floor
-      if (EV_DoFloor(line, raiseFloorToNearest))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 70:
-      // Turbo Lower Floor
-      if (EV_DoFloor(line,turboLower))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 114:
-      // Blazing Door Raise (faster than TURBO!)
-      if (EV_DoDoor (line,blazeRaise))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 115:
-      // Blazing Door Open (faster than TURBO!)
-      if (EV_DoDoor (line,blazeOpen))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 116:
-      // Blazing Door Close (faster than TURBO!)
-      if (EV_DoDoor (line,blazeClose))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 123:
-      // Blazing PlatDownWaitUpStay
-      if (EV_DoPlat(line,blazeDWUS,0))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 132:
-      // Raise Floor Turbo
-      if (EV_DoFloor(line,raiseFloorTurbo))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 99:
-      // BlzOpenDoor BLUE
-   case 134:
-      // BlzOpenDoor RED
-   case 136:
-      // BlzOpenDoor YELLOW
-      if (EV_DoLockedDoor (line,blazeOpen,thing))
-         P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 138:
-      // Light Turn On
-      EV_LightTurnOn(line,255);
-      P_ChangeSwitchTexture(line,1,0);
-      break;
-      
-   case 139:
-      // Light Turn Off
-      EV_LightTurnOn(line,35);
-      P_ChangeSwitchTexture(line,1,0);
-      break;
-   }
-   return true;
-}
-*/
 
 //=============================================================================
 //
@@ -2473,6 +2422,281 @@ static ev_action_t BoomGenAction =
 // Each level type (DOOM, Heretic, Strife, Hexen) has its own set of line 
 // specials. Heretic and Strife's sets are based on DOOM's with certain 
 // additions (many of which conflict with BOOM extensions).
+//
+
+#define LINESPEC(number, action) { number, &action, NULL, NULL },
+
+// DOOM Bindings
+static ev_binding_t DOOMBindings[] =
+{
+   LINESPEC(  1, DRRaiseDoor)
+   LINESPEC(  2, W1OpenDoor)
+   LINESPEC(  3, W1CloseDoor)
+   LINESPEC(  4, W1RaiseDoor)
+   LINESPEC(  5, W1RaiseFloor)
+   LINESPEC(  6, W1FastCeilCrushRaise)
+   LINESPEC(  7, S1BuildStairsUp8)
+   LINESPEC(  8, W1BuildStairsUp8)
+   LINESPEC(  9, S1DoDonut)
+   LINESPEC( 10, W1PlatDownWaitUpStay)
+   LINESPEC( 11, S1ExitLevel)
+   LINESPEC( 12, W1LightTurnOn)
+   LINESPEC( 13, W1LightTurnOn255)
+   LINESPEC( 14, S1PlatRaise32Change)
+   LINESPEC( 15, S1PlatRaise24Change)
+   LINESPEC( 16, W1CloseDoor30)
+   LINESPEC( 17, W1StartLightStrobing)
+   LINESPEC( 18, S1FloorRaiseToNearest)
+   LINESPEC( 19, W1LowerFloor)
+   LINESPEC( 20, S1PlatRaiseNearestChange)
+   LINESPEC( 21, S1PlatDownWaitUpStay)
+   LINESPEC( 22, W1PlatRaiseNearestChange)
+   LINESPEC( 23, S1FloorLowerToLowest)
+   LINESPEC( 24, G1RaiseFloor)
+   LINESPEC( 25, W1CeilingCrushAndRaise)
+   LINESPEC( 26, DRRaiseDoorBlue)
+   LINESPEC( 27, DRRaiseDoorYellow)
+   LINESPEC( 28, DRRaiseDoorRed)
+   LINESPEC( 29, S1RaiseDoor)
+   LINESPEC( 30, W1FloorRaiseToTexture)
+   LINESPEC( 31, D1OpenDoor)
+   LINESPEC( 32, D1OpenDoorBlue)
+   LINESPEC( 33, D1OpenDoorRed)
+   LINESPEC( 34, D1OpenDoorYellow)
+   LINESPEC( 35, W1LightsVeryDark)
+   LINESPEC( 36, W1LowerFloorTurbo)
+   LINESPEC( 37, W1FloorLowerAndChange)
+   LINESPEC( 38, W1FloorLowerToLowest)
+   LINESPEC( 39, W1Teleport)
+   LINESPEC( 40, W1RaiseCeilingLowerFloor)
+   LINESPEC( 41, S1CeilingLowerToFloor)
+   LINESPEC( 42, SRCloseDoor)
+   LINESPEC( 43, SRCeilingLowerToFloor)
+   LINESPEC( 44, W1CeilingLowerAndCrush)
+   LINESPEC( 45, SRLowerFloor)
+   LINESPEC( 46, GROpenDoor)
+   LINESPEC( 47, G1PlatRaiseNearestChange)
+   // TODO: 48 - Scroll Texture (static init)
+   LINESPEC( 49, S1CeilingCrushAndRaise)
+   LINESPEC( 50, S1CloseDoor)
+   LINESPEC( 51, S1SecretExit)
+   LINESPEC( 52, WRExitLevel)
+   LINESPEC( 53, W1PlatPerpetualRaise)
+   LINESPEC( 54, W1PlatStop)
+   LINESPEC( 55, S1FloorRaiseCrush)
+   LINESPEC( 56, W1FloorRaiseCrush)
+   LINESPEC( 57, W1CeilingCrushStop)
+   LINESPEC( 58, W1RaiseFloor24)
+   LINESPEC( 59, W1RaiseFloor24Change)
+   LINESPEC( 60, SRFloorLowerToLowest)
+   LINESPEC( 61, SROpenDoor)
+   LINESPEC( 62, SRPlatDownWaitUpStay)
+   LINESPEC( 63, SRRaiseDoor)
+   LINESPEC( 64, SRRaiseFloor)
+   LINESPEC( 65, SRFloorRaiseCrush)
+   LINESPEC( 66, SRPlatRaise24Change)
+   LINESPEC( 67, SRPlatRaise32Change)
+   LINESPEC( 68, SRPlatRaiseNearestChange)
+   LINESPEC( 69, SRFloorRaiseToNearest)
+   LINESPEC( 70, SRLowerFloorTurbo)
+   LINESPEC( 71, S1LowerFloorTurbo)
+   LINESPEC( 72, WRCeilingLowerAndCrush)
+   LINESPEC( 73, WRCeilingCrushAndRaise)
+   LINESPEC( 74, WRCeilingCrushStop)
+   LINESPEC( 75, WRCloseDoor)
+   LINESPEC( 76, WRCloseDoor30)
+   LINESPEC( 77, WRFastCeilCrushRaise)
+   LINESPEC( 78, SRChangeOnlyNumeric)
+   LINESPEC( 79, WRLightsVeryDark)
+   LINESPEC( 80, WRLightTurnOn)
+   LINESPEC( 81, WRLightTurnOn255)
+   LINESPEC( 82, WRFloorLowerToLowest)
+   LINESPEC( 83, WRLowerFloor)
+   LINESPEC( 84, WRFloorLowerAndChange)
+   // TODO: 85 (static init)
+   LINESPEC( 86, WROpenDoor)
+   LINESPEC( 87, WRPlatPerpetualRaise)
+   LINESPEC( 88, WRPlatDownWaitUpStay)
+   LINESPEC( 89, WRPlatStop)
+   LINESPEC( 90, WRRaiseDoor)
+   LINESPEC( 91, WRRaiseFloor)
+   LINESPEC( 92, WRRaiseFloor24)
+   LINESPEC( 93, WRRaiseFloor24Change)
+   LINESPEC( 94, WRFloorRaiseCrush)
+   LINESPEC( 95, WRPlatRaiseNearestChange)
+   LINESPEC( 96, WRFloorRaiseToTexture)
+   LINESPEC( 97, WRTeleport)
+   LINESPEC( 98, WRLowerFloorTurbo)
+   LINESPEC( 99, SRDoorBlazeOpenBlue)
+   LINESPEC(100, W1BuildStairsTurbo16)
+   LINESPEC(101, S1RaiseFloor)
+   LINESPEC(102, S1LowerFloor)
+   LINESPEC(103, S1OpenDoor)
+   LINESPEC(104, W1TurnTagLightsOff)
+   LINESPEC(105, WRDoorBlazeRaise)
+   LINESPEC(106, WRDoorBlazeOpen)
+   LINESPEC(107, WRDoorBlazeClose)
+   LINESPEC(108, W1DoorBlazeRaise)
+   LINESPEC(109, W1DoorBlazeOpen)
+   LINESPEC(110, W1DoorBlazeClose)
+   LINESPEC(111, S1DoorBlazeRaise)
+   LINESPEC(112, S1DoorBlazeOpen)
+   LINESPEC(113, S1DoorBlazeClose)
+   LINESPEC(114, SRDoorBlazeRaise)
+   LINESPEC(115, SRDoorBlazeOpen)
+   LINESPEC(116, SRDoorBlazeClose)
+   LINESPEC(117, DRDoorBlazeRaise)
+   LINESPEC(118, D1DoorBlazeOpen)
+   LINESPEC(119, W1FloorRaiseToNearest)
+   LINESPEC(120, WRPlatBlazeDWUS)
+   LINESPEC(121, W1PlatBlazeDWUS)
+   LINESPEC(122, S1PlatBlazeDWUS)
+   LINESPEC(123, SRPlatBlazeDWUS)
+   LINESPEC(124, WRSecretExit)
+   LINESPEC(125, W1TeleportMonsters)
+   LINESPEC(126, WRTeleportMonsters)
+   LINESPEC(127, S1BuildStairsTurbo16)
+   LINESPEC(128, WRFloorRaiseToNearest)
+   LINESPEC(129, WRRaiseFloorTurbo)
+   LINESPEC(130, W1RaiseFloorTurbo)
+   LINESPEC(131, S1RaiseFloorTurbo)
+   LINESPEC(132, SRRaiseFloorTurbo)
+   LINESPEC(133, S1DoorBlazeOpenBlue)
+   LINESPEC(134, SRDoorBlazeOpenRed)
+   LINESPEC(135, S1DoorBlazeOpenRed)
+   LINESPEC(136, SRDoorBlazeOpenYellow)
+   LINESPEC(137, S1DoorBlazeOpenYellow)
+   LINESPEC(138, SRLightTurnOn255)
+   LINESPEC(139, SRLightsVeryDark)
+   LINESPEC(140, S1RaiseFloor512)
+   LINESPEC(141, W1SilentCrushAndRaise)
+   LINESPEC(142, W1RaiseFloor512)
+   LINESPEC(143, W1PlatRaise24Change)
+   LINESPEC(144, W1PlatRaise32Change)
+   LINESPEC(145, W1CeilingLowerToFloor)
+   LINESPEC(146, W1DoDonut)
+   LINESPEC(147, WRRaiseFloor512)
+   LINESPEC(148, WRPlatRaise24Change)
+   LINESPEC(149, WRPlatRaise32Change)
+   LINESPEC(150, WRSilentCrushAndRaise)
+   LINESPEC(151, WRRaiseCeilingLowerFloor)
+   LINESPEC(152, WRCeilingLowerToFloor)
+   LINESPEC(153, W1ChangeOnly)
+   LINESPEC(154, WRChangeOnly)
+   LINESPEC(155, WRDoDonut)
+   LINESPEC(156, WRStartLightStrobing)
+   LINESPEC(157, WRTurnTagLightsOff)
+   LINESPEC(158, S1FloorRaiseToTexture)
+   LINESPEC(159, S1FloorLowerAndChange)
+   LINESPEC(160, S1RaiseFloor24Change)
+   LINESPEC(161, S1RaiseFloor24)
+   LINESPEC(162, S1PlatPerpetualRaise)
+   LINESPEC(163, S1PlatStop)
+   LINESPEC(164, S1FastCeilCrushRaise)
+   LINESPEC(165, S1SilentCrushAndRaise)
+   LINESPEC(166, S1BOOMRaiseCeilingOrLowerFloor)
+   LINESPEC(167, S1CeilingLowerAndCrush)
+   LINESPEC(168, S1CeilingCrushStop)
+   LINESPEC(169, S1LightTurnOn)
+   LINESPEC(170, S1LightsVeryDark)
+   LINESPEC(171, S1LightTurnOn255)
+   LINESPEC(172, S1StartLightStrobing)
+   LINESPEC(173, S1TurnTagLightsOff)
+   LINESPEC(174, S1Teleport)
+   LINESPEC(175, S1CloseDoor30)
+   LINESPEC(176, SRFloorRaiseToTexture)
+   LINESPEC(177, SRFloorLowerAndChange)
+   LINESPEC(178, SRRaiseFloor512)
+   LINESPEC(179, SRRaiseFloor24Change)
+   LINESPEC(180, SRRaiseFloor24)
+   LINESPEC(181, SRPlatPerpetualRaise)
+   LINESPEC(182, SRPlatStop)
+   LINESPEC(183, SRFastCeilCrushRaise)
+   LINESPEC(184, SRCeilingCrushAndRaise)
+   LINESPEC(185, SRSilentCrushAndRaise)
+   LINESPEC(186, SRBOOMRaiseCeilingOrLowerFloor)
+   LINESPEC(187, SRCeilingLowerAndCrush)
+   LINESPEC(188, SRCeilingCrushStop)
+   LINESPEC(189, S1ChangeOnly)
+   LINESPEC(190, SRChangeOnly)
+   LINESPEC(191, SRDoDonut)
+   LINESPEC(192, SRLightTurnOn)
+   LINESPEC(193, SRStartLightStrobing)
+   LINESPEC(194, SRTurnTagLightsOff)
+   LINESPEC(195, SRTeleport)
+   LINESPEC(196, SRCloseDoor30)
+   LINESPEC(197, G1ExitLevel)
+   LINESPEC(198, G1SecretExit)
+   LINESPEC(199, W1CeilingLowerToLowest)
+   LINESPEC(200, W1CeilingLowerToMaxFloor)
+   LINESPEC(201, WRCeilingLowerToLowest)
+   LINESPEC(202, WRCeilingLowerToMaxFloor)
+   LINESPEC(203, S1CeilingLowerToLowest)
+   LINESPEC(204, S1CeilingLowerToMaxFloor)
+   LINESPEC(205, SRCeilingLowerToLowest)
+   LINESPEC(206, SRCeilingLowerToMaxFloor)
+   LINESPEC(207, W1SilentTeleport)
+   LINESPEC(208, WRSilentTeleport)
+   LINESPEC(209, S1SilentTeleport)
+   LINESPEC(210, SRSilentTeleport)
+   LINESPEC(211, SRPlatToggleUpDown)
+   LINESPEC(212, WRPlatToggleUpDown)
+   // TODO: 213 - 218?
+   LINESPEC(219, W1FloorLowerToNearest)
+   LINESPEC(220, WRFloorLowerToNearest)
+   LINESPEC(221, S1FloorLowerToNearest)
+   LINESPEC(222, SRFloorLowerToNearest)
+   // TODO: 223 - 226?
+   LINESPEC(227, W1ElevatorUp)
+   LINESPEC(228, WRElevatorUp)
+   LINESPEC(229, S1ElevatorUp)
+   LINESPEC(230, SRElevatorUp)
+   LINESPEC(231, W1ElevatorDown)
+   LINESPEC(232, WRElevatorDown)
+   LINESPEC(233, S1ElevatorDown)
+   LINESPEC(234, SRElevatorDown)
+   LINESPEC(235, W1ElevatorCurrent)
+   LINESPEC(236, WRElevatorCurrent)
+   LINESPEC(237, S1ElevatorCurrent)
+   LINESPEC(238, SRElevatorCurrent)
+   LINESPEC(239, W1ChangeOnlyNumeric)
+   LINESPEC(240, WRChangeOnlyNumeric)
+   LINESPEC(241, S1ChangeOnlyNumeric)
+   // TODO: 242?
+   LINESPEC(243, W1SilentLineTeleport)
+   LINESPEC(244, WRSilentLineTeleport)
+   // TODO: 245-255?
+   LINESPEC(256, WRBuildStairsUp8)
+   LINESPEC(257, WRBuildStairsTurbo16)
+   LINESPEC(258, SRBuildStairsUp8)
+   LINESPEC(259, SRBuildStairsTurbo16)
+   // TODO: 260, 261?
+   LINESPEC(262, W1SilentLineTeleportReverse)
+   LINESPEC(263, WRSilentLineTeleportReverse)
+   LINESPEC(264, W1SilentLineTRMonsters)
+   LINESPEC(265, WRSilentLineTRMonsters)
+   LINESPEC(266, W1SilentLineTeleMonsters)
+   LINESPEC(267, WRSilentLineTeleMonsters)
+   LINESPEC(268, W1SilentTeleportMonsters)
+   LINESPEC(269, WRSilentTeleportMonsters)
+   // TODO: 270-272?
+   LINESPEC(273, WRStartLineScript1S)
+   LINESPEC(274, W1StartLineScript)
+   LINESPEC(275, W1StartLineScript1S)
+   LINESPEC(276, SRStartLineScript)
+   LINESPEC(277, S1StartLineScript)
+   LINESPEC(278, GRStartLineScript)
+   LINESPEC(279, G1StartLineScript)
+   LINESPEC(280, WRStartLineScript)
+   // TODO: EE Line Types 281+
+};
+
+
+//=============================================================================
+//
+// Special Resolution
+//
+// Lookup an action by number.
 //
 
 //

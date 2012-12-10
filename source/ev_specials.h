@@ -43,6 +43,7 @@ enum EVActionFlags
    EV_POSTCLEARALWAYS  = 0x00000020, // Always clear special
    EV_POSTCHANGESWITCH = 0x00000040, // Changes switch texture if successful
    EV_POSTCHANGEALWAYS = 0x00000080, // Changes switch texture even if fails
+   EV_POSTCHANGESIDED  = 0x00000100, // Switch texture changes on proper side of line
 };
 
 // Data related to an instance of a special activation.
@@ -112,7 +113,6 @@ struct ev_action_t
 // game type.
 struct ev_binding_t
 {
-   int gameType;        // game to which this entry applies
    int actionNumber;    // line action number
    ev_action_t *action; // the actual action to execute
 
