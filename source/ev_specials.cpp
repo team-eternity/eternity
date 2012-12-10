@@ -65,14 +65,7 @@ int P_CheckTag(line_t *line)
 
    case 138:
    case 139:  // Lighting specials
-   
-   case 169:
-   case 170:
-   case 171:
-   case 172:
-   case 173:
-   case 174:
-   
+  
    case 192:
    case 193:  
    case 194:
@@ -478,8 +471,9 @@ static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
 //
 static bool EV_ActionOpenDoor(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 2:  (W1)
-   // case 86: (WR)
+   // case   2: (W1)
+   // case  86: (WR)
+   // case 103: (S1)
    // Open Door
    return !!EV_DoDoor(instance->line, doorOpen);
 }
@@ -513,8 +507,9 @@ static bool EV_ActionRaiseDoor(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionRaiseFloor(ev_action_t *action, ev_instance_t *instance)
 {
-   // case  5: (W1)
-   // case 91: (WR)
+   // case   5: (W1)
+   // case  91: (WR)
+   // case 101: (S1)
    // Raise Floor
    return !!EV_DoFloor(instance->line, raiseFloor);
 }
@@ -524,8 +519,9 @@ static bool EV_ActionRaiseFloor(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionFastCeilCrushRaise(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 6:  (W1)
-   // case 77: (WR)
+   // case   6: (W1)
+   // case  77: (WR)
+   // case 164: (S1 - BOOM Extended)
    // Fast Ceiling Crush & Raise
    return !!EV_DoCeiling(instance->line, fastCrushAndRaise);
 }
@@ -559,8 +555,9 @@ static bool EV_ActionPlatDownWaitUpStay(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionLightTurnOn(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 12: (W1)
-   // case 80: (WR)
+   // case  12: (W1)
+   // case  80: (WR)
+   // case 169: (S1 - BOOM Extended)
    // Light Turn On - brightest near
    return !!EV_LightTurnOn(instance->line, 0);
 }
@@ -581,8 +578,9 @@ static bool EV_ActionLightTurnOn255(ev_action_t *action, ev_instance_t *instance
 //
 static bool EV_ActionCloseDoor30(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 16: (W1)
-   // case 76: (WR)
+   // case  16: (W1)
+   // case  76: (WR)
+   // case 175: (S1 - BOOM Extended)
    // Close Door 30
    return !!EV_DoDoor(instance->line, closeThenOpen);
 }
@@ -592,8 +590,9 @@ static bool EV_ActionCloseDoor30(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionStartLightStrobing(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 17:  (W1)
+   // case  17: (W1)
    // case 156: (WR - BOOM Extended)
+   // case 172: (S1 - BOOM Extended)
    // Start Light Strobing
    return !!EV_StartLightStrobing(instance->line);
 }
@@ -603,8 +602,9 @@ static bool EV_ActionStartLightStrobing(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionLowerFloor(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 19: (W1)
-   // case 83: (WR)
+   // case  19: (W1)
+   // case  83: (WR)
+   // case 102: (S1)
    // Lower Floor
    return !!EV_DoFloor(instance->line, lowerFloor);
 }
@@ -638,8 +638,9 @@ static bool EV_ActionCeilingCrushAndRaise(ev_action_t *action, ev_instance_t *in
 //
 static bool EV_ActionFloorRaiseToTexture(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 30: (W1)
-   // case 96: (WR)
+   // case  30: (W1)
+   // case  96: (WR)
+   // case 158: (S1 - BOOM Extended)
    // Raise floor to shortest texture height on either side of lines.
    return !!EV_DoFloor(instance->line, raiseToTexture);
 }
@@ -649,8 +650,9 @@ static bool EV_ActionFloorRaiseToTexture(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionLightsVeryDark(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 35: (W1)
-   // case 79: (WR)
+   // case  35: (W1)
+   // case  79: (WR)
+   // case 170: (S1 - BOOM Extended)
    // Lights Very Dark
    return !!EV_LightTurnOn(instance->line, 35);
 }
@@ -661,6 +663,7 @@ static bool EV_ActionLightsVeryDark(ev_action_t *action, ev_instance_t *instance
 static bool EV_ActionLowerFloorTurbo(ev_action_t *action, ev_instance_t *instance)
 {
    // case 36: (W1)
+   // case 71: (S1)
    // case 98: (WR)
    // Lower Floor (TURBO)
    return !!EV_DoFloor(instance->line, turboLower);
@@ -671,8 +674,9 @@ static bool EV_ActionLowerFloorTurbo(ev_action_t *action, ev_instance_t *instanc
 //
 static bool EV_ActionFloorLowerAndChange(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 37: (W1)
-   // case 84: (WR)
+   // case  37: (W1)
+   // case  84: (WR)
+   // case 159: (S1 - BOOM Extended)
    // LowerAndChange
    return !!EV_DoFloor(instance->line, lowerAndChange);
 }
@@ -694,8 +698,9 @@ static bool EV_ActionFloorLowerToLowest(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionTeleport(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 39: (W1)
-   // case 97: (WR)
+   // case  39: (W1)
+   // case  97: (WR)
+   // case 174: (S1 - BOOM Extended)
    // TELEPORT!
    // case 125: (W1)
    // case 126: (WR)
@@ -749,14 +754,30 @@ static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action,
    return true;
 }
 
+//
+// EV_ActionBOOMRaiseCeilingOrLowerFloor
+//
+// haleyjd: This is supposed to do the same as the above, but, thanks to a
+// glaring hole in the logic, it will only perform one action or the other,
+// depending on whether or not the ceiling is currently busy 9_9
+//
+static bool EV_ActionBOOMRaiseCeilingOrLowerFloor(ev_action_t *action, 
+                                                  ev_instance_t *instance)
+{
+   // case 166: (S1 - BOOM Extended)
+   // Raise ceiling, Lower floor
+   return (EV_DoCeiling(instance->line, raiseToHighest) ||
+           EV_DoFloor(instance->line, lowerFloorToLowest));
+}
 
 //
 // EV_ActionCeilingLowerAndCrush
 //
 static bool EV_ActionCeilingLowerAndCrush(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 44: (W1)
-   // case 72: (WR)
+   // case  44: (W1)
+   // case  72: (WR)
+   // case 167: (S1 - BOOM Extended)
    // Ceiling Crush
    return !!EV_DoCeiling(instance->line, lowerAndCrush);
 }
@@ -804,8 +825,9 @@ static bool EV_ActionSwitchExitLevel(ev_action_t *action, ev_instance_t *instanc
 //
 static bool EV_ActionPlatPerpetualRaise(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 53: (W1)
-   // case 87: (WR)
+   // case  53: (W1)
+   // case  87: (WR)
+   // case 162: (S1 - BOOM Extended)
    // Perpetual Platform Raise
    return !!EV_DoPlat(instance->line, perpetualRaise, 0);
 }
@@ -815,8 +837,9 @@ static bool EV_ActionPlatPerpetualRaise(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionPlatStop(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 54: (W1)
-   // case 89: (WR)
+   // case  54: (W1)
+   // case  89: (WR)
+   // case 163: (S1 - BOOM Extended)
    // Platform Stop
    return !!EV_StopPlat(instance->line);
 }
@@ -826,6 +849,7 @@ static bool EV_ActionPlatStop(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionFloorRaiseCrush(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 55: (S1)
    // case 56: (W1)
    // case 94: (WR)
    // Raise Floor Crush
@@ -837,8 +861,9 @@ static bool EV_ActionFloorRaiseCrush(ev_action_t *action, ev_instance_t *instanc
 //
 static bool EV_ActionCeilingCrushStop(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 57: (W1)
-   // case 74: (WR)
+   // case  57: (W1)
+   // case  74: (WR)
+   // case 168: (S1 - BOOM Extended)
    // Ceiling Crush Stop
    return !!EV_CeilingCrushStop(instance->line);
 }
@@ -848,8 +873,9 @@ static bool EV_ActionCeilingCrushStop(ev_action_t *action, ev_instance_t *instan
 //
 static bool EV_ActionRaiseFloor24(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 58: (W1)
-   // case 92: (WR)
+   // case  58: (W1)
+   // case  92: (WR)
+   // case 161: (S1 - BOOM Extended)
    // Raise Floor 24
    return !!EV_DoFloor(instance->line, raiseFloor24);
 }
@@ -859,8 +885,9 @@ static bool EV_ActionRaiseFloor24(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionRaiseFloor24Change(ev_action_t *action, ev_instance_t *instance)
 {
-   // case 59: (W1)
-   // case 93: (WR)
+   // case  59: (W1)
+   // case  93: (WR)
+   // case 160: (S1 - BOOM Extended)
    // Raise Floor 24 And Change
    return !!EV_DoFloor(instance->line, raiseFloor24AndChange);
 }
@@ -871,6 +898,7 @@ static bool EV_ActionRaiseFloor24Change(ev_action_t *action, ev_instance_t *inst
 static bool EV_ActionBuildStairsTurbo16(ev_action_t *action, ev_instance_t *instance)
 {
    // case 100: (W1)
+   // case 127: (S1)
    // case 257: (WR - BOOM Extended)
    // Build Stairs Turbo 16
    return !!EV_BuildStairs(instance->line, turbo16);
@@ -883,6 +911,7 @@ static bool EV_ActionTurnTagLightsOff(ev_action_t *action, ev_instance_t *instan
 {
    // case 104: (W1)
    // case 157: (WR - BOOM Extended)
+   // case 173: (S1 - BOOM Extended)
    // Turn lights off in sector(tag)
    return !!EV_TurnTagLightsOff(instance->line);
 }
@@ -894,6 +923,7 @@ static bool EV_ActionDoorBlazeRaise(ev_action_t *action, ev_instance_t *instance
 {
    // case 105: (WR)
    // case 108: (W1)
+   // case 111: (S1)
    // Blazing Door Raise (faster than TURBO!)
    return !!EV_DoDoor(instance->line, blazeRaise);
 }
@@ -905,6 +935,7 @@ static bool EV_ActionDoorBlazeOpen(ev_action_t *action, ev_instance_t *instance)
 {
    // case 106: (WR)
    // case 109: (W1)
+   // case 112: (S1)
    // Blazing Door Open (faster than TURBO!)
    return !!EV_DoDoor(instance->line, blazeOpen);
 }
@@ -916,6 +947,7 @@ static bool EV_ActionDoorBlazeClose(ev_action_t *action, ev_instance_t *instance
 {
    // case 107: (WR)
    // case 110: (W1)
+   // case 113: (S1)
    // Blazing Door Close (faster than TURBO!)
    return !!EV_DoDoor(instance->line, blazeClose);
 }
@@ -939,6 +971,7 @@ static bool EV_ActionPlatBlazeDWUS(ev_action_t *action, ev_instance_t *instance)
 {
    // case 120: (WR)
    // case 121: (W1)
+   // case 122: (S1)
    // Blazing PlatDownWaitUpStay
    return !!EV_DoPlat(instance->line, blazeDWUS, 0);
 }
@@ -988,6 +1021,7 @@ static bool EV_ActionRaiseFloorTurbo(ev_action_t *action, ev_instance_t *instanc
 {
    // case 129: (WR)
    // case 130: (W1)
+   // case 131: (S1)
    // Raise Floor Turbo
    return !!EV_DoFloor(instance->line, raiseFloorTurbo);
 }
@@ -999,6 +1033,7 @@ static bool EV_ActionSilentCrushAndRaise(ev_action_t *action, ev_instance_t *ins
 {
    // case 141: (W1)
    // case 150: (WR - BOOM Extended)
+   // case 165: (S1 - BOOM Extended)
    // Silent Ceiling Crush & Raise
    return !!EV_DoCeiling(instance->line, silentCrushAndRaise);
 }
@@ -1008,6 +1043,7 @@ static bool EV_ActionSilentCrushAndRaise(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionRaiseFloor512(ev_action_t *action, ev_instance_t *instance)
 {
+   // case 140: (S1)
    // case 142: (W1 - BOOM Extended)
    // case 147: (WR - BOOM Extended)
    // Raise Floor 512
@@ -1069,6 +1105,7 @@ static bool EV_ActionCeilingLowerToLowest(ev_action_t *action, ev_instance_t *in
 {
    // case 199: (W1 - BOOM Extended)
    // case 201: (WR - BOOM Extended)
+   // case 203: (S1 - BOOM Extended)
    // Lower ceiling to lowest surrounding ceiling
    return !!EV_DoCeiling(instance->line, lowerToLowest);
 }
@@ -1080,6 +1117,7 @@ static bool EV_ActionCeilingLowerToMaxFloor(ev_action_t *action, ev_instance_t *
 {
    // case 200: (W1 - BOOM Extended)
    // case 202: (WR - BOOM Extended)
+   // case 204: (S1 - BOOM Extended)
    // Lower ceiling to highest surrounding floor
    return !!EV_DoCeiling(instance->line, lowerToMaxFloor);
 }
@@ -1095,6 +1133,7 @@ static bool EV_ActionSilentTeleport(ev_action_t *action, ev_instance_t *instance
 
    // case 207: (W1 - BOOM Extended)
    // case 208: (WR - BOOM Extended)
+   // case 209: (S1 - BOOM Extended)
    // killough 2/16/98: W1 silent teleporter (normal kind)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
@@ -1111,6 +1150,7 @@ static bool EV_ActionChangeOnly(ev_action_t *action, ev_instance_t *instance)
    // jff 3/15/98 create texture change no motion type
    // case 153: (W1 - BOOM Extended)
    // case 154: (WR - BOOM Extended)
+   // case 189: (S1 - BOOM Extended)
    // Texture/Type Change Only (Trig)
    return !!EV_DoChange(instance->line, trigChangeOnly);
 }
@@ -1253,6 +1293,20 @@ static bool EV_ActionVerticalDoor(ev_action_t *action, ev_instance_t *instance)
    // or to preamble function. Or, break up function altogether.
 
    return !!EV_VerticalDoor(instance->line, instance->actor);
+}
+
+//
+// EV_ActionDoLockedDoor
+//
+static bool EV_ActionDoLockedDoor(ev_action_t *action, ev_instance_t *instance)
+{
+   // case 133: (S1) BlzOpenDoor BLUE
+   // case 135: (S1) BlzOpenDoor RED
+   // case 137: (S1) BlzOpenDoor YELLOW
+
+   // TODO: move special-specific logic out of EV_DoLockedDoor
+   
+   return !!EV_DoLockedDoor(instance->line, blazeOpen, instance->actor);
 }
 
 //
@@ -1541,6 +1595,9 @@ W1LINE(W1PlatPerpetualRaise, PlatPerpetualRaise, 0, 0);
 // DOOM Line Type 54 - W1 Platform Stop
 W1LINE(W1PlatStop, PlatStop, 0, 0);
 
+// DOOM Line Type 55 - S1 Floor Raise & Crush
+S1LINE(S1FloorRaiseCrush, FloorRaiseCrush, 0, 0);
+
 // DOOM Line Type 56 - W1 Floor Raise & Crush
 W1LINE(W1FloorRaiseCrush, FloorRaiseCrush, 0, 0);
 
@@ -1552,6 +1609,9 @@ W1LINE(W1RaiseFloor24, RaiseFloor24, 0, 0);
 
 // DOOM Line Type 59 - W1 Raise Floor 24 and Change
 W1LINE(W1RaiseFloor24Change, RaiseFloor24Change, 0, 0);
+
+// DOOM Line Type 71 - S1 Lower Floor Turbo
+S1LINE(S1LowerFloorTurbo, LowerFloorTurbo, 0, 0);
 
 // DOOM Line Type 72 - WR Ceiling Crush
 WRLINE(WRCeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
@@ -1631,6 +1691,15 @@ WRLINE(WRLowerFloorTurbo, LowerFloorTurbo, 0, 0);
 // DOOM Line Type 100 - W1 Build Stairs Turbo 16
 W1LINE(W1BuildStairsTurbo16, BuildStairsTurbo16, 0, 0);
 
+// DOOM Line Type 101 - S1 Raise Floor
+S1LINE(S1RaiseFloor, RaiseFloor, 0, 0);
+
+// DOOM Line Type 102 - S1 Lower Floor to Surrounding Floor
+S1LINE(S1LowerFloor, LowerFloor, 0, 0);
+
+// DOOM Line Type 103 - S1 Open Door
+S1LINE(S1OpenDoor, OpenDoor, 0, 0);
+
 // DOOM Line Type 104 - W1 Turn Lights Off in Sector
 W1LINE(W1TurnTagLightsOff, TurnTagLightsOff, EV_PREALLOWZEROTAG, 0);
 
@@ -1652,6 +1721,15 @@ W1LINE(W1DoorBlazeOpen, DoorBlazeOpen, 0, 0);
 // DOOM Line Type 110 - W1 Blazing Door Close
 W1LINE(W1DoorBlazeClose, DoorBlazeClose, 0, 0);
 
+// DOOM Line Type 111 - S1 Blazing Door Raise
+S1LINE(S1DoorBlazeRaise, DoorBlazeRaise, 0, 0);
+
+// DOOM Line Type 112 - S1 Blazing Door Open
+S1LINE(S1DoorBlazeOpen, DoorBlazeOpen, 0, 0);
+
+// DOOM Line Type 113 - S1 Blazing Door Close
+S1LINE(S1DoorBlazeClose, DoorBlazeClose, 0, 0);
+
 // DOOM Line Type 117 - DR Door Blaze Raise
 DRLINE(DRDoorBlazeRaise, VerticalDoor, 0, 0);
 
@@ -1667,6 +1745,9 @@ WRLINE(WRPlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
 // DOOM Line Type 121 - W1 Plat Blaze Down-Wait-Up-Stay
 W1LINE(W1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
 
+// DOOM Line Type 122 - S1 Plat Blaze Down-Wait-Up-Stay
+S1LINE(S1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
+
 // DOOM Line Type 124 - WR Secret Exit
 WRLINE(WRSecretExit, SecretExit, EV_PREALLOWZEROTAG, 0);
 
@@ -1677,6 +1758,9 @@ W1LINE(W1TeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | 
 // DOOM Line Type 126 - WR Teleport Monsters Only
 WRLINE(WRTeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY, 0);
 
+// DOOM Line Type 127 - S1 Build Stairs Up Turbo 16
+S1LINE(S1BuildStairsTurbo16, BuildStairsTurbo16, 0, 0);
+
 // DOOM Line Type 128 - WR Raise Floor to Nearest Floor
 WRLINE(WRFloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
 
@@ -1685,6 +1769,21 @@ WRLINE(WRRaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
 
 // DOOM Line Type 130 - W1 Raise Floor Turbo
 W1LINE(W1RaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
+
+// DOOM Line Type 131 - S1 Raise Floor Turbo
+S1LINE(S1RaiseFloorTurbo, RaiseFloorTurbo, 0, 0);
+
+// DOOM Line Type 133 - S1 Door Blaze Open Blue Key
+S1LINE(S1DoorBlazeOpenBlue, DoLockedDoor, 0, 0);
+
+// DOOM Line Type 135 - S1 Door Blaze Open Red Key
+S1LINE(S1DoorBlazeOpenRed, DoLockedDoor, 0, 0);
+
+// DOOM Line Type 137 - S1 Door Blaze Open Yellow Key
+S1LINE(S1DoorBlazeOpenYellow, DoLockedDoor, 0, 0);
+
+// DOOM Line Type 140 - S1 Raise Floor 512
+S1LINE(S1RaiseFloor512, RaiseFloor512, 0, 0);
 
 // DOOM Line Type 141 - W1 Ceiling Silent Crush & Raise
 W1LINE(W1SilentCrushAndRaise, SilentCrushAndRaise, 0, 0);
@@ -1738,6 +1837,65 @@ WRLINE(WRStartLightStrobing, StartLightStrobing, EV_PREALLOWZEROTAG, 200);
 // BOOM Extended Line Type 157 - WR Lights to Dimmest Near
 WRLINE(WRTurnTagLightsOff, TurnTagLightsOff, EV_PREALLOWZEROTAG, 200);
 
+// BOOM Extended Line Type 158 - S1 Raise Floor to Shortest Lower Texture
+S1LINE(S1FloorRaiseToTexture, FloorRaiseToTexture, 0, 200);
+
+// BOOM Extended Line Type 159 - S1 Floor Lower and Change
+S1LINE(S1FloorLowerAndChange, FloorLowerAndChange, 0, 200);
+
+// BOOM Extended Line Type 160 - S1 Raise Floor 24 and Change
+S1LINE(S1RaiseFloor24Change, RaiseFloor24Change, 0, 200);
+
+// BOOM Extended Line Type 161 - S1 Raise Floor 24
+S1LINE(S1RaiseFloor24, RaiseFloor24, 0, 200);
+
+// BOOM Extended Line Type 162 - S1 Plat Perpetual Raise
+S1LINE(S1PlatPerpetualRaise, PlatPerpetualRaise, 0, 200);
+
+// BOOM Extended Line Type 163 - S1 Stop Plat
+S1LINE(S1PlatStop, PlatStop, EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 164 - S1 Ceiling Fast Crush and Raise
+S1LINE(S1FastCeilCrushRaise, FastCeilCrushRaise, 0, 200);
+
+// BOOM Extended Line Type 165 - S1 Ceiling Silent Crush and Raise
+S1LINE(S1SilentCrushAndRaise, SilentCrushAndRaise, 0, 200);
+
+// BOOM Extended Line Type 166 - S1 Raise Ceiling -or- Lower Floor
+// haleyjd: It's supposed to do both. Due to short-circuiting, it will
+// only do one or the other. This is a BOOM glitch.
+S1LINE(S1BOOMRaiseCeilingOrLowerFloor, BOOMRaiseCeilingOrLowerFloor, 0, 200);
+
+// BOOM Extended Line Type 167 - S1 Ceiling Lower and Crush
+S1LINE(S1CeilingLowerAndCrush, CeilingLowerAndCrush, 0, 200);
+
+// BOOM Extended Line Type 168 - S1 Ceiling Crush Stop
+S1LINE(S1CeilingCrushStop, CeilingCrushStop, 0, 200);
+
+// BOOM Extended Line Type 169 - S1 Lights to Brighest Neighbor
+S1LINE(S1LightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 170 - S1 Lights Very Dark
+S1LINE(S1LightsVeryDark, LightsVeryDark, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 171 - S1 Lights On 255
+S1LINE(S1LightTurnOn255, LightTurnOn255, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 172 - S1 Start Lights Strobing
+S1LINE(S1StartLightStrobing, StartLightStrobing, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 173 - S1 Lights to Lowest Neighbor
+S1LINE(S1TurnTagLightsOff, TurnTagLightsOff, EV_PREALLOWZEROTAG | EV_POSTCHANGEALWAYS, 200);
+
+// BOOM Extended Line Type 174 - S1 Teleport
+S1LINE(S1Teleport, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 175 - S1 Door Close 30, then Open
+S1LINE(S1CloseDoor30, CloseDoor30, 0, 200);
+
+// BOOM Extended Line Type 189 - S1 Change Texture Only
+S1LINE(S1ChangeOnly, ChangeOnly, 0, 200);
+
 // BOOM Extended Line Type 199 - W1 Ceiling Lower to Lowest Surr. Ceiling
 W1LINE(W1CeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
 
@@ -1750,11 +1908,20 @@ WRLINE(WRCeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
 // BOOM Extended Line Type 202 - WR Lower Ceiling to Max Floor
 WRLINE(WRCeilingLowerToMaxFloor, CeilingLowerToMaxFloor, 0, 200);
 
+// BOOM Extended Line Type 203 - S1 Ceiling Lower to Lowest Surr. Ceiling
+S1LINE(S1CeilingLowerToLowest, CeilingLowerToLowest, 0, 200);
+
+// BOOM Extended Line Type 204 - S1 Ceiling Lower to Highest Surr. Floor
+S1LINE(S1CeilingLowerToMaxFloor, CeilingLowerToMaxFloor, 0, 200);
+
 // BOOM Extended Line Type 207 - W1 Silent Teleport
 W1LINE(W1SilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 208 - WR Silent Teleport
 WRLINE(WRSilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
+
+// BOOM Extended Line Type 209 - S1 Silent Teleport
+S1LINE(S1SilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS, 200);
 
 // BOOM Extended Line Type 212 - WR Plat Toggle Floor Instant C/F
 WRLINE(WRPlatToggleUpDown, PlatToggleUpDown, 0, 200);
@@ -1849,7 +2016,6 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       {
          //jff 3/5/98 add ability to use teleporters for monsters
       case 195:       // switch teleporters
-      case 174:
       case 210:       // silent switch teleporters
       case 209:
          break;
@@ -1863,88 +2029,6 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
    switch(line->special)
    {
      // Switches (non-retriggerable)
-     
-  case 55:
-      // Raise Floor Crush
-      if (EV_DoFloor(line,raiseFloorCrush))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-
-   case 71:
-      // Turbo Lower Floor
-      if (EV_DoFloor(line,turboLower))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 101:
-      // Raise Floor
-      if (EV_DoFloor(line,raiseFloor))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 102:
-      // Lower Floor to Surrounding floor height
-      if (EV_DoFloor(line,lowerFloor))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 103:
-      // Open Door
-      if (EV_DoDoor(line,doorOpen))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 111:
-      // Blazing Door Raise (faster than TURBO!)
-      if (EV_DoDoor (line,blazeRaise))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 112:
-      // Blazing Door Open (faster than TURBO!)
-      if (EV_DoDoor (line,blazeOpen))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 113:
-      // Blazing Door Close (faster than TURBO!)
-      if (EV_DoDoor (line,blazeClose))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 122:
-      // Blazing PlatDownWaitUpStay
-      if (EV_DoPlat(line,blazeDWUS,0))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 127:
-      // Build Stairs Turbo 16
-      if (EV_BuildStairs(line,turbo16))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-      
-   case 131:
-      // Raise Floor Turbo
-      if (EV_DoFloor(line,raiseFloorTurbo))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-        
-   case 133:
-      // BlzOpenDoor BLUE
-   case 135:
-      // BlzOpenDoor RED
-   case 137:
-      // BlzOpenDoor YELLOW
-      if(EV_DoLockedDoor (line,blazeOpen,thing))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
-        
-   case 140:
-      // Raise Floor 512
-      if (EV_DoFloor(line,raiseFloor512))
-         P_ChangeSwitchTexture(line,0,0);
-      break;
 
       // killough 1/31/98: factored out compatibility check;
       // added inner switch, relaxed check to demo_compatibility
@@ -1956,161 +2040,6 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          {
             //jff 1/29/98 added linedef types to fill all functions out so that
             // all possess SR, S1, WR, W1 types
-
-         case 158:
-            // Raise Floor to shortest lower texture
-            // 158 S1  EV_DoFloor(raiseToTexture), CSW(0)
-            if (EV_DoFloor(line,raiseToTexture))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-
-         case 159:
-            // Raise Floor to shortest lower texture
-            // 159 S1  EV_DoFloor(lowerAndChange)
-            if (EV_DoFloor(line,lowerAndChange))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 160:
-            // Raise Floor 24 and change
-            // 160 S1  EV_DoFloor(raiseFloor24AndChange)
-            if (EV_DoFloor(line,raiseFloor24AndChange))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 161:
-            // Raise Floor 24
-            // 161 S1  EV_DoFloor(raiseFloor24)
-            if (EV_DoFloor(line,raiseFloor24))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 162:
-            // Moving floor min n to max n
-            // 162 S1  EV_DoPlat(perpetualRaise,0)
-            if (EV_DoPlat(line,perpetualRaise,0))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 163:
-            // Stop Moving floor
-            // 163 S1  EV_DoPlat(perpetualRaise,0)
-            EV_StopPlat(line);
-            P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 164:
-            // Start fast crusher
-            // 164 S1  EV_DoCeiling(fastCrushAndRaise)
-            if (EV_DoCeiling(line,fastCrushAndRaise))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 165:
-            // Start slow silent crusher
-            // 165 S1  EV_DoCeiling(silentCrushAndRaise)
-            if (EV_DoCeiling(line,silentCrushAndRaise))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-
-         case 166:
-            // Raise ceiling, Lower floor
-            // 166 S1 EV_DoCeiling(raiseToHighest), EV_DoFloor(lowerFloortoLowest)
-            if(EV_DoCeiling(line, raiseToHighest) ||
-               EV_DoFloor(line, lowerFloorToLowest))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-
-         case 167:
-            // Lower floor and Crush
-            // 167 S1 EV_DoCeiling(lowerAndCrush)
-            if (EV_DoCeiling(line, lowerAndCrush))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 168:
-            // Stop crusher
-            // 168 S1 EV_CeilingCrushStop()
-            if (EV_CeilingCrushStop(line))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 169:
-            // Lights to brightest neighbor sector
-            // 169 S1  EV_LightTurnOn(0)
-            EV_LightTurnOn(line,0);
-            P_ChangeSwitchTexture(line,0,0);
-            break;
-
-         case 170:
-            // Lights to near dark
-            // 170 S1  EV_LightTurnOn(35)
-            EV_LightTurnOn(line,35);
-            P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 171:
-            // Lights on full
-            // 171 S1  EV_LightTurnOn(255)
-            EV_LightTurnOn(line,255);
-            P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 172:
-            // Start Lights Strobing
-            // 172 S1  EV_StartLightStrobing()
-            EV_StartLightStrobing(line);
-            P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 173:
-            // Lights to Dimmest Near
-            // 173 S1  EV_TurnTagLightsOff()
-            EV_TurnTagLightsOff(line);
-            P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 174:
-            // Teleport
-            // 174 S1  EV_Teleport(side,thing)
-            if (EV_Teleport(line,side,thing))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 175:
-            // Close Door, Open in 30 secs
-            // 175 S1  EV_DoDoor(close30ThenOpen)
-            if (EV_DoDoor(line, closeThenOpen))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-
-         case 189: //jff 3/15/98 create texture change no motion type
-            // Texture Change Only (Trigger)
-            // 189 S1 Change Texture/Type Only
-            if (EV_DoChange(line,trigChangeOnly))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 203:
-            // Lower ceiling to lowest surrounding ceiling
-            // 203 S1 EV_DoCeiling(lowerToLowest)
-            if (EV_DoCeiling(line,lowerToLowest))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 204:
-            // Lower ceiling to highest surrounding floor
-            // 204 S1 EV_DoCeiling(lowerToMaxFloor)
-            if (EV_DoCeiling(line,lowerToMaxFloor))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
-            
-         case 209:
-            // killough 1/31/98: silent teleporter
-            //jff 209 S1 SilentTeleport 
-            if (EV_SilentTeleport(line, side, thing))
-               P_ChangeSwitchTexture(line,0,0);
-            break;
             
          case 241: //jff 3/15/98 create texture change no motion type
             // Texture Change Only (Numeric)
