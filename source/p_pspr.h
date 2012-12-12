@@ -92,10 +92,12 @@ void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);
 
-extern void P_BulletSlope(Mobj *mo);
+void P_BulletSlope(Mobj *mo);
 
 weaponinfo_t *P_GetReadyWeapon(player_t *player);
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);
+
+void P_WeaponRecoil(player_t *player);
 
 #endif
 
