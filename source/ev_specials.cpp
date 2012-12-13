@@ -29,8 +29,10 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_hash.h"
 #include "ev_specials.h"
 #include "g_game.h"
+#include "p_info.h"
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -2424,7 +2426,7 @@ static ev_action_t BoomGenAction =
 // additions (many of which conflict with BOOM extensions).
 //
 
-#define LINESPEC(number, action) { number, &action, NULL, NULL },
+#define LINESPEC(number, action) { number, &action },
 
 // DOOM Bindings
 static ev_binding_t DOOMBindings[] =
@@ -2905,6 +2907,229 @@ bool EV_CrossSpecialLine(line_t *line, int side, Mobj *thing)
       return false;
 
    return EV_ActivateSpecialLine(action, &instance);
+}
+
+//=============================================================================
+//
+// Static Init Lines
+//
+// Rather than activatable triggers, these line types are used to setup some
+// sort of persistent effect in the map at level load time.
+//
+
+#define STATICSPEC(line, function) { line, function },
+
+// DOOM Static Init Bindings
+static ev_static_t DOOMStaticBindings[] =
+{
+   STATICSPEC( 48, EV_STATIC_SCROLL_LINE_LEFT)
+   STATICSPEC( 85, EV_STATIC_SCROLL_LINE_RIGHT)
+   STATICSPEC(213, EV_STATIC_LIGHT_TRANSFER_FLOOR)
+   STATICSPEC(214, EV_STATIC_SCROLL_ACCEL_CEILING)
+   STATICSPEC(215, EV_STATIC_SCROLL_ACCEL_FLOOR)
+   STATICSPEC(216, EV_STATIC_CARRY_ACCEL_FLOOR)
+   STATICSPEC(217, EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR)
+   STATICSPEC(218, EV_STATIC_SCROLL_ACCEL_WALL)
+   STATICSPEC(223, EV_STATIC_FRICTION_TRANSFER)
+   STATICSPEC(224, EV_STATIC_WIND_CONTROL)
+   STATICSPEC(225, EV_STATIC_CURRENT_CONTROL)
+   STATICSPEC(226, EV_STATIC_PUSHPULL_CONTROL)
+   STATICSPEC(242, EV_STATIC_TRANSFER_HEIGHTS)
+   STATICSPEC(245, EV_STATIC_SCROLL_DISPLACE_CEILING)
+   STATICSPEC(246, EV_STATIC_SCROLL_DISPLACE_FLOOR)
+   STATICSPEC(247, EV_STATIC_CARRY_DISPLACE_FLOOR)
+   STATICSPEC(248, EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
+   STATICSPEC(249, EV_STATIC_SCROLL_DISPLACE_WALL)
+   STATICSPEC(250, EV_STATIC_SCROLL_CEILING)
+   STATICSPEC(251, EV_STATIC_SCROLL_FLOOR)
+   STATICSPEC(252, EV_STATIC_CARRY_FLOOR)
+   STATICSPEC(253, EV_STATIC_SCROLL_CARRY_FLOOR)
+   STATICSPEC(254, EV_STATIC_SCROLL_WALL_WITH)
+   STATICSPEC(255, EV_STATIC_SCROLL_BY_OFFSETS)
+   STATICSPEC(260, EV_STATIC_TRANSLUCENT)
+   STATICSPEC(261, EV_STATIC_LIGHT_TRANSFER_CEILING)
+   STATICSPEC(270, EV_STATIC_EXTRADATA_LINEDEF)
+   STATICSPEC(271, EV_STATIC_SKY_TRANSFER)
+   STATICSPEC(272, EV_STATIC_SKY_TRANSFER_FLIPPED)
+   STATICSPEC(281, EV_STATIC_3DMIDTEX_ATTACH_FLOOR)
+   STATICSPEC(282, EV_STATIC_3DMIDTEX_ATTACH_CEILING)
+   STATICSPEC(283, EV_STATIC_PORTAL_PLANE_CEILING)
+   STATICSPEC(284, EV_STATIC_PORTAL_PLANE_FLOOR)
+   STATICSPEC(285, EV_STATIC_PORTAL_PLANE_CEILING_FLOOR)
+   STATICSPEC(286, EV_STATIC_PORTAL_HORIZON_CEILING)
+   STATICSPEC(287, EV_STATIC_PORTAL_HORIZON_FLOOR)
+   STATICSPEC(288, EV_STATIC_PORTAL_HORIZON_CEILING_FLOOR)
+   STATICSPEC(289, EV_STATIC_PORTAL_LINE)
+   STATICSPEC(290, EV_STATIC_PORTAL_SKYBOX_CEILING)
+   STATICSPEC(291, EV_STATIC_PORTAL_SKYBOX_FLOOR)
+   STATICSPEC(292, EV_STATIC_PORTAL_SKYBOX_CEILING_FLOOR)
+   STATICSPEC(293, EV_STATIC_HERETIC_WIND)
+   STATICSPEC(294, EV_STATIC_HERETIC_CURRENT)
+   STATICSPEC(295, EV_STATIC_PORTAL_ANCHORED_CEILING)
+   STATICSPEC(296, EV_STATIC_PORTAL_ANCHORED_FLOOR)
+   STATICSPEC(297, EV_STATIC_PORTAL_ANCHORED_CEILING_FLOOR)
+   STATICSPEC(298, EV_STATIC_PORTAL_ANCHOR)
+   STATICSPEC(299, EV_STATIC_PORTAL_ANCHOR_FLOOR)
+   STATICSPEC(344, EV_STATIC_PORTAL_TWOWAY_CEILING)
+   STATICSPEC(345, EV_STATIC_PORTAL_TWOWAY_FLOOR)
+   STATICSPEC(346, EV_STATIC_PORTAL_TWOWAY_ANCHOR)
+   STATICSPEC(347, EV_STATIC_PORTAL_TWOWAY_ANCHOR_FLOOR)
+   STATICSPEC(348, EV_STATIC_POLYOBJ_START_LINE)
+   STATICSPEC(349, EV_STATIC_POLYOBJ_EXPLICIT_LINE)
+   STATICSPEC(358, EV_STATIC_PORTAL_LINKED_CEILING)
+   STATICSPEC(359, EV_STATIC_PORTAL_LINKED_FLOOR)
+   STATICSPEC(360, EV_STATIC_PORTAL_LINKED_ANCHOR)
+   STATICSPEC(361, EV_STATIC_PORTAL_LINKED_ANCHOR_FLOOR)
+   STATICSPEC(376, EV_STATIC_PORTAL_LINKED_LINE2LINE)
+   STATICSPEC(377, EV_STATIC_PORTAL_LINKED_L2L_ANCHOR)
+   STATICSPEC(378, EV_STATIC_LINE_SET_IDENTIFICATION)
+   STATICSPEC(379, EV_STATIC_ATTACH_SET_CEILING_CONTROL)
+   STATICSPEC(380, EV_STATIC_ATTACH_SET_FLOOR_CONTROL)
+   STATICSPEC(381, EV_STATIC_ATTACH_FLOOR_TO_CONTROL)
+   STATICSPEC(382, EV_STATIC_ATTACH_CEILING_TO_CONTROL)
+   STATICSPEC(383, EV_STATIC_ATTACH_MIRROR_FLOOR)
+   STATICSPEC(384, EV_STATIC_ATTACH_MIRROR_CEILING)
+   STATICSPEC(385, EV_STATIC_PORTAL_APPLY_FRONTSECTOR)
+   STATICSPEC(386, EV_STATIC_SLOPE_FSEC_FLOOR)
+   STATICSPEC(387, EV_STATIC_SLOPE_FSEC_CEILING)
+   STATICSPEC(388, EV_STATIC_SLOPE_FSEC_FLOOR_CEILING)
+   STATICSPEC(389, EV_STATIC_SLOPE_BSEC_FLOOR)
+   STATICSPEC(390, EV_STATIC_SLOPE_BSEC_CEILING)
+   STATICSPEC(391, EV_STATIC_SLOPE_BSEC_FLOOR_CEILING)
+   STATICSPEC(392, EV_STATIC_SLOPE_BACKFLOOR_FRONTCEILING)
+   STATICSPEC(393, EV_STATIC_SLOPE_FRONTFLOOR_BACKCEILING)
+   STATICSPEC(394, EV_STATIC_SLOPE_FRONTFLOOR_TAG)
+   STATICSPEC(395, EV_STATIC_SLOPE_FRONTCEILING_TAG)
+   STATICSPEC(396, EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG)
+   STATICSPEC(401, EV_STATIC_EXTRADATA_SECTOR)
+};
+
+//
+// Hash Tables
+//
+
+typedef EHashTable<ev_static_t, EIntHashKey, 
+                   &ev_static_t::staticFn, &ev_static_t::links> EV_StaticHash;
+
+// DOOM hash
+static EV_StaticHash DOOMStaticHash(earrlen(DOOMStaticBindings));
+
+
+//
+// EV_AddStaticSpecialsToHash
+//
+// Add an array of static specials to a hash table.
+//
+static void EV_AddStaticSpecialsToHash(EV_StaticHash &hash, 
+                                       ev_static_t *bindings, size_t count)
+{
+   // Create a duplicate of the entire bindings array so that the items can
+   // be linked into multiple hash tables at runtime.
+   ev_static_t *newBindings = estructalloc(ev_static_t, count);
+
+   memcpy(newBindings, bindings, count * sizeof(*bindings));
+
+   for(size_t i = 0; i < count; i++)
+      hash.addObject(newBindings[i]);
+}
+
+//
+// EV_InitDOOMStaticHash
+//
+// First-time-use initialization for the DOOM static specials hash table.
+//
+static void EV_InitDOOMStaticHash()
+{
+   static bool firsttime = true;
+
+   if(firsttime)
+   {
+      firsttime = false;
+      
+      // add every item in the DOOM static bindings array
+      EV_AddStaticSpecialsToHash(DOOMStaticHash, DOOMStaticBindings, 
+                                 earrlen(DOOMStaticBindings));
+   }
+}
+
+//
+// EV_DOOMSpecialForStaticInit
+//
+// Always looks up a special in the DOOM gamemode's static init list, regardless
+// of the map format or gamemode in use. Returns 0 if no such special exists.
+//
+int EV_DOOMSpecialForStaticInit(int staticFn)
+{
+   ev_static_t *binding;
+
+   // init the hash if it hasn't been done yet
+   EV_InitDOOMStaticHash();
+
+   return (binding = DOOMStaticHash.objectForKey(staticFn)) ? binding->actionNumber : 0;
+}
+
+//
+// EV_HereticSpecialForStaticInit
+//
+// Always looks up a special in the Heretic gamemode's static init list, 
+// regardless of the map format or gamemode in use. Returns 0 if no such special
+// exists.
+//
+int EV_HereticSpecialForStaticInit(int staticFn)
+{
+   // TODO
+   return 0;
+}
+
+//
+// EV_HexenSpecialForStaticInit
+//
+// Always looks up a special in the Hexen gamemode's static init list, 
+// regardless of the map format or gamemode in use. Returns 0 if no such special
+// exists.
+//
+int EV_HexenSpecialForStaticInit(int staticFn)
+{
+   // TODO
+   return 0;
+}
+
+// 
+// EV_StrifeSpecialForStaticInit
+//
+// Always looks up a special in the Strife gamemode's static init list,
+// regardless of the map format or gamemode in use. Returns 0 if no such special
+// exists.
+//
+int EV_StrifeSpecialForStaticInit(int staticFn)
+{
+   // TODO
+   return 0;
+}
+
+typedef int (*EV_hashFunc)(int);
+
+// Get a hash table lookup function for a particular map type
+static EV_hashFunc hashFuncForMapType[LI_TYPE_NUMTYPES] =
+{
+   EV_DOOMSpecialForStaticInit,    // DOOM
+   EV_HereticSpecialForStaticInit, // Heretic
+   EV_HexenSpecialForStaticInit,   // Hexen
+   EV_StrifeSpecialForStaticInit,  // Strife
+};
+
+//
+// EV_SpecialForStaticInit
+//
+// Pass in the symbolic static function name you want the line special for; it
+// will return the line special number currently bound to that function for the
+// currently active map type.
+//
+int EV_SpecialForStaticInit(int staticFn)
+{
+   EV_hashFunc hashFn = hashFuncForMapType[LevelInfo.levelType];
+
+   return hashFn(staticFn);
 }
 
 // EOF

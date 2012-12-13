@@ -27,6 +27,8 @@
 #ifndef EV_SPECIALS_H__
 #define EV_SPECIALS_H__
 
+#include "m_dllist.h"
+
 struct ev_action_t;
 struct line_t;
 class  Mobj;
@@ -109,15 +111,13 @@ struct ev_action_t
    int          minversion; // minimum demo version
 };
 
-// Binds a line special action to a specific action number in the indicated
-// game type.
+// Binds a line special action to a specific action number.
 struct ev_binding_t
 {
    int actionNumber;    // line action number
    ev_action_t *action; // the actual action to execute
 
-   ev_binding_t *next;  // next on hash chain
-   ev_binding_t *first; // first on hash chain at this slot
+   DLListItem<ev_binding_t> links; // hash links
 };
 
 //
@@ -209,6 +209,15 @@ enum
    EV_STATIC_EXTRADATA_SECTOR,              // 401
 
    EV_STATIC_MAX
+};
+
+// Binds a line special number to a static init function
+struct ev_static_t
+{
+   int actionNumber; // numeric line special
+   int staticFn;     // static init function enumeration value
+
+   DLListItem<ev_static_t> links; // hash links
 };
 
 #endif
