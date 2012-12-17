@@ -43,6 +43,7 @@ enum
    ACS_CHUNKID_AINI = ACS_CHUNKID('A', 'I', 'N', 'I'),
    ACS_CHUNKID_ARAY = ACS_CHUNKID('A', 'R', 'A', 'Y'),
    ACS_CHUNKID_ASTR = ACS_CHUNKID('A', 'S', 'T', 'R'),
+   ACS_CHUNKID_ATAG = ACS_CHUNKID('A', 'T', 'A', 'G'),
    ACS_CHUNKID_FNAM = ACS_CHUNKID('F', 'N', 'A', 'M'),
    ACS_CHUNKID_FUNC = ACS_CHUNKID('F', 'U', 'N', 'C'),
    ACS_CHUNKID_LOAD = ACS_CHUNKID('L', 'O', 'A', 'D'),
@@ -294,6 +295,45 @@ static void ACS_chunkerASTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
          ACSArray *arr = &vm->maparrs[var];
          for(uint32_t i = vm->mapalen[var]; i--;)
             arr->at(i) = vm->getStringIndex(arr->at(i));
+      }
+   }
+}
+
+//
+// ACS_chunkerATAG
+//
+// Tags map arrays.
+//
+static void ACS_chunkerATAG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+                            uint32_t chunkLength)
+{
+   if(chunkID != ACS_CHUNKID_ATAG) return;
+
+   // Need version byte and array number.
+   if(chunkLength < 5) return;
+
+   // Check version.
+   if(*chunkData++ != 0) return;
+
+   // Check array number.
+   uint32_t arrnum = SwapULong(*(uint32_t *)chunkData); chunkData += 4;
+   if(arrnum >= ACS_NUM_MAPARRS) return;
+
+   ACSArray &arr = vm->maparrs[arrnum];
+
+   // Remaining data are tag types.
+   chunkLength -= 5;
+   for(uint32_t i = 0; chunkLength--; ++i)
+   {
+      switch(*chunkData++)
+      {
+      case 1: // string
+         arr[i] = vm->getStringIndex(arr[i]);
+         break;
+
+      case 2: // function
+         arr[i] = (uint32_t)arr[i] < vm->numFuncs ? vm->funcptrs[arr[i]]->number : 0;
+         break;
       }
    }
 }
@@ -837,6 +877,9 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
          }
       }
    }
+
+   // ATAG - Map Array Tagging
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerATAG);
 }
 
 // EOF
