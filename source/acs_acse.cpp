@@ -46,6 +46,7 @@ enum
    ACS_CHUNKID_ATAG = ACS_CHUNKID('A', 'T', 'A', 'G'),
    ACS_CHUNKID_FNAM = ACS_CHUNKID('F', 'N', 'A', 'M'),
    ACS_CHUNKID_FUNC = ACS_CHUNKID('F', 'U', 'N', 'C'),
+   ACS_CHUNKID_JUMP = ACS_CHUNKID('J', 'U', 'M', 'P'),
    ACS_CHUNKID_LOAD = ACS_CHUNKID('L', 'O', 'A', 'D'),
    ACS_CHUNKID_MEXP = ACS_CHUNKID('M', 'E', 'X', 'P'),
    ACS_CHUNKID_MIMP = ACS_CHUNKID('M', 'I', 'M', 'P'),
@@ -382,6 +383,35 @@ static void ACS_chunkerFUNC(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 
       chunkData += 8;
    }
+}
+
+//
+// ACS_chunkerJUMP
+//
+// Dynamic jump targets.
+//
+static void ACS_chunkerJUMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+                            uint32_t chunkLength)
+{
+   if(chunkID != ACS_CHUNKID_JUMP) return;
+
+   // Chunk is an unadorned list of jump targets.
+   uint32_t numJumps = vm->numJumps + chunkLength / 4, *chunkItr;
+   ACSJump *jumpItr, *jumpEnd;
+
+   // Start by resizing the current array (if any).
+   vm->jumps = (ACSJump *)Z_Realloc(vm->jumps, numJumps * sizeof(ACSJump), PU_LEVEL, NULL);
+
+   jumpItr = vm->jumps + vm->numJumps;
+   jumpEnd = vm->jumps + numJumps;
+   chunkItr = (uint32_t *)chunkData;
+
+   // Just read in the values for now. Translating will happen later.
+   while(jumpItr != jumpEnd)
+      (*jumpItr++).codeIndex = SwapULong(*chunkItr++);
+
+   // Put jump count back into VM.
+   vm->numJumps = numJumps;
 }
 
 //
@@ -788,6 +818,9 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
 
    // FUNC - Functions
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerFUNC);
+
+   // JUMP - Dynamic Jump Targets
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerJUMP);
 
    // MEXP - Map Variable/Array Export
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerMEXP);

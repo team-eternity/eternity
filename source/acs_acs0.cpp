@@ -1090,6 +1090,15 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
          itr->codePtr = vm->code;
    }
 
+   // Process dynamic jump targets.
+   for(ACSJump *itr = vm->jumps, *end = itr + vm->numJumps; itr != end; ++itr)
+   {
+      if(itr->codeIndex < lumpLength)
+         itr->codePtr = vm->code + codeIndexMap[itr->codeIndex];
+      else
+         itr->codePtr = 0;
+   }
+
    efree(codeIndexMap);
 }
 

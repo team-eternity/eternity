@@ -365,6 +365,15 @@ public:
 };
 
 //
+// ACSJump
+//
+union ACSJump
+{
+   uint32_t codeIndex;
+   int32_t *codePtr;
+};
+
+//
 // ACSScript
 //
 // An actual script entity as read from the ACS lump's entry table,
@@ -585,6 +594,8 @@ public:
    ACSFunc **funcptrs;                 // pointers into vm funcdat
    ACSFunc  *funcs;                    // functions local to this vm
    uint32_t  numFuncs;                 // number of functions
+   ACSJump  *jumps;                    // dynamic jump targets
+   uint32_t  numJumps;                 // number of dynamic jump targets
    int32_t  *mapvtab[ACS_NUM_MAPVARS]; // pointers into vm mapvars
    int32_t   mapvars[ACS_NUM_MAPVARS]; // map variables local to this vm
    ACSArray *mapatab[ACS_NUM_MAPARRS]; // pointers into vm maparrs

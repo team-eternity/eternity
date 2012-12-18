@@ -961,6 +961,16 @@ void ACSThinker::Think()
       vm        = callPtr->vm;
 
       NEXTOP();
+   OPCODE(BRANCH_STACK):
+      opcode = POP();
+      if(opcode < vm->numJumps)
+      {
+         BRANCH_COUNT();
+         ip = vm->jumps[opcode].codePtr;
+      }
+      else
+         ip = vm->code;
+      NEXTOP();
    OPCODE(BRANCH_ZERO):
       if(!POP())
          BRANCHOP(IPCURR());
@@ -1765,6 +1775,8 @@ void ACSVM::reset()
 
    code       = NULL;
    numCode    = 0;
+   jumps      = NULL;
+   numJumps   = 0;
    strings    = NULL;
    numStrings = 0;
    scripts    = NULL;

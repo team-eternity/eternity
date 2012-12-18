@@ -194,6 +194,7 @@
    ACS_OP(BRANCH_IMM,        1)
    ACS_OP(BRANCH_NOTZERO,    1)
    ACS_OP(BRANCH_RETURN,     0)
+   ACS_OP(BRANCH_STACK,      0)
    ACS_OP(BRANCH_ZERO,       1)
 
    // Stack Control
@@ -623,6 +624,8 @@
    /* 359 */ ACSE_OP(GET_FUNCP, GET_FUNCP, 1, true)
    /* 360 */ ACSE_OP(BRANCH_CALL, BRANCH_CALL, 0, false)
    /* 361 */ ACSE_OP(SCRIPTWAITNAME, SCRIPTWAITNAME, 0, false)
+   /* 362 */ ACSE_OP(KILL, TRANSLATIONRANGE3, 0, false)
+   /* 363 */ ACSE_OP(BRANCH_STACK, BRANCH_STACK, 0, false)
 #endif//ACSE_OP
 
 // EOF
