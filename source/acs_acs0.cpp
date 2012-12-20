@@ -1019,6 +1019,12 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
       ACS_traceScriptACS0(&tracer, itr->codeIndex);
    }
 
+   // ... from dynamic jump targets.
+   for(ACSJump *itr = vm->jumps, *end = itr + vm->numJumps; itr != end; ++itr)
+   {
+      ACS_traceScriptACS0(&tracer, itr->codeIndex);
+   }
+
    ++vm->numCode; // Add a KILL to the end as well, to avoid running off the end.
 
    // Translate all the instructions found.
