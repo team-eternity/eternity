@@ -409,7 +409,6 @@ public:
 struct acs_call_t
 {
    int32_t *ip;
-   int32_t *locals;
    uint32_t numLocals;
    ACSVM   *vm;
 };
@@ -457,6 +456,8 @@ public:
    int32_t    *stack;       // value stack
    uint32_t    stackPtr;    // stack pointer
    uint32_t    numStack;    // stack size
+   int32_t    *localvar;    // local variable storage area
+   uint32_t    numLocalvar; // local variable allocation size
    int32_t    *locals;      // local variables and arguments
    uint32_t    numLocals;   // number of local variables
    int32_t     sreg;        // state register

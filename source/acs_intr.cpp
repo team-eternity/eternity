@@ -278,12 +278,14 @@ static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
    newScript->delay = TICRATE;
 
    // set ip to entry point
-   newScript->ip        = acs->codePtr;
-   newScript->numStack  = ACS_NUM_STACK * 2;
-   newScript->stack     = estructalloctag(int32_t, newScript->numStack, PU_LEVEL);
-   newScript->stackPtr  = 0;
-   newScript->numLocals = acs->numVars;
-   newScript->locals    = estructalloctag(int32_t, newScript->numLocals, PU_LEVEL);
+   newScript->ip          = acs->codePtr;
+   newScript->numStack    = ACS_NUM_STACK * 2;
+   newScript->stack       = estructalloctag(int32_t, newScript->numStack, PU_LEVEL);
+   newScript->stackPtr    = 0;
+   newScript->numLocalvar = acs->numVars;
+   newScript->localvar    = estructalloctag(int32_t, newScript->numLocalvar, PU_LEVEL);
+   newScript->numLocals   = newScript->numLocalvar;
+   newScript->locals      = newScript->localvar;
 
    // copy in some important data
    newScript->script = acs;
@@ -551,7 +553,8 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(KILL):
-      doom_printf(FC_ERROR "ACS Error: KILL at %d\a", (int)(ip - vm->code - 1));
+      doom_printf(FC_ERROR "ACS Error: KILL at %d from VM %u\a",
+                  (int)(ip - vm->code - 1), (unsigned)vm->id);
       goto action_endscript;
 
       // Special Commands
@@ -874,20 +877,34 @@ void ACSThinker::Think()
             stp = stack + stackPtr;
          }
 
+         // Ensure there's enough local variable space.
+         temp = func->numArgs + func->numVars;
+         if((size_t)(locals - localvar) + numLocals + temp >= numLocalvar)
+         {
+            size_t localsTemp = locals - localvar;
+
+            numLocalvar += temp * 2 + ACS_NUM_LOCALVARS;
+            localvar = (int32_t *)Z_Realloc(localvar, numLocalvar * sizeof(int32_t), PU_LEVEL, NULL);
+            locals = localvar + localsTemp;
+         }
+
+         // Create return frame.
          callPtr->ip        = ip;
          callPtr->numLocals = numLocals;
-         callPtr->locals    = locals;
          callPtr->vm        = vm;
+         ++callPtr;
 
+         // Read arguments and clear local variables.
+         locals += numLocals;
+
+         memcpy(locals, stp - func->numArgs, func->numArgs * sizeof(int32_t));
+         stp -= func->numArgs;
+         memset(locals + func->numArgs, 0, func->numVars * sizeof(int32_t));
+
+         // Set VM data.
          ip        = func->codePtr;
          numLocals = func->numVars + func->numArgs;
-         locals    = estructalloc(int32_t, numLocals);
          vm        = func->vm;
-
-         for(temp = func->numArgs; temp--;)
-            locals[temp] = POP();
-
-         ++callPtr;
       }
       NEXTOP();
    OPCODE(BRANCH_CASE):
@@ -953,12 +970,11 @@ void ACSThinker::Think()
 
       --callPtr;
 
-      efree(locals);
-
       ip        = callPtr->ip;
       numLocals = callPtr->numLocals;
-      locals    = callPtr->locals;
       vm        = callPtr->vm;
+
+      locals -= numLocals;
 
       NEXTOP();
    OPCODE(BRANCH_STACK):
@@ -2121,14 +2137,16 @@ bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
    // setup the new script thinker
    newThread = new ACSThinker;
 
-   newThread->ip        = script->codePtr;
-   newThread->numStack  = ACS_NUM_STACK * 2;
-   newThread->stack     = estructalloctag(int32_t, newThread->numStack, PU_LEVEL);
-   newThread->stackPtr  = 0;
-   newThread->numLocals = script->numVars;
-   newThread->locals    = estructalloctag(int32_t, newThread->numLocals, PU_LEVEL);
-   newThread->line      = line;
-   newThread->lineSide  = lineSide;
+   newThread->ip          = script->codePtr;
+   newThread->numStack    = ACS_NUM_STACK * 2;
+   newThread->stack       = estructalloctag(int32_t, newThread->numStack, PU_LEVEL);
+   newThread->stackPtr    = 0;
+   newThread->numLocalvar = script->numVars;
+   newThread->localvar    = estructalloctag(int32_t, newThread->numLocalvar, PU_LEVEL);
+   newThread->numLocals   = newThread->numLocalvar;
+   newThread->locals      = newThread->localvar;
+   newThread->line        = line;
+   newThread->lineSide    = lineSide;
    P_SetTarget<Mobj>(&newThread->trigger, trigger);
 
    // copy in some important data
@@ -2391,12 +2409,8 @@ static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
 
    arc << ipTemp << call.numLocals << call.vm;
 
-   call.ip = call.vm->code + ipTemp;
-
    if(arc.isLoading())
-      call.locals = (int32_t *)Z_Malloc(call.numLocals * sizeof(int32_t), PU_LEVEL, NULL);
-
-   P_ArchiveArray(arc, call.locals, call.numLocals);
+      call.ip = call.vm->code + ipTemp;
 
    return arc;
 }
@@ -2526,7 +2540,7 @@ void ACSArray::archive(SaveArchive &arc)
 //
 void ACSThinker::serialize(SaveArchive &arc)
 {
-   uint32_t scriptIndex, callPtrIndex, printIndex, ipIndex, lineIndex;
+   uint32_t scriptIndex, localsIndex, callPtrIndex, printIndex, ipIndex, lineIndex;
 
    Super::serialize(arc);
 
@@ -2534,6 +2548,8 @@ void ACSThinker::serialize(SaveArchive &arc)
    if(arc.isSaving())
    {
       scriptIndex = script - vm->scripts;
+
+      localsIndex = locals - localvar;
 
       callPtrIndex = callPtr - calls;
 
@@ -2547,13 +2563,17 @@ void ACSThinker::serialize(SaveArchive &arc)
    }
 
    // Basic properties
-   arc << ipIndex << stackPtr << numLocals << sreg << sdata << callPtrIndex << printIndex
-       << scriptIndex << vm << delay << triggerSwizzle << lineIndex << lineSide;
+   arc << ipIndex << stackPtr << numLocalvar << localsIndex << numLocals << sreg
+       << sdata << callPtrIndex << printIndex << scriptIndex << vm << delay
+       << triggerSwizzle << lineIndex << lineSide;
 
    // Allocations/Index-to-Pointer
    if(arc.isLoading())
    {
       script = vm->scripts + scriptIndex;
+
+      localvar = estructalloctag(int32_t, numLocalvar, PU_LEVEL);
+      locals = localvar + localsIndex;
 
       numCalls = callPtrIndex;
       calls    = estructalloctag(acs_call_t, numCalls, PU_LEVEL);
@@ -2570,13 +2590,11 @@ void ACSThinker::serialize(SaveArchive &arc)
 
       numStack = stackPtr + ACS_NUM_STACK;
       stack = estructalloctag(int32_t, numStack, PU_LEVEL);
-
-      locals = estructalloctag(int32_t, numLocals, PU_LEVEL);
    }
 
    // Arrays
    P_ArchiveArray(arc, stack, stackPtr);
-   P_ArchiveArray(arc, locals, numLocals);
+   P_ArchiveArray(arc, localvar, numLocalvar);
    P_ArchiveArray(arc, calls, callPtrIndex);
 
    for(qstring **itr = printStack, **end = printPtr; itr != end; ++itr)

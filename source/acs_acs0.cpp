@@ -114,7 +114,7 @@ static uint32_t ACS_countOpSizeACS0(acs0_tracer_t *tracer, uint32_t index,
 
    case ACS0_OP_BRANCH_CASETABLE:
       // Set opSize to the op plus alignment.
-      opSize = (opSize + 3) & ~3;
+      opSize = ((index + opSize + 3) & ~3) - index;
 
       // Need room for the case count.
       if(index + opSize > tracer->lumpLength - 4) return opSize;
