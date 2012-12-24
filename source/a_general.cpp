@@ -1245,5 +1245,60 @@ void A_CasingThrust(Mobj *actor)
    actor->momz = momz + (P_SubRandom(pr_casing) << 8);
 }
 
+//
+// A_DetonateEx
+//
+// Semi-equivalent to ZDoom A_Explode extensions.
+//
+// args[0] : damage
+// args[1] : radius
+// args[2] : hurt self?
+// args[3] : alert?
+// TODO: args[4] : full damage radius
+// TODO: args[5] : nail count
+// TODO: args[6] : nail damage
+// args[7] : z clip?
+// args[8] : spot is source?
+//
+void A_DetonateEx(Mobj *actor)
+{
+   int   damage   =  E_ArgAsInt(actor->state->args, 0, 128);
+   int   radius   =  E_ArgAsInt(actor->state->args, 1, 128);
+   bool  hurtself = (E_ArgAsInt(actor->state->args, 2, 1) == 1);
+   bool  alert    = (E_ArgAsInt(actor->state->args, 3, 1) == 1);
+   bool  zclip    = (E_ArgAsInt(actor->state->args, 7, 0) == 1);
+   bool  spotsrc  = (E_ArgAsInt(actor->state->args, 8, 0) == 1);
+   Mobj *source   = actor->target;
+   unsigned int flags = 0;
+
+   // invalid damage or radius, return immediately.
+   if(damage <= 0 || radius <= 0)
+      return;
+
+   // if there's no target, or spot is designated as being the source,
+   // set source == actor.
+   if(!source || spotsrc)
+      source = actor;
+
+   // doesn't damage self?
+   if(!hurtself)
+      flags |= RAF_NOSELFDAMAGE;
+
+   // checks z height?
+   if(zclip)
+      flags |= RAF_CLIPHEIGHT;
+
+   // Do it.
+   P_RadiusAttack(actor, source, damage, radius, actor->info->mod, flags);
+
+   // optional noise alert, as in Strife 
+   if(alert)
+      P_NoiseAlert(source, actor);
+
+   // cause a terrain hit
+   if(actor->z <= actor->secfloorz + radius * FRACUNIT)
+      E_HitWater(actor, actor->subsector->sector);
+}
+
 // EOF
 

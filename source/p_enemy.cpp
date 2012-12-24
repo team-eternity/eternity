@@ -1900,7 +1900,7 @@ CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
    P_DamageMobj(clip.linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
    clip.linetarget->momz = 1000*FRACUNIT/clip.linetarget->info->mass;
 
-   P_RadiusAttack(clip.linetarget, plyr->mo, 70, MOD_UNKNOWN);
+   P_RadiusAttack(clip.linetarget, plyr->mo, 70, 70, MOD_UNKNOWN, 0);
 }
 
 void P_SpawnPlayer(mapthing_t* mthing);

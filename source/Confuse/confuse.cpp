@@ -602,7 +602,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       val->section->filename  = cfg->filename;
       val->section->line      = cfg->line;
       val->section->errfunc   = cfg->errfunc;
-      val->section->title     = value;
+      val->section->title     = value ? estrdup(value) : NULL;
       // haleyjd 01/02/12: make the old section a displaced version of the
       // new one, so that it can remain accessible
       val->section->displaced = oldsection;
@@ -792,6 +792,15 @@ struct cfg_pstate_t
    cfg_opt_t   *opt;     // current option
    cfg_value_t *val;     // current value
    cfg_opt_t    funcopt; // dummy option, for function call parsing
+
+   ~cfg_pstate_t()
+   {
+      if(opttitle)
+      {
+         efree(opttitle);
+         opttitle = 0;
+      }
+   }
 };
 
 // Forward declaration required for recursion.
@@ -902,6 +911,7 @@ static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
    if(pstate.opt->type == CFGT_MVPROP) // haleyjd: multi-valued properties
    {
       pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+      efree(pstate.opttitle);
       pstate.opttitle = 0;
       if(!pstate.val || !pstate.val->section || !pstate.val->section->opts)
          return STATE_ERROR;
@@ -1063,8 +1073,7 @@ static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate
          return STATE_ERROR;
 
       // Add its value to the parent section
-      pstate.val = cfg_setopt(titleParentCfg, titlePropsOpt, 
-                              estrdup(titlePropsOpt->name));
+      pstate.val = cfg_setopt(titleParentCfg, titlePropsOpt, titlePropsOpt->name);
       if(!pstate.val || !pstate.val->section || !pstate.val->section->opts)
          return STATE_ERROR;
 
@@ -1101,6 +1110,7 @@ static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate
       {
          // Get new value
          pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
+         efree(pstate.opttitle);
          pstate.opttitle = 0;
          if(!pstate.val)
             return STATE_ERROR;

@@ -322,6 +322,7 @@ dehflags_t deh_mobjflags[] =
   {"NORANDOMIZE",      0x00000040, 3}, // missile spawn and death not randomized
   {"BRIGHT",           0x00000080, 3}, // actor is always fullbright
   {"FLY",              0x00000100, 3}, // actor is flying
+  {"NORADIUSHACK",     0x00000200, 3}, // bouncing missile obeys normal radius attack flags
 
   { NULL,              0 }             // NULL terminator
 };
