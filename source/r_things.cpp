@@ -131,7 +131,7 @@ typedef struct maskdraw_s
 //
 typedef struct vissprite_s
 {
-  int x1, x2;
+  int     x1, x2;
   fixed_t gx, gy;              // for line side calculation
   fixed_t gz, gzt;             // global bottom / top for silhouette clipping
   fixed_t texturemid;
@@ -151,7 +151,7 @@ typedef struct vissprite_s
   // killough 3/27/98: height sector for underwater/fake ceiling support
   int heightsec;
 
-  int translucency; // haleyjd: zdoom-style translucency
+  uint16_t translucency; // haleyjd: zdoom-style translucency
 
   fixed_t footclip; // haleyjd: foot clipping
 
@@ -657,7 +657,8 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    if(vis->colour)
       column.translation = translationtables[vis->colour - 1];
    
-   column.translevel = vis->translucency;   
+   column.translevel = vis->translucency;
+   column.translevel += 1;
    tranmap = main_tranmap; // killough 4/11/98   
    
    // haleyjd: faster selection for drawstyles
@@ -913,11 +914,12 @@ static void R_ProjectSprite(Mobj *thing)
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
 
-   vis->translucency = thing->translucency; // haleyjd 09/01/02
+   // haleyjd 09/01/02
+   vis->translucency = static_cast<uint16_t>(thing->translucency - 1); 
 
    // haleyjd 11/14/02: ghost flag
-   if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT)
-      vis->translucency = HTIC_GHOST_TRANS;
+   if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
+      vis->translucency = HTIC_GHOST_TRANS - 1;
 
    // haleyjd 10/12/02: foot clipping
    vis->footclip = thing->floorclip;
@@ -954,7 +956,7 @@ static void R_ProjectSprite(Mobj *thing)
    {   
       if(thing->flags3 & MF3_TLSTYLEADD)
          vis->drawstyle = VS_DRAWSTYLE_ADD;
-      else if(vis->translucency < FRACUNIT)
+      else if(vis->translucency < FRACUNIT - 1)
          vis->drawstyle = VS_DRAWSTYLE_ALPHA;
       else if(thing->flags & MF_TRANSLUCENT)
          vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
@@ -1099,7 +1101,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->x1 = x1 < 0.0f ? 0 : (int)x1;
    vis->x2 = x2 >= view.width ? viewwidth - 1 : (int)x2;
    vis->colour = 0;      // sf: default colourmap
-   vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.
+   vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
    vis->footclip = 0; // haleyjd
    vis->scale = view.pspriteyscale;
    vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
@@ -1137,7 +1139,7 @@ static void R_DrawPSprite(pspdef_t *psp)
            general_translucency)
    {
       vis->drawstyle    = VS_DRAWSTYLE_ALPHA;
-      vis->translucency = HTIC_GHOST_TRANS;
+      vis->translucency = HTIC_GHOST_TRANS - 1;
       vis->colormap     = spritelights[MAXLIGHTSCALE-1];
    }
    else if(fixedcolormap)
@@ -1922,6 +1924,10 @@ static void R_ProjectParticle(particle_t *particle)
    if(ty1 < 1.0f)
       return;
 
+   // invisible?
+   if(!particle->trans)
+      return;
+
    tx1 = (tempx * view.cos) - (tempy * view.sin);
 
    tx2 = tx1 + 1.0f;
@@ -1961,8 +1967,8 @@ static void R_ProjectParticle(particle_t *particle)
       heightsec = sector->heightsec;
 
       if(particle->z < sector->floorheight || 
-	      particle->z > sector->ceilingheight)
-	      return;
+	 particle->z > sector->ceilingheight)
+	 return;
    }
    
    // only clip particles which are in special sectors
@@ -1972,15 +1978,15 @@ static void R_ProjectParticle(particle_t *particle)
                 viewplayer->mo->subsector->sector->heightsec;
       
       if(phs != -1 && 
-	      viewz < sectors[phs].floorheight ?
-	      particle->z >= sectors[heightsec].floorheight :
+	 viewz < sectors[phs].floorheight ?
+	 particle->z >= sectors[heightsec].floorheight :
          gzt < sectors[heightsec].floorheight)
          return;
 
       if(phs != -1 && 
-	      viewz > sectors[phs].ceilingheight ?
-	      gzt < sectors[heightsec].ceilingheight &&
-	      viewz >= sectors[heightsec].ceilingheight :
+	 viewz > sectors[phs].ceilingheight ?
+	 gzt < sectors[heightsec].ceilingheight &&
+	 viewz >= sectors[heightsec].ceilingheight :
          particle->z >= sectors[heightsec].ceilingheight)
          return;
    }
@@ -1997,7 +2003,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
    vis->colour = particle->color;
    vis->patch = -1;
-   vis->translucency = (signed int)particle->trans;
+   vis->translucency = static_cast<uint16_t>(particle->trans - 1);
    // Cardboard
    vis->dist = idist;
    vis->xstep = 1.0f / xscale;
@@ -2101,50 +2107,31 @@ static void R_DrawParticle(vissprite_t *vis)
       // haleyjd 02/08/05: rewritten to remove inner loop invariants
       if(general_translucency && particle_trans)
       {
-         if(particle_trans == 1) // smooth (DosDOOM-style)
-         {
-            unsigned int bg, fg;
-            unsigned int *fg2rgb, *bg2rgb;
-            unsigned int fglevel, bglevel;
+         unsigned int bg, fg;
+         unsigned int *fg2rgb, *bg2rgb;
+         unsigned int fglevel, bglevel;
 
-            // look up translucency information
-            fglevel = (unsigned int)(vis->translucency) & ~0x3ff;
-            bglevel = FRACUNIT - fglevel;
-            fg2rgb  = Col2RGB8[fglevel >> 10];
-            bg2rgb  = Col2RGB8[bglevel >> 10];
-            fg      = fg2rgb[color]; // foreground color is invariant
+         // look up translucency information
+         fglevel = ((unsigned int)(vis->translucency) + 1) & ~0x3ff;
+         bglevel = FRACUNIT - fglevel;
+         fg2rgb  = Col2RGB8[fglevel >> 10];
+         bg2rgb  = Col2RGB8[bglevel >> 10];
+         fg      = fg2rgb[color]; // foreground color is invariant
 
-            do // step in y
-            {
-               int count = xcount;
-               
-               do // step in x
-               {
-                  bg = bg2rgb[*dest];
-                  bg = (fg + bg) | 0x1f07c1f;
-                  *dest++ = RGB32k[0][0][bg & (bg >> 15)];
-               } 
-               while(--count);
-               dest += spacing;  // go to next row
-            } 
-            while(--ycount);
-         }
-         else // general (BOOM)
+         do // step in y
          {
-            do // step in y
+            int count = xcount;
+
+            do // step in x
             {
-               int count = xcount;
-               
-               do // step in x
-               {
-                  *dest = main_tranmap[(*dest << 8) + color];
-                  ++dest;
-               } 
-               while(--count);
-               dest += spacing;  // go to next row
+               bg = bg2rgb[*dest];
+               bg = (fg + bg) | 0x1f07c1f;
+               *dest++ = RGB32k[0][0][bg & (bg >> 15)];
             } 
-            while(--ycount);
-         } // end else [particle_trans == 2]
+            while(--count);
+            dest += spacing;  // go to next row
+         } 
+         while(--ycount);
       }
       else // opaque (fast, and looks terrible)
       {

@@ -1180,7 +1180,7 @@ void R_DoomTLStyle(void)
 }
 
 //
-//  Console Commands
+// Console Commands
 //
 
 static const char *handedstr[]  = { "right", "left" };
