@@ -1672,7 +1672,6 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
                clipbot[x] = h;
       }
 
-
       mh = M_FixedToFloat(sector->ceilingheight) - view.z;
       if(sector->c_pflags & PS_PASSABLE && sector->ceilingheight < spr->gzt)
       {

@@ -543,10 +543,8 @@ struct visplane_t
    fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
 
    // SoM: The plain silhouette arrays are allocated based on screen-size now.
-   int *pad1;
    int *top;
-   int *pad2, *pad3;
-   int *bottom, *pad4;
+   int *bottom;
 
    // This is the width of the above silhouette buffers. If a video mode is set
    // that is wider than max_width, the visplane's buffers need to be
