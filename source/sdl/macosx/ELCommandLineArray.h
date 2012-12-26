@@ -21,36 +21,41 @@
 //
 // DESCRIPTION:
 //
-// Instant edit action responding delegate for real time parameter updating
+// Command-line argument array
 //
 //----------------------------------------------------------------------------
 
-#import "ELTextFieldDelegate.h"
-#import "LauncherController.h"
+#import <Foundation/Foundation.h>
 
-@implementation ELTextFieldDelegate
+@class ELCommandLineArgument;
 
 //
-// dealloc
+// ELCommandLineArray
 //
--(void)dealloc
+// Modified mutable array that deals with command-line arguments
+//
+@interface ELCommandLineArray : NSObject
 {
-   
-   // Remove observer
-   [[NSNotificationCenter defaultCenter] removeObserver:self];
-   
-   [super dealloc];
+	NSMutableArray *array;
 }
+@property (readonly) NSMutableArray *array;
 
-//
-// control:textShouldBeginEditing:
-//
--(void)textDidChange:(NSNotification *)aNotification
-{
-   [owner updateParameters:[aNotification object]];
-}
+// Return argument which has aString identifier, or nil if not found
+- (ELCommandLineArgument *)argumentWithIdentifier:(NSString *)aString;
+
+// Set argument value
+- (NSMutableArray *)extraWordsForArgument:(NSString *)argName;
+
+// See if it has argument, without creating it
+- (ELCommandLineArgument *)hasArgument:(NSString *)argName;
+
+// Count the words
+- (NSUInteger)countWords;
+
+// Generate the argv array
+- (NSArray *)deployArray;
+
+// Add argument
+- (void)addArgument:(ELCommandLineArgument *)arg;
 
 @end
-
-// EOF
-

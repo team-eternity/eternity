@@ -21,36 +21,43 @@
 //
 // DESCRIPTION:
 //
-// Instant edit action responding delegate for real time parameter updating
+// Command-line argument unit
 //
 //----------------------------------------------------------------------------
 
-#import "ELTextFieldDelegate.h"
-#import "LauncherController.h"
-
-@implementation ELTextFieldDelegate
+#import <Foundation/Foundation.h>
 
 //
-// dealloc
+// ELCommandLineArgument
 //
--(void)dealloc
+// Eternity launch command line argument unit
+//
+@interface ELCommandLineArgument : NSObject
 {
-   
-   // Remove observer
-   [[NSNotificationCenter defaultCenter] removeObserver:self];
-   
-   [super dealloc];
+	NSString *identifier;			// argument name (prefixed with hyphen and allowing )
+	NSMutableArray *extraWords;	// extra components (such as warp level or file names)
+	BOOL enabled;						// enabled flag (true by default)
 }
 
-//
-// control:textShouldBeginEditing:
-//
--(void)textDidChange:(NSNotification *)aNotification
-{
-   [owner updateParameters:[aNotification object]];
-}
+// Make the extraWords array accessible
+@property (readonly) NSMutableArray *extraWords;
+
+// Same for the identifier
+@property (readonly ) NSString *identifier;
+
+// Allow enable modification
+@property (assign) BOOL enabled;
+
+// Initialize with an identifier and empty extra words
+-(id)initWithIdentifier:(NSString *)aString;
+
+// Get without allocking
++(ELCommandLineArgument *)argWithIdentifier:(NSString *)aString;
+
+// Generate response argument string
+-(NSString *)responseFileString:(BOOL)withQuotes;
+
+// Generate general argument string
+-(NSString *)generalArgString:(BOOL)withQuotes;
 
 @end
-
-// EOF
-

@@ -27,7 +27,7 @@
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
-	<string>NSMyApplication</string>
+	<string>NSApplication</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -46,22 +46,6 @@
 				<string>pk3</string>
 				<string>zip</string>
 			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>eternityuser</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>Eternity.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>Eternity User Package</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
-			<key>LSTypeIsPackage</key>
-			<true/>
 		</dict>
 	</array>
 </dict>

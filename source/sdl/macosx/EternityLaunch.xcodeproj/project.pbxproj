@@ -51,6 +51,9 @@
 		FA1F578C158BC552006F8063 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5777158BC552006F8063 /* trees.c */; };
 		FA1F578D158BC552006F8063 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5779158BC552006F8063 /* uncompr.c */; };
 		FA1F578E158BC552006F8063 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F577C158BC552006F8063 /* zutil.c */; };
+		FA3011EE1689D1BB005D25A8 /* MainStart.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011ED1689D1BA005D25A8 /* MainStart.m */; };
+		FA3011F1168A427B005D25A8 /* ELCommandLineArgument.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */; };
+		FA3011F4168A44E0005D25A8 /* ELCommandLineArray.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */; };
 		FA31940E15B9FC84001F82B9 /* e_gameprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */; };
 		FA82169E1647128A00FF998A /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		FA82169F1647128A00FF998A /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = FA8216751647128900FF998A /* COPYING */; };
@@ -271,12 +274,13 @@
 		FABF5E50158BF42800C49E93 /* ser_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D81158BF42800C49E93 /* ser_main.cpp */; };
 		FABF5E51158BF42800C49E93 /* i_cpu_posix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */; };
 		FABF5F01158C710400C49E93 /* Eternity.icns in Resources */ = {isa = PBXBuildFile; fileRef = FABF5F00158C710400C49E93 /* Eternity.icns */; };
-		FABF5F09158C78F300C49E93 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FABF5F08158C78F300C49E93 /* SDLMain.m */; };
+		FABF5F09158C78F300C49E93 /* LauncherController.m in Sources */ = {isa = PBXBuildFile; fileRef = FABF5F08158C78F300C49E93 /* LauncherController.m */; };
 		FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FABF5FFF158C8F6300C49E93 /* Credits.rtf */; };
 		FADFF98F16555F6200C8537B /* d_findiwads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FADFF98D16555F6200C8537B /* d_findiwads.cpp */; };
 		FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
 		FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
+		FAEB990716666A65004B0CD1 /* ev_specials.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAEB990516666A65004B0CD1 /* ev_specials.cpp */; };
 		FAEDFC0116584F2A00A779F9 /* Delete_octagon.png in Resources */ = {isa = PBXBuildFile; fileRef = FAEDFC0016584F2A00A779F9 /* Delete_octagon.png */; };
 /* End PBXBuildFile section */
 
@@ -558,6 +562,11 @@
 		FA1F577B158BC552006F8063 /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.h; name = zlib.h; path = ../../../zlib/zlib.h; sourceTree = SOURCE_ROOT; };
 		FA1F577C158BC552006F8063 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../../../zlib/zutil.c; sourceTree = SOURCE_ROOT; };
 		FA1F577D158BC552006F8063 /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.h; name = zutil.h; path = ../../../zlib/zutil.h; sourceTree = SOURCE_ROOT; };
+		FA3011ED1689D1BA005D25A8 /* MainStart.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainStart.m; sourceTree = "<group>"; };
+		FA3011EF168A427B005D25A8 /* ELCommandLineArgument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArgument.h; sourceTree = "<group>"; };
+		FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArgument.m; sourceTree = "<group>"; };
+		FA3011F2168A44DF005D25A8 /* ELCommandLineArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArray.h; sourceTree = "<group>"; };
+		FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArray.m; sourceTree = "<group>"; };
 		FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_gameprops.cpp; path = ../../e_gameprops.cpp; sourceTree = SOURCE_ROOT; };
 		FA7CF31D1655B54D007CF8DB /* EternityBase2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = EternityBase2; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../../base; sourceTree = SOURCE_ROOT; };
@@ -785,8 +794,8 @@
 		FABF5D81158BF42800C49E93 /* ser_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ser_main.cpp; path = ../ser_main.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_cpu_posix.cpp; path = ../i_cpu_posix.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5F00158C710400C49E93 /* Eternity.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Eternity.icns; sourceTree = "<group>"; };
-		FABF5F07158C78F300C49E93 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
-		FABF5F08158C78F300C49E93 /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
+		FABF5F07158C78F300C49E93 /* LauncherController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LauncherController.h; sourceTree = "<group>"; };
+		FABF5F08158C78F300C49E93 /* LauncherController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LauncherController.m; sourceTree = "<group>"; };
 		FABF5FFF158C8F6300C49E93 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		FACACB2B16521F9E0091AF2E /* a_small.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_small.h; path = ../../a_small.h; sourceTree = "<group>"; };
 		FACACB30165220590091AF2E /* confuse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = confuse.h; path = ../../Confuse/confuse.h; sourceTree = "<group>"; };
@@ -822,6 +831,8 @@
 		FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
 		FAEA89EB164DB9F400E9F874 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
 		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
+		FAEB990516666A65004B0CD1 /* ev_specials.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_specials.cpp; path = ../../ev_specials.cpp; sourceTree = "<group>"; };
+		FAEB990616666A65004B0CD1 /* ev_specials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_specials.h; path = ../../ev_specials.h; sourceTree = "<group>"; };
 		FAEDFC0016584F2A00A779F9 /* Delete_octagon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Delete_octagon.png; path = Resources/Delete_octagon.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -934,8 +945,13 @@
 		FA1F5705158BC2FD006F8063 /* Main */ = {
 			isa = PBXGroup;
 			children = (
-				FABF5F07158C78F300C49E93 /* SDLMain.h */,
-				FABF5F08158C78F300C49E93 /* SDLMain.m */,
+				FABF5F07158C78F300C49E93 /* LauncherController.h */,
+				FABF5F08158C78F300C49E93 /* LauncherController.m */,
+				FA3011F2168A44DF005D25A8 /* ELCommandLineArray.h */,
+				FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */,
+				FA3011EF168A427B005D25A8 /* ELCommandLineArgument.h */,
+				FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */,
+				FA3011ED1689D1BA005D25A8 /* MainStart.m */,
 				256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */,
 				FAB103E01591214400393DE3 /* ELDumpConsole.h */,
 				FAB103E11591214400393DE3 /* ELDumpConsole.m */,
@@ -1113,6 +1129,7 @@
 				FACACB3116527E970091AF2E /* D_ */,
 				FACACB3616527F790091AF2E /* doom */,
 				FACACB391652802D0091AF2E /* E_ */,
+				FAEB990316666A46004B0CD1 /* EV_ */,
 				FACACB3D165281000091AF2E /* F_ */,
 				FACACB3F1652ED510091AF2E /* G_ */,
 				FACACB821653014C0091AF2E /* GL_ */,
@@ -2045,6 +2062,15 @@
 			name = Cam;
 			sourceTree = "<group>";
 		};
+		FAEB990316666A46004B0CD1 /* EV_ */ = {
+			isa = PBXGroup;
+			children = (
+				FAEB990516666A65004B0CD1 /* ev_specials.cpp */,
+				FAEB990616666A65004B0CD1 /* ev_specials.h */,
+			);
+			name = EV_;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -2377,7 +2403,7 @@
 				FABF5E4F158BF42800C49E93 /* mmus2mid.cpp in Sources */,
 				FABF5E50158BF42800C49E93 /* ser_main.cpp in Sources */,
 				FABF5E51158BF42800C49E93 /* i_cpu_posix.cpp in Sources */,
-				FABF5F09158C78F300C49E93 /* SDLMain.m in Sources */,
+				FABF5F09158C78F300C49E93 /* LauncherController.m in Sources */,
 				FAB103E21591214400393DE3 /* ELDumpConsole.m in Sources */,
 				FA31940E15B9FC84001F82B9 /* e_gameprops.cpp in Sources */,
 				FA16D39915E01A3A002318D1 /* acs_acse.cpp in Sources */,
@@ -2390,6 +2416,10 @@
 				FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */,
 				FA891468165424E40034E860 /* ELTextFieldDelegate.m in Sources */,
 				FADFF98F16555F6200C8537B /* d_findiwads.cpp in Sources */,
+				FAEB990716666A65004B0CD1 /* ev_specials.cpp in Sources */,
+				FA3011EE1689D1BB005D25A8 /* MainStart.m in Sources */,
+				FA3011F1168A427B005D25A8 /* ELCommandLineArgument.m in Sources */,
+				FA3011F4168A44E0005D25A8 /* ELCommandLineArray.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2457,7 +2487,7 @@
 					ZONEIDCHECK,
 					R_PORTALS,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = (
 					/Developer/Headers/FlatCarbon,
 					/Library/Frameworks/SDL.framework/Headers,
@@ -2508,7 +2538,7 @@
 					NDEBUG,
 					R_LINKEDPORTALS,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = (
 					/Developer/Headers/FlatCarbon,
 					/Library/Frameworks/SDL.framework/Headers,

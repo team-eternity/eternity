@@ -28,30 +28,27 @@
 //
 // FILE BASED ON:
 //
-//   SDLMain.m - main entry point for our Cocoa-ized SDL app
+//   LauncherController.m - main entry point for our Cocoa-ized SDL app
 //     Initial Version: Darrell Walisser <dwaliss1@purdue.edu>
 //		Non-NIB-Code & other changes: Max Horn <max@quendi.de>
 //
 //  Feel free to customize this file to suit your needs
 //
 
-
-#ifndef SDLMAIN_H_
-#define SDLMAIN_H_
-
 #import <Cocoa/Cocoa.h>
 
-@class ELDumpConsole, ELFileViewDataSource, ELTextFieldDelegate;
+@class ELDumpConsole, ELFileViewDataSource, ELTextFieldDelegate, ELCommandLineArray;
 
 //
-// SDLMain
+// LauncherController
 //
 // Front-end's controller
 //
-@interface SDLMain : NSObject
+@interface LauncherController : NSObject
 {
-	IBOutlet NSWindow *window;
-	NSFileManager *fileMan;
+	NSFileManager *fileMan;		// quick pointer to the file manager
+	
+	IBOutlet NSWindow *window;	// main window
 	ELDumpConsole *console;
    IBOutlet ELFileViewDataSource *fileViewDataSource; //data source for pwadView
 	
@@ -60,67 +57,45 @@
 	
 	IBOutlet NSTabView *tabView;
 	IBOutlet NSPopUpButton *iwadPopUp, *gameTypePopUp;
-   IBOutlet NSPopUpButton *userPopUp;  // user (player) configuration list
 	IBOutlet NSTableView *pwadView;
    
 	IBOutlet NSTextField *recordDemoField, *playDemoField;
-	IBOutlet NSTextField *warpField, *skillField, *fragField, *timeField,
-      *turboField, *dmflagField, *netField;	// heh
+	IBOutlet NSTextField *warpField, *skillField, *fragField, *timeField, *turboField, *dmflagField, *netField;	// heh
 	IBOutlet NSTextField *otherField;
    
 	IBOutlet NSButton *respawn, *fast, *nomons, *vanilla, *timedemo, *fastdemo;
 	IBOutlet NSTextField *infoDisplay;
    
    IBOutlet ELTextFieldDelegate *textFieldDelegate;   // the notif. delegate
-	
-//	IBOutlet NSButton *launchButton;
-	
+
 	NSMenu *iwadPopMenu;
 	
 	NSAlert *noIwadAlert, *badIwadAlert, *nothingForGfsAlert;
-	
-   NSString *eeUserExt;
+
 	NSArray *pwadTypes;
-	NSMutableArray *pwadArray, *param;
+	NSMutableArray *pwadArray;
   	NSMutableSet *iwadSet;  // set of IWADs
    NSMutableSet *userSet;  // set of user configurations
 	
-	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp,
-      *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo,
-		*parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags,
-      *parmNet;
+	ELCommandLineArray *param;
+	char *callName;
+	
+	NSMutableString *userPath, *basePath;
+	
+	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp, *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo, *parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags, *parmNet;
 }
 @property (assign) IBOutlet NSWindow *window;
 @property (readonly) NSMutableArray *pwadArray;
 
--(id)init;
--(void)dealloc;
--(void)initNibData;
--(void)setupTextFieldNotification;
+-(void)initNibData:(int)argc argVector:(char **)argv;
 -(IBAction)launchGame:(id)sender;
--(void)doAddUserFromURL:(NSURL *)wURL;
--(void)addUserEnded:(NSOpenPanel *)panel returnCode:(int)code
-        contextInfo:(void *)info;
--(IBAction)addUser:(id)sender;
--(IBAction)removeUser:(id)sender;
--(void)doAddIwadFromURL:(NSURL *)wURL;
--(void)chooseIwadAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode
-                 contextInfo:(void *)contextInfo;
 -(IBAction)removeIwad:(id)sender;
 -(IBAction)addPwad:(id)sender;
 -(IBAction)addIwad:(id)sender;
 -(IBAction)addAllRecentPwads:(id)sender;
--(void)doAddPwadFromURL:(NSURL *)wURL;
--(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void
-                                                                        *)info;
 -(IBAction)removeAllPwads:(id)sender;
 -(IBAction)removePwad:(id)sender;
 -(IBAction)chooseRecordDemo:(id)sender;
--(void)chooseRecordDidEnd:(NSSavePanel *)sheet returnCode:(int)returnCode
-              contextInfo:(void *)contextInfo;
--(IBAction)choosePlayDemo:(id)sender;
--(void)choosePlayDidEnd:(NSOpenPanel *)panel returnCode:(int)code
-            contextInfo:(void *)info;
 -(IBAction)clearPlayDemo:(id)sender;
 -(IBAction)clearRecordDemo:(id)sender;
 -(IBAction)clearNetwork:(id)sender;
@@ -128,32 +103,12 @@
 -(IBAction)saveAsGFS:(id)sender;
 
 
-// Kind of ugly... but safe
--(void)updateParmIwad:(id)sender; // called by pop-up button command
--(void)updateParmPwad:(id)sender;	// called by table addition/removal
--(IBAction)updateParmRsp:(id)sender;
--(IBAction)updateParmOthers:(id)sender;	// called by text field
--(IBAction)updateParmWarp:(id)sender;	// called by text field
--(IBAction)updateParmSkill:(id)sender;	// called by text field
--(IBAction)updateParmFlags:(id)sender;	// called by any check box
--(IBAction)updateParmRecord:(id)sender;	// called by text field
--(IBAction)updateParmPlayDemo:(id)sender;	// called by text field, check boxes
--(IBAction)updateParmGameType:(id)sender;	// called by pop-up menu command
--(IBAction)updateParmFragLimit:(id)sender;
--(IBAction)updateParmTimeLimit:(id)sender;
--(IBAction)updateParmTurbo:(id)sender;
--(IBAction)updateParmDmflags:(id)sender;
--(IBAction)updateParmNet:(id)sender;
+// Kind of ugly… but safe
 -(IBAction)updateParameters:(id)sender;
 
 -(IBAction)goGetHelp:(id)sender;
 
--(void)saveDefaults;
--(void)loadDefaults;
-
 @end
-
-#endif /* SDLMAIN_H_ */
 
 // EOF
 

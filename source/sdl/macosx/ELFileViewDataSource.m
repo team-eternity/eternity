@@ -26,7 +26,7 @@
 //----------------------------------------------------------------------------
 
 #import "ELFileViewDataSource.h"
-#import "SDLMain.h"
+#import "LauncherController.h"
 
 //
 // ELFileViewDataSource
@@ -57,25 +57,22 @@
 -(id)tableView:(NSTableView *)aTableView
 objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
-	id returnValue=nil;
-	NSString *columnIdentifer = [aTableColumn identifier];
+/*	id returnValue=nil;
 	
 	NSURL *pwadURL = [array objectAtIndex:rowIndex];
 	NSString *pwadString = [pwadURL path];
    NSString *relativePwadString = [pwadURL relativePath];
 	
-	if ([columnIdentifer isEqualToString:@"pwadIcon"])
-	{
-		returnValue = [[NSWorkspace sharedWorkspace] iconForFile:pwadString];
-	}
-	else
-	{
-		NSString *niceName = [relativePwadString
-                            stringByAbbreviatingWithTildeInPath];
-		returnValue = niceName;
-	}
+	
+	
+	NSString *niceName = [relativePwadString stringByAbbreviatingWithTildeInPath];
+	[[aTableColumn dataCellForRow:rowIndex] setImage:[[NSWorkspace sharedWorkspace] iconForFile:pwadString]];
+	returnValue = niceName;
+
    
-	return returnValue;
+	return returnValue;*/
+	
+	return [array objectAtIndex:rowIndex];
 }
 
 //
@@ -87,8 +84,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
   forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
    // set value to pwadArray element (currently only offline files are loaded
-   NSURL *URLCandidate = [NSURL fileURLWithPath:[anObject
-                                             stringByExpandingTildeInPath]];
+   NSURL *URLCandidate = [NSURL fileURLWithPath:[anObject stringByExpandingTildeInPath]];
    
    [array replaceObjectAtIndex:rowIndex withObject:URLCandidate];
    [owner updateParameters:aTableView];
