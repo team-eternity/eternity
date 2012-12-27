@@ -280,7 +280,22 @@ static BOOL gSDLStarted;	// IOAN 20120616
 
 	// set the parameter array
 	callName = argv[0];	// Argument 0: file name
-	// [param setFromStringArray:parmArray];
+	
+	if(argc > 1)
+	{
+		gCalledAppMainline = TRUE;
+		gSDLStarted = YES;	// IOAN 20120616
+		[window close];
+	
+		status = SDL_main (argc, argv);
+		
+		//	[console showInstantLog];
+		// We're done, thank you for playing
+//		if(status == 0)   // only exit if it's all ok
+			exit(status);
+		
+		return;
+	}
 	
    // TODO: Allow file list view to accept Finder files
    // [pwadView registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType, nil]];
