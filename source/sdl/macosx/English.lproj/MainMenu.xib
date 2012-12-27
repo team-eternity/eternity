@@ -1400,7 +1400,7 @@
 							<int key="NSViewLayerContentsRedrawPolicy">2</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="794851952">
-								<int key="NSCellFlags">-1804468671</int>
+								<int key="NSCellFlags">-1803944383</int>
 								<int key="NSCellFlags2">272630784</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="297986072"/>
@@ -1932,7 +1932,7 @@
 												<string key="NSFrame">{{17, 5}, {255, 22}}</string>
 												<reference key="NSSuperview" ref="103060869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView"/>
+												<reference key="NSNextKeyView" ref="612149919"/>
 												<int key="NSViewLayerContentsRedrawPolicy">2</int>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSTextFieldCell" key="NSCell" id="600857089">
@@ -2623,7 +2623,7 @@
 							<string key="NSFrame">{{20, 23}, {82, 82}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="943441926"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSViewIsLayerTreeHost">YES</bool>
 							<object class="NSShadow" key="NSViewShadow">
 								<double key="NSShadowHoriz">2</double>
@@ -2674,29 +2674,6 @@
 								<int key="NSPeriodicInterval">75</int>
 							</object>
 						</object>
-						<object class="NSTextField" id="943441926">
-							<reference key="NSNextResponder" ref="439893737"/>
-							<int key="NSvFlags">290</int>
-							<string key="NSFrame">{{107, 20}, {433, 92}}</string>
-							<reference key="NSSuperview" ref="439893737"/>
-							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
-							<bool key="NSEnabled">YES</bool>
-							<object class="NSTextFieldCell" key="NSCell" id="761786064">
-								<int key="NSCellFlags">73530881</int>
-								<int key="NSCellFlags2">272629760</int>
-								<string key="NSContents"/>
-								<object class="NSFont" key="NSSupport">
-									<string key="NSName">LucidaGrande</string>
-									<double key="NSSize">10</double>
-									<int key="NSfFlags">16</int>
-								</object>
-								<reference key="NSControlView" ref="943441926"/>
-								<bool key="NSDrawsBackground">YES</bool>
-								<reference key="NSBackgroundColor" ref="1066638762"/>
-								<reference key="NSTextColor" ref="937936875"/>
-							</object>
-						</object>
 						<object class="NSButton" id="896244967">
 							<reference key="NSNextResponder" ref="439893737"/>
 							<int key="NSvFlags">265</int>
@@ -2721,6 +2698,26 @@
 								<int key="NSPeriodicInterval">75</int>
 							</object>
 						</object>
+						<object class="NSTextField" id="469380651">
+							<reference key="NSNextResponder" ref="439893737"/>
+							<int key="NSvFlags">290</int>
+							<string key="NSFrame">{{110, 23}, {427, 82}}</string>
+							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
+							<string key="NSReuseIdentifierKey">_NS:9</string>
+							<string key="NSAntiCompressionPriority">{250, 750}</string>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSTextFieldCell" key="NSCell" id="644870011">
+								<int key="NSCellFlags">-2074083327</int>
+								<int key="NSCellFlags2">4329472</int>
+								<string key="NSContents"/>
+								<reference key="NSSupport" ref="26"/>
+								<string key="NSCellIdentifier">_NS:9</string>
+								<reference key="NSControlView" ref="469380651"/>
+								<reference key="NSBackgroundColor" ref="1066638762"/>
+								<reference key="NSTextColor" ref="230315763"/>
+							</object>
+						</object>
 					</object>
 					<string key="NSFrameSize">{557, 429}</string>
 					<reference key="NSSuperview"/>
@@ -2728,7 +2725,7 @@
 					<reference key="NSNextKeyView" ref="391876804"/>
 					<int key="NSViewLayerContentsRedrawPolicy">2</int>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1280, 1002}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
 				<string key="NSMinSize">{525, 451}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">EternityLaunchMainWindow</string>
@@ -2984,14 +2981,6 @@
 						<reference key="destination" ref="873290335"/>
 					</object>
 					<int key="connectionID">905</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">infoDisplay</string>
-						<reference key="source" ref="1021"/>
-						<reference key="destination" ref="943441926"/>
-					</object>
-					<int key="connectionID">918</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
@@ -3288,6 +3277,14 @@
 						<reference key="destination" ref="879792570"/>
 					</object>
 					<int key="connectionID">987</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">infoDisplay</string>
+						<reference key="source" ref="1021"/>
+						<reference key="destination" ref="469380651"/>
+					</object>
+					<int key="connectionID">1097</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
@@ -4546,9 +4543,9 @@
 							<reference ref="391876804"/>
 							<reference ref="479610586"/>
 							<reference ref="296669405"/>
-							<reference ref="943441926"/>
 							<reference ref="761277658"/>
 							<reference ref="896244967"/>
+							<reference ref="469380651"/>
 						</object>
 						<reference key="parent" ref="972006081"/>
 					</object>
@@ -5820,20 +5817,6 @@
 						<reference key="parent" ref="227321360"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">916</int>
-						<reference key="object" ref="943441926"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="761786064"/>
-						</object>
-						<reference key="parent" ref="439893737"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">917</int>
-						<reference key="object" ref="761786064"/>
-						<reference key="parent" ref="943441926"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">919</int>
 						<reference key="object" ref="301756564"/>
 						<object class="NSMutableArray" key="children">
@@ -5900,6 +5883,20 @@
 						<reference key="object" ref="715918928"/>
 						<reference key="parent" ref="267914245"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1095</int>
+						<reference key="object" ref="469380651"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="644870011"/>
+						</object>
+						<reference key="parent" ref="439893737"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1096</int>
+						<reference key="object" ref="644870011"/>
+						<reference key="parent" ref="469380651"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -5912,6 +5909,8 @@
 					<string>-3.IBPluginDependency</string>
 					<string>1083.CustomClassName</string>
 					<string>1083.IBPluginDependency</string>
+					<string>1095.IBPluginDependency</string>
+					<string>1096.IBPluginDependency</string>
 					<string>112.IBPluginDependency</string>
 					<string>124.IBPluginDependency</string>
 					<string>125.IBPluginDependency</string>
@@ -6202,8 +6201,6 @@
 					<string>848.IBAttributePlaceholdersKey</string>
 					<string>848.IBPluginDependency</string>
 					<string>849.IBPluginDependency</string>
-					<string>916.IBPluginDependency</string>
-					<string>917.IBPluginDependency</string>
 					<string>919.IBAttributePlaceholdersKey</string>
 					<string>919.IBPluginDependency</string>
 					<string>92.IBPluginDependency</string>
@@ -6230,6 +6227,8 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>NSPathCell</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6722,8 +6721,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSMutableDictionary">
 						<string key="NS.key.0">ToolTip</string>
 						<object class="IBToolTipAttribute" key="NS.object.0">
@@ -6778,7 +6775,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1083</int>
+			<int key="maxID">1097</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -6831,7 +6828,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>addAllRecentPwads:</string>
 							<string>addIwad:</string>
 							<string>addPwad:</string>
-							<string>choosePlayDemo:</string>
 							<string>chooseRecordDemo:</string>
 							<string>clearNetwork:</string>
 							<string>clearPlayDemo:</string>
@@ -6843,36 +6839,9 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>removePwad:</string>
 							<string>saveAsGFS:</string>
 							<string>updateParameters:</string>
-							<string>updateParmDmflags:</string>
-							<string>updateParmFlags:</string>
-							<string>updateParmFragLimit:</string>
-							<string>updateParmGameType:</string>
-							<string>updateParmNet:</string>
-							<string>updateParmOthers:</string>
-							<string>updateParmPlayDemo:</string>
-							<string>updateParmRecord:</string>
-							<string>updateParmRsp:</string>
-							<string>updateParmSkill:</string>
-							<string>updateParmTimeLimit:</string>
-							<string>updateParmTurbo:</string>
-							<string>updateParmWarp:</string>
 						</object>
 						<object class="NSArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -6896,7 +6865,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>addAllRecentPwads:</string>
 							<string>addIwad:</string>
 							<string>addPwad:</string>
-							<string>choosePlayDemo:</string>
 							<string>chooseRecordDemo:</string>
 							<string>clearNetwork:</string>
 							<string>clearPlayDemo:</string>
@@ -6908,19 +6876,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>removePwad:</string>
 							<string>saveAsGFS:</string>
 							<string>updateParameters:</string>
-							<string>updateParmDmflags:</string>
-							<string>updateParmFlags:</string>
-							<string>updateParmFragLimit:</string>
-							<string>updateParmGameType:</string>
-							<string>updateParmNet:</string>
-							<string>updateParmOthers:</string>
-							<string>updateParmPlayDemo:</string>
-							<string>updateParmRecord:</string>
-							<string>updateParmRsp:</string>
-							<string>updateParmSkill:</string>
-							<string>updateParmTimeLimit:</string>
-							<string>updateParmTurbo:</string>
-							<string>updateParmWarp:</string>
 						</object>
 						<object class="NSArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -6934,10 +6889,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">addPwad:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">choosePlayDemo:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -6984,58 +6935,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 								<string key="name">updateParameters:</string>
 								<string key="candidateClassName">id</string>
 							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmDmflags:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmFlags:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmFragLimit:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmGameType:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmNet:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmOthers:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmPlayDemo:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmRecord:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmRsp:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmSkill:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmTimeLimit:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmTurbo:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">updateParmWarp:</string>
-								<string key="candidateClassName">id</string>
-							</object>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="outlets">
@@ -7067,7 +6966,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>timeField</string>
 							<string>timedemo</string>
 							<string>turboField</string>
-							<string>userPopUp</string>
 							<string>vanilla</string>
 							<string>warpField</string>
 							<string>window</string>
@@ -7099,7 +6997,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>NSTextField</string>
 							<string>NSButton</string>
 							<string>NSTextField</string>
-							<string>NSPopUpButton</string>
 							<string>NSButton</string>
 							<string>NSTextField</string>
 							<string>NSWindow</string>
@@ -7134,7 +7031,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<string>timeField</string>
 							<string>timedemo</string>
 							<string>turboField</string>
-							<string>userPopUp</string>
 							<string>vanilla</string>
 							<string>warpField</string>
 							<string>window</string>
@@ -7240,10 +7136,6 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 							<object class="IBToOneOutletInfo">
 								<string key="name">turboField</string>
 								<string key="candidateClassName">NSTextField</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">userPopUp</string>
-								<string key="candidateClassName">NSPopUpButton</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">vanilla</string>

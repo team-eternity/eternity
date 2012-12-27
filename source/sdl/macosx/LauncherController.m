@@ -1223,9 +1223,9 @@ iwadMightBe:
 			continue;	// skip if that kind
 		
 		// the rest are valid
-		[infotext appendString:@" "];
+
 		[infotext appendString:[arg generalArgString:YES]];
-		
+		[infotext appendString:@"\n"];		
 	}
 	
 	[infoDisplay setStringValue:infotext];

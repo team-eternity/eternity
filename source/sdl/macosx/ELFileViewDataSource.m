@@ -54,24 +54,8 @@
 //
 // Read from pwadarray and put into table
 //
--(id)tableView:(NSTableView *)aTableView
-objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
+-(id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
-/*	id returnValue=nil;
-	
-	NSURL *pwadURL = [array objectAtIndex:rowIndex];
-	NSString *pwadString = [pwadURL path];
-   NSString *relativePwadString = [pwadURL relativePath];
-	
-	
-	
-	NSString *niceName = [relativePwadString stringByAbbreviatingWithTildeInPath];
-	[[aTableColumn dataCellForRow:rowIndex] setImage:[[NSWorkspace sharedWorkspace] iconForFile:pwadString]];
-	returnValue = niceName;
-
-   
-	return returnValue;*/
-	
 	return [array objectAtIndex:rowIndex];
 }
 
@@ -80,8 +64,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 //
 // Allow renaming -file entries
 //
--(void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject
-  forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
+-(void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
    // set value to pwadArray element (currently only offline files are loaded
    NSURL *URLCandidate = [NSURL fileURLWithPath:[anObject stringByExpandingTildeInPath]];
