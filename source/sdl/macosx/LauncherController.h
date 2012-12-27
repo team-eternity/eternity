@@ -52,7 +52,7 @@
 	ELDumpConsole *console;
    IBOutlet ELFileViewDataSource *fileViewDataSource; //data source for pwadView
 	
-	IBOutlet NSMenuItem *fileClose, *fileCloseAll, *fileOpenAllRecent;
+	IBOutlet NSMenuItem *fileClose, *fileCloseAll, *fileOpenAllRecent, *showInFinder;
 	IBOutlet NSButton *saveAsGFS;
 	
 	IBOutlet NSTabView *tabView;
@@ -107,6 +107,9 @@
 -(IBAction)updateParameters:(id)sender;
 
 -(IBAction)goGetHelp:(id)sender;
+
+-(IBAction)showUserInFinder:(id)sender;
+-(IBAction)showFileInFinder:(id)sender;
 
 @end
 

@@ -61,9 +61,6 @@
   
    dup2([outHandle fileDescriptor], fileno(stdout));
    
-   
-
-   
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(dataReady:)
 												 name:NSFileHandleReadCompletionNotification

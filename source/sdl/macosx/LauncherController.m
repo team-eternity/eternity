@@ -440,6 +440,14 @@ static BOOL gSDLStarted;	// IOAN 20120616
 }
 
 //
+// showUserInFinder
+//
+-(IBAction)showUserInFinder:(id)sender
+{
+	[[NSWorkspace sharedWorkspace] openFile:userPath withApplication:@"Finder"];
+}
+
+//
 // launchGame:
 //
 // Start the damned game
@@ -472,12 +480,18 @@ iwadMightBe:
 	
 	// Add -base and user here
 	ELCommandLineArgument *argBase, *argUser;
-	argBase = [ELCommandLineArgument argWithIdentifier:@"-base"];
-	[[argBase extraWords] addObject:basePath];
-	argUser = [ELCommandLineArgument argWithIdentifier:@"-user"];
-	[[argUser extraWords] addObject:userPath];
-	[param addArgument:argBase];
-	[param addArgument:argUser];
+	if(![param miscHasWord:@"-base"])
+	{
+		argBase = [ELCommandLineArgument argWithIdentifier:@"-base"];
+		[[argBase extraWords] addObject:basePath];
+		[param addArgument:argBase];
+	}
+	if(![param miscHasWord:@"-user"])
+	{
+		argUser = [ELCommandLineArgument argWithIdentifier:@"-user"];
+		[[argUser extraWords] addObject:userPath];
+		[param addArgument:argUser];
+	}
 	
 	int gArgc;
 	char **gArgv;
@@ -568,6 +582,14 @@ iwadMightBe:
 }
 
 //
+// showFileInFinder:
+//
+-(IBAction)showFileInFinder:(id)sender
+{
+	[[NSWorkspace sharedWorkspace] openFile:[[pwadArray objectAtIndex:[pwadView selectedRow] ] path] withApplication:@"Finder"];
+}
+
+//
 // addIwad:
 //
 -(IBAction)addIwad:(id)sender
@@ -598,6 +620,8 @@ iwadMightBe:
 //
 -(BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {
+	if(menuItem == showInFinder)
+		return [pwadArray count] > 0 && [pwadView selectedRow] > -1;
 	if(menuItem == fileClose || menuItem == fileCloseAll)
 		return [pwadArray count] > 0;
 	if(menuItem == fileOpenAllRecent)

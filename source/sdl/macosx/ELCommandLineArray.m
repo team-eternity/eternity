@@ -172,4 +172,26 @@
 	[array addObject:arg];
 }
 
+//
+// miscHasWord:
+//
+// Check if the " " parameter has the given word
+//
+- (BOOL)miscHasWord:(NSString *)wordName
+{
+	ELCommandLineArgument *arg;
+	arg = [self hasArgument:@" "];
+	if ([arg enabled])
+	{
+		NSString *wrd;
+		
+		for(wrd in [arg extraWords])
+		{
+			if([wrd caseInsensitiveCompare:wordName] == NSOrderedSame)
+				return YES;
+		}
+	}
+	return NO;
+}
+
 @end
