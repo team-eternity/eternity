@@ -48,7 +48,7 @@ extern const char *big_num_font_name;
 // haleyjd 10/30/06: enum for text control characters
 enum
 {
-   TEXT_COLOR_BRICK = 128,
+   TEXT_COLOR_BRICK = 0x80,
    TEXT_COLOR_TAN,
    TEXT_COLOR_GRAY,
    TEXT_COLOR_GREEN,
@@ -58,15 +58,22 @@ enum
    TEXT_COLOR_BLUE,
    TEXT_COLOR_ORANGE,
    TEXT_COLOR_YELLOW,
-   TEXT_CONTROL_TRANS,
+   TEXT_COLOR_CUSTOM1,
+   TEXT_COLOR_CUSTOM2,
+   TEXT_COLOR_CUSTOM3,
+   TEXT_COLOR_CUSTOM4,
+
+   TEXT_COLOR_MIN = TEXT_COLOR_BRICK,
+   TEXT_COLOR_MAX = TEXT_COLOR_CUSTOM4,
+
+   TEXT_CONTROL_TRANS = 0xfa,
    TEXT_COLOR_NORMAL,
    TEXT_COLOR_HI,
    TEXT_COLOR_ERROR,
    TEXT_CONTROL_SHADOW,
    TEXT_CONTROL_ABSCENTER,
 
-   TEXT_COLOR_MIN = TEXT_COLOR_BRICK,
-   TEXT_COLOR_MAX = TEXT_COLOR_YELLOW,
+   TEXT_CONTROL_MAX
 };
 
 // normal font colors -- 128 through 137
@@ -80,16 +87,22 @@ enum
 #define FC_BLUE         "\x87"
 #define FC_ORANGE       "\x88"
 #define FC_YELLOW       "\x89"
-// haleyjd: translucent text support (138)
-#define FC_TRANS        "\x8a"
-// haleyjd 08/20/02: new characters for internal color usage (139-141)
-#define FC_NORMAL       "\x8b"
-#define FC_HI           "\x8c"
-#define FC_ERROR        "\x8d"
-// haleyjd 03/14/06: shadow toggle via text (142)
-#define FC_SHADOW       "\x8e"
-// haleyjd 03/29/06: absolute centering toggle (143)
-#define FC_ABSCENTER    "\x8f"
+// haleyjd 09/17/12: custom colors
+#define FC_CUSTOM1      "\x8a"
+#define FC_CUSTOM2      "\x8b"
+#define FC_CUSTOM3      "\x8c"
+#define FC_CUSTOM4      "\x8d"
+
+// haleyjd: translucent text support 
+#define FC_TRANS        "\xfa"
+// haleyjd 08/20/02: new characters for internal color usage 
+#define FC_NORMAL       "\xfb"
+#define FC_HI           "\xfc"
+#define FC_ERROR        "\xfd"
+// haleyjd 03/14/06: shadow toggle via text
+#define FC_SHADOW       "\xfe"
+// haleyjd 03/29/06: absolute centering toggle
+#define FC_ABSCENTER    "\xff"
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -104,7 +117,7 @@ void V_DrawBox(int, int, int, int);
 //
 
 void V_DrawLoading();
-void V_SetLoading(int total, char *mess);
+void V_SetLoading(int total, const char *mess);
 void V_LoadingIncrease();
 void V_LoadingSetTo(int amount);
 

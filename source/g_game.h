@@ -42,6 +42,7 @@ bool G_CheckDemoStatus(void);
 void G_DeathMatchSpawnPlayer(int playernum);
 void G_DeferedInitNewNum(skill_t skill, int episode, int map);
 void G_DeferedInitNew(skill_t skill, const char *levelname);
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir);
 void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(const char *name, bool showmenu);
 void G_LoadGame(char *name, int slot, bool is_command); // killough 5/15/98

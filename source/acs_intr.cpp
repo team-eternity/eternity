@@ -2,6 +2,7 @@
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
+// Copyright(C) 2012 David Hill
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,31 +24,30 @@
 //
 // By James Haley
 //
+// Improved by David Hill
+//
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
-#include "c_io.h"
+#include "c_runcmd.h"
 #include "doomstat.h"
-#include "e_exdata.h"
+#include "e_hash.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "m_buffer.h"
+#include "m_collection.h"
 #include "m_misc.h"
 #include "m_qstr.h"
-#include "m_random.h"
 #include "m_swap.h"
-#include "p_mobj.h"
+#include "p_info.h"
+#include "p_maputl.h"
 #include "p_saveg.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "r_data.h"
-#include "r_defs.h"
 #include "r_state.h"
-#include "s_sndseq.h"
 #include "v_misc.h"
-#include "v_video.h"
 #include "w_wad.h"
 
 //
@@ -57,140 +57,82 @@
 // script states for sreg
 enum
 {
-   ACS_STATE_STOPPED,    // not running
-   ACS_STATE_RUNNING,    // currently running
-   ACS_STATE_SUSPEND,    // suspended by instruction
-   ACS_STATE_WAITTAG,    // waiting on a tag
-   ACS_STATE_WAITSCRIPT, // waiting on a script
-   ACS_STATE_WAITPOLY,   // waiting on a polyobject
-   ACS_STATE_TERMINATE,  // will be stopped on next thinking turn
+   ACS_STATE_STOPPED,          // not running
+   ACS_STATE_RUNNING,          // currently running
+   ACS_STATE_SUSPEND,          // suspended by instruction
+   ACS_STATE_WAITTAG,          // waiting on a tag
+   ACS_STATE_WAITSCRIPTNUMBER, // waiting on a numbered script
+   ACS_STATE_WAITSCRIPTNAME,   // waiting on a named script
+   ACS_STATE_WAITPOLY,         // waiting on a polyobject
+   ACS_STATE_TERMINATE,        // will be stopped on next thinking turn
 };
 
-// opcode IDs
-enum
+//
+// Case sensitive, pre-lengthed string key.
+//
+class ACSStringHashKey
 {
-   /*   0 */ OP_NOP,
-   /*   1 */ OP_TERMINATE,
-   /*   2 */ OP_SUSPEND,
-   /*   3 */ OP_PUSHNUMBER,
-   /*   4 */ OP_LINESPEC1,
-   /*   5 */ OP_LINESPEC2,
-   /*   6 */ OP_LINESPEC3,
-   /*   7 */ OP_LINESPEC4,
-   /*   8 */ OP_LINESPEC5,
-   /*   9 */ OP_LINESPEC1_IMM,
-   /*  10 */ OP_LINESPEC2_IMM,
-   /*  11 */ OP_LINESPEC3_IMM,
-   /*  12 */ OP_LINESPEC4_IMM,
-   /*  13 */ OP_LINESPEC5_IMM,
-   /*  14 */ OP_ADD,
-   /*  15 */ OP_SUB,
-   /*  16 */ OP_MUL,
-   /*  17 */ OP_DIV,
-   /*  18 */ OP_MOD,
-   /*  19 */ OP_EQUAL,
-   /*  20 */ OP_NOTEQUAL,
-   /*  21 */ OP_LESS,
-   /*  22 */ OP_GREATER,
-   /*  23 */ OP_LESSOREQUAL,
-   /*  24 */ OP_GREATEROREQUAL,
-   /*  25 */ OP_ASSIGNSCRIPTVAR,
-   /*  26 */ OP_ASSIGNMAPVAR,
-   /*  27 */ OP_ASSIGNWORLDVAR,
-   /*  28 */ OP_PUSHSCRIPTVAR,
-   /*  29 */ OP_PUSHMAPVAR,
-   /*  30 */ OP_PUSHWORLDVAR,
-   /*  31 */ OP_ADDSCRIPTVAR,
-   /*  32 */ OP_ADDMAPVAR,
-   /*  33 */ OP_ADDWORLDVAR,
-   /*  34 */ OP_SUBSCRIPTVAR,
-   /*  35 */ OP_SUBMAPVAR,
-   /*  36 */ OP_SUBWORLDVAR,
-   /*  37 */ OP_MULSCRIPTVAR,
-   /*  38 */ OP_MULMAPVAR,
-   /*  39 */ OP_MULWORLDVAR,
-   /*  40 */ OP_DIVSCRIPTVAR,
-   /*  41 */ OP_DIVMAPVAR,
-   /*  42 */ OP_DIVWORLDVAR,
-   /*  43 */ OP_MODSCRIPTVAR,
-   /*  44 */ OP_MODMAPVAR,
-   /*  45 */ OP_MODWORLDVAR,
-   /*  46 */ OP_INCSCRIPTVAR,
-   /*  47 */ OP_INCMAPVAR,
-   /*  48 */ OP_INCWORLDVAR,
-   /*  49 */ OP_DECSCRIPTVAR,
-   /*  50 */ OP_DECMAPVAR,
-   /*  51 */ OP_DECWORLDVAR,
-   /*  52 */ OP_BRANCH,
-   /*  53 */ OP_BRANCHNOTZERO,
-   /*  54 */ OP_DECSTP,
-   /*  55 */ OP_DELAY,
-   /*  56 */ OP_DELAY_IMM,
-   /*  57 */ OP_RANDOM,
-   /*  58 */ OP_RANDOM_IMM,
-   /*  59 */ OP_THINGCOUNT,
-   /*  60 */ OP_THINGCOUNT_IMM,
-   /*  61 */ OP_TAGWAIT,
-   /*  62 */ OP_TAGWAIT_IMM,
-   /*  63 */ OP_POLYWAIT,
-   /*  64 */ OP_POLYWAIT_IMM,
-   /*  65 */ OP_CHANGEFLOOR,
-   /*  66 */ OP_CHANGEFLOOR_IMM,
-   /*  67 */ OP_CHANGECEILING,
-   /*  68 */ OP_CHANGECEILING_IMM,
-   /*  69 */ OP_RESTART,
-   /*  70 */ OP_LOGICALAND,
-   /*  71 */ OP_LOGICALOR,
-   /*  72 */ OP_BITWISEAND,
-   /*  73 */ OP_BITWISEOR,
-   /*  74 */ OP_BITWISEXOR,
-   /*  75 */ OP_LOGICALNOT,
-   /*  76 */ OP_SHIFTLEFT,
-   /*  77 */ OP_SHIFTRIGHT,
-   /*  78 */ OP_NEGATE,
-   /*  79 */ OP_BRANCHZERO,
-   /*  80 */ OP_LINESIDE,
-   /*  81 */ OP_SCRIPTWAIT,
-   /*  82 */ OP_SCRIPTWAIT_IMM,
-   /*  83 */ OP_CLEARLINESPECIAL,
-   /*  84 */ OP_CASEJUMP,
-   /*  85 */ OP_STARTPRINT,
-   /*  86 */ OP_ENDPRINT,
-   /*  87 */ OP_PRINTSTRING,
-   /*  88 */ OP_PRINTINT,
-   /*  89 */ OP_PRINTCHAR,
-   /*  90 */ OP_PLAYERCOUNT,
-   /*  91 */ OP_GAMETYPE,
-   /*  92 */ OP_GAMESKILL,
-   /*  93 */ OP_TIMER,
-   /*  94 */ OP_SECTORSOUND,
-   /*  95 */ OP_AMBIENTSOUND,
-   /*  96 */ OP_SOUNDSEQUENCE,
-   /*  97 */ OP_SETLINETEXTURE,
-   /*  98 */ OP_SETLINEBLOCKING,
-   /*  99 */ OP_SETLINESPECIAL,
-   /* 100 */ OP_THINGSOUND,
-   /* 101 */ OP_ENDPRINTBOLD,
+public:
+   typedef ACSString::Data basic_type;
+   typedef ACSString::Data param_type;
+
+   static unsigned int HashCode(param_type input)
+   {
+      unsigned int hash = 0;
+
+      for(const char *itr = input.s, *end = itr + input.l; itr != end; ++itr)
+         hash = hash * 5 + *itr;
+
+      return hash;
+   }
+
+   static bool Compare(param_type first, param_type second)
+   {
+      return first.l == second.l && !memcmp(first.s, second.s, first.l);
+   }
 };
 
 //
 // Static Variables
 //
 
-// deferred scripts
-static DLListItem<deferredacs_t> *acsDeferred;
-
 // haleyjd 06/24/08: level script vm for ACS
-static acsvm_t acsLevelScriptVM;
+static ACSVM acsLevelScriptVM;
 
-static acsvm_t **acsVMs;   // virtual machines
-static int numACSVMs;      // number of vm's
-static int numACSVMsAlloc; // number of vm pointers allocated
+static PODCollection<ACSVM *> acsVMs;
 
+// scripts-by-number
+EHashTable<ACSScript, EIntHashKey, &ACSScript::number, &ACSScript::numberLinks>
+acsScriptsByNumber;
+
+// scripts-by-name
+EHashTable<ACSScript, ENCStringHashKey, &ACSScript::name, &ACSScript::nameLinks>
+acsScriptsByName;
+
+// DynaString lookup
+EHashTable<ACSString, ACSStringHashKey, &ACSString::data, &ACSString::dataLinks>
+acsStrings;
 
 //
 // Global Variables
 //
+
+acs_opdata_t ACSopdata[ACS_OPMAX] =
+{
+   #define ACS_OP(OP,ARGC) {ACS_OP_##OP, ARGC},
+   #include "acs_op.h"
+   #undef ACS_OP
+};
+
+DLListItem<ACSDeferred> *ACSDeferred::list = NULL;
+
+ACSString  **ACSVM::GlobalStrings = NULL;
+unsigned int ACSVM::GlobalNumStrings = 0;
+unsigned int ACSVM::GlobalAllocStrings = 0;
+unsigned int ACSVM::GlobalNumStringsBase = 0;
+
+ACSFunc    **ACSVM::GlobalFuncs = NULL;
+unsigned int ACSVM::GlobalNumFuncs = 0;
 
 // ACS_thingtypes:
 // This array translates from ACS spawn numbers to internal thingtype indices.
@@ -199,11 +141,13 @@ static int numACSVMsAlloc; // number of vm pointers allocated
 
 int ACS_thingtypes[ACS_NUM_THINGTYPES];
 
-// map variables
-int ACSmapvars[32];
-
 // world variables
-int ACSworldvars[64];
+int32_t ACSworldvars[ACS_NUM_WORLDVARS];
+ACSArray ACSworldarrs[ACS_NUM_WORLDARRS];
+
+// global variables
+int32_t ACSglobalvars[ACS_NUM_GLOBALVARS];
+ACSArray ACSglobalarrs[ACS_NUM_GLOBALARRS];
 
 //
 // Static Functions
@@ -214,40 +158,32 @@ int ACSworldvars[64];
 //
 // haleyjd 06/24/08: keeps track of all ACS virtual machines.
 //
-static void ACS_addVirtualMachine(acsvm_t *vm)
+static void ACS_addVirtualMachine(ACSVM *vm)
 {
-   if(numACSVMs >= numACSVMsAlloc)
-   {
-      numACSVMsAlloc = numACSVMsAlloc ? numACSVMsAlloc * 2 : 4;
-      acsVMs = erealloc(acsvm_t **, acsVMs, numACSVMsAlloc * sizeof(acsvm_t *));
-   }
-
-   acsVMs[numACSVMs] = vm;
-   vm->id = numACSVMs++;
+   vm->id = acsVMs.getLength();
+   acsVMs.add(vm);
 }
-
-static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                    int type, int args[5]);
 
 //
 // ACS_addThread
 //
 // Adds a thinker as a thread on the given script.
 //
-static void ACS_addThread(ACSThinker *script, acscript_t *acscript)
+static void ACS_addThread(ACSThinker *thread)
 {
-   ACSThinker *next = acscript->threads;
+   ACSScript *script = thread->script;
+   ACSThinker *next = script->threads;
 
-   if((script->nextthread = next))
-      next->prevthread = &script->nextthread;
-   script->prevthread = &acscript->threads;
-   acscript->threads = script;
+   if((thread->nextthread = next))
+      next->prevthread = &thread->nextthread;
+   thread->prevthread = &script->threads;
+   script->threads = thread;
 }
 
 //
 // ACS_removeThread
 //
-// Removes a thinker from the acscript thread list.
+// Removes a thinker from the script thread list.
 //
 static void ACS_removeThread(ACSThinker *script)
 {
@@ -265,31 +201,40 @@ static void ACS_removeThread(ACSThinker *script)
 // same VM which are waiting on this one. All threads of the specified
 // script must be terminated first.
 //
-static void ACS_scriptFinished(ACSThinker *script)
+static void ACS_scriptFinished(ACSThinker *thread)
 {
-   int i;
-   acsvm_t *vm          = script->vm;
-   acscript_t *acscript = script->acscript;
+   ACSScript  *s, *sEnd;
    ACSThinker *th;
+   ACSVM     **vm, **vmEnd;
 
    // first check that all threads of the same script have terminated
-   if(acscript->threads)
+   if(thread->script->threads)
       return; // nope
 
-   // find scripts waiting on this one (same VM only)
-   
-   // loop on vm scripts array
-   for(i = 0; i < vm->numScripts; ++i)
+   // find scripts waiting on this one (any VM)
+
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
    {
-      // loop on threads list for each script
-      for(th = vm->scripts[i].threads; th; th = th->nextthread)
+      // loop on vm scripts array
+      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
       {
-         if(th->sreg  == ACS_STATE_WAITSCRIPT &&
-            th->sdata == acscript->number)
+         // loop on threads list for each script
+         for(th = s->threads; th; th = th->nextthread)
          {
-            // wake up the script
-            th->sreg  = ACS_STATE_RUNNING;
-            th->sdata = 0;
+            // Check for waiting on a numbered script.
+            if(th->sreg  == ACS_STATE_WAITSCRIPTNUMBER &&
+               th->sdata == thread->script->number)
+            {
+               th->sreg  = ACS_STATE_RUNNING;
+               th->sdata = 0;
+            }
+            // And the same for named scripts.
+            else if(th->sreg == ACS_STATE_WAITSCRIPTNAME && thread->script->name &&
+                    !strcasecmp(ACSVM::GetString(th->sdata), thread->script->name))
+            {
+               th->sreg  = ACS_STATE_RUNNING;
+               th->sdata = 0;
+            }
          }
       }
    }
@@ -300,16 +245,23 @@ static void ACS_scriptFinished(ACSThinker *script)
 //
 // Ultimately terminates the script and removes its thinker.
 //
-static void ACS_stopScript(ACSThinker *script, acscript_t *acscript)
+static void ACS_stopScript(ACSThinker *thread)
 {
-   ACS_removeThread(script);
-   
+   ACS_removeThread(thread);
+
    // notify waiting scripts that this script has ended
-   ACS_scriptFinished(script);
+   ACS_scriptFinished(thread);
 
-   P_SetTarget<Mobj>(&script->trigger, NULL);
+   // Free the print buffers.
+   for(qstring **itr = thread->printStack, **end = itr + thread->numPrints; itr != end; ++itr)
+      delete *itr;
 
-   script->removeThinker();
+   // And the print buffer stack itself.
+   Z_Free(thread->printStack);
+
+   P_SetTarget<Mobj>(&thread->trigger, NULL);
+
+   thread->removeThinker();
 }
 
 //
@@ -318,86 +270,42 @@ static void ACS_stopScript(ACSThinker *script, acscript_t *acscript)
 // Starts an open script (a script indicated to start at the beginning of
 // the level).
 //
-static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
+static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
 {
    ACSThinker *newScript = new ACSThinker;
-
-   newScript->vmID        = vmID;
-   newScript->scriptNum   = acs->number;
-   newScript->internalNum = iNum;
 
    // open scripts wait one second before running
    newScript->delay = TICRATE;
 
    // set ip to entry point
-   newScript->ip = acs->code;
+   newScript->ip          = acs->codePtr;
+   newScript->numStack    = ACS_NUM_STACK * 2;
+   newScript->stack       = estructalloctag(int32_t, newScript->numStack, PU_LEVEL);
+   newScript->stackPtr    = 0;
+   newScript->numLocalvar = acs->numVars;
+   newScript->localvar    = estructalloctag(int32_t, newScript->numLocalvar, PU_LEVEL);
+   newScript->numLocals   = newScript->numLocalvar;
+   newScript->locals      = newScript->localvar;
 
    // copy in some important data
-   newScript->code        = acs->code;
-   newScript->data        = vm->data;
-   newScript->stringtable = vm->stringtable;
-   newScript->printBuffer = vm->printBuffer;
-   newScript->acscript    = acs;
-   newScript->vm          = vm;
+   newScript->script = acs;
+   newScript->vm     = vm;
 
    // set up thinker
    newScript->addThinker();
 
    // mark as running
    newScript->sreg = ACS_STATE_RUNNING;
-   ACS_addThread(newScript, acs);
-}
-
-//
-// ACS_indexForNum
-//
-// Returns the index of the script in the "scripts" array given its number
-// from within the script itself. Returns vm->numScripts if no such script
-// exists.
-//
-// Currently uses a linear search, since the set is small and fixed-size.
-//
-int ACS_indexForNum(acsvm_t *vm, int num)
-{
-   int idx;
-
-   for(idx = 0; idx < vm->numScripts; ++idx)
-      if(vm->scripts[idx].number == num)
-         break;
-
-   return idx;
+   ACS_addThread(newScript);
 }
 
 //
 // ACS_execLineSpec
 //
 // Executes a line special that has been encoded in the script with
-// operands on the stack.
+// immediate operands or on the stack.
 //
-static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
-                             int arg0, int arg1, int arg2, int arg3, int arg4)
-{
-   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-
-   args[0] = arg0;
-   args[1] = arg1;
-   args[2] = arg2;
-   args[3] = arg3;
-   args[4] = arg4;
-
-   // translate line specials & args for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
-}
-
-//
-// ACS_execLineSpecImm
-//
-// Executes a line special that has been encoded in the script with
-// immediate operands.
-//
-static void ACS_execLineSpecImm(line_t *l, Mobj *mo, int16_t spec, int side,
+static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
                                 int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -405,52 +313,12 @@ static void ACS_execLineSpecImm(line_t *l, Mobj *mo, int16_t spec, int side,
 
    // args follow instruction in the code from first to last
    for(; i > 0; --i)
-      args[argc-i] = SwapLong(*argv++);
+      args[argc-i] = *argv++;
 
    // translate line specials & args for Hexen maps
    P_ConvertHexenLineSpec(&spec, args);
 
-   P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
-}
-
-//
-// ACS_countThings
-//
-// Returns a count of all things that match the supplied criteria.
-// If type or tid are zero, that particular criterion is not applied.
-//
-static int ACS_countThings(int type, int tid)
-{
-   Thinker *th;
-   int count = 0;
-
-   // don't bother counting if no valid search is specified
-   if(!(type || tid))
-      return 0;
-   
-   // translate ACS thing type ids to true types
-   if(type < 0 || type >= ACS_NUM_THINGTYPES)
-      return 0;
-
-   type = ACS_thingtypes[type];
-   
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
-         {
-            // don't count killable things that are dead
-            if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
-               mo->health <= 0)
-               continue;
-            ++count;
-         }
-      }
-   }
-
-   return count;
+   return P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
 }
 
 //
@@ -469,66 +337,50 @@ static int ACS_countPlayers(void)
    return count;
 }
 
-// ZDoom blocking types
-enum
+//
+// ACS_getCVar
+//
+static int32_t ACS_getCVar(const char *name)
 {
-   BLOCK_NOTHING,
-   BLOCK_CREATURES,
-   BLOCK_EVERYTHING,
-   BLOCK_RAILING,
-   BLOCK_PLAYERS
-};
+   command_t *command;
+   variable_t *var;
 
-//
-// ACS_setLineBlocking
-//
-// Toggles the blocking flag on all tagged lines.
-//
-static void ACS_setLineBlocking(int tag, int block)
-{
-   line_t *l;
-   int linenum = -1;
+   command = C_GetCmdForName(name);
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   if(!command || !(var = command->variable))
+      return 0;
+
+   switch(var->type)
    {
-      switch(block)
-      {
-      case BLOCK_NOTHING:
-         // clear the flags
-         l->flags    &= ~ML_BLOCKING;
-         l->extflags &= ~EX_ML_BLOCKALL;
-         break;
-      case BLOCK_CREATURES:
-         l->extflags &= ~EX_ML_BLOCKALL;
-         l->flags |= ML_BLOCKING;
-         break;
-      case BLOCK_EVERYTHING: // ZDoom extension - block everything
-         l->flags    |= ML_BLOCKING;
-         l->extflags |= EX_ML_BLOCKALL;
-         break;
-      default: // Others not implemented yet :P
-         break;
-      }
+   case vt_int: return *(int *)var->variable;
+   case vt_float: return M_DoubleToFixed(*(double *)var->variable);
+   case vt_string: return 0; // TODO: DynaStrings
+   case vt_chararray: return 0; // TODO: DynaStrings
+   case vt_toggle: return *(bool *)var->variable;
    }
+
+   return 0;
 }
 
 //
-// ACS_setLineSpecial
+// ACS_getLevelVar
 //
-// Sets all tagged lines' complete parameterized specials.
-//
-static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
+static int32_t ACS_getLevelVar(uint32_t var)
 {
-   line_t *l;
-   int linenum = -1;
-
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   switch(var)
    {
-      l->special = spec;
-      memcpy(l->args, args, 5 * sizeof(int));
+   case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
+   case ACS_LEVELVAR_ClusterNumber:  return 0;
+   case ACS_LEVELVAR_LevelNumber:    return 0;
+   case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
+   case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
+   case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
+   case ACS_LEVELVAR_FoundItems:     return players[consoleplayer].itemcount;
+   case ACS_LEVELVAR_TotalMonsters:  return wminfo.maxkills;
+   case ACS_LEVELVAR_KilledMonsters: return players[consoleplayer].killcount;
+   case ACS_LEVELVAR_SuckTime:       return 1;
+
+   default: return 0;
    }
 }
 
@@ -540,32 +392,113 @@ static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 
 // Interpreter Macros
 
-#define PUSH(x)   stack[stp++] = (x)
-#define POP()     stack[--stp]
-#define PEEK()    stack[stp-1]
-#define DECSTP()  --stp
-#define DECSTP2() stp -= 2
-#define DECSTP3() stp -= 3
-#define DECSTP4() stp -= 4
-#define DECSTP5() stp -= 5
+// Don't use COMPGOTO if RANGECHECK is enabled, so that there's a default case.
+#if defined(__GNUC__) && !defined(RANGECHECK)
+#define COMPGOTO
+#endif
 
-#define IPCURR()  SwapLong(*ip)
-#define IPNEXT()  SwapLong(*ip++)
+#define PUSH(x)   (*stp++ = (x))
+#define POP()     (*--stp)
+#define PEEK()    (*(stp-1))
+#define DECSTP()  (--stp)
+#define INCSTP()  (++stp)
+
+#define IPCURR()  (*ip)
+#define IPNEXT()  (*ip++)
+
+#define STACK_AT(x) (*(stp-(x)))
 
 // for binary operations: ++ and -- mess these up
-#define ST_OP1      stack[stp-2]
-#define ST_OP2      stack[stp-1]
-#define ST_BINOP(x) stack[stp-2] = (x); --stp
+#define ST_BINOP(OP) temp = POP(); STACK_AT(1) = (STACK_AT(1) OP temp)
+#define ST_BINOP_EQ(OP) temp = POP(); STACK_AT(1) OP temp
 
-#define STACK_AT(x) stack[stp-(x)]
+#define AR_BINOP(VAR, OP) temp = POP(); (VAR)[POP()] OP temp
 
-// script states for T_ACSThinker
-enum
-{
-   ACTION_RUN,       // default: keep running opcodes
-   ACTION_STOP,      // stop execution for current tic
-   ACTION_ENDSCRIPT, // end script execution on cmd or error
-};
+#define BINOP_GROUP(NAME, OP) \
+   OPCODE(NAME##_STACK): \
+      ST_BINOP_EQ(OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_LOCALVAR): \
+      this->locals[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPVAR): \
+      *vm->mapvtab[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDVAR): \
+      ACSworldvars[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALVAR): \
+      ACSglobalvars[IPNEXT()] OP POP(); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPARR): \
+      AR_BINOP(*vm->mapatab[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDARR): \
+      AR_BINOP(ACSworldarrs[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALARR): \
+      AR_BINOP(ACSglobalarrs[IPNEXT()], OP); \
+      NEXTOP();
+
+#define DIV_CHECK(VAL) \
+   if(!(VAL)) \
+   { \
+      doom_printf(FC_ERROR "ACS Error: divide by zero\a"); \
+      goto action_endscript; \
+   } \
+
+
+#define DIVOP_EQ(VAR, OP) DIV_CHECK(temp = POP()); (VAR) OP temp
+
+#define DIVOP_GROUP(NAME, OP) \
+   OPCODE(NAME##_STACK): \
+      DIVOP_EQ(STACK_AT(1), OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_LOCALVAR): \
+      DIVOP_EQ(this->locals[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPVAR): \
+      DIVOP_EQ(*vm->mapvtab[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDVAR): \
+      DIVOP_EQ(ACSworldvars[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALVAR): \
+      DIVOP_EQ(ACSglobalvars[IPNEXT()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_MAPARR): \
+      DIVOP_EQ(vm->mapatab[IPNEXT()]->at(POP()), OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_WORLDARR): \
+      DIVOP_EQ(ACSworldarrs[IPNEXT()][POP()], OP); \
+      NEXTOP(); \
+   OPCODE(NAME##_GLOBALARR): \
+      DIVOP_EQ(ACSglobalarrs[IPNEXT()][POP()], OP); \
+      NEXTOP();
+
+#define BRANCH_COUNT() \
+   if(++count > 500000) \
+   { \
+      doom_printf(FC_ERROR "ACS Error: terminated runaway script\a"); \
+      goto action_endscript; \
+   }
+
+// Uses do...while for convenience of use.
+#define BRANCHOP(TARGET) \
+   do \
+   { \
+      ip = vm->code + (TARGET); \
+      BRANCH_COUNT(); \
+   } \
+   while(0)
+
+#ifdef COMPGOTO
+#define OPCODE(OP) acs_op_##OP
+#define NEXTOP() goto *ops[IPNEXT()]
+#else
+#define OPCODE(OP) case ACS_OP_##OP
+#define NEXTOP() break
+#endif
 
 IMPLEMENT_THINKER_TYPE(ACSThinker)
 
@@ -577,16 +510,26 @@ IMPLEMENT_THINKER_TYPE(ACSThinker)
 //
 void ACSThinker::Think()
 {
+#ifdef COMPGOTO
+   static const void *const ops[ACS_OPMAX] =
+   {
+      #define ACS_OP(OP,ARGC) &&acs_op_##OP,
+      #include "acs_op.h"
+      #undef ACS_OP
+   };
+#endif
+
    // cache vm data in local vars for efficiency
-   register int *ip    = this->ip;
-   register int stp    = this->stp;    
-   register int *stack = this->stack;
-   int action = ACTION_RUN;
-   int opcode, temp, count = 0;
+   register int32_t *ip  = this->ip;
+   register int32_t *stp = this->stack + this->stackPtr;
+   int count = 0;
+   uint32_t opcode;
+   int32_t temp;
+   ACSFunc *func;
 
    // should the script terminate?
    if(this->sreg == ACS_STATE_TERMINATE)
-      ACS_stopScript(this, this->acscript);
+      ACS_stopScript(this);
 
    // is the script running?
    if(this->sreg != ACS_STATE_RUNNING)
@@ -598,574 +541,1996 @@ void ACSThinker::Think()
       --this->delay;
       return;
    }
-  
-   // run opcodes until action != ACTION_RUN
-   do
+
+   // run opcodes until a terminating instruction is reached
+#ifdef COMPGOTO
+   NEXTOP();
+#else
+   for(;;) switch(IPNEXT())
+#endif
    {
-      // count instructions to end unbounded loops
-      ++count;
-      
-      opcode = IPNEXT();
-      switch(opcode)
+   OPCODE(NOP):
+      NEXTOP();
+
+   OPCODE(KILL):
+      doom_printf(FC_ERROR "ACS Error: KILL at %d from VM %u\a",
+                  (int)(ip - vm->code - 1), (unsigned)vm->id);
+      goto action_endscript;
+
+      // Special Commands
+   OPCODE(CALLFUNC):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      ACSfunc[opcode](this, temp, stp, stp);
+      NEXTOP();
+   OPCODE(CALLFUNC_IMM):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      ACSfunc[opcode](this, temp, ip, stp);
+      ip += temp; // consume args
+      NEXTOP();
+   OPCODE(CALLFUNC_ZD):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+   {
+      int32_t *oldstp = stp;
+      ACSfunc[opcode](this, temp, stp, stp);
+      if(stp == oldstp) *stp++ = 0; // must always return at least one byte
+   }
+      NEXTOP();
+
+   OPCODE(LINESPEC):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      NEXTOP();
+   OPCODE(LINESPEC_IMM):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, ip);
+      ip += temp; // consume args
+      NEXTOP();
+   OPCODE(LINESPEC_RET):
+      opcode = IPNEXT(); // read special
+      temp = IPNEXT(); // read argcount
+      stp -= temp; // consume args
+      temp = ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      PUSH(temp);
+      NEXTOP();
+
+      // SET
+   OPCODE(SET_RESULT):
+      result = POP();
+      NEXTOP();
+   OPCODE(SET_LOCALVAR):
+      this->locals[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_MAPVAR):
+      *vm->mapvtab[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_WORLDVAR):
+      ACSworldvars[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_GLOBALVAR):
+      ACSglobalvars[IPNEXT()] = POP();
+      NEXTOP();
+   OPCODE(SET_MAPARR):
+      AR_BINOP(*vm->mapatab[IPNEXT()], =);
+      NEXTOP();
+   OPCODE(SET_WORLDARR):
+      AR_BINOP(ACSworldarrs[IPNEXT()], =);
+      NEXTOP();
+   OPCODE(SET_GLOBALARR):
+      AR_BINOP(ACSglobalarrs[IPNEXT()], =);
+      NEXTOP();
+
+   OPCODE(SET_THINGVAR):
       {
-      case OP_NOP:
-         break;
-      case OP_TERMINATE:
-         action = ACTION_ENDSCRIPT;
-         break;
-      case OP_SUSPEND:
-         this->sreg = ACS_STATE_SUSPEND;
-         action = ACTION_STOP;
-         break;
-      case OP_PUSHNUMBER:
-         PUSH(IPNEXT());
-         break;
-      case OP_LINESPEC1:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(1), 0, 0, 0, 0);
-         DECSTP();
-         break;
-      case OP_LINESPEC2:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(2), STACK_AT(1), 0, 0, 0);
-         DECSTP2();
-         break;
-      case OP_LINESPEC3:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(3), STACK_AT(2), STACK_AT(1), 0, 0);
-         DECSTP3();
-         break;
-      case OP_LINESPEC4:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1), 0);
-         DECSTP4();
-         break;
-      case OP_LINESPEC5:
-         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
-                          this->lineSide,
-                          STACK_AT(5), STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1));
-         DECSTP5();
-         break;
-      case OP_LINESPEC1_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp, 
-                             this->lineSide, 1, ip);
-         ++ip; // skip past arg
-         break;
-      case OP_LINESPEC2_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 2, ip);
-         ip += 2; // skip past args
-         break;
-      case OP_LINESPEC3_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 3, ip);
-         ip += 3; // skip past args
-         break;
-      case OP_LINESPEC4_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 4, ip);
-         ip += 4; // skip past args
-         break;
-      case OP_LINESPEC5_IMM:
-         temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
-                             this->lineSide, 5, ip);
-         ip += 5; // skip past args
-         break;
-      case OP_ADD:
-         ST_BINOP(ST_OP1 + ST_OP2);
-         break;
-      case OP_SUB:
-         ST_BINOP(ST_OP1 - ST_OP2);
-         break;
-      case OP_MUL:
-         ST_BINOP(ST_OP1 * ST_OP2);
-         break;
-      case OP_DIV:
-         if(!(temp = ST_OP2))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ST_BINOP(ST_OP1 / temp);
-         break;
-      case OP_MOD:
-         if(!(temp = ST_OP2))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ST_BINOP(ST_OP1 % temp);
-         break;
-      case OP_EQUAL:
-         ST_BINOP(ST_OP1 == ST_OP2);
-         break;
-      case OP_NOTEQUAL:
-         ST_BINOP(ST_OP1 != ST_OP2);
-         break;
-      case OP_LESS:
-         ST_BINOP(ST_OP1 < ST_OP2);
-         break;
-      case OP_GREATER:
-         ST_BINOP(ST_OP1 > ST_OP2);
-         break;
-      case OP_LESSOREQUAL:
-         ST_BINOP(ST_OP1 <= ST_OP2);
-         break;
-      case OP_GREATEROREQUAL:
-         ST_BINOP(ST_OP1 >= ST_OP2);
-         break;
-      case OP_ASSIGNSCRIPTVAR:
-         this->locals[IPNEXT()] = POP();
-         break;
-      case OP_ASSIGNMAPVAR:
-         ACSmapvars[IPNEXT()] = POP();
-         break;
-      case OP_ASSIGNWORLDVAR:
-         ACSworldvars[IPNEXT()] = POP();
-         break;
-      case OP_PUSHSCRIPTVAR:
-         PUSH(this->locals[IPNEXT()]);
-         break;
-      case OP_PUSHMAPVAR:
-         PUSH(ACSmapvars[IPNEXT()]);
-         break;
-      case OP_PUSHWORLDVAR:
-         PUSH(ACSworldvars[IPNEXT()]);
-         break;
-      case OP_ADDSCRIPTVAR:
-         this->locals[IPNEXT()] += POP();
-         break;
-      case OP_ADDMAPVAR:
-         ACSmapvars[IPNEXT()] += POP();
-         break;
-      case OP_ADDWORLDVAR:
-         ACSworldvars[IPNEXT()] += POP();
-         break;
-      case OP_SUBSCRIPTVAR:
-         this->locals[IPNEXT()] -= POP();
-         break;
-      case OP_SUBMAPVAR:
-         ACSmapvars[IPNEXT()] -= POP();
-         break;
-      case OP_SUBWORLDVAR:
-         ACSworldvars[IPNEXT()] -= POP();
-         break;
-      case OP_MULSCRIPTVAR:
-         this->locals[IPNEXT()] *= POP();
-         break;
-      case OP_MULMAPVAR:
-         ACSmapvars[IPNEXT()] *= POP();
-         break;
-      case OP_MULWORLDVAR:
-         ACSworldvars[IPNEXT()] *= POP();
-         break;
-      case OP_DIVSCRIPTVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         this->locals[IPNEXT()] /= temp;
-         break;
-      case OP_DIVMAPVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSmapvars[IPNEXT()] /= temp;
-         break;
-      case OP_DIVWORLDVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSworldvars[IPNEXT()] /= temp;
-         break;
-      case OP_MODSCRIPTVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         this->locals[IPNEXT()] %= temp;
-         break;
-      case OP_MODMAPVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSmapvars[IPNEXT()] %= temp;
-         break;
-      case OP_MODWORLDVAR:
-         if(!(temp = POP()))
-         {
-            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
-            action = ACTION_ENDSCRIPT;
-            break;
-         }
-         ACSworldvars[IPNEXT()] %= temp;
-         break;
-      case OP_INCSCRIPTVAR:
-         this->locals[IPNEXT()] += 1;
-         break;
-      case OP_INCMAPVAR:
-         ACSmapvars[IPNEXT()] += 1;
-         break;
-      case OP_INCWORLDVAR:
-         ACSworldvars[IPNEXT()] += 1;
-         break;
-      case OP_DECSCRIPTVAR:
-         this->locals[IPNEXT()] -= 1;
-         break;
-      case OP_DECMAPVAR:
-         ACSmapvars[IPNEXT()] -= 1;
-         break;
-      case OP_DECWORLDVAR:
-         ACSworldvars[IPNEXT()] -= 1;
-         break;
-      case OP_BRANCH:
-         ip = (int *)(this->data + IPCURR());
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case OP_BRANCHNOTZERO:
-         if(POP())
-            ip = (int *)(this->data + IPCURR());
+         temp    = POP();
+         opcode  = IPNEXT();
+         int tid = POP();
+         Mobj *mo = NULL;
+
+         while((mo = P_FindMobjFromTID(tid, mo, trigger)))
+            ACS_SetThingVar(mo, opcode, temp);
+      }
+      NEXTOP();
+
+      // GET
+   OPCODE(GET_IMM):
+      PUSH(IPNEXT());
+      NEXTOP();
+   OPCODE(GET_FUNCP):
+      opcode = IPNEXT();
+      PUSH(opcode < vm->numFuncs ? vm->funcptrs[opcode]->number : 0);
+      NEXTOP();
+   OPCODE(GET_LOCALVAR):
+      PUSH(this->locals[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_MAPVAR):
+      PUSH(*vm->mapvtab[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_WORLDVAR):
+      PUSH(ACSworldvars[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_GLOBALVAR):
+      PUSH(ACSglobalvars[IPNEXT()]);
+      NEXTOP();
+   OPCODE(GET_MAPARR):
+      STACK_AT(1) = vm->mapatab[IPNEXT()]->at(STACK_AT(1));
+      NEXTOP();
+   OPCODE(GET_WORLDARR):
+      STACK_AT(1) = ACSworldarrs[IPNEXT()][STACK_AT(1)];
+      NEXTOP();
+   OPCODE(GET_GLOBALARR):
+      STACK_AT(1) = ACSglobalarrs[IPNEXT()][STACK_AT(1)];
+      NEXTOP();
+
+   OPCODE(GET_STRINGARR):
+      temp   = POP();
+      opcode = POP();
+      if(opcode < ACSVM::GlobalNumStrings)
+      {
+         ACSString *string = ACSVM::GlobalStrings[opcode];
+         if((uint32_t)temp < string->data.l)
+            PUSH(string->data.s[(uint32_t)temp]);
          else
-            ++ip;
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case OP_DECSTP:
-         DECSTP();
-         break;
-      case OP_DELAY:
-         this->delay = POP();
-         action = ACTION_STOP;
-         break;
-      case OP_DELAY_IMM:
-         this->delay = IPNEXT();
-         action = ACTION_STOP;
-         break;
-      case OP_RANDOM:
-         {
-            int min, max;
-            max = POP();
-            min = POP();
+            PUSH(0);
+      }
+      else
+         PUSH(0);
+      NEXTOP();
 
-            PUSH(P_RangeRandom(pr_script, min, max));
-         }
-         break;
-      case OP_RANDOM_IMM:
-         {
-            int min, max;
-            min = IPNEXT();
-            max = IPNEXT();
+   OPCODE(GET_THINGVAR):
+      STACK_AT(1) = ACS_GetThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT());
+      NEXTOP();
 
-            PUSH(P_RangeRandom(pr_script, min, max));
-         }
-         break;
-      case OP_THINGCOUNT:
-         temp = POP(); // get tid
-         temp = ACS_countThings(POP(), temp);
-         PUSH(temp);
-         break;
-      case OP_THINGCOUNT_IMM:
-         temp = IPNEXT(); // get type
-         temp = ACS_countThings(temp, IPNEXT());
-         PUSH(temp);
-         break;
-      case OP_TAGWAIT:
-         this->sreg  = ACS_STATE_WAITTAG;
-         this->sdata = POP(); // get sector tag
-         action = ACTION_STOP;
-         break;
-      case OP_TAGWAIT_IMM:
-         this->sreg  = ACS_STATE_WAITTAG;
-         this->sdata = IPNEXT(); // get sector tag
-         action = ACTION_STOP;
-         break;
-      case OP_POLYWAIT:
-         this->sreg  = ACS_STATE_WAITPOLY;
-         this->sdata = POP(); // get poly tag
-         action = ACTION_STOP;
-         break;
-      case OP_POLYWAIT_IMM:
-         this->sreg  = ACS_STATE_WAITPOLY;
-         this->sdata = IPNEXT(); // get poly tag
-         action = ACTION_STOP;
-         break;
-      case OP_CHANGEFLOOR:
-         temp = POP(); // get flat string index
-         P_ChangeFloorTex(this->stringtable[temp], POP()); // get tag
-         break;
-      case OP_CHANGEFLOOR_IMM:
-         temp = *ip++; // get tag
-         P_ChangeFloorTex(this->stringtable[IPNEXT()], temp);
-         break;
-      case OP_CHANGECEILING:
-         temp = POP(); // get flat string index
-         P_ChangeCeilingTex(this->stringtable[temp], POP()); // get tag
-         break;
-      case OP_CHANGECEILING_IMM:
-         temp = IPNEXT(); // get tag
-         P_ChangeCeilingTex(this->stringtable[IPNEXT()], temp);
-         break;
-      case OP_RESTART:
-         ip = this->code;
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case OP_LOGICALAND:
-         ST_BINOP(ST_OP1 && ST_OP2);
-         break;
-      case OP_LOGICALOR:
-         ST_BINOP(ST_OP1 || ST_OP2);
-         break;
-      case OP_BITWISEAND:
-         ST_BINOP(ST_OP1 & ST_OP2);
-         break;
-      case OP_BITWISEOR:
-         ST_BINOP(ST_OP1 | ST_OP2);
-         break;
-      case OP_BITWISEXOR:
-         ST_BINOP(ST_OP1 ^ ST_OP2);
-         break;
-      case OP_LOGICALNOT:
-         temp = POP();
-         PUSH(!temp);
-         break;
-      case OP_SHIFTLEFT:
-         ST_BINOP(ST_OP1 << ST_OP2);
-         break;
-      case OP_SHIFTRIGHT:
-         ST_BINOP(ST_OP1 >> ST_OP2);
-         break;
-      case OP_NEGATE:
-         temp = POP();
-         PUSH(-temp);
-         break;
-      case OP_BRANCHZERO:
-         if(!(POP()))
-            ip = (int *)(this->data + IPCURR());
-         else
-            ++ip;
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case OP_LINESIDE:
-         PUSH(this->lineSide);
-         break;
-      case OP_SCRIPTWAIT:
-         this->sreg  = ACS_STATE_WAITSCRIPT;
-         this->sdata = POP(); // get script num
-         action = ACTION_STOP;
-         break;
-      case OP_SCRIPTWAIT_IMM:
-         this->sreg  = ACS_STATE_WAITSCRIPT;
-         this->sdata = IPNEXT(); // get script num
-         action = ACTION_STOP;
-         break;
-      case OP_CLEARLINESPECIAL:
-         if(this->line)
-            this->line->special = 0;
-         break;
-      case OP_CASEJUMP:
-         if(PEEK() == IPNEXT()) // compare top of stack against op+1
-         {
-            DECSTP(); // take the value off the stack
-            ip = (int *)(this->data + IPCURR()); // jump to op+2
-         }
-         else
-            ++ip; // increment past offset at op+2, leave value on stack
-         if(count >= 500000)
-         {
-            doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
-            action = ACTION_ENDSCRIPT;
-         }
-         break;
-      case OP_STARTPRINT:
-         this->printBuffer->clear();
-         break;
-      case OP_ENDPRINT:
-         if(this->trigger && this->trigger->player)
-            player_printf(this->trigger->player, this->printBuffer->constPtr());
-         else
-            player_printf(&players[consoleplayer], this->printBuffer->constPtr());
-         break;
-      case OP_PRINTSTRING:
-         this->printBuffer->concat(this->stringtable[POP()]);
-         break;
-      case OP_PRINTINT:
-         {
-            char buffer[33];
-            this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
-         }
-         break;
-      case OP_PRINTCHAR:
-         *this->printBuffer += (char)POP();
-         break;
-      case OP_PLAYERCOUNT:
-         PUSH(ACS_countPlayers());
-         break;
-      case OP_GAMETYPE:
-         PUSH(GameType);
-         break;
-      case OP_GAMESKILL:
-         PUSH(gameskill);
-         break;
-      case OP_TIMER:
-         PUSH(leveltime);
-         break;
-      case OP_SECTORSOUND:
-         {
-            PointThinker *src = NULL;
-            int vol            = POP();
-            int strnum         = POP();
+   OPCODE(GET_LEVELARR):
+      STACK_AT(1) = ACS_getLevelVar(STACK_AT(1));
+      NEXTOP();
 
-            // if script started from a line, use the frontsector's sound origin
-            if(this->line)
-               src = &(this->line->frontsector->soundorg);
+   OPCODE(GET_CVAR):
+      STACK_AT(1) = ACS_getCVar(ACSVM::GetString(STACK_AT(1)));
+      NEXTOP();
 
-            S_StartSoundNameAtVolume(src, this->stringtable[strnum], vol, 
-                                     ATTN_NORMAL, CHAN_AUTO);
-         }
-         break;
-      case OP_AMBIENTSOUND:
+      // GETARR
+   OPCODE(GETARR_IMM):
+      for(temp = IPNEXT(); temp--;) PUSH(IPNEXT());
+      NEXTOP();
+
+      // CHK
+   OPCODE(CHK_THINGVAR):
+      temp = POP();
+      STACK_AT(1) = ACS_ChkThingVar(P_FindMobjFromTID(STACK_AT(1), NULL, trigger), IPNEXT(), temp);
+      NEXTOP();
+
+      // Binary Ops
+      // ADD
+      BINOP_GROUP(ADD, +=);
+
+      // AND
+      BINOP_GROUP(AND, &=);
+
+      // CMP
+   OPCODE(CMP_EQ):
+      ST_BINOP(==);
+      NEXTOP();
+   OPCODE(CMP_NE):
+      ST_BINOP(!=);
+      NEXTOP();
+   OPCODE(CMP_LT):
+      ST_BINOP(<);
+      NEXTOP();
+   OPCODE(CMP_GT):
+      ST_BINOP(>);
+      NEXTOP();
+   OPCODE(CMP_LE):
+      ST_BINOP(<=);
+      NEXTOP();
+   OPCODE(CMP_GE):
+      ST_BINOP(>=);
+      NEXTOP();
+
+      // DEC
+   OPCODE(DEC_LOCALVAR):
+      --this->locals[IPNEXT()];
+      NEXTOP();
+   OPCODE(DEC_MAPVAR):
+      --*vm->mapvtab[IPNEXT()];
+      NEXTOP();
+   OPCODE(DEC_WORLDVAR):
+      --ACSworldvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(DEC_GLOBALVAR):
+      --ACSglobalvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(DEC_MAPARR):
+      --vm->mapatab[IPNEXT()]->at(POP());
+      NEXTOP();
+   OPCODE(DEC_WORLDARR):
+      --ACSworldarrs[IPNEXT()][POP()];
+      NEXTOP();
+   OPCODE(DEC_GLOBALARR):
+      --ACSglobalarrs[IPNEXT()][POP()];
+      NEXTOP();
+
+      // DIV
+      DIVOP_GROUP(DIV, /=);
+   OPCODE(DIVX_STACK):
+      DIV_CHECK(temp = POP()); STACK_AT(1) = FixedDiv(STACK_AT(1), temp);
+      NEXTOP();
+
+      // INC
+   OPCODE(INC_LOCALVAR):
+      ++this->locals[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_MAPVAR):
+      ++*vm->mapvtab[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_WORLDVAR):
+      ++ACSworldvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_GLOBALVAR):
+      ++ACSglobalvars[IPNEXT()];
+      NEXTOP();
+   OPCODE(INC_MAPARR):
+      ++vm->mapatab[IPNEXT()]->at(POP());
+      NEXTOP();
+   OPCODE(INC_WORLDARR):
+      ++ACSworldarrs[IPNEXT()][POP()];
+      NEXTOP();
+   OPCODE(INC_GLOBALARR):
+      ++ACSglobalarrs[IPNEXT()][POP()];
+      NEXTOP();
+
+      // IOR
+      BINOP_GROUP(IOR, |=);
+
+      // LSH
+      BINOP_GROUP(LSH, <<=);
+
+      // MOD
+      DIVOP_GROUP(MOD, %=);
+
+      // MUL
+      BINOP_GROUP(MUL, *=);
+   OPCODE(MULX_STACK):
+      temp = POP(); STACK_AT(1) = FixedMul(STACK_AT(1), temp);
+      NEXTOP();
+
+      // RSH
+      BINOP_GROUP(RSH, >>=);
+
+      // SUB
+      BINOP_GROUP(SUB, -=);
+
+      // XOR
+      BINOP_GROUP(XOR, ^=);
+
+      // Unary Ops
+   OPCODE(INVERT_STACK):
+      STACK_AT(1) = ~STACK_AT(1);
+      NEXTOP();
+   OPCODE(NEGATE_STACK):
+      STACK_AT(1) = -STACK_AT(1);
+      NEXTOP();
+
+      // Logical Ops
+   OPCODE(LOGAND_STACK):
+      ST_BINOP(&&);
+      NEXTOP();
+   OPCODE(LOGIOR_STACK):
+      ST_BINOP(||);
+      NEXTOP();
+   OPCODE(LOGNOT_STACK):
+      STACK_AT(1) = !STACK_AT(1);
+      NEXTOP();
+
+      // Trigonometry Ops
+   OPCODE(TRIG_COS):
+      STACK_AT(1) = finecosine[(angle_t)(STACK_AT(1) << FRACBITS) >> ANGLETOFINESHIFT];
+      NEXTOP();
+   OPCODE(TRIG_SIN):
+      STACK_AT(1) = finesine[(angle_t)(STACK_AT(1) << FRACBITS) >> ANGLETOFINESHIFT];
+      NEXTOP();
+   OPCODE(TRIG_VECTORANGLE):
+      DECSTP();
+      STACK_AT(1) = P_PointToAngle(0, 0, STACK_AT(1), STACK_AT(0));
+      NEXTOP();
+
+      // Branching
+   OPCODE(BRANCH_CALL):
+      opcode = POP();
+      func = ACSVM::FindFunction(opcode);
+      goto acs_op_call;
+   OPCODE(BRANCH_CALL_IMM):
+      opcode = IPNEXT();
+      func = opcode < vm->numFuncs ? vm->funcptrs[opcode] : NULL;
+   acs_op_call:
+      {
+         if(!func)
          {
-            int vol    = POP();
-            int strnum = POP();
-
-            S_StartSoundNameAtVolume(NULL, this->stringtable[strnum], vol, 
-                                     ATTN_NORMAL, CHAN_AUTO);
+            doom_printf(FC_ERROR "ACS Error: CALL out of range: %d\a", (int)opcode);
+            goto action_endscript;
          }
-         break;
-      case OP_SOUNDSEQUENCE:
-         {
-            sector_t *sec;
-            int strnum = POP();
 
-            if(this->line && (sec = this->line->frontsector))
+         BRANCH_COUNT();
+
+         // Ensure there's enough space for the call frame.
+         if((size_t)(callPtr - calls) >= numCalls)
+         {
+            size_t callPtrTemp = callPtr - calls;
+            numCalls += ACS_NUM_CALLS;
+            calls = (acs_call_t *)Z_Realloc(calls, numCalls * sizeof(acs_call_t),
+                                            PU_LEVEL, NULL);
+            callPtr = &calls[callPtrTemp];
+         }
+
+         // Ensure there's enough stack space.
+         if(numStack - (stackPtr = stp - stack) < ACS_NUM_STACK)
+         {
+            numStack = stackPtr + ACS_NUM_STACK * 2;
+            stack = (int32_t *)Z_Realloc(stack, numStack * sizeof(int32_t), PU_LEVEL, NULL);
+            stp = stack + stackPtr;
+         }
+
+         // Ensure there's enough local variable space.
+         temp = func->numArgs + func->numVars;
+         if((size_t)(locals - localvar) + numLocals + temp >= numLocalvar)
+         {
+            size_t localsTemp = locals - localvar;
+
+            numLocalvar += temp * 2 + ACS_NUM_LOCALVARS;
+            localvar = (int32_t *)Z_Realloc(localvar, numLocalvar * sizeof(int32_t), PU_LEVEL, NULL);
+            locals = localvar + localsTemp;
+         }
+
+         // Create return frame.
+         callPtr->ip        = ip;
+         callPtr->numLocals = numLocals;
+         callPtr->vm        = vm;
+         ++callPtr;
+
+         // Read arguments and clear local variables.
+         locals += numLocals;
+
+         memcpy(locals, stp - func->numArgs, func->numArgs * sizeof(int32_t));
+         stp -= func->numArgs;
+         memset(locals + func->numArgs, 0, func->numVars * sizeof(int32_t));
+
+         // Set VM data.
+         ip        = func->codePtr;
+         numLocals = func->numVars + func->numArgs;
+         vm        = func->vm;
+      }
+      NEXTOP();
+   OPCODE(BRANCH_CASE):
+      if(PEEK() == IPNEXT()) // compare top of stack against op+1
+      {
+         DECSTP(); // take the value off the stack
+         BRANCHOP(IPCURR()); // jump to op+2
+      }
+      else
+         ++ip; // increment past offset at op+2, leave value on stack
+      NEXTOP();
+   OPCODE(BRANCH_CASETABLE):
+      {
+         // Case data is a series if value-address pairs.
+         typedef int32_t case_t[2];
+         case_t *caseBegin, *caseEnd, *caseItr;
+
+         temp = IPNEXT(); // Number of cases.
+
+         caseBegin = (case_t *)ip;
+         caseEnd = caseBegin + temp;
+
+         ip = (int32_t *)caseEnd;
+
+         // Search for matching case using binary search.
+         if(temp) for(;;)
+         {
+            temp = caseEnd - caseBegin;
+            caseItr = caseBegin + (temp / 2);
+
+            if((*caseItr)[0] == PEEK())
             {
-               S_StartSectorSequenceName(sec, this->stringtable[strnum], 
-                                         SEQ_ORIGIN_SECTOR_F);
+               DECSTP();
+               BRANCHOP((*caseItr)[1]);
+               break;
             }
-            /*
-            FIXME
+
+            // If true, this was the last case to try.
+            if(temp == 1) break;
+
+            if((*caseItr)[0] < PEEK())
+               caseBegin = caseItr;
             else
-            {
-               S_StartSequenceName(NULL, vm->stringtable[strnum], 
-                                   SEQ_ORIGIN_OTHER, -1);
-            }
-            */
+               caseEnd = caseItr;
          }
+      }
+      NEXTOP();
+   OPCODE(BRANCH_IMM):
+      BRANCHOP(IPCURR());
+      NEXTOP();
+   OPCODE(BRANCH_NOTZERO):
+      if(POP())
+         BRANCHOP(IPCURR());
+      else
+         ++ip;
+      NEXTOP();
+   OPCODE(BRANCH_RETURN):
+      // If there are no call frames, silently turn this into a terminate.
+      // This handles both erroneous RETURN instructions and allows for easier
+      // calling of arbitrary ACS functions.
+      if(callPtr == calls)
+         goto action_endscript;
+
+      --callPtr;
+
+      ip        = callPtr->ip;
+      numLocals = callPtr->numLocals;
+      vm        = callPtr->vm;
+
+      locals -= numLocals;
+
+      NEXTOP();
+   OPCODE(BRANCH_STACK):
+      opcode = POP();
+      if(opcode < vm->numJumps)
+      {
+         BRANCH_COUNT();
+         ip = vm->jumps[opcode].codePtr;
+      }
+      else
+         ip = vm->code;
+      NEXTOP();
+   OPCODE(BRANCH_ZERO):
+      if(!POP())
+         BRANCHOP(IPCURR());
+      else
+         ++ip;
+      NEXTOP();
+
+      // Stack Control
+   OPCODE(STACK_COPY):
+      STACK_AT(0) = STACK_AT(1);
+      INCSTP();
+      NEXTOP();
+   OPCODE(STACK_DROP):
+      DECSTP();
+      NEXTOP();
+   OPCODE(STACK_SWAP):
+      temp = STACK_AT(1);
+      STACK_AT(1) = STACK_AT(2);
+      STACK_AT(2) = temp;
+      NEXTOP();
+
+      // Script Control
+   OPCODE(DELAY):
+      this->delay = POP();
+      goto action_stop;
+   OPCODE(DELAY_IMM):
+      this->delay = IPNEXT();
+      goto action_stop;
+
+   OPCODE(POLYWAIT):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = POP(); // get poly tag
+      goto action_stop;
+   OPCODE(POLYWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITPOLY;
+      this->sdata = IPNEXT(); // get poly tag
+      goto action_stop;
+
+   OPCODE(SCRIPT_RESTART):
+      ip = script->codePtr;
+      BRANCH_COUNT();
+      NEXTOP();
+   OPCODE(SCRIPT_SUSPEND):
+      this->sreg = ACS_STATE_SUSPEND;
+      goto action_stop;
+   OPCODE(SCRIPT_TERMINATE):
+      goto action_endscript;
+
+   OPCODE(TAGWAIT):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = POP(); // get sector tag
+      goto action_stop;
+   OPCODE(TAGWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITTAG;
+      this->sdata = IPNEXT(); // get sector tag
+      goto action_stop;
+
+   OPCODE(SCRIPTWAIT):
+      this->sreg  = ACS_STATE_WAITSCRIPTNUMBER;
+      this->sdata = POP(); // get script num
+      goto action_stop;
+   OPCODE(SCRIPTWAIT_IMM):
+      this->sreg  = ACS_STATE_WAITSCRIPTNUMBER;
+      this->sdata = IPNEXT(); // get script num
+      goto action_stop;
+
+   OPCODE(SCRIPTWAITNAME):
+      this->sreg  = ACS_STATE_WAITSCRIPTNAME;
+      this->sdata = POP(); // get script name
+      goto action_stop;
+   OPCODE(SCRIPTWAITNAME_IMM):
+      this->sreg  = ACS_STATE_WAITSCRIPTNAME;
+      this->sdata = IPNEXT(); // get script name
+      goto action_stop;
+
+      // Printing
+   OPCODE(STARTPRINT):
+      pushPrint();
+      NEXTOP();
+   OPCODE(ENDPRINT):
+      if(this->trigger && this->trigger->player)
+         player_printf(trigger->player, printBuffer->constPtr());
+      else
+         player_printf(&players[consoleplayer], printBuffer->constPtr());
+      popPrint();
+      NEXTOP();
+   OPCODE(ENDPRINTBOLD):
+      HU_CenterMsgTimedColor(printBuffer->constPtr(), FC_GOLD, 20*35);
+      popPrint();
+      NEXTOP();
+   OPCODE(ENDPRINTLOG):
+      printf("%s\n", printBuffer->constPtr());
+      popPrint();
+      NEXTOP();
+   OPCODE(ENDPRINTSTRING):
+      PUSH(ACSVM::AddString(printBuffer->constPtr(), printBuffer->length()));
+      popPrint();
+      NEXTOP();
+   OPCODE(PRINTMAPARRAY):
+      stp -= 2;
+      vm->mapatab[stp[1]]->print(printBuffer, stp[0]);
+      NEXTOP();
+   OPCODE(PRINTMAPRANGE):
+      stp -= 4;
+      vm->mapatab[stp[1]]->print(printBuffer, stp[0] + stp[2], stp[3]);
+      NEXTOP();
+   OPCODE(PRINTWORLDARRAY):
+      stp -= 2;
+      ACSworldarrs[stp[1]].print(printBuffer, stp[0]);
+      NEXTOP();
+   OPCODE(PRINTWORLDRANGE):
+      stp -= 4;
+      ACSworldarrs[stp[1]].print(printBuffer, stp[0] + stp[2], stp[3]);
+      NEXTOP();
+   OPCODE(PRINTGLOBALARRAY):
+      stp -= 2;
+      ACSglobalarrs[stp[1]].print(printBuffer, stp[0]);
+      NEXTOP();
+   OPCODE(PRINTGLOBALRANGE):
+      stp -= 4;
+      ACSglobalarrs[stp[1]].print(printBuffer, stp[0] + stp[2], stp[3]);
+      NEXTOP();
+   OPCODE(PRINTCHAR):
+      *printBuffer += (char)POP();
+      NEXTOP();
+   OPCODE(PRINTFIXED):
+      {
+         // %E worst case: -1.52587e-05 == 12 + NUL
+         // %F worst case: -0.000106811 == 12 + NUL
+         // %F worst case: -32768.9     ==  8 + NUL
+         // %G is probably maximally P+6+1. (Actually, plus longer exponent.)
+         char buffer[13];
+         sprintf(buffer, "%G", M_FixedToDouble(POP()));
+         printBuffer->concat(buffer);
+      }
+      NEXTOP();
+   OPCODE(PRINTINT):
+      {
+         // %i worst case: -2147483648 == 11 + NUL
+         char buffer[12];
+         printBuffer->concat(M_Itoa(POP(), buffer, 10));
+      }
+      NEXTOP();
+   OPCODE(PRINTINT_BIN):
+      {
+         // %B worst case: -10000000000000000000000000000000 == 33 + NUL
+         char buffer[34];
+         printBuffer->concat(M_Itoa(POP(), buffer, 2));
+      }
+      NEXTOP();
+   OPCODE(PRINTINT_HEX):
+      {
+         // %x worst case: -80000000 == 9 + NUL
+         char buffer[10];
+         printBuffer->concat(M_Itoa(POP(), buffer, 16));
+      }
+      NEXTOP();
+   OPCODE(PRINTNAME):
+      temp = POP();
+      switch(temp)
+      {
+      case 0:
+         printBuffer->concat(players[consoleplayer].name);
          break;
-      case OP_SETLINETEXTURE:
-         {
-            int pos, side, tag, strnum;
 
-            strnum = POP();
-            pos    = POP();
-            side   = POP();
-            tag    = POP();
-
-            P_ChangeLineTex(this->stringtable[strnum], pos, side, tag, false);
-         }
-         break;
-      case OP_SETLINEBLOCKING:
-         {
-            int tag, block;
-
-            block = POP();
-            tag   = POP();
-
-            ACS_setLineBlocking(tag, block);
-         }
-         break;
-      case OP_SETLINESPECIAL:
-         {
-            int tag;
-            int16_t spec;
-            int args[NUMLINEARGS];
-
-            for(temp = 5; temp > 0; --temp)
-               args[temp-1] = POP();
-            spec = POP();
-            tag  = POP();
-
-            ACS_setLineSpecial(spec, args, tag);
-         }
-         break;
-      case OP_THINGSOUND:
-         {
-            int vol    = POP();
-            int strnum = POP();
-            int tid    = POP();
-            Mobj *mo = NULL;
-
-            while((mo = P_FindMobjFromTID(tid, mo, NULL)))
-            {
-               S_StartSoundNameAtVolume(mo, this->stringtable[strnum], vol,
-                                        ATTN_NORMAL, CHAN_AUTO);
-            }
-         }
-         break;
-      case OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
-         break;
       default:
-         // unknown opcode, must stop execution
-         doom_printf(FC_ERROR "ACS Error: unknown opcode %d\a", opcode);
-         action = ACTION_ENDSCRIPT;
+         if(temp > 0 && temp <= MAXPLAYERS)
+            printBuffer->concat(players[temp - 1].name);
          break;
       }
-   } 
-   while(action == ACTION_RUN);
+      NEXTOP();
+   OPCODE(PRINTSTRING):
+      printBuffer->concat(ACSVM::GetString(POP()));
+      NEXTOP();
 
-   // check for special actions flagged in loop above
-   switch(action)
-   {
-   case ACTION_ENDSCRIPT:
-      // end the script
-      ACS_stopScript(this, this->acscript);
-      break;
+      // Miscellaneous
+
+   OPCODE(CLEARLINESPECIAL):
+      if(this->line)
+         this->line->special = 0;
+      NEXTOP();
+
+   OPCODE(GAMESKILL):
+      PUSH(gameskill);
+      NEXTOP();
+
+   OPCODE(GAMETYPE):
+      PUSH(GameType);
+      NEXTOP();
+
+   OPCODE(GETSCREENHEIGHT):
+      PUSH(video.height);
+      NEXTOP();
+   OPCODE(GETSCREENWIDTH):
+      PUSH(video.width);
+      NEXTOP();
+
+   OPCODE(LINEOFFSETY):
+      PUSH(line ? sides[line->sidenum[0]].rowoffset >> FRACBITS : 0);
+      NEXTOP();
+   OPCODE(LINESIDE):
+      PUSH(this->lineSide);
+      NEXTOP();
+
+   OPCODE(PLAYERCOUNT):
+      PUSH(ACS_countPlayers());
+      NEXTOP();
+
+   OPCODE(SETGRAVITY):
+      LevelInfo.gravity = POP() / 800;
+      NEXTOP();
+   OPCODE(SETGRAVITY_IMM):
+      LevelInfo.gravity = IPNEXT() / 800;
+      NEXTOP();
+
+   OPCODE(STRCPYMAP):
+      stp -= 6;
+      temp = vm->mapatab[stp[1]]->copyString(stp[0] + stp[2], stp[3], stp[4], stp[5]);
+      PUSH(temp);
+      NEXTOP();
+   OPCODE(STRCPYWORLD):
+      stp -= 6;
+      temp = ACSworldarrs[stp[1]].copyString(stp[0] + stp[2], stp[3], stp[4], stp[5]);
+      PUSH(temp);
+      NEXTOP();
+   OPCODE(STRCPYGLOBAL):
+      stp -= 6;
+      temp = ACSglobalarrs[stp[1]].copyString(stp[0] + stp[2], stp[3], stp[4], stp[5]);
+      PUSH(temp);
+      NEXTOP();
+   OPCODE(STRLEN):
+      STACK_AT(1) = ACSVM::GetStringLength(STACK_AT(1));
+      NEXTOP();
+   OPCODE(TAGSTRING):
+      STACK_AT(1) = vm->getStringIndex(STACK_AT(1));
+      NEXTOP();
+
+   OPCODE(TIMER):
+      PUSH(leveltime);
+      NEXTOP();
+
+#ifndef COMPGOTO
    default:
-      // copy fields back into script
-      this->ip  = ip;
-      this->stp = stp;
+      // unknown opcode, must stop execution
+      doom_printf(FC_ERROR "ACS Error: unknown opcode %d\a", opcode);
+      goto action_endscript;
+#endif
+   }
+
+action_endscript:
+   // end the script
+   ACS_stopScript(this);
+   goto function_end;
+
+action_stop:
+   // copy fields back into script
+   this->ip  = ip;
+   this->stackPtr = stp - this->stack;
+   goto function_end;
+
+function_end:;
+}
+
+//
+// ACSThinker::popPrint
+//
+void ACSThinker::popPrint()
+{
+   // Decrement printPtr, but keep the disposed buffer for use later.
+   if(printPtr != printStack)
+   {
+      if(--printPtr != printStack)
+         printBuffer = *(printPtr - 1);
+      else
+         printBuffer = *printPtr;
+   }
+   else
+      printBuffer = *printPtr;
+}
+
+//
+// ACSThinker::pushPrint
+//
+void ACSThinker::pushPrint()
+{
+   uint32_t printIndex = printPtr - printStack;
+
+   // Make room for the new buffer.
+   if(printIndex == numPrints)
+   {
+      numPrints += ACS_NUM_PRINTS;
+      printStack = (qstring **)Z_Realloc(printStack, numPrints * sizeof(qstring *),
+                                         PU_LEVEL, NULL);
+      printPtr = &printStack[printIndex];
+
+      // Nullify the newly allocated pointers.
+      for(qstring **itr = printPtr, **end = printStack + numPrints; itr != end; ++itr)
+         *itr = NULL;
+   }
+
+   qstring *&print = *printPtr++;
+
+   if(!print)
+      print = new qstring(qstring::basesize, PU_LEVEL);
+   else
+      print->clear();
+
+   printBuffer = print;
+}
+
+//
+// ACSArray::clear
+//
+// Frees all of the associated memory, effectively resetting all values to 0.
+//
+void ACSArray::clear()
+{
+   // Iterate over every region in arrdata.
+   for(region_t **regionItr = arrdata, **regionEnd = regionItr + ACS_ARRDATASIZE;
+       regionItr != regionEnd; ++regionItr)
+   {
+      // If this region isn't allocated, skip it.
+      if(!*regionItr) continue;
+
+      // Iterate over every block in the region. (**regionItr is region_t AKA block_t*[])
+      for(block_t **blockItr = **regionItr, **blockEnd = blockItr + ACS_REGIONSIZE;
+          blockItr != blockEnd; ++blockItr)
+      {
+         // If this block isn't allocated, skip it.
+         if(!*blockItr) continue;
+
+         // Iterate over every page in the block. (**blockItr is block_t AKA page_t*[])
+         for(page_t **pageItr = **blockItr, **pageEnd = pageItr + ACS_BLOCKSIZE;
+             pageItr != pageEnd; ++pageItr)
+         {
+            // If this page is allocated, free it.
+            if(*pageItr) Z_Free(*pageItr);
+         }
+
+         // Free the block.
+         Z_Free(*blockItr);
+      }
+
+      // Free the region.
+      Z_Free(*regionItr);
+      *regionItr = NULL;
+   }
+}
+
+//
+// ACSArray::getRegion
+//
+ACSArray::region_t &ACSArray::getRegion(uint32_t addr)
+{
+   // Find the requested region.
+   region_t *&region = getArrdata()[addr];
+
+   // If not allocated yet, do so.
+   if(!region) region = estructalloc(region_t, 1);
+
+   return *region;
+}
+
+//
+// ACSArray::getBlock
+//
+ACSArray::block_t &ACSArray::getBlock(uint32_t addr)
+{
+   // Find the requested block.
+   block_t *&block = getRegion(addr / ACS_REGIONSIZE)[addr % ACS_REGIONSIZE];
+
+   // If not allocated yet, do so.
+   if(!block) block = estructalloc(block_t, 1);
+
+   return *block;
+}
+
+//
+// ACSArray::getPage
+//
+ACSArray::page_t &ACSArray::getPage(uint32_t addr)
+{
+   // Find the requested page.
+   page_t *&page = getBlock(addr / ACS_BLOCKSIZE)[addr % ACS_BLOCKSIZE];
+
+   // If not allocated yet, do so.
+   if(!page) page = estructalloc(page_t, 1);
+
+   return *page;
+}
+
+//
+// ACSArray::copyString
+//
+bool ACSArray::copyString(uint32_t offset, uint32_t length,
+                          uint32_t strnum, uint32_t stroff)
+{
+   if(strnum >= ACSVM::GlobalNumStrings) return false;
+
+   ACSString::Data &strdat = ACSVM::GlobalStrings[strnum]->data;
+
+   if(stroff > strdat.l) return false;
+
+   const char *string = strdat.s + stroff;
+
+   length += offset; // use length as end
+   while(*string)
+   {
+      if(offset == length) return false;
+      getVal(offset++) = *string++;
+   }
+
+   if(offset != length)
+   {
+      getVal(offset) = 0;
+      return true;
+   }
+   else
+      return false;
+}
+
+//
+// ACSArray::print
+//
+void ACSArray::print(qstring *printBuffer, uint32_t offset, uint32_t length)
+{
+   length += offset; // use length as end
+   for(char val; offset != length && (val = (char)getVal(offset)); ++offset)
+      *printBuffer += val;
+}
+
+//
+// ACSDeferred::~ACSDeferred
+//
+ACSDeferred::~ACSDeferred()
+{
+   link.remove();
+
+   Z_Free(name);
+   Z_Free(argv);
+}
+
+//
+// ACSDeferred::execute
+//
+void ACSDeferred::execute()
+{
+   ACSThinker *thread;
+
+   // If no action to perform yet, just return.
+   if(gamemap != mapnum)
+      return;
+
+   switch(type)
+   {
+   case EXECUTE_NUMBER:
+      ACS_ExecuteScriptNumber(number, mapnum, flags, argv, argc, NULL, NULL, 0, &thread);
+      if(thread)
+         thread->delay = TICRATE;
+      break;
+
+   case EXECUTE_NAME:
+      ACS_ExecuteScriptName(name, mapnum, flags, argv, argc, NULL, NULL, 0, &thread);
+      if(thread)
+         thread->delay = TICRATE;
+      break;
+
+   case SUSPEND_NUMBER:
+      ACS_SuspendScriptNumber(number, mapnum);
+      break;
+
+   case SUSPEND_NAME:
+      ACS_SuspendScriptName(name, mapnum);
+      break;
+
+   case TERMINATE_NUMBER:
+      ACS_TerminateScriptNumber(number, mapnum);
+      break;
+
+   case TERMINATE_NAME:
+      ACS_TerminateScriptName(name, mapnum);
       break;
    }
+
+   // The action has been done, there is now no reason to continue existing.
+   delete this;
+}
+
+//
+// ACSDeferred::ExecuteAll
+//
+void ACSDeferred::ExecuteAll()
+{
+   DLListItem<ACSDeferred> *item, *next = list;
+
+   while((item = next))
+   {
+      next = item->dllNext;
+      item->dllObject->execute();
+   }
+}
+
+//
+// ACSDeferred::ClearAll
+//
+void ACSDeferred::ClearAll()
+{
+   while(list)
+      delete list->dllObject;
+}
+
+//
+// ACSDeferred::IsDeferredNumber
+//
+bool ACSDeferred::IsDeferredNumber(int32_t number, int mapnum)
+{
+   for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
+   {
+      ACSDeferred *dacs = item->dllObject;
+      if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
+         !dacs->name && dacs->number == number)
+         return true;
+   }
+
+   return false;
+}
+
+//
+// ACSDeferred::IsDeferredName
+//
+bool ACSDeferred::IsDeferredName(const char *name, int mapnum)
+{
+   for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
+   {
+      ACSDeferred *dacs = item->dllObject;
+      if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
+         dacs->name && !strcasecmp(dacs->name, name))
+         return true;
+   }
+
+   return false;
+}
+
+//
+// ACSDeferred::DeferExecuteNumber
+//
+bool ACSDeferred::DeferExecuteNumber(int32_t number, int mapnum, int flags,
+                                     const int32_t *argv, uint32_t argc)
+{
+   if(!(flags & ACS_EXECUTE_ALWAYS) && IsDeferredNumber(number, mapnum))
+      return false;
+
+   const size_t size = sizeof(int32_t) * argc;
+   int32_t *newArgv = (int32_t *)memcpy(Z_Malloc(size, PU_STATIC, NULL), argv, size);
+
+   new ACSDeferred(EXECUTE_NUMBER, number, NULL, mapnum, flags, newArgv, argc);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferExecuteName
+//
+bool ACSDeferred::DeferExecuteName(const char *name, int mapnum, int flags,
+                                   const int32_t *argv, uint32_t argc)
+{
+   if(!(flags & ACS_EXECUTE_ALWAYS) && IsDeferredName(name, mapnum))
+      return false;
+
+   char *newName = Z_Strdup(name, PU_STATIC, NULL);
+
+   const size_t size = sizeof(int32_t) * argc;
+   int32_t *newArgv = (int32_t *)memcpy(Z_Malloc(size, PU_STATIC, NULL), argv, size);
+
+   new ACSDeferred(EXECUTE_NAME, -1, newName, mapnum, flags, newArgv, argc);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferSuspendNumber
+//
+bool ACSDeferred::DeferSuspendNumber(int32_t number, int mapnum)
+{
+   if(IsDeferredNumber(number, mapnum))
+      return false;
+
+   new ACSDeferred(SUSPEND_NUMBER, number, NULL, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferSuspendName
+//
+bool ACSDeferred::DeferSuspendName(const char *name, int mapnum)
+{
+   if(IsDeferredName(name, mapnum))
+      return false;
+
+   char *newName = Z_Strdup(name, PU_STATIC, NULL);
+
+   new ACSDeferred(SUSPEND_NAME, -1, newName, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferTerminateNumber
+//
+bool ACSDeferred::DeferTerminateNumber(int32_t number, int mapnum)
+{
+   if(IsDeferredNumber(number, mapnum))
+      return false;
+
+   new ACSDeferred(TERMINATE_NUMBER, number, NULL, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSDeferred::DeferTerminateName
+//
+bool ACSDeferred::DeferTerminateName(const char *name, int mapnum)
+{
+   if(IsDeferredName(name, mapnum))
+      return false;
+
+   char *newName = Z_Strdup(name, PU_STATIC, NULL);
+
+   new ACSDeferred(TERMINATE_NAME, -1, newName, mapnum, 0, NULL, 0);
+
+   return true;
+}
+
+//
+// ACSVM::ACSVM
+//
+ACSVM::ACSVM(int tag) : ZoneObject()
+{
+   ChangeTag(tag);
+   reset();
+}
+
+//
+// ACSVM::~ACSVM
+//
+ACSVM::~ACSVM()
+{
+}
+
+//
+// ACSVM::addStrings
+//
+void ACSVM::addStrings()
+{
+   // Make sure there is enough space.
+   if(GlobalAllocStrings < numStrings)
+   {
+      GlobalAllocStrings = numStrings;
+      GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
+         GlobalNumStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+   }
+
+   // Set the missing global entries to ours.
+   for(; GlobalNumStrings < numStrings; ++GlobalNumStrings)
+      GlobalStrings[GlobalNumStrings] = GlobalStrings[strings[GlobalNumStrings]];
+}
+
+//
+// ACSVM::findFunction
+//
+ACSFunc *ACSVM::findFunction(const char *name)
+{
+   // Look through all of this VM's functions.
+   for(unsigned int i = numFuncNames < numFuncs ? numFuncNames : numFuncs; i--;)
+   {
+      // Check for matching name, but don't match if it's an external function.
+      // Note that this check changes once the VM is loaded.
+      if((loaded ? (funcs[i].codePtr != code) : (funcs[i].codeIndex != 0)) &&
+         !strcasecmp(GlobalStrings[funcNames[i]]->data.s, name))
+      {
+         return &funcs[i];
+      }
+   }
+
+   return NULL;
+}
+
+//
+// ACSVM::findMapVar
+//
+int32_t *ACSVM::findMapVar(const char *name)
+{
+   for(unsigned int i = ACS_NUM_MAPVARS; i--;)
+   {
+      if(mapvnam[i] && !strcasecmp(mapvnam[i], name))
+         return &mapvars[i];
+   }
+
+   return NULL;
+}
+
+//
+// ACSVM::findMapArr
+//
+ACSArray *ACSVM::findMapArr(const char *name)
+{
+   for(unsigned int i = ACS_NUM_MAPARRS; i--;)
+   {
+      if(mapanam[i] && !strcasecmp(mapanam[i], name))
+         return &maparrs[i];
+   }
+
+   return NULL;
+}
+
+//
+// ACSVM::AddString
+//
+uint32_t ACSVM::AddString(const char *s, uint32_t l)
+{
+   ACSString::Data data = {s, l};
+   ACSString *string;
+
+   // If no existing string with that data...
+   if(!(string = acsStrings.objectForKey(data)))
+   {
+      char *str;
+
+      // Make new string.
+      string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + l + 1, PU_LEVEL, NULL);
+      string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
+      string->data.l = l;
+
+      memcpy(str, s, l);
+      str[l] = 0;
+
+      // Set metadata.
+      if(acsScriptsByName.isInitialized())
+         string->script = acsScriptsByName.objectForKey(string->data.s);
+      else
+         string->script = NULL;
+
+      string->length = strlen(string->data.s);
+      string->number = GlobalNumStrings;
+
+      // Make room in global array.
+      if(GlobalNumStrings == GlobalAllocStrings)
+      {
+         GlobalAllocStrings += GlobalAllocStrings > 64 ? GlobalAllocStrings : 64;
+         GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
+            GlobalAllocStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+      }
+
+      // Add to global array.
+      GlobalStrings[GlobalNumStrings++] = string;
+      acsStrings.addObject(string);
+   }
+
+   return string->number;
+}
+
+//
+// ACSVM::FindScriptByNumber
+//
+ACSScript *ACSVM::FindScriptByNumber(int32_t scrnum)
+{
+   return acsScriptsByNumber.objectForKey(scrnum);
+}
+
+//
+// ACSVM::FindScriptByName
+//
+ACSScript *ACSVM::FindScriptByName(const char *name)
+{
+   return acsScriptsByName.objectForKey(name);
+}
+
+//
+// ACSVM::reset
+//
+void ACSVM::reset()
+{
+   for(int i = ACS_NUM_MAPVARS; i--;)
+   {
+      mapvars[i] = 0;
+      mapvtab[i] = &mapvars[i];
+
+      mapvnam[i] = NULL;
+   }
+
+   for(int i = ACS_NUM_MAPARRS; i--;)
+   {
+      maparrs[i].clear();
+      mapatab[i] = &maparrs[i];
+
+      mapanam[i] = NULL;
+      mapalen[i] = 0;
+      mapahas[i] = false;
+   }
+
+   code       = NULL;
+   numCode    = 0;
+   jumps      = NULL;
+   numJumps   = 0;
+   strings    = NULL;
+   numStrings = 0;
+   scripts    = NULL;
+   numScripts = 0;
+   loaded     = false;
+   lump       = -1;
+
+   exports    = NULL;
+   numExports = 0;
+   imports    = NULL;
+   importVMs  = NULL;
+   numImports = 0;
+}
+
+//
+// ACS_Init
+//
+// Called at startup.
+//
+void ACS_Init(void)
+{
+}
+
+//
+// ACS_NewGame
+//
+// Called when a new game is started.
+//
+void ACS_NewGame(void)
+{
+   // clear out the world variables
+   memset(ACSworldvars, 0, sizeof(ACSworldvars));
+
+   // clear out the global variables
+   memset(ACSglobalvars, 0, sizeof(ACSglobalvars));
+
+   // clear out deferred scripts
+   ACSDeferred::ClearAll();
+}
+
+//
+// ACS_InitLevel
+//
+// Called at level start from P_SetupLevel
+//
+void ACS_InitLevel(void)
+{
+   acsLevelScriptVM.reset();
+
+   ACSVM::GlobalStrings = NULL;
+   ACSVM::GlobalAllocStrings = 0;
+   ACSVM::GlobalNumStrings = 0;
+}
+
+//
+// ACS_LoadScript
+//
+ACSVM *ACS_LoadScript(WadDirectory *dir, int lump)
+{
+   ACSVM *vm;
+
+   if(lump == -1) return NULL;
+
+   // If the lump has already been loaded, don't reload it.
+   for(ACSVM **itr = acsVMs.begin(), **end = acsVMs.end(); itr != end; ++itr)
+   {
+      if ((*itr)->lump == lump)
+         return *itr;
+   }
+
+   vm = new ACSVM(PU_LEVEL);
+
+   ACS_LoadScript(vm, dir, lump);
+
+   return vm;
+}
+
+//
+// ACS_LoadScript
+//
+void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
+{
+   byte *data;
+
+   ACS_addVirtualMachine(vm);
+   vm->lump    = lump;
+
+   // zero length or too-short lump?
+   if(dir->lumpLength(lump) < 4)
+   {
+      vm->code = NULL;
+      return;
+   }
+
+   // load the lump
+   data = (byte *)(dir->cacheLumpNum(lump, PU_LEVEL));
+
+   switch(SwapULong(*(uint32_t *)data))
+   {
+   case ACS_CHUNKID('A', 'C', 'S', '\0'):
+      ACS_LoadScriptACS0(vm, dir, lump, data);
+      break;
+
+   case ACS_CHUNKID('A', 'C', 'S', 'E'):
+      ACS_LoadScriptACSE(vm, dir, lump, data);
+      break;
+
+   case ACS_CHUNKID('A', 'C', 'S', 'e'):
+      ACS_LoadScriptACSe(vm, dir, lump, data);
+      break;
+   }
+
+   // haleyjd 06/30/09: open scripts must be started *here*, not above.
+   for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
+   {
+      if(itr->type == ACS_STYPE_OPEN)
+         ACS_runOpenScript(vm, itr);
+   }
+}
+
+//
+// ACS_loadScripts
+//
+// Reads lump names out of the lump and loads them as scripts.
+//
+static void ACS_loadScripts(WadDirectory *dir, int lump)
+{
+   const char *itr, *end;
+   char lumpname[9], *nameItr, *const nameEnd = lumpname+8;
+
+   itr = (const char *)(dir->cacheLumpNum(lump, PU_CACHE));
+   end = itr + dir->lumpLength(lump);
+
+   for(;;)
+   {
+      // Discard any whitespace.
+      while(itr != end && isspace(*itr)) ++itr;
+
+      if(itr == end) break;
+
+      // Read a name.
+      nameItr = lumpname;
+      while(itr != end && nameItr != nameEnd && !isspace(*itr))
+         *nameItr++ = *itr++;
+      *nameItr = '\0';
+
+      // Discard excess letters.
+      while(itr != end && !isspace(*itr)) ++itr;
+
+      if((lump = dir->checkNumForName(lumpname, lumpinfo_t::ns_acs)) != -1)
+         ACS_LoadScript(dir, lump);
+   }
+}
+
+//
+// ACS_LoadLevelScript
+//
+// Loads the level scripts and initializes the levelscript virtual machine.
+// Called from P_SetupLevel.
+//
+void ACS_LoadLevelScript(WadDirectory *dir, int lump)
+{
+   ACSFunc   *func, *funcEnd;
+   ACSScript *s,    *sEnd;
+   ACSVM    **vm,  **vmEnd;
+
+   // Start at 1 so that number of chains is never 0.
+   unsigned int numScriptsByNumber = 1, numScriptsByName = 1;
+
+   acsScriptsByNumber.destroy();
+   acsScriptsByName.destroy();
+   acsStrings.destroy();
+   acsVMs.makeEmpty();
+
+   acsStrings.initialize(32);
+
+   // load the level script, if any
+   if(lump != -1)
+      ACS_LoadScript(&acsLevelScriptVM, dir, lump);
+
+   // The rest of the function is LOADACS handling.
+
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
+
+   lump = dir->getLumpNameChain("LOADACS")->index;
+   while(lump != -1)
+   {
+      if(!strncasecmp(lumpinfo[lump]->name, "LOADACS", 7) &&
+         lumpinfo[lump]->li_namespace == lumpinfo_t::ns_global)
+      {
+         ACS_loadScripts(dir, lump);
+      }
+
+      lump = lumpinfo[lump]->next;
+   }
+
+   // Haha, not really! Now we have to process script names.
+
+   // For this round, just tally the number of scripts.
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
+      {
+         if(s->number < 0)
+            ++numScriptsByName;
+         else
+            ++numScriptsByNumber;
+      }
+   }
+
+   acsScriptsByNumber.initialize(numScriptsByNumber);
+   acsScriptsByName.initialize(numScriptsByName);
+
+   // Now actually add them to the tables.
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
+      {
+         if(s->number < 0)
+            acsScriptsByName.addObject(s);
+         else
+         {
+            ACSScript *olds = acsScriptsByNumber.objectForKey(s->number);
+
+            // If there already exists a script by that number...
+            if(olds)
+            {
+               // ... and it's from the same VM, keep the first one.
+               // Otherwise, only keep the newest.
+               if(olds->vm != s->vm)
+               {
+                  acsScriptsByNumber.removeObject(olds);
+                  acsScriptsByNumber.addObject(s);
+               }
+            }
+            else
+               acsScriptsByNumber.addObject(s);
+         }
+      }
+   }
+
+   // Process strings.
+
+   // During loading, alloc is the same as num.
+   ACSVM::GlobalAllocStrings = ACSVM::GlobalNumStrings;
+
+   // Save this number for saving.
+   ACSVM::GlobalNumStringsBase = ACSVM::GlobalNumStrings;
+
+   // Rebuild the hash so it has good performance at runtime.
+   if(acsStrings.getNumItems() > acsStrings.getNumChains())
+      acsStrings.rebuild(acsStrings.getNumItems());
+
+   // Pre-search scripts for strings. This makes named scripts faster than numbered!
+   for(ACSString **itr = ACSVM::GlobalStrings,
+       **end = itr + ACSVM::GlobalNumStrings; itr != end; ++itr)
+   {
+      (*itr)->script = ACSVM::FindScriptByName((*itr)->data.s);
+   }
+
+   // Process GlobalFuncs.
+   // Unlike strings, this array is not a direct combining of all the VMs.
+
+   // Count the number of defined functions, leaving 0 to mean no function.
+   ACSVM::GlobalNumFuncs = 1;
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(func = (*vm)->funcs, funcEnd = func + (*vm)->numFuncs; func != funcEnd; ++func)
+      {
+         if(func->codePtr != (*vm)->code)
+            ++ACSVM::GlobalNumFuncs;
+      }
+   }
+
+   // Allocate the array.
+   ACSVM::GlobalFuncs = (ACSFunc **)Z_Malloc(ACSVM::GlobalNumFuncs * sizeof(ACSFunc *),
+                                             PU_LEVEL, NULL);
+
+   // Build the array, the first element being no function.
+   ACSVM::GlobalNumFuncs = 0;
+   ACSVM::GlobalFuncs[ACSVM::GlobalNumFuncs++] = NULL;
+   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   {
+      for(func = (*vm)->funcs, funcEnd = func + (*vm)->numFuncs; func != funcEnd; ++func)
+      {
+         if(func->codePtr != (*vm)->code)
+         {
+            func->number = ACSVM::GlobalNumFuncs;
+            ACSVM::GlobalFuncs[ACSVM::GlobalNumFuncs++] = func;
+         }
+         else
+            func->number = 0;
+      }
+   }
+}
+
+//
+// ACS_RunDeferredScripts
+//
+// Runs scripts that have been deferred for the current map
+//
+void ACS_RunDeferredScripts()
+{
+   ACSDeferred::ExecuteAll();
+}
+
+//
+// ACS_ExecuteScript
+//
+// Attempts to execute the given script.
+//
+bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
+                       uint32_t argc, Mobj *trigger, line_t *line, int lineSide,
+                       ACSThinker **thread)
+{
+   ACSThinker *newThread;
+   bool foundScripts = false;
+   unsigned int i;
+
+   // If a value is to be returned in thread, it should be determinate.
+   if(thread)
+      *thread = NULL;
+
+   if(!script) return false;
+
+   for(ACSThinker *itr = script->threads; itr; itr = itr->nextthread)
+   {
+      // if the script is suspended, restart it
+      if(itr->sreg == ACS_STATE_SUSPEND)
+      {
+         foundScripts = true;
+         itr->sreg = ACS_STATE_RUNNING;
+      }
+   }
+
+   // if not an always-execute action and we restarted a stopped script,
+   // then we return true now.
+   // otherwise, return false for failure.
+   if(!(flags & ACS_EXECUTE_ALWAYS) && script->threads)
+      return foundScripts;
+
+   // setup the new script thinker
+   newThread = new ACSThinker;
+
+   newThread->ip          = script->codePtr;
+   newThread->numStack    = ACS_NUM_STACK * 2;
+   newThread->stack       = estructalloctag(int32_t, newThread->numStack, PU_LEVEL);
+   newThread->stackPtr    = 0;
+   newThread->numLocalvar = script->numVars;
+   newThread->localvar    = estructalloctag(int32_t, newThread->numLocalvar, PU_LEVEL);
+   newThread->numLocals   = newThread->numLocalvar;
+   newThread->locals      = newThread->localvar;
+   newThread->line        = line;
+   newThread->lineSide    = lineSide;
+   P_SetTarget<Mobj>(&newThread->trigger, trigger);
+
+   // copy in some important data
+   newThread->script   = script;
+   newThread->vm       = script->vm;
+
+   // copy arguments into first N local variables
+   for(i = 0; i < script->numArgs; ++i)
+      newThread->locals[i] = i < argc ? argv[i] : 0;
+
+   // attach the thinker
+   newThread->addThinker();
+
+   // add as a thread of the script
+   ACS_addThread(newThread);
+
+   // mark as running
+   newThread->sreg  = ACS_STATE_RUNNING;
+   newThread->sdata = 0;
+
+   if(flags & ACS_EXECUTE_IMMEDIATE)
+      newThread->exec();
+
+   // return pointer to new script in *scr if not null
+   if(thread)
+      *thread = newThread;
+
+   return true;
+}
+
+//
+// ACS_ExecuteScriptNumber
+//
+// Attempts to execute the numbered script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_ExecuteScriptNumber(int32_t number, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, ACSThinker **thread)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_ExecuteScript(ACSVM::FindScriptByNumber(number), flags,
+                               argv, argc, trigger, line, lineSide, thread);
+   else
+   {
+      if(thread) *thread = NULL;
+      return ACSDeferred::DeferExecuteNumber(number, mapnum, flags, argv, argc);
+   }
+}
+
+//
+// ACS_ExecuteScriptName
+//
+// Attempts to execute the named script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_ExecuteScriptName(const char *name, int mapnum, int flags,
+                           const int32_t *argv, uint32_t argc, Mobj *trigger,
+                           line_t *line, int lineSide, ACSThinker **thread)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_ExecuteScript(ACSVM::FindScriptByName(name), flags,
+                               argv, argc, trigger, line, lineSide, thread);
+   else
+   {
+      if(thread) *thread = NULL;
+      return ACSDeferred::DeferExecuteName(name, mapnum, flags, argv, argc);
+   }
+}
+
+//
+// ACS_ExecuteScriptString
+//
+// Like above, but using an ACS string index.
+//
+bool ACS_ExecuteScriptString(uint32_t strnum, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, ACSThinker **thread)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_ExecuteScript(ACSVM::FindScriptByString(strnum), flags,
+                               argv, argc, trigger, line, lineSide, thread);
+   else
+   {
+      if(thread) *thread = NULL;
+      return ACSDeferred::DeferExecuteName(ACSVM::GetString(strnum), mapnum, flags, argv, argc);
+   }
+}
+
+//
+// ACS_TerminateScript
+//
+// Attempts to terminate the given script.
+//
+bool ACS_TerminateScript(ACSScript *script)
+{
+   bool ret = false;
+
+   if(!script) return false;
+
+   for(ACSThinker *thread = script->threads; thread; thread = thread->nextthread)
+   {
+      if(thread->sreg != ACS_STATE_STOPPED)
+      {
+         thread->sreg = ACS_STATE_TERMINATE;
+         ret = true;
+      }
+   }
+
+   return ret;
+}
+
+//
+// ACS_TerminateScriptNumber
+//
+// Attempts to terminate the numbered script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_TerminateScriptNumber(int32_t number, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_TerminateScript(ACSVM::FindScriptByNumber(number));
+   else
+      return ACSDeferred::DeferTerminateNumber(number, mapnum);
+}
+
+//
+// ACS_TerminateScriptName
+//
+// Attempts to terminate the named script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_TerminateScriptName(const char *name, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_TerminateScript(ACSVM::FindScriptByName(name));
+   else
+      return ACSDeferred::DeferTerminateName(name, mapnum);
+}
+
+//
+// ACS_TerminateScriptString
+//
+// Like above, but using an ACS string index.
+//
+bool ACS_TerminateScriptString(uint32_t strnum, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_TerminateScript(ACSVM::FindScriptByString(strnum));
+   else
+      return ACSDeferred::DeferTerminateName(ACSVM::GetString(strnum), mapnum);
+}
+
+//
+// ACS_SuspendScript
+//
+// Attempts to suspend the given script.
+//
+bool ACS_SuspendScript(ACSScript *script)
+{
+   bool ret = false;
+
+   if(!script) return false;
+
+   for(ACSThinker *thread = script->threads; thread; thread = thread->nextthread)
+   {
+      if(thread->sreg != ACS_STATE_STOPPED &&
+         thread->sreg != ACS_STATE_TERMINATE)
+      {
+         thread->sreg = ACS_STATE_SUSPEND;
+         ret = true;
+      }
+   }
+
+   return ret;
+}
+
+//
+// ACS_SuspendScriptNumber
+//
+// Attempts to suspend the numbered script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_SuspendScriptNumber(int32_t number, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_SuspendScript(ACSVM::FindScriptByNumber(number));
+   else
+      return ACSDeferred::DeferSuspendNumber(number, mapnum);
+}
+
+//
+// ACS_SuspendScriptName
+//
+// Attempts to suspend the named script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+bool ACS_SuspendScriptName(const char *name, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_SuspendScript(ACSVM::FindScriptByName(name));
+   else
+      return ACSDeferred::DeferSuspendName(name, mapnum);
+}
+
+//
+// ACS_SuspendScriptString
+//
+// Like above, but using an ACS string index.
+//
+bool ACS_SuspendScriptString(uint32_t strnum, int mapnum)
+{
+   if(mapnum == 0 || mapnum == gamemap)
+      return ACS_SuspendScript(ACSVM::FindScriptByString(strnum));
+   else
+      return ACSDeferred::DeferSuspendName(ACSVM::GetString(strnum), mapnum);
+}
+
+//=============================================================================
+//
+// Save/Load Code
+//
+
+//
+// SaveArchive << ACSVM *
+//
+static SaveArchive &operator << (SaveArchive &arc, ACSVM *&vm)
+{
+   uint32_t vmID;
+
+   if(arc.isSaving())
+      vmID = vm->id;
+
+   arc << vmID;
+
+   if(arc.isLoading())
+      vm = acsVMs[vmID];
+
+   return arc;
+}
+
+//
+// SaveArchive << ACSArray
+//
+static SaveArchive &operator << (SaveArchive &arc, ACSArray &arr)
+{
+   arr.archive(arc);
+   return arc;
+}
+
+//
+// SaveArchive << acs_call_t
+//
+static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
+{
+   uint32_t ipTemp;
+
+   if(arc.isSaving())
+      ipTemp = call.ip - call.vm->code;
+
+   arc << ipTemp << call.numLocals << call.vm;
+
+   if(arc.isLoading())
+      call.ip = call.vm->code + ipTemp;
+
+   return arc;
+}
+
+//
+// ACSArray::archiveArrdata
+//
+void ACSArray::archiveArrdata(SaveArchive &arc, arrdata_t *arrdata)
+{
+   bool hasRegion;
+
+   // Archive every region.
+   for(region_t **regionItr = *arrdata, **regionEnd = regionItr + ACS_ARRDATASIZE;
+       regionItr != regionEnd; ++regionItr)
+   {
+      // Determine if there is a region to archive.
+      if(arc.isSaving())
+         hasRegion = *regionItr != NULL;
+
+      arc << hasRegion;
+
+      // If so, archive it.
+      if(hasRegion)
+      {
+         // If loading, need to allocate the region.
+         if(arc.isLoading())
+            *regionItr = estructalloc(region_t, 1);
+
+         archiveRegion(arc, *regionItr);
+      }
+   }
+}
+
+//
+// ACSArray::archiveRegion
+//
+void ACSArray::archiveRegion(SaveArchive &arc, region_t *region)
+{
+   bool hasBlock;
+
+   // Archive every block in the region.
+   for(block_t **blockItr = *region, **blockEnd = blockItr + ACS_REGIONSIZE;
+       blockItr != blockEnd; ++blockItr)
+   {
+      // Determine if there is a block to archive.
+      if(arc.isSaving())
+         hasBlock = *blockItr != NULL;
+
+      arc << hasBlock;
+
+      // If so, archive it.
+      if(hasBlock)
+      {
+         // If loading, need to allocate the block.
+         if(arc.isLoading())
+            *blockItr = estructalloc(block_t, 1);
+
+         archiveBlock(arc, *blockItr);
+      }
+   }
+}
+
+//
+// ACSArray::archiveBlock
+//
+void ACSArray::archiveBlock(SaveArchive &arc, block_t *block)
+{
+   bool hasPage;
+
+   // Archive every page in the block.
+   for(page_t **pageItr = *block, **pageEnd = pageItr + ACS_BLOCKSIZE;
+       pageItr != pageEnd; ++pageItr)
+   {
+      // Determine if there is a page to archive.
+      if(arc.isSaving())
+         hasPage = *pageItr != NULL;
+
+      arc << hasPage;
+
+      // If so, archive it.
+      if(hasPage)
+      {
+         // If loading, need to allocate the page first.
+         if(arc.isLoading())
+            *pageItr = estructalloc(page_t, 1);
+
+         archivePage(arc, *pageItr);
+      }
+   }
+}
+
+//
+// ACSArray::archivePage
+//
+void ACSArray::archivePage(SaveArchive &arc, page_t *page)
+{
+   for(val_t *valItr = *page, *valEnd = valItr + ACS_PAGESIZE;
+       valItr != valEnd; ++valItr)
+   {
+      archiveVal(arc, valItr);
+   }
+}
+
+//
+// ACSArray::archiveVal
+//
+void ACSArray::archiveVal(SaveArchive &arc, val_t *val)
+{
+   arc << *val;
+}
+
+//
+// ACSArray::archive
+//
+void ACSArray::archive(SaveArchive &arc)
+{
+   if(arc.isLoading())
+      clear();
+
+   archiveArrdata(arc, &arrdata);
 }
 
 //
@@ -1175,42 +2540,76 @@ void ACSThinker::Think()
 //
 void ACSThinker::serialize(SaveArchive &arc)
 {
+   uint32_t scriptIndex, localsIndex, callPtrIndex, printIndex, ipIndex, lineIndex;
+
    Super::serialize(arc);
 
-   // Basic properties
-   arc << vmID << scriptNum << internalNum << stp << sreg << sdata 
-       << delay << lineSide;
-
-   // Arrays
-   P_ArchiveArray<int>(arc, stack,  ACS_STACK_LEN);
-   P_ArchiveArray<int>(arc, locals, ACS_NUMLOCALS);
-
-   // Pointers
+   // Pointer-to-Index
    if(arc.isSaving())
    {
-      unsigned int tempIp, tempLine, tempTrigger;
+      scriptIndex = script - vm->scripts;
 
-      // Save instruction pointer, line pointer, and trigger
-      tempIp      = ip - code;
-      tempLine    = line ? line - lines + 1 : 0;
-      tempTrigger = P_NumForThinker(trigger);
-      
-      arc << tempIp << tempLine << tempTrigger;
+      localsIndex = locals - localvar;
+
+      callPtrIndex = callPtr - calls;
+
+      printIndex = printPtr - printStack;
+
+      ipIndex = ip - vm->code;
+
+      lineIndex = line ? line - lines + 1 : 0;
+
+      triggerSwizzle = P_NumForThinker(trigger);
    }
-   else
+
+   // Basic properties
+   arc << ipIndex << stackPtr << numLocalvar << localsIndex << numLocals << sreg
+       << sdata << callPtrIndex << printIndex << scriptIndex << vm << delay
+       << triggerSwizzle << lineIndex << lineSide;
+
+   // Allocations/Index-to-Pointer
+   if(arc.isLoading())
    {
-      unsigned int ipnum, linenum;
-      
-      // Restore line pointer; IP is restored in ACS_RestartSavedScript,
-      // and trigger must be restored in deswizzle() after all thinkers
-      // have been spawned.
-      arc << ipnum << linenum << triggerSwizzle;
+      script = vm->scripts + scriptIndex;
 
-      line = linenum ? &lines[linenum - 1] : NULL;
+      localvar = estructalloctag(int32_t, numLocalvar, PU_LEVEL);
+      locals = localvar + localsIndex;
 
-      // This will restore all the various data structure pointers such as
-      // prev/next thread, stringtable, code/data, printBuffer, vm, etc.
-      ACS_RestartSavedScript(this, ipnum);
+      numCalls = callPtrIndex;
+      calls    = estructalloctag(acs_call_t, numCalls, PU_LEVEL);
+      callPtr  = calls + callPtrIndex;
+
+      numPrints   = printIndex;
+      printStack  = estructalloctag(qstring *, numPrints, PU_LEVEL);
+      printPtr    = printStack + printIndex;
+      printBuffer = printIndex ? *(printPtr - 1) : NULL;
+
+      ip = vm->code + ipIndex;
+
+      line = lineIndex ? &lines[lineIndex - 1] : NULL;
+
+      numStack = stackPtr + ACS_NUM_STACK;
+      stack = estructalloctag(int32_t, numStack, PU_LEVEL);
+   }
+
+   // Arrays
+   P_ArchiveArray(arc, stack, stackPtr);
+   P_ArchiveArray(arc, localvar, numLocalvar);
+   P_ArchiveArray(arc, calls, callPtrIndex);
+
+   for(qstring **itr = printStack, **end = printPtr; itr != end; ++itr)
+   {
+      if(arc.isLoading())
+         *itr = new qstring(0, PU_LEVEL);
+
+      (*itr)->archive(arc);
+   }
+
+   // Post-load insertion into the environment.
+   if(arc.isLoading())
+   {
+      // add the thread
+      ACS_addThread(this);
    }
 }
 
@@ -1226,526 +2625,146 @@ void ACSThinker::deSwizzle()
    triggerSwizzle = 0;
 }
 
-
 //
-// ACS_Init
+// ACSDeferred::archive
 //
-// Called at startup.
-//
-void ACS_Init(void)
+void ACSDeferred::archive(SaveArchive &arc)
 {
-   // initialize the qstring used to construct player messages
-   acsLevelScriptVM.printBuffer = new qstring(qstring::basesize);
+   size_t len = 0;
 
-   // add levelscript vm as vm #0
-   ACS_addVirtualMachine(&acsLevelScriptVM);
+   arc << type << number << mapnum << flags << argc;
+
+   arc.ArchiveLString(name, len);
+
+   if(arc.isLoading())
+      argv = estructalloc(int32_t, argc);
+
+   P_ArchiveArray(arc, argv, argc);
 }
 
 //
-// ACS_NewGame
+// ACSDeferred::ArchiveAll
 //
-// Called when a new game is started.
-//
-void ACS_NewGame(void)
+void ACSDeferred::ArchiveAll(SaveArchive &arc)
 {
-   DLListItem<deferredacs_t> *cur, *next;
+   DLListItem<ACSDeferred> *item;
+   uint32_t size;
 
-   // clear out the world variables
-   memset(ACSworldvars, 0, sizeof(ACSworldvars));
-
-   // clear out deferred scripts
-   cur = acsDeferred;
-
-   while(cur)
+   if(arc.isSaving())
    {
-      next = cur->dllNext;
-      cur->remove();      
-      efree(cur->dllObject);
-      cur = next;
+      size = 0;
+      for(item = list; item; item = item->dllNext)
+         ++size;
    }
 
-   acsDeferred = NULL;
-}
+   arc << size;
 
-//
-// ACS_InitLevel
-//
-// Called at level start from P_SetupLevel
-//
-void ACS_InitLevel(void)
-{
-   acsLevelScriptVM.loaded = false;
-}
-
-//
-// ACS_LoadScript
-//
-void ACS_LoadScript(acsvm_t *vm, int lump)
-{
-   int32_t *rover;
-   int i, numstrings;
-
-   // zero length or too-short lump?
-   if(W_LumpLength(lump) < 6)
+   if(arc.isLoading())
    {
-      vm->data = NULL;
-      return;
+      while(list)
+         delete list->dllObject;
+
+      while(size--)
+         new ACSDeferred;
    }
 
-   // load the lump
-   vm->data = (byte *)(wGlobalDir.CacheLumpNum(lump, PU_LEVEL));
-
-   rover = (int32_t *)vm->data;
-
-   // check magic id string: currently supports Hexen format only
-   if(SwapLong(*rover++) != 0x00534341) // "ACS\0"
-      return;
-
-   // set rover to information table
-   rover = (int32_t *)(vm->data + SwapLong(*rover));
-
-   // read number of scripts
-   vm->numScripts = SwapLong(*rover++);
-
-   if(vm->numScripts <= 0) // no scripts defined?
-      return;
-
-   // allocate scripts array
-   vm->scripts = estructalloctag(acscript_t, vm->numScripts, PU_LEVEL);
-
-   vm->loaded = true;
-
-   // read script information entries
-   for(i = 0; i < vm->numScripts; ++i)
-   {
-      vm->scripts[i].number  = SwapLong(*rover++); // read script number
-      vm->scripts[i].code    = (int *)(vm->data + SwapLong(*rover++)); // set entry pt
-      vm->scripts[i].numArgs = SwapLong(*rover++); // number of args
-
-      // handle open scripts: scripts > 1000 should start at the
-      // beginning of the level      
-      if(vm->scripts[i].number >= 1000)
-      {
-         vm->scripts[i].number -= 1000;
-         vm->scripts[i].isOpen = true;
-      }
-   }
-
-   // we are now positioned at the string table; read number of strings
-   numstrings = SwapLong(*rover++);
-
-   // allocate string table
-   if(numstrings > 0)
-   {
-      vm->stringtable = (char **)(Z_Malloc(numstrings * sizeof(char *), 
-                                          PU_LEVEL, NULL));
-      
-      // set string pointers
-      for(i = 0; i < numstrings; ++i)
-         vm->stringtable[i] = (char *)(vm->data + SwapLong(*rover++));
-   }
-
-   // haleyjd 06/30/09: open scripts must be started *here*, not above.
-   for(i = 0; i < vm->numScripts; ++i)
-   {
-      if(vm->scripts[i].isOpen)
-         ACS_runOpenScript(vm, &(vm->scripts[i]), i, vm->id);
-   }   
+   for(item = list; item; item = item->dllNext)
+      item->dllObject->archive(arc);
 }
 
 //
-// ACS_LoadLevelScript
+// ACSVM::ArchiveStrings
 //
-// Loads the level scripts and initializes the levelscript virtual machine.
-// Called from P_SetupLevel.
-//
-void ACS_LoadLevelScript(int lump)
+void ACSVM::ArchiveStrings(SaveArchive &arc)
 {
-   ACS_LoadScript(&acsLevelScriptVM, lump);
-   
-   // zero map variables
-   memset(ACSmapvars, 0, sizeof(ACSmapvars));
-}
+   ACSString *string;
+   uint32_t size;
+   char *str;
 
-//
-// ACS_addDeferredScriptVM
-//
-// Adds a deferred script that will be executed when the indicated
-// gamemap is reached. Currently supports maps of MAPxy name structure.
-//
-static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                    int type, int args[NUMLINEARGS])
-{
-   DLListItem<deferredacs_t> *cur = acsDeferred;
-   deferredacs_t *newdacs;
-
-   // check to make sure the script isn't already scheduled
-   while(cur)
+   if(arc.isSaving())
    {
-      deferredacs_t *dacs = cur->dllObject;
+      // Write the number of strings to save.
+      arc << (size = GlobalNumStrings - GlobalNumStringsBase);
 
-      if(dacs->targetMap == mapnum && dacs->scriptNum == scrnum)
-         return false;
-
-      cur = cur->dllNext;
-   }
-
-   // allocate a new deferredacs_t
-   newdacs = estructalloc(deferredacs_t, 1);
-
-   // set script number
-   newdacs->scriptNum = scrnum; 
-
-   // set vm id #
-   newdacs->vmID = vm->id;
-
-   // set action type
-   newdacs->type = type;
-
-   // set args
-   memcpy(newdacs->args, args, 5 * sizeof(int));
-
-   // record target map number
-   newdacs->targetMap = mapnum;
-
-   // add it to the linked list
-   newdacs->link.insert(newdacs, &acsDeferred);
-
-   return true;
-}
-
-//
-// ACS_RunDeferredScripts
-//
-// Runs scripts that have been deferred for the current map
-//
-void ACS_RunDeferredScripts(void)
-{
-   DLListItem<deferredacs_t> *cur = acsDeferred, *next;
-   ACSThinker *newScript = NULL;
-   ACSThinker *rover = NULL;
-   int internalNum;
-
-   while(cur)
-   {
-      acsvm_t *vm;
-      deferredacs_t *dacs = cur->dllObject;
-
-      next = cur->dllNext; 
-
-      vm = acsVMs[dacs->vmID];
-
-      if(dacs->targetMap == gamemap)
-      {
-         switch(dacs->type)
-         {
-         case ACS_DEFERRED_EXECUTE:
-            ACS_StartScriptVM(vm, dacs->scriptNum, 0, dacs->args, NULL, NULL, 0, 
-                              &newScript, false);
-            if(newScript)
-               newScript->delay = TICRATE;
-            break;
-         case ACS_DEFERRED_SUSPEND:
-            if((internalNum = ACS_indexForNum(vm, dacs->scriptNum)) != vm->numScripts)
-            {
-               acscript_t *script = &(vm->scripts[internalNum]);
-               rover = script->threads;
-
-               while(rover)
-               {
-                  if(rover->sreg != ACS_STATE_STOPPED &&
-                     rover->sreg != ACS_STATE_TERMINATE)
-                     rover->sreg = ACS_STATE_SUSPEND;
-
-                  rover = rover->nextthread;
-               }
-            }
-            break;
-         case ACS_DEFERRED_TERMINATE:
-            if((internalNum = ACS_indexForNum(vm, dacs->scriptNum)) != vm->numScripts)
-            {
-               acscript_t *script = &(vm->scripts[internalNum]);
-               rover = script->threads;
-
-               while(rover)
-               {
-                  if(rover->sreg != ACS_STATE_STOPPED)
-                     rover->sreg = ACS_STATE_TERMINATE;
-
-                  rover = rover->nextthread;
-               }
-            }
-            break;
-         }
-
-         // unhook and delete this deferred script
-         cur->remove();
-         efree(dacs);
-      }
-
-      cur = next;
-   }
-}
-
-//
-// ACS_StartScriptVM
-//
-// Standard method for starting an ACS script.
-//
-bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                       Mobj *mo, line_t *line, int side,
-                       ACSThinker **scr, bool always)
-{
-   acscript_t   *scrData;
-   ACSThinker *newScript, *rover;
-   bool foundScripts = false;
-   int i, internalNum;
-
-   // ACS must be active on the current map or we do nothing
-   if(!vm->loaded)
-      return false;
-
-   // should the script be deferred to a different map?
-   if(map > 0 && map != gamemap)
-      return ACS_addDeferredScriptVM(vm, scrnum, map, ACS_DEFERRED_EXECUTE, args);
-
-   // look for the script
-   if((internalNum = ACS_indexForNum(vm, scrnum)) == vm->numScripts)
-   {
-      // tink!
-      doom_printf(FC_ERROR "ACS_StartScript: no such script %d\a\n", scrnum);
-      return false;
-   }
-
-   scrData = &(vm->scripts[internalNum]);
-
-   rover = scrData->threads;
-
-   while(rover)
-   {
-      // if the script is suspended, restart it
-      if(rover->sreg == ACS_STATE_SUSPEND)
-      {
-         foundScripts = true;
-         rover->sreg = ACS_STATE_RUNNING;
-      }
-
-      rover = rover->nextthread;
-   }
-
-   // if not an always-execute action and we restarted a stopped script,
-   // then we return true now.
-   // otherwise, return false for failure.
-   if(!always && scrData->threads)
-      return foundScripts;
-
-   // setup the new script thinker
-   newScript = new ACSThinker;
-
-   newScript->scriptNum   = scrnum;
-   newScript->internalNum = internalNum;
-   newScript->ip          = scrData->code;
-   newScript->line        = line;
-   newScript->lineSide    = side;
-   P_SetTarget<Mobj>(&newScript->trigger, mo);
-
-   // copy in some important data
-   newScript->code        = scrData->code;
-   newScript->data        = vm->data;
-   newScript->stringtable = vm->stringtable;
-   newScript->printBuffer = vm->printBuffer;
-   newScript->acscript    = scrData;
-   newScript->vm          = vm;
-
-   // copy arguments into first N local variables
-   for(i = 0; i < scrData->numArgs; ++i)
-      newScript->locals[i] = args[i];
-
-   // attach the thinker
-   newScript->addThinker();
-
-   // add as a thread of the acscript
-   ACS_addThread(newScript, scrData);
-	
-   // mark as running
-   newScript->sreg  = ACS_STATE_RUNNING;
-   newScript->sdata = 0;
-
-   // return pointer to new script in *scr if not null
-   if(scr)
-      *scr = newScript;
-	
-   return true;
-}
-
-//
-// ACS_StartScript
-//
-// Convenience routine; starts a script in the levelscript vm.
-//
-bool ACS_StartScript(int scrnum, int map, int *args, 
-                     Mobj *mo, line_t *line, int side,
-                     ACSThinker **scr, bool always)
-{
-   return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
-                            line, side, scr, always);
-}
-
-//
-// ACS_TerminateScriptVM
-//
-// Attempts to terminate the given script. If the mapnum doesn't match the
-// current gamemap, the action will be deferred.
-//
-bool ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
-{
-   bool ret = false;
-   int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-
-   // ACS must be active on the current map or we do nothing
-   if(!vm->loaded)
-      return false;
-
-   if(mapnum > 0 && mapnum == gamemap)
-   {
-      int internalNum;
-
-      if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
-      {
-         acscript_t *script = &(vm->scripts[internalNum]);
-         ACSThinker *rover = script->threads;
-
-         while(rover)
-         {
-            if(rover->sreg != ACS_STATE_STOPPED)
-            {
-               rover->sreg = ACS_STATE_TERMINATE;
-               ret = true;
-            }
-            rover = rover->nextthread;
-         }
-      }
+      // Write the strings.
+      for(unsigned int i = GlobalNumStringsBase; i != GlobalNumStrings; ++i)
+         arc.WriteLString(GlobalStrings[i]->data.s, GlobalStrings[i]->data.l);
    }
    else
-      ret = ACS_addDeferredScriptVM(vm, scrnum, mapnum, ACS_DEFERRED_TERMINATE, foo);
-
-   return ret;
-}
-
-//
-// ACS_TerminateScript
-//
-// Convenience routine; terminates a level script.
-//
-bool ACS_TerminateScript(int scrnum, int mapnum)
-{
-   return ACS_TerminateScriptVM(&acsLevelScriptVM, scrnum, mapnum);
-}
-
-//
-// ACS_SuspendScriptVM
-//
-// Attempts to suspend the given script. If the mapnum doesn't match the
-// current gamemap, the action will be deferred.
-//
-bool ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
-{
-   int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-   bool ret = false;
-
-   // ACS must be active on the current map or we do nothing
-   if(!vm->loaded)
-      return false;
-
-   if(mapnum > 0 && mapnum == gamemap)
    {
-      int internalNum;
+      // Read the number of strings to load.
+      arc << size;
 
-      if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
+      // Allocate space for the pointers.
+      GlobalAllocStrings = GlobalNumStrings + size;
+      GlobalStrings = (ACSString **)Z_Realloc(GlobalStrings,
+         GlobalAllocStrings * sizeof(ACSString *), PU_LEVEL, NULL);
+
+      // Read the strings.
+      while(GlobalNumStrings != GlobalAllocStrings)
       {
-         acscript_t *script = &(vm->scripts[internalNum]);
-         ACSThinker *rover = script->threads;
+         // Read string size.
+         arc << size;
 
-         while(rover)
+         // Make new string.
+         string = (ACSString *)Z_Malloc(ACS_STRING_SIZE_PADDED + size + 1, PU_LEVEL, NULL);
+         string->data.s = str = (char *)string + ACS_STRING_SIZE_PADDED;
+         string->data.l = size;
+
+         arc.getLoadFile()->read(str, size);
+         str[size] = 0;
+
+         // Set metadata.
+         string->script = acsScriptsByName.objectForKey(string->data.s);
+         string->length = strlen(string->data.s);
+         string->number = GlobalNumStrings;
+
+         // Add to global array.
+         GlobalStrings[GlobalNumStrings++] = string;
+         acsStrings.addObject(string);
+      }
+   }
+}
+
+//
+// ACS_Archive
+//
+void ACS_Archive(SaveArchive &arc)
+{
+   // any OPEN script threads created during ACS_LoadLevelScript have
+   // been destroyed, so clear out the threads list of all scripts
+   if(arc.isLoading())
+   {
+      for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+      {
+         for(ACSScript *s = (*vm)->scripts,
+             *sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
          {
-            if(rover->sreg != ACS_STATE_STOPPED &&
-               rover->sreg != ACS_STATE_TERMINATE)
-            {
-               rover->sreg = ACS_STATE_SUSPEND;
-               ret = true;
-            }
+            s->threads = NULL;
          }
       }
    }
-   else
-      ret = ACS_addDeferredScriptVM(vm, scrnum, mapnum, ACS_DEFERRED_SUSPEND, foo);
 
-   return ret;
-}
-
-//
-// ACS_SuspendScript
-//
-// Convenience routine; suspends a level script.
-//
-bool ACS_SuspendScript(int scrnum, int mapnum)
-{
-   return ACS_SuspendScriptVM(&acsLevelScriptVM, scrnum, mapnum);
-}
-
-//=============================================================================
-//
-// Save/Load Code
-//
-
-//
-// ACS_PrepareForLoad
-//
-// Gets the ACS system ready for a savegame load.
-//
-void ACS_PrepareForLoad(void)
-{
-   int i, j;
-
-   for(i = 0; i < numACSVMs; ++i)
+   // Archive map variables.
+   for(ACSVM **vm = acsVMs.begin(), **vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
    {
-      for(j = 0; j < acsVMs[i]->numScripts; ++j)
-      {
-         // any OPEN script threads created during ACS_LoadLevelScript
-         // have been destroyed, so clear out the threads list of all 
-         // scripts
-         acsVMs[i]->scripts[j].threads = NULL;
-      }
+      P_ArchiveArray(arc, (*vm)->mapvars, ACS_NUM_MAPVARS);
+      P_ArchiveArray(arc, (*vm)->maparrs, ACS_NUM_MAPARRS);
    }
 
-}
+   // Archive world variables. (TODO: not load on hub transfer?)
+   P_ArchiveArray(arc, ACSworldvars, ACS_NUM_WORLDVARS);
+   P_ArchiveArray(arc, ACSworldarrs, ACS_NUM_WORLDARRS);
 
-//
-// ACS_RestartSavedScript
-//
-// Fixes up an ACSThinker loaded from a savegame.
-//
-void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset)
-{
-   // nullify list links for safety
-   th->prevthread = NULL;
-   th->nextthread = NULL;
+   // Archive global variables.
+   P_ArchiveArray(arc, ACSglobalvars, ACS_NUM_GLOBALVARS);
+   P_ArchiveArray(arc, ACSglobalarrs, ACS_NUM_GLOBALARRS);
 
-   // reinitialize pointers
-   th->vm          = acsVMs[th->vmID];
-   th->acscript    = &(th->vm->scripts[th->internalNum]);
-   th->code        = th->acscript->code;
-   th->data        = th->vm->data;
-   th->stringtable = th->vm->stringtable;
-   th->printBuffer = th->vm->printBuffer;
+   // Archive deferred scripts. (TODO: not load on hub transfer?)
+   ACSDeferred::ArchiveAll(arc);
 
-   // note: line and trigger pointers are restored in p_saveg.c
-
-   // restore ip to be relative to new codebase (saved value is offset)
-   th->ip = (int *)(th->code + ipOffset);
-
-   // add the thread
-   ACS_addThread(th, th->acscript);
+   // Archive DynaStrings.
+   ACSVM::ArchiveStrings(arc);
 }
 
 // EOF

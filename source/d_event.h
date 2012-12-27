@@ -117,11 +117,6 @@ typedef enum
 //
 // GLOBAL VARIABLES
 //
-#define MAXEVENTS               64
-
-extern event_t   events[MAXEVENTS];
-extern int       eventhead;
-extern int       eventtail;
 
 extern gameaction_t gameaction;
 

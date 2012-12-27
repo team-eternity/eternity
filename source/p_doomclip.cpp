@@ -1523,7 +1523,7 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
    {
       while(cc->spechit.getLength() > 0)
       {
-         line_t *l = cc->spechit.removeLast();
+         line_t *l = cc->spechit.pop();
          
 // PTODO
 #ifdef R_LINKEDPORTALS
@@ -2107,8 +2107,10 @@ typedef struct bombdata_s
 {
    Mobj *bombsource;
    Mobj *bombspot;
-   int     bombdamage;
-   int     bombmod;    // haleyjd 07/13/03
+   int  bombdamage;
+   int  bombmod;    // haleyjd 07/13/03
+   int  bombdistance;
+   int  bombflags;
 } bombdata_t;
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
@@ -2189,9 +2191,9 @@ static bool PIT_RadiusAttack(Mobj *thing, MapContext *mc)
 //   haleyjd 07/13/03: added method of death flag
 //   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
 //
-void DoomClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc)
+void DoomClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int distance, int mod, unsigned int flags, ClipContext *cc)
 {
-   fixed_t  dist = (damage + MAXRADIUS) << FRACBITS;
+   fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
    int yh = (spot->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
    int yl = (spot->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
    int xh = (spot->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
@@ -2214,10 +2216,12 @@ void DoomClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod,
       theBomb = &bombs[0]; // otherwise, we use bomb 0 for everything :(
 
    // set up us the bomb!
-   theBomb->bombspot   = spot;
-   theBomb->bombsource = source;
-   theBomb->bombdamage = damage;
-   theBomb->bombmod    = mod;
+   theBomb->bombspot     = spot;
+   theBomb->bombsource   = source;
+   theBomb->bombdamage   = damage;
+   theBomb->bombdistance = distance;
+   theBomb->bombmod      = mod;
+   theBomb->bombflags    = flags;
    
    for(y = yl; y <= yh; ++y)
       for(x = xl; x <= xh; ++x)

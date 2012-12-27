@@ -443,8 +443,7 @@ static void C_ArgvtoArgs(void)
    for(i = 0; i < Console.argc; ++i)
    {
       // haleyjd: use qstring to avoid sprintf problems and to be secure
-      Console.args += *Console.argv[i];
-      Console.args += ' ';
+      Console.args << *Console.argv[i] << ' ';
    }
 }
 
@@ -464,9 +463,7 @@ static const char *C_QuotedArgvToArgs(void)
    // haleyjd: use qstring to eliminate undefined sprintf behavior
    for(i = 0; i < Console.argc; ++i)
    {
-      returnbuf += *Console.argv[i];
-      returnbuf.makeQuoted();
-      returnbuf += ' ';
+      returnbuf << '"' << *Console.argv[i] << "\" ";
    }
    
    return returnbuf.constPtr();
@@ -831,7 +828,7 @@ static void C_SetVariable(command_t *command)
    variable_t* variable;
    int size = 0;
    double fs = 0.0;
-   char *errormsg;
+   const char *errormsg;
    const char *temp;
    int setflags;
    const char *varerror = NULL;
@@ -1102,12 +1099,12 @@ qstring &C_NextTab(qstring &key)
    if(thistab >= numtabs)
    {
       thistab = -1;
-       return origkey;
+      return origkey;
    }
    else
    {   
-      returnstr = tabs[thistab]->name;
-      returnstr += ' ';
+      returnstr << tabs[thistab]->name << ' ';
+
       return returnstr;
    }
 }
@@ -1138,8 +1135,7 @@ qstring &C_PrevTab(qstring &key)
    }
    else
    {
-      returnstr = tabs[thistab]->name;
-      returnstr += ' ';
+      returnstr << tabs[thistab]->name << ' ';
       return returnstr;
    }
 }
@@ -1514,10 +1510,7 @@ void C_RunScript(DWFILE *dwfile)
 {
    qstring qstr;
    int state = CSC_NONE;
-   char c;
-
-   // initialize and allocate the qstring
-   qstr.initCreate();
+   int c;
 
    // parse script
    while((c = D_Fgetc(dwfile)) != EOF)
@@ -1551,7 +1544,7 @@ void C_RunScript(DWFILE *dwfile)
             state = CSC_NONE;
          }
          else
-            qstr += c;
+            qstr += static_cast<char>(c);
          continue;
       }
 
@@ -1573,8 +1566,7 @@ void C_RunScript(DWFILE *dwfile)
          continue;
 #endif
       default:                // anything else starts a command
-         qstr.clear();
-         qstr += c;
+         qstr.clear() << static_cast<char>(c);
          state = CSC_COMMAND;
          continue;
       }

@@ -30,6 +30,7 @@
 
 #include "a_small.h"
 #include "c_net.h"
+#include "c_runcmd.h"
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_gi.h"
@@ -61,6 +62,9 @@
 
 bool onground; // whether player is on ground or in air
 
+bool pitchedflight = true;
+bool default_pitchedflight = true;
+
 //
 // P_SetDisplayPlayer
 //
@@ -80,11 +84,19 @@ void P_SetDisplayPlayer(int new_displayplayer)
 // P_Thrust
 // Moves the given origin along a given angle.
 //
-
-void P_Thrust(player_t* player,angle_t angle,fixed_t move)
+// davidph 06/06/12: Added pitch.
+//
+void P_Thrust(player_t *player, angle_t angle, angle_t pitch, fixed_t move)
 {
-  player->mo->momx += FixedMul(move,finecosine[angle >>= ANGLETOFINESHIFT]);
-  player->mo->momy += FixedMul(move,finesine[angle]);
+   if(pitch)
+   {
+      pitch >>= ANGLETOFINESHIFT;
+      player->mo->momz -= FixedMul(move, finesine[pitch]);
+      move = FixedMul(move, finecosine[pitch]);
+   }
+
+   player->mo->momx += FixedMul(move, finecosine[angle >>= ANGLETOFINESHIFT]);
+   player->mo->momy += FixedMul(move, finesine[angle]);
 }
 
 //
@@ -97,11 +109,20 @@ void P_Thrust(player_t* player,angle_t angle,fixed_t move)
 // occur on conveyors, unless the player walks on one, and bobbing should be
 // reduced at a regular rate, even on ice (where the player coasts).
 //
-void P_Bob(player_t *player, angle_t angle, fixed_t move)
+// davidph 06/06/12: Added pitch. (Though only used to determine the true move.)
+//
+void P_Bob(player_t *player, angle_t angle, angle_t pitch, fixed_t move)
 {
    // e6y
    if(demo_version < 203)
       return;
+
+   if(pitch)
+   {
+      pitch >>= ANGLETOFINESHIFT;
+    //player->momz -= FixedMul(move, finesine[pitch]);
+      move = FixedMul(move, finecosine[pitch]);
+   }
 
    player->momx += FixedMul(move,finecosine[angle >>= ANGLETOFINESHIFT]);
    player->momy += FixedMul(move,finesine[angle]);
@@ -166,6 +187,10 @@ void P_CalcHeight(player_t *player)
          player->bob = MAXBOB;
    }
 
+   // haleyjd 06/05/12: flying players
+   if(player->mo->flags4 & MF4_FLY && !onground)
+      player->bob = FRACUNIT / 2;
+
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
@@ -227,6 +252,47 @@ void P_CalcHeight(player_t *player)
 }
 
 //
+// P_PlayerFlight
+//
+// haleyjd 06/05/12: flying logic for players
+//
+static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+{
+   int fly = cmd->fly;
+
+   if(fly && player->powers[pw_flight])
+   {
+      if(fly != FLIGHT_CENTER)
+      {
+         player->flyheight = fly * 2;
+
+         if(!(player->mo->flags4 & MF4_FLY))
+            P_PlayerStartFlight(player, false);
+      }
+      else
+         P_PlayerStopFlight(player);
+   }
+   // TODO:
+   // else
+   // * If have a flight-granting powerup, activate it now
+
+   if(player->mo->flags4 & MF4_FLY)
+   {
+      if(player->mo->intflags & MIF_CLEARMOMZ)
+      {
+         player->mo->momz = 0;
+         player->mo->intflags &= ~MIF_CLEARMOMZ;
+      }
+
+      if(player->flyheight)
+      {
+         player->mo->momz = player->flyheight * FRACUNIT;
+         player->flyheight /= 2;
+      }
+   }
+}
+
+//
 // P_MovePlayer
 //
 // Adds momentum if the player is not in the air
@@ -241,8 +307,11 @@ void P_MovePlayer(player_t* player)
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
-   onground = mo->z <= mo->floorz ||
-      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ);
+   // 06/05/12: flying players
+   onground = 
+      mo->z <= mo->floorz ||
+      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ) ||
+      (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
    //
@@ -265,22 +334,31 @@ void P_MovePlayer(player_t* player)
          int bobfactor =
             friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
 
+         // davidph 06/06/12: pitch-to-fly
+         fixed_t pitch = player->pitch;
+
+         if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
+            pitch = 0;
+
          if (cmd->forwardmove)
          {
-            P_Bob(player,mo->angle,cmd->forwardmove*bobfactor);
-            P_Thrust(player,mo->angle,cmd->forwardmove*movefactor);
+            P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
+            P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
          
          if (cmd->sidemove)
          {
-            P_Bob(player,mo->angle-ANG90,cmd->sidemove*bobfactor);
-            P_Thrust(player,mo->angle-ANG90,cmd->sidemove*movefactor);
+            P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
+            P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
 
       if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);
    }
+
+   // haleyjd 06/05/12: flight
+   P_PlayerFlight(player, cmd);
 }
 
 #define ANG5 (ANG90/18)
@@ -395,7 +473,7 @@ static void P_HereticCurrent(player_t *player)
       sector_t *sec = m->m_sector;
 
       if(sec->hticPushType >= 20 && sec->hticPushType <= 39)
-         P_Thrust(player, sec->hticPushAngle, sec->hticPushForce);
+         P_Thrust(player, sec->hticPushAngle, 0, sec->hticPushForce);
    }
 }
 
@@ -644,6 +722,12 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
+   if(player->powers[pw_flight] > 0) // haleyjd 06/05/12
+   {
+      if(!--player->powers[pw_flight])
+         P_PlayerStopFlight(player);
+   }
+
    if(player->damagecount)
       player->damagecount--;
 
@@ -683,7 +767,40 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
       player->attacker = attacker;
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+//
+// P_PlayerStartFlight
+//
+// Call this to start the player flying.
+//
+void P_PlayerStartFlight(player_t *player, bool thrustup)
+{
+   if(full_demo_version < make_full_version(340, 23))
+      return;
+
+   player->mo->flags4 |= MF4_FLY;
+   player->mo->flags  |= MF_NOGRAVITY;
+
+   if(thrustup && player->mo->z <= player->mo->floorz)
+      player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
+
+   // TODO: stop screaming if falling
+}
+
+//
+// P_PlayerStopFlight
+//
+// Call this to make the player stop flying.
+//
+void P_PlayerStopFlight(player_t *player)
+{
+   if(full_demo_version < make_full_version(340, 23))
+      return;
+
+   player->mo->flags4 &= ~MF4_FLY;
+   player->mo->flags  &= ~MF_NOGRAVITY;
+}
+
+#if 0
 // Small native functions for player stuff
 
 static cell AMX_NATIVE_CALL sm_getplayername(AMX *amx, cell *params)

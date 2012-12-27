@@ -146,10 +146,10 @@ void ClipEngine::applyTorque(Mobj *mo)
 
 
 
-void ClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
+void ClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int distance, int mod, unsigned int flags)
 {
    ClipContext *cc = getContext();
-   radiusAttack(spot, source, damage, mod, cc);
+   radiusAttack(spot, source, damage, distance, mod, flags, cc);
    freeContext(cc);
 }
 

@@ -337,7 +337,7 @@ static bool CachePCSLump(sfxinfo_t *sfx)
    if((lumpnum = I_PCSGetSfxLumpNum(sfx)) == -1)
       return false;
 
-   current_sound_lump = (Uint8 *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
+   current_sound_lump = (Uint8 *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
    lumplen            = W_LumpLength(lumpnum);
    
    // Read header   
@@ -432,7 +432,7 @@ static int I_PCSSoundID(int handle)
    return handle;
 }
 
-static void I_PCSStopSound(int handle)
+static void I_PCSStopSound(int handle, int id)
 {
    if(!pcs_initialised)
       return;

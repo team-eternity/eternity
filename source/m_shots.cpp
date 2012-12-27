@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "d_gi.h"
 #include "d_io.h"
@@ -626,7 +627,8 @@ void M_ScreenShot(void)
       {
          // killough 4/18/98: make palette stay around
          // (PU_CACHE could cause crash)         
-         byte *pal = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
+         //byte *pal = (byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC);
+         AutoPalette pal(wGlobalDir);
 
          // get screen graphics
          V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 
@@ -637,8 +639,8 @@ void M_ScreenShot(void)
          // killough 10/98: detect failure and remove file if error
          success = format->writer(&ob, backscreen2.data, 
                                   (uint32_t)(backscreen2.width), 
-                                  (uint32_t)(backscreen2.height), 
-                                  pal);
+                                  (uint32_t)(backscreen2.height),
+                                  pal.get());
 
          // haleyjd: close the buffer
          ob.Close();
@@ -654,7 +656,7 @@ void M_ScreenShot(void)
          I_EndRead();
 
          // killough 4/18/98: now you can mark it PU_CACHE
-         Z_ChangeTag(pal, PU_CACHE);
+         // Z_ChangeTag(pal, PU_CACHE); - haleyjd 9/30/12: not needed now.
       }
    }
 

@@ -35,20 +35,21 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
-#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_WIN32_WCE)
+// main Tweaks for Windows Platforms
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) && !defined(_WIN32_WCE)
 
 // haleyjd: we do not need SDL_main under Win32.
 #undef main
 
 // haleyjd 07/23/09:
-// in release mode, rename this function to common_main and use the main 
-// defined in i_w32main.c, which contains an exception handler to replace
-// the useless SDL parachute.
-#if !defined(_DEBUG)
+// For Visual Studio only, in release mode, rename this function to common_main
+// and use the main defined in i_w32main.c, which contains an exception handler 
+// to replace the useless SDL parachute.
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
 #define main common_main
 #endif
 
-#endif
+#endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
 void I_Quit(void);
 
@@ -70,12 +71,15 @@ int SDLIsInit;
 
 int main(int argc, char **argv)
 {
+   static char env_vidwinpos[] = "SDL_VIDEO_WINDOW_POS=center";
+   static char env_vidcenter[] = "SDL_VIDEO_CENTERED=1";
+
    myargc = argc;
    myargv = argv;
 
    // Set SDL video centering
-   putenv("SDL_VIDEO_WINDOW_POS=center");
-   putenv("SDL_VIDEO_CENTERED=1");
+   putenv(env_vidwinpos);
+   putenv(env_vidcenter);
    
    // SoM: From CHOCODOOM Thank you fraggle!!
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS

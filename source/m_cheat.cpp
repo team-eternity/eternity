@@ -49,9 +49,11 @@
 #include "m_cheat.h"
 #include "p_inter.h"
 #include "p_setup.h"
+#include "p_user.h"
 #include "r_data.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
@@ -118,43 +120,43 @@ struct cheat_s cheat[] = {
   {"idmus",      "Change music",      always,
    cheat_mus,      -2},
 
-  {"idchoppers", "Chainsaw",          not_net | not_demo,
+  {"idchoppers", "Chainsaw",          not_net | not_demo | no_score,
    cheat_choppers, 0 },
 
-  {"iddqd",      "God mode",          not_net | not_demo,
+  {"iddqd",      "God mode",          not_net | not_demo | no_score,
    cheat_god, 0  },
 
-  {"idk",        NULL,                not_net | not_demo | not_deh,
+  {"idk",        NULL,                not_net | not_demo | not_deh | no_score,
    cheat_k, 0 },  // The most controversial cheat code in Doom history!!!
 
-  {"idkfa",      "Ammo & Keys",       not_net | not_demo,
+  {"idkfa",      "Ammo & Keys",       not_net | not_demo | no_score,
    cheat_kfa, 0 },
 
-  {"idfa",       "Ammo",              not_net | not_demo,
+  {"idfa",       "Ammo",              not_net | not_demo | no_score,
    cheat_fa, 0  },
 
-  {"idspispopd", "No Clipping 1",     not_net | not_demo,
+  {"idspispopd", "No Clipping 1",     not_net | not_demo | no_score,
    cheat_noclip, 0 },
 
   {"idclip",     "No Clipping 2",     not_net | not_demo,
    cheat_noclip, 0 },
 
-  {"idbeholdv",  "Invincibility",     not_net | not_demo,
+  {"idbeholdv",  "Invincibility",     not_net | not_demo | no_score,
    cheat_pw,  pw_invulnerability },
 
-  {"idbeholds",  "Berserk",           not_net | not_demo,
+  {"idbeholds",  "Berserk",           not_net | not_demo | no_score,
    cheat_pw,  pw_strength        },
 
-  {"idbeholdi",  "Invisibility",      not_net | not_demo,  
+  {"idbeholdi",  "Invisibility",      not_net | not_demo | no_score,  
    cheat_pw,  pw_invisibility    },
 
-  {"idbeholdr",  "Radiation Suit",    not_net | not_demo,
+  {"idbeholdr",  "Radiation Suit",    not_net | not_demo | no_score,
    cheat_pw,  pw_ironfeet        },
 
-  {"idbeholda",  "Auto-map",          not_net | not_demo,
+  {"idbeholda",  "Auto-map",          not_net | not_demo | no_score,
    cheat_pw,  pw_allmap          },
 
-  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo,
+  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo | no_score,
    cheat_pw,  pw_infrared        },
 
   {"idbehold",   "BEHOLD menu",       not_net | not_demo,
@@ -169,7 +171,7 @@ struct cheat_s cheat[] = {
   {"comp",    NULL,                   not_net | not_demo,
    cheat_comp, 0     },     // phares
 
-  {"killem",     NULL,                not_net | not_demo,
+  {"killem",     NULL,                not_net | not_demo | no_score,
    cheat_massacre, 0 },     // jff 2/01/98 kill all monsters
 
   {"iddt",       "Map cheat",         not_dm,
@@ -178,46 +180,46 @@ struct cheat_s cheat[] = {
   {"hom",     NULL,                   always,
    cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
 
-  {"key",     NULL,                   not_net | not_demo, 
+  {"key",     NULL,                   not_net | not_demo | no_score, 
    cheat_key, 0   },     // killough 2/16/98: generalized key cheats
 
-  {"keyr",    NULL,                   not_net | not_demo,
+  {"keyr",    NULL,                   not_net | not_demo | no_score,
    cheat_keyx, 0  },
 
-  {"keyy",    NULL,                   not_net | not_demo,
+  {"keyy",    NULL,                   not_net | not_demo | no_score,
    cheat_keyx, 0  },
 
-  {"keyb",    NULL,                   not_net | not_demo,
+  {"keyb",    NULL,                   not_net | not_demo | no_score,
    cheat_keyx, 0  },
 
-  {"keyrc",   NULL,                   not_net | not_demo, 
+  {"keyrc",   NULL,                   not_net | not_demo | no_score, 
    cheat_keyxx, it_redcard    },
 
-  {"keyyc",   NULL,                   not_net | not_demo,
+  {"keyyc",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_yellowcard },
 
-  {"keybc",   NULL,                   not_net | not_demo, 
+  {"keybc",   NULL,                   not_net | not_demo | no_score, 
    cheat_keyxx, it_bluecard   },
 
-  {"keyrs",   NULL,                   not_net | not_demo,
+  {"keyrs",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_redskull   },
 
-  {"keyys",   NULL,                   not_net | not_demo,
+  {"keyys",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_yellowskull},
 
-  {"keybs",   NULL,                   not_net | not_demo,
+  {"keybs",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_blueskull  },  // killough 2/16/98: end generalized keys
 
-  {"weap",    NULL,                   not_net | not_demo,
+  {"weap",    NULL,                   not_net | not_demo | no_score,
    cheat_weap, 0  },     // killough 2/16/98: generalized weapon cheats
 
-  {"weap",    NULL,                   not_net | not_demo,
+  {"weap",    NULL,                   not_net | not_demo | no_score,
    cheat_weapx, -1},
 
-  {"ammo",    NULL,                   not_net | not_demo,
+  {"ammo",    NULL,                   not_net | not_demo | no_score,
    cheat_ammo, 0  },
 
-  {"ammo",    NULL,                   not_net | not_demo,
+  {"ammo",    NULL,                   not_net | not_demo | no_score,
    cheat_ammox, -1},  // killough 2/16/98: end generalized weapons
 
   {"tran",    NULL,                   always,
@@ -238,20 +240,20 @@ struct cheat_s cheat[] = {
 #endif
 
   // haleyjd: total invis cheat -- hideme
-  {"hideme", NULL,      not_net | not_demo,
+  {"hideme", NULL,      not_net | not_demo | no_score,
     cheat_pw, pw_totalinvis     },
 
   // haleyjd: heretic ghost 
-  {"ghost",  NULL,      not_net | not_demo,
+  {"ghost",  NULL,      not_net | not_demo | no_score,
     cheat_pw, pw_ghost },
 
-  {"infshots", NULL,    not_net | not_demo,
+  {"infshots", NULL,    not_net | not_demo | no_score,
     cheat_infammo, 0 },
 
-  {"silence", NULL,     not_net | not_demo,
+  {"silence", NULL,     not_net | not_demo | no_score,
     cheat_pw, pw_silencer },
 
-  {"iamtheone", NULL,   not_net | not_demo,
+  {"iamtheone", NULL,   not_net | not_demo | no_score,
     cheat_one, 0 },
 
   {NULL, NULL, 0, NULL, 0 } // end-of-list marker
@@ -455,6 +457,9 @@ static void cheat_clev(const void *arg)
    const char *buf = (const char *)arg;
    char mapname[9];
    int epsd, map, lumpnum;
+   bool foundit = false;
+   WadDirectory *levelDir = g_dir; // 11/06/12: look in g_dir first
+   int mission = inmanageddir;     // save current value of managed mission
 
    // return silently on nonsense input
    if(buf[0] < '0' || buf[0] > '9' ||
@@ -480,9 +485,19 @@ static void cheat_clev(const void *arg)
    }
 
    // haleyjd: check mapname for existence and validity as a map
-   lumpnum = W_CheckNumForName(mapname);
+   do
+   {
+      lumpnum = levelDir->checkNumForName(mapname);
 
-   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
+      if(lumpnum != -1 && P_CheckLevel(levelDir, lumpnum) != LEVEL_FORMAT_INVALID)
+      {
+         foundit = true;
+         break; // got one!
+      }
+   }
+   while(levelDir != &wGlobalDir && (levelDir = &wGlobalDir));
+
+   if(!foundit)
    {
       doom_printf("%s not found or is not a valid map", mapname);
       return;
@@ -494,7 +509,11 @@ static void cheat_clev(const void *arg)
 
    doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
-   G_DeferedInitNewNum(gameskill, epsd, map);
+   G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
+   
+   // restore mission if appropriate
+   if(levelDir != &wGlobalDir)
+      inmanageddir = mission;
 }
 
 // 'mypos' for player position
@@ -790,6 +809,10 @@ bool M_FindCheats(int key)
             matchedbefore = 1;              // responder has eaten key
             ret = true;
             cheat[i].func(&(cheat[i].arg)); // call cheat handler
+
+            // haleyjd 09/10/12: if cheat disables scores, mark the player
+            if(cheat[i].when & no_score)
+               players[consoleplayer].cheats |= CF_CHEATED;
          }
       }
    }
@@ -874,6 +897,24 @@ CONSOLE_COMMAND(buddha, cf_notnet|cf_level)
 
    doom_printf(players[consoleplayer].cheats & CF_IMMORTAL ?
                "Immortality on" : "Immortality off");
+}
+
+CONSOLE_COMMAND(fly, cf_notnet|cf_level)
+{
+   player_t *p = &players[consoleplayer];
+
+   if(!(p->powers[pw_flight]))
+   {
+      p->powers[pw_flight] = -1;
+      P_PlayerStartFlight(p, true);
+   }
+   else
+   {
+      p->powers[pw_flight] = 0;
+      P_PlayerStopFlight(p);
+   }
+
+   doom_printf(p->powers[pw_flight] ? "Flight on" : "Flight off");
 }
 
 extern void A_Fall(Mobj *);
@@ -962,6 +1003,7 @@ void Cheat_AddCommands()
    C_AddCommand(god);
    C_AddCommand(noclip);
    C_AddCommand(buddha);
+   C_AddCommand(fly);
    C_AddCommand(nuke);
 }
 

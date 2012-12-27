@@ -321,6 +321,8 @@ dehflags_t deh_mobjflags[] =
   {"SYNCHRONIZED",     0x00000020, 3}, // spawn state tics are not randomized
   {"NORANDOMIZE",      0x00000040, 3}, // missile spawn and death not randomized
   {"BRIGHT",           0x00000080, 3}, // actor is always fullbright
+  {"FLY",              0x00000100, 3}, // actor is flying
+  {"NORADIUSHACK",     0x00000200, 3}, // bouncing missile obeys normal radius attack flags
 
   { NULL,              0 }             // NULL terminator
 };
@@ -537,7 +539,7 @@ static void deh_CloseLog(void)
 // haleyjd 09/07/01: this can be called while in video mode now,
 // so printf calls needed to be converted to usermsg calls
 //
-void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
+void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
 {
    DWFILE infile, *filein = &infile;    // killough 10/98
    char inbuffer[DEH_BUFFERMAX];  // Place to put the primary infostring
@@ -1595,7 +1597,7 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
    int value;      // All deh values are ints or longs
-   char *strval = "";  // pointer to the value area
+   char *strval;  // pointer to the value area
    int ix, iy;   // array indices
    char *p;  // utility pointer
    

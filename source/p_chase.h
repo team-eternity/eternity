@@ -37,6 +37,7 @@ struct camera_t
    fixed_t pitch;
    int heightsec;  // haleyjd: for deep water handling
    int groupid;
+   bool flying;
 };
 
 extern int chasex;
@@ -64,9 +65,10 @@ void P_ResetChasecam();
 void P_WalkTicker();
 void P_ResetWalkcam();
 
+void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY);
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target);
-void P_FollowCamOff(void);
-void P_FollowCamTicker(void);
+void P_FollowCamOff();
+bool P_FollowCamTicker();
 
 #endif
 

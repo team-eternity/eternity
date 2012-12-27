@@ -125,7 +125,7 @@ cfg_opt_t edf_pclass_opts[] =
    CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE),
    CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE),
 
-   CFG_BOOL(ITEM_PCLASS_DEFAULT, cfg_false, CFGF_NONE),
+   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),
 
    CFG_END()
 };
@@ -493,11 +493,11 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
    // default flag
    if(IS_SET(pcsec, ITEM_PCLASS_DEFAULT))
    {
-      cfg_bool_t tmp = cfg_getbool(pcsec, ITEM_PCLASS_DEFAULT);
+      bool tmp = cfg_getbool(pcsec, ITEM_PCLASS_DEFAULT);
 
       // last player class with default flag set true will become the default
       // player class for the current gamemode.
-      if(tmp == cfg_true)
+      if(tmp == true)
          GameModeInfo->defPClassName = pc->mnemonic;
    }
 }

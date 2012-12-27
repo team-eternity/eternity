@@ -112,6 +112,18 @@ struct side_t;
 #define TriggerType           0x0007
 #define TriggerTypeShift      0
 
+// haleyjd: Generalized type enumeration
+enum
+{
+   GenTypeFloor,
+   GenTypeCeiling,
+   GenTypeDoor,
+   GenTypeLocked,
+   GenTypeLift,
+   GenTypeStairs,
+   GenTypeCrusher
+};
+
 // define masks and shifts for the floor type fields
 
 #define FloorCrush            0x1000
@@ -1494,6 +1506,8 @@ enum
 bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
 bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
                          int *args, int side, int spac, bool reuse);
+
+extern void P_StartLineScript(line_t *line, Mobj *thing);
 
 #endif
 

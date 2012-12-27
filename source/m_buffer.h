@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //   Buffered file output.
@@ -59,10 +59,29 @@ protected:
    size_t idx;    // current index
    int endian;    // endianness indicator
    bool throwing; // throws exceptions on IO errors
+   bool ownFile;  // buffer owns the file
    
    void InitBuffer(size_t pLen, int pEndian);
 
 public:
+   BufferedFileBase() 
+      : f(NULL), buffer(NULL), len(0), idx(0), endian(0), throwing(false),
+        ownFile(false)
+   {
+   }
+
+   virtual ~BufferedFileBase()
+   {
+      if(ownFile && f)
+         fclose(f);
+
+      if(buffer)
+      {
+         efree(buffer);
+         buffer = NULL;
+      }
+   }
+
    long Tell();
    virtual void Close();
 
@@ -111,21 +130,23 @@ public:
 //
 class InBuffer : public BufferedFileBase
 {
-protected:
-   size_t readlen; // amount actually read (may be less than len)
-   bool atEOF;
-   bool ReadFile();
-
 public:
-   bool OpenFile(const char *filename, size_t pLen, int pEndian);
+   InBuffer() : BufferedFileBase()
+   {
+   }
 
-   bool Read(void *dest, size_t size);
-   bool ReadSint32(int32_t  &num);
-   bool ReadUint32(uint32_t &num);
-   bool ReadSint16(int16_t  &num);
-   bool ReadUint16(uint16_t &num);
-   bool ReadSint8 (int8_t   &num);
-   bool ReadUint8 (uint8_t  &num);
+   bool openFile(const char *filename, int pEndian);
+   bool openExisting(FILE *f, int pEndian);
+
+   int    seek(long offset, int origin);
+   size_t read(void *dest, size_t size);
+   int    skip(size_t skipAmt);
+   bool   readSint32(int32_t  &num);
+   bool   readUint32(uint32_t &num);
+   bool   readSint16(int16_t  &num);
+   bool   readUint16(uint16_t &num);
+   bool   readSint8 (int8_t   &num);
+   bool   readUint8 (uint8_t  &num);
 };
 
 #endif

@@ -77,7 +77,7 @@ void P_InitSwitchList(void)
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
    int lumpnum;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    lumpinfo_t  *lump;
 
    episode = GameModeInfo->switchEpisode;
@@ -100,7 +100,7 @@ void P_InitSwitchList(void)
    if(lumpnum < 0)
       I_Error("P_InitSwitchList: missing SWITCHES lump\n");
 
-   alphSwitchList = (switchlist_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
+   alphSwitchList = (switchlist_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
    for(i = 0; ; i++)
    {
@@ -283,7 +283,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    int       texMid;
    int       texBot;
    int       i;
-   char     *sound;     // haleyjd
+   const char *sound;     // haleyjd
    int       sidenum;
    sector_t *sector;
    
@@ -347,8 +347,6 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       }
    }
 }
-
-extern void P_StartLineScript(line_t *line, Mobj *thing);
 
 //
 // P_UseSpecialLine

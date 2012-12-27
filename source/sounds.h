@@ -132,7 +132,7 @@ struct sfxinfo_t
 struct musicinfo_t
 {
    // up to 6-character name
-   char *name;
+   const char *name;
 
    // haleyjd 04/10/11: whether to apply prefix or not
    bool prefix;

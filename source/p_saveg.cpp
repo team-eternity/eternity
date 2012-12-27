@@ -112,7 +112,7 @@ void SaveArchive::ArchiveCString(char *str, size_t maxLen)
    if(savefile)
       savefile->Write(str, maxLen);
    else
-      loadfile->Read(str, maxLen);
+      loadfile->read(str, maxLen);
 }
 
 //
@@ -125,21 +125,26 @@ void SaveArchive::ArchiveLString(char *&str, size_t &len)
 {
    if(savefile)
    {
-      if(!len)
-         len = strlen(str) + 1;
+      if(str)
+      {
+         if(!len)
+            len = strlen(str) + 1;
 
-      savefile->WriteUint32((uint32_t)len); // FIXME: size_t
-      savefile->Write(str, len);
+         savefile->WriteUint32((uint32_t)len); // FIXME: size_t
+         savefile->Write(str, len);
+      }
+      else
+         savefile->WriteUint32(0);
    }
    else
    {
       uint32_t tempLen;
-      loadfile->ReadUint32(tempLen);
+      loadfile->readUint32(tempLen);
       len = (size_t)tempLen; // FIXME: size_t
       if(len != 0)
       {
          str = ecalloc(char *, 1, len);
-         loadfile->Read(str, len);
+         loadfile->read(str, len);
       }
       else
          str = NULL;
@@ -175,7 +180,7 @@ SaveArchive &SaveArchive::operator << (int32_t &x)
    if(savefile)
       savefile->WriteSint32(x);
    else
-      loadfile->ReadSint32(x);
+      loadfile->readSint32(x);
 
    return *this;
 }
@@ -185,7 +190,7 @@ SaveArchive &SaveArchive::operator << (uint32_t &x)
    if(savefile)
       savefile->WriteUint32(x);
    else
-      loadfile->ReadUint32(x);
+      loadfile->readUint32(x);
 
    return *this;
 }
@@ -195,7 +200,7 @@ SaveArchive &SaveArchive::operator << (int16_t &x)
    if(savefile)
       savefile->WriteSint16(x);
    else
-      loadfile->ReadSint16(x);
+      loadfile->readSint16(x);
 
    return *this;
 }
@@ -205,7 +210,7 @@ SaveArchive &SaveArchive::operator << (uint16_t &x)
    if(savefile)
       savefile->WriteUint16(x);
    else
-      loadfile->ReadUint16(x);
+      loadfile->readUint16(x);
 
    return *this;
 }
@@ -215,7 +220,7 @@ SaveArchive &SaveArchive::operator << (int8_t &x)
    if(savefile)
       savefile->WriteSint8(x);
    else
-      loadfile->ReadSint8(x);
+      loadfile->readSint8(x);
 
    return *this;
 }
@@ -225,7 +230,7 @@ SaveArchive &SaveArchive::operator << (uint8_t &x)
    if(savefile)
       savefile->WriteUint8(x);
    else
-      loadfile->ReadUint8(x);
+      loadfile->readUint8(x);
 
    return *this;
 }
@@ -237,7 +242,7 @@ SaveArchive &SaveArchive::operator << (bool &x)
    else
    {
       uint8_t temp;
-      loadfile->ReadUint8(temp);
+      loadfile->readUint8(temp);
       x = !!temp;
    }
 
@@ -250,7 +255,7 @@ SaveArchive &SaveArchive::operator << (float &x)
    if(savefile)
       savefile->Write(&x, sizeof(x));
    else
-      loadfile->Read(&x, sizeof(x));
+      loadfile->read(&x, sizeof(x));
 
    return *this;
 }
@@ -261,7 +266,7 @@ SaveArchive &SaveArchive::operator << (double &x)
    if(savefile)
       savefile->Write(&x, sizeof(x));
    else
-      loadfile->Read(&x, sizeof(x));
+      loadfile->read(&x, sizeof(x));
 
    return *this;
 }
@@ -278,7 +283,7 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
    }
    else
    {
-      loadfile->ReadSint32(sectornum);
+      loadfile->readSint32(sectornum);
       if(sectornum < 0 || sectornum >= numsectors)
       {
          I_Error("SaveArchive: sector num %d out of range\n",
@@ -303,7 +308,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    }
    else
    {
-      loadfile->ReadSint32(linenum);
+      loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be NULL
          ln = NULL;
       else if(linenum < 0 || linenum >= numlines)
@@ -643,7 +648,7 @@ static void P_RemoveAllThinkers(void)
    {
       Thinker *next = th->next;
 
-      if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+      if(th->isInstanceOf(RTTI(Mobj)))
          th->removeThinker();
       else
          delete th;
@@ -681,10 +686,10 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    }
    else
    {
-      char *className = "";
+      char *className = NULL;
       size_t len;
       unsigned int idx = 1; // Start at index 1, as 0 means NULL
-      ThinkerType *thinkerType;
+      Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
       // allocate thinker table
@@ -695,14 +700,14 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
       while(1)
       {
-         if(*className != '\0')
+         if(className)
             efree(className);
 
          // Get the next class name
          arc.ArchiveLString(className, len);
 
          // Find the ThinkerType matching this name
-         if(!(thinkerType = ThinkerType::FindType(className)))
+         if(!(thinkerType = RTTIObject::Type::FindType<Thinker::Type>(className)))
          {
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
@@ -715,7 +720,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
 
          // Create a thinker of the appropriate type and load it
-         newThinker = thinkerType->newThinker();
+         newThinker = thinkerType->newObject();
          newThinker->serialize(arc);
 
          // Put it in the table
@@ -882,50 +887,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
 // higher architecture. ::sighs::
 //
 
-// haleyjd 05/24/04: Small savegame support!
-
-//
-// P_ArchiveSmallAMX
-//
-// Saves the size and contents of a Small AMX's data segment, or
-// restores it to the saved state.
-// When loading:
-// The existing data segment will be checked for size consistency
-// with the archived one, and it'll bomb out if there's a conflict.
-// This will avoid most problems with maps that have had their
-// scripts recompiled since last being used.
-//
-#ifndef EE_NO_SMALL_SUPPORT
-static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
-{
-   uint32_t amx_size = 0, arch_amx_size;
-   long temp_size = 0;
-   byte *data;
-
-   // get both size of and pointer to data segment
-   data = SM_GetAMXDataSegment(amx, &temp_size);
-
-   amx_size = (uint32_t)temp_size;
-
-   // read/write the size
-   if(arc.isSaving())
-   {
-      arc << amx_size;
-
-      // write the data segment
-      arc.getSaveFile()->Write(data, amx_size);
-   }
-   else
-   {
-      arc << arch_amx_size;
-      if(arch_amx_size != amx_size)
-         I_Error("P_ArchiveSmallAMX: data segment consistency error\n");
-
-      arc.getLoadFile()->Read(data, arch_amx_size);
-   }
-}
-#endif
-
+#if 0
 //
 // P_ArchiveCallbacks
 //
@@ -942,7 +904,7 @@ static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
 //
 static void P_ArchiveCallbacks(SaveArchive &arc)
 {
-#ifndef EE_NO_SMALL_SUPPORT
+
    int callback_count = 0;
    
    if(arc.isSaving())
@@ -991,7 +953,6 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
          SM_LinkCallback(newCallback);
       }
    }
-#endif
 }
 
 //=============================================================================
@@ -1008,7 +969,6 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 //
 void P_ArchiveScripts(SaveArchive &arc)
 {
-#ifndef EE_NO_SMALL_SUPPORT
    bool haveGameScript = false, haveLevelScript = false;
 
    if(arc.isSaving())
@@ -1040,8 +1000,8 @@ void P_ArchiveScripts(SaveArchive &arc)
    P_ArchiveCallbacks(arc);
 
    // TODO: execute load game event callbacks?
-#endif
 }
+#endif
 
 //============================================================================
 //
@@ -1253,18 +1213,9 @@ void P_ArchiveButtons(SaveArchive &arc)
 // haleyjd 07/06/09: ACS Save/Load
 //
 
-void P_ArchiveACS(void)
+void P_ArchiveACS(SaveArchive &arc)
 {
-   // save map vars
-   // save world vars
-   // TODO: save deferred scripts
-}
-
-void P_UnArchiveACS(void)
-{
-   // load map vars
-   // load world vars (TODO: not on hub transfer)
-   // TODO: load deferred scripts (TODO: not on hub transfer)
+   ACS_Archive(arc);
 }
 
 //============================================================================
@@ -1307,7 +1258,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       // haleyjd 06/16/10: save "inmasterlevels" state
       int tempskill = (int)gameskill;
       
-      arc << compatibility << tempskill << inmasterlevels;
+      arc << compatibility << tempskill << inmanageddir;
    
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
@@ -1387,9 +1338,9 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);    // killough 1/18/98: save RNG information
       P_ArchiveMap(arc);    // killough 1/22/98: save automap information
-      P_ArchiveScripts(arc);   // sf: archive scripts
       P_ArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
+      P_ArchiveACS(arc);            // davidph 05/30/12
 
       P_DeNumberThinkers();
 
@@ -1434,7 +1385,7 @@ void P_LoadGame(const char *filename)
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
 
-   if(!loadfile.OpenFile(filename, 512*1024, OutBuffer::NENDIAN))
+   if(!loadfile.openFile(filename, InBuffer::NENDIAN))
    {
       C_Printf(FC_ERROR "Failed to load savegame %s\n", filename);
       C_SetConsole();
@@ -1464,7 +1415,7 @@ void P_LoadGame(const char *filename)
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
       int tempskill;
-      arc << compatibility << tempskill << inmasterlevels;
+      arc << compatibility << tempskill << inmanageddir;
 
       gameskill = (skill_t)tempskill;
       
@@ -1482,7 +1433,7 @@ void P_LoadGame(const char *filename)
 
       G_SetGameMap(); // get gameepisode, map
 
-      // start out g_dir pointing at w_GlobalDir again
+      // start out g_dir pointing at wGlobalDir again
       g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
@@ -1502,12 +1453,17 @@ void P_LoadGame(const char *filename)
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears
          // for a missing wad.
-         // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
+         // Note: set d_dir as well, so G_InitNew won't overwrite with wGlobalDir!
          if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
             g_dir = d_dir = dir;
 
          // done with temporary file name
          efree(fn);
+
+         // 11/04/12: Since we loaded a managed directory wad, initialize the
+         // mission. This will take care of any special data loading 
+         // requirements, such as metadata for NR4TL.
+         W_InitManagedMission(inmanageddir);
       }
    
       // killough 3/16/98, 12/98: check lump name checksum
@@ -1552,7 +1508,7 @@ void P_LoadGame(const char *filename)
 
       /* cph 2001/05/23 - Must read options before we set up the level */
       byte options[GAME_OPTION_SIZE];
-      loadfile.Read(options, sizeof(options));
+      loadfile.read(options, sizeof(options));
 
       G_ReadOptions(options);
  
@@ -1582,9 +1538,6 @@ void P_LoadGame(const char *filename)
       // haleyjd 04/14/03: load dmflags
       arc << dmflags;
 
-      // haleyjd 07/06/09: prepare ACS for loading
-      ACS_PrepareForLoad();
-
       // dearchive all the modifications
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
@@ -1592,16 +1545,16 @@ void P_LoadGame(const char *filename)
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);            // killough 1/18/98: load RNG information
       P_ArchiveMap(arc);            // killough 1/22/98: load automap information
-      P_ArchiveScripts(arc);        // sf: scripting
       P_UnArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
+      P_ArchiveACS(arc);            // davidph 05/30/12
 
       P_FreeThinkerTable();
 
       uint8_t cmarker;
       arc << cmarker;
       if(cmarker != 0xE6)
-         I_FatalError(I_ERR_KILL, "Bad savegame: last byte is 0x%x\n", cmarker);
+         I_Error("Bad savegame: last byte is 0x%x\n", cmarker);
 
       // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
       Z_CheckHeap(); 
@@ -1609,7 +1562,7 @@ void P_LoadGame(const char *filename)
    catch(...)
    {
       // FIXME/TODO: I hate fatal errors, don't know what to do right now.
-      I_FatalError(I_ERR_KILL, "P_LoadGame: Savegame read error\n");
+      I_Error("P_LoadGame: Savegame read error\n");
    }
 
    loadfile.Close();

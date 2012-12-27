@@ -59,6 +59,8 @@ struct rpolyobj_t
    dynaseg_t  *dynaSegs; // list of dynasegs
    polyobj_t  *polyobj;  // polyobject of which this rpolyobj_t is a fragment
    rpolyobj_t *freenext; // next on freelist
+   fixed_t     cx, cy;   // 12/09/12: center point coordinates
+   fixed_t     zdist;    // 12/09/12: z distance
 };
 
 void R_AttachPolyObject(polyobj_t *poly);

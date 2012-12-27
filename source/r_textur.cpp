@@ -346,7 +346,7 @@ static texturelump_t *R_InitTextureLump(const char *lname, bool required)
       byte *temp;
 
       tlump->maxoff      = W_LumpLength(tlump->lumpnum);
-      tlump->data = temp = (byte *)(wGlobalDir.CacheLumpNum(tlump->lumpnum, PU_STATIC));
+      tlump->data = temp = (byte *)(wGlobalDir.cacheLumpNum(tlump->lumpnum, PU_STATIC));
       tlump->numtextures = TEXINT(temp);
       tlump->directory   = temp;
    }
@@ -595,6 +595,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
               ptroff + len, tex->width * tex->height, tempmask.buffermax);
    }
 #endif
+
    if(tempmask.mask && tex == tempmask.tex)
    {
       byte *mask = tempmask.buffer + ptroff;
@@ -626,7 +627,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
 //
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
-   byte      *src = (byte *)(wGlobalDir.CacheLumpNum(component->lump, PU_CACHE));
+   byte      *src = (byte *)(wGlobalDir.cacheLumpNum(component->lump, PU_CACHE));
    int       destoff, srcoff, deststep, srcxstep, srcystep;
    int       xstart, ystart, xstop, ystop;
    int       width, height, wcount, hcount;
@@ -793,17 +794,22 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 //
 static void StartTexture(texture_t *tex, bool mask)
 {
-   int bufferlen = tex->width * tex->height;
+   // haleyjd 11/18/12: We *must* allocate some pad space in the texture buffer.
+   // Due to intermixed use of float and fixed_t in Cardboard, it is impossible
+   // to make sure that fracstep is perfectly in sync with y1/y2 values in the
+   // column drawers. This can result in a read of up to one additional pixel
+   // more than what is available. :/
+
+   int bufferlen = tex->width * tex->height + 4;
    
    // Static for now
-   tex->buffer = (byte *)(Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer));
-   memset(tex->buffer, 0, sizeof(byte) * bufferlen);
+   tex->buffer = ecalloctag(byte *, 1, bufferlen, PU_STATIC, (void **)&tex->buffer);
    
    if((tempmask.mask = mask))
    {
       tempmask.tex = tex;
       
-      // Setup the temprary mask
+      // Setup the temporary mask
       if(bufferlen > tempmask.buffermax || !tempmask.buffer)
       {
          tempmask.buffermax = bufferlen;
@@ -847,7 +853,7 @@ static void FinishTexture(texture_t *tex)
    int        x, y, i, colcount;
    texcol_t   *col, *tcol;
    byte       *maskp;
-   
+
    Z_ChangeTag(tex->buffer, PU_CACHE);
    
    if(!tempmask.mask)
@@ -862,7 +868,7 @@ static void FinishTexture(texture_t *tex)
    // Allocate column pointers
    tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
    
-   // Build the columsn based on mask info
+   // Build the columns based on mask info
    maskp = tempmask.buffer;
 
    for(x = 0; x < tex->width; x++)
@@ -1064,7 +1070,7 @@ static int *R_LoadPNames(void)
 
    // Load the patch names from pnames.lmp.
    name[8] = 0;
-   names = (char *)wGlobalDir.CacheLumpName("PNAMES", PU_STATIC);
+   names = (char *)wGlobalDir.cacheLumpName("PNAMES", PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
@@ -1174,7 +1180,7 @@ static void R_AddFlats(void)
    int       i;
    byte      flatsize;
    uint16_t  width, height;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
    for(i = 0; i < numflats; ++i)
    {
@@ -1331,7 +1337,7 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
    
    if(!t->buffer)
       R_CacheTexture(tex);
-   
+
    return t->columns[col & t->widthmask];
 }
 
@@ -1512,7 +1518,7 @@ void R_LoadDoom1(void)
    lumplen = W_LumpLength(lumpnum);
    lump    = ecalloc(char *, 1, lumplen + 1);
    
-   wGlobalDir.ReadLump(lumpnum, lump);
+   wGlobalDir.readLump(lumpnum, lump);
    
    rover = lump;
    numconvs = 0;

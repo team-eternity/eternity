@@ -29,14 +29,15 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "d_iwad.h"
 #include "d_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
@@ -48,6 +49,7 @@
 #include "g_game.h"
 #include "hu_over.h"
 #include "hu_stuff.h" // haleyjd
+#include "i_system.h"
 #include "i_video.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -69,12 +71,14 @@
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
 extern menu_t menu_main;
 extern menu_t menu_episode;
+extern menu_t menu_d2episode;
 extern menu_t menu_startmap;
 
 // Blocky mode, has default, 0 = high, 1 = normal
@@ -141,18 +145,18 @@ void MN_InitMenus(void)
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
-   V_DrawPatch(94, 2, &vbscreen, 
+   V_DrawPatch(94, 2, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_DOOM", PU_CACHE));
 }
 
 static menuitem_t mn_main_items[] =
 {
-   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME"  },
-   { it_runcmd, "options",    "mn_options",  "M_OPTION" },
-   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG"  },
-   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG"  },
-   { it_runcmd, "read this!", "credits",     "M_RDTHIS" },
-   { it_runcmd, "quit",       "mn_quit",     "M_QUITG"  },
+   { it_runcmd, "New Game",   "mn_newgame",  "M_NGAME"  },
+   { it_runcmd, "Options",    "mn_options",  "M_OPTION" },
+   { it_runcmd, "Load Game",  "mn_loadgame", "M_LOADG"  },
+   { it_runcmd, "Save Game",  "mn_savegame", "M_SAVEG"  },
+   { it_runcmd, "Read This!", "credits",     "M_RDTHIS" },
+   { it_runcmd, "Quit",       "mn_quit",     "M_QUITG"  },
    { it_end }
 };
 
@@ -236,10 +240,12 @@ CONSOLE_COMMAND(mn_newgame, 0)
    
    if(GameModeInfo->id == commercial)
    {
+// haleyjd 08/19/2012: startmap is currently deprecated, may return later
+#ifdef EE_STARTMAP_PROMPT
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
       bool mapPresent = true;
-      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
       // if lump not found or the game is modified and the
       // lump comes from the first loaded wad, consider it not
@@ -248,7 +254,6 @@ CONSOLE_COMMAND(mn_newgame, 0)
          (modifiedgame && 
           lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
-
 
       // dont use new game menu if not needed
       if(!(modifiedgame && startOnNewMap) && use_startmap && mapPresent)
@@ -263,7 +268,11 @@ CONSOLE_COMMAND(mn_newgame, 0)
          }
       }
       else
-         MN_StartMenu(&menu_newgame);
+#endif
+         if(bfgedition && (w_norestpath && *w_norestpath))
+            MN_StartMenu(&menu_d2episode);
+         else
+            MN_StartMenu(&menu_newgame);
    }
    else
    {
@@ -316,16 +325,16 @@ CONSOLE_COMMAND(mn_quit, 0)
 
 static void MN_EpisodeDrawer()
 {
-   V_DrawPatch(54, 38, &vbscreen, 
+   V_DrawPatch(54, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
 }
 
 static menuitem_t mn_episode_items[] =
 {
-   { it_runcmd, "knee deep in the dead", "mn_episode 1",  "M_EPI1" },
-   { it_runcmd, "the shores of hell",    "mn_episode 2",  "M_EPI2" },
-   { it_runcmd, "inferno!",              "mn_episode 3",  "M_EPI3" },
-   { it_runcmd, "thy flesh consumed",    "mn_episode 4",  "M_EPI4" },
+   { it_runcmd, "Knee Deep in the Dead", "mn_episode 1",  "M_EPI1" },
+   { it_runcmd, "The Shores of Hell",    "mn_episode 2",  "M_EPI2" },
+   { it_runcmd, "Inferno",               "mn_episode 3",  "M_EPI3" },
+   { it_runcmd, "Thy Flesh Consumed",    "mn_episode 4",  "M_EPI4" },
    { it_end }
 };
 
@@ -334,7 +343,7 @@ menu_t menu_episode =
    mn_episode_items,           // menu items
    NULL, NULL, NULL,           // pages
    48, 63,                     // x, y offsets
-   2,                          // select episode 1
+   0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
    MN_EpisodeDrawer            // drawer
 };
@@ -362,6 +371,28 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
 
 //=============================================================================
 //
+// BFG Edition No Rest for the Living Special Support
+//
+
+static menuitem_t mn_dm2ep_items[] =
+{
+   { it_runcmd, "Hell on Earth",          "mn_episode 1",  "M_EPI1" },
+   { it_runcmd, "No Rest for the Living", "mn_episode 2",  "M_EPI2" },
+   { it_end }
+};
+
+menu_t menu_d2episode =
+{
+   mn_dm2ep_items,             // menu items
+   NULL, NULL, NULL,           // pages
+   48, 63,                     // x, y offsets
+   0,                          // select episode 1
+   mf_skullmenu | mf_emulated, // skull menu
+   MN_EpisodeDrawer            // drawer
+};
+
+//=============================================================================
+//
 // New Game Menu: Skill Level Selection
 //
 
@@ -383,9 +414,9 @@ static void MN_openNewGameMenu(void)
 //
 static void MN_DrawNewGame()
 {
-   V_DrawPatch(96, 14, &vbscreen, 
+   V_DrawPatch(96, 14, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_NEWG", PU_CACHE));
-   V_DrawPatch(54, 38, &vbscreen, 
+   V_DrawPatch(54, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_SKILL", PU_CACHE));
 }
 
@@ -404,7 +435,7 @@ menu_t menu_newgame =
    mn_newgame_items,   // menu items
    NULL, NULL, NULL,   // pages
    48, 63,             // x,y offsets
-   6,                        // starting item (overridden by open method)
+   0,                        // starting item (overridden by open method)
    mf_skullmenu|mf_emulated, // is a skull menu
    MN_DrawNewGame,     // drawer method
    NULL, NULL,         // toc
@@ -430,7 +461,10 @@ static void MN_DoNightmare(void)
    else
    {
       // start on first level of selected episode
-      G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
+      if(bfgedition && start_episode == 2)
+         W_DoNR4TLStart();
+      else
+         G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
    
    MN_ClearMenus();
@@ -469,7 +503,10 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    else
    {
       // start on first level of selected episode
-      G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
+      if(bfgedition && start_episode == 2)
+         W_DoNR4TLStart();
+      else
+         G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    
    MN_ClearMenus();
@@ -482,15 +519,15 @@ CONSOLE_COMMAND(newgame, cf_notnet)
 
 static menuitem_t mn_startmap_items[] =
 {
-   {it_title,  "new game",          NULL,                  "M_NEWG"},
+   {it_title,  "New Game",          NULL,                  "M_NEWG"},
    {it_gap},
    {it_info,   "Eternity includes a 'start map' to let"},
    {it_info,   "you start new games from in a level."},
    {it_gap},
-   {it_info,   FC_GOLD "in the future would you rather:"},
+   {it_info,   "In the future would you rather:"},
    {it_gap},
-   {it_runcmd, "use the start map", "use_startmap 1; mn_newgame"},
-   {it_runcmd, "use the menu",      "use_startmap 0; mn_newgame"},
+   {it_runcmd, "Use the start map", "use_startmap 1; mn_newgame"},
+   {it_runcmd, "Use the menu",      "use_startmap 0; mn_newgame"},
    {it_end}
 };
 
@@ -518,23 +555,23 @@ CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 
 static menuitem_t mn_demos_items[] =
 {
-   {it_title,      FC_GOLD "demos",          NULL,             "m_demos"},
+   {it_title,      "Demos",                  NULL,             "m_demos"},
    {it_gap},
-   {it_info,       FC_GOLD "play demo"},
-   {it_variable,   "demo name",              "mn_demoname"},
-   {it_runcmd,     "play demo...",           "mn_clearmenus; playdemo %mn_demoname"},
-   {it_runcmd,     "stop demo...",           "mn_clearmenus; stopdemo"},
+   {it_info,       "Play Demo"},
+   {it_variable,   "Demo name",              "mn_demoname"},
+   {it_runcmd,     "Play demo...",           "mn_clearmenus; playdemo %mn_demoname"},
+   {it_runcmd,     "Stop demo...",           "mn_clearmenus; stopdemo"},
    {it_gap},
-   {it_info,       FC_GOLD "sync"},
-   {it_toggle,     "demo insurance",         "demo_insurance"},
+   {it_info,       "Sync"},
+   {it_toggle,     "Demo insurance",         "demo_insurance"},
    {it_gap},
-   {it_info,       FC_GOLD "cameras"},
-   {it_toggle,     "viewpoint changes",      "cooldemo"},
-   {it_toggle,     "walkcam",                "walkcam"},
-   {it_toggle,     "chasecam",               "chasecam"},
-   {it_variable,   "chasecam height",        "chasecam_height"},
-   {it_variable,   "chasecam speed %",       "chasecam_speed"},
-   {it_variable,   "chasecam distance",      "chasecam_dist"},
+   {it_info,       "Cameras"},
+   {it_toggle,     "Viewpoint changes",      "cooldemo"},
+   {it_toggle,     "Walkcam",                "walkcam"},
+   {it_toggle,     "Chasecam",               "chasecam"},
+   {it_variable,   "Chasecam height",        "chasecam_height"},
+   {it_variable,   "Chasecam speed %",       "chasecam_speed"},
+   {it_variable,   "Chasecam distance",      "chasecam_dist"},
    {it_end}
 };
 
@@ -570,11 +607,11 @@ extern menu_t menu_wadiwads3;
 
 static const char *mn_wad_names[] =
 {
-   "File Selection",
-   "Misc Settings",
+   "File Selection / Master Levels",
+   "Misc Settings / Autoloads",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
-   "IWAD Paths - Freedoom",
+   "IWAD Paths - Freedoom / Mission Packs",
    NULL
 };
 
@@ -590,43 +627,48 @@ static menu_t *mn_wad_pages[] =
 
 static menuitem_t mn_loadwad_items[] =
 {
-   {it_title,    FC_GOLD "Load Wad",       NULL,               "M_WAD"},
+   {it_title,    "Load Wad",               NULL,                "M_WAD"},
    {it_gap},
-   {it_info,     FC_GOLD "File Selection", NULL,                NULL, MENUITEM_CENTERED },
+   {it_info,     "File Selection",         NULL,                NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "Wad name:",              "mn_wadname" },
-   {it_variable, "Wad directory:",         "wad_directory" },
-   {it_runcmd,   "Select wad...",          "mn_selectwad" },
+   {it_variable, "Wad name:",              "mn_wadname",        NULL, MENUITEM_LALIGNED },
+   {it_variable, "Wad directory:",         "wad_directory",     NULL, MENUITEM_LALIGNED },
+   {it_runcmd,   "Select wad...",          "mn_selectwad",      NULL, MENUITEM_LALIGNED },
    {it_gap},
    {it_runcmd,   "Load wad",               "mn_loadwaditem",    NULL, MENUITEM_CENTERED },
+   {it_gap},
+   {it_info,     "Master Levels",          NULL,                NULL, MENUITEM_CENTERED },
+   {it_gap},
+   {it_variable, "Master Levels dir:",     "master_levels_dir", NULL, MENUITEM_LALIGNED },
+   {it_runcmd,   "Play Master Levels...",  "w_masterlevels",    NULL, MENUITEM_LALIGNED },
    {it_end},
 };
 
 static menuitem_t mn_wadmisc_items[] =
 {
-   {it_title,    FC_GOLD "Wad Options", NULL,                   "M_WADOPT"},
+   {it_title,    "Wad Options",          NULL,                   "M_WADOPT"},
    {it_gap},
-   {it_info,     FC_GOLD "Misc Settings", NULL,                 NULL, MENUITEM_CENTERED },
+   {it_info,     "Misc Settings",        NULL,                   NULL, MENUITEM_CENTERED },
    {it_gap},
    {it_toggle,   "Use start map",        "use_startmap" },
    {it_toggle,   "Start on 1st new map", "startonnewmap" },
    {it_gap},
-   {it_info,     FC_GOLD "Autoloaded Files", NULL,              NULL, MENUITEM_CENTERED },
+   {it_info,     "Autoloaded Files",     NULL,                   NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "WAD file 1:",         "auto_wad_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "WAD file 2:",         "auto_wad_2",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "DEH file 1:",         "auto_deh_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "DEH file 2:",         "auto_deh_2",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "CSC file 1:",         "auto_csc_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "CSC file 2:",         "auto_csc_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "WAD file 1:",          "auto_wad_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "WAD file 2:",          "auto_wad_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "DEH file 1:",          "auto_deh_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "DEH file 2:",          "auto_deh_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "CSC file 1:",          "auto_csc_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "CSC file 2:",          "auto_csc_2",           NULL, MENUITEM_LALIGNED },
    {it_end},
 };
 
 static menuitem_t mn_wadiwad1_items[] =
 {
-   {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
+   {it_title,    "Wad Options",         NULL,                     "M_WADOPT"},
    {it_gap},
-   {it_info,     FC_GOLD "IWAD Paths - DOOM", NULL,               NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - DOOM",   NULL,                     NULL, MENUITEM_CENTERED },
    {it_gap}, 
    {it_variable, "DOOM (SW):",          "iwad_doom_shareware",    NULL, MENUITEM_LALIGNED },
    {it_variable, "DOOM (Reg):",         "iwad_doom",              NULL, MENUITEM_LALIGNED },
@@ -640,9 +682,9 @@ static menuitem_t mn_wadiwad1_items[] =
 
 static menuitem_t mn_wadiwad2_items[] =
 {
-   {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
+   {it_title,    "Wad Options",         NULL,                     "M_WADOPT"},
    {it_gap},
-   {it_info,     FC_GOLD "IWAD Paths - Raven", NULL,              NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - Raven",  NULL,                     NULL, MENUITEM_CENTERED },
    {it_gap}, 
    {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic (Reg):",      "iwad_heretic",           NULL, MENUITEM_LALIGNED },
@@ -652,13 +694,17 @@ static menuitem_t mn_wadiwad2_items[] =
 
 static menuitem_t mn_wadiwad3_items[] =
 {
-   {it_title,    FC_GOLD "Wad Options", NULL,           "M_WADOPT"},
+   {it_title,    "Wad Options",           NULL,             "M_WADOPT"},
    {it_gap},
-   {it_info,     FC_GOLD "IWAD Paths - Freedoom", NULL,  NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - Freedoom", NULL,             NULL, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "Freedoom:",          "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
-   {it_variable, "Ultimate Freedoom:", "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
-   {it_variable, "FreeDM:",            "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom:",             "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "Ultimate Freedoom:",    "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",               "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_gap},
+   {it_info,     "Mission Packs",           NULL,            NULL, MENUITEM_CENTERED },
+   {it_gap}, 
+   {it_variable, "No Rest for the Living:", "w_norestpath",  NULL, MENUITEM_LALIGNED },
    {it_end}
 };
 
@@ -774,7 +820,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       MN_ErrorMsg("Failed to load wad file");
 }
 
-/////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Multiplayer Game settings
 //
@@ -804,14 +850,14 @@ static menu_t *mn_gset_pages[] =
 
 static menuitem_t mn_gamesettings_items[] =
 {
-   {it_title,    FC_GOLD "game settings",        NULL,       "M_GSET"},
+   {it_title,    "Game Settings",        NULL,       "M_GSET"},
    {it_gap},
-   {it_info,     FC_GOLD "general"},
+   {it_info,     "General"},
    {it_toggle,   "game type",                  "gametype"},
    {it_variable, "starting level",             "startlevel"},
    {it_toggle,   "skill level",                "skill"},
    {it_gap},
-   {it_info,     FC_GOLD "dm auto-exit"},
+   {it_info,     "DM Auto-Exit"},
    {it_variable, "time limit",                 "timelimit"},
    {it_variable, "frag limit",                 "fraglimit"},
    {it_end}
@@ -866,14 +912,14 @@ CONSOLE_COMMAND(mn_gset, 0)            // just setting options from menu
 
 static menuitem_t mn_advanced_items[] =
 {
-   {it_title,    FC_GOLD "game settings",           NULL,             "M_GSET"},
+   {it_title,    "Game Settings",              NULL,             "M_GSET"},
    {it_gap},
-   {it_info,     FC_GOLD "monsters"},
+   {it_info,     "Monsters"},
    {it_toggle,   "no monsters",                "nomonsters"},
    {it_toggle,   "fast monsters",              "fast"},
    {it_toggle,   "respawning monsters",        "respawn"},
    {it_gap},
-   {it_info,     FC_GOLD "BOOM features"},
+   {it_info,     "BOOM Features"},
    {it_toggle,   "variable friction",          "varfriction"},
    {it_toggle,   "boom push effects",          "pushers"},
    {it_toggle,   "nukage enabled",             "nukage"},
@@ -913,7 +959,7 @@ static void MN_DMFlagsDrawer(void);
 
 static menuitem_t mn_dmflags_items[] =
 {
-   {it_title,    FC_GOLD "deathmatch flags",   NULL,            "M_DMFLAG"},
+   {it_title,    "Deathmatch Flags",           NULL,            "M_DMFLAG"},
    {it_gap},
    {it_runcmd,   "items respawn",              "mn_dfitem"},
    {it_runcmd,   "weapons stay",               "mn_dfweapstay"},
@@ -922,7 +968,7 @@ static menuitem_t mn_dmflags_items[] =
    {it_runcmd,   "respawning super items",     "mn_dfrespsupr"},
    {it_runcmd,   "instagib",                   "mn_dfinstagib"},
    {it_gap},
-   {it_info,     FC_GOLD "dmflags =",          NULL,            NULL, MENUITEM_CENTERED},
+   {it_info,     "dmflags =",                  NULL,            NULL, MENUITEM_CENTERED},
    {it_end}
 };
 
@@ -973,14 +1019,14 @@ static void MN_DMFlagsDrawer(void)
          values[!(dmflags & (1<<(i-2)))],
          (i == menu_dmflags.selected) ? 
             GameModeInfo->selectColor : GameModeInfo->variableColor,
-         menuitem->x + 20, menuitem->y
+         menuitem->x + 20, menuitem->y, &subscreen43
         );
    }
 
    menuitem = &(menu_dmflags.menuitems[9]);
    // draw dmflags value
-   psnprintf(buf, sizeof(buf), FC_GOLD "%lu", dmflags);
-   V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y);
+   psnprintf(buf, sizeof(buf), "%c%lu", GameModeInfo->infoColor, dmflags);
+   V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y, &subscreen43);
 }
 
 static void toggle_dm_flag(unsigned int flag)
@@ -1028,18 +1074,18 @@ CONSOLE_COMMAND(mn_dfinstagib, cf_server|cf_hidden)
 
 static menuitem_t mn_chatmacros_items[] =
 {
-   {it_title,    FC_GOLD "chat macros", NULL,         "M_CHATM"},
+   {it_title,    "Chat Macros", NULL,         "M_CHATM"},
    {it_gap},
-   {it_variable, "0:",                  "chatmacro0"},
-   {it_variable, "1:",                  "chatmacro1"},
-   {it_variable, "2:",                  "chatmacro2"},
-   {it_variable, "3:",                  "chatmacro3"},
-   {it_variable, "4:",                  "chatmacro4"},
-   {it_variable, "5:",                  "chatmacro5"},
-   {it_variable, "6:",                  "chatmacro6"},
-   {it_variable, "7:",                  "chatmacro7"},
-   {it_variable, "8:",                  "chatmacro8"},
-   {it_variable, "9:",                  "chatmacro9"},
+   {it_variable, "0:",          "chatmacro0"},
+   {it_variable, "1:",          "chatmacro1"},
+   {it_variable, "2:",          "chatmacro2"},
+   {it_variable, "3:",          "chatmacro3"},
+   {it_variable, "4:",          "chatmacro4"},
+   {it_variable, "5:",          "chatmacro5"},
+   {it_variable, "6:",          "chatmacro6"},
+   {it_variable, "7:",          "chatmacro7"},
+   {it_variable, "8:",          "chatmacro8"},
+   {it_variable, "9:",          "chatmacro9"},
    {it_end}
 };
 
@@ -1073,7 +1119,7 @@ void MN_PlayerDrawer(void);
 
 static menuitem_t mn_player_items[] =
 {
-   {it_title,  FC_GOLD "player setup",         NULL,         "M_PLAYER"},
+   {it_title,          "Player Setup",         NULL,         "M_PLAYER"},
    {it_gap},
    {it_variable,       "player name",          "name"},
    {it_toggle,         "player colour",        "colour"},
@@ -1130,7 +1176,7 @@ void MN_PlayerDrawer(void)
       (
        SPRITEBOX_X + 8 + loff,
        SPRITEBOX_Y + 8 + toff,
-       &vbscreen,
+       &subscreen43,
        patch,
        players[consoleplayer].colormap ?
           translationtables[(players[consoleplayer].colormap - 1)] :
@@ -1284,16 +1330,16 @@ void MN_DrawLoadBox(int x, int y)
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
    patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
-   V_DrawPatch(x, y, &vbscreen, patch_left);
+   V_DrawPatch(x, y, &subscreen43, patch_left);
    x += patch_left->width;
    
    for(i=0; i<24; i++)
    {
-      V_DrawPatch(x, y, &vbscreen, patch_mid);
+      V_DrawPatch(x, y, &subscreen43, patch_mid);
       x += patch_mid->width;
    }
    
-   V_DrawPatch(x, y, &vbscreen, patch_right);
+   V_DrawPatch(x, y, &subscreen43, patch_right);
 
    // haleyjd: make purgable
    Z_ChangeTag(patch_left,  PU_CACHE);
@@ -1307,7 +1353,7 @@ void MN_LoadGameDrawer(void);
 
 static menuitem_t mn_loadgame_items[] =
 {
-   {it_title,  FC_GOLD "load game", NULL,         "M_LGTTL"},
+   {it_title,  "Load Game", NULL,         "M_LGTTL"},
    {it_gap},
    {it_runcmd, "save slot 0",       "mn_load 0"},
    {it_gap},
@@ -1469,7 +1515,7 @@ void MN_SaveGameDrawer(void)
 
 static menuitem_t mn_savegame_items[] =
 {
-   {it_title,  FC_GOLD "save game",           NULL,              "M_SGTTL"},
+   {it_title,    "Save Game",           NULL,              "M_SGTTL"},
    {it_gap},
    {it_variable, "",                          "savegame_0"},
    {it_gap},
@@ -1578,45 +1624,45 @@ static menu_t *mn_options_pages[] =
 
 static menuitem_t mn_options_items[] =
 {
-   {it_title,  FC_GOLD "options",       NULL,             "M_OPTION"},
+   {it_title,  "Options",               NULL,             "M_OPTION"},
    {it_gap},
-   {it_info,   FC_GOLD "input/output"},
-   {it_runcmd, "key bindings",          "mn_movekeys" },
-   {it_runcmd, "mouse / gamepad",       "mn_mouse"    },
-   {it_runcmd, "video options",         "mn_video"    },
-   {it_runcmd, "sound options",         "mn_sound"    },
+   {it_info,   "Input/Output"},
+   {it_runcmd, "Key bindings",          "mn_movekeys" },
+   {it_runcmd, "Mouse / Gamepad",       "mn_mouse"    },
+   {it_runcmd, "Video Options",         "mn_video"    },
+   {it_runcmd, "Sound Options",         "mn_sound"    },
    {it_gap},
-   {it_info,   FC_GOLD "game options"},
-   {it_runcmd, "compatibility",         "mn_compat"   },
-   {it_runcmd, "enemies",               "mn_enemies"  },
-   {it_runcmd, "weapons",               "mn_weapons"  },
+   {it_info,   "Game Options"},
+   {it_runcmd, "Compatibility",         "mn_compat"   },
+   {it_runcmd, "Enemies",               "mn_enemies"  },
+   {it_runcmd, "Weapons",               "mn_weapons"  },
    {it_gap},
-   {it_info,   FC_GOLD "game widgets"},
-   {it_runcmd, "hud settings",          "mn_hud"      },
-   {it_runcmd, "status bar",            "mn_status"   },
-   {it_runcmd, "automap",               "mn_automap"  },
+   {it_info,   "Game Widgets"},
+   {it_runcmd, "HUD Settings",          "mn_hud"      },
+   {it_runcmd, "Status Bar",            "mn_status"   },
+   {it_runcmd, "Automap",               "mn_automap"  },
    {it_end}
 };
 
 static menuitem_t mn_optionsp2_items[] =
 {
-   {it_title,  FC_GOLD "options",        NULL,             "M_OPTION"},
+   {it_title,  "Options",                NULL,             "M_OPTION"},
    {it_gap},
-   {it_info,   FC_GOLD "multiplayer"},
-   {it_runcmd, "player setup",           "mn_player"  },
-   {it_runcmd, "game settings",          "mn_gset"    },
+   {it_info,   "Multiplayer"},
+   {it_runcmd, "Player Setup",           "mn_player"  },
+   {it_runcmd, "Game Settings",          "mn_gset"    },
    {it_gap},
-   {it_info,   FC_GOLD "game files"},
-   {it_runcmd, "wad options",            "mn_loadwad" },
-   {it_runcmd, "demo settings",          "mn_demos"   },
-   {it_runcmd, "configuration",          "mn_config"  },
+   {it_info,   "Game Files"},
+   {it_runcmd, "WAD Options",            "mn_loadwad" },
+   {it_runcmd, "Demo Settings",          "mn_demos"   },
+   {it_runcmd, "Configuration",          "mn_config"  },
    {it_gap},
-   {it_info,   FC_GOLD "menus"},
-   {it_runcmd, "menu options",           "mn_menus"   },
-   {it_runcmd, "custom menu",            "mn_dynamenu _MN_Custom" },
+   {it_info,   "Menus"},
+   {it_runcmd, "Menu Options",           "mn_menus"   },
+   {it_runcmd, "Custom Menu",            "mn_dynamenu _MN_Custom" },
    {it_gap},
-   {it_info,   FC_GOLD "information"},
-   {it_runcmd, "about eternity",         "credits"    },
+   {it_info,   "Information"},
+   {it_runcmd, "About Eternity",         "credits"    },
    {it_end}
 };
 
@@ -1920,6 +1966,7 @@ extern menu_t menu_video;
 extern menu_t menu_sysvideo;
 extern menu_t menu_video_pg2;
 extern menu_t menu_particles;
+extern menu_t menu_vidadv;
 
 static const char *mn_vidpage_names[] =
 {
@@ -1927,6 +1974,7 @@ static const char *mn_vidpage_names[] =
    "System / Console / Screenshots",
    "Screen Wipe",
    "Particles",
+   "Advanced",
    NULL
 };
 
@@ -1936,6 +1984,7 @@ static menu_t *mn_vidpage_menus[] =
    &menu_sysvideo,
    &menu_video_pg2,
    &menu_particles,
+   &menu_vidadv,
    NULL
 };
 
@@ -1943,22 +1992,21 @@ void MN_VideoModeDrawer(void);
 
 static menuitem_t mn_video_items[] =
 {
-   {it_title,        FC_GOLD "Video Options",           NULL, "m_video"},
+   {it_title,        "Video Options",           NULL, "m_video"},
    {it_gap},
-   {it_info,         FC_GOLD "Mode"                                    },
-   {it_runcmd,       "choose a mode...",        "mn_vidmode"           },
-   {it_variable,     "video mode",              "i_videomode"          },
-   {it_toggle,       "favorite aspect ratio",   "mn_favaspectratio"    },
-   {it_toggle,       "favorite screen mode",    "mn_favscreentype"     },
-   //{it_runcmd,       "make default video mode", "i_default_videomode"  },
-   {it_toggle,       "vertical sync",           "v_retrace"            },
-   {it_slider,       "gamma correction",        "gamma"                },   
+   {it_info,         "Mode"                                            },
+   {it_runcmd,       "Choose a mode...",        "mn_vidmode"           },
+   {it_variable,     "Video mode",              "i_videomode"          },
+   {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
+   {it_toggle,       "Vertical sync",           "v_retrace"            },
+   {it_slider,       "Gamma correction",        "gamma"                },   
    {it_gap},
-   {it_info,         FC_GOLD "Rendering"                               },
-   {it_slider,       "screen size",             "screensize"           },
-   {it_toggle,       "hom detector flashes",    "r_homflash"           },
-   {it_toggle,       "translucency",            "r_trans"              },
-   {it_variable,     "translucency percentage", "r_tranpct"            },
+   {it_info,         "Rendering"                                       },
+   {it_slider,       "Screen size",             "screensize"           },
+   {it_toggle,       "HOM detector flashes",    "r_homflash"           },
+   {it_toggle,       "Translucency",            "r_trans"              },
+   {it_variable,     "Translucency percentage", "r_tranpct"            },
    {it_end}
 };
 
@@ -2002,7 +2050,7 @@ void MN_VideoModeDrawer(void)
    // approximately center box on "translucency" item in menu
    y = menu_video.menuitems[13].y - 5;
    V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &vbscreen, patch, NULL, FTRANLEVEL);
+   V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
 }
 
 CONSOLE_COMMAND(mn_video, 0)
@@ -2012,23 +2060,23 @@ CONSOLE_COMMAND(mn_video, 0)
 
 static menuitem_t mn_sysvideo_items[] =
 {
-   {it_title,    FC_GOLD "Video Options",   NULL, "m_video"},
+   {it_title,    "Video Options",           NULL, "m_video"},
    {it_gap},
-   {it_info,     FC_GOLD "System"},
-   {it_toggle,   "textmode startup",        "textmode_startup"},
+   {it_info,     "System"},
+   {it_toggle,   "Textmode startup",        "textmode_startup"},
 #ifdef _SDL_VER
-   {it_toggle,   "wait at exit",            "i_waitatexit"},
-   {it_toggle,   "show endoom",             "i_showendoom"},
-   {it_variable, "endoom delay",            "i_endoomdelay"},
+   {it_toggle,   "Wait at exit",            "i_waitatexit"},
+   {it_toggle,   "Show ENDOOM",             "i_showendoom"},
+   {it_variable, "ENDOOM delay",            "i_endoomdelay"},
 #endif
    {it_gap},
-   {it_info,     FC_GOLD "Console"},
-   {it_variable, "console speed",           "c_speed"},
-   {it_variable, "console height",          "c_height"},
+   {it_info,     "Console"},
+   {it_variable, "Console speed",           "c_speed"},
+   {it_variable, "Console height",          "c_height"},
    {it_gap},
-   {it_info,     FC_GOLD "Screenshots"},
-   {it_toggle,   "screenshot format",       "shot_type"},
-   {it_toggle,   "gamma correct shots",     "shot_gamma"},
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_end}
 };
 
@@ -2048,14 +2096,14 @@ menu_t menu_sysvideo =
 
 static menuitem_t mn_video_page2_items[] =
 {
-   {it_title,   FC_GOLD "Video Options",    NULL, "m_video"},
+   {it_title,   "Video Options",            NULL, "m_video"},
    {it_gap},
-   {it_info,    FC_GOLD "Screen Wipe"},
-   {it_toggle,  "wipe type",                "wipetype"},
-   {it_toggle,  "game waits",               "wipewait"},
+   {it_info,    "Screen Wipe"},
+   {it_toggle,  "Wipe type",                "wipetype"},
+   {it_toggle,  "Game waits",               "wipewait"},
    {it_gap},
-   {it_info,    FC_GOLD "Misc."},
-   {it_toggle,  "loading disk icon",       "v_diskicon"},
+   {it_info,    "Misc."},
+   {it_toggle,  "Loading disk icon",       "v_diskicon"},
    {it_end}
 };
 
@@ -2075,20 +2123,20 @@ menu_t menu_video_pg2 =
 
 static menuitem_t mn_particles_items[] =
 {
-   {it_title,  FC_GOLD "Video Options", NULL,              "m_video"},
+   {it_title,  "Video Options", NULL,              "m_video"},
    {it_gap},
-   {it_info,         FC_GOLD "Particles"},
-   {it_toggle, "render particle effects",  "draw_particles"},
-   {it_toggle, "particle translucency",    "r_ptcltrans"},
+   {it_info,   "Particles"},
+   {it_toggle, "Render particle effects",  "draw_particles"},
+   {it_toggle, "Particle translucency",    "r_ptcltrans"},
    {it_gap},
-   {it_info,         FC_GOLD "Effects"},
-   {it_toggle, "blood splat type",         "bloodsplattype"},
-   {it_toggle, "bullet puff type",         "bulletpufftype"},
-   {it_toggle, "enable rocket trail",      "rocket_trails"},
-   {it_toggle, "enable grenade trail",     "grenade_trails"},
-   {it_toggle, "enable bfg cloud",         "bfg_cloud"},
-   {it_toggle, "enable rocket explosion",  "pevt_rexpl"},
-   {it_toggle, "enable bfg explosion",     "pevt_bfgexpl"},
+   {it_info,   "Effects"},
+   {it_toggle, "Blood splat type",         "bloodsplattype"},
+   {it_toggle, "Bullet puff type",         "bulletpufftype"},
+   {it_toggle, "Enable rocket trail",      "rocket_trails"},
+   {it_toggle, "Enable grenade trail",     "grenade_trails"},
+   {it_toggle, "Enable bfg cloud",         "bfg_cloud"},
+   {it_toggle, "Enable rocket explosion",  "pevt_rexpl"},
+   {it_toggle, "Enable bfg explosion",     "pevt_bfgexpl"},
    {it_end}
 };
 
@@ -2096,7 +2144,7 @@ menu_t menu_particles =
 {
    mn_particles_items,   // menu items
    &menu_video_pg2,      // previous page
-   NULL,                 // next page
+   &menu_vidadv,         // next page
    &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
@@ -2106,11 +2154,44 @@ menu_t menu_particles =
    mn_vidpage_menus
 };
 
-
 CONSOLE_COMMAND(mn_particle, 0)
 {
    MN_StartMenu(&menu_particles);
 }
+
+// Advanced video option items
+static menuitem_t mn_vidadv_items[] =
+{
+   { it_title,    "Video Options",    NULL,                "m_video" },
+   { it_gap },
+   { it_info,     "Advanced"},
+   { it_toggle,   "Video driver",             "i_videodriverid"    },
+   { it_variable, "Software bitdepth",        "i_softbitdepth"     },
+   { it_gap },
+   { it_info,     "OpenGL"},
+   { it_variable, "GL color depth",           "gl_colordepth"      },
+   { it_toggle,   "Texture filtering",        "gl_filter_type"     },
+   { it_toggle,   "Texture format",           "gl_texture_format"  },
+   { it_toggle,   "Use extensions",           "gl_use_extensions"  },
+   { it_toggle,   "Use ARB pixelbuffers",     "gl_arb_pixelbuffer" },
+   { it_end }
+};
+
+
+// Advanced video options
+menu_t menu_vidadv =
+{
+   mn_vidadv_items,      // menu items
+   &menu_particles,      // previous page
+   NULL,                 // next page
+   &menu_video,          // rootpage
+   200, 15,              // x,y offset
+   3,                    // start on first selectable
+   mf_background,        // full-screen menu
+   NULL,
+   mn_vidpage_names,
+   mn_vidpage_menus
+};
 
 
 /////////////////////////////////////////////////////////////////
@@ -2137,19 +2218,19 @@ static menu_t *mn_sndpage_menus[] =
 
 static menuitem_t mn_sound_items[] =
 {
-   {it_title,      FC_GOLD "Sound Options",       NULL, "m_sound"},
+   {it_title,      "Sound Options",       NULL, "m_sound"},
    {it_gap},
-   {it_info,       FC_GOLD "Volume"},
+   {it_info,       "Volume"},
    {it_slider,     "Sfx volume",                   "sfx_volume"},
    {it_slider,     "Music volume",                 "music_volume"},
    {it_gap},
-   {it_info,       FC_GOLD "Setup"},
+   {it_info,       "Setup"},
    {it_toggle,     "Sound card",                   "snd_card"},
    {it_toggle,     "Music card",                   "mus_card"},
    {it_toggle,     "Sound channels",               "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_gap},
-   {it_info,       FC_GOLD "Misc"},
+   {it_info,       "Misc"},
    {it_toggle,     "Precache sounds",              "s_precache"},
    {it_toggle,     "Pitched sounds",               "s_pitched"},
    {it_end}
@@ -2176,9 +2257,9 @@ CONSOLE_COMMAND(mn_sound, 0)
 
 static menuitem_t mn_soundeq_items[] =
 {
-   { it_title,      FC_GOLD "Sound Options",  NULL, "m_sound" },
+   { it_title,      "Sound Options",          NULL, "m_sound" },
    { it_gap },
-   { it_info,       FC_GOLD "Equalizer"                       },
+   { it_info,       "Equalizer"                               },
    { it_toggle,     "Enable equalizer",       "s_equalizer"   },
    { it_slider,     "Low band gain",          "s_lowgain"     },
    { it_slider,     "Midrange gain",          "s_midgain"     },
@@ -2234,21 +2315,21 @@ static menu_t *mn_mousejoy_pages[] =
 
 static menuitem_t mn_mouse_items[] =
 {
-   {it_title,      FC_GOLD "mouse settings",       NULL,   "m_mouse"},
+   {it_title,      "Mouse Settings",                NULL, "m_mouse"  },
    {it_gap},
-   {it_toggle,     "enable mouse",                  "i_usemouse"},
+   {it_toggle,     "Enable mouse",                  "i_usemouse"     },
    {it_gap},
-   {it_info,       FC_GOLD "sensitivity"},
-   {it_variable,   "horizontal",                    "sens_horiz"},
-   {it_variable,   "vertical",                      "sens_vert"},
-   {it_toggle,     "vanilla sensitivity",           "sens_vanilla"},
+   {it_info,       "Sensitivity"},
+   {it_variable,   "Horizontal",                    "sens_horiz"     },
+   {it_variable,   "Vertical",                      "sens_vert"      },
+   {it_toggle,     "Vanilla sensitivity",           "sens_vanilla"   },
    {it_gap},
-   {it_info,       FC_GOLD "misc."},
-   {it_toggle,     "invert mouse",                  "invertmouse"},
-   {it_toggle,     "smooth turning",                "smooth_turning"},
-   {it_toggle,     "novert emulation",              "mouse_novert"},
+   {it_info,       "Miscellaneous"},
+   {it_toggle,     "Invert mouse",                  "invertmouse"    },
+   {it_toggle,     "Smooth turning",                "smooth_turning" },
+   {it_toggle,     "Novert emulation",              "mouse_novert"   },
 #ifdef _SDL_VER
-   {it_toggle,     "window grabs mouse",            "i_grabmouse"},
+   {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
    {it_end}
 };
@@ -2274,17 +2355,17 @@ CONSOLE_COMMAND(mn_mouse, 0)
 
 static menuitem_t mn_mouse_accel_and_mlook_items[] =
 {
-   {it_title,      FC_GOLD "Mouse Settings",       NULL,   "m_mouse"},
+   {it_title,      "Mouse Settings",       NULL,   "m_mouse"},
    {it_gap},
-   {it_info,       FC_GOLD"acceleration"},
-   {it_toggle,     "type",                "mouse_accel_type"},
-   {it_variable,   "custom threshold",    "mouse_accel_threshold"},
-   {it_variable,   "custom amount",       "mouse_accel_value"},
+   {it_info,       "Acceleration"},
+   {it_toggle,     "Type",                "mouse_accel_type"},
+   {it_variable,   "Custom threshold",    "mouse_accel_threshold"},
+   {it_variable,   "Custom amount",       "mouse_accel_value"},
    {it_gap},
-   {it_info,       FC_GOLD"mouselook"},
-   {it_toggle,     "enable mouselook",    "allowmlook" },
-   {it_toggle,     "always mouselook",    "alwaysmlook"},
-   {it_toggle,     "stretch short skies", "r_stretchsky"},
+   {it_info,       "Mouselook"},
+   {it_toggle,     "Enable mouselook",    "allowmlook" },
+   {it_toggle,     "Always mouselook",    "alwaysmlook"},
+   {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
 
@@ -2372,14 +2453,14 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
 
 static menuitem_t mn_joystick_items[] =
 {
-   {it_title,        FC_GOLD "joystick settings", NULL, "M_JOYSET" },
+   {it_title,        "Joystick Settings",         NULL, "M_JOYSET" },
    {it_gap},
-   {it_toggle,       "enable joystick",           "i_usejoystick"},
-   {it_runcmd,       "select joystick...",        "mn_joysticks" },
+   {it_toggle,       "Enable joystick",           "i_usejoystick"},
+   {it_runcmd,       "Select joystick...",        "mn_joysticks" },
    {it_gap},
-   {it_info,         FC_GOLD "sensitivity"},
-   {it_variable,     "horizontal",                "joySens_x" },
-   {it_variable,     "vertical",                  "joySens_y" },
+   {it_info,         "Sensitivity"},
+   {it_variable,     "Horizontal",                "joySens_x" },
+   {it_variable,     "Vertical",                  "joySens_y" },
    {it_end}
 };
 
@@ -2430,41 +2511,41 @@ static menu_t *mn_hud_pages[] =
 
 static menuitem_t mn_hud_items[] =
 {
-   {it_title,      FC_GOLD "hud settings",         NULL,      "m_hud"},
+   {it_title,      "HUD Settings",         NULL,      "m_hud"},
    {it_gap},
-   {it_info,       FC_GOLD "message options"},
-   {it_toggle,     "messages",                     "hu_messages"},
-   {it_toggle,     "message colour",               "hu_messagecolor"},
-   {it_toggle,     "messages scroll",              "hu_messagescroll"},
-   {it_toggle,     "message lines",                "hu_messagelines"},
-   {it_variable,   "message time (ms)",            "hu_messagetime"},
-   {it_toggle,     "obituaries",                   "hu_obituaries"},
-   {it_toggle,     "obituary colour",              "hu_obitcolor"},
+   {it_info,       "Message Options"},
+   {it_toggle,     "Messages",                     "hu_messages"},
+   {it_toggle,     "Message colour",               "hu_messagecolor"},
+   {it_toggle,     "Messages scroll",              "hu_messagescroll"},
+   {it_toggle,     "Message lines",                "hu_messagelines"},
+   {it_variable,   "Message time (ms)",            "hu_messagetime"},
+   {it_toggle,     "Obituaries",                   "hu_obituaries"},
+   {it_toggle,     "Obituary colour",              "hu_obitcolor"},
    {it_gap},
-   {it_info,       FC_GOLD "BOOM HUD options"},
-   {it_toggle,     "display type",                 "hu_overlay"},
-   {it_toggle,     "hide secrets",                 "hu_hidesecrets"},
+   {it_info,       "BOOM HUD options"},
+   {it_toggle,     "Display type",                 "hu_overlay"},
+   {it_toggle,     "Hide secrets",                 "hu_hidesecrets"},
    {it_end}
 };
 
 static menuitem_t mn_hud_pg2_items[] =
 {
-   {it_title,      FC_GOLD "hud settings",         NULL,      "m_hud"},
+   {it_title,      "HUD Settings",         NULL,      "m_hud"},
    {it_gap},
-   {it_info,       FC_GOLD "crosshair options"},
-   {it_toggle,     "crosshair type",               "hu_crosshair"},
-   {it_toggle,     "monster highlighting",         "hu_crosshair_hilite"},
+   {it_info,       "Crosshair Options"},
+   {it_toggle,     "Crosshair type",               "hu_crosshair"},
+   {it_toggle,     "Monster highlighting",         "hu_crosshair_hilite"},
    {it_gap},
-   {it_info,       FC_GOLD "automap options"},
-   {it_toggle,     "show coords widget",           "hu_showcoords"},
-   {it_toggle,     "coords follow pointer",        "map_coords"},
-   {it_toggle,     "coords color",                 "hu_coordscolor"},
-   {it_toggle,     "show level time widget",       "hu_showtime"},
-   {it_toggle,     "level time color",             "hu_timecolor"},
-   {it_toggle,     "level name color",             "hu_levelnamecolor"},
+   {it_info,       "Automap Options"},
+   {it_toggle,     "Show coords widget",           "hu_showcoords"},
+   {it_toggle,     "Coords follow pointer",        "map_coords"},
+   {it_toggle,     "Coords color",                 "hu_coordscolor"},
+   {it_toggle,     "Show level time widget",       "hu_showtime"},
+   {it_toggle,     "Level time color",             "hu_timecolor"},
+   {it_toggle,     "Level name color",             "hu_levelnamecolor"},
    {it_gap},
-   {it_info,       FC_GOLD "miscellaneous"},
-   {it_toggle,     "show frags in deathmatch",     "show_scores"},
+   {it_info,       "Miscellaneous"},
+   {it_toggle,     "Show frags in deathmatch",     "show_scores"},
    {it_end}
 };
 
@@ -2526,7 +2607,7 @@ static void MN_HUDPg2Drawer(void)
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 
-                    &vbscreen, patch, colrngs[CR_RED], FTRANLEVEL);
+                    &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 
@@ -2543,23 +2624,23 @@ CONSOLE_COMMAND(mn_hud, 0)
 
 static menuitem_t mn_statusbar_items[] =
 {
-   {it_title,      FC_GOLD "status bar",           NULL,           "m_stat"},
+   {it_title,      "Status Bar",           NULL,           "M_STATUS"},
    {it_gap},
-   {it_toggle,     "numbers always red",           "st_rednum"},
-   {it_toggle,     "percent sign grey",            "st_graypct"},
-   {it_toggle,     "single key display",           "st_singlekey"},
+   {it_toggle,     "Numbers always red",           "st_rednum"},
+   {it_toggle,     "Percent sign grey",            "st_graypct"},
+   {it_toggle,     "Single key display",           "st_singlekey"},
    {it_gap},
-   {it_info,       FC_GOLD "status bar colours"},
-   {it_variable,   "ammo ok percentage",           "ammo_yellow"},
-   {it_variable,   "ammo low percentage",          "ammo_red"},
+   {it_info,       "Status Bar Colors"},
+   {it_variable,   "Ammo ok percentage",           "ammo_yellow"},
+   {it_variable,   "Ammo low percentage",          "ammo_red"},
    {it_gap},
-   {it_variable,   "armour high percentage",       "armor_green"},
-   {it_variable,   "armour ok percentage",         "armor_yellow"},
-   {it_variable,   "armour low percentage",        "armor_red"},
+   {it_variable,   "Armor high percentage",        "armor_green"},
+   {it_variable,   "Armor ok percentage",          "armor_yellow"},
+   {it_variable,   "Armor low percentage",         "armor_red"},
    {it_gap},
-   {it_variable,   "health high percentage",       "health_green"},
-   {it_variable,   "health ok percentage",         "health_yellow"},
-   {it_variable,   "health low percentage",        "health_red"},
+   {it_variable,   "Health high percentage",       "health_green"},
+   {it_variable,   "Health ok percentage",         "health_yellow"},
+   {it_variable,   "Health low percentage",        "health_red"},
    {it_end}
 };
 
@@ -2608,60 +2689,60 @@ static menu_t *mn_automap_pages[] =
 
 static menuitem_t mn_automapcolbgl_items[] =
 {
-   {it_title,    FC_GOLD "automap",              NULL, "m_auto"},
+   {it_title,    "Automap",              NULL, "m_auto"},
    {it_gap},
-   {it_info,     FC_GOLD "background and lines", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,     "Background and Lines", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap,  "background colour",            "mapcolor_back"},
-   {it_automap,  "crosshair",                    "mapcolor_hair"},
-   {it_automap,  "grid",                         "mapcolor_grid"},
-   {it_automap,  "one-sided walls",              "mapcolor_wall"},
-   {it_automap,  "teleporter",                   "mapcolor_tele"},
-   {it_automap,  "secret area boundary",         "mapcolor_secr"},
-   {it_automap,  "exit",                         "mapcolor_exit"},
-   {it_automap,  "unseen line",                  "mapcolor_unsn"},
+   {it_automap,  "Background colour",            "mapcolor_back"},
+   {it_automap,  "Crosshair",                    "mapcolor_hair"},
+   {it_automap,  "Grid",                         "mapcolor_grid"},
+   {it_automap,  "One-sided walls",              "mapcolor_wall"},
+   {it_automap,  "Teleporter",                   "mapcolor_tele"},
+   {it_automap,  "Secret area boundary",         "mapcolor_secr"},
+   {it_automap,  "Exit",                         "mapcolor_exit"},
+   {it_automap,  "Unseen line",                  "mapcolor_unsn"},
    {it_end}
 };
 
 static menuitem_t mn_automapcoldoor_items[] =
 {
-   {it_title,    FC_GOLD "automap",        NULL, "m_auto"},
+   {it_title,    "Automap",        NULL, "m_auto"},
    {it_gap},
-   {it_info,     FC_GOLD "floor and ceiling lines", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,     "Floor and Ceiling Lines", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap,  "change in floor height",   "mapcolor_fchg"},
-   {it_automap,  "change in ceiling height", "mapcolor_cchg"},
-   {it_automap,  "floor and ceiling equal",  "mapcolor_clsd"},
-   {it_automap,  "no change in height",      "mapcolor_flat"},
-   {it_automap,  "red locked door",          "mapcolor_rdor"},
-   {it_automap,  "yellow locked door",       "mapcolor_ydor"},
-   {it_automap,  "blue locked door",         "mapcolor_bdor"},
+   {it_automap,  "Change in floor height",   "mapcolor_fchg"},
+   {it_automap,  "Change in ceiling height", "mapcolor_cchg"},
+   {it_automap,  "Floor and ceiling equal",  "mapcolor_clsd"},
+   {it_automap,  "No change in height",      "mapcolor_flat"},
+   {it_automap,  "Red locked door",          "mapcolor_rdor"},
+   {it_automap,  "Yellow locked door",       "mapcolor_ydor"},
+   {it_automap,  "Blue locked door",         "mapcolor_bdor"},
    {it_end}
 };
 
 static menuitem_t mn_automapcolsprite_items[] =
 {
-   {it_title,    FC_GOLD "automap", NULL, "m_auto"},
+   {it_title,    "Automap", NULL, "m_auto"},
    {it_gap},
-   {it_info,     FC_GOLD "sprites", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,     "Sprites", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap,  "normal objects",  "mapcolor_sprt"},
-   {it_automap,  "friends",         "mapcolor_frnd"},
-   {it_automap,  "player arrow",    "mapcolor_sngl"},
-   {it_automap,  "red key",         "mapcolor_rkey"},
-   {it_automap,  "yellow key",      "mapcolor_ykey"},
-   {it_automap,  "blue key",        "mapcolor_bkey"},
+   {it_automap,  "Normal objects",  "mapcolor_sprt"},
+   {it_automap,  "Friends",         "mapcolor_frnd"},
+   {it_automap,  "Player arrow",    "mapcolor_sngl"},
+   {it_automap,  "Red key",         "mapcolor_rkey"},
+   {it_automap,  "Yellow key",      "mapcolor_ykey"},
+   {it_automap,  "Blue key",        "mapcolor_bkey"},
    {it_end}
 };
 
 static menuitem_t mn_automapportal_items[] =
 {
-   {it_title,    FC_GOLD "automap", NULL, "m_auto"},
+   {it_title,    "Automap", NULL, "m_auto"},
    {it_gap},
-   {it_info,     FC_GOLD "portals", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,     "Portals", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_toggle,   "overlay linked portals", "mapportal_overlay"},
-   {it_automap,  "overlay line color",     "mapcolor_prtl"},
+   {it_toggle,   "Overlay linked portals", "mapportal_overlay"},
+   {it_automap,  "Overlay line color",     "mapcolor_prtl"},
    {it_end},
 };
 
@@ -2763,16 +2844,16 @@ YSHEAR_FIXME: this feature may return after EDF for weapons
 
 static menuitem_t mn_weapons_items[] =
 {
-   {it_title,      FC_GOLD "weapons",                NULL, "M_WEAP"},
+   {it_title,      "Weapons",                NULL, "M_WEAP"},
    {it_gap},
-   {it_info,       FC_GOLD "options", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,       "Options", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_toggle,     "bfg type",                       "bfgtype"},
-   {it_toggle,     "bobbing",                        "bobbing"},
-   {it_toggle,     "recoil",                         "recoil"},
-   {it_toggle,     "fist/ssg toggle",                "doom_weapon_toggles"},
-   {it_toggle,     "autoaiming",                     "autoaim"},
-   {it_variable,   "change time",                    "weapspeed"},
+   {it_toggle,     "Bfg type",                       "bfgtype"},
+   {it_toggle,     "Bobbing",                        "bobbing"},
+   {it_toggle,     "Recoil",                         "recoil"},
+   {it_toggle,     "Fist/SSG toggle",                "doom_weapon_toggles"},
+   {it_toggle,     "Autoaiming",                     "autoaim"},
+   {it_variable,   "Change time",                    "weapspeed"},
    {it_gap},
    {it_end},
 };
@@ -2793,9 +2874,9 @@ menu_t menu_weapons =
 
 static menuitem_t mn_weapons_pref_items[] =
 {
-   {it_title,      FC_GOLD "weapons",       NULL, "M_WEAP"},
+   {it_title,      "Weapons",       NULL, "M_WEAP"},
    {it_gap},
-   {it_info,       FC_GOLD "preferences", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,       "Preferences", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
    {it_variable,   "1",                     "weappref_1"},
    {it_variable,   "2",                     "weappref_2"},
@@ -2858,15 +2939,15 @@ static menu_t *mn_compat_pages[] =
 
 static menuitem_t mn_compat1_items[] =
 {
-   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_title,  "Compatibility", NULL, "m_compat" },
    { it_gap },   
-   { it_info,   FC_GOLD "Players", NULL, NULL, MENUITEM_CENTERED        },
+   { it_info,   "Players",                NULL, NULL, MENUITEM_CENTERED },
    { it_toggle, "God mode is not absolute",            "comp_god"       },
    { it_toggle, "Powerup cheats are time limited",     "comp_infcheat"  },
    { it_toggle, "Sky is normal when invulnerable",     "comp_skymap"    },
    { it_toggle, "Zombie players can exit levels",      "comp_zombie"    },
    { it_gap },
-   { it_info,   FC_GOLD "Monster AI", NULL, NULL, MENUITEM_CENTERED     },
+   { it_info,   "Monster AI",             NULL, NULL, MENUITEM_CENTERED },
    { it_toggle, "Arch-viles can create ghosts",        "comp_vile"      },
    { it_toggle, "Pain elemental lost souls limited",   "comp_pain"      },
    { it_toggle, "Lost souls get stuck in walls",       "comp_skull"     },
@@ -2880,9 +2961,9 @@ static menuitem_t mn_compat1_items[] =
  
 static menuitem_t mn_compat2_items[] =
 { 
-   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_title,  "Compatibility", NULL, "m_compat" },
    { it_gap },   
-   { it_info,   FC_GOLD "Simulation",    NULL, NULL, MENUITEM_CENTERED   },
+   { it_info,   "Simulation",              NULL, NULL, MENUITEM_CENTERED },
    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff"    },
    { it_toggle, "Actors never fall off ledges",        "comp_falloff"    },
    { it_toggle, "Spawncubes telefrag on MAP30 only",   "comp_telefrag"   },
@@ -2898,9 +2979,9 @@ static menuitem_t mn_compat2_items[] =
 
 static menuitem_t mn_compat3_items[] =
 {
-   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_title,  "Compatibility", NULL, "m_compat" },
    { it_gap },
-   { it_info,   FC_GOLD "Maps",       NULL, NULL, MENUITEM_CENTERED      },
+   { it_info,   "Maps",                    NULL, NULL, MENUITEM_CENTERED },
    { it_toggle, "Turbo doors make two closing sounds",  "comp_blazing"   },
    { it_toggle, "Disable tagged door light fading",     "comp_doorlight" },
    { it_toggle, "Use DOOM stairbuilding method",        "comp_stairs"    },
@@ -2963,21 +3044,21 @@ CONSOLE_COMMAND(mn_compat, 0)
 
 static menuitem_t mn_enemies_items[] =
 {
-   {it_title,      FC_GOLD "enemies",              NULL,      "m_enem"},
+   {it_title,      "Enemies",              NULL,      "m_enem"},
    {it_gap},
-   {it_info,       FC_GOLD "monster options"},
-   {it_toggle,     "monsters remember target",     "mon_remember"},
-   {it_toggle,     "monster infighting",           "mon_infight"},
-   {it_toggle,     "monsters back out",            "mon_backing"},
-   {it_toggle,     "monsters avoid hazards",       "mon_avoid"},
-   {it_toggle,     "affected by friction",         "mon_friction"},
-   {it_toggle,     "climb tall stairs",            "mon_climb"},
+   {it_info,       "Monster options"},
+   {it_toggle,     "Monsters remember target",     "mon_remember"},
+   {it_toggle,     "Monster infighting",           "mon_infight"},
+   {it_toggle,     "Monsters back out",            "mon_backing"},
+   {it_toggle,     "Monsters avoid hazards",       "mon_avoid"},
+   {it_toggle,     "Affected by friction",         "mon_friction"},
+   {it_toggle,     "Climb tall stairs",            "mon_climb"},
    {it_gap},
-   {it_info,       FC_GOLD "mbf friend options"},
-   {it_variable,   "friend distance",              "mon_distfriend"},
-   {it_toggle,     "rescue dying friends",         "mon_helpfriends"},
-   {it_variable,   "number of helper dogs",        "numhelpers"},
-   {it_toggle,     "dogs can jump down",           "dogjumping"},
+   {it_info,       "MBF Friend Options"},
+   {it_variable,   "Friend distance",              "mon_distfriend"},
+   {it_toggle,     "Rescue dying friends",         "mon_helpfriends"},
+   {it_variable,   "Number of helper dogs",        "numhelpers"},
+   {it_toggle,     "Dogs can jump down",           "dogjumping"},
    {it_end}
 };
 
@@ -3043,37 +3124,39 @@ static menu_t *mn_binding_contentpages[] =
 
 static menuitem_t mn_movekeys_items[] =
 {
-   {it_title, FC_GOLD "key bindings",   NULL, "M_KEYBND"},
+   {it_title,        "Key Bindings",   NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,  FC_GOLD "basic movement", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,         "Basic Movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding,      "move forward",    "forward"},
-   {it_binding,      "move backward",   "backward"},
-   {it_binding,      "run",             "speed"},
-   {it_binding,      "turn left",       "left"},
-   {it_binding,      "turn right",      "right"},
-   {it_binding,      "strafe on",       "strafe"},
-   {it_binding,      "strafe left",     "moveleft"},
-   {it_binding,      "strafe right",    "moveright"},
+   {it_binding,      "Move forward",    "forward"},
+   {it_binding,      "Move backward",   "backward"},
+   {it_binding,      "Run",             "speed"},
+   {it_binding,      "Turn left",       "left"},
+   {it_binding,      "Turn right",      "right"},
+   {it_binding,      "Strafe on",       "strafe"},
+   {it_binding,      "Strafe left",     "moveleft"},
+   {it_binding,      "Strafe right",    "moveright"},
    {it_binding,      "180 degree turn", "flip"},
-   {it_binding,      "use",             "use"},
-   {it_binding,      "attack/fire",     "attack"},
-   {it_binding,      "toggle autorun",  "autorun"},
+   {it_binding,      "Use",             "use"},
+   {it_binding,      "Attack/fire",     "attack"},
+   {it_binding,      "Toggle autorun",  "autorun"},
    {it_end}
 };
 
 static menuitem_t mn_advkeys_items[] =
 {
-   {it_title, FC_GOLD "key bindings",      NULL, "M_KEYBND"},
+   {it_title,        "Key Bindings",      NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,  FC_GOLD "advanced movement", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,         "Advanced Movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding,      "jump",            "jump"},
-   {it_gap},
-   {it_binding,      "mlook on",        "mlook"},
-   {it_binding,      "look up",         "lookup"},
-   {it_binding,      "look down",       "lookdown"},
-   {it_binding,      "center view",     "center"},
+   {it_binding,      "Jump",            "jump"},
+   {it_binding,      "MLook on",        "mlook"},
+   {it_binding,      "Look up",         "lookup"},
+   {it_binding,      "Look down",       "lookdown"},
+   {it_binding,      "Center view",     "center"},
+   {it_binding,      "Fly up",          "flyup"},
+   {it_binding,      "Fly down",        "flydown"},
+   {it_binding,      "Fly center",      "flycenter"},
    {it_end}
 };
 
@@ -3122,22 +3205,22 @@ CONSOLE_COMMAND(mn_advkeys, 0)
 
 static menuitem_t mn_weaponbindings_items[] =
 {
-   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,    FC_GOLD "weapon keys",  NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Weapon Keys",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "weapon 1",             "weapon1"},
-   {it_binding, "weapon 2",             "weapon2"},
-   {it_binding, "weapon 3",             "weapon3"},
-   {it_binding, "weapon 4",             "weapon4"},
-   {it_binding, "weapon 5",             "weapon5"},
-   {it_binding, "weapon 6",             "weapon6"},
-   {it_binding, "weapon 7",             "weapon7"},
-   {it_binding, "weapon 8",             "weapon8"},
-   {it_binding, "weapon 9",             "weapon9"},
-   {it_binding, "next best weapon",     "nextweapon"},
-   {it_binding, "next weapon",          "weaponup"},
-   {it_binding, "previous weapon",      "weapondown"},
+   {it_binding, "Weapon 1",             "weapon1"},
+   {it_binding, "Weapon 2",             "weapon2"},
+   {it_binding, "Weapon 3",             "weapon3"},
+   {it_binding, "Weapon 4",             "weapon4"},
+   {it_binding, "Weapon 5",             "weapon5"},
+   {it_binding, "Weapon 6",             "weapon6"},
+   {it_binding, "Weapon 7",             "weapon7"},
+   {it_binding, "Weapon 8",             "weapon8"},
+   {it_binding, "Weapon 9",             "weapon9"},
+   {it_binding, "Next best weapon",     "nextweapon"},
+   {it_binding, "Next weapon",          "weaponup"},
+   {it_binding, "Previous weapon",      "weapondown"},
    {it_end}
 };
 
@@ -3169,16 +3252,16 @@ CONSOLE_COMMAND(mn_weaponkeys, 0)
 
 static menuitem_t mn_envbindings_items[] =
 {
-   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,    FC_GOLD "environment",  NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Environment",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "screen size up",       "screensize +"},
-   {it_binding, "screen size down",     "screensize -"},
-   {it_binding, "take screenshot",      "screenshot"},
-   {it_binding, "spectate prev",        "spectate_prev"},
-   {it_binding, "spectate next",        "spectate_next"},
-   {it_binding, "spectate self",        "spectate_self"},
+   {it_binding, "Screen size up",       "screensize +"},
+   {it_binding, "Screen size down",     "screensize -"},
+   {it_binding, "Take screenshot",      "screenshot"},
+   {it_binding, "Spectate prev",        "spectate_prev"},
+   {it_binding, "Spectate next",        "spectate_next"},
+   {it_binding, "Spectate self",        "spectate_self"},
    {it_end}
 };
 
@@ -3208,20 +3291,20 @@ CONSOLE_COMMAND(mn_envkeys, 0)
 
 static menuitem_t mn_function_items[] =
 {
-   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,    FC_GOLD "game functions",  NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Game Functions",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "save game",            "mn_savegame"}, 
-   {it_binding, "load game",            "mn_loadgame"},
-   {it_binding, "volume",               "mn_sound"},
-   {it_binding, "toggle hud",           "hu_overlay /"},
-   {it_binding, "quick save",           "quicksave"},
-   {it_binding, "end game",             "mn_endgame"},
-   {it_binding, "toggle messages",      "hu_messages /"},
-   {it_binding, "quick load",           "quickload"},
-   {it_binding, "quit",                 "mn_quit"},
-   {it_binding, "gamma correction",     "gamma /"},
+   {it_binding, "Save game",            "mn_savegame"}, 
+   {it_binding, "Load game",            "mn_loadgame"},
+   {it_binding, "Volume",               "mn_sound"},
+   {it_binding, "Toggle hud",           "hu_overlay /"},
+   {it_binding, "Quick save",           "quicksave"},
+   {it_binding, "End game",             "mn_endgame"},
+   {it_binding, "Toggle messages",      "hu_messages /"},
+   {it_binding, "Quick load",           "quickload"},
+   {it_binding, "Quit",                 "mn_quit"},
+   {it_binding, "Gamma correction",     "gamma /"},
    {it_end}
 };
 
@@ -3251,22 +3334,22 @@ CONSOLE_COMMAND(mn_gamefuncs, 0)
 
 static menuitem_t mn_menukeys_items[] =
 {
-   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,    FC_GOLD "menu keys", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Menu Keys", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "toggle menus",         "menu_toggle"},
-   {it_binding, "previous menu",        "menu_previous"},
-   {it_binding, "next item",            "menu_down"},
-   {it_binding, "previous item",        "menu_up"},
-   {it_binding, "next value",           "menu_right"},
-   {it_binding, "previous value",       "menu_left"},
-   {it_binding, "confirm",              "menu_confirm"},
-   {it_binding, "display help",         "menu_help"},
-   {it_binding, "display setup",        "menu_setup"},
-   {it_binding, "previous page",        "menu_pageup"},
-   {it_binding, "next page",            "menu_pagedown"},
-   {it_binding, "show contents",        "menu_contents"},
+   {it_binding, "Toggle menus",         "menu_toggle"},
+   {it_binding, "Previous menu",        "menu_previous"},
+   {it_binding, "Next item",            "menu_down"},
+   {it_binding, "Previous item",        "menu_up"},
+   {it_binding, "Next value",           "menu_right"},
+   {it_binding, "Previous value",       "menu_left"},
+   {it_binding, "Confirm",              "menu_confirm"},
+   {it_binding, "Display help",         "menu_help"},
+   {it_binding, "Display setup",        "menu_setup"},
+   {it_binding, "Previous page",        "menu_pageup"},
+   {it_binding, "Next page",            "menu_pagedown"},
+   {it_binding, "Show contents",        "menu_contents"},
    {it_end}
 };
 
@@ -3296,22 +3379,22 @@ CONSOLE_COMMAND(mn_menukeys, 0)
 
 static menuitem_t mn_automapkeys_items[] =
 {
-   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,    FC_GOLD "automap",      NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Automap",      NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "toggle map",           "map_toggle"},
-   {it_binding, "move up",              "map_up"},
-   {it_binding, "move down",            "map_down"},
-   {it_binding, "move left",            "map_left"},
-   {it_binding, "move right",           "map_right"},
-   {it_binding, "zoom in",              "map_zoomin"},
-   {it_binding, "zoom out",             "map_zoomout"},
-   {it_binding, "show full map",        "map_gobig"},
-   {it_binding, "follow mode",          "map_follow"},
-   {it_binding, "mark spot",            "map_mark"},
-   {it_binding, "clear spots",          "map_clear"},
-   {it_binding, "show grid",            "map_grid"},
+   {it_binding, "Toggle map",           "map_toggle"},
+   {it_binding, "Move up",              "map_up"},
+   {it_binding, "Move down",            "map_down"},
+   {it_binding, "Move left",            "map_left"},
+   {it_binding, "Move right",           "map_right"},
+   {it_binding, "Zoom in",              "map_zoomin"},
+   {it_binding, "Zoom out",             "map_zoomout"},
+   {it_binding, "Show full map",        "map_gobig"},
+   {it_binding, "Follow mode",          "map_follow"},
+   {it_binding, "Mark spot",            "map_mark"},
+   {it_binding, "Clear spots",          "map_clear"},
+   {it_binding, "Show grid",            "map_grid"},
    {it_end}
 };
 
@@ -3341,18 +3424,18 @@ CONSOLE_COMMAND(mn_automapkeys, 0)
 
 static menuitem_t mn_consolekeys_items[] =
 {
-   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
-   {it_info,    FC_GOLD "console",      NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Console",      NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "toggle",               "console_toggle"},
-   {it_binding, "enter command",        "console_enter"},
-   {it_binding, "complete command",     "console_tab"},
-   {it_binding, "previous command",     "console_up"},
-   {it_binding, "next command",         "console_down"},
-   {it_binding, "backspace",            "console_backspace"},
-   {it_binding, "page up",              "console_pageup"},
-   {it_binding, "page down",            "console_pagedown"},
+   {it_binding, "Toggle",               "console_toggle"},
+   {it_binding, "Enter command",        "console_enter"},
+   {it_binding, "Complete command",     "console_tab"},
+   {it_binding, "Previous command",     "console_up"},
+   {it_binding, "Next command",         "console_down"},
+   {it_binding, "Backspace",            "console_backspace"},
+   {it_binding, "Page up",              "console_pageup"},
+   {it_binding, "Page down",            "console_pagedown"},
    {it_end}
 };
 
@@ -3514,18 +3597,18 @@ CONSOLE_COMMAND(mn_search, 0)
 
 static menuitem_t mn_menus_items[] =
 {
-   {it_title,    FC_GOLD "menu options",   NULL, "M_MENUS"},
+   {it_title,    "Menu Options",   NULL, "M_MENUS"},
    {it_gap},
-   {it_info,     FC_GOLD "general"},
-   {it_toggle,   "toggle key backs up",    "mn_toggleisback"},
-   {it_runcmd,   "set background...",      "mn_selectflat"},
+   {it_info,     "General"},
+   {it_toggle,   "Toggle key backs up",    "mn_toggleisback"},
+   {it_runcmd,   "Set background...",      "mn_selectflat"},
    {it_gap},
-   {it_info,     FC_GOLD "compatibility"},
-   {it_toggle,   "emulate all old menus",  "mn_classic_menus"},
+   {it_info,     "Compatibility"},
+   {it_toggle,   "Emulate all old menus",  "mn_classic_menus"},
    {it_gap},
-   {it_info,     FC_GOLD "utilities"},
-   {it_variable, "search string:",         "mn_searchstr"},
-   {it_runcmd,   "search in menus...",     "mn_search"},
+   {it_info,     "Utilities"},
+   {it_variable, "Search string:",         "mn_searchstr"},
+   {it_runcmd,   "Search in menus...",     "mn_search"},
    {it_end},
 };
 
@@ -3552,10 +3635,10 @@ CONSOLE_COMMAND(mn_menus, 0)
 
 static menuitem_t mn_config_items[] =
 {
-   {it_title,    FC_GOLD "Configuration" },
+   {it_title,    "Configuration" },
    {it_gap},
-   {it_info,     FC_GOLD "Doom Game Modes"},
-   {it_toggle,   "use base/doom config",     "use_doom_config" },
+   {it_info,     "Doom Game Modes"},
+   {it_toggle,   "Use base/doom config",     "use_doom_config" },
    {it_end}
 };
 
@@ -3673,13 +3756,13 @@ static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 
 static void MN_OldOptionsDrawer(void)
 {
-   V_DrawPatch(108, 15, &vbscreen,
+   V_DrawPatch(108, 15, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_OPTTTL", PU_CACHE));
 
-   V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
+   V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, msgNames[showMessages], PU_CACHE));
 
-   V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
+   V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, detailNames[0], PU_CACHE));
 }
 
@@ -3719,7 +3802,7 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatch(60, 38, &vbscreen, 
+   V_DrawPatch(60, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_SVOL", PU_CACHE));
 }
 

@@ -39,15 +39,28 @@
 #include "m_qstr.h"
 #include "m_misc.h"       // for M_Strupr/M_Strlwr
 #include "m_strcasestr.h" // for M_StrCaseStr
+#include "p_saveg.h"
 #include "d_io.h"         // for strcasecmp
 
 const size_t qstring::npos = ((size_t) -1);
-const size_t qstring::basesize = 32;
+const size_t qstring::basesize = 16;
 
 //=============================================================================
 //
 // Constructors, Destructors, and Reinitializers
 //
+
+void qstring::unLocalize(size_t pSize)
+{
+   if(isLocal())
+   {
+      buffer = ecalloc(char *, 1, pSize);
+      size   = pSize;
+      strcpy(buffer, local);
+
+      memset(local, 0, basesize);
+   }
+}
 
 //
 // qstring::createSize
@@ -58,10 +71,21 @@ const size_t qstring::basesize = 32;
 //
 qstring &qstring::createSize(size_t pSize)
 {
-   buffer = erealloc(char *, buffer, pSize);
-   size   = pSize;
-   index  = 0;
-   memset(buffer, 0, size);
+   // Can remain local?
+   if(isLocal() && pSize <= basesize)
+      clear();
+   else
+   {
+      unLocalize(pSize);
+
+      // Don't realloc if not needed
+      if(size < pSize)
+      {
+         buffer = erealloc(char *, buffer, pSize);
+         size   = pSize;
+      }
+      clear();
+   }
 
    return *this;
 }
@@ -88,9 +112,9 @@ qstring &qstring::create()
 //
 qstring &qstring::initCreate()
 {
-   buffer = NULL;
-   size   = 0;
-   index  = 0;
+   buffer = local;
+   size   = basesize;
+   clear();
 
    return create();
 }
@@ -102,25 +126,11 @@ qstring &qstring::initCreate()
 //
 qstring &qstring::initCreateSize(size_t pSize)
 {
-   buffer = NULL;
-   size   = 0;
-   index  = 0;
+   buffer = local;
+   size   = basesize;
+   clear();
 
    return createSize(pSize);
-}
-
-//
-// qstring::checkBuffer
-//
-// Private method.
-// Will allocate a buffer for the qstring if it doesn't have one already.
-//
-char *qstring::checkBuffer()
-{
-   if(!buffer)
-      create();
-
-   return buffer;
 }
 
 //
@@ -132,10 +142,13 @@ char *qstring::checkBuffer()
 //
 void qstring::freeBuffer()
 {
-   if(buffer)
+   if(buffer && !isLocal())
       efree(buffer);
-   buffer = NULL;
-   index = size = 0;
+
+   // return to being local
+   buffer = local;
+   size   = basesize;
+   clear();
 }
 
 //=============================================================================
@@ -151,9 +164,6 @@ void qstring::freeBuffer()
 //
 char qstring::charAt(size_t idx) const
 {
-   if(!buffer)
-      return '\0';
-
    if(idx >= size)
       I_Error("qstring::charAt: index out of range\n");
 
@@ -168,10 +178,35 @@ char qstring::charAt(size_t idx) const
 //
 char *qstring::bufferAt(size_t idx)
 {
-   checkBuffer();
-
    return idx < size ? buffer + idx : NULL;
 }
+
+//
+// qstring::operator []
+//
+// Read-write variant.
+//
+char &qstring::operator [] (size_t idx)
+{
+   if(idx >= size)
+      I_Error("qstring::operator []: index out of range\n");
+
+   return buffer[idx];
+}
+
+//
+// qstring::operator []
+//
+// Read-only variant.
+//
+const char &qstring::operator [] (size_t idx) const
+{
+   if(idx >= size)
+      I_Error("qstring::operator []: index out of range\n");
+
+   return buffer[idx];
+}
+
 
 //=============================================================================
 //
@@ -186,10 +221,7 @@ char *qstring::bufferAt(size_t idx)
 //
 qstring &qstring::clear()
 {
-   checkBuffer();
-
-   if(size)
-      memset(buffer, 0, size);
+   memset(buffer, 0, size);
    index = 0;
 
    return *this;
@@ -202,12 +234,7 @@ qstring &qstring::clear()
 //
 qstring &qstring::clearOrCreate(size_t pSize)
 {
-   if(!buffer)
-      createSize(pSize);
-   else
-      clear();
-
-   return *this;
+   return createSize(pSize);
 }
 
 //
@@ -223,9 +250,17 @@ qstring &qstring::grow(size_t len)
    {
       size_t newsize = size + len;
 
-      buffer = erealloc(char *, buffer, newsize);
-      memset(buffer + size, 0, len);
-      size += len;
+      if(isLocal()) // are we local?
+      {
+         if(newsize > basesize) // can we stay local?
+            unLocalize(newsize);
+      }
+      else
+      {
+         buffer = erealloc(char *, buffer, newsize);
+         memset(buffer + size, 0, len);
+         size += len;
+      }
    }
 
    return *this;
@@ -244,8 +279,6 @@ qstring &qstring::grow(size_t len)
 //
 qstring &qstring::Putc(char ch)
 {
-   checkBuffer();
-
    if(index >= size - 1) // leave room for \0
       grow(size);        // double buffer size
 
@@ -288,16 +321,11 @@ qstring &qstring::Delc()
 //
 qstring &qstring::concat(const char *str)
 {
-   if(!buffer)
-      initCreateSize(strlen(str) + 1);
-   else
-   {
-      unsigned int cursize = size;
-      unsigned int newsize = index + strlen(str) + 1;
+   size_t cursize = size;
+   size_t newsize = index + strlen(str) + 1;
 
-      if(newsize > cursize)
-         grow(newsize - cursize);
-   }
+   if(newsize > cursize)
+      grow(newsize - cursize);
 
    strcat(buffer, str);
 
@@ -313,7 +341,7 @@ qstring &qstring::concat(const char *str)
 //
 qstring &qstring::concat(const qstring &src)
 {
-   return concat(src.buffer ? src.buffer : "");
+   return concat(src.buffer);
 }
 
 //
@@ -347,10 +375,7 @@ qstring &qstring::insert(const char *insertstr, size_t pos)
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize    = index + insertstrlen + 1;; 
-   
-   if(!buffer)
-      initCreateSize(totalsize);
+   size_t totalsize    = index + insertstrlen + 1; 
    
    // pos must be between 0 and dest->index - 1
    if(pos >= index)
@@ -384,6 +409,28 @@ qstring &qstring::copy(const char *str)
       clear();
    
    return concat(str);
+}
+
+//
+// qstring::copy
+//
+// Copies at most count bytes from the C string into the qstring.
+//
+qstring &qstring::copy(const char *str, size_t count)
+{
+   if(index > 0)
+      clear();
+
+   size_t newsize = count + 1;
+
+   if(newsize > size)
+      grow(newsize - size);
+
+   strncpy(buffer, str, count);
+
+   index = strlen(buffer);
+
+   return *this;
 }
 
 //
@@ -426,7 +473,7 @@ qstring &qstring::operator = (const char *other)
 //
 char *qstring::copyInto(char *dest, size_t pSize) const
 {
-   return strncpy(dest, buffer ? buffer : "", pSize);
+   return strncpy(dest, buffer, pSize);
 }
 
 //
@@ -453,6 +500,10 @@ void qstring::swapWith(qstring &str2)
    size_t  tmpsize;
    size_t  tmpindex;
 
+   // Both must be unlocalized.
+   unLocalize(size);
+   str2.unLocalize(str2.size);
+
    tmpbuffer = this->buffer; // make a shallow copy
    tmpsize   = this->size;
    tmpindex  = this->index;
@@ -476,8 +527,6 @@ qstring &qstring::lstrip(char c)
    size_t i   = 0;
    size_t len = index;
 
-   checkBuffer();
-   
    while(buffer[i] != '\0' && buffer[i] == c)
       ++i;
 
@@ -503,8 +552,6 @@ qstring &qstring::lstrip(char c)
 //
 qstring &qstring::rstrip(char c)
 {
-   checkBuffer();
-
    while(index && buffer[index - 1] == c)
       Delc();
 
@@ -518,8 +565,6 @@ qstring &qstring::rstrip(char c)
 //
 qstring &qstring::truncate(size_t pos)
 {
-   checkBuffer();
-
    // pos must be between 0 and qstr->index - 1
    if(pos >= index)
       I_Error("qstring::truncate: position out of range\n");
@@ -528,6 +573,78 @@ qstring &qstring::truncate(size_t pos)
    index = pos;
 
    return *this;
+}
+
+//
+// qstring::erase
+//
+// std::string-compatible erasure function.
+//
+qstring &qstring::erase(size_t pos, size_t n)
+{
+   // truncate handles the case of n == qstring::npos
+   if(!n)
+      return *this;
+   else if(n == npos)
+      return truncate(pos);
+
+   // pos must be between 0 and qstr->index - 1
+   if(pos >= index)
+      I_Error("qstring::erase: position out of range\n");
+
+   size_t endPos = pos + n;
+   if(endPos > index)
+      endPos = index;
+
+   char *to   = buffer + pos;
+   char *from = buffer + endPos;
+   char *end  = buffer + index;
+
+   while(to != end)
+   {
+      *to = *from;
+      ++to;
+      if(from != end)
+         ++from;
+   }
+
+   index -= (endPos - pos);
+   return *this;
+}
+
+
+//=============================================================================
+//
+// Stream Insertion Operators
+//
+
+qstring &qstring::operator << (const qstring &other)
+{
+   return concat(other);
+}
+
+qstring &qstring::operator << (const char *other)
+{
+   return concat(other);
+}
+
+qstring &qstring::operator << (char ch)
+{
+   return Putc(ch);
+}
+
+qstring &qstring::operator << (int i)
+{
+   char buf[33];
+   M_Itoa(i, buf, 10);
+   return concat(buf);
+}
+
+qstring &qstring::operator << (double d)
+{
+   char buf[1079]; // srsly...
+   psnprintf(buf, sizeof(buf), "%f", d);
+   return concat(buf);
 }
 
 //=============================================================================
@@ -542,7 +659,7 @@ qstring &qstring::truncate(size_t pos)
 //
 int qstring::strCmp(const char *str) const
 {
-   return strcmp(buffer ? buffer : "", str);
+   return strcmp(buffer, str);
 }
 
 //
@@ -552,7 +669,7 @@ int qstring::strCmp(const char *str) const
 //
 int qstring::strNCmp(const char *str, size_t maxcount) const
 {
-   return strncmp(buffer ? buffer : "", str, maxcount);
+   return strncmp(buffer, str, maxcount);
 }
 
 //
@@ -562,7 +679,7 @@ int qstring::strNCmp(const char *str, size_t maxcount) const
 //
 int qstring::strCaseCmp(const char *str) const
 {
-   return strcasecmp(buffer ? buffer : "", str);
+   return strcasecmp(buffer, str);
 }
 
 //
@@ -572,7 +689,7 @@ int qstring::strCaseCmp(const char *str) const
 //
 int qstring::strNCaseCmp(const char *str, size_t maxcount) const
 {
-   return strncasecmp(buffer ? buffer : "", str, maxcount);
+   return strncasecmp(buffer, str, maxcount);
 }
 
 //
@@ -582,7 +699,7 @@ int qstring::strNCaseCmp(const char *str, size_t maxcount) const
 //
 bool qstring::compare(const char *str) const
 {
-   return !strcmp(buffer ? buffer : "", str);
+   return !strcmp(buffer, str);
 }
 
 //
@@ -592,7 +709,7 @@ bool qstring::compare(const char *str) const
 //
 bool qstring::compare(const qstring &other) const
 {
-   return !strcmp(buffer ? buffer : "", other.buffer);
+   return !strcmp(buffer, other.buffer);
 }
 
 //
@@ -602,7 +719,7 @@ bool qstring::compare(const qstring &other) const
 //
 bool qstring::operator == (const char *other) const
 {
-   return !strcmp(buffer ? buffer : "", other);
+   return !strcmp(buffer, other);
 }
 
 //
@@ -612,7 +729,7 @@ bool qstring::operator == (const char *other) const
 //
 bool qstring::operator == (const qstring &other) const
 {
-   return !strcmp(buffer ? buffer : "", other.buffer);
+   return !strcmp(buffer, other.buffer);
 }
 
 //
@@ -622,7 +739,7 @@ bool qstring::operator == (const qstring &other) const
 //
 bool qstring::operator != (const char *other) const
 {
-   return strcmp(buffer ? buffer : "", other) != 0;
+   return strcmp(buffer, other) != 0;
 }
 
 //
@@ -632,7 +749,7 @@ bool qstring::operator != (const char *other) const
 //
 bool qstring::operator != (const qstring &other) const
 {
-   return strcmp(buffer ? buffer : "", other.buffer) != 0;
+   return strcmp(buffer, other.buffer) != 0;
 }
 
 //=============================================================================
@@ -698,7 +815,7 @@ unsigned int qstring::hashCodeCase() const
 //
 const char *qstring::strChr(char c) const
 {
-   return buffer ? strchr(buffer, c) : NULL;
+   return strchr(buffer, c);
 }
 
 //
@@ -708,7 +825,7 @@ const char *qstring::strChr(char c) const
 //
 const char *qstring::strRChr(char c) const
 {
-   return buffer ? strrchr(buffer, c) : NULL;
+   return strrchr(buffer, c);
 }
 
 //
@@ -719,13 +836,9 @@ const char *qstring::strRChr(char c) const
 //
 size_t qstring::findFirstOf(char c) const
 {
-   const char *rover;
+   const char *rover = buffer;
    bool found = false;
    
-   if(!buffer)
-      return npos;
-   
-   rover = buffer;
    while(*rover)
    {
       if(*rover == c)
@@ -747,13 +860,9 @@ size_t qstring::findFirstOf(char c) const
 //
 size_t qstring::findFirstNotOf(char c) const
 {
-   const char *rover;
+   const char *rover = buffer;
    bool found = false;
 
-   if(!buffer)
-      return npos;
-
-   rover = buffer;
    while(*rover)
    {
       if(*rover != c)
@@ -768,6 +877,34 @@ size_t qstring::findFirstNotOf(char c) const
 }
 
 //
+// qstring::findLastOf
+//
+// Find the last occurrance of a character in the qstring which matches
+// the provided character. Returns qstring::npos if not found.
+//
+size_t qstring::findLastOf(char c) const
+{
+   const char *rover;
+   bool found = false;
+   
+   if(!index)
+      return npos;
+   
+   rover = buffer + index - 1;
+   do
+   {
+      if(*rover == c)
+      {
+         found = true;
+         break;
+      }
+   }
+   while((rover == buffer) ? false : (--rover, true));
+
+   return found ? rover - buffer : npos;
+}
+
+//
 // qstring::findSubStr
 //
 // Calls strstr on the qstring. If the passed-in string is found, then the
@@ -775,7 +912,7 @@ size_t qstring::findFirstNotOf(char c) const
 //
 const char *qstring::findSubStr(const char *substr) const
 {
-   return strstr(buffer ? buffer : "", substr);
+   return strstr(buffer, substr);
 }
 
 //
@@ -786,7 +923,24 @@ const char *qstring::findSubStr(const char *substr) const
 //
 const char *qstring::findSubStrNoCase(const char *substr) const
 {
-   return M_StrCaseStr(buffer ? buffer : "", substr);
+   return M_StrCaseStr(buffer, substr);
+}
+
+//
+// qstring::find
+//
+// std::string-compatible find function.
+//
+size_t qstring::find(const char *s, size_t pos) const
+{
+   // pos must be between 0 and index - 1
+   if(pos >= index)
+      I_Error("qstring::find: position out of range\n");
+
+   char *base   = buffer + pos;
+   char *substr = strstr(base, s);
+   
+   return substr ? substr - buffer : npos;
 }
 
 //=============================================================================
@@ -805,7 +959,7 @@ const char *qstring::findSubStrNoCase(const char *substr) const
 //
 int qstring::toInt() const
 {
-   return buffer ? atoi(buffer) : 0;
+   return atoi(buffer);
 }
 
 //
@@ -815,8 +969,6 @@ int qstring::toInt() const
 //
 long qstring::toLong(char **endptr, int radix) 
 {
-   checkBuffer();
-
    return strtol(buffer, endptr, radix);
 }
 
@@ -831,8 +983,6 @@ long qstring::toLong(char **endptr, int radix)
 
 double qstring::toDouble(char **endptr)
 {
-   checkBuffer();
-
    return strtod(buffer, endptr);
 }
 
@@ -847,7 +997,7 @@ double qstring::toDouble(char **endptr)
 //
 char *qstring::duplicate(int tag) const
 {
-   return Z_Strdup(buffer ? buffer : "", tag, NULL);
+   return Z_Strdup(buffer, tag, NULL);
 }
 
 //
@@ -858,7 +1008,7 @@ char *qstring::duplicate(int tag) const
 //
 char *qstring::duplicateAuto() const
 {
-   return Z_Strdupa(buffer ? buffer : "");
+   return Z_Strdupa(buffer);
 }
 
 //=============================================================================
@@ -873,7 +1023,7 @@ char *qstring::duplicateAuto() const
 //
 qstring &qstring::toLower()
 {
-   M_Strlwr(checkBuffer());
+   M_Strlwr(buffer);
    return *this;
 }
 
@@ -884,7 +1034,7 @@ qstring &qstring::toLower()
 //
 qstring &qstring::toUpper()
 {
-   M_Strupr(checkBuffer());
+   M_Strupr(buffer);
    return *this;
 }
 
@@ -930,8 +1080,6 @@ size_t qstring::replace(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
 
-   checkBuffer();
-   
    memset(qstr_repltable, 0, sizeof(qstr_repltable));
 
    // first scan the filter string and build the replacement filter table
@@ -949,8 +1097,6 @@ size_t qstring::replace(const char *filter, char repl)
 size_t qstring::replaceNotOf(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
-
-   checkBuffer();
    
    memset(qstr_repltable, 1, sizeof(qstr_repltable));
 
@@ -960,6 +1106,11 @@ size_t qstring::replaceNotOf(const char *filter, char repl)
 
    return QStrReplaceInternal(this, repl);
 }
+
+//=============================================================================
+//
+// File Path Specific Routines
+//
 
 //
 // qstring::normalizeSlashes
@@ -971,12 +1122,97 @@ size_t qstring::replaceNotOf(const char *filter, char repl)
 //
 qstring &qstring::normalizeSlashes()
 {
-   checkBuffer();
-
    M_NormalizeSlashes(buffer);
    index = strlen(buffer);
 
    return *this;
+}
+
+//
+// qstring::pathConcatenate
+//
+// Concatenate a C string assuming the qstring's current contents are a file
+// path. Slashes will be normalized.
+//
+qstring &qstring::pathConcatenate(const char *addend)
+{
+   // Only add a slash if this is not the initial path component.
+   if(index > 0)
+      *this += '/';
+
+   *this += addend;
+   normalizeSlashes();
+
+   return *this;
+}
+
+//
+// qstring::addDefaultExtension
+//
+// Similar to M_AddDefaultExtension, but for qstrings.
+// Note: an empty string will not be modified.
+//
+qstring &qstring::addDefaultExtension(const char *ext)
+{
+   char *p = buffer;
+
+   if(p && index > 0)
+   {
+      p = p + index - 1;  // no need to seek for \0 here
+      while(p-- > buffer && *p != '/' && *p != '\\')
+      {
+         if(*p == '.')
+            return *this; // has an extension already.
+      }
+      if(*ext != '.') // need a dot?
+         *this += '.';
+      *this += ext;   // add the extension
+   }
+
+   return *this;
+}
+
+//
+// qstring::removeFileSpec
+//
+// Removes a filespec from a path.
+// If called on a path without a file, the last path component is removed.
+//
+qstring &qstring::removeFileSpec()
+{
+   size_t lastSlash;
+
+   lastSlash = findLastOf('/');
+   if(lastSlash == npos)
+      lastSlash = findLastOf('\\');
+   if(lastSlash != npos)
+      truncate(lastSlash);
+
+   return *this;
+}
+
+//
+// qstring::extractFileBase
+//
+// Similar to M_ExtractFileBase, but for qstrings.
+// This one is not limited to 8 character file names, and will include any
+// file extension, however, so it is not strictly equivalent.
+//
+void qstring::extractFileBase(qstring &dest)
+{
+   const char *src = buffer + index - 1;
+   dest = "";
+
+   // back up until a \ or the start
+   while(src != buffer && 
+      *(src - 1) != ':' &&
+      *(src - 1) != '\\' &&
+      *(src - 1) != '/')
+   {
+      --src;
+   }
+
+   dest = src;
 }
 
 //=============================================================================
@@ -1072,9 +1308,9 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'f':
             case 'g':
             case 'G':
-               // extremely excessive, but it's possible according to fcvt
+               // extremely excessive, but it's possible 
                dummydbl = va_arg(va1, double);
-               charcount += 626; 
+               charcount += 1078; 
                pctstate = false;
                break;
             case 'c': // Character
@@ -1116,6 +1352,43 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
    index = strlen(buffer);
 
    return returnval;
+}
+
+//=============================================================================
+//
+// Archiving
+//
+
+//
+// qstring::archive
+//
+// davidph 06/10/12: Handles archiving a qstring with proper state information.
+//
+void qstring::archive(SaveArchive &arc)
+{
+   uint32_t indexTemp;
+
+   if(arc.isLoading())
+      freeBuffer(); // haleyjd: do not leak memory
+
+   arc.ArchiveLString(buffer, size);
+
+   if(arc.isSaving())
+      indexTemp = index;
+
+   arc << indexTemp;
+
+   if(arc.isLoading())
+   {
+      // haleyjd: if turned out empty, restore to local buffer
+      if(!buffer)
+      {
+         buffer = local;
+         size   = 0;
+      }
+
+      index = indexTemp;
+   }
 }
 
 // EOF

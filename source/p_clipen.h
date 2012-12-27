@@ -64,6 +64,14 @@ typedef struct
 } open_t;
 
 
+// flags for controlling radius attack behaviors
+enum
+{
+   RAF_NOSELFDAMAGE = 0x00000001, // explosion does not damage originator
+   RAF_CLIPHEIGHT   = 0x00000002, // height range is checked, like Hexen
+};
+
+
 class ClipEngine
 {
    public:
@@ -106,8 +114,8 @@ class ClipEngine
       virtual void applyTorque(Mobj *mo);
       virtual void applyTorque(Mobj *mo, ClipContext *cc) = 0;
       
-      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod);
-      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc) = 0;
+      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int distance, int mod, unsigned int flags);
+      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int distance, int mod, unsigned int flags, ClipContext *cc) = 0;
 
       virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc) = 0;
       

@@ -56,7 +56,7 @@ void   D_OpenFile(DWFILE *infile, const char *filename, const char *mode);
 void   D_OpenLump(DWFILE *infile, int lumpnum);
 void   D_Fclose(DWFILE *dwfile);
 size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file);
-size_t D_FileLength(DWFILE *file);
+long   D_FileLength(DWFILE *file);
 
 inline static bool D_IsOpen(DWFILE *dwfile)
 {

@@ -47,6 +47,7 @@
 #include "p_pspr.h"
 #include "p_skin.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "r_main.h"
 #include "r_segs.h"
 #include "r_things.h"
@@ -71,8 +72,6 @@ int default_weapon_speed = 6;
 #define WEAPONTOP    (FRACUNIT*32)
 
 #define BFGCELLS bfgcells        /* Ty 03/09/98 externalized in p_inter.c */
-
-extern void P_Thrust(player_t *, angle_t, fixed_t);
 
 // The following array holds the recoil values         // phares
 // haleyjd 08/18/08: recoil moved into weaponinfo
@@ -203,8 +202,7 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
    // haleyjd 04/05/07: codepointer rewrite -- use same prototype for
    // all codepointers by getting player and psp from mo->player. This
    // requires stashing the "position" parameter in player_t, however.
-
-   player->curpsprite = position;
+   // 5/29/12: see below...
 
    do
    {
@@ -239,6 +237,10 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       if(state->action)
       {
          P_SetupPlayerGunAction(player, psp);
+
+         // haleyjd 05/29/12: this must be set before every action call, due to
+         // the possibility of recursive calls to P_SetPsprite.
+         player->curpsprite = position;
 
          state->action(player->mo);
          
@@ -849,6 +851,26 @@ void A_Raise(Mobj *mo)
    P_SetPsprite(player, ps_weapon, newstate);
 }
 
+//
+// P_WeaponRecoil
+//
+// haleyjd 12/11/12: Separated out of the below.
+//
+void P_WeaponRecoil(player_t *player)
+{
+   // killough 3/27/98: prevent recoil in no-clipping mode
+   if(!(player->mo->flags & MF_NOCLIP))
+   {
+      // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
+      if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
+         (weapon_recoil && (demo_version >= 203 || !compatibility)))
+      {
+         P_Thrust(player, ANG180 + player->mo->angle, 0,
+                  2048*weaponinfo[player->readyweapon].recoil); // phares
+      }
+   }
+}
+
 // Weapons now recoil, amount depending on the weapon.              // phares
 //                                                                  //   |
 // The P_SetPsprite call in each of the weapon firing routines      //   V
@@ -863,17 +885,7 @@ static void A_FireSomething(player_t* player, int adder)
    P_SetPsprite(player, ps_flash,
       weaponinfo[player->readyweapon].flashstate+adder);
    
-   // killough 3/27/98: prevent recoil in no-clipping mode
-   if(!(player->mo->flags & MF_NOCLIP))
-   {
-      // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
-      if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
-         (weapon_recoil && (demo_version >= 203 || !compatibility)))
-      {
-         P_Thrust(player, ANG180 + player->mo->angle,
-                  2048*weaponinfo[player->readyweapon].recoil); // phares
-      }
-   }
+   P_WeaponRecoil(player);
 }
 
 //
@@ -1130,7 +1142,7 @@ void A_FireOldBFG(Mobj *mo)
    // WEAPON_FIXME: recoil for classic BFG
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle,
+      P_Thrust(player, ANG180 + mo->angle, 0,
                512*weaponinfo[wp_plasma].recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
@@ -1767,10 +1779,12 @@ static argkeywd_t fcbkwds =
 // args[2] : number of bullets to fire
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
+// args[5] : if not zero, set specific flash state; if < 0, don't change it.
 //
 void A_FireCustomBullets(Mobj *mo)
 {
    int i, accurate, numbullets, damage, dmgmod;
+   int flashint, flashstate;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1785,6 +1799,9 @@ void A_FireCustomBullets(Mobj *mo)
    numbullets = E_ArgAsInt(psp->state->args, 2, 0);
    damage     = E_ArgAsInt(psp->state->args, 3, 0);
    dmgmod     = E_ArgAsInt(psp->state->args, 4, 0);
+   
+   flashint   = E_ArgAsInt(psp->state->args, 5, 0);
+   flashstate = E_ArgAsStateNum(psp->state->args, 5, NULL);
 
    if(!accurate)
       accurate = 1;
@@ -1806,7 +1823,14 @@ void A_FireCustomBullets(Mobj *mo)
       P_SubtractAmmo(player, -1);
    }
 
-   A_FireSomething(player, 0);
+   // have a flash state?
+   if(flashint >= 0 && flashstate != NullStateNum)
+      P_SetPsprite(player, ps_flash, flashstate);
+   else if(flashint == 0) // zero means default behavior
+      P_SetPsprite(player, ps_flash, P_GetReadyWeapon(player)->flashstate);
+
+   P_WeaponRecoil(player);
+
    
    TracerContext *tc = trace->getContext();
    P_BulletSlope(mo, tc);

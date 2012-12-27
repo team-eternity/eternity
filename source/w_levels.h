@@ -37,7 +37,17 @@ struct wadlevel_t
 };
 
 extern char *w_masterlevelsdirname;
-extern bool inmasterlevels;          // true if we are playing master levels
+extern char *w_norestpath;
+extern int   inmanageddir;   // non-zoer if we are playing a managed dir level
+
+// managed directory level/mission types
+enum
+{
+   MD_NONE,         // not in a managed directory
+   MD_MASTERLEVELS, // Master Levels
+   MD_NR4TL,        // No Rest for the Living
+   MD_OTHER         // Hell if I Know
+};
 
 WadDirectory *W_AddManagedWad(const char *filename);
 WadDirectory *W_GetManagedWad(const char *filename);
@@ -46,6 +56,8 @@ wadlevel_t   *W_FindAllMapsInLevelWad(WadDirectory *dir);
 wadlevel_t   *W_FindLevelInDir(WadDirectory *waddir, const char *name);
 void          W_DoMasterLevels(bool allowexit);
 void          W_EnumerateMasterLevels(bool forceRefresh);
+void          W_DoNR4TLStart();
+void          W_InitManagedMission(int mission);
 
 #endif
 

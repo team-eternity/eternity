@@ -959,7 +959,7 @@ static void doKeyword(pstate_t *ps)
    {
       state_t *state = states[DSP.currentstate - 1];
       int kwdcode = E_StrToNumLinear(decorate_kwds, NUMDECKWDS, 
-                                     ps->tokenbuffer->getBuffer());
+                                     ps->tokenbuffer->constPtr());
 
       switch(kwdcode)
       {
@@ -1708,10 +1708,6 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
    qstring linebuffer;
    qstring tokenbuffer;
    const char *inputstr = input;
-
-   // create line and token buffers
-   linebuffer.initCreate();
-   tokenbuffer.initCreate();
 
    // initialize pstate structure
    ps.index       = 0;

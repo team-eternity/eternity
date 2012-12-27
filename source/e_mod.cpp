@@ -39,6 +39,7 @@
 #include "d_dehtbl.h"
 #include "d_io.h"
 #include "doomtype.h"
+#include "metaapi.h"
 
 //
 // damagetype options
@@ -51,10 +52,10 @@
 
 cfg_opt_t edf_dmgtype_opts[] =
 {
-   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,        CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,      CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,      CFGF_NONE),
-   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, cfg_false, CFGF_NONE),
+   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,    CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,  CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,  CFGF_NONE),
+   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false, CFGF_NONE),
    CFG_END()
 };
 
@@ -91,6 +92,10 @@ static int edf_alloc_modnum = D_MAXINT;
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
    e_mod_namehash.addObject(*mod);
+
+   // cache dfKeyIndex for use in metatables
+   mod->dfKeyIndex = 
+      MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
 }
 
 // need forward declaration for E_AutoAllocModNum
@@ -288,7 +293,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
    // process sourceless flag
    if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
-      mod->sourceless = (cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS) == cfg_true);
+      mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n", 
                   def ? "Defined" : "Modified", mod->name);
@@ -302,6 +307,9 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 //
 static void E_initUnknownMod(void)
 {
+   static char name[] = "Unknown";
+   static char obituary[] = "OB_DEFAULT";
+
    static bool firsttime = true;
 
    if(firsttime) // only needed once
@@ -310,10 +318,10 @@ static void E_initUnknownMod(void)
 
       memset(&unknown_mod, 0, sizeof(emod_t));
 
-      unknown_mod.name = "Unknown";
+      unknown_mod.name = name;
       unknown_mod.num  = 0;
-      unknown_mod.obituary = "OB_DEFAULT";
-      unknown_mod.selfobituary = "OB_DEFAULT";
+      unknown_mod.obituary = obituary;
+      unknown_mod.selfobituary = obituary;
       unknown_mod.obitIsBexString = true;
       unknown_mod.selfObitIsBexString = true;
       unknown_mod.sourceless = false;

@@ -48,6 +48,7 @@
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_spec.h"
+#include "p_user.h"
 #include "r_draw.h"
 #include "v_misc.h"
 
@@ -85,7 +86,10 @@ const char *skills[]=
    "nightmare"
 };
 
-const char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
+const char *bfgtypestr[5] = 
+{ 
+   "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"
+};
 const char *dmstr[] = { "single", "coop", "deathmatch" };
 
 /*************************************************************************
@@ -231,6 +235,10 @@ const char *str_bfglook[] = { "off", "on", "fixedgun" };
 VARIABLE_INT(bfglook,   NULL,                   0, 2, str_bfglook);
 CONSOLE_NETVAR(bfglook, bfglook, cf_server, netcmd_bfglook) {}
 
+// davidph 06/06/12 -- haleyjd 06/07/12: promoted to netvar since sync-critical
+VARIABLE_TOGGLE(pitchedflight, &default_pitchedflight, onoff)
+CONSOLE_NETVAR(p_pitchedflight, pitchedflight, cf_server, netcmd_pitchedflight) {}
+
 // 'auto exit' variables
 
 VARIABLE_INT(levelTimeLimit,    NULL,           0, 100,         NULL);
@@ -360,8 +368,8 @@ CONSOLE_COMMAND(puke, cf_notnet)
    for(i = 1; i < Console.argc; ++i)
       args[i - 1] = Console.argv[i]->toInt();
 
-   ACS_StartScript(Console.argv[0]->toInt(), gamemap, args,
-                   players[Console.cmdsrc].mo, NULL, 0, NULL, true);
+   ACS_ExecuteScriptNumber(Console.argv[0]->toInt(), gamemap, ACS_EXECUTE_ALWAYS,
+                           args, 5, NULL, NULL, 0);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)
@@ -391,6 +399,7 @@ void P_AddCommands(void)
    C_AddCommand(nukage);
    C_AddCommand(weapspeed);
    C_AddCommand(bfglook);
+   C_AddCommand(p_pitchedflight);
    
    C_AddCommand(fast);
    C_AddCommand(nomonsters);

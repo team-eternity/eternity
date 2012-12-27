@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
@@ -104,6 +105,10 @@
 #define FNAME_DOOM_R    "FreeDoom version"
 #define FNAME_DOOM2     "FreeDoom II version"
 
+// BFG Edition override names
+#define BFGNAME_DOOM    "Ultimate DOOM BFG Edition version"
+#define BFGNAME_DOOM2   "DOOM II BFG Edition version"
+
 // Startup banners
 #define BANNER_DOOM_SW   "DOOM Shareware Startup"
 #define BANNER_DOOM_REG  "DOOM Registered Startup"
@@ -119,7 +124,6 @@
 
 // Default intermission pics
 #define INTERPIC_DOOM    "INTERPIC"
-#define INTERPIC_DISK    "DMENUPIC"
 
 // Default finales caused by Teleport_EndGame special
 #define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
@@ -142,7 +146,7 @@
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
-    GIF_HASMADMELEE)
+    GIF_HASMADMELEE | GIF_CENTERHUDMSG)
 
 // globals
 
@@ -611,6 +615,7 @@ char *gi_path_doomsw;
 char *gi_path_doomreg;
 char *gi_path_doomu;
 char *gi_path_doom2;
+char *gi_path_bfgdoom2;
 char *gi_path_tnt;
 char *gi_path_plut;
 char *gi_path_hacx;
@@ -721,7 +726,7 @@ static missioninfo_t gmDisk =
    NULL,            // creditBackgroundOR
    CONBACK_DISK,    // consoleBackOR
    NULL,            // demoStatesOR
-   INTERPIC_DISK,   // interPicOR
+   NULL,            // interPicOR
    DiskExitRules,   // exitRulesOR
 };
 
@@ -823,6 +828,7 @@ static gamemodeinfo_t giDoomSW =
    
    VNAME_DOOM_SW,    // versionName
    FNAME_DOOM_SW,    // freeVerName
+   NULL,             // bfgEditionName
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
    
@@ -847,12 +853,14 @@ static gamemodeinfo_t giDoomSW =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -917,6 +925,7 @@ static gamemodeinfo_t giDoomReg =
    
    VNAME_DOOM_REG,   // versionName
    FNAME_DOOM_R,     // freeVerName
+   NULL,             // bfgEditionName
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
    
@@ -941,12 +950,14 @@ static gamemodeinfo_t giDoomReg =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1011,6 +1022,7 @@ static gamemodeinfo_t giDoomRetail =
    
    VNAME_DOOM_RET,   // versionName
    FNAME_DOOM_R,     // freeVerName
+   BFGNAME_DOOM,     // bfgEditionName
    BANNER_DOOM_RET,  // startupBanner
    &gi_path_doomu,   // iwadPath
    
@@ -1035,12 +1047,14 @@ static gamemodeinfo_t giDoomRetail =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,          // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1105,6 +1119,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    VNAME_DOOM2,      // versionName
    FNAME_DOOM2,      // freeVerName
+   BFGNAME_DOOM2,    // bfgEditionName
    BANNER_DOOM2,     // startupBanner
    &gi_path_doom2,   // iwadPath
 
@@ -1129,12 +1144,14 @@ static gamemodeinfo_t giDoomCommercial =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
    0,                // menuOffset
 
    DM2BRDRFLAT,      // borderFlat
    &giDoomBorder,    // border
 
-   &cr_red,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1199,6 +1216,7 @@ static gamemodeinfo_t giHereticSW =
 
    VNAME_HTIC_SW,    // versionName
    NULL,             // freeVerName
+   NULL,             // bfgEditionName
    BANNER_HTIC_SW,   // startupBanner
    &gi_path_hticsw,  // iwadPath
 
@@ -1223,12 +1241,14 @@ static gamemodeinfo_t giHereticSW =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HSWBRDRFLAT,      // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1297,6 +1317,7 @@ static gamemodeinfo_t giHereticReg =
    
    VNAME_HTIC_REG,   // versionName
    NULL,             // freeVerName
+   NULL,             // bfgEditionName
    BANNER_HTIC_REG,  // startupBanner
    &gi_path_hticreg, // iwadPath
 
@@ -1321,12 +1342,14 @@ static gamemodeinfo_t giHereticReg =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
+   CR_GREEN,         // titleColor
+   CR_GOLD,          // itemColor
    4,                // menuOffset
 
    HREGBRDRFLAT,     // borderFlat
    &giHticBorder,    // border
 
-   &cr_gray,         // defTextTrans
+   CR_GRAY,          // defTextTrans
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
@@ -1454,8 +1477,11 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
 // W_InitMultipleFiles (and is done so immediately afterward), in order to
 // account for any PWADs loaded.
 //
+// 07/15/2012: Added runtime adjustment of blackIndex and whiteIndex.
+//
 void D_InitGMIPostWads(void)
 {
+   AutoPalette pal(wGlobalDir);
    gamemodeinfo_t *gi = GameModeInfo;
    missioninfo_t  *mi = gi->missionInfo;
 
@@ -1464,6 +1490,9 @@ void D_InitGMIPostWads(void)
    // * if MI_DEMOIFDEMO4 IS set, then only if DEMO4 actually exists.
    if(!(mi->flags & MI_DEMOIFDEMO4) || W_CheckNumForName("DEMO4") >= 0)
       OVERRIDE(demoStates, NULL);
+
+   GameModeInfo->blackIndex = V_FindBestColor(pal.get(), 0,   0,   0);
+   GameModeInfo->whiteIndex = V_FindBestColor(pal.get(), 255, 255, 255);
 }
 
 // EOF

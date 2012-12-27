@@ -49,6 +49,7 @@
 #include "m_misc.h"
 #include "mn_engin.h"
 #include "mn_files.h"
+#include "mn_misc.h"
 #include "r_data.h"
 #include "s_sound.h"
 #include "v_font.h"
@@ -72,6 +73,8 @@
 //
 static bool filecmp(const char *filename, const char *wildcard)
 {
+   static char no_ext[] = "";
+
    char *filename_main, *wildcard_main; // filename
    char *filename_ext, *wildcard_ext;   // extension
    bool res = true;
@@ -85,7 +88,7 @@ static bool filecmp(const char *filename, const char *wildcard)
    filename_ext = strrchr(filename_main, '.');
    
    if(!filename_ext) 
-      filename_ext = ""; // no extension
+      filename_ext = no_ext; // no extension
    else
    {
       // break into 2 strings; replace . with \0
@@ -96,7 +99,7 @@ static bool filecmp(const char *filename, const char *wildcard)
    wildcard_ext = strrchr(wildcard_main, '.');
 
    if(!wildcard_ext)
-      wildcard_ext = "";
+      wildcard_ext = no_ext;
    else
       *wildcard_ext++ = '\0';
 
@@ -195,7 +198,7 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 {
    int i;
 
-   for(i = 0; i < dir->numfiles; ++i)
+   for(i = 0; i < dir->numfiles; i++)
    {
       if(!strcasecmp(filename, (dir->filenames)[i]))
          break;
@@ -213,10 +216,8 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 //
 void MN_ClearDirectory(mndir_t *dir)
 {
-   int i;
-   
    // clear all alloced files   
-   for(i = 0; i < dir->numfiles; ++i)
+   for(int i = 0; i < dir->numfiles; i++)
    {
       efree((dir->filenames)[i]);
       (dir->filenames)[i] = NULL;
@@ -301,7 +302,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
 
 static mndir_t *mn_currentdir;
 
-static void MN_FileDrawer(void);
+static void MN_FileDrawer();
 static bool MN_FileResponder(event_t *ev);
 
 // file selector is handled using a menu widget
@@ -322,7 +323,7 @@ static bool allow_exit = true;
 // graphical widget in the game engine so far. Significantly different
 // than it was in SMMU 3.30.
 //
-static void MN_FileDrawer(void)
+static void MN_FileDrawer()
 {
    int i;
    int bbot, btop, bleft, bright, w, h; // color box coords and dimensions
@@ -351,10 +352,10 @@ static void MN_FileDrawer(void)
 
    // draw color rect -- must manually scale coordinates
    // SoM: w = x2 - x1 + 1
-   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex,
-                video.x1lookup[bleft], video.y1lookup[btop], 
-                video.x2lookup[bleft + w - 1] - video.x1lookup[bleft] + 1,
-                video.y2lookup[btop + h - 1] - video.y1lookup[btop] + 1);
+   V_ColorBlock(&subscreen43, GameModeInfo->blackIndex,
+                subscreen43.x1lookup[bleft], subscreen43.y1lookup[btop], 
+                subscreen43.x2lookup[bleft + w - 1] - subscreen43.x1lookup[bleft] + 1,
+                subscreen43.y2lookup[btop + h - 1] - subscreen43.y1lookup[btop] + 1);
 
    // draw the dialog title
    if(help_description)
@@ -416,6 +417,18 @@ static void MN_FileDrawer(void)
       // step by the height of one line
       y += lheight;
    }
+}
+
+//
+// MN_doExitFileWidget
+//
+// When allow_exit flag is false, call D_StartTitle
+//
+static void MN_doExitFileWidget()
+{
+   MN_PopWidget();  // cancel widget
+   MN_ClearMenus();
+   D_StartTitle();
 }
 
 //
@@ -481,15 +494,18 @@ static bool MN_FileResponder(event_t *ev)
    if(action_menu_toggle || action_menu_previous)
    {
       // When allow_exit flag is false, call D_StartTitle
+      action_menu_toggle = action_menu_previous = false;
       if(!allow_exit)
       {
-         MN_ClearMenus();
-         D_StartTitle();
+         MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
+                         MN_doExitFileWidget);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
       }
-
-      action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL; // cancel widget
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      else
+      {
+         MN_PopWidget(); // cancel widget
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      }
       return true;
    }
   
@@ -507,7 +523,7 @@ static bool MN_FileResponder(event_t *ev)
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
       if(select_dismiss)
-         current_menuwidget = NULL; // cancel widget
+         MN_PopWidget(); // cancel widget
       return true;
    }
 
@@ -550,11 +566,8 @@ char *wad_directory; // directory where user keeps wads
 VARIABLE_STRING(wad_directory,  NULL,          1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 {
-   char *a;
-
    // normalize slashes
-   for(a = wad_directory; *a; ++a)
-      if(*a == '\\') *a = '/';
+   M_NormalizeSlashes(wad_directory);
 }
 
 static mndir_t mn_diskdir;
@@ -581,11 +594,12 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 
    selected_item      = 0;
    mn_currentdir      = &mn_diskdir;
-   current_menuwidget = &file_selector;
    help_description   = "select wad file:";
    variable_name      = "mn_wadname";
    select_dismiss     = true;
    allow_exit         = true;
+
+   MN_PushWidget(&file_selector);
 }
 
 //
@@ -600,13 +614,14 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
    if(dir->numfiles < 1)
       return;
 
-   selected_item      = 0;
-   mn_currentdir      = dir;
-   current_menuwidget = &file_selector;
-   help_description   = title;
-   variable_name      = command;
-   select_dismiss     = dismissOnSelect;
-   allow_exit         = allowExit;
+   selected_item    = 0;
+   mn_currentdir    = dir;
+   help_description = title;
+   variable_name    = command;
+   select_dismiss   = dismissOnSelect;
+   allow_exit       = allowExit;
+
+   MN_PushWidget(&file_selector);
 }
 
 //=============================================================================
@@ -678,13 +693,14 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    // sort the list
    MN_sortFiles(&mn_diskdir);
 
-   selected_item = 0;
-   mn_currentdir = &mn_diskdir;
-   current_menuwidget = &file_selector;
+   selected_item    = 0;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select music to play:";
-   variable_name = "s_playmusic";
-   select_dismiss = false;
-   allow_exit     = true;
+   variable_name    = "s_playmusic";
+   select_dismiss   = false;
+   allow_exit       = true;
+
+   MN_PushWidget(&file_selector);
 }
 
 CONSOLE_COMMAND(mn_selectflat, 0)
@@ -698,7 +714,7 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    MN_addFile(&mn_diskdir, "default");
 
    // run through flats
-   for(i = flatstart; i < flatstop; ++i)
+   for(i = flatstart; i < flatstop; i++)
    {
       // size must be exactly 64x64
       if(textures[i]->width == 64 && textures[i]->height == 64)
@@ -719,12 +735,13 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    if((curnum = MN_findFile(&mn_diskdir, mn_background)) != mn_diskdir.numfiles)
       selected_item = curnum;
    
-   mn_currentdir = &mn_diskdir;
-   current_menuwidget = &file_selector;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select background:";
-   variable_name = "mn_background";
-   select_dismiss = false;
-   allow_exit     = true;
+   variable_name    = "mn_background";
+   select_dismiss   = false;
+   allow_exit       = true;
+
+   MN_PushWidget(&file_selector);
 }
 
 void MN_File_AddCommands(void)

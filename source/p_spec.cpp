@@ -106,10 +106,10 @@ typedef struct anim_s
 
 struct animdef_s
 {
-   char istexture;            //jff 3/23/98 make char for comparison
-   char endname[9];           //  if false, it is a flat
-   char startname[9];
-   int  speed;
+   uint8_t istexture;      // 0xff terminates; if false, it is a flat
+   char    endname[9];           
+   char    startname[9];
+   int     speed;
 }; //jff 3/23/98 pack to read from memory
 
 typedef struct animdef_s animdef_t;
@@ -181,10 +181,10 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = (animdef_t *)wGlobalDir.CacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = (animdef_t *)wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC);
 
    lastanim = anims;
-   for(i=0 ; animdefs[i].istexture != -1 ; i++)
+   for(i = 0; animdefs[i].istexture != 0xff; i++)
    {
       flags = TF_ANIMATED;
       
@@ -197,7 +197,7 @@ void P_InitPicAnims(void)
          maxanims = newmax;
       }
 
-      if (animdefs[i].istexture)
+      if(animdefs[i].istexture)
       {
          // different episode ?
          if(R_CheckForWall(animdefs[i].startname) == -1)
@@ -1166,32 +1166,8 @@ bool P_WasSecret(sector_t *sec)
 //
 void P_StartLineScript(line_t *line, Mobj *thing)
 {
-#ifndef EE_NO_SMALL_SUPPORT
-   if(levelScriptLoaded)
-   {
-      SmallContext_t *useContext;
-      SmallContext_t newContext;
-
-      // possibly create a child context for the Levelscript
-      useContext = SM_CreateChildContext(curLSContext, &newContext);
-
-      // set invocation data
-      useContext->invocationData.invokeType = SC_INVOKE_LINE;
-      useContext->invocationData.trigger = thing;
-      useContext->invocationData.line = line;
-
-      // execute
-      SM_ExecScriptByNumV(&useContext->smallAMX, line->tag);
-
-      // clear invocation
-      SM_ClearInvocation(useContext);
-
-      // destroy any child context that might have been created
-      SM_DestroyChildContext(useContext);         
-   }
-   else // haleyjd 03/20/11: Defer to ACS if there is no Small level script
-#endif
-      ACS_StartScript(line->tag, gamemap, line->args, thing, line, 0, NULL, false);
+   ACS_ExecuteScriptNumber(line->tag, gamemap, 0, line->args, NUMLINEARGS, 
+                           thing, line, 0);
 }
 
 //=============================================================================
@@ -1526,14 +1502,17 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 
    case 40:
       // RaiseCeilingLowerFloor
-      if(P_ClearSwitchOnFail())
+      if(demo_compatibility)
       {
          EV_DoCeiling(line, raiseToHighest);
          EV_DoFloor(line, lowerFloorToLowest); //jff 02/12/98 doesn't work
          line->special = 0;
       }
-      else if(EV_DoCeiling(line, raiseToHighest))
-         line->special = 0;
+      else
+      {
+         if(EV_DoCeiling(line, raiseToHighest) || P_ClearSwitchOnFail())
+            line->special = 0;
+      }
       break;
 
    case 44:
@@ -5151,7 +5130,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    }
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small Natives
 //

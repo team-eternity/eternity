@@ -32,11 +32,9 @@
 #include "../w_wad.h"
 #include "../m_qstr.h"
 #include "../i_system.h"
+#include "../v_misc.h"
 
 #include "confuse.h"
-
-#define _(str) str
-#define N_(str) str
 
 // file include stack
 
@@ -44,22 +42,27 @@
 
 static struct cfginclude_s
 {
-   char *filename;
-   int lumpnum;    // haleyjd
-   unsigned int line;
-   char *buffer;   // haleyjd 03/16/08
-   char *pos;
+   char          *filename;
+   int            lumpnum;  // haleyjd
+   unsigned int   line;
+   char          *buffer;   // haleyjd 03/16/08
+   char          *pos;
+   cfg_dialect_t  dialect;  // haleyjd 09/17/12
 } include_stack[MAX_INCLUDE_DEPTH];
 
 static int include_stack_ptr = 0;
 
-char *mytext; // haleyjd: equivalent to yytext
+// haleyjd 09/17/12: current parser dialect
+static cfg_dialect_t currentDialect = CFG_DIALECT_DELTA;
+
+const char *mytext; // haleyjd: equivalent to yytext
 
 // haleyjd 07/11/03: dynamic string buffer solution from 
 // libConfuse v2.0; eliminates unsafe, overflowable array
 // 02/12/04: replaced with generalized solution in m_qstr.c
 
 static qstring qstr;
+static qstring hexchar;
 
 //
 // lexer_error
@@ -75,14 +78,14 @@ static void lexer_error(cfg_t *cfg, const char *msg)
 // haleyjd 12/23/06: if true, unquoted strings can contain spaces
 // at the moment. Defaults to false.
 
-static cfg_bool_t unquoted_spaces = cfg_false;
+static bool unquoted_spaces = false;
 
 //
 // lexer_set_unquoted_spaces
 //
 // Toggles the behavior of spaces inside unquoted strings.
 //
-void lexer_set_unquoted_spaces(cfg_bool_t us)
+void lexer_set_unquoted_spaces(bool us)
 {
    unquoted_spaces = us;
 }
@@ -92,10 +95,11 @@ static char *bufferpos; // position in buffer
 
 static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 {
-   size_t  foo, size; 
+   size_t  foo;
+   size_t  size; 
    char   *buffer;
    
-   size   = D_FileLength(dwfile);
+   size   = static_cast<size_t>(D_FileLength(dwfile));
    buffer = emalloc(char *, size + 1);
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
@@ -114,7 +118,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    return buffer;
 }
 
-static void lexer_free_buffer(void)
+static void lexer_free_buffer()
 {
    if(lexbuffer)
       efree(lexbuffer);
@@ -162,7 +166,8 @@ void lexer_reset(void)
 
    // reset lexer variables
    mytext = NULL;
-   unquoted_spaces = cfg_false;
+   unquoted_spaces = false;
+   currentDialect  = CFG_DIALECT_DELTA;
 
    // free qstring buffer
    qstr.freeBuffer();
@@ -208,6 +213,10 @@ enum
    STATE_SLCOMMENT,
    STATE_MLCOMMENT,
    STATE_STRING,
+   STATE_ESCAPE,
+   STATE_HEXESCAPE,
+   STATE_LINECONTINUANCE,
+   STATE_STRINGCOALESCE,
    STATE_UNQUOTEDSTRING,
    STATE_HEREDOC
 };
@@ -255,104 +264,16 @@ static int lexer_state_mlcomment(lexerstate_t *ls)
 //
 static int lexer_state_string(lexerstate_t *ls)
 {
-   int ret = -1;
-
    switch(ls->c)
    {
    case '\n': // free linebreak -- not allowed
       lexer_error(ls->cfg, "unterminated string constant");
-      ret = 0;
-      break;
-   case '\\': // escaped characters or line continuation
-      {
-         char s = *bufferpos++;
-         
-         switch(s)
-         {
-         case '\0':
-            lexer_error(ls->cfg, "EOF in string constant");
-            ret = 0;
-            break;
-         case '\r':
-         case '\n':
-            // line continuance for quoted strings!
-            // increment the line
-            ls->cfg->line++;
-            
-            // loop until a non-whitespace char is found
-            while(isspace((unsigned char)(s = *bufferpos++)));
-            
-            // better not be EOF!
-            if(s == '\0')
-            {
-               lexer_error(ls->cfg, "EOF in string constant");
-               ret = 0;
-               break;
-            }
-            
-            // put back the last char
-            --bufferpos;
-            break;
-         case 'n':
-            qstr += '\n';
-            break;
-         case 't':
-            qstr += '\t';
-            break;
-         case 'a':
-            qstr += '\a';
-            break;
-         case 'b':
-            qstr += '\b';
-            break;                     
-         case '0':
-            qstr += '\0';
-            break;
-            // haleyjd 03/14/06: color codes
-         case 'K':
-            qstr += (char)128;
-            break;
-         case '1':
-         case '2':
-         case '3':
-         case '4':
-         case '5':
-         case '6':
-         case '7':
-         case '8':
-         case '9':
-            qstr += (char)((s - '0') + 128);
-            break;
-            // haleyjd 03/14/06: special codes
-         case 'T': // translucency
-            qstr += (char)138;
-            break;
-         case 'N': // normal
-            qstr += (char)139;
-            break;
-         case 'H': // hi
-            qstr += (char)140;
-            break;
-         case 'E': // error
-            qstr += (char)141;
-            break;
-         case 'S': // shadowed
-            qstr += (char)142;
-            break;
-         case 'C': // absCentered
-            qstr += (char)143;
-            break;
-         default:
-            qstr += s;
-            break;
-         }
-      }
-      break;
+      return 0;
    case '"':
       if(ls->stringtype == 1) // double-quoted string, end it
       {
-         mytext = qstr.getBuffer();
-         ret = CFGT_STR;
+         // check for coalescence
+         ls->state = STATE_STRINGCOALESCE;
       }
       else
          qstr += ls->c;
@@ -360,18 +281,168 @@ static int lexer_state_string(lexerstate_t *ls)
    case '\'':
       if(ls->stringtype == 2) // single-quoted string, end it
       {               
-         mytext = qstr.getBuffer();
-         ret = CFGT_STR;
+         // check for coalescence
+         ls->state = STATE_STRINGCOALESCE;
       }
       else
          qstr += ls->c;
+      break;
+   case '\\':
+      // a forward slash begins an escape sequence
+      ls->state = STATE_ESCAPE;
       break;
    default:
       qstr += ls->c;
       break;
    }
 
-   return ret;
+   return -1;
+}
+
+//
+// lexer_state_escape
+//
+// Handle escape sequences in quoted strings
+//
+static int lexer_state_escape(lexerstate_t *ls)
+{
+   switch(ls->c)
+   {
+   case '\n': // line continuance for quoted strings
+      ls->cfg->line++; // increment line count
+      ls->state = STATE_LINECONTINUANCE;
+      return -1;
+   case 'a': // bell
+      qstr += '\a'; 
+      break;
+   case 'b': // rub
+      qstr += '\b'; 
+      break;
+   case 'n': // line break
+      qstr += '\n'; 
+      break;
+   case 't': // tab
+      qstr += '\t'; 
+      break;
+   case 'x': // hex escape sequence
+      hexchar.clear();
+      ls->state = STATE_HEXESCAPE;
+      return -1;
+   case '0': // NB: *not* null char! Brick color.
+   case '1':
+   case '2':
+   case '3':
+   case '4':
+   case '5':
+   case '6':
+   case '7':
+   case '8':
+   case '9': // haleyjd 03/14/06: color codes      
+      qstr += (char)((ls->c - '0') + TEXT_COLOR_MIN);
+      break;
+   case 'C': // absCentered
+      qstr += (char)TEXT_CONTROL_ABSCENTER;
+      break;
+   case 'E': // error
+      qstr += (char)TEXT_COLOR_ERROR;
+      break;
+   case 'H': // hi
+      qstr += (char)TEXT_COLOR_HI;
+      break;
+   case 'K': // 'K' is an old alias for "brick" color.
+      qstr += (char)TEXT_COLOR_MIN;
+      break;
+   case 'N': // normal
+      qstr += (char)TEXT_COLOR_NORMAL;
+      break;
+   case 'S': // shadowed
+      qstr += (char)TEXT_CONTROL_SHADOW;
+      break;
+   case 'T': // translucency
+      qstr += (char)TEXT_CONTROL_TRANS;
+      break;
+   default: // Anything else is treated literally
+      qstr += ls->c;
+      break;
+   }
+
+   // If we reach here, return to STATE_STRING
+   ls->state = STATE_STRING;
+   return -1;
+}
+
+//
+// lexer_state_hexescape
+//
+// Handle \x character constants
+//
+static int lexer_state_hexescape(lexerstate_t *ls)
+{
+   if((ls->c >= '0' && ls->c <= '9') ||
+      (ls->c >= 'A' && ls->c <= 'F') ||
+      (ls->c >= 'a' && ls->c <= 'f'))
+   {
+      hexchar += ls->c;
+
+      if(hexchar.length() == 2) // Only two chars max.
+      {
+         qstr += (char)(hexchar.toLong(NULL, 16));
+         ls->state = STATE_STRING; // Back to string parsing.
+      }
+   }
+   else // unknown character
+   {
+      lexer_error(ls->cfg, "illegal character in hex escape sequence");
+      return 0;
+   }
+
+   return -1; // keep scanning
+}
+
+//
+// lexer_state_linecontinuance
+//
+// Handle hacky C-style line continuance inside quoted string tokens
+//
+static int lexer_state_linecontinuance(lexerstate_t *ls)
+{
+   // stay in this state until a non-whitespace char is found
+   if(ls->c != ' ' && ls->c != '\t')
+   {
+      // put back the last character and return to STATE_STRING
+      --bufferpos;
+      ls->state = STATE_STRING;
+   }
+
+   return -1;
+}
+
+//
+// lexer_state_stringcoalesce
+//
+// Look for the start of another string literal after the current one,
+// separated by nothing except whitespace. When this happens, coalesce
+// the consecutive string tokens into one token.
+//
+static int lexer_state_stringcoalesce(lexerstate_t *ls)
+{
+   switch(ls->c)
+   {
+   case '\n':    // increment line count, and fall through.
+      ls->cfg->line++; 
+   case ' ':     // whitespace, continue scanning
+   case '\t':
+      return -1;
+   case '"':     // quotations: coalesce with previous token
+   case '\'':
+      ls->state = STATE_STRING; // go back to string state.
+      ls->stringtype = (ls->c == '\'' ? 2 : 1);
+      return -1;
+   default:      // something else; put it back and return token
+      --bufferpos;
+      mytext = qstr.constPtr();
+      return CFGT_STR;
+   }
 }
 
 //
@@ -381,15 +452,16 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
 {
    char c = ls->c;
 
-   if((!unquoted_spaces && (c == ' ' || c == '\t'))    || 
-      c == '"'  || c == '\'' || c == '\n' || c == '='  || 
-      c == '{'  || c == '}'  || c == '('  || c == ')'  || 
-      c == '+'  || c == ','  || c == '#'  || c == '/'  || 
+   if((!unquoted_spaces && (c == ' ' || c == '\t'))       || 
+      (currentDialect >= CFG_DIALECT_ALFHEIM && c == ':') ||
+      c == '"'  || c == '\'' || c == '\n' || c == '='     || 
+      c == '{'  || c == '}'  || c == '('  || c == ')'     || 
+      c == '+'  || c == ','  || c == '#'  || c == '/'     || 
       c == ';')
    {
       // any special character ends an unquoted string
       --bufferpos; // put it back
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
       
       return CFGT_STR; // return a string token
    }
@@ -424,7 +496,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
    if(ls->c == c && *bufferpos == '@')
    {
       ++bufferpos; // move forward past @
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
 
       return CFGT_STR; // return a string token
    }
@@ -543,9 +615,17 @@ static int lexer_state_none(lexerstate_t *ls)
       }
       // fall through, @ is not special unless followed by " or '
    default:  // anything else is part of an unquoted string
-      qstr.clear();
-      qstr += ls->c;
-      ls->state = STATE_UNQUOTEDSTRING;
+      if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
+      {
+         mytext = ":";
+         ret    = ':'; 
+      }
+      else
+      {
+         qstr.clear();
+         qstr += ls->c;
+         ls->state = STATE_UNQUOTEDSTRING;
+      }
       break;
    }
 
@@ -559,6 +639,10 @@ static lexfunc_t lexerfuncs[] =
    lexer_state_slcomment,
    lexer_state_mlcomment,
    lexer_state_string,
+   lexer_state_escape,
+   lexer_state_hexescape,
+   lexer_state_linecontinuance,
+   lexer_state_stringcoalesce,
    lexer_state_unquotedstring,
    lexer_state_heredoc,
 };
@@ -591,16 +675,21 @@ include:
    switch(ls.state)
    {
    case STATE_STRING:
+   case STATE_ESCAPE:
+   case STATE_HEXESCAPE:
+   case STATE_LINECONTINUANCE:
    case STATE_HEREDOC:
       // EOF in quoted or heredoc string - not allowed
       lexer_error(cfg, "EOF in string constant");
       return 0;
 
    case STATE_UNQUOTEDSTRING:
-      // EOF after unquoted string -- return the string, next
-      // call will return EOF
+   case STATE_STRINGCOALESCE:
+      // EOF after unquoted string or while looking ahead for string
+      // literal coalescence -- return the string, next call will 
+      // return EOF.
       --bufferpos;
-      mytext = qstr.getBuffer();
+      mytext = qstr.constPtr();
       return CFGT_STR;
 
    default:      
@@ -615,11 +704,12 @@ include:
          // done with an include file      
          efree(cfg->filename);
          lexer_free_buffer();
-         lexbuffer     = include_stack[include_stack_ptr].buffer;
-         bufferpos     = include_stack[include_stack_ptr].pos;
-         cfg->filename = include_stack[include_stack_ptr].filename;
-         cfg->line     = include_stack[include_stack_ptr].line;
-         cfg->lumpnum  = include_stack[include_stack_ptr].lumpnum;
+         lexbuffer      = include_stack[include_stack_ptr].buffer;
+         bufferpos      = include_stack[include_stack_ptr].pos;
+         cfg->filename  = include_stack[include_stack_ptr].filename;
+         cfg->line      = include_stack[include_stack_ptr].line;
+         cfg->lumpnum   = include_stack[include_stack_ptr].lumpnum;
+         currentDialect = include_stack[include_stack_ptr].dialect;
 
          ls.state = STATE_NONE; // make sure it's not in an odd state
          goto include; // haleyjd: goto -- kill me now!
@@ -677,6 +767,7 @@ int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int lumpnu
    include_stack[include_stack_ptr].lumpnum  = cfg->lumpnum;
    include_stack[include_stack_ptr].buffer   = lexbuffer;
    include_stack[include_stack_ptr].pos      = bufferpos;
+   include_stack[include_stack_ptr].dialect  = currentDialect;
    include_stack_ptr++;
 
    cfg->filename = cfg_tilde_expand(filename);
@@ -698,6 +789,16 @@ int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int lumpnu
 int cfg_lexer_source_type(cfg_t *cfg)
 {
    return cfg->lumpnum;
+}
+
+//
+// cfg_lexer_set_dialect
+//
+// Change the dialect being used by the lexer.
+//
+void cfg_lexer_set_dialect(cfg_dialect_t dialect)
+{
+   currentDialect = dialect;
 }
 
 // EOF

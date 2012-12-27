@@ -3,9 +3,9 @@
 // $Id: mmus2mid.h,v 1.6 1998/05/10 23:00:48 jim Exp $
 //
 //-----------------------------------------------------------------------------
-//
-#if !defined( MMUS2MID_H )
-#define MMUS2MID_H
+
+#ifndef MMUS2MID_H__
+#define MMUS2MID_H__
 
 // error codes
 
@@ -41,11 +41,13 @@ typedef struct MIDI                    /* a midi file */
 } MIDI;
 #endif // DJGPP
 
-int mmus2mid(UBYTE *mus, int size, MIDI *mid, UWORD division, int nocomp);
-int MIDIToMidi(MIDI *mididata,UBYTE **mid,int *midlen);
-int MidiToMIDI(UBYTE *mid,MIDI *mididata);
+bool mmuscheckformat(UBYTE *mus, int size);
+int  mmus2mid(UBYTE *mus, int size, MIDI *mid, UWORD division, int nocomp);
+int  MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen);
+int  MidiToMIDI(UBYTE *mid,MIDI *mididata);
 
 #endif
+
 //----------------------------------------------------------------------------
 //
 // $Log: mmus2mid.h,v $

@@ -221,8 +221,8 @@ static void P_AddSkin(skin_t *newskin)
 static void P_AddSpriteLumps(const char *named)
 {
    int i, n = strlen(named);
-   int numlumps = wGlobalDir.GetNumLumps();
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   int numlumps = wGlobalDir.getNumLumps();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
    for(i = 0; i < numlumps; i++)
    {
@@ -294,7 +294,7 @@ void P_ParseSkin(int lumpnum)
    char *rover;
    char inputline[256];
    bool comment;
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
    // FIXME: revise to use finite-state-automaton parser and qstring buffers
 
@@ -306,7 +306,7 @@ void P_ParseSkin(int lumpnum)
    strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
 
-   newskin->facename = "STF";      // default status bar face
+   newskin->facename = estrdup("STF");      // default status bar face
    newskin->faces    = NULL;
 
    newskin->type    = SKIN_PLAYER; // haleyjd: it's a player skin
@@ -315,7 +315,7 @@ void P_ParseSkin(int lumpnum)
    // set sounds to defaults
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
 
-   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));  // get the lump
+   lump = (char *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));  // get the lump
    
    rover = lump; 
    comment = false;

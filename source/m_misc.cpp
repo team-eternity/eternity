@@ -36,6 +36,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "hal/i_platform.h"
 
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -66,6 +67,7 @@
 #include "p_clipen.h"
 #include "p_doomclip.h"
 #include "p_partcl.h"
+#include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_sky.h"
@@ -160,7 +162,7 @@ default_t defaults[] =
                "precache sounds at startup"),
   
    // killough 10/98
-   DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("disk_icon", &disk_icon, NULL, 0, 0, 1, default_t::wad_no, 
                "1 to enable flashing icon during disk IO"),
   
    // killough 2/21/98
@@ -267,6 +269,9 @@ default_t defaults[] =
 
    DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
+
+   DEFAULT_BOOL("p_pitchedflight", &default_pitchedflight, &pitchedflight, true, default_t::wad_yes, 
+                "1 to enable flying in the direction you are looking"),
    
    // no color changes on status bar
    DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, default_t::wad_yes,
@@ -318,7 +323,7 @@ default_t defaults[] =
    DEFAULT_INT("show_messages", &showMessages, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable message display"),
 
-   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_no,
+   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_no,
                "messages colour"),
 
    // killough 3/6/98: preserve autorun across games
@@ -688,13 +693,13 @@ default_t defaults[] =
    DEFAULT_BOOL("hu_showcoords", &hu_showcoords, NULL, true, default_t::wad_yes,
                 "display player/pointer coordinates on automap"),
    
-   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap level time widget"),
 
-   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap level name widget"),
    
-   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
+   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_yes,
                "color of automap coordinates widget"),
    
    // below is red
@@ -769,7 +774,7 @@ default_t defaults[] =
    DEFAULT_INT("obituaries",&obituaries, NULL, 0, 0, 1, default_t::wad_yes,
                "obituaries on/off"),
    
-   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_LIMIT-1, default_t::wad_no,
+   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_BUILTIN, default_t::wad_no,
                "obituaries colour"),
    
    DEFAULT_INT("draw_particles",&drawparticles, NULL, 0, 0, 1, default_t::wad_yes,
@@ -861,7 +866,7 @@ default_t defaults[] =
    DEFAULT_BOOL("donut_emulation", &donut_emulation, NULL, false, default_t::wad_no,
                 "emulate undefined EV_DoDonut behavior"),
    
-   DEFAULT_INT("wipewait",&wipewait, NULL, 2, 0, 2, default_t::wad_no,
+   DEFAULT_INT("wipewait",&wipewait, NULL, 1, 0, 2, default_t::wad_no,
                "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"),
    
    DEFAULT_INT("wipetype",&wipetype, NULL, 1, 0, 2, default_t::wad_yes,
@@ -877,8 +882,7 @@ default_t defaults[] =
 #endif
 
    // last entry
-   { NULL, dt_integer, NULL, NULL, NULL, NULL, 0.0f, false, { 0, 0 }, default_t::wad_no,
-     NULL, M_ZEROFIELDS }
+   DEFAULT_END()
 };
 
 //
@@ -1466,9 +1470,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, userpath, D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 1, userpath, "/tmpetern.cfg");
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", userpath, D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmpetern.cfg", userpath);
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
@@ -1482,10 +1486,11 @@ void M_SaveDefaultFile(defaultfile_t *df)
    // killough 10/98: use executable's name
 
    if(config_help && !df->helpHeader &&
-      fprintf(f,";%s.cfg format:\n"
+      fprintf(f,
+              ";eternity.cfg format:\n"
               ";[min-max(default)] description of variable\n"
               ";* at end indicates variable is settable in wads\n"
-              ";variable   value\n\n", D_DoomExeName()) == EOF)
+              ";variable   value\n\n") == EOF)
    {
       M_defaultFileWriteError(df, tmpfile);
       return;
@@ -1627,7 +1632,7 @@ void M_LoadOptions(void)
    if((lump = W_CheckNumForName("OPTIONS")) != -1)
    {
       int size = W_LumpLength(lump), buflen = 0;
-      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.CacheLumpNum(lump, PU_STATIC));
+      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.cacheLumpNum(lump, PU_STATIC));
       while (size > 0)
       {
          int len = 0;
@@ -1836,7 +1841,7 @@ default_t *M_FindDefaultForCVar(variable_t *var)
 //
 // killough 9/98: rewritten to use stdio and to flash disk icon
 //
-bool M_WriteFile(char const *name, void *source, unsigned int length)
+bool M_WriteFile(char const *name, void *source, size_t length)
 {
    FILE *fp;
    bool result;
@@ -1902,7 +1907,7 @@ int M_ReadFile(char const *name, byte **buffer)
 // haleyjd 03/09/06: made global
 // haleyjd 01/04/10: use fseek/ftell
 //
-int M_FileLength(FILE *f)
+long M_FileLength(FILE *f)
 {
    long curpos, len;
 
@@ -1911,7 +1916,31 @@ int M_FileLength(FILE *f)
    len = ftell(f);
    fseek(f, curpos, SEEK_SET);
 
-   return (int)len;
+   return len;
+}
+
+//
+// M_LoadStringFromFile
+//
+// haleyjd 09/02/12: Like M_ReadFile, but assumes the contents are a string
+// and therefore null terminates the buffer.
+//
+char *M_LoadStringFromFile(const char *filename)
+{
+   FILE *f   = NULL;
+   char *buf = NULL;
+   long  len = 0;
+   
+   if(!(f = fopen(filename, "rb")))
+      return NULL;
+
+   // allocate at length + 1 for null termination
+   len = M_FileLength(f);
+   buf = ecalloc(char *, 1, len + 1);
+   fread(buf, 1, static_cast<size_t>(len), f);
+   fclose(f);
+
+   return buf;
 }
 
 //=============================================================================
@@ -2145,22 +2174,38 @@ char *M_AddDefaultExtension(char *path, const char *ext)
 void M_NormalizeSlashes(char *str)
 {
    char *p;
+   char useSlash      = '/'; // The slash type to use for normalization.
+   char replaceSlash = '\\'; // The kind of slash to replace.
+   bool isUNC = false;
+
+   if(ee_current_platform == EE_PLATFORM_WINDOWS)
+   {
+      // This is an UNC path; it should use backslashes.
+      // NB: We check for both in the event one was changed earlier by mistake.
+      if(strlen(str) > 2 && 
+         ((str[0] == '\\' || str[0] == '/') && str[0] == str[1]))
+      {
+         useSlash = '\\';
+         replaceSlash = '/';
+         isUNC = true;
+      }
+   }
    
-   // Convert all backslashes to slashes
+   // Convert all replaceSlashes to useSlashes
    for(p = str; *p; p++)
    {
-      if(*p == '\\')
-         *p = '/';
+      if(*p == replaceSlash)
+         *p = useSlash;
    }
 
    // Remove trailing slashes
-   while(p > str && *--p == '/')
+   while(p > str && *--p == useSlash)
       *p = 0;
 
    // Collapse multiple slashes
-   for(p = str; (*str++ = *p); )
-      if(*p++ == '/')
-         while(*p == '/')
+   for(p = str + (isUNC ? 2 : 0); (*str++ = *p); )
+      if(*p++ == useSlash)
+         while(*p == useSlash)
             p++;
 }
 

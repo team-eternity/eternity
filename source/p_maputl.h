@@ -27,6 +27,8 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+#include "tables.h" // for angle_t
+
 struct sector_t;
 struct line_t;
 class  Mobj;
@@ -51,7 +53,8 @@ struct intercept_t
 {
   fixed_t     frac;           // along trace line
   bool        isaline;
-  union {
+  union d_u
+  {
     Mobj* thing;
     line_t* line;
   } d;

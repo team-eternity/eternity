@@ -228,7 +228,7 @@ void HU_Start(void)
       }
    }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDStart");
@@ -248,7 +248,7 @@ void HU_Drawer(void)
    int i;
    hu_widget_t *widget;
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDPreDraw");
@@ -392,14 +392,17 @@ static void HU_MessageDraw(hu_widget_t *widget)
       int x = 0;
       char *msg = mw->messages[i];
 
-      // haleyjd 12/26/02: center messages in Heretic
-      // FIXME/TODO: make this an option in DOOM?
-      if(GameModeInfo->type == Game_Heretic)
+      // haleyjd 12/26/02: center messages in proper gamemodes
+      // haleyjd 08/26/12: center also if in widescreen modes
+      if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
+         vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
+      {
          x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
+      }
       
       // haleyjd 06/04/05: use V_FontWriteTextColored like it should.
       // Color codes within strings will still override the default.
-      V_FontWriteTextColored(hud_font, msg, mess_colour, x, y);
+      V_FontWriteTextColored(hud_font, msg, mess_colour, x, y, &subscreen43);
    }
 }
 
@@ -497,7 +500,7 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
    // be sure the patch is loaded
    pw->patch = PatchLoader::CacheName(wGlobalDir, pw->patchname, PU_CACHE);
 
-   V_DrawPatchTL(pw->x, pw->y, &vbscreen, pw->patch, pw->color, pw->tl_level);
+   V_DrawPatchTL(pw->x, pw->y, &subscreen43, pw->patch, pw->color, pw->tl_level);
 }
 
 //
@@ -660,9 +663,12 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
    if(tw->message && (!tw->cleartic || leveltime < tw->cleartic))
    {
       if(tw->color)
-         V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, tw->x, tw->y);
+      {
+         V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, 
+                                tw->x, tw->y, &subscreen43);
+      }
       else
-         V_FontWriteText(tw->font, tw->message, tw->x, tw->y);
+         V_FontWriteText(tw->font, tw->message, tw->x, tw->y, &subscreen43);
    }
 }
 
@@ -941,9 +947,9 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
       drawy = scaledwindowy + (scaledviewheight - h) / 2;
   
    if(pal == notargetcolour)
-      V_DrawPatchTL(drawx, drawy, &vbscreen, patch, pal, FTRANLEVEL);
+      V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
    else
-      V_DrawPatchTranslated(drawx, drawy, &vbscreen, patch, pal, false);
+      V_DrawPatchTranslated(drawx, drawy, &subscreen43, patch, pal, false);
 }
 
 //
@@ -1307,7 +1313,7 @@ static void HU_CoordTick(hu_widget_t *widget)
    }
    plyr = &players[displayplayer];
 
-   AM_Coordinates(plyr->mo, &x, &y, &z);
+   AM_Coordinates(plyr->mo, x, y, z);
 
    if(tw == &coordx_widget)
    {
@@ -1430,10 +1436,10 @@ const char english_shiftxform[] =
 //
 
 VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
-VARIABLE_INT(mess_colour,       NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(mess_colour,       NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
-VARIABLE_INT(obcolour,          NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(obcolour,          NULL, 0, CR_BUILTIN,    textcolours);
 VARIABLE_INT(crosshairnum,      NULL, 0, CROSSHAIRS-1,  cross_str);
 VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
 VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
@@ -1441,9 +1447,9 @@ VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
 // haleyjd 02/12/06: lost/new hud options
 VARIABLE_TOGGLE(hu_showtime,    NULL,                   yesno);
 VARIABLE_TOGGLE(hu_showcoords,  NULL,                   yesno);
-VARIABLE_INT(hu_timecolor,      NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(hu_timecolor,      NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);
@@ -1498,7 +1504,7 @@ void HU_AddCommands(void)
    HU_OverAddCommands();
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Script functions
 //

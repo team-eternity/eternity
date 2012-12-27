@@ -99,6 +99,7 @@ subsector_t *subsectors;
 
 int      numnodes;
 node_t   *nodes;
+fnode_t  *fnodes;
 
 int      numlines;
 line_t   *lines;
@@ -344,13 +345,13 @@ void P_LoadVertexes(int lump)
    
    // Determine number of vertexes:
    //  total lump length / vertex record length.
-   numvertexes = setupwad->LumpLength(lump) / sizeof(mapvertex_t);
+   numvertexes = setupwad->lumpLength(lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
    vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
    
    // Load data into cache.
-   data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(i = 0; i < numvertexes; ++i)
@@ -377,9 +378,9 @@ void P_LoadSegs(int lump)
    int  i;
    byte *data;
    
-   numsegs = setupwad->LumpLength(lump) / sizeof(mapseg_t);
+   numsegs = setupwad->lumpLength(lump) / sizeof(mapseg_t);
    segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
-   data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    
    for(i = 0; i < numsegs; ++i)
    {
@@ -437,9 +438,9 @@ void P_LoadSubsectors(int lump)
    byte *data;
    int  i;
    
-   numsubsectors = setupwad->LumpLength(lump) / sizeof(mapsubsector_t);
+   numsubsectors = setupwad->lumpLength(lump) / sizeof(mapsubsector_t);
    subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
-   data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    
    for(i = 0; i < numsubsectors; ++i)
    {
@@ -465,9 +466,9 @@ void P_LoadSectors(int lumpnum)
    int  defaultSndSeq;
    char namebuf[9];
    
-   numsectors  = setupwad->LumpLength(lumpnum) / sizeof(mapsector_t);
+   numsectors  = setupwad->lumpLength(lumpnum) / sizeof(mapsector_t);
    sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
-   lump = data = (byte *)(setupwad->CacheLumpNum(lumpnum, PU_STATIC));
+   lump = data = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
@@ -575,20 +576,20 @@ void P_LoadSectors(int lumpnum)
 // general line equation coefficients for a node, which are used during the
 // process of dynaseg generation.
 //
-static void P_CalcNodeCoefficients(node_t *no)
+static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 {
    // haleyjd 05/16/08: keep floating point versions as well for dynamic
    // seg splitting operations
-   no->fx  = (double)no->x;
-   no->fy  = (double)no->y;
-   no->fdx = (double)no->dx;
-   no->fdy = (double)no->dy;
+   fnode->fx  = (double)node->x;
+   fnode->fy  = (double)node->y;
+   fnode->fdx = (double)node->dx;
+   fnode->fdy = (double)node->dy;
 
    // haleyjd 05/20/08: precalculate general line equation coefficients
-   no->a   = -no->fdy;
-   no->b   =  no->fdx;
-   no->c   =  no->fdy * no->fx - no->fdx * no->fy;
-   no->len = sqrt(no->fdx * no->fdx + no->fdy * no->fdy);
+   fnode->a   = -fnode->fdy;
+   fnode->b   =  fnode->fdx;
+   fnode->c   =  fnode->fdy * fnode->fx - fnode->fdx * fnode->fy;
+   fnode->len = sqrt(fnode->fdx * fnode->fdx + fnode->fdy * fnode->fdy);
 }
 
 //
@@ -601,7 +602,7 @@ void P_LoadNodes(int lump)
    byte *data;
    int  i;
    
-   numnodes = setupwad->LumpLength(lump) / sizeof(mapnode_t);
+   numnodes = setupwad->lumpLength(lump) / sizeof(mapnode_t);
 
    // haleyjd 09/01/02:
    // Long-needed fix: bomb out on zero-length nodes
@@ -611,8 +612,9 @@ void P_LoadNodes(int lump)
       return;
    }
 
-   nodes = (node_t *)(Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0));
-   data  = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   nodes  = estructalloctag(node_t,  numnodes, PU_LEVEL);
+   fnodes = estructalloctag(fnode_t, numnodes, PU_LEVEL);
+   data   = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numnodes; ++i)
    {
@@ -626,7 +628,7 @@ void P_LoadNodes(int lump)
       no->dy = SwapShort(mn->dy);
 
       // haleyjd: calculate floating-point data
-      P_CalcNodeCoefficients(no);
+      P_CalcNodeCoefficients(no, &fnodes[i]);
 
       no->x  <<= FRACBITS;
       no->y  <<= FRACBITS;
@@ -662,11 +664,11 @@ static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
    bool result = false;
 
    // haleyjd: be sure something is actually there
-   if(!setupwad->LumpLength(lumpnum + ML_NODES))
+   if(!setupwad->lumpLength(lumpnum + ML_NODES))
       return result;
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
-   data = setupwad->CacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
+   data = setupwad->cacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
 
    if(!memcmp(data, "XNOD", 4))
    {
@@ -785,8 +787,8 @@ static void P_LoadZNodes(int lump)
    uint32_t numNodes;
    vertex_t *newvertarray = NULL;
 
-   data = lumpptr = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
-   len  = setupwad->LumpLength(lump);
+   data = lumpptr = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+   len  = setupwad->lumpLength(lump);
 
    // skip header
    CheckZNodesOverflow(len, 4);
@@ -881,7 +883,8 @@ static void P_LoadZNodes(int lump)
    numNodes = GetLevelDWordU(&data);
 
    numnodes = numNodes;
-   nodes = ecalloc(node_t *, numNodes, sizeof(node_t));
+   nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
+   fnodes = estructalloctag(fnode_t, numNodes, PU_LEVEL);
 
    CheckZNodesOverflow(len, numNodes * 32);
    for (i = 0; i < numNodes; i++)
@@ -907,7 +910,7 @@ static void P_LoadZNodes(int lump)
       no->dx = mn.dx;
       no->dy = mn.dy;
 
-      P_CalcNodeCoefficients(no);
+      P_CalcNodeCoefficients(no, &fnodes[i]);
 
       no->x  <<= FRACBITS;
       no->y  <<= FRACBITS;
@@ -945,10 +948,10 @@ static void P_ConvertHereticThing(mapthing_t *mthing);
 void P_LoadThings(int lump)
 {
    int  i;
-   byte *data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    mapthing_t *mapthings;
    
-   numthings = setupwad->LumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
+   numthings = setupwad->lumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
@@ -1017,10 +1020,10 @@ void P_LoadThings(int lump)
 void P_LoadHexenThings(int lump)
 {
    int  i;
-   byte *data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    mapthing_t *mapthings;
    
-   numthings = setupwad->LumpLength(lump) / sizeof(mapthinghexen_t);
+   numthings = setupwad->lumpLength(lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
@@ -1160,9 +1163,9 @@ void P_LoadLineDefs(int lump)
    byte *data;
    int  i;
 
-   numlines = setupwad->LumpLength(lump) / sizeof(maplinedef_t);
+   numlines = setupwad->lumpLength(lump) / sizeof(maplinedef_t);
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
-   data     = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1274,9 +1277,9 @@ void P_LoadHexenLineDefs(int lump)
    byte *data;
    int  i;
 
-   numlines = setupwad->LumpLength(lump) / sizeof(maplinedefhexen_t);
+   numlines = setupwad->lumpLength(lump) / sizeof(maplinedefhexen_t);
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
-   data     = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1373,7 +1376,7 @@ void P_LoadLineDefs2(void)
 //
 void P_LoadSideDefs(int lump)
 {
-   numsides = setupwad->LumpLength(lump) / sizeof(mapsidedef_t);
+   numsides = setupwad->lumpLength(lump) / sizeof(mapsidedef_t);
    sides    = estructalloctag(side_t, numsides, PU_LEVEL);
 }
 
@@ -1383,7 +1386,7 @@ void P_LoadSideDefs(int lump)
 
 void P_LoadSideDefs2(int lumpnum)
 {
-   byte *lump = (byte *)(setupwad->CacheLumpNum(lumpnum, PU_STATIC));
+   byte *lump = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
    byte *data = lump;
    int  i;
    char toptexture[9], bottomtexture[9], midtexture[9];
@@ -1749,7 +1752,7 @@ static bool P_VerifyBlockMap(int count)
 //
 void P_LoadBlockMap(int lump)
 {
-   int len   = setupwad->LumpLength(lump);
+   int len   = setupwad->lumpLength(lump);
    int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
@@ -1762,7 +1765,7 @@ void P_LoadBlockMap(int lump)
    else
    {
       int i;
-      int16_t *wadblockmaplump = (int16_t *)(setupwad->CacheLumpNum(lump, PU_LEVEL));
+      int16_t *wadblockmaplump = (int16_t *)(setupwad->cacheLumpNum(lump, PU_LEVEL));
       blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
                                       PU_LEVEL, NULL));
 
@@ -2030,7 +2033,7 @@ static void P_LoadReject(int lump)
    int size;
    int expectedsize;
 
-   size = setupwad->LumpLength(lump);
+   size = setupwad->lumpLength(lump);
 
    // haleyjd: round numsectors^2 to next higher multiple of 8, then divide by
    // 8 to get the expected reject size for this level
@@ -2041,7 +2044,7 @@ static void P_LoadReject(int lump)
    // 2. if size <  expectedsize, allocate a zero-filled buffer and copy
    //    in whatever exists from the actual lump.
    if(size >= expectedsize)
-      rejectmatrix = (byte *)(setupwad->CacheLumpNum(lump, PU_LEVEL));
+      rejectmatrix = (byte *)(setupwad->cacheLumpNum(lump, PU_LEVEL));
    else
    {
       // set to all zeroes so that the reject has no effect
@@ -2049,7 +2052,7 @@ static void P_LoadReject(int lump)
 
       if(size > 0)
       {
-         byte *temp = (byte *)(setupwad->CacheLumpNum(lump, PU_CACHE));
+         byte *temp = (byte *)(setupwad->cacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
       }
    }
@@ -2089,8 +2092,8 @@ static const char *levellumps[] =
 int P_CheckLevel(WadDirectory *dir, int lumpnum)
 {
    int i, ln;
-   int          numlumps = dir->GetNumLumps();
-   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   int          numlumps = dir->getNumLumps();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
    
    for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
    {
@@ -2197,7 +2200,7 @@ static void P_PreZoneFreeLevel(void)
    //==============================================
    // Scripting
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // haleyjd 03/15/03: clear levelscript callbacks
    SM_RemoveCallbacks(SC_VM_LEVELSCRIPT);
 #endif
@@ -2366,10 +2369,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
-   lumpinfo = setupwad->GetLumpInfo();
+   lumpinfo = setupwad->getLumpInfo();
    
    // get the map name lump number
-   if((lumpnum = setupwad->CheckNumForName(mapname)) == -1)
+   if((lumpnum = setupwad->checkNumForName(mapname)) == -1)
    {
       P_SetupLevelError("Map not found", mapname);
       return;
@@ -2509,20 +2512,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    else
       camera = NULL;        // camera off
 
-#ifndef EE_NO_SMALL_SUPPORT
-   // haleyjd 03/15/03: load and initialize any level scripts
-   SM_InitLevelScript();
-#endif
-
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo
    if(mapformat == LEVEL_FORMAT_HEXEN)
       acslumpnum = lumpnum + ML_BEHAVIOR;
    else if(LevelInfo.acsScriptLump)
-      acslumpnum = setupwad->CheckNumForName(LevelInfo.acsScriptLump);
+      acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);
 
-   if(acslumpnum != -1)
-      ACS_LoadLevelScript(acslumpnum);
+   ACS_LoadLevelScript(dir, acslumpnum);
 }
 
 //

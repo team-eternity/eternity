@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // Reallocating string structure
 //
@@ -38,14 +38,18 @@
 
 #include "z_zone.h"
 
+class SaveArchive;
+
 class qstring : public ZoneObject
 {
 private:
+   char    local[16];
    char   *buffer;
    size_t  index;
    size_t  size;
    
-   char   *checkBuffer();
+   bool isLocal() const { return (buffer == local); }
+   void unLocalize(size_t pSize);
 
 public:
    static const size_t npos;
@@ -53,17 +57,29 @@ public:
 
    // Constructors / Destructor
    qstring(size_t startSize = 0, int tag = PU_STATIC) 
-      : ZoneObject(), buffer(NULL), index(0), size(0)
+      : ZoneObject(), index(0), size(16)
    {
       ChangeTag(tag);
+      buffer = local;
+      memset(local, 0, sizeof(local));
       if(startSize)
          initCreateSize(startSize);
    }
 
    qstring(const qstring &other) 
-      : ZoneObject(), buffer(NULL), index(0), size(0)
+      : ZoneObject(), index(0), size(16)
    {
+      buffer = local;
+      memset(local, 0, sizeof(local));
       copy(other);
+   }
+
+   explicit qstring(const char *cstr)
+      : ZoneObject(), index(0), size(16)
+   {
+      buffer = local;
+      memset(local, 0, sizeof(local));
+      copy(cstr);
    }
 
    ~qstring() { freeBuffer(); }
@@ -77,14 +93,14 @@ public:
    // cached, and is not meant for writing into (although it is safe to do so, it
    // circumvents the encapsulation and security of this structure).
    //
-   char *getBuffer() { return checkBuffer(); }
+   char *getBuffer() { return buffer; }
 
    //
    // qstring::constPtr
    //
    // Like qstring::getBuffer, but casts to const to enforce safety.
    //
-   const char *constPtr() { return checkBuffer(); }
+   const char *constPtr() const { return buffer; }
 
    //
    // qstring::length
@@ -141,6 +157,7 @@ public:
 
    // Copying and Swapping
    qstring &copy(const char *str);
+   qstring &copy(const char *str, size_t count);
    qstring &copy(const qstring &src);
    char    *copyInto(char *dest, size_t size) const;
    qstring &copyInto(qstring &dest) const;
@@ -153,7 +170,13 @@ public:
    // Substring Replacements
    size_t   replace(const char *filter, char repl);
    size_t   replaceNotOf(const char *filter, char repl);
+   
+   // File Path Utilities
    qstring &normalizeSlashes();
+   qstring &pathConcatenate(const char *addend);
+   qstring &addDefaultExtension(const char *ext);
+   qstring &removeFileSpec();
+   void     extractFileBase(qstring &dest);
 
    // Zone strdup wrappers
    char *duplicate(int tag) const;
@@ -169,13 +192,16 @@ public:
    const char *strRChr(char c) const;
    size_t      findFirstOf(char c) const;
    size_t      findFirstNotOf(char c) const;
+   size_t      findLastOf(char c) const;
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
+   size_t      find(const char *s, size_t pos = 0) const;
 
    // Stripping and Truncation
    qstring &lstrip(char c);
    qstring &rstrip(char c);
    qstring &truncate(size_t pos);
+   qstring &erase(size_t pos, size_t n = npos);
 
    // Special Formatting 
    qstring &makeQuoted();
@@ -191,6 +217,17 @@ public:
    qstring &operator += (const qstring &other);
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
+   qstring &operator << (const qstring &other);
+   qstring &operator << (const char    *other);
+   qstring &operator << (char   ch);
+   qstring &operator << (int    i);
+   qstring &operator << (double d);
+   
+   char       &operator [] (size_t idx);
+   const char &operator [] (size_t idx) const;
+
+   // Archiving
+   void archive(SaveArchive &arc);
 };
 
 #endif

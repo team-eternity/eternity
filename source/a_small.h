@@ -30,75 +30,10 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __A_SMALL_H__
-#define __A_SMALL_H__
+#ifndef A_SMALL_H__
+#define A_SMALL_H__
 
-class Mobj;
-struct line_t;
-
-#ifndef EE_NO_SMALL_SUPPORT
-
-#include "doomtype.h"
-#include "amx.h"
-
-// custom app-defined errors
-
-#define SC_ERR_MASK 32768
-
-typedef enum
-{
-   SC_ERR_READ,                        // lump read failure
-   SC_ERR_GAMEMODE,                    // native not available in gm
-   SC_ERR_INVOKE,                      // data invalid for inv. model
-   SC_ERR_BADVM,                       // unknown vm type
-   SC_ERR_BADWAIT,                     // unknown wait type
-   SC_ERR_REENTRANT,                   // attempt at reentrant call
-   SC_ERR_NUMERRS                      // maximum
-} scripterr_e;
-
-// invocation models
-
-typedef enum
-{
-   SC_INVOKE_NONE,     // internal
-   SC_INVOKE_CCMD,     // console command
-   SC_INVOKE_THING,    // thing frame
-   SC_INVOKE_PLAYER,   // player gun frame
-   SC_INVOKE_LINE,     // linedef
-   SC_INVOKE_TERRAIN,  // scripted TerrainType
-   SC_INVOKE_CALLBACK, // scheduled callback
-   SC_INVOKE_SPECIAL,  // started as a special
-   SC_INVOKE_DIALOGUE, // started by dialogue
-} scriptinvoke_e;
-
-// VM types
-
-typedef enum
-{
-   SC_VM_GAMESCRIPT,
-   SC_VM_LEVELSCRIPT,
-   SC_VM_END, // a special end marker (used by savegame code)
-} sc_vm_e;
-
-//
-// Invocation Data
-//
-// This is one of the core structures used to interact with the Small
-// scripting engine. This structure holds data about how a script was
-// started, only while that script is running. Every SmallContext
-// contains its own invocation data. This is one thing that FraggleScript
-// REALLY needed.
-//
-typedef struct sc_invoke_s
-{
-   scriptinvoke_e invokeType; // invocation type for native functions
-
-   // invocation data
-   Mobj *trigger; // thing that started script -- get with TID_TRIGGER
-   int playernum;   // # of player that started script
-   line_t *line;    // line that started script
-   int spec_mode;   // line special mode; see sm_specialmode in p_genlin.c
-} sc_invoke_t;
+#if 0
 
 // callback flags
 
@@ -133,43 +68,6 @@ typedef struct sc_callback_s
 
 } sc_callback_t;
 
-//
-// SmallContext
-//
-// haleyjd 06/01/04: Because of reentrancy issues, most script
-// starting must now use a SmallContext. This structure and its
-// helper functions in a_small.c make amx_Exec appear to behave
-// like a purely reentrant function to the rest of the game engine.
-// Actually, it's a big and sort of gross hack necessitated by a 
-// limitation in Small -- the code and execution context are still 
-// married, even with amx_Clone (it cannot allow a shared memory 
-// space; this structure has to copy back data to the parent context).
-//
-// Note that the AMX is also given a pointer back to its SmallContext
-// container, so that native functions can retrieve the context data.
-// This is done using the Small USERDATA facility and the helper
-// function SM_GetContextForAMX.
-//
-typedef struct SmallContext_s
-{
-   AMX smallAMX;                  // The Small AMX for this context
-   sc_invoke_t invocationData;    // invocation data for this context
-   struct SmallContext_s *parent; // parent context, if any
-   struct SmallContext_s *child;  // child context, if any
-   bool isChild;                  // true if created as a child
-   sc_vm_e vm;                    // vm this context is or is a child of   
-} SmallContext_t;
-
-SmallContext_t *SM_GetContextForAMX(AMX *);
-SmallContext_t *SM_CreateChildContext(SmallContext_t *, SmallContext_t *);
-void SM_DestroyChildContext(SmallContext_t *);
-
-int  SM_GetSmallString(AMX *amx, char **dest, cell addr);
-byte *SM_GetAMXDataSegment(AMX *amx, long *size);
-void SM_ClearInvocation(SmallContext_t *);
-void SM_InitGameScript(void);
-void SM_InitLevelScript(void);
-void SM_InitSmall(void);
 sc_callback_t *SM_GetCallbackList(void);
 void SM_LinkCallback(sc_callback_t *);
 void SM_ExecuteCallbacks(void);
@@ -177,21 +75,9 @@ void SM_RemoveCallbacks(int vm);
 void SM_RemoveCallback(sc_callback_t *callback);
 int  SM_AddCallback(char *scrname, sc_vm_e vm, 
                    int waittype, int waitdata, int waitflags);
-cell SM_ExecScriptV(AMX *amx, int fnNum);
-cell SM_ExecScriptByNum(AMX *amx, int number, int numparams, 
-                       cell params[]);
-cell SM_ExecScriptByNumV(AMX *amx, int number);
+#endif
 
-void SM_OptScriptCallback(SmallContext_t *ctx, const char *cbname);
-
-extern bool gameScriptLoaded;
-extern bool levelScriptLoaded;
-extern SmallContext_t GameScript;
-extern SmallContext_t *curGSContext;
-extern SmallContext_t LevelScript;
-extern SmallContext_t *curLSContext;
-
-#endif // EE_NO_SMALL_SUPPORT
+class Mobj;
 
 // haleyjd 07/06/04: FINE put it here!
 Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);

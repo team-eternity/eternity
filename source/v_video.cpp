@@ -48,7 +48,6 @@
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
 // SoM: Moved. See cb_video_t
 // byte *screens[5];
-int  dirtybox[4];
 
 //jff 2/18/98 palette color ranges for translation
 //jff 4/24/98 now pointers set to predefined lumps to allow overloading
@@ -66,7 +65,7 @@ byte *cr_orange;
 byte *cr_yellow;
 
 //jff 4/24/98 initialize this at runtime
-byte *colrngs[10];
+byte *colrngs[CR_LIMIT];
 
 // Now where did these came from?
 byte gammatable[5][256] =
@@ -194,9 +193,13 @@ static const crdef_t crdefs[] =
 // killough 5/2/98: tiny engine driven by table above
 void V_InitColorTranslation(void)
 {
-  register const crdef_t *p;
-  for (p=crdefs; p->name; p++)
-    *p->map1 = *p->map2 = (byte *)(wGlobalDir.CacheLumpName(p->name, PU_STATIC));
+   register const crdef_t *p;
+   for(p = crdefs; p->name; p++)
+      *p->map1 = *p->map2 = (byte *)(wGlobalDir.cacheLumpName(p->name, PU_STATIC));
+
+   // haleyjd: init custom color slots too
+   for(int i = CR_CUSTOM1; i <= CR_MAXCUSTOM; i++)
+      colrngs[i] = R_GetIdentityMap();
 }
 
 //
@@ -688,18 +691,18 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 //
 void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
-   void *source;
-   patch_t *patch;
-   int len = wGlobalDir.LumpLength(lumpnum);
+   void    *source = NULL;
+   patch_t *patch  = NULL;
+   int len = wGlobalDir.lumpLength(lumpnum);
 
    switch(len)
    {
    case 4096:  // 64x64 flat
-      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
+      source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBackgroundCached((byte *)source, dest);
       break;
    case 64000: // 320x200 linear
-      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
+      source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBlockFS(dest, (byte *)source);
       break;
    default:    // anything else is treated like a patch (let god sort it out)
@@ -806,6 +809,35 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 // additive translucency. Note this code is included in Odamex and
 // so it can be considered GPL as used here, rather than BSD. But,
 // I don't care either way. It is effectively dual-licensed I suppose.
+// So, you can use it under this license if you wish:
+//
+// Copyright 1998-2012 Randy Heit  All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions 
+// are met:
+//
+// 1. Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//
+// 3. The name of the author may not be used to endorse or promote products
+//    derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
 bool flexTranInit = false;
 unsigned int  Col2RGB8[65][256];
@@ -899,9 +931,6 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
       dest += SCREENWIDTH;
    }
 }
-
-
-
 
 //----------------------------------------------------------------------------
 //

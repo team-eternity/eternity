@@ -736,7 +736,7 @@ void A_HticExplode(Mobj *actor)
       break;
    }
 
-   clip->radiusAttack(actor, actor->target, damage, actor->info->mod);
+   clip->radiusAttack(actor, actor->target, damage, damage, actor->info->mod, 0);
 
    if(actor->z <= actor->secfloorz + damage * FRACUNIT)
       E_HitWater(actor, actor->subsector->sector);
@@ -969,7 +969,7 @@ void A_VolcBallImpact(Mobj *actor)
    }
 
    // do some radius damage
-   clip->radiusAttack(actor, actor->target, 25, actor->info->mod);
+   clip->radiusAttack(actor, actor->target, 25, 25, actor->info->mod, 0);
 
    // spawn 4 little volcano balls
    for(i = 0; i < 4; ++i)

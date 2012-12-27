@@ -28,11 +28,11 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_files.h"
 #include "d_gi.h"     // haleyjd: gamemode pertinent info
 #include "d_io.h"
 #include "d_mod.h"
@@ -44,6 +44,8 @@
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "i_system.h"
+#include "i_video.h"
 #include "m_misc.h"
 #include "m_shots.h"
 #include "m_random.h"
@@ -60,8 +62,6 @@
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
-
-extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 
 extern int automlook;
 extern int invert_mouse;
@@ -243,6 +243,13 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
 
+   // haleyjd 09/22/12: mark all players as "cheated" to disable scoring
+   for(int i = 0; i < MAXPLAYERS; i++)
+   {
+      if(playeringame[i])
+         players[i].cheats |= CF_CHEATED;
+   }
+
    if((player->health > 0) || comp[comp_zombie])
       G_ExitLevel();
 }
@@ -261,7 +268,7 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(wGlobalDir.CheckNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
+   if(wGlobalDir.checkNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
    {
       C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
       return;
@@ -289,7 +296,14 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
 
 // 'cool' demo
 
-VARIABLE_BOOLEAN(cooldemo, NULL,            onoff);
+const char *cooldemo_modes[] =
+{
+   "off",
+   "random",
+   "follow"
+};
+
+VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
 ///////////////////////////////////////////////////
@@ -472,21 +486,23 @@ CONSOLE_VARIABLE(runiswalk, runiswalk, 0) {}
 
 // haleyjd 03/22/09: iwad cvars
 
-VARIABLE_STRING(gi_path_doomsw,  NULL, UL);
-VARIABLE_STRING(gi_path_doomreg, NULL, UL);
-VARIABLE_STRING(gi_path_doomu,   NULL, UL);
-VARIABLE_STRING(gi_path_doom2,   NULL, UL);
-VARIABLE_STRING(gi_path_tnt,     NULL, UL);
-VARIABLE_STRING(gi_path_plut,    NULL, UL);
-VARIABLE_STRING(gi_path_hacx,    NULL, UL);
-VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
-VARIABLE_STRING(gi_path_hticreg, NULL, UL);
-VARIABLE_STRING(gi_path_sosr,    NULL, UL);
-VARIABLE_STRING(gi_path_fdoom,   NULL, UL);
-VARIABLE_STRING(gi_path_fdoomu,  NULL, UL);
-VARIABLE_STRING(gi_path_freedm,  NULL, UL);
+VARIABLE_STRING(gi_path_doomsw,   NULL, UL);
+VARIABLE_STRING(gi_path_doomreg,  NULL, UL);
+VARIABLE_STRING(gi_path_doomu,    NULL, UL);
+VARIABLE_STRING(gi_path_doom2,    NULL, UL);
+VARIABLE_STRING(gi_path_bfgdoom2, NULL, UL);
+VARIABLE_STRING(gi_path_tnt,      NULL, UL);
+VARIABLE_STRING(gi_path_plut,     NULL, UL);
+VARIABLE_STRING(gi_path_hacx,     NULL, UL);
+VARIABLE_STRING(gi_path_hticsw,   NULL, UL);
+VARIABLE_STRING(gi_path_hticreg,  NULL, UL);
+VARIABLE_STRING(gi_path_sosr,     NULL, UL);
+VARIABLE_STRING(gi_path_fdoom,    NULL, UL);
+VARIABLE_STRING(gi_path_fdoomu,   NULL, UL);
+VARIABLE_STRING(gi_path_freedm,   NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
+VARIABLE_STRING(w_norestpath,          NULL, UL);
 
 static bool G_TestIWADPath(char *path)
 {
@@ -506,67 +522,72 @@ static bool G_TestIWADPath(char *path)
    return true;
 }
 
-CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  cf_allowblank)
+CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_doomsw);
 }
 
-CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, cf_allowblank)
+CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg,  cf_allowblank)
 {
    G_TestIWADPath(gi_path_doomreg);
 }
 
-CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   cf_allowblank)
+CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,    cf_allowblank)
 {
    G_TestIWADPath(gi_path_doomu);
 }
 
-CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   cf_allowblank)
+CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,    cf_allowblank)
 {
    G_TestIWADPath(gi_path_doom2);
 }
 
-CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     cf_allowblank)
+CONSOLE_VARIABLE(iwad_bfgdoom2,          gi_path_bfgdoom2, cf_allowblank)
+{
+   G_TestIWADPath(gi_path_bfgdoom2);
+}
+
+CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,      cf_allowblank)
 {
    G_TestIWADPath(gi_path_tnt);
 }
 
-CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    cf_allowblank)
+CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,     cf_allowblank)
 {
    G_TestIWADPath(gi_path_plut);
 }
 
-CONSOLE_VARIABLE(iwad_hacx,              gi_path_hacx,    cf_allowblank)
+CONSOLE_VARIABLE(iwad_hacx,              gi_path_hacx,     cf_allowblank)
 {
    G_TestIWADPath(gi_path_hacx);
 }
 
-CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  cf_allowblank)
+CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_hticsw);
 }
 
-CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, cf_allowblank)
+CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg,  cf_allowblank)
 {
    G_TestIWADPath(gi_path_hticreg);
 }
 
-CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    cf_allowblank)
+CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,     cf_allowblank)
 {
    G_TestIWADPath(gi_path_sosr);
 }
 
-CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,   cf_allowblank)
+CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,    cf_allowblank)
 {
    G_TestIWADPath(gi_path_fdoom);
 }
 
-CONSOLE_VARIABLE(iwad_freedoomu,         gi_path_fdoomu,  cf_allowblank)
+CONSOLE_VARIABLE(iwad_freedoomu,         gi_path_fdoomu,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_fdoomu);
 }
 
-CONSOLE_VARIABLE(iwad_freedm,            gi_path_freedm,  cf_allowblank)
+CONSOLE_VARIABLE(iwad_freedm,            gi_path_freedm,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_freedm);
 }
@@ -575,6 +596,11 @@ CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)
 {
    if(G_TestIWADPath(w_masterlevelsdirname))
       W_EnumerateMasterLevels(true);
+}
+
+CONSOLE_VARIABLE(w_norestpath, w_norestpath, cf_allowblank)
+{
+   G_TestIWADPath(w_norestpath);
 }
 
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
@@ -750,7 +776,7 @@ void G_AddWeapPrefs(void)
 // haleyjd 03/13/06
 //
 
-static char *autoload_names[] =
+static const char *autoload_names[] =
 {
    "auto_wad_1",
    "auto_wad_2",
@@ -970,6 +996,8 @@ void G_AddCommands(void)
    C_AddCommand(iwad_freedoomu);
    C_AddCommand(iwad_freedm);
    C_AddCommand(master_levels_dir);
+   C_AddCommand(w_norestpath);
+
    C_AddCommand(use_doom_config);
 
    G_AddChatMacros();

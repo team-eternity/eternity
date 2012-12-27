@@ -123,7 +123,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    if(!num)
    {
       //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x - w, n->y, &vbscreen, n->p[0], 
+      V_DrawPatchTL(x - w, n->y, &subscreen43, n->p[0], 
                     sts_always_red ? NULL : outrng, alpha);
    }
 
@@ -133,7 +133,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    {
       x -= w;
       //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x, n->y, &vbscreen, n->p[ num % 10 ],
+      V_DrawPatchTL(x, n->y, &subscreen43, n->p[ num % 10 ],
                     sts_always_red ? NULL : outrng, alpha);
       num /= 10;
    }
@@ -143,7 +143,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    if(neg)
    {
       //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x - 8, n->y, &vbscreen, sttminus,
+      V_DrawPatchTL(x - 8, n->y, &subscreen43, sttminus,
                     sts_always_red ? NULL : outrng, alpha);
    }
 }
@@ -202,7 +202,7 @@ void STlib_updatePercent(st_percent_t *per, byte *outrng, int alpha)
       if(!sts_always_red)
          tlate = sts_pct_always_gray ? cr_gray : outrng;
 
-      V_DrawPatchTL(per->n.x, per->n.y, &vbscreen, per->p, tlate, alpha);
+      V_DrawPatchTL(per->n.x, per->n.y, &subscreen43, per->p, tlate, alpha);
    }
    
    STlib_updateNum(&per->n, outrng, alpha);
@@ -244,7 +244,7 @@ void STlib_updateMultIcon(st_multicon_t *mi, int alpha)
    {
       // killough 2/16/98: redraw only if != -1
       if(*mi->inum != -1)
-         V_DrawPatchTL(mi->x, mi->y, &vbscreen, mi->p[*mi->inum], NULL, alpha);
+         V_DrawPatchTL(mi->x, mi->y, &subscreen43, mi->p[*mi->inum], NULL, alpha);
    }
 }
 
@@ -283,7 +283,7 @@ void STlib_updateBinIcon(st_binicon_t *bi)
    if(*bi->on)
    {
       if(*bi->val)
-         V_DrawPatch(bi->x, bi->y, &vbscreen, bi->p);
+         V_DrawPatch(bi->x, bi->y, &subscreen43, bi->p);
    }
 }
 

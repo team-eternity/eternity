@@ -227,7 +227,7 @@ static void HI_loadData(void)
 }
 
 // Uncomment this define to see all players in single-player mode
-#define HI_DEBUG_ALLPLAYERS
+//#define HI_DEBUG_ALLPLAYERS
 
 //
 // HI_playerInGame
@@ -318,7 +318,7 @@ static void HI_drawNewLevelName(int y)
    const char *thisLevelName;
 
    x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_NOWENTERING)) >> 1;
-   V_FontWriteText(in_font, HIS_NOWENTERING, x, y);
+   V_FontWriteText(in_font, HIS_NOWENTERING, x, y, &subscreen43);
 
    if(nextMapName)
       thisLevelName = nextMapName->string;
@@ -326,7 +326,7 @@ static void HI_drawNewLevelName(int y)
       thisLevelName = "new level";
 
    x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, thisLevelName)) >> 1;
-   V_FontWriteTextShadowed(in_bigfont, thisLevelName, x, y + 10);
+   V_FontWriteTextShadowed(in_bigfont, thisLevelName, x, y + 10, &subscreen43);
 }
 
 //
@@ -346,10 +346,10 @@ static void HI_drawOldLevelName(int y)
       oldLevelName = "new level";
 
    x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, oldLevelName)) / 2;
-   V_FontWriteTextShadowed(in_bigfont, oldLevelName, x, y);
+   V_FontWriteTextShadowed(in_bigfont, oldLevelName, x, y, &subscreen43);
 
    x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_FINISHED)) / 2;
-   V_FontWriteText(in_font, HIS_FINISHED, x, y + 22);
+   V_FontWriteText(in_font, HIS_FINISHED, x, y + 22, &subscreen43);
 }
 
 //
@@ -381,7 +381,7 @@ static void HI_drawGoing(void)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][i].x, 
                   hipoints[hi_wbs.epsd][i].y,
-                  &vbscreen,
+                  &subscreen43,
                   hi_in_x);
    }
 
@@ -390,7 +390,7 @@ static void HI_drawGoing(void)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][8].x, 
                   hipoints[hi_wbs.epsd][8].y,
-                  &vbscreen,
+                  &subscreen43,
                   hi_in_x);
    }
 
@@ -399,7 +399,7 @@ static void HI_drawGoing(void)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][hi_wbs.next].x,
                   hipoints[hi_wbs.epsd][hi_wbs.next].y, 
-                  &vbscreen,
+                  &subscreen43,
                   hi_in_yah);
    }
 }
@@ -439,7 +439,7 @@ static void HI_drawLeaving(void)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][i].x,
                   hipoints[hi_wbs.epsd][i].y,
-                  &vbscreen,
+                  &subscreen43,
                   hi_in_x);
    }
 
@@ -448,7 +448,7 @@ static void HI_drawLeaving(void)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][8].x, 
                   hipoints[hi_wbs.epsd][8].y,
-                  &vbscreen,
+                  &subscreen43,
                   hi_in_x);
    }
 
@@ -457,7 +457,7 @@ static void HI_drawLeaving(void)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][thislevel].x, 
                   hipoints[hi_wbs.epsd][thislevel].y,
-                  &vbscreen,
+                  &subscreen43,
                   hi_in_x);
    }   
 }
@@ -472,12 +472,12 @@ static void HI_drawLevelStat(int stat, int max, int x, int y)
    char str[16];
 
    sprintf(str, "%3d", stat);
-   V_FontWriteTextShadowed(in_bignumfont, str, x, y);
+   V_FontWriteTextShadowed(in_bignumfont, str, x, y, &subscreen43);
    
-   V_FontWriteTextShadowed(in_bigfont, "/", x + 37, y);
+   V_FontWriteTextShadowed(in_bigfont, "/", x + 37, y, &subscreen43);
 
    sprintf(str, "%3d", max);
-   V_FontWriteTextShadowed(in_bignumfont, str, x + 48, y);
+   V_FontWriteTextShadowed(in_bignumfont, str, x + 48, y, &subscreen43);
 }
 
 //
@@ -490,8 +490,8 @@ static void HI_drawLevelStatPct(int stat, int x, int y, int pctx)
    char str[16];
 
    sprintf(str, "%3d", stat);
-   V_FontWriteTextShadowed(in_bignumfont, str,  x,    y);
-   V_FontWriteTextShadowed(in_bigfont,    "%",  pctx, y);
+   V_FontWriteTextShadowed(in_bignumfont, str,  x,    y, &subscreen43);
+   V_FontWriteTextShadowed(in_bigfont,    "%",  pctx, y, &subscreen43);
 }
 
 static void HI_drawFragCount(int count, int x, int y)
@@ -499,7 +499,7 @@ static void HI_drawFragCount(int count, int x, int y)
    char str[16];
 
    sprintf(str, "%3d", count);
-   V_FontWriteTextShadowed(in_bignumfont, str, x, y);
+   V_FontWriteTextShadowed(in_bignumfont, str, x, y, &subscreen43);
 }
 
 //
@@ -516,16 +516,16 @@ static void HI_drawTime(int h, int m, int s, int x, int y)
    if(h)
    {
       sprintf(timestr, "%02d", h);
-      V_FontWriteTextShadowed(in_bignumfont, timestr, x, y);
-      V_FontWriteTextShadowed(in_bigfont, ":", x + 26, y);
+      V_FontWriteTextShadowed(in_bignumfont, timestr, x,      y, &subscreen43);
+      V_FontWriteTextShadowed(in_bigfont,    ":",     x + 26, y, &subscreen43);
    }
 
    sprintf(timestr, "%02d", m);
-   V_FontWriteTextShadowed(in_bignumfont, timestr, x + 34, y);
-   V_FontWriteTextShadowed(in_bigfont, ":", x + 60, y);
+   V_FontWriteTextShadowed(in_bignumfont, timestr, x + 34, y, &subscreen43);
+   V_FontWriteTextShadowed(in_bigfont,    ":",     x + 60, y, &subscreen43);
 
    sprintf(timestr, "%02d", s);
-   V_FontWriteTextShadowed(in_bignumfont, timestr, x + 68, y);
+   V_FontWriteTextShadowed(in_bignumfont, timestr, x + 68, y, &subscreen43);
 }
 
 //
@@ -540,9 +540,9 @@ static void HI_drawSingleStats(void)
 {
    static int statstage = 0;
 
-   V_FontWriteTextShadowed(in_bigfont, HIS_KILLS,   50,  65);
-   V_FontWriteTextShadowed(in_bigfont, HIS_ITEMS,   50,  90);
-   V_FontWriteTextShadowed(in_bigfont, HIS_SECRETS, 50, 115);
+   V_FontWriteTextShadowed(in_bigfont, HIS_KILLS,   50,  65, &subscreen43);
+   V_FontWriteTextShadowed(in_bigfont, HIS_ITEMS,   50,  90, &subscreen43);
+   V_FontWriteTextShadowed(in_bigfont, HIS_SECRETS, 50, 115, &subscreen43);
 
    HI_drawOldLevelName(3);
 
@@ -618,7 +618,7 @@ static void HI_drawSingleStats(void)
          
          seconds = time;
 
-         V_FontWriteTextShadowed(in_bigfont, HIS_TIME, 85, 160);
+         V_FontWriteTextShadowed(in_bigfont, HIS_TIME, 85, 160, &subscreen43);
          HI_drawTime(hours, minutes, seconds, 155, 160);
       }
       else
@@ -639,9 +639,9 @@ static void HI_drawCoopStats(void)
    int i, ypos;
    static int statstage;
 
-   V_FontWriteTextShadowed(in_bigfont, HIS_KILLS,   95, 35);
-   V_FontWriteTextShadowed(in_bigfont, HIS_BONUS,  155, 35);
-   V_FontWriteTextShadowed(in_bigfont, HIS_SECRET, 232, 35);
+   V_FontWriteTextShadowed(in_bigfont, HIS_KILLS,   95, 35, &subscreen43);
+   V_FontWriteTextShadowed(in_bigfont, HIS_BONUS,  155, 35, &subscreen43);
+   V_FontWriteTextShadowed(in_bigfont, HIS_SECRET, 232, 35, &subscreen43);
 
    HI_drawOldLevelName(3);
 
@@ -659,7 +659,7 @@ static void HI_drawCoopStats(void)
    {
       if(HI_playerInGame(i))
       {
-         V_DrawPatchShadowed(25, ypos, &vbscreen, 
+         V_DrawPatchShadowed(25, ypos, &subscreen43, 
             PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
             NULL, FRACUNIT);
 
@@ -715,11 +715,11 @@ static void HI_drawDMStats(void)
    int i, j;
    int xpos, ypos, kpos;
 
-   V_FontWriteTextShadowed(in_bigfont, HIS_TOTAL, 265, 30);
-   V_FontWriteText(in_font, HIS_VICTIMS, 140, 8);
+   V_FontWriteTextShadowed(in_bigfont, HIS_TOTAL, 265, 30, &subscreen43);
+   V_FontWriteText(in_font, HIS_VICTIMS, 140, 8, &subscreen43);
 
    for(i = 0; i < 7; ++i)
-      V_FontWriteText(in_font, HIS_KILLERS + i*2, 10, 80 + 9 * i);
+      V_FontWriteText(in_font, HIS_KILLERS + i*2, 10, 80 + 9 * i, &subscreen43);
 
    xpos = 90;
    ypos = 55;
@@ -737,12 +737,12 @@ static void HI_drawDMStats(void)
          {
             V_DrawPatchGeneral(40, 
                (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
-               &vbscreen,
+               &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
                false);
             V_DrawPatchGeneral((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS,
                18,
-               &vbscreen,
+               &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_dead_faces[i], PU_CACHE),
                false);
          }
@@ -775,15 +775,15 @@ static void HI_drawDMStats(void)
 
             if(i == consoleplayer)
             {
-               V_ColorBlockTLScaled(&vbscreen, blockcolor, xpos, ypos + 3, 
+               V_ColorBlockTLScaled(&subscreen43, blockcolor, xpos, ypos + 3, 
                                     (263-(xpos-3)+1) + 48, 36 - 5, 
                                     FRACUNIT/3);
             }
 
-            V_DrawPatchTL(40, ypos, &vbscreen,
+            V_DrawPatchTL(40, ypos, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
                NULL, tllevel);
-            V_DrawPatchTL(xpos, 18, &vbscreen,
+            V_DrawPatchTL(xpos, 18, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_dead_faces[i], PU_CACHE),
                NULL, tllevel);
 
@@ -903,19 +903,17 @@ static void HI_Ticker(void)
 // HI_DrawBackground
 //
 // Called when the background needs to be changed.
-// IN_slamBackground is called to swap this to the
-// screen, saving some time.
 //
 static void HI_DrawBackground(void)
 {
    if(interstate > INTR_STATS && hi_interpic)
    {
-      V_DrawPatch(0, 0, &backscreen1, hi_interpic);
+      V_DrawPatch(0, 0, &subscreen43, hi_interpic);
    }
    else
    {
       // TODO: externalize flat name
-      V_DrawBackground("FLOOR16", &backscreen1);
+      V_DrawBackground("FLOOR16", &subscreen43);
    }
 }
 

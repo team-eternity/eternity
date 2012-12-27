@@ -36,7 +36,7 @@
 #ifndef G_GFS_H__
 #define G_GFS_H__
 
-typedef struct gfs_s
+struct gfs_t
 {
    char **wadnames;
    char **dehnames;
@@ -51,7 +51,7 @@ typedef struct gfs_s
    int numcsc;
    bool hasIWAD;
    bool hasEDF;
-} gfs_t;
+};
 
 gfs_t *G_LoadGFS(const char *filename);
 void G_FreeGFS(gfs_t *lgfs);

@@ -38,7 +38,7 @@ typedef struct i_sounddriver_s
    void (*ShutdownSound)(void);
    int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int);
    int  (*SoundID)(int);
-   void (*StopSound)(int);
+   void (*StopSound)(int, int);
    int  (*SoundIsPlaying)(int);
    void (*UpdateSoundParams)(int, int, int, int);
    void (*UpdateEQParams)(void);
@@ -69,7 +69,7 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
 int I_SoundID(int handle);
 
 // Stops a sound channel.
-void I_StopSound(int handle);
+void I_StopSound(int handle, int id);
 
 // Called by S_*() functions
 //  to see if a channel is still playing.

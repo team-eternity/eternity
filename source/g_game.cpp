@@ -69,6 +69,7 @@
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "hu_stuff.h"
 #include "hu_frags.h" // haleyjd
 #include "r_data.h"
@@ -173,6 +174,7 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
+bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -206,7 +208,7 @@ void *statcopy;       // for statistics driver
 
 int keylookspeed = 5;
 
-int cooldemo = false;
+int cooldemo = 0;
 int cooldemo_tics;      // number of tics until changing view
 
 void G_CoolViewPoint();
@@ -233,6 +235,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    int newweapon;            // phares
    int look = 0; 
    int mlook = 0;
+   int flyheight = 0;
    static int prevmlook = 0;
    ticcmd_t *base;
    double tmousex, tmousey;     // local mousex, mousey
@@ -534,6 +537,17 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          look = -32767;
    }
 
+   // haleyjd 06/05/12: flight
+   if(action_flyup)
+      flyheight = FLIGHT_IMPULSE_AMT;
+   if(action_flydown)
+      flyheight = -FLIGHT_IMPULSE_AMT;
+   if(action_flycenter)
+   {
+      flyheight = FLIGHT_CENTER;
+      look = -32768;
+   }
+
    if(strafe)
       side += (int)(tmousex * 2.0);
    else
@@ -552,6 +566,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->forwardmove += forward;
    cmd->sidemove += side;
    cmd->look = look;
+   cmd->fly = flyheight;
 
    // special buttons
    if(sendpause)
@@ -654,6 +669,7 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
+   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
@@ -699,6 +715,9 @@ bool G_Responder(event_t* ev)
       return true;
    }
 
+   if(G_KeyResponder(ev, kac_cmd))
+      return true;
+
    // any other key pops up menu if in demos
    //
    // killough 8/2/98: enable automap in -timedemo demos
@@ -717,10 +736,6 @@ bool G_Responder(event_t* ev)
             S_ResumeSound();
          return true;
       }
-
-      // [CG] 01/29/12: Respond to command events.
-      if(G_KeyResponder(ev, kac_command))
-         return true;
 
       // killough 10/98:
       // Don't pop up menu, if paused in middle
@@ -763,13 +778,21 @@ bool G_Responder(event_t* ev)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
+      {
          C_RunTextCmd("pause");
+      }
       else
-         G_KeyResponder(ev, kac_player | kac_command); // haleyjd
+      {
+         if(ev->data1 < NUMKEYS)
+            gamekeydown[ev->data1] = true;         
+         G_KeyResponder(ev, kac_game); // haleyjd
+      }
       return true;    // eat key down events
       
    case ev_keyup:
-      G_KeyResponder(ev, kac_player | kac_command);   // haleyjd
+      if(ev->data1 < NUMKEYS)
+         gamekeydown[ev->data1] = false;
+      G_KeyResponder(ev, kac_game);   // haleyjd
       return false;   // always let key up events filter down
       
    case ev_mouse:
@@ -936,7 +959,7 @@ void G_DoPlayDemo(void)
    M_ExtractFileBase(defdemoname, basename);         // killough
    
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = wGlobalDir.CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   if((lumpnum = wGlobalDir.checkNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -949,7 +972,7 @@ void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC)); // killough
+   demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1036,6 +1059,9 @@ void G_DoPlayDemo(void)
 
       default_allowmlook = allowmlook;
       allowmlook = 0;
+
+      // haleyjd 06/07/12: for the sake of Heretic/Hexen demos only
+      pitchedflight = false;
 
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
@@ -1253,7 +1279,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
       {
          demo_p++;
-         demo_p++;
+         demo_p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
       }
       
       if(demo_version >= 335)
@@ -1276,6 +1302,11 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       }
       else
          cmd->look = 0;
+
+      if(full_demo_version >= make_full_version(340, 23))
+         cmd->fly = *demo_p++;
+      else
+         cmd->fly = 0;
       
       // killough 3/26/98, 10/98: Ignore savegames in demos 
       if(demoplayback && 
@@ -1327,8 +1358,11 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(demo_version >= 333)
    {
       demo_p[i++] =  cmd->look & 0xff;
-      demo_p[i]   = (cmd->look >> 8) & 0xff;
+      demo_p[i++] = (cmd->look >> 8) & 0xff;
    }
+
+   if(full_demo_version >= make_full_version(340, 23))
+      demo_p[i] = cmd->fly;
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
@@ -1551,14 +1585,14 @@ static void G_DoWorldDone(void)
    // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists
    // in the wad directory, and if so, use it. Otherwise, return to the Master
    // Levels selection menu.
-   if(inmasterlevels)
+   if(inmanageddir)
    {
       wadlevel_t *level = W_FindLevelInDir(g_dir, gamemapname);
 
-      if(!level)
+      if(!level && inmanageddir == MD_MASTERLEVELS)
       {
          gameaction = ga_nothing;
-         inmasterlevels = false;
+         inmanageddir = MD_NONE;
          W_DoMasterLevels(false);
          return;
       }
@@ -1707,13 +1741,13 @@ uint64_t G_Signature(WadDirectory *dir)
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = dir->CheckNumForName(gamemapname);
+   lump = dir->checkNumForName(gamemapname);
    
-   if(lump != -1 && (i = lump + 10) < dir->GetNumLumps())
+   if(lump != -1 && (i = lump + 10) < dir->getNumLumps())
    {
       do
       {
-         s = s * 2 + dir->LumpLength(i);
+         s = s * 2 + dir->lumpLength(i);
       }
       while(--i > lump);
    }
@@ -1759,13 +1793,17 @@ static void G_CameraTicker(void)
    else if((chasecam_active = (camera == &chasecam)))
       P_ChaseTicker();
    else if(camera == &followcam)
-      P_FollowCamTicker();
+   {
+      if(!P_FollowCamTicker())
+         cooldemo_tics = 0; // force refresh
+   }
 
    // cooldemo countdown   
    if(demoplayback && cooldemo)
    {
-      // force refresh on death of displayed player
-      if(players[displayplayer].health <= 0)
+      // force refresh on death (or rebirth in follow mode) of displayed player
+      if(players[displayplayer].health <= 0 ||
+         (cooldemo == 2 && camera != &followcam))
          cooldemo_tics = 0;
 
       if(cooldemo_tics)
@@ -1955,7 +1993,7 @@ void G_Ticker(void)
    if(inwipe)
       Wipe_Ticker();
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
    // haleyjd 03/15/03: execute scheduled Small callbacks
    SM_ExecuteCallbacks();
 #endif
@@ -2380,7 +2418,7 @@ void G_WorldDone(void)
    // haleyjd 10/24/10: if in Master Levels mode, just return from here now.
    // The choice of whether to go to another level or show the Master Levels
    // menu is taken care of in G_DoWorldDone.
-   if(inmasterlevels)
+   if(inmanageddir == MD_MASTERLEVELS)
       return;
 
    if(secretexit)
@@ -2470,7 +2508,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 
    // haleyjd 06/16/10: default to NULL
    d_dir = NULL;
-   inmasterlevels = false;
+   inmanageddir = MD_NONE;
    
    gameaction = ga_newgame;
 }
@@ -2571,6 +2609,9 @@ void G_ReloadDefaults(void)
    
    // killough 3/31/98, 4/5/98: demo sync insurance
    demo_insurance = default_demo_insurance == 1;
+
+   // haleyjd 06/07/12: pitchedflight has default
+   pitchedflight = default_pitchedflight;
    
    G_ScrambleRand();
 }
@@ -2603,20 +2644,28 @@ void G_DoNewGame (void)
 
 class MetaSpeedSet : public MetaObject
 {
+   DECLARE_RTTI_TYPE(MetaSpeedSet, MetaObject)
+
 protected:
    int mobjType;            // the type this speedset is for
    int normalSpeed;         // the normal speed of this thing type
    int fastSpeed;           // -fast speed
 
 public:
-   // Constructor
+   // Default constructor
+   MetaSpeedSet() 
+      : MetaObject(), mobjType(-1), normalSpeed(0), fastSpeed(0)
+   {
+   }
+
+   // Parameterized constructor
    MetaSpeedSet(int pMobjType, int pNormalSpeed, int pFastSpeed) 
-      : MetaObject("MetaSpeedSet", "speedset"), mobjType(pMobjType), 
+      : MetaObject("speedset"), mobjType(pMobjType), 
         normalSpeed(pNormalSpeed), fastSpeed(pFastSpeed)
    {
    }
 
-   // Copy Constructor
+   // Copy constructor
    MetaSpeedSet(const MetaSpeedSet &other) : MetaObject(other) 
    {
       this->mobjType    = other.mobjType;
@@ -2648,23 +2697,29 @@ public:
    int getNormalSpeed() const { return normalSpeed; }
    int getFastSpeed()   const { return fastSpeed;   }
 
-   int setNormalSpeed(int i)   { normalSpeed = i; }
-   int setFastSpeed(int i)     { fastSpeed   = i; }
+   void setNormalSpeed(int i)   { normalSpeed = i; }
+   void setFastSpeed(int i)     { fastSpeed   = i; }
    
    void setSpeeds(int normal, int fast) { normalSpeed = normal; fastSpeed = fast; }
 };
 
+IMPLEMENT_RTTI_TYPE(MetaSpeedSet)
+
+// Speedset key cache for fast lookups
+static MetaKeyIndex speedsetKey("speedset");
+
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
-   mobjinfo_t *mi = mobjinfo[thingtype];
+   MetaTable  *meta = mobjinfo[thingtype]->meta;
+   size_t metaKey = speedsetKey.getIndex();
 
-   if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+   if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
    {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }
    else
-      mi->meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
+      meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
 
 // killough 4/10/98: New function to fix bug which caused Doom
@@ -2675,6 +2730,7 @@ void G_SetFastParms(int fast_pending)
    static int fast = 0;            // remembers fast state
    int i;
    MetaObject *o;
+   size_t metaKey = speedsetKey.getIndex();
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2696,7 +2752,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
@@ -2710,7 +2766,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }
@@ -2794,7 +2850,7 @@ void G_InitNew(skill_t skill, char *name)
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : &wGlobalDir;
+   g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
    d_dir = NULL;
    
    G_DoLoadLevel();
@@ -2912,8 +2968,11 @@ byte *G_WriteOptions(byte *demoptr)
 
    // haleyjd 04/06/05: allowmlook is sync critical
    *demoptr++ = allowmlook; // byte 60
+
+   // haleyjd 06/07/12: pitchedflight
+   *demoptr++ = pitchedflight; // byte 61
    
-   // CURRENT BYTES LEFT: 3
+   // CURRENT BYTES LEFT: 2
 
    //----------------
    // Padding at end
@@ -3009,7 +3068,14 @@ byte *G_ReadOptions(byte *demoptr)
       if(demo_version >= 333)
       {
          // haleyjd 04/06/05: allowmlook is sync-critical
-         allowmlook = *demoptr; // Remember: ADD INCREMENT :)
+         allowmlook = *demoptr++; 
+      }
+
+      if(full_demo_version >= make_full_version(340, 23))
+      {
+         // haleyjd 06/07/12: pitchedflight
+         pitchedflight = (*demoptr ? true : false); 
+         // Remember: ADD INCREMENT :)
       }
    }
    else  // defaults for versions <= 2.02
@@ -3036,11 +3102,13 @@ byte *G_ReadOptions(byte *demoptr)
       dog_jumping = 0;                  // killough 10/98
       monkeys = 0;
       
-      default_autoaim = autoaim;
+      default_autoaim = autoaim; // FIXME: err?
       autoaim = 1;
 
-      default_allowmlook = allowmlook;
+      default_allowmlook = allowmlook; // FIXME: err??
       allowmlook = 0;
+
+      pitchedflight = false;
    }
   
    return target;
@@ -3090,6 +3158,7 @@ void G_SetOldDemoOptions(void)
    autoaim               = 1;
    default_allowmlook    = allowmlook;
    allowmlook            = 0;
+   pitchedflight         = false; // haleyjd 06/07/12
 }
 
 //
@@ -3236,7 +3305,7 @@ void G_TimeDemo(const char *name, bool showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(wGlobalDir.CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
+   if(wGlobalDir.checkNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;
@@ -3377,12 +3446,15 @@ extern camera_t intercam;
 //
 // Change to new viewpoint
 //
-void G_CoolViewPoint(void)
+void G_CoolViewPoint()
 {
    int viewtype;
    int old_displayplayer = displayplayer;
 
-   viewtype = M_Random() % 3;
+   if(cooldemo == 2) // always followcam?
+      viewtype = 2;
+   else
+      viewtype = M_Random() % 3;
    
    // pick the next player
    do
@@ -3420,25 +3492,22 @@ void G_CoolViewPoint(void)
       chasecam_active = true;
       P_ChaseStart();
    }
-   else if(viewtype == 2) // camera view
+   else if(viewtype == 2) // follow camera view
    {
-      // sometimes check out the player's enemies
-      Mobj *spot = players[displayplayer].attacker;
+      fixed_t x, y;
+      Mobj *spot = players[displayplayer].mo;
 
-      // no enemy? check out the player's current location then.
-      if(!spot || spot->health <= 0)
-         spot = players[displayplayer].mo;
-
-      P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
+      P_LocateFollowCam(spot, x, y);
+      P_SetFollowCam(x, y, spot);
       
       camera = &followcam;
    }
   
-   // pic a random number of tics until changing the viewpoint
+   // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 
 //
 // Small native functions

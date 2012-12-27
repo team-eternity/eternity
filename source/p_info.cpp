@@ -73,6 +73,7 @@
 #include "p_setup.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 extern char gamemapname[9];
@@ -148,6 +149,8 @@ typedef struct metainfo_s
    int nextsecret;        // next secret #, only used if non-0
    bool finale;           // if true, sets LevelInfo.endOfGame
    const char *intertext; // only used if finale is true
+   const char *interpic;  // interpic, if not NULL
+   int mission;           // if non-zero, only applies during a mission pack
 } metainfo_t;
 
 static int nummetainfo, nummetainfoalloc;
@@ -243,7 +246,7 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    lumpinfo_t  *lump;
    int glumpnum;
 
@@ -485,7 +488,7 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 //
 void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
    lumpinfo_t  *lump;
    int glumpnum;
 
@@ -495,7 +498,7 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
 
    limode = LI_MODE_GLOBAL;
 
-   lump = dir->GetLumpNameChain("EMAPINFO");
+   lump = dir->getLumpNameChain("EMAPINFO");
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
@@ -531,13 +534,13 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
    // problem and to use qstring to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = dir->LumpLength(lumpnum)))
+   if(!(size = dir->lumpLength(lumpnum)))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
-   dir->ReadLump(lumpnum, lump);
+   dir->readLump(lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
@@ -547,9 +550,6 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 
    rover = lump;
 
-   // create the line buffer
-   line.initCreate();
-   
    while(*rover)
    {
       if(*rover == '\n') // end of line
@@ -778,10 +778,6 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
    // overflow of static buffer and bad kludges used to separate
    // the variable and value tokens -- now uses qstring.
 
-   // create qstrings to hold the tokens
-   var.initCreate();
-   value.initCreate();
-
    while((c = *rover++))
    {
       switch(state)
@@ -876,24 +872,32 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 #define HU_TITLET (mapnamest[gamemap-1])
 #define HU_TITLEH (mapnamesh[(gameepisode-1)*9+gamemap-1])
 
+enum SynthType_e
+{
+   SYNTH_NEWLEVEL,    // "new level"
+   SYNTH_HIDDENLEVEL, // "hidden level"
+   SYNTH_NUMTYPES
+};
+
+static const char *synthNames[SYNTH_NUMTYPES] =
+{
+   "%s: new level",
+   "%s: hidden level"
+};
+
 //
 // SynthLevelName
 //
 // Makes up a level name for new maps and Heretic secrets.
 // Moved here from hu_stuff.c
 //
-// secret == true  -> Heretic hidden map
-// secret == false -> Just a plain new level
-//
-static void SynthLevelName(bool secret)
+static void SynthLevelName(SynthType_e levelNameType)
 {
    // haleyjd 12/14/01: halved size of this string, max length
    // is deterministic since gamemapname is 8 chars long
    static char newlevelstr[25];
 
-   sprintf(newlevelstr, 
-           secret ? "%s: hidden level" : "%s: new level", 
-           gamemapname);
+   sprintf(newlevelstr, synthNames[levelNameType], gamemapname);
    
    LevelInfo.levelName = newlevelstr;
 }
@@ -906,10 +910,12 @@ static void SynthLevelName(bool secret)
 //
 static void P_InfoDefaultLevelName(void)
 {
-   const char *bexname = NULL;
-   bool deh_modified   = false;
-   bool synth_type     = false;
-   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
+   const char    *bexname      = NULL;
+   bool           deh_modified = false;
+   SynthType_e    synthType    = SYNTH_NEWLEVEL;
+   int            d2upperbound = 32;
+   missioninfo_t *missionInfo  = GameModeInfo->missionInfo;
+   
 
    // if we have a current metainfo, use its level name
    if(curmetainfo)
@@ -918,7 +924,14 @@ static void P_InfoDefaultLevelName(void)
       return;
    }
 
-   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
+   // haleyjd 11/03/12: in pack_disk, we have 33 map names.
+   // This is also allowed for subsitution through BEX mnemonic HUSTR_33.
+   if(DEH_StringChanged("HUSTR_33") ||
+      (GameModeInfo->id == commercial && 
+       GameModeInfo->missionInfo->id == pack_disk))
+      d2upperbound = 33;
+
+   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
    {
       // DOOM II
       bexname = missionInfo->id == pack_tnt  ? HU_TITLET :
@@ -938,7 +951,7 @@ static void P_InfoDefaultLevelName(void)
          if(maxEpisode == 1 || gameepisode < maxEpisode)
             bexname = HU_TITLEH;            
          else
-            synth_type = true; // put "hidden level"
+            synthType = SYNTH_HIDDENLEVEL; // put "hidden level"
       }
       else // DOOM
          bexname = HU_TITLE;         
@@ -948,14 +961,14 @@ static void P_InfoDefaultLevelName(void)
       deh_modified = DEH_StringChanged(bexname);
 
    if((newlevel && !deh_modified) || !bexname)
-      SynthLevelName(synth_type);
+      SynthLevelName(synthType);
    else
       LevelInfo.levelName = DEH_String(bexname);
 }
 
 #define NUMMAPINFOSOUNDS 10
 
-static char *DefSoundNames[NUMMAPINFOSOUNDS] =
+static const char *DefSoundNames[NUMMAPINFOSOUNDS] =
 {
    "EE_DoorOpen",
    "EE_DoorClose",
@@ -1074,7 +1087,7 @@ static void P_LoadInterTextLump(void)
       
       str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
       
-      wGlobalDir.ReadLump(lumpNum, str);
+      wGlobalDir.readLump(lumpNum, str);
       
       // null-terminate the string
       str[lumpLen] = '\0';
@@ -1381,8 +1394,17 @@ static void P_ClearLevelVars(void)
    LevelInfo.nextLevelPic    = NULL;
    LevelInfo.nextSecretPic   = NULL;
    LevelInfo.creator         = "unknown";
-   LevelInfo.interPic        = GameModeInfo->interPic;
-   LevelInfo.partime         = curmetainfo ? curmetainfo->partime : -1;
+
+   if(curmetainfo) // metadata-overridable intermission defaults
+   {
+      LevelInfo.interPic = curmetainfo->interpic;
+      LevelInfo.partime  = curmetainfo->partime;
+   }
+   else
+   {
+      LevelInfo.interPic = GameModeInfo->interPic;
+      LevelInfo.partime  = -1;
+   }
 
    LevelInfo.colorMap        = "COLORMAP";
    LevelInfo.outdoorFog      = NULL;
@@ -1444,6 +1466,10 @@ static void P_ClearLevelVars(void)
       psnprintf(nextsecret, sizeof(nextsecret), "MAP%02d", curmetainfo->nextsecret);
       LevelInfo.nextSecret = nextsecret;
    }
+
+   // haleyjd 08/31/12: Master Levels mode hacks
+   if(inmanageddir == MD_MASTERLEVELS && GameModeInfo->type == Game_DOOM)
+      LevelInfo.interPic = "INTRMLEV";
 }
 
 int default_weaponowned[NUMWEAPONS];
@@ -1494,12 +1520,13 @@ static void P_InitWeapons(void)
 //
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
-   int i;
    metainfo_t *mi = NULL;
 
-   for(i = 0; i < nummetainfo; ++i)
+   for(int i = 0; i < nummetainfo; i++)
    {
-      if(metainfo[i].level == mapnum)
+      // Check for map number match, and mission match, if a mission
+      // is required to be active in order to use this metadata.
+      if(metainfo[i].level == mapnum && metainfo[i].mission == inmanageddir)
       {
          mi = &metainfo[i];
          break;
@@ -1518,7 +1545,8 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 // possible PWAD(s) that originate from certain console versions of DOOM.
 //
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, bool finale, const char *intertext)
+                      int next, int secr, bool finale, const char *intertext,
+                      int mission, const char *interpic)
 {
    metainfo_t *mi;
 
@@ -1538,6 +1566,8 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    mi->nextsecret = secr;
    mi->finale     = finale;
    mi->intertext  = intertext;
+   mi->mission    = mission;
+   mi->interpic   = interpic;
 
    ++nummetainfo;
 }
@@ -1723,7 +1753,7 @@ const char *P_GetMusInfoMusic(const char *mapname, int number)
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
-   char *fn = estrdup(wadfile);
+   char *fn = Z_Strdupa(wadfile);
    char *dotloc = NULL;
    byte *buffer = NULL;
 
@@ -1919,8 +1949,6 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    tmplpstate_t state;
    qstring tokenbuffer;
    char *ret = NULL;
-
-   tokenbuffer.initCreate();
 
    state.text          = text;
    state.len           = len;

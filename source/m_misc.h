@@ -33,13 +33,14 @@
 // MISC
 //
 
-bool M_WriteFile(const char *name, void *source, unsigned int length);
-int  M_ReadFile(const char *name, byte **buffer);
-void M_LoadOptions(void);                             // killough 11/98
+bool  M_WriteFile(const char *name, void *source, size_t length);
+int   M_ReadFile(const char *name, byte **buffer);
+char *M_LoadStringFromFile(const char *filename);
+void  M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions, as well as
 // some misc string routines that really don't fit anywhere else. Some of these
-// default to the standard implementation if its existence is verifiable 
+// default to the platform implementation if its existence is verifiable 
 // (see d_keywds.h)
 
 char *M_Strupr(char *string);
@@ -51,7 +52,7 @@ int   M_CountNumLines(const char *str);
 // haleyjd: moved a number of these here from w_wad module.
 
 void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
-int   M_FileLength(FILE *f);
+long  M_FileLength(FILE *f);
 void  M_ExtractFileBase(const char *, char *);               // killough
 char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98
@@ -129,23 +130,25 @@ struct default_t
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
-#define M_ZEROFIELDS NULL, NULL, 0, 0, NULL, 0, false, NULL
+#define DEFAULT_END() \
+   { NULL, dt_integer, NULL, NULL, 0, NULL, 0.0, false, { 0, 0 }, default_t::wad_no, NULL, \
+     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_integer, loc, cur, def, NULL, 0.0f, false, { min, max }, wad, help, \
-     M_ZEROFIELDS }
+   { name, dt_integer, loc, cur, def, NULL, 0.0, false, { min, max }, wad, help, \
+     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_STR(name, loc, cur, def, wad, help) \
-   { name, dt_string, loc, cur, 0, def, 0.0f, false, { 0, 0 }, wad, help, \
-     M_ZEROFIELDS }
+   { name, dt_string, loc, cur, 0, def, 0.0, false, { 0, 0 }, wad, help, \
+     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
    { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help, \
-     M_ZEROFIELDS }
+     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
-   { name, dt_boolean, loc, cur, 0, NULL, 0.0f, def, { 0, 1 }, wad, help, \
-     M_ZEROFIELDS }
+   { name, dt_boolean, loc, cur, 0, NULL, 0.0, def, { 0, 1 }, wad, help, \
+     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 // haleyjd 03/14/09: defaultfile_t structure
 typedef struct defaultfile_s

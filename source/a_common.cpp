@@ -694,7 +694,7 @@ void A_Die(Mobj *actor)
 //
 void A_Explode(Mobj *thingy)
 {
-   clip->radiusAttack(thingy, thingy->target, 128, thingy->info->mod);
+   clip->radiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
       E_HitWater(thingy, thingy->subsector->sector);
@@ -704,7 +704,7 @@ void A_Nailbomb(Mobj *thing)
 {
    int i;
    
-   clip->radiusAttack(thing, thing->target, 128, thing->info->mod);
+   clip->radiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
@@ -722,7 +722,7 @@ void A_Nailbomb(Mobj *thing)
 //
 void A_Detonate(Mobj *mo)
 {
-   clip->radiusAttack(mo, mo->target, mo->damage, mo->info->mod);
+   clip->radiusAttack(mo, mo->target, mo->damage, mo->damage, mo->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    if(demo_version >= 331 && mo->z <= mo->secfloorz + mo->damage*FRACUNIT)

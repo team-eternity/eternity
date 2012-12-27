@@ -47,14 +47,14 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_clipen.h"
-#include "p_maputl.h"
-#include "p_traceengine.h"
 #include "p_mapcontext.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "p_traceengine.h"
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
@@ -393,57 +393,15 @@ void A_StartScript(Mobj *actor)
    
    if(selectvm < 2)
    {
-#ifndef EE_NO_SMALL_SUPPORT
-      SmallContext_t *rootContext, *useContext;
-      SmallContext_t newContext;
-      cell params[3];
-
-      params[0] = (cell)(E_ArgAsInt(actor->state->args, 2, 0));
-      params[1] = (cell)(E_ArgAsInt(actor->state->args, 3, 0));
-      params[2] = (cell)(E_ArgAsInt(actor->state->args, 4, 0));
-
-      // determine root context to use
-      switch(selectvm)
-      {
-      default:
-      case 0: // game script
-         if(!gameScriptLoaded)
-            return;
-         rootContext = curGSContext;
-         break;
-      case 1: // level script
-         if(!levelScriptLoaded)
-            return;
-         rootContext = curLSContext;
-         break;
-      }
-
-      // possibly create a child context for the selected VM
-      useContext = SM_CreateChildContext(rootContext, &newContext);
-
-      // set invocation data
-      useContext->invocationData.invokeType = SC_INVOKE_THING;
-      useContext->invocationData.trigger = actor;
-
-      // execute
-      SM_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
-
-      // clear invocation data
-      SM_ClearInvocation(useContext);
-
-      // destroy any child context that might have been created
-      SM_DestroyChildContext(useContext);
-#else
       /* nothing */ ;
-#endif
    }
    else
    {
-      int args[5] = { 0, 0, 0, 0, 0 };
+      int args[3] = { 0, 0, 0 };
       args[0] = E_ArgAsInt(actor->state->args, 2, 0);
       args[1] = E_ArgAsInt(actor->state->args, 3, 0);
-      args[2] = E_ArgAsInt(actor->state->args, 4, 0);      
-      ACS_StartScript(scriptnum, gamemap, args, actor, NULL, 0, NULL, true);
+      args[2] = E_ArgAsInt(actor->state->args, 4, 0);
+      ACS_ExecuteScriptNumber(scriptnum, gamemap, 0, args, 3, NULL, NULL, 0);
    }
 }
 
@@ -1289,6 +1247,61 @@ void A_CasingThrust(Mobj *actor)
    actor->momx += P_SubRandom(pr_casing) << 8;
    actor->momy += P_SubRandom(pr_casing) << 8;
    actor->momz = momz + (P_SubRandom(pr_casing) << 8);
+}
+
+//
+// A_DetonateEx
+//
+// Semi-equivalent to ZDoom A_Explode extensions.
+//
+// args[0] : damage
+// args[1] : radius
+// args[2] : hurt self?
+// args[3] : alert?
+// TODO: args[4] : full damage radius
+// TODO: args[5] : nail count
+// TODO: args[6] : nail damage
+// args[7] : z clip?
+// args[8] : spot is source?
+//
+void A_DetonateEx(Mobj *actor)
+{
+   int   damage   =  E_ArgAsInt(actor->state->args, 0, 128);
+   int   radius   =  E_ArgAsInt(actor->state->args, 1, 128);
+   bool  hurtself = (E_ArgAsInt(actor->state->args, 2, 1) == 1);
+   bool  alert    = (E_ArgAsInt(actor->state->args, 3, 1) == 1);
+   bool  zclip    = (E_ArgAsInt(actor->state->args, 7, 0) == 1);
+   bool  spotsrc  = (E_ArgAsInt(actor->state->args, 8, 0) == 1);
+   Mobj *source   = actor->target;
+   unsigned int flags = 0;
+
+   // invalid damage or radius, return immediately.
+   if(damage <= 0 || radius <= 0)
+      return;
+
+   // if there's no target, or spot is designated as being the source,
+   // set source == actor.
+   if(!source || spotsrc)
+      source = actor;
+
+   // doesn't damage self?
+   if(!hurtself)
+      flags |= RAF_NOSELFDAMAGE;
+
+   // checks z height?
+   if(zclip)
+      flags |= RAF_CLIPHEIGHT;
+
+   // Do it.
+   clip->radiusAttack(actor, source, damage, radius, actor->info->mod, flags);
+
+   // optional noise alert, as in Strife 
+   if(alert)
+      P_NoiseAlert(source, actor);
+
+   // cause a terrain hit
+   if(actor->z <= actor->secfloorz + radius * FRACUNIT)
+      E_HitWater(actor, actor->subsector->sector);
 }
 
 // EOF

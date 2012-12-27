@@ -217,16 +217,10 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 //
 void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 {
-   double t;
    double dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
    double dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
  
-   if(dx == 0.0 && dy == 0.0)
-      t = 0;
-   else
-      t = sqrt((dx * dx) + (dy * dy));
-
-   lseg->offset = (float)t;
+   lseg->offset = static_cast<float>(sqrt(dx * dx + dy * dy));
 }
 
 //
@@ -244,8 +238,8 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.sidedef = proto->seg.sidedef;
 
    // vertices
-   ret->seg.v1      = v1;
-   ret->seg.v2      = v2;
+   ret->seg.v1 = v1;
+   ret->seg.v2 = v2;
 
    // calculate texture offset
    R_DynaSegOffset(&ret->seg, proto->seg.linedef, 0);
@@ -258,8 +252,11 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static void R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
+static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
 {
+   // get the fnode for the node
+   fnode_t *bsp = &fnodes[node - nodes];
+
    double a1 = lseg->v2->fy - lseg->v1->fy;
    double b1 = lseg->v1->fx - lseg->v2->fx;
    double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
@@ -277,10 +274,12 @@ static void R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
    //        If so I'll need my own R_PointOnSide routine with some
    //        epsilon values.
    if(d == 0.0) 
-      I_Error("R_IntersectPoint: lines are parallel\n");
+      return false;
 
    *x = (float)((b1 * c2 - b2 * c1) / d);
    *y = (float)((a2 * c1 - a1 * c2) / d);
+
+   return true;
 }
 
 //
@@ -291,7 +290,7 @@ static void R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
 // from the partition line. If the distance is too small, we may decide to
 // change our idea of sidedness.
 //
-inline static double R_PartitionDistance(double x, double y, node_t *node)
+inline static double R_PartitionDistance(double x, double y, fnode_t *node)
 {
    return fabs((node->a * x + node->b * y + node->c) / node->len);
 }
@@ -308,16 +307,17 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 {
    while(!(bspnum & NF_SUBSECTOR))
    {
-      node_t *bsp = &nodes[bspnum];
-      seg_t  *lseg = &dseg->seg;
+      node_t  *bsp   = &nodes[bspnum];
+      fnode_t *fnode = &fnodes[bspnum];
+      seg_t   *lseg  = &dseg->seg;
 
       // test vertices against node line
       int side_v1 = R_PointOnSide(lseg->v1->x, lseg->v1->y, bsp);
       int side_v2 = R_PointOnSide(lseg->v2->x, lseg->v2->y, bsp);
 
       // get distance of vertices from partition line
-      double dist_v1 = R_PartitionDistance(lseg->v1->fx, lseg->v1->fy, bsp);
-      double dist_v2 = R_PartitionDistance(lseg->v2->fx, lseg->v2->fy, bsp);
+      double dist_v1 = R_PartitionDistance(lseg->v1->fx, lseg->v1->fy, fnode);
+      double dist_v2 = R_PartitionDistance(lseg->v2->fx, lseg->v2->fy, fnode);
 
       // If the distances are less than epsilon, consider the points as being
       // on the same side as the polyobj origin. Why? People like to build
@@ -348,20 +348,29 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
          dynaseg_t *nds;
          vertex_t  *nv = R_GetFreeDynaVertex();
 
-         R_IntersectPoint(lseg, bsp, &nv->fx, &nv->fy);
+         if(R_IntersectPoint(lseg, bsp, &nv->fx, &nv->fy))
+         {
+            // also set fixed-point coordinates
+            nv->x = M_FloatToFixed(nv->fx);
+            nv->y = M_FloatToFixed(nv->fy);
 
-         // also set fixed-point coordinates
-         nv->x = M_FloatToFixed(nv->fx);
-         nv->y = M_FloatToFixed(nv->fy);
+            // create new dynaseg from nv to seg->v2
+            nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
 
-         // create new dynaseg from nv to seg->v2
-         nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
+            // alter current seg to run from seg->v1 to nv
+            lseg->v2 = nv;
 
-         // alter current seg to run from seg->v1 to nv
-         lseg->v2 = nv;
-
-         // recurse to split v2 side
-         R_SplitLine(nds, bsp->children[side_v2]);
+            // recurse to split v2 side
+            R_SplitLine(nds, bsp->children[side_v2]);
+         }
+         else
+         {
+            // Classification failed (this really should not happen, but, math
+            // on computers is not ideal...). Return the dynavertex and do
+            // nothing here; the seg will be classified on v1 side for lack of
+            // anything better to do with it.
+            R_FreeDynaVertex(nv);
+         }
       }
 
       // continue on v1 side
@@ -413,6 +422,80 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 }
 
 //
+// R_FragmentCenterPoint
+//
+// haleyjd 12/09/12: My original sorting method is insufficient because it 
+// considered the polyobject center point to be a proper judge of z depth for
+// every fragment. This new solution is an interim, until BSP trees are added.
+//
+static void R_FragmentCenterPoint(rpolyobj_t *rpo)
+{
+   dynaseg_t *rover = rpo->dynaSegs;
+   double x, y;
+   int vcount = 0;
+
+   x = y = 0.0;
+
+   while(rover)
+   {
+      // only add in the v1 vertices, for speed
+      vertex_t *v = rover->seg.v1;
+      ++vcount;
+
+      x += v->fx;
+      y += v->fy;
+
+      rover = rover->subnext;
+   }
+
+   // calculate average coordinates
+   x /= vcount;
+   y /= vcount;
+
+   // convert to fixed point
+   rpo->cx = M_DoubleToFixed(x);
+   rpo->cy = M_DoubleToFixed(y);
+}
+
+//
+// R_CalcFragmentCenterPoints
+//
+// Find all the polyobjects' fragments and calculate their center points.
+// See above for an explanation. This is temporary code, an interim solution
+// until we start using BSP trees for polyobjects and dynamic sectors.
+//
+static void R_CalcFragmentCenterPoints(polyobj_t *poly)
+{
+   // a bad polyobject should never have been attached in the first place
+   if(poly->flags & POF_ISBAD)
+      return;
+
+   // not attached?
+   if(!(poly->flags & POF_ATTACHED))
+      return;
+   
+   // no dynaseg-containing subsecs?
+   if(!poly->dynaSubsecs || !poly->numDSS)
+      return;
+
+   // iterate over stored subsector pointers
+   for(int i = 0; i < poly->numDSS; ++i)
+   {
+      subsector_t *ss = poly->dynaSubsecs[i];
+      DLListItem<rpolyobj_t> *link = ss->polyList;
+      
+      // iterate on subsector rpolyobj_t lists
+      while(link)
+      {
+         rpolyobj_t *rpo = link->dllObject;
+         if(rpo->polyobj == poly)
+            R_FragmentCenterPoint(rpo);
+         link = link->dllNext;
+      }
+   }
+}
+
+//
 // R_AttachPolyObject
 //
 // Generates dynamic segs for a single polyobject.
@@ -450,6 +533,9 @@ void R_AttachPolyObject(polyobj_t *poly)
       // The dynasegs are stored in the subsectors in which they finally end up.
       R_SplitLine(idseg, numnodes - 1);
    }
+
+   // haleyjd 12/09/12: calculate center points for every fragment
+   R_CalcFragmentCenterPoints(poly);
 
    poly->flags |= POF_ATTACHED;
 }

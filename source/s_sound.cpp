@@ -156,17 +156,18 @@ static void S_StopChannel(int cnum)
       I_Error("S_StopChannel: handle %d out of range\n", cnum);
 #endif
 
-   if(channels[cnum].sfxinfo)
+   channel_t *c = &channels[cnum];
+
+   if(c->sfxinfo)
    {
-      if(I_SoundIsPlaying(channels[cnum].handle))
-         I_StopSound(channels[cnum].handle);      // stop the sound playing
+      I_StopSound(c->handle, c->idnum); // stop the sound playing
       
       // haleyjd 08/13/10: sound origins should count as thinker references
-      if(demo_version >= 337 && channels[cnum].origin)
-         P_SetTarget<PointThinker>(&(channels[cnum].origin), NULL);
+      if(demo_version >= 337 && c->origin)
+         P_SetTarget<PointThinker>(&(c->origin), NULL);
 
       // haleyjd 09/27/06: clear the entire channel
-      memset(&channels[cnum], 0, sizeof(channel_t));
+      memset(c, 0, sizeof(channel_t));
    }
 }
 
@@ -849,6 +850,8 @@ void S_UpdateSounds(const Mobj *listener)
       if(c->idnum != I_SoundID(c->handle))
       {
          // clear the channel and keep going
+         if(demo_version >= 337 && c->origin)
+            P_SetTarget<PointThinker>(&(c->origin), NULL);
          memset(c, 0, sizeof(channel_t));
          continue;
       }
@@ -1084,7 +1087,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
+   music->data = wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);   
 
    if(music->data)
    {
@@ -1402,8 +1405,7 @@ musicinfo_t *S_MusicForName(const char *name)
    }
    else // name is unprefixed; try with prefix first, then without.
    {
-      tempname = GameModeInfo->musPrefix;
-      tempname.concat(name);
+      tempname.clear() << GameModeInfo->musPrefix << name;
       tempname.toUpper();
       lumpnum = W_CheckNumForName(tempname.constPtr());
 
@@ -1432,34 +1434,6 @@ musicinfo_t *S_MusicForName(const char *name)
    return mus;
 }
 
-/*
-void S_UpdateMusic(const char *lumpname)
-{
-   musicinfo_t *music;
-   const char *musname;
-   int prefixlen;
-   
-   // haleyjd 04/10/11: rewritten completely
-   prefixlen = strlen(GameModeInfo->musPrefix);
-   if(prefixlen && strlen(lumpname) > prefixlen)
-      musname = lumpname + prefixlen;
-   else
-      musname = lumpname;
-   
-   // check if one already in the table first
-   music = S_MusicForName(musname);
-   
-   if(!music) // not found in list?
-   {
-      // build a new musicinfo_t
-      music = ecalloc(musicinfo_t *, 1 ,sizeof(*music));
-      music->name = estrdup(musname);
-      
-      // hook into hash list
-      S_HookMusic(music);
-   }
-}
-*/
 //=============================================================================
 //
 // Console Commands
@@ -1542,7 +1516,7 @@ void S_AddCommands(void)
   C_AddCommand(s_hidefmusic);
 }
 
-#ifndef EE_NO_SMALL_SUPPORT
+#if 0
 //
 // Small native functions
 //

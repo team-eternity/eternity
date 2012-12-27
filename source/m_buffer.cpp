@@ -53,8 +53,8 @@ void BufferedFileBase::InitBuffer(size_t pLen, int pEndian)
 //
 // BufferedFileBase::Tell
 //
-// Gives the current file offset, minus any data that might be currently
-// pending in an output buffer.
+// Gives the current file offset; this does not account for any data that might
+// be currently pending in an output buffer.
 //
 long BufferedFileBase::Tell()
 {
@@ -82,6 +82,8 @@ void BufferedFileBase::Close()
       efree(buffer);
       buffer = NULL;
    }
+
+   ownFile = false;
 }
 
 //
@@ -184,6 +186,8 @@ bool OutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
 
    InitBuffer(pLen, pEndian);
 
+   ownFile = true;
+
    return true;
 }
 
@@ -223,19 +227,12 @@ void OutBuffer::Close()
    {
      if(f)
         Flush();
-      
-     BufferedFileBase::Close();
    }
-   catch(BufferedIOException)
+   catch(...)
    {
-      // if it didn't close, close it now. 
-      // CPP_FIXME: should really use a proper RAII idiom
-      if(f)
-         BufferedFileBase::Close();
-
-      // propagate the exception
-      throw; 
    }
+      
+   BufferedFileBase::Close();
 }
 
 //
@@ -356,96 +353,78 @@ bool OutBuffer::WriteSint8(int8_t num)
 //
 
 //
-// InBuffer::OpenFile
+// InBuffer::openFile
 //
 // Opens a file for binary input.
 //
-bool InBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
+bool InBuffer::openFile(const char *filename, int pEndian)
 {
    if(!(f = fopen(filename, "rb")))
       return false;
 
-   InitBuffer(pLen, pEndian);
-   readlen = 0;
-   atEOF = false;
+   endian  = pEndian;
+   ownFile = true;
+
    return true;
 }
 
 //
-// InBuffer::ReadFile
+// InBuffer::openExisting
 //
-// Read the buffer's amount of data from the file or as much as is left.
-// If has hit EOF, no further reads are made.
+// Attach the input buffer to an already open file.
 //
-bool InBuffer::ReadFile()
+bool InBuffer::openExisting(FILE *pf, int pEndian)
 {
-   if(!atEOF)
-   {
-      readlen = fread(buffer, 1, len, f);
+   if(!(f = pf))
+      return false;
 
-      if(readlen != len)
-         atEOF = true;
-      idx = 0;
-   }
-   else
-   {
-      // exhausted input
-      idx = 0;
-      readlen = 0; 
-   }
+   endian  = pEndian;
+   ownFile = false;
 
-   return atEOF;
+   return true;
 }
 
 //
-// InBuffer::Read
+// InBuffer::seek
+//
+// Seeks inside the file via fseek, and then clears the internal buffer.
+//
+int InBuffer::seek(long offset, int origin)
+{
+   return fseek(f, offset, origin);
+}
+
+//
+// InBuffer::read
 //
 // Read 'size' amount of bytes from the file. Reads are done from the physical
 // medium in chunks of the buffer's length.
 //
-bool InBuffer::Read(void *dest, size_t size)
+size_t InBuffer::read(void *dest, size_t size)
 {
-   byte *lDest = (byte *)dest;
-   size_t lReadAmt;
-   size_t lBytesToRead = size;
-
-   while(lBytesToRead)
-   {
-      lReadAmt = readlen - idx;
-
-      if(!lReadAmt) // nothing left in the buffer?
-      {
-         if(!ReadFile()) // try to read more
-         {
-            if(!readlen) // nothing was read? uh oh!
-               return false;
-         }
-         lReadAmt = readlen;
-      }
-
-      if(lBytesToRead < lReadAmt)
-         lReadAmt = lBytesToRead;
-
-      memcpy(lDest, &(buffer[idx]), lReadAmt);
-
-      idx += lReadAmt;
-      lDest += lReadAmt;
-      lBytesToRead -= lReadAmt;
-   }
-
-   return true;
+   return fread(dest, 1, size, f);
 }
 
 //
-// InBuffer::ReadUint32
+// InBuffer::skip
+//
+// Skip a given number of bytes forward.
+//
+int InBuffer::skip(size_t skipAmt)
+{
+   return fseek(f, skipAmt, SEEK_CUR);
+}
+
+//
+// InBuffer::readUint32
 //
 // Read a uint32 value from the input file.
 //
-bool InBuffer::ReadUint32(uint32_t &num)
+bool InBuffer::readUint32(uint32_t &num)
 {
    uint32_t lNum;
 
-   if(!Read(&lNum, sizeof(lNum)))
+   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
       return false;
 
    SwapULong(lNum);
@@ -454,15 +433,15 @@ bool InBuffer::ReadUint32(uint32_t &num)
 }
 
 //
-// InBuffer::ReadSint32
+// InBuffer::readSint32
 //
 // Read an int32 value from the input file.
 //
-bool InBuffer::ReadSint32(int32_t &num)
+bool InBuffer::readSint32(int32_t &num)
 {
    int32_t lNum;
 
-   if(!Read(&lNum, sizeof(lNum)))
+   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
       return false;
 
    SwapLong(lNum);
@@ -471,15 +450,15 @@ bool InBuffer::ReadSint32(int32_t &num)
 }
 
 //
-// InBuffer::ReadUint16
+// InBuffer::readUint16
 //
 // Read a uint16 value from the input file.
 //
-bool InBuffer::ReadUint16(uint16_t &num)
+bool InBuffer::readUint16(uint16_t &num)
 {
    uint16_t lNum;
 
-   if(!Read(&lNum, sizeof(lNum)))
+   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
       return false;
 
    SwapUShort(lNum);
@@ -488,15 +467,15 @@ bool InBuffer::ReadUint16(uint16_t &num)
 }
 
 //
-// InBuffer::ReadSint16
+// InBuffer::readSint16
 //
 // Read an int16 value from the input file.
 //
-bool InBuffer::ReadSint16(int16_t &num)
+bool InBuffer::readSint16(int16_t &num)
 {
    int16_t lNum;
 
-   if(!Read(&lNum, sizeof(lNum)))
+   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
       return false;
 
    SwapShort(lNum);
@@ -505,45 +484,29 @@ bool InBuffer::ReadSint16(int16_t &num)
 }
 
 //
-// InBuffer::ReadUint8
+// InBuffer::readUint8
 //
 // Read a uint8 value from input file.
 //
-bool InBuffer::ReadUint8(uint8_t &num)
+bool InBuffer::readUint8(uint8_t &num)
 {
-   if(idx == readlen) // nothing left in the buffer?
-   {
-      if(!ReadFile()) // try to read more
-      {
-         if(!readlen) // nothing was read? uh oh!
-            return false;
-      }
-   }
+   if(read(&num, sizeof(num)) != sizeof(num))
+      return false;
 
-   num = buffer[idx];
-   ++idx;
-    return true;
+   return true;
 }
 
 //
-// InBuffer::ReadSint8
+// InBuffer::readSint8
 //
 // Read an int8 value from input file.
 //
-bool InBuffer::ReadSint8(int8_t &num)
+bool InBuffer::readSint8(int8_t &num)
 {
-   if(idx == readlen) // nothing left in the buffer?
-   {
-      if(!ReadFile()) // try to read more
-      {
-         if(!readlen) // nothing was read? uh oh!
-            return false;
-      }
-   }
-
-   num = (int8_t)(buffer[idx]);
-   ++idx;
-    return true;
+   if(read(&num, sizeof(num)) != sizeof(num))
+      return false;
+   
+   return true;
 }
 
 // EOF

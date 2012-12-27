@@ -194,6 +194,7 @@ typedef enum {
   pw_totalinvis,  // haleyjd: total invisibility
   pw_ghost,       // haleyjd: heretic ghost
   pw_silencer,    // haleyjd: silencer
+  pw_flight,      // haleyjd: flight
   NUMPOWERS
 } powertype_t;
 
@@ -332,6 +333,11 @@ typedef enum {
 #define MORE_FRICTION_MOMENTUM 15000       // mud factor based on momentum
 #define ORIG_FRICTION          0xE800      // original value
 #define ORIG_FRICTION_FACTOR   2048        // original value
+#define FRICTION_FLY           0xEB00      // haleyjd: Raven flying player
+
+// haleyjd 06/05/12: flying
+#define FLIGHT_CENTER      -8
+#define FLIGHT_IMPULSE_AMT  5
 
 // sf: some useful macros
 //

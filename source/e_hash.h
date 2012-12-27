@@ -134,15 +134,16 @@ public:
    //
    // addObject
    //
-   // Put an object into the hash table
+   // Put an object into the hash table.
+   // Overload taking a pre-computed unmodulated hash code.
    //
-   void addObject(item_type &object)
+   void addObject(item_type &object, unsigned int unmodHC)
    {
       if(!isInit)
          initialize(127);
 
       link_type &link = object.*linkPtr;
-      link.dllData    = key_type::HashCode(object.*hashKey);
+      link.dllData    = unmodHC; 
       unsigned int hc = link.dllData % numChains;
 
       link.insert(&object, &chains[hc]);
@@ -151,8 +152,17 @@ public:
       calcLoadFactor();
    }
 
-   // Convenience overload for pointers
+   void addObject(item_type &object)
+   {
+      addObject(object, key_type::HashCode(object.*hashKey));
+   }
+
+   // Convenience overloads for pointers
    void addObject(item_type *object) { addObject(*object); }
+   void addObject(item_type *object, unsigned int unmodHC)
+   {
+      addObject(*object, unmodHC);
+   }
 
    //
    // removeObject
@@ -176,6 +186,28 @@ public:
    void removeObject(item_type *object) { removeObject(*object); }
 
    //
+   // objectForKey(EHashUnmodKey, unsigned int)
+   //
+   // Tries to find an object, given an unmodulated pre-computed 
+   // hash code corresponding to the key.
+   //
+   item_type *objectForKey(param_key_type key, unsigned int unmodHC) const
+   {
+      if(isInit)
+      {
+         unsigned int hc = unmodHC % numChains;
+         link_type *chain = chains[hc];
+
+         while(chain && !key_type::Compare(chain->dllObject->*hashKey, key))
+            chain = chain->dllNext;
+
+         return chain ? chain->dllObject : NULL;
+      }
+      else
+         return NULL;
+   }
+
+   //
    // objectForKey(key_type&)
    //
    // Tries to find an object for the given key in the hash table. 
@@ -184,13 +216,22 @@ public:
    //
    item_type *objectForKey(param_key_type key) const
    {
+      return objectForKey(key, key_type::HashCode(key));
+   }
+
+   //
+   // chainForKey(EHashUnmodKey, unsigned int)
+   //
+   // Returns the first object on the hash chain used by the given
+   // unmodulated hash code, or NULL if that hash chain is empty. The
+   // object returned does not necessarily match the given hash code.
+   //
+   item_type *chainForKey(param_key_type key, unsigned int unmodHC)
+   {
       if(isInit)
       {
-         unsigned int hc  = key_type::HashCode(key) % numChains;
+         unsigned int hc  = unmodHC % numChains;
          link_type *chain = chains[hc];
-
-         while(chain && !key_type::Compare(chain->dllObject->*hashKey, key))
-            chain = chain->dllNext;
 
          return chain ? chain->dllObject : NULL;
       }
@@ -207,15 +248,7 @@ public:
    //
    item_type *chainForKey(param_key_type key) const
    {
-      if(isInit)
-      {
-         unsigned int hc  = key_type::HashCode(key) % numChains;
-         link_type *chain = chains[hc];
-
-         return chain ? chain->dllObject : NULL;
-      }
-      else
-         return NULL;
+      return chainForKey(key, key_type::HashCode(key));
    }
 
    //
@@ -244,6 +277,41 @@ public:
    basic_key_type keyForObject(item_type *object) const
    {
       return object->*hashKey;
+   }
+
+   // 
+   // keyIterator
+   //
+   // Looks for the next object after the current one specified having the
+   // same key. If passed NULL in object, it will start a new search.
+   // Returns NULL when the search has reached the end of the hash chain.
+   // Overload for pre-computed unmodulated hash codes.
+   //
+   item_type *keyIterator(item_type *object, param_key_type key,
+                          unsigned int unmodHC)
+   {
+      item_type *ret;
+
+      if(!isInit)
+         return NULL;
+
+      if(!object) // starting a new search?
+         ret = objectForKey(key, unmodHC);
+      else
+      {
+         link_type *link = &(object->*linkPtr);
+
+         // start on next object in hash chain
+         link = link->dllNext;
+
+         // walk down the chain
+         while(link && !key_type::Compare(link->dllObject->*hashKey, key))
+            link = link->dllNext;
+
+         ret = link ? link->dllObject : NULL;
+      }
+
+      return ret;
    }
 
    //
@@ -326,6 +394,7 @@ public:
    void rebuild(unsigned int newNumChains)
    {
       link_type    **oldchains    = chains;    // save current chains
+      link_type    **prevobjs     = NULL;
       unsigned int   oldNumChains = numChains;
       unsigned int   i;
 
@@ -336,10 +405,13 @@ public:
       chains = ecalloc(link_type **, newNumChains, sizeof(link_type *));
       numChains = newNumChains;
 
+      // allocate a temporary table of list end pointers, for each new chain
+      prevobjs = ecalloc(link_type **, newNumChains, sizeof(link_type *));
+
       // run down the old chains
       for(i = 0; i < oldNumChains; ++i)
       {
-         link_type *chain, *prevobj = NULL;
+         link_type *chain;
          unsigned int hashcode;
 
          // restart from beginning of old chain each time
@@ -355,9 +427,11 @@ public:
             // re-add to new hash at end of list
             hashcode = chain->dllData % numChains;
 
-            chain->insert(chain->dllObject, prevobj ? &(prevobj->dllNext) :
-                                                      &(chains[hashcode]));
-            prevobj = chain;
+            chain->insert(chain->dllObject, 
+                          prevobjs[hashcode] ? &(prevobjs[hashcode]->dllNext) :
+                                               &(chains[hashcode]));
+
+            prevobjs[hashcode] = chain;
          }
       }
 
@@ -366,6 +440,9 @@ public:
 
       // delete old chains
       efree(oldchains);
+
+      // delete temporary list end pointers
+      efree(prevobjs);
    }
 };
 

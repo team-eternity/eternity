@@ -376,6 +376,10 @@ void (Z_Free)(void *p, const char *file, int line)
 
       Z_IDCheck(IDBOOL(block->id != ZONEID),
                 "Z_Free: freed a pointer without ZONEID", block, file, line);
+
+      // haleyjd: permanent blocks are never freed even if the code tries.
+      if(block->tag == PU_PERMANENT)
+         return;
       
       IDCHECK(block->id = 0); // Nullify id so another free fails
 
@@ -472,6 +476,10 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
              "Z_ChangeTag: an owner is required for purgable blocks",
              block, file, line);
 
+   // haleyjd: permanent blocks are not re-tagged even if the code tries.
+   if(block->tag == PU_PERMANENT)
+      return;
+
    if((*block->prev = block->next))
       block->next->prev = block->prev;
    if((block->next = blockbytag[tag]))
@@ -518,6 +526,10 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_Realloc: Reallocated a block without ZONEID\n", 
              block, file, line);
+
+   // haleyjd: realloc cannot change the tag of a permanent block
+   if(block->tag == PU_PERMANENT)
+      tag = PU_PERMANENT;
 
    // nullify current user, if any
    if(block->user)

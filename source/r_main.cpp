@@ -598,15 +598,23 @@ void R_SetupViewScaling(void)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = video.width;
-      viewheight = video.height;
+      viewwidth        = video.width;
+      viewheight       = video.height;
+   }
+   else if(setblocks == 10)                               // haleyjd 07/18/2012
+   {
+      scaledviewwidth  = SCREENWIDTH;
+      scaledviewheight = SCREENHEIGHT - GameModeInfo->StatusBar->height;
+      viewwidth        = video.width;
+      viewheight       = video.y2lookup[scaledviewheight - 1] + 1;
    }
    else
    {
+      int st_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
       int x1, x2, y1, y2;
 
       scaledviewwidth  = setblocks * 32;
-      scaledviewheight = (setblocks * 168 / 10) & ~7;     // killough 11/98
+      scaledviewheight = (setblocks * st_y / 10) & ~7;     // killough 11/98
 
       // SoM: phased out realxarray in favor of the *lookup tables.
       // w = x2 - x1 + 1
@@ -616,7 +624,7 @@ void R_SetupViewScaling(void)
       if(scaledviewwidth == SCREENWIDTH)
          y1 = 0;
       else
-         y1 = (SCREENHEIGHT - GameModeInfo->StatusBar->height - scaledviewheight) >> 1;
+         y1 = (st_y - scaledviewheight) >> 1;
 
       y2 = y1 + scaledviewheight - 1;
 
@@ -1172,7 +1180,7 @@ void R_DoomTLStyle(void)
 }
 
 //
-//  Console Commands
+// Console Commands
 //
 
 static const char *handedstr[]  = { "right", "left" };
@@ -1315,6 +1323,25 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
    R_DoomTLStyle();
 }
 
+CONSOLE_COMMAND(r_changesky, 0)
+{
+   if(Console.argc < 1)
+   {
+      C_Puts("Usage: r_changesky texturename");
+      return;
+   }
+
+   qstring name = *Console.argv[0];
+   name.toUpper();
+
+   int texnum = R_CheckForWall(name.constPtr());
+
+   if(texnum != -1)
+      skytexture = texnum;
+   else
+      C_Printf(FC_ERROR "No such texture %s", name.constPtr());
+}
+
 void R_AddCommands(void)
 {
    C_AddCommand(r_fov);
@@ -1337,6 +1364,7 @@ void R_AddCommands(void)
    C_AddCommand(r_vissprite_limit);
    C_AddCommand(r_showrefused);
    C_AddCommand(r_tlstyle);
+   C_AddCommand(r_changesky);
 
    C_AddCommand(p_dumphubs);
 }
