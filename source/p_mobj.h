@@ -355,23 +355,6 @@ public:
    // spawned.
    Mobj  *tid_next;  // ptr to next thing in tid chain
    Mobj **tid_prevn; // ptr to last thing's next pointer
-
-#ifdef R_LINKEDPORTALS
-   // SoM: When a mobj partially passes through a floor/ceiling portal, it 
-   // needs to clip against two sets of map structures and map objects, the 
-   // one it's currently in and then one it's passing into. The current plane
-   // (haha) is to spawn a dummy mobj on the other side of the portal and use
-   // that to occupy space for the mobj / send feedback to the main mobj as to
-   // where its position will be on the other side. This will require a lot of
-   // special clipping code...
-   Mobj *portaldummy;
-
-   // This should only be set if the mobj is a portaldummy. This is the link 
-   // back to the object that this is a dummy for. This link will be used for
-   // such things as the dummy taking damage (intersecting bullets and rockets, 
-   // anyone?)
-   Mobj *dummyto;
-#endif
 };
 
 // External declarations (formerly in p_local.h) -- killough 5/2/98

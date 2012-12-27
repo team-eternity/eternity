@@ -103,3 +103,96 @@ bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, C
 {
    return false;
 }
+
+
+
+void PortalClipEngine::unsetThingPosition(Mobj *thing)
+{
+   P_LogThingPosition(thing, "unset");
+   
+   if(!(thing->flags & MF_NOSECTOR))
+   {
+      Mobj **sprev = thing->sprev;
+      Mobj  *snext = thing->snext;
+      if((*sprev = snext))  // unlink from sector list
+         snext->sprev = sprev;
+
+      thing->old_sectorlist = thing->touching_sectorlist;
+      thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
+   }
+
+   if(!(thing->flags & MF_NOBLOCKMAP))
+   {
+      Mobj *bnext, **bprev = thing->bprev;
+      if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
+         bnext->bprev = bprev;
+   }
+
+   thing->groupid = R_NOGROUP;
+}
+
+
+
+void PortalClipEngine::setThingPosition(Mobj *thing)
+{
+   // link into subsector
+   subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
+
+   thing->groupid = ss->sector->groupid;
+
+   P_LogThingPosition(thing, " set ");
+
+   if(!(thing->flags & MF_NOSECTOR))
+   {
+      // invisible things don't go into the sector links
+      
+      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+      // pointers, allows head nodes to be treated like everything else
+      
+      Mobj **link = &ss->sector->thinglist;
+      Mobj *snext = *link;
+      if((thing->snext = snext))
+         snext->sprev = &thing->snext;
+      thing->sprev = link;
+      *link = thing;
+
+      // phares 3/16/98
+      //
+      // If sector_list isn't NULL, it has a collection of sector
+      // nodes that were just removed from this Thing.
+      //
+      // Collect the sectors the object will live in by looking at
+      // the existing sector_list and adding new nodes and deleting
+      // obsolete ones.
+      //
+      // When a node is deleted, its sector links (the links starting
+      // at sector_t->touching_thinglist) are broken. When a node is
+      // added, new sector links are created.
+
+      thing->touching_sectorlist = createSecNodeList(thing, thing->x, thing->y);
+      thing->old_sectorlist = NULL;
+   }
+
+   // link into blockmap
+   if(!(thing->flags & MF_NOBLOCKMAP))
+   {
+      // inert things don't need to be in blockmap
+      int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
+      int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
+      
+      if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
+      {
+         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+         // pointers, allows head nodes to be treated like everything else
+
+         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
+         Mobj *bnext = *link;
+         if((thing->bnext = bnext))
+            bnext->bprev = &thing->bnext;
+         thing->bprev = link;
+         *link = thing;
+      }
+      else        // thing is off the map
+         thing->bnext = NULL, thing->bprev = NULL;
+   }
+}

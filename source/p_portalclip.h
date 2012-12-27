@@ -39,10 +39,9 @@ class PortalClipEngine : public ClipEngine
       virtual ~PortalClipEngine() {}
       
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
-
       virtual bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc);
       virtual bool makeZMove(Mobj *thing, fixed_t z, ClipContext *cc);
-      
+
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss);
       virtual bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);
       virtual bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
@@ -55,7 +54,7 @@ class PortalClipEngine : public ClipEngine
       virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc);
       virtual bool checkSides(Mobj *actor, int x, int y, ClipContext *cc);
 
-      virtual void        delSeclist(msecnode_t *);
+      virtual void delSeclist(msecnode_t *);
       virtual msecnode_t *createSecNodeList(Mobj *,fixed_t, fixed_t);
       
       virtual int  getMoveFactor(Mobj *mo, int *friction);
@@ -63,8 +62,13 @@ class PortalClipEngine : public ClipEngine
       virtual void applyTorque(Mobj *mo, ClipContext *cc);
       
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc);
-      
+
       virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc);
+      
+      // Utility functions
+      virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc);
+      virtual void unsetThingPosition(Mobj *mo);
+      virtual void setThingPosition(Mobj *mo);
       
       // Clipping contexts
       virtual ClipContext*  getContext();
@@ -73,11 +77,6 @@ class PortalClipEngine : public ClipEngine
    private:
       ClipContext    *unused;
 };
-
-
-
-extern int  spechits_emulation;  // haleyjd 09/20/06
-extern bool donut_emulation; // haleyjd 10/16/09
 
 
 

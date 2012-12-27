@@ -2953,10 +2953,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\source\p_mapcontext.h"
-						>
-					</File>
-					<File
 						RelativePath="..\Source\p_mobj.h"
 						>
 					</File>
@@ -5099,6 +5095,10 @@
 					</File>
 					<File
 						RelativePath="..\source\p_clipen.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_mapcontext.h"
 						>
 					</File>
 				</Filter>
