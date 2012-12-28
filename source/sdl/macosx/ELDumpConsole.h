@@ -29,7 +29,7 @@
 
 
 @interface ELDumpConsole : NSWindowController {
-	IBOutlet NSTextField *textField;
+	IBOutlet NSTextView *textField;
 	NSMutableString *log;
 	NSAttributedString *attrStr;
 	NSFileHandle *outHandle, *inHandle;

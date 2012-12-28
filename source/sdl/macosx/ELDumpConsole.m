@@ -53,7 +53,8 @@
 -(void)startLogging
 {
 
-	[[self window] makeKeyAndOrderFront:self];
+	[[self window] orderFront:self];
+	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:13]];
 	
    pipe = [NSPipe pipe];
    outHandle = [pipe fileHandleForWriting];
@@ -82,7 +83,8 @@
 												 encoding:NSUTF8StringEncoding];
 		[log appendString:string];
 		[string release];
-		[textField setStringValue:log];
+		[textField setString:log];
+		[textField scrollToEndOfDocument:self];
 //      [string getCString:line maxLength:80 encoding:NSUTF8StringEncoding];
 //      NSLog(string);
 	}

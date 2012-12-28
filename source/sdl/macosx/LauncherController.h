@@ -64,7 +64,8 @@
 	IBOutlet NSTextField *otherField;
    
 	IBOutlet NSButton *respawn, *fast, *nomons, *vanilla, *timedemo, *fastdemo;
-	IBOutlet NSTextField *infoDisplay;
+	
+	IBOutlet NSTextView *infoDisplay;
    
    IBOutlet ELTextFieldDelegate *textFieldDelegate;   // the notif. delegate
 

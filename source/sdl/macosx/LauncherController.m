@@ -283,13 +283,14 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	
 	if(argc > 1)
 	{
+//		[console startLogging];
 		gCalledAppMainline = TRUE;
 		gSDLStarted = YES;	// IOAN 20120616
 		[window close];
 	
 		status = SDL_main (argc, argv);
 		
-		//	[console showInstantLog];
+		// [console showInstantLog];
 		// We're done, thank you for playing
 //		if(status == 0)   // only exit if it's all ok
 			exit(status);
@@ -1267,7 +1268,7 @@ iwadMightBe:
 		[infotext appendString:@"\n"];		
 	}
 	
-	[infoDisplay setStringValue:infotext];
+	[infoDisplay setString:infotext];
 	
 }
 

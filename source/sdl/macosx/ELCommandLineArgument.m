@@ -107,7 +107,10 @@
 	
 	NSMutableString *ret;
 	if(![identifier isEqualToString:@" "])
+	{
 		ret = [NSMutableString stringWithString:identifier];
+		[ret appendString:@" "];
+	}
 	else
 		ret = [NSMutableString string];
 	NSString *component;
@@ -116,7 +119,7 @@
 	for(component in extraWords)
 	{
 		// do your job
-		[ret appendString:@" "];
+
 		whitespaceRange = [component rangeOfCharacterFromSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 		if(withQuotes && whitespaceRange.location != NSNotFound)
 		{
@@ -126,6 +129,7 @@
 		}
 		else
 			[ret appendString:component];
+		[ret appendString:@" "];
 	}
 	
 	return ret;
