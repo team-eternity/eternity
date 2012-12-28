@@ -51,20 +51,6 @@
    if(!(line))             \
       return false
 
-/*
-int P_CheckTag(line_t *line)
-{
-   switch (line->special)
-   {
-   case 48:  // Scrolling walls
-   case 85:
-      return 1;
-   }
-
-  return 0;
-}
-*/
-
 //=============================================================================
 //
 // Utilities
@@ -1475,6 +1461,88 @@ static bool EV_ActionBoomGen(ev_action_t *action, ev_instance_t *instance)
    default:
       return false;
    }
+}
+
+//
+// Parameterized Actions
+//
+// These are used directly by the Hexen map format and from within ACS scripts,
+// and are also available to DOOM-format maps through use of ExtraData.
+//
+
+//
+// EV_ActionDoorRaise
+//
+// Implements Door_Raise(tag, speed, delay, lighttag)
+//
+static bool EV_ActionDoorRaise(ev_action_t *action, ev_instance_t *instance)
+{
+   doordata_t dd;
+   int flags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind           = OdCDoor;
+   dd.spac           = instance->spac;
+   dd.reuse          = ((flags & EX_ML_REPEAT) == EX_ML_REPEAT);
+   dd.speed_value    = instance->args[1] * FRACUNIT / 8;
+   dd.usealtlighttag = true;
+   dd.topcountdown   = 0;
+   dd.delay_value    = instance->args[2];
+   dd.altlighttag    = instance->args[3];
+
+   // FIXME/TODO: set genDoorThing in case of manual retrigger
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->args[0], &dd);
+}
+
+//
+// EV_ActionDoorOpen
+//
+// Implements Door_Open(tag, speed, lighttag)
+//
+static bool EV_ActionDoorOpen(ev_action_t *action, ev_instance_t *instance)
+{
+   doordata_t dd;
+   int flags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind           = ODoor;
+   dd.spac           = instance->spac;
+   dd.reuse          = ((flags & EX_ML_REPEAT) == EX_ML_REPEAT);
+   dd.speed_value    = instance->args[1] * FRACUNIT / 8;
+   dd.usealtlighttag = true;
+   dd.topcountdown   = 0;
+   dd.delay_value    = 0;
+   dd.altlighttag    = instance->args[2];
+
+   // FIXME/TODO
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->args[0], &dd);
+}
+
+//
+// EV_ActionDoorClose
+//
+// Implements Door_Close(tag, speed, lighttag)
+//
+static bool EV_ActionDoorClose(ev_action_t *action, ev_instance_t *instance)
+{
+   doordata_t dd;
+   int flags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind           = CDoor;
+   dd.spac           = instance->spac;
+   dd.reuse          = ((flags & EX_ML_REPEAT) == EX_ML_REPEAT);
+   dd.speed_value    = instance->args[1] * FRACUNIT / 8;
+   dd.usealtlighttag = true;
+   dd.topcountdown   = 0;
+   dd.delay_value    = 0;
+   dd.altlighttag    = instance->args[2];
+
+   // FIXME/TODO
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->args[0], &dd);
 }
 
 //=============================================================================
@@ -3004,6 +3072,14 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(401, EV_STATIC_EXTRADATA_SECTOR)
 };
 
+// Hexen Static Init Bindings
+static ev_static_t HexenStaticBindings[] =
+{
+   STATICSPEC(  1, EV_STATIC_POLYOBJ_START_LINE)
+   STATICSPEC(  5, EV_STATIC_POLYOBJ_EXPLICIT_LINE)
+   STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
+};
+
 //
 // Hash Tables
 //
@@ -3072,13 +3148,19 @@ int EV_DOOMSpecialForStaticInit(int staticFn)
 // EV_HereticSpecialForStaticInit
 //
 // Always looks up a special in the Heretic gamemode's static init list, 
-// regardless of the map format or gamemode in use. Returns 0 if no such special
-// exists.
+// regardless of the map format or gamemode in use. Returns 0 if no such 
+// special exists.
 //
 int EV_HereticSpecialForStaticInit(int staticFn)
 {
-   // TODO
-   return 0;
+   // There is only one difference between Heretic and DOOM regarding static
+   // init specials; line type 99 is equivalent to BOOM extended type 85, 
+   // scroll line right.
+
+   if(staticFn == EV_STATIC_SCROLL_LINE_RIGHT)
+      return 99;
+
+   return EV_DOOMSpecialForStaticInit(staticFn);
 }
 
 //
