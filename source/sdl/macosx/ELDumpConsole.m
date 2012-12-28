@@ -33,7 +33,7 @@
 
 -(id)initWithWindowNibName:(NSString *)windowNibName
 {
-	if([super initWithWindowNibName:windowNibName])
+	if(self = [super initWithWindowNibName:windowNibName])
 	{
 		log = [[NSMutableString alloc] init];
       

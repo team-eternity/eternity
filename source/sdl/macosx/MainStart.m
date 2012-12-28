@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	eternityApplicationMain(argc, argv);
+	eternityApplicationMain(gArgc, gArgv);
 	
 	return 0;
 }

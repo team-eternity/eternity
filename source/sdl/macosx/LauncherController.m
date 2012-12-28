@@ -203,7 +203,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 -(id)init
 {
-	if([super init])
+	if(self = [super init])
 	{
 		fileMan = [NSFileManager defaultManager];
 		iwadSet = [[NSMutableSet alloc] initWithCapacity:0];
@@ -446,6 +446,14 @@ static BOOL gSDLStarted;	// IOAN 20120616
 -(IBAction)showUserInFinder:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openFile:userPath withApplication:@"Finder"];
+}
+
+//
+// accessBaseFolder
+//
+-(IBAction)accessBaseFolder:(id)sender
+{
+	[[NSWorkspace sharedWorkspace] openFile:basePath withApplication:@"Finder"];
 }
 
 //
@@ -1294,21 +1302,18 @@ iwadMightBe:
       NSURL *URL;
       NSMutableArray *archArr = [NSMutableArray array];
       for(URL in aURLCollection)
-         [archArr addObject:[URL path]];
+         [archArr addObject:[URL relativeString]];
       [defaults setObject:archArr forKey:aString];
    };
 	
 	// IWAD list
-   saveURLsFromCollection(iwadSet, @"iwadSet");
+   saveURLsFromCollection(iwadSet, @"iwadSet_v2");
    
    // Index of selected item
 	[defaults setInteger:[iwadPopUp indexOfSelectedItem] forKey:@"iwadPopUpIndex"];
    
 	// PWAD array
-   saveURLsFromCollection(pwadArray, @"pwadArray");
-      
-   // User set
-   saveURLsFromCollection(userSet, @"userSet");
+   saveURLsFromCollection(pwadArray, @"pwadArray_v2");
    
 	// Other parameters
 	[defaults setObject:[otherField stringValue] forKey:@"otherField"];
@@ -1378,17 +1383,17 @@ iwadMightBe:
          archArr = [defaults stringArrayForKey:aKey];
          for(archStr in archArr)
          {
-            [self performSelector:aMessage
-                       withObject:[NSURL URLWithString:archStr]];
+            [self performSelector:aMessage withObject:[NSURL URLWithString:archStr]];
+	//			NSString *sss;
          }
       };
 		
 		// IWAD set
-      loadURLsFromKey(@"iwadSet", @selector(doAddIwadFromURL:));
+      loadURLsFromKey(@"iwadSet_v2", @selector(doAddIwadFromURL:));
 		[iwadPopUp selectItemAtIndex:[defaults integerForKey:@"iwadPopUpIndex"]];
 
       // PWAD array
-      loadURLsFromKey(@"pwadArray", @selector(doAddPwadFromURL:));
+      loadURLsFromKey(@"pwadArray_v2", @selector(doAddPwadFromURL:));
 		[pwadView reloadData];
 			 
 		// Other parameters
@@ -1440,11 +1445,29 @@ iwadMightBe:
 //
 // goGetHelp:
 //
-// Go to the parameters article in the You Fail It Eternity wiki. I might decide to turn it into an offline help
+// Go to the parameters article in the Eternity wiki. I might decide to turn it into an offline help
 //
 -(IBAction)goGetHelp:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://eternity.youfailit.net/index.php?title=List_of_command_line_parameters"]];
+}
+
+//
+// goGetHelp:
+//
+// Go to the rot article in the Eternity wiki. I might decide to turn it into an offline help
+//
+-(IBAction)goGetHelpRoot:(id)sender
+{
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://eternity.youfailit.net/"]];
+}
+
+//
+// showLicense
+//
+-(IBAction)showLicense:(id)sender
+{
+	[[NSWorkspace sharedWorkspace] openFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"COPYING.pdf"] withApplication:@"Preview"];
 }
 
 @end	// end LauncherController class definition

@@ -84,6 +84,7 @@
 	NSMutableString *userPath, *basePath;
 	
 	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp, *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo, *parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags, *parmNet;
+	
 }
 @property (assign) IBOutlet NSWindow *window;
 @property (readonly) NSMutableArray *pwadArray;
@@ -108,9 +109,13 @@
 -(IBAction)updateParameters:(id)sender;
 
 -(IBAction)goGetHelp:(id)sender;
+-(IBAction)goGetHelpRoot:(id)sender;
 
 -(IBAction)showUserInFinder:(id)sender;
 -(IBAction)showFileInFinder:(id)sender;
+-(IBAction)accessBaseFolder:(id)sender;
+
+-(IBAction)showLicense:(id)sender;
 
 @end
 
