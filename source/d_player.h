@@ -79,7 +79,9 @@ typedef enum
   // haleyjd 03/18/03: infinite ammo
   CF_INFAMMO          = 8,
   // haleyjd 12/29/10: immortality cheat
-  CF_IMMORTAL         = 0x10
+  CF_IMMORTAL         = 0x10,
+  // haleyjd 09/10/12: used any score-cancelling cheat
+  CF_CHEATED          = 0x20
 } cheat_t;
 
 
@@ -88,7 +90,7 @@ typedef enum
 //
 struct player_t
 {
-   Mobj        *mo;
+   Mobj          *mo;
    playerclass_t *pclass;      // haleyjd 09/27/07: player class
    skin_t        *skin;        // skin
    playerstate_t  playerstate; // live, dead, reborn, etc.

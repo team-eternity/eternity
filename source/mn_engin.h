@@ -198,8 +198,6 @@ void MN_StartControlPanel(void);
 
 void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
 
-void MN_DrawBackground(char *patch, byte *screen);  // killough 11/98
-
 void MN_DrawCredits(void);    // killough 11/98
 
 void MN_ActivateMenu(void);

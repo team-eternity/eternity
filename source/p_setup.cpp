@@ -99,6 +99,7 @@ subsector_t *subsectors;
 
 int      numnodes;
 node_t   *nodes;
+fnode_t  *fnodes;
 
 int      numlines;
 line_t   *lines;
@@ -575,20 +576,20 @@ void P_LoadSectors(int lumpnum)
 // general line equation coefficients for a node, which are used during the
 // process of dynaseg generation.
 //
-static void P_CalcNodeCoefficients(node_t *no)
+static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 {
    // haleyjd 05/16/08: keep floating point versions as well for dynamic
    // seg splitting operations
-   no->fx  = (double)no->x;
-   no->fy  = (double)no->y;
-   no->fdx = (double)no->dx;
-   no->fdy = (double)no->dy;
+   fnode->fx  = (double)node->x;
+   fnode->fy  = (double)node->y;
+   fnode->fdx = (double)node->dx;
+   fnode->fdy = (double)node->dy;
 
    // haleyjd 05/20/08: precalculate general line equation coefficients
-   no->a   = -no->fdy;
-   no->b   =  no->fdx;
-   no->c   =  no->fdy * no->fx - no->fdx * no->fy;
-   no->len = sqrt(no->fdx * no->fdx + no->fdy * no->fdy);
+   fnode->a   = -fnode->fdy;
+   fnode->b   =  fnode->fdx;
+   fnode->c   =  fnode->fdy * fnode->fx - fnode->fdx * fnode->fy;
+   fnode->len = sqrt(fnode->fdx * fnode->fdx + fnode->fdy * fnode->fdy);
 }
 
 //
@@ -611,8 +612,9 @@ void P_LoadNodes(int lump)
       return;
    }
 
-   nodes = (node_t *)(Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0));
-   data  = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+   nodes  = estructalloctag(node_t,  numnodes, PU_LEVEL);
+   fnodes = estructalloctag(fnode_t, numnodes, PU_LEVEL);
+   data   = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numnodes; ++i)
    {
@@ -626,7 +628,7 @@ void P_LoadNodes(int lump)
       no->dy = SwapShort(mn->dy);
 
       // haleyjd: calculate floating-point data
-      P_CalcNodeCoefficients(no);
+      P_CalcNodeCoefficients(no, &fnodes[i]);
 
       no->x  <<= FRACBITS;
       no->y  <<= FRACBITS;
@@ -881,7 +883,8 @@ static void P_LoadZNodes(int lump)
    numNodes = GetLevelDWordU(&data);
 
    numnodes = numNodes;
-   nodes = ecalloc(node_t *, numNodes, sizeof(node_t));
+   nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
+   fnodes = estructalloctag(fnode_t, numNodes, PU_LEVEL);
 
    CheckZNodesOverflow(len, numNodes * 32);
    for (i = 0; i < numNodes; i++)
@@ -907,7 +910,7 @@ static void P_LoadZNodes(int lump)
       no->dx = mn.dx;
       no->dy = mn.dy;
 
-      P_CalcNodeCoefficients(no);
+      P_CalcNodeCoefficients(no, &fnodes[i]);
 
       no->x  <<= FRACBITS;
       no->y  <<= FRACBITS;

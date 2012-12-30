@@ -365,6 +365,15 @@ public:
 };
 
 //
+// ACSJump
+//
+union ACSJump
+{
+   uint32_t codeIndex;
+   int32_t *codePtr;
+};
+
+//
 // ACSScript
 //
 // An actual script entity as read from the ACS lump's entry table,
@@ -400,7 +409,6 @@ public:
 struct acs_call_t
 {
    int32_t *ip;
-   int32_t *locals;
    uint32_t numLocals;
    ACSVM   *vm;
 };
@@ -448,6 +456,8 @@ public:
    int32_t    *stack;       // value stack
    uint32_t    stackPtr;    // stack pointer
    uint32_t    numStack;    // stack size
+   int32_t    *localvar;    // local variable storage area
+   uint32_t    numLocalvar; // local variable allocation size
    int32_t    *locals;      // local variables and arguments
    uint32_t    numLocals;   // number of local variables
    int32_t     sreg;        // state register
@@ -585,6 +595,8 @@ public:
    ACSFunc **funcptrs;                 // pointers into vm funcdat
    ACSFunc  *funcs;                    // functions local to this vm
    uint32_t  numFuncs;                 // number of functions
+   ACSJump  *jumps;                    // dynamic jump targets
+   uint32_t  numJumps;                 // number of dynamic jump targets
    int32_t  *mapvtab[ACS_NUM_MAPVARS]; // pointers into vm mapvars
    int32_t   mapvars[ACS_NUM_MAPVARS]; // map variables local to this vm
    ACSArray *mapatab[ACS_NUM_MAPARRS]; // pointers into vm maparrs

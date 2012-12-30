@@ -44,6 +44,7 @@
 #include "r_main.h"
 #include "s_sound.h"
 #include "v_misc.h"
+#include "w_formats.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
 
@@ -89,16 +90,38 @@ static void D_reAllocFiles()
 // haleyjd 05/28/10: added f and baseoffset parameters for subfile support.
 //
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               int privatedir)
+               bool privatedir, bool iwad)
 {
+   unsigned int flags;
+
    D_reAllocFiles();
 
    wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
-   wadfiles[numwadfiles].privatedir   = privatedir;
-   wadfiles[numwadfiles].directory    = false;
+   wadfiles[numwadfiles].requiredFmt  = -1;
+   
+   // haleyjd 10/27/12: setup flags
+   flags = WFA_ALLOWINEXACTFN | WFA_OPENFAILFATAL | WFA_ALLOWHACKS;
+
+   // adding a subfile?
+   if(fp)
+   {
+      wadfiles[numwadfiles].requiredFmt = W_FORMAT_WAD;
+      flags |= (WFA_SUBFILE | WFA_REQUIREFORMAT);
+   }
+
+   // private directory?
+   if(privatedir)
+      flags |= WFA_PRIVATE;
+
+   // haleyjd 10/3/12: must explicitly track what file has been added as the
+   // IWAD now. Special thanks to id Software and their BFG Edition fuck-ups!
+   if(iwad)
+      flags |= WFA_ISIWADFILE;
+
+   wadfiles[numwadfiles].flags = flags;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
@@ -118,8 +141,9 @@ void D_AddDirectory(const char *dir)
    wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
    wadfiles[numwadfiles].f            = NULL;
    wadfiles[numwadfiles].baseoffset   = 0;
-   wadfiles[numwadfiles].privatedir   = 0;
-   wadfiles[numwadfiles].directory    = true;
+
+   // haleyjd 10/27/12: flags
+   wadfiles[numwadfiles].flags = WFA_OPENFAILFATAL | WFA_DIRECTORY;
 
    wadfiles[numwadfiles+1].filename = NULL;
 
@@ -196,7 +220,7 @@ void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, false, false);
    }
 }
 
@@ -246,15 +270,22 @@ void D_LooseWads()
       // get extension (search from right end)
       dot = strrchr(myargv[i], '.');
 
-      // check extension
-      if(!dot || strncasecmp(dot, ".wad", 4))
+      // check for extension
+      if(!dot)
+         continue;
+
+      // allow any supported archive extension
+      if(strncasecmp(dot, ".wad", 4) &&
+         strncasecmp(dot, ".pke", 4) &&
+         strncasecmp(dot, ".pk3", 4) &&
+         strncasecmp(dot, ".zip", 4))
          continue;
 
       // add it
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, false, false);
    }
 }
 
@@ -460,7 +491,7 @@ static void D_reInitWadfiles()
 }
 
 // FIXME: various parts of this routine need tightening up
-void D_NewWadLumps(FILE *handle)
+void D_NewWadLumps(int source)
 {
    int i, format;
    char wad_firstlevel[9];
@@ -471,7 +502,7 @@ void D_NewWadLumps(FILE *handle)
 
    for(i = 0; i < numlumps; ++i)
    {
-      if(lumpinfo[i]->file != handle)
+      if(lumpinfo[i]->source != source)
          continue;
 
       // haleyjd: changed check for "THINGS" lump to a fullblown
@@ -521,10 +552,10 @@ void D_NewWadLumps(FILE *handle)
 bool D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
-   if(wGlobalDir.addNewFile(s))
+   if(!wGlobalDir.addNewFile(s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads
+   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, false, false); // add to the list of wads
    C_SetConsole();
    D_reInitWadfiles();
    return true;

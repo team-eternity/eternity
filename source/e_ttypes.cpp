@@ -130,9 +130,9 @@ cfg_opt_t edf_terrn_opts[] =
    CFG_STR(ITEM_TERRAIN_DMGTYPE,  "UNKNOWN", CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_DMGMASK,  0,         CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_FOOTCLIP, 0,         CFGF_NONE),
-   CFG_BOOL(ITEM_TERRAIN_LIQUID,  cfg_false, CFGF_NONE),
-   CFG_BOOL(ITEM_TERRAIN_SPALERT, cfg_false, CFGF_NONE),
-   CFG_BOOL(ITEM_TERRAIN_USECOLS, cfg_false, CFGF_NONE),
+   CFG_BOOL(ITEM_TERRAIN_LIQUID,  false,     CFGF_NONE),
+   CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
+   CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
    
    CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
@@ -150,9 +150,9 @@ cfg_opt_t edf_terdelta_opts[] =
    CFG_STR(ITEM_TERRAIN_DMGTYPE,  "UNKNOWN", CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_DMGMASK,  0,         CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_FOOTCLIP, 0,         CFGF_NONE),
-   CFG_BOOL(ITEM_TERRAIN_LIQUID,  cfg_false, CFGF_NONE),
-   CFG_BOOL(ITEM_TERRAIN_SPALERT, cfg_false, CFGF_NONE),
-   CFG_BOOL(ITEM_TERRAIN_USECOLS, cfg_false, CFGF_NONE),
+   CFG_BOOL(ITEM_TERRAIN_LIQUID,  false,     CFGF_NONE),
+   CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
+   CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
    
    CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
@@ -415,22 +415,19 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
    // process liquid
    if(IS_SET(ITEM_TERRAIN_LIQUID))
    {
-      newTerrain->liquid = 
-         (cfg_getbool(cfg, ITEM_TERRAIN_LIQUID) == cfg_true);
+      newTerrain->liquid = cfg_getbool(cfg, ITEM_TERRAIN_LIQUID);
    }
 
    // process splashalert
    if(IS_SET(ITEM_TERRAIN_SPALERT))
    {
-      newTerrain->splashalert =
-         (cfg_getbool(cfg, ITEM_TERRAIN_SPALERT) == cfg_true);
+      newTerrain->splashalert = cfg_getbool(cfg, ITEM_TERRAIN_SPALERT);
    }
 
    // process usepcolors
    if(IS_SET(ITEM_TERRAIN_USECOLS))
    {
-      newTerrain->usepcolors =
-         (cfg_getbool(cfg, ITEM_TERRAIN_USECOLS) == cfg_true);
+      newTerrain->usepcolors = cfg_getbool(cfg, ITEM_TERRAIN_USECOLS);
    }
 
    // process particle colors

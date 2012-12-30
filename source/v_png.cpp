@@ -31,11 +31,14 @@
 
 #include "z_zone.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "doomtype.h"
 #include "v_misc.h"
 #include "v_png.h"
 #include "v_video.h"
+#include "w_wad.h"
+#include "z_auto.h"
 
 // Need libpng
 #include "png.h"
@@ -76,6 +79,8 @@ public:
 
    // Methods
    bool  readImage(const void *data);
+   bool  readFromLumpNum(WadDirectory &dir, int lump);
+   bool  readFromLumpName(WadDirectory &dir, const char *name);
    void  freeImage();
    byte *getAs8Bit(const byte *outpal) const;
    byte *getAs24Bit() const;
@@ -163,9 +168,10 @@ bool VPNGImagePimpl::readImage(const void *data)
       return false;
    }
 
-   // TODO: Warning - the concept of throwing an exception through libpng is
-   // still untested. One of the libpng authors claims it should work, in lieu
-   // of using setjmp/longjmp. Need to feed it a bad PNG to see what happens.
+   // DONE: I have successfully tested the concept of throwing an exception 
+   // through libpng. One of the libpng authors claimed it should work, in lieu
+   // of using setjmp/longjmp. I have fed EE some bad PNGs and the exception
+   // propagates past the C calls on the stack and ends up here without incident.
    try
    {
       // set read function, since we are reading from a data source in memory
@@ -282,7 +288,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    }
    catch(...)
    {
-      readSuccess = false;
+       readSuccess = false;
    }
 
    // Done, cleanup.
@@ -293,6 +299,35 @@ bool VPNGImagePimpl::readImage(const void *data)
    row_pointers = NULL;
 
    return readSuccess;
+}
+
+//
+// VPNGImagePimpl::readFromLumpNum
+//
+// Read a PNG resource from a lump, by number.
+//
+bool VPNGImagePimpl::readFromLumpNum(WadDirectory &dir, int lump)
+{
+   ZAutoBuffer lumpBuffer;
+   bool result = false;
+
+   if(lump >= 0)
+   {
+      dir.cacheLumpAuto(lump, lumpBuffer);
+      result = readImage(lumpBuffer.get());
+   }
+
+   return result;
+}
+
+//
+// VPNGImagePimpl::readFromLumpName
+//
+// Read a PNG resource from a lump, by name.
+//
+bool VPNGImagePimpl::readFromLumpName(WadDirectory &dir, const char *name)
+{
+   return readFromLumpNum(dir, dir.checkNumForName(name));
 }
 
 //
@@ -463,7 +498,7 @@ VPNGImage::VPNGImage() : ZoneObject()
 {
    // pImpl object is a POD, so use calloc to create it and
    // initialize all fields to zero
-   pImpl = ecalloc(VPNGImagePimpl *, 1, sizeof(VPNGImagePimpl));
+   pImpl = estructalloc(VPNGImagePimpl, 1);
 }
 
 //
@@ -492,6 +527,27 @@ VPNGImage::~VPNGImage()
 bool VPNGImage::readImage(const void *data)
 {
    return pImpl->readImage(data);
+}
+
+//
+// VPNGImage::readFromLump
+//
+// Calls readImage after caching the given lump number in the given
+// wad directory. Overload for lump numbers.
+//
+bool VPNGImage::readFromLump(WadDirectory &dir, int lumpnum)
+{
+   return pImpl->readFromLumpNum(dir, lumpnum);
+}
+
+//
+// VPNGImage::readFromLump
+//
+// Overload for lump names.
+//
+bool VPNGImage::readFromLump(WadDirectory &dir, const char *lumpname)
+{
+   return pImpl->readFromLumpName(dir, lumpname);
 }
 
 //
@@ -603,13 +659,28 @@ byte *VPNGImage::getAs24Bit() const
    return pImpl->getAs24Bit();
 }
 
+patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
+{
+   AutoPalette pal(wGlobalDir);
+   patch_t *patch  = NULL;
+   byte    *linear = getAs8Bit(pal.get());
+   int      w      = static_cast<int>(getWidth());
+   int      h      = static_cast<int>(getHeight());
+
+   patch = V_LinearToPatch(linear, w, h, size, tag, user);
+
+   efree(linear);
+
+   return patch;
+}
+
 //=============================================================================
 //
 // Static Methods
 //
 
 //
-// VPNGImage::CheckPngFormat
+// VPNGImage::CheckPNGFormat
 //
 // Static method.
 // Returns true if the block appears to be a PNG based on the magic signature.
@@ -617,6 +688,243 @@ byte *VPNGImage::getAs24Bit() const
 bool VPNGImage::CheckPNGFormat(const void *data)
 {
    return !png_sig_cmp((png_const_bytep)data, 0, 8);
+}
+
+//
+// VPNGImage::LoadAsPatch
+//
+// Load a PNG image and convert it to patch_t format.
+//
+patch_t *VPNGImage::LoadAsPatch(int lumpnum, int tag, void **user, size_t *size)
+{   
+   patch_t *patch = NULL;
+   int len;
+  
+   if((len = wGlobalDir.lumpLength(lumpnum)) > 8)
+   {
+      VPNGImage   png;
+      ZAutoBuffer buffer(len, true);
+      wGlobalDir.readLump(lumpnum, buffer.get());
+      if(png.readImage(buffer.get()))
+         patch = png.getAsPatch(tag, user);
+   }
+
+   return patch;
+}
+
+patch_t *VPNGImage::LoadAsPatch(const char *lumpname, int tag, void **user,
+                                size_t *size)
+{
+   int lumpnum = wGlobalDir.checkNumForName(lumpname);
+
+   return lumpnum >= 0 ? LoadAsPatch(lumpnum, tag, user, size) : NULL;
+}
+
+//=============================================================================
+//
+// PNG Writer
+//
+
+// PNG writing private data structure
+struct pngwrite_t
+{
+   FILE *outf;
+   bool  errorFlag;
+   int   errnoVal;
+};
+
+//
+// V_pngDataWrite
+//
+// File writing callback for libpng.
+//
+static void V_pngDataWrite(png_structp pngptr, png_bytep data, png_size_t len)
+{
+   pngwrite_t *iodata = static_cast<pngwrite_t *>(png_get_io_ptr(pngptr));
+
+   if(fwrite(data, 1, len, iodata->outf) != len)
+   {
+      iodata->errorFlag = true;
+      iodata->errnoVal  = errno;
+   }
+}
+
+//
+// V_pngDataFlush
+//
+// Flush callback for libpng.
+//
+static void V_pngDataFlush(png_structp pngptr)
+{
+   pngwrite_t *iodata = static_cast<pngwrite_t *>(png_get_io_ptr(pngptr));
+ 
+   if(fflush(iodata->outf) != 0)
+   {
+      iodata->errorFlag = true;
+      iodata->errnoVal  = errno;
+   }
+}
+
+//
+// V_pngWriteWarning
+//
+// Warning message callback for libpng.
+//
+static void V_pngWriteWarning(png_structp pngptr, png_const_charp warningMsg)
+{
+   C_Printf(FC_ERROR "libpng warning: %s", warningMsg);
+}
+
+//
+// V_pngWriteError
+//
+// Error callback for libpng. An exception will be thrown so that control
+// jumps back to V_WritePNG without returning through libpng.
+//
+static void V_pngWriteError(png_structp pngptr, png_const_charp errorMsg)
+{
+   C_Printf(FC_ERROR "libpng error: %s", errorMsg);
+
+   throw 0;
+}
+
+//
+// V_pngRemoveFile
+//
+// Closes and removes the PNG file if an error occurs.
+//
+static void V_pngRemoveFile(pngwrite_t *writeData, const char *filename)
+{
+   if(writeData->outf)
+   {
+      fclose(writeData->outf);
+      writeData->outf = NULL;
+      if(writeData->errorFlag)
+      {
+         int error = writeData->errnoVal;
+         C_Printf(FC_ERROR "V_pngRemoveFile: IO error: %s\a", 
+                  error ? strerror(error) : "unknown error");
+      }
+   }
+
+   // Try to remove it.
+   if(remove(filename) != 0)
+   {
+      C_Printf(FC_ERROR "V_pngRemoveFile: error deleting bad PNG file: %s\a",
+               errno ? strerror(errno) : "unknown error");
+   }
+}
+
+//
+// V_WritePNG
+//
+// Write a linear graphic as a PNG file.
+//
+bool V_WritePNG(byte *linear, int width, int height, const char *filename)
+{
+   AutoPalette palcache(wGlobalDir);
+   png_structp pngStruct;
+   png_infop   pngInfo;
+   png_colorp  pngPalette;
+   pngwrite_t  writeData;
+   bool        libpngError = false;
+   bool        retval;
+      
+   byte  *palette;
+   byte **rowpointers;
+
+   // Load palette
+   palette = palcache.get();
+
+   // Open file for output
+   if(!(writeData.outf = fopen(filename, "wb")))
+   {
+      C_Printf(FC_ERROR "V_WritePNG: could not open %s for write\a", filename);
+      return false;
+   }
+   writeData.errorFlag = false;
+   writeData.errnoVal  = 0;
+
+   // Create the libpng write struct
+   if(!(pngStruct = 
+        png_create_write_struct(PNG_LIBPNG_VER_STRING, &writeData,
+                                V_pngWriteError, V_pngWriteWarning)))
+   {
+      V_pngRemoveFile(&writeData, filename);
+      return false;
+   }
+
+   // Create the libpng info struct
+   if(!(pngInfo = png_create_info_struct(pngStruct)))
+   {
+      png_destroy_write_struct(&pngStruct, NULL);
+      V_pngRemoveFile(&writeData, filename);
+      return false;
+   }
+
+   // Allocate row pointers and palette
+   rowpointers = ecalloc(byte **,    height, sizeof(byte *));
+   pngPalette  = ecalloc(png_colorp, 256,    sizeof(png_color));
+
+   try
+   {
+      // Set write functions
+      png_set_write_fn(pngStruct, &writeData, V_pngDataWrite, V_pngDataFlush);
+
+      // Set IHDR data
+      png_set_IHDR(pngStruct, pngInfo, width, height, 8, PNG_COLOR_TYPE_PALETTE,
+                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, 
+                   PNG_FILTER_TYPE_DEFAULT);
+
+      // Copy palette
+      for(int color = 0; color < 256; color++)
+      {
+         pngPalette[color].red   = palette[color * 3 + 0];
+         pngPalette[color].green = palette[color * 3 + 1];
+         pngPalette[color].blue  = palette[color * 3 + 2];
+      }
+      png_set_PLTE(pngStruct, pngInfo, pngPalette, 256);
+
+      // Write info
+      png_write_info(pngStruct, pngInfo);
+
+      // Set packing and swapping attributes as needed
+      png_set_packing(pngStruct);
+      png_set_packswap(pngStruct);
+
+      // Set row pointers
+      for(int row = 0; row < height; row++)
+         rowpointers[row] = &linear[row * width];
+
+      // Write image
+      png_write_image(pngStruct, rowpointers);
+
+      // Write end
+      png_write_end(pngStruct, pngInfo);
+   }
+   catch(...)
+   {
+      libpngError = true;
+   }
+
+   // Remove the file if something went wrong.
+   if(libpngError || writeData.errorFlag)
+   {
+      V_pngRemoveFile(&writeData, filename);
+      retval = false;
+   }
+   else
+   {
+      fclose(writeData.outf);
+      retval = true;
+   }
+
+   // Clean up.
+   png_destroy_write_struct(&pngStruct, &pngInfo);
+   efree(rowpointers);
+   efree(pngPalette);
+
+   return retval;
 }
 
 // EOF

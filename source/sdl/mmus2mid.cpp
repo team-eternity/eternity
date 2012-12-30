@@ -303,6 +303,29 @@ static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
    return newevent;
 }
 
+#define MAX_HEADER_SCAN 32
+
+//
+// mmuscheckformat
+//
+// haleyjd 11/23/12:
+// Returns true if the data is a MUS.
+//
+bool mmuscheckformat(UBYTE *mus, int size)
+{
+   UBYTE *hptr = mus;
+   while(hptr < mus + size - sizeof(MUSheader) && 
+         hptr < mus + MAX_HEADER_SCAN &&
+         strncmp((const char *)hptr, "MUS\x1a", 4))
+      ++hptr;
+
+   if(hptr < mus + size - sizeof(MUSheader) && 
+      !strncmp((const char *)hptr, "MUS\x1a", 4))
+      return true;
+
+   return false;
+}
+
 //
 // mmus2mid()
 //
@@ -338,6 +361,7 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
    // or DMX doesn't use the MUS header at all somehow.
    hptr = mus;
    while(hptr < mus + size - sizeof(MUSheader) && 
+         hptr < mus + MAX_HEADER_SCAN &&
          strncmp((const char *)hptr, "MUS\x1a", 4))
       ++hptr;
 

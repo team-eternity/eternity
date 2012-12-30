@@ -699,19 +699,17 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 
    if(check->max_width < (unsigned int)video.width)
    {
-      if(check->pad1)
-         efree(check->pad1);
-      if(check->pad3)
-         efree(check->pad3);
+      int *paddedTop, *paddedBottom;
+
+      if(check->top)
+         efree(check->top - 1);
 
       check->max_width = video.width;
-      check->pad1 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));
-      check->top = check->pad1 + 1;
-      check->pad2 = check->pad1 + video.width + 1;
+      paddedTop    = ecalloc(int *, 2 * (video.width + 2), sizeof(int));
+      paddedBottom = paddedTop + video.width + 2;
 
-      check->pad3 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));
-      check->bottom = check->pad3 + 1;
-      check->pad4 = check->pad3 + video.width + 1;
+      check->top    = paddedTop    + 1;
+      check->bottom = paddedBottom + 1;
    }
    
    num_visplanes++;      // keep track of how many for counter
@@ -1163,7 +1161,7 @@ static void do_draw_plane(visplane_t *pl)
          if(column.y1 <= column.y2)
          {
             column.source = R_GetRawColumn(texture,
-               ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
+               ((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT);
             
             colfunc();
          }
@@ -1255,18 +1253,9 @@ static void do_draw_plane(visplane_t *pl)
                plane.fixedunitx = plane.fixedunity = FRACUNIT;
             else
             {
-               // haleyjd: commented out for TEST
-               /*
-#ifdef __APPLE__
-               plane.fixedunitx = (float)(1 << (30 - rw));
-               plane.fixedunity = (float)(1 << (30 - rh));
-#else
-               */
                plane.fixedunitx = (float)(1 << (32 - rw));
                plane.fixedunity = (float)(1 << span.yshift);
-/*#endif*/
             }
-
          }
       }
        

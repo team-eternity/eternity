@@ -170,7 +170,7 @@ static const char *subchans[] =
 
 #define SOUND_OPTIONS \
    CFG_STR(ITEM_SND_LUMP,          NULL,              CFGF_NONE), \
-   CFG_BOOL(ITEM_SND_PREFIX,       cfg_true,          CFGF_NONE), \
+   CFG_BOOL(ITEM_SND_PREFIX,       true,              CFGF_NONE), \
    CFG_STR(ITEM_SND_SINGULARITY,   "sg_none",         CFGF_NONE), \
    CFG_INT(ITEM_SND_PRIORITY,      64,                CFGF_NONE), \
    CFG_STR(ITEM_SND_LINK,          "none",            CFGF_NONE), \
@@ -184,7 +184,7 @@ static const char *subchans[] =
    CFG_STR(ITEM_SND_PITCHVAR,      "none",            CFGF_NONE), \
    CFG_STR(ITEM_SND_SUBCHANNEL,    "Auto",            CFGF_NONE), \
    CFG_STR(ITEM_SND_PCSLUMP,       NULL,              CFGF_NONE), \
-   CFG_BOOL(ITEM_SND_NOPCSOUND,    cfg_false,         CFGF_NONE), \
+   CFG_BOOL(ITEM_SND_NOPCSOUND,    false,             CFGF_NONE), \
    CFG_INT(ITEM_SND_DEHNUM,        -1,                CFGF_NONE), \
    CFG_END()
 
@@ -573,7 +573,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
          sfx->flags &= ~SFXF_PREFIX;
       else
       {
-         if(cfg_getbool(section, ITEM_SND_PREFIX) == cfg_true)
+         if(cfg_getbool(section, ITEM_SND_PREFIX))
             sfx->flags |= SFXF_PREFIX;
          else
             sfx->flags &= ~SFXF_PREFIX;
@@ -727,9 +727,9 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
    // haleyjd 11/08/08: process "nopcsound" flag
    if(IS_SET(ITEM_SND_NOPCSOUND))
    {
-      cfg_bool_t nopcsound = cfg_getbool(section, ITEM_SND_NOPCSOUND);
+      bool nopcsound = cfg_getbool(section, ITEM_SND_NOPCSOUND);
 
-      if(nopcsound == cfg_true)
+      if(nopcsound)
          sfx->flags |= SFXF_NOPCSOUND;
       else
          sfx->flags &= ~SFXF_NOPCSOUND;
@@ -967,8 +967,8 @@ cfg_opt_t edf_sndseq_opts[] =
    CFG_STR(ITEM_SEQ_ATTN,    "normal",  CFGF_NONE),
    CFG_INT(ITEM_SEQ_VOL,     127,       CFGF_NONE),
    CFG_INT(ITEM_SEQ_MNVOL,   -1,        CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_NSCO,   cfg_false, CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_RNDVOL, cfg_false, CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_NSCO,   false,     CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_RNDVOL, false,     CFGF_NONE),
    CFG_STR(ITEM_SEQ_DOOR,    NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_PLAT,    NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_FLOOR,   NULL,      CFGF_NONE),
@@ -1515,10 +1515,10 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    }
 
    // process nostopcutoff
-   newSeq->nostopcutoff = (cfg_getbool(cfg, ITEM_SEQ_NSCO) == cfg_true);
+   newSeq->nostopcutoff = cfg_getbool(cfg, ITEM_SEQ_NSCO);
 
    // haleyjd 01/12/11: support for proper Heretic randomization behavior
-   newSeq->randomplayvol = (cfg_getbool(cfg, ITEM_SEQ_RNDVOL) == cfg_true);
+   newSeq->randomplayvol = cfg_getbool(cfg, ITEM_SEQ_RNDVOL);
 
    // process command list
 

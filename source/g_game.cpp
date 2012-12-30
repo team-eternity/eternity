@@ -1579,14 +1579,14 @@ static void G_DoWorldDone(void)
    // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists
    // in the wad directory, and if so, use it. Otherwise, return to the Master
    // Levels selection menu.
-   if(inmasterlevels)
+   if(inmanageddir)
    {
       wadlevel_t *level = W_FindLevelInDir(g_dir, gamemapname);
 
-      if(!level)
+      if(!level && inmanageddir == MD_MASTERLEVELS)
       {
          gameaction = ga_nothing;
-         inmasterlevels = false;
+         inmanageddir = MD_NONE;
          W_DoMasterLevels(false);
          return;
       }
@@ -2414,7 +2414,7 @@ void G_WorldDone(void)
    // haleyjd 10/24/10: if in Master Levels mode, just return from here now.
    // The choice of whether to go to another level or show the Master Levels
    // menu is taken care of in G_DoWorldDone.
-   if(inmasterlevels)
+   if(inmanageddir == MD_MASTERLEVELS)
       return;
 
    if(secretexit)
@@ -2504,7 +2504,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 
    // haleyjd 06/16/10: default to NULL
    d_dir = NULL;
-   inmasterlevels = false;
+   inmanageddir = MD_NONE;
    
    gameaction = ga_newgame;
 }
@@ -2701,17 +2701,21 @@ public:
 
 IMPLEMENT_RTTI_TYPE(MetaSpeedSet)
 
+// Speedset key cache for fast lookups
+static MetaKeyIndex speedsetKey("speedset");
+
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
-   mobjinfo_t *mi = mobjinfo[thingtype];
+   MetaTable  *meta = mobjinfo[thingtype]->meta;
+   size_t metaKey = speedsetKey.getIndex();
 
-   if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+   if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
    {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }
    else
-      mi->meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
+      meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
 
 // killough 4/10/98: New function to fix bug which caused Doom
@@ -2722,6 +2726,7 @@ void G_SetFastParms(int fast_pending)
    static int fast = 0;            // remembers fast state
    int i;
    MetaObject *o;
+   size_t metaKey = speedsetKey.getIndex();
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2743,7 +2748,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
@@ -2757,7 +2762,7 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
             {
                mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }
@@ -2841,7 +2846,7 @@ void G_InitNew(skill_t skill, char *name)
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : &wGlobalDir;
+   g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
    d_dir = NULL;
    
    G_DoLoadLevel();

@@ -35,6 +35,8 @@
 #include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "d_findiwads.h"
+#include "d_iwad.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "g_game.h"
@@ -47,7 +49,9 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "sounds.h"
+#include "w_levels.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 // D_FIXME:
 extern bool gamepathset;
@@ -55,6 +59,7 @@ extern int  gamepathparm;
 void D_InitPaths();
 void D_CheckGameMusic();
 
+bool d_scaniwads;                     // haleyjd 11/15/12
 
 static char *baseiwad;                // jff 3/23/98: iwad directory
 
@@ -188,6 +193,30 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
    return concat;
 }
 
+//
+// D_GetNumDoomWadPaths
+//
+// Returns the number of path components loaded from DOOMWADPATH
+//
+size_t D_GetNumDoomWadPaths()
+{
+   return doomwadpaths.getLength();
+}
+
+//
+// D_GetDoomWadPath
+//
+// Returns the DOOMWADPATH entry at index i.
+// Returns NULL if i is not a valid index.
+//
+char *D_GetDoomWadPath(size_t i)
+{
+   if(i >= doomwadpaths.getLength())
+      return NULL;
+
+   return doomwadpaths[i];
+}
+
 //=============================================================================
 //
 // Disk File Handling
@@ -273,7 +302,7 @@ static void D_FindDiskFileIWAD(void)
 static void D_LoadDiskFileIWAD(void)
 {
    if(diskiwad.f)
-      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, 0);
+      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, false, true);
    else
       I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
@@ -290,7 +319,7 @@ static void D_LoadDiskFilePWAD(void)
    if(wad.f)
    {
       if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, 0);
+         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, false, false);
    }
 }
 
@@ -299,7 +328,7 @@ static void D_LoadDiskFilePWAD(void)
 //
 // Gets a single line of input from the metadata.txt resource.
 //
-static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
+static bool D_metaGetLine(qstring &qstr, const char *input, int *idx)
 {
    int i = *idx;
 
@@ -307,7 +336,7 @@ static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
    if(input[i] == '\0')
       return false;
 
-   qstr->clear();
+   qstr.clear();
 
    while(input[i] != '\n' && input[i] != '\0')
    {
@@ -315,10 +344,10 @@ static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
       {
          // make \n sequence into a \n character
          ++i;
-         *qstr += '\n';
+         qstr += '\n';
       }
       else if(input[i] != '\r')
-         *qstr += input[i];
+         qstr += input[i];
 
       ++i;
    }
@@ -333,21 +362,91 @@ static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
 }
 
 //
+// D_parseMetaData
+//
+// Parse a metadata resource
+//
+static void D_parseMetaData(const char *metatext, int mission)
+{
+   qstring buffer;
+   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
+   int partime = 0, musicnum = 0, index = 0;
+   int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
+   
+   // get first line, which is an episode id
+   D_metaGetLine(buffer, metatext, &index);
+
+   // get episode name
+   if(D_metaGetLine(buffer, metatext, &index))
+   {
+      if(mission == MD_NONE) // Not when playing as a mission pack
+         GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
+   }
+
+   // get end text
+   if(D_metaGetLine(buffer, metatext, &index))
+      endtext = buffer.duplicate(PU_STATIC);
+
+   // get next level after secret
+   if(D_metaGetLine(buffer, metatext, &index))
+      exitreturn = buffer.toInt();
+
+   // skip next line (wad name)
+   D_metaGetLine(buffer, metatext, &index);
+
+   // get secret level
+   if(D_metaGetLine(buffer, metatext, &index))
+      secretlevel = buffer.toInt();
+
+   // get levels
+   while(D_metaGetLine(buffer, metatext, &index))
+   {
+      switch(linenum)
+      {
+      case 0: // levelname
+         levelname = buffer.duplicate(PU_STATIC);
+         break;
+      case 1: // music number
+         musicnum = mus_runnin + buffer.toInt() - 1;
+
+         if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
+            musicname = S_music[musicnum].name;
+         else
+            musicname = "";
+         break;
+      case 2: // partime (final field)
+         partime = buffer.toInt();
+
+         // create a metainfo object for LevelInfo
+         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
+                          levelnum == secretlevel ? exitreturn : 0,
+                          levelnum == exitreturn - 1 ? secretlevel : 0,
+                          levelnum == secretlevel - 1, 
+                          (levelnum == secretlevel - 1) ? endtext : NULL,
+                          mission, "DMENUPIC");
+         break;
+      }
+      ++linenum;
+
+      if(linenum == 3)
+      {
+         levelnum++;
+         linenum = 0;
+      }
+   }
+}
+
+//
 // D_DiskMetaData
 //
 // Handles metadata in the disk file.
 //
-static void D_DiskMetaData(void)
+static void D_DiskMetaData()
 {
    char *name  = NULL, *metatext = NULL;
    const char *slash = NULL;
-   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
-   int slen = 0, index = 0;
-   int partime = 0, musicnum = 0;
-   int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
+   int slen = 0;
    diskwad_t wad;
-   qstring buffer;
-   qstring *qstr = &buffer;
 
    if(!diskpwad)
       return;
@@ -375,70 +474,27 @@ static void D_DiskMetaData(void)
       return;
 
    // parse it
-
-   // setup qstring
-   qstr->initCreate();
-
-   // get first line, which is an episode id
-   D_metaGetLine(qstr, metatext, &index);
-
-   // get episode name
-   if(D_metaGetLine(qstr, metatext, &index))
-      GameModeInfo->versionName = qstr->duplicate(PU_STATIC);
-
-   // get end text
-   if(D_metaGetLine(qstr, metatext, &index))
-      endtext = qstr->duplicate(PU_STATIC);
-
-   // get next level after secret
-   if(D_metaGetLine(qstr, metatext, &index))
-      exitreturn = qstr->toInt();
-
-   // skip next line (wad name)
-   D_metaGetLine(qstr, metatext, &index);
-
-   // get secret level
-   if(D_metaGetLine(qstr, metatext, &index))
-      secretlevel = qstr->toInt();
-
-   // get levels
-   while(D_metaGetLine(qstr, metatext, &index))
-   {
-      switch(linenum)
-      {
-      case 0: // levelname
-         levelname = qstr->duplicate(PU_STATIC);
-         break;
-      case 1: // music number
-         musicnum = mus_runnin + qstr->toInt() - 1;
-
-         if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
-            musicname = S_music[musicnum].name;
-         else
-            musicname = "";
-         break;
-      case 2: // partime (final field)
-         partime = qstr->toInt();
-
-         // create a metainfo object for LevelInfo
-         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
-                          levelnum == secretlevel ? exitreturn : 0,
-                          levelnum == exitreturn - 1 ? secretlevel : 0,
-                          levelnum == secretlevel - 1, 
-                          (levelnum == secretlevel - 1) ? endtext : NULL);
-         break;
-      }
-      ++linenum;
-
-      if(linenum == 3)
-      {
-         levelnum++;
-         linenum = 0;
-      }
-   }
+   D_parseMetaData(metatext, MD_NONE);
 
    // done with metadata resource
    efree(metatext);
+}
+
+//
+// D_MissionMetaData
+//
+// haleyjd 11/04/12: Load metadata for a mission pack wad file.
+//
+void D_MissionMetaData(const char *lump, int mission)
+{
+   int lumpnum  = wGlobalDir.getNumForName(lump);
+   int lumpsize = wGlobalDir.lumpLength(lumpnum);
+   ZAutoBuffer metabuffer(lumpsize + 1, true);
+   char *metatext = metabuffer.getAs<char *>();
+
+   wGlobalDir.readLump(lumpnum, metatext);
+
+   D_parseMetaData(metatext, mission);
 }
 
 //=============================================================================
@@ -451,11 +507,12 @@ int iwad_choice; // haleyjd 03/19/10: remember choice
 // variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[NUMPICKIWADS] =
 {
-   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
-   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
-   &gi_path_hacx,                                      // HACX
-   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
-   &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
+   &gi_path_doomsw, &gi_path_doomreg,  &gi_path_doomu,  // Doom 1
+   &gi_path_doom2,  &gi_path_bfgdoom2,                  // Doom 2
+   &gi_path_tnt,    &gi_path_plut,                      // Final Doom
+   &gi_path_hacx,                                       // HACX
+   &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
+   &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // FreeDoom
 };
 
 //
@@ -525,30 +582,31 @@ struct iwadpathmatch_t
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
-   { MATCH_GAME, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_GAME, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_GAME, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
+   { MATCH_GAME, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
+   { MATCH_GAME, "doom",      { &gi_path_doomu,    &gi_path_doomreg,  &gi_path_doomsw } },
+   { MATCH_GAME, "tnt",       { &gi_path_tnt,      NULL,              NULL            } },
+   { MATCH_GAME, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
+   { MATCH_GAME, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
+   { MATCH_GAME, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  &gi_path_hticsw } },
 
    // -iwad matches 
-   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
-   { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
-   { MATCH_IWAD, "doom1",     { &gi_path_doomsw, NULL,             NULL            } },
-   { MATCH_IWAD, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_fdoomu } },
-   { MATCH_IWAD, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_IWAD, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_IWAD, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw, NULL,             NULL            } },
-   { MATCH_IWAD, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
-   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
-   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
-   { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
+   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
+   { MATCH_IWAD, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
+   { MATCH_IWAD, "doomu",     { &gi_path_doomu,    &gi_path_fdoomu,   NULL            } },
+   { MATCH_IWAD, "doom1",     { &gi_path_doomsw,   NULL,              NULL            } },
+   { MATCH_IWAD, "doom",      { &gi_path_doomu,    &gi_path_doomreg,  &gi_path_fdoomu } },
+   { MATCH_IWAD, "tnt",       { &gi_path_tnt,      NULL,              NULL            } },
+   { MATCH_IWAD, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
+   { MATCH_IWAD, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
+   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   NULL,              NULL            } },
+   { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  NULL            } },
+   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,    NULL,              NULL            } },
+   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu,   NULL,              NULL            } },
+   { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
+   { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
    
    // Terminating entry
-   { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
+   { MATCH_NONE, NULL,        { NULL,              NULL,              NULL            } }
 };
 
 //
@@ -640,8 +698,22 @@ static char *D_IWADPathForIWADParam(const char *iwad)
 // haleyjd 10/13/05: special stuff for FreeDOOM :)
 bool freedoom = false;
 
+// haleyjd 11/03/12: special stuff for BFG Edition IWADs
+bool bfgedition = false;
+
 //
-// D_checkIWAD
+// lumpnamecmp
+//
+// Compare a possibly non-null-terminated lump name against a static
+// character string of no more than 8 characters.
+//
+static int lumpnamecmp(const char *lumpname, const char *str)
+{
+   return strncmp(lumpname, str, strlen(str));
+}
+
+//
+// D_CheckIWAD
 //
 // Verify a file is indeed tagged as an IWAD
 // Scan its lumps for levelnames and return gamemode as indicated
@@ -659,19 +731,22 @@ bool freedoom = false;
 //
 // joel 10/17/98 Final DOOM fix: added gmission
 //
-static void D_checkIWAD(const char *iwadname, 
-                        GameMode_t *gmode, GameMission_t *gmission, 
-                        bool *hassec)
+void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
 {
    FILE *fp;
-   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
+   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0, bfg = 0;
    int raven = 0, sosr = 0;
    filelump_t lump;
    wadinfo_t header;
    const char *n = lump.name;
 
    if(!(fp = fopen(iwadname, "rb")))
-      I_Error("Can't open IWAD: %s\n", iwadname);
+   {
+      if(version.flags & IWADF_FATALNOTOPEN)
+         I_Error("Can't open IWAD: %s\n", iwadname);
+      version.error = true;
+      return;
+   }
 
    // read IWAD header
    if(fread(&header, sizeof header, 1, fp) < 1 ||
@@ -681,8 +756,15 @@ static void D_checkIWAD(const char *iwadname,
       // resetting peoples' IWADs to PWADs. Only error if it is also 
       // not a PWAD.
       if(strncmp(header.identification, "PWAD", 4))
-         I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
-      else
+      {
+         if(version.flags & IWADF_FATALNOTWAD)
+            I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
+
+         version.error = true;
+         fclose(fp);
+         return;
+      }
+      else if(version.flags & IWADF_FATALNOTWAD)
          usermsg("Warning: IWAD tag not present: %s\n", iwadname);
    }
 
@@ -717,72 +799,84 @@ static void D_checkIWAD(const char *iwadname,
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(!strncmp(n, "ADVISOR",  7) || 
-              !strncmp(n, "TINTTAB",  7) || 
-              !strncmp(n, "SNDCURVE", 8))
+      else if(!lumpnamecmp(n, "ADVISOR") || 
+              !lumpnamecmp(n, "TINTTAB") || 
+              !lumpnamecmp(n, "SNDCURVE"))
       {
          ++raven;
       }
-      else if(!strncmp(n, "EXTENDED", 8))
+      else if(!lumpnamecmp(n, "EXTENDED"))
          ++sosr;
-      else if(!strncmp(n, "FREEDOOM", 8))
-         freedoom = true;
-      else if(!strncmp(n, "HACX-R", 6))
+      else if(!lumpnamecmp(n, "FREEDOOM"))
+         *version.freedoom = true;
+      else if(!lumpnamecmp(n, "HACX-R"))
          ++hacx;
+      else if(!lumpnamecmp(n, "M_ACPT"  ) || // haleyjd 11/03/12: BFG Edition
+              !lumpnamecmp(n, "M_CAN"   ) ||
+              !lumpnamecmp(n, "M_EXITO" ) ||
+              !lumpnamecmp(n, "M_CHG"   ) ||
+              !lumpnamecmp(n, "DMENUPIC"))
+      {
+        ++bfg;
+        if(bfg >= 5) // demand all 5 new lumps for safety.
+           *version.bfgedition = true;
+      }
    }
 
    fclose(fp);
 
-   *hassec = false;
+   *version.hassec = false;
 
    // haleyjd 10/09/05: "Raven mode" detection
    if(raven == 3)
    {
       // TODO: Hexen
-      *gmission = heretic;
+      *version.gmission = heretic;
 
       if(rg >= 18)
       {
          // require both E4 and EXTENDED lump for SoSR
          if(sosr && ud >= 9)
-            *gmission = hticsosr;
-         *gmode = hereticreg;
+            *version.gmission = hticsosr;
+         *version.gmode = hereticreg;
       }
       else if(sw >= 9)
-         *gmode = hereticsw;
+         *version.gmode = hereticsw;
       else
-         *gmode = indetermined;
+         *version.gmode = indetermined;
    }
    else
    {
-      *gmission = doom;
+      *version.gmission = doom;
 
       if(cm >= 30 || (cm && !rg))
       {
-         if(freedoom) // FreeDoom is meant to be Doom II, not TNT
-            *gmission = doom2;
+         if(*version.freedoom) // FreeDoom is meant to be Doom II, not TNT
+            *version.gmission = doom2;
+         else if(*version.bfgedition) // BFG Edition - Behaves same as XBox 360 disk version
+            *version.gmission = pack_disk;
          else
          {
             if(tnt >= 4)
-               *gmission = pack_tnt;
+               *version.gmission = pack_tnt;
             else if(plut >= 8)
-               *gmission = pack_plut;
+               *version.gmission = pack_plut;
             else if(hacx)
-               *gmission = pack_hacx;
+               *version.gmission = pack_hacx;
             else
-               *gmission = doom2;
+               *version.gmission = doom2;
          }
-         *hassec = (sc >= 2) || hacx;
-         *gmode = commercial;
+         *version.hassec = (sc >= 2) || hacx;
+         *version.gmode = commercial;
       }
       else if(ud >= 9)
-         *gmode = retail;
+         *version.gmode = retail;
       else if(rg >= 18)
-         *gmode = registered;
+         *version.gmode = registered;
       else if(sw >= 9)
-         *gmode = shareware;
+         *version.gmode = shareware;
       else
-         *gmode = indetermined;
+         *version.gmode = indetermined;
    }
 }
 
@@ -827,7 +921,7 @@ static bool WadFileStatus(char *filename, bool *isdir)
 }
 
 // jff 4/19/98 list of standard IWAD names
-static const char *const standard_iwads[]=
+const char *const standard_iwads[]=
 {
    // Official IWADs
    "/doom2.wad",     // DOOM II
@@ -846,9 +940,11 @@ static const char *const standard_iwads[]=
    "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
    "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
    "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
+   "/bfgdoom.wad",   // BFG Edition UDoom IWAD  -- haleyjd 11/03/12
+   "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD  -- haleyjd 11/03/12
 };
 
-static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
+int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
 
 //
 // D_findIWADFile
@@ -902,6 +998,20 @@ static char *D_findIWADFile()
    int i, j;
    char *p;
    const char *basename = NULL;
+
+   // haleyjd 01/01/11: support for DOOMWADPATH
+   D_parseDoomWadPath();
+
+   // haleyjd 11/15/12: if so marked, scan for IWADs. This is a one-time
+   // only operation unless the user resets the value of d_scaniwads.
+   // This will populate as many of the gi_path_* IWADs and w_* mission 
+   // packs as can be found amongst likely locations. User settings are
+   // never overwritten by this process.
+   if(d_scaniwads)
+   {
+      D_FindIWADs();
+      d_scaniwads = false;
+   }
 
    //jff 3/24/98 get -iwad parm if specified else use .
    if((i = M_CheckParm("-iwad")) && i < myargc - 1)
@@ -1033,9 +1143,6 @@ static char *D_findIWADFile()
       }
    }
 
-   // haleyjd 01/01/11: support for DOOMWADPATH
-   D_parseDoomWadPath();
-
    if(doomwadpaths.getLength()) // If at least one path is specified...
    {
       if(customiwad) // -iwad was used with a file name?
@@ -1131,7 +1238,7 @@ static void D_loadResourceWad()
       psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, 0);
+   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, false, false);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1207,10 +1314,20 @@ static void D_identifyIWAD(void)
 
    if(iwad && *iwad)
    {
+      iwadcheck_t version;
+
       printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
 
+      version.gmode      = &gamemode;
+      version.gmission   = &gamemission;
+      version.hassec     = &haswolflevels;
+      version.freedoom   = &freedoom;
+      version.bfgedition = &bfgedition;
+      version.error      = false;
+      version.flags      = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;
+
       // joel 10/16/98 gamemission added
-      D_checkIWAD(iwad, &gamemode, &gamemission, &haswolflevels);
+      D_CheckIWAD(iwad, version);
 
       // setup GameModeInfo
       D_SetGameModeInfo(gamemode, gamemission);
@@ -1225,7 +1342,7 @@ static void D_identifyIWAD(void)
       // fraggle -- this allows better compatibility with new IWADs
       D_loadResourceWad();
 
-      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
+      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, false, true);
 
       // 12/24/11: check for game folder hi-def music
       D_CheckGameMusic();

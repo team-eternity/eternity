@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Zone Memory Allocation, perhaps NeXT ObjectiveC inspired.
@@ -104,6 +104,8 @@ enum
 
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */
 
+// killough 3/22/98: add file/line info
+
 void *(Z_Malloc)(size_t size, int tag, void **ptr, const char *, int);
 void  (Z_Free)(void *ptr, const char *, int);
 void  (Z_FreeTags)(int lowtag, int hightag, const char *, int);
@@ -116,8 +118,8 @@ void   Z_FreeAlloca(void);
 void *(Z_Alloca)(size_t n, const char *file, int line);
 void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line);
 char *(Z_Strdupa)(const char *s, const char *file, int line);
-void  (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info
-int   (Z_CheckTag)(void *,const char *,int);
+void  (Z_CheckHeap)(const char *, int);   
+int   (Z_CheckTag)(void *, const char *, int);
 
 void *Z_SysMalloc(size_t size);
 void *Z_SysCalloc(size_t n1, size_t n2);
@@ -140,6 +142,9 @@ void  Z_SysFree(void *p);
 #define emalloc(type, n) \
    static_cast<type>((Z_Malloc)(n, PU_STATIC, 0, __FILE__, __LINE__))
 
+#define emalloctag(type, n1, tag, user) \
+   static_cast<type>((Z_Malloc)(n1, tag, user, __FILE__, __LINE__))
+
 #define ecalloc(type, n1, n2) \
    static_cast<type>((Z_Calloc)(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
 
@@ -158,6 +163,9 @@ void  Z_SysFree(void *p);
 #define estrdup(s) (Z_Strdup)(s, PU_STATIC, 0, __FILE__, __LINE__)
 
 #define efree(p)   (Z_Free)(p, __FILE__, __LINE__)
+
+// Get the size of a static array
+#define earrlen(a) (sizeof(a) / sizeof(*a))
 
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));

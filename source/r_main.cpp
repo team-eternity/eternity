@@ -1180,7 +1180,7 @@ void R_DoomTLStyle(void)
 }
 
 //
-//  Console Commands
+// Console Commands
 //
 
 static const char *handedstr[]  = { "right", "left" };
@@ -1323,6 +1323,25 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
    R_DoomTLStyle();
 }
 
+CONSOLE_COMMAND(r_changesky, 0)
+{
+   if(Console.argc < 1)
+   {
+      C_Puts("Usage: r_changesky texturename");
+      return;
+   }
+
+   qstring name = *Console.argv[0];
+   name.toUpper();
+
+   int texnum = R_CheckForWall(name.constPtr());
+
+   if(texnum != -1)
+      skytexture = texnum;
+   else
+      C_Printf(FC_ERROR "No such texture %s", name.constPtr());
+}
+
 void R_AddCommands(void)
 {
    C_AddCommand(r_fov);
@@ -1345,6 +1364,7 @@ void R_AddCommands(void)
    C_AddCommand(r_vissprite_limit);
    C_AddCommand(r_showrefused);
    C_AddCommand(r_tlstyle);
+   C_AddCommand(r_changesky);
 
    C_AddCommand(p_dumphubs);
 }

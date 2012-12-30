@@ -35,10 +35,10 @@ extern char firstlevel[9];
 
 // WAD Files
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               int privatedir);
+               bool privatedir, bool iwad);
 void D_AddDirectory(const char *dir);
 void D_ListWads();
-void D_NewWadLumps(FILE *handle);
+void D_NewWadLumps(int source);
 bool D_AddNewFile(const char *s);
 
 // GFS Scripts

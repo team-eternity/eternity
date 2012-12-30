@@ -60,8 +60,7 @@ protected:
    DLListItem<MetaObject> typelinks; // links by type
    const char *key;                  // primary hash key
    const char *type;                 // type hash key
-   
-   char *key_name; // storage pointer for key (alloc'd string)
+   size_t      keyIdx;               // index of interned key
 
    friend class metaTablePimpl;
 
@@ -74,7 +73,8 @@ public:
 
    void setType();
 
-   const char *getKey() const { return key_name; }
+   const char *getKey() const    { return key;    }
+   size_t      getKeyIdx() const { return keyIdx; }
 
    // Virtual Methods
    virtual MetaObject *clone() const;
@@ -191,21 +191,28 @@ public:
    // Find objects in the table:
    // * By Key
    MetaObject *getObject(const char *key);
+   MetaObject *getObject(size_t keyIndex);
    // * By Type
    MetaObject *getObjectType(const char *type);
    // * By Key AND Type
+   MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(const char *key, const char *type);
+   MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type);
+   MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
 
    // Iterators
    MetaObject *getNextObject(MetaObject *object, const char *key);
+   MetaObject *getNextObject(MetaObject *object, size_t keyIndex);
    MetaObject *getNextType(MetaObject *object, const char *type);
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type);
    MetaObject *tableIterator(MetaObject *object) const;
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects
    
    // Signed integer
    void addInt(const char *key, int value);
+   int  getInt(size_t keyIndex, int defValue);
    int  getInt(const char *key, int defValue);
    void setInt(const char *key, int newValue);
    int  removeInt(const char *key);
@@ -229,6 +236,39 @@ public:
 
    // Clearing
    void clearTable();
+
+   // Statics
+   static size_t IndexForKey(const char *key);
+};
+
+//
+// MetaKeyIndex
+//
+// This class can be used as a static key proxy. The first time it is used, it
+// will intern the provided key in the MetaObject key interning table. From
+// then on, it will return the cached index.
+//
+class MetaKeyIndex
+{
+protected:
+   const char *key;
+   size_t keyIndex;
+   bool   haveIndex;
+
+public:
+   MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) 
+   {
+   }
+
+   size_t getIndex() 
+   { 
+      if(!haveIndex)
+      {
+         keyIndex  = MetaTable::IndexForKey(key);
+         haveIndex = true;
+      }
+      return keyIndex;
+   }
 };
 
 #endif

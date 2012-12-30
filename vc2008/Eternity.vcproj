@@ -52,7 +52,7 @@
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib rpcrt4.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -148,7 +148,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32;..\libpng"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -174,11 +174,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib opengl32.lib rpcrt4.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				IgnoreAllDefaultLibraries="true"
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Eternity.pdb"
 				SubSystem="1"
@@ -602,6 +602,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\d_findiwads.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\d_gi.cpp"
 						>
 						<FileConfiguration
@@ -763,6 +767,10 @@
 					</File>
 					<File
 						RelativePath="..\source\d_files.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\d_findiwads.h"
 						>
 					</File>
 					<File
@@ -1673,6 +1681,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\source\in_stats.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\in_stats.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Source\wi_stuff.cpp"
 					>
 					<FileConfiguration
@@ -2011,6 +2027,10 @@
 					</File>
 					<File
 						RelativePath="..\source\m_strcasestr.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_structio.h"
 						>
 					</File>
 					<File
@@ -3687,6 +3707,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_midirpc.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\sdl\i_net.cpp"
 						>
 						<FileConfiguration
@@ -3945,6 +3969,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_midirpc.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\i_net.h"
 						>
 					</File>
@@ -3970,6 +3998,18 @@
 					</File>
 					<File
 						RelativePath="..\Source\sdl\mmus2mid.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="midiproc"
+					>
+					<File
+						RelativePath="..\midiproc\midiproc.h"
+						>
+					</File>
+					<File
+						RelativePath="..\midiproc\midiproc_c.c"
 						>
 					</File>
 				</Filter>
@@ -4243,6 +4283,10 @@
 					Name="W_ Headers"
 					>
 					<File
+						RelativePath="..\source\w_formats.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\w_hacks.h"
 						>
 					</File>
@@ -4254,10 +4298,18 @@
 						RelativePath="..\Source\w_wad.h"
 						>
 					</File>
+					<File
+						RelativePath="..\source\w_zip.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="W_ Source"
 					>
+					<File
+						RelativePath="..\source\w_formats.cpp"
+						>
+					</File>
 					<File
 						RelativePath="..\source\w_hacks.cpp"
 						>
@@ -4288,11 +4340,19 @@
 							/>
 						</FileConfiguration>
 					</File>
+					<File
+						RelativePath="..\source\w_zip.cpp"
+						>
+					</File>
 				</Filter>
 			</Filter>
 			<Filter
 				Name="Z_"
 				>
+				<File
+					RelativePath="..\source\z_auto.h"
+					>
+				</File>
 				<File
 					RelativePath="..\source\z_native.cpp"
 					>
@@ -4419,6 +4479,10 @@
 					Name="Misc Headers"
 					Filter="h;hpp;hxx;hm;inl"
 					>
+					<File
+						RelativePath="..\source\autopalette.h"
+						>
+					</File>
 					<File
 						RelativePath="..\Source\info.h"
 						>
@@ -5144,6 +5208,18 @@
 				</File>
 				<File
 					RelativePath="..\source\cam_sight.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="EV_"
+				>
+				<File
+					RelativePath="..\source\ev_specials.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\ev_specials.h"
 					>
 				</File>
 			</Filter>

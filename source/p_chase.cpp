@@ -25,12 +25,6 @@
 //
 //--------------------------------------------------------------------------
 
-#ifdef _MSC_VER
-// EE cannot link with the debug CRT due to SDL, so according to MSDN, we
-// need to define this value, to stop the STL from using _Debug_message.
-#define _HAS_ITERATOR_DEBUGGING 0
-#endif
-
 #include <algorithm>
 #include "z_zone.h"
 

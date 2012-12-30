@@ -62,8 +62,21 @@ void    P_UseLines(player_t *player);
 fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
 void    P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                      fixed_t slope, int damage );
-void    P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod);
 bool    P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
+
+//
+// Radius Attack
+//
+
+void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
+                    int mod, unsigned int flags);
+
+// flags for controlling radius attack behaviors
+enum
+{
+   RAF_NOSELFDAMAGE = 0x00000001, // explosion does not damage originator
+   RAF_CLIPHEIGHT   = 0x00000002, // height range is checked, like Hexen
+};
 
 //jff 3/19/98 P_CheckSector(): new routine to replace P_ChangeSector()
 bool        P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);

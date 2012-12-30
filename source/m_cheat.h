@@ -29,13 +29,14 @@
 
 enum 
 { 
-   always   = 0,
-   not_dm   = 1,
-   not_coop = 2,
-   not_demo = 4, 
-   not_menu = 8,
-   not_deh  = 16,
+   always    = 0,
+   not_dm    = 1,
+   not_coop  = 2,
+   not_demo  = 4, 
+   not_menu  = 8,
+   not_deh   = 16,
    beta_only = 32,                  // killough 7/24/98
+   no_score  = 64,                  // haleyjd  9/10/12: cancels high scores
    not_net = not_dm | not_coop
 }; 
 

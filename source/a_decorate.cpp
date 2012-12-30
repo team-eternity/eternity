@@ -93,21 +93,6 @@ void A_ClearSkin(Mobj *mo)
 }
 
 //
-// A_DetonateEx
-//
-// Equivalent to ZDoom A_Explode extensions.
-//
-// args[0] : damage
-// args[1] : radius
-// args[2] : hurt self?
-// args[3] : alert?
-// args[4] : full damage radius
-//
-void A_DetonateEx(Mobj *actor)
-{
-}
-
-//
 // A_FadeIn
 //
 // ZDoom-inspired action function, implemented using wiki docs.

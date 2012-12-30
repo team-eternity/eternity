@@ -30,6 +30,9 @@
 
 #include "z_zone.h"
 
+struct patch_t;
+class  WadDirectory;
+
 // Forward declare private implementation class
 class VPNGImagePimpl;
 
@@ -44,6 +47,8 @@ public:
 
    // Methods
    bool readImage(const void *data);
+   bool readFromLump(WadDirectory &dir, int lumpnum);
+   bool readFromLump(WadDirectory &dir, const char *lumpname);
  
    // accessors
    uint32_t  getWidth()      const;
@@ -59,10 +64,17 @@ public:
    // conversions
    byte     *getAs8Bit(const byte *outpal) const;
    byte     *getAs24Bit() const;
+   patch_t  *getAsPatch(int tag, void **user = NULL, size_t *size = NULL) const;
 
    // Static routines
-   static bool CheckPNGFormat(const void *data);
+   static bool     CheckPNGFormat(const void *data);
+   static patch_t *LoadAsPatch(int lumpnum, int tag, void **user = NULL,
+                               size_t *size = NULL);
+   static patch_t *LoadAsPatch(const char *lumpname, int tag, 
+                               void **user = NULL, size_t *size = NULL);
 };
+
+bool V_WritePNG(byte *linear, int width, int height, const char *filename);
 
 #endif
 

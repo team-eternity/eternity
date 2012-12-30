@@ -108,11 +108,6 @@ int fuzzpos = 0;
 //  be used. It has also been used with Wolfenstein 3D.
 // 
 
-// haleyjd 04/10/04: FIXME -- ASM version of R_DrawColumn is out
-// of sync currently.
-
-//#ifndef USEASM     // killough 2/15/98
-
 void CB_DrawColumn_8(void)
 {
    int count;
@@ -174,9 +169,6 @@ void CB_DrawColumn_8(void)
       }
    }
 }
-// haleyjd 04/10/04: FIXME -- ASM version of R_DrawColumn is out
-// of sync currently.
-
 
 // Here is the version of R_DrawColumn that deals with translucent  // phares
 // textures and sprites. It's identical to R_DrawColumn except      //    |
@@ -189,11 +181,6 @@ void CB_DrawColumn_8(void)
 // Since we're concerned about performance, the 'translucent or
 // opaque' decision is made outside this routine, not down where the
 // actual code differences are.
-
-// haleyjd 04/10/04: FIXME -- ASM version of R_DrawTLColumn is out
-// of sync currently.
-
-//#ifndef USEASM                       // killough 2/21/98: converted to x86 asm
 
 #define SRCPIXEL \
    tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
@@ -262,11 +249,6 @@ void CB_DrawTLColumn_8(void)
 }
 
 #undef SRCPIXEL
-
-// haleyjd 04/10/04: FIXME -- ASM version of R_DrawTLColumn is out
-// of sync currently.
-
-//#endif  // killough 2/21/98: converted to x86 asm
 
 #define SRCPIXEL \
    tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
@@ -1078,6 +1060,29 @@ int R_TranslationNumForName(const char *name)
       result = lumpnum - markernum + TRANSLATIONCOLOURS;
 
    return result;
+}
+
+//
+// R_GetIdentityMap
+//
+// haleyjd 09/08/12: Returns a pointer to the identity translation.
+// There is one global shared copy of it, which can neither be freed 
+// nor have its tag changed. If you really want/need your own copy 
+// of it for some reason, get it and then memcpy it into your own 
+// buffer.
+//
+byte *R_GetIdentityMap()
+{
+   static byte *identityMap;
+
+   if(!identityMap)
+   {
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      for(int i = 0; i < 256; i++)
+         identityMap[i] = i;
+   }
+
+   return identityMap;
 }
 
 ////////////////////////////////////////////////////////////////

@@ -234,6 +234,9 @@
 #define HUSTR_31    "level 31: wolfenstein"
 #define HUSTR_32    "level 32: grosse"
 
+// haleyjd 10/03/12: only used for pack_disk
+#define HUSTR_33    "level 33: betray"
+
 #define PHUSTR_1    "level 1: congo"
 #define PHUSTR_2    "level 2: well of souls"
 #define PHUSTR_3    "level 3: aztec"

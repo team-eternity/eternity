@@ -91,7 +91,6 @@ typedef struct polyobj_s
    Mobj *spawnSpotMobj;        // for use during init only!
    PointThinker spawnSpot;     // location of spawn spot
    vertex_t centerPt;          // center point
-   fixed_t zdist;              // viewz distance for sorting
    angle_t angle;              // for rotation
 
    fixed_t blockbox[4];        // bounding box for clipping

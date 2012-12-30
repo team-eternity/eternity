@@ -30,9 +30,7 @@
 
 #include "../hal/i_platform.h"
 
-#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
-#error This version of i_cpu.c is for Win32 only.
-#endif
+#ifdef _MSC_VER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,6 +106,8 @@ void I_SetAffinityMask(void)
          startupmsg("I_SetAffinityMask", "applied affinity mask.");      
    }
 }
+
+#endif // _MSC_VER
 
 // EOF
 

@@ -1246,7 +1246,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+            else if(th->isInstanceOf(RTTI(Mobj)))
             {
                if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
                   return true;
@@ -1293,7 +1293,7 @@ bool P_HelpFriend(Mobj *actor)
    {
       Mobj *mo;
       
-      if(!th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+      if(!th->isInstanceOf(RTTI(Mobj)))
          continue;
          
       mo = static_cast<Mobj *>(th);
@@ -1900,7 +1900,7 @@ CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
    P_DamageMobj(clip.linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
    clip.linetarget->momz = 1000*FRACUNIT/clip.linetarget->info->mass;
 
-   P_RadiusAttack(clip.linetarget, plyr->mo, 70, MOD_UNKNOWN);
+   P_RadiusAttack(clip.linetarget, plyr->mo, 70, 70, MOD_UNKNOWN, 0);
 }
 
 void P_SpawnPlayer(mapthing_t* mthing);

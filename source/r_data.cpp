@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
@@ -216,7 +217,8 @@ void R_InitTranMap(int progress)
    else
    {
       // Compose a default transparent filter map based on PLAYPAL.
-      unsigned char *playpal = (unsigned char *)wGlobalDir.cacheLumpName("PLAYPAL", PU_STATIC);
+      AutoPalette pal(wGlobalDir);
+      byte *playpal = pal.get();
       
       char *fname = NULL;
       unsigned int fnamesize;
@@ -329,8 +331,6 @@ void R_InitTranMap(int progress)
       
       if(cachefp)              // killough 11/98: fix filehandle leak
          fclose(cachefp);
-
-      Z_ChangeTag(playpal, PU_CACHE);
    }
 }
 

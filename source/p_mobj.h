@@ -354,24 +354,36 @@ public:
    // spawned.
    Mobj  *tid_next;  // ptr to next thing in tid chain
    Mobj **tid_prevn; // ptr to last thing's next pointer
-
-#ifdef R_LINKEDPORTALS
-   // SoM: When a mobj partially passes through a floor/ceiling portal, it 
-   // needs to clip against two sets of map structures and map objects, the 
-   // one it's currently in and then one it's passing into. The current plane
-   // (haha) is to spawn a dummy mobj on the other side of the portal and use
-   // that to occupy space for the mobj / send feedback to the main mobj as to
-   // where its position will be on the other side. This will require a lot of
-   // special clipping code...
-   Mobj *portaldummy;
-
-   // This should only be set if the mobj is a portaldummy. This is the link 
-   // back to the object that this is a dummy for. This link will be used for
-   // such things as the dummy taking damage (intersecting bullets and rockets, 
-   // anyone?)
-   Mobj *dummyto;
-#endif
 };
+
+//
+// MobjFadeThinker
+//
+// Takes care of processing for Mobj alphavelocity fade effects.
+// At most one of these can exist for a given Mobj. Most Mobj do not use
+// this effect so in terms of processing power, this makes sense.
+//
+class MobjFadeThinker : public Thinker
+{
+   DECLARE_THINKER_TYPE(MobjFadeThinker, Thinker)
+
+protected:
+   Mobj *target;
+   unsigned int swizzled_target; // for serialization
+
+   virtual void Think();
+
+public:
+   MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
+   virtual void removeThinker();
+   virtual void serialize(SaveArchive &arc);
+   virtual void deSwizzle();
+
+   Mobj *getTarget() const { return target; }
+   void setTarget(Mobj *pTarget);
+};
+
+void P_StartMobjFade(Mobj *mo, int alphavelocity);
 
 // External declarations (formerly in p_local.h) -- killough 5/2/98
 
@@ -661,7 +673,8 @@ enum
    MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
    MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
    MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
-   MF4_FLY            = 0x00000100  // Actor is flying
+   MF4_FLY            = 0x00000100, // Actor is flying
+   MF4_NORADIUSHACK   = 0x00000200  // Bouncing missiles obey normal radius attack flags
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

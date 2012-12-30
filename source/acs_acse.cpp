@@ -43,8 +43,10 @@ enum
    ACS_CHUNKID_AINI = ACS_CHUNKID('A', 'I', 'N', 'I'),
    ACS_CHUNKID_ARAY = ACS_CHUNKID('A', 'R', 'A', 'Y'),
    ACS_CHUNKID_ASTR = ACS_CHUNKID('A', 'S', 'T', 'R'),
+   ACS_CHUNKID_ATAG = ACS_CHUNKID('A', 'T', 'A', 'G'),
    ACS_CHUNKID_FNAM = ACS_CHUNKID('F', 'N', 'A', 'M'),
    ACS_CHUNKID_FUNC = ACS_CHUNKID('F', 'U', 'N', 'C'),
+   ACS_CHUNKID_JUMP = ACS_CHUNKID('J', 'U', 'M', 'P'),
    ACS_CHUNKID_LOAD = ACS_CHUNKID('L', 'O', 'A', 'D'),
    ACS_CHUNKID_MEXP = ACS_CHUNKID('M', 'E', 'X', 'P'),
    ACS_CHUNKID_MIMP = ACS_CHUNKID('M', 'I', 'M', 'P'),
@@ -299,6 +301,45 @@ static void ACS_chunkerASTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 }
 
 //
+// ACS_chunkerATAG
+//
+// Tags map arrays.
+//
+static void ACS_chunkerATAG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+                            uint32_t chunkLength)
+{
+   if(chunkID != ACS_CHUNKID_ATAG) return;
+
+   // Need version byte and array number.
+   if(chunkLength < 5) return;
+
+   // Check version.
+   if(*chunkData++ != 0) return;
+
+   // Check array number.
+   uint32_t arrnum = SwapULong(*(uint32_t *)chunkData); chunkData += 4;
+   if(arrnum >= ACS_NUM_MAPARRS) return;
+
+   ACSArray &arr = vm->maparrs[arrnum];
+
+   // Remaining data are tag types.
+   chunkLength -= 5;
+   for(uint32_t i = 0; chunkLength--; ++i)
+   {
+      switch(*chunkData++)
+      {
+      case 1: // string
+         arr[i] = vm->getStringIndex(arr[i]);
+         break;
+
+      case 2: // function
+         arr[i] = (uint32_t)arr[i] < vm->numFuncs ? vm->funcptrs[arr[i]]->number : 0;
+         break;
+      }
+   }
+}
+
+//
 // ACS_chunkerFNAM
 //
 // Function names.
@@ -342,6 +383,35 @@ static void ACS_chunkerFUNC(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 
       chunkData += 8;
    }
+}
+
+//
+// ACS_chunkerJUMP
+//
+// Dynamic jump targets.
+//
+static void ACS_chunkerJUMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+                            uint32_t chunkLength)
+{
+   if(chunkID != ACS_CHUNKID_JUMP) return;
+
+   // Chunk is an unadorned list of jump targets.
+   uint32_t numJumps = vm->numJumps + chunkLength / 4, *chunkItr;
+   ACSJump *jumpItr, *jumpEnd;
+
+   // Start by resizing the current array (if any).
+   vm->jumps = (ACSJump *)Z_Realloc(vm->jumps, numJumps * sizeof(ACSJump), PU_LEVEL, NULL);
+
+   jumpItr = vm->jumps + vm->numJumps;
+   jumpEnd = vm->jumps + numJumps;
+   chunkItr = (uint32_t *)chunkData;
+
+   // Just read in the values for now. Translating will happen later.
+   while(jumpItr != jumpEnd)
+      (*jumpItr++).codeIndex = SwapULong(*chunkItr++);
+
+   // Put jump count back into VM.
+   vm->numJumps = numJumps;
 }
 
 //
@@ -749,6 +819,9 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    // FUNC - Functions
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerFUNC);
 
+   // JUMP - Dynamic Jump Targets
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerJUMP);
+
    // MEXP - Map Variable/Array Export
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerMEXP);
 
@@ -837,6 +910,9 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
          }
       }
    }
+
+   // ATAG - Map Array Tagging
+   ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerATAG);
 }
 
 // EOF

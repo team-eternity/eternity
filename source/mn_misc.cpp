@@ -253,7 +253,11 @@ void MN_Question(const char *message, const char *command)
    
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
-   
+
+   // If a widget we popped up over is fullscreen, so are we, since
+   // we'll call down to its drawer. Otherwise, not.
+   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
+
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_message_command = command;
@@ -275,6 +279,10 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
    
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
+
+   // If a widget we popped up over is fullscreen, so are we, since
+   // we'll call down to its drawer. Otherwise, not.
+   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
    
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
@@ -459,6 +467,8 @@ void MN_DrawCredits(void)
                    0, y, &subscreen43);
 }
 
+extern menuwidget_t helpscreen_widget; // actually just below...
+
 void MN_HelpDrawer(void)
 {
    if(helpscreens[viewing_helpscreen].Drawer)
@@ -469,6 +479,11 @@ void MN_HelpDrawer(void)
    {
       // haleyjd: support raw lumps
       int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
+
+      // if the screen is larger than 4:3, we need to draw pillars ourselves,
+      // as D_Display won't be able to know if this widget is fullscreen or not
+      // in time to do it as usual.
+      D_DrawPillars();
 
       // haleyjd 05/18/09: use smart background drawer
       V_DrawFSBackground(&subscreen43, lumpnum);
@@ -690,11 +705,84 @@ void MN_SelectColour(const char *variable_name)
    selected_colour = *(int *)colour_command->variable->variable;
 }
 
+//=============================================================================
+//
+// Font Test Widget
+//
+
+static vfont_t *testfont; // font to test
+static qstring  teststr;  // string for test
+
+static void MN_fontTestDrawer()
+{
+   int totalHeight = SCREENHEIGHT - testfont->absh * 2;
+   int itemHeight  = totalHeight / (CR_BUILTIN + 1);   
+   int x = 160 - V_FontStringWidth(testfont, teststr.constPtr())/2;
+   int y = testfont->absh;
+
+   V_DrawBackground(mn_background_flat, &vbscreen);
+   
+   for(int i = 0; i <= CR_BUILTIN; i++)
+   {
+      V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
+      y += itemHeight;
+   }
+}
+
+static bool MN_fontTestResponder(event_t *ev)
+{
+   if(action_menu_toggle || action_menu_previous)
+   {
+      // exit widget
+      action_menu_toggle = action_menu_previous = false;
+      MN_PopWidget();
+      teststr.freeBuffer();
+   }
+
+   return true;
+}
+
+static menuwidget_t fonttest_widget = 
+{
+   MN_fontTestDrawer, 
+   MN_fontTestResponder, 
+   NULL, 
+   true
+};
+
+CONSOLE_COMMAND(mn_testfont, 0)
+{
+   vfont_t *font;
+   const char *fontName;
+
+   if(Console.argc < 1)
+   {
+      C_Puts(FC_ERROR "Usage: mn_testfont fontname [message]");
+      return;
+   }
+   
+   fontName = Console.argv[0]->constPtr();
+   if(!(font = E_FontForName(fontName)))
+   {
+      C_Printf(FC_ERROR "Unknown font %s\n", fontName);
+      return;
+   }
+
+   if(Console.argc >= 2)
+      teststr = *Console.argv[1];
+   else
+      teststr = "ABCDEFGHIJKL";
+
+   testfont = font;   
+   MN_PushWidget(&fonttest_widget);
+}
+
 
 void MN_AddMiscCommands(void)
 {
    C_AddCommand(credits);
    C_AddCommand(help);
+   C_AddCommand(mn_testfont);
 }
 
 // EOF

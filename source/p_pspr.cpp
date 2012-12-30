@@ -849,6 +849,26 @@ void A_Raise(Mobj *mo)
    P_SetPsprite(player, ps_weapon, newstate);
 }
 
+//
+// P_WeaponRecoil
+//
+// haleyjd 12/11/12: Separated out of the below.
+//
+void P_WeaponRecoil(player_t *player)
+{
+   // killough 3/27/98: prevent recoil in no-clipping mode
+   if(!(player->mo->flags & MF_NOCLIP))
+   {
+      // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
+      if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
+         (weapon_recoil && (demo_version >= 203 || !compatibility)))
+      {
+         P_Thrust(player, ANG180 + player->mo->angle, 0,
+                  2048*weaponinfo[player->readyweapon].recoil); // phares
+      }
+   }
+}
+
 // Weapons now recoil, amount depending on the weapon.              // phares
 //                                                                  //   |
 // The P_SetPsprite call in each of the weapon firing routines      //   V
@@ -863,17 +883,7 @@ static void A_FireSomething(player_t* player, int adder)
    P_SetPsprite(player, ps_flash,
       weaponinfo[player->readyweapon].flashstate+adder);
    
-   // killough 3/27/98: prevent recoil in no-clipping mode
-   if(!(player->mo->flags & MF_NOCLIP))
-   {
-      // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
-      if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
-         (weapon_recoil && (demo_version >= 203 || !compatibility)))
-      {
-         P_Thrust(player, ANG180 + player->mo->angle, 0,
-                  2048*weaponinfo[player->readyweapon].recoil); // phares
-      }
-   }
+   P_WeaponRecoil(player);
 }
 
 //
@@ -1735,10 +1745,12 @@ static argkeywd_t fcbkwds =
 // args[2] : number of bullets to fire
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
+// args[5] : if not zero, set specific flash state; if < 0, don't change it.
 //
 void A_FireCustomBullets(Mobj *mo)
 {
    int i, accurate, numbullets, damage, dmgmod;
+   int flashint, flashstate;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1753,6 +1765,9 @@ void A_FireCustomBullets(Mobj *mo)
    numbullets = E_ArgAsInt(psp->state->args, 2, 0);
    damage     = E_ArgAsInt(psp->state->args, 3, 0);
    dmgmod     = E_ArgAsInt(psp->state->args, 4, 0);
+   
+   flashint   = E_ArgAsInt(psp->state->args, 5, 0);
+   flashstate = E_ArgAsStateNum(psp->state->args, 5, NULL);
 
    if(!accurate)
       accurate = 1;
@@ -1774,7 +1789,14 @@ void A_FireCustomBullets(Mobj *mo)
       P_SubtractAmmo(player, -1);
    }
 
-   A_FireSomething(player, 0);
+   // have a flash state?
+   if(flashint >= 0 && flashstate != NullStateNum)
+      P_SetPsprite(player, ps_flash, flashstate);
+   else if(flashint == 0) // zero means default behavior
+      P_SetPsprite(player, ps_flash, P_GetReadyWeapon(player)->flashstate);
+
+   P_WeaponRecoil(player);
+
    P_BulletSlope(mo);
 
    // loop on numbullets

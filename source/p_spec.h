@@ -112,6 +112,18 @@ struct side_t;
 #define TriggerType           0x0007
 #define TriggerTypeShift      0
 
+// haleyjd: Generalized type enumeration
+enum
+{
+   GenTypeFloor,
+   GenTypeCeiling,
+   GenTypeDoor,
+   GenTypeLocked,
+   GenTypeLift,
+   GenTypeStairs,
+   GenTypeCrusher
+};
+
 // define masks and shifts for the floor type fields
 
 #define FloorCrush            0x1000
@@ -826,8 +838,7 @@ public:
 typedef struct doordata_s
 {
    // generalized values
-   int kind;
-   int trigger_type;
+   int  kind;
 
    // parameterized values
    fixed_t speed_value;
@@ -835,6 +846,8 @@ typedef struct doordata_s
    int     altlighttag;
    bool    usealtlighttag;
    int     topcountdown;
+   int     spac;
+   bool    reuse;
 } doordata_t;
 
 // haleyjd 09/06/07: sector special transfer structure
@@ -1349,6 +1362,7 @@ int EV_DoGenStairs(line_t *line);
 
 int EV_DoGenCrusher(line_t *line);
 
+int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd);
 int EV_DoGenDoor(line_t *line);
 
 int EV_DoGenLockedDoor(line_t *line);
@@ -1494,6 +1508,8 @@ enum
 bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
 bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
                          int *args, int side, int spac, bool reuse);
+
+extern void P_StartLineScript(line_t *line, Mobj *thing);
 
 #endif
 

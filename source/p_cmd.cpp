@@ -85,7 +85,10 @@ const char *skills[]=
    "nightmare"
 };
 
-const char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
+const char *bfgtypestr[5] = 
+{ 
+   "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"
+};
 const char *dmstr[] = { "single", "coop", "deathmatch" };
 
 /*************************************************************************

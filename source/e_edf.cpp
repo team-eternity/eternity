@@ -276,9 +276,9 @@ static cfg_opt_t cast_sound_opts[] =
 
 static cfg_opt_t cast_opts[] =
 {
-   CFG_STR(ITEM_CAST_TYPE, NULL, CFGF_NONE),
-   CFG_STR(ITEM_CAST_NAME, "unknown", CFGF_NONE),
-   CFG_BOOL(ITEM_CAST_SA,  cfg_false, CFGF_NONE),
+   CFG_STR(ITEM_CAST_TYPE,  NULL,            CFGF_NONE),
+   CFG_STR(ITEM_CAST_NAME,  "unknown",       CFGF_NONE),
+   CFG_BOOL(ITEM_CAST_SA,   false,           CFGF_NONE),
    CFG_SEC(ITEM_CAST_SOUND, cast_sound_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_END()
 };
@@ -338,6 +338,7 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_FONT_INTRB,     "ee_bigfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_INTRBN,    "ee_bignumfont",   CFGF_NONE),
    CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
+   CFG_FUNC("setdialect",       E_SetDialect),
    CFG_FUNC("include",          E_Include),
    CFG_FUNC("lumpinclude",      E_LumpInclude),
    CFG_FUNC("include_prev",     E_IncludePrev),    // DEPRECATED
@@ -468,7 +469,6 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
       va_end(va2);
    }
 
-   msg_no_tabs.initCreate();
    msg_no_tabs = msg;
    msg_no_tabs.replace("\t", ' ');
 
@@ -1484,7 +1484,7 @@ static void E_ProcessCast(cfg_t *cfg)
          castorder[i].name = estrdup(tempstr); // store provided value
 
       // get stopattack flag (used by player)
-      castorder[i].stopattack = (cfg_getbool(castsec, ITEM_CAST_SA) == cfg_true);
+      castorder[i].stopattack = cfg_getbool(castsec, ITEM_CAST_SA);
 
       // process sound blocks (up to four will be processed)
       tempint = cfg_size(castsec, ITEM_CAST_SOUND);

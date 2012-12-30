@@ -32,11 +32,12 @@ struct DWFILE;
 int   mylex(cfg_t *cfg);
 int   lexer_init(cfg_t *cfg, DWFILE *);
 void  lexer_reset(void);
-void  lexer_set_unquoted_spaces(cfg_bool_t);
+void  lexer_set_unquoted_spaces(bool);
 char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len);
 char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *len);
 int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *fname, int lumpnum);
 int   cfg_lexer_source_type(cfg_t *cfg);
+void  cfg_lexer_set_dialect(cfg_dialect_t dialect);
 
 #endif
 

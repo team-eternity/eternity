@@ -28,7 +28,7 @@
 
 #include "../hal/i_platform.h"
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+#ifdef _MSC_VER
 
 #include <windows.h>
 #include "SDL_syswm.h"
@@ -39,7 +39,7 @@ extern void I_FatalError(int code, const char *error, ...);
 
 int disable_sysmenu;
 
-#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#if !defined(_DEBUG)
 int main(int argc, char **argv)
 {
    __try

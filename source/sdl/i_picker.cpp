@@ -48,6 +48,7 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "DOOMREG",
    "UDOOM",
    "DOOM2",
+   "BFGDOOM2",
    "TNT",
    "PLUTONIA",
    "HACX",
@@ -66,6 +67,7 @@ static const char *titles[NUMPICKIWADS] =
    "DOOM Registered Version",
    "The Ultimate DOOM",
    "DOOM II: Hell on Earth",
+   "DOOM II: Hell on Earth - BFG Edition",
    "Final DOOM: TNT - Evilution",
    "Final DOOM: The Plutonia Experiment",
    "HACX - Twitch 'n Kill",
@@ -157,10 +159,7 @@ static bool I_Pick_OpenWad(void)
    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   if(pickwad.addNewFile(filename))
-      return false;
-
-   return true;
+   return pickwad.addNewFile(filename);
 }
 
 //

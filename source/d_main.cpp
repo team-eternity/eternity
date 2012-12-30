@@ -517,13 +517,34 @@ static void D_showMemStats(void)
 #endif
 
 //
-// D_drawWings
+// D_DrawPillars
+//
+// Will draw pillars for pillarboxing the 4:3 subscreen.
+//
+void D_DrawPillars()
+{
+   int wingwidth;
+   
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
+      return;
+   
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   if(wingwidth <= 0)
+         return;
+
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+                0, wingwidth, vbscreen.height);
+}
+
+//
+// D_DrawWings
 //
 // haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
 // status bar while it is visible. This is necessary when drawing patches at
 // 4:3 aspect ratio over widescreen video modes.
 //
-static void D_drawWings()
+void D_DrawWings()
 {
    int wingwidth;
 
@@ -531,6 +552,10 @@ static void D_drawWings()
       return;
 
    wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+
+   // safety check
+   if(wingwidth <= 0)
+      return;
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
@@ -577,7 +602,7 @@ void D_Display(void)
 
    // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
    // created by drawing patches 4:3 in higher aspect ratios.
-   D_drawWings();
+   D_DrawWings();
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
@@ -1342,7 +1367,7 @@ static void D_GameAutoloadWads(void)
          if(strstr(direntry->d_name, ".wad"))
          {
             fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
-            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, 0);
+            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, false, false);
          }
       }
       
@@ -1454,6 +1479,10 @@ void D_SetGameName(const char *iwad)
    // haleyjd 03/07/10: Special FreeDoom overrides :)
    if(freedoom && GameModeInfo->freeVerName)
       game_name = GameModeInfo->freeVerName;
+
+   // haleyjd 11/03/12: BFG Edition overrides
+   if(bfgedition && GameModeInfo->bfgEditionName)
+      game_name = GameModeInfo->bfgEditionName;
 
    puts(game_name);
 }
@@ -1656,7 +1685,7 @@ static void D_ProcessDehCommandLine(void)
    // Ty 03/18/98 also allow .bex extension.  .bex overrides if both exist.
    // killough 11/98: also allow -bex
 
-   int p = M_CheckParm ("-deh");
+   int p = M_CheckParm("-deh");
    if(p || (p = M_CheckParm("-bex")))
    {
       // the parms after p are deh/bex file names,
@@ -1717,7 +1746,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, 0);
+                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, false, false);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -2056,7 +2085,7 @@ static void D_DoomInit(void)
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, 0);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, false, false);
          }
       }
    }
@@ -2086,7 +2115,7 @@ static void D_DoomInit(void)
       strncpy(file, demosource, len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
+      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, false, false);
       usermsg("Playing demo %s\n", file);
    }
 
@@ -2177,7 +2206,7 @@ static void D_DoomInit(void)
    M_LoadDefaults();              // load before initing other systems
 
    // haleyjd 01/11/09: process affinity mask stuff
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
+#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
    {
       extern void I_SetAffinityMask(void);
 
@@ -2224,6 +2253,10 @@ static void D_DoomInit(void)
    // haleyjd 08/20/07: queue autoload dir dehs
    D_GameAutoloadDEH();
 
+   // jff 4/24/98 load color translation lumps
+   // haleyjd 09/06/12: need to do this before EDF
+   V_InitColorTranslation(); 
+
    // haleyjd 09/11/03: All EDF and DeHackEd processing is now
    // centralized here, in order to allow EDF to load from wads.
    // As noted in comments, the other DEH functions above now add
@@ -2244,9 +2277,7 @@ static void D_DoomInit(void)
 
    // Process the DeHackEd queue, then free it
    D_ProcessDEHQueue();
-
-   V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
-
+   
    // haleyjd: moved down turbo to here for player class support
    if((p = M_CheckParm("-turbo")))
    {
@@ -2296,32 +2327,35 @@ static void D_DoomInit(void)
       D_SetGraphicsMode();
    }
 
-   startupmsg("R_Init","Init DOOM refresh daemon");
+   startupmsg("R_Init", "Init DOOM refresh daemon");
    R_Init();
 
-   startupmsg("P_Init","Init Playloop state.");
+   startupmsg("P_Init", "Init Playloop state.");
    P_Init();
 
-   startupmsg("HU_Init","Setting up heads up display.");
+   startupmsg("HU_Init", "Setting up heads up display.");
    HU_Init();
 
-   startupmsg("ST_Init","Init status bar.");
+   startupmsg("ST_Init", "Init status bar.");
    ST_Init();
 
-   startupmsg("MN_Init","Init menu.");
+   startupmsg("MN_Init", "Init menu.");
    MN_Init();
+
+   startupmsg("IN_Init", "Init intermission.");
+   IN_Init(); // haleyjd 09/10/12
 
    startupmsg("F_Init", "Init finale.");
    F_Init();
 
-   startupmsg("S_Init","Setting up sound.");
+   startupmsg("S_Init", "Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
 
    //
    // NETCODE_FIXME: Netgame check.
    //
 
-   startupmsg("D_CheckNetGame","Check netgame status.");
+   startupmsg("D_CheckNetGame", "Check netgame status.");
    D_CheckNetGame();
 
    // haleyjd 04/10/03: set coop gametype

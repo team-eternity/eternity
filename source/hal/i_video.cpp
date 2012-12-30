@@ -284,8 +284,6 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
    qstring qstr;
    bool errorflag = false;
 
-   qstr.initCreate();
-
    while(*c)
    {
       switch(state)
@@ -460,7 +458,7 @@ static bool I_InitGraphicsMode(void)
       // Reset renderer field of view
       R_ResetFOV(video.width, video.height);
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+#ifdef _MSC_VER
       // Win32 specific hack: disable system menu
       I_DisableSysMenu();
 #endif
@@ -516,10 +514,6 @@ static void I_ResetScreen(void)
    
    // Reset palette
    ST_Start();
-   
-   // Redraw cached intermission buffer if needed
-   if(gamestate == GS_INTERMISSION)
-      IN_DrawBackground();
 
    // haleyjd: reset wipe engine
    Wipe_ScreenReset();

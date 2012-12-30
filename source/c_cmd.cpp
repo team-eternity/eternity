@@ -372,30 +372,36 @@ CONSOLE_COMMAND(cvarhelp, 0)
    C_Printf("Variable %s not found\n", name);
 }
 
+CONSOLE_COMMAND(c_popup, 0)
+{
+   C_InstaPopup();
+}
+
         /******** add commands *******/
 
 // command-adding functions in other modules
 
-extern void       AM_AddCommands(void);        // am_color
-extern void    Cheat_AddCommands(void);        // m_cheat
-extern void        D_AddCommands(void);        // d_main   -- haleyjd
-extern void        E_AddCommands(void);        // e_cmd    -- haleyjd
-extern void        G_AddCommands(void);        // g_cmd
-extern void   G_Bind_AddCommands(void);        // g_bind   -- haleyjd
-extern void      G_DMAddCommands(void);        // g_dmflag -- haleyjd
-extern void       HU_AddCommands(void);        // hu_stuff
-extern void        I_AddCommands(void);        // i_system
-extern void       MN_AddCommands(void);        // mn_menu
-extern void      net_AddCommands(void);        // d_net
-extern void        P_AddCommands(void);        // p_cmd
-extern void P_AddGenLineCommands(void);        // p_genlin -- haleyjd
-extern void       PE_AddCommands(void);        // p_enemy  -- haleyjd
-extern void        R_AddCommands(void);        // r_main
-extern void        S_AddCommands(void);        // s_sound
-extern void     S_AddSeqCommands(void);        // s_sndseq -- haleyjd
-extern void       ST_AddCommands(void);        // st_stuff
-extern void        V_AddCommands(void);        // v_misc
-extern void        W_AddCommands(void);        // w_levels -- haleyjd
+extern void       AM_AddCommands();        // am_color
+extern void    Cheat_AddCommands();        // m_cheat
+extern void        D_AddCommands();        // d_main   -- haleyjd
+extern void        E_AddCommands();        // e_cmd    -- haleyjd
+extern void        G_AddCommands();        // g_cmd
+extern void   G_Bind_AddCommands();        // g_bind   -- haleyjd
+extern void      G_DMAddCommands();        // g_dmflag -- haleyjd
+extern void       HU_AddCommands();        // hu_stuff
+extern void        I_AddCommands();        // i_system
+extern void IN_Stats_AddCommands();        // in_stats -- haleyjd
+extern void       MN_AddCommands();        // mn_menu
+extern void      net_AddCommands();        // d_net
+extern void        P_AddCommands();        // p_cmd
+extern void P_AddGenLineCommands();        // p_genlin -- haleyjd
+extern void       PE_AddCommands();        // p_enemy  -- haleyjd
+extern void        R_AddCommands();        // r_main
+extern void        S_AddCommands();        // s_sound
+extern void     S_AddSeqCommands();        // s_sndseq -- haleyjd
+extern void       ST_AddCommands();        // st_stuff
+extern void        V_AddCommands();        // v_misc
+extern void        W_AddCommands();        // w_levels -- haleyjd
 
 void C_AddCommands()
 {
@@ -416,6 +422,7 @@ void C_AddCommands()
   C_AddCommand(dumplog); // haleyjd
   C_AddCommand(openlog);
   C_AddCommand(closelog);
+  C_AddCommand(c_popup);
 
   // SoM: I can never remember the values for a console variable
   C_AddCommand(cvarhelp);
@@ -431,6 +438,7 @@ void C_AddCommands()
   GL_AddCommands();  // haleyjd
   HU_AddCommands();
   I_AddCommands();
+  IN_Stats_AddCommands(); // haleyjd
   MN_AddCommands();
   net_AddCommands();
   P_AddCommands();

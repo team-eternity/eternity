@@ -35,10 +35,12 @@
 #include "c_io.h"
 #include "d_gi.h"
 #include "doomstat.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "r_patch.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -120,17 +122,15 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
 
    if(font->color)
    {
+      // haleyjd 03/27/03: use fixedColor if it was set, else use default,
+      // which may come from GameModeInfo.
       if(fixedColor)
-      {
-         // haleyjd 03/27/03: use fixedColor if it was set
-         color = (byte *)colrngs[fixedColNum];
+      {         
+         color = font->colrngs[fixedColNum];
          fixedColor = false;
       }
       else
-      {
-         // haleyjd: get default text color from GameModeInfo
-         color = *(GameModeInfo->defTextTrans); // Note: ptr to ptr
-      }
+         color = font->colrngs[font->colorDefault];
    }
    
    // haleyjd 10/04/05: support alternate colormap sources
@@ -155,47 +155,44 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       // color and control codes
       if(c >= TEXT_COLOR_MIN)
       {
-         if(c == TEXT_CONTROL_TRANS) // translucency toggle
+         switch(c)
          {
+         case TEXT_CONTROL_TRANS: // translucency toggle
             tl ^= true;
-         }
-         else if(c == TEXT_CONTROL_SHADOW) // shadow toggle
-         {
+            break;
+         case TEXT_CONTROL_SHADOW: // shadow toggle
             shadowChar ^= true;
-         }
-         else if(c == TEXT_CONTROL_ABSCENTER) // abscenter toggle
-         {
+            break;
+         case TEXT_CONTROL_ABSCENTER: // abscenter toggle
             absCentered ^= true;
-         }
-         else if(font->color && !useAltMap) // not all fonts support translations
-         {
-            int colnum;
-            
-            // haleyjd: allow use of gamemode-dependent defaults
-            switch(c)
+            break;
+         default:
+            if(font->color && !useAltMap) // not all fonts support translations
             {
-            case TEXT_COLOR_NORMAL:
-               colnum = GameModeInfo->colorNormal;
-               break;
-            case TEXT_COLOR_HI:
-               colnum = GameModeInfo->colorHigh;
-               break;
-            case TEXT_COLOR_ERROR:
-               colnum = GameModeInfo->colorError;
-               break;
-            default:
-               colnum = c - 128;
-               break;
-            }
+               int colnum;
 
-            // check that colrng number is within bounds
-            if(colnum < 0 || colnum >= CR_LIMIT)
-            {
-               C_Printf("V_FontWriteText: invalid color %i\n", colnum);
-               continue;
+               // haleyjd: allow use of gamemode-dependent defaults
+               switch(c)
+               {
+               case TEXT_COLOR_NORMAL:
+                  colnum = font->colorNormal;
+                  break;
+               case TEXT_COLOR_HI:
+                  colnum = font->colorHigh;
+                  break;
+               case TEXT_COLOR_ERROR:
+                  colnum = font->colorError;
+                  break;
+               default:
+                  colnum = c - 128;
+                  break;
+               }
+
+               // check that colrng number is within bounds
+               if(colnum >= 0 && colnum < CR_LIMIT)
+                  color = font->colrngs[colnum];
             }
-            else
-               color = (byte *)colrngs[colnum];
+            break;
          }
          continue;
       }
@@ -207,13 +204,13 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
          cx =  cx * 40;
          continue;
       }
-      if(c == '\n')
+      else if(c == '\n')
       {
          cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
          cy += font->cy;
          continue;
       }
-      if(c == '\a') // don't draw BELs in linear fonts
+      else if(c == '\a') // don't draw BELs in linear fonts
          continue;
       
       // normalize character
@@ -237,7 +234,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       // check against screen bounds
       // haleyjd 12/29/05: text is now clipped by patch drawing code
       
-      if(font->linear)
+      if(font->linear && font->data)
       {
          // TODO: translucent masked block support
          // TODO: shadowed linear?
@@ -312,9 +309,15 @@ void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map
 // Write text with a shadow effect.
 //
 void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
-                             VBuffer *screen)
+                             VBuffer *screen, int color)
 {
    shadowChar = true;
+   if(color >= 0 && color < CR_LIMIT)
+   {
+      fixedColor  = true;
+      fixedColNum = color;
+   }
+   
    V_FontWriteText(font, s, x, y, screen);
 }
 
@@ -467,6 +470,188 @@ int16_t V_FontMaxWidth(vfont_t *font)
    }
 
    return w;
+}
+
+//
+// V_FontFitTextToRect
+//
+// Modify text so that it fits within a given rect, based on the width and height
+// of characters in the provided font.
+//
+void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2)
+{
+   // get full message width and height
+   bool fitsWidth  = false;
+   int  fullWidth  = V_FontStringWidth(font, msg);
+   int  fullHeight = V_FontStringHeight(font, msg);
+
+   // fits within the width?
+   if(x1 + fullWidth <= x2)
+   {
+      fitsWidth = true;
+
+      // fits within the height?
+      if(y1 + fullHeight <= y2)
+         return; // no modification necessary.
+   }
+
+   // Adjust for width first, if needed.
+   if(!fitsWidth)
+   {
+      char *rover = msg;
+      char *currentBreakPos = NULL;
+      int width = 0;
+      int widthSinceLastBreak = 0;
+
+      while(*rover)
+      {
+         int charWidth = V_FontCharWidth(font, *rover);
+         width += charWidth;
+         widthSinceLastBreak += charWidth;
+
+         if(*rover == ' ')
+         {
+            currentBreakPos = rover;
+            widthSinceLastBreak = 0;
+         }
+         else if(*rover == '\n')
+         {
+            currentBreakPos = NULL;
+            width = widthSinceLastBreak = 0;
+         }
+
+         if(x1 + width > x2) // need to break
+         {
+            if(currentBreakPos)
+            {
+               *currentBreakPos = '\n';
+               width = widthSinceLastBreak;
+            }
+            currentBreakPos = NULL;
+         }
+         ++rover;
+      }
+
+      // recalculate the full height for the modified string
+      fullHeight = V_FontStringHeight(font, msg);
+   }
+
+   // Adjust for height, if needed
+   if(y1 + fullHeight > y2)
+   {
+      char *rover = msg + strlen(msg) - 1;
+      
+      // Clip off lines until it fits.
+      while(rover != msg && y1 + fullHeight > y2)
+      {
+         if(*rover == '\n')
+         {
+            *rover = '\0';
+            fullHeight -= font->cy;
+         }
+         --rover;
+      }
+   }
+}
+
+//
+// V_FontFitTextToRect
+//
+// Modify text so that it fits within a given rect, based on the width and height
+// of characters in the provided font.
+//
+// Variant for qstrings. There are functions in the class that make the process
+// more efficient for height clipping purposes.
+//
+void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, int y2)
+{
+   // get full message width and height
+   bool fitsWidth  = false;
+   int  fullWidth  = V_FontStringWidth(font, msg.constPtr());
+   int  fullHeight = V_FontStringHeight(font, msg.constPtr());
+
+   // fits within the width?
+   if(x1 + fullWidth <= x2)
+   {
+      fitsWidth = true;
+
+      // fits within the height?
+      if(y1 + fullHeight <= y2)
+         return; // no modification necessary.
+   }
+
+   // Adjust for width first, if needed.
+   if(!fitsWidth)
+   {
+      size_t currentBreakPos = 0;
+      int width = 0;
+      int widthSinceLastBreak = 0;
+
+      for(size_t i = 0; i < msg.length(); i++)
+      {
+         char c = msg[i];
+         int  charWidth = V_FontCharWidth(font, c);
+
+         width += charWidth;
+         widthSinceLastBreak += charWidth;
+
+         if(c == ' ')
+         {
+            widthSinceLastBreak = 0;
+            currentBreakPos = i;
+         }
+         else if(c == '\n')
+         {
+            width = widthSinceLastBreak = 0;
+            currentBreakPos = 0;
+         }
+
+         if(x1 + width > x2) // need to break
+         {
+            if(currentBreakPos)
+            {
+               msg[currentBreakPos] = '\n';
+               width = widthSinceLastBreak;
+            }
+            currentBreakPos = 0;
+         }
+      }
+
+      // recalculate the full height for the modified string
+      fullHeight = V_FontStringHeight(font, msg.constPtr());
+   }
+
+   // Clip off lines until it fits.
+   while(y1 + fullHeight > y2)
+   {
+      size_t lastSlashN = msg.findLastOf('\n');
+      if(lastSlashN == qstring::npos)
+         break; // Oh well...
+      msg.truncate(lastSlashN);
+      fullHeight -= font->cy;
+   }
+}
+
+//
+// V_FontGetUsedColors
+//
+// Determines all of the colors that are used by patches in a
+// patch font. Linear fonts are not supported here yet.
+//
+byte *V_FontGetUsedColors(vfont_t *font)
+{
+   if(font->linear) // not supported yet...
+      return NULL;
+
+   byte *colorsUsed = ecalloc(byte *, 1, 256);
+
+   for(unsigned int i = 0; i < font->size; i++)
+   {
+      if(font->fontgfx[i])
+         PatchLoader::GetUsedColors(font->fontgfx[i], colorsUsed);
+   }
+
+   return colorsUsed;
 }
 
 // EOF

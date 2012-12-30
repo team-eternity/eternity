@@ -1510,10 +1510,7 @@ void C_RunScript(DWFILE *dwfile)
 {
    qstring qstr;
    int state = CSC_NONE;
-   char c;
-
-   // initialize and allocate the qstring
-   qstr.initCreate();
+   int c;
 
    // parse script
    while((c = D_Fgetc(dwfile)) != EOF)
@@ -1547,7 +1544,7 @@ void C_RunScript(DWFILE *dwfile)
             state = CSC_NONE;
          }
          else
-            qstr += c;
+            qstr += static_cast<char>(c);
          continue;
       }
 
@@ -1569,7 +1566,7 @@ void C_RunScript(DWFILE *dwfile)
          continue;
 #endif
       default:                // anything else starts a command
-         qstr.clear() << c;
+         qstr.clear() << static_cast<char>(c);
          state = CSC_COMMAND;
          continue;
       }

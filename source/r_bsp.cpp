@@ -1968,7 +1968,7 @@ static int R_PolyobjCompare(const void *p1, const void *p2)
    const rpolyobj_t *po1 = *(rpolyobj_t **)p1;
    const rpolyobj_t *po2 = *(rpolyobj_t **)p2;
 
-   return po1->polyobj->zdist - po2->polyobj->zdist;
+   return po1->zdist - po2->zdist;
 }
 
 //
@@ -1983,13 +1983,17 @@ static int R_PolyobjCompare(const void *p1, const void *p2)
 static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
 {
    int i = 0;
-         
+
+   // haleyjd 12/09/12: The original algorithm held over from pre-dynasegs
+   // polyobjects of comparing the centerpoint of each polyobject is totally
+   // insufficient. For now, we compare the center of each fragment instead. 
+   // Eventually this will be replaced with BSP tree traversal.
    while(list)
    {
-      polyobj_t *po = list->dllObject->polyobj;
+      rpolyobj_t *rpo = list->dllObject;
 
-      po->zdist = R_PointToDist2(viewx, viewy, po->centerPt.x, po->centerPt.y);
-      po_ptrs[i++] = list->dllObject;
+      rpo->zdist = R_PointToDist2(viewx, viewy, rpo->cx, rpo->cy);
+      po_ptrs[i++] = rpo;
       list = list->dllNext;
    }
    

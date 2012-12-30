@@ -29,10 +29,44 @@
 #ifndef D_IWAD_H__
 #define D_IWAD_H__
 
-extern bool freedoom;
+// Needed for GameMode_t/GameMission_t
+#include "d_gi.h" 
 
-char *D_FindInDoomWadPath(const char *filename, const char *extension);
+extern bool d_scaniwads;
+
+extern bool freedoom;
+extern bool bfgedition;
+
+extern const char *const standard_iwads[];
+extern int nstandard_iwads;
+
+// IWAD check flags
+enum IWADCheckFlags_e
+{
+   IWADF_NOERRORS     = 0,
+   IWADF_FATALNOTOPEN = 0x00000001,
+   IWADF_FATALNOTWAD  = 0x00000002
+};
+
+struct iwadcheck_t
+{
+   unsigned int   flags;
+   bool           error;
+   GameMode_t    *gmode;
+   GameMission_t *gmission;
+   bool          *hassec;
+   bool          *freedoom;
+   bool          *bfgedition;
+};
+
+void D_CheckIWAD(const char *iwadname, iwadcheck_t &version);
+
+char   *D_FindInDoomWadPath(const char *filename, const char *extension);
+size_t  D_GetNumDoomWadPaths();
+char   *D_GetDoomWadPath(size_t i);
+
 void D_IdentifyVersion();
+void D_MissionMetaData(const char *lump, int mission);
 
 #endif
 

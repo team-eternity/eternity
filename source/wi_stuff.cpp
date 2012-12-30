@@ -477,7 +477,7 @@ static void WI_drawEL(void)
    bool loadedInfoPatch = false;
 
    // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
-   if(inmasterlevels)
+   if(inmanageddir == MD_MASTERLEVELS)
       return;
 
    // haleyjd 06/17/06: support spec. of next map/next secret map pics
@@ -1022,7 +1022,7 @@ static void WI_drawShowNextLoc(void)
 // Args:    none
 // Returns: void
 //
-static void WI_drawNoState(void)
+static void WI_drawNoState()
 {
    snl_pointeron = true;
    WI_drawShowNextLoc();
@@ -1892,8 +1892,6 @@ static void WI_loadData(void)
    int   i, j;
    char name[9];
 
-   WI_DrawBackground();         // killough 11/98
-
 #if 0
    // UNUSED
    if(GameModeInfo->id == commercial)
@@ -1903,10 +1901,6 @@ static void WI_loadData(void)
          *pic = colormaps[256*25 + *pic];
    }
 #endif
-
-   // haleyjd 06/17/06: no longer needed:
-   // killough 4/26/98: free lnames here (it was freed too early in Doom)
-   // Z_Free(lnames);
 
    if(GameModeInfo->id == commercial)
    {
@@ -1918,15 +1912,15 @@ static void WI_loadData(void)
 
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->last);
 
-         if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_this = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+         if((lumpnum = g_dir->checkNumForName(name)) != -1)
+            wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
             wi_lname_this = NULL;
 
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->next);
 
-         if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_next = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+         if((lumpnum = g_dir->checkNumForName(name)) != -1)
+            wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
             wi_lname_next = NULL;
       }
@@ -1940,15 +1934,15 @@ static void WI_loadData(void)
 
          psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->last);
 
-         if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_this = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+         if((lumpnum = g_dir->checkNumForName(name)) != -1)
+            wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
             wi_lname_this = NULL;
 
          psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
 
-         if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_next = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+         if((lumpnum = g_dir->checkNumForName(name)) != -1)
+            wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
             wi_lname_next = NULL;
       }
@@ -2139,25 +2133,21 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    mapName = NULL;
    nextMapName = NULL;
 
-   if(LevelInfo.useEDFInterName || inmasterlevels)
+   if(LevelInfo.useEDFInterName || inmanageddir)
    {
       char nameBuffer[24];
       const char *basename;
 
       // set current map
-      if(inmasterlevels)
+      if(inmanageddir == MD_MASTERLEVELS)
       {
          // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
          qstring buffer;
          qstring lvname;
 
-         lvname << FC_ABSCENTER << LevelInfo.levelName;
-         if(V_FontStringWidth(in_bigfont, lvname.constPtr()) > 320)
-         {
-            size_t lastSpace = lvname.findLastOf(' ');
-            if(lastSpace != qstring::npos)
-               *lvname.bufferAt(lastSpace) = '\n';
-         }
+         lvname << FC_ABSCENTER << FC_GOLD << LevelInfo.levelName;
+
+         V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
 
          buffer << "{EE_MLEV_" << lvname << "}";
          mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1);

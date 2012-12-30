@@ -112,7 +112,7 @@ void SaveArchive::ArchiveCString(char *str, size_t maxLen)
    if(savefile)
       savefile->Write(str, maxLen);
    else
-      loadfile->Read(str, maxLen);
+      loadfile->read(str, maxLen);
 }
 
 //
@@ -139,12 +139,12 @@ void SaveArchive::ArchiveLString(char *&str, size_t &len)
    else
    {
       uint32_t tempLen;
-      loadfile->ReadUint32(tempLen);
+      loadfile->readUint32(tempLen);
       len = (size_t)tempLen; // FIXME: size_t
       if(len != 0)
       {
          str = ecalloc(char *, 1, len);
-         loadfile->Read(str, len);
+         loadfile->read(str, len);
       }
       else
          str = NULL;
@@ -180,7 +180,7 @@ SaveArchive &SaveArchive::operator << (int32_t &x)
    if(savefile)
       savefile->WriteSint32(x);
    else
-      loadfile->ReadSint32(x);
+      loadfile->readSint32(x);
 
    return *this;
 }
@@ -190,7 +190,7 @@ SaveArchive &SaveArchive::operator << (uint32_t &x)
    if(savefile)
       savefile->WriteUint32(x);
    else
-      loadfile->ReadUint32(x);
+      loadfile->readUint32(x);
 
    return *this;
 }
@@ -200,7 +200,7 @@ SaveArchive &SaveArchive::operator << (int16_t &x)
    if(savefile)
       savefile->WriteSint16(x);
    else
-      loadfile->ReadSint16(x);
+      loadfile->readSint16(x);
 
    return *this;
 }
@@ -210,7 +210,7 @@ SaveArchive &SaveArchive::operator << (uint16_t &x)
    if(savefile)
       savefile->WriteUint16(x);
    else
-      loadfile->ReadUint16(x);
+      loadfile->readUint16(x);
 
    return *this;
 }
@@ -220,7 +220,7 @@ SaveArchive &SaveArchive::operator << (int8_t &x)
    if(savefile)
       savefile->WriteSint8(x);
    else
-      loadfile->ReadSint8(x);
+      loadfile->readSint8(x);
 
    return *this;
 }
@@ -230,7 +230,7 @@ SaveArchive &SaveArchive::operator << (uint8_t &x)
    if(savefile)
       savefile->WriteUint8(x);
    else
-      loadfile->ReadUint8(x);
+      loadfile->readUint8(x);
 
    return *this;
 }
@@ -242,7 +242,7 @@ SaveArchive &SaveArchive::operator << (bool &x)
    else
    {
       uint8_t temp;
-      loadfile->ReadUint8(temp);
+      loadfile->readUint8(temp);
       x = !!temp;
    }
 
@@ -255,7 +255,7 @@ SaveArchive &SaveArchive::operator << (float &x)
    if(savefile)
       savefile->Write(&x, sizeof(x));
    else
-      loadfile->Read(&x, sizeof(x));
+      loadfile->read(&x, sizeof(x));
 
    return *this;
 }
@@ -266,7 +266,7 @@ SaveArchive &SaveArchive::operator << (double &x)
    if(savefile)
       savefile->Write(&x, sizeof(x));
    else
-      loadfile->Read(&x, sizeof(x));
+      loadfile->read(&x, sizeof(x));
 
    return *this;
 }
@@ -283,7 +283,7 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
    }
    else
    {
-      loadfile->ReadSint32(sectornum);
+      loadfile->readSint32(sectornum);
       if(sectornum < 0 || sectornum >= numsectors)
       {
          I_Error("SaveArchive: sector num %d out of range\n",
@@ -308,7 +308,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    }
    else
    {
-      loadfile->ReadSint32(linenum);
+      loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be NULL
          ln = NULL;
       else if(linenum < 0 || linenum >= numlines)
@@ -648,7 +648,7 @@ static void P_RemoveAllThinkers(void)
    {
       Thinker *next = th->next;
 
-      if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+      if(th->isInstanceOf(RTTI(Mobj)))
          th->removeThinker();
       else
          delete th;
@@ -1258,7 +1258,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       // haleyjd 06/16/10: save "inmasterlevels" state
       int tempskill = (int)gameskill;
       
-      arc << compatibility << tempskill << inmasterlevels;
+      arc << compatibility << tempskill << inmanageddir;
    
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
@@ -1385,7 +1385,7 @@ void P_LoadGame(const char *filename)
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
 
-   if(!loadfile.OpenFile(filename, 512*1024, OutBuffer::NENDIAN))
+   if(!loadfile.openFile(filename, InBuffer::NENDIAN))
    {
       C_Printf(FC_ERROR "Failed to load savegame %s\n", filename);
       C_SetConsole();
@@ -1415,7 +1415,7 @@ void P_LoadGame(const char *filename)
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
       int tempskill;
-      arc << compatibility << tempskill << inmasterlevels;
+      arc << compatibility << tempskill << inmanageddir;
 
       gameskill = (skill_t)tempskill;
       
@@ -1433,7 +1433,7 @@ void P_LoadGame(const char *filename)
 
       G_SetGameMap(); // get gameepisode, map
 
-      // start out g_dir pointing at w_GlobalDir again
+      // start out g_dir pointing at wGlobalDir again
       g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
@@ -1453,12 +1453,17 @@ void P_LoadGame(const char *filename)
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears
          // for a missing wad.
-         // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
+         // Note: set d_dir as well, so G_InitNew won't overwrite with wGlobalDir!
          if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
             g_dir = d_dir = dir;
 
          // done with temporary file name
          efree(fn);
+
+         // 11/04/12: Since we loaded a managed directory wad, initialize the
+         // mission. This will take care of any special data loading 
+         // requirements, such as metadata for NR4TL.
+         W_InitManagedMission(inmanageddir);
       }
    
       // killough 3/16/98, 12/98: check lump name checksum
@@ -1503,7 +1508,7 @@ void P_LoadGame(const char *filename)
 
       /* cph 2001/05/23 - Must read options before we set up the level */
       byte options[GAME_OPTION_SIZE];
-      loadfile.Read(options, sizeof(options));
+      loadfile.read(options, sizeof(options));
 
       G_ReadOptions(options);
  

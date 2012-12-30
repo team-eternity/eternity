@@ -198,7 +198,7 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 {
    int i;
 
-   for(i = 0; i < dir->numfiles; ++i)
+   for(i = 0; i < dir->numfiles; i++)
    {
       if(!strcasecmp(filename, (dir->filenames)[i]))
          break;
@@ -216,10 +216,8 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 //
 void MN_ClearDirectory(mndir_t *dir)
 {
-   int i;
-   
    // clear all alloced files   
-   for(i = 0; i < dir->numfiles; ++i)
+   for(int i = 0; i < dir->numfiles; i++)
    {
       efree((dir->filenames)[i]);
       (dir->filenames)[i] = NULL;
@@ -304,7 +302,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
 
 static mndir_t *mn_currentdir;
 
-static void MN_FileDrawer(void);
+static void MN_FileDrawer();
 static bool MN_FileResponder(event_t *ev);
 
 // file selector is handled using a menu widget
@@ -325,7 +323,7 @@ static bool allow_exit = true;
 // graphical widget in the game engine so far. Significantly different
 // than it was in SMMU 3.30.
 //
-static void MN_FileDrawer(void)
+static void MN_FileDrawer()
 {
    int i;
    int bbot, btop, bleft, bright, w, h; // color box coords and dimensions
@@ -496,18 +494,12 @@ static bool MN_FileResponder(event_t *ev)
    if(action_menu_toggle || action_menu_previous)
    {
       // When allow_exit flag is false, call D_StartTitle
-      /*
-      if(!allow_exit)
-      {
-         MN_ClearMenus();
-         D_StartTitle();
-      }
-      */
       action_menu_toggle = action_menu_previous = false;
       if(!allow_exit)
       {
          MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
                          MN_doExitFileWidget);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
       }
       else
       {
@@ -622,12 +614,12 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
    if(dir->numfiles < 1)
       return;
 
-   selected_item      = 0;
-   mn_currentdir      = dir;
-   help_description   = title;
-   variable_name      = command;
-   select_dismiss     = dismissOnSelect;
-   allow_exit         = allowExit;
+   selected_item    = 0;
+   mn_currentdir    = dir;
+   help_description = title;
+   variable_name    = command;
+   select_dismiss   = dismissOnSelect;
+   allow_exit       = allowExit;
 
    MN_PushWidget(&file_selector);
 }
@@ -701,12 +693,12 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    // sort the list
    MN_sortFiles(&mn_diskdir);
 
-   selected_item = 0;
-   mn_currentdir = &mn_diskdir;
+   selected_item    = 0;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select music to play:";
-   variable_name = "s_playmusic";
-   select_dismiss = false;
-   allow_exit     = true;
+   variable_name    = "s_playmusic";
+   select_dismiss   = false;
+   allow_exit       = true;
 
    MN_PushWidget(&file_selector);
 }
@@ -722,7 +714,7 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    MN_addFile(&mn_diskdir, "default");
 
    // run through flats
-   for(i = flatstart; i < flatstop; ++i)
+   for(i = flatstart; i < flatstop; i++)
    {
       // size must be exactly 64x64
       if(textures[i]->width == 64 && textures[i]->height == 64)
@@ -743,11 +735,11 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    if((curnum = MN_findFile(&mn_diskdir, mn_background)) != mn_diskdir.numfiles)
       selected_item = curnum;
    
-   mn_currentdir = &mn_diskdir;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select background:";
-   variable_name = "mn_background";
-   select_dismiss = false;
-   allow_exit     = true;
+   variable_name    = "mn_background";
+   select_dismiss   = false;
+   allow_exit       = true;
 
    MN_PushWidget(&file_selector);
 }

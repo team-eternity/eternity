@@ -1,10 +1,13 @@
-// EDF for Eternity Engine v3.40.21
-//  Frames for Doom gamemode objects.
 //
-//  Note that most of these now only serve to reserve space in the states array 
-//  for data that will be filled in by DECORATE-format state blocks in the 
-//  thingtypes. This is only required so that the frames have global visibility
-//  by name and DeHackEd number, which can't be assigned via DECORATE states.
+// EDF for Eternity Engine v3.40.21
+//
+// Frames for Doom gamemode objects.
+//
+// Note that most of these now only serve to reserve space in the states array 
+// for data that will be filled in by DECORATE-format state blocks in the 
+// thingtypes. This is only required so that the frames have global visibility
+// by name and DeHackEd number, which can't be assigned via DECORATE states.
+//
 
 // DoomBlood frames
 frame S_BLOOD1 { +decorate; dehackednum 90 }
@@ -51,7 +54,7 @@ frame S_EXPLODE3 { +decorate; dehackednum 129 }
 // BFGShot frames
 frame S_BFGSHOT  { +decorate; dehackednum 115 }
 frame S_BFGSHOT2 { +decorate; dehackednum 116 }
-frame S_BFGLAND  { +decorate; dehackednum 117; particle_event pevt_bfgexpl}
+frame S_BFGLAND  { +decorate; dehackednum 117; particle_event pevt_bfgexpl }
 frame S_BFGLAND2 { +decorate; dehackednum 118 }
 frame S_BFGLAND3 { +decorate; dehackednum 119 }
 frame S_BFGLAND4 { +decorate; dehackednum 120 }

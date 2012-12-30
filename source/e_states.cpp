@@ -82,7 +82,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 #define FRAME_FIELDS \
    CFG_STR(ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
    CFG_INT_CB(ITEM_FRAME_SPRFRAME, 0,           CFGF_NONE, E_SpriteFrameCB), \
-   CFG_BOOL(ITEM_FRAME_FULLBRT,    cfg_false,   CFGF_NONE), \
+   CFG_BOOL(ITEM_FRAME_FULLBRT,    false,       CFGF_NONE), \
    CFG_INT(ITEM_FRAME_TICS,        1,           CFGF_NONE), \
    CFG_STRFUNC(ITEM_FRAME_ACTION,  "NULL",      E_ActionFuncCB), \
    CFG_STR(ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
@@ -1032,9 +1032,6 @@ static void E_ProcessCmpState(const char *value, int i)
    char *curtoken = NULL;
    int tok_index = 0, j;
 
-   // first things first, we have to initialize the qstring
-   buffer.initCreate();
-
    // initialize tokenizer variables
    in_action = false;
    early_args_found = false;
@@ -1231,7 +1228,7 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
    // check for fullbright
    if(IS_SET(ITEM_FRAME_FULLBRT))
    {
-      if(cfg_getbool(framesec, ITEM_FRAME_FULLBRT) == cfg_true)
+      if(cfg_getbool(framesec, ITEM_FRAME_FULLBRT))
          states[i]->frame |= FF_FULLBRIGHT;
    }
 
