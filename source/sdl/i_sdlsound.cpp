@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
@@ -554,7 +554,8 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          if(chan->data >= chan->enddata)
          {
             if(chan->loop && !paused && 
-               ((!menuactive && !consoleactive) || demoplayback || netgame))
+               (((!Menu.isUpFront()) && (!Console.isUpFront())) ||
+                demoplayback || netgame))
             {
                // haleyjd 06/03/06: restart a looping sample if not paused
                chan->data = chan->startdata;

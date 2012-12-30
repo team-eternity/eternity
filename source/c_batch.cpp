@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et: vi:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Charles Gunyon
@@ -307,15 +307,14 @@ CommandBatch* C_CommandBatchIterator(CommandBatch *batch)
    return saved_command_batches.batchIterator(batch);
 }
 
-void C_SaveCommandBatches(FILE *file)
+void C_SaveCommandBatches(qstring &buf)
 {
    CommandBatch *batch = NULL;
 
    while((batch = saved_command_batches.batchIterator(batch)))
    {
-      fprintf(
-         file, "batch %s \"%s\"\n", batch->getName(), batch->getCommands()
-      );
+      buf << "batch " << batch->getName() << " \"" << batch->getCommands()
+          << "\"\n";
    }
 }
 

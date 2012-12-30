@@ -427,7 +427,7 @@ static void MN_FileDrawer()
 static void MN_doExitFileWidget()
 {
    MN_PopWidget();  // cancel widget
-   MN_ClearMenus();
+   Menu.deactivate();
    D_StartTitle();
 }
 
@@ -442,10 +442,8 @@ static bool MN_FileResponder(event_t *ev)
 {
    unsigned char ch;
 
-   if(action_menu_up || action_menu_left)
+   if(Menu.checkAndClearActions("menu_up", "menu_left"))
    {
-      action_menu_up = action_menu_left = false;
-
       if(selected_item > 0) 
       {
          selected_item--;
@@ -454,9 +452,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
   
-   if(action_menu_down || action_menu_right)
+   if(Menu.checkAndClearActions("menu_down", "menu_right"))
    {
-      action_menu_down = action_menu_right = false;
       if(selected_item < (mn_currentdir->numfiles - 1)) 
       {
          selected_item++;
@@ -465,9 +462,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
    
-   if(action_menu_pageup)
+   if(Menu.checkAndClearAction("menu_pageup"))
    {
-      action_menu_pageup = false;
       if(numfileboxlines)
       {
          selected_item -= numfileboxlines;
@@ -478,9 +474,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
   
-   if(action_menu_pagedown)
+   if(Menu.checkAndClearAction("menu_pagedown"))
    {
-      action_menu_pagedown = false;
       if(numfileboxlines)
       {
          selected_item += numfileboxlines;
@@ -491,10 +486,9 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
    
-   if(action_menu_toggle || action_menu_previous)
+   if(Menu.checkAndClearActions("menu_toggle", "menu_previous"))
    {
       // When allow_exit flag is false, call D_StartTitle
-      action_menu_toggle = action_menu_previous = false;
       if(!allow_exit)
       {
          MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
@@ -509,10 +503,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
   
-   if(action_menu_confirm)
+   if(Menu.checkAndClearAction("menu_confirm"))
    {
-      action_menu_confirm = false;
-      
       // set variable to new value
       if(variable_name)
       {
@@ -572,7 +564,7 @@ CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 
 static mndir_t mn_diskdir;
 
-CONSOLE_COMMAND(mn_selectwad, 0)
+CONSOLE_COMMAND(mn_selectwad, 0, ii_all)
 {
    int ret = MN_ReadDirectory(&mn_diskdir, wad_directory, "*.wad");
 
@@ -634,7 +626,7 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
   
 // 'dir' command is useful :)
 
-CONSOLE_COMMAND(dir, 0)
+CONSOLE_COMMAND(dir, 0, ii_all)
 {
    int i;
    const char *wildcard;
@@ -647,12 +639,10 @@ CONSOLE_COMMAND(dir, 0)
    MN_ReadDirectory(&mn_diskdir, ".", wildcard);
    
    for(i = 0; i < mn_diskdir.numfiles; ++i)
-   {
       C_Printf("%s\n", (mn_diskdir.filenames)[i]);
-   }
 }
 
-CONSOLE_COMMAND(mn_selectmusic, 0)
+CONSOLE_COMMAND(mn_selectmusic, 0, ii_all)
 {
    musicinfo_t *music;
    char namebuf[16];
@@ -703,7 +693,7 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    MN_PushWidget(&file_selector);
 }
 
-CONSOLE_COMMAND(mn_selectflat, 0)
+CONSOLE_COMMAND(mn_selectflat, 0, ii_all)
 {
    int i;
    int curnum;

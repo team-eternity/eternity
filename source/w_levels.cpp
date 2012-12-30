@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -462,7 +462,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
    // Try to load the indicated wad from the Master Levels directory
    if(!(dir = W_loadMasterLevelWad(filename)))
    {
-      if(menuactive)
+      if(Menu.isUpFront())
          MN_ErrorMsg("Could not load wad");
       else
          C_Printf(FC_ERROR "Could not load level %s\n", filename);
@@ -487,7 +487,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
    // none??
    if(!mapname || !*mapname)
    {
-      if(menuactive)
+      if(Menu.isUpFront())
          MN_ErrorMsg("No maps found in wad");
       else
          C_Printf(FC_ERROR "No maps found in wad %s\n", filename);
@@ -495,7 +495,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
    }
 
    // Got one. Start playing it!
-   MN_ClearMenus();
+   Menu.deactivate();
    G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), mapname, dir);
 
    // set inmanageddir - this is even saved in savegames :)
@@ -548,7 +548,7 @@ void W_DoMasterLevels(bool allowexit)
 
    if(!masterlevelsenum)
    {
-      if(menuactive)
+      if(Menu.isUpFront())
          MN_ErrorMsg("Could not list directory");
       else
          C_Printf(FC_ERROR "w_masterlevels: could not list directory\n");
@@ -607,7 +607,7 @@ void W_DoNR4TLStart()
    // Try to load the NR4TL wad file
    if(!(dir = W_loadNR4TL()))
    {
-      if(menuactive)
+      if(Menu.isActive())
          MN_ErrorMsg("Could not load wad");
       else
          C_Printf(FC_ERROR "Could not load %s\n", w_norestpath);
@@ -618,7 +618,7 @@ void W_DoNR4TLStart()
    W_InitManagedMission(MD_NR4TL);
 
    // Start playing it!
-   MN_ClearMenus();
+   Menu.deactivate();
    G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), "MAP01", dir);
 
    // set inmanageddir
@@ -672,7 +672,7 @@ void W_InitManagedMission(int mission)
 // Shows the Master Levels menu, assuming master_levels_dir is properly 
 // configured.
 //
-CONSOLE_COMMAND(w_masterlevels, cf_notnet)
+CONSOLE_COMMAND(w_masterlevels, cf_notnet, ii_all)
 {
    W_DoMasterLevels(true);
 }
@@ -683,7 +683,7 @@ CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 // Executed by the menu filebox widget when displaying the Master Levels
 // directory listing, in order to load and start the proper map.
 //
-CONSOLE_COMMAND(w_startlevel, cf_notnet)
+CONSOLE_COMMAND(w_startlevel, cf_notnet, ii_all)
 {
    const char *levelname = NULL;
 
@@ -702,7 +702,7 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
 //
 // Start playing No Rest for the Living
 //
-CONSOLE_COMMAND(w_playnorest, 0)
+CONSOLE_COMMAND(w_playnorest, 0, ii_all)
 {
    W_DoNR4TLStart();
 }
@@ -714,7 +714,7 @@ CONSOLE_COMMAND(w_playnorest, 0)
 //
 
 // Write out a lump
-CONSOLE_COMMAND(w_writelump, 0)
+CONSOLE_COMMAND(w_writelump, 0, ii_all)
 {
    qstring filename;
    const char *lumpname;

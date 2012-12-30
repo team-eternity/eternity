@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -34,6 +34,7 @@
 #include "autopalette.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
+#include "d_iface.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "f_finale.h"

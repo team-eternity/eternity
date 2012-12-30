@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -213,8 +213,6 @@ extern int snd_DesiredSfxDevice;
 //  status bar explicitely.
 extern  bool statusbaractive;
 
-extern  bool automapactive; // In AutoMap mode?
-extern  bool menuactive;    // Menu overlayed?
 extern  int  paused;        // Game Pause?
 extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display
 extern  bool viewactive;
@@ -266,8 +264,6 @@ extern  bool timingdemo;
 // Run tick clock at fastest speed possible while playing demo.  killough
 extern  bool fastdemo;
 
-extern  gamestate_t  gamestate;
-
 //-----------------------------
 // Internal parameters, fixed.
 // These are set by the engine, and not changed
@@ -275,7 +271,6 @@ extern  gamestate_t  gamestate;
 //  WAD, partly set at startup time.
 
 extern  int   gametic;
-
 
 // Bookkeeping on players - state.
 extern  player_t  players[MAXPLAYERS];

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Simon Howard, et al.
@@ -55,6 +55,7 @@
 #include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
+#include "d_iface.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"

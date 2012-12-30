@@ -539,7 +539,7 @@ static const char *IN_formatTics(int tics)
 // Console Commands
 //
 
-CONSOLE_COMMAND(mapscores, cf_level)
+CONSOLE_COMMAND(mapscores, cf_level, ii_level)
 {
    INStatsManager &statsMgr = INStatsManager::Get();
    qstring levelkey, descr;

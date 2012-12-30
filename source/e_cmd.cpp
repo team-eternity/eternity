@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -47,7 +47,7 @@
 // Lists all the EDF thing type mnemonics along with their DeHackEd
 // numbers and doomednums
 //
-CONSOLE_COMMAND(e_dumpthings, 0)
+CONSOLE_COMMAND(e_dumpthings, 0, ii_all)
 {
    int i;
 
@@ -63,7 +63,7 @@ CONSOLE_COMMAND(e_dumpthings, 0)
    }
 }
 
-CONSOLE_COMMAND(e_thingtype, 0)
+CONSOLE_COMMAND(e_thingtype, 0, ii_all)
 {
    int num;
 
@@ -164,7 +164,7 @@ CONSOLE_COMMAND(e_thingtype, 0)
 //
 // Displays the properties stored in the metatable for the given thingtype.
 //
-CONSOLE_COMMAND(e_dumpmeta, 0)
+CONSOLE_COMMAND(e_dumpmeta, 0, ii_all)
 {
    MetaTable  *meta;
    MetaObject *obj = NULL;
@@ -201,7 +201,7 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 //
 // Displays information on one EDF state definition.
 //
-CONSOLE_COMMAND(e_dumpstate, 0)
+CONSOLE_COMMAND(e_dumpstate, 0, ii_all)
 {
    int num;
    state_t *state;
@@ -261,7 +261,7 @@ CONSOLE_COMMAND(e_dumpstate, 0)
 // As above, but filters for objects that have the MF_SPECIAL
 // flag. This is useful in concert with the "give" command.
 //
-CONSOLE_COMMAND(e_dumpitems, 0)
+CONSOLE_COMMAND(e_dumpitems, 0, ii_all)
 {
    int i;
 
@@ -285,7 +285,7 @@ CONSOLE_COMMAND(e_dumpitems, 0)
 //
 // Plays an EDF sound.
 //
-CONSOLE_COMMAND(e_playsound, 0)
+CONSOLE_COMMAND(e_playsound, 0, ii_all)
 {
    sfxinfo_t *sfx;
 
@@ -308,7 +308,7 @@ CONSOLE_COMMAND(e_playsound, 0)
    S_StartSfxInfo(NULL, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
 }
 
-CONSOLE_COMMAND(e_listmapthings, cf_level)
+CONSOLE_COMMAND(e_listmapthings, cf_level, ii_game)
 {
    mapthing_t *things;
    int i, numthings;
@@ -331,7 +331,7 @@ CONSOLE_COMMAND(e_listmapthings, cf_level)
    }
 }
 
-CONSOLE_COMMAND(e_mapthing, cf_level)
+CONSOLE_COMMAND(e_mapthing, cf_level, ii_game)
 {
    mapthing_t *things;
    int i, numthings, recordnum;
@@ -376,7 +376,7 @@ CONSOLE_COMMAND(e_mapthing, cf_level)
    C_Printf("Record not found\n");
 }
 
-CONSOLE_COMMAND(e_listlinedefs, cf_level)
+CONSOLE_COMMAND(e_listlinedefs, cf_level, ii_game)
 {
    maplinedefext_t *lines;
    int i, numlines;
@@ -400,7 +400,7 @@ CONSOLE_COMMAND(e_listlinedefs, cf_level)
    }
 }
 
-CONSOLE_COMMAND(e_linedef, cf_level)
+CONSOLE_COMMAND(e_linedef, cf_level, ii_game)
 {
    maplinedefext_t *lines;
    int i, numlines, recordnum;

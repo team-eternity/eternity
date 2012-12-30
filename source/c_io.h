@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -48,7 +48,6 @@ void C_CloseConsoleLog(void);
 void C_DumpMessages(qstring *filename);
 
 // sf 9/99: made a #define
-#define consoleactive (Console.current_height || gamestate == GS_CONSOLE)
 #define c_moving      (Console.current_height != Console.current_target)
 
 extern int c_height;     // the height of the console

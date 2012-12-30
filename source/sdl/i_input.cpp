@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -36,7 +36,9 @@
 #include "../doomdef.h"
 #include "../doomstat.h"
 #include "../g_bind.h"
+#include "../g_game.h"
 #include "../m_argv.h"
+#include "../mn_engin.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 
@@ -110,11 +112,11 @@ bool MouseShouldBeGrabbed(void)
       return false;
 
    // when menu is active or game is paused, release the mouse
-   if(menuactive || consoleactive || paused)
+   if(Menu.isUpFront() || Console.isUpFront() || paused)
       return false;
 
    // only grab mouse when playing levels (but not demos)
-   return (gamestate == GS_LEVEL) && !demoplayback;
+   return (G_GameStateIs(GS_LEVEL) && !demoplayback);
 }
 
 //
@@ -156,7 +158,7 @@ void UpdateFocus(void)
       }
       else
          SDL_EnableKeyRepeat(0, 0);
-      key_bindings.reset();
+      key_bindings.clearKeyStates();
       currently_focused = window_focused;
    }
 }
@@ -237,6 +239,10 @@ static int I_TranslateKey(int sym)
    case SDLK_END:         rc = KEYD_END;        break;
    case SDLK_INSERT:      rc = KEYD_INSERT;     break;
    case SDLK_DELETE:      rc = KEYD_DEL;        break;
+
+   case SDLK_PRINT:       rc = KEYD_PRINT;      break;
+   case SDLK_SYSREQ:      rc = KEYD_SYSRQ;      break;
+
    default:
       rc = sym;
       break;

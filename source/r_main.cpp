@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -789,7 +789,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
-         !(((menuactive || consoleactive) && !demoplayback && !netgame) || paused))
+         !(((Menu.isUpFront() || Console.isUpFront()) &&
+            !demoplayback && !netgame) || paused))
       {
          int strength = player->quake;
 
@@ -1150,7 +1151,7 @@ void R_DoomTLStyle(void)
          mobjinfo[tnum]->flags3 |= MF3_TLSTYLEADD;
       
       // if we are in-level, update all things of the corresponding type too
-      if(gamestate == GS_LEVEL)
+      if(G_GameStateIs(GS_LEVEL))
       {
          Thinker *th;
          
@@ -1284,7 +1285,7 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
    // haleyjd 10/09/05: get sound from gameModeInfo
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
    
-   if(gamestate == GS_LEVEL) // not in intercam
+   if(G_GameStateIs(GS_LEVEL)) // not in intercam
    {
       hide_menu = 20;             // hide the menu for a few tics
       
@@ -1312,7 +1313,7 @@ CONSOLE_VARIABLE(r_spanengine,   r_span_engine_num,   0) {}
 VARIABLE_INT(r_vissprite_limit, NULL, -1, D_MAXINT, NULL);
 CONSOLE_VARIABLE(r_vissprite_limit, r_vissprite_limit, 0) {}
 
-CONSOLE_COMMAND(p_dumphubs, 0)
+CONSOLE_COMMAND(p_dumphubs, 0, ii_all)
 {
    extern void P_DumpHubs();
    P_DumpHubs();
@@ -1323,7 +1324,7 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
    R_DoomTLStyle();
 }
 
-CONSOLE_COMMAND(r_changesky, 0)
+CONSOLE_COMMAND(r_changesky, 0, ii_game)
 {
    if(Console.argc < 1)
    {

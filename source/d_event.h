@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -35,10 +35,10 @@
 // Input event types.
 typedef enum
 {
-  ev_keydown,
-  ev_keyup,
-  ev_mouse,
-  ev_joystick
+  ev_keydown  = 1,
+  ev_keyup    = 2,
+  ev_mouse    = 4,
+  ev_joystick = 8
 } evtype_t;
 
 // Event structure.

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -868,8 +868,11 @@ static bool SM_WaitFinished(sc_callback_t *callback)
 
    if((callback->flags & SCBF_PAUSABLE && paused) ||
       (callback->flags & SCBF_MPAUSE && 
-       (menuactive || consoleactive) && !demoplayback && !netgame))
+       (D_InterfaceIs(ii_menu) || D_InterfaceIs(ii_console)) &&
+       !demoplayback && !netgame))
+   {
       return false;
+   }
 
    switch(callback->wait_type)
    {
@@ -966,7 +969,7 @@ void SM_InitSmall(void)
 //
 // Prints a list of running callback data to the console
 //
-CONSOLE_COMMAND(sm_running, 0)
+CONSOLE_COMMAND(sm_running, 0, ii_all)
 {
    sc_callback_t *cb;
    int i = 0;
@@ -984,7 +987,7 @@ CONSOLE_COMMAND(sm_running, 0)
 //
 // Executes a script with no arguments from the console
 //
-CONSOLE_COMMAND(sm_execv, cf_notnet)
+CONSOLE_COMMAND(sm_execv, cf_notnet, ii_all)
 {
    SmallContext_t *context;
    int vmNum;
@@ -1023,7 +1026,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
    context->invocationData.playernum  = Console.cmdsrc;
-   if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
+   if(G_GameStateIs(GS_LEVEL) && players[Console.cmdsrc].mo)
       context->invocationData.trigger = players[Console.cmdsrc].mo;
 
    SM_ExecScriptNameV(vm, Console.argv[1]->getBuffer());
@@ -1037,7 +1040,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
 // Executes a script with any number of integer parameters
 // from the console
 //
-CONSOLE_COMMAND(sm_execi, cf_notnet)
+CONSOLE_COMMAND(sm_execi, cf_notnet, ii_all)
 {
    SmallContext_t *context;
    AMX *vm;
@@ -1087,7 +1090,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
    context->invocationData.playernum  = Console.cmdsrc;
-   if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
+   if(G_GameStateIs(GS_LEVEL) && players[Console.cmdsrc].mo)
       context->invocationData.trigger = players[Console.cmdsrc].mo;
 
    SM_ExecScriptNameI(vm, Console.argv[1]->getBuffer(), argcount, params);

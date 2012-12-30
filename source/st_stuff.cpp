@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -928,15 +928,15 @@ void ST_Drawer(bool fullscreen)
    // haleyjd: test whether fullscreen graphical hud is enabled
    bool fshud = hud_enabled && hud_overlaystyle == 4;
 
-   st_statusbaron  = !fullscreen || automapactive || fshud;
-   st_backgroundon = !fullscreen || automapactive;
+   st_statusbaron  = !fullscreen || AutoMap.isUpFront() || fshud;
+   st_backgroundon = !fullscreen || AutoMap.isUpFront();
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
    // sf: draw nothing in fullscreen
    // tiny bit faster and also removes the problem of status bar
    // percent '%' signs being drawn in fullscreen
-   if(fullscreen && !automapactive)
+   if(fullscreen && !AutoMap.isUpFront())
    {
       // haleyjd: call game mode's fullscreen drawer when 
       // hud is enabled and hud_overlaystyle is "graphical"

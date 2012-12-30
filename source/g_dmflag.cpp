@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -80,7 +80,7 @@ CONSOLE_NETVAR(dmflags, dmflags, cf_server, netcmd_dmflags) {}
 
 // allows setting of default flags for a certain game mode
 
-CONSOLE_COMMAND(defdmflags, cf_server)
+CONSOLE_COMMAND(defdmflags, cf_server, ii_all)
 {
    int mode;
    unsigned int flags = 0;

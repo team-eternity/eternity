@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -72,47 +72,47 @@ extern int keylookspeed;
 // Game Commands
 //
 
-CONSOLE_COMMAND(i_exitwithmessage, 0)
+CONSOLE_COMMAND(i_exitwithmessage, 0, ii_all)
 {
    I_ExitWithMessage("%s\n", Console.args.constPtr());
 }
 
-CONSOLE_COMMAND(i_fatalerror, 0)
+CONSOLE_COMMAND(i_fatalerror, 0, ii_all)
 {
    I_FatalError(I_ERR_KILL, "%s\n", Console.args.constPtr());
 }
 
-CONSOLE_COMMAND(i_error, 0)
+CONSOLE_COMMAND(i_error, 0, ii_all)
 {
    I_Error("%s\n", Console.args.constPtr());
 }
 
-CONSOLE_COMMAND(z_print, cf_hidden)
+CONSOLE_COMMAND(z_print, cf_hidden, ii_all)
 {
    Z_PrintZoneHeap();
 }
 
-CONSOLE_COMMAND(z_dumpcore, cf_hidden)
+CONSOLE_COMMAND(z_dumpcore, cf_hidden, ii_all)
 {
    Z_DumpCore();
 }
 
-CONSOLE_COMMAND(starttitle, cf_notnet)
+CONSOLE_COMMAND(starttitle, cf_notnet, ii_all)
 {
    // haleyjd 04/18/03
    if(demorecording || singledemo)
       G_CheckDemoStatus();
 
-   MN_ClearMenus();         // put menu away
+   Menu.deactivate();       // put menu away
    D_StartTitle();
 }
 
-CONSOLE_COMMAND(endgame, cf_notnet)
+CONSOLE_COMMAND(endgame, cf_notnet, ii_all)
 {
    C_SetConsole();
 }
 
-CONSOLE_COMMAND(pause, cf_server)
+CONSOLE_COMMAND(pause, cf_server, ii_game)
 {
    sendpause = true;
 }
@@ -135,12 +135,12 @@ void G_QuitDoom(void)
    exit(0);
 }
 
-CONSOLE_COMMAND(quit, 0)
+CONSOLE_COMMAND(quit, 0, ii_all)
 {
    G_QuitDoom();
 }
 
-CONSOLE_COMMAND(animshot, 0)
+CONSOLE_COMMAND(animshot, 0, ii_all)
 {
    if(!Console.argc)
    {
@@ -153,7 +153,7 @@ CONSOLE_COMMAND(animshot, 0)
    C_InstaPopup();    // turn off console
 }
 
-CONSOLE_COMMAND(screenshot, 0)
+CONSOLE_COMMAND(screenshot, 0, ii_all)
 {
    if(Console.cmdtype != c_typed)
       C_InstaPopup();
@@ -231,14 +231,14 @@ CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0) {}
 // turbo scale
 
 int turbo_scale = 100;
-VARIABLE_INT(turbo_scale, NULL,         10, 400, NULL);
+VARIABLE_INT(turbo_scale, NULL, 10, 400, NULL);
 CONSOLE_VARIABLE(turbo, turbo_scale, 0)
 {
    C_Printf("turbo scale: %i%%\n",turbo_scale);
    E_ApplyTurbo(turbo_scale);
 }
 
-CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
+CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel, ii_level)
 {
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
@@ -259,7 +259,7 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 // Demo Stuff
 //
 
-CONSOLE_COMMAND(playdemo, cf_notnet)
+CONSOLE_COMMAND(playdemo, cf_notnet, ii_all)
 {
    if(Console.argc < 1)
    {
@@ -278,13 +278,12 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    singledemo = true;            // quit after one demo
 }
 
-
-CONSOLE_COMMAND(stopdemo, cf_notnet)
+CONSOLE_COMMAND(stopdemo, cf_notnet, ii_demoscreen)
 {
    G_StopDemo();
 }
 
-CONSOLE_COMMAND(timedemo, cf_notnet)
+CONSOLE_COMMAND(timedemo, cf_notnet, ii_all)
 {
    if(Console.argc != 2)
    {
@@ -314,7 +313,7 @@ CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 // load new wad
 // buffered command: r_init during load
 
-CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
+CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered, ii_all)
 {
    if(GameModeInfo->flags & GIF_SHAREWARE)
    {
@@ -326,7 +325,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
 
 // list loaded wads
 
-CONSOLE_COMMAND(listwads, 0)
+CONSOLE_COMMAND(listwads, 0, ii_all)
 {
    D_ListWads();
 }
@@ -338,7 +337,7 @@ CONSOLE_CONST(rngseed, rngseed);
 
 // suicide
 
-CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
+CONSOLE_NETCMD(kill, cf_level, netcmd_kill, ii_level)
 {
    Mobj *mobj;
    int playernum;
@@ -355,7 +354,7 @@ CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
 
 // change level
 
-CONSOLE_NETCMD(map, cf_server, netcmd_map)
+CONSOLE_NETCMD(map, cf_server, netcmd_map, ii_level)
 {
    int lumpnum;
 
@@ -511,7 +510,7 @@ static bool G_TestIWADPath(char *path)
    // test for read access, and warn if non-existent
    if(access(path, R_OK))
    {
-      if(menuactive)
+      if(Menu.isUpFront())
          MN_ErrorMsg("Warning: cannot access filepath");
       else
          C_Printf(FC_ERROR "Warning: cannot access filepath\n");
@@ -606,17 +605,17 @@ CONSOLE_VARIABLE(w_norestpath, w_norestpath, cf_allowblank)
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
 CONSOLE_VARIABLE(use_doom_config, use_doom_config, 0) {}
 
-CONSOLE_COMMAND(m_resetcomments, 0)
+CONSOLE_COMMAND(m_resetcomments, 0, ii_all)
 {
    M_ResetDefaultComments();
    M_ResetSysComments();
 }
 
-CONSOLE_COMMAND(spectate_prev, 0)
+CONSOLE_COMMAND(spectate_prev, 0, ii_level)
 {
    int i = displayplayer - 1;
 
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+   if((!G_GameStateIs(GS_LEVEL)) || ((!demoplayback) && (GameType == gt_dm)))
       return;
 
    for(; i != displayplayer; i--)
@@ -631,11 +630,11 @@ CONSOLE_COMMAND(spectate_prev, 0)
    P_SetDisplayPlayer(i);
 }
 
-CONSOLE_COMMAND(spectate_next, 0)
+CONSOLE_COMMAND(spectate_next, 0, ii_level)
 {
    int i = displayplayer + 1;
 
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+   if((!G_GameStateIs(GS_LEVEL)) || ((!demoplayback) && (GameType == gt_dm)))
       return;
 
    for(; i != displayplayer; i++)
@@ -650,9 +649,9 @@ CONSOLE_COMMAND(spectate_next, 0)
    P_SetDisplayPlayer(i);
 }
 
-CONSOLE_COMMAND(spectate_self, 0)
+CONSOLE_COMMAND(spectate_self, 0, ii_level)
 {
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+   if((!G_GameStateIs(GS_LEVEL)) || ((!demoplayback) && (GameType == gt_dm)))
       return;
 
    P_SetDisplayPlayer(consoleplayer);

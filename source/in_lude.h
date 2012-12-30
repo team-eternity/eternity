@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -55,14 +55,30 @@ extern char *in_fontname;
 extern char *in_bigfontname;
 extern char *in_bignumfontname;
 
+class IntermissionInterface : public InputInterface
+{
+private:
+   wbstartstruct_t *stats;
+
+public:
+   IntermissionInterface();
+
+   void init();
+   void draw();
+   void tick();
+
+   void activate();
+   bool isFullScreen();
+
+   void setStats(wbstartstruct_t *new_stats);
+};
+
+extern IntermissionInterface Intermission;
+
 void IN_AddCameras(void);
 void IN_slamBackground(void);
 void IN_checkForAccelerate(void);
-void IN_Ticker(void);
-void IN_Drawer(void);
 void IN_DrawBackground(void);
-void IN_Start(wbstartstruct_t *wbstartstruct);
-void IN_Init();
 
 #endif
 

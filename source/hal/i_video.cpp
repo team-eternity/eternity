@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -509,8 +509,8 @@ static void I_ResetScreen(void)
    // reset other modules
    
    // Reset automap dimensions
-   if(automapactive)
-      AM_Start();
+   if(AutoMap.isUpFront())
+      AutoMap.activate();
    
    // Reset palette
    ST_Start();
@@ -621,7 +621,7 @@ CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
    i_default_videomode = estrdup(i_videomode);
 }
 
-CONSOLE_COMMAND(i_default_videomode, 0)
+CONSOLE_COMMAND(i_default_videomode, 0, ii_all)
 {
    /*
    if(i_default_videomode)

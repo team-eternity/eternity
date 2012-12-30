@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -29,6 +29,7 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
+#include "d_iface.h"
 #include "m_dllist.h"
 #include "p_tick.h"
 #include "r_defs.h"

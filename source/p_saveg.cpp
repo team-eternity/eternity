@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -776,7 +776,15 @@ static void P_ArchiveRNG(SaveArchive &arc)
 //
 static void P_ArchiveMap(SaveArchive &arc)
 {
-   arc << automapactive << followplayer << automap_grid << markpointnum;
+   bool automap_active = AutoMap.isUpFront();
+   bool start_automap = false;
+
+   if(arc.isSaving())
+      arc << automap_active;
+   else
+      arc << start_automap;
+
+   arc << followplayer << automap_grid << markpointnum;
 
    if(markpointnum)
    {
@@ -787,8 +795,8 @@ static void P_ArchiveMap(SaveArchive &arc)
       }
       else
       {
-         if(automapactive)
-            AM_Start();
+         if(start_automap)
+            AutoMap.activate();
 
          while(markpointnum >= markpointnum_max)
          {

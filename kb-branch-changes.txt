@@ -1,0 +1,59 @@
+===============================================================================
+This log contains a summary of changes performed kb-branch to add more features
+to Eternity's key bindings system.  This is still a work in progress.
+===============================================================================
+
+-------------------------------------------------------------------------------
+12/30/2012
+
+First commit of the new interface system.  A short(ish) summary:
+
+  - Updated the bind/unbind commands to take interfaces now.  For example:
+    - [bind w forward] binds key 'w' to action 'forward' across all interfaces
+      that support the 'forward' action, which currently are the game and
+      automap interfaces.
+    - [bind w forward game] binds key 'w' to action 'forward' just in the game
+      interface.
+  - Updated eternity.wad in base/doom and base/heretic with new key bindings.
+  - altdown/ctrldown/shiftdown are now part of the global key_bindings
+    instance, and set during D_ProcessEvents before any interface event
+    handling takes place.
+  - Event types (ev_keydown, ev_keyup, etc.) are now flags (1, 2, 4, 8) instead
+    of just sequential values.  This is so interfaces can specify event types
+    they accept.
+  - Console commands/netcmds now all must specify an interface in which they
+    run.  If they run in multiple interfaces, they can be OR'd together.
+  - Protecting access to GS_* variables through G_GetGameState, G_SetGameState,
+    G_GameStateIs, etc.
+  - Refactored the automap into a sub-interface of Game
+  - Refactored G_Ticker, G_Responder, etc. into an interface
+  - Refactored demo screens into an interface and Advancer classes
+  - Refactored the finale into an interface
+  - Refactored intermission into an interface
+  - Refactored the console into an interface
+  - The input event buffer is now dynamically allocated, and resized if it ever
+    overflows
+  - Added printscreen and sysrq keys
+  - Removed shifted versions of keys in keybindings, as they can never actually
+    be bound to actions.
+    - This includes '<', '>', and '~', which were converted to ',', '.', and
+      '`' respectively.
+  - Hardcoded key bindings (key_escape, key_chat, key_help, key_pause and
+    g/i/b/r for p2p player-specific chat) were removed.  P2P player-specific
+    chat, as far as I can tell, doesn't work in EE currently, I plan to fix
+    this later.
+  - ST_Responder is now not called by anything, as it was only forwarding
+    events to M_FindCheats.  I left the code in st_stuff, but wanted to note
+    the change here.
+  - The key bindings menu now allows specification of interface, for example:
+    {it_binding, "Toggle menus", "menu_toggle"}, becomes
+    KB_MENU_ITEM("Toggle menus", "toggle_menu", "Menu"),
+    This is to avoid inadvertently stomping binds in other interfaces.
+
+Unfortunately, d_iface.h includes z_zone.h and e_hash.h.  I'm looking for ways
+around this.
+
+===============================================================================
+EOF
+===============================================================================
+

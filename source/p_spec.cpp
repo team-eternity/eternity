@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -5133,7 +5133,7 @@ static cell AMX_NATIVE_CALL sm_sectorspecial(AMX *amx, cell *params)
    int id      = (int)params[2];
    int secnum = -1;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -5158,7 +5158,7 @@ static cell AMX_NATIVE_CALL sm_sectorcolormap(AMX *amx, cell *params)
    int id     = (int)params[3];
    int secnum = -1;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
