@@ -58,7 +58,32 @@ extern int      bmapwidth;
 extern int      bmapheight;      // in mapblocks
 extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
-extern Mobj   **blocklinks;    // for thing chains
+
+enum
+{
+   NORTH_ADJACENT = 0x1,
+   EAST_ADJACENT = 0x2,
+   SOUTH_ADJACENT = 0x4,
+   WEST_ADJACENT = 0x8
+};
+
+struct mobjblocklink_t
+{
+   int    adjacencymask;
+   int    nodeindex;
+   Mobj  *mo;
+   
+   
+   mobjblocklink_t *bnext, *bprev;
+   mobjblocklink_t *mnext;
+};
+extern mobjblocklink_t    **blocklinks;
+
+// Function to add a blockmap link to a mobj for the given blockmap node
+mobjblocklink_t *P_AddMobjBlockLink(Mobj *mo, int bx, int by, int mask);
+
+// Function to remove all blockmap links for a given mobj
+void P_RemoveMobjBlockLinks(Mobj *mo);
 
 extern bool     newlevel;
 extern int      doom1level;

@@ -2824,19 +2824,7 @@ void DoomClipEngine::unsetThingPosition(Mobj *thing)
 
    if(!(thing->flags & MF_NOBLOCKMAP))
    {
-      // inert things don't need to be in blockmap
-      
-      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
-      // pointers, allows head node pointers to be treated like everything else
-      //
-      // Also more robust, since it doesn't depend on current position for
-      // unlinking. Old method required computing head node based on position
-      // at time of unlinking, assuming it was the same position as during
-      // linking.
-      
-      Mobj *bnext, **bprev = thing->bprev;
-      if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
-         bnext->bprev = bprev;
+      P_RemoveMobjBlockLinks(thing);
    }
 
 #ifdef R_LINKEDPORTALS
@@ -2902,19 +2890,7 @@ void DoomClipEngine::setThingPosition(Mobj *thing)
       int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
       
       if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
-      {
-         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-         // pointers, allows head nodes to be treated like everything else
-
-         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
-         Mobj *bnext = *link;
-         if((thing->bnext = bnext))
-            bnext->bprev = &thing->bnext;
-         thing->bprev = link;
-         *link = thing;
-      }
-      else        // thing is off the map
-         thing->bnext = NULL, thing->bprev = NULL;
+         P_AddMobjBlockLink(thing, blockx, blocky, 0);
    }
 }
 

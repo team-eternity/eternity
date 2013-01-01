@@ -250,33 +250,6 @@ Mobj *P_GetThingUnder(Mobj *mo)
    return testz_mobj;
 }
 
-//
-// P_SBlockThingsIterator
-//
-// Special version of P_BlockThingsIterator: takes an actor from which to start
-// a search, which is an extension borrowed from zdoom and is needed for 3D 
-// object clipping.
-//
-bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *, MapContext *), 
-                            Mobj *actor, MapContext *mc)
-{
-   Mobj *mobj;
-
-   if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
-      return true;
-   
-   if(actor == NULL)
-      mobj = blocklinks[y * bmapwidth + x];
-   else
-      mobj = actor->bnext;
-
-   for(; mobj; mobj = mobj->bnext)
-      if(!func(mobj, mc))
-         return false;
-   
-   return true;
-}
-
 static Mobj *stepthing;
 
 extern bool PIT_CheckLine(line_t *ld, MapContext *mc);
@@ -605,12 +578,19 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
    {
       for(by = yl; by <= yh; ++by)
       {
+         if(bx < 0 || by < 0 || bx >= bmapwidth || by >= bmapheight)
+            continue;
+            
          // haleyjd: from zdoom:
-         Mobj *robin = NULL;
+         // SoM: Modified to use blocklink_t
+         mobjblocklink_t *link = blocklinks[by * bmapwidth + bx];
 
-         do
+         while(link)
          {
-            if(!P_SBlockThingsIterator(bx, by, PIT_CheckThing3D, robin, cc))
+            while(link && PIT_CheckThing3D(link->mo, cc))
+               link = link->bnext;
+               
+            if(link)
             { 
                // [RH] If a thing can be stepped up on, we need to continue checking
                // other things in the blocks and see if we hit something that is
@@ -629,7 +609,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
                {
                   if(thingblocker == NULL || cc->BlockingMobj->z > thingblocker->z)
                      thingblocker = cc->BlockingMobj;
-                  robin = cc->BlockingMobj;
+                  
+                  link = cc->BlockingMobj->blocklinks;
                   cc->BlockingMobj = NULL;
                }
                else if(thing->player &&
@@ -646,7 +627,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
                   // Nothing is blocking us, but this actor potentially could
                   // if there is something else to step on.
                   //fakedblocker = cc->BlockingMobj;
-                  robin = cc->BlockingMobj;
+                  link = cc->BlockingMobj->blocklinks;
                   cc->BlockingMobj = NULL;
                }
                else
@@ -655,11 +636,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
 
                   return false;
                }
+               
+               link = link->bnext;
             }
-            else
-               robin = NULL;
          } 
-         while(robin);
       }
    }
 

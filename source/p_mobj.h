@@ -43,6 +43,7 @@
 struct msecnode_t;
 struct player_t;
 struct skin_t;
+struct mobjblocklink_t;
 class  TracerContext;
 
 // Defines
@@ -226,8 +227,7 @@ public:
 
    // Interaction info, by BLOCKMAP.
    // Links in blocks (if needed).
-   Mobj             *bnext;
-   Mobj            **bprev; // killough 8/11/98: change to ptr-to-ptr
+   mobjblocklink_t    *blocklinks;
 
    subsector_t        *subsector;
 

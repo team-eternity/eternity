@@ -766,21 +766,21 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
       {
          if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
          {
-            Mobj *mo = blocklinks[y * bmapwidth + x];
+            mobjblocklink_t *link = blocklinks[y * bmapwidth + x];
 
             // haleyjd 08/14/10: use modification-safe traversal
-            while(mo)
+            while(link)
             {
-               Mobj *next = mo->bnext;
+               mobjblocklink_t *next = link->bnext;
 
                // always push players even if not solid
-               if(((mo->flags & MF_SOLID) || mo->player) && 
-                  !Polyobj_untouched(line, mo))
+               if(((link->mo->flags & MF_SOLID) || link->mo->player) && 
+                  !Polyobj_untouched(line, link->mo))
                {
-                  Polyobj_pushThing(po, line, mo);
+                  Polyobj_pushThing(po, line, link->mo);
                   hitthing = true;
                }
-               mo = next; // demo compatibility is not a factor here
+               link = next; // demo compatibility is not a factor here
             }
          } // end if
       } // end for(x)

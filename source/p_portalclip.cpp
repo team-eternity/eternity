@@ -123,9 +123,7 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
 
    if(!(thing->flags & MF_NOBLOCKMAP))
    {
-      Mobj *bnext, **bprev = thing->bprev;
-      if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
-         bnext->bprev = bprev;
+      P_RemoveMobjBlockLinks(thing);
    }
 
    thing->groupid = R_NOGROUP;
@@ -144,30 +142,12 @@ void PortalClipEngine::setThingPosition(Mobj *thing)
 
    if(!(thing->flags & MF_NOSECTOR))
    {
-      // invisible things don't go into the sector links
-      
-      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-      // pointers, allows head nodes to be treated like everything else
-      
       Mobj **link = &ss->sector->thinglist;
       Mobj *snext = *link;
       if((thing->snext = snext))
          snext->sprev = &thing->snext;
       thing->sprev = link;
       *link = thing;
-
-      // phares 3/16/98
-      //
-      // If sector_list isn't NULL, it has a collection of sector
-      // nodes that were just removed from this Thing.
-      //
-      // Collect the sectors the object will live in by looking at
-      // the existing sector_list and adding new nodes and deleting
-      // obsolete ones.
-      //
-      // When a node is deleted, its sector links (the links starting
-      // at sector_t->touching_thinglist) are broken. When a node is
-      // added, new sector links are created.
 
       thing->touching_sectorlist = createSecNodeList(thing, thing->x, thing->y);
       thing->old_sectorlist = NULL;
@@ -176,23 +156,24 @@ void PortalClipEngine::setThingPosition(Mobj *thing)
    // link into blockmap
    if(!(thing->flags & MF_NOBLOCKMAP))
    {
-      // inert things don't need to be in blockmap
-      int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
-      int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
-      
-      if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
-      {
-         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-         // pointers, allows head nodes to be treated like everything else
+      int yh = (thing->y + thing->radius - bmaporgy)>>MAPBLOCKSHIFT;
+      int yl = (thing->y - thing->radius - bmaporgy)>>MAPBLOCKSHIFT;
+      int xh = (thing->x + thing->radius - bmaporgx)>>MAPBLOCKSHIFT;
+      int xl = (thing->x - thing->radius - bmaporgx)>>MAPBLOCKSHIFT;
+      int bx, by;
+      int mask = 0;
 
-         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
-         Mobj *bnext = *link;
-         if((thing->bnext = bnext))
-            bnext->bprev = &thing->bnext;
-         thing->bprev = link;
-         *link = thing;
+      for(by = yl; by <= yh; ++by)
+      {
+         for(bx = xl; bx <= xh; ++bx)
+         {
+            if(bx >= 0 && bx < bmapwidth && by >= 0 && by < bmapheight)
+               P_AddMobjBlockLink(thing, bx, by, mask | (by < yh ? SOUTH_ADJACENT : 0) | (bx < xh ? EAST_ADJACENT : 0));
+               
+            mask |= WEST_ADJACENT;
+         }
+         mask |= NORTH_ADJACENT;
+         mask &= ~WEST_ADJACENT;
       }
-      else        // thing is off the map
-         thing->bnext = NULL, thing->bprev = NULL;
    }
 }

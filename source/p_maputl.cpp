@@ -319,10 +319,10 @@ bool P_BlockThingsIterator(int x, int y, bool func(Mobj*, MapContext *), MapCont
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
-      Mobj *mobj = blocklinks[y * bmapwidth + x];
+      mobjblocklink_t *link = blocklinks[y * bmapwidth + x];
 
-      for(; mobj; mobj = mobj->bnext)
-         if(!func(mobj, c))
+      for(; link; link = link->bnext)
+         if(!func(link->mo, c))
             return false;
    }
    return true;
