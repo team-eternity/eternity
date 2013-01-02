@@ -438,79 +438,27 @@ extern fixed_t FloatBobOffsets[64];
 #ifdef R_LINKEDPORTALS
 #include "linkoffs.h"
 
-inline static fixed_t getTargetX(Mobj *mo)
-{
-   linkoffset_t *link;
-
-   if(!mo || !mo->target)
-      return 0;
-
-   if(mo->groupid == mo->target->groupid ||
-      !(link = P_GetLinkOffset(mo->groupid, mo->target->groupid)))
-      return mo->target->x;
-
-   return mo->target->x + link->x;
-}
-
-inline static fixed_t getTargetY(Mobj *mo)
-{
-   linkoffset_t *link;
-
-   if(!mo || !mo->target)
-      return 0;
-
-   if(mo->groupid == mo->target->groupid ||
-      !(link = P_GetLinkOffset(mo->groupid, mo->target->groupid)))
-      return mo->target->y;
-
-   return mo->target->y + link->y;
-}
-
-// SoM: if I am not mistaken (which I shouldn't be) linked portals only ever make an
-// x and y offset... Maybe I should phase out the z offset stuff?
-inline static fixed_t getTargetZ(Mobj *mo)
-{
-   linkoffset_t *link;
-
-   if(!mo || !mo->target)
-      return 0;
-
-   if(mo->groupid == mo->target->groupid ||
-      !(link = P_GetLinkOffset(mo->groupid, mo->target->groupid)))
-      return mo->target->z;
-
-   return mo->target->z + link->z;
-}
+// Made these use getThing* to eliminate the code duplication
+#define getTargetX(mo) getThingX(mo, mo->target)
+#define getTargetY(mo) getThingY(mo, mo->target)
+#define getTargetZ(mo) getThingZ(mo, mo->target)
 
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
 
 inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
 {
-   linkoffset_t *link;
-
-   if(!mo1 || !mo2)
-      return 0;
-
-   if(mo1->groupid == mo2->groupid ||
-      !(link = P_GetLinkOffset(mo1->groupid, mo2->groupid)))
-      return mo2->x;
-
-   return mo2->x + link->x;
+   return (mo1 && mo2) ? mo2->x + P_GetLinkOffset(mo1->groupid, mo2->groupid)->x : 0;
 }
 
 inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 {
-   linkoffset_t *link;
+   return (mo1 && mo2) ? mo2->y + P_GetLinkOffset(mo1->groupid, mo2->groupid)->y : 0;
+}
 
-   if(!mo1 || !mo2)
-      return 0;
-
-   if(mo1->groupid == mo2->groupid ||
-      !(link = P_GetLinkOffset(mo1->groupid, mo2->groupid)))
-      return mo2->y;
-
-   return mo2->y + link->y;
+inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
+{
+   return (mo1 && mo2) ? mo2->z + P_GetLinkOffset(mo1->groupid, mo2->groupid)->z : 0;
 }
 
 #endif

@@ -51,6 +51,11 @@
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
 linkoffset_t **linktable = NULL;
 
+
+// This guy is a (0, 0, 0) link offset which is used to populate null links in the 
+// linktable and is returned by P_GetLinkOffset for invalid inputs
+static linkoffset_t zerolink = {0, 0, 0};
+
 // The group list is allocated PU_STATIC because it isn't level specific, however,
 // each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
 // count back to 0
@@ -240,32 +245,36 @@ void P_GatherSectors(sector_t *from, int groupid)
 // P_GetLinkOffset
 //
 // This function returns a linkoffset_t object which contains the map-space
-// offset to get from the startgroup to the targetgroup.
+// offset to get from the startgroup to the targetgroup. This will always return 
+// a linkoffset_t object. In cases of invalid input or no link the offset will be
+// (0, 0, 0)
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
+#ifdef RANGECHECK
+   if(!useportalgroups)
+      return &zerolink;
+      
    if(!linktable)
    {
-#ifdef RANGECHECK
-      doom_printf("P_GetLinkOffset called with no linktable allocated.\n");
-#endif
-      return NULL;
+      doom_printf("P_GetLinkOffset called with no link table.\n");
+      return &zerolink;
    }
-
+   
    if(startgroup < 0 || startgroup >= groupcount)
    {
-#ifdef RANGECHECK
       doom_printf("P_GetLinkOffset called with start groupid out of bounds.\n");
-#endif
-      return NULL;
+      return &zerolink;
    }
 
    if(targetgroup < 0 || targetgroup >= groupcount)
    {
-#ifdef RANGECHECK
       doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
-#endif
-      return NULL;
+      return &zerolink;
    }
+#else
+   if(!linktable || !useportalgroups || startgroup < 0 || startgroup >= groupcount || targetgroup < 0 || targetgroup >= groupcount)
+      return &zerolink;
+#endif
 
    return linktable[startgroup * groupcount + targetgroup];
 }
@@ -551,6 +560,13 @@ bool P_BuildLinkTable(void)
       if(sectors[i].groupid == R_NOGROUP)
          R_SetSectorGroupID(sectors + i, 0);
    }
+   
+   // Last step is to put zerolink in every link position that is currently null
+   for(i = 0; i < groupcount; ++i)
+   {
+      if(!linktable[i])
+         linktable[i] = &zerolink;
+   }
 
    // Everything checks out... let's run the portals
    useportalgroups = true;
@@ -799,25 +815,6 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
    line->pflags = newbehavior;
    P_CheckLPortalState(line);
 }
-
-//=============================================================================
-//
-// SoM: Begin dummy mobj code
-//
-
-#if 0
-void P_DummyMobjThinker(Mobj *mobj)
-{
-   
-}
-
-void P_CreateDummy(Mobj *owner)
-{
-   if(owner->portaldummy)
-      return;
-
-}
-#endif
 
 // EOF
 
