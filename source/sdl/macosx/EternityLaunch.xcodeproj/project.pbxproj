@@ -283,15 +283,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		FA7CF31B1655B54D007CF8DB /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		FA82164A1647124600FF998A /* Base and User */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -569,7 +560,6 @@
 		FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArray.m; sourceTree = "<group>"; };
 		FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_gameprops.cpp; path = ../../e_gameprops.cpp; sourceTree = SOURCE_ROOT; };
 		FA730D1A168DFC0D00E39907 /* COPYING.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = COPYING.pdf; path = Resources/COPYING.pdf; sourceTree = "<group>"; };
-		FA7CF31D1655B54D007CF8DB /* EternityBase2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = EternityBase2; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../../base; sourceTree = SOURCE_ROOT; };
 		FA8216761647128900FF998A /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = docs; path = ../../../docs; sourceTree = SOURCE_ROOT; };
 		FA8216871647128900FF998A /* user */ = {isa = PBXFileReference; lastKnownFileType = folder; name = user; path = ../../../user; sourceTree = SOURCE_ROOT; };
@@ -833,6 +823,7 @@
 		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
 		FAEB990516666A65004B0CD1 /* ev_specials.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_specials.cpp; path = ../../ev_specials.cpp; sourceTree = "<group>"; };
 		FAEB990616666A65004B0CD1 /* ev_specials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_specials.h; path = ../../ev_specials.h; sourceTree = "<group>"; };
+		FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -845,13 +836,6 @@
 				FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */,
 				FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */,
 				FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FA7CF31A1655B54D007CF8DB /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -880,7 +864,6 @@
 			isa = PBXGroup;
 			children = (
 				8D1107320486CEB800E47090 /* Eternity Engine.app */,
-				FA7CF31D1655B54D007CF8DB /* EternityBase2 */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -890,7 +873,6 @@
 			children = (
 				29B97315FDCFA39411CA2CEA /* Code */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
-				FA7CF31F1655B54D007CF8DB /* EternityBase2 */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				FAB104A5159146E500393DE3 /* Cocoa.framework */,
@@ -935,6 +917,7 @@
 				FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */,
 				FAEA89EB164DB9F400E9F874 /* SDL_net.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 				FA1F567F158BB857006F8063 /* OpenGL.framework */,
 			);
@@ -1095,13 +1078,6 @@
 				FACACB2716521E950091AF2E /* Source Files */,
 			);
 			name = Eternity;
-			sourceTree = "<group>";
-		};
-		FA7CF31F1655B54D007CF8DB /* EternityBase2 */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = EternityBase2;
 			sourceTree = "<group>";
 		};
 		FA8216B2164712B100FF998A /* Eternity companions */ = {
@@ -2092,23 +2068,6 @@
 			productReference = 8D1107320486CEB800E47090 /* Eternity Engine.app */;
 			productType = "com.apple.product-type.application";
 		};
-		FA7CF31C1655B54D007CF8DB /* EternityBase2 */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FA7CF3241655B54D007CF8DB /* Build configuration list for PBXNativeTarget "EternityBase2" */;
-			buildPhases = (
-				FA7CF3191655B54D007CF8DB /* Sources */,
-				FA7CF31A1655B54D007CF8DB /* Frameworks */,
-				FA7CF31B1655B54D007CF8DB /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = EternityBase2;
-			productName = EternityBase2;
-			productReference = FA7CF31D1655B54D007CF8DB /* EternityBase2 */;
-			productType = "com.apple.product-type.tool";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -2126,13 +2085,13 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* EternityLaunch */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* Eternity Engine */,
-				FA7CF31C1655B54D007CF8DB /* EternityBase2 */,
 			);
 		};
 /* End PBXProject section */
@@ -2417,13 +2376,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FA7CF3191655B54D007CF8DB /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
@@ -2584,52 +2536,6 @@
 			};
 			name = Release;
 		};
-		FA7CF3251655B54D007CF8DB /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx10.7;
-			};
-			name = Debug;
-		};
-		FA7CF3261655B54D007CF8DB /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx10.7;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2647,15 +2553,6 @@
 			buildConfigurations = (
 				C01FCF4F08A954540054247B /* Debug */,
 				C01FCF5008A954540054247B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		FA7CF3241655B54D007CF8DB /* Build configuration list for PBXNativeTarget "EternityBase2" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FA7CF3251655B54D007CF8DB /* Debug */,
-				FA7CF3261655B54D007CF8DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

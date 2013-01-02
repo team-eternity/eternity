@@ -539,27 +539,68 @@ iwadMightBe:
 }
 
 //
+// iwadPopUpShowDifferentPaths
+//
+// Show the path differences if file names are equal
+//
+-(void)iwadPopUpShowDifferentPaths
+{
+	// I have to scan all set components
+	NSURL *url;
+	NSString *iwadPath;
+	
+	// There will be a list of files with identical last names
+	// Each component will contain a last name and the indices in the list view
+	
+	for(url in iwadSet)
+	{
+		// We've established that non-path URL can't enter the list
+		iwadPath = [url path];
+		
+	}
+}
+
+//
 // doAddIwadFromURL:
 //
--(void)doAddIwadFromURL:(NSURL *)wURL
+// Tries to add IWAD as specified by URL to the pop-up button list
+// Returns YES if successful or already there (URL valid for path, RFC 1808)
+// Returns NO if given URL is invalid
+//
+-(BOOL)doAddIwadFromURL:(NSURL *)wURL
 {
-	NSInteger ind;
+	NSMenuItem *last;
 	if(![iwadSet containsObject:wURL])
 	{
+		
+		NSString *iwadPath = [wURL path];
+		if(iwadPath == nil)
+			return NO;	// URL not RFC 1808
+		
 		[iwadSet addObject:wURL];
 		
-		NSString *iwadString = [[wURL path] stringByAbbreviatingWithTildeInPath];
+		[iwadPopUp addItemWithTitle:[fileMan displayNameAtPath:iwadPath]];
+
+		last = [[[iwadPopUp menu] itemArray] lastObject];
+		[last setRepresentedObject:wURL];
+		[last setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadPath]];
 		
-		[iwadPopUp addItemWithTitle:iwadString];
-		ind = [iwadPopUp numberOfItems] - 1;
-		[[[iwadPopUp menu] itemAtIndex:ind] setToolTip:iwadString];
-		[[[iwadPopUp menu] itemAtIndex:ind] setRepresentedObject:wURL];
-		[[[iwadPopUp menu] itemAtIndex:ind] setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadString]];
-		[[[iwadPopUp menu] itemAtIndex:ind] setAction:@selector(updateParameters:)];
-		[[[iwadPopUp menu] itemAtIndex:ind] setTarget:self];
+		[last setAction:@selector(updateParameters:)];
+		[last setTarget:self];
 		
-		[iwadPopUp selectItemAtIndex:ind];
+		// NOTE: it's a very rare case to choose between two different IWADs with the same name. In any case…
+		// FIXME: implement path difference specifier in parentheses
+		
+		[iwadPopUp selectItem:last];
+      [self updateParameters:self];
+	} 
+	else
+	{
+		
 	}
+	// FIXME: select the existing path component
+	// FIXME: each set component should point to a menu item
+	return YES;
 }
 
 //
@@ -687,7 +728,7 @@ iwadMightBe:
 	for(openCandidate in [panel URLs])
 	{
       [self doAddIwadFromURL:openCandidate];
-      [self updateParameters:self];
+
 	}
 }
 
