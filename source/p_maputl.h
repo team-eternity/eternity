@@ -49,7 +49,9 @@ class  ClipContext;
 struct divline_t;
 
 
-struct intercept_t
+// SoM: linetracer_t can be cast to divline_t for the appropriate functions but holds much more
+// data which is needed for making tracers correctly travel through portals
+typedef struct linetracer_s
 {
    fixed_t     x;
    fixed_t     y;

@@ -1830,11 +1830,6 @@ void A_FireCustomBullets(Mobj *mo)
       P_SetPsprite(player, ps_flash, P_GetReadyWeapon(player)->flashstate);
 
    P_WeaponRecoil(player);
-
-   P_BulletSlope(mo);
-
-   P_WeaponRecoil(player);
-
    
    TracerContext *tc = trace->getContext();
    P_BulletSlope(mo, tc);
