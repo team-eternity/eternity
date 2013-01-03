@@ -2890,7 +2890,7 @@ void DoomClipEngine::setThingPosition(Mobj *thing)
       int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
       
       if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
-         P_AddMobjBlockLink(thing, blockx, blocky, 0);
+         P_AddMobjBlockLink(thing, blockx, blocky, CENTER_ADJACENT);
    }
 }
 

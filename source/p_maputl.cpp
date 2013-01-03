@@ -420,6 +420,78 @@ angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y)
    return 0;
 }
 
+
+static mobjblocklink_t    *freeBlockLinkHead;
+
+void P_InitMobjBlockLinks()
+{
+   freeBlockLinkHead = NULL;
+}
+
+
+mobjblocklink_t  *P_AddMobjBlockLink(Mobj *mo, int bx, int by, int adjacencymask)
+{
+   mobjblocklink_t *link;
+   int index = by * bmapwidth + bx;
+   
+   if(freeBlockLinkHead)
+   {
+      link = freeBlockLinkHead;
+      freeBlockLinkHead = link->mnext;
+   }
+   else
+      link = (mobjblocklink_t *)Z_Malloc(sizeof(mobjblocklink_t), PU_LEVEL, NULL);
+   
+   link->mo = mo;
+   link->adjacencymask = adjacencymask;
+   link->nodeindex = index;
+   
+   // Add to mobj
+   link->mnext = mo->blocklinks;
+   mo->blocklinks = link;
+   
+   // Add to block
+   mobjblocklink_t *head = blocklinks[index];
+   link->bnext = head;
+   link->bprev = NULL;
+   
+   if(head)
+      head->bprev = link;
+   
+   blocklinks[index] = link;
+    
+   return link;
+}
+
+
+
+void P_RemoveMobjBlockLinks(Mobj *mo)
+{
+   // remove from blocks
+   mobjblocklink_t *link;
+   mobjblocklink_t *next = mo->blocklinks;
+   do
+   {
+      link = next;
+      
+      if(!link->bprev)
+         blocklinks[link->nodeindex] = link->bnext;
+      else
+         link->bprev->bnext = link->bnext;
+      
+      if(link->bnext)
+         link->bnext->bprev = link->bprev;
+      
+      next = link->mnext;
+   } while(next);
+   
+   link->mo = NULL;
+   link->mnext = freeBlockLinkHead;
+   freeBlockLinkHead = mo->blocklinks;
+   mo->blocklinks = NULL;
+}
+
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_maputl.c,v $

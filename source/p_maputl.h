@@ -86,6 +86,42 @@ void P_LogThingPosition(Mobj *mo, const char *caller);
 #define P_LogThingPosition(a, b)
 #endif
 
+struct mobjblocklink_t
+{
+   int    adjacencymask;
+   int    nodeindex;
+   Mobj  *mo;
+   
+   
+   mobjblocklink_t *bnext, *bprev;
+   mobjblocklink_t *mnext;
+};
+
+enum
+{
+   NORTH_ADJACENT = 0x1,
+   EAST_ADJACENT = 0x2,
+   SOUTH_ADJACENT = 0x4,
+   WEST_ADJACENT = 0x8,
+   CENTER_ADJACENT = 0x10
+};
+
+//
+// P_SetupBlockLinks
+// Called once on level start, sets up the init state for block links.
+void P_InitMobjBlockLinks();
+
+//
+// P_AddMobjBlockLink
+// Function to add a blockmap link to a mobj for the given blockmap node
+mobjblocklink_t *P_AddMobjBlockLink(Mobj *mo, int bx, int by, int mask);
+
+//
+// P_RemoveMobjBlockLinks
+// Function to remove all blockmap links for a given mobj
+void P_RemoveMobjBlockLinks(Mobj *mo);
+
+
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, MapContext *), MapContext *c);
 bool P_BlockThingsIterator(int x, int y, bool func(Mobj   *, MapContext *), MapContext *c);
 
