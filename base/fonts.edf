@@ -9,27 +9,6 @@ includeifenabled("heretic/fonts.edf", "HERETIC");
 // Common Fonts
 //
 
-// Hud overlay font - used by BOOM-style HUD
-font ee_hudfont
-{
-   id          = 1;
-   start       = '!';
-   end         = 0x7f;
-   linesize    = 8;
-   spacesize   = 4;
-   tallestchar = 8; 
-   colorable   = true;
-   uppercase   = true;
-   
-   filter { start = '0'; end = '9';         mask = "DIG%c"  }
-   filter { start = 'A'; end = 'Z';         mask = "DIG%c"  }
-   filter { chars = { 45, 47, 58, 91, 93 }; mask = "DIG%i"  }
-   filter { start = 123; end = 127;         mask = "STBR%i" }
-   filter { chars = { '_' };                mask = "DIG45"  }
-   filter { chars = { '(' };                mask = "DIG91"  }
-   filter { chars = { ')' };                mask = "DIG93"  }
-}
-
 // Console font
 font ee_consolefont
 {

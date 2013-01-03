@@ -258,7 +258,11 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
-   if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) 
+   if(mo->flags4 & MF4_FLY)
+   {
+      friction = FRICTION_FLY;
+   }
+   else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) 
       && (demo_version >= 203 || (mo->player && !compatibility)) &&
       variable_friction)
    {
@@ -1448,9 +1452,29 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          return ret;
          
       // mobj must lower to fit
-      if((clip.floatok = true, !(thing->flags & MF_TELEPORT) &&
-          clip.ceilingz - thing->z < thing->height))
+      clip.floatok = true;
+      if(!(thing->flags & MF_TELEPORT) && !(thing->flags4 & MF4_FLY) &&
+         clip.ceilingz - thing->z < thing->height)
          return ret;          
+
+      // haleyjd 06/05/12: flying players - move up or down the lower/upper areas
+      // of lines that are contacted when the player presses into them
+      if(thing->flags4 & MF4_FLY)
+      {
+         if(thing->z + thing->height > clip.ceilingz)
+         {
+            thing->momz = -8*FRACUNIT;
+            thing->intflags |= MIF_CLEARMOMZ;
+            return false;
+         }
+         else if(thing->z < clip.floorz && 
+                 clip.floorz - clip.dropoffz > 24*FRACUNIT) // TODO: dropoff max
+         {
+            thing->momz = 8*FRACUNIT;
+            thing->intflags |= MIF_CLEARMOMZ;
+            return false;
+         }
+      }
 
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
@@ -2087,8 +2111,11 @@ typedef struct bombdata_s
 {
    Mobj *bombsource;
    Mobj *bombspot;
-   int     bombdamage;
-   int     bombmod;    // haleyjd 07/13/03
+   int   bombdamage;
+   int   bombdistance; // haleyjd 12/22/12
+   int   bombmod;      // haleyjd 07/13/03
+   
+   unsigned int bombflags; // haleyjd 12/22/12
 } bombdata_t;
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
@@ -2104,13 +2131,19 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 static bool PIT_RadiusAttack(Mobj *thing)
 {
    fixed_t dx, dy, dist;
-   Mobj *bombspot   = theBomb->bombspot;
-   Mobj *bombsource = theBomb->bombsource;
+   Mobj *bombspot     = theBomb->bombspot;
+   Mobj *bombsource   = theBomb->bombsource;
+   int   bombdistance = theBomb->bombdistance;
+   int   bombdamage   = theBomb->bombdamage;
    
    // killough 8/20/98: allow bouncers to take damage 
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
    
    if(!(thing->flags & (MF_SHOOTABLE | MF_BOUNCES)))
+      return true;
+
+   // haleyjd 12/22/12: Hexen check for no self-damage
+   if(theBomb->bombflags & RAF_NOSELFDAMAGE && thing == bombsource)
       return true;
    
    // Boss spider and cyborg
@@ -2118,11 +2151,9 @@ static bool PIT_RadiusAttack(Mobj *thing)
    
    // killough 8/10/98: allow grenades to hurt anyone, unless
    // fired by Cyberdemons, in which case it won't hurt Cybers.   
-   // haleyjd 09/21/09: do this only in old demos because it really
-   // doesn't make sense with our newer features.
-   // EDF3-FIXME: restore... make more intelligent?
+   // haleyjd 12/22/12: if bouncer has NORADIUSHACK, don't do this check.
 
-   if(demo_version < 335 && bombspot->flags & MF_BOUNCES)
+   if(bombspot->flags & MF_BOUNCES && !(bombspot->flags4 & MF4_NORADIUSHACK))
    {
       int cyberType = E_ThingNumForDEHNum(MT_CYBORG);
 
@@ -2146,13 +2177,27 @@ static bool PIT_RadiusAttack(Mobj *thing)
    if(dist < 0)
       dist = 0;
 
-   if(dist >= theBomb->bombdamage)
+   if(dist >= bombdistance)
       return true;  // out of range
+
+   // haleyjd: optional z check for Hexen-style explosions
+   if(theBomb->bombflags & RAF_CLIPHEIGHT)
+   {
+      if((D_abs(thing->z - bombspot->z) / FRACUNIT) > 2 * bombdistance)
+         return true;
+   }
 
    if(P_CheckSight(thing, bombspot))      // must be in direct path
    {
-      P_DamageMobj(thing, bombspot, bombsource, theBomb->bombdamage - dist, 
-                   theBomb->bombmod);
+      int damage;
+
+      // haleyjd 12/22/12: support Hexen-compatible distance separate from damage
+      if(bombdamage == bombdistance)
+         damage = bombdamage - dist;
+      else
+         damage = (bombdamage * (bombdistance - dist) / bombdistance) + 1;
+      
+      P_DamageMobj(thing, bombspot, bombsource, damage, theBomb->bombmod);
    }
    
    return true;
@@ -2165,9 +2210,10 @@ static bool PIT_RadiusAttack(Mobj *thing)
 //   haleyjd 07/13/03: added method of death flag
 //   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
 //
-void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
+void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
+                    int mod, unsigned int flags)
 {
-   fixed_t  dist = (damage + MAXRADIUS) << FRACBITS;
+   fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
    int yh = (spot->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
    int yl = (spot->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
    int xh = (spot->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
@@ -2190,10 +2236,12 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
       theBomb = &bombs[0]; // otherwise, we use bomb 0 for everything :(
 
    // set up us the bomb!
-   theBomb->bombspot   = spot;
-   theBomb->bombsource = source;
-   theBomb->bombdamage = damage;
-   theBomb->bombmod    = mod;
+   theBomb->bombspot     = spot;
+   theBomb->bombsource   = source;
+   theBomb->bombdamage   = damage;
+   theBomb->bombdistance = distance;
+   theBomb->bombmod      = mod;
+   theBomb->bombflags    = flags;
    
    for(y = yl; y <= yh; ++y)
       for(x = xl; x <= xh; ++x)

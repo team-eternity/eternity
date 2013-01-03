@@ -838,8 +838,7 @@ public:
 typedef struct doordata_s
 {
    // generalized values
-   int kind;
-   int trigger_type;
+   int  kind;
 
    // parameterized values
    fixed_t speed_value;
@@ -847,6 +846,8 @@ typedef struct doordata_s
    int     altlighttag;
    bool    usealtlighttag;
    int     topcountdown;
+   int     spac;
+   bool    reuse;
 } doordata_t;
 
 // haleyjd 09/06/07: sector special transfer structure
@@ -1361,6 +1362,7 @@ int EV_DoGenStairs(line_t *line);
 
 int EV_DoGenCrusher(line_t *line);
 
+int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd);
 int EV_DoGenDoor(line_t *line);
 
 int EV_DoGenLockedDoor(line_t *line);

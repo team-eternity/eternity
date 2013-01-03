@@ -1671,7 +1671,7 @@ static void D_ProcessDehCommandLine(void)
    // Ty 03/18/98 also allow .bex extension.  .bex overrides if both exist.
    // killough 11/98: also allow -bex
 
-   int p = M_CheckParm ("-deh");
+   int p = M_CheckParm("-deh");
    if(p || (p = M_CheckParm("-bex")))
    {
       // the parms after p are deh/bex file names,

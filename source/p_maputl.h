@@ -51,6 +51,36 @@ struct divline_t;
 
 struct intercept_t
 {
+   fixed_t     x;
+   fixed_t     y;
+   fixed_t     dx;
+   fixed_t     dy;
+
+   // Moved crappy globals here
+   fixed_t     z; // replaces shootz
+   int         la_damage;
+   fixed_t     attackrange;
+   fixed_t     aimslope;
+   fixed_t     topslope, bottomslope;
+
+   // SoM: used by aiming TPT
+   fixed_t     originx;
+   fixed_t     originy;
+   fixed_t     originz;
+
+   fixed_t     sin;
+   fixed_t     cos;
+
+   // Accumulated travel along the line. Should be the XY distance between (x,y) 
+   // and (originx, originy) 
+   fixed_t movefrac;
+
+
+   bool finished;
+} linetracer_t;
+
+struct intercept_t
+{
   fixed_t     frac;           // along trace line
   bool        isaline;
   union d_u

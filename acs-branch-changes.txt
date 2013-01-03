@@ -1,0 +1,281 @@
+===============================================================================
+This log contains a summary of changes performed on trunk and acs-branch to add
+more features to Eternity's ACS engine, including compatibility with ZDoom's
+extensions. acs-branch spans SVN revisions from 2080 to 2129. Related trunk
+activity spans from 2045 to 2074.
+===============================================================================
+-------------------------------------------------------------------------------
+08/05/2012
+
+Changed print buffer management to use a stack. STARTPRINT pushes to the stack
+and ENDPRINT* pops the stack. This should ensure full compatibility with ZDoom
+semantics with the benefit that function call doesn't affect the buffer, which
+enables custom printing subroutines.
+
+Also added ZDoom's UniqueTID and IsTIDUsed functions.
+
+-------------------------------------------------------------------------------
+07/13/2012
+
+Added a check to BRANCH_RETURN to terminate if there are no call frames left.
+Aside from the obvious crash-prevention, it will also allow the engine to call
+arbitrary ACS functions.
+
+Similarly, added a check to BRANCH_CALL to make sure there is enough stack
+space based on ACS_NUM_STACK and if not, allocate more. This effectively resets
+that limit for each function allowing more recursion.
+
+And then ACSString loading was rewritten so that everything goes through
+AddString. This does inter-module and inter-chunk string folding and makes more
+strings available to DynaStrings.
+
+The only trick is that GlobalStrings is made to match VM-0's strings.
+
+Also fixed a crippling copy-paste bug in AddString where it would realloc using
+GlobalNumStrings instead of GlobalAllocStrings.
+
+-------------------------------------------------------------------------------
+07/04/2012
+
+Fixed miscellaneous bugs.
+  * ACSVM::findFunction needed to check for external differently based on
+    whether it's loaded or not.
+  * Tracer needed to not trace from external functions.
+  * THINGVAR setters needed to pass the iterator into P_FindMobjFromTID.
+  * ThingCount, when passed an invalid type, needed to always return 0.
+  * P_NextThinker needed to use th->next instead of returning th.
+  * This one was merely a potential issue for when we start to really dig into
+    that 64-bit address space, but when accessing a character from an ACSString
+    via temp, it should be cast to uint32_t first so that it can't sign extend.
+
+-------------------------------------------------------------------------------
+07/02/2012
+
+Added GET_FUNCP and BRANCH_CALL (the old BRANCH_CALL is now BRANCH_CALL_IMM).
+
+I know I said I was done adding instructions, but this became an option and I
+had to go for it.
+
+-------------------------------------------------------------------------------
+07/01/2012
+
+Rewrote deferredacs_t into ACSDeferred, a full-fledged self-contained class for
+deferring ACS actions. The primary benefit simply being the ability to defer
+named-script actions.
+
+Also added the ability for scripts to wait on named scripts, although the code
+cannot yet be invoked by the user since the ACSE instruction set is governed by
+ZDoom. Furthermore, it is possible to wait on a numbered script from any VM,
+rather than only the VM of the waiting script.
+
+-------------------------------------------------------------------------------
+06/23/2012
+
+Added PRINT*RANGE and STRCPY* instructions. This brings Eternity up to the
+current instruction count of ZDoom. All that's left now is to hunt down any
+bugs in the currently implemented instructions. Filling in missing ones is left
+as a task for trunk as the relevant back-ends are added.
+
+-------------------------------------------------------------------------------
+06/22/2012
+
+Added ZDoom's CALLFUNC instruction. And added as many of the related functions
+as I could, even if some are handled by translating to other instructions.
+
+I also re-rewrote the interface to ACS_ExecuteScript so that thread was an
+optional parameter and mapnum would be next to scriptnum/name like for
+ACS_Suspend/TerminateScript.
+
+Moved ACS_OP_GET/SET_THINGARR to ACS_FUNC_Get/SetThingVar, since they clearly
+met the criteria for being moved there. (Calls external function and takes all
+stack args.)
+
+And then suddenly, most of a day passed and I added DynaStrings and the
+ENDPRINTSTRING instruction. (AKA, SAVESTRING or StrParam.) Unlike ZDoom's,
+Eternity's DynaStrings do not expire. Instead, they are reused when possible.
+
+-------------------------------------------------------------------------------
+06/20/2012
+
+Added named script handling. Also renamed acscript_t to ACSScript. I know the S
+is redundant, but ACScript only looks right when not next to any other class
+from the module.
+
+I've removed the ACS_StuffVM functions, because script numbers need to be
+considered global, not per-VM. Also rewrite ACS_ExecuteScript (formerly
+ACS_StartScript) to take an argc, allowing for arbitrary argument counts.
+
+Looking up a script by number now uses an EHashTable. When building the table,
+only the first script with a given number from a given VM is used. This
+emulates Hexen's lookup and will possibly improve lookup time slightly by not
+including duplicate numbers.
+
+Also added ACSString to store metadata about ACS strings. Including a fast
+lookup for named scripts, eliminating the runtime cost of "calling" a named
+script over a numbered script.
+
+I also fixed the reading of string literals to process escapes like ZDoom.
+However, unlike ZDoom, the user is not exposed to the unprocessed string.
+
+-------------------------------------------------------------------------------
+06/19/2012
+
+Added instructions up to, but not including, CALLFUNC. Stopping here because
+adding CALLFUNC means adding all of ZDoom's CALLFUNC functions.
+
+I am making a conscious decision here to not emulate movement buttons for
+GetPlayerInput. ZDoom itself doesn't even promise to set them. Maybe this will
+change with client-server. Then again, maybe not.
+
+-------------------------------------------------------------------------------
+06/14/2012
+
+Added instructions up to LSH_GLOBALARR, as much as possible.
+
+Cleaned up the interpreter loop by using a macro to generate most of the binary
+operator instructions. One could argue this makes it more difficult to follow,
+but I find the repetition distracting.
+
+Moved printBuffer into ACSThinker, so that it doesn't get lost every time
+there's a delay.
+
+-------------------------------------------------------------------------------
+06/13/2012
+
+Added instructions up to ENDPRINTLOG, as much as possible.
+
+Changed handling of activator-getter instructions to translate to GET_THINGVAR.
+I don't see any need to keep them in the core loop like that. And it's not like
+the extra GET_IMM is that costly.
+
+A special word about the extra THINGVARs. They are commented as unexposed
+because they are subject to arbitrary change. Get/SetActorProperty is from
+ZDoom so ZDoom gets to decide what the APROP values are. While I admit that
+warnings of "undefined behavior" never seem to stop people, that doesn't mean
+I'll do anything about mods that break from ignoring this warning.
+
+Also, ACSe loading was not correct with regards to certain instructions having
+compressed arguments. And RETURN instructions needed to terminate tracing.
+
+-------------------------------------------------------------------------------
+06/10/2012
+
+Added ACS functions, compatible with ZDoom's, but using a separate call stack.
+Perhaps the most obvious benefit is the ability to delay while in a function,
+and subsequently to save in such a state. As usual, it should otherwise be
+compatible with any existing script that doesn't use bizarre bytecode/assembly
+hacks that depend on internal implementation details.
+
+Another point worth noting about Eternity's CALL/RETURN is that it allows an
+arbitrary number of return values.
+
+I have also reduced the number of ACSVM/acscript_t members copied into
+ACSThinker to reduce code duplication and complexity. I understand why this was
+being done at the time, but with the transition to C++, the incentive to do so
+has been mostly lost due to C++'s implicit this. And cases where it would be
+done so for efficiency should be done in the interpreter function itself.
+
+-------------------------------------------------------------------------------
+06/08/2012
+
+Added ACSE/e loading. All chunks except FUNC/FNAM and STRE are supported.
+
+In this loader, all chunks are additive. For instance, multiple STRL chunks
+will be combined into a single table. Other than that, this should be entirely
+compatible with ZDoom with regards to features internally supported.
+
+This is the first commit on acs-branch itself and the creation of this file.
+
+-------------------------------------------------------------------------------
+06/05/2012
+
+Added ACS arrays. For world/global arrays, these work like ZDoom's, allowing
+arbitrary index access and zero-initializing. Unlike ZDoom, map arrays work the
+same way as world/global ones. This simplifies the code and provides what I
+consider a valuable feature.
+
+Also, fixed a really shameful mistake in TAGSTRING. The intention was to permit
+double-tagging but the result was that tagging didn't work under certain common
+circumstances. (Hence shameful.)
+
+-------------------------------------------------------------------------------
+06/03/2012
+
+Added CALLFUNC/CALLFUNC_IMM as a way to move instructions out of the core loop.
+It also serves as the base for implementing ZDoom's CALLFUNC.
+
+CALLFUNC_IMM showcases another advantage of the loader: The ability to pre-tag
+immediate operands as strings meaning that these two instructions also reduce
+code duplication.
+
+Aside from helping the core loop fit in cache better, there is another reason
+for moving things out of it. File-size/line-count. I, DavidPH, find very large
+source files to be intimidating. And there are a lot of instructions left to
+add. Therefore, I am taking measures early to prevent gigantor.cpp.
+
+-------------------------------------------------------------------------------
+06/02/2012
+
+Added ZDoom instructions up to and including TAGSTRING. I want to note right
+now that this was the only actual goal of the changes.
+
+Not all of the instructions could be implemented at this time (though more than
+I originally expected), and for that reason (and others), the KILL instruction
+was added. It is used to terminate the script with an error message.
+
+Of the added instructions, there were no intentional semantic changes, aside
+from TAGSTRING. However, an important ability of the loader has been applied.
+Translation of instructions to other instructions (as in GET_THINGX) or even
+sequences of instructions (as in GAMETYPE_SINGLEPLAYER).
+
+As a side note, the instructions named OPCODExxx are ones which are not
+implemented in ZDoom or otherwise lack proper definitions.
+
+-------------------------------------------------------------------------------
+05/31/2012
+
+Added libraries. This includes LOADACS with A_START/A_END and turning "map"
+variables into VM-local. Because it is now a proper class, acsvm_t is now ACSVM
+and can therefore stand tall and proud among Eternity's other classes.
+
+The LOADACS parser is not strictly compliant to what ZDoom would accept, but
+it's probably more forgiving than what an actual inter-port standard would
+specify. The real deviation from ZDoom is the use of a single global string
+table rather than separate tables for each VM. This will have serious
+implications with regards to the TAGSTRING instruction, but any proper usage
+of the instruction will continue to work. (Such as by ZDoom's acc and DH-acc.)
+
+Also, added save/load of ACS information that at least works for non-hubs. This
+is an improvement over the old code which didn't.
+
+Finally, at the request of Quasar, ACS loading now uses a WadDirectory it is
+given rather than assuming it should use the global directory.
+
+-------------------------------------------------------------------------------
+05/27/2012
+
+Rewrote the interpreter to be more efficient and compact in general. Most
+notably, it is now capable of being direct-threaded when compiling with GCC.
+(And could be adapted to do so for any other compiler with support for computed
+goto.) It also reduces code duplication by using macros.
+
+The only semantic change from this is that instruction-counting has been turned
+into branch-counting. This is for two reasons. Firstly, it reduces overhead in
+the interpreter by not having to increment count on every iteration, only when
+branching. Secondly, because 500K instructions is not enough for advanced
+initialization scripts or even some intensive game-logic.
+
+-------------------------------------------------------------------------------
+05/27/2012
+
+Rewrote the entire ACS loading mechanism so that the input file is actually
+processed and translated. This eliminates various run-time complications and
+inefficiencies, such as the need to do byte-swapping.
+
+It also makes it possible to feed disparate bytecode containers into the same
+interpreter code, which will be useful when Eternity begins its own extensions.
+
+===============================================================================
+EOF
+===============================================================================
+

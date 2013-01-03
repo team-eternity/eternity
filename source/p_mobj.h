@@ -357,6 +357,35 @@ public:
    Mobj **tid_prevn; // ptr to last thing's next pointer
 };
 
+//
+// MobjFadeThinker
+//
+// Takes care of processing for Mobj alphavelocity fade effects.
+// At most one of these can exist for a given Mobj. Most Mobj do not use
+// this effect so in terms of processing power, this makes sense.
+//
+class MobjFadeThinker : public Thinker
+{
+   DECLARE_THINKER_TYPE(MobjFadeThinker, Thinker)
+
+protected:
+   Mobj *target;
+   unsigned int swizzled_target; // for serialization
+
+   virtual void Think();
+
+public:
+   MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
+   virtual void removeThinker();
+   virtual void serialize(SaveArchive &arc);
+   virtual void deSwizzle();
+
+   Mobj *getTarget() const { return target; }
+   void setTarget(Mobj *pTarget);
+};
+
+void P_StartMobjFade(Mobj *mo, int alphavelocity);
+
 // External declarations (formerly in p_local.h) -- killough 5/2/98
 
 // killough 11/98:

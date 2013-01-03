@@ -1,20 +1,28 @@
-// Default Root EDF file for Eternity Engine v3.35.92
-//     This file can contain any definitions, but should remain limited to
-//     include statements for the purpose of organization.
+//
+// Default Root EDF file for Eternity Engine v3.40.27
+//
+// This file can contain any definitions, but should remain limited to
+// include statements for the purpose of organization.
+//
 
-include("sprites.edf")
-include("sounds.edf")
-include("frames.edf")
-include("things.edf")
-include("cast.edf")
-include("misc.edf")
-include("terrain.edf")
-include("player.edf")
-include("fonts.edf")
+setdialect("Alfheim");
+
+include("sprites.edf");
+include("sounds.edf");
+include("frames.edf");
+include("things.edf");
+include("cast.edf");
+include("misc.edf");
+include("terrain.edf");
+include("player.edf");
+include("fonts.edf");
+
+// Change back in case of user.edf compatibility issues
+setdialect("Delta");
 
 // You can create a "user.edf" file to contain your own tweaks.
 // One thing you can do with this is define the custom user menu.
 // This include does nothing until you create this file.
 
-userinclude("user.edf")
+userinclude("user.edf");
 

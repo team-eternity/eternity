@@ -1204,24 +1204,6 @@ void Mobj::Think()
    // removed old code which looked at target references
    // (we use pointer reference counting now)
 
-   // haleyjd 05/23/08: increment counters
-   if(alphavelocity)
-   {
-      translucency += alphavelocity;
-      if(translucency < 0)
-      {
-         translucency = 0;
-         if(flags3 & MF3_CYCLEALPHA)
-            alphavelocity = -alphavelocity;
-      }
-      else if(translucency > FRACUNIT)
-      {
-         translucency = FRACUNIT;
-         if(flags3 & MF3_CYCLEALPHA)
-            alphavelocity = -alphavelocity;
-      }
-   }
-
    cc->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
    // haleyjd 08/07/04: handle deep water plane hits
@@ -1632,7 +1614,11 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // haleyjd: zdoom-style translucency level
    mobj->translucency  = info->translucency;
-   mobj->alphavelocity = info->alphavelocity; // 5/23/08
+
+   if(info->alphavelocity != 0) // 5/23/08
+      P_StartMobjFade(mobj, info->alphavelocity);
+   else
+      mobj->alphavelocity = 0;
 
    if(mobj->translucency != FRACUNIT)
    {
@@ -2933,6 +2919,139 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
    default:
       return NULL;
    }
+}
+
+//=============================================================================
+//
+// MobjFadeThinker
+//
+// Handle alpha velocity fading for Mobj. Very few things use this so it does
+// not belong inside Mobj::Think where it adds overhead to every thing.
+//
+
+IMPLEMENT_THINKER_TYPE(MobjFadeThinker)
+
+//
+// MobjFadeThinker::setTarget
+//
+// Set the Mobj to which an MobjFadeThinker applies.
+//
+void MobjFadeThinker::setTarget(Mobj *pTarget)
+{
+   P_SetTarget<Mobj>(&target, pTarget);
+   }
+
+//
+// MobjFadeThinker::removeThinker
+//
+// Virtual method, overrides Thinker::removeThinker.
+// Clear the counted reference to the parent Mobj before removing self.
+//
+void MobjFadeThinker::removeThinker()
+{
+   P_SetTarget<Mobj>(&target, NULL); // clear reference to parent Mobj
+   Super::removeThinker();           // call parent implementation
+}
+
+//
+// MobjFadeThinker::Think
+//
+// Fade the parent Mobj if applicable. If not, remove self.
+//
+void MobjFadeThinker::Think()
+{
+   // If target is being removed, or won't fade, remove self.
+   if(target->isRemoved() || !target->alphavelocity)
+   {
+      removeThinker();
+      return;
+   }
+
+   target->translucency += target->alphavelocity;
+
+   if(target->translucency < 0)
+   {
+      target->translucency = 0;
+      if(target->flags3 & MF3_CYCLEALPHA)
+         target->alphavelocity = -target->alphavelocity;
+      else
+         removeThinker(); // done.
+   }
+   else if(target->translucency > FRACUNIT)
+   {
+      target->translucency = FRACUNIT;
+      if(target->flags3 & MF3_CYCLEALPHA)
+         target->alphavelocity = -target->alphavelocity;
+      else
+         removeThinker(); // done.
+   }
+}
+
+//
+// MobjFadeThinker::serialize
+//
+// Serialization for the parent Mobj pointer.
+//
+void MobjFadeThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   if(arc.isSaving()) // Saving
+   {
+      // Pointer to mobj
+      unsigned int targetNum = P_NumForThinker(target);
+ 
+      arc << targetNum;
+   }
+   else
+      arc << swizzled_target; // get swizzled pointer
+}
+
+//
+// MobjFadeThinker::deSwizzle
+//
+// Since this thinker stores an Mobj pointer, the pointer must be de-swizzled
+// when loading save games.
+//
+void MobjFadeThinker::deSwizzle()
+{
+   Mobj *lTarget = thinker_cast<Mobj *>(P_ThinkerForNum(swizzled_target));
+
+   P_SetNewTarget(&target, lTarget);
+}
+
+//
+// P_StartMobjFade
+//
+// Call to start an Mobj fading due to a change in its alphavelocity field.
+// Just setting alphavelocity won't work unless the Mobj happens to already
+// have an MobjFadeThinker so, don't do that. You CAN set it to 0, however,
+// in which case any existing MobjFadeThinker will remove itself the next time
+// it executes.
+//
+void P_StartMobjFade(Mobj *mo, int alphavelocity)
+{
+   MobjFadeThinker *mf = NULL;
+   Thinker *cap = &thinkerclasscap[th_misc];
+
+   for(Thinker *th = cap->cnext; th != cap; th = th->cnext)
+   {
+      if((mf = thinker_cast<MobjFadeThinker *>(th)) && mf->getTarget() == mo)
+         break; // found one
+
+      // keep looking
+      mf = NULL;
+   }
+
+   if(!mf && alphavelocity != 0) // not one? spawn it now.
+   {
+      mf = new MobjFadeThinker;
+      mf->addThinker();
+      mf->setTarget(mo);
+   }
+
+   // otherwise, the existing thinker will pick up this change.
+   mo->alphavelocity = alphavelocity;
 }
 
 #if 0

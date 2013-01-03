@@ -48,12 +48,43 @@
 #include "r_main.h"
 #include "r_state.h"
 
-
 //////////////////////////////////////////////////////////
 //
 // Generalized Linedef Type handlers
 //
 //////////////////////////////////////////////////////////
+
+//
+// SPACForTriggerType
+//
+// haleyjd 12/26/12: Translate BOOM generalized trigger type into
+// a Hexen-style SPAC value.
+//
+static int SPACForTriggerType(unsigned int value, bool &reuse)
+{
+   int triggerType = (value & TriggerType) >> TriggerTypeShift;
+
+   switch(triggerType)
+   {
+   case PushOnce:
+   case PushMany:
+   case SwitchOnce:
+   case SwitchMany:
+      reuse = (triggerType == PushMany || triggerType == SwitchMany);
+      return SPAC_USE;
+   case GunOnce:
+   case GunMany:
+      reuse = (triggerType == GunMany);
+      return SPAC_IMPACT;
+   case WalkOnce:
+   case WalkMany:
+      reuse = (triggerType == WalkMany);
+      return SPAC_CROSS;
+   default:
+      reuse = true;
+      return -1;
+   }
+}
 
 int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
 {
@@ -1066,7 +1097,7 @@ Mobj *genDoorThing;
 // ** genDoorThing must be set before the calling routine is
 //    executed! If it is NULL, no retrigger can occur.
 //
-static int GenDoorRetrigger(Thinker *th, int trig)
+static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
 {
    VerticalDoorThinker *door;
 
@@ -1075,7 +1106,7 @@ static int GenDoorRetrigger(Thinker *th, int trig)
 
    if(genDoorThing && 
       (door->type == doorNormal || door->type == blazeRaise) &&
-      trig == PushMany)
+      dd->spac == SPAC_USE && dd->reuse && !tag)
    {
       return door->reTriggerVerticalDoor(!!genDoorThing->player);
    }
@@ -1108,7 +1139,7 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
-   if(dd->trigger_type == PushOnce || dd->trigger_type == PushMany)
+   if(dd->spac == SPAC_USE && !tag)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
@@ -1133,7 +1164,7 @@ manual_door:
             // haleyjd 02/23/04: allow repushing of certain generalized
             // doors
             if(demo_version >= 331)
-               rtn = GenDoorRetrigger(sec->ceilingdata, dd->trigger_type);
+               rtn = GenDoorRetrigger(sec->ceilingdata, dd, tag);
 
             return rtn;
          }
@@ -1246,9 +1277,11 @@ manual_door:
 //
 int EV_DoGenLockedDoor(line_t *line)
 {
-   doordata_t dd = { 0 };
-   unsigned value = (unsigned int)line->special - GenLockedBase;
+   doordata_t dd;
+   unsigned int value = (unsigned int)line->special - GenLockedBase;
    int speedType;
+
+   memset(&dd, 0, sizeof(doordata_t));
 
    // parse the bit fields in the line's special type
    
@@ -1260,7 +1293,7 @@ int EV_DoGenLockedDoor(line_t *line)
    dd.speed_value  = VDOORSPEED * (1 << speedType);
 
    dd.kind         = (value & LockedKind ) >> LockedKindShift;
-   dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+   dd.spac = SPACForTriggerType(value, dd.reuse); 
    dd.usealtlighttag = false;
    
    return EV_DoParamDoor(line, line->tag, &dd);
@@ -1278,9 +1311,11 @@ int EV_DoGenLockedDoor(line_t *line)
 //
 int EV_DoGenDoor(line_t* line)
 {
-   doordata_t dd = { 0 };
+   doordata_t dd;
    unsigned int value = (unsigned int)line->special - GenDoorBase;
    int delayType, speedType;
+
+   memset(&dd, 0, sizeof(doordata_t));
 
    // parse the bit fields in the line's special type
    
@@ -1310,7 +1345,7 @@ int EV_DoGenDoor(line_t* line)
    dd.speed_value  = VDOORSPEED * (1 << speedType);
 
    dd.kind         = (value & DoorKind   ) >> DoorKindShift;
-   dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+   dd.spac = SPACForTriggerType(value, dd.reuse);
    dd.usealtlighttag = false;
 
    return EV_DoParamDoor(line, line->tag, &dd);
@@ -1375,7 +1410,7 @@ static int param_door_kinds[6] =
 // Parses arguments for parameterized Door specials.
 //
 static bool pspec_Door(line_t *line, Mobj *thing, int *args, 
-                          int16_t special, int trigger_type)
+                       int16_t special, int spac, bool reuse)
 {
    int kind;
    doordata_t dd;
@@ -1424,7 +1459,8 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
    }
 
    dd.kind = kind;
-   dd.trigger_type = trigger_type;
+   dd.spac  = spac;
+   dd.reuse = reuse;
 
    // set genDoorThing in case of manual retrigger
    genDoorThing = thing;
@@ -1930,7 +1966,7 @@ bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
    case 303: // Door_CloseWaitOpen
    case 304: // Door_WaitRaise
    case 305: // Door_WaitClose
-      success = pspec_Door(line, thing, args, special, trigger_type);
+      success = pspec_Door(line, thing, args, special, spac, reuse);
       break;
    case 306: // Floor_RaiseToHighest
    case 307: // Floor_LowerToHighest
@@ -2393,167 +2429,6 @@ void P_AddGenLineCommands(void)
 {
    C_AddCommand(p_linespec);
 }
-
-#if 0
-//
-// Small Param Line Special Wrappers
-//
-
-#define SCRIPT_SPEC(num, name) \
-static cell AMX_NATIVE_CALL sm_ ## name(AMX *amx, cell *params) \
-{ \
-   return P_ScriptSpec((num), amx, params); \
-}
-
-SCRIPT_SPEC(300, door_raise)
-SCRIPT_SPEC(301, door_open)
-SCRIPT_SPEC(302, door_close)
-SCRIPT_SPEC(303, door_closewaitopen)
-SCRIPT_SPEC(304, door_waitraise)
-SCRIPT_SPEC(305, door_waitclose)
-SCRIPT_SPEC(306, floor_raisetohighest)
-SCRIPT_SPEC(307, floor_lowertohighest)
-SCRIPT_SPEC(308, floor_raisetolowest)
-SCRIPT_SPEC(309, floor_lowertolowest)
-SCRIPT_SPEC(310, floor_raisetonearest)
-SCRIPT_SPEC(311, floor_lowertonearest)
-SCRIPT_SPEC(312, floor_raisetolowestceiling)
-SCRIPT_SPEC(313, floor_lowertolowestceiling)
-SCRIPT_SPEC(314, floor_raisetoceiling)
-SCRIPT_SPEC(315, floor_raisebytexture)
-SCRIPT_SPEC(316, floor_lowerbytexture)
-SCRIPT_SPEC(317, floor_raisebyvalue)
-SCRIPT_SPEC(318, floor_lowerbyvalue)
-SCRIPT_SPEC(319, floor_movetovalue)
-SCRIPT_SPEC(320, floor_raiseinstant)
-SCRIPT_SPEC(321, floor_lowerinstant)
-SCRIPT_SPEC(322, floor_toceilinginstant)
-SCRIPT_SPEC(323, ceiling_raisetohighest)
-SCRIPT_SPEC(324, ceiling_tohighestinstant)
-SCRIPT_SPEC(325, ceiling_raisetonearest)
-SCRIPT_SPEC(326, ceiling_lowertonearest)
-SCRIPT_SPEC(327, ceiling_raisetolowest)
-SCRIPT_SPEC(328, ceiling_lowertolowest)
-SCRIPT_SPEC(329, ceiling_raisetohighestfloor)
-SCRIPT_SPEC(330, ceiling_lowertohighestfloor)
-SCRIPT_SPEC(331, ceiling_tofloorinstant)
-SCRIPT_SPEC(332, ceiling_lowertofloor)
-SCRIPT_SPEC(333, ceiling_raisebytexture)
-SCRIPT_SPEC(334, ceiling_lowerbytexture)
-SCRIPT_SPEC(335, ceiling_raisebyvalue)
-SCRIPT_SPEC(336, ceiling_lowerbyvalue)
-SCRIPT_SPEC(337, ceiling_movetovalue)
-SCRIPT_SPEC(338, ceiling_raiseinstant)
-SCRIPT_SPEC(339, ceiling_lowerinstant)
-SCRIPT_SPEC(340, stairs_buildupdoom)
-SCRIPT_SPEC(341, stairs_builddowndoom)
-SCRIPT_SPEC(342, stairs_buildupdoomsync)
-SCRIPT_SPEC(343, stairs_builddowndoomsync)
-SCRIPT_SPEC(350, polyobj_doorslide)
-SCRIPT_SPEC(351, polyobj_doorswing)
-SCRIPT_SPEC(352, polyobj_move)
-SCRIPT_SPEC(353, polyobj_or_move)
-SCRIPT_SPEC(354, polyobj_rotateright)
-SCRIPT_SPEC(355, polyobj_or_rotateright)
-SCRIPT_SPEC(356, polyobj_rotateleft)
-SCRIPT_SPEC(357, polyobj_or_rotateleft)
-SCRIPT_SPEC(362, pillar_build)
-SCRIPT_SPEC(363, pillar_buildandcrush)
-SCRIPT_SPEC(364, pillar_open)
-SCRIPT_SPEC(365, acs_execute)
-SCRIPT_SPEC(366, acs_suspend)
-SCRIPT_SPEC(367, acs_terminate)
-SCRIPT_SPEC(368, light_raisebyvalue)
-SCRIPT_SPEC(369, light_lowerbyvalue)
-SCRIPT_SPEC(370, light_changetovalue)
-SCRIPT_SPEC(371, light_fade)
-SCRIPT_SPEC(372, light_glow)
-SCRIPT_SPEC(373, light_flicker)
-SCRIPT_SPEC(374, light_strobe)
-SCRIPT_SPEC(375, radius_quake)
-SCRIPT_SPEC(397, floor_waggle)
-SCRIPT_SPEC(398, thing_spawn)
-SCRIPT_SPEC(399, thing_spawnnofog)
-
-AMX_NATIVE_INFO genlin_Natives[] =
-{
-   { "_SpecialMode",                 sm_specialmode                 },
-   { "_Door_Raise",                  sm_door_raise                  },
-   { "_Door_Open",                   sm_door_open                   },
-   { "_Door_Close",                  sm_door_close                  },
-   { "_Door_CloseWaitOpen",          sm_door_closewaitopen          },
-   { "_Door_WaitRaise",              sm_door_waitraise              },
-   { "_Door_WaitClose",              sm_door_waitclose              },
-   { "_Floor_RaiseToHighest",        sm_floor_raisetohighest        },
-   { "_Floor_LowerToHighest",        sm_floor_lowertohighest        },
-   { "_Floor_RaiseToLowest",         sm_floor_raisetolowest         },
-   { "_Floor_LowerToLowest",         sm_floor_lowertolowest         },
-   { "_Floor_RaiseToNearest",        sm_floor_raisetonearest        },
-   { "_Floor_LowerToNearest",        sm_floor_lowertonearest        },
-   { "_Floor_RaiseToLowestCeiling",  sm_floor_raisetolowestceiling  },
-   { "_Floor_LowerToLowestCeiling",  sm_floor_lowertolowestceiling  },
-   { "_Floor_RaiseToCeiling",        sm_floor_raisetoceiling        },
-   { "_Floor_RaiseByTexture",        sm_floor_raisebytexture        },
-   { "_Floor_LowerByTexture",        sm_floor_lowerbytexture        },
-   { "_Floor_RaiseByValue",          sm_floor_raisebyvalue          },
-   { "_Floor_LowerByValue",          sm_floor_lowerbyvalue          },
-   { "_Floor_MoveToValue",           sm_floor_movetovalue           },
-   { "_Floor_RaiseInstant",          sm_floor_raiseinstant          },
-   { "_Floor_LowerInstant",          sm_floor_lowerinstant          },
-   { "_Floor_ToCeilingInstant",      sm_floor_toceilinginstant      },
-   { "_Ceiling_RaiseToHighest",      sm_ceiling_raisetohighest      },
-   { "_Ceiling_ToHighestInstant",    sm_ceiling_tohighestinstant    },
-   { "_Ceiling_RaiseToNearest",      sm_ceiling_raisetonearest      },
-   { "_Ceiling_LowerToNearest",      sm_ceiling_lowertonearest      },
-   { "_Ceiling_RaiseToLowest",       sm_ceiling_raisetolowest       },
-   { "_Ceiling_LowerToLowest",       sm_ceiling_lowertolowest       },
-   { "_Ceiling_RaiseToHighestFloor", sm_ceiling_raisetohighestfloor },
-   { "_Ceiling_LowerToHighestFloor", sm_ceiling_lowertohighestfloor },
-   { "_Ceiling_ToFloorInstant",      sm_ceiling_tofloorinstant      },
-   { "_Ceiling_LowerToFloor",        sm_ceiling_lowertofloor        },
-   { "_Ceiling_RaiseByTexture",      sm_ceiling_raisebytexture      },
-   { "_Ceiling_LowerByTexture",      sm_ceiling_lowerbytexture      },
-   { "_Ceiling_RaiseByValue",        sm_ceiling_raisebyvalue        },
-   { "_Ceiling_LowerByValue",        sm_ceiling_lowerbyvalue        },
-   { "_Ceiling_MoveToValue",         sm_ceiling_movetovalue         },
-   { "_Ceiling_RaiseInstant",        sm_ceiling_raiseinstant        },
-   { "_Ceiling_LowerInstant",        sm_ceiling_lowerinstant        },
-   { "_Stairs_BuildUpDoom",          sm_stairs_buildupdoom          },
-   { "_Stairs_BuildDownDoom",        sm_stairs_builddowndoom        },
-   { "_Stairs_BuildUpDoomSync",      sm_stairs_buildupdoomsync      },
-   { "_Stairs_BuildDownDoomSync",    sm_stairs_builddowndoomsync    },
-   { "_Polyobj_DoorSlide",           sm_polyobj_doorslide           },
-   { "_Polyobj_DoorSwing",           sm_polyobj_doorswing           },
-   { "_Polyobj_Move",                sm_polyobj_move                },
-   { "_Polyobj_OR_Move",             sm_polyobj_or_move             },
-   { "_Polyobj_RotateRight",         sm_polyobj_rotateright         },
-   { "_Polyobj_OR_RotateRight",      sm_polyobj_or_rotateright      },
-   { "_Polyobj_RotateLeft",          sm_polyobj_rotateleft          },
-   { "_Polyobj_OR_RotateLeft",       sm_polyobj_or_rotateleft       },
-   { "_Pillar_Build",                sm_pillar_build                },
-   { "_Pillar_BuildAndCrush",        sm_pillar_buildandcrush        },
-   { "_Pillar_Open",                 sm_pillar_open                 },
-   { "_ACS_Execute",                 sm_acs_execute                 },
-   { "_ACS_Suspend",                 sm_acs_suspend                 },
-   { "_ACS_Terminate",               sm_acs_terminate               },
-   { "_Light_RaiseByValue",          sm_light_raisebyvalue          },
-   { "_Light_LowerByValue",          sm_light_lowerbyvalue          },
-   { "_Light_ChangeToValue",         sm_light_changetovalue         },
-   { "_Light_Fade",                  sm_light_fade                  },
-   { "_Light_Glow",                  sm_light_glow                  },
-   { "_Light_Flicker",               sm_light_flicker               },
-   { "_Light_Strobe",                sm_light_strobe                },
-   { "_Radius_Quake",                sm_radius_quake                },
-   { "_ChangeFloor",                 sm_changefloortex              },
-   { "_ChangeCeiling",               sm_changeceilingtex            },
-   { "_SetLineTexture",              sm_changelinetex               },
-   { "_SetLineTextureTag",           sm_changelinetextag            },
-   { "_Floor_Waggle",                sm_floor_waggle                },
-   { "_Thing_Spawn",                 sm_thing_spawn                 },
-   { "_Thing_SpawnNoFog",            sm_thing_spawnnofog            },
-   { NULL, NULL }
-};
-#endif
 
 //----------------------------------------------------------------------------
 //
