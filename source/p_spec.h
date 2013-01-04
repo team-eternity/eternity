@@ -846,15 +846,15 @@ enum
 // haleyjd 05/04/04: extended data struct for gen/param doors
 typedef struct doordata_s
 {
-   int     flags;         // flags for action
-   int     spac;          // valid if DDF_HAVESPAC is set
-   int     trigger_type;  // valid if DDF_HAVETRIGGERTYPE is set
+   int     flags;         // flags for action; use DDF values above.
+   int     spac;          // valid IFF DDF_HAVESPAC is set
+   int     trigger_type;  // valid IFF DDF_HAVETRIGGERTYPE is set
 
    int     kind;          // kind of door action
    fixed_t speed_value;   // speed of door action
-   int     delay_value;   // delay before initial activation
+   int     delay_value;   // delay between open and close
    int     altlighttag;   // alternate light tag, if DDF_USEALTLIGHTTAG is set
-   int     topcountdown;  // delay between open and close
+   int     topcountdown;  // delay before initial activation
 } doordata_t;
 
 // haleyjd 09/06/07: sector special transfer structure

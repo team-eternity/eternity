@@ -1057,7 +1057,7 @@ Mobj *genDoorThing;
 // haleyjd 02/23/04: This function handles retriggering of certain
 // active generalized door types, a functionality which was neglected 
 // in BOOM. To be retriggerable, the door must fit these criteria:
-// 1. The thinker on the sector must be a T_VerticalDoor
+// 1. The thinker on the sector must be a VerticalDoorThinker
 // 2. The door type must be raise, not open or close
 // 3. The activation trigger must be PushMany
 //
