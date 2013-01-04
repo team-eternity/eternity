@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
@@ -415,13 +415,13 @@ VARIABLE_FLOAT(s_highgain, NULL, 0.0, 3.0);
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {
-   if(snd_card != 0 && Menu.isUpFront())
+   if(snd_card != 0 && menuactive)
       MN_ErrorMsg("takes effect after restart");
 }
 
 CONSOLE_VARIABLE(mus_card, mus_card, 0)
 {
-   if(mus_card != 0 && Menu.isUpFront())
+   if(mus_card != 0 && menuactive)
       MN_ErrorMsg("takes effect after restart");
 }
 

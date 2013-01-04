@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -22,7 +22,6 @@
 #ifndef G_GAME_H__
 #define G_GAME_H__
 
-#include "d_iface.h"
 // Required for byte
 #include "doomtype.h"
 
@@ -37,7 +36,6 @@ class WadDirectory;
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
 
-void G_Drawer();
 bool G_Responder(event_t *ev);
 bool G_CheckDemoStatus(void);
 bool G_CheckDemoStatus(void);
@@ -80,14 +78,6 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 uint64_t G_Signature(WadDirectory *dir);
 void G_DoPlayDemo(void);
 
-// [CG] Control access to gamestate.
-bool G_GameStateIs(gamestate_t test_game_state);
-void G_SetGameState(gamestate_t new_game_state);
-void G_ResetWipeGameState();
-void G_ResetOldGameState();
-bool G_GameStateChanged();
-void G_ForceWipe();
-
 void R_InitPortals();
 
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes
@@ -98,6 +88,11 @@ void player_printf(player_t *player, const char *s, ...);
 
 // killough 5/2/98: moved from m_misc.c:
 
+extern int  key_escape;                                             // phares
+extern int  key_autorun;
+extern int  key_chat;
+extern int  key_help;
+extern int  key_pause;
 extern int  destination_keys[MAXPLAYERS];
 extern int  autorun;           // always running?                   // phares
 extern int  runiswalk;
@@ -149,54 +144,6 @@ extern WadDirectory *d_dir;
 #define MIN_MAXPLAYERS 32
 
 #endif
-
-//--------------------------------------------------------------------------
-// Game Interface
-//
-
-class GameInterface : public InputInterface
-{
-public:
-   GameInterface();
-
-   void init();
-   void draw();
-   void tick();
-   void registerHandledActions();
-   bool handleEvent(event_t *ev);
-   bool isFullScreen();
-};
-
-//--------------------------------------------------------------------------
-// Demo Screen Interface
-//
-
-class DemoScreenInterface : public InputInterface
-{
-private:
-   int         pagetic;
-   int         demosequence;
-   const char *pagename;
-   bool        startup_deferred;
-
-public:
-   DemoScreenInterface();
-
-   void draw();
-   void tick();
-   void registerHandledActions();
-   bool handleEvent(event_t *ev);
-   bool isFullScreen();
-
-   void drawTitle(const char *name);
-   void drawTitleA(const char *name);
-   void setPageName(const char *name);
-   void startUpDeferred();
-   void startUpIfDeferred();
-};
-
-extern GameInterface Game;
-extern DemoScreenInterface DemoScreen;
 
 //----------------------------------------------------------------------------
 //

@@ -22,7 +22,6 @@
 #ifndef __C_RUNCMD_H__
 #define __C_RUNCMD_H__
 
-#include "d_iface.h"
 #include "m_qstr.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
@@ -35,7 +34,6 @@
 struct command_t;
 struct default_t;
 struct variable_t;
-struct event_t;
 
 /******************************** #defines ********************************/
 
@@ -50,11 +48,11 @@ struct event_t;
 //              C_Printf("hello!\n");
 //        }
 
-#define CONSOLE_COMMAND(name, flags, interface)        \
-        void Handler_ ## name(void);                   \
-        command_t Cmd_ ## name = { # name, ct_command, \
-                       flags, interface, NULL,         \
-                       Handler_ ## name, 0, NULL };    \
+#define CONSOLE_COMMAND(name, flags)                    \
+        void Handler_ ## name(void);                    \
+        command_t Cmd_ ## name = { # name, ct_command,  \
+                       flags, NULL, Handler_ ## name,   \
+                       0, NULL };                       \
         void Handler_ ## name(void)
 
 		 
@@ -63,11 +61,11 @@ struct event_t;
 //      You must also provide a handler function even
 //      if it is just {}
 
-#define CONSOLE_VARIABLE(name, variable, flags)            \
-        void Handler_ ## name(void);                       \
-        command_t Cmd_ ## name = { # name, ct_variable,    \
-                        flags, ii_none, &var_ ## variable, \
-                        Handler_ ## name, 0, NULL };       \
+#define CONSOLE_VARIABLE(name, variable, flags)                      \
+        void Handler_ ## name(void);                                 \
+        command_t Cmd_ ## name = { # name, ct_variable,              \
+                        flags, &var_ ## variable, Handler_ ## name,  \
+                        0, NULL };                                   \
         void Handler_ ## name(void)
 
 // Same as CONSOLE_COMMAND, but sync-ed across network. When
@@ -75,29 +73,28 @@ struct event_t;
 //      You must assign your variable a unique netgame
 //      variable (list in c_net.h)
 
-#define CONSOLE_NETCMD(name, flags, netcmd, interface)       \
-        void Handler_ ## name(void);                         \
-        command_t Cmd_ ## name = { # name, ct_command,       \
-                       (flags) | cf_netvar, interface, NULL, \
-                       Handler_ ## name, netcmd, NULL };     \
+#define CONSOLE_NETCMD(name, flags, netcmd)              \
+        void Handler_ ## name(void);                     \
+        command_t Cmd_ ## name = { # name, ct_command,   \
+                       (flags) | cf_netvar, NULL,        \
+                       Handler_ ## name, netcmd, NULL }; \
         void Handler_ ## name()
 
 // As for CONSOLE_VARIABLE, but for net, see above
 
-#define CONSOLE_NETVAR(name, variable, flags, netcmd)        \
-        void Handler_ ## name(void);                         \
-        command_t Cmd_ ## name = { # name, ct_variable,      \
-                        cf_netvar | (flags), ii_none,        \
-                        &var_ ## variable, Handler_ ## name, \
-                        netcmd, NULL };                      \
+#define CONSOLE_NETVAR(name, variable, flags, netcmd)               \
+        void Handler_ ## name(void);                                \
+        command_t Cmd_ ## name = { # name, ct_variable,             \
+                        cf_netvar | (flags), &var_ ## variable,     \
+                        Handler_ ## name, netcmd, NULL };           \
         void Handler_ ## name(void)
 
 // Create a constant. You must declare the variable holding
 //      the constant using the variable macros below.
 
-#define CONSOLE_CONST(name, variable)                        \
-        command_t Cmd_ ## name = { # name, ct_constant, 0,   \
-                ii_none, &var_ ## variable, NULL, 0, NULL };
+#define CONSOLE_CONST(name, variable)                           \
+        command_t Cmd_ ## name = { # name, ct_constant, 0,      \
+                &var_ ## variable, NULL, 0, NULL };
 
         /*********** variable macros *************/
 
@@ -224,14 +221,13 @@ struct variable_t
 
 struct command_t
 {
-   const char  *name;
-   int          type;           // ct_?? command type
-   int          flags;          // cf_??
-   int          interfaces;     // [CG] Supporting interfaces
-   variable_t  *variable;
-   void       (*handler)(void); // handler
-   int          netcmd;         // network command number
-   command_t   *next;           // for hashing
+  const char *name;
+  int type;              // ct_?? command type
+  int flags;             // cf_??
+  variable_t *variable;
+  void (*handler)(void); // handler
+  int netcmd;            // network command number
+  command_t *next;       // for hashing
 };
 
 typedef struct alias_s
@@ -250,37 +246,22 @@ typedef struct alias_s
 //
 // Console state is now stored in the console_t structure.
 // 
-
-class ConsoleInterface : public InputInterface
+struct console_t
 {
-public:
    int current_height; // current height of console
    int current_target; // target height of console
-   int cmdsrc;         // player source of current command being run
-   int cmdtype;        // source type of command (console, menu, etc)
-   int argc;           // number of argv's
-   int numargvsalloc;  // number of arguments available to command parsing
    bool showprompt;    // toggles input prompt on or off
    bool enabled;       // enabled state of console
+   int cmdsrc;         // player source of current command being run
+   int cmdtype;        // source type of command (console, menu, etc)
+   command_t *command; // current command being run
+   int  argc;          // number of argv's
    qstring   args;     // args as single string   
    qstring **argv;     // argument values to current command
-   command_t *command; // current command being run
-
-   ConsoleInterface();
-
-   void init();
-   void draw();
-   void tick();
-
-   bool isFullScreen();
-
-   void toggle();
-   void registerHandledActions();
-
-   bool handleEvent(event_t *ev);
+   int numargvsalloc;  // number of arguments available to command parsing
 };
 
-extern ConsoleInterface Console; // the one and only Console object
+extern console_t Console; // the one and only Console object
 
 /***** command running ****/
 

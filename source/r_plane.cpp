@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -650,9 +650,9 @@ void R_ClearPlanes(void)
 
 #if 0
    // FIXME: borked in widescreen aspect ratios...
-   int scaled_height = D_InterfaceIs(ii_console) ? video.x1lookup[Console.current_height] : 0;
+   int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
 
-   a = (float)(D_InterfaceIs(ii_console) ? 
+   a = (float)(consoleactive ? 
          (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
 #endif
 

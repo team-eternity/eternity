@@ -183,8 +183,10 @@ static bool MN_SkinResponder(event_t *ev)
    if(ev->type != ev_keydown)
       return false;
 
-   if(Menu.checkAndClearActions("menu_toggle", "menu_previous"))
+   if(action_menu_toggle || action_menu_previous)
    {
+      action_menu_toggle = action_menu_previous = false;
+
       // kill the widget
       skview_metadeaths.clear();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
@@ -192,8 +194,10 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(Menu.checkAndClearAction("menu_left"))
+   if(action_menu_left)
    {
+      action_menu_left = false;
+
       // rotate sprite left
       if(skview_rot == 7)
          skview_rot = 0;
@@ -203,8 +207,10 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(Menu.checkAndClearAction("menu_right"))
+   if(action_menu_right)
    {
+      action_menu_right = false;
+
       // rotate sprite right
       if(skview_rot == 0)
          skview_rot = 7;
@@ -214,8 +220,10 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(Menu.checkAndClearAction("menu_up"))
+   if(action_menu_up)
    {
+      action_menu_up = false;
+
       // increase light level
       if(skview_light != 0)
          --skview_light;
@@ -223,8 +231,10 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(Menu.checkAndClearAction("menu_down"))
+   if(action_menu_down)
    {
+      action_menu_down = false;
+
       // decrease light level
       if(skview_light != 31)
          ++skview_light;

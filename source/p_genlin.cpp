@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -2234,7 +2234,7 @@ static cell AMX_NATIVE_CALL sm_changeceilingtex(AMX *amx, cell *params)
    char *flat;
    int tag, err;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2265,7 +2265,7 @@ static cell AMX_NATIVE_CALL sm_changefloortex(AMX *amx, cell *params)
    char *flat;
    int err, tag;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2297,7 +2297,7 @@ static cell AMX_NATIVE_CALL sm_changelinetex(AMX *amx, cell *params)
    char *texname;
    int err, lineid, side, pos;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2331,7 +2331,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
    char *texname;
    int err, tag, side, pos;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2372,7 +2372,7 @@ static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
    line_t *line  = NULL;
    Mobj *thing = NULL;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2402,7 +2402,7 @@ static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
 // Console Command to execute line specials
 //
 
-CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
    int16_t spec;
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };

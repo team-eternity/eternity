@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -67,7 +67,7 @@ static bool C_Strcmp(const char *pa, const char *pb);
 // The Console (TM)
 //
 
-ConsoleInterface Console;
+console_t Console;
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -280,7 +280,7 @@ static int C_CheckFlags(command_t *command, const char **errormsg)
    if((command->flags & cf_server) && consoleplayer && !demoplayback
       && Console.cmdtype != c_netcmd)
       *errormsg = "for server only";
-   if((command->flags & cf_level) && !G_GameStateIs(GS_LEVEL))
+   if((command->flags & cf_level) && gamestate != GS_LEVEL)
       *errormsg = "can be run in levels only";
    
    // net-sync critical variables are usually critical to demo sync too
@@ -305,16 +305,16 @@ static int C_CheckFlags(command_t *command, const char **errormsg)
 //
 // C_doErrorMsg
 //
-// haleyjd 08/15/10: I had to separate out printing of errors from C_CheckFlags
-//                   since that function can now be called just for checking a
-//                   variable's state and not just for setting it.
+// haleyjd 08/15/10: I had to separate out printing of errors from C_CheckFlags since
+// that function can now be called just for checking a variable's state and not just
+// for setting it.
 //
 static void C_doErrorMsg(command_t *command, const char *errormsg)
 {
    if(errormsg)
    {
       C_Printf("%s: %s\n", command->name, errormsg);
-      if(Menu.isUpFront())
+      if(menuactive)
          MN_ErrorMsg(errormsg);
    }
 }

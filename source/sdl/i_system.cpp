@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -577,7 +577,7 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 // haleyjd 04/15/02: windows joystick commands
-CONSOLE_COMMAND(i_joystick, 0, ii_all)
+CONSOLE_COMMAND(i_joystick, 0)
 {
    if(Console.argc != 1)
       return;
@@ -585,9 +585,13 @@ CONSOLE_COMMAND(i_joystick, 0, ii_all)
    i_SDLJoystickNum = Console.argv[0]->toInt();
 
    if(i_SDLJoystickNum != -1)
+   {
       joystickpresent = I_SetJoystickDevice(i_SDLJoystickNum);
+   }
    else
+   {
       joystickpresent = false;
+   }
 }
 
 #ifdef _SDL_VER

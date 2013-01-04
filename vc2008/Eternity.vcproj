@@ -628,10 +628,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\source\d_iface.cpp"
-						>
-					</File>
-					<File
 						RelativePath="..\Source\d_io.cpp"
 						>
 						<FileConfiguration
@@ -783,10 +779,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\d_gi.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\d_iface.h"
 						>
 					</File>
 					<File

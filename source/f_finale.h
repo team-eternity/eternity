@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -63,22 +63,6 @@ enum
    FINALE_NUMFINALES
 };
 
-class FinaleInterface : public InputInterface
-{
-public:
-   FinaleInterface();
-
-   void init();
-   void draw();
-   void tick();
-   void activate();
-   bool isFullScreen();
-   bool handleEvent(event_t *ev);
-};
-
-extern FinaleInterface Finale;
-
-/*
 // haleyjd 02/25/09
 void F_Init(void);
 
@@ -92,7 +76,6 @@ void F_Ticker(void);
 void F_Drawer(void);
 
 void F_StartFinale(void);
-*/
 
 #endif
 

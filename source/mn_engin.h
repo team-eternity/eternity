@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,27 +30,8 @@
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__
 
-#include "d_iface.h"
-
 struct event_t;
 struct variable_t;
-
-class MenuInterface : public InputInterface
-{
-public:
-   MenuInterface();
-
-   void init();
-   void draw();
-   void tick();
-   void activate();
-   void deactivate();
-   void registerHandledActions();
-   bool handleEvent(event_t *ev);
-   bool isFullScreen();
-};
-
-extern MenuInterface Menu;
 
 //
 // menu_t
@@ -102,9 +83,6 @@ struct menuitem_t
   const char *patch; // patch to use or NULL
 
   int flags;   // haleyjd 03/29/05: menu item flags
-
-	const char *interface_name; // [CG] 12/1/12: Used for interface-specific
-                              //               key bindings
 
   /*** internal stuff used by menu code ***/
   int x, y;
@@ -191,10 +169,27 @@ void   MN_PushWidget(menuwidget_t *widget);
 void   MN_PopWidget();
 size_t MN_NumActiveWidgets();
 
+// responder for events
+
+bool MN_Responder(event_t *ev);
+
+// Called by main loop,
+// only used for menu (skull cursor) animation.
+
+void MN_Ticker(void);
+
 // Called by main loop,
 // draws the menus directly into the screen buffer.
 
 void MN_DrawMenu(menu_t *menu);
+void MN_Drawer(void);
+
+bool MN_CheckFullScreen(void);
+
+// Called by D_DoomMain,
+// loads the config file.
+
+void MN_Init(void);
 
 // Called by intro code to force menu up upon a keypress,
 // does nothing if menu is already up.
@@ -205,8 +200,10 @@ void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
 
 void MN_DrawCredits(void);    // killough 11/98
 
+void MN_ActivateMenu(void);
 void MN_StartMenu(menu_t *menu);         // sf 10/99
 void MN_PrevMenu(void);
+void MN_ClearMenus(void);                    // sf 10/99
 
 // font functions
 void MN_WriteText(const char *s, int x, int y);

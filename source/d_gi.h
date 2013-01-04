@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -38,7 +38,6 @@ struct interfns_t;
 struct menu_t;
 struct musicinfo_t;
 struct stbarfns_t;
-class DemoScreenInterface;
 
 // inspired by, but not taken from, zdoom
 
@@ -84,55 +83,20 @@ enum
 };
 
 // haleyjd 07/02/09: moved demostate_t to header for GameModeInfo
-// [CG] 10/21/12: Make into classes
 
-class DemoStateAdvancer
+typedef void (*dsfunc_t)(const char *);
+
+typedef struct demostate_s
 {
-protected:
-   int current_index;
+   dsfunc_t func;
+   const char *name;
+} demostate_t;
 
-public:
-   DemoStateAdvancer() : current_index(-1) {}
-
-   void setIndex(int new_index) { current_index = new_index; }
-   virtual void advance() {}
-};
-
-class DoomDemoStateAdvancer : public DemoStateAdvancer
-{
-public:
-   void advance();
-};
-
-class Doom2DemoStateAdvancer : public DemoStateAdvancer
-{
-public:
-   void advance();
-};
-
-class UDoomDemoStateAdvancer : public DemoStateAdvancer
-{
-public:
-   void advance();
-};
-
-class HSWDemoStateAdvancer : public DemoStateAdvancer
-{
-public:
-   void advance();
-};
-
-class HRegDemoStateAdvancer : public DemoStateAdvancer
-{
-public:
-   void advance();
-};
-
-extern DoomDemoStateAdvancer  DoomDemoState;
-extern Doom2DemoStateAdvancer Doom2DemoState;
-extern UDoomDemoStateAdvancer UDoomDemoState;
-extern HSWDemoStateAdvancer   HSWDemoState;
-extern HRegDemoStateAdvancer  HRegDemoState;
+extern const demostate_t demostates_doom[];
+extern const demostate_t demostates_doom2[];
+extern const demostate_t demostates_udoom[];
+extern const demostate_t demostates_hsw[];
+extern const demostate_t demostates_hreg[];
 
 //
 // Exit Rule Sets
@@ -291,15 +255,15 @@ typedef struct missioninfo_s
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
 
-   const char   *versionNameOR;   // if not NULL, overrides name of the gamemode
-   const char   *startupBannerOR; // if not NULL, overrides the startup banner 
-   int           numEpisodesOR;   // if not    0, overrides number of episodes
-   char        **iwadPathOR;      // if not NULL, overrides iwadPath
-   finaledata_t *finaleDataOR;    // if not NULL, overrides finaleData
+   const char   *versionNameOR;      // if not NULL, overrides name of the gamemode
+   const char   *startupBannerOR;    // if not NULL, overrides the startup banner 
+   int           numEpisodesOR;      // if not    0, overrides number of episodes
+   char        **iwadPathOR;         // if not NULL, overrides iwadPath
+   finaledata_t *finaleDataOR;       // if not NULL, overrides finaleData
    const char   *menuBackgroundOR;   // if not NULL, overrides menuBackground
    const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
    const char   *consoleBackOR;      // if not NULL, overrides consoleBack
-   DemoStateAdvancer *demoStatesOR;  // if not NULL, overrides demostates
+   const demostate_t *demoStatesOR;  // if not NULL, overrides demostates
    const char   *interPicOR;         // if not NULL, overrides interPic
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
 } missioninfo_t;
@@ -326,7 +290,7 @@ typedef struct gamemodeinfo_s
    char **iwadPath;               // iwad path variable
    
    // demo state information
-   DemoStateAdvancer *demoStates; // demostates advancing function
+   const demostate_t *demoStates; // demostates table
    int titleTics;                 // length of time to show title
    int advisorTics;               // for Heretic, len. to show advisory
    int pageTics;                  // length of general demo state pages

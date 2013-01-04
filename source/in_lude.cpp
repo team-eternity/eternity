@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -51,9 +51,6 @@
 #include "s_sound.h"
 #include "v_video.h"
 
-static void IN_shutDown();
-void IN_StartCamera(void);
-
 // Globals
 
 // used for timing
@@ -84,117 +81,6 @@ MobjCollection camerathings;
 
 // chosen camera
 Mobj *wi_camera;
-
-// Intermission Interface
-
-IntermissionInterface Intermission;
-
-IntermissionInterface::IntermissionInterface() :
-   InputInterface("Intermission", ii_intermission, ev_keydown), stats(NULL)
-{
-}
-
-//
-// IN_Init
-//
-// Called at startup.
-//
-void IntermissionInterface::init()
-{
-   // haleyjd 09/10/12: Initialize the statistics manager.
-   INStatsManager::Init();
-
-   atexit(IN_shutDown);
-}
-
-//
-// IN_Drawer
-//
-// Calls the gamemode-specific intermission drawer.
-//
-void IntermissionInterface::draw()
-{
-   InterFuncs->Drawer();
-}
-
-//
-// IN_Ticker
-//
-// Runs intermission timer, starts music, checks for acceleration
-// when user presses a key, and runs the level if an intermission
-// camera is active. Gamemode-specific ticker is called.
-//
-void IntermissionInterface::tick()
-{
-   // counter for general background animation
-   intertime++;  
-   
-   // intermission music
-   if(intertime == 1)
-      S_ChangeMusicNum(GameModeInfo->interMusNum, true);
-
-   IN_checkForAccelerate();
-
-   InterFuncs->Ticker();
-
-   // keep the level running when using an intermission camera
-   if(realbackdrop)
-      P_Ticker();
-}
-
-//
-// IN_Start
-//
-// Sets up intermission cameras, sets the game to use the proper
-// intermission object for the current gamemode, and then calls the
-// gamemode's start function.
-//
-void IntermissionInterface::activate()
-{
-   if(!stats)
-   {
-      I_Error(
-         "IntermissionInterface::setStats must be called before "
-         "IntermissionInterface::activate, exiting.\n"
-      );
-   }
-
-   // haleyjd 09/10/12: record high scores
-   INStatsManager::Get().recordStats(stats);
-   
-   // haleyjd 03/24/05: allow skipping stats intermission
-   if(LevelInfo.killStats)
-   {
-      G_WorldDone();
-      return;
-   }
-
-   if(!in_font)
-   {
-      if(!(in_font = E_FontForName(in_fontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_fontname);
-      if(!(in_bigfont = E_FontForName(in_bigfontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
-      if(!(in_bignumfont = E_FontForName(in_bignumfontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_bignumfontname);
-   }
-
-   IN_StartCamera();  //set up camera
-
-   InterFuncs = GameModeInfo->interfuncs;
-
-   InterFuncs->Start(stats);
-}
-
-bool IntermissionInterface::isFullScreen()
-{
-   return isUpFront();
-}
-
-void IntermissionInterface::setStats(wbstartstruct_t *new_stats)
-{
-   stats = new_stats;
-}
 
 //
 // IN_AddCameras
@@ -322,6 +208,41 @@ void IN_checkForAccelerate(void)
 }
 
 //
+// IN_Ticker
+//
+// Runs intermission timer, starts music, checks for acceleration
+// when user presses a key, and runs the level if an intermission
+// camera is active. Gamemode-specific ticker is called.
+//
+void IN_Ticker(void)
+{
+   // counter for general background animation
+   intertime++;  
+   
+   // intermission music
+   if(intertime == 1)
+      S_ChangeMusicNum(GameModeInfo->interMusNum, true);
+
+   IN_checkForAccelerate();
+
+   InterFuncs->Ticker();
+
+   // keep the level running when using an intermission camera
+   if(realbackdrop)
+      P_Ticker();
+}
+
+//
+// IN_Drawer
+//
+// Calls the gamemode-specific intermission drawer.
+//
+void IN_Drawer(void)
+{
+   InterFuncs->Drawer();
+}
+
+//
 // IN_DrawBackground
 //
 // Calls the gamemode-specific background drawer. This doesn't
@@ -336,6 +257,42 @@ void IN_DrawBackground(void)
 }
 
 //
+// IN_Start
+//
+// Sets up intermission cameras, sets the game to use the proper
+// intermission object for the current gamemode, and then calls the
+// gamemode's start function.
+//
+void IN_Start(wbstartstruct_t *wbstartstruct)
+{
+   // haleyjd 09/10/12: record high scores
+   INStatsManager::Get().recordStats(wbstartstruct);
+   
+   // haleyjd 03/24/05: allow skipping stats intermission
+   if(LevelInfo.killStats)
+   {
+      G_WorldDone();
+      return;
+   }
+
+   if(!in_font)
+   {
+      if(!(in_font = E_FontForName(in_fontname)))
+         I_Error("IN_Start: bad EDF font name %s\n", in_fontname);
+      if(!(in_bigfont = E_FontForName(in_bigfontname)))
+         I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
+      if(!(in_bignumfont = E_FontForName(in_bignumfontname)))
+         I_Error("IN_Start: bad EDF font name %s\n", in_bignumfontname);
+   }
+
+   IN_StartCamera();  //set up camera
+
+   InterFuncs = GameModeInfo->interfuncs;
+
+   InterFuncs->Start(wbstartstruct);
+}
+
+//
 // IN_shutDown
 //
 // atexit handler.
@@ -343,6 +300,19 @@ void IN_DrawBackground(void)
 static void IN_shutDown()
 {
    INStatsManager::Get().saveStats();
+}
+
+//
+// IN_Init
+//
+// Called at startup.
+//
+void IN_Init()
+{
+   // haleyjd 09/10/12: Initialize the statistics manager.
+   INStatsManager::Init();
+
+   atexit(IN_shutDown);
 }
 
 // EOF

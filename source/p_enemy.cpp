@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -1731,7 +1731,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    newmobj->updateThinker();
 }
 
-CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden, ii_level)
+CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 {
    int type;
    int flagsmode = -1;
@@ -1766,7 +1766,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden, ii_level)
    P_ConsoleSummon(type, 0, flagsmode, flags);
 }
 
-CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden, ii_level)
+CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden)
 {
    // only in DOOM II ;)
    if(GameModeInfo->id == commercial)
@@ -1781,7 +1781,7 @@ CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden, ii_level)
    }
 }
 
-CONSOLE_COMMAND(give, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(give, cf_notnet|cf_level)
 {
    int i;
    int itemnum;
@@ -1824,7 +1824,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level, ii_level)
 // This command lets the player "whistle" to teleport a friend
 // of the given type to his location.
 //
-CONSOLE_COMMAND(whistle, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
 {
    int thingnum;
    player_t *plyr = &players[consoleplayer];
@@ -1842,7 +1842,7 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level, ii_level)
    P_Whistle(plyr->mo, thingnum);
 }
 
-CONSOLE_COMMAND(mdk, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
@@ -1858,7 +1858,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level, ii_level)
    P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
 }
 
-CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    int i;
@@ -1878,7 +1878,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level, ii_level)
    }
 }
 
-CONSOLE_COMMAND(banish, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
@@ -1888,7 +1888,7 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level, ii_level)
       clip.linetarget->removeThinker();
 }
 
-CONSOLE_COMMAND(vilehit, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
@@ -1928,7 +1928,7 @@ static void P_ResurrectPlayer(void)
    }
 }
 
-CONSOLE_COMMAND(resurrect, cf_notnet|cf_level, ii_level)
+CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
 {
    P_ResurrectPlayer();
 }

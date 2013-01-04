@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -31,8 +31,6 @@
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "d_main.h"
-#include "g_game.h"
-#include "mn_engin.h"
 #include "p_user.h"
 #include "p_chase.h"
 #include "p_saveg.h"
@@ -272,8 +270,8 @@ void P_Ticker(void)
    // 
    // All of this complicated mess is used to preserve demo sync.
    
-   if(paused || ((Menu.isUpFront() || Console.isUpFront()) &&
-      !demoplayback && !netgame && players[consoleplayer].viewz != 1))
+   if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
+                 players[consoleplayer].viewz != 1))
       return;
    
    P_ParticleThinker(); // haleyjd: think for particles
@@ -282,7 +280,7 @@ void P_Ticker(void)
 
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
-   if(G_GameStateIs(GS_LEVEL) && !cinema_pause)
+   if(gamestate == GS_LEVEL && !cinema_pause)
       for(i = 0; i < MAXPLAYERS; i++)
          if(playeringame[i])
             P_PlayerThink(&players[i]);
@@ -302,7 +300,7 @@ void P_Ticker(void)
    // to "jump". code in p_floor.c detects if a hyperlift has been
    // activated and viewz is reset appropriately here.
    
-   if(demo_version >= 303 && reset_viewz && G_GameStateIs(GS_LEVEL))
+   if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
       P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
    
    P_RunEffects(); // haleyjd: run particle effects

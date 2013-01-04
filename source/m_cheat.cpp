@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -34,7 +34,6 @@
 
 #include "z_zone.h"
 
-#include "am_map.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -48,7 +47,6 @@
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_cheat.h"
-#include "mn_engin.h"
 #include "p_inter.h"
 #include "p_setup.h"
 #include "p_user.h"
@@ -580,7 +578,8 @@ static void cheat_massacre(const void *arg)
 static void cheat_ddt(const void *arg)
 {
    extern int ddt_cheating;
-   if(AutoMap.isUpFront())
+   extern bool automapactive;
+   if(automapactive)
       ddt_cheating = (ddt_cheating + 1) % 3;
 }
 
@@ -795,7 +794,7 @@ bool M_FindCheats(int key)
          !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
          !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
          !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
-         !(cheat[i].when & not_menu && Menu.isUpFront()) &&
+         !(cheat[i].when & not_menu && menuactive) &&
          !(cheat[i].when & not_deh  && cheat[i].deh_modified))
       {
          if(cheat[i].arg < 0)               // if additional args are required
@@ -829,7 +828,7 @@ bool M_FindCheats(int key)
 
 // haleyjd 03/18/03: infinite ammo cheat, at long last
 
-CONSOLE_COMMAND(infammo, cf_notnet|cf_level, ii_game)
+CONSOLE_COMMAND(infammo, cf_notnet|cf_level)
 {
    int value = 0;
    if(Console.argc)
@@ -844,7 +843,7 @@ CONSOLE_COMMAND(infammo, cf_notnet|cf_level, ii_game)
                "Infinite ammo on" : "Infinite ammo off");
 }
 
-CONSOLE_COMMAND(noclip, cf_notnet|cf_level, ii_game)
+CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
 {
    int value=0;
 
@@ -861,7 +860,7 @@ CONSOLE_COMMAND(noclip, cf_notnet|cf_level, ii_game)
                "STSTR_NCON" : "STSTR_NCOFF"));
 }
 
-CONSOLE_COMMAND(god, cf_notnet|cf_level, ii_game)
+CONSOLE_COMMAND(god, cf_notnet|cf_level)
 {
    int value = 0;        // sf: choose to set to 0 or 1 
 
@@ -885,7 +884,7 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level, ii_game)
       doom_printf("%s", DEH_String("STSTR_DQDOFF")); // Ty 03/27/98 - externalized
 }
 
-CONSOLE_COMMAND(buddha, cf_notnet|cf_level, ii_game)
+CONSOLE_COMMAND(buddha, cf_notnet|cf_level)
 {
    int value = 0;
    if(Console.argc)
@@ -900,7 +899,7 @@ CONSOLE_COMMAND(buddha, cf_notnet|cf_level, ii_game)
                "Immortality on" : "Immortality off");
 }
 
-CONSOLE_COMMAND(fly, cf_notnet|cf_level, ii_game)
+CONSOLE_COMMAND(fly, cf_notnet|cf_level)
 {
    player_t *p = &players[consoleplayer];
 
@@ -993,7 +992,7 @@ static void M_NukeMonsters(void)
    doom_printf("%d Monster%s Killed", killcount,  (killcount == 1) ? "" : "s");
 }
 
-CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke, ii_level)
+CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
 {
    M_NukeMonsters();
 }

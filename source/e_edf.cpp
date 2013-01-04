@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -72,7 +72,6 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
-#include "d_iface.h"
 #include "d_io.h"
 #include "d_dwfile.h"
 

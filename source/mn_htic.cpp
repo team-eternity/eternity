@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -140,7 +140,7 @@ menu_t menu_hepisode =
    mf_skullmenu,         // is a skull menu
 };
 
-CONSOLE_COMMAND(mn_hnewgame, 0, ii_all)
+CONSOLE_COMMAND(mn_hnewgame, 0)
 {
    if(netgame && !demoplayback)
    {
@@ -187,7 +187,7 @@ menu_t menu_hnewgame =
    mf_skullmenu,         // is a skull menu
 };
 
-CONSOLE_COMMAND(mn_hepis, cf_notnet, ii_all)
+CONSOLE_COMMAND(mn_hepis, cf_notnet)
 {
    if(!Console.argc)
    {

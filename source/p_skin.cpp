@@ -37,7 +37,6 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "g_game.h"
 #include "info.h"
 #include "p_info.h"
 #include "p_skin.h"
@@ -415,7 +414,7 @@ void P_SetSkin(skin_t *skin, int playernum)
    
    pl->skin = skin;
    
-   if(G_GameStateIs(GS_LEVEL))
+   if(gamestate == GS_LEVEL)
    {
       Mobj *mo = pl->mo;
       
@@ -516,12 +515,14 @@ skin_t *P_GetMonsterSkin(spritenum_t sprnum)
 
 /**** console stuff ******/
 
-CONSOLE_COMMAND(listskins, 0, ii_all)
+CONSOLE_COMMAND(listskins, 0)
 {
    int i;
 
    for(i = 0; i < numskins; i++)
+   {      
       C_Printf("%s\n", skins[i]->skinname);
+   }
 }
 
 //      helper macro to ensure grammatical correctness :)

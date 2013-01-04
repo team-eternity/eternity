@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2001 James Haley
@@ -69,7 +69,7 @@ CONST_STRING(vername_hack);
 CONSOLE_CONST(ver_name, vername_hack);
 
                 /************* aliases ***************/
-CONSOLE_COMMAND(alias, 0, ii_all)
+CONSOLE_COMMAND(alias, 0)
 {
    alias_t *alias;
    const char *temp;
@@ -119,7 +119,7 @@ CONST_STRING(cmdoptions);
 CONSOLE_CONST(opt, cmdoptions);
 
 // command list
-CONSOLE_COMMAND(cmdlist, 0, ii_console)
+CONSOLE_COMMAND(cmdlist, 0)
 {
    command_t *current;
    int i;
@@ -182,14 +182,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 // echo string to console
 
-CONSOLE_COMMAND(echo, 0, ii_console)
+CONSOLE_COMMAND(echo, 0)
 {
    C_Puts(Console.args.constPtr());
 }
 
 // delay in console
 
-CONSOLE_COMMAND(delay, 0, ii_console)
+CONSOLE_COMMAND(delay, 0)
 {
    C_BufferDelay(Console.cmdtype, Console.argc ? Console.argv[0]->toInt() : 1);
 }
@@ -197,7 +197,7 @@ CONSOLE_COMMAND(delay, 0, ii_console)
 // flood the console with crap
 // .. such a great and useful command
 
-CONSOLE_COMMAND(flood, 0, ii_console)
+CONSOLE_COMMAND(flood, 0)
 {
   int a;
 
@@ -205,11 +205,11 @@ CONSOLE_COMMAND(flood, 0, ii_console)
     C_Printf("%c\n", a%64 + 32);
 }
 
-CONSOLE_COMMAND(quote, 0, ii_console) {}
+CONSOLE_COMMAND(quote, 0) {}
 
 // haleyjd: dumplog command to write out the console to file
 
-CONSOLE_COMMAND(dumplog, 0, ii_all)
+CONSOLE_COMMAND(dumplog, 0)
 {
    if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
@@ -219,7 +219,7 @@ CONSOLE_COMMAND(dumplog, 0, ii_all)
 
 // haleyjd 09/07/03: true console logging commands
 
-CONSOLE_COMMAND(openlog, 0, ii_all)
+CONSOLE_COMMAND(openlog, 0)
 {
    if(!Console.argc)
       C_Printf("usage: openlog filename\n");
@@ -227,14 +227,14 @@ CONSOLE_COMMAND(openlog, 0, ii_all)
       C_OpenConsoleLog(Console.argv[0]);
 }
 
-CONSOLE_COMMAND(closelog, 0, ii_all)
+CONSOLE_COMMAND(closelog, 0)
 {
    C_CloseConsoleLog();
 }
 
 
 // SoM: omg why didn't we have this before?
-CONSOLE_COMMAND(cvarhelp, 0, ii_console)
+CONSOLE_COMMAND(cvarhelp, 0)
 {
    command_t  *current;
    variable_t *var;
@@ -372,7 +372,7 @@ CONSOLE_COMMAND(cvarhelp, 0, ii_console)
    C_Printf("Variable %s not found\n", name);
 }
 
-CONSOLE_COMMAND(c_popup, 0, ii_all)
+CONSOLE_COMMAND(c_popup, 0)
 {
    C_InstaPopup();
 }

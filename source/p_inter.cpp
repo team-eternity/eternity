@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -904,11 +904,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
 
-      if(target->player == &players[consoleplayer] && AutoMap.isUpFront())
+      if(target->player == &players[consoleplayer] && automapactive)
       {
-         // don't die in auto map; switch view prior to dying
          if(!demoplayback) // killough 11/98: don't switch out in demos, though
-            AutoMap.deactivate();
+            AM_Stop();    // don't die in auto map; switch view prior to dying
       }
    }
 
@@ -1687,7 +1686,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
    SmallContext_t *context = SM_GetContextForAMX(amx);
    Mobj *rover = NULL;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -1726,7 +1725,7 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
    Mobj *inflictor = NULL;
    Mobj *source = NULL;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -1762,7 +1761,7 @@ static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
    SmallContext_t *context = SM_GetContextForAMX(amx);
    Mobj *obj = NULL, *targ = NULL;
 
-   if(!G_GameStateIs(GS_LEVEL))
+   if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

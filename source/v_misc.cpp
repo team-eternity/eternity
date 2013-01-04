@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -166,7 +166,7 @@ void V_DrawLoading(void)
       return;
 
    // 05/02/10: update console
-   Console.draw();
+   C_Drawer();
   
    V_DrawBox((SCREENWIDTH/2)-50, (SCREENHEIGHT/2)-30, 100, 40);
 
@@ -565,11 +565,11 @@ void V_InitMisc(void)
 const char *str_ticker[] = { "off", "chart", "classic", "text" };
 VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
 
-CONSOLE_COMMAND(v_modelist, 0, ii_all)
+CONSOLE_COMMAND(v_modelist, 0)
 {
 }
 
-CONSOLE_COMMAND(v_fontcolors, 0, ii_all)
+CONSOLE_COMMAND(v_fontcolors, 0)
 {
    vfont_t *font;
    byte    *colors;
@@ -619,7 +619,7 @@ CONSOLE_COMMAND(v_fontcolors, 0, ii_all)
 CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}
 
 // Dump a patch to file as a PNG. This involves a *lot* of code.
-CONSOLE_COMMAND(v_dumppatch, 0, ii_all)
+CONSOLE_COMMAND(v_dumppatch, 0)
 {
    qstring filename;
    const char *lump;

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,7 +30,6 @@
 #include "z_zone.h"
 #include "i_system.h"
 
-#include "am_map.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_event.h"
@@ -579,7 +578,7 @@ void HU_DisableHUD()
 void HU_OverlayDraw()
 {
    // SoM 2-4-04: ANYRES
-   if(viewheight != video.height || AutoMap.isUpFront() || !hud_enabled) 
+   if(viewheight != video.height || automapactive || !hud_enabled) 
       return;  // fullscreen only
   
    HU_overlaySetup();

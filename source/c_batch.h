@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Charles Gunyon
@@ -27,14 +27,12 @@
 #ifndef C_BATCH__
 #define C_BATCH__
 
-class qstring;
-
 void          C_ActivateCommandBatch();
 void          C_AddCommandBatch(const char *name, const char *commands);
 const char*   C_GetCommandBatch(const char *name);
 void          C_CommandBatchTicker();
 bool          C_CommandIsBatch(const char *name);
-void          C_SaveCommandBatches(qstring &buf);
+void          C_SaveCommandBatches(FILE *file);
 
 #endif
 

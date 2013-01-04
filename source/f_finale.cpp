@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,21 +28,18 @@
 #include "i_system.h"
 #include "i_video.h"
 
-#include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"     // Ty 03/22/98 - externalizations
 #include "d_dehtbl.h"
 #include "d_event.h"
 #include "d_gi.h"
-#include "d_iface.h"
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_fonts.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "f_finale.h"
-#include "g_game.h"
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "p_info.h"
@@ -72,10 +69,6 @@ int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-static void F_TextWrite(void);
-static void F_FinaleEndDrawer(void);
-static float Get_TextSpeed(void);
-
 void F_StartCast(void);
 void F_CastTicker(void);
 bool F_CastResponder(event_t *ev);
@@ -91,49 +84,71 @@ static byte *DemonBuffer; // haleyjd 08/23/02
 vfont_t *f_font;
 char *f_fontname;
 
-// Finale Interface
-
-FinaleInterface Finale;
-
-FinaleInterface::FinaleInterface() :
-   InputInterface("Finale", ii_finale, ev_keydown)
-{
-}
-
-
 //
 // F_Init
 //
 // haleyjd 02/25/09: Added to resolve finale font.
 //
-void FinaleInterface::init()
+void F_Init(void)
 {
    if(!(f_font = E_FontForName(f_fontname)))
       I_Error("F_Init: bad EDF font name %s\n", f_fontname);
 }
 
 //
-// F_Drawer
+// F_StartFinale
 //
-// Main finale drawing routine.
-// Either runs a text mode finale, draws the DOOM II cast, or calls
-// F_FinaleEndDrawer above.
-//
-void FinaleInterface::draw()
+void F_StartFinale(void)
 {
-   switch(finalestage)
-   {
-   case 2:
-      F_CastDrawer();
-      break;
-   case 0:
-      F_TextWrite();
-      break;
-   default:
-      F_FinaleEndDrawer();
-      break;
-   }
+   gameaction = ga_nothing;
+   gamestate = GS_FINALE;
+   automapactive = false;
+   
+   // killough 3/28/98: clear accelerative text flags
+   acceleratestage = midstage = 0;
+
+   // haleyjd 07/17/04: level-dependent initialization moved to MapInfo
+
+   S_ChangeMusicName(LevelInfo.interMusic, true);
+   
+   finalestage = 0;
+   finalecount = 0;
 }
+
+//
+// F_Responder
+//
+bool F_Responder(event_t *event)
+{
+   if(finalestage == 2)
+      return F_CastResponder(event);
+   
+   // haleyjd: Heretic underwater hack for E2 end
+   if(finalestage == 3 && event->type == ev_keydown)
+   {
+      // restore normal palette and kick out to title screen
+      finalestage = 4;
+      I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
+      return true;
+   }
+   
+   return false;
+}
+
+// 
+// Get_TextSpeed() 
+//
+// Returns the value of the text display speed  // phares
+// Rewritten to allow user-directed acceleration -- killough 3/28/98
+//
+static float Get_TextSpeed(void)
+{
+   return 
+      (float)(midstage ? NEWTEXTSPEED : 
+              (midstage=acceleratestage) ? 
+               acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
+}
+
 
 //
 // F_Ticker
@@ -148,7 +163,7 @@ void FinaleInterface::draw()
 // killough 5/10/98: add back v1.9 demo compatibility
 // haleyjd 10/12/01: reformatted, added cast call for any level
 //
-void FinaleInterface::tick()
+void F_Ticker(void)
 {
    int i;
    
@@ -198,7 +213,7 @@ void FinaleInterface::tick()
             // no wipe before Heretic E2 or E3 finales
             if(LevelInfo.finaleType != FINALE_HTIC_WATER &&
                LevelInfo.finaleType != FINALE_HTIC_DEMON)
-               G_ForceWipe();     // force a wipe
+               wipegamestate = GS_NOSTATE;     // force a wipe
 
             // special actions
             switch(LevelInfo.finaleType)
@@ -227,71 +242,6 @@ void FinaleInterface::tick()
 }
 
 //
-// F_StartFinale
-//
-void FinaleInterface::activate()
-{
-   InputInterface::activate();
-
-   gameaction = ga_nothing;
-   G_SetGameState(GS_FINALE);
-   AutoMap.deactivate();
-   
-   // killough 3/28/98: clear accelerative text flags
-   acceleratestage = midstage = 0;
-
-   // haleyjd 07/17/04: level-dependent initialization moved to MapInfo
-
-   S_ChangeMusicName(LevelInfo.interMusic, true);
-   
-   finalestage = 0;
-   finalecount = 0;
-}
-
-bool FinaleInterface::isFullScreen()
-{
-   return isUpFront();
-}
-
-//
-// F_Responder
-//
-bool FinaleInterface::handleEvent(event_t *ev)
-{
-   if(InputInterface::handleEvent(ev))
-      return true;
-
-   if(finalestage == 2)
-      return F_CastResponder(ev);
-   
-   // haleyjd: Heretic underwater hack for E2 end
-   if(finalestage == 3)
-   {
-      // restore normal palette and kick out to title screen
-      finalestage = 4;
-      I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
-      return true;
-   }
-   
-   return false;
-}
-
-// 
-// Get_TextSpeed() 
-//
-// Returns the value of the text display speed  // phares
-// Rewritten to allow user-directed acceleration -- killough 3/28/98
-//
-static float Get_TextSpeed(void)
-{
-   return 
-      (float)(midstage ? NEWTEXTSPEED : 
-              (midstage=acceleratestage) ? 
-               acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
-}
-
-
-//
 // F_TextWrite
 //
 // This program displays the background and text at end-mission     // phares
@@ -302,7 +252,7 @@ static float Get_TextSpeed(void)
 // text can be increased, and there's still time to read what's     //   |
 // written.                                                         // phares
 //
-static void F_TextWrite(void)
+void F_TextWrite(void)
 {
    int         w, h;         // killough 8/9/98: move variables below
    int         count;
@@ -399,6 +349,8 @@ int             castframes;
 int             castonmelee;
 bool            castattacking;
 
+extern  gamestate_t     wipegamestate;
+
 // haleyjd 07/05/03: support old DEH names for the first
 // 17 cast members, for compatibility purposes.
 #define OLDCASTMAX 17
@@ -428,7 +380,7 @@ static const char *oldnames[OLDCASTMAX] =
 //
 // haleyjd 07/05/03: rewritten for EDF support
 //
-static void F_StartCast(void)
+void F_StartCast(void)
 {
    int i;
 
@@ -444,7 +396,7 @@ static void F_StartCast(void)
          castorder[i].name = estrdup(DEH_String(oldnames[i]));
    }
 
-   G_ForceWipe();         // force a screen wipe
+   wipegamestate = GS_NOSTATE;         // force a screen wipe
    castnum = 0;
    caststate = states[mobjinfo[castorder[castnum].type]->seestate];
    casttics = caststate->tics;
@@ -459,7 +411,7 @@ static void F_StartCast(void)
 //
 // F_CastTicker
 //
-static void F_CastTicker(void)
+void F_CastTicker(void)
 {
    int st;
    int sfx;
@@ -569,7 +521,7 @@ static void F_CastTicker(void)
 //
 // F_CastResponder
 //
-static bool F_CastResponder(event_t* ev)
+bool F_CastResponder(event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -603,7 +555,7 @@ static bool F_CastResponder(event_t* ev)
 // methods instead of duplicating that code unnecessarily. It's 
 // about 200 lines shorter now.
 //
-static void F_CastPrint(const char *text)
+void F_CastPrint(const char *text)
 {
    V_FontWriteText(f_font, text, 
                    160 - V_FontStringWidth(f_font, text) / 2, 180,
@@ -614,7 +566,7 @@ static void F_CastPrint(const char *text)
 //
 // F_CastDrawer
 //
-static void F_CastDrawer(void)
+void F_CastDrawer(void)
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
@@ -666,7 +618,7 @@ static void F_CastDrawer(void)
 //
 // F_BunnyScroll
 //
-static void F_BunnyScroll(void)
+void F_BunnyScroll(void)
 {
    int         scrolled;
    patch_t*    p1;
@@ -717,7 +669,7 @@ static void F_BunnyScroll(void)
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
-static void F_DrawUnderwater(void)
+void F_DrawUnderwater(void)
 {
    switch(finalestage)
    {
@@ -738,8 +690,7 @@ static void F_DrawUnderwater(void)
    case 3:
       Console.enabled = false; // let console key fall through
       paused = 0;
-      if(Menu.isUpFront())
-         Menu.deactivate();
+      menuactive = false;
       break;
    
    case 4:
@@ -796,7 +747,7 @@ static void F_InitDemonScroller(void)
 //
 // haleyjd: Heretic episode 3 demon scroller
 //
-static void F_DemonScroll(void)
+void F_DemonScroll(void)
 {
    static int yval = 0;
    static int nextscroll = 0;
@@ -869,6 +820,30 @@ static void F_FinaleEndDrawer(void)
       F_DemonScroll();
       break;
    default: // ?
+      break;
+   }
+}
+
+
+//
+// F_Drawer
+//
+// Main finale drawing routine.
+// Either runs a text mode finale, draws the DOOM II cast, or calls
+// F_FinaleEndDrawer above.
+//
+void F_Drawer(void)
+{
+   switch(finalestage)
+   {
+   case 2:
+      F_CastDrawer();
+      break;
+   case 0:
+      F_TextWrite();
+      break;
+   default:
+      F_FinaleEndDrawer();
       break;
    }
 }

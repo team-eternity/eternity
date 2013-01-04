@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //---------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -96,7 +96,7 @@ const char *dmstr[] = { "single", "coop", "deathmatch" };
  *************************************************************************/
 
 // haleyjd: had to change this into a command
-CONSOLE_COMMAND(creator, 0, ii_all)
+CONSOLE_COMMAND(creator, 0)
 {
    C_Printf("creator is '%s'\n", LevelInfo.creator);
 }
@@ -134,7 +134,7 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
       colour = TRANSLATIONCOLOURS;
    
    players[playernum].colormap = colour;
-   if(G_GameStateIs(GS_LEVEL))
+   if(gamestate == GS_LEVEL)
       players[playernum].mo->colour = colour;
    
    if(playernum == consoleplayer) 
@@ -262,9 +262,9 @@ CONSOLE_NETVAR(fast, fastparm, cf_server, netcmd_fast)
 VARIABLE_TOGGLE(nomonsters, &clnomonsters,                  onoff);
 CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 {
-   if(G_GameStateIs(GS_LEVEL))
+   if(gamestate == GS_LEVEL)
       C_Printf("note: nomonsters will not change until next level\n");
-   if(Menu.isUpFront())
+   if(menuactive)
       MN_ErrorMsg("does not take effect until next level");
 }
 
@@ -273,9 +273,9 @@ CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 VARIABLE_TOGGLE(respawnparm, &clrespawnparm,                 onoff);
 CONSOLE_NETVAR(respawn, respawnparm, cf_server, netcmd_respawn)
 {
-   if(G_GameStateIs(GS_LEVEL))
+   if(gamestate == GS_LEVEL)
       C_Printf("note: respawn will change on new game\n");
-   if(Menu.isUpFront())
+   if(menuactive)
       MN_ErrorMsg("will take effect on new game");
 }
 
@@ -350,13 +350,13 @@ CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
-CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet, ii_level)
+CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 {
-   if(G_GameStateIs(GS_LEVEL))
+   if(gamestate == GS_LEVEL)
       players[0].mo->momz = 10*FRACUNIT;
 }
 
-CONSOLE_COMMAND(puke, cf_notnet, ii_all)
+CONSOLE_COMMAND(puke, cf_notnet)
 {
    int i;
    int args[5] = { 0, 0, 0, 0, 0 };
@@ -371,13 +371,13 @@ CONSOLE_COMMAND(puke, cf_notnet, ii_all)
                            args, 5, NULL, NULL, 0);
 }
 
-CONSOLE_COMMAND(enable_lightning, 0, ii_all)
+CONSOLE_COMMAND(enable_lightning, 0)
 {
    LevelInfo.hasLightning = true;
    P_InitLightning();
 }
 
-CONSOLE_COMMAND(thunder, 0, ii_all)
+CONSOLE_COMMAND(thunder, 0)
 {
    P_ForceLightning();
 }

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -417,7 +417,7 @@ void MN_ProcessMenus(cfg_t *cfg)
 // Console.argv[0] -- this can even be used within dynamic menus
 // to reference other dynamic menus from command-type items.
 //
-CONSOLE_COMMAND(mn_dynamenu, 0, ii_all)
+CONSOLE_COMMAND(mn_dynamenu, 0)
 {
    menu_t *menu;
 

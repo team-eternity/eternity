@@ -21,8 +21,11 @@
 //
 // Key Bindings
 //
-// Rewritten to support input interfaces as well as press only, release only,
-// activate only and deactivate only bindings.
+// Rewritten to support press/release/activate/deactivate only bindings,
+// as well as to allow a key to be bound to multiple actions in the same
+// key action category.
+//
+// By Charles Gunyon
 //
 //----------------------------------------------------------------------------
 
@@ -30,177 +33,125 @@
 #define G_BIND_H__
 
 #include "e_hash.h"
-#include "m_qstr.h"
+#include "mn_engin.h"
 
 #define KBSS_NUM_KEYS 256
+#define KBSS_INITIAL_KEY_ACTION_CHAIN_SIZE 127
+#define KBSS_MAX_LOAD_FACTOR 0.7
 
-struct event_t;
-
-class qstring;
-class InputAction;
-class InputInterface;
-class KeyBindingsSubSystem;
+// haleyjd 07/03/04: key binding classes
+// [CG] Renamed to key binding "category" to avoid collision with C++ keyword.
+enum input_action_category_e
+{
+   kac_none    =  1,
+   kac_player  =  2,      // player  bindings -- handled by G_BuildTiccmd
+   kac_menu    =  4,      // menu    bindings -- handled by MN_Responder
+   kac_map     =  8,      // map     bindings -- handled by AM_Responder
+   kac_console = 16,      // console bindings -- handled by C_Responder
+   kac_hud     = 32,      // hud     bindings -- handled by HU_Responder
+   kac_command = 64,      // command bindings -- handled by C_RunTextCmd
+   kac_max,
+};
 
 class KeyBind : public ZoneObject
 {
-public:
-   // [bind +a "+left"]
-   static uint8_t const activates_on_press                            = 1;
-
-   // [bind -a "+left"]
-   static uint8_t const activates_on_release                          = 2;
-
-   // [bind a "+left"]
-   static uint8_t const activates_on_press_and_release                = 3;
-
-   // [bind +a "-left"]
-   static uint8_t const deactivates_on_press                          = 4;
-
-   // [bind -a "-left"]
-   static uint8_t const deactivates_on_release                        = 5;
-
-   // [bind a "-left"]
-   static uint8_t const deactivates_on_press_and_release              = 6;
-
-   // [bind a "left"]
-   static uint8_t const activates_on_press_and_deactivates_on_release = 7;
-
-   // [bind a "!left"]
-   static uint8_t const deactivates_on_press_and_activates_on_release = 8;
-
-   // For convenience
-   static uint8_t const normal = activates_on_press_and_deactivates_on_release;
-   static uint8_t const reverse = deactivates_on_press_and_activates_on_release;
-
 private:
-   uint8_t      type;
-   InputAction *action;
+   char *hidden_key_name;
+   char *hidden_action_name;
+   int key_number;
+   input_action_category_e category;
+   bool pressed;
+   unsigned short flags;
 
 public:
-   char *key;
+   static short const activate_only   = 1; // key only activates the action
+   static short const deactivate_only = 2; // key only deactivates the action
+   static short const press_only      = 4; // only triggered by a key press
+   static short const release_only    = 8; // only triggered by a key release
 
-   DLListItem<KeyBind> links;
+   DLListItem<KeyBind> key_to_action_links;
+   DLListItem<KeyBind> action_to_key_links;
+   DLListItem<KeyBind> unbind_links;
 
-   KeyBind(InputAction *new_action);
-   KeyBind(InputAction *new_action, uint8_t new_type);
+   const char *keys_to_actions_key;
+   const char *actions_to_keys_key;
+
+   KeyBind(int new_key_number, const char *new_key_name,
+           const char *new_action_name, input_action_category_e new_category,
+           unsigned short new_flags);
    ~KeyBind();
 
-   InputAction* getAction()   const;
-   uint8_t      getType()     const;
+   int                           getKeyNumber()                    const;
+   const char*                   getKeyName()                      const;
+   const char*                   getActionName()                   const;
+   const bool                    isPressed()                       const;
+   const bool                    isReleased()                      const;
+   void                          press();
+   void                          release();
+   const input_action_category_e getCategory()                     const;
+   const unsigned short          getFlags()                        const;
+   bool                          isNormal()                        const;
+   bool                          isActivateOnly()                  const;
+   bool                          isDeactivateOnly()                const;
+   bool                          isPressOnly()                     const;
+   bool                          isReleaseOnly()                   const;
+   bool                          keyIs(const char *key_name)       const;
+   bool                          actionIs(const char *action_name) const;
 
-   void setType(uint8_t new_type);
 };
 
 class InputKey : public ZoneObject
 {
 private:
-
+   char *hidden_name;
    int number;
-   char *name;
-   uint16_t bind_count;
-
-   EHashTable<KeyBind, ENCStringHashKey, &KeyBind::key,
-              &KeyBind::links> *binds;
-
-   KeyBind* getBind(InputAction *action)                         const;
-   void     writeBindingsOfType(qstring &buf, uint8_t bind_type) const;
+   bool disabled;
 
 public:
-
-   char *key;
-
    DLListItem<InputKey> links;
+   const char *key;
 
    InputKey(int new_number, const char *new_name);
    ~InputKey();
+   const char* getName()    const;
+   int         getNumber()  const;
+   bool        isDisabled() const;
+   void        disable();
+   void        enable();
 
-   /* [CG] InputKeys can be tricky, here's a cheat sheet.
-    *
-    *      Each interface has a list of supported actions.  For an example,
-    *      let's use Menu and Game.  Menu supports the "screenshot" action,
-    *      and Game does as well.  It's likely that the same key is bound to
-    *      the "screenshot" action in both interfaces, let's say that key is
-    *      the "Print Screen" key.  That means that the "Print Screen" InputKey
-    *      has two KeyBinds inside of it, one bound to the "screenshot" action
-    *      in the Game interface, and one bound to the "screenshot" action in
-    *      the Menu interface.
-    *
-    *      In the Keybindings menu, none of the actions currently specify which
-    *      interface to which they belong.  They tell the key bindings sub-
-    *      system to bind/unbind key "x" to/from action "y".  In the case of
-    *      binding, this does exactly that, "x" is bound to "y" in ALL
-    *      interfaces.  If "x" is bound to "y" in ANY interface, "x" is unbound
-    *      from "y" in ALL interfaces.
-    *
-    *      This brings up the convention of using string action names vs.
-    *      pointers to InputAction instances.  InputAction instances contain
-    *      their supporting interface; in the above example, there are two
-    *      separate "screenshot" InputAction instances, one bound to the Menu
-    *      interface and another bound to the Game interface.
-    *
-    *      Using string action names implies that whatever method you are
-    *      invoking will be applied across ALL interfaces supporting that
-    *      action.  Using a InputAction pointer implies that whatever method
-    *      you are invoking applies just to that action inside its interface.
-    *      And when you specify an interface (like in
-    *      InputKey::unbind(qstring *action_name, InputInterface *iface)), you
-    *      imply that you expect the method to only apply that action inside
-    *      that interface.
-    */
-
-   const char* getName()                              const;
-   int         getNumber()                            const;
-   bool        isBoundTo(const char *action_name)     const;
-   bool        isBoundTo(InputAction *action)         const;
-   bool        isOnlyBoundTo(const char *action_name) const;
-   KeyBind*    keyBindIterator(KeyBind *kb)           const;
-   void        writeBindings(qstring &buf)            const;
-
-   void bind(InputAction *action);
-   void bind(InputAction *action, uint8_t type);
-   void bind(const char *action_name);
-   void bind(const char *action_name, uint8_t type);
-   bool unbind();
-   bool unbind(const char *action_name);
-   bool unbind(const char *action_name, InputInterface *iface);
-   bool unbind(InputAction *action);
-   void handleEvent(event_t *ev, InputInterface *iface);
-   void activateAllBinds();
-   void deactivateAllBinds();
-
-   bool operator == (const char *key_name)     const;
-   bool operator == (unsigned char key_number) const;
-   bool operator != (const char *key_name)     const;
-   bool operator != (unsigned char key_number) const;
 };
 
+//
+// InputAction
+//
 class InputAction : public ZoneObject
 {
-private:
-   char *name;
-   InputInterface *iface;
-   int activation_count;
-   bool activating_keys[KBSS_NUM_KEYS];
+protected:
+   char *hidden_name;
+   input_action_category_e category;
+   char *bound_keys_description;
 
 public:
-   char *key;
    DLListItem<InputAction> links;
+   const char *key;
 
-   // [CG] TODO: Add help information.
-
-   InputAction(const char *new_name, InputInterface *new_iface);
+   InputAction(const char *new_name, input_action_category_e new_category);
    ~InputAction();
 
-   const char*     getName()              const;
-   InputInterface* getInterface()         const;
-   const char*     getBoundKeyNames()     const;
-   bool            isActive()             const;
-   const char*     getFirstBoundKeyName() const;
+   bool                          handleEvent(event_t *ev, KeyBind *kb);
+   const char*                   getName()                             const;
+   const input_action_category_e getCategory()                         const;
+   const char*                   getDescription()                      const;
+   void                          setDescription(const char *new_description);
 
-   void activate();
-   void activate(InputKey *key);
-   void deactivate();
-   void deactivate(InputKey *key);
+   virtual void                  activate(KeyBind *kb, event_t *ev);
+   virtual void                  deactivate(KeyBind *kb, event_t *ev);
+   virtual void                  print()                               const;
+   virtual bool                  isActive()                            const;
+   virtual bool                  mayActivate(KeyBind *kb)              const;
+   virtual bool                  mayDeactivate(KeyBind *kb)            const;
+   virtual void                  Think();
+
 };
 
 class KeyBindingsSubSystem
@@ -212,55 +163,139 @@ private:
    EHashTable<InputKey, ENCStringHashKey, &InputKey::key,
               &InputKey::links> *names_to_keys;
 
+   EHashTable<InputAction, ENCStringHashKey, &InputAction::key,
+              &InputAction::links> *names_to_actions;
+
+   EHashTable<KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
+              &KeyBind::key_to_action_links> *keys_to_actions;
+
+   EHashTable<KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
+              &KeyBind::action_to_key_links> *actions_to_keys;
+
    // name of configuration file to read from/write to.
    char *cfg_file;
 
-   // Used by the keybindings menu, the responder sets the action name and the
-   // interface name when the user selects an action to bind a key to, and once
-   // the user selects a key, we then bind that key to the action for the
-   // given interface.  If the interface name is blank, then the key is bound
-   // to that action for any supporting interface.
-   qstring binding_action_name;
-   qstring binding_interface_name;
+   // name of action we are editing
+   const char *binding_action;
+
+   void updateBoundKeyDescription(InputAction *action);
+   void bindKeyToAction(InputKey *key, const char *action_name,
+                        unsigned short flags);
 
 public:
 
-   bool altdown;
-   bool ctrldown;
-   bool shiftdown;
+   static menuwidget_t binding_widget;
 
    KeyBindingsSubSystem();
 
-   void initialize();
+   static int getCategoryIndex(int category);
 
-   const char* getBindingActionName()       const;
-   const char* getBindingInterfaceName()    const;
-   InputKey*   getKeyFromEvent(event_t *ev) const;
-   InputKey*   getKey(int index)            const;
-   InputKey*   getKey(const char *key_name) const;
-   InputKey*   getKey(qstring *key_name)    const;
-   void        writeActions(qstring &buf)   const;
+   void         initialize();
+   void         setKeyBindingsFile(const char *filename);
+   void         setBindingAction(const char *new_binding_action);
+   const char*  getBindingAction();
+   const char*  getBoundKeys(const char *action_name);
+   const char*  getFirstBoundKey(const char *action_name);
+   void         reEnableKeys();
+   void         reset();
+   bool         handleKeyEvent(event_t *ev, int categories);
+   void         runInputActions();
+   void         loadKeyBindings();
+   void         saveKeyBindings();
+   InputKey*    getKey(int index);
+   InputKey*    getKey(const char *key_name);
+   InputAction* getAction(const char *action_name);
+   KeyBind*     keyBindIterator(KeyBind *kb);
+   KeyBind*     keyBindIterator(KeyBind *kb, const char *key_name);
+   InputAction* actionIterator(InputAction *action);
+   void         removeBind(KeyBind **kb);
+   void         createBind(InputKey *key, InputAction *action,
+                           unsigned short flags);
+   void         bindKeyToActions(const char *key_name,
+                                 const qstring &action_names);
 
-   const char* getKeysBoundToAction(const char *action_name,
-                                    const char *interface_name) const;
-
-   void loadKeyBindings();
-   void saveKeyBindings();
-   void clearKeyStates();
-
-   void setKeyBindingsFile(const char *filename);
-   void startMenuBind(const char *new_binding_action_name,
-                      const char *new_binding_interface_name);
-   bool handleEvent(event_t *ev);
 };
 
 extern KeyBindingsSubSystem key_bindings;
 
-void MN_EditKeyBinding(const char *action_name, const char *interface_name);
-void MN_BindDrawer();
-bool MN_BindResponder(event_t *ev);
+void        G_EditBinding(const char *action_name);
+void        G_Bind_AddCommands();
+void        G_BindDrawer();
+bool        G_BindResponder(event_t *ev);
 
-void G_Bind_AddCommands();
+// action variables
+
+extern int action_forward;
+extern int action_backward;
+extern int action_left;
+extern int action_right;
+extern int action_moveleft;
+extern int action_moveright;
+extern int action_lookup;
+extern int action_lookdown;
+extern int action_flyup;
+extern int action_flydown;
+extern int action_flycenter;
+extern int action_use;
+extern int action_speed;
+extern int action_attack;
+extern int action_strafe;
+extern int action_flip;
+extern int action_jump;
+extern int action_autorun;
+
+extern int action_mlook;
+extern int action_center;
+extern int action_weapon1;
+extern int action_weapon2;
+extern int action_weapon3;
+extern int action_weapon4;
+extern int action_weapon5;
+extern int action_weapon6;
+extern int action_weapon7;
+extern int action_weapon8;
+extern int action_weapon9;
+extern int action_nextweapon;
+extern int action_weaponup;
+extern int action_weapondown;
+
+
+extern int action_frags;
+
+extern int action_menu_help;
+extern int action_menu_toggle;
+extern int action_menu_setup;
+extern int action_menu_up;
+extern int action_menu_down;
+extern int action_menu_confirm;
+extern int action_menu_previous;
+extern int action_menu_left;
+extern int action_menu_right;
+extern int action_menu_pageup;
+extern int action_menu_pagedown;
+extern int action_menu_contents;
+
+extern int action_map_toggle;
+extern int action_map_right;
+extern int action_map_left;
+extern int action_map_up;
+extern int action_map_down;
+extern int action_map_zoomin;
+extern int action_map_zoomout;
+extern int action_map_gobig;
+extern int action_map_follow;
+extern int action_map_mark;
+extern int action_map_clear;
+extern int action_map_grid;
+
+extern int action_console_pageup;
+extern int action_console_pagedown;
+extern int action_console_toggle;
+extern int action_console_tab;
+extern int action_console_enter;
+extern int action_console_up;
+extern int action_console_down;
+extern int action_console_backspace;
 
 #endif
 

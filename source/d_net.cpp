@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -242,7 +242,7 @@ static void GetPackets(void)
          // sf: remove the players mobj
          // spawn teleport flash
          
-         if(G_GameStateIs(GS_LEVEL))
+         if(gamestate == GS_LEVEL)
          {
             Mobj *tflash;
 
@@ -694,6 +694,8 @@ int  oldnettics;
 int  opensocket_count = 0;
 bool opensocket;
 
+extern bool advancedemo;
+
 // Run new game tics.  Returns true if at least one tic
 // was run.
 
@@ -786,8 +788,9 @@ static bool RunGameTics(void)
       D_ProcessEvents();
       //newtics = 1;  // only 1 new tic
       G_BuildTiccmd(&netcmds[consoleplayer][maketic%BACKUPTICS]);
-      DemoScreen.startUpIfDeferred();
-      Game.tick();
+      if(advancedemo)
+         D_DoAdvanceDemo();
+      G_Ticker();
       gametic++;
       maketic++;
       return true;
@@ -826,10 +829,11 @@ static bool RunGameTics(void)
       for(i = 0; i < ticdup; ++i)
       {
          if(gametic/ticdup > lowtic)
-            I_Error("gametic > lowtic\n");
-         DemoScreen.startUpIfDeferred();
-         // isconsoletic = G_GameStateIs(GS_CONSOLE);
-         Game.tick();
+            I_Error("gametic>lowtic\n");
+         if(advancedemo)
+            D_DoAdvanceDemo();
+         //isconsoletic =  gamestate == GS_CONSOLE;
+         G_Ticker();
          gametic++;
          
          // modify command for duplicated tics
@@ -884,8 +888,8 @@ void TryRunTics(void)
       for(i = 0; i < realtics; ++i)   // run tics
       {
          // all independent tickers here
-         Menu.tick();
-         Console.tick();
+         MN_Ticker();
+         C_Ticker();
          V_FPSTicker();
       }
 
@@ -901,7 +905,7 @@ void TryRunTics(void)
 //
 
 /*
-CONSOLE_COMMAND(kick, cf_server, ii_all)
+CONSOLE_COMMAND(kick, cf_server)
 {
    if(!Console.argc)
    {
@@ -913,7 +917,7 @@ CONSOLE_COMMAND(kick, cf_server, ii_all)
 }
 */
 
-CONSOLE_COMMAND(playerinfo, 0, ii_all)
+CONSOLE_COMMAND(playerinfo, 0)
 {
    int i;
    
@@ -927,7 +931,7 @@ CONSOLE_COMMAND(playerinfo, 0, ii_all)
 // NETCODE_FIXME: See notes above about kicking out instead of 
 // dropping to console.
 //
-CONSOLE_COMMAND(disconnect, cf_netonly, ii_all)
+CONSOLE_COMMAND(disconnect, cf_netonly)
 {
    D_QuitNetGame();
    C_SetConsole();
