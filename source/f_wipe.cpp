@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -74,9 +74,9 @@ static void Wipe_meltStartScreen(void)
    // SoM: wtf? Why did I scale this before??? This should be within the 320x200
    // space unscaled!
    starting_height = Console.current_height;
-   
+
    worms[0] = starting_height - (M_Random() & 15);
-   
+
    for(x = 1; x < SCREENWIDTH; ++x)
    {
       int r = (M_Random() % 3) - 1;
@@ -96,10 +96,10 @@ static void Wipe_meltStartScreen(void)
       // limit check
       int wormx = (x << FRACBITS) / video.xscale;
       int wormy = video.y1lookup[worms[wormx] > 0 ? worms[wormx] : 0];
-      
+
       src = vbscreen.data + x;
       dest = start_screen[x];
-      
+
       for(y = 0; y < video.height - wormy; y++)
       {
          *dest = *src;
@@ -118,7 +118,7 @@ static void Wipe_meltDrawer(void)
    for(x = 0; x < video.width; ++x)
    {
       int wormy, wormx;
-      
+
       wormx = (x << FRACBITS) / video.xscale;
       wormy = worms[wormx] > 0 ? worms[wormx] : 0;  // limit check
 
@@ -126,7 +126,7 @@ static void Wipe_meltDrawer(void)
 
       src = start_screen[x];
       dest = vbscreen.data + vbscreen.pitch * wormy + x;
-      
+
       for(y = video.height - wormy; y--;)
       {
          *dest = *src++;
@@ -139,7 +139,7 @@ static bool Wipe_meltTicker(void)
 {
    bool done;
    int x;
-  
+
    done = true;  // default to true
 
    // SoM 2-4-04: ANYRES
@@ -162,7 +162,7 @@ static bool Wipe_meltTicker(void)
          done = false;
       }
    }
-  
+
    return done;
 }
 
@@ -172,7 +172,7 @@ static bool Wipe_meltTicker(void)
 //
 // Vanilla Doom had an attempt at this, but it was not being done in a way that
 // would actually work in 8-bit, and so it was left disabled in the commercial
-// releases. This provided direct inspiration for Rogue during Strife 
+// releases. This provided direct inspiration for Rogue during Strife
 // development, however; the hub transition crossfade wipe used there was
 // implemented directly on top of the unfinished code according to the
 // disassembly. This wipe might also be useful for Heretic and Hexen, where
@@ -208,7 +208,7 @@ static void Wipe_fadeDrawer(void)
          for(x = 0; x < vbscreen.width; ++x)
          {
             unsigned int fg, bg;
-            
+
             fg = fg2rgb[*dest];
             bg = bg2rgb[*src++];
             fg = (fg + bg) | 0x1f07c1f;
@@ -278,7 +278,7 @@ void Wipe_StartScreen(void)
    {
       // SoM: Reformatted and cleaned up (ANYRES)
       // haleyjd: make purgable, allocate at required size
-      wipe_buffer = (byte *)(Z_Malloc(video.height * video.width, PU_STATIC, 
+      wipe_buffer = (byte *)(Z_Malloc(video.height * video.width, PU_STATIC,
                                       (void **)&wipe_buffer));
    }
    else
@@ -342,4 +342,3 @@ void Wipe_Ticker(void)
 }
 
 // EOF
-

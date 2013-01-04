@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -72,9 +72,9 @@ bool inhelpscreens; // indicates we are in or just left a help screen
 char menu_error_message[128];
 int menu_error_time = 0;
 
-// haleyjd 02/12/06: option to allow the toggle menu action to back up 
+// haleyjd 02/12/06: option to allow the toggle menu action to back up
 // through menus instead of exiting directly, to emulate ports like zdoom.
-bool menu_toggleisback; 
+bool menu_toggleisback;
 
         // input for typing in new value
 static command_t *input_command = NULL;       // NULL if not typing in
@@ -121,7 +121,7 @@ static int smallptr_idx;
 static int smallptr_coords[2][2];
 
 //=============================================================================
-// 
+//
 // Menu Drawing - Utilities
 //
 
@@ -131,7 +131,7 @@ static int smallptr_coords[2][2];
 #define BLINK_TIME 8
 
 // haleyjd 08/30/06: emulated old menus have fixed item size of 16
-#define EMULATED_ITEM_SIZE 16 
+#define EMULATED_ITEM_SIZE 16
 
 // width of slider, in mid-patches
 #define SLIDE_PATCHES 9
@@ -152,7 +152,7 @@ enum
 //
 void MN_DrawSmallPtr(int x, int y)
 {
-   V_DrawPatch(x, y, &subscreen43, 
+   V_DrawPatch(x, y, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, smallptrs[smallptr_idx], PU_CACHE));
 }
 
@@ -214,7 +214,7 @@ static int MN_FindLastSelectable(menu_t *menu)
    // first, find end
    for(; menu->menuitems[i].type != it_end; ++i)
       ; /* do nothing loop */
-   
+
    // back up one, but not beyond the beginning
    if(i > 0)
       --i;
@@ -266,23 +266,23 @@ static int MN_DrawSlider(int x, int y, int pct)
 
       y += yamt / 2;
    }
-  
+
    V_DrawPatch(draw_x, y, &subscreen43, slider_gfx[slider_left]);
    draw_x += wl;
-  
+
    for(i = 0; i < SLIDE_PATCHES; ++i)
    {
       V_DrawPatch(draw_x, y, &subscreen43, slider_gfx[slider_mid]);
       draw_x += wm - 1;
    }
-   
+
    V_DrawPatch(draw_x, y, &subscreen43, slider_gfx[slider_right]);
-  
+
    // find position to draw slider patch
-   
+
    slider_width = (wm - 1) * SLIDE_PATCHES;
    draw_x = wl + (pct * (slider_width - ws)) / 100;
-   
+
    V_DrawPatch(x + draw_x, y, &subscreen43, slider_gfx[slider_slider]);
 
    // haleyjd: set slider gfx purgable
@@ -309,19 +309,19 @@ static void MN_DrawThermo(int x, int y, int thermWidth, int thermDot)
    xx = x;
    V_DrawPatch(xx, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_THERML", PU_CACHE));
-   
+
    xx += 8;
-   
+
    for(i = 0; i < thermWidth; ++i)
    {
       V_DrawPatch(xx, y, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "M_THERMM", PU_CACHE));
       xx += 8;
    }
-   
+
    V_DrawPatch(xx, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_THERMR", PU_CACHE));
-   
+
    V_DrawPatch((x + 8) + thermDot*8, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_THERMO", PU_CACHE));
 }
@@ -346,9 +346,9 @@ static void MN_CalcWidestWidth(menu_t *menu)
       // only LALIGNED items are taken into account
       if(item->flags & MENUITEM_LALIGNED)
       {
-         int desc_width = 
+         int desc_width =
             item->flags & MENUITEM_BIGFONT ?
-               V_FontStringWidth(menu_font_big, item->description) 
+               V_FontStringWidth(menu_font_big, item->description)
                : MN_StringWidth(item->description);
 
          if(desc_width > menu->widest_width)
@@ -370,7 +370,7 @@ static void MN_CalcWidestWidth(menu_t *menu)
 // haleyjd 05/01/10: Draws an item's patch if appropriate. Returns true if
 // MN_DrawMenuItem should return. item_height may be modified on return.
 //
-static bool MN_drawPatchForItem(menuitem_t *item, int *item_height, 
+static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
                                 int color, int alignment)
 {
    patch_t *patch;
@@ -389,7 +389,7 @@ static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
       width = patch->width;
 
       // check for left-aligned
-      if(alignment != ALIGNMENT_LEFT) 
+      if(alignment != ALIGNMENT_LEFT)
          x -= width;
 
       // adjust x if a centered title
@@ -405,7 +405,7 @@ static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
       // haleyjd 05/16/04: hack for traditional menu support;
       // this was hard-coded in the old system
       if(drawing_menu->flags & mf_emulated)
-         *item_height = EMULATED_ITEM_SIZE; 
+         *item_height = EMULATED_ITEM_SIZE;
 
       if(item->type != it_bigslider)
          return true; // return from MN_DrawMenuItem
@@ -437,7 +437,7 @@ static int MN_titleDescription(menuitem_t *item)
       V_FontWriteTextColored(menu_font_big, text, GameModeInfo->titleColor,
                              x, item->y, &subscreen43);
    }
-      
+
    return V_FontStringHeight(menu_font_big, text);
 }
 
@@ -447,17 +447,17 @@ static int MN_titleDescription(menuitem_t *item)
 // Draws a generic menuitem description.
 // May modify *item_height and *item_width
 //
-static void MN_genericDescription(menuitem_t *item, 
+static void MN_genericDescription(menuitem_t *item,
                                   int *item_height, int *item_width,
                                   int alignment, int color)
 {
    int x, y;
-   
-   *item_width = 
+
+   *item_width =
       (item->flags & MENUITEM_BIGFONT) ?
-         V_FontStringWidth(menu_font_big, item->description) : 
+         V_FontStringWidth(menu_font_big, item->description) :
          MN_StringWidth(item->description);
-      
+
    if(item->flags & MENUITEM_CENTERED || alignment == ALIGNMENT_CENTER)
       x = (SCREENWIDTH - *item_width) / 2;
    else if(item->flags & MENUITEM_LALIGNED)
@@ -507,9 +507,9 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
       if(color == GameModeInfo->unselectColor)
          color = GameModeInfo->variableColor;
    }
-         
+
    // write variable value text
-   MN_WriteTextColored(boundkeys, color, 
+   MN_WriteTextColored(boundkeys, color,
                        x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
 }
 
@@ -535,7 +535,7 @@ static void MN_truncateInput(qstring &qstr, int x)
          subbed_width += V_FontCharWidth(menu_font, *start);
          ++start;
       }
-      
+
       if(start != end)
       {
          const char *temp = Z_Strdupa(start); // make a temp copy
@@ -553,7 +553,7 @@ static void MN_truncateInput(qstring &qstr, int x)
 static void MN_truncateValue(qstring &qstr, int x)
 {
    int width = MN_StringWidth(qstr.constPtr());
-   
+
    if(x + width > SCREENWIDTH - 8) // too wide to fit?
    {
       int subbed_width = 0;
@@ -581,13 +581,13 @@ static void MN_truncateValue(qstring &qstr, int x)
 //
 // Draws a toggle or variable item.
 //
-static void MN_drawItemToggleVar(menuitem_t *item, int color, 
+static void MN_drawItemToggleVar(menuitem_t *item, int color,
                                  int alignment, int desc_width)
 {
    static qstring varvalue; // temp buffer
    int x = item->x;
    int y = item->y;
-         
+
    if(drawing_menu->flags & mf_background)
    {
       // include gap on fullscreen menus
@@ -595,9 +595,9 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
          x = 8 + drawing_menu->widest_width + 16;  // haleyjd: use widest_width
       else
          x += GAP;
-      
+
       // adjust colour for different coloured variables
-      if(color == GameModeInfo->unselectColor) 
+      if(color == GameModeInfo->unselectColor)
          color = GameModeInfo->variableColor;
    }
 
@@ -621,7 +621,7 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
    {
       varvalue = C_VariableStringValue(item->var);
       MN_truncateValue(varvalue, x);
-   }         
+   }
 
    // draw it
    MN_WriteTextColored(varvalue.constPtr(), color, x, y);
@@ -648,7 +648,7 @@ static void MN_drawItemSlider(menuitem_t *item, int color, int alignment,
       {
          int range = var->max - var->min;
          int posn;
-         
+
          if(var->type == vt_int)
             posn = *(int *)var->variable - var->min;
          else
@@ -700,14 +700,14 @@ static void MN_drawItemBigSlider(menuitem_t *item, int color, int alignment,
    int y = item->y;
 
    MN_GetItemVariable(item);
-   
+
    if(item->var && item->var->type == vt_int)
    {
       // note: the thermometer is drawn in the position of the next menu
       // item, so place a gap underneath it.
       // FIXME/TODO: support on non-emulated menus
-      MN_DrawThermo(x, y + EMULATED_ITEM_SIZE, 
-                    item->var->max - item->var->min + 1, 
+      MN_DrawThermo(x, y + EMULATED_ITEM_SIZE,
+                    item->var->max - item->var->min + 1,
                     *(int *)item->var->variable);
    }
 }
@@ -724,19 +724,19 @@ static void MN_drawItemAutomap(menuitem_t *item, int color, int alignment,
    int iy = item->y;
    int amcolor;
    byte block[BLOCK_SIZE*BLOCK_SIZE];
-         
+
    MN_GetItemVariable(item);
 
    if(!item->var || item->var->type != vt_int)
       return;
-         
+
    // find colour of this variable from console variable
    amcolor = *(int *)item->var->variable;
-         
+
    // create block
    // border
    memset(block, GameModeInfo->blackIndex, BLOCK_SIZE*BLOCK_SIZE);
-         
+
    if(amcolor)
    {
       int bx, by;
@@ -746,14 +746,14 @@ static void MN_drawItemAutomap(menuitem_t *item, int color, int alignment,
          for(by = 1; by < BLOCK_SIZE - 1; by++)
             block[by * BLOCK_SIZE + bx] = (byte)amcolor;
    }
-         
-   // draw it         
+
+   // draw it
    V_DrawBlock(ix + GAP, iy - 1, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
-   // draw patch w/cross         
+   // draw patch w/cross
    if(!amcolor)
    {
-      V_DrawPatch(ix + GAP + 1, iy, &subscreen43, 
+      V_DrawPatch(ix + GAP + 1, iy, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
    }
 }
@@ -813,7 +813,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
       return item_height;
    }
- 
+
    // draw an alternate patch?
 
    // haleyjd: gamemodes that use big menu font don't use pics, ever
@@ -822,7 +822,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
       return item_height; // if returned true, we are done.
 
    // draw description text
-   
+
    if(item->type == it_title)
       item_height = MN_titleDescription(item);
    else if(item->type != it_bigslider || !item->patch)
@@ -935,7 +935,7 @@ static mn_helpfunc_t MN_helpStrFuncs[] =
 static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 {
    if(menu->flags & mf_skullmenu)
-   {      
+   {
       int item_x = menu->x - 30;                         // 30 left
       int item_y = y + (item_height - SKULL_HEIGHT) / 2; // midpoint
 
@@ -958,8 +958,8 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
          PatchLoader::CacheNum(wGlobalDir, smallptrs[smallptr_idx], PU_CACHE));
 
       // draw right pointer
-      V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &subscreen43, 
-         PatchLoader::CacheNum(wGlobalDir, 
+      V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &subscreen43,
+         PatchLoader::CacheNum(wGlobalDir,
                                smallptrs[(NUMSMALLPTRS - smallptr_idx) % NUMSMALLPTRS],
                                PU_CACHE));
    }
@@ -976,7 +976,7 @@ static void MN_drawPageIndicator(bool next)
 {
    char msgbuffer[64];
    const char *actionname, *speckeyname, *replkeyname, *fmtstr, *key;
-   
+
    if(next) // drawing a next indicator
    {
       actionname  = "menu_pagedown"; // name of action
@@ -1001,8 +1001,8 @@ static void MN_drawPageIndicator(bool next)
 
    psnprintf(msgbuffer, sizeof(msgbuffer), fmtstr, key);
 
-   MN_WriteTextColored(msgbuffer, CR_GOLD, 
-                       next ? 310 - MN_StringWidth(msgbuffer) : 10, 
+   MN_WriteTextColored(msgbuffer, CR_GOLD,
+                       next ? 310 - MN_StringWidth(msgbuffer) : 10,
                        SCREENHEIGHT - (2 * menu_font->absh + 1));
 }
 
@@ -1038,8 +1038,8 @@ void MN_DrawMenu(menu_t *menu)
       return;
 
    drawing_menu = menu; // needed by DrawMenuItem
-   y = menu->y; 
-      
+   y = menu->y;
+
    // draw background
 
    if(menu->flags & mf_background)
@@ -1075,14 +1075,14 @@ void MN_DrawMenu(menu_t *menu)
          else
             item_color = GameModeInfo->unselectColor;
       }
-      
+
       // draw item
       item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
-      
+
       // if selected item, draw skull / pointer next to it
       if(menu->selected == itemnum)
          MN_drawPointer(menu, y, itemnum, item_height);
-      
+
       // go down by item height
       y += item_height;
    }
@@ -1091,7 +1091,7 @@ void MN_DrawMenu(menu_t *menu)
       return; // no help msg in skull menu
 
    // choose help message to print
-   
+
    if(menu_error_time) // error message takes priority
    {
       // make it flash
@@ -1106,7 +1106,7 @@ void MN_DrawMenu(menu_t *menu)
 
       // write some help about the item
       menuitem = &menu->menuitems[menu->selected];
-      
+
       if(MN_helpStrFuncs[menuitem->type])
          helpmsg = MN_helpStrFuncs[menuitem->type](menuitem, msgbuffer);
 
@@ -1272,13 +1272,13 @@ void MN_Init(void)
       smallptr_dims[0] = ptr0->width;
       smallptr_dims[1] = ptr0->height;
    }
-      
+
    quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
 
    // haleyjd: init heretic stuff if appropriate
    if(GameModeInfo->type == Game_Heretic)
       MN_HInitSkull(); // initialize spinning skulls
-   
+
    MN_InitMenus();     // create menu commands in mn_menus.c
    MN_InitFonts();     // create menu fonts
    MN_SetBackground(); // set background
@@ -1311,11 +1311,11 @@ void MN_Ticker(void)
 // drawer
 
 void MN_Drawer(void)
-{ 
+{
    // activate menu if displaying widget
    if(current_menuwidget && !menuactive)
       MN_StartControlPanel();
-      
+
    if(current_menuwidget)
    {
       // alternate drawer
@@ -1325,9 +1325,9 @@ void MN_Drawer(void)
    }
 
    // haleyjd: moved down to here
-   if(!menuactive || hide_menu) 
+   if(!menuactive || hide_menu)
       return;
- 
+
    MN_DrawMenu(current_menu);
 }
 
@@ -1384,9 +1384,9 @@ bool MN_Responder(event_t *ev)
    {
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
-      
+
       if(ev->data1 == KEYD_ESCAPE)        // cancel input
-         input_command = NULL;      
+         input_command = NULL;
       else if(ev->data1 == KEYD_ENTER)
       {
          if(input_buffer[0] || (input_command->flags & cf_allowblank))
@@ -1418,9 +1418,9 @@ bool MN_Responder(event_t *ev)
          input_buffer[strlen((char *)input_buffer)-1] = '\0';
          return true; // eatkey
       }
-      
+
       // probably just a normal character
-      
+
       // only care about valid characters
       // dont allow too many characters on one command line
 
@@ -1439,16 +1439,16 @@ bool MN_Responder(event_t *ev)
             input_buffer[strlen((char *)input_buffer)] = ich;
          }
       }
-      
+
       return true;
-   } 
+   }
 
    if(devparm && ev->data1 == key_help)
    {
       G_ScreenShot();
       return true;
    }
-  
+
    if(action_menu_toggle)
    {
       // toggle menu
@@ -1465,9 +1465,9 @@ bool MN_Responder(event_t *ev)
             S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
          }
       }
-      else 
-         MN_StartControlPanel();      
-      
+      else
+         MN_StartControlPanel();
+
       return true;
    }
 
@@ -1484,7 +1484,7 @@ bool MN_Responder(event_t *ev)
       C_RunTextCmd("mn_options");
       return true;
    }
-   
+
    // not interested in other keys if not in menu
    if(!menuactive)
       return false;
@@ -1493,14 +1493,14 @@ bool MN_Responder(event_t *ev)
    {
       bool cancelsnd = false;
       action_menu_up = false;
-      
+
       // skip gaps
       do
       {
          if(--current_menu->selected < 0)
          {
             int i;
-            
+
             if(!ctrldown) // 3/13/09: control cancels these behaviors
             {
                // haleyjd: in paged menus, go to the previous page
@@ -1517,9 +1517,9 @@ bool MN_Responder(event_t *ev)
                   current_menu->selected = MN_FindFirstSelectable(current_menu);
                   cancelsnd = true; // cancel the sound cuz we didn't do anything
                   break; // exit the loop
-               }               
+               }
             }
-            
+
             // jump to end of menu
             for(i = 0; current_menu->menuitems[i].type != it_end; ++i)
                ; /* do-nothing loop */
@@ -1527,18 +1527,18 @@ bool MN_Responder(event_t *ev)
          }
       }
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
-      
+
       if(!cancelsnd)
          S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
-      
+
       return true;  // eatkey
    }
-  
+
    if(action_menu_down)
    {
       bool cancelsnd = false;
       action_menu_down = false;
-      
+
       do
       {
          ++current_menu->selected;
@@ -1546,7 +1546,7 @@ bool MN_Responder(event_t *ev)
          {
             if(!ctrldown) // 03/13/09: control cancels these behaviors
             {
-               // haleyjd: in paged menus, go to the next page               
+               // haleyjd: in paged menus, go to the next page
                if(current_menu->nextpage)
                {
                   // set selected item to the last selectable item
@@ -1562,24 +1562,24 @@ bool MN_Responder(event_t *ev)
                   break; // exit the loop
                }
             }
-            
+
             current_menu->selected = 0;     // jump back to start
          }
       }
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
-      
+
       if(!cancelsnd)
          S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
       return true;  // eatkey
    }
-   
+
    if(action_menu_confirm)
    {
       menuitem_t *menuitem = &current_menu->menuitems[current_menu->selected];
 
       action_menu_confirm = false;
-      
+
       switch(menuitem->type)
       {
       case it_runcmd:
@@ -1587,32 +1587,32 @@ bool MN_Responder(event_t *ev)
          Console.cmdtype = c_menu;
          C_RunTextCmd(menuitem->data);
          break;
-         
+
       case it_toggle:
          // boolean values only toggled on enter
          if((menuitem->var->type != vt_toggle && menuitem->var->type != vt_int) ||
-            menuitem->var->max - menuitem->var->min > 1) 
+            menuitem->var->max - menuitem->var->min > 1)
             break;
-         
+
          // toggle value now
          psnprintf((char *)tempstr, sizeof(tempstr), "%s /", menuitem->data);
          C_RunTextCmd((char *)tempstr);
-         
+
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
          break;
-         
+
       case it_variable:
       case it_variable_nd:
          // get input for new value
          input_command = C_GetCmdForName(menuitem->data);
-         
+
          // haleyjd 07/23/04: restore starting input_buffer with
          // the current value of string variables
          if(input_command->variable->type == vt_string)
          {
             char *str = *(char **)(input_command->variable->variable);
-            
-            if(current_menu != GameModeInfo->saveMenu || 
+
+            if(current_menu != GameModeInfo->saveMenu ||
                strcmp(str, DEH_String("EMPTYSTRING")))
                strcpy((char *)input_buffer, str);
             else
@@ -1637,27 +1637,27 @@ bool MN_Responder(event_t *ev)
       case it_binding:
          G_EditBinding(menuitem->data);
          break;
-         
+
       default:
          break;
       }
 
       return true;
    }
-  
+
    if(action_menu_previous)
    {
       action_menu_previous = false;
       MN_PrevMenu();
       return true;
    }
-   
+
    // decrease value of variable
    if(action_menu_left)
    {
       menuitem_t *menuitem;
       action_menu_left = false;
-      
+
       // haleyjd 10/07/05: if ctrl is down, go to previous menu
       if(ctrldown)
       {
@@ -1665,12 +1665,12 @@ bool MN_Responder(event_t *ev)
             MN_PageMenu(current_menu->prevpage);
          else
             S_StartSound(NULL, GameModeInfo->c_BellSound);
-         
+
          return true;
       }
-      
+
       menuitem = &current_menu->menuitems[current_menu->selected];
-      
+
       switch(menuitem->type)
       {
       case it_slider:
@@ -1679,7 +1679,7 @@ bool MN_Responder(event_t *ev)
          // no on-off int values
          if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
          {
-            if(menuitem->var->max - menuitem->var->min == 1) 
+            if(menuitem->var->max - menuitem->var->min == 1)
                break;
 
             // change variable
@@ -1702,7 +1702,7 @@ bool MN_Responder(event_t *ev)
             else if(value > menuitem->var->dmax)
                value = menuitem->var->dmax;
 
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"",
                       menuitem->data, value);
          }
          else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
@@ -1716,13 +1716,13 @@ bool MN_Responder(event_t *ev)
       }
       return true;
    }
-  
+
    // increase value of variable
    if(action_menu_right)
    {
       menuitem_t *menuitem;
       action_menu_right = false;
-      
+
       // haleyjd 10/07/05: if ctrl is down, go to next menu
       if(ctrldown)
       {
@@ -1730,12 +1730,12 @@ bool MN_Responder(event_t *ev)
             MN_PageMenu(current_menu->nextpage);
          else
             S_StartSound(NULL, GameModeInfo->c_BellSound);
-         
+
          return true;
       }
-      
+
       menuitem = &current_menu->menuitems[current_menu->selected];
-      
+
       switch(menuitem->type)
       {
       case it_slider:
@@ -1744,9 +1744,9 @@ bool MN_Responder(event_t *ev)
          // no on-off int values
          if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
          {
-            if(menuitem->var->max - menuitem->var->min == 1) 
+            if(menuitem->var->max - menuitem->var->min == 1)
                break;
-         
+
             // change variable
             psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
          }
@@ -1767,7 +1767,7 @@ bool MN_Responder(event_t *ev)
             else if(value > menuitem->var->dmax)
                value = menuitem->var->dmax;
 
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"",
                       menuitem->data, value);
          }
          else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
@@ -1776,11 +1776,11 @@ bool MN_Responder(event_t *ev)
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
-         
+
       default:
          break;
       }
-      
+
       return true;
    }
 
@@ -1793,7 +1793,7 @@ bool MN_Responder(event_t *ev)
          MN_PageMenu(current_menu->prevpage);
       else
          S_StartSound(NULL, GameModeInfo->c_BellSound);
-      
+
       return true;
    }
 
@@ -1829,22 +1829,22 @@ bool MN_Responder(event_t *ev)
       ch = tolower((unsigned char)(ev->character));
    else
       ch = tolower(ev->data1);
-   
+
    if(ev->type == ev_keydown && ch >= 'a' && ch <= 'z')
-   {  
+   {
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should
 
       int n = current_menu->selected;
-      
+
       do
       {
          n++;
-         if(current_menu->menuitems[n].type == it_end) 
+         if(current_menu->menuitems[n].type == it_end)
             n = 0; // loop round
 
          // ignore unselectables
-         if(!is_a_gap(&current_menu->menuitems[n])) 
+         if(!is_a_gap(&current_menu->menuitems[n]))
          {
             if(tolower(current_menu->menuitems[n].description[0]) == ch)
             {
@@ -1855,8 +1855,8 @@ bool MN_Responder(event_t *ev)
          }
       } while(n != current_menu->selected);
    }
-   
-   return true; 
+
+   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1888,7 +1888,7 @@ void MN_StartMenu(menu_t *menu)
    if(!menuactive)
    {
       MN_ActivateMenu();
-      current_menu = menu;      
+      current_menu = menu;
       menu_history_num = 0;  // reset history
    }
    else
@@ -1897,12 +1897,12 @@ void MN_StartMenu(menu_t *menu)
       current_menu = menu;
    }
 
-   // haleyjd 10/02/06: if the menu being activated has a curpage set, 
+   // haleyjd 10/02/06: if the menu being activated has a curpage set,
    // redirect to that page now; this allows us to return to whatever
    // page the user was last viewing.
    if(current_menu->curpage)
       current_menu = current_menu->curpage;
-   
+
    menu_error_time = 0;      // clear error message
 
    // haleyjd 11/12/09: custom menu open actions
@@ -1943,7 +1943,7 @@ void MN_PrevMenu(void)
       MN_ClearMenus();
    else
       current_menu = menu_history[menu_history_num];
-   
+
    menu_error_time = 0;          // clear errors
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
@@ -1990,11 +1990,11 @@ void MN_ForcedLoadGame(char *msg)
 void MN_ErrorMsg(const char *s, ...)
 {
    va_list args;
-   
+
    va_start(args, s);
    pvsnprintf(menu_error_message, sizeof(menu_error_message), s, args);
    va_end(args);
-   
+
    menu_error_time = 140;
 }
 
@@ -2080,7 +2080,7 @@ int MN_StringWidth(const char *s)
 }
 
 //=============================================================================
-// 
+//
 // Box Widget
 //
 // haleyjd 10/15/05: Generalized code for box widgets.
@@ -2173,7 +2173,7 @@ static void MN_BoxWidgetDrawer(void)
 
    // draw the menu in the background
    MN_DrawMenu(current_menu);
-   
+
    x = (SCREENWIDTH  - box->width ) >> 1;
    y = (SCREENHEIGHT - box->height) >> 1;
 
@@ -2197,20 +2197,20 @@ static void MN_BoxWidgetDrawer(void)
    {
       int color = GameModeInfo->unselectColor;
       int height = V_FontStringHeight(menu_font_normal, curname);
-      
+
       if(box->selection_idx == i)
       {
          color = GameModeInfo->selectColor;
 
          // draw small pointer
-         MN_DrawSmallPtr(x - (smallptr_dims[0] + 1), 
+         MN_DrawSmallPtr(x - (smallptr_dims[0] + 1),
                          y + ((height - smallptr_dims[1]) >> 1));
       }
 
       MN_WriteTextColored(curname, color, x, y);
 
       y += height + 1;
-      
+
       curname = box->item_names[++i];
    }
 }
@@ -2273,7 +2273,7 @@ static bool MN_BoxWidgetResponder(event_t *ev)
       default:
          break;
       }
-      
+
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]); // pow!
       return true;
    }
@@ -2310,7 +2310,7 @@ void MN_SetupBoxWidget(const char *title, const char **item_names,
    menu_box_widget.title = title;
    menu_box_widget.item_names = item_names;
    menu_box_widget.type = type;
-   
+
    switch(type)
    {
    case 0: // menu page widget
@@ -2406,7 +2406,7 @@ void MN_AddCommands(void)
    C_AddCommand(forceload);
    C_AddCommand(mn_toggleisback);
    C_AddCommand(mn_background);
-   
+
    MN_AddMenus();               // add commands to call the menus
    MN_AddMiscCommands();
    MN_AddDynaMenuCommands();    // haleyjd 03/13/06

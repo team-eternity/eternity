@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -93,9 +93,9 @@ enum
 #define FC_CUSTOM3      "\x8c"
 #define FC_CUSTOM4      "\x8d"
 
-// haleyjd: translucent text support 
+// haleyjd: translucent text support
 #define FC_TRANS        "\xfa"
-// haleyjd 08/20/02: new characters for internal color usage 
+// haleyjd 08/20/02: new characters for internal color usage
 #define FC_NORMAL       "\xfb"
 #define FC_HI           "\xfc"
 #define FC_ERROR        "\xfd"

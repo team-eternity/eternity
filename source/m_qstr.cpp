@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -159,7 +159,7 @@ void qstring::freeBuffer()
 //
 // qstring::charAt
 //
-// Indexing function to access a character in a qstring. This is slower but 
+// Indexing function to access a character in a qstring. This is slower but
 // more secure than using qstring::getBuffer with array indexing.
 //
 char qstring::charAt(size_t idx) const
@@ -216,7 +216,7 @@ const char &qstring::operator [] (size_t idx) const
 //
 // qstring::clear
 //
-// Sets the entire qstring buffer to zero, and resets the insertion index. 
+// Sets the entire qstring buffer to zero, and resets the insertion index.
 // Does not reallocate the buffer.
 //
 qstring &qstring::clear()
@@ -241,11 +241,11 @@ qstring &qstring::clearOrCreate(size_t pSize)
 // qstring::grow
 //
 // Grows the qstring's buffer by the indicated amount. This is automatically
-// called by other qstring methods, so there is generally no need to call it 
+// called by other qstring methods, so there is generally no need to call it
 // yourself.
 //
 qstring &qstring::grow(size_t len)
-{   
+{
    if(len > 0)
    {
       size_t newsize = size + len;
@@ -267,7 +267,7 @@ qstring &qstring::grow(size_t len)
 }
 
 //=============================================================================
-// 
+//
 // Concatenation and Insertion/Deletion/Copying Functions
 //
 
@@ -375,8 +375,8 @@ qstring &qstring::insert(const char *insertstr, size_t pos)
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize    = index + insertstrlen + 1; 
-   
+   size_t totalsize    = index + insertstrlen + 1;
+
    // pos must be between 0 and dest->index - 1
    if(pos >= index)
       I_Error("qstring::insert: position out of range\n");
@@ -407,7 +407,7 @@ qstring &qstring::copy(const char *str)
 {
    if(index > 0)
       clear();
-   
+
    return concat(str);
 }
 
@@ -485,7 +485,7 @@ qstring &qstring::copyInto(qstring &dest) const
 {
    if(dest.index > 0)
       dest.clear();
-   
+
    return dest.concat(*this);
 }
 
@@ -694,7 +694,7 @@ int qstring::strNCaseCmp(const char *str, size_t maxcount) const
 
 //
 // qstring::compare
-// 
+//
 // C++ style comparison. True return value means it is equal to the argument.
 //
 bool qstring::compare(const char *str) const
@@ -704,7 +704,7 @@ bool qstring::compare(const char *str) const
 
 //
 // qstring::compare
-// 
+//
 // Overload for qstrings.
 //
 bool qstring::compare(const qstring &other) const
@@ -831,14 +831,14 @@ const char *qstring::strRChr(char c) const
 //
 // qstring::findFirstOf
 //
-// Finds the first occurance of a character in the qstring and returns its 
+// Finds the first occurance of a character in the qstring and returns its
 // position. Returns qstring_npos if not found.
 //
 size_t qstring::findFirstOf(char c) const
 {
    const char *rover = buffer;
    bool found = false;
-   
+
    while(*rover)
    {
       if(*rover == c)
@@ -886,10 +886,10 @@ size_t qstring::findLastOf(char c) const
 {
    const char *rover;
    bool found = false;
-   
+
    if(!index)
       return npos;
-   
+
    rover = buffer + index - 1;
    do
    {
@@ -939,7 +939,7 @@ size_t qstring::find(const char *s, size_t pos) const
 
    char *base   = buffer + pos;
    char *substr = strstr(base, s);
-   
+
    return substr ? substr - buffer : npos;
 }
 
@@ -967,7 +967,7 @@ int qstring::toInt() const
 //
 // Returns the qstring converted to a long integer via strtol.
 //
-long qstring::toLong(char **endptr, int radix) 
+long qstring::toLong(char **endptr, int radix)
 {
    return strtol(buffer, endptr, radix);
 }
@@ -1097,7 +1097,7 @@ size_t qstring::replace(const char *filter, char repl)
 size_t qstring::replaceNotOf(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
-   
+
    memset(qstr_repltable, 1, sizeof(qstr_repltable));
 
    // first scan the filter string and build the replacement filter table
@@ -1204,7 +1204,7 @@ void qstring::extractFileBase(qstring &dest)
    dest = "";
 
    // back up until a \ or the start
-   while(src != buffer && 
+   while(src != buffer &&
       *(src - 1) != ':' &&
       *(src - 1) != '\\' &&
       *(src - 1) != '/')
@@ -1216,13 +1216,13 @@ void qstring::extractFileBase(qstring &dest)
 }
 
 //=============================================================================
-// 
+//
 // Formatting
 //
 
 //
 // qstring::makeQuoted
-// 
+//
 // Adds quotation marks to the qstring.
 //
 qstring &qstring::makeQuoted()
@@ -1295,7 +1295,7 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'u':
                // highest 32-bit octal is 11, plus 1 for possible sign
                dummyint = va_arg(va1, int);
-               charcount += 12; 
+               charcount += 12;
                pctstate = false;
                break;
             case 'p': // Pointer
@@ -1308,9 +1308,9 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'f':
             case 'g':
             case 'G':
-               // extremely excessive, but it's possible 
+               // extremely excessive, but it's possible
                dummydbl = va_arg(va1, double);
-               charcount += 1078; 
+               charcount += 1078;
                pctstate = false;
                break;
             case 'c': // Character
@@ -1392,4 +1392,3 @@ void qstring::archive(SaveArchive &arc)
 }
 
 // EOF
-

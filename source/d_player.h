@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -52,14 +52,14 @@ struct skin_t;
 //
 // Player states.
 //
-enum 
+enum
 {
   // Playing or camping.
   PST_LIVE,
   // Dead on the ground, view follows killer.
   PST_DEAD,
   // Ready to restart/respawn???
-  PST_REBORN            
+  PST_REBORN
 
 };
 
@@ -98,9 +98,9 @@ struct player_t
 
    // Determine POV,
    //  including viewpoint bobbing during movement.
-  
-   fixed_t        viewz;           // Focal origin above r.z  
-   fixed_t        viewheight;      // Base height above floor for viewz.  
+
+   fixed_t        viewz;           // Focal origin above r.z
+   fixed_t        viewheight;      // Base height above floor for viewz.
    fixed_t        deltaviewheight; // Bob/squat speed.
    fixed_t        bob;             // bounded/scaled total momentum.
    fixed_t        pitch;           // haleyjd 04/03/05: true pitch angle
@@ -113,18 +113,18 @@ struct player_t
 
    int            health;       // This is only used between levels
    int            armorpoints;
-   int            armortype;    // Armor type is 0-2.  
+   int            armortype;    // Armor type is 0-2.
    bool           hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
 
    // Power ups. invinc and invis are tic counters.
    int            powers[NUMPOWERS];
    bool           cards[NUMCARDS];
    bool           backpack;
-  
+
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];
    int            totalfrags;
-   
+
    weapontype_t   readyweapon;
    weapontype_t   pendingweapon; // Is wp_nochange if not changing.
 
@@ -134,7 +134,7 @@ struct player_t
    int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.
-   
+
    int            attackdown; // True if button down last tic.
    int            usedown;
 
@@ -147,7 +147,7 @@ struct player_t
    int            itemcount;
    int            secretcount;
    bool           didsecret;    // True if secret level has been done.
-  
+
    // For screen flashing (red or bright).
    int            damagecount;
    int            bonuscount;
@@ -160,11 +160,11 @@ struct player_t
    // Overlay view sprites (gun, etc).
    pspdef_t       psprites[NUMPSPRITES];
    int            curpsprite;    // haleyjd 04/05/07: for codeptr rewrite
-  
+
    int            quake;         // If > 0, player is experiencing an earthquake
    int            jumptime;      // If > 0, player can't jump again yet
    int            flyheight;     // haleyjd 06/05/12: flying
-   
+
    // Player name
    char           name[20];
 };
@@ -177,15 +177,15 @@ struct player_t
 struct wbplayerstruct_t
 {
   bool        in;     // whether the player is in game
-    
+
   // Player stats, kills, collected items etc.
   int         skills;
   int         sitems;
   int         ssecret;
-  int         stime; 
+  int         stime;
   int         frags[4];
   int         score;  // current score on entry, modified on return
-  
+
 };
 
 struct wbstartstruct_t
@@ -197,11 +197,11 @@ struct wbstartstruct_t
 
   // haleyjd: if player is going to secret map
   bool        gotosecret;
-    
+
   // previous and next levels, origin 0
   int         last;
-  int         next;   
-    
+  int         next;
+
   int         maxkills;
   int         maxitems;
   int         maxsecret;
@@ -209,9 +209,9 @@ struct wbstartstruct_t
 
   // the par time
   int         partime;
-    
+
   // index of this player in game
-  int         pnum;   
+  int         pnum;
 
   wbplayerstruct_t    plyr[MAXPLAYERS];
 

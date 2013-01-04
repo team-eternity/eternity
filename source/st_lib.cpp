@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -76,8 +76,8 @@ void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
 
 //
 // STlib_drawNum()
-// 
-// A fairly efficient way to draw a number based on differences from the 
+//
+// A fairly efficient way to draw a number based on differences from the
 // old number.
 //
 // Passed a st_number_t widget, a color range for output, and a flag
@@ -105,7 +105,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
          num = -9;
       else if(numdigits == 3 && num < -99)
          num = -99;
-      
+
       num = -num;
    }
 
@@ -123,7 +123,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    if(!num)
    {
       //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x - w, n->y, &subscreen43, n->p[0], 
+      V_DrawPatchTL(x - w, n->y, &subscreen43, n->p[0],
                     sts_always_red ? NULL : outrng, alpha);
    }
 
@@ -204,7 +204,7 @@ void STlib_updatePercent(st_percent_t *per, byte *outrng, int alpha)
 
       V_DrawPatchTL(per->n.x, per->n.y, &subscreen43, per->p, tlate, alpha);
    }
-   
+
    STlib_updateNum(&per->n, outrng, alpha);
 }
 
@@ -258,7 +258,7 @@ void STlib_updateMultIcon(st_multicon_t *mi, int alpha)
 // to the flags representing what is displayed, and pointer to the enable flag
 // Returns nothing.
 //
-void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i, 
+void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i,
                        bool *val, bool *on)
 {
    b->x   = x;
@@ -316,4 +316,3 @@ void STlib_updateBinIcon(st_binicon_t *bi)
 //
 //
 //----------------------------------------------------------------------------
-

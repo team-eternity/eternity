@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    EDF Font Definitions
 //
 //-----------------------------------------------------------------------------
@@ -172,7 +172,7 @@ cfg_opt_t edf_font_opts[] =
    CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE),
    CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE),
    CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE),
-   
+
    CFG_END()
 };
 
@@ -244,7 +244,7 @@ static bool E_AutoAllocFontNum(vfont_t *font)
    do
    {
       num = edf_alloc_fontnum--;
-   } 
+   }
    while(num >= 0 && E_FontForNum(num));
 
    // ran out while looking for an unused number?
@@ -346,7 +346,7 @@ static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
          if(rover != font && rover->fontgfx)
          {
             unsigned int j;
-            
+
             // run down the font graphics
             for(j = 0; j < font->size; ++j)
                if(font->fontgfx[j] == p)
@@ -391,7 +391,7 @@ static void E_DisposePatches(vfont_t *font)
 //
 // E_LoadLinearFont
 //
-// Populates a pre-allocated vfont_t with information on a linear font 
+// Populates a pre-allocated vfont_t with information on a linear font
 // graphic.
 //
 static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
@@ -403,7 +403,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
    // in case this font was changed from patch to block:
    E_DisposePatches(font);
 
-   // handle disposal of previous font graphics 
+   // handle disposal of previous font graphics
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
       efree(font->data);
@@ -422,7 +422,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
       if(fontpng.readFromLump(wGlobalDir, lumpnum))
       {
          AutoPalette pal(wGlobalDir);
-         bool is8Bit256    = (fontpng.getBitDepth() == 8 && 
+         bool is8Bit256    = (fontpng.getBitDepth() == 8 &&
                               fontpng.getNumColors() == 256);
          bool doRequantize = (!is8Bit256 || requantize);
 
@@ -458,7 +458,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
          break;
       }
    }
-   
+
    if(!foundsize)
    {
       E_EDFLoggedWarning(2, "Invalid lump dimensions for linear font %s\n", name);
@@ -524,17 +524,17 @@ static void E_VerifyFilter(const char *str)
             inpct = false;
             break;
          default: // screw you, hacker boy
-            E_EDFLoggedErr(2, 
+            E_EDFLoggedErr(2,
                "E_VerifyFilter: '%s' has bad format specifier '%c'\n",
                str, *rover);
          }
       }
-      
+
       if(*rover == '%')
       {
          if(foundpct) // already found one? dirty hackers.
          {
-            E_EDFLoggedErr(2, 
+            E_EDFLoggedErr(2,
                "E_VerifyFilter: '%s' has too many format specifiers\n",
                str);
          }
@@ -629,7 +629,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       // get fields
       pos = NULL;
       tempstr = cfg_getstr(sec, ITEM_FILTER_START);
-      
+
       if(strlen(tempstr) > 1)
          tempnum = strtol(tempstr, &pos, 0);
 
@@ -640,7 +640,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 
       pos = NULL;
       tempstr = cfg_getstr(sec, ITEM_FILTER_END);
-      
+
       if(strlen(tempstr) > 1)
          tempnum = strtol(tempstr, &pos, 0);
 
@@ -662,7 +662,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 //
 // Creates the fontgfx array and precaches all patches as determined via
 // execution of the filter objects in the font.
-// 
+//
 void E_LoadPatchFont(vfont_t *font)
 {
    unsigned int i, j, k, m;
@@ -714,7 +714,7 @@ void E_LoadPatchFont(vfont_t *font)
          int lnum;
 
          memset(lumpname, 0, sizeof(lumpname));
-         psnprintf(lumpname, sizeof(lumpname), 
+         psnprintf(lumpname, sizeof(lumpname),
                    filtertouse->mask, j - font->patchnumoffset);
 
          if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
@@ -756,13 +756,13 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
          return;
       }
 
-      int lumpnum = 
+      int lumpnum =
          wGlobalDir.checkNumForNameNSG(lumpname, lumpinfo_t::ns_translations);
       if(lumpnum >= 0)
       {
          if(wGlobalDir.lumpLength(lumpnum) >= 256)
          {
-            font->colrngs[index] = 
+            font->colrngs[index] =
                static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
          }
       }
@@ -840,7 +840,7 @@ static void E_ProcessFont(cfg_t *sec)
          tempnum = strtol(tempstr, &pos, 0);
 
       if(pos && *pos == '\0') // it is a number?
-         font->start = tempnum; 
+         font->start = tempnum;
       else
          font->start = *tempstr; // interpret as character
    }
@@ -903,21 +903,21 @@ static void E_ProcessFont(cfg_t *sec)
    // normal color
    if(IS_SET(sec, ITEM_FONT_COLORN))
    {
-      E_setFontColor(sec, font, ITEM_FONT_COLORN, 
+      E_setFontColor(sec, font, ITEM_FONT_COLORN,
          &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
    }
-   
+
    // high color
    if(IS_SET(sec, ITEM_FONT_COLORH))
    {
-      E_setFontColor(sec, font, ITEM_FONT_COLORH, 
+      E_setFontColor(sec, font, ITEM_FONT_COLORH,
          &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
    }
 
    // error color
    if(IS_SET(sec, ITEM_FONT_COLORE))
    {
-      E_setFontColor(sec, font, ITEM_FONT_COLORE, 
+      E_setFontColor(sec, font, ITEM_FONT_COLORE,
          &vfont_t::colorError, &gamemodeinfo_t::colorError);
    }
 
@@ -930,7 +930,7 @@ static void E_ProcessFont(cfg_t *sec)
       {
          qstring translation;
          const char *fieldname = fontcolornames[col];
-         
+
          E_CfgListToCommaString(colors, fontcolornames[col], translation);
 
          E_loadTranslation(font, col, translation.constPtr());
@@ -979,10 +979,10 @@ static void E_ProcessFont(cfg_t *sec)
       // allocate the font filters
       font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
       font->numfilters = numfilters;
-      
+
       for(i = 0; i < numfilters; ++i)
       {
-         E_ProcessFontFilter(cfg_getnsec(sec, ITEM_FONT_FILTER, i), 
+         E_ProcessFontFilter(cfg_getnsec(sec, ITEM_FONT_FILTER, i),
                              &(font->filters[i]));
       }
 
@@ -992,7 +992,7 @@ static void E_ProcessFont(cfg_t *sec)
       E_LoadPatchFont(font);
    }
 
-   E_EDFLogPrintf("\t\t%s font %s\n", 
+   E_EDFLogPrintf("\t\t%s font %s\n",
                   def ? "Defined" : "Modified", font->name);
 }
 
@@ -1081,11 +1081,10 @@ vfont_t *E_FontForNum(int num)
 // the name does not exist.
 //
 int E_FontNumForName(const char *name)
-{ 
+{
    vfont_t *font = E_FontForName(name);
 
    return font ? font->num : -1;
 }
 
 // EOF
-

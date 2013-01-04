@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //--------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -6,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,7 +28,7 @@ typedef struct deh_bexptr_s
 {
    void (*cptr)(Mobj *); // actual pointer to the subroutine
    const char *lookup;   // mnemonic lookup string to be specified in BEX
-   int next;             // haleyjd: for bex hash chaining   
+   int next;             // haleyjd: for bex hash chaining
 } deh_bexptr;
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
@@ -35,7 +36,7 @@ extern int num_bexptrs;
 
 typedef struct dehstr_s
 {
-   const char **ppstr;   // doubly indirect pointer to string   
+   const char **ppstr;   // doubly indirect pointer to string
    const char *lookup;   // pointer to lookup string name
    const char *original; // haleyjd 10/08/06: original string
    int bnext;            // haleyjd: for bex hash chaining (by mnemonic)
@@ -99,4 +100,3 @@ void D_ProcessDEHQueue(void);
 #endif
 
 // EOF
-

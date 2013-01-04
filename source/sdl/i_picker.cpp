@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -84,7 +84,7 @@ static byte *iwadpics[NUMPICKIWADS]; // iwad title pics
 static byte *pals[NUMPICKIWADS];     // palettes
 
 //=============================================================================
-// 
+//
 // Data
 //
 
@@ -101,7 +101,7 @@ static void I_Pick_LoadGfx(void)
    {
       VPNGImage png;
       void *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
-      
+
       if(png.readImage(lump))
       {
          if(png.getWidth() == 540 && png.getHeight() == 380)
@@ -139,7 +139,7 @@ static void I_Pick_LoadIWAD(int num)
             pals[num]     = pngPalette;
          }
       }
-      
+
       efree(lump);
    }
 }
@@ -240,7 +240,7 @@ static void I_Pick_DrawBG(void)
 
    if(!bgframe)
       return;
-   
+
    src = bgframe;
 
    if(SDL_MUSTLOCK(pickscreen))
@@ -291,7 +291,7 @@ static void I_Pick_DrawIWADPic(int pic)
 
    if(!iwadpics[pic] || !pals[pic])
       return;
-   
+
    src = iwadpics[pic];
    pal = pals[pic];
 
@@ -301,7 +301,7 @@ static void I_Pick_DrawIWADPic(int pic)
          return;
       locked = true;
    }
-   
+
    for(y = 19; y < 240 + 19; ++y)
    {
       dest = (Uint32 *)((byte *)pickscreen->pixels + y * pickscreen->pitch +
@@ -325,7 +325,7 @@ static void I_Pick_DrawIWADPic(int pic)
          *dest++ = color;
       }
    }
-   
+
    if(locked)
       SDL_UnlockSurface(pickscreen);
 }
@@ -355,13 +355,13 @@ static void I_Pick_Drawer(void)
 //
 // I_Pick_DoLeft
 //
-// Called for left arrow keydown and mouse click events. Moves the IWAD 
+// Called for left arrow keydown and mouse click events. Moves the IWAD
 // selection back to the previous valid IWAD.
 //
 static void I_Pick_DoLeft(void)
 {
    int startwad = currentiwad;
-   
+
    do
    {
       --currentiwad;
@@ -369,7 +369,7 @@ static void I_Pick_DoLeft(void)
          currentiwad = NUMPICKIWADS - 1;
    }
    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
-   
+
    SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
 }
 
@@ -382,7 +382,7 @@ static void I_Pick_DoLeft(void)
 static void I_Pick_DoRight(void)
 {
    int startwad = currentiwad;
-   
+
    do
    {
       ++currentiwad;
@@ -390,7 +390,7 @@ static void I_Pick_DoRight(void)
          currentiwad = 0;
    }
    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
-   
+
    SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
 }
 
@@ -512,7 +512,7 @@ static void I_Pick_MainLoop(void)
          case SDL_KEYDOWN:
             switch(ev.key.keysym.sym)
             {
-            case SDLK_ESCAPE:  
+            case SDLK_ESCAPE:
                I_Pick_DoAbort();
                break;
             case SDLK_BACKSPACE:
@@ -536,7 +536,7 @@ static void I_Pick_MainLoop(void)
             break;
          }
       }
-      
+
       // sleep
       SDL_Delay(1);
    }
@@ -562,7 +562,7 @@ static void I_Pick_Shutdown(void)
 //   haleyjd: I hate SDL.
 //   if(pickvideoinit)
 //      SDL_QuitSubSystem(SDL_INIT_VIDEO);
-   
+
    pickvideoinit = false;
 }
 
@@ -636,4 +636,3 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 }
 
 // EOF
-

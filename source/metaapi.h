@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -78,7 +78,7 @@ public:
 
    // Virtual Methods
    virtual MetaObject *clone() const;
-   virtual const char *toString() const;   
+   virtual const char *toString() const;
 };
 
 // MetaObject specializations for basic types
@@ -97,7 +97,7 @@ public:
 
    // Virtual Methods
    virtual MetaObject *clone() const;
-   virtual const char *toString() const; 
+   virtual const char *toString() const;
 
    // Accessors
    int getValue() const { return value; }
@@ -209,7 +209,7 @@ public:
    MetaObject *tableIterator(MetaObject *object) const;
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects
-   
+
    // Signed integer
    void addInt(const char *key, int value);
    int  getInt(size_t keyIndex, int defValue);
@@ -256,12 +256,12 @@ protected:
    bool   haveIndex;
 
 public:
-   MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) 
+   MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false)
    {
    }
 
-   size_t getIndex() 
-   { 
+   size_t getIndex()
+   {
       if(!haveIndex)
       {
          keyIndex  = MetaTable::IndexForKey(key);
@@ -274,4 +274,3 @@ public:
 #endif
 
 // EOF
-

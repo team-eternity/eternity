@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 David Hill, James Haley
@@ -50,7 +50,7 @@ public:
       void addType();
 
       Type *next; // next type on the same hash chain
-      
+
       static Type *rttiTypes[NUMTYPECHAINS]; // hash table
 
    protected:
@@ -108,12 +108,12 @@ public:
    static Type StaticType;
 
    // getDynamicType will always return the most-derived (or "actual") type of
-   // the object even when invoked through pointers or references to super 
+   // the object even when invoked through pointers or references to super
    // classes. You are required to override this method.
    virtual const Type *getDynamicType() const { return &StaticType; }
 
    // getClassName will always return the name of the most-derived (or "actual")
-   // type of the object even when invoked through pointers or references to 
+   // type of the object even when invoked through pointers or references to
    // super classes.
    const char *getClassName() const { return getDynamicType()->name; }
 
@@ -132,7 +132,7 @@ public:
    //
    // Returns true if the object's actual type matches the passed-in name.
    //
-   bool isInstanceOf(const char *className) const 
+   bool isInstanceOf(const char *className) const
    {
       return !strcmp(getClassName(), className);
    }
@@ -192,7 +192,7 @@ public:
 // class Type;
 // * This is the class's RTTI proxy type and it automatically inherits from the
 //   Super class's proxy. The constructor is protected. The proxy class exposes
-//   the type it proxies for (ie., name) as Type::Class, and a virtual 
+//   the type it proxies for (ie., name) as Type::Class, and a virtual
 //   newObject() factory constructor method. Note using this macro will exact
 //   the requirement of a default constructor on the RTTIObject descendant.
 //
@@ -201,9 +201,9 @@ public:
 //   descendant. It is instantiated by the IMPLEMENT_RTTI_TYPE macro below.
 //
 // virtual const Type *getDynamicType() const;
-// * This method of the RTTIObject descendant will return the StaticType 
+// * This method of the RTTIObject descendant will return the StaticType
 //   member, which in the context of each individual class, is the instance
-//   representing the actual most-derived type of the object, ie., 
+//   representing the actual most-derived type of the object, ie.,
 //   name::StaticType (the parent instances of StaticType are progressively
 //   hidden in each descendant scope).
 //
@@ -233,9 +233,9 @@ private:
 //
 // Example:
 //   IMPLEMENT_RTTI_TYPE(FireFlickerThinker)
-//   This defines FireFlickerThinker::StaticType and constructs it with 
+//   This defines FireFlickerThinker::StaticType and constructs it with
 //   "FireFlickerThinker" as its class name.
-// 
+//
 
 #define IMPLEMENT_RTTI_TYPE(name) \
 name::Type name::StaticType(#name, &Super::StaticType);
@@ -245,7 +245,7 @@ name::Type name::StaticType(#name, &Super::StaticType);
 //
 // runtime_cast
 //
-// This is the most general equivalent of dynamic_cast which uses the custom 
+// This is the most general equivalent of dynamic_cast which uses the custom
 // RTTI system instead of C++'s built-in typeid structures.
 //
 template<typename T> inline T runtime_cast(RTTIObject *robj)
@@ -259,4 +259,3 @@ template<typename T> inline T runtime_cast(RTTIObject *robj)
 #endif //E_RTTI_H__
 
 // EOF
-

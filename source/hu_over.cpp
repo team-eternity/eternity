@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -240,12 +240,12 @@ static void HU_textBar(qstring &s, int pct)
 {
    if(pct > 100)
       pct = 100;
-  
+
    // build the string, decide how many blocks
    while(pct)
    {
       int addchar = 0;
-      
+
       if(pct >= BARSIZE)
       {
          addchar = 123;  // full pct: 4 blocks
@@ -264,7 +264,7 @@ static void HU_textBar(qstring &s, int pct)
 //
 // Drawer
 //
-// The actual drawer is the heart of the overlay code. It is split into 
+// The actual drawer is the heart of the overlay code. It is split into
 // individual functions, each of which draws a different part.
 //
 
@@ -278,26 +278,26 @@ static void HU_drawHealth(int x, int y)
 {
    qstring tempstr;
    int fontcolor;
-   
+
    HU_WriteText(HUDCOLOR "Health", x, y);
    x += GAP; // leave a gap between name and bar
-   
+
    // decide on the colour first
    fontcolor =
       hu_player.health < health_red    ? *FC_RED   :
       hu_player.health < health_yellow ? *FC_GOLD  :
       hu_player.health <= health_green ? *FC_GREEN :
       *FC_BLUE;
-  
+
    //psnprintf(tempstr, sizeof(tempstr), "%c", fontcolor);
    tempstr << static_cast<char>(fontcolor);
 
    // now make the actual bar
    HU_textBar(tempstr, hu_player.health);
-   
+
    // append the percentage itself
    tempstr << " " << hu_player.health;
-   
+
    // write it
    HU_WriteText(tempstr.constPtr(), x, y);
 }
@@ -345,14 +345,14 @@ static void HU_drawAmmo(int x, int y)
    qstring tempstr;
    int fontcolor;
    int lmaxammo;
-   
+
    HU_WriteText(HUDCOLOR "Ammo", x, y);
    x += GAP;
-   
+
    fontcolor = weapcolor(hu_player.readyweapon);
-   
+
    tempstr << static_cast<char>(fontcolor);
-   
+
    lmaxammo = playermaxammo;
 
    if(lmaxammo)
@@ -362,23 +362,23 @@ static void HU_drawAmmo(int x, int y)
    }
    else // fist or chainsaw
       tempstr << "N/A";
-   
+
    HU_WriteText(tempstr.constPtr(), x, y);
 }
 
 //
 // HU_drawWeapons
-// 
+//
 // Weapons List
 //
 static void HU_drawWeapons(int x, int y)
 {
    qstring tempstr;
    int fontcolor;
-   
+
    HU_WriteText(HUDCOLOR "Weapons", x, y);  // draw then leave a gap
    x += GAP;
-  
+
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       if(hu_player.weaponowned[i])
@@ -388,7 +388,7 @@ static void HU_drawWeapons(int x, int y)
          tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
       }
    }
-   
+
    HU_WriteText(tempstr.constPtr(), x, y);  // draw it
 }
 
@@ -403,7 +403,7 @@ static void HU_drawKeys(int x, int y)
 {
    HU_WriteText(HUDCOLOR "Keys", x, y);    // draw then leave a gap
    x += GAP;
-   
+
    // haleyjd 10/09/05: don't show double keys in Heretic
    for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
@@ -440,16 +440,16 @@ static void HU_drawFrags(int x, int y)
 static void HU_drawStatus(int x, int y)
 {
    qstring tempstr;
-   
+
    HU_WriteText(HUDCOLOR "Status", x, y); // draw, leave a gap
    x += GAP;
-  
+
    // haleyjd 06/14/06: restored original colors to K/I/S
-   tempstr 
-      << FC_RED  "K " FC_GREEN << hu_player.killcount   << '/' << totalkills << ' ' 
-      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << '/' << totalitems << ' ' 
+   tempstr
+      << FC_RED  "K " FC_GREEN << hu_player.killcount   << '/' << totalkills << ' '
+      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << '/' << totalitems << ' '
       << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
-  
+
    HU_WriteText(tempstr.constPtr(), x, y);
 }
 
@@ -461,7 +461,7 @@ static void HU_overlaySetup()
    int i, x, y;
 
    // decide where to put all the widgets
-   
+
    for(i = 0; i < NUMOVERLAY; i++)
       overlay[i].x = 1;       // turn em all on
 
@@ -477,15 +477,15 @@ static void HU_overlaySetup()
       overlay[ol_frag].x = -1;
 
    // now build according to style
-   
+
    switch(hud_overlaystyle)
-   {      
+   {
    case HUD_OFF:       // 'off'
    case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
-      for(i = 0; i < NUMOVERLAY; i++)         
+      for(i = 0; i < NUMOVERLAY; i++)
          setol(i, -1, -1); // turn it off
       break;
-      
+
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
       y = SCREENHEIGHT - 8;
 
@@ -498,9 +498,9 @@ static void HU_overlaySetup()
          }
       }
       break;
-      
+
    case HUD_FLAT: // all at bottom of screen
-      x = 160; 
+      x = 160;
       y = SCREENHEIGHT - 8;
 
       // haleyjd 06/14/06: rewrote to restore a sensible ordering
@@ -524,7 +524,7 @@ static void HU_overlaySetup()
       setol(ol_armor,  SCREENWIDTH-138,   8);
       setol(ol_weap,   SCREENWIDTH-138, 184);
       setol(ol_ammo,   SCREENWIDTH-138, 192);
-      
+
       if(GameType == gt_dm)  // if dm, put frags in place of keys
          setol(ol_frag, 0, 192);
       else
@@ -557,7 +557,7 @@ void HU_ToggleHUD()
 //
 // HU_DisableHUD
 //
-// haleyjd: Called from CONSOLE_COMMAND(screensize). Added since SMMU; is 
+// haleyjd: Called from CONSOLE_COMMAND(screensize). Added since SMMU; is
 // required to properly support changing between fullscreen/status bar/HUD.
 //
 void HU_DisableHUD()
@@ -578,11 +578,11 @@ void HU_DisableHUD()
 void HU_OverlayDraw()
 {
    // SoM 2-4-04: ANYRES
-   if(viewheight != video.height || automapactive || !hud_enabled) 
+   if(viewheight != video.height || automapactive || !hud_enabled)
       return;  // fullscreen only
-  
+
    HU_overlaySetup();
-   
+
    for(int i = 0; i < NUMOVERLAY; i++)
    {
       if(overlay[i].x != -1)

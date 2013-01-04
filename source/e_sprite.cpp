@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -6,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -46,13 +47,13 @@ struct esprite_t
 {
    DLListItem<esprite_t> link;    // hash links
    char                 *nameptr; // hash key
-   
+
    int  num;      // sprite number
-   char name[5];  // sprite name   
+   char name[5];  // sprite name
 };
 
 // sprite hash table
-static EHashTable<esprite_t, ENCStringHashKey, 
+static EHashTable<esprite_t, ENCStringHashKey,
                   &esprite_t::nameptr, &esprite_t::link> spritehash(257);
 
 //
@@ -75,21 +76,21 @@ int E_SpriteNumForName(const char *name)
 //
 // E_AddSprite
 //
-// haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already 
+// haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already
 // present. Returns true if successful and false otherwise.
 //
 static bool E_AddSprite(const char *name, esprite_t *sprite)
 {
-   // initialize the esprite object   
+   // initialize the esprite object
    strncpy(sprite->name, name, 4);
    sprite->num = NUMSPRITES;
    sprite->nameptr = sprite->name;
-   
+
    if(spritehash.objectForKey(name))
       return false; // don't add the same sprite name twice
-   
+
    E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
-   
+
    // add esprite to hash
    spritehash.addObject(sprite);
 
@@ -131,10 +132,10 @@ void E_ProcessSprites(cfg_t *cfg)
 
    // get number of sprites in the spritenames array
    numarraysprites = cfg_size(cfg, SEC_SPRITE);
-   
+
    E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", numarraysprites);
-   
-   // At least one sprite is required to be defined through the 
+
+   // At least one sprite is required to be defined through the
    // spritenames array, but only when no sprites have been defined
    // already.
    if(!numarraysprites)
@@ -156,7 +157,7 @@ void E_ProcessSprites(cfg_t *cfg)
       // spritenames must be exactly 4 characters long
       if(strlen(sprname) != 4)
       {
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_ProcessSprites: invalid sprite name '%s'\n", sprname);
       }
 
@@ -191,9 +192,8 @@ bool E_ProcessSingleSprite(const char *sprname)
       efree(spr);
       return false;
    }
-   
+
    return true;
 }
 
 // EOF
-

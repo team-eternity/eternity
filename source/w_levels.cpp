@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,7 +47,7 @@
 #include "w_wad.h"
 
 //=============================================================================
-// 
+//
 // Externs
 //
 
@@ -84,7 +84,7 @@ public:
    wadlevel_t *findLevel(const char *name);
    const char *getFirstLevelName();
 
-   const char *getName() const { return name; }   
+   const char *getName() const { return name; }
 };
 
 //=============================================================================
@@ -93,8 +93,8 @@ public:
 //
 
 // hash table
-static EHashTable<ManagedDirectory, EStringHashKey, 
-                  &ManagedDirectory::name, &ManagedDirectory::links> 
+static EHashTable<ManagedDirectory, EStringHashKey,
+                  &ManagedDirectory::name, &ManagedDirectory::links>
                   w_dirhash(31);
 
 //=============================================================================
@@ -147,7 +147,7 @@ ManagedDirectory::~ManagedDirectory()
    // free directory filename
    if(name)
    {
-      efree(name); 
+      efree(name);
       name = NULL;
    }
 
@@ -167,7 +167,7 @@ ManagedDirectory::~ManagedDirectory()
 bool ManagedDirectory::openWadFile()
 {
    bool ret;
-   
+
    if((ret = addNewPrivateFile(name)))
       D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, true, false);
 
@@ -433,7 +433,7 @@ static WadDirectory *W_loadMasterLevelWad(const char *filename)
    char *fullpath = NULL;
    int len = 0;
    WadDirectory *dir = NULL;
-   
+
    if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
       return NULL;
 
@@ -530,7 +530,7 @@ void W_EnumerateMasterLevels(bool forceRefresh)
                errno ? strerror(errno) : "(unknown error)");
       return;
    }
-   
+
    if(masterlevelsdir.numfiles > 0)
       masterlevelsenum = true;
 }
@@ -555,8 +555,8 @@ void W_DoMasterLevels(bool allowexit)
       return;
    }
 
-   MN_DisplayFileSelector(&masterlevelsdir, 
-                          "Select a Master Levels WAD:", 
+   MN_DisplayFileSelector(&masterlevelsdir,
+                          "Select a Master Levels WAD:",
                           "w_startlevel", true, allowexit);
 }
 
@@ -580,7 +580,7 @@ static WadDirectory *W_loadNR4TL()
 {
    int len = 0;
    WadDirectory *dir = NULL;
-   
+
    if(!w_norestpath || !*w_norestpath)
       return NULL;
 
@@ -669,7 +669,7 @@ void W_InitManagedMission(int mission)
 //
 // w_masterlevels
 //
-// Shows the Master Levels menu, assuming master_levels_dir is properly 
+// Shows the Master Levels menu, assuming master_levels_dir is properly
 // configured.
 //
 CONSOLE_COMMAND(w_masterlevels, cf_notnet)
@@ -679,7 +679,7 @@ CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 
 //
 // w_startlevel
-// 
+//
 // Executed by the menu filebox widget when displaying the Master Levels
 // directory listing, in order to load and start the proper map.
 //
@@ -737,8 +737,8 @@ CONSOLE_COMMAND(w_writelump, 0)
 // W_AddCommands
 //
 // Adds all managed wad directory and Master Levels commands, as well as some
-// misc utilities related to wad files. Note that the master_levels_dir cvar 
-// is in g_cmd along with the IWAD settings, because it needs to use some of 
+// misc utilities related to wad files. Note that the master_levels_dir cvar
+// is in g_cmd along with the IWAD settings, because it needs to use some of
 // the same code they use for path verification.
 //
 void W_AddCommands(void)
@@ -752,4 +752,3 @@ void W_AddCommands(void)
 }
 
 // EOF
-

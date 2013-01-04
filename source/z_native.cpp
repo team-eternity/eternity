@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 // Native implementation of the zone API. This doesn't have a lot of advantage
 // over the zone heap during normal play, but it shines when the game is
 // under stress, whereas the zone heap chokes doing an O(N) search over the
-// block list and wasting time dumping purgables, causing unnecessary disk 
+// block list and wasting time dumping purgables, causing unnecessary disk
 // thrashing.
 //
 // When running with this heap, there is no limitation to the amount of memory
@@ -87,7 +87,7 @@
 //=============================================================================
 //
 // Memblock Structure
-// 
+//
 
 typedef struct memblock
 {
@@ -113,7 +113,7 @@ typedef struct memblock
 
 // haleyjd 03/08/10: dynamically calculated header size;
 // round sizeof(memblock_t) up to nearest 16-byte boundary. This should work
-// just about everywhere, and keeps the assumption of a 32-byte header on 
+// just about everywhere, and keeps the assumption of a 32-byte header on
 // 32-bit. 64-bit will use a 64-byte header.
 static const size_t header_size = (sizeof(memblock_t) + 15) & ~15;
 
@@ -148,7 +148,7 @@ void       *ZoneObject::newalloc;            // most recent ZoneObject alloc
 
 //
 // Z_IDCheckNB
-// 
+//
 // Performs a fatal error condition check contingent on the definition
 // of ZONEIDCHECK, in any context where a memblock pointer is not available.
 //
@@ -166,7 +166,7 @@ static void Z_IDCheckNB(bool err, const char *errmsg,
 // of ZONEIDCHECK, and accepts a memblock pointer for provision of additional
 // malloc source information available when INSTRUMENTED is also defined.
 //
-static void Z_IDCheck(bool err, const char *errmsg, 
+static void Z_IDCheck(bool err, const char *errmsg,
                       memblock_t *block, const char *file, int line)
 {
    if(err)
@@ -288,7 +288,7 @@ static void Z_Close(void)
 }
 
 void Z_Init(void)
-{   
+{
    atexit(Z_Close);            // exit handler
 
    Z_OpenLogFile();
@@ -313,12 +313,12 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    DEBUG_CHECKHEAP();
 
    Z_IDCheckNB(IDBOOL(tag >= PU_PURGELEVEL && !user),
-               "Z_Malloc: an owner is required for purgable blocks", 
+               "Z_Malloc: an owner is required for purgable blocks",
                file, line);
 
    if(!size)
       return user ? *user = NULL : NULL;          // malloc(0) returns NULL
-   
+
    if(!(block = (memblock_t *)(malloc(size + header_size))))
    {
       if(blockbytag[PU_CACHE])
@@ -333,31 +333,31 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
       I_FatalError(I_ERR_KILL, "Z_Malloc: Failure trying to allocate %u bytes\n"
                                "Source: %s:%d\n", (unsigned int)size, file, line);
    }
-   
+
    block->size = size;
-   
+
    if((block->next = blockbytag[tag]))
       block->next->prev = &block->next;
    blockbytag[tag] = block;
    block->prev = &blockbytag[tag];
-           
+
    INSTRUMENT(memorybytag[tag] += block->size);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
-         
+
    IDCHECK(block->id = ZONEID); // signature required in block header
-   
+
    block->tag  = tag;           // tag
    block->user = user;          // user
-   
+
    ret = ((byte *) block + header_size);
    if(user)                     // if there is a user
       *user = ret;              // set user to point to new block
-   
+
    // scramble memory -- weed out any bugs
    SCRAMBLER(ret, size);
 
-   Z_LogPrintf("* %p = Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", 
+   Z_LogPrintf("* %p = Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n",
                ret, size, tag, user, file, line);
 
    return ret;
@@ -380,7 +380,7 @@ void (Z_Free)(void *p, const char *file, int line)
       // haleyjd: permanent blocks are never freed even if the code tries.
       if(block->tag == PU_PERMANENT)
          return;
-      
+
       IDCHECK(block->id = 0); // Nullify id so another free fails
 
       // haleyjd 01/20/09: check invalid tags
@@ -409,9 +409,9 @@ void (Z_Free)(void *p, const char *file, int line)
 
       if((*block->prev = block->next))
          block->next->prev = block->prev;
-         
+
       free(block);
-         
+
       Z_LogPrintf("* Z_Free(p=%p, file=%s:%d)\n", p, file, line);
    }
 }
@@ -425,13 +425,13 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 
    // haleyjd 03/30/2011: delete ZoneObjects of the same tags as well
    ZoneObject::FreeTags(lowtag, hightag);
-   
+
    if(lowtag <= PU_FREE)
       lowtag = PU_FREE+1;
 
    if(hightag > PU_CACHE)
       hightag = PU_CACHE;
-   
+
    for(; lowtag <= hightag; ++lowtag)
    {
       for(block = blockbytag[lowtag], blockbytag[lowtag] = NULL; block;)
@@ -439,7 +439,7 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
          memblock_t *next = block->next;
 
          Z_IDCheck(IDBOOL(block->id != ZONEID),
-                   "Z_FreeTags: Changed a tag without ZONEID", 
+                   "Z_FreeTags: Changed a tag without ZONEID",
                    block, file, line);
 
          (Z_Free)((byte *)block + header_size, file, line);
@@ -457,16 +457,16 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
    memblock_t *block;
-   
+
    DEBUG_CHECKHEAP();
-   
+
    if(!ptr)
    {
-      I_FatalError(I_ERR_KILL, 
+      I_FatalError(I_ERR_KILL,
                    "Z_ChangeTag: can't change a NULL pointer at %s:%d\n",
                    file, line);
    }
-   
+
    block = (memblock_t *)((byte *) ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
@@ -524,7 +524,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block = origblock = (memblock_t *)((byte *)ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
-             "Z_Realloc: Reallocated a block without ZONEID\n", 
+             "Z_Realloc: Reallocated a block without ZONEID\n",
              block, file, line);
 
    // haleyjd: realloc cannot change the tag of a permanent block
@@ -546,7 +546,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    if(!(newblock = (memblock_t *)(realloc(block, n + header_size))))
    {
-      // haleyjd 07/09/10: Note that unlinking the block above makes this safe 
+      // haleyjd 07/09/10: Note that unlinking the block above makes this safe
       // even if the current block is PU_CACHE; Z_FreeTags won't find it.
       if(blockbytag[PU_CACHE])
       {
@@ -589,7 +589,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
 
-   Z_LogPrintf("* %p = Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", 
+   Z_LogPrintf("* %p = Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n",
                p, ptr, n, tag, user, file, line);
 
    return p;
@@ -632,7 +632,7 @@ void (Z_CheckHeap)(const char *file, int line)
       for(block = blockbytag[lowtag]; block; block = block->next)
       {
          Z_IDCheck(IDBOOL(block->id != ZONEID),
-                   "Z_CheckHeap: Block found without ZONEID", 
+                   "Z_CheckHeap: Block found without ZONEID",
                    block, file, line);
       }
    }
@@ -659,7 +659,7 @@ int (Z_CheckTag)(void *ptr, const char *file, int line)
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_CheckTag: block doesn't have ZONEID", block, file, line);
-   
+
    return block->tag;
 }
 
@@ -694,7 +694,7 @@ void Z_PrintZoneHeap(void)
       {
          fprintf(outfile, fmtstr, block,
 #if defined(ZONEIDCHECK)
-                 block->id, 
+                 block->id,
 #endif
                  block->next, block->prev, block->size,
                  block->user, block->tag
@@ -715,7 +715,7 @@ void Z_PrintZoneHeap(void)
             fputs("\tWARNING: purgable block with no user\n", outfile);
          if(block->tag >= PU_MAX)
             fputs("\tWARNING: invalid cache level\n", outfile);
-         
+
          fflush(outfile);
       }
    }
@@ -753,11 +753,11 @@ void Z_DumpCore(void)
 void *Z_SysMalloc(size_t size)
 {
    void *ret;
-   
+
    if(!(ret = malloc(size)))
    {
       I_FatalError(I_ERR_KILL,
-                   "Z_SysMalloc: failed on allocation of %u bytes\n", 
+                   "Z_SysMalloc: failed on allocation of %u bytes\n",
                    (unsigned int)size);
    }
 
@@ -776,7 +776,7 @@ void *Z_SysCalloc(size_t n1, size_t n2)
    if(!(ret = calloc(n1, n2)))
    {
       I_FatalError(I_ERR_KILL,
-                   "Z_SysCalloc: failed on allocation of %u bytes\n", 
+                   "Z_SysCalloc: failed on allocation of %u bytes\n",
                    (unsigned int)n1*n2);
    }
 
@@ -796,7 +796,7 @@ void *Z_SysRealloc(void *ptr, size_t size)
    if(!(ret = realloc(ptr, size)))
    {
       I_FatalError(I_ERR_KILL,
-                   "Z_SysRealloc: failed on allocation of %u bytes\n", 
+                   "Z_SysRealloc: failed on allocation of %u bytes\n",
                    (unsigned int)size);
    }
 
@@ -832,7 +832,7 @@ void Z_FreeAlloca(void)
 
    if(!block)
       return;
-   
+
    Z_LogPuts("* Freeing alloca blocks\n");
 
    blockbytag[PU_AUTO] = NULL;
@@ -842,7 +842,7 @@ void Z_FreeAlloca(void)
       memblock_t *next = block->next;
 
       Z_IDCheckNB(IDBOOL(block->id != ZONEID),
-                  "Z_FreeAlloca: Freed a tag without ZONEID", 
+                  "Z_FreeAlloca: Freed a tag without ZONEID",
                   __FILE__, __LINE__);
 
       Z_Free((byte *)block + header_size);
@@ -866,7 +866,7 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    // allocate it
    ptr = (Z_Calloc)(n, 1, PU_AUTO, NULL, file, line);
 
-   Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n", 
+   Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n",
                ptr, n, file, line);
 
    return ptr;
@@ -892,10 +892,10 @@ void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line)
       if(block->tag != PU_AUTO)
          I_FatalError(I_ERR_KILL, "Z_Realloca: strange block tag %d\n", block->tag);
    }
-   
+
    ret = (Z_Realloc)(ptr, n, PU_AUTO, NULL, file, line);
 
-   Z_LogPrintf("* %p = Z_Realloca(ptr = %p, n = %lu, file = %s, line = %d)\n", 
+   Z_LogPrintf("* %p = Z_Realloca(ptr = %p, n = %lu, file = %s, line = %d)\n",
                ret, ptr, n, file, line);
 
    return ret;
@@ -907,7 +907,7 @@ void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line)
 // haleyjd 05/07/08: strdup that uses alloca, for convenience.
 //
 char *(Z_Strdupa)(const char *s, const char *file, int line)
-{      
+{
    return strcpy((char *)((Z_Alloca)(strlen(s)+1, file, line)), s);
 }
 
@@ -929,10 +929,10 @@ void *ZoneObject::operator new (size_t size)
 //
 // ZoneObject Constructor
 //
-// If the ZoneObject::newalloc static is set, it will be picked up by the 
+// If the ZoneObject::newalloc static is set, it will be picked up by the
 // subsequent constructor call and stored in the object that was allocated.
 //
-ZoneObject::ZoneObject() 
+ZoneObject::ZoneObject()
    : zonealloc(NULL), zonetag(PU_FREE), zonenext(NULL), zoneprev(NULL)
 {
    if(newalloc)
@@ -1024,7 +1024,7 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
 
    if(hightag > PU_CACHE)
       hightag = PU_CACHE;
-   
+
    for(; lowtag <= hightag; ++lowtag)
    {
       for(obj = objectbytag[lowtag], objectbytag[lowtag] = NULL; obj;)

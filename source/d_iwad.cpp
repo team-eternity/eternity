@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -68,7 +68,7 @@ static char *baseiwad;                // jff 3/23/98: iwad directory
 // DOOMWADPATH support
 //
 // haleyjd 12/31/10: A standard evolved later for DOOMWADPATH, in preference to
-// use of DOOMWADDIR, which could only specify a single path. DOOMWADPATH is 
+// use of DOOMWADDIR, which could only specify a single path. DOOMWADPATH is
 // like the standard system path, except for wads. When looking for a file on
 // the DOOMWADPATH, the paths in the variable will be tried in the order they
 // are specified.
@@ -156,7 +156,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
    for(size_t i = 0; i < numpaths ; i++)
    {
       struct stat sbuf;
-      
+
       qstr = doomwadpaths[i];
       qstr.pathConcatenate(filename);
 
@@ -172,7 +172,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
 
       // See if the file could benefit from having the default extension
       // added to it.
-      if(extension && (currext = qstr.bufferAt(qstr.length() - 4))) 
+      if(extension && (currext = qstr.bufferAt(qstr.length() - 4)))
       {
          if(strcasecmp(currext, extension)) // Doesn't already have it?
          {
@@ -372,7 +372,7 @@ static void D_parseMetaData(const char *metatext, int mission)
    const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
    int partime = 0, musicnum = 0, index = 0;
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
-   
+
    // get first line, which is an episode id
    D_metaGetLine(buffer, metatext, &index);
 
@@ -418,10 +418,10 @@ static void D_parseMetaData(const char *metatext, int mission)
          partime = buffer.toInt();
 
          // create a metainfo object for LevelInfo
-         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
+         P_CreateMetaInfo(levelnum, levelname, partime, musicname,
                           levelnum == secretlevel ? exitreturn : 0,
                           levelnum == exitreturn - 1 ? secretlevel : 0,
-                          levelnum == secretlevel - 1, 
+                          levelnum == secretlevel - 1,
                           (levelnum == secretlevel - 1) ? endtext : NULL,
                           mission, "DMENUPIC");
          break;
@@ -460,7 +460,7 @@ static void D_DiskMetaData()
 
    // construct the metadata filename
    M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
-   
+
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
@@ -555,7 +555,7 @@ static const char *D_doIWADMenu(void)
    return iwadToUse;
 }
 
-// Match modes for iwadpathmatch 
+// Match modes for iwadpathmatch
 enum
 {
    MATCH_NONE,
@@ -589,7 +589,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_GAME, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
    { MATCH_GAME, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  &gi_path_hticsw } },
 
-   // -iwad matches 
+   // -iwad matches
    { MATCH_IWAD, "doom2f",    { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
    { MATCH_IWAD, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
    { MATCH_IWAD, "doomu",     { &gi_path_doomu,    &gi_path_fdoomu,   NULL            } },
@@ -604,7 +604,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu,   NULL,              NULL            } },
    { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
    { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
-   
+
    // Terminating entry
    { MATCH_NONE, NULL,        { NULL,              NULL,              NULL            } }
 };
@@ -612,7 +612,7 @@ static iwadpathmatch_t iwadMatchers[] =
 //
 // D_IWADPathForGame
 //
-// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
+// haleyjd 12/31/10: Return the best defined IWAD path variable for a
 // -game parameter. Returns NULL if none found.
 //
 static char *D_IWADPathForGame(const char *game)
@@ -644,16 +644,16 @@ static char *D_IWADPathForGame(const char *game)
 //
 // D_IWADPathForIWADParam
 //
-// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
+// haleyjd 12/31/10: Return the best defined IWAD path variable for a
 // -iwad parameter. Returns NULL if none found.
 //
 static char *D_IWADPathForIWADParam(const char *iwad)
 {
    iwadpathmatch_t *cur = iwadMatchers;
-   
+
    // If the name starts with a slash, step forward one
    char *tmpname = Z_Strdupa((*iwad == '/' || *iwad == '\\') ? iwad + 1 : iwad);
-   
+
    // Truncate at any extension
    char *dotpos = strrchr(tmpname, '.');
    if(dotpos)
@@ -753,7 +753,7 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
       strncmp(header.identification, "IWAD", 4))
    {
       // haleyjd 06/06/09: do not error out here, due to some bad tools
-      // resetting peoples' IWADs to PWADs. Only error if it is also 
+      // resetting peoples' IWADs to PWADs. Only error if it is also
       // not a PWAD.
       if(strncmp(header.identification, "PWAD", 4))
       {
@@ -799,8 +799,8 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(!lumpnamecmp(n, "ADVISOR") || 
-              !lumpnamecmp(n, "TINTTAB") || 
+      else if(!lumpnamecmp(n, "ADVISOR") ||
+              !lumpnamecmp(n, "TINTTAB") ||
               !lumpnamecmp(n, "SNDCURVE"))
       {
          ++raven;
@@ -1004,7 +1004,7 @@ static char *D_findIWADFile()
 
    // haleyjd 11/15/12: if so marked, scan for IWADs. This is a one-time
    // only operation unless the user resets the value of d_scaniwads.
-   // This will populate as many of the gi_path_* IWADs and w_* mission 
+   // This will populate as many of the gi_path_* IWADs and w_* mission
    // packs as can be found amongst likely locations. User settings are
    // never overwritten by this process.
    if(d_scaniwads)
@@ -1024,7 +1024,7 @@ static char *D_findIWADFile()
    if(gamepathset && !basename)
    {
       qstring tempGameIWAD;
-      
+
       tempGameIWAD = basegamepath;
       tempGameIWAD.pathConcatenate(myargv[gamepathparm]);
       tempGameIWAD.addDefaultExtension(".wad");
@@ -1032,7 +1032,7 @@ static char *D_findIWADFile()
 
       if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
          basename = gameiwad;
-      else                        
+      else
       {
          // haleyjd 12/31/10: base/game/game.wad doesn't exist;
          // try matching against appropriate configured IWAD path(s)
@@ -1041,7 +1041,7 @@ static char *D_findIWADFile()
             basename = cfgpath;
       }
    }
-      
+
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
@@ -1050,7 +1050,7 @@ static char *D_findIWADFile()
 
       iwad = ecalloc(char *, 1, strlen(baseiwad) + 1024);
       strcpy(iwad, baseiwad);
-      
+
       if(WadFileStatus(iwad, &isdir))
       {
          if(!isdir)
@@ -1402,4 +1402,3 @@ void D_IdentifyVersion()
 }
 
 // EOF
-

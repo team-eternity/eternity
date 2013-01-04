@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, Simon Howard, et al.
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -91,67 +91,67 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
    int oldfreq;
    int i;
    int nsamples;
-   
-   // Number of samples is quadrupled, because of 16-bit and stereo   
+
+   // Number of samples is quadrupled, because of 16-bit and stereo
    nsamples = len / 4;
-   
+
    leftptr = (Sint16 *) stream;
    rightptr = ((Sint16 *) stream) + 1;
-    
-   // Fill the output buffer   
+
+   // Fill the output buffer
    for(i = 0; i < nsamples; ++i)
    {
-      // Has this sound expired? If so, invoke the callback to get 
-      // the next frequency.      
-      while(current_remaining == 0) 
+      // Has this sound expired? If so, invoke the callback to get
+      // the next frequency.
+      while(current_remaining == 0)
       {
          oldfreq = current_freq;
-         
+
          // Get the next frequency to play
-         
+
          callback(&current_remaining, &current_freq);
-         
+
          if(current_freq != 0)
          {
             // Adjust phase to match to the new frequency.
             // This gives us a smooth transition between different tones,
-            // with no impulse changes.            
+            // with no impulse changes.
             phase_offset = (phase_offset * oldfreq) / current_freq;
          }
-         
+
          current_remaining = (current_remaining * mixing_freq) / 1000;
       }
-      
-      // Set the value for this sample.      
+
+      // Set the value for this sample.
       if(current_freq == 0)
       {
-         // Silence         
+         // Silence
          this_value = 0;
       }
-      else 
+      else
       {
          int frac;
-         
+
          // Determine whether we are at a peak or trough in the current
-         // sound.  Multiply by 2 so that frac % 2 will give 0 or 1 
+         // sound.  Multiply by 2 so that frac % 2 will give 0 or 1
          // depending on whether we are at a peak or trough.
-         
+
          frac = (phase_offset * current_freq * 2) / mixing_freq;
-         
-         if((frac % 2) == 0) 
+
+         if((frac % 2) == 0)
             this_value =  SQUARE_WAVE_AMP;
          else
             this_value = -SQUARE_WAVE_AMP;
-         
+
          ++phase_offset;
       }
-      
+
       --current_remaining;
-      
-      // Use the same value for the left and right channels.      
+
+      // Use the same value for the left and right channels.
       *leftptr  += this_value;
       *rightptr += this_value;
-      
+
       leftptr  += 2;
       rightptr += 2;
    }
@@ -170,15 +170,15 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       fprintf(stderr, "Unable to set up sound.\n");
       return 0;
    }
-   
+
    if(Mix_OpenAudio(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024) < 0)
    {
       fprintf(stderr, "Error initialising SDL_mixer: %s\n", Mix_GetError());
-      
+
       SDL_QuitSubSystem(SDL_INIT_AUDIO);
       return 0;
    }
-   
+
    SDL_PauseAudio(0);
 
     // Get the mixer frequency, format and number of channels.
@@ -189,7 +189,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 
     if (mixing_format != AUDIO_S16SYS || mixing_channels != 2)
     {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "PCSound_SDL only supports native signed 16-bit LSB, "
                 "stereo format!\n");
 
@@ -222,7 +222,7 @@ static unsigned int current_sound_remaining = 0;
 static int current_sound_handle = 0;
 static int current_sound_lump_num = -1;
 
-static const float frequencies[] = 
+static const float frequencies[] =
 {
        0.0f,  175.00f,  180.02f,  185.01f,  190.02f,  196.02f,  202.02f,  208.01f,
     214.02f,  220.02f,  226.02f,  233.04f,  240.02f,  247.03f,  254.03f,  262.00f,
@@ -248,25 +248,25 @@ static const float frequencies[] =
 static void PCSCallbackFunc(int *duration, int *freq)
 {
    unsigned int tone;
-   
+
    *duration = 1000 / 140;
-   
+
    if(SDL_LockMutex(sound_lock) < 0)
    {
       *freq = 0;
       return;
    }
-   
+
    if(current_sound_lump != NULL && current_sound_remaining > 0)
    {
       // Read the next tone
-      
+
       tone = *current_sound_pos;
-      
+
       // Use the tone -> frequency lookup table.  See pcspkr10.zip
       // for a full discussion of this.
       // Check we don't overflow the frequency table.
-      
+
       if(tone < NUMFREQUENCIES)
       {
          *freq = (int) frequencies[tone];
@@ -275,13 +275,13 @@ static void PCSCallbackFunc(int *duration, int *freq)
       {
          *freq = 0;
       }
-      
+
       ++current_sound_pos;
       --current_sound_remaining;
    }
    else
       *freq = 0;
-   
+
    SDL_UnlockMutex(sound_lock);
 }
 
@@ -323,38 +323,38 @@ static bool CachePCSLump(sfxinfo_t *sfx)
    int lumpnum;
    int lumplen;
    int headerlen;
-   
-   // Free the current sound lump back to the cache   
+
+   // Free the current sound lump back to the cache
    if(current_sound_lump != NULL)
    {
       Z_ChangeTag(current_sound_lump, PU_CACHE);
       current_sound_lump = NULL;
    }
-   
+
    // Load from WAD
-   
+
    // haleyjd: check for validity
    if((lumpnum = I_PCSGetSfxLumpNum(sfx)) == -1)
       return false;
 
    current_sound_lump = (Uint8 *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
    lumplen            = W_LumpLength(lumpnum);
-   
-   // Read header   
+
+   // Read header
 
    if(current_sound_lump[0] != 0x00 || current_sound_lump[1] != 0x00)
       return false;
-   
+
    headerlen = (current_sound_lump[3] << 8) | current_sound_lump[2];
-   
+
    if(headerlen > lumplen - 4)
       return false;
-   
-   // Header checks out ok   
+
+   // Header checks out ok
    current_sound_remaining = headerlen;
    current_sound_pos       = current_sound_lump + 4;
    current_sound_lump_num  = lumpnum;
-   
+
    return true;
 }
 
@@ -365,13 +365,13 @@ static bool CachePCSLump(sfxinfo_t *sfx)
 
 static int I_PCSInitSound(void)
 {
-   // Use the sample rate from the configuration file   
+   // Use the sample rate from the configuration file
    PCSound_SetSampleRate(44100);
-   
+
    // Initialise the PC speaker subsystem.
-   
+
    pcs_initialised = !!PCSound_SDL_Init(PCSCallbackFunc);
-   
+
    if(pcs_initialised)
    {
       sound_lock = SDL_CreateMutex();
@@ -379,7 +379,7 @@ static int I_PCSInitSound(void)
    }
    else
       printf("Failed to initialize PC speaker emulation\n");
-   
+
    return pcs_initialised;
 }
 
@@ -404,7 +404,7 @@ static void I_PCSShutdownSound(void)
       PCSound_SDL_Shutdown();
 }
 
-static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep, 
+static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep,
                           int pitch, int pri, int loop)
 {
    int result;
@@ -440,7 +440,7 @@ static void I_PCSStopSound(int handle, int id)
    if(SDL_LockMutex(sound_lock) < 0)
       return;
 
-   // If this is the channel currently playing, immediately end it.   
+   // If this is the channel currently playing, immediately end it.
    if(current_sound_handle == handle)
       current_sound_remaining = 0;
 
@@ -478,4 +478,3 @@ i_sounddriver_t i_pcsound_driver =
 };
 
 // EOF
-

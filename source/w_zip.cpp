@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -164,7 +164,7 @@ static MStructReader<ZIPEndOfCentralDir> endCentralDirReader(&endSignature);
 #define ZF_ENCRYPTED   0x01
 #define BUFREADCOMMENT 0x400
 
-template<typename T> static inline T zipmin(T a, T b) 
+template<typename T> static inline T zipmin(T a, T b)
 {
    return (a < b ? a : b);
 }
@@ -173,8 +173,8 @@ template<typename T> static inline T zipmin(T a, T b)
 // ZIP_FindEndOfCentralDir
 //
 // Derived from ZDoom, which derived it from Quake 3 unzip.c, where it is
-// named unzlocal_SearchCentralDir and is derived from unzip.c by Gilles 
-// Vollant, under the following BSD-style license (which ZDoom does NOT 
+// named unzlocal_SearchCentralDir and is derived from unzip.c by Gilles
+// Vollant, under the following BSD-style license (which ZDoom does NOT
 // properly preserve in its own code):
 //
 // unzip.h -- IO for uncompress .zip files using zlib
@@ -188,11 +188,11 @@ template<typename T> static inline T zipmin(T a, T b)
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
-// 
+//
 // Permission is granted to anyone to use this software for any purpose,
 // including commercial applications, and to alter it and redistribute it
 // freely, subject to the following restrictions:
-// 
+//
 // 1. The origin of this software must not be misrepresented; you must not
 //    claim that you wrote the original software. If you use this software
 //    in a product, an acknowledgment in the product documentation would be
@@ -312,7 +312,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 
    // Locate the central directory
    if(!ZIP_FindEndOfCentralDir(fin, centralDirEnd) || !centralDirEnd)
-      return false; 
+      return false;
 
    if(fin.seek(centralDirEnd, SEEK_SET))
       return false;
@@ -358,7 +358,7 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 
    // Read out the name, entry, and comment together.
    // This will position the InBuffer at the next directory entry.
-   size_t totalStrLen = 
+   size_t totalStrLen =
       entry.nameLength + entry.extraLength + entry.commentLength;
    ZAutoBuffer nameBuffer(totalStrLen + 1, true);
    char *name = nameBuffer.getAs<char *>();
@@ -392,7 +392,7 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
       skip = true;
       return true;
    }
-   
+
    // Save and normalize the name
    namestr.copy(name, entry.nameLength);
    namestr.toLower();
@@ -435,12 +435,12 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
    // seek to start of directory
    if(fin.seek(offset, SEEK_SET))
       return false;
-  
+
    for(int i = 0; i < numLumps; i++)
    {
       ZipLump &lump    = lumps[lumpidx];
       bool     skipped = false;
-      
+
       if(readCentralDirEntry(fin, lump, skipped))
       {
          if(!skipped)
@@ -512,7 +512,7 @@ void ZipFile::checkForWadFiles(WadDirectory &parentDir)
       if(!(lumps[i].flags & LF_ISEMBEDDEDWAD))
          continue;
 
-      // will not consider any lump less than 28 in size 
+      // will not consider any lump less than 28 in size
       // (valid wad header, plus at least one lump in the directory)
       if(lumps[i].size < 28)
          continue;
@@ -584,7 +584,7 @@ protected:
    InBuffer &fin;       // input buffered file
    z_stream  zlStream;  // zlib data structure
    bool      atEOF;     // hit EOF in InBuffer::Read
-   
+
    byte deflateBuffer[DEFLATE_BUFF_SIZE]; // buffer for input to zlib
 
    void buffer()
@@ -601,16 +601,16 @@ protected:
    }
 
 public:
-   ZIPDeflateReader(InBuffer &pFin) 
+   ZIPDeflateReader(InBuffer &pFin)
       : fin(pFin), zlStream(), atEOF(false)
    {
       int code;
-      
+
       zlStream.zalloc = NULL;
       zlStream.zfree  = NULL;
 
       buffer();
-      
+
       if((code = inflateInit2(&zlStream, -MAX_WBITS)) != Z_OK)
          I_Error("ZIPDeflateReader: inflateInit2 failed with code %d\n", code);
    }
@@ -732,4 +732,3 @@ void ZipLump::read(void *buffer)
 }
 
 // EOF
-

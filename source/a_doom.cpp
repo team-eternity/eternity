@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -65,7 +65,7 @@
 void A_PosAttack(Mobj *actor)
 {
    int angle, damage, slope;
-   
+
    if(!actor->target)
       return;
 
@@ -73,7 +73,7 @@ void A_PosAttack(Mobj *actor)
    angle = actor->angle;
    slope = P_AimLineAttack(actor, angle, MISSILERANGE, 0); // killough 8/2/98
    S_StartSound(actor, sfx_pistol);
-   
+
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_posattack) << 20;
 
@@ -89,18 +89,18 @@ void A_PosAttack(Mobj *actor)
 void A_SPosAttack(Mobj* actor)
 {
    int i, bangle, slope;
-   
+
    if (!actor->target)
       return;
-   
+
    S_StartSound(actor, sfx_shotgn);
    A_FaceTarget(actor);
-   
+
    bangle = actor->angle;
    slope = P_AimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
-   
+
    for(i = 0; i < 3; ++i)
-   {  
+   {
       // haleyjd 08/05/04: use new function
       int angle = bangle + (P_SubRandom(pr_sposattack) << 20);
       int damage = ((P_Random(pr_sposattack) % 5) + 1) * 3;
@@ -121,17 +121,17 @@ void A_SPosAttack(Mobj* actor)
 void A_CPosAttack(Mobj *actor)
 {
    int angle, bangle, damage, slope;
-   
+
    if (!actor->target)
       return;
 
    // haleyjd: restored to normal
    S_StartSound(actor, sfx_shotgn);
    A_FaceTarget(actor);
-   
+
    bangle = actor->angle;
    slope = P_AimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
-   
+
    // haleyjd 08/05/04: use new function
    angle = bangle + (P_SubRandom(pr_cposattack) << 20);
    damage = ((P_Random(pr_cposattack) % 5) + 1) * 3;
@@ -147,14 +147,14 @@ void A_CPosRefire(Mobj *actor)
 {
    // keep firing unless target got out of sight
    A_FaceTarget(actor);
-   
+
    // killough 12/98: Stop firing if a friend has gotten in the way
    if(actor->flags & MF_FRIEND && P_HitFriend(actor))
    {
       P_SetMobjState(actor, actor->info->seestate);
       return;
    }
-   
+
    // killough 11/98: prevent refiring on friends continuously
    if(P_Random(pr_cposrefire) < 40)
    {
@@ -271,14 +271,14 @@ void A_SpidRefire(Mobj* actor)
 {
    // keep firing unless target got out of sight
    A_FaceTarget(actor);
-   
+
    // killough 12/98: Stop firing if a friend has gotten in the way
    if(actor->flags & MF_FRIEND && P_HitFriend(actor))
    {
       P_SetMobjState(actor, actor->info->seestate);
       return;
    }
-   
+
    if(P_Random(pr_spidrefire) < 10)
       return;
 
@@ -302,7 +302,7 @@ void A_BspiAttack(Mobj *actor)
       return;
    A_FaceTarget(actor);
    // launch a missile
-   P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_ARACHPLAZ), 
+   P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_ARACHPLAZ),
                   actor->z + DEFAULTMISSILEZ);
 }
 
@@ -355,9 +355,9 @@ void A_CyberAttack(Mobj *actor)
    if(!actor->target)
       return;
    A_FaceTarget(actor);
-   P_SpawnMissile(actor, actor->target, 
+   P_SpawnMissile(actor, actor->target,
                   E_SafeThingType(MT_ROCKET),
-                  actor->z + DEFAULTMISSILEZ);   
+                  actor->z + DEFAULTMISSILEZ);
 }
 
 //=============================================================================
@@ -373,16 +373,16 @@ void A_CyberAttack(Mobj *actor)
 void A_SkelMissile(Mobj *actor)
 {
    Mobj *mo;
-   
+
    if(!actor->target)
       return;
-   
+
    A_FaceTarget (actor);
    actor->z += 16*FRACUNIT;      // so missile spawns higher
    mo = P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_TRACER),
                        actor->z + DEFAULTMISSILEZ);
    actor->z -= 16*FRACUNIT;      // back to normal
-   
+
    mo->x += mo->momx;
    mo->y += mo->momy;
    P_SetTarget<Mobj>(&mo->tracer, actor->target);  // killough 11/98
@@ -404,20 +404,20 @@ void A_Tracer(Mobj *actor)
    Mobj        *th;
 
    // killough 1/18/98: this is why some missiles do not have smoke
-   // and some do. Also, internal demos start at random gametics, 
-   // thus the bug in which revenants cause internal demos to go out 
+   // and some do. Also, internal demos start at random gametics,
+   // thus the bug in which revenants cause internal demos to go out
    // of sync.
    //
    // killough 3/6/98: fix revenant internal demo bug by subtracting
    // levelstarttic from gametic.
    //
    // killough 9/29/98: use new "basetic" so that demos stay in sync
-   // during pauses and menu activations, while retaining old demo 
+   // during pauses and menu activations, while retaining old demo
    // sync.
    //
-   // leveltime would have been better to use to start with in Doom, 
-   // but since old demos were recorded using gametic, we must stick 
-   // with it, and improvise around it (using leveltime causes desync 
+   // leveltime would have been better to use to start with in Doom,
+   // but since old demos were recorded using gametic, we must stick
+   // with it, and improvise around it (using leveltime causes desync
    // across levels).
 
    if((gametic-basetic) & 3)
@@ -425,19 +425,19 @@ void A_Tracer(Mobj *actor)
 
    // spawn a puff of smoke behind the rocket
    P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false);
-   
+
    th = P_SpawnMobj(actor->x - actor->momx,
                     actor->y - actor->momy,
                     actor->z, E_SafeThingType(MT_SMOKE));
-  
+
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_tracer) & 3;
    if(th->tics < 1)
       th->tics = 1;
-  
+
    // adjust direction
    dest = actor->tracer;
-   
+
    if(!dest || dest->health <= 0)
       return;
 
@@ -466,14 +466,14 @@ void A_Tracer(Mobj *actor)
 
    // change slope
    dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
-   
+
    dist = dist / actor->info->speed;
 
    if(dist < 1)
       dist = 1;
 
    slope = (dest->z + 40*FRACUNIT - actor->z) / dist;
-   
+
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;
    else
@@ -531,18 +531,18 @@ bool PIT_VileCheck(Mobj *thing)
    int maxdist;
    bool check;
    int vileType = E_SafeThingType(MT_VILE);
-   
+
    if(!(thing->flags & MF_CORPSE))
       return true;        // not a monster
-   
+
    if(thing->tics != -1)
       return true;        // not lying still yet
-   
+
    if(thing->info->raisestate == NullStateNum)
       return true;        // monster doesn't have a raise state
-   
+
    maxdist = thing->info->radius + mobjinfo[vileType]->radius;
-   
+
    if(D_abs(thing->x-viletryx) > maxdist ||
       D_abs(thing->y-viletryy) > maxdist)
       return true;                // not actually touching
@@ -564,7 +564,7 @@ bool PIT_VileCheck(Mobj *thing)
    if(comp[comp_vile])
    {                                                              // phares
       corpsehit->height <<= 2;                                    //   V
-      
+
       // haleyjd 11/11/04: this is also broken by Lee's change to
       // PIT_CheckThing when not in demo_compatibility.
       if(demo_version >= 331)
@@ -574,13 +574,13 @@ bool PIT_VileCheck(Mobj *thing)
 
       if(demo_version >= 331)
          corpsehit->flags &= ~MF_SOLID;
-      
+
       corpsehit->height >>= 2;
    }
    else
    {
       int height,radius;
-      
+
       height = corpsehit->height; // save temporarily
       radius = corpsehit->radius; // save temporarily
       corpsehit->height = P_ThingInfoHeight(corpsehit->info);
@@ -615,7 +615,7 @@ void A_VileChase(Mobj *actor)
          actor->x + actor->info->speed*xspeed[actor->movedir];
       viletryy =
          actor->y + actor->info->speed*yspeed[actor->movedir];
-      
+
       xl = (viletryx - bmaporgx - MAXRADIUS*2)>>MAPBLOCKSHIFT;
       xh = (viletryx - bmaporgx + MAXRADIUS*2)>>MAPBLOCKSHIFT;
       yl = (viletryy - bmaporgy - MAXRADIUS*2)>>MAPBLOCKSHIFT;
@@ -632,7 +632,7 @@ void A_VileChase(Mobj *actor)
             if(!P_BlockThingsIterator(bx, by, PIT_VileCheck))
             {
                mobjinfo_t *info;
-               
+
                // got one!
                Mobj *temp = actor->target;
                actor->target = corpsehit;
@@ -647,9 +647,9 @@ void A_VileChase(Mobj *actor)
                // in case they were cleared by the thing being crushed
                if(info->altsprite != -1)
                   corpsehit->skin = P_GetMonsterSkin(info->altsprite);
-               
+
                P_SetMobjState(corpsehit, info->raisestate);
-               
+
                if(comp[comp_vile])
                   corpsehit->height <<= 2;                        // phares
                else                                               //   V
@@ -658,12 +658,12 @@ void A_VileChase(Mobj *actor)
                   corpsehit->height = P_ThingInfoHeight(info);
                   corpsehit->radius = info->radius;
                }                                                  // phares
-               
-               // killough 7/18/98: 
+
+               // killough 7/18/98:
                // friendliness is transferred from AV to raised corpse
-               corpsehit->flags = 
+               corpsehit->flags =
                   (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
-               
+
                corpsehit->health = info->spawnhealth;
                P_SetTarget<Mobj>(&corpsehit->target, NULL);  // killough 11/98
 
@@ -672,10 +672,10 @@ void A_VileChase(Mobj *actor)
                   P_SetTarget<Mobj>(&corpsehit->lastenemy, NULL);
                   corpsehit->flags &= ~MF_JUSTHIT;
                }
-               
+
                // killough 8/29/98: add to appropriate thread
                corpsehit->updateThinker();
-               
+
                return;
             }
          }
@@ -703,16 +703,16 @@ void A_Fire(Mobj *actor)
 {
    angle_t an;
    Mobj *dest = actor->tracer;
-   
+
    if(!dest)
       return;
-   
+
    // don't move it if the vile lost sight
    if(!P_CheckSight(actor->target, dest) )
       return;
-   
+
    an = dest->angle >> ANGLETOFINESHIFT;
-   
+
    P_UnsetThingPosition(actor);
    actor->x = dest->x + FixedMul(24*FRACUNIT, finecosine[an]);
    actor->y = dest->y + FixedMul(24*FRACUNIT, finesine[an]);
@@ -753,17 +753,17 @@ void A_FireCrackle(Mobj* actor)
 void A_VileTarget(Mobj *actor)
 {
    Mobj *fog;
-   
+
    if(!actor->target)
       return;
 
    A_FaceTarget(actor);
-   
+
    // killough 12/98: fix Vile fog coordinates
    fog = P_SpawnMobj(actor->target->x,
                      demo_version < 203 ? actor->target->x : actor->target->y,
                      actor->target->z,E_SafeThingType(MT_FIRE));
-   
+
    P_SetTarget<Mobj>(&actor->tracer, fog);   // killough 11/98
    P_SetTarget<Mobj>(&fog->target, actor);
    P_SetTarget<Mobj>(&fog->tracer, actor->target);
@@ -779,12 +779,12 @@ void A_VileAttack(Mobj *actor)
 {
    Mobj *fire;
    int    an;
-   
+
    if(!actor->target)
       return;
 
    A_FaceTarget(actor);
-   
+
    if(!P_CheckSight(actor, actor->target))
       return;
 
@@ -793,9 +793,9 @@ void A_VileAttack(Mobj *actor)
    actor->target->momz = 1000*FRACUNIT/actor->target->info->mass;
 
    an = actor->angle >> ANGLETOFINESHIFT;
-   
+
    fire = actor->tracer;
-   
+
    if(!fire)
       return;
 
@@ -806,7 +806,7 @@ void A_VileAttack(Mobj *actor)
 }
 
 //=============================================================================
-// 
+//
 // Mancubus
 //
 
@@ -848,9 +848,9 @@ void A_FatAttack1(Mobj *actor)
 
    // Change direction  to ...
    actor->angle += FATSPREAD;
-   
+
    P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
+
    mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
    mo->angle += FATSPREAD;
    an = mo->angle >> ANGLETOFINESHIFT;
@@ -879,7 +879,7 @@ void A_FatAttack2(Mobj *actor)
    // Now here choose opposite deviation.
    actor->angle -= FATSPREAD;
    P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
+
    mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
    mo->angle -= FATSPREAD*2;
    an = mo->angle >> ANGLETOFINESHIFT;
@@ -902,15 +902,15 @@ void A_FatAttack3(Mobj *actor)
    // haleyjd: no crashing
    if(!actor->target)
       return;
-   
+
    A_FaceTarget(actor);
-   
+
    mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
    mo->angle -= FATSPREAD/2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
    mo->momy = FixedMul(mo->info->speed, finesine[an]);
-   
+
    mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
    mo->angle += FATSPREAD/2;
    an = mo->angle >> ANGLETOFINESHIFT;
@@ -931,10 +931,10 @@ void A_FatAttack3(Mobj *actor)
 // Fly at the player like a missile.
 //
 void A_SkullAttack(Mobj *actor)
-{   
+{
    if(!actor->target)
       return;
-   
+
    S_StartSound(actor, actor->info->attacksound);
 
    // haleyjd 08/07/04: use new P_SkullFly function
@@ -953,14 +953,14 @@ void A_SkullAttack(Mobj *actor)
 void A_BetaSkullAttack(Mobj *actor)
 {
    int damage;
-   
+
    // haleyjd: changed to check if objects are the SAME type, not
    // for hard-coded lost soul
    if(!actor->target || actor->target->type == actor->type)
       return;
-   
+
    S_StartSound(actor, actor->info->attacksound);
-   
+
    A_FaceTarget(actor);
    damage = (P_Random(pr_skullfly)%8+1)*actor->damage;
    P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
@@ -1011,33 +1011,33 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    }
 
    // okay, there's room for another one
-   
+
    an = angle >> ANGLETOFINESHIFT;
-   
+
    prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType]->radius)/2;
 
    x = actor->x + FixedMul(prestep, finecosine[an]);
    y = actor->y + FixedMul(prestep, finesine[an]);
    z = actor->z + 8*FRACUNIT;
-   
+
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
       newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
    else                                                             //   V
    {
       // Check whether the Lost Soul is being fired through a 1-sided
       // wall or an impassible line, or a "monsters can't cross" line.
-      // If it is, then we don't allow the spawn. This is a bug fix, 
-      // but it should be considered an enhancement, since it may 
+      // If it is, then we don't allow the spawn. This is a bug fix,
+      // but it should be considered an enhancement, since it may
       // disturb existing demos, so don't do it in compatibility mode.
-      
+
       if (Check_Sides(actor,x,y))
          return;
-      
+
       newmobj = P_SpawnMobj(x, y, z, skullType);
-      
+
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
-      
+
       if((newmobj->z >
          (newmobj->subsector->sector->ceilingheight - newmobj->height)) ||
          (newmobj->z < newmobj->subsector->sector->floorheight))
@@ -1063,7 +1063,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       P_DamageMobj(newmobj, actor, actor, 10000, MOD_UNKNOWN);
       return;
    }
-   
+
    P_SetTarget<Mobj>(&newmobj->target, actor->target);
    A_SkullAttack(newmobj);
 }
@@ -1139,7 +1139,7 @@ void A_BossDeath(Mobj *mo)
       if(playeringame[i] && players[i].health > 0)
          break;
    }
-   
+
    // no one left alive, so do not end game
    if(i == MAXPLAYERS)
       return;
@@ -1157,8 +1157,8 @@ void A_BossDeath(Mobj *mo)
             Mobj *mo2;
             if((mo2 = thinker_cast<Mobj *>(th)))
             {
-               if(mo2 != mo && 
-                  (mo2->flags2 & boss_specs[i].thing_flag) && 
+               if(mo2 != mo &&
+                  (mo2->flags2 & boss_specs[i].thing_flag) &&
                   mo2->health > 0)
                   return;         // other boss not dead
             }
@@ -1206,11 +1206,11 @@ void A_KeenDie(Mobj* mo)
 {
    Thinker *th;
    line_t   junk;
-   
+
    A_Fall(mo);
 
    // scan the remaining thinkers to see if all Keens are dead
-   
+
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       Mobj *mo2;
@@ -1288,7 +1288,7 @@ void A_BrainScream(Mobj *mo)
    for(x = mo->x - 196*FRACUNIT; x < mo->x + 320*FRACUNIT; x += FRACUNIT*8)
    {
       int   y  = mo->y - 320*FRACUNIT;
-      int   z  = 128 + P_Random(pr_brainscream)*2*FRACUNIT;      
+      int   z  = 128 + P_Random(pr_brainscream)*2*FRACUNIT;
       Mobj *th = P_SpawnMobj(x, y, z, rocketType);
       // haleyjd 02/21/05: disable particle events/effects for this thing
       th->intflags |= MIF_NOPTCLEVTS;
@@ -1308,7 +1308,7 @@ void A_BrainScream(Mobj *mo)
 // More Romero head death effects.
 //
 void A_BrainExplode(Mobj *mo)
-{  
+{
    // haleyjd 08/05/04: use new function
    int x = mo->x + P_SubRandom(pr_brainexp)*2048;
    int y = mo->y;
@@ -1320,7 +1320,7 @@ void A_BrainExplode(Mobj *mo)
    th->intflags |= MIF_NOPTCLEVTS;
    th->effects = 0;
    P_SetMobjState(th, E_SafeState(S_BRAINEXPLODE1));
-   
+
    th->tics -= P_Random(pr_brainexp) & 7;
    if(th->tics < 1)
       th->tics = 1;
@@ -1345,7 +1345,7 @@ void A_BrainSpit(Mobj *mo)
 {
    Mobj *targ, *newmobj;
    int SpawnShotType = E_SafeThingType(MT_SPAWNSHOT);
-   
+
     // killough 4/1/98: ignore if no targets
    if(braintargets.isEmpty())
       return;
@@ -1364,10 +1364,10 @@ void A_BrainSpit(Mobj *mo)
 
    // killough 7/18/98: brain friendliness is transferred
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
-   
+
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
-   
+
    S_StartSound(NULL, sfx_bospit);
 }
 
@@ -1397,12 +1397,12 @@ int *BossSpawnProbs;
 //
 void A_SpawnFly(Mobj *mo)
 {
-   int    i;         // schepe 
+   int    i;         // schepe
    Mobj *newmobj;  // killough 8/9/98
    int    r;
    mobjtype_t type = 0;
-   int fireType = E_SafeThingType(MT_SPAWNFIRE); 
-      
+   int fireType = E_SafeThingType(MT_SPAWNFIRE);
+
    Mobj *fog;
    Mobj *targ;
 
@@ -1416,12 +1416,12 @@ void A_SpawnFly(Mobj *mo)
    // haleyjd: do not crash if target is null
    if(!(targ = mo->target))
       return;
-   
+
    // First spawn teleport fog.
    fog = P_SpawnMobj(targ->x, targ->y, targ->z, fireType);
-   
+
    S_StartSound(fog, sfx_telept);
-   
+
    // Randomly select monster to spawn.
    r = P_Random(pr_spawnfly);
 
@@ -1437,22 +1437,21 @@ void A_SpawnFly(Mobj *mo)
    }
 
    newmobj = P_SpawnMobj(targ->x, targ->y, targ->z, type);
-   
+
    // killough 7/18/98: brain friendliness is transferred
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
-   
+
    if(P_LookForTargets(newmobj,true))      // killough 9/4/98
       P_SetMobjState(newmobj, newmobj->info->seestate);
-   
+
    // telefrag anything in this spot
    P_TeleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
-   
+
    // remove self (i.e., cube).
    mo->removeThinker();
 }
 
 // EOF
-

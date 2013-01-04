@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,7 +36,7 @@
 // * V_BlockDrawerS  -- general scaling
 //
 
-static void V_BlockDrawer(int x, int y, VBuffer *buffer, 
+static void V_BlockDrawer(int x, int y, VBuffer *buffer,
                           int width, int height, byte *source)
 {
    byte *src, *dest;
@@ -83,7 +83,7 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    }
 }
 
-static void V_BlockDrawerS(int x, int y, VBuffer *buffer, 
+static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
                            int width, int height, byte *source)
 {
    byte *src, *dest, *row;
@@ -91,13 +91,13 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
    int dx, dy;
-   
+
    // clip to screen within scaled coordinate space
-   
+
    // entirely off-screen?
    if(x + width < 0 || y + height < 0 || x >= buffer->unscaledw || y >= buffer->unscaledh)
       return;
-   
+
    cx1 = x >= 0 ? x : 0;
    cy1 = y >= 0 ? y : 0;
    cx2 = x + width - 1;
@@ -108,19 +108,19 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
 
    if(cy2 >= buffer->unscaledh)
       cy2 = buffer->unscaledh - 1;
-   
+
    // change in origin due to clipping
    dx = cx1 - x;
    dy = cy1 - y;
-   
+
    // clipped rect width/height
    cw = cx2 - cx1 + 1;
    ch = cy2 - cy1 + 1;
-   
+
    // zero-size rect?
    if(cw <= 0 || ch <= 0)
       return;
-      
+
    realx = buffer->x1lookup[cx1];
    realy = buffer->y1lookup[cy1];
    w     = buffer->x2lookup[cx2] - realx + 1;
@@ -147,7 +147,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
       i = w;
       xfrac = 0;
       ytex = (yfrac >> FRACBITS) * width;
-      
+
       while(i--)
       {
          xtex = (xfrac >> FRACBITS);
@@ -161,13 +161,13 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
 }
 
 //==============================================================================
-// 
+//
 // Masked block drawers
 //
 // haleyjd 06/29/08
 //
 
-static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer, 
+static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
                                 int width, int height, int srcpitch,
                                 byte *source, byte *cmap)
 {
@@ -219,7 +219,7 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
    }
 }
 
-static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer, 
+static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
                                  int width, int height, int srcpitch,
                                  byte *source, byte *cmap)
 {
@@ -228,13 +228,13 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
    int dx, dy;
-   
+
    // clip to screen within scaled coordinate space
-   
+
    // entirely off-screen?
    if(x + width < 0 || y + height < 0 || x >= buffer->unscaledw || y >= buffer->unscaledh)
       return;
-   
+
    cx1 = x >= 0 ? x : 0;
    cy1 = y >= 0 ? y : 0;
    cx2 = x + width - 1;
@@ -245,15 +245,15 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
 
    if(cy2 >= buffer->unscaledh)
       cy2 = buffer->unscaledh - 1;
-   
+
    // change in origin due to clipping
    dx = cx1 - x;
    dy = cy1 - y;
-   
+
    // clipped rect width/height
    cw = cx2 - cx1 + 1;
    ch = cy2 - cy1 + 1;
-   
+
    // zero-size rect?
    if(cw <= 0 || ch <= 0)
       return;
@@ -284,7 +284,7 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
       i = w;
       xfrac = 0;
       ytex = (yfrac >> FRACBITS) * srcpitch;
-      
+
       while(i--)
       {
          xtex = (xfrac >> FRACBITS);
@@ -347,7 +347,7 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    }
 }
 
-void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
+void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
                           int tl)
 {
    byte *d, *row;
@@ -366,7 +366,7 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
 
    {
       unsigned int fglevel, bglevel;
-      
+
       fglevel = tl & ~0x3ff;
       bglevel = FRACUNIT - fglevel;
       fg2rgb  = Col2RGB8[fglevel >> 10];
@@ -432,7 +432,7 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
 #endif
 
    dest = buffer->ylut[y] + buffer->xlut[x];
-   
+
    while(h--)
    {
       memset(dest, color, w);
@@ -445,7 +445,7 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
 //
 // Draws a block of solid color with alpha blending.
 //
-void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, 
+void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
                     int w, int h, int tl)
 {
    byte *dest, *row;
@@ -477,9 +477,9 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
    }
 
    dest = buffer->ylut[y] + buffer->xlut[x];
-   
+
    while(h--)
-   { 
+   {
       row = dest;
       tw = w;
 
@@ -527,7 +527,7 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
    {
       for(y = 0; y < buffer->height; ++y)
       {
-         row = dest;         
+         row = dest;
          for(x = 0; x < buffer->width >> 6; ++x)
          {
             memcpy(row, src + ((y & 63) << 6), 64);
@@ -546,12 +546,12 @@ static void V_TileBlock64S(VBuffer *buffer, byte *src)
    byte *dest, *row;
    fixed_t xstep, ystep, xfrac, yfrac = 0;
    int xtex, ytex, w, h;
-   
+
    w = buffer->width;
    h = buffer->height;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
-   
+
    dest = buffer->data;
 
    while(h--)
@@ -560,14 +560,14 @@ static void V_TileBlock64S(VBuffer *buffer, byte *src)
       row = dest;
       xfrac = 0;
       ytex = ((yfrac >> FRACBITS) & 63) << 6;
-      
+
       while(i--)
       {
          xtex = (xfrac >> FRACBITS) & 63;
          *row++ = src[ytex + xtex];
          xfrac += xstep;
       }
-      
+
       yfrac += ystep;
       dest += buffer->pitch;
    }
@@ -600,4 +600,3 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
 }
 
 // EOF
-

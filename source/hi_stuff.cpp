@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -210,7 +210,7 @@ static void HI_loadData(void)
          // try ExMy and MAPxy defaults for normally-named maps
          if(isExMy(gamemapname))
          {
-            psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
+            psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d",
                       hi_wbs.epsd + 1, hi_wbs.next + 1);
             nextMapName = E_StringForName(nameBuffer);
          }
@@ -289,7 +289,7 @@ static void HI_initStats(void)
          }
       }
    }
-   
+
    // no slaughterboy stuff if everyone is equal
    if(slaughtercount == playercount)
       slaughterboy = 0;
@@ -365,9 +365,9 @@ static void HI_drawGoing(void)
 
    if(gameepisode > 3)
       return;
- 
+
    HI_drawNewLevelName(10);
-   
+
    previous = hi_wbs.last;
 
    // handle secret level
@@ -375,11 +375,11 @@ static void HI_drawGoing(void)
    {
       previous = hi_wbs.next - 1;
    }
-   
+
    // draw patches on levels visited
    for(i = 0; i <= previous; i++)
    {
-      V_DrawPatch(hipoints[hi_wbs.epsd][i].x, 
+      V_DrawPatch(hipoints[hi_wbs.epsd][i].x,
                   hipoints[hi_wbs.epsd][i].y,
                   &subscreen43,
                   hi_in_x);
@@ -388,7 +388,7 @@ static void HI_drawGoing(void)
    // draw patch on secret level
    if(hi_wbs.didsecret)
    {
-      V_DrawPatch(hipoints[hi_wbs.epsd][8].x, 
+      V_DrawPatch(hipoints[hi_wbs.epsd][8].x,
                   hipoints[hi_wbs.epsd][8].y,
                   &subscreen43,
                   hi_in_x);
@@ -398,7 +398,7 @@ static void HI_drawGoing(void)
    if(flashtime)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][hi_wbs.next].x,
-                  hipoints[hi_wbs.epsd][hi_wbs.next].y, 
+                  hipoints[hi_wbs.epsd][hi_wbs.next].y,
                   &subscreen43,
                   hi_in_yah);
    }
@@ -446,7 +446,7 @@ static void HI_drawLeaving(void)
    // draw the secret level if appropriate
    if(drawsecret)
    {
-      V_DrawPatch(hipoints[hi_wbs.epsd][8].x, 
+      V_DrawPatch(hipoints[hi_wbs.epsd][8].x,
                   hipoints[hi_wbs.epsd][8].y,
                   &subscreen43,
                   hi_in_x);
@@ -455,11 +455,11 @@ static void HI_drawLeaving(void)
    // blink the level we're leaving
    if(flashtime)
    {
-      V_DrawPatch(hipoints[hi_wbs.epsd][thislevel].x, 
+      V_DrawPatch(hipoints[hi_wbs.epsd][thislevel].x,
                   hipoints[hi_wbs.epsd][thislevel].y,
                   &subscreen43,
                   hi_in_x);
-   }   
+   }
 }
 
 //
@@ -473,7 +473,7 @@ static void HI_drawLevelStat(int stat, int max, int x, int y)
 
    sprintf(str, "%3d", stat);
    V_FontWriteTextShadowed(in_bignumfont, str, x, y, &subscreen43);
-   
+
    V_FontWriteTextShadowed(in_bigfont, "/", x + 37, y, &subscreen43);
 
    sprintf(str, "%3d", max);
@@ -565,7 +565,7 @@ static void HI_drawSingleStats(void)
       HI_drawLevelStat(players[consoleplayer].killcount,
                        hi_wbs.maxkills, 200, 65);
    }
-   
+
    // tics 60 to 90: add item count
    if(intertime > 60)
    {
@@ -578,7 +578,7 @@ static void HI_drawSingleStats(void)
       HI_drawLevelStat(players[consoleplayer].itemcount,
                        hi_wbs.maxitems, 200, 90);
    }
-   
+
    // tics 90 to 150: add secret count
    if(intertime > 90)
    {
@@ -605,17 +605,17 @@ static void HI_drawSingleStats(void)
       }
 
       if(gameepisode < 4)
-      {         
+      {
          int time, hours, minutes, seconds;
-         
+
          time = hi_wbs.plyr[consoleplayer].stime / TICRATE;
-         
+
          hours = time / 3600;
          time -= hours * 3600;
-         
+
          minutes = time / 60;
          time -= minutes * 60;
-         
+
          seconds = time;
 
          V_FontWriteTextShadowed(in_bigfont, HIS_TIME, 85, 160, &subscreen43);
@@ -659,8 +659,8 @@ static void HI_drawCoopStats(void)
    {
       if(HI_playerInGame(i))
       {
-         V_DrawPatchShadowed(25, ypos, &subscreen43, 
-            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
+         V_DrawPatchShadowed(25, ypos, &subscreen43,
+            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
             NULL, FRACUNIT);
 
          if(statstage == 1)
@@ -735,10 +735,10 @@ static void HI_drawDMStats(void)
       {
          if(HI_playerInGame(i))
          {
-            V_DrawPatchGeneral(40, 
+            V_DrawPatchGeneral(40,
                (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
                &subscreen43,
-               PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
+               PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
                false);
             V_DrawPatchGeneral((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS,
                18,
@@ -775,8 +775,8 @@ static void HI_drawDMStats(void)
 
             if(i == consoleplayer)
             {
-               V_ColorBlockTLScaled(&subscreen43, blockcolor, xpos, ypos + 3, 
-                                    (263-(xpos-3)+1) + 48, 36 - 5, 
+               V_ColorBlockTLScaled(&subscreen43, blockcolor, xpos, ypos + 3,
+                                    (263-(xpos-3)+1) + 48, 36 - 5,
                                     FRACUNIT/3);
             }
 
@@ -816,7 +816,7 @@ static void HI_drawDMStats(void)
 static void HI_Ticker(void)
 {
    if(GameType == gt_dm)
-   {      
+   {
       if(!(intertime % 3))
          blockcolor += blockfade;
 
@@ -829,7 +829,7 @@ static void HI_Ticker(void)
    if(interstate == INTR_WAITING)
    {
       countdown--;
-      
+
       if(!countdown)
       {
          HI_Stop();
@@ -842,7 +842,7 @@ static void HI_Ticker(void)
    if(statetime < intertime)
    {
       interstate++;
-      
+
       if(gameepisode > 3 && interstate > INTR_STATS)
       {
          // extended episodes have no map screens
@@ -923,7 +923,7 @@ static void HI_Drawer(void)
 
    if(interstate == INTR_WAITING)
       return;
-   
+
    if(oldinterstate != INTR_GOING && interstate == INTR_GOING)
       S_StartSound(NULL, sfx_hpstop);
 
@@ -984,7 +984,5 @@ interfns_t HticIntermission =
 };
 
 // EOF
-
-
 
 

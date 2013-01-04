@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -495,12 +495,12 @@ const char *savegamename;
 // end d_deh.h variable declarations
 // ============================================================
 
-// Do this for a lookup--the pointer (loaded above) is 
-// cross-referenced to a string key that is the same as the define 
-// above.  We will use estrdups to set these new values that we read 
+// Do this for a lookup--the pointer (loaded above) is
+// cross-referenced to a string key that is the same as the define
+// above.  We will use estrdups to set these new values that we read
 // from the file, orphaning the original value set above.
 
-dehstr_t deh_strlookup[] = 
+dehstr_t deh_strlookup[] =
 {
    { &s_D_DEVSTR,    "D_DEVSTR"    },
    { &s_D_CDROM,     "D_CDROM"     },
@@ -1494,50 +1494,50 @@ deh_bexptr deh_bexptrs[] =
   POINTER(FireCrackle),
   POINTER(Tracer),
   POINTER(SkelWhoosh),
-  POINTER(SkelFist),      
-  POINTER(SkelMissile),   
-  POINTER(FatRaise),      
-  POINTER(FatAttack1),    
-  POINTER(FatAttack2),    
-  POINTER(FatAttack3),    
-  POINTER(BossDeath),     
-  POINTER(CPosAttack),    
-  POINTER(CPosRefire),    
-  POINTER(TroopAttack),   
-  POINTER(SargAttack),    
-  POINTER(HeadAttack),    
-  POINTER(BruisAttack),   
-  POINTER(SkullAttack),   
-  POINTER(Metal),         
-  POINTER(SpidRefire),    
-  POINTER(BabyMetal),     
-  POINTER(BspiAttack),    
-  POINTER(Hoof),          
-  POINTER(CyberAttack),   
-  POINTER(PainAttack),    
-  POINTER(PainDie),       
-  POINTER(KeenDie),       
-  POINTER(BrainPain),     
-  POINTER(BrainScream),   
-  POINTER(BrainDie),      
-  POINTER(BrainAwake),    
-  POINTER(BrainSpit),     
-  POINTER(SpawnSound),    
-  POINTER(SpawnFly),      
-  POINTER(BrainExplode),  
-  
-  // killough 8/9/98 - 11/98: MBF Pointers  
-  POINTER(Detonate),      
-  POINTER(Mushroom),      
-  POINTER(Die),           
-  POINTER(Spawn),         
-  POINTER(Turn),          
-  POINTER(Face),          
+  POINTER(SkelFist),
+  POINTER(SkelMissile),
+  POINTER(FatRaise),
+  POINTER(FatAttack1),
+  POINTER(FatAttack2),
+  POINTER(FatAttack3),
+  POINTER(BossDeath),
+  POINTER(CPosAttack),
+  POINTER(CPosRefire),
+  POINTER(TroopAttack),
+  POINTER(SargAttack),
+  POINTER(HeadAttack),
+  POINTER(BruisAttack),
+  POINTER(SkullAttack),
+  POINTER(Metal),
+  POINTER(SpidRefire),
+  POINTER(BabyMetal),
+  POINTER(BspiAttack),
+  POINTER(Hoof),
+  POINTER(CyberAttack),
+  POINTER(PainAttack),
+  POINTER(PainDie),
+  POINTER(KeenDie),
+  POINTER(BrainPain),
+  POINTER(BrainScream),
+  POINTER(BrainDie),
+  POINTER(BrainAwake),
+  POINTER(BrainSpit),
+  POINTER(SpawnSound),
+  POINTER(SpawnFly),
+  POINTER(BrainExplode),
+
+  // killough 8/9/98 - 11/98: MBF Pointers
+  POINTER(Detonate),
+  POINTER(Mushroom),
+  POINTER(Die),
+  POINTER(Spawn),
+  POINTER(Turn),
+  POINTER(Face),
   POINTER(Scratch),
   POINTER(PlaySound),
   POINTER(RandomJump),
   POINTER(LineEffect),
-  
+
   POINTER(Nailbomb),
 
   // haleyjd: start new eternity codeptrs
@@ -1554,10 +1554,10 @@ deh_bexptr deh_bexptrs[] =
   POINTER(GenTracer),
   POINTER(BFG11KHit),
   POINTER(BouncingBFG),
-  POINTER(BFGBurst),          
-  POINTER(FireOldBFG),        
-  POINTER(KeepChasing),       
-  POINTER(Stop),              
+  POINTER(BFGBurst),
+  POINTER(FireOldBFG),
+  POINTER(KeepChasing),
+  POINTER(Stop),
   POINTER(PlayerThunk),
   POINTER(MissileAttack),
   POINTER(MissileSpread),
@@ -1594,60 +1594,60 @@ deh_bexptr deh_bexptrs[] =
 
   // haleyjd: Heretic pointers
   POINTER(SpawnGlitter),
-  POINTER(AccelGlitter),      
-  POINTER(SpawnAbove),        
-  POINTER(MummyAttack),       
-  POINTER(MummyAttack2),      
-  POINTER(MummySoul),         
-  POINTER(HticDrop),          
-  POINTER(HticTracer),        
-  POINTER(ClinkAttack),       
-  POINTER(WizardAtk1),        
-  POINTER(WizardAtk2),        
-  POINTER(WizardAtk3),        
-  POINTER(Srcr2Decide),       
-  POINTER(Srcr2Attack),       
-  POINTER(BlueSpark),         
-  POINTER(GenWizard),         
-  POINTER(Sor2DthInit),       
-  POINTER(Sor2DthLoop),       
+  POINTER(AccelGlitter),
+  POINTER(SpawnAbove),
+  POINTER(MummyAttack),
+  POINTER(MummyAttack2),
+  POINTER(MummySoul),
+  POINTER(HticDrop),
+  POINTER(HticTracer),
+  POINTER(ClinkAttack),
+  POINTER(WizardAtk1),
+  POINTER(WizardAtk2),
+  POINTER(WizardAtk3),
+  POINTER(Srcr2Decide),
+  POINTER(Srcr2Attack),
+  POINTER(BlueSpark),
+  POINTER(GenWizard),
+  POINTER(Sor2DthInit),
+  POINTER(Sor2DthLoop),
   POINTER(HticExplode),
-  POINTER(HticBossDeath),     
-  POINTER(PodPain),           
-  POINTER(RemovePod),         
-  POINTER(MakePod),           
-  POINTER(KnightAttack),      
-  POINTER(DripBlood),         
-  POINTER(BeastAttack),       
-  POINTER(BeastPuff),         
-  POINTER(SnakeAttack),       
-  POINTER(SnakeAttack2),      
-  POINTER(Sor1Chase),         
-  POINTER(Sor1Pain),          
-  POINTER(Srcr1Attack),       
-  POINTER(SorcererRise),      
-  POINTER(VolcanoBlast),      
-  POINTER(VolcBallImpact),    
-  POINTER(MinotaurAtk1),      
-  POINTER(MinotaurDecide),    
-  POINTER(MinotaurAtk2),      
-  POINTER(MinotaurAtk3),      
-  POINTER(MinotaurCharge),    
-  POINTER(MntrFloorFire),     
-  POINTER(LichFire),          
-  POINTER(LichWhirlwind),     
-  POINTER(LichAttack),        
-  POINTER(WhirlwindSeek),     
-  POINTER(LichIceImpact),     
-  POINTER(LichFireGrow),      
-  POINTER(ImpChargeAtk),      
-  POINTER(ImpMeleeAtk),       
-  POINTER(ImpMissileAtk),     
-  POINTER(ImpDeath),          
-  POINTER(ImpXDeath1),        
-  POINTER(ImpXDeath2),        
-  POINTER(ImpExplode),        
-  POINTER(PlayerSkull),       
+  POINTER(HticBossDeath),
+  POINTER(PodPain),
+  POINTER(RemovePod),
+  POINTER(MakePod),
+  POINTER(KnightAttack),
+  POINTER(DripBlood),
+  POINTER(BeastAttack),
+  POINTER(BeastPuff),
+  POINTER(SnakeAttack),
+  POINTER(SnakeAttack2),
+  POINTER(Sor1Chase),
+  POINTER(Sor1Pain),
+  POINTER(Srcr1Attack),
+  POINTER(SorcererRise),
+  POINTER(VolcanoBlast),
+  POINTER(VolcBallImpact),
+  POINTER(MinotaurAtk1),
+  POINTER(MinotaurDecide),
+  POINTER(MinotaurAtk2),
+  POINTER(MinotaurAtk3),
+  POINTER(MinotaurCharge),
+  POINTER(MntrFloorFire),
+  POINTER(LichFire),
+  POINTER(LichWhirlwind),
+  POINTER(LichAttack),
+  POINTER(WhirlwindSeek),
+  POINTER(LichIceImpact),
+  POINTER(LichFireGrow),
+  POINTER(ImpChargeAtk),
+  POINTER(ImpMeleeAtk),
+  POINTER(ImpMissileAtk),
+  POINTER(ImpDeath),
+  POINTER(ImpXDeath1),
+  POINTER(ImpXDeath2),
+  POINTER(ImpExplode),
+  POINTER(PlayerSkull),
   POINTER(ClearSkin),
   POINTER(PhoenixPuff),
 
@@ -1724,11 +1724,11 @@ deh_bexptr deh_bexptrs[] =
   POINTER(FreezeDeathChunks),
 
   // zdoom-inspired pointers
-  POINTER(AlertMonsters),     
-  POINTER(CheckPlayerDone),   
-  POINTER(FadeIn),            
-  POINTER(FadeOut),           
-  POINTER(JumpIfTargetInLOS), 
+  POINTER(AlertMonsters),
+  POINTER(CheckPlayerDone),
+  POINTER(FadeIn),
+  POINTER(FadeOut),
+  POINTER(JumpIfTargetInLOS),
   POINTER(PlaySoundEx),
   POINTER(SetTranslucent),
   POINTER(Jump),
@@ -1741,7 +1741,7 @@ deh_bexptr deh_bexptrs[] =
   {NULL,             "NULL"},  // Ty 05/16/98
 };
 
-// haleyjd 03/14/03: Just because its null-terminated doesn't mean 
+// haleyjd 03/14/03: Just because its null-terminated doesn't mean
 // we can index it however the hell we want! See deh_procPointer in
 // d_deh.c for a big bug fix.
 
@@ -1754,8 +1754,8 @@ int num_bexptrs = sizeof(deh_bexptrs) / sizeof(*deh_bexptrs);
 //
 // D_HashTableKey
 //
-// Fairly standard key computation -- this is used for multiple 
-// tables so there's not much use trying to make it perfect. It'll 
+// Fairly standard key computation -- this is used for multiple
+// tables so there's not much use trying to make it perfect. It'll
 // save time anyways.
 // 08/28/03: vastly simplified, is now similar to SGI's STL hash
 //
@@ -1829,7 +1829,7 @@ static void D_DEHStrHashInit(void)
       // key for actual string value
       dkey = D_HashTableKey(*(deh_strlookup[i].ppstr)) % NUMSTRCHAINS;
 
-      deh_strlookup[i].bnext = bexstrhashchains[bkey];      
+      deh_strlookup[i].bnext = bexstrhashchains[bkey];
       bexstrhashchains[bkey] = i;
 
       deh_strlookup[i].dnext = dehstrhashchains[dkey];
@@ -1877,7 +1877,7 @@ dehstr_t *D_GetBEXStr(const char *string)
 // D_GetDEHStr
 //
 // Finds the entry in the table above given the actual string value to look for.
-// haleyjd 10/08/06: altered to always use original value of string for 
+// haleyjd 10/08/06: altered to always use original value of string for
 // comparisons in order to support proper DeHackEd string replacement logic.
 //
 dehstr_t *D_GetDEHStr(const char *string)
@@ -1963,7 +1963,7 @@ static void D_BEXPtrHashInit(void)
    for(i = 0; i < num_bexptrs; i++)
    {
       unsigned int key;
-      
+
       key = D_HashTableKey(deh_bexptrs[i].lookup) % NUMCPTRCHAINS;
 
       deh_bexptrs[i].next = bexcpchains[key];
@@ -2079,7 +2079,7 @@ typedef struct dehqueueitem_s
    mqueueitem_t mqitem; // this must be first
 
    char name[PATH_MAX+1];
-   int  lumpnum;   
+   int  lumpnum;
 } dehqueueitem_t;
 
 static mqueue_t dehqueue;
@@ -2129,7 +2129,7 @@ static const char *D_dehout(void)
 
    if(!p)
       p = M_CheckParm("-bexout");
-   
+
    return (p && ++p < myargc) ? myargv[p] : NULL;
 }
 
@@ -2150,7 +2150,7 @@ void D_ProcessDEHQueue(void)
    {
       dehqueueitem_t *dqitem = (dehqueueitem_t *)rover;
 
-      // if lumpnum != -1, this is a wad dehacked lump, otherwise 
+      // if lumpnum != -1, this is a wad dehacked lump, otherwise
       // it's a file
       if(dqitem->lumpnum != -1)
       {
@@ -2167,5 +2167,3 @@ void D_ProcessDEHQueue(void)
 }
 
 // EOF
-
-

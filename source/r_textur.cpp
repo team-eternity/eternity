@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Stephen McGranahan, James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -80,7 +80,7 @@ typedef struct maptexture_s
 } maptexture_t;
 
 // SoM: all textures/flats are now stored in a single array (textures)
-// Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
+// Walls start from wallstart to (wallstop - 1) and flats go from flatstart
 // to (flatstop - 1)
 int       wallstart, wallstop;
 int       flatstart, flatstop;
@@ -89,7 +89,7 @@ int       firstflat, lastflat;
 
 // SoM: This is the number of textures/flats loaded from wads.
 // This distinction is important because any textures that EE generates
-// will not be cachable. 
+// will not be cachable.
 int       numwadtex;
 
 // SoM: Index of the BAADF00D invalid texture marker
@@ -98,7 +98,7 @@ int       badtex;
 int       texturecount;
 texture_t **textures;
 
-// SoM: Because all textures and flats are stored in the same array, the 
+// SoM: Because all textures and flats are stored in the same array, the
 // translation tables are now combined.
 int       *texturetranslation;
 
@@ -114,20 +114,20 @@ int       *texturetranslation;
 // Figures out the flat dimensions as which a texture may be used.
 //
 static void R_DetermineFlatSize(texture_t *t)
-{   
+{
    // If not powers of two, it can't be a flat.
    if((t->width != 1 && t->width & (t->width - 1)) ||
       (t->height != 1 && t->height & (t->height - 1)))
       return;
-      
+
    t->flags |= TF_CANBEFLAT;
-   
+
    if(t->width != t->height)
    {
       t->flatsize = FLAT_GENERALIZED;
       return;
    }
-      
+
    switch(t->width * t->height)
    {
    case 4096:  // 64x64
@@ -155,40 +155,40 @@ static void R_DetermineFlatSize(texture_t *t)
 // Allocates and initializes a new texture_t struct, filling in all needed data
 // for the given parameters.
 //
-static texture_t *R_AllocTexStruct(const char *name, uint16_t width, 
+static texture_t *R_AllocTexStruct(const char *name, uint16_t width,
                                    uint16_t height, int16_t compcount)
 {
    size_t    size;
    texture_t *ret;
    int       j;
-  
+
 #ifdef RANGECHECK
    if(!width || !height || !name || compcount < 0)
    {
-      I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n", 
+      I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n",
               name, width, height, compcount);
    }
 #endif
 
    size = sizeof(texture_t) + sizeof(tcomponent_t) * (compcount - 1);
-   
+
    ret = (texture_t *)(Z_Calloc(1, size, PU_RENDERER, NULL));
-   
+
    ret->name = ret->namebuf;
    strncpy(ret->namebuf, name, 8);
    ret->width = width;
    ret->height = height;
    ret->ccount = compcount;
-   
+
    // SoM: no longer use global lists. This is now done for every texture.
    for(j = 1; j * 2 <= ret->width; j <<= 1)
      ;
-     
+
    ret->widthmask = j - 1;
    ret->heightfrac = ret->height << FRACBITS;
 
    R_DetermineFlatSize(ret);
-   
+
    return ret;
 }
 
@@ -295,7 +295,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
 
    for(i = 0; i < 8; ++i)
       tt.name[i] = (char)*rover++;
-   
+
    rover += 4; // skip "unused"
 
    tt.width      = TEXSHORT(rover);
@@ -413,11 +413,11 @@ static void R_DetectTextureFormat(texturelump_t *tlump)
 //
 // R_TextureHacks
 //
-// SoM: This function determines special cases for some textures with known 
+// SoM: This function determines special cases for some textures with known
 // erroneous data.
 //
 static void R_TextureHacks(texture_t *t)
-{   
+{
    // Adapted from Zdoom's FMultiPatchTexture::CheckForHacks
    if(GameModeInfo->type == Game_DOOM &&
       GameModeInfo->missionInfo->id == doom &&
@@ -432,7 +432,7 @@ static void R_TextureHacks(texture_t *t)
       t->components->originy = 0;
       return;
    }
-   
+
    if(GameModeInfo->type == Game_Heretic &&
       t->height == 128 &&
       t->name[0] == 'S' &&
@@ -496,11 +496,11 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 
       rawpatch = TextureHandlers[tlump->format].ReadTexture(rawtex);
 
-      texture = textures[texnum] = 
+      texture = textures[texnum] =
          R_AllocTexStruct(tt.name, tt.width, tt.height, tt.patchcount);
-         
+
       texture->index = texnum;
-         
+
       component = texture->components;
 
       for(j = 0; j < texture->ccount; ++j, ++component)
@@ -519,7 +519,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
                          tp.patch, (const char *)(texture->name));
             //++*errors;
-            
+
             component->width = component->height = 0;
          }
          else
@@ -529,7 +529,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             component->height = p->height;
          }
       }
-      
+
       R_TextureHacks(texture);
    }
 
@@ -563,7 +563,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 
 
 // This struct holds the temporary structure of a masked texture while it is
-// build assembled. When a texture is complete, new col structs are allocated 
+// build assembled. When a texture is complete, new col structs are allocated
 // in a single block to ensure linearity within memory.
 struct tempmask_s
 {
@@ -572,7 +572,7 @@ struct tempmask_s
    int        buffermax;  // size of allocated buffer
    byte      *buffer;     // mask buffer.
    texture_t *tex;
-   
+
    texcol_t  *tempcols;
 } tempmask = { false, 0, NULL, NULL, NULL };
 
@@ -581,17 +581,17 @@ struct tempmask_s
 //
 // Copies from src to the tex buffer and optionally marks the temporary mask
 //
-static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, 
+static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
                          int ptroff, int len)
 {
    byte *dest = tex->buffer + ptroff;
-   
+
 #ifdef RANGECHECK
    if(ptroff < 0 || ptroff + len > tex->width * tex->height ||
       ptroff + len > tempmask.buffermax)
    {
-      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", 
-              (const char *)(tex->name), 
+      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n",
+              (const char *)(tex->name),
               ptroff + len, tex->width * tex->height, tempmask.buffermax);
    }
 #endif
@@ -599,12 +599,12 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
    if(tempmask.mask && tex == tempmask.tex)
    {
       byte *mask = tempmask.buffer + ptroff;
-      
+
       while(len > 0)
       {
          *dest = *src;
-         dest++; src += srcstep; 
-         
+         dest++; src += srcstep;
+
          *mask = 255; mask++;
          len--;
       }
@@ -622,7 +622,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
 
 //
 // AddTexFlat
-// 
+//
 // Paints the given flat-based component to the texture and marks mask info
 //
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
@@ -631,7 +631,7 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    int       destoff, srcoff, deststep, srcxstep, srcystep;
    int       xstart, ystart, xstop, ystop;
    int       width, height, wcount, hcount;
-   
+
    // If the flat is supposed to be flipped or rotated, do that here
    // For now, just setup the normal way
    {
@@ -639,22 +639,22 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
       height = component->width;
       srcystep = component->width;
       srcxstep = 1;
-      
+
       srcoff = 0;//component->width * (component->height - 1);
    }
-   
+
    // Determine starts and stops
    xstart = component->originx;
    ystart = component->originy;
    xstop = xstart + width;
    ystop = ystart + height;
-   
+
    // Make sure component is not entirely off of the texture (should this count
    // as a texture error?)
    if(xstop <= 0 || xstart >= tex->width ||
       ystop <= 0 || ystart >= tex->height)
       return;
-   
+
    // Offset src or dest based on the x offset first.
    srcoff += xstart < 0 ? -xstart * srcxstep : 0;
    destoff = xstart >= 0 ? xstart * tex->height : 0;
@@ -671,20 +671,20 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
       destoff += ystart;
 
    deststep = tex->height;
-   
+
    if(xstop > tex->width)
       xstop = tex->width;
    if(ystop > tex->height)
       ystop = tex->height;
-      
+
    wcount = xstop - xstart;
    hcount = ystop - ystart;
-      
+
    while(wcount > 0)
    {
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n",
                  (const char *)(tex->name), srcoff, tex->width * tex->height);
 #endif
       AddTexColumn(tex, src + srcoff, srcystep, destoff, hcount);
@@ -696,7 +696,7 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 
 //
 // AddTexPatch
-// 
+//
 // Paints the given flat-based component to the texture and marks mask info
 //
 static void AddTexPatch(texture_t *tex, tcomponent_t *component)
@@ -706,61 +706,61 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
    int      xstart, ystart, xstop;
    int      colindex, colstep;
    int      x, xstep;
-   
+
    // Make sure component is not entirely off of the texture (should this count
    // as a texture error?)
-   if(component->originx + component->width <= 0 || 
+   if(component->originx + component->width <= 0 ||
       component->originx >= tex->width ||
       component->originy + component->height <= 0 ||
       component->originy >= tex->height)
       return;
-   
+
    // Determine starts and stops
    colindex = component->originx < 0 ? -component->originx : 0;
    xstart = component->originx >= 0 ? component->originx : 0;
    xstop = component->originx + component->width;
-   
+
    ystart = component->originy;
-   
+
    if(xstop > tex->width)
       xstop = tex->width;
-     
+
    // if flipped, do so here.
    xstep = 1;
    colstep = 1;
-      
+
    for(x = xstart; x < xstop; x += xstep, colindex += colstep)
    {
       int top, y1, y2, destbase;
-      const column_t *column = 
+      const column_t *column =
          (const column_t *)((byte *)patch + patch->columnofs[colindex]);
-         
+
       destbase = x * tex->height;
       top = 0;
-      
+
       while(column->topdelta != 0xff)
       {
          const byte *src = (const byte *)column + 3;
          int        srcoff = 0;
-         
-         top = column->topdelta <= top ? 
+
+         top = column->topdelta <= top ?
                column->topdelta + top :
                column->topdelta;
-         
+
          y1 = ystart + top;
          y2 = y1 + column->length;
          destoff = destbase;
-               
+
          if(y2 <= 0)
          {
             column = (const column_t *)(src + column->length + 1);
             continue;
          }
-         
+
          // Done if this happens
          if(y1 >= tex->height)
             break;
-            
+
          if(y1 < 0)
          {
             srcoff += -(y1);
@@ -768,19 +768,19 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
          }
          else
             destoff += y1;
-            
+
          if(y2 > tex->height)
             y2 = tex->height;
 
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + y2 - y1 > column->length)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n",
                  (const char *)(tex->name), srcoff, column->length);
 #endif
-            
+
          if(y2 - y1 > 0)
             AddTexColumn(tex, src + srcoff, 1, destoff, y2 - y1);
-            
+
          column = (const column_t *)(src + column->length + 1);
       }
    }
@@ -801,19 +801,19 @@ static void StartTexture(texture_t *tex, bool mask)
    // more than what is available. :/
 
    int bufferlen = tex->width * tex->height + 4;
-   
+
    // Static for now
    tex->buffer = ecalloctag(byte *, 1, bufferlen, PU_STATIC, (void **)&tex->buffer);
-   
+
    if((tempmask.mask = mask))
    {
       tempmask.tex = tex;
-      
+
       // Setup the temporary mask
       if(bufferlen > tempmask.buffermax || !tempmask.buffer)
       {
          tempmask.buffermax = bufferlen;
-         tempmask.buffer = (byte *)(Z_Realloc(tempmask.buffer, bufferlen, 
+         tempmask.buffer = (byte *)(Z_Realloc(tempmask.buffer, bufferlen,
                                         PU_RENDERER, (void **)&tempmask.buffer));
       }
       memset(tempmask.buffer, 0, bufferlen);
@@ -835,10 +835,10 @@ static texcol_t *NextTempCol(texcol_t *current)
       else
          return tempmask.tempcols;
    }
-   
+
    if(!current->next)
       return current->next = estructalloc(texcol_t, 1);
-   
+
    return current->next;
 }
 
@@ -855,19 +855,19 @@ static void FinishTexture(texture_t *tex)
    byte       *maskp;
 
    Z_ChangeTag(tex->buffer, PU_CACHE);
-   
+
    if(!tempmask.mask)
       return;
-      
+
    if(tempmask.tex != tex)
    {
       // SoM: ERROR?
       return;
    }
-   
+
    // Allocate column pointers
    tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
-   
+
    // Build the columns based on mask info
    maskp = tempmask.buffer;
 
@@ -876,7 +876,7 @@ static void FinishTexture(texture_t *tex)
       y = 0;
       col = NULL;
       colcount = 0;
-      
+
       while(y < tex->height)
       {
          // Skip transparent pixels
@@ -885,41 +885,41 @@ static void FinishTexture(texture_t *tex)
             maskp++;
             y++;
          }
-         
+
          // Build a column
          if(y < tex->height && *maskp > 0)
          {
             colcount++;
             col = NextTempCol(col);
-            
+
             col->yoff = y;
             col->ptroff = maskp - tempmask.buffer;
-            
+
             while(y < tex->height && *maskp > 0)
             {
                maskp++; y++;
             }
-            
+
             col->len = y - col->yoff;
          }
       }
-      
+
       // No columns? No problem!
       if(!colcount)
       {
          tex->columns[x] = NULL;
          continue;
       }
-         
+
       // Now allocate and build the actual column structs in the texture
       tcol = tex->columns[x] = estructalloctag(texcol_t, colcount, PU_RENDERER);
-           
+
       col = NULL;
       for(i = 0; i < colcount; i++)
       {
          col = NextTempCol(col);
          memcpy(tcol, col, sizeof(texcol_t));
-         
+
          tcol->next = i + 1 < colcount ? tcol + 1 : NULL;
          tcol = tcol->next;
       }
@@ -928,14 +928,14 @@ static void FinishTexture(texture_t *tex)
 
 //
 // R_CacheTexture
-// 
+//
 // Caches a texture in memory, building it from component parts.
 //
 texture_t *R_CacheTexture(int num)
 {
    texture_t  *tex;
    int        i;
-   
+
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
       I_Error("R_CacheTexture: invalid texture num %i\n", num);
@@ -944,11 +944,11 @@ texture_t *R_CacheTexture(int num)
    tex = textures[num];
    if(tex->buffer)
       return tex;
-   
+
    // SoM: This situation would most certainly require an abort.
    if(tex->ccount == 0)
    {
-      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
+      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n",
               (const char *)(tex->name));
    }
 
@@ -956,21 +956,21 @@ texture_t *R_CacheTexture(int num)
    // 1. There is no buffer, and there are no columns which means the texture
    //    has never been built before and needs a full treatment
    // 2. There is no buffer, but there are columns which means that the buffer
-   //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not. 
+   //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not.
    //    This case means we only have to rebuilt the buffer.
 
-   // Start the texture. Check the size of the mask buffer if needed.   
+   // Start the texture. Check the size of the mask buffer if needed.
    StartTexture(tex, tex->columns == NULL);
-   
+
    // Add the components to the buffer/mask
    for(i = 0; i < tex->ccount; i++)
    {
       tcomponent_t *component = tex->components + i;
-      
+
       // SoM: Do NOT add lumps with a -1 lump
       if(component->lump == -1)
          continue;
-         
+
       switch(component->type)
       {
       case TC_FLAT:
@@ -999,17 +999,17 @@ static void R_MakeMissingTexture(int count)
    texture_t   *tex;
    int         i;
    byte        c1, c2;
-   
+
    if(count >= texturecount)
    {
       usermsg("R_MakeMissingTexture: count >= texturecount\n");
       return;
    }
-   
+
    badtex = count;
    textures[badtex] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
    tex->buffer = (byte *)(Z_Malloc(64*64, PU_RENDERER, NULL));
-   
+
    // Allocate column pointers
    tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
 
@@ -1022,7 +1022,7 @@ static void R_MakeMissingTexture(int count)
       tex->columns[i]->len = tex->height;
       tex->columns[i]->ptroff = i * tex->height;
    }
-   
+
    // Fill pixels
    c1 = GameModeInfo->whiteIndex;
    c2 = GameModeInfo->blackIndex;
@@ -1045,12 +1045,12 @@ static void R_InitLoading(void)
    // Really complex printing shit...
    int temp1 = W_GetNumForName("S_START");
    int temp2 = W_GetNumForName("S_END") - 1;
-   
+
    // 1/18/98 killough:  reduce the number of initialization dots
    // and make more accurate
    // sf: reorganised to use loading pic
    int temp3 = 6 + (temp2 - temp1 + 255) / 128 + (numwalls + 255) / 128;
-   
+
    V_SetLoading(temp3, "R_Init:");
 }
 
@@ -1074,13 +1074,13 @@ static int *R_LoadPNames(void)
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
-   
+
    for(i = 0; i < nummappatches; ++i)
    {
       strncpy(name, name_p + i * 8, 8);
-      
+
       patchlookup[i] = W_CheckNumForName(name);
-      
+
       if(patchlookup[i] == -1)
       {
          // killough 4/17/98:
@@ -1090,9 +1090,9 @@ static int *R_LoadPNames(void)
          // that wall patches always win over sprites, even when they
          // appear first in a wad. This is a kludgy solution to the wad
          // lump namespace problem.
-         
+
          patchlookup[i] = W_CheckNumForNameNS(name, lumpinfo_t::ns_sprites);
-         
+
          if(patchlookup[i] == -1 && devparm)    // killough 8/8/98
             usermsg("\nWarning: patch %.8s, index %d does not exist", name, i);
       }
@@ -1116,7 +1116,7 @@ static void R_InitTranslationLUT(void)
 
    // Create translation table for global animation.
    // killough 4/9/98: make column offsets 32-bit;
-   // clean up malloc-ing to use sizeof   
+   // clean up malloc-ing to use sizeof
    texturetranslation =
       (int *)(Z_Malloc((texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, 0));
 
@@ -1141,26 +1141,26 @@ static EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::lin
 static void R_InitTextureHash(void)
 {
    int i;
-   
+
    walltable.destroy();
    flattable.destroy();
 
-   // haleyjd 12/12/10: For efficiency, allocate as many chains as there are 
+   // haleyjd 12/12/10: For efficiency, allocate as many chains as there are
    // entries, plus a few more for breathing room.
    walltable.initialize(wallstop - wallstart + 31);
    flattable.initialize(flatstop - flatstart + 31);
-   
+
    for(i = wallstart; i < wallstop; i++)
       walltable.addObject(textures[i]);
-      
+
    for(i = flatstart; i < flatstop; i++)
       flattable.addObject(textures[i]);
 }
 
 //
 // R_CountFlats
-// 
-// SoM: This was split out of R_InitFlats which has been combined with 
+//
+// SoM: This was split out of R_InitFlats which has been combined with
 // R_InitTextures
 //
 static void R_CountFlats()
@@ -1181,12 +1181,12 @@ static void R_AddFlats(void)
    byte      flatsize;
    uint16_t  width, height;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   
+
    for(i = 0; i < numflats; ++i)
    {
       lumpinfo_t *lump = lumpinfo[i + firstflat];
       texture_t  *tex;
-      
+
       switch(lump->size)
       {
       case 16384: // 128x128
@@ -1206,10 +1206,10 @@ static void R_AddFlats(void)
          width = height = 64;
          break;
       }
-      
-      tex = textures[i + flatstart] = 
+
+      tex = textures[i + flatstart] =
          R_AllocTexStruct(lump->name, width, height, 1);
-     
+
       tex->flatsize = flatsize;
       tex->index = i + flatstart;
       tex->components[0].lump = i + firstflat;
@@ -1229,8 +1229,8 @@ void R_InitTextures(void)
 {
    int *patchlookup;
    int errors = 0;
-   int i, texnum = 0;   
-   
+   int i, texnum = 0;
+
    texturelump_t *maptex1;
    texturelump_t *maptex2;
 
@@ -1247,16 +1247,16 @@ void R_InitTextures(void)
    numwalls  = maptex1->numtextures + maptex2->numtextures;
    wallstart = 0;
    wallstop  = wallstart + numwalls;
-   
+
    // Count flats
    R_CountFlats();
    flatstart = numwalls;
    flatstop = flatstart + numflats;
-      
+
    // SoM: Add one more for the missing texture texture
    numwadtex = numwalls + numflats;
    texturecount = numwalls + numflats + 1;
-   
+
    // Allocate textures
    textures = (texture_t **)(Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, NULL));
    memset(textures, 0, sizeof(texture_t *) * texturecount);
@@ -1281,25 +1281,25 @@ void R_InitTextures(void)
    // done with texturelumps
    R_FreeTextureLump(maptex1);
    R_FreeTextureLump(maptex2);
-   
+
    if(errors)
       I_Error("\n\n%d texture errors.\n", errors);
 
-   // SoM: This REALLY hits us when starting EE with large wads. Caching 
+   // SoM: This REALLY hits us when starting EE with large wads. Caching
    // textures on map start would probably be preferable 99.9% of the time...
    // Precache textures
    for(i = wallstart; i < wallstop; ++i)
       R_CacheTexture(i);
-   
+
    if(errors)
-      I_Error("\n\n%d texture errors.\n", errors); 
-      
+      I_Error("\n\n%d texture errors.\n", errors);
+
    // Load flats
-   R_AddFlats();     
+   R_AddFlats();
 
    // Create the bad texture texture
    R_MakeMissingTexture(texturecount - 1);
-   
+
    // initialize texture hashing
    R_InitTextureHash();
 }
@@ -1334,7 +1334,7 @@ byte *R_GetRawColumn(int tex, int32_t col)
 texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 {
    texture_t *t = textures[tex];
-   
+
    if(!t->buffer)
       R_CacheTexture(tex);
 
@@ -1347,7 +1347,7 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 byte *R_GetLinearBuffer(int tex)
 {
    texture_t *t = textures[tex];
-   
+
    if(!t->buffer)
       R_CacheTexture(tex);
 
@@ -1383,10 +1383,10 @@ int R_FindFlat(const char *name)    // killough -- const added
 {
    texture_t *tex;
 
-   // Search flats first   
+   // Search flats first
    if(!(tex = R_SearchFlats(name)))
       tex = R_SearchWalls(name);
-   
+
    // SoM: Check here for flat-ness!
    if(tex && !(tex->flags & TF_CANBEFLAT))
       tex = NULL;
@@ -1404,10 +1404,10 @@ int R_CheckForFlat(const char *name)
 {
    texture_t *tex;
 
-   // Search flats first   
+   // Search flats first
    if(!(tex = R_SearchFlats(name)))
       tex = R_SearchWalls(name);
-      
+
    return (tex && tex->flags & TF_CANBEFLAT) ? tex->index : -1;
 }
 
@@ -1426,14 +1426,14 @@ int R_CheckForFlat(const char *name)
 int R_CheckForWall(const char *name)
 {
    texture_t *tex;
-   
+
    if(*name == '-')     // "NoTexture" marker.
       return 0;
 
    // Search walls before flats.
    if(!(tex = R_SearchWalls(name)))
       tex = R_SearchFlats(name);
-      
+
    return tex ? tex->index : -1;
 }
 
@@ -1452,11 +1452,11 @@ int R_FindWall(const char *name)  // const added -- killough
    if(i == -1)
    {
       i = R_Doom1Texture(name);   // try doom I textures
-      
+
       if(i == -1)
       {
          C_Printf(FC_ERROR "Texture %.8s not found\n", name);
-         
+
          // SoM: Return index of missing texture texture.
          return texturecount - 1;
       }
@@ -1507,7 +1507,7 @@ void R_LoadDoom1(void)
 
    char texture1[9];
    char texture2[9];
-   
+
    if((lumpnum = W_CheckNumForName("TXTRCONV")) == -1)
       return;
 
@@ -1517,12 +1517,12 @@ void R_LoadDoom1(void)
 
    lumplen = W_LumpLength(lumpnum);
    lump    = ecalloc(char *, 1, lumplen + 1);
-   
+
    wGlobalDir.readLump(lumpnum, lump);
-   
+
    rover = lump;
    numconvs = 0;
-   
+
    while(*rover)
    {
       switch(state)
@@ -1565,13 +1565,13 @@ void R_LoadDoom1(void)
             if(numconvs >= numconvsalloc)
             {
                numconvsalloc = numconvsalloc ? numconvsalloc*2 : 56;
-               txtrconv = erealloc(doom1text_t *, txtrconv, 
+               txtrconv = erealloc(doom1text_t *, txtrconv,
                                    numconvsalloc * sizeof *txtrconv);
             }
-            
+
             strncpy(txtrconv[numconvs].doom1, texture1, 9);
             strncpy(txtrconv[numconvs].doom2, texture2, 9);
-            
+
             numconvs++;
 
             // clear out temps
@@ -1592,7 +1592,7 @@ void R_LoadDoom1(void)
 
       rover++;
    }
-   
+
    // finished with lump
    efree(lump);
 }
@@ -1600,12 +1600,12 @@ void R_LoadDoom1(void)
 static int R_Doom1Texture(const char *name)
 {
    int i;
-   
+
    // slow i know; should be hash tabled
    // mind you who cares? it's only going to be
-   // used by a few people and only at the start of 
+   // used by a few people and only at the start of
    // the level
-   
+
    for(i = 0; i < numconvs; i++)
    {
       if(!strncasecmp(name, txtrconv[i].doom1, 8))   // found it
@@ -1614,9 +1614,8 @@ static int R_Doom1Texture(const char *name)
          return R_CheckForWall(txtrconv[i].doom2);
       }
    }
-   
+
    return -1;
 }
 
 // EOF
-

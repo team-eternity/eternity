@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,7 +32,7 @@ extern bool useportalgroups;
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
-// do you think anyone is going to make a level with 2147483647 groups that 
+// do you think anyone is going to make a level with 2147483647 groups that
 // doesn't have NUTS in the wad name? I didn't think so either.
 #define R_NOGROUP -1
 #endif
@@ -77,7 +77,7 @@ void R_SetSectorGroupID(sector_t *sector, int groupid);
 
 //
 // P_CheckCPortalState
-// 
+//
 // Checks the state of the ceiling portal in the given sector and updates
 // the state flags accordingly.
 //
@@ -85,7 +85,7 @@ void P_CheckCPortalState(sector_t *sec);
 
 
 // P_CheckFPortalState
-// 
+//
 // Checks the state of the floor portal in the given sector and updates
 // the state flags accordingly.
 //
@@ -93,7 +93,7 @@ void P_CheckFPortalState(sector_t *sec);
 
 //
 // P_CheckLPortalState
-// 
+//
 // Checks the state of the portal in the given line and updates
 // the state flags accordingly.
 //
@@ -133,7 +133,7 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior);
 //
 // P_SetCPortalBehavior
 //
-// This function sets the behavior flags for the ceiling portal of a given 
+// This function sets the behavior flags for the ceiling portal of a given
 // sector and updates the state flags for the surface.
 //
 void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
@@ -149,4 +149,3 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior);
 #endif
 
 // EOF
-

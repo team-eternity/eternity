@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -72,13 +72,13 @@ enum
 struct menuitem_t
 {
   int type; // item types
-  
+
   const char *description;  // the describing name of this item
 
   // useful data for the item:
   // console command if console
   // variable name if variable, etc
-  const char *data;         
+  const char *data;
 
   const char *patch; // patch to use or NULL
 
@@ -95,7 +95,7 @@ struct menuitem_t
 // haleyjd 10/07/05: Menu engine changes:
 // 1. menuitems are no longer contained inside the menu_t structure,
 //    since this was wasting tons of memory.
-// 2. paged menu support -- menus may have more than one page of 
+// 2. paged menu support -- menus may have more than one page of
 //    options again, just like they did in BOOM.
 // 3. (10/15/05) table of contents support
 
@@ -121,18 +121,18 @@ struct menu_t
 
    // x,y offset of menu
    int x, y;
-  
+
    // currently selected item
    int selected;
-   
+
    // menu flags
-   int flags;               
-   
-   void (*drawer)(void);              // separate drawer function 
+   int flags;
+
+   void (*drawer)(void);              // separate drawer function
 
    const char **content_names;    // table of contents stuff, optional
    menu_t     **content_pages;
-   
+
    int gap_override;              // haleyjd 10/09/05: override gap size
 
    void (*open)(void);            // haleyjd 11/12/09: special open menu function
@@ -160,7 +160,7 @@ struct menuwidget_t
   bool (*responder)(event_t *ev);
   void (*ticker)();   // haleyjd 05/29/06
   bool fullscreen;    // haleyjd: optimization for fullscreen widgets
-  
+
   menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
 };
 
@@ -212,7 +212,7 @@ int MN_StringWidth(const char *s);
 
 void MN_ErrorMsg(const char *s, ...);
 
-void MN_SetupBoxWidget(const char *, const char **, int, menu_t **, 
+void MN_SetupBoxWidget(const char *, const char **, int, menu_t **,
                        const char **);
 void MN_ShowBoxWidget(void);
 
@@ -241,5 +241,5 @@ extern char *mn_background;
 extern const char *mn_background_flat;
 
 #endif
-                            
+
 // EOF

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,10 +43,10 @@ typedef enum
 typedef struct tcomponent_s
 {
    int32_t   originx, originy;  // Block origin, which has already accounted
-   uint32_t  width, height;     // Unscaled dimensions of the graphic. 
-   
+   uint32_t  width, height;     // Unscaled dimensions of the graphic.
+
    int32_t   lump;              // Lump number of the
-    
+
    cmptype_e type;              // Type of lump
 } tcomponent_t;
 
@@ -57,7 +57,7 @@ struct texcol_t
 {
    uint16_t yoff, len;
    uint32_t ptroff;
-   
+
    texcol_t *next;
 };
 
@@ -72,7 +72,7 @@ typedef enum
    TF_MASKED    = 0x1,
    // Set by animation code marks this texture as being swirly
    TF_SWIRLY    = 0x2,
-   // Set if the texture can be used as a flat. 
+   // Set if the texture can be used as a flat.
    TF_CANBEFLAT = 0x4,
    // Set if the texture is animated
    TF_ANIMATED  = 0x8,
@@ -82,7 +82,7 @@ struct texture_t
 {
    // SoM: New dog's in town
    DLListItem<texture_t> link;
-   
+
    // Index within the texture array of this object.
    int           index;
 
@@ -90,21 +90,21 @@ struct texture_t
    char      *name;
    char       namebuf[9];       // Keep name for switch changing, etc.
    int16_t    width, height;
-   
+
    // SoM: These are no longer kept in separate arrays
    int32_t    widthmask;
    int32_t    heightfrac;
-   
+
    // SoM: texture attributes
    uint32_t   flags;
-   
+
    // SoM: If the texture can be used as an optimized flat, this is the size
    // of the flat
    byte       flatsize;
-   
+
    texcol_t   **columns;     // SoM: width length list of columns
    byte       *buffer;       // SoM: Linear buffer the texture occupies
-   
+
    // New texture system can put either textures or flats (or anything, really)
    // into a texture, so the old patches idea has been scrapped for 'graphics'
    // which can be either patch graphics or linear graphics.
@@ -115,7 +115,7 @@ struct texture_t
 // Retrieve column data for span blitting.
 //byte *R_GetColumn(int tex, int32_t col);
 
-// SoM: This is replaced with two functions. For solid walls/skies, we only 
+// SoM: This is replaced with two functions. For solid walls/skies, we only
 // need the raw column data (direct buffer ptr). For masked mid-textures, we
 // need to return columns from the column list
 byte     *R_GetRawColumn(int tex, int32_t col);
@@ -129,7 +129,7 @@ byte *R_GetLinearBuffer(int tex);
 texture_t *R_CacheTexture(int num);
 
 // SoM: all textures/flats are now stored in a single array (textures)
-// Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
+// Walls start from wallstart to (wallstop - 1) and flats go from flatstart
 // to (flatstop - 1)
 extern int         wallstart, wallstop;
 extern int         flatstart, flatstop;
@@ -137,7 +137,7 @@ extern int         numwalls, numflats;
 
 // SoM: This is the number of textures/flats loaded from wads
 // this distinction is important because any textures that EE generates
-// will not be cachable. 
+// will not be cachable.
 extern int         numwadtex;
 
 // SoM: Index of the BAADF00D invalid texture marker
@@ -146,7 +146,7 @@ extern int         badtex;
 extern int         texturecount;
 extern texture_t **textures;
 
-// SoM: Because all textures and flats are stored in the same array, the 
+// SoM: Because all textures and flats are stored in the same array, the
 // translation tables are now combined.
 extern int        *texturetranslation;
 
@@ -164,7 +164,7 @@ int R_CheckForFlat(const char *name);
 // Called by P_Ticker for switches and animations,
 // returns the texture number for the texture name.
 int R_FindWall(const char *name);       // killough -- const added
-int R_CheckForWall(const char *name); 
+int R_CheckForWall(const char *name);
 
 void R_InitTranMap(int);      // killough 3/6/98: translucency initialization
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
@@ -206,4 +206,3 @@ extern int global_fog_index;
 //
 //
 //----------------------------------------------------------------------------
-

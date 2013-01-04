@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Samuel Villarreal
@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,7 +22,7 @@
 //
 // DESCRIPTION:
 //   PNG Resource Reading and Conversion
-//   
+//
 //   Some code derived from Doom 64 EX, by Kaiser. Used under the GPL.
 //   Some code derived from SDL_image, by Sam Lantinga. Used under the GPL
 //    (via license upgrade option of the LGPL v2.1 license)
@@ -127,7 +127,7 @@ static void V_pngWarning(png_structp png_ptr, png_const_charp error_msg)
 static void V_pngReadFunc(png_structp png_ptr, png_bytep area, png_size_t size)
 {
    vpngiostruct_t *io = static_cast<vpngiostruct_t *>(png_get_io_ptr(png_ptr));
-   
+
    memcpy(area, io->data, size);
    io->data += size;
 }
@@ -156,7 +156,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    if(!VPNGImage::CheckPNGFormat(data))
       return false;
 
-   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, 
+   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
                                     V_pngError, V_pngWarning);
    if(!png_ptr)
       return false;
@@ -168,7 +168,7 @@ bool VPNGImagePimpl::readImage(const void *data)
       return false;
    }
 
-   // DONE: I have successfully tested the concept of throwing an exception 
+   // DONE: I have successfully tested the concept of throwing an exception
    // through libpng. One of the libpng authors claimed it should work, in lieu
    // of using setjmp/longjmp. I have fed EE some bad PNGs and the exception
    // propagates past the C calls on the stack and ends up here without incident.
@@ -231,11 +231,11 @@ bool VPNGImagePimpl::readImage(const void *data)
 
       // Update info
       png_read_update_info(png_ptr, info_ptr);
-      png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, 
+      png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                    NULL, NULL, NULL);
 
       channels = png_get_channels(png_ptr, info_ptr);
-      
+
       // Allocate surface
       pitch   = width * bit_depth * channels / 8;
       surface = ecalloc(byte *, pitch, height);
@@ -354,14 +354,14 @@ void VPNGImagePimpl::freeImage()
 //
 byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
 {
-   int numcolors = 
+   int numcolors =
       palette.numColors > 256 ? palette.numColors : 256;
 
    byte *newpal = ecalloc(byte *, 1, numcolors);
 
    for(int i = 0; i < palette.numColors; i++)
    {
-      newpal[i] = V_FindBestColor(outpal, 
+      newpal[i] = V_FindBestColor(outpal,
                                   palette.colors[i*3+0],
                                   palette.colors[i*3+1],
                                   palette.colors[i*3+2]);
@@ -377,7 +377,7 @@ byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
 //
 byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
 {
-   if(color_type == PNG_COLOR_TYPE_GRAY || 
+   if(color_type == PNG_COLOR_TYPE_GRAY ||
       color_type == PNG_COLOR_TYPE_PALETTE)
    {
       if(!outpal)
@@ -437,7 +437,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
 //
 byte *VPNGImagePimpl::getAs24Bit() const
 {
-   if(color_type == PNG_COLOR_TYPE_GRAY || 
+   if(color_type == PNG_COLOR_TYPE_GRAY ||
       color_type == PNG_COLOR_TYPE_PALETTE)
    {
       if(!palette.colors) // no palette??
@@ -610,15 +610,15 @@ byte *VPNGImage::getPalette() const
 //
 // Returns a copy of the PNG's palette (if it has one) which is expanded to
 // 256 (or more) colors. The unused indices are all black.
-// 
+//
 byte *VPNGImage::expandPalette() const
 {
    byte *newPalette = NULL;
-   
+
    if(pImpl->palette.colors)
    {
       int numcolorsalloc = PNGMAX(pImpl->palette.numColors, 256);
-      
+
       newPalette = ecalloc(byte *, 3, numcolorsalloc);
       memcpy(newPalette, pImpl->palette.colors, 3*pImpl->palette.numColors);
    }
@@ -633,7 +633,7 @@ byte *VPNGImage::expandPalette() const
 //
 // VPNGImage::getAs8Bit
 //
-// Returns an 8-bit linear version of the PNG graphics. 
+// Returns an 8-bit linear version of the PNG graphics.
 // If it is grayscale or 8-bit color:
 //  * If outpal is provided, the colors will be requantized to that palette
 //  * If outpal is NULL, the colors are left alone
@@ -648,7 +648,7 @@ byte *VPNGImage::getAs8Bit(const byte *outpal) const
 //
 // VPNGImage::getAs24Bit
 //
-// Returns a 24-bit linear version of the PNG graphics. 
+// Returns a 24-bit linear version of the PNG graphics.
 // If it is grayscale or 8-bit color:
 //  * Output is converted to 24-bit
 // If it is true color:
@@ -696,10 +696,10 @@ bool VPNGImage::CheckPNGFormat(const void *data)
 // Load a PNG image and convert it to patch_t format.
 //
 patch_t *VPNGImage::LoadAsPatch(int lumpnum, int tag, void **user, size_t *size)
-{   
+{
    patch_t *patch = NULL;
    int len;
-  
+
    if((len = wGlobalDir.lumpLength(lumpnum)) > 8)
    {
       VPNGImage   png;
@@ -757,7 +757,7 @@ static void V_pngDataWrite(png_structp pngptr, png_bytep data, png_size_t len)
 static void V_pngDataFlush(png_structp pngptr)
 {
    pngwrite_t *iodata = static_cast<pngwrite_t *>(png_get_io_ptr(pngptr));
- 
+
    if(fflush(iodata->outf) != 0)
    {
       iodata->errorFlag = true;
@@ -802,7 +802,7 @@ static void V_pngRemoveFile(pngwrite_t *writeData, const char *filename)
       if(writeData->errorFlag)
       {
          int error = writeData->errnoVal;
-         C_Printf(FC_ERROR "V_pngRemoveFile: IO error: %s\a", 
+         C_Printf(FC_ERROR "V_pngRemoveFile: IO error: %s\a",
                   error ? strerror(error) : "unknown error");
       }
    }
@@ -829,7 +829,7 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
    pngwrite_t  writeData;
    bool        libpngError = false;
    bool        retval;
-      
+
    byte  *palette;
    byte **rowpointers;
 
@@ -846,7 +846,7 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
    writeData.errnoVal  = 0;
 
    // Create the libpng write struct
-   if(!(pngStruct = 
+   if(!(pngStruct =
         png_create_write_struct(PNG_LIBPNG_VER_STRING, &writeData,
                                 V_pngWriteError, V_pngWriteWarning)))
    {
@@ -873,7 +873,7 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
 
       // Set IHDR data
       png_set_IHDR(pngStruct, pngInfo, width, height, 8, PNG_COLOR_TYPE_PALETTE,
-                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, 
+                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
                    PNG_FILTER_TYPE_DEFAULT);
 
       // Copy palette
@@ -928,4 +928,3 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
 }
 
 // EOF
-

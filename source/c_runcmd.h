@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 
 #include "m_qstr.h"
 
-// NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
+// NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and
 // variables need tweaks and extensions to fully support archiving in
 // the configuration and possibly in savegames, and also telling what
 // commands and variables are sync-critical. The main addition needed
@@ -55,7 +55,7 @@ struct variable_t;
                        0, NULL };                       \
         void Handler_ ## name(void)
 
-		 
+
 // console variable. you must define the range of values etc. for
 //      the variable using the other macros below.
 //      You must also provide a handler function even
@@ -157,7 +157,7 @@ struct variable_t;
                   vt_string, -1, -1, NULL, 0, 0, NULL, NULL };
 
 
-#define C_AddCommand(c)  (C_AddCommand)(&Cmd_ ## c) 
+#define C_AddCommand(c)  (C_AddCommand)(&Cmd_ ## c)
 
 /********************************* ENUMS **********************************/
 
@@ -182,7 +182,7 @@ enum    // command flag
 {
   cf_notnet       = 0x001, // not in netgames
   cf_netonly      = 0x002, // only in netgames
-  cf_server       = 0x004, // server only 
+  cf_server       = 0x004, // server only
   cf_handlerset   = 0x008, // if set, the handler sets the variable,
                            // not c_runcmd.c itself
   cf_netvar       = 0x010, // sync with other pcs
@@ -195,7 +195,7 @@ enum    // command flag
 
 enum    // variable type
 {
-  vt_int,       // normal integer 
+  vt_int,       // normal integer
   vt_float,     // decimal
   vt_string,    // string
   vt_chararray, // char array -- haleyjd 03/13/06
@@ -205,16 +205,16 @@ enum    // variable type
 /******************************** STRUCTS ********************************/
 
 struct variable_t
-{  
+{
   void *variable;        // NB: for strings, this is char ** not char *
-  void *v_default;       // the default 
+  void *v_default;       // the default
   int type;              // vt_?? variable type: int, string
   int min;               // minimum value or string length
   int max;               // maximum value/length
   const char **defines;  // strings representing the value: eg "on" not "1"
   double dmin;           // haleyjd 04/21/10: min for double vars
   double dmax;           //                   max for double vars
-  
+
   default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
   command_t *command;           // haleyjd 08/15/10: parent command
 };
@@ -234,7 +234,7 @@ typedef struct alias_s
 {
   char *name;
   char *command;
-  
+
   struct alias_s *next; // haleyjd 04/14/03
 
 } alias_t;
@@ -245,7 +245,7 @@ typedef struct alias_s
 // haleyjd 05/20/10
 //
 // Console state is now stored in the console_t structure.
-// 
+//
 struct console_t
 {
    int current_height; // current height of console
@@ -256,7 +256,7 @@ struct console_t
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
    int  argc;          // number of argv's
-   qstring   args;     // args as single string   
+   qstring   args;     // args as single string
    qstring **argv;     // argument values to current command
    int numargvsalloc;  // number of arguments available to command parsing
 };

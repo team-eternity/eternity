@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 Raven Software, James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -54,14 +54,14 @@ int EV_ThingProjectile(int *args, bool gravity)
    bool success = false;
 
    tid    = args[0];
-   
+
    if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
       moType = ACS_thingtypes[args[1]];
    else
       moType = UnknownThingType;
 
    mi = mobjinfo[moType];
- 
+
    // Don't spawn monsters if -nomonsters
    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
       return false;
@@ -82,7 +82,7 @@ int EV_ThingProjectile(int *args, bool gravity)
       newMobj->momy    = FixedMul(speed, finesine[fineAngle]);
       newMobj->momz    = vspeed;
       // HEXEN TODO: ???
-      //newMobj->flags2 |= MF2_DROPPED; 
+      //newMobj->flags2 |= MF2_DROPPED;
       if(gravity)
       {
          newMobj->flags &= ~MF_NOGRAVITY;
@@ -109,28 +109,28 @@ int EV_ThingSpawn(int *args, bool fog)
    mobjinfo_t *mi;
    bool success = false;
    fixed_t z;
-   
+
    tid = args[0];
-   
+
    if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
       moType = ACS_thingtypes[args[1]];
    else
       moType = UnknownThingType;
 
    mi = mobjinfo[moType];
-   
-   // Don't spawn monsters if -nomonsters 
+
+   // Don't spawn monsters if -nomonsters
    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
       return false;
 
    angle = (angle_t)args[2] << 24;
-   
+
    while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
    {
       z = mobj->z;
 
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
-      
+
       if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y)) // Didn't fit?
          newMobj->removeThinker();
       else
@@ -139,13 +139,13 @@ int EV_ThingSpawn(int *args, bool fog)
 
          if(fog)
          {
-            fogMobj = 
+            fogMobj =
                P_SpawnMobj(mobj->x, mobj->y,
-                           mobj->z + GameModeInfo->teleFogHeight, 
+                           mobj->z + GameModeInfo->teleFogHeight,
                            E_SafeThingType(GameModeInfo->teleFogType));
             S_StartSound(fogMobj, GameModeInfo->teleSound);
          }
-         
+
          // don't item-respawn
          newMobj->flags3 |= MF3_NOITEMRESP;
 
@@ -156,7 +156,7 @@ int EV_ThingSpawn(int *args, bool fog)
    return success;
 }
 
-// 
+//
 // EV_ThingActivate
 //
 // Implements Thing_Activate(tid)
@@ -227,4 +227,3 @@ int EV_ThingDeactivate(int tid)
 }
 
 // EOF
-

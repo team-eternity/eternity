@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -131,7 +131,7 @@ cfg_opt_t edf_pclass_opts[] =
 };
 
 //==============================================================================
-// 
+//
 // Global Variables
 //
 
@@ -446,14 +446,14 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       statenum_t statenum = 0;
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_ALTATTACK);
 
-      // altattackstate should be specified, but if it's not, use the 
+      // altattackstate should be specified, but if it's not, use the
       // thing type's normal missilestate.
       if(!tempstr || (statenum = E_StateNumForName(tempstr)) < 0)
       {
          mobjinfo_t *mi = mobjinfo[pc->type];
          statenum = mi->missilestate;
       }
-      
+
       pc->altattack = statenum;
    }
 
@@ -636,15 +636,13 @@ void E_ApplyTurbo(int ts)
       {
          pc->forwardmove[0] = pc->oforwardmove[0] * ts / 100;
          pc->forwardmove[1] = pc->oforwardmove[1] * ts / 100;
-         
+
          pc->sidemove[0] = pc->osidemove[0] * ts / 100;
          pc->sidemove[1] = pc->osidemove[1] * ts / 100;
-         
+
          pc = pc->next;
       }
    }
 }
 
 // EOF
-
-

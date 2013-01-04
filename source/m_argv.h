@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //  Utilities for storing and checking command-line parameters.
-//    
+//
 //-----------------------------------------------------------------------------
 
 
@@ -38,7 +38,7 @@ extern char **myargv;
 int M_CheckParm(const char *check);
 
 // Returns position of the first argument found in the null-terminated 'parms'
-// array for which the number of arguments to the command-line parameter 
+// array for which the number of arguments to the command-line parameter
 // specified in 'numargs' is available.
 int M_CheckMultiParm(const char **parms, int numargs);
 

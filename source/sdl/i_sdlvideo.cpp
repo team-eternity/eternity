@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
+//
 //   SDL-specific graphics code.
 //
 //-----------------------------------------------------------------------------
@@ -86,8 +86,8 @@ void SDLVideoDriver::FinishUpdate(void)
    UpdateGrab();
 
    // Don't update the screen if the window isn't visible.
-   // Not doing this breaks under Windows when we alt-tab away 
-   // while fullscreen.   
+   // Not doing this breaks under Windows when we alt-tab away
+   // while fullscreen.
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
 
@@ -120,7 +120,7 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height,
                      vbscreen.width, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
@@ -131,7 +131,7 @@ static SDL_Surface *disk = NULL, *disk_bg = NULL;
 
 //
 // SDLVideoDriver::InitDiskFlash
-// 
+//
 // killough 10/98: init disk icon
 //
 void SDLVideoDriver::InitDiskFlash()
@@ -165,7 +165,7 @@ void SDLVideoDriver::InitDiskFlash()
    SDL_SetPalette(disktmp, SDL_LOGPAL, colors, 0, 256);
 
    // setup VBuffer and point it into the SDL_Surface
-   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8, 
+   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8,
                      (byte *)(disktmp->pixels));
    V_SetScaling(&diskvb, 16, 15);
 
@@ -176,7 +176,7 @@ void SDLVideoDriver::InitDiskFlash()
    // Done with VBuffer object
    V_FreeVBuffer(&diskvb);
 
-   // Convert 8-bit disk into a surface-format surface - let SDL handle the 
+   // Convert 8-bit disk into a surface-format surface - let SDL handle the
    // specifics of the process, as it's designed for it.
    disk    = SDL_DisplayFormat(disktmp);
    disk_bg = SDL_DisplayFormat(disktmp);
@@ -209,7 +209,7 @@ void SDLVideoDriver::EndRead(void)
 {
    if(!disk_bg)
       return;
-   
+
    SDL_BlitSurface(disk_bg, NULL, sdlscreen, &drect);
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
@@ -240,7 +240,7 @@ static void I_SDLSetPaletteDirect(byte *palette)
 //
 // SDLVideoDriver::SetPalette
 //
-// Set the palette, or, if palette is NULL, update the current palette to use 
+// Set the palette, or, if palette is NULL, update the current palette to use
 // the current gamma setting.
 //
 void SDLVideoDriver::SetPalette(byte *palette)
@@ -297,7 +297,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
 
    if(sdlscreen)
    {
-      primary_surface = 
+      primary_surface =
          SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
                               8, 0, 0, 0, 0);
       if(!primary_surface)
@@ -331,7 +331,7 @@ void SDLVideoDriver::ShutdownGraphicsPartway()
 void SDLVideoDriver::ShutdownGraphics()
 {
    ShutdownGraphicsPartway();
-      
+
    // haleyjd 10/09/05: shut down graphics earlier
    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
@@ -388,9 +388,9 @@ bool SDLVideoDriver::InitGraphicsMode()
       wantvsync = true;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
                &wanthardware, &wantframe);
-   
+
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
@@ -408,7 +408,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 10/27/09
    if(!wantframe)
       flags |= SDL_NOFRAME;
-     
+
    if(!SDL_VideoModeOK(v_w, v_h, v_bd, flags) ||
       !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
    {
@@ -458,7 +458,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    video.height    = v_h;
    video.bitdepth  = 8;
    video.pixelsize = 1;
-   
+
    // haleyjd 11/12/09: set surface palettes immediately
    I_SDLSetPaletteDirect((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
 
@@ -469,4 +469,3 @@ bool SDLVideoDriver::InitGraphicsMode()
 SDLVideoDriver i_sdlvideodriver;
 
 // EOF
-

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,7 +21,7 @@
 //
 // Gamemode information
 //
-// Stores all gamemode-dependent information in one location and 
+// Stores all gamemode-dependent information in one location and
 // lends more structure to other modules.
 //
 // James Haley
@@ -104,11 +104,11 @@ extern const demostate_t demostates_hreg[];
 
 typedef struct exitrule_s
 {
-   int gameepisode; // current episode (1 for games like DOOM 2, 
+   int gameepisode; // current episode (1 for games like DOOM 2,
                     //   -1 if doesn't matter, -2 to terminate array)
-   int gamemap;     // current map the game is on (1-based, -1 if doesn't matter)   
+   int gamemap;     // current map the game is on (1-based, -1 if doesn't matter)
    int destmap;     // destination map (0-based for wminfo)
-   bool isSecret;   // this rule applies for secret exits   
+   bool isSecret;   // this rule applies for secret exits
 } exitrule_t;
 
 //
@@ -190,7 +190,7 @@ enum
 
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependent animations etc.
-typedef enum 
+typedef enum
 {
   shareware,    // DOOM 1 shareware, E1, M9
   registered,   // DOOM 1 registered, E3, M27
@@ -251,12 +251,12 @@ typedef struct missioninfo_s
    GameMission_t  id;            // mission id - replaces "gamemission" variable
    unsigned int   flags;         // missioninfo flags
    const char    *gamePathName;  // name of base/game folder used for this mission
-   
+
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
 
    const char   *versionNameOR;      // if not NULL, overrides name of the gamemode
-   const char   *startupBannerOR;    // if not NULL, overrides the startup banner 
+   const char   *startupBannerOR;    // if not NULL, overrides the startup banner
    int           numEpisodesOR;      // if not    0, overrides number of episodes
    char        **iwadPathOR;         // if not NULL, overrides iwadPath
    finaledata_t *finaleDataOR;       // if not NULL, overrides finaleData
@@ -281,14 +281,14 @@ typedef struct gamemodeinfo_s
    GameMode_t id;             // id      - replaces "gamemode" variable
    int type;                  // main game mode type: doom, heretic, etc.
    int flags;                 // game mode flags
-   
+
    // startup stuff
    const char *versionName;       // descriptive version name
    const char *freeVerName;       // FreeDoom override name, if such exists
    const char *bfgEditionName;    // BFG Edition override name, if exists
-   const char *startupBanner;     // startup banner text   
+   const char *startupBanner;     // startup banner text
    char **iwadPath;               // iwad path variable
-   
+
    // demo state information
    const demostate_t *demoStates; // demostates table
    int titleTics;                 // length of time to show title

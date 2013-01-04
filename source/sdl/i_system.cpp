@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -78,10 +78,10 @@ static Uint32 basetime=0;
 int  I_GetTime_RealTime (void)
 {
    Uint32        ticks;
-   
+
    // milliseconds since SDL initialization
    ticks = SDL_GetTicks();
-   
+
    return ((ticks - basetime)*TICRATE)/1000;
 }
 
@@ -135,7 +135,7 @@ int joystickpresent;  // phares 4/3/98
 
 // current device number -- saved in config file
 int i_SDLJoystickNum;
- 
+
 // pointer to current joystick device information
 SDL_Joystick *sdlJoystick = NULL;
 
@@ -146,13 +146,13 @@ static SDLMod oldmod; // SoM 3/20/2002: save old modifier key state
 void I_Shutdown(void)
 {
    SDL_SetModState(oldmod);
-   
+
    // haleyjd 04/15/02: shutdown joystick
    if(joystickpresent && sdlJoystick && i_SDLJoystickNum >= 0)
    {
       if(SDL_JoystickOpened(i_SDLJoystickNum))
          SDL_JoystickClose(sdlJoystick);
-      
+
       joystickpresent = false;
    }
 }
@@ -169,7 +169,7 @@ int sdlJoystickNumButtons;
 void I_EnumerateJoysticks(void)
 {
    int i;
-   
+
    numJoysticks = SDL_NumJoysticks();
 
    if(joysticks)
@@ -186,7 +186,7 @@ void I_EnumerateJoysticks(void)
 
    for(i = 0; i < numJoysticks; i++)
    {
-      joysticks[i].description = 
+      joysticks[i].description =
 	 Z_Strdup(SDL_JoystickName(i), PU_STATIC, NULL);
    }
 
@@ -224,7 +224,7 @@ bool I_SetJoystickDevice(int deviceNum)
 extern bool unicodeinput;
 
 void I_InitKeyboard(void)
-{   
+{
    keyboard_installed = 1;
 
    if(unicodeinput)
@@ -238,13 +238,13 @@ void I_InitKeyboard(void)
 void I_Init(void)
 {
    int clock_rate = realtic_clock_rate, p;
-   
+
    if((p = M_CheckParm("-speed")) && p < myargc-1 &&
       (p = atoi(myargv[p+1])) >= 10 && p <= 1000)
       clock_rate = p;
-   
+
    basetime = SDL_GetTicks();
-   
+
    // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
    if(fastdemo)
    {
@@ -272,13 +272,13 @@ void I_Init(void)
    {
       joystickpresent = false;
    }
-      
+
    // killough 3/6/98: end of keyboard / autorun state changes
-      
+
    atexit(I_Shutdown);
-   
+
    // killough 2/21/98: avoid sound initialization if no sound & no music
-   { 
+   {
       extern bool nomusicparm, nosfxparm;
       if(!(nomusicparm && nosfxparm))
          I_InitSound();
@@ -313,11 +313,11 @@ static int error_exitcode;
 void I_Quit(void)
 {
    has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
-   
+
    // haleyjd 06/05/10: not in fatal error situations; causes heap calls
    if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
       G_CheckDemoStatus();
-   
+
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
@@ -335,7 +335,7 @@ void I_Quit(void)
    IFNOTFATAL(M_SaveDefaults());
    IFNOTFATAL(M_SaveSysConfig());
    IFNOTFATAL(key_bindings.saveKeyBindings()); // haleyjd
-   
+
 #ifdef _MSC_VER
    // Under Visual C++, the console window likes to rudely slam
    // shut -- this can stop it, but is now optional except when an error occurs
@@ -433,7 +433,7 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
       pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
       va_end(argptr);
    }
-   
+
    if(!has_exited)    // If it hasn't exited yet, exit now -- killough
    {
       has_exited = 1; // Prevent infinitely recursive exits -- killough
@@ -494,31 +494,31 @@ void I_EndDoom(void)
    unsigned char *screendata;
    int start_ms;
    bool waiting;
-   
+
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
    // allow ENDOOM disable in configuration.
    if(!GameModeInfo || !showendoom)
       return;
-   
+
    endoom_data = (unsigned char *)wGlobalDir.cacheLumpName(GameModeInfo->endTextName, PU_STATIC);
-   
-   // Set up text mode screen   
+
+   // Set up text mode screen
    if(!TXT_Init())
       return;
-   
+
    // Make sure the new window has the right title and icon
    SDL_WM_SetCaption("Thanks for using the Eternity Engine!", NULL);
-   
-   // Write the data to the screen memory   
+
+   // Write the data to the screen memory
    screendata = TXT_GetScreenData();
    memcpy(screendata, endoom_data, 4000);
-   
+
    // Wait for 10 seconds, or until a keypress or mouse click
    // haleyjd: delay period specified in config (default = 350)
    waiting = true;
    start_ms = I_GetTime();
-   
+
    while(waiting && I_GetTime() < start_ms + endoomdelay)
    {
       TXT_UpdateScreen();
@@ -528,8 +528,8 @@ void I_EndDoom(void)
 
       TXT_Sleep(1);
    }
-   
-   // Shut down text mode screen   
+
+   // Shut down text mode screen
    TXT_Shutdown();
 }
 
@@ -570,7 +570,7 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
    }
    else
       I_GetTime = I_GetTime_RealTime;
-   
+
    //ResetNet();         // reset the timers and stuff
 }
 
@@ -622,7 +622,7 @@ void I_AddCommands()
    C_AddCommand(i_showendoom);
    C_AddCommand(i_endoomdelay);
 #endif
-   
+
    I_Video_AddCommands();
    I_Sound_AddCommands();
    Ser_AddCommands();

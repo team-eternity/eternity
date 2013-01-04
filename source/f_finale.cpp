@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -103,14 +103,14 @@ void F_StartFinale(void)
    gameaction = ga_nothing;
    gamestate = GS_FINALE;
    automapactive = false;
-   
+
    // killough 3/28/98: clear accelerative text flags
    acceleratestage = midstage = 0;
 
    // haleyjd 07/17/04: level-dependent initialization moved to MapInfo
 
    S_ChangeMusicName(LevelInfo.interMusic, true);
-   
+
    finalestage = 0;
    finalecount = 0;
 }
@@ -122,7 +122,7 @@ bool F_Responder(event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
-   
+
    // haleyjd: Heretic underwater hack for E2 end
    if(finalestage == 3 && event->type == ev_keydown)
    {
@@ -131,21 +131,21 @@ bool F_Responder(event_t *event)
       I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
       return true;
    }
-   
+
    return false;
 }
 
-// 
-// Get_TextSpeed() 
+//
+// Get_TextSpeed()
 //
 // Returns the value of the text display speed  // phares
 // Rewritten to allow user-directed acceleration -- killough 3/28/98
 //
 static float Get_TextSpeed(void)
 {
-   return 
-      (float)(midstage ? NEWTEXTSPEED : 
-              (midstage=acceleratestage) ? 
+   return
+      (float)(midstage ? NEWTEXTSPEED :
+              (midstage=acceleratestage) ?
                acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
 }
 
@@ -166,7 +166,7 @@ static float Get_TextSpeed(void)
 void F_Ticker(void)
 {
    int i;
-   
+
    if(!demo_compatibility)
    {
       // killough 3/28/98: check for acceleration
@@ -188,13 +188,13 @@ void F_Ticker(void)
             return;
          }
    }
-   
+
    // advance animation
    finalecount++;
-   
+
    if(finalestage == 2)
       F_CastTicker();
-   
+
    if(!finalestage)
    {
       float speed = demo_compatibility ? TEXTSPEED : Get_TextSpeed();
@@ -206,7 +206,7 @@ void F_Ticker(void)
          // Doom 1 / Ultimate Doom episode end: with enough time, it's automatic
          // haleyjd 05/26/06: all finales except just text use this
          if(LevelInfo.finaleType != FINALE_TEXT)
-         {                          
+         {
             finalecount = 0;
             finalestage = 1;
 
@@ -229,7 +229,7 @@ void F_Ticker(void)
             }
          }
          else if(!demo_compatibility && midstage)
-         { 
+         {
             // you must press a button to continue in Doom 2
             // haleyjd: allow cast calls after arbitrary maps
             if(LevelInfo.endOfGame)
@@ -261,7 +261,7 @@ void F_TextWrite(void)
    int         cx;
    int         cy;
    int         lumpnum;
-   
+
    // haleyjd: get finale font metrics
    giftextpos_t *textpos = GameModeInfo->fTextPos;
 
@@ -269,17 +269,17 @@ void F_TextWrite(void)
       return;
 
    // erase the entire screen to a tiled background
-   
+
    // killough 11/98: the background-filling code was already in m_menu.c
 
    lumpnum = W_CheckNumForName(LevelInfo.backDrop);
-   
+
    if(lumpnum == -1) // flat
       V_DrawBackground(LevelInfo.backDrop, &vbscreen);
    else
    {                     // normal picture
       patch_t *pic;
-      
+
       pic = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
       V_DrawPatch(0, 0, &subscreen43, pic);
    }
@@ -288,7 +288,7 @@ void F_TextWrite(void)
    cx = textpos->x;
    cy = textpos->y;
    ch = LevelInfo.interText;
-      
+
    count = (int)((finalecount - 10)/Get_TextSpeed()); // phares
    if(count < 0)
       count = 0;
@@ -297,14 +297,14 @@ void F_TextWrite(void)
    {
       if(!(c = *ch++))
          break;
-      
+
       if(c == '\n')
       {
          cx = textpos->x;
          cy += f_font->cy;
          continue;
       }
-      
+
       // haleyjd: added null pointer check
       c = toupper(c) - f_font->start;
 
@@ -313,7 +313,7 @@ void F_TextWrite(void)
          cx += f_font->space;
          continue;
       }
-      
+
       w = f_font->fontgfx[c]->width;
       if(cx + w > SCREENWIDTH)
          continue; // haleyjd: continue if text off right side
@@ -323,7 +323,7 @@ void F_TextWrite(void)
          break; // haleyjd: break if text off bottom
 
       V_DrawPatch(cx, cy, &subscreen43, f_font->fontgfx[c]);
-      
+
       cx += w;
    }
 }
@@ -337,7 +337,7 @@ void F_TextWrite(void)
 // haleyjd 07/05/03: modified to be dynamic through EDF
 
 // define MAX_CASTORDER 18 /* Ty - hard coded for now */
-// castinfo_t      castorder[MAX_CASTORDER]; 
+// castinfo_t      castorder[MAX_CASTORDER];
 int             max_castorder;
 castinfo_t      *castorder; // Ty 03/22/98 - externalized and init moved into f_startcast()
 
@@ -385,7 +385,7 @@ void F_StartCast(void)
    int i;
 
    // types are now set through EDF
-   
+
    // haleyjd 04/17/09: check against max_castorder; don't trash memory.
 
    // if a cast name was left NULL by EDF, it means we're going to
@@ -401,7 +401,7 @@ void F_StartCast(void)
    caststate = states[mobjinfo[castorder[castnum].type]->seestate];
    casttics = caststate->tics;
    castdeath = false;
-   finalestage = 2;    
+   finalestage = 2;
    castframes = 0;
    castonmelee = 0;
    castattacking = false;
@@ -415,10 +415,10 @@ void F_CastTicker(void)
 {
    int st;
    int sfx;
-   
+
    if(--casttics > 0)
       return;                 // not time to change state yet
-              
+
    if(caststate->tics == -1 || caststate->nextstate == NullStateNum)
    {
       // switch from deathstate to next monster
@@ -431,7 +431,7 @@ void F_CastTicker(void)
       castframes = 0;
    }
    else
-   {      
+   {
       // just advance to next state in animation
 
       // haleyjd: modified to use a field set through EDF
@@ -450,7 +450,7 @@ void F_CastTicker(void)
 
       // haleyjd: new sound event method -- each actor type
       // can define up to four sound events.
-      
+
       // Search for a sound matching this state.
       sfx = 0;
       for(i = 0; i < 4; ++i)
@@ -458,10 +458,10 @@ void F_CastTicker(void)
          if(st == castorder[castnum].sounds[i].frame)
             sfx = castorder[castnum].sounds[i].sound;
       }
-      
+
       S_StartSound(NULL, sfx);
    }
-      
+
    if(castframes == 12)
    {
       int i, stnum;
@@ -495,11 +495,11 @@ void F_CastTicker(void)
             if(stnum == castorder[castnum].sounds[i].frame)
                sfx = castorder[castnum].sounds[i].sound;
          }
-         
+
          S_StartSound(NULL, sfx);
       }
    }
-      
+
    if(castattacking)
    {
       if(castframes == 24 ||
@@ -511,7 +511,7 @@ void F_CastTicker(void)
          caststate = states[mobjinfo[castorder[castnum].type]->seestate];
       }
    }
-      
+
    casttics = caststate->tics;
    if(casttics == -1)
       casttics = 15;
@@ -525,10 +525,10 @@ bool F_CastResponder(event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
-   
+
    if(castdeath)
       return true;                    // already in dying frames
-   
+
    // go into death frame
    castdeath  = true;
    caststate  = states[mobjinfo[castorder[castnum].type]->deathstate];
@@ -538,12 +538,12 @@ bool F_CastResponder(event_t* ev)
    if(mobjinfo[castorder[castnum].type]->deathsound)
    {
       if(castorder[castnum].type == players[consoleplayer].pclass->type)
-         S_StartSoundName(NULL, 
+         S_StartSoundName(NULL,
             players[consoleplayer].skin->sounds[sk_pldeth]);
       else
          S_StartSound(NULL, mobjinfo[castorder[castnum].type]->deathsound);
    }
-   
+
    return true;
 }
 
@@ -551,13 +551,13 @@ bool F_CastResponder(event_t* ev)
 // F_CastPrint
 //
 // haleyjd 03/17/05: Writes the cast member name centered at the
-// bottom of the screen. Rewritten to use the proper text-drawing 
-// methods instead of duplicating that code unnecessarily. It's 
+// bottom of the screen. Rewritten to use the proper text-drawing
+// methods instead of duplicating that code unnecessarily. It's
 // about 200 lines shorter now.
 //
 void F_CastPrint(const char *text)
 {
-   V_FontWriteText(f_font, text, 
+   V_FontWriteText(f_font, text,
                    160 - V_FontStringWidth(f_font, text) / 2, 180,
                    &subscreen43);
 }
@@ -577,42 +577,42 @@ void F_CastDrawer(void)
    castinfo_t    *cast    = &castorder[castnum];
    mobjinfo_t    *mi      =  mobjinfo[cast->type];
    player_t      *cplayer = &players[consoleplayer];
-   
+
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawPatch(0, 0, &subscreen43, 
+   V_DrawPatch(0, 0, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
-   
+
    if(cast->name)
       F_CastPrint(cast->name);
-   
+
    // draw the current frame in the middle of the screen
    sprdef = sprites + caststate->sprite;
-   
+
    // override for alternate monster sprite?
    if(mi->altsprite != -1)
       sprdef = &sprites[mi->altsprite];
-   
+
    // override for player skin?
    if(cast->type == cplayer->pclass->type)
    {
       int colormap = cplayer->colormap;
-      
+
       sprdef    = &sprites[cplayer->skin->sprite];
       translate = colormap ? translationtables[colormap - 1] : NULL;
    }
-   
+
    // haleyjd 08/15/02
    if(!(sprdef->spriteframes))
       return;
-   
+
    sprframe = &sprdef->spriteframes[caststate->frame & FF_FRAMEMASK];
    lump = sprframe->lump[0];
    flip = !!sprframe->flip[0];
-   
+
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   
-   V_DrawPatchTranslated(160, 170, &subscreen43, patch, translate, flip);      
+
+   V_DrawPatchTranslated(160, 170, &subscreen43, patch, translate, flip);
 }
 
 //
@@ -626,33 +626,33 @@ void F_BunnyScroll(void)
    char        name[10];
    int         stage;
    static int  laststage;
-   
+
    p1 = PatchLoader::CacheName(wGlobalDir, "PFUB2", PU_LEVEL);
    p2 = PatchLoader::CacheName(wGlobalDir, "PFUB1", PU_LEVEL);
-   
+
    scrolled = 320 - (finalecount-230)/2;
    if(scrolled > 320)
       scrolled = 320;
    if(scrolled < 0)
       scrolled = 0;
-              
+
    // ANYRES
    if(scrolled > 0)
       V_DrawPatchGeneral(320 - scrolled, 0, &subscreen43, p2, false);
    if(scrolled < 320)
       V_DrawPatchGeneral(-scrolled, 0, &subscreen43, p1, false);
-      
+
    if(finalecount < 1130)
       return;
    if(finalecount < 1180)
    {
       V_DrawPatch((SCREENWIDTH - 13 * 8) / 2,
-                  (SCREENHEIGHT - 8 * 8) / 2, &subscreen43, 
+                  (SCREENHEIGHT - 8 * 8) / 2, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "END0", PU_CACHE));
       laststage = 0;
       return;
    }
-   
+
    stage = (finalecount - 1180) / 5;
    if(stage > 6)
       stage = 6;
@@ -661,10 +661,10 @@ void F_BunnyScroll(void)
       S_StartSound (NULL, sfx_pistol);
       laststage = stage;
    }
-   
+
    sprintf(name,"END%i", stage);
-   V_DrawPatch((SCREENWIDTH - 13 * 8) / 2, 
-               (SCREENHEIGHT - 8 * 8) / 2, &subscreen43, 
+   V_DrawPatch((SCREENWIDTH - 13 * 8) / 2,
+               (SCREENHEIGHT - 8 * 8) / 2, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, name, PU_CACHE));
 }
 
@@ -675,7 +675,7 @@ void F_DrawUnderwater(void)
    {
    case 1:
       C_InstaPopup(); // put away console if down
-      
+
       {
          byte *palette;
 
@@ -692,7 +692,7 @@ void F_DrawUnderwater(void)
       paused = 0;
       menuactive = false;
       break;
-   
+
    case 4:
       Console.enabled = true;
       V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
@@ -722,7 +722,7 @@ static void F_InitDemonScroller(void)
 
    // init VBuffer
    V_InitVBufferFrom(&vbuf, 320, 400, 320, video.bitdepth, DemonBuffer);
-   
+
    if(lsize2 == 64000) // raw screen
       wGlobalDir.readLump(lnum2, DemonBuffer);
    else
@@ -767,7 +767,7 @@ void F_DemonScroll(void)
       // shows
       V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
                   DemonBuffer + 64000 - yval);
-      
+
       if(finalecount >= nextscroll)
       {
          yval += 320; // move up one line
@@ -795,11 +795,11 @@ static void F_FinaleEndDrawer(void)
    switch(LevelInfo.finaleType)
    {
    case FINALE_DOOM_CREDITS:
-      V_DrawPatch(0, 0, &subscreen43, 
+      V_DrawPatch(0, 0, &subscreen43,
          PatchLoader::CacheName(wGlobalDir, sw ? "HELP2" : "CREDIT", PU_CACHE));
       break;
    case FINALE_DOOM_DEIMOS:
-      V_DrawPatch(0,0,&subscreen43, 
+      V_DrawPatch(0,0,&subscreen43,
          PatchLoader::CacheName(wGlobalDir, "VICTORY2",PU_CACHE));
       break;
    case FINALE_DOOM_BUNNY:

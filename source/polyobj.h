@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -82,8 +82,8 @@ typedef struct polyobj_s
    int numVerticesAlloc;       // number of vertices allocated
    vertex_t *origVerts;        // original positions relative to spawn spot
    vertex_t *tmpVerts;         // temporary vertex backups for rotation
-   vertex_t **vertices;        // vertices this polyobject must move   
-   
+   vertex_t **vertices;        // vertices this polyobject must move
+
    int numLines;               // number of linedefs
    int numLinesAlloc;          // number of linedefs allocated
    line_t **lines;             // linedefs this polyobject must move
@@ -133,7 +133,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
    int speed;         // speed of movement per frame
@@ -150,7 +150,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int polyObjNum;     // numeric id of polyobject
    int speed;          // resultant velocity
@@ -170,12 +170,12 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int polyObjNum;         // numeric id of affected polyobject
    int delay;              // delay time
    int delayCount;         // delay counter
-   int initSpeed;          // initial speed 
+   int initSpeed;          // initial speed
    int speed;              // speed of motion
    int initDistance;       // initial distance to travel
    int distance;           // current distance to travel
@@ -197,7 +197,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    int polyObjNum;    // numeric id of affected polyobject
    int delay;         // delay time
@@ -272,4 +272,3 @@ extern DLListItem<polymaplink_t> **polyblocklinks; // polyobject blockmap
 #endif
 
 // EOF
-

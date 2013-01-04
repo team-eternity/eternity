@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -69,7 +69,7 @@ static void MN_HMainMenuDrawer(void);
 static menuitem_t mn_hmain_items[] =
 {
    // 'heretic' title and skulls drawn by the drawer
-   
+
    {it_runcmd, "new game",  "mn_hnewgame", NULL, MENUITEM_BIGFONT },
    {it_runcmd, "options",   "mn_options",  NULL, MENUITEM_BIGFONT },
    {it_runcmd, "load game", "mn_loadgame", NULL, MENUITEM_BIGFONT },
@@ -97,7 +97,7 @@ void MN_HInitSkull(void)
    for(i = 0; i < NUM_HSKULL; i++)
    {
       sprintf(tempstr, "M_SKL%.2d", i);
-      HSkullLumpNums[i] = W_GetNumForName(tempstr);         
+      HSkullLumpNums[i] = W_GetNumForName(tempstr);
    }
 }
 
@@ -106,7 +106,7 @@ static void MN_HMainMenuDrawer(void)
    int skullIndex;
 
    // draw M_HTIC
-   V_DrawPatch(88, 0, &subscreen43, 
+   V_DrawPatch(88, 0, &subscreen43,
       PatchLoader::CacheName(wGlobalDir, "M_HTIC", PU_CACHE));
 
    // draw spinning skulls
@@ -162,7 +162,7 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
    // chop off SoSR episodes if not present
    if(GameModeInfo->missionInfo->id != hticsosr)
       menu_hepisode.menuitems[5].type = it_end;
-   
+
    MN_StartMenu(&menu_hepisode);
 }
 
@@ -194,15 +194,15 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
       C_Printf("usage: mn_hepis <epinum>\n");
       return;
    }
-   
+
    start_episode = Console.argv[0]->toInt();
-   
+
    if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {
       MN_Alert("only available in the registered version");
       return;
    }
-   
+
    MN_StartMenu(&menu_hnewgame);
 }
 
@@ -250,7 +250,7 @@ static void MN_HSaveDrawer(void)
    int x, y, i;
    const char *title = "save game";
 
-   V_FontWriteText(menu_font_big, title, 
+   V_FontWriteText(menu_font_big, title,
                    160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
                    &subscreen43);
 
@@ -259,7 +259,7 @@ static void MN_HSaveDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &subscreen43, 
+      V_DrawPatch(x, y, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }
@@ -317,8 +317,8 @@ static void MN_HLoadDrawer(void)
    if(!emptystr)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
 
-   V_FontWriteText(menu_font_big, title, 
-                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10, 
+   V_FontWriteText(menu_font_big, title,
+                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
                    &subscreen43);
 
    x = HLOADGAME_BOX_X;
@@ -326,7 +326,7 @@ static void MN_HLoadDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &subscreen43, 
+      V_DrawPatch(x, y, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }

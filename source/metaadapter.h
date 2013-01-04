@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,11 +39,11 @@
 // have a default constructor and be directly copyable - either a POD, or an
 // object with a copy constructor.
 //
-// The primary means of external object adaptation is forwarding of method 
-// calls and operators through the star and arrow operator overloads, which 
+// The primary means of external object adaptation is forwarding of method
+// calls and operators through the star and arrow operator overloads, which
 // make this class behave similar to a smart pointer. Via use of operator ->,
 // it is possible to delegate directly all messages to the contained object
-// without forcing an is-a relationship that would otherwise lead to virtual 
+// without forcing an is-a relationship that would otherwise lead to virtual
 // multiple inheritance for many types such as qstring.
 //
 template<typename T> class MetaAdapter : public MetaObject
@@ -88,4 +88,3 @@ public:
 #endif
 
 // EOF
-

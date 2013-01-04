@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,14 +57,14 @@ static char e_argemptystr[] = "";
 bool E_AddArgToList(arglist_t *al, const char *value)
 {
    bool added = false;
-   
+
    if(al->numargs < EMAXARGS)
    {
       if(ISEMPTY(value))
          al->args[al->numargs] = e_argemptystr;
       else
          al->args[al->numargs] = estrdup(value);
-      
+
       al->numargs++;
       added = true;
    }
@@ -76,7 +76,7 @@ bool E_AddArgToList(arglist_t *al, const char *value)
 // E_SetArg
 //
 // Sets the argument at the given index to a new value. If that argument
-// does not exist already, empty arguments will be added until that index 
+// does not exist already, empty arguments will be added until that index
 // is valid.
 //
 bool E_SetArg(arglist_t *al, int index, const char *value)
@@ -109,7 +109,7 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
 // E_SetArgFromNumber
 //
 // Calls E_SetArg after performing an itoa operation on the argument.
-// This is for convenience in DeHackEd, which is not very smart about 
+// This is for convenience in DeHackEd, which is not very smart about
 // setting arguments.
 //
 bool E_SetArgFromNumber(arglist_t *al, int index, int value)
@@ -278,9 +278,9 @@ double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
 //
 // E_ArgAsThingNum
 //
-// Gets the arg value at index i as a thingtype number, if such 
+// Gets the arg value at index i as a thingtype number, if such
 // argument exists. The evaluated value will be cached so that it can
-// be returned on subsequent calls. If the arg does not exist, the 
+// be returned on subsequent calls. If the arg does not exist, the
 // Unknown thingtype is returned instead.
 //
 int E_ArgAsThingNum(arglist_t *al, int index)
@@ -374,7 +374,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 // name, their behavior should be to subsequently look for a DECORATE state of
 // that name.
 //
-// For pointers implemented for DECORATE state compatibility, the evaluation 
+// For pointers implemented for DECORATE state compatibility, the evaluation
 // order should be opposite - DECORATE state labels have priority over global
 // state names, and for some pointers, global state names are not allowed.
 //
@@ -383,7 +383,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 // E_GetJumpInfo
 //
 // Returns the target state given an initial type and label text. Assuming that
-// the text does not contain a :: operator, the information returned will be 
+// the text does not contain a :: operator, the information returned will be
 // the ordinary plain state named by the input string. Otherwise, both the mobjinfo
 // and statename may be redirected.
 //
@@ -394,7 +394,7 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 
    char *statename = NULL, *type = NULL;
 
-   // if the statename does not contain a colon, there is no potential for 
+   // if the statename does not contain a colon, there is no potential for
    // redirection.
    if(!colon)
       return E_GetStateForMobjInfo(mi, arg);
@@ -413,7 +413,7 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
    else
    {
       int thingtype = E_ThingNumForName(type);
-      
+
       // non-existent thingtype is an error, no jump will happen
       if(thingtype == -1)
          return NULL;
@@ -427,7 +427,7 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 //
 // E_ArgAsStateLabel
 //
-// This evaluator only allows DECORATE state labels or numbers, and will not 
+// This evaluator only allows DECORATE state labels or numbers, and will not
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
 //
@@ -487,7 +487,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
       {
          // it is a name
          int statenum;
-         
+
          // haleyjd 07/18/10: Try EDF state name first; if this turns out as
          // invalid, check to see if it's a DECORATE state label before returning
          // NullStateNum.
@@ -556,7 +556,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
       {
          // it is a name
          int statenum;
-         
+
          // haleyjd 07/18/10: Try EDF state name first; if this turns out as
          // invalid, check to see if it's a DECORATE state label before returning
          // NullStateNum.
@@ -580,7 +580,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
                eval->type = EVALTYPE_STATENUM;
                eval->value.i = -1;
             }
-         }      
+         }
       }
       else
       {
@@ -623,7 +623,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
       {
          // it is a name
          int statenum;
-       
+
          // haleyjd 07/18/10: Try EDF state name first; if this turns out as
          // invalid, check to see if it's a DECORATE state label before returning
          // NullStateNum.
@@ -647,12 +647,12 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
                eval->type = EVALTYPE_STATENUM;
                eval->value.i = -1;
             }
-         }      
+         }
       }
       else
       {
          eval->type = EVALTYPE_STATENUM;
-         
+
          // it is a DeHackEd number if it is >= 0
          if(num >= 0)
             eval->value.i = E_StateNumForDEHNum((int)num);
@@ -667,8 +667,8 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
 //
 // E_ArgAsThingFlags
 //
-// Gets the arg value at index i as a set of thing flag masks, if such argument 
-// exists. The evaluated value will be cached so that it can be returned on 
+// Gets the arg value at index i as a set of thing flag masks, if such argument
+// exists. The evaluated value will be cached so that it can be returned on
 // subsequent calls. If the arg does not exist, NULL is returned.
 //
 int *E_ArgAsThingFlags(arglist_t *al, int index)
@@ -846,7 +846,7 @@ int E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue)
       if(pos && *pos != '\0')
       {
          // it is a name
-         eval->value.i = E_StrToNumLinear(kw->keywords, 
+         eval->value.i = E_StrToNumLinear(kw->keywords,
                                           kw->numkeywords,
                                           al->args[index]);
 
@@ -864,4 +864,3 @@ int E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue)
 }
 
 // EOF
-

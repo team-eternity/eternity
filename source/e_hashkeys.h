@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    Generic hash table implementation - Hash Key classes
 //
 //-----------------------------------------------------------------------------
@@ -33,15 +33,15 @@ unsigned int D_HashTableKeyCase(const char *str);
 //
 // E*HashKey
 //
-// haleyjd 12/12/10: These POD classes replace ehashable_i with go-between 
-// objects that know how to deal with the internal key of the type of object 
-// being stored in an EHashTable, while not restricting a given type to only 
+// haleyjd 12/12/10: These POD classes replace ehashable_i with go-between
+// objects that know how to deal with the internal key of the type of object
+// being stored in an EHashTable, while not restricting a given type to only
 // being able to use EHashTable in a single way, as it would if an inheritance
 // solution were used.
 //
 // The EHashTable class specifies the following interface which to key objects
 // must adhere:
-// * They should expose the type of their basic literal key field in a 
+// * They should expose the type of their basic literal key field in a
 //   public typedef called basic_type.
 // * They should expose the type of a secondary type that is comparable with
 //   the basic key type for use as the function parameter to EHashTable's
@@ -81,7 +81,7 @@ public:
 //
 class EStringHashKey
 {
-public: 
+public:
    typedef const char *basic_type;
    typedef const char *param_type;
 
@@ -96,7 +96,7 @@ public:
    }
 };
 
-// 
+//
 // POD case-insensitive string key
 //
 class ENCStringHashKey
@@ -119,4 +119,3 @@ public:
 #endif
 
 // EOF
-

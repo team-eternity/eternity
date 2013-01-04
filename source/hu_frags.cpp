@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -97,18 +97,18 @@ void HU_FragsDrawer(void)
    V_DrawPatch(x, y, &vbscreen, fragtitle);
 
    y = NAMEY;
-   
+
    for(i = 0; i < num_players; ++i)
    {
       // write their name
-      psnprintf(tempstr, sizeof(tempstr), "%s%s", !demoplayback && 
+      psnprintf(tempstr, sizeof(tempstr), "%s%s", !demoplayback &&
          sortedplayers[i]==players+consoleplayer ? FC_HI : FC_NORMAL,
          sortedplayers[i]->name);
-      
-      V_FontWriteText(hud_font, tempstr, 
+
+      V_FontWriteText(hud_font, tempstr,
                       NAMEX - V_FontStringWidth(hud_font, tempstr), y,
                       &subscreen43);
-      
+
       // box behind frag pic
       // haleyjd 01/12/04: changed translation handling
 
@@ -119,7 +119,7 @@ void HU_FragsDrawer(void)
                             NULL, false);
       // draw the frags
       psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
-      V_FontWriteText(hud_font, tempstr, 
+      V_FontWriteText(hud_font, tempstr,
                       FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y,
                       &subscreen43);
       y += 10;
@@ -184,7 +184,7 @@ void HU_FragsUpdate(void)
 CONSOLE_COMMAND(frags, 0)
 {
    int i;
-   
+
    for(i = 0; i < num_players; ++i)
    {
       C_Printf(FC_HI"%i"FC_NORMAL" %s\n",

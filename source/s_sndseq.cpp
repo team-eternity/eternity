@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -266,7 +266,7 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, int seqOrigin
    newSeq->originIdx    = seqOriginIdx;        // set origin index
 
    // 06/16/06: possibly randomize starting volume
-   newSeq->volume = 
+   newSeq->volume =
       edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                       : edfSeq->volume;
 }
@@ -284,8 +284,8 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
       origintype = SEQ_ORIGIN_SECTOR_C;
    else
       origintype = SEQ_ORIGIN_SECTOR_F;
-   
-   S_StartSequenceNum(SECTOR_ORIGIN(s, origintype), s->sndSeqID, seqtype, 
+
+   S_StartSequenceNum(SECTOR_ORIGIN(s, origintype), s->sndSeqID, seqtype,
                       origintype, s - sectors);
 }
 
@@ -298,14 +298,14 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 void S_ReplaceSectorSequence(sector_t *s, int seqtype)
 {
    int originType;
-   
+
    if(seqtype == SEQ_CEILING || seqtype == SEQ_DOOR)
       originType = SEQ_ORIGIN_SECTOR_C;
    else
       originType = SEQ_ORIGIN_SECTOR_F;
 
    S_SquashSectorSequence(s, originType);
-   
+
    S_StartSequenceNum(SECTOR_ORIGIN(s, originType), s->sndSeqID, seqtype,
                       originType, s - sectors);
 }
@@ -317,7 +317,7 @@ void S_ReplaceSectorSequence(sector_t *s, int seqtype)
 //
 void S_StartPolySequence(polyobj_t *po)
 {
-   S_StartSequenceNum(&po->spawnSpot, po->seqId, SEQ_DOOR, 
+   S_StartSequenceNum(&po->spawnSpot, po->seqId, SEQ_DOOR,
                       SEQ_ORIGIN_POLYOBJ, po->id);
 }
 
@@ -326,7 +326,7 @@ void S_StartPolySequence(polyobj_t *po)
 //
 // Starts the named sound sequence.
 //
-void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginType, 
+void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginType,
                          int seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
@@ -359,7 +359,7 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
    newSeq->originIdx    = seqOriginIdx;        // origin index
 
    // possibly randomize starting volume
-   newSeq->volume = 
+   newSeq->volume =
       edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                       : edfSeq->volume;
 }
@@ -371,7 +371,7 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
 //
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, int originType)
 {
-   S_StartSequenceName(SECTOR_ORIGIN(s, originType), seqname, originType, 
+   S_StartSequenceName(SECTOR_ORIGIN(s, originType), seqname, originType,
                        s - sectors);
 }
 
@@ -405,7 +405,7 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
       // clear the NORANDOM flag
       seq->flags &= ~SEQ_FLAG_NORANDOM;
 
-      S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume, 
+      S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume,
                      seq->attenuation, loop, CHAN_AUTO);
    }
 }
@@ -427,7 +427,7 @@ static bool enviroSeqFinished;
 static void S_RunSequence(SndSeq_t *curSeq)
 {
    bool isPlaying = false;
-   
+
    // if delaying, count down delay
    if(curSeq->delayCounter)
    {
@@ -521,7 +521,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          // if allowed, stop any other sound playing
          if(curSeq->sequence->nostopcutoff == false)
             S_StopSound(curSeq->origin, CHAN_ALL);
-         
+
          // unlink and delete this object
          curSeq->link.remove();
          Z_Free(curSeq);
@@ -691,7 +691,7 @@ static void S_RunEnviroSequence(void)
       enviroSeq.originIdx    = -1;
 
       // possibly randomize the starting volume
-      enviroSeq.volume = 
+      enviroSeq.volume =
          edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                          : edfSeq->volume;
 
@@ -780,4 +780,3 @@ void S_AddSeqCommands(void)
 }
 
 // EOF
-

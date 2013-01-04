@@ -1632,4 +1632,3 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
 };
 
 // EOF
-

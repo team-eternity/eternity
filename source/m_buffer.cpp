@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -231,7 +231,7 @@ void OutBuffer::Close()
    catch(...)
    {
    }
-      
+
    BufferedFileBase::Close();
 }
 
@@ -249,7 +249,7 @@ bool OutBuffer::Write(const void *data, size_t size)
    while(lBytesToWrite)
    {
       lWriteAmt = len - idx;
-      
+
       if(!lWriteAmt)
       {
          if(!Flush())
@@ -321,7 +321,7 @@ bool OutBuffer::WriteSint16(int16_t num)
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
 bool OutBuffer::WriteUint8(uint8_t num)
-{     
+{
    if(idx == len)
    {
       if(!Flush())
@@ -330,7 +330,7 @@ bool OutBuffer::WriteUint8(uint8_t num)
 
    buffer[idx] = num;
    ++idx;
- 
+
    return true;
 }
 
@@ -341,7 +341,7 @@ bool OutBuffer::WriteUint8(uint8_t num)
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
 bool OutBuffer::WriteSint8(int8_t num)
-{     
+{
    return WriteUint8((uint8_t)num);
 }
 
@@ -505,9 +505,8 @@ bool InBuffer::readSint8(int8_t &num)
 {
    if(read(&num, sizeof(num)) != sizeof(num))
       return false;
-   
+
    return true;
 }
 
 // EOF
-

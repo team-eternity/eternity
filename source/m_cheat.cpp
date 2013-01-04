@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,7 +22,7 @@
 // DESCRIPTION:
 //      Cheat sequence checking.
 //
-// NETCODE_FIXME: Cheats need to work in netgames and demos when enabled 
+// NETCODE_FIXME: Cheats need to work in netgames and demos when enabled
 // by the arbitrator. Requires significant changes, including addition of
 // cheat events in the input stream. I also want to add the ability to
 // turn cheat detection on/off along with the use of letter keys for
@@ -147,7 +147,7 @@ struct cheat_s cheat[] = {
   {"idbeholds",  "Berserk",           not_net | not_demo | no_score,
    cheat_pw,  pw_strength        },
 
-  {"idbeholdi",  "Invisibility",      not_net | not_demo | no_score,  
+  {"idbeholdi",  "Invisibility",      not_net | not_demo | no_score,
    cheat_pw,  pw_invisibility    },
 
   {"idbeholdr",  "Radiation Suit",    not_net | not_demo | no_score,
@@ -180,7 +180,7 @@ struct cheat_s cheat[] = {
   {"hom",     NULL,                   always,
    cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
 
-  {"key",     NULL,                   not_net | not_demo | no_score, 
+  {"key",     NULL,                   not_net | not_demo | no_score,
    cheat_key, 0   },     // killough 2/16/98: generalized key cheats
 
   {"keyr",    NULL,                   not_net | not_demo | no_score,
@@ -192,13 +192,13 @@ struct cheat_s cheat[] = {
   {"keyb",    NULL,                   not_net | not_demo | no_score,
    cheat_keyx, 0  },
 
-  {"keyrc",   NULL,                   not_net | not_demo | no_score, 
+  {"keyrc",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_redcard    },
 
   {"keyyc",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_yellowcard },
 
-  {"keybc",   NULL,                   not_net | not_demo | no_score, 
+  {"keybc",   NULL,                   not_net | not_demo | no_score,
    cheat_keyxx, it_bluecard   },
 
   {"keyrs",   NULL,                   not_net | not_demo | no_score,
@@ -228,7 +228,7 @@ struct cheat_s cheat[] = {
   {"ice",     NULL,                   not_net | not_demo,
    cheat_friction, 0   },   // phares 3/10/98: toggle variable friction effects
 
-  {"push",    NULL,                   not_net | not_demo, 
+  {"push",    NULL,                   not_net | not_demo,
    cheat_pushers, 0    },   // phares 3/10/98: toggle pushers
 
   {"nuke",    NULL,                   not_net | not_demo,
@@ -243,7 +243,7 @@ struct cheat_s cheat[] = {
   {"hideme", NULL,      not_net | not_demo | no_score,
     cheat_pw, pw_totalinvis     },
 
-  // haleyjd: heretic ghost 
+  // haleyjd: heretic ghost
   {"ghost",  NULL,      not_net | not_demo | no_score,
     cheat_pw, pw_ghost },
 
@@ -273,19 +273,19 @@ static void cheat_mus(const void *arg)
 {
    int musnum;
    const char *buf = (const char *)arg;
-   
+
    //jff 3/20/98 note: this cheat allowed in netgame/demorecord
-   
+
    //jff 3/17/98 avoid musnum being negative and crashing
    if(!isdigit(buf[0]) || !isdigit(buf[1]))
       return;
 
    doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
-  
+
    if(GameModeInfo->id == commercial)
    {
       musnum = mus_runnin + (buf[0]-'0')*10 + buf[1]-'0' - 1;
-          
+
       //jff 4/11/98 prevent IDMUS00 in DOOMII and IDMUS36 or greater
       if(musnum < mus_runnin ||  ((buf[0]-'0')*10 + buf[1]-'0') > 35)
          doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
@@ -314,7 +314,7 @@ static void cheat_mus(const void *arg)
    else
    {
       musnum = mus_e1m1 + (buf[0]-'1')*9 + (buf[1]-'1');
-          
+
       //jff 4/11/98 prevent IDMUS0x IDMUSx0 in DOOMI and greater than introa
       if(buf[0] < '1' || buf[1] < '1' || ((buf[0]-'1')*9 + buf[1]-'1') > 31)
          doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
@@ -367,19 +367,19 @@ static void cheat_one(const void *arg)
 static void cheat_fa(const void *arg)
 {
    int i;
-   
+
    if(!plyr->backpack)
    {
       for(i = 0; i < NUMAMMO; i++)
          plyr->maxammo[i] *= 2;
       plyr->backpack = true;
    }
-   
+
    plyr->armorpoints = idfa_armor;      // Ty 03/09/98 - deh
    plyr->armortype = idfa_armor_class;  // Ty 03/09/98 - deh
 
    // WEAPON_FIXME: IDFA cheat
-   
+
    // You can't own weapons that aren't in the game - phares 02/27/98
    for(i = 0; i < NUMWEAPONS; i++)
    {
@@ -387,7 +387,7 @@ static void cheat_fa(const void *arg)
          (i == wp_supershotgun && !enable_ssg)))
          plyr->weaponowned[i] = true;
    }
-      
+
    for(i = 0; i < NUMAMMO; i++)
    {
       if(i != am_cell || GameModeInfo->id != shareware)
@@ -441,7 +441,7 @@ static void cheat_pw(const void *arg)
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
-   
+
    doom_printf("%s", DEH_String("STSTR_BEHOLDX")); // Ty 03/27/98 - externalized
 }
 
@@ -471,7 +471,7 @@ static void cheat_clev(const void *arg)
 
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      epsd = 1; //jff was 0, but espd is 1-based 
+      epsd = 1; //jff was 0, but espd is 1-based
       map = (buf[0] - '0')*10 + buf[1] - '0';
 
       psnprintf(mapname, sizeof(mapname), "MAP%02d", map);
@@ -502,7 +502,7 @@ static void cheat_clev(const void *arg)
       doom_printf("%s not found or is not a valid map", mapname);
       return;
    }
-   
+
    // So be it.
 
    idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
@@ -510,7 +510,7 @@ static void cheat_clev(const void *arg)
    doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
    G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
-   
+
    // restore mission if appropriate
    if(levelDir != &wGlobalDir)
       inmanageddir = mission;
@@ -520,7 +520,7 @@ static void cheat_clev(const void *arg)
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
 static void cheat_mypos(const void *arg)
 {
-   doom_printf("Position (%d,%d,%d)\tAngle %-.0f", 
+   doom_printf("Position (%d,%d,%d)\tAngle %-.0f",
                players[consoleplayer].mo->x >> FRACBITS,
                players[consoleplayer].mo->y >> FRACBITS,
                players[consoleplayer].mo->z >> FRACBITS,
@@ -531,7 +531,7 @@ static void cheat_mypos(const void *arg)
 static void cheat_comp(const void *arg)
 {
    int i;
-   
+
    // Ty 03/27/98 - externalized
    doom_printf("%s",
       DEH_String((compatibility = !compatibility) ? "STSTR_COMPON"
@@ -545,9 +545,9 @@ static void cheat_comp(const void *arg)
 static void cheat_friction(const void *arg)
 {
    C_RunTextCmd("varfriction /");        //sf
-   
+
    // FIXME: externalize strings
-   doom_printf(variable_friction ? "Variable Friction enabled" : 
+   doom_printf(variable_friction ? "Variable Friction enabled" :
                                    "Variable Friction disabled" );
 }
 
@@ -556,7 +556,7 @@ static void cheat_friction(const void *arg)
 static void cheat_pushers(const void *arg)
 {
    C_RunTextCmd("pushers /");
-   
+
    // FIXME: externalize strings
    doom_printf(allow_pushers ? "pushers enabled" : "pushers disabled");
 }
@@ -604,7 +604,7 @@ static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
 
-   doom_printf((plyr->cards[key] = !plyr->cards[key]) ? 
+   doom_printf((plyr->cards[key] = !plyr->cards[key]) ?
      "Key Added" : "Key Removed");  // Ty 03/27/98 - *not* externalized
 }
 
@@ -635,10 +635,10 @@ static void cheat_weapx(const void *arg)
       {
          if((plyr->weaponowned[w] = !plyr->weaponowned[w]))
             doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
-         else 
+         else
          {
             weapontype_t P_SwitchWeapon(player_t *player);
-            
+
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
             if(w == plyr->readyweapon)     // maybe switch if weapon removed
                plyr->pendingweapon = P_SwitchWeapon(plyr);
@@ -663,7 +663,7 @@ static void cheat_ammox(const void *arg)
       if((plyr->backpack = !plyr->backpack))
       {
          doom_printf("Backpack Added");
-         
+
          for(a = 0; a < NUMAMMO; ++a)
             plyr->maxammo[a] <<= 1;
       }
@@ -679,8 +679,8 @@ static void cheat_ammox(const void *arg)
       }
    }
    else if(a >= 0 && a < NUMAMMO)
-   { 
-      // killough 5/5/98: switch plasma and rockets for now -- KLUDGE 
+   {
+      // killough 5/5/98: switch plasma and rockets for now -- KLUDGE
       a = (a == am_cell ? am_misl : a == am_misl ? am_cell : a);  // HACK
 
       // haleyjd 10/24/09: altered behavior:
@@ -727,7 +727,7 @@ bool M_FindCheats(int key)
    static uint64_t sr;
    static char argbuf[CHEAT_ARGS_MAX+1], *arg;
    static int init, argsleft, cht;
-   int i, matchedbefore; 
+   int i, matchedbefore;
    bool ret;
 
    // If we are expecting arguments to a cheat
@@ -804,7 +804,7 @@ bool M_FindCheats(int key)
             argsleft = -cheat[i].arg;       // number of args expected
             ret = true;                     // responder has eaten key
          }
-         else if(!matchedbefore)            // allow only one cheat at a time 
+         else if(!matchedbefore)            // allow only one cheat at a time
          {
             matchedbefore = 1;              // responder has eaten key
             ret = true;
@@ -862,25 +862,25 @@ CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
 
 CONSOLE_COMMAND(god, cf_notnet|cf_level)
 {
-   int value = 0;        // sf: choose to set to 0 or 1 
+   int value = 0;        // sf: choose to set to 0 or 1
 
    if(Console.argc)
       sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_GODMODE);
-   
+
    players[consoleplayer].cheats &= ~CF_GODMODE;
    players[consoleplayer].cheats |= value ? CF_GODMODE : 0;
-   
+
    if(players[consoleplayer].cheats & CF_GODMODE)
    {
       if (players[consoleplayer].mo)
          players[consoleplayer].mo->health = god_health;  // Ty 03/09/98 - deh
-      
+
       players[consoleplayer].health = god_health;
       doom_printf("%s", DEH_String("STSTR_DQDON")); // Ty 03/27/98 - externalized
    }
-   else 
+   else
       doom_printf("%s", DEH_String("STSTR_DQDOFF")); // Ty 03/27/98 - externalized
 }
 
@@ -952,11 +952,11 @@ void A_SorcNukeSpec(Mobj *actor)
 // haleyjd 01/10/02: reformatted some code
 //
 static void M_NukeMonsters(void)
-{   
+{
    int killcount = 0;
    Thinker *th = &thinkercap;
    int mask = MF_FRIEND;
-      
+
    do
    {
       while((th = th->next) != &thinkercap)
@@ -986,7 +986,7 @@ static void M_NukeMonsters(void)
       }
    }
    while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98
-   
+
    // killough 3/22/98: make more intelligent about plural
    // Ty 03/27/98 - string(s) *not* externalized
    doom_printf("%d Monster%s Killed", killcount,  (killcount == 1) ? "" : "s");

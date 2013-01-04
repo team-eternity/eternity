@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -13,12 +13,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    
+//
 //   CPU-related system-specific module for POSIX systems
 //
 //-----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ unsigned int process_affinity_mask;
 //
 // Due to ongoing problems with the SDL_mixer library and/or the SDL audio
 // core, it is necessary to support the restriction of Eternity to a single
-// core or CPU. Apparent thread contention issues cause the library to 
+// core or CPU. Apparent thread contention issues cause the library to
 // malfunction if multiple threads of the process run simultaneously.
 //
 // I wish SDL would fix their bullshit already.
@@ -74,7 +74,7 @@ void I_SetAffinityMask(void)
       cpu_set_t set;
 
       CPU_ZERO(&set);
-      
+
       for(i = 0; i < 16; ++i)
          CPU_SET((process_affinity_mask>>i)&1, &set);
 
@@ -87,4 +87,3 @@ void I_SetAffinityMask(void)
 }
 
 // EOF
-

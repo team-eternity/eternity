@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -75,17 +75,17 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
       case sfx_posit3:
          sound = sfx_posit1 + P_Random(rngnum) % 3;
          break;
-         
+
       case sfx_bgsit1:
       case sfx_bgsit2:
          sound = sfx_bgsit1 + P_Random(rngnum) % 2;
          break;
-                  
+
       default:
          sound = actor->info->seesound;
          break;
       }
-      
+
       // haleyjd: generalize to all bosses
       if(actor->flags2 & MF2_BOSS)
          emitter = NULL;
@@ -105,10 +105,10 @@ void A_Look(Mobj *actor)
    bool allaround = false;
 
    // killough 7/18/98:
-   // Friendly monsters go after other monsters first, but 
+   // Friendly monsters go after other monsters first, but
    // also return to player, without attacking them, if they
    // cannot find any targets. A marine's best friend :)
-   
+
    actor->threshold = actor->pursuecount = 0;
 
    if(actor->flags4 & MF4_LOOKALLAROUND)
@@ -333,7 +333,7 @@ void A_Chase(Mobj *actor)
       superfriend = P_SuperFriend(actor);
 
   // check for melee attack
-   if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && 
+   if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) &&
       !superfriend)
    {
       // haleyjd 05/01/05: Detect and prevent infinite recursion if
@@ -347,13 +347,13 @@ void A_Chase(Mobj *actor)
       }
 
       S_StartSound(actor, actor->info->attacksound);
-      
+
       recursion = true;
 
       P_SetMobjState(actor, actor->info->meleestate);
 
       recursion = false;
-      
+
       if(actor->info->missilestate == NullStateNum)
          actor->flags |= MF_JUSTHIT; // killough 8/98: remember an attack
       return;
@@ -373,7 +373,7 @@ void A_Chase(Mobj *actor)
       }
 
       // haleyjd 05/22/06: ALWAYSFAST flag
-      if(!actor->movecount || gameskill >= sk_nightmare || fastparm || 
+      if(!actor->movecount || gameskill >= sk_nightmare || fastparm ||
          (actor->flags3 & MF3_ALWAYSFAST))
       {
          if(P_CheckMissileRange(actor))
@@ -394,7 +394,7 @@ void A_Chase(Mobj *actor)
          // killough 9/9/98: for backward demo compatibility
          if(netgame && !P_CheckSight(actor, actor->target) &&
             P_LookForPlayers(actor, true))
-            return;  
+            return;
       }
       else  // killough 7/18/98, 9/9/98: new monster AI
       {
@@ -409,11 +409,11 @@ void A_Chase(Mobj *actor)
             else
             {
                actor->pursuecount = BASETHRESHOLD;
-               
+
                // If current target is bad and a new one is found, return:
 
                if(!(actor->target && actor->target->health > 0 &&
-                   ((comp[comp_pursuit] && !netgame) || 
+                   ((comp[comp_pursuit] && !netgame) ||
                     (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
                       (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
                     P_CheckSight(actor, actor->target)))) &&
@@ -421,14 +421,14 @@ void A_Chase(Mobj *actor)
                {
                   return;
                }
-              
+
                // (Current target was good, or no new target was found)
                //
-               // If monster is a missile-less friend, give up pursuit 
-               // and return to player, if no attacks have occurred 
+               // If monster is a missile-less friend, give up pursuit
+               // and return to player, if no attacks have occurred
                // recently.
-               
-               if(actor->info->missilestate == NullStateNum && 
+
+               if(actor->info->missilestate == NullStateNum &&
                   actor->flags & MF_FRIEND)
                {
                   if(actor->flags & MF_JUSTHIT)        // if recent action,
@@ -441,16 +441,16 @@ void A_Chase(Mobj *actor)
          }
       }
    }
-   
+
    if(actor->strafecount)
       actor->strafecount--;
-   
+
    // chase towards player
    if(--actor->movecount<0 || !P_SmartMove(actor))
       P_NewChaseDir(actor);
 
    // make active sound
-   P_MakeActiveSound(actor);   
+   P_MakeActiveSound(actor);
 }
 
 //
@@ -476,7 +476,7 @@ void A_RandomWalk(Mobj *actor)
       else if(delta < 0)
          actor->angle += ANG90 / 2;
    }
-   
+
    // time to move?
    if(--actor->movecount < 0 || !P_Move(actor, 0))
    {
@@ -489,13 +489,13 @@ void A_RandomWalk(Mobj *actor)
          P_SetMobjState(actor, actor->info->spawnstate);
          return;
       }
-   
+
       if(turnaround != DI_NODIR) // find reverse direction
          turnaround ^= 4;
 
       // try a completely random direction
       tdir = P_Random(pr_rndwnewdir) & 7;
-      if(tdir != turnaround && 
+      if(tdir != turnaround &&
          (actor->movedir = tdir, P_Move(actor, 0)))
       {
          checkdirs[tdir] = 1;
@@ -512,8 +512,8 @@ void A_RandomWalk(Mobj *actor)
                // don't try the one we already tried before
                if(checkdirs[tdir])
                   continue;
-               
-               if(tdir != turnaround && 
+
+               if(tdir != turnaround &&
                   (actor->movedir = tdir, P_Move(actor, 0)))
                {
                   dirfound = true;
@@ -528,8 +528,8 @@ void A_RandomWalk(Mobj *actor)
                // don't try the one we already tried before
                if(checkdirs[tdir])
                   continue;
-               
-               if(tdir != turnaround && 
+
+               if(tdir != turnaround &&
                   (actor->movedir = tdir, P_Move(actor, 0)))
                {
                   dirfound = true;
@@ -547,7 +547,7 @@ void A_RandomWalk(Mobj *actor)
          else
             dirfound = true;
       }
-      
+
       // if moving, reset movecount
       if(dirfound)
          actor->movecount = P_Random(pr_rndwmovect) & 15;
@@ -560,7 +560,7 @@ void A_RandomWalk(Mobj *actor)
 void A_Scream(Mobj *actor)
 {
    int sound;
-   
+
    switch(actor->info->deathsound)
    {
    case 0:
@@ -571,12 +571,12 @@ void A_Scream(Mobj *actor)
    case sfx_podth3:
       sound = sfx_podth1 + P_Random(pr_scream)%3;
       break;
-      
+
    case sfx_bgdth1:
    case sfx_bgdth2:
       sound = sfx_bgdth1 + P_Random(pr_scream)%2;
       break;
-      
+
    default:
       sound = actor->info->deathsound;
       break;
@@ -603,7 +603,7 @@ void A_PlayerScream(Mobj *mo)
    else if(GameModeInfo->id == shareware || mo->health >= -50)
    {
       // Default death sound
-      sound = sk_pldeth; 
+      sound = sk_pldeth;
    }
    else
    {
@@ -615,7 +615,7 @@ void A_PlayerScream(Mobj *mo)
    if(!comp[comp_fallingdmg] && demo_version >= 329 &&
       mo->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
-      
+
    S_StartSound(mo, GameModeInfo->playerSounds[sound]);
 }
 
@@ -648,7 +648,7 @@ void A_PlayerSkull(Mobj *actor)
       head->player->damagecount = 32;    // see red for a while
       P_SetPlayerAttacker(head->player, actor); // look at old body
    }
-   
+
    // send head flying
    head->momx = 512 * P_SubRandom(pr_skullpop);
    head->momy = 512 * P_SubRandom(pr_skullpop);
@@ -658,14 +658,14 @@ void A_PlayerSkull(Mobj *actor)
 void A_XScream(Mobj *actor)
 {
    int sound = GameModeInfo->playerSounds[sk_slop];
-   
+
    // haleyjd: falling damage
    if(!comp[comp_fallingdmg] && demo_version >= 329)
    {
       if(actor->player && actor->intflags & MIF_DIEDFALLING)
          sound = GameModeInfo->playerSounds[sk_fallht];
    }
-   
+
    S_StartSound(actor, sound);
 }
 
@@ -701,7 +701,7 @@ void A_Explode(Mobj *thingy)
 void A_Nailbomb(Mobj *thing)
 {
    int i;
-   
+
    P_RadiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
@@ -728,4 +728,3 @@ void A_Detonate(Mobj *mo)
 }
 
 // EOF
-

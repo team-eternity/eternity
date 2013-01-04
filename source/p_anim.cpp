@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //=========================================================================
 //
 // Copyright(C) 2000 James Haley
@@ -6,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,12 +58,12 @@ static void P_LightningFlash(void);
 void P_AnimateSurfaces(void)
 {
    // update sky scroll offsets
-   //   haleyjd: stored as regular ints in the mapinfo so we need 
+   //   haleyjd: stored as regular ints in the mapinfo so we need
    //   to transform these to fixed point values :)
 
    Sky1ColumnOffset += ((fixed_t)LevelInfo.skyDelta ) << 8;
    Sky2ColumnOffset += ((fixed_t)LevelInfo.sky2Delta) << 8;
-   
+
    if(LevelInfo.hasLightning)
    {
       if(!NextLightningFlash || LightningFlash)
@@ -115,7 +116,7 @@ static void P_LightningFlash(void)
    {
       LightningFlash = (P_Random(pr_lightning) & 7) + 8;
       flashLight     = 200 + (P_Random(pr_lightning) & 31);
-      
+
       foundSec = false;
 
       for(i = 0; i < numsectors; i++)
@@ -169,19 +170,19 @@ void P_ForceLightning(void)
 // Called from P_SetupLevel
 //
 void P_InitLightning(void)
-{  
+{
    if(!LevelInfo.hasLightning)
       LightningFlash = 0;
    else
    {
       LevelSky = skytexture;
-      
+
       if(LevelInfo.altSkyName)
          LevelTempSky = R_FindWall(LevelInfo.altSkyName);
       else
          LevelTempSky = -1;
-      
-      LightningFlash = 0;      
+
+      LightningFlash = 0;
       NextLightningFlash = ((M_Random() & 15) + 5) * 35;
    }
 }
@@ -207,4 +208,3 @@ AMX_NATIVE_INFO panim_Natives[] =
 #endif
 
 // EOF
-

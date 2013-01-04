@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    EDF Inventory
 //
 //-----------------------------------------------------------------------------
@@ -129,7 +129,7 @@ static unsigned int inv_pindex  = 0;
 
 //=============================================================================
 //
-// Inventory Hashing 
+// Inventory Hashing
 //
 
 #define NUMINVCHAINS 307
@@ -202,7 +202,7 @@ inventory_t *E_GetInventoryForName(const char *name)
 //
 // E_CollectInventory
 //
-// Pre-creates and hashes by name the inventory definitions, for purpose 
+// Pre-creates and hashes by name the inventory definitions, for purpose
 // of mutual and forward references.
 //
 void E_CollectInventory(cfg_t *cfg)
@@ -232,7 +232,7 @@ void E_CollectInventory(cfg_t *cfg)
 
    // build hash tables
    E_EDFLogPuts("\t\tBuilding inventory hash tables\n");
-   
+
    // cycle through the thingtypes defined in the cfg
    for(i = 0; i < numInventory; i++)
    {
@@ -240,9 +240,9 @@ void E_CollectInventory(cfg_t *cfg)
       const char *name = cfg_title(invcfg);
 
       // This is a new inventory, whether or not one already exists by this name
-      // in the hash table. For subsequent addition of EDF inventory defs at 
-      // runtime, the hash table semantics of "find newest first" take care of 
-      // overriding, while not breaking objects that depend on the original 
+      // in the hash table. For subsequent addition of EDF inventory defs at
+      // runtime, the hash table semantics of "find newest first" take care of
+      // overriding, while not breaking objects that depend on the original
       // definition of the inventory type for inheritance purposes.
       inventory_t *inv = &newInvDefs[i];
 
@@ -293,9 +293,9 @@ static bool E_CheckInventoryInherit(inventory_t *inv)
 //
 static void E_AddInventoryToPStack(inventory_t *inv)
 {
-   // Overflow shouldn't happen since it would require cyclic inheritance as 
+   // Overflow shouldn't happen since it would require cyclic inheritance as
    // well, but I'll guard against it anyways.
-   
+
    if(inv_pindex >= numInventoryDefs)
       E_EDFLoggedErr(2, "E_AddInventoryToPStack: max inheritance depth exceeded\n");
 
@@ -353,9 +353,9 @@ static void E_CopyInventory(inventory_t *child, inventory_t *parent)
    child->numkey    = numkey;
    child->processed = processed;
    child->meta      = meta;
-   
+
    // normalize special fields
-   
+
    // * duplicate mallocs
    if(child->icon)
       child->icon = estrdup(child->icon);
@@ -402,10 +402,10 @@ static void E_processNone(inventory_t *inv, cfg_t *invsec, bool def, bool inheri
 //
 // Health
 //
-// Health inventory items are collected immediately and will add to the 
+// Health inventory items are collected immediately and will add to the
 // collector's health, up to the maxamount value.
 //
-static void E_processHealthProperties(inventory_t *inv, cfg_t *invsec, 
+static void E_processHealthProperties(inventory_t *inv, cfg_t *invsec,
                                       bool def, bool inherits)
 {
    // "Hard-coded" initial properties for Health class:
@@ -419,7 +419,7 @@ static void E_processHealthProperties(inventory_t *inv, cfg_t *invsec,
 
 typedef void (*SubClassFuncPtr)(inventory_t *, cfg_t *, bool, bool);
 
-static SubClassFuncPtr inventorySubClasses[INV_CLASS_NUMCLASSES] = 
+static SubClassFuncPtr inventorySubClasses[INV_CLASS_NUMCLASSES] =
 {
    E_processNone,
    E_processHealthProperties
@@ -438,7 +438,7 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
    bool inherits = false;
 
    // possible when inheriting from an inventory def of a previous EDF generation
-   if(!invsec) 
+   if(!invsec)
       return;
 
    // Process inheritance (not in deltas)
@@ -448,35 +448,35 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
       // inheritance, don't process it again
       if(inv->processed)
          return;
-      
+
       if(cfg_size(invsec, ITEM_INVENTORY_INHERITS) > 0)
       {
          cfg_t *parent_invsec;
-         
+
          // resolve parent inventory def
          inventory_t *parent = E_GetInventoryForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
 
          // check against cyclic inheritance
          if(!E_CheckInventoryInherit(parent))
          {
-            E_EDFLoggedErr(2, 
+            E_EDFLoggedErr(2,
                "E_ProcessInventory: cyclic inheritance detected in inventory '%s'\n",
                inv->name);
          }
-         
+
          // add to inheritance stack
          E_AddInventoryToPStack(parent);
 
          // process parent recursively
          parent_invsec = cfg_gettsec(pcfg, EDF_SEC_INVENTORY, parent->name);
          E_ProcessInventory(parent, parent_invsec, pcfg, true);
-         
+
          // copy parent to this thing
          E_CopyInventory(inv, parent);
 
          // keep track of parent explicitly
          inv->parent = parent;
-         
+
          // we inherit, so treat defaults as no value
          inherits = true;
       }
@@ -488,7 +488,7 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
    }
 
    // field processing
-   
+
    if(IS_SET(ITEM_INVENTORY_CLASS))
    {
       const char *classname = cfg_getstr(invsec, ITEM_INVENTORY_CLASS);
@@ -549,8 +549,8 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
       else
          inv->flags = E_ParseFlags(tempstr, &inventory_flagset);
    }
-   
-   // TODO: addflags/remflags   
+
+   // TODO: addflags/remflags
 }
 
 //
@@ -629,4 +629,3 @@ void E_ProcessInventoryDeltas(cfg_t *cfg)
 }
 
 // EOF
-

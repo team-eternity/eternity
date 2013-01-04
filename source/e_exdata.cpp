@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,7 +23,7 @@
 //
 // The be-all, end-all extension to the DOOM map format. Uses the
 // libConfuse library like EDF.
-// 
+//
 // ExtraData can extend mapthings, lines, and sectors with an
 // arbitrary number of fields, with data provided in more or less
 // any format. The use of a textual input language will forever
@@ -178,7 +178,7 @@ static cfg_opt_t linedef_opts[] =
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
    CFG_STR(FIELD_LINE_ARGS,        0, CFGF_LIST),
    CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
-   CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
+   CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE),
    CFG_END()
 };
 
@@ -238,7 +238,7 @@ static cfg_opt_t sector_opts[] =
    CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB2),
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB2),
-   
+
    CFG_END()
 };
 
@@ -306,9 +306,9 @@ static struct exlinespec
    // Normal DOOM/BOOM extended specials.
    // Most of these have horrible names, but they won't be
    // used much via ExtraData, so it doesn't matter.
-   {   0, "None" }, 
-   {   1, "DR_RaiseDoor_Slow_Mon" }, 
-   {   2, "W1_OpenDoor_Slow" },      
+   {   0, "None" },
+   {   1, "DR_RaiseDoor_Slow_Mon" },
+   {   2, "W1_OpenDoor_Slow" },
    {   3, "W1_CloseDoor_Slow" },
    {   4, "W1_RaiseDoor_Slow" },
    {   5, "W1_Floor_UpLnC_Slow" },
@@ -608,7 +608,7 @@ static struct exlinespec
    { 299, "Portal_AnchorLineFloor" },
 
    // Parameterized specials.
-   // These have nice names because their specifics come from ExtraData 
+   // These have nice names because their specifics come from ExtraData
    // line arguments, ala Hexen, instead of being hardcoded.
    { 300, "Door_Raise" },
    { 301, "Door_Open" },
@@ -654,7 +654,7 @@ static struct exlinespec
    { 341, "Stairs_BuildDownDoom" },
    { 342, "Stairs_BuildUpDoomSync" },
    { 343, "Stairs_BuildDownDoomSync" },
-   
+
    // SoM: two-way portals
    { 344, "Portal_TwowayCeiling" },
    { 345, "Portal_TwowayFloor" },
@@ -719,14 +719,14 @@ static struct exlinespec
    { 391, "Slope_BacksectorFloorAndCeiling" },
    { 392, "Slope_BackFloorAndFrontCeiling" },
    { 393, "Slope_BackCeilingAndFrontFloor" },
-   
+
    { 394, "Slope_FrontFloorToTaggedSlope" },
    { 395, "Slope_FrontCeilingToTaggedSlope" },
    { 396, "Slope_FrontFloorAndCeilingToTaggedSlope" },
-   
+
    // Misc Hexen specials
-   { 397, "Floor_Waggle" }, 
-   { 398, "Thing_Spawn"  }, 
+   { 397, "Floor_Waggle" },
+   { 398, "Thing_Spawn"  },
    { 399, "Thing_SpawnNoFog" },
    { 400, "Teleport_EndGame" },
 
@@ -845,11 +845,11 @@ static void E_ParseThingArgs(mapthing_t *mte, cfg_t *sec)
 
    // count number of args given in list
    numargs = cfg_size(sec, FIELD_ARGS);
-   
+
    // init all args to 0
    for(i = 0; i < NUMMTARGS; ++i)
       mte->args[i] = 0;
-   
+
    // parse the given args values
    for(i = 0; i < numargs && i < NUMMTARGS; ++i)
    {
@@ -909,7 +909,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       EDThings[i].type = (int16_t)(E_ParseTypeField(tempstr));
 
       // it is not allowed to spawn an ExtraData control object via
-      // ExtraData, but the error is tolerated by changing it to an 
+      // ExtraData, but the error is tolerated by changing it to an
       // "Unknown" thing
       if(EDThings[i].type == ED_CTRL_DOOMEDNUM)
          EDThings[i].type = mobjinfo[UnknownThingType]->doomednum;
@@ -1104,7 +1104,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
 
 //
 // E_BooleanArg
-// 
+//
 // Parses a yes/no generalized type argument.
 //
 static bool E_BooleanArg(const char *str)
@@ -1556,11 +1556,11 @@ static void E_ParseLineArgs(maplinedefext_t *mlde, cfg_t *sec)
 
    // count number of args given in list
    numargs = cfg_size(sec, FIELD_LINE_ARGS);
-   
+
    // init all args to 0
    for(i = 0; i < NUMLINEARGS; ++i)
       mlde->args[i] = 0;
-   
+
    // parse the given args values
    for(i = 0; i < numargs && i < NUMLINEARGS; ++i)
    {
@@ -1680,8 +1680,8 @@ static unsigned int E_EDSectorForRecordNum(int recnum)
 //
 // E_NormalizeFlatAngle
 //
-// ZDoom decided for us that floors and ceilings should rotate backward with 
-// respect to DOOM's normal angular coordinate system, so don't blame me for 
+// ZDoom decided for us that floors and ceilings should rotate backward with
+// respect to DOOM's normal angular coordinate system, so don't blame me for
 // the reversal.
 //
 static double E_NormalizeFlatAngle(double input)
@@ -1759,11 +1759,11 @@ static void E_ProcessEDSectors(cfg_t *cfg)
          sec->hasflags = true; // flags were set
          sec->flags = E_ParseFlags(tempstr, &sector_flagset);
       }
-      
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGSADD); // flags to add
       if(*tempstr != '\0')
          sec->flagsadd = E_ParseFlags(tempstr, &sector_flagset);
-      
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGSREM); // flags to remove
       if(*tempstr != '\0')
          sec->flagsrem = E_ParseFlags(tempstr, &sector_flagset);
@@ -1775,7 +1775,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
 
       // damagemask
       sec->damagemask = cfg_getint(section, FIELD_SECTOR_DAMAGEMASK);
-      
+
       // damagemod
       tempstr = cfg_getstr(section, FIELD_SECTOR_DAMAGEMOD);
       sec->damagemod = E_DamageTypeNumForName(tempstr);
@@ -1787,11 +1787,11 @@ static void E_ProcessEDSectors(cfg_t *cfg)
          sec->hasdamageflags = true; // flags were set
          sec->damageflags = E_ParseFlags(tempstr, &sectordamage_flagset);
       }
-      
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_DMGFLAGSADD); // flags to add
       if(*tempstr != '\0')
          sec->damageflagsadd = E_ParseFlags(tempstr, &sectordamage_flagset);
-      
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_DMGFLAGSREM); // flags to remove
       if(*tempstr != '\0')
          sec->damageflagsrem = E_ParseFlags(tempstr, &sectordamage_flagset);
@@ -1875,10 +1875,10 @@ void E_LoadExtraData(void)
    // reset ExtraData variables (allocations are at PU_LEVEL
    // cache level, so anything from any earlier level has been
    // freed)
-   
+
    EDThings = NULL;
    numEDMapThings = 0;
-   
+
    EDLines = NULL;
    numEDLines = 0;
 
@@ -1917,7 +1917,7 @@ void E_LoadExtraData(void)
 //
 // Called by P_SpawnMapThing when an ExtraData control point
 // (doomednum 5004) is encountered.  This function recursively
-// calls P_SpawnMapThing with the new mapthing data from the 
+// calls P_SpawnMapThing with the new mapthing data from the
 // corresponding ExtraData record.
 //
 Mobj *E_SpawnMapThingExt(mapthing_t *mt)
@@ -1931,7 +1931,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
       (edThingIdx = E_EDThingForRecordNum((uint16_t)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
-      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
+      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ,
                          UnknownThingType);
    }
 
@@ -1943,7 +1943,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
    edthing->y     = mt->y;
    edthing->angle = mt->angle;
 
-   // spawn the thing normally; 
+   // spawn the thing normally;
    // return the spawned object back through P_SpawnMapThing
 
    return P_SpawnMapThing(edthing);
@@ -2013,10 +2013,10 @@ void E_LoadSectorExt(line_t *line)
       line->tag = 0;
       return;
    }
-   
+
    sector = line->frontsector;
-   
-   // The ExtraData record number is the line's tag; the line's frontsector is the 
+
+   // The ExtraData record number is the line's tag; the line's frontsector is the
    // sector to adjust.
    if((edSectorIdx = E_EDSectorForRecordNum(line->tag)) == numEDSectors)
    {
@@ -2040,7 +2040,7 @@ void E_LoadSectorExt(line_t *line)
    sector->damage      = edsector->damage;
    sector->damagemask  = edsector->damagemask;
    sector->damagemod   = edsector->damagemod;
-   
+
    if(edsector->hasdamageflags) // if flags-to-set were specified, set them.
       sector->damageflags = edsector->damageflags;
 
@@ -2073,12 +2073,12 @@ void E_LoadSectorExt(line_t *line)
    // per-sector portal properties
    sector->f_pflags = (edsector->f_pflags | (edsector->f_alpha << PO_OPACITYSHIFT));
    sector->c_pflags = (edsector->c_pflags | (edsector->c_alpha << PO_OPACITYSHIFT));
-   
+
    if(sector->f_portal)
       P_CheckFPortalState(sector);
    if(sector->c_portal)
       P_CheckCPortalState(sector);
-   
+
    // TODO: more?
 
    // clear the line tag
@@ -2192,4 +2192,3 @@ void E_GetEDLines(maplinedefext_t **lines, int *numlines)
 }
 
 // EOF
-

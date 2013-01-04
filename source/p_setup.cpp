@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -206,14 +206,14 @@ inline static void ShortToNodeChild(int *loc, uint16_t value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-inline static int SafeUintIndex(int16_t input, int limit, 
+inline static int SafeUintIndex(int16_t input, int limit,
                                 const char *func, int index, const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
-      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n", 
+      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n",
                func, index, item, ret);
       ret = 0;
    }
@@ -227,14 +227,14 @@ inline static int SafeUintIndex(int16_t input, int limit,
 // haleyjd 06/14/10: Matching routine for indices that are already in unsigned
 // short format.
 //
-inline static int SafeRealUintIndex(uint16_t input, int limit, 
+inline static int SafeRealUintIndex(uint16_t input, int limit,
                                     const char *func, int index, const char *item)
 {
    int ret = (int)(SwapUShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
-      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n", 
+      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n",
                func, index, item, ret);
       ret = 0;
    }
@@ -316,7 +316,7 @@ static uint32_t GetLevelDWordU(byte **data)
 //
 // GetLevelString
 //
-// Reads a "len"-byte string from the lump data and writes it into the 
+// Reads a "len"-byte string from the lump data and writes it into the
 // destination buffer. The read pointer is incremented by len bytes.
 //
 static void GetLevelString(byte **data, char *dest, int len)
@@ -342,23 +342,23 @@ void P_LoadVertexes(int lump)
 {
    byte *data;
    int i;
-   
+
    // Determine number of vertexes:
    //  total lump length / vertex record length.
    numvertexes = setupwad->lumpLength(lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
    vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
-   
+
    // Load data into cache.
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
-   
+
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(i = 0; i < numvertexes; ++i)
    {
       vertexes[i].x = SwapShort(((mapvertex_t *) data)[i].x) << FRACBITS;
       vertexes[i].y = SwapShort(((mapvertex_t *) data)[i].y) << FRACBITS;
-      
+
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
@@ -377,16 +377,16 @@ void P_LoadSegs(int lump)
 {
    int  i;
    byte *data;
-   
+
    numsegs = setupwad->lumpLength(lump) / sizeof(mapseg_t);
    segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
-   
+
    for(i = 0; i < numsegs; ++i)
    {
       seg_t *li = segs + i;
       mapseg_t *ml = (mapseg_t *)data + i;
-      
+
       int side, linedef;
       line_t *ldef;
 
@@ -412,7 +412,7 @@ void P_LoadSegs(int lump)
 
       P_CalcSegLength(li);
    }
-   
+
    Z_Free(data);
 }
 
@@ -437,11 +437,11 @@ void P_LoadSubsectors(int lump)
    mapsubsector_t *mss;
    byte *data;
    int  i;
-   
+
    numsubsectors = setupwad->lumpLength(lump) / sizeof(mapsubsector_t);
    subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
-   
+
    for(i = 0; i < numsubsectors; ++i)
    {
       mss = &(((mapsubsector_t *)data)[i]);
@@ -450,7 +450,7 @@ void P_LoadSubsectors(int lump)
       subsectors[i].numlines  = (int)SwapShort(mss->numsegs ) & 0xffff;
       subsectors[i].firstline = (int)SwapShort(mss->firstseg) & 0xffff;
    }
-   
+
    Z_Free(data);
 }
 
@@ -465,7 +465,7 @@ void P_LoadSectors(int lumpnum)
    int  i;
    int  defaultSndSeq;
    char namebuf[9];
-   
+
    numsectors  = setupwad->lumpLength(lumpnum) / sizeof(mapsector_t);
    sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
    lump = data = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
@@ -490,7 +490,7 @@ void P_LoadSectors(int lumpnum)
       ss->lightlevel         = GetLevelWord(&data);
       ss->special            = GetLevelWord(&data);
       ss->tag                = GetLevelWord(&data);
-      
+
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
 
@@ -501,15 +501,15 @@ void P_LoadSectors(int lumpnum)
 
       // killough 4/11/98 sector used to get ceiling lighting:
       ss->ceilinglightsec = -1;
-      
+
       // killough 4/4/98: colormaps:
       // haleyjd 03/04/07: modifications for per-sector colormap logic
       ss->bottommap = ss->midmap = ss->topmap =
          ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
-            
+
       // SoM 9/19/02: Initialize the attached sector list for 3dsides
       ss->c_attached = ss->f_attached = NULL;
-      // SoM 11/9/04: 
+      // SoM 11/9/04:
       ss->c_attsectors = ss->f_attsectors = NULL;
 
       // SoM 10/14/07:
@@ -601,7 +601,7 @@ void P_LoadNodes(int lump)
 {
    byte *data;
    int  i;
-   
+
    numnodes = setupwad->lumpLength(lump) / sizeof(mapnode_t);
 
    // haleyjd 09/01/02:
@@ -644,7 +644,7 @@ void P_LoadNodes(int lump)
             no->bbox[j][k] = SwapShort(mn->bbox[j][k]) << FRACBITS;
       }
    }
-   
+
    Z_Free(data);
 }
 
@@ -795,7 +795,7 @@ static void P_LoadZNodes(int lump)
    data += 4;
 
    // Read extra vertices added during node building
-   CheckZNodesOverflow(len, sizeof(orgVerts));  
+   CheckZNodesOverflow(len, sizeof(orgVerts));
    orgVerts = GetLevelDWordU(&data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
@@ -905,8 +905,8 @@ static void P_LoadZNodes(int lump)
       for(j = 0; j < 2; j++)
          mn.children[j] = GetLevelDWord(&data);
 
-      no->x  = mn.x; 
-      no->y  = mn.y; 
+      no->x  = mn.x;
+      no->y  = mn.y;
       no->dx = mn.dx;
       no->dy = mn.dy;
 
@@ -950,17 +950,17 @@ void P_LoadThings(int lump)
    int  i;
    byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    mapthing_t *mapthings;
-   
+
    numthings = setupwad->lumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
-   
+
    for(i = 0; i < numthings; ++i)
    {
       mapthingdoom_t *mt = (mapthingdoom_t *)data + i;
       mapthing_t     *ft = &mapthings[i];
-      
+
       // haleyjd 09/11/06: wow, this should be up here.
       ft->type = SwapShort(mt->type);
 
@@ -984,20 +984,20 @@ void P_LoadThings(int lump)
             continue;
          }
       }
-      
+
       // Do spawn all other stuff.
       ft->x       = SwapShort(mt->x);
       ft->y       = SwapShort(mt->y);
-      ft->angle   = SwapShort(mt->angle);      
+      ft->angle   = SwapShort(mt->angle);
       ft->options = SwapShort(mt->options);
 
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
-      
+
       P_SpawnMapThing(ft);
    }
-   
+
    // haleyjd: all player things for players in this game should now be valid
    if(GameType != gt_dm)
    {
@@ -1022,17 +1022,17 @@ void P_LoadHexenThings(int lump)
    int  i;
    byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    mapthing_t *mapthings;
-   
+
    numthings = setupwad->lumpLength(lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
-   
+
    for(i = 0; i < numthings; ++i)
    {
       mapthinghexen_t *mt = (mapthinghexen_t *)data + i;
       mapthing_t      *ft = &mapthings[i];
-      
+
       ft->tid     = SwapShort(mt->tid);
       ft->x       = SwapShort(mt->x);
       ft->y       = SwapShort(mt->y);
@@ -1046,10 +1046,10 @@ void P_LoadHexenThings(int lump)
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
-      
+
       P_SpawnMapThing(ft);
    }
-   
+
    // haleyjd: all player things for players in this game
    //          should now be valid in SP or co-op
    if(GameType != gt_dm)
@@ -1191,8 +1191,8 @@ void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if(ld->special == ED_LINE_SPECIAL)
          E_LoadLineDefExt(ld, true);
-      else if(E_IsParamSpecial(ld->special) || 
-              ld->special == POLYOBJ_START_LINE || 
+      else if(E_IsParamSpecial(ld->special) ||
+              ld->special == POLYOBJ_START_LINE ||
               ld->special == POLYOBJ_EXPLICIT_LINE)
       {
          E_LoadLineDefExt(ld, false);
@@ -1288,7 +1288,7 @@ void P_LoadHexenLineDefs(int lump)
 
       ld->flags   = SwapShort(mld->flags);
       ld->special = mld->special;
-      
+
       for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
          ld->args[argnum] = mld->args[argnum];
 
@@ -1328,7 +1328,7 @@ void P_LoadLineDefs2(void)
    for(; i--; ld++)
    {
       // killough 11/98: fix common wad errors (missing sidedefs):
-      
+
       if(ld->sidenum[0] == -1)
       {
          C_Printf(FC_ERROR "line error: missing first sidedef replaced\a\n");
@@ -1348,7 +1348,7 @@ void P_LoadLineDefs2(void)
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
       ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
-      
+
       switch(ld->special)
       {                       // killough 4/11/98: handle special types
          int lump, j;
@@ -1407,7 +1407,7 @@ void P_LoadSideDefs2(int lumpnum)
       //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
 
       sd->textureoffset = GetLevelWord(&data) << FRACBITS;
-      sd->rowoffset     = GetLevelWord(&data) << FRACBITS; 
+      sd->rowoffset     = GetLevelWord(&data) << FRACBITS;
 
       // haleyjd 05/26/10: read texture names into buffers
       GetLevelString(&data, toptexture,    8);
@@ -1512,7 +1512,7 @@ static void P_CreateBlockMap(void)
    C_Printf("P_CreateBlockMap: rebuilding blockmap for level\n");
 
    // First find limits of map
-   
+
    for(i = 0; i < (unsigned int)numvertexes; ++i)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
@@ -1527,13 +1527,13 @@ static void P_CreateBlockMap(void)
    }
 
    // Save blockmap parameters
-   
+
    bmaporgx   = minx << FRACBITS;
    bmaporgy   = miny << FRACBITS;
    bmapwidth  = ((maxx - minx) >> MAPBTOFRAC) + 1;
    bmapheight = ((maxy - miny) >> MAPBTOFRAC) + 1;
 
-   // Compute blockmap, which is stored as a 2d array of variable-sized 
+   // Compute blockmap, which is stored as a 2d array of variable-sized
    // lists.
    //
    // Pseudocode:
@@ -1550,7 +1550,7 @@ static void P_CreateBlockMap(void)
    //     exit loop.
    //
    //     Move to an adjacent block by moving towards the ending block
-   //     in either the x or y direction, to the block which contains 
+   //     in either the x or y direction, to the block which contains
    //     the linedef.
 
    {
@@ -1562,17 +1562,17 @@ static void P_CreateBlockMap(void)
          // starting coordinates
          int x = (lines[i].v1->x >> FRACBITS) - minx;
          int y = (lines[i].v1->y >> FRACBITS) - miny;
-         
+
          // x-y deltas
          int adx = lines[i].dx >> FRACBITS, dx = adx < 0 ? -1 : 1;
-         int ady = lines[i].dy >> FRACBITS, dy = ady < 0 ? -1 : 1; 
+         int ady = lines[i].dy >> FRACBITS, dy = ady < 0 ? -1 : 1;
 
-         // difference in preferring to move across y (>0) 
+         // difference in preferring to move across y (>0)
          // instead of x (<0)
          int diff = !adx ? 1 : !ady ? -1 :
-          (((x >> MAPBTOFRAC) << MAPBTOFRAC) + 
+          (((x >> MAPBTOFRAC) << MAPBTOFRAC) +
            (dx > 0 ? MAPBLOCKUNITS-1 : 0) - x) * (ady = D_abs(ady)) * dx -
-          (((y >> MAPBTOFRAC) << MAPBTOFRAC) + 
+          (((y >> MAPBTOFRAC) << MAPBTOFRAC) +
            (dy > 0 ? MAPBLOCKUNITS-1 : 0) - y) * (adx = D_abs(adx)) * dy;
 
          // starting block, and pointer to its blocklist structure
@@ -1608,7 +1608,7 @@ static void P_CreateBlockMap(void)
                break;
 
             // Move in either the x or y direction to the next block
-            if(diff < 0) 
+            if(diff < 0)
                diff += ady, b += dx;
             else
                diff -= adx, b += dy;
@@ -1617,10 +1617,10 @@ static void P_CreateBlockMap(void)
 
       // Compute the total size of the blockmap.
       //
-      // Compression of empty blocks is performed by reserving two 
+      // Compression of empty blocks is performed by reserving two
       // offset words at tot and tot+1.
       //
-      // 4 words, unused if this routine is called, are reserved at 
+      // 4 words, unused if this routine is called, are reserved at
       // the start.
 
       {
@@ -1631,11 +1631,11 @@ static void P_CreateBlockMap(void)
          {
             // 1 header word + 1 trailer word + blocklist
             if(bmap[i].n)
-               count += bmap[i].n + 2; 
+               count += bmap[i].n + 2;
          }
 
          // Allocate blockmap lump with computed count
-         blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count, 
+         blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
                                          PU_LEVEL, 0));
       }
 
@@ -1661,7 +1661,7 @@ static void P_CreateBlockMap(void)
             else     // Empty blocklist: point to reserved empty blocklist
                blockmaplump[i] = tot;
          }
-         
+
          efree(bmap);    // Free uncompressed blockmap
       }
    }
@@ -1692,7 +1692,7 @@ static bool P_VerifyBlockMap(int count)
 
          offset = y * bmapwidth + x;
          blockoffset = blockmaplump + offset + 4;
-         
+
          // check that block offset is in bounds
          if(blockoffset >= maxoffs)
          {
@@ -1700,8 +1700,8 @@ static bool P_VerifyBlockMap(int count)
             bmaperrormsg = "offset overflow";
             break;
          }
-         
-         offset = *blockoffset;         
+
+         offset = *blockoffset;
          list   = blockmaplump + offset;
 
          // scan forward for a -1 terminator before maxoffs
@@ -1754,7 +1754,7 @@ void P_LoadBlockMap(int lump)
 {
    int len   = setupwad->lumpLength(lump);
    int count = len / 2;
-   
+
    // sf: -blockmap checkparm made into variable
    // also checking for levels without blockmaps (0 length)
    // haleyjd 03/04/10: blockmaps of less than 8 bytes cannot be valid
@@ -1847,7 +1847,7 @@ void P_GroupLines(void)
    for(i = 0; i < numlines; ++i)
    {
       lines[i].frontsector->linecount++;
-      if(lines[i].backsector && 
+      if(lines[i].backsector &&
          lines[i].backsector != lines[i].frontsector)
       {
          lines[i].backsector->linecount++;
@@ -1869,11 +1869,11 @@ void P_GroupLines(void)
       sectors[i].lines = linebuffer;
       linebuffer += sectors[i].linecount;
    }
-  
+
    for(i = 0; i < numlines; ++i)
    {
       AddLineToSector(lines[i].frontsector, &lines[i]);
-      if(lines[i].backsector && 
+      if(lines[i].backsector &&
          lines[i].backsector != lines[i].frontsector)
       {
          AddLineToSector(lines[i].backsector, &lines[i]);
@@ -1887,16 +1887,16 @@ void P_GroupLines(void)
 
       // adjust pointers to point back to the beginning of each list
       sector->lines -= sector->linecount;
-      
+
       // haleyjd 04/28/10: divide before add to lessen chance of overflow;
       //    this only affects sounds, so there is no compatibility check.
       //    EE does not bother with presentation compatibility for sounds
       //    except where playability is a concern (ie. in deathmatch).
 
       // set the degenMobj to the middle of the bounding box
-      sector->soundorg.x = sector->blockbox[BOXRIGHT] / 2 + 
+      sector->soundorg.x = sector->blockbox[BOXRIGHT] / 2 +
                            sector->blockbox[BOXLEFT] / 2;
-      sector->soundorg.y = sector->blockbox[BOXTOP] / 2 + 
+      sector->soundorg.y = sector->blockbox[BOXTOP] / 2 +
                            sector->blockbox[BOXBOTTOM] / 2;
       // SoM: same for group id.
       // haleyjd: note - groups have not been built yet, so this is just for
@@ -1972,9 +1972,9 @@ void P_GroupLines(void)
 //
 void P_RemoveSlimeTrails(void)             // killough 10/98
 {
-   byte *hit; 
+   byte *hit;
    int i;
-   
+
    // haleyjd: don't mess with vertices in old demos, for safety.
    if(demo_version < 203)
       return;
@@ -1994,7 +1994,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
             {
                hit[v - vertexes] = 1;        // Mark this vertex as processed
                if(v != l->v1 && v != l->v2)  // Exclude endpoints of linedefs
-               { 
+               {
                   // Project the vertex back onto the parent linedef
                   int64_t dx2 = (l->dx >> FRACBITS) * (l->dx >> FRACBITS);
                   int64_t dy2 = (l->dy >> FRACBITS) * (l->dy >> FRACBITS);
@@ -2007,7 +2007,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
                   v->fx = M_FixedToFloat(v->x);
                   v->fy = M_FixedToFloat(v->y);
                }
-            }  
+            }
          } // Obfuscated C contest entry:   :)
          while((v != segs[i].v2) && (v = segs[i].v2));
       }
@@ -2094,7 +2094,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
    int i, ln;
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
-   
+
    for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
    {
       ln = lumpnum + i;
@@ -2129,7 +2129,7 @@ void P_InitThingLists(void); // haleyjd
 
 //
 // P_SetupLevelError
-// 
+//
 // haleyjd 02/18/10: Error handling routine for P_SetupLevel
 //
 static void P_SetupLevelError(const char *msg, const char *levelname)
@@ -2145,7 +2145,7 @@ static void P_SetupLevelError(const char *msg, const char *levelname)
 // haleyjd 06/04/05: moved here and renamed from HU_NewLevel
 //
 static void P_NewLevelMsg(void)
-{   
+{
    C_Printf("\n");
    C_Separator();
    C_Printf("%c  %s\n\n", 128+CR_GRAY, LevelInfo.levelName);
@@ -2187,7 +2187,7 @@ static void P_ClearPlayerVars(void)
 //
 // P_PreZoneFreeLevel
 //
-// haleyjd 2/18/10: actions that must be performed immediately prior to 
+// haleyjd 2/18/10: actions that must be performed immediately prior to
 // Z_FreeTags should be kept here.
 //
 static void P_PreZoneFreeLevel(void)
@@ -2213,7 +2213,7 @@ static void P_PreZoneFreeLevel(void)
 
    // haleyjd 06/06/06: stop sound sequences
    S_StopAllSequences();
-   
+
    // haleyjd 10/19/06: stop looped sounds
    S_StopLoopedSounds();
 
@@ -2239,7 +2239,7 @@ static void P_PreZoneFreeLevel(void)
    P_FollowCamOff();
 
    // sf: free the psecnode_t linked list in p_map.c
-   P_FreeSecNodeList(); 
+   P_FreeSecNodeList();
 }
 
 //
@@ -2253,22 +2253,22 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    // Playsim
 
    // re-initialize thinker list
-   Thinker::InitThinkers();   
-   
+   Thinker::InitThinkers();
+
    // haleyjd 02/02/04 -- clear the TID hash table
-   P_InitTIDHash();     
+   P_InitTIDHash();
 
    // SoM: I can't believe I forgot to call this!
-   P_InitPortals(); 
+   P_InitPortals();
 
    //==============================================
    // Map data scripts
 
    // load MapInfo
    P_LoadLevelInfo(lumpnum, W_GetManagedDirFN(waddir));
-   
+
    // haleyjd 10/08/03: load ExtraData
-   E_LoadExtraData();         
+   E_LoadExtraData();
 
    //==============================================
    // Renderer
@@ -2278,16 +2278,16 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 
    // haleyjd: set global colormap -- see r_data.c
    R_SetGlobalLevelColormap();
-   
+
    //==============================================
    // Wake up subsystems
 
    // wake up heads-up display
    HU_Start();
-   
+
    // must be after P_LoadLevelInfo as the music lump name is gotten there
    S_Start();
-   
+
    // console message
    P_NewLevelMsg();
 }
@@ -2357,7 +2357,7 @@ void P_InitThingLists(void)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, 
+void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
                   skill_t skill)
 {
    lumpinfo_t **lumpinfo;
@@ -2370,7 +2370,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
    lumpinfo = setupwad->getLumpInfo();
-   
+
    // get the map name lump number
    if((lumpnum = setupwad->checkNumForName(mapname)) == -1)
    {
@@ -2394,7 +2394,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // perform pre-Z_FreeTags actions
    P_PreZoneFreeLevel();
-   
+
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVEL);
 
@@ -2402,16 +2402,16 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_InitNewLevel(lumpnum, dir);
 
    // note: most of this ordering is important
-   
+
    // killough 3/1/98: P_LoadBlockMap call moved down to below
    // killough 4/4/98: split load of sidedefs into two parts,
    // to allow texture names to be used in special linedefs
 
    level_error = NULL; // reset
-   
+
    P_LoadVertexes(lumpnum + ML_VERTEXES);
    P_LoadSectors (lumpnum + ML_SECTORS);
-   
+
    // possible error: missing flats
    CHECK_ERROR();
 
@@ -2431,7 +2431,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_LoadSideDefs2 (lumpnum + ML_SIDEDEFS);
    P_LoadLineDefs2 ();                      // killough 4/4/98
    P_LoadBlockMap  (lumpnum + ML_BLOCKMAP); // killough 3/1/98
-   
+
    if(P_CheckForZDoomUncompressedNodes(lumpnum))
    {
       P_LoadZNodes(lumpnum + ML_NODES);
@@ -2446,17 +2446,17 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       // possible error: missing nodes
       CHECK_ERROR();
 
-      P_LoadSegs(lumpnum + ML_SEGS);   
+      P_LoadSegs(lumpnum + ML_SEGS);
    }
 
    P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
    P_GroupLines();
 
    // killough 10/98: remove slime trails from wad
-   P_RemoveSlimeTrails(); 
+   P_RemoveSlimeTrails();
 
    // Note: you don't need to clear player queue slots --
-   // a much simpler fix is in g_game.c -- killough 10/98   
+   // a much simpler fix is in g_game.c -- killough 10/98
    bodyqueslot = 0;
    deathmatch_p = deathmatchstarts;
 
@@ -2478,15 +2478,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    CHECK_ERROR();
 
    // haleyjd: init all thing lists (boss brain spots, etc)
-   P_InitThingLists(); 
+   P_InitThingLists();
 
    // clear special respawning queue
    iquehead = iquetail = 0;
-   
+
    // haleyjd 10/05/05: convert heretic specials
    if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
       P_ConvertHereticSpecials();
-   
+
    // set up world state
    P_SpawnSpecials(mapformat);
 
@@ -2553,17 +2553,17 @@ void P_LoadOlo(void)
 {
    int lumpnum;
    char *lump;
-   
+
    if((lumpnum = W_CheckNumForName("OLO")) == -1)
       return;
-   
+
    lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
-   
+
    if(strncmp(lump, "OLO", 3))
       return;
-   
+
    memcpy(&olo, lump, sizeof(olo_t));
-   
+
    olo_loaded = true;
 }
 #endif
@@ -2581,7 +2581,7 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
    // null, player starts, teleport destination are common
    if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
       return;
-   
+
    // handle ordinary Heretic things -- all are less than 100
    if(mthing->type < 100)
    {
@@ -2647,4 +2647,3 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

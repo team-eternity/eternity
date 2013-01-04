@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -79,23 +79,23 @@ static bool filecmp(const char *filename, const char *wildcard)
    char *filename_ext, *wildcard_ext;   // extension
    bool res = true;
    int i = 0;
-  
+
    // haleyjd: must be case insensitive
    filename_main = M_Strupr(estrdup(filename));
    wildcard_main = M_Strupr(estrdup(wildcard));
-   
+
    // find separator -- haleyjd: use strrchr, not strchr
    filename_ext = strrchr(filename_main, '.');
-   
-   if(!filename_ext) 
+
+   if(!filename_ext)
       filename_ext = no_ext; // no extension
    else
    {
       // break into 2 strings; replace . with \0
       *filename_ext++ = '\0';
    }
-   
-   // do the same with the wildcard -- haleyjd: strrchr again  
+
+   // do the same with the wildcard -- haleyjd: strrchr again
    wildcard_ext = strrchr(wildcard_main, '.');
 
    if(!wildcard_ext)
@@ -139,7 +139,7 @@ static bool filecmp(const char *filename, const char *wildcard)
       while(wildcard_ext[i])
       {
          bool exitloop = false;
-         
+
          switch(wildcard_ext[i])
          {
          case '?':
@@ -155,10 +155,10 @@ static bool filecmp(const char *filename, const char *wildcard)
             }
             break;
          }
-         
+
          if(exitloop)
             break;
-         
+
          ++i;
       }
    }
@@ -181,7 +181,7 @@ static void MN_addFile(mndir_t *dir, const char *filename)
    {
       // realloc bigger: limitless
       dir->numfilesalloc = dir->numfilesalloc ? dir->numfilesalloc * 2 : 32;
-      dir->filenames = erealloc(char **, dir->filenames, 
+      dir->filenames = erealloc(char **, dir->filenames,
                                 dir->numfilesalloc * sizeof(char *));
    }
 
@@ -216,7 +216,7 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 //
 void MN_ClearDirectory(mndir_t *dir)
 {
-   // clear all alloced files   
+   // clear all alloced files
    for(int i = 0; i < dir->numfiles; i++)
    {
       efree((dir->filenames)[i]);
@@ -268,15 +268,15 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
 
    // clear directory
    MN_ClearDirectory(dir);
-  
-   // open directory and read filenames  
+
+   // open directory and read filenames
    dir->dirpath = read_dir;
    directory = opendir(dir->dirpath);
 
    // test for failure
    if(!directory)
       return errno;
-  
+
    while((direntry = readdir(directory)))
    {
       if(filecmp(direntry->d_name, read_wildcard))
@@ -344,7 +344,7 @@ static void MN_FileDrawer()
    btop = 16 + 8 + lheight + 8;
    bbot = SCREENHEIGHT - 16 - 8;
    h = bbot - btop + 1;
-   
+
    // calculate unscaled left, right, and width of color box
    bleft  = 16 + 8;
    bright = SCREENWIDTH - 16 - 8;
@@ -353,7 +353,7 @@ static void MN_FileDrawer()
    // draw color rect -- must manually scale coordinates
    // SoM: w = x2 - x1 + 1
    V_ColorBlock(&subscreen43, GameModeInfo->blackIndex,
-                subscreen43.x1lookup[bleft], subscreen43.y1lookup[btop], 
+                subscreen43.x1lookup[bleft], subscreen43.y1lookup[btop],
                 subscreen43.x2lookup[bleft + w - 1] - subscreen43.x1lookup[bleft] + 1,
                 subscreen43.y2lookup[btop + h - 1] - subscreen43.y1lookup[btop] + 1);
 
@@ -363,7 +363,7 @@ static void MN_FileDrawer()
 
    // add one to the line height for the remaining lines to leave a gap
    lheight += 1;
-   
+
    // calculate the number of text lines that can fit in the box
    // leave 2 pixels of gap for the top and the bottom of the box
    numfileboxlines = (h - 2) / lheight;
@@ -410,7 +410,7 @@ static void MN_FileDrawer()
          text = FC_GOLD "More...";
       else
          text = (mn_currentdir->filenames)[i];
-      
+
       // draw it!
       MN_WriteTextColored(text, color, x + 11, y);
 
@@ -446,25 +446,25 @@ static bool MN_FileResponder(event_t *ev)
    {
       action_menu_up = action_menu_left = false;
 
-      if(selected_item > 0) 
+      if(selected_item > 0)
       {
          selected_item--;
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       }
       return true;
    }
-  
+
    if(action_menu_down || action_menu_right)
    {
       action_menu_down = action_menu_right = false;
-      if(selected_item < (mn_currentdir->numfiles - 1)) 
+      if(selected_item < (mn_currentdir->numfiles - 1))
       {
          selected_item++;
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       }
       return true;
    }
-   
+
    if(action_menu_pageup)
    {
       action_menu_pageup = false;
@@ -477,27 +477,27 @@ static bool MN_FileResponder(event_t *ev)
       }
       return true;
    }
-  
+
    if(action_menu_pagedown)
    {
       action_menu_pagedown = false;
       if(numfileboxlines)
       {
          selected_item += numfileboxlines;
-         if(selected_item >= mn_currentdir->numfiles) 
+         if(selected_item >= mn_currentdir->numfiles)
             selected_item = mn_currentdir->numfiles - 1;
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
-   
+
    if(action_menu_toggle || action_menu_previous)
    {
       // When allow_exit flag is false, call D_StartTitle
       action_menu_toggle = action_menu_previous = false;
       if(!allow_exit)
       {
-         MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
+         MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)",
                          MN_doExitFileWidget);
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
       }
@@ -508,16 +508,16 @@ static bool MN_FileResponder(event_t *ev)
       }
       return true;
    }
-  
+
    if(action_menu_confirm)
    {
       action_menu_confirm = false;
-      
+
       // set variable to new value
       if(variable_name)
       {
          char tempstr[128];
-         psnprintf(tempstr, sizeof(tempstr), 
+         psnprintf(tempstr, sizeof(tempstr),
             "%s \"%s\"", variable_name, (mn_currentdir->filenames)[selected_item]);
          C_RunTextCmd(tempstr);
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
@@ -535,15 +535,15 @@ static bool MN_FileResponder(event_t *ev)
       ch = tolower(ev->data1);
 
    if(ch >= 'a' && ch <= 'z')
-   {  
+   {
       int n = selected_item;
-      
+
       do
       {
          n++;
-         if(n >= mn_currentdir->numfiles) 
+         if(n >= mn_currentdir->numfiles)
             n = 0; // loop round
-         
+
          if(tolower((mn_currentdir->filenames)[n][0]) == ch)
          {
             // found a matching item!
@@ -554,10 +554,10 @@ static bool MN_FileResponder(event_t *ev)
             }
             return true; // eat key
          }
-      } 
+      }
       while(n != selected_item);
    }
-   
+
    return false; // not interested
 }
 
@@ -607,7 +607,7 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 //
 // haleyjd 06/16/10: for external access to the file selector widget
 //
-void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
+void MN_DisplayFileSelector(mndir_t *dir, const char *title,
                             const char *command, bool dismissOnSelect,
                             bool allowExit)
 {
@@ -631,21 +631,21 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
 // The Filename reading provides a useful opportunity for some handy
 // console commands.
 //
-  
+
 // 'dir' command is useful :)
 
 CONSOLE_COMMAND(dir, 0)
 {
    int i;
    const char *wildcard;
-   
+
    if(Console.argc)
       wildcard = Console.argv[0]->constPtr();
    else
       wildcard = "*.*";
-   
+
    MN_ReadDirectory(&mn_diskdir, ".", wildcard);
-   
+
    for(i = 0; i < mn_diskdir.numfiles; ++i)
    {
       C_Printf("%s\n", (mn_diskdir.filenames)[i]);
@@ -671,12 +671,12 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
          // don't add music entries that don't actually exist
          if(music->prefix)
          {
-            psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+            psnprintf(namebuf, sizeof(namebuf), "%s%s",
                       GameModeInfo->musPrefix, music->name);
          }
          else
             psnprintf(namebuf, sizeof(namebuf), "%s", music->name);
-         
+
          if(W_CheckNumForName(namebuf) >= 0)
             MN_addFile(&mn_diskdir, music->name);
 
@@ -729,12 +729,12 @@ CONSOLE_COMMAND(mn_selectflat, 0)
 
    // sort the list
    MN_sortFiles(&mn_diskdir);
-   
+
    selected_item = 0;
 
    if((curnum = MN_findFile(&mn_diskdir, mn_background)) != mn_diskdir.numfiles)
       selected_item = curnum;
-   
+
    mn_currentdir    = &mn_diskdir;
    help_description = "select background:";
    variable_name    = "mn_background";
@@ -754,4 +754,3 @@ void MN_File_AddCommands(void)
 }
 
 // EOF
-

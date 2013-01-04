@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //--------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Simon Howard, James Haley, et al.
@@ -6,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -122,7 +123,7 @@ void P_InitSkins(void)
    P_InitMonsterSkins();
 
    // FIXME: problem here with preferences
-   if(default_skin == NULL) 
+   if(default_skin == NULL)
    {
       playerclass_t *dpc = E_PlayerClassForName(GameModeInfo->defPClassName);
       default_skin = estrdup(dpc->defaultskin->skinname);
@@ -134,7 +135,7 @@ void P_InitSkins(void)
    // allocate spritelist
    if(spritelist)
       Z_Free(spritelist);
-   
+
    // don't count any skin with an already-existing sprite
    if((numskinsprites = numskins - numedfskins) < 0)
       I_Error("P_InitSkins: numedfskins > numskins\n");
@@ -213,7 +214,7 @@ static void P_AddSkin(skin_t *newskin)
       numskinsalloc = numskinsalloc ? numskinsalloc*2 : 32;
       skins = erealloc(skin_t **, skins, numskinsalloc*sizeof(skin_t *));
    }
-   
+
    skins[numskins] = newskin;
    numskins++;
 }
@@ -223,7 +224,7 @@ static void P_AddSpriteLumps(const char *named)
    int i, n = strlen(named);
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   
+
    for(i = 0; i < numlumps; i++)
    {
       if(!strncasecmp(lumpinfo[i]->name, named, n))
@@ -240,16 +241,16 @@ static skin_t *newskin;
 static void P_ParseSkinCmd(char *line)
 {
    int i;
-   
-   while(*line==' ') 
+
+   while(*line==' ')
       line++;
-   if(!*line) 
+   if(!*line)
       return;      // maybe nothing left now
-   
+
    if(!strncasecmp(line, "name", 4))
    {
       char *skinname = line+4;
-      while(*skinname == ' ') 
+      while(*skinname == ' ')
          skinname++;
       newskin->skinname = estrdup(skinname);
    }
@@ -269,20 +270,20 @@ static void P_ParseSkinCmd(char *line)
    }
 
    // is it a sound?
-   
+
    for(i = 0; i < NUMSKINSOUNDS; i++)
    {
-      if(!strncasecmp(line, skinsoundnames[i], 
+      if(!strncasecmp(line, skinsoundnames[i],
                       strlen(skinsoundnames[i])))
       {                    // yes!
          char *newsoundname = line + strlen(skinsoundnames[i]);
          while(*newsoundname == ' ')
             newsoundname++;
-         
+
          // FIXME: only increment past DS if DS is provided; otherwise,
          // the value is a raw sound mnemonic already
          newsoundname += 2;        // ds
-         
+
          newskin->sounds[i] = estrdup(newsoundname);
       }
    }
@@ -299,7 +300,7 @@ void P_ParseSkin(int lumpnum)
    // FIXME: revise to use finite-state-automaton parser and qstring buffers
 
    memset(inputline, 0, 256);
-      
+
    newskin = estructalloc(skin_t, 1);
 
    newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
@@ -316,8 +317,8 @@ void P_ParseSkin(int lumpnum)
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
 
    lump = (char *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));  // get the lump
-   
-   rover = lump; 
+
+   rover = lump;
    comment = false;
 
    while(rover < lump + lumpinfo[lumpnum]->size)
@@ -327,7 +328,7 @@ void P_ParseSkin(int lumpnum)
          comment = true;
       if(*rover>31 && !comment)
       {
-         psnprintf(inputline, sizeof(inputline), "%s%c", 
+         psnprintf(inputline, sizeof(inputline), "%s%c",
                    inputline, (*rover == '=') ? ' ' : *rover);
       }
       if(*rover=='\n') // end of line
@@ -339,18 +340,18 @@ void P_ParseSkin(int lumpnum)
       rover++;
    }
    P_ParseSkinCmd(inputline);    // parse the last line
-   
+
    Z_ChangeTag(lump, PU_CACHE); // mark lump purgable
-   
+
    P_AddSkin(newskin);
    P_AddSpriteLumps(newskin->spritename);
 }
 
 static void P_CacheFaces(skin_t *skin)
 {
-   if(skin->faces) 
+   if(skin->faces)
       return; // already cached
-   
+
    if(!strcasecmp(skin->facename, "STF"))
    {
       skin->faces = default_faces;
@@ -375,7 +376,7 @@ static skin_t *P_SkinForName(const char *s)
 
    while(*s==' ')
       s++;
-   
+
    if(!skins)
       return NULL;
 
@@ -411,19 +412,19 @@ void P_SetSkin(skin_t *skin, int playernum)
 
    if(!playeringame[playernum])
       return;
-   
+
    pl->skin = skin;
-   
+
    if(gamestate == GS_LEVEL)
    {
       Mobj *mo = pl->mo;
-      
+
       mo->skin = skin;
 
       if(mo->state && mo->state->sprite == mo->info->defsprite)
          mo->sprite = skin->sprite;
    }
-   
+
    if(playernum == consoleplayer)
       default_skin = skin->skinname;
 }
@@ -432,22 +433,22 @@ void P_SetSkin(skin_t *skin, int playernum)
 static skin_t *P_PrevSkin(int player)
 {
    int skinnum;
-      
+
    // find the skin in the list first
    for(skinnum = 0; skinnum < numskins; skinnum++)
    {
       if(players[player].skin == skins[skinnum])
          break;
    }
-         
+
    if(skinnum == numskins)
       return NULL;         // not found (?)
 
    --skinnum;      // previous skin
-   
-   if(skinnum < 0) 
+
+   if(skinnum < 0)
       skinnum = numskins-1;   // loop around
-   
+
    return skins[skinnum];
 }
 
@@ -455,22 +456,22 @@ static skin_t *P_PrevSkin(int player)
 static skin_t *P_NextSkin(int player)
 {
    int skinnum;
-      
+
    // find the skin in the list first
 
    for(skinnum = 0; skinnum < numskins; skinnum++)
    {
-      if(players[player].skin == skins[skinnum]) 
+      if(players[player].skin == skins[skinnum])
          break;
    }
 
    if(skinnum == numskins)
       return NULL;         // not found (?)
-   
+
    ++skinnum;      // next skin
-   
+
    if(skinnum >= numskins) skinnum = 0;    // loop around
-   
+
    return skins[skinnum];
 }
 
@@ -520,7 +521,7 @@ CONSOLE_COMMAND(listskins, 0)
    int i;
 
    for(i = 0; i < numskins; i++)
-   {      
+   {
       C_Printf("%s\n", skins[i]->skinname);
    }
 }
@@ -536,7 +537,7 @@ VARIABLE_STRING(default_skin, NULL, 256);
 CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
 {
    skin_t *skin;
-   
+
    if(!Console.argc)
    {
       if(consoleplayer == Console.cmdsrc)
@@ -567,4 +568,3 @@ void P_Skin_AddCommands(void)
 }
 
 // EOF
-

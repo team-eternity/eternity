@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //
 // Particle effects header
 //
@@ -20,7 +21,7 @@ struct subsector_t;
 #define PS_FLOORCLIP    0x0002
 #define PS_FALLTOGROUND 0x0004
 #define PS_HITGROUND    0x0008
-#define PS_SPLASH       0x0010 
+#define PS_SPLASH       0x0010
 
 struct particle_t
 {
@@ -104,9 +105,9 @@ void P_RunEffects(void);
 void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int updown);
 
 void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int kind);
-void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int updown, 
+void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int updown,
                    int kind);
-void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
                   angle_t angle);
 void P_DisconnectEffect(Mobj *actor);
 

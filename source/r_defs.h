@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -202,32 +202,32 @@ struct sector_t
    int stairlock;   // -2 on first locked -1 after thinker done 0 normally
    int prevsec;     // -1 or number of sector for previous step
    int nextsec;     // -1 or number of next step sector
-  
+
    // killough 3/7/98: floor and ceiling texture offsets
    fixed_t   floor_xoffs,   floor_yoffs;
    fixed_t ceiling_xoffs, ceiling_yoffs;
 
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector
-   
+
    // killough 4/11/98: support for lightlevels coming from another sector
    int floorlightsec, ceilinglightsec;
-   
+
    int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
-   
+
    // killough 10/98: support skies coming from sidedefs. Allows scrolling
-   // skies and other effects. No "level info" kind of lump is needed, 
+   // skies and other effects. No "level info" kind of lump is needed,
    // because you can use an arbitrary number of skies per level with this
    // method. This field only applies when skyflatnum is used for floorpic
    // or ceilingpic, because the rest of Doom needs to know which is sky
    // and which isn't, etc.
-   
+
    int sky;
-   
+
    // list of mobjs that are at least partially in the sector
    // thinglist is a subset of touching_thinglist
-   msecnode_t *touching_thinglist;               // phares 3/14/98  
-   
+   msecnode_t *touching_thinglist;               // phares 3/14/98
+
    int linecount;
    line_t **lines;
 
@@ -244,7 +244,7 @@ struct sector_t
    int *c_attsectors;
 
 
-   // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
+   // SoM 10/14/07: And now surfaces of other sectors can be attached to a
    // sector's floor and/or ceiling
    int c_asurfacecount;
    attachedsurface_t *c_asurfaces;
@@ -253,11 +253,11 @@ struct sector_t
 
    // Flags for portals
    unsigned int c_pflags, f_pflags;
-   
+
    // Portals
    portal_t *c_portal;
    portal_t *f_portal;
-   
+
    int groupid;
 
    // haleyjd 03/12/03: Heretic wind specials
@@ -284,7 +284,7 @@ struct sector_t
    // generalized sector types outside of DOOM-format maps.
    unsigned int flags;
    unsigned int intflags; // internal flags
-   
+
    // haleyjd 12/31/08: sector damage properties
    int damage;      // if > 0, sector is damaging
    int damagemask;  // damage is done when !(leveltime % mask)
@@ -296,7 +296,7 @@ struct sector_t
    pslope_t *c_slope;
 
    // haleyjd 08/30/09 - used by the lightning code
-   int16_t oldlightlevel; 
+   int16_t oldlightlevel;
 
    // haleyjd 10/17/10: terrain type overrides
    ETerrain *floorterrain;
@@ -314,7 +314,7 @@ struct side_t
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
-  int16_t toptexture;      // Texture indices. We do not maintain names here. 
+  int16_t toptexture;      // Texture indices. We do not maintain names here.
   int16_t bottomtexture;
   int16_t midtexture;
   sector_t* sector;      // Sector the SideDef is facing.
@@ -343,7 +343,7 @@ struct line_t
    vertex_t *v1, *v2;      // Vertices, from v1 to v2.
    fixed_t  dx, dy;        // Precalculated v2 - v1 for side checking.
    int16_t  flags;         // Animation related.
-   int16_t  special;         
+   int16_t  special;
    int      tag;           // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
@@ -352,7 +352,7 @@ struct line_t
    fixed_t bbox[4];        // A bounding box, for the linedef's extent
    slopetype_t slopetype;  // To aid move clipping.
    sector_t *frontsector;  // Front and back sector.
-   sector_t *backsector; 
+   sector_t *backsector;
    int validcount;         // if == validcount, already checked
    int tranlump;           // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
@@ -427,7 +427,7 @@ struct seg_t
   float     offset;
   side_t   *sidedef;
   line_t   *linedef;
-  
+
   // Sector references.
   // Could be retrieved from linedef, too
   // (but that would be slower -- killough)
@@ -449,10 +449,10 @@ struct node_t
    int     children[2];  // If NF_SUBSECTOR, it's a subsector.
 };
 
-// 
+//
 // fnode
 //
-// haleyjd 12/07/12: The fnode structure holds floating-point general line 
+// haleyjd 12/07/12: The fnode structure holds floating-point general line
 // equation coefficients and float versions of partition line coordinates and
 // lengths. It is kept separate from node_t for purposes of not causing that
 // structure to become cache inefficient.
@@ -468,7 +468,7 @@ struct fnode_t
 // OTHER TYPES
 //
 
-//  
+//
 // Sprites are patches with a special naming convention
 //  so they can be recognized by R_InitSprites.
 // The base name is NNNNFx or NNNNFxFx, with
@@ -528,8 +528,8 @@ struct rslope_t
 
 // SoM: Or, since that url is no longer valid, you could just explain it here!
 // A visplane is basically a list of columns that a floor or ceiling occupies
-// in screen space. Doom's renderer then rasterizes them (turns them into 
-// horizontal spans) in a rather quick single pass so they can be textured 
+// in screen space. Doom's renderer then rasterizes them (turns them into
+// horizontal spans) in a rather quick single pass so they can be textured
 // in a quick, constant-z texture mapping loop.
 
 struct visplane_t
@@ -562,12 +562,12 @@ struct visplane_t
    // Slopes!
    pslope_t *pslope;
    rslope_t rslope;
-   
+
    // Needed for overlays
    // This is the table the visplane currently belongs to
    planehash_t           *table;
    // This is the blending flags from the portal surface (flags & PS_OVERLAYFLAGS)
-   int                    bflags; 
+   int                    bflags;
    // Opacity of the overlay (255 - opaque, 0 - translucent)
    byte                   opacity;
 };

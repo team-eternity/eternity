@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -56,7 +56,7 @@ CONSOLE_COMMAND(e_dumpthings, 0)
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
       //  04/13/08: do not display auto-allocated dehnums
-      C_Printf("%5d  %5d  %s\n", 
+      C_Printf("%5d  %5d  %s\n",
                mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
                mobjinfo[i]->doomednum,
                mobjinfo[i]->name);
@@ -85,8 +85,8 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_ERROR "ID Data:\n"
             FC_HI "DeHackEd #: " FC_NORMAL "%d\n"
             FC_HI "DoomEd #: " FC_NORMAL "%d\n\n",
-            mobjinfo[num]->name, 
-            mobjinfo[num]->dehnum, 
+            mobjinfo[num]->name,
+            mobjinfo[num]->dehnum,
             mobjinfo[num]->doomednum);
 
    C_Printf(FC_ERROR "State Data:\n"
@@ -190,8 +190,8 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 
    while((obj = meta->tableIterator(obj)))
    {
-      C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
-               FC_NORMAL "%s", 
+      C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n"
+               FC_NORMAL "%s",
                obj->getKey(), obj->getClassName(), obj->toString());
    }
 }
@@ -219,7 +219,7 @@ CONSOLE_COMMAND(e_dumpstate, 0)
       C_Printf("State not found\n");
       return;
    }
-   
+
    state = states[num];
 
    C_Printf(FC_ERROR "Data for State %s:\n"
@@ -234,16 +234,16 @@ CONSOLE_COMMAND(e_dumpstate, 0)
             FC_HI "Misc 1: "     FC_NORMAL "%d\n"
             FC_HI "Misc 2: "     FC_NORMAL "%d\n"
             FC_ERROR "Arguments:\n",
-            state->name, 
+            state->name,
             state->dehnum,
             state->index,
             state->decorate ? "true" : "false",
-            state->sprite, 
+            state->sprite,
             state->frame & FF_FRAMEMASK,
             state->frame & FF_FULLBRIGHT ? "true" : "false",
             state->tics,
             state->nextstate,
-            state->misc1, 
+            state->misc1,
             state->misc2);
 
    if(state->args)
@@ -325,8 +325,8 @@ CONSOLE_COMMAND(e_listmapthings, cf_level)
 
    for(i = 0; i < numthings; ++i)
    {
-      C_Printf("%5d  %5d  %5d   %5d\n", 
-               things[i].recordnum, things[i].next, 
+      C_Printf("%5d  %5d  %5d   %5d\n",
+               things[i].recordnum, things[i].next,
                things[i].type, things[i].tid);
    }
 }
@@ -393,8 +393,8 @@ CONSOLE_COMMAND(e_listlinedefs, cf_level)
 
    for(i = 0; i < numlines; ++i)
    {
-      C_Printf("%5d %5d %5d %5d\n", 
-               lines[i].recordnum, lines[i].next, 
+      C_Printf("%5d %5d %5d %5d\n",
+               lines[i].recordnum, lines[i].next,
                lines[i].stdfields.special,
                lines[i].stdfields.tag);
    }
@@ -509,4 +509,3 @@ AMX_NATIVE_INFO edf_Natives[] =
 #endif
 
 // EOF
-

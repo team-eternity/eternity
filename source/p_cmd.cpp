@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// Game console variables 
+// Game console variables
 //
 // By Simon Howard
 //
@@ -85,8 +85,8 @@ const char *skills[]=
    "nightmare"
 };
 
-const char *bfgtypestr[5] = 
-{ 
+const char *bfgtypestr[5] =
+{
    "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"
 };
 const char *dmstr[] = { "single", "coop", "deathmatch" };
@@ -123,7 +123,7 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 
    if(!Console.argc)
       return;
-   
+
    playernum = Console.cmdsrc;
 
    colour = Console.argv[0]->toInt();
@@ -132,12 +132,12 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
       colour = 0;
    if(colour > TRANSLATIONCOLOURS)
       colour = TRANSLATIONCOLOURS;
-   
+
    players[playernum].colormap = colour;
    if(gamestate == GS_LEVEL)
       players[playernum].mo->colour = colour;
-   
-   if(playernum == consoleplayer) 
+
+   if(playernum == consoleplayer)
       default_colour = colour; // typed
 }
 
@@ -187,18 +187,18 @@ CONSOLE_NETVAR(allowmlook, allowmlook, cf_server, netcmd_allowmlook) {}
 VARIABLE_INT(bfgtype, &default_bfgtype,         0, 4, bfgtypestr);
 CONSOLE_NETVAR(bfgtype, bfgtype, cf_server, netcmd_bfgtype) {}
 
-// autoaiming 
+// autoaiming
 
 //
 // NETCODE_FIXME: Players should be able to have their own autoaim
-// settings. Changing this will also require propagated changes to 
+// settings. Changing this will also require propagated changes to
 // the weapon system.
 //
 
 VARIABLE_BOOLEAN(autoaim, &default_autoaim,         onoff);
 CONSOLE_NETVAR(autoaim, autoaim, cf_server, netcmd_autoaim) {}
 
-// weapons recoil 
+// weapons recoil
 
 VARIABLE_BOOLEAN(weapon_recoil, &default_weapon_recoil, onoff);
 CONSOLE_NETVAR(recoil, weapon_recoil, cf_server, netcmd_recoil) {}
@@ -385,7 +385,7 @@ CONSOLE_COMMAND(thunder, 0)
 void P_AddCommands(void)
 {
    C_AddCommand(creator);
-   
+
    C_AddCommand(colour);
    C_AddCommand(gametype);
    C_AddCommand(skill);
@@ -399,7 +399,7 @@ void P_AddCommands(void)
    C_AddCommand(weapspeed);
    C_AddCommand(bfglook);
    C_AddCommand(p_pitchedflight);
-   
+
    C_AddCommand(fast);
    C_AddCommand(nomonsters);
    C_AddCommand(respawn);
@@ -411,7 +411,7 @@ void P_AddCommands(void)
    C_AddCommand(mon_climb);
    C_AddCommand(mon_helpfriends);
    C_AddCommand(mon_distfriend);
-   
+
    C_AddCommand(timelimit);
    C_AddCommand(fraglimit);
 
@@ -427,10 +427,9 @@ void P_AddCommands(void)
 
    C_AddCommand(enable_lightning);
    C_AddCommand(thunder);
-   
+
    P_Chase_AddCommands();
    P_Skin_AddCommands();
 }
 
 // EOF
-

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Samuel Villarreal
@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -40,7 +40,7 @@ class VPNGImage : public ZoneObject
 {
 private:
    VPNGImagePimpl *pImpl; // Private implementation object to hide libpng
-   
+
 public:
    VPNGImage();
    ~VPNGImage();
@@ -49,7 +49,7 @@ public:
    bool readImage(const void *data);
    bool readFromLump(WadDirectory &dir, int lumpnum);
    bool readFromLump(WadDirectory &dir, const char *lumpname);
- 
+
    // accessors
    uint32_t  getWidth()      const;
    uint32_t  getHeight()     const;
@@ -70,7 +70,7 @@ public:
    static bool     CheckPNGFormat(const void *data);
    static patch_t *LoadAsPatch(int lumpnum, int tag, void **user = NULL,
                                size_t *size = NULL);
-   static patch_t *LoadAsPatch(const char *lumpname, int tag, 
+   static patch_t *LoadAsPatch(const char *lumpname, int tag,
                                void **user = NULL, size_t *size = NULL);
 };
 
@@ -79,4 +79,3 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename);
 #endif
 
 // EOF
-

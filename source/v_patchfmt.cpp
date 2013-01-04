@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -41,7 +41,7 @@ size_t PatchLoader::DefaultPatchSize;
 //
 // PatchLoader::GetDefaultPatch
 //
-// haleyjd 02/05/12: static, returns a default patch graphic to use in 
+// haleyjd 02/05/12: static, returns a default patch graphic to use in
 // place of a missing patch. The graphic is allocated using the PU_PERMANENT
 // zone tag (as of 06/09/12) so that client code cannot free or change the
 // tag of the data even if it tries (which it generally will).
@@ -72,7 +72,7 @@ bool PatchLoader::checkData(void *data, size_t size) const
    if(size < 8)
       return false; // invalid header
 
-   patch_t *patch  = static_cast<patch_t *>(data);   
+   patch_t *patch  = static_cast<patch_t *>(data);
    short    width  = SwapShort(patch->width);
    short    height = SwapShort(patch->height);
 
@@ -238,7 +238,7 @@ void PatchLoader::GetUsedColors(patch_t *patch, byte *pal)
       {
          int   count  = *(rover + 1);
          byte *source = rover + 3;
-         
+
          while(count--)
             pal[*source++] = 1;
 
@@ -248,4 +248,3 @@ void PatchLoader::GetUsedColors(patch_t *patch, byte *pal)
 }
 
 // EOF
-

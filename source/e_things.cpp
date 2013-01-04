@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -60,7 +60,7 @@
 #include "w_wad.h"
 
 // 11/06/11: track generations
-static int edf_thing_generation = 1; 
+static int edf_thing_generation = 1;
 
 // 7/24/05: This is now global, for efficiency's sake
 
@@ -290,7 +290,7 @@ static basicttype_t BasicThingTypes[] =
       MF3_SPACMONSTER|MF3_PASSMOBJ,                             // flags3
    },
    // FriendlyHelper
-   { 
+   {
       MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_FRIEND,                // flags
       MF2_JUMPDOWN|MF2_FOOTCLIP,                                   // flags2
       MF3_WINDTHRUST|MF3_SUPERFRIEND|MF3_SPACMONSTER|MF3_PASSMOBJ, // flags3
@@ -511,7 +511,7 @@ cfg_opt_t edf_tdelta_opts[] =
 #define NUMTHINGCHAINS 307
 
 // hash by name
-static EHashTable<mobjinfo_t, ENCStringHashKey, 
+static EHashTable<mobjinfo_t, ENCStringHashKey,
                   &mobjinfo_t::name, &mobjinfo_t::namelinks> thing_namehash(NUMTHINGCHAINS);
 
 // hash by DeHackEd number
@@ -642,7 +642,7 @@ bool E_AutoAllocThingDEHNum(int thingnum)
    do
    {
       dehnum = edf_alloc_thing_dehnum--;
-   } 
+   }
    while(dehnum >= 0 && E_ThingNumForDEHNum(dehnum) != -1);
 
    // ran out while looking for an unused number?
@@ -656,7 +656,7 @@ bool E_AutoAllocThingDEHNum(int thingnum)
    return true;
 }
 
-// 
+//
 // Processing Functions
 //
 
@@ -704,7 +704,7 @@ static void E_ReallocThings(int numnewthings)
 //
 // E_CollectThings
 //
-// Pre-creates and hashes by name the thingtypes, for purpose 
+// Pre-creates and hashes by name the thingtypes, for purpose
 // of mutual and forward references.
 //
 void E_CollectThings(cfg_t *cfg)
@@ -745,7 +745,7 @@ void E_CollectThings(cfg_t *cfg)
 
    // build hash tables
    E_EDFLogPuts("\t\tBuilding thing hash tables\n");
-   
+
    // cycle through the thingtypes defined in the cfg
    for(i = 0; i < numthingtypes; i++)
    {
@@ -810,7 +810,7 @@ void E_CollectThings(cfg_t *cfg)
 // Does sound name lookup & verification and then stores the resulting
 // sound DeHackEd number into *target.
 //
-static void E_ThingSound(const char *data, const char *fieldname, 
+static void E_ThingSound(const char *data, const char *fieldname,
                          int thingnum, int *target)
 {
    sfxinfo_t *sfx;
@@ -822,13 +822,13 @@ static void E_ThingSound(const char *data, const char *fieldname,
                          mobjinfo[thingnum]->name, fieldname, data);
       sfx = &NullSound;
    }
-   
+
    // haleyjd 03/22/06: support auto-allocation of dehnums where possible
    if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
       *target = sfx->dehackednum;
    else
    {
-      E_EDFLoggedWarning(2, 
+      E_EDFLoggedWarning(2,
                          "Warning: failed to auto-allocate DeHackEd number "
                          "for sound %s\n", sfx->mnemonic);
       *target = 0;
@@ -880,7 +880,7 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 static void E_RemoveMetaStatePtr(mobjinfo_t *mi, MetaState *ms)
 {
    mi->meta->removeObject(ms);
-   
+
    delete ms;
 }
 
@@ -908,7 +908,7 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 {
    MetaObject *obj = NULL;
    MetaState  *ret = NULL;
-   
+
    if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
       ret = static_cast<MetaState *>(obj);
 
@@ -974,14 +974,14 @@ state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
 // E_AddDamageTypeState
 //
 // Adds a deathstate for a particular dynamic damage type to the given
-// mobjinfo. An mobjinfo can only contain one deathstate for each 
+// mobjinfo. An mobjinfo can only contain one deathstate for each
 // damagetype.
 //
-static void E_AddDamageTypeState(mobjinfo_t *info, const char *base, 
+static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
                                  state_t *state, emod_t *mod)
 {
    MetaState *msnode;
-   
+
    // if one exists for this mod already, use it, else create a new one.
    if((msnode = E_GetMetaState(info, E_ModFieldName(base, mod))))
       msnode->setValue(state);
@@ -1038,7 +1038,7 @@ enum
 // overwrite), this routine modifies the mobjinfo's custom damagetype
 // state lists appropriately.
 //
-// The list is a flat list of strings. In add or overwrite mode, every 
+// The list is a flat list of strings. In add or overwrite mode, every
 // set of two strings is a mod/state pair. In remove mode, all the strings
 // are mod types (we don't care about the states in that case).
 //
@@ -1125,8 +1125,8 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 //
 // E_IsMobjInfoDescendantOf
 //
-// Returns an mobjinfo_t * if the given mobjinfo inherits from the given type 
-// by name. Returns NULL otherwise. Self-identity is *not* considered 
+// Returns an mobjinfo_t * if the given mobjinfo inherits from the given type
+// by name. Returns NULL otherwise. Self-identity is *not* considered
 // inheritance.
 //
 mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
@@ -1208,7 +1208,7 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
          // otherwise, check if the indicated type inherits from this one
          if(!strcasecmp(typestr, "super") && mi->parent)
             type = mi->parent;
-         else 
+         else
             type = E_IsMobjInfoDescendantOf(mi, typestr);
       }
       else
@@ -1262,7 +1262,7 @@ static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
    for(i = 0; i < dso->numstates; ++i)
    {
       int *nativefield;
-      
+
       // first see if this is a native state
       if((nativefield = E_GetNativeStateLoc(mi, dso->states[i].label)))
          *nativefield = dso->states[i].state->index;
@@ -1270,7 +1270,7 @@ static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
       {
          MetaState *msnode;
 
-         // there is not a matching native field, so add the state as a 
+         // there is not a matching native field, so add the state as a
          // metastate
          if((msnode = E_GetMetaState(mi, dso->states[i].label)))
             msnode->setValue(dso->states[i].state);
@@ -1307,7 +1307,7 @@ static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
 //
 // haleyjd 06/22/10: Processes the DECORATE state list in a thing
 //
-static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str, 
+static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str,
                                        const char *firststate, bool recursive)
 {
    edecstateout_t *dso;
@@ -1373,7 +1373,7 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
 // Damage Factors
 //
 // haleyjd 09/26/09: damage factors are also stored in the mobjinfo
-// metatable. These floating point properties adjust the amount of damage 
+// metatable. These floating point properties adjust the amount of damage
 // done to objects by specific damage types.
 //
 
@@ -1431,7 +1431,7 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
             cfg_error(cfg, "bad translation lump '%s'\n", value);
          return -1;
       }
-         
+
       *(int *)result = tlnum;
    }
    else
@@ -1485,7 +1485,7 @@ static void E_AddThingToPStack(int num)
 {
    // Overflow shouldn't happen since it would require cyclic
    // inheritance as well, but I'll guard against it anyways.
-   
+
    if(thing_pindex >= NUMMOBJTYPES)
       E_EDFLoggedErr(2, "E_AddThingToPStack: max inheritance depth exceeded\n");
 
@@ -1522,7 +1522,7 @@ static void E_CopyThing(int num, int pnum)
    MetaTable  *meta;
    int         index;
    int         generation;
-   
+
    this_mi = mobjinfo[num];
 
    // must save the following fields in the destination thing
@@ -1584,7 +1584,7 @@ void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
 {
    cfg_t *titleprops;
 
-   if(def && cfg_size(thingsec, "#title") > 0 && 
+   if(def && cfg_size(thingsec, "#title") > 0 &&
       (titleprops = cfg_gettitleprops(thingsec)))
    {
       props.superclass  = cfg_getstr(titleprops, ITEM_TNG_TITLE_SUPER);
@@ -1604,7 +1604,7 @@ void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
 //
 // Get the mobjinfo index for the thing's superclass thingtype.
 //
-static int E_resolveParentThingType(cfg_t *thingsec, 
+static int E_resolveParentThingType(cfg_t *thingsec,
                                     const thingtitleprops_t &props)
 {
    int pnum = -1;
@@ -1612,7 +1612,7 @@ static int E_resolveParentThingType(cfg_t *thingsec,
    // check title props first
    if(props.superclass)
    {
-      // "Mobj" is currently a dummy value and means it is just a plain 
+      // "Mobj" is currently a dummy value and means it is just a plain
       // thing not inheriting from anything else. Maybe in the future it
       // could designate specialized native subclasses of Mobj as well?
       if(strcasecmp(props.superclass, "Mobj"))
@@ -1659,7 +1659,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    // that was processed in a previous EDF generation, so no processing is
    // required; return immediately.
    if(!thingsec)
-      return; 
+      return;
 
    // Retrieve title properties
    E_getThingTitleProps(thingsec, titleprops, def);
@@ -1676,7 +1676,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       if(titleprops.superclass || cfg_size(thingsec, ITEM_TNG_INHERITS) > 0)
          pnum = E_resolveParentThingType(thingsec, titleprops);
-      
+
       if(pnum >= 0)
       {
          cfg_t *parent_tngsec;
@@ -1685,11 +1685,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          // check against cyclic inheritance
          if(!E_CheckThingInherit(pnum))
          {
-            E_EDFLoggedErr(2, 
+            E_EDFLoggedErr(2,
                "E_ProcessThing: cyclic inheritance detected in thing '%s'\n",
                mobjinfo[i]->name);
          }
-         
+
          // add to inheritance stack
          E_AddThingToPStack(pnum);
 
@@ -1697,13 +1697,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          // 12/12/2011: must use cfg_gettsec; note can return NULL
          parent_tngsec = cfg_gettsec(pcfg, EDF_SEC_THING, mobjinfo[pnum]->name);
          E_ProcessThing(pnum, parent_tngsec, pcfg, true);
-         
+
          // copy parent to this thing
          E_CopyThing(i, pnum);
 
          // haleyjd 06/19/09: keep track of parent explicitly
          mobjinfo[i]->parent = mobjinfo[pnum];
-         
+
          // we inherit, so treat defaults as no value
          inherits = true;
       }
@@ -1752,7 +1752,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET_BT(ITEM_TNG_SPAWNSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SPAWNSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_SPAWNSTATE, i, 
+      E_ThingFrame(tempstr, ITEM_TNG_SPAWNSTATE, i,
                    &(mobjinfo[i]->spawnstate));
    }
 
@@ -1824,7 +1824,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_ACTIVESTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_ACTIVESTATE, i, 
+      E_ThingFrame(tempstr, ITEM_TNG_ACTIVESTATE, i,
                    &(mobjinfo[i]->activestate));
    }
 
@@ -1836,7 +1836,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
 
    // ******************************** SOUNDS ********************************
-   
+
    // process seesound
    if(IS_SET(ITEM_TNG_SEESOUND))
    {
@@ -1916,7 +1916,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    if(IS_SET(ITEM_TNG_FASTSPEED))
    {
-      tempint = cfg_getint(thingsec, ITEM_TNG_FASTSPEED);         
+      tempint = cfg_getint(thingsec, ITEM_TNG_FASTSPEED);
       if(tempint)
          G_SpeedSetAddThing(i, mobjinfo[i]->speed, tempint);
    }
@@ -1957,7 +1957,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_DAMAGE))
       mobjinfo[i]->damage = cfg_getint(thingsec, ITEM_TNG_DAMAGE);
 
-   // 09/22/06: process topdamage 
+   // 09/22/06: process topdamage
    if(IS_SET(ITEM_TNG_TOPDAMAGE))
       mobjinfo[i]->topdamage = cfg_getint(thingsec, ITEM_TNG_TOPDAMAGE);
 
@@ -2005,7 +2005,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          mobjinfo[i]->flags2 = results[1];
          mobjinfo[i]->flags3 = results[2];
          mobjinfo[i]->flags4 = results[3];
-         
+
          cflags = true; // values were set from cflags
       }
    }
@@ -2021,7 +2021,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          else
             mobjinfo[i]->flags = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE1);
       }
-      
+
       // process flags2
       if(IS_SET_BT(ITEM_TNG_FLAGS2))
       {
@@ -2060,7 +2060,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ADDFLAGS);
-         
+
       results = deh_ParseFlagsCombined(tempstr);
 
       mobjinfo[i]->flags  |= results[0];
@@ -2089,14 +2089,14 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       deh_bexptr *dp;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_NUKESPEC);
-      
+
       if(!(dp = D_GetBexPtr(tempstr)))
       {
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_ProcessThing: thing '%s': bad nukespecial '%s'\n",
             mobjinfo[i]->name, tempstr);
       }
-      
+
       if(dp->cptr != NULL)
          mobjinfo[i]->nukespec = dp->cptr;
    }
@@ -2110,7 +2110,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       else
          mobjinfo[i]->particlefx = E_ParseFlags(tempstr, &particle_flags);
    }
-      
+
    // 07/13/03: process droptype
    if(IS_SET(ITEM_TNG_DROPTYPE))
    {
@@ -2141,7 +2141,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MOD);
 
       tempint = strtol(tempstr, &endpos, 0);
-      
+
       if(endpos && *endpos == '\0')
          mod = E_DamageTypeForNum(tempint);  // it is a number
       else
@@ -2187,13 +2187,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_DMGSPECIAL))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DMGSPECIAL);
-      
+
       // find the proper dmgspecial number (linear search)
       tempint = E_StrToNumLinear(inflictorTypes, INFLICTOR_NUMTYPES, tempstr);
 
       if(tempint == INFLICTOR_NUMTYPES)
       {
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_ProcessThing: thing '%s': invalid dmgspecial '%s'\n",
             mobjinfo[i]->name, tempstr);
       }
@@ -2334,8 +2334,8 @@ void E_ProcessThings(cfg_t *cfg)
       E_AddThingToPStack(thingnum);
 
       E_ProcessThing(thingnum, thingsec, cfg, true);
-      
-      E_EDFLogPrintf("\t\tFinished thingtype %s (#%d)\n", 
+
+      E_EDFLogPrintf("\t\tFinished thingtype %s (#%d)\n",
                      mobjinfo[thingnum]->name, thingnum);
    }
 
@@ -2515,4 +2515,3 @@ state_t *E_GetStateForMobj(Mobj *mo, const char *label)
 }
 
 // EOF
-

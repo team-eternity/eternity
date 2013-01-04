@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -60,14 +60,14 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
    int length = 0;        // current line width
    unsigned char c;
    patch_t *patch = NULL;
-   
+
    for(; *s; s++)
    {
       c = *s;
 
       if(c >= 128) // color or control code
          continue;
-      
+
       if(c == '\n') // newline
          break;
 
@@ -88,8 +88,8 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
          else
             length += patch->width - font->dw;
       }
-   }   
-   
+   }
+
    return length;
 }
 
@@ -108,7 +108,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
    patch_t *patch = NULL;   // patch for current character -OR-
    byte    *src   = NULL;   // source char for linear font
    int     w;               // width of patch
-   
+
    const unsigned char *ch; // pointer to string
    unsigned int c;          // current character
    int cx, cy, tx;          // current screen position
@@ -125,14 +125,14 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       // haleyjd 03/27/03: use fixedColor if it was set, else use default,
       // which may come from GameModeInfo.
       if(fixedColor)
-      {         
+      {
          color = font->colrngs[fixedColNum];
          fixedColor = false;
       }
       else
          color = font->colrngs[font->colorDefault];
    }
-   
+
    // haleyjd 10/04/05: support alternate colormap sources
    if(altMap)
    {
@@ -140,16 +140,16 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       altMap = NULL;
       useAltMap = true;
    }
-      
+
    ch = (const unsigned char *)s;
 
    // haleyjd 03/29/06: special treatment - if first character is 143
    // (abscenter toggle), then center line
-   
-   cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
+
+   cx = (*ch == TEXT_CONTROL_ABSCENTER) ?
           (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
    cy = y;
-   
+
    while((c = *ch++))
    {
       // color and control codes
@@ -212,7 +212,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       }
       else if(c == '\a') // don't draw BELs in linear fonts
          continue;
-      
+
       // normalize character
       if(font->upper)
          c = toupper(c) - font->start;
@@ -233,7 +233,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
 
       // check against screen bounds
       // haleyjd 12/29/05: text is now clipped by patch drawing code
-      
+
       if(font->linear && font->data)
       {
          // TODO: translucent masked block support
@@ -259,11 +259,11 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
                V_DrawPatchTranslated(tx, cy, screen, patch, color, false);
          }
       }
-      
+
       // move over in x direction, applying width delta if appropriate
       cx += (font->centered ? font->cw : (w - font->dw));
    }
-   
+
    // reset text shadowing on exit
    shadowChar = false;
 
@@ -317,7 +317,7 @@ void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
       fixedColor  = true;
       fixedColNum = color;
    }
-   
+
    V_FontWriteText(font, s, x, y, screen);
 }
 
@@ -340,16 +340,16 @@ int V_FontStringHeight(vfont_t *font, const char *s)
 {
    unsigned char c;
    int height;
-   
+
    height = font->cy; // a string is always at least one line high
-   
+
    // add an extra cy for each newline found
    while((c = (unsigned char)*s++))
    {
       if(c == '\n')
          height += font->cy;
    }
-   
+
    return height;
 }
 
@@ -364,20 +364,20 @@ int V_FontStringWidth(vfont_t *font, const char *s)
    int longest_width = 0; // longest line width so far
    unsigned char c;
    patch_t *patch = NULL;
-   
+
    for(; *s; s++)
    {
       c = (unsigned char)*s;
 
       if(c >= 128) // color or control code
          continue;
-      
+
       if(c == '\n') // newline
       {
-         if(length > longest_width) 
+         if(length > longest_width)
             longest_width = length;
          length = 0; // next line;
-         continue;	  
+         continue;
       }
 
       // normalize character
@@ -398,10 +398,10 @@ int V_FontStringWidth(vfont_t *font, const char *s)
             length += (patch->width - font->dw);
       }
    }
-   
+
    if(length > longest_width)
       longest_width = length; // check last line
-   
+
    return longest_width;
 }
 
@@ -415,12 +415,12 @@ int V_FontCharWidth(vfont_t *font, char pChar)
    unsigned char c;
    int width;
    patch_t *patch = NULL;
-   
+
    c = (unsigned char)pChar;
 
    if(c >= 128) // color or control code
       return 0;
-      
+
    if(c == '\n') // newline
       return 0;
 
@@ -441,7 +441,7 @@ int V_FontCharWidth(vfont_t *font, char pChar)
       else
          width = (patch->width - font->dw);
    }
-   
+
    return width;
 }
 
@@ -540,7 +540,7 @@ void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y
    if(y1 + fullHeight > y2)
    {
       char *rover = msg + strlen(msg) - 1;
-      
+
       // Clip off lines until it fits.
       while(rover != msg && y1 + fullHeight > y2)
       {
@@ -655,4 +655,3 @@ byte *V_FontGetUsedColors(vfont_t *font)
 }
 
 // EOF
-

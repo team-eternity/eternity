@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2001 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -66,7 +66,7 @@ extern int columnofs[];
 extern int global_cmap_index; // haleyjd: NGCS
 
 //=============================================================================
-// 
+//
 // Defines
 
 #define MINZ        (FRACUNIT*4)
@@ -224,7 +224,7 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 {
    if(!top || !bottom)
    {
-      register float *topp = portaltop, *bottomp = portalbottom, 
+      register float *topp = portaltop, *bottomp = portalbottom,
                      *stopp = portaltop + MAX_SCREENWIDTH;
 
       while(topp < stopp)
@@ -280,7 +280,7 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
    }
 
    // the lump is only used for one rotation
-   
+
    if(sprtemp[frame].lump[--rotation] == -1)
    {
       sprtemp[frame].lump[rotation] = lump - firstspritelump;
@@ -327,18 +327,18 @@ static void R_InitSpriteDefs(char **namelist)
 
    if(!numentries || !*namelist)
       return;
-   
+
    // count the number of sprite names
    for(i = 0; namelist[i]; ++i)
       ; // do nothing
-   
+
    numsprites = (signed int)i;
 
    sprites = (spritedef_t *)(Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL));
-   
+
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
-   
+
    hash = estructalloc(rsprhash_s, numentries); // allocate hash table
 
    for(i = 0; i < numentries; ++i) // initialize hash table as empty
@@ -358,7 +358,7 @@ static void R_InitSpriteDefs(char **namelist)
    {
       const char *spritename = namelist[i];
       int j = hash[R_SpriteNameHash(spritename) % numentries].index;
-      
+
       if(j >= 0)
       {
          memset(sprtemp, -1, sizeof(sprtemp));
@@ -401,11 +401,11 @@ static void R_InitSpriteDefs(char **namelist)
                   I_Error("R_InitSprites: No patches found "
                           "for %.8s frame %c\n", namelist[i], frame+'A');
                   break;
-                  
+
                case 0:
                   // only the first rotation is needed
                   break;
-                  
+
                case 1:
                   // must have all 8 frames
                   {
@@ -434,11 +434,11 @@ static void R_InitSpriteDefs(char **namelist)
       {
          // haleyjd 08/15/02: problem here.
          // If j was -1 above, meaning that there are no lumps for the sprite
-         // present, the sprite is left uninitialized. This creates major 
+         // present, the sprite is left uninitialized. This creates major
          // problems in R_PrecacheLevel if a thing tries to subsequently use
          // that sprite. Instead, set numframes to 0 and spriteframes to NULL.
          // Then, check for these values before loading any sprite.
-         
+
          sprites[i].numframes = 0;
          sprites[i].spriteframes = NULL;
       }
@@ -478,26 +478,26 @@ void R_ClearSprites(void)
 //
 // R_PushPost
 //
-// Pushes a new element on the post-BSP stack. 
+// Pushes a new element on the post-BSP stack.
 //
 void R_PushPost(bool pushmasked, planehash_t *overlay)
 {
    poststack_t *post;
-   
+
    if(stacksize == stackmax)
    {
       stackmax += 10;
       pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * stackmax);
    }
-   
+
    post = pstack + stacksize;
-   
+
    post->overlay = overlay;
 
    if(pushmasked)
    {
       int i;
-      
+
       // Get an unused maskedrange object, or allocate a new one
       if(unusedmasked)
       {
@@ -506,15 +506,15 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       }
       else
          post->masked = estructalloc(maskedrange_t, 1);
-         
+
       memset(post->masked, 0, sizeof(*post->masked));
-      
+
       for(i = stacksize - 1; i >= 0; i--)
       {
          if(pstack[i].masked)
             break;
       }
-      
+
       if(i >= 0)
       {
          post->masked->firstds      = pstack[i].masked->lastds;
@@ -522,10 +522,10 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       }
       else
          post->masked->firstds = post->masked->firstsprite = 0;
-         
+
       post->masked->lastds     = ds_p - drawsegs;
       post->masked->lastsprite = num_vissprite;
-      
+
       memcpy(post->masked->ceilingclip, portaltop,    MAX_SCREENWIDTH * sizeof(float));
       memcpy(post->masked->floorclip,   portalbottom, MAX_SCREENWIDTH * sizeof(float));
    }
@@ -562,7 +562,7 @@ static void R_DrawMaskedColumn(column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
-   
+
    column.texheight = 0; // killough 11/98
 
    while(tcolumn->topdelta != 0xff)
@@ -596,7 +596,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
-   
+
    column.texheight = 0; // killough 11/98
 
    while(tcol)
@@ -646,21 +646,21 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       R_DrawParticle(vis);
       return;
    }
-  
+
    patch = PatchLoader::CacheNum(wGlobalDir, vis->patch+firstspritelump, PU_CACHE);
-   
+
    column.colormap = vis->colormap;
-   
+
    // killough 4/11/98: rearrange and handle translucent sprites
    // mixed with translucent/non-translucent 2s normals
 
    if(vis->colour)
       column.translation = translationtables[vis->colour - 1];
-   
+
    column.translevel = vis->translucency;
    column.translevel += 1;
-   tranmap = main_tranmap; // killough 4/11/98   
-   
+   tranmap = main_tranmap; // killough 4/11/98
+
    // haleyjd: faster selection for drawstyles
    colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];
 
@@ -670,7 +670,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    maskedcolumn.scale = vis->scale;
    maskedcolumn.ytop = vis->ytop;
    frac = vis->startx;
-   
+
    // haleyjd 10/10/02: foot clipping
    if(vis->footclip)
    {
@@ -693,11 +693,11 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             mfloorclip[column.x] = baseclip;
 
          texturecolumn = (int)frac;
-         
+
          // haleyjd 09/16/07: Cardboard requires this rangecheck, made nonfatal
          if(texturecolumn < 0 || texturecolumn >= w)
             continue;
-         
+
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
          R_DrawMaskedColumn(tcolumn);
       }
@@ -707,11 +707,11 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       for(column.x = vis->x1; column.x <= vis->x2; column.x++, frac += vis->xstep)
       {
          texturecolumn = (int)frac;
-         
+
          // haleyjd 09/16/07: Cardboard requires this rangecheck, made nonfatal
          if(texturecolumn < 0 || texturecolumn >= w)
             continue;
-         
+
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
          R_DrawMaskedColumn(tcolumn);
       }
@@ -779,13 +779,13 @@ static void R_ProjectSprite(Mobj *thing)
    }
 
    sprdef = &sprites[thing->sprite];
-   
+
    if(((thing->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
       !(sprdef->spriteframes))
    {
       // haleyjd 08/12/02: modified error handling
       doom_printf(FC_ERROR "Bad frame %i for sprite %s",
-                  thing->frame & FF_FRAMEMASK, 
+                  thing->frame & FF_FRAMEMASK,
                   spritelist[thing->sprite]);
       if(thing->state)
       {
@@ -798,7 +798,7 @@ static void R_ProjectSprite(Mobj *thing)
    }
 
    sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
-   
+
    if(sprframe->rotate)
    {
       // SoM: Use old rotation code
@@ -864,7 +864,7 @@ static void R_ProjectSprite(Mobj *thing)
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
    heightsec = thing->subsector->sector->heightsec;
-   
+
    if(heightsec != -1)   // only clip things which are in special sectors
    {
       // haleyjd: and yet ANOTHER assumption!
@@ -880,17 +880,17 @@ static void R_ProjectSprite(Mobj *thing)
            thing->z >= sectors[heightsec].ceilingheight)
          return;
    }
-  
+
    // haleyjd 10/09/06: optional vissprite limit ^____^
    if(r_vissprite_limit != -1 && ++r_vissprite_count > r_vissprite_limit)
       return;
 
    // store information in a vissprite
    vis = R_NewVisSprite();
-   
-   // killough 3/27/98: save sector for special clipping later   
+
+   // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
-   
+
    vis->colour = thing->colour;
    vis->gx = thing->x;
    vis->gy = thing->y;
@@ -915,7 +915,7 @@ static void R_ProjectSprite(Mobj *thing)
       vis->startx += vis->xstep * (vis->x1 - x1);
 
    // haleyjd 09/01/02
-   vis->translucency = static_cast<uint16_t>(thing->translucency - 1); 
+   vis->translucency = static_cast<uint16_t>(thing->translucency - 1);
 
    // haleyjd 11/14/02: ghost flag
    if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
@@ -938,7 +938,7 @@ static void R_ProjectSprite(Mobj *thing)
    else if(LevelInfo.useFullBright && IS_FULLBRIGHT(thing)) // haleyjd
       vis->colormap = fullcolormap;       // full bright  // killough 3/20/98
    else
-   {     
+   {
       // diminished light
       // SoM: ANYRES
       int index = (int)(idist * 2560.0f);
@@ -953,7 +953,7 @@ static void R_ProjectSprite(Mobj *thing)
    if(thing->flags & MF_SHADOW)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;
    else if(general_translucency)
-   {   
+   {
       if(thing->flags3 & MF3_TLSTYLEADD)
          vis->drawstyle = VS_DRAWSTYLE_ADD;
       else if(vis->translucency < FRACUNIT - 1)
@@ -973,7 +973,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 {
    Mobj *thing;
    int    lightnum;
-   
+
    // BSP is traversed by subsector.
    // A sector might have been split into several
    //  subsectors during BSP building.
@@ -981,21 +981,21 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 
    if(sec->validcount == validcount)
       return;
-   
+
    // Well, now it will be done.
    sec->validcount = validcount;
-   
+
    lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
-   
+
    if(lightnum < 0)
       spritelights = scalelight[0];
    else if(lightnum >= LIGHTLEVELS)
       spritelights = scalelight[LIGHTLEVELS-1];
    else
       spritelights = scalelight[lightnum];
-   
+
    // Handle all things in sector.
-   
+
    for(thing = sec->thinglist; thing; thing = thing->snext)
       R_ProjectSprite(thing);
 
@@ -1020,38 +1020,38 @@ static void R_DrawPSprite(pspdef_t *psp)
    float         tx;
    float         x1, x2, w;
    float         oldycenter;
-   
+
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    int            lump;
    bool           flip;
    vissprite_t   *vis;
    vissprite_t    avis;
-   
+
    // haleyjd: total invis. psprite disable
-   
+
    if(viewplayer->mo->flags2 & MF2_DONTDRAW)
       return;
-   
+
    // decide which patch to use
    // haleyjd 08/14/02: should not be rangecheck, modified error
    // handling
-   
+
    if((unsigned int)psp->state->sprite >= (unsigned int)numsprites)
    {
-      doom_printf(FC_ERROR "Bad sprite number %i", 
+      doom_printf(FC_ERROR "Bad sprite number %i",
                   psp->state->sprite);
       psp->state->sprite = blankSpriteNum;
       psp->state->frame = 0;
    }
 
    sprdef = &sprites[psp->state->sprite];
-   
+
    if(((psp->state->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
       !(sprdef->spriteframes))
    {
       doom_printf(FC_ERROR "Bad frame %d for sprite %s",
-                 (int)(psp->state->frame & FF_FRAMEMASK), 
+                 (int)(psp->state->frame & FF_FRAMEMASK),
                  spritelist[psp->state->sprite]);
       psp->state->sprite = blankSpriteNum;
       psp->state->frame = 0;
@@ -1060,10 +1060,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    }
 
    sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
-   
+
    lump = sprframe->lump[0];
    flip = !!(sprframe->flip[0] ^ lefthanded);
-   
+
    // calculate edges of the shape
    tx  = M_FixedToFloat(psp->sx) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
@@ -1072,28 +1072,28 @@ static void R_DrawPSprite(pspdef_t *psp)
    w = (float)(spritewidth[lump] >> FRACBITS);
 
    x1 = (view.xcenter + tx * view.pspritexscale);
-   
+
    // off the right side
    if(x1 > viewwidth)
       return;
-   
+
    tx += w;
    x2  = (view.xcenter + tx * view.pspritexscale) - 1.0f;
-   
+
    // off the left side
    if(x2 < 0)
       return;
- 
+
    if(lefthanded)
    {
       float tmpx = x1;
       x1 = view.width - x2;
       x2 = view.width - tmpx;    // viewwidth-x1
    }
-   
+
    // store information in a vissprite
    vis = &avis;
-   
+
    // killough 12/98: fix psprite positioning problem
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
                       (psp->sy - spritetopoffset[lump]);
@@ -1107,7 +1107,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
    vis->sector = viewplayer->mo->subsector->sector - sectors;
-   
+
    // haleyjd 07/01/07: use actual pixel range to scale graphic
    if(flip)
    {
@@ -1119,15 +1119,15 @@ static void R_DrawPSprite(pspdef_t *psp)
       vis->xstep  = w / (x2 - x1 + 1.0f);
       vis->startx = 0.0f;
    }
-   
+
    if(vis->x1 > x1)
       vis->startx += vis->xstep * (vis->x1-x1);
-   
+
    vis->patch = lump;
 
    vis->drawstyle = VS_DRAWSTYLE_NORMAL;
-   
-   if(viewplayer->powers[pw_invisibility] > 4*32 || 
+
+   if(viewplayer->powers[pw_invisibility] > 4*32 ||
       viewplayer->powers[pw_invisibility] & 8)
    {
       // sf: shadow draw now detected by flags
@@ -1148,15 +1148,15 @@ static void R_DrawPSprite(pspdef_t *psp)
       vis->colormap = fullcolormap;            // full bright // killough 3/20/98
    else
       vis->colormap = spritelights[MAXLIGHTSCALE-1];  // local light
-   
+
    if(psp->trans && general_translucency) // translucent gunflash
       vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
 
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
-   
+
    R_DrawVisSprite(vis, vis->x1, vis->x2);
-   
+
    view.ycenter = oldycenter;
 }
 
@@ -1169,10 +1169,10 @@ static void R_DrawPlayerSprites(void)
    pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
-   
+
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
-   
+
    R_SectorColormap(viewplayer->mo->subsector->sector);
 
    // get light level
@@ -1181,7 +1181,7 @@ static void R_DrawPlayerSprites(void)
 
    R_FakeFlat(viewplayer->mo->subsector->sector, &tmpsec,
               &floorlightlevel, &ceilinglightlevel, 0);
-   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
+   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1))
                  + (extralight * LIGHTBRIGHT);
 
    if(lightnum < 0)
@@ -1193,7 +1193,7 @@ static void R_DrawPlayerSprites(void)
 
    for(i = 0; i < viewwidth; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
-   
+
    // clip to screen bounds
    mfloorclip = pscreenheightarray;
    mceilingclip = zeroarray;
@@ -1241,7 +1241,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
 
       msort(s1, t, n1);
       msort(s2, t, n2);
-      
+
       while((*s1)->dist > (*s2)->dist ?
             (*d++ = *s1++, --n1) : (*d++ = *s2++, --n2));
 
@@ -1249,7 +1249,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
          bcopyp(d, s2, n2);
       else
          bcopyp(d, s1, n1);
-      
+
       bcopyp(s, t, n);
    }
    else
@@ -1279,16 +1279,16 @@ static void R_SortVisSprites(void)
    if(num_vissprite)
    {
       int i = num_vissprite;
-      
+
       // If we need to allocate more pointers for the vissprites,
       // allocate as many as were allocated for sprites -- killough
       // killough 9/22/98: allocate twice as many
-      
+
       if(num_vissprite_ptrs < num_vissprite*2)
       {
          efree(vissprite_ptrs);  // better than realloc -- no preserving needed
          num_vissprite_ptrs = num_vissprite_alloc * 2;
-         vissprite_ptrs = emalloc(vissprite_t **, 
+         vissprite_ptrs = emalloc(vissprite_t **,
                                   num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
@@ -1297,7 +1297,7 @@ static void R_SortVisSprites(void)
 
       // killough 9/22/98: replace qsort with merge sort, since the keys
       // are roughly in order to begin with, due to BSP rendering.
-      
+
       msort(vissprite_ptrs, vissprite_ptrs + num_vissprite, num_vissprite);
    }
 }
@@ -1311,20 +1311,20 @@ static void R_SortVisSprites(void)
 static void R_SortVisSpriteRange(int first, int last)
 {
    unsigned int numsprites = last - first;
-   
+
    if(numsprites > 0)
    {
       int i = numsprites;
-      
+
       // If we need to allocate more pointers for the vissprites,
       // allocate as many as were allocated for sprites -- killough
       // killough 9/22/98: allocate twice as many
-      
+
       if(num_vissprite_ptrs < numsprites*2)
       {
          efree(vissprite_ptrs);  // better than realloc -- no preserving needed
          num_vissprite_ptrs = num_vissprite_alloc * 2;
-         vissprite_ptrs = emalloc(vissprite_t **, 
+         vissprite_ptrs = emalloc(vissprite_t **,
                                   num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
@@ -1333,7 +1333,7 @@ static void R_SortVisSpriteRange(int first, int last)
 
       // killough 9/22/98: replace qsort with merge sort, since the keys
       // are roughly in order to begin with, due to BSP rendering.
-      
+
       msort(vissprite_ptrs, vissprite_ptrs + numsprites, numsprites);
    }
 }
@@ -1351,21 +1351,21 @@ void R_DrawSprite(vissprite_t *spr)
    int     r2;
    float dist;
    float fardist;
-   
+
    for(x = spr->x1; x <= spr->x2; ++x)
       clipbot[x] = cliptop[x] = -2;
 
    // Scan drawsegs from end to start for obscuring segs.
    // The first drawseg that has a greater scale is the clip seg.
-   
+
    // Modified by Lee Killough:
    // (pointer check was originally nonportable
    // and buggy, by going past LEFT end of array):
-   
+
    //    for (ds=ds_p-1 ; ds >= drawsegs ; ds--)    old buggy code
 
    for(ds = ds_p; ds-- > drawsegs; )  // new -- killough
-   {      
+   {
       // determine if the drawseg obscures the sprite
       if(ds->x1 > spr->x2 || ds->x2 < spr->x1 ||
          (!ds->silhouette && !ds->maskedtexturecol))
@@ -1392,7 +1392,7 @@ void R_DrawSprite(vissprite_t *spr)
             R_RenderMaskedSegRange(ds, r1, r2);
          continue;                // seg is behind sprite
       }
-      
+
       // clip this piece of the sprite
       // killough 3/27/98: optimized and made much shorter
 
@@ -1414,7 +1414,7 @@ void R_DrawSprite(vissprite_t *spr)
    if(spr->heightsec != -1) // only things in specially marked sectors
    {
       float h, mh;
-      
+
       int phs = viewcamera ? viewcamera->heightsec :
                    viewplayer->mo->subsector->sector->heightsec;
 
@@ -1459,12 +1459,12 @@ void R_DrawSprite(vissprite_t *spr)
 
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
-   
+
    for(x = spr->x1; x <= spr->x2; ++x)
    {
       if(clipbot[x] == -2)
          clipbot[x] = view.height - 1.0f;
-      
+
       if(cliptop[x] == -2)
          cliptop[x] = 0.0f;
    }
@@ -1560,7 +1560,7 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
       // The first drawseg that has a greater scale is the clip seg.
 
       for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
-      {      
+      {
          // determine if the drawseg obscures the sprite
          if(ds->x1 > spr->x2 || ds->x2 < spr->x1 ||
             (!ds->silhouette && !ds->maskedtexturecol))
@@ -1610,7 +1610,7 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    if(spr->heightsec != -1) // only things in specially marked sectors
    {
       float h, mh;
-      
+
       int phs = viewcamera ? viewcamera->heightsec :
                    viewplayer->mo->subsector->sector->heightsec;
 
@@ -1687,12 +1687,12 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
-   
+
    for(x = spr->x1; x <= spr->x2; ++x)
    {
       if(clipbot[x] == -2 || clipbot[x] > pbottom[x])
          clipbot[x] = pbottom[x];
-      
+
       if(cliptop[x] == -2 || cliptop[x] < ptop[x])
          cliptop[x] = ptop[x];
     }
@@ -1713,7 +1713,7 @@ void R_DrawPostBSP(void)
    drawseg_t      *ds;
    int            firstds, lastds, firstsprite, lastsprite;
    int            i;
- 
+
    while(stacksize > 0)
    {
       --stacksize;
@@ -1729,7 +1729,7 @@ void R_DrawPostBSP(void)
          {
             R_SortVisSpriteRange(firstsprite, lastsprite);
 
-            // haleyjd 04/25/10: 
+            // haleyjd 04/25/10:
             // e6y
             // Reducing of cache misses in the following R_DrawSprite()
             // Makes sense for scenes with huge amount of drawsegs.
@@ -1741,8 +1741,8 @@ void R_DrawPostBSP(void)
                {
                   // haleyjd: fix reallocation to track 2x size
                   drawsegs_xrange_size =  2 * (maxdrawsegs+1);
-                  drawsegs_xrange = 
-                     erealloc(drawsegs_xrange_t *, drawsegs_xrange, 
+                  drawsegs_xrange =
+                     erealloc(drawsegs_xrange_t *, drawsegs_xrange,
                               drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                }
                for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
@@ -1775,22 +1775,22 @@ void R_DrawPostBSP(void)
          for(ds=drawsegs + lastds ; ds-- > drawsegs + firstds; )  // new -- killough
             if(ds->maskedtexturecol)
                R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
-         
+
          // Done with the masked range
          pstack[stacksize].masked = NULL;
          masked->next = unusedmasked;
          unusedmasked = masked;
-         
+
          masked = NULL;
       }
-       
-      
+
+
       if(pstack[stacksize].overlay)
       {
          // haleyjd 09/04/06: handle through column engine
          if(r_column_engine->ResetBuffer)
             r_column_engine->ResetBuffer();
-            
+
          R_DrawPlanes(pstack[stacksize].overlay);
       }
    }
@@ -1806,7 +1806,7 @@ void R_DrawPostBSP(void)
 // haleyjd 09/30/01
 //
 // Particle Rendering
-// This incorporates itself mostly seamlessly within the vissprite system, 
+// This incorporates itself mostly seamlessly within the vissprite system,
 // incurring only minor changes to the functions above.
 //
 // For code adapted from ZDoom:
@@ -1814,7 +1814,7 @@ void R_DrawPostBSP(void)
 // Copyright 1998-2012 Randy Heit  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
 // 1. Redistributions of source code must retain the above copyright
@@ -1872,12 +1872,12 @@ void R_InitParticles(void)
 
    if((i = M_CheckParm("-numparticles")) && i < myargc - 1)
       numParticles = atoi(myargv[i+1]);
-   
+
    if(numParticles == 0) // assume default
       numParticles = 4000;
    else if(numParticles < 100)
       numParticles = 100;
-   
+
    Particles = (particle_t *)(Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL));
    R_ClearParticles();
 }
@@ -1890,7 +1890,7 @@ void R_InitParticles(void)
 void R_ClearParticles(void)
 {
    int i;
-   
+
    memset(Particles, 0, numParticles*sizeof(particle_t));
    activeParticles = -1;
    inactiveParticles = 0;
@@ -1909,7 +1909,7 @@ static void R_ProjectParticle(particle_t *particle)
    vissprite_t *vis;
    sector_t    *sector = NULL;
    int heightsec = -1;
-   
+
    float tempx, tempy, ty1, tx1, tx2, tz;
    float idist, xscale, yscale;
    float y1, y2;
@@ -1934,13 +1934,13 @@ static void R_ProjectParticle(particle_t *particle)
    idist = 1.0f / ty1;
    xscale = idist * view.xfoc;
    yscale = idist * view.yfoc;
-   
+
    // calculate edges of the shape
    x1 = (int)(view.xcenter + (tx1 * xscale));
    x2 = (int)(view.xcenter + (tx2 * xscale));
 
    if(x2 < x1) x2 = x1;
-   
+
    // off either side?
    if(x1 >= viewwidth || x2 < 0)
       return;
@@ -1949,47 +1949,47 @@ static void R_ProjectParticle(particle_t *particle)
 
    y1 = (view.ycenter - (tz * yscale));
    y2 = (view.ycenter - ((tz - 1.0f) * yscale));
-   
+
    if(y2 < 0.0f || y1 >= view.height)
       return;
-   
+
    gzt = particle->z + 1;
-   
+
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   
+
    {
       // haleyjd 02/20/04: use subsector now stored in particle
       subsector_t *subsector = particle->subsector;
       sector = subsector->sector;
       heightsec = sector->heightsec;
 
-      if(particle->z < sector->floorheight || 
+      if(particle->z < sector->floorheight ||
 	 particle->z > sector->ceilingheight)
 	 return;
    }
-   
+
    // only clip particles which are in special sectors
    if(heightsec != -1)
    {
       int phs = viewcamera ? viewcamera->heightsec :
                 viewplayer->mo->subsector->sector->heightsec;
-      
-      if(phs != -1 && 
+
+      if(phs != -1 &&
 	 viewz < sectors[phs].floorheight ?
 	 particle->z >= sectors[heightsec].floorheight :
          gzt < sectors[heightsec].floorheight)
          return;
 
-      if(phs != -1 && 
+      if(phs != -1 &&
 	 viewz > sectors[phs].ceilingheight ?
 	 gzt < sectors[heightsec].ceilingheight &&
 	 viewz >= sectors[heightsec].ceilingheight :
          particle->z >= sectors[heightsec].ceilingheight)
          return;
    }
-   
+
    // store information in a vissprite
    vis = R_NewVisSprite();
    vis->heightsec = heightsec;
@@ -2009,13 +2009,13 @@ static void R_ProjectParticle(particle_t *particle)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = yscale;
-   vis->sector = sector - sectors;  
-   
+   vis->sector = sector - sectors;
+
    if(fixedcolormap ==
       fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
    {
       vis->colormap = fixedcolormap;
-   } 
+   }
    else
    {
       R_SectorColormap(sector);
@@ -2030,23 +2030,23 @@ static void R_ProjectParticle(particle_t *particle)
          sector_t tmpsec;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 
-         R_FakeFlat(sector, &tmpsec, &floorlightlevel, 
+         R_FakeFlat(sector, &tmpsec, &floorlightlevel,
                     &ceilinglightlevel, false);
 
          lightnum = (floorlightlevel + ceilinglightlevel) / 2;
          lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
-         
+
          if(lightnum >= LIGHTLEVELS || fixedcolormap)
-            ltable = scalelight[LIGHTLEVELS - 1];      
+            ltable = scalelight[LIGHTLEVELS - 1];
          else if(lightnum < 0)
             ltable = scalelight[0];
          else
             ltable = scalelight[lightnum];
-         
+
          index = (int)(idist * 2560.0f);
          if(index >= MAXLIGHTSCALE)
             index = MAXLIGHTSCALE - 1;
-         
+
          vis->colormap = ltable[index];
       }
    }
@@ -2073,7 +2073,7 @@ static void R_DrawParticle(vissprite_t *vis)
 
    // due to square shape, it is unnecessary to clip the entire
    // particle
-   
+
    if(vis->ybottom > mfloorclip[ox1])
       vis->ybottom = mfloorclip[ox1];
    if(vis->ybottom > mfloorclip[ox2])
@@ -2094,8 +2094,8 @@ static void R_DrawParticle(vissprite_t *vis)
       byte *dest;
 
       xcount = x2 - x1 + 1;
-      
-      ycount = yh - yl;      
+
+      ycount = yh - yl;
       if(ycount < 0)
          return;
       ++ycount;
@@ -2126,10 +2126,10 @@ static void R_DrawParticle(vissprite_t *vis)
                bg = bg2rgb[*dest];
                bg = (fg + bg) | 0x1f07c1f;
                *dest++ = RGB32k[0][0][bg & (bg >> 15)];
-            } 
+            }
             while(--count);
             dest += spacing;  // go to next row
-         } 
+         }
          while(--ycount);
       }
       else // opaque (fast, and looks terrible)
@@ -2137,12 +2137,12 @@ static void R_DrawParticle(vissprite_t *vis)
          do // step in y
          {
             int count = xcount;
-            
+
             do // step in x
                *dest++ = color;
             while(--count);
             dest += spacing;  // go to next row
-         } 
+         }
          while(--ycount);
       } // end else [!general_translucency]
    } // end local block

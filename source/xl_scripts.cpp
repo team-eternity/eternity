@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -84,13 +84,13 @@ protected:
 
 public:
    // Constructor / Destructor
-   XLTokenizer(const char *str) 
+   XLTokenizer(const char *str)
       : token(32), state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
-   { 
+   {
    }
 
    int getNextToken();
-   
+
    // Accessors
    int getTokenType() const { return tokentype; }
    qstring &getToken() { return token; }
@@ -110,7 +110,7 @@ void XLTokenizer::doStateScan()
    case '\r':
    case '\n':
       // remain in this state
-      break; 
+      break;
    case '\0': // end of input
       tokentype = TOKEN_EOF;
       state     = STATE_DONE;
@@ -131,7 +131,7 @@ void XLTokenizer::doStateScan()
 }
 
 // Scanning inside a token
-void XLTokenizer::doStateInToken() 
+void XLTokenizer::doStateInToken()
 {
    switch(input[idx])
    {
@@ -143,11 +143,11 @@ void XLTokenizer::doStateInToken()
       state = STATE_DONE;
       break;
    case '\0':  // end of input -OR- start of a comment
-   case ';':   
+   case ';':
       --idx;   // backup, next call will handle it in STATE_SCAN.
       state = STATE_DONE;
       break;
-   default: 
+   default:
       token += input[idx];
       break;
    }
@@ -203,7 +203,7 @@ int XLTokenizer::getNextToken()
 }
 
 //=============================================================================
-// 
+//
 // XLParser
 //
 // This is a module-local base class for Hexen lump parsers.
@@ -229,7 +229,7 @@ public:
    XLParser(const char *pLumpname) : lumpname(pLumpname), lumpdata(NULL) {}
 
    // Destructor
-   virtual ~XLParser() 
+   virtual ~XLParser()
    {
       // kill off any lump that might still be cached
       if(lumpdata)
@@ -252,7 +252,7 @@ public:
 //
 // Parses a single lump.
 //
-void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump) 
+void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
 {
    // free any previously loaded lump
    if(lumpdata)
@@ -330,12 +330,12 @@ class XLSndInfoParser : public XLParser
 {
 protected:
    static const char *sndInfoKwds[]; // see below class.
-   
+
    // keyword enumeration
    enum
    {
      KWD_ALIAS,
-     KWD_AMBIENT,     
+     KWD_AMBIENT,
      KWD_ARCHIVEPATH,
      KWD_EDFOVERRIDE,
      KWD_ENDIF,
@@ -389,14 +389,14 @@ protected:
 
 public:
    // Constructor
-   XLSndInfoParser() 
+   XLSndInfoParser()
       : XLParser("SNDINFO"), soundname(32), edfOverRide(false), musicmapnum(0)
    {
    }
 };
 
 // Keywords for SNDINFO
-// Note that all ZDoom extensions are included, even though they are not 
+// Note that all ZDoom extensions are included, even though they are not
 // supported yet. This is so that they are properly documented and ignored in
 // the meanwhile.
 const char *XLSndInfoParser::sndInfoKwds[] =
@@ -419,7 +419,7 @@ const char *XLSndInfoParser::sndInfoKwds[] =
    "$playercompat",
    "$playersound",
    "$playersounddup",
-   "$random",   
+   "$random",
    "$registered",
    "$rolloff",
    "$singular",
@@ -429,7 +429,7 @@ const char *XLSndInfoParser::sndInfoKwds[] =
 //
 // State Handlers
 //
-   
+
 // Expecting the start of a SNDINFO command or sound definition
 void XLSndInfoParser::doStateExpectCmd(XLTokenizer &token)
 {
@@ -525,7 +525,7 @@ void XLSndInfoParser::doStateExpectSndLump(XLTokenizer &token)
       qstring &soundlump = token.getToken();
 
       // Lump must exist, otherwise we create erroneous sounds if there are
-      // unknown keywords in the lump. Thanks to ZDoom for defining such a 
+      // unknown keywords in the lump. Thanks to ZDoom for defining such a
       // clean, context-free, grammar-based language with delimiters :>
       if(soundlump.length() <= 8 &&
          waddir->checkNumForName(soundlump.constPtr()) != -1)
@@ -596,7 +596,7 @@ void XLSndInfoParser::startLump()
 
 //=============================================================================
 //
-// Risen3D MUSINFO 
+// Risen3D MUSINFO
 //
 
 class XLMusInfoParser : public XLParser
@@ -631,7 +631,7 @@ protected:
 
 public:
    // Constructor
-   XLMusInfoParser() 
+   XLMusInfoParser()
       : XLParser("MUSINFO"), state(STATE_EXPECTMAP), mapname(), mapnum(0)
    {
    }
@@ -721,7 +721,7 @@ void XLMusInfoParser::doStateExpectMusLump(XLTokenizer &token)
 {
    lumpname = token.getToken();
    pushMusInfoDef(); // push out the complete definition
-   
+
    // expecting either another mapnum, or a new mapname token
    state = STATE_EXPECTMAPNUM2;
 }
@@ -758,7 +758,7 @@ void XLMusInfoParser::startLump()
 }
 
 //=============================================================================
-// 
+//
 // External Interface
 //
 
@@ -777,4 +777,3 @@ void XL_ParseHexenScripts()
 }
 
 // EOF
-

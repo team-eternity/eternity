@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,7 +23,7 @@
 //
 // basic console commands and variables for controlling
 // the console itself.
-// 
+//
 // By Simon Howard
 //
 // NETCODE_FIXME -- CONSOLE_FIXME
@@ -75,12 +75,12 @@ CONSOLE_COMMAND(alias, 0)
    const char *temp;
 
    // haleyjd 04/14/03: rewritten
-   
+
    if(!Console.argc)
    {
       // list em
       C_Printf(FC_HI"alias list:" FC_NORMAL "\n\n");
-      
+
       alias = aliases.next;
       if(!alias)
       {
@@ -96,21 +96,21 @@ CONSOLE_COMMAND(alias, 0)
       }
       return;
    }
-  
+
    if(Console.argc == 1)  // only one, remove alias
    {
       C_RemoveAlias(Console.argv[0]);
       return;
    }
-   
+
    // find it or make a new one
-   
+
    temp = Console.args.bufferAt(Console.argv[0]->length());
-   
+
    // QSTR_FIXME: needs a routine
    while(*temp == ' ')
       temp++;
-   
+
    C_NewAlias(Console.argv[0]->constPtr(), temp);
 }
 
@@ -146,10 +146,10 @@ CONSOLE_COMMAND(cmdlist, 0)
          masklen = len;
       }
    }
-   
+
    // list each command from the hash chains
-   
-   // 5/8/99 change: use hash table and 
+
+   // 5/8/99 change: use hash table and
    // alphabetical order by first letter
    // haleyjd 07/08/04: fixed to run for last letter
 
@@ -159,7 +159,7 @@ CONSOLE_COMMAND(cmdlist, 0)
       {
          for(current = cmdroots[i]; current; current = current->next)
          {
-            if(current->name[0] == charnum && 
+            if(current->name[0] == charnum &&
                (!mask || !strncasecmp(current->name, mask, masklen)) &&
                !(current->flags & cf_hidden))
             {
@@ -272,7 +272,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
             if(def)
             {
-               C_Printf("Default value: %s\n", 
+               C_Printf("Default value: %s\n",
                         var->defines[def->defaultvalue_i - var->min]);
             }
          }
@@ -285,7 +285,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
             }
             else if(var->min == UL)
             {
-               C_Printf("Value range for '%s':\n Any integer <= %d\n", 
+               C_Printf("Value range for '%s':\n Any integer <= %d\n",
                         name, var->max);
             }
             else if(var->max == UL)
@@ -295,7 +295,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
             }
             else
             {
-               C_Printf("Value range for '%s':\n %d through %d\n", 
+               C_Printf("Value range for '%s':\n %d through %d\n",
                         name, var->min, var->max);
             }
 
@@ -314,7 +314,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
             if(def)
             {
-               C_Printf("Default value: %s\n", 
+               C_Printf("Default value: %s\n",
                         var->defines[def->defaultvalue_b]);
             }
          }
@@ -334,7 +334,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
          }
          else if(var->dmin == UL)
          {
-            C_Printf("Value range for '%s':\n any float <= %f\n", 
+            C_Printf("Value range for '%s':\n any float <= %f\n",
                      name, var->dmax);
          }
          else if(var->dmax == UL)
@@ -344,7 +344,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
          }
          else
          {
-            C_Printf("Value range for '%s':\n %f through %f\n", 
+            C_Printf("Value range for '%s':\n %f through %f\n",
                      name, var->dmin, var->dmax);
          }
 
@@ -355,7 +355,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
       default:
          if(var->max != UL)
          {
-            C_Printf("Value for '%s':\n String of max %d length\n", 
+            C_Printf("Value for '%s':\n String of max %d length\n",
                      name, var->max);
          }
          else
@@ -409,7 +409,7 @@ void C_AddCommands()
   C_AddCommand(ver_date);
   C_AddCommand(ver_time); // haleyjd
   C_AddCommand(ver_name);
-  
+
   C_AddCommand(c_height);
   C_AddCommand(c_speed);
   C_AddCommand(cmdlist);
@@ -426,7 +426,7 @@ void C_AddCommands()
 
   // SoM: I can never remember the values for a console variable
   C_AddCommand(cvarhelp);
-  
+
   // add commands in other modules
   AM_AddCommands();
   Cheat_AddCommands();
@@ -466,4 +466,3 @@ AMX_NATIVE_INFO ccmd_Natives[] =
 #endif
 
 // EOF
-

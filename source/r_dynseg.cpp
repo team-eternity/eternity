@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -71,8 +71,8 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
    if(po->numDSS >= po->numDSSAlloc)
    {
       po->numDSSAlloc = po->numDSSAlloc ? po->numDSSAlloc * 2 : 8;
-      po->dynaSubsecs = 
-         erealloc(subsector_t **, po->dynaSubsecs, 
+      po->dynaSubsecs =
+         erealloc(subsector_t **, po->dynaSubsecs,
                   po->numDSSAlloc * sizeof(subsector_t *));
    }
    po->dynaSubsecs[po->numDSS++] = ss;
@@ -194,7 +194,7 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 
       link = link->dllNext;
    }
-   
+
    // there is not one, so create a new one and link it in
    rpo = R_GetFreeRPolyObj();
 
@@ -219,7 +219,7 @@ void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 {
    double dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
    double dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
- 
+
    lseg->offset = static_cast<float>(sqrt(dx * dx + dy * dy));
 }
 
@@ -260,7 +260,7 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
    double a1 = lseg->v2->fy - lseg->v1->fy;
    double b1 = lseg->v1->fx - lseg->v2->fx;
    double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
-   
+
    // haleyjd 05/13/09: massive optimization
    double a2 = -bsp->a;
    double b2 = -bsp->b;
@@ -269,11 +269,11 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
    double d = a1 * b2 - a2 * b1;
 
    // lines are parallel?? shouldn't be.
-   // FIXME: could this occur due to roundoff error in R_PointOnSide? 
+   // FIXME: could this occur due to roundoff error in R_PointOnSide?
    //        Guess we'll find out the hard way ;)
    //        If so I'll need my own R_PointOnSide routine with some
    //        epsilon values.
-   if(d == 0.0) 
+   if(d == 0.0)
       return false;
 
    *x = (float)((b1 * c2 - b2 * c1) / d);
@@ -331,14 +331,14 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             // both vertices are within epsilon distance; classify the seg
             // with respect to the polyobject center point
             side_v1 = side_v2 = R_PointOnSide(dseg->polyobj->centerPt.x,
-                                              dseg->polyobj->centerPt.y, 
+                                              dseg->polyobj->centerPt.y,
                                               bsp);
          }
          else
             side_v1 = side_v2; // v1 is very close; classify as v2 side
       }
       else if(dist_v2 <= DS_EPSILON)
-      {         
+      {
          side_v2 = side_v1; // v2 is very close; classify as v1 side
       }
 
@@ -380,9 +380,9 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    // reached a subsector: attach dynaseg
    int num;
    rpolyobj_t *fragment;
-      
+
    num = bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR;
-      
+
 #ifdef RANGECHECK
    if(num >= numsubsectors)
       I_Error("R_SplitLine: ss %d with numss = %d\n", num, numsubsectors);
@@ -391,15 +391,15 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    // see if this subsector already has an rpolyobj_t for this polyobject
    // if it does not, then one will be created.
    fragment = R_FindFragment(&subsectors[num], dseg->polyobj);
-      
+
    // link this seg in at the end of the list in the rpolyobj_t
    if(fragment->dynaSegs)
    {
       dynaseg_t *fdseg = fragment->dynaSegs;
-         
+
       while(fdseg->subnext)
          fdseg = fdseg->subnext;
-        
+
       fdseg->subnext = dseg;
    }
    else
@@ -424,7 +424,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 //
 // R_FragmentCenterPoint
 //
-// haleyjd 12/09/12: My original sorting method is insufficient because it 
+// haleyjd 12/09/12: My original sorting method is insufficient because it
 // considered the polyobject center point to be a proper judge of z depth for
 // every fragment. This new solution is an interim, until BSP trees are added.
 //
@@ -473,7 +473,7 @@ static void R_CalcFragmentCenterPoints(polyobj_t *poly)
    // not attached?
    if(!(poly->flags & POF_ATTACHED))
       return;
-   
+
    // no dynaseg-containing subsecs?
    if(!poly->dynaSubsecs || !poly->numDSS)
       return;
@@ -483,7 +483,7 @@ static void R_CalcFragmentCenterPoints(polyobj_t *poly)
    {
       subsector_t *ss = poly->dynaSubsecs[i];
       DLListItem<rpolyobj_t> *link = ss->polyList;
-      
+
       // iterate on subsector rpolyobj_t lists
       while(link)
       {
@@ -509,7 +509,7 @@ void R_AttachPolyObject(polyobj_t *poly)
       return;
 
    // already attached?
-   if(poly->flags & POF_ATTACHED) 
+   if(poly->flags & POF_ATTACHED)
       return;
 
    // iterate on the polyobject lines array
@@ -558,7 +558,7 @@ void R_DetachPolyObject(polyobj_t *poly)
    // not attached?
    if(!(poly->flags & POF_ATTACHED))
       return;
-   
+
    // no dynaseg-containing subsecs?
    if(!poly->dynaSubsecs || !poly->numDSS)
       return;
@@ -569,7 +569,7 @@ void R_DetachPolyObject(polyobj_t *poly)
       subsector_t *ss = poly->dynaSubsecs[i];
       DLListItem<rpolyobj_t> *link = ss->polyList;
       DLListItem<rpolyobj_t> *next;
-      
+
       // iterate on subsector rpolyobj_t lists
       while(link)
       {
@@ -583,26 +583,26 @@ void R_DetachPolyObject(polyobj_t *poly)
             {
                dynaseg_t *ds     = rpo->dynaSegs;
                dynaseg_t *nextds = ds->subnext;
-               
+
                vertex_t *v1 = ds->seg.v1;
                vertex_t *v2 = ds->seg.v2;
-               
+
                // put dynamic vertices on free list if they haven't already been
                // put there by another seg
                if(!v1->dynafree)
                   R_FreeDynaVertex(v1);
                if(!v2->dynafree)
                   R_FreeDynaVertex(v2);
-               
+
                // put this dynaseg on the free list
                R_FreeDynaSeg(ds);
-               
+
                rpo->dynaSegs = nextds;
             }
-            
+
             // unlink this rpolyobj_t
             link->remove();
-            
+
             // put it on the freelist
             R_FreeRPolyObj(rpo);
          }
@@ -615,7 +615,7 @@ void R_DetachPolyObject(polyobj_t *poly)
    }
 
    // no longer tracking any subsectors
-   poly->numDSS = 0;   
+   poly->numDSS = 0;
    poly->flags &= ~POF_ATTACHED;
 }
 
@@ -636,4 +636,3 @@ void R_ClearDynaSegs(void)
 }
 
 // EOF
-

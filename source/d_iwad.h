@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -30,7 +30,7 @@
 #define D_IWAD_H__
 
 // Needed for GameMode_t/GameMission_t
-#include "d_gi.h" 
+#include "d_gi.h"
 
 extern bool d_scaniwads;
 
@@ -71,4 +71,3 @@ void D_MissionMetaData(const char *lump, int mission);
 #endif
 
 // EOF
-

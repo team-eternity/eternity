@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,7 +57,7 @@ struct directlump_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    size_t position;  // for direct and memory lumps, offset into file/buffer
 };
-  
+
 // A memory lump is loaded in a buffer in RAM and just needs to be memcpy'd.
 struct memorylump_t
 {
@@ -83,7 +83,7 @@ struct lumpinfo_t
    // haleyjd: logical lump data
    char   name[9];
    size_t size;
-   
+
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
    int index, next;
 
@@ -92,7 +92,7 @@ struct lumpinfo_t
    int selfindex;
 
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
-   enum 
+   enum
    {
       ns_global,
       ns_sprites,
@@ -111,7 +111,7 @@ struct lumpinfo_t
       fmt_patch,   // converted to a patch
       fmt_maxfmts  // number of formats
    } lumpformat;
-   
+
    void *cache[fmt_maxfmts];  //sf
 
    // haleyjd: lump type
@@ -122,11 +122,11 @@ struct lumpinfo_t
       lump_file,    // lump is a directory file; must be opened to use
       lump_zip,     // lump is inside a zip file
       lump_numtypes
-   }; 
+   };
    int type;
 
    int source; // haleyjd: unique id # for source of this lump
-   
+
    // haleyjd: physical lump data (guarded union)
    union
    {
@@ -135,7 +135,7 @@ struct lumpinfo_t
       ziplump_t    zip;
    };
 
-   char *lfn;  // long file name, where relevant   
+   char *lfn;  // long file name, where relevant
 };
 
 // Flags for wfileadd_t
@@ -175,7 +175,7 @@ struct wfileadd_t
 //
 // haleyjd 06/26/11: Wad lump preprocessing and formatting
 //
-// Inherit from this interface class to provide verification and preprocessing 
+// Inherit from this interface class to provide verification and preprocessing
 // code to W_CacheLump* routines.
 //
 class WadLumpLoader
@@ -190,13 +190,13 @@ public:
    } Code;
 
    // verifyData should do format checking and return true if the data is valid,
-   // and false otherwise. If verifyData returns anything other than CODE_OK, 
+   // and false otherwise. If verifyData returns anything other than CODE_OK,
    // formatData is not called under any circumstance.
    virtual Code verifyData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
-   // be done once only and not every time the lump is referenced/used. 
+   // be done once only and not every time the lump is referenced/used.
    virtual Code formatData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatIndex specifies an alternate cache pointer to use for resources
@@ -229,7 +229,7 @@ public:
       ADDSUBFILE, // Add as a subfile wad
       ADDPRIVATE  // Add to a private directory
    };
-   
+
    static int IWADSource;   // source # of the global IWAD file
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
@@ -260,8 +260,8 @@ protected:
    void initLumpHash();
    void initResources();
    void addInfoPtr(lumpinfo_t *infoptr);
-   void coalesceMarkedResource(const char *start_marker, 
-                               const char *end_marker, 
+   void coalesceMarkedResource(const char *start_marker,
+                               const char *end_marker,
                                int li_namespace);
    void incrementSource(openwad_t &openData);
    void handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
@@ -289,7 +289,7 @@ public:
    int   checkNumForName(const char *name, int li_namespace = lumpinfo_t::ns_global);
    int   checkNumForNameNSG(const char *name, int li_namespace);
    int   getNumForName(const char *name);
-   
+
    // sf: add a new wad file after the game has already begun
    bool  addNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
@@ -315,7 +315,7 @@ public:
    void  setType(int i)   { type = i;    }
    void *getData() const  { return data; }
    void  setData(void *d) { data = d;    }
-   
+
    // Read-only properties
    int          getNumLumps() const { return numlumps; }
    lumpinfo_t **getLumpInfo() const { return lumpinfo; }

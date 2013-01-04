@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -151,11 +151,11 @@ static void ST_drawInvNum(int num, int x, int y)
    {
       if(num < -9)
       {
-         V_DrawPatch(x - 26, y + 1, &subscreen43, 
+         V_DrawPatch(x - 26, y + 1, &subscreen43,
                      PatchLoader::CacheName(wGlobalDir, "LAME", PU_CACHE));
          return;
       }
-         
+
       num = -num;
    }
 
@@ -168,10 +168,10 @@ static void ST_drawInvNum(int num, int x, int y)
       V_DrawPatch(x, y, &subscreen43, invnums[num%10]);
       num /= 10;
    }
-   
+
    if(neg)
    {
-      V_DrawPatch(x - 18, y, &subscreen43, 
+      V_DrawPatch(x - 18, y, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "NEGNUM", PU_CACHE));
    }
 }
@@ -185,7 +185,7 @@ static void ST_drawBackground(void)
 {
    // draw the background
    V_DrawPatch(0, 158, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE));
-   
+
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
    if(plyr->cheats & CF_GODMODE)
@@ -193,7 +193,7 @@ static void ST_drawBackground(void)
       V_DrawPatch(16,  167, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GOD1", PU_CACHE));
       V_DrawPatch(287, 167, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GOD2", PU_CACHE));
    }
-   
+
    // draw the tops of the faces
    V_DrawPatch(0,   148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
    V_DrawPatch(290, 148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
@@ -209,12 +209,12 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    int cx1, cy1, cx2, cy2;
 
    fixed_t mapnum, mapstep;
-   
+
    cx1 = x;
    cy1 = y;
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
-               
+
    realx = subscreen43.x1lookup[cx1];
    realy = subscreen43.y1lookup[cy1];
    w     = subscreen43.x2lookup[cx2] - realx + 1;
@@ -238,7 +238,7 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
       row = dest;
       i = w;
       mapnum = startcmap << FRACBITS;
-      
+
       while(i--)
       {
          colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
@@ -272,36 +272,36 @@ static void ST_drawLifeChain(void)
 {
    int y = 191;
    int chainpos = chainhealth;
-   
+
    // bound chainpos between 0 and 100
    if(chainpos < 0)
       chainpos = 0;
    if(chainpos > 100)
       chainpos = 100;
-   
+
    // the total length between the left- and right-most gem
    // positions is 256 pixels, so scale the chainpos by that
    // amount (gem can range from 17 to 273)
    chainpos = (chainpos << 8) / 100;
-      
+
    // jiggle y coordinate when chain is moving
    if(plyr->health != chainhealth)
       y += chainwiggle;
 
    // draw the chain -- links repeat every 17 pixels, so we
    // wrap the chain back to the starting position every 17
-   V_DrawPatch(2 + (chainpos%17), y, &subscreen43, 
+   V_DrawPatch(2 + (chainpos%17), y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "CHAIN", PU_CACHE));
-   
-   // draw the gem (17 is the far left pos., 273 is max)   
+
+   // draw the gem (17 is the far left pos., 273 is max)
    // TODO: fix life gem for multiplayer modes
-   V_DrawPatch(17 + chainpos, y, &subscreen43, 
+   V_DrawPatch(17 + chainpos, y, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "LIFEGEM2", PU_CACHE));
-   
+
    // draw face patches to cover over spare ends of chain
    V_DrawPatch(0,   190, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFACE", PU_CACHE));
    V_DrawPatch(276, 190, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFACE", PU_CACHE));
-   
+
    // use the colormap to shadow the ends of the chain
    ST_chainShadow();
 }
@@ -408,4 +408,3 @@ stbarfns_t HticStatusBar =
 };
 
 // EOF
-

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -56,7 +56,7 @@
       a BSP tree containing all the static objects in the scene, and
       reinsert the dynamic objects. While this is straightforward to
       implement, it can involve substantial computation.
-       
+
       "If a dynamic object is separated from each static object by a
       plane, the dynamic object can be represented as a single point
       regardless of its complexity. This can dramatically reduce the
@@ -72,9 +72,9 @@
       dynamic object will always be drawn completely in front of the
       static objects behind it.
 
-      "...a different front/back test is necessary, because a point 
-      doesn't partition three dimesnional (sic) space. The correct 
-      front/back test is to simply compare distances to the eye. Once 
+      "...a different front/back test is necessary, because a point
+      doesn't partition three dimesnional (sic) space. The correct
+      front/back test is to simply compare distances to the eye. Once
       computed, this distance can be cached at the node until the frame
       is drawn."
 
@@ -88,11 +88,11 @@
    overlap with each other or with static walls.
 
    The reason that multiple polyobjects per subsector is viable is that
-   with the above assumption that the objects will not overlap, if the 
+   with the above assumption that the objects will not overlap, if the
    center point of one polyobject is closer to the viewer than the center
-   point of another, then the entire polyobject is closer to the viewer. 
-   In this way it is possible to impose an order on polyobjects within a 
-   subsector, as well as allowing the BSP tree to impose its natural 
+   point of another, then the entire polyobject is closer to the viewer.
+   In this way it is possible to impose an order on polyobjects within a
+   subsector, as well as allowing the BSP tree to impose its natural
    ordering on polyobjects amongst all subsectors.
 */
 
@@ -193,7 +193,7 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
    if(po->numVertices >= po->numVerticesAlloc)
    {
       po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
-      po->vertices = 
+      po->vertices =
          (vertex_t **)(Z_Realloc(po->vertices,
                                  po->numVerticesAlloc * sizeof(vertex_t *),
                                  PU_LEVEL, NULL));
@@ -236,7 +236,7 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    if(po->numLines >= po->numLinesAlloc)
    {
       po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
-      po->lines = (line_t **)(Z_Realloc(po->lines, 
+      po->lines = (line_t **)(Z_Realloc(po->lines,
                                         po->numLinesAlloc * sizeof(line_t *),
                                         PU_LEVEL, NULL));
    }
@@ -282,7 +282,7 @@ static void Polyobj_findLines(polyobj_t *po, line_t *line)
       // initial line
       if(line->v2->x == startx && line->v2->y == starty)
          return;
-      
+
       // search the lines for one whose starting vertex is equal to the current
       // line's ending vertex.
       for(i = 0; i < numlines; ++i)
@@ -340,7 +340,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
    // first loop: save off all segs with polyobject's id number
    for(i = 0; i < numlines; ++i)
    {
-      if(lines[i].special == POLYOBJ_EXPLICIT_LINE  && 
+      if(lines[i].special == POLYOBJ_EXPLICIT_LINE  &&
          lines[i].args[0] == po->id &&
          lines[i].args[1] > 0)
       {
@@ -411,7 +411,7 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
    // TODO: support customized thrust?
    po->thrust = FRACUNIT;
 
-   // 1. Search lines for "line start" special with tag matching this 
+   // 1. Search lines for "line start" special with tag matching this
    //    polyobject's id number. If found, iterate through lines which
    //    share common vertices and record them into the polyobject.
    for(i = 0; i < numlines; ++i)
@@ -419,7 +419,7 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
       line_t *line = &lines[i];
 
       // is it a START line with this polyobject's id?
-      if(line->special == POLYOBJ_START_LINE && 
+      if(line->special == POLYOBJ_START_LINE &&
          line->args[0] == po->id)
       {
          Polyobj_findLines(po, line);
@@ -436,10 +436,10 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
    if(po->flags & POF_ISBAD)
       return;
 
-   // 2. If no such line existed in the first step, look for a line with the 
+   // 2. If no such line existed in the first step, look for a line with the
    //    "explicit" special with tag matching this polyobject's id number. If
-   //    found, continue to search for all such lines, storing them in a 
-   //    temporary list of lines which is then copied into the polyobject in 
+   //    found, continue to search for all such lines, storing them in a
+   //    temporary list of lines which is then copied into the polyobject in
    //    sorted order.
    if(po->numLines == 0)
    {
@@ -555,10 +555,10 @@ static void Polyobj_setCenterPt(polyobj_t *po)
       center_x += M_FixedToDouble(po->vertices[i]->x);
       center_y += M_FixedToDouble(po->vertices[i]->y);
    }
-   
+
    center_x /= po->numVertices;
    center_y /= po->numVertices;
-   
+
    po->centerPt.x = M_DoubleToFixed(center_x);
    po->centerPt.y = M_DoubleToFixed(center_y);
 
@@ -614,40 +614,40 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
 {
    fixed_t *blockbox = po->blockbox;
    int i, x, y;
-   
+
    // never link a bad polyobject or a polyobject already linked
    if(po->flags & (POF_ISBAD | POF_LINKED))
       return;
-   
+
    // 2/26/06: start line box with values of first vertex, not MININT/MAXINT
    blockbox[BOXLEFT]   = blockbox[BOXRIGHT] = po->vertices[0]->x;
    blockbox[BOXBOTTOM] = blockbox[BOXTOP]   = po->vertices[0]->y;
-   
+
    // add all vertices to the bounding box
    for(i = 1; i < po->numVertices; ++i)
       M_AddToBox(blockbox, po->vertices[i]->x, po->vertices[i]->y);
-   
-   // adjust bounding box relative to blockmap 
+
+   // adjust bounding box relative to blockmap
    blockbox[BOXRIGHT]  = (blockbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
    blockbox[BOXLEFT]   = (blockbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
    blockbox[BOXTOP]    = (blockbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
    blockbox[BOXBOTTOM] = (blockbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   
+
    // link polyobject to every block its bounding box intersects
    for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)
    {
-      for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)   
+      for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)
       {
          if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
          {
             polymaplink_t  *l = Polyobj_getLink();
-            
+
             l->po = po;
 
             // haleyjd 05/18/06: optimization: keep track of links in polyobject
             l->po_next = po->linkhead;
             po->linkhead = l;
-            
+
             l->link.insert(l, &polyblocklinks[y * bmapwidth + x]);
          }
       }
@@ -721,7 +721,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
 {
    angle_t lineangle;
    fixed_t momx, momy;
-   
+
    // calculate angle of line and subtract 90 degrees to get normal
    lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
    lineangle >>= ANGLETOFINESHIFT;
@@ -733,7 +733,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    // if object doesn't fit at desired location, possibly hurt it
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
-      if((po->flags & POF_DAMAGING) || 
+      if((po->flags & POF_DAMAGING) ||
          !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
       {
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
@@ -774,7 +774,7 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
                Mobj *next = mo->bnext;
 
                // always push players even if not solid
-               if(((mo->flags & MF_SOLID) || mo->player) && 
+               if(((mo->flags & MF_SOLID) || mo->player) &&
                   !Polyobj_untouched(line, mo))
                {
                   Polyobj_pushThing(po, line, mo);
@@ -824,17 +824,17 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       // reset vertices
       for(i = 0; i < po->numVertices; ++i)
          Polyobj_vecSub(po->vertices[i], &vec);
-      
+
       // reset lines that have been moved
       for(i = 0; i < po->numLines; ++i)
-         Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
+         Polyobj_bboxSub(po->lines[i]->bbox, &vec);
    }
    else
    {
       // translate the spawnSpot as well
       po->spawnSpot.x += vec.x;
-      po->spawnSpot.y += vec.y;          
-      
+      po->spawnSpot.y += vec.y;
+
       // 04/19/09: translate sound origins
       for(i = 0; i < po->numLines; ++i)
       {
@@ -906,7 +906,7 @@ static void Polyobj_rotateLine(line_t *ld)
       ld->bbox[BOXLEFT]  = v2->x;
       ld->bbox[BOXRIGHT] = v1->x;
    }
-      
+
    if(v1->y < v2->y)
    {
       ld->bbox[BOXBOTTOM] = v1->y;
@@ -1005,7 +1005,7 @@ polyobj_t *Polyobj_GetForNum(int id)
    // haleyjd 01/07/07: must check if == 0 first!
    if(numPolyObjects == 0)
       return NULL;
-   
+
    curidx = PolyObjects[id % numPolyObjects].first;
 
    while(curidx != numPolyObjects && PolyObjects[curidx].id != id)
@@ -1068,7 +1068,7 @@ void Polyobj_InitLevel(void)
             mo->info->doomednum == POLYOBJ_SPAWNDAMAGE_DOOMEDNUM)
          {
             ++numPolyObjects;
-            
+
             qitem = ecalloc(mobjqitem_t *, 1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &spawnqueue);
@@ -1101,7 +1101,7 @@ void Polyobj_InitLevel(void)
       for(i = 0; i < numPolyObjects; ++i)
       {
          qitem = (mobjqitem_t *)M_QueueIterator(&spawnqueue);
-         
+
          Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint.angle);
       }
 
@@ -1109,7 +1109,7 @@ void Polyobj_InitLevel(void)
       for(i = 0; i < numAnchors; ++i)
       {
          qitem = (mobjqitem_t *)M_QueueIterator(&anchorqueue);
-         
+
          Polyobj_moveToSpawnSpot(&(qitem->mo->spawnpoint));
       }
 
@@ -1132,10 +1132,10 @@ void Polyobj_InitLevel(void)
 void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 {
    fixed_t dx, dy;
-   
+
    // first, rotate to the saved angle
    Polyobj_rotate(po, angle);
-   
+
    // determine component distances to translate
    dx = x - po->spawnSpot.x;
    dy = y - po->spawnSpot.y;
@@ -1166,7 +1166,7 @@ void PolyRotateThinker::Think()
    if(po->thinker == NULL)
    {
       po->thinker = this;
-      
+
       // reset polyobject's thrust
       po->thrust = D_abs(this->speed) >> 8;
       if(po->thrust < FRACUNIT)
@@ -1224,7 +1224,7 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
 //
 // Calculates the speed components from the desired resultant velocity.
 //
-inline static void Polyobj_componentSpeed(int resVel, int angle, 
+inline static void Polyobj_componentSpeed(int resVel, int angle,
                                           int *xVel, int *yVel)
 {
    *xVel = FixedMul(resVel, finecosine[angle]);
@@ -1246,7 +1246,7 @@ void PolyMoveThinker::Think()
    if(po->thinker == NULL)
    {
       po->thinker = this;
-      
+
       // reset polyobject's thrust
       po->thrust = D_abs(this->speed) >> 3;
       if(po->thrust < FRACUNIT)
@@ -1315,7 +1315,7 @@ void PolySlideDoorThinker::Think()
    if(po->thinker == NULL)
    {
       po->thinker = this;
-      
+
       // reset polyobject's thrust
       po->thrust = D_abs(this->speed) >> 3;
       if(po->thrust < FRACUNIT)
@@ -1336,10 +1336,10 @@ void PolySlideDoorThinker::Think()
    if(Polyobj_moveXY(po, this->momx, this->momy))
    {
       int avel = D_abs(this->speed);
-      
+
       // decrement distance by the amount it moved
       this->distance -= avel;
-      
+
       // are we at or past the destination?
       if(this->distance <= 0)
       {
@@ -1347,20 +1347,20 @@ void PolySlideDoorThinker::Think()
          if(!this->closing)
          {
             this->closing = true;
-            
+
             // reset distance and speed
             this->distance = this->initDistance;
             this->speed    = this->initSpeed;
-            
+
             // start delay
             this->delayCount = this->delay;
-            
+
             // reverse angle
             this->angle = this->revAngle;
-            
+
             // reset component speeds
             Polyobj_componentSpeed(this->speed, this->angle, &this->momx, &this->momy);
-         } 
+         }
          else
          {
             // remove thinker
@@ -1424,7 +1424,7 @@ void PolySwingDoorThinker::Think()
    if(po->thinker == NULL)
    {
       po->thinker = this;
-      
+
       // reset polyobject's thrust
       po->thrust = D_abs(this->speed) >> 3;
       if(po->thrust < FRACUNIT)
@@ -1457,14 +1457,14 @@ void PolySwingDoorThinker::Think()
          if(!this->closing)
          {
             this->closing = true;
-            
+
             // reset distance and speed
             this->distance =  this->initDistance;
             this->speed    = -this->initSpeed; // reverse speed on close
-            
+
             // start delay
-            this->delayCount = this->delay;            
-         } 
+            this->delayCount = this->delay;
+         }
          else
          {
             // remove thinker
@@ -1520,7 +1520,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
 
    if(!(po = Polyobj_GetForNum(prdata->polyObjNum)))
    {
-      doom_printf(FC_ERROR "EV_DoPolyObjRotate: bad polyobj %d", 
+      doom_printf(FC_ERROR "EV_DoPolyObjRotate: bad polyobj %d",
                   prdata->polyObjNum);
       return 0;
    }
@@ -1540,7 +1540,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
 
    // set fields
    th->polyObjNum = prdata->polyObjNum;
-   
+
    // use Hexen-style byte angles for speed and distance
    th->speed = (prdata->speed * prdata->direction * BYTEANGLEMUL) >> 3;
 
@@ -1569,21 +1569,21 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       // check for override if this polyobj already has a thinker
       if(po->thinker && !prdata->overRide)
          break;
-      
+
       // create a new thinker
       th = new PolyRotateThinker;
       th->addThinker();
       po->thinker = th;
-      
+
       // set fields
       th->polyObjNum = po->id;
-      
+
       // use opposite direction for mirroring polyobjects
       // alternate the direction for each successive mirror
-      th->speed = 
+      th->speed =
          (prdata->speed * diracc * prdata->direction * BYTEANGLEMUL) >> 3;
       diracc = (diracc > 0) ? -1 : 1;
-      
+
       if(prdata->distance == 255)    // 255 means perpetual
          th->distance = -1;
       else if(prdata->distance == 0) // 0 means approx. 360 degrees
@@ -1613,7 +1613,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
 
    if(!(po = Polyobj_GetForNum(pmdata->polyObjNum)))
    {
-      doom_printf(FC_ERROR "EV_DoPolyObjMove: bad polyobj %d", 
+      doom_printf(FC_ERROR "EV_DoPolyObjMove: bad polyobj %d",
                   pmdata->polyObjNum);
       return 0;
    }
@@ -1663,19 +1663,19 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       th = new PolyMoveThinker;
       th->addThinker();
       po->thinker = th;
-      
+
       // set fields
       th->polyObjNum = po->id;
       th->distance   = pmdata->distance;
       th->speed      = pmdata->speed;
-      
+
       // use opposite angle for every other mirror
       th->angle = ((pmdata->angle * BYTEANGLEMUL) + angadd) >> ANGLETOFINESHIFT;
       angadd = angadd ? 0 : ANG180;
-      
+
       // set component speeds
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
-      
+
       // set polyobject's thrust
       po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
@@ -1698,7 +1698,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    // allocate and add a new slide door thinker
    th = new PolySlideDoorThinker;
    th->addThinker();
-   
+
    // point the polyobject to this thinker
    po->thinker = th;
 
@@ -1709,14 +1709,14 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    th->delayCount = 0;
    th->distance   = th->initDistance = doordata->distance;
    th->speed      = th->initSpeed    = doordata->speed;
-   
+
    // haleyjd: do angle reverse calculation in full precision to avoid
    // drift due to ANGLETOFINESHIFT.
    angtemp       = doordata->angle * BYTEANGLEMUL;
    th->angle     = angtemp >> ANGLETOFINESHIFT;
    th->initAngle = th->angle;
    th->revAngle  = (angtemp + ANG180) >> ANGLETOFINESHIFT;
-   
+
    Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
    // set polyobject's thrust
@@ -1748,7 +1748,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       th->delayCount = 0;
       th->distance   = th->initDistance = doordata->distance;
       th->speed      = th->initSpeed    = doordata->speed;
-      
+
       // alternate angle for each successive mirror
       angtemp       = doordata->angle * BYTEANGLEMUL + angadd;
       th->angle     = angtemp >> ANGLETOFINESHIFT;
@@ -1764,7 +1764,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
          po->thrust = 4*FRACUNIT;
-      
+
       S_StartPolySequence(po);
    }
 }
@@ -1777,7 +1777,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    // allocate and add a new swing door thinker
    th = new PolySwingDoorThinker;
    th->addThinker();
-   
+
    // point the polyobject to this thinker
    po->thinker = th;
 
@@ -1796,7 +1796,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       po->thrust = FRACUNIT;
    else if(po->thrust > 4*FRACUNIT)
       po->thrust = 4*FRACUNIT;
-   
+
    S_StartPolySequence(po);
 
    // start action on mirroring polyobjects as well
@@ -1843,7 +1843,7 @@ int EV_DoPolyDoor(polydoordata_t *doordata)
 
    if(!(po = Polyobj_GetForNum(doordata->polyObjNum)))
    {
-      doom_printf(FC_ERROR "EV_DoPolyDoor: bad polyobj %d", 
+      doom_printf(FC_ERROR "EV_DoPolyDoor: bad polyobj %d",
                   doordata->polyObjNum);
       return 0;
    }
@@ -1862,7 +1862,7 @@ int EV_DoPolyDoor(polydoordata_t *doordata)
       Polyobj_doSwingDoor(po, doordata);
       break;
    default:
-      doom_printf(FC_ERROR "EV_DoPolyDoor: unknown door type %d", 
+      doom_printf(FC_ERROR "EV_DoPolyDoor: unknown door type %d",
                   doordata->doorType);
       return 0;
    }
@@ -1871,4 +1871,3 @@ int EV_DoPolyDoor(polydoordata_t *doordata)
 }
 
 // EOF
-

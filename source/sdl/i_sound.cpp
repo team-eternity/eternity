@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -88,7 +88,7 @@ void I_SetSfxVolume(int volume)
   //  the menu/config file setting
   //  to the state variable used in
   //  the mixing.
-  
+
    snd_SfxVolume = volume;
 }
 
@@ -97,10 +97,10 @@ void I_SetSfxVolume(int volume)
 //
 // I_StartSound
 //
-int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, 
+int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
                  int pri, int loop)
-{   
-   return snd_init ? 
+{
+   return snd_init ?
       i_sounddriver->StartSound(sound, cnum, vol, sep, pitch, pri, loop) : -1;
 }
 
@@ -120,7 +120,7 @@ void I_StopSound(int handle, int id)
 // I_SoundIsPlaying
 //
 int I_SoundIsPlaying(int handle)
-{ 
+{
    return snd_init ? i_sounddriver->SoundIsPlaying(handle) : 0;
 }
 
@@ -144,7 +144,7 @@ int I_SoundID(int handle)
 // that have expired. The I_SDLUpdateSound function does sound updating, but
 // cannot be allowed to modify the zone heap due to being dispatched from a
 // separate thread.
-// 
+//
 void I_UpdateSound(void)
 {
    if(snd_init)
@@ -210,7 +210,7 @@ extern i_sounddriver_t i_pcsound_driver;
 // I_InitSound
 //
 void I_InitSound(void)
-{   
+{
    if(!nosfxparm)
    {
       printf("I_InitSound: ");
@@ -223,7 +223,7 @@ void I_InitSound(void)
          i_sounddriver = &i_sdlsound_driver;
          if(i_sounddriver->InitSound())
          {
-            atexit(I_ShutdownSound);  
+            atexit(I_ShutdownSound);
             snd_init = true;
          }
          break;
@@ -413,7 +413,7 @@ VARIABLE_FLOAT(s_lowgain,  NULL, 0.0, 3.0);
 VARIABLE_FLOAT(s_midgain,  NULL, 0.0, 3.0);
 VARIABLE_FLOAT(s_highgain, NULL, 0.0, 3.0);
 
-CONSOLE_VARIABLE(snd_card, snd_card, 0) 
+CONSOLE_VARIABLE(snd_card, snd_card, 0)
 {
    if(snd_card != 0 && menuactive)
       MN_ErrorMsg("takes effect after restart");
@@ -429,7 +429,7 @@ CONSOLE_VARIABLE(detect_voices, detect_voices, 0) {}
 
 #ifdef _SDL_VER
 #ifdef HAVE_SPCLIB
-CONSOLE_VARIABLE(snd_spcpreamp, spc_preamp, 0) 
+CONSOLE_VARIABLE(snd_spcpreamp, spc_preamp, 0)
 {
    I_SetMusicVolume(snd_MusicVolume);
 }

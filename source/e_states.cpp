@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -116,11 +116,11 @@ cfg_opt_t edf_fdelta_opts[] =
 #define NUMSTATECHAINS 2003
 
 // hash by name
-static EHashTable<state_t, ENCStringHashKey, 
+static EHashTable<state_t, ENCStringHashKey,
                   &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
 
 // hash by DeHackEd number
-static EHashTable<state_t, EIntHashKey, 
+static EHashTable<state_t, EIntHashKey,
                   &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
 
 //
@@ -254,7 +254,7 @@ bool E_AutoAllocStateDEHNum(int statenum)
    do
    {
       dehnum = edf_alloc_state_dehnum--;
-   } 
+   }
    while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) >= 0);
 
    // ran out while looking for an unused number?
@@ -342,7 +342,7 @@ void E_ReallocStates(int numnewstates)
 //
 // E_CollectStates
 //
-// Pre-creates and hashes by name the states, for purpose of mutual 
+// Pre-creates and hashes by name the states, for purpose of mutual
 // and forward references.
 //
 void E_CollectStates(cfg_t *cfg)
@@ -373,7 +373,7 @@ void E_CollectStates(cfg_t *cfg)
       curnewstate = firstnewstate = NUMSTATES;
 
       E_ReallocStates((int)numnew);
-      
+
       // set pointers in states[] to the proper structures
       for(i = firstnewstate; i < (unsigned int)NUMSTATES; ++i)
       {
@@ -487,9 +487,9 @@ static void E_StateSprite(const char *tempstr, int i)
          // haleyjd 03/24/10: add implicitly-defined sprite
          if(!E_ProcessSingleSprite(tempstr))
          {
-            E_EDFLoggedWarning(2, 
+            E_EDFLoggedWarning(2,
                                "Warning: frame '%s': couldn't implicitly "
-                               "define sprite '%s'\n", 
+                               "define sprite '%s'\n",
                                states[i]->name, tempstr);
             sprnum = blankSpriteNum;
          }
@@ -504,14 +504,14 @@ static void E_StateSprite(const char *tempstr, int i)
 // E_ActionFuncCB
 //
 // haleyjd 04/03/08: Callback function for the new function-valued string
-// option used to specify state action functions. This is called during 
+// option used to specify state action functions. This is called during
 // parsing, not processing, and thus we do not look up/resolve anything
 // at this point. We are only interested in populating the cfg's args
 // values with the strings passed to this callback as parameters. The value
 // of the option has already been set to the name of the codepointer by
 // the libConfuse framework.
 //
-static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, 
+static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
                           const char **argv)
 {
    if(argc > 0)
@@ -528,7 +528,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 static void E_StateAction(const char *tempstr, int i)
 {
    deh_bexptr *dp = D_GetBexPtr(tempstr);
-   
+
    if(!dp)
    {
       E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad action '%s'\n",
@@ -566,7 +566,7 @@ static void E_AssignMiscThing(int *target, int thingnum)
       *target = mobjinfo[thingnum]->dehnum;
    else
    {
-      E_EDFLoggedWarning(2, 
+      E_EDFLoggedWarning(2,
                          "Warning: failed to auto-allocate DeHackEd number "
                          "for thing %s\n", mobjinfo[thingnum]->name);
       *target = UnknownThingType;
@@ -599,7 +599,7 @@ static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
       *target = sfx->dehackednum;
    else
    {
-      E_EDFLoggedWarning(2, 
+      E_EDFLoggedWarning(2,
                          "Warning: failed to auto-allocate DeHackEd number "
                          "for sound %s\n", sfx->mnemonic);
       *target = 0;
@@ -621,7 +621,7 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 {
    if(!dp)
       E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", name);
-   
+
    // get the index of this deh_bexptr in the master
    // deh_bexptrs array, and store it in the arg field
    *target = dp - deh_bexptrs;
@@ -640,12 +640,12 @@ static void E_ParseMiscField(const char *value, int *target)
    int i;
    char prefix[16];
    const char *colonloc, *strval;
-   
+
    memset(prefix, 0, 16);
 
    // look for a colon ending a possible prefix
    colonloc = E_ExtractPrefix(value, prefix, 16);
-   
+
    if(colonloc)
    {
       // a colon was found, so identify the prefix
@@ -687,7 +687,7 @@ static void E_ParseMiscField(const char *value, int *target)
             if(!sfx)
             {
                // haleyjd 05/31/06: relaxed to warning
-               E_EDFLoggedWarning(2, "Warning: invalid sound '%s' in misc field\n", 
+               E_EDFLoggedWarning(2, "Warning: invalid sound '%s' in misc field\n",
                                   strval);
                sfx = &NullSound;
             }
@@ -753,7 +753,7 @@ static void E_ParseMiscField(const char *value, int *target)
          sfxinfo_t *sfx;
          edf_string_t *str;
          deh_bexptr *dp;
-         
+
          if((temp = E_ThingNumForName(value)) != -1)           // thingtype?
             E_AssignMiscThing(target, temp);
          else if((temp = E_StateNumForName(value)) >= 0)       // frame?
@@ -779,7 +779,7 @@ static const char *E_GetArgument(const char *value)
 {
    char prefix[16];
    const char *colonloc;
-   
+
    memset(prefix, 0, 16);
 
    // look for a colon ending a possible prefix
@@ -870,10 +870,10 @@ static void E_StateNextFrame(const char *tempstr, int i)
          // the resulting value must be a valid frame deh number
          tempint = E_GetStateNumForDEHNum(result);
       }
-      else      
+      else
       {
          // error
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_ProcessState: frame '%s': bad nextframe '%s'\n",
             states[i]->name, tempstr);
 
@@ -899,7 +899,7 @@ static void E_StatePtclEvt(const char *tempstr, int i)
    }
    if(tempint == P_EVENT_NUMEVENTS)
    {
-      E_EDFLoggedErr(2, 
+      E_EDFLoggedErr(2,
          "E_ProcessState: frame '%s': bad ptclevent '%s'\n",
          states[i]->name, tempstr);
    }
@@ -1021,9 +1021,9 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 // Fields at the end can be left off. "*" in a field means to use
 // the normal default value.
 //
-// haleyjd 06/24/04: rewritten to use a finite-state-automaton lexer, 
-// making the format MUCH more flexible than it was under the former 
-// strtok system. The E_CmpTokenizer function above performs the 
+// haleyjd 06/24/04: rewritten to use a finite-state-automaton lexer,
+// making the format MUCH more flexible than it was under the former
+// strtok system. The E_CmpTokenizer function above performs the
 // lexing, returning each token in the qstring provided to it.
 //
 static void E_ProcessCmpState(const char *value, int i)
@@ -1053,7 +1053,7 @@ static void E_ProcessCmpState(const char *value, int i)
       // call the value-parsing callback explicitly
       if(E_SpriteFrameCB(NULL, NULL, curtoken, &(states[i]->frame)) == -1)
       {
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_ProcessCmpState: frame '%s': bad spriteframe '%s'\n",
             states[i]->name, curtoken);
       }
@@ -1096,7 +1096,7 @@ static void E_ProcessCmpState(const char *value, int i)
       while(!early_args_end)
       {
          NEXTTOKEN();
-         
+
          if(DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, "");
          else
@@ -1202,7 +1202,7 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
       if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
       {
          tempstr = cfg_getstr(framesec, ITEM_FRAME_CMP);
-         
+
          E_ProcessCmpState(tempstr, i);
          def = false; // process remainder as if a frame delta
          goto hitcmp;
@@ -1248,7 +1248,7 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
    if(IS_SET(ITEM_FRAME_NEXTFRAME))
    {
       tempstr = cfg_getstr(framesec, ITEM_FRAME_NEXTFRAME);
-      
+
       E_StateNextFrame(tempstr, i);
    }
 
@@ -1267,12 +1267,12 @@ hitcmp:
       for(j = 0; j < tempint; ++j)
       {
          tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
-         
+
          E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
       }
    }
 
-   // 01/01/12: the following fields are allowed when processing a 
+   // 01/01/12: the following fields are allowed when processing a
    // DECORATE-reserved state
 hitdecorate:
    // misc field parsing (complicated)
@@ -1319,7 +1319,7 @@ void E_ProcessStates(cfg_t *cfg)
 
       E_ProcessState(statenum, framesec, true);
 
-      E_EDFLogPrintf("\t\tFinished frame %s (#%d)\n", 
+      E_EDFLogPrintf("\t\tFinished frame %s (#%d)\n",
                      states[statenum]->name, statenum);
    }
 }
@@ -1363,4 +1363,3 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 
 
 // EOF
-

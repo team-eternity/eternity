@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -141,7 +141,7 @@ void A_MummyAttack(Mobj *actor)
       return;
 
    S_StartSound(actor, actor->info->attacksound);
-   
+
    if(P_CheckMeleeRange(actor))
    {
       int dmg = ((P_Random(pr_mumpunch)&7)+1)*2;
@@ -156,18 +156,18 @@ void A_MummyAttack(Mobj *actor)
 void A_MummyAttack2(Mobj *actor)
 {
    Mobj *mo;
-   
+
    if(!actor->target)
       return;
-   
+
    if(P_CheckMeleeRange(actor))
    {
       int dmg = ((P_Random(pr_mumpunch2)&7)+1)*2;
       P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
       return;
    }
-   
-   mo = P_SpawnMissile(actor, actor->target, 
+
+   mo = P_SpawnMissile(actor, actor->target,
                        E_SafeThingType(MT_MUMMYFX1),
                        actor->z + DEFAULTMISSILEZ);
 
@@ -178,7 +178,7 @@ void A_MummySoul(Mobj *actor)
 {
    Mobj *mo;
    int soulType = E_SafeThingType(MT_MUMMYSOUL);
-   
+
    mo = P_SpawnMobj(actor->x, actor->y, actor->z+10*FRACUNIT, soulType);
    mo->momz = FRACUNIT;
 }
@@ -187,10 +187,10 @@ void P_HticDrop(Mobj *actor, int special, mobjtype_t type)
 {
    Mobj *item;
 
-   item = P_SpawnMobj(actor->x, actor->y, 
+   item = P_SpawnMobj(actor->x, actor->y,
                       actor->z + (actor->height >> 1),
                       type);
-   
+
    item->momx = P_SubRandom(pr_hdropmom) << 8;
    item->momy = P_SubRandom(pr_hdropmom) << 8;
    item->momz = (P_Random(pr_hdropmom) << 10) + 5*FRACUNIT;
@@ -262,10 +262,10 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
    fixed_t dist;
    Mobj   *dest;
    bool    dir;
-  
+
    // adjust direction
    dest = actor->tracer;
-   
+
    if(!dest || dest->health <= 0)
       return;
 
@@ -314,9 +314,9 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
    {
       // directly from above
       dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
-      
+
       dist = dist / actor->info->speed;
-      
+
       if(dist < 1)
          dist = 1;
 
@@ -330,7 +330,7 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 // A_HticTracer
 //
 // Parameterized pointer for Heretic-style tracers. I wanted
-// to merge this with A_GenTracer, but the logic looks incompatible 
+// to merge this with A_GenTracer, but the logic looks incompatible
 // no matter how I rewrite it.
 //
 // args[0]: threshold in degrees
@@ -395,13 +395,13 @@ void A_WizardAtk3(Mobj *actor)
    fixed_t momz;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
    int wizfxType = E_SafeThingType(MT_WIZFX1);
-   
+
    actor->flags3 &= ~MF3_GHOST;
    if(!actor->target)
       return;
 
    S_StartSound(actor, actor->info->attacksound);
-   
+
    if(P_CheckMeleeRange(actor))
    {
       int dmg = ((P_Random(pr_wizatk) & 7) + 1) * 4;
@@ -454,11 +454,11 @@ void A_Srcr1Attack(Mobj *actor)
       return;
 
    S_StartSound(actor, actor->info->attacksound);
-   
+
    // bite attack
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_sorc1atk)&7)+1)*8, MOD_HIT);
       return;
    }
@@ -474,11 +474,11 @@ void A_Srcr1Attack(Mobj *actor)
       mo = P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
       momz = mo->momz;
       angle = mo->angle;
-      P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3, 
+      P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3,
                           momz, mheight);
       P_SpawnMissileAngle(actor, srcrfxType, angle+ANGLE_1*3,
                           momz, mheight);
-      
+
       // desperation -- attack twice
       if(actor->health * 3 < actor->info->spawnhealth)
       {
@@ -487,7 +487,7 @@ void A_Srcr1Attack(Mobj *actor)
             actor->counters[1] = 0;
          }
          else
-         { 
+         {
             actor->counters[1] = 1;
             P_SetMobjState(actor, E_SafeState(S_SRCR1_ATK4));
          }
@@ -504,7 +504,7 @@ void A_SorcererRise(Mobj *actor)
 {
    Mobj *mo;
    int   sorc2Type = E_SafeThingType(MT_SORCERER2);
-   
+
    actor->flags &= ~MF_SOLID;
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, sorc2Type);
    mo->angle = actor->angle;
@@ -514,10 +514,10 @@ void A_SorcererRise(Mobj *actor)
 
    // add to appropriate thread
    mo->updateThinker();
-   
+
    if(actor->target && !(mo->flags & MF_FRIEND))
       P_SetTarget<Mobj>(&mo->target, actor->target);
-   
+
    P_SetMobjState(mo, E_SafeState(S_SOR2_RISE1));
 }
 
@@ -546,7 +546,7 @@ void A_Srcr2Decide(Mobj *actor)
 {
    int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
    int index    = actor->health / (actor->info->spawnhealth / 8);
-   
+
    // if no spots, no teleportation
    if(sorcspots.isEmpty())
       return;
@@ -575,10 +575,10 @@ void A_Srcr2Attack(Mobj *actor)
    fixed_t z = actor->z + DEFAULTMISSILEZ;
    int sor2fx1Type = E_SafeThingType(MT_SOR2FX1);
    int sor2fx2Type = E_SafeThingType(MT_SOR2FX2);
-   
+
    if(!actor->target)
       return;
-   
+
    // haleyjd 10/01/08: use CHAN_WEAPON; D'Sparil never seems to cut off his
    // own sounds.
    S_StartSoundAtVolume(actor, actor->info->attacksound, 127, ATTN_NONE, CHAN_WEAPON);
@@ -598,13 +598,13 @@ void A_Srcr2Attack(Mobj *actor)
       Mobj *mo;
 
       // spawn wizards -- transfer friendliness
-      mo = P_SpawnMissileAngle(actor, sor2fx2Type, 
-                               actor->angle - ANG45, 
+      mo = P_SpawnMissileAngle(actor, sor2fx2Type,
+                               actor->angle - ANG45,
                                FRACUNIT / 2, z);
       mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
-      
+
       mo = P_SpawnMissileAngle(actor, sor2fx2Type,
-                               actor->angle + ANG45, 
+                               actor->angle + ANG45,
                                FRACUNIT / 2, z);
       mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
    }
@@ -620,13 +620,13 @@ void A_BlueSpark(Mobj *actor)
    int i;
    Mobj *mo;
    int sparkType = E_SafeThingType(MT_SOR2FXSPARK);
-   
+
    for(i = 0; i < 2; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, sparkType);
-      
+
       mo->momx = P_SubRandom(pr_bluespark) << 9;
-      mo->momy = P_SubRandom(pr_bluespark) << 9;      
+      mo->momy = P_SubRandom(pr_bluespark) << 9;
       mo->momz = FRACUNIT + (P_Random(pr_bluespark) << 8);
    }
 }
@@ -637,9 +637,9 @@ void A_GenWizard(Mobj *actor)
    Mobj *fog;
    int wizType = E_SafeThingType(MT_WIZARD);
    int fogType = E_SafeThingType(MT_HTFOG);
-   
-   mo = P_SpawnMobj(actor->x, actor->y, 
-                    actor->z-mobjinfo[wizType]->height/2, 
+
+   mo = P_SpawnMobj(actor->x, actor->y,
+                    actor->z-mobjinfo[wizType]->height/2,
                     wizType);
 
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
@@ -670,7 +670,7 @@ void A_GenWizard(Mobj *actor)
    actor->momx = actor->momy = actor->momz = 0;
    P_SetMobjState(actor, mobjinfo[actor->type]->deathstate);
    actor->flags &= ~MF_MISSILE;
-   
+
    // spawn a telefog
    fog = P_SpawnMobj(actor->x, actor->y, actor->z, fogType);
    S_StartSound(fog, sfx_htelept);
@@ -688,7 +688,7 @@ void A_Sor2DthInit(Mobj *actor)
 void A_Sor2DthLoop(Mobj *actor)
 {
    if(--actor->counters[0])
-   { 
+   {
       // Need to loop
       P_SetMobjState(actor, E_SafeState(S_SOR2_DIE4));
    }
@@ -699,10 +699,10 @@ static const char *kwds_A_HticExplode[] =
    "default",       //    0
    "dsparilbspark", //    1
    "floorfire",     //    2
-   "timebomb",      //    3   
+   "timebomb",      //    3
 };
 
-static argkeywd_t hticexpkwds = 
+static argkeywd_t hticexpkwds =
 {
    kwds_A_HticExplode,
    sizeof(kwds_A_HticExplode)/sizeof(const char *)
@@ -773,9 +773,9 @@ void A_HticBossDeath(Mobj *actor)
 
    for(i = 0; i < NUM_HBOSS_SPECS; ++i)
    {
-      unsigned int flags = 
+      unsigned int flags =
          hboss_specs[i].flagfield == 2 ? actor->flags2 : actor->flags3;
-      
+
       // to activate a special, the thing must be a boss that triggers
       // it, and the map must have the special enabled.
       if((flags & hboss_specs[i].thing_flag) &&
@@ -788,8 +788,8 @@ void A_HticBossDeath(Mobj *actor)
             {
                unsigned int moflags =
                   hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;
-               if(mo != actor && 
-                  (moflags & hboss_specs[i].thing_flag) && 
+               if(mo != actor &&
+                  (moflags & hboss_specs[i].thing_flag) &&
                   mo->health > 0)
                   return;         // other boss not dead
             }
@@ -806,7 +806,7 @@ void A_HticBossDeath(Mobj *actor)
             // if a friendly boss dies, kill only friends
             // if an enemy boss dies, kill only enemies
             P_Massacre((actor->flags & MF_FRIEND) ? 1 : 2);
-            
+
             // fall through
          case BSPEC_E1M8:
             junk.tag = 666;
@@ -829,20 +829,20 @@ void A_PodPain(Mobj *actor)
    int   chance;
    Mobj *goo;
    int   gooType = E_SafeThingType(MT_PODGOO);
-   
+
    chance = P_Random(pr_podpain);
 
    if(chance < 128)
       return;
-   
+
    count = (chance > 240) ? 2 : 1;
-   
+
    for(i = 0; i < count; ++i)
    {
       goo = P_SpawnMobj(actor->x, actor->y,
                         actor->z + 48*FRACUNIT, gooType);
       P_SetTarget<Mobj>(&goo->target, actor);
-      
+
       goo->momx = P_SubRandom(pr_podpain) << 9;
       goo->momy = P_SubRandom(pr_podpain) << 9;
       goo->momz = (FRACUNIT >> 1) + (P_Random(pr_podpain) << 9);
@@ -890,16 +890,16 @@ void A_MakePod(Mobj *actor)
       mo->removeThinker();
       return;
    }
-   
+
    P_SetMobjState(mo, E_SafeState(S_POD_GROW1));
    S_StartSound(mo, sfx_newpod);
-   
+
    // give the pod some random momentum
    angle = P_Random(pr_makepod) << 24;
    move  = 9*FRACUNIT >> 1;
 
    P_ThrustMobj(mo, angle, move);
-   
+
    // use tracer field to link pod to generator, and increment
    // generator's pod count
    P_SetTarget<Mobj>(&mo->tracer, actor);
@@ -922,21 +922,21 @@ void A_VolcanoBlast(Mobj *actor)
    int      i, numvolcballs;
    Mobj    *volcball;
    angle_t  angle;
- 
+
    // spawn 1 to 3 volcano balls
    numvolcballs = (P_Random(pr_volcano) % 3) + 1;
-   
+
    for(i = 0; i < numvolcballs; ++i)
    {
-      volcball = P_SpawnMobj(actor->x, actor->y, actor->z + 44*FRACUNIT, 
+      volcball = P_SpawnMobj(actor->x, actor->y, actor->z + 44*FRACUNIT,
                              ballType);
       P_SetTarget<Mobj>(&volcball->target, actor);
       S_StartSound(volcball, sfx_bstatk);
 
       // shoot at a random angle
-      volcball->angle = P_Random(pr_volcano) << 24;      
+      volcball->angle = P_Random(pr_volcano) << 24;
       angle = volcball->angle >> ANGLETOFINESHIFT;
-      
+
       // give it some momentum
       volcball->momx = finecosine[angle];
       volcball->momy = finesine[angle];
@@ -978,15 +978,15 @@ void A_VolcBallImpact(Mobj *actor)
 
       // pass on whatever shot the original volcano ball
       P_SetTarget<Mobj>(&svolcball->target, actor->target);
-      
+
       svolcball->angle = i * ANG90;
       angle = svolcball->angle >> ANGLETOFINESHIFT;
-      
+
       // give them some momentum
       svolcball->momx = FixedMul(7*FRACUNIT/10, finecosine[angle]);
       svolcball->momy = FixedMul(7*FRACUNIT/10, finesine[angle]);
       svolcball->momz = FRACUNIT + (P_Random(pr_svolcano) << 9);
-      
+
       // check if it hit something immediately
       P_CheckMissileSpawn(svolcball);
    }
@@ -1021,10 +1021,10 @@ void A_KnightAttack(Mobj *actor)
    else
    {
       S_StartSound(actor, actor->info->attacksound);
-      
+
       if(actor->type == ghostType || P_Random(pr_knightat2) < 40)
       {
-         P_SpawnMissile(actor, actor->target, redAxeType, 
+         P_SpawnMissile(actor, actor->target, redAxeType,
                         actor->z + 36*FRACUNIT);
       }
       else
@@ -1049,7 +1049,7 @@ void A_DripBlood(Mobj *actor)
    y = actor->y + (P_SubRandom(pr_dripblood) << 11);
 
    mo = P_SpawnMobj(x, y, actor->z, E_SafeThingType(MT_HTICBLOOD));
-   
+
    mo->momx = P_SubRandom(pr_dripblood) << 10;
    mo->momy = P_SubRandom(pr_dripblood) << 10;
 
@@ -1067,7 +1067,7 @@ void A_BeastAttack(Mobj *actor)
       return;
 
    S_StartSound(actor, actor->info->attacksound);
-   
+
    if(P_CheckMeleeRange(actor))
    {
       int dmg = ((P_Random(pr_beastbite) & 7) + 1) * 3;
@@ -1104,10 +1104,10 @@ void A_BeastPuff(Mobj *actor)
       // because there, they gave it no momenta. A missile has
       // to be moving to inflict any damage. Doing this makes the
       // smoke a little dangerous. It also requires the missile's
-      // target to be passed on, however, since otherwise the 
+      // target to be passed on, however, since otherwise the
       // Weredragon that shot this missile can get hurt by it.
 
-      x = actor->x + (P_SubRandom(pr_puffy) << 10);      
+      x = actor->x + (P_SubRandom(pr_puffy) << 10);
       y = actor->y + (P_SubRandom(pr_puffy) << 10);
       z = actor->z + (P_SubRandom(pr_puffy) << 10);
 
@@ -1177,12 +1177,12 @@ void A_MinotaurAtk1(Mobj *actor)
       return;
 
    S_StartSound(actor, sfx_stfpow);
-   
+
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_minatk1) & 7) + 1) * 4, MOD_HIT);
-   
+
       // if target is player, make the viewheight go down
       if((player = actor->target->player) != NULL)
          player->deltaviewheight = -16*FRACUNIT;
@@ -1230,14 +1230,14 @@ void A_MinotaurDecide(Mobj *actor)
       return;
 
    S_StartSound(actor, sfx_minsit);
-   
+
 #ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
+   dist = P_AproxDistance(actor->x - getTargetX(actor),
                           actor->y - getTargetY(actor));
-#else   
+#else
    dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
 #endif
-   
+
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
    {
@@ -1245,24 +1245,24 @@ void A_MinotaurDecide(Mobj *actor)
       P_SetMobjStateNF(actor, E_SafeState(S_MNTR_ATK4_1));
       actor->flags |= MF_SKULLFLY;
       A_FaceTarget(actor);
-      
+
       // give him momentum
       angle = actor->angle >> ANGLETOFINESHIFT;
       actor->momx = FixedMul(13*FRACUNIT, finecosine[angle]);
       actor->momy = FixedMul(13*FRACUNIT, finesine[angle]);
-      
+
       // set a timer
       actor->counters[0] = TICRATE >> 1;
    }
    else if(P_CheckFloorFire(dist, target))
-   { 
+   {
       // floor fire
       P_SetMobjState(actor, E_SafeState(S_MNTR_ATK3_1));
       actor->counters[1] = 0;
    }
    else
       A_FaceTarget(actor);
-      
+
    // Fall through to swing attack
 }
 
@@ -1275,7 +1275,7 @@ void A_MinotaurCharge(Mobj *actor)
 {
    int   puffType = E_SafeThingType(MT_PHOENIXPUFF);
    Mobj *puff;
-   
+
    if(actor->counters[0]) // test charge timer
    {
       // spawn some smoke and count down the charge
@@ -1302,7 +1302,7 @@ void A_MinotaurAtk2(Mobj *actor)
    Mobj    *mo;
    angle_t  angle;
    fixed_t  momz;
-   
+
    if(!actor->target)
       return;
 
@@ -1310,13 +1310,13 @@ void A_MinotaurAtk2(Mobj *actor)
 
    if(P_CheckMeleeRange(actor)) // hit directly
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_minatk2) & 7) + 1) * 5, MOD_HIT);
    }
    else // missile spread attack
    {
       fixed_t z = actor->z + 40*FRACUNIT;
-      
+
       // shoot a missile straight
       mo = P_SpawnMissile(actor, actor->target, mntrfxType, z);
       S_StartSound(mo, sfx_minat2);
@@ -1347,7 +1347,7 @@ void A_MinotaurAtk3(Mobj *actor)
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_minatk3) & 7) + 1) * 5, MOD_HIT);
 
       // if target is player, decrease viewheight
@@ -1382,11 +1382,11 @@ void A_MntrFloorFire(Mobj *actor)
 
    // set actor to floor
    actor->z = actor->floorz;
-   
+
    // determine spawn coordinates for small flame
    x = actor->x + (P_SubRandom(pr_mffire) << 10);
    y = actor->y + (P_SubRandom(pr_mffire) << 10);
-   
+
    // spawn the flame
    mo = P_SpawnMobj(x, y, ONFLOORZ, mntrfxType);
 
@@ -1422,9 +1422,9 @@ void A_LichFire(Mobj *actor)
       return;
 
    // spawn the parent fireball
-   baseFire = P_SpawnMissile(actor, target, headfxType, 
+   baseFire = P_SpawnMissile(actor, target, headfxType,
                              actor->z + DEFAULTMISSILEZ);
-   
+
    // set it to S_HEADFX3_4 so that it doesn't grow
    P_SetMobjState(baseFire, frameNum);
 
@@ -1433,22 +1433,22 @@ void A_LichFire(Mobj *actor)
    for(i = 0; i < 5; ++i)
    {
       fire = P_SpawnMobj(baseFire->x, baseFire->y, baseFire->z, headfxType);
-    
+
       // pass on the lich as the originator
       P_SetTarget<Mobj>(&fire->target, baseFire->target);
-      
+
       // inherit the motion properties of the parent fireball
       fire->angle = baseFire->angle;
       fire->momx  = baseFire->momx;
       fire->momy  = baseFire->momy;
       fire->momz  = baseFire->momz;
-      
+
       // start out with zero damage
       fire->damage = 0;
 
       // set a counter for growth
       fire->counters[0] = (i + 1) << 1;
-      
+
       P_CheckMissileSpawn(fire);
    }
 }
@@ -1468,10 +1468,10 @@ void A_LichWhirlwind(Mobj *actor)
       return;
 
    mo = P_SpawnMissile(actor, target, wwType, actor->z);
-   
+
    // use mo->tracer to track target
    P_SetTarget<Mobj>(&mo->tracer, target);
-   
+
    mo->counters[0] = 20*TICRATE; // duration
    mo->counters[1] = 50;         // timer for active sound
    mo->counters[2] = 60;         // explocount limit
@@ -1502,31 +1502,31 @@ void A_LichAttack(Mobj *actor)
       return;
 
    A_FaceTarget(actor);
-   
+
    // hit directly when in melee range
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(target, actor, actor, 
-                   ((P_Random(pr_lichmelee) & 7) + 1) * 6, 
+      P_DamageMobj(target, actor, actor,
+                   ((P_Random(pr_lichmelee) & 7) + 1) * 6,
                    MOD_HIT);
       return;
    }
-   
+
    // determine distance and use it to alter attack probabilities
 #ifdef R_LINKEDPORTALS
-   dist = (P_AproxDistance(actor->x - getTargetX(actor), 
+   dist = (P_AproxDistance(actor->x - getTargetX(actor),
                           actor->y - getTargetY(actor)) > 512*FRACUNIT);
 #else
    dist = (P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT);
 #endif
-   
+
    randAttack = P_Random(pr_lichattack);
-   
+
    if(randAttack < (dist ? 150 : 50))
    {
       // ice attack
       P_SpawnMissile(actor, target, fxType, actor->z + DEFAULTMISSILEZ);
-      S_StartSound(actor, sfx_hedat2);	
+      S_StartSound(actor, sfx_hedat2);
    }
    else if(randAttack < (dist ? 200 : 150))
       A_LichFire(actor);
@@ -1549,16 +1549,16 @@ void A_WhirlwindSeek(Mobj *actor)
       actor->flags &= ~MF_MISSILE;
       return;
    }
-   
+
    // decrement active sound counter
    if((actor->counters[1] -= 3) < 0)
    {
       actor->counters[1] = 58 + (P_Random(pr_whirlseek) & 31);
       S_StartSound(actor, sfx_hedat3);
    }
-   
+
    // test if tracer has become an invalid target
-   if(!ancient_demo && actor->tracer && 
+   if(!ancient_demo && actor->tracer &&
       (actor->tracer->flags3 & MF3_GHOST ||
        actor->tracer->health < 0))
    {
@@ -1591,10 +1591,10 @@ void A_LichIceImpact(Mobj *actor)
    int      fxType = E_SafeThingType(MT_LICHFX2);
    angle_t  angle;
    Mobj    *shard;
-   
+
    for(int i = 0; i < 8; ++i)
    {
-      shard = P_SpawnMobj(actor->x, actor->y, actor->z, fxType);      
+      shard = P_SpawnMobj(actor->x, actor->y, actor->z, fxType);
       P_SetTarget<Mobj>(&shard->target, actor->target);
 
       // send shards out every 45 degrees
@@ -1605,7 +1605,7 @@ void A_LichIceImpact(Mobj *actor)
       shard->momx = FixedMul(shard->info->speed, finecosine[angle]);
       shard->momy = FixedMul(shard->info->speed, finesine[angle]);
       shard->momz = -3 * FRACUNIT / 5;
-      
+
       // check the spawn to see if it hit immediately
       P_CheckMissileSpawn(shard);
    }
@@ -1621,7 +1621,7 @@ void A_LichFireGrow(Mobj *actor)
    int frameNum = E_SafeState(S_LICHFX3_4);
 
    actor->z += 9*FRACUNIT;
-   
+
    if(--actor->counters[0] == 0) // count down growth timer
    {
       actor->damage = actor->info->damage; // restore normal damage
@@ -1639,17 +1639,17 @@ void A_LichFireGrow(Mobj *actor)
 //
 // Almost identical to the Lost Soul's attack, but adds a frequent
 // failure to attack so that the imps do not constantly charge.
-// Note that this makes them nearly paralyzed in "Black Plague" 
+// Note that this makes them nearly paralyzed in "Black Plague"
 // skill level, however...
 //
 void A_ImpChargeAtk(Mobj *actor)
-{   
+{
    if(!actor->target || P_Random(pr_impcharge) > 64)
    {
       P_SetMobjState(actor, actor->info->seestate);
    }
    else
-   {   
+   {
       S_StartSound(actor, actor->info->attacksound);
 
       P_SkullFly(actor, 12 * FRACUNIT);
@@ -1665,10 +1665,10 @@ void A_ImpMeleeAtk(Mobj *actor)
       return;
 
    S_StartSound(actor, actor->info->attacksound);
-   
+
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    5 + (P_Random(pr_impmelee) & 7), MOD_HIT);
    }
 }
@@ -1689,7 +1689,7 @@ void A_ImpMissileAtk(Mobj *actor)
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    5 + (P_Random(pr_impmelee2) & 7), MOD_HIT);
    }
    else
@@ -1705,7 +1705,7 @@ void A_ImpDeath(Mobj *actor)
 {
    actor->flags &= ~MF_SOLID;
    actor->flags2 |= MF2_FOOTCLIP;
-   
+
    if(actor->z <= actor->floorz && actor->info->crashstate != NullStateNum)
    {
       actor->intflags |= MIF_CRASHED;
@@ -1765,12 +1765,12 @@ void A_ImpExplode(Mobj *actor)
    fxType1  = E_SafeThingType(MT_IMPCHUNK1);
    fxType2  = E_SafeThingType(MT_IMPCHUNK2);
    stateNum = E_SafeState(S_IMP_XCRASH1);
-   
+
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, fxType1);
    mo->momx = P_SubRandom(pr_impcrash) << 10;
    mo->momy = P_SubRandom(pr_impcrash) << 10;
    mo->momz = 9*FRACUNIT;
-   
+
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, fxType2);
    mo->momx = P_SubRandom(pr_impcrash) << 10;
    mo->momy = P_SubRandom(pr_impcrash) << 10;
@@ -1799,18 +1799,18 @@ void A_PhoenixPuff(Mobj *actor)
    angle_t angle;
 
    thingtype = E_ArgAsThingNum(actor->state->args, 0);
-   
+
    P_HticTracer(actor, ANGLE_1 * 5, ANGLE_1 * 10);
-   
+
    puff = P_SpawnMobj(actor->x, actor->y, actor->z, thingtype);
-   
+
    angle = actor->angle + ANG90;
    angle >>= ANGLETOFINESHIFT;
    puff->momx = FixedMul(13 * FRACUNIT / 10, finecosine[angle]);
    puff->momy = FixedMul(13 * FRACUNIT / 10, finesine[angle]);
-   
+
    puff = P_SpawnMobj(actor->x, actor->y, actor->z, thingtype);
-   
+
    angle = actor->angle - ANG90;
    angle >>= ANGLETOFINESHIFT;
    puff->momx = FixedMul(13 * FRACUNIT / 10, finecosine[angle]);
@@ -1818,4 +1818,3 @@ void A_PhoenixPuff(Mobj *actor)
 }
 
 // EOF
-

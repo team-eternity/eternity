@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
+//
 //    Hash routines for data integrity and cryptographic purposes.
 //
 //-----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ protected:
    uint8_t  message[64]; // current 512-bit message block
    int      messageidx;  // current index into message (accumulate until == 64)
    bool     gonebad;     // an error occurred in the computation
-   hashtype_e type;      // algorithm being used for computation   
+   hashtype_e type;      // algorithm being used for computation
 
    friend class CRC32Hash;
    friend class Adler32Hash;
@@ -60,7 +60,7 @@ protected:
 public:
    HashData();
    HashData(hashtype_e pType);
-   HashData(hashtype_e pType, const uint8_t *data, uint32_t size, 
+   HashData(hashtype_e pType, const uint8_t *data, uint32_t size,
             bool doWrapUp = true);
 
    void      initialize(hashtype_e type);
@@ -77,4 +77,3 @@ public:
 #endif
 
 // EOF
-

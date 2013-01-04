@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -128,7 +128,7 @@ static bool D_getRegistryString(const registry_value_t &regval, qstring &str)
    AutoRegKey key(regval);
    if(!key)
       return false;
-   
+
    // Find the type and length of the string
    if(key.queryValueEx(regval.value, NULL, &valtype, NULL, &len))
       return false;
@@ -235,7 +235,7 @@ static const char *steamMasterLevelsPath = "Master Levels of Doom\\master\\wads"
 
 // Hexen 95, from the Towers of Darkness collection.
 // Special thanks to GreyGhost for finding the registry keys it creates.
-// TODO: There's no code to load this right now, since EE doesn't support 
+// TODO: There's no code to load this right now, since EE doesn't support
 // Hexen as of yet. Consider it ground work for the future.
 static registry_value_t hexen95Value =
 {
@@ -268,7 +268,7 @@ static void D_addUninstallPaths(Collection<qstring> &paths)
             paths.add(str.erase(0, uninstpos + uninstlen));
          }
       }
-      
+
       ++regval;
    }
 }
@@ -310,7 +310,7 @@ static void D_addSteamPaths(Collection<qstring> &paths)
       for(int i = 0; i < earrlen(steamInstallSubDirs); i++)
       {
          qstring &newPath = paths.addNew();
-         
+
          newPath = str;
          newPath.pathConcatenate("\\steamapps\\common");
          newPath.pathConcatenate(steamInstallSubDirs[i]);
@@ -395,7 +395,7 @@ static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
       if(!strcmp(ent->d_name, ".") ||
          !strcmp(ent->d_name, ".."))
          continue;
-      
+
       struct stat sbuf;
       qstring fullpath;
       fullpath = base;
@@ -417,7 +417,7 @@ static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
 static void D_addDefaultDirectories(Collection<qstring> &paths)
 {
    DIR *dir;
-   
+
    paths.addNew() = ".";            // current directory
    paths.addNew() = D_DoomExeDir(); // executable directory
 
@@ -464,7 +464,7 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
 
    // Steam
    D_addSteamPaths(paths);
-   
+
    // Collector's Edition
    D_addCollectorsEdition(paths);
 
@@ -514,9 +514,9 @@ static void D_determineIWADVersion(const qstring &fullpath)
       if(PATHEMPTY(gi_path_doomreg))
          var = &gi_path_doomreg;
       break;
-   case retail: // The Ultimate DOOM   
+   case retail: // The Ultimate DOOM
       if(isfreever)
-      { 
+      {
          if(PATHEMPTY(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
       }
@@ -559,7 +559,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
       }
       break;
    case hereticsw: // Heretic Shareware
-      if(PATHEMPTY(gi_path_hticsw)) 
+      if(PATHEMPTY(gi_path_hticsw))
          var = &gi_path_hticsw;
       break;
    case hereticreg: // Heretic Registered
@@ -722,10 +722,9 @@ void D_FindIWADs()
    D_checkForNoRest(); // NR4TL
 
    // TODO: DKotDC, when Hexen is supported
-   
+
    // Master Levels detection
    D_findMasterLevels();
 }
 
 // EOF
-

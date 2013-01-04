@@ -231,12 +231,12 @@ bool InputKey::isDisabled() const
    return disabled;
 }
 
-void InputKey::disable()      
+void InputKey::disable()
 {
    disabled = true;
 }
 
-void InputKey::enable()      
+void InputKey::enable()
 {
    disabled = false;
 }

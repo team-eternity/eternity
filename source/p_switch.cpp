@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -74,7 +74,7 @@ int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
 void P_InitSwitchList(void)
 {
    int i, index = 0;
-   int episode; 
+   int episode;
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
    int lumpnum;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
@@ -86,13 +86,13 @@ void P_InitSwitchList(void)
 
    // haleyjd 08/29/09: run down the hash chain for SWITCHES
    lump = W_GetLumpNameChain("SWITCHES");
-   
+
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {
       lump = lumpinfo[lumpnum];
 
       // look for a lump which is of a possibly good size
-      if(!strcasecmp(lump->name, "SWITCHES") && 
+      if(!strcasecmp(lump->name, "SWITCHES") &&
          lump->size % sizeof(switchlist_t) == 0)
          break;
    }
@@ -167,13 +167,13 @@ button_t *P_FindFreeButton(void)
 //
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
 //
-static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
+static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
                           bwhere_e w, int texture, int time, bool dopopout,
                           const char *startsound)
 {
    int i;
    button_t *button;
-   
+
    // See if button is already pressed
    for(i = 0; i < numbuttonsalloc; ++i)
    {
@@ -182,7 +182,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
    }
 
    button = P_FindFreeButton();
-   
+
    button->line     = line - lines;
    button->side     = sidenum;
    button->where    = w;
@@ -194,7 +194,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
 
    // switch activation sound
    S_StartSoundName(&line->soundorg, startsound);
-   
+
    // haleyjd 04/16/08: and thus dies one of the last static limits.
    // I_Error("P_StartButton: no button slots left!");
 }
@@ -244,19 +244,19 @@ void P_RunButtons(void)
                case top:
                   sides[button->side].toptexture = button->btexture;
                   break;
-                  
+
                case middle:
                   sides[button->side].midtexture = button->btexture;
                   break;
-                  
+
                case bottom:
                   sides[button->side].bottomtexture = button->btexture;
                   break;
                }
-               
+
                S_StartSoundName(&line->soundorg, "EE_SwitchOn");
             }
-            
+
             // clear out the button
             memset(button, 0, sizeof(button_t));
          }
@@ -286,7 +286,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    const char *sound;     // haleyjd
    int       sidenum;
    sector_t *sector;
-   
+
    if(!useAgain)
       line->special = 0;
 
@@ -307,7 +307,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    texBot = sides[sidenum].bottomtexture;
 
    sound = "EE_SwitchOn"; // haleyjd
-   
+
    // EXIT SWITCH?
    if(line->special == 11)
       sound = "EE_SwitchEx"; // haleyjd
@@ -321,28 +321,28 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       if(switchlist[i] == texTop) // if an upper texture
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
-         
+
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
                        !!useAgain, sound); // start timer
-         
+
          return;
       }
       else if(switchlist[i] == texMid) // if a normal texture
       {
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
-         
+
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
                        !!useAgain, sound); // start timer
-         
+
          return;
       }
       else if(switchlist[i] == texBot) // if a lower texture
       {
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
-         
+
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
                        !!useAgain, sound); // start timer
-         
+
          return;
       }
    }
@@ -366,11 +366,11 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
    if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
       return false;
 
-   // SoM: only allow switch specials on 3d sides to be triggered if 
+   // SoM: only allow switch specials on 3d sides to be triggered if
    // the mobj is within range of the side.
    // haleyjd 05/02/06: ONLY on two-sided lines.
    if(demo_version >= 331 && (line->flags & ML_3DMIDTEX) &&
-      line->backsector && line->sidenum[side] != -1 && 
+      line->backsector && line->sidenum[side] != -1 &&
       sides[line->sidenum[side]].midtexture)
    {
       fixed_t opentop, openbottom;
@@ -379,7 +379,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 
       opentop = line->frontsector->ceilingheight < line->backsector->ceilingheight ?
                 line->frontsector->ceilingheight : line->backsector->ceilingheight;
-      
+
       openbottom = line->frontsector->floorheight > line->backsector->floorheight ?
                    line->frontsector->floorheight : line->backsector->floorheight;
 
@@ -520,14 +520,14 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          }
       }
    }
-    
+
    // Switches that other things can activate.
    if(!thing->player)
    {
       // never open secret doors
       if(line->flags & ML_SECRET)
          return false;
-      
+
       switch(line->special)
       {
       case 1:         // MANUAL DOOR RAISE
@@ -540,7 +540,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       case 210:       // silent switch teleporters
       case 209:
          break;
-         
+
       default:
          return false;
       }
@@ -557,17 +557,17 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
    case 26:            // Blue Door/Locked
    case 27:            // Yellow Door /Locked
    case 28:            // Red Door /Locked
-      
+
    case 31:            // Manual door open
    case 32:            // Blue locked door open
    case 33:            // Red locked door open
    case 34:            // Yellow locked door open
-      
+
    case 117:           // Blazing door raise
    case 118:           // Blazing door open
       EV_VerticalDoor(line, thing);          // haleyjd: note ignored return value...
       break;
-        
+
       // Switches (non-retriggerable)
    case 7:
       // Build Stairs
@@ -580,11 +580,11 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       if (EV_DoDonut(line))
          P_ChangeSwitchTexture(line,0,0);
       break;
-        
+
    case 11:
       // Exit level
       // killough 10/98: prevent zombies from exiting levels
-      if(thing->player && thing->player->health <= 0 && 
+      if(thing->player && thing->player->health <= 0 &&
          !comp[comp_zombie])
       {
          S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
@@ -593,73 +593,73 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       P_ChangeSwitchTexture(line,0,0);
       G_ExitLevel ();
       break;
-        
+
    case 14:
       // Raise Floor 32 and change texture
       if (EV_DoPlat(line,raiseAndChange,32))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 15:
       // Raise Floor 24 and change texture
       if (EV_DoPlat(line,raiseAndChange,24))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 18:
       // Raise Floor to next highest floor
       if (EV_DoFloor(line, raiseFloorToNearest))
          P_ChangeSwitchTexture(line,0,0);
       break;
-        
+
    case 20:
       // Raise Plat next highest floor and change texture
       if (EV_DoPlat(line,raiseToNearestAndChange,0))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 21:
       // PlatDownWaitUpStay
       if (EV_DoPlat(line,downWaitUpStay,0))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 23:
       // Lower Floor to Lowest
       if (EV_DoFloor(line,lowerFloorToLowest))
          P_ChangeSwitchTexture(line,0,0);
       break;
-        
+
    case 29:
       // Raise Door
       if (EV_DoDoor(line,doorNormal))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 41:
       // Lower Ceiling to Floor
       if (EV_DoCeiling(line,lowerToFloor))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 71:
       // Turbo Lower Floor
       if (EV_DoFloor(line,turboLower))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 49:
       // Ceiling Crush And Raise
       if (EV_DoCeiling(line,crushAndRaise))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 50:
       // Close Door
       if (EV_DoDoor(line,doorClose))
          P_ChangeSwitchTexture(line,0,0);
       break;
-        
+
    case 51:
       // Secret EXIT
       // killough 10/98: prevent zombies from exiting levels
@@ -672,67 +672,67 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       P_ChangeSwitchTexture(line,0,0);
       G_SecretExitLevel ();
       break;
-        
+
    case 55:
       // Raise Floor Crush
       if (EV_DoFloor(line,raiseFloorCrush))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 101:
       // Raise Floor
       if (EV_DoFloor(line,raiseFloor))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 102:
       // Lower Floor to Surrounding floor height
       if (EV_DoFloor(line,lowerFloor))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 103:
       // Open Door
       if (EV_DoDoor(line,doorOpen))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 111:
       // Blazing Door Raise (faster than TURBO!)
       if (EV_DoDoor (line,blazeRaise))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 112:
       // Blazing Door Open (faster than TURBO!)
       if (EV_DoDoor (line,blazeOpen))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 113:
       // Blazing Door Close (faster than TURBO!)
       if (EV_DoDoor (line,blazeClose))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 122:
       // Blazing PlatDownWaitUpStay
       if (EV_DoPlat(line,blazeDWUS,0))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 127:
       // Build Stairs Turbo 16
       if (EV_BuildStairs(line,turbo16))
          P_ChangeSwitchTexture(line,0,0);
       break;
-      
+
    case 131:
       // Raise Floor Turbo
       if (EV_DoFloor(line,raiseFloorTurbo))
          P_ChangeSwitchTexture(line,0,0);
       break;
-        
+
    case 133:
       // BlzOpenDoor BLUE
    case 135:
@@ -742,7 +742,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       if(EV_DoLockedDoor (line,blazeOpen,thing))
          P_ChangeSwitchTexture(line,0,0);
       break;
-        
+
    case 140:
       // Raise Floor 512
       if (EV_DoFloor(line,raiseFloor512))
@@ -773,42 +773,42 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_DoFloor(line,lowerAndChange))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 160:
             // Raise Floor 24 and change
             // 160 S1  EV_DoFloor(raiseFloor24AndChange)
             if (EV_DoFloor(line,raiseFloor24AndChange))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 161:
             // Raise Floor 24
             // 161 S1  EV_DoFloor(raiseFloor24)
             if (EV_DoFloor(line,raiseFloor24))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 162:
             // Moving floor min n to max n
             // 162 S1  EV_DoPlat(perpetualRaise,0)
             if (EV_DoPlat(line,perpetualRaise,0))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 163:
             // Stop Moving floor
             // 163 S1  EV_DoPlat(perpetualRaise,0)
             EV_StopPlat(line);
             P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 164:
             // Start fast crusher
             // 164 S1  EV_DoCeiling(fastCrushAndRaise)
             if (EV_DoCeiling(line,fastCrushAndRaise))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 165:
             // Start slow silent crusher
             // 165 S1  EV_DoCeiling(silentCrushAndRaise)
@@ -830,14 +830,14 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_DoCeiling(line, lowerAndCrush))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 168:
             // Stop crusher
             // 168 S1 EV_CeilingCrushStop()
             if (EV_CeilingCrushStop(line))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 169:
             // Lights to brightest neighbor sector
             // 169 S1  EV_LightTurnOn(0)
@@ -851,35 +851,35 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             EV_LightTurnOn(line,35);
             P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 171:
             // Lights on full
             // 171 S1  EV_LightTurnOn(255)
             EV_LightTurnOn(line,255);
             P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 172:
             // Start Lights Strobing
             // 172 S1  EV_StartLightStrobing()
             EV_StartLightStrobing(line);
             P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 173:
             // Lights to Dimmest Near
             // 173 S1  EV_TurnTagLightsOff()
             EV_TurnTagLightsOff(line);
             P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 174:
             // Teleport
             // 174 S1  EV_Teleport(side,thing)
             if (EV_Teleport(line,side,thing))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 175:
             // Close Door, Open in 30 secs
             // 175 S1  EV_DoDoor(close30ThenOpen)
@@ -893,28 +893,28 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_DoChange(line,trigChangeOnly))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 203:
             // Lower ceiling to lowest surrounding ceiling
             // 203 S1 EV_DoCeiling(lowerToLowest)
             if (EV_DoCeiling(line,lowerToLowest))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 204:
             // Lower ceiling to highest surrounding floor
             // 204 S1 EV_DoCeiling(lowerToMaxFloor)
             if (EV_DoCeiling(line,lowerToMaxFloor))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 209:
             // killough 1/31/98: silent teleporter
-            //jff 209 S1 SilentTeleport 
+            //jff 209 S1 SilentTeleport
             if (EV_SilentTeleport(line, side, thing))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 241: //jff 3/15/98 create texture change no motion type
             // Texture Change Only (Numeric)
             // 241 S1 Change Texture/Type Only
@@ -928,34 +928,34 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_DoFloor(line,lowerFloorToNearest))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 229:
             // Raise elevator next floor
             // 229 S1 Raise Elevator next floor
             if (EV_DoElevator(line,elevateUp))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 233:
             // Lower elevator next floor
             // 233 S1 Lower Elevator next floor
             if (EV_DoElevator(line,elevateDown))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
+
          case 237:
             // Elevator to current floor
             // 237 S1 Elevator to current floor
             if (EV_DoElevator(line,elevateCurrent))
                P_ChangeSwitchTexture(line,0,0);
             break;
-            
-            
+
+
             // jff 1/29/98 end of added S1 linedef types
-            
+
             //jff 1/29/98 added linedef types to fill all functions out so that
             // all possess SR, S1, WR, W1 types
-            
+
          case 78: //jff 3/15/98 create texture change no motion type
             // Texture Change Only (Numeric)
             // 78 SR Change Texture/Type Only
@@ -969,28 +969,28 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_DoFloor(line,raiseToTexture))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 177:
             // Raise Floor to shortest lower texture
             // 177 SR  EV_DoFloor(lowerAndChange)
             if (EV_DoFloor(line,lowerAndChange))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 178:
             // Raise Floor 512
             // 178 SR  EV_DoFloor(raiseFloor512)
             if (EV_DoFloor(line,raiseFloor512))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 179:
             // Raise Floor 24 and change
             // 179 SR  EV_DoFloor(raiseFloor24AndChange)
             if (EV_DoFloor(line,raiseFloor24AndChange))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 180:
             // Raise Floor 24
             // 180 SR  EV_DoFloor(raiseFloor24)
@@ -1018,21 +1018,21 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_DoCeiling(line,fastCrushAndRaise))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 184:
             // Start slow crusher
             // 184 SR  EV_DoCeiling(crushAndRaise)
             if(EV_DoCeiling(line,crushAndRaise))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 185:
             // Start slow silent crusher
             // 185 SR  EV_DoCeiling(silentCrushAndRaise)
             if (EV_DoCeiling(line,silentCrushAndRaise))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 186:
             // Raise ceiling, Lower floor
             // 186 SR EV_DoCeiling(raiseToHighest), EV_DoFloor(lowerFloortoLowest)
@@ -1054,119 +1054,119 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
             if (EV_CeilingCrushStop(line))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 190: //jff 3/15/98 create texture change no motion type
             // Texture Change Only (Trigger)
             // 190 SR Change Texture/Type Only
             if (EV_DoChange(line,trigChangeOnly))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 191:
             // Lower Pillar, Raise Donut
             // 191 SR  EV_DoDonut()
             if (EV_DoDonut(line))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 192:
             // Lights to brightest neighbor sector
             // 192 SR  EV_LightTurnOn(0)
             EV_LightTurnOn(line,0);
             P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 193:
             // Start Lights Strobing
             // 193 SR  EV_StartLightStrobing()
             EV_StartLightStrobing(line);
             P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 194:
             // Lights to Dimmest Near
             // 194 SR  EV_TurnTagLightsOff()
             EV_TurnTagLightsOff(line);
             P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 195:
             // Teleport
             // 195 SR  EV_Teleport(side,thing)
             if (EV_Teleport(line,side,thing))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 196:
             // Close Door, Open in 30 secs
             // 196 SR  EV_DoDoor(close30ThenOpen)
             if (EV_DoDoor(line, closeThenOpen))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 205:
             // Lower ceiling to lowest surrounding ceiling
             // 205 SR EV_DoCeiling(lowerToLowest)
             if (EV_DoCeiling(line,lowerToLowest))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 206:
             // Lower ceiling to highest surrounding floor
             // 206 SR EV_DoCeiling(lowerToMaxFloor)
             if (EV_DoCeiling(line,lowerToMaxFloor))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 210:
             // killough 1/31/98: silent teleporter
-            //jff 210 SR SilentTeleport 
+            //jff 210 SR SilentTeleport
             if (EV_SilentTeleport(line, side, thing))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 211: //jff 3/14/98 create instant toggle floor type
             // Toggle Floor Between C and F Instantly
             // 211 SR Toggle Floor Instant
             if (EV_DoPlat(line,toggleUpDn,0))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 222:
             // Lower floor to next lowest floor
             // 222 SR Lower Floor To Nearest Floor
             if (EV_DoFloor(line,lowerFloorToNearest))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 230:
             // Raise elevator next floor
             // 230 SR Raise Elevator next floor
             if (EV_DoElevator(line,elevateUp))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 234:
             // Lower elevator next floor
             // 234 SR Lower Elevator next floor
             if (EV_DoElevator(line,elevateDown))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 238:
             // Elevator to current floor
             // 238 SR Elevator to current floor
             if (EV_DoElevator(line,elevateCurrent))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 258:
             // Build stairs, step 8
             // 258 SR EV_BuildStairs(build8)
             if (EV_BuildStairs(line,build8))
                P_ChangeSwitchTexture(line,1,0);
             break;
-            
+
          case 259:
             // Build stairs, step 16
             // 259 SR EV_BuildStairs(turbo16)
@@ -1174,14 +1174,14 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
                P_ChangeSwitchTexture(line,1,0);
             break;
             // 1/29/98 jff end of added SR linedef types
-            
+
             // sf: scripting
          case 277: // S1 start script
             line->special = 0;
          case 276: // SR start script
             P_ChangeSwitchTexture(line, (line->special ? 1 : 0), 0);
             P_StartLineScript(line, thing);
-            break;            
+            break;
          }
       }
       break;
@@ -1192,115 +1192,115 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       if (EV_DoDoor(line,doorClose))
          P_ChangeSwitchTexture(line,1,0);
       break;
-        
+
    case 43:
       // Lower Ceiling to Floor
       if (EV_DoCeiling(line,lowerToFloor))
          P_ChangeSwitchTexture(line,1,0);
       break;
-        
+
    case 45:
       // Lower Floor to Surrounding floor height
       if (EV_DoFloor(line,lowerFloor))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 60:
       // Lower Floor to Lowest
       if (EV_DoFloor(line,lowerFloorToLowest))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 61:
       // Open Door
       if (EV_DoDoor(line,doorOpen))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 62:
       // PlatDownWaitUpStay
       if (EV_DoPlat(line,downWaitUpStay,1))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 63:
       // Raise Door
       if (EV_DoDoor(line,doorNormal))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 64:
       // Raise Floor to ceiling
       if (EV_DoFloor(line,raiseFloor))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 66:
       // Raise Floor 24 and change texture
       if (EV_DoPlat(line,raiseAndChange,24))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 67:
       // Raise Floor 32 and change texture
       if (EV_DoPlat(line,raiseAndChange,32))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 65:
       // Raise Floor Crush
       if (EV_DoFloor(line,raiseFloorCrush))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 68:
       // Raise Plat to next highest floor and change texture
       if (EV_DoPlat(line,raiseToNearestAndChange,0))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 69:
       // Raise Floor to next highest floor
       if (EV_DoFloor(line, raiseFloorToNearest))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 70:
       // Turbo Lower Floor
       if (EV_DoFloor(line,turboLower))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 114:
       // Blazing Door Raise (faster than TURBO!)
       if (EV_DoDoor (line,blazeRaise))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 115:
       // Blazing Door Open (faster than TURBO!)
       if (EV_DoDoor (line,blazeOpen))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 116:
       // Blazing Door Close (faster than TURBO!)
       if (EV_DoDoor (line,blazeClose))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 123:
       // Blazing PlatDownWaitUpStay
       if (EV_DoPlat(line,blazeDWUS,0))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 132:
       // Raise Floor Turbo
       if (EV_DoFloor(line,raiseFloorTurbo))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 99:
       // BlzOpenDoor BLUE
    case 134:
@@ -1310,13 +1310,13 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       if (EV_DoLockedDoor (line,blazeOpen,thing))
          P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 138:
       // Light Turn On
       EV_LightTurnOn(line,255);
       P_ChangeSwitchTexture(line,1,0);
       break;
-      
+
    case 139:
       // Light Turn Off
       EV_LightTurnOn(line,35);
@@ -1396,4 +1396,3 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 //
 //
 //----------------------------------------------------------------------------
-

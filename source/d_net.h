@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -77,7 +77,7 @@ struct doomdata_t
     uint32_t     checksum;
     // Only valid if NCMD_RETRANSMIT.
     byte         retransmitfrom;
-    
+
     byte         starttic;
     byte         player;
     byte         numtics;
@@ -123,15 +123,15 @@ struct doomcom_t
 {
     // Supposed to be DOOMCOM_ID?
     int32_t             id;
-    
+
     // DOOM executes an int to execute commands.
-    int16_t             intnum;         
+    int16_t             intnum;
     // Communication between DOOM and the driver.
     // Is CMD_SEND or CMD_GET.
     int16_t             command;
     // Is dest for send, set by get (-1 = no packet).
     int16_t             remotenode;
-    
+
     // Info common to all nodes.
     // Console is allways node 0.
     int16_t             numnodes;
@@ -150,7 +150,7 @@ struct doomcom_t
     // Info specific to this node.
     int16_t             consoleplayer;
     int16_t             numplayers;
-    
+
     // These are related to the 3-display mode,
     //  in which two drones looking left and right
     //  were used to render two additional views
@@ -159,11 +159,11 @@ struct doomcom_t
     // 1 = left, 0 = center, -1 = right
     int16_t             angleoffset;
     // 1 = drone
-    int16_t             drone;          
+    int16_t             drone;
 
     // The packet data to be sent.
     doomdata_t          data;
-    
+
 };
 
 // Create any new ticcmds and broadcast to other players.

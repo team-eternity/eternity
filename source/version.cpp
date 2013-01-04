@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@ const char version_name[] = "Gungnir";
 #ifdef _SDL_VER
 const char ee_wmCaption[] = "Eternity Engine v3.40.32 \"Gungnir\"";
 #endif
-            
+
 // haleyjd: Eternity release history
 // private alpha       -- 3.29 private       09/14/00
 // public beta         -- 3.29 public beta 1 01/08/01
@@ -77,7 +77,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.32 \"Gungnir\"";
 // 3.40.20 'Mjolnir'   -- 12/25/11
 // 3.40.25 'Midgard'   -- 08/26/12
 // 3.40.30 'Alfheim'   -- 11/04/12
-// 3.40.32 'Gungnir'   -- 
+// 3.40.32 'Gungnir'   --
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
@@ -92,4 +92,3 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.32 \"Gungnir\"";
 // version information files
 //
 //----------------------------------------------------------------------------
-

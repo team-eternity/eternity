@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -328,7 +328,7 @@ void A_CentaurAttack(Mobj *actor)
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    P_Random(pr_centauratk) % 7 + 3, MOD_HIT);
    }
 }
@@ -346,7 +346,7 @@ void A_CentaurAttack2(Mobj *actor)
 //
 // Throws an object away from the source.
 //
-static void P_TossEquipmentItem(Mobj *mo, angle_t angle, int momshift, 
+static void P_TossEquipmentItem(Mobj *mo, angle_t angle, int momshift,
                                 fixed_t baseZMom)
 {
    mo->momx = FixedMul(((P_Random(pr_dropequip) - 128) << momshift) + FRACUNIT,
@@ -354,7 +354,7 @@ static void P_TossEquipmentItem(Mobj *mo, angle_t angle, int momshift,
 
    mo->momy = FixedMul(((P_Random(pr_dropequip) - 128) << momshift) + FRACUNIT,
                        finesine[angle >> ANGLETOFINESHIFT]);
-   
+
    mo->momz = baseZMom + (P_Random(pr_dropequip) << (momshift - 1));
 }
 
@@ -374,7 +374,7 @@ void A_DropEquipment(Mobj *actor)
    int moType1    = E_ArgAsThingNum(actor->state->args, 0);
    int moType2    = E_ArgAsThingNum(actor->state->args, 1);
    int xyMomShift = E_ArgAsInt(actor->state->args, 2, 0);
-   
+
    fixed_t baseZMom = E_ArgAsInt(actor->state->args, 3, 0) * FRACUNIT;
    fixed_t zHeight  = E_ArgAsInt(actor->state->args, 4, 0) * FRACUNIT;
 
@@ -417,10 +417,10 @@ void A_BishopAttack(Mobj *actor)
       return;
 
    S_StartSound(actor, actor->info->attacksound);
-   
+
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_bishop1) & 7) + 1) * 4, MOD_HIT);
    }
    else
@@ -442,23 +442,23 @@ void A_BishopMissileWeave(Mobj *actor)
    fixed_t newX, newY;
    int weaveXY, weaveZ;
    int angle;
-   
+
    weaveXY = actor->counters[1] >> 16;
    weaveZ  = actor->counters[1] & 0xFFFF;
    angle   = (actor->angle + ANG90) >> ANGLETOFINESHIFT;
-   
+
    newX     = actor->x - FixedMul(finecosine[angle], FloatBobOffsets[weaveXY] << 1);
-   newY     = actor->y - FixedMul(finesine[angle],   FloatBobOffsets[weaveXY] << 1);   
-   weaveXY  = (weaveXY + 2) & 63;   
+   newY     = actor->y - FixedMul(finesine[angle],   FloatBobOffsets[weaveXY] << 1);
+   weaveXY  = (weaveXY + 2) & 63;
    newX    += FixedMul(finecosine[angle], FloatBobOffsets[weaveXY] << 1);
    newY    += FixedMul(finesine[angle],   FloatBobOffsets[weaveXY] << 1);
-   
+
    P_TryMove(actor, newX, newY, false);
-   
+
    actor->z -= FloatBobOffsets[weaveZ];
-   weaveZ    = (weaveZ + 2) & 63;   
+   weaveZ    = (weaveZ + 2) & 63;
    actor->z += FloatBobOffsets[weaveZ];
-   
+
    actor->counters[1] = weaveZ + (weaveXY << 16);
 }
 
@@ -495,7 +495,7 @@ void A_SpawnBlur(Mobj *actor)
    int walkState = E_ArgAsStateNum(actor->state->args, 0, actor);
    int atkState  = E_ArgAsStateNum(actor->state->args, 1, actor);
    int thingType = E_ArgAsThingNum(actor->state->args, 2);
-   
+
    if(!--actor->counters[0])
    {
       actor->momx = 0;
@@ -554,7 +554,7 @@ void A_DragonFlap(Mobj *actor)
 
    /*
    HEXEN_TODO:
-   S_StartSound(actor, 
+   S_StartSound(actor,
       P_Random() < 240 ? SFX_DRAGON_WINGFLAP : actor->info->activesound);
    */
 }
@@ -571,19 +571,19 @@ void A_DragonFX2(Mobj *actor)
    Mobj *mo;
    int i;
    int delay;
-   
+
    delay = 16 + (P_Random(pr_dragonfx) >> 3);
-   
+
    for(i = 1 + (P_Random(pr_dragonfx) & 3); i; i--)
    {
-      mo = P_SpawnMobj(actor->x + ((P_Random(pr_dragonfx) - 128) << 14), 
-                       actor->y + ((P_Random(pr_dragonfx) - 128) << 14), 
+      mo = P_SpawnMobj(actor->x + ((P_Random(pr_dragonfx) - 128) << 14),
+                       actor->y + ((P_Random(pr_dragonfx) - 128) << 14),
                        actor->z + ((P_Random(pr_dragonfx) - 128) << 12),
                        thingType);
 
       mo->tics = delay + (P_Random(pr_dragonfx) & 3) * i * 2;
       P_SetTarget<Mobj>(&mo->target, actor->target);
-   } 
+   }
 }
 
 //
@@ -625,7 +625,7 @@ void A_DemonAttack1(Mobj *actor)
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_chaosbite) & 7) + 1) * 2, MOD_HIT);
    }
 }
@@ -703,14 +703,14 @@ void A_WraithMelee(Mobj *actor)
 
    if(!actor->target)
       return;
-   
+
    // Steal health from target and give to actor
    if(P_CheckMeleeRange(actor) && (P_Random(pr_wraithm) < 220))
    {
       amount = ((P_Random(pr_wraithd) & 7) + 1) * 2;
-      
+
       P_DamageMobj(actor->target, actor, actor, amount, MOD_HIT);
-      
+
       actor->health += amount;
    }
 }
@@ -736,11 +736,11 @@ void A_WraithFX2(Mobj *actor)
    Mobj *mo;
    angle_t angle;
    int i;
-   
+
    for(i = 0; i < 2; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType);
-      
+
       if(P_Random(pr_wraithfx2) < 128)
          angle = actor->angle + (P_Random(pr_wraithfx2) << 22);
       else
@@ -749,7 +749,7 @@ void A_WraithFX2(Mobj *actor)
       mo->momz = 0;
       mo->momx = FixedMul((P_Random(pr_wraithfx2) << 7) + FRACUNIT,
                           finecosine[angle >> ANGLETOFINESHIFT]);
-      mo->momy = FixedMul((P_Random(pr_wraithfx2) << 7) + FRACUNIT, 
+      mo->momy = FixedMul((P_Random(pr_wraithfx2) << 7) + FRACUNIT,
                           finesine[angle >> ANGLETOFINESHIFT]);
       P_SetTarget<Mobj>(&mo->target, actor);
       mo->floorclip = 10*FRACUNIT;
@@ -769,11 +769,11 @@ void A_WraithFX3(Mobj *actor)
    Mobj *mo;
    int numdropped = P_Random(pr_wraithfx3) % 15;
    int i;
-   
+
    for(i = 0; i < numdropped; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType);
-      
+
       mo->x += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx3) << 10);
@@ -801,7 +801,7 @@ void A_WraithFX4(Mobj *actor)
    Mobj *mo;
    int chance = P_Random(pr_wraithfx4a);
    int spawnflags;
-   
+
    if(chance < 10)
       spawnflags = WFX4_SPAWN_TYPE1;
    else if(chance < 20)
@@ -810,7 +810,7 @@ void A_WraithFX4(Mobj *actor)
       spawnflags = WFX4_SPAWN_TYPE1 | WFX4_SPAWN_TYPE2;
    else
       spawnflags = 0;
-   
+
    if(spawnflags & WFX4_SPAWN_TYPE1)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType1);
@@ -859,7 +859,7 @@ void A_EttinAttack(Mobj *actor)
 {
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
+      P_DamageMobj(actor->target, actor, actor,
                    ((P_Random(pr_ettin) & 7) + 1) * 2, MOD_HIT);
    }
 }
@@ -878,8 +878,8 @@ void A_DropMace(Mobj *actor)
    int momShift     = E_ArgAsInt(actor->state->args, 1, 0);
    fixed_t baseMomZ = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT;
    Mobj *mo;
-   
-   mo = P_SpawnMobj(actor->x, actor->y, actor->z + (actor->height >> 1), 
+
+   mo = P_SpawnMobj(actor->x, actor->y, actor->z + (actor->height >> 1),
                     thingType);
 
    mo->momx = (P_Random(pr_dropmace) - 128) << momShift;
@@ -903,23 +903,23 @@ void A_AffritSpawnRock(Mobj *actor)
 
    for(i = 0; i < 5; ++i)
       thingTypes[i] = E_ArgAsThingNum(actor->state->args, i);
-   
+
    rtype = thingTypes[P_Random(pr_affritrock) % 5];
-   
+
    x = actor->x + ((P_Random(pr_affritrock) - 128) << 12);
    y = actor->y + ((P_Random(pr_affritrock) - 128) << 12);
    z = actor->z + (P_Random(pr_affritrock) << 11);
-   
+
    mo = P_SpawnMobj(x, y, z, rtype);
-   
+
    P_SetTarget<Mobj>(&mo->target, actor);
 
    mo->momx = (P_Random(pr_affritrock) - 128) << 10;
    mo->momy = (P_Random(pr_affritrock) - 128) << 10;
    mo->momz = (P_Random(pr_affritrock) << 10);
-   
+
    mo->counters[0] = 2; // Number bounces
-   
+
    // Initialize fire demon
    actor->counters[1]  = 0;
    actor->flags       &= ~MF_JUSTATTACKED;
@@ -968,15 +968,15 @@ void A_AffritSplotch(Mobj *actor)
    int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    Mobj *mo;
-   
+
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType1);
-   
+
    mo->momx = (P_Random(pr_affrits) - 128) << 11;
    mo->momy = (P_Random(pr_affrits) - 128) << 11;
    mo->momz = 3*FRACUNIT + (P_Random(pr_affrits) << 10);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType2);
-   
+
    mo->momx = (P_Random(pr_affrits) - 128) << 11;
    mo->momy = (P_Random(pr_affrits) - 128) << 11;
    mo->momz = 3*FRACUNIT + (P_Random(pr_affrits)<<10);
@@ -995,16 +995,16 @@ void A_IceGuyLook(Mobj *actor)
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    fixed_t dist;
    fixed_t an;
-   
+
    A_Look(actor);
 
    if(P_Random(pr_icelook) < 64)
    {
       dist = ((P_Random(pr_icelook2) - 128) * actor->radius) >> 7;
       an   = (actor->angle + ANG90) >> ANGLETOFINESHIFT;
-      
+
       P_SpawnMobj(actor->x + FixedMul(dist, finecosine[an]),
-                  actor->y + FixedMul(dist, finesine[an]), 
+                  actor->y + FixedMul(dist, finesine[an]),
                   actor->z + 60*FRACUNIT,
                   (P_Random(pr_icelook2) & 1) ? thingType2 : thingType1);
    }
@@ -1024,16 +1024,16 @@ void A_IceGuyChase(Mobj *actor)
    fixed_t dist;
    fixed_t an;
    Mobj *mo;
-   
+
    A_Chase(actor);
 
    if(P_Random(pr_icechase) < 128)
    {
       dist = ((P_Random(pr_icechase2) - 128) * actor->radius) >> 7;
       an   = (actor->angle + ANG90) >> ANGLETOFINESHIFT;
-      
+
       mo = P_SpawnMobj(actor->x + FixedMul(dist, finecosine[an]),
-                       actor->y + FixedMul(dist, finesine[an]), 
+                       actor->y + FixedMul(dist, finesine[an]),
                        actor->z + 60*FRACUNIT,
                        (P_Random(pr_icechase2) & 1) ? thingType2 : thingType1);
       mo->momx = actor->momx;
@@ -1055,12 +1055,12 @@ void A_IceGuyDie(Mobj *actor)
 {
    // HEXEN_TODO
    //void A_FreezeDeathChunks(Mobj *actor);
-   
+
    actor->momx = 0;
    actor->momy = 0;
    actor->momz = 0;
    actor->height <<= 2;
-   
+
    // HEXEN_TODO
    //A_FreezeDeathChunks(actor);
 }
@@ -1123,4 +1123,3 @@ void A_FreezeDeathChunks(Mobj *actor)
 
 
 // EOF
-

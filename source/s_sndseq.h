@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -100,7 +100,7 @@ struct SndSeq_t
 
    PointThinker *origin;         // the origin of the sequence
    sfxinfo_t *currentSound;      // current sound being played
-   
+
    int delayCounter;             // delay time counter
    int volume;                   // current volume
    int attenuation;              // current attenuation type
@@ -116,9 +116,9 @@ struct SndSeq_t
 extern DLListItem<SndSeq_t> *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
-void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, 
+void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype,
                         int seqOriginType, int seqOriginIdx);
-void S_StartSequenceName(PointThinker *mo, const char *seqname, 
+void S_StartSequenceName(PointThinker *mo, const char *seqname,
                          int seqOriginType, int seqOriginIdx);
 void S_StopSequence(PointThinker *mo);
 void S_SquashSequence(PointThinker *mo);
@@ -161,4 +161,3 @@ extern int s_enviro_volume;
 #endif
 
 // EOF
-

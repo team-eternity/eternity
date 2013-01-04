@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 // I have implemented DECORATE states into EDF for several reasons. First and
 // foremost is that their compact syntax is vastly superior even to EDF cmp
 // frames. Second, they offer improved encapsulation of states within the
-// objects that use them. Third, they will be useful for weapons and 
+// objects that use them. Third, they will be useful for weapons and
 // inventory definitions as well as mobjinfo.
 //
 // And finally, they offer a vastly simpler method of both adding and removing
@@ -107,7 +107,7 @@ typedef struct edecparser_s
    DLListItem<estatebuf_t> *curbufstate; // current state during main pass
 
    estatebuf_t *neweststate; // newest buffered state generated
-   
+
 
    // counts - incremented during the principals pass and used
    // to pre-allocate a sufficient number of entities for the main pass
@@ -199,7 +199,7 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
 /*
    State Transition Diagram
    ----------------------------------
-   NEEDLABEL: 
+   NEEDLABEL:
       <label> : NEEDLABELORKWORSTATE
       EOL     : loop
    NEEDLABELORKWORSTATE:
@@ -521,17 +521,17 @@ static void DoTokenStateText(tkstate_t *tks)
       // numbers up to this point, we will consider it a number, but the
       // parser can sort this out if the wrong token type appears when it
       // is expecting TOKEN_LABEL.
-      
+
       token->toLong(&endpos, 10);
-      
+
       if(*endpos != '\0')
-      {      
+      {
          // it's not just a number, so assume it's a label
          tks->tokentype = TOKEN_LABEL;
          tks->state     = TSTATE_LABEL;
       }
       // otherwise, proceed as normal
-      
+
       // add the dot character to the token
       *token += '.';
    }
@@ -605,9 +605,9 @@ static void DoTokenStateLabel(tkstate_t *tks)
    }
    else
    {
-      // anything else means we may have been mistaken about this being a 
+      // anything else means we may have been mistaken about this being a
       // label after all, or this is a label in the context of a goto statement;
-      // in that case, we mark the token as text type and the parser can sort 
+      // in that case, we mark the token as text type and the parser can sort
       // out the damage by watching out for it.
       tks->tokentype = TOKEN_TEXT;
       tks->state     = TSTATE_DONE;
@@ -726,21 +726,21 @@ static void PSExpectedErr(pstate_t *ps, const char *expected)
    if(ps->tokenerror)
       tokenname = ds_token_errors[ps->tokenerror];
 
-   E_EDFLoggedWarning(2, 
+   E_EDFLoggedWarning(2,
                       "Error on line %d of DECORATE state block:\n\t\t"
                       "Expected %s %s but found %s %s with value '%s'\n",
                       ps->linenum,
                       hasvowel(expected)  ? "an" : "a", expected,
                       hasvowel(tokenname) ? "an" : "a", tokenname,
                       ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->constPtr() : "\\n");
-   
+
    ps->error = true;
 }
 
 //
 // PSWrapStates
 //
-// haleyjd 06/23/10: shared logic to handle the end of a set of one or more 
+// haleyjd 06/23/10: shared logic to handle the end of a set of one or more
 // DECORATE state definitions. This is invoked from the following states:
 // * PSTATE_NEEDBRIGHTORACTION
 // * PSTATE_NEEDSTATEEOLORPAREN
@@ -755,7 +755,7 @@ static void PSWrapStates(pstate_t *ps)
       DLListItem<estatebuf_t> *link = DSP.curbufstate;
       int curlinenum = link->dllObject->linenum;
 
-      while(link && link->dllObject->linenum == curlinenum && 
+      while(link && link->dllObject->linenum == curlinenum &&
             link->dllObject->type == BUF_STATE)
       {
          link = link->dllNext;
@@ -783,14 +783,14 @@ static void DoPSNeedLabel(pstate_t *ps)
 
    case TOKEN_LABEL:
       // record label to associate with next state generated
-      if(ps->principals) 
+      if(ps->principals)
       {
          // count a label
-         DSP.numdeclabels++; 
+         DSP.numdeclabels++;
          // make a label object
          E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->constPtr(), ps->linenum);
       }
-      // Outside of principals, we don't do anything here. When we hit a 
+      // Outside of principals, we don't do anything here. When we hit a
       // non-label parsing state, we will run down the labels until we reach
       // the first non-label buffered object and create output labels for all
       // of them.
@@ -838,7 +838,7 @@ static void doLabel(pstate_t *ps)
 //
 // * During principals, we count it and generate a buffered goto object.
 //   In addition, if this goto immediately follows a label, we must count
-//   it specially because it will generate an invisible state that 
+//   it specially because it will generate an invisible state that
 //   immediately transfers to the goto's destination label.
 //
 // * During the main pass, if we are sitting with curbufstate on a label,
@@ -847,7 +847,7 @@ static void doLabel(pstate_t *ps)
 //   Otherwise, this goto record is meant to modify the nextstate of the
 //   previous state_t that was processed. Note the previous state_t processed
 //   while dealing with a keyword is *always* currentstate - 1.
-//   
+//
 // * Because label resolution is not complete, we must store ALL gotos into
 //   the temporary "internalgotos" list. This list is run down after the
 //   main parsing pass. Any gotos that can be resolved to labels in the
@@ -886,12 +886,12 @@ static void doGoto(pstate_t *ps)
          {
             edecstateout_t *dso = DSP.pDSO;
             edecstate_t *s = &(dso->states[dso->numstates]);
-            
+
             s->label = estrdup(link->dllObject->name);
             s->state = states[DSP.currentstate];
-            
+
             dso->numstates++;
-            
+
             link = link->dllNext;
          }
          DSP.curbufstate = link;
@@ -911,7 +911,7 @@ static void doGoto(pstate_t *ps)
 
          DSP.numinternalgotos++; // move forward one internal goto
       }
-      
+
       // move to next buffered state object
       DSP.curbufstate = DSP.curbufstate->dllNext;
    }
@@ -922,20 +922,20 @@ static void doGoto(pstate_t *ps)
 // doKeyword
 //
 // Other keywords are not quite as horrible as goto.
-// 
+//
 // * During principals we just record a keyword object and what type of keyword
 //   it is. "stop" keywords that immediately follow one or more labels are "kill
-//   states," however, which must eventually be returned to the caller in the 
-//   DSO object for removing states from whatever object contains this state 
+//   states," however, which must eventually be returned to the caller in the
+//   DSO object for removing states from whatever object contains this state
 //   block.
 //
 // * During the main pass, the loop, wait, and stop keywords are resolved to
-//   their jump targets immediately. The wait keyword keeps an object in its 
+//   their jump targets immediately. The wait keyword keeps an object in its
 //   current state, whereas the loop keyword returns it to the previous state
-//   to which a label was resolved, which is kept in the variable 
+//   to which a label was resolved, which is kept in the variable
 //   "lastlabelstate" (see doText below). "stop" sends a state to the NULL
 //   state. stop keywords that follow labels are added to the killstates list
-//   in the DSO object immediately, once for each consecutive label that 
+//   in the DSO object immediately, once for each consecutive label that
 //   points to that stop keyword.
 //
 static void doKeyword(pstate_t *ps)
@@ -946,7 +946,7 @@ static void doKeyword(pstate_t *ps)
       // count a keyword
       DSP.numkeywords++;
 
-      // if the keyword is "stop" and the previous buffered object is a label, 
+      // if the keyword is "stop" and the previous buffered object is a label,
       // this is a "kill state"
       if(DSP.neweststate && DSP.neweststate->type == BUF_LABEL &&
          *ps->tokenbuffer == "stop")
@@ -958,7 +958,7 @@ static void doKeyword(pstate_t *ps)
    else
    {
       state_t *state = states[DSP.currentstate - 1];
-      int kwdcode = E_StrToNumLinear(decorate_kwds, NUMDECKWDS, 
+      int kwdcode = E_StrToNumLinear(decorate_kwds, NUMDECKWDS,
                                      ps->tokenbuffer->constPtr());
 
       switch(kwdcode)
@@ -980,14 +980,14 @@ static void doKeyword(pstate_t *ps)
          {
             DLListItem<estatebuf_t> *link = DSP.curbufstate;
 
-            // if we're still on a label and this is a stop keyword, run 
+            // if we're still on a label and this is a stop keyword, run
             // forward through the labels and make kill states for each one
             while(link->dllObject->type != BUF_KEYWORD)
             {
                edecstateout_t *dso = DSP.pDSO;
                ekillstate_t   *ks  = &(dso->killstates[dso->numkillstates]);
-               
-               ks->killname = estrdup(link->dllObject->name);               
+
+               ks->killname = estrdup(link->dllObject->name);
                dso->numkillstates++;
 
                link = link->dllNext;
@@ -1059,12 +1059,12 @@ static void doText(pstate_t *ps)
          link = link->dllNext;
       }
       DSP.curbufstate = link;
-      
+
       statenum = DSP.currentstate;
 
       // set sprite number of all frame objects on the list with the same
       // linenumber as the current buffered state object
-      while(link && 
+      while(link &&
             link->dllObject->linenum == DSP.curbufstate->dllObject->linenum &&
             link->dllObject->type == BUF_STATE)
       {
@@ -1230,7 +1230,7 @@ static void DoPSNeedKWEOL(pstate_t *ps)
 // If this string is more than one character long, we generate additional
 // states up to the number of characters in the string, and the rest of the
 // properties parsed for the first state apply to those states. The states
-// created this way have their next state fields automatically created to be 
+// created this way have their next state fields automatically created to be
 // consecutive.
 //
 static void DoPSNeedStateFrames(pstate_t *ps)
@@ -1247,10 +1247,10 @@ static void DoPSNeedStateFrames(pstate_t *ps)
       if(ps->principals)
       {
          // During parsing for principals, we determine how many states should
-         // be created, and add that many state objects. Each state object 
-         // created here will have the same line number as this line in the 
+         // be created, and add that many state objects. Each state object
+         // created here will have the same line number as this line in the
          // DECORATE state block, and when parsing for values, we will apply the
-         // values to all states from the current one to the last one found 
+         // values to all states from the current one to the last one found
          // having the same line number.
          int i;
          int numstatestomake = (int)(ps->tokenbuffer->length());
@@ -1268,7 +1268,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          int statenum = DSP.currentstate;
          unsigned int stridx = 0;
 
-         while(link && link->dllObject->type == BUF_STATE && 
+         while(link && link->dllObject->type == BUF_STATE &&
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             char c = toupper(ps->tokenbuffer->charAt(stridx));
@@ -1314,7 +1314,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
-   {      
+   {
       // Apply the tics to each state with the same line number.
       if(!ps->principals)
       {
@@ -1322,7 +1322,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
          int statenum = DSP.currentstate;
          int tics = ps->tokenbuffer->toInt();
 
-         while(link && link->dllObject->type == BUF_STATE && 
+         while(link && link->dllObject->type == BUF_STATE &&
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             if(states[statenum]->decorate)
@@ -1365,7 +1365,7 @@ static void doAction(pstate_t *ps, const char *fn)
          return;
       }
 
-      while(link && link->dllObject->type == BUF_STATE && 
+      while(link && link->dllObject->type == BUF_STATE &&
             link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
       {
          if(states[statenum]->decorate)
@@ -1384,7 +1384,7 @@ static void doAction(pstate_t *ps, const char *fn)
 // Expecting either "bright", which modifies the current state block to use
 // fullbright frames, or the action name.
 //
-// 06/23/10: We also accept EOL here so as not to require "Null" on frames 
+// 06/23/10: We also accept EOL here so as not to require "Null" on frames
 //           that use the null action. (woops!)
 //
 static void DoPSNeedBrightOrAction(pstate_t *ps)
@@ -1414,7 +1414,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
+         while(link && link->dllObject->type == BUF_STATE &&
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             if(states[statenum]->decorate)
@@ -1436,7 +1436,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
 // Expecting an action name after having dealt with the "bright" command.
 //
 // 08/15/10: Bugfix - we also need to accept EOL here as well!
-//  
+//
 //
 static void DoPSNeedStateAction(pstate_t *ps)
 {
@@ -1482,7 +1482,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
+         while(link && link->dllObject->type == BUF_STATE &&
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             if(states[statenum]->decorate)
@@ -1505,7 +1505,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
 //
 // DoPSNeedStateArgOrParen
 //
-// After '(' we expect an argument or ')' (which is pointless to have but 
+// After '(' we expect an argument or ')' (which is pointless to have but
 // is still allowed).
 //
 static void DoPSNeedStateArgOrParen(pstate_t *ps)
@@ -1521,7 +1521,7 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
+         while(link && link->dllObject->type == BUF_STATE &&
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             if(states[statenum]->decorate)
@@ -1592,7 +1592,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
+         while(link && link->dllObject->type == BUF_STATE &&
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             if(states[statenum]->decorate)
@@ -1682,7 +1682,7 @@ bool E_GetDSLine(const char **src, pstate_t *ps)
 
          if(c == '\n')
             break;
-         
+
          *ps->linebuffer += c;
       }
 
@@ -1713,7 +1713,7 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
    ps.index       = 0;
    ps.linenum     = 0;
    ps.tokentype   = 0;
-   ps.tokenerror  = TERR_NONE;   
+   ps.tokenerror  = TERR_NONE;
    ps.linebuffer  = &linebuffer;
    ps.tokenbuffer = &tokenbuffer;
    ps.principals  = principals;
@@ -1762,7 +1762,7 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
 //
 static bool E_checkPrincipalSemantics(const char *firststate)
 {
-   DLListItem<estatebuf_t> *link = DSP.statebuffer; 
+   DLListItem<estatebuf_t> *link = DSP.statebuffer;
    estatebuf_t *prev = NULL;
 
    // Trying to use a pre-defined set of states. Certain conditions must be met:
@@ -1828,12 +1828,12 @@ static bool E_checkPrincipalSemantics(const char *firststate)
       // as this is not allowed.
       if(prev && prev->type == BUF_LABEL && bstate->type == BUF_KEYWORD)
       {
-         if(!strcasecmp(bstate->name, "loop") || 
+         if(!strcasecmp(bstate->name, "loop") ||
             !strcasecmp(bstate->name, "wait"))
          {
-            E_EDFLoggedWarning(2, 
+            E_EDFLoggedWarning(2,
                                "E_checkPrincipalSemantics: illegal keyword in "
-                               "DECORATE states: line %d: %s\n", 
+                               "DECORATE states: line %d: %s\n",
                                bstate->linenum, bstate->name);
             return false;
          }
@@ -1865,7 +1865,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input, const char *first
 {
    edecstateout_t *newdso = NULL;
    int totalstates;
-   
+
    // Parse for principals (basic grammatic acceptance/rejection,
    // counting objects, recording some basic information).
    if(!E_parseDecorateInternal(input, true))
@@ -1908,7 +1908,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input, const char *first
             states[i] = &newstates[i - DSP.firststate];
             states[i]->index = i;
             states[i]->name = ecalloc(char *, 1, 40);
-            psnprintf(states[i]->name, 40, "{DS %d}", i);         
+            psnprintf(states[i]->name, 40, "{DS %d}", i);
             states[i]->dehnum = -1;
             states[i]->sprite = blankSpriteNum;
             states[i]->nextstate = NullStateNum;
@@ -1968,7 +1968,7 @@ static bool E_DecorateMainPass(const char *input, edecstateout_t *dso)
 // E_resolveGotos
 //
 // Resolves gotos for which labels can be found in the DSO label set.
-// Any goto which cannot be resolved in such a way must be added 
+// Any goto which cannot be resolved in such a way must be added
 // instead to the DSO goto set for external resolution.
 //
 static bool E_resolveGotos(edecstateout_t *dso)
@@ -2006,11 +2006,11 @@ static bool E_resolveGotos(edecstateout_t *dso)
                else
                {
                   // invalid!
-                  E_EDFLoggedWarning(2, 
-                                     "E_resolveGotos: bad DECORATE goto offset %s+%d\n", 
+                  E_EDFLoggedWarning(2,
+                                     "E_resolveGotos: bad DECORATE goto offset %s+%d\n",
                                      gotoInfo->gotodest, gotoInfo->gotooffset);
                   return false;
-               }     
+               }
             } // end if
          } // end if
       } // end for
@@ -2164,5 +2164,3 @@ void E_FreeDSO(edecstateout_t *dso)
 }
 
 // EOF
-
-

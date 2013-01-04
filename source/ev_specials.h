@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -40,7 +40,7 @@ enum EVActionFlags
    EV_PREMONSTERSONLY  = 0x00000002, // Preamble should only allow monsters
    EV_PREALLOWZEROTAG  = 0x00000004, // Preamble should allow zero tag
    EV_PREFIRSTSIDEONLY = 0x00000008, // Disallow activation from back side
-   
+
    EV_POSTCLEARSPECIAL = 0x00000010, // Clear special after activation
    EV_POSTCLEARALWAYS  = 0x00000020, // Always clear special
    EV_POSTCHANGESWITCH = 0x00000040, // Changes switch texture if successful
@@ -84,7 +84,7 @@ typedef bool (*EVPostFunc)(ev_action_t *, bool, ev_instance_t *);
 //
 // EVActionFunc
 //
-// All actions must adhere to this call signature. Most members of the 
+// All actions must adhere to this call signature. Most members of the
 // specialactivation structure are optional and must be checked for validity.
 //
 typedef bool (*EVActionFunc)(ev_action_t *, ev_instance_t *);
@@ -223,4 +223,3 @@ struct ev_static_t
 #endif
 
 // EOF
-

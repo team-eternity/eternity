@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -95,7 +95,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          if(linedef->alpha == 0.0f)
             return;
 
-         if(linedef->extflags & EX_ML_ADDITIVE) 
+         if(linedef->extflags & EX_ML_ADDITIVE)
          {
             colfunc = r_column_engine->DrawAddColumn;
             column.translevel = M_FloatToFixed(linedef->alpha);
@@ -113,14 +113,14 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    segclip.backsec  = segclip.line->backsector;
 
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
-   
+
    // killough 4/13/98: get correct lightlevel for 2s normal textures
    lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false)
                ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
-   {  
+   {
       if(linedef->v1->y == linedef->v2->y)
          lightnum -= LIGHTBRIGHT;
       else if(linedef->v1->x == linedef->v2->x)
@@ -128,8 +128,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    }
 
    // SoM 10/19/02: deep water colormap fix
-   wlight = 
-      ds->colormap[lightnum >= LIGHTLEVELS || fixedcolormap ? 
+   wlight =
+      ds->colormap[lightnum >= LIGHTLEVELS || fixedcolormap ?
                    LIGHTLEVELS-1 :
                    lightnum <  0 ? 0 : lightnum ] ;
 
@@ -156,14 +156,14 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    }
 
    column.texmid += segclip.line->sidedef->rowoffset;
-   
+
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)
    //   column.colormap = fixedcolormap;
    if(fixedcolormap)
    {
       // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap == 
+      if(fixedcolormap ==
          fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
          column.colormap = fixedcolormap;
       else
@@ -184,10 +184,10 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          {                             // killough 11/98:
             // SoM: ANYRES
             int index = (int)(dist * 2560.0f);
-            
+
             if(index >=  MAXLIGHTSCALE )
                index = MAXLIGHTSCALE - 1;
-            
+
             column.colormap = wlight[index];
          }
 
@@ -207,7 +207,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
          R_DrawNewMaskedColumn(textures[texnum], col);
-         
+
          maskedtexturecol[column.x] = FLT_MAX;
       }
    }
@@ -239,7 +239,7 @@ static void R_RenderSegLoop(void)
    if(segclip.x1 < 0 || segclip.x2 >= viewwidth || segclip.x1 > segclip.x2)
    {
       I_Error("R_RenderSegLoop: invalid seg x values!\n"
-              "   x1 = %d, x2 = %d, linenum = %d\n", 
+              "   x1 = %d, x2 = %d, linenum = %d\n",
               segclip.x1, segclip.x2, segclip.line->linedef - lines);
    }
 #endif
@@ -249,7 +249,7 @@ static void R_RenderSegLoop(void)
    if(fixedcolormap)
    {
       // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap == 
+      if(fixedcolormap ==
          fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
          column.colormap = fixedcolormap;
       else
@@ -268,16 +268,16 @@ static void R_RenderSegLoop(void)
       if(segclip.markflags & (SEG_MARKCPORTAL|SEG_MARKCEILING|SEG_MARKCOVERLAY))
       {
          line = t - 1;
-         
+
          if(line > clipbot)
             line = clipbot;
-         
+
          if(line >= cliptop)
          {
             if(segclip.markflags & SEG_MARKCOVERLAY)
             {
                int otop = ceilingclip[i] > overlaycclip[i] ? cliptop : (int)overlaycclip[i];
-               
+
                if(segclip.ceilingplane && line >= otop)
                {
                   segclip.ceilingplane->top[i]    = otop;
@@ -286,7 +286,7 @@ static void R_RenderSegLoop(void)
 
                overlaycclip[i] = (float)t;
             }
-            
+
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
                R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
@@ -300,7 +300,7 @@ static void R_RenderSegLoop(void)
             }
          }
       }
-  
+
       // SoM 3/10/2005: Only add to the portal of the floor is marked
       if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR|SEG_MARKFOVERLAY))
       {
@@ -314,7 +314,7 @@ static void R_RenderSegLoop(void)
             if(segclip.markflags & SEG_MARKFOVERLAY)
             {
                int olow = floorclip[i] < overlayfclip[i] ? clipbot : (int)overlayfclip[i];
-               
+
                if(segclip.floorplane && line <= olow)
                {
                   segclip.floorplane->top[i]    = line;
@@ -323,7 +323,7 @@ static void R_RenderSegLoop(void)
 
                overlayfclip[i] = (float)b;
             }
-            
+
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
                R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
@@ -337,7 +337,7 @@ static void R_RenderSegLoop(void)
             }
          }
       }
-      
+
       if(segclip.segtextured)
       {
          int index;
@@ -360,7 +360,7 @@ static void R_RenderSegLoop(void)
             // and running test levels through it to do the math and get 2560 as the
             // light distance factor.
             index = (int)(segclip.dist * 2560.0f);
-         
+
             if(index >=  MAXLIGHTSCALE)
                index = MAXLIGHTSCALE - 1;
 
@@ -459,9 +459,9 @@ static void R_RenderSegLoop(void)
       }
       else
       {
-         if(segclip.markflags & SEG_MARKFLOOR) 
+         if(segclip.markflags & SEG_MARKFLOOR)
             floorclip[i] = (float)b;
-         if(segclip.markflags & SEG_MARKCEILING) 
+         if(segclip.markflags & SEG_MARKCEILING)
             ceilingclip[i] = (float)t;
       }
 
@@ -521,7 +521,7 @@ static void R_CloseDSP(void)
 //
 // This function iterates through the x range of segclip, and checks for columns
 // that became closed in the clipping arrays after the segclip is rendered. Any
-// new closed regions are then added to the solidsegs array to speed up 
+// new closed regions are then added to the solidsegs array to speed up
 // rejection of new segs trying to render to closed areas of clipping space.
 //
 static void R_DetectClosedColumns()
@@ -556,7 +556,7 @@ static void R_DetectClosedColumns()
    for(; i < stop; i++)
    {
       // Find the first closed column
-      while(i < stop && floorclip[i] >= ceilingclip[i]) 
+      while(i < stop && floorclip[i] >= ceilingclip[i])
          ++i;
 
       // End open
@@ -573,12 +573,12 @@ static void R_DetectClosedColumns()
       startx = i;
 
       // Find the first open column
-      while(i < stop && floorclip[i] < ceilingclip[i]) 
+      while(i < stop && floorclip[i] < ceilingclip[i])
          ++i;
 
       // from startx to i - 1 is solid.
 #ifdef RANGECHECK
-      if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth || 
+      if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth ||
          startx >= viewwidth || i - 1 < 0)
          I_Error("R_DetectClosedColumns: bad range %i, %i\n", startx, i - 1);
 #endif
@@ -586,7 +586,7 @@ static void R_DetectClosedColumns()
       // SoM: This creates a bug clipping sprites:
       // What happens when there is a solid seg created, but no drawseg marked
       // as solid? Sprites appear through architecture. The solution is to
-      // modify the drawseg created before this function was called to only be 
+      // modify the drawseg created before this function was called to only be
       // open where the seg has not created a solid seg.
       R_MarkSolidSeg(startx, i-1);
 
@@ -609,7 +609,7 @@ static void R_StoreTextureColumns(void)
    int i;
    float texx;
    float basescale;
-   
+
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
@@ -657,7 +657,7 @@ void R_StoreWallRange(const int start, const int stop)
    float pstep;
 
    bool usesegloop;
-   
+
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
 
@@ -666,7 +666,7 @@ void R_StoreWallRange(const int start, const int stop)
    if(!segclip.line)
       I_Error("R_StoreWallRange: null segclip.line\n");
 #endif
-   
+
    clipx1 = (float)(start - segclip.x1frac);
 
    clipx2 = (float)(segclip.x2frac - stop);
@@ -730,7 +730,7 @@ void R_StoreWallRange(const int start, const int stop)
    }
 
    // Lighting
-   // TODO: Modularize the lighting. This function should not handle colormaps 
+   // TODO: Modularize the lighting. This function should not handle colormaps
    // directly.
    // calculate light table
    //  use different light tables
@@ -742,7 +742,7 @@ void R_StoreWallRange(const int start, const int stop)
 
       // haleyjd 08/11/00: optionally skip this to evenly apply colormap
       if(LevelInfo.unevenLight)
-      {  
+      {
          if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
             lightnum -= LIGHTBRIGHT;
          else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
@@ -767,7 +767,7 @@ void R_StoreWallRange(const int start, const int stop)
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = scalelight;
-   
+
    if(segclip.clipsolid)
       R_CloseDSP();
    else
@@ -775,7 +775,7 @@ void R_StoreWallRange(const int start, const int stop)
       ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
       ds_p->silhouette = 0;
 
-      // SoM: TODO: This can be a bit problematic for slopes because we'll have 
+      // SoM: TODO: This can be a bit problematic for slopes because we'll have
       // to check the line for textures at both ends...
       if(segclip.frontsec->floorheight > segclip.backsec->floorheight)
       {
@@ -806,7 +806,7 @@ void R_StoreWallRange(const int start, const int stop)
          xlen = segclip.x2 - segclip.x1 + 1;
 
          ds_p->maskedtexturecol = lastopening - segclip.x1;
-         
+
          mtc = lastopening;
 
          for(i = 0; i < xlen; i++)
@@ -818,23 +818,23 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->maskedtexturecol = NULL;
    }
 
-   usesegloop = !seg.backsec        || 
-                 seg.clipsolid      || 
+   usesegloop = !seg.backsec        ||
+                 seg.clipsolid      ||
                  seg.markflags      ||
-                 seg.toptex         || 
-                 seg.midtex         || 
-                 seg.bottomtex      || 
-                 seg.f_portalignore || 
+                 seg.toptex         ||
+                 seg.midtex         ||
+                 seg.bottomtex      ||
+                 seg.f_portalignore ||
                  seg.c_portalignore ||
-                 segclip.line->linedef->portal || 
-                 ds_p->silhouette   || 
+                 segclip.line->linedef->portal ||
+                 ds_p->silhouette   ||
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
       R_RenderSegLoop();
    else
       R_StoreTextureColumns();
-   
+
    // store clipping arrays
    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
    {
@@ -863,7 +863,7 @@ void R_StoreWallRange(const int start, const int stop)
       ds_p->bsilheight = D_MAXINT;
    }
 
-   if(!segclip.clipsolid && 
+   if(!segclip.clipsolid &&
       (ds_p->silhouette & SIL_TOP || ds_p->silhouette & SIL_BOTTOM))
       R_DetectClosedColumns();
 

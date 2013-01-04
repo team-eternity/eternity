@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -86,14 +86,14 @@ int P_DivlineSide(fixed_t x, fixed_t y, const divline_t *node)
 // killough 4/19/98: made static, cleaned up
 // haleyjd  9/23/02: reformatted
 //
-static fixed_t P_InterceptVector2(const divline_t *v2, 
+static fixed_t P_InterceptVector2(const divline_t *v2,
                                   const divline_t *v1)
 {
    fixed_t den;
 
    if((den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy)))
    {
-      return 
+      return
          FixedDiv(FixedMul((v1->x - v2->x)>>8, v1->dy) +
                   FixedMul((v2->y - v1->y)>>8, v1->dx), den);
    }
@@ -116,13 +116,13 @@ static bool P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
       line_t *line = po->lines[i];
       divline_t divl;
       const vertex_t *v1,*v2;
-      
+
       // already checked other side?
       if(line->validcount == validcount)
          continue;
 
       line->validcount = validcount;
-      
+
       // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
       if(line->bbox[BOXLEFT  ] > los->bbox[BOXRIGHT ] ||
          line->bbox[BOXRIGHT ] < los->bbox[BOXLEFT  ] ||
@@ -132,7 +132,7 @@ static bool P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 
       v1 = line->v1;
       v2 = line->v2;
-      
+
       // line isn't crossed?
       if(P_DivlineSide(v1->x, v1->y, &los->strace) ==
          P_DivlineSide(v2->x, v2->y, &los->strace))
@@ -140,7 +140,7 @@ static bool P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 
       divl.dx = v2->x - (divl.x = v1->x);
       divl.dy = v2->y - (divl.y = v1->y);
-      
+
       // line isn't crossed?
       if(P_DivlineSide(los->strace.x, los->strace.y, &divl) ==
          P_DivlineSide(los->t2x, los->t2y, &divl))
@@ -149,13 +149,13 @@ static bool P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
       // stop because it is not two sided
       return false;
    }
-   
+
    return true;
 }
 
 //
 // P_CrossSubsector
-// 
+//
 // Returns true if strace crosses the given subsector successfully.
 //
 // killough 4/19/98: made static and cleaned up
@@ -165,7 +165,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
    seg_t *lseg;
    int count;
    DLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
-   
+
 #ifdef RANGECHECK
    if(num >= numsubsectors)
       I_Error("P_CrossSubsector: ss %i with numss = %i\n", num, numsubsectors);
@@ -199,13 +199,13 @@ static bool P_CrossSubsector(int num, register los_t *los)
       const sector_t *front, *back;
       const vertex_t *v1,*v2;
       fixed_t frac;
-      
+
       // already checked other side?
       if(line->validcount == validcount)
          continue;
 
       line->validcount = validcount;
-      
+
       // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
       // haleyjd: another demo compatibility fix by cph -- who knows
       // why this is a problem, though
@@ -221,7 +221,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
 
       v1 = line->v1;
       v2 = line->v2;
-      
+
       // line isn't crossed?
       if(P_DivlineSide(v1->x, v1->y, &los->strace) ==
          P_DivlineSide(v2->x, v2->y, &los->strace))
@@ -229,7 +229,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
 
       divl.dx = v2->x - (divl.x = v1->x);
       divl.dy = v2->y - (divl.y = v1->y);
-      
+
       // line isn't crossed?
       if(P_DivlineSide(los->strace.x, los->strace.y, &divl) ==
          P_DivlineSide(los->t2x, los->t2y, &divl))
@@ -254,24 +254,24 @@ static bool P_CrossSubsector(int num, register los_t *los)
       // because of ceiling height differences
       opentop = front->ceilingheight < back->ceilingheight ?
          front->ceilingheight : back->ceilingheight ;
-      
+
       // because of floor height differences
       openbottom = front->floorheight > back->floorheight ?
          front->floorheight : back->floorheight ;
-      
+
       // quick test for totally closed doors
       if(openbottom >= opentop)
          return false;               // stop
 
       frac = P_InterceptVector2(&los->strace, &divl);
-      
+
       if(front->floorheight != back->floorheight)
       {
          fixed_t slope = FixedDiv(openbottom - los->sightzstart , frac);
          if(slope > los->bottomslope)
             los->bottomslope = slope;
       }
-      
+
       if(front->ceilingheight != back->ceilingheight)
       {
          fixed_t slope = FixedDiv(opentop - los->sightzstart , frac);
@@ -310,7 +310,7 @@ static bool P_CrossBSPNode(int bspnum, register los_t *los)
             bspnum = bsp->children[side^1];  // cross the ending side
       }
    }
-   return 
+   return
       P_CrossSubsector((bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR), los);
 }
 
@@ -363,16 +363,16 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
    // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
    // haleyjd 12/28/10: This "fix" was not in BOOM 200-202 either!
 
-   if(demo_version >= 203 && !t1->subsector->polyList && 
+   if(demo_version >= 203 && !t1->subsector->polyList &&
       t1->subsector == t2->subsector)
       return true;
 
    // An unobstructed LOS is possible.
    // Now look from eyes of t1 to any part of t2.
-   
+
    validcount++;
 
-   los.topslope = 
+   los.topslope =
       (los.bottomslope = t2->z - (los.sightzstart =
                                  t1->z + t1->height -
                                   (t1->height>>2))) + t2->height;
@@ -388,7 +388,7 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
       los.bbox[BOXTOP] = t1->y, los.bbox[BOXBOTTOM] = t2->y;
    else
       los.bbox[BOXTOP] = t2->y, los.bbox[BOXBOTTOM] = t1->y;
-   
+
    // the head node is the last node output
    return P_CrossBSPNode(numnodes-1, &los);
 }
@@ -418,4 +418,3 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

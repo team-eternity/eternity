@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //   Random number generator
-//    
+//
 //-----------------------------------------------------------------------------
 
 
@@ -139,7 +139,7 @@ typedef enum {
   pr_centauratk,  // A_CentaurAttack
   pr_dropequip,   // A_DropEquipment
   pr_bishop1,
-  pr_steamspawn, // steam spawn codepointer 
+  pr_steamspawn, // steam spawn codepointer
   pr_mincharge,  // minotaur inflictor special
   pr_reflect,    // missile reflection
   pr_tglitz,     // teleglitter z coord
@@ -150,20 +150,20 @@ typedef enum {
   pr_tglit,      // teleglitter spawn
   pr_spawnfloat, // random spawn float z flag
   pr_mumpunch,   // mummy punches
-  pr_mumpunch2,  
+  pr_mumpunch2,
   pr_hdrop1,     // heretic item drops
-  pr_hdrop2,     
-  pr_hdropmom,   
+  pr_hdrop2,
+  pr_hdropmom,
   pr_clinkatk,   // clink scratch
   pr_ghostsneak, // random failure to sight ghost player
   pr_wizatk,     // wizard attack
   pr_lookact,    // make seesound instead of active sound
   pr_sorctele1,  // d'sparil stuff
-  pr_sorctele2,  
-  pr_sorfx1xpl,  
-  pr_soratk1,    
-  pr_soratk2,    
-  pr_bluespark,  
+  pr_sorctele2,
+  pr_sorfx1xpl,
+  pr_soratk1,
+  pr_soratk2,
+  pr_bluespark,
   pr_podpain,    // pod pain
   pr_makepod,    // pod spawn
   pr_knightat1,  // knight scratch
@@ -178,7 +178,7 @@ typedef enum {
   pr_madmelee,   // Heretic mad fighting after player death
   pr_whirlwind,  // Whirlwind inflictor
   pr_lichmelee,  // Iron Lich attacks
-  pr_lichattack, 
+  pr_lichattack,
   pr_whirlseek,  // Whirlwind seeking
   pr_impcharge,  // Imp charge attack
   pr_impmelee,   // Imp melee attack
@@ -196,7 +196,7 @@ typedef enum {
   pr_spawnblur,  // A_SpawnBlur
   pr_chaosbite,  // A_DemonAttack1
   pr_wraithm,    // A_WraithMelee
-  pr_wraithd, 
+  pr_wraithd,
   pr_wraithfx2,
   pr_wraithfx3,
   pr_wraithfx4a,
@@ -209,7 +209,7 @@ typedef enum {
   pr_icelook,    // A_IceGuyLook
   pr_icelook2,
   pr_icechase,   // A_IceGuyChase
-  pr_icechase2, 
+  pr_icechase2,
   pr_dragonfx,   // A_DragonFX2
   pr_dropmace,   // A_DropMace
   pr_rip,        // ripper missile damage

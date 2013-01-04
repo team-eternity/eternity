@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //   Ceiling aninmation (lowering, crushing, raising)
 //
 //-----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ IMPLEMENT_THINKER_TYPE(CeilingThinker)
 // Passed a CeilingThinker structure that contains all the info about the move.
 // see P_SPEC.H for fields. No return value.
 //
-// jff 02/08/98 all cases with labels beginning with gen added to support 
+// jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 //
 void CeilingThinker::Think()
@@ -158,13 +158,13 @@ void CeilingThinker::Think()
          case crushAndRaise:
             direction = plat_down;
             break;
-            
+
          default:
             break;
          }
       }
       break;
-  
+
    case plat_down:
       // Ceiling moving down
       res = T_MovePlane(sector, speed, bottomheight, crush, 1, direction);
@@ -185,19 +185,19 @@ void CeilingThinker::Think()
                speed = this->oldspeed;
             direction = plat_up; //jff 2/22/98 make it go back up!
             break;
-            
+
             // make platform stop at bottom of all crusher strokes
             // except generalized ones, reset speed, start back up
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
             if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
                P_CeilingSequence(sector, CNOISE_SEMISILENT);
-         case crushAndRaise: 
+         case crushAndRaise:
             speed = CEILSPEED;
          case fastCrushAndRaise:
             direction = plat_up;
             break;
-            
+
             // in the case of ceiling mover/changer, change the texture
             // then remove the active ceiling
          case genCeilingChgT:
@@ -217,7 +217,7 @@ void CeilingThinker::Think()
          case genCeiling:
             P_RemoveActiveCeiling(this);
             break;
-            
+
          default:
             break;
          }
@@ -230,7 +230,7 @@ void CeilingThinker::Think()
             switch(type)
             {
                //jff 02/08/98 slow down slow crushers on obstacle
-            case genCrusher:  
+            case genCrusher:
             case genSilentCrusher:
                if(oldspeed < CEILSPEED*3)
                   speed = CEILSPEED / 8;
@@ -240,7 +240,7 @@ void CeilingThinker::Think()
             case lowerAndCrush:
                speed = CEILSPEED / 8;
                break;
-               
+
             default:
                break;
             }
@@ -260,7 +260,7 @@ void CeilingThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << type << bottomheight << topheight << speed << oldspeed
-       << crush << special << texture << direction << inStasis << tag 
+       << crush << special << texture << direction << inStasis << tag
        << olddirection;
 
    // Reattach to active ceilings list
@@ -307,7 +307,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
    int       noise = CNOISE_NORMAL; // haleyjd 09/28/06
    sector_t  *sec;
    CeilingThinker *ceiling;
-      
+
    // Reactivate in-stasis ceilings...for certain types.
    // This restarts a crusher after it has been stopped
    switch(type)
@@ -320,16 +320,16 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
    default:
       break;
    }
-  
+
    // affects all sectors with the same tag as the linedef
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
+
       // if ceiling already moving, don't start a second function on it
       if(P_SectorActive(ceiling_special, sec))  //jff 2/22/98
          continue;
-  
+
       // create a new ceiling thinker
       rtn = 1;
       ceiling = new CeilingThinker;
@@ -337,7 +337,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
       sec->ceilingdata = ceiling;               //jff 2/22/98
       ceiling->sector = sec;
       ceiling->crush = -1;
-  
+
       // setup ceiling structure according to type of function
       switch(type)
       {
@@ -368,23 +368,23 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
          ceiling->direction = plat_up;
          ceiling->speed = CEILSPEED;
          break;
-         
+
       case lowerToLowest:
          ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED;
          break;
-         
+
       case lowerToMaxFloor:
          ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED;
          break;
-         
+
       default:
          break;
       }
-    
+
       // add the ceiling to the active list
       ceiling->tag = sec->tag;
       ceiling->type = type;
@@ -407,7 +407,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 // The following were all rewritten by Lee Killough
 // to use the new structure which places no limits
 // on active ceilings. It also avoids spending as much
-// time searching for active ceilings. Previously a 
+// time searching for active ceilings. Previously a
 // fixed-size array was used, with NULL indicating
 // empty entries, while now a doubly-linked list
 // is used.
@@ -426,7 +426,7 @@ int P_ActivateInStasisCeiling(line_t *line)
 {
    ceilinglist_t *cl;
    int rtn = 0, noise;
-   
+
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
@@ -468,7 +468,7 @@ int P_ActivateInStasisCeiling(line_t *line)
 int EV_CeilingCrushStop(line_t* line)
 {
    int rtn = 0;
-   
+
    ceilinglist_t *cl;
    for(cl = activeceilings; cl; cl = cl->next)
    {
@@ -533,7 +533,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 void P_RemoveAllActiveCeilings(void)
 {
    while(activeceilings)
-   {  
+   {
       ceilinglist_t *next = activeceilings->next;
       efree(activeceilings);
       activeceilings = next;
@@ -595,4 +595,3 @@ void P_ChangeCeilingTex(const char *name, int tag)
 //
 //
 //----------------------------------------------------------------------------
-

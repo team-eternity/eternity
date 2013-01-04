@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,10 +57,10 @@ int r_swirl;       // hack
 static void R_DrawLines(void)
 {
    int x,y;
-   
+
    for(x = 0; x < 64; ++x)
       for(y = 0; y < 64; ++y)
-         if((!x % 8) || (!y % 8)) 
+         if((!x % 8) || (!y % 8))
             normalflat[(y<<6)+x] = 0;
 }
 #endif
@@ -84,29 +84,29 @@ byte *R_DistortedFlat(int texnum)
    int i;
    int leveltic = gametic;
    texture_t *tex = R_CacheTexture(texnum);
-   
+
    // SoM: different flat sizes?
    if(tex->flatsize != FLAT_64)
       return tex->buffer;
-      
+
    // Already swirled this one?
    if(gametic == swirltic && lasttex == texnum)
       return distortedflat;
-      
+
    lasttex = texnum;
 
    // built this tic?
    if(gametic != swirltic)
    {
       int x, y;
-      
+
       for(x = 0; x < 64; ++x)
       {
          for(y = 0; y < 64; ++y)
          {
             int x1, y1;
             int sinvalue, sinvalue2;
-            
+
             sinvalue = (y * SWIRLFACTOR + leveltic*SPEED*5 + 900) & 8191;
             sinvalue2 = (x * SWIRLFACTOR2 + leveltic*SPEED*4 + 300) & 8191;
             x1 = x + 128
@@ -119,23 +119,22 @@ byte *R_DistortedFlat(int texnum)
                  + ((finesine[sinvalue]*AMP) >> FRACBITS)
                  + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
 
-            x1 &= 63; 
+            x1 &= 63;
             y1 &= 63;
-            
+
             offset[(y<<6) + x] = (y1<<6) + x1;
          }
       }
-      
+
       swirltic = gametic;
    }
-   
+
    normalflat = tex->buffer;
-   
+
    for(i = 0; i < 4096; ++i)
       distortedflat[i] = normalflat[offset[i]];
-   
+
    return distortedflat;
 }
 
 // EOF
-

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -46,7 +46,7 @@
 // These primes roughly double in size.
 static const unsigned int metaPrimes[] =
 {
-     53,    97,   193,   389,   769,  1543,   
+     53,    97,   193,   389,   769,  1543,
    3079,  6151, 12289, 24593, 49157, 98317
 };
 
@@ -62,7 +62,7 @@ int metaerrno = 0;
 //
 // Key Interning
 //
-// MetaObject key strings are interned here, for space efficiency. 
+// MetaObject key strings are interned here, for space efficiency.
 //
 
 struct metakey_t
@@ -146,7 +146,7 @@ MetaObject::MetaObject()
 //
 // Constructor for MetaObject when type and/or key are known.
 //
-MetaObject::MetaObject(const char *pKey) 
+MetaObject::MetaObject(const char *pKey)
    : RTTIObject(), links(), typelinks(), type()
 {
    metakey_t &keyObj = MetaKey(pKey);
@@ -161,9 +161,9 @@ MetaObject::MetaObject(const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), type(), 
+   : RTTIObject(), links(), typelinks(), type(),
      key(other.key), keyIdx(other.keyIdx)
-{   
+{
 }
 
 //
@@ -204,7 +204,7 @@ const char *MetaObject::toString() const
    static qstring qstr;
    size_t bytestoprint = getZoneSize();
    const byte *data    = reinterpret_cast<const byte *>(getBlockPtr());
-   
+
    qstr.clearOrCreate(128);
 
    if(!bytestoprint) // Not a zone object? Can only dump the base class.
@@ -317,7 +317,7 @@ IMPLEMENT_RTTI_TYPE(MetaDouble)
 //
 // MetaDouble(char *, double)
 //
-MetaDouble::MetaDouble(const char *key, double d) 
+MetaDouble::MetaDouble(const char *key, double d)
    : MetaObject(key), value(d)
 {
 }
@@ -361,7 +361,7 @@ const char *MetaDouble::toString() const
 //
 // Strings
 //
-// metastrings created with these APIs assume ownership of the string. 
+// metastrings created with these APIs assume ownership of the string.
 //
 
 IMPLEMENT_RTTI_TYPE(MetaString)
@@ -471,13 +471,13 @@ class metaTablePimpl : public ZoneObject
 {
 public:
    // the key hash is growable; keys are case-insensitive.
-   EHashTable<MetaObject, ENCStringHashKey, 
+   EHashTable<MetaObject, ENCStringHashKey,
               &MetaObject::key, &MetaObject::links> keyhash;
 
    // the type hash is fixed size since there are a limited number of types
-   // defined in the source code; types are case sensitive, because they are 
+   // defined in the source code; types are case sensitive, because they are
    // based on C types.
-   EHashTable<MetaObject, EStringHashKey, 
+   EHashTable<MetaObject, EStringHashKey,
               &MetaObject::type, &MetaObject::typelinks> typehash;
 
    metaTablePimpl() : ZoneObject(), keyhash(METANUMCHAINS), typehash(METANUMCHAINS) {}
@@ -666,7 +666,7 @@ void MetaTable::addObject(MetaObject *object)
    unsigned int curNumChains = pImpl->keyhash.getNumChains();
 
    // check for key table overload
-   if(pImpl->keyhash.getLoadFactor() > METALOADFACTOR && 
+   if(pImpl->keyhash.getLoadFactor() > METALOADFACTOR &&
       curNumChains < metaPrimes[METANUMPRIMES - 1])
    {
       int i;
@@ -719,7 +719,7 @@ void MetaTable::removeObject(MetaObject &object)
 //
 // MetaTable::getObject
 //
-// Returns the first object found in the metatable with the given key, 
+// Returns the first object found in the metatable with the given key,
 // regardless of its type. Returns NULL if no such object exists.
 //
 MetaObject *MetaTable::getObject(const char *key)
@@ -741,7 +741,7 @@ MetaObject *MetaTable::getObject(size_t keyIndex)
 //
 // MetaTable::getObjectType
 //
-// Returns the first object found in the metatable which matches the type. 
+// Returns the first object found in the metatable which matches the type.
 // Returns NULL if no such object exists.
 //
 MetaObject *MetaTable::getObjectType(const char *type)
@@ -754,7 +754,7 @@ MetaObject *MetaTable::getObjectType(const char *type)
 //
 // As above, but satisfying both conditions at once.
 //
-MetaObject *MetaTable::getObjectKeyAndType(const char *key, 
+MetaObject *MetaTable::getObjectKeyAndType(const char *key,
                                            const MetaObject::Type *type)
 {
    MetaObject *obj = NULL;
@@ -787,7 +787,7 @@ MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
 // Overload taking a MetaObject interned key index and RTTIObject::Type
 // instance.
 //
-MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, 
+MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex,
                                            const MetaObject::Type *type)
 {
    metakey_t  &keyObj = MetaKeyForIndex(keyIndex);
@@ -798,7 +798,7 @@ MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex,
       if(obj->isInstanceOf(type))
          break;
    }
-   
+
    return obj;
 }
 
@@ -827,7 +827,7 @@ MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, const char *type)
 //
 MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key)
 {
-   // If no key is provided but object is valid, get the next object with the 
+   // If no key is provided but object is valid, get the next object with the
    // same key as the current one.
    if(object && !key)
    {
@@ -948,7 +948,7 @@ void MetaTable::addInt(const char *key, int value)
 //
 // Get an integer from the metatable. This routine returns the value
 // rather than a pointer to a metaint_t. If an object of the requested
-// name doesn't exist in the table, defvalue is returned and metaerrno 
+// name doesn't exist in the table, defvalue is returned and metaerrno
 // is set to indicate the problem.
 //
 // Use of this routine only returns the first such value in the table.
@@ -1003,7 +1003,7 @@ void MetaTable::setInt(const char *key, int newValue)
 // MetaTable::removeInt
 //
 // Removes the given field if it exists as a metaint_t.
-// Only one object will be removed. If more than one such object 
+// Only one object will be removed. If more than one such object
 // exists, you would need to call this routine until metaerrno is
 // set to META_ERR_NOSUCHOBJECT.
 //
@@ -1092,7 +1092,7 @@ void MetaTable::setDouble(const char *key, double newValue)
 // MetaTable::removeDouble
 //
 // Removes the given field if it exists as a metadouble_t.
-// Only one object will be removed. If more than one such object 
+// Only one object will be removed. If more than one such object
 // exists, you would need to call this routine until metaerrno is
 // set to META_ERR_NOSUCHOBJECT.
 //
@@ -1163,7 +1163,7 @@ const char *MetaTable::getString(const char *key, const char *defValue)
 //
 // If the metatable already contains a metastring of the given name, it will
 // be edited to have the provided value. Otherwise, a new metastring will be
-// added to the table with that value. 
+// added to the table with that value.
 //
 void MetaTable::setString(const char *key, const char *newValue)
 {
@@ -1179,12 +1179,12 @@ void MetaTable::setString(const char *key, const char *newValue)
 // MetaTable::removeString
 //
 // Removes the given field if it exists as a metastring_t.
-// Only one object will be removed. If more than one such object 
+// Only one object will be removed. If more than one such object
 // exists, you would need to call this routine until metaerrno is
 // set to META_ERR_NOSUCHOBJECT.
 //
-// When calling this routine, the value of the object is returned 
-// in case it is needed, and you will need to then free it yourself 
+// When calling this routine, the value of the object is returned
+// in case it is needed, and you will need to then free it yourself
 // using free(). If the return value is not needed, call
 // MetaTable::removeStringNR instead and the string value will be destroyed.
 //
@@ -1206,12 +1206,12 @@ char *MetaTable::removeString(const char *key)
 
    // Destroying the MetaString will destroy the value inside it too, unless we
    // get and then nullify its value manually. This is one reason why MetaTable
-   // is a friend to these basic types, as it makes some simple management 
-   // chores like this more efficient. Otherwise I'd have to estrdup the string 
+   // is a friend to these basic types, as it makes some simple management
+   // chores like this more efficient. Otherwise I'd have to estrdup the string
    // and that's stupid.
 
    str = static_cast<MetaString *>(obj);
-   
+
    value = str->value;
    str->value = NULL; // destructor does nothing if this is cleared first
 
@@ -1310,4 +1310,3 @@ size_t MetaTable::IndexForKey(const char *key)
 }
 
 // EOF
-

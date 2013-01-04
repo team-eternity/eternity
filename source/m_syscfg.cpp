@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -176,7 +176,7 @@ static default_t sysdefaults[] =
 
    DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, NULL, 880.0, 0, UL, default_t::wad_no,
                  "High end of low pass band"),
-   
+
    DEFAULT_FLOAT("s_highfreq", &s_highfreq, NULL, 5000.0, 0, UL, default_t::wad_no,
                  "Low end of high pass band"),
 
@@ -190,7 +190,7 @@ static default_t sysdefaults[] =
                  "Midrange gain"),
 
    DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, default_t::wad_no,
-                 "High pass gain"),  
+                 "High pass gain"),
 
    DEFAULT_INT("s_enviro_volume", &s_enviro_volume, NULL, 4, 0, 16, default_t::wad_no,
                "Volume of environmental sound sequences"),
@@ -202,11 +202,11 @@ static default_t sysdefaults[] =
    // jff 3/30/98 add ability to take screenshots in BMP format
    DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 3, 0, 3, default_t::wad_no,
                "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
-   
+
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
 
-   DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
+   DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1,
                default_t::wad_no, i_videohelpstr),
 
    DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
@@ -233,12 +233,12 @@ static default_t sysdefaults[] =
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
                "GL backend screen bitdepth (16, 24, or 32)"),
 
-   DEFAULT_INT("gl_texture_format", &cfg_gl_texture_format, NULL, CFG_GL_RGBA8, 
-               0, CFG_GL_NUMTEXFORMATS-1, default_t::wad_no, 
+   DEFAULT_INT("gl_texture_format", &cfg_gl_texture_format, NULL, CFG_GL_RGBA8,
+               0, CFG_GL_NUMTEXFORMATS-1, default_t::wad_no,
                "GL2D internal texture format"),
 
    DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, NULL, CFG_GL_LINEAR,
-               0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
+               0, CFG_GL_NUMFILTERS-1, default_t::wad_no,
                "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
@@ -250,7 +250,7 @@ static default_t sysdefaults[] =
 
    DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
-   
+
    DEFAULT_INT("grabmouse", &grabmouse, NULL, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
 
@@ -260,7 +260,7 @@ static default_t sysdefaults[] =
 #endif
 
 #if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
-   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, default_t::wad_no, 
+   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, default_t::wad_no,
                "process affinity mask - warning: expert setting only!"),
 #endif
 
@@ -327,4 +327,3 @@ default_t *M_GetSysDefaults(void)
 }
 
 // EOF
-

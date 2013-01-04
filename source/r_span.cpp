@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley, Stephen McGranahan, et al.
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,8 +39,8 @@
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
 
-extern byte *ylookup[MAXHEIGHT]; 
-extern int  columnofs[MAXWIDTH]; 
+extern byte *ylookup[MAXHEIGHT];
+extern int  columnofs[MAXWIDTH];
 
 //==============================================================================
 //
@@ -276,7 +276,7 @@ extern int  columnofs[MAXWIDTH];
 // negate the speed benefit of unrolling by causing a cache miss.
 //
 // SoM: Why didn't I see this earlier? the spot variable is a waste now
-// because we don't have the uber complicated math to calculate it now, 
+// because we don't have the uber complicated math to calculate it now,
 // so that was a memory write we didn't need!
 //
 #define SPAN_FUNC(name, plog, pdest, xshift, yshift, xmask, pp, ppx, dstp) \
@@ -325,72 +325,72 @@ extern int  columnofs[MAXWIDTH];
 // Ok, because I was able to eliminate the variable spot below, this function
 // is now FASTER than doom's original span renderer. Whodathunkit?
 
-SPAN_FUNC(R_DrawSpanCB_8_64,  SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+SPAN_FUNC(R_DrawSpanCB_8_64,  SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0,
           PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanCB_8_128, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+SPAN_FUNC(R_DrawSpanCB_8_128, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80,
           PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanCB_8_256, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+SPAN_FUNC(R_DrawSpanCB_8_256, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
           PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 SPAN_FUNC(R_DrawSpanCB_8_512, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
           PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanCB_8_GEN, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
+SPAN_FUNC(R_DrawSpanCB_8_GEN, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift),
           (span.yshift), (span.xmask), PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
-static void R_DrawSpan_OLD(void) 
-{ 
+static void R_DrawSpan_OLD(void)
+{
    register unsigned int position;
    unsigned int step;
-   
+
    byte *source;
    byte *colormap;
    byte *dest;
-   
+
    unsigned int count;
-   
+
    position = ((span.yfrac<<10)&0xffff0000) | ((span.xfrac>>6)&0xffff);
    step     = ((span.ystep<<10)&0xffff0000) | ((span.xstep>>6)&0xffff);
-   
+
    source   = (byte *)(span.source);
    colormap = span.colormap;
-   dest     = ylookup[span.y] + columnofs[span.x1];       
-   count    = span.x2 - span.x1 + 1; 
-   
+   dest     = ylookup[span.y] + columnofs[span.x1];
+   count    = span.x2 - span.x1 + 1;
+
    // SoM: So I went back and realized the error of ID's ways and this is even
    // faster now! This is by far the fastest way because it uses the exact same
-   // number of ops mine does except it only has one addition and one memory 
+   // number of ops mine does except it only has one addition and one memory
    // write for the position variable. Now we only have two writes to memory
    // (one for the pixel, one for position)
 
    while(count >= 4)
-   { 
-      dest[0] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+   {
+      dest[0] = colormap[source[(position>>26) | ((position>>4) & 4032)]];
       position += step;
 
-      dest[1] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      dest[1] = colormap[source[(position>>26) | ((position>>4) & 4032)]];
       position += step;
 
-      dest[2] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      dest[2] = colormap[source[(position>>26) | ((position>>4) & 4032)]];
       position += step;
 
-      dest[3] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      dest[3] = colormap[source[(position>>26) | ((position>>4) & 4032)]];
       position += step;
 
       dest += 4;
       count -= 4;
-   } 
+   }
 
    while (count)
-   { 
-      *dest++ = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+   {
+      *dest++ = colormap[source[(position>>26) | ((position>>4) & 4032)]];
       position += step;
       count--;
-   } 
+   }
 }
 
 // SoM: Removed the original span drawing code.
@@ -403,35 +403,35 @@ static void R_DrawSpan_OLD(void)
 // visplane layering.
 //
 
-SPAN_FUNC(R_DrawSpanTL_8_64,  TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+SPAN_FUNC(R_DrawSpanTL_8_64,  TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0,
           TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanTL_8_128, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+SPAN_FUNC(R_DrawSpanTL_8_128, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80,
           TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanTL_8_256, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+SPAN_FUNC(R_DrawSpanTL_8_256, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
           TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 SPAN_FUNC(R_DrawSpanTL_8_512, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
           TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanTL_8_GEN, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
+SPAN_FUNC(R_DrawSpanTL_8_GEN, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift),
           (span.yshift), (span.xmask), TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 // Additive blending
 
-SPAN_FUNC(R_DrawSpanAdd_8_64,  ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+SPAN_FUNC(R_DrawSpanAdd_8_64,  ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0,
           ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanAdd_8_128, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+SPAN_FUNC(R_DrawSpanAdd_8_128, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80,
           ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanAdd_8_256, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+SPAN_FUNC(R_DrawSpanAdd_8_256, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
           ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 SPAN_FUNC(R_DrawSpanAdd_8_512, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
           ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
+SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift),
           (span.yshift), (span.xmask), ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 //==============================================================================
@@ -443,13 +443,13 @@ SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshi
 // Low detail shall only be supported in 8-bit color.
 //
 
-SPAN_FUNC(R_DrawSpan_LD64,  SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+SPAN_FUNC(R_DrawSpan_LD64,  SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0,
           LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpan_LD128, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+SPAN_FUNC(R_DrawSpan_LD128, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80,
           LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpan_LD256, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+SPAN_FUNC(R_DrawSpan_LD256, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
           LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
 SPAN_FUNC(R_DrawSpan_LD512, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
@@ -457,13 +457,13 @@ SPAN_FUNC(R_DrawSpan_LD512, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE0
 
 // Translucent variants
 
-SPAN_FUNC(R_DrawSpanTL_LD64,  TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+SPAN_FUNC(R_DrawSpanTL_LD64,  TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0,
           LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanTL_LD128, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+SPAN_FUNC(R_DrawSpanTL_LD128, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80,
           LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanTL_LD256, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+SPAN_FUNC(R_DrawSpanTL_LD256, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
           LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
 SPAN_FUNC(R_DrawSpanTL_LD512, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
@@ -471,13 +471,13 @@ SPAN_FUNC(R_DrawSpanTL_LD512, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0
 
 // Additive variants
 
-SPAN_FUNC(R_DrawSpanAdd_LD64,  ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+SPAN_FUNC(R_DrawSpanAdd_LD64,  ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0,
           LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanAdd_LD128, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+SPAN_FUNC(R_DrawSpanAdd_LD128, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80,
           LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-SPAN_FUNC(R_DrawSpanAdd_LD256, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+SPAN_FUNC(R_DrawSpanAdd_LD256, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
           LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
 SPAN_FUNC(R_DrawSpanAdd_LD512, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
@@ -497,7 +497,7 @@ void R_DrawSlope_8_64(void)
    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id = slopespan.idfrac, ids = slopespan.idstep;
-   
+
    byte *src, *dest, *colormap;
    int count;
    fixed_t mapindex = 0;
@@ -534,7 +534,7 @@ void R_DrawSlope_8_64(void)
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
-      // TODO: 
+      // TODO:
       mulstart = 65536.0f / id;
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
@@ -600,7 +600,7 @@ void R_DrawSlope_8_128(void)
    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id = slopespan.idfrac, ids = slopespan.idstep;
-   
+
    byte *src, *dest, *colormap;
    int count;
    fixed_t mapindex = 0;
@@ -619,7 +619,7 @@ void R_DrawSlope_8_128(void)
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
-      // TODO: 
+      // TODO:
       mulstart = 65536.0f / id;
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
@@ -683,7 +683,7 @@ void R_DrawSlope_8_256(void)
    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id = slopespan.idfrac, ids = slopespan.idstep;
-   
+
    byte *src, *dest, *colormap;
    int count;
    fixed_t mapindex = 0;
@@ -702,7 +702,7 @@ void R_DrawSlope_8_256(void)
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
-      // TODO: 
+      // TODO:
       mulstart = 65536.0f / id;
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
@@ -766,7 +766,7 @@ void R_DrawSlope_8_512(void)
    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id = slopespan.idfrac, ids = slopespan.idstep;
-   
+
    byte *src, *dest, *colormap;
    int count;
    fixed_t mapindex = 0;
@@ -785,7 +785,7 @@ void R_DrawSlope_8_512(void)
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
-      // TODO: 
+      // TODO:
       mulstart = 65536.0f / id;
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
@@ -851,7 +851,7 @@ void R_DrawSlope_8_GEN(void)
    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id = slopespan.idfrac, ids = slopespan.idstep;
-   
+
    byte *src, *dest, *colormap;
    int count;
    fixed_t mapindex = 0;
@@ -870,7 +870,7 @@ void R_DrawSlope_8_GEN(void)
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
-      // TODO: 
+      // TODO:
       mulstart = 65536.0f / id;
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
@@ -1013,4 +1013,3 @@ spandrawer_t r_lowspandrawer =
 };
 
 // EOF
-

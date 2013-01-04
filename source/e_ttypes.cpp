@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //   New dynamic TerrainTypes system. Inspired heavily by zdoom, but
 //   all-original code.
 //
@@ -134,10 +134,10 @@ cfg_opt_t edf_terrn_opts[] =
    CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
    CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
-   
+
    CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
    CFG_INT_CB(ITEM_TERRAIN_COL2,  0,         CFGF_NONE, E_ColorStrCB),
-   
+
    CFG_END()
 };
 
@@ -154,10 +154,10 @@ cfg_opt_t edf_terdelta_opts[] =
    CFG_BOOL(ITEM_TERRAIN_SPALERT, false,     CFGF_NONE),
    CFG_BOOL(ITEM_TERRAIN_USECOLS, false,     CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_MINVER,   0,         CFGF_NONE),
-   
+
    CFG_INT_CB(ITEM_TERRAIN_COL1,  0,         CFGF_NONE, E_ColorStrCB),
    CFG_INT_CB(ITEM_TERRAIN_COL2,  0,         CFGF_NONE, E_ColorStrCB),
-   
+
    CFG_END()
 };
 
@@ -229,14 +229,14 @@ static void E_ProcessSplash(cfg_t *cfg)
    if(!(newSplash = E_SplashForName(tempstr)))
    {
       newSplash = estructalloc(ETerrainSplash, 1);
-      
+
       if(strlen(tempstr) >= sizeof(newSplash->name))
       {
          E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
                         tempstr);
       }
       strncpy(newSplash->name, tempstr, sizeof(newSplash->name));
-      
+
       E_AddSplashToHash(newSplash);
       newsp = true;
    }
@@ -260,20 +260,20 @@ static void E_ProcessSplash(cfg_t *cfg)
    // process baseclass
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
    newSplash->baseclass = E_ThingNumForName(tempstr);
-   
+
    // process chunkclass
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_CHUNKCLASS);
    newSplash->chunkclass = E_ThingNumForName(tempstr);
-   
+
    // process chunkxvelshift, yvelshift, zvelshift
    newSplash->chunkxvelshift = cfg_getint(cfg, ITEM_SPLASH_XVELSHIFT);
    newSplash->chunkyvelshift = cfg_getint(cfg, ITEM_SPLASH_YVELSHIFT);
    newSplash->chunkzvelshift = cfg_getint(cfg, ITEM_SPLASH_ZVELSHIFT);
-  
+
    // process chunkbasezvel
-   newSplash->chunkbasezvel = 
+   newSplash->chunkbasezvel =
       cfg_getint(cfg, ITEM_SPLASH_BASEZVEL) * FRACUNIT;
-   
+
    // process sound
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
    if(strlen(tempstr) >= sizeof(newSplash->sound))
@@ -283,8 +283,8 @@ static void E_ProcessSplash(cfg_t *cfg)
    }
    strncpy(newSplash->sound, tempstr, sizeof(newSplash->sound));
 
-   E_EDFLogPrintf("\t\t\t%s splash '%s'\n", 
-                  newsp ? "Finished" : "Modified", 
+   E_EDFLogPrintf("\t\t\t%s splash '%s'\n",
+                  newsp ? "Finished" : "Modified",
                   newSplash->name);
 }
 
@@ -371,7 +371,7 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
       tempstr = cfg_getstr(cfg, ITEM_TERDELTA_NAME);
       if(!tempstr)
       {
-         E_EDFLoggedErr(3, 
+         E_EDFLoggedErr(3,
             "E_ProcessTerrain: terrain delta requires name field!\n");
       }
 
@@ -408,7 +408,7 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
    // process footclip
    if(IS_SET(ITEM_TERRAIN_FOOTCLIP))
    {
-      newTerrain->footclip = 
+      newTerrain->footclip =
          cfg_getint(cfg, ITEM_TERRAIN_FOOTCLIP) * FRACUNIT;
    }
 
@@ -446,7 +446,7 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
 
    if(def)
    {
-      E_EDFLogPrintf("\t\t\t%s terrain '%s'\n", 
+      E_EDFLogPrintf("\t\t\t%s terrain '%s'\n",
                      newtr ? "Finished" : "Modified",
                      newTerrain->name);
    }
@@ -475,7 +475,7 @@ static void E_AddSolidTerrain(void)
       strncpy(solid.name, "Solid", sizeof(solid.name));
       E_AddTerrainToHash(&solid);
       solidinit = true;
-      --numterrains; // do not count the solid terrain 
+      --numterrains; // do not count the solid terrain
    }
 }
 
@@ -673,13 +673,13 @@ void E_InitTerrainTypes(void)
 //
 // Note: this returns the floor type of the thing's subsector
 // floorpic, not necessarily the floor the thing is standing on.
-// haleyjd 10/16/10: Except that's never been sufficient. So in 
+// haleyjd 10/16/10: Except that's never been sufficient. So in
 // newer versions return the appropriate floor's type.
 //
 ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
 {
    ETerrain *terrain = NULL;
-   
+
    if(full_demo_version >= make_full_version(339, 21))
    {
       msecnode_t *m = NULL;
@@ -702,12 +702,12 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
          terrain = &solid;
    }
 
-   if(!terrain) 
+   if(!terrain)
    {
       if(!(terrain = thing->subsector->sector->floorterrain))
          terrain = TerrainTypes[thing->subsector->sector->floorpic];
    }
-   
+
    if(demo_version < terrain->minversion || comp[comp_terrain])
       terrain = &solid;
 
@@ -753,7 +753,7 @@ ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
 fixed_t E_SectorFloorClip(sector_t *sector)
 {
    ETerrain *terrain = NULL;
-   
+
    // override with sector terrain if one is specified
    if(!(terrain = sector->floorterrain))
       terrain = TerrainTypes[sector->floorpic];
@@ -805,14 +805,14 @@ void E_PtclTerrainHit(particle_t *p)
    if(splash->smallclass != -1)
    {
       mo = P_SpawnMobj(x, y, z, splash->smallclass);
-      mo->floorclip += splash->smallclip;      
+      mo->floorclip += splash->smallclip;
    }
    else if(splash->baseclass != -1)
    {
       // spawn only a splash base otherwise
       mo = P_SpawnMobj(x, y, z, splash->baseclass);
    }
-   
+
    if(mo)
       S_StartSoundName(mo, splash->smallsound);
 }
@@ -826,14 +826,14 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = NULL;
-   bool lowmass = (thing->info->mass < 10);   
+   bool lowmass = (thing->info->mass < 10);
 
    if(!splash)
       return;
 
    // low mass splash?
    // note: small splash didn't exist before version 3.33
-   if(demo_version >= 333 && 
+   if(demo_version >= 333 &&
       lowmass && splash->smallclass != -1)
    {
       mo = P_SpawnMobj(thing->x, thing->y, z, splash->smallclass);
@@ -848,7 +848,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
       {
          mo = P_SpawnMobj(thing->x, thing->y, z, splash->chunkclass);
          P_SetTarget<Mobj>(&mo->target, thing);
-         
+
          if(splash->chunkxvelshift != -1)
             mo->momx = P_SubRandom(pr_splash) << splash->chunkxvelshift;
          if(splash->chunkyvelshift != -1)
@@ -864,9 +864,9 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
    }
 
    // make a sound
-   // use the splash object as the origin if possible, 
+   // use the splash object as the origin if possible,
    // else the thing that hit the terrain
-   S_StartSoundName(mo ? mo : thing, 
+   S_StartSoundName(mo ? mo : thing,
                     lowmass ? splash->smallsound : splash->sound);
 }
 
@@ -892,7 +892,7 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
    if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
       terrain = &solid;
 
-   z = sector->heightsec != -1 ? 
+   z = sector->heightsec != -1 ?
          sectors[sector->heightsec].floorheight :
          sector->floorheight;
 
@@ -919,11 +919,10 @@ bool E_HitFloor(Mobj *thing)
 
    // not on a floor or dealing with deep water, return solid
    // deep water splashes are handled in P_MobjThinker now
-   if(!m || m->m_sector->heightsec != -1)         
+   if(!m || m->m_sector->heightsec != -1)
       return false;
 
    return E_HitWater(thing, m->m_sector);
 }
 
 // EOF
-

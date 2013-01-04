@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,7 +47,7 @@ private:
    char   *buffer;
    size_t  index;
    size_t  size;
-   
+
    bool isLocal() const { return (buffer == local); }
    void unLocalize(size_t pSize);
 
@@ -56,7 +56,7 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(size_t startSize = 0, int tag = PU_STATIC) 
+   qstring(size_t startSize = 0, int tag = PU_STATIC)
       : ZoneObject(), index(0), size(16)
    {
       ChangeTag(tag);
@@ -66,7 +66,7 @@ public:
          initCreateSize(startSize);
    }
 
-   qstring(const qstring &other) 
+   qstring(const qstring &other)
       : ZoneObject(), index(0), size(16)
    {
       buffer = local;
@@ -89,7 +89,7 @@ public:
    //
    // qstring::getBuffer
    //
-   // Retrieves a pointer to the internal buffer. This pointer shouldn't be 
+   // Retrieves a pointer to the internal buffer. This pointer shouldn't be
    // cached, and is not meant for writing into (although it is safe to do so, it
    // circumvents the encapsulation and security of this structure).
    //
@@ -170,7 +170,7 @@ public:
    // Substring Replacements
    size_t   replace(const char *filter, char repl);
    size_t   replaceNotOf(const char *filter, char repl);
-   
+
    // File Path Utilities
    qstring &normalizeSlashes();
    qstring &pathConcatenate(const char *addend);
@@ -203,7 +203,7 @@ public:
    qstring &truncate(size_t pos);
    qstring &erase(size_t pos, size_t n = npos);
 
-   // Special Formatting 
+   // Special Formatting
    qstring &makeQuoted();
    int      Printf(size_t maxlen, const char *fmt, ...);
 
@@ -222,7 +222,7 @@ public:
    qstring &operator << (char   ch);
    qstring &operator << (int    i);
    qstring &operator << (double d);
-   
+
    char       &operator [] (size_t idx);
    const char &operator [] (size_t idx) const;
 
@@ -233,5 +233,3 @@ public:
 #endif
 
 // EOF
-
-

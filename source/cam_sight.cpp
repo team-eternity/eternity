@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 // Copyright 1998-2012 Randy Heit  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
 // 1. Redistributions of source code must retain the above copyright
@@ -107,7 +107,7 @@ void CAM_LineOpening(camsight_t &cam, line_t *linedef)
       cam.openrange = 0;
       return;
    }
-   
+
    front = linedef->frontsector;
    back  = linedef->backsector;
 
@@ -136,7 +136,7 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
 {
    line_t  *li;
    fixed_t slope;
-	
+
    li = in->d.line;
 
    //
@@ -153,7 +153,7 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
       if(slope > cam.bottomslope)
          cam.bottomslope = slope;
    }
-	
+
    if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
    {
       slope = FixedDiv(cam.opentop - cam.sightzstart, in->frac);
@@ -182,7 +182,7 @@ static bool CAM_SightCheckLine(camsight_t &cam, int linenum)
 
    P_MakeDivline(ld, &dl);
    s1 = P_PointOnDivlineSide(cam.trace.x, cam.trace.y, &dl);
-   s2 = P_PointOnDivlineSide(cam.trace.x + cam.trace.dx, 
+   s2 = P_PointOnDivlineSide(cam.trace.x + cam.trace.dx,
                              cam.trace.y + cam.trace.dy, &dl);
    if(s1 == s2)
       return true; // line isn't crossed
@@ -225,7 +225,7 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
       if(!(cam.validpolys[polynum >> 3] & (1 << (polynum & 7))))
       {
          cam.validpolys[polynum >> 3] |= 1 << (polynum & 7);
-         
+
          for(int i = 0; i < po->numLines; ++i)
          {
             int linenum = po->lines[i] - lines;
@@ -250,7 +250,7 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
    for(; *list != -1; list++)
    {
       int linenum = *list;
-      
+
       if(linenum >= numlines)
          continue;
 
@@ -287,12 +287,12 @@ static bool CAM_SightTraverseIntercepts(camsight_t &cam)
       P_MakeDivline(scan->d.line, &dl);
       scan->frac = P_InterceptVector(&cam.trace, &dl);
    }
-	
+
    //
    // go through in order
-   //	
+   //
    in = NULL; // shut up compiler warning
-	
+
    while(count--)
    {
       dist = D_MAXINT;
@@ -331,10 +331,10 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
    fixed_t partialx, partialy;
    fixed_t xintercept, yintercept;
    int     mapx, mapy, mapxstep, mapystep;
-		
+
    if(((cam.cx - bmaporgx) & (MAPBLOCKSIZE - 1)) == 0)
       cam.cx += FRACUNIT; // don't side exactly on a line
-   
+
    if(((cam.cy - bmaporgy) & (MAPBLOCKSIZE - 1)) == 0)
       cam.cy += FRACUNIT; // don't side exactly on a line
 
@@ -376,10 +376,10 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
       mapxstep = 0;
       partialx = FRACUNIT;
       ystep    = 256*FRACUNIT;
-   }	
+   }
 
    yintercept = (cam.cy >> MAPBTOFRAC) + FixedMul(partialx, ystep);
-	
+
    if(yt2 > yt1)
    {
       mapystep = 1;
@@ -397,7 +397,7 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
       mapystep = 0;
       partialy = FRACUNIT;
       xstep    = 256*FRACUNIT;
-   }	
+   }
 
    xintercept = (cam.cx >> MAPBTOFRAC) + FixedMul(partialy, xstep);
 
@@ -418,17 +418,17 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
          yintercept = yt1 << FRACBITS;
       }
    }
-	
+
    // step through map blocks
    // Count is present to prevent a round off error from skipping the break
    mapx = xt1;
    mapy = yt1;
-	
+
    for(int count = 0; count < 100; count++)
    {
       if(!CAM_SightBlockLinesIterator(cam, mapx, mapy))
          return false;	// early out
-		
+
       if((mapxstep | mapystep) == 0)
          break;
 
@@ -436,31 +436,31 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
       // From ZDoom (usable under the ZDoom code license):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
-      // Doom 1.2, and persisted into Heretic, Hexen, and some versions of 
+      // Doom 1.2, and persisted into Heretic, Hexen, and some versions of
       // ZDoom.
-      switch((((yintercept >> FRACBITS) == mapy) << 1) | 
+      switch((((yintercept >> FRACBITS) == mapy) << 1) |
               ((xintercept >> FRACBITS) == mapx))
       {
-      case 0: 
+      case 0:
          // Neither xintercept nor yintercept match!
          // Continuing won't make things any better, so we might as well stop.
          count = 100;
          break;
-      case 1: 
+      case 1:
          // xintercept matches
          xintercept += xstep;
          mapy += mapystep;
          if(mapy == yt2)
             mapystep = 0;
          break;
-      case 2: 
+      case 2:
          // yintercept matches
          yintercept += ystep;
          mapx += mapxstep;
          if(mapx == xt2)
             mapxstep = 0;
          break;
-      case 3: 
+      case 3:
          // xintercept and yintercept both match
          // The trace is exiting a block through its corner. Not only does the
          // block being entered need to be checked (which will happen when this
@@ -521,7 +521,7 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
    s1   = (csec = R_PointInSubsector(cx, cy)->sector) - sectors;
    s2   = (tsec = R_PointInSubsector(tx, ty)->sector) - sectors;
    pnum = s1 * numsectors + s2;
-	
+
    if(!(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
       camsight_t newCam;
@@ -563,4 +563,3 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
 }
 
 // EOF
-

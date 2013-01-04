@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 /******************************* Chasecam code *****************************/
 //
 // Copyright(C) 2000 James Haley
@@ -6,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -83,12 +84,12 @@ void P_GetChasecamTarget(void)
    // aimfor is the preferred height of the chasecam above
    // the player
    // haleyjd: 1 unit for each degree of pitch works surprisingly well
-   aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT 
+   aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT
                + FixedDiv(players[displayplayer].pitch, ANGLE_1);
-      
+
    trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
    trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
-   
+
    targetx = playermobj->x - chasecam_dist * trace.cos;
    targety = playermobj->y - chasecam_dist * trace.sin;
    targetz = playermobj->z + aimfor;
@@ -106,7 +107,7 @@ void P_GetChasecamTarget(void)
                   PT_ADDLINES, PTR_chasetraverse);
 
    ss = R_PointInSubsector(targetx, targety);
-   
+
    floorheight = ss->sector->floorheight;
    ceilingheight = ss->sector->ceilingheight;
 
@@ -128,23 +129,23 @@ void P_ChaseTicker(void)
 
    // find the target
    P_GetChasecamTarget();
-   
+
    // find distance to target..
    xdist = targetx-chasecam.x;
    ydist = targety-chasecam.y;
    zdist = targetz-chasecam.z;
-   
+
    // haleyjd: patched these lines with cph's fix
    //          for overflow occuring in the multiplication
    // now move chasecam
    chasecam.x += FixedMul(xdist, chasecam_speed*(FRACUNIT/100));
    chasecam.y += FixedMul(ydist, chasecam_speed*(FRACUNIT/100));
    chasecam.z += FixedMul(zdist, chasecam_speed*(FRACUNIT/100));
-   
+
    chasecam.pitch = players[displayplayer].pitch;
    chasecam.angle = playerangle;
 
-   // haleyjd: fix for deep water HOM bug -- 
+   // haleyjd: fix for deep water HOM bug --
    // although this is called from P_GetChasecamTarget, we
    // can't do it there because the target point may have
    // different deep water qualities than the interim locale
@@ -198,10 +199,10 @@ void P_ChaseEnd(void)
 int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 {
    int64_t thezi;
-   
+
    thezi = (dist * (ztarget - playerz)) / totaldist;
    thezi += playerz;
-   
+
    return (int)thezi;
 }
 
@@ -226,13 +227,13 @@ bool PTR_chasetraverse(intercept_t *in)
    if(in->isaline)
    {
       line_t *li = in->d.line;
-      
+
       dist = FixedMul(trace.attackrange, in->frac);
       frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
-      
+
       // hit line
       // position a bit closer
-      
+
       x = trace.x + FixedMul(trace.dx, frac);
       y = trace.y + FixedMul(trace.dy, frac);
 
@@ -240,20 +241,20 @@ bool PTR_chasetraverse(intercept_t *in)
       {  // crosses a two sided line
 
          // sf: find which side it hit
-         
+
          ss = R_PointInSubsector (x, y);
-         
+
          othersector = li->backsector;
-         
+
          if(ss->sector==li->backsector)      // other side
             othersector = li->frontsector;
 
          // interpolate, find z at the point of intersection
-         
+
          z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
-         
+
          // found which side, check for intersections
-         if( (li->flags & ML_BLOCKING) || 
+         if( (li->flags & ML_BLOCKING) ||
             (othersector->floorheight>z) || (othersector->ceilingheight<z)
             || (othersector->ceilingheight-othersector->floorheight
                 < 40*FRACUNIT));          // hit
@@ -266,12 +267,12 @@ bool PTR_chasetraverse(intercept_t *in)
       targetx = x;        // point the new chasecam target at the intersection
       targety = y;
       targetz = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
-      
+
       // don't go any farther
-      
+
       return false;
    }
-   
+
    return true;
 }
 
@@ -284,17 +285,17 @@ void P_ResetChasecam(void)
 
    // find the chasecam target
    P_GetChasecamTarget();
-   
+
    chasecam.x = targetx;
    chasecam.y = targety;
    chasecam.z = targetz;
-   
+
 #ifdef R_LINKEDPORTALS
    chasecam.groupid = targetgroupid;
 #endif
 
    // haleyjd
-   chasecam.heightsec = 
+   chasecam.heightsec =
       R_PointInSubsector(chasecam.x, chasecam.y)->sector->heightsec;
 }
 
@@ -317,8 +318,8 @@ void P_WalkTicker(void)
    angle_t fwan, san;
 
    walkcamera.angle += walktic->angleturn << 16;
-   
-   // looking up/down 
+
+   // looking up/down
    // haleyjd: this is the same as new code in p_user.c, but for walkcam
    if(look)
    {
@@ -379,7 +380,7 @@ void P_WalkTicker(void)
    {
       fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
       fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
-      
+
       if(walkcamera.z > maxheight)
          walkcamera.z = maxheight;
       if(walkcamera.z < minheight)
@@ -395,7 +396,7 @@ void P_ResetWalkcam(void)
    walkcamera.angle  = R_WadToAngle(playerstarts[0].angle);
    walkcamera.pitch  = 0;
    walkcamera.flying = false;
-   
+
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
    walkcamera.heightsec = sec->heightsec;
@@ -498,7 +499,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
          destY = v->y + 10 * finesine[ang >> ANGLETOFINESHIFT];
 
          return; // We've found our location
-      }                   
+      }
    }
 
    // If we got here, somehow the target isn't visible... (shouldn't happen)
@@ -528,7 +529,7 @@ static void P_setFollowPitch()
 
    zdist    = M_FixedToDouble(zabs);
    fixedang = (fixed_t)(atan2(zdist, xydist) * (ANG180 / PI));
-      
+
    if(fixedang > ANGLE_1 * 32)
       fixedang = ANGLE_1 * 32;
 
@@ -632,4 +633,3 @@ AMX_NATIVE_INFO chase_Natives[] =
 #endif
 
 // EOF
-

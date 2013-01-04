@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -244,7 +244,7 @@ static patch_t *shortnum[10];
 
 // 3 key-cards, 3 skulls, 3 card/skull combos
 // jff 2/24/98 extend number of patches by three skull/card combos
-// sf: unstaticed for overlay 
+// sf: unstaticed for overlay
 patch_t *keys[NUMCARDS+3];
 
 // face status patches
@@ -344,13 +344,13 @@ static void ST_refreshBackground(void)
          V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
-               NULL, 
+               NULL,
             false);
       }
 
       // faces
       STlib_initMultIcon(&w_faces,  ST_FACESX, ST_FACESY,
-                         players[displayplayer].skin->faces, 
+                         players[displayplayer].skin->faces,
                          &st_faceindex, &st_statusbaron);
    }
 }
@@ -396,7 +396,7 @@ static int ST_calcPainOffset(void)
    static int lastcalc;
    static int oldhealth = -1;
    int health = plyr->health > 100 ? 100 : plyr->health;
-   
+
    if(health != oldhealth)
    {
       lastcalc = ST_FACESTRIDE * (((100 - health) * ST_NUMPAINFACES) / 101);
@@ -437,7 +437,7 @@ static void ST_updateFaceWidget(void)
    static int lastattackdown = -1;
    static int priority = ST_PRIORITY_NONE;
    bool       doevilgrin;
-   
+
    if(priority < ST_PRIORITY_MAX)
    {
       // dead
@@ -591,7 +591,7 @@ static void ST_updateFaceWidget(void)
       if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability])
       {
          priority = ST_PRIORITY_GODMODE;
-         
+
          st_faceindex = ST_GODFACE;
          st_facecount = 1;
       }
@@ -605,7 +605,7 @@ static void ST_updateFaceWidget(void)
       st_facecount = ST_STRAIGHTFACECOUNT;
       priority = ST_PRIORITY_NONE;
    }
-   
+
    st_facecount--;
 }
 
@@ -628,10 +628,10 @@ static void ST_updateWidgets(void)
    for(i = 0; i < 3; i++)
    {
       keyboxes[i] = plyr->cards[i] ? i : -1;
-      
+
       //jff 2/24/98 select double key
       //killough 2/28/98: preserve traditional keys by config option
-      
+
       if(plyr->cards[i+3])
          keyboxes[i] = keyboxes[i]==-1 || sts_traditional_keys ? i+3 : i+6;
    }
@@ -709,7 +709,7 @@ static void ST_doPaletteStuff(void)
          palette = NUMBONUSPALS-1;
       palette += STARTBONUSPALS;
    }
-   else if(plyr->powers[pw_ironfeet] > 4*32 || 
+   else if(plyr->powers[pw_ironfeet] > 4*32 ||
            plyr->powers[pw_ironfeet] & 8)
       palette = RADIATIONPAL;
    else
@@ -717,9 +717,9 @@ static void ST_doPaletteStuff(void)
 
    // sf: no palette flashes for camera
    // haleyjd 10/14/09: never access negative palette indices
-   if(camera || palette < 0) 
+   if(camera || palette < 0)
       palette = 0;
-  
+
    if(palette != st_palette)
    {
       st_palette = palette;
@@ -777,7 +777,7 @@ static void ST_drawWidgets()
    // used by w_frags widget
    st_fragson = st_statusbaron && GameType == gt_dm;
 
-   // haleyjd: draw widgets common to status bar and fullscreen 
+   // haleyjd: draw widgets common to status bar and fullscreen
    ST_drawCommonWidgets(FRACUNIT);
 
    for(i = 0; i < 4; i++)
@@ -800,7 +800,7 @@ static void ST_doRefresh(void)
 {
    // draw status bar background to off-screen buffer
    ST_refreshBackground();
-   
+
    // and refresh all widgets
    ST_drawWidgets();
 }
@@ -899,7 +899,7 @@ static void ST_DoomFSDrawer(void)
 
    // health
    V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
-   
+
    // armor
    if(plyr->armortype == 2)
       V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
@@ -938,7 +938,7 @@ void ST_Drawer(bool fullscreen)
    // percent '%' signs being drawn in fullscreen
    if(fullscreen && !automapactive)
    {
-      // haleyjd: call game mode's fullscreen drawer when 
+      // haleyjd: call game mode's fullscreen drawer when
       // hud is enabled and hud_overlaystyle is "graphical"
       if(fshud)
          StatusBar->FSDrawer();
@@ -1309,7 +1309,7 @@ static void ST_Stop(void)
 {
    if(st_stopped)
       return;
-   I_SetPalette((byte *)(wGlobalDir.cacheLumpNum(lu_palette, PU_CACHE)));   
+   I_SetPalette((byte *)(wGlobalDir.cacheLumpNum(lu_palette, PU_CACHE)));
    st_stopped = true;
 }
 
@@ -1390,15 +1390,15 @@ void ST_AddCommands(void)
 {
    C_AddCommand(ammo_red);
    C_AddCommand(ammo_yellow);
-   
+
    C_AddCommand(health_red);
    C_AddCommand(health_yellow);
    C_AddCommand(health_green);
-   
+
    C_AddCommand(armor_red);
    C_AddCommand(armor_yellow);
    C_AddCommand(armor_green);
-   
+
    C_AddCommand(st_graypct);
    C_AddCommand(st_rednum);
    C_AddCommand(st_singlekey);

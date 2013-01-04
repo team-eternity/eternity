@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -60,8 +60,8 @@ extern vfont_t *menu_font_big;
 
 // haleyjd 02/24/02: bug fix -- MN_Alert and MN_Question replaced
 // M_StartMessage in SMMU, but fraggle didn't put code in them to
-// properly set the menuactive state based on whether or not menus 
-// were active at the time of the call, leading to weird menu 
+// properly set the menuactive state based on whether or not menus
+// were active at the time of the call, leading to weird menu
 // behavior
 static bool popupMenuActive;
 
@@ -94,7 +94,7 @@ extern vfont_t *menu_font_normal;
 //
 // Local routine to draw centered messages. Candidate for
 // absorption into future generalized font code. Rewritten
-// 02/22/04 to use qstring module. 
+// 02/22/04 to use qstring module.
 //
 static void WriteCenteredText(char *message)
 {
@@ -105,7 +105,7 @@ static void WriteCenteredText(char *message)
    int w, h;
 
    qstr.clearOrCreate(128);
-   
+
    // rather than reallocate memory every time we draw it,
    // use one buffer and increase the size as neccesary
    // haleyjd 02/22/04: qstring handles this for us now
@@ -127,7 +127,7 @@ static void WriteCenteredText(char *message)
       {
          buffer = qstr.constPtr();
          x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
-         V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);         
+         V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);
          qstr.clear(); // clear buffer
          y += menu_font_normal->absh; // next line
       }
@@ -140,7 +140,7 @@ static void WriteCenteredText(char *message)
    // dont forget the last line.. prob. not \n terminated
    buffer = qstr.constPtr();
    x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
-   V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);   
+   V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);
 }
 
 void MN_PopupDrawer(void)
@@ -148,7 +148,7 @@ void MN_PopupDrawer(void)
    // haleyjd 08/31/12: If we popped up over another widget, draw it.
    if(popup_widget.prev && popup_widget.prev->drawer)
       popup_widget.prev->drawer();
-   
+
    WriteCenteredText(popup_message);
 }
 
@@ -156,7 +156,7 @@ bool MN_PopupResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
-   
+
    if(ev->type != ev_keydown)
       return false;
 
@@ -164,7 +164,7 @@ bool MN_PopupResponder(event_t *ev)
       ch = tolower(ev->character);
    else
       ch = ev->data1;
-   
+
    switch(popup_message_type)
    {
    case popup_alert:
@@ -206,11 +206,11 @@ bool MN_PopupResponder(event_t *ev)
          MN_PopWidget(); // kill message
       }
       break;
-      
+
    default:
       break;
    }
-   
+
    return true; // always eat key
 }
 
@@ -223,16 +223,16 @@ bool MN_PopupResponder(event_t *ev)
 void MN_Alert(const char *message, ...)
 {
    va_list args;
-   
+
    // haleyjd 02/24/02: bug fix for menuactive state
    popupMenuActive = menuactive;
-   
+
    MN_ActivateMenu();
-   
+
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
    popup_message_type = popup_alert;
-   
+
    va_start(args, message);
    pvsnprintf(popup_message, sizeof(popup_message), message, args);
    va_end(args);
@@ -248,9 +248,9 @@ void MN_Question(const char *message, const char *command)
 {
    // haleyjd 02/24/02: bug fix for menuactive state
    popupMenuActive = menuactive;
-   
+
    MN_ActivateMenu();
-   
+
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
 
@@ -274,16 +274,16 @@ void MN_Question(const char *message, const char *command)
 void MN_QuestionFunc(const char *message, void (*handler)(void))
 {
    popupMenuActive = menuactive;
-   
+
    MN_ActivateMenu();
-   
+
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
 
    // If a widget we popped up over is fullscreen, so are we, since
    // we'll call down to its drawer. Otherwise, not.
    popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
-   
+
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_callback = handler;
@@ -310,12 +310,12 @@ extern bool inhelpscreens; // indicates we are in or just left a help screen
 static void AddHelpScreen(const char *screenname)
 {
    int lumpnum;
-   
+
    if((lumpnum = W_CheckNumForName(screenname)) != -1)
    {
       helpscreens[num_helpscreens].Drawer = NULL;   // no drawer
       helpscreens[num_helpscreens++].lumpnum = lumpnum;
-   }  
+   }
 }
 
 // build help screens differently according to whether displaying
@@ -324,11 +324,11 @@ static void AddHelpScreen(const char *screenname)
 static void MN_FindCreditScreens(void)
 {
    num_helpscreens = 0;  // reset
-   
+
    // add dynamic smmu credits screen
-   
+
    helpscreens[num_helpscreens++].Drawer = MN_DrawCredits;
-   
+
    // other help screens
 
    // haleyjd: do / do not want certain screens for different
@@ -339,18 +339,18 @@ static void MN_FindCreditScreens(void)
       AddHelpScreen(DEH_String("ORDER"));
    else
       AddHelpScreen(DEH_String("HELP2"));
-   
+
    AddHelpScreen(DEH_String("CREDIT"));
 }
 
 static void MN_FindHelpScreens(void)
 {
    int custom;
-   
+
    num_helpscreens = 0;
-   
+
    // add custom menus first
-   
+
    for(custom = 0; custom < 100; ++custom)
    {
       char tempstr[10];
@@ -358,9 +358,9 @@ static void MN_FindHelpScreens(void)
       sprintf(tempstr, "HELP%.02i", custom);
       AddHelpScreen(tempstr);
    }
-   
+
    // now the default original doom ones
-   
+
    // sf: keep original help screens until key bindings rewritten
    // and i can restore the dynamic help screens
 
@@ -368,13 +368,13 @@ static void MN_FindHelpScreens(void)
       AddHelpScreen(DEH_String("ORDER"));
    else
       AddHelpScreen("HELP");
-   
+
    AddHelpScreen("HELP1");
-   
+
    // promote the registered version at every availability
    // haleyjd: HELP2 is a help screen in heretic too
-   
-   AddHelpScreen(DEH_String("HELP2")); 
+
+   AddHelpScreen(DEH_String("HELP2"));
 }
 
 enum
@@ -397,7 +397,7 @@ static const char *cat_strs[NUMCATS] =
 static const char *val_strs[NUMCATS] =
 {
    "James Haley\nStephen McGranahan\nCharles Gunyon\nDavid Hill\n",
-   
+
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
 
    "Michael Mancuso\nSven Ruthner\n",
@@ -440,7 +440,7 @@ void MN_DrawCredits(void)
 
    // sf: altered for SMMU
    // haleyjd: altered for Eternity :)
-   
+
    V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
 
    y = GameModeInfo->creditY;
@@ -453,7 +453,7 @@ void MN_DrawCredits(void)
    {
       int catStrWidth = V_FontStringWidth(menu_font_normal, cat_strs[i]);
 
-      V_FontWriteText(menu_font_normal, cat_strs[i], 
+      V_FontWriteText(menu_font_normal, cat_strs[i],
                       line_x + (cat_width - catStrWidth), y, &subscreen43);
 
       V_FontWriteText(menu_font_normal, val_strs[i], line_x + cat_width + 16, y,
@@ -462,8 +462,8 @@ void MN_DrawCredits(void)
       y += V_FontStringHeight(menu_font_normal, val_strs[i]);
    }
 
-   V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2012 Team Eternity et al.", 
+   V_FontWriteText(menu_font_normal,
+                   FC_ABSCENTER "Copyright 2012 Team Eternity et al.",
                    0, y, &subscreen43);
 }
 
@@ -496,9 +496,9 @@ static bool help_prev_menuactive;
 bool MN_HelpResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
-   
+
    if(ev->type != ev_keydown) return false;
-   
+
    if(action_menu_previous)
    {
       action_menu_previous = false;
@@ -556,10 +556,10 @@ CONSOLE_COMMAND(help, 0)
 
    MN_ActivateMenu();
    MN_FindHelpScreens();        // search for help screens
-   
+
    // hook in widget to display menu
    MN_PushWidget(&helpscreen_widget);
-   
+
    // start on first screen
    viewing_helpscreen = 0;
 }
@@ -571,10 +571,10 @@ CONSOLE_COMMAND(credits, 0)
 
    MN_ActivateMenu();
    MN_FindCreditScreens();        // search for help screens
-   
+
    // hook in widget to display menu
    MN_PushWidget(&helpscreen_widget);
-   
+
    // start on first screen
    viewing_helpscreen = 0;
 }
@@ -599,37 +599,37 @@ void MN_MapColourDrawer(void)
    byte block[BLOCK_SIZE*BLOCK_SIZE];
 
    // draw the menu in the background
-   
+
    MN_DrawMenu(current_menu);
 
    // draw colours table
-   
+
    patch = PatchLoader::CacheName(wGlobalDir, "M_COLORS", PU_CACHE);
-   
+
    x = (SCREENWIDTH  - patch->width ) / 2;
    y = (SCREENHEIGHT - patch->height) / 2;
-   
+
    V_DrawPatch(x, y, &subscreen43, patch);
-   
+
    x += 4 + 8 * (selected_colour % 16);
    y += 4 + 8 * (selected_colour / 16);
 
    // build block
-   
+
    // border
    memset(block, HIGHLIGHT_COLOUR, BLOCK_SIZE*BLOCK_SIZE);
-  
+
    // draw colour inside
    for(u = 1; u < BLOCK_SIZE - 1; ++u)
       for(v = 1; v < BLOCK_SIZE - 1; ++v)
          block[v*BLOCK_SIZE + u] = selected_colour;
-  
+
    // draw block
    V_DrawBlock(x, y, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
    if(!selected_colour)
    {
-      V_DrawPatch(x+1, y+1, &subscreen43, 
+      V_DrawPatch(x+1, y+1, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
    }
 }
@@ -647,19 +647,19 @@ bool MN_MapColourResponder(event_t *ev)
       action_menu_right = false;
       selected_colour++;
    }
-   
+
    if(action_menu_up)
    {
       action_menu_up = false;
       selected_colour -= 16;
    }
-   
+
    if(action_menu_down)
    {
       action_menu_down = false;
       selected_colour += 16;
    }
-   
+
    if(action_menu_toggle || action_menu_previous)
    {
       // cancel colour selection
@@ -672,27 +672,27 @@ bool MN_MapColourResponder(event_t *ev)
    {
       static char tempstr[128];
       sprintf(tempstr, "%i", selected_colour);
-     
+
       // run command
       C_RunCommand(colour_command, tempstr);
-      
+
       // kill selector
       action_menu_confirm = false;
       MN_PopWidget();
       return true;
    }
 
-   if(selected_colour < 0) 
+   if(selected_colour < 0)
       selected_colour = 0;
-   if(selected_colour > 255) 
+   if(selected_colour > 255)
       selected_colour = 255;
-   
+
    return true; // always eat key
 }
 
-menuwidget_t colour_widget = 
+menuwidget_t colour_widget =
 {
-   MN_MapColourDrawer, 
+   MN_MapColourDrawer,
    MN_MapColourResponder,
    NULL,
    true
@@ -716,12 +716,12 @@ static qstring  teststr;  // string for test
 static void MN_fontTestDrawer()
 {
    int totalHeight = SCREENHEIGHT - testfont->absh * 2;
-   int itemHeight  = totalHeight / (CR_BUILTIN + 1);   
+   int itemHeight  = totalHeight / (CR_BUILTIN + 1);
    int x = 160 - V_FontStringWidth(testfont, teststr.constPtr())/2;
    int y = testfont->absh;
 
    V_DrawBackground(mn_background_flat, &vbscreen);
-   
+
    for(int i = 0; i <= CR_BUILTIN; i++)
    {
       V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
@@ -742,11 +742,11 @@ static bool MN_fontTestResponder(event_t *ev)
    return true;
 }
 
-static menuwidget_t fonttest_widget = 
+static menuwidget_t fonttest_widget =
 {
-   MN_fontTestDrawer, 
-   MN_fontTestResponder, 
-   NULL, 
+   MN_fontTestDrawer,
+   MN_fontTestResponder,
+   NULL,
    true
 };
 
@@ -760,7 +760,7 @@ CONSOLE_COMMAND(mn_testfont, 0)
       C_Puts(FC_ERROR "Usage: mn_testfont fontname [message]");
       return;
    }
-   
+
    fontName = Console.argv[0]->constPtr();
    if(!(font = E_FontForName(fontName)))
    {
@@ -773,7 +773,7 @@ CONSOLE_COMMAND(mn_testfont, 0)
    else
       teststr = "ABCDEFGHIJKL";
 
-   testfont = font;   
+   testfont = font;
    MN_PushWidget(&fonttest_widget);
 }
 

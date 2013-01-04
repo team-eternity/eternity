@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@
 
 // haleyjd 07/23/09:
 // For Visual Studio only, in release mode, rename this function to common_main
-// and use the main defined in i_w32main.c, which contains an exception handler 
+// and use the main defined in i_w32main.c, which contains an exception handler
 // to replace the useless SDL parachute.
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
 #define main common_main
@@ -80,18 +80,18 @@ int main(int argc, char **argv)
    // Set SDL video centering
    putenv(env_vidwinpos);
    putenv(env_vidcenter);
-   
+
    // SoM: From CHOCODOOM Thank you fraggle!!
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
    // Allow -gdi as a shortcut for using the windib driver.
-   
+
    //!
-   // @category video 
+   // @category video
    // @platform windows
    //
    // Use the Windows GDI driver instead of DirectX.
    //
-      
+
    // SoM: the gdi interface is much faster for windowed modes which are more
    // commonly used. Thus, GDI is default.
    if(M_CheckParm("-directx"))
@@ -116,9 +116,9 @@ int main(int argc, char **argv)
 
    Z_Init();
    atexit(I_Quit);
-   
+
    D_DoomMain();
-   
+
    return 0;
 }
 
@@ -147,7 +147,7 @@ static void VerifySDLVersions(void)
 
    // expected versions
    // must update these when SDL is updated.
-   static SDL_version ex_vers[3] = 
+   static SDL_version ex_vers[3] =
    {
       { 1, 2, 14 }, // SDL
       { 1, 2, 11 }, // SDL_mixer
@@ -191,7 +191,7 @@ static void VerifySDLVersions(void)
              "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
              cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
    }
-   
+
    if(lv->major != ex_vers[1].major || lv->minor != ex_vers[1].minor ||
       lv->patch != ex_vers[1].patch)
    {
@@ -201,7 +201,7 @@ static void VerifySDLVersions(void)
              lv->major, lv->minor, lv->patch,
              ex_vers[1].major, ex_vers[1].minor, ex_vers[1].patch);
    }
-   
+
    if(!(error & ERROR_SDL_MIXER))
       printf("DEBUG: Using SDL_mixer version %d.%d.%d\n",
              lv->major, lv->minor, lv->patch);
@@ -226,7 +226,7 @@ static void VerifySDLVersions(void)
              lv->major, lv->minor, lv->patch,
              ex_vers[2].major, ex_vers[2].minor, ex_vers[2].patch);
    }
-   
+
    if(!(error & ERROR_SDL_NET))
       printf("DEBUG: Using SDL_net version %d.%d.%d\n",
              lv->major, lv->minor, lv->patch);
@@ -234,4 +234,3 @@ static void VerifySDLVersions(void)
 #endif
 
 // EOF
-

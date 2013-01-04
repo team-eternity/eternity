@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -41,7 +41,7 @@
 //
 // Alocates and fill the contents of a slope structure.
 //
-static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, 
+static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d,
                              const float zdelta, bool isceiling)
 {
    pslope_t *ret = (pslope_t *)(Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL));
@@ -86,7 +86,7 @@ static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d,
       M_CrossProduct3f(&ret->normalf, &d1, &d2);
 
       len = (float)sqrt(ret->normalf.x * ret->normalf.x +
-                        ret->normalf.y * ret->normalf.y + 
+                        ret->normalf.y * ret->normalf.y +
                         ret->normalf.z * ret->normalf.z);
 
       ret->normalf.x /= len;
@@ -144,11 +144,11 @@ float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
    {
       line_t *li = sector->lines[i];
       float dist;
-      
+
       // Don't compare to the slope line.
       if(li == line)
          continue;
-      
+
       dist = (float)fabs((li->v1->fx - o->x) * d->x + (li->v1->fy - o->y) * d->y);
       if(dist > fardist)
          fardist = dist;
@@ -336,13 +336,12 @@ float P_GetZAtf(pslope_t *slope, float x, float y)
 //
 // P_DistFromPlanef
 //
-float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, 
+float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
                        const v3float_t *pnormal)
 {
-   return (point->x - pori->x) * pnormal->x + 
+   return (point->x - pori->x) * pnormal->x +
           (point->y - pori->y) * pnormal->y +
           (point->z - pori->z) * pnormal->z;
 }
 
 // EOF
-

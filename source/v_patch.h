@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -72,7 +72,7 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype);
 void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data);
 
 // SoM: In my continual effort to weed out multiple column drawers I discovered
-// the new patch system is derived from the old screen sprite code. I've 
+// the new patch system is derived from the old screen sprite code. I've
 // cleaned it up a bit.
 
 struct cb_patch_column_t  // It's cardboard now, bitches!
@@ -80,7 +80,7 @@ struct cb_patch_column_t  // It's cardboard now, bitches!
    int x;
    int y1, y2;
 
-   fixed_t frac; 
+   fixed_t frac;
    fixed_t step;
 
    byte   *source;
@@ -94,14 +94,14 @@ struct cb_patch_column_t  // It's cardboard now, bitches!
    // haleyjd: translucency lookups
    unsigned int *fg2rgb;
    unsigned int *bg2rgb;
-}; 
+};
 
 // Conversion routines
 
 byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height);
 
-patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, 
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
                          int tag, void **user = NULL);
 
 bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor);
@@ -109,4 +109,3 @@ bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor);
 #endif
 
 // EOF
-

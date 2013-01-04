@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -60,7 +60,7 @@ struct columndrawer_t
    void (*DrawAddTRColumn)(void);  // additive flextran/translated
 
    void (*ResetBuffer)(void);      // reset function (may be null)
-   
+
    void (*ByVisSpriteStyle[VS_NUMSTYLES][2])(void);
 };
 
@@ -132,11 +132,11 @@ void R_FillBackScreen(void);
 // If the view size is not full screen, draws a border around it.
 void R_DrawViewBorder(void);
 
-extern byte *tranmap;         // translucency filter maps 256x256  // phares 
+extern byte *tranmap;         // translucency filter maps 256x256  // phares
 extern byte *main_tranmap;    // killough 4/11/98
 extern byte *ylookup[];       // killough 11/98
 
-#define FUZZTABLE 50 
+#define FUZZTABLE 50
 #define FUZZOFF (SCREENWIDTH)
 
 extern const int fuzzoffset[];

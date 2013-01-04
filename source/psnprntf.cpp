@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //=============================================================================
 // psnprintf
 //
@@ -458,7 +459,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
      */
     char numstack[22];    /* largest 64 bit number has 22 octal digits */
     char *stackpos = numstack;
-    
+
     char fmt       = *info->fmt;
     int flags      = info->flags;
     int precision  = info->precision;
@@ -757,10 +758,10 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
 /*
  * WARNING: Assumes 64 bit doubles
  */
-typedef union DBLBITS_u 
+typedef union DBLBITS_u
 {
    double D;
-   struct word_s 
+   struct word_s
    {
       uint32_t W0;
       uint32_t W1;
@@ -1138,4 +1139,3 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
 }
 
 // EOF
-

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -116,14 +116,14 @@ static void C_initBackdrop(void)
    // 07/02/08: don't make INTERPIC quite as dark
    if(!strcasecmp(lumpname, "INTERPIC"))
       cmapnum = 10;
-   
+
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
    {
       lumpname = "CONSOLE";
       darken = false; // I assume it is already suitable for use.
    }
-   
+
    if(cbackneedfree)
    {
       V_FreeVBuffer(&cback);
@@ -133,9 +133,9 @@ static void C_initBackdrop(void)
 
    V_InitVBuffer(&cback, video.width, video.height, video.bitdepth);
    V_SetScaling(&cback, SCREENWIDTH, SCREENHEIGHT);
-   
+
    lumpnum = W_GetNumForName(lumpname);
-   
+
    // haleyjd 03/30/08: support linear fullscreen graphics
    if(W_LumpLength(lumpnum) == 64000)
    {
@@ -148,7 +148,7 @@ static void C_initBackdrop(void)
          V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
                         0, 0, video.width, video.height, FRACUNIT/2);
       }
-      
+
       Z_ChangeTag(block, PU_CACHE);
    }
    else
@@ -160,21 +160,21 @@ static void C_initBackdrop(void)
          int clumpnum, csize;
 
          // 07/02/08: for safety we need to use a temporary copy of the colormap
-         // here, and not alter the cache level of the lump. This could cause 
-         // the renderer to lose its hold on the colormap if this routine is 
+         // here, and not alter the cache level of the lump. This could cause
+         // the renderer to lose its hold on the colormap if this routine is
          // called during gameplay due to a resolution change.
          clumpnum = W_GetNumForName("COLORMAP");
          csize    = W_LumpLength(clumpnum);
 
          colormap = emalloc(byte *, csize);
          wGlobalDir.readLump(clumpnum, colormap);
-         
+
          V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
          efree(colormap);
       }
       else
          V_DrawPatchFS(&cback, patch);
-      
+
       Z_ChangeTag(patch, PU_CACHE);
    }
 }
@@ -218,13 +218,13 @@ void C_Init(void)
 
    if(!(c_font = E_FontForName(c_fontname)))
       I_Error("C_Init: bad EDF font name %s\n", c_fontname);
-   
+
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
-   
+
    C_AddCommands();
    C_updateInputPoint();
-   
+
    // haleyjd
    key_bindings.initialize();
 }
@@ -234,7 +234,7 @@ void C_Init(void)
 void C_Ticker(void)
 {
    Console.showprompt = true;
-   
+
    if(gamestate != GS_CONSOLE)
    {
       // specific to half-screen version only
@@ -255,60 +255,60 @@ void C_Ticker(void)
       // console gamestate: no moving consoles!
       Console.current_target = Console.current_height;
    }
-   
+
    if(consoleactive)  // no scrolling thru messages when fullscreen
    {
       // scroll based on keys down
       message_pos += pgdn_down - pgup_down;
-      
-      // check we're in the area of valid messages        
+
+      // check we're in the area of valid messages
       if(message_pos < 0)
          message_pos = 0;
       if(message_pos > message_last)
          message_pos = message_last;
    }
-   
+
    //
    // NETCODE_FIXME -- CONSOLE_FIXME: Buffered command crap.
    // Needs complete rewrite.
    //
-   
+
    C_RunBuffer(c_typed);   // run the delayed typed commands
    C_RunBuffer(c_menu);
 }
 
 //
-// CONSOLE_FIXME: history needs to be more efficient. Use pointers 
+// CONSOLE_FIXME: history needs to be more efficient. Use pointers
 // instead of copying strings back and forth.
 //
 static void C_addToHistory(qstring *s)
 {
    const char *a_prompt;
-   
+
    // display the command in console
    // hrmm wtf does this do? I dunno.
    if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
       a_prompt = altprompt;
    else
       a_prompt = inputprompt;
-   
+
    C_Printf("%s%s\n", a_prompt, s->constPtr());
-   
+
    // check for nothing typed or just spaces
    if(s->findFirstNotOf(' ') == qstring::npos)
       return;
-   
+
    // add it to the history
    // 6/8/99 maximum linelength to prevent segfaults
    // QSTR_FIXME: change history -> qstring
    s->copyInto(history[history_last], LINELENGTH);
    history_last++;
-   
+
    // scroll the history if necessary
    while(history_last >= HISTORY)
    {
       int i;
-      
+
       // haleyjd 03/02/02: this loop went one past the end of history
       // and left possible garbage in the higher end of the array
       for(i = 0; i < HISTORY - 1; i++)
@@ -316,7 +316,7 @@ static void C_addToHistory(qstring *s)
          strcpy(history[i], history[i+1]);
       }
       history[HISTORY - 1][0] = '\0';
-      
+
       history_last--;
    }
 
@@ -337,7 +337,7 @@ bool C_Responder(event_t *ev)
 
    // haleyjd 05/29/06: dynamic console bindings
    key_bindings.handleKeyEvent(ev, kac_console);
-   
+
    if(ev->data1 == KEYD_RSHIFT)
    {
       shiftdown = (ev->type==ev_keydown);
@@ -350,17 +350,17 @@ bool C_Responder(event_t *ev)
    pgdn_down = action_console_pagedown;
    if(action_console_pagedown)
       return consoleactive;
-  
+
    // only interested in keypresses
    if(ev->type != ev_keydown)
       return false;
-  
+
    //////////////////////////////////
    // Check for special keypresses
    //
    // detect activating of console etc.
    //
-   
+
    // activate console?
    if(action_console_toggle && Console.enabled)
    {
@@ -374,11 +374,11 @@ bool C_Responder(event_t *ev)
       return true;
    }
 
-   if(!consoleactive) 
+   if(!consoleactive)
       return false;
-   
+
    // not til its stopped moving
-   if(Console.current_target < Console.current_height) 
+   if(Console.current_target < Console.current_height)
       return false;
 
    ///////////////////////////////////////
@@ -386,7 +386,7 @@ bool C_Responder(event_t *ev)
    //
    // keypresses only dealt with if console active
    //
-   
+
    // tab-completion
    if(action_console_tab)
    {
@@ -398,63 +398,63 @@ bool C_Responder(event_t *ev)
       C_updateInputPoint(); // reset scrolling
       return true;
     }
-  
+
    // run command
    if(action_console_enter)
    {
       action_console_enter = false;
 
       C_addToHistory(&inputtext); // add to history
-      
+
       if(inputtext == "r0x0rz delux0rz")
          Egg(); // shh!
-      
+
       // run the command
       Console.cmdtype = c_typed;
       C_RunTextCmd(inputtext.constPtr());
-      
+
       C_InitTab();            // reset tab completion
-      
+
       inputtext.clear(); // clear inputtext now
       C_updateInputPoint();    // reset scrolling
-      
+
       return true;
    }
 
    ////////////////////////////////
    // Command history
-   //  
-   
+   //
+
    // previous command
-   
+
    if(action_console_up)
    {
       action_console_up = false;
 
       history_current =
          (history_current <= 0) ? 0 : history_current - 1;
-      
+
       // read history from inputtext
       inputtext = history[history_current];
-      
+
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
       return true;
    }
-  
+
   // next command
-  
+
    if(action_console_down)
    {
       action_console_down = false;
 
-      history_current = (history_current >= history_last) 
+      history_current = (history_current >= history_last)
          ? history_last : history_current + 1;
 
       // the last history is an empty string
       inputtext = ((history_current == history_last) ?
                     "" : (char *)history[history_current]);
-      
+
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
       return true;
@@ -463,22 +463,22 @@ bool C_Responder(event_t *ev)
    /////////////////////////////////////////
    // Normal Text Input
    //
-   
+
    // backspace
-   
+
    if(action_console_backspace)
    {
       action_console_backspace = false;
 
       inputtext.Delc();
-      
+
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
       return true;
    }
 
    // none of these, probably just a normal character
-   
+
    if(ev->character)
       ch = ev->character;
    else if(ev->data1 > 31 && ev->data1 < 127)
@@ -486,16 +486,16 @@ bool C_Responder(event_t *ev)
 
    // only care about valid characters
    // dont allow too many characters on one command line
-   
+
    if(ch > 31 && ch < 127)
    {
       inputtext += ch;
-      
+
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
       return true;
    }
-   
+
    return false;   // dont care about this event
 }
 
@@ -516,7 +516,7 @@ void C_Drawer(void)
    static int oldscreenheight = 0;
    static int oldscreenwidth = 0;
 
-   if(!consoleactive) 
+   if(!consoleactive)
       return;   // dont draw if not active
 
    // Check for change in screen res
@@ -532,35 +532,35 @@ void C_Drawer(void)
    if(gamestate == GS_CONSOLE)
       Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
 
-   real_height = 
-      cback.scaled ? cback.y2lookup[Console.current_height - 1] + 1 : 
+   real_height =
+      cback.scaled ? cback.y2lookup[Console.current_height - 1] + 1 :
                      Console.current_height;
 
    // draw backdrop
    // SoM: use the VBuffer
-   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0, 
+   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0,
                  cback.height - real_height, cback.width, real_height);
 
    //////////////////////////////////////////////////////////////////////
    // draw text messages
-   
+
    // offset starting point up by 8 if we are showing input prompt
-   
-   y = Console.current_height - 
+
+   y = Console.current_height -
          ((Console.showprompt && message_pos == message_last) ? c_font->absh : 0) - 1;
 
    // start at our position in the message history
    count = message_pos;
-        
+
    while(1)
    {
       // move up one line on the screen
       // back one line in the history
       y -= c_font->absh;
-      
+
       if(--count < 0) break;        // end of message history?
       if(y <= -c_font->absh) break; // past top of screen?
-      
+
       // draw this line
       V_FontWriteText(c_font, messages[count], 1, y);
    }
@@ -568,15 +568,15 @@ void C_Drawer(void)
    //////////////////////////////////
    // Draw input line
    //
-  
+
    // input line on screen, not scrolled back in history?
-   
-   if(Console.current_height > c_font->absh && Console.showprompt && 
+
+   if(Console.current_height > c_font->absh && Console.showprompt &&
       message_pos == message_last)
    {
       const char *a_prompt;
       char tempstr[LINELENGTH];
-      
+
       // if we are scrolled back, dont draw the input line
       if(message_pos == message_last)
       {
@@ -585,11 +585,11 @@ void C_Drawer(void)
          else
             a_prompt = inputprompt;
 
-         psnprintf(tempstr, sizeof(tempstr), 
+         psnprintf(tempstr, sizeof(tempstr),
                    "%s%s_", a_prompt, input_point);
       }
-      
-      V_FontWriteText(c_font, tempstr, 1, 
+
+      V_FontWriteText(c_font, tempstr, 1,
                       Console.current_height - c_font->absh - 1);
    }
 }
@@ -626,7 +626,7 @@ void C_Update(void)
 static void C_ScrollUp(void)
 {
    if(message_last == message_pos)
-      message_pos++;   
+      message_pos++;
    message_last++;
 
    if(message_last >= MESSAGES) // past the end of the string
@@ -643,18 +643,18 @@ static void C_ScrollUp(void)
 
       for(i = MESSAGES - MESSAGECUT, j = 0; i < MESSAGES; i++, j++) // fill end
          messages[i] = tempptrs[j];
-      
+
       message_last -= MESSAGECUT; // move the message boundary
 
       // haleyjd 09/04/02: set message_pos to message_last
       // to avoid problems with console flooding
       message_pos = message_last;
    }
-   
+
    memset(messages[message_last], 0, LINELENGTH); // new line is empty
 }
 
-// 
+//
 // C_AddMessage
 //
 // haleyjd:
@@ -701,7 +701,7 @@ static void C_AddMessage(const char *s)
             *end++ = linecolor; // keep current color on next line
             *end = '\0';
          }
-         
+
          end = (unsigned char *)(messages[message_last] + strlen(messages[message_last]));
          *end++ = *c;
          *end = '\0';
@@ -724,11 +724,11 @@ static void C_AddMessage(const char *s)
       C_ScrollUp();
 }
 
-// haleyjd: this function attempts to break up formatted strings 
-// into segments no more than a gamemode-dependent number of 
-// characters long. It'll succeed as long as the string in question 
-// doesn't contain that number of consecutive characters without a 
-// space, tab, or line-break, so like, don't print stupidness 
+// haleyjd: this function attempts to break up formatted strings
+// into segments no more than a gamemode-dependent number of
+// characters long. It'll succeed as long as the string in question
+// doesn't contain that number of consecutive characters without a
+// space, tab, or line-break, so like, don't print stupidness
 // like that. It's a console, not a hex editor...
 //
 // CONSOLE_FIXME: See above, this is also a mess.
@@ -752,7 +752,7 @@ static void C_AdjustLineBreaks(char *str)
 
          lastspace = i;
       }
-      
+
       if(str[i] == '\n')
          count = lastspace = 0;
       else
@@ -762,7 +762,7 @@ static void C_AdjustLineBreaks(char *str)
       {
          // 03/16/01: must add length since last space to new line
          count = i - (lastspace + 1);
-         
+
          // replace last space with \n
          // if no last space, we're screwed
          if(lastspace)
@@ -796,16 +796,16 @@ void C_Printf(const char *s, ...)
    // haleyjd: sanity check
    if(!s)
       return;
-   
+
    va_start(args, s);
    pvsnprintf(tempstr, sizeof(tempstr), s, args);
    va_end(args);
 
    // haleyjd: write this message to the log if one is open
-   C_AppendToLog(tempstr); 
-   
+   C_AppendToLog(tempstr);
+
    C_AdjustLineBreaks(tempstr); // haleyjd
-   
+
    C_AddMessage(tempstr);
 }
 
@@ -832,8 +832,8 @@ void C_Separator(void)
 // than 128 in value. This prevents console logs and dumps from
 // having a bunch of meaningless extended ASCII in them.
 //
-static void C_StripColorChars(const unsigned char *src, 
-                              unsigned char *dest, 
+static void C_StripColorChars(const unsigned char *src,
+                              unsigned char *dest,
                               int len)
 {
    register int srcidx = 0, destidx = 0;
@@ -848,7 +848,7 @@ static void C_StripColorChars(const unsigned char *src,
    }
 }
 
-// 
+//
 // C_DumpMessages
 //
 // haleyjd 03/01/02: now you can dump the console to file :)
@@ -863,7 +863,7 @@ void C_DumpMessages(qstring *filename)
 
    if(!(outfile = fopen(filename->constPtr(), "a+")))
    {
-      C_Printf(FC_ERROR "Could not append console buffer to file %s\n", 
+      C_Printf(FC_ERROR "Could not append console buffer to file %s\n",
                filename->constPtr());
       return;
    }
@@ -952,7 +952,7 @@ void C_SetConsole(void)
    gameaction = ga_nothing;
    Console.current_height = SCREENHEIGHT;
    Console.current_target = SCREENHEIGHT;
-   
+
    S_StopMusic();                  // stop music if any
    S_StopSounds(true);             // and sounds
    G_StopDemo();                   // stop demo playing
@@ -1002,7 +1002,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    msgs = (char **)(Z_Calloc(numparams, sizeof(char *), PU_STATIC, NULL));
 
    for(i = 1; i <= numparams; i++)
-   {      
+   {
       // translate reference parameter to physical address
       if((err = amx_GetAddr(amx, params[i], &cstr)) != AMX_ERR_NONE)
       {
@@ -1031,7 +1031,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    // calculate total strlen
    for(i = 0; i < numparams; i++)
       totallen += (int)strlen(msgs[i]);
-  
+
    // create complete message
    msg = (char *)(Z_Calloc(1, totallen + 1, PU_STATIC, NULL));
 
@@ -1043,7 +1043,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    // free all allocations (fun!)
    Z_Free(msg);                    // complete message
    for(i = 0; i < numparams; i++)  // individual strings
-      Z_Free(msgs[i]);   
+      Z_Free(msgs[i]);
    Z_Free(msgs);                   // string table
 
    return 0;
@@ -1087,7 +1087,7 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 // haleyjd: ??? ;)
 //
 static void Egg()
-{   
+{
    int x, y;
    byte *egg = static_cast<byte *>(wGlobalDir.cacheLumpName("SFRAGGLE", PU_CACHE));
 
@@ -1101,7 +1101,7 @@ static void Egg()
       }
    }
 
-   V_FontWriteText(hud_overfont, 
+   V_FontWriteText(hud_overfont,
                    FC_BROWN "my hair looks much too\n"
                    "dark in this pic.\n"
                    "oh well, have fun!\n-- fraggle", 160, 168, &cback);

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -111,7 +111,7 @@ void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_
                                                                  // sf: G_Drawer???
 //
 // R_ResetFOV
-// 
+//
 // SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
 //
@@ -153,7 +153,7 @@ typedef struct cb_view_s
 
    float width, height;
    float xcenter, ycenter;
-   
+
    float xfoc, yfoc, focratio;
    float fov;
    float tan;
@@ -169,7 +169,7 @@ enum
    SEG_MARKCPORTAL = 0x02,
    SEG_MARKFLOOR   = 0x04,
    SEG_MARKFPORTAL = 0x08,
-   
+
    // SoM
    SEG_MARKCOVERLAY = 0x10,
    SEG_MARKFOVERLAY = 0x20,
@@ -228,7 +228,7 @@ extern cb_seg_t   seg;
 extern cb_seg_t   segclip;
 
 // SoM: frameid frame counter.
-void R_IncrementFrameid(void); // Needed by the portal functions... 
+void R_IncrementFrameid(void); // Needed by the portal functions...
 extern unsigned   frameid;
 
 // SoM: include these prototypes after the map data definitions:

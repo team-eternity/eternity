@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,19 +57,19 @@ extern int gamma_correct;
 //
 // Holds all metrics related to the current video mode.
 //
-cb_video_t video = 
+cb_video_t video =
 {
    8, 1,
-   SCREENWIDTH, 
-   SCREENHEIGHT, 
+   SCREENWIDTH,
+   SCREENHEIGHT,
    SCREENWIDTH,
    SCREENWIDTH * FRACUNIT,
    SCREENHEIGHT * FRACUNIT,
-   FRACUNIT, 
-   FRACUNIT, 
-   FRACUNIT, 
    FRACUNIT,
-   1.0f, 1.0f, 1.0f, 1.0f, 
+   FRACUNIT,
+   FRACUNIT,
+   FRACUNIT,
+   1.0f, 1.0f, 1.0f, 1.0f,
    false,
    {NULL, NULL, NULL, NULL, NULL}
 };
@@ -80,7 +80,7 @@ cb_video_t video =
 // Called after changing video mode
 //
 void V_ResetMode(void)
-{   
+{
    I_SetMode(0);
 }
 
@@ -100,13 +100,13 @@ void V_DrawBox(int x, int y, int w, int h)
    int xs = bgp[0]->width;
    int ys = bgp[0]->height;
    int i, j;
-   
+
    // top rows
    V_DrawPatch(x, y, &subscreen43, bgp[0]);    // ul
    for(j = x+xs; j < x+w-xs; j += xs)       // uc
       V_DrawPatch(j, y, &subscreen43, bgp[1]);
    V_DrawPatchShadowed(j, y, &subscreen43, bgp[2], NULL, 65536);    // ur
-   
+
    // middle rows
    for(i = y+ys; i < y+h-ys; i += ys)
    {
@@ -115,7 +115,7 @@ void V_DrawBox(int x, int y, int w, int h)
          V_DrawPatch(j, i, &subscreen43, bgp[4]);
       V_DrawPatchShadowed(j, i, &subscreen43, bgp[5], NULL, 65536);    // cr
    }
-   
+
    // bottom row
    V_DrawPatchShadowed(x, i, &subscreen43, bgp[6], NULL, 65536);
    for(j = x+xs; j < x+w-xs; j += xs)
@@ -167,14 +167,14 @@ void V_DrawLoading(void)
 
    // 05/02/10: update console
    C_Drawer();
-  
+
    V_DrawBox((SCREENWIDTH/2)-50, (SCREENHEIGHT/2)-30, 100, 40);
 
    font = E_FontForName("ee_smallfont");
-   
-   V_FontWriteText(font, loading_message, (SCREENWIDTH/2)-30, 
+
+   V_FontWriteText(font, loading_message, (SCREENWIDTH/2)-30,
                    (SCREENHEIGHT/2)-20, &subscreen43);
-  
+
    x = ((SCREENWIDTH/2)-45);
    y = (SCREENHEIGHT/2);
    linelen = (90*loading_amount) / loading_total;
@@ -271,7 +271,7 @@ void V_FPSDrawer(void)
    int i;
    int x,y;          // screen x,y
    int cx, cy;       // chart x,y
-   
+
    if(v_ticker == 2)
    {
       V_ClassicFPSDrawer();
@@ -283,9 +283,9 @@ void V_FPSDrawer(void)
       V_TextFPSDrawer();
       return;
    }
-  
+
    current_count++;
- 
+
    // render the chart
    for(cx=0, x = X_OFFSET; cx<FPS_HISTORY; x++, cx++)
    {
@@ -305,16 +305,16 @@ void V_FPSTicker(void)
    static int lasttic;
    int thistic;
    int i;
-   
+
    thistic = I_GetTime() / 7;
-   
+
    if(lasttic != thistic)
    {
       lasttic = thistic;
-      
+
       for(i = 0; i < FPS_HISTORY - 1; i++)
          history[i] = history[i+1];
-      
+
       history[FPS_HISTORY-1] = current_count;
       current_count = 0;
    }
@@ -328,7 +328,7 @@ void V_FPSTicker(void)
 void V_ClassicFPSDrawer(void)
 {
   static int lasttic;
-  
+
   int i = I_GetTime();
   int tics = i - lasttic;
   lasttic = i;
@@ -361,27 +361,27 @@ void V_TextFPSDrawer(void)
    static int  fhistory[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
    static int  lasttic = 0, slot = 0;
    vfont_t *font;
-   
+
    float fps = 0;
    int   i, thistic, totaltics = 0;
-   
+
    thistic = I_GetTime();
-   
+
    fhistory[slot & 15] = thistic != lasttic ? thistic - lasttic : 1;
    slot++;
 
    for(i = 0; i < 16; i++)
       totaltics += fhistory[i];
-   
+
    if(totaltics)
       fps = (float)TICRATE / (totaltics / 16.0f);
-   
+
    psnprintf(fpsStr, sizeof(fpsStr), FC_GRAY "FPS: %.2f", fps);
-   
+
    lasttic = thistic;
 
    font = E_FontForName("ee_smallfont");
-      
+
    V_FontWriteText(font, fpsStr, 5, 10);
 }
 
@@ -443,18 +443,18 @@ static void V_InitScreenVBuffer(void)
    else
       vbscreenneedsfree = true;
 
-   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, 
+   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch,
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width,
                      video.bitdepth, video.screens[1]);
    V_SetScaling(&backscreen1, SCREENWIDTH, SCREENHEIGHT);
 
    // Only vbscreen and backscreen1 need scaling set.
-   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width,
                      video.bitdepth, video.screens[2]);
-   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width,
                      video.bitdepth, video.screens[3]);
 
    // Init subscreen43
@@ -473,7 +473,7 @@ extern void I_UnsetPrimaryBuffer(void);
 void V_Init(void)
 {
    static byte *s = NULL;
-   
+
    int size = video.width * video.height;
 
    // haleyjd 05/30/08: removed screens from zone heap
@@ -487,12 +487,12 @@ void V_Init(void)
       (video.screens[3] =
          (video.screens[2] =
             (video.screens[1] = s = (byte *)(Z_SysCalloc(size, 4))) + size) + size) + size;
-   
+
    // SoM: TODO: implement direct to SDL surface drawing.
    I_SetPrimaryBuffer();
 
    R_SetupViewScaling();
-   
+
    V_InitScreenVBuffer(); // haleyjd
 }
 
@@ -515,9 +515,9 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
    int         tnum = R_FindFlat(patchname) - flatstart;
    byte        *src;
-   
+
    // SoM: Extra protection, I don't think this should ever actually happen.
-   if(tnum < 0 || tnum >= numflats)   
+   if(tnum < 0 || tnum >= numflats)
       src = R_GetLinearBuffer(badtex);
    else
       src = (byte *)(wGlobalDir.cacheLumpNum(firstflat + tnum, PU_CACHE));
@@ -536,7 +536,7 @@ byte *R_DistortedFlat(int);
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
    byte *src = R_DistortedFlat(R_FindFlat(patchname));
-   
+
    back_dest->TileBlock64(back_dest, src);
 }
 
@@ -553,7 +553,7 @@ void V_InitMisc(void)
    if(!flexTranInit)
    {
       AutoPalette palette(wGlobalDir);
-      V_InitFlexTranTable(palette.get());      
+      V_InitFlexTranTable(palette.get());
    }
 }
 
@@ -582,7 +582,7 @@ CONSOLE_COMMAND(v_fontcolors, 0)
       C_Puts(FC_ERROR "Usage: v_fontcolors fontname filename");
       return;
    }
-   
+
    fontName = Console.argv[0]->constPtr();
    if(!(font = E_FontForName(fontName)))
    {

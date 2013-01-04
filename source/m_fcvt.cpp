@@ -1,19 +1,19 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2002 DJ Delorie, see COPYING.DJ for details 
+// Copyright (C) 2002 DJ Delorie, see COPYING.DJ for details
 // Copyright (C) 2003 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -66,7 +66,7 @@ char *M_Fcvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
    char *dot;
 
    sprintf(cvtbuf, "%-+#.*f", DBL_MAX_10_EXP + digits + 1, value);
-   
+
    /* The sign.  */
    if(*s++ == '-')
       *sign = 1;
@@ -79,7 +79,7 @@ char *M_Fcvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
       *decpt = dot - s;
    else
       *decpt = strlen(s);
-  
+
    /* SunOS docs says if NDIGITS is 8 or more, produce "Infinity"
       instead of "Inf".  */
    if(strncmp(s, "Inf", 3) == 0)
@@ -124,7 +124,7 @@ M_Ecvround(char *numbuf, char *last_digit, const char *after_last, int *decpt)
 {
    char *p;
    int carry = 0;
-   
+
    /* Do we have at all to round the last digit?  */
    if(*after_last > '4')
    {
@@ -186,11 +186,11 @@ M_Ecvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
    else
    {
       char *last_digit, *digit_after_last;
-      
+
       /* Copy (the single) digit before the decimal.  */
       while(*s && *s != decimal && d - buf < ndigits)
          *d++ = *s++;
-      
+
       /* If we don't see any exponent, here's our decimal point.  */
       *decpt = d - buf;
       if(*s)
@@ -210,14 +210,14 @@ M_Ecvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
 
       /* Adjust the decimal point by the exponent value.  */
       *decpt += atoi(s);
-      
+
       /* Pad with zeroes if needed.  */
       while(d - buf < ndigits)
          *d++ = '0';
 
       /* Zero-terminate.  */
       *d = '\0';
-      
+
       /* Round if necessary.  */
       M_Ecvround(buf, last_digit, digit_after_last, decpt);
    }
@@ -229,4 +229,3 @@ M_Ecvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
 #endif
 
 // EOF
-

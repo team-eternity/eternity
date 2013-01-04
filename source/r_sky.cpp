@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -58,21 +58,21 @@ void R_StartSky(void)
    Sky1ColumnOffset = Sky2ColumnOffset = 0;
 
    // haleyjd 07/18/04: init moved to MapInfo
-  
+
    // Set the sky map.
    // First thing, we have a dummy sky texture name,
    //  a flat. The data is in the WAD only because
    //  we look for an actual index, instead of simply
    //  setting one.
 
-   skyflatnum  = R_FindFlat(SKYFLATNAME);   
+   skyflatnum  = R_FindFlat(SKYFLATNAME);
    sky2flatnum = R_FindFlat(SKY2FLATNAME); // haleyjd
 
    // haleyjd 01/22/04: added error checking
-   
+
    if((skytexture = R_FindWall(LevelInfo.skyName)) == -1)
       I_Error("R_StartSky: bad sky texture '%s'\n", LevelInfo.skyName);
-      
+
    if((sky2texture = R_FindWall(LevelInfo.sky2Name)) == -1)
       I_Error("R_StartSky: bad sky2 texture '%s'\n", LevelInfo.sky2Name);
 }
@@ -106,7 +106,7 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    // should we use it
    newSky->texturenum = texturenum;
    newSky->height = textures[texturenum]->height;
-   
+
    if(newSky->height >= 200)
       newSky->texturemid = 200*FRACUNIT;
    else
@@ -126,7 +126,7 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
 //
 // Looks for the specified skytexture_t with the given texturenum
 // in the hash table. If it doesn't exist, it'll be created now.
-// 
+//
 skytexture_t *R_GetSkyTexture(int texturenum)
 {
    int key;

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,8 +48,8 @@ bool reset_viewz;
 //
 // THINKERS
 //
-// All thinkers should be allocated by Z_Malloc so they can be operated on 
-// uniformly. The actual structures will vary in size, but the first element 
+// All thinkers should be allocated by Z_Malloc so they can be operated on
+// uniformly. The actual structures will vary in size, but the first element
 // must be thinker_t.
 //
 
@@ -57,11 +57,11 @@ bool reset_viewz;
 Thinker thinkercap;
 
 // killough 8/29/98: we maintain several separate threads, each containing
-// a special class of thinkers, to allow more efficient searches. 
+// a special class of thinkers, to allow more efficient searches.
 
 Thinker thinkerclasscap[NUMTHCLASS];
 
-// 
+//
 // Thinker::StaticType
 //
 // haleyjd 11/14/11: Custom RTTI
@@ -74,10 +74,10 @@ IMPLEMENT_RTTI_TYPE(Thinker)
 void Thinker::InitThinkers(void)
 {
    int i;
-   
+
    for(i = 0; i < NUMTHCLASS; i++)  // killough 8/29/98: initialize threaded lists
       thinkerclasscap[i].cprev = thinkerclasscap[i].cnext = &thinkerclasscap[i];
-   
+
    thinkercap.prev = thinkercap.next  = &thinkercap;
 }
 
@@ -90,7 +90,7 @@ void Thinker::InitThinkers(void)
 void Thinker::addToThreadedList(int tclass)
 {
    register Thinker *th;
-   
+
    // Remove from current thread, if in one -- haleyjd: from PrBoom
    if((th = this->cnext) != NULL)
       (th->cprev = this->cprev)->cnext = th;
@@ -107,7 +107,7 @@ void Thinker::addToThreadedList(int tclass)
 // P_UpdateThinker
 //
 // killough 8/29/98:
-// 
+//
 // We maintain separate threads of friends and enemies, to permit more
 // efficient searches.
 //
@@ -132,9 +132,9 @@ void Thinker::addThinker()
    next = &thinkercap;
    prev = thinkercap.prev;
    thinkercap.prev = this;
-   
+
    references = 0;    // killough 11/98: init reference counter to 0
-   
+
    // killough 8/29/98: set sentinel pointers, and then add to appropriate list
    cnext = cprev = this;
    updateThinker();
@@ -164,10 +164,10 @@ void Thinker::removeDelayed()
    {
       Thinker *lnext = this->next;
       (lnext->prev = currentthinker = this->prev)->next = lnext;
-      
+
       // haleyjd 11/09/06: remove from threaded list now
       (this->cnext->cprev = this->cprev)->cnext = this->cnext;
-      
+
       delete this;
    }
 }
@@ -187,9 +187,9 @@ void Thinker::removeDelayed()
 void Thinker::removeThinker()
 {
    removed = true;
-   
+
    // killough 8/29/98: remove immediately from threaded list
-   
+
    // haleyjd 11/09/06: NO! Doing this here was always suspect to me, and
    // sure enough: if a monster's removed at the wrong time, it gets put
    // back into the list improperly and starts causing an infinite loop in
@@ -227,7 +227,7 @@ void Thinker::removeThinker()
 //
 void Thinker::RunThinkers(void)
 {
-   for(currentthinker = thinkercap.next; 
+   for(currentthinker = thinkercap.next;
        currentthinker != &thinkercap;
        currentthinker = currentthinker->next)
    {
@@ -243,7 +243,7 @@ void Thinker::RunThinkers(void)
 //
 // Thinker serialization works together with the SaveArchive class and the
 // series of ThinkerType-derived classes. Thinker subclasses should always
-// call their parent implementation's serialize method. This default 
+// call their parent implementation's serialize method. This default
 // implementation takes care of writing the class name when the archive is in
 // save mode. If the thinker is being loaded from a save, the save archive
 // has already read out the thinker name in order to instantiate an instance
@@ -261,19 +261,19 @@ void Thinker::serialize(SaveArchive &arc)
 void P_Ticker(void)
 {
    int i;
-   
+
    // pause if in menu and at least one tic has been run
    //
    // killough 9/29/98: note that this ties in with basetic,
    // since G_Ticker does the pausing during recording or
    // playback, and compensates by incrementing basetic.
-   // 
+   //
    // All of this complicated mess is used to preserve demo sync.
-   
+
    if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
                  players[consoleplayer].viewz != 1))
       return;
-   
+
    P_ParticleThinker(); // haleyjd: think for particles
 
    S_RunSequences(); // haleyjd 06/06/06
@@ -292,17 +292,17 @@ void P_Ticker(void)
    P_RespawnSpecials();
    if(demo_version >= 329)
       P_AnimateSurfaces(); // haleyjd 04/14/99
-   
+
    leveltime++;                       // for par times
 
    // sf: on original doom, sometimes if you activated a hyperlift
    // while standing on it, your viewz was left behind and appeared
    // to "jump". code in p_floor.c detects if a hyperlift has been
    // activated and viewz is reset appropriately here.
-   
+
    if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
       P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
-   
+
    P_RunEffects(); // haleyjd: run particle effects
 }
 
@@ -331,4 +331,3 @@ void P_Ticker(void)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

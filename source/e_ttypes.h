@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //   New dynamic TerrainTypes system. Inspired heavily by zdoom, but
 //   all-original code.
 //
@@ -56,7 +56,7 @@ typedef struct ETerrainSplash_s
    int smallclass;        // mobjtype used for small splash
    int smallclip;         // amount of floorclip to apply to small splash
    char smallsound[129];  // sound to play for small splash
-   
+
    int baseclass;         // mobjtype used for normal splash
    int chunkclass;        // mobjtype used for normal splash chunk
    int chunkxvelshift;    // chunk's x velocity factor
@@ -78,7 +78,7 @@ struct ETerrain
    fixed_t footclip;        // footclip amount
    bool liquid;             // is liquid?
    bool splashalert;        // normal splash causes P_NoiseAlert?
-   bool usepcolors;         // use particle colors?   
+   bool usepcolors;         // use particle colors?
    byte pcolor_1;           // particle color 1
    byte pcolor_2;           // particle color 2
 
@@ -107,4 +107,3 @@ void      E_PtclTerrainHit(particle_t *);
 #endif
 
 // EOF
-

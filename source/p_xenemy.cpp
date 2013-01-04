@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -51,7 +51,7 @@ void QuakeThinker::Think()
 {
    int i, tics;
    sfxinfo_t *quakesound;
-   
+
    // quake is finished?
    if(this->duration == 0)
    {
@@ -59,7 +59,7 @@ void QuakeThinker::Think()
       this->removeThinker();
       return;
    }
-   
+
    quakesound = E_SoundForName("Earthquake");
 
    // loop quake sound
@@ -75,7 +75,7 @@ void QuakeThinker::Think()
       {
          player_t *p  = &players[i];
          Mobj   *mo = p->mo;
-         fixed_t  dst = P_AproxDistance(this->x - mo->x, 
+         fixed_t  dst = P_AproxDistance(this->x - mo->x,
                                         this->y - mo->y);
 
          // test if player is in quake radius
@@ -87,8 +87,8 @@ void QuakeThinker::Think()
          // every 2 tics, the player may be damaged
          if(!(tics & 1))
          {
-            angle_t  thrustangle;   
-            
+            angle_t  thrustangle;
+
             // test if in damage radius and on floor
             if(dst < this->damageRadius && mo->z <= mo->floorz)
             {
@@ -150,4 +150,3 @@ bool P_StartQuake(int *args)
 }
 
 // EOF
-

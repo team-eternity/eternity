@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -54,7 +54,7 @@ struct skin_t;
 
 #define ONFLOORZ        D_MININT
 #define ONCEILINGZ      D_MAXINT
-// haleyjd 10/13/02: floatrand 
+// haleyjd 10/13/02: floatrand
 #define FLOATRANDZ     (D_MAXINT - 1)
 #define MINFLTRNDZ     (40*FRACUNIT)
 
@@ -126,7 +126,7 @@ struct subsector_t;
 // things, but nothing can run into a missile).
 // Each block in the grid is 128*128 units, and knows about
 // every line_t that it contains a piece of, and every
-// interactable Mobj that has its origin contained.  
+// interactable Mobj that has its origin contained.
 //
 // A valid Mobj is a Mobj that has the proper subsector_t
 // filled in for its xy coordinates and is linked into the
@@ -141,7 +141,7 @@ struct subsector_t;
 // Any questions?
 //
 
-// ammo + weapon in a dropped backpack 
+// ammo + weapon in a dropped backpack
 
 typedef struct backpack_s
 {
@@ -161,7 +161,7 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   
+
    // Data Members
    fixed_t x, y, z;
    // SoM: yes Quasar, this is entirely necessary
@@ -173,12 +173,12 @@ public:
 //
 // killough 2/20/98:
 //
-// WARNING: Special steps must be taken here if C pointers are added to this 
+// WARNING: Special steps must be taken here if C pointers are added to this
 // Mobj class, or else savegames will crash when loaded.
 //
 // Do not add "Mobj *fooptr" without adding code to serialize and deswizzle to
 // convert the pointers to ordinals and back for savegames. This was the whole
-// reason behind monsters going to sleep when loading savegames (the "target" 
+// reason behind monsters going to sleep when loading savegames (the "target"
 // pointer was simply nullified after loading, to prevent Doom from crashing),
 // and the whole reason behind loadgames crashing on savegames of AV attacks.
 //
@@ -204,14 +204,14 @@ protected:
    // Methods
    void Think();
 
-public:   
+public:
    // Virtual methods (overridables)
    // Inherited from Thinker:
    virtual void updateThinker();
    virtual void removeThinker();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
-   
+
    // Data members
 
    // More list: links in sector (if needed)
@@ -239,7 +239,7 @@ public:
 
    // For movement checking.
    fixed_t             radius;
-   fixed_t             height; 
+   fixed_t             height;
 
    // Momentums, used to update position.
    fixed_t             momx;
@@ -280,7 +280,7 @@ public:
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
-   int16_t             reactiontime;   
+   int16_t             reactiontime;
 
    // If >0, the current target will be chased no
    // matter what (even if shot by another object)
@@ -297,13 +297,13 @@ public:
    skin_t *            skin;   //sf: skin
 
    // Player number last looked for.
-   int16_t             lastlook;       
+   int16_t             lastlook;
 
    // For nightmare respawn.
-   mapthing_t          spawnpoint;     
+   mapthing_t          spawnpoint;
 
    // Thing being chased/attacked for tracers.
-   Mobj             *tracer; 
+   Mobj             *tracer;
 
    // new field: last known enemy -- killough 2/15/98
    Mobj             *lastenemy;
@@ -440,7 +440,7 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
 Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
-Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
+Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz,
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
 // new Eternity mobj function prototypes  haleyjd
@@ -555,11 +555,11 @@ enum {}; // Fixes a retarded glitch in the Visual Studio IDE.
 enum
 {
    MF_SPECIAL      = 0x00000001, // Call P_SpecialThing when touched.
-   MF_SOLID        = 0x00000002, // Blocks.    
-   MF_SHOOTABLE    = 0x00000004, // Can be hit.    
+   MF_SOLID        = 0x00000002, // Blocks.
+   MF_SHOOTABLE    = 0x00000004, // Can be hit.
    MF_NOSECTOR     = 0x00000008, // Don't use the sector links (invisible but touchable).
    MF_NOBLOCKMAP   = 0x00000010, // Don't use the blocklinks (inert but displayable)
-   MF_AMBUSH       = 0x00000020, // Not to be activated by sound, deaf monster.    
+   MF_AMBUSH       = 0x00000020, // Not to be activated by sound, deaf monster.
    MF_JUSTHIT      = 0x00000040, // Will try to attack right back.
    MF_JUSTATTACKED = 0x00000080, // Will take at least one step before attacking.
    MF_SPAWNCEILING = 0x00000100, // Hangs from ceiling instead of standing on floor.
@@ -571,7 +571,7 @@ enum
    MF_FLOAT        = 0x00004000, // Allow moves to any height. For active floaters.
    MF_TELEPORT     = 0x00008000, // Don't cross lines ??? or look at heights on teleport.
    MF_MISSILE      = 0x00010000, // Don't hit same species, explode on block.
-   MF_DROPPED      = 0x00020000, // Dropped by a demon, not level spawned. 
+   MF_DROPPED      = 0x00020000, // Dropped by a demon, not level spawned.
    MF_SHADOW       = 0x00040000, // Use fuzzy draw (shadow demons or spectres)
    MF_NOBLOOD      = 0x00080000, // Don't bleed when shot (use puff).
    MF_CORPSE       = 0x00100000, // Don't stop moving halfway off a step.
@@ -604,7 +604,7 @@ enum
    MF2_PUSHABLE      = 0x00000200,  // can be pushed by moving things
    MF2_MAP07BOSS1    = 0x00000400,  // is a MAP07 boss type 1
    MF2_MAP07BOSS2    = 0x00000800,  // is a MAP07 boss type 2
-   MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss 
+   MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss
    MF2_E2M8BOSS      = 0x00002000,  // is an E2M8 boss
    MF2_E3M8BOSS      = 0x00004000,  // is an E3M8 boss
    MF2_BOSS          = 0x00008000,  // is a boss

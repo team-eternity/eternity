@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,17 +57,17 @@ IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
 void FireFlickerThinker::Think()
 {
    int amount;
-   
+
    if(--this->count)
       return;
-   
+
    amount = (P_Random(pr_lights)&3)*16;
-   
+
    if(this->sector->lightlevel - amount < this->minlight)
       this->sector->lightlevel = this->minlight;
    else
       this->sector->lightlevel = this->maxlight - amount;
-   
+
    this->count = 4;
 }
 
@@ -98,7 +98,7 @@ void LightFlashThinker::Think()
 {
    if(--this->count)
       return;
-   
+
    if(this->sector->lightlevel == this->maxlight)
    {
       this->sector->lightlevel = this->minlight;
@@ -162,7 +162,7 @@ void StrobeThinker::Think()
 {
    if(--this->count)
       return;
-   
+
    if(this->sector->lightlevel == this->minlight)
    {
       this->sector->lightlevel = this->maxlight;
@@ -190,10 +190,10 @@ void StrobeThinker::serialize(SaveArchive &arc)
 //
 // StrobeThinker::reTriggerVerticalDoor
 //
-// haleyjd 10/13/2011: emulate vanilla behavior when a strobe thinker is 
+// haleyjd 10/13/2011: emulate vanilla behavior when a strobe thinker is
 // manipulated as a VerticalDoorThinker
 //
-bool StrobeThinker::reTriggerVerticalDoor(bool player) 
+bool StrobeThinker::reTriggerVerticalDoor(bool player)
 {
    if(!demo_compatibility)
       return false;
@@ -207,7 +207,7 @@ bool StrobeThinker::reTriggerVerticalDoor(bool player)
 
       darktime = plat_down;
    }
-   
+
    return true;
 }
 
@@ -235,7 +235,7 @@ void GlowThinker::Think()
          this->direction = 1;
       }
       break;
-      
+
    case 1:
       // light brightens
       this->sector->lightlevel += GLOWSPEED;
@@ -279,7 +279,7 @@ void LightFadeThinker::Think()
    this->lightlevel += this->step;
 
    // fading up or down? check if done
-   if((this->step > 0) ? this->lightlevel >= this->destlevel 
+   if((this->step > 0) ? this->lightlevel >= this->destlevel
                        : this->lightlevel <= this->destlevel)
    {
       this->lightlevel = this->destlevel;
@@ -340,14 +340,14 @@ void LightFadeThinker::serialize(SaveArchive &arc)
 void P_SpawnFireFlicker(sector_t *sector)
 {
    FireFlickerThinker *flick;
-   
+
    // Note that we are resetting sector attributes.
    // Nothing special about it during gameplay.
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
-   
+
    flick = new FireFlickerThinker;
    flick->addThinker();
-   
+
    flick->sector = sector;
    flick->maxlight = sector->lightlevel;
    flick->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel)+16;
@@ -365,16 +365,16 @@ void P_SpawnFireFlicker(sector_t *sector)
 void P_SpawnLightFlash(sector_t *sector)
 {
    LightFlashThinker *flash;
-   
+
    // nothing special about it during gameplay
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
-   
+
    flash = new LightFlashThinker;
    flash->addThinker();
-   
+
    flash->sector = sector;
    flash->maxlight = sector->lightlevel;
-   
+
    flash->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel);
    flash->maxtime = 64;
    flash->mintime = 7;
@@ -394,22 +394,22 @@ void P_SpawnLightFlash(sector_t *sector)
 void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 {
    StrobeThinker *flash;
-   
+
    flash = new StrobeThinker;
    flash->addThinker();
-   
+
    flash->sector = sector;
    flash->darktime = fastOrSlow;
    flash->brighttime = STROBEBRIGHT;
    flash->maxlight = sector->lightlevel;
    flash->minlight = P_FindMinSurroundingLight(sector, sector->lightlevel);
-   
+
    if(flash->minlight == flash->maxlight)
       flash->minlight = 0;
-   
+
    // nothing special about it during gameplay
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
-   
+
    if(!inSync)
       flash->count = (P_Random(pr_lights)&7)+1;
    else
@@ -427,16 +427,16 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 void P_SpawnGlowingLight(sector_t *sector)
 {
    GlowThinker *g;
-   
+
    g = new GlowThinker;
-   
+
    g->addThinker();
-   
+
    g->sector = sector;
    g->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel);
    g->maxlight = sector->lightlevel;
    g->direction = -1;
-   
+
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
 }
 
@@ -460,7 +460,7 @@ int EV_StartLightStrobing(line_t *line)
 {
    int   secnum;
    sector_t* sec;
-   
+
    secnum = -1;
    // start lights strobing in all sectors tagged same as line
    while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
@@ -469,7 +469,7 @@ int EV_StartLightStrobing(line_t *line)
       // if already doing a lighting function, don't start a second
       if(P_SectorActive(lighting_special,sec)) //jff 2/22/98
          continue;
-      
+
       P_SpawnStrobeFlash(sec, SLOWDARK, 0);
    }
    return 1;
@@ -488,9 +488,9 @@ int EV_StartLightStrobing(line_t *line)
 int EV_TurnTagLightsOff(line_t* line)
 {
    int j;
-   
+
    // search sectors for those with same tag as activating line
-   
+
    // killough 10/98: replaced inefficient search with fast search
    for(j = -1; (j = P_FindSectorFromLineTag(line,j)) >= 0;)
    {
@@ -522,17 +522,17 @@ int EV_TurnTagLightsOff(line_t* line)
 int EV_LightTurnOn(line_t *line, int bright)
 {
    int i;
-   
+
    // search all sectors for ones with same tag as activating line
-   
+
    // killough 10/98: replace inefficient search with fast search
    for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
    {
       sector_t *temp, *sector = sectors+i;
       int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
-      
+
       // bright = 0 means to search for highest light level surrounding sector
-      
+
       if(!bright)
       {
          for(j = 0;j < sector->linecount; j++)
@@ -544,10 +544,10 @@ int EV_LightTurnOn(line_t *line, int bright)
       }
 
       sector->lightlevel = tbright;
-      
-      //jff 5/17/98 unless compatibility optioned 
+
+      //jff 5/17/98 unless compatibility optioned
       //then maximum near ANY tagged sector
-      
+
       if(comp[comp_model])
          bright = tbright;
    }
@@ -560,7 +560,7 @@ int EV_LightTurnOn(line_t *line, int bright)
 //
 // Turn sectors tagged to line lights on to specified or max neighbor level
 //
-// Passed the activating line's tag, and a light level fraction between 
+// Passed the activating line's tag, and a light level fraction between
 // 0 and 1. Sets the light to min on 0, max on 1, and interpolates in-
 // between. Used for doors with gradual lighting effects.
 //
@@ -571,8 +571,8 @@ int EV_LightTurnOn(line_t *line, int bright)
 int EV_LightTurnOnPartway(int tag, fixed_t level)
 {
    int i;
-   
-   if(level < 0)          // clip at extremes 
+
+   if(level < 0)          // clip at extremes
       level = 0;
    if(level > FRACUNIT)
       level = FRACUNIT;
@@ -627,7 +627,7 @@ int EV_SetLight(line_t *line, int tag, setlight_e type, int lvl)
    }
 
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
-   {      
+   {
 dobackside:
       s = &sectors[i];
 
@@ -684,7 +684,7 @@ int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
       backside = true;
       goto dobackside;
    }
-   
+
    // search all sectors for ones with tag
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
@@ -695,7 +695,7 @@ dobackside:
       lf->addThinker();       // add thinker
 
       lf->sector = &sectors[i];
-      
+
       lf->destlevel  = destvalue * FRACUNIT;               // dest. light level
       lf->lightlevel = lf->sector->lightlevel * FRACUNIT;  // curr. light level
       lf->step = (lf->destlevel - lf->lightlevel) / speed; // delta per frame
@@ -744,7 +744,7 @@ int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
       backside = true;
       goto dobackside;
    }
-   
+
    // search all sectors for ones with tag
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
@@ -782,7 +782,7 @@ dobackside:
 // independent durations for both levels. Uses the same thinker as the normal
 // strobe light effect.
 //
-int EV_StrobeLight(line_t *line, int tag, 
+int EV_StrobeLight(line_t *line, int tag,
                    int maxval, int minval, int maxtime, int mintime)
 {
    StrobeThinker *flash;
@@ -797,14 +797,14 @@ int EV_StrobeLight(line_t *line, int tag,
       backside = true;
       goto dobackside;
    }
-   
+
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
 dobackside:
       rtn = 1;
       flash = new StrobeThinker;
       flash->addThinker();
-      
+
       flash->sector     = &sectors[i];
       flash->maxlight   = maxval;
       flash->minlight   = minval;
@@ -843,14 +843,14 @@ int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
       backside = true;
       goto dobackside;
    }
-   
+
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
 dobackside:
       rtn = 1;
       flash = new LightFlashThinker;
       flash->addThinker();
-      
+
       flash->sector   = &sectors[i];
       flash->maxlight = maxval;
       flash->minlight = minval;
@@ -905,4 +905,3 @@ dobackside:
 //
 //
 //----------------------------------------------------------------------------
-

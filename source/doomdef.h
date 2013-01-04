@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -126,7 +126,7 @@ typedef enum {
 // a macro to find out whether to make moving sounds in a sector
 #define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
 
-typedef enum 
+typedef enum
 {
   sk_none=-1, //jff 3/24/98 create unpicked skill setting
   sk_baby=0,
@@ -152,7 +152,7 @@ typedef enum {
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
-enum 
+enum
 {
   wp_fist,
   wp_pistol,
@@ -171,13 +171,13 @@ enum
 typedef int weapontype_t;
 
 // Ammunition types defined.
-enum 
+enum
 {
   am_clip,    // Pistol / chaingun ammo.
   am_shell,   // Shotgun / double barreled shotgun.
   am_cell,    // Plasma rifle, BFG.
   am_misl,    // Missile launcher.
-  
+
   NUMAMMO,
   am_noammo   // Unlimited for chainsaw / fist.
 };
@@ -236,7 +236,7 @@ typedef enum {
 #define KEYD_RALT       0xb8 //(0x80+0x38)
 #define KEYD_LALT       KEYD_RALT
 
-#define KEYD_CAPSLOCK   0xba                 // phares 
+#define KEYD_CAPSLOCK   0xba                 // phares
 
 #define KEYD_F1         0xbb //(0x80+0x3b)
 #define KEYD_F2         0xbc //(0x80+0x3c)
@@ -351,7 +351,7 @@ typedef enum {
                 && isnumchar((s)[1]) && isnumchar((s)[3]) \
                         && !(s)[4])
 #define isMAPxy(s) ( (s)[0] == 'M' && (s)[1] == 'A' && (s)[2] == 'P'   \
-                && isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5] )  
+                && isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5] )
 
 #define HTIC_GHOST_TRANS 26624
 

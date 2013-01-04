@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -174,7 +174,7 @@ typedef struct crdef_s
 } crdef_t;
 
 // killough 5/2/98: table-driven approach
-static const crdef_t crdefs[] = 
+static const crdef_t crdefs[] =
 {
    { "CRBRICK",  &cr_brick,   &colrngs[CR_BRICK ] },
    { "CRTAN",    &cr_tan,     &colrngs[CR_TAN   ] },
@@ -302,8 +302,8 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 
 #ifdef RANGECHECK
    // SoM: Do not attempt to copy across scaled buffers with different scales
-   if(src->scaled  != dest->scaled  || 
-      src->ixscale != dest->ixscale || 
+   if(src->scaled  != dest->scaled  ||
+      src->ixscale != dest->ixscale ||
       src->iyscale != dest->iyscale)
    {
       I_Error("V_CopyRect: src and dest VBuffers have different scaling\n");
@@ -311,7 +311,7 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 #endif
 
    // quick rejection if source rect is off-screen
-   if(srcx + width < 0 || srcy + height < 0 || 
+   if(srcx + width < 0 || srcy + height < 0 ||
       srcx >= src->unscaledw || srcy >= src->unscaledh)
       return;
 
@@ -436,7 +436,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
                            byte *outr, bool flipped)
 {
    PatchInfo pi;
-   
+
    pi.x = x;
    pi.y = y;
    pi.patch = patch;
@@ -445,7 +445,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
    // is the patch really translated?
    if(outr)
    {
-      pi.drawstyle = PSTYLE_TLATED;   
+      pi.drawstyle = PSTYLE_TLATED;
       V_SetPatchColrng(outr);
    }
    else
@@ -464,7 +464,7 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
                               byte *outr, byte *lighttable, bool flipped)
 {
    PatchInfo pi;
-   
+
    pi.x = x;
    pi.y = y;
    pi.patch = patch;
@@ -480,7 +480,7 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
       }
       else
       {
-         pi.drawstyle = PSTYLE_TLATED;   
+         pi.drawstyle = PSTYLE_TLATED;
       }
       V_SetPatchColrng(outr);
    }
@@ -506,7 +506,7 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
 // the color translation lumps loaded in V_InitColorTranslation.
 //
 // haleyjd 04/03/04: rewritten for ANYRES patch system
-// 
+//
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
                    byte *outr, int tl)
 {
@@ -555,7 +555,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
 // translucency and optional color translation.
 //
 // haleyjd 02/08/05
-// 
+//
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
                     byte *outr, int tl)
 {
@@ -587,7 +587,7 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
       unsigned int fglevel, bglevel;
       fglevel = tl & ~0x3ff;    // normal foreground level
       bglevel = FRACUNIT;       // full background level
-      V_SetPatchTL(Col2RGB8_LessPrecision[fglevel >> 10], 
+      V_SetPatchTL(Col2RGB8_LessPrecision[fglevel >> 10],
                    Col2RGB8_LessPrecision[bglevel >> 10]);
    }
 
@@ -634,7 +634,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
 //
 // V_DrawBlock
 //
-// Draw a linear block of pixels into the view buffer. 
+// Draw a linear block of pixels into the view buffer.
 //
 // The bytes at src are copied in linear order to the screen rectangle
 // at x,y in screenbuffer scrn, with size width by height.
@@ -642,7 +642,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
 // No return value.
 //
 // haleyjd 04/08/03: rewritten for ANYRES system -- see v_block.c
-// 
+//
 void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src)
 {
    buffer->BlockDrawer(x, y, buffer, width, height, src);
@@ -651,10 +651,10 @@ void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src
 //
 // V_DrawMaskedBlockTR
 //
-// Draw a translated, masked linear block of pixels into the view buffer. 
+// Draw a translated, masked linear block of pixels into the view buffer.
 //
 // haleyjd 06/29/08
-// 
+//
 void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
                          int srcpitch, byte *src, byte *cmap)
 {
@@ -758,7 +758,7 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
 }
 #endif
 
-// 
+//
 // V_FindBestColor
 //
 // Adapted from zdoom -- thanks to Randy Heit.
@@ -782,7 +782,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
       dr = r - *palette++;
       dg = g - *palette++;
       db = b - *palette++;
-      
+
       distortion = dr*dr + dg*dg + db*db;
 
       if(distortion < bestdistortion)
@@ -790,7 +790,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
          // exact match
          if(!distortion)
             return i;
-         
+
          bestdistortion = distortion;
          bestcolor = i;
       }
@@ -800,9 +800,9 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 }
 
 // haleyjd: DOSDoom-style single translucency lookup-up table
-// generation code. This code has a 32k (plus a bit more) 
+// generation code. This code has a 32k (plus a bit more)
 // footprint but allows a much wider range of translucency effects
-// than BOOM-style translucency. This will be used for particles, 
+// than BOOM-style translucency. This will be used for particles,
 // for variable mapthing trans levels, and for screen patches.
 
 // haleyjd: Updated 06/21/08 to use 32k lookup, mainly to fix
@@ -814,7 +814,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 // Copyright 1998-2012 Randy Heit  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
 // 1. Redistributions of source code must retain the above copyright
@@ -861,9 +861,9 @@ void V_InitFlexTranTable(const byte *palette)
 
    // mark that we've initialized the flex tran table
    flexTranInit = true;
-   
+
    tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL));
-   
+
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {
       tempRGBpal[i].r = palRover[0];
@@ -878,13 +878,13 @@ void V_InitFlexTranTable(const byte *palette)
       {
          for(b = 0; b < 32; ++b)
          {
-            RGB32k[r][g][b] = 
-               V_FindBestColor(palette, 
+            RGB32k[r][g][b] =
+               V_FindBestColor(palette,
                                MAKECOLOR(r), MAKECOLOR(g), MAKECOLOR(b));
          }
       }
    }
-   
+
    // build lookup table
    for(x = 0; x < 65; ++x)
    {
@@ -896,13 +896,13 @@ void V_InitFlexTranTable(const byte *palette)
       }
    }
 
-   // build a secondary lookup with red and blue lsbs masked out for additive 
-   // blending; otherwise, the overflow messes up the calculation and you get 
+   // build a secondary lookup with red and blue lsbs masked out for additive
+   // blending; otherwise, the overflow messes up the calculation and you get
    // something very ugly.
    for(x = 1; x < 64; ++x)
    {
       Col2RGB8_LessPrecision[x] = Col2RGB8_2[x - 1];
-      
+
       for(y = 0; y < 256; ++y)
          Col2RGB8_2[x-1][y] = Col2RGB8[x][y] & 0x3feffbff;
    }
@@ -915,15 +915,15 @@ void V_InitFlexTranTable(const byte *palette)
 //
 // V_CacheBlock
 //
-// haleyjd 12/22/02: 
-// Copies a linear block to a memory buffer as if to a 
+// haleyjd 12/22/02:
+// Copies a linear block to a memory buffer as if to a
 // low-res screen
 //
 void V_CacheBlock(int x, int y, int width, int height, byte *src,
                   byte *bdest)
 {
    byte *dest = bdest + y*SCREENWIDTH + x;
-   
+
    while(height--)
    {
       memcpy(dest, src, width);
@@ -966,4 +966,3 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

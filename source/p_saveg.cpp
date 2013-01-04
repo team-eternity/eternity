@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -82,7 +82,7 @@
 //
 // Constructs a SaveArchive object in saving mode.
 //
-SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
+SaveArchive::SaveArchive(OutBuffer *pSaveFile)
    : savefile(pSaveFile), loadfile(NULL)
 {
    if(!pSaveFile)
@@ -104,7 +104,7 @@ SaveArchive::SaveArchive(InBuffer *pLoadFile)
 //
 // SaveArchive::ArchiveCString
 //
-// Writes/reads strings with a fixed maximum length, which should be 
+// Writes/reads strings with a fixed maximum length, which should be
 // null-extended prior to the call.
 //
 void SaveArchive::ArchiveCString(char *str, size_t maxLen)
@@ -327,7 +327,7 @@ SaveArchive &SaveArchive::operator << (spectransfer_t &st)
 {
    *this << st.damage << st.damageflags << st.damagemask << st.damagemod
          << st.flags << st.newspecial;
-   
+
    return *this;
 }
 
@@ -363,15 +363,15 @@ static void P_FreeThinkerTable(void)
 static void P_NumberThinkers(void)
 {
    Thinker *th;
-   
+
    num_thinkers = 0; // init to 0
-   
+
    // killough 2/14/98:
    // count the number of thinkers, and mark each one with its index, using
    // the prev field as a placeholder, since it can be restored later.
 
    // haleyjd 11/26/10: Replaced with virtual enumeration facility
-   
+
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       th->setOrdinal(num_thinkers + 1);
@@ -388,7 +388,7 @@ static void P_DeNumberThinkers(void)
       th->setOrdinal(0);
 }
 
-// 
+//
 // P_NumForThinker
 //
 // Get the mobj number from the mobj.
@@ -449,7 +449,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int j;
          player_t &p = players[i];
 
-         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
+         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn
              << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
@@ -462,7 +462,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
              << p.colormap     << p.curpsprite      << p.quake
              << p.jumptime;
-         
+
          for(j = 0; j < NUMPOWERS; j++)
             arc << p.powers[j];
 
@@ -521,7 +521,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
    sector_t *sec;
    line_t   *li;
    side_t   *si;
-  
+
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
@@ -533,13 +533,13 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
-      arc << sec->floorheight << sec->ceilingheight 
-          << sec->friction << sec->movefactor  
+      arc << sec->floorheight << sec->ceilingheight
+          << sec->friction << sec->movefactor
           << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags 
+          << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->damagemask << sec->damagemod
           << sec->floorpic << sec->ceilingpic
-          << sec->lightlevel << sec->oldlightlevel 
+          << sec->lightlevel << sec->oldlightlevel
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
@@ -568,10 +568,10 @@ static void P_ArchiveWorld(SaveArchive &arc)
          if(li->sidenum[j] != -1)
          {
             si = &sides[li->sidenum[j]];
-            
+
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
-            
+
             arc << si->textureoffset << si->rowoffset
                 << si->toptexture << si->bottomtexture << si->midtexture;
          }
@@ -640,7 +640,7 @@ static void P_RemoveAllThinkers(void)
    Thinker *th;
 
    // FIXME/TODO: This leaks all mobjs til the next level by calling
-   // Thinker::InitThinkers. This should really be handled more 
+   // Thinker::InitThinkers. This should really be handled more
    // uniformly with a virtual method.
 
    // remove all the current thinkers
@@ -652,7 +652,7 @@ static void P_RemoveAllThinkers(void)
          th->removeThinker();
       else
          delete th;
-      
+
       th = next;
    }
 
@@ -711,12 +711,12 @@ static void P_ArchiveThinkers(SaveArchive &arc)
          {
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
-            else 
+            else
                I_Error("Unknown tclass %s in savegame\n", className);
          }
 
          // Too many thinkers?!
-         if(idx > num_thinkers) 
+         if(idx > num_thinkers)
             I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
 
          // Create a thinker of the appropriate type and load it
@@ -793,7 +793,7 @@ static void P_ArchiveMap(SaveArchive &arc)
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints, 
+            markpoints = erealloc(mpoint_t *, markpoints,
                                   sizeof *markpoints * markpointnum_max);
          }
 
@@ -804,7 +804,7 @@ static void P_ArchiveMap(SaveArchive &arc)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// 
+//
 // haleyjd 03/26/06: PolyObject saving code
 //
 
@@ -836,7 +836,7 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
    {
       char *className = NULL;
       size_t len = 0;
-      
+
       arc.ArchiveLString(className, len);
 
       if(!className || strncmp(className, "PointThinker", len))
@@ -906,7 +906,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 {
 
    int callback_count = 0;
-   
+
    if(arc.isSaving())
    {
       sc_callback_t *list = SM_GetCallbackList();
@@ -941,7 +941,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
          sc_callback_t *newCallback = estructalloc(sc_callback_t, 1);
          int8_t vm;
 
-         arc << newCallback->flags << newCallback->scriptNum << vm 
+         arc << newCallback->flags << newCallback->scriptNum << vm
              << newCallback->wait_data << newCallback->wait_type;
 
          newCallback->vm = vm;
@@ -1023,7 +1023,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
    arc << seq->originType;
 
    // depending on origin type, either save the origin index (sector or polyobj
-   // number), or an Mobj number. This differentiation is necessary because 
+   // number), or an Mobj number. This differentiation is necessary because
    // degenMobj are not covered by mobj numbering.
    switch(seq->originType)
    {
@@ -1037,7 +1037,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
       arc << twizzle;
       break;
    default:
-      I_Error("P_ArchiveSndSeq: unknown sequence origin type %d\n", 
+      I_Error("P_ArchiveSndSeq: unknown sequence origin type %d\n",
               seq->originType);
    }
 
@@ -1062,7 +1062,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
 
    if(!(newSeq->sequence = E_SequenceForName(name)))
    {
-      I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
+      I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n",
               name);
    }
 
@@ -1094,7 +1094,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    case SEQ_ORIGIN_POLYOBJ:
       if(!(po = Polyobj_GetForNum(twizzle)))
       {
-         I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
+         I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n",
                  twizzle);
       }
       newSeq->originIdx = po->id;
@@ -1117,7 +1117,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    // remove looping flag if present
    newSeq->flags &= ~SEQ_FLAG_LOOPING;
 
-   // let the sound sequence code take care of putting this sequence into its 
+   // let the sound sequence code take care of putting this sequence into its
    // proper place, as that's a complicated action that requires use of data
    // static to s_sndseq.c
    S_SetSequenceStatus(newSeq);
@@ -1188,7 +1188,7 @@ void P_ArchiveButtons(SaveArchive &arc)
    // first, save or load the number of buttons
    if(arc.isSaving())
       numsaved = numbuttonsalloc;
-   
+
    arc << numsaved;
 
    // When loading, if not equal, we need to realloc buttonlist
@@ -1247,19 +1247,19 @@ void P_SaveCurrentLevel(char *filename, char *description)
    try
    {
       arc.ArchiveCString(description, SAVESTRINGSIZE);
-      
+
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
       sprintf(name2, VERSIONID, version);
-   
+
       arc.ArchiveCString(name2, VERSIONSIZE);
-   
+
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
       int tempskill = (int)gameskill;
-      
+
       arc << compatibility << tempskill << inmanageddir;
-   
+
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
       {
@@ -1284,14 +1284,14 @@ void P_SaveCurrentLevel(char *filename, char *description)
          int len = 0;
          arc << len;
       }
-  
+
       // killough 3/16/98, 12/98: store lump name checksum
       // FIXME/TODO: Will be simple with future save format
       /*
       uint64_t checksum = G_Signature(g_dir);
       savefile.Write(&checksum, sizeof(checksum));
 
-      // killough 3/16/98: store pwad filenames in savegame  
+      // killough 3/16/98: store pwad filenames in savegame
       for(wfileadd_t *file = wadfiles; file->filename; ++file)
       {
          const char *fn = file->filename;
@@ -1300,7 +1300,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       }
       savefile.WriteUint8(0);
       */
-  
+
       for(i = 0; i < MAXPLAYERS; i++)
          arc << playeringame[i];
 
@@ -1317,19 +1317,19 @@ void P_SaveCurrentLevel(char *filename, char *description)
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
       savefile.Write(options, sizeof(options));
-   
+
       //killough 11/98: save entire word
       arc << leveltime;
-   
+
       // killough 11/98: save revenant tracer state
       uint8_t tracerState = (uint8_t)((gametic-basetic) & 255);
       arc << tracerState;
 
       arc << dmflags;
-   
+
       // killough 3/22/98: add Z_CheckHeap after each call to ensure consistency
       // haleyjd 07/06/09: just Z_CheckHeap after the end. This stuff works by now.
-   
+
       P_NumberThinkers();    // turn ptrs to numbers
 
       P_ArchivePlayers(arc);
@@ -1345,7 +1345,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_DeNumberThinkers();
 
       uint8_t cmarker = 0xE6; // consistency marker
-      arc << cmarker; 
+      arc << cmarker;
    }
    catch(BufferedIOException)
    {
@@ -1372,7 +1372,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 }
 
 //============================================================================
-// 
+//
 // Loading -- Main Routine
 //
 
@@ -1401,12 +1401,12 @@ void P_LoadGame(const char *filename)
       char throwaway[SAVESTRINGSIZE];
 
       arc.ArchiveCString(throwaway, SAVESTRINGSIZE);
-      
+
       // killough 2/22/98: "proprietary" version string :-)
       sprintf(vcheck, VERSIONID, version);
 
       arc.ArchiveCString(vread, VERSIONSIZE);
-   
+
       // killough 2/22/98: Friendly savegame version difference message
       // FIXME/TODO: restore proper version verification
       if(strncmp(vread, vcheck, VERSIONSIZE))
@@ -1418,10 +1418,10 @@ void P_LoadGame(const char *filename)
       arc << compatibility << tempskill << inmanageddir;
 
       gameskill = (skill_t)tempskill;
-      
+
       demo_version    = version;    // killough 7/19/98: use this version's id
-      demo_subversion = subversion; // haleyjd 06/17/01   
-  
+      demo_subversion = subversion; // haleyjd 06/17/01
+
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
       {
@@ -1446,7 +1446,7 @@ void P_LoadGame(const char *filename)
       {
          WadDirectory *dir;
 
-         // read a name of len bytes 
+         // read a name of len bytes
          char *fn = ecalloc(char *, 1, len);
          arc.ArchiveCString(fn, (size_t)len);
 
@@ -1461,11 +1461,11 @@ void P_LoadGame(const char *filename)
          efree(fn);
 
          // 11/04/12: Since we loaded a managed directory wad, initialize the
-         // mission. This will take care of any special data loading 
+         // mission. This will take care of any special data loading
          // requirements, such as metadata for NR4TL.
          W_InitManagedMission(inmanageddir);
       }
-   
+
       // killough 3/16/98, 12/98: check lump name checksum
       // FIXME/TODO: advanced savegame verification is needed
       /*
@@ -1511,7 +1511,7 @@ void P_LoadGame(const char *filename)
       loadfile.read(options, sizeof(options));
 
       G_ReadOptions(options);
- 
+
       // load a base level
       // sf: in hubs, use g_doloadlevel instead of g_initnew
       if(hub_changelevel)
@@ -1521,9 +1521,9 @@ void P_LoadGame(const char *filename)
 
       // killough 3/1/98: Read game options
       // killough 11/98: move down to here
-   
-      // cph - MBF needs to reread the savegame options because 
-      // G_InitNew rereads the WAD options. The demo playback code does 
+
+      // cph - MBF needs to reread the savegame options because
+      // G_InitNew rereads the WAD options. The demo playback code does
       // this too.
       G_ReadOptions(options);
 
@@ -1557,7 +1557,7 @@ void P_LoadGame(const char *filename)
          I_Error("Bad savegame: last byte is 0x%x\n", cmarker);
 
       // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
-      Z_CheckHeap(); 
+      Z_CheckHeap();
    }
    catch(...)
    {
@@ -1569,7 +1569,7 @@ void P_LoadGame(const char *filename)
 
    if (setsizeneeded)
       R_ExecuteSetViewSize();
-   
+
    // draw the pattern into the back screen
    R_FillBackScreen();
 
@@ -1590,7 +1590,7 @@ void P_LoadGame(const char *filename)
 
    // sf: if loading a hub level, restore position relative to sector
    //  for 'seamless' travel between levels
-   if(hub_changelevel) 
+   if(hub_changelevel)
       P_RestorePlayerPosition();
 
    // haleyjd 01/07/07: run deferred ACS scripts
@@ -1648,4 +1648,3 @@ void P_LoadGame(const char *filename)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

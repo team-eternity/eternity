@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
+//
 //  Hardware Abstraction Layer for Video
 //  haleyjd 05/08/11
 //
@@ -79,7 +79,7 @@ struct haldriveritem_t
 };
 
 // Help string for system.cfg:
-const char *const i_videohelpstr = 
+const char *const i_videohelpstr =
   "Select video backend (-1 = default"
 #ifdef _SDL_VER
   ", 0 = SDL Software"
@@ -344,7 +344,7 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
          case 's': // software
             *hw = false;
             break;
-         case 'h': // hardware 
+         case 'h': // hardware
             *hw = true;
             break;
          case 'n': // noframe
@@ -404,16 +404,16 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
          *w = p;
-      
+
       if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
          *h = p;
-      
+
       if(M_CheckParm("-fullscreen"))
          *fs = true;
       if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
          *fs = false;
-      
+
       if(M_CheckParm("-vsync"))
          *vs = true;
       if(M_CheckParm("-novsync"))
@@ -443,7 +443,7 @@ extern void I_DisableSysMenu(void);
 //
 static bool I_InitGraphicsMode(void)
 {
-   bool result; 
+   bool result;
 
    if(!i_default_videomode)
       i_default_videomode = estrdup("640x480w");
@@ -497,7 +497,7 @@ static void I_ResetScreen(void)
       in_graphics_mode = false;
       in_textmode = true;
    }
-   
+
    // Switch to new graphics mode
    // check for errors -- we may be setting to a different mode instead
    if(I_InitGraphicsMode())
@@ -505,19 +505,19 @@ static void I_ResetScreen(void)
       disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
       return;
    }
-   
+
    // reset other modules
-   
+
    // Reset automap dimensions
    if(automapactive)
       AM_Start();
-   
+
    // Reset palette
    ST_Start();
 
    // haleyjd: reset wipe engine
    Wipe_ScreenReset();
-   
+
    // A LOT of heap activity just happened, so check it.
    Z_CheckHeap();
 
@@ -528,13 +528,13 @@ void I_InitGraphics(void)
 {
    static int firsttime = true;
    haldriveritem_t *driveritem = NULL;
-   
+
    if(!firsttime)
       return;
-   
+
    firsttime = false;
-   
-   // Select video driver based on configuration (out of those available in 
+
+   // Select video driver based on configuration (out of those available in
    // the current compile), or get the default driver if unspecified
    if(!(driveritem = I_DefaultVideoDriver()))
    {
@@ -546,7 +546,7 @@ void I_InitGraphics(void)
       i_videodriverid = driveritem->id;
       usermsg(" (using video driver '%s')", driveritem->name);
    }
-   
+
    // haleyjd: not a good idea for SDL :(
    // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
    //    return;
@@ -560,25 +560,25 @@ void I_InitGraphics(void)
    //
    // enter graphics mode
    //
-   
+
    atexit(I_ShutdownGraphics);
-   
+
    V_ResetMode();
-   
+
    Z_CheckHeap();
 }
 
 void I_SetMode(int i)
 {
    static int firsttime = true;    // the first time to set mode
-   
+
    if(firsttime)
       I_InitGraphicsMode();
    else
       I_ResetScreen();
-   
+
    firsttime = false;
-}        
+}
 
 /************************
         CONSOLE COMMANDS
@@ -631,7 +631,7 @@ CONSOLE_COMMAND(i_default_videomode, 0)
    */
 }
 
-static const char *i_videodrivernames[] = 
+static const char *i_videodrivernames[] =
 {
    "default",
    "SDL Software",
@@ -648,10 +648,10 @@ void I_Video_AddCommands(void)
 {
    C_AddCommand(i_usemouse);
    C_AddCommand(i_usejoystick);
-   
+
    C_AddCommand(v_diskicon);
    C_AddCommand(v_retrace);
-   
+
    C_AddCommand(joySens_x);
    C_AddCommand(joySens_y);
 
@@ -666,4 +666,3 @@ void I_Video_AddCommands(void)
 }
 
 // EOF
-

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,7 +22,7 @@
 // DESCRIPTION:
 //
 // Small Scripting Engine Interface
-// 
+//
 // Functions needed to provide for game engine usage of the Small
 // virtual machine (see amx.c)
 //
@@ -125,7 +125,7 @@ SmallContext_t *SM_GetContextForAMX(AMX *amx)
 // execution. It will return parent if a child context wasn't
 // created.
 //
-SmallContext_t *SM_CreateChildContext(SmallContext_t *parent, 
+SmallContext_t *SM_CreateChildContext(SmallContext_t *parent,
                                       SmallContext_t *child)
 {
    long dataSize, sthpSize, totalSize;
@@ -153,9 +153,9 @@ SmallContext_t *SM_CreateChildContext(SmallContext_t *parent,
       I_Error("SM_CreateChildContext: internal Small error\n");
 
    // set child AMX to point back to its context
-   amx_SetUserData(&child->smallAMX, 
+   amx_SetUserData(&child->smallAMX,
                    AMX_USERTAG('C','N','T','X'), child);
-   
+
    child->vm = parent->vm;
 
    // update the appropriate global context pointer
@@ -272,7 +272,7 @@ static int SM_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
    {
       return (SC_ERR_READ | SC_ERR_MASK);
    }
-   
+
    W_ReadLumpHeader(lumpnum, (void *)(&hdr), sizeof(hdr));
    amx_Align32((uint32_t *)(&hdr.size));
 
@@ -350,7 +350,7 @@ static void SM_AMXError(int err)
    if(err & SC_ERR_MASK)
    {
       err &= ~SC_ERR_MASK;
-      
+
       if(err >= 0 && err < SC_ERR_NUMERRS)
          errmsg = msgs[err];
    }
@@ -388,14 +388,14 @@ extern int AMXEXPORT amx_CoreInit(AMX *amx);
 // SM_RegisterNatives
 //
 // Registers all native functions with the given AMX.
-// The native functions registered here are in various modules. 
-// I feel this is preferable to putting all natives in one giant, 
+// The native functions registered here are in various modules.
+// I feel this is preferable to putting all natives in one giant,
 // entangled module.
 //
 static int SM_RegisterNatives(AMX *amx)
 {
    // register each module's natives
-   amx_Register(amx, cons_io_Natives, -1); // c_io   
+   amx_Register(amx, cons_io_Natives, -1); // c_io
    amx_Register(amx, local_Natives,   -1); // misc stuff in here
    amx_Register(amx, ccmd_Natives,    -1); // c_cmd
    amx_Register(amx, chase_Natives,   -1); // p_chase
@@ -478,7 +478,7 @@ void SM_OptScriptCallback(SmallContext_t *ctx, const char *cbname)
 {
    int index;
    AMX *amx = &ctx->smallAMX;
-   
+
    if(amx_FindPublic(amx, cbname, &index) == AMX_ERR_NONE)
    {
       ctx->invocationData.invokeType = SC_INVOKE_CALLBACK;
@@ -505,13 +505,13 @@ void SM_InitGameScript(void)
 
    gameScriptLoaded = false;
 
-   C_Printf(FC_HI "SM_InitGameScript: " 
+   C_Printf(FC_HI "SM_InitGameScript: "
             FC_NORMAL "loading game scripts\n");
 
    // 07/19/03: go ahead and check if GAMESCR exists
-   // before trying to load it; eliminates need for a 
+   // before trying to load it; eliminates need for a
    // dummy lump in eternity.wad
-   
+
    if(W_CheckNumForName("GAMESCR") == -1)
       return;
 
@@ -624,7 +624,7 @@ void SM_InitLevelScript(void)
    amx_SetUserData(amx, AMX_USERTAG('C','N','T','X'), &LevelScript);
 
    // run the OnInit script, if it exists and we are NOT loading
-   // a saved game. The state created by OnInit should still exist 
+   // a saved game. The state created by OnInit should still exist
    // in a saved game, so running the script again would be unexpected.
 
    if(gameaction != ga_loadgame)
@@ -683,7 +683,7 @@ cell SM_ExecScriptNameV(AMX *amx, char *fn)
 //
 // Execute a script, passing a given number of integer parameters
 //
-cell SM_ExecScriptNameI(AMX *amx, char *fn, 
+cell SM_ExecScriptNameI(AMX *amx, char *fn,
                        int numparams, cell params[])
 {
    int err;
@@ -696,7 +696,7 @@ cell SM_ExecScriptNameI(AMX *amx, char *fn,
       return 0;
    }
 
-   if((err = amx_Execv(amx, &retval, index, numparams, params)) 
+   if((err = amx_Execv(amx, &retval, index, numparams, params))
          != AMX_ERR_NONE)
    {
       SM_AMXError(err);
@@ -712,12 +712,12 @@ cell SM_ExecScriptNameI(AMX *amx, char *fn,
 // The number given is translated into "Script<number>", which
 // must match the name of a public function in the given AMX.
 //
-cell SM_ExecScriptByNum(AMX *amx, int number, int numparams, 
+cell SM_ExecScriptByNum(AMX *amx, int number, int numparams,
                        cell params[])
 {
    char scriptname[64];
 
-   psnprintf(scriptname, sizeof(scriptname), 
+   psnprintf(scriptname, sizeof(scriptname),
              "%s%d", "Script", number);
 
    return SM_ExecScriptNameI(amx, scriptname, numparams, params);
@@ -727,7 +727,7 @@ cell SM_ExecScriptByNumV(AMX *amx, int number)
 {
    char scriptname[64];
 
-   psnprintf(scriptname, sizeof(scriptname), 
+   psnprintf(scriptname, sizeof(scriptname),
              "%s%d", "Script", number);
 
    return SM_ExecScriptNameV(amx, scriptname);
@@ -749,9 +749,9 @@ static sc_callback_t callBackHead;
 // I don't like introducing more globals, there are too many
 // as it is ;)
 //
-sc_callback_t *SM_GetCallbackList(void) 
-{ 
-   return &callBackHead; 
+sc_callback_t *SM_GetCallbackList(void)
+{
+   return &callBackHead;
 }
 
 //
@@ -806,7 +806,7 @@ int SM_AddCallback(char *scrname, sc_vm_e vm, int waittype,
    {
       return err;
    }
-   
+
    newCallback = (sc_callback_t *)(Z_Malloc(sizeof(sc_callback_t), PU_STATIC, 0));
 
    newCallback->vm = vm;
@@ -817,7 +817,7 @@ int SM_AddCallback(char *scrname, sc_vm_e vm, int waittype,
 
    // link callback into list
    SM_LinkCallback(newCallback);
-   
+
    return AMX_ERR_NONE;
 }
 
@@ -846,8 +846,8 @@ void SM_RemoveCallback(sc_callback_t *callback)
 //
 void SM_RemoveCallbacks(int vm)
 {
-   for(currentcb = callBackHead.next; 
-       currentcb != &callBackHead; 
+   for(currentcb = callBackHead.next;
+       currentcb != &callBackHead;
        currentcb = currentcb->next)
    {
       if(vm == -1 || vm == currentcb->vm)
@@ -867,7 +867,7 @@ static bool SM_WaitFinished(sc_callback_t *callback)
    // check pause flags
 
    if((callback->flags & SCBF_PAUSABLE && paused) ||
-      (callback->flags & SCBF_MPAUSE && 
+      (callback->flags & SCBF_MPAUSE &&
        (menuactive || consoleactive) && !demoplayback && !netgame))
       return false;
 
@@ -881,8 +881,8 @@ static bool SM_WaitFinished(sc_callback_t *callback)
    case sc_callback_t::wt_tagwait:
       {
          int secnum = -1;
-         
-         while((secnum = P_FindSectorFromTag(callback->wait_data, 
+
+         while((secnum = P_FindSectorFromTag(callback->wait_data,
                                              secnum)) >= 0)
          {
             sector_t *sec = &sectors[secnum];
@@ -973,7 +973,7 @@ CONSOLE_COMMAND(sm_running, 0)
 
    for(cb = callBackHead.next; cb != &callBackHead; cb = cb->next)
    {
-      C_Printf("callback %d: scr#:%d  wttype:%d wtdata:%d\n", 
+      C_Printf("callback %d: scr#:%d  wttype:%d wtdata:%d\n",
                i, cb->scriptNum, cb->wait_type, cb->wait_data);
       ++i;
    }
@@ -1174,7 +1174,7 @@ static cell AMX_NATIVE_CALL sm_getPlayerSrc(AMX *amx, cell *params)
 //
 // Returns the true TID of the trigger object, if it has one, otherwise
 // returns TID_TRIGGER.
-// If there is no trigger object, the function returns zero.  
+// If there is no trigger object, the function returns zero.
 //
 static cell AMX_NATIVE_CALL sm_getThingSrc(AMX *amx, cell *params)
 {
@@ -1285,15 +1285,15 @@ static cell exec_across(AMX *origAMX, cell *params, SmallContext_t *execContext)
 
    // count of parameters to send to function (subtract one for fn)
    numparams = (params[0] / sizeof(cell)) - 1;
-   
+
    if(numparams > 0)
    {
       scrparams = (cell *)(Z_Malloc(numparams * sizeof(cell), PU_STATIC, NULL));
       memcpy(scrparams, params + 1, numparams * sizeof(cell));
 
-      retval = SM_ExecScriptNameI(&execContext->smallAMX, scrname, 
+      retval = SM_ExecScriptNameI(&execContext->smallAMX, scrname,
                                  numparams, scrparams);
-      
+
       Z_Free(scrparams);
    }
    else
@@ -1459,7 +1459,7 @@ static cell A_SetPublicVarValue(AMX *execAMX, AMX *varAMX, cell nameaddr, cell v
       Z_Free(varname);
       return -1;
    }
-   
+
    // done with varname
    Z_Free(varname);
 
@@ -1468,7 +1468,7 @@ static cell A_SetPublicVarValue(AMX *execAMX, AMX *varAMX, cell nameaddr, cell v
    {
       amx_RaiseError(execAMX, err);
       return -1;
-   }   
+   }
 
    // set value of variable
    return (*physvaraddr = value);
@@ -1515,7 +1515,7 @@ static cell AMX_NATIVE_CALL sm_getgamevar(AMX *amx, cell *params)
       amx_RaiseError(amx, SC_ERR_BADVM | SC_ERR_MASK);
       return -1;
    }
-   
+
    // get AMX containing variable
    gsamx = &(curGSContext->smallAMX);
 
@@ -1550,7 +1550,7 @@ static int dochar(AMX *amx, char ch, cell param)
 {
    cell *cptr;
    char intbuffer[33];
-   
+
    switch(ch)
    {
    case '%':
@@ -1583,7 +1583,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
 {
    int i;
    int informat = 0, paramidx = 0;
-   
+
    /* check whether this is a packed string */
    if((ucell)*cstr > UCHAR_MAX)
    {
@@ -1602,11 +1602,11 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
          {
             paramidx += dochar(amx, c, params[paramidx]);
             informat=0;
-         } 
+         }
          else if(params != NULL && c == '%')
          {
             informat = 1;
-         } 
+         }
          else
          {
             small_qstr += c;
@@ -1615,8 +1615,8 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
             i++;
          j = (j + sizeof(cell) - sizeof(char)) % sizeof(cell);
       } /* for */
-   } 
-   else 
+   }
+   else
    {
       /* the string is unpacked */
       for(i = 0; cstr[i] != 0; ++i)
@@ -1625,14 +1625,14 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
          {
             paramidx += dochar(amx, (char)cstr[i], params[paramidx]);
             informat = 0;
-         } 
+         }
          else if(params != NULL && (int)cstr[i] == '%')
          {
             if(paramidx < num)
                informat = 1;
             else
                amx_RaiseError(amx, AMX_ERR_NATIVE);
-         } 
+         }
          else
          {
             small_qstr += (char)cstr[i];
@@ -1659,7 +1659,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
 
    // get destination
    destination = (int)params[1];
-   
+
    // print the formatted string into the qstring
    amx_GetAddr(amx, params[2], &cstr);
    printstring(amx, cstr, params+3, (int)(params[0] / sizeof(cell)) - 2);
@@ -1705,8 +1705,6 @@ AMX_NATIVE_INFO local_Natives[] =
    { NULL, NULL }
 };
 
-#endif 
+#endif
 
 // EOF
-
-

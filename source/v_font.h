@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -80,7 +80,7 @@ struct vfont_t
    patch_t **fontgfx;  // graphics patches for font (not owned)
 
    int   cw;           // constant width, used only when centering is on
-   
+
    bool  linear;       // linear graphic lump?
    byte *data;         // data for linear graphic
    int   lsize;        // character size in linear graphic
@@ -104,7 +104,7 @@ void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, i
                                VBuffer *screen = NULL);
 void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
                               VBuffer *screen = NULL);
-void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y, 
+void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
                                 VBuffer *screen = NULL, int color = -1);
 int     V_FontStringHeight(vfont_t *font, const char *s);
 int     V_FontStringWidth(vfont_t *font, const char *s);
@@ -120,4 +120,3 @@ byte *V_FontGetUsedColors(vfont_t *font);
 #endif
 
 // EOF
-

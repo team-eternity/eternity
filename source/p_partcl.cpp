@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 // Copyright 1998-2012 Randy Heit  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
 // 1. Redistributions of source code must retain the above copyright
@@ -137,170 +137,170 @@ typedef float vec3_t[3];
 
 static vec3_t avelocities[NUMVERTEXNORMALS];
 
-static vec3_t bytedirs[NUMVERTEXNORMALS] = 
+static vec3_t bytedirs[NUMVERTEXNORMALS] =
 {
-   {-0.525731f, 0.000000f, 0.850651f}, 
-   {-0.442863f, 0.238856f, 0.864188f}, 
-   {-0.295242f, 0.000000f, 0.955423f}, 
-   {-0.309017f, 0.500000f, 0.809017f}, 
-   {-0.162460f, 0.262866f, 0.951056f}, 
-   {0.000000f, 0.000000f, 1.000000f}, 
-   {0.000000f, 0.850651f, 0.525731f}, 
-   {-0.147621f, 0.716567f, 0.681718f}, 
-   {0.147621f, 0.716567f, 0.681718f}, 
-   {0.000000f, 0.525731f, 0.850651f}, 
-   {0.309017f, 0.500000f, 0.809017f}, 
-   {0.525731f, 0.000000f, 0.850651f}, 
-   {0.295242f, 0.000000f, 0.955423f}, 
-   {0.442863f, 0.238856f, 0.864188f}, 
-   {0.162460f, 0.262866f, 0.951056f}, 
-   {-0.681718f, 0.147621f, 0.716567f}, 
-   {-0.809017f, 0.309017f, 0.500000f}, 
-   {-0.587785f, 0.425325f, 0.688191f}, 
-   {-0.850651f, 0.525731f, 0.000000f}, 
-   {-0.864188f, 0.442863f, 0.238856f}, 
-   {-0.716567f, 0.681718f, 0.147621f}, 
-   {-0.688191f, 0.587785f, 0.425325f}, 
-   {-0.500000f, 0.809017f, 0.309017f}, 
-   {-0.238856f, 0.864188f, 0.442863f}, 
-   {-0.425325f, 0.688191f, 0.587785f}, 
-   {-0.716567f, 0.681718f, -0.147621f}, 
-   {-0.500000f, 0.809017f, -0.309017f}, 
-   {-0.525731f, 0.850651f, 0.000000f}, 
-   {0.000000f, 0.850651f, -0.525731f}, 
-   {-0.238856f, 0.864188f, -0.442863f}, 
-   {0.000000f, 0.955423f, -0.295242f}, 
-   {-0.262866f, 0.951056f, -0.162460f}, 
-   {0.000000f, 1.000000f, 0.000000f}, 
-   {0.000000f, 0.955423f, 0.295242f}, 
-   {-0.262866f, 0.951056f, 0.162460f}, 
-   {0.238856f, 0.864188f, 0.442863f}, 
-   {0.262866f, 0.951056f, 0.162460f}, 
-   {0.500000f, 0.809017f, 0.309017f}, 
-   {0.238856f, 0.864188f, -0.442863f}, 
-   {0.262866f, 0.951056f, -0.162460f}, 
-   {0.500000f, 0.809017f, -0.309017f}, 
-   {0.850651f, 0.525731f, 0.000000f}, 
-   {0.716567f, 0.681718f, 0.147621f}, 
-   {0.716567f, 0.681718f, -0.147621f}, 
-   {0.525731f, 0.850651f, 0.000000f}, 
-   {0.425325f, 0.688191f, 0.587785f}, 
-   {0.864188f, 0.442863f, 0.238856f}, 
-   {0.688191f, 0.587785f, 0.425325f}, 
-   {0.809017f, 0.309017f, 0.500000f}, 
-   {0.681718f, 0.147621f, 0.716567f}, 
-   {0.587785f, 0.425325f, 0.688191f}, 
-   {0.955423f, 0.295242f, 0.000000f}, 
-   {1.000000f, 0.000000f, 0.000000f}, 
-   {0.951056f, 0.162460f, 0.262866f}, 
-   {0.850651f, -0.525731f, 0.000000f}, 
-   {0.955423f, -0.295242f, 0.000000f}, 
-   {0.864188f, -0.442863f, 0.238856f}, 
-   {0.951056f, -0.162460f, 0.262866f}, 
-   {0.809017f, -0.309017f, 0.500000f}, 
-   {0.681718f, -0.147621f, 0.716567f}, 
-   {0.850651f, 0.000000f, 0.525731f}, 
-   {0.864188f, 0.442863f, -0.238856f}, 
-   {0.809017f, 0.309017f, -0.500000f}, 
-   {0.951056f, 0.162460f, -0.262866f}, 
-   {0.525731f, 0.000000f, -0.850651f}, 
-   {0.681718f, 0.147621f, -0.716567f}, 
-   {0.681718f, -0.147621f, -0.716567f}, 
-   {0.850651f, 0.000000f, -0.525731f}, 
-   {0.809017f, -0.309017f, -0.500000f}, 
-   {0.864188f, -0.442863f, -0.238856f}, 
-   {0.951056f, -0.162460f, -0.262866f}, 
-   {0.147621f, 0.716567f, -0.681718f}, 
-   {0.309017f, 0.500000f, -0.809017f}, 
-   {0.425325f, 0.688191f, -0.587785f}, 
-   {0.442863f, 0.238856f, -0.864188f}, 
-   {0.587785f, 0.425325f, -0.688191f}, 
-   {0.688191f, 0.587785f, -0.425325f}, 
-   {-0.147621f, 0.716567f, -0.681718f}, 
-   {-0.309017f, 0.500000f, -0.809017f}, 
-   {0.000000f, 0.525731f, -0.850651f}, 
-   {-0.525731f, 0.000000f, -0.850651f}, 
-   {-0.442863f, 0.238856f, -0.864188f}, 
-   {-0.295242f, 0.000000f, -0.955423f}, 
-   {-0.162460f, 0.262866f, -0.951056f}, 
-   {0.000000f, 0.000000f, -1.000000f}, 
-   {0.295242f, 0.000000f, -0.955423f}, 
-   {0.162460f, 0.262866f, -0.951056f}, 
-   {-0.442863f, -0.238856f, -0.864188f}, 
-   {-0.309017f, -0.500000f, -0.809017f}, 
-   {-0.162460f, -0.262866f, -0.951056f}, 
-   {0.000000f, -0.850651f, -0.525731f}, 
-   {-0.147621f, -0.716567f, -0.681718f}, 
-   {0.147621f, -0.716567f, -0.681718f}, 
-   {0.000000f, -0.525731f, -0.850651f}, 
-   {0.309017f, -0.500000f, -0.809017f}, 
-   {0.442863f, -0.238856f, -0.864188f}, 
-   {0.162460f, -0.262866f, -0.951056f}, 
-   {0.238856f, -0.864188f, -0.442863f}, 
-   {0.500000f, -0.809017f, -0.309017f}, 
-   {0.425325f, -0.688191f, -0.587785f}, 
-   {0.716567f, -0.681718f, -0.147621f}, 
-   {0.688191f, -0.587785f, -0.425325f}, 
-   {0.587785f, -0.425325f, -0.688191f}, 
-   {0.000000f, -0.955423f, -0.295242f}, 
-   {0.000000f, -1.000000f, 0.000000f}, 
-   {0.262866f, -0.951056f, -0.162460f}, 
-   {0.000000f, -0.850651f, 0.525731f}, 
-   {0.000000f, -0.955423f, 0.295242f}, 
-   {0.238856f, -0.864188f, 0.442863f}, 
-   {0.262866f, -0.951056f, 0.162460f}, 
-   {0.500000f, -0.809017f, 0.309017f}, 
-   {0.716567f, -0.681718f, 0.147621f}, 
-   {0.525731f, -0.850651f, 0.000000f}, 
-   {-0.238856f, -0.864188f, -0.442863f}, 
-   {-0.500000f, -0.809017f, -0.309017f}, 
-   {-0.262866f, -0.951056f, -0.162460f}, 
-   {-0.850651f, -0.525731f, 0.000000f}, 
-   {-0.716567f, -0.681718f, -0.147621f}, 
-   {-0.716567f, -0.681718f, 0.147621f}, 
-   {-0.525731f, -0.850651f, 0.000000f}, 
-   {-0.500000f, -0.809017f, 0.309017f}, 
-   {-0.238856f, -0.864188f, 0.442863f}, 
-   {-0.262866f, -0.951056f, 0.162460f}, 
-   {-0.864188f, -0.442863f, 0.238856f}, 
-   {-0.809017f, -0.309017f, 0.500000f}, 
-   {-0.688191f, -0.587785f, 0.425325f}, 
-   {-0.681718f, -0.147621f, 0.716567f}, 
-   {-0.442863f, -0.238856f, 0.864188f}, 
-   {-0.587785f, -0.425325f, 0.688191f}, 
-   {-0.309017f, -0.500000f, 0.809017f}, 
-   {-0.147621f, -0.716567f, 0.681718f}, 
-   {-0.425325f, -0.688191f, 0.587785f}, 
-   {-0.162460f, -0.262866f, 0.951056f}, 
-   {0.442863f, -0.238856f, 0.864188f}, 
-   {0.162460f, -0.262866f, 0.951056f}, 
-   {0.309017f, -0.500000f, 0.809017f}, 
-   {0.147621f, -0.716567f, 0.681718f}, 
-   {0.000000f, -0.525731f, 0.850651f}, 
-   {0.425325f, -0.688191f, 0.587785f}, 
-   {0.587785f, -0.425325f, 0.688191f}, 
-   {0.688191f, -0.587785f, 0.425325f}, 
-   {-0.955423f, 0.295242f, 0.000000f}, 
-   {-0.951056f, 0.162460f, 0.262866f}, 
-   {-1.000000f, 0.000000f, 0.000000f}, 
-   {-0.850651f, 0.000000f, 0.525731f}, 
-   {-0.955423f, -0.295242f, 0.000000f}, 
-   {-0.951056f, -0.162460f, 0.262866f}, 
-   {-0.864188f, 0.442863f, -0.238856f}, 
-   {-0.951056f, 0.162460f, -0.262866f}, 
-   {-0.809017f, 0.309017f, -0.500000f}, 
-   {-0.864188f, -0.442863f, -0.238856f}, 
-   {-0.951056f, -0.162460f, -0.262866f}, 
-   {-0.809017f, -0.309017f, -0.500000f}, 
-   {-0.681718f, 0.147621f, -0.716567f}, 
-   {-0.681718f, -0.147621f, -0.716567f}, 
-   {-0.850651f, 0.000000f, -0.525731f}, 
-   {-0.688191f, 0.587785f, -0.425325f}, 
-   {-0.587785f, 0.425325f, -0.688191f}, 
-   {-0.425325f, 0.688191f, -0.587785f}, 
-   {-0.425325f, -0.688191f, -0.587785f}, 
-   {-0.587785f, -0.425325f, -0.688191f}, 
-   {-0.688191f, -0.587785f, -0.425325f}, 
+   {-0.525731f, 0.000000f, 0.850651f},
+   {-0.442863f, 0.238856f, 0.864188f},
+   {-0.295242f, 0.000000f, 0.955423f},
+   {-0.309017f, 0.500000f, 0.809017f},
+   {-0.162460f, 0.262866f, 0.951056f},
+   {0.000000f, 0.000000f, 1.000000f},
+   {0.000000f, 0.850651f, 0.525731f},
+   {-0.147621f, 0.716567f, 0.681718f},
+   {0.147621f, 0.716567f, 0.681718f},
+   {0.000000f, 0.525731f, 0.850651f},
+   {0.309017f, 0.500000f, 0.809017f},
+   {0.525731f, 0.000000f, 0.850651f},
+   {0.295242f, 0.000000f, 0.955423f},
+   {0.442863f, 0.238856f, 0.864188f},
+   {0.162460f, 0.262866f, 0.951056f},
+   {-0.681718f, 0.147621f, 0.716567f},
+   {-0.809017f, 0.309017f, 0.500000f},
+   {-0.587785f, 0.425325f, 0.688191f},
+   {-0.850651f, 0.525731f, 0.000000f},
+   {-0.864188f, 0.442863f, 0.238856f},
+   {-0.716567f, 0.681718f, 0.147621f},
+   {-0.688191f, 0.587785f, 0.425325f},
+   {-0.500000f, 0.809017f, 0.309017f},
+   {-0.238856f, 0.864188f, 0.442863f},
+   {-0.425325f, 0.688191f, 0.587785f},
+   {-0.716567f, 0.681718f, -0.147621f},
+   {-0.500000f, 0.809017f, -0.309017f},
+   {-0.525731f, 0.850651f, 0.000000f},
+   {0.000000f, 0.850651f, -0.525731f},
+   {-0.238856f, 0.864188f, -0.442863f},
+   {0.000000f, 0.955423f, -0.295242f},
+   {-0.262866f, 0.951056f, -0.162460f},
+   {0.000000f, 1.000000f, 0.000000f},
+   {0.000000f, 0.955423f, 0.295242f},
+   {-0.262866f, 0.951056f, 0.162460f},
+   {0.238856f, 0.864188f, 0.442863f},
+   {0.262866f, 0.951056f, 0.162460f},
+   {0.500000f, 0.809017f, 0.309017f},
+   {0.238856f, 0.864188f, -0.442863f},
+   {0.262866f, 0.951056f, -0.162460f},
+   {0.500000f, 0.809017f, -0.309017f},
+   {0.850651f, 0.525731f, 0.000000f},
+   {0.716567f, 0.681718f, 0.147621f},
+   {0.716567f, 0.681718f, -0.147621f},
+   {0.525731f, 0.850651f, 0.000000f},
+   {0.425325f, 0.688191f, 0.587785f},
+   {0.864188f, 0.442863f, 0.238856f},
+   {0.688191f, 0.587785f, 0.425325f},
+   {0.809017f, 0.309017f, 0.500000f},
+   {0.681718f, 0.147621f, 0.716567f},
+   {0.587785f, 0.425325f, 0.688191f},
+   {0.955423f, 0.295242f, 0.000000f},
+   {1.000000f, 0.000000f, 0.000000f},
+   {0.951056f, 0.162460f, 0.262866f},
+   {0.850651f, -0.525731f, 0.000000f},
+   {0.955423f, -0.295242f, 0.000000f},
+   {0.864188f, -0.442863f, 0.238856f},
+   {0.951056f, -0.162460f, 0.262866f},
+   {0.809017f, -0.309017f, 0.500000f},
+   {0.681718f, -0.147621f, 0.716567f},
+   {0.850651f, 0.000000f, 0.525731f},
+   {0.864188f, 0.442863f, -0.238856f},
+   {0.809017f, 0.309017f, -0.500000f},
+   {0.951056f, 0.162460f, -0.262866f},
+   {0.525731f, 0.000000f, -0.850651f},
+   {0.681718f, 0.147621f, -0.716567f},
+   {0.681718f, -0.147621f, -0.716567f},
+   {0.850651f, 0.000000f, -0.525731f},
+   {0.809017f, -0.309017f, -0.500000f},
+   {0.864188f, -0.442863f, -0.238856f},
+   {0.951056f, -0.162460f, -0.262866f},
+   {0.147621f, 0.716567f, -0.681718f},
+   {0.309017f, 0.500000f, -0.809017f},
+   {0.425325f, 0.688191f, -0.587785f},
+   {0.442863f, 0.238856f, -0.864188f},
+   {0.587785f, 0.425325f, -0.688191f},
+   {0.688191f, 0.587785f, -0.425325f},
+   {-0.147621f, 0.716567f, -0.681718f},
+   {-0.309017f, 0.500000f, -0.809017f},
+   {0.000000f, 0.525731f, -0.850651f},
+   {-0.525731f, 0.000000f, -0.850651f},
+   {-0.442863f, 0.238856f, -0.864188f},
+   {-0.295242f, 0.000000f, -0.955423f},
+   {-0.162460f, 0.262866f, -0.951056f},
+   {0.000000f, 0.000000f, -1.000000f},
+   {0.295242f, 0.000000f, -0.955423f},
+   {0.162460f, 0.262866f, -0.951056f},
+   {-0.442863f, -0.238856f, -0.864188f},
+   {-0.309017f, -0.500000f, -0.809017f},
+   {-0.162460f, -0.262866f, -0.951056f},
+   {0.000000f, -0.850651f, -0.525731f},
+   {-0.147621f, -0.716567f, -0.681718f},
+   {0.147621f, -0.716567f, -0.681718f},
+   {0.000000f, -0.525731f, -0.850651f},
+   {0.309017f, -0.500000f, -0.809017f},
+   {0.442863f, -0.238856f, -0.864188f},
+   {0.162460f, -0.262866f, -0.951056f},
+   {0.238856f, -0.864188f, -0.442863f},
+   {0.500000f, -0.809017f, -0.309017f},
+   {0.425325f, -0.688191f, -0.587785f},
+   {0.716567f, -0.681718f, -0.147621f},
+   {0.688191f, -0.587785f, -0.425325f},
+   {0.587785f, -0.425325f, -0.688191f},
+   {0.000000f, -0.955423f, -0.295242f},
+   {0.000000f, -1.000000f, 0.000000f},
+   {0.262866f, -0.951056f, -0.162460f},
+   {0.000000f, -0.850651f, 0.525731f},
+   {0.000000f, -0.955423f, 0.295242f},
+   {0.238856f, -0.864188f, 0.442863f},
+   {0.262866f, -0.951056f, 0.162460f},
+   {0.500000f, -0.809017f, 0.309017f},
+   {0.716567f, -0.681718f, 0.147621f},
+   {0.525731f, -0.850651f, 0.000000f},
+   {-0.238856f, -0.864188f, -0.442863f},
+   {-0.500000f, -0.809017f, -0.309017f},
+   {-0.262866f, -0.951056f, -0.162460f},
+   {-0.850651f, -0.525731f, 0.000000f},
+   {-0.716567f, -0.681718f, -0.147621f},
+   {-0.716567f, -0.681718f, 0.147621f},
+   {-0.525731f, -0.850651f, 0.000000f},
+   {-0.500000f, -0.809017f, 0.309017f},
+   {-0.238856f, -0.864188f, 0.442863f},
+   {-0.262866f, -0.951056f, 0.162460f},
+   {-0.864188f, -0.442863f, 0.238856f},
+   {-0.809017f, -0.309017f, 0.500000f},
+   {-0.688191f, -0.587785f, 0.425325f},
+   {-0.681718f, -0.147621f, 0.716567f},
+   {-0.442863f, -0.238856f, 0.864188f},
+   {-0.587785f, -0.425325f, 0.688191f},
+   {-0.309017f, -0.500000f, 0.809017f},
+   {-0.147621f, -0.716567f, 0.681718f},
+   {-0.425325f, -0.688191f, 0.587785f},
+   {-0.162460f, -0.262866f, 0.951056f},
+   {0.442863f, -0.238856f, 0.864188f},
+   {0.162460f, -0.262866f, 0.951056f},
+   {0.309017f, -0.500000f, 0.809017f},
+   {0.147621f, -0.716567f, 0.681718f},
+   {0.000000f, -0.525731f, 0.850651f},
+   {0.425325f, -0.688191f, 0.587785f},
+   {0.587785f, -0.425325f, 0.688191f},
+   {0.688191f, -0.587785f, 0.425325f},
+   {-0.955423f, 0.295242f, 0.000000f},
+   {-0.951056f, 0.162460f, 0.262866f},
+   {-1.000000f, 0.000000f, 0.000000f},
+   {-0.850651f, 0.000000f, 0.525731f},
+   {-0.955423f, -0.295242f, 0.000000f},
+   {-0.951056f, -0.162460f, 0.262866f},
+   {-0.864188f, 0.442863f, -0.238856f},
+   {-0.951056f, 0.162460f, -0.262866f},
+   {-0.809017f, 0.309017f, -0.500000f},
+   {-0.864188f, -0.442863f, -0.238856f},
+   {-0.951056f, -0.162460f, -0.262866f},
+   {-0.809017f, -0.309017f, -0.500000f},
+   {-0.681718f, 0.147621f, -0.716567f},
+   {-0.681718f, -0.147621f, -0.716567f},
+   {-0.850651f, 0.000000f, -0.525731f},
+   {-0.688191f, 0.587785f, -0.425325f},
+   {-0.587785f, 0.425325f, -0.688191f},
+   {-0.425325f, 0.688191f, -0.587785f},
+   {-0.425325f, -0.688191f, -0.587785f},
+   {-0.587785f, -0.425325f, -0.688191f},
+   {-0.688191f, -0.587785f, -0.425325f},
 };
 
 //
@@ -383,13 +383,13 @@ void P_ParticleThinker(void)
    particle_t *particle, *prev;
    sector_t *psec;
    fixed_t floorheight;
-   
+
    i = activeParticles;
    prev = NULL;
-   while(i != -1) 
+   while(i != -1)
    {
       unsigned int oldtrans;
-      
+
       particle = Particles + i;
       i = particle->next;
 
@@ -403,7 +403,7 @@ void P_ParticleThinker(void)
          // perform fading
          oldtrans = particle->trans;
          particle->trans -= particle->fade;
-         
+
          // is it time to kill this particle?
          if(oldtrans < particle->trans || --particle->ttl == 0)
          {
@@ -435,11 +435,11 @@ void P_ParticleThinker(void)
 
       // haleyjd 09/04/05: use deep water floor if it is higher
       // than the real floor.
-      floorheight = 
-         (psec->heightsec != -1 && 
+      floorheight =
+         (psec->heightsec != -1 &&
           sectors[psec->heightsec].floorheight > psec->floorheight) ?
           sectors[psec->heightsec].floorheight :
-          psec->floorheight; 
+          psec->floorheight;
 
       // did particle hit ground, but is now no longer on it?
       if(particle->styleflags & PS_HITGROUND && particle->z != floorheight)
@@ -468,13 +468,13 @@ void P_ParticleThinker(void)
             particle->z = floorheight;
             particle->accz = particle->velz = 0;
             particle->styleflags |= PS_HITGROUND;
-            
+
             // some particles make splashes
             if(particle->styleflags & PS_SPLASH)
                E_PtclTerrainHit(particle);
          }
       }
-      
+
       prev = particle;
    }
 }
@@ -524,19 +524,19 @@ void P_RunEffects(void)
 static particle_t *JitterParticle(int ttl)
 {
    particle_t *particle = newParticle();
-   
-   if(particle) 
+
+   if(particle)
    {
       // Set initial velocities
       particle->velx = PARTICLE_VELRND;
       particle->vely = PARTICLE_VELRND;
       particle->velz = PARTICLE_VELRND;
-      
+
       // Set initial accelerations
       particle->accx = PARTICLE_ACCRND;
       particle->accy = PARTICLE_ACCRND;
       particle->accz = PARTICLE_ACCRND;
-      
+
       particle->trans = FRACUNIT;	// fully opaque
       particle->ttl = ttl;
       particle->fade = FADEFROMTTL(ttl);
@@ -547,34 +547,34 @@ static particle_t *JitterParticle(int ttl)
 static void MakeFountain(Mobj *actor, byte color1, byte color2)
 {
    particle_t *particle;
-   
+
    if(!(leveltime & 1))
       return;
-   
+
    particle = JitterParticle(51);
-   
+
    if(particle)
    {
       angle_t an  = M_Random()<<(24-ANGLETOFINESHIFT);
       fixed_t out = FixedMul(actor->radius, M_Random()<<8);
-      
+
       particle->x = actor->x + FixedMul(out, finecosine[an]);
       particle->y = actor->y + FixedMul(out, finesine[an]);
       particle->z = actor->z + actor->height + FRACUNIT;
       P_SetParticlePosition(particle);
-      
+
       if(out < actor->radius/8)
          particle->velz += FRACUNIT*10/3;
       else
          particle->velz += FRACUNIT*3;
-      
+
       particle->accz -= FRACUNIT/11;
       if(M_Random() < 30)
       {
          particle->size = 4;
          particle->color = color2;
-      } 
-      else 
+      }
+      else
       {
          particle->size = 6;
          particle->color = color1;
@@ -589,30 +589,30 @@ static void P_RunEffect(Mobj *actor, int effects)
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
    particle_t *particle;
 
-   if(effects & FX_FLIES || 
+   if(effects & FX_FLIES ||
       (effects & FX_FLIESONDEATH && actor->tics == -1 &&
        actor->movecount >= 4*TICRATE))
-   {       
+   {
       P_FlyEffect(actor);
       if(!(actor->movecount % (2*TICRATE)))
          S_StartSound(actor, sfx_eefly);
    }
-   
+
    if((effects & FX_ROCKET) && drawrockettrails)
    {
       int i, speed;
 
       // Rocket trail
-      fixed_t backx = 
-         actor->x - FixedMul(finecosine[(moveangle)>>ANGLETOFINESHIFT], 
+      fixed_t backx =
+         actor->x - FixedMul(finecosine[(moveangle)>>ANGLETOFINESHIFT],
                              actor->radius*2);
-      fixed_t backy = 
-         actor->y - FixedMul(finesine[(moveangle)>>ANGLETOFINESHIFT], 
+      fixed_t backy =
+         actor->y - FixedMul(finesine[(moveangle)>>ANGLETOFINESHIFT],
                              actor->radius*2);
-      fixed_t backz = 
-         actor->z - (actor->height>>3) * (actor->momz>>16) + 
+      fixed_t backz =
+         actor->z - (actor->height>>3) * (actor->momz>>16) +
          (2*actor->height)/3;
-      
+
       angle_t an = (moveangle + ANG90) >> ANGLETOFINESHIFT;
 
       particle = JitterParticle(3 + (M_Random() & 31));
@@ -633,7 +633,7 @@ static void P_RunEffect(Mobj *actor, int effects)
          particle->size = 2;
          particle->styleflags = PS_FULLBRIGHT;
       }
-      
+
       for(i = 6; i; --i)
       {
          particle_t *iparticle = JitterParticle(3 + (M_Random() & 31));
@@ -642,7 +642,7 @@ static void P_RunEffect(Mobj *actor, int effects)
             fixed_t pathdist = M_Random() << 8;
             iparticle->x = backx - FixedMul(actor->momx, pathdist);
             iparticle->y = backy - FixedMul(actor->momy, pathdist);
-            iparticle->z = backz - FixedMul(actor->momz, pathdist) + 
+            iparticle->z = backz - FixedMul(actor->momz, pathdist) +
                              (M_Random() << 10);
             P_SetParticlePosition(iparticle);
 
@@ -651,19 +651,19 @@ static void P_RunEffect(Mobj *actor, int effects)
             iparticle->vely += FixedMul(speed, finesine[an]);
             iparticle->velz += FRACUNIT/80;
             iparticle->accz += FRACUNIT/40;
-            iparticle->color = (M_Random() & 7) ? grey2 : grey1;            
+            iparticle->color = (M_Random() & 7) ? grey2 : grey1;
             iparticle->size = 3;
             iparticle->styleflags = 0;
-         } 
+         }
          else
             break;
       }
    }
-   
+
    if((effects & FX_GRENADE) && drawgrenadetrails)
    {
       // Grenade trail
-      
+
       P_DrawSplash2(6,
          actor->x - FixedMul (finecosine[(moveangle)>>ANGLETOFINESHIFT], actor->radius*2),
          actor->y - FixedMul (finesine[(moveangle)>>ANGLETOFINESHIFT], actor->radius*2),
@@ -678,9 +678,9 @@ static void P_RunEffect(Mobj *actor, int effects)
    {
       // Particle fountain -- can be switched on and off via the
       // MF2_DORMANT flag
-      
-      static const byte *fountainColors[16] = 
-      { 
+
+      static const byte *fountainColors[16] =
+      {
          &black,  &black,
          &red,    &red1,
          &green,  &green1,
@@ -698,12 +698,12 @@ static void P_RunEffect(Mobj *actor, int effects)
       P_DripEffect(actor);
 }
 
-void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z,
                   angle_t angle, int kind)
 {
    byte color1, color2;
-   
-   switch(kind) 
+
+   switch(kind)
    {
    case 1: // Spark
       color1 = orange;
@@ -712,15 +712,15 @@ void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z,
    default:
       return;
    }
-   
+
    for(; count; count--)
    {
       angle_t an;
       particle_t *p = JitterParticle(10);
-            
+
       if(!p)
          break;
-      
+
       p->size = 2;
       p->color = M_Random() & 0x80 ? color1 : color2;
       p->styleflags = PS_FULLBRIGHT;
@@ -744,17 +744,17 @@ void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z,
 // to use new styleflags that weren't available when this was written.
 // This code is under the GPL.
 //
-static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z, 
+static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
                         angle_t angle, byte color1, byte color2)
 {
    for(; count; --count)
    {
       particle_t *p = newParticle();
       angle_t an;
-      
+
       if(!p)
          break;
-      
+
       p->ttl = 96;
       p->fade = FADEFROMTTL(96);
       p->trans = FRACUNIT;
@@ -778,7 +778,7 @@ static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
 // more to replace the god-awful Quake 2-wannabe splash from zdoom.
 // This code is under the GPL.
 //
-void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, 
+void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
                  int updown)
 {
    particle_t *p;
@@ -791,20 +791,20 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
    // default: grey puff
    color1 = grey1;
    color2 = grey5;
-   
+
    if(!comp[comp_terrain])
    {
-      // 06/21/02: make bullet puff colors responsive to 
-      // TerrainTypes -- this is very cool and Quake-2-like ^_^      
-      
+      // 06/21/02: make bullet puff colors responsive to
+      // TerrainTypes -- this is very cool and Quake-2-like ^_^
+
       ETerrain *terrain = E_GetTerrainTypeForPt(x, y, updown);
-      
+
       if(terrain->usepcolors)
       {
          color1 = terrain->pcolor_1;
          color2 = terrain->pcolor_2;
       }
-      
+
       if(terrain->liquid)
          hitwater = true;
    }
@@ -825,27 +825,27 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
    }
 
    for(; count; --count)
-   {      
+   {
       if(!(p = newParticle()))
          break;
-      
+
       p->ttl = ttl;
       p->fade = FADEFROMTTL(ttl);
       p->trans = FRACUNIT;
       p->size = 2 + M_Random() % 5;
-      p->color = M_Random() & 0x80 ? color1 : color2;      
+      p->color = M_Random() & 0x80 ? color1 : color2;
       p->velz = M_Random() * 512;
       if(updown == 1) // ceiling shot?
          p->velz = -(p->velz / 4);
       p->accz = accz;
       p->styleflags = 0;
-      
+
       an = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
       p->velx = (M_Random() * finecosine[an]) >> 11;
       p->vely = (M_Random() * finesine[an]) >> 11;
       p->accx = p->velx >> 4;
       p->accy = p->vely >> 4;
-      
+
       if(updown == 1) // ceiling shot?
          p->z = z - (M_Random() + 72) * 2000;
       else
@@ -864,15 +864,15 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
       {
          fixed_t pathdist = M_Random() << 8;
          fixed_t speed;
-         
+
          if(!(p = JitterParticle(3 + (M_Random() % 24))))
             break;
-         
+
          p->x = x - pathdist;
          p->y = y - pathdist;
          p->z = z - pathdist;
          P_SetParticlePosition(p);
-         
+
          speed = (M_Random() - 128) * (FRACUNIT / 200);
          an = angle >> ANGLETOFINESHIFT;
          p->velx += FixedMul(speed, finecosine[an]);
@@ -908,7 +908,7 @@ static struct bloodColor
    { &orange, &yorange },
 };
 
-void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
                   angle_t angle)
 {
    byte color1, color2;
@@ -947,41 +947,41 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    {
       if(!(p = newParticle()))
          break;
-      
+
       p->ttl = 25 + M_Random() % 6;
       p->fade = FADEFROMTTL(p->ttl);
       p->trans = FRACUNIT;
       p->size = 1 + M_Random() % 4;
-      
+
       // if colors are part of same ramp, use all in between
       if(color1 != color2 && abs(color2 - color1) <= 16)
          p->color = M_RangeRandom(color1, color2);
       else
          p->color = M_Random() & 0x80 ? color1 : color2;
-      
+
       p->styleflags = 0;
-      
+
       an      = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
       p->velx = (M_Random() * finecosine[an]) / 768;
       p->vely = (M_Random() * finesine[an]) / 768;
 
-      an      = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;      
+      an      = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
       p->x    = x + (M_Random() % 15) * finecosine[an];
       p->y    = y + (M_Random() % 15) * finesine[an];
       p->z    = z + (M_Random() - 128) * -3500;
       p->velz = (M_Random() < 32) ? M_Random() * 140 : M_Random() * -128;
       p->accz = -FRACUNIT/16;
-      
+
       P_SetParticlePosition(p);
    }
 }
 
-void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
                    angle_t angle, int updown, int kind)
-{   
+{
    byte color1, color2;
    int zvel, zspread, zadd;
-   
+
    switch(kind)
    {
    case 2:		// Smoke
@@ -991,19 +991,19 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
    default:
       return;
    }
-   
+
    zvel = -128;
    zspread = (updown ? -6000 : 6000);
    zadd = ((updown == 2) ? -128 : 0);
-   
+
    for(; count; count--)
    {
       particle_t *p = newParticle();
       angle_t an;
-      
+
       if(!p)
          break;
-      
+
       p->ttl = 12;
       p->fade = FADEFROMTTL(12);
       p->trans = FRACUNIT;
@@ -1029,7 +1029,7 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
 }
 
 /*
-void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
                    angle_t angle, int updown, int kind)
 {
    int color1, color2;
@@ -1038,7 +1038,7 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
    bool smoke = false, consistant = false;
    int mod = 31;
    byte ttl = 12;
-   
+
    switch(kind)
    {
    case 0:              // Blood
@@ -1048,11 +1048,11 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
    case 1:              // Gunshot
       if(!comp[comp_terrain])
       {
-         // 06/21/02: make bullet puff colors responsive to 
-         // TerrainTypes -- this is very cool and Quake-2-like ^_^      
-         
+         // 06/21/02: make bullet puff colors responsive to
+         // TerrainTypes -- this is very cool and Quake-2-like ^_^
+
          int terrain = P_GetTerrainTypeForPt(x, y, updown);
-         
+
          switch(terrain)
          {
          case FLOOR_WATER:
@@ -1092,7 +1092,7 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
    default:
       return;
    }
-   
+
    if(smoke)
    {
       zvel = 512;
@@ -1109,15 +1109,15 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
       ttl = 35;
       consistant = true;
    }
-   
+
    for(; count; count--)
    {
       particle_t *p = newParticle();
       angle_t an;
-      
+
       if(!p)
          break;
-      
+
       p->ttl = ttl;
       p->fade = FADEFROMTTL(ttl);
       p->trans = FRACUNIT;
@@ -1144,17 +1144,17 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
 void P_DisconnectEffect(Mobj *actor)
 {
    int i;
-   
+
    for(i = 64; i; i--)
    {
       particle_t *p = JitterParticle (TICRATE*2);
-      
+
       if(!p)
          break;
-      
-      p->x = actor->x + 
+
+      p->x = actor->x +
              ((M_Random()-128)<<9) * (actor->radius>>FRACBITS);
-      p->y = actor->y + 
+      p->y = actor->y +
              ((M_Random()-128)<<9) * (actor->radius>>FRACBITS);
       p->z = actor->z + (M_Random()<<8) * (actor->height>>FRACBITS);
       P_SetParticlePosition(p);
@@ -1192,10 +1192,10 @@ static void P_FlyEffect(Mobj *actor)
       count = 162;
 
    if(count < 1)
-      count = 1;   
+      count = 1;
    if(count > 162)
       count = 162;
-   
+
    for(i = 0; i < count; i += 2)
    {
       if(!(p = newParticle()))
@@ -1207,7 +1207,7 @@ static void P_FlyEffect(Mobj *actor)
       angle = ltime * avelocities[i][1];
       sp = (float)sin(angle);
       cp = (float)cos(angle);
-	
+
       forward[0] = cp*cy;
       forward[1] = cp*sy;
       forward[2] = -sp;
@@ -1244,7 +1244,7 @@ static void P_BFGEffect(Mobj *actor)
    vec3_t forward;
    float dist = 64;
    float ltime;
-	
+
    ltime = (float)leveltime / 30.0f;
    for(i = 0; i < NUMVERTEXNORMALS; i++)
    {
@@ -1257,11 +1257,11 @@ static void P_BFGEffect(Mobj *actor)
       angle = ltime * avelocities[i][1];
       sp = (float)sin(angle);
       cp = (float)cos(angle);
-	
+
       forward[0] = cp*cy;
       forward[1] = cp*sy;
       forward[2] = -sp;
-      
+
       dist = (float)sin(ltime + i)*64;
       p->x = actor->x + (int)((bytedirs[i][0]*dist + forward[0]*BEAMLENGTH)*FRACUNIT);
       p->y = actor->y + (int)((bytedirs[i][1]*dist + forward[1]*BEAMLENGTH)*FRACUNIT);
@@ -1308,14 +1308,14 @@ static void P_DripEffect(Mobj *actor)
 
    if(!(p = newParticle()))
       return;
-      
+
    p->ttl   = 18;
    p->trans = 9*FRACUNIT/16;
    p->fade  = p->trans / p->ttl;
-   
+
    p->color = (byte)(actor->args[0]);
    p->size  = (byte)(actor->args[1]);
-   
+
    p->velz = 128 * -3000;
    p->accz = -LevelInfo.gravity;
    p->styleflags = PS_FLOORCLIP | PS_FALLTOGROUND;
@@ -1358,12 +1358,12 @@ void P_RunEvent(Mobj *actor)
    if(!drawparticles)
       return;
 
-   // haleyjd: 
+   // haleyjd:
    // if actor->state is NULL, the thing has been removed, or
    // if MIF_NOPTCLEVTS is set, don't run events for this thing
    if(!actor || !actor->state || (actor->intflags & MIF_NOPTCLEVTS))
       return;
-   
+
    effectNum = actor->state->particle_evt;
 
    if(effectNum < 0 || effectNum >= P_EVENT_NUMEVENTS)
@@ -1386,7 +1386,7 @@ void P_RunEvent(Mobj *actor)
 // rocket/BFG burst code. Available under the GNU General Public
 // License.
 //
-static void P_ExplosionParticles(fixed_t x, fixed_t y, fixed_t z, 
+static void P_ExplosionParticles(fixed_t x, fixed_t y, fixed_t z,
                                  byte color1, byte color2)
 {
    int i, rnd;
@@ -1528,4 +1528,3 @@ AMX_NATIVE_INFO ptcl_Natives[] =
 #endif
 
 // EOF
-

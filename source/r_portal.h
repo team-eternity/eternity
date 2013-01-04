@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -41,7 +41,7 @@ typedef enum
    R_HORIZON,
    R_PLANE,
    R_TWOWAY, // SoM: two-way non-linked anchored portals
-   R_LINKED, // SoM: interactive portals  
+   R_LINKED, // SoM: interactive portals
 } rportaltype_e;
 
 
@@ -59,7 +59,7 @@ typedef enum
    PF_BLOCKSOUND         = 0x008,
    // Mask for the flags portion
    PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND,
-   
+
    // -- Overlay flags --
    // Only used per-surface and indicate various overlay options for the portal
    // Portal has a blended texture overlay (alpha is default)
@@ -72,10 +72,10 @@ typedef enum
    PS_USEGLOBALTEX       = 0x040,
    // Mask for all overlay flags
    PS_OVERLAYFLAGS       = PS_OBLENDFLAGS | PS_USEGLOBALTEX,
-   
+
    // -- State flags --
    // These are only used per-surface and indicate the current state of the portal
-  
+
    // Portal can be rendered
    PS_VISIBLE            = 0x080,
    // Portal can be passed through
@@ -84,12 +84,12 @@ typedef enum
    PS_PASSSOUND          = 0x200,
    // Mask for state flags
    PS_STATEMASK          = PS_VISIBLE | PS_PASSABLE | PS_PASSSOUND,
-   
-   // -- Opactiy -- 
+
+   // -- Opactiy --
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
    PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
-   
+
    // All overlay and blending flags
    PS_BLENDFLAGS         = PS_OVERLAYFLAGS | PO_OPACITYMASK,
 } portalflag_e;
@@ -101,12 +101,12 @@ typedef struct linkdata_s
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
    fixed_t   planez;
-   
-   // gromid is the group where the portal actually is, toid is the group on 
+
+   // gromid is the group where the portal actually is, toid is the group on
    // the 'other side' of the portal.
    int       fromid, toid;
-      
-   // These are for debug purposes (so mappers can find the portats 
+
+   // These are for debug purposes (so mappers can find the portats
    // causing problems)
    int       maker, anchor;
 } linkdata_t;
@@ -116,8 +116,8 @@ typedef struct linkdata_s
 typedef struct anchordata_s
 {
    fixed_t   deltax, deltay, deltaz;
-   
-   // These are for debug purposes (so mappers can find the portats 
+
+   // These are for debug purposes (so mappers can find the portats
    // causing problems)
    int       maker, anchor;
 } anchordata_t;
@@ -164,7 +164,7 @@ struct portal_t
 
    // See: portalflag_e
    int    flags;
-   
+
    // Planes that makeup a blended overlay
    int          globaltex;
    planehash_t *poverlay;
@@ -179,29 +179,29 @@ portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 
-portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
-                             fixed_t *floorz, fixed_t *ceilingz, 
-                             int16_t *floorlight, int16_t *ceilinglight, 
-                             fixed_t *floorxoff, fixed_t *flooryoff, 
+portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
+                             fixed_t *floorz, fixed_t *ceilingz,
+                             int16_t *floorlight, int16_t *ceilinglight,
+                             fixed_t *floorxoff, fixed_t *flooryoff,
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
                              float *ceilingbaseangle, float *ceilingangle);
 
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
+portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel,
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
                            float *angle);
 
 void R_ClearPortals(void);
 void R_RenderPortals(void);
 
-portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
+portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
                             fixed_t planez, int fromid, int toid);
 
 //=============================================================================
 //
 // Portal windows
 //
-// A portal window represents the screen reigon through which the player is 
+// A portal window represents the screen reigon through which the player is
 // 'looking' at the portal.
 //
 
@@ -237,7 +237,7 @@ struct pwindow_t
 
    // Next window in the main chain
    pwindow_t *next;
-   
+
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
    pwindow_t *head, *child;
@@ -261,7 +261,7 @@ typedef struct portalrender_s
    pwindow_t *w;
 
    void (*segClipFunc)();
-   
+
    planehash_t *overlay;
 } portalrender_t;
 

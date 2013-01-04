@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -142,7 +142,7 @@ void P_CalcHeight(player_t *player)
    // OPTIMIZE: tablify angle
    // Note: a LUT allows for effects
    //  like a ramp with low health.
-   
+
    // killough 10/98: Make bobbing depend only on player-applied motion.
    //
    // Note: don't reduce bobbing here if on ice: if you reduce bobbing here,
@@ -192,7 +192,7 @@ void P_CalcHeight(player_t *player)
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
-      
+
       if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
          player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
 
@@ -200,9 +200,9 @@ void P_CalcHeight(player_t *player)
       // The following line was in the Id source and appears
       // to be a bug. player->viewz is checked in a similar
       // manner at a different exit below.
-      
+
       // player->viewz = player->mo->z + player->viewheight;
-      
+
       return;
    }
 
@@ -210,11 +210,11 @@ void P_CalcHeight(player_t *player)
    bob   = FixedMul(player->bob / 2, finesine[angle]);
 
    // move viewheight
-   
+
    if(player->playerstate == PST_LIVE)
    {
       player->viewheight += player->deltaviewheight;
-      
+
       if(player->viewheight > VIEWHEIGHT)
       {
          player->viewheight = VIEWHEIGHT;
@@ -239,12 +239,12 @@ void P_CalcHeight(player_t *player)
    player->viewz = player->mo->z + player->viewheight + bob;
 
    // haleyjd 08/07/04: new floorclip system
-   if(player->mo->floorclip && player->playerstate != PST_DEAD && 
+   if(player->mo->floorclip && player->playerstate != PST_DEAD &&
       player->mo->z <= player->mo->floorz)
    {
       player->viewz -= player->mo->floorclip;
    }
-   
+
    if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
       player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
 }
@@ -301,24 +301,24 @@ void P_MovePlayer(player_t* player)
 {
    ticcmd_t *cmd = &player->cmd;
    Mobj *mo = player->mo;
-   
+
    mo->angle += cmd->angleturn << 16;
-   
+
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
-   onground = 
+   onground =
       mo->z <= mo->floorz ||
       (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ) ||
       (mo->flags4 & MF4_FLY);
-   
+
    // killough 10/98:
    //
    // We must apply thrust to the player and bobbing separately, to avoid
    // anomalies. The thrust applied to bobbing is always the same strength on
    // ice, because the player still "works just as hard" to move, while the
    // thrust applied to the movement varies with 'movefactor'.
-   
-   if((!demo_compatibility && demo_version < 203) || 
+
+   if((!demo_compatibility && demo_version < 203) ||
       (cmd->forwardmove | cmd->sidemove)) // killough 10/98
    {
       if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
@@ -328,7 +328,7 @@ void P_MovePlayer(player_t* player)
          // killough 11/98:
          // On sludge, make bobbing depend on efficiency.
          // On ice, make it depend on effort.
-         
+
          int bobfactor =
             friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
 
@@ -343,7 +343,7 @@ void P_MovePlayer(player_t* player)
             P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
             P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
-         
+
          if (cmd->sidemove)
          {
             P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
@@ -371,17 +371,17 @@ void P_DeathThink(player_t *player)
 {
    angle_t angle;
    angle_t delta;
-   
+
    P_MovePsprites(player);
-   
+
    // fall to the ground
-   
+
    if(player->viewheight > 6 * FRACUNIT)
       player->viewheight -= FRACUNIT;
-   
+
    if(player->viewheight < 6 * FRACUNIT)
       player->viewheight = 6 * FRACUNIT;
-   
+
    player->deltaviewheight = 0;
 
    // haleyjd: never bob player view when dead, and always treat player like
@@ -397,9 +397,9 @@ void P_DeathThink(player_t *player)
                     (!comp[comp_overunder] &&
                      player->mo->intflags & MIF_ONMOBJ);
    }
-   
+
    P_CalcHeight(player);
-   
+
    if(player->attacker && player->attacker != player->mo)
    {
       angle = P_PointToAngle(player->mo->x,
@@ -408,18 +408,18 @@ void P_DeathThink(player_t *player)
                              player->attacker->y);
 
       delta = angle - player->mo->angle;
-      
+
       if(delta < ANG5 || delta > (unsigned int)-ANG5)
       {
          // Looking at killer,
          //  so fade damage flash down.
-         
+
          player->mo->angle = angle;
-         
+
          if(player->damagecount)
             player->damagecount--;
       }
-      else 
+      else
          if(delta < ANG180)
             player->mo->angle += ANG5;
          else
@@ -437,7 +437,7 @@ void P_DeathThink(player_t *player)
       if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }
-      
+
    if(player->cmd.buttons & BT_USE)
       player->playerstate = PST_REBORN;
 }
@@ -447,7 +447,7 @@ void P_DeathThink(player_t *player)
 //
 // Applies Heretic current effects to the player.
 //
-// haleyjd 09/09/07: Rewritten to use msecnodes and eliminate the redundant 
+// haleyjd 09/09/07: Rewritten to use msecnodes and eliminate the redundant
 // Mobj::floorsec field.
 //
 static void P_HereticCurrent(player_t *player)
@@ -458,7 +458,7 @@ static void P_HereticCurrent(player_t *player)
    // don't affect the player if noclipping is on (pushes you through walls)
    if(thing->flags & MF_NOCLIP)
       return;
-   
+
    // determine what touched sector the player is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
@@ -548,7 +548,7 @@ void P_PlayerThink(player_t *player)
    // Move around.
    // Reactiontime is used to prevent movement
    //  for a bit after a teleport.
-   
+
    if(player->mo->reactiontime)
       player->mo->reactiontime--;
    else
@@ -556,10 +556,10 @@ void P_PlayerThink(player_t *player)
       P_MovePlayer(player);
 
       // Handle actions   -- joek 12/22/07
-      
+
       if(cmd->actions & AC_JUMP)
       {
-         if((player->mo->z == player->mo->floorz || 
+         if((player->mo->z == player->mo->floorz ||
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
          {
             player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
@@ -568,16 +568,16 @@ void P_PlayerThink(player_t *player)
          }
       }
    }
-  
+
    P_CalcHeight (player); // Determines view height and bobbing
-   
+
    // haleyjd: are we falling? might need to scream :->
    if(!comp[comp_fallingdmg] && demo_version >= 329)
-   {  
+   {
       if(player->mo->momz >= 0)
          player->mo->intflags &= ~MIF_SCREAMED;
 
-      if(player->mo->momz <= -35*FRACUNIT && 
+      if(player->mo->momz <= -35*FRACUNIT &&
          player->mo->momz >= -40*FRACUNIT &&
          !(player->mo->intflags & MIF_SCREAMED))
       {
@@ -613,9 +613,9 @@ void P_PlayerThink(player_t *player)
    // out from underneath you.                                         // phares
 
    // haleyjd: burn damage is now implemented, but is handled elsewhere.
-   
+
    // Check for weapon change.
-   
+
    // A special event has no other buttons.
 
    if(cmd->buttons & BT_SPECIAL)
@@ -626,9 +626,9 @@ void P_PlayerThink(player_t *player)
       // The actual changing of the weapon is done
       //  when the weapon psprite can do it
       //  (read: not in the middle of an attack).
-      
+
       newweapon = (weapontype_t)((cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT);
-      
+
       // killough 3/22/98: For demo compatibility we must perform the fist
       // and SSG weapons switches here, rather than in G_BuildTiccmd(). For
       // other games which rely on user preferences, we must use the latter.
@@ -636,7 +636,7 @@ void P_PlayerThink(player_t *player)
       // WEAPON_FIXME: bunch of crap.
 
       if(demo_compatibility)
-      { 
+      {
          // compatibility mode -- required for old demos -- killough
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
             (player->readyweapon != wp_chainsaw ||
@@ -663,7 +663,7 @@ void P_PlayerThink(player_t *player)
    }
 
    // check for use
-   
+
    if(cmd->buttons & BT_USE)
    {
       if(!player->usedown)
@@ -711,9 +711,9 @@ void P_PlayerThink(player_t *player)
 
    if(player->powers[pw_totalinvis] > 0) // haleyjd
    {
-      player->mo->flags2 &= ~MF2_DONTDRAW; // flash   
-      player->powers[pw_totalinvis]--;  
-      player->mo->flags2 |=               
+      player->mo->flags2 &= ~MF2_DONTDRAW; // flash
+      player->powers[pw_totalinvis]--;
+      player->mo->flags2 |=
          player->powers[pw_totalinvis] &&
          (player->powers[pw_totalinvis] > 4*32 ||
           player->powers[pw_totalinvis] & 8)
@@ -737,8 +737,8 @@ void P_PlayerThink(player_t *player)
 
    // sf: removed MBF beta stuff
 
-   player->fixedcolormap = 
-      (player->powers[pw_invulnerability] > 4*32 ||    
+   player->fixedcolormap =
+      (player->powers[pw_invulnerability] > 4*32 ||
        player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
       (player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8);
 
@@ -749,7 +749,7 @@ void P_PlayerThink(player_t *player)
 //
 // P_SetPlayerAttacker
 //
-// haleyjd 09/30/2011: Needed function to fix a BOOM problem wherein 
+// haleyjd 09/30/2011: Needed function to fix a BOOM problem wherein
 // player_t::attacker is not properly reference-counted against the
 // Mobj to which it points.
 //
@@ -882,4 +882,3 @@ AMX_NATIVE_INFO user_Natives[] =
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

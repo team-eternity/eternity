@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,7 +22,7 @@
 // DESCRIPTION:
 //
 // Small Scripting Engine Interface
-// 
+//
 // Functions needed to provide for game engine usage of the Small
 // virtual machine (see amx.c)
 //
@@ -73,7 +73,7 @@ void SM_LinkCallback(sc_callback_t *);
 void SM_ExecuteCallbacks(void);
 void SM_RemoveCallbacks(int vm);
 void SM_RemoveCallback(sc_callback_t *callback);
-int  SM_AddCallback(char *scrname, sc_vm_e vm, 
+int  SM_AddCallback(char *scrname, sc_vm_e vm,
                    int waittype, int waitdata, int waitflags);
 #endif
 
@@ -85,4 +85,3 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 #endif
 
 // EOF
-

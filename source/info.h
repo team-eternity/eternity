@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -46,7 +46,7 @@ extern int NUMSPRITES;
 enum
 {
   S_NULL,
-  
+
   S_PUNCH = 2,
   S_PUNCHDOWN,
   S_PUNCHUP,
@@ -57,7 +57,7 @@ enum
   S_PISTOLUP,
   S_PISTOL1,
   S_PISTOLFLASH = 17,
-  
+
   S_SGUN = 18,
   S_SGUNDOWN,
   S_SGUNUP,
@@ -77,7 +77,7 @@ enum
   S_CHAIN2, // not used
   S_CHAIN3,
   S_CHAINFLASH1,
-  
+
   S_MISSILE = 57,
   S_MISSILEDOWN,
   S_MISSILEUP,
@@ -169,9 +169,9 @@ struct state_t
    statenum_t  nextstate;              // index of next state, or -1
    int         misc1, misc2;           // used for psprite positioning
    int         particle_evt;           // haleyjd: determines an event to run
-   
+
    struct arglist_s *args;             // haleyjd: state arguments
-   
+
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
    int         dehnum;    // DeHackEd number for fast access, comp.
@@ -196,10 +196,10 @@ enum
 {
   MT_VILE = 4,
   MT_FIRE,
-  
+
   MT_TRACER = 7,
   MT_SMOKE,
-  
+
   MT_FATSHOT = 10,
 
   MT_BRUISER = 16,
@@ -244,7 +244,7 @@ enum
 
   MT_HTFOG = 334,
   MT_HTICBLOOD,
-  
+
   MT_MUMMYSOUL = 340,
   MT_MUMMYFX1,
 
@@ -294,12 +294,12 @@ enum
   MT_FOGPATCHS = 228,
   MT_FOGPATCHM,
   MT_FOGPATCHL,
-  
+
 // End Eternity TC New Things
 
   // haleyjd: NUMMOBJTYPES is a variable now
   //NUMMOBJTYPES  // Counter of how many there are
-}; 
+};
 
 typedef int mobjtype_t;
 
@@ -378,7 +378,7 @@ struct mobjinfo_t
    int topdamagemask;   // haleyjd 09/23/06: time mask for topdamage
    int alphavelocity;   // haleyjd 05/23/08: alpha velocity
    int respawntime;     // haleyjd 09/23/09: minimum time before respawn
-   int respawnchance;   // haleyjd 09/23/09: chance of respawn (out of 255)   
+   int respawnchance;   // haleyjd 09/23/09: chance of respawn (out of 255)
    float xscale;        // haleyjd 11/22/09: x scaling
    float yscale;        // haleyjd 11/22/09: y scaling
    int activestate;     // haleyjd 03/19/11: Hexen activation state
@@ -387,7 +387,7 @@ struct mobjinfo_t
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
 
    void (*nukespec)(Mobj *); // haleyjd 08/18/09: nukespec made a native property
-   
+
    // haleyjd: fields needed for EDF identification and hashing
    DLListItem<mobjinfo_t> namelinks; // haleyjd 11/03/11: new hashing: by name
    DLListItem<mobjinfo_t> numlinks;  // haleyjd 11/03/11: new hashing: by dehnum

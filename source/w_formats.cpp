@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -84,7 +84,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
       }
    }
 
-   return f;      
+   return f;
 }
 
 typedef bool (*FormatFunc)(FILE *, long);
@@ -94,7 +94,7 @@ typedef bool (*FormatFunc)(FILE *, long);
 //
 // Detect an id IWAD or PWAD file, as used in DOOM itself and its direct spawn,
 // Heretic, Hexen, and Strife, as well as in numerous other games directly,
-// such as RoTT, Amulets and Armor, Bloodmasters, etc. It also formed the 
+// such as RoTT, Amulets and Armor, Bloodmasters, etc. It also formed the
 // basis of the GRP (Duke3D) and PAK (Quake) formats.
 //
 static bool W_isWadFile(FILE *f, long baseoffset)
@@ -147,7 +147,7 @@ static bool W_isFile(FILE *f, long baseoffset)
    return true;
 }
 
-static FormatFunc formatFuncs[W_FORMAT_MAX] = 
+static FormatFunc formatFuncs[W_FORMAT_MAX] =
 {
    W_isWadFile, // W_FORMAT_WAD
    W_isZipFile, // W_FORMAT_ZIP
@@ -168,7 +168,7 @@ WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset)
    while(!formatFuncs[fmt](f, baseoffset))
       ++fmt;
 
-   return static_cast<WResourceFmt>(fmt);      
+   return static_cast<WResourceFmt>(fmt);
 }
 
 //
@@ -203,7 +203,7 @@ static namespace_matcher_t matchers[] =
    { "acs/",          lumpinfo_t::ns_acs          },
    { "colormaps/",    lumpinfo_t::ns_colormaps    },
    { "demos/",        lumpinfo_t::ns_demos        }, // EE extension
-   { "flats/",        lumpinfo_t::ns_flats        },   
+   { "flats/",        lumpinfo_t::ns_flats        },
    { "graphics/",     lumpinfo_t::ns_global       }, // Treated as global in EE
    { "music/",        lumpinfo_t::ns_global       }, // Treated as global in EE
    { "sounds/",       lumpinfo_t::ns_global       }, // Treated as global in EE
@@ -251,4 +251,3 @@ int W_NamespaceForFilePath(const char *path)
 }
 
 // EOF
-

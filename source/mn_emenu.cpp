@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// Dynamic Menus -- EDF Subsystem 
+// Dynamic Menus -- EDF Subsystem
 //
 // By James Haley
 //
@@ -192,8 +192,8 @@ static menu_t *MN_CreateDynamicMenu(const char *name)
 // Sets up the fields of a dynamic menu given all the information about
 // it. The items and the menu must have been created and hashed previously.
 //
-static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items, 
-                               const char *prev, const char *next, 
+static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items,
+                               const char *prev, const char *next,
                                int x, int y, int firstitem, int flags)
 {
    // set fields
@@ -248,7 +248,7 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
       // process fields
 
       // set item type
-      items[i].type = E_StrToNumLinear(mnitem_types, NUM_MNITEM_TYPES, 
+      items[i].type = E_StrToNumLinear(mnitem_types, NUM_MNITEM_TYPES,
                                        cfg_getstr(itemSec, ITEM_MNITEM_TYPE));
       if(items[i].type == NUM_MNITEM_TYPES)
          items[i].type = it_info; // default to information only
@@ -288,7 +288,7 @@ static void MN_ClearDynamicMenu(menu_t *menu)
    if(menu->menuitems)
    {
       menuitem_t *item = menu->menuitems;
-      
+
       while(item->type != it_end)
       {
          if(item->dyndescription)
@@ -364,7 +364,7 @@ void MN_ProcessMenus(cfg_t *cfg)
 
    E_EDFLogPrintf("\t* Processing dynamic menus\n"
                   "\t\t%d dynamic menus defined\n", numMenus);
-   
+
    // first: hash all the menus
    // if a menu of the name already exists, it will be cleared out
    for(i = 0; i < numMenus; ++i)
@@ -402,7 +402,7 @@ void MN_ProcessMenus(cfg_t *cfg)
       // not allowed in a shareware gamemode!
       if(GameModeInfo->flags & GIF_SHAREWARE)
       {
-         E_EDFLoggedErr(1, "MN_ProcessMenus: can't override episodes " 
+         E_EDFLoggedErr(1, "MN_ProcessMenus: can't override episodes "
                            "in shareware. Register!\n");
       }
 
@@ -447,4 +447,3 @@ void MN_AddDynaMenuCommands(void)
 }
 
 // EOF
-

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -76,7 +76,7 @@ int P_Random(pr_class_t pr_class)
    // All of this RNG stuff is tricky as far as demo sync goes --
    // it's like playing with explosives :) Lee
 
-   int compat; 
+   int compat;
 
    unsigned int boom;
 
@@ -125,14 +125,14 @@ int P_Random(pr_class_t pr_class)
 unsigned int P_RandomEx(pr_class_t pr_class)
 {
    unsigned int boom;
-   
+
    if(pr_class != pr_misc && !demo_insurance)
       pr_class = pr_all_in_one;
 
    boom = rng.seed[pr_class];
 
    rng.seed[pr_class] = boom * 1664525ul + 221297ul + pr_class*2;
-   
+
    return boom;
 }
 
@@ -165,7 +165,7 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max)
 //
 // haleyjd 03/16/09: as above, but works for large ranges.
 //
-unsigned int P_RangeRandomEx(pr_class_t pr_class, 
+unsigned int P_RangeRandomEx(pr_class_t pr_class,
                              unsigned int min, unsigned int max)
 {
    return (P_RandomEx(pr_class) % (max - min + 1)) + min;
@@ -198,7 +198,7 @@ static cell AMX_NATIVE_CALL sm_random(AMX *amx, cell *params)
 // sm_mrandom
 //
 // Implements M_Random()
-// 
+//
 // This is strictly for non-demo-sync-critical stuff such as
 // particle effects.
 //

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,7 +21,7 @@
 //
 // Gamemode information
 //
-// Stores all gamemode-dependent information in one location and 
+// Stores all gamemode-dependent information in one location and
 // lends more structure to other modules.
 //
 // James Haley
@@ -84,7 +84,7 @@
 #define CONBACK_DEFAULT "TITLEPIC"
 #define CONBACK_COMRET  "INTERPIC"
 #define CONBACK_DISK    "DMENUPIC"
-#define CONBACK_HERETIC "TITLE" 
+#define CONBACK_HERETIC "TITLE"
 
 // Version names
 #define VNAME_DOOM_SW   "DOOM Shareware version"
@@ -594,7 +594,7 @@ static bspecrule_t HereticBossSpecs[] =
    {  3,  8, BSPEC_E3M8 },
    {  4,  6, BSPEC_E4M6 }, // for compatibility with earlier EE's
    {  4,  8, BSPEC_E4M8 },
-   {  5,  8, BSPEC_E5M8 }, 
+   {  5,  8, BSPEC_E5M8 },
    { -1 }
 };
 
@@ -825,13 +825,13 @@ static gamemodeinfo_t giDoomSW =
    shareware,                    // id
    Game_DOOM,                    // type
    GIF_SHAREWARE | DOOM_GIFLAGS, // flags
-   
+
    VNAME_DOOM_SW,    // versionName
    FNAME_DOOM_SW,    // freeVerName
    NULL,             // bfgEditionName
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
-   
+
    demostates_doom,  // demoStates
    170,              // titleTics
    0,                // advisorTics
@@ -922,13 +922,13 @@ static gamemodeinfo_t giDoomReg =
    registered,       // id
    Game_DOOM,        // type
    DOOM_GIFLAGS,     // flags
-   
+
    VNAME_DOOM_REG,   // versionName
    FNAME_DOOM_R,     // freeVerName
    NULL,             // bfgEditionName
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
-   
+
    demostates_doom,  // demoStates
    170,              // titleTics
    0,                // advisorTics
@@ -1019,13 +1019,13 @@ static gamemodeinfo_t giDoomRetail =
    retail,           // id
    Game_DOOM,        // type
    DOOM_GIFLAGS,     // flags
-   
+
    VNAME_DOOM_RET,   // versionName
    FNAME_DOOM_R,     // freeVerName
    BFGNAME_DOOM,     // bfgEditionName
    BANNER_DOOM_RET,  // startupBanner
    &gi_path_doomu,   // iwadPath
-   
+
    demostates_udoom, // demoStates
    170,              // titleTics
    0,                // advisorTics
@@ -1312,9 +1312,9 @@ static gamemodeinfo_t giHereticSW =
 static gamemodeinfo_t giHereticReg =
 {
    hereticreg,       // id
-   Game_Heretic,     // type   
+   Game_Heretic,     // type
    HERETIC_GIFLAGS,  // flags
-   
+
    VNAME_HTIC_REG,   // versionName
    NULL,             // freeVerName
    NULL,             // bfgEditionName
@@ -1396,7 +1396,7 @@ static gamemodeinfo_t giHereticReg =
 
    2,                 // switchEpisode
    &HereticSkyData,   // skyData
-   
+
    HereticDefaultORs, // defaultORs
 
    "ENDTEXT",          // endTextName
@@ -1448,7 +1448,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
 
    // If gamemode == indetermined, we want to use the unknown gamemission
    // information to set overrides, but *not* to actually set the mission
-   // information. Turns out the "none" value of gamemission has never 
+   // information. Turns out the "none" value of gamemission has never
    // been used, and some code in the engine might crash if gamemission is
    // actually set to "none".
    if(mode == indetermined)
@@ -1465,7 +1465,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(consoleBack,      NULL);
    OVERRIDE(interPic,         NULL);
    OVERRIDE(exitRules,        NULL);
-   
+
    // Note: demostates are not overridden here, see below.
 }
 

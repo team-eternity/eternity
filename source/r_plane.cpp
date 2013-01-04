@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -146,13 +146,13 @@ void R_InitPlanes(void)
 //
 static int R_SpanLight(float dist)
 {
-   int map = 
+   int map =
       (int)(plane.startmap - (1280.0f / dist)) + 1 - (extralight * LIGHTBRIGHT);
 
    return map < 0 ? 0 : map >= NUMCOLORMAPS ? NUMCOLORMAPS - 1 : map;
 }
 
-// 
+//
 // R_PlaneLight
 //
 // Sets up the internal light level barriers inside the plane struct
@@ -187,7 +187,7 @@ static uint32_t R_doubleToUint32(double d)
    bool    neg;
    double  two32;
 
-   // FIXME: should check for finiteness first, but we have no code for 
+   // FIXME: should check for finiteness first, but we have no code for
    // doing that in EE yet.
 
    //if (!JSDOUBLE_IS_FINITE(d))
@@ -224,8 +224,8 @@ static void R_MapPlane(int y, int x1, int x2)
    if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
       I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
-  
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
+
+   // SoM: because ycenter is an actual row of pixels (and it isn't really the
    // center row because there are an even number of rows) some corrections need
    // to be made depending on where the row lies relative to the ycenter row.
    if(view.ycenter == y)
@@ -246,9 +246,9 @@ static void R_MapPlane(int y, int x1, int x2)
 #ifdef __APPLE__
    {
       double value;
-      
+
       value = fmod(plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width); 
+                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width);
       if(value < 0) value += plane.tex->width;
       span.xfrac = (int)(value * plane.fixedunitx);
       span.xfrac <<= 2;
@@ -258,22 +258,22 @@ static void R_MapPlane(int y, int x1, int x2)
       if(value < 0) value += plane.tex->height;
       span.yfrac = (int)(value * plane.fixedunity);
       span.yfrac <<= 2;
-      
+
       value = fmod(xstep, (double)plane.tex->width);
       if(value < 0) value += plane.tex->width;
       span.xstep = (int)(value * plane.fixedunitx);
       span.xstep <<= 2;
-            
+
       value = fmod(ystep, (double)plane.tex->height);
       if(value < 0) value += plane.tex->height;
       span.ystep = (int)(value * plane.fixedunity);
       span.ystep <<= 2;
    }
 #else
-   span.xfrac = 
+   span.xfrac =
       (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
                       + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
-   span.yfrac = 
+   span.yfrac =
       (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
                       + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
    span.xstep = (unsigned int)(xstep * plane.fixedunitx);
@@ -303,12 +303,12 @@ static void R_MapPlane(int y, int x1, int x2)
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
       span.colormap = plane.colormap + R_SpanLight(realy) * 256;
-   
+
    span.y  = y;
    span.x1 = x1;
    span.x2 = x2;
    span.source = plane.source;
-   
+
    // BIG FLATS
    flatfunc();
 
@@ -339,8 +339,8 @@ static void R_MapPlane(int y, int x1, int x2)
    if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
       I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
-  
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
+
+   // SoM: because ycenter is an actual row of pixels (and it isn't really the
    // center row because there are an even number of rows) some corrections need
    // to be made depending on where the row lies relative to the ycenter row.
    if(view.ycenter == y)
@@ -356,9 +356,9 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = view.sin * slope * view.focratio * scale;
    ystep = view.cos * slope * view.focratio * scale;
 
-   span.xfrac = (unsigned int)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy) 
+   span.xfrac = (unsigned int)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy)
                             + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned int)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy) 
+   span.yfrac = (unsigned int)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy)
                             + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
    span.xstep = (unsigned int)(xstep * plane.fixedunit);
    span.ystep = (unsigned int)(ystep * plane.fixedunit);
@@ -371,12 +371,12 @@ static void R_MapPlane(int y, int x1, int x2)
          index = MAXLIGHTZ-1;
       span.colormap = plane.planezlight[index];
    }
-   
+
    span.y  = y;
    span.x1 = x1;
    span.x2 = x2;
    span.source = plane.source;
-   
+
    // BIG FLATS
    flatfunc();
 
@@ -474,7 +474,7 @@ static void R_MapSlope(int y, int x1, int x2)
       map2 = map1;
 
    R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
- 
+
    slopefunc();
 }
 
@@ -482,13 +482,13 @@ static void R_MapSlope(int y, int x1, int x2)
 
 //
 // R_CompareSlopes
-// 
+//
 // SoM: Returns true if the texture spaces of the give slope structs are the
 // same.
 //
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
-   return 
+   return
       (s1 == s2) ||                 // both are equal, including both NULL; OR:
        (s1 && s2 &&                 // both are valid and...
         CompFloats(s1->normalf.x, s2->normalf.x) &&  // components are equal and...
@@ -502,7 +502,7 @@ bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 //
 // R_CalcSlope
 //
-// SoM: Calculates the rslope info from the OHV vectors and rotation/offset 
+// SoM: Calculates the rslope info from the OHV vectors and rotation/offset
 // information in the plane struct
 //
 static void R_CalcSlope(visplane_t *pl)
@@ -516,10 +516,10 @@ static void R_CalcSlope(visplane_t *pl)
    if(!pl->pslope)
       return;
 
-   
+
    tsin = sin(pl->angle);
    tcos = cos(pl->angle);
-   
+
    xl = tex->width;
    yl = tex->height;
 
@@ -543,7 +543,7 @@ static void R_CalcSlope(visplane_t *pl)
 
    M_SubVec3(&rslope->M, &rslope->M, &rslope->P);
    M_SubVec3(&rslope->N, &rslope->N, &rslope->P);
-   
+
    M_CrossProduct3(&rslope->A, &rslope->P, &rslope->N);
    M_CrossProduct3(&rslope->B, &rslope->P, &rslope->M);
    M_CrossProduct3(&rslope->C, &rslope->M, &rslope->N);
@@ -564,7 +564,7 @@ static void R_CalcSlope(visplane_t *pl)
 
    rslope->zat = P_GetZAtf(pl->pslope, pl->viewxf, pl->viewyf);
 
-   // More help from randy. I was totally lost on this... 
+   // More help from randy. I was totally lost on this...
    ixscale = view.tan / (float)xl;
    iyscale = view.tan / (float)yl;
 
@@ -581,36 +581,36 @@ planehash_t *R_NewPlaneHash(int chaincount)
 {
    planehash_t*  ret;
    int           i;
-   
+
    // Make sure chaincount is a power of 2
    if((chaincount - 1) & chaincount)
    {
       int c = 2;
       while(c < chaincount)
          c <<= 1;
-      
+
       chaincount = c;
    }
-   
+
    ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, NULL));
    ret->chaincount = chaincount;
    ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, NULL));
-   
+
    for(i = 0; i < chaincount; i++)
       ret->chains[i] = NULL;
-      
+
    return ret;
 }
 
 //
 // R_ClearPlaneHash
 //
-// Empties the chains of the given hash table and places the planes within 
+// Empties the chains of the given hash table and places the planes within
 // in the free stack.
 void R_ClearPlaneHash(planehash_t *table)
 {
    int    i;
-   
+
    for(i = 0; i < table->chaincount; ++i)    // new code -- killough
       for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
          freehead = &(*freehead)->next;
@@ -621,13 +621,13 @@ void R_ClearPlaneHash(planehash_t *table)
 //
 // R_ClearOverlayClips
 //
-// Clears the arrays used to clip portal overlays. This function is called before the start of 
+// Clears the arrays used to clip portal overlays. This function is called before the start of
 // each portal rendering.
 //
 void R_ClearOverlayClips(void)
 {
    int i;
-   
+
    // opening / clipping determination
    for(i = 0; i < MAX_SCREENWIDTH; ++i)
    {
@@ -652,7 +652,7 @@ void R_ClearPlanes(void)
    // FIXME: borked in widescreen aspect ratios...
    int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
 
-   a = (float)(consoleactive ? 
+   a = (float)(consoleactive ?
          (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
 #endif
 
@@ -672,7 +672,7 @@ void R_ClearPlanes(void)
 
    // texture calculation
    memset(cachedheight, 0, sizeof(cachedheight));
-   
+
    num_visplanes = 0;    // reset
 }
 
@@ -688,13 +688,13 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 
    if(!check)
       check = ecalloc(visplane_t *, 1, sizeof *check);
-   else 
+   else
       if(!(freetail = freetail->next))
          freehead = &freetail;
-   
+
    check->next = table->chains[hash];
    table->chains[hash] = check;
-   
+
    check->table = table;
 
    if(check->max_width < (unsigned int)video.width)
@@ -711,9 +711,9 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
    }
-   
+
    num_visplanes++;      // keep track of how many for counter
-   
+
    return check;
 }
 
@@ -735,13 +735,13 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    // SoM: table == NULL means use main table
    if(!table)
       table = &mainhash;
-      
+
    blendflags &= PS_OBLENDFLAGS;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
    if(!(blendflags & PS_ADDITIVE) && opacity == 255)
       blendflags = 0;
-      
+
    // killough 10/98: PL_SKYFLAT
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
    {
@@ -768,9 +768,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          yoffs == check->yoffs &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap && 
-         viewx == check->viewx && 
-         viewy == check->viewy && 
+         fixedcolormap == check->fixedcolormap &&
+         viewx == check->viewx &&
+         viewy == check->viewy &&
          viewz == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
@@ -792,22 +792,22 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
    check->fullcolormap = fullcolormap;
-   
+
    check->viewx = viewx;
    check->viewy = viewy;
    check->viewz = viewz;
-   
+
    check->heightf = M_FixedToFloat(height);
    check->xoffsf  = M_FixedToFloat(xoffs);
    check->yoffsf  = M_FixedToFloat(yoffs);
-   
+
    check->bflags = blendflags;
    check->opacity = opacity;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
    check->viewsin = (float) sin(view.angle + check->angle);
    check->viewcos = (float) cos(view.angle + check->angle);
-   
+
    // SoM: set up slope type stuff
    if((check->pslope = slope))
    {
@@ -828,7 +828,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       check->viewyf = -view.x * tsin + view.y * tcos;
       check->viewzf =  view.z;
    }
-   
+
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
    {
@@ -836,7 +836,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       register int *p = check->top;
       while(i < check->max_width) p[i++] = 0x7FFFFFFF;
    }
-   
+
    return check;
 }
 
@@ -846,14 +846,14 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
-   
+
    planehash_t *table = pl->table;
-   
+
    if(start < pl->minx)
       intrl   = pl->minx, unionl = start;
    else
       unionl  = pl->minx,  intrl = start;
-   
+
    if(stop  > pl->maxx)
       intrh   = pl->maxx, unionh = stop;
    else
@@ -868,7 +868,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    {
       unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
       visplane_t *new_pl = new_visplane(hash, table);
-      
+
       new_pl->height = pl->height;
       new_pl->picnum = pl->picnum;
       new_pl->lightlevel = pl->lightlevel;
@@ -877,7 +877,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
       new_pl->yoffs = pl->yoffs;
       new_pl->angle = pl->angle;                 // haleyjd 01/05/08
-      
+
       new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
       new_pl->viewcos = pl->viewcos;
 
@@ -893,7 +893,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->heightf = pl->heightf;
       new_pl->xoffsf = pl->xoffsf;
       new_pl->yoffsf = pl->yoffsf;
-      
+
       new_pl->bflags = pl->bflags;
       new_pl->opacity = pl->opacity;
 
@@ -910,7 +910,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
          while(i < pl->max_width) p[i++] = 0x7FFFFFFF;
       }
    }
-   
+
    return pl;
 }
 
@@ -943,9 +943,9 @@ void do_draw_newsky(visplane_t *pl)
    int x, offset, skyTexture, offset2, skyTexture2;
    angle_t an;
    skytexture_t *sky1, *sky2;
-   
+
    an = viewangle;
-   
+
    if(LevelInfo.doubleSky) // render two layers
    {
       // get scrolling offsets and textures
@@ -956,12 +956,12 @@ void do_draw_newsky(visplane_t *pl)
 
       sky1 = R_GetSkyTexture(skyTexture);
       sky2 = R_GetSkyTexture(skyTexture2);
-      
+
       if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
          column.colormap = fullcolormap;
-      
+
       // first draw sky 2 with R_DrawColumn (unmasked)
-      column.texmid = sky2->texturemid;      
+      column.texmid = sky2->texturemid;
       column.texheight = sky2->height;
 
       // haleyjd: don't stretch textures over 200 tall
@@ -969,7 +969,7 @@ void do_draw_newsky(visplane_t *pl)
          column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
          column.step = M_FloatToFixed(view.pspriteystep);
-      
+
       for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
@@ -977,11 +977,11 @@ void do_draw_newsky(visplane_t *pl)
             column.source =
                R_GetRawColumn(skyTexture2,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
-            
+
             colfunc();
          }
       }
-      
+
       // now draw sky 1 with R_DrawNewSkyColumn (masked)
       column.texmid = sky1->texturemid;
       column.texheight = sky1->height;
@@ -991,7 +991,7 @@ void do_draw_newsky(visplane_t *pl)
          column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
          column.step = M_FloatToFixed(view.pspriteystep);
-      
+
       for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
@@ -999,7 +999,7 @@ void do_draw_newsky(visplane_t *pl)
             column.source =
                R_GetRawColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
-            
+
             colfunc();
          }
       }
@@ -1018,12 +1018,12 @@ void do_draw_newsky(visplane_t *pl)
       }
 
       sky1 = R_GetSkyTexture(skyTexture);
-      
+
       column.texmid = sky1->texturemid;    // Default y-offset
-      
+
       if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
          column.colormap = fullcolormap;
-      
+
       column.texheight = sky1->height;
 
       // haleyjd: don't stretch textures over 200 tall
@@ -1031,7 +1031,7 @@ void do_draw_newsky(visplane_t *pl)
          column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
          column.step = M_FloatToFixed(view.pspriteystep);
-      
+
       for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
@@ -1047,9 +1047,9 @@ void do_draw_newsky(visplane_t *pl)
 }
 
 // Log base 2 LUT
-static const int MultiplyDeBruijnBitPosition2[32] = 
+static const int MultiplyDeBruijnBitPosition2[32] =
 {
-  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
+  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
   31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 };
 
@@ -1070,7 +1070,7 @@ static void do_draw_plane(visplane_t *pl)
    // * Always for sky2
    // * Use for sky1 IF double skies or sky delta set
    if(pl->picnum == sky2flatnum ||
-      (pl->picnum == skyflatnum && 
+      (pl->picnum == skyflatnum &&
        (LevelInfo.doubleSky || LevelInfo.skyDelta)))
    {
       do_draw_newsky(pl);
@@ -1082,22 +1082,22 @@ static void do_draw_plane(visplane_t *pl)
       int texture;
       angle_t an, flip;
       skytexture_t *sky;
-      
+
       // killough 10/98: allow skies to come from sidedefs.
       // Allows scrolling and/or animated skies, as well as
       // arbitrary multiple skies per level without having
       // to use info lumps.
 
       an = viewangle;
-      
+
       if(pl->picnum & PL_SKYFLAT)
-      { 
+      {
          // Sky Linedef
          const line_t *l = &lines[pl->picnum & ~PL_SKYFLAT];
-         
+
          // Sky transferred from first sidedef
          const side_t *s = *l->sidenum + sides;
-         
+
          // Texture comes from upper texture of reference sidedef
          texture = texturetranslation[s->toptexture];
 
@@ -1108,25 +1108,25 @@ static void do_draw_plane(visplane_t *pl)
          // to allow sky rotation as well as careful positioning.
          // However, the offset is scaled very small, so that it
          // allows a long-period of sky rotation.
-         
+
          an += s->textureoffset;
-         
-         // Vertical offset allows careful sky positioning.        
-         
+
+         // Vertical offset allows careful sky positioning.
+
          column.texmid = s->rowoffset - 28*FRACUNIT;
-         
+
          // We sometimes flip the picture horizontally.
          //
          // Doom always flipped the picture, so we make it optional,
          // to make it easier to use the new feature, while to still
          // allow old sky textures to be used.
-         
+
          flip = l->special == 272 ? 0u : ~0u;
       }
       else 	 // Normal Doom sky, only one allowed per level
       {
          texture = skytexture;             // Default texture
-         sky = R_GetSkyTexture(texture);   // haleyjd 08/30/02         
+         sky = R_GetSkyTexture(texture);   // haleyjd 08/30/02
          column.texmid = sky->texturemid;  // Default y-offset
          flip = 0;                         // Doom flips it
       }
@@ -1142,7 +1142,7 @@ static void do_draw_plane(visplane_t *pl)
       //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
       // haleyjd: use height determined from patches in texture
       column.texheight = sky->height;
-      
+
       // haleyjd:  don't stretch textures over 200 tall
       // 10/07/06: don't stretch skies in old demos (no mlook)
       if(demo_version >= 300 && column.texheight < 200 && stretchsky)
@@ -1162,13 +1162,13 @@ static void do_draw_plane(visplane_t *pl)
          {
             column.source = R_GetRawColumn(texture,
                ((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT);
-            
+
             colfunc();
          }
       }
    }
    else      // regular flat
-   {  
+   {
       texture_t *tex;
       int        stop, light;
       bool       lptex64 = false; // haleyjd 06/09/10
@@ -1194,24 +1194,24 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
+      stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD :
                  (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
-                
+
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
       slopefunc = r_span_engine->DrawSlope[stylenum][tex->flatsize];
-      
+
       if(stylenum == SPAN_STYLE_TL)
       {
          int level = (pl->opacity + 1) >> 2;
-         
+
          span.fg2rgb = Col2RGB8[level];
          span.bg2rgb = Col2RGB8[64 - level];
       }
       else if(stylenum == SPAN_STYLE_ADD)
       {
          int level = (pl->opacity + 1) >> 2;
-         
+
          span.fg2rgb = Col2RGB8_LessPrecision[level];
          span.bg2rgb = Col2RGB8_LessPrecision[64];
       }
@@ -1226,27 +1226,27 @@ static void do_draw_plane(visplane_t *pl)
          plane.slope = &pl->rslope;
       else
          plane.slope = NULL;
-         
+
       {
          int rw, rh;
-         
+
          rh = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->height * 0x077CB531U) >> 27];
          rw = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width * 0x077CB531U) >> 27];
 
          if(plane.slope)
          {
             span.ymask = tex->height - 1;
-            
+
             span.xshift = 16 - rh;
             span.xmask = (tex->width - 1) << (16 - span.xshift);
          }
          else
          {
             span.yshift = 32 - rh;
-            
+
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
-            
+
             // haleyjd: we must allow for low-precision drawing to affect this
             // here since it's no longer looked up from an array
             if(lptex64)
@@ -1258,8 +1258,8 @@ static void do_draw_plane(visplane_t *pl)
             }
          }
       }
-       
-        
+
+
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
 
@@ -1269,7 +1269,7 @@ static void do_draw_plane(visplane_t *pl)
       plane.pviewsin = pl->viewsin; // haleyjd 01/05/08: Add angle
       plane.pviewcos = pl->viewcos;
       plane.height   = pl->heightf - pl->viewzf;
-      
+
       //light = (pl->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
       // SoM 10/19/02: deep water colormap fix
@@ -1304,17 +1304,17 @@ static void do_draw_plane(visplane_t *pl)
 //
 // R_DrawPlanes
 //
-// Called after the BSP has been traversed and walls have rendered. This 
+// Called after the BSP has been traversed and walls have rendered. This
 // function is also now used to render portal overlays.
 //
 void R_DrawPlanes(planehash_t *table)
 {
    visplane_t *pl;
    int i;
-   
+
    if(!table)
       table = &mainhash;
-   
+
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)

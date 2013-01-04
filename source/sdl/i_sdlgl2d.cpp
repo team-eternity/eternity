@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
+//
 //   SDL-specific GL 2D-in-3D video code
 //
 //-----------------------------------------------------------------------------
@@ -67,7 +67,7 @@ void UpdateFocus(void);
 static SDL_Surface *surface;
 
 // Temporary screen surface; this is what the game will draw itself into.
-static SDL_Surface *screen; 
+static SDL_Surface *screen;
 
 // 32-bit converted palette for translation of the screen to 32-bit pixel data.
 static Uint32 RGB8to32[256];
@@ -140,8 +140,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
    UpdateGrab();
 
    // Don't update the screen if the window isn't visible.
-   // Not doing this breaks under Windows when we alt-tab away 
-   // while fullscreen.   
+   // Not doing this breaks under Windows when we alt-tab away
+   // while fullscreen.
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
 
@@ -154,8 +154,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
       GL_BindTextureIfNeeded(textureid);
 
       // update the texture data
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                      (GLsizei)video.width, (GLsizei)video.height, 
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                      (GLsizei)video.width, (GLsizei)video.height,
                       GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)framebuffer);
    }
    else
@@ -261,13 +261,13 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
 {
    byte *temppal;
 
-   // Cache palette if a new one is being set (otherwise the gamma setting is 
+   // Cache palette if a new one is being set (otherwise the gamma setting is
    // being changed)
    if(pal)
       memcpy(cachedpal, pal, 768);
 
    temppal = cachedpal;
- 
+
    // Create 32-bit translation lookup
    for(int i = 0; i < 256; i++)
    {
@@ -276,7 +276,7 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
          ((Uint32)(gammatable[usegamma][*(temppal + 0)]) << 16) |
          ((Uint32)(gammatable[usegamma][*(temppal + 1)]) <<  8) |
          ((Uint32)(gammatable[usegamma][*(temppal + 2)]) <<  0);
-      
+
       temppal += 3;
    }
 }
@@ -332,14 +332,14 @@ void SDLGL2DVideoDriver::ShutdownGraphics()
 // SDLGL2DVideoDriver::ShutdownGraphicsPartway
 //
 void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
-{   
+{
    // haleyjd 06/21/06: use UpdateGrab here, not release
    UpdateGrab();
 
    // Code to allow changing resolutions in OpenGL.
    // Must shutdown everything.
-   
-   // Delete textures and clear names 
+
+   // Delete textures and clear names
    if(textureid)
    {
       glDeleteTextures(1, &textureid);
@@ -436,7 +436,7 @@ static GLint internalTextureFormats[CFG_GL_NUMTEXFORMATS] =
    GL_RGB10_A2,
    GL_RGBA12,
    GL_RGBA16
-   
+
 };
 
 // Configurable texture filtering parameters
@@ -488,11 +488,11 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;
-   
+
    // set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
                &wanthardware, &wantframe);
-   
+
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
@@ -500,10 +500,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    if(wantfullscreen)
       flags |= SDL_FULLSCREEN;
-   
+
    if(!wantframe)
       flags |= SDL_NOFRAME;
-   
+
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   colordepth >= 24 ? 8 : 5);
@@ -515,7 +515,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Set GL video mode
    if(!(surface = SDL_SetVideoMode(v_w, v_h, colordepth, flags)))
    {
-      I_FatalError(I_ERR_KILL, "Couldn't set OpenGL video mode %dx%dx%d\n", 
+      I_FatalError(I_ERR_KILL, "Couldn't set OpenGL video mode %dx%dx%d\n",
                    v_w, v_h, colordepth);
    }
 
@@ -534,7 +534,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Set ortho projection
    GL_SetOrthoMode(v_w, v_h);
-   
+
    // Calculate framebuffer texture sizes
    framebuffer_umax = GL_MakeTextureDimension((unsigned int)v_w);
    framebuffer_vmax = GL_MakeTextureDimension((unsigned int)v_h);
@@ -550,17 +550,17 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    texturesize = framebuffer_umax * framebuffer_vmax * 4;
    tempbuffer = ecalloc(GLvoid *, framebuffer_umax * 4, framebuffer_vmax);
    GL_BindTextureAndRemember(textureid);
-   
+
    // villsa 05/29/11: set filtering otherwise texture won't render
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texfiltertype); 
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texfiltertype);   
-   
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texfiltertype);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texfiltertype);
+
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
    // TODO: allow user selection of internal texture format
-   glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax, 
-                (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 
+   glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax,
+                (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE,
                 tempbuffer);
    efree(tempbuffer);
 
@@ -599,4 +599,3 @@ SDLGL2DVideoDriver i_sdlgl2dvideodriver;
 #endif
 
 // EOF
-

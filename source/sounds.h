@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -110,7 +110,7 @@ struct sfxinfo_t
    void *data;        // sound data
    int length;        // lump length
    unsigned int alen; // length of converted sound pointed to by data
-   
+
    // this is checked every second to see if sound
    // can be thrown out (if 0, then decrement, if -1,
    // then throw out, if > 0, then it is in use)
@@ -118,7 +118,7 @@ struct sfxinfo_t
 
    // haleyjd: EDF mnemonic
    char mnemonic[129];
-      
+
    // haleyjd 09/03/03: revised for dynamic EDF sounds
    DLListItem<sfxinfo_t> numlinks; // haleyjd 04/13/08: numeric hash links
    sfxinfo_t *next;                // next in mnemonic hash chain
@@ -136,16 +136,16 @@ struct musicinfo_t
 
    // haleyjd 04/10/11: whether to apply prefix or not
    bool prefix;
-   
+
    // lump number of music
    //  int lumpnum;
-   
+
    // music data
    void *data;
-   
+
    // music handle once registered
    int handle;
-   
+
    // sf: for hashing
    musicinfo_t *next;
 };

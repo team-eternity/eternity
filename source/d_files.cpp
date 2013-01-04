@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -101,7 +101,7 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
    wadfiles[numwadfiles].requiredFmt  = -1;
-   
+
    // haleyjd 10/27/12: setup flags
    flags = WFA_ALLOWINEXACTFN | WFA_OPENFAILFATAL | WFA_ALLOWHACKS;
 
@@ -250,8 +250,8 @@ void D_ProcessGFSCsc(gfs_t *gfs)
 
 //=============================================================================
 //
-// Loose File Support Functions 
-// 
+// Loose File Support Functions
+//
 // These enable drag-and-drop support for Windows and possibly other OSes.
 //
 
@@ -367,7 +367,7 @@ const char *D_LooseDemo()
       // check extension
       if(!dot || strncasecmp(dot, ".lmp", 4))
          continue;
-      
+
       ret = myargv[i];
       break; // process only the first demo found
    }
@@ -562,4 +562,3 @@ bool D_AddNewFile(const char *s)
 }
 
 // EOF
-

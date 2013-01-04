@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -145,7 +145,7 @@ static void R_AddSolidSeg(int x1, int x2)
 
       newend = rover;
    }
-   
+
    verify:
 #ifdef RANGECHECK
    // Verify the new segs
@@ -154,10 +154,10 @@ static void R_AddSolidSeg(int x1, int x2)
       if(rover->last >= (rover+1)->first)
       {
          I_Error("R_AddSolidSeg: created a seg that overlaps next seg:\n"
-                 "   (%i)->last = %i, (%i)->first = %i\n", 
-                 rover - solidsegs, 
-                 rover->last, 
-                 (rover + 1) - solidsegs, 
+                 "   (%i)->last = %i, (%i)->first = %i\n",
+                 rover - solidsegs,
+                 rover->last,
+                 (rover + 1) - solidsegs,
                  (rover + 1)->last);
       }
    }
@@ -193,10 +193,10 @@ static void R_AddMarkedSegs(void)
 static void R_ClipSolidWallSegment(int x1, int x2)
 {
    cliprange_t *next, *start;
-   
+
    // Find the first range that touches the range
    // (adjacent pixels are touching).
-   
+
    start = solidsegs;
    while(start->last < x1 - 1)
       ++start;
@@ -207,7 +207,7 @@ static void R_ClipSolidWallSegment(int x1, int x2)
       {
          // Post is entirely visible (above start), so insert a new clippost.
          R_StoreWallRange(x1, x2);
-         
+
          // 1/11/98 killough: performance tuning using fast memmove
          memmove(start + 1, start, (++newend - start) * sizeof(*start));
          start->first = x1;
@@ -217,7 +217,7 @@ static void R_ClipSolidWallSegment(int x1, int x2)
 
       // There is a fragment above *start.
       R_StoreWallRange(x1, start->first - 1);
-      
+
       // Now adjust the clip size.
       start->first = x1;
    }
@@ -232,7 +232,7 @@ static void R_ClipSolidWallSegment(int x1, int x2)
       R_StoreWallRange(next->last + 1, (next + 1)->first - 1);
       ++next;
       if(x2 <= next->last)
-      {  
+      {
          // Bottom is contained in next. Adjust the clip size.
          start->last = next->last;
          goto crunch;
@@ -241,19 +241,19 @@ static void R_ClipSolidWallSegment(int x1, int x2)
 
    // There is a fragment after *next.
    R_StoreWallRange(next->last + 1, x2);
-   
+
    // Adjust the clip size.
    start->last = x2;
-   
+
    // Remove start+1 to next from the clip list,
    // because start now covers their area.
 crunch:
    if(next == start) // Post just extended past the bottom of one post.
       goto verifysegs;
-   
+
    while(next++ != newend)      // Remove a post.
       *++start = *next;
-   
+
    newend = start;
 
    verifysegs:
@@ -264,10 +264,10 @@ crunch:
       if(start->last >= (start+1)->first)
       {
          I_Error("R_ClipSolidWallSegment: created a seg that overlaps next seg:\n"
-                 "   (%i)->last = %i, (%i)->first = %i\n", 
-                 start - solidsegs, 
-                 start->last, 
-                 (start + 1) - solidsegs, 
+                 "   (%i)->last = %i, (%i)->first = %i\n",
+                 start - solidsegs,
+                 start->last,
+                 (start + 1) - solidsegs,
                  (start + 1)->last);
       }
    }
@@ -287,9 +287,9 @@ crunch:
 static void R_ClipPassWallSegment(int x1, int x2)
 {
    cliprange_t *start;
-   
+
    start = solidsegs;
-   
+
    // Find the first range that touches the range
    //  (adjacent pixels are touching).
    while(start->last < x1 - 1)
@@ -317,11 +317,11 @@ static void R_ClipPassWallSegment(int x1, int x2)
       // There is a fragment between two posts.
       R_StoreWallRange(start->last + 1, (start + 1)->first - 1);
       ++start;
-      
+
       if(x2 <= start->last)
          return;
    }
-   
+
    // There is a fragment after *next.
    R_StoreWallRange(start->last + 1, x2);
 }
@@ -350,59 +350,59 @@ bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
 {
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
-   
+
    R_ClearClipSegs();
 
    // SoM: This should be done here instead of having an additional loop
    portalrender.miny = MAX_SCREENHEIGHT;
    portalrender.maxy = 0;
-   
+
    // extend first solidseg to one column left of first open post
-   while(i < stop && bottom[i] < top[i]) 
+   while(i < stop && bottom[i] < top[i])
       ++i;
-   
+
    // the entire thing is closed?
    if(i == stop)
       return false;
 
    solidseg->last = i - 1;
-   solidseg++;   
-   
+   solidseg++;
+
    while(1)
    {
       //find the first closed post.
-      while(i < stop && bottom[i] >= top[i]) 
+      while(i < stop && bottom[i] >= top[i])
       {
-         if(top[i] < portalrender.miny) 
+         if(top[i] < portalrender.miny)
             portalrender.miny = top[i];
 
-         if(bottom[i] > portalrender.maxy) 
+         if(bottom[i] > portalrender.maxy)
             portalrender.maxy = bottom[i];
 
          ++i;
       }
-      
+
       if(i == viewwidth)
          goto endopen;
 
       // set the solidsegs
       solidseg->first = i;
-      
+
       // find the first open post
       while(i < stop && top[i] > bottom[i]) i++;
       if(i == stop)
          goto endclosed;
-      
+
       solidseg->last = i - 1;
       solidseg++;
    }
-   
+
 endopen:
    solidseg->first = stop;
    solidseg->last = D_MAXINT;
    newend = solidseg + 1;
    return true;
-   
+
 endclosed:
    solidseg->last = D_MAXINT;
    newend = solidseg + 1;
@@ -476,15 +476,15 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
    }
-   
+
    if(sec->heightsec != -1)
    {
       int underwater; // haleyjd: restructured
-      
+
       int heightsec = -1;
-      
+
       const sector_t *s = &sectors[sec->heightsec];
-      
+
       // haleyjd: Lee assumed that only players would ever be
       // involved in LOS calculations for deep water -- must be
       // fixed for cameras -- thanks to Julian for finding the
@@ -492,7 +492,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
       heightsec = camera ? camera->heightsec
                          : viewplayer->mo->subsector->sector->heightsec;
-            
+
       underwater = (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
 
       // Replace floor and ceiling height with other sector's heights.
@@ -536,7 +536,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->intflags &= ~SIF_SKY;
 
          tempsec->lightlevel  = s->lightlevel;
-         
+
          if(floorlightlevel)
          {
             *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
@@ -549,10 +549,10 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
          }
       }
-      else if(heightsec != -1 && 
+      else if(heightsec != -1 &&
               viewz >= sectors[heightsec].ceilingheight &&
               sec->ceilingheight > s->ceilingheight)
-      {   
+      {
          // SoM: kill any floor portals that may try to render
          tempsec->f_portal = NULL;
 
@@ -578,9 +578,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
          tempsec->intflags &= ~SIF_SKY;
-         
+
          tempsec->lightlevel  = s->lightlevel;
-         
+
          if(floorlightlevel)
          {
             *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
@@ -600,7 +600,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          if(sec->floorheight != s->floorheight)
             tempsec->f_portal = NULL;
       }
-      
+
       tempsec->ceilingheightf = M_FixedToFloat(tempsec->ceilingheight);
       tempsec->floorheightf   = M_FixedToFloat(tempsec->floorheight);
       sec = tempsec;            // Use other sector
@@ -637,7 +637,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          }
          else
             P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
-            
+
          sec = tempsec;
       }
       else if(!(sec->f_pflags & PS_VISIBLE))
@@ -656,19 +656,19 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 //
 // R_ClipSegToPortal
 //
-// SoM 3/14/2005: This function will reject segs that are completely 
-// outside the portal window based on a few conditions. It will also 
-// clip the start and stop values of the seg based on what range it is 
-// actually visible in. This function is sound and Doom could even use 
+// SoM 3/14/2005: This function will reject segs that are completely
+// outside the portal window based on a few conditions. It will also
+// clip the start and stop values of the seg based on what range it is
+// actually visible in. This function is sound and Doom could even use
 // this for normal rendering, but it adds some overhead.
 //
 // SoM 6/24/2007: Moved this here and rewrote it a bit.
 //
 
-// The way we handle segs depends on relative camera position. If the 
+// The way we handle segs depends on relative camera position. If the
 // camera is above we need to reject segs based on the top of the seg.
-// If the camera is below the bottom of the seg the bottom edge needs 
-// to be clipped. This is done so visplanes will still be rendered 
+// If the camera is below the bottom of the seg the bottom edge needs
+// to be clipped. This is done so visplanes will still be rendered
 // fully.
 
 static float slopemark[MAX_SCREENWIDTH];
@@ -694,10 +694,10 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 //
 // R_ClipInitialSegRange
 //
-// Performs initial clipping based on the opening of the portal. This can 
-// quickly reject segs that are all the way off the left or right edges 
+// Performs initial clipping based on the opening of the portal. This can
+// quickly reject segs that are all the way off the left or right edges
 // of the portal window.
-// 
+//
 static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
    // SoM: Quickly reject the seg based on the bounding box of the portal
@@ -740,13 +740,13 @@ void R_ClipSegToFPortal(void)
    int start, stop;
 
    if(!R_ClipInitialSegRange(&start, &stop, &clipx1, &clipx2))
-      return; 
+      return;
 
    if(seg.ceilingplane && seg.ceilingplane->pslope)
    {
       for(i = start; i <= stop; i++)
       {
-         // skip past the closed or out of sight columns to find the first 
+         // skip past the closed or out of sight columns to find the first
          // visible column
          while(i <= stop && floorclip[i] - slopemark[i] <= -1.0) i++;
 
@@ -755,7 +755,7 @@ void R_ClipSegToFPortal(void)
 
          startx = i; // mark
 
-         // skip past visible columns 
+         // skip past visible columns
          while(i <= stop && floorclip[i] - slopemark[i] > -1.0f) i++;
 
          if(seg.clipsolid)
@@ -786,7 +786,7 @@ void R_ClipSegToFPortal(void)
 
          startx = i; // mark
 
-         // skip past visible columns 
+         // skip past visible columns
          for(; i <= stop && floorclip[i] - top > -1.0f; i++)
          {
             slopemark[i] = top;
@@ -808,7 +808,7 @@ void R_ClipSegToCPortal(void)
    int start, stop;
 
    if(!R_ClipInitialSegRange(&start, &stop, &clipx1, &clipx2))
-      return; 
+      return;
 
    if(seg.floorplane && seg.floorplane->pslope)
    {
@@ -872,7 +872,7 @@ void R_ClipSegToLPortal(void)
 
    // Line based portal. This requires special clipping...
    if(!R_ClipInitialSegRange(&start, &stop, &clipx1, &clipx2))
-      return; 
+      return;
 
    // This can actually happen with slopes!
    if(!seg.floorplane && !seg.ceilingplane)
@@ -896,7 +896,7 @@ void R_ClipSegToLPortal(void)
          return;
 
       topstep = seg.topstep;
-      
+
       for(i = start; i <= stop; i++)
       {
          for(; i <= stop && (bottom < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
@@ -966,7 +966,7 @@ void R_ClipSegToLPortal(void)
 
       float top, top2, topstep;
 
-      // I totally overlooked this when I moved all the wall panel projection 
+      // I totally overlooked this when I moved all the wall panel projection
       // to r_segs.c
       top = seg.top + seg.topstep * clipx1;
       top2 = seg.top2 - seg.topstep * clipx2;
@@ -979,7 +979,7 @@ void R_ClipSegToLPortal(void)
 
       for(i = start; i <= stop; i++)
       {
-         // skip past the closed or out of sight columns to find the first 
+         // skip past the closed or out of sight columns to find the first
          // visible column
          for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
             top += topstep;
@@ -989,7 +989,7 @@ void R_ClipSegToLPortal(void)
 
          startx = i; // mark
 
-         // skip past visible columns 
+         // skip past visible columns
          for(; i <= stop && floorclip[i] - top > -1.0f; i++)
             top += topstep;
 
@@ -1022,7 +1022,7 @@ void R_ClipSegToLPortal(void)
 
 
 
-R_ClipSegFunc segclipfuncs[] = 
+R_ClipSegFunc segclipfuncs[] =
 {
    R_ClipSegToFPortal,
    R_ClipSegToCPortal,
@@ -1032,8 +1032,8 @@ R_ClipSegFunc segclipfuncs[] =
 #define NEARCLIP 0.05f
 #define PNEARCLIP 0.001f
 
-static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
-                        float texbottom, vertex_t *v1, vertex_t *v2, 
+static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
+                        float texbottom, vertex_t *v1, vertex_t *v2,
                         float lclip1, float lclip2)
 {
    bool mark, markblend; // haleyjd
@@ -1121,7 +1121,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
    {
-      // If the line is clipped solid, it can't be assumed that the upper 
+      // If the line is clipped solid, it can't be assumed that the upper
       // texture portion meets up with an adjacent ceiling flat.
       if(seg.clipsolid)
       {
@@ -1137,20 +1137,20 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
 
 
-   // -- Ceilings -- 
+   // -- Ceilings --
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ? 
+   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ?
                   (t != h || t2 != h2) :
                   (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
    seg.markflags = 0;
-   
-   markblend = seg.frontsec->c_portal != NULL 
-         && seg.backsec->c_portal != NULL 
+
+   markblend = seg.frontsec->c_portal != NULL
+         && seg.backsec->c_portal != NULL
          && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
 
    if(seg.c_portal &&
-      (seg.clipsolid || heightchange || 
+      (seg.clipsolid || heightchange ||
        seg.frontsec->c_portal != seg.backsec->c_portal))
    {
       seg.markflags |= SEG_MARKCPORTAL;
@@ -1159,7 +1159,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    else
       seg.c_window   = NULL;
 
-   if(seg.ceilingplane && 
+   if(seg.ceilingplane &&
        (mark || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
@@ -1187,15 +1187,15 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    else
       seg.toptex = 0;
 
-   // -- Floors -- 
+   // -- Floors --
    // SoM: TODO: Float comparisons should be done within an epsilon
    heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ? (l != b || l2 != b2) :
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 
-   markblend = seg.frontsec->f_portal != NULL 
-         && seg.backsec->f_portal != NULL 
+   markblend = seg.frontsec->f_portal != NULL
+         && seg.backsec->f_portal != NULL
          && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
-         
+
    if(seg.f_portal &&
       (seg.clipsolid || heightchange ||
        seg.frontsec->f_portal != seg.backsec->f_portal))
@@ -1206,11 +1206,11 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    else
       seg.f_window = NULL;
 
-   if(seg.floorplane && 
+   if(seg.floorplane &&
       (mark || seg.clipsolid || heightchange ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
-       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle != 
+       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
         seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
@@ -1226,7 +1226,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    // haleyjd 03/12/06: inverted predicates to simplify
    if(seg.backsec->f_portal != seg.frontsec->f_portal)
    {
-      if(seg.frontsec->f_portal && 
+      if(seg.frontsec->f_portal &&
          seg.frontsec->f_portal->type != R_LINKED &&
          seg.frontsec->f_portal->type != R_TWOWAY)
          seg.f_portalignore = true;
@@ -1234,7 +1234,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    if(seg.backsec->c_portal != seg.frontsec->c_portal)
    {
-      if(seg.frontsec->c_portal && 
+      if(seg.frontsec->c_portal &&
          seg.frontsec->c_portal->type != R_LINKED &&
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
@@ -1269,7 +1269,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.l_window = NULL;
 }
 
-static void R_2S_Normal(float pstep, float i1, float i2, float textop, 
+static void R_2S_Normal(float pstep, float i1, float i2, float textop,
                         float texbottom)
 {
    bool mark, markblend; // haleyjd
@@ -1307,13 +1307,13 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                    seg.side->bottomtexture == 0);
 
-   // New clipsolid code will emulate the old doom behavior and still manages to 
+   // New clipsolid code will emulate the old doom behavior and still manages to
    // keep valid closed door cases handled.
    seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
        seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
        (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
         seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
-        (seg.backsec->ceilingheight <= seg.backsec->floorheight && 
+        (seg.backsec->ceilingheight <= seg.backsec->floorheight &&
          !uppermissing && !lowermissing)));
 
    // This was moved here because the behavior changes based on the value of seg.clipsolid.
@@ -1336,12 +1336,12 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    }
 
    seg.markflags = 0;
-   
-   markblend = seg.frontsec->c_portal != NULL 
-            && seg.backsec->c_portal != NULL 
+
+   markblend = seg.frontsec->c_portal != NULL
+            && seg.backsec->c_portal != NULL
             && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
-               
-   if(mark || seg.clipsolid || frontc != backc || 
+
+   if(mark || seg.clipsolid || frontc != backc ||
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
        (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
@@ -1351,12 +1351,12 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->topmap != seg.backsec->topmap ||
        seg.frontsec->c_portal != seg.backsec->c_portal || markblend) // haleyjd
    {
-      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : 
+      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY :
                     seg.ceilingplane ? SEG_MARKCEILING : 0;
    }
-   
-   if(seg.c_portal && 
-      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
+
+   if(seg.c_portal &&
+      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight ||
        seg.frontsec->c_portal != seg.backsec->c_portal))
    {
       seg.markflags |= SEG_MARKCPORTAL;
@@ -1366,7 +1366,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.c_window = NULL;
 
    if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
-     !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
+     !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) &&
       side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
@@ -1381,11 +1381,11 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.toptex = 0;
 
 
-   markblend = seg.frontsec->f_portal != NULL 
-            && seg.backsec->f_portal != NULL 
+   markblend = seg.frontsec->f_portal != NULL
+            && seg.backsec->f_portal != NULL
             && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
-             
-   if(mark || seg.clipsolid ||  
+
+   if(mark || seg.clipsolid ||
        seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
@@ -1394,13 +1394,13 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
-       seg.frontsec->f_portal != seg.backsec->f_portal || 
+       seg.frontsec->f_portal != seg.backsec->f_portal ||
        markblend) // haleyjd
    {
-      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : 
+      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY :
                        seg.floorplane ? SEG_MARKFLOOR : 0;
    }
-   
+
    if(seg.f_portal &&
       (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->f_portal != seg.backsec->f_portal))
@@ -1416,7 +1416,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // haleyjd 03/12/06: inverted predicates to simplify
    if(seg.backsec->f_portal != seg.frontsec->f_portal)
    {
-      if(seg.frontsec->f_portal && 
+      if(seg.frontsec->f_portal &&
          seg.frontsec->f_portal->type != R_LINKED &&
          seg.frontsec->f_portal->type != R_TWOWAY)
          seg.f_portalignore = true;
@@ -1424,7 +1424,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    if(seg.backsec->c_portal != seg.frontsec->c_portal)
    {
-      if(seg.frontsec->c_portal && 
+      if(seg.frontsec->c_portal &&
          seg.frontsec->c_portal->type != R_LINKED &&
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
@@ -1483,9 +1483,9 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
 
-   // SoM: one of the byproducts of the portal height enforcement: The top 
-   // silhouette should be drawn at ceilingheight but the actual texture 
-   // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
+   // SoM: one of the byproducts of the portal height enforcement: The top
+   // silhouette should be drawn at ceilingheight but the actual texture
+   // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE
    // complicated :/
    float textop, texbottom;
 
@@ -1511,19 +1511,19 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !(seg.frontsec->intflags & SIF_SKY) &&
-      !((seg.frontsec->c_pflags & PS_PASSABLE && 
-        viewz > R_CPLink(seg.frontsec)->planez) || 
-        (seg.frontsec->f_pflags & PS_PASSABLE && 
+      !((seg.frontsec->c_pflags & PS_PASSABLE &&
+        viewz > R_CPLink(seg.frontsec)->planez) ||
+        (seg.frontsec->f_pflags & PS_PASSABLE &&
         viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
    // Reject empty two-sided lines used for line specials.
    if(seg.backsec && seg.frontsec
-      && seg.backsec->ceilingpic == seg.frontsec->ceilingpic 
+      && seg.backsec->ceilingpic == seg.frontsec->ceilingpic
       && seg.backsec->floorpic   == seg.frontsec->floorpic
-      && seg.backsec->lightlevel == seg.frontsec->lightlevel 
+      && seg.backsec->lightlevel == seg.frontsec->lightlevel
       && seg.line->sidedef->midtexture == 0
-      
+
       // killough 3/7/98: Take flats offsets into account:
       && seg.backsec->floor_xoffs   == seg.frontsec->floor_xoffs
       && seg.backsec->floor_yoffs   == seg.frontsec->floor_yoffs
@@ -1535,24 +1535,24 @@ static void R_AddLine(seg_t *line, bool dynasegs)
           seg.frontsec->floorbaseangle + seg.frontsec->floorangle)
       && (seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle ==
           seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle)
-      
+
       // killough 4/16/98: consider altered lighting
       && seg.backsec->floorlightsec   == seg.frontsec->floorlightsec
       && seg.backsec->ceilinglightsec == seg.frontsec->ceilinglightsec
 
       && seg.backsec->floorheight   == seg.frontsec->floorheight
       && seg.backsec->ceilingheight == seg.frontsec->ceilingheight
-      
+
       // sf: coloured lighting
       // haleyjd 03/04/07: must test against maps, not heightsec
-      && seg.backsec->bottommap == seg.frontsec->bottommap 
-      && seg.backsec->midmap    == seg.frontsec->midmap 
+      && seg.backsec->bottommap == seg.frontsec->bottommap
+      && seg.backsec->midmap    == seg.frontsec->midmap
       && seg.backsec->topmap    == seg.frontsec->topmap
 
       // SoM 12/10/03: PORTALS
       && seg.backsec->c_portal == seg.frontsec->c_portal
       && seg.backsec->f_portal == seg.frontsec->f_portal
-      
+
       && (seg.backsec->c_portal != NULL && (seg.backsec->c_pflags & PS_BLENDFLAGS) == (seg.frontsec->c_pflags & PS_BLENDFLAGS))
       && (seg.backsec->f_portal != NULL && (seg.backsec->f_pflags & PS_BLENDFLAGS) == (seg.frontsec->f_pflags & PS_BLENDFLAGS))
 
@@ -1561,7 +1561,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       && seg.backsec->f_slope == seg.frontsec->f_slope
       && seg.backsec->c_slope == seg.frontsec->c_slope
       )
-      return;      
+      return;
 
    // The first step is to do calculations for the entire wall seg, then
    // send the wall to the clipping functions.
@@ -1580,15 +1580,15 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    t2.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
    t2.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
 
-   // SoM: Portal lines are not texture and as a result can be clipped MUCH 
-   // closer to the camera than normal lines can. This closer clipping 
+   // SoM: Portal lines are not texture and as a result can be clipped MUCH
+   // closer to the camera than normal lines can. This closer clipping
    // distance is used to stave off the flash that can sometimes occur when
    // passing through a linked portal line.
    if(line->linedef->portal)
       nearclip = PNEARCLIP;
 
    if(t1.fy < nearclip)
-   {      
+   {
       float move, movey;
 
       // Simple reject for lines entirely behind the view plane.
@@ -1619,7 +1619,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    i2 = 1.0f / t2.fy;
    x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
 
-   // SoM: Handle the case where a wall is only occupying a single post but 
+   // SoM: Handle the case where a wall is only occupying a single post but
    // still needs to be rendered to keep groups of single post walls from not
    // being rendered and causing slime trails.
    floorx1 = (float)floor(x1 + 0.999f);
@@ -1639,21 +1639,21 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       pstep = 1.0f;
 
    side = line->sidedef;
-   
-   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset) + line->offset; 
+
+   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset) + line->offset;
    seg.toffsety = toffsety + M_FixedToFloat(side->rowoffset);
 
    if(seg.toffsetx < 0)
    {
       float maxtexw = 0.0f;
 
-      // SoM: ok, this was driving me crazy. It seems that when the offset is 
-      // less than 0, the fractional part will cause the texel at 
+      // SoM: ok, this was driving me crazy. It seems that when the offset is
+      // less than 0, the fractional part will cause the texel at
       // 0 + abs(seg.toffsetx) to double and it will strip the first texel to
       // one column. This is because -64 + ANY FRACTION is going to cast to 63
-      // and when you cast -0.999 through 0.999 it will cast to 0. The first 
+      // and when you cast -0.999 through 0.999 it will cast to 0. The first
       // step is to find the largest texture width on the line to make sure all
-      // the textures will start at the same column when the offsets are 
+      // the textures will start at the same column when the offsets are
       // adjusted.
 
       if(side->toptexture)
@@ -1663,12 +1663,12 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       if(side->bottomtexture && textures[side->bottomtexture]->widthmask > maxtexw)
          maxtexw = (float)textures[side->bottomtexture]->widthmask;
 
-      // Then adjust the offset to zero or the first positive value that will 
+      // Then adjust the offset to zero or the first positive value that will
       // repeat correctly with the largest texture on the line.
       if(maxtexw)
       {
          maxtexw++;
-         while(seg.toffsetx < 0.0f) 
+         while(seg.toffsetx < 0.0f)
             seg.toffsetx += maxtexw;
       }
    }
@@ -1720,7 +1720,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       seg.bottom2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
    }
    else
-   {      
+   {
       seg.bottom  = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
       seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
    }
@@ -1733,7 +1733,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    seg.f_portalignore = seg.c_portalignore = false;
 
-   if(!seg.backsec) 
+   if(!seg.backsec)
    {
       seg.twosided = false;
       seg.toptex   = seg.bottomtex = 0;
@@ -1748,7 +1748,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       seg.markflags = 0;
       seg.c_window = seg.f_window = NULL;
 
-      // SoM: these should be treated differently! 
+      // SoM: these should be treated differently!
       if(seg.frontsec->c_portal && (seg.frontsec->c_portal->type < R_TWOWAY ||
          (seg.frontsec->c_pflags & PS_VISIBLE && seg.frontsec->ceilingheight > viewz)))
       {
@@ -1767,17 +1767,17 @@ static void R_AddLine(seg_t *line, bool dynasegs)
          seg.markflags |= seg.frontsec->c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
       if(seg.floorplane != NULL)
          seg.markflags |= seg.frontsec->f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
-         
+
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
       seg.l_window    = line->linedef->portal ?
                         R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 
       // haleyjd 03/12/06: inverted predicates to simplify
-      if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
+      if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED &&
          seg.frontsec->f_portal->type != R_TWOWAY)
          seg.f_portalignore = true;
-      if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED && 
+      if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED &&
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
    }
@@ -1790,10 +1790,10 @@ static void R_AddLine(seg_t *line, bool dynasegs)
          R_2S_Normal(pstep, i1, i2, textop, texbottom);
    }
 
-   // SoM: This really needs to be handled here. The float values need to be 
+   // SoM: This really needs to be handled here. The float values need to be
    // clipped to sane values here because floats have a higher range of values
    // than ints do. If the clipping is done after the casting, the step values
-   // will no longer be accurate. This ensures more correct projection and 
+   // will no longer be accurate. This ensures more correct projection and
    // texturing.
    if(x1 < 0)
    {
@@ -1894,9 +1894,9 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    // check clip list for an open space
    angle1 = R_PointToAngle (x1, y1) - viewangle;
    angle2 = R_PointToAngle (x2, y2) - viewangle;
-   
+
    span = angle1 - angle2;
-   
+
    // Sitting on a line?
    if(span >= ANG180)
       return true;
@@ -1905,11 +1905,11 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    if(tspan > 2 * clipangle)
    {
       tspan -= (2 * clipangle);
-      
+
       // Totally off the left edge?
       if(tspan >= span)
          return false;
-      
+
       angle1 = clipangle;
    }
 
@@ -1917,11 +1917,11 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    if(tspan > 2 * clipangle)
    {
       tspan -= (2 * clipangle);
-      
+
       // Totally off the left edge?
       if(tspan >= span)
          return false;
-      
+
       angle2 = 0-clipangle;
    }
 
@@ -1932,10 +1932,10 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
    sx1 = viewangletox[angle1];
    sx2 = viewangletox[angle2];
-   
+
    // SoM: To account for the rounding error of the old BSP system, I needed to
    // make adjustments.
-   // SoM: Moved this to before the "does not cross a pixel" check to fix 
+   // SoM: Moved this to before the "does not cross a pixel" check to fix
    // another slime trail
    if(sx1 > 0) sx1--;
    if(sx2 < viewwidth - 1) sx2++;
@@ -1945,10 +1945,10 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    start = solidsegs;
    while(start->last < sx2)
       ++start;
-   
+
    if(sx1 >= start->first && sx2 <= start->last)
       return false;      // The clippost contains the new span.
-   
+
    return true;
 }
 
@@ -1986,7 +1986,7 @@ static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
 
    // haleyjd 12/09/12: The original algorithm held over from pre-dynasegs
    // polyobjects of comparing the centerpoint of each polyobject is totally
-   // insufficient. For now, we compare the center of each fragment instead. 
+   // insufficient. For now, we compare the center of each fragment instead.
    // Eventually this will be replaced with BSP tree traversal.
    while(list)
    {
@@ -1996,7 +1996,7 @@ static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
       po_ptrs[i++] = rpo;
       list = list->dllNext;
    }
-   
+
    // the polyobjects are NOT in any particular order, so use qsort
    qsort(po_ptrs, numpolys, sizeof(rpolyobj_t *), R_PolyobjCompare);
 }
@@ -2077,7 +2077,7 @@ static void R_Subsector(int num)
 
    bool        visible;
    v3float_t   cam;
-   
+
 #ifdef RANGECHECK
    if(num >= numsubsectors)
       I_Error("R_Subsector: ss %i with numss = %i\n", num, numsubsectors);
@@ -2112,11 +2112,11 @@ static void R_Subsector(int num)
 
    // -- Floor plane and portal --
    visible  = (!seg.frontsec->f_slope && seg.frontsec->floorheight < viewz)
-           || (seg.frontsec->f_slope 
-           &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
+           || (seg.frontsec->f_slope
+           &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of,
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
-   seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE 
+   seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
                && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
                ? seg.frontsec->f_portal : NULL;
@@ -2129,12 +2129,12 @@ static void R_Subsector(int num)
 
       seg.floorplane = visible && seg.frontsec->f_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->floorheight,
-                    seg.frontsec->f_pflags & PS_USEGLOBALTEX ? 
+                    seg.frontsec->f_pflags & PS_USEGLOBALTEX ?
                     seg.f_portal->globaltex : seg.frontsec->floorpic,
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
-                    floorangle, seg.frontsec->f_slope, 
+                    floorangle, seg.frontsec->f_slope,
                     seg.frontsec->f_pflags,
                     fpalpha,
                     seg.f_portal->poverlay) : NULL;
@@ -2145,7 +2145,7 @@ static void R_Subsector(int num)
       seg.floorplane = (visible || // killough 3/7/98
          (seg.frontsec->heightsec != -1 &&
           sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
-        R_FindPlane(seg.frontsec->floorheight, 
+        R_FindPlane(seg.frontsec->floorheight,
                     (seg.frontsec->floorpic == skyflatnum ||
                      seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
@@ -2155,17 +2155,17 @@ static void R_Subsector(int num)
                     seg.frontsec->floor_yoffs,
                     floorangle, seg.frontsec->f_slope, 0, 255, NULL) : NULL;
    }
-   
+
 
    // -- Ceiling plane and portal --
    visible  = (!seg.frontsec->c_slope && seg.frontsec->ceilingheight > viewz)
-           || (seg.frontsec->c_slope 
-           &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
+           || (seg.frontsec->c_slope
+           &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of,
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
-   seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE 
+   seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE
                && (!portalrender.active || portalrender.w->type != pw_floor)
-               && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
+               && (visible || seg.frontsec->c_portal->type < R_TWOWAY)
                ? seg.frontsec->c_portal : NULL;
 
    // This gets a little convoluted if you try to do it on one inequality
@@ -2176,12 +2176,12 @@ static void R_Subsector(int num)
 
       seg.ceilingplane = visible && seg.frontsec->c_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->ceilingheight,
-                    seg.frontsec->c_pflags & PS_USEGLOBALTEX ? 
+                    seg.frontsec->c_pflags & PS_USEGLOBALTEX ?
                     seg.c_portal->globaltex : seg.frontsec->ceilingpic,
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->ceiling_xoffs,       // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
-                    ceilingangle, seg.frontsec->c_slope, 
+                    ceilingangle, seg.frontsec->c_slope,
                     seg.frontsec->c_pflags,
                     cpalpha,
                     seg.c_portal->poverlay) : NULL;
@@ -2202,8 +2202,8 @@ static void R_Subsector(int num)
                     seg.frontsec->ceiling_yoffs,
                     ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
    }
-  
-   // killough 9/18/98: Fix underwater slowdown, by passing real sector 
+
+   // killough 9/18/98: Fix underwater slowdown, by passing real sector
    // instead of fake one. Improve sprite lighting by basing sprite
    // lightlevels on floor & ceiling lightlevels in the surrounding area.
    //
@@ -2213,7 +2213,7 @@ static void R_Subsector(int num)
    // That is part of the 242 effect!!!  If you simply pass sub->sector to
    // the old code you will not get correct lighting for underwater sprites!!!
    // Either you must pass the fake sector and handle validcount here, on the
-   // real sector, or you must account for the lighting in some other way, 
+   // real sector, or you must account for the lighting in some other way,
    // like passing it as an argument.
 
    R_AddSprites(sub->sector, (floorlightlevel+ceilinglightlevel)/2);
@@ -2242,18 +2242,18 @@ void R_RenderBSPNode(int bspnum)
    while(!(bspnum & NF_SUBSECTOR))  // Found a subsector?
    {
       node_t *bsp = &nodes[bspnum];
-      
+
       // Decide which side the view point is on.
       int side = R_PointOnSide(viewx, viewy, bsp);
-      
+
       // Recursively divide front space.
       R_RenderBSPNode(bsp->children[side]);
-      
+
       // Possibly divide back space.
-      
+
       if(!R_CheckBBox(bsp->bbox[side^=1]))
          return;
-      
+
       bspnum = bsp->children[side];
    }
    R_Subsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);

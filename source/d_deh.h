@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //--------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -6,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +27,7 @@
 //      comments in this file
 //      New string names all start with an extra s_ to avoid conflicts,
 //      but are otherwise identical to the original including uppercase.
-//      This is partly to keep the changes simple and partly for easier 
+//      This is partly to keep the changes simple and partly for easier
 //      identification of the locations in which they're used.
 //
 //      Printed strings for translation
@@ -64,17 +65,17 @@ extern const char *s_QSPROMPT; // = QSPROMPT;
 //#define QLPROMPT      "do you want to quickload the game named\n\n'%s'?\n\n"PRESSYN
 extern const char *s_QLPROMPT; // = QLPROMPT;
 
-//#define NEWGAME       
+//#define NEWGAME
 //"you can't start a new game\n"
 //"while in a network game.\n\n"PRESSKEY
 extern const char *s_NEWGAME; // = NEWGAME;
 
-//#define NIGHTMARE     
+//#define NIGHTMARE
 //"are you sure? this skill level\n"
 //"isn't even remotely fair.\n\n"PRESSYN
 extern const char *s_NIGHTMARE; // = NIGHTMARE;
 
-//#define SWSTRING      
+//#define SWSTRING
 //"this is the shareware version of doom.\n\n"
 //"you need to order the entire trilogy.\n\n"PRESSKEY
 extern const char *s_SWSTRING; // = SWSTRING;
@@ -634,14 +635,14 @@ extern const char *s_STSTR_COMPOFF; // = STSTR_COMPOFF;
 //
 //      F_Finale.C
 //
-//#define E1TEXT 
+//#define E1TEXT
 //"Once you beat the big badasses and\n"
 //"clean out the moon base you're supposed\n"
 //"to win, aren't you? Aren't you? Where's\n"
 //"your fat reward and ticket home? What\n"
 //"the hell is this? It's not supposed to\n"
 //"end this way!\n"
-//"\n" 
+//"\n"
 //"It stinks like rotten meat, but looks\n"
 //"like the lost Deimos base.  Looks like\n"
 //"you're stuck on The Shores of Hell.\n"
@@ -653,14 +654,14 @@ extern const char *s_STSTR_COMPOFF; // = STSTR_COMPOFF;
 extern const char *s_E1TEXT; // = E1TEXT;
 
 
-//#define E2TEXT 
+//#define E2TEXT
 //"You've done it! The hideous cyber-\n"
 //"demon lord that ruled the lost Deimos\n"
 //"moon base has been slain and you\n"
 //"are triumphant! But ... where are\n"
 //"you? You clamber to the edge of the\n"
 //"moon and look down to see the awful\n"
-//"truth.\n" 
+//"truth.\n"
 //"\n"
 //"Deimos floats above Hell itself!\n"
 //"You've never heard of anyone escaping\n"
@@ -668,7 +669,7 @@ extern const char *s_E1TEXT; // = E1TEXT;
 //"sorry they ever heard of you! Quickly,\n"
 //"you rappel down to  the surface of\n"
 //"Hell.\n"
-//"\n" 
+//"\n"
 //"Now, it's on to the final chapter of\n"
 //"DOOM! -- Inferno."
 extern const char *s_E2TEXT; // = E2TEXT;
@@ -685,7 +686,7 @@ extern const char *s_E2TEXT; // = E2TEXT;
 //"contain, and now Hell at last plays\n"
 //"fair -- for you emerge from the door\n"
 //"to see the green fields of Earth!\n"
-//"Home at last.\n" 
+//"Home at last.\n"
 //"\n"
 //"You wonder what's been happening on\n"
 //"Earth while you were battling evil\n"
@@ -695,7 +696,7 @@ extern const char *s_E2TEXT; // = E2TEXT;
 extern const char *s_E3TEXT; // = E3TEXT;
 
 
-//#define E4TEXT 
+//#define E4TEXT
 //"the spider mastermind must have sent forth\n"
 //"its legions of hellspawn before your\n"
 //"final confrontation with that terrible\n"
@@ -717,25 +718,25 @@ extern const char *s_E4TEXT; // = E4TEXT;
 
 // after level 6, put this:
 
-//#define C1TEXT 
-//"YOU HAVE ENTERED DEEPLY INTO THE INFESTED\n" 
-//"STARPORT. BUT SOMETHING IS WRONG. THE\n" 
-//"MONSTERS HAVE BROUGHT THEIR OWN REALITY\n" 
-//"WITH THEM, AND THE STARPORT'S TECHNOLOGY\n" 
-//"IS BEING SUBVERTED BY THEIR PRESENCE.\n" 
+//#define C1TEXT
+//"YOU HAVE ENTERED DEEPLY INTO THE INFESTED\n"
+//"STARPORT. BUT SOMETHING IS WRONG. THE\n"
+//"MONSTERS HAVE BROUGHT THEIR OWN REALITY\n"
+//"WITH THEM, AND THE STARPORT'S TECHNOLOGY\n"
+//"IS BEING SUBVERTED BY THEIR PRESENCE.\n"
 //"\n"
-//"AHEAD, YOU SEE AN OUTPOST OF HELL, A\n" 
-//"FORTIFIED ZONE. IF YOU CAN GET PAST IT,\n" 
-//"YOU CAN PENETRATE INTO THE HAUNTED HEART\n" 
-//"OF THE STARBASE AND FIND THE CONTROLLING\n" 
-//"SWITCH WHICH HOLDS EARTH'S POPULATION\n" 
+//"AHEAD, YOU SEE AN OUTPOST OF HELL, A\n"
+//"FORTIFIED ZONE. IF YOU CAN GET PAST IT,\n"
+//"YOU CAN PENETRATE INTO THE HAUNTED HEART\n"
+//"OF THE STARBASE AND FIND THE CONTROLLING\n"
+//"SWITCH WHICH HOLDS EARTH'S POPULATION\n"
 //"HOSTAGE."
 extern const char *s_C1TEXT; // = C1TEXT;
 
 // After level 11, put this:
 
-//#define C2TEXT 
-//"YOU HAVE WON! YOUR VICTORY HAS ENABLED\n" 
+//#define C2TEXT
+//"YOU HAVE WON! YOUR VICTORY HAS ENABLED\n"
 //"HUMANKIND TO EVACUATE EARTH AND ESCAPE\n"
 //"THE NIGHTMARE.  NOW YOU ARE THE ONLY\n"
 //"HUMAN LEFT ON THE FACE OF THE PLANET.\n"
@@ -757,7 +758,7 @@ extern const char *s_C2TEXT; // = C2TEXT;
 
 // After level 20, put this:
 
-//#define C3TEXT 
+//#define C3TEXT
 //"YOU ARE AT THE CORRUPT HEART OF THE CITY,\n"
 //"SURROUNDED BY THE CORPSES OF YOUR ENEMIES.\n"
 //"YOU SEE NO WAY TO DESTROY THE CREATURES'\n"
@@ -772,7 +773,7 @@ extern const char *s_C3TEXT; // = C3TEXT;
 
 // After level 29, put this:
 
-//#define C4TEXT 
+//#define C4TEXT
 //"THE HORRENDOUS VISAGE OF THE BIGGEST\n"
 //"DEMON YOU'VE EVER SEEN CRUMBLES BEFORE\n"
 //"YOU, AFTER YOU PUMP YOUR ROCKETS INTO\n"
@@ -794,7 +795,7 @@ extern const char *s_C4TEXT; // = C4TEXT;
 
 // Before level 31, put this:
 
-//#define C5TEXT 
+//#define C5TEXT
 //"CONGRATULATIONS, YOU'VE FOUND THE SECRET\n"
 //"LEVEL! LOOKS LIKE IT'S BEEN BUILT BY\n"
 //"HUMANS, RATHER THAN DEMONS. YOU WONDER\n"
@@ -811,9 +812,9 @@ extern const char *s_C5TEXT; // = C5TEXT;
 //"BLAZE THROUGH THIS ONE!\n"
 extern const char *s_C6TEXT; // = C6TEXT;
 
-// after map 06 
+// after map 06
 
-//#define P1TEXT  
+//#define P1TEXT
 //"You gloat over the steaming carcass of the\n"
 //"Guardian.  With its death, you've wrested\n"
 //"the Accelerator from the stinking claws\n"
@@ -830,7 +831,7 @@ extern const char *s_P1TEXT; // = P1TEXT;
 
 // after map 11
 
-//#define P2TEXT 
+//#define P2TEXT
 //"Even the deadly Arch-Vile labyrinth could\n"
 //"not stop you, and you've gotten to the\n"
 //"prototype Accelerator which is soon\n"
@@ -842,7 +843,7 @@ extern const char *s_P2TEXT; // = P2TEXT;
 
 // after map 20
 
-//#define P3TEXT 
+//#define P3TEXT
 //"You've bashed and battered your way into\n"
 //"the heart of the devil-hive.  Time for a\n"
 //"Search-and-Destroy mission, aimed at the\n"
@@ -857,7 +858,7 @@ extern const char *s_P3TEXT; // = P3TEXT;
 
 // after map 30
 
-//#define P4TEXT 
+//#define P4TEXT
 //"The Gatekeeper's evil face is splattered\n"
 //"all over the place.  As its tattered corpse\n"
 //"collapses, an inverted Gate forms and\n"
@@ -883,14 +884,14 @@ extern const char *s_P5TEXT; // = P5TEXT;
 
 // before map 32
 
-//#define P6TEXT 
+//#define P6TEXT
 //"Betcha wondered just what WAS the hardest\n"
 //"level we had ready for ya?  Now you know.\n"
 //"No one gets out alive."
 extern const char *s_P6TEXT; // = P6TEXT;
 
 
-//#define T1TEXT 
+//#define T1TEXT
 //"You've fought your way out of the infested\n"
 //"experimental labs.   It seems that UAC has\n"
 //"once again gulped it down.  With their\n"
@@ -906,7 +907,7 @@ extern const char *s_P6TEXT; // = P6TEXT;
 extern const char *s_T1TEXT; // = T1TEXT;
 
 
-//#define T2TEXT 
+//#define T2TEXT
 //"You hear the grinding of heavy machinery\n"
 //"ahead.  You sure hope they're not stamping\n"
 //"out new hellspawn, but you're ready to\n"
@@ -919,7 +920,7 @@ extern const char *s_T1TEXT; // = T1TEXT;
 extern const char *s_T2TEXT; // = T2TEXT;
 
 
-//#define T3TEXT 
+//#define T3TEXT
 //"The vista opening ahead looks real damn\n"
 //"familiar. Smells familiar, too -- like\n"
 //"fried excrement. You didn't like this\n"
@@ -945,7 +946,7 @@ extern const char *s_T3TEXT; // = T3TEXT;
 extern const char *s_T4TEXT; // = T4TEXT;
 
 
-//#define T5TEXT 
+//#define T5TEXT
 //"What now? Looks totally different. Kind\n"
 //"of like King Tut's condo. Well,\n"
 //"whatever's here can't be any worse\n"
@@ -954,7 +955,7 @@ extern const char *s_T4TEXT; // = T4TEXT;
 extern const char *s_T5TEXT; // = T5TEXT;
 
 
-//#define T6TEXT 
+//#define T6TEXT
 //"Time for a vacation. You've burst the\n"
 //"bowels of hell and by golly you're ready\n"
 //"for a break. You mutter to yourself,\n"
@@ -1186,7 +1187,6 @@ extern bool deh_loaded; // sf
 //
 // Revision 1.4  1998/04/10  06:47:29  killough
 // Fix CVS stuff
-//   
+//
 //
 //--------------------------------------------------------------------
-

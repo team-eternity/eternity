@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -58,9 +58,9 @@ public:
    // Methods
    void ArchiveCString(char *str,  size_t maxLen);
    void ArchiveLString(char *&str, size_t &len);
-   
+
    // WriteLString is valid during saving only. This is to accomodate const
-   // char *'s which must be saved, and are read into temporary buffers 
+   // char *'s which must be saved, and are read into temporary buffers
    // during loading.
    void WriteLString(const char *str, size_t len = 0);
 
@@ -73,7 +73,7 @@ public:
    SaveArchive &operator << (int16_t  &x);
    SaveArchive &operator << (uint16_t &x);
    SaveArchive &operator << (int8_t   &x);
-   SaveArchive &operator << (uint8_t  &x); 
+   SaveArchive &operator << (uint8_t  &x);
    SaveArchive &operator << (bool     &x);
    SaveArchive &operator << (float    &x);
    SaveArchive &operator << (double   &x);

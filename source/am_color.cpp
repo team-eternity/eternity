@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -55,8 +55,8 @@ extern int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 extern int mapcolor_frnd;    // colors for friends of player
 extern int mapcolor_prtl;    // SoM: color for lines not in player portal group
 
-// SoM: map mode. True means the portal groups are overlayed (the group the 
-// player is in being displayed in color and the other groups being grayed out 
+// SoM: map mode. True means the portal groups are overlayed (the group the
+// player is in being displayed in color and the other groups being grayed out
 // and underneath) and false means the map is not modified.
 extern int mapportal_overlay;
 

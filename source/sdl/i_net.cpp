@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,7 +28,7 @@
 // a go-between for the code in d_net.c and code in an eventual Win32-
 // specific (or general BSD) sockets module where UDP and possibly IPX
 // are supported. Both zdoom and Quake 2 have sockets code that could
-// easily be adapted to work for Eternity. Quake 2 is a preferred 
+// easily be adapted to work for Eternity. Quake 2 is a preferred
 // reference source because of its GPL license.
 //
 //-----------------------------------------------------------------------------
@@ -119,18 +119,18 @@ inline static Uint32 NetToHost32(const byte *area)
 // haleyjd 08/25/11: Moved checksumming to low-level protocol
 
 //
-// NetChecksum 
+// NetChecksum
 //
 static uint32_t NetChecksum(byte *packetdata, int len)
 {
    uint32_t c = 0x1234567;
    int i;
-   
+
    len /= sizeof(uint32_t);
 
    for(i = 0; i < len; ++i)
       c += ((uint32_t *)packetdata)[i] * (i + 1);
-   
+
    return c & NCMD_CHECKSUM;
 }
 
@@ -225,7 +225,7 @@ void writegetpacket(void *data, int len)
 bool PacketSend(void)
 {
    int c;
-   int packetsize = 0;   
+   int packetsize = 0;
 
    byte *rover = (byte *)packet->data;
 
@@ -242,16 +242,16 @@ bool PacketSend(void)
       for(c = 0; c < netbuffer->numtics; ++c)
       {
          byte *ticstart = rover, *ticend;
-         Sint16 ticcmdflags = 0;         
-         
+         Sint16 ticcmdflags = 0;
+
          // reserve 2 bytes for the flags
          rover += 2;
 
          NETWRITEBYTEIF(netbuffer->d.cmds[c].forwardmove, TCF_FORWARDMOVE);
          NETWRITEBYTEIF(netbuffer->d.cmds[c].sidemove,    TCF_SIDEMOVE);
-         NETWRITESHORTIF(netbuffer->d.cmds[c].angleturn,  TCF_ANGLETURN);         
-         
-         NETWRITESHORT(netbuffer->d.cmds[c].consistency);         
+         NETWRITESHORTIF(netbuffer->d.cmds[c].angleturn,  TCF_ANGLETURN);
+
+         NETWRITESHORT(netbuffer->d.cmds[c].consistency);
 
          NETWRITEBYTEIF(netbuffer->d.cmds[c].chatchar, TCF_CHATCHAR);
          NETWRITEBYTEIF(netbuffer->d.cmds[c].buttons,  TCF_BUTTONS);
@@ -271,7 +271,7 @@ bool PacketSend(void)
    {
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          *rover++ = netbuffer->d.data[c];
-      
+
       packetsize += GAME_OPTION_SIZE;
    }
 
@@ -279,7 +279,7 @@ bool PacketSend(void)
    rover = (byte *)packet->data;
    netbuffer->checksum |= NetChecksum((byte *)packet->data + 4, packetsize);
    NETWRITELONG(netbuffer->checksum);
-   
+
    packet->len     = packetsize;
    packet->address = sendaddress[doomcom->remotenode];
 
@@ -303,12 +303,12 @@ bool PacketGet(void)
    uint32_t checksum;
    int i, c, packets_read;
    byte *rover;
-   
+
    packets_read = SDLNet_UDP_Recv(udpsocket, packet);
-   
+
    if(packets_read < 0)
       I_Error("Error reading packet: %s\n", SDLNet_GetError());
-   
+
    if(packets_read == 0)
    {
       doomcom->remotenode = -1;
@@ -316,41 +316,41 @@ bool PacketGet(void)
    }
 
    writegetpacket(packet->data, packet->len);
-   
+
    for(i = 0; i < doomcom->numnodes; ++i)
    {
-      if(packet->address.host == sendaddress[i].host && 
+      if(packet->address.host == sendaddress[i].host &&
          packet->address.port == sendaddress[i].port)
          break;
    }
-   
+
    if(i == doomcom->numnodes)
    {
       doomcom->remotenode = -1;
       return true;
    }
-   
+
    doomcom->remotenode = i;
 
    if(packet->len < 4)
       return false;
-   
+
    rover = (byte *)packet->data;
 
    checksum = NetToHost32(rover);
-   
+
    // haleyjd: verify checksum first; if fails, don't even read the rest
    if((checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
       return false;
-   
+
    netbuffer->checksum = checksum;
    rover += 4;
-   
+
    netbuffer->player         = *rover++;
    netbuffer->retransmitfrom = *rover++;
    netbuffer->starttic       = *rover++;
    netbuffer->numtics        = *rover++;
-   
+
    if(!(netbuffer->checksum & NCMD_SETUP))
    {
       for(c = 0; c < netbuffer->numtics; ++c)
@@ -371,10 +371,10 @@ bool PacketGet(void)
             netbuffer->d.cmds[c].angleturn = NetToHost16(rover);
             rover += 2;
          }
-         
+
          netbuffer->d.cmds[c].consistency = NetToHost16(rover);
          rover += 2;
-         
+
          if(ticcmdflags & TCF_CHATCHAR)
             netbuffer->d.cmds[c].chatchar = *rover++;
          if(ticcmdflags & TCF_BUTTONS)
@@ -411,13 +411,13 @@ void I_QuitNetwork(void)
       SDLNet_FreePacket(packet);
       packet = NULL;
    }
-   
+
    if(udpsocket)
    {
       SDLNet_UDP_Close(udpsocket);
       udpsocket = NULL;
    }
-   
+
    SDLNet_Quit();
 }
 
@@ -427,9 +427,9 @@ void I_QuitNetwork(void)
 void I_InitNetwork(void)
 {
    int i, p;
-   
+
    doomcom = estructalloc(doomcom_t, 1);
-   
+
    // set up for network
    i = M_CheckParm("-dup");
    if(i && i < myargc - 1)
@@ -442,7 +442,7 @@ void I_InitNetwork(void)
    }
    else
       doomcom->ticdup = 1;
-	
+
    if(M_CheckParm("-extratic"))
       doomcom->extratics = 1;
    else
@@ -467,38 +467,38 @@ void I_InitNetwork(void)
       doomcom->consoleplayer = 0;
       doomcom->extratics = 0;
       doomcom->ticdup = 1;
-      
+
       netgame = false;
-      return;      
+      return;
    }
 
    if(i + 2 >= myargc)
       I_Error("I_InitNetwork: insufficient parameters to -net\n");
-   
+
    netsend = PacketSend;
    netget  = PacketGet;
    netgame = true;
-   
+
    doomcom->consoleplayer = myargv[i+1][0]-'1';
-   
+
    doomcom->numnodes = 1;
-   
+
    SDLNet_Init();
-   
+
    atexit(I_QuitNetwork);
-   
+
    i++;
    while(++i < myargc && myargv[i][0] != '-')
    {
       if(SDLNet_ResolveHost(&sendaddress[doomcom->numnodes], myargv[i], DOOMPORT))
          I_Error("Unable to resolve %s\n", myargv[i]);
-      
+
       doomcom->numnodes++;
    }
 
    doomcom->id = DOOMCOM_ID;
    doomcom->numplayers = doomcom->numnodes;
-   
+
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
 
    packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 31) & ~31));

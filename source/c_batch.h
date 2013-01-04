@@ -35,4 +35,3 @@ bool          C_CommandIsBatch(const char *name);
 void          C_SaveCommandBatches(FILE *file);
 
 #endif
-

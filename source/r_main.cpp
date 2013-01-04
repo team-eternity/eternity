@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -113,7 +113,7 @@ angle_t clipangle;
 // The viewangletox[viewangle + FINEANGLES/4] lookup
 // maps the visible view angles to screen X coordinates,
 // flattening the arc to a flat projection plane.
-// There will be many angles mapped to the same X. 
+// There will be many angles mapped to the same X.
 
 int viewangletox[FINEANGLES/2];
 
@@ -192,13 +192,13 @@ int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 {
    if(!node->dx)
       return x <= node->x ? node->dy > 0 : node->dy < 0;
-   
+
    if(!node->dy)
       return y <= node->y ? node->dx < 0 : node->dx > 0;
-   
+
    x -= node->x;
    y -= node->y;
-  
+
    // Try to quickly decide by looking at sign bits.
    if((node->dy ^ node->dx ^ x ^ y) < 0)
       return (node->dy ^ x) < 0;  // (left is negative)
@@ -216,13 +216,13 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 
    if(!ldx)
       return x <= lx ? ldy > 0 : ldy < 0;
-   
+
    if(!ldy)
       return y <= ly ? ldx < 0 : ldx > 0;
-  
+
    x -= lx;
    y -= ly;
-        
+
    // Try to quickly decide by looking at sign bits.
    if((ldy ^ ldx ^ x ^ y) < 0)
       return (ldy ^ x) < 0;          // (left is negative)
@@ -240,9 +240,9 @@ int SlopeDiv(unsigned int num, unsigned int den)
 
    if(den < 512)
       return SLOPERANGE;
-   
+
    ans = (num << 3) / (den >> 8);
-   
+
    return ans <= SLOPERANGE ? ans : SLOPERANGE;
 }
 
@@ -264,14 +264,14 @@ int SlopeDiv(unsigned int num, unsigned int den)
 // haleyjd 01/28/10: restored to Vanilla and made some modifications
 //
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y)
-{	
+{
    x -= pviewx;
    y -= pviewy;
 
    if((x | y) == 0)
       return 0;
 
-   if(x < R_P2ATHRESHOLD && x > -R_P2ATHRESHOLD && 
+   if(x < R_P2ATHRESHOLD && x > -R_P2ATHRESHOLD &&
       y < R_P2ATHRESHOLD && y > -R_P2ATHRESHOLD)
    {
       if(x >= 0)
@@ -356,7 +356,7 @@ float maxtangent = 1.0f;
 
 //
 // R_ResetFOV
-// 
+//
 // SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
 //
@@ -372,7 +372,7 @@ void R_ResetFOV(int width, int height)
    {
       fov = 90;
       return;
-   }   
+   }
 
    // The general equation is as follows:
    // y = mx + b -> fov = (75/2) * ratio + 40
@@ -398,7 +398,7 @@ static void R_InitTextureMapping (void)
 {
    register int i, x, limit;
    float vtan, ratio, slopet;
-   
+
    // Use tangent table to generate viewangletox:
    //  viewangletox will give the next greatest x
    //  after the view angle.
@@ -408,7 +408,7 @@ static void R_InitTextureMapping (void)
    // Cardboard
    if(video.height == 200 || video.height == 400)
       ratio = 1.0f;
-   else 
+   else
       ratio = 1.2f;
 
    view.fov = (float)fov * PI / 180.0f;
@@ -449,26 +449,26 @@ static void R_InitTextureMapping (void)
 
    while(i < FINEANGLES/2)
       viewangletox[i++] = -1;
-    
+
    // Scan viewangletox[] to generate xtoviewangle[]:
    //  xtoviewangle will give the smallest view angle
    //  that maps to x.
-   
+
    for(x = 0; x <= viewwidth; ++x)
    {
       for(i = 0; viewangletox[i] > x; ++i)
          ;
       xtoviewangle[x] = (i << ANGLETOFINESHIFT) - ANG90;
    }
-    
+
    // Take out the fencepost cases from viewangletox.
    for(i = 0; i < FINEANGLES/2; ++i)
       if(viewangletox[i] == -1)
          viewangletox[i] = 0;
-      else 
+      else
          if(viewangletox[i] == viewwidth+1)
             viewangletox[i] = viewwidth;
-        
+
    clipangle = xtoviewangle[0];
 }
 
@@ -482,25 +482,25 @@ static void R_InitTextureMapping (void)
 void R_InitLightTables (void)
 {
    int i;
-   
+
    // killough 4/4/98: dynamic colormaps
    // haleyjd: FIXME - wtf kind of types ARE these anyway??
    c_zlight     = emalloc(lighttable_t *(*)[32][128], sizeof(*c_zlight) * numcolormaps);
    c_scalelight = emalloc(lighttable_t *(*)[32][48],  sizeof(*c_scalelight) * numcolormaps);
-   
+
    // Calculate the light levels to use
    //  for each level / distance combination.
    for(i = 0; i < LIGHTLEVELS; ++i)
    {
-      // SoM: the LIGHTBRIGHT constant must be used to scale the start offset of 
-      // the colormaps, otherwise the levels are staggered and become slightly 
+      // SoM: the LIGHTBRIGHT constant must be used to scale the start offset of
+      // the colormaps, otherwise the levels are staggered and become slightly
       // darker.
       int j, startcmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
       for(j = 0; j < MAXLIGHTZ; ++j)
       {
          int scale = FixedDiv((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
          int t, level = startcmap - (scale >> LIGHTSCALESHIFT)/DISTMAP;
-         
+
          if(level < 0)
             level = 0;
          else if(level >= NUMCOLORMAPS)
@@ -554,12 +554,12 @@ void R_SetupViewScaling(void)
    video.scaled = (video.xscalef > 1.0f || video.yscalef > 1.0f);
 
    // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using
-   // floats to do the scaling which is 100 times more accurate, secondly, I 
-   // realized that the reason the old single arrays were causing problems was 
-   // they were only calculating the top-left corner of the scaled pixels. 
+   // floats to do the scaling which is 100 times more accurate, secondly, I
+   // realized that the reason the old single arrays were causing problems was
+   // they were only calculating the top-left corner of the scaled pixels.
    // Calculating widths through these arrays is wrong because the scaling will
-   // change the final scaled widths depending on what their unscaled screen 
-   // coords were. Thusly, all rectangles should be converted to unscaled 
+   // change the final scaled widths depending on what their unscaled screen
+   // coords were. Thusly, all rectangles should be converted to unscaled
    // x1, y1, x2, y2 coords, scaled, and then converted back to x, y, w, h
    video.x1lookup[0] = 0;
    lastfrac = frac = 0;
@@ -652,11 +652,11 @@ void R_ExecuteSetViewSize(void)
    int i;
 
    setsizeneeded = false;
-   
+
    R_SetupViewScaling();
-   
+
    R_InitTextureMapping();
-    
+
    // thing clipping
    for(i = 0; i < viewwidth; ++i)
       screenheightarray[i] = view.height - 1.0f;
@@ -669,16 +669,16 @@ void R_ExecuteSetViewSize(void)
       for(j = 0; j < MAXLIGHTSCALE; ++j)
       {                                       // killough 11/98:
          int t, level = startcmap - j*1/DISTMAP;
-         
+
          if(level < 0)
             level = 0;
-         
+
          if(level >= NUMCOLORMAPS)
             level = NUMCOLORMAPS-1;
-         
+
          // killough 3/20/98: initialize multiple colormaps
          level *= 256;
-         
+
          for(t = 0; t < numcolormaps; ++t)     // killough 4/4/98
             c_scalelight[t][i][j] = colormaps[t] + level;
       }
@@ -732,11 +732,11 @@ unsigned int frameid = 0;
 //
 // R_IncrementFrameid
 //
-// SoM: frameid is an unsigned integer that represents the number of the frame 
-// currently being rendered for use in caching data used by the renderer which 
+// SoM: frameid is an unsigned integer that represents the number of the frame
+// currently being rendered for use in caching data used by the renderer which
 // is unique to each frame. frameid is incremented every frame. When the number
 // becomes too great and the value wraps back around to 0, the structures should
-// be searched and all frameids reset to prevent mishaps in the rendering 
+// be searched and all frameids reset to prevent mishaps in the rendering
 // process.
 //
 void R_IncrementFrameid(void)
@@ -760,19 +760,19 @@ void R_IncrementFrameid(void)
 // R_SetupFrame
 //
 void R_SetupFrame(player_t *player, camera_t *camera)
-{               
+{
    Mobj *mobj;
    fixed_t pitch;
    fixed_t dy;
    fixed_t viewheightfrac;
-   
+
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
    R_SetSpanEngine();
    // Cardboard
    R_IncrementFrameid();
-   
+
    viewplayer = player;
    mobj = player->mo;
 
@@ -826,20 +826,20 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    // make fixed-point viewheight and divide by 2
    viewheightfrac = viewheight << (FRACBITS - 1);
 
-   // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid 
+   // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid
    // unnecessary roundoff error. This is what was causing sky textures to
    // appear a half-pixel too low (the entire display was too low actually).
    if(pitch)
    {
-      dy = FixedMul(focallen_y, 
+      dy = FixedMul(focallen_y,
                     finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
-            
+
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)
          dy = -viewheightfrac;
       else if(dy > viewheightfrac)
          dy = viewheightfrac;
-      
+
       centeryfrac = viewheightfrac + dy;
    }
    else
@@ -848,14 +848,14 @@ void R_SetupFrame(player_t *player, camera_t *camera)
 
       yslope = origyslope + (viewheight >> 1);
    }
-   
+
    centery = centeryfrac >> FRACBITS;
 
    view.ycenter = (float)centery;
 
    // use drawcolumn
    colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
-   
+
    ++validcount;
 }
 
@@ -872,18 +872,18 @@ void R_SectorColormap(sector_t *s)
 {
    int cm = 0;
    area_t viewarea;
-   
+
    // killough 3/20/98, 4/4/98: select colormap based on player status
    // haleyjd 03/04/07: rewritten to get colormaps from the sector itself
    // instead of from its heightsec if it has one (heightsec colormaps are
    // transferred to their affected sectors at level setup now).
-   
+
    if(s->heightsec == -1)
       viewarea = area_normal;
    else
    {
       sector_t *viewsector = R_PointInSubsector(viewx, viewy)->sector;
-      
+
       // find which area the viewpoint is in
       viewarea =
          viewsector->heightsec == -1 ? area_normal :
@@ -917,24 +917,24 @@ void R_SectorColormap(sector_t *s)
 
       fixedcolormap = fullcolormap   // killough 3/20/98: use fullcolormap
         + viewplayer->fixedcolormap*256*sizeof(lighttable_t);
-        
+
       walllights = scalelightfixed;
 
       for(i = 0; i < MAXLIGHTSCALE; ++i)
          scalelightfixed[i] = fixedcolormap;
    }
    else
-      fixedcolormap = NULL;   
+      fixedcolormap = NULL;
 }
 
 angle_t R_WadToAngle(int wadangle)
 {
    // haleyjd: FIXME: needs comp option
    // allows wads to specify angles to
-   // the nearest degree, not nearest 45   
+   // the nearest degree, not nearest 45
 
-   return (demo_version < 302) 
-             ? (wadangle / 45) * ANG45 
+   return (demo_version < 302)
+             ? (wadangle / 45) * ANG45
              : wadangle * (ANG45 / 45);
 }
 
@@ -954,7 +954,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    unsigned int savedflags = 0;
 
    R_SetupFrame(player, camerapoint);
-   
+
    // haleyjd: untaint portals
    R_UntaintPortals();
 
@@ -967,7 +967,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    if(autodetect_hom)
       R_HOMdrawer();
-   
+
    // check for new console commands.
    NetUpdate();
 
@@ -984,34 +984,34 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    if(quake)
       player->mo->flags2 = savedflags;
-   
+
    // Check for new console commands.
    NetUpdate();
 
    R_SetMaskedSilhouette(NULL, NULL);
-   
+
    // Push the first element on the Post-BSP stack
    R_PushPost(true, NULL);
-   
+
    // SoM 12/9/03: render the portals.
    R_RenderPortals();
 
    R_DrawPlanes(NULL);
-   
+
    // Check for new console commands.
    NetUpdate();
 
-   // Draw Post-BSP elements such as sprites, masked textures, and portal 
+   // Draw Post-BSP elements such as sprites, masked textures, and portal
    // overlays
    R_DrawPostBSP();
-   
+
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
-   
+
    // Check for new console commands.
    NetUpdate();
-   
+
    render_ticker++;
 }
 
@@ -1023,7 +1023,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 void R_HOMdrawer(void)
 {
    int colour;
-   
+
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
 
    V_ColorBlock(&vbscreen, (byte)colour, viewwindowx, viewwindowy, viewwidth,
@@ -1033,7 +1033,7 @@ void R_HOMdrawer(void)
 //
 // R_ResetTrans
 //
-// Builds BOOM tranmap. 
+// Builds BOOM tranmap.
 // Called when general_translucency is changed at run-time.
 //
 void R_ResetTrans(void)
@@ -1085,7 +1085,7 @@ static r_tlstyle_t DoomThingStyles[] =
    { "TracerSmoke",     { R_MAKENONE, R_MAKEBOOM, R_MAKEBOOM   } },
    { "BulletPuff",      { R_MAKENONE, R_MAKEBOOM, R_MAKEBOOM   } },
    { "InvisiSphere",    { R_MAKENONE, R_MAKEBOOM, R_MAKEBOOM   } },
-   
+
    // "Normal" items - these return to no blending in "new" style
    { "SoulSphere",      { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
    { "InvulnSphere",    { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
@@ -1122,12 +1122,12 @@ void R_DoomTLStyle(void)
       firsttime = false;
       return;
    }
-   
+
    for(i = 0; i < NUMDOOMTHINGSTYLES; ++i)
    {
       int tnum   = E_ThingNumForName(DoomThingStyles[i].className);
       int action = DoomThingStyles[i].actions[r_tlstyle];
-      
+
       if(tnum == -1)
          continue;
 
@@ -1137,23 +1137,23 @@ void R_DoomTLStyle(void)
       // Eternity enhancement pack, probably) is active.
       if(firsttime && mobjinfo[tnum]->flags3 & MF3_TLSTYLEADD)
          continue;
-      
+
       // Do the action
       if(action & R_CLEARTL)
          mobjinfo[tnum]->flags &= ~MF_TRANSLUCENT;
       else if(action & R_SETTL)
          mobjinfo[tnum]->flags |= MF_TRANSLUCENT;
-      
+
       if(action & R_CLEARADD)
          mobjinfo[tnum]->flags3 &= ~MF3_TLSTYLEADD;
       else if(action & R_SETADD)
          mobjinfo[tnum]->flags3 |= MF3_TLSTYLEADD;
-      
+
       // if we are in-level, update all things of the corresponding type too
       if(gamestate == GS_LEVEL)
       {
          Thinker *th;
-         
+
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             Mobj *mo;
@@ -1165,7 +1165,7 @@ void R_DoomTLStyle(void)
                      mo->flags &= ~MF_TRANSLUCENT;
                   else if(action & R_SETTL)
                      mo->flags |= MF_TRANSLUCENT;
-                  
+
                   if(action & R_CLEARADD)
                      mo->flags3 &= ~MF3_TLSTYLEADD;
                   else if(action & R_SETADD)
@@ -1283,11 +1283,11 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
 {
    // haleyjd 10/09/05: get sound from gameModeInfo
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
-   
+
    if(gamestate == GS_LEVEL) // not in intercam
    {
       hide_menu = 20;             // hide the menu for a few tics
-      
+
       R_SetViewSize(screenSize + 3);
 
       // haleyjd 10/19/03: reimplement proper hud behavior
@@ -1318,7 +1318,7 @@ CONSOLE_COMMAND(p_dumphubs, 0)
    P_DumpHubs();
 }
 
-CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0) 
+CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
 {
    R_DoomTLStyle();
 }

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-// 
+//
 // Statistics Saving and Loading
 //
 //-----------------------------------------------------------------------------
@@ -46,7 +46,7 @@
 // Global Singleton Instance
 INStatsManager INStatsManager::singleton;
 
-// 
+//
 // A hash key with file system case sensitivity properties.
 //
 class INFSStringHashKey
@@ -57,13 +57,13 @@ public:
 
    static unsigned int HashCode(const char *input)
    {
-      return EE_PLATFORM_TEST(EE_PLATF_CSFS) 
+      return EE_PLATFORM_TEST(EE_PLATF_CSFS)
                ? D_HashTableKeyCase(input) : D_HashTableKey(input);
    }
 
    static bool Compare(const char *first, const char *second)
    {
-      return EE_PLATFORM_TEST(EE_PLATF_CSFS) 
+      return EE_PLATFORM_TEST(EE_PLATF_CSFS)
                ? !strcmp(first, second) : !strcasecmp(first, second);
    }
 };
@@ -77,7 +77,7 @@ class INStatsMgrPimpl
 public:
    static INStatsMgrPimpl singleton;
 
-   EHashTable<in_stat_t, INFSStringHashKey, 
+   EHashTable<in_stat_t, INFSStringHashKey,
               &in_stat_t::levelkey, &in_stat_t::links> statsByLevelKey;
 
    // expected fields
@@ -86,7 +86,7 @@ public:
       FIELD_LEVELKEY,
       FIELD_PLAYERNAME,
       FIELD_SKILL,
-      FIELD_RECORDTYPE,   
+      FIELD_RECORDTYPE,
       FIELD_VALUE,
       FIELD_MAXVALUE,
       FIELD_NUMFIELDS
@@ -202,7 +202,7 @@ void INStatsMgrPimpl::parseCSVScores(char *input)
 
       if(fields.getLength() >= FIELD_NUMFIELDS)
       {
-         int recordType = E_StrToNumLinear(recordTypeNames, INSTAT_NUMTYPES, 
+         int recordType = E_StrToNumLinear(recordTypeNames, INSTAT_NUMTYPES,
                                            fields[FIELD_RECORDTYPE].constPtr());
 
          if(recordType < INSTAT_NUMTYPES)
@@ -277,12 +277,12 @@ static void MakeCSVValue(qstring &qstr, const char *input, bool comma)
 //
 void INStatsManager::saveStats()
 {
-   in_stat_t *stat = NULL;   
+   in_stat_t *stat = NULL;
    qstring path;
    qstring value;
    FILE *f;
    int i;
-   
+
    path = usergamepath;
    path.pathConcatenate("stats.csv");
 
@@ -349,7 +349,7 @@ in_stat_t *INStatsManager::findScore(const qstring &key, int type)
 //
 // Add a new score to the table.
 //
-void INStatsManager::addScore(const char *levelkey, int score, int maxscore, 
+void INStatsManager::addScore(const char *levelkey, int score, int maxscore,
                               int scoretype, int pnum)
 {
    in_stat_t *newStat = estructalloc(in_stat_t, 1);
@@ -360,7 +360,7 @@ void INStatsManager::addScore(const char *levelkey, int score, int maxscore,
    newStat->recordType = scoretype;
    newStat->skill      = gameskill;
    newStat->playername = estrdup(players[pnum].name);
-   
+
    pImpl->statsByLevelKey.addObject(newStat);
 }
 
@@ -376,7 +376,7 @@ void INStatsManager::getLevelKey(qstring &outstr)
 
    // really should not happen.
    if(!fn)
-      return;   
+      return;
 
    // construct the unique key for this level
    outstr << fn << "::" << qstring(gamemapname).toUpper();
@@ -406,7 +406,7 @@ void INStatsManager::getLevelKey(qstring &outstr, const char *mapName)
 //
 // Make a key from a path and a lump name, even if the wad's not loaded.
 //
-void INStatsManager::getLevelKey(qstring &outstr, 
+void INStatsManager::getLevelKey(qstring &outstr,
                                  const char *path, const char *mapName)
 {
    outstr = path;
@@ -473,14 +473,14 @@ void INStatsManager::recordStats(const wbstartstruct_t *wbstats)
          // * For most categories, a higher score wins. Time is an exception.
          // * A tie wins if it is achieved on a higher skill level.
          if((gameskill > instat->skill && scores[i] == instat->value) ||
-            (i == INSTAT_TIME ? 
+            (i == INSTAT_TIME ?
              scores[i] < instat->value : scores[i] > instat->value))
          {
             // This player has the new high score!
             instat->skill    = gameskill;
             instat->value    = scores[i];
             instat->maxValue = maxscores[i];
-            E_ReplaceString(instat->playername, 
+            E_ReplaceString(instat->playername,
                             estrdup(players[wbstats->pnum].name));
          }
       }
@@ -550,7 +550,7 @@ CONSOLE_COMMAND(mapscores, cf_level)
       statsMgr.getLevelKey(levelkey, Console.argv[0]->constPtr());
    else if(Console.argc >= 2) // absolute filepath::map
    {
-      statsMgr.getLevelKey(levelkey, 
+      statsMgr.getLevelKey(levelkey,
          Console.argv[0]->constPtr(),
          Console.argv[1]->constPtr());
    }
@@ -594,4 +594,3 @@ void IN_Stats_AddCommands()
 }
 
 // EOF
-

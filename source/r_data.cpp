@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -84,29 +84,29 @@ void R_InitSpriteLumps(void)
 {
    int i;
    patch_t *patch;
-   
+
    firstspritelump = W_GetNumForName("S_START") + 1;
    lastspritelump = W_GetNumForName("S_END") - 1;
    numspritelumps = lastspritelump - firstspritelump + 1;
-   
+
    // killough 4/9/98: make columnd offsets 32-bit;
    // clean up malloc-ing to use sizeof
-   
-   spritewidth = 
+
+   spritewidth =
       (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_RENDERER, 0));
-   spriteoffset = 
+   spriteoffset =
       (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_RENDERER, 0));
    spritetopoffset =
       (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, 0));
-   spriteheight = 
+   spriteheight =
       (float *)(Z_Malloc(numspritelumps * sizeof(float), PU_RENDERER, 0));
-   
+
    for(i = 0; i < numspritelumps; ++i)
    {
       // sf: loading pic
       if(!(i&127))            // killough
          V_LoadingIncrease();
-      
+
       patch = PatchLoader::CacheNum(wGlobalDir, firstspritelump + i, PU_CACHE);
 
       spritewidth[i]     = patch->width << FRACBITS;
@@ -132,9 +132,9 @@ void R_InitColormaps(void)
    lastcolormaplump  = W_GetNumForName("C_END");
    numcolormaps      = lastcolormaplump - firstcolormaplump;
    colormaps = (lighttable_t **)(Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0));
-   
+
    colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
-   
+
    for(i = 1; i < numcolormaps; ++i)
       colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum(i + firstcolormaplump, PU_RENDERER));
 }
@@ -185,7 +185,7 @@ int tran_filter_pct = 66;       // filter percent
 #pragma pack(push, 1)
 #endif
 
-struct trmapcache_s 
+struct trmapcache_s
 {
    char signature[4];          // haleyjd 06/09/09: added
    byte pct;
@@ -209,9 +209,9 @@ struct trmapcache_s
 void R_InitTranMap(int progress)
 {
    int lump = W_CheckNumForName("TRANMAP");
-   
+
    // If a translucency filter map lump is present, use it
-   
+
    if(lump != -1)  // Set a pointer to the translucency filter maps.
       main_tranmap = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
    else
@@ -219,12 +219,12 @@ void R_InitTranMap(int progress)
       // Compose a default transparent filter map based on PLAYPAL.
       AutoPalette pal(wGlobalDir);
       byte *playpal = pal.get();
-      
+
       char *fname = NULL;
       unsigned int fnamesize;
-      
+
       struct trmapcache_s cache;
-      
+
       FILE *cachefp;
 
       // haleyjd 11/23/06: use basegamepath
@@ -232,11 +232,11 @@ void R_InitTranMap(int progress)
       fnamesize = M_StringAlloca(&fname, 1, 12, usergamepath);
 
       psnprintf(fname, fnamesize, "%s/tranmap.dat", usergamepath);
-      
+
       cachefp = fopen(fname, "r+b");
 
       main_tranmap = (byte *)(Z_Malloc(256*256, PU_RENDERER, 0));  // killough 4/11/98
-      
+
       // Use cached translucency filter if it's available
 
       if(!cachefp ? cachefp = fopen(fname, "wb") , 1 :
@@ -272,7 +272,7 @@ void R_InitTranMap(int progress)
          }
 
          // Next, compute all entries using minimum arithmetic.
-         
+
          {
             int i,j;
             byte *tp = main_tranmap;
@@ -281,10 +281,10 @@ void R_InitTranMap(int progress)
                int r1 = pal[0][i] * w2;
                int g1 = pal[1][i] * w2;
                int b1 = pal[2][i] * w2;
-               
+
                if(!(i & 31) && progress)
-                  V_LoadingIncrease();        //sf 
-               
+                  V_LoadingIncrease();        //sf
+
                if(!(~i & 15))
                {
                   if (i & 32)       // killough 10/98: display flashing disk
@@ -328,7 +328,7 @@ void R_InitTranMap(int progress)
          for(i = 0; i < 8; ++i)
             V_LoadingIncrease();    // 8 '.'s
       }
-      
+
       if(cachefp)              // killough 11/98: fix filehandle leak
          fclose(cachefp);
    }
@@ -364,18 +364,18 @@ void R_InitData(void)
    }
 
    // haleyjd 11/21/09: first time through here, set DOOM thingtype translucency
-   // styles. Why only the first time? We don't need to do this if R_Init is 
+   // styles. Why only the first time? We don't need to do this if R_Init is
    // invoked through adding a new wad file.
-   
+
    // haleyjd 01/28/10: also initialize tantoangle_acc table
-   
+
    if(firsttime)
    {
       Table_InitTanToAngle();
       R_DoomTLStyle();
       firsttime = false;
    }
-   
+
    // process SMMU Doom->Doom2 texture conversion table
    R_LoadDoom1();
 }
@@ -403,7 +403,7 @@ void R_PrecacheLevel(void)
 
    if(demoplayback)
       return;
-   
+
    if(!r_precache)
       return;
 
@@ -413,11 +413,11 @@ void R_PrecacheLevel(void)
 
    // Precache textures.
    memset(hitlist, 0, texturecount);
-   
+
    // Mark floors and ceilings
    for(i = numsectors; --i >= 0; )
       hitlist[sectors[i].floorpic] = hitlist[sectors[i].ceilingpic] = 1;
-      
+
    // Mark walls
    for(i = numsides; --i >= 0; )
    {
@@ -432,7 +432,7 @@ void R_PrecacheLevel(void)
    //  while the sky texture is stored like
    //  a wall texture, with an episode dependend
    //  name.
-   
+
    hitlist[skytexture] = 1;
    hitlist[sky2texture] = 1; // haleyjd
 
@@ -462,7 +462,7 @@ void R_PrecacheLevel(void)
       if (hitlist[i])
       {
          int j = sprites[i].numframes;
-         
+
          while (--j >= 0)
          {
             int16_t *sflump = sprites[i].spriteframes[j].lump;

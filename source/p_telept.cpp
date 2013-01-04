@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -73,7 +73,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
          {
             fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
             player_t *player = thing->player;
-            
+
             // killough 5/12/98: exclude voodoo dolls:
             if(player && player->mo != thing)
                player = NULL;
@@ -84,7 +84,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             // haleyjd 12/15/02: cph found out this was removed
             // in Final DOOM, so don't do it for Final DOOM demos.
             if(!(demo_compatibility &&
-               (GameModeInfo->missionInfo->id == pack_plut || 
+               (GameModeInfo->missionInfo->id == pack_plut ||
                 GameModeInfo->missionInfo->id == pack_tnt)))
             {
                // SoM: so yeah... Need this for linked portals.
@@ -113,15 +113,15 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
                P_ResetChasecam();
 
             // spawn teleport fog and emit sound at source
-            S_StartSound(P_SpawnMobj(oldx, oldy, 
-                                     oldz + GameModeInfo->teleFogHeight, 
-                                     E_SafeThingType(GameModeInfo->teleFogType)), 
+            S_StartSound(P_SpawnMobj(oldx, oldy,
+                                     oldz + GameModeInfo->teleFogHeight,
+                                     E_SafeThingType(GameModeInfo->teleFogType)),
                          GameModeInfo->teleSound);
 
             // spawn teleport fog and emit sound at destination
             S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
                                      m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
-                                     thing->z + GameModeInfo->teleFogHeight, 
+                                     thing->z + GameModeInfo->teleFogHeight,
                                      E_SafeThingType(GameModeInfo->teleFogType)),
                          GameModeInfo->teleSound);
 
@@ -133,11 +133,11 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
 
             // kill all momentum
             thing->momx = thing->momy = thing->momz = 0;
-            
+
             // killough 10/98: kill all bobbing momentum too
             if(player)
                player->momx = player->momy = 0;
- 
+
             return 1;
          }
       }
@@ -155,11 +155,11 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
    int       i;
    Mobj    *m;
    Thinker *th;
-   
+
    // don't teleport missiles
    // Don't teleport if hit back of line,
    // so you can get out of teleporter.
-   
+
    if(side || thing->flags & MF_MISSILE)
       return 0;
 
@@ -169,13 +169,13 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
       {
          if(!(m = thinker_cast<Mobj *>(th)))
             continue;
-         
+
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
             // Height of thing above ground, in case of mid-air teleports:
             fixed_t z = thing->z - thing->floorz;
-            
+
             // Get the angle between the exit thing and source linedef.
             // Rotate 90 degrees, so that walking perpendicularly across
             // teleporter linedef causes thing to exit in the direction
@@ -186,44 +186,44 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
             // Sine, cosine of angle adjustment
             fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
             fixed_t c = finecosine[angle>>ANGLETOFINESHIFT];
-            
+
             // Momentum of thing crossing teleporter linedef
             fixed_t momx = thing->momx;
             fixed_t momy = thing->momy;
 
             // Whether this is a player, and if so, a pointer to its player_t
             player_t *player = thing->player;
-            
+
             // Attempt to teleport, aborting if blocked
             if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
                return 0;
 
             // Rotate thing according to difference in angles
             thing->angle += angle;
-            
+
             // Adjust z position to be same height above ground as before
             thing->z = z + thing->floorz;
-            
+
             // Rotate thing's momentum to come out of exit just like it entered
             thing->momx = FixedMul(momx, c) - FixedMul(momy, s);
             thing->momy = FixedMul(momy, c) + FixedMul(momx, s);
-            
+
             // Adjust player's view, in case there has been a height change
             // Voodoo dolls are excluded by making sure player->mo == thing.
             if(player && player->mo == thing)
             {
                // Save the current deltaviewheight, used in stepping
                fixed_t deltaviewheight = player->deltaviewheight;
-               
+
                // Clear deltaviewheight, since we don't want any changes
                player->deltaviewheight = 0;
-               
+
                // Set player's view according to the newly set parameters
                P_CalcHeight(player);
-               
+
                // Reset the delta to have the same dynamics as before
                player->deltaviewheight = deltaviewheight;
-               
+
                if(player == players+displayplayer)
                   P_ResetChasecam();
             }
@@ -252,7 +252,7 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
 {
    int i;
    line_t *l;
-   
+
    if(side || thing->flags & MF_MISSILE)
       return 0;
 
@@ -319,7 +319,7 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
          // when going down a step on a non-reversed teleporter.
 
          int lside = reverse || (player && stepdown);
-         
+
          // Make sure we are on correct side of exit linedef.
          while(P_PointOnLineSide(x, y, l) != lside && --fudge>=0)
          {
@@ -337,14 +337,14 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
          // Ground level at the exit is measured as the higher of the
          // two floor heights at the exit linedef.
          thing->z = z + sides[l->sidenum[stepdown]].sector->floorheight;
-         
+
          // Rotate thing's orientation according to difference in linedef angles
          thing->angle += angle;
-         
+
          // Momentum of thing crossing teleporter linedef
          x = thing->momx;
          y = thing->momy;
-         
+
          // Rotate thing's momentum to come out of exit just like it entered
          thing->momx = FixedMul(x, c) - FixedMul(y, s);
          thing->momy = FixedMul(y, c) + FixedMul(x, s);
@@ -369,7 +369,7 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
          }
 
          P_AdjustFloorClip(thing);
-         
+
          return 1;
       }
    }
@@ -419,4 +419,3 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

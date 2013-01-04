@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -93,7 +93,7 @@ public:
 
    // isEmpty: test if the collection is empty or not
    bool isEmpty() const { return length == 0; }
-   
+
    //
    // wrapIterator
    //
@@ -112,7 +112,7 @@ public:
 
       return ret;
    }
-   
+
    //
    // at
    //
@@ -127,7 +127,7 @@ public:
 
    // operator[] - Overloaded operator wrapper for at method.
    T &operator [] (size_t index) { return at(index); }
-   
+
    //
    // getRandom
    //
@@ -139,7 +139,7 @@ public:
 
       if(!ptrArray || !length)
          I_Error("BaseCollection::getRandom: called on empty collection\n");
-      
+
       index = (size_t)P_Random(rngnum) % length;
 
       return ptrArray[index];
@@ -165,9 +165,9 @@ public:
    PODCollection() : BaseCollection<T>()
    {
    }
-   
+
    // Parameterized constructor
-   PODCollection(size_t initSize, int zoneTag = PU_STATIC) 
+   PODCollection(size_t initSize, int zoneTag = PU_STATIC)
       : BaseCollection<T>(zoneTag)
    {
       this->resize(initSize);
@@ -180,10 +180,10 @@ public:
 
       if(this->ptrArray == other.ptrArray) // same object?
          return;
-      
+
       this->length = other.length;
       this->wrapiterator = other.wrapiterator;
-      
+
       if(this->length > this->numalloc)
          this->resize(this->length - oldlength);
 
@@ -195,7 +195,7 @@ public:
    {
       this->assign(other);
    }
-   
+
    // Destructor
    ~PODCollection() { clear(); }
 
@@ -247,7 +247,7 @@ public:
       if(this->length >= this->numalloc)
          this->resize(this->length ? this->length : 32);
       memset(&(this->ptrArray[this->length]), 0, sizeof(T));
-      
+
       return this->ptrArray[this->length++];
    }
 
@@ -260,7 +260,7 @@ public:
    {
       if(!this->ptrArray || !this->length)
          I_Error("PODCollection::pop: array underflow\n");
-      
+
       return this->ptrArray[--this->length];
    }
 };
@@ -268,7 +268,7 @@ public:
 //
 // Collection
 //
-// This class can store any type of data, including objects that require 
+// This class can store any type of data, including objects that require
 // constructor/destructor calls and contain virtual methods.
 //
 template<typename T> class Collection : public BaseCollection<T>
@@ -281,14 +281,14 @@ public:
    Collection() : BaseCollection<T>(), prototype(NULL)
    {
    }
-   
+
    // Parameterized constructor
-   Collection(size_t initSize, int zoneTag = PU_STATIC) 
+   Collection(size_t initSize, int zoneTag = PU_STATIC)
       : BaseCollection<T>(zoneTag), prototype(NULL)
    {
       this->resize(initSize);
    }
-   
+
    // Destructor
    ~Collection() { this->clear(); }
 
@@ -319,7 +319,7 @@ public:
       }
       this->baseClear();
    }
-   
+
    //
    // makeEmpty
    //
@@ -347,10 +347,10 @@ public:
    {
       if(this->length >= this->numalloc)
          this->resize(this->length ? this->length : 32); // double array size
-      
+
       // placement copy construct new item
       ::new (&this->ptrArray[this->length]) T(newItem);
-      
+
       ++this->length;
    }
 
@@ -384,4 +384,3 @@ public:
 #endif
 
 // EOF
-

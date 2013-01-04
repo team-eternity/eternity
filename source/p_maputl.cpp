@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -163,7 +163,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
       clip.openrange = 0;
       return;
    }
-   
+
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
 
@@ -171,9 +171,9 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && 
+      if(mo && demo_version >= 333 &&
          clip.openfrontsector->c_pflags & PS_PASSABLE &&
-         clip.openbacksector->c_pflags & PS_PASSABLE && 
+         clip.openbacksector->c_pflags & PS_PASSABLE &&
          clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
       {
          frontceilz = backceilz = clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
@@ -184,7 +184,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
          frontceilz = clip.openfrontsector->ceilingheight;
          backceilz  = clip.openbacksector->ceilingheight;
       }
-      
+
       frontcz = clip.openfrontsector->ceilingheight;
       backcz  = clip.openbacksector->ceilingheight;
    }
@@ -192,14 +192,14 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && 
+      if(mo && demo_version >= 333 &&
          clip.openfrontsector->f_pflags & PS_PASSABLE &&
-         clip.openbacksector->f_pflags & PS_PASSABLE && 
+         clip.openbacksector->f_pflags & PS_PASSABLE &&
          clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
       {
          frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       }
-      else 
+      else
 #endif
       {
          frontfloorz = clip.openfrontsector->floorheight;
@@ -209,13 +209,13 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
       frontfz = clip.openfrontsector->floorheight;
       backfz = clip.openbacksector->floorheight;
    }
-   
+
    if(frontceilz < backceilz)
       clip.opentop = frontceilz;
    else
       clip.opentop = backceilz;
 
-   
+
    if(frontfloorz > backfloorz)
    {
       clip.openbottom = frontfloorz;
@@ -244,14 +244,14 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
    clip.opensecfloor = clip.openbottom;
    clip.opensecceil  = clip.opentop;
 
-   // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
+   // SoM 9/02/02: Um... I know I told Quasar` I would do this after
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
-   if(demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) && 
+   if(demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) &&
       sides[linedef->sidenum[0]].midtexture)
    {
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
-      
+
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
          texbot = side->rowoffset + obot;
@@ -266,7 +266,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
 
       // SoM 9/7/02: use monster blocking line to provide better
       // clipping
-      if((linedef->flags & ML_BLOCKMONSTERS) && 
+      if((linedef->flags & ML_BLOCKMONSTERS) &&
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
          D_abs(mo->z - textop) <= 24*FRACUNIT)
       {
@@ -274,7 +274,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
          clip.openrange = 0;
          return;
       }
-      
+
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
          if(texbot < clip.opentop)
@@ -347,7 +347,7 @@ void P_UnsetThingPosition(Mobj *thing)
    {
       // invisible things don't need to be in sector list
       // unlink from subsector
-      
+
       // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
       // pointers, allows head node pointers to be treated like everything else
       Mobj **sprev = thing->sprev;
@@ -367,7 +367,7 @@ void P_UnsetThingPosition(Mobj *thing)
       //
       // If this Thing is being removed entirely, then the calling
       // routine will clear out the nodes in sector_list.
-      
+
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
    }
@@ -375,7 +375,7 @@ void P_UnsetThingPosition(Mobj *thing)
    if(!(thing->flags & MF_NOBLOCKMAP))
    {
       // inert things don't need to be in blockmap
-      
+
       // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
       // pointers, allows head node pointers to be treated like everything else
       //
@@ -383,7 +383,7 @@ void P_UnsetThingPosition(Mobj *thing)
       // unlinking. Old method required computing head node based on position
       // at time of unlinking, assuming it was the same position as during
       // linking.
-      
+
       Mobj *bnext, **bprev = thing->bprev;
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
@@ -416,10 +416,10 @@ void P_SetThingPosition(Mobj *thing)
    if(!(thing->flags & MF_NOSECTOR))
    {
       // invisible things don't go into the sector links
-      
+
       // killough 8/11/98: simpler scheme using pointer-to-pointer prev
       // pointers, allows head nodes to be treated like everything else
-      
+
       Mobj **link = &ss->sector->thinglist;
       Mobj *snext = *link;
       if((thing->snext = snext))
@@ -450,7 +450,7 @@ void P_SetThingPosition(Mobj *thing)
       // inert things don't need to be in blockmap
       int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
       int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
-      
+
       if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
       {
          // killough 8/11/98: simpler scheme using pointer-to-pointer prev
@@ -486,7 +486,7 @@ bool ThingIsOnLine(Mobj *t, line_t *l)
 
    // First make sure bounding boxes of linedef and thing intersect.
    // Leads to quick rejection using only shifts and adds/subs/compares.
-   
+
    if(D_abs(a*2+dx)-D_abs(dx) > r*2 || D_abs(b*2+dy)-D_abs(dy) > r*2)
       return 0;
 
@@ -531,7 +531,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
    DLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
-   
+
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
    offset = y * bmapwidth + x;
@@ -547,7 +547,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
       {
          int i;
          po->validcount = validcount;
-         
+
          for(i = 0; i < po->numLines; ++i)
          {
             if(po->lines[i]->validcount == validcount) // line has been checked
@@ -571,11 +571,11 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
    // killough 2/22/98: demo_compatibility check
    // skip 0 starting delimiter -- phares
    if(!demo_compatibility)
-      list++;     
+      list++;
    for( ; *list != -1; list++)
    {
       line_t *ld;
-      
+
       // haleyjd 04/06/10: to avoid some crashes during demo playback due to
       // invalid blockmap lumps
       if(*list >= numlines)
@@ -626,7 +626,7 @@ bool P_BlockThingsIterator(int x, int y, bool func(Mobj*))
 //                   added P_ version for use by gamecode.
 //
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y)
-{	
+{
    x -= xo;
    y -= yo;
 
@@ -744,4 +744,3 @@ angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

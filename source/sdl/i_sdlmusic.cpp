@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -102,7 +102,7 @@ static void I_EffectSPC(void *udata, Uint8 *stream, int len)
    if(spcsamples != lastspcsamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      spc_buffer = (Sint16 *)(Z_SysRealloc(spc_buffer, 
+      spc_buffer = (Sint16 *)(Z_SysRealloc(spc_buffer,
                                           (spcsamples + 2) * 2 * sizeof(Sint16)));
       lastspcsamples = spcsamples;
    }
@@ -145,7 +145,7 @@ static void I_EffectSPC(void *udata, Uint8 *stream, int len)
       stepremainder += ((32000 << 16) / 44100);
 
       i += (stepremainder >> 16);
-      
+
       datal = spc_buffer + (i << STEPSHIFT);
       datar = datal + 1;
 
@@ -182,7 +182,7 @@ static Mix_Music *music = NULL;
 static SDL_RWops *rw = NULL;
 
 // Same goes for buffers that were allocated to convert music;
-// since this concerns mus, we could do otherwise but this 
+// since this concerns mus, we could do otherwise but this
 // approach is better for consistency
 static void *music_block = NULL;
 
@@ -225,7 +225,7 @@ static int I_SDLInitSoundForMusic(void)
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
       return 0;
-   
+
    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
       return 0;
 
@@ -393,11 +393,11 @@ static void I_SDLUnRegisterSong(int handle)
 #endif
 
    if(CHECK_MUSIC(handle))
-   {   
+   {
       // Stop and free song
       I_SDLStopSong(handle);
       Mix_FreeMusic(music);
-     
+
       // Reinitialize all this
       music = NULL;
       rw    = NULL;
@@ -448,7 +448,7 @@ static int I_TryLoadSPC(void *data, int size)
       doom_printf("Failed to allocate snes_spc");
       return -1;
    }
-   
+
    if((err = spc_load_spc(snes_spc, data, (long)size)))
    {
       spc_delete(snes_spc);
@@ -526,7 +526,7 @@ static int I_SDLRegisterSong(void *data, int size)
       size   = midlen;
       isMIDI = true;   // now it's a MIDI.
    }
-   
+
 #ifdef EE_FEATURE_MIDIRPC
    // Check for option to invoke RPC server if isMIDI
    if(isMIDI && haveMidiServer)
@@ -591,4 +591,3 @@ i_musicdriver_t i_sdlmusicdriver =
 };
 
 // EOF
-

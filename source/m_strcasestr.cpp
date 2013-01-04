@@ -3,19 +3,19 @@
 //
 // Copyright (C) 2005-2007 Free Software Foundation, Inc.
 // Written by Bruno Haible <bruno@clisp.org>, 2005.
-// 
+//
 // Modifications for Eternity Copyright(C) 2011 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@
 // See http://en.wikipedia.org/wiki/Knuth-Morris-Pratt_algorithm
 // Return a boolean indicating success
 //
-static bool knuth_morris_pratt(const char *haystack, const char *needle, 
+static bool knuth_morris_pratt(const char *haystack, const char *needle,
                                const char **resultp)
 {
    size_t m = strlen(needle);
@@ -139,7 +139,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
    if(*needle != '\0')
    {
       // Minimizing the worst-case complexity:
-      // Let n = strlen(haystack), m = strlen(needle). The naive algorithm is 
+      // Let n = strlen(haystack), m = strlen(needle). The naive algorithm is
       // O(n*m) worst-case. The Knuth-Morris-Pratt algorithm is O(n) worst-case
       // but needs a memory allocation. To achieve linear complexity and yet
       // amortize the cost of the memory allocation, we activate the K-M-P
@@ -164,14 +164,14 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
             return NULL; // No match.
 
          // See whether it's advisable to use an asymptotically faster algorithm
-         if(try_kmp && 
-            outer_loop_count >= 10 && 
+         if(try_kmp &&
+            outer_loop_count >= 10 &&
             comparison_count >= 5 * outer_loop_count)
          {
             // See if needle + comparison_count now reaches the end of the needle
             if(needle_last_ccount)
             {
-               needle_last_ccount += pstrnlen(needle_last_ccount, 
+               needle_last_ccount += pstrnlen(needle_last_ccount,
                                               comparison_count - last_ccount);
                if(!*needle_last_ccount)
                   needle_last_ccount = NULL;
@@ -201,7 +201,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
                   return haystack; // Found a match
                if(!*rhaystack)
                   return NULL; // No match.
-               
+
                ++comparison_count;
                if(tolower((unsigned char)*rhaystack) != tolower((unsigned char)*rneedle))
                   break; // Nothing in this round.
@@ -222,4 +222,3 @@ char *M_StrCaseStr(char *haystack, const char *needle)
 }
 
 // EOF
-

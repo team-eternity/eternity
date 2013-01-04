@@ -7,22 +7,22 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// Console Network support 
+// Console Network support
 //
 // Network commands can be sent across netgames using 'C_SendCmd'. The
-// command is transferred byte by byte, 1 per tic cmd, using the 
+// command is transferred byte by byte, 1 per tic cmd, using the
 // chatchar variable (previously used for chat messages)
 //
 // By Simon Howard
@@ -63,7 +63,7 @@ command_t *c_netcmds[NUMNETCMDS];
   but of course free() is redefined to Z_Free(), and you can't do
   that -- similar to the bug that was crashing the savegame menu,
   but this one caused a segfault, and only occasionally, because
-  of Z_Free's faulty assumption that a pointer will be in valid 
+  of Z_Free's faulty assumption that a pointer will be in valid
   address space to test the zone id, even if its not a ptr to a
   zone block.
 */
@@ -130,12 +130,12 @@ void C_SendCmd(int dest, int cmdnum, const char *s,...)
    va_list args;
    char tempstr[500];
 
-   va_start(args, s);  
+   va_start(args, s);
    pvsnprintf(tempstr, sizeof(tempstr), s, args);
    va_end(args);
 
    s = tempstr;
-  
+
    if(!netgame || demoplayback)
    {
       Console.cmdsrc = consoleplayer;
@@ -147,7 +147,7 @@ void C_SendCmd(int dest, int cmdnum, const char *s,...)
    C_queueChatChar(0); // flush out previous commands
    C_queueChatChar((unsigned char)(dest+1)); // the chat message destination
    C_queueChatChar((unsigned char)cmdnum);        // command num
-   
+
    while(*s)
    {
       C_queueChatChar(*s);
@@ -159,12 +159,12 @@ void C_SendCmd(int dest, int cmdnum, const char *s,...)
 void C_NetInit(void)
 {
   int i;
-  
+
   for(i = 0; i < MAXPLAYERS; ++i)
   {
      incomingdest[i] = -1;
      incomingmsg[i].initCreate();
-  }  
+  }
 }
 
 void C_DealWithChar(unsigned char c, int source);
@@ -178,7 +178,7 @@ void C_NetTicker(void)
       // check for incoming chat chars
       for(i=0; i<MAXPLAYERS; i++)
       {
-         if(!playeringame[i]) 
+         if(!playeringame[i])
             continue;
          C_DealWithChar(players[i].cmd.chatchar,i);
       }
@@ -191,7 +191,7 @@ void C_NetTicker(void)
 void C_DealWithChar(unsigned char c, int source)
 {
    int netcmdnum;
-   
+
    if(c)
    {
       if(incomingdest[source] == -1)  // first char: the destination
@@ -211,7 +211,7 @@ void C_DealWithChar(unsigned char c, int source)
 
             // the first byte is the command num
             netcmdnum = *(incomingmsg[source].constPtr());
-            
+
             if(netcmdnum >= NUMNETCMDS || netcmdnum <= 0)
                C_Printf(FC_ERROR"unknown netcmd: %i\n", netcmdnum);
             else
@@ -237,7 +237,7 @@ void C_SendNetData()
   int i;
 
   C_SetConsole();
-  
+
   // display message according to what we're about to do
 
   C_Printf(consoleplayer ?
@@ -245,14 +245,14 @@ void C_SendNetData()
            FC_HI"Please Wait"FC_NORMAL" Sending game data..\n");
 
 
-  // go thru all hash chains, check for net sync variables  
+  // go thru all hash chains, check for net sync variables
   for(i = 0; i < CMDCHAINS; i++)
   {
      command = cmdroots[i];
 
      while(command)
      {
-        if(command->type == ct_variable && command->flags & cf_netvar && 
+        if(command->type == ct_variable && command->flags & cf_netvar &&
            (consoleplayer == 0 || !(command->flags & cf_server)))
         {
            C_UpdateVar(command);
@@ -262,7 +262,7 @@ void C_SendNetData()
   }
 
   demo_insurance = 1;      // always use 1 in multiplayer
-  
+
   if(consoleplayer == 0)      // if server, send command to warp to map
   {
      sprintf(tempstr, "map %s", startlevel);
@@ -276,9 +276,9 @@ void C_SendNetData()
 void C_UpdateVar(command_t *command)
 {
   char tempstr[100];
-  
+
   sprintf(tempstr,"\"%s\"", C_VariableValue(command->variable) );
-  
+
   C_SendCmd(CN_BROADCAST, command->netcmd, tempstr);
 }
 

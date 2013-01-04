@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Stephen McGranahan
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -45,20 +45,20 @@
 #include "v_misc.h"
 
 // SoM: Linked portals
-// This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
+// This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the
 // table is built it is allocated as a linear buffer of groupcount * groupcount
-// entries. The entries are arranged much like pixels in a screen buffer where 
+// entries. The entries are arranged much like pixels in a screen buffer where
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
 linkoffset_t **linktable = NULL;
 
 // The group list is allocated PU_STATIC because it isn't level specific, however,
-// each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
+// each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the
 // count back to 0
-typedef struct 
+typedef struct
 {
    // List of sectors contained in the group
    sector_t **seclist;
-   
+
    // Size of the list
    int listsize;
 } pgroup_t;
@@ -67,7 +67,7 @@ static pgroup_t **groups = NULL;
 static int      groupcount = 0;
 static int      grouplimit = 0;
 
-// This flag is a big deal. Heh, if this is true a whole lot of code will 
+// This flag is a big deal. Heh, if this is true a whole lot of code will
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
 bool useportalgroups = false;
@@ -116,31 +116,31 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
 //
 // P_CreatePortalGroup
 //
-// This function creates a new portal group using the given sector as the 
-// starting point for the group. P_GatherSectors is then called to gather 
+// This function creates a new portal group using the given sector as the
+// starting point for the group. P_GatherSectors is then called to gather
 // sectors into the group, and the newly created id is returned.
 //
 int P_CreatePortalGroup(sector_t *from)
 {
    int       groupid = groupcount;
    pgroup_t  *group;
-   
+
    if(from->groupid != R_NOGROUP)
       return from->groupid;
-      
+
    if(groupcount == grouplimit)
    {
       grouplimit = grouplimit ? (grouplimit << 1) : 8;
       groups = erealloc(pgroup_t **, groups, sizeof(pgroup_t **) * grouplimit);
    }
-   groupcount++;   
-   
-   
+   groupcount++;
+
+
    group = groups[groupid] = (pgroup_t *)(Z_Malloc(sizeof(pgroup_t), PU_LEVEL, 0));
-      
+
    group->seclist = NULL;
    group->listsize = 0;
-  
+
    P_GatherSectors(from, groupid);
    return groupid;
 }
@@ -148,10 +148,10 @@ int P_CreatePortalGroup(sector_t *from)
 //
 // P_GatherSectors
 //
-// The function will run through the sector's lines list, and add 
-// attached sectors to the group's sector list. As each sector is added the 
+// The function will run through the sector's lines list, and add
+// attached sectors to the group's sector list. As each sector is added the
 // currently forming group's id is assigned to that sector. This will continue
-// until every attached sector has been added to the list, thus defining a 
+// until every attached sector has been added to the list, thus defining a
 // closed subspace of the map.
 //
 void P_GatherSectors(sector_t *from, int groupid)
@@ -164,7 +164,7 @@ void P_GatherSectors(sector_t *from, int groupid)
    line_t    *line;
    int       count = 0;
    int       i, sec, p;
-   
+
    if(groupid < 0 || groupid >= groupcount)
    {
       // I have no idea if/when this would ever happen, but at any rate, it
@@ -173,7 +173,7 @@ void P_GatherSectors(sector_t *from, int groupid)
    }
 
    group = groups[groupid];
-   
+
    // Sector already has a group
    if(from->groupid != R_NOGROUP)
       return;
@@ -187,7 +187,7 @@ void P_GatherSectors(sector_t *from, int groupid)
 
    R_SetSectorGroupID(from, groupid);
    list[count++] = from;
-   
+
    for(sec = 0; sec < count; ++sec)
    {
       from = list[sec];
@@ -229,9 +229,9 @@ void P_GatherSectors(sector_t *from, int groupid)
    }
 
    // Ok, so expand the group list
-   group->seclist = erealloc(sector_t **, group->seclist, 
+   group->seclist = erealloc(sector_t **, group->seclist,
                              sizeof(sector_t *) * (group->listsize + count));
-   
+
    memcpy(group->seclist + group->listsize, list, count * sizeof(sector_t *));
    group->listsize += count;
 }
@@ -276,7 +276,7 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 // Returns 0 if the link offset was added successfully, 1 if the start group is
 // out of bounds, and 2 of the target group is out of bounds.
 //
-int P_AddLinkOffset(int startgroup, int targetgroup, 
+int P_AddLinkOffset(int startgroup, int targetgroup,
                     fixed_t x, fixed_t y, fixed_t z)
 {
    linkoffset_t *link;
@@ -287,11 +287,11 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 #endif
 
    if(startgroup < 0 || startgroup >= groupcount)
-      return 1; 
+      return 1;
       //I_Error("P_AddLinkOffset: start groupid %d out of bounds.\n", startgroup);
 
    if(targetgroup < 0 || targetgroup >= groupcount)
-      return 2; 
+      return 2;
       //I_Error("P_AddLinkOffset: target groupid %d out of bounds.\n", targetgroup);
 
    if(startgroup == targetgroup)
@@ -299,7 +299,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 
    link = (linkoffset_t *)(Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0));
    linktable[startgroup * groupcount + targetgroup] = link;
-   
+
    link->x = x;
    link->y = y;
    link->z = z;
@@ -329,9 +329,9 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
-   if(portal->data.link.fromid < 0 || 
+   if(portal->data.link.fromid < 0 ||
       portal->data.link.fromid >= groupcount ||
-      portal->data.link.toid < 0 || 
+      portal->data.link.toid < 0 ||
       portal->data.link.toid >= groupcount)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal has a groupid out "
@@ -339,14 +339,14 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
-   if(sec->groupid < 0 || 
+   if(sec->groupid < 0 ||
       sec->groupid >= groupcount)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to a "
                "portal group.\nLinked portals are disabled.\a\n", i);
       return false;
    }
-   
+
    if(sec->groupid != portal->data.link.fromid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to the "
@@ -359,8 +359,8 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
    if(!(link = P_GetLinkOffset(sec->groupid, portal->data.link.toid)))
    {
       int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
-                                portal->data.link.deltax, 
-                                portal->data.link.deltay, 
+                                portal->data.link.deltax,
+                                portal->data.link.deltay,
                                 portal->data.link.deltaz);
       if(ret)
          return false;
@@ -374,7 +374,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       {
          C_Printf(FC_ERROR "P_BuildLinkTable: sector %i in group %i contains "
                   "inconsistent reference to group %i.\n"
-                  "Linked portals are disabled.\a\n", 
+                  "Linked portals are disabled.\a\n",
                   i, sec->groupid, portal->data.link.toid);
          return false;
       }
@@ -386,17 +386,17 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 //
 // P_GatherLinks
 //
-// This function generates linkoffset_t objects for every group to every other 
+// This function generates linkoffset_t objects for every group to every other
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
-static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
+static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
                           int from)
 {
    int i, p;
    linkoffset_t *link, **linklist, **fromlist;
 
    // The main group has an indrect link with every group that links to a group
-   // that has a direct link to it, or any group that has a link to a group the 
+   // that has a direct link to it, or any group that has a link to a group the
    // main group has an indirect link to. huh.
 
    // First step: run through the list of groups this group has direct links to
@@ -420,7 +420,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
    linklist = linktable + group * groupcount;
    fromlist = linktable + from * groupcount;
 
-   // Second step run through the linked group's link list. Ignore any groups 
+   // Second step run through the linked group's link list. Ignore any groups
    // the main group is already linked to. Add the deltas and add the entries,
    // then call this function for groups the linked group links to.
    for(p = 0; p < groupcount; ++p)
@@ -441,21 +441,21 @@ static void P_GlobalPortalStateCheck()
    sector_t *sec;
    line_t   *line;
    int      i;
-   
+
    for(i = 0; i < numsectors; i++)
    {
       sec = sectors + i;
-      
+
       if(sec->c_portal)
          P_CheckCPortalState(sec);
       if(sec->f_portal)
          P_CheckFPortalState(sec);
    }
-   
+
    for(i = 0; i < numlines; i++)
    {
       line = lines + i;
-      
+
       if(line->portal)
          P_CheckLPortalState(line);
    }
@@ -475,7 +475,7 @@ bool P_BuildLinkTable(void)
 
    // SoM: the last line of the table (starting at groupcount * groupcount) is
    // used as a temporary list for gathering links.
-   linktable = 
+   linktable =
       (linkoffset_t **)(Z_Calloc(1, sizeof(linkoffset_t *)*groupcount*groupcount,
                                 PU_LEVEL, 0));
 
@@ -483,7 +483,7 @@ bool P_BuildLinkTable(void)
    for(i = 0; i < numsectors; i++)
    {
       sec = sectors + i;
-      
+
       // Make sure there are no groups that reference themselves or invalid group
       // id numbers.
       if(sec->groupid < R_NOGROUP || sec->groupid >= groupcount)
@@ -544,7 +544,7 @@ bool P_BuildLinkTable(void)
    for(i = 0; i < groupcount; ++i)
       P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
 
-   // SoM: one last step. Find all map architecture with a group id of -1 and 
+   // SoM: one last step. Find all map architecture with a group id of -1 and
    // assign it to group 0
    for(i = 0; i < numsectors; i++)
    {
@@ -555,7 +555,7 @@ bool P_BuildLinkTable(void)
    // Everything checks out... let's run the portals
    useportalgroups = true;
    P_GlobalPortalStateCheck();
-   
+
    return true;
 }
 
@@ -580,7 +580,7 @@ void P_LinkRejectTable(void)
          {
             if(i == p)
                continue;
-            
+
             list2 = groups[p]->seclist;
             for(q = 0; list2[q]; q++)
             {
@@ -639,7 +639,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
    }
 
    P_AdjustFloorClip(mo);
-   
+
    return 1;
 }
 
@@ -658,56 +658,56 @@ static int P_GetPortalState(portal_t *portal, int sflags, bool obscured)
 {
    bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
-   
+
    if(!portal)
       return 0;
-      
+
    active = !obscured && !(portal->flags & PF_DISABLED) && !(sflags & PF_DISABLED);
-   
+
    if(active && !(portal->flags & PF_NORENDER) && !(sflags & PF_NORENDER))
       ret |= PS_VISIBLE;
-      
+
    // Next two flags are for linked portals only
    active = (active && portal->type == R_LINKED && useportalgroups == true);
-      
+
    if(active && !(portal->flags & PF_NOPASS) && !(sflags & PF_NOPASS))
       ret |= PS_PASSABLE;
-   
+
    if(active && !(portal->flags & PF_BLOCKSOUND) && !(sflags & PF_BLOCKSOUND))
       ret |= PS_PASSSOUND;
-      
+
    return ret;
 }
 
 void P_CheckCPortalState(sector_t *sec)
 {
    bool     obscured;
-   
+
    if(!sec->c_portal)
    {
       sec->c_pflags = 0;
       return;
    }
-   
-   obscured = (sec->c_portal->type == R_LINKED && 
+
+   obscured = (sec->c_portal->type == R_LINKED &&
                sec->ceilingheight < sec->c_portal->data.link.planez);
-               
+
    sec->c_pflags = P_GetPortalState(sec->c_portal, sec->c_pflags, obscured);
 }
 
 void P_CheckFPortalState(sector_t *sec)
 {
    bool     obscured;
-   
+
    if(!sec->f_portal)
    {
       sec->f_pflags = 0;
       return;
    }
 
-   obscured = (sec->f_portal->type == R_LINKED && 
+   obscured = (sec->f_portal->type == R_LINKED &&
                sec->floorheight > sec->f_portal->data.link.planez);
-               
+
    sec->f_pflags = P_GetPortalState(sec->f_portal, sec->f_pflags, obscured);
 }
 
@@ -718,7 +718,7 @@ void P_CheckLPortalState(line_t *line)
       line->pflags = 0;
       return;
    }
-   
+
    line->pflags = P_GetPortalState(line->portal, line->pflags, false);
 }
 
@@ -732,7 +732,7 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
    sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
-   
+
    P_CheckFPortalState(sec);
 }
 
@@ -753,19 +753,19 @@ void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 void P_SetPortalBehavior(portal_t *portal, int newbehavior)
 {
    int   i;
-   
+
    portal->flags = newbehavior & PF_FLAGMASK;
    for(i = 0; i < numsectors; i++)
    {
       sector_t *sec = sectors + i;
-      
+
       if(sec->c_portal == portal)
          P_CheckCPortalState(sec);
       if(sec->f_portal == portal)
          P_CheckFPortalState(sec);
    }
-   
-   
+
+
    for(i = 0; i < numlines; i++)
    {
       if(lines[i].portal == portal)
@@ -777,7 +777,7 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
 {
    if(!sec->f_portal)
       return;
-      
+
    sec->f_pflags = newbehavior;
    P_CheckFPortalState(sec);
 }
@@ -786,7 +786,7 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
 {
    if(!sec->c_portal)
       return;
-      
+
    sec->c_pflags = newbehavior;
    P_CheckCPortalState(sec);
 }
@@ -795,7 +795,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 {
    if(!line->portal)
       return;
-      
+
    line->pflags = newbehavior;
    P_CheckLPortalState(line);
 }
@@ -808,7 +808,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 #if 0
 void P_DummyMobjThinker(Mobj *mobj)
 {
-   
+
 }
 
 void P_CreateDummy(Mobj *owner)
@@ -820,4 +820,3 @@ void P_CreateDummy(Mobj *owner)
 #endif
 
 // EOF
-

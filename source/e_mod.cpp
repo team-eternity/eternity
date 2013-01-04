@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -7,19 +7,19 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    Custom damage types, or "Means of Death" flags.
 //
 //-----------------------------------------------------------------------------
@@ -67,11 +67,11 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static EHashTable<emod_t, ENCStringHashKey, 
+static EHashTable<emod_t, ENCStringHashKey,
                  &emod_t::name, &emod_t::namelinks> e_mod_namehash(NUMMODCHAINS);
 
 // haleyjd 08/02/09: use new generic hash
-static EHashTable<emod_t, EIntHashKey, 
+static EHashTable<emod_t, EIntHashKey,
                   &emod_t::num, &emod_t::numlinks> e_mod_numhash(NUMMODCHAINS);
 
 // default damage type - "Unknown"
@@ -94,7 +94,7 @@ static void E_AddDamageTypeToNameHash(emod_t *mod)
    e_mod_namehash.addObject(*mod);
 
    // cache dfKeyIndex for use in metatables
-   mod->dfKeyIndex = 
+   mod->dfKeyIndex =
       MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
 }
 
@@ -124,7 +124,7 @@ static bool E_AutoAllocModNum(emod_t *mod)
    do
    {
       num = edf_alloc_modnum--;
-   } 
+   }
    while(num > 0 && E_DamageTypeForNum(num) != &unknown_mod);
 
    // ran out while looking for an unused number?
@@ -146,10 +146,10 @@ static bool E_AutoAllocModNum(emod_t *mod)
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
    // Auto-assign a numeric key to all damage types which don't have
-   // a valid one explicitly specified. This avoids some gigantic, 
-   // messy code rewrites by allowing mobjinfo to always store the 
+   // a valid one explicitly specified. This avoids some gigantic,
+   // messy code rewrites by allowing mobjinfo to always store the
    // numeric key.
-   
+
    if(mod->num <= 0)
    {
       E_AutoAllocModNum(mod);
@@ -254,7 +254,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
          // determine if obituary string is a BEX string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
-            ++obituary;         
+            ++obituary;
             mod->obitIsBexString = true;
          }
          else
@@ -281,7 +281,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
          // determine if obituary string is a BEX string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
-            ++obituary;         
+            ++obituary;
             mod->selfObitIsBexString = true;
          }
          else
@@ -295,7 +295,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
-   E_EDFLogPrintf("\t\t%s damagetype %s\n", 
+   E_EDFLogPrintf("\t\t%s damagetype %s\n",
                   def ? "Defined" : "Modified", mod->name);
 }
 
@@ -377,7 +377,7 @@ emod_t *E_DamageTypeForName(const char *name)
 emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
-   
+
    if((mod = e_mod_numhash.objectForKey(num)) == NULL)
       mod = &unknown_mod;
 
@@ -392,11 +392,10 @@ emod_t *E_DamageTypeForNum(int num)
 // requested type is not found by name.
 //
 int E_DamageTypeNumForName(const char *name)
-{ 
+{
    emod_t *mod = E_DamageTypeForName(name);
 
    return mod ? mod->num : 0;
 }
 
 // EOF
-

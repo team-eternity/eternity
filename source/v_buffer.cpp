@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -146,14 +146,14 @@ VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
 // Gives a VBuffer object the given pixeldata. The VBuffer does not OWN the
 // given data and so it will not be freed by V_FreeVBuffer
 //
-void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch, 
+void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch,
                        int bitdepth, byte *data)
 {
    int     psize;
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n", 
+      I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n",
               width, height);
    }
 
@@ -183,14 +183,14 @@ void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch,
 // by this funciton does not OWN the given data and so it will not be freed by
 // V_FreeVBuffer
 //
-VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, 
+VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
                              int bitdepth, byte *data)
 {
    VBuffer *ret;
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n", 
+      I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n",
               width, height);
    }
 
@@ -208,9 +208,9 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
 //
 // V_InitSubVBuffer
 //
-// Inits a VBuffer object to share pixel data with another. 
+// Inits a VBuffer object to share pixel data with another.
 //
-void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, 
+void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
                       int width, int height)
 {
    int     psize;
@@ -220,14 +220,14 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_SubVBuffer: Invalid dimensions %dx%d\n", 
+      I_Error("V_SubVBuffer: Invalid dimensions %dx%d\n",
               width, height);
    }
 
-   if(x < 0 || y < 0 || 
+   if(x < 0 || y < 0 ||
       x + width - 1 > parent->width || y + height - 1 > parent->height)
    {
-      I_Error("V_SubVBuffer: Invalid dimensions: x=%d, y=%d, w=%d, h=%d\n", 
+      I_Error("V_SubVBuffer: Invalid dimensions: x=%d, y=%d, w=%d, h=%d\n",
               x, y, width, height);
    }
 
@@ -252,7 +252,7 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
 //
 // V_SubVBuffer
 //
-// Allocates a new VBuffer object that shares pixel data with another. 
+// Allocates a new VBuffer object that shares pixel data with another.
 //
 VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height)
 {
@@ -321,7 +321,7 @@ void V_UnsetScaling(VBuffer *buffer)
       Z_SysFree(buffer->y2lookup);
    }
 
-   buffer->x1lookup = buffer->x2lookup 
+   buffer->x1lookup = buffer->x2lookup
       = buffer->y1lookup = buffer->y2lookup = NULL;
 
    V_SetupBufferFuncs(buffer, DRAWTYPE_UNSCALED);
@@ -351,7 +351,7 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
    buffer->unscaledw = unscaledw;
    buffer->unscaledh = unscaledh;
 
-   if(unscaledw == SCREENWIDTH && unscaledh == SCREENHEIGHT 
+   if(unscaledw == SCREENWIDTH && unscaledh == SCREENHEIGHT
       && buffer->width == video.width && buffer->height == video.height)
    {
       buffer->x1lookup = video.x1lookup;
@@ -416,8 +416,8 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
 //
 // SoM: blit from one vbuffer to another
 //
-void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
-                   unsigned int sx, unsigned int sy, unsigned int width, 
+void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
+                   unsigned int sx, unsigned int sy, unsigned int width,
                    unsigned int height)
 {
    byte *dbuf, *sbuf;
@@ -495,4 +495,3 @@ fixed_t VBuffer::getVirtualAspectRatio() const
 }
 
 // EOF
-

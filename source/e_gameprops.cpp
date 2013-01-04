@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -288,17 +288,17 @@ static void E_processGamePropsBlock(cfg_t *props)
 
    if(IS_SET(ITEM_GPROP_TITLETICS))
       GameModeInfo->titleTics = cfg_getint(props, ITEM_GPROP_TITLETICS);
-   
+
    if(IS_SET(ITEM_GPROP_ADVISORTICS))
       GameModeInfo->advisorTics = cfg_getint(props, ITEM_GPROP_ADVISORTICS);
-   
+
    if(IS_SET(ITEM_GPROP_PAGETICS))
       GameModeInfo->pageTics = cfg_getint(props, ITEM_GPROP_PAGETICS);
 
    // Menu Properties
    if(IS_SET(ITEM_GPROP_MENUBKGND))
    {
-      E_setDynamicString(GameModeInfo->menuBackground, GI_STR_MENUBKGND, 
+      E_setDynamicString(GameModeInfo->menuBackground, GI_STR_MENUBKGND,
                          cfg_getstr(props, ITEM_GPROP_MENUBKGND));
    }
 
@@ -346,49 +346,49 @@ static void E_processGamePropsBlock(cfg_t *props)
 
    if(IS_SET(ITEM_GPROP_BORDERTL))
    {
-      E_setDynamicString(GameModeInfo->border->c_tl, GI_STR_BORDERTL, 
+      E_setDynamicString(GameModeInfo->border->c_tl, GI_STR_BORDERTL,
                          cfg_getstr(props, ITEM_GPROP_BORDERTL));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERTOP))
    {
-      E_setDynamicString(GameModeInfo->border->top, GI_STR_BORDERTOP, 
+      E_setDynamicString(GameModeInfo->border->top, GI_STR_BORDERTOP,
                          cfg_getstr(props, ITEM_GPROP_BORDERTOP));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERTR))
    {
-      E_setDynamicString(GameModeInfo->border->c_tr, GI_STR_BORDERTR, 
+      E_setDynamicString(GameModeInfo->border->c_tr, GI_STR_BORDERTR,
                          cfg_getstr(props, ITEM_GPROP_BORDERTR));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERLEFT))
    {
-      E_setDynamicString(GameModeInfo->border->left, GI_STR_BORDERLEFT, 
+      E_setDynamicString(GameModeInfo->border->left, GI_STR_BORDERLEFT,
                          cfg_getstr(props, ITEM_GPROP_BORDERLEFT));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERRIGHT))
    {
-      E_setDynamicString(GameModeInfo->border->right, GI_STR_BORDERRIGHT, 
+      E_setDynamicString(GameModeInfo->border->right, GI_STR_BORDERRIGHT,
                          cfg_getstr(props, ITEM_GPROP_BORDERRIGHT));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERBL))
    {
-      E_setDynamicString(GameModeInfo->border->c_bl, GI_STR_BORDERBL, 
+      E_setDynamicString(GameModeInfo->border->c_bl, GI_STR_BORDERBL,
                          cfg_getstr(props, ITEM_GPROP_BORDERBL));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERBOTT))
    {
-      E_setDynamicString(GameModeInfo->border->bottom, GI_STR_BORDERBOTT, 
+      E_setDynamicString(GameModeInfo->border->bottom, GI_STR_BORDERBOTT,
                          cfg_getstr(props, ITEM_GPROP_BORDERBOTT));
    }
 
    if(IS_SET(ITEM_GPROP_BORDERBR))
    {
-      E_setDynamicString(GameModeInfo->border->c_br, GI_STR_BORDERBR, 
+      E_setDynamicString(GameModeInfo->border->c_br, GI_STR_BORDERBR,
                          cfg_getstr(props, ITEM_GPROP_BORDERBR));
    }
 
@@ -468,7 +468,7 @@ static void E_processGamePropsBlock(cfg_t *props)
    // has not provided a specific finale type for the level.
    if(IS_SET(ITEM_GPROP_FINTYPE))
    {
-      int finaleType = E_StrToNumLinear(finaleTypeStrs, FINALE_NUMFINALES, 
+      int finaleType = E_StrToNumLinear(finaleTypeStrs, FINALE_NUMFINALES,
                                         cfg_getstr(props, ITEM_GPROP_FINTYPE));
 
       if(finaleType >= 0 && finaleType < FINALE_NUMFINALES)
@@ -505,7 +505,7 @@ static void E_processGamePropsBlock(cfg_t *props)
       E_setDynamicString(GameModeInfo->defSoundName, GI_STR_DEFSNDNAME,
                          cfg_getstr(props, ITEM_GPROP_DEFSNDNAME));
    }
-   
+
    // Credit Screen Properties
 
    if(IS_SET(ITEM_GPROP_CREDITBKGND))
@@ -519,9 +519,9 @@ static void E_processGamePropsBlock(cfg_t *props)
 
    if(IS_SET(ITEM_GPROP_CREDITTSTEP))
       GameModeInfo->creditTitleStep = cfg_getint(props, ITEM_GPROP_CREDITTSTEP);
-   
+
    // Exit Properties
-   
+
    if(IS_SET(ITEM_GPROP_ENDTEXTNAME))
    {
       E_setDynamicString(GameModeInfo->endTextName, GI_STR_ENDTEXTNAME,
@@ -545,4 +545,3 @@ void E_ProcessGameProperties(cfg_t *cfg)
 }
 
 // EOF
-

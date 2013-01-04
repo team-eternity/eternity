@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 #ifndef PSNPRINTF_H
 #define PSNPRINTF_H
 
@@ -49,5 +50,3 @@ size_t pstrnlen(const char *s, size_t count);
 
 
 #endif /* ifdef PSNPRINTF_H */
-
-

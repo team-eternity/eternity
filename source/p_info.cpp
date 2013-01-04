@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,7 +32,7 @@
 // As of 07/22/04, Eternity can now support global MapInfo lumps in
 // addition to MapInfo placed in level headers. Header MapInfo always
 // overrides any global lump data. The global lumps cascade in such
-// a way that a map will get its global MapInfo from the newest 
+// a way that a map will get its global MapInfo from the newest
 // "EMAPINFO" lump that contains a block with the map's name.
 //
 // I have also moved much of the initialization code from many modules
@@ -98,7 +98,7 @@ enum
 //
 // A single separate prototype object serves as the read destination for the
 // current pass of parsing. This is so that the levelvars array can reference
-// the fields of a static object without overwriting the LevelInfo object 
+// the fields of a static object without overwriting the LevelInfo object
 // itself.
 //
 struct LevelInfoProto_t
@@ -106,7 +106,7 @@ struct LevelInfoProto_t
    DLListItem<LevelInfoProto_t> links;         // links for hashing
    char       *mapname;                        // name of map to which this belongs
    char        mapnamestr[9];                  // storage for name
-   int         type;                           // type id via above enumeration   
+   int         type;                           // type id via above enumeration
    LevelInfo_t info;                           // the LevelInfo object
    bool        modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
 };
@@ -115,7 +115,7 @@ struct LevelInfoProto_t
 LevelInfo_t LevelInfo;
 
 // haleyjd 06/25/10: LevelInfo prototype used for parsing. Data fields marked as
-// "modified" are then copied to the destination LevelInfo (either a prototype, 
+// "modified" are then copied to the destination LevelInfo (either a prototype,
 // or the actual LevelInfo object for the current level).
 LevelInfoProto_t LevelInfoProto;
 static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info);
@@ -278,7 +278,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 
    // run down the hash chain for EMAPINFO
    lump = W_GetLumpNameChain("EMAPINFO");
-   
+
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
       lump = lumpinfo[glumpnum];
@@ -286,7 +286,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
          lump->li_namespace == lumpinfo_t::ns_global)
       {
-         // reset the parser state         
+         // reset the parser state
          readtype = RT_OTHER;
          P_ParseLevelInfo(&wGlobalDir, glumpnum, PU_LEVEL); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
@@ -296,7 +296,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 
    // FIXME/TODO: eliminate code above and copy fields from global prototype
    // if one exists.
-   
+
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
@@ -304,7 +304,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 
    // copy modified fields from the parsing prototype into LevelInfo
    P_copyPrototypeToLevelInfo(&LevelInfoProto, &LevelInfo);
-   
+
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
    P_SetSky2Texture();
@@ -331,8 +331,8 @@ static int numPrototypes;
 static int numPrototypesAlloc;
 
 // hash table for prototype objects
-static EHashTable<LevelInfoProto_t, ENCStringHashKey, 
-                  &LevelInfoProto_t::mapname, &LevelInfoProto_t::links> protoHash; 
+static EHashTable<LevelInfoProto_t, ENCStringHashKey,
+                  &LevelInfoProto_t::mapname, &LevelInfoProto_t::links> protoHash;
 
 //
 // P_addLevelInfoPrototype
@@ -348,7 +348,7 @@ static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
    if(numPrototypes >= numPrototypesAlloc)
    {
       numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
-      levelInfoPrototypes = 
+      levelInfoPrototypes =
          erealloc(LevelInfoProto_t **, levelInfoPrototypes,
                   numPrototypesAlloc * sizeof(LevelInfoProto_t *));
    }
@@ -426,7 +426,7 @@ static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *inf
    LI_COPY(USEEDFINTERNAME,  useEDFInterName);
    LI_COPY(ENDOFGAME,        endOfGame);
    LI_COPY(EXTRADATA,        extraData);
-   LI_COPY(FINALESECRETONLY, finaleSecretOnly); 
+   LI_COPY(FINALESECRETONLY, finaleSecretOnly);
    LI_COPY(FINALETYPE,       finaleType);
    LI_COPY(USEFULLBRIGHT,    useFullBright);
    LI_COPY(GRAVITY,          gravity);
@@ -469,7 +469,7 @@ static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *inf
 //
 // P_copyLevelInfoPrototype
 //
-// haleyjd 06/25/10: Copies data out of the LevelInfoProto object into the 
+// haleyjd 06/25/10: Copies data out of the LevelInfoProto object into the
 // destination LevelInfoProto object.
 //
 static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
@@ -504,7 +504,7 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
    {
       lump = lumpinfo[glumpnum];
 
-      if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
+      if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
          lump->li_namespace == lumpinfo_t::ns_global)
       {
          // reset parser state
@@ -532,7 +532,7 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 
    // haleyjd 03/12/05: seriously restructured to eliminate last line
    // problem and to use qstring to buffer lines
-   
+
    // if lump is zero size, we are done
    if(!(size = dir->lumpLength(lumpnum)))
       return;
@@ -585,15 +585,15 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
    line->toLower();              // make everything lowercase
    line->lstrip(' ');            // strip spaces at beginning
    line->rstrip(' ');            // strip spaces at end
-   
+
    if(!(len = line->length()))   // ignore totally empty lines
       return 0;
 
    // detect comments at beginning
-   if(line->charAt(0) == '#' || line->charAt(0) == ';' || 
+   if(line->charAt(0) == '#' || line->charAt(0) == ';' ||
       (len > 1 && line->charAt(0) == '/' && line->charAt(1) == '/'))
       return 0;
-     
+
    if((label = line->strChr('[')))  // a new section separator
    {
       ++label;
@@ -631,7 +631,7 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
       // go to next line immediately
       return 0;
    }
-  
+
    switch(readtype)
    {
    case RT_LEVELINFO:
@@ -707,7 +707,7 @@ levelvar_t levelvars[]=
    LI_BOOLNF("edf-intername",   USEEDFINTERNAME,  useEDFInterName),
    LI_BOOLNF("endofgame",       ENDOFGAME,        endOfGame),
    LI_STRING("extradata",       EXTRADATA,        extraData),
-   LI_BOOLNF("finale-secret",   FINALESECRETONLY, finaleSecretOnly), 
+   LI_BOOLNF("finale-secret",   FINALESECRETONLY, finaleSecretOnly),
    LI_STRNUM("finaletype",      FINALETYPE,       finaleType,       finaleTypeVals),
    LI_BOOLNF("fullbright",      USEFULLBRIGHT,    useFullBright),
    LI_INTEGR("gravity",         GRAVITY,          gravity),
@@ -747,7 +747,7 @@ levelvar_t levelvars[]=
    LI_BOOLNF("unevenlight",     UNEVENLIGHT,      unevenLight),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
-   
+
    LI_END() // must be last
 };
 
@@ -830,14 +830,14 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
                *(int *)current->variable = val;
             }
             break;
-            
+
          case IVT_INT:
             *(int*)current->variable = value.toInt();
             break;
-            
+
             // haleyjd 03/15/03: boolean support
          case IVT_BOOLEAN:
-            *(bool *)current->variable = 
+            *(bool *)current->variable =
                !value.strCaseCmp("true") ? true : false;
             break;
 
@@ -845,7 +845,7 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
          case IVT_FLAGS:
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
-               
+
                *(int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
             }
             break;
@@ -898,7 +898,7 @@ static void SynthLevelName(SynthType_e levelNameType)
    static char newlevelstr[25];
 
    sprintf(newlevelstr, synthNames[levelNameType], gamemapname);
-   
+
    LevelInfo.levelName = newlevelstr;
 }
 
@@ -915,7 +915,7 @@ static void P_InfoDefaultLevelName(void)
    SynthType_e    synthType    = SYNTH_NEWLEVEL;
    int            d2upperbound = 32;
    missioninfo_t *missionInfo  = GameModeInfo->missionInfo;
-   
+
 
    // if we have a current metainfo, use its level name
    if(curmetainfo)
@@ -927,7 +927,7 @@ static void P_InfoDefaultLevelName(void)
    // haleyjd 11/03/12: in pack_disk, we have 33 map names.
    // This is also allowed for subsitution through BEX mnemonic HUSTR_33.
    if(DEH_StringChanged("HUSTR_33") ||
-      (GameModeInfo->id == commercial && 
+      (GameModeInfo->id == commercial &&
        GameModeInfo->missionInfo->id == pack_disk))
       d2upperbound = 33;
 
@@ -944,17 +944,17 @@ static void P_InfoDefaultLevelName(void)
       if(GameModeInfo->type == Game_Heretic) // Heretic
       {
          int maxEpisode = GameModeInfo->numEpisodes;
-         
+
          // For Heretic, the last episode isn't "real" and contains
          // "secret" levels -- a name is synthesized for those
          // 10/10/05: don't catch shareware here
          if(maxEpisode == 1 || gameepisode < maxEpisode)
-            bexname = HU_TITLEH;            
+            bexname = HU_TITLEH;
          else
             synthType = SYNTH_HIDDENLEVEL; // put "hidden level"
       }
       else // DOOM
-         bexname = HU_TITLE;         
+         bexname = HU_TITLE;
    }
 
    if(bexname)
@@ -1081,14 +1081,14 @@ static void P_LoadInterTextLump(void)
    {
       int lumpNum, lumpLen;
       char *str;
-            
+
       lumpNum = W_GetNumForName(LevelInfo.interTextLump);
       lumpLen = W_LumpLength(lumpNum);
-      
+
       str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
-      
+
       wGlobalDir.readLump(lumpNum, str);
-      
+
       // null-terminate the string
       str[lumpLen] = '\0';
 
@@ -1129,7 +1129,7 @@ static void P_InfoDefaultFinale(void)
    // levels in episode 6, which have no statistics intermission.
    if(fdata->killStatsHack)
    {
-      if(!(GameModeInfo->flags & GIF_SHAREWARE) && 
+      if(!(GameModeInfo->flags & GIF_SHAREWARE) &&
          gameepisode >= GameModeInfo->numEpisodes)
          LevelInfo.killStats = true;
    }
@@ -1178,7 +1178,7 @@ static void P_InfoDefaultFinale(void)
       // The finale data sets all have rules to cover defaulted maps.
 
       // haleyjd: note -- this cannot use F_SKY1 like it did in BOOM
-      // because heretic.wad contains an invalid F_SKY1 flat. This 
+      // because heretic.wad contains an invalid F_SKY1 flat. This
       // caused crashes during development of Heretic support, so now
       // it uses the F_SKY2 flat which is provided in eternity.wad.
       LevelInfo.backDrop   = "F_SKY2";
@@ -1280,7 +1280,7 @@ static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
    const char *sndInfoLump;
 
    // Default to undefined
-   LevelInfo.musicName = ""; 
+   LevelInfo.musicName = "";
 
    // Is there a diskfile metainfo?
    if(curmetainfo)
@@ -1296,8 +1296,8 @@ static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
 //
 // Post-processing routine.
 //
-// Sets the sky2Name, if it is still NULL, to whatever 
-// skyName has ended up as. This may be the default, or 
+// Sets the sky2Name, if it is still NULL, to whatever
+// skyName has ended up as. This may be the default, or
 // the value from MapInfo.
 //
 static void P_SetSky2Texture(void)
@@ -1410,7 +1410,7 @@ static void P_ClearLevelVars(void)
    LevelInfo.outdoorFog      = NULL;
    LevelInfo.useFullBright   = true;
    LevelInfo.unevenLight     = true;
-   
+
    LevelInfo.hasLightning    = false;
    LevelInfo.nextSecret      = "";
    //info_weapons            = "";
@@ -1419,7 +1419,7 @@ static void P_ClearLevelVars(void)
    LevelInfo.scriptLump      = NULL;
    LevelInfo.acsScriptLump   = NULL;
    LevelInfo.extraData       = NULL;
-   
+
    // Hexen TODO: will be true for Hexen maps by default
    LevelInfo.noAutoSequences = false;
 
@@ -1430,12 +1430,12 @@ static void P_ClearLevelVars(void)
    P_InfoDefaultSky();
    P_InfoDefaultBossSpecials();
    P_InfoDefaultMusic(curmetainfo);
-   
+
    // special handling for ExMy maps under DOOM II
    if(GameModeInfo->id == commercial && isExMy(levelmapname))
    {
       LevelInfo.nextLevel = nextlevel;
-      
+
       // set the next episode
       strcpy(nextlevel, levelmapname);
       nextlevel[3]++;
@@ -1483,11 +1483,11 @@ static void P_InitWeapons(void)
 #if 0
    char *s;
 #endif
-   
+
    memset(default_weaponowned, 0, sizeof(default_weaponowned));
-#if 0   
+#if 0
    s = info_weapons;
-   
+
    while(*s)
    {
       switch(*s)
@@ -1510,12 +1510,12 @@ static void P_InitWeapons(void)
 // Meta Info
 //
 // Meta info is only loaded from diskfiles and may override LevelInfo defaults.
-// 
+//
 
 //
 // P_GetMetaInfoForLevel
 //
-// Finds a metainfo object for the given map number, if one exists (returns 
+// Finds a metainfo object for the given map number, if one exists (returns
 // NULL otherwise).
 //
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
@@ -1540,11 +1540,11 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 // P_CreateMetaInfo
 //
 // Creates a metainfo object for a given map with all of the various data that
-// can be defined in metadata.txt files. This is called from some code in 
+// can be defined in metadata.txt files. This is called from some code in
 // d_main.c that deals with special ".disk" files that contain an IWAD and
 // possible PWAD(s) that originate from certain console versions of DOOM.
 //
-void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
+void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
                       int next, int secr, bool finale, const char *intertext,
                       int mission, const char *interpic)
 {
@@ -1584,7 +1584,7 @@ struct sndinfomus_t
    char *lumpname;
 };
 
-static EHashTable<sndinfomus_t, EIntHashKey, 
+static EHashTable<sndinfomus_t, EIntHashKey,
                   &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash(101);
 
 //
@@ -1618,7 +1618,7 @@ void P_AddSndInfoMusic(int mapnum, const char *lumpname)
    S_MusicForName(newmus->lumpname);
 }
 
-// 
+//
 // P_GetSndInfoMusic
 //
 // If a Hexen SNDINFO music definition exists for the passed-in map number,
@@ -1654,7 +1654,7 @@ public:
    qstring mapname;
 };
 
-static EHashTable<MusInfoMusic, ENCQStrHashKey, 
+static EHashTable<MusInfoMusic, ENCQStrHashKey,
                   &MusInfoMusic::mapname, &MusInfoMusic::links> musInfoMusHash(101);
 
 //
@@ -1708,7 +1708,7 @@ void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
    }
 }
 
-// 
+//
 // P_GetMusInfoMusic
 //
 // If a Risen3D MUSINFO music definition exists for the passed-in map name,
@@ -1972,4 +1972,3 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
 }
 
 // EOF
-

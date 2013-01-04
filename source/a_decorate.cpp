@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -56,7 +56,7 @@
 //
 // ZDoom codepointer #3, implemented from scratch using wiki
 // documentation. 100% GPL version.
-// 
+//
 void A_AlertMonsters(Mobj *mo)
 {
    if(mo->target)
@@ -67,13 +67,13 @@ void A_AlertMonsters(Mobj *mo)
 // A_CheckPlayerDone
 //
 // ZDoom codepointer #4. Needed for Heretic support also.
-// Extension: 
+// Extension:
 //    args[0] == state DeHackEd number to transfer into
 //
 void A_CheckPlayerDone(Mobj *actor)
 {
    int statenum;
-   
+
    if((statenum = E_ArgAsStateNumNI(actor->state->args, 0, actor)) < 0)
       return;
 
@@ -102,7 +102,7 @@ void A_ClearSkin(Mobj *mo)
 void A_FadeIn(Mobj *mo)
 {
    mo->translucency += E_ArgAsFixed(mo->state->args, 0, 0);
-   
+
    if(mo->translucency < 0)
       mo->translucency = 0;
    else if(mo->translucency > FRACUNIT)
@@ -119,7 +119,7 @@ void A_FadeIn(Mobj *mo)
 void A_FadeOut(Mobj *mo)
 {
    mo->translucency -= E_ArgAsFixed(mo->state->args, 0, 0);
-   
+
    if(mo->translucency < 0)
       mo->translucency = 0;
    else if(mo->translucency > FRACUNIT)
@@ -246,7 +246,7 @@ void A_JumpIfTargetInLOS(Mobj *mo)
          angle_t fov  = FixedToAngle(ifov);
          angle_t tang = P_PointToAngle(mo->x, mo->y,
 #ifdef R_LINKEDPORTALS
-                                        getThingX(mo, target), 
+                                        getThingX(mo, target),
                                         getThingY(mo, target));
 #else
                                         target->x, target->y);
@@ -255,21 +255,21 @@ void A_JumpIfTargetInLOS(Mobj *mo)
          angle_t maxang = mo->angle + fov / 2;
 
          // if the angles are backward, compare differently
-         if((minang > maxang) ? tang < minang && tang > maxang 
+         if((minang > maxang) ? tang < minang && tang > maxang
                               : tang < minang || tang > maxang)
          {
             return;
          }
       }
 
-      // check line of sight 
+      // check line of sight
       if(!P_CheckSight(mo, target))
          return;
 
       // prepare to jump!
       if((statenum = E_ArgAsStateNumNI(mo->state->args, 0, mo)) < 0)
          return;
-      
+
       P_SetMobjState(mo, statenum);
    }
 }
@@ -279,7 +279,7 @@ void A_JumpIfTargetInLOS(Mobj *mo)
 //
 // ZDoom codepointer #2, implemented from scratch using wiki
 // documentation. 100% GPL version.
-// 
+//
 // args[0] : alpha
 // args[1] : mode
 //
@@ -389,7 +389,7 @@ void A_PlaySoundEx(Mobj *mo)
    bool loop;
 
    sfx = E_ArgAsSound(mo->state->args, 0);
-   
+
    // handle channel
    channel = E_ArgAsKwd(mo->state->args, 1, &channelkwdsold, -1);
    if(channel == -1)
@@ -402,7 +402,7 @@ void A_PlaySoundEx(Mobj *mo)
 
    // handle attenuation
    attn = E_ArgAsKwd(mo->state->args, 3, &attnkwdsold, -1);
-   
+
    if(attn == -1)
    {
       E_ResetArgEval(mo->state->args, 3);
@@ -429,4 +429,3 @@ void A_PlaySoundEx(Mobj *mo)
 }
 
 // EOF
-

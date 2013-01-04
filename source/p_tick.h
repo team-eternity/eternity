@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,13 +38,13 @@ class Thinker : public RTTIObject
 
 private:
    // Private implementation details - Methods
-   void removeDelayed(); 
+   void removeDelayed();
 
    // Data members
    // killough 11/98: count of how many other objects reference
    // this one using pointers. Used for garbage collection.
    unsigned int references;
-   
+
    // Statics
    // Current position in list during RunThinkers
    static Thinker *currentthinker;
@@ -64,7 +64,7 @@ protected:
 
 public:
    // Constructor
-   Thinker() 
+   Thinker()
       : Super(), references(0), removed(false), ordinal(0), prev(NULL),
         next(NULL), cprev(NULL), cnext(NULL)
    {
@@ -77,15 +77,15 @@ public:
 
    // Methods
    void addThinker();
-   
+
    // Accessors
    bool isRemoved() const { return removed; }
-   
+
    // Reference counting
    void addReference() { ++references; }
    void delReference() { --references; }
 
-   // Enumeration 
+   // Enumeration
    // For thinkers needing savegame enumeration.
    void setOrdinal(unsigned int i) { ordinal = shouldSerialize() ? i : 0; }
    unsigned int getOrdinal() const { return ordinal; }
@@ -100,12 +100,12 @@ public:
    // De-swizzling should restore pointers to other thinkers.
    virtual void deSwizzle() {}
    virtual bool shouldSerialize() const { return !removed;  }
-   
+
    // Data Members
 
    Thinker *prev;
    Thinker *next;
-  
+
    // killough 8/29/98: we maintain thinkers in several equivalence classes,
    // according to various criteria, so as to allow quicker searches.
 
@@ -117,8 +117,8 @@ public:
 // thinker_cast
 //
 // Use this dynamic_cast variant to automatically check if something is a valid
-// unremoved Thinker subclass instance. This is necessary because the old 
-// behavior of checking function pointer values effectively changed the type 
+// unremoved Thinker subclass instance. This is necessary because the old
+// behavior of checking function pointer values effectively changed the type
 // that a thinker was considered to be when it was set into a deferred removal
 // state, and C++ doesn't support that with virtual methods OR RTTI.
 //
@@ -160,7 +160,7 @@ template<typename T> T *P_NextThinker(T *th)
 //
 // killough 11/98
 // This function is used to keep track of pointer references to mobj thinkers.
-// In Doom, objects such as lost souls could sometimes be removed despite 
+// In Doom, objects such as lost souls could sometimes be removed despite
 // their still being referenced. In Boom, 'target' mobj fields were tested
 // during each gametic, and any objects pointed to by them would be prevented
 // from being removed. But this was incomplete, and was slow (every mobj was
@@ -176,7 +176,7 @@ template<typename T> void P_SetTarget(T **mop, T *targ)
 }
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
-typedef enum 
+typedef enum
 {
   th_delete,  // haleyjd 11/09/06: giant bug fix
   th_misc,
@@ -194,7 +194,7 @@ extern bool reset_viewz;
 // DECLARE_THINKER_TYPE
 //
 #define DECLARE_THINKER_TYPE(name, inherited) DECLARE_RTTI_TYPE(name, inherited)
-   
+
 //
 // IMPLEMENT_THINKER_TYPE
 //

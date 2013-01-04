@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -42,7 +42,7 @@ extern void M_GetFilePath(const char *fn, char *base, size_t len);
 // WIN_GetExeDir
 //
 // When compiling for Windows, D_DoomExeDir calls this instead of
-// the generalized M_GetFilePath on argv[0].  This is necessary 
+// the generalized M_GetFilePath on argv[0].  This is necessary
 // because some versions of Windows deliberately strip argv[0] down
 // to the file name, removing all path information. This causes a
 // serious malfunction under Windows XP which can only be corrected
@@ -70,4 +70,3 @@ void WIN_GetExeDir(char *buffer, unsigned int size)
 }
 
 // EOF
-

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,21 +48,21 @@ static int ytop;
 //
 // Draws a plain patch column with no remappings.
 //
-static void V_DrawPatchColumn(void) 
-{ 
+static void V_DrawPatchColumn(void)
+{
    int              count;
    register byte    *dest;    // killough
    register fixed_t frac;     // killough
    fixed_t          fracstep;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumn: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumn: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
@@ -79,7 +79,7 @@ static void V_DrawPatchColumn(void)
 
    {
       register const byte *source = patchcol.source;
-            
+
       while((count -= 2) >= 0)
       {
          *dest = source[frac >> FRACBITS];
@@ -92,28 +92,28 @@ static void V_DrawPatchColumn(void)
       if(count & 1)
          *dest = source[frac >> FRACBITS];
    }
-} 
+}
 
 //
 // V_DrawPatchColumnTR
 //
 // Draws a plain patch column with color translation.
 //
-static void V_DrawPatchColumnTR(void) 
-{ 
+static void V_DrawPatchColumnTR(void)
+{
    int              count;
    register byte    *dest;    // killough
    register fixed_t frac;     // killough
    fixed_t          fracstep;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
@@ -130,7 +130,7 @@ static void V_DrawPatchColumnTR(void)
 
    {
       register const byte *source = patchcol.source;
-            
+
       while((count -= 2) >= 0)
       {
          *dest = patchcol.translation[source[frac >> FRACBITS]];
@@ -143,28 +143,28 @@ static void V_DrawPatchColumnTR(void)
       if(count & 1)
          *dest = patchcol.translation[source[frac >> FRACBITS]];
    }
-} 
+}
 
 //
 // V_DrawPatchColumnTRLit
 //
 // Draws a plain patch column with color translation and light remapping
 //
-static void V_DrawPatchColumnTRLit(void) 
-{ 
+static void V_DrawPatchColumnTRLit(void)
+{
    int              count;
    register byte    *dest;    // killough
    register fixed_t frac;     // killough
    fixed_t          fracstep;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
@@ -181,7 +181,7 @@ static void V_DrawPatchColumnTRLit(void)
 
    {
       register const byte *source = patchcol.source;
-            
+
       while((count -= 2) >= 0)
       {
          *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
@@ -194,7 +194,7 @@ static void V_DrawPatchColumnTRLit(void)
       if(count & 1)
          *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
    }
-} 
+}
 
 
 #define DO_COLOR_BLEND()                       \
@@ -210,21 +210,21 @@ static void V_DrawPatchColumnTRLit(void)
 // translucency lookups must be set before getting here.
 //
 void V_DrawPatchColumnTL(void)
-{ 
-   int              count; 
+{
+   int              count;
    register byte    *dest;           // killough
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    unsigned int     fg, bg;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumnTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
@@ -235,7 +235,7 @@ void V_DrawPatchColumnTL(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = patchcol.source;
-            
+
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
@@ -270,32 +270,32 @@ void V_DrawPatchColumnTL(void)
 // Requires both translucency lookups and a translation table.
 //
 void V_DrawPatchColumnTRTL(void)
-{ 
-   int              count; 
+{
+   int              count;
    register byte    *dest;           // killough
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    unsigned int     fg, bg;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = patchcol.step; 
+   fracstep = patchcol.step;
    frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = patchcol.source;
-      
+
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
@@ -335,32 +335,32 @@ void V_DrawPatchColumnTRTL(void)
 // Draws a patch column with additive translucency.
 //
 void V_DrawPatchColumnAdd(void)
-{ 
-   int              count; 
+{
+   int              count;
    register byte    *dest;           // killough
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    unsigned int     a, b;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnAdd: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumnAdd: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = patchcol.step; 
+   fracstep = patchcol.step;
    frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = patchcol.source;
-      
+
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
@@ -400,41 +400,41 @@ void V_DrawPatchColumnAdd(void)
 // translation.
 //
 void V_DrawPatchColumnAddTR(void)
-{ 
-   int              count; 
+{
+   int              count;
    register byte    *dest;           // killough
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    unsigned int     a, b;
-   
+
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
-                                 
-#ifdef RANGECHECK 
-   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
-      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
-#endif 
+
+#ifdef RANGECHECK
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width ||
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height)
+      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x);
+#endif
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = patchcol.step; 
+   fracstep = patchcol.step;
    frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = patchcol.source;
-      
+
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
          frac += fracstep;
-         
+
          DO_COLOR_BLEND();
-         
+
          dest += patchcol.buffer->pitch;
          frac += fracstep;
       }
@@ -462,7 +462,7 @@ static void V_DrawMaskedColumn(column_t *column)
          // SoM: Make sure the lut is never referenced out of range
          if(columntop >= patchcol.buffer->unscaledh)
             return;
-            
+
          patchcol.y1 = patchcol.buffer->y1lookup[columntop];
          patchcol.frac = 0;
       }
@@ -484,7 +484,7 @@ static void V_DrawMaskedColumn(column_t *column)
       if((column->length > 0 && patchcol.y2 < patchcol.y1) ||
          patchcol.y2 >= patchcol.buffer->height)
          patchcol.y2 = patchcol.buffer->height - 1;
-      
+
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
       {
@@ -558,13 +558,13 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    void       (*maskcolfunc)(column_t *);
 
    w = patch->width; // haleyjd: holy crap, stop calling this 800 times
-   
+
    patchcol.buffer = buffer;
 
    // calculate edges of the shape
    if(pi->flipped)
    {
-      // If flipped, then offsets are flipped as well which means they 
+      // If flipped, then offsets are flipped as well which means they
       // technically offset from the right side of the patch (x2)
       x2 = pi->x + patch->leftoffset;
       x1 = x2 - (w - 1);
@@ -579,7 +579,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    // the Cardboard video structure...
 
    if(buffer->scaled)
-   {      
+   {
       iscale        = buffer->ixscale;
       patchcol.step = buffer->iyscale;
       maxw          = buffer->unscaledw;
@@ -614,18 +614,18 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    }
 
    patchcol.x  = x1 < 0 ? 0 : x1;
-   
-   // SoM: Any time clipping occurs on screen coords, the resulting clipped 
+
+   // SoM: Any time clipping occurs on screen coords, the resulting clipped
    // coords should be checked to make sure we are still on screen.
    if(x2 < x1)
       return;
 
-   // SoM: Ok, so the startfrac should ALWAYS be the last post of the patch 
+   // SoM: Ok, so the startfrac should ALWAYS be the last post of the patch
    // when the patch is flipped minus the fractional "bump" from the screen
    // scaling, then the patchcol.x to x1 clipping will place the frac in the
    // correct column no matter what. This also ensures that scaling will be
    // uniform. If the resolution is 320x2X0 the iscale will be 65537 which
-   // will create some fractional bump down, so it is safe to assume this 
+   // will create some fractional bump down, so it is safe to assume this
    // puts us just below patch->width << 16
    if(pi->flipped)
       startfrac = (w << 16) - ((x1 * iscale) & 0xffff) - 1;
@@ -646,16 +646,16 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       patchcol.colfunc = colfuncfordrawstyle[pi->drawstyle];
 
       ytop = pi->y - patch->topoffset;
-      
+
       for(; patchcol.x <= x2; patchcol.x++, startfrac += xiscale)
       {
          texturecolumn = startfrac >> FRACBITS;
-         
+
 #ifdef RANGECHECK
          if(texturecolumn < 0 || texturecolumn >= w)
             I_Error("V_DrawPatchInt: bad texturecolumn %d\n", texturecolumn);
 #endif
-         
+
          column = (column_t *)((byte *)patch + patch->columnofs[texturecolumn]);
          maskcolfunc(column);
       }
@@ -714,21 +714,21 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
    byte *buffer = emalloc(byte *, w * h);
 
    memset(buffer, fillcolor, w * h);
-  
+
    if(!flipped)
       col = 0, colstop = w, colstep = 1;
 
    desttop = buffer;
-      
+
    for(; col != colstop; col += colstep, ++desttop)
    {
-      const column_t *column = 
+      const column_t *column =
          (const column_t *)((byte *)patch + patch->columnofs[col]);
-      
+
       // step through the posts in a column
       while(column->topdelta != 0xff)
       {
-         // killough 2/21/98: Unrolled and performance-tuned         
+         // killough 2/21/98: Unrolled and performance-tuned
          register const byte *source = (byte *)column + 3;
          register byte *dest = desttop + column->topdelta * w;
          register int count = column->length;
@@ -741,7 +741,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
          // haleyjd: make sure there's something left to draw
          if(count <= 0)
             break;
-         
+
          if((count -= 4) >= 0)
          {
             do
@@ -790,7 +790,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
 //
 // haleyjd 07/07/07: converts a linear graphic to a patch
 //
-patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, 
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
                          int tag, void **user)
 {
    int      x, y;
@@ -803,9 +803,9 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
    // 2. patch_t header is 4 shorts plus width * int for columnofs array
    // 3. one post per vertical slice plus 2 padding bytes and 1 byte for
    //    a -1 post to cap the column are required
-   size_t total_size = 
+   size_t total_size =
       4 * sizeof(int16_t) + w * (h + sizeof(int32_t) + sizeof(column_t) + 3);
-   
+
    byte *out = ecalloctag(byte *, 1, total_size, tag, user);
 
    p = (patch_t *)out;
@@ -843,7 +843,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
       // create end post
       *(dest + 1) = 255;
 
-      // skip to next column location 
+      // skip to next column location
       dest += 2;
    }
 
@@ -874,7 +874,7 @@ bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor)
       C_Printf(FC_ERROR "No such lump %s", lump);
       return false;
    }
-   
+
    // cache the target lump into an autobuffer. We want to do it this way here,
    // versus loading it normally, because we don't want to deal with caching of
    // formatted lumps, substitution of the default patch, etc
@@ -893,7 +893,7 @@ bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor)
    }
 
    // convert to linear
-   linear = V_PatchToLinear(reinterpret_cast<patch_t *>(data), false, fillcolor, 
+   linear = V_PatchToLinear(reinterpret_cast<patch_t *>(data), false, fillcolor,
                             &width, &height);
 
    // Finally, write out the linear as a PNG.
@@ -906,7 +906,6 @@ bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor)
    efree(linear);
    return res;
 }
- 
+
 
 // EOF
-

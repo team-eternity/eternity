@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,8 +35,8 @@
 #endif
 
 // function inlining is available on most platforms, however,
-// the GNU C __inline__ is too common and conflicts with a 
-// definition in SDL, so it needs to be factored out into a 
+// the GNU C __inline__ is too common and conflicts with a
+// definition in SDL, so it needs to be factored out into a
 // custom macro definition
 
 // haleyjd 04/13/11: C++ supports inline natively
@@ -46,7 +46,7 @@
 //
 // These control the presence of custom code for some common
 // non-ANSI libc functions that are in m_misc.c -- in some cases
-// its not worth having the code when its already available in 
+// its not worth having the code when its already available in
 // the platform's libc
 //
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@
 
 //jff 2/16/98 palette color ranges for translation
 //jff 2/18/98 conversion to palette lookups for speed
-//jff 4/24/98 now pointers to lumps loaded 
+//jff 4/24/98 now pointers to lumps loaded
 extern byte *cr_brick;
 extern byte *cr_tan;
 extern byte *cr_gray;
@@ -69,9 +69,9 @@ typedef enum
   CR_BLUE,    //7
   CR_ORANGE,  //8
   CR_YELLOW,  //9
-  
+
   CR_BUILTIN = CR_YELLOW,
-  
+
   // haleyjd: "custom" colors do not have built-in translations;
   // they are free for user definition via EDF.
   CR_CUSTOM1, //10
@@ -80,7 +80,7 @@ typedef enum
   CR_CUSTOM4, //13
 
   CR_MAXCUSTOM = CR_CUSTOM4,
-  
+
   CR_LIMIT    //jff 2/27/98 added for range check
 } crange_idx_e;
 //jff 1/16/98 end palette color range additions
@@ -132,7 +132,7 @@ void V_CopyRect(int srcx,  int srcy,  VBuffer *src, int width, int height,
 // V_DrawPatchGeneral (killough 11/98)
 // Consolidated V_DrawPatch and V_DrawPatchFlipped. This function renders a
 // patch to a VBuffer object utilizing any scaling information the buffer has.
-void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, 
+void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
                         bool flipped);
 
 // V_DrawPatch
@@ -147,7 +147,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // V_DrawPatchTranslated
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but applies
 // The given color translation to the patch.
-void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, 
+void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
                            byte *outr, bool flipped);
 
 // V_DrawPatchTranslatedLit
@@ -159,7 +159,7 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with the given opacity. If a color translation table is supplied
 // (outr != NULL) the patch is translated as well.
-void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, 
+void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
                    byte *outr, int tl);
 
 // V_DrawPatchAdd
@@ -180,7 +180,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
 // V_DrawBlock
 // Draw a linear block of pixels into the view buffer, using the buffer's
 // scaling information (if present)
-void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, 
+void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height,
                  byte *src);
 
 // V_DrawMaskedBlockTR
@@ -250,4 +250,3 @@ extern VBuffer subscreen43;
 //
 //
 //----------------------------------------------------------------------------
-

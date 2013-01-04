@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -59,7 +59,7 @@
 //
 // P_ClearSwitchOnFail
 //
-// haleyjd 08/29/09: Replaces demo_compatibility checks for clearing 
+// haleyjd 08/29/09: Replaces demo_compatibility checks for clearing
 // W1/S1/G1 line actions on action failure, because it makes some maps
 // unplayable if it is disabled unconditionally outside of demos.
 //
@@ -90,17 +90,17 @@ static bool EV_Check3DMidTexSwitch(line_t *line, Mobj *thing, int side)
    if(sidenum != -1)
       sidedef = &sides[sidenum];
 
-   // SoM: only allow switch specials on 3d sides to be triggered if 
+   // SoM: only allow switch specials on 3d sides to be triggered if
    // the mobj is within range of the side.
    // haleyjd 05/02/06: ONLY on two-sided lines.
-   if((line->flags & ML_3DMIDTEX) && line->backsector && 
+   if((line->flags & ML_3DMIDTEX) && line->backsector &&
       sidedef && sidedef->midtexture)
    {
       fixed_t opentop, openbottom, textop, texbot;
 
       opentop = line->frontsector->ceilingheight < line->backsector->ceilingheight ?
                 line->frontsector->ceilingheight : line->backsector->ceilingheight;
-      
+
       openbottom = line->frontsector->floorheight > line->backsector->floorheight ?
                    line->frontsector->floorheight : line->backsector->floorheight;
 
@@ -143,7 +143,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
    // Things that should never trigger lines
    if(!instance->actor->player)
    {
-      // haleyjd: changed to check against MF2_NOCROSS flag instead of 
+      // haleyjd: changed to check against MF2_NOCROSS flag instead of
       // switching on type.
       if(instance->actor->flags2 & MF2_NOCROSS)
          return false;
@@ -209,7 +209,7 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_LINE(line);
 
    // All DOOM-style use specials only support activation from the first side
-   if(instance->side) 
+   if(instance->side)
       return false;
 
    // Check for 3DMidTex range restrictions
@@ -239,7 +239,7 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
 //
 // Post-activation semantics for DOOM-style use line actions.
 //
-static bool EV_DOOMPostUseLine(ev_action_t *action, bool result, 
+static bool EV_DOOMPostUseLine(ev_action_t *action, bool result,
                                ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
@@ -258,7 +258,7 @@ static bool EV_DOOMPostUseLine(ev_action_t *action, bool result,
    // FIXME/TODO: ideally we return result; the vanilla code always returns true
    // if the line action was *attempted*, not if it succeeded. Fixing this will
    // require a new comp flag.
-   
+
    //return result;
    return true; // temporary
 }
@@ -298,7 +298,7 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
 //
 // Post-activation semantics for DOOM-style use line actions.
 //
-static bool EV_DOOMPostShootLine(ev_action_t *action, bool result, 
+static bool EV_DOOMPostShootLine(ev_action_t *action, bool result,
                                  ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
@@ -307,7 +307,7 @@ static bool EV_DOOMPostShootLine(ev_action_t *action, bool result,
    if(flags & EV_POSTCHANGESWITCH)
    {
       // Non-BOOM gun line types may clear their special even if they fail
-      if(result || (flags & EV_POSTCHANGEALWAYS) || 
+      if(result || (flags & EV_POSTCHANGEALWAYS) ||
          (action->minversion < 200 && P_ClearSwitchOnFail()))
       {
          int useAgain   = !(flags & EV_POSTCLEARSPECIAL);
@@ -336,7 +336,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
 {
    Mobj   *thing = instance->actor;
    line_t *line  = instance->line;
-   
+
    REQUIRE_ACTOR(thing);
    REQUIRE_LINE(line);
 
@@ -385,7 +385,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
       case GenTypeCeiling:
          // CeilingModel is "Allow Monsters" if CeilingChange is 0
          if((line->special & CeilingChange) || !(line->special & CeilingModel))
-            return false; 
+            return false;
          break;
       case GenTypeDoor:
          if(!(line->special & DoorMonster))
@@ -432,7 +432,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
 
    // check for line side?
    // NB: BOOM code checked specially for Push types, but, that check was
-   // redundant to one at the top of P_UseSpecialLine that applies to 
+   // redundant to one at the top of P_UseSpecialLine that applies to
    // everything.
    if(instance->side)
    {
@@ -484,7 +484,7 @@ static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
    // just returns true if an action is attempted, not if it succeeds. Until a
    // comp var is added, we return true from here instead of forwarding on the
    // result.
-   
+
    //return result;
    return true; // temporary
 }
@@ -764,7 +764,7 @@ static bool EV_ActionTeleport(ev_action_t *action, ev_instance_t *instance)
 // EV_ActionRaiseCeilingLowerFloor
 //
 // haleyjd: This action never historically worked (seems Romero forgot that
-// only one action could be active on a sector at a time...), so it will 
+// only one action could be active on a sector at a time...), so it will
 // actually only ever raise the ceiling. In demo_compatibility mode we do
 // try to lower the floor, but, it won't work. This is done for strict
 // compatibility in case it somehow has an unpredictable playsim side effect.
@@ -792,7 +792,7 @@ static bool EV_ActionRaiseCeilingLowerFloor(ev_action_t *action, ev_instance_t *
 // This version on the other hand works unconditionally, and is a BOOM
 // extension.
 //
-static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action, 
+static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action,
                                                 ev_instance_t *instance)
 {
    // case 151: (WR - BOOM Extended)
@@ -812,7 +812,7 @@ static bool EV_ActionBOOMRaiseCeilingLowerFloor(ev_action_t *action,
 // glaring hole in the logic, it will only perform one action or the other,
 // depending on whether or not the ceiling is currently busy 9_9
 //
-static bool EV_ActionBOOMRaiseCeilingOrLowerFloor(ev_action_t *action, 
+static bool EV_ActionBOOMRaiseCeilingOrLowerFloor(ev_action_t *action,
                                                   ev_instance_t *instance)
 {
    // case 166: (S1 - BOOM Extended)
@@ -1341,7 +1341,7 @@ static bool EV_ActionSilentLineTeleport(ev_action_t *action, ev_instance_t *inst
    line_t *line  = instance->line;
    int     side  = instance->side;
    Mobj   *thing = instance->actor;
-  
+
    // case 243: (W1 - BOOM Extended)
    // case 244: (WR - BOOM Extended)
    // jff 3/6/98 make fit within DCK's 256 linedef types
@@ -1356,7 +1356,7 @@ static bool EV_ActionSilentLineTeleport(ev_action_t *action, ev_instance_t *inst
 //
 // EV_ActionSilentLineTeleportReverse
 //
-static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action, 
+static bool EV_ActionSilentLineTeleportReverse(ev_action_t *action,
                                                ev_instance_t *instance)
 {
    line_t *line  = instance->line;
@@ -1394,7 +1394,7 @@ static bool EV_ActionStartLineScript(ev_action_t *action, ev_instance_t *instanc
    return true;
 }
 
-// 
+//
 // EV_ActionVerticalDoor
 //
 static bool EV_ActionVerticalDoor(ev_action_t *action, ev_instance_t *instance)
@@ -1410,7 +1410,7 @@ static bool EV_ActionVerticalDoor(ev_action_t *action, ev_instance_t *instance)
    // case 34:  -- Yellow locked door open
    // case 117: -- Blazing door raise
    // case 118: -- Blazing door open
-   
+
    // TODO: move special-specific logic out of EV_VerticalDoor to here,
    // or to preamble function. Or, break up function altogether.
 
@@ -1430,7 +1430,7 @@ static bool EV_ActionDoLockedDoor(ev_action_t *action, ev_instance_t *instance)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    // TODO: move special-specific logic out of EV_DoLockedDoor
-   
+
    return !!EV_DoLockedDoor(instance->line, blazeOpen, instance->actor);
 }
 
@@ -1561,8 +1561,8 @@ static ev_actiontype_t WRActionType =
    0                     // no default flags
 };
 
-// W1-Type lines may be activated once. Semantics are implemented in the 
-// post-cross callback to implement compatibility behaviors regarding the 
+// W1-Type lines may be activated once. Semantics are implemented in the
+// post-cross callback to implement compatibility behaviors regarding the
 // premature clearing of specials crossed from the wrong side or without
 // successful instance having occurred.
 static ev_actiontype_t W1ActionType =
@@ -1614,7 +1614,7 @@ static ev_actiontype_t GRActionType =
 };
 
 // G1-Type lines may be activated once, by a hitscan attack.
-static ev_actiontype_t G1ActionType = 
+static ev_actiontype_t G1ActionType =
 {
    SPAC_IMPACT,          // line must be hit
    EV_DOOMPreShootLine,  // pre-activation callback
@@ -1843,7 +1843,7 @@ SRLINE(SRCeilingLowerToFloor, CeilingLowerToFloor, 0, 0);
 // DOOM Line Type 44 - W1 Ceiling Crush
 W1LINE(W1CeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
 
-// DOOM Line Type 45 - SR Floor Lower to Surr. Floor 
+// DOOM Line Type 45 - SR Floor Lower to Surr. Floor
 SRLINE(SRLowerFloor, LowerFloor, 0, 0);
 
 // DOOM Line Type 46 - GR Open Door
@@ -2478,7 +2478,7 @@ WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
 //
 
 static ev_action_t BoomGenAction =
-{                                         
+{
    &BoomGenActionType,    // use generalized action type
    EV_ActionBoomGen,      // use a single action function
    0,                     // flags aren't used
@@ -2489,8 +2489,8 @@ static ev_action_t BoomGenAction =
 //
 // Special Bindings
 //
-// Each level type (DOOM, Heretic, Strife, Hexen) has its own set of line 
-// specials. Heretic and Strife's sets are based on DOOM's with certain 
+// Each level type (DOOM, Heretic, Strife, Hexen) has its own set of line
+// specials. Heretic and Strife's sets are based on DOOM's with certain
 // additions (many of which conflict with BOOM extensions).
 //
 
@@ -2828,9 +2828,9 @@ static int EV_GenActivationType(int16_t special)
 //
 ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
 {
-   // check if it is a generalized type 
+   // check if it is a generalized type
    instance.gentype = EV_GenTypeForSpecial(instance.line->special);
-   
+
    if(instance.gentype >= GenTypeFloor)
    {
       // This is a BOOM generalized special type
@@ -2845,7 +2845,7 @@ ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
       // TODO: normal
    }
 
-   return NULL; 
+   return NULL;
 }
 
 //=============================================================================
@@ -3084,7 +3084,7 @@ static ev_static_t HexenStaticBindings[] =
 // Hash Tables
 //
 
-typedef EHashTable<ev_static_t, EIntHashKey, 
+typedef EHashTable<ev_static_t, EIntHashKey,
                    &ev_static_t::staticFn, &ev_static_t::links> EV_StaticHash;
 
 // DOOM hash
@@ -3096,7 +3096,7 @@ static EV_StaticHash DOOMStaticHash(earrlen(DOOMStaticBindings));
 //
 // Add an array of static specials to a hash table.
 //
-static void EV_AddStaticSpecialsToHash(EV_StaticHash &hash, 
+static void EV_AddStaticSpecialsToHash(EV_StaticHash &hash,
                                        ev_static_t *bindings, size_t count)
 {
    // Create a duplicate of the entire bindings array so that the items can
@@ -3121,9 +3121,9 @@ static void EV_InitDOOMStaticHash()
    if(firsttime)
    {
       firsttime = false;
-      
+
       // add every item in the DOOM static bindings array
-      EV_AddStaticSpecialsToHash(DOOMStaticHash, DOOMStaticBindings, 
+      EV_AddStaticSpecialsToHash(DOOMStaticHash, DOOMStaticBindings,
                                  earrlen(DOOMStaticBindings));
    }
 }
@@ -3147,14 +3147,14 @@ int EV_DOOMSpecialForStaticInit(int staticFn)
 //
 // EV_HereticSpecialForStaticInit
 //
-// Always looks up a special in the Heretic gamemode's static init list, 
-// regardless of the map format or gamemode in use. Returns 0 if no such 
+// Always looks up a special in the Heretic gamemode's static init list,
+// regardless of the map format or gamemode in use. Returns 0 if no such
 // special exists.
 //
 int EV_HereticSpecialForStaticInit(int staticFn)
 {
    // There is only one difference between Heretic and DOOM regarding static
-   // init specials; line type 99 is equivalent to BOOM extended type 85, 
+   // init specials; line type 99 is equivalent to BOOM extended type 85,
    // scroll line right.
 
    if(staticFn == EV_STATIC_SCROLL_LINE_RIGHT)
@@ -3166,7 +3166,7 @@ int EV_HereticSpecialForStaticInit(int staticFn)
 //
 // EV_HexenSpecialForStaticInit
 //
-// Always looks up a special in the Hexen gamemode's static init list, 
+// Always looks up a special in the Hexen gamemode's static init list,
 // regardless of the map format or gamemode in use. Returns 0 if no such special
 // exists.
 //
@@ -3176,7 +3176,7 @@ int EV_HexenSpecialForStaticInit(int staticFn)
    return 0;
 }
 
-// 
+//
 // EV_StrifeSpecialForStaticInit
 //
 // Always looks up a special in the Strife gamemode's static init list,
@@ -3215,4 +3215,3 @@ int EV_SpecialForStaticInit(int staticFn)
 }
 
 // EOF
-

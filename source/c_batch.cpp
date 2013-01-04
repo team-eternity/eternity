@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et: vi:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2012 Charles Gunyon
@@ -318,4 +318,3 @@ void C_SaveCommandBatches(FILE *file)
       );
    }
 }
-

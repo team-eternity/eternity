@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3:sw=3:set et: 
+// Emacs style mode select -*- C++ -*- vi:ts=3:sw=3:set et:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -55,17 +55,17 @@ struct v2float_t
    float x, y;
 };
 
-// 
+//
 // M_TranslateVec3
 //
 // Translates the given vector (in doom's coordinate system) to the camera
 // space (in right-handed coordinate system) This function is used for slopes.
-// 
+//
 void M_TranslateVec3f(v3float_t *vec);
 void M_TranslateVec3 (v3double_t *vec);
 
 
-// 
+//
 // M_SubVec3
 //
 // Subtracts v2 from v1 stores in dest
@@ -73,7 +73,7 @@ void M_TranslateVec3 (v3double_t *vec);
 void M_SubVec3f(v3float_t *dest,  const v3float_t *v1,  const v3float_t *v2);
 void M_SubVec3 (v3double_t *dest, const v3double_t *v1, const v3double_t *v2);
 
-// 
+//
 // M_DotVec3
 //
 // Returns the dot product of v1 and v2
@@ -92,4 +92,3 @@ void M_CrossProduct3 (v3double_t *dest, const v3double_t *v1, const v3double_t *
 #endif
 
 // EOF
-

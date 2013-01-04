@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 
 void P_LoadLevelInfo(int lumpnum, const char *lvname);
 
-void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
+void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
                       int next, int secr, bool finale, const char *intertext,
                       int mission, const char *interpic);
 
@@ -62,8 +62,8 @@ enum
 // LevelInfo Field Enumeration
 //
 // haleyjd 06/21/10: This is needed to keep track of what fields are stored in
-// a LevelInfo prototype. The order does not have to match that in the 
-// structure, but there must be one enumeration value for every structure 
+// a LevelInfo prototype. The order does not have to match that in the
+// structure, but there must be one enumeration value for every structure
 // field.
 //
 enum
@@ -117,7 +117,7 @@ enum
    LI_FIELD_SOUNDPSTART,
    LI_FIELD_SOUNDFCMOVE,
    LI_FIELD_NOAUTOSEQUENCES,
-   
+
    // count of fields
    LI_FIELD_NUMFIELDS
 };
@@ -211,4 +211,3 @@ extern int default_weaponowned[NUMWEAPONS];
 #endif
 
 // EOF
-

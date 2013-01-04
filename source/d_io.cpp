@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,11 +47,11 @@ char *D_Fgets(char *buf, size_t n, DWFILE *fp)
    // If this is a real file, return regular fgets
    if(fp->type == DWF_FILE)
       return fgets(buf, n, (FILE *) fp->inp);
-   
+
    // If no more characters
    if(!n || !*fp->inp || fp->size <= 0)
       return NULL;
-  
+
    if(n == 1)
    {
       fp->size--, *buf = *fp->inp++;
@@ -69,13 +69,13 @@ char *D_Fgets(char *buf, size_t n, DWFILE *fp)
 
 int D_Feof(DWFILE *fp)
 {
-   return (fp->type == DWF_FILE) ? 
+   return (fp->type == DWF_FILE) ?
              feof((FILE *)fp->inp) : !*fp->inp || fp->size <= 0;
 }
 
 int D_Fgetc(DWFILE *fp)
 {
-   return (fp->type == DWF_FILE) ? 
+   return (fp->type == DWF_FILE) ?
              fgetc((FILE *) fp->inp) : fp->size > 0 ?
                 fp->size--, *fp->inp++ : EOF;
 }
@@ -84,13 +84,13 @@ int D_Fgetc(DWFILE *fp)
 //
 // D_Ungetc
 //
-// haleyjd 04/03/03: note that wad lump buffers will not be 
+// haleyjd 04/03/03: note that wad lump buffers will not be
 // written into by this function -- this is necessary to
 // maintain cacheability.
 //
 int D_Ungetc(int c, DWFILE *fp)
 {
-   return (fp->type == DWF_FILE) ? 
+   return (fp->type == DWF_FILE) ?
              ungetc(c, (FILE *)fp->inp) :
                 fp->size < fp->origsize ? fp->size++, *(--fp->inp) : EOF;
 }
@@ -201,4 +201,3 @@ long D_FileLength(DWFILE *file)
 }
 
 // EOF
-

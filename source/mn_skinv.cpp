@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -142,7 +142,7 @@ static void MN_skinEmulateAction(state_t *state)
       else
       {
          S_StartSoundName(NULL,
-            (GameModeInfo->id == shareware || M_Random() % 2) ? 
+            (GameModeInfo->id == shareware || M_Random() % 2) ?
              players[consoleplayer].skin->sounds[sk_pldeth] :
              players[consoleplayer].skin->sounds[sk_pdiehi]);
       }
@@ -162,9 +162,9 @@ static void MN_skinEmulateAction(state_t *state)
 static void MN_SkinSetState(state_t *state)
 {
    int tics;
-   
+
    skview_state = state;
-   
+
    tics = skview_state->tics;
    skview_tics = menutime + (skview_halfspeed ? 2*tics : tics);
 
@@ -343,7 +343,7 @@ static void MN_SkinInstructions(void)
 
    // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
    // it with one call to V_FontWriteText instead of five.
-   V_FontWriteText(menu_font_normal, 
+   V_FontWriteText(menu_font_normal,
                "Instructions:\n"
                FC_GRAY "left"  FC_RED " = rotate left, "
                FC_GRAY "right" FC_RED " = rotate right\n"
@@ -353,7 +353,7 @@ static void MN_SkinInstructions(void)
                FC_GRAY "x"     FC_RED " = gib\n"
                FC_GRAY "space" FC_RED " = respawn, "
                FC_GRAY "h"     FC_RED " = half-speed\n"
-               FC_GRAY "toggle or previous" FC_RED " = exit", 
+               FC_GRAY "toggle or previous" FC_RED " = exit",
                4, INSTR_Y, &subscreen43);
 }
 
@@ -421,7 +421,7 @@ static void MN_SkinDrawer(void)
 
    // draw the sprite, with color translation and proper flipping
    // 01/12/04: changed translation handling
-   V_DrawPatchTranslatedLit(160, 120, &subscreen43, patch, translate, 
+   V_DrawPatchTranslatedLit(160, 120, &subscreen43, patch, translate,
                             colormaps[0] + 256 * lighttouse, flip);
 }
 
@@ -465,7 +465,7 @@ static void MN_initMetaDeaths()
    playerclass_t *pclass = players[consoleplayer].pclass;
    MetaTable     *meta   = mobjinfo[pclass->type]->meta;
    MetaObject    *obj    = NULL;
-   
+
    skview_metadeaths.clear();
 
    while((obj = meta->getNextType(obj, METATYPE(MetaState))))
@@ -502,7 +502,7 @@ void MN_InitSkinViewer(void)
    skview_atkstate2 = pclass->altattack;
 
    // haleyjd 03/29/08: determine if player skin has wimpy death sound
-   skview_haswdth = 
+   skview_haswdth =
       (strcasecmp(players[consoleplayer].skin->sounds[sk_plwdth], "none") != 0);
 
    MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);
@@ -514,4 +514,3 @@ void MN_InitSkinViewer(void)
 }
 
 // EOF
-
