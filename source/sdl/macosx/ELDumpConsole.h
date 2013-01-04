@@ -28,19 +28,24 @@
 #import <Cocoa/Cocoa.h>
 
 
-@interface ELDumpConsole : NSWindowController {
+@interface ELDumpConsole : NSWindowController
+{
 	IBOutlet NSTextView *textField;
-	NSMutableString *log;
-	NSAttributedString *attrStr;
-	NSFileHandle *outHandle, *inHandle;
+	IBOutlet NSPanel *pwindow;
+//	NSMutableString *log;
+//	NSAttributedString *attrStr;
    NSPipe *pipe;
+	NSFileHandle *inHandle;
+	NSFileHandle *outHandle;
+	id masterOwner;
 }
 
-@property (assign) NSMutableString *log;
+//@property (assign) NSMutableString *log;
+@property (assign) id masterOwner;
 
 -(id)initWithWindowNibName:(NSString *)windowNibName;
 -(void)dealloc;
--(void)startLogging;
+-(void)startLogging:(NSTask *)engineTask;
 -(void)dataReady:(NSNotification *)notification;
 
 @end

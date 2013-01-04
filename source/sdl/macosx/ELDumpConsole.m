@@ -26,17 +26,18 @@
 //----------------------------------------------------------------------------
 
 #import "ELDumpConsole.h"
+#import "LauncherController.h"
 
 
 @implementation ELDumpConsole
-@synthesize log;
+//@synthesize log;
+@synthesize masterOwner;
 
 -(id)initWithWindowNibName:(NSString *)windowNibName
 {
 	if(self = [super initWithWindowNibName:windowNibName])
 	{
-		log = [[NSMutableString alloc] init];
-      
+//		log = [[NSMutableString alloc] init];
 		
 	}
 	
@@ -45,46 +46,85 @@
 
 -(void)dealloc
 {
-	[log release];
+//	[log release];
    
 	[super dealloc];
 }
 
--(void)startLogging
-{
+extern BOOL gCalledAppMainline;
+extern BOOL gSDLStarted;
 
-	[[self window] orderFront:self];
-	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:13]];
+- (void)taskComplete:(NSNotification *)notification
+{
+	NSTask *task = [notification object];
+	[masterOwner taskEnded];
+	int term = [task terminationStatus];
+	if (term == 0)
+		[pwindow orderOut:self];
+	else
+		[pwindow orderFront:self];
+	[[NSNotificationCenter defaultCenter]
+	 removeObserver:self
+	 name:NSTaskDidTerminateNotification
+	 object:[notification object]];
 	
-   pipe = [NSPipe pipe];
+}
+
+-(void)startLogging:(NSTask *)engineTask
+{
+//	[self showWindow:nil];
+	[self loadWindow];
+//	[self showWindow:self];
+	[pwindow setFloatingPanel:NO];
+	[pwindow orderFront:self];
+
+//	[window setBecomesKeyOnlyIfNeeded:YES];
+	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:12]];
+//	[log setString:@""];
+//	[textField setString:log];
+	
+	pipe = [NSPipe pipe];
+	
    outHandle = [pipe fileHandleForWriting];
    inHandle = [pipe fileHandleForReading];
-  
-   dup2([outHandle fileDescriptor], fileno(stdout));
+	
+//	NSFileHandle *testfh = [engineTask standardOutput];
+	
+   dup2([outHandle fileDescriptor], [[engineTask standardOutput] fileDescriptor]);
    
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(dataReady:)
 												 name:NSFileHandleReadCompletionNotification
 											   object:inHandle];
 	
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskComplete:) name:NSTaskDidTerminateNotification object:nil];
+	
+	[engineTask launch];
 	[inHandle readInBackgroundAndNotify];
+	
 }
 
 
 -(void)dataReady:(NSNotification *)notification
 {
-   [inHandle readInBackgroundAndNotify];
+	[inHandle readInBackgroundAndNotify];
 	NSData *data = [[notification userInfo]
 					objectForKey:NSFileHandleNotificationDataItem];
+//	NSFileHandle *handle = [notification object];
 //   char line[81];
 	if([data length])
 	{
 		NSString *string = [[NSString alloc] initWithData:data
 												 encoding:NSUTF8StringEncoding];
-		[log appendString:string];
+		
+		[textField setEditable:YES];
+		[textField setSelectedRange:NSMakeRange([[textField string] length], 0)];
+		[textField insertText:string];
+		[textField setEditable:NO];
 		[string release];
-		[textField setString:log];
 		[textField scrollToEndOfDocument:self];
+		
+
 //      [string getCString:line maxLength:80 encoding:NSUTF8StringEncoding];
 //      NSLog(string);
 	}

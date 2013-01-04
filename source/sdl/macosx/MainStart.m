@@ -25,27 +25,15 @@
 //
 //----------------------------------------------------------------------------
 
-#include <SDL.h>
 #import <Cocoa/Cocoa.h>
 #import "LauncherController.h"
-
-// Static global variables to be passed to LaunchController
-static int    gArgc;				// argument count
-static char  **gArgv;			// argument contents
-
-//
-// Setup the name swap
-//
-#ifdef main
-#undef main
-#endif
 
 //
 // eternityApplicationMain
 //
 // Custom NSApplicationMain called from main below
 //
-static void eternityApplicationMain(int argc, char **argv)
+static int eternityApplicationMain(int argc, const char **argv)
 {
 	NSAutoreleasePool	*pool = [[NSAutoreleasePool alloc] init];
 	LauncherController *launchController;
@@ -59,10 +47,10 @@ static void eternityApplicationMain(int argc, char **argv)
 	[NSApp setDelegate:launchController];
 	
 	// Setup the NIB
-	[NSBundle loadNibNamed:@"MainMenu" owner:launchController];
+	[NSBundle loadNibNamed:@"Launcher" owner:launchController];
 	
 	// Do the UI initialization on the controller
-	[launchController initNibData:argc argVector:argv];
+	[launchController initNibData];
 	
 	// Run the app
 	[NSApp run];
@@ -70,6 +58,8 @@ static void eternityApplicationMain(int argc, char **argv)
 	// End (probably never reached?)
 	[launchController release];
 	[pool release];
+	
+	return 0;
 }
 
 //
@@ -77,29 +67,9 @@ static void eternityApplicationMain(int argc, char **argv)
 //
 // Main entry point to executable - should *not* be SDL_main!
 //
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
-	if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 )
-	{
-		gArgv = (char **) SDL_malloc(sizeof (char *) * 2);
-		gArgv[0] = argv[0];
-		gArgv[1] = NULL;
-		gArgc = 1;
-	}
-	else
-	{
-		int i;
-		gArgc = argc;
-		gArgv = (char **) SDL_malloc(sizeof (char *) * (argc+1));
-		for (i = 0; i <= argc; i++)
-		{
-			gArgv[i] = argv[i];
-		}
-	}
-	
-	eternityApplicationMain(gArgc, gArgv);
-	
-	return 0;
+	return eternityApplicationMain(argc, argv);
 }
 
 // EOF
