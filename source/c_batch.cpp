@@ -307,14 +307,14 @@ CommandBatch* C_CommandBatchIterator(CommandBatch *batch)
    return saved_command_batches.batchIterator(batch);
 }
 
-void C_SaveCommandBatches(FILE *file)
+void C_SaveCommandBatches(qstring &buf)
 {
    CommandBatch *batch = NULL;
 
    while((batch = saved_command_batches.batchIterator(batch)))
    {
-      fprintf(
-         file, "batch %s \"%s\"\n", batch->getName(), batch->getCommands()
-      );
+      buf << "batch " << batch->getName() << " \"" << batch->getCommands()
+          << "\"\n";
    }
 }
+

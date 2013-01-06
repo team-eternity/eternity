@@ -27,11 +27,13 @@
 #ifndef C_BATCH__
 #define C_BATCH__
 
+class qstring;
+
 void          C_ActivateCommandBatch();
 void          C_AddCommandBatch(const char *name, const char *commands);
 const char*   C_GetCommandBatch(const char *name);
 void          C_CommandBatchTicker();
 bool          C_CommandIsBatch(const char *name);
-void          C_SaveCommandBatches(FILE *file);
+void          C_SaveCommandBatches(qstring &buf);
 
 #endif

@@ -238,6 +238,10 @@ static int I_TranslateKey(int sym)
    case SDLK_END:         rc = KEYD_END;        break;
    case SDLK_INSERT:      rc = KEYD_INSERT;     break;
    case SDLK_DELETE:      rc = KEYD_DEL;        break;
+
+   case SDLK_PRINT:       rc = KEYD_PRINT;      break;
+   case SDLK_SYSREQ:      rc = KEYD_SYSRQ;      break;
+
    default:
       rc = sym;
       break;

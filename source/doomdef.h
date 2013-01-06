@@ -211,6 +211,9 @@ typedef enum {
 // Most key data are simple ascii (uppercased).
 
 #define KEYD_TAB        0x09
+#define KEYD_PRINT      0x0a // [CG] 12/28/12
+#define KEYD_SYSRQ      0x0b // [CG] 12/28/12
+
 #define KEYD_ENTER      0x0d
 #define KEYD_ESCAPE     0x1b
 
