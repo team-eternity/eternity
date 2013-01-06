@@ -230,10 +230,12 @@ void D_ProcessEvents(void)
 
    for(ev = events; ev != current_event; ev++)
    {
-      if(!MN_Responder(current_event))
-         if(!C_Responder(current_event))
-            G_Responder(current_event);
+      if(!MN_Responder(ev))
+         if(!C_Responder(ev))
+            G_Responder(ev);
    }
+
+   current_event = events;
 }
 
 //=============================================================================
@@ -2379,7 +2381,7 @@ static void D_DoomInit(void)
 
    // haleyjd: this SHOULD be late enough...
    startupmsg("G_LoadDefaults", "Init keybindings.");
-   key_bindings.loadKeyBindings();
+   G_LoadDefaults();
 
    //
    // CONSOLE_FIXME: This may not be the best time for scripts.

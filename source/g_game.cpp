@@ -33,7 +33,6 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
-#include "c_batch.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -175,6 +174,7 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
+bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -669,12 +669,13 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
+   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
-   key_bindings.reset(); // haleyjd 05/20/05: all bindings off
+   G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
 
    // killough: make -timedemo work on multilevel demos
    // Move to end of function to minimize noise -- killough 2/22/98:
@@ -714,6 +715,9 @@ bool G_Responder(event_t* ev)
       return true;
    }
 
+   if(G_KeyResponder(ev, kac_cmd))
+      return true;
+
    // any other key pops up menu if in demos
    //
    // killough 8/2/98: enable automap in -timedemo demos
@@ -732,11 +736,6 @@ bool G_Responder(event_t* ev)
             S_ResumeSound();
          return true;
       }
-
-
-      // [CG] 01/29/12: Respond to command events.
-      if(key_bindings.handleKeyEvent(ev, kac_command))
-         return true;
 
       // killough 10/98:
       // Don't pop up menu, if paused in middle
@@ -783,12 +782,19 @@ bool G_Responder(event_t* ev)
          C_RunTextCmd("pause");
       }
       else
-         key_bindings.handleKeyEvent(ev, kac_player | kac_command); // haleyjd
+      {
+         if(ev->data1 < NUMKEYS)
+            gamekeydown[ev->data1] = true;
+         G_KeyResponder(ev, kac_game); // haleyjd
+      }
       return true;    // eat key down events
 
    case ev_keyup:
-      key_bindings.handleKeyEvent(ev, kac_player | kac_command);   // haleyjd
+      if(ev->data1 < NUMKEYS)
+         gamekeydown[ev->data1] = false;
+      G_KeyResponder(ev, kac_game);   // haleyjd
       return false;   // always let key up events filter down
+
    case ev_mouse:
       mousebuttons[0] = !!(ev->data1 & 1);
       mousebuttons[1] = !!(ev->data1 & 2);
@@ -1984,8 +1990,6 @@ void G_Ticker(void)
 
    // call other tickers
    C_NetTicker();        // sf: console network commands
-   key_bindings.runInputActions();// [CG] Tick input actions.
-   C_CommandBatchTicker();        // [CG] Tick command batches.
    if(inwipe)
       Wipe_Ticker();
 

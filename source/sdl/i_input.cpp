@@ -156,7 +156,7 @@ void UpdateFocus(void)
       }
       else
          SDL_EnableKeyRepeat(0, 0);
-      key_bindings.reset();
+      G_ClearKeyStates();
       currently_focused = window_focused;
    }
 }
@@ -736,3 +736,4 @@ void I_StartTic(void)
 }
 
 // EOF
+
