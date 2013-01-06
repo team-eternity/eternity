@@ -1478,16 +1478,18 @@ static bool EV_ActionBoomGen(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionDoorRaise(ev_action_t *action, ev_instance_t *instance)
 {
    doordata_t dd;
-   int flags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
-   dd.kind           = OdCDoor;
-   dd.spac           = instance->spac;
-   dd.reuse          = ((flags & EX_ML_REPEAT) == EX_ML_REPEAT);
-   dd.speed_value    = instance->args[1] * FRACUNIT / 8;
-   dd.usealtlighttag = true;
-   dd.topcountdown   = 0;
-   dd.delay_value    = instance->args[2];
-   dd.altlighttag    = instance->args[3];
+   dd.kind         = OdCDoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.topcountdown = 0;
+   dd.delay_value  = instance->args[2];
+   dd.altlighttag  = instance->args[3];
+   
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
 
    // FIXME/TODO: set genDoorThing in case of manual retrigger
    genDoorThing = instance->actor;
@@ -1503,16 +1505,18 @@ static bool EV_ActionDoorRaise(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionDoorOpen(ev_action_t *action, ev_instance_t *instance)
 {
    doordata_t dd;
-   int flags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
-   dd.kind           = ODoor;
-   dd.spac           = instance->spac;
-   dd.reuse          = ((flags & EX_ML_REPEAT) == EX_ML_REPEAT);
-   dd.speed_value    = instance->args[1] * FRACUNIT / 8;
-   dd.usealtlighttag = true;
-   dd.topcountdown   = 0;
-   dd.delay_value    = 0;
-   dd.altlighttag    = instance->args[2];
+   dd.kind         = ODoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.topcountdown = 0;
+   dd.delay_value  = 0;
+   dd.altlighttag  = instance->args[2];
+
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
 
    // FIXME/TODO
    genDoorThing = instance->actor;
@@ -1528,16 +1532,18 @@ static bool EV_ActionDoorOpen(ev_action_t *action, ev_instance_t *instance)
 static bool EV_ActionDoorClose(ev_action_t *action, ev_instance_t *instance)
 {
    doordata_t dd;
-   int flags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
-   dd.kind           = CDoor;
-   dd.spac           = instance->spac;
-   dd.reuse          = ((flags & EX_ML_REPEAT) == EX_ML_REPEAT);
-   dd.speed_value    = instance->args[1] * FRACUNIT / 8;
-   dd.usealtlighttag = true;
-   dd.topcountdown   = 0;
-   dd.delay_value    = 0;
-   dd.altlighttag    = instance->args[2];
+   dd.kind         = CDoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.topcountdown = 0;
+   dd.delay_value  = 0;
+   dd.altlighttag  = instance->args[2];
+
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
 
    // FIXME/TODO
    genDoorThing = instance->actor;

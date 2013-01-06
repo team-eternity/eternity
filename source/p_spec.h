@@ -834,20 +834,27 @@ public:
    bool turbo;     // haleyjd: behave as a turbo door, independent of speed
 };
 
+// door data flags
+enum
+{
+   DDF_HAVETRIGGERTYPE = 0x00000001, // BOOM-style generalized trigger
+   DDF_HAVESPAC        = 0x00000002, // Hexen-style parameterized trigger
+   DDF_USEALTLIGHTTAG  = 0x00000004, // use the altlighttag field
+   DDF_REUSABLE        = 0x00000008, // action can be retriggered
+};
+
 // haleyjd 05/04/04: extended data struct for gen/param doors
 typedef struct doordata_s
 {
-   // generalized values
-   int  kind;
+   int     flags;         // flags for action; use DDF values above.
+   int     spac;          // valid IFF DDF_HAVESPAC is set
+   int     trigger_type;  // valid IFF DDF_HAVETRIGGERTYPE is set
 
-   // parameterized values
-   fixed_t speed_value;
-   int     delay_value;
-   int     altlighttag;
-   bool    usealtlighttag;
-   int     topcountdown;
-   int     spac;
-   bool    reuse;
+   int     kind;          // kind of door action
+   fixed_t speed_value;   // speed of door action
+   int     delay_value;   // delay between open and close
+   int     altlighttag;   // alternate light tag, if DDF_USEALTLIGHTTAG is set
+   int     topcountdown;  // delay before initial activation
 } doordata_t;
 
 // haleyjd 09/06/07: sector special transfer structure

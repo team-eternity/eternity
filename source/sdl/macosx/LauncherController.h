@@ -44,11 +44,12 @@
 //
 // Front-end's controller
 //
-@interface LauncherController : NSObject
+@interface LauncherController : NSWindowController
 {
 	NSFileManager *fileMan;		// quick pointer to the file manager
 	
-	IBOutlet NSWindow *window;	// main window
+	IBOutlet NSWindow *mainWindow;
+	
 	ELDumpConsole *console;
    IBOutlet ELFileViewDataSource *fileViewDataSource; //data source for pwadView
 	
@@ -59,7 +60,8 @@
 	IBOutlet NSPopUpButton *iwadPopUp, *gameTypePopUp;
 	IBOutlet NSTableView *pwadView;
    
-	IBOutlet NSTextField *recordDemoField, *playDemoField;
+	IBOutlet NSTextField *recordDemoField;
+	IBOutlet NSTextField *playDemoField;
 	IBOutlet NSTextField *warpField, *skillField, *fragField, *timeField, *turboField, *dmflagField, *netField;	// heh
 	IBOutlet NSTextField *otherField;
    
@@ -83,13 +85,15 @@
 	
 	NSMutableString *userPath, *basePath;
 	
+	NSTask *task;
+	
 	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp, *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo, *parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags, *parmNet;
 	
 }
 @property (assign) IBOutlet NSWindow *window;
 @property (readonly) NSMutableArray *pwadArray;
 
--(void)initNibData:(int)argc argVector:(char **)argv;
+-(void)initNibData;
 -(IBAction)launchGame:(id)sender;
 -(IBAction)removeIwad:(id)sender;
 -(IBAction)addPwad:(id)sender;
@@ -116,6 +120,8 @@
 -(IBAction)accessBaseFolder:(id)sender;
 
 -(IBAction)showLicense:(id)sender;
+
+-(void)taskEnded;
 
 @end
 

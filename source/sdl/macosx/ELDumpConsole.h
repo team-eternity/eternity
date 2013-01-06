@@ -21,26 +21,29 @@
 //
 // DESCRIPTION:
 //
-// Dump window for console output (not yet implemented)
+// Dump window for console output 
 //
 //----------------------------------------------------------------------------
 
 #import <Cocoa/Cocoa.h>
 
 
-@interface ELDumpConsole : NSWindowController {
-	IBOutlet NSTextView *textField;
-	NSMutableString *log;
-	NSAttributedString *attrStr;
-	NSFileHandle *outHandle, *inHandle;
-   NSPipe *pipe;
+@interface ELDumpConsole : NSWindowController
+{
+	IBOutlet NSTextView *textField;			// the text display
+	IBOutlet NSPanel *pwindow;					// the console panel
+	IBOutlet NSView *errorMessage;			// the error message icon + label
+   NSPipe *pipe;									// i/o pipe with eternity engine
+	NSFileHandle *inHandle;						// the pipe file handle
+	id masterOwner;								// LauncherController
+	NSMutableString *outputMessageString;	// what gets received
+	IBOutlet NSTextField *errorLabel;		// text label with error message
 }
 
-@property (assign) NSMutableString *log;
+@property (assign) id masterOwner;
 
 -(id)initWithWindowNibName:(NSString *)windowNibName;
--(void)dealloc;
--(void)startLogging;
+-(void)startLogging:(NSTask *)engineTask;
 -(void)dataReady:(NSNotification *)notification;
 
 @end

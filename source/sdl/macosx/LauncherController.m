@@ -45,99 +45,15 @@
 // * Correct menu bar
 // * Some artwork background
 
-#include <SDL.h>
 #import "LauncherController.h"
 #import "ELDumpConsole.h"
 #import "ELFileViewDataSource.h"
 #import "ELCommandLineArray.h"
 #import "ELCommandLineArgument.h"
-#include <sys/param.h> /* for MAXPATHLEN */
-#include <unistd.h>
-
-//
-// For some reaon, Apple removed setAppleMenu from the headers in 10.4,
-// but the method still is there and works. To avoid warnings, we declare
-// it ourselves here.
-//
-//
-@interface NSApplication(SDL_Missing_Methods)
-- (void)setAppleMenu:(NSMenu *)menu;
-@end
 
 
-//
-// Use this flag to determine whether we use CPS (docking) or not
-//
-//#define		SDL_USE_CPS		1
-#ifdef SDL_USE_CPS
-//
-// Portions of CPS.h
-//
-typedef struct CPSProcessSerNum
-{
-	UInt32		lo;
-	UInt32		hi;
-} CPSProcessSerNum;
-
-extern OSErr	CPSGetCurrentProcess( CPSProcessSerNum *psn);
-extern OSErr 	CPSEnableForegroundOperation( CPSProcessSerNum *psn, UInt32
-                                            _arg2, UInt32 _arg3, UInt32 _arg4, 
-                                            UInt32 _arg5);
-extern OSErr	CPSSetFrontProcess( CPSProcessSerNum *psn);
-
-#endif // SDL_USE_CPS
-
-static int status;   // SDL MAINLINE EXIT STATUS
 static BOOL gCalledAppMainline = FALSE;
 static BOOL gSDLStarted;	// IOAN 20120616
-
-//
-// IOAN 20121225: currently disabled. just use NSApplication lol
-//
-#if 0
-	//
-	// IOAN 20120616: changed from a category to a subclass
-	//
-	// NSMyApplication: derived class
-	//
-	@interface NSMyApplication : NSApplication
-	- (void)terminateSDL:(id)sender;
-	@end
-
-	@implementation NSMyApplication : NSApplication
-
-	//
-	// terminate:
-	//
-	// Called when application is ending. Issue SDL ending if game started.
-	//
-	/*
-	- (void)terminate:(id)sender
-	{
-		if(gCalledAppMainline)
-			[self terminateSDL:sender];
-		else
-			[super terminate:sender];
-	}
-	*/
-	//
-	// terminateSDL:
-	//
-	// Invoked from the Quit menu item. Equivalent to Eternity quit.
-	// FIXME: make it quit instantly.
-	//
-	- (void)terminateSDL:(id)sender	// IOAN 20120616: changed SDL name
-	{
-		 // Post a SDL_QUIT event
-		exit(-1);
-		//
-		// SDL_Event event;
-		// event.type = SDL_QUIT;
-		// SDL_PushEvent(&event);
-		
-	}
-	@end
-#endif
 
 @interface LauncherController ()
 -(void)loadDefaults;
@@ -192,6 +108,8 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	[userPath release];
 	
 	[console release];
+	
+	[task release];
 	
 	[super dealloc];
 }
@@ -260,7 +178,10 @@ static BOOL gSDLStarted;	// IOAN 20120616
 		basePath = [[NSMutableString alloc] init];
 		userPath = [[NSMutableString alloc] init];
 		
+		task = nil;
+		
 		console = [[ELDumpConsole alloc] initWithWindowNibName:@"DumpConsole"];
+
 	}
 	return self;
 }
@@ -270,7 +191,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 // Added after Nib got loaded. Generic initialization that wouldn't go in init
 //
--(void)initNibData:(int)argc argVector:(char **)argv
+-(void)initNibData
 {
 	// TODO: depending on argc and argv, either jump directly to launchGame (giving it correct arguments), or initialize param with no elements and continue on waiting user input. For now, assume empty entries
 	
@@ -278,31 +199,15 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	[iwadPopUp setMenu:iwadPopMenu];
 
 
-	// set the parameter array
-	callName = argv[0];	// Argument 0: file name
 	
-	if(argc > 1)
-	{
-//		[console startLogging];
-		gCalledAppMainline = TRUE;
-		gSDLStarted = YES;	// IOAN 20120616
-		[window close];
-	
-		status = SDL_main (argc, argv);
-		
-		// [console showInstantLog];
-		// We're done, thank you for playing
-//		if(status == 0)   // only exit if it's all ok
-			exit(status);
-		
-		return;
-	}
 	
    // TODO: Allow file list view to accept Finder files
    // [pwadView registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType, nil]];
 	
    // Set array for data source
    [fileViewDataSource setArray:pwadArray];
+
+	[console setMasterOwner:self];
    
 	[self loadDefaults];
 }
@@ -371,7 +276,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	// TODO: copy bundled prototype user data into workingDirPath, if it doesn't exist there yet
 	// FIXME: make workingDirPath a member variable.
 	
-	chdir([appDataPath cStringUsingEncoding:NSUTF8StringEncoding]);
+//	chdir([appDataPath cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 //
@@ -416,6 +321,8 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 - (void)windowWillClose:(NSNotification *)notification
 {
+	if([notification object] != mainWindow)
+		return;
 	if(!gSDLStarted)
 		[self updateParameters:self];
 	
@@ -454,6 +361,24 @@ static BOOL gSDLStarted;	// IOAN 20120616
 -(IBAction)accessBaseFolder:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openFile:basePath withApplication:@"Finder"];
+}
+
+//
+// taskEnded
+//
+// Game ended, do clean-up
+//
+-(void)taskEnded
+{
+	// remove last four parameters
+	
+
+	gCalledAppMainline = FALSE;
+	gSDLStarted = NO;	// IOAN 20120616
+	[window orderFront:nil];
+	
+	[[param argumentWithIdentifier:@"-base"] setEnabled:NO];
+	[[param argumentWithIdentifier:@"-user"] setEnabled:NO];
 }
 
 //
@@ -501,65 +426,94 @@ iwadMightBe:
 		[[argUser extraWords] addObject:userPath];
 		[param addArgument:argUser];
 	}
-	
-	int gArgc;
-	char **gArgv;
 
-	gArgc = [param countWords] + 1;	// call name + arguments
 	NSArray *deploy = [param deployArray];
-	NSString *compon;
-	
-	gArgv = (char **)SDL_malloc((gArgc + 1) * sizeof(char *));
-	gArgv[gArgc] = NULL;
-	gArgv[0] = callName;
-	
-	NSUInteger i = 1, len;
-	for(compon in deploy)
-	{
-		len = [compon length] + 1;
-		gArgv[i] = (char*)SDL_malloc(len*sizeof(char));
-
-		strcpy(gArgv[i], [compon UTF8String]);
-		++i;
-	}
-	
 	// Start console
-//	[console startLogging];
+	
 	
 	gCalledAppMainline = TRUE;
 	gSDLStarted = YES;	// IOAN 20120616
-	[window close];
+	[window orderOut:self];
 	
-    status = SDL_main (gArgc, gArgv);
+	// IOAN 20130103: use Neil's PrBoom-Mac Launcher code
+	[task release];
+	task = [[NSTask alloc] init];
+	NSBundle *engineBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"Eternity.app" ofType:nil]];
+	
+	[task setLaunchPath:[engineBundle executablePath]];
+	[task setArguments:deploy];
+	
+	[console startLogging:task];
 	
 //	[console showInstantLog];
 // We're done, thank you for playing
-   if(status == 0)   // only exit if it's all ok
-    exit(status);
+//   if(status == 0)   // only exit if it's all ok
+//    exit(status);
+}
+
+//
+// iwadPopUpShowDifferentPaths
+//
+// Show the path differences if file names are equal
+//
+-(void)iwadPopUpShowDifferentPaths
+{
+	// I have to scan all set components
+	NSURL *url;
+	NSString *iwadPath;
+	
+	// There will be a list of files with identical last names
+	// Each component will contain a last name and the indices in the list view
+	
+	for(url in iwadSet)
+	{
+		// We've established that non-path URL can't enter the list
+		iwadPath = [url path];
+		
+	}
 }
 
 //
 // doAddIwadFromURL:
 //
--(void)doAddIwadFromURL:(NSURL *)wURL
+// Tries to add IWAD as specified by URL to the pop-up button list
+// Returns YES if successful or already there (URL valid for path, RFC 1808)
+// Returns NO if given URL is invalid
+//
+-(BOOL)doAddIwadFromURL:(NSURL *)wURL
 {
-	NSInteger ind;
+	NSMenuItem *last;
 	if(![iwadSet containsObject:wURL])
 	{
+		
+		NSString *iwadPath = [wURL path];
+		if(iwadPath == nil)
+			return NO;	// URL not RFC 1808
+		
 		[iwadSet addObject:wURL];
 		
-		NSString *iwadString = [[wURL path] stringByAbbreviatingWithTildeInPath];
+		[iwadPopUp addItemWithTitle:[fileMan displayNameAtPath:iwadPath]];
+
+		last = [[[iwadPopUp menu] itemArray] lastObject];
+		[last setRepresentedObject:wURL];
+		[last setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadPath]];
 		
-		[iwadPopUp addItemWithTitle:iwadString];
-		ind = [iwadPopUp numberOfItems] - 1;
-		[[[iwadPopUp menu] itemAtIndex:ind] setToolTip:iwadString];
-		[[[iwadPopUp menu] itemAtIndex:ind] setRepresentedObject:wURL];
-		[[[iwadPopUp menu] itemAtIndex:ind] setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadString]];
-		[[[iwadPopUp menu] itemAtIndex:ind] setAction:@selector(updateParameters:)];
-		[[[iwadPopUp menu] itemAtIndex:ind] setTarget:self];
+		[last setAction:@selector(updateParameters:)];
+		[last setTarget:self];
 		
-		[iwadPopUp selectItemAtIndex:ind];
+		// NOTE: it's a very rare case to choose between two different IWADs with the same name. In any case…
+		// FIXME: implement path difference specifier in parentheses
+		
+		[iwadPopUp selectItem:last];
+      [self updateParameters:self];
+	} 
+	else
+	{
+		
 	}
+	// FIXME: select the existing path component
+	// FIXME: each set component should point to a menu item
+	return YES;
 }
 
 //
@@ -687,7 +641,7 @@ iwadMightBe:
 	for(openCandidate in [panel URLs])
 	{
       [self doAddIwadFromURL:openCandidate];
-      [self updateParameters:self];
+
 	}
 }
 

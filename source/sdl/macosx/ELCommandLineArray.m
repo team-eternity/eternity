@@ -169,7 +169,20 @@
 //
 - (void)addArgument:(ELCommandLineArgument *)arg
 {
-	[array addObject:arg];
+	ELCommandLineArgument *curArg;
+	curArg = [self hasArgument:[arg identifier]];
+	if(curArg)
+	{
+		if([curArg enabled])
+			[[curArg extraWords ] setArray:[arg extraWords]];
+		else
+		{
+			[curArg setEnabled:YES];
+			[[curArg extraWords ] setArray:[arg extraWords]];
+		}
+	}
+	else
+		[array addObject:arg];
 }
 
 //

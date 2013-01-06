@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //  Generalized linedef type handlers
@@ -48,43 +48,10 @@
 #include "r_main.h"
 #include "r_state.h"
 
-//////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Generalized Linedef Type handlers
 //
-//////////////////////////////////////////////////////////
-
-//
-// SPACForTriggerType
-//
-// haleyjd 12/26/12: Translate BOOM generalized trigger type into
-// a Hexen-style SPAC value.
-//
-static int SPACForTriggerType(unsigned int value, bool &reuse)
-{
-   int triggerType = (value & TriggerType) >> TriggerTypeShift;
-
-   switch(triggerType)
-   {
-   case PushOnce:
-   case PushMany:
-   case SwitchOnce:
-   case SwitchMany:
-      reuse = (triggerType == PushMany || triggerType == SwitchMany);
-      return SPAC_USE;
-   case GunOnce:
-   case GunMany:
-      reuse = (triggerType == GunMany);
-      return SPAC_IMPACT;
-   case WalkOnce:
-   case WalkMany:
-      reuse = (triggerType == WalkMany);
-      return SPAC_CROSS;
-   default:
-      reuse = true;
-      return -1;
-   }
-}
 
 int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
 {
@@ -1090,7 +1057,7 @@ Mobj *genDoorThing;
 // haleyjd 02/23/04: This function handles retriggering of certain
 // active generalized door types, a functionality which was neglected
 // in BOOM. To be retriggerable, the door must fit these criteria:
-// 1. The thinker on the sector must be a T_VerticalDoor
+// 1. The thinker on the sector must be a VerticalDoorThinker
 // 2. The door type must be raise, not open or close
 // 3. The activation trigger must be PushMany
 //
@@ -1104,14 +1071,27 @@ static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
    if(!(door = thinker_cast<VerticalDoorThinker *>(th)))
       return 0;
 
-   if(genDoorThing &&
-      (door->type == doorNormal || door->type == blazeRaise) &&
-      dd->spac == SPAC_USE && dd->reuse && !tag)
+   if(!genDoorThing)
+      return 0;
+
+   if(door->type != doorNormal && door->type != blazeRaise)
+      return 0;
+
+   if(dd->flags & DDF_HAVETRIGGERTYPE) // BOOM-style activation
    {
-      return door->reTriggerVerticalDoor(!!genDoorThing->player);
+      // PushMany generalized doors only.
+      if(dd->trigger_type != PushMany)
+         return 0;
+   }
+   else if(dd->flags & DDF_HAVESPAC) // Hexen-style activation
+   {
+      // Must be usable, must be capable of multiple activations, and must be a 
+      // manual door action (ie., zero tag)
+      if(dd->spac != SPAC_USE || !(dd->flags & DDF_REUSABLE) || tag)
+         return 0;
    }
 
-   return 0;
+   return door->reTriggerVerticalDoor(!!genDoorThing->player);
 }
 
 //
@@ -1139,7 +1119,10 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
-   if(dd->spac == SPAC_USE && !tag)
+   // haleyjd 01/03/12: BOOM-style, or Hexen-style?
+   if(((dd->flags & DDF_HAVETRIGGERTYPE) && 
+       (dd->trigger_type == PushOnce || dd->trigger_type == PushMany)) ||
+      ((dd->flags & DDF_HAVESPAC) && !tag))
    {
       if(!line || !(sec = line->backsector))
          return rtn;
@@ -1187,7 +1170,7 @@ manual_door:
 
       // killough 10/98: implement gradual lighting
       // haleyjd 02/28/05: support light changes from alternate tag
-      if(dd->usealtlighttag)
+      if(dd->flags & DDF_USEALTLIGHTTAG)
          door->lighttag = dd->altlighttag;
       else
          door->lighttag = !comp[comp_doorlight] && line &&
@@ -1284,17 +1267,29 @@ int EV_DoGenLockedDoor(line_t *line)
    memset(&dd, 0, sizeof(doordata_t));
 
    // parse the bit fields in the line's special type
+   dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+   dd.flags = DDF_HAVETRIGGERTYPE;
 
+   switch(dd.trigger_type)
+   {
+   case PushMany:
+   case SwitchMany:
+   case WalkMany:
+   case GunMany:
+      dd.flags |= DDF_REUSABLE;
+      break;
+   default:
+      break;
+   }
+   
    dd.delay_value = VDOORWAIT;
 
    speedType = (value & LockedSpeed) >> LockedSpeedShift;
 
    // setup speed of door motion
-   dd.speed_value  = VDOORSPEED * (1 << speedType);
+   dd.speed_value = VDOORSPEED * (1 << speedType);
 
-   dd.kind = (value & LockedKind ) >> LockedKindShift;
-   dd.spac = SPACForTriggerType(value, dd.reuse);
-   dd.usealtlighttag = false;
+   dd.kind = (value & LockedKind) >> LockedKindShift;
 
    return EV_DoParamDoor(line, line->tag, &dd);
 }
@@ -1318,6 +1313,20 @@ int EV_DoGenDoor(line_t *line)
    memset(&dd, 0, sizeof(doordata_t));
 
    // parse the bit fields in the line's special type
+   dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+   dd.flags = DDF_HAVETRIGGERTYPE;
+
+   switch(dd.trigger_type)
+   {
+   case PushMany:
+   case SwitchMany:
+   case WalkMany:
+   case GunMany:
+      dd.flags |= DDF_REUSABLE;
+      break;
+   default:
+      break;
+   }
 
    delayType = (value & DoorDelay) >> DoorDelayShift;
 
@@ -1345,9 +1354,7 @@ int EV_DoGenDoor(line_t *line)
    dd.speed_value  = VDOORSPEED * (1 << speedType);
 
    dd.kind = (value & DoorKind) >> DoorKindShift;
-   dd.spac = SPACForTriggerType(value, dd.reuse);
-   dd.usealtlighttag = false;
-
+   
    return EV_DoParamDoor(line, line->tag, &dd);
 }
 
@@ -1420,6 +1427,8 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
       I_Error("pspec_Door: parameterized door special out of range\n");
 #endif
 
+   memset(&dd, 0, sizeof(doordata_t));
+
    kind = param_door_kinds[special - 300];
 
    // speed is always second parameter
@@ -1427,7 +1436,7 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
    dd.speed_value = args[1] * FRACUNIT / 8;
 
    // all param doors support alternate light tagging
-   dd.usealtlighttag = true;
+   dd.flags |= DDF_USEALTLIGHTTAG;
 
    // initialize values that aren't used everywhere:
    dd.delay_value  = 0;
@@ -1458,9 +1467,12 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
       break;
    }
 
-   dd.kind  = kind;
-   dd.spac  = spac;
-   dd.reuse = reuse;
+   dd.kind   = kind;
+   dd.spac   = spac;
+   dd.flags |= DDF_HAVESPAC; // Hexen-style activation
+
+   if(reuse)
+      dd.flags |= DDF_REUSABLE;
 
    // set genDoorThing in case of manual retrigger
    genDoorThing = thing;
