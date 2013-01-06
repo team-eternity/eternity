@@ -182,7 +182,7 @@ static void LoadHubLevel(char *levelname)
       hub_changelevel = true;
    }
 
-   wipegamestate = gamestate;
+   G_ResetWipeGameState();
 }
 
 void P_HubChangeLevel(char *levelname)

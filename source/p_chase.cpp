@@ -281,7 +281,7 @@ bool PTR_chasetraverse(intercept_t *in)
 void P_ResetChasecam(void)
 {
    if(!chasecam_active) return;
-   if(gamestate != GS_LEVEL) return;       // only in level
+   if(!G_GameStateIs(GS_LEVEL)) return;       // only in level
 
    // find the chasecam target
    P_GetChasecamTarget();
@@ -599,7 +599,7 @@ static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 {
    int cam_onoff = (int)params[1];
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -615,7 +615,7 @@ static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL sm_ischaseon(AMX *amx, cell *params)
 {
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

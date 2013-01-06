@@ -616,7 +616,7 @@ CONSOLE_COMMAND(spectate_prev, 0)
 {
    int i = displayplayer - 1;
 
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+   if((!G_GameStateIs(GS_LEVEL)) || ((!demoplayback) && (GameType == gt_dm)))
       return;
 
    for(; i != displayplayer; i--)
@@ -635,7 +635,7 @@ CONSOLE_COMMAND(spectate_next, 0)
 {
    int i = displayplayer + 1;
 
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+   if((!G_GameStateIs(GS_LEVEL)) || ((!demoplayback) && (GameType == gt_dm)))
       return;
 
    for(; i != displayplayer; i++)
@@ -652,7 +652,7 @@ CONSOLE_COMMAND(spectate_next, 0)
 
 CONSOLE_COMMAND(spectate_self, 0)
 {
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+   if((!G_GameStateIs(GS_LEVEL)) || ((!demoplayback) && (GameType == gt_dm)))
       return;
 
    P_SetDisplayPlayer(consoleplayer);

@@ -235,7 +235,7 @@ void C_Ticker(void)
 {
    Console.showprompt = true;
 
-   if(gamestate != GS_CONSOLE)
+   if(!G_GameStateIs(GS_CONSOLE))
    {
       // specific to half-screen version only
 
@@ -287,7 +287,7 @@ static void C_addToHistory(qstring *s)
 
    // display the command in console
    // hrmm wtf does this do? I dunno.
-   if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
+   if(G_GameStateIs(GS_LEVEL) && !strcasecmp(players[0].name, "quasar"))
       a_prompt = altprompt;
    else
       a_prompt = inputprompt;
@@ -529,7 +529,7 @@ void C_Drawer(void)
    }
 
    // fullscreen console for fullscreen mode
-   if(gamestate == GS_CONSOLE)
+   if(G_GameStateIs(GS_CONSOLE))
       Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
 
    real_height =
@@ -580,7 +580,7 @@ void C_Drawer(void)
       // if we are scrolled back, dont draw the input line
       if(message_pos == message_last)
       {
-         if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
+         if(G_GameStateIs(GS_LEVEL) && !strcasecmp(players[0].name, "quasar"))
             a_prompt = altprompt;
          else
             a_prompt = inputprompt;
@@ -948,7 +948,7 @@ static void C_AppendToLog(const char *text)
 
 void C_SetConsole(void)
 {
-   gamestate = GS_CONSOLE;
+   G_SetGameState(GS_CONSOLE);
    gameaction = ga_nothing;
    Console.current_height = SCREENHEIGHT;
    Console.current_target = SCREENHEIGHT;
@@ -970,7 +970,7 @@ void C_Popup(void)
 void C_InstaPopup(void)
 {
    // haleyjd 10/20/08: no popup in GS_CONSOLE gamestate!
-   if(gamestate != GS_CONSOLE)
+   if(!G_GameStateIs(GS_CONSOLE))
       Console.current_target = Console.current_height = 0;
 }
 

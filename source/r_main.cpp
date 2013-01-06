@@ -1150,7 +1150,7 @@ void R_DoomTLStyle(void)
          mobjinfo[tnum]->flags3 |= MF3_TLSTYLEADD;
 
       // if we are in-level, update all things of the corresponding type too
-      if(gamestate == GS_LEVEL)
+      if(G_GameStateIs(GS_LEVEL))
       {
          Thinker *th;
 
@@ -1284,7 +1284,7 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
    // haleyjd 10/09/05: get sound from gameModeInfo
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
 
-   if(gamestate == GS_LEVEL) // not in intercam
+   if(G_GameStateIs(GS_LEVEL)) // not in intercam
    {
       hide_menu = 20;             // hide the menu for a few tics
 

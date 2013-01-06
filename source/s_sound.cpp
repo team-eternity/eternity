@@ -37,6 +37,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_sound.h"
+#include "g_game.h"
 #include "i_sound.h"
 #include "m_random.h"
 #include "m_queue.h"
@@ -180,7 +181,7 @@ static void S_StopChannel(int cnum)
 static bool S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
    {
       // are we in a killed-sound sector?
       if(ear &&
@@ -532,7 +533,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    singularity = sfx->singularity;
 
    // haleyjd: setup playercam
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
    {
       if(camera) // an external camera is active
       {
@@ -1554,7 +1555,7 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
    int err, tag, secnum = -1;
    char *sndname;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -1588,7 +1589,7 @@ static cell AMX_NATIVE_CALL sm_sectorsoundnum(AMX *amx, cell *params)
    sndnum  = params[1];
    tag     = params[2];
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

@@ -86,6 +86,11 @@
 #include "w_levels.h" // haleyjd
 #include "w_wad.h"
 
+extern gamestate_t wipegamestate;
+extern gamestate_t oldgamestate;
+
+extern void R_InitPortals(void);
+
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
 
@@ -96,11 +101,11 @@ static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
+static gamestate_t  gamestate; // [CG] Made static.
 
 WadDirectory *g_dir = &wGlobalDir;
 
 gameaction_t    gameaction;
-gamestate_t     gamestate;
 skill_t         gameskill;
 bool            respawnmonsters;
 int             gameepisode;
@@ -629,11 +634,6 @@ void G_SetGameMapName(const char *s)
    M_Strupr(gamemapname);
 }
 
-extern gamestate_t wipegamestate;
-extern gamestate_t oldgamestate;
-
-extern void R_InitPortals(void);
-
 //
 // G_DoLoadLevel
 //
@@ -647,11 +647,11 @@ void G_DoLoadLevel(void)
       basetic = gametic;
 
    // haleyjd 07/28/10: Waaaay too early for this.
-   //gamestate = GS_LEVEL;
+   // G_SetGameState(GS_LEVEL);
 
    P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
-   if(gamestate != GS_LEVEL)       // level load error
+   if(!G_GameStateIs(GS_LEVEL))       // level load error
    {
       for(i = 0; i < MAXPLAYERS; ++i)
          players[i].playerstate = PST_LIVE;
@@ -695,7 +695,7 @@ void G_DoLoadLevel(void)
    else
    {  // sf: no screen wipe while changing hub level
       if(wipegamestate == GS_LEVEL)
-         wipegamestate = GS_NOSTATE;             // force a wipe
+         G_ForceWipe(); // force a wipe
    }
 }
 
@@ -707,7 +707,7 @@ void G_DoLoadLevel(void)
 bool G_Responder(event_t* ev)
 {
    // killough 9/29/98: reformatted
-   if(gamestate == GS_LEVEL &&
+   if(G_GameStateIs(GS_LEVEL) &&
       (HU_Responder(ev) ||  // chat ate the event
        ST_Responder(ev) ||  // status window ate it
        AM_Responder(ev)))
@@ -725,7 +725,8 @@ bool G_Responder(event_t* ev)
    // killough 9/29/98: make any key pop up menu regardless of
    // which kind of demo, and allow other events during playback
 
-   if(gameaction == ga_nothing && (demoplayback || gamestate == GS_DEMOSCREEN))
+   if(gameaction == ga_nothing && (demoplayback ||
+                                   G_GameStateIs(GS_DEMOSCREEN)))
    {
       // killough 9/29/98: allow user to pause demos during playback
       if (ev->type == ev_keydown && ev->data1 == key_pause)
@@ -748,7 +749,7 @@ bool G_Responder(event_t* ev)
 
       if(!walkcam_active) // if so, we need to go on below
       {
-         if(gamestate == GS_DEMOSCREEN && !(paused & 2) &&
+         if(G_GameStateIs(GS_DEMOSCREEN) && !(paused & 2) &&
             !automapactive &&
             ((ev->type == ev_keydown) ||
              (ev->type == ev_mouse && ev->data1) ||
@@ -765,7 +766,7 @@ bool G_Responder(event_t* ev)
       }
    }
 
-   if(gamestate == GS_FINALE && F_Responder(ev))
+   if(G_GameStateIs(GS_FINALE) && F_Responder(ev))
       return true;  // finale ate the event
 
    if(action_autorun)
@@ -1541,7 +1542,7 @@ static void G_DoCompleted(void)
              sizeof(wminfo.plyr[i].frags));
    }
 
-   gamestate = GS_INTERMISSION;
+   G_SetGameState(GS_INTERMISSION);
    automapactive = false;
 
    if(statcopy)
@@ -1555,7 +1556,7 @@ static void G_DoWorldDone(void)
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
-   gamestate = GS_LOADING;
+   G_SetGameState(GS_LOADING);
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels
@@ -1668,12 +1669,12 @@ void G_LoadGame(char *name, int slot, bool command)
 
 static void G_LoadGameErr(char *msg)
 {
-   Z_Free(savebuffer);           // Free the savegame buffer
-   MN_ForcedLoadGame(msg);       // Print message asking for 'Y' to force
-   if(command_loadgame)          // If this was a command-line -loadgame
+   Z_Free(savebuffer);               // Free the savegame buffer
+   MN_ForcedLoadGame(msg);           // Print message asking for 'Y' to force
+   if(command_loadgame)              // If this was a command-line -loadgame
    {
-      D_StartTitle();            // Start the title screen
-      gamestate = GS_DEMOSCREEN; // And set the game state accordingly
+      D_StartTitle();                // Start the title screen
+      G_SetGameState(GS_DEMOSCREEN); // And set the game state accordingly
    }
 }
 
@@ -1998,7 +1999,7 @@ void G_Ticker(void)
    SM_ExecuteCallbacks();
 #endif
 
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
    {
       P_Ticker();
       G_CameraTicker(); // haleyjd: move cameras
@@ -2008,20 +2009,12 @@ void G_Ticker(void)
    }
    else if(!(paused & 2)) // haleyjd: refactored
    {
-      switch(gamestate)
-      {
-      case GS_INTERMISSION:
+      if(G_GameStateIs(GS_INTERMISSION))
          IN_Ticker();
-         break;
-      case GS_FINALE:
+      else if(G_GameStateIs(GS_FINALE))
          F_Ticker();
-         break;
-      case GS_DEMOSCREEN:
+      else if(G_GameStateIs(GS_DEMOSCREEN))
          D_PageTicker();
-         break;
-      default:
-         break;
-      }
    }
 }
 
@@ -2475,13 +2468,9 @@ char *G_GetNameForMap(int episode, int map)
    memset(levelname, 0, 9);
 
    if(GameModeInfo->flags & GIF_MAPXY)
-   {
       sprintf(levelname, "MAP%02d", map);
-   }
    else
-   {
       sprintf(levelname, "E%01dM%01d", episode, map);
-   }
 
    return levelname;
 }
@@ -3390,8 +3379,74 @@ void G_StopDemo(void)
 
    G_CheckDemoStatus();
    advancedemo = false;
-   if(gamestate != GS_CONSOLE)
+   if(!G_GameStateIs(GS_CONSOLE))
       C_SetConsole();
+}
+
+//
+// G_GameStateIs
+//
+// Tests the current game state.
+//
+bool G_GameStateIs(gamestate_t test_game_state)
+{
+   if(test_game_state == gamestate)
+      return true;
+
+   return false;
+}
+
+//
+// G_SetGameState
+//
+// Sets the current game state.
+//
+void G_SetGameState(gamestate_t new_game_state)
+{
+   gamestate = new_game_state;
+}
+
+//
+// G_ResetWipeGameState
+//
+// Sets the current wipe game state to the current game state.
+//
+void G_ResetWipeGameState()
+{
+   wipegamestate = gamestate;
+}
+
+//
+// G_ResetOldGameState
+//
+// Sets the old game state to the current game state.
+//
+void G_ResetOldGameState()
+{
+   oldgamestate = gamestate;
+}
+
+//
+// G_GameStateChanged
+//
+// Tests if the game state has changed
+//
+bool G_GameStateChanged()
+{
+   if(gamestate != oldgamestate)
+      return true;
+
+   return false;
+}
+
+//
+// G_ForceWipe
+//
+// Forces a screen wipe
+//
+void G_ForceWipe()
+{
+   wipegamestate = GS_NOSTATE;
 }
 
 // killough 1/22/98: this is a "Doom printf" for messages. I've gotten
@@ -3516,7 +3571,7 @@ void G_CoolViewPoint()
 
 static cell AMX_NATIVE_CALL sm_exitlevel(AMX *amx, cell *params)
 {
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3528,7 +3583,7 @@ static cell AMX_NATIVE_CALL sm_exitlevel(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL sm_exitsecret(AMX *amx, cell *params)
 {
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

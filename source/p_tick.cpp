@@ -31,6 +31,7 @@
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "d_main.h"
+#include "g_game.h"
 #include "p_user.h"
 #include "p_chase.h"
 #include "p_saveg.h"
@@ -280,7 +281,7 @@ void P_Ticker(void)
 
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
-   if(gamestate == GS_LEVEL && !cinema_pause)
+   if(G_GameStateIs(GS_LEVEL) && !cinema_pause)
       for(i = 0; i < MAXPLAYERS; i++)
          if(playeringame[i])
             P_PlayerThink(&players[i]);
@@ -300,7 +301,7 @@ void P_Ticker(void)
    // to "jump". code in p_floor.c detects if a hyperlift has been
    // activated and viewz is reset appropriately here.
 
-   if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
+   if(demo_version >= 303 && reset_viewz && G_GameStateIs(GS_LEVEL))
       P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
 
    P_RunEffects(); // haleyjd: run particle effects

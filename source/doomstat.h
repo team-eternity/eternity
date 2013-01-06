@@ -266,8 +266,6 @@ extern  bool timingdemo;
 // Run tick clock at fastest speed possible while playing demo.  killough
 extern  bool fastdemo;
 
-extern  gamestate_t  gamestate;
-
 //-----------------------------
 // Internal parameters, fixed.
 // These are set by the engine, and not changed

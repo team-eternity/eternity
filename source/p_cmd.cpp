@@ -134,7 +134,7 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
       colour = TRANSLATIONCOLOURS;
 
    players[playernum].colormap = colour;
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
       players[playernum].mo->colour = colour;
 
    if(playernum == consoleplayer)
@@ -262,7 +262,7 @@ CONSOLE_NETVAR(fast, fastparm, cf_server, netcmd_fast)
 VARIABLE_TOGGLE(nomonsters, &clnomonsters,                  onoff);
 CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 {
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
       C_Printf("note: nomonsters will not change until next level\n");
    if(menuactive)
       MN_ErrorMsg("does not take effect until next level");
@@ -273,7 +273,7 @@ CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 VARIABLE_TOGGLE(respawnparm, &clrespawnparm,                 onoff);
 CONSOLE_NETVAR(respawn, respawnparm, cf_server, netcmd_respawn)
 {
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
       C_Printf("note: respawn will change on new game\n");
    if(menuactive)
       MN_ErrorMsg("will take effect on new game");
@@ -352,7 +352,7 @@ void P_Skin_AddCommands(void);
 
 CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 {
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
       players[0].mo->momz = 10*FRACUNIT;
 }
 

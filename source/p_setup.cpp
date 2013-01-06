@@ -2365,7 +2365,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
-   gamestate = GS_LOADING;
+   G_SetGameState(GS_LOADING);
 
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
@@ -2504,7 +2504,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
    // 01/13/2011: Moved up a bit. The below actions want GS_LEVEL gamestate :>
-   gamestate = GS_LEVEL;
+   G_SetGameState(GS_LEVEL);
 
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)

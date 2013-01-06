@@ -2764,7 +2764,7 @@ void P_ChangeThingHeights(void)
 {
    Thinker *th;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
       return;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)

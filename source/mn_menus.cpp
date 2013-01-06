@@ -1214,7 +1214,7 @@ void MN_SaveGame(void)
    int save_slot =
       (char **)(Console.command->variable->variable) - savegamenames;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
       return; // only save in level
 
    if(save_slot < 0 || save_slot >= SAVESLOTS)
@@ -1557,7 +1557,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
       return;
    }
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
       return;    // only save in levels
 
    MN_ReadSaveStrings();
@@ -1577,7 +1577,7 @@ CONSOLE_COMMAND(quicksave, 0)
       return;
    }
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
       return;
 
    if(quickSaveSlot < 0)

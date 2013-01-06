@@ -280,7 +280,7 @@ static int C_CheckFlags(command_t *command, const char **errormsg)
    if((command->flags & cf_server) && consoleplayer && !demoplayback
       && Console.cmdtype != c_netcmd)
       *errormsg = "for server only";
-   if((command->flags & cf_level) && gamestate != GS_LEVEL)
+   if((command->flags & cf_level) && (!G_GameStateIs(GS_LEVEL)))
       *errormsg = "can be run in levels only";
 
    // net-sync critical variables are usually critical to demo sync too

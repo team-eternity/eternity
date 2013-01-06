@@ -401,7 +401,7 @@ void D_DoAdvanceDemo(void)
    gameaction = ga_nothing;
 
    pagetic = GameModeInfo->pageTics;
-   gamestate = GS_DEMOSCREEN;
+   G_SetGameState(GS_DEMOSCREEN);
 
    // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
    // demo state resource names
@@ -564,7 +564,7 @@ void D_DrawWings()
    if(wingwidth <= 0)
       return;
 
-   if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
+   if(G_GameStateIs(GS_LEVEL) && !MN_CheckFullScreen())
    {
       if(scaledviewheight != 200 || automapactive)
       {
@@ -603,8 +603,8 @@ void D_Display(void)
 
    // save the current screen if about to wipe
    // no melting consoles
-   if(gamestate != wipegamestate &&
-      !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
+   if((!G_GameStateIs(wipegamestate)) &&
+      !((wipegamestate = GS_CONSOLE) && (!G_GameStateIs(GS_LEVEL))))
       Wipe_StartScreen();
 
    // haleyjd 07/15/2012: draw "wings" (or pillars) to fill in missing bits
@@ -615,9 +615,8 @@ void D_Display(void)
    // need to do all this if the menus are going to cover it up :)
    if(!MN_CheckFullScreen())
    {
-      switch(gamestate)                // do buffered drawing
+      if(G_GameStateIs(GS_LEVEL))
       {
-      case GS_LEVEL:
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
@@ -634,27 +633,20 @@ void D_Display(void)
 
          ST_Drawer(scaledviewheight == 200);  // killough 11/98
          HU_Drawer();
-         break;
-      case GS_INTERMISSION:
-         IN_Drawer();
-         break;
-      case GS_FINALE:
-         F_Drawer();
-         break;
-      case GS_DEMOSCREEN:
-         D_PageDrawer();
-         break;
-      case GS_CONSOLE:
-         break;
-      default:
-         break;
       }
+      else if(G_GameStateIs(GS_INTERMISSION))
+         IN_Drawer();
+      else if(G_GameStateIs(GS_FINALE))
+         F_Drawer();
+      else if(G_GameStateIs(GS_DEMOSCREEN))
+         D_PageDrawer();
 
       // clean up border stuff
-      if(gamestate != oldgamestate && gamestate != GS_LEVEL)
+      if(G_GameStateChanged() && !G_GameStateIs(GS_LEVEL))
          I_SetPalette((byte *)(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
 
-      oldgamestate = wipegamestate = gamestate;
+      G_ResetOldGameState();
+      G_ResetWipeGameState();
 
       // draw pause pic
       if(paused && !walkcam_active) // sf: not if walkcam active for
@@ -1896,7 +1888,7 @@ static void D_SetGraphicsMode(void)
    I_InitGraphics();
 
    // set up the console to display startup messages
-   gamestate = GS_CONSOLE;
+   G_SetGameState(GS_CONSOLE);
    Console.current_height = SCREENHEIGHT;
    Console.showprompt = false;
 
@@ -1944,7 +1936,7 @@ static void D_DoomInit(void)
    bool haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
 
-   gamestate = GS_STARTUP; // haleyjd 01/01/10
+   G_SetGameState(GS_STARTUP); // haleyjd 01/01/10
 
    D_StartupMessage();
 
@@ -2585,7 +2577,8 @@ void D_DoomMain(void)
 {
    D_DoomInit();
 
-   oldgamestate = wipegamestate = gamestate;
+   G_ResetOldGameState();
+   G_ResetWipeGameState();
 
    // haleyjd 02/23/04: fix problems with -warp
    if(autostart)

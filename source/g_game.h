@@ -78,6 +78,14 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 uint64_t G_Signature(WadDirectory *dir);
 void G_DoPlayDemo(void);
 
+// [CG] Control access to gamestate.
+bool G_GameStateIs(gamestate_t test_game_state);
+void G_SetGameState(gamestate_t new_game_state);
+void G_ResetWipeGameState();
+void G_ResetOldGameState();
+bool G_GameStateChanged();
+void G_ForceWipe();
+
 void R_InitPortals();
 
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes

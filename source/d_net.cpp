@@ -242,7 +242,7 @@ static void GetPackets(void)
          // sf: remove the players mobj
          // spawn teleport flash
 
-         if(gamestate == GS_LEVEL)
+         if(G_GameStateIs(GS_LEVEL))
          {
             Mobj *tflash;
 

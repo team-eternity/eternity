@@ -36,6 +36,7 @@
 #include "../doomdef.h"
 #include "../doomstat.h"
 #include "../g_bind.h"
+#include "../g_game.h"
 #include "../m_argv.h"
 #include "../v_misc.h"
 #include "../v_video.h"
@@ -114,7 +115,7 @@ bool MouseShouldBeGrabbed(void)
       return false;
 
    // only grab mouse when playing levels (but not demos)
-   return (gamestate == GS_LEVEL) && !demoplayback;
+   return (G_GameStateIs(GS_LEVEL)) && !demoplayback;
 }
 
 //

@@ -38,6 +38,7 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "d_main.h"
+#include "g_game.h"
 #include "info.h"
 #include "p_info.h"
 #include "p_skin.h"
@@ -415,7 +416,7 @@ void P_SetSkin(skin_t *skin, int playernum)
 
    pl->skin = skin;
 
-   if(gamestate == GS_LEVEL)
+   if(G_GameStateIs(GS_LEVEL))
    {
       Mobj *mo = pl->mo;
 

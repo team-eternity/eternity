@@ -40,6 +40,7 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "f_finale.h"
+#include "g_game.h"
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "p_info.h"
@@ -101,7 +102,7 @@ void F_Init(void)
 void F_StartFinale(void)
 {
    gameaction = ga_nothing;
-   gamestate = GS_FINALE;
+   G_SetGameState(GS_FINALE);
    automapactive = false;
 
    // killough 3/28/98: clear accelerative text flags
