@@ -198,14 +198,13 @@ void D_PostEvent(event_t *ev)
    }
 
    memcpy(current_event, ev, sizeof(event_t));
+   current_event++;
 
-   if((current_event - events) == (event_queue_size - 1))
+   if(((size_t)((current_event - events))) == event_queue_size)
    {
       event_queue_size *= 2;
-      events = ecalloc(event_t *, sizeof(event_t), event_queue_size);
+      events = erealloc(event_t *, events, sizeof(event_t) * event_queue_size);
    }
-
-   current_event++;
 }
 
 //
@@ -214,16 +213,22 @@ void D_PostEvent(event_t *ev)
 //
 void D_ProcessEvents(void)
 {
-   size_t event_count = current_event - events;
+   event_t *ev = NULL;
+
    // IF STORE DEMO, DO NOT ACCEPT INPUT
    // sf: I don't think SMMU is going to be played in any store any
    //     time soon =)
    // if (gamemode != commercial || W_CheckNumForName("map01") >= 0)
+   //
+   // [CG] Really this would now be:
+   // if (gamemode == commercial && W_CheckNumForName("map01") >= 0)
+   // {
+   //    current_event = events;
+   //    return;
+   // }
+   //
 
-   // [CG] Re-enable keys that were disabled this TIC.
-   key_bindings.reEnableKeys();
-
-   for(current_event = events; event_count > 0; event_count--)
+   for(ev = events; ev != current_event; ev++)
    {
       if(!MN_Responder(current_event))
          if(!C_Responder(current_event))
