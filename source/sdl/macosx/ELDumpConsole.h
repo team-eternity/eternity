@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //
-// Dump window for console output (not yet implemented)
+// Dump window for console output 
 //
 //----------------------------------------------------------------------------
 
@@ -30,21 +30,19 @@
 
 @interface ELDumpConsole : NSWindowController
 {
-	IBOutlet NSTextView *textField;
-	IBOutlet NSPanel *pwindow;
-//	NSMutableString *log;
-//	NSAttributedString *attrStr;
-   NSPipe *pipe;
-	NSFileHandle *inHandle;
-	NSFileHandle *outHandle;
-	id masterOwner;
+	IBOutlet NSTextView *textField;			// the text display
+	IBOutlet NSPanel *pwindow;					// the console panel
+	IBOutlet NSView *errorMessage;			// the error message icon + label
+   NSPipe *pipe;									// i/o pipe with eternity engine
+	NSFileHandle *inHandle;						// the pipe file handle
+	id masterOwner;								// LauncherController
+	NSMutableString *outputMessageString;	// what gets received
+	IBOutlet NSTextField *errorLabel;		// text label with error message
 }
 
-//@property (assign) NSMutableString *log;
 @property (assign) id masterOwner;
 
 -(id)initWithWindowNibName:(NSString *)windowNibName;
--(void)dealloc;
 -(void)startLogging:(NSTask *)engineTask;
 -(void)dataReady:(NSNotification *)notification;
 

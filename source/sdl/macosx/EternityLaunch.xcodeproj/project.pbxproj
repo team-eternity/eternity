@@ -10,15 +10,11 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */; };
-		FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1F567F158BB857006F8063 /* OpenGL.framework */; };
 		FA3011EE1689D1BB005D25A8 /* MainStart.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011ED1689D1BA005D25A8 /* MainStart.m */; };
 		FA3011F1168A427B005D25A8 /* ELCommandLineArgument.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */; };
 		FA3011F4168A44E0005D25A8 /* ELCommandLineArray.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */; };
 		FA601C721696228000046D2D /* Eternity.app in Resources */ = {isa = PBXBuildFile; fileRef = FA601C711696228000046D2D /* Eternity.app */; };
 		FA601C7B1696246800046D2D /* Launcher.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA601C791696246800046D2D /* Launcher.xib */; };
-		FA730D11168DE5D700E39907 /* SDL.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
-		FA730D12168DE5D700E39907 /* SDL_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; };
-		FA730D13168DE5D700E39907 /* SDL_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
 		FA730D1B168DFC0D00E39907 /* COPYING.pdf in Resources */ = {isa = PBXBuildFile; fileRef = FA730D1A168DFC0D00E39907 /* COPYING.pdf */; };
 		FA8216A21647129700FF998A /* base in Base and User */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		FA8216A41647129700FF998A /* docs in Base and User */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
@@ -29,9 +25,7 @@
 		FABF5F01158C710400C49E93 /* Eternity.icns in Resources */ = {isa = PBXBuildFile; fileRef = FABF5F00158C710400C49E93 /* Eternity.icns */; };
 		FABF5F09158C78F300C49E93 /* LauncherController.m in Sources */ = {isa = PBXBuildFile; fileRef = FABF5F08158C78F300C49E93 /* LauncherController.m */; };
 		FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FABF5FFF158C8F6300C49E93 /* Credits.rtf */; };
-		FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; settings = {ATTRIBUTES = (Required, ); }; };
-		FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
-		FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
+		FAE0EB3F1696C1D9007E84F2 /* error_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = FAE0EB3E1696C1D9007E84F2 /* error_icon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -54,9 +48,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				FA730D11168DE5D700E39907 /* SDL.framework in CopyFiles */,
-				FA730D12168DE5D700E39907 /* SDL_mixer.framework in CopyFiles */,
-				FA730D13168DE5D700E39907 /* SDL_net.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,7 +64,6 @@
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELFileViewDataSource.h; sourceTree = "<group>"; };
 		FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELFileViewDataSource.m; sourceTree = "<group>"; };
-		FA1F567F158BB857006F8063 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		FA3011ED1689D1BA005D25A8 /* MainStart.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainStart.m; sourceTree = "<group>"; };
 		FA3011EF168A427B005D25A8 /* ELCommandLineArgument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArgument.h; sourceTree = "<group>"; };
 		FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArgument.m; sourceTree = "<group>"; };
@@ -96,9 +86,7 @@
 		FABF5F07158C78F300C49E93 /* LauncherController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LauncherController.h; sourceTree = "<group>"; };
 		FABF5F08158C78F300C49E93 /* LauncherController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LauncherController.m; sourceTree = "<group>"; };
 		FABF5FFF158C8F6300C49E93 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
-		FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
-		FAEA89EB164DB9F400E9F874 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
-		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
+		FAE0EB3E1696C1D9007E84F2 /* error_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = error_icon.png; path = Resources/error_icon.png; sourceTree = "<group>"; };
 		FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -108,10 +96,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */,
-				FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */,
-				FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */,
-				FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -170,7 +154,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				FA601C791696246800046D2D /* Launcher.xib */,
+				FAE0EB3E1696C1D9007E84F2 /* error_icon.png */,
 				FA601C711696228000046D2D /* Eternity.app */,
 				FA730D1A168DFC0D00E39907 /* COPYING.pdf */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
@@ -178,6 +162,7 @@
 				8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				FABF5FFF158C8F6300C49E93 /* Credits.rtf */,
+				FA601C791696246800046D2D /* Launcher.xib */,
 				FAB103DB15911F4E00393DE3 /* DumpConsole.xib */,
 			);
 			name = Resources;
@@ -186,13 +171,9 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FAEA89EC164DB9F400E9F874 /* SDL.framework */,
-				FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */,
-				FAEA89EB164DB9F400E9F874 /* SDL_net.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
-				FA1F567F158BB857006F8063 /* OpenGL.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -291,6 +272,7 @@
 				FA730D1B168DFC0D00E39907 /* COPYING.pdf in Resources */,
 				FA601C721696228000046D2D /* Eternity.app in Resources */,
 				FA601C7B1696246800046D2D /* Launcher.xib in Resources */,
+				FAE0EB3F1696C1D9007E84F2 /* error_icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

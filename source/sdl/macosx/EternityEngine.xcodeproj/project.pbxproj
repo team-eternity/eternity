@@ -52,9 +52,6 @@
 		FA1F578E158BC552006F8063 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F577C158BC552006F8063 /* zutil.c */; };
 		FA31940E15B9FC84001F82B9 /* e_gameprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */; };
 		FA601C6716961D9A00046D2D /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FA601C6616961D9A00046D2D /* SDLMain.m */; };
-		FA730D11168DE5D700E39907 /* SDL.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
-		FA730D12168DE5D700E39907 /* SDL_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; };
-		FA730D13168DE5D700E39907 /* SDL_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
 		FA88983C1628C4660025048A /* in_stats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88983A1628C4660025048A /* in_stats.cpp */; };
 		FA889950162984C20025048A /* i_platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88994E162984C20025048A /* i_platform.cpp */; };
 		FA889951162984C20025048A /* i_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88994F162984C20025048A /* i_video.cpp */; };
@@ -262,10 +259,14 @@
 		FABF5E4F158BF42800C49E93 /* mmus2mid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D80158BF42800C49E93 /* mmus2mid.cpp */; };
 		FABF5E50158BF42800C49E93 /* ser_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D81158BF42800C49E93 /* ser_main.cpp */; };
 		FABF5E51158BF42800C49E93 /* i_cpu_posix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */; };
+		FAD316321699055A00AA4907 /* libSDL_mixer-1.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FAD3162F1699055A00AA4907 /* libSDL_mixer-1.2.0.dylib */; };
+		FAD316331699055A00AA4907 /* libSDL_net-1.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FAD316301699055A00AA4907 /* libSDL_net-1.2.0.dylib */; };
+		FAD316341699055A00AA4907 /* libSDL-1.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FAD316311699055A00AA4907 /* libSDL-1.2.0.dylib */; };
+		FAD316351699057700AA4907 /* libSDL_mixer-1.2.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAD3162F1699055A00AA4907 /* libSDL_mixer-1.2.0.dylib */; };
+		FAD316361699057900AA4907 /* libSDL_net-1.2.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAD316301699055A00AA4907 /* libSDL_net-1.2.0.dylib */; };
+		FAD316371699057B00AA4907 /* libSDL-1.2.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = FAD316311699055A00AA4907 /* libSDL-1.2.0.dylib */; };
 		FADFF98F16555F6200C8537B /* d_findiwads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FADFF98D16555F6200C8537B /* d_findiwads.cpp */; };
-		FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */; settings = {ATTRIBUTES = (Required, ); }; };
-		FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EB164DB9F400E9F874 /* SDL_net.framework */; };
-		FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAEA89EC164DB9F400E9F874 /* SDL.framework */; };
+		FAE0EB381696BA10007E84F2 /* Eternity.icns in Resources */ = {isa = PBXBuildFile; fileRef = FAE0EB371696BA10007E84F2 /* Eternity.icns */; };
 		FAEB990716666A65004B0CD1 /* ev_specials.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAEB990516666A65004B0CD1 /* ev_specials.cpp */; };
 /* End PBXBuildFile section */
 
@@ -284,11 +285,11 @@
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
 			dstPath = "";
-			dstSubfolderSpec = 10;
+			dstSubfolderSpec = 6;
 			files = (
-				FA730D11168DE5D700E39907 /* SDL.framework in CopyFiles */,
-				FA730D12168DE5D700E39907 /* SDL_mixer.framework in CopyFiles */,
-				FA730D13168DE5D700E39907 /* SDL_net.framework in CopyFiles */,
+				FAD316351699057700AA4907 /* libSDL_mixer-1.2.0.dylib in CopyFiles */,
+				FAD316361699057900AA4907 /* libSDL_net-1.2.0.dylib in CopyFiles */,
+				FAD316371699057B00AA4907 /* libSDL-1.2.0.dylib in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -782,11 +783,12 @@
 		FACACB761652FC980091AF2E /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = version.h; path = ../../version.h; sourceTree = "<group>"; };
 		FACACB7E165300FA0091AF2E /* xl_scripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xl_scripts.h; path = ../../xl_scripts.h; sourceTree = "<group>"; };
 		FACACB87165301C70091AF2E /* metaadapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaadapter.h; path = ../../metaadapter.h; sourceTree = "<group>"; };
+		FAD3162F1699055A00AA4907 /* libSDL_mixer-1.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL_mixer-1.2.0.dylib"; path = "../../../../../EternityMacDev/libSDL_mixer-1.2.0.dylib"; sourceTree = "<group>"; };
+		FAD316301699055A00AA4907 /* libSDL_net-1.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL_net-1.2.0.dylib"; path = "../../../../../EternityMacDev/libSDL_net-1.2.0.dylib"; sourceTree = "<group>"; };
+		FAD316311699055A00AA4907 /* libSDL-1.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL-1.2.0.dylib"; path = "../../../../../EternityMacDev/libSDL-1.2.0.dylib"; sourceTree = "<group>"; };
 		FADFF98D16555F6200C8537B /* d_findiwads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_findiwads.cpp; path = ../../d_findiwads.cpp; sourceTree = "<group>"; };
 		FADFF98E16555F6200C8537B /* d_findiwads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_findiwads.h; path = ../../d_findiwads.h; sourceTree = "<group>"; };
-		FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
-		FAEA89EB164DB9F400E9F874 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
-		FAEA89EC164DB9F400E9F874 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
+		FAE0EB371696BA10007E84F2 /* Eternity.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Eternity.icns; sourceTree = "<group>"; };
 		FAEB990516666A65004B0CD1 /* ev_specials.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_specials.cpp; path = ../../ev_specials.cpp; sourceTree = "<group>"; };
 		FAEB990616666A65004B0CD1 /* ev_specials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_specials.h; path = ../../ev_specials.h; sourceTree = "<group>"; };
 		FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -799,9 +801,9 @@
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */,
-				FAEA89EE164DB9F400E9F874 /* SDL_net.framework in Frameworks */,
-				FAEA89EF164DB9F400E9F874 /* SDL.framework in Frameworks */,
-				FAEA89ED164DB9F400E9F874 /* SDL_mixer.framework in Frameworks */,
+				FAD316321699055A00AA4907 /* libSDL_mixer-1.2.0.dylib in Frameworks */,
+				FAD316331699055A00AA4907 /* libSDL_net-1.2.0.dylib in Frameworks */,
+				FAD316341699055A00AA4907 /* libSDL-1.2.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -839,6 +841,7 @@
 			children = (
 				29B97315FDCFA39411CA2CEA /* Code */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
+				FAD3162E1699053C00AA4907 /* Libraries */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				FAB104A5159146E500393DE3 /* Cocoa.framework */,
@@ -864,6 +867,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				FAE0EB371696BA10007E84F2 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityEngine-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				1DDD58140DA1D0A300B32029 /* MainMenu.xib */,
@@ -874,9 +878,6 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FAEA89EC164DB9F400E9F874 /* SDL.framework */,
-				FAEA89EA164DB9F400E9F874 /* SDL_mixer.framework */,
-				FAEA89EB164DB9F400E9F874 /* SDL_net.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
@@ -1976,6 +1977,16 @@
 			name = Cam;
 			sourceTree = "<group>";
 		};
+		FAD3162E1699053C00AA4907 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				FAD3162F1699055A00AA4907 /* libSDL_mixer-1.2.0.dylib */,
+				FAD316301699055A00AA4907 /* libSDL_net-1.2.0.dylib */,
+				FAD316311699055A00AA4907 /* libSDL-1.2.0.dylib */,
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
 		FAEB990316666A46004B0CD1 /* EV_ */ = {
 			isa = PBXGroup;
 			children = (
@@ -2045,6 +2056,7 @@
 				1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */,
 				FABF5CB1158BF34C00C49E93 /* zlib1.rc in Resources */,
 				FABF5CB3158BF3B100C49E93 /* snes_spc.def in Resources */,
+				FAE0EB381696BA10007E84F2 /* Eternity.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2375,6 +2387,10 @@
 				);
 				INFOPLIST_FILE = "EternityEngine-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../../EternityMacDev\"",
+				);
 				MACH_O_TYPE = mh_execute;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = "Eternity Engine";
@@ -2430,6 +2446,10 @@
 					"CMAKE_INTDIR=\"Release\"",
 				);
 				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../../EternityMacDev\"",
+				);
 				MACH_O_TYPE = mh_execute;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = NO;

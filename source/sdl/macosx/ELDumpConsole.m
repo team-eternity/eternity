@@ -21,39 +21,76 @@
 //
 // DESCRIPTION:
 //
-// Dump window for console output (not yet implemented)
+// Dump window for console output 
 //
 //----------------------------------------------------------------------------
 
 #import "ELDumpConsole.h"
 #import "LauncherController.h"
 
+//
+// NSPanel (ConsolePanel)
+//
+// Category of NSPanel that merely composites a few panel-setting instructions
+//
+@interface NSPanel (ConsolePanel)
+// Sets it as an infopanel
+-(void)setAsPanel:(BOOL)flag;
+@end
 
+@implementation NSPanel (ConsolePanel)
+
+//
+// setAsPanel:
+//
+// Sets it as an infopanel
+//
+-(void)setAsPanel:(BOOL)flag
+{
+	[self setFloatingPanel:flag];
+	[self setHidesOnDeactivate:flag];
+}
+
+@end
+
+//
+// ELDumpConsole
+//
+// Console that displays Eternity Engine's standard output and error
+//
 @implementation ELDumpConsole
-//@synthesize log;
+
 @synthesize masterOwner;
 
+//
+// initWithWindowNibName:
+//
+// Standard initializator
+//
 -(id)initWithWindowNibName:(NSString *)windowNibName
 {
 	if(self = [super initWithWindowNibName:windowNibName])
 	{
-//		log = [[NSMutableString alloc] init];
-		
+		outputMessageString = nil;
 	}
 	
 	return self;
 }
 
+//
+// dealloc
+//
 -(void)dealloc
 {
-//	[log release];
-   
+	[outputMessageString release];
 	[super dealloc];
 }
 
-extern BOOL gCalledAppMainline;
-extern BOOL gSDLStarted;
-
+//
+// taskComplete:
+//
+// Called when Eternity Engine ends
+//
 - (void)taskComplete:(NSNotification *)notification
 {
 	NSTask *task = [notification object];
@@ -62,40 +99,40 @@ extern BOOL gSDLStarted;
 	if (term == 0)
 		[pwindow orderOut:self];
 	else
+	{
+		[errorMessage setHidden:NO];
+//		[errorLabel setStringValue:outputMessageString];
 		[pwindow orderFront:self];
-	[[NSNotificationCenter defaultCenter]
-	 removeObserver:self
-	 name:NSTaskDidTerminateNotification
-	 object:[notification object]];
-	
+		[pwindow setAsPanel:YES];
+	}
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSTaskDidTerminateNotification object:[notification object]];
 }
 
+//
+// startLogging:
+//
+// Runs the specified task and sets up the console to accept its output
+//
 -(void)startLogging:(NSTask *)engineTask
 {
-//	[self showWindow:nil];
-	[self loadWindow];
-//	[self showWindow:self];
-	[pwindow setFloatingPanel:NO];
+	// load the window
+	[self window];
+	
+	[errorMessage setHidden:YES];
 	[pwindow orderFront:self];
+	[pwindow setAsPanel:NO];
+	
+	[pwindow center];
 
-//	[window setBecomesKeyOnlyIfNeeded:YES];
 	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:12]];
-//	[log setString:@""];
-//	[textField setString:log];
 	
 	pipe = [NSPipe pipe];
 	
-   outHandle = [pipe fileHandleForWriting];
-   inHandle = [pipe fileHandleForReading];
+	inHandle = [pipe fileHandleForReading];
+	[engineTask setStandardOutput:pipe];
+	[engineTask setStandardError:pipe];
 	
-//	NSFileHandle *testfh = [engineTask standardOutput];
-	
-   dup2([outHandle fileDescriptor], [[engineTask standardOutput] fileDescriptor]);
-   
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(dataReady:)
-												 name:NSFileHandleReadCompletionNotification
-											   object:inHandle];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(dataReady:) name:NSFileHandleReadCompletionNotification object:inHandle];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskComplete:) name:NSTaskDidTerminateNotification object:nil];
 	
@@ -104,37 +141,36 @@ extern BOOL gSDLStarted;
 	
 }
 
-
+//
+// dataReady:
+//
+// Message came
+//
 -(void)dataReady:(NSNotification *)notification
 {
-	[inHandle readInBackgroundAndNotify];
+
 	NSData *data = [[notification userInfo]
 					objectForKey:NSFileHandleNotificationDataItem];
-//	NSFileHandle *handle = [notification object];
-//   char line[81];
+
 	if([data length])
 	{
-		NSString *string = [[NSString alloc] initWithData:data
-												 encoding:NSUTF8StringEncoding];
+		if(!outputMessageString)
+			outputMessageString = [[NSMutableString alloc] init];
+		
+		[outputMessageString setString:[NSString stringWithCString:[data bytes] encoding:NSUTF8StringEncoding]];
 		
 		[textField setEditable:YES];
 		[textField setSelectedRange:NSMakeRange([[textField string] length], 0)];
-		[textField insertText:string];
+		[textField insertText:outputMessageString];
 		[textField setEditable:NO];
-		[string release];
 		[textField scrollToEndOfDocument:self];
 		
-
-//      [string getCString:line maxLength:80 encoding:NSUTF8StringEncoding];
-//      NSLog(string);
+		[inHandle readInBackgroundAndNotify];
 	}
 	else
 	{
 		
-		[[NSNotificationCenter defaultCenter]
-		 removeObserver:self
-		 name:NSFileHandleReadCompletionNotification
-		 object:[notification object]];
+		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleReadCompletionNotification object:[notification object]];
 	}
 }
 @end
