@@ -969,11 +969,21 @@ public:
    int delayTimer;
 };
 
+// Floor data flags
+enum
+{
+   FDF_HAVESPAC        = 0x00000001, // has Hexen-style SPAC activation
+   FDF_HAVETRIGGERTYPE = 0x00000002  // has BOOM-style generalized trigger type
+};
+
 // haleyjd 05/07/04: extended data struct for parameterized floors
 typedef struct floordata_s
 {   
    // generalized values
-   int trigger_type;
+   int flags;
+   int spac;         // valid IFF flags & FDF_HAVESPAC
+   int trigger_type; // valid IFF flags & FDF_HAVETRIGGERTYPE
+   
    int crush;
    int direction;
    int speed_type;
@@ -1173,10 +1183,10 @@ public:
 
 enum
 {
-  plat_stop     = 0,
-  plat_up       = 1,
-  plat_down     = -1,
-  plat_special  = 2,  // haleyjd 02/24/05
+   plat_stop     =  0,
+   plat_up       =  1,
+   plat_down     = -1,
+   plat_special  =  2,  // haleyjd 02/24/05
 };
 
 
@@ -1359,6 +1369,7 @@ int EV_StopPlat(line_t *line);
 
 // p_genlin
 
+int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd);
 int EV_DoGenFloor(line_t *line);
 
 int EV_DoGenCeiling(line_t *line);

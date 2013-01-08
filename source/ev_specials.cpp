@@ -122,6 +122,33 @@ static bool EV_Check3DMidTexSwitch(line_t *line, Mobj *thing, int side)
    return true;
 }
 
+//
+// EV_floorChangeForArg
+//
+// Gets sector property change type data for a parameterized floor type
+// based on one of the instance arguments.
+//
+static void EV_floorChangeForArg(floordata_t &fd, int arg)
+{
+   static int fchgdata[7][2] =
+   {
+      //   model       change type
+      { FTriggerModel, FNoChg   }, // no change
+      { FTriggerModel, FChgZero }, // trigger, zero special
+      { FNumericModel, FChgZero }, // numeric, zero special
+      { FTriggerModel, FChgTxt  }, // trigger, change texture
+      { FNumericModel, FChgTxt  }, // numeric, change texture
+      { FTriggerModel, FChgTyp  }, // trigger, change type
+      { FNumericModel, FChgTyp  }, // numeric, change type
+   };
+
+   if(arg < 0 || arg >= 7)
+      arg = 0;
+
+   fd.change_model = fchgdata[arg][0];
+   fd.change_type  = fchgdata[arg][1];
+}
+
 //=============================================================================
 //
 // DOOM Activation Helpers - Preambles and Post-Actions
@@ -1471,11 +1498,13 @@ static bool EV_ActionBoomGen(ev_action_t *action, ev_instance_t *instance)
 //
 
 //
-// EV_ActionDoorRaise
+// EV_ActionParamDoorRaise
 //
 // Implements Door_Raise(tag, speed, delay, lighttag)
+// * ExtraData: 300
+// * Hexen:     12
 //
-static bool EV_ActionDoorRaise(ev_action_t *action, ev_instance_t *instance)
+static bool EV_ActionParamDoorRaise(ev_action_t *action, ev_instance_t *instance)
 {
    doordata_t dd;
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
@@ -1494,15 +1523,17 @@ static bool EV_ActionDoorRaise(ev_action_t *action, ev_instance_t *instance)
    // FIXME/TODO: set genDoorThing in case of manual retrigger
    genDoorThing = instance->actor;
 
-   return !!EV_DoParamDoor(instance->line, instance->args[0], &dd);
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
-// EV_ActionDoorOpen
+// EV_ActionParamDoorOpen
 //
 // Implements Door_Open(tag, speed, lighttag)
+// * ExtraData: 301
+// * Hexen:     11
 //
-static bool EV_ActionDoorOpen(ev_action_t *action, ev_instance_t *instance)
+static bool EV_ActionParamDoorOpen(ev_action_t *action, ev_instance_t *instance)
 {
    doordata_t dd;
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
@@ -1521,15 +1552,17 @@ static bool EV_ActionDoorOpen(ev_action_t *action, ev_instance_t *instance)
    // FIXME/TODO
    genDoorThing = instance->actor;
 
-   return !!EV_DoParamDoor(instance->line, instance->args[0], &dd);
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
-// EV_ActionDoorClose
+// EV_ActionParamDoorClose
 //
 // Implements Door_Close(tag, speed, lighttag)
+// * ExtraData: 302
+// * Hexen:     10
 //
-static bool EV_ActionDoorClose(ev_action_t *action, ev_instance_t *instance)
+static bool EV_ActionParamDoorClose(ev_action_t *action, ev_instance_t *instance)
 {
    doordata_t dd;
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
@@ -1548,7 +1581,512 @@ static bool EV_ActionDoorClose(ev_action_t *action, ev_instance_t *instance)
    // FIXME/TODO
    genDoorThing = instance->actor;
 
-   return !!EV_DoParamDoor(instance->line, instance->args[0], &dd);
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
+}
+
+//
+// EV_ActionParamFloorRaiseToHighest
+//
+// Implements Floor_RaiseToHighest(tag, speed, change, crush)
+// * ExtraData: 306
+// * Hexen:     24
+//
+static bool EV_ActionParamFloorRaiseToHighest(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoHnF;         // to highest neighboring floor
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = instance->args[3];                // crush
+   
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamEEFloorLowerToHighest
+//
+// Implements Floor_LowerToHighestEE(tag, speed, change)
+// * ExtraData: 307
+//
+// NB: Not ZDoom-compatible with special of same name
+// TODO: implement compatible spec for Hexen-format special 242
+//
+static bool EV_ActionParamEEFloorLowerToHighest(ev_action_t *action, 
+                                                ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 0;              // down
+   fd.target_type = FtoHnF;         // to highest neighboring floor
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT /8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);      // change
+   fd.crush       = -1;
+   
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseToLowest
+//
+// Implements Floor_RaiseToLowest(tag, change, crush)
+// * ExtraData: 308
+//
+static bool EV_ActionParamFloorRaiseToLowest(ev_action_t *action, 
+                                             ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoLnF;         // to lowest neighboring floor
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedNormal;    // target is lower, so motion is instant.
+   EV_floorChangeForArg(fd, instance->args[1]); // change
+   fd.crush       = instance->args[2];          // crush
+   
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerToLowest
+//
+// Implements Floor_LowerToLowest(tag, speed, change)
+// * ExtraData: 309
+// * Hexen:     21
+//
+static bool EV_ActionParamFloorLowerToLowest(ev_action_t *action, 
+                                             ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 0;              // down
+   fd.target_type = FtoLnF;         // to lowest neighboring floor
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;    
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseToNearest
+//
+// Implements Floor_RaiseToNearest(tag, speed, change, crush)
+// * ExtraData: 310
+// * Hexen:     25
+//
+static bool EV_ActionParamFloorRaiseToNearest(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoNnF;         // to nearest neighboring floor
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = instance->args[3];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerToNearest
+//
+// Implements Floor_LowerToNearest(tag, speed, change)
+// * ExtraData: 311
+// * Hexen:     22
+//
+static bool EV_ActionParamFloorLowerToNearest(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 0;              // down
+   fd.target_type = FtoNnF;         // to nearest neighboring floor
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseToLowestCeiling
+//
+// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush)
+// * ExtraData: 312
+// * Hexen (ZDoom Extension): 238
+//
+static bool EV_ActionParamFloorRaiseToLowestCeiling(ev_action_t *action, 
+                                                    ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoLnC;         // to lowest neighboring ceiling
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = instance->args[3];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerToLowestCeiling
+//
+// Implements Floor_LowerToLowestCeiling(tag, speed, change)
+// * ExtraData: 313
+//
+static bool EV_ActionParamFloorLowerToLowestCeiling(ev_action_t *action, 
+                                                    ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 0;              // down
+   fd.target_type = FtoLnC;         // to lowest neighboring ceiling
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseToCeiling
+//
+// Implements Floor_RaiseToCeiling(tag, speed, change, crush)
+// * ExtraData: 314
+//
+static bool EV_ActionParamFloorRaiseToCeiling(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoC;           // to sector ceiling
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = instance->args[3];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseByTexture
+//
+// Implements Floor_RaiseByTexture(tag, speed, change, crush)
+// * ExtraData: 315
+// * Hexen (ZDoom Extension): 240
+//
+static bool EV_ActionParamFloorRaiseByTexture(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 1;              // up
+   fd.target_type = FbyST;          // by shortest lower texture
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = instance->args[3];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerByTexture
+//
+// Implements Floor_LowerByTexture(tag, speed, change)
+// * ExtraData: 316
+//
+static bool EV_ActionParamFloorLowerByTexture(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 0;              // down
+   fd.target_type = FbyST;          // by shortest lower texture
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
+   fd.crush       = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseByValue
+//
+// Implements Floor_RaiseByValue(tag, speed, height, change, crush)
+// * ExtraData: 317
+// * Hexen:     23
+//
+static bool EV_ActionParamFloorRaiseByValue(ev_action_t *action, 
+                                            ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 1;              // up
+   fd.target_type  = FbyParam;       // by value
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedParam;
+   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.height_value = instance->args[2] * FRACUNIT;     // height
+   EV_floorChangeForArg(fd, instance->args[3]);        // change
+   fd.crush        = instance->args[4];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseByValueTimes8
+//
+// Implements Floor_RaiseByValueTimes8(tag, speed, height, change, crush)
+// * ExtraData: TODO? (Not needed, really; args have full integer range)
+// * Hexen:     35
+//
+static bool EV_ActionParamFloorRaiseByValueTimes8(ev_action_t *action, 
+                                                  ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 1;              // up
+   fd.target_type  = FbyParam;       // by value
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedParam;
+   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.height_value = instance->args[2] * FRACUNIT * 8; // height
+   EV_floorChangeForArg(fd, instance->args[3]);        // change
+   fd.crush        = instance->args[4];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerByValue
+//
+// Implements Floor_LowerByValue(tag, speed, height, change)
+// * ExtraData: 318
+// * Hexen:     20
+//
+static bool EV_ActionParamFloorLowerByValue(ev_action_t *action, 
+                                            ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 0;              // down
+   fd.target_type  = FbyParam;       // by value
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedParam;
+   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.height_value = instance->args[2] * FRACUNIT;     // height
+   EV_floorChangeForArg(fd, instance->args[3]);        // change
+   fd.crush        = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerByValueTimes8
+//
+// Implements Floor_LowerByValue(tag, speed, height, change)
+// * ExtraData: TODO? (Not really needed)
+// * Hexen:     36
+//
+static bool EV_ActionParamFloorLowerByValueTimes8(ev_action_t *action, 
+                                                  ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 0;              // down
+   fd.target_type  = FbyParam;       // by value
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedParam;
+   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.height_value = instance->args[2] * FRACUNIT * 8; // height
+   EV_floorChangeForArg(fd, instance->args[3]);        // change
+   fd.crush        = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorMoveToValue
+//
+// Implements Floor_MoveToValue(tag, speed, height, neg, change)
+// * ExtraData: 319
+// * Hexen (ZDoom Extension): 37
+//
+static bool EV_ActionParamFloorMoveToValue(ev_action_t *action, 
+                                           ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 1;              // not used; direction is relative to target
+   fd.target_type  = FtoAbs;         // to absolute height
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedParam;
+   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.height_value = instance->args[2] * FRACUNIT;     // height
+   if(instance->args[3])                               // neg
+      fd.height_value = -fd.height_value;
+   EV_floorChangeForArg(fd, instance->args[4]);        // change
+   fd.crush        = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorMoveToValueTimes8
+//
+// Implements Floor_MoveToValueTimes8(tag, speed, height, neg, change)
+// * ExtraData: TODO? (Not really needed)
+// * Hexen:     68
+//
+static bool EV_ActionParamFloorMoveToValueTimes8(ev_action_t *action, 
+                                                 ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 1;              // not used; direction is relative to target
+   fd.target_type  = FtoAbs;         // to absolute height
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedParam;
+   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.height_value = instance->args[2] * FRACUNIT * 8; // height
+   if(instance->args[3])                               // neg
+      fd.height_value = -fd.height_value;
+   EV_floorChangeForArg(fd, instance->args[4]);        // change
+   fd.crush        = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorRaiseInstant
+//
+// Implements Floor_RaiseInstant(tag, unused, height, change, crush)
+// * ExtraData: 320
+// * Hexen:     
+//
+static bool EV_ActionParamFloorRaiseInstant(ev_action_t *action, 
+                                            ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 1;              // up
+   fd.target_type  = FInst;          // always move instantly
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedNormal;    // unused, always instant.
+   fd.height_value = instance->args[2] * FRACUNIT * 8; // height
+   EV_floorChangeForArg(fd, instance->args[3]);        // change
+   fd.crush        = instance->args[4];                // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerInstant
+//
+// Implements Floor_LowerInstant(tag, unused, height, change)
+// * ExtraData: 321
+// * Hexen:     66
+//
+static bool EV_ActionParamFloorLowerInstant(ev_action_t *action, 
+                                            ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction    = 0;              // down
+   fd.target_type  = FInst;          // always move instantly
+   fd.spac         = instance->spac; // activated Hexen-style
+   fd.flags        = FDF_HAVESPAC;
+   fd.speed_type   = SpeedNormal;    // unused, always instant.
+   fd.height_value = instance->args[2] * FRACUNIT * 8; // height
+   EV_floorChangeForArg(fd, instance->args[3]);        // change
+   fd.crush        = -1;
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorToCeilingInstant
+//
+// Implements Floor_ToCeilingInstant(tag, change, crush)
+// * ExtraData: 322
+//
+static bool EV_ActionParamFloorToCeilingInstant(ev_action_t *action, 
+                                                ev_instance_t *instance)
+{
+   floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
+   fd.direction   = 0;              // down (to cause instant movement)
+   fd.target_type = FtoC;           // to sector ceiling
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedNormal;    // unused (always instant).
+   EV_floorChangeForArg(fd, instance->args[1]); // change
+   fd.crush       = instance->args[2];          // crush
+
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
 
 //=============================================================================

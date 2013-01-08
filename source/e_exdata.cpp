@@ -617,7 +617,7 @@ static struct exlinespec
    { 304, "Door_WaitRaise" },
    { 305, "Door_WaitClose" },
    { 306, "Floor_RaiseToHighest" },
-   { 307, "Floor_LowerToHighest" },
+   { 307, "Floor_LowerToHighestEE" },
    { 308, "Floor_RaiseToLowest" },
    { 309, "Floor_LowerToLowest" },
    { 310, "Floor_RaiseToNearest" },

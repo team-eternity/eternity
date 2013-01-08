@@ -63,7 +63,10 @@ int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/07/04: only line actions can be manual
-   if(fd->trigger_type == PushOnce || fd->trigger_type == PushMany)
+   if(((fd->flags & FDF_HAVETRIGGERTYPE) &&
+       (fd->trigger_type == PushOnce || fd->trigger_type == PushMany)) ||
+      ((fd->flags & FDF_HAVESPAC) && !tag)
+     )
    {
       if(!line || !(sec = line->backsector))
          return rtn;
@@ -93,13 +96,15 @@ manual_floor:
       floor->addThinker();
       sec->floordata = floor;
       
-      floor->crush = fd->crush;
+      floor->crush     = fd->crush;
       floor->direction = fd->direction ? plat_up : plat_down;
-      floor->sector = sec;
-      floor->texture = sec->floorpic;
+      floor->sector    = sec;
+      floor->texture   = sec->floorpic;
+      floor->type      = genFloor;
+
       //jff 3/14/98 transfer old special field too
       P_SetupSpecialTransfer(sec, &(floor->special));
-      floor->type = genFloor;
+      
 
       // set the speed of motion
       switch(fd->speed_type)
@@ -274,21 +279,20 @@ manual_floor:
 int EV_DoGenFloor(line_t *line)
 {
    floordata_t fd;
+   memset(&fd, 0, sizeof(fd));
+
    unsigned value = (unsigned int)line->special - GenFloorBase;
 
    // parse the bit fields in the line's special type
    
    fd.crush        = ((value & FloorCrush) >> FloorCrushShift) ? 10 : -1;
-   fd.change_type  = (value & FloorChange) >> FloorChangeShift;
-   fd.target_type  = (value & FloorTarget) >> FloorTargetShift;
+   fd.change_type  = (value & FloorChange   ) >> FloorChangeShift;
+   fd.target_type  = (value & FloorTarget   ) >> FloorTargetShift;
    fd.direction    = (value & FloorDirection) >> FloorDirectionShift;
-   fd.change_model = (value & FloorModel) >> FloorModelShift;
-   fd.speed_type   = (value & FloorSpeed) >> FloorSpeedShift;
-   fd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
-
-   // 08/25/09: initialize unused fields
-   fd.height_value = 0;
-   fd.speed_value  = 0;
+   fd.change_model = (value & FloorModel    ) >> FloorModelShift;
+   fd.speed_type   = (value & FloorSpeed    ) >> FloorSpeedShift;
+   fd.trigger_type = (value & TriggerType   ) >> TriggerTypeShift;
+   fd.flags        = FDF_HAVETRIGGERTYPE;
 
    return EV_DoParamFloor(line, line->tag, &fd);
 }
@@ -1523,8 +1527,7 @@ static int fchgdata[7][2] =
 //
 // Parses arguments for parameterized Floor specials.
 //
-static bool pspec_Floor(line_t *line, int *args, int16_t special, 
-                           int trigger_type)
+static bool pspec_Floor(line_t *line, int *args, int16_t special, int spac)
 {
    floordata_t fd = { 0 };
    int normspec;
@@ -1538,7 +1541,8 @@ static bool pspec_Floor(line_t *line, int *args, int16_t special,
 
    fd.direction   = param_floor_data[normspec][0];
    fd.target_type = param_floor_data[normspec][1];
-   fd.trigger_type = trigger_type;
+   fd.spac        = spac;
+   fd.flags       = FDF_HAVESPAC;
    fd.crush = -1;
 
    switch(special)
@@ -1997,7 +2001,7 @@ bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
    case 320: // Floor_RaiseInstant
    case 321: // Floor_LowerInstant
    case 322: // Floor_ToCeilingInstant
-      success = pspec_Floor(line, args, special, trigger_type);
+      success = pspec_Floor(line, args, special, spac);
       break;
    case 323: // Ceiling_RaiseToHighest
    case 324: // Ceiling_ToHighestInstant
