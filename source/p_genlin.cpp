@@ -310,7 +310,10 @@ int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
    CeilingThinker *ceiling;
 
    // check if a manual trigger, if so do just the sector on the backside
-   if(cd->trigger_type == PushOnce || cd->trigger_type == PushMany)
+   if(((cd->flags & CDF_HAVETRIGGERTYPE) && 
+       (cd->trigger_type == PushOnce || cd->trigger_type == PushMany)) ||
+      ((cd->flags & CDF_HAVESPAC) && !tag)
+     )
    {
       if(!line || !(sec = line->backsector))
          return rtn;
@@ -529,12 +532,13 @@ int EV_DoGenCeiling(line_t *line)
    // parse the bit fields in the line's special type
    
    cd.crush        = ((value & CeilingCrush) >> CeilingCrushShift) ? 10 : -1;
-   cd.change_type  = (value & CeilingChange) >> CeilingChangeShift;
-   cd.target_type  = (value & CeilingTarget) >> CeilingTargetShift;
+   cd.change_type  = (value & CeilingChange   ) >> CeilingChangeShift;
+   cd.target_type  = (value & CeilingTarget   ) >> CeilingTargetShift;
    cd.direction    = (value & CeilingDirection) >> CeilingDirectionShift;
-   cd.change_model = (value & CeilingModel) >> CeilingModelShift;
-   cd.speed_type   = (value & CeilingSpeed) >> CeilingSpeedShift;
-   cd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+   cd.change_model = (value & CeilingModel    ) >> CeilingModelShift;
+   cd.speed_type   = (value & CeilingSpeed    ) >> CeilingSpeedShift;
+   cd.trigger_type = (value & TriggerType     ) >> TriggerTypeShift;
+   cd.flags        = CDF_HAVETRIGGERTYPE; // BOOM-style activation
 
    // 08/25/09: initialize unused values
    cd.height_value = 0;
@@ -719,7 +723,12 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 10/06/05: only line actions can be manual
-   if(sd->trigger_type == PushOnce || sd->trigger_type == PushMany)
+   //if(sd->trigger_type == PushOnce || sd->trigger_type == PushMany)
+
+   if(((sd->flags & SDF_HAVETRIGGERTYPE) &&
+       (sd->trigger_type == PushOnce || sd->trigger_type == PushMany)) ||
+      ((sd->flags & SDF_HAVESPAC) && !tag)
+     )
    {
       if(!line || !(sec = line->backsector))
          return rtn;
@@ -802,13 +811,14 @@ manual_stair:
          break;
       }
 
-      speed = floor->speed;
-      height = sec->floorheight + floor->direction * stairsize;
-      floor->floordestheight = height;
-      texture = sec->floorpic;
+      speed        = floor->speed;
+      height       = sec->floorheight + floor->direction * stairsize;
+      texture      = sec->floorpic;
       floor->crush = -1;
-      floor->type = genBuildStair; // jff 3/31/98 do not leave uninited
-
+      floor->type  = genBuildStair; // jff 3/31/98 do not leave uninited
+      
+      floor->floordestheight = height;
+      
       // haleyjd 10/13/05: init reset and delay properties
       floor->resetTime     = sd->reset_value;
       floor->resetHeight   = sec->floorheight;
@@ -843,7 +853,7 @@ manual_stair:
             tsec = (sec->lines[i])->backsector;
             newsecnum = tsec - sectors;
             
-            if(!sd->ignore && tsec->floorpic != texture)
+            if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->floorpic != texture)
                continue;
 
             // jff 6/19/98 prevent double stepsize
@@ -863,10 +873,10 @@ manual_stair:
             // jff 2/26/98
             // link the stair chain in both directions
             // lock the stair sector until building complete
-            sec->nextsec = newsecnum; // link step to next
-            tsec->prevsec = secnum;   // link next back
-            tsec->nextsec = -1;       // set next forward link as end
-            tsec->stairlock = -2;     // lock the step
+            sec->nextsec    = newsecnum; // link step to next
+            tsec->prevsec   = secnum;    // link next back
+            tsec->nextsec   = -1;        // set next forward link as end
+            tsec->stairlock = -2;        // lock the step
             
             sec = tsec;
             secnum = newsecnum;
@@ -879,7 +889,7 @@ manual_stair:
             floor->sector = sec;
 
             // haleyjd 10/06/05: support synchronized stair raising
-            if(sd->sync_value)
+            if(sd->flags & SDF_SYNCHRONIZED)
             {
                floor->speed = 
                   D_abs(FixedMul(speed, 
@@ -928,15 +938,16 @@ int EV_DoGenStairs(line_t *line)
    unsigned    value = (unsigned int)line->special - GenStairsBase;
 
    // parse the bit fields in the line's special type
-   
-   sd.ignore        = (value & StairIgnore) >> StairIgnoreShift;
    sd.direction     = (value & StairDirection) >> StairDirectionShift;
    sd.stepsize_type = (value & StairStep) >> StairStepShift;
    sd.speed_type    = (value & StairSpeed) >> StairSpeedShift;
    sd.trigger_type  = (value & TriggerType) >> TriggerTypeShift;
+   sd.flags         = SDF_HAVETRIGGERTYPE;
+
+   if((value & StairIgnore) >> StairIgnoreShift)
+      sd.flags |= SDF_IGNORETEXTURES;
    
    // haleyjd 10/06/05: generalized stairs don't support the following
-   sd.sync_value     = 0;
    sd.delay_value    = 0;
    sd.reset_value    = 0;
    sd.speed_value    = 0;
@@ -1678,11 +1689,12 @@ static int cchgdata[7][2] =
 //
 // Parses arguments for parameterized Ceiling specials.
 //
-static bool pspec_Ceiling(line_t *line, int *args, int16_t special, 
-                             int trigger_type)
+static bool pspec_Ceiling(line_t *line, int *args, int16_t special, int spac)
 {
-   ceilingdata_t cd = { 0 };
+   ceilingdata_t cd;
    int normspec;
+
+   memset(&cd, 0, sizeof(cd));
 
 #ifdef RANGECHECK
    if(special < 323 || special > 339)
@@ -1693,9 +1705,10 @@ static bool pspec_Ceiling(line_t *line, int *args, int16_t special,
 
    cd.direction    = param_ceiling_data[normspec][0];
    cd.target_type  = param_ceiling_data[normspec][1];
-   cd.trigger_type = trigger_type;
    cd.speed_value  = 0;
    cd.crush        = -1;
+   cd.spac         = spac;
+   cd.flags        = CDF_HAVESPAC; // Hexen-style activation
 
    switch(special)
    {
@@ -1792,19 +1805,20 @@ static bool pspec_Ceiling(line_t *line, int *args, int16_t special,
 //
 // Parses arguments for parameterized Stair specials.
 //
-static bool pspec_Stairs(line_t *line, int *args, int16_t special, 
-                            int trigger_type)
+static bool pspec_Stairs(line_t *line, int *args, int16_t special, int spac)
 {
-   stairdata_t sd = { 0 };
+   stairdata_t sd;
+   memset(&sd, 0, sizeof(sd));
 
-   sd.trigger_type  = trigger_type;
+   sd.flags         = SDF_HAVESPAC;
+   sd.spac          = spac;   
    sd.direction     = 0;
    sd.speed_type    = SpeedParam;
    sd.stepsize_type = StepSizeParam;
    
    // haleyjd: eventually this will depend on the special type; right
    // now, all are set to not ignore texture differences
-   sd.ignore        = 0;
+   // sd.ignore = 0;
 
    switch(special)
    {
@@ -1812,7 +1826,6 @@ static bool pspec_Stairs(line_t *line, int *args, int16_t special,
       sd.direction = 1;
       // fall through
    case 341: // Stairs_BuildDownDoom
-      sd.sync_value  = 0;
       sd.delay_value = args[3];
       sd.reset_value = args[4];
       break;
@@ -1820,14 +1833,12 @@ static bool pspec_Stairs(line_t *line, int *args, int16_t special,
       sd.direction = 1;
       // fall through
    case 343: // Stairs_BuildDownDoomSync
-      sd.sync_value  = 1;
+      sd.flags |= SDF_SYNCHRONIZED;
       sd.delay_value = 0;       // 10/02/06 sync'd stairs can't delay >_<
       sd.reset_value = args[3];
       break;
    }
 
-   // all stair types take the same arguments:
-   //    (tag, speed, stepsize, delay, reset)
    sd.speed_value    = args[1] * FRACUNIT / 8;
    sd.stepsize_value = args[2] * FRACUNIT;
 
@@ -2020,13 +2031,13 @@ bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
    case 337: // Ceiling_MoveToValue
    case 338: // Ceiling_RaiseInstant
    case 339: // Ceiling_LowerInstant
-      success = pspec_Ceiling(line, args, special, trigger_type);
+      success = pspec_Ceiling(line, args, special, spac);
       break;
    case 340: // Stairs_BuildUpDoom
    case 341: // Stairs_BuildDownDoom
    case 342: // Stairs_BuildUpDoomSync
    case 343: // Stairs_BuildDownDoomSync
-      success = pspec_Stairs(line, args, special, trigger_type);
+      success = pspec_Stairs(line, args, special, spac);
       break;
    case 350: // Polyobj_DoorSlide
    case 351: // Polyobj_DoorSwing

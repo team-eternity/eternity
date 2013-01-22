@@ -916,11 +916,21 @@ typedef struct ceilinglist
   struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
+// haleyjd 01/09/12: ceiling data flags
+enum
+{
+   CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
+   CDF_HAVESPAC        = 0x00000002  // has Hexen-style spac
+};
+
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
 typedef struct ceilingdata_s
 {   
-   // generalized values
-   int trigger_type;
+   int flags;        // combination of values above
+   int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
+   int spac;         // valid IFF (flags & CDF_HAVESPAC)
+   
+   // generalized values   
    int crush;
    int direction;
    int speed_type;
@@ -996,12 +1006,23 @@ typedef struct floordata_s
    fixed_t speed_value;
 } floordata_t;
 
+// haleyjd 01/21/13: stairdata flags
+enum
+{
+   SDF_HAVESPAC        = 0x00000001, // Hexen-style activation
+   SDF_HAVETRIGGERTYPE = 0x00000002, // BOOM-style activation
+   SDF_IGNORETEXTURES  = 0x00000004, // whether or not to ignore floor textures
+   SDF_SYNCHRONIZED    = 0x00000008, // if set, build in sync
+};
+
 // haleyjd 10/06/05: extended data struct for parameterized stairs
 typedef struct stairdata_s
 {   
-   // generalized values
+   int flags;
+   int spac;
    int trigger_type;
-   int ignore;
+
+   // generalized values
    int direction;
    int stepsize_type;
    int speed_type;
@@ -1011,7 +1032,6 @@ typedef struct stairdata_s
    fixed_t speed_value;
    int delay_value;
    int reset_value;
-   int sync_value;
 } stairdata_t;
 
 class ElevatorThinker : public SectorThinker
@@ -1372,10 +1392,12 @@ int EV_StopPlat(line_t *line);
 int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd);
 int EV_DoGenFloor(line_t *line);
 
+int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd);
 int EV_DoGenCeiling(line_t *line);
 
 int EV_DoGenLift(line_t *line);
 
+int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);
 
 int EV_DoGenCrusher(line_t *line);

@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "acs_intr.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
@@ -36,6 +37,7 @@
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "p_spec.h"
+#include "p_xenemy.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -147,6 +149,33 @@ static void EV_floorChangeForArg(floordata_t &fd, int arg)
 
    fd.change_model = fchgdata[arg][0];
    fd.change_type  = fchgdata[arg][1];
+}
+
+//
+// EV_ceilingChangeForArg
+//
+// Gets sector property change type data for a parameterized ceiling type
+// based on one of the instance arguments.
+//
+static void EV_ceilingChangeForArg(ceilingdata_t &cd, int arg)
+{
+   static int cchgdata[7][2] =
+   {
+      //   model       change type
+      { CTriggerModel, CNoChg },
+      { CTriggerModel, CChgZero },
+      { CNumericModel, CChgZero },
+      { CTriggerModel, CChgTxt  },
+      { CNumericModel, CChgTxt  },
+      { CTriggerModel, CChgTyp  },
+      { CNumericModel, CChgTyp  },
+   };
+
+   if(arg < 0 || arg >= 7)
+      arg = 0;
+
+   cd.change_model = cchgdata[arg][0];
+   cd.change_type  = cchgdata[arg][1];
 }
 
 //=============================================================================
@@ -1585,6 +1614,91 @@ static bool EV_ActionParamDoorClose(ev_action_t *action, ev_instance_t *instance
 }
 
 //
+// EV_ActionParamDoorCloseWaitOpen
+//
+// Implements Door_CloseWaitOpen(tag, speed, delay, lighttag)
+// * ExtraData: 303
+// * Hexen (ZDoom Extension): 249
+//
+static bool EV_ActionParamDoorCloseWaitOpen(ev_action_t *action, ev_instance_t *instance)
+{
+   doordata_t dd;
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind         = CdODoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.topcountdown = 0;
+   dd.delay_value  = instance->args[2];
+   dd.altlighttag  = instance->args[3];
+
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
+
+   // FIXME/TODO:
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
+}
+
+//
+// EV_ActionParamDoorWaitRaise
+//
+// Implements Door_WaitRaise(tag, speed, delay, topcount, lighttag)
+// * ExtraData: 304
+//
+static bool EV_ActionParamDoorWaitRaise(ev_action_t *action, ev_instance_t *instance)
+{
+   doordata_t dd;
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind         = pDOdCDoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.delay_value  = instance->args[2];
+   dd.topcountdown = instance->args[3];
+   dd.altlighttag  = instance->args[4];
+
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
+
+   // FIXME / TODO:
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
+}
+
+//
+// EV_ActionParamDoorWaitClose
+//
+// Implements Door_WaitClose(tag, speed, topcount, lighttag)
+// * ExtraData: 305
+//
+static bool EV_ActionParamDoorWaitClose(ev_action_t *action, ev_instance_t *instance)
+{
+   doordata_t dd;
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind         = pDCDoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.delay_value  = 0;
+   dd.topcountdown = instance->args[2];
+   dd.altlighttag  = instance->args[3];
+
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
+
+   // FIXME/TODO:
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
+}
+
+//
 // EV_ActionParamFloorRaiseToHighest
 //
 // Implements Floor_RaiseToHighest(tag, speed, change, crush)
@@ -2089,6 +2203,829 @@ static bool EV_ActionParamFloorToCeilingInstant(ev_action_t *action,
    return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
 
+//
+// EV_ActionParamCeilingRaiseToHighest
+//
+// Implements Ceiling_RaiseToHighest(tag, speed, change)
+// * ExtraData: 323
+//
+static bool EV_ActionParamCeilingRaiseToHighest(ev_action_t *action, 
+                                                ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction   = 1;              // up
+   cd.target_type = CtoHnC;         // to highest neighboring ceiling
+   cd.spac        = instance->spac; // activated Hexen-style
+   cd.flags       = CDF_HAVESPAC;
+   cd.speed_type  = SpeedParam;
+   cd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);     // change
+   cd.crush       = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingToHighestInstant
+//
+// Implements Ceiling_ToHighestInstant(tag, change, crush)
+// * ExtraData: 324
+//
+static bool EV_ActionParamCeilingToHighestInstant(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction   = 0;              // down (to cause instant movement)
+   cd.target_type = CtoHnC;         // to highest neighboring ceiling
+   cd.spac        = instance->spac; // activated Hexen-style
+   cd.flags       = CDF_HAVESPAC;
+   cd.speed_type  = SpeedNormal;    // not used
+   EV_ceilingChangeForArg(cd, instance->args[1]); // change
+   cd.crush       = instance->args[2];            // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseToNearest
+//
+// Implements Ceiling_RaiseToNearest(tag, speed, change)
+// * ExtraData: 325
+// * Hexen (ZDoom Extension): 252
+//
+static bool EV_ActionParamCeilingRaiseToNearest(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CtoNnC;         // to nearest neighboring ceiling
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerToNearest
+//
+// Implements Ceiling_LowerToNearest(tag, speed, change, crush)
+// * ExtraData: 326
+//
+static bool EV_ActionParamCeilingLowerToNearest(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CtoNnC;         // to nearest neighboring ceiling
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = instance->args[3];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseToLowest
+//
+// Implements Ceiling_RaiseToLowest(tag, speed, change)
+// * ExtraData: 327
+//
+static bool EV_ActionParamCeilingRaiseToLowest(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CtoLnC;         // to lowest neighboring ceiling
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerToLowest
+//
+// Implements Ceiling_LowerToLowest(tag, speed, change, crush)
+// * ExtraData: 328
+// * Hexen (ZDoom Extension): 253
+//
+static bool EV_ActionParamCeilingLowerToLowest(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CtoLnC;         // to lowest neighboring ceiling
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = instance->args[3];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseToHighestFloor
+//
+// Implements Ceiling_RaiseToHighestFloor(tag, speed, change)
+// * ExtraData: 329
+//
+static bool EV_ActionParamCeilingRaiseToHighestFloor(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CtoHnF;         // to highest neighboring floor
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerToHighestFloor
+//
+// Implements Ceiling_LowerToHighestFloor(tag, speed, change crush)
+// * ExtraData: 330
+// * Hexen (ZDoom Extension): 192
+//
+static bool EV_ActionParamCeilingLowerToHighestFloor(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CtoHnF;         // to highest neighboring floor
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = instance->args[3];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingToFloorInstant
+//
+// Implements Ceiling_ToFloorInstant(tag, change, crush)
+// * ExtraData: 331
+//
+static bool EV_ActionParamCeilingToFloorInstant(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up (to cause instant movement)
+   cd.target_type   = CtoF;           // to sector floor
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedNormal;    // not used
+   EV_ceilingChangeForArg(cd, instance->args[1]); // change
+   cd.crush         = instance->args[2];          // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerToFloor
+//
+// Implements Ceiling_LowerToFloor(tag, speed, change, crush)
+// * ExtraData: 332
+// * Hexen (ZDoom Extension): 254
+//
+static bool EV_ActionParamCeilingLowerToFloor(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CtoF;           // to sector floor
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = instance->args[3];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseByTexture
+//
+// Implements Ceiling_RaiseByTexture(tag, speed, change)
+// * ExtraData: 333
+//
+static bool EV_ActionParamCeilingRaiseByTexture(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CbyST;          // by shortest upper texture
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerByTexture
+//
+// Implements Ceiling_LowerByTexture(tag, speed, change, crush)
+// * ExtraData: 334
+//
+static bool EV_ActionParamCeilingLowerByTexture(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CbyST;          // by shortest upper texture
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   EV_ceilingChangeForArg(cd, instance->args[2]);       // change
+   cd.crush         = instance->args[3];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseByValue
+//
+// Implements Ceiling_RaiseByValue(tag, speed, height, change)
+// * ExtraData: 335
+// * Hexen:     41
+//
+static bool EV_ActionParamCeilingRaiseByValue(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CbyParam;       // by value
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.height_value  = instance->args[2] * FRACUNIT;     // height
+   EV_ceilingChangeForArg(cd, instance->args[3]);       // change
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerByValue
+//
+// Implements Ceiling_LowerByValue(tag, speed, height, change, crush)
+// * ExtraData: 336
+// * Hexen:     40
+//
+static bool EV_ActionParamCeilingLowerByValue(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CbyParam;       // by value
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.height_value  = instance->args[2] * FRACUNIT;     // height
+   EV_ceilingChangeForArg(cd, instance->args[3]);       // change
+   cd.crush         = instance->args[4];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseByValueTimes8
+//
+// Implements Ceiling_RaiseByValueTimes8(tag, speed, height, change)
+// * Hexen (ZDoom Extension): 198
+//
+static bool EV_ActionParamCeilingRaiseByValueTimes8(ev_action_t *action, 
+                                                    ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CbyParam;       // by value
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
+   EV_ceilingChangeForArg(cd, instance->args[3]);       // change
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerByValueTimes8
+//
+// Implements Ceiling_LowerByValueTimes8(tag, speed, height, change, crush)
+// * Hexen (ZDoom Extension): 199
+//
+static bool EV_ActionParamCeilingLowerByValueTimes8(ev_action_t *action, 
+                                                    ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CbyParam;       // by value
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
+   EV_ceilingChangeForArg(cd, instance->args[3]);       // change
+   cd.crush         = instance->args[4];                // crush
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingMoveToValue
+//
+// Implements Ceiling_MoveToValue(tag, speed, height, neg, change)
+// * ExtraData: 337
+// * Hexen:     47
+//
+static bool EV_ActionParamCeilingMoveToValue(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // not used; motion is relative to target
+   cd.target_type   = CtoAbs;         // move to absolute height
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.height_value  = instance->args[2] * FRACUNIT;     // height
+   if(instance->args[3])                                // neg
+      cd.height_value = -cd.height_value;
+   EV_ceilingChangeForArg(cd, instance->args[4]);       // change
+   cd.crush = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingMoveToValueTimes8
+//
+// Implements Ceiling_MoveToValueTimes8(tag, speed, height, neg, change)
+// * ExtraData: 337
+// * Hexen:     69
+//
+static bool EV_ActionParamCeilingMoveToValueTimes8(ev_action_t *action, 
+                                                   ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // not used; motion is relative to target
+   cd.target_type   = CtoAbs;         // move to absolute height
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedParam;
+   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
+   if(instance->args[3])                                // neg
+      cd.height_value = -cd.height_value;
+   EV_ceilingChangeForArg(cd, instance->args[4]);       // change
+   cd.crush = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingRaiseInstant
+//
+// Implements Ceiling_RaiseInstant(tag, unused, height, change)
+// * ExtraData: 338
+// * Hexen (ZDoom Extension): 194
+//
+static bool EV_ActionParamCeilingRaiseInstant(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 1;              // up
+   cd.target_type   = CInst;          // instant motion to dest height
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedNormal;    // not used
+   cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
+   EV_ceilingChangeForArg(cd, instance->args[3]);
+   cd.crush         = -1;
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerInstant
+//
+// Implements Ceiling_LowerInstant(tag, unused, height, change, crush)
+// * ExtraData: 339
+// * Hexen (ZDoom Extension): 193
+//
+static bool EV_ActionParamCeilingLowerInstant(ev_action_t *action, ev_instance_t *instance)
+{
+   ceilingdata_t cd;
+   memset(&cd, 0, sizeof(cd));
+
+   cd.direction     = 0;              // down
+   cd.target_type   = CInst;          // instant motion to dest height
+   cd.spac          = instance->spac; // activated Hexen-style
+   cd.flags         = CDF_HAVESPAC;
+   cd.speed_type    = SpeedNormal;    // unused
+   cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
+   EV_ceilingChangeForArg(cd, instance->args[3]);       // change
+   cd.crush         = instance->args[4];
+
+   return !!EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamStairsBuildUpDoom
+//
+// Implements Stairs_BuildUpDoom(tag, speed, height, delay, reset)
+// * ExtraData: 340
+// * Hexen (ZDoom Extension): 217
+//
+static bool EV_ActionParamStairsBuildUpDoom(ev_action_t *action, ev_instance_t *instance)
+{
+   stairdata_t sd;
+   memset(&sd, 0, sizeof(sd));
+
+   sd.flags          = SDF_HAVESPAC;
+   sd.spac           = instance->spac; // Hexen-style activation
+   sd.direction      = 1;              // up
+   sd.speed_type     = SpeedParam;
+   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type  = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value    = instance->args[3];                // delay
+   sd.reset_value    = instance->args[4];                // reset
+
+   return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// EV_ActionParamStairsBuildDownDoom
+//
+// Implements Stairs_BuildDownDoom(tag, speed, height, delay, reset)
+// * ExtraData: 341
+//
+static bool EV_ActionParamStairsBuildDownDoom(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   stairdata_t sd;
+   memset(&sd, 0, sizeof(sd));
+
+   sd.flags          = SDF_HAVESPAC;
+   sd.spac           = instance->spac; // Hexen-style activation
+   sd.direction      = 0;              // down
+   sd.speed_type     = SpeedParam;
+   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type  = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value    = instance->args[3];                // delay
+   sd.reset_value    = instance->args[4];
+
+   return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// EV_ActionParamStairsBuildUpDoomSync
+//
+// Implements Stairs_BuildUpDoomSync(tag, speed, height, reset)
+// * ExtraData: 342
+//
+static bool EV_ActionParamStairsBuildUpDoomSync(ev_action_t *action,
+                                                ev_instance_t *instance)
+{
+   stairdata_t sd;
+   memset(&sd, 0, sizeof(sd));
+
+   sd.flags          = SDF_HAVESPAC | SDF_SYNCHRONIZED;
+   sd.spac           = instance->spac; 
+   sd.direction      = 1;
+   sd.speed_type     = SpeedParam;
+   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type  = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value    = 0;
+   sd.reset_value    = instance->args[3];                // reset
+
+   return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// EV_ActionParamStairsBuildDownDoomSync
+//
+// Implements Stairs_BuildDownDoomSync(tag, speed, height, reset)
+// * ExtraData: 343
+//
+static bool EV_ActionParamStairsBuildDownDoomSync(ev_action_t *action,
+                                                  ev_instance_t *instance)
+{
+   stairdata_t sd;
+   memset(&sd, 0, sizeof(sd));
+
+   sd.flags          = SDF_HAVESPAC | SDF_SYNCHRONIZED;
+   sd.spac           = instance->spac; 
+   sd.direction      = 0;
+   sd.speed_type     = SpeedParam;
+   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type  = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value    = 0;
+   sd.reset_value    = instance->args[3];                // reset
+
+   return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// EV_ActionACSExecute
+//
+// Implements ACS_Execute(script, map, arg1, arg2, arg3)
+// * ExtraData: 365
+// * Hexen:     80
+//
+static bool EV_ActionACSExecute(ev_action_t *action, ev_instance_t *instance)
+{
+   int    *args  = instance->args;  // FIXME: param is int32_t *
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+
+   return ACS_ExecuteScriptNumber(args[0], args[1], 0, args + 2, 3, thing, line, side);
+}
+
+
+//
+// EV_ActionACSSuspend
+//
+// Implements ACS_Suspend(script, map)
+// * ExtraData: 366
+// * Hexen:     81
+//
+static bool EV_ActionACSSuspend(ev_action_t *action, ev_instance_t *instance)
+{
+   return ACS_SuspendScriptNumber(instance->args[0], instance->args[1]);
+}
+
+//
+// EV_ActionACSTerminate
+//
+// Implements ACS_Terminate(script, map)
+// * ExtraData: 367
+// * Hexen:     82
+//
+static bool EV_ActionACSTerminate(ev_action_t *action, ev_instance_t *instance)
+{
+   return ACS_TerminateScriptNumber(instance->args[0], instance->args[1]);
+}
+
+//
+// EV_ActionParamLightRaiseByValue
+//
+// Implements Light_RaiseByValue(tag, value)
+// * ExtraData: 368
+// * Hexen:     110
+//
+static bool EV_ActionParamLightRaiseByValue(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_SetLight(instance->line, instance->tag, setlight_add, instance->args[1]);
+}
+
+//
+// EV_ActionParamLightLowerByValue
+//
+// Implements Light_LowerByValue(tag, value)
+// * ExtraData: 369
+// * Hexen:     111
+//
+static bool EV_ActionParamLightLowerByValue(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_SetLight(instance->line, instance->tag, setlight_sub, instance->args[1]);
+}
+
+//
+// EV_ActionParamLightChangeToValue
+//
+// Implements Light_ChangeToValue(tag, value)
+// * ExtraData: 370
+// * Hexen:     112
+//
+static bool EV_ActionParamLightChangeToValue(ev_action_t *action, 
+                                             ev_instance_t *instance)
+{
+   return !!EV_SetLight(instance->line, instance->tag, setlight_set, instance->args[1]);
+}
+
+//
+// EV_ActionParamLightFade
+//
+// Implements Light_Fade(tag, dest, speed)
+// * ExtraData: 371
+// * Hexen:     113
+//
+static bool EV_ActionParamLightFade(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_FadeLight(instance->line, instance->tag, 
+                         instance->args[1], instance->args[2]);
+}
+
+//
+// EV_ActionParamLightGlow
+//
+// Implements Light_Glow(tag, max, min, speed)
+// * ExtraData: 372
+// * Hexen:     114
+//
+static bool EV_ActionParamLightGlow(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_GlowLight(instance->line, instance->tag,
+                         instance->args[1], instance->args[2], instance->args[3]);
+}
+
+//
+// EV_ActionParamLightFlicker
+//
+// Implements Light_Flicker(tag, max, min)
+// * ExtraData: 373
+// * Hexen:     115
+//
+static bool EV_ActionParamLightFlicker(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_FlickerLight(instance->line, instance->tag,
+                            instance->args[1], instance->args[2]);
+}
+
+//
+// EV_ActionParamLightStrobe
+//
+// Implements Light_Strobe(tag, maxval, minval, maxtime, mintime)
+// * ExtraData: 374
+// * Hexen:     116
+//
+static bool EV_ActionParamLightStrobe(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_StrobeLight(instance->line, instance->tag, instance->args[1],
+                           instance->args[2], instance->args[3], instance->args[4]);
+}
+
+//
+// EV_ActionRadiusQuake
+//
+// Implements Radius_Quake(intensity, duration, dmgradius, radius, tid)
+// * ExtraData: 375
+// * Hexen:     120
+//
+static bool EV_ActionRadiusQuake(ev_action_t *action, ev_instance_t *instance)
+{
+   return P_StartQuake(instance->args);
+}
+
+//
+// EV_ActionFloorWaggle
+//
+// Implements Floor_Waggle(tag, height, speed, offset, timer)
+// * ExtraData: 397
+// * Hexen:     138
+//
+static bool EV_ActionFloorWaggle(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_StartFloorWaggle(instance->line, instance->tag, instance->args[1],
+                                instance->args[2], instance->args[3], instance->args[4]);
+}
+
+//
+// EV_ActionThingSpawn
+//
+// Implements Thing_Spawn(tid, type, angle, newtid)
+// * ExtraData: 398
+// * Hexen:     135
+//
+static bool EV_ActionThingSpawn(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_ThingSpawn(instance->args, true);
+}
+
+//
+// EV_ActionThingSpawnNoFog
+//
+// Implements Thing_SpawnNoFog(tid, type, angle, newtid)
+// * ExtraData: 399
+// * Hexen:     137
+//
+static bool EV_ActionThingSpawnNoFog(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_ThingSpawn(instance->args, false);
+}
+
+//
+// EV_ActionTeleportEndGame
+//
+// Implements Teleport_EndGame()
+// * ExtraData: 400
+// * Hexen:     75
+//
+static bool EV_ActionTeleportEndGame(ev_action_t *action, ev_instance_t *instance)
+{
+   G_ForceFinale();
+   return true;
+}
+
+//
+// EV_ActionThingProjectile
+//
+// Implements Thing_Projectile(tid, type, angle, speed, vspeed)
+// * ExtraData: 402
+// * Hexen:     134
+//
+static bool EV_ActionThingProjectile(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_ThingProjectile(instance->args, false);
+}
+
+//
+// EV_ActionThingProjectileGravity
+//
+// Implements Thing_ProjectileGravity(tid, type, angle, speed, vspeed)
+// * ExtraData: 403
+// * Hexen:     136
+//
+static bool EV_ActionThingProjectileGravity(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_ThingProjectile(instance->args, true);
+}
+
+//
+// EV_ActionThingActivate
+//
+// Implements Thing_Activate(tid)
+// * ExtraData: 404
+// * Hexen:     130
+//
+static bool EV_ActionThingActivate(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_ThingActivate(instance->args[0]);
+}
+
+//
+// EV_ActionThingDeactivate
+//
+// Implements Thing_Deactivate(tid)
+// * ExtraData: 405
+// * Hexen:     131
+//
+static bool EV_ActionThingDeactivate(ev_action_t *action, ev_instance_t *instance)
+{
+   return !!EV_ThingDeactivate(instance->args[0]);
+}
+
 //=============================================================================
 //
 // Action Types
@@ -2108,7 +3045,7 @@ static ev_actiontype_t WRActionType =
 // W1-Type lines may be activated once. Semantics are implemented in the 
 // post-cross callback to implement compatibility behaviors regarding the 
 // premature clearing of specials crossed from the wrong side or without
-// successful instance having occurred.
+// successful activation having occurred.
 static ev_actiontype_t W1ActionType =
 {
    SPAC_CROSS,           // line must be crossed
