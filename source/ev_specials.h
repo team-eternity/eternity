@@ -46,6 +46,8 @@ enum EVActionFlags
    EV_POSTCHANGESWITCH = 0x00000040, // Changes switch texture if successful
    EV_POSTCHANGEALWAYS = 0x00000080, // Changes switch texture even if fails
    EV_POSTCHANGESIDED  = 0x00000100, // Switch texture changes on proper side of line
+
+   EV_PARAMLINESPEC    = 0x00000200, // Is a parameterized line special
 };
 
 // Data related to an instance of a special activation.

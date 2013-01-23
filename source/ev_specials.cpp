@@ -44,6 +44,11 @@
 #include "r_state.h"
 #include "s_sound.h"
 
+//=============================================================================
+//
+// Macros
+//
+
 // Call to require a valid actor
 #define REQUIRE_ACTOR(actor) \
    if(!(actor))              \
@@ -53,6 +58,11 @@
 #define REQUIRE_LINE(line) \
    if(!(line))             \
       return false
+
+// Define a struct var and ensure it is fully initialized
+#define INIT_STRUCT(type, name)  \
+   type name;                    \
+   memset(&name, 0, sizeof(name))
 
 //=============================================================================
 //
@@ -1536,7 +1546,7 @@ static bool EV_ActionBoomGen(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionParamDoorRaise(ev_action_t *action, ev_instance_t *instance)
 {
-   doordata_t dd;
+   INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
    dd.kind         = OdCDoor;
@@ -1565,7 +1575,7 @@ static bool EV_ActionParamDoorRaise(ev_action_t *action, ev_instance_t *instance
 //
 static bool EV_ActionParamDoorOpen(ev_action_t *action, ev_instance_t *instance)
 {
-   doordata_t dd;
+   INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
    dd.kind         = ODoor;
@@ -1594,7 +1604,7 @@ static bool EV_ActionParamDoorOpen(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionParamDoorClose(ev_action_t *action, ev_instance_t *instance)
 {
-   doordata_t dd;
+   INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
    dd.kind         = CDoor;
@@ -1623,7 +1633,7 @@ static bool EV_ActionParamDoorClose(ev_action_t *action, ev_instance_t *instance
 //
 static bool EV_ActionParamDoorCloseWaitOpen(ev_action_t *action, ev_instance_t *instance)
 {
-   doordata_t dd;
+   INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
    dd.kind         = CdODoor;
@@ -1651,7 +1661,7 @@ static bool EV_ActionParamDoorCloseWaitOpen(ev_action_t *action, ev_instance_t *
 //
 static bool EV_ActionParamDoorWaitRaise(ev_action_t *action, ev_instance_t *instance)
 {
-   doordata_t dd;
+   INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
    dd.kind         = pDOdCDoor;
@@ -1679,7 +1689,7 @@ static bool EV_ActionParamDoorWaitRaise(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionParamDoorWaitClose(ev_action_t *action, ev_instance_t *instance)
 {
-   doordata_t dd;
+   INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
    dd.kind         = pDCDoor;
@@ -1709,8 +1719,7 @@ static bool EV_ActionParamDoorWaitClose(ev_action_t *action, ev_instance_t *inst
 static bool EV_ActionParamFloorRaiseToHighest(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
    fd.target_type = FtoHnF;         // to highest neighboring floor
@@ -1736,8 +1745,7 @@ static bool EV_ActionParamFloorRaiseToHighest(ev_action_t *action,
 static bool EV_ActionParamEEFloorLowerToHighest(ev_action_t *action, 
                                                 ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
    fd.target_type = FtoHnF;         // to highest neighboring floor
@@ -1760,8 +1768,7 @@ static bool EV_ActionParamEEFloorLowerToHighest(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseToLowest(ev_action_t *action, 
                                              ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
    fd.target_type = FtoLnF;         // to lowest neighboring floor
@@ -1784,8 +1791,7 @@ static bool EV_ActionParamFloorRaiseToLowest(ev_action_t *action,
 static bool EV_ActionParamFloorLowerToLowest(ev_action_t *action, 
                                              ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
    fd.target_type = FtoLnF;         // to lowest neighboring floor
@@ -1809,8 +1815,7 @@ static bool EV_ActionParamFloorLowerToLowest(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseToNearest(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
    fd.target_type = FtoNnF;         // to nearest neighboring floor
@@ -1834,8 +1839,7 @@ static bool EV_ActionParamFloorRaiseToNearest(ev_action_t *action,
 static bool EV_ActionParamFloorLowerToNearest(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
    fd.target_type = FtoNnF;         // to nearest neighboring floor
@@ -1859,8 +1863,7 @@ static bool EV_ActionParamFloorLowerToNearest(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseToLowestCeiling(ev_action_t *action, 
                                                     ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
    fd.target_type = FtoLnC;         // to lowest neighboring ceiling
@@ -1883,8 +1886,7 @@ static bool EV_ActionParamFloorRaiseToLowestCeiling(ev_action_t *action,
 static bool EV_ActionParamFloorLowerToLowestCeiling(ev_action_t *action, 
                                                     ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
    fd.target_type = FtoLnC;         // to lowest neighboring ceiling
@@ -1907,8 +1909,7 @@ static bool EV_ActionParamFloorLowerToLowestCeiling(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseToCeiling(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
    fd.target_type = FtoC;           // to sector ceiling
@@ -1932,8 +1933,7 @@ static bool EV_ActionParamFloorRaiseToCeiling(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseByTexture(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
    fd.target_type = FbyST;          // by shortest lower texture
@@ -1956,8 +1956,7 @@ static bool EV_ActionParamFloorRaiseByTexture(ev_action_t *action,
 static bool EV_ActionParamFloorLowerByTexture(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
    fd.target_type = FbyST;          // by shortest lower texture
@@ -1981,8 +1980,7 @@ static bool EV_ActionParamFloorLowerByTexture(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseByValue(ev_action_t *action, 
                                             ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 1;              // up
    fd.target_type  = FbyParam;       // by value
@@ -2007,8 +2005,7 @@ static bool EV_ActionParamFloorRaiseByValue(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseByValueTimes8(ev_action_t *action, 
                                                   ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 1;              // up
    fd.target_type  = FbyParam;       // by value
@@ -2033,8 +2030,7 @@ static bool EV_ActionParamFloorRaiseByValueTimes8(ev_action_t *action,
 static bool EV_ActionParamFloorLowerByValue(ev_action_t *action, 
                                             ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 0;              // down
    fd.target_type  = FbyParam;       // by value
@@ -2059,8 +2055,7 @@ static bool EV_ActionParamFloorLowerByValue(ev_action_t *action,
 static bool EV_ActionParamFloorLowerByValueTimes8(ev_action_t *action, 
                                                   ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 0;              // down
    fd.target_type  = FbyParam;       // by value
@@ -2085,8 +2080,7 @@ static bool EV_ActionParamFloorLowerByValueTimes8(ev_action_t *action,
 static bool EV_ActionParamFloorMoveToValue(ev_action_t *action, 
                                            ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 1;              // not used; direction is relative to target
    fd.target_type  = FtoAbs;         // to absolute height
@@ -2113,8 +2107,7 @@ static bool EV_ActionParamFloorMoveToValue(ev_action_t *action,
 static bool EV_ActionParamFloorMoveToValueTimes8(ev_action_t *action, 
                                                  ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 1;              // not used; direction is relative to target
    fd.target_type  = FtoAbs;         // to absolute height
@@ -2141,8 +2134,7 @@ static bool EV_ActionParamFloorMoveToValueTimes8(ev_action_t *action,
 static bool EV_ActionParamFloorRaiseInstant(ev_action_t *action, 
                                             ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 1;              // up
    fd.target_type  = FInst;          // always move instantly
@@ -2166,8 +2158,7 @@ static bool EV_ActionParamFloorRaiseInstant(ev_action_t *action,
 static bool EV_ActionParamFloorLowerInstant(ev_action_t *action, 
                                             ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction    = 0;              // down
    fd.target_type  = FInst;          // always move instantly
@@ -2190,8 +2181,7 @@ static bool EV_ActionParamFloorLowerInstant(ev_action_t *action,
 static bool EV_ActionParamFloorToCeilingInstant(ev_action_t *action, 
                                                 ev_instance_t *instance)
 {
-   floordata_t fd;
-   memset(&fd, 0, sizeof(fd));
+   INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down (to cause instant movement)
    fd.target_type = FtoC;           // to sector ceiling
@@ -2213,8 +2203,7 @@ static bool EV_ActionParamFloorToCeilingInstant(ev_action_t *action,
 static bool EV_ActionParamCeilingRaiseToHighest(ev_action_t *action, 
                                                 ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction   = 1;              // up
    cd.target_type = CtoHnC;         // to highest neighboring ceiling
@@ -2236,8 +2225,7 @@ static bool EV_ActionParamCeilingRaiseToHighest(ev_action_t *action,
 //
 static bool EV_ActionParamCeilingToHighestInstant(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction   = 0;              // down (to cause instant movement)
    cd.target_type = CtoHnC;         // to highest neighboring ceiling
@@ -2259,8 +2247,7 @@ static bool EV_ActionParamCeilingToHighestInstant(ev_action_t *action, ev_instan
 //
 static bool EV_ActionParamCeilingRaiseToNearest(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CtoNnC;         // to nearest neighboring ceiling
@@ -2282,8 +2269,7 @@ static bool EV_ActionParamCeilingRaiseToNearest(ev_action_t *action, ev_instance
 //
 static bool EV_ActionParamCeilingLowerToNearest(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CtoNnC;         // to nearest neighboring ceiling
@@ -2305,8 +2291,7 @@ static bool EV_ActionParamCeilingLowerToNearest(ev_action_t *action, ev_instance
 //
 static bool EV_ActionParamCeilingRaiseToLowest(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CtoLnC;         // to lowest neighboring ceiling
@@ -2329,8 +2314,7 @@ static bool EV_ActionParamCeilingRaiseToLowest(ev_action_t *action, ev_instance_
 //
 static bool EV_ActionParamCeilingLowerToLowest(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CtoLnC;         // to lowest neighboring ceiling
@@ -2352,8 +2336,7 @@ static bool EV_ActionParamCeilingLowerToLowest(ev_action_t *action, ev_instance_
 //
 static bool EV_ActionParamCeilingRaiseToHighestFloor(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CtoHnF;         // to highest neighboring floor
@@ -2376,8 +2359,7 @@ static bool EV_ActionParamCeilingRaiseToHighestFloor(ev_action_t *action, ev_ins
 //
 static bool EV_ActionParamCeilingLowerToHighestFloor(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CtoHnF;         // to highest neighboring floor
@@ -2399,8 +2381,7 @@ static bool EV_ActionParamCeilingLowerToHighestFloor(ev_action_t *action, ev_ins
 //
 static bool EV_ActionParamCeilingToFloorInstant(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up (to cause instant movement)
    cd.target_type   = CtoF;           // to sector floor
@@ -2422,8 +2403,7 @@ static bool EV_ActionParamCeilingToFloorInstant(ev_action_t *action, ev_instance
 //
 static bool EV_ActionParamCeilingLowerToFloor(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CtoF;           // to sector floor
@@ -2445,8 +2425,7 @@ static bool EV_ActionParamCeilingLowerToFloor(ev_action_t *action, ev_instance_t
 //
 static bool EV_ActionParamCeilingRaiseByTexture(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CbyST;          // by shortest upper texture
@@ -2468,8 +2447,7 @@ static bool EV_ActionParamCeilingRaiseByTexture(ev_action_t *action, ev_instance
 //
 static bool EV_ActionParamCeilingLowerByTexture(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CbyST;          // by shortest upper texture
@@ -2492,8 +2470,7 @@ static bool EV_ActionParamCeilingLowerByTexture(ev_action_t *action, ev_instance
 //
 static bool EV_ActionParamCeilingRaiseByValue(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CbyParam;       // by value
@@ -2517,8 +2494,7 @@ static bool EV_ActionParamCeilingRaiseByValue(ev_action_t *action, ev_instance_t
 //
 static bool EV_ActionParamCeilingLowerByValue(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CbyParam;       // by value
@@ -2542,8 +2518,7 @@ static bool EV_ActionParamCeilingLowerByValue(ev_action_t *action, ev_instance_t
 static bool EV_ActionParamCeilingRaiseByValueTimes8(ev_action_t *action, 
                                                     ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CbyParam;       // by value
@@ -2567,8 +2542,7 @@ static bool EV_ActionParamCeilingRaiseByValueTimes8(ev_action_t *action,
 static bool EV_ActionParamCeilingLowerByValueTimes8(ev_action_t *action, 
                                                     ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CbyParam;       // by value
@@ -2592,8 +2566,7 @@ static bool EV_ActionParamCeilingLowerByValueTimes8(ev_action_t *action,
 //
 static bool EV_ActionParamCeilingMoveToValue(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // not used; motion is relative to target
    cd.target_type   = CtoAbs;         // move to absolute height
@@ -2620,8 +2593,7 @@ static bool EV_ActionParamCeilingMoveToValue(ev_action_t *action, ev_instance_t 
 static bool EV_ActionParamCeilingMoveToValueTimes8(ev_action_t *action, 
                                                    ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // not used; motion is relative to target
    cd.target_type   = CtoAbs;         // move to absolute height
@@ -2647,8 +2619,7 @@ static bool EV_ActionParamCeilingMoveToValueTimes8(ev_action_t *action,
 //
 static bool EV_ActionParamCeilingRaiseInstant(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 1;              // up
    cd.target_type   = CInst;          // instant motion to dest height
@@ -2671,8 +2642,7 @@ static bool EV_ActionParamCeilingRaiseInstant(ev_action_t *action, ev_instance_t
 //
 static bool EV_ActionParamCeilingLowerInstant(ev_action_t *action, ev_instance_t *instance)
 {
-   ceilingdata_t cd;
-   memset(&cd, 0, sizeof(cd));
+   INIT_STRUCT(ceilingdata_t, cd);
 
    cd.direction     = 0;              // down
    cd.target_type   = CInst;          // instant motion to dest height
@@ -2695,8 +2665,7 @@ static bool EV_ActionParamCeilingLowerInstant(ev_action_t *action, ev_instance_t
 //
 static bool EV_ActionParamStairsBuildUpDoom(ev_action_t *action, ev_instance_t *instance)
 {
-   stairdata_t sd;
-   memset(&sd, 0, sizeof(sd));
+   INIT_STRUCT(stairdata_t, sd);
 
    sd.flags          = SDF_HAVESPAC;
    sd.spac           = instance->spac; // Hexen-style activation
@@ -2720,8 +2689,7 @@ static bool EV_ActionParamStairsBuildUpDoom(ev_action_t *action, ev_instance_t *
 static bool EV_ActionParamStairsBuildDownDoom(ev_action_t *action, 
                                               ev_instance_t *instance)
 {
-   stairdata_t sd;
-   memset(&sd, 0, sizeof(sd));
+   INIT_STRUCT(stairdata_t, sd);
 
    sd.flags          = SDF_HAVESPAC;
    sd.spac           = instance->spac; // Hexen-style activation
@@ -2745,8 +2713,7 @@ static bool EV_ActionParamStairsBuildDownDoom(ev_action_t *action,
 static bool EV_ActionParamStairsBuildUpDoomSync(ev_action_t *action,
                                                 ev_instance_t *instance)
 {
-   stairdata_t sd;
-   memset(&sd, 0, sizeof(sd));
+   INIT_STRUCT(stairdata_t, sd);
 
    sd.flags          = SDF_HAVESPAC | SDF_SYNCHRONIZED;
    sd.spac           = instance->spac; 
@@ -2770,8 +2737,7 @@ static bool EV_ActionParamStairsBuildUpDoomSync(ev_action_t *action,
 static bool EV_ActionParamStairsBuildDownDoomSync(ev_action_t *action,
                                                   ev_instance_t *instance)
 {
-   stairdata_t sd;
-   memset(&sd, 0, sizeof(sd));
+   INIT_STRUCT(stairdata_t, sd);
 
    sd.flags          = SDF_HAVESPAC | SDF_SYNCHRONIZED;
    sd.spac           = instance->spac; 
@@ -2795,8 +2761,7 @@ static bool EV_ActionParamStairsBuildDownDoomSync(ev_action_t *action,
 //
 static bool EV_ActionPolyobjDoorSlide(ev_action_t *action, ev_instance_t *instance)
 {
-   polydoordata_t pdd;
-   memset(&pdd, 0, sizeof(pdd));
+   INIT_STRUCT(polydoordata_t, pdd);
 
    pdd.doorType   = POLY_DOOR_SLIDE;
    pdd.polyObjNum = instance->args[0];                // id
@@ -2817,8 +2782,7 @@ static bool EV_ActionPolyobjDoorSlide(ev_action_t *action, ev_instance_t *instan
 //
 static bool EV_ActionPolyobjDoorSwing(ev_action_t *action, ev_instance_t *instance)
 {
-   polydoordata_t pdd;
-   memset(&pdd, 0, sizeof(pdd));
+   INIT_STRUCT(polydoordata_t, pdd);
 
    pdd.doorType   = POLY_DOOR_SWING;
    pdd.polyObjNum = instance->args[0]; // id
@@ -2838,8 +2802,7 @@ static bool EV_ActionPolyobjDoorSwing(ev_action_t *action, ev_instance_t *instan
 //
 static bool EV_ActionPolyobjMove(ev_action_t *action, ev_instance_t *instance)
 {
-   polymovedata_t pmd;
-   memset(&pmd, 0, sizeof(pmd));
+   INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
    pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
@@ -2858,8 +2821,7 @@ static bool EV_ActionPolyobjMove(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionPolyobjMoveTimes8(ev_action_t *action, ev_instance_t *instance)
 {
-   polymovedata_t pmd;
-   memset(&pmd, 0, sizeof(pmd));
+   INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
    pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
@@ -2879,8 +2841,7 @@ static bool EV_ActionPolyobjMoveTimes8(ev_action_t *action, ev_instance_t *insta
 //
 static bool EV_ActionPolyobjORMove(ev_action_t *action, ev_instance_t *instance)
 {
-   polymovedata_t pmd;
-   memset(&pmd, 0, sizeof(pmd));
+   INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
    pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
@@ -2899,8 +2860,7 @@ static bool EV_ActionPolyobjORMove(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionPolyobjORMoveTimes8(ev_action_t *action, ev_instance_t *instance)
 {
-   polymovedata_t pmd;
-   memset(&pmd, 0, sizeof(pmd));
+   INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
    pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
@@ -2920,8 +2880,7 @@ static bool EV_ActionPolyobjORMoveTimes8(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionPolyobjRotateRight(ev_action_t *action, ev_instance_t *instance)
 {
-   polyrotdata_t prd;
-   memset(&prd, 0, sizeof(prd));
+   INIT_STRUCT(polyrotdata_t, prd);
 
    prd.polyObjNum = instance->args[0]; // id
    prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2941,8 +2900,7 @@ static bool EV_ActionPolyobjRotateRight(ev_action_t *action, ev_instance_t *inst
 //
 static bool EV_ActionPolyobjORRotateRight(ev_action_t *action, ev_instance_t *instance)
 {
-   polyrotdata_t prd;
-   memset(&prd, 0, sizeof(prd));
+   INIT_STRUCT(polyrotdata_t, prd);
 
    prd.polyObjNum = instance->args[0]; // id
    prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2962,8 +2920,7 @@ static bool EV_ActionPolyobjORRotateRight(ev_action_t *action, ev_instance_t *in
 //
 static bool EV_ActionPolyobjRotateLeft(ev_action_t *action, ev_instance_t *instance)
 {
-   polyrotdata_t prd;
-   memset(&prd, 0, sizeof(prd));
+   INIT_STRUCT(polyrotdata_t, prd);
 
    prd.polyObjNum = instance->args[0]; // id
    prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2983,8 +2940,7 @@ static bool EV_ActionPolyobjRotateLeft(ev_action_t *action, ev_instance_t *insta
 //
 static bool EV_ActionPolyobjORRotateLeft(ev_action_t *action, ev_instance_t *instance)
 {
-   polyrotdata_t prd;
-   memset(&prd, 0, sizeof(prd));
+   INIT_STRUCT(polyrotdata_t, prd);
 
    prd.polyObjNum = instance->args[0]; // id
    prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -3004,8 +2960,7 @@ static bool EV_ActionPolyobjORRotateLeft(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionPillarBuild(ev_action_t *action, ev_instance_t *instance)
 {
-   pillardata_t pd;
-   memset(&pd, 0, sizeof(pd));
+   INIT_STRUCT(pillardata_t, pd);
 
    pd.tag    = instance->tag;
    pd.speed  = instance->args[1] * FRACUNIT / 8;
@@ -3024,8 +2979,7 @@ static bool EV_ActionPillarBuild(ev_action_t *action, ev_instance_t *instance)
 //
 static bool EV_ActionPillarBuildAndCrush(ev_action_t *action, ev_instance_t *instance)
 {
-   pillardata_t pd;
-   memset(&pd, 0, sizeof(pd));
+   INIT_STRUCT(pillardata_t, pd);
 
    pd.tag    = instance->tag;
    pd.speed  = instance->args[1] * FRACUNIT / 8;
@@ -3045,8 +2999,7 @@ static bool EV_ActionPillarBuildAndCrush(ev_action_t *action, ev_instance_t *ins
 //
 static bool EV_ActionPillarOpen(ev_action_t *action, ev_instance_t *instance)
 {
-   pillardata_t pd;
-   memset(&pd, 0, sizeof(pd));
+   INIT_STRUCT(pillardata_t, pd);
 
    pd.tag   = instance->args[0];
    pd.speed = instance->args[1] * FRACUNIT / 8;
@@ -4607,12 +4560,12 @@ ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
 //
 
 //
-// EV_CheckSpac
+// EV_checkSpac
 //
 // Checks against the instance characteristics of the action to see if this
 // method of activating the line is allowed.
 //
-static bool EV_CheckSpac(ev_action_t *action, ev_instance_t *instance)
+static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
 {
    if(action->type->activation >= 0) // specific type for this action?
    {
@@ -4685,15 +4638,15 @@ static bool EV_CheckSpac(ev_action_t *action, ev_instance_t *instance)
 //
 // EV_ActivateSpecialLine
 //
-// Shared logic for all types of line activationonly
+// Shared logic for all types of line activation
 //
 bool EV_ActivateSpecialLine(ev_action_t *action, ev_instance_t *instance)
 {
    // check for special instance
-   if(!EV_CheckSpac(action, instance))
+   if(!EV_checkSpac(action, instance))
       return false;
 
-   // execute pre-amble action
+   // execute pre-amble routine
    if(!action->type->pre(action, instance))
       return false;
 
@@ -4704,28 +4657,31 @@ bool EV_ActivateSpecialLine(ev_action_t *action, ev_instance_t *instance)
 }
 
 //
-// EV_CrossSpecialLine
+// EV_ActivateSpecialLineWithSpac
 //
-// A line has been activated by an Mobj physically crossing it.
+// Populates the ev_instance_t from separate arguments and then activates the
+// special.
 //
-bool EV_CrossSpecialLine(line_t *line, int side, Mobj *thing)
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac)
 {
-   ev_action_t   *action;
-   ev_instance_t  instance;
-
-   memset(&instance, 0, sizeof(instance));
+   ev_action_t *action;
+   INIT_STRUCT(ev_instance_t, instance);
 
    // setup instance
    instance.actor = thing;
    instance.args  = line->args;
    instance.line  = line;
    instance.side  = side;
-   instance.spac  = SPAC_CROSS;
+   instance.spac  = spac;
    instance.tag   = line->tag;
 
    // get action
    if(!(action = EV_ActionForInstance(instance)))
       return false;
+
+   // check for parameterized special behavior with tags
+   if(EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
+      instance.tag = instance.args[0];
 
    return EV_ActivateSpecialLine(action, &instance);
 }
