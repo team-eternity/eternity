@@ -38,6 +38,7 @@
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
+#include "polyobj.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -2783,6 +2784,277 @@ static bool EV_ActionParamStairsBuildDownDoomSync(ev_action_t *action,
    sd.reset_value    = instance->args[3];                // reset
 
    return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// EV_ActionPolyobjDoorSlide
+//
+// Implements Polyobj_DoorSlide(id, speed, angle, distance, delay)
+// * ExtraData: 350
+// * Hexen:     8
+//
+static bool EV_ActionPolyobjDoorSlide(ev_action_t *action, ev_instance_t *instance)
+{
+   polydoordata_t pdd;
+   memset(&pdd, 0, sizeof(pdd));
+
+   pdd.doorType   = POLY_DOOR_SLIDE;
+   pdd.polyObjNum = instance->args[0];                // id
+   pdd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pdd.angle      = instance->args[2];                // angle (byte angle)
+   pdd.distance   = instance->args[3] * FRACUNIT;     // distance
+   pdd.delay      = instance->args[4];                // delay in tics
+
+   return !!EV_DoPolyDoor(&pdd);
+}
+
+//
+// EV_ActionPolyobjDoorSwing
+//
+// Implements Polyobj_DoorSwing(id, speed, distance, delay)
+// * ExtraData: 351
+// * Hexen:     7
+//
+static bool EV_ActionPolyobjDoorSwing(ev_action_t *action, ev_instance_t *instance)
+{
+   polydoordata_t pdd;
+   memset(&pdd, 0, sizeof(pdd));
+
+   pdd.doorType   = POLY_DOOR_SWING;
+   pdd.polyObjNum = instance->args[0]; // id
+   pdd.speed      = instance->args[1]; // angular speed (byte angle)
+   pdd.distance   = instance->args[2]; // angular distance (byte angle)
+   pdd.delay      = instance->args[3]; // delay in tics
+
+   return !!EV_DoPolyDoor(&pdd);
+}
+
+//
+// EV_ActionPolyobjMove
+//
+// Implements Polyobj_Move(id, speed, angle, distance)
+// * ExtraData: 352
+// * Hexen:     4
+//
+static bool EV_ActionPolyobjMove(ev_action_t *action, ev_instance_t *instance)
+{
+   polymovedata_t pmd;
+   memset(&pmd, 0, sizeof(pmd));
+
+   pmd.polyObjNum = instance->args[0];                // id
+   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.angle      = instance->args[2];                // angle (byte angle)
+   pmd.distance   = instance->args[3] * FRACUNIT;     // distance
+   pmd.overRide   = false;
+
+   return !!EV_DoPolyObjMove(&pmd);
+}
+
+//
+// EV_ActionPolyobjMoveTimes8
+//
+// Implements Polyobj_MoveTimes8(id, speed, angle, distance)
+// * Hexen: 6
+//
+static bool EV_ActionPolyobjMoveTimes8(ev_action_t *action, ev_instance_t *instance)
+{
+   polymovedata_t pmd;
+   memset(&pmd, 0, sizeof(pmd));
+
+   pmd.polyObjNum = instance->args[0];                // id
+   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.angle      = instance->args[2];                // angle (byte angle)
+   pmd.distance   = instance->args[3] * FRACUNIT * 8; // distance
+   pmd.overRide   = false;
+
+   return !!EV_DoPolyObjMove(&pmd);
+}
+
+//
+// EV_ActionPolyobjORMove
+//
+// Implements Polyobj_OR_Move(id, speed, angle, distance)
+// * ExtraData: 353
+// * Hexen:     92
+//
+static bool EV_ActionPolyobjORMove(ev_action_t *action, ev_instance_t *instance)
+{
+   polymovedata_t pmd;
+   memset(&pmd, 0, sizeof(pmd));
+
+   pmd.polyObjNum = instance->args[0];                // id
+   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.angle      = instance->args[2];                // angle (byte angle)
+   pmd.distance   = instance->args[3] * FRACUNIT;     // distance
+   pmd.overRide   = true;
+
+   return !!EV_DoPolyObjMove(&pmd);
+}
+
+//
+// EV_ActionPolyobjORMoveTimes8
+//
+// Implements Polyobj_OR_MoveTimes8(id, speed, angle, distance)
+// * Hexen: 93
+//
+static bool EV_ActionPolyobjORMoveTimes8(ev_action_t *action, ev_instance_t *instance)
+{
+   polymovedata_t pmd;
+   memset(&pmd, 0, sizeof(pmd));
+
+   pmd.polyObjNum = instance->args[0];                // id
+   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.angle      = instance->args[2];                // angle (byte angle)
+   pmd.distance   = instance->args[3] * FRACUNIT * 8; // distance
+   pmd.overRide   = true;
+
+   return !!EV_DoPolyObjMove(&pmd);
+}
+
+//
+// EV_ActionPolyobjRotateRight
+//
+// Implements Polyobj_RotateRight(id, speed, distance)
+// * ExtraData: 354
+// * Hexen:     3
+//
+static bool EV_ActionPolyobjRotateRight(ev_action_t *action, ev_instance_t *instance)
+{
+   polyrotdata_t prd;
+   memset(&prd, 0, sizeof(prd));
+
+   prd.polyObjNum = instance->args[0]; // id
+   prd.speed      = instance->args[1]; // angular speed (byte angle)
+   prd.distance   = instance->args[2]; // angular distance (byte angle)
+   prd.direction  = -1;
+   prd.overRide   = false;
+
+   return !!EV_DoPolyObjRotate(&prd);
+}
+
+//
+// EV_ActionPolyobjORRotateRight
+//
+// Implements Polyobj_OR_RotateRight(id, speed, distance)
+// * ExtraData: 355
+// * Hexen:     91
+//
+static bool EV_ActionPolyobjORRotateRight(ev_action_t *action, ev_instance_t *instance)
+{
+   polyrotdata_t prd;
+   memset(&prd, 0, sizeof(prd));
+
+   prd.polyObjNum = instance->args[0]; // id
+   prd.speed      = instance->args[1]; // angular speed (byte angle)
+   prd.distance   = instance->args[2]; // angular distance (byte angle)
+   prd.direction  = -1;
+   prd.overRide   = true;
+
+   return !!EV_DoPolyObjRotate(&prd);
+}
+
+//
+// EV_ActionPolyobjRotateLeft
+//
+// Implements Polyobj_RotateLeft(id, speed, distance)
+// * ExtraData: 356
+// * Hexen:     2
+//
+static bool EV_ActionPolyobjRotateLeft(ev_action_t *action, ev_instance_t *instance)
+{
+   polyrotdata_t prd;
+   memset(&prd, 0, sizeof(prd));
+
+   prd.polyObjNum = instance->args[0]; // id
+   prd.speed      = instance->args[1]; // angular speed (byte angle)
+   prd.distance   = instance->args[2]; // angular distance (byte angle)
+   prd.direction  = 1;
+   prd.overRide   = false;
+
+   return !!EV_DoPolyObjRotate(&prd);
+}
+
+//
+// EV_ActionPolyobjORRotateLeft
+//
+// Implements Polyobj_OR_RotateLeft(id, speed, distance)
+// * ExtraData: 357
+// * Hexen:     90
+//
+static bool EV_ActionPolyobjORRotateLeft(ev_action_t *action, ev_instance_t *instance)
+{
+   polyrotdata_t prd;
+   memset(&prd, 0, sizeof(prd));
+
+   prd.polyObjNum = instance->args[0]; // id
+   prd.speed      = instance->args[1]; // angular speed (byte angle)
+   prd.distance   = instance->args[2]; // angular distance (byte angle)
+   prd.direction  = 1;
+   prd.overRide   = true;
+
+   return !!EV_DoPolyObjRotate(&prd);
+}
+
+//
+// EV_ActionPillarBuild
+//
+// Implements Pillar_Build(tag, speed, height)
+// * ExtraData: 362
+// * Hexen:     29
+//
+static bool EV_ActionPillarBuild(ev_action_t *action, ev_instance_t *instance)
+{
+   pillardata_t pd;
+   memset(&pd, 0, sizeof(pd));
+
+   pd.tag    = instance->tag;
+   pd.speed  = instance->args[1] * FRACUNIT / 8;
+   pd.height = instance->args[2] * FRACUNIT;
+   pd.crush  = 0;
+
+   return !!EV_PillarBuild(instance->line, &pd);
+}
+
+//
+// EV_ActionPillarBuildAndCrush
+//
+// Implements Pillar_BuildAndCrush(tag, speed, height, crush)
+// * ExtraData: 363
+// * Hexen:     94
+//
+static bool EV_ActionPillarBuildAndCrush(ev_action_t *action, ev_instance_t *instance)
+{
+   pillardata_t pd;
+   memset(&pd, 0, sizeof(pd));
+
+   pd.tag    = instance->tag;
+   pd.speed  = instance->args[1] * FRACUNIT / 8;
+   pd.height = instance->args[2] * FRACUNIT;
+   pd.crush  = instance->args[3];
+   // TODO: support ZDoom crush mode in args[4]
+
+   return !!EV_PillarBuild(instance->line, &pd);
+}
+
+//
+// EV_ActionPillarOpen
+//
+// Implements Pillar_Open(tag, speed, fdist, cdist)
+// * ExtraData: 364
+// * Hexen:     30
+//
+static bool EV_ActionPillarOpen(ev_action_t *action, ev_instance_t *instance)
+{
+   pillardata_t pd;
+   memset(&pd, 0, sizeof(pd));
+
+   pd.tag   = instance->args[0];
+   pd.speed = instance->args[1] * FRACUNIT / 8;
+   pd.fdist = instance->args[2] * FRACUNIT;
+   pd.cdist = instance->args[3] * FRACUNIT;
+   pd.crush = 0;
+
+   return !!EV_PillarOpen(instance->line, &pd);
 }
 
 //

@@ -1852,7 +1852,8 @@ static bool pspec_Stairs(line_t *line, int *args, int16_t special, int spac)
 //
 static bool pspec_PolyDoor(int *args, int16_t special)
 {
-   polydoordata_t pdd = { 0 };
+   polydoordata_t pdd;
+   memset(&pdd, 0, sizeof(pdd));
 
    pdd.polyObjNum = args[0]; // polyobject id
    
