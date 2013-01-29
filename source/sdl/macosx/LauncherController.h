@@ -90,7 +90,6 @@
 	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp, *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo, *parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags, *parmNet;
 	
 }
-@property (assign) IBOutlet NSWindow *window;
 @property (readonly) NSMutableArray *pwadArray;
 
 -(void)initNibData;

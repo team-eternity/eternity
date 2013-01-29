@@ -25,15 +25,6 @@
 //
 //----------------------------------------------------------------------------
 
-//
-// FILE BASED ON:
-//
-//   LauncherController.m - main entry point for our Cocoa-ized SDL app
-//     Initial Version: Darrell Walisser <dwaliss1@purdue.edu>
-//		Non-NIB-Code & other changes: Max Horn <max@quendi.de>
-//
-//  Feel free to customize this file to suit your needs
-//
 
 // TODO:
 //
@@ -68,7 +59,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 @implementation LauncherController
 
-@synthesize window, pwadArray;
+@synthesize pwadArray;
 
 //
 // dealloc
@@ -219,6 +210,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 // Copied from help HTML: https://developer.apple.com/library/mac/#documentation/FileManagement/Conceptual/FileSystemProgrammingGUide/AccessingFilesandDirectories/AccessingFilesandDirectories.html#//apple_ref/doc/uid/TP40010672-CH3-SW3
 //
+#if 0 // NOT USED: requires OS X 10.6 or later
 - (NSURL*)applicationDataDirectory
 {
 	NSArray* possibleURLs = [fileMan URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
@@ -241,6 +233,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	
 	return appDirectory;
 }
+#endif // 0
 
 //
 // setupWorkingDirectory:
@@ -252,21 +245,19 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 - (void) setupWorkingDirectory
 {
-	NSString *appDataPath = [[self applicationDataDirectory] path];
-	if(![fileMan fileExistsAtPath:appDataPath])
-	{
-		[fileMan createDirectoryAtPath:appDataPath withIntermediateDirectories:YES attributes:nil error:nil];
-	}
-	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
-	NSString *basPath = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"base"];
-	NSString *internalUserPath = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"user"];
-	
-	NSError *err = nil;
-	if(![fileMan fileExistsAtPath:usrPath])
-	{
-		[fileMan copyItemAtPath:internalUserPath toPath:usrPath error:&err];
-	}
-	
+   NSString *appDataPath = [[@"~/Library/Application Support" stringByExpandingTildeInPath] stringByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
+  	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
+   
+	[fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom"] withIntermediateDirectories:YES attributes:nil error:nil];
+   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom2"] withIntermediateDirectories:YES attributes:nil error:nil];
+   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"hacx"] withIntermediateDirectories:YES attributes:nil error:nil];
+   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"heretic"] withIntermediateDirectories:YES attributes:nil error:nil];
+   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"plutonia"] withIntermediateDirectories:YES attributes:nil error:nil];
+   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"shots"] withIntermediateDirectories:YES attributes:nil error:nil];
+   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"tnt"] withIntermediateDirectories:YES attributes:nil error:nil];
+
+	NSString *basPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"base"];
+		
 	[userPath setString:usrPath];
 	[basePath setString:basPath];
 	
@@ -276,7 +267,6 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	// TODO: copy bundled prototype user data into workingDirPath, if it doesn't exist there yet
 	// FIXME: make workingDirPath a member variable.
 	
-//	chdir([appDataPath cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 //
@@ -331,7 +321,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
                         // don't read them from bundle
 	if(!gSDLStarted)
 	{
-		[NSApp terminate:window];
+		[NSApp terminate:[self window]];
 	}
 }
 
@@ -375,7 +365,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 
 	gCalledAppMainline = FALSE;
 	gSDLStarted = NO;	// IOAN 20120616
-	[window orderFront:nil];
+	[[self window] orderFront:nil];
 	
 	[[param argumentWithIdentifier:@"-base"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-user"] setEnabled:NO];
@@ -433,7 +423,7 @@ iwadMightBe:
 	
 	gCalledAppMainline = TRUE;
 	gSDLStarted = YES;	// IOAN 20120616
-	[window orderOut:self];
+	[[self window] orderOut:self];
 	
 	// IOAN 20130103: use Neil's PrBoom-Mac Launcher code
 	[task release];
