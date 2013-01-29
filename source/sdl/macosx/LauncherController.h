@@ -73,7 +73,7 @@
 
 	NSMenu *iwadPopMenu;
 	
-	NSAlert *noIwadAlert, *badIwadAlert, *nothingForGfsAlert;
+	NSAlert *noIwadAlert, *badIwadAlert, *nothingForGfsAlert, *overwriteDemoAlert, *recordDemoIsDir;
 
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray;

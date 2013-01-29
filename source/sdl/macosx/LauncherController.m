@@ -77,6 +77,8 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	[noIwadAlert release];
 	[badIwadAlert release];
 	[nothingForGfsAlert release];
+   [overwriteDemoAlert release];
+   [recordDemoIsDir release];
 	
 	[parmRsp release];
 	[parmIwad release];
@@ -148,6 +150,21 @@ static BOOL gSDLStarted;	// IOAN 20120616
 		[nothingForGfsAlert setInformativeText:
        @"A GFS needs to refer to an IWAD and/or to a set of add-on files."];
 		[nothingForGfsAlert setAlertStyle:NSInformationalAlertStyle];
+      
+      overwriteDemoAlert = [[NSAlert alloc] init];
+      [overwriteDemoAlert addButtonWithTitle:@"Cancel Game"];
+      [overwriteDemoAlert addButtonWithTitle:@"Overwrite and Start"];
+      [overwriteDemoAlert setMessageText:@"Overwrite demo to be recorded?"];
+      [overwriteDemoAlert setInformativeText:@"The target file in the \"Record Demo:\" field already exists and will be overwritten if you proceed. Make sure not to lose valuable data."];
+      [overwriteDemoAlert setAlertStyle:NSCriticalAlertStyle];
+      
+      recordDemoIsDir = [[NSAlert alloc] init];
+		[recordDemoIsDir addButtonWithTitle:@"Dismiss"];
+		[recordDemoIsDir setMessageText:
+       @"Cannot record demo."];
+		[recordDemoIsDir setInformativeText:
+       @"The target file in the \"Record Demo:\" field is a directory."];
+		[recordDemoIsDir setAlertStyle:NSWarningAlertStyle];
 		
 		parmRsp = [[NSMutableArray alloc] initWithCapacity:0];
 		parmIwad = [[NSMutableArray alloc] initWithCapacity:0];
@@ -361,46 +378,27 @@ static BOOL gSDLStarted;	// IOAN 20120616
 -(void)taskEnded
 {
 	// remove last four parameters
-	
-
 	gCalledAppMainline = FALSE;
 	gSDLStarted = NO;	// IOAN 20120616
 	[[self window] orderFront:nil];
 	
 	[[param argumentWithIdentifier:@"-base"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-user"] setEnabled:NO];
+   
+   // Clear the demo record field
+   [recordDemoField setStringValue:@""];
+   [self updateParameters:self];
 }
 
 //
-// launchGame:
+// doLaunchGame
 //
-// Start the damned game
+// Everything is set, start the game.
 //
--(IBAction)launchGame:(id)sender
+-(void)doLaunchGame:(id)sender
 {
-	if([iwadPopUp numberOfItems] < 1)
-	{
-		// No IWAD selected: look for a GFS anyway
-		NSURL *wURL;
-		for(wURL in pwadArray)
-			if ([[[wURL path] pathExtension] caseInsensitiveCompare:@"gfs"] 
-             == NSOrderedSame) 
-         {
-				goto iwadMightBe;	// Found a GFS. It might contain an IWAD, 
-                              // so go ahead.
-			}
-		
-		// Prompt the user to select an IWAD file
-		[noIwadAlert beginSheetModalForWindow:[self window] modalDelegate:self 
-      didEndSelector:@selector(chooseIwadAlertDidEnd:returnCode:contextInfo:) 
-                                contextInfo:nil];
-		
-		return;
-	}
-iwadMightBe:
-	
-	[self updateParameters:sender];	// Update parameters. 
-                                    // FIXME: do it in real-time
+	[self updateParameters:sender];	// Update parameters.
+   // FIXME: do it in real-time
 	
 	// Add -base and user here
 	ELCommandLineArgument *argBase, *argUser;
@@ -416,7 +414,7 @@ iwadMightBe:
 		[[argUser extraWords] addObject:userPath];
 		[param addArgument:argUser];
 	}
-
+   
 	NSArray *deploy = [param deployArray];
 	// Start console
 	
@@ -435,10 +433,69 @@ iwadMightBe:
 	
 	[console startLogging:task];
 	
-//	[console showInstantLog];
-// We're done, thank you for playing
-//   if(status == 0)   // only exit if it's all ok
-//    exit(status);
+   //	[console showInstantLog];
+   // We're done, thank you for playing
+   //   if(status == 0)   // only exit if it's all ok
+   //    exit(status);
+}
+
+//
+// overwriteDemoDidEnd:returnCode:contextInfo:
+//
+// User has chosen to overwrite demo
+//
+-(void)overwriteDemoDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
+{
+   if(returnCode == NSAlertSecondButtonReturn)
+	{
+      [self doLaunchGame:self];
+   }
+}
+
+//
+// launchGame:
+//
+// Start the game
+//
+-(IBAction)launchGame:(id)sender
+{
+	if([iwadPopUp numberOfItems] < 1)
+	{
+		// No IWAD selected: look for a GFS anyway
+		NSURL *wURL;
+		for(wURL in pwadArray)
+			if ([[[wURL path] pathExtension] caseInsensitiveCompare:@"gfs"]
+             == NSOrderedSame) 
+         {
+				goto iwadMightBe;	// Found a GFS. It might contain an IWAD, 
+                              // so go ahead.
+			}
+		
+		// Prompt the user to select an IWAD file
+		[noIwadAlert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(chooseIwadAlertDidEnd:returnCode:contextInfo:) contextInfo:nil];
+		
+		return;
+	}
+iwadMightBe:
+   ;
+   // Check if wad exists at path and query
+   BOOL isDir;
+   if([fileMan fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
+   {
+      if(isDir)
+      {
+         [recordDemoIsDir beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:NULL contextInfo:NULL];
+         return;
+      }
+      else
+      {
+         [overwriteDemoAlert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(overwriteDemoDidEnd:returnCode:contextInfo:) contextInfo:nil];
+         
+         return;
+      }
+   }
+   
+   [self doLaunchGame:sender];
 }
 
 //

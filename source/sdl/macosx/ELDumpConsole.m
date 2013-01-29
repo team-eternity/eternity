@@ -101,7 +101,6 @@
 	else
 	{
 		[errorMessage setHidden:NO];
-//		[errorLabel setStringValue:outputMessageString];
 		[pwindow orderFront:self];
 		[pwindow setAsPanel:YES];
 	}
