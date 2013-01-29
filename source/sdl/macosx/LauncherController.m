@@ -195,13 +195,50 @@ static BOOL gSDLStarted;	// IOAN 20120616
 }
 
 //
+// gotoDoc:
+//
+// go to specified documentation
+//
+-(void)gotoDoc:(id)sender
+{
+   [[NSWorkspace sharedWorkspace] openFile:[sender representedObject]];
+}
+
+//
+// makeDocumentMenu
+//
+-(void)makeDocumentMenu
+{
+   NSError *err = nil;
+   NSArray *contents = [fileMan contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
+   
+   if(err)
+   {
+      [NSAlert alertWithError:err];
+      return;
+   }
+   
+   NSString *fname, *fullname;
+   
+   for(fname in contents)
+   {
+      fullname = [[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] stringByAppendingPathComponent:fname];
+      NSMenuItem *item;
+      
+      item = [[NSMenuItem alloc] initWithTitle:[fname stringByDeletingPathExtension] action:@selector(gotoDoc:) keyEquivalent:@""];
+      [item setRepresentedObject:fullname];
+      
+      [[docMenu submenu] addItem:item];
+   }
+}
+
+//
 // initNibData:argVector:
 //
 // Added after Nib got loaded. Generic initialization that wouldn't go in init
 //
 -(void)initNibData
 {
-	// TODO: depending on argc and argv, either jump directly to launchGame (giving it correct arguments), or initialize param with no elements and continue on waiting user input. For now, assume empty entries
 	
 	// Set the pop-up button
 	[iwadPopUp setMenu:iwadPopMenu];
@@ -218,6 +255,9 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	[console setMasterOwner:self];
    
 	[self loadDefaults];
+   
+   // Add documents to list
+   [self makeDocumentMenu];
 }
 
 //
@@ -355,7 +395,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 }
 
 //
-// showUserInFinder
+// showUserInFinder:
 //
 -(IBAction)showUserInFinder:(id)sender
 {
@@ -363,11 +403,19 @@ static BOOL gSDLStarted;	// IOAN 20120616
 }
 
 //
-// accessBaseFolder
+// accessBaseFolder:
 //
 -(IBAction)accessBaseFolder:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openFile:basePath withApplication:@"Finder"];
+}
+
+//
+// accessOldDocs:
+//
+-(IBAction)accessOldDocs:(id)sender
+{
+   [[NSWorkspace sharedWorkspace] openFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] withApplication:@"Finder"];
 }
 
 //

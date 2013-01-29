@@ -70,6 +70,8 @@
 	IBOutlet NSTextView *infoDisplay;
    
    IBOutlet ELTextFieldDelegate *textFieldDelegate;   // the notif. delegate
+   
+   IBOutlet NSMenuItem *docMenu;
 
 	NSMenu *iwadPopMenu;
 	
@@ -117,6 +119,7 @@
 -(IBAction)showUserInFinder:(id)sender;
 -(IBAction)showFileInFinder:(id)sender;
 -(IBAction)accessBaseFolder:(id)sender;
+-(IBAction)accessOldDocs:(id)sender;
 
 -(IBAction)showLicense:(id)sender;
 
