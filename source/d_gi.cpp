@@ -887,6 +887,7 @@ static gamemodeinfo_t giDoomSW =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -984,6 +985,7 @@ static gamemodeinfo_t giDoomReg =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1081,6 +1083,7 @@ static gamemodeinfo_t giDoomRetail =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1178,6 +1181,7 @@ static gamemodeinfo_t giDoomCommercial =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    Doom2BossSpecs,   // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1275,6 +1279,7 @@ static gamemodeinfo_t giHereticSW =
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
+   LI_TYPE_HERETIC,  // levelType
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1376,6 +1381,7 @@ static gamemodeinfo_t giHereticReg =
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
+   LI_TYPE_HERETIC,  // levelType
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

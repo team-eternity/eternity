@@ -190,6 +190,22 @@ static void EV_ceilingChangeForArg(ceilingdata_t &cd, int arg)
 }
 
 //=============================================================================
+// 
+// Null Activation Helpers - They do nothing.
+//
+
+static bool EV_NullPreCrossLine(ev_action_t *action, ev_instance_t *instance)
+{
+   return false;
+}
+
+static bool EV_NullPostCrossLine(ev_action_t *action, bool result, 
+                                 ev_instance_t *instance)
+{
+   return false;
+}
+
+//=============================================================================
 //
 // DOOM Activation Helpers - Preambles and Post-Actions
 //
@@ -558,7 +574,55 @@ static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
 
 //=============================================================================
 //
+// Parameterized Pre- and Post-Actions
+//
+
+//
+// EV_ParamPreActivate
+//
+// There is nothing to do here. All logic was already taken care of by the 
+// EV_checkSpac function.
+//
+static bool EV_ParamPreActivate(ev_action_t *action, ev_instance_t *instance)
+{
+   return true;
+}
+
+static bool EV_ParamPostActivate(ev_action_t *action, bool result, 
+                                 ev_instance_t *instance)
+{
+   // check for switch texture change and special clear
+   if(result && instance->line)
+   {
+      int reuse = (instance->line->extflags & EX_ML_REPEAT);
+
+      if(!reuse)
+         instance->line->special = 0;
+
+      if(instance->spac == SPAC_USE || instance->spac == SPAC_IMPACT)
+         P_ChangeSwitchTexture(instance->line, reuse, instance->side);
+   }
+
+   return result;
+}
+
+//=============================================================================
+//
 // Action Routines
+//
+
+//
+// EV_ActionNull
+//
+// This is a non-action, used to override inherited bindings.
+//
+static bool EV_ActionNull(ev_action_t *action, ev_instance_t *instance)
+{
+   return false;
+}
+
+//
+// DOOM and Shared Actions
 //
 
 //
@@ -1502,6 +1566,62 @@ static bool EV_ActionDoLockedDoor(ev_action_t *action, ev_instance_t *instance)
 }
 
 //
+// Heretic Actions
+//
+// Heretic added a few new line types, all of which it should be noted conflict
+// with BOOM extended line types.
+//
+
+//
+// EV_ActionHereticDoorRaise3x
+//
+// Heretic: 100
+// Open-wait-close type door that moves at a unique 3x normal speed. This is 
+// remapped to Door_Raise.
+//
+static bool EV_ActionHereticDoorRaise3x(ev_action_t *action, ev_instance_t *instance)
+{
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind         = OdCDoor;
+   dd.spac         = SPAC_CROSS;
+   dd.speed_value  = 3 * VDOORSPEED;
+   dd.topcountdown = 0;
+   dd.delay_value  = VDOORWAIT;
+   dd.altlighttag  = 0;
+   dd.flags        = DDF_HAVESPAC | DDF_REUSABLE;
+
+   // FIXME / TODO: set genDoorThing in case of manual retrigger
+   genDoorThing = instance->actor;
+
+   return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
+}
+
+//
+// EV_ActionHereticStairsBuildUp16FS
+//
+// Heretic: 106 (W1)
+// Heretic: 107 (S1)
+// Stair types which build stairs of size 16 up at FLOORSPEED.
+// Remapped to Stairs_BuildUpDoom.
+//
+static bool EV_ActionHereticStairsBuildUp16FS(ev_action_t *action, 
+                                              ev_instance_t *instance)
+{
+   INIT_STRUCT(stairdata_t, sd);
+
+   sd.flags          = SDF_HAVESPAC;
+   sd.spac           = instance->spac; 
+   sd.direction      = 1;              // up
+   sd.speed_type     = SpeedParam;
+   sd.speed_value    = FLOORSPEED;     // speed
+   sd.stepsize_type  = StepSizeParam;
+   sd.stepsize_value = 16 * FRACUNIT;  // height
+
+   return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
 // BOOM Generalized Action
 //
 
@@ -2129,7 +2249,7 @@ static bool EV_ActionParamFloorMoveToValueTimes8(ev_action_t *action,
 //
 // Implements Floor_RaiseInstant(tag, unused, height, change, crush)
 // * ExtraData: 320
-// * Hexen:     
+// * Hexen:     67
 //
 static bool EV_ActionParamFloorRaiseInstant(ev_action_t *action, 
                                             ev_instance_t *instance)
@@ -2587,8 +2707,7 @@ static bool EV_ActionParamCeilingMoveToValue(ev_action_t *action, ev_instance_t 
 // EV_ActionParamCeilingMoveToValueTimes8
 //
 // Implements Ceiling_MoveToValueTimes8(tag, speed, height, neg, change)
-// * ExtraData: 337
-// * Hexen:     69
+// * Hexen: 69
 //
 static bool EV_ActionParamCeilingMoveToValueTimes8(ev_action_t *action, 
                                                    ev_instance_t *instance)
@@ -3256,6 +3375,15 @@ static bool EV_ActionThingDeactivate(ev_action_t *action, ev_instance_t *instanc
 // Action Types
 //
 
+// The Null action type doesn't do anything.
+static ev_actiontype_t NullActionType =
+{
+   -1,
+   EV_NullPreCrossLine,
+   EV_NullPostCrossLine,
+   0
+};
+
 // DOOM-Style Action Types
 
 // WR-Type lines may be crossed multiple times
@@ -3338,10 +3466,34 @@ static ev_actiontype_t BoomGenActionType =
    0                       // flags are not used by this type
 };
 
+// Parameterized Action Type (there is but one)
+
+static ev_actiontype_t ParamActionType =
+{
+   -1,                    // SPAC is determined by line flags
+   EV_ParamPreActivate,   // pre-activation callback
+   EV_ParamPostActivate,  // post-activation callback
+   EV_PARAMLINESPEC       // is parameterized
+};
+
 //=============================================================================
 //
 // DOOM Line Actions
 //
+
+//
+// The Null line action doesn't do anything, and is used to override inherited
+// bindings. For example in Heretic, type 99 is a static init line. Since
+// Heretic defers to DOOM's bindings for types it does not implement, it needs
+// to hide BOOM type 99 with a null action binding.
+//
+static ev_action_t NullAction =
+{
+   &NullActionType,
+   EV_ActionNull,
+   0,
+   0
+};
 
 // Macro to declare a DOOM-style W1 line action
 #define W1LINE(name, action, flags, version) \
@@ -4178,6 +4330,19 @@ G1LINE(G1StartLineScript, StartLineScript, EV_PREALLOWZEROTAG | EV_POSTCHANGEALW
 // SMMU Extended Line Type 280 - WR Start Script
 WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
 
+//
+// Heretic Actions
+//
+
+// Heretic Line Type 100 - WR Raise Door 3x
+WRLINE(WRHereticDoorRaise3x, HereticDoorRaise3x, 0, 0);
+
+// Heretic Line Type 106 - W1 Stairs Build Up 16 FLOORSPEED
+W1LINE(W1HereticStairsBuildUp16FS, HereticStairsBuildUp16FS, 0, 0);
+
+// Heretic Line Type 107 - S1 Stairs Build Up 16 FLOORSPEED
+S1LINE(S1HereticStairsBuildUp16FS, HereticStairsBuildUp16FS, 0, 0);
+
 //=============================================================================
 //
 // BOOM Generalized Line Action
@@ -4190,6 +4355,105 @@ static ev_action_t BoomGenAction =
    0,                     // flags aren't used
    200                    // BOOM or up
 };
+
+//=============================================================================
+//
+// Parameterized Line Actions
+//
+
+// Macro to declare a parameterized line action
+
+#define PARAMLINE(name)      \
+   static ev_action_t name = \
+   {                         \
+      &ParamActionType,      \
+      EV_Action ## name,     \
+      0,                     \
+      333                    \
+   }
+
+PARAMLINE(ParamDoorRaise);
+PARAMLINE(ParamDoorOpen);
+PARAMLINE(ParamDoorClose);
+PARAMLINE(ParamDoorCloseWaitOpen);
+PARAMLINE(ParamDoorWaitRaise);
+PARAMLINE(ParamDoorWaitClose);
+PARAMLINE(ParamFloorRaiseToHighest);
+PARAMLINE(ParamEEFloorLowerToHighest); 
+PARAMLINE(ParamFloorRaiseToLowest);
+PARAMLINE(ParamFloorLowerToLowest);
+PARAMLINE(ParamFloorRaiseToNearest);
+PARAMLINE(ParamFloorLowerToNearest);
+PARAMLINE(ParamFloorRaiseToLowestCeiling);
+PARAMLINE(ParamFloorLowerToLowestCeiling);
+PARAMLINE(ParamFloorRaiseToCeiling);
+PARAMLINE(ParamFloorRaiseByTexture);
+PARAMLINE(ParamFloorLowerByTexture);
+PARAMLINE(ParamFloorRaiseByValue);
+PARAMLINE(ParamFloorRaiseByValueTimes8);
+PARAMLINE(ParamFloorLowerByValue);
+PARAMLINE(ParamFloorLowerByValueTimes8);
+PARAMLINE(ParamFloorMoveToValue);
+PARAMLINE(ParamFloorMoveToValueTimes8);
+PARAMLINE(ParamFloorRaiseInstant);
+PARAMLINE(ParamFloorLowerInstant);
+PARAMLINE(ParamFloorToCeilingInstant);
+PARAMLINE(ParamCeilingRaiseToHighest);
+PARAMLINE(ParamCeilingToHighestInstant);
+PARAMLINE(ParamCeilingRaiseToNearest);
+PARAMLINE(ParamCeilingLowerToNearest);
+PARAMLINE(ParamCeilingRaiseToLowest);
+PARAMLINE(ParamCeilingLowerToLowest);
+PARAMLINE(ParamCeilingRaiseToHighestFloor);
+PARAMLINE(ParamCeilingLowerToHighestFloor);
+PARAMLINE(ParamCeilingToFloorInstant);
+PARAMLINE(ParamCeilingLowerToFloor);
+PARAMLINE(ParamCeilingRaiseByTexture);
+PARAMLINE(ParamCeilingLowerByTexture);
+PARAMLINE(ParamCeilingRaiseByValue);
+PARAMLINE(ParamCeilingLowerByValue);
+PARAMLINE(ParamCeilingRaiseByValueTimes8);
+PARAMLINE(ParamCeilingLowerByValueTimes8);
+PARAMLINE(ParamCeilingMoveToValue);
+PARAMLINE(ParamCeilingMoveToValueTimes8);
+PARAMLINE(ParamCeilingRaiseInstant);
+PARAMLINE(ParamCeilingLowerInstant);
+PARAMLINE(ParamStairsBuildUpDoom);
+PARAMLINE(ParamStairsBuildDownDoom);
+PARAMLINE(ParamStairsBuildUpDoomSync);
+PARAMLINE(ParamStairsBuildDownDoomSync);
+PARAMLINE(PolyobjDoorSlide);
+PARAMLINE(PolyobjDoorSwing);
+PARAMLINE(PolyobjMove);
+PARAMLINE(PolyobjMoveTimes8);
+PARAMLINE(PolyobjORMove);
+PARAMLINE(PolyobjORMoveTimes8);
+PARAMLINE(PolyobjRotateRight);
+PARAMLINE(PolyobjORRotateRight);
+PARAMLINE(PolyobjRotateLeft);
+PARAMLINE(PolyobjORRotateLeft);
+PARAMLINE(PillarBuild);
+PARAMLINE(PillarBuildAndCrush);
+PARAMLINE(PillarOpen);
+PARAMLINE(ACSExecute);
+PARAMLINE(ACSSuspend);
+PARAMLINE(ACSTerminate);
+PARAMLINE(ParamLightRaiseByValue);
+PARAMLINE(ParamLightLowerByValue);
+PARAMLINE(ParamLightChangeToValue);
+PARAMLINE(ParamLightFade);
+PARAMLINE(ParamLightGlow);
+PARAMLINE(ParamLightFlicker);
+PARAMLINE(ParamLightStrobe);
+PARAMLINE(RadiusQuake);
+PARAMLINE(FloorWaggle);
+PARAMLINE(ThingSpawn);
+PARAMLINE(ThingSpawnNoFog);
+PARAMLINE(TeleportEndGame);
+PARAMLINE(ThingProjectile);
+PARAMLINE(ThingProjectileGravity);
+PARAMLINE(ThingActivate);
+PARAMLINE(ThingDeactivate);
 
 //=============================================================================
 //
@@ -4252,7 +4516,6 @@ static ev_binding_t DOOMBindings[] =
    LINESPEC( 45, SRLowerFloor)
    LINESPEC( 46, GROpenDoor)
    LINESPEC( 47, G1PlatRaiseNearestChange)
-   // TODO: 48 - Scroll Texture (static init)
    LINESPEC( 49, S1CeilingCrushAndRaise)
    LINESPEC( 50, S1CloseDoor)
    LINESPEC( 51, S1SecretExit)
@@ -4289,7 +4552,6 @@ static ev_binding_t DOOMBindings[] =
    LINESPEC( 82, WRFloorLowerToLowest)
    LINESPEC( 83, WRLowerFloor)
    LINESPEC( 84, WRFloorLowerAndChange)
-   // TODO: 85 (static init)
    LINESPEC( 86, WROpenDoor)
    LINESPEC( 87, WRPlatPerpetualRaise)
    LINESPEC( 88, WRPlatDownWaitUpStay)
@@ -4417,12 +4679,10 @@ static ev_binding_t DOOMBindings[] =
    LINESPEC(210, SRSilentTeleport)
    LINESPEC(211, SRPlatToggleUpDown)
    LINESPEC(212, WRPlatToggleUpDown)
-   // TODO: 213 - 218?
    LINESPEC(219, W1FloorLowerToNearest)
    LINESPEC(220, WRFloorLowerToNearest)
    LINESPEC(221, S1FloorLowerToNearest)
    LINESPEC(222, SRFloorLowerToNearest)
-   // TODO: 223 - 226?
    LINESPEC(227, W1ElevatorUp)
    LINESPEC(228, WRElevatorUp)
    LINESPEC(229, S1ElevatorUp)
@@ -4438,15 +4698,12 @@ static ev_binding_t DOOMBindings[] =
    LINESPEC(239, W1ChangeOnlyNumeric)
    LINESPEC(240, WRChangeOnlyNumeric)
    LINESPEC(241, S1ChangeOnlyNumeric)
-   // TODO: 242?
    LINESPEC(243, W1SilentLineTeleport)
    LINESPEC(244, WRSilentLineTeleport)
-   // TODO: 245-255?
    LINESPEC(256, WRBuildStairsUp8)
    LINESPEC(257, WRBuildStairsTurbo16)
    LINESPEC(258, SRBuildStairsUp8)
    LINESPEC(259, SRBuildStairsTurbo16)
-   // TODO: 260, 261?
    LINESPEC(262, W1SilentLineTeleportReverse)
    LINESPEC(263, WRSilentLineTeleportReverse)
    LINESPEC(264, W1SilentLineTRMonsters)
@@ -4455,7 +4712,6 @@ static ev_binding_t DOOMBindings[] =
    LINESPEC(267, WRSilentLineTeleMonsters)
    LINESPEC(268, W1SilentTeleportMonsters)
    LINESPEC(269, WRSilentTeleportMonsters)
-   // TODO: 270-272?
    LINESPEC(273, WRStartLineScript1S)
    LINESPEC(274, W1StartLineScript)
    LINESPEC(275, W1StartLineScript1S)
@@ -4464,9 +4720,160 @@ static ev_binding_t DOOMBindings[] =
    LINESPEC(278, GRStartLineScript)
    LINESPEC(279, G1StartLineScript)
    LINESPEC(280, WRStartLineScript)
-   // TODO: EE Line Types 281+
+   LINESPEC(300, ParamDoorRaise)
+   LINESPEC(301, ParamDoorOpen)
+   LINESPEC(302, ParamDoorClose)
+   LINESPEC(303, ParamDoorCloseWaitOpen)
+   LINESPEC(304, ParamDoorWaitRaise)
+   LINESPEC(305, ParamDoorWaitClose)
+   LINESPEC(306, ParamFloorRaiseToHighest)
+   LINESPEC(307, ParamEEFloorLowerToHighest)
+   LINESPEC(308, ParamFloorRaiseToLowest)
+   LINESPEC(309, ParamFloorLowerToLowest)
+   LINESPEC(310, ParamFloorRaiseToNearest)
+   LINESPEC(311, ParamFloorLowerToNearest)
+   LINESPEC(312, ParamFloorRaiseToLowestCeiling)
+   LINESPEC(313, ParamFloorLowerToLowestCeiling)
+   LINESPEC(314, ParamFloorRaiseToCeiling)
+   LINESPEC(315, ParamFloorRaiseByTexture)
+   LINESPEC(316, ParamFloorLowerByTexture)
+   LINESPEC(317, ParamFloorRaiseByValue)
+   LINESPEC(318, ParamFloorLowerByValue)
+   LINESPEC(319, ParamFloorMoveToValue)
+   LINESPEC(320, ParamFloorRaiseInstant)
+   LINESPEC(321, ParamFloorLowerInstant)
+   LINESPEC(322, ParamFloorToCeilingInstant)
+   LINESPEC(323, ParamCeilingRaiseToHighest)
+   LINESPEC(324, ParamCeilingToHighestInstant)
+   LINESPEC(325, ParamCeilingRaiseToNearest)
+   LINESPEC(326, ParamCeilingLowerToNearest)
+   LINESPEC(327, ParamCeilingRaiseToLowest)
+   LINESPEC(328, ParamCeilingLowerToLowest)
+   LINESPEC(329, ParamCeilingRaiseToHighestFloor)
+   LINESPEC(330, ParamCeilingLowerToHighestFloor)
+   LINESPEC(331, ParamCeilingToFloorInstant)
+   LINESPEC(332, ParamCeilingLowerToFloor)
+   LINESPEC(333, ParamCeilingRaiseByTexture)
+   LINESPEC(334, ParamCeilingLowerByTexture)
+   LINESPEC(335, ParamCeilingRaiseByValue)
+   LINESPEC(336, ParamCeilingLowerByValue)
+   LINESPEC(337, ParamCeilingMoveToValue)
+   LINESPEC(338, ParamCeilingRaiseInstant)
+   LINESPEC(339, ParamCeilingLowerInstant)
+   LINESPEC(340, ParamStairsBuildUpDoom)
+   LINESPEC(341, ParamStairsBuildDownDoom)
+   LINESPEC(342, ParamStairsBuildUpDoomSync)
+   LINESPEC(343, ParamStairsBuildDownDoomSync)
+   LINESPEC(350, PolyobjDoorSlide)
+   LINESPEC(351, PolyobjDoorSwing)
+   LINESPEC(352, PolyobjMove)
+   LINESPEC(353, PolyobjORMove)
+   LINESPEC(354, PolyobjRotateRight)
+   LINESPEC(355, PolyobjORRotateRight)
+   LINESPEC(356, PolyobjRotateLeft)
+   LINESPEC(357, PolyobjORRotateLeft)
+   LINESPEC(362, PillarBuild)
+   LINESPEC(363, PillarBuildAndCrush)
+   LINESPEC(364, PillarOpen)
+   LINESPEC(365, ACSExecute)
+   LINESPEC(366, ACSSuspend)
+   LINESPEC(367, ACSTerminate)
+   LINESPEC(368, ParamLightRaiseByValue)
+   LINESPEC(369, ParamLightLowerByValue)
+   LINESPEC(370, ParamLightChangeToValue)
+   LINESPEC(371, ParamLightFade)
+   LINESPEC(372, ParamLightGlow)
+   LINESPEC(373, ParamLightFlicker)
+   LINESPEC(374, ParamLightStrobe)
+   LINESPEC(375, RadiusQuake)
+   LINESPEC(397, FloorWaggle)
+   LINESPEC(398, ThingSpawn)
+   LINESPEC(399, ThingSpawnNoFog)
+   LINESPEC(400, TeleportEndGame)
+   LINESPEC(402, ThingProjectile)
+   LINESPEC(403, ThingProjectileGravity)
+   LINESPEC(404, ThingActivate)
+   LINESPEC(405, ThingDeactivate)
 };
 
+// Heretic Bindings
+// Heretic's bindings are additive over DOOM's.
+static ev_binding_t HereticBindings[] =
+{
+   LINESPEC(99,  NullAction)                 // Hide BOOM type 99
+   LINESPEC(100, WRHereticDoorRaise3x)
+   LINESPEC(105, WRSecretExit)
+   LINESPEC(106, W1HereticStairsBuildUp16FS)
+   LINESPEC(107, S1HereticStairsBuildUp16FS)
+};
+
+// Hexen Bindings
+static ev_binding_t HexenBindings[] =
+{
+   LINESPEC(2,   PolyobjRotateLeft)
+   LINESPEC(3,   PolyobjRotateRight)
+   LINESPEC(4,   PolyobjMove)
+   LINESPEC(6,   PolyobjMoveTimes8)
+   LINESPEC(7,   PolyobjDoorSwing)
+   LINESPEC(8,   PolyobjDoorSlide)
+   LINESPEC(10,  ParamDoorClose)
+   LINESPEC(11,  ParamDoorOpen)
+   LINESPEC(12,  ParamDoorRaise)
+   LINESPEC(20,  ParamFloorLowerByValue)
+   LINESPEC(21,  ParamFloorLowerToLowest)
+   LINESPEC(22,  ParamFloorLowerToNearest)
+   LINESPEC(23,  ParamFloorRaiseByValue)
+   LINESPEC(24,  ParamFloorRaiseToHighest)
+   LINESPEC(25,  ParamFloorRaiseToNearest)
+   LINESPEC(29,  PillarBuild)
+   LINESPEC(30,  PillarOpen)
+   LINESPEC(35,  ParamFloorRaiseByValueTimes8)
+   LINESPEC(36,  ParamFloorLowerByValueTimes8)
+   LINESPEC(37,  ParamFloorMoveToValue)
+   LINESPEC(40,  ParamCeilingLowerByValue)
+   LINESPEC(41,  ParamCeilingRaiseByValue)
+   LINESPEC(47,  ParamCeilingMoveToValue)
+   LINESPEC(66,  ParamFloorLowerInstant)
+   LINESPEC(67,  ParamFloorRaiseInstant)
+   LINESPEC(68,  ParamFloorMoveToValueTimes8)
+   LINESPEC(69,  ParamCeilingMoveToValueTimes8)
+   LINESPEC(75,  TeleportEndGame)
+   LINESPEC(80,  ACSExecute)
+   LINESPEC(81,  ACSSuspend)
+   LINESPEC(82,  ACSTerminate)
+   LINESPEC(90,  PolyobjORRotateLeft)
+   LINESPEC(91,  PolyobjORRotateRight)
+   LINESPEC(92,  PolyobjORMove)
+   LINESPEC(93,  PolyobjORMoveTimes8)
+   LINESPEC(94,  PillarBuildAndCrush)
+   LINESPEC(110, ParamLightRaiseByValue)
+   LINESPEC(111, ParamLightLowerByValue)
+   LINESPEC(112, ParamLightChangeToValue)
+   LINESPEC(113, ParamLightFade)
+   LINESPEC(114, ParamLightGlow)
+   LINESPEC(115, ParamLightFlicker)
+   LINESPEC(116, ParamLightStrobe)
+   LINESPEC(120, RadiusQuake)
+   LINESPEC(130, ThingActivate)
+   LINESPEC(131, ThingDeactivate)
+   LINESPEC(134, ThingProjectile)
+   LINESPEC(135, ThingSpawn)
+   LINESPEC(136, ThingProjectileGravity)
+   LINESPEC(137, ThingSpawnNoFog)
+   LINESPEC(138, FloorWaggle)
+   LINESPEC(192, ParamCeilingLowerToHighestFloor)
+   LINESPEC(193, ParamCeilingLowerInstant)
+   LINESPEC(194, ParamCeilingRaiseInstant)
+   LINESPEC(198, ParamCeilingRaiseByValueTimes8)
+   LINESPEC(199, ParamCeilingLowerByValueTimes8)
+   LINESPEC(217, ParamStairsBuildUpDoom)
+   LINESPEC(238, ParamFloorRaiseToLowestCeiling)
+   LINESPEC(240, ParamFloorRaiseByTexture)
+   LINESPEC(249, ParamDoorCloseWaitOpen)
+   LINESPEC(252, ParamCeilingRaiseToNearest)
+   LINESPEC(253, ParamCeilingLowerToLowest)
+   LINESPEC(254, ParamCeilingLowerToFloor)
+};
 
 //=============================================================================
 //
@@ -4786,6 +5193,7 @@ static ev_static_t HexenStaticBindings[] =
 {
    STATICSPEC(  1, EV_STATIC_POLYOBJ_START_LINE)
    STATICSPEC(  5, EV_STATIC_POLYOBJ_EXPLICIT_LINE)
+   // TODO: Scroller types 100-103
    STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
 };
 
@@ -4799,6 +5207,9 @@ typedef EHashTable<ev_static_t, EIntHashKey,
 // DOOM hash
 static EV_StaticHash DOOMStaticHash(earrlen(DOOMStaticBindings));
 
+
+// Hexen hash
+static EV_StaticHash HexenStaticHash(earrlen(HexenStaticBindings));
 
 //
 // EV_AddStaticSpecialsToHash
@@ -4834,6 +5245,25 @@ static void EV_InitDOOMStaticHash()
       // add every item in the DOOM static bindings array
       EV_AddStaticSpecialsToHash(DOOMStaticHash, DOOMStaticBindings, 
                                  earrlen(DOOMStaticBindings));
+   }
+}
+
+//
+// EV_InitHexenStaticHash
+//
+// First-time-use initialization for the Hexen static specials hash table.
+//
+static void EV_InitHexenStaticHash()
+{
+   static bool firsttime = true;
+
+   if(firsttime)
+   {
+      firsttime = false;
+
+      // add every time in the Hexen static bindings array
+      EV_AddStaticSpecialsToHash(HexenStaticHash, HexenStaticBindings,
+                                 earrlen(HexenStaticBindings));
    }
 }
 
@@ -4881,8 +5311,12 @@ int EV_HereticSpecialForStaticInit(int staticFn)
 //
 int EV_HexenSpecialForStaticInit(int staticFn)
 {
-   // TODO
-   return 0;
+   ev_static_t *binding;
+
+   // init the hash if it hasn't been done yet
+   EV_InitHexenStaticHash();
+
+   return (binding = HexenStaticHash.objectForKey(staticFn)) ? binding->actionNumber : 0;
 }
 
 // 

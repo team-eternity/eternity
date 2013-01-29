@@ -201,19 +201,6 @@ typedef struct textvals_s
    int defaultval;
 } textvals_t;
 
-static const char *ltstrs[] =
-{
-   "doom",
-   "heretic",
-};
-
-static textvals_t levelTypeVals =
-{
-   ltstrs,
-   2,
-   0
-};
-
 static const char *finaleTypeStrs[] =
 {
    "text",
@@ -441,7 +428,6 @@ static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *inf
    LI_COPY(NEXTLEVELPIC,     nextLevelPic);
    LI_COPY(NEXTSECRETPIC,    nextSecretPic);
    LI_COPY(SCRIPTLUMP,       scriptLump);
-   LI_COPY(LEVELTYPE,        levelType);
    LI_COPY(HASLIGHTNING,     hasLightning);
    LI_COPY(MUSICNAME,        musicName);
    LI_COPY(NEXTLEVEL,        nextLevel);
@@ -722,7 +708,6 @@ levelvar_t levelvars[]=
    LI_STRING("levelpicnext",    NEXTLEVELPIC,     nextLevelPic),
    LI_STRING("levelpicsecret",  NEXTSECRETPIC,    nextSecretPic),
    LI_STRING("levelscript",     SCRIPTLUMP,       scriptLump),
-   LI_STRNUM("leveltype",       LEVELTYPE,        levelType,        levelTypeVals),
    LI_BOOLNF("lightning",       HASLIGHTNING,     hasLightning),
    LI_STRING("music",           MUSICNAME,        musicName),
    LI_STRING("nextlevel",       NEXTLEVEL,        nextLevel),
@@ -1380,15 +1365,7 @@ static void P_ClearLevelVars(void)
    curmetainfo = P_GetMetaInfoForLevel(gamemap);
 
    // set default level type depending on game mode
-   switch(GameModeInfo->type)
-   {
-   case Game_DOOM:
-      LevelInfo.levelType = LI_TYPE_DOOM;
-      break;
-   case Game_Heretic:
-      LevelInfo.levelType = LI_TYPE_HERETIC;
-      break;
-   }
+   LevelInfo.levelType = GameModeInfo->levelType;
 
    LevelInfo.levelPic        = NULL;
    LevelInfo.nextLevelPic    = NULL;

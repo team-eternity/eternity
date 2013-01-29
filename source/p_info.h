@@ -48,16 +48,6 @@ enum
    BSPEC_E5M8    = 0x00000080,
 };
 
-// haleyjd 10/05/05: level translation types
-enum
-{
-   LI_TYPE_DOOM,
-   LI_TYPE_HERETIC,
-   LI_TYPE_HEXEN,
-   LI_TYPE_STRIFE,
-   LI_TYPE_NUMTYPES
-};
-
 //
 // LevelInfo Field Enumeration
 //
@@ -131,6 +121,7 @@ enum
 typedef struct LevelInfo_s
 {
    // map type selection
+   int mapFormat;            // format of the map (Doom or Hexen)
    int levelType;            // level type used for conversions, etc.
 
    // specials: lines, sectors, etc.

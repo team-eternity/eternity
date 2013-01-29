@@ -231,6 +231,15 @@ enum
    NumGameModeTypes
 };
 
+// haleyjd 10/05/05: level translation types
+enum
+{
+   LI_TYPE_DOOM,
+   LI_TYPE_HERETIC,
+   LI_TYPE_HEXEN,
+   LI_TYPE_STRIFE,
+   LI_TYPE_NUMTYPES
+};
 
 // mission flags
 enum
@@ -352,6 +361,7 @@ typedef struct gamemodeinfo_s
    const char *defPClassName; // default playerclass name
    const char *defTranslate;  // default translation for AUTOTRANSLATE
    bspecrule_t *bossRules;    // default boss specials
+   int levelType;             // level translation type
 
    // Intermission and Finale stuff
    const char *interPic;      // default intermission backdrop

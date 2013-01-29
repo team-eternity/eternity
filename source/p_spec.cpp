@@ -830,7 +830,7 @@ int P_FindSectorFromTag(const int tag, int start)
 //
 // Hash the sector tags across the sectors and linedefs.
 //
-static void P_InitTagLists(int mapformat)
+static void P_InitTagLists()
 {
    register int i;
    
@@ -853,7 +853,7 @@ static void P_InitTagLists(int mapformat)
    {                               // so that lower linedefs appear first
       // haleyjd 05/16/09: unified id into tag;
       // added mapformat parameter to test here:
-      if(mapformat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
       {
          int j = (unsigned int)lines[i].tag % (unsigned int)numlines; // Hash func
          lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
@@ -2693,7 +2693,7 @@ void P_SpawnSpecials(int mapformat)
    // P_InitTagLists() must be called before P_FindSectorFromLineTag()
    // or P_FindLineFromLineTag() can be called.
 
-   P_InitTagLists(mapformat);   // killough 1/30/98: Create xref tables for tags
+   P_InitTagLists();   // killough 1/30/98: Create xref tables for tags
    
    P_SpawnScrollers(); // killough 3/7/98: Add generalized scrollers
    
@@ -4617,7 +4617,7 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
       *special = 356; // args are same
       break;
    case 3:   // poly rotate right
-      *special = 357; // args are same
+      *special = 354; // args are same
       break;
    case 4:   // poly move
       *special = 352; // args are same

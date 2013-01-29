@@ -150,9 +150,6 @@ size_t     num_deathmatchstarts;   // killough
 mapthing_t *deathmatch_p;
 mapthing_t playerstarts[MAXPLAYERS];
 
-// haleyjd 12/28/08: made module-global
-static int mapformat;
-
 // haleyjd 06/14/10: level wad directory
 static WadDirectory *setupwad;
 
@@ -533,7 +530,7 @@ void P_LoadSectors(int lumpnum)
 
       // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
       //         12/31/08: convert BOOM generalized damage
-      if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
       {
          int damagetype;
 
@@ -2379,7 +2376,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
 
    // determine map format; if invalid, abort
-   if((mapformat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
+   if((LevelInfo.mapFormat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
    {
       P_SetupLevelError("Not a valid level", mapname);
       return;
@@ -2418,7 +2415,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(mapformat)
+   switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
       P_LoadLineDefs(lumpnum + ML_LINEDEFS);
@@ -2461,7 +2458,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    deathmatch_p = deathmatchstarts;
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(mapformat)
+   switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
       P_LoadThings(lumpnum + ML_THINGS);
@@ -2484,14 +2481,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    iquehead = iquetail = 0;
    
    // haleyjd 10/05/05: convert heretic specials
-   if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
       P_ConvertHereticSpecials();
    
    // set up world state
-   P_SpawnSpecials(mapformat);
+   P_SpawnSpecials(LevelInfo.mapFormat);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials(mapformat);
+   P_SpawnDeferredSpecials(LevelInfo.mapFormat);
 
    // haleyjd
    P_InitLightning();
@@ -2514,7 +2511,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo
-   if(mapformat == LEVEL_FORMAT_HEXEN)
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
       acslumpnum = lumpnum + ML_BEHAVIOR;
    else if(LevelInfo.acsScriptLump)
       acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);

@@ -724,6 +724,9 @@ default_t defaults[] =
    // below is green, above blue
    DEFAULT_INT("armor_green",&armor_green, NULL, 100, 0, 200, default_t::wad_yes,
                "amount of armor for green to blue transition"),
+
+   DEFAULT_BOOL("armor_byclass", &armor_byclass, NULL, true, default_t::wad_yes,
+                "reflect armor class using blue or green color"),
    
    // below 25% is red
    DEFAULT_INT("ammo_red",&ammo_red, NULL, 25, 0, 100, default_t::wad_yes,
