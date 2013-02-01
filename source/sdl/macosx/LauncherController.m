@@ -1017,9 +1017,14 @@ iwadMightBe:
 
 		[pathArray release];
 	}
-	[gfsOut writeToURL:[panel URL] atomically:YES encoding:NSUTF8StringEncoding 
+	[gfsOut writeToURL:[panel URL] atomically:YES encoding:NSUTF8StringEncoding
                 error:NULL];
 	[gfsOut release];
+   
+   // Now, replace the files with the GFS
+   [self removeAllPwads:self];
+   [self doAddPwadFromURL:[panel URL]];
+   [self updateParameters:self];
 }
 
 //
