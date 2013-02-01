@@ -1473,7 +1473,7 @@
 												<string key="NSFrame">{{17, 5}, {255, 22}}</string>
 												<reference key="NSSuperview" ref="103060869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="342804816"/>
+												<reference key="NSNextKeyView"/>
 												<double key="NSViewAlphaValue">0.50000000000000011</double>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSTextFieldCell" key="NSCell" id="600857089">
@@ -2317,7 +2317,7 @@
 										<object class="NSTextView" id="51900878">
 											<reference key="NSNextResponder" ref="714705946"/>
 											<int key="NSvFlags">2322</int>
-											<string key="NSFrameSize">{425, 80}</string>
+											<string key="NSFrameSize">{410, 80}</string>
 											<reference key="NSSuperview" ref="714705946"/>
 											<reference key="NSWindow"/>
 											<reference key="NSNextKeyView" ref="1046023411"/>
@@ -2338,7 +2338,7 @@
 													<nil key="NSDelegate"/>
 												</object>
 												<reference key="NSTextView" ref="51900878"/>
-												<double key="NSWidth">425</double>
+												<double key="NSWidth">410</double>
 												<int key="NSTCFlags">1</int>
 											</object>
 											<object class="NSTextViewSharedData" key="NSSharedData">
@@ -2400,7 +2400,7 @@
 											<nil key="NSDelegate"/>
 										</object>
 									</object>
-									<string key="NSFrame">{{1, 1}, {425, 80}}</string>
+									<string key="NSFrame">{{1, 1}, {410, 80}}</string>
 									<reference key="NSSuperview" ref="502326609"/>
 									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView" ref="51900878"/>
@@ -2568,7 +2568,7 @@ wGw</bytes>
 								<object class="NSScroller" id="1046023411">
 									<reference key="NSNextResponder" ref="502326609"/>
 									<int key="NSvFlags">256</int>
-									<string key="NSFrame">{{410, 1}, {16, 80}}</string>
+									<string key="NSFrame">{{411, 1}, {15, 80}}</string>
 									<reference key="NSSuperview" ref="502326609"/>
 									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView"/>
@@ -5278,6 +5278,7 @@ wGw</bytes>
 					<string>1141.IBPluginDependency</string>
 					<string>1142.IBPluginDependency</string>
 					<string>1143.IBPluginDependency</string>
+					<string>1233.IBAttributePlaceholdersKey</string>
 					<string>1233.IBPluginDependency</string>
 					<string>1234.IBPluginDependency</string>
 					<string>1236.IBPluginDependency</string>
@@ -5548,6 +5549,14 @@ wGw</bytes>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSMutableDictionary">
+						<string key="NS.key.0">ToolTip</string>
+						<object class="IBToolTipAttribute" key="NS.object.0">
+							<string key="name">ToolTip</string>
+							<reference key="object" ref="112221574"/>
+							<string key="toolTip">Access the Eternity data folder for captured screenshots and for reviewing configuration files.</string>
+						</object>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -5999,7 +6008,7 @@ Y29uc29sZSBzY3JpcHRzClJTUCDigJQgcmVzcG9uc2UgZmlsZXM</string>
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1272</int>
+			<int key="maxID">1274</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
