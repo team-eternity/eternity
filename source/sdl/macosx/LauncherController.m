@@ -676,6 +676,7 @@ iwadMightBe:
 	[panel setAllowsMultipleSelection:true];
 	[panel setCanChooseFiles:true];
 	[panel setCanChooseDirectories:false];
+   [panel setMessage:@"Choose add-on file"];
 	[panel beginSheetForDirectory:nil file:nil types:pwadTypes modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(addPwadEnded:returnCode:contextInfo:) contextInfo:nil];
 }
 
@@ -696,6 +697,7 @@ iwadMightBe:
 	[panel setAllowsMultipleSelection:true];
 	[panel setCanChooseFiles:true];
 	[panel setCanChooseDirectories:false];
+   [panel setMessage:@"Choose main game WAD"];
 	[panel beginSheetForDirectory:nil file:nil types:pwadTypes modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(addIwadEnded:returnCode:contextInfo:) contextInfo:nil];
 }
 
@@ -712,13 +714,13 @@ iwadMightBe:
 //
 -(BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {
-	if(menuItem == showInFinder)
-		return [pwadArray count] > 0 && [pwadView selectedRow] > -1;
 	if(menuItem == fileClose || menuItem == fileCloseAll)
 		return [pwadArray count] > 0;
 	if(menuItem == fileOpenAllRecent)
 		return [[[NSDocumentController sharedDocumentController] recentDocumentURLs] count] > 0;
-	
+	if(menuItem == fileCloseIWAD)
+      return [iwadPopUp numberOfItems] > 0;
+   
 	return YES;
 }
 
