@@ -699,7 +699,34 @@ iwadMightBe:
 	if(pwadView)
 		[pwadView reloadData];
 }
-	
+
+//
+// doAddPwadsFromURLs:
+//
+// Adds multiple files, from an array made of NSURL objects. Simply calls doAddPwadFromURL:
+//
+-(void)doAddPwadsFromURLs:(NSArray *)wURLArray atIndexes:(NSIndexSet *)anIndexSet
+{
+   
+   NSUndoManager *undom = [pwadView undoManager];
+   [undom registerUndoWithTarget:self selector:@selector(doRemovePwadsAtIndexes:) object:anIndexSet];
+   [undom setActionName:@"Add/Remove Files"];
+   
+   
+   [pwadArray insertObjects:wURLArray atIndexes:anIndexSet];
+   
+   NSURL *URL;
+   for (URL in wURLArray)
+   {
+      [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:URL];
+   }
+   if(pwadView)
+      [pwadView reloadData];
+   
+   // Needed here.
+   [self updateParameters:self];
+}
+
 //
 // addPwadEnded:returnCode:contextInfo:
 //
@@ -741,13 +768,78 @@ iwadMightBe:
 }
 
 //
+// doRemovePwadsAtIndexes:
+//
+// Removes pwads at designated indexes
+//
+-(void)doRemovePwadsAtIndexes:(NSIndexSet *)anIndexSet
+{
+   if([pwadArray count] <= 0) // empty array, do nothing
+   {
+      NSBeep();
+      return;
+   }
+   
+   if([anIndexSet count] > 0 && [anIndexSet lastIndex] >= [pwadArray count]) // out of bounds, do nothing
+   {
+      NSBeep();
+      return;
+   }
+   
+   //
+   // Take the set.
+   //
+   NSIndexSet *set;
+   if([anIndexSet count] <= 0)                     // Nothing specified (empty set), so take {0}
+      set = [NSIndexSet indexSetWithIndex:0];
+   else                                            // Specified in argument
+      set = anIndexSet;
+
+   // Set the objects to be deleted
+   NSArray *undoRemoveURLs = [pwadArray objectsAtIndexes:set];
+   
+   //
+   // Do the deletion, update parameters, update view
+   //
+   [pwadArray removeObjectsAtIndexes:set];
+   [pwadView reloadData];
+   [self updateParameters:self];
+   
+   //
+   // Register undo
+   //
+   NSUndoManager *undom = [pwadView undoManager];
+   [[undom prepareWithInvocationTarget:self] doAddPwadsFromURLs:undoRemoveURLs atIndexes:set];
+   [undom setActionName:@"Add/Remove Files"];
+   
+   //
+   // Update selection
+   //
+   if([anIndexSet count] <= 0)   // Deleted when nothing was specified
+   {
+      [pwadView selectRowIndexes:set byExtendingSelection:NO];
+      [pwadView scrollRowToVisible:0];
+   }
+   else                          // Deleted when something was selected
+   {
+      NSInteger dest;
+      
+		if([[pwadView selectedRowIndexes] count] < 1)
+			dest = [pwadView numberOfRows] - 1;
+		else // if ([[pwadView selectedRowIndexes] count] >= 1)
+			dest = [pwadView selectedRow] - [[pwadView selectedRowIndexes] count] + 1;
+      
+		[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:dest] byExtendingSelection:NO];
+		[pwadView scrollRowToVisible:dest];
+   }
+}
+
+//
 // removeAllPwads:
 //
 -(IBAction)removeAllPwads:(id)sender
 {
-	[pwadArray removeAllObjects];
-	[self updateParameters:sender];
-	[pwadView reloadData];
+   [self doRemovePwadsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [pwadArray count])]];
 }
 
 //
@@ -755,39 +847,7 @@ iwadMightBe:
 //
 -(IBAction)removePwad:(id)sender
 {
-	NSIndexSet *set = [pwadView selectedRowIndexes];
-	
-	if([set count] == 0)
-	{
-		if([pwadArray count] > 0)
-		{
-			
-			[pwadArray removeObjectAtIndex:0];
-			[self updateParameters:sender];
-			[pwadView reloadData];
-			[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
-			
-			[pwadView scrollRowToVisible:0];
-		}
-	}
-	else
-	{
-		
-		[pwadArray removeObjectsAtIndexes:set];
-		[self updateParameters:sender];
-		
-		[pwadView reloadData];
-	
-		NSInteger dest;
-	
-		if([[pwadView selectedRowIndexes] count] < 1)
-			dest = [pwadView numberOfRows] - 1;
-		else // if ([[pwadView selectedRowIndexes] count] >= 1)
-			dest = [pwadView selectedRow] - [[pwadView selectedRowIndexes] count] + 1;
-	
-		[pwadView selectRowIndexes:[NSIndexSet indexSetWithIndex:dest] byExtendingSelection:NO];
-		[pwadView scrollRowToVisible:dest];
-	}
+   [self doRemovePwadsAtIndexes:[pwadView selectedRowIndexes]];
 }
 
 //
