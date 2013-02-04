@@ -116,6 +116,8 @@ static BOOL gSDLStarted;	// IOAN 20120616
 {
 	if(self = [super init])
 	{
+      dontUndo = FALSE;
+      
 		fileMan = [NSFileManager defaultManager];
 		iwadSet = [[NSMutableSet alloc] initWithCapacity:0];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
@@ -233,7 +235,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 }
 
 //
-// initNibData:argVector:
+// initNibData
 //
 // Added after Nib got loaded. Generic initialization that wouldn't go in init
 //
@@ -258,6 +260,18 @@ static BOOL gSDLStarted;	// IOAN 20120616
    
    // Add documents to list
    [self makeDocumentMenu];
+}
+
+//
+// getUndoFor:
+//
+// Gets undo manager for an object. But returns nil if it has to be suppressed
+//
+-(NSUndoManager *)getUndoFor:(id)obj
+{
+   if(self->dontUndo)
+      return nil;
+   return [obj undoManager];
 }
 
 //
@@ -569,14 +583,17 @@ iwadMightBe:
 }
 
 //
-// doAddIwadFromURL:
+// doAddIwadFromURL:atIndex:
 //
 // Tries to add IWAD as specified by URL to the pop-up button list
 // Returns YES if successful or already there (URL valid for path, RFC 1808)
 // Returns NO if given URL is invalid
 //
--(BOOL)doAddIwadFromURL:(NSURL *)wURL
+-(BOOL)doAddIwadFromURL:(NSURL *)wURL atIndex:(NSInteger)ind
 {
+   if(ind < 0 || ind > [iwadPopUp numberOfItems])
+      return NO;
+   
 	NSMenuItem *last;
 	if(![iwadSet containsObject:wURL])
 	{
@@ -586,10 +603,15 @@ iwadMightBe:
 			return NO;	// URL not RFC 1808
 		
 		[iwadSet addObject:wURL];
-		
-		[iwadPopUp addItemWithTitle:[fileMan displayNameAtPath:iwadPath]];
+		      
+      [iwadPopUp insertItemWithTitle:[fileMan displayNameAtPath:iwadPath] atIndex:ind];
+      
+      NSUndoManager *undom = [self getUndoFor:iwadPopUp];
+      [[undom prepareWithInvocationTarget:self] doRemoveIwadAtIndex:ind];
+      [undom setActionName:@"Add/Remove Game WAD"];
 
-		last = [[[iwadPopUp menu] itemArray] lastObject];
+
+		last = [[[iwadPopUp menu] itemArray] objectAtIndex:ind];
 		[last setRepresentedObject:wURL];
 		[last setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadPath]];
 		
@@ -602,13 +624,39 @@ iwadMightBe:
 		[iwadPopUp selectItem:last];
       [self updateParameters:self];
 	} 
-	else
-	{
-		
-	}
 	// FIXME: select the existing path component
 	// FIXME: each set component should point to a menu item
 	return YES;
+}
+
+//
+// doAddIwadFromURL:
+//
+-(BOOL)doAddIwadFromURL:(NSURL *)wURL
+{
+   return [self doAddIwadFromURL:wURL atIndex:[iwadPopUp numberOfItems]];
+}
+
+//
+// doRemoveIwadAtIndex:
+//
+-(void)doRemoveIwadAtIndex:(NSInteger)ind
+{
+   if(ind >= 0 && [iwadPopUp numberOfItems] > ind)
+	{
+		NSURL *iwadURL = [[iwadPopUp itemAtIndex:ind] representedObject];
+      
+      NSUndoManager *undom = [self getUndoFor:iwadPopUp];
+      [[undom prepareWithInvocationTarget:self] doAddIwadFromURL:iwadURL atIndex:ind];
+      [undom setActionName:@"Add/Remove Game WAD"];
+		
+		[iwadPopUp removeItemAtIndex:ind];
+		[iwadSet removeObject:iwadURL];
+		
+		[self updateParameters:[iwadPopUp selectedItem]];
+	}
+   else
+      NSBeep();
 }
 
 //
@@ -616,15 +664,7 @@ iwadMightBe:
 //
 -(IBAction)removeIwad:(id)sender
 {
-	if([iwadPopUp numberOfItems] > 0)
-	{
-		NSURL *iwadURL = [[iwadPopUp selectedItem] representedObject];
-		
-		[iwadPopUp removeItemAtIndex:[iwadPopUp indexOfSelectedItem]];
-		[iwadSet removeObject:iwadURL];
-		
-		[self updateParameters:[iwadPopUp selectedItem]];
-	}
+   [self doRemoveIwadAtIndex:[iwadPopUp indexOfSelectedItem]];
 }
 
 //
@@ -664,13 +704,7 @@ iwadMightBe:
 //
 -(IBAction)addAllRecentPwads:(id)sender
 {
-	NSURL *wURL;
-	
-	for(wURL in [[NSDocumentController sharedDocumentController] recentDocumentURLs])
-   {
-      [self doAddPwadFromURL:wURL];
-      [self updateParameters:self];
-   }
+   [self doAddPwadsFromURLs:[[NSDocumentController sharedDocumentController] recentDocumentURLs] atIndexes:nil];
 }
 
 //
@@ -689,29 +723,19 @@ iwadMightBe:
 }
 
 //
-// doAddPwadFromURL:
+// doAddPwadsFromURLs:atIndexes:
 //
--(void)doAddPwadFromURL:(NSURL *)wURL
-{
-	[pwadArray addObject:wURL];
-	[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:wURL];
-	
-	if(pwadView)
-		[pwadView reloadData];
-}
-
-//
-// doAddPwadsFromURLs:
-//
-// Adds multiple files, from an array made of NSURL objects. Simply calls doAddPwadFromURL:
+// Adds multiple files, from an array made of NSURL objects.
 //
 -(void)doAddPwadsFromURLs:(NSArray *)wURLArray atIndexes:(NSIndexSet *)anIndexSet
 {
+   // if it's null, assign it
+   if(anIndexSet == nil)
+      anIndexSet = [NSIndexSet indexSetWithIndex:[pwadArray count]];   // nothing designated, so add at end.
    
-   NSUndoManager *undom = [pwadView undoManager];
+   NSUndoManager *undom = [self getUndoFor:pwadView];
    [undom registerUndoWithTarget:self selector:@selector(doRemovePwadsAtIndexes:) object:anIndexSet];
    [undom setActionName:@"Add/Remove Files"];
-   
    
    [pwadArray insertObjects:wURLArray atIndexes:anIndexSet];
    
@@ -728,6 +752,14 @@ iwadMightBe:
 }
 
 //
+// doAddPwadFromURL:
+//
+-(void)doAddPwadFromURL:(NSURL *)wURL
+{
+   [self doAddPwadsFromURLs:[NSArray arrayWithObject:wURL] atIndexes:nil];
+}
+
+//
 // addPwadEnded:returnCode:contextInfo:
 //
 -(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info
@@ -738,13 +770,9 @@ iwadMightBe:
 	}
 	
 	// Look thru the array to locate the PWAD and put that on.
-	NSURL *openCandidate;
+   
+   [self doAddPwadsFromURLs:[panel URLs] atIndexes:nil];
 	
-	for(openCandidate in [panel URLs])
-	{
-      [self doAddPwadFromURL:openCandidate];
-      [self updateParameters:self];
-	}
 }
 
 //
@@ -808,7 +836,7 @@ iwadMightBe:
    //
    // Register undo
    //
-   NSUndoManager *undom = [pwadView undoManager];
+   NSUndoManager *undom = [self getUndoFor:pwadView];
    [[undom prepareWithInvocationTarget:self] doAddPwadsFromURLs:undoRemoveURLs atIndexes:set];
    [undom setActionName:@"Add/Remove Files"];
    
@@ -1479,6 +1507,8 @@ iwadMightBe:
 -(void)loadDefaults
 {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+   
+   self->dontUndo = TRUE;
 	
 	if([defaults boolForKey:@"Saved."])
 	{
@@ -1554,6 +1584,8 @@ iwadMightBe:
 		
 		[self updateParameters:self];
 	}
+   
+   self->dontUndo = FALSE;
 }
 
 //
