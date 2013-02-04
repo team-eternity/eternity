@@ -69,8 +69,6 @@ public:
 Mobj *P_GetPushThing(int); // phares 3/23/98
 void P_SpawnPushers();
 
-void P_SpawnHereticWind(line_t *line);
-
 #endif
 
 // EOF

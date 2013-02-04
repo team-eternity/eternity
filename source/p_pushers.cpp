@@ -360,6 +360,42 @@ Mobj* P_GetPushThing(int s)
 }
 
 //
+// P_spawnHereticWind
+//
+// haleyjd 03/12/03: Heretic Wind/Current Transfer specials
+//
+static void P_spawnHereticWind(line_t *line, int staticFn)
+{
+   int s;
+   int pushType;
+   angle_t lineAngle;
+   fixed_t magnitude;
+
+   lineAngle = P_PointToAngle(0, 0, line->dx, line->dy);
+   magnitude = (P_AproxDistance(line->dx, line->dy) >> FRACBITS) * 512;
+
+   // types 20-39 affect the player in P_PlayerThink
+   // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
+   // this is selected by use of lines 294 or 293, respectively
+   switch(staticFn)
+   {
+   case EV_STATIC_HERETIC_CURRENT:
+      pushType = 20;
+      break;
+   default:
+      pushType = 40;
+      break;
+   }
+
+   for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+   {
+      sectors[s].hticPushType  = pushType;
+      sectors[s].hticPushAngle = lineAngle;
+      sectors[s].hticPushForce = magnitude;
+   }
+}
+
+//
 // P_SpawnPushers
 //
 // Initialize the sectors where pushers are present
@@ -397,35 +433,15 @@ void P_SpawnPushers()
          }
          break;
 
+      case EV_STATIC_HERETIC_WIND:
+      case EV_STATIC_HERETIC_CURRENT:
+         // haleyjd 03/12/03: Heretic wind and current transfer specials
+         P_spawnHereticWind(line, staticFn);
+         break;
+
       default: // not a function we handle here
          break;
       }
-   }
-}
-
-//
-// P_SpawnHereticWind
-//
-// haleyjd 03/12/03: Heretic Wind/Current Transfer specials
-//
-void P_SpawnHereticWind(line_t *line)
-{
-   int s;
-   angle_t lineangle;
-   fixed_t magnitude;
-
-   lineangle = P_PointToAngle(0, 0, line->dx, line->dy);
-   magnitude = (P_AproxDistance(line->dx, line->dy)>>FRACBITS) * 512;
-
-   for(s = -1; (s = P_FindSectorFromLineTag(line,s)) >= 0; )
-   {
-      // types 20-39 affect the player in P_PlayerThink
-      // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
-      // this is selected by use of lines 294 or 293, respectively
-
-      sectors[s].hticPushType  = (line->special == 294) ? 20 : 40;
-      sectors[s].hticPushAngle = lineangle;
-      sectors[s].hticPushForce = magnitude;
    }
 }
 

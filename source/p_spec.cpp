@@ -2758,12 +2758,6 @@ void P_SpawnSpecials(int mapformat)
          P_AttachLines(&lines[i], true);
          break;
 
-      // haleyjd 03/12/03: Heretic wind transfer specials
-      case 293:
-      case 294:
-         P_SpawnHereticWind(&lines[i]);
-         break;
-
       // SoM 12/10/03: added skybox/portal specials
       // haleyjd 01/24/04: functionalized code to reduce footprint
       case 283:
