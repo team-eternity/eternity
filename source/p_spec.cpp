@@ -3001,13 +3001,16 @@ void FrictionThinker::serialize(SaveArchive &arc)
 // change.
 //
 //=====================================
+
+//
+// P_SpawnFriction
 //
 // Initialize the sectors where friction is increased or decreased
-
-static void P_SpawnFriction(void)
+//
+static void P_SpawnFriction()
 {
    int i;
-   line_t *l = lines;
+   line_t *line = lines;
    
    // killough 8/28/98: initialize all sectors to normal friction first
    for(i = 0; i < numsectors; i++)
@@ -3016,17 +3019,22 @@ static void P_SpawnFriction(void)
       // skip any value that's not zero (now zeroed in P_LoadSectors)
       if(!sectors[i].friction)
       {
-         sectors[i].friction = ORIG_FRICTION;
+         sectors[i].friction   = ORIG_FRICTION;
          sectors[i].movefactor = ORIG_FRICTION_FACTOR;
       }
    }
 
-   for(i = 0 ; i < numlines ; i++,l++)
+   // haleyjd 02/03/13: get the friction transfer static init binding
+   int fricspec;
+   if(!(fricspec = EV_SpecialForStaticInit(EV_STATIC_FRICTION_TRANSFER)))
+      return; // not defined for this map
+
+   for(i = 0 ; i < numlines ; i++, line++)
    {
-      if(l->special == 223)
+      if(line->special == fricspec)
       {
-         int length = P_AproxDistance(l->dx,l->dy)>>FRACBITS;
-         int friction = (0x1EB8*length)/0x80 + 0xD000;
+         int length   = P_AproxDistance(line->dx, line->dy) >> FRACBITS;
+         int friction = (0x1EB8 * length) / 0x80 + 0xD000;
          int movefactor, s;
 
          // The following check might seem odd. At the time of movement,
@@ -3034,9 +3042,9 @@ static void P_SpawnFriction(void)
          // higher friction value actually means 'less friction'.
 
          if(friction > ORIG_FRICTION)       // ice
-            movefactor = ((0x10092 - friction)*(0x70))/0x158;
+            movefactor = ((0x10092  - friction) * 0x70) / 0x158;
          else
-            movefactor = ((friction - 0xDB34)*(0xA))/0x80;
+            movefactor = ((friction - 0xDB34  ) * 0x0A) / 0x80;
 
          if(demo_version >= 203)
          { 
@@ -3049,7 +3057,7 @@ static void P_SpawnFriction(void)
                movefactor = 32;
          }
 
-         for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ;)
+         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0 ;)
          {
             // killough 8/28/98:
             //

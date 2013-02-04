@@ -38,6 +38,7 @@
 #include "doomstat.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -1184,11 +1185,14 @@ void P_LoadLineDefs(int lump)
       // haleyjd 03/28/11: do shared loading logic in one place
       P_InitLineDef(ld);
 
+      // haleyjd 02/03/13: get ExtraData static init binding
+      int edlinespec = EV_SpecialForStaticInit(EV_STATIC_EXTRADATA_LINEDEF);
+
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
-      if(ld->special == ED_LINE_SPECIAL)
+      if(edlinespec && ld->special == edlinespec)
          E_LoadLineDefExt(ld, true);
-      else if(E_IsParamSpecial(ld->special) || 
+      else if(E_IsParamSpecial(ld->special) ||     // EV_SPECIALS FIXME/TODO
               ld->special == POLYOBJ_START_LINE || 
               ld->special == POLYOBJ_EXPLICIT_LINE)
       {
