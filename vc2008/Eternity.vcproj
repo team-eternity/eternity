@@ -2713,6 +2713,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_scroll.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\p_sector.cpp"
 						>
 					</File>
@@ -3068,6 +3072,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_saveg.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_scroll.h"
 						>
 					</File>
 					<File

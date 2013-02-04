@@ -469,6 +469,10 @@ extern int map_point_coordinates;
 VARIABLE_BOOLEAN(map_point_coordinates, NULL, onoff);
 CONSOLE_VARIABLE(map_coords, map_point_coordinates, 0) {}
 
+extern int map_secret_after;
+VARIABLE_BOOLEAN(map_secret_after, NULL, yesno);
+CONSOLE_VARIABLE(map_secret_after, map_secret_after, 0) {}
+
 VARIABLE_INT(dogs, &default_dogs, 0, 3, NULL);
 CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
 
@@ -963,6 +967,7 @@ void G_AddCommands(void)
 
    // haleyjd: new stuff
    C_AddCommand(map_coords);
+   C_AddCommand(map_secret_after);
    C_AddCommand(numhelpers);
    C_AddCommand(dogjumping);
    C_AddCommand(draw_particles);

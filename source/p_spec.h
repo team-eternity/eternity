@@ -1116,37 +1116,6 @@ public:
 
 // p_spec
 
-// killough 3/7/98: Add generalized scroll effects
-
-class ScrollThinker : public Thinker
-{
-   DECLARE_THINKER_TYPE(ScrollThinker, Thinker)
-
-protected:
-   void Think();
-
-public:
-   // Methods
-   virtual void serialize(SaveArchive &arc);
-   
-   // Data Members
-   fixed_t dx, dy;      // (dx,dy) scroll speeds
-   int affectee;        // Number of affected sidedef, sector, tag, or whatever
-   int control;         // Control sector (-1 if none) used to control scrolling
-   fixed_t last_height; // Last known height of control sector
-   fixed_t vdx, vdy;    // Accumulated velocity if accelerative
-   int accel;           // Whether it's accelerative
-   enum
-   {
-      sc_side,
-      sc_floor,
-      sc_ceiling,
-      sc_carry,
-      sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-   };
-   int type;              // Type of scroll effect
-};
-
 // haleyjd 04/11/10: FrictionThinker restored
 // phares 3/12/98: added new model of friction for ice/sludge effects
 

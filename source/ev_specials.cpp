@@ -35,6 +35,7 @@
 #include "g_game.h"
 #include "p_info.h"
 #include "p_mobj.h"
+#include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
@@ -5201,32 +5202,36 @@ static ev_static_t HexenStaticBindings[] =
 // Hash Tables
 //
 
-typedef EHashTable<ev_static_t, EIntHashKey, 
-                   &ev_static_t::staticFn, &ev_static_t::links> EV_StaticHash;
+// Resolve a static init function to the special to which it is bound
+typedef EHashTable<ev_static_t, EIntHashKey, &ev_static_t::staticFn,
+                   &ev_static_t::staticLinks> EV_StaticHash;
 
-// DOOM hash
-static EV_StaticHash DOOMStaticHash(earrlen(DOOMStaticBindings));
+// Resolve a line special to the static init function to which it is bound
+typedef EHashTable<ev_static_t, EIntHashKey,&ev_static_t::actionNumber,
+                   &ev_static_t::actionLinks> EV_StaticSpecHash;
 
+// DOOM hashes
+static EV_StaticHash     DOOMStaticHash(earrlen(DOOMStaticBindings));
+static EV_StaticSpecHash DOOMStaticSpecHash(earrlen(DOOMStaticBindings));
 
-// Hexen hash
-static EV_StaticHash HexenStaticHash(earrlen(HexenStaticBindings));
+// Hexen hashes
+static EV_StaticHash     HexenStaticHash(earrlen(HexenStaticBindings));
+static EV_StaticSpecHash HexenStaticSpecHash(earrlen(HexenStaticBindings));
 
 //
 // EV_AddStaticSpecialsToHash
 //
 // Add an array of static specials to a hash table.
 //
-static void EV_AddStaticSpecialsToHash(EV_StaticHash &hash, 
+static void EV_AddStaticSpecialsToHash(EV_StaticHash &staticHash, 
+                                       EV_StaticSpecHash &actionHash,
                                        ev_static_t *bindings, size_t count)
 {
-   // Create a duplicate of the entire bindings array so that the items can
-   // be linked into multiple hash tables at runtime.
-   ev_static_t *newBindings = estructalloc(ev_static_t, count);
-
-   memcpy(newBindings, bindings, count * sizeof(*bindings));
-
    for(size_t i = 0; i < count; i++)
-      hash.addObject(newBindings[i]);
+   {
+      staticHash.addObject(bindings[i]);
+      actionHash.addObject(bindings[i]);
+   }
 }
 
 //
@@ -5243,7 +5248,8 @@ static void EV_InitDOOMStaticHash()
       firsttime = false;
       
       // add every item in the DOOM static bindings array
-      EV_AddStaticSpecialsToHash(DOOMStaticHash, DOOMStaticBindings, 
+      EV_AddStaticSpecialsToHash(DOOMStaticHash, DOOMStaticSpecHash, 
+                                 DOOMStaticBindings,
                                  earrlen(DOOMStaticBindings));
    }
 }
@@ -5261,8 +5267,9 @@ static void EV_InitHexenStaticHash()
    {
       firsttime = false;
 
-      // add every time in the Hexen static bindings array
-      EV_AddStaticSpecialsToHash(HexenStaticHash, HexenStaticBindings,
+      // add every item in the Hexen static bindings array
+      EV_AddStaticSpecialsToHash(HexenStaticHash, HexenStaticSpecHash,
+                                 HexenStaticBindings,
                                  earrlen(HexenStaticBindings));
    }
 }
@@ -5281,6 +5288,23 @@ int EV_DOOMSpecialForStaticInit(int staticFn)
    EV_InitDOOMStaticHash();
 
    return (binding = DOOMStaticHash.objectForKey(staticFn)) ? binding->actionNumber : 0;
+}
+
+//
+// EV_DOOMStaticInitForSpecial
+//
+// Always looks up a static init function in the DOOM gamemode's static init list,
+// regardless of the map format or gamemode in use. Returns 0 if the given special
+// isn't bound to a static init function.
+//
+int EV_DOOMStaticInitForSpecial(int special)
+{
+   ev_static_t *binding;
+
+   // init the hash if it hasn't been done yet
+   EV_InitDOOMStaticHash();
+
+   return (binding = DOOMStaticSpecHash.objectForKey(special)) ? binding->staticFn : 0;
 }
 
 //
@@ -5303,6 +5327,21 @@ int EV_HereticSpecialForStaticInit(int staticFn)
 }
 
 //
+// EV_HereticStaticInitForSpecial
+//
+// Always looks up a static init function in the Heretic gamemode's static init
+// list, regardless of the map format or gamemode in use. Returns 0 if the given
+// special isn't bound to a static init function.
+//
+int EV_HereticStaticInitForSpecial(int special)
+{
+   if(special == 99)
+      return EV_STATIC_SCROLL_LINE_RIGHT;
+
+   return EV_DOOMStaticInitForSpecial(special);
+}
+
+//
 // EV_HexenSpecialForStaticInit
 //
 // Always looks up a special in the Hexen gamemode's static init list, 
@@ -5319,6 +5358,23 @@ int EV_HexenSpecialForStaticInit(int staticFn)
    return (binding = HexenStaticHash.objectForKey(staticFn)) ? binding->actionNumber : 0;
 }
 
+//
+// EV_HexenStaticInitForSpecial
+//
+// Always looks up a static init function in the Hexen gamemode's statc init
+// list, regardless of the map format or gamemode in use. Returns 0 if the given
+// special isn't bound to a static init function.
+//
+int EV_HexenStaticInitForSpecial(int special)
+{
+   ev_static_t *binding;
+
+   // init the hash if it hasn't been done yet
+   EV_InitHexenStaticHash();
+
+   return (binding = HexenStaticSpecHash.objectForKey(special)) ? binding->staticFn: 0;
+}
+
 // 
 // EV_StrifeSpecialForStaticInit
 //
@@ -5332,29 +5388,69 @@ int EV_StrifeSpecialForStaticInit(int staticFn)
    return 0;
 }
 
-typedef int (*EV_hashFunc)(int);
-
-// Get a hash table lookup function for a particular map type
-static EV_hashFunc hashFuncForMapType[LI_TYPE_NUMTYPES] =
+//
+// EV_StrifeStaticInitForSpecial
+//
+// TODO
+//
+int EV_StrifeStaticInitForSpecial(int special)
 {
-   EV_DOOMSpecialForStaticInit,    // DOOM
-   EV_HereticSpecialForStaticInit, // Heretic
-   EV_HexenSpecialForStaticInit,   // Hexen
-   EV_StrifeSpecialForStaticInit,  // Strife
-};
+   return 0;
+}
 
 //
 // EV_SpecialForStaticInit
 //
 // Pass in the symbolic static function name you want the line special for; it
 // will return the line special number currently bound to that function for the
-// currently active map type.
+// currently active map type. If zero is returned, that static function has no
+// binding for the current map.
 //
 int EV_SpecialForStaticInit(int staticFn)
 {
-   EV_hashFunc hashFn = hashFuncForMapType[LevelInfo.levelType];
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+      return EV_HexenSpecialForStaticInit(staticFn);
+   else
+   {
+      switch(LevelInfo.levelType)
+      {
+      case LI_TYPE_DOOM: 
+      default:
+         return EV_DOOMSpecialForStaticInit(staticFn);
+      case LI_TYPE_HERETIC:
+      case LI_TYPE_HEXEN:   // matches ZDoom's default behavior
+         return EV_HereticSpecialForStaticInit(staticFn);
+      case LI_TYPE_STRIFE:
+         return EV_StrifeSpecialForStaticInit(staticFn);
+      }
+   }      
+}
 
-   return hashFn(staticFn);
+//
+// EV_StaticInitForSpecial
+//
+// Pass in a line special number and the static function ordinal bound to that
+// special will be returned. If zero is returned, there is no static function
+// bound to that special for the current map.
+//
+int EV_StaticInitForSpecial(int special)
+{
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+      return EV_HexenStaticInitForSpecial(special);
+   else
+   {
+      switch(LevelInfo.levelType)
+      {
+      case LI_TYPE_DOOM:
+      default:
+         return EV_DOOMStaticInitForSpecial(special);
+      case LI_TYPE_HERETIC:
+      case LI_TYPE_HEXEN:
+         return EV_HereticStaticInitForSpecial(special);
+      case LI_TYPE_STRIFE:
+         return EV_StrifeStaticInitForSpecial(special);
+      }
+   }
 }
 
 // EOF

@@ -129,6 +129,7 @@ struct ev_binding_t
 enum
 {
    // Enumerator                               DOOM/BOOM/MBF/EE Line Special
+   EV_STATIC_NULL,                          // No-op placeholder
    EV_STATIC_SCROLL_LINE_LEFT,              // 48
    EV_STATIC_SCROLL_LINE_RIGHT,             // 85
    EV_STATIC_LIGHT_TRANSFER_FLOOR,          // 213
@@ -219,8 +220,12 @@ struct ev_static_t
    int actionNumber; // numeric line special
    int staticFn;     // static init function enumeration value
 
-   DLListItem<ev_static_t> links; // hash links
+   DLListItem<ev_static_t> staticLinks; // hash links for static->special
+   DLListItem<ev_static_t> actionLinks; // hash links for special->static
 };
+
+int EV_SpecialForStaticInit(int staticFn);
+int EV_StaticInitForSpecial(int special);
 
 #endif
 
