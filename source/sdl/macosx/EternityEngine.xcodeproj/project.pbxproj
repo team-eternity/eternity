@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
+		4F9F72D316BFB73200C405AE /* p_pushers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D116BFB73200C405AE /* p_pushers.cpp */; };
+		4F9F72D416BFB73200C405AE /* p_scroll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D216BFB73200C405AE /* p_scroll.cpp */; };
 		4FD651AE16B802BE00F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
 		4FD651B316B8033900F9BE74 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FD651B016B8033900F9BE74 /* SDL_mixer.framework */; };
 		4FD651B416B8033900F9BE74 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FD651B116B8033900F9BE74 /* SDL_net.framework */; };
@@ -299,6 +301,10 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
+		4F9F72CF16BFB70A00C405AE /* p_pushers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_pushers.h; path = ../../p_pushers.h; sourceTree = "<group>"; };
+		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../../p_scroll.h; sourceTree = "<group>"; };
+		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../../p_pushers.cpp; sourceTree = "<group>"; };
+		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../../p_scroll.cpp; sourceTree = "<group>"; };
 		4FD651B016B8033900F9BE74 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
 		4FD651B116B8033900F9BE74 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
 		4FD651B216B8033900F9BE74 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
@@ -1457,6 +1463,8 @@
 		FACACB521652EFE30091AF2E /* P_ source */ = {
 			isa = PBXGroup;
 			children = (
+				4F9F72D116BFB73200C405AE /* p_pushers.cpp */,
+				4F9F72D216BFB73200C405AE /* p_scroll.cpp */,
 				FABF5D0D158BF42800C49E93 /* p_anim.cpp */,
 				FABF5D0E158BF42800C49E93 /* p_ceilng.cpp */,
 				FABF5D0F158BF42800C49E93 /* p_chase.cpp */,
@@ -1500,6 +1508,8 @@
 		FACACB531652EFE70091AF2E /* P_ headers */ = {
 			isa = PBXGroup;
 			children = (
+				4F9F72CF16BFB70A00C405AE /* p_pushers.h */,
+				4F9F72D016BFB70A00C405AE /* p_scroll.h */,
 				FACACB541652F1170091AF2E /* linkoffs.h */,
 				FACACB551652F1170091AF2E /* p_anim.h */,
 				FA16D42415E01E96002318D1 /* p_chase.h */,
@@ -2291,6 +2301,8 @@
 				FADFF98F16555F6200C8537B /* d_findiwads.cpp in Sources */,
 				FAEB990716666A65004B0CD1 /* ev_specials.cpp in Sources */,
 				FA601C6716961D9A00046D2D /* SDLMain.m in Sources */,
+				4F9F72D316BFB73200C405AE /* p_pushers.cpp in Sources */,
+				4F9F72D416BFB73200C405AE /* p_scroll.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
