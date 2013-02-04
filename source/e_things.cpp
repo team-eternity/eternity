@@ -1517,24 +1517,23 @@ static void E_CopyThing(int num, int pnum)
 {
    mobjinfo_t *this_mi;
    DLListItem<mobjinfo_t> namelinks, numlinks;
-   int         dehnum;
    char       *name;
+   int         dehnum;
    MetaTable  *meta;
    int         index;
    int         generation;
    
    this_mi = mobjinfo[num];
 
-   // must save the following fields in the destination thing
+   // must save the following fields in the destination thing:
    namelinks  = this_mi->namelinks;
    numlinks   = this_mi->numlinks;
-   dehnum     = this_mi->dehnum;
    name       = this_mi->name;
+   dehnum     = this_mi->dehnum;
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
-   memcpy(name, this_mi->name, sizeof(this_mi->name));
-
+   
    // copy from source to destination
    memcpy(this_mi, mobjinfo[pnum], sizeof(mobjinfo_t));
 
@@ -1559,7 +1558,6 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
-   memcpy(this_mi->name, name, sizeof(this_mi->name));
 
    // other fields not inherited:
 
