@@ -66,6 +66,7 @@
 	IBOutlet NSTextField *otherField;
    
 	IBOutlet NSButton *respawn, *fast, *nomons, *vanilla, *timedemo, *fastdemo;
+   IBOutlet NSMatrix *demotype;
 	
 	IBOutlet NSTextView *infoDisplay;
    
@@ -121,9 +122,10 @@
 -(IBAction)showUserInFinder:(id)sender;
 -(IBAction)showFileInFinder:(id)sender;
 -(IBAction)accessBaseFolder:(id)sender;
--(IBAction)accessOldDocs:(id)sender;
 
 -(IBAction)showLicense:(id)sender;
+
+-(IBAction)makeCheckboxUndo:(id)sender;
 
 -(void)taskEnded;
 

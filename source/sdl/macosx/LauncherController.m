@@ -29,12 +29,9 @@
 // TODO:
 //
 // * Backspace (delete) key for removing file entries
-// * Warn user on overwriting demo at "start game" moment, not entry moment
 // * Options to copy the whole parameter list to clipboard (not by selecting
-//   directly)
+//   directly) (???)
 // * Full help instead of Internet link
-// * Correct menu bar
-// * Some artwork background
 
 #import "LauncherController.h"
 #import "ELDumpConsole.h"
@@ -42,6 +39,11 @@
 #import "ELCommandLineArray.h"
 #import "ELCommandLineArgument.h"
 
+#define SET_UNDO(a, b, c)     NSUndoManager *undom = [self getUndoFor:a]; \
+                              [[undom prepareWithInvocationTarget:self] b]; \
+                              [undom setActionName:c];
+
+NSInteger prevState = 0; // heh
 
 static BOOL gCalledAppMainline = FALSE;
 static BOOL gSDLStarted;	// IOAN 20120616
@@ -459,7 +461,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 -(void)doLaunchGame:(id)sender
 {
-	[self updateParameters:sender];	// Update parameters.
+	[self updateParameters:self];	// Update parameters.
    // FIXME: do it in real-time
 	
 	// Add -base and user here
@@ -606,11 +608,8 @@ iwadMightBe:
 		      
       [iwadPopUp insertItemWithTitle:[fileMan displayNameAtPath:iwadPath] atIndex:ind];
       
-      NSUndoManager *undom = [self getUndoFor:iwadPopUp];
-      [[undom prepareWithInvocationTarget:self] doRemoveIwadAtIndex:ind];
-      [undom setActionName:@"Add/Remove Game WAD"];
-
-
+      SET_UNDO(iwadPopUp, doRemoveIwadAtIndex:ind, @"Add/Remove Game WAD")
+      
 		last = [[[iwadPopUp menu] itemArray] objectAtIndex:ind];
 		[last setRepresentedObject:wURL];
 		[last setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadPath]];
@@ -646,10 +645,8 @@ iwadMightBe:
 	{
 		NSURL *iwadURL = [[iwadPopUp itemAtIndex:ind] representedObject];
       
-      NSUndoManager *undom = [self getUndoFor:iwadPopUp];
-      [[undom prepareWithInvocationTarget:self] doAddIwadFromURL:iwadURL atIndex:ind];
-      [undom setActionName:@"Add/Remove Game WAD"];
-		
+      SET_UNDO(iwadPopUp, doAddIwadFromURL:iwadURL atIndex:ind, @"Add/Remove Game WAD")
+      
 		[iwadPopUp removeItemAtIndex:ind];
 		[iwadSet removeObject:iwadURL];
 		
@@ -735,9 +732,7 @@ iwadMightBe:
    if(anIndexSet == nil)
       anIndexSet = [NSIndexSet indexSetWithIndex:[pwadArray count]];   // nothing designated, so add at end.
    
-   NSUndoManager *undom = [self getUndoFor:pwadView];
-   [undom registerUndoWithTarget:self selector:@selector(doRemovePwadsAtIndexes:) object:anIndexSet];
-   [undom setActionName:@"Add/Remove Files"];
+   SET_UNDO(pwadView, doRemovePwadsAtIndexes:anIndexSet, @"Add/Remove Files")
    
    [pwadArray insertObjects:wURLArray atIndexes:anIndexSet];
    
@@ -838,9 +833,7 @@ iwadMightBe:
    //
    // Register undo
    //
-   NSUndoManager *undom = [self getUndoFor:pwadView];
-   [[undom prepareWithInvocationTarget:self] doAddPwadsFromURLs:undoRemoveURLs atIndexes:set];
-   [undom setActionName:@"Add/Remove Files"];
+   SET_UNDO(pwadView, doAddPwadsFromURLs:undoRemoveURLs atIndexes:set, @"Add/Remove Files")
    
    //
    // Update selection
@@ -892,6 +885,31 @@ iwadMightBe:
 }
 
 //
+// resetRecordDemo
+//
+-(void)resetRecordDemo
+{
+   NSString *strval = [recordDemoField stringValue];
+   SET_UNDO(recordDemoField, setRecordDemo:strval, @"Set Demo Record")
+   
+   [recordDemoField setStringValue:@""];
+	
+	[self updateParameters:self];
+}
+
+//
+// setRecordDemo:
+//
+-(void)setRecordDemo:(NSString *)path
+{
+   SET_UNDO(recordDemoField, resetRecordDemo, @"Set Demo Record")
+   
+   [recordDemoField setStringValue:path];
+	
+	[self updateParameters:self];
+}
+
+//
 // chooseRecordDidEnd:returnCode:contextInfo:
 //
 -(void)chooseRecordDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
@@ -900,9 +918,7 @@ iwadMightBe:
 	{
 		return;
 	}
-	[recordDemoField setStringValue:[[panel URL] path]];
-	
-	[self updateParameters:self];
+   [self setRecordDemo:[[panel URL] path]];
 	
 }
 
@@ -941,11 +957,65 @@ iwadMightBe:
 //
 -(IBAction)clearPlayDemo:(id)sender
 {
-	[playDemoField setStringValue:@""];
-	[fastdemo setState:NSOffState];
-	[timedemo setState:NSOffState];
-	
-	[self updateParameters:sender];
+   [self toggleBlankValue:playDemoField toValue:@""];
+   [self toggleBlankState3:demotype toState:0];
+}
+
+//
+// toggleBlankValue:toValue:
+//
+-(void)toggleBlankValue:(NSTextField *)field toValue:(NSString *)value
+{
+   if([[field stringValue] isEqualToString:value])
+      return;
+   
+   SET_UNDO(field, toggleBlankValue:field toValue:[field stringValue], @"Change Value")
+   
+   [field setStringValue:value];
+   
+   [self updateParameters:self];
+}
+
+//
+// toggleBlankState:toState:
+//
+-(void)toggleBlankState:(NSButton *)field toState:(NSCellStateValue)state
+{
+   if([field state] == state)
+      return;
+   SET_UNDO(field, toggleBlankState:field toState:[field state], @"Change Value")
+   
+   [field setState:state];
+   
+   [self updateParameters:self];
+}
+
+//
+// toggleBlankState2:toState:
+//
+-(void)toggleBlankState2:(NSPopUpButton *)field toState:(NSInteger)state
+{
+   if([field indexOfSelectedItem] == state)
+      return;
+   SET_UNDO(field, toggleBlankState2:field toState:[field indexOfSelectedItem], @"Change Value")
+   
+   [field selectItemAtIndex:state];
+   
+   [self updateParameters:self];
+}
+
+//
+// toggleBlankState3:toState:
+//
+-(void)toggleBlankState3:(NSMatrix *)field toState:(NSInteger)state
+{
+   if([field selectedRow] == state)
+      return;
+   SET_UNDO(field, toggleBlankState3:field toState:[field selectedRow], @"Change Value")
+   
+   [field selectCellAtRow:state column:0];
+   
+   [self updateParameters:self];
 }
 
 //
@@ -955,16 +1025,14 @@ iwadMightBe:
 //
 -(IBAction)clearRecordDemo:(id)sender
 {
-	[recordDemoField setStringValue:@""];
-	[warpField setStringValue:@""];
-	[skillField setStringValue:@""];
-	
-	[respawn setState:NSOffState];
-	[fast setState:NSOffState];
-	[nomons setState:NSOffState];
-	[vanilla setState:NSOffState];
-	
-	[self updateParameters:sender];
+   [self toggleBlankValue:recordDemoField toValue:@""];
+   [self toggleBlankValue:warpField toValue:@""];
+   [self toggleBlankValue:skillField toValue:@""];
+   
+   [self toggleBlankState:respawn toState:NSOffState];
+   [self toggleBlankState:fast toState:NSOffState];
+   [self toggleBlankState:nomons toState:NSOffState];
+   [self toggleBlankState:vanilla toState:NSOffState];
 
 }
 
@@ -975,15 +1043,13 @@ iwadMightBe:
 //
 -(IBAction)clearNetwork:(id)sender
 {
-	[gameTypePopUp selectItemAtIndex:0];
-	
-	[fragField setStringValue:@""];
-	[timeField setStringValue:@""];
-	[turboField setStringValue:@""];
-	[dmflagField setStringValue:@""];
-	[netField setStringValue:@""];
-	
-	[self updateParameters:sender];
+   [self toggleBlankValue:fragField toValue:@""];
+   [self toggleBlankValue:timeField toValue:@""];
+   [self toggleBlankValue:turboField toValue:@""];
+   [self toggleBlankValue:dmflagField toValue:@""];
+   [self toggleBlankValue:netField toValue:@""];
+   
+   [self toggleBlankState2:gameTypePopUp toState:0];
 }
 
 //
@@ -1327,10 +1393,7 @@ iwadMightBe:
 //
 -(IBAction)updateParmPlayDemo:(id)sender
 {
-	if(sender == timedemo && [timedemo state] == NSOnState)
-		[fastdemo setState:NSOffState];
-	else if(sender == fastdemo && [fastdemo state] == NSOnState)
-		[timedemo setState:NSOffState];
+	
 	
 	[[param argumentWithIdentifier:@"-timedemo"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-fastdemo"] setEnabled:NO];
@@ -1338,12 +1401,18 @@ iwadMightBe:
 	if([[playDemoField stringValue] length] > 0)
 	{
 		NSString *name;
-		if([timedemo state] == NSOnState)
-			name = @"-timedemo";
-		else if([fastdemo state] == NSOnState)
-			name = @"-fastdemo";
-		else
-			name = @"-playdemo";
+      switch([demotype selectedRow])
+      {
+         default:
+            name = @"-playdemo";
+            break;
+         case 1:
+            name = @"-timedemo";
+            break;
+         case 2:
+            name = @"-fastdemo";
+            break;
+      }
 		[[param argumentWithIdentifier:name] setEnabled:YES];
 		[[[param argumentWithIdentifier:name] extraWords] setArray:[NSArray arrayWithObject:[playDemoField stringValue]]];
 	}
@@ -1371,6 +1440,48 @@ iwadMightBe:
 			break;
 	}
 }
+
+//
+// doMakeCheckboxUndo:
+//
+-(void)doMakeCheckboxUndo:(NSCellStateValue)state toSender:(NSButton *)sender
+{
+   SET_UNDO(sender, doMakeCheckboxUndo:(state == NSOnState ? NSOffState : NSOnState) toSender:sender, @"Toggle Value")
+   
+   [sender setState:state];
+   
+   [self updateParameters:sender];
+}
+
+//
+// makeCheckboxUndo:
+//
+-(IBAction)makeCheckboxUndo:(id)sender
+{
+   [self doMakeCheckboxUndo:[sender state] toSender:sender];
+}
+
+//
+// doMakeRadioUndo:
+//
+-(void)doMakeRadioUndo:(NSInteger)state toSender:(NSMatrix *)sender
+{
+   SET_UNDO(sender, doMakeRadioUndo:prevState toSender:sender, @"Change Value")
+   
+   [sender selectCellAtRow:state column:0];
+   
+   prevState = state;
+   
+   [self updateParameters:sender];
+}
+
+//
+// makeRadioUndo:
+//
+-(IBAction)makeRadioUndo:(id)sender
+{
+   [self doMakeRadioUndo:[sender selectedRow] toSender:sender];
+}
 		 
 //
 // updateParameters:
@@ -1379,6 +1490,7 @@ iwadMightBe:
 //
 -(IBAction)updateParameters:(id)sender
 {
+   
 	[self updateParmRsp:sender];
 	[self updateParmIwad:sender];
 	[self updateParmPwad:sender];
@@ -1421,7 +1533,7 @@ iwadMightBe:
 	}
 	
 	[infoDisplay setString:infotext];
-	
+	[infoDisplay scrollToEndOfDocument:sender];
 }
 
 //
@@ -1485,8 +1597,7 @@ iwadMightBe:
 	[defaults setObject:[playDemoField stringValue] forKey:@"playdemo"];
 	
 	// timedemo, fastdemo
-	[defaults setBool:[timedemo state] == NSOnState ? YES : NO forKey:@"timedemo"];
-	[defaults setBool:[fastdemo state] == NSOnState ? YES : NO forKey:@"fastdemo"];
+   [defaults setInteger:[demotype selectedRow] forKey:@"demotype"];
 	
 	// gametype
 	[defaults setInteger:[gameTypePopUp indexOfSelectedItem] forKey:@"gameTypePopUpIndex"];
@@ -1569,8 +1680,7 @@ iwadMightBe:
 		[playDemoField setStringValue:[defaults objectForKey:@"playdemo"]];
 		
 		// timedemo, fastdemo
-		[timedemo setState:[defaults boolForKey:@"timedemo"] ? NSOnState : NSOffState];
-		[fastdemo setState:[defaults boolForKey:@"fastdemo"] ? NSOnState : NSOffState];
+      [demotype selectCellAtRow:(prevState = [defaults integerForKey:@"demotype"]) column:0];
 		
 		// gametype
 		[gameTypePopUp selectItemAtIndex:[defaults integerForKey:@"gameTypePopUpIndex"]];
