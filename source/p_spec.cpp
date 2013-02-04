@@ -3784,9 +3784,6 @@ void P_ConvertHereticSpecials(void)
 
       switch(line->special)
       {
-      case 99:  // Texture scroll right
-         line->special = 85;
-         break;
       case 100: // WR raise door 3*VDOORSPEED
          line->special  = 300; // Door_Raise
          line->extflags = EX_ML_CROSS|EX_ML_PLAYER|EX_ML_REPEAT;
