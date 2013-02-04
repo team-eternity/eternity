@@ -1136,38 +1136,6 @@ public:
    int affectee;      // Number of affected sector
 };
 
-// phares 3/20/98: added new model of Pushers for push/pull effects
-
-class PushThinker : public Thinker
-{
-   DECLARE_THINKER_TYPE(PushThinker, Thinker)
-
-protected:
-   void Think();
-
-public:
-   // Methods
-   virtual void serialize(SaveArchive &arc);
-   
-   // Data Members
-   enum
-   {
-      p_push,
-      p_pull,
-      p_wind,
-      p_current,
-   }; 
-   int type;
-   Mobj *source;        // Point source if point pusher
-   int x_mag;           // X Strength
-   int y_mag;           // Y Strength
-   int magnitude;       // Vector strength for point pusher
-   int radius;          // Effective radius for point pusher
-   int x;               // X of point source if point pusher
-   int y;               // Y of point source if point pusher
-   int affectee;        // Number of affected sector
-};
-
 // sf: direction plat moving
 
 enum
@@ -1478,8 +1446,6 @@ void P_RemoveActiveCeiling(CeilingThinker *c);
 int P_ActivateInStasisCeiling(line_t *line); 
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
-
-Mobj *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachLines(line_t *cline, bool ceiling);

@@ -20,23 +20,24 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Scrollers, carriers, and related effects
+//   BOOM Push / Pull / Current Effects
 //
 //-----------------------------------------------------------------------------
 
-#ifndef P_SCROLL_H__
-#define P_SCROLL_H__
+#ifndef P_PUSHERS_H__
+#define P_PUSHERS_H__
 
-#include "m_fixed.h" // for fixed_t
-#include "p_tick.h"  // for Thinker
+#include "p_tick.h" // for Thinker
 
-class SaveArchive;
+struct line_t;
+class  Mobj;
+class  SaveArchive;
 
-// killough 3/7/98: Add generalized scroll effects
+// phares 3/20/98: added new model of Pushers for push/pull effects
 
-class ScrollThinker : public Thinker
+class PushThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(ScrollThinker, Thinker)
+   DECLARE_THINKER_TYPE(PushThinker, Thinker)
 
 protected:
    void Think();
@@ -46,29 +47,32 @@ public:
    virtual void serialize(SaveArchive &arc);
    
    // Data Members
-   fixed_t dx, dy;      // (dx,dy) scroll speeds
-   int affectee;        // Number of affected sidedef, sector, tag, or whatever
-   int control;         // Control sector (-1 if none) used to control scrolling
-   fixed_t last_height; // Last known height of control sector
-   fixed_t vdx, vdy;    // Accumulated velocity if accelerative
-   int accel;           // Whether it's accelerative
    enum
    {
-      sc_side,
-      sc_floor,
-      sc_ceiling,
-      sc_carry,
-      sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-   };
-   int type;              // Type of scroll effect
+      p_push,
+      p_pull,
+      p_wind,
+      p_current,
+   }; 
+
+   int   type;
+   Mobj *source;        // Point source if point pusher
+   int   x_mag;         // X Strength
+   int   y_mag;         // Y Strength
+   int   magnitude;     // Vector strength for point pusher
+   int   radius;        // Effective radius for point pusher
+   int   x;             // X of point source if point pusher
+   int   y;             // Y of point source if point pusher
+   int   affectee;      // Number of affected sector
 };
 
-void Add_Scroller(int type, fixed_t dx, fixed_t dy,
-                  int control, int affectee, int accel);
+Mobj *P_GetPushThing(int); // phares 3/23/98
+void P_SpawnPushers();
 
-void P_SpawnScrollers();
+void P_SpawnHereticWind(line_t *line);
 
 #endif
 
 // EOF
+
 

@@ -2691,6 +2691,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_pushers.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_saveg.cpp"
 						>
 						<FileConfiguration
@@ -3068,6 +3072,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_pspr.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_pushers.h"
 						>
 					</File>
 					<File
