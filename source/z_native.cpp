@@ -777,7 +777,7 @@ void *Z_SysCalloc(size_t n1, size_t n2)
    {
       I_FatalError(I_ERR_KILL,
                    "Z_SysCalloc: failed on allocation of %u bytes\n", 
-                   (unsigned int)n1*n2);
+                   (unsigned int)(n1*n2));
    }
 
    return ret;

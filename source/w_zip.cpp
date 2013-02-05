@@ -430,7 +430,6 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 {
    int lumpidx   = 0; // current index into lumps[]
-   int skipLumps = 0; // number of lumps skipped
 
    // seek to start of directory
    if(fin.seek(offset, SEEK_SET))
@@ -541,6 +540,12 @@ void ZipFile::linkTo(DLListItem<ZipFile> **head)
    links.insert(this, head);
 }
 
+//
+// ZipFile::getLump
+//
+// Range-checking accessor function returning a reference to a given lump
+// structure. Fatal if the index is out of range.
+//
 ZipLump &ZipFile::getLump(int lumpNum)
 {
    if(lumpNum < 0 || lumpNum >= numLumps)

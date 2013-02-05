@@ -714,12 +714,13 @@ static void HI_drawDMStats(void)
 {
    int i, j;
    int xpos, ypos, kpos;
+   const char *killers = HIS_KILLERS;
 
    V_FontWriteTextShadowed(in_bigfont, HIS_TOTAL, 265, 30, &subscreen43);
    V_FontWriteText(in_font, HIS_VICTIMS, 140, 8, &subscreen43);
 
    for(i = 0; i < 7; ++i)
-      V_FontWriteText(in_font, HIS_KILLERS + i*2, 10, 80 + 9 * i, &subscreen43);
+      V_FontWriteText(in_font, killers + i*2, 10, 80 + 9 * i, &subscreen43);
 
    xpos = 90;
    ypos = 55;

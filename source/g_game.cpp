@@ -674,7 +674,7 @@ void G_DoLoadLevel(void)
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
-   memset(mousebuttons, 0, sizeof(mousebuttons));
+   memset(mousearray, 0, sizeof(mousearray));
    G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
 
    // killough: make -timedemo work on multilevel demos

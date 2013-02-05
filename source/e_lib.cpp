@@ -931,7 +931,6 @@ void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
 //
 char *E_GetHeredocLine(char **src)
 {
-   bool isdone  = false;
    char *srctxt    = *src;
    char *linestart = srctxt;
 

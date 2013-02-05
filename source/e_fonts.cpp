@@ -929,7 +929,6 @@ static void E_ProcessFont(cfg_t *sec)
       for(int col = 0; col < CR_LIMIT; col++)
       {
          qstring translation;
-         const char *fieldname = fontcolornames[col];
          
          E_CfgListToCommaString(colors, fontcolornames[col], translation);
 

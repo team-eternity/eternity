@@ -1134,8 +1134,8 @@ static void R_DrawPSprite(pspdef_t *psp)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;         // shadow draw
       vis->colormap  = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
    }
-   else if(viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
-           viewplayer->powers[pw_ghost] & 8 &&
+   else if((viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
+            viewplayer->powers[pw_ghost] & 8) &&
            general_translucency)
    {
       vis->drawstyle    = VS_DRAWSTYLE_ALPHA;

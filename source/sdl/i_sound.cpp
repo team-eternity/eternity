@@ -325,8 +325,6 @@ void I_SetMusicVolume(int volume)
       i_musicdriver->SetMusicVolume(volume);
 }
 
-static int paused_midi_volume;
-
 //
 // I_PauseSong
 //

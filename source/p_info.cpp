@@ -565,7 +565,6 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
 {
    unsigned int len;
    const char *label = NULL;
-   LevelInfoProto_t *curproto = NULL;
 
    line->replace("\t\r\n", ' '); // erase any control characters
    line->toLower();              // make everything lowercase

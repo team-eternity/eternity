@@ -1348,7 +1348,7 @@ int EV_DoDonut(line_t *line)
       if(P_SectorActive(floor_special, s1)) //jff 2/22/98
          continue;
                       
-      s2 = getNextSector(s1->lines[0],s1); // s2 is pool's sector
+      s2 = getNextSector(s1->lines[0], s1); // s2 is pool's sector
       if(!s2) continue;           // note lowest numbered line around
                                   // pillar must be two-sided 
 
@@ -1367,7 +1367,7 @@ int EV_DoDonut(line_t *line)
             // because it always evaluates to false. Since this is causing
             // a warning in GCC 4, I have commented it out.
             if(/*(!s2->lines[i]->flags & ML_TWOSIDED) ||*/
-               (s2->lines[i]->backsector == s1))
+               s2->lines[i]->backsector == s1)
                continue;
          }
          else if(!s2->lines[i]->backsector ||
@@ -1398,13 +1398,13 @@ int EV_DoDonut(line_t *line)
          //  Spawn rising slime
          floor = new FloorMoveThinker;
          floor->addThinker();
-         s2->floordata = floor; //jff 2/22/98
-         floor->type = donutRaise;
-         floor->crush = -1;
+         s2->floordata    = floor; //jff 2/22/98
+         floor->type      = donutRaise;
+         floor->crush     = -1;
          floor->direction = plat_up;
-         floor->sector = s2;
-         floor->speed = FLOORSPEED / 2;
-         floor->texture = s3_floorpic;
+         floor->sector    = s2;
+         floor->speed     = FLOORSPEED / 2;
+         floor->texture   = s3_floorpic;
          P_ZeroSpecialTransfer(&(floor->special));
          floor->floordestheight = s3_floorheight;
          P_FloorSequence(floor->sector);
@@ -1412,12 +1412,12 @@ int EV_DoDonut(line_t *line)
          //  Spawn lowering donut-hole pillar
          floor = new FloorMoveThinker;
          floor->addThinker();
-         s1->floordata = floor; //jff 2/22/98
-         floor->type = lowerFloor;
-         floor->crush = -1;
+         s1->floordata    = floor; //jff 2/22/98
+         floor->type      = lowerFloor;
+         floor->crush     = -1;
          floor->direction = plat_down;
-         floor->sector = s1;
-         floor->speed = FLOORSPEED / 2;
+         floor->sector    = s1;
+         floor->speed     = FLOORSPEED / 2;
          floor->floordestheight = s3_floorheight;
          P_FloorSequence(floor->sector);
          break;

@@ -90,9 +90,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 {
    int   numdigits = n->width;
    int   num = *n->num;
-
    int   w = n->p[0]->width;
-   int   h = n->p[0]->height;
    int   x;
 
    int   neg;

@@ -3425,7 +3425,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
    // haleyjd: static analyzer says this could happen, so let's just be safe.
    if(!attached)
       I_Error("P_AttachLines: nothing to attach to sector %d\n",
-              cline->frontsector - sectors);
+              static_cast<int>(cline->frontsector - sectors));
 
    // Copy the list to the c_attached or f_attached list.
    if(ceiling)

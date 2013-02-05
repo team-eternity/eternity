@@ -85,12 +85,14 @@ void SectorThinker::serialize(SaveArchive &arc)
 //
 void P_NewSectorActionFromMobj(Mobj *actor)
 {
+#if 0
    sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
 
    if(actor->type == E_ThingNumForName("EESectorActionEnter"))
    {
       // TODO
    }
+#endif
 }
 
 // EOF

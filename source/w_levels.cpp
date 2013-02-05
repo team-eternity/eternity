@@ -431,7 +431,6 @@ static bool masterlevelsenum;   // if true, the folder has been enumerated
 static WadDirectory *W_loadMasterLevelWad(const char *filename)
 {
    char *fullpath = NULL;
-   int len = 0;
    WadDirectory *dir = NULL;
    
    if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
@@ -578,7 +577,6 @@ char *w_norestpath;
 //
 static WadDirectory *W_loadNR4TL()
 {
-   int len = 0;
    WadDirectory *dir = NULL;
    
    if(!w_norestpath || !*w_norestpath)
@@ -599,10 +597,7 @@ static WadDirectory *W_loadNR4TL()
 //
 void W_DoNR4TLStart()
 {
-   static bool firsttime = true;
-
    WadDirectory *dir = NULL;
-   const char *mapname = NULL;
 
    // Try to load the NR4TL wad file
    if(!(dir = W_loadNR4TL()))

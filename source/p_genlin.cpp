@@ -1386,39 +1386,6 @@ int EV_DoGenDoor(line_t *line)
 // specials at run-time.
 //
 
-//
-// pspec_TriggerType
-//
-// Routine to get a generalized line trigger type for a given
-// parameterized special activation.
-//
-static int pspec_TriggerType(int spac, int tag, bool reuse)
-{
-   int trig = 0;
-
-   // zero tags must always be treated as push types
-   if(!tag)
-      return (reuse ? PushMany : PushOnce);
-
-   switch(spac)
-   {
-   case SPAC_USE:
-      trig = (reuse ? SwitchMany : SwitchOnce);
-      break;
-   case SPAC_IMPACT:
-      trig = (reuse ? GunMany : GunOnce);
-      break;
-   case SPAC_CROSS:
-      trig = (reuse ? WalkMany : WalkOnce);
-      break;
-   case SPAC_PUSH:
-      // TODO
-      break;
-   }
-
-   return trig;
-}
-
 // parameterized door trigger type lookup table
 
 static int param_door_kinds[6] =
@@ -1983,8 +1950,6 @@ bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
                          int *args, int side, int spac, bool reuse)
 {
    bool success = false;
-
-   int trigger_type = pspec_TriggerType(spac, args[0], reuse);
 
    switch(special)
    {

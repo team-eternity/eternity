@@ -154,7 +154,7 @@ enum
 
 typedef struct keyaction_s
 {
-   char *name;        // text description
+   const char *name;        // text description
 
    // haleyjd 07/03/04: key binding classes
    int bclass;
@@ -275,7 +275,7 @@ static keyaction_t *cons_keyactions = NULL;
 
 typedef struct doomkey_s
 {
-   char *name;
+   const char *name;
    bool keydown[NUMKEYACTIONCLASSES];
    keyaction_t *bindings[NUMKEYACTIONCLASSES];
 } doomkey_t;

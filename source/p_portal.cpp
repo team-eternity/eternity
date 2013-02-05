@@ -605,7 +605,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
    fixed_t momx = mo->momx;
    fixed_t momy = mo->momy;
    fixed_t momz = mo->momz;
-   fixed_t vh = mo->player ? mo->player->viewheight : 0;
+   //fixed_t vh = mo->player ? mo->player->viewheight : 0;
 
    if(!mo || !link)
       return 0;
@@ -620,7 +620,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if (mo->player)
+   if(mo->player)
    {
       // Save the current deltaviewheight, used in stepping
       fixed_t deltaviewheight = mo->player->deltaviewheight;
@@ -634,7 +634,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
       // Reset the delta to have the same dynamics as before
       mo->player->deltaviewheight = deltaviewheight;
 
-      if(mo->player == players+displayplayer)
+      if(mo->player == players + displayplayer)
           P_ResetChasecam();
    }
 

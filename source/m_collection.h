@@ -67,7 +67,8 @@ protected:
       if(newnumalloc > numalloc)
       {
          ptrArray = erealloc(T *, ptrArray, newnumalloc * sizeof(T));
-         memset(ptrArray + numalloc, 0, (newnumalloc - numalloc) * sizeof(T));
+         memset(static_cast<void *>(ptrArray + numalloc), 0, 
+                (newnumalloc - numalloc) * sizeof(T));
          numalloc = newnumalloc;
       }
    }
@@ -333,7 +334,7 @@ public:
          for(size_t i = 0; i < this->length; i++)
             this->ptrArray[i].~T();
 
-         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+         memset(static_cast<void *>(this->ptrArray), 0, this->numalloc * sizeof(T));
       }
       this->length = this->wrapiterator = 0;
    }
