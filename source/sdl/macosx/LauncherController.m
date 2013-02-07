@@ -82,22 +82,6 @@ static BOOL gSDLStarted;	// IOAN 20120616
    [overwriteDemoAlert release];
    [recordDemoIsDir release];
 	
-	[parmRsp release];
-	[parmIwad release];
-	[parmPwad release];
-	[parmOthers release];
-	[parmWarp release];
-	[parmSkill release];
-	[parmFlags release];
-	[parmRecord release];
-	[parmPlayDemo release];
-	[parmGameType release];
-	[parmFragLimit release];
-	[parmTimeLimit release];
-	[parmTurbo release];
-	[parmDmflags release];
-	[parmNet release];
-	
 	[param release];
 	[basePath release];
 	[userPath release];
@@ -169,22 +153,6 @@ static BOOL gSDLStarted;	// IOAN 20120616
 		[recordDemoIsDir setInformativeText:
        @"The target file in the \"Record Demo:\" field is a directory."];
 		[recordDemoIsDir setAlertStyle:NSWarningAlertStyle];
-		
-		parmRsp = [[NSMutableArray alloc] initWithCapacity:0];
-		parmIwad = [[NSMutableArray alloc] initWithCapacity:0];
-		parmPwad = [[NSMutableArray alloc] initWithCapacity:0];
-		parmOthers = [[NSMutableArray alloc] initWithCapacity:0];
-		parmWarp = [[NSMutableArray alloc] initWithCapacity:0];
-		parmSkill = [[NSMutableArray alloc] initWithCapacity:0];
-		parmFlags = [[NSMutableArray alloc] initWithCapacity:0];
-		parmRecord = [[NSMutableArray alloc] initWithCapacity:0];
-		parmPlayDemo = [[NSMutableArray alloc] initWithCapacity:0];
-		parmGameType = [[NSMutableArray alloc] initWithCapacity:0];
-		parmFragLimit = [[NSMutableArray alloc] initWithCapacity:0];
-		parmTimeLimit = [[NSMutableArray alloc] initWithCapacity:0];
-		parmTurbo = [[NSMutableArray alloc] initWithCapacity:0];
-		parmDmflags = [[NSMutableArray alloc] initWithCapacity:0];
-		parmNet = [[NSMutableArray alloc] initWithCapacity:0];
 		
 		param = [[ELCommandLineArray alloc] init];
 		basePath = [[NSMutableString alloc] init];
@@ -672,9 +640,12 @@ iwadMightBe:
 	NSOpenPanel *panel = [NSOpenPanel openPanel];
 	[panel setAllowsMultipleSelection:true];
 	[panel setCanChooseFiles:true];
-	[panel setCanChooseDirectories:false];
+	[panel setCanChooseDirectories:true];
    [panel setMessage:@"Choose add-on file"];
-	[panel beginSheetForDirectory:nil file:nil types:pwadTypes modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(addPwadEnded:returnCode:contextInfo:) contextInfo:nil];
+	[panel beginSheetForDirectory:nil file:nil types:pwadTypes
+                  modalForWindow:[NSApp mainWindow] modalDelegate:self
+                  didEndSelector:@selector(addPwadEnded:returnCode:contextInfo:)
+                     contextInfo:nil];
 }
 
 //
@@ -682,7 +653,9 @@ iwadMightBe:
 //
 -(IBAction)showFileInFinder:(id)sender
 {
-	[[NSWorkspace sharedWorkspace] openFile:[[pwadArray objectAtIndex:[pwadView selectedRow] ] path] withApplication:@"Finder"];
+	[[NSWorkspace sharedWorkspace] openFile:
+    [[pwadArray objectAtIndex:[pwadView selectedRow] ] path]
+                           withApplication:@"Finder"];
 }
 
 //
@@ -695,7 +668,10 @@ iwadMightBe:
 	[panel setCanChooseFiles:true];
 	[panel setCanChooseDirectories:false];
    [panel setMessage:@"Choose main game WAD"];
-	[panel beginSheetForDirectory:nil file:nil types:pwadTypes modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(addIwadEnded:returnCode:contextInfo:) contextInfo:nil];
+	[panel beginSheetForDirectory:nil file:nil types:pwadTypes
+                  modalForWindow:[NSApp mainWindow] modalDelegate:self
+                  didEndSelector:@selector(addIwadEnded:returnCode:contextInfo:)
+                     contextInfo:nil];
 }
 
 //
@@ -1163,8 +1139,17 @@ iwadMightBe:
 				[gfsOut appendString:path];
 				[gfsOut appendString:@"\"\n"];
 			}
-			else // any other extension defaults to wadfile
+         else if([extension caseInsensitiveCompare:@"disk"] == NSOrderedSame
+                 || [extension caseInsensitiveCompare:@"gfs"] == NSOrderedSame
+                 || [extension caseInsensitiveCompare:@"rsp"] == NSOrderedSame)
+         {
+            // Do nothing in case of some extensions (which cannot be -file)
+            // FIXME: refactor this. 
+            ;
+         }
+			else
 			{
+             // any other extension defaults to wadfile
 				[gfsOut appendString:@"wadfile = \""];
 				[gfsOut appendString:path];
 				[gfsOut appendString:@"\"\n"];
@@ -1218,12 +1203,17 @@ iwadMightBe:
 //
 // updateParmIwad:
 //
-// Updates the command-line parameter for the IWAD
+// Updates the command-line parameter for the IWAD. If a .disk image is set,
+// don't load it here but in updateParmPwad: (which deals with the other files)
 //
 -(void)updateParmIwad:(id)sender
 {
-	if([iwadPopUp numberOfItems] <= 0)
+	if([iwadPopUp numberOfItems] <= 0
+      || [[[[[iwadPopUp selectedItem] representedObject] path] pathExtension]
+          caseInsensitiveCompare:@"disk"] == NSOrderedSame)
 	{
+      // Either nothing selected, or a .disk image is loaded - so load it from
+      // updateParmPwad: below
 		[[param argumentWithIdentifier:@"-iwad"] setEnabled:NO];
 	}
 	else
@@ -1236,22 +1226,46 @@ iwadMightBe:
 }
 
 //
+// addIwadDiskParm
+//
+// Needs to be called before adding .disk from table pwadView
+//
+-(void)addIwadDiskParm
+{
+   if([iwadPopUp numberOfItems] <= 0
+      || [[[[[iwadPopUp selectedItem] representedObject] path] pathExtension]
+          caseInsensitiveCompare:@"disk"] != NSOrderedSame)
+	{
+      // Either nothing selected, or a .disk image is loaded - so load it from
+      // updateParmPwad: below
+		[[param argumentWithIdentifier:@"-disk"] setEnabled:NO];
+	}
+	else
+	{
+		[[param argumentWithIdentifier:@"-disk"] setEnabled:YES];
+		[[[param argumentWithIdentifier:@"-disk"] extraWords] removeAllObjects];
+		[[[param argumentWithIdentifier:@"-disk"] extraWords]
+       addObject:[[[iwadPopUp selectedItem] representedObject] path]];
+	}
+}
+
+//
 // updateParmPwad:
 //
 // Updates the command-line parameters for various add-on files (not just PWADs)
 //
 -(void)updateParmPwad:(id)sender
 {
-	[parmPwad removeAllObjects];
 	
 	[[param argumentWithIdentifier:@"-config"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-deh"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-edf"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-exec"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-gfs"] setEnabled:NO];
-   [[param argumentWithIdentifier:@"-disk"] setEnabled:NO];
  	[[param argumentWithIdentifier:@"-file"] setEnabled:NO];
-	
+   // Take care of disk from IWAD first...
+   [self addIwadDiskParm];
+   
 	NSDictionary *specialParams = [NSDictionary dictionaryWithObjectsAndKeys:
                                   @"-config", @"cfg",
                                   @"-deh", @"bex",
@@ -1394,7 +1408,6 @@ iwadMightBe:
 //
 -(IBAction)updateParmRecord:(id)sender
 {
-	[parmRecord removeAllObjects];
 	if([[recordDemoField stringValue] length] > 0)
 	{
 		[[param argumentWithIdentifier:@"-record"] setEnabled:YES];

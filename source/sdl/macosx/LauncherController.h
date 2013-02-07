@@ -89,8 +89,6 @@
 	NSMutableString *userPath, *basePath;
 	
 	NSTask *task;
-	
-	NSMutableArray *parmRsp, *parmIwad, *parmPwad, *parmOthers, *parmWarp, *parmSkill, *parmFlags, *parmRecord, *parmPlayDemo, *parmGameType, *parmFragLimit, *parmTimeLimit, *parmTurbo, *parmDmflags, *parmNet;
     
     BOOL dontUndo;
 	
