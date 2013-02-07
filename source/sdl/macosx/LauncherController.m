@@ -124,7 +124,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 		iwadSet = [[NSMutableSet alloc] initWithCapacity:0];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
-                   @"pke", @"zip", nil];
+                   @"pke", @"zip", @"disk", nil];
 		iwadPopMenu = [[NSMenu alloc] initWithTitle:@"Choose IWAD"];
 		pwadArray = [[NSMutableArray alloc] initWithCapacity:0];
       userSet = [[NSMutableSet alloc] initWithCapacity:0];
@@ -1193,8 +1193,6 @@ iwadMightBe:
 	// if not found: delete it
 	
 	// This is more complex, so divide it further
-	// pwadTypes = [NSArray arrayWithObjects:@"cfg", @"bex", @"deh", @"edf", 
-   // @"csc", @"wad", @"gfs", @"rsp", @"lmp", nil];
 	
 	NSURL *url;
 	NSString *extension, *path;
@@ -1220,6 +1218,8 @@ iwadMightBe:
 //
 // updateParmIwad:
 //
+// Updates the command-line parameter for the IWAD
+//
 -(void)updateParmIwad:(id)sender
 {
 	if([iwadPopUp numberOfItems] <= 0)
@@ -1230,29 +1230,36 @@ iwadMightBe:
 	{
 		[[param argumentWithIdentifier:@"-iwad"] setEnabled:YES];
 		[[[param argumentWithIdentifier:@"-iwad"] extraWords] removeAllObjects];
-		[[[param argumentWithIdentifier:@"-iwad"] extraWords] addObject:[[[iwadPopUp selectedItem] representedObject] path]];
+		[[[param argumentWithIdentifier:@"-iwad"] extraWords]
+       addObject:[[[iwadPopUp selectedItem] representedObject] path]];
 	}
 }
 
 //
 // updateParmPwad:
 //
+// Updates the command-line parameters for various add-on files (not just PWADs)
+//
 -(void)updateParmPwad:(id)sender
 {
 	[parmPwad removeAllObjects];
-	// This is more complex, so divide it further
-   // pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
-   //             @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
-   ///             @"pke", @"zip", nil];
 	
 	[[param argumentWithIdentifier:@"-config"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-deh"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-edf"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-exec"] setEnabled:NO];
-	[[param argumentWithIdentifier:@"-file"] setEnabled:NO];
 	[[param argumentWithIdentifier:@"-gfs"] setEnabled:NO];
+   [[param argumentWithIdentifier:@"-disk"] setEnabled:NO];
+ 	[[param argumentWithIdentifier:@"-file"] setEnabled:NO];
 	
-	NSDictionary *specialParams = [NSDictionary dictionaryWithObjectsAndKeys:@"-config", @"cfg", @"-deh", @"bex", @"-deh", @"deh", @"-edf", @"edf", @"-exec", @"csc", @"-gfs", @"gfs", nil];
+	NSDictionary *specialParams = [NSDictionary dictionaryWithObjectsAndKeys:
+                                  @"-config", @"cfg",
+                                  @"-deh", @"bex",
+                                  @"-deh", @"deh",
+                                  @"-edf", @"edf",
+                                  @"-exec", @"csc",
+                                  @"-gfs", @"gfs",
+                                  @"-disk", @"disk", nil];
 	
 	NSURL *url;
 	NSString *exttest, *parmtest, *extension, *path;
@@ -1261,9 +1268,11 @@ iwadMightBe:
 	{
 		path = [url path];
 		extension = [path pathExtension];
-		// -config
 		
 		found = NO;
+      
+      // Look for any extension that shouldn't be treated as a mission pack
+      // (-file)
 		for(exttest in specialParams)
 		{
 			if([extension caseInsensitiveCompare:exttest] == NSOrderedSame)
@@ -1272,19 +1281,26 @@ iwadMightBe:
 				if(![[param argumentWithIdentifier:parmtest] enabled])
 				{
 					[[param argumentWithIdentifier:parmtest] setEnabled:YES];
-					[[[param argumentWithIdentifier:parmtest] extraWords] removeAllObjects];
+					[[[param argumentWithIdentifier:parmtest] extraWords]
+                removeAllObjects];
 				}
-				[[[param argumentWithIdentifier:parmtest] extraWords] addObject:path];
+				[[[param argumentWithIdentifier:parmtest] extraWords]
+             addObject:path];
 				found = YES;
+            
+            // if found an extension, don't bother looking for others
+            break;
 			}
 		}
 		
+      // No special extension found, fallback to -file (may or may not work)
 		if(!found)
 		{
 			if(![[param argumentWithIdentifier:@"-file"] enabled])
 			{
 				[[param argumentWithIdentifier:@"-file"] setEnabled:YES];
-				[[[param argumentWithIdentifier:@"-file"] extraWords] removeAllObjects];
+				[[[param argumentWithIdentifier:@"-file"] extraWords]
+             removeAllObjects];
 			}
 			[[[param argumentWithIdentifier:@"-file"] extraWords] addObject:path];
 		}
