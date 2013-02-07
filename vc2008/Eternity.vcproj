@@ -5230,14 +5230,46 @@
 			<Filter
 				Name="EV_"
 				>
-				<File
-					RelativePath="..\source\ev_specials.cpp"
+				<Filter
+					Name="EV_ Headers"
 					>
-				</File>
-				<File
-					RelativePath="..\source\ev_specials.h"
+					<File
+						RelativePath="..\source\ev_actions.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_bindings.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_macros.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_specials.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="EV_ Source"
 					>
-				</File>
+					<File
+						RelativePath="..\source\ev_actions.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_bindings.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_specials.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_static.cpp"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter

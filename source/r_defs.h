@@ -161,9 +161,9 @@ struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int16_t special;
-   int     args[NUMLINEARGS];
-   int     actionflags;
+   int special;
+   int args[NUMLINEARGS];
+   int actionflags;
 };
 
 //
@@ -343,7 +343,7 @@ struct line_t
    vertex_t *v1, *v2;      // Vertices, from v1 to v2.
    fixed_t  dx, dy;        // Precalculated v2 - v1 for side checking.
    int16_t  flags;         // Animation related.
-   int16_t  special;         
+   int      special;         
    int      tag;           // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs

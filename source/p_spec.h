@@ -28,6 +28,9 @@
 
 // HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
+// Required for: fixed_t
+#include "m_fixed.h"
+
 // Required for: Thinker
 #include "p_tick.h"
 
@@ -1223,7 +1226,7 @@ bool P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
-void P_ConvertHexenLineSpec(int16_t *special, int *args);
+void P_ConvertHexenLineSpec(int *special, int *args);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1376,7 +1379,7 @@ void P_SpawnSpecials(int);
 //
 // SoM: Specials that copy slopes, ect., need to be collected in a separate 
 // pass
-void P_SpawnDeferredSpecials(int mapformat);
+void P_SpawnDeferredSpecials();
 
 // every tic
 void P_UpdateSpecials(void);
@@ -1450,7 +1453,7 @@ void P_CeilingSequence(sector_t *s, int noiseLevel);
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachLines(line_t *cline, bool ceiling);
 bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush);
-void P_AttachSectors(line_t *line);
+void P_AttachSectors(line_t *line, int staticFn);
 
 bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush);
 
@@ -1481,7 +1484,7 @@ enum
 };
 
 bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int special, 
                          int *args, int side, int spac, bool reuse);
 
 extern void P_StartLineScript(line_t *line, Mobj *thing);

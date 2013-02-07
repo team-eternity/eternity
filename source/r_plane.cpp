@@ -43,6 +43,7 @@
 #include "c_io.h"
 #include "d_gi.h"
 #include "doomstat.h"
+#include "ev_specials.h"
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_slopes.h"
@@ -1120,8 +1121,8 @@ static void do_draw_plane(visplane_t *pl)
          // Doom always flipped the picture, so we make it optional,
          // to make it easier to use the new feature, while to still
          // allow old sky textures to be used.
-         
-         flip = l->special == 272 ? 0u : ~0u;
+         int staticFn = EV_StaticInitForSpecial(l->special);
+         flip = (staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED) ? 0u : ~0u;
       }
       else 	 // Normal Doom sky, only one allowed per level
       {

@@ -55,7 +55,8 @@ struct ev_instance_t
 {
    Mobj   *actor;   // actor, if any
    line_t *line;    // line, if any
-   int    *args;    // arguments (may point to line->args
+   int     special; // special to activate (may == line->special)
+   int    *args;    // arguments (may point to line->args)
    int     tag;     // tag (may == line->tag or line->args[0])
    int     side;    // side of activation
    int     spac;    // special activation type
@@ -118,9 +119,43 @@ struct ev_binding_t
 {
    int actionNumber;    // line action number
    ev_action_t *action; // the actual action to execute
+   const char *name;    // name, if this binding has one
 
-   DLListItem<ev_binding_t> links; // hash links
+   DLListItem<ev_binding_t> links;     // hash links by number
+   DLListItem<ev_binding_t> namelinks; // hash links by name
 };
+
+// Action Types
+extern ev_actiontype_t NullActionType;
+extern ev_actiontype_t WRActionType;
+extern ev_actiontype_t W1ActionType;
+extern ev_actiontype_t SRActionType;
+extern ev_actiontype_t S1ActionType;
+extern ev_actiontype_t DRActionType;
+extern ev_actiontype_t GRActionType;
+extern ev_actiontype_t G1ActionType;
+extern ev_actiontype_t BoomGenActionType;
+extern ev_actiontype_t ParamActionType;
+
+// Interface
+
+// Binding for Special
+ev_binding_t *EV_DOOMBindingForSpecial(int special);
+ev_binding_t *EV_HereticBindingForSpecial(int special);
+ev_binding_t *EV_HexenBindingForSpecial(int special);
+
+// Binding for Name
+ev_binding_t *EV_DOOMBindingForName(const char *name);
+ev_binding_t *EV_HexenBindingForName(const char *name);
+ev_binding_t *EV_BindingForName(const char *name);
+
+// Action for Special 
+ev_action_t  *EV_DOOMActionForSpecial(int special);
+ev_action_t  *EV_HereticActionForSpecial(int special);
+ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_ActionForSpecial(int special);
+
+bool EV_IsParamLineSpec(int special);
 
 //
 // Static Init Line Types
@@ -224,8 +259,12 @@ struct ev_static_t
    DLListItem<ev_static_t> actionLinks; // hash links for special->static
 };
 
-int EV_SpecialForStaticInit(int staticFn);
-int EV_StaticInitForSpecial(int special);
+// Interface
+
+int  EV_SpecialForStaticInit(int staticFn);
+int  EV_StaticInitForSpecial(int special);
+int  EV_SpecialForStaticInitName(const char *name);
+bool EV_IsParamStaticInit(int special);
 
 #endif
 

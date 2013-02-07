@@ -844,7 +844,7 @@ static void ACS_funcSetLineMonsterBlocking(ACS_FUNCARG)
 static void ACS_funcSetLineSpecial(ACS_FUNCARG)
 {
    int     tag  = args[0];
-   int16_t spec = args[1];
+   int     spec = args[1];
    int     larg[NUMLINEARGS];
    line_t *l;
    int     linenum = -1;
@@ -1000,7 +1000,7 @@ static void ACS_funcSetThingPosition(ACS_FUNCARG)
 static void ACS_funcSetThingSpecial(ACS_FUNCARG)
 {
    int     tid  = args[0];
-   int16_t spec = args[1];
+   int     spec = args[1];
    int     larg[NUMLINEARGS];
    Mobj   *mo   = NULL;
 

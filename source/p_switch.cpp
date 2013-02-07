@@ -31,6 +31,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_swap.h"
 #include "p_info.h"
@@ -361,7 +362,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // haleyjd: param lines make sidedness decisions on their own
-   bool is_param = E_IsParamSpecial(line->special);
+   bool is_param = EV_IsParamLineSpec(line->special);
 
    if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
       return false;

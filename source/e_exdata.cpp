@@ -49,6 +49,7 @@
 #include "d_io.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "ev_specials.h"
 #include "m_qstr.h"
 #include "p_info.h"
 #include "p_mobj.h"
@@ -292,456 +293,6 @@ static dehflagset_t sectorportal_flagset =
    0                  // mode
 };
 
-//
-// Line Special Information
-//
-
-static struct exlinespec
-{
-   int16_t special;     // line special number
-   const char *name;    // descriptive name
-   unsigned int next;   // for hashing
-} exlinespecs[] =
-{
-   // Normal DOOM/BOOM extended specials.
-   // Most of these have horrible names, but they won't be
-   // used much via ExtraData, so it doesn't matter.
-   {   0, "None" }, 
-   {   1, "DR_RaiseDoor_Slow_Mon" }, 
-   {   2, "W1_OpenDoor_Slow" },      
-   {   3, "W1_CloseDoor_Slow" },
-   {   4, "W1_RaiseDoor_Slow" },
-   {   5, "W1_Floor_UpLnC_Slow" },
-   {   6, "W1_StartCrusher_Fast" },
-   {   7, "S1_Stairs_Up8_Slow" },
-   {   8, "W1_Stairs_Up8_Slow" },
-   {   9, "S1_Donut" },
-   {  10, "W1_Plat_Lift_Slow" },
-   {  11, "S1_ExitLevel" },
-   {  12, "W1_Light_MaxNeighbor" },
-   {  13, "W1_Light_Set255" },
-   {  14, "S1_Plat_Up32_c0t_Slow" },
-   {  15, "S1_Plat_Up24_cTt_Slow" },
-   {  16, "W1_Door_CloseWait30" },
-   {  17, "W1_Light_Blink" },
-   {  18, "S1_Floor_UpNnF_Slow" },
-   {  19, "W1_Floor_DnHnF_Slow" },
-   {  20, "S1_Plat_UpNnF_c0t_Slow" },
-   {  21, "S1_Plat_Lift_Slow" },
-   {  22, "W1_Plat_UpNnF_c0t_Slow" },
-   {  23, "S1_Floor_DnLnF_Slow" },
-   {  24, "G1_Floor_UpLnC_Slow" },
-   {  25, "W1_StartCrusher_Slow" },
-   {  26, "DR_RaiseLockedDoor_Blue_Slow" },
-   {  27, "DR_RaiseLockedDoor_Yellow_Slow" },
-   {  28, "DR_RaiseLockedDoor_Red_Slow" },
-   {  29, "S1_RaiseDoor_Slow" },
-   {  30, "W1_Floor_UpsT_Slow" },
-   {  31, "D1_OpenDoor_Slow" },
-   {  32, "D1_OpenLockedDoor_Blue_Slow" },
-   {  33, "D1_OpenLockedDoor_Red_Slow" },
-   {  34, "D1_OpenLockedDoor_Yellow_Slow" },
-   {  35, "W1_Light_Set35" },
-   {  36, "W1_Floor_DnHnFp8_Fast" },
-   {  37, "W1_Floor_DnLnF_cSn_Slow" },
-   {  38, "W1_Floor_DnLnF_Slow" },
-   {  39, "W1_TeleportToSpot" },
-   {  40, "W1_Ceiling_UpHnC_Slow" },
-   {  41, "S1_Ceiling_DnF_Fast" },
-   {  42, "SR_CloseDoor_Slow" },
-   {  43, "SR_Ceiling_DnF_Fast" },
-   {  44, "W1_Ceiling_DnFp8_Slow" },
-   {  45, "SR_Floor_DnHnF_Slow" },
-   {  46, "GR_OpenDoor_Slow" },
-   {  47, "G1_Plat_UpNnF_c0t_Slow" },
-   {  48, "ScrollLeft" },
-   {  49, "S1_StartCrusher_Slow" },
-   {  50, "S1_CloseDoor_Slow" },
-   {  51, "S1_ExitSecret" },
-   {  52, "W1_ExitLevel" },
-   {  53, "W1_Plat_LoHiPerpetual" },
-   {  54, "W1_StopPlat" },
-   {  55, "S1_Floor_UpLnCm8_Slow_Crush" },
-   {  56, "W1_Floor_UpLnCm8_Slow_Crush" },
-   {  57, "W1_StopCrusher" },
-   {  58, "W1_Floor_Up24_Slow" },
-   {  59, "W1_Floor_Up24_cSt_Slow" },
-   {  60, "SR_Floor_DnLnF_Slow" },
-   {  61, "SR_OpenDoor_Slow" },
-   {  62, "SR_Plat_Lift_Slow" },
-   {  63, "SR_RaiseDoor_Slow" },
-   {  64, "SR_Floor_UpLnC_Slow" },
-   {  65, "SR_Floor_UpLnCm8_Slow_Crush" },
-   {  66, "SR_Plat_Up24_cTt_Slow" },
-   {  67, "SR_Plat_Up32_c0t_Slow" },
-   {  68, "SR_Plat_UpNnF_c0t_Slow" },
-   {  69, "SR_Floor_UpNnF_Slow" },
-   {  70, "SR_Floor_DnHnFp8_Fast" },
-   {  71, "S1_Floor_DnHnFp8_Fast" },
-   {  72, "WR_Ceiling_DnFp8_Slow" },
-   {  73, "WR_StartCrusher_Slow" },
-   {  74, "WR_StopCrusher" },
-   {  75, "WR_CloseDoor_Slow" },
-   {  76, "WR_Door_CloseWait30" },
-   {  77, "WR_StartCrusher_Fast" },
-   {  78, "SR_Floor_cSn" },
-   {  79, "WR_Light_Set35" },
-   {  80, "WR_Light_MaxNeighbor" },
-   {  81, "WR_Light_Set255" },
-   {  82, "WR_Floor_DnLnF_Slow" },
-   {  83, "WR_Floor_DnHnF_Slow" },
-   {  84, "WR_Floor_DnLnF_cSn_Slow" },
-   {  85, "ScrollRight" },
-   {  86, "WR_OpenDoor_Slow" },
-   {  87, "WR_Plat_LoHiPerpetual" },
-   {  88, "WR_Plat_Lift_Slow" },
-   {  89, "WR_StopPlat" },
-   {  90, "WR_RaiseDoor_Slow" },
-   {  91, "WR_Floor_UpLnC_Slow" },
-   {  92, "WR_Floor_Up24_Slow" },
-   {  93, "WR_Floor_Up24_cSt_Slow" },
-   {  94, "WR_Floor_UpLnCm8_Slow_Crush" },
-   {  95, "WR_Plat_UpNnF_c0t_Slow" },
-   {  96, "WR_Floor_UpsT_Slow" },
-   {  97, "WR_TeleportToSpot" },
-   {  98, "WR_Floor_DnHnFp8_Fast" },
-   {  99, "WR_OpenLockedDoor_Blue_Fast" },
-   { 100, "W1_Stairs_Up16_Fast" },
-   { 101, "S1_Floor_UpLnC_Slow" },
-   { 102, "S1_Floor_DnHnF_Slow" },
-   { 103, "S1_OpenDoor_Slow" },
-   { 104, "W1_Light_MinNeighbor" },
-   { 105, "WR_RaiseDoor_Fast" },
-   { 106, "WR_OpenDoor_Fast" },
-   { 107, "WR_CloseDoor_Fast" },
-   { 108, "W1_RaiseDoor_Fast" },
-   { 109, "W1_OpenDoor_Fast" },
-   { 110, "W1_CloseDoor_Fast" },
-   { 111, "S1_RaiseDoor_Fast" },
-   { 112, "S1_OpenDoor_Fast" },
-   { 113, "S1_CloseDoor_Fast" },
-   { 114, "SR_RaiseDoor_Fast" },
-   { 115, "SR_OpenDoor_Fast" },
-   { 116, "SR_CloseDoor_Fast" },
-   { 117, "DR_RaiseDoor_Fast" },
-   { 118, "D1_OpenDoor_Fast" },
-   { 119, "W1_Floor_UpNnF_Slow" },
-   { 120, "WR_Plat_Lift_Fast" },
-   { 121, "W1_Plat_Lift_Fast" },
-   { 122, "S1_Plat_Lift_Fast" },
-   { 123, "SR_Plat_Lift_Fast" },
-   { 124, "W1_ExitSecret" },
-   { 125, "W1_TeleportToSpot_MonOnly" },
-   { 126, "WR_TeleportToSpot_MonOnly" },
-   { 127, "S1_Stairs_Up16_Fast" },
-   { 128, "WR_Floor_UpNnF_Slow" },
-   { 129, "WR_Floor_UpNnF_Fast" },
-   { 130, "W1_Floor_UpNnF_Fast" },
-   { 131, "S1_Floor_UpNnF_Fast" },
-   { 132, "SR_Floor_UpNnF_Fast" },
-   { 133, "S1_OpenLockedDoor_Blue_Fast" },
-   { 134, "SR_OpenLockedDoor_Red_Fast" },
-   { 135, "S1_OpenLockedDoor_Red_Fast" },
-   { 136, "SR_OpenLockedDoor_Yellow_Fast" },
-   { 137, "S1_OpenLockedDoor_Yellow_Fast" },
-   { 138, "SR_Light_Set255" },
-   { 139, "SR_Light_Set35" },
-   { 140, "S1_Floor_Up512_Slow" },
-   { 141, "W1_StartCrusher_Silent_Slow" },
-   { 142, "W1_Floor_Up512_Slow" },
-   { 143, "W1_Plat_Up24_cTt_Slow" },
-   { 144, "W1_Plat_Up32_c0t_Slow" },
-   { 145, "W1_Ceiling_DnF_Fast" },
-   { 146, "W1_Donut" },
-   { 147, "WR_Floor_Up512_Slow" },
-   { 148, "WR_Plat_Up24_cTt_Slow" },
-   { 149, "WR_Plat_Up32_c0t_Slow" },
-   { 150, "WR_StartCrusher_Silent_Slow" },
-   { 151, "WR_Ceiling_UpHnC_Slow" },
-   { 152, "WR_Ceiling_DnF_Fast" },
-   { 153, "W1_Floor_cSt" },
-   { 154, "WR_Floor_cSt" },
-   { 155, "WR_Donut" },
-   { 156, "WR_Light_Blink" },
-   { 157, "WR_Light_MinNeighbor" },
-   { 158, "S1_Floor_UpsT_Slow" },
-   { 159, "S1_Floor_DnLnF_cSn_Slow" },
-   { 160, "S1_Floor_Up24_cSt_Slow" },
-   { 161, "S1_Floor_Up24_Slow" },
-   { 162, "S1_Plat_LoHiPerpetual" },
-   { 163, "S1_StopPlat" },
-   { 164, "S1_StartCrusher_Fast" },
-   { 165, "S1_StartCrusher_Silent_Slow" },
-   { 166, "S1_Ceiling_UpHnC_Slow" },
-   { 167, "S1_Ceiling_DnFp8_Slow" },
-   { 168, "S1_StopCrusher" },
-   { 169, "S1_Light_MaxNeighbor" },
-   { 170, "S1_Light_Set35" },
-   { 171, "S1_Light_Set255" },
-   { 172, "S1_Light_Blink" },
-   { 173, "S1_Light_MinNeighbor" },
-   { 174, "S1_TeleportToSpot" },
-   { 175, "S1_Door_CloseWait30" },
-   { 176, "SR_Floor_UpsT_Slow" },
-   { 177, "SR_Floor_DnLnF_cSn_Slow" },
-   { 178, "SR_Floor_Up512_Slow" },
-   { 179, "SR_Floor_Up24_cSt_Slow" },
-   { 180, "SR_Floor_Up24_Slow" },
-   { 181, "SR_Plat_LoHiPerpetual" },
-   { 182, "SR_StopPlat" },
-   { 183, "SR_StartCrusher_Fast" },
-   { 184, "SR_StartCrusher_Slow" },
-   { 185, "SR_StartCrusher_Silent_Slow" },
-   { 186, "SR_Ceiling_UpHnC_Slow" },
-   { 187, "SR_Ceiling_DnFp8_Slow" },
-   { 188, "SR_StopCrusher" },
-   { 189, "S1_Floor_cSt" },
-   { 190, "SR_Floor_cSt" },
-   { 191, "SR_Donut" },
-   { 192, "SR_Light_MaxNeighbor" },
-   { 193, "SR_Light_Blink" },
-   { 194, "SR_Light_MinNeighbor" },
-   { 195, "SR_TeleportToSpot" },
-   { 196, "SR_Door_CloseWait30" },
-   { 197, "G1_ExitLevel" },
-   { 198, "G1_ExitSecret" },
-   { 199, "W1_Ceiling_DnLnC_Slow" },
-   { 200, "W1_Ceiling_DnHnF_Slow" },
-   { 201, "WR_Ceiling_DnLnC_Slow" },
-   { 202, "WR_Ceiling_DnHnF_Slow" },
-   { 203, "S1_Ceiling_DnLnC_Slow" },
-   { 204, "S1_Ceiling_DnHnF_Slow" },
-   { 205, "SR_Ceiling_DnLnC_Slow" },
-   { 206, "SR_Ceiling_DnHnF_Slow" },
-   { 207, "W1_TeleportToSpot_Orient_Silent" },
-   { 208, "WR_TeleportToSpot_Orient_Silent" },
-   { 209, "S1_TeleportToSpot_Orient_Silent" },
-   { 210, "SR_TeleportToSpot_Orient_Silent" },
-   { 211, "SR_Plat_CeilingToggle_Instant" },
-   { 212, "WR_Plat_CeilingToggle_Instant" },
-   { 213, "TransferLight_Floor" },
-   { 214, "ScrollCeiling_Accel" },
-   { 215, "ScrollFloor_Accel" },
-   { 216, "CarryObjects_Accel" },
-   { 217, "ScrollFloorCarryObjects_Accel" },
-   { 218, "ScrollWallWithFlat_Accel" },
-   { 219, "W1_Floor_DnNnF_Slow" },
-   { 220, "WR_Floor_DnNnF_Slow" },
-   { 221, "S1_Floor_DnNnF_Slow" },
-   { 222, "SR_Floor_DnNnF_Slow" },
-   { 223, "TransferFriction" },
-   { 224, "TransferWind" },
-   { 225, "TransferCurrent" },
-   { 226, "TransferPointForce" },
-   { 227, "W1_Elevator_NextHi" },
-   { 228, "WR_Elevator_NextHi" },
-   { 229, "S1_Elevator_NextHi" },
-   { 230, "SR_Elevator_NextHi" },
-   { 231, "W1_Elevator_NextLo" },
-   { 232, "WR_Elevator_NextLo" },
-   { 233, "S1_Elevator_NextLo" },
-   { 234, "SR_Elevator_NextLo" },
-   { 235, "W1_Elevator_Current" },
-   { 236, "WR_Elevator_Current" },
-   { 237, "S1_Elevator_Current" },
-   { 238, "SR_Elevator_Current" },
-   { 239, "W1_Floor_cSn" },
-   { 240, "WR_Floor_cSn" },
-   { 241, "S1_Floor_cSn" },
-   { 242, "TransferHeights" },
-   { 243, "W1_TeleportToLine" },
-   { 244, "WR_TeleportToLine" },
-   { 245, "ScrollCeiling_ByHeight" },
-   { 246, "ScrollFloor_ByHeight" },
-   { 247, "CarryObjects_ByHeight" },
-   { 248, "ScrollFloorCarryObjects_ByHeight" },
-   { 249, "ScrollWallWithFlat_ByHeight" },
-   { 250, "ScrollCeiling" },
-   { 251, "ScrollFloor" },
-   { 252, "CarryObjects" },
-   { 253, "ScrollFloorCarryObjects" },
-   { 254, "ScrollWallWithFlat" },
-   { 255, "ScrollWallByOffsets" },
-   { 256, "WR_Stairs_Up8_Slow" },
-   { 257, "WR_Stairs_Up16_Fast" },
-   { 258, "SR_Stairs_Up8_Slow" },
-   { 259, "SR_Stairs_Up16_Fast" },
-   { 260, "Translucent" },
-   { 261, "TransferLight_Ceiling" },
-   { 262, "W1_TeleportToLine_Reverse" },
-   { 263, "WR_TeleportToLine_Reverse" },
-   { 264, "W1_TeleportToLine_Reverse_MonOnly" },
-   { 265, "WR_TeleportToLine_Reverse_MonOnly" },
-   { 266, "W1_TeleportToLine_MonOnly" },
-   { 267, "WR_TeleportToLine_MonOnly" },
-   { 268, "W1_TeleportToSpot_Silent_MonOnly" },
-   { 269, "WR_TeleportToSpot_Silent_MonOnly" },
-   { 270, "ExtraDataSpecial" },
-   { 271, "TransferSky" },
-   { 272, "TransferSkyFlipped" },
-   { 273, "WR_StartScript_1S" },
-   { 274, "W1_StartScript" },
-   { 275, "W1_StartScript_1S" },
-   { 276, "SR_StartScript" },
-   { 277, "S1_StartScript" },
-   { 278, "GR_StartScript" },
-   { 279, "G1_StartScript" },
-   { 280, "WR_StartScript" },
-   { 281, "3DMidTex_MoveWithFloor" },
-   { 282, "3DMidTex_MoveWithCeiling" },
-   { 283, "Portal_PlaneCeiling" },
-   { 284, "Portal_PlaneFloor" },
-   { 285, "Portal_PlaneFloorCeiling" },
-   { 286, "Portal_HorizonCeiling" },
-   { 287, "Portal_HorizonFloor" },
-   { 288, "Portal_HorizonFloorCeiling" },
-   { 289, "Portal_LineTransfer" },
-   { 290, "Portal_SkyboxCeiling" },
-   { 291, "Portal_SkyboxFloor" },
-   { 292, "Portal_SkyboxFloorCeiling" },
-   { 293, "TransferHereticWind" },
-   { 294, "TransferHereticCurrent" },
-   { 295, "Portal_AnchoredCeiling" },
-   { 296, "Portal_AnchoredFloor" },
-   { 297, "Portal_AnchoredFloorCeiling" },
-   { 298, "Portal_AnchorLine" },
-   { 299, "Portal_AnchorLineFloor" },
-
-   // Parameterized specials.
-   // These have nice names because their specifics come from ExtraData 
-   // line arguments, ala Hexen, instead of being hardcoded.
-   { 300, "Door_Raise" },
-   { 301, "Door_Open" },
-   { 302, "Door_Close" },
-   { 303, "Door_CloseWaitOpen" },
-   { 304, "Door_WaitRaise" },
-   { 305, "Door_WaitClose" },
-   { 306, "Floor_RaiseToHighest" },
-   { 307, "Floor_LowerToHighestEE" },
-   { 308, "Floor_RaiseToLowest" },
-   { 309, "Floor_LowerToLowest" },
-   { 310, "Floor_RaiseToNearest" },
-   { 311, "Floor_LowerToNearest" },
-   { 312, "Floor_RaiseToLowestCeiling" },
-   { 313, "Floor_LowerToLowestCeiling" },
-   { 314, "Floor_RaiseToCeiling" },
-   { 315, "Floor_RaiseByTexture" },
-   { 316, "Floor_LowerByTexture" },
-   { 317, "Floor_RaiseByValue" },
-   { 318, "Floor_LowerByValue" },
-   { 319, "Floor_MoveToValue" },
-   { 320, "Floor_RaiseInstant" },
-   { 321, "Floor_LowerInstant" },
-   { 322, "Floor_ToCeilingInstant" },
-   { 323, "Ceiling_RaiseToHighest" },
-   { 324, "Ceiling_ToHighestInstant" },
-   { 325, "Ceiling_RaiseToNearest" },
-   { 326, "Ceiling_LowerToNearest" },
-   { 327, "Ceiling_RaiseToLowest" },
-   { 328, "Ceiling_LowerToLowest" },
-   { 329, "Ceiling_RaiseToHighestFloor" },
-   { 330, "Ceiling_LowerToHighestFloor" },
-   { 331, "Ceiling_ToFloorInstant" },
-   { 332, "Ceiling_LowerToFloor" },
-   { 333, "Ceiling_RaiseByTexture" },
-   { 334, "Ceiling_LowerByTexture" },
-   { 335, "Ceiling_RaiseByValue" },
-   { 336, "Ceiling_LowerByValue" },
-   { 337, "Ceiling_MoveToValue" },
-   { 338, "Ceiling_RaiseInstant" },
-   { 339, "Ceiling_LowerInstant" },
-   { 340, "Stairs_BuildUpDoom" },
-   { 341, "Stairs_BuildDownDoom" },
-   { 342, "Stairs_BuildUpDoomSync" },
-   { 343, "Stairs_BuildDownDoomSync" },
-   
-   // SoM: two-way portals
-   { 344, "Portal_TwowayCeiling" },
-   { 345, "Portal_TwowayFloor" },
-   { 346, "Portal_TwowayAnchorLine" },
-   { 347, "Portal_TwowayAnchorLineFloor" },
-
-   // Polyobjects
-   { 348, "Polyobj_StartLine" },
-   { 349, "Polyobj_ExplicitLine" },
-   { 350, "Polyobj_DoorSlide" },
-   { 351, "Polyobj_DoorSwing" },
-   { 352, "Polyobj_Move" },
-   { 353, "Polyobj_OR_Move" },
-   { 354, "Polyobj_RotateRight" },
-   { 355, "Polyobj_OR_RotateRight" },
-   { 356, "Polyobj_RotateLeft" },
-   { 357, "Polyobj_OR_RotateLeft" },
-
-   // SoM: linked portal types
-   { 358, "Portal_LinkedCeiling" },
-   { 359, "Portal_LinkedFloor" },
-   { 360, "Portal_LinkedAnchorLine" },
-   { 361, "Portal_LinkedAnchorLineFloor" },
-
-   { 362, "Pillar_Build" },
-   { 363, "Pillar_BuildAndCrush" },
-   { 364, "Pillar_Open" },
-   { 365, "ACS_Execute" },
-   { 366, "ACS_Suspend" },
-   { 367, "ACS_Terminate" },
-   { 368, "Light_RaiseByValue" },
-   { 369, "Light_LowerByValue" },
-   { 370, "Light_ChangeToValue" },
-   { 371, "Light_Fade" },
-   { 372, "Light_Glow" },
-   { 373, "Light_Flicker" },
-   { 374, "Light_Strobe" },
-   { 375, "Radius_Quake" },
-
-   { 376, "Portal_LinkedLineToLine" },
-   { 377, "Portal_LinkedLineToLineAnchor" },
-
-   { 378, "Line_SetIdentification" },
-
-   // Sector floor/ceiling attachment
-   { 379, "Attach_SetCeilingControl" },
-   { 380, "Attach_SetFloorControl" },
-   { 381, "Attach_FloorToControl" },
-   { 382, "Attach_CeilingToControl" },
-   { 383, "Attach_MirrorFloorToControl" },
-   { 384, "Attach_MirrorCeilingToControl" },
-
-   // Apply tagged portals to frontsector
-   { 385, "Portal_ApplyToFrontsector" },
-
-   // Slopes
-   { 386, "Slope_FrontsectorFloor" },
-   { 387, "Slope_FrontsectorCeiling" },
-   { 388, "Slope_FrontsectorFloorAndCeiling" },
-   { 389, "Slope_BacksectorFloor" },
-   { 390, "Slope_BacksectorCeiling" },
-   { 391, "Slope_BacksectorFloorAndCeiling" },
-   { 392, "Slope_BackFloorAndFrontCeiling" },
-   { 393, "Slope_BackCeilingAndFrontFloor" },
-   
-   { 394, "Slope_FrontFloorToTaggedSlope" },
-   { 395, "Slope_FrontCeilingToTaggedSlope" },
-   { 396, "Slope_FrontFloorAndCeilingToTaggedSlope" },
-   
-   // Misc Hexen specials
-   { 397, "Floor_Waggle" }, 
-   { 398, "Thing_Spawn"  }, 
-   { 399, "Thing_SpawnNoFog" },
-   { 400, "Teleport_EndGame" },
-
-   // ExtraData sector control line
-   { 401, "ExtraDataSector" },
-
-   // More misc Hexen specials
-   { 402, "Thing_Projectile" },
-   { 403, "Thing_ProjectileGravity" },
-   { 404, "Thing_Activate" },
-   { 405, "Thing_Deactivate" },
-};
-
-#define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
-
 // primary ExtraData options table
 
 static cfg_opt_t ed_opts[] =
@@ -963,56 +514,25 @@ static unsigned int E_EDLineForRecordNum(int recnum)
    return num;
 }
 
-#define NUMLSPECCHAINS 307
-static unsigned int linespec_chains[NUMLSPECCHAINS];
-
-//
-// E_InitLineSpecHash
-//
-// Sets up a threaded hash table through the exlinespecs array to
-// avoid untimely name -> number resolution.
-//
-static void E_InitLineSpecHash(void)
-{
-   unsigned int i;
-
-   // init all chains
-   for(i = 0; i < NUMLSPECCHAINS; ++i)
-      linespec_chains[i] = NUMLINESPECS;
-
-   // add all specials to hash table
-   for(i = 0; i < NUMLINESPECS; ++i)
-   {
-      unsigned int key = D_HashTableKey(exlinespecs[i].name) % NUMLSPECCHAINS;
-      exlinespecs[i].next = linespec_chains[key];
-      linespec_chains[key] = i;
-   }
-}
-
 //
 // E_LineSpecForName
 //
 // Gets a line special for a name.
 //
-int16_t E_LineSpecForName(const char *name)
+int E_LineSpecForName(const char *name)
 {
-   static bool hash_init = false;
-   unsigned int key = D_HashTableKey(name) % NUMLSPECCHAINS;
-   unsigned int i;
+   int special = 0;
 
-   // initialize line specials hash first time
-   if(!hash_init)
+   // check static inits first
+   if(!(special = EV_SpecialForStaticInitName(name)))
    {
-      E_InitLineSpecHash();
-      hash_init = true;
+      // check normal line types
+      ev_binding_t *binding = EV_BindingForName(name);
+      if(binding)
+         special = binding->actionNumber;
    }
 
-   i = linespec_chains[key];
-
-   while(i != NUMLINESPECS && strcasecmp(name, exlinespecs[i].name))
-      i = exlinespecs[i].next;
-
-   return (i != NUMLINESPECS ? exlinespecs[i].special : 0);
+   return special;
 }
 
 //
@@ -1020,15 +540,15 @@ int16_t E_LineSpecForName(const char *name)
 //
 // Returns a base generalized line type for a name.
 //
-static int16_t E_GenTypeForName(const char *name)
+static int E_GenTypeForName(const char *name)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *names[] =
    {
       "GenFloor", "GenCeiling", "GenDoor", "GenLockedDoor",
       "GenLift", "GenStairs", "GenCrusher", NULL
    };
-   static int16_t bases[] =
+   static int bases[] =
    {
       GenFloorBase, GenCeilingBase, GenDoorBase, GenLockedBase,
       GenLiftBase, GenStairsBase, GenCrusherBase, 0
@@ -1117,9 +637,9 @@ static bool E_BooleanArg(const char *str)
 //
 // Parses a generalized speed argument.
 //
-static int16_t E_SpeedArg(const char *str)
+static int E_SpeedArg(const char *str)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *speeds[] =
    {
       "slow", "normal", "fast", "turbo", NULL
@@ -1136,9 +656,9 @@ static int16_t E_SpeedArg(const char *str)
 //
 // Parses a floor/ceiling changer type argument.
 //
-static int16_t E_ChangeArg(const char *str)
+static int E_ChangeArg(const char *str)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *changes[] =
    {
       "none", "zero", "texture", "texturetype", NULL
@@ -1155,7 +675,7 @@ static int16_t E_ChangeArg(const char *str)
 //
 // Parses a floor/ceiling changer model argument.
 //
-static int16_t E_ModelArg(const char *str)
+static int E_ModelArg(const char *str)
 {
    if(!strcasecmp(str, "numeric"))
       return 1;
@@ -1169,9 +689,9 @@ static int16_t E_ModelArg(const char *str)
 //
 // Parses the target argument for a generalized floor type.
 //
-static int16_t E_FloorTarget(const char *str)
+static int E_FloorTarget(const char *str)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *targs[] =
    {
       "HnF", "LnF", "NnF", "LnC", "C", "sT", "24", "32", NULL
@@ -1188,9 +708,9 @@ static int16_t E_FloorTarget(const char *str)
 //
 // Parses the target argument for a generalized ceiling type.
 //
-static int16_t E_CeilingTarget(const char *str)
+static int E_CeilingTarget(const char *str)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *targs[] =
    {
       "HnC", "LnC", "NnC", "HnF", "F", "sT", "24", "32", NULL
@@ -1207,7 +727,7 @@ static int16_t E_CeilingTarget(const char *str)
 //
 // Parses a direction argument.
 //
-static int16_t E_DirArg(const char *str)
+static int E_DirArg(const char *str)
 {
    if(!strcasecmp(str, "up"))
       return 1;
@@ -1221,7 +741,7 @@ static int16_t E_DirArg(const char *str)
 //
 // Parses a generalized door type argument.
 //
-static int16_t E_DoorTypeArg(const char *str)
+static int E_DoorTypeArg(const char *str)
 {
    if(!strcasecmp(str, "Open"))
       return 1;
@@ -1239,7 +759,7 @@ static int16_t E_DoorTypeArg(const char *str)
 //
 // Parses a generalized door delay argument.
 //
-static int16_t E_DoorDelay(const char *str)
+static int E_DoorDelay(const char *str)
 {
    if(*str == '4')
       return 1;
@@ -1257,7 +777,7 @@ static int16_t E_DoorDelay(const char *str)
 //
 // Parses a generalized locked door type argument.
 //
-static int16_t E_LockedType(const char *str)
+static int E_LockedType(const char *str)
 {
    if(!strcasecmp(str, "Open"))
       return 1;
@@ -1271,9 +791,9 @@ static int16_t E_LockedType(const char *str)
 //
 // Parses the key argument for a locked door.
 //
-static int16_t E_LockedKey(const char *str)
+static int E_LockedKey(const char *str)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *keys[] =
    {
       "Any", "RedCard", "BlueCard", "YellowCard", "RedSkull", "BlueSkull",
@@ -1291,7 +811,7 @@ static int16_t E_LockedKey(const char *str)
 //
 // Parses the target argument for a generalized lift.
 //
-static int16_t E_LiftTarget(const char *str)
+static int E_LiftTarget(const char *str)
 {
    if(!strcasecmp(str, "NnF"))
       return 1;
@@ -1309,7 +829,7 @@ static int16_t E_LiftTarget(const char *str)
 //
 // Parses the delay argument for a generalized lift.
 //
-static int16_t E_LiftDelay(const char *str)
+static int E_LiftDelay(const char *str)
 {
    if(*str == '3')
       return 1;
@@ -1327,7 +847,7 @@ static int16_t E_LiftDelay(const char *str)
 //
 // Parses the step size argument for generalized stairs.
 //
-static int16_t E_StepSize(const char *str)
+static int E_StepSize(const char *str)
 {
    if(*str == '8')
       return 1;
@@ -1345,9 +865,9 @@ static int16_t E_StepSize(const char *str)
 //
 // Parses the trigger type of a generalized line special.
 //
-static int16_t E_GenTrigger(const char *str)
+static int E_GenTrigger(const char *str)
 {
-   int16_t i = 0;
+   int i = 0;
    static const char *trigs[] =
    {
       "W1", "WR", "S1", "SR", "G1", "GR", "D1", "DR", NULL
@@ -1387,12 +907,12 @@ static int16_t E_GenTrigger(const char *str)
 // line system. Hence, not a lot of time has been spent making it
 // fast or clean.
 //
-static int16_t E_ProcessGenSpec(const char *value)
+static int E_ProcessGenSpec(const char *value)
 {
    qstring buffer;
    const char *curtoken = NULL;
    int t, forc = 0, tok_index = 0;
-   int16_t trigger;
+   int trigger;
 
    // get special name (starts at beginning, ends at '[')
    // and convert to base trigger type
@@ -1963,7 +1483,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 
    // ExtraData record number is stored in line tag
    if(!LevelInfo.extraData || numEDLines == 0 ||
-      (edLineIdx = E_EDLineForRecordNum((uint16_t)(line->tag))) == numEDLines)
+      (edLineIdx = E_EDLineForRecordNum(line->tag)) == numEDLines)
    {
       // if no ExtraData or no such record, zero special and clear tag,
       // and we're finished here.
@@ -2083,100 +1603,6 @@ void E_LoadSectorExt(line_t *line)
 
    // clear the line tag
    line->tag = 0;
-}
-
-//
-// E_IsParamSpecial
-//
-// Tests if a given line special is parameterized.
-//
-bool E_IsParamSpecial(int16_t special)
-{
-   // no param line specs in old demos
-   if(demo_version < 333)
-      return false;
-
-   switch(special)
-   {
-   case 300: // Door_Raise
-   case 301: // Door_Open
-   case 302: // Door_Close
-   case 303: // Door_CloseWaitOpen
-   case 304: // Door_WaitRaise
-   case 305: // Door_WaitClose
-   case 306: // Floor_RaiseToHighest
-   case 307: // Floor_LowerToHighest
-   case 308: // Floor_RaiseToLowest
-   case 309: // Floor_LowerToLowest
-   case 310: // Floor_RaiseToNearest
-   case 311: // Floor_LowerToNearest
-   case 312: // Floor_RaiseToLowestCeiling
-   case 313: // Floor_LowerToLowestCeiling
-   case 314: // Floor_RaiseToCeiling
-   case 315: // Floor_RaiseByTexture
-   case 316: // Floor_LowerByTexture
-   case 317: // Floor_RaiseByValue
-   case 318: // Floor_LowerByValue
-   case 319: // Floor_MoveToValue
-   case 320: // Floor_RaiseInstant
-   case 321: // Floor_LowerInstant
-   case 322: // Floor_ToCeilingInstant
-   case 323: // Ceiling_RaiseToHighest
-   case 324: // Ceiling_ToHighestInstant
-   case 325: // Ceiling_RaiseToNearest
-   case 326: // Ceiling_LowerToNearest
-   case 327: // Ceiling_RaiseToLowest
-   case 328: // Ceiling_LowerToLowest
-   case 329: // Ceiling_RaiseToHighestFloor
-   case 330: // Ceiling_LowerToHighestFloor
-   case 331: // Ceiling_ToFloorInstant
-   case 332: // Ceiling_LowerToFloor
-   case 333: // Ceiling_RaiseByTexture
-   case 334: // Ceiling_LowerByTexture
-   case 335: // Ceiling_RaiseByValue
-   case 336: // Ceiling_LowerByValue
-   case 337: // Ceiling_MoveToValue
-   case 338: // Ceiling_RaiseInstant
-   case 339: // Ceiling_LowerInstant
-   case 340: // Stairs_BuildUpDoom
-   case 341: // Stairs_BuildDownDoom
-   case 342: // Stairs_BuildUpDoomSync
-   case 343: // Stairs_BuildDownDoomSync
-   case 350: // Polyobj_DoorSlide
-   case 351: // Polyobj_DoorSwing
-   case 352: // Polyobj_Move
-   case 353: // Polyobj_OR_Move
-   case 354: // Polyobj_RotateRight
-   case 355: // Polyobj_OR_RotateRight
-   case 356: // Polyobj_RotateLeft
-   case 357: // Polyobj_OR_RotateLeft
-   case 362: // Pillar_Build
-   case 363: // Pillar_BuildAndCrush
-   case 364: // Pillar_Open
-   case 365: // ACS_Execute
-   case 366: // ACS_Suspend
-   case 367: // ACS_Terminate
-   case 368: // Light_RaiseByValue
-   case 369: // Light_LowerByValue
-   case 370: // Light_ChangeToValue
-   case 371: // Light_Fade
-   case 372: // Light_Glow
-   case 373: // Light_Flicker
-   case 374: // Light_Strobe
-   case 375: // Radius_Quake
-   case 378: // Line_SetIdentification
-   case 397: // Floor_Waggle
-   case 398: // Thing_Spawn
-   case 399: // Thing_SpawnNoFog
-   case 400: // Teleport_EndGame
-   case 402: // Thing_Projectile
-   case 403: // Thing_ProjectileGravity
-   case 404: // Thing_Activate
-   case 405: // Thing_Deactivate
-      return true;
-   default:
-      return false;
-   }
 }
 
 void E_GetEDMapThings(mapthing_t **things, int *numthings)

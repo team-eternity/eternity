@@ -305,7 +305,7 @@ static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
 // Executes a line special that has been encoded in the script with
 // immediate operands or on the stack.
 //
-static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
+static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int spec, int side,
                                 int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -585,19 +585,19 @@ void ACSThinker::Think()
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
       stp -= temp; // consume args
-      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      ACS_execLineSpec(line, trigger, (int)opcode, lineSide, temp, stp);
       NEXTOP();
    OPCODE(LINESPEC_IMM):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
-      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, ip);
+      ACS_execLineSpec(line, trigger, (int)opcode, lineSide, temp, ip);
       ip += temp; // consume args
       NEXTOP();
    OPCODE(LINESPEC_RET):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
       stp -= temp; // consume args
-      temp = ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      temp = ACS_execLineSpec(line, trigger, (int)opcode, lineSide, temp, stp);
       PUSH(temp);
       NEXTOP();
 

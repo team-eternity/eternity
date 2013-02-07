@@ -281,7 +281,7 @@ int EV_DoGenFloor(line_t *line)
    floordata_t fd;
    memset(&fd, 0, sizeof(fd));
 
-   unsigned value = (unsigned int)line->special - GenFloorBase;
+   int value = line->special - GenFloorBase;
 
    // parse the bit fields in the line's special type
    
@@ -527,7 +527,7 @@ manual_ceiling:
 int EV_DoGenCeiling(line_t *line)
 {
    ceilingdata_t cd;
-   unsigned value = (unsigned int)line->special - GenCeilingBase;
+   int value = line->special - GenCeilingBase;
 
    // parse the bit fields in the line's special type
    
@@ -562,7 +562,7 @@ int EV_DoGenLift(line_t *line)
    int       rtn;
    bool      manual;
    sector_t *sec;
-   unsigned int value = (unsigned int)line->special - GenLiftBase;
+   int value = line->special - GenLiftBase;
 
    // parse the bit fields in the line's special type
    
@@ -935,7 +935,7 @@ int EV_DoGenStairs(line_t *line)
 {
    stairdata_t sd;
    int         rtn;
-   unsigned    value = (unsigned int)line->special - GenStairsBase;
+   int         value = line->special - GenStairsBase;
 
    // parse the bit fields in the line's special type
    sd.direction     = (value & StairDirection) >> StairDirectionShift;
@@ -977,7 +977,7 @@ int EV_DoGenCrusher(line_t *line)
    bool      manual;
    sector_t *sec;
    CeilingThinker *ceiling;
-   unsigned int value = (unsigned int)line->special - GenCrusherBase;
+   int value = line->special - GenCrusherBase;
    
    // parse the bit fields in the line's special type
    
@@ -1276,7 +1276,7 @@ manual_door:
 int EV_DoGenLockedDoor(line_t *line)
 {
    doordata_t dd;
-   unsigned int value = (unsigned int)line->special - GenLockedBase;
+   int value = line->special - GenLockedBase;
    int speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
@@ -1322,7 +1322,7 @@ int EV_DoGenLockedDoor(line_t *line)
 int EV_DoGenDoor(line_t *line)
 {
    doordata_t dd;
-   unsigned int value = (unsigned int)line->special - GenDoorBase;
+   int value = line->special - GenDoorBase;
    int delayType, speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
@@ -1399,7 +1399,7 @@ static int param_door_kinds[6] =
 // Parses arguments for parameterized Door specials.
 //
 static bool pspec_Door(line_t *line, Mobj *thing, int *args, 
-                       int16_t special, int spac, bool reuse)
+                       int special, int spac, bool reuse)
 {
    int kind;
    doordata_t dd;
@@ -1505,7 +1505,7 @@ static int fchgdata[7][2] =
 //
 // Parses arguments for parameterized Floor specials.
 //
-static bool pspec_Floor(line_t *line, int *args, int16_t special, int spac)
+static bool pspec_Floor(line_t *line, int *args, int special, int spac)
 {
    floordata_t fd = { 0 };
    int normspec;
@@ -1656,7 +1656,7 @@ static int cchgdata[7][2] =
 //
 // Parses arguments for parameterized Ceiling specials.
 //
-static bool pspec_Ceiling(line_t *line, int *args, int16_t special, int spac)
+static bool pspec_Ceiling(line_t *line, int *args, int special, int spac)
 {
    ceilingdata_t cd;
    int normspec;
@@ -1772,7 +1772,7 @@ static bool pspec_Ceiling(line_t *line, int *args, int16_t special, int spac)
 //
 // Parses arguments for parameterized Stair specials.
 //
-static bool pspec_Stairs(line_t *line, int *args, int16_t special, int spac)
+static bool pspec_Stairs(line_t *line, int *args, int special, int spac)
 {
    stairdata_t sd;
    memset(&sd, 0, sizeof(sd));
@@ -1817,7 +1817,7 @@ static bool pspec_Stairs(line_t *line, int *args, int16_t special, int spac)
 //
 // Parses arguments for parameterized polyobject door types
 //
-static bool pspec_PolyDoor(int *args, int16_t special)
+static bool pspec_PolyDoor(int *args, int special)
 {
    polydoordata_t pdd;
    memset(&pdd, 0, sizeof(pdd));
@@ -1851,7 +1851,7 @@ static bool pspec_PolyDoor(int *args, int16_t special)
 //
 // Parses arguments for parameterized polyobject move specials
 //
-static bool pspec_PolyMove(int *args, int16_t special)
+static bool pspec_PolyMove(int *args, int special)
 {
    polymovedata_t pmd;
 
@@ -1870,7 +1870,7 @@ static bool pspec_PolyMove(int *args, int16_t special)
 //
 // Parses arguments for parameterized polyobject rotate specials
 //
-static bool pspec_PolyRotate(int *args, int16_t special)
+static bool pspec_PolyRotate(int *args, int special)
 {
    polyrotdata_t prd;
 
@@ -1895,7 +1895,7 @@ static bool pspec_PolyRotate(int *args, int16_t special)
 //
 // haleyjd: rewritten to use pillardata_t struct
 //
-static bool pspec_Pillar(line_t *line, int *args, int16_t special)
+static bool pspec_Pillar(line_t *line, int *args, int special)
 {
    pillardata_t pd;
    
@@ -1928,7 +1928,7 @@ static bool pspec_Pillar(line_t *line, int *args, int16_t special)
 //
 // haleyjd 01/07/07: Runs an ACS script.
 //
-static bool pspec_ACSExecute(line_t *line, int *args, int16_t special,
+static bool pspec_ACSExecute(line_t *line, int *args, int special,
                                 int side, Mobj *thing)
 {
    return ACS_ExecuteScriptNumber(args[0], args[1], 0, args+2, 3, thing, line, side);
@@ -1946,7 +1946,7 @@ static bool pspec_ACSExecute(line_t *line, int *args, int16_t special,
 // side:    Side of line activated. May be ignored.
 // reuse:   if action is repeatable
 //
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int special, 
                          int *args, int side, int spac, bool reuse)
 {
    bool success = false;
@@ -2357,7 +2357,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
 // the indicated special. All functions using this must take the
 // same arguments in the same order as the line special.
 //
-static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
+static int P_ScriptSpec(int spec, AMX *amx, cell *params)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numparams = params[0] / sizeof(cell);
@@ -2397,7 +2397,7 @@ static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
 
 CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
-   int16_t spec;
+   int spec;
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numargs;
 

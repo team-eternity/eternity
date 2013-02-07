@@ -29,6 +29,8 @@
 
 #include "c_io.h"
 #include "doomdef.h"
+#include "ev_specials.h"
+#include "i_system.h"
 #include "m_bbox.h"
 #include "p_slopes.h"
 #include "p_spec.h"
@@ -162,12 +164,53 @@ float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
 }
 
 //
+// P_getSlopeProps
+//
+// haleyjd 02/05/13: Get slope properties for a static init function.
+//
+static void P_getSlopeProps(int staticFn, bool &frontfloor, bool &backfloor,
+                            bool &frontceil, bool &backceil)
+{
+   struct staticslopeprops_t 
+   {
+      int  staticFn;
+      bool frontfloor;
+      bool backfloor;
+      bool frontceil;
+      bool backceil;
+   };
+   static staticslopeprops_t props[] =
+   {
+      { EV_STATIC_SLOPE_FSEC_FLOOR,             true,  false, false, false },
+      { EV_STATIC_SLOPE_FSEC_CEILING,           false, false, true,  false },
+      { EV_STATIC_SLOPE_FSEC_FLOOR_CEILING,     true,  false, true,  false },
+      { EV_STATIC_SLOPE_BSEC_FLOOR,             false, true,  false, false },
+      { EV_STATIC_SLOPE_BSEC_CEILING,           false, false, false, true  },
+      { EV_STATIC_SLOPE_BSEC_FLOOR_CEILING,     false, true,  false, true  },
+      { EV_STATIC_SLOPE_BACKFLOOR_FRONTCEILING, false, true,  true,  false },
+      { EV_STATIC_SLOPE_FRONTFLOOR_BACKCEILING, true,  false, false, true  },
+   };
+
+   for(size_t i = 0; i < earrlen(props); i++)
+   {
+      if(staticFn == props[i].staticFn)
+      {
+         frontfloor = props[i].frontfloor;
+         backfloor  = props[i].backfloor;
+         frontceil  = props[i].frontceil;
+         backceil   = props[i].backceil;
+         break;
+      }
+   }
+}
+
+//
 // P_SpawnSlope_Line
 //
 // Creates one or more slopes based on the given line type and front/back
 // sectors.
 //
-void P_SpawnSlope_Line(int linenum)
+void P_SpawnSlope_Line(int linenum, int staticFn)
 {
    line_t *line = lines + linenum;
    int special = line->special;
@@ -175,11 +218,11 @@ void P_SpawnSlope_Line(int linenum)
    v2float_t direction;
    float dz, extent;
 
-   bool frontfloor = (special == 386 || special == 388 || special == 393);
-   bool backfloor  = (special == 389 || special == 391 || special == 392);
-   bool frontceil  = (special == 387 || special == 388 || special == 392);
-   bool backceil   = (special == 390 || special == 391 || special == 393);
+   bool frontfloor = false, backfloor = false, 
+        frontceil  = false, backceil  = false;
 
+   P_getSlopeProps(staticFn, frontfloor, backfloor, frontceil, backceil);
+   
    // SoM: We don't need the line to retain its special type
    line->special = 0;
 
@@ -277,26 +320,42 @@ void P_SpawnSlope_Line(int linenum)
    */
 }
 
-
-
 //
 // P_CopySectorSlope
 //
 // Searches through tagged sectors and copies
 //
-void P_CopySectorSlope(line_t *line)
+void P_CopySectorSlope(line_t *line, int staticFn)
 {
    sector_t *fsec = line->frontsector;
    int i, special = line->special;
+   bool copyFloor   = false;
+   bool copyCeiling = false;
+
+   switch(staticFn)
+   {
+   case EV_STATIC_SLOPE_FRONTFLOOR_TAG:
+      copyFloor = true;
+      break;
+   case EV_STATIC_SLOPE_FRONTCEILING_TAG:
+      copyCeiling = true;
+      break;
+   case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
+      copyFloor = copyCeiling = true;
+      break;
+   default:
+      I_Error("P_CopySectorSlope: unknown static init %d\n", staticFn);
+   }
 
    // Check for copy linedefs
    for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
    {
-      sector_t *srcsec = sectors + i;
+      sector_t *srcsec = &sectors[i];
 
-      if((special - 393) & 1 && !fsec->f_slope && srcsec->f_slope)
+      if(copyFloor && !fsec->f_slope && srcsec->f_slope)
          fsec->f_slope = P_CopySlope(srcsec->f_slope);
-      if((special - 393) & 2 && !fsec->c_slope && srcsec->c_slope)
+
+      if(copyCeiling && !fsec->c_slope && srcsec->c_slope)
          fsec->c_slope = P_CopySlope(srcsec->c_slope);
    }
 

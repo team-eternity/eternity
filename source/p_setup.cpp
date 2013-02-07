@@ -1171,7 +1171,7 @@ void P_LoadLineDefs(int lump)
       line_t *ld = lines + i;
 
       ld->flags   = SwapShort(mld->flags);
-      ld->special = SwapShort(mld->special);
+      ld->special = (int)(SwapShort(mld->special)) & 0xffff;
       ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
@@ -1192,9 +1192,8 @@ void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if(edlinespec && ld->special == edlinespec)
          E_LoadLineDefExt(ld, true);
-      else if(E_IsParamSpecial(ld->special) ||     // EV_SPECIALS FIXME/TODO
-              ld->special == POLYOBJ_START_LINE || 
-              ld->special == POLYOBJ_EXPLICIT_LINE)
+      else if(EV_IsParamLineSpec(ld->special) || 
+              EV_IsParamStaticInit(ld->special))
       {
          E_LoadLineDefExt(ld, false);
       }
@@ -1350,10 +1349,13 @@ void P_LoadLineDefs2(void)
       ld->frontsector = sides[ld->sidenum[0]].sector;
       ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
       
-      switch(ld->special)
+      // haleyjd 02/06/13: lookup static init
+      int staticFn = EV_StaticInitForSpecial(ld->special);
+
+      switch(staticFn)
       {                       // killough 4/11/98: handle special types
          int lump, j;
-      case 260:               // killough 4/11/98: translucent 2s textures
+      case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
          if(!ld->tag)                        // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
@@ -1365,6 +1367,9 @@ void P_LoadLineDefs2(void)
                   lines[j].tranlump = lump;
             }
          }
+         break;
+
+      default:
          break;
       }
    } // end for
@@ -1422,10 +1427,14 @@ void P_LoadSideDefs2(int lumpnum)
       // killough 4/4/98: allow sidedef texture names to be overloaded
       // killough 4/11/98: refined to allow colormaps to work as wall
       // textures if invalid as colormaps but valid as textures.
+      // haleyjd 02/06/13: look up static init function
 
-      switch(sd->special)
+      int staticFn = EV_StaticInitForSpecial(sd->special);
+
+      switch(staticFn)
       {
-      case 242:                  // variable colormap via 242 linedef
+      case EV_STATIC_TRANSFER_HEIGHTS: 
+         // variable colormap via 242 linedef
          if((cmap = R_ColormapNumForName(bottomtexture)) < 0)
             sd->bottomtexture = R_FindWall(bottomtexture);
          else
@@ -1449,7 +1458,8 @@ void P_LoadSideDefs2(int lumpnum)
          }
          break;
 
-      case 260: // killough 4/11/98: apply translucency to 2s normal texture
+      case EV_STATIC_TRANSLUCENT: 
+         // killough 4/11/98: apply translucency to 2s normal texture
          if(strncasecmp("TRANMAP", midtexture, 8))
          {
             sd->special = W_CheckNumForName(midtexture);
@@ -1470,7 +1480,7 @@ void P_LoadSideDefs2(int lumpnum)
          else
          {
             // is "TRANMAP", which is generated as tranmap #0
-            sd->special = 0;
+            sd->special    = 0;
             sd->midtexture = 0;
          }
          sd->toptexture    = R_FindWall(toptexture);
@@ -2492,7 +2502,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_SpawnSpecials(LevelInfo.mapFormat);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials(LevelInfo.mapFormat);
+   P_SpawnDeferredSpecials();
 
    // haleyjd
    P_InitLightning();

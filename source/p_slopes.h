@@ -40,7 +40,7 @@ void P_MakeLineNormal(line_t *line);
 // P_SpawnSlope_Line
 // Creates one or more slopes based on the given line type and front/back
 // sectors.
-void P_SpawnSlope_Line(int linenum);
+void P_SpawnSlope_Line(int linenum, int staticFn);
 
 
 //
@@ -48,7 +48,7 @@ void P_SpawnSlope_Line(int linenum);
 //
 // Searches through tagged sectors and copies
 //
-void P_CopySectorSlope(line_t *line);
+void P_CopySectorSlope(line_t *line, int staticFn);
 
 // Returns the height of the sloped plane at (x, y) as a fixed_t
 fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y);
