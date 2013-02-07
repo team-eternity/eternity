@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
+		4F69650A16C3B1EB00FF2028 /* ev_actions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F69650416C3B1EB00FF2028 /* ev_actions.cpp */; };
+		4F69650B16C3B1EB00FF2028 /* ev_bindings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F69650616C3B1EB00FF2028 /* ev_bindings.cpp */; };
+		4F69650C16C3B1EB00FF2028 /* ev_static.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F69650916C3B1EB00FF2028 /* ev_static.cpp */; };
 		4F8B42E916C1101000765638 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8B42E816C1101000765638 /* zutil.c */; };
 		4F98955016C10FB1005D78C0 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F98954F16C10FB1005D78C0 /* trees.c */; };
 		4F9F72D316BFB73200C405AE /* p_pushers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D116BFB73200C405AE /* p_pushers.cpp */; };
@@ -293,6 +296,12 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
+		4F69650416C3B1EB00FF2028 /* ev_actions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_actions.cpp; path = ../../ev_actions.cpp; sourceTree = "<group>"; };
+		4F69650516C3B1EB00FF2028 /* ev_actions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_actions.h; path = ../../ev_actions.h; sourceTree = "<group>"; };
+		4F69650616C3B1EB00FF2028 /* ev_bindings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_bindings.cpp; path = ../../ev_bindings.cpp; sourceTree = "<group>"; };
+		4F69650716C3B1EB00FF2028 /* ev_bindings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_bindings.h; path = ../../ev_bindings.h; sourceTree = "<group>"; };
+		4F69650816C3B1EB00FF2028 /* ev_macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_macros.h; path = ../../ev_macros.h; sourceTree = "<group>"; };
+		4F69650916C3B1EB00FF2028 /* ev_static.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_static.cpp; path = ../../ev_static.cpp; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../../../zlib/zutil.c; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../../../zlib/trees.c; sourceTree = "<group>"; };
 		4F9F72CF16BFB70A00C405AE /* p_pushers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_pushers.h; path = ../../p_pushers.h; sourceTree = "<group>"; };
@@ -1672,8 +1681,14 @@
 		FAEB990316666A46004B0CD1 /* EV_ */ = {
 			isa = PBXGroup;
 			children = (
+				4F69650416C3B1EB00FF2028 /* ev_actions.cpp */,
+				4F69650516C3B1EB00FF2028 /* ev_actions.h */,
+				4F69650616C3B1EB00FF2028 /* ev_bindings.cpp */,
+				4F69650716C3B1EB00FF2028 /* ev_bindings.h */,
+				4F69650816C3B1EB00FF2028 /* ev_macros.h */,
 				FAEB990516666A65004B0CD1 /* ev_specials.cpp */,
 				FAEB990616666A65004B0CD1 /* ev_specials.h */,
+				4F69650916C3B1EB00FF2028 /* ev_static.cpp */,
 			);
 			name = EV_;
 			sourceTree = "<group>";
@@ -1991,6 +2006,9 @@
 				4F9F72D416BFB73200C405AE /* p_scroll.cpp in Sources */,
 				4F98955016C10FB1005D78C0 /* trees.c in Sources */,
 				4F8B42E916C1101000765638 /* zutil.c in Sources */,
+				4F69650A16C3B1EB00FF2028 /* ev_actions.cpp in Sources */,
+				4F69650B16C3B1EB00FF2028 /* ev_bindings.cpp in Sources */,
+				4F69650C16C3B1EB00FF2028 /* ev_static.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
