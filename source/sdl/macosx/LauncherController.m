@@ -706,7 +706,10 @@ iwadMightBe:
 {
    // if it's null, assign it
    if(anIndexSet == nil)
-      anIndexSet = [NSIndexSet indexSetWithIndex:[pwadArray count]];   // nothing designated, so add at end.
+      anIndexSet = [NSIndexSet
+                    indexSetWithIndexesInRange:NSMakeRange([pwadArray count],
+                                                           [wURLArray count])];
+   // nothing designated, so add at end.
    
    SET_UNDO(pwadView, doRemovePwadsAtIndexes:anIndexSet, @"Add/Remove Files")
    
@@ -715,7 +718,8 @@ iwadMightBe:
    NSURL *URL;
    for (URL in wURLArray)
    {
-      [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:URL];
+      [[NSDocumentController sharedDocumentController]
+       noteNewRecentDocumentURL:URL];
    }
    if(pwadView)
       [pwadView reloadData];
