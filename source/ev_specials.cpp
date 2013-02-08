@@ -55,17 +55,26 @@
 //
 
 //
-// P_ClearSwitchOnFail
+// EV_ClearSwitchOnFail
 //
 // haleyjd 08/29/09: Replaces demo_compatibility checks for clearing 
 // W1/S1/G1 line actions on action failure, because it makes some maps
 // unplayable if it is disabled unconditionally outside of demos.
 //
-inline static bool P_ClearSwitchOnFail(void)
+inline static bool EV_ClearSwitchOnFail(void)
 {
    return demo_compatibility || (demo_version >= 335 && comp[comp_special]);
 }
 
+//
+// EV_CompositeActionFlags
+//
+// Returns the composition of the action's flags with the flags imposed by the
+// action's type. Always call this rather than directly accessing action->flags,
+// because all flags that are implied by an action's type will only be set by
+// the type and never by the action. For example, W1ActionType sets 
+// EV_POSTCLEARSPECIAL for all DOOM-style W1 actions.
+//
 inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
 {
    return (action->type->flags | action->flags);
@@ -197,7 +206,7 @@ static bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
 
    if(flags & EV_POSTCLEARSPECIAL)
    {
-      bool clearSpecial = (result || P_ClearSwitchOnFail());
+      bool clearSpecial = (result || EV_ClearSwitchOnFail());
 
       if(clearSpecial || (flags & EV_POSTCLEARALWAYS))
          instance->line->special = 0;
@@ -322,7 +331,7 @@ static bool EV_DOOMPostShootLine(ev_action_t *action, bool result,
    {
       // Non-BOOM gun line types may clear their special even if they fail
       if(result || (flags & EV_POSTCHANGEALWAYS) || 
-         (action->minversion < 200 && P_ClearSwitchOnFail()))
+         (action->minversion < 200 && EV_ClearSwitchOnFail()))
       {
          int useAgain   = !(flags & EV_POSTCLEARSPECIAL);
          int changeSide = (flags & EV_POSTCHANGESIDED) ? instance->side : 0;
@@ -462,6 +471,17 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
       }
    }
 
+   // check for 3DMidTex switch restrictions
+   switch(instance->genspac)
+   {
+   case PushOnce:
+   case PushMany:
+   case SwitchOnce:
+   case SwitchMany:
+      if(!EV_Check3DMidTexSwitch(line, thing, instance->side))
+         return false;
+   }
+
    return true;
 }
 
@@ -511,11 +531,17 @@ static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
 //
 // EV_ParamPreActivate
 //
-// There is nothing to do here. All logic was already taken care of by the 
-// EV_checkSpac function.
+// The only check to make here is for 3DMidTex switches. The rest of the logic
+// has been implemented in EV_checkSpac.
 //
 static bool EV_ParamPreActivate(ev_action_t *action, ev_instance_t *instance)
 {
+   if(instance->line && instance->actor && instance->spac == SPAC_USE)
+   {
+      if(!EV_Check3DMidTexSwitch(instance->line, instance->actor, instance->side))
+         return false;
+   }
+
    return true;
 }
 
@@ -992,7 +1018,7 @@ ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
 //
 // EV_checkSpac
 //
-// Checks against the instance characteristics of the action to see if this
+// Checks against the activation characteristics of the action to see if this
 // method of activating the line is allowed.
 //
 static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
@@ -1072,10 +1098,15 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
 //
 bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 {
+   // demo version check
+   if(action->minversion > demo_version)
+      return false;
+
    // execute pre-amble routine
    if(!action->type->pre(action, instance))
       return false;
 
+   // execute the action
    bool result = action->action(action, instance);
 
    // execute the post-action routine

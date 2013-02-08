@@ -944,7 +944,7 @@ const char *const standard_iwads[]=
    "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD  -- haleyjd 11/03/12
 };
 
-int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
+int nstandard_iwads = earrlen(standard_iwads);
 
 //
 // D_findIWADFile
@@ -1165,7 +1165,7 @@ static char *D_findIWADFile()
       }
    }
 
-   for(i = 0; i < sizeof envvars / sizeof *envvars; i++)
+   for(i = 0; i < earrlen(envvars); i++)
    {
       if((p = getenv(envvars[i])))
       {
@@ -1248,7 +1248,7 @@ static void D_loadResourceWad()
 //
 // haleyjd 05/31/10: IdentifyVersion subroutine for dealing with disk files.
 //
-static void D_identifyDisk(void)
+static void D_identifyDisk()
 {
    GameMode_t    gamemode;
    GameMission_t gamemission;
@@ -1304,7 +1304,7 @@ static void D_identifyDisk(void)
 //
 // haleyjd 05/31/10: IdentifyVersion subroutine for dealing with normal IWADs.
 //
-static void D_identifyIWAD(void)
+static void D_identifyIWAD()
 {
    char *iwad;
    GameMode_t    gamemode;
