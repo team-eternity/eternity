@@ -29,7 +29,7 @@
 
 @interface ELTextFieldDelegate : NSObject
 {
-   IBOutlet id owner;
+   IBOutlet id mOwner;
 }
 
 -(void)textDidChange:(NSNotification *)aNotification;

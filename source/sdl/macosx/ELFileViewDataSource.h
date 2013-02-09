@@ -35,7 +35,7 @@
 @interface ELFileViewDataSource : NSObject
 {
    NSMutableArray *array;   // array for the data
-   IBOutlet id owner;
+   IBOutlet id mOwner;
 }
 @property (assign) NSMutableArray *array;
 

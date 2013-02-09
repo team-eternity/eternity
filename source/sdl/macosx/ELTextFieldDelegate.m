@@ -47,7 +47,7 @@
 //
 -(void)textDidChange:(NSNotification *)aNotification
 {
-   [owner updateParameters:[aNotification object]];
+   [mOwner updateParameters:[aNotification object]];
 }
 
 @end

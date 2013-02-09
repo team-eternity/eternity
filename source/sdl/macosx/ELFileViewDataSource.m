@@ -70,7 +70,7 @@
    NSURL *URLCandidate = [NSURL fileURLWithPath:[anObject stringByExpandingTildeInPath]];
    
    [array replaceObjectAtIndex:rowIndex withObject:URLCandidate];
-   [owner updateParameters:aTableView];
+   [mOwner updateParameters:aTableView];
 }
 
 @end
