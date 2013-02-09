@@ -1066,6 +1066,19 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
 //
 
 //
+// EV_ActionLowerFloorTurboA
+//
+// Heretic: 36 (W1)
+// Heretic: 70 (SR)
+// Heretic: 71 (S1)
+// Heretic: 98 (WR)
+//
+DEFINE_ACTION(EV_ActionLowerFloorTurboA)
+{
+   return !!EV_DoFloor(instance->line, turboLowerA);
+}
+
+//
 // EV_ActionHereticDoorRaise3x
 //
 // Heretic: 100
@@ -1088,6 +1101,30 @@ DEFINE_ACTION(EV_ActionHereticDoorRaise3x)
    genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
+}
+
+//
+// EV_ActionHereticStairsBuildUp8FS
+//
+// Heretic: 7 (S1)
+// Heretic: 8 (W1)
+// Heretic changed all stair types from DOOM to raise at FLOORSPEED;
+// Thanks to Gez for having found this a long time ago for ZDoom and
+// then sharing it with me.
+//
+DEFINE_ACTION(EV_ActionHereticStairsBuildUp8FS)
+{
+   INIT_STRUCT(stairdata_t, sd);
+
+   sd.flags          = SDF_HAVESPAC;
+   sd.spac           = instance->spac;
+   sd.direction      = 1;
+   sd.speed_type     = SpeedParam;
+   sd.speed_value    = FLOORSPEED;
+   sd.stepsize_type  = StepSizeParam;
+   sd.stepsize_value = 8 * FRACUNIT;
+
+   return !!EV_DoParamStairs(instance->line, instance->tag, &sd);
 }
 
 //

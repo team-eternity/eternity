@@ -103,7 +103,9 @@ DECLARE_ACTION(EV_ActionVerticalDoor);
 DECLARE_ACTION(EV_ActionDoLockedDoor);
 
 // Heretic Actions
+DECLARE_ACTION(EV_ActionLowerFloorTurboA);
 DECLARE_ACTION(EV_ActionHereticDoorRaise3x);
+DECLARE_ACTION(EV_ActionHereticStairsBuildUp8FS);
 DECLARE_ACTION(EV_ActionHereticStairsBuildUp16FS);
 
 // BOOM Generalized Action

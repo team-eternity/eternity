@@ -864,8 +864,18 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED * 4;
          floor->floordestheight = P_FindHighestFloorSurrounding(sec);
-         if (floor->floordestheight != sec->floorheight)
+         if(floor->floordestheight != sec->floorheight)
             floor->floordestheight += 8*FRACUNIT;
+         break;
+
+      case turboLowerA:
+         // haleyjd 02/09/13: Heretic has different behavior for turbo lower
+         // floors. Thanks to Gez for pointing this out.
+         floor->direction = plat_down;
+         floor->sector    = sec;
+         floor->speed     = FLOORSPEED * 4;
+         floor->floordestheight = 
+            P_FindHighestFloorSurrounding(sec) + 8 * FRACUNIT;
          break;
 
       case raiseFloorCrush:

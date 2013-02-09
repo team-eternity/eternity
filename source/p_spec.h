@@ -529,6 +529,9 @@ typedef enum
    genWaitStair,  // haleyjd 10/10/05: stair resetting
    genDelayStair, // haleyjd 10/13/05: delayed stair
    genResetStair, 
+
+   // new types for supporting other idTech games
+   turboLowerA,   // haleyjd 02/09/13: for Heretic turbo floors
 } floor_e;
 
 typedef enum

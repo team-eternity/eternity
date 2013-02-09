@@ -887,6 +887,30 @@ WRLINE(WRStartLineScript, StartLineScript, EV_PREALLOWZEROTAG, 300);
 // Heretic Actions
 //
 
+// Heretic Line Type 7 - S1 Stairs Build Up 8 FLOORSPEED
+S1LINE(S1HereticStairsBuildUp8FS, HereticStairsBuildUp8FS, 0, 0);
+
+// Heretic Line Type 8 - W1 Stairs Build Up 8 FLOORSPEED
+W1LINE(W1HereticStairsBuildUp8FS, HereticStairsBuildUp8FS, 0, 0);
+
+// Heretic Line Type 10 - W1 Plat Down-Wait-Up-Stay, No Monsters
+W1LINE(W1HticPlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
+
+// Heretic Line Type 36 - W1 Lower Floor Turbo, Floorheight + 8
+W1LINE(W1LowerFloorTurboA, LowerFloorTurboA, 0, 0);
+
+// Heretic Line Type 70 - SR Lower Floor Turbo, Floorheight + 8
+WRLINE(SRLowerFloorTurboA, LowerFloorTurboA, 0, 0);
+
+// Heretic Line Type 71 - S1 Lower Floor Turbo, Floorheight + 8
+S1LINE(S1LowerFloorTurboA, LowerFloorTurboA, 0, 0);
+
+// Heretic Line Type 88 - WR Plat DWUS, No Monsters
+WRLINE(WRHticPlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
+
+// Heretic Line Type 98 - WR Lower Floor Turbo, Floorheight + 8
+WRLINE(WRLowerFloorTurboA, LowerFloorTurboA, 0, 0);
+
 // Heretic Line Type 100 - WR Raise Door 3x
 WRLINE(WRHereticDoorRaise3x, HereticDoorRaise3x, 0, 0);
 
@@ -1355,9 +1379,20 @@ size_t DOOMBindingsLen = earrlen(DOOMBindings);
 
 // Heretic Bindings
 // Heretic's bindings are additive over DOOM's.
+// Special thanks to Gez for saving me a ton of trouble by reporting missing
+// differences in behavior for types 7, 8, 10, 36, 70, 71, 49, 88, and 98
 ev_binding_t HereticBindings[] =
 {
-   LINESPEC(99,  NullAction)                 // Hide BOOM type 99
+   LINESPEC(  7, S1HereticStairsBuildUp8FS)
+   LINESPEC(  8, W1HereticStairsBuildUp8FS)
+   LINESPEC( 10, W1HticPlatDownWaitUpStay)
+   LINESPEC( 36, W1LowerFloorTurboA)
+   LINESPEC( 49, S1CeilingLowerAndCrush)
+   LINESPEC( 70, S1LowerFloorTurboA)
+   LINESPEC( 71, S1LowerFloorTurboA)
+   LINESPEC( 88, WRHticPlatDownWaitUpStay)
+   LINESPEC( 98, WRLowerFloorTurboA)
+   LINESPEC( 99, NullAction)                 // Hide BOOM type 99
    LINESPEC(100, WRHereticDoorRaise3x)
    LINESPEC(105, WRSecretExit)
    LINESPEC(106, W1HereticStairsBuildUp16FS)
