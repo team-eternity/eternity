@@ -69,7 +69,7 @@
 //
 -(id)initWithWindowNibName:(NSString *)windowNibName
 {
-	if(self = [super initWithWindowNibName:windowNibName])
+	if((self = [super initWithWindowNibName:windowNibName]))
 	{
 		outputMessageString = nil;
 	}
