@@ -35,6 +35,7 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_info.h"
@@ -2397,9 +2398,7 @@ static int P_ScriptSpec(int spec, AMX *amx, cell *params)
 
 CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
-   int spec;
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-   int i, numargs;
 
    if(!Console.argc)
    {
@@ -2407,15 +2406,18 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
       return;
    }
 
-   spec = E_LineSpecForName(Console.argv[0]->constPtr());
+   ev_binding_t *bind = EV_BindingForName(Console.argv[0]->constPtr());
+   if(bind)
+   {
+      if(EV_CompositeActionFlags(bind->action) & EV_PARAMLINESPEC)
+      {
+         int numargs = Console.argc - 1;
+         for(int i = 0; i < numargs; i++)
+            args[i] = Console.argv[i + 1]->toInt();
 
-   numargs = Console.argc - 1;
-
-   for(i = 0; i < numargs; ++i)
-      args[i] = Console.argv[i + 1]->toInt();
-
-   P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0, 
-                       SPAC_CROSS, true);
+         EV_ActivateAction(bind->action, args, players[Console.cmdsrc].mo);
+      }
+   }
 }
 
 void P_AddGenLineCommands(void)

@@ -67,20 +67,6 @@ inline static bool EV_ClearSwitchOnFail(void)
 }
 
 //
-// EV_CompositeActionFlags
-//
-// Returns the composition of the action's flags with the flags imposed by the
-// action's type. Always call this rather than directly accessing action->flags,
-// because all flags that are implied by an action's type will only be set by
-// the type and never by the action. For example, W1ActionType sets 
-// EV_POSTCLEARSPECIAL for all DOOM-style W1 actions.
-//
-inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
-{
-   return (action->type->flags | action->flags);
-}
-
-//
 // EV_Check3DMidTexSwitch
 //
 // haleyjd 12/02/12: split off 3DMidTex switch range testing into its own

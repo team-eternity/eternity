@@ -125,6 +125,20 @@ struct ev_binding_t
    DLListItem<ev_binding_t> namelinks; // hash links by name
 };
 
+//
+// EV_CompositeActionFlags
+//
+// Returns the composition of the action's flags with the flags imposed by the
+// action's type. Always call this rather than directly accessing action->flags,
+// because all flags that are implied by an action's type will only be set by
+// the type and never by the action. For example, W1ActionType sets 
+// EV_POSTCLEARSPECIAL for all DOOM-style W1 actions.
+//
+inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
+{
+   return (action->type->flags | action->flags);
+}
+
 // Action Types
 extern ev_actiontype_t NullActionType;
 extern ev_actiontype_t WRActionType;
@@ -156,6 +170,9 @@ ev_action_t  *EV_HexenActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
 bool EV_IsParamLineSpec(int special);
+
+// Activation
+bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //
 // Static Init Line Types
