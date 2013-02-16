@@ -1173,11 +1173,11 @@ bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing)
    INIT_STRUCT(ev_instance_t, instance);
 
    // setup instance
-   instance.actor   = thing;
-   instance.args    = args;
-   instance.side    = 0;
-   instance.spac    = SPAC_CROSS;
-   instance.tag     = args[0];
+   instance.actor = thing;
+   instance.args  = args;
+   instance.side  = 0;
+   instance.spac  = SPAC_CROSS;
+   instance.tag   = args[0];
 
    return EV_ActivateSpecial(action, &instance);
 }

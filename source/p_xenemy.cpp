@@ -74,7 +74,7 @@ void QuakeThinker::Think()
       if(playeringame[i])
       {
          player_t *p  = &players[i];
-         Mobj   *mo = p->mo;
+         Mobj     *mo = p->mo;
          fixed_t  dst = P_AproxDistance(this->x - mo->x, 
                                         this->y - mo->y);
 

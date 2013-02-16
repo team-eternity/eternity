@@ -239,6 +239,10 @@ int EV_DOOMStaticInitForSpecial(int special)
 {
    ev_static_t *binding;
 
+   // Early return for special 0
+   if(!special)
+      return EV_STATIC_NULL;
+
    // init the hash if it hasn't been done yet
    EV_initDOOMStaticHash();
 
@@ -307,6 +311,10 @@ int EV_HexenStaticInitForSpecial(int special)
 {
    ev_static_t *binding;
 
+   // Early return for special 0
+   if(!special)
+      return EV_STATIC_NULL;
+
    // init the hash if it hasn't been done yet
    EV_initHexenStaticHash();
 
@@ -373,6 +381,10 @@ int EV_SpecialForStaticInit(int staticFn)
 //
 int EV_StaticInitForSpecial(int special)
 {
+   // Early return for special 0
+   if(!special)
+      return EV_STATIC_NULL;
+
    if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
       return EV_HexenStaticInitForSpecial(special);
    else
@@ -411,7 +423,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_LINE_SET_IDENTIFICATION, "Line_SetIdentification" },
    };
 
-   // There aren't enough of these to warrant a hash table.
+   // There aren't enough of these to warrant a hash table. Yet.
    for(size_t i = 0; i < earrlen(namedStatics); i++)
    {
       if(!strcasecmp(namedStatics[i].name, name))

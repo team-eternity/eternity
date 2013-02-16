@@ -252,7 +252,7 @@ bool PlatThinker::reTriggerVerticalDoor(bool player)
 //
 int EV_DoPlat(line_t *line, plattype_e type, int amount )
 {
-   PlatThinker   *plat;
+   PlatThinker *plat;
    int       secnum;
    int       rtn;
    sector_t *sec;
@@ -405,14 +405,14 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
 //
 void P_ActivateInStasis(int tag)
 {
-   platlist_t *pl;
-   for(pl = activeplats; pl; pl = pl->next)   // search the active plats
+   // search the active plats
+   for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
-      PlatThinker *plat = pl->plat;              // for one in stasis with right tag
+      PlatThinker *plat = pl->plat;   // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
-         if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
-            plat->status = plat->oldstatus==up? down : up;
+         if(plat->type == toggleUpDn) //jff 3/14/98 reactivate toggle type
+            plat->status = plat->oldstatus == up? down : up;
          else
             plat->status = plat->oldstatus;
       }
@@ -431,13 +431,13 @@ void P_ActivateInStasis(int tag)
 //
 int EV_StopPlat(line_t *line)
 {
-   platlist_t *pl;
-   for(pl = activeplats; pl; pl = pl->next)  // search the active plats
+   // search the active plats
+   for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
-      PlatThinker *plat = pl->plat;             // for one with the tag not in stasis
+      PlatThinker *plat = pl->plat;      // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
-         plat->oldstatus = plat->status;    // put it in stasis
+         plat->oldstatus = plat->status; // put it in stasis
          plat->status = in_stasis;
       }
    }
@@ -488,7 +488,7 @@ void P_RemoveActivePlat(PlatThinker *plat)
 //
 // Passed nothing, returns nothing
 //
-void P_RemoveAllActivePlats(void)
+void P_RemoveAllActivePlats()
 {
    while(activeplats)
    {  

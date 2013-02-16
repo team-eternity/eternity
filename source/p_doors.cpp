@@ -656,12 +656,10 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    return 1;
 }
 
-
-///////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Sector type door spawners
 //
-///////////////////////////////////////////////////////////////
 
 //
 // P_SpawnDoorCloseIn30()
@@ -670,7 +668,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 //
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
-
+//
 void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;

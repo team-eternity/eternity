@@ -487,24 +487,25 @@ int EV_StartLightStrobing(line_t *line)
 //
 int EV_TurnTagLightsOff(line_t* line)
 {
-   int j;
-   
    // search sectors for those with same tag as activating line
    
    // killough 10/98: replaced inefficient search with fast search
-   for(j = -1; (j = P_FindSectorFromLineTag(line,j)) >= 0;)
+   for(int j = -1; (j = P_FindSectorFromLineTag(line, j)) >= 0; )
    {
       sector_t *sector = sectors + j, *tsec;
-      int i, min = sector->lightlevel;
+      int min = sector->lightlevel;
+      
       // find min neighbor light level
-      for(i = 0;i < sector->linecount; i++)
+      for(int i = 0; i < sector->linecount; i++)
       {
-         if ((tsec = getNextSector(sector->lines[i], sector)) &&
+         if((tsec = getNextSector(sector->lines[i], sector)) &&
             tsec->lightlevel < min)
             min = tsec->lightlevel;
       }
+      
       sector->lightlevel = min;
    }
+
    return 1;
 }
 

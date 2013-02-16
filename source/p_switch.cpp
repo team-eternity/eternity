@@ -131,7 +131,7 @@ void P_InitSwitchList(void)
 //
 // haleyjd 04/16/08: Made buttons dynamic.
 //
-button_t *P_FindFreeButton(void)
+button_t *P_FindFreeButton()
 {
    int i;
    int oldnumbuttons;
@@ -218,7 +218,7 @@ void P_ClearButtons(void)
 // haleyjd 10/16/05: moved here and turned into its own function.
 // haleyjd 04/16/08: rewritten to use indices instead of pointers
 //
-void P_RunButtons(void)
+void P_RunButtons()
 {
    int i;
    button_t *button;

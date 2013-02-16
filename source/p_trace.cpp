@@ -680,14 +680,21 @@ static bool PTR_UseTraverse(intercept_t *in)
 //
 static bool PTR_NoWayTraverse(intercept_t *in)
 {
-   line_t *ld = in->d.line;                       // This linedef
+   line_t *ld = in->d.line; // This linedef
 
-   return ld->special ||                          // Ignore specials
-     !(ld->flags & ML_BLOCKING ||                 // Always blocking
-       (P_LineOpening(ld, NULL),                  // Find openings
-        clip.openrange <= 0 ||                         // No opening
-        clip.openbottom > usething->z+24*FRACUNIT ||   // Too high it blocks
-        clip.opentop < usething->z+usething->height)); // Too low it blocks
+   if(ld->special) // Ignore specials
+      return true;
+
+   if(ld->flags & ML_BLOCKING) // Always blocking
+      return false;
+
+   // Find openings
+   P_LineOpening(ld, NULL);
+
+   return 
+      !(clip.openrange  <= 0 ||                            // No opening
+        clip.openbottom > usething->z + 24 * FRACUNIT ||   // Too high, it blocks
+        clip.opentop    < usething->z + usething->height); // Too low, it blocks
 }
 
 //

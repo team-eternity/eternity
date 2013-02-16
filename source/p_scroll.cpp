@@ -331,7 +331,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, line_t *l)
       staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
       control = sides[*l->sidenum].sector - sectors;
 
-   for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
+   for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0; )
       Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
 
    dx = FixedMul(dx, CARRYFACTOR);
@@ -339,7 +339,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, line_t *l)
 
    // NB: don't fold these loops together. Even though it would be more
    // efficient, we must maintain BOOM-compatible thinker spawning order.
-   for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
+   for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0; )
       Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
 }
 
@@ -389,31 +389,11 @@ static void P_spawnStaticWallScroller(line_t *l, fixed_t dx, fixed_t dy)
    Add_Scroller(ScrollThinker::sc_side, dx, dy, -1, l->sidenum[0], 0);
 }
 
-/*
-   EV_STATIC_SCROLL_ACCEL_CEILING,          // 214
-   EV_STATIC_SCROLL_DISPLACE_CEILING,       // 245
-   EV_STATIC_SCROLL_CEILING,                // 250
-   
-   EV_STATIC_SCROLL_ACCEL_FLOOR,            // 215
-   EV_STATIC_SCROLL_DISPLACE_FLOOR,         // 246
-   EV_STATIC_SCROLL_FLOOR,                  // 251
-   
-   EV_STATIC_CARRY_ACCEL_FLOOR,             // 216
-   EV_STATIC_CARRY_DISPLACE_FLOOR,          // 247
-   EV_STATIC_CARRY_FLOOR,                   // 252
-   
-   EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR,      // 217
-   EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR,   // 248
-   EV_STATIC_SCROLL_CARRY_FLOOR,            // 253
-
-   EV_STATIC_SCROLL_ACCEL_WALL,             // 218
-   EV_STATIC_SCROLL_DISPLACE_WALL,          // 249
-   EV_STATIC_SCROLL_WALL_WITH,              // 254
-   
-   EV_STATIC_SCROLL_BY_OFFSETS,             // 255
-*/
-
+//
+// P_SpawnScrollers
+//
 // Initialize the scrollers
+//
 void P_SpawnScrollers()
 {
    line_t *line = lines;
