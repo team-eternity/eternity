@@ -1292,9 +1292,6 @@ void P_LoadHexenLineDefs(int lump)
       for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
          ld->args[argnum] = mld->args[argnum];
 
-      // Do Hexen special translation
-      P_ConvertHexenLineSpec(&(ld->special), ld->args);
-
       // Convert line flags after setting special?
       P_ConvertHexenLineFlags(ld);
 

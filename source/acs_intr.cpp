@@ -35,6 +35,7 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_hash.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_buffer.h"
@@ -315,10 +316,7 @@ static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int spec, int side,
    for(; i > 0; --i)
       args[argc-i] = *argv++;
 
-   // translate line specials & args for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   return P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
+   return EV_ActivateACSSpecial(l, spec, args, side, mo);
 }
 
 //

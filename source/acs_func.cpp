@@ -851,9 +851,6 @@ static void ACS_funcSetLineSpecial(ACS_FUNCARG)
 
    memcpy(larg, args+2, sizeof(larg));
 
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, larg);
-
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       l->special = spec;
@@ -1006,12 +1003,9 @@ static void ACS_funcSetThingSpecial(ACS_FUNCARG)
 
    memcpy(larg, args+2, sizeof(larg));
 
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, larg);
-
    while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
    {
-    //mo->special = spec;
+    //mo->special = spec; HEXEN_TODO
       memcpy(mo->args, larg, sizeof(larg));
    }
 }

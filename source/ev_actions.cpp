@@ -1096,9 +1096,7 @@ DEFINE_ACTION(EV_ActionHereticDoorRaise3x)
    dd.delay_value  = VDOORWAIT;
    dd.altlighttag  = 0;
    dd.flags        = DDF_HAVESPAC | DDF_REUSABLE;
-
-   // FIXME / TODO: set genDoorThing in case of manual retrigger
-   genDoorThing = instance->actor;
+   dd.thing        = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
@@ -1163,11 +1161,9 @@ DEFINE_ACTION(EV_ActionBoomGen)
    case GenTypeCeiling:
       return !!EV_DoGenCeiling(instance->line);
    case GenTypeDoor:
-      genDoorThing = instance->actor; // FIXME!!!
-      return !!EV_DoGenDoor(instance->line);
+      return !!EV_DoGenDoor(instance->line, instance->actor);
    case GenTypeLocked:
-      genDoorThing = instance->actor; // FIXME!!!
-      return !!EV_DoGenLockedDoor(instance->line);
+      return !!EV_DoGenLockedDoor(instance->line, instance->actor);
    case GenTypeLift:
       return !!EV_DoGenLift(instance->line);
    case GenTypeStairs:
@@ -1204,13 +1200,11 @@ DEFINE_ACTION(EV_ActionParamDoorRaise)
    dd.topcountdown = 0;
    dd.delay_value  = instance->args[2];
    dd.altlighttag  = instance->args[3];
+   dd.thing        = instance->actor;
    
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
-
-   // FIXME/TODO: set genDoorThing in case of manual retrigger
-   genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
@@ -1233,13 +1227,11 @@ DEFINE_ACTION(EV_ActionParamDoorOpen)
    dd.topcountdown = 0;
    dd.delay_value  = 0;
    dd.altlighttag  = instance->args[2];
+   dd.thing        = instance->actor;
 
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
-
-   // FIXME/TODO
-   genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
@@ -1262,13 +1254,11 @@ DEFINE_ACTION(EV_ActionParamDoorClose)
    dd.topcountdown = 0;
    dd.delay_value  = 0;
    dd.altlighttag  = instance->args[2];
+   dd.thing        = instance->actor;
 
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
-
-   // FIXME/TODO
-   genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
@@ -1291,13 +1281,11 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
    dd.topcountdown = 0;
    dd.delay_value  = instance->args[2];
    dd.altlighttag  = instance->args[3];
+   dd.thing        = instance->actor;
 
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
-
-   // FIXME/TODO:
-   genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
@@ -1319,13 +1307,11 @@ DEFINE_ACTION(EV_ActionParamDoorWaitRaise)
    dd.delay_value  = instance->args[2];
    dd.topcountdown = instance->args[3];
    dd.altlighttag  = instance->args[4];
+   dd.thing        = instance->actor;
 
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
-
-   // FIXME / TODO:
-   genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
@@ -1347,13 +1333,11 @@ DEFINE_ACTION(EV_ActionParamDoorWaitClose)
    dd.delay_value  = 0;
    dd.topcountdown = instance->args[2];
    dd.altlighttag  = instance->args[3];
+   dd.thing        = instance->actor;
 
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
-
-   // FIXME/TODO:
-   genDoorThing = instance->actor;
 
    return !!EV_DoParamDoor(instance->line, instance->tag, &dd);
 }

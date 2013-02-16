@@ -1161,6 +1161,32 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
 }
 
 //
+// EV_ActivateACSSpecial
+//
+// Activate a special for ACS.
+//
+bool EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing)
+{
+   ev_action_t *action;
+   INIT_STRUCT(ev_instance_t, instance);
+
+   // setup instance
+   instance.actor   = thing;
+   instance.args    = args;
+   instance.line    = line;
+   instance.special = special;
+   instance.side    = side;
+   instance.spac    = SPAC_CROSS;
+   instance.tag     = args[0];
+
+   // get action (always from within the Hexen namespace)
+   if(!(action = EV_HexenActionForSpecial(special)))
+      return false;
+
+   return EV_ActivateSpecial(action, &instance);
+}
+
+//
 // EV_ActivateAction
 //
 // Activate an action that has been looked up elsewhere.

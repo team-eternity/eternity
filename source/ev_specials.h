@@ -169,9 +169,13 @@ ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
+// Testing
 bool EV_IsParamLineSpec(int special);
 
 // Activation
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac);
+bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
+bool EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //

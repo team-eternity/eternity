@@ -861,6 +861,8 @@ typedef struct doordata_s
    int     delay_value;   // delay between open and close
    int     altlighttag;   // alternate light tag, if DDF_USEALTLIGHTTAG is set
    int     topcountdown;  // delay before initial activation
+
+   Mobj   *thing;         // activating thing, if any
 } doordata_t;
 
 // haleyjd 09/06/07: sector special transfer structure
@@ -1217,8 +1219,6 @@ int P_FindMinSurroundingLight(sector_t *sector, int max);
 
 sector_t *getNextSector(line_t *line, sector_t *sec);
 
-int P_CheckTag(line_t *line); // jff 2/27/98
-
 bool P_CanUnlockGenDoor(line_t *line, player_t *player);
 
 int P_SectorActive(special_e t, sector_t *s);
@@ -1228,8 +1228,6 @@ bool P_IsSecret(sector_t *sec);
 bool P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
-
-void P_ConvertHexenLineSpec(int *special, int *args);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1346,14 +1344,11 @@ int EV_DoGenStairs(line_t *line);
 int EV_DoGenCrusher(line_t *line);
 
 int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd);
-int EV_DoGenDoor(line_t *line);
+int EV_DoGenDoor(line_t *line, Mobj *thing);
 
-int EV_DoGenLockedDoor(line_t *line);
+int EV_DoGenLockedDoor(line_t *line, Mobj *thing);
 
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
-
-// haleyjd 02/23/04
-extern Mobj *genDoorThing;
 
 // p_things
 
@@ -1485,10 +1480,6 @@ enum
    SPAC_IMPACT,
    SPAC_PUSH,
 };
-
-bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int special, 
-                         int *args, int side, int spac, bool reuse);
 
 extern void P_StartLineScript(line_t *line, Mobj *thing);
 

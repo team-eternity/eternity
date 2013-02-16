@@ -1063,10 +1063,6 @@ manual_crusher:
    return rtn;
 }
 
-// haleyjd 02/23/04: yuck, a global -- this is necessary because
-// I can't change the prototype of EV_DoGenDoor
-Mobj *genDoorThing;
-
 //
 // GenDoorRetrigger
 //
@@ -1077,9 +1073,6 @@ Mobj *genDoorThing;
 // 2. The door type must be raise, not open or close
 // 3. The activation trigger must be PushMany
 //
-// ** genDoorThing must be set before the calling routine is
-//    executed! If it is NULL, no retrigger can occur.
-//
 static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
 {
    VerticalDoorThinker *door;
@@ -1087,7 +1080,7 @@ static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
    if(!(door = thinker_cast<VerticalDoorThinker *>(th)))
       return 0;
 
-   if(!genDoorThing)
+   if(!dd->thing)
       return 0;
 
    if(door->type != doorNormal && door->type != blazeRaise)
@@ -1107,7 +1100,7 @@ static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
          return 0;
    }
 
-   return door->reTriggerVerticalDoor(!!genDoorThing->player);
+   return door->reTriggerVerticalDoor(!!dd->thing->player);
 }
 
 //
@@ -1265,7 +1258,7 @@ manual_door:
 }
 
 //
-// EV_DoGenLockedDoor()
+// EV_DoGenLockedDoor
 //
 // Handle generalized locked door types
 //
@@ -1274,13 +1267,15 @@ manual_door:
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenLockedDoor(line_t *line)
+int EV_DoGenLockedDoor(line_t *line, Mobj *thing)
 {
    doordata_t dd;
    int value = line->special - GenLockedBase;
    int speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
+
+   dd.thing = thing;
 
    // parse the bit fields in the line's special type
    dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
@@ -1311,7 +1306,7 @@ int EV_DoGenLockedDoor(line_t *line)
 }
 
 //
-// EV_DoGenDoor()
+// EV_DoGenDoor
 //
 // Handle generalized door types
 //
@@ -1320,13 +1315,15 @@ int EV_DoGenLockedDoor(line_t *line)
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenDoor(line_t *line)
+int EV_DoGenDoor(line_t *line, Mobj *thing)
 {
    doordata_t dd;
    int value = line->special - GenDoorBase;
    int delayType, speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
+
+   dd.thing = thing;
 
    // parse the bit fields in the line's special type
    dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
@@ -1372,793 +1369,6 @@ int EV_DoGenDoor(line_t *line)
    dd.kind = (value & DoorKind) >> DoorKindShift;
    
    return EV_DoParamDoor(line, line->tag, &dd);
-}
-
-//
-// haleyjd 02/28/05: Parameterized Line Special System
-//
-// This is the code that dispatches requests to execute parameterized
-// line specials, which work very similar to Hexen's line specials.
-// Parameterized specials try to avoid code explosion by absorbing the
-// generalized line code as special cases and then allowing fully
-// customized data to be passed into the EV_ functions above inside
-// new structs that hold all the parameters. This is a lot easier and
-// more compatible than converting generalized lines into parameterized
-// specials at run-time.
-//
-
-// parameterized door trigger type lookup table
-
-static int param_door_kinds[6] =
-{
-   OdCDoor, ODoor, CDoor, CdODoor, pDOdCDoor, pDCDoor
-};
-
-//
-// pspec_Door
-//
-// Parses arguments for parameterized Door specials.
-//
-static bool pspec_Door(line_t *line, Mobj *thing, int *args, 
-                       int special, int spac, bool reuse)
-{
-   int kind;
-   doordata_t dd;
-
-#ifdef RANGECHECK
-   if(special < 300 || special > 305)
-      I_Error("pspec_Door: parameterized door special out of range\n");
-#endif
-
-   memset(&dd, 0, sizeof(doordata_t));
-
-   kind = param_door_kinds[special - 300];
-
-   // speed is always second parameter
-   // value is eighths of a unit per tic
-   dd.speed_value = args[1] * FRACUNIT / 8;
-  
-   // all param doors support alternate light tagging
-   dd.flags |= DDF_USEALTLIGHTTAG;
-
-   // initialize values that aren't used everywhere:
-   dd.delay_value  = 0;
-   dd.topcountdown = 0;
-
-   // OdC and CdO doors support wait as third param.
-   // pDCDoor has topcountdown as third param
-   // pDOdCDoor has delay and countdown as third and fourth
-   // Other door types have light tag as third param.
-   switch(kind)
-   {
-   case OdCDoor:
-   case CdODoor:
-      dd.delay_value = args[2];
-      dd.altlighttag = args[3];
-      break;
-   case pDCDoor:
-      dd.topcountdown = args[2];
-      dd.altlighttag  = args[3];
-      break;
-   case pDOdCDoor:
-      dd.delay_value  = args[2];
-      dd.topcountdown = args[3];
-      dd.altlighttag  = args[4];
-      break;
-   default:
-      dd.altlighttag = args[2];
-      break;
-   }
-
-   dd.kind   = kind;
-   dd.spac   = spac;
-   dd.flags |= DDF_HAVESPAC; // Hexen-style activation
-
-   if(reuse)
-      dd.flags |= DDF_REUSABLE;
-
-   // set genDoorThing in case of manual retrigger
-   genDoorThing = thing;
-
-   return !!EV_DoParamDoor(line, args[0], &dd);
-}
-
-//
-// Tablified data for parameterized floor types
-//
-
-static int param_floor_data[17][2] =
-{
-//  dir trigger
-   { 1, FtoHnF   }, // 306: Floor_RaiseToHighest
-   { 0, FtoHnF   }, // 307: Floor_LowerToHighest
-   { 1, FtoLnF   }, // 308: Floor_RaiseToLowest
-   { 0, FtoLnF   }, // 309: Floor_LowerToLowest
-   { 1, FtoNnF   }, // 310: Floor_RaiseToNearest
-   { 0, FtoNnF   }, // 311: Floor_LowerToNearest
-   { 1, FtoLnC   }, // 312: Floor_RaiseToLowestCeiling
-   { 0, FtoLnC   }, // 313: Floor_LowerToLowestCeiling
-   { 1, FtoC     }, // 314: Floor_RaiseToCeiling
-   { 1, FbyST    }, // 315: Floor_RaiseByTexture
-   { 0, FbyST    }, // 316: Floor_LowerByTexture
-   { 1, FbyParam }, // 317: Floor_RaiseByValue
-   { 0, FbyParam }, // 318: Floor_LowerByValue
-   { 1, FtoAbs   }, // 319: Floor_MoveToValue (note: this dir not used)
-   { 1, FInst    }, // 320: Floor_RaiseInstant
-   { 0, FInst    }, // 321: Floor_LowerInstant
-   { 0, FtoC     }, // 322: Floor_ToCeilingInstant
-};
-
-static int fchgdata[7][2] =
-{
-//   model          change type
-   { FTriggerModel, FNoChg },
-   { FTriggerModel, FChgZero },
-   { FNumericModel, FChgZero },
-   { FTriggerModel, FChgTxt  },
-   { FNumericModel, FChgTxt  },
-   { FTriggerModel, FChgTyp  },
-   { FNumericModel, FChgTyp  },
-};
-
-//
-// pspec_Floor
-//
-// Parses arguments for parameterized Floor specials.
-//
-static bool pspec_Floor(line_t *line, int *args, int special, int spac)
-{
-   floordata_t fd = { 0 };
-   int normspec;
-
-#ifdef RANGECHECK
-   if(special < 306 || special > 322)
-      I_Error("pspec_Floor: parameterized floor trigger out of range\n");
-#endif
-
-   normspec = special - 306;
-
-   fd.direction   = param_floor_data[normspec][0];
-   fd.target_type = param_floor_data[normspec][1];
-   fd.spac        = spac;
-   fd.flags       = FDF_HAVESPAC;
-   fd.crush = -1;
-
-   switch(special)
-   {
-      // (tag, speed, change, [crush])
-   case 306: // Floor_RaiseToHighest
-   case 310: // Floor_RaiseToNearest
-   case 312: // Floor_RaiseToLowestCeiling
-   case 314: // Floor_RaiseToCeiling
-   case 315: // Floor_RaiseByTexture
-      fd.crush = args[3];
-      // fall through:
-   case 307: // Floor_LowerToHighest
-   case 309: // Floor_LowerToLowest
-   case 311: // Floor_LowerToNearest
-   case 313: // Floor_LowerToLowestCeiling
-   case 316: // Floor_LowerByTexture
-      fd.speed_type   = SpeedParam;
-      fd.speed_value  = args[1] * FRACUNIT / 8;
-      if(args[2] >= 0 && args[2] < 7)
-      {
-         fd.change_model = fchgdata[args[2]][0];
-         fd.change_type  = fchgdata[args[2]][1];
-      }
-      else
-      {
-         fd.change_model = 0;
-         fd.change_type  = 0;
-      }
-      break;
- 
-      // (tag, change, crush)
-   case 308: // Floor_RaiseToLowest -- special case, always instant
-   case 322: // ToCeilingInstant
-      fd.speed_type   = SpeedNormal; // not used
-      if(args[1] >= 0 && args[1] < 7)
-      {
-         fd.change_model = fchgdata[args[1]][0];
-         fd.change_type  = fchgdata[args[1]][1];
-      }
-      else
-      {
-         fd.change_model = 0;
-         fd.change_type  = 0;
-      }
-      fd.crush = args[2];
-      break;
-
-      // (tag, speed, height, change, [crush])
-   case 317: // Floor_RaiseByValue
-   case 319: // Floor_MoveToValue
-      fd.crush = args[4];
-      // fall through:
-   case 318: // Floor_LowerByValue
-      fd.speed_type   = SpeedParam;
-      fd.speed_value  = args[1] * FRACUNIT / 8;
-      fd.height_value = args[2] * FRACUNIT;
-      if(args[3] >= 0 && args[3] < 7)
-      {
-         fd.change_model = fchgdata[args[3]][0];
-         fd.change_type  = fchgdata[args[3]][1];
-      }
-      else
-      {
-         fd.change_model = 0;
-         fd.change_type  = 0;
-      }
-      break;
-
-      // (tag, height, change, [crush])
-   case 320: // Floor_RaiseInstant
-      fd.crush = args[3];
-      // fall through:
-   case 321: // Floor_LowerInstant
-      fd.speed_type   = SpeedNormal; // not really used
-      fd.height_value = args[1] * FRACUNIT;
-      if(args[2] >= 0 && args[2] < 7)
-      {
-         fd.change_model = fchgdata[args[2]][0];
-         fd.change_type  = fchgdata[args[2]][1];
-      }
-      else
-      {
-         fd.change_model = 0;
-         fd.change_type  = 0;
-      }
-      break;
-   }
-
-   return !!EV_DoParamFloor(line, args[0], &fd);
-}
-
-//
-// Tablified data for parameterized ceiling types
-//
-
-static int param_ceiling_data[17][2] =
-{
-//  dir trigger
-   { 1, CtoHnC   }, // 323: Ceiling_RaiseToHighest
-   { 0, CtoHnC   }, // 324: Ceiling_ToHighestInstant
-   { 1, CtoNnC   }, // 325: Ceiling_RaiseToNearest
-   { 0, CtoNnC   }, // 326: Ceiling_LowerToNearest
-   { 1, CtoLnC   }, // 327: Ceiling_RaiseToLowest
-   { 0, CtoLnC   }, // 328: Ceiling_LowerToLowest
-   { 1, CtoHnF   }, // 329: Ceiling_RaiseToHighestFloor
-   { 0, CtoHnF   }, // 330: Ceiling_LowerToHighestFloor
-   { 1, CtoF     }, // 331: Ceiling_ToFloorInstant
-   { 0, CtoF     }, // 332: Ceiling_LowerToFloor
-   { 1, CbyST    }, // 333: Ceiling_RaiseByTexture
-   { 0, CbyST    }, // 334: Ceiling_LowerByTexture
-   { 1, CbyParam }, // 335: Ceiling_RaiseByValue
-   { 0, CbyParam }, // 336: Ceiling_LowerByValue
-   { 1, CtoAbs   }, // 337: Ceiling_MoveToValue (note: this dir not used)
-   { 1, CInst    }, // 338: Ceiling_RaiseInstant
-   { 0, CInst    }, // 339: Ceiling_LowerInstant
-};
-
-static int cchgdata[7][2] =
-{
-//   model          change type
-   { CTriggerModel, CNoChg },
-   { CTriggerModel, CChgZero },
-   { CNumericModel, CChgZero },
-   { CTriggerModel, CChgTxt  },
-   { CNumericModel, CChgTxt  },
-   { CTriggerModel, CChgTyp  },
-   { CNumericModel, CChgTyp  },
-};
-
-//
-// pspec_Ceiling
-//
-// Parses arguments for parameterized Ceiling specials.
-//
-static bool pspec_Ceiling(line_t *line, int *args, int special, int spac)
-{
-   ceilingdata_t cd;
-   int normspec;
-
-   memset(&cd, 0, sizeof(cd));
-
-#ifdef RANGECHECK
-   if(special < 323 || special > 339)
-      I_Error("pspec_Ceiling: parameterized ceiling trigger out of range\n");
-#endif
-
-   normspec = special - 323;
-
-   cd.direction    = param_ceiling_data[normspec][0];
-   cd.target_type  = param_ceiling_data[normspec][1];
-   cd.speed_value  = 0;
-   cd.crush        = -1;
-   cd.spac         = spac;
-   cd.flags        = CDF_HAVESPAC; // Hexen-style activation
-
-   switch(special)
-   {
-      // (tag, speed, change, [crush])
-   case 326: // Ceiling_LowerToNearest
-   case 328: // Ceiling_LowerToLowest
-   case 330: // Ceiling_LowerToHighestFloor
-   case 332: // Ceiling_LowerToFloor
-   case 334: // Ceiling_LowerByTexture
-      cd.crush = args[3];
-      // fall through:
-   case 323: // Ceiling_RaiseToHighest
-   case 325: // Ceiling_RaiseToNearest
-   case 327: // Ceiling_RaiseToLowest
-   case 329: // Ceiling_RaiseToHighestFloor
-   case 333: // Ceiling_RaiseByTexture
-      cd.speed_type   = SpeedParam;
-      cd.speed_value  = args[1] * FRACUNIT / 8;
-      if(args[2] >= 0 && args[2] < 7)
-      {
-         cd.change_model = cchgdata[args[2]][0];
-         cd.change_type  = cchgdata[args[2]][1];
-      }
-      else
-      {
-         cd.change_model = 0;
-         cd.change_type  = 0;
-      }
-      break;
-      
-      // (tag, change, crush)
-   case 324: // Ceiling_ToHighestInstant -- special case, always instant
-   case 331: // Ceiling_ToFloorInstant
-      cd.speed_type   = SpeedNormal; // not used
-      if(args[1] >= 0 && args[1] < 7)
-      {
-         cd.change_model = cchgdata[args[1]][0];
-         cd.change_type  = cchgdata[args[1]][1];
-      }
-      else
-      {
-         cd.change_model = 0;
-         cd.change_type  = 0;
-      }
-      cd.crush = args[2];
-      break;
-
-      // (tag, speed, height, change, [crush])
-   case 336: // Ceiling_LowerByValue
-   case 337: // Ceiling_MoveToValue
-      cd.crush = args[4];
-      // fall through:
-   case 335: // Ceiling_RaiseByValue
-      cd.speed_type   = SpeedParam;
-      cd.speed_value  = args[1] * FRACUNIT / 8;
-      cd.height_value = args[2] * FRACUNIT;
-      if(args[3] >= 0 && args[3] < 7)
-      {
-         cd.change_model = cchgdata[args[3]][0];
-         cd.change_type  = cchgdata[args[3]][1];
-      }
-      else
-      {
-         cd.change_model = 0;
-         cd.change_type  = 0;
-      }
-      break;
-
-      // (tag, height, change, [crush])
-   case 339: // Ceiling_LowerInstant
-      cd.crush = args[3];
-      // fall through:
-   case 338: // Ceiling_RaiseInstant
-      cd.speed_type   = SpeedNormal; // not really used
-      cd.height_value = args[1] * FRACUNIT;
-      if(args[2] >= 0 && args[2] < 7)
-      {
-         cd.change_model = cchgdata[args[2]][0];
-         cd.change_type  = cchgdata[args[2]][1];
-      }
-      else
-      {
-         cd.change_model = 0;
-         cd.change_type  = 0;
-      }
-      break;
-   }
-
-   return !!EV_DoParamCeiling(line, args[0], &cd);
-}
-
-//
-// pspec_Stairs
-//
-// Parses arguments for parameterized Stair specials.
-//
-static bool pspec_Stairs(line_t *line, int *args, int special, int spac)
-{
-   stairdata_t sd;
-   memset(&sd, 0, sizeof(sd));
-
-   sd.flags         = SDF_HAVESPAC;
-   sd.spac          = spac;   
-   sd.direction     = 0;
-   sd.speed_type    = SpeedParam;
-   sd.stepsize_type = StepSizeParam;
-   
-   // haleyjd: eventually this will depend on the special type; right
-   // now, all are set to not ignore texture differences
-   // sd.ignore = 0;
-
-   switch(special)
-   {
-   case 340: // Stairs_BuildUpDoom
-      sd.direction = 1;
-      // fall through
-   case 341: // Stairs_BuildDownDoom
-      sd.delay_value = args[3];
-      sd.reset_value = args[4];
-      break;
-   case 342: // Stairs_BuildUpDoomSync
-      sd.direction = 1;
-      // fall through
-   case 343: // Stairs_BuildDownDoomSync
-      sd.flags |= SDF_SYNCHRONIZED;
-      sd.delay_value = 0;       // 10/02/06 sync'd stairs can't delay >_<
-      sd.reset_value = args[3];
-      break;
-   }
-
-   sd.speed_value    = args[1] * FRACUNIT / 8;
-   sd.stepsize_value = args[2] * FRACUNIT;
-
-   return !!EV_DoParamStairs(line, args[0], &sd);
-}
-
-//
-// pspec_PolyDoor
-//
-// Parses arguments for parameterized polyobject door types
-//
-static bool pspec_PolyDoor(int *args, int special)
-{
-   polydoordata_t pdd;
-   memset(&pdd, 0, sizeof(pdd));
-
-   pdd.polyObjNum = args[0]; // polyobject id
-   
-   switch(special)
-   {
-   case 350: // Polyobj_DoorSlide
-      pdd.doorType = POLY_DOOR_SLIDE;
-      pdd.speed    = args[1] * FRACUNIT / 8;
-      pdd.angle    = args[2]; // angle of motion (byte angle)
-      pdd.distance = args[3] * FRACUNIT;
-      pdd.delay    = args[4]; // delay in tics
-      break;
-   case 351: // Polyobj_DoorSwing
-      pdd.doorType = POLY_DOOR_SWING;
-      pdd.speed    = args[1]; // angular speed (byte angle)
-      pdd.distance = args[2]; // angular distance (byte angle)
-      pdd.delay    = args[3]; // delay in tics
-      break;
-   default:
-      return 0; // ???
-   }
-
-   return !!EV_DoPolyDoor(&pdd);
-}
-
-//
-// pspec_PolyMove
-//
-// Parses arguments for parameterized polyobject move specials
-//
-static bool pspec_PolyMove(int *args, int special)
-{
-   polymovedata_t pmd;
-
-   pmd.polyObjNum = args[0];
-   pmd.speed      = args[1] * FRACUNIT / 8;
-   pmd.angle      = args[2]; // byteangle
-   pmd.distance   = args[3] * FRACUNIT;
-
-   pmd.overRide = (special == 353); // Polyobj_OR_Move
-
-   return !!EV_DoPolyObjMove(&pmd);
-}
-
-//
-// pspec_PolyRotate
-//
-// Parses arguments for parameterized polyobject rotate specials
-//
-static bool pspec_PolyRotate(int *args, int special)
-{
-   polyrotdata_t prd;
-
-   prd.polyObjNum = args[0];
-   prd.speed      = args[1]; // angular speed (byteangle)
-   prd.distance   = args[2]; // angular distance (byteangle)
-
-   // Polyobj_(OR_)RotateRight have dir == -1
-   prd.direction = (special == 354 || special == 355) ? -1 : 1;
-   
-   // Polyobj_OR types have override set to true
-   prd.overRide  = (special == 355 || special == 357);
-
-   return !!EV_DoPolyObjRotate(&prd);
-}
-
-//
-// pspec_Pillar
-//
-// joek
-// Parses arguments for hexen style parameterized Pillar specials.
-//
-// haleyjd: rewritten to use pillardata_t struct
-//
-static bool pspec_Pillar(line_t *line, int *args, int special)
-{
-   pillardata_t pd;
-   
-   pd.tag   = args[0];
-   pd.crush = 0;
-
-   switch(special)
-   {
-   case 363:
-      pd.crush  = args[3];
-      // fall through
-   case 362:
-      pd.speed  = args[1] ? args[1] * FRACUNIT / 8 : FRACUNIT; // no 0 speed!
-      pd.height = args[2] * FRACUNIT;
-      return !!EV_PillarBuild(line, &pd);
-
-   case 364:
-      pd.speed = args[1] ? args[1] * FRACUNIT / 8 : FRACUNIT;
-      pd.fdist = args[2] * FRACUNIT;
-      pd.cdist = args[3] * FRACUNIT;
-      return !!EV_PillarOpen(line, &pd);
-
-   default:
-      return false;
-   }
-}
-
-//
-// pspec_ACSExecute
-//
-// haleyjd 01/07/07: Runs an ACS script.
-//
-static bool pspec_ACSExecute(line_t *line, int *args, int special,
-                                int side, Mobj *thing)
-{
-   return ACS_ExecuteScriptNumber(args[0], args[1], 0, args+2, 3, thing, line, side);
-}
-
-//
-// P_ExecParamLineSpec
-//
-// Executes a parameterized line special.
-//
-// line:    Pointer to line being activated. May be NULL in this context.
-// thing:   Pointer to thing doing activation. May be NULL in this context.
-// special: Special to execute.
-// args:    Arguments to special.
-// side:    Side of line activated. May be ignored.
-// reuse:   if action is repeatable
-//
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int special, 
-                         int *args, int side, int spac, bool reuse)
-{
-   bool success = false;
-
-   switch(special)
-   {
-   case 300: // Door_Raise
-   case 301: // Door_Open
-   case 302: // Door_Close
-   case 303: // Door_CloseWaitOpen
-   case 304: // Door_WaitRaise
-   case 305: // Door_WaitClose
-      success = pspec_Door(line, thing, args, special, spac, reuse);
-      break;
-   case 306: // Floor_RaiseToHighest
-   case 307: // Floor_LowerToHighest
-   case 308: // Floor_RaiseToLowest
-   case 309: // Floor_LowerToLowest
-   case 310: // Floor_RaiseToNearest
-   case 311: // Floor_LowerToNearest
-   case 312: // Floor_RaiseToLowestCeiling
-   case 313: // Floor_LowerToLowestCeiling
-   case 314: // Floor_RaiseToCeiling
-   case 315: // Floor_RaiseByTexture
-   case 316: // Floor_LowerByTexture
-   case 317: // Floor_RaiseByValue
-   case 318: // Floor_LowerByValue
-   case 319: // Floor_MoveToValue
-   case 320: // Floor_RaiseInstant
-   case 321: // Floor_LowerInstant
-   case 322: // Floor_ToCeilingInstant
-      success = pspec_Floor(line, args, special, spac);
-      break;
-   case 323: // Ceiling_RaiseToHighest
-   case 324: // Ceiling_ToHighestInstant
-   case 325: // Ceiling_RaiseToNearest
-   case 326: // Ceiling_LowerToNearest
-   case 327: // Ceiling_RaiseToLowest
-   case 328: // Ceiling_LowerToLowest
-   case 329: // Ceiling_RaiseToHighestFloor
-   case 330: // Ceiling_LowerToHighestFloor
-   case 331: // Ceiling_ToFloorInstant
-   case 332: // Ceiling_LowerToFloor
-   case 333: // Ceiling_RaiseByTexture
-   case 334: // Ceiling_LowerByTexture
-   case 335: // Ceiling_RaiseByValue
-   case 336: // Ceiling_LowerByValue
-   case 337: // Ceiling_MoveToValue
-   case 338: // Ceiling_RaiseInstant
-   case 339: // Ceiling_LowerInstant
-      success = pspec_Ceiling(line, args, special, spac);
-      break;
-   case 340: // Stairs_BuildUpDoom
-   case 341: // Stairs_BuildDownDoom
-   case 342: // Stairs_BuildUpDoomSync
-   case 343: // Stairs_BuildDownDoomSync
-      success = pspec_Stairs(line, args, special, spac);
-      break;
-   case 350: // Polyobj_DoorSlide
-   case 351: // Polyobj_DoorSwing
-      success = pspec_PolyDoor(args, special);
-      break;
-   case 352: // Polyobj_Move
-   case 353: // Polyobj_OR_Move
-      success = pspec_PolyMove(args, special);
-      break;
-   case 354: // Polyobj_RotateRight
-   case 355: // Polyobj_OR_RotateRight
-   case 356: // Polyobj_RotateLeft
-   case 357: // Polyobj_OR_RotateLeft
-      success = pspec_PolyRotate(args, special);
-      break;
-   case 362: // Pillar_Build
-   case 363: // Pillar_BuildAndCrush
-   case 364: // Pillar_Open
-      success = pspec_Pillar(line, args, special);
-      break;
-   case 365: // ACS_Execute
-      success = pspec_ACSExecute(line, args, special, side, thing);
-      break;
-   case 366: // ACS_Suspend
-      success = ACS_SuspendScriptNumber(args[0], args[1]);
-      break;
-   case 367: // ACS_Terminate
-      success = ACS_TerminateScriptNumber(args[0], args[1]);
-      break;
-   case 368: // Light_RaiseByValue
-      success = !!EV_SetLight(line, args[0], setlight_add, args[1]);
-      break;
-   case 369: // Light_LowerByValue
-      success = !!EV_SetLight(line, args[0], setlight_sub, args[1]);
-      break;
-   case 370: // Light_ChangeToValue
-      success = !!EV_SetLight(line, args[0], setlight_set, args[1]);
-      break;
-   case 371: // Light_Fade
-      success = !!EV_FadeLight(line, args[0], args[1], args[2]);
-      break;
-   case 372: // Light_Glow
-      success = !!EV_GlowLight(line, args[0], args[1], args[2], args[3]);
-      break;
-   case 373: // Light_Flicker
-      success = !!EV_FlickerLight(line, args[0], args[1], args[2]);
-      break;
-   case 374: // Light_Strobe
-      success = !!EV_StrobeLight(line, args[0], args[1], args[2], args[3], args[4]);
-      break;
-   case 375: // Radius_Quake
-      success = P_StartQuake(args);
-      break;
-   case 397: // Floor_Waggle
-      success = !!EV_StartFloorWaggle(line, args[0], args[1], args[2], args[3], args[4]);
-      break;
-   case 398: // Thing_Spawn
-   case 399: // Thing_SpawnNoFog
-      success = !!EV_ThingSpawn(args, (special == 398));
-      break;
-   case 400: // Teleport_EndGame
-      G_ForceFinale();
-      success = true;
-      break;
-   case 402: // Thing_Projectile
-   case 403: // Thing_ProjectileGravity
-      success = !!EV_ThingProjectile(args, (special == 403));
-      break;
-   case 404: // Thing_Activate
-      success = !!EV_ThingActivate(args[0]);
-      break;
-   case 405: // Thing_Deactivate
-      success = !!EV_ThingDeactivate(args[0]);
-      break;
-   default:
-      break;
-   }
-
-   return success;
-}
-
-//
-// P_ActivateParamLine
-//
-// Handles a param line activation and executes the appropriate
-// parameterized line special.
-//
-// line:  The line being activated. Never NULL in this context.
-// thing: The thing that wants to activate this line. Never NULL in this context.
-// side:  Side of line activated, 0 or 1.
-// spac:  Type of activation. This is de-wed from the special with
-//        parameterized lines using the ExtraData extflags line field.
-//
-bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac)
-{
-   bool success = false, reuse = false;
-   int flags = 0;
-
-   // check player / monster / missile enable flags
-   if(thing->player)                   // treat as player?
-      flags |= EX_ML_PLAYER;
-   if(thing->flags3 & MF3_SPACMISSILE) // treat as missile?
-      flags |= EX_ML_MISSILE;
-   if(thing->flags3 & MF3_SPACMONSTER) // treat as monster?
-      flags |= EX_ML_MONSTER;
-
-   if(!(line->extflags & flags))
-      return false;
-
-   // check activation flags -- can we activate this line this way?
-   switch(spac)
-   {
-   case SPAC_CROSS:
-      flags = EX_ML_CROSS;
-      break;
-   case SPAC_USE:
-      flags = EX_ML_USE;
-      break;
-   case SPAC_IMPACT:
-      flags = EX_ML_IMPACT;
-      break;
-   case SPAC_PUSH:
-      flags = EX_ML_PUSH;
-      break;
-   }
-
-   if(!(line->extflags & flags))
-      return false;
-
-   // check 1S only flag -- if set, must be activated from first side
-   if((line->extflags & EX_ML_1SONLY) && side != 0)
-      return false;
-
-   // is action reusable?
-   if(line->extflags & EX_ML_REPEAT)
-      reuse = true;
-
-   // execute the special
-   success = P_ExecParamLineSpec(line, thing, line->special, line->args,
-                                 side, spac, reuse);
-
-   // actions to take if line activation was successful:
-   if(success)
-   {
-      // clear special if line is not repeatable
-      if(!reuse)
-         line->special = 0;
-      
-      // change switch textures where appropriate
-      if(spac == SPAC_USE || spac == SPAC_IMPACT)
-         P_ChangeSwitchTexture(line, reuse, side);
-   }
-
-   return success;
 }
 
 // ChangeLineTex texture position numbers
@@ -2207,16 +1417,6 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
 //
 // Small Natives
 //
-
-//
-// sm_specialmode
-//
-// Deprecated: does nothing
-//
-static cell AMX_NATIVE_CALL sm_specialmode(AMX *amx, cell *params)
-{
-   return 0;
-}
 
 //
 // sm_changecelingtex  -- joek 9/11/07
@@ -2349,47 +1549,6 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
    return 0;
 }
 
-//
-// P_ScriptSpec
-//
-// haleyjd 05/20/05
-//
-// Thunks from Small script params to line special args and executes
-// the indicated special. All functions using this must take the
-// same arguments in the same order as the line special.
-//
-static int P_ScriptSpec(int spec, AMX *amx, cell *params)
-{
-   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-   int i, numparams = params[0] / sizeof(cell);
-   SmallContext_t *ctx;
-   line_t *line  = NULL;
-   Mobj *thing = NULL;
-
-   if(gamestate != GS_LEVEL)
-   {
-      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
-      return -1;
-   }
-
-   ctx = SM_GetContextForAMX(amx);
-
-   // If invocation type is SC_INVOKE_LINE, we can pass on the line and
-   // thing that triggered this script. This results in the action acting
-   // exactly like it belongs to the line normally.
-
-   if(ctx->invocationData.invokeType == SC_INVOKE_LINE)
-   {
-      line  = ctx->invocationData.line;
-      thing = ctx->invocationData.trigger;
-   }
-
-   for(i = 0; i < numparams; ++i)
-      args[i] = params[i + 1];
-
-   // FIXME: spac important?
-   return P_ExecParamLineSpec(line, thing, spec, args, 0, SPAC_CROSS, true);
-}
 #endif
 
 //
