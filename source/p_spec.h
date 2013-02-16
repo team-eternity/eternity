@@ -1375,7 +1375,7 @@ void P_InitPicAnims(void);
 void P_InitSwitchList(void);
 
 // at map load
-void P_SpawnSpecials(int);
+void P_SpawnSpecials();
 
 // 
 // P_SpawnDeferredSpecials
@@ -1400,8 +1400,8 @@ void P_PlayerOnSpecialFlat(player_t *player);
 // p_switch
 
 // haleyjd 10/16/05: moved all button code into p_switch.c
-void P_ClearButtons(void);
-void P_RunButtons(void);
+void P_ClearButtons();
+void P_RunButtons();
 
 // p_lights
 

@@ -2545,7 +2545,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 //
 // After the map has been loaded, scan for specials that spawn thinkers
 //
-void P_SpawnSpecials(int mapformat)
+void P_SpawnSpecials()
 {
    sector_t *sector;
    int      i;

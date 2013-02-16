@@ -2499,7 +2499,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_ConvertHereticSpecials();
    
    // set up world state
-   P_SpawnSpecials(LevelInfo.mapFormat);
+   P_SpawnSpecials();
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
    P_SpawnDeferredSpecials();

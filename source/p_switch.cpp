@@ -205,7 +205,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
 //
 // haleyjd 10/16/05: isolated from P_SpawnSpecials
 //
-void P_ClearButtons(void)
+void P_ClearButtons()
 {
    if(numbuttonsalloc)
       memset(buttonlist, 0, numbuttonsalloc * sizeof(button_t));
