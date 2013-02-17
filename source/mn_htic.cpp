@@ -74,7 +74,6 @@ static menuitem_t mn_hmain_items[] =
    {it_runcmd, "options",   "mn_options",  NULL, MENUITEM_BIGFONT },
    {it_runcmd, "load game", "mn_loadgame", NULL, MENUITEM_BIGFONT },
    {it_runcmd, "save game", "mn_savegame", NULL, MENUITEM_BIGFONT },
-   {it_runcmd, "end game",  "mn_endgame",  NULL, MENUITEM_BIGFONT },
    {it_runcmd, "quit game", "mn_quit",     NULL, MENUITEM_BIGFONT },
    {it_end}
 };

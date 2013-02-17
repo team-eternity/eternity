@@ -221,9 +221,6 @@ static void HI_loadData(void)
          }
       }
    }
-
-   // draw the background to the back buffer
-   HI_DrawBackground();
 }
 
 // Uncomment this define to see all players in single-player mode
