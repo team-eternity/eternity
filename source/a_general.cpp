@@ -382,7 +382,7 @@ static argkeywd_t sscriptkwds =
 //
 // args[0] - script number to start
 // args[1] - select vm (0 == gamescript, 1 == levelscript, 2 == ACS levelscript)
-// args[2-4] - parameters to script (must accept 3 params)
+// args[2-MAX] - parameters to script (must accept 3 params)
 //
 void A_StartScript(Mobj *actor)
 {
@@ -395,11 +395,59 @@ void A_StartScript(Mobj *actor)
    }
    else
    {
-      int args[3] = { 0, 0, 0 };
-      args[0] = E_ArgAsInt(actor->state->args, 2, 0);
-      args[1] = E_ArgAsInt(actor->state->args, 3, 0);
-      args[2] = E_ArgAsInt(actor->state->args, 4, 0);
-      ACS_ExecuteScriptNumber(scriptnum, gamemap, 0, args, 3, NULL, NULL, 0);
+      int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
+      int argc = E_GetArgCount(actor->state->args);
+
+      if(argc > 2)
+      {
+         int32_t argv[EMAXARGS - 2];
+         argc -= 2;
+
+         for(int i = 0; i < argc; ++i)
+             argv[i] = E_ArgAsInt(actor->state->args, i + 2, 0);
+
+         ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, argv, argc, actor, NULL, 0);
+      }
+      else
+      {
+         ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, NULL, 0, actor, NULL, 0);
+      }
+   }
+}
+
+//
+// A_StartScriptNamed
+//
+// Same as A_StartScript, but for named scripts.
+//
+void A_StartScriptNamed(Mobj *actor)
+{
+   const char *scriptname = E_ArgAsString(actor->state->args, 0, "");
+   int selectvm = E_ArgAsKwd(actor->state->args, 1, &sscriptkwds, 0);
+
+   if(selectvm < 2)
+   {
+      /* nothing */ ;
+   }
+   else
+   {
+      int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
+      int argc = E_GetArgCount(actor->state->args);
+
+      if(argc > 2)
+      {
+         int32_t argv[EMAXARGS - 2];
+         argc -= 2;
+
+         for(int i = 0; i < argc; ++i)
+             argv[i] = E_ArgAsInt(actor->state->args, i + 2, 0);
+
+         ACS_ExecuteScriptName(scriptname, gamemap, flags, argv, argc, actor, NULL, 0);
+      }
+      else
+      {
+         ACS_ExecuteScriptName(scriptname, gamemap, flags, NULL, 0, actor, NULL, 0);
+      }
    }
 }
 

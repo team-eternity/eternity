@@ -1251,6 +1251,7 @@ void A_SetFlags(Mobj *);
 void A_UnSetFlags(Mobj *);
 void A_BetaSkullAttack(Mobj *);
 void A_StartScript(Mobj *); // haleyjd 1/25/00: Script wrapper
+void A_StartScriptNamed(Mobj *);
 void A_PlayerStartScript(Mobj *);
 void A_GenRefire(Mobj *);
 void A_FireGrenade(Mobj *);
@@ -1542,6 +1543,7 @@ deh_bexptr deh_bexptrs[] =
 
   // haleyjd: start new eternity codeptrs
   POINTER(StartScript),
+  POINTER(StartScriptNamed),
   POINTER(PlayerStartScript),
   POINTER(SetFlags),
   POINTER(UnSetFlags),

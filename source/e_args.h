@@ -84,6 +84,7 @@ typedef struct argkeywd_s
 } argkeywd_t;
 
 bool          E_AddArgToList(arglist_t *al, const char *value);
+inline int    E_GetArgCount(arglist_t *al) { return al ? al->numargs : 0; }
 bool          E_SetArg(arglist_t *al, int index, const char *value);
 bool          E_SetArgFromNumber(arglist_t *al, int index, int value);
 void          E_DisposeArgs(arglist_t *al);
