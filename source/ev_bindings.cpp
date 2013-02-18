@@ -1031,6 +1031,12 @@ PARAMLINE(ThingProjectile);
 PARAMLINE(ThingProjectileGravity);
 PARAMLINE(ThingActivate);
 PARAMLINE(ThingDeactivate);
+PARAMLINE(ParamPlatPerpetualRaise);
+PARAMLINE(ParamPlatStop);
+PARAMLINE(ParamPlatDWUS);
+PARAMLINE(ParamPlatDownByValue);
+PARAMLINE(ParamPlatUWDS);
+PARAMLINE(ParamPlatUpByValue);
 
 //=============================================================================
 //
@@ -1373,6 +1379,12 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(403, ThingProjectileGravity,          "Thing_ProjectileGravity")
    LINESPECNAMED(404, ThingActivate,                   "Thing_Activate")
    LINESPECNAMED(405, ThingDeactivate,                 "Thing_Deactivate")
+   LINESPECNAMED(410, ParamPlatPerpetualRaise,         "Plat_PerpetualRaise")
+   LINESPECNAMED(411, ParamPlatStop,                   "Plat_Stop")
+   LINESPECNAMED(412, ParamPlatDWUS,                   "Plat_DownWaitUpStay")
+   LINESPECNAMED(413, ParamPlatDownByValue,            "Plat_DownByValue")
+   LINESPECNAMED(414, ParamPlatUWDS,                   "Plat_UpWaitDownStay")
+   LINESPECNAMED(415, ParamPlatUpByValue,              "Plat_UpByValue")
 };
 
 size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1427,6 +1439,12 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(40,  ParamCeilingLowerByValue,        "Ceiling_LowerByValue")
    LINESPECNAMED(41,  ParamCeilingRaiseByValue,        "Ceiling_RaiseByValue")
    LINESPECNAMED(47,  ParamCeilingMoveToValue,         "Ceiling_MoveToValue")
+   LINESPECNAMED(60,  ParamPlatPerpetualRaise,         "Plat_PerpetualRaise")
+   LINESPECNAMED(61,  ParamPlatStop,                   "Plat_Stop")
+   LINESPECNAMED(62,  ParamPlatDWUS,                   "Plat_DownWaitUpStay")
+   LINESPECNAMED(63,  ParamPlatDownByValue,            "Plat_DownByValue")
+   LINESPECNAMED(64,  ParamPlatUWDS,                   "Plat_UpWaitDownStay")
+   LINESPECNAMED(65,  ParamPlatUpByValue,              "Plat_UpByValue")
    LINESPECNAMED(66,  ParamFloorLowerInstant,          "Floor_LowerInstant")
    LINESPECNAMED(67,  ParamFloorRaiseInstant,          "Floor_RaiseInstant")
    LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,     "Floor_MoveToValueTimes8")

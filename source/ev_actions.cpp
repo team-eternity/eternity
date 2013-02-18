@@ -211,7 +211,7 @@ DEFINE_ACTION(EV_ActionPlatDownWaitUpStay)
    // case 62: (SR)
    // case 88: (WR)
    // PlatDownWaitUp
-   return !!EV_DoPlat(instance->line, downWaitUpStay, 0);
+   return EV_DoPlat(instance->line, downWaitUpStay, 0);
 }
 
 //
@@ -289,7 +289,7 @@ DEFINE_ACTION(EV_ActionPlatRaiseNearestChange)
    // case 68: (SR)
    // case 95: (WR)
    // Raise floor to nearest height and change texture
-   return !!EV_DoPlat(instance->line, raiseToNearestAndChange, 0);
+   return EV_DoPlat(instance->line, raiseToNearestAndChange, 0);
 }
 
 //
@@ -525,7 +525,7 @@ DEFINE_ACTION(EV_ActionPlatPerpetualRaise)
    // case 162: (S1 - BOOM Extended)
    // case 181: (SR - BOOM Extended)
    // Perpetual Platform Raise
-   return !!EV_DoPlat(instance->line, perpetualRaise, 0);
+   return EV_DoPlat(instance->line, perpetualRaise, 0);
 }
 
 //
@@ -538,7 +538,7 @@ DEFINE_ACTION(EV_ActionPlatStop)
    // case 163: (S1 - BOOM Extended)
    // case 182: (SR - BOOM Extended)
    // Platform Stop
-   return !!EV_StopPlat(instance->line);
+   return EV_StopPlat(instance->line);
 }
 
 //
@@ -681,7 +681,7 @@ DEFINE_ACTION(EV_ActionPlatBlazeDWUS)
    // case 122: (S1)
    // case 123: (SR)
    // Blazing PlatDownWaitUpStay
-   return !!EV_DoPlat(instance->line, blazeDWUS, 0);
+   return EV_DoPlat(instance->line, blazeDWUS, 0);
 }
 
 //
@@ -788,7 +788,7 @@ DEFINE_ACTION(EV_ActionPlatRaise24Change)
    // case 143: (W1 - BOOM Extended)
    // case 148: (WR - BOOM Extended)
    // Raise Floor 24 and change
-   return !!EV_DoPlat(instance->line, raiseAndChange, 24);
+   return EV_DoPlat(instance->line, raiseAndChange, 24);
 }
 
 //
@@ -801,7 +801,7 @@ DEFINE_ACTION(EV_ActionPlatRaise32Change)
    // case 144: (W1 - BOOM Extended)
    // case 149: (WR - BOOM Extended)
    // Raise Floor 32 and change
-   return !!EV_DoPlat(instance->line, raiseAndChange, 32);
+   return EV_DoPlat(instance->line, raiseAndChange, 32);
 }
 
 //
@@ -1004,7 +1004,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
    // jff 3/14/98 create instant toggle floor type
    // case 211: (SR - BOOM Extended)
    // case 212: (WR - BOOM Extended)
-   return !!EV_DoPlat(instance->line, toggleUpDn, 0);
+   return EV_DoPlat(instance->line, toggleUpDn, 0);
 }
 
 //
@@ -2853,6 +2853,78 @@ DEFINE_ACTION(EV_ActionThingActivate)
 DEFINE_ACTION(EV_ActionThingDeactivate)
 {
    return !!EV_ThingDeactivate(instance->args[0]);
+}
+
+//
+// EV_ActionParamPlatPerpetualRaise
+//
+// Implements Plat_PerpetualRaise(tag, speed, delay)
+// * ExtraData: 410
+// * Hexen:     60
+//
+DEFINE_ACTION(EV_ActionParamPlatPerpetualRaise)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaise);
+}
+
+//
+// EV_ActionParamPlatStop
+//
+// Implements Plat_Stop(tag)
+// * ExtraData: 411
+// * Hexen:     61
+//
+DEFINE_ACTION(EV_ActionParamPlatStop)
+{
+   return EV_StopPlatByTag(instance->tag);
+}
+
+//
+// EV_ActionParamPlatDWUS
+//
+// Implements Plat_DownWaitUpStay(tag, speed, delay)
+// * ExtraData: 412
+// * Hexen:     62
+//
+DEFINE_ACTION(EV_ActionParamPlatDWUS)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramDownWaitUpStay);
+}
+
+//
+// EV_ActionParamPlatDownByValue
+//
+// Implements Plat_DownByValue(tag, speed, delay, height)
+// * ExtraData: 413
+// * Hexen:     63
+//
+DEFINE_ACTION(EV_ActionParamPlatDownByValue)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramDownByValueWaitUpStay);
+}
+
+//
+// EV_ActionParamPlatUWDS
+//
+// Implements Plat_UpWaitDownStay(tag, speed, delay)
+// * ExtraData: 414
+// * Hexen:     64
+//
+DEFINE_ACTION(EV_ActionParamPlatUWDS)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramUpWaitDownStay);
+}
+
+//
+// EV_ActionParamPlatUpByValue
+//
+// Implements Plat_UpByValue(tag, speed, delay, height)
+// * ExtraData: 415
+// * Hexen:     65
+//
+DEFINE_ACTION(EV_ActionParamPlatUpByValue)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramUpByValueWaitDownStay);
 }
 
 // EOF

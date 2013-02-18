@@ -559,17 +559,17 @@ int EV_DoGenCeiling(line_t *line)
 int EV_DoGenLift(line_t *line)
 {
    PlatThinker *plat;
-   int       secnum;
-   int       rtn;
-   bool      manual;
-   sector_t *sec;
-   int value = line->special - GenLiftBase;
+   sector_t    *sec;
+   int  secnum;
+   int  rtn;
+   bool manual;
+   int  value = line->special - GenLiftBase;
 
    // parse the bit fields in the line's special type
    
-   int Targ = (value & LiftTarget) >> LiftTargetShift;
-   int Dely = (value & LiftDelay) >> LiftDelayShift;
-   int Sped = (value & LiftSpeed) >> LiftSpeedShift;
+   int Targ = (value & LiftTarget ) >> LiftTargetShift;
+   int Dely = (value & LiftDelay  ) >> LiftDelayShift;
+   int Sped = (value & LiftSpeed  ) >> LiftSpeedShift;
    int Trig = (value & TriggerType) >> TriggerTypeShift;
 
    secnum = -1;
@@ -577,16 +577,16 @@ int EV_DoGenLift(line_t *line)
    
    // Activate all <type> plats that are in_stasis
    
-   if(Targ==LnF2HnF)
+   if(Targ == LnF2HnF)
       PlatThinker::ActivateInStasis(line->tag);
         
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
-   if(Trig==PushOnce || Trig==PushMany)
+   if(Trig == PushOnce || Trig == PushMany)
    {
       if (!(sec = line->backsector))
          return rtn;
-      secnum = sec-sectors;
+      secnum = sec - sectors;
       manual = true;
       goto manual_lift;
    }
@@ -611,13 +611,13 @@ manual_lift:
       plat = new PlatThinker;
       plat->addThinker();
       
-      plat->sector = sec;
-      plat->sector->floordata = plat;
       plat->crush  = -1;
       plat->tag    = line->tag;
       plat->type   = genLift;
       plat->high   = sec->floorheight;
       plat->status = PlatThinker::down;
+      plat->sector = sec;
+      plat->sector->floordata = plat;
 
       // setup the target destination height
       switch(Targ)
@@ -718,12 +718,11 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    
    FloorMoveThinker *floor;
    
-   fixed_t  stairsize;
-   fixed_t  speed;  
+   fixed_t stairsize;
+   fixed_t speed;  
    
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 10/06/05: only line actions can be manual
-   //if(sd->trigger_type == PushOnce || sd->trigger_type == PushMany)
 
    if(((sd->flags & SDF_HAVETRIGGERTYPE) &&
        (sd->trigger_type == PushOnce || sd->trigger_type == PushMany)) ||

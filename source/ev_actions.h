@@ -194,6 +194,12 @@ DECLARE_ACTION(EV_ActionThingProjectile);
 DECLARE_ACTION(EV_ActionThingProjectileGravity);
 DECLARE_ACTION(EV_ActionThingActivate);
 DECLARE_ACTION(EV_ActionThingDeactivate);
+DECLARE_ACTION(EV_ActionParamPlatPerpetualRaise);
+DECLARE_ACTION(EV_ActionParamPlatStop);
+DECLARE_ACTION(EV_ActionParamPlatDWUS);
+DECLARE_ACTION(EV_ActionParamPlatDownByValue);
+DECLARE_ACTION(EV_ActionParamPlatUWDS);
+DECLARE_ACTION(EV_ActionParamPlatUpByValue);
 
 #endif
 

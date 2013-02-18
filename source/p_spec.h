@@ -397,11 +397,22 @@ typedef enum
    raiseAndChange,
    raiseToNearestAndChange,
    blazeDWUS,
-   genLift,      //jff added to support generalized Plat types
+   genLift,       // jff added to support generalized Plat types
    genPerpetual, 
-   toggleUpDn,   //jff 3/14/98 added to support instant toggle type
+   toggleUpDn,    // jff 3/14/98 added to support instant toggle type
+   upWaitDownStay // haleyjd 2/18/13: Hexen and Strife reverse plats
 
 } plattype_e;
+
+// haleyjd 02/18/13: parameterized plat trigger types
+typedef enum
+{
+   paramDownWaitUpStay,
+   paramDownByValueWaitUpStay,
+   paramUpWaitDownStay,
+   paramUpByValueWaitDownStay,
+   paramPerpetualRaise
+} paramplattype_e;
 
 // p_doors
 
@@ -1324,9 +1335,10 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
 
-int EV_DoPlat(line_t *line, plattype_e type, int amount);
-
-int EV_StopPlat(line_t *line);
+bool EV_DoPlat(line_t *line, plattype_e type, int amount);
+bool EV_DoParamPlat(line_t *line, int *args, paramplattype_e type);
+bool EV_StopPlatByTag(int tag);
+bool EV_StopPlat(line_t *line);
 
 // p_genlin
 
