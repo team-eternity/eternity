@@ -392,14 +392,6 @@ typedef enum
 
 typedef enum
 {
-   up,
-   down,
-   waiting,
-   in_stasis
-} plat_e;
-
-typedef enum
-{
    perpetualRaise,
    downWaitUpStay,
    raiseAndChange,
@@ -761,6 +753,16 @@ public:
 class PlatThinker : public SectorThinker
 {
    DECLARE_THINKER_TYPE(PlatThinker, SectorThinker)
+
+public:
+   // Enumerations
+   typedef enum
+   {
+      up,
+      down,
+      waiting,
+      in_stasis
+   } plat_e;
 
 protected:
    void Think();

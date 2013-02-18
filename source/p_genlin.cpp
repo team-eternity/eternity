@@ -613,12 +613,11 @@ manual_lift:
       
       plat->sector = sec;
       plat->sector->floordata = plat;
-      plat->crush = -1;
-      plat->tag = line->tag;
-      
-      plat->type = genLift;
-      plat->high = sec->floorheight;
-      plat->status = down;
+      plat->crush  = -1;
+      plat->tag    = line->tag;
+      plat->type   = genLift;
+      plat->high   = sec->floorheight;
+      plat->status = PlatThinker::down;
 
       // setup the target destination height
       switch(Targ)
@@ -644,7 +643,7 @@ manual_lift:
          plat->high = P_FindHighestFloorSurrounding(sec);
          if(plat->high < sec->floorheight)
             plat->high = sec->floorheight;
-         plat->status = (P_Random(pr_genlift)&1) ? down : up;
+         plat->status = (P_Random(pr_genlift)&1) ? PlatThinker::down : PlatThinker::up;
          break;
       default:
          break;

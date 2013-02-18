@@ -317,7 +317,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
          plat->high    = P_FindNextHighestFloor(sec,sec->floorheight);
          plat->wait    = 0;
-         plat->status  = up;
+         plat->status  = PlatThinker::up;
          //jff 3/14/98 clear old field as well
          P_ZeroSectorSpecial(sec);
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
@@ -328,7 +328,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
          plat->high    = sec->floorheight + amount*FRACUNIT;
          plat->wait    = 0;
-         plat->status  = up;
+         plat->status  = PlatThinker::up;
          
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
@@ -342,7 +342,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          
          plat->high   = sec->floorheight;
          plat->wait   = 35*PLATWAIT;
-         plat->status = down;
+         plat->status = PlatThinker::down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
@@ -355,7 +355,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          
          plat->high   = sec->floorheight;
          plat->wait   = 35*PLATWAIT;
-         plat->status = down;
+         plat->status = PlatThinker::down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
@@ -372,7 +372,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
             plat->high = sec->floorheight;
          
          plat->wait   = 35*PLATWAIT;
-         plat->status = (P_Random(pr_plats) & 1) ? down : up;
+         plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
          
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
@@ -385,7 +385,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          // set up toggling between ceiling, floor inclusive
          plat->low    = sec->ceilingheight;
          plat->high   = sec->floorheight;
-         plat->status = down;
+         plat->status = PlatThinker::down;
 
          P_PlatSequence(plat->sector, "EEPlatSilent");
          break;
@@ -444,10 +444,11 @@ int EV_StopPlat(line_t *line)
    for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
       PlatThinker *plat = pl->plat;      // for one with the tag not in stasis
-      if(plat->status != in_stasis && plat->tag == line->tag)
+      if(plat->status != PlatThinker::in_stasis && plat->tag == line->tag)
       {
-         plat->oldstatus = plat->status; // put it in stasis
-         plat->status = in_stasis;
+         // put it in stasis
+         plat->oldstatus = plat->status; 
+         plat->status    = PlatThinker::in_stasis;
       }
    }
    return 1;
