@@ -621,28 +621,28 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    case 26:
    case 27:
    case 28:
-      door->type      = doorNormal;
+      door->type = doorNormal;
       break;
 
    case 31:
    case 32:
    case 33:
    case 34:
-      door->type      = doorOpen;
-      line->special   = 0;
+      door->type    = doorOpen;
+      line->special = 0;
       break;
 
    case 117: // blazing door raise
-      door->type      = blazeRaise;
-      door->speed     = VDOORSPEED*4;
-      door->turbo     = true;
+      door->type  = blazeRaise;
+      door->speed = VDOORSPEED*4;
+      door->turbo = true;
       break;
 
    case 118: // blazing door open
-      door->type      = blazeOpen;
-      line->special   = 0;
-      door->speed     = VDOORSPEED*4;
-      door->turbo     = true;
+      door->type    = blazeOpen;
+      line->special = 0;
+      door->speed   = VDOORSPEED*4;
+      door->turbo   = true;
       break;
 
    default:

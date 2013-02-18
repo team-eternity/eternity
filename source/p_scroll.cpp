@@ -454,6 +454,26 @@ void P_SpawnScrollers()
              sides[*line->sidenum].rowoffset);
          break;
 
+      case EV_STATIC_SCROLL_LEFT_PARAM:
+         // haleyjd 02/17/13: Hexen Scroll_Texture_Left
+         P_spawnStaticWallScroller(line, line->args[0] << 10, 0);
+         break;
+
+      case EV_STATIC_SCROLL_RIGHT_PARAM:
+         // haleyjd 02/17/13: Hexen Scroll_Texture_Right
+         P_spawnStaticWallScroller(line, -(line->args[0] << 10), 0);
+         break;
+
+      case EV_STATIC_SCROLL_UP_PARAM:
+         // haleyjd 02/17/13: Hexen Scroll_Texture_Up
+         P_spawnStaticWallScroller(line, 0, line->args[0] << 10);
+         break;
+
+      case EV_STATIC_SCROLL_DOWN_PARAM:
+         // haleyjd 02/17/13: Hexen Scroll_Texture_Down
+         P_spawnStaticWallScroller(line, 0, -(line->args[0] << 10));
+         break;
+
       default:
          break; // not a function handled here
       }
