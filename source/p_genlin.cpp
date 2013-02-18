@@ -578,7 +578,7 @@ int EV_DoGenLift(line_t *line)
    // Activate all <type> plats that are in_stasis
    
    if(Targ==LnF2HnF)
-      P_ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->tag);
         
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
@@ -687,7 +687,7 @@ manual_lift:
       }
 
       P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-      P_AddActivePlat(plat); // add this plat to the list of active plats
+      plat->addActivePlat(); // add this plat to the list of active plats
       
       if(manual)
          return rtn;

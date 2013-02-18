@@ -1476,7 +1476,7 @@ void P_SpawnSpecials()
 
    P_RemoveAllActiveCeilings();  // jff 2/22/98 use killough's scheme
    
-   P_RemoveAllActivePlats();     // killough
+   PlatThinker::RemoveAllActivePlats(); // killough
 
    // clear buttons (haleyjd 10/16/05: button stuff -> p_switch.c)
    P_ClearButtons();

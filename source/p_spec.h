@@ -768,9 +768,17 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
 
 public:
-   // Methods
+   // Overridden Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+
+   // Methods
+   void addActivePlat();
+   void removeActivePlat();
+
+   // Static Methods
+   static void ActivateInStasis(int tag);
+   static void RemoveAllActivePlats();    // killough
 
    // Data Members
    fixed_t speed;
@@ -783,16 +791,8 @@ public:
    int crush;
    int tag;
    int type;
-   struct platlist *list;   // killough
+   struct platlist_t *list;   // killough
 };
-
-// New limit-free plat structure -- killough
-
-typedef struct platlist 
-{
-  PlatThinker *plat; 
-  struct platlist *next, **prev;
-} platlist_t;
 
 // p_ceilng
 
@@ -1169,8 +1169,6 @@ enum
 extern int             levelTimeLimit;
 extern int             levelFragLimit;
 
-extern platlist_t *activeplats;        // killough 2/14/98
-
 extern ceilinglist_t *activeceilings;  // jff 2/22/98
 
 ////////////////////////////////////////////////////////////////
@@ -1410,14 +1408,6 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 
 // p_plats
-
-void P_AddActivePlat(PlatThinker *plat);
-
-void P_RemoveActivePlat(PlatThinker *plat);
-
-void P_RemoveAllActivePlats(void);    // killough
-
-void P_ActivateInStasis(int tag);
 
 void P_PlatSequence(sector_t *s, const char *seqname);
 

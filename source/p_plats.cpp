@@ -40,7 +40,16 @@
 #include "s_sound.h"
 #include "sounds.h"
 
-platlist_t *activeplats;       // killough 2/14/98: made global again
+// New limit-free plat structure -- killough
+
+struct platlist_t
+{
+   PlatThinker  *plat; 
+   platlist_t   *next;
+   platlist_t  **prev;
+};
+
+static platlist_t *activeplats;
 
 //
 // P_PlatSequence
@@ -122,7 +131,7 @@ void PlatThinker::Think()
             case downWaitUpStay:
             case raiseAndChange:
             case genLift:
-               P_RemoveActivePlat(this);     // killough
+               removeActivePlat();     // killough
             default:
                break;
             }
@@ -169,7 +178,7 @@ void PlatThinker::Think()
             {
             case raiseAndChange:
             case raiseToNearestAndChange:
-               P_RemoveActivePlat(this);
+               removeActivePlat();
             default:
                break;
             }
@@ -213,7 +222,7 @@ void PlatThinker::serialize(SaveArchive &arc)
 
    // Reattach to active plats list
    if(arc.isLoading())
-      P_AddActivePlat(this);
+      addActivePlat();
 }
 
 //
@@ -264,11 +273,11 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
    switch(type)
    {
    case perpetualRaise:
-      P_ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->tag);
       break;
       
    case toggleUpDn:
-      P_ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->tag);
       rtn=1;
       break;
       
@@ -304,55 +313,55 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       switch(type)
       {
       case raiseToNearestAndChange:
-         plat->speed = PLATSPEED/2;
+         plat->speed   = PLATSPEED/2;
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
-         plat->wait = 0;
-         plat->status = up;
+         plat->high    = P_FindNextHighestFloor(sec,sec->floorheight);
+         plat->wait    = 0;
+         plat->status  = up;
          //jff 3/14/98 clear old field as well
          P_ZeroSectorSpecial(sec);
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           
       case raiseAndChange:
-         plat->speed = PLATSPEED/2;
+         plat->speed   = PLATSPEED/2;
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = sec->floorheight + amount*FRACUNIT;
-         plat->wait = 0;
-         plat->status = up;
+         plat->high    = sec->floorheight + amount*FRACUNIT;
+         plat->wait    = 0;
+         plat->status  = up;
          
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           
       case downWaitUpStay:
          plat->speed = PLATSPEED * 4;
-         plat->low = P_FindLowestFloorSurrounding(sec);
+         plat->low   = P_FindLowestFloorSurrounding(sec);
          
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
          
-         plat->high = sec->floorheight;
-         plat->wait = 35*PLATWAIT;
+         plat->high   = sec->floorheight;
+         plat->wait   = 35*PLATWAIT;
          plat->status = down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
       case blazeDWUS:
          plat->speed = PLATSPEED * 8;
-         plat->low = P_FindLowestFloorSurrounding(sec);
+         plat->low   = P_FindLowestFloorSurrounding(sec);
          
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
          
-         plat->high = sec->floorheight;
-         plat->wait = 35*PLATWAIT;
+         plat->high   = sec->floorheight;
+         plat->wait   = 35*PLATWAIT;
          plat->status = down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
       case perpetualRaise:
          plat->speed = PLATSPEED;
-         plat->low = P_FindLowestFloorSurrounding(sec);
+         plat->low   = P_FindLowestFloorSurrounding(sec);
          
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
@@ -362,7 +371,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          if(plat->high < sec->floorheight)
             plat->high = sec->floorheight;
          
-         plat->wait = 35*PLATWAIT;
+         plat->wait   = 35*PLATWAIT;
          plat->status = (P_Random(pr_plats) & 1) ? down : up;
          
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
@@ -384,7 +393,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       default:
          break;
       }
-      P_AddActivePlat(plat);  // add plat to list of active plats
+      plat->addActivePlat();  // add plat to list of active plats
    }
    return rtn;
 }
@@ -403,7 +412,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
 // Passed the tag of the plat that should be reactivated
 // Returns nothing
 //
-void P_ActivateInStasis(int tag)
+void PlatThinker::ActivateInStasis(int tag)
 {
    // search the active plats
    for(platlist_t *pl = activeplats; pl; pl = pl->next)
@@ -412,7 +421,7 @@ void P_ActivateInStasis(int tag)
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type == toggleUpDn) //jff 3/14/98 reactivate toggle type
-            plat->status = plat->oldstatus == up? down : up;
+            plat->status = plat->oldstatus == up ? down : up;
          else
             plat->status = plat->oldstatus;
       }
@@ -452,11 +461,10 @@ int EV_StopPlat(line_t *line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(PlatThinker *plat)
+void PlatThinker::addActivePlat()
 {
-   platlist_t *list = estructalloc(platlist_t, 1);
-   list->plat = plat;
-   plat->list = list;
+   list = estructalloc(platlist_t, 1);
+   list->plat = this;
    if((list->next = activeplats))
       list->next->prev = &list->next;
    list->prev = &activeplats;
@@ -471,11 +479,10 @@ void P_AddActivePlat(PlatThinker *plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(PlatThinker *plat)
+void PlatThinker::removeActivePlat()
 {
-   platlist_t *list = plat->list;
-   plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   plat->removeThinker();
+   sector->floordata = NULL; //jff 2/23/98 multiple thinkers
+   removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);
@@ -488,7 +495,7 @@ void P_RemoveActivePlat(PlatThinker *plat)
 //
 // Passed nothing, returns nothing
 //
-void P_RemoveAllActivePlats()
+void PlatThinker::RemoveAllActivePlats()
 {
    while(activeplats)
    {  

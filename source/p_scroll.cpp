@@ -383,6 +383,10 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 // * EV_STATIC_SCROLL_LINE_LEFT
 // * EV_STATIC_SCROLL_LINE_RIGHT
 // * EV_STATIC_SCROLL_BY_OFFSETS
+// * EV_STATIC_SCROLL_LEFT_PARAM
+// * EV_STATIC_SCROLL_RIGHT_PARAM
+// * EV_STATIC_SCROLL_UP_PARAM
+// * EV_STATIC_SCROLL_DOWN_PARAM
 //
 static void P_spawnStaticWallScroller(line_t *l, fixed_t dx, fixed_t dy)
 {
