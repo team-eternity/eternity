@@ -242,6 +242,27 @@ static void ACS_scriptFinished(ACSThinker *thread)
 }
 
 //
+// ACS_checkTag
+//
+// Returns true if the script should start running again and false if it needs
+// to keep waiting.
+//
+static bool ACS_checkTag(ACSThinker *th)
+{
+   int tag = static_cast<int>(th->sdata);
+   int secnum = -1;
+
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector_t *sec = &sectors[secnum];
+      if(sec->floordata || sec->ceilingdata)
+         return false;
+   }
+
+   return true;
+}
+
+//
 // ACS_stopScript
 //
 // Ultimately terminates the script and removes its thinker.
@@ -531,7 +552,20 @@ void ACSThinker::Think()
 
    // is the script running?
    if(this->sreg != ACS_STATE_RUNNING)
-      return;
+   {
+      switch(this->sreg)
+      {
+      case ACS_STATE_WAITTAG:
+         if(ACS_checkTag(this))
+         {
+            this->sreg = ACS_STATE_RUNNING;
+            break;
+         }
+         // fall-through
+      default:
+         return;
+      }
+   }
 
    // check for delays
    if(this->delay)
