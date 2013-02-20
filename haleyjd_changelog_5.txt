@@ -2,6 +2,149 @@
 Changes since Eternity Engine v3.40.30
 ================================================================================
 --------------------------------------------------------------------------------
+12/13/12
+
+Added DLListItem hash links to ev_binding_t, and created the ev_static_t struct
+to hold information on static init bindings. Created a static init bindings
+array for DOOM types and hash lookup functions.
+
+--------------------------------------------------------------------------------
+12/11/12
+
+Added an enumeration of all static init functions; these enum values will
+eventually replace the use of hard-coded special numbers in all the static init
+instantiation functions; instead, they'll grab the init for the special they're
+handling at runtime and check against that value.
+
+Added a new parameter to A_FireCustomBullets which accepts a firing frame to use
+for the weapon.
+
+--------------------------------------------------------------------------------
+12/10/12
+
+All DOOM line types are now defined in ev_specials; I have built the DOOM 
+bindings array, which contains special-number-to-action mappings for runtime
+activated specials
+
+Missing entirely at this point is anything to do with static inits - those line
+types which are processed only at map startup and are used to setup effects such
+as scrollers, friction, light transfers, fake heights, portals, slopes, attached
+sectors and midtex, etc.
+
+These are going to need their own separate system for binding and lookup.
+
+--------------------------------------------------------------------------------
+12/09/12
+
+Continuing some work on improving dynasegs, I have added an interim solution to
+our fragment sorting glitch (my original idea to sort polyobjects by their mid-
+points, as inspired by the BSP FAQ, is unfortunately insufficient). I now sort
+each fragment by its midpoint, determined as the average of its vertices. This
+is incrementallly better, but is not immune to problems.
+
+What we NEED is something similar to what I determined earlier would work to
+support a scheme for dynamic subsectors - a full BSP tree. Randy Heit already
+implemented this in ZDoom for their polyobject system. Of course, he had the
+advantage of already having an integrated node builder too.
+
+It'll be a while before I get around to that. I have returned to work on the 
+ev_specials system for now, folding in the majority of the remaining vanilla
+and BOOM S1 linedef types.
+
+--------------------------------------------------------------------------------
+12/07/12
+
+Took a short break from the line system to work on dynasegs, in which several
+problems are now known to exist.
+
+First I have adapted a modification made in ZDoom which allows classification of
+points to fail due to the node line being apparently parallel to the dynaseg,
+and when this happens, the entire dynaseg will be classified as being on the
+"v1" side of the node line. This is not necessarily mathematically correct, as
+something is screwy in the first place when this happens (probably round-off
+error), but it works a lot better than calling I_Error :)
+
+I removed an unnecessary branch in R_DynaSegOffset, as sqrt(0) == 0. I have no
+idea why I thought that might be undefined at the time...
+
+DavidPH tried compiling Eternity for an ARM-based machine and found a few
+portability issues, all of them relating to the compiler treating characters as
+unsigned by default. Nothing difficult to fix fortunately.
+
+Finally, I moved all floating point fields used strictly for dynasegs out of the
+cache-critical node_t structure and into a separate array of the same size which
+is allocated at map load after nodes have been loaded. Since dynasegs are the 
+only users of this information (general line equation coefficients and converted
+versions of the node line coordinates and length), there is absolutely no sense
+in weighting down the rest of the renderer with it. I detected a noticeable
+increase in speed when running the BSP-intensive Sunder MAP11.
+
+--------------------------------------------------------------------------------
+12/03/12
+
+Started work on support for use-type actions in ev_specials, including functions
+to check for 3DMidTex switch height restrictions, action types and actions for
+S1/SR/D1/DR line types, more action functions, and additional refactoring of
+BOOM genspecs.
+
+--------------------------------------------------------------------------------
+11/30/12
+
+Renamed specialactivation_t to ev_instance_t, mainly because the previous name
+was too damn long, and also I like the terminology "instance" much better for
+describing the combination of data that is used to drive the action.
+
+Did some significant backtracking on implementation of generalized specials, 
+since they felt like they were turning into a mess and were possibly going to
+create compatibility issues that at first seemed insurmountable.
+
+--------------------------------------------------------------------------------
+11/29/12
+
+Added more line actions and refactored the way that ev_action_t works; common
+properties amongst actions are now implemented in the ev_actiontype_t, and each
+action of that type references that actiontype record.
+
+Since common flags are now contained in the action type, but flags may also be
+added by the action itself, a new function EV_CompositeActionFlags has been
+defined that should always be used to check the flags of an action. It will OR
+the action's flags together with those of its action type and return the 
+combined result.
+
+Started work on action hashing and lookup, and activation logic, including
+extensive code to handle determination of whether or not a given linedef 
+supports the special activation (SPAC) mode.
+
+--------------------------------------------------------------------------------
+11/27/12
+
+Due to spending another weekend without an Internet connection, I have pushed
+back plans for another release and instead, I have begun laying the foundations
+of Eternity's new linedef special system. Under this system, line special 
+numbers will be fully de-wed from the effects they have; instead, those will be
+determined through hash lookups against binding tables that associate line
+specials with actions according to the gamemode and map format in use. This will
+eliminate numerous special cases, hackish load-time remapping functions, and 
+some duplicated code.
+
+It will also, more importantly, open the door to UDMF implementation, and will
+expedite completion and accuracy checking during the remaining implementation 
+work for Heretic, Hexen, and Strife.
+
+The new linedef special system lives in a new module, ev_specials.cpp, as EV_
+is the original namespace for "event" functions, and is currently underpopulated
+as compared to the vast P_ namespace to which it is closely related.
+
+--------------------------------------------------------------------------------
+11/25/12
+
+printz pointed out and helped me figure out a compatibility problem with line
+type 40, the broken "raise ceiling, lower floor" type from vanilla DOOM. The
+changes I made earlier to change zero tag checks to use a function had left it
+behaving differently than it should have depending on the demo version and the
+user's compatibility settings.
+
+--------------------------------------------------------------------------------
 11/24/12
 
 CSG discovered a few days ago that a bit of code I added to the texture system
