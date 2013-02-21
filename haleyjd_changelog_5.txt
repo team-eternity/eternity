@@ -2,6 +2,428 @@
 Changes since Eternity Engine v3.40.30
 ================================================================================
 --------------------------------------------------------------------------------
+02/20/13
+
+The engine has been modified so that 3D object clipping will always be used on
+maps that have active linked portal groups, since linked portals become totally
+non-functional without it. This will save projects from having to use OPTIONS to
+force the value of comp_overunder, as Vapordemo already did.
+
+I am working on updating the changelog in preparation for Gungnir release.
+
+--------------------------------------------------------------------------------
+02/19/13
+
+Finally implemented tagwait() in the ACS interpreter, after noticing that ZDoom
+had a much more streamlined implementation of it than the one Raven used, which
+required all thinkers to be modified to notify the ACS interpreter that they 
+were stopping.
+
+Instead, ZDoom just has tag-waiting scripts scan the sector tag hash for active
+floors or ceilings. If any are found, the script keeps waiting, and otherwise it
+resumes running. So simple. I should have thought of it myself :P
+
+Probably that would have been too expensive in vanilla, because it didn't hash
+sector tags - it would have had to scan the entire sectors array. Even still,
+if enough sectors are tagged, or there are an unusual number of collisions in 
+the tag hash table, you might could see a script chewing CPU when it should be
+considered idle. I'm really not too worried though.
+
+--------------------------------------------------------------------------------
+02/18/13
+
+Converted most of the functions in p_plats into methods of the PlatThinker 
+class, some static, others instance. Also moved the plat_e enumeration, whose
+members were far too generically named to be global, into the class.
+
+Added EV_DoParamPlat and implemented the various parameterized plat types from
+Hexen:
+
+* Plat_PerpetualRaise(tag, speed, delay)      : Hexen 60 / ExtraData 410
+* Plat_Stop(tag)                              : Hexen 61 / ExtraData 411
+* Plat_DownWaitUpStay(tag, speed, delay)      : Hexen 62 / ExtraData 412
+* Plat_DownByValue(tag, speed, delay, height) : Hexen 63 / ExtraData 413
+* Plat_UpWaitDownStay(tag, speed, delay)      : Hexen 64 / ExtraData 414
+* Plat_UpByValue(tag, speed, delay, height)   : Hexen 65 / ExtraData 415
+
+Note that Up-Wait-Down-Stay plats are entirely new to Eternity, and specials 
+64/65 (414/415 in ExtraData) are the only current way to use them. Eventually
+non-parameterized versions will be available for Strife, however, as it too
+implemented this type of plat.
+
+--------------------------------------------------------------------------------
+02/17/13
+
+Exercising the new freedom offered by the ev_specials / ev_static system, I have
+effortlessly added support for Hexen's parameterized texture scrolling specials:
+
+* Scroll_Texture_Left(speed)  : Hexen 100 / ExtraData 406
+* Scroll_Texture_Right(speed) : Hexen 101 / ExtraData 407
+* Scroll_Texture_Up(speed)    : Hexen 102 / ExtraData 408
+* Scroll_Texture_Down(speed)  : Hexen 103 / ExtraData 409
+
+--------------------------------------------------------------------------------
+02/16/13 (2)
+
+ev_specials is now completely integrated with the game engine; all runtime
+linedef special activation takes place through the new system. Initial testing
+is positive, with no issues found so far.
+
+All old dead code from the previous mess of 3 separate line systems has been
+removed, including the sprawling switch statements in the P_Cross/Use/Shoot
+SpecialLine functions, a vast majority of the code in p_genlin which was new 
+over what existed in BOOM, and the hatefully ugly P_ConvertHexenLineSpec 
+function and the code to deal with linedefs in P_ConvertHereticSpecials.
+
+I immediately turned to knock off a TODO placed during ev_specials development,
+which was elimination of the genDoorThing global variable used to support
+reactivation of generalized doors. This was previously necessary due to 
+EV_DoGenDoor being called through a function pointer, meaning it had a fixed
+prototype that had to match the rest of the EV_DoGen* functions.
+
+Now that the generalized mess from BOOM is gone completely, that was no longer
+a factor. EV_DoGenDoor and EV_DoGenLocked both now accept a second Mobj *
+parameter. This is populated into the doordata_t::thing field, which is also
+used more directly for parameterized door types.
+
+Ten total files were modified in order to complete the full integration.
+
+Afterward, I fixed a couple of issues identified while testing Heretic's line
+specials:
+
+* Heretic still suffered the same intermission screen wipe regression that DOOM
+  had post-Mjolnir with extinction of the screen caching regime. Fixed again by
+  removing the call to draw the background from the HI_loadData function.
+  
+* Heretic's menu still had an End Game item, which is un-vanilla. Removed it to
+  match changes made earlier for DOOM and DOOM II.
+
+--------------------------------------------------------------------------------
+02/16/13 (1)
+
+Preliminary changes are being made en masse in preparation for ev_specials
+runtime special integration:
+
+* Elimination of void in parameter lists, as it's no longer required in C++.
+
+* C++-ification of some code segments in p_plats, p_lights.
+
+* Early return from all EV_ binding resolution functions when invoked for 
+  special 0, which will happen for the vast majority of linedefs that do not
+  have specials. 0 is never a valid bound line special and so it doesn't need
+  the overhead (however minor) of a hash lookup.
+  
+* Minor code reformatting and comment changes in about a dozen modules.
+
+* Reformatted the PTR_NoWayTraverse function, so that it is readable by mere
+  mortals, and not just by post-singularity transhumans who converse with the 
+  Mother on our behalf, in the language of the machines.
+  
+* P_SpawnSpecials no longer needs a "mapformat" parameter, as it is accessed
+  through the global LevelInfo structure as LevelInfo.mapFormat.
+
+--------------------------------------------------------------------------------
+02/15/13
+
+The p_linespec command is now the first code to integrate with the ev_specials
+code for runtime special activation. Initial tests have all been successful,
+mainly consisting of me running around BOOMEDIT.WAD causing earthquakes from
+my current location by invoking Radius_Quake :P
+
+--------------------------------------------------------------------------------
+02/09/13
+
+Gez pointed out several discrepancies in behavior of linetypes in Heretic that,
+while on the surface look the same as they were in DOOM, have hard-coded changes
+to speed or action constants that had escaped my notice. These have been
+implemented correctly in ZDoom from the get-go but are new to Eternity:
+
+* Types 7 and 8 (build stairs up, 8) were modified to move at FLOORSPEED, to
+  match the new faster 106/107 16-size stair types. These moved significantly
+  slower than this in DOOM.
+  
+* Types 10 and 88, Plat Down-Wait-Up-Stay, do not allow monsters, while in DOOM 
+  they did. For type 10 in particular that was bad, as it's a W1 type. Not good
+  to let monsters use up the one and only activation of most linedefs...
+  
+* Types 36, 70, 71, and 98 (various Lower Floor Turbo types) do not behave the
+  same as DOOM's - when instantiated, these actions will always add 8 to their
+  target floorheight, whereas DOOM only added the 8 conditionally (and on a 
+  condition which, to me at least, makes very little sense indeed).
+  
+  I almost wonder if this isn't something that changed in DOOM itself between
+  versions at some point. It has the look and feel of something that somebody
+  might have decided to fuck over at some point between 1.2 and 1.666...
+  
+* Type 49 was changed outright from Ceiling Crush and Raise in DOOM, to 
+  Ceiling Lower and Crush. I have no explanation for this one at all.
+  
+This should significantly improve EE's Heretic compatibility as far as line 
+specials go.
+
+--------------------------------------------------------------------------------
+02/08/13
+
+More ev_specials work:
+
+* Renamed P_ClearSwitchOnFail to EV_ClearSwitchOnFail
+
+* Added documentation for EV_CompositeActionFlags
+
+* All switch type preambles (DOOM-style, BOOM gen, and parameterized) should
+  invoke the EV_Check3DMidTexSwitch function, so that all switches support 
+  height range checking when the linedef is flagged as a 3DMidTex line.
+
+* Implemented almost-forgotton check against ev_action_t::minversion in
+  EV_ActivateSpecial, so that specials only exist within proper demo versions.
+
+--------------------------------------------------------------------------------
+02/06/13
+
+All static inits are now using the ev_specials binding system.
+
+In order to simplify various ugly things in the new special system and within
+other pre-existing code, I have converted line_t::special from short to int.
+
+ExtraData's line special for name function is now using ev_specials to do its
+lookup.
+
+Growing frustrated with the still growing size of ev_specials, I decided now
+was the best time to go ahead and break it up into several modules:
+
+* ev_actions.cpp  : Contains action function implementations.
+* ev_bindings.cpp : Contains ev_action_t structs and ev_binding_t arrays.
+* ev_static.cpp   : Contains all code related to static init line specials.
+* ev_macros.h     : Contains common macro definitions.
+
+ev_specials retains all the core special resolution and activation semantics.
+
+--------------------------------------------------------------------------------
+02/05/13
+
+Applied fixes for the rest of the hundred or so static analyzer warnings that
+printz sent.
+
+--------------------------------------------------------------------------------
+02/04/13
+
+printz sent me a new list of static analyzer warnings. I eliminated a bad memcpy
+hanging around in E_CopyThing in EDF which appears to have somehow survived the
+merge of edf3-branch inappropriately.
+
+Removed the handling of Heretic line type 99 from the soon-to-be-exterminated
+P_ConvertHereticSpecials, since that type is now handled with static init
+bindings.
+
+--------------------------------------------------------------------------------
+02/03/13
+
+While considering how to begin integration of static inits into the full engine,
+I realized I'll definitely need bidirectional hashing of static inits to 
+specials and specials to static inits, as there are some places where I already
+have the special but need the init it corresponds to, and then places where I
+know the static I want, but need to look for lines with the special bound to it.
+
+To accomplish that, I just added a second set of hash links to ev_static_t and
+now build inverse hashes.
+
+Scrollers are the first system to feel the power of the new binding system.
+As part of the FIXME/TODO outstanding against the overbloated p_spec module, I
+first split all their logic and data structures out into a new module, p_scroll.
+
+Added a missing cvar binding for map_secret_after, which fraggle forgot in SMMU.
+As a result, I had to update the blame counter in #noteternityenginerelated :P
+
+Additional work later on ev_specials static init integration:
+
+* Friction converted
+
+* ExtraData linedef special converted
+
+* Split out BOOM push, pull, wind, and current code out of p_spec into its own
+  new module, p_pushers. Converted all these types to use the ev_specials static
+  init system.
+  
+* Moved spawning of BOOM-style lines for Heretic-style current and wind effects
+  out of P_SpawnSpecials and into the p_pushers module. Converted to use
+  ev_specials.
+
+--------------------------------------------------------------------------------
+01/29/13
+
+Significant work on ev_specials:
+
+* Added a NullActionType and NullAction which can be used to hide "inherited"
+  bindings in Heretic and (eventually) Strife, which after doing their own
+  hash lookups, defer to DOOM's bindings, since the majority are still the same
+  and there is no point to having 3x the storage allocated for those bindings
+  when lookups are so blazing fast (integer hash keys leave very little to be
+  desired). The first use of this is to hide BOOM's linedef type 99 in Heretic,
+  since in Heretic line type 99 is bound to EV_STATIC_SCROLL_LINE_RIGHT, which
+  is a static init function. That means it must have no effect at runtime.
+  
+* Added pre- and post-activation callbacks for parameterized specials and
+  defined the ParamActionType to use them. Added instantiations of all of the
+  ev_action_t structs for them too.
+
+* Added action functions for all of Heretic's unique specials, including the
+  3x speed blazing door types and 16-size steps that build at FLOORSPEED.
+  
+* Bound the new parameterized line actions to specials for DOOM and Hexen, and
+  created a bindings array for Heretic's unique actions.
+  
+* Added Hexen static init bindings and lookup functions.
+
+Found time to do some other work on top of all that, too:
+
+* Removed ability to override map translation from EMAPINFO and consolidated
+  the level type and map format information into the GameModeInfo and LevelInfo
+  structures. This is needed for ev_specials.
+  
+* Added an experimental "armor_byclass" setting which overrides the behavior of
+  the BOOM HUD with respect to armor. When you have blue armor, blue is used if
+  your armor is better than OK, and otherwise green is used. This is as opposed
+  to the color changing from blue to green based on whether you have more than
+  100 armor, which is visually confusing and leads to green armor being picked
+  up even though you still have, for example, 75 blue armor, which is of far
+  superior ability to absorb damage.
+  
+  Unfortunately this doesn't currently affect the same behavior on the status
+  bar, because the implementation of that check is buried deep inside st_lib
+  where the code no longer has access to the player's armorclass. Getting that
+  information down into that module will take some additional work and I can't
+  be bothered quite yet.
+
+--------------------------------------------------------------------------------
+01/23/13
+
+Worked on the core ev_specials logic and made refinements to the coding of the
+action functions as well:
+
+* Added an INIT_STRUCT macro to absorb the constant declaration/memset pattern
+  which emerged (since it is not possible to rely on "short initialization" of
+  structs that are local variables in C/C++ - unlike globals, they do NOT get
+  their unspecified structure fields filled out with zeroes, and a lot of 
+  programmers do not know this - I didn't even know it until a few months ago 
+  myself!).
+  
+* Renamed some statics to conform with EE style.
+
+* Eliminated idea of having one EV_ function per spac type, as that has turned
+  out to be totally unnecessary as the pre-amble functions and EV_checkSpac
+  take care of everything. Instead, there is now simply one function,
+  EV_ActivateSpecialLineWithSpac.
+  
+* Added an EV_PARAMLINESPEC flag to distinguish parameterized specials from 
+  ordinary ones, since these need the instance tag field filled out with the
+  same value that is in args[0] before invocation of E_ActivateSpecialLine.
+
+--------------------------------------------------------------------------------
+01/22/13
+
+All parameterized line types have now been integrated, which means that all
+existing linedef specials in Eternity are now executable through the ev_specials
+system. What remains now is to finish the core logic for lookup and activation,
+and make a sweep for any blatant errors or omissions in the system.
+
+--------------------------------------------------------------------------------
+01/08/13
+
+Parameterized floor types have been integrated into the new special system, but
+not without some casualties to backward compatibility, which I had anticipated
+earlier and already warned the relevant people about - they assured me that they
+had not made use of the types which had to change due to their original
+implementations not being strictly Hexen compatible.
+
+--------------------------------------------------------------------------------
+01/03/13
+
+While folding in parameterized specials, I realized that not having a clean
+separation between them and the generalized types for doors would cause serious
+compatibility issues regarding zero tags. I was about ready to give up on the 
+whole system when I came up with a workaround that allows the instance to store
+either a generalized activation type or a Hexen-style SPAC, and recoded the
+EV_DoParamDoor routine to respect one or the other of these.
+
+--------------------------------------------------------------------------------
+12/27/12
+
+Returned to work on the new linedef special system by beginning the process of
+folding in the parameterized Hexen-style specials from p_genlin that are 
+available through ExtraData and within the Hexen map format and ACS.
+
+To reduce processing overhead in P_MobjThinker, and because so very few objects
+ever use the alphavelocity feature, I have split that logic off into its own
+thinker type, MobjFadeThinker, which can attach itself to an Mobj in order to
+fade its alpha up or down.
+
+--------------------------------------------------------------------------------
+12/24/12
+
+Streamlined multiple facets of translucency handling within the renderer:
+
+* vissprite_t's translucency field is now compressed to a short int, to save on
+  cache space. The normal range of values is 0 to 65536, but objects with 0
+  translucency do not generate vissprites, so it is possible to subtract one
+  and very neatly fit the result into an unsigned short.
+  
+* "BOOM-style" translucency is no longer supported for particles, as there is
+  simply no point to having this code path in there causing cache misses and
+  looking hideous if activated.
+  
+* Particles with a 0 translucency level should not be drawn.
+
+
+Continuing on this train of thought, I made some other cache friendly changes:
+
+* Allocation and access of the clipping arrays in visplane_t could be 
+  drastically streamlined by allocating both the top and bottom as one solid
+  array with the padding indexes integrated into the amount allocated. This
+  should reduce heap fragmentation and slightly increase cache performance.
+  Plus, it saves 16 bytes from the visplane_t structure itself.
+  
+* Three bytes were trimmed from the cache-critical drawseg_t structure by 
+  changing the effectively boolean silhouette structure member from a full int
+  to a byte. The compiler probably adds that much back in padding, however, so
+  this change is unlikely to affect anything unless packing pragmas are added
+  to the struct (and not having a good profiler, I have no way to test whether
+  the resulting unaligned access penalties would be better or worse than any
+  potential cache misses).
+
+--------------------------------------------------------------------------------
+12/23/12
+
+Resuming work on EE after my recent period of mourning, I've turned my attention
+to several minor issues for the time being:
+
+* P_RadiusAttack has been modified to support Hexen features including the 
+  ability to have separate damage and radius, and to have explosions which do 
+  not damage the originator, In addition, support for z-clipped explosions has
+  been added, and a new flag, MF4_NORADIUSHACK, was defined to better support
+  MBF compatibility with Cyberdemons versus bouncing grenades - the new flag
+  can be added to an object to overcome the effects of this hack, which applies
+  by default.
+  
+* Finished the A_DetonateEx pointer added earlier and made it mostly compatible
+  with ZDoom's A_Explode extensions. It can take advantage of all of the above
+  new features.
+  
+* Found and fixed a major bug in libConfuse (most likely due to some of my own
+  recent modifications, and not an original problem in the library) whereby
+  cfg->title strings were getting copied between sections without strdup being
+  called. So, when these strings got released later, they could be freed
+  multiple times, causing heap corruption or access violations.
+
+--------------------------------------------------------------------------------
+12/15/12
+
+This entry is in memory of my cat, Nikki Fritz, who died on this date after 20
+very happy years of life. She will be missed terribly. I loved her as I would my
+own child and I feel very lost without her. I'd give anything to have her back,
+and I can only hope that, if there is some kind of afterlife, she will wait for
+me there.
+
+--------------------------------------------------------------------------------
 12/13/12
 
 Added DLListItem hash links to ev_binding_t, and created the ev_static_t struct
