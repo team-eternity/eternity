@@ -1130,7 +1130,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
    subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
-   if(!comp[comp_overunder])
+   if(P_Use3DClipping())
       return P_CheckPosition3D(thing, x, y);
    
    clip.thing = thing;
@@ -1308,7 +1308,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
    // [RH] If the thing is standing on something, use its current z as 
    // the floorz. This is so that it does not walk off of things onto a 
    // drop off.
-   if(!comp[comp_overunder] && thing->intflags & MIF_ONMOBJ)
+   if(P_Use3DClipping() && thing->intflags & MIF_ONMOBJ)
       floorz = thing->z > clip.floorz ? thing->z : clip.floorz;
 
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
@@ -1398,7 +1398,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    // haleyjd: OVER_UNDER
-   if(!comp[comp_overunder])
+   if(P_Use3DClipping())
    {
       oldz = thing->z;
 
@@ -1481,7 +1481,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          // too big a step up
          if(clip.floorz - thing->z > 24*FRACUNIT)
             return ret;
-         else if(!comp[comp_overunder] && thing->z < clip.floorz)
+         else if(P_Use3DClipping() && thing->z < clip.floorz)
          { 
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
@@ -1822,6 +1822,7 @@ static void P_HitSlideLine(line_t *ld)
          P_AproxDistance(tmxmove, tmymove) > 4*FRACUNIT &&
          variable_friction &&  // killough 8/28/98: calc friction on demand
          slidemo->z <= slidemo->floorz &&
+         !(slidemo->flags4 & MF4_FLY) && // haleyjd: not when just flying
          P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
    }
    else
@@ -1949,7 +1950,7 @@ static bool PTR_SlideTraverse(intercept_t *in)
    
    if(clip.openbottom - slidemo->z > 24*FRACUNIT )
       goto isblocking;  // too big a step up
-   else if(!comp[comp_overunder] &&
+   else if(P_Use3DClipping() &&
            slidemo->z < clip.openbottom) // haleyjd: OVER_UNDER
    { 
       // [RH] Check to make sure there's nothing in the way for the step up
@@ -2383,7 +2384,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
       return P_ChangeSector(sector, crunch);
 
    // haleyjd: call down to P_ChangeSector3D instead.
-   if(!comp[comp_overunder])
+   if(P_Use3DClipping())
       return P_ChangeSector3D(sector, crunch, amt, floorOrCeil);
    
    nofit = 0;

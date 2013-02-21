@@ -612,7 +612,7 @@ void P_XYMovement(Mobj* mo)
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
-      (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
+      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
    // killough 8/11/98: add bouncers
@@ -1052,7 +1052,7 @@ void P_NightmareRespawn(Mobj* mobj)
    if(demo_version >= 331)
       mobj->flags |= MF_SOLID;
 
-   if(!comp[comp_overunder]) // haleyjd: OVER_UNDER
+   if(P_Use3DClipping()) // haleyjd: OVER_UNDER
    {
       fixed_t sheight = mobj->height;
 
@@ -1224,7 +1224,7 @@ void Mobj::Think()
          return;       // mobj was removed
    }
 
-   if(comp[comp_overunder])
+   if(!P_Use3DClipping())
       clip.BlockingMobj = NULL;
 
    lz = z;
@@ -1240,8 +1240,7 @@ void Mobj::Think()
    // haleyjd: OVER_UNDER: major changes
    if(momz || clip.BlockingMobj || lz != floorz)
    {
-      if(!comp[comp_overunder]  &&
-         ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
+      if(P_Use3DClipping() && ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
       {
          Mobj *onmo;
 

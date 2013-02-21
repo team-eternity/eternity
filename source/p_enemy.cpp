@@ -194,7 +194,7 @@ bool P_CheckMeleeRange(Mobj *actor)
    Mobj *pl = actor->target;
    
    // haleyjd 02/15/02: revision of joel's fix for z height check
-   if(pl && !comp[comp_overunder])
+   if(pl && P_Use3DClipping())
    {
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
@@ -426,7 +426,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // haleyjd: OVER_UNDER:
    // [RH] Instead of yanking non-floating monsters to the ground,
    // let gravity drop them down, unless they're moving down a step.
-   if(!comp[comp_overunder])
+   if(P_Use3DClipping())
    {
       if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
@@ -507,7 +507,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
          // haleyjd: OVER_UNDER:
          // [RH] Check to make sure there's nothing in the way of the float
-         if(!comp[comp_overunder])
+         if(P_Use3DClipping())
          {
             if(P_TestMobjZ(actor))
             {
@@ -579,7 +579,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
-   if(comp[comp_overunder])
+   if(!P_Use3DClipping())
    {
       if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
@@ -852,7 +852,7 @@ void P_NewChaseDir(Mobj *actor)
       if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         (comp[comp_overunder] || 
+         (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
       {

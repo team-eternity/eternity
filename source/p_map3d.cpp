@@ -57,6 +57,7 @@
 #include "p_mobjcol.h"
 #include "p_inter.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -64,6 +65,17 @@
 
 // I HATE GLOBALS!!!
 extern fixed_t   FloatBobOffsets[64];
+
+//
+// P_Use3DClipping
+//
+// haleyjd 02/20/13: Whether we want to use 3D clipping or not is more
+// complicated than just checking comp[comp_overunder] now.
+//
+bool P_Use3DClipping()
+{
+   return (!comp[comp_overunder] || useportalgroups);
+}
 
 //
 // P_ZMovementTest

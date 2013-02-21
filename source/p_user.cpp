@@ -40,6 +40,7 @@
 #include "hu_stuff.h"
 #include "p_chase.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -308,7 +309,7 @@ void P_MovePlayer(player_t* player)
    // 06/05/12: flying players
    onground = 
       mo->z <= mo->floorz ||
-      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ) ||
+      (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
       (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
@@ -394,7 +395,7 @@ void P_DeathThink(player_t *player)
    else
    {
       onground = player->mo->z <= player->mo->floorz ||
-                    (!comp[comp_overunder] &&
+                    (P_Use3DClipping() &&
                      player->mo->intflags & MIF_ONMOBJ);
    }
    
