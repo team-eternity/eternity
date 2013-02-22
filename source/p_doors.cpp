@@ -43,6 +43,7 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "t_plane.h"
 
 //
 // P_DoorSequence
@@ -159,7 +160,7 @@ void VerticalDoorThinker::Think()
 
    case plat_down:
       // Door is moving down
-      res = T_MovePlane(sector, speed, sector->floorheight, -1, 1, direction);
+      res = T_MoveCeilingDown(sector, speed, sector->floorheight, -1);
 
       // killough 10/98: implement gradual lighting effects
       if(lighttag && topheight - sector->floorheight)
@@ -220,7 +221,7 @@ void VerticalDoorThinker::Think()
 
    case plat_up:
       // Door is moving up
-      res = T_MovePlane(sector, speed, topheight, -1, 1, direction);
+      res = T_MoveCeilingUp(sector, speed, topheight, -1);
 
       // killough 10/98: implement gradual lighting effects
       if(lighttag && topheight - sector->floorheight)

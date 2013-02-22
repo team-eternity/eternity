@@ -5271,6 +5271,18 @@
 					</File>
 				</Filter>
 			</Filter>
+			<Filter
+				Name="T_"
+				>
+				<File
+					RelativePath="..\source\t_plane.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\t_plane.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

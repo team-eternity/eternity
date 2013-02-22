@@ -39,6 +39,7 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "t_plane.h"
 
 // New limit-free plat structure -- killough
 
@@ -88,7 +89,7 @@ void PlatThinker::Think()
    switch(status)
    {
    case up: // plat moving up
-      res = T_MovePlane(sector, speed, high, crush, 0, 1);
+      res = T_MoveFloorUp(sector, speed, high, crush);
                                         
       // if a pure raise type, make the plat moving sound
       // haleyjd: now handled through sound sequences
@@ -140,7 +141,7 @@ void PlatThinker::Think()
       break;
         
    case down: // plat moving down
-      res = T_MovePlane(sector, speed, low, -1, 0, -1);
+      res = T_MoveFloorDown(sector, speed, low, -1);
 
       // handle reaching end of down stroke
       // SoM: attached sectors means the plat can crush when heading down too

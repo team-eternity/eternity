@@ -37,6 +37,7 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
+#include "t_plane.h"
 
 // the list of ceilings moving currently, including crushers
 ceilinglist_t *activeceilings;
@@ -121,7 +122,7 @@ void CeilingThinker::Think()
 
    case plat_up:
       // Ceiling is moving up
-      res = T_MovePlane(sector, speed, topheight, -1, 1, direction);
+      res = T_MoveCeilingUp(sector, speed, topheight, -1);
 
       // if not a silent crusher, make moving sound
       // haleyjd: now handled through sound sequences
@@ -167,7 +168,7 @@ void CeilingThinker::Think()
   
    case plat_down:
       // Ceiling moving down
-      res = T_MovePlane(sector, speed, bottomheight, crush, 1, direction);
+      res = T_MoveCeilingDown(sector, speed, bottomheight, crush);
 
       // if not silent crusher type make moving sound
       // haleyjd: now handled through sound sequences

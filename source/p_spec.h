@@ -579,14 +579,6 @@ typedef enum
    bottom      
 } bwhere_e;
 
-// crush check returns
-typedef enum
-{
-   ok,
-   crushed,
-   pastdest
-} result_e;
-
 //=============================================================================
 //
 // linedef and sector special data types
@@ -1239,17 +1231,6 @@ bool P_IsSecret(sector_t *sec);
 bool P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
-
-////////////////////////////////////////////////////////////////
-//
-// Linedef and sector special action function prototypes
-//
-////////////////////////////////////////////////////////////////
-
-// p_floor
-
-result_e T_MovePlane(sector_t *sector, fixed_t speed, fixed_t dest,
-                     int crush, int floorOrCeiling, int direction);
 
 ////////////////////////////////////////////////////////////////
 //
