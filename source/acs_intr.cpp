@@ -546,25 +546,21 @@ void ACSThinker::Think()
    int32_t temp;
    ACSFunc *func;
 
-   // should the script terminate?
-   if(this->sreg == ACS_STATE_TERMINATE)
-      ACS_stopScript(this);
-
-   // is the script running?
-   if(this->sreg != ACS_STATE_RUNNING)
+   // Check the script state.
+   switch(sreg)
    {
-      switch(this->sreg)
-      {
-      case ACS_STATE_WAITTAG:
-         if(ACS_checkTag(this))
-         {
-            this->sreg = ACS_STATE_RUNNING;
-            break;
-         }
-         // fall-through
-      default:
+   case ACS_STATE_WAITTAG:
+      if(!ACS_checkTag(this))
          return;
-      }
+
+      sreg = ACS_STATE_RUNNING;
+   case ACS_STATE_RUNNING:
+      break;
+
+   case ACS_STATE_TERMINATE:
+      ACS_stopScript(this);
+   default:
+      return;
    }
 
    // check for delays
