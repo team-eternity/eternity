@@ -13,6 +13,7 @@
 		4F69650C16C3B1EB00FF2028 /* ev_static.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F69650916C3B1EB00FF2028 /* ev_static.cpp */; };
 		4F8B42E916C1101000765638 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8B42E816C1101000765638 /* zutil.c */; };
 		4F98955016C10FB1005D78C0 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F98954F16C10FB1005D78C0 /* trees.c */; };
+		4F9A249416D95878002BE852 /* t_plane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9A249216D95878002BE852 /* t_plane.cpp */; };
 		4F9F72D316BFB73200C405AE /* p_pushers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D116BFB73200C405AE /* p_pushers.cpp */; };
 		4F9F72D416BFB73200C405AE /* p_scroll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D216BFB73200C405AE /* p_scroll.cpp */; };
 		4FD651AE16B802BE00F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
@@ -304,6 +305,8 @@
 		4F69650916C3B1EB00FF2028 /* ev_static.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_static.cpp; path = ../../ev_static.cpp; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../../../zlib/zutil.c; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../../../zlib/trees.c; sourceTree = "<group>"; };
+		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../../t_plane.cpp; sourceTree = "<group>"; };
+		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../../t_plane.h; sourceTree = "<group>"; };
 		4F9F72CF16BFB70A00C405AE /* p_pushers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_pushers.h; path = ../../p_pushers.h; sourceTree = "<group>"; };
 		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../../p_scroll.h; sourceTree = "<group>"; };
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../../p_pushers.cpp; sourceTree = "<group>"; };
@@ -861,6 +864,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		4F9A249116D9585E002BE852 /* T_ */ = {
+			isa = PBXGroup;
+			children = (
+				4F9A249216D95878002BE852 /* t_plane.cpp */,
+				4F9A249316D95878002BE852 /* t_plane.h */,
+			);
+			name = T_;
+			sourceTree = "<group>";
+		};
 		4FD651AF16B8032900F9BE74 /* Installed */ = {
 			isa = PBXGroup;
 			children = (
@@ -1037,6 +1049,7 @@
 				FACACB5F1652F2B50091AF2E /* S_ */,
 				FACACB601652F3070091AF2E /* SDL */,
 				FACACB661652F5650091AF2E /* ST_ */,
+				4F9A249116D9585E002BE852 /* T_ */,
 				FACACB771652FCA80091AF2E /* TXT_ */,
 				FACACB681652F5B20091AF2E /* V_ */,
 				FACACB6C1652F8E00091AF2E /* W_ */,
@@ -2009,6 +2022,7 @@
 				4F69650A16C3B1EB00FF2028 /* ev_actions.cpp in Sources */,
 				4F69650B16C3B1EB00FF2028 /* ev_bindings.cpp in Sources */,
 				4F69650C16C3B1EB00FF2028 /* ev_static.cpp in Sources */,
+				4F9A249416D95878002BE852 /* t_plane.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
