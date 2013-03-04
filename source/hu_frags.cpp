@@ -59,8 +59,6 @@
 
 #define FRAGNUMX 175
 
-extern bool gamekeydown[NUMKEYS]; // g_game.c
-
 player_t *sortedplayers[MAXPLAYERS];
 
 int num_players;

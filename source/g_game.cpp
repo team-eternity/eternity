@@ -174,7 +174,6 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -669,7 +668,6 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
-   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
@@ -778,20 +776,12 @@ bool G_Responder(event_t* ev)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
-      {
          C_RunTextCmd("pause");
-      }
       else
-      {
-         if(ev->data1 < NUMKEYS)
-            gamekeydown[ev->data1] = true;         
          G_KeyResponder(ev, kac_game); // haleyjd
-      }
       return true;    // eat key down events
       
    case ev_keyup:
-      if(ev->data1 < NUMKEYS)
-         gamekeydown[ev->data1] = false;
       G_KeyResponder(ev, kac_game);   // haleyjd
       return false;   // always let key up events filter down
       

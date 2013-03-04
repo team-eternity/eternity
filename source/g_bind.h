@@ -95,6 +95,12 @@ extern int action_menu_pageup;
 extern int action_menu_pagedown;
 extern int action_menu_contents;
 
+extern int action_map_panright;
+extern int action_map_panleft;
+extern int action_map_panup;
+extern int action_map_pandown;
+extern int action_map_zoomin;
+extern int action_map_zoomout;
 extern int action_map_toggle;
 extern int action_map_gobig;
 extern int action_map_follow;

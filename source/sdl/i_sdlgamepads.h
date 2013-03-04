@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,23 +20,56 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:  
-//    Platform Defines
+//    Implementation of SDL classes for Gamepads and Joysticks
 //
 //-----------------------------------------------------------------------------
 
-#include "i_platform.h"
+#ifndef I_SDLGAMEPADS_H__
+#define I_SDLGAMEPADS_H__
 
-int ee_current_platform = EE_CURRENT_PLATFORM;
-int ee_current_compiler = EE_CURRENT_COMPILER;
+// Need Gamepad/Joystick HAL
+#include "../hal/i_gamepads.h"
 
-int ee_platform_flags[EE_PLATFORM_MAX] =
+//
+// SDLGamePadDriver
+//
+// Implements the abstract HAL gamepad/joystick interface for SDL's DirectInput
+// based gamepad support.
+//
+class SDLGamePadDriver : public HALGamePadDriver
 {
-   0,             // Windows
-   EE_PLATF_CSFS, // Linux
-   EE_PLATF_CSFS, // FreeBSD
-   0,             // MacOS X
-   0              // Unknown
+protected:
+   void buildDeviceName(int idx, qstring &out);
+
+public:
+   virtual bool initialize();
+   virtual void shutdown();
+   virtual void enumerateDevices();
 };
+
+extern SDLGamePadDriver i_sdlGamePadDriver;
+
+//
+// SDLGamePad
+//
+// Implements the abstract HAL gamepad class, for devices that are driven by
+// the SDL DirectInput driver.
+//
+class SDLGamePad : public HALGamePad
+{
+   DECLARE_RTTI_TYPE(SDLGamePad, HALGamePad)
+
+public:
+   SDLGamePad();
+
+   virtual bool select();
+   virtual void deselect();
+
+   int  sdlIndex; // SDL gamepad number
+   bool active;
+};
+
+#endif
 
 // EOF
 

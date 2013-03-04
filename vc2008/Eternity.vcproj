@@ -3815,6 +3815,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlgamepads.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\sdl\i_sdlgl2d.cpp"
 						>
 					</File>
@@ -3994,6 +3998,10 @@
 					</File>
 					<File
 						RelativePath="..\source\Win32\i_opndir.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sdl\i_sdlgamepads.h"
 						>
 					</File>
 					<File
@@ -5092,6 +5100,10 @@
 					Name="HAL Source"
 					>
 					<File
+						RelativePath="..\source\hal\i_gamepads.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\hal\i_platform.cpp"
 						>
 					</File>
@@ -5103,6 +5115,10 @@
 				<Filter
 					Name="HAL Headers"
 					>
+					<File
+						RelativePath="..\source\hal\i_gamepads.h"
+						>
+					</File>
 					<File
 						RelativePath="..\source\hal\i_picker.h"
 						>

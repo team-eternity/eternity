@@ -119,6 +119,12 @@ int action_menu_contents;
 
 // AutoMap Actions -- handled by AM_Responder
 
+int action_map_panright;
+int action_map_panleft;
+int action_map_panup;
+int action_map_pandown;
+int action_map_zoomin;
+int action_map_zoomout;
 int action_map_toggle;
 int action_map_gobig;
 int action_map_follow;
@@ -144,8 +150,7 @@ int action_console_backspace;
 enum
 {
    at_variable,
-   at_function,
-   at_conscmd,     // console command
+   at_conscmd     // console command
 };
 
 //
@@ -230,12 +235,12 @@ keyaction_t keyactions[NUMKEYACTIONS] =
 
    // Automap Actions
 
-   {"map_right",         kac_map,     at_function,     {NULL}},
-   {"map_left",          kac_map,     at_function,     {NULL}},
-   {"map_up",            kac_map,     at_function,     {NULL}},
-   {"map_down",          kac_map,     at_function,     {NULL}},
-   {"map_zoomin",        kac_map,     at_function,     {NULL}},
-   {"map_zoomout",       kac_map,     at_function,     {NULL}},
+   {"map_right",         kac_map,     at_variable,     {&action_map_panright}},
+   {"map_left",          kac_map,     at_variable,     {&action_map_panleft}},
+   {"map_up",            kac_map,     at_variable,     {&action_map_panup}},
+   {"map_down",          kac_map,     at_variable,     {&action_map_pandown}},
+   {"map_zoomin",        kac_map,     at_variable,     {&action_map_zoomin}},
+   {"map_zoomout",       kac_map,     at_variable,     {&action_map_zoomout}},
 
    {"map_toggle",        kac_map,     at_variable,     {&action_map_toggle}},
    {"map_gobig",         kac_map,     at_variable,     {&action_map_gobig}},
@@ -268,19 +273,27 @@ const int num_keyactions = sizeof(keyactions) / sizeof(*keyactions);
 static keyaction_t *cons_keyactions = NULL;
 
 //
+// Key types
+//
+enum
+{
+   KEY_HOLD,   // holdable key: has ev_keydown, ev_keyup
+   KEY_TRIGGER // trigger key: ev_keydown only
+};
+
+//
 // The actual key bindings
 //
-
-#define NUM_KEYS 256
 
 typedef struct doomkey_s
 {
    const char *name;
    bool keydown[NUMKEYACTIONCLASSES];
    keyaction_t *bindings[NUMKEYACTIONCLASSES];
+   int type;
 } doomkey_t;
 
-static doomkey_t keybindings[NUM_KEYS];
+static doomkey_t keybindings[NUMKEYS];
 
 static keyaction_t *G_KeyActionForName(const char *name);
 
@@ -373,7 +386,7 @@ void G_InitKeyBindings(void)
    keybindings['.'].name = ">";
    keybindings['`'].name = "tilde";
    
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       // fill in name if not set yet
       
@@ -393,21 +406,13 @@ void G_InitKeyBindings(void)
       memset(keybindings[i].bindings, 0, 
              NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
    }
-
-   // haleyjd 10/09/05: init callback functions for some keyactions
-   keyactions[ka_map_right].value.Handler   = AM_HandlerRight;
-   keyactions[ka_map_left].value.Handler    = AM_HandlerLeft;
-   keyactions[ka_map_up].value.Handler      = AM_HandlerUp;
-   keyactions[ka_map_down].value.Handler    = AM_HandlerDown;
-   keyactions[ka_map_zoomin].value.Handler  = AM_HandlerZoomin;
-   keyactions[ka_map_zoomout].value.Handler = AM_HandlerZoomout;
 }
 
 void G_ClearKeyStates(void)
 {
    int i, j;
 
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
       {
@@ -501,7 +506,7 @@ static int G_KeyForName(const char *name)
 {
    int i;
    
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       if(!strcasecmp(keybindings[i].name, name))
          return tolower(i);
@@ -556,7 +561,7 @@ const char *G_BoundKeys(const char *action)
 
    // FIXME: buffer overflow possible!
    
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       if(keybindings[i].bindings[ke->bclass] == ke)
       {
@@ -588,7 +593,7 @@ const char *G_FirstBoundKey(const char *action)
    
    // sequential search -ugh
    
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       if(keybindings[i].bindings[ke->bclass] == ke)
       {
@@ -611,7 +616,7 @@ bool G_KeyResponder(event_t *ev, int bclass)
    bool ret = false;
 
    // do not index out of bounds
-   if(ev->data1 >= NUM_KEYS)
+   if(ev->data1 >= NUMKEYS)
       return ret;
    
    if(ev->data1 == KEYD_RCTRL)      // ctrl
@@ -646,10 +651,6 @@ bool G_KeyResponder(event_t *ev, int bclass)
             case at_variable:
                *(keybindings[key].bindings[bclass]->value.variable) = 1;
                break;
-
-            case at_function:
-               keybindings[key].bindings[bclass]->value.Handler(ev);
-               break;
                
             case at_conscmd:
                if(!consoleactive) // haleyjd: not in console.
@@ -675,10 +676,6 @@ bool G_KeyResponder(event_t *ev, int bclass)
          {
          case at_variable:
             *(keybindings[key].bindings[bclass]->value.variable) = 0;
-            break;
-
-         case at_function:
-            keybindings[key].bindings[bclass]->value.Handler(ev);
             break;
             
          default:
@@ -742,7 +739,7 @@ bool G_BindResponder(event_t *ev)
       return false;
 
    // do not index out of bounds
-   if(ev->data1 >= NUM_KEYS)
+   if(ev->data1 >= NUMKEYS)
       return false;
    
    // got a key - close box
@@ -859,7 +856,7 @@ void G_SaveDefaults(void)
 
   // write key bindings
 
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       // haleyjd 07/03/04: support multiple binding classes
       for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
@@ -939,7 +936,7 @@ CONSOLE_COMMAND(listkeys, 0)
 {
    int i;
 
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
       C_Printf("%s\n", keybindings[i].name);
 }
 
@@ -1011,7 +1008,7 @@ CONSOLE_COMMAND(unbindall, 0)
    
    C_Printf("clearing all key bindings\n");
    
-   for(i = 0; i < NUM_KEYS; ++i)
+   for(i = 0; i < NUMKEYS; ++i)
    {
       for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
          keybindings[i].bindings[j] = NULL;
@@ -1028,7 +1025,7 @@ CONSOLE_COMMAND(bindings, 0)
 {
    int i, j;
 
-   for(i = 0; i < NUM_KEYS; i++)
+   for(i = 0; i < NUMKEYS; i++)
    {
       for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
       {

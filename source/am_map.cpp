@@ -801,14 +801,51 @@ static bool am_key_handled;
 //
 bool AM_Responder(event_t *ev)
 {
-   static int cheatstate=0;
    static int bigstate=0;
      
    // haleyjd 07/07/04: dynamic bindings
    am_key_handled = false;
    G_KeyResponder(ev, kac_map);
 
-   if(ev->type == ev_keydown && !am_key_handled)
+   // Handle panning
+   if(automapactive && !followplayer)
+   {
+      m_paninc.x = 0;
+      m_paninc.y = 0;
+
+      if(action_map_panright)
+      {
+         m_paninc.x = FTOM(F_PANINC);
+         am_key_handled = true;
+      }
+
+      if(action_map_panleft)
+      {
+         m_paninc.x = -FTOM(F_PANINC);
+         am_key_handled = true;
+      }
+
+      if(action_map_panup)
+      {
+         m_paninc.y = FTOM(F_PANINC);
+         am_key_handled = true;
+      }
+
+      if(action_map_pandown)
+      {
+         m_paninc.y = -FTOM(F_PANINC);
+         am_key_handled = true;
+      }
+   }
+
+   // Handle zoom
+   if(automapactive)
+   {
+      mtof_zoommul = 1.0;
+      ftom_zoommul = 1.0;
+   }
+
+   if(ev->type == ev_keydown)
    {
       if(!automapactive)
       {
@@ -821,14 +858,13 @@ bool AM_Responder(event_t *ev)
       }
       else
       {
-         am_key_handled = true;
-
          if(action_map_toggle)
          {
             action_map_toggle = bigstate = 0;
             AM_Stop();
+            am_key_handled = true;
          }
-         else if(action_map_gobig)
+         if(action_map_gobig)
          {
             bigstate = !bigstate;
             if(bigstate)
@@ -839,8 +875,9 @@ bool AM_Responder(event_t *ev)
             else
                AM_restoreScaleAndLoc();
             action_map_gobig = 0;
+            am_key_handled = true;
          }
-         else if(action_map_follow)
+         if(action_map_follow)
          {
             followplayer = !followplayer;
             f_oldloc.x = D_MAXINT;
@@ -848,33 +885,32 @@ bool AM_Responder(event_t *ev)
             doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON" 
                                                       : "AMSTR_FOLLOWOFF"));
             action_map_follow = 0;
+            am_key_handled = true;
          }
-         else if(action_map_grid)
+         if(action_map_grid)
          {
             automap_grid = !automap_grid;      // killough 2/28/98
             // Ty 03/27/98 - *not* externalized
             doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
                                                       : "AMSTR_GRIDOFF"));
             action_map_grid = 0;
+            am_key_handled = true;
          }
-         else if(action_map_mark)
+         if(action_map_mark)
          {
             // Ty 03/27/98 - *not* externalized     
             // sf: fixed this (buffer at start, presumably from an old sprintf
             doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
             AM_addMark();
             action_map_mark = 0;
+            am_key_handled = true;
          }
-         else if(action_map_clear)
+         if(action_map_clear)
          {
             AM_clearMarks();  // Ty 03/27/98 - *not* externalized
             doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
             action_map_clear = 0;
-         }
-         else
-         {
-            cheatstate = 0;
-            am_key_handled = false;
+            am_key_handled = true;
          }
       }
    }
@@ -882,81 +918,6 @@ bool AM_Responder(event_t *ev)
    return am_key_handled;
 }
 
-//
-// action_handler_right
-//
-// Registered as the handler for the "map_right" key binding.
-//
-void AM_HandlerRight(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.x = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.x = 0;
-   }
-}
-
-//
-// action_handler_left
-//
-// Registered as the handler for the "map_left" key binding.
-//
-void AM_HandlerLeft(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.x = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.x = 0;
-   }
-}
-
-//
-// action_handler_up
-//
-// Registered as the handler for the "map_up" key binding.
-//
-void AM_HandlerUp(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.y = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.y = 0;
-   }
-}
-
-//
-// action_handler_down
-//
-// Registered as the handler for the "map_down" key binding.
-//
-void AM_HandlerDown(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.y = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.y = 0;
-   }
-}
 
 //
 // action_handler_zoomout

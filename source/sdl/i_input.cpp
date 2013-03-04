@@ -37,6 +37,7 @@
 #include "../doomstat.h"
 #include "../g_bind.h"
 #include "../m_argv.h"
+#include "../p_chase.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 
@@ -109,8 +110,11 @@ bool MouseShouldBeGrabbed(void)
    if(!grabmouse)
       return false;
 
-   // when menu is active or game is paused, release the mouse
-   if(menuactive || consoleactive || paused)
+   // when menu is active or game is paused, release the mouse, but:
+   // * menu and console do not pause during netgames
+   // * walkcam needs mouse when game is paused
+   if(((menuactive || consoleactive) && !netgame) || 
+      (paused && !walkcam_active))
       return false;
 
    // only grab mouse when playing levels (but not demos)
