@@ -843,6 +843,20 @@ bool AM_Responder(event_t *ev)
    {
       mtof_zoommul = 1.0;
       ftom_zoommul = 1.0;
+
+      if(action_map_zoomout)
+      {
+         mtof_zoommul = M_ZOOMOUT;
+         ftom_zoommul = M_ZOOMIN;
+         am_key_handled = true;
+      }
+
+      if(action_map_zoomin)
+      {
+         mtof_zoommul = M_ZOOMIN;
+         ftom_zoommul = M_ZOOMOUT;
+         am_key_handled = true;
+      }
    }
 
    if(ev->type == ev_keydown)
@@ -916,53 +930,6 @@ bool AM_Responder(event_t *ev)
    }
 
    return am_key_handled;
-}
-
-
-//
-// action_handler_zoomout
-//
-// Registered as the handler for the "map_zoomout" key binding.
-//
-void AM_HandlerZoomout(event_t *ev)
-{
-   if(automapactive)
-   {
-      if(ev->type == ev_keydown)
-      {
-         mtof_zoommul = M_ZOOMOUT;
-         ftom_zoommul = M_ZOOMIN;
-         am_key_handled = true;
-      }
-      else
-      {
-         mtof_zoommul = 1.0;
-         ftom_zoommul = 1.0;
-      }
-   }
-}
-
-//
-// action_handler_zoomin
-//
-// Registered as the handler for the "map_zoomin" key binding.
-//
-void AM_HandlerZoomin(event_t *ev)
-{
-   if(automapactive)
-   {
-      if(ev->type == ev_keydown)
-      {
-         mtof_zoommul = M_ZOOMIN;
-         ftom_zoommul = M_ZOOMOUT;
-         am_key_handled = true;
-      }
-      else
-      {
-         mtof_zoommul = 1.0;
-         ftom_zoommul = 1.0;
-      }
-   }
 }
 
 //
