@@ -157,7 +157,7 @@ struct menu_t
 struct menuwidget_t
 {
   void (*drawer)();
-  bool (*responder)(event_t *ev);
+  bool (*responder)(event_t *ev, int);
   void (*ticker)();   // haleyjd 05/29/06
   bool fullscreen;    // haleyjd: optimization for fullscreen widgets
   

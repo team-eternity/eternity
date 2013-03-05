@@ -303,7 +303,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
 static mndir_t *mn_currentdir;
 
 static void MN_FileDrawer();
-static bool MN_FileResponder(event_t *ev);
+static bool MN_FileResponder(event_t *ev, int action);
 
 // file selector is handled using a menu widget
 
@@ -438,14 +438,12 @@ static void MN_doExitFileWidget()
 // keybinding actions rather than key constants like in SMMU. Also
 // added sounds to give a more consistent UI feel.
 //
-static bool MN_FileResponder(event_t *ev)
+static bool MN_FileResponder(event_t *ev, int action)
 {
    unsigned char ch;
 
-   if(action_menu_up || action_menu_left)
+   if(action == ka_menu_up || action == ka_menu_left)
    {
-      action_menu_up = action_menu_left = false;
-
       if(selected_item > 0) 
       {
          selected_item--;
@@ -454,9 +452,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
   
-   if(action_menu_down || action_menu_right)
+   if(action == ka_menu_down || action == ka_menu_right)
    {
-      action_menu_down = action_menu_right = false;
       if(selected_item < (mn_currentdir->numfiles - 1)) 
       {
          selected_item++;
@@ -465,9 +462,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
    
-   if(action_menu_pageup)
+   if(action == ka_menu_pageup)
    {
-      action_menu_pageup = false;
       if(numfileboxlines)
       {
          selected_item -= numfileboxlines;
@@ -478,9 +474,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
   
-   if(action_menu_pagedown)
+   if(action == ka_menu_pagedown)
    {
-      action_menu_pagedown = false;
       if(numfileboxlines)
       {
          selected_item += numfileboxlines;
@@ -491,10 +486,9 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
    
-   if(action_menu_toggle || action_menu_previous)
+   if(action == ka_menu_toggle || action == ka_menu_previous)
    {
       // When allow_exit flag is false, call D_StartTitle
-      action_menu_toggle = action_menu_previous = false;
       if(!allow_exit)
       {
          MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
@@ -509,10 +503,8 @@ static bool MN_FileResponder(event_t *ev)
       return true;
    }
   
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
-      action_menu_confirm = false;
-      
       // set variable to new value
       if(variable_name)
       {

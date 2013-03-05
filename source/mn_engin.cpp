@@ -1354,7 +1354,7 @@ bool MN_Responder(event_t *ev)
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
-   G_KeyResponder(ev, kac_menu);
+   int action = G_KeyResponder(ev, kac_menu);
 
    // haleyjd 10/07/05
    if(ev->data1 == KEYD_RCTRL)
@@ -1375,7 +1375,7 @@ bool MN_Responder(event_t *ev)
    // are we displaying a widget?
    if(current_menuwidget)
    {
-      current_menuwidget->responder(ev);
+      current_menuwidget->responder(ev, action);
       return true;
    }
 
@@ -1449,11 +1449,8 @@ bool MN_Responder(event_t *ev)
       return true;
    }
   
-   if(action_menu_toggle)
+   if(action == ka_menu_toggle)
    {
-      // toggle menu
-      action_menu_toggle = false;
-
       // start up main menu or kill menu
       if(menuactive)
       {
@@ -1471,16 +1468,14 @@ bool MN_Responder(event_t *ev)
       return true;
    }
 
-   if(action_menu_help)
+   if(action == ka_menu_help)
    {
-      action_menu_help = false;
       C_RunTextCmd("help");
       return true;
    }
 
-   if(action_menu_setup)
+   if(action == ka_menu_setup)
    {
-      action_menu_setup = false;
       C_RunTextCmd("mn_options");
       return true;
    }
@@ -1489,10 +1484,9 @@ bool MN_Responder(event_t *ev)
    if(!menuactive)
       return false;
 
-   if(action_menu_up)
+   if(action == ka_menu_up)
    {
       bool cancelsnd = false;
-      action_menu_up = false;
       
       // skip gaps
       do
@@ -1534,10 +1528,9 @@ bool MN_Responder(event_t *ev)
       return true;  // eatkey
    }
   
-   if(action_menu_down)
+   if(action == ka_menu_down)
    {
       bool cancelsnd = false;
-      action_menu_down = false;
       
       do
       {
@@ -1574,12 +1567,10 @@ bool MN_Responder(event_t *ev)
       return true;  // eatkey
    }
    
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
       menuitem_t *menuitem = &current_menu->menuitems[current_menu->selected];
-
-      action_menu_confirm = false;
-      
+     
       switch(menuitem->type)
       {
       case it_runcmd:
@@ -1645,19 +1636,17 @@ bool MN_Responder(event_t *ev)
       return true;
    }
   
-   if(action_menu_previous)
+   if(action == ka_menu_previous)
    {
-      action_menu_previous = false;
       MN_PrevMenu();
       return true;
    }
    
    // decrease value of variable
-   if(action_menu_left)
+   if(action == ka_menu_left)
    {
       menuitem_t *menuitem;
-      action_menu_left = false;
-      
+
       // haleyjd 10/07/05: if ctrl is down, go to previous menu
       if(ctrldown)
       {
@@ -1718,10 +1707,9 @@ bool MN_Responder(event_t *ev)
    }
   
    // increase value of variable
-   if(action_menu_right)
+   if(action == ka_menu_right)
    {
       menuitem_t *menuitem;
-      action_menu_right = false;
       
       // haleyjd 10/07/05: if ctrl is down, go to next menu
       if(ctrldown)
@@ -1785,10 +1773,8 @@ bool MN_Responder(event_t *ev)
    }
 
    // haleyjd 10/07/05: page up action -- return to previous page
-   if(action_menu_pageup)
+   if(action == ka_menu_pageup)
    {
-      action_menu_pageup = false;
-
       if(current_menu->prevpage)
          MN_PageMenu(current_menu->prevpage);
       else
@@ -1798,10 +1784,8 @@ bool MN_Responder(event_t *ev)
    }
 
    // haleyjd 10/07/05: page down action -- go to next page
-   if(action_menu_pagedown)
+   if(action == ka_menu_pagedown)
    {
-      action_menu_pagedown = false;
-
       if(current_menu->nextpage)
          MN_PageMenu(current_menu->nextpage);
       else
@@ -1811,10 +1795,8 @@ bool MN_Responder(event_t *ev)
    }
 
    // haleyjd 10/15/05: table of contents widget!
-   if(action_menu_contents)
+   if(action == ka_menu_contents)
    {
-      action_menu_contents = false;
-
       if(current_menu->content_names && current_menu->content_pages)
          MN_ShowContents();
       else
@@ -2220,24 +2202,22 @@ static void MN_BoxWidgetDrawer(void)
 //
 // Handle events to a menu box widget.
 //
-static bool MN_BoxWidgetResponder(event_t *ev)
+static bool MN_BoxWidgetResponder(event_t *ev, int action)
 {
    // get a pointer to the box widget
    box_widget_t *box = (box_widget_t *)current_menuwidget;
 
    // toggle and previous dismiss the widget
-   if(action_menu_toggle || action_menu_previous)
+   if(action == ka_menu_toggle || action == ka_menu_previous)
    {
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
 
    // up/left: move selection to previous item with wrap
-   if(action_menu_up || action_menu_left)
+   if(action == ka_menu_up || action == ka_menu_left)
    {
-      action_menu_up = action_menu_left = false;
       if(--box->selection_idx < 0)
          box->selection_idx = box->maxidx;
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -2245,9 +2225,8 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    }
 
    // down/right: move selection to next item with wrap
-   if(action_menu_down || action_menu_right)
+   if(action == ka_menu_down || action == ka_menu_right)
    {
-      action_menu_down = action_menu_right = false;
       if(++box->selection_idx > box->maxidx)
          box->selection_idx = 0;
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -2255,9 +2234,8 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    }
 
    // confirm: clear widget and set menu page or run command
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
-      action_menu_confirm = false;
       MN_PopWidget();
 
       switch(box->type)

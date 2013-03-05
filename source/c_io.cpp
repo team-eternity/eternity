@@ -336,20 +336,24 @@ bool C_Responder(event_t *ev)
       return false;
 
    // haleyjd 05/29/06: dynamic console bindings
-   G_KeyResponder(ev, kac_console);
+   int action = G_KeyResponder(ev, kac_console);
    
    if(ev->data1 == KEYD_RSHIFT)
    {
-      shiftdown = (ev->type==ev_keydown);
+      shiftdown = (ev->type == ev_keydown);
       return consoleactive;   // eat if console active
    }
 
-   pgup_down = action_console_pageup;
-   if(action_console_pageup)
+   if(action == ka_console_pageup)
+   {
+      pgup_down = (ev->type == ev_keydown);
       return consoleactive;
-   pgdn_down = action_console_pagedown;
-   if(action_console_pagedown)
+   }
+   else if(action == ka_console_pagedown)
+   {
+      pgdn_down = (ev->type == ev_keydown);
       return consoleactive;
+   }
   
    // only interested in keypresses
    if(ev->type != ev_keydown)
@@ -362,13 +366,11 @@ bool C_Responder(event_t *ev)
    //
    
    // activate console?
-   if(action_console_toggle && Console.enabled)
+   if(action == ka_console_toggle && Console.enabled)
    {
       bool goingup = Console.current_target == c_height;
 
       // set console
-      action_console_toggle = false;
-
       Console.current_target = goingup ? 0 : c_height;
 
       return true;
@@ -381,29 +383,23 @@ bool C_Responder(event_t *ev)
    if(Console.current_target < Console.current_height) 
       return false;
 
+   switch(action)
+   {
    ///////////////////////////////////////
    // Console active commands
    //
    // keypresses only dealt with if console active
    //
-   
-   // tab-completion
-   if(action_console_tab)
-   {
+
+   case ka_console_tab: // tab-completion
       // set inputtext to next or previous in
       // tab-completion list depending on whether
       // shift is being held down
-      action_console_tab = false;
       inputtext = (shiftdown ? C_NextTab(inputtext) : C_PrevTab(inputtext));
       C_updateInputPoint(); // reset scrolling
       return true;
-    }
   
-   // run command
-   if(action_console_enter)
-   {
-      action_console_enter = false;
-
+   case ka_console_enter: // run command
       C_addToHistory(&inputtext); // add to history
       
       if(inputtext == "r0x0rz delux0rz")
@@ -419,18 +415,12 @@ bool C_Responder(event_t *ev)
       C_updateInputPoint();    // reset scrolling
       
       return true;
-   }
 
    ////////////////////////////////
    // Command history
    //  
-   
-   // previous command
-   
-   if(action_console_up)
-   {
-      action_console_up = false;
 
+   case ka_console_up: // previous command
       history_current =
          (history_current <= 0) ? 0 : history_current - 1;
       
@@ -440,14 +430,8 @@ bool C_Responder(event_t *ev)
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
       return true;
-   }
   
-  // next command
-  
-   if(action_console_down)
-   {
-      action_console_down = false;
-
+   case ka_console_down: // next command  
       history_current = (history_current >= history_last) 
          ? history_last : history_current + 1;
 
@@ -458,35 +442,29 @@ bool C_Responder(event_t *ev)
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
       return true;
-   }
 
    /////////////////////////////////////////
    // Normal Text Input
    //
    
-   // backspace
-   
-   if(action_console_backspace)
-   {
-      action_console_backspace = false;
-
+   case ka_console_backspace: // backspace
       inputtext.Delc();
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
       return true;
-   }
 
+   default:
+      break;
+   }
+    
    // none of these, probably just a normal character
-   
    if(ev->character)
       ch = ev->character;
    else if(ev->data1 > 31 && ev->data1 < 127)
       ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
 
    // only care about valid characters
-   // dont allow too many characters on one command line
-   
    if(ch > 31 && ch < 127)
    {
       inputtext += ch;
@@ -503,9 +481,9 @@ bool C_Responder(event_t *ev)
 // draw the console
 
 //
-// CONSOLE_FIXME: Support other fonts. Break messages across lines during
-// drawing instead of during message insertion? It should be possible
-// although it would complicate the scrolling logic.
+// CONSOLE_FIXME: Break messages across lines during drawing instead of
+// during message insertion? It should be possible although it would 
+// complicate the scrolling logic.
 //
 
 void C_Drawer(void)

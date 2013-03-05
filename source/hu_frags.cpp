@@ -62,7 +62,9 @@
 player_t *sortedplayers[MAXPLAYERS];
 
 int num_players;
-int show_scores;                // enable scores
+int show_scores;   // enable scores (for config)
+
+bool hu_showfrags; // showing frags currently
 
 void HU_FragsInit(void)
 {
@@ -82,7 +84,7 @@ void HU_FragsDrawer(void)
       return;
 
    if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
-      && !action_frags) || GameType != gt_dm || automapactive)
+      && !hu_showfrags) || GameType != gt_dm || automapactive)
       return;
 
    // "frags"

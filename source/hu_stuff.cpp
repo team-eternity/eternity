@@ -1205,14 +1205,17 @@ static bool HU_ChatRespond(event_t *ev)
    static bool shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
-   G_KeyResponder(ev, kac_hud);
+   int action = G_KeyResponder(ev, kac_hud);
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);
-   
+
+   if(action == ka_frags)
+      hu_showfrags = (ev->type == ev_keydown);
+
    if(ev->type != ev_keydown)
       return false;
-   
+
    if(!chat_active)
    {
       if(ev->data1 == key_chat && netgame) 

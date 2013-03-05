@@ -57,92 +57,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-// Action variables
-// These variables are asserted as positive values when the action
-// they represent has been performed by the player via key pressing.
-
-// Game Actions -- These are handled in g_game.c
-
-int action_forward;     // forward movement
-int action_backward;    // backward movement
-int action_left;        // left movement
-int action_right;       // right movement
-int action_moveleft;    // key-strafe left
-int action_moveright;   // key-strafe right
-int action_use;         // object activation
-int action_speed;       // running
-int action_attack;      // firing current weapon
-int action_strafe;      // strafe in any direction
-int action_flip;        // 180 degree turn
-int action_jump;        // jump
-
-int action_mlook;       // mlook activation
-int action_lookup;      // key-look up
-int action_lookdown;    // key-look down
-int action_center;      // key-look centerview
-int action_flyup;       // fly up
-int action_flydown;     // fly down
-int action_flycenter;   // fly "center"
-int action_weapon1;     // select weapon 1
-int action_weapon2;     // select weapon 2
-int action_weapon3;     // select weapon 3
-int action_weapon4;     // select weapon 4
-int action_weapon5;     // select weapon 5
-int action_weapon6;     // select weapon 6
-int action_weapon7;     // select weapon 7
-int action_weapon8;     // select weapon 8
-int action_weapon9;     // select weapon 9
-
-int action_nextweapon;  // toggle to next-favored weapon
-
-int action_weaponup;    // haleyjd: next weapon in order
-int action_weapondown;  // haleyjd: prev weapon in order
-
-int action_frags;       // show frags
-
-int action_autorun;     // autorun
-
-// Menu Actions -- handled by MN_Responder
-
-int action_menu_help;
-int action_menu_toggle;
-int action_menu_setup;
-int action_menu_up;
-int action_menu_down;
-int action_menu_confirm;
-int action_menu_previous;
-int action_menu_left;
-int action_menu_right;
-int action_menu_pageup;
-int action_menu_pagedown;
-int action_menu_contents;
-
-// AutoMap Actions -- handled by AM_Responder
-
-int action_map_panright;
-int action_map_panleft;
-int action_map_panup;
-int action_map_pandown;
-int action_map_zoomin;
-int action_map_zoomout;
-int action_map_toggle;
-int action_map_gobig;
-int action_map_follow;
-int action_map_mark;
-int action_map_clear;
-int action_map_grid;
-
-// Console Actions -- handled by C_Responder
-
-int action_console_pageup;
-int action_console_pagedown;
-int action_console_toggle;
-int action_console_tab;
-int action_console_enter;
-int action_console_up;
-int action_console_down;
-int action_console_backspace;
-
 //
 // Handler Functions
 //
@@ -166,12 +80,6 @@ typedef struct keyaction_s
    
    int type;
    
-   union keyactiondata
-   {
-      int *variable;  // variable -- if non-zero, action activated (key down)
-      binding_handler Handler;
-   } value;
-   
    int num;
    struct keyaction_s *next; // haleyjd: used for console bindings
 
@@ -180,93 +88,91 @@ typedef struct keyaction_s
 keyaction_t keyactions[NUMKEYACTIONS] =
 {
    // Null Action
-   {NULL,        kac_game,       at_variable,     {NULL}},
+   { NULL,                kac_game,    at_variable },
 
    // Game Actions
 
-   {"forward",   kac_game,       at_variable,     {&action_forward}},
-   {"backward",  kac_game,       at_variable,     {&action_backward}},
-   {"left",      kac_game,       at_variable,     {&action_left}},
-   {"right",     kac_game,       at_variable,     {&action_right}},
-   {"moveleft",  kac_game,       at_variable,     {&action_moveleft}},
-   {"moveright", kac_game,       at_variable,     {&action_moveright}},
-   {"use",       kac_game,       at_variable,     {&action_use}},
-   {"strafe",    kac_game,       at_variable,     {&action_strafe}},
-   {"attack",    kac_game,       at_variable,     {&action_attack}},
-   {"flip",      kac_game,       at_variable,     {&action_flip}},
-   {"speed",     kac_game,       at_variable,     {&action_speed}},
-   {"jump",      kac_game,       at_variable,     {&action_jump}},      //  -- joek 12/22/07
-   {"autorun",   kac_game,       at_variable,     {&action_autorun}},
+   { "forward",           kac_game,    at_variable },
+   { "backward",          kac_game,    at_variable },
+   { "left",              kac_game,    at_variable },
+   { "right",             kac_game,    at_variable },
+   { "moveleft",          kac_game,    at_variable },
+   { "moveright",         kac_game,    at_variable },
+   { "use",               kac_game,    at_variable },
+   { "strafe",            kac_game,    at_variable },
+   { "attack",            kac_game,    at_variable },
+   { "flip",              kac_game,    at_variable },
+   { "speed",             kac_game,    at_variable },
+   { "jump",              kac_game,    at_variable },      //  -- joek 12/22/07
+   { "autorun",           kac_game,    at_variable },
 
-   {"mlook",     kac_game,       at_variable,     {&action_mlook}},
-   {"lookup",    kac_game,       at_variable,     {&action_lookup}},
-   {"lookdown",  kac_game,       at_variable,     {&action_lookdown}},
-   {"center",    kac_game,       at_variable,     {&action_center}},
+   { "mlook",             kac_game,    at_variable },
+   { "lookup",            kac_game,    at_variable },
+   { "lookdown",          kac_game,    at_variable },
+   { "center",            kac_game,    at_variable },
 
-   {"flyup",     kac_game,       at_variable,     {&action_flyup}},
-   {"flydown",   kac_game,       at_variable,     {&action_flydown}},
-   {"flycenter", kac_game,       at_variable,     {&action_flycenter}},
+   { "flyup",             kac_game,    at_variable },
+   { "flydown",           kac_game,    at_variable },
+   { "flycenter",         kac_game,    at_variable },
 
-   {"weapon1",   kac_game,       at_variable,     {&action_weapon1}},
-   {"weapon2",   kac_game,       at_variable,     {&action_weapon2}},
-   {"weapon3",   kac_game,       at_variable,     {&action_weapon3}},
-   {"weapon4",   kac_game,       at_variable,     {&action_weapon4}},
-   {"weapon5",   kac_game,       at_variable,     {&action_weapon5}},
-   {"weapon6",   kac_game,       at_variable,     {&action_weapon6}},
-   {"weapon7",   kac_game,       at_variable,     {&action_weapon7}},
-   {"weapon8",   kac_game,       at_variable,     {&action_weapon8}},
-   {"weapon9",   kac_game,       at_variable,     {&action_weapon9}},
-   {"nextweapon",kac_game,       at_variable,     {&action_nextweapon}},
-   {"weaponup",  kac_game,       at_variable,     {&action_weaponup}},
-   {"weapondown",kac_game,       at_variable,     {&action_weapondown}},
+   { "weapon1",           kac_game,    at_variable },
+   { "weapon2",           kac_game,    at_variable },
+   { "weapon3",           kac_game,    at_variable },
+   { "weapon4",           kac_game,    at_variable },
+   { "weapon5",           kac_game,    at_variable },
+   { "weapon6",           kac_game,    at_variable },
+   { "weapon7",           kac_game,    at_variable },
+   { "weapon8",           kac_game,    at_variable },
+   { "weapon9",           kac_game,    at_variable },
+   { "nextweapon",        kac_game,    at_variable },
+   { "weaponup",          kac_game,    at_variable },
+   { "weapondown",        kac_game,    at_variable },
 
    // HUD Actions
 
-   {"frags",     kac_hud,        at_variable,     {&action_frags}},
+   { "frags",             kac_hud,     at_variable },
 
    // Menu Actions
 
-   {"menu_toggle",       kac_menu,    at_variable,     {&action_menu_toggle}},
-   {"menu_help",         kac_menu,    at_variable,     {&action_menu_help}},
-   {"menu_setup",        kac_menu,    at_variable,     {&action_menu_setup}},
-   {"menu_up",           kac_menu,    at_variable,     {&action_menu_up}},
-   {"menu_down",         kac_menu,    at_variable,     {&action_menu_down}},
-   {"menu_confirm",      kac_menu,    at_variable,     {&action_menu_confirm}},
-   {"menu_previous",     kac_menu,    at_variable,     {&action_menu_previous}},
-   {"menu_left",         kac_menu,    at_variable,     {&action_menu_left}},
-   {"menu_right",        kac_menu,    at_variable,     {&action_menu_right}},
-   {"menu_pageup",       kac_menu,    at_variable,     {&action_menu_pageup}},
-   {"menu_pagedown",     kac_menu,    at_variable,     {&action_menu_pagedown}},
-   {"menu_contents",     kac_menu,    at_variable,     {&action_menu_contents}},
+   { "menu_toggle",       kac_menu,    at_variable },
+   { "menu_help",         kac_menu,    at_variable },
+   { "menu_setup",        kac_menu,    at_variable },
+   { "menu_up",           kac_menu,    at_variable },
+   { "menu_down",         kac_menu,    at_variable },
+   { "menu_confirm",      kac_menu,    at_variable },
+   { "menu_previous",     kac_menu,    at_variable },
+   { "menu_left",         kac_menu,    at_variable },
+   { "menu_right",        kac_menu,    at_variable },
+   { "menu_pageup",       kac_menu,    at_variable },
+   { "menu_pagedown",     kac_menu,    at_variable },
+   { "menu_contents",     kac_menu,    at_variable },
 
    // Automap Actions
 
-   {"map_right",         kac_map,     at_variable,     {&action_map_panright}},
-   {"map_left",          kac_map,     at_variable,     {&action_map_panleft}},
-   {"map_up",            kac_map,     at_variable,     {&action_map_panup}},
-   {"map_down",          kac_map,     at_variable,     {&action_map_pandown}},
-   {"map_zoomin",        kac_map,     at_variable,     {&action_map_zoomin}},
-   {"map_zoomout",       kac_map,     at_variable,     {&action_map_zoomout}},
-   {"map_toggle",        kac_map,     at_variable,     {&action_map_toggle}},
-   {"map_gobig",         kac_map,     at_variable,     {&action_map_gobig}},
-   {"map_follow",        kac_map,     at_variable,     {&action_map_follow}},
-   {"map_mark",          kac_map,     at_variable,     {&action_map_mark}},
-   {"map_clear",         kac_map,     at_variable,     {&action_map_clear}},
-   {"map_grid",          kac_map,     at_variable,     {&action_map_grid}},
+   { "map_right",         kac_map,     at_variable },
+   { "map_left",          kac_map,     at_variable },
+   { "map_up",            kac_map,     at_variable },
+   { "map_down",          kac_map,     at_variable },
+   { "map_zoomin",        kac_map,     at_variable },
+   { "map_zoomout",       kac_map,     at_variable },
+   { "map_toggle",        kac_map,     at_variable },
+   { "map_gobig",         kac_map,     at_variable },
+   { "map_follow",        kac_map,     at_variable },
+   { "map_mark",          kac_map,     at_variable },
+   { "map_clear",         kac_map,     at_variable },
+   { "map_grid",          kac_map,     at_variable },
 
    // Console Actions
 
-   {"console_pageup",    kac_console, at_variable,     {&action_console_pageup}},
-   {"console_pagedown",  kac_console, at_variable,     {&action_console_pagedown}},
-   {"console_toggle",    kac_console, at_variable,     {&action_console_toggle}},
-   {"console_tab",       kac_console, at_variable,     {&action_console_tab}},
-   {"console_enter",     kac_console, at_variable,     {&action_console_enter}},
-   {"console_up",        kac_console, at_variable,     {&action_console_up}},
-   {"console_down",      kac_console, at_variable,     {&action_console_down}},
-   {"console_backspace", kac_console, at_variable,     {&action_console_backspace}},
+   { "console_pageup",    kac_console, at_variable },
+   { "console_pagedown",  kac_console, at_variable },
+   { "console_toggle",    kac_console, at_variable },
+   { "console_tab",       kac_console, at_variable },
+   { "console_enter",     kac_console, at_variable },
+   { "console_up",        kac_console, at_variable },
+   { "console_down",      kac_console, at_variable },
+   { "console_backspace", kac_console, at_variable },
 };
-
-const int num_keyactions = sizeof(keyactions) / sizeof(*keyactions);
 
 // Console Bindings
 //
@@ -408,7 +314,7 @@ void G_InitKeyBindings(void)
       keyactions[i].num = i;
 }
 
-void G_ClearKeyStates(void)
+void G_ClearKeyStates()
 {
    int i, j;
 
@@ -417,20 +323,8 @@ void G_ClearKeyStates(void)
       for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
       {
          keybindings[i].keydown[j] = false;
-            
-         if(keybindings[i].bindings[j])
-         {
-            switch(keybindings[i].bindings[j]->type)
-            {
-            case at_variable:
-               *(keybindings[i].bindings[j]->value.variable) = 0;
-               break;
-            default:
-               break;
-            }
-         } // end if
-      } // end for
-   } // end for
+      }
+   }
 }
 
 //
@@ -447,7 +341,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    // sequential search
    // this is only called every now and then
    
-   for(i = 0; i < num_keyactions; ++i)
+   for(i = 0; i < NUMKEYACTIONS; ++i)
    {
       if(!keyactions[i].name)
          continue;
@@ -658,10 +552,6 @@ int G_KeyResponder(event_t *ev, int bclass)
       {
          switch(keybindings[key].bindings[bclass]->type)
          {
-         case at_variable:
-            *(keybindings[key].bindings[bclass]->value.variable) = 1;
-            break;
-
          case at_conscmd:
             if(!consoleactive) // haleyjd: not in console.
                C_RunTextCmd(keybindings[key].bindings[bclass]->name);
@@ -681,19 +571,7 @@ int G_KeyResponder(event_t *ev, int bclass)
       keybindings[key].keydown[bclass] = false;
 
       if((action = keybindings[key].bindings[bclass]))
-      {
-         switch(keybindings[key].bindings[bclass]->type)
-         {
-         case at_variable:
-            *(keybindings[key].bindings[bclass]->value.variable) = 0;
-            break;
-            
-         default:
-            break;
-         }
-
          ret = action->num;
-      }
    }
 
    return ret;
@@ -742,7 +620,7 @@ void G_BindDrawer(void)
 //
 // Responder for widget
 //
-bool G_BindResponder(event_t *ev)
+bool G_BindResponder(event_t *ev, int mnaction)
 {
    keyaction_t *action;
    
@@ -756,11 +634,8 @@ bool G_BindResponder(event_t *ev)
    // got a key - close box
    MN_PopWidget();
 
-   if(action_menu_toggle) // cancel
-   {
-      action_menu_toggle = false;
+   if(mnaction == ka_menu_toggle) // cancel
       return true;
-   }
    
    if(!(action = G_KeyActionForName(binding_action)))
    {
@@ -778,8 +653,6 @@ bool G_BindResponder(event_t *ev)
 
    // haleyjd 10/16/05: clear state of action involved
    keybindings[ev->data1].keydown[action->bclass] = false;
-   if(action->type == at_variable)
-      *(action->value.variable) = 0;
    
    return true;
 }
@@ -937,10 +810,11 @@ CONSOLE_COMMAND(bind, 0)
 // haleyjd: utility functions
 CONSOLE_COMMAND(listactions, 0)
 {
-   int i;
-   
-   for(i = 0; i < num_keyactions; ++i)
-      C_Printf("%s\n", keyactions[i].name);
+   for(int i = 0; i < NUMKEYACTIONS; ++i)
+   {
+      if(keyactions[i].name)
+         C_Printf("%s\n", keyactions[i].name);
+   }
 }
 
 CONSOLE_COMMAND(listkeys, 0)

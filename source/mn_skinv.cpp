@@ -177,16 +177,14 @@ static void MN_SkinSetState(state_t *state)
 // The skin viewer widget responder function. Sorta long and
 // hackish, but cool.
 //
-static bool MN_SkinResponder(event_t *ev)
+static bool MN_SkinResponder(event_t *ev, int action)
 {
    // only interested in keydown events
    if(ev->type != ev_keydown)
       return false;
 
-   if(action_menu_toggle || action_menu_previous)
+   if(action == ka_menu_toggle || action == ka_menu_previous)
    {
-      action_menu_toggle = action_menu_previous = false;
-
       // kill the widget
       skview_metadeaths.clear();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
@@ -194,10 +192,8 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(action_menu_left)
+   if(action == ka_menu_left)
    {
-      action_menu_left = false;
-
       // rotate sprite left
       if(skview_rot == 7)
          skview_rot = 0;
@@ -207,10 +203,8 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(action_menu_right)
+   if(action == ka_menu_right)
    {
-      action_menu_right = false;
-
       // rotate sprite right
       if(skview_rot == 0)
          skview_rot = 7;
@@ -220,10 +214,8 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(action_menu_up)
+   if(action == ka_menu_up)
    {
-      action_menu_up = false;
-
       // increase light level
       if(skview_light != 0)
          --skview_light;
@@ -231,10 +223,8 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
-   if(action_menu_down)
+   if(action == ka_menu_down)
    {
-      action_menu_down = false;
-
       // decrease light level
       if(skview_light != 31)
          ++skview_light;

@@ -212,6 +212,8 @@ int cooldemo_tics;      // number of tics until changing view
 
 void G_CoolViewPoint();
 
+static bool gameactions[NUMKEYACTIONS];
+
 //
 // G_BuildTiccmd
 //
@@ -224,7 +226,6 @@ void G_CoolViewPoint();
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   bool strafe;
    bool bstrafe;
    bool sendcenterview = false;
    int speed;
@@ -245,14 +246,15 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
-   strafe = !!action_strafe;
-   //speed = autorun || action_speed;
-   speed = (autorun ? !(runiswalk && action_speed) : action_speed);
-   
+   if(autorun)
+      speed = !(runiswalk && gameactions[ka_speed]);
+   else
+      speed = gameactions[ka_speed];
+
    forward = side = 0;
 
    // use two stage accelerative turning on the keyboard and joystick
-   if(joyxmove < 0 || joyxmove > 0 || action_right || action_left)
+   if(joyxmove < 0 || joyxmove > 0 || gameactions[ka_right] || gameactions[ka_left])
       turnheld += ticdup;
    else
       turnheld = 0;
@@ -263,18 +265,18 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       tspeed = speed;
 
    // turn 180 degrees in one keystroke? -- phares
-   if(action_flip)
+   if(gameactions[ka_flip])
    {
       cmd->angleturn += (int16_t)QUICKREVERSE;
-      action_flip = 0;
+      gameactions[ka_flip] = false;
    }
 
    // let movement keys cancel each other out
-   if(strafe)
+   if(gameactions[ka_strafe])
    {
-      if(action_right)
+      if(gameactions[ka_right])
          side += pc->sidemove[speed];
-      if(action_left)
+      if(gameactions[ka_left])
          side -= pc->sidemove[speed];
       if(joyxmove > 0)
          side += pc->sidemove[speed];
@@ -283,9 +285,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
    else
    {
-      if(action_right)
+      if(gameactions[ka_right])
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
-      if(action_left)
+      if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
       if(joyxmove > 0)
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
@@ -293,29 +295,29 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
    }
 
-   if(action_forward)
+   if(gameactions[ka_forward])
       forward += pc->forwardmove[speed];
-   if(action_backward)
+   if(gameactions[ka_backward])
       forward -= pc->forwardmove[speed];
    if(joyymove < 0)
       forward += pc->forwardmove[speed];
    if(joyymove > 0)
       forward -= pc->forwardmove[speed];
-   if(action_moveright)
+   if(gameactions[ka_moveright])
       side += pc->sidemove[speed];
-   if(action_moveleft)
+   if(gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
-   if(action_jump)                    // -- joek 12/22/07
+   if(gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
-   mlook = allowmlook && (action_mlook || automlook);
+   mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
    cmd->chatchar = C_dequeueChatChar();
 
-   if(action_attack)
+   if(gameactions[ka_attack])
       cmd->buttons |= BT_ATTACK;
 
-   if(action_use)
+   if(gameactions[ka_use])
    {
       cmd->buttons |= BT_USE;
       // clear double clicks if hit use button
@@ -345,22 +347,22 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    //
  
    if((!demo_compatibility && players[consoleplayer].attackdown &&
-       !P_CheckAmmo(&players[consoleplayer])) || action_nextweapon)
+       !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
    {
       newweapon = P_SwitchWeapon(&players[consoleplayer]); // phares
    }
    else
    {                                 // phares 02/26/98: Added gamemode checks
       newweapon =
-        action_weapon1 ? wp_fist :    // killough 5/2/98: reformatted
-        action_weapon2 ? wp_pistol :
-        action_weapon3 ? wp_shotgun :
-        action_weapon4 ? wp_chaingun :
-        action_weapon5 ? wp_missile :
-        action_weapon6 && GameModeInfo->id != shareware ? wp_plasma :
-        action_weapon7 && GameModeInfo->id != shareware ? wp_bfg :
-        action_weapon8 ? wp_chainsaw :
-        action_weapon9 && enable_ssg ? wp_supershotgun :
+        gameactions[ka_weapon1] ? wp_fist :    // killough 5/2/98: reformatted
+        gameactions[ka_weapon2] ? wp_pistol :
+        gameactions[ka_weapon3] ? wp_shotgun :
+        gameactions[ka_weapon4] ? wp_chaingun :
+        gameactions[ka_weapon5] ? wp_missile :
+        gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
+        gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
+        gameactions[ka_weapon8] ? wp_chainsaw :
+        gameactions[ka_weapon9] && enable_ssg ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -414,9 +416,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 03/06/09: next/prev weapon actions
-   if(action_weaponup)
+   if(gameactions[ka_weaponup])
       newweapon = P_NextWeapon(&players[consoleplayer]);
-   else if(action_weapondown)
+   else if(gameactions[ka_weapondown])
       newweapon = P_PrevWeapon(&players[consoleplayer]);
 
    if(newweapon != wp_nochange)
@@ -451,7 +453,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // strafe double click
 
-   bstrafe = mousebuttons[mousebstrafe]; // haleyjd: removed joybstrafe
+   bstrafe = mousebuttons[mousebstrafe];
    if(bstrafe != dclickstate2 && dclicktime2 > 1 )
    {
       dclickstate2 = bstrafe;
@@ -517,11 +519,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    prevmlook = mlook;
    
-   if(action_lookup)
+   if(gameactions[ka_lookup])
       look += pc->lookspeed[speed];
-   if(action_lookdown)
+   if(gameactions[ka_lookdown])
       look -= pc->lookspeed[speed];
-   if(action_center)
+   if(gameactions[ka_center])
       sendcenterview = true;
 
    // haleyjd: special value for view centering
@@ -536,17 +538,17 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 06/05/12: flight
-   if(action_flyup)
+   if(gameactions[ka_flyup])
       flyheight = FLIGHT_IMPULSE_AMT;
-   if(action_flydown)
+   if(gameactions[ka_flydown])
       flyheight = -FLIGHT_IMPULSE_AMT;
-   if(action_flycenter)
+   if(gameactions[ka_flycenter])
    {
       flyheight = FLIGHT_CENTER;
       look = -32768;
    }
 
-   if(strafe)
+   if(gameactions[ka_strafe])
       side += (int)(tmousex * 2.0);
    else
       cmd->angleturn -= (int)(tmousex * 8.0);
@@ -671,8 +673,9 @@ void G_DoLoadLevel(void)
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
-   memset(mousearray, 0, sizeof(mousearray));
-   G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
+   memset(mousearray,  0, sizeof(mousearray));
+   memset(gameactions, 0, sizeof(gameactions)); // haleyjd 05/20/05: all bindings off
+   G_ClearKeyStates(); 
 
    // killough: make -timedemo work on multilevel demos
    // Move to end of function to minimize noise -- killough 2/22/98:
@@ -703,6 +706,8 @@ void G_DoLoadLevel(void)
 //
 bool G_Responder(event_t* ev)
 {
+   int action;
+
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -765,23 +770,28 @@ bool G_Responder(event_t* ev)
    if(gamestate == GS_FINALE && F_Responder(ev))
       return true;  // finale ate the event
 
-   if(action_autorun)
-   {
-      action_autorun = 0;
-      autorun = !autorun;
-   }
-
    switch(ev->type)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
          C_RunTextCmd("pause");
       else
-         G_KeyResponder(ev, kac_game); // haleyjd
+      {
+         action = G_KeyResponder(ev, kac_game); // haleyjd
+         gameactions[action] = true;
+      }
+
+      if(gameactions[ka_autorun])
+      {
+         gameactions[ka_autorun] = 0;
+         autorun = !autorun;
+      }
+
       return true;    // eat key down events
       
    case ev_keyup:
-      G_KeyResponder(ev, kac_game);   // haleyjd
+      action = G_KeyResponder(ev, kac_game);   // haleyjd
+      gameactions[action] = false;
       return false;   // always let key up events filter down
       
    case ev_mouse:
