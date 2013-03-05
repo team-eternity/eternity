@@ -266,7 +266,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(action_flip)
    {
       cmd->angleturn += (int16_t)QUICKREVERSE;
-      action_flip = false;
+      action_flip = 0;
    }
 
    // let movement keys cancel each other out
@@ -425,7 +425,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= newweapon << BT_WEAPONSHIFT;
    }
 
-   // mouse -- haleyjd: some of this is obsolete now -- removed
+   // mouse
   
    // forward double click -- haleyjd: still allow double clicks
    if(mousebuttons[mousebforward] != dclickstate && dclicktime > 1 )
@@ -475,10 +475,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // sf: smooth out the mouse movement
    // change to use tmousex, y   
-   // divide by the number of new tics so each gets an equal share
 
-   tmousex = mousex /* / newtics */;
-   tmousey = mousey /* / newtics */;
+   tmousex = mousex;
+   tmousey = mousey;
 
    // we average the mouse movement as well
    // this is most important in smoothing movement

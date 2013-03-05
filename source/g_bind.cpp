@@ -172,12 +172,16 @@ typedef struct keyaction_s
       binding_handler Handler;
    } value;
    
+   int num;
    struct keyaction_s *next; // haleyjd: used for console bindings
 
 } keyaction_t;
 
 keyaction_t keyactions[NUMKEYACTIONS] =
 {
+   // Null Action
+   {NULL,        kac_game,       at_variable,     {NULL}},
+
    // Game Actions
 
    {"forward",   kac_game,       at_variable,     {&action_forward}},
@@ -216,6 +220,8 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"weaponup",  kac_game,       at_variable,     {&action_weaponup}},
    {"weapondown",kac_game,       at_variable,     {&action_weapondown}},
 
+   // HUD Actions
+
    {"frags",     kac_hud,        at_variable,     {&action_frags}},
 
    // Menu Actions
@@ -241,13 +247,14 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"map_down",          kac_map,     at_variable,     {&action_map_pandown}},
    {"map_zoomin",        kac_map,     at_variable,     {&action_map_zoomin}},
    {"map_zoomout",       kac_map,     at_variable,     {&action_map_zoomout}},
-
    {"map_toggle",        kac_map,     at_variable,     {&action_map_toggle}},
    {"map_gobig",         kac_map,     at_variable,     {&action_map_gobig}},
    {"map_follow",        kac_map,     at_variable,     {&action_map_follow}},
    {"map_mark",          kac_map,     at_variable,     {&action_map_mark}},
    {"map_clear",         kac_map,     at_variable,     {&action_map_clear}},
    {"map_grid",          kac_map,     at_variable,     {&action_map_grid}},
+
+   // Console Actions
 
    {"console_pageup",    kac_console, at_variable,     {&action_console_pageup}},
    {"console_pagedown",  kac_console, at_variable,     {&action_console_pagedown}},
@@ -273,15 +280,6 @@ const int num_keyactions = sizeof(keyactions) / sizeof(*keyactions);
 static keyaction_t *cons_keyactions = NULL;
 
 //
-// Key types
-//
-enum
-{
-   KEY_HOLD,   // holdable key: has ev_keydown, ev_keyup
-   KEY_TRIGGER // trigger key: ev_keydown only
-};
-
-//
 // The actual key bindings
 //
 
@@ -290,7 +288,6 @@ typedef struct doomkey_s
    const char *name;
    bool keydown[NUMKEYACTIONCLASSES];
    keyaction_t *bindings[NUMKEYACTIONCLASSES];
-   int type;
 } doomkey_t;
 
 static doomkey_t keybindings[NUMKEYS];
@@ -406,6 +403,9 @@ void G_InitKeyBindings(void)
       memset(keybindings[i].bindings, 0, 
              NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
    }
+
+   for(i = 0; i < NUMKEYACTIONS; i++)
+      keyactions[i].num = i;
 }
 
 void G_ClearKeyStates(void)
@@ -440,6 +440,7 @@ void G_ClearKeyStates(void)
 //
 static keyaction_t *G_KeyActionForName(const char *name)
 {
+   static int cons_actionnum = NUMKEYACTIONS;
    int i;
    keyaction_t *prev, *temp, *newaction;
    
@@ -448,6 +449,8 @@ static keyaction_t *G_KeyActionForName(const char *name)
    
    for(i = 0; i < num_keyactions; ++i)
    {
+      if(!keyactions[i].name)
+         continue;
       if(!strcasecmp(name, keyactions[i].name))
          return &keyactions[i];
    }
@@ -474,6 +477,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
       cons_keyactions->type = at_conscmd;
       cons_keyactions->name = Z_Strdup(name, PU_STATIC, 0);
       cons_keyactions->next = NULL;
+      cons_keyactions->num  = cons_actionnum++;
       
       return cons_keyactions;
    }
@@ -491,6 +495,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    newaction->type = at_conscmd;
    newaction->name = Z_Strdup(name, PU_STATIC, 0);
    newaction->next = NULL;
+   newaction->num  = cons_actionnum++;
    
    if(prev) prev->next = newaction;
 
@@ -610,22 +615,28 @@ const char *G_FirstBoundKey(const char *action)
 //
 // The main driver function for the entire key binding system
 //
-bool G_KeyResponder(event_t *ev, int bclass)
+int G_KeyResponder(event_t *ev, int bclass)
 {
+#if 0
    static bool ctrldown;
-   bool ret = false;
+#endif
+   int ret = ka_nothing;
+   keyaction_t *action = NULL;
 
    // do not index out of bounds
    if(ev->data1 >= NUMKEYS)
       return ret;
    
+#if 0
    if(ev->data1 == KEYD_RCTRL)      // ctrl
       ctrldown = (ev->type == ev_keydown);
+#endif
    
    if(ev->type == ev_keydown)
    {
       int key = tolower(ev->data1);
-      
+
+#if 0
       if(opensocket &&                 // netgame disconnect binding
          ctrldown && ev->data1 == 'd')
       {
@@ -639,29 +650,28 @@ bool G_KeyResponder(event_t *ev, int bclass)
          ctrldown = false;
          return true;
       }
+#endif
 
-      //if(!keybindings[key].keydown[bclass])
+      keybindings[key].keydown[bclass] = true;
+
+      if((action = keybindings[key].bindings[bclass]))
       {
-         keybindings[key].keydown[bclass] = true;
-                  
-         if(keybindings[key].bindings[bclass])
+         switch(keybindings[key].bindings[bclass]->type)
          {
-            switch(keybindings[key].bindings[bclass]->type)
-            {
-            case at_variable:
-               *(keybindings[key].bindings[bclass]->value.variable) = 1;
-               break;
-               
-            case at_conscmd:
-               if(!consoleactive) // haleyjd: not in console.
-                  C_RunTextCmd(keybindings[key].bindings[bclass]->name);
-               break;
-               
-            default:
-               break;
-            }
-            ret = true;
+         case at_variable:
+            *(keybindings[key].bindings[bclass]->value.variable) = 1;
+            break;
+
+         case at_conscmd:
+            if(!consoleactive) // haleyjd: not in console.
+               C_RunTextCmd(keybindings[key].bindings[bclass]->name);
+            break;
+
+         default:
+            break;
          }
+
+         ret = action->num;
       }
    }
    else if(ev->type == ev_keyup)
@@ -670,7 +680,7 @@ bool G_KeyResponder(event_t *ev, int bclass)
 
       keybindings[key].keydown[bclass] = false;
 
-      if(keybindings[key].bindings[bclass])
+      if((action = keybindings[key].bindings[bclass]))
       {
          switch(keybindings[key].bindings[bclass]->type)
          {
@@ -681,7 +691,8 @@ bool G_KeyResponder(event_t *ev, int bclass)
          default:
             break;
          }
-         ret = true;
+
+         ret = action->num;
       }
    }
 

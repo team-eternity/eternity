@@ -801,135 +801,153 @@ static bool am_key_handled;
 //
 bool AM_Responder(event_t *ev)
 {
-   static int bigstate=0;
-     
+   static int bigstate = 0;
+  
    // haleyjd 07/07/04: dynamic bindings
-   am_key_handled = false;
-   G_KeyResponder(ev, kac_map);
+   int action = G_KeyResponder(ev, kac_map);
 
-   // Handle panning
-   if(automapactive && !followplayer)
+   if(!automapactive)
    {
-      m_paninc.x = 0;
-      m_paninc.y = 0;
+      if(ev->type != ev_keydown)
+         return false;
 
-      if(action_map_panright)
+      switch(action)
       {
-         m_paninc.x = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-
-      if(action_map_panleft)
-      {
-         m_paninc.x = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-
-      if(action_map_panup)
-      {
-         m_paninc.y = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-
-      if(action_map_pandown)
-      {
-         m_paninc.y = -FTOM(F_PANINC);
-         am_key_handled = true;
+      case ka_map_toggle: // activate automap
+         AM_Start();
+         return true;
+      default:
+         return false;
       }
    }
-
-   // Handle zoom
-   if(automapactive)
+   else
    {
-      mtof_zoommul = 1.0;
-      ftom_zoommul = 1.0;
-
-      if(action_map_zoomout)
+      // handle end of pan or zoom on keyup
+      if(ev->type == ev_keyup)
       {
+         switch(action)
+         {
+         case ka_map_right:   // stop pan left or right
+         case ka_map_left:
+            if(!followplayer)
+            {
+               m_paninc.x = 0;
+               return true;
+            }
+            return false;
+
+         case ka_map_up:      // stop pan up or down
+         case ka_map_down:
+            if(!followplayer)
+            {
+               m_paninc.y = 0;
+               return true;
+            }
+            return false;
+
+         case ka_map_zoomin:  // stop zoom in or out
+         case ka_map_zoomout:
+            mtof_zoommul = 1.0;
+            ftom_zoommul = 1.0;
+            return true;
+         }
+      }
+
+      // all other events are keydown only
+      if(ev->type != ev_keydown)
+         return false;
+
+      switch(action)
+      {
+      case ka_map_right: // pan right
+         if(!followplayer)
+         {
+            m_paninc.x = FTOM(F_PANINC);
+            return true;
+         }
+         return false;
+
+      case ka_map_left: // pan left
+         if(!followplayer)
+         {
+            m_paninc.x = -FTOM(F_PANINC);
+            return true;
+         }
+         return false;
+
+      case ka_map_up: // pan up
+         if(!followplayer)
+         {
+            m_paninc.y = FTOM(F_PANINC);
+            return true;
+         }
+         return false;
+
+      case ka_map_down: // pan down
+         if(!followplayer)
+         {
+            m_paninc.y = -FTOM(F_PANINC);
+            return true;
+         }
+         return false;
+
+      case ka_map_zoomout: // zoom out
          mtof_zoommul = M_ZOOMOUT;
          ftom_zoommul = M_ZOOMIN;
-         am_key_handled = true;
-      }
+         return true;
 
-      if(action_map_zoomin)
-      {
+      case ka_map_zoomin: // zoom in
          mtof_zoommul = M_ZOOMIN;
          ftom_zoommul = M_ZOOMOUT;
-         am_key_handled = true;
+         return true;
+
+      case ka_map_toggle: // deactivate map
+         bigstate = 0;
+         AM_Stop();
+         return true;
+
+      case ka_map_gobig: // "go big"
+         bigstate = !bigstate;
+         if(bigstate)
+         {
+            AM_saveScaleAndLoc();
+            AM_minOutWindowScale();
+         }
+         else
+            AM_restoreScaleAndLoc();
+         return true;
+
+      case ka_map_follow: // toggle follow mode
+         followplayer = !followplayer;
+         f_oldloc.x = D_MAXINT;
+         // Ty 03/27/98 - externalized
+         doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON"
+                                                   : "AMSTR_FOLLOWOFF"));
+         return true;
+
+      case ka_map_grid: // toggle grid
+         automap_grid = !automap_grid; // killough 2/28/98
+         // Ty 03/27/98 - *not* externalized
+         doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
+                                                   : "AMSTR_GRIDOFF"));
+         return true;
+
+      case ka_map_mark: // mark a spot
+         // Ty 03/27/98 - *not* externalized     
+         // sf: fixed this (buffer at start, presumably from an old sprintf
+         doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
+         AM_addMark();
+         return true;
+
+      case ka_map_clear: // clear all marked spots
+         AM_clearMarks();  // Ty 03/27/98 - *not* externalized
+         doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
+         return true;
+
+      default:
+         return false;
       }
    }
-
-   if(ev->type == ev_keydown)
-   {
-      if(!automapactive)
-      {
-         if(action_map_toggle)
-         {
-            AM_Start();
-            am_key_handled = true;
-            action_map_toggle = 0;
-         }
-      }
-      else
-      {
-         if(action_map_toggle)
-         {
-            action_map_toggle = bigstate = 0;
-            AM_Stop();
-            am_key_handled = true;
-         }
-         if(action_map_gobig)
-         {
-            bigstate = !bigstate;
-            if(bigstate)
-            {
-               AM_saveScaleAndLoc();
-               AM_minOutWindowScale();
-            }
-            else
-               AM_restoreScaleAndLoc();
-            action_map_gobig = 0;
-            am_key_handled = true;
-         }
-         if(action_map_follow)
-         {
-            followplayer = !followplayer;
-            f_oldloc.x = D_MAXINT;
-            // Ty 03/27/98 - externalized
-            doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON" 
-                                                      : "AMSTR_FOLLOWOFF"));
-            action_map_follow = 0;
-            am_key_handled = true;
-         }
-         if(action_map_grid)
-         {
-            automap_grid = !automap_grid;      // killough 2/28/98
-            // Ty 03/27/98 - *not* externalized
-            doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
-                                                      : "AMSTR_GRIDOFF"));
-            action_map_grid = 0;
-            am_key_handled = true;
-         }
-         if(action_map_mark)
-         {
-            // Ty 03/27/98 - *not* externalized     
-            // sf: fixed this (buffer at start, presumably from an old sprintf
-            doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
-            AM_addMark();
-            action_map_mark = 0;
-            am_key_handled = true;
-         }
-         if(action_map_clear)
-         {
-            AM_clearMarks();  // Ty 03/27/98 - *not* externalized
-            doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
-            action_map_clear = 0;
-            am_key_handled = true;
-         }
-      }
-   }
-
-   return am_key_handled;
 }
 
 //

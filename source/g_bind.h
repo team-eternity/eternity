@@ -26,7 +26,7 @@
 #define G_BIND_H__
 
 void G_InitKeyBindings(void);
-bool G_KeyResponder(event_t *ev, int bclass);
+int  G_KeyResponder(event_t *ev, int bclass);
 
 void G_ClearKeyStates(void);
 
@@ -131,6 +131,7 @@ enum keyactionclass
 
 enum keyaction_e
 {
+   ka_nothing,
    ka_forward,
    ka_backward,
    ka_left,      
