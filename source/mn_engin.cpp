@@ -494,9 +494,11 @@ static void MN_genericDescription(menuitem_t *item,
 static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
                                int desc_width)
 {
-   const char *boundkeys = G_BoundKeys(item->data);
+   qstring boundkeys;
    int x = item->x;
    int y = item->y;
+
+   G_BoundKeys(item->data, boundkeys);
 
    if(drawing_menu->flags & mf_background)
    {
@@ -509,7 +511,7 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
    }
          
    // write variable value text
-   MN_WriteTextColored(boundkeys, color, 
+   MN_WriteTextColored(boundkeys.constPtr(), color, 
                        x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
 }
 

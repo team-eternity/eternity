@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@
 #include "g_bind.h"
 #include "g_game.h"
 #include "m_argv.h"
+#include "m_qstr.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
 #include "m_misc.h"
@@ -71,19 +72,14 @@ enum
 // Actions List
 //
 
-typedef struct keyaction_s
+struct keyaction_t
 {
-   const char *name;        // text description
-
-   // haleyjd 07/03/04: key binding classes
-   int bclass;
-   
-   int type;
-   
-   int num;
-   struct keyaction_s *next; // haleyjd: used for console bindings
-
-} keyaction_t;
+   const char *name;  // text description
+   int bclass;        // haleyjd 07/03/04: key binding classes
+   int type;          // type of action (at_variable or at_conscmd)
+   int num;           // unique ID number (for at_variable, index into keyactions)
+   keyaction_t *next; // haleyjd: used for console bindings
+};
 
 keyaction_t keyactions[NUMKEYACTIONS] =
 {
@@ -103,7 +99,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "attack",            kac_game,    at_variable },
    { "flip",              kac_game,    at_variable },
    { "speed",             kac_game,    at_variable },
-   { "jump",              kac_game,    at_variable },      //  -- joek 12/22/07
+   { "jump",              kac_game,    at_variable }, // -- joek 12/22/07
    { "autorun",           kac_game,    at_variable },
 
    { "mlook",             kac_game,    at_variable },
@@ -189,12 +185,12 @@ static keyaction_t *cons_keyactions = NULL;
 // The actual key bindings
 //
 
-typedef struct doomkey_s
+struct doomkey_t
 {
    const char *name;
    bool keydown[NUMKEYACTIONCLASSES];
    keyaction_t *bindings[NUMKEYACTIONCLASSES];
-} doomkey_t;
+};
 
 static doomkey_t keybindings[NUMKEYS];
 
@@ -205,10 +201,8 @@ static keyaction_t *G_KeyActionForName(const char *name);
 //
 // Set up key names and various details
 //
-void G_InitKeyBindings(void)
+void G_InitKeyBindings()
 {
-   int i;
-   
    // various names for different keys
    
    keybindings[KEYD_RIGHTARROW].name  = "rightarrow";
@@ -289,7 +283,7 @@ void G_InitKeyBindings(void)
    keybindings['.'].name = ">";
    keybindings['`'].name = "tilde";
    
-   for(i = 0; i < NUMKEYS; ++i)
+   for(int i = 0; i < NUMKEYS; i++)
    {
       // fill in name if not set yet
       
@@ -310,7 +304,7 @@ void G_InitKeyBindings(void)
              NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
    }
 
-   for(i = 0; i < NUMKEYACTIONS; i++)
+   for(int i = 0; i < NUMKEYACTIONS; i++)
       keyactions[i].num = i;
 }
 
@@ -318,12 +312,10 @@ void G_ClearKeyStates()
 {
    int i, j;
 
-   for(i = 0; i < NUMKEYS; ++i)
+   for(i = 0; i < NUMKEYS; i++)
    {
-      for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
-      {
+      for(j = 0; j < NUMKEYACTIONCLASSES; j++)
          keybindings[i].keydown[j] = false;
-      }
    }
 }
 
@@ -335,13 +327,12 @@ void G_ClearKeyStates()
 static keyaction_t *G_KeyActionForName(const char *name)
 {
    static int cons_actionnum = NUMKEYACTIONS;
-   int i;
    keyaction_t *prev, *temp, *newaction;
    
    // sequential search
    // this is only called every now and then
    
-   for(i = 0; i < NUMKEYACTIONS; ++i)
+   for(int i = 0; i < NUMKEYACTIONS; i++)
    {
       if(!keyactions[i].name)
          continue;
@@ -366,12 +357,12 @@ static keyaction_t *G_KeyActionForName(const char *name)
    else
    {
       // first time only - cons_keyactions was NULL
-      cons_keyactions = (keyaction_t *)(Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0));
+      cons_keyactions = estructalloc(keyaction_t, 1);
       cons_keyactions->bclass = kac_cmd;
-      cons_keyactions->type = at_conscmd;
-      cons_keyactions->name = Z_Strdup(name, PU_STATIC, 0);
-      cons_keyactions->next = NULL;
-      cons_keyactions->num  = cons_actionnum++;
+      cons_keyactions->type   = at_conscmd;
+      cons_keyactions->name   = Z_Strdup(name, PU_STATIC, 0);
+      cons_keyactions->next   = NULL;
+      cons_keyactions->num    = cons_actionnum++;
       
       return cons_keyactions;
    }
@@ -384,7 +375,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
       prev = temp;
       temp = temp->next;
    }
-   newaction = (keyaction_t *)(Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0));
+   newaction = estructalloc(keyaction_t, 1);
    newaction->bclass = kac_cmd;
    newaction->type = at_conscmd;
    newaction->name = Z_Strdup(name, PU_STATIC, 0);
@@ -403,9 +394,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
 //
 static int G_KeyForName(const char *name)
 {
-   int i;
-   
-   for(i = 0; i < NUMKEYS; ++i)
+   for(int i = 0; i < NUMKEYS; i++)
    {
       if(!strcasecmp(keybindings[i].name, name))
          return tolower(i);
@@ -445,32 +434,29 @@ static void G_BindKeyToAction(const char *key_name, const char *action_name)
 //
 // Get an ascii description of the keys bound to a particular action
 //
-const char *G_BoundKeys(const char *action)
+void G_BoundKeys(const char *action, qstring &outstr)
 {
-   int i;
-   static char ret[1024];   // store list of keys bound to this   
    keyaction_t *ke;
    
    if(!(ke = G_KeyActionForName(action)))
-      return "unknown action";
-   
-   ret[0] = '\0';   // clear ret
-   
+   {
+      outstr = "unknown action";
+      return;
+   }
+ 
    // sequential search -ugh
-
-   // FIXME: buffer overflow possible!
-   
-   for(i = 0; i < NUMKEYS; ++i)
+   for(int i = 0; i < NUMKEYS; i++)
    {
       if(keybindings[i].bindings[ke->bclass] == ke)
       {
-         if(ret[0])
-            strcat(ret, " + ");
-         strcat(ret, keybindings[i].name);
+         if(outstr.length() > 0)
+            outstr += " + ";
+         outstr += keybindings[i].name;
       }
    }
-   
-   return ret[0] ? ret : "none";
+
+   if(!outstr.length())
+      outstr = "none";
 }
 
 //
@@ -492,7 +478,7 @@ const char *G_FirstBoundKey(const char *action)
    
    // sequential search -ugh
    
-   for(i = 0; i < NUMKEYS; ++i)
+   for(i = 0; i < NUMKEYS; i++)
    {
       if(keybindings[i].bindings[ke->bclass] == ke)
       {
@@ -511,9 +497,6 @@ const char *G_FirstBoundKey(const char *action)
 //
 int G_KeyResponder(event_t *ev, int bclass)
 {
-#if 0
-   static bool ctrldown;
-#endif
    int ret = ka_nothing;
    keyaction_t *action = NULL;
 
@@ -521,30 +504,9 @@ int G_KeyResponder(event_t *ev, int bclass)
    if(ev->data1 >= NUMKEYS)
       return ret;
    
-#if 0
-   if(ev->data1 == KEYD_RCTRL)      // ctrl
-      ctrldown = (ev->type == ev_keydown);
-#endif
-   
    if(ev->type == ev_keydown)
    {
       int key = tolower(ev->data1);
-
-#if 0
-      if(opensocket &&                 // netgame disconnect binding
-         ctrldown && ev->data1 == 'd')
-      {
-         char buffer[128];
-         
-         psnprintf(buffer, sizeof(buffer),
-                   "disconnect from server?\n\n%s", DEH_String("PRESSYN"));
-         MN_Question(buffer, "disconnect leaving");
-         
-         // dont get stuck thinking ctrl is down
-         ctrldown = false;
-         return true;
-      }
-#endif
 
       keybindings[key].keydown[bclass] = true;
 
@@ -584,7 +546,6 @@ int G_KeyResponder(event_t *ev, int bclass)
 // For menu: when we select to change a key binding the widget is used
 // as the drawer and responder
 //
-//===========================================================================
 
 static const char *binding_action; // name of action we are editing
 
@@ -595,7 +556,7 @@ extern vfont_t *menu_font_normal;
 //
 // Draw the prompt box
 //
-void G_BindDrawer(void)
+void G_BindDrawer()
 {
    const char *msg = "\n -= input new key =- \n";
    int x, y, width, height;
@@ -740,10 +701,10 @@ void G_SaveDefaults(void)
 
   // write key bindings
 
-   for(i = 0; i < NUMKEYS; ++i)
+   for(i = 0; i < NUMKEYS; i++)
    {
       // haleyjd 07/03/04: support multiple binding classes
-      for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
+      for(j = 0; j < NUMKEYACTIONCLASSES; j++)
       {
          if(keybindings[i].bindings[j])
          {
@@ -788,7 +749,7 @@ CONSOLE_COMMAND(bind, 0)
          int j;
          bool foundBinding = false;
          
-         for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
+         for(j = 0; j < NUMKEYACTIONCLASSES; j++)
          {
             if(keybindings[key].bindings[j])
             {
@@ -810,7 +771,7 @@ CONSOLE_COMMAND(bind, 0)
 // haleyjd: utility functions
 CONSOLE_COMMAND(listactions, 0)
 {
-   for(int i = 0; i < NUMKEYACTIONS; ++i)
+   for(int i = 0; i < NUMKEYACTIONS; i++)
    {
       if(keyactions[i].name)
          C_Printf("%s\n", keyactions[i].name);
@@ -821,7 +782,7 @@ CONSOLE_COMMAND(listkeys, 0)
 {
    int i;
 
-   for(i = 0; i < NUMKEYS; ++i)
+   for(i = 0; i < NUMKEYS; i++)
       C_Printf("%s\n", keybindings[i].name);
 }
 
@@ -863,7 +824,7 @@ CONSOLE_COMMAND(unbind, 0)
             C_Printf(FC_ERROR " console and menu actions ignored\n");
          }
          
-         for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
+         for(j = 0; j < NUMKEYACTIONCLASSES; j++)
          {
             // do not release menu or console actions in this manner
             if(j != kac_menu && j != kac_console)
@@ -895,7 +856,7 @@ CONSOLE_COMMAND(unbindall, 0)
    
    for(i = 0; i < NUMKEYS; ++i)
    {
-      for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
+      for(j = 0; j < NUMKEYACTIONCLASSES; j++)
          keybindings[i].bindings[j] = NULL;
    }
 }

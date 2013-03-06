@@ -25,23 +25,26 @@
 #ifndef G_BIND_H__
 #define G_BIND_H__
 
-void G_InitKeyBindings(void);
+struct event_t;
+class  qstring;
+
+void G_InitKeyBindings();
 int  G_KeyResponder(event_t *ev, int bclass);
 
-void G_ClearKeyStates(void);
+void G_ClearKeyStates();
 
 typedef void (*binding_handler)(event_t *ev);
 
 void G_EditBinding(const char *action);
-const char *G_BoundKeys(const char *action);
+void G_BoundKeys(const char *action, qstring &outstr);
 const char *G_FirstBoundKey(const char *action);
 
 // default file loading
 
-void G_LoadDefaults(void);
-void G_SaveDefaults(void);
+void G_LoadDefaults();
+void G_SaveDefaults();
 
-void G_Bind_AddCommands(void);
+void G_Bind_AddCommands();
 
 // haleyjd 07/03/04: key binding classes
 enum keyactionclass
@@ -55,6 +58,7 @@ enum keyactionclass
    NUMKEYACTIONCLASSES
 };
 
+// key actions
 enum keyaction_e
 {
    ka_nothing,
