@@ -639,8 +639,6 @@ extern void R_InitPortals(void);
 //
 void G_DoLoadLevel(void)
 {
-   int i;
-   
    levelstarttic = gametic; // for time calculation
    
    if(!demo_compatibility && demo_version < 203)   // killough 9/29/98
@@ -653,7 +651,7 @@ void G_DoLoadLevel(void)
 
    if(gamestate != GS_LEVEL)       // level load error
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(int i = 0; i < MAXPLAYERS; i++)
          players[i].playerstate = PST_LIVE;
       return;
    }

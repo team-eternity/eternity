@@ -786,7 +786,6 @@ static bool RunGameTics(void)
    {
       I_StartTic();
       D_ProcessEvents();
-      //newtics = 1;  // only 1 new tic
       G_BuildTiccmd(&netcmds[consoleplayer][maketic%BACKUPTICS]);
       if(advancedemo)
          D_DoAdvanceDemo();
@@ -832,7 +831,6 @@ static bool RunGameTics(void)
             I_Error("gametic>lowtic\n");
          if(advancedemo)
             D_DoAdvanceDemo();
-         //isconsoletic =  gamestate == GS_CONSOLE;
          G_Ticker();
          gametic++;
          
@@ -854,6 +852,7 @@ static bool RunGameTics(void)
             }
          }
       }
+
       NetUpdate();   // check for new console commands
    }
 
