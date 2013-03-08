@@ -433,7 +433,7 @@ static void CenterMouse(void)
 // This is to combine all mouse movement for a tic into one mouse
 // motion event.
 //
-static void I_ReadMouse(void)
+static void I_ReadMouse()
 {
    int x, y;
    event_t ev;
@@ -455,7 +455,7 @@ static void I_ReadMouse(void)
       {
          // SoM: So the values that go to Eternity should be 16.16 fixed
          //      point...
-         ev.data2 = AccelerateMouse(x);
+         ev.data2 =  AccelerateMouse(x);
          ev.data3 = -AccelerateMouse(y);
       }
       else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
@@ -616,10 +616,8 @@ static void I_GetEvent()
          if(d_event.data1 == KEYD_CAPSLOCK)
          {
             // oPS I HITTED TEH CAPDLOCK!
-            tempevent.type      = ev_keyup;
-            tempevent.data1     = KEYD_CAPSLOCK;
-            tempevent.character = 0;
-
+            tempevent.type  = ev_keyup;
+            tempevent.data1 = KEYD_CAPSLOCK;
             I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif
@@ -643,8 +641,8 @@ static void I_GetEvent()
          {
             d_event.type = ev_keydown;
 
-            tempevent.type      = ev_keyup;
-            tempevent.data1     = KEYD_CAPSLOCK;
+            tempevent.type  = ev_keyup;
+            tempevent.data1 = KEYD_CAPSLOCK;
             I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif

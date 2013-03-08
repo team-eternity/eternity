@@ -163,7 +163,14 @@ bool SDLGamePad::select()
    // remember who is in use internally
    activeIdx = sdlIndex;
 
-   return ((joystick = SDL_JoystickOpen(sdlIndex)) != NULL);
+   if((joystick = SDL_JoystickOpen(sdlIndex)) != NULL)
+   {
+      numAxes    = SDL_JoystickNumAxes(joystick);
+      numButtons = SDL_JoystickNumButtons(joystick);
+      return true;
+   }
+   else
+      return false;
 }
 
 //
@@ -182,6 +189,26 @@ void SDLGamePad::deselect()
       joystick  = NULL;
       activeIdx = -1;
    }
+}
+
+//
+// SDLGamePad::poll
+//
+// Refresh input state data by polling the device.
+//
+void SDLGamePad::poll()
+{
+   SDL_JoystickUpdate();
+}
+
+//
+// SDLGamePad::buttonDown
+//
+// Test button state for the indicated button.
+//
+bool SDLGamePad::buttonDown(int buttonNum)
+{
+   return !!SDL_JoystickGetButton(joystick, buttonNum);
 }
 
 // EOF

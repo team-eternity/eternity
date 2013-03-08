@@ -69,12 +69,19 @@ class HALGamePad : public RTTIObject
    DECLARE_RTTI_TYPE(HALGamePad, RTTIObject)
 
 public:
-   HALGamePad() : Super(), name() {}
+   HALGamePad() : Super(), name(), numAxes(0), numButtons(0) {}
 
+   // Selection
    virtual bool select()   { return false; } // Select as the input device
    virtual void deselect() {}                // Deselect from input device status
+   
+   // Input
+   virtual void poll() {} // Refresh all input state data
+   virtual bool buttonDown(int buttonNum) { return false; }
 
-   qstring name; // Device name
+   qstring name;        // Device name
+   int     numAxes;     // Number of axes supported
+   int     numButtons;  // Number of buttons supported
 };
 
 #endif

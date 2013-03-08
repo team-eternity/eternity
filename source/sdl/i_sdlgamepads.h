@@ -65,6 +65,9 @@ public:
    virtual bool select();
    virtual void deselect();
 
+   virtual void poll();
+   virtual bool buttonDown(int buttonNum);
+
    int  sdlIndex; // SDL gamepad number
    bool active;
 };
