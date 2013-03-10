@@ -37,6 +37,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "hal/i_platform.h"
+#include "hal/i_gamepads.h"
 
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -148,14 +149,11 @@ default_t defaults[] =
    // haleyjd 04/15/02: SDL joystick device number
    DEFAULT_INT("joystick_num", &i_SDLJoystickNum, NULL, -1, -1, UL, default_t::wad_no,
                "SDL joystick device number, -1 to disable"),
-    
-   // joystick sensitivities
-   DEFAULT_INT("joystickSens_x", &joystickSens_x, NULL, 0, -32768, 32767, default_t::wad_no,
-               "SDL joystick horizontal sensitivity"),
-
-   DEFAULT_INT("joystickSens_y", &joystickSens_y, NULL, 0, -32768, 32767, default_t::wad_no,
-               "SDL joystick vertical sensitivity"),
 #endif
+
+   // joystick sensitivity
+   DEFAULT_INT("i_joysticksens", &i_joysticksens, NULL, 0, 0, 32767, default_t::wad_no,
+               "DirectInput joystick sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),

@@ -699,7 +699,7 @@ void G_AddChatMacros(void)
       command->handler = NULL;
       command->netcmd = 0;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
 }
 
@@ -769,7 +769,7 @@ void G_AddWeapPrefs(void)
       command->handler = G_WeapPrefHandler;
       command->netcmd = 0;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
 }
 
@@ -830,7 +830,7 @@ void G_AddAutoloadFiles(void)
       command->handler = NULL;
       command->netcmd = 0;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
 }
 
@@ -918,98 +918,8 @@ void G_AddCompat(void)
       command->variable = variable;
       command->netcmd = netcmd_comp_0 + i;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
-}
-
-void G_AddCommands(void)
-{
-   C_AddCommand(i_exitwithmessage);
-   C_AddCommand(i_fatalerror);
-   C_AddCommand(i_error);
-   C_AddCommand(z_print);
-   C_AddCommand(z_dumpcore);
-   C_AddCommand(starttitle);
-   C_AddCommand(endgame);
-   C_AddCommand(pause);
-   C_AddCommand(quit);
-   C_AddCommand(animshot);
-   C_AddCommand(screenshot);
-   C_AddCommand(shot_type);
-   C_AddCommand(shot_gamma);
-   C_AddCommand(alwaysmlook);
-   C_AddCommand(bobbing);
-   C_AddCommand(doom_weapon_toggles);
-   C_AddCommand(sens_horiz);
-   C_AddCommand(sens_vert);
-   C_AddCommand(sens_combined);
-   C_AddCommand(sens_vanilla);
-   C_AddCommand(mouse_accel_type);
-   C_AddCommand(mouse_accel_threshold);
-   C_AddCommand(mouse_accel_value);
-   C_AddCommand(mouse_novert);
-   C_AddCommand(invertmouse);
-   C_AddCommand(turbo);
-   C_AddCommand(playdemo);
-   C_AddCommand(timedemo);
-   C_AddCommand(cooldemo);
-   C_AddCommand(stopdemo);
-   C_AddCommand(exitlevel);
-   C_AddCommand(addfile);
-   C_AddCommand(listwads);
-   C_AddCommand(rngseed);
-   C_AddCommand(kill);
-   C_AddCommand(map);
-   C_AddCommand(name);
-   C_AddCommand(textmode_startup);
-   C_AddCommand(demo_insurance);
-   C_AddCommand(smooth_turning);
-
-   // haleyjd: new stuff
-   C_AddCommand(map_coords);
-   C_AddCommand(map_secret_after);
-   C_AddCommand(numhelpers);
-   C_AddCommand(dogjumping);
-   C_AddCommand(draw_particles);
-   C_AddCommand(bloodsplattype);
-   C_AddCommand(bulletpufftype);
-   C_AddCommand(rocket_trails);
-   C_AddCommand(grenade_trails);
-   C_AddCommand(bfg_cloud);
-   C_AddCommand(startonnewmap);
-   C_AddCommand(autorun);
-   C_AddCommand(runiswalk);
-   C_AddCommand(m_resetcomments);
-
-   // [CG] 01/29/2012: Spectate previous, next and self
-   C_AddCommand(spectate_prev);
-   C_AddCommand(spectate_next);
-   C_AddCommand(spectate_self);
-
-   // haleyjd 03/22/09: iwad paths
-   C_AddCommand(iwad_doom_shareware);
-   C_AddCommand(iwad_doom);
-   C_AddCommand(iwad_ultimate_doom);
-   C_AddCommand(iwad_doom2);
-   C_AddCommand(iwad_tnt);
-   C_AddCommand(iwad_plutonia);
-   C_AddCommand(iwad_hacx);
-   C_AddCommand(iwad_heretic_shareware);
-   C_AddCommand(iwad_heretic);
-   C_AddCommand(iwad_heretic_sosr);
-   C_AddCommand(iwad_freedoom);
-   C_AddCommand(iwad_freedoomu);
-   C_AddCommand(iwad_freedm);
-   C_AddCommand(master_levels_dir);
-   C_AddCommand(w_norestpath);
-
-   C_AddCommand(use_doom_config);
-
-   G_AddChatMacros();
-   G_AddWeapPrefs();
-   G_AddCompat();
-   G_AddAutoloadFiles(); // haleyjd
-   P_AddEventVars(); // haleyjd
 }
 
 // EOF

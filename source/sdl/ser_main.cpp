@@ -72,12 +72,4 @@ CONSOLE_COMMAND(answer, cf_notnet | cf_buffered)
 
 CONSOLE_VARIABLE(com, comport, 0) {}
 
-void Ser_AddCommands(void)
-{
-   C_AddCommand(nullmodem);
-   C_AddCommand(dial);
-   C_AddCommand(com);
-   C_AddCommand(answer);
-}
-
 // EOF

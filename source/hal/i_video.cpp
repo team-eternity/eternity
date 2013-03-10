@@ -599,13 +599,6 @@ VARIABLE_BOOLEAN(usejoystick, NULL, yesno);
 CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
 CONSOLE_VARIABLE(i_usejoystick, usejoystick, 0) {}
 
-// haleyjd 04/15/02: joystick sensitivity variables
-VARIABLE_INT(joystickSens_x, NULL, -32768, 32767, NULL);
-VARIABLE_INT(joystickSens_y, NULL, -32768, 32767, NULL);
-
-CONSOLE_VARIABLE(joySens_x, joystickSens_x, 0) {}
-CONSOLE_VARIABLE(joySens_y, joystickSens_y, 0) {}
-
 // haleyjd 03/27/06: mouse grabbing
 VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
 CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
@@ -643,27 +636,6 @@ CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
 
 VARIABLE_INT(i_softbitdepth, NULL, 8, 32, NULL);
 CONSOLE_VARIABLE(i_softbitdepth, i_softbitdepth, 0) {}
-
-void I_Video_AddCommands(void)
-{
-   C_AddCommand(i_usemouse);
-   C_AddCommand(i_usejoystick);
-   
-   C_AddCommand(v_diskicon);
-   C_AddCommand(v_retrace);
-   
-   C_AddCommand(joySens_x);
-   C_AddCommand(joySens_y);
-
-   C_AddCommand(i_grabmouse);
-
-   C_AddCommand(i_videomode);
-   C_AddCommand(i_default_videomode);
-
-   C_AddCommand(i_videodriverid);
-
-   C_AddCommand(i_softbitdepth);
-}
 
 // EOF
 

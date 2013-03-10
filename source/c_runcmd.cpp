@@ -1427,7 +1427,7 @@ static bool C_Strcmp(const char *pa, const char *pb)
 
 command_t *cmdroots[CMDCHAINS];
 
-void (C_AddCommand)(command_t *command)
+void C_AddCommand(command_t *command)
 {
    unsigned int hash = D_HashTableKey(command->name) % CMDCHAINS;
    
@@ -1455,7 +1455,7 @@ void (C_AddCommand)(command_t *command)
 void C_AddCommandList(command_t *list)
 {
    for(; list->type != ct_end; list++)
-      (C_AddCommand)(list);
+      C_AddCommand(list);
 }
 
 // get a command from a string if possible

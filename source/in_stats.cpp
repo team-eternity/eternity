@@ -588,10 +588,5 @@ CONSOLE_COMMAND(mapscores, cf_level)
    }
 }
 
-void IN_Stats_AddCommands()
-{
-   C_AddCommand(mapscores);
-}
-
 // EOF
 

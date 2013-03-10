@@ -643,12 +643,4 @@ CONSOLE_COMMAND(v_dumppatch, 0)
    V_WritePatchAsPNG(lump, filename.constPtr(), static_cast<byte>(fillcolor));
 }
 
-void V_AddCommands(void)
-{
-   C_AddCommand(v_modelist);
-   C_AddCommand(v_fontcolors);
-   C_AddCommand(v_ticker);
-   C_AddCommand(v_dumppatch);
-}
-
 // EOF

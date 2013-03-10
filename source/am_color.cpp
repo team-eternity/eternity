@@ -108,31 +108,4 @@ CONSOLE_VARIABLE(mapcolor_frnd, mapcolor_frnd, 0) {}
 CONSOLE_VARIABLE(mapcolor_prtl, mapcolor_prtl, 0) {}
 CONSOLE_VARIABLE(mapportal_overlay, mapportal_overlay, 0) {}
 
-void AM_AddCommands(void)
-{
-  C_AddCommand(mapcolor_back);
-  C_AddCommand(mapcolor_grid);
-  C_AddCommand(mapcolor_wall);
-  C_AddCommand(mapcolor_fchg);
-  C_AddCommand(mapcolor_cchg);
-  C_AddCommand(mapcolor_clsd);
-  C_AddCommand(mapcolor_rkey);
-  C_AddCommand(mapcolor_ykey);
-  C_AddCommand(mapcolor_bkey);
-  C_AddCommand(mapcolor_rdor);
-  C_AddCommand(mapcolor_ydor);
-  C_AddCommand(mapcolor_bdor);
-  C_AddCommand(mapcolor_tele);
-  C_AddCommand(mapcolor_secr);
-  C_AddCommand(mapcolor_exit);
-  C_AddCommand(mapcolor_unsn);
-  C_AddCommand(mapcolor_flat);
-  C_AddCommand(mapcolor_sprt);
-  C_AddCommand(mapcolor_hair);
-  C_AddCommand(mapcolor_sngl);
-  C_AddCommand(mapcolor_frnd);
-  C_AddCommand(mapcolor_prtl);
-  C_AddCommand(mapportal_overlay);
-}
-
 // EOF

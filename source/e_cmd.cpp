@@ -445,25 +445,6 @@ CONSOLE_COMMAND(e_linedef, cf_level)
    C_Printf("Record not found\n");
 }
 
-//
-// E_AddCommands
-//
-// Adds the commands to the command list
-//
-void E_AddCommands(void)
-{
-   C_AddCommand(e_dumpthings);
-   C_AddCommand(e_thingtype);
-   C_AddCommand(e_dumpmeta);
-   C_AddCommand(e_dumpstate);
-   C_AddCommand(e_dumpitems);
-   C_AddCommand(e_playsound);
-   C_AddCommand(e_listmapthings);
-   C_AddCommand(e_mapthing);
-   C_AddCommand(e_listlinedefs);
-   C_AddCommand(e_linedef);
-}
-
 #if 0
 
 //

@@ -755,12 +755,4 @@ CONSOLE_COMMAND(mn_testfont, 0)
    MN_PushWidget(&fonttest_widget);
 }
 
-
-void MN_AddMiscCommands(void)
-{
-   C_AddCommand(credits);
-   C_AddCommand(help);
-   C_AddCommand(mn_testfont);
-}
-
 // EOF

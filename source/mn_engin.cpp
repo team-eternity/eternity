@@ -2376,20 +2376,4 @@ CONSOLE_VARIABLE(mn_background, mn_background, 0)
    MN_SetBackground();
 }
 
-extern void MN_AddMenus(void);              // mn_menus.c
-extern void MN_AddMiscCommands(void);       // mn_misc.c
-
-void MN_AddCommands(void)
-{
-   C_AddCommand(mn_clearmenus);
-   C_AddCommand(mn_prevmenu);
-   C_AddCommand(forceload);
-   C_AddCommand(mn_toggleisback);
-   C_AddCommand(mn_background);
-   
-   MN_AddMenus();               // add commands to call the menus
-   MN_AddMiscCommands();
-   MN_AddDynaMenuCommands();    // haleyjd 03/13/06
-}
-
 // EOF

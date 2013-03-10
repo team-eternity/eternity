@@ -25,6 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
+#include "../c_runcmd.h"
 
 #include "i_gamepads.h"
 
@@ -45,6 +46,14 @@ static PODCollection<HALGamePad *> masterGamePadList;
 
 // Currently selected and active gamepad object, if any.
 static HALGamePad *activePad;
+
+// Generic sensitivity values, for drivers that need them
+int i_joysticksens;
+
+// haleyjd 04/15/02: joystick sensitivity variables
+VARIABLE_INT(i_joysticksens, NULL, 0, 32767, NULL);
+
+CONSOLE_VARIABLE(i_joysticksens, i_joysticksens, 0) {}
 
 //=============================================================================
 //

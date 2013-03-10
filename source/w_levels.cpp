@@ -728,23 +728,5 @@ CONSOLE_COMMAND(w_writelump, 0)
    wGlobalDir.writeLump(lumpname, filename.constPtr());
 }
 
-//
-// W_AddCommands
-//
-// Adds all managed wad directory and Master Levels commands, as well as some
-// misc utilities related to wad files. Note that the master_levels_dir cvar 
-// is in g_cmd along with the IWAD settings, because it needs to use some of 
-// the same code they use for path verification.
-//
-void W_AddCommands(void)
-{
-   C_AddCommand(w_masterlevels);
-   C_AddCommand(w_startlevel);
-   C_AddCommand(w_playnorest);
-
-   // Utils
-   C_AddCommand(w_writelump);
-}
-
 // EOF
 

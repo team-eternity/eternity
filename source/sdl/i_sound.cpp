@@ -461,29 +461,6 @@ CONSOLE_VARIABLE(s_lowgain,   s_lowgain,   0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_midgain,   s_midgain,   0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_highgain,  s_highgain,  0) { I_UpdateEQ(); }
 
-void I_Sound_AddCommands(void)
-{
-   C_AddCommand(snd_card);
-   C_AddCommand(mus_card);
-   C_AddCommand(detect_voices);
-
-   C_AddCommand(s_equalizer);
-   C_AddCommand(s_lowfreq);
-   C_AddCommand(s_highfreq);
-   C_AddCommand(s_eqpreamp);
-   C_AddCommand(s_lowgain);
-   C_AddCommand(s_midgain);
-   C_AddCommand(s_highgain);
-
-#ifdef _SDL_VER
-#ifdef HAVE_SPCLIB
-   C_AddCommand(snd_spcpreamp);
-   C_AddCommand(snd_spcbassboost);
-#endif
-#endif
-}
-
-
 //----------------------------------------------------------------------------
 //
 // $Log: i_sound.c,v $

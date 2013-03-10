@@ -1097,13 +1097,6 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
    Z_Free(params);
 }
 
-void SM_AddCommands(void)
-{
-   C_AddCommand(sm_running);
-   C_AddCommand(sm_execv);
-   C_AddCommand(sm_execi);
-}
-
 // local natives -- these classify as core functionality
 
 //

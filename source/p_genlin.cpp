@@ -1577,11 +1577,6 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
    }
 }
 
-void P_AddGenLineCommands()
-{
-   C_AddCommand(p_linespec);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: p_genlin.c,v $

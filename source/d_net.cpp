@@ -940,14 +940,6 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
 
-void net_AddCommands()
-{
-   //C_AddCommand(kick);
-   //C_AddCommand(disconnect);
-   C_AddCommand(playerinfo);
-   C_AddCommand(d_fastrefresh);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: d_net.c,v $

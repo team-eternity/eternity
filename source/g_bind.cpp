@@ -885,14 +885,4 @@ CONSOLE_COMMAND(bindings, 0)
    }
 }
 
-void G_Bind_AddCommands()
-{
-   C_AddCommand(bind);
-   C_AddCommand(listactions);
-   C_AddCommand(listkeys);
-   C_AddCommand(unbind);
-   C_AddCommand(unbindall);
-   C_AddCommand(bindings);
-}
-
 // EOF

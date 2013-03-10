@@ -1477,32 +1477,6 @@ CONSOLE_VARIABLE(hu_timecolor, hu_timecolor, 0) {}
 CONSOLE_VARIABLE(hu_levelnamecolor, hu_levelnamecolor, 0) {}
 CONSOLE_VARIABLE(hu_coordscolor, hu_coordscolor, 0) {}
 
-
-extern void HU_FragsAddCommands(void);
-extern void HU_OverAddCommands(void);
-
-void HU_AddCommands(void)
-{
-   C_AddCommand(hu_obituaries);
-   C_AddCommand(hu_obitcolor);
-   C_AddCommand(hu_crosshair);
-   C_AddCommand(hu_crosshair_hilite);
-   C_AddCommand(hu_messages);
-   C_AddCommand(hu_messagecolor);
-   C_AddCommand(say);   
-   C_AddCommand(hu_messagelines);
-   C_AddCommand(hu_messagescroll);
-   C_AddCommand(hu_messagetime);
-   C_AddCommand(hu_showtime);
-   C_AddCommand(hu_showcoords);
-   C_AddCommand(hu_timecolor);
-   C_AddCommand(hu_levelnamecolor);
-   C_AddCommand(hu_coordscolor);
-   
-   HU_FragsAddCommands();
-   HU_OverAddCommands();
-}
-
 #if 0
 //
 // Script functions

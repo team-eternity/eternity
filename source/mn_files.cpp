@@ -736,14 +736,5 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    MN_PushWidget(&file_selector);
 }
 
-void MN_File_AddCommands(void)
-{
-   C_AddCommand(dir);
-   C_AddCommand(mn_selectwad);
-   C_AddCommand(wad_directory);
-   C_AddCommand(mn_selectmusic);
-   C_AddCommand(mn_selectflat);
-}
-
 // EOF
 

@@ -338,10 +338,4 @@ static void MN_HLoadDrawer(void)
    }
 }
 
-void MN_AddHMenus(void)
-{
-   C_AddCommand(mn_hnewgame);
-   C_AddCommand(mn_hepis);
-}
-
 // EOF

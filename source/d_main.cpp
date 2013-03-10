@@ -2605,11 +2605,6 @@ void D_DoomMain(void)
 VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
 CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
 
-void D_AddCommands(void)
-{
-   C_AddCommand(d_drawfps);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: d_main.c,v $

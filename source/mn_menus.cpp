@@ -1236,7 +1236,7 @@ void MN_SaveGame(void)
 }
 
 // create the savegame console commands
-void MN_CreateSaveCmds(void)
+void MN_CreateSaveCmds()
 {
    // haleyjd: something about the way these commands are being created
    //          is causing the console code to free a ptr with no zone id...
@@ -1271,7 +1271,7 @@ void MN_CreateSaveCmds(void)
       save_command->handler = MN_SaveGame;
       save_command->netcmd = 0;
       
-      (C_AddCommand)(save_command); // hook into cmdlist
+      C_AddCommand(save_command); // hook into cmdlist
    }
 }
 
@@ -3823,104 +3823,5 @@ CONSOLE_COMMAND(mn_old_sound, 0)
 
 // TODO: Original Save and Load Menus?
 // TODO: Draw skull cursor on Credits pages?
-
-//
-// MN_AddMenus
-//
-// Adds all menu system commands to the console command chains.
-// 
-void MN_AddMenus(void)
-{
-   C_AddCommand(mn_newgame);
-   C_AddCommand(mn_episode);
-   C_AddCommand(startlevel);
-   C_AddCommand(use_startmap);
-   C_AddCommand(mn_start_mapname); // haleyjd 05/14/06
-   
-   C_AddCommand(mn_loadgame);
-   C_AddCommand(mn_load);
-   C_AddCommand(mn_savegame);
-
-   C_AddCommand(mn_loadwad);
-   C_AddCommand(mn_loadwaditem);
-   C_AddCommand(mn_wadname);
-   C_AddCommand(mn_demos);
-   C_AddCommand(mn_demoname);
-   C_AddCommand(mn_player);
-
-   // haleyjd: dmflags
-   C_AddCommand(mn_dfitem);
-   C_AddCommand(mn_dfweapstay);
-   C_AddCommand(mn_dfbarrel);
-   C_AddCommand(mn_dfplyrdrop);
-   C_AddCommand(mn_dfrespsupr);
-   C_AddCommand(mn_dfinstagib);
-   
-   // different connect types
-   C_AddCommand(mn_gset);
-   
-   C_AddCommand(mn_options);
-   C_AddCommand(mn_mouse);
-   C_AddCommand(mn_video);
-   C_AddCommand(mn_particle);  // haleyjd: particle options menu
-   C_AddCommand(mn_vidmode);
-   C_AddCommand(mn_favaspectratio);
-   C_AddCommand(mn_favscreentype);
-   C_AddCommand(mn_sound);
-   C_AddCommand(mn_weapons);
-   C_AddCommand(mn_compat);
-   C_AddCommand(mn_enemies);
-   C_AddCommand(mn_hud);
-   C_AddCommand(mn_status);
-   C_AddCommand(mn_automap);
-
-   C_AddCommand(mn_movekeys);
-   C_AddCommand(mn_advkeys);
-   C_AddCommand(mn_weaponkeys);
-   C_AddCommand(mn_envkeys);
-   C_AddCommand(mn_gamefuncs);
-   C_AddCommand(mn_menukeys);
-   C_AddCommand(mn_automapkeys);
-   C_AddCommand(mn_consolekeys);
-   C_AddCommand(newgame);
-   
-   // prompt messages
-   C_AddCommand(mn_quit);
-   C_AddCommand(mn_endgame);
-
-   // haleyjd 03/15/06: the "menu" menu
-   C_AddCommand(mn_menus);
-   C_AddCommand(mn_searchstr);
-   C_AddCommand(mn_search);
-
-   C_AddCommand(mn_config);
-   
-   // haleyjd: quicksave, quickload
-   C_AddCommand(quicksave);
-   C_AddCommand(quickload);
-   C_AddCommand(qsave);
-   C_AddCommand(qload);
-   
-   // haleyjd 04/15/02: SDL joystick devices
-#ifdef _SDL_VER
-   C_AddCommand(mn_joysticks);
-   C_AddCommand(mn_joymenu);
-#endif
-
-   C_AddCommand(skinviewer);
-
-   // haleyjd: "old" menus
-   C_AddCommand(mn_classic_menus);
-   C_AddCommand(mn_old_options);
-   C_AddCommand(mn_old_sound);
-   
-   // haleyjd: add Heretic-specific menus (in mn_htic.c)
-   MN_AddHMenus();
-   
-   MN_CreateSaveCmds();
-
-   // haleyjd 03/11/06: file dialog cmds
-   MN_File_AddCommands();
-}
 
 // EOF

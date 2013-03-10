@@ -1936,20 +1936,6 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
 VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
 CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
 
-void PE_AddCommands(void)
-{
-   C_AddCommand(summon);
-   C_AddCommand(give);
-   C_AddCommand(viles);
-   C_AddCommand(whistle);
-   C_AddCommand(mdk);
-   C_AddCommand(mdkbomb);
-   C_AddCommand(banish);
-   C_AddCommand(vilehit);
-   C_AddCommand(resurrect);
-   C_AddCommand(p_lastenemyroar);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: p_enemy.c,v $

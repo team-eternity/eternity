@@ -436,15 +436,5 @@ CONSOLE_COMMAND(mn_dynamenu, 0)
    MN_StartMenu(menu);
 }
 
-//
-// MN_AddDynaMenuCommands
-//
-// Adds console commands related to the dynamic menu system.
-//
-void MN_AddDynaMenuCommands(void)
-{
-   C_AddCommand(mn_dynamenu);
-}
-
 // EOF
 

@@ -1342,33 +1342,6 @@ CONSOLE_COMMAND(r_changesky, 0)
       C_Printf(FC_ERROR "No such texture %s", name.constPtr());
 }
 
-void R_AddCommands(void)
-{
-   C_AddCommand(r_fov);
-   C_AddCommand(lefthanded);
-   C_AddCommand(r_blockmap);
-   C_AddCommand(r_homflash);
-   C_AddCommand(r_planeview);
-   C_AddCommand(r_precache);
-   C_AddCommand(r_showgun);
-   C_AddCommand(r_showhom);
-   C_AddCommand(r_stretchsky);
-   C_AddCommand(r_swirl);
-   C_AddCommand(r_trans);
-   C_AddCommand(r_tranpct);
-   C_AddCommand(screensize);
-   C_AddCommand(gamma);
-   C_AddCommand(r_ptcltrans);
-   C_AddCommand(r_columnengine);
-   C_AddCommand(r_spanengine);
-   C_AddCommand(r_vissprite_limit);
-   C_AddCommand(r_showrefused);
-   C_AddCommand(r_tlstyle);
-   C_AddCommand(r_changesky);
-
-   C_AddCommand(p_dumphubs);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: r_main.c,v $

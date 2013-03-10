@@ -96,10 +96,6 @@ extern const char *const i_videohelpstr;
 
 // Below here has been moved to i_input.c
 // haleyjd
-#ifdef _SDL_VER
-extern int joystickSens_x;
-extern int joystickSens_y;
-#endif
 
 int I_DoomCode2ScanCode(int);   // killough
 int I_ScanCode2DoomCode(int);   // killough

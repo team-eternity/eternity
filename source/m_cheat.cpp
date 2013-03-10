@@ -997,16 +997,6 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
    M_NukeMonsters();
 }
 
-void Cheat_AddCommands()
-{
-   C_AddCommand(infammo);
-   C_AddCommand(god);
-   C_AddCommand(noclip);
-   C_AddCommand(buddha);
-   C_AddCommand(fly);
-   C_AddCommand(nuke);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: m_cheat.c,v $

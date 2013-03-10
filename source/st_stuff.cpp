@@ -1390,25 +1390,6 @@ CONSOLE_VARIABLE(st_rednum,    sts_always_red,       0) {}
 CONSOLE_VARIABLE(st_singlekey, sts_traditional_keys, 0) {}
 CONSOLE_VARIABLE(st_fsalpha,   st_fsalpha,           0) {}
 
-void ST_AddCommands(void)
-{
-   C_AddCommand(ammo_red);
-   C_AddCommand(ammo_yellow);
-   
-   C_AddCommand(health_red);
-   C_AddCommand(health_yellow);
-   C_AddCommand(health_green);
-   
-   C_AddCommand(armor_red);
-   C_AddCommand(armor_yellow);
-   C_AddCommand(armor_green);
-   
-   C_AddCommand(st_graypct);
-   C_AddCommand(st_rednum);
-   C_AddCommand(st_singlekey);
-   C_AddCommand(st_fsalpha);
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: st_stuff.c,v $

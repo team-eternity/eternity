@@ -196,10 +196,4 @@ CONSOLE_COMMAND(frags, 0)
 VARIABLE_BOOLEAN(show_scores,       NULL,           onoff);
 CONSOLE_VARIABLE(show_scores,   show_scores,    0)      {}
 
-void HU_FragsAddCommands(void)
-{
-   C_AddCommand(frags);
-   C_AddCommand(show_scores);
-}
-
 // EOF

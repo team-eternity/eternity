@@ -199,16 +199,24 @@ void SDLGamePad::deselect()
 void SDLGamePad::poll()
 {
    SDL_JoystickUpdate();
-}
 
-//
-// SDLGamePad::buttonDown
-//
-// Test button state for the indicated button.
-//
-bool SDLGamePad::buttonDown(int buttonNum)
-{
-   return !!SDL_JoystickGetButton(joystick, buttonNum);
+   // save old button states
+   memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
+
+   // get button states
+   for(int i = 0; i < numButtons && i < MAXBUTTONS; i++)
+      state.buttons[i] = !!SDL_JoystickGetButton(joystick, i);
+
+   // get axis states
+   for(int i = 0; i < numAxes && i < MAXAXES; i++)
+   {
+      Sint16 val = SDL_JoystickGetAxis(joystick, i);
+
+      if(val > i_joysticksens || val < -i_joysticksens)
+         state.axes[i] = static_cast<float>(val) / 32768.0f;
+      else
+         state.axes[i] = 0.0f;
+   }
 }
 
 // EOF

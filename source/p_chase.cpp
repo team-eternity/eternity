@@ -584,15 +584,6 @@ bool P_FollowCamTicker()
                          followtarget->height);
 }
 
-void P_Chase_AddCommands(void)
-{
-   C_AddCommand(chasecam);
-   C_AddCommand(chasecam_height);
-   C_AddCommand(chasecam_dist);
-   C_AddCommand(chasecam_speed);
-   C_AddCommand(walkcam);
-}
-
 #if 0
 static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 {

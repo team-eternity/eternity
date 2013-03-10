@@ -611,10 +611,4 @@ CONSOLE_VARIABLE(hu_overlay, hud_overlaystyle, 0) {}
 VARIABLE_BOOLEAN(hud_hidestatus, NULL, yesno);
 CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
 
-void HU_OverAddCommands()
-{
-   C_AddCommand(hu_overlay);
-   C_AddCommand(hu_hidesecrets);
-}
-
 // EOF

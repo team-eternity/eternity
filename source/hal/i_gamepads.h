@@ -33,6 +33,9 @@
 
 class HALGamePad;
 
+// Generic sensitivity value, for drivers that need it
+extern int i_joysticksens;
+
 //
 // HALGamePadDriver
 //
@@ -77,11 +80,27 @@ public:
    
    // Input
    virtual void poll() {} // Refresh all input state data
-   virtual bool buttonDown(int buttonNum) { return false; }
 
+   // Data
    qstring name;        // Device name
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
+
+   enum
+   {
+      // In interest of efficiency, we have caps on the number of device inputs
+      // we will monitor.
+      MAXAXES = 8,
+      MAXBUTTONS = 16
+   };
+
+   struct padstate_t
+   {
+      bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
+      bool  buttons[MAXBUTTONS];     // current button states
+      float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
+   };
+   padstate_t state;
 };
 
 #endif

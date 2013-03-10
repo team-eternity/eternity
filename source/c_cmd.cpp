@@ -377,79 +377,55 @@ CONSOLE_COMMAND(c_popup, 0)
    C_InstaPopup();
 }
 
-        /******** add commands *******/
+//=============================================================================
+//
+// Add Commands
+//
 
-// command-adding functions in other modules
+// Static list head pointer for CCmdRegistry instances
+DLListItem<CCmdRegistry> *CCmdRegistry::commands;
 
-extern void       AM_AddCommands();        // am_color
-extern void    Cheat_AddCommands();        // m_cheat
-extern void        D_AddCommands();        // d_main   -- haleyjd
-extern void        E_AddCommands();        // e_cmd    -- haleyjd
-extern void        G_AddCommands();        // g_cmd
-extern void   G_Bind_AddCommands();        // g_bind   -- haleyjd
-extern void      G_DMAddCommands();        // g_dmflag -- haleyjd
-extern void       HU_AddCommands();        // hu_stuff
-extern void        I_AddCommands();        // i_system
-extern void IN_Stats_AddCommands();        // in_stats -- haleyjd
-extern void       MN_AddCommands();        // mn_menu
-extern void      net_AddCommands();        // d_net
-extern void        P_AddCommands();        // p_cmd
-extern void P_AddGenLineCommands();        // p_genlin -- haleyjd
-extern void       PE_AddCommands();        // p_enemy  -- haleyjd
-extern void        R_AddCommands();        // r_main
-extern void        S_AddCommands();        // s_sound
-extern void     S_AddSeqCommands();        // s_sndseq -- haleyjd
-extern void       ST_AddCommands();        // st_stuff
-extern void        V_AddCommands();        // v_misc
-extern void        W_AddCommands();        // w_levels -- haleyjd
+//
+// CCmdRegistry::AddCommands
+//
+// Static method; called from C_AddCommands at startup. CCmdRegistry instances
+// have all added themselves to the class's static instance list (in arbitrary
+// order). Run down the list and add every command.
+//
+void CCmdRegistry::AddCommands()
+{
+   DLListItem<CCmdRegistry> *item = commands;
 
+   while(item)
+   {
+      C_AddCommand(item->dllObject->command);
+      item = item->dllNext;
+   }
+}
+
+// Special command adding functions that still need to be called:
+extern void G_AddChatMacros();
+extern void G_AddWeapPrefs();
+extern void G_AddAutoloadFiles();
+extern void G_AddCompat();
+extern void MN_CreateSaveCmds();
+extern void P_AddEventVars();
+
+//
+// C_AddCommands
+//
 void C_AddCommands()
 {
-  C_AddCommand(version);
-  C_AddCommand(ver_date);
-  C_AddCommand(ver_time); // haleyjd
-  C_AddCommand(ver_name);
-  
-  C_AddCommand(c_height);
-  C_AddCommand(c_speed);
-  C_AddCommand(cmdlist);
-  C_AddCommand(delay);
-  C_AddCommand(alias);
-  C_AddCommand(opt);
-  C_AddCommand(echo);
-  C_AddCommand(flood);
-  C_AddCommand(quote);
-  C_AddCommand(dumplog); // haleyjd
-  C_AddCommand(openlog);
-  C_AddCommand(closelog);
-  C_AddCommand(c_popup);
+   // Add global commands through the registry
+   CCmdRegistry::AddCommands();
 
-  // SoM: I can never remember the values for a console variable
-  C_AddCommand(cvarhelp);
-  
-  // add commands in other modules
-  AM_AddCommands();
-  Cheat_AddCommands();
-  D_AddCommands();
-  E_AddCommands();
-  G_AddCommands();
-  G_Bind_AddCommands();
-  G_DMAddCommands();
-  GL_AddCommands();  // haleyjd
-  HU_AddCommands();
-  I_AddCommands();
-  IN_Stats_AddCommands(); // haleyjd
-  MN_AddCommands();
-  net_AddCommands();
-  P_AddCommands();
-  P_AddGenLineCommands();
-  PE_AddCommands();  // haleyjd
-  R_AddCommands();
-  S_AddCommands();
-  S_AddSeqCommands();
-  ST_AddCommands();
-  V_AddCommands();
-  W_AddCommands();
+   // Some commands are created dynamically:
+   G_AddChatMacros();
+   G_AddWeapPrefs();
+   G_AddAutoloadFiles();
+   G_AddCompat();
+   MN_CreateSaveCmds();
+   P_AddEventVars();
 }
 
 #if 0

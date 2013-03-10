@@ -269,9 +269,6 @@ extern int          usejoystick;
 extern int          joystickpresent;
 extern int          sdlJoystickNumButtons;
 
-int joystickSens_x;
-int joystickSens_y;
-
 static int keyForButtonNum[8] =
 {
    KEYD_JOY1, KEYD_JOY2, KEYD_JOY3, KEYD_JOY4,
@@ -286,6 +283,8 @@ static int keyForButtonNum[8] =
 //
 static void I_JoystickEvents(void)
 {
+   // TODO: call down to the HALGamePad
+   /*
    // haleyjd 04/15/02: SDL joystick support
 
    event_t event;
@@ -345,6 +344,7 @@ static void I_JoystickEvents(void)
          old_joyb[i] = joyb[i];
       }
    }
+   */
 }
 
 

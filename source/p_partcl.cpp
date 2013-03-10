@@ -1440,7 +1440,7 @@ static void P_BFGExplosion(Mobj *actor)
 }
 
 // Generate console variables for the enabled flags on each event
-void P_AddEventVars(void)
+void P_AddEventVars()
 {
    int i;
 
@@ -1465,7 +1465,7 @@ void P_AddEventVars(void)
       command->handler = NULL;
       command->netcmd = 0;
 
-      (C_AddCommand)(command);
+      C_AddCommand(command);
    }
 }
 

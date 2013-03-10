@@ -774,10 +774,5 @@ void S_SequenceGameLoad(void)
 VARIABLE_INT(s_enviro_volume, NULL, 0, 16, NULL);
 CONSOLE_VARIABLE(s_enviro_volume, s_enviro_volume, 0) {}
 
-void S_AddSeqCommands(void)
-{
-   C_AddCommand(s_enviro_volume);
-}
-
 // EOF
 

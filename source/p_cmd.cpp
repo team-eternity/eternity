@@ -382,55 +382,5 @@ CONSOLE_COMMAND(thunder, 0)
    P_ForceLightning();
 }
 
-void P_AddCommands(void)
-{
-   C_AddCommand(creator);
-   
-   C_AddCommand(colour);
-   C_AddCommand(gametype);
-   C_AddCommand(skill);
-   C_AddCommand(allowmlook);
-   C_AddCommand(bfgtype);
-   C_AddCommand(autoaim);
-   C_AddCommand(recoil);
-   C_AddCommand(pushers);
-   C_AddCommand(varfriction);
-   C_AddCommand(nukage);
-   C_AddCommand(weapspeed);
-   C_AddCommand(bfglook);
-   C_AddCommand(p_pitchedflight);
-   
-   C_AddCommand(fast);
-   C_AddCommand(nomonsters);
-   C_AddCommand(respawn);
-   C_AddCommand(mon_remember);
-   C_AddCommand(mon_infight);
-   C_AddCommand(mon_backing);
-   C_AddCommand(mon_avoid);
-   C_AddCommand(mon_friction);
-   C_AddCommand(mon_climb);
-   C_AddCommand(mon_helpfriends);
-   C_AddCommand(mon_distfriend);
-   
-   C_AddCommand(timelimit);
-   C_AddCommand(fraglimit);
-
-   C_AddCommand(spechits_emulation);
-   C_AddCommand(donut_emulation);
-   C_AddCommand(p_markunknowns);
-   C_AddCommand(wipewait);
-   C_AddCommand(wipetype);
-   C_AddCommand(am_drawnodelines);
-
-   C_AddCommand(spacejump);
-   C_AddCommand(puke);
-
-   C_AddCommand(enable_lightning);
-   C_AddCommand(thunder);
-   
-   P_Chase_AddCommands();
-   P_Skin_AddCommands();
-}
-
 // EOF
 

@@ -605,29 +605,6 @@ VARIABLE_INT(endoomdelay, NULL, 35, 3500, NULL);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 
-extern void I_Sound_AddCommands();
-extern void I_Video_AddCommands();
-extern void I_Input_AddCommands();
-extern void Ser_AddCommands();
-
-        // add system specific commands
-void I_AddCommands()
-{
-   C_AddCommand(i_ledsoff);
-   C_AddCommand(i_gamespeed);
-   C_AddCommand(i_joystick);
-
-#ifdef _SDL_VER
-   C_AddCommand(i_waitatexit);
-   C_AddCommand(i_showendoom);
-   C_AddCommand(i_endoomdelay);
-#endif
-   
-   I_Video_AddCommands();
-   I_Sound_AddCommands();
-   Ser_AddCommands();
-}
-
 //----------------------------------------------------------------------------
 //
 // $Log: i_system.c,v $

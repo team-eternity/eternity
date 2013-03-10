@@ -113,7 +113,7 @@ void P_DisconnectEffect(Mobj *actor);
 // event functions
 
 void P_RunEvent(Mobj *actor);
-void P_AddEventVars(void);
+void P_AddEventVars();
 
 #endif
 
