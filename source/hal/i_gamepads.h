@@ -33,14 +33,16 @@
 
 class HALGamePad;
 
+// Joystick device number, for config file
+extern int i_joysticknum;
+
 // Generic sensitivity value, for drivers that need it
 extern int i_joysticksens;
 
 //
 // HALGamePadDriver
 //
-// Base class for gamepad device drivers. Each device links back to the driver
-// that implements it.
+// Base class for gamepad device drivers.
 //
 class HALGamePadDriver
 {
@@ -49,14 +51,13 @@ protected:
 
 public:
    HALGamePadDriver() : devices() {}
+   virtual ~HALGamePadDriver() {}
 
    // Gamepad Driver API
    virtual bool initialize()       = 0; // Perform any required startup init
    virtual void shutdown()         = 0; // Perform shutdown operations
    virtual void enumerateDevices() = 0; // Enumerate supported devices
-
-   // Concrete Methods
-   HALGamePad *findGamePadNamed(const char *name);
+   virtual int  getBaseDeviceNum() = 0; // Get base device number
 
    // Data
    PODCollection<HALGamePad *> devices;    // Supported devices
@@ -69,19 +70,20 @@ public:
 //
 class HALGamePad : public RTTIObject
 {
-   DECLARE_RTTI_TYPE(HALGamePad, RTTIObject)
+   DECLARE_ABSTRACT_TYPE(HALGamePad, RTTIObject)
 
 public:
-   HALGamePad() : Super(), name(), numAxes(0), numButtons(0) {}
+   HALGamePad() : Super(), num(-1), name(), numAxes(0), numButtons(0), state() {}
 
    // Selection
-   virtual bool select()   { return false; } // Select as the input device
-   virtual void deselect() {}                // Deselect from input device status
+   virtual bool select()   = 0; // Select as the input device
+   virtual void deselect() = 0; // Deselect from input device status
    
    // Input
-   virtual void poll() {} // Refresh all input state data
+   virtual void poll() = 0;     // Refresh all input state data
 
    // Data
+   int     num;         // Device number
    qstring name;        // Device name
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
@@ -102,6 +104,13 @@ public:
    };
    padstate_t state;
 };
+
+// Global interface
+
+bool I_SelectDefaultGamePad();
+void I_InitGamePads();
+void I_ShutdownGamePads();
+HALGamePad::padstate_t *I_PollActiveGamePad();
 
 #endif
 

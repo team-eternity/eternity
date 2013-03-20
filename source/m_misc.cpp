@@ -145,11 +145,9 @@ default_t defaults[] =
    DEFAULT_INT("music_card", &mus_card, NULL, MUS_DEFAULT, MUS_MIN, MUS_MAX, default_t::wad_no,
                MUS_DESCR),
 
-#ifdef _SDL_VER
    // haleyjd 04/15/02: SDL joystick device number
-   DEFAULT_INT("joystick_num", &i_SDLJoystickNum, NULL, -1, -1, UL, default_t::wad_no,
+   DEFAULT_INT("joystick_num", &i_joysticknum, NULL, -1, -1, UL, default_t::wad_no,
                "SDL joystick device number, -1 to disable"),
-#endif
 
    // joystick sensitivity
    DEFAULT_INT("i_joysticksens", &i_joysticksens, NULL, 0, 0, 32767, default_t::wad_no,

@@ -129,12 +129,8 @@ static int I_GetTime_Error(void)
 int (*I_GetTime)(void) = I_GetTime_Error;  // killough
 
 int mousepresent;
-int joystickpresent;  // phares 4/3/98
 
 // haleyjd 04/15/02: SDL joystick support
-
-// current device number -- saved in config file
-int i_SDLJoystickNum;
  
 // pointer to current joystick device information
 SDL_Joystick *sdlJoystick = NULL;
@@ -148,13 +144,15 @@ void I_Shutdown(void)
    SDL_SetModState(oldmod);
    
    // haleyjd 04/15/02: shutdown joystick
-   if(joystickpresent && sdlJoystick && i_SDLJoystickNum >= 0)
+   /*
+   if(joystickpresent && sdlJoystick && i_joysticknum >= 0)
    {
-      if(SDL_JoystickOpened(i_SDLJoystickNum))
+      if(SDL_JoystickOpened(i_joysticknum))
          SDL_JoystickClose(sdlJoystick);
       
       joystickpresent = false;
    }
+   */
 }
 
 jsdata_t *joysticks = NULL;
@@ -168,6 +166,7 @@ int sdlJoystickNumButtons;
 //
 void I_EnumerateJoysticks(void)
 {
+   /*
    int i;
    
    numJoysticks = SDL_NumJoysticks();
@@ -192,6 +191,7 @@ void I_EnumerateJoysticks(void)
 
    // last element is a dummy
    joysticks[numJoysticks].description = NULL;
+   */
 }
 
 
@@ -202,6 +202,7 @@ void I_EnumerateJoysticks(void)
 //
 bool I_SetJoystickDevice(int deviceNum)
 {
+   /*
    if(deviceNum >= SDL_NumJoysticks())
       return false;
    else
@@ -219,6 +220,8 @@ bool I_SetJoystickDevice(int deviceNum)
 
       return true;
    }
+   */
+   return false;
 }
 
 extern bool unicodeinput;
@@ -261,17 +264,19 @@ void I_Init(void)
          I_GetTime = I_GetTime_RealTime;
    }
 
+   /*
    // haleyjd 04/15/02: initialize joystick
    I_EnumerateJoysticks();
 
-   if(i_SDLJoystickNum != -1)
+   if(i_joysticknum != -1)
    {
-      joystickpresent = I_SetJoystickDevice(i_SDLJoystickNum);
+      joystickpresent = I_SetJoystickDevice(i_joysticknum);
    }
    else
    {
       joystickpresent = false;
    }
+   */
       
    // killough 3/6/98: end of keyboard / autorun state changes
       
@@ -575,24 +580,6 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 }
 
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
-
-// haleyjd 04/15/02: windows joystick commands
-CONSOLE_COMMAND(i_joystick, 0)
-{
-   if(Console.argc != 1)
-      return;
-
-   i_SDLJoystickNum = Console.argv[0]->toInt();
-
-   if(i_SDLJoystickNum != -1)
-   {
-      joystickpresent = I_SetJoystickDevice(i_SDLJoystickNum);
-   }
-   else
-   {
-      joystickpresent = false;
-   }
-}
 
 #ifdef _SDL_VER
 VARIABLE_BOOLEAN(waitAtExit, NULL, yesno);

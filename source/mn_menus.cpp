@@ -2433,13 +2433,14 @@ static void MN_BuildJSTables(void)
 
 CONSOLE_COMMAND(mn_joysticks, cf_hidden)
 {
+   /*
    const char *drv_name;
    static char title[256];
 
    MN_BuildJSTables();
 
-   if(i_SDLJoystickNum != -1)
-      drv_name = joysticks[i_SDLJoystickNum].description;
+   if(i_joysticknum != -1)
+      drv_name = joysticks[i_joysticknum].description;
    else
       drv_name = "none";
 
@@ -2449,6 +2450,7 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
 
    MN_SetupBoxWidget(title, mn_js_desc, 1, NULL, mn_js_cmds);
    MN_ShowBoxWidget();
+   */
 }
 
 static menuitem_t mn_joystick_items[] =

@@ -266,7 +266,6 @@ int I_DoomCode2ScanCode(int a)
 
 extern SDL_Joystick *sdlJoystick;
 extern int          usejoystick;
-extern int          joystickpresent;
 extern int          sdlJoystickNumButtons;
 
 static int keyForButtonNum[8] =

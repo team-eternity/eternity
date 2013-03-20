@@ -36,8 +36,8 @@
 
 // Globals
 
-// Configuration value: name of the selected gamepad device, if any
-const char *i_gamepadname;
+// current device number -- saved in config file
+int i_joysticknum;
 
 // Module-private data
 
@@ -68,26 +68,6 @@ CONSOLE_VARIABLE(i_joysticksens, i_joysticksens, 0) {}
 void HALGamePadDriver::addDevice(HALGamePad *device)
 {
    devices.add(device);
-}
-
-//
-// HALGamePadDriver::findGamePadNamed
-//
-// Find a gamepad within the context of a single driver with the given name.
-// Returns NULL if not found.
-//
-HALGamePad *HALGamePadDriver::findGamePadNamed(const char *name)
-{
-   PODCollection<HALGamePad *>::iterator itr;
-
-   for(itr = devices.begin(); itr != devices.end(); itr++)
-   {
-      if((*itr)->name.compare(name))
-         return *itr;
-   }
-
-   // Not found.
-   return NULL;
 }
 
 //=============================================================================
@@ -138,15 +118,22 @@ static halpaddriveritem_t halPadDriverTable[] =
 bool I_SelectDefaultGamePad()
 {
    HALGamePad *pad = NULL;
-   
-   if(i_gamepadname && *i_gamepadname)
+
+   // Deselect any active device first.
+   if(activePad)
    {
-      // search through the master directory for a pad with this name
+      activePad->deselect();
+      activePad = NULL;
+   }
+
+   if(i_joysticknum >= 0)
+   {
+      // search through the master directory for a pad with this number
       PODCollection<HALGamePad *>::iterator itr = masterGamePadList.begin();
 
       for(; itr != masterGamePadList.end(); itr++)
       {
-         if((*itr)->name.compare(i_gamepadname))
+         if((*itr)->num == i_joysticknum)
          {
             pad = *itr; // found it.
             break;
@@ -156,14 +143,7 @@ bool I_SelectDefaultGamePad()
 
    // Select the device if it was found.
    if(pad)
-   {
-      // Deselect any active device first.
-      if(activePad)
-      {
-         activePad->deselect();
-         activePad = NULL;
-      }
-      
+   {      
       if(pad->select())
          activePad = pad;
    }
@@ -178,13 +158,6 @@ bool I_SelectDefaultGamePad()
 //
 void I_EnumerateGamePads()
 {
-   // Deselect the current active device, if any
-   if(activePad)
-   {
-      activePad->deselect();
-      activePad = NULL;
-   }
-
    // Have all drivers re-enumerate their pads
    halpaddriveritem_t *item = halPadDriverTable;
 
@@ -195,7 +168,7 @@ void I_EnumerateGamePads()
       ++item;
    }
 
-   // rebuild the master pad directory
+   // build the master pad directory
    masterGamePadList.clear();
 
    item = halPadDriverTable;
@@ -236,6 +209,50 @@ void I_InitGamePads()
    I_EnumerateGamePads();
 
    // Select default pad
+   I_SelectDefaultGamePad();
+}
+
+//
+// I_ShutdownGamePads
+//
+// Call at shutdown to clean up all gamepad drivers.
+//
+void I_ShutdownGamePads()
+{
+   halpaddriveritem_t *item = halPadDriverTable;
+
+   while(item->name)
+   {
+      if(item->driver)
+         item->driver->shutdown();
+      ++item;
+   }
+}
+
+//
+// I_PollActiveGamePad
+//
+// Get input from the currently active gamepad, if any.
+// Returns NULL if there is no device active.
+//
+HALGamePad::padstate_t *I_PollActiveGamePad()
+{
+   if(activePad)
+   {
+      activePad->poll();
+      return &activePad->state;
+   }
+   else
+      return NULL;
+}
+
+// haleyjd 04/15/02: windows joystick commands
+CONSOLE_COMMAND(i_joystick, 0)
+{
+   if(Console.argc != 1)
+      return;
+
+   i_joysticknum = Console.argv[0]->toInt();
    I_SelectDefaultGamePad();
 }
 

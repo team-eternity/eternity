@@ -89,41 +89,18 @@ void SDLGamePadDriver::shutdown()
 //
 void SDLGamePadDriver::enumerateDevices()
 {
-   HALGamePad *dev;
-   SDLGamePad *sdlDev;
    int numpads = SDL_NumJoysticks();
-
-   // clear the active state of all existing devices
-   PODCollection<HALGamePad *>::iterator itr;
-   for(itr = devices.begin(); itr != devices.end(); itr++)
-   {
-      if((sdlDev = runtime_cast<SDLGamePad *>(*itr)))
-      {
-         sdlDev->sdlIndex = -1;
-         sdlDev->active   = false;
-      }
-   }
+   SDLGamePad *sdlDev;
 
    for(int i = 0; i < numpads; i++)
    {
       qstring name;
       buildDeviceName(i, name);
 
-      if((dev = findGamePadNamed(name.constPtr())))
-      {
-         // already built; check for possible index change
-         if((sdlDev = runtime_cast<SDLGamePad *>(dev)))
-         {
-            sdlDev->sdlIndex = i;
-            sdlDev->active   = true; // reactivate it
-         }
-         continue;
-      }
-
-      // instantiate a new one
       sdlDev = new SDLGamePad();
       sdlDev->name     = name;
       sdlDev->sdlIndex = i;
+      sdlDev->num      = getBaseDeviceNum() + i;
 
       addDevice(sdlDev);
    }
@@ -143,7 +120,7 @@ IMPLEMENT_RTTI_TYPE(SDLGamePad)
 // Constructor
 //
 SDLGamePad::SDLGamePad() 
-   : Super(), sdlIndex(-1), active(true)
+   : Super(), sdlIndex(-1)
 {
 }
 
@@ -155,9 +132,6 @@ SDLGamePad::SDLGamePad()
 bool SDLGamePad::select()
 {
    if(joystick) // one is still open? (should not happen)
-      return false;
-
-   if(!active || sdlIndex == -1) // not valid?
       return false;
 
    // remember who is in use internally

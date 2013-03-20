@@ -134,8 +134,6 @@ int I_CheckAbort();
 // haleyjd 04/15/02: SDL joystick stuff
 
 #ifdef _SDL_VER
-extern int i_SDLJoystickNum;
-
 bool I_SetJoystickDevice(int deviceNum);
 
 typedef struct jsdata_s
