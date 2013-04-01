@@ -27,7 +27,9 @@
 
 #include "SDL.h"
 
+// HAL modules
 #include "../hal/i_platform.h"
+#include "../hal/i_gamepads.h"
 
 #include "../c_io.h"
 #include "../c_runcmd.h"
@@ -264,10 +266,6 @@ int I_DoomCode2ScanCode(int a)
 // Joystick                                                    // phares 4/3/98
 //
 
-extern SDL_Joystick *sdlJoystick;
-extern int          usejoystick;
-extern int          sdlJoystickNumButtons;
-
 static int keyForButtonNum[8] =
 {
    KEYD_JOY1, KEYD_JOY2, KEYD_JOY3, KEYD_JOY4,
@@ -280,9 +278,15 @@ static int keyForButtonNum[8] =
 // Gathers joystick data and creates an event_t for later processing
 // by G_Responder().
 //
-static void I_JoystickEvents(void)
+static void I_JoystickEvents()
 {
-   // TODO: call down to the HALGamePad
+   HALGamePad::padstate_t *padstate;
+
+   if((padstate = I_PollActiveGamePad()))
+   {
+      // TODO: turn padstate into button input events
+   }
+
    /*
    // haleyjd 04/15/02: SDL joystick support
 
@@ -350,7 +354,7 @@ static void I_JoystickEvents(void)
 //
 // I_StartFrame
 //
-void I_StartFrame(void)
+void I_StartFrame()
 {
    I_JoystickEvents(); // Obtain joystick data                 phares 4/3/98
 }
@@ -360,7 +364,7 @@ void I_StartFrame(void)
 // Mouse
 //
 
-extern void MN_QuitDoom(void);
+extern void MN_QuitDoom();
 extern int mouseAccel_type;
 extern int mouseAccel_threshold;
 extern double mouseAccel_value;
@@ -410,7 +414,7 @@ static double CustomAccelerateMouse(int val)
 // haleyjd 10/23/08: from Choco-Doom:
 // Warp the mouse back to the middle of the screen
 //
-static void CenterMouse(void)
+static void CenterMouse()
 {
    // Warp the the screen center
 

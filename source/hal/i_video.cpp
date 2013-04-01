@@ -154,7 +154,6 @@ static haldriveritem_t *I_DefaultVideoDriver()
 // WM-related stuff (see i_input.c)
 //
 
-extern int  usejoystick;
 extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
@@ -594,10 +593,8 @@ CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 }
 
 VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
-VARIABLE_BOOLEAN(usejoystick, NULL, yesno);
 
 CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
-CONSOLE_VARIABLE(i_usejoystick, usejoystick, 0) {}
 
 // haleyjd 03/27/06: mouse grabbing
 VARIABLE_BOOLEAN(grabmouse, NULL, yesno);

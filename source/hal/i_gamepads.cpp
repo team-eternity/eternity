@@ -92,6 +92,9 @@ struct halpaddriveritem_t
    HALGamePadDriver *driver;
 };
 
+//
+// Driver Table
+//
 static halpaddriveritem_t halPadDriverTable[] =
 {
    // SDL DirectInput Driver
@@ -244,6 +247,30 @@ HALGamePad::padstate_t *I_PollActiveGamePad()
    }
    else
       return NULL;
+}
+
+//
+// I_GetNumGamePads
+//
+size_t I_GetNumGamePads()
+{
+   return masterGamePadList.getLength();
+}
+
+//
+// I_GetGamePad
+//
+HALGamePad *I_GetGamePad(size_t index)
+{
+   return masterGamePadList[index];
+}
+
+//
+// I_GetActivePad
+//
+HALGamePad *I_GetActivePad()
+{
+   return activePad;
 }
 
 // haleyjd 04/15/02: windows joystick commands

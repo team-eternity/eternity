@@ -112,6 +112,10 @@ void I_InitGamePads();
 void I_ShutdownGamePads();
 HALGamePad::padstate_t *I_PollActiveGamePad();
 
+size_t I_GetNumGamePads();
+HALGamePad *I_GetGamePad(size_t index);
+HALGamePad *I_GetActivePad();
+
 #endif
 
 // EOF

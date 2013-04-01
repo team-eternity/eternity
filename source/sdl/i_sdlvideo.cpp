@@ -45,14 +45,13 @@
 // WM-related stuff (see i_input.c)
 //
 
-extern int  usejoystick;
 extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
 
-void UpdateGrab(void);
-bool MouseShouldBeGrabbed(void);
-void UpdateFocus(void);
+void UpdateGrab();
+bool MouseShouldBeGrabbed();
+void UpdateFocus();
 
 SDL_Surface *sdlscreen;
 static SDL_Surface *primary_surface = NULL;
@@ -80,7 +79,7 @@ static bool crossbitdepth;
 //
 // Push the newest frame to the display.
 //
-void SDLVideoDriver::FinishUpdate(void)
+void SDLVideoDriver::FinishUpdate()
 {
    // haleyjd 10/08/05: from Chocolate DOOM:
    UpdateGrab();
@@ -205,7 +204,7 @@ void SDLVideoDriver::BeginRead()
 //
 // killough 10/98: erase disk icon
 //
-void SDLVideoDriver::EndRead(void)
+void SDLVideoDriver::EndRead()
 {
    if(!disk_bg)
       return;

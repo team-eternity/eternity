@@ -30,6 +30,8 @@
 
 #include "z_zone.h"
 
+#include "hal/i_gamepads.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
@@ -2291,11 +2293,9 @@ menu_t menu_soundeq =
 
 static const char *mn_mousejoy_names[] =
 {
-   "mouse",
-   "mouselook",
-#ifdef _SDL_VER
-   "joystick",
-#endif
+   "Mouse Settings",
+   "Acceleration / Mouselook",
+   "Gamepad Settings",
    NULL
 };
 
@@ -2307,15 +2307,13 @@ static menu_t *mn_mousejoy_pages[] =
 {
    &menu_mouse,
    &menu_mouse_accel_and_mlook,
-#ifdef _SDL_VER
    &menu_joystick,
-#endif
    NULL
 };
 
 static menuitem_t mn_mouse_items[] =
 {
-   {it_title,      "Mouse Settings",                NULL, "m_mouse"  },
+   {it_title,      "Mouse Settings",                NULL, "M_MOUSE"  },
    {it_gap},
    {it_toggle,     "Enable mouse",                  "i_usemouse"     },
    {it_gap},
@@ -2355,7 +2353,7 @@ CONSOLE_COMMAND(mn_mouse, 0)
 
 static menuitem_t mn_mouse_accel_and_mlook_items[] =
 {
-   {it_title,      "Mouse Settings",       NULL,   "m_mouse"},
+   {it_title,      "Mouse Settings",       NULL,   "M_MOUSE"},
    {it_gap},
    {it_info,       "Acceleration"},
    {it_toggle,     "Type",                "mouse_accel_type"},
@@ -2373,11 +2371,7 @@ menu_t menu_mouse_accel_and_mlook =
 {
    mn_mouse_accel_and_mlook_items, // menu items
    &menu_mouse,                    // previous page
-#ifdef _SDL_VER
    &menu_joystick,                 // next page
-#else
-   NULL,
-#endif
    &menu_mouse,                    // rootpage
    200, 15,                        // x, y offset
    3,                              // first selectable
@@ -2389,81 +2383,79 @@ menu_t menu_mouse_accel_and_mlook =
 
 //------------------------------------------------------------------------
 //
-// SDL-specific joystick configuration menu
+// Joystick Configuration Menu
 //
-
-#ifdef _SDL_VER
 
 static const char **mn_js_desc;
 static const char **mn_js_cmds;
 
-extern int numJoysticks;
-
-static void MN_BuildJSTables(void)
+static void MN_BuildJSTables()
 {
    static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
    {
-      int jsnum;
-      char tempstr[20];
+      qstring tempstr;
+      size_t numpads = I_GetNumGamePads();
 
       // allocate arrays
-      mn_js_desc = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *), 
-                                            PU_STATIC, NULL));
-      mn_js_cmds = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
-                                            PU_STATIC, NULL));
-      
+      mn_js_desc = ecalloc(const char **, (numpads + 2), sizeof(char *));
+      mn_js_cmds = ecalloc(const char **, (numpads + 2), sizeof(char *));
+
+      // first item is "none", for disabling gamepad input altogether
       mn_js_desc[0] = "none";
       mn_js_cmds[0] = "i_joystick -1";
-            
-      for(jsnum = 0; jsnum < numJoysticks; ++jsnum)
+
+      // add every active gamepad
+      for(size_t jsnum = 0; jsnum < numpads; jsnum++)
       {
-         mn_js_desc[jsnum+1] = joysticks[jsnum].description;
-         sprintf(tempstr, "i_joystick %i", jsnum);
-         mn_js_cmds[jsnum+1] = estrdup(tempstr);
+         HALGamePad *pad = I_GetGamePad(jsnum);
+
+         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);         
+         
+         tempstr.Printf(0, "i_joystick %i", pad->num);
+         mn_js_cmds[jsnum + 1] = tempstr.duplicate(PU_STATIC);
       }
-      mn_js_desc[numJoysticks + 1] = NULL;
-      mn_js_cmds[numJoysticks + 1] = NULL;
-          
+
+      // add a null terminator to the end of the list
+      mn_js_desc[numpads + 1] = NULL;
+      mn_js_cmds[numpads + 1] = NULL;
+
       menu_built = true;
    }
 }
 
 CONSOLE_COMMAND(mn_joysticks, cf_hidden)
 {
-   /*
-   const char *drv_name;
    static char title[256];
-
+   const char *drv_name;
+   HALGamePad *pad;
    MN_BuildJSTables();
 
-   if(i_joysticknum != -1)
-      drv_name = joysticks[i_joysticknum].description;
+   if((pad = I_GetActivePad()))
+      drv_name = pad->name.constPtr();
    else
       drv_name = "none";
 
-   psnprintf(title, sizeof(title), 
-             "choose a joystick\n\n  current device:\n  %s",
+   psnprintf(title, sizeof(title),
+             "Choose a Gamepad\n\n  Current device:\n  %s",
              drv_name);
 
    MN_SetupBoxWidget(title, mn_js_desc, 1, NULL, mn_js_cmds);
    MN_ShowBoxWidget();
-   */
 }
 
 static menuitem_t mn_joystick_items[] =
 {
-   {it_title,        "Joystick Settings",         NULL, "M_JOYSET" },
-   {it_gap},
-   {it_toggle,       "Enable joystick",           "i_usejoystick"},
-   {it_runcmd,       "Select joystick...",        "mn_joysticks" },
-   {it_gap},
-   {it_info,         "Sensitivity"},
-   {it_variable,     "Horizontal",                "joySens_x" },
-   {it_variable,     "Vertical",                  "joySens_y" },
-   {it_end}
+   { it_title,        "Gamepad Settings",          NULL,   NULL     },
+   { it_gap                                                         },
+   { it_info,         "Devices"                                     },
+   { it_runcmd,       "Select gamepad...",         "mn_joysticks"   },
+   { it_gap                                                         },
+   { it_info,         "Settings"                                    },
+   { it_variable,     "DirectInput sensitivity",   "i_joysticksens" },
+   { it_end                                                         }
 };
 
 menu_t menu_joystick =
@@ -2484,8 +2476,6 @@ CONSOLE_COMMAND(mn_joymenu, 0)
 {   
    MN_StartMenu(&menu_joystick);
 }
-
-#endif // _SDL_VER
 
 /////////////////////////////////////////////////////////////////
 //

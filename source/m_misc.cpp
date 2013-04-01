@@ -82,7 +82,6 @@
 
 int config_help;         //jff 3/3/98
 int usemouse;
-int usejoystick;
 
 extern int mousebstrafe;
 extern int mousebforward;
@@ -504,9 +503,6 @@ default_t defaults[] =
    DEFAULT_INT("mouseb_dblc2", &mousebforward, NULL, 2, -1, 2, default_t::wad_no,
                "2nd mouse button to enable for double-click use action (-1 = disable)"),
    
-   DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, default_t::wad_no,
-               "1 to enable use of joystick"),
-      
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, default_t::wad_yes,
                "chat string associated with 0 key"),
    
