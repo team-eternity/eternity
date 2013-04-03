@@ -47,16 +47,6 @@ static int activeIdx = -1;
 //
 
 //
-// SDLGamePadDriver::buildDeviceName
-//
-// Protected method; builds the device name for an SDL gamepad.
-//
-void SDLGamePadDriver::buildDeviceName(int idx, qstring &out)
-{
-   out << "SDL " << SDL_JoystickName(idx);
-}
-
-//
 // SDLGamePadDriver::initialize
 //
 // Start up the SDL gamepad driver.
@@ -94,14 +84,7 @@ void SDLGamePadDriver::enumerateDevices()
 
    for(int i = 0; i < numpads; i++)
    {
-      qstring name;
-      buildDeviceName(i, name);
-
-      sdlDev = new SDLGamePad();
-      sdlDev->name     = name;
-      sdlDev->sdlIndex = i;
-      sdlDev->num      = getBaseDeviceNum() + i;
-
+      sdlDev = new SDLGamePad(i);
       addDevice(sdlDev);
    }
 }
@@ -119,9 +102,11 @@ IMPLEMENT_RTTI_TYPE(SDLGamePad)
 // 
 // Constructor
 //
-SDLGamePad::SDLGamePad() 
-   : Super(), sdlIndex(-1)
+SDLGamePad::SDLGamePad(int idx) 
+   : Super(), sdlIndex(idx)
 {
+   name << "SDL " << SDL_JoystickName(sdlIndex);
+   num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
 }
 
 //

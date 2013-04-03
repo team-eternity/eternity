@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2013 James Haley
@@ -19,54 +19,46 @@
 //
 //-----------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Implementation of SDL classes for Gamepads and Joysticks
+// XInput Gamepad Support
+//
+// By James Haley
 //
 //-----------------------------------------------------------------------------
 
-#ifndef I_SDLGAMEPADS_H__
-#define I_SDLGAMEPADS_H__
+#ifndef I_XINPUT_H__
+#define I_XINPUT_H__
 
-// Need Gamepad/Joystick HAL
+#ifdef EE_FEATURE_XINPUT
+
 #include "../hal/i_gamepads.h"
 
-//
-// SDLGamePadDriver
-//
-// Implements the abstract HAL gamepad/joystick interface for SDL's DirectInput
-// based gamepad support.
-//
-class SDLGamePadDriver : public HALGamePadDriver
+class XInputGamePadDriver : public HALGamePadDriver
 {
 public:
    virtual bool initialize();
    virtual void shutdown();
    virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0x10000; }
+   virtual int  getBaseDeviceNum() { return 0; }
 };
 
-extern SDLGamePadDriver i_sdlGamePadDriver;
+extern XInputGamePadDriver i_xinputGamePadDriver;
 
-//
-// SDLGamePad
-//
-// Implements the abstract HAL gamepad class, for devices that are driven by
-// the SDL DirectInput driver.
-//
-class SDLGamePad : public HALGamePad
+class XInputGamePad : public HALGamePad
 {
-   DECLARE_RTTI_TYPE(SDLGamePad, HALGamePad)
+   DECLARE_RTTI_TYPE(XInputGamePad, HALGamePad)
 
 protected:
-   int sdlIndex; // SDL gamepad number
+   unsigned long dwUserIndex;
 
 public:
-   SDLGamePad(int idx = 0);
+   XInputGamePad(unsigned long userIdx = 0);
 
    virtual bool select();
    virtual void deselect();
    virtual void poll();
 };
+
+#endif
 
 #endif
 

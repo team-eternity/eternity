@@ -33,6 +33,9 @@
 #ifdef _SDL_VER
 #include "../sdl/i_sdlgamepads.h"
 #endif
+#ifdef EE_FEATURE_XINPUT
+#include "../Win32/i_xinput.h"
+#endif
 
 // Globals
 
@@ -87,9 +90,10 @@ IMPLEMENT_RTTI_TYPE(HALGamePad)
 //
 struct halpaddriveritem_t
 {
-   int id;
-   const char *name;
-   HALGamePadDriver *driver;
+   int id;                    // HAL driver ID number
+   const char *name;          // name of driver
+   HALGamePadDriver *driver;  // pointer to driver interface, if supported
+   bool isInit;               // if true, successfully initialized
 };
 
 //
@@ -102,14 +106,27 @@ static halpaddriveritem_t halPadDriverTable[] =
       0,
       "SDL DirectInput",
 #ifdef _SDL_VER
-      &i_sdlGamePadDriver
+      &i_sdlGamePadDriver,
 #else
-      NULL
+      NULL,
 #endif
+      false
+   },
+
+   // XInput Driver for XBox 360 controller and compatibles
+   {
+      1,
+      "XInput",
+#ifdef EE_FEATURE_XINPUT
+      &i_xinputGamePadDriver,
+#else
+      NULL,
+#endif
+      false
    },
 
    // Terminating entry
-   { -1, NULL, NULL }
+   { -1, NULL, NULL, false }
 };
 
 //
@@ -161,12 +178,12 @@ bool I_SelectDefaultGamePad()
 //
 void I_EnumerateGamePads()
 {
-   // Have all drivers re-enumerate their pads
+   // Have all supported drivers enumerate their gamepads
    halpaddriveritem_t *item = halPadDriverTable;
 
    while(item->name)
    {
-      if(item->driver)
+      if(item->driver && item->isInit)
          item->driver->enumerateDevices();
       ++item;
    }
@@ -204,7 +221,7 @@ void I_InitGamePads()
    while(item->name)
    {
       if(item->driver)
-         item->driver->initialize();
+         item->isInit = item->driver->initialize();
       ++item;
    }
 
@@ -226,7 +243,7 @@ void I_ShutdownGamePads()
 
    while(item->name)
    {
-      if(item->driver)
+      if(item->driver && item->isInit)
          item->driver->shutdown();
       ++item;
    }
