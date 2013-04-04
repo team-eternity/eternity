@@ -138,8 +138,11 @@ XInputGamePad::XInputGamePad(unsigned long userIdx)
 //
 bool XInputGamePad::select()
 {
-   // TODO
-   return false;
+   XINPUT_STATE testState;
+
+   memset(&testState, 0, sizeof(testState));
+
+   return !pXInputGetState(dwUserIndex, &testState);
 }
 
 //
@@ -147,15 +150,55 @@ bool XInputGamePad::select()
 //
 void XInputGamePad::deselect()
 {
-   // TODO
+   // Nothing to be done here.
 }
+
+struct buttonenum_t
+{
+   int xInputButton;
+   int halButton;
+};
+
+static buttonenum_t buttonTable[] =
+{
+   { XINPUT_GAMEPAD_DPAD_UP,         0 },
+   { XINPUT_GAMEPAD_DPAD_DOWN,       1 },
+   { XINPUT_GAMEPAD_DPAD_LEFT,       2 },
+   { XINPUT_GAMEPAD_DPAD_RIGHT,      3 },
+   { XINPUT_GAMEPAD_START,           4 },
+   { XINPUT_GAMEPAD_BACK,            5 },
+   { XINPUT_GAMEPAD_LEFT_THUMB,      6 },
+   { XINPUT_GAMEPAD_RIGHT_THUMB,     7 },
+   { XINPUT_GAMEPAD_LEFT_SHOULDER,   8 },
+   { XINPUT_GAMEPAD_RIGHT_SHOULDER,  9 },
+   { XINPUT_GAMEPAD_A,              10 },
+   { XINPUT_GAMEPAD_B,              11 },
+   { XINPUT_GAMEPAD_X,              12 },
+   { XINPUT_GAMEPAD_Y,              13 },
+};
 
 //
 // XInputGamePad::poll
 //
 void XInputGamePad::poll()
 {
-   // TODO
+   XINPUT_STATE xsState;
+   
+   memset(&xsState, 0, sizeof(xsState));
+
+   if(!pXInputGetState(dwUserIndex, &xsState))
+   {
+      // save old button states
+      memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
+
+      for(size_t i = 0; i < earrlen(buttonTable); i++)
+      {
+         if(xsState.Gamepad.wButtons & buttonTable[i].xInputButton)
+            state.buttons[buttonTable[i].halButton] = true;
+      }
+
+      // TODO: analog axis input
+   }
 }
 
 #endif
