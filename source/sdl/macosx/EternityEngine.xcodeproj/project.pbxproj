@@ -264,7 +264,6 @@
 		FABF5E4E158BF42800C49E93 /* i_sdlvideo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D7F158BF42800C49E93 /* i_sdlvideo.cpp */; };
 		FABF5E4F158BF42800C49E93 /* mmus2mid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D80158BF42800C49E93 /* mmus2mid.cpp */; };
 		FABF5E50158BF42800C49E93 /* ser_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D81158BF42800C49E93 /* ser_main.cpp */; };
-		FABF5E51158BF42800C49E93 /* i_cpu_posix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */; };
 		FADFF98F16555F6200C8537B /* d_findiwads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FADFF98D16555F6200C8537B /* d_findiwads.cpp */; };
 		FAE0EB381696BA10007E84F2 /* Eternity.icns in Resources */ = {isa = PBXBuildFile; fileRef = FAE0EB371696BA10007E84F2 /* Eternity.icns */; };
 		FAEB990716666A65004B0CD1 /* ev_specials.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAEB990516666A65004B0CD1 /* ev_specials.cpp */; };
@@ -760,7 +759,6 @@
 		FABF5D7F158BF42800C49E93 /* i_sdlvideo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_sdlvideo.cpp; path = ../i_sdlvideo.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D80158BF42800C49E93 /* mmus2mid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mmus2mid.cpp; path = ../mmus2mid.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D81158BF42800C49E93 /* ser_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ser_main.cpp; path = ../ser_main.cpp; sourceTree = SOURCE_ROOT; };
-		FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_cpu_posix.cpp; path = ../i_cpu_posix.cpp; sourceTree = SOURCE_ROOT; };
 		FACACB2B16521F9E0091AF2E /* a_small.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_small.h; path = ../../a_small.h; sourceTree = "<group>"; };
 		FACACB30165220590091AF2E /* confuse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = confuse.h; path = ../../Confuse/confuse.h; sourceTree = "<group>"; };
 		FACACB3416527F270091AF2E /* d_deh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_deh.h; path = ../../d_deh.h; sourceTree = "<group>"; };
@@ -1493,7 +1491,6 @@
 				FABF5D7F158BF42800C49E93 /* i_sdlvideo.cpp */,
 				FABF5D80158BF42800C49E93 /* mmus2mid.cpp */,
 				FABF5D81158BF42800C49E93 /* ser_main.cpp */,
-				FABF5D82158BF42800C49E93 /* i_cpu_posix.cpp */,
 			);
 			name = SDL;
 			sourceTree = "<group>";
@@ -2013,7 +2010,6 @@
 				FABF5E4E158BF42800C49E93 /* i_sdlvideo.cpp in Sources */,
 				FABF5E4F158BF42800C49E93 /* mmus2mid.cpp in Sources */,
 				FABF5E50158BF42800C49E93 /* ser_main.cpp in Sources */,
-				FABF5E51158BF42800C49E93 /* i_cpu_posix.cpp in Sources */,
 				FA31940E15B9FC84001F82B9 /* e_gameprops.cpp in Sources */,
 				FA16D39915E01A3A002318D1 /* acs_acse.cpp in Sources */,
 				FA16D3A015E01B82002318D1 /* d_files.cpp in Sources */,
