@@ -178,26 +178,47 @@ static buttonenum_t buttonTable[] =
 };
 
 //
+// XInputGamePad::normAxis
+//
+// Normalize an analog axis value after clipping to the minimum threshold value.
+//
+float XInputGamePad::normAxis(int value, int threshold, float maxvalue)
+{
+   if(abs(value) > threshold)
+      return static_cast<float>(value) / maxvalue;
+   else
+      return 0.0f;
+}
+
+//
 // XInputGamePad::poll
 //
 void XInputGamePad::poll()
 {
-   XINPUT_STATE xsState;
+   XINPUT_STATE xstate;
+   XINPUT_GAMEPAD &pad = xstate.Gamepad;
    
-   memset(&xsState, 0, sizeof(xsState));
+   memset(&xstate, 0, sizeof(xstate));
 
-   if(!pXInputGetState(dwUserIndex, &xsState))
+   if(!pXInputGetState(dwUserIndex, &xstate))
    {
       // save old button states
       memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
 
+      // read button states
       for(size_t i = 0; i < earrlen(buttonTable); i++)
       {
-         if(xsState.Gamepad.wButtons & buttonTable[i].xInputButton)
-            state.buttons[buttonTable[i].halButton] = true;
+         state.buttons[buttonTable[i].halButton] = 
+            ((pad.wButtons & buttonTable[i].xInputButton) == buttonTable[i].xInputButton);
       }
 
-      // TODO: analog axis input
+      // read axis states
+      state.axes[0] = normAxis(pad.sThumbLX,      XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,  32768.0f);
+      state.axes[1] = normAxis(pad.sThumbLY,      XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,  32768.0f);
+      state.axes[2] = normAxis(pad.sThumbRX,      XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, 32768.0f);
+      state.axes[3] = normAxis(pad.sThumbRY,      XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, 32768.0f);
+      state.axes[4] = normAxis(pad.bLeftTrigger,  XINPUT_GAMEPAD_TRIGGER_THRESHOLD,    255.0f);
+      state.axes[5] = normAxis(pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD,    255.0f);
    }
 }
 
