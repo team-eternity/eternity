@@ -1211,7 +1211,7 @@ CONSOLE_COMMAND(mn_player, 0)
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
 
-void MN_SaveGame(void)
+void MN_SaveGame()
 {
    int save_slot = 
       (char **)(Console.command->variable->variable) - savegamenames;
@@ -1283,7 +1283,7 @@ void MN_CreateSaveCmds()
 //  read the strings from the savegame files
 // based on the mbf sources
 //
-void MN_ReadSaveStrings(void)
+void MN_ReadSaveStrings()
 {
    int i;
    
@@ -1324,24 +1324,21 @@ void MN_ReadSaveStrings(void)
    }
 }
 
-void MN_DrawLoadBox(int x, int y)
+void MN_DrawSaveLoadBorder(int x, int y)
 {
-   int i;
-   
    patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
    patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
-   V_DrawPatch(x, y, &subscreen43, patch_left);
-   x += patch_left->width;
+   V_DrawPatch(x - 8, y + 7, &subscreen43, patch_left);
    
-   for(i=0; i<24; i++)
+   for(int i = 0; i < 24; i++)
    {
-      V_DrawPatch(x, y, &subscreen43, patch_mid);
-      x += patch_mid->width;
+      V_DrawPatch(x, y + 7, &subscreen43, patch_mid);
+      x += 8;
    }
    
-   V_DrawPatch(x, y, &subscreen43, patch_right);
+   V_DrawPatch(x, y + 7, &subscreen43, patch_right);
 
    // haleyjd: make purgable
    Z_ChangeTag(patch_left,  PU_CACHE);
@@ -1349,28 +1346,20 @@ void MN_DrawLoadBox(int x, int y)
    Z_ChangeTag(patch_right, PU_CACHE);
 }
 
-void MN_LoadGameDrawer(void);
+void MN_LoadGameDrawer();
 
 // haleyjd: all saveslot names changed to be consistent
 
 static menuitem_t mn_loadgame_items[] =
 {
-   {it_title,  "Load Game", NULL,         "M_LGTTL"},
-   {it_gap},
+   //{it_title,  "Load Game", NULL,         "M_LGTTL"},
    {it_runcmd, "save slot 0",       "mn_load 0"},
-   {it_gap},
    {it_runcmd, "save slot 1",       "mn_load 1"},
-   {it_gap},
    {it_runcmd, "save slot 2",       "mn_load 2"},
-   {it_gap},
    {it_runcmd, "save slot 3",       "mn_load 3"},
-   {it_gap},
    {it_runcmd, "save slot 4",       "mn_load 4"},
-   {it_gap},
    {it_runcmd, "save slot 5",       "mn_load 5"},
-   {it_gap},
    {it_runcmd, "save slot 6",       "mn_load 6"},
-   {it_gap},
    {it_runcmd, "save slot 7",       "mn_load 7"},
    {it_end}
 };
@@ -1379,30 +1368,26 @@ menu_t menu_loadgame =
 {
    mn_loadgame_items,
    NULL, NULL, NULL,                 // pages
-   50, 15,                           // x, y
+   80, 54,                           // x, y
    2,                                // starting slot
-   mf_skullmenu | mf_leftaligned,    // skull menu
+   mf_skullmenu | mf_emulated,       // skull menu
    MN_LoadGameDrawer,
 };
 
 
-void MN_LoadGameDrawer(void)
+void MN_LoadGameDrawer()
 {
    static char *emptystr = NULL;
-   int i, y;
+
+   V_DrawPatch(72, 28, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE));
 
    if(!emptystr)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
    
-   for(i = 0, y = 46; i < SAVESLOTS; ++i, y += 16) // haleyjd
+   for(int i = 0;  i < SAVESLOTS; i++)
    {
-      MN_DrawLoadBox(45, y);
-   }
-   
-   // this is lame
-   for(i = 0, y = 2; i < SAVESLOTS; ++i, y += 2)  // haleyjd
-   {
-      menu_loadgame.menuitems[y].description =
+      MN_DrawSaveLoadBorder(menu_loadgame.x, menu_loadgame.y + i*16);
+      menu_loadgame.menuitems[i].description =
          savegamenames[i] ? savegamenames[i] : emptystr;
    }
 }
@@ -1503,36 +1488,19 @@ CONSOLE_COMMAND(qload, cf_hidden)
 // Save Game
 //
 
-// haleyjd: fixes continue here from 8-17 build
+void MN_SaveGameDrawer();
 
-void MN_SaveGameDrawer(void)
-{
-   int i, y;
-   
-   for(i = 0, y = 46; i < SAVESLOTS; i++, y += 16) // haleyjd
-   {
-      MN_DrawLoadBox(45, y);
-   }
-}
+// haleyjd: fixes continue here from 8-17 build
 
 static menuitem_t mn_savegame_items[] =
 {
-   {it_title,    "Save Game",           NULL,              "M_SGTTL"},
-   {it_gap},
    {it_variable, "",                          "savegame_0"},
-   {it_gap},
    {it_variable, "",                          "savegame_1"},
-   {it_gap},
    {it_variable, "",                          "savegame_2"},
-   {it_gap},
    {it_variable, "",                          "savegame_3"},
-   {it_gap},
    {it_variable, "",                          "savegame_4"},
-   {it_gap},
    {it_variable, "",                          "savegame_5"},
-   {it_gap},
    {it_variable, "",                          "savegame_6"},
-   {it_gap},
    {it_variable, "",                          "savegame_7"},
    {it_end}
 };
@@ -1541,11 +1509,19 @@ menu_t menu_savegame =
 {
    mn_savegame_items,
    NULL, NULL, NULL,                 // pages
-   50, 15,                           // x, y
+   80, 54,                           // x, y
    2,                                // starting slot
-   mf_skullmenu | mf_leftaligned,    // skull menu
+   mf_skullmenu | mf_emulated,       // skull menu
    MN_SaveGameDrawer,
 };
+
+void MN_SaveGameDrawer()
+{
+   V_DrawPatch(72, 28, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
+
+   for(int i = 0; i < SAVESLOTS; i++)
+      MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);
+}
 
 CONSOLE_COMMAND(mn_savegame, 0)
 {

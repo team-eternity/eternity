@@ -401,12 +401,6 @@ static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
 
       V_DrawPatch(x, y, &subscreen43, patch);
 
-
-      // haleyjd 05/16/04: hack for traditional menu support;
-      // this was hard-coded in the old system
-      if(drawing_menu->flags & mf_emulated)
-         *item_height = EMULATED_ITEM_SIZE; 
-
       if(item->type != it_bigslider)
          return true; // return from MN_DrawMenuItem
    }
@@ -821,7 +815,14 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
    // haleyjd: gamemodes that use big menu font don't use pics, ever
    if(item->patch && !(GameModeInfo->flags & GIF_MNBIGFONT) &&
       MN_drawPatchForItem(item, &item_height, color, alignment))
+   {
+      // haleyjd 05/16/04: hack for traditional menu support;
+      // this was hard-coded in the old system
+      if(drawing_menu->flags & mf_emulated)
+         item_height = EMULATED_ITEM_SIZE; 
+
       return item_height; // if returned true, we are done.
+   }
 
    // draw description text
    
@@ -834,6 +835,9 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
    if(MN_itemDrawerFuncs[item->type])
       MN_itemDrawerFuncs[item->type](item, color, alignment, desc_width);
+
+   if(drawing_menu->flags & mf_emulated)
+      item_height = EMULATED_ITEM_SIZE;
 
    return item_height;
 }
