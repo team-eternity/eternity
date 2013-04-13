@@ -266,12 +266,6 @@ int I_DoomCode2ScanCode(int a)
 // Joystick                                                    // phares 4/3/98
 //
 
-static int keyForButtonNum[8] =
-{
-   KEYD_JOY1, KEYD_JOY2, KEYD_JOY3, KEYD_JOY4,
-   KEYD_JOY5, KEYD_JOY6, KEYD_JOY7, KEYD_JOY8
-};
-
 //
 // I_JoystickEvents
 //
@@ -282,71 +276,28 @@ static void I_JoystickEvents()
 {
    HALGamePad::padstate_t *padstate;
 
-   if((padstate = I_PollActiveGamePad()))
+   if(!(padstate = I_PollActiveGamePad()))
+      return;
+
+   // turn padstate into button input events
+   for(int button = 0; button < HALGamePad::MAXBUTTONS; button++)
    {
-      // TODO: turn padstate into button input events
+      edefstructvar(event_t, ev);
+
+      if(padstate->buttons[button] != padstate->prevbuttons[button])
+      {
+         ev.type  = padstate->buttons[button] ? ev_keydown : ev_keyup;
+         ev.data1 = KEYD_JOYSTART + button;
+         D_PostEvent(&ev);
+      }
    }
 
    /*
-   // haleyjd 04/15/02: SDL joystick support
-
-   event_t event;
-   int i, joyb[8];
-   Sint16 joy_x, joy_y;
-   static int old_joyb[8];
-
-   memset(joyb, 0, sizeof(joyb));
-
-   if(!joystickpresent || !usejoystick || !sdlJoystick ||
-      !sdlJoystickNumButtons)
-      return;
-
-   SDL_JoystickUpdate(); // read the current joystick settings
    event.type = ev_joystick;
    event.data1 = 0;
 
-   // read the button settings
-   for(i = 0; i < 8 && i < sdlJoystickNumButtons; ++i)
-   {
-      if((joyb[i] = SDL_JoystickGetButton(sdlJoystick, i)))
-         event.data1 |= (1 << i);
-   }
-
-   // Read the x,y settings. Convert to -1 or 0 or +1.
-   joy_x = SDL_JoystickGetAxis(sdlJoystick, 0);
-   joy_y = SDL_JoystickGetAxis(sdlJoystick, 1);
-
-   if(joy_x < -joystickSens_x)
-      event.data2 = -1;
-   else if(joy_x > joystickSens_x)
-      event.data2 = 1;
-   else
-      event.data2 = 0;
-
-   if(joy_y < -joystickSens_y)
-      event.data3 = -1;
-   else if(joy_y > joystickSens_y)
-      event.data3 = 1;
-   else
-      event.data3 = 0;
-
    // post what you found
-
    D_PostEvent(&event);
-
-   // build button events (make joystick buttons virtual keyboard keys
-   // as originally suggested by lee killough in the boom suggestions file)
-
-   for(i = 0; i < 8; ++i)
-   {
-      if(joyb[i] != old_joyb[i])
-      {
-         event.type  = joyb[i] ? ev_keydown : ev_keyup;
-         event.data1 = keyForButtonNum[i];
-         D_PostEvent(&event);
-         old_joyb[i] = joyb[i];
-      }
-   }
    */
 }
 

@@ -632,12 +632,10 @@ void G_SetGameMapName(const char *s)
 extern gamestate_t wipegamestate;
 extern gamestate_t oldgamestate;
 
-extern void R_InitPortals(void);
-
 //
 // G_DoLoadLevel
 //
-void G_DoLoadLevel(void)
+void G_DoLoadLevel()
 {
    levelstarttic = gametic; // for time calculation
    

@@ -167,6 +167,11 @@ void  Z_SysFree(void *p);
 // Get the size of a static array
 #define earrlen(a) (sizeof(a) / sizeof(*a))
 
+// Define a struct var and ensure it is fully initialized
+#define edefstructvar(type, name)  \
+   type name;                    \
+   memset(&name, 0, sizeof(name))
+
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 

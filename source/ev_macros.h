@@ -42,12 +42,6 @@
    if(!(line))             \
       return false
 
-// Define a struct var and ensure it is fully initialized
-#define INIT_STRUCT(type, name)  \
-   type name;                    \
-   memset(&name, 0, sizeof(name))
-
-
 #endif
 
 // EOF

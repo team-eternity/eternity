@@ -196,6 +196,94 @@ static doomkey_t keybindings[NUMKEYS];
 
 static keyaction_t *G_KeyActionForName(const char *name);
 
+// Some keys have special names. Ones not listed here have a default name
+// generated for them at startup.
+struct keyname_t
+{
+   int keyCode;
+   const char *name;
+} keyNames[] =
+{
+   { KEYD_COMMA,      "<"          },
+   { KEYD_PERIOD,     ">"          },
+   { KEYD_ACCGRAVE,   "tilde"      },
+   { KEYD_RIGHTARROW, "rightarrow" },
+   { KEYD_LEFTARROW,  "leftarrow"  },
+   { KEYD_UPARROW,    "uparrow"    },
+   { KEYD_DOWNARROW,  "downarrow"  },
+   { KEYD_ESCAPE,     "escape"     },
+   { KEYD_ENTER,      "enter"      },
+   { KEYD_TAB,        "tab"        },
+   { KEYD_F1,         "f1"         },
+   { KEYD_F2,         "f2"         },
+   { KEYD_F3,         "f3"         },
+   { KEYD_F4,         "f4"         },
+   { KEYD_F5,         "f5"         },
+   { KEYD_F6,         "f6"         },
+   { KEYD_F7,         "f7"         },
+   { KEYD_F8,         "f8"         },
+   { KEYD_F9,         "f9"         },
+   { KEYD_F10,        "f10"        },
+   { KEYD_F11,        "f11"        },
+   { KEYD_F12,        "f12"        },
+   { KEYD_BACKSPACE,  "backspace"  },
+   { KEYD_PAUSE,      "pause"      },
+   { KEYD_MINUS,      "-"          },
+   { KEYD_RSHIFT,     "shift"      },
+   { KEYD_RCTRL,      "ctrl"       },
+   { KEYD_RALT,       "alt"        },
+   { KEYD_CAPSLOCK,   "capslock"   },
+   { KEYD_INSERT,     "insert"     },
+   { KEYD_HOME,       "home"       },
+   { KEYD_END,        "end"        },
+   { KEYD_PAGEUP,     "pgup"       },
+   { KEYD_PAGEDOWN,   "pgdn"       },
+   { KEYD_SCROLLLOCK, "scrolllock" },
+   { KEYD_SPACEBAR,   "space"      },
+   { KEYD_NUMLOCK,    "numlock"    },
+   { KEYD_DEL,        "delete"     },
+   { KEYD_MOUSE1,     "mouse1"     },
+   { KEYD_MOUSE2,     "mouse2"     },
+   { KEYD_MOUSE3,     "mouse3"     },
+   { KEYD_MOUSE4,     "mouse4"     },
+   { KEYD_MOUSE5,     "mouse5"     },
+   { KEYD_MWHEELUP,   "wheelup"    },
+   { KEYD_MWHEELDOWN, "wheeldown"  },
+   { KEYD_KP0,        "kp_0"       },
+   { KEYD_KP1,        "kp_1"       },
+   { KEYD_KP2,        "kp_2"       },
+   { KEYD_KP3,        "kp_3"       },
+   { KEYD_KP4,        "kp_4"       },
+   { KEYD_KP5,        "kp_5"       },
+   { KEYD_KP6,        "kp_6"       },
+   { KEYD_KP7,        "kp_7"       },
+   { KEYD_KP8,        "kp_8"       },
+   { KEYD_KP9,        "kp_9"       },
+   { KEYD_KPPERIOD,   "kp_period"  },
+   { KEYD_KPDIVIDE,   "kp_slash"   },
+   { KEYD_KPMULTIPLY, "kp_star"    },
+   { KEYD_KPMINUS,    "kp_minus"   },
+   { KEYD_KPPLUS,     "kp_plus"    },
+   { KEYD_KPENTER,    "kp_enter"   },
+   { KEYD_KPEQUALS,   "kp_equals"  },
+   { KEYD_JOY01,      "joy1"       },
+   { KEYD_JOY02,      "joy2"       },
+   { KEYD_JOY03,      "joy3"       },
+   { KEYD_JOY04,      "joy4"       },
+   { KEYD_JOY05,      "joy5"       },
+   { KEYD_JOY06,      "joy6"       },
+   { KEYD_JOY07,      "joy7"       },
+   { KEYD_JOY08,      "joy8"       },
+   { KEYD_JOY09,      "joy9"       },
+   { KEYD_JOY10,      "joy10"      },
+   { KEYD_JOY11,      "joy11"      },
+   { KEYD_JOY12,      "joy12"      },
+   { KEYD_JOY13,      "joy13"      },
+   { KEYD_JOY14,      "joy14"      },
+   { KEYD_JOY15,      "joy15"      },
+   { KEYD_JOY16,      "joy16"      },
+};
+
 //
 // G_InitKeyBindings
 //
@@ -204,85 +292,9 @@ static keyaction_t *G_KeyActionForName(const char *name);
 void G_InitKeyBindings()
 {
    // various names for different keys
-   
-   keybindings[KEYD_RIGHTARROW].name  = "rightarrow";
-   keybindings[KEYD_LEFTARROW].name   = "leftarrow";
-   keybindings[KEYD_UPARROW].name     = "uparrow";
-   keybindings[KEYD_DOWNARROW].name   = "downarrow";
-   keybindings[KEYD_ESCAPE].name      = "escape";
-   keybindings[KEYD_ENTER].name       = "enter";
-   keybindings[KEYD_TAB].name         = "tab";
-   
-   keybindings[KEYD_F1].name          = "f1";
-   keybindings[KEYD_F2].name          = "f2";
-   keybindings[KEYD_F3].name          = "f3";
-   keybindings[KEYD_F4].name          = "f4";
-   keybindings[KEYD_F5].name          = "f5";
-   keybindings[KEYD_F6].name          = "f6";
-   keybindings[KEYD_F7].name          = "f7";
-   keybindings[KEYD_F8].name          = "f8";
-   keybindings[KEYD_F9].name          = "f9";
-   keybindings[KEYD_F10].name         = "f10";
-   keybindings[KEYD_F11].name         = "f11";
-   keybindings[KEYD_F12].name         = "f12";
-   
-   keybindings[KEYD_BACKSPACE].name   = "backspace";
-   keybindings[KEYD_PAUSE].name       = "pause";
-   keybindings[KEYD_MINUS].name       = "-";
-   keybindings[KEYD_RSHIFT].name      = "shift";
-   keybindings[KEYD_RCTRL].name       = "ctrl";
-   keybindings[KEYD_RALT].name        = "alt";
-   keybindings[KEYD_CAPSLOCK].name    = "capslock";
-   
-   keybindings[KEYD_INSERT].name      = "insert";
-   keybindings[KEYD_HOME].name        = "home";
-   keybindings[KEYD_END].name         = "end";
-   keybindings[KEYD_PAGEUP].name      = "pgup";
-   keybindings[KEYD_PAGEDOWN].name    = "pgdn";
-   keybindings[KEYD_SCROLLLOCK].name  = "scrolllock";
-   keybindings[KEYD_SPACEBAR].name    = "space";
-   keybindings[KEYD_NUMLOCK].name     = "numlock";
-   keybindings[KEYD_DEL].name         = "delete";
-   
-   keybindings[KEYD_MOUSE1].name      = "mouse1";
-   keybindings[KEYD_MOUSE2].name      = "mouse2";
-   keybindings[KEYD_MOUSE3].name      = "mouse3";
-   keybindings[KEYD_MOUSE4].name      = "mouse4";
-   keybindings[KEYD_MOUSE5].name      = "mouse5";
-   keybindings[KEYD_MWHEELUP].name    = "wheelup";
-   keybindings[KEYD_MWHEELDOWN].name  = "wheeldown";
-   
-   keybindings[KEYD_JOY1].name        = "joy1";
-   keybindings[KEYD_JOY2].name        = "joy2";
-   keybindings[KEYD_JOY3].name        = "joy3";
-   keybindings[KEYD_JOY4].name        = "joy4";
-   keybindings[KEYD_JOY5].name        = "joy5";
-   keybindings[KEYD_JOY6].name        = "joy6";
-   keybindings[KEYD_JOY7].name        = "joy7";
-   keybindings[KEYD_JOY8].name        = "joy8";
+   for(size_t kn = 0; kn < earrlen(keyNames); kn++)
+      keybindings[keyNames[kn].keyCode].name = keyNames[kn].name;
 
-   keybindings[KEYD_KP0].name         = "kp_0";
-   keybindings[KEYD_KP1].name         = "kp_1";
-   keybindings[KEYD_KP2].name         = "kp_2";
-   keybindings[KEYD_KP3].name         = "kp_3";
-   keybindings[KEYD_KP4].name         = "kp_4";
-   keybindings[KEYD_KP5].name         = "kp_5";
-   keybindings[KEYD_KP6].name         = "kp_6";
-   keybindings[KEYD_KP7].name         = "kp_7";
-   keybindings[KEYD_KP8].name         = "kp_8";
-   keybindings[KEYD_KP9].name         = "kp_9";
-   keybindings[KEYD_KPPERIOD].name    = "kp_period";
-   keybindings[KEYD_KPDIVIDE].name    = "kp_slash";
-   keybindings[KEYD_KPMULTIPLY].name  = "kp_star";
-   keybindings[KEYD_KPMINUS].name     = "kp_minus";
-   keybindings[KEYD_KPPLUS].name      = "kp_plus";
-   keybindings[KEYD_KPENTER].name     = "kp_enter";
-   keybindings[KEYD_KPEQUALS].name    = "kp_equals";
-   
-   keybindings[','].name = "<";
-   keybindings['.'].name = ">";
-   keybindings['`'].name = "tilde";
-   
    for(int i = 0; i < NUMKEYS; i++)
    {
       // fill in name if not set yet
@@ -292,10 +304,10 @@ void G_InitKeyBindings()
          char tempstr[32];
          
          // build generic name
-         if(isprint(i))
+         if(i > 0 && i < 128 && isprint(i))
             sprintf(tempstr, "%c", i);
          else
-            sprintf(tempstr, "key%02i", i);
+            sprintf(tempstr, "key%x", i);
          
          keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, 0);
       }
@@ -635,13 +647,12 @@ void G_EditBinding(const char *action)
 //
 // Load/Save defaults
 //
-//===========================================================================
 
 // default script:
 
 static char *cfg_file = NULL; 
 
-void G_LoadDefaults(void)
+void G_LoadDefaults()
 {
    char *temp = NULL;
    size_t len;
@@ -685,7 +696,7 @@ void G_LoadDefaults(void)
    D_Fclose(file);
 }
 
-void G_SaveDefaults(void)
+void G_SaveDefaults()
 {
    FILE *file;
    int i, j;
@@ -728,7 +739,6 @@ void G_SaveDefaults(void)
 //
 // Console Commands
 //
-//===========================================================================
 
 CONSOLE_COMMAND(bind, 0)
 {

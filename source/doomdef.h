@@ -216,8 +216,13 @@ typedef enum {
 
 #define KEYD_SPACEBAR   0x20
 
+#define KEYD_COMMA      0x2c
 #define KEYD_MINUS      0x2d
+#define KEYD_PERIOD     0x2e
+
 #define KEYD_EQUALS     0x3d
+
+#define KEYD_ACCGRAVE   0x60
 
 #define KEYD_BACKSPACE  0x7f
 
@@ -260,18 +265,11 @@ typedef enum {
 #define KEYD_F11        0xd7 //(0x80+0x57)
 #define KEYD_F12        0xd8 //(0x80+0x58)
 
-// haleyjd: virtual keys
+// haleyjd: virtual keys for mouse
 #define KEYD_MOUSE1     0xe0 //(0x80 + 0x60)
 #define KEYD_MOUSE2     0xe1 //(0x80 + 0x61)
 #define KEYD_MOUSE3     0xe2 //(0x80 + 0x62)
-#define KEYD_JOY1       0xe3 //(0x80 + 0x63)
-#define KEYD_JOY2       0xe4 //(0x80 + 0x64)
-#define KEYD_JOY3       0xe5 //(0x80 + 0x65)
-#define KEYD_JOY4       0xe6 //(0x80 + 0x66)
-#define KEYD_JOY5       0xe7 //(0x80 + 0x67)
-#define KEYD_JOY6       0xe8 //(0x80 + 0x68)
-#define KEYD_JOY7       0xe9 //(0x80 + 0x69)
-#define KEYD_JOY8       0xea //(0x80 + 0x6a)
+// currently unused: 0x80 + (0x63 : 0x6a)
 #define KEYD_MWHEELUP   0xeb //(0x80 + 0x6b)
 #define KEYD_MWHEELDOWN 0xec //(0x80 + 0x6c)
 
@@ -299,12 +297,27 @@ typedef enum {
 
 #define KEYD_PAUSE      0xff
 
-// phares 3/2/98:
+// virtual key codes for gamepad buttons
+#define KEYD_JOYSTART 0x100
+#define KEYD_JOY01    KEYD_JOYSTART
+#define KEYD_JOY02    0x101
+#define KEYD_JOY03    0x102
+#define KEYD_JOY04    0x103
+#define KEYD_JOY05    0x104
+#define KEYD_JOY06    0x105
+#define KEYD_JOY07    0x106
+#define KEYD_JOY08    0x107
+#define KEYD_JOY09    0x108
+#define KEYD_JOY10    0x109
+#define KEYD_JOY11    0x10a
+#define KEYD_JOY12    0x10b
+#define KEYD_JOY13    0x10c
+#define KEYD_JOY14    0x10d
+#define KEYD_JOY15    0x10e
+#define KEYD_JOY16    0x10f
+#define KEYD_JOYEND   KEYD_JOY16
 
-// phares 3/2/98
-
-// sf: console key
-#define KEYD_ACCGRAVE   '`'
+#define NUMKEYS       KEYD_JOYEND + 1
 
 // phares 4/19/98:
 // Defines Setup Screen groups that config variables appear in.

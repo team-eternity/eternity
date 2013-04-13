@@ -117,8 +117,6 @@ extern int  animscreenshot;       // animated screenshots
 extern int pars[][10];  // hardcoded array size
 extern int cpars[];     // hardcoded array size
 
-#define NUMKEYS   256
-
 extern int cooldemo;
 extern bool hub_changelevel;
 
