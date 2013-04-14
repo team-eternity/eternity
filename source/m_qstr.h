@@ -179,7 +179,7 @@ public:
    void     extractFileBase(qstring &dest);
 
    // Zone strdup wrappers
-   char *duplicate(int tag) const;
+   char *duplicate(int tag = PU_STATIC) const;
    char *duplicateAuto() const;
 
    // Numeric Conversions

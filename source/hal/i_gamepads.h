@@ -72,6 +72,9 @@ class HALGamePad : public RTTIObject
 {
    DECLARE_ABSTRACT_TYPE(HALGamePad, RTTIObject)
 
+protected:
+   void backupState();
+
 public:
    HALGamePad() : Super(), num(-1), name(), numAxes(0), numButtons(0), state() {}
 
@@ -100,6 +103,7 @@ public:
    {
       bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
       bool  buttons[MAXBUTTONS];     // current button states
+      float prevaxes[MAXAXES];       // backed-up previous axis states
       float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
    };
    padstate_t state;

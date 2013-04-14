@@ -202,8 +202,8 @@ void XInputGamePad::poll()
 
    if(!pXInputGetState(dwUserIndex, &xstate))
    {
-      // save old button states
-      memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
+      // save old button and axis states
+      backupState();
 
       // read button states
       for(size_t i = 0; i < earrlen(buttonTable); i++)

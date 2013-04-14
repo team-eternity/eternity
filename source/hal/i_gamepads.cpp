@@ -80,6 +80,18 @@ void HALGamePadDriver::addDevice(HALGamePad *device)
 
 IMPLEMENT_RTTI_TYPE(HALGamePad)
 
+//
+// HALGamePad::backupState
+//
+// Saves the prior state of buttons and axes before polling occurs. Call from
+// child classes' poll method.
+//
+void HALGamePad::backupState()
+{
+   memcpy(state.prevaxes,    state.axes,    sizeof(state.axes));
+   memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
+}
+
 //=============================================================================
 //
 // Global Interface

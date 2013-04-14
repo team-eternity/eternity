@@ -287,18 +287,36 @@ static void I_JoystickEvents()
       if(padstate->buttons[button] != padstate->prevbuttons[button])
       {
          ev.type  = padstate->buttons[button] ? ev_keydown : ev_keyup;
-         ev.data1 = KEYD_JOYSTART + button;
+         ev.data1 = KEYD_JOY01 + button;
          D_PostEvent(&ev);
       }
    }
 
-   /*
-   event.type = ev_joystick;
-   event.data1 = 0;
+   // read axes
+   for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
+   {
+      if(padstate->axes[axis] != padstate->prevaxes[axis])
+      {
+         edefstructvar(event_t, ev);
+         
+         // previously off, fire an axis on keydown event;
+         // previously on, fire key up
+         if(padstate->prevaxes[axis] == 0.0f)
+            ev.type  = ev_keydown;
+         else
+            ev.type  = ev_keyup;
 
-   // post what you found
-   D_PostEvent(&event);
-   */
+         ev.data1 = KEYD_AXISON01 + axis;
+         D_PostEvent(&ev);
+      }
+
+      // post analog axis state
+      edefstructvar(event_t, ev);
+      ev.type  = ev_joystick;
+      ev.data1 = axis;
+      ev.data2 = padstate->axes[axis];
+      D_PostEvent(&ev);
+   }
 }
 
 

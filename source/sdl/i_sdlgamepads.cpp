@@ -159,8 +159,8 @@ void SDLGamePad::poll()
 {
    SDL_JoystickUpdate();
 
-   // save old button states
-   memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
+   // save old button and axis states
+   backupState();
 
    // get button states
    for(int i = 0; i < numButtons && i < MAXBUTTONS; i++)
@@ -172,7 +172,13 @@ void SDLGamePad::poll()
       Sint16 val = SDL_JoystickGetAxis(joystick, i);
 
       if(val > i_joysticksens || val < -i_joysticksens)
-         state.axes[i] = static_cast<float>(val) / 32768.0f;
+      {
+         // unbias on the low end, so that +32767 means 1.0
+         if(val == -32768)
+            val = -32767;
+
+         state.axes[i] = static_cast<float>(val) / 32767.0f;
+      }
       else
          state.axes[i] = 0.0f;
    }

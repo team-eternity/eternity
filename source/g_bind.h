@@ -130,6 +130,20 @@ enum keyaction_e
    NUMKEYACTIONS
 };
 
+// Possible action types for analog axis input
+enum axisaction_e
+{
+   axis_none,       // input is ignored
+   axis_move,       // forward/backward movement
+   axis_strafe,     // strafe left/right
+   axis_turn,       // turn left/right
+   axis_look,       // look up/down
+   axis_max         // keep this last
+};
+
+// Axis bindings
+extern int axisActions[];
+
 #endif
 
 // EOF

@@ -32,6 +32,8 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "../hal/i_gamepads.h"
+
 #include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
@@ -282,6 +284,14 @@ struct keyname_t
    { KEYD_JOY14,      "joy14"      },
    { KEYD_JOY15,      "joy15"      },
    { KEYD_JOY16,      "joy16"      },
+   { KEYD_AXISON01,   "axis1"      },
+   { KEYD_AXISON02,   "axis2"      },
+   { KEYD_AXISON03,   "axis3"      },
+   { KEYD_AXISON04,   "axis4"      },
+   { KEYD_AXISON05,   "axis5"      },
+   { KEYD_AXISON06,   "axis6"      },
+   { KEYD_AXISON07,   "axis7"      },
+   { KEYD_AXISON08,   "axis8"      },
 };
 
 //
@@ -641,6 +651,55 @@ void G_EditBinding(const char *action)
 {
    MN_PushWidget(&binding_widget);
    binding_action = action;
+}
+
+//===========================================================================
+//
+// Analog Axis Binding
+//
+
+// Axis action bindings
+int axisActions[HALGamePad::MAXAXES];
+
+// Names for axis actions
+static const char *axisActionNames[axis_max] =
+{
+   "none",
+   "move",
+   "strafe",
+   "turn",
+   "look"
+};
+
+//
+// G_CreateAxisActionVars
+//
+// Build console variables for all axis action bindings.
+//
+void G_CreateAxisActionVars()
+{
+   for(int i = 0; i < HALGamePad::MAXAXES; i++)
+   {
+      qstring     name;
+      variable_t *variable;
+      command_t  *command;
+
+      variable = estructalloc(variable_t, 1);
+      variable->variable  = &axisActions[i];
+      variable->v_default = NULL;
+      variable->type      = vt_int;
+      variable->min       = axis_none;
+      variable->max       = axis_max - 1;
+      variable->defines   = axisActionNames;
+
+      command = estructalloc(command_t, 1);
+      name << "g_axisaction" << i;
+      command->name     = name.duplicate();
+      command->type     = ct_variable;
+      command->variable = variable;
+
+      C_AddCommand(command);
+   }
 }
 
 //===========================================================================

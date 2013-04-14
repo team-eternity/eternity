@@ -750,7 +750,7 @@ bool G_Responder(event_t* ev)
             !automapactive &&
             ((ev->type == ev_keydown) ||
              (ev->type == ev_mouse && ev->data1) ||
-             (ev->type == ev_joystick && ev->data1)))
+             ev->type == ev_joystick))
          {
             // popup menu
             MN_StartControlPanel();
@@ -811,9 +811,9 @@ bool G_Responder(event_t* ev)
       return true;    // eat events
       
    case ev_joystick:
-      // haleyjd: joybuttons now obsolete -- removed
-      joyxmove = ev->data2;
-      joyymove = ev->data3;
+      // TODO
+      //joyxmove = ev->data2;
+      //joyymove = ev->data3;
       return true;    // eat events
       
    default:
