@@ -32,7 +32,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
-#include "../hal/i_gamepads.h"
+#include "hal/i_gamepads.h"
 
 #include "am_map.h"
 #include "c_io.h"

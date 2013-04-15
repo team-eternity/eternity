@@ -431,7 +431,7 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
 }
 
 #ifdef _MSC_VER
-extern void I_DisableSysMenu(void);
+extern void I_DisableSysMenu();
 #endif
 
 //
@@ -458,7 +458,7 @@ static bool I_InitGraphicsMode(void)
       R_ResetFOV(video.width, video.height);
 
 #ifdef _MSC_VER
-      // Win32 specific hack: disable system menu
+      // Win32 specific hacks
       I_DisableSysMenu();
 #endif
 
