@@ -877,7 +877,7 @@ static void Handler_CompTHeights(void)
    P_ChangeThingHeights();
 }
 
-void G_AddCompat(void)
+void G_AddCompat()
 {
    int i;
 

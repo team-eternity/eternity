@@ -100,7 +100,8 @@ struct lumpinfo_t
       ns_colormaps,
       ns_translations,
       ns_demos,
-      ns_acs
+      ns_acs,
+      ns_max           // keep this last.
    };
    int li_namespace;
 
@@ -319,6 +320,8 @@ public:
    // Read-only properties
    int          getNumLumps() const { return numlumps; }
    lumpinfo_t **getLumpInfo() const { return lumpinfo; }
+
+   int getLumpCount(int li_namespace);
 };
 
 extern WadDirectory wGlobalDir; // the global wad directory

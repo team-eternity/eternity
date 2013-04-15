@@ -71,7 +71,7 @@ public:
    DLListItem<ManagedDirectory> links; // links
    char *name;   // name
 
-   ManagedDirectory() : WadDirectory(), links(), name(NULL), levels(NULL)
+   ManagedDirectory() : WadDirectory(), levels(NULL), links(), name(NULL)
    {
    }
    ~ManagedDirectory();
@@ -625,6 +625,16 @@ void W_DoNR4TLStart()
 // Mission Initialization
 //
 
+//
+// W_initNR4TL
+//
+// No Rest for the Living requires some metadata to be loaded in order to get
+// the proper level transitions, map names, music tracks, and episode ending
+// behavior. The level metadata system in p_info only applies records loaded
+// this way to maps when the managed dir mission matches the passed-in value,
+// so loading this data does not affect the ordinary IWAD maps or interfere
+// with any loaded MapInfo data.
+//
 static void W_initNR4TL()
 {
    static bool firsttime = true;

@@ -2415,7 +2415,7 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
       drv_name = "none";
 
    psnprintf(title, sizeof(title),
-             "Choose a Gamepad\n\n  Current device:\n  %s",
+             "Choose a Gamepad\n\nCurrent device:\n  %s",
              drv_name);
 
    MN_SetupBoxWidget(title, mn_js_desc, 1, NULL, mn_js_cmds);

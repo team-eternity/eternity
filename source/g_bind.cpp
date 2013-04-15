@@ -704,6 +704,35 @@ void G_CreateAxisActionVars()
 
 //===========================================================================
 //
+// Gamepad Profiles
+//
+
+//
+// G_clearGamepadBindings
+//
+// Clears out all gamepad button and axis bindings in order to reset the
+// control scheme to a default state.
+//
+static void G_clearGamepadBindings()
+{
+   // clear button bindings
+   for(int key = 0; key < HALGamePad::MAXBUTTONS; key++)
+   {
+      int vkc = KEYD_JOY01 + key;
+
+      for(int j = 0; j < NUMKEYACTIONCLASSES; j++)
+         keybindings[vkc].bindings[j] = NULL;      
+   }
+
+   // clear axis actions
+   for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
+      axisActions[axis] = axis_none;
+}
+
+
+
+//===========================================================================
+//
 // Load/Save defaults
 //
 

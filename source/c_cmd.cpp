@@ -408,6 +408,7 @@ extern void G_AddChatMacros();
 extern void G_AddWeapPrefs();
 extern void G_AddAutoloadFiles();
 extern void G_AddCompat();
+extern void G_CreateAxisActionVars();
 extern void MN_CreateSaveCmds();
 extern void P_AddEventVars();
 
@@ -424,6 +425,7 @@ void C_AddCommands()
    G_AddWeapPrefs();
    G_AddAutoloadFiles();
    G_AddCompat();
+   G_CreateAxisActionVars();
    MN_CreateSaveCmds();
    P_AddEventVars();
 }

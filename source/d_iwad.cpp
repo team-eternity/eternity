@@ -1231,11 +1231,11 @@ static void D_loadResourceWad()
    char *filestr = NULL;
    size_t len = M_StringAlloca(&filestr, 1, 20, basegamepath);
 
-   psnprintf(filestr, len, "%s/eternity.wad", basegamepath);
+   psnprintf(filestr, len, "%s/eternity.pke", basegamepath);
 
-   // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.wad
+   // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.pke
    if(access(filestr, R_OK))
-      psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
+      psnprintf(filestr, len, "%s/doom/eternity.pke", basepath);
 
    M_NormalizeSlashes(filestr);
    D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, false, false);
