@@ -512,22 +512,17 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 //
 static void P_setFollowPitch()
 {
-   fixed_t zabs = abs(followtarget->z - followcam.z);
-
-   if(zabs <= 41*FRACUNIT)
-   {
-      followcam.pitch = 0;
-      return;
-   }
+   fixed_t aimz = followtarget->z + 41*FRACUNIT;
+   fixed_t zabs = abs(aimz - followcam.z);
 
    fixed_t fixedang;
    double  zdist;
-   bool    camlower = (followcam.z < followtarget->z);
+   bool    camlower = (followcam.z < aimz);
    double  xydist = M_FixedToDouble(P_AproxDistance(followtarget->x - followcam.x,
                                                     followtarget->y - followcam.y));
 
    zdist    = M_FixedToDouble(zabs);
-   fixedang = (fixed_t)(atan2(zdist, xydist) * (ANG180 / PI));
+   fixedang = (fixed_t)(atan2(zdist, xydist) * ((unsigned int)ANG180 / PI));
       
    if(fixedang > ANGLE_1 * 32)
       fixedang = ANGLE_1 * 32;
