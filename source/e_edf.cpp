@@ -1116,7 +1116,7 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
       lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
       // recurse on next item
-      E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);
+      E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->namehash.next);
 
       // handle this lump
       if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&         // name match
@@ -1153,7 +1153,7 @@ static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
    root = W_GetLumpNameChain(lumpname);
 
    // parse all lumps of this name recursively in last-to-first order
-   E_ParseLumpRecursive(cfg, lumpname, root->index);
+   E_ParseLumpRecursive(cfg, lumpname, root->namehash.index);
 }
 
 //

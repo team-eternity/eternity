@@ -1043,8 +1043,11 @@ static void R_MakeMissingTexture(int count)
 static void R_InitLoading(void)
 {
    // Really complex printing shit...
-   int temp1 = W_GetNumForName("S_START");
-   int temp2 = W_GetNumForName("S_END") - 1;
+   const WadDirectory::namespace_t &ns =
+      wGlobalDir.getNamespace(lumpinfo_t::ns_sprites);
+
+   int temp1 = ns.firstLump - 1;
+   int temp2 = ns.firstLump + ns.numLumps - 1;
    
    // 1/18/98 killough:  reduce the number of initialization dots
    // and make more accurate
@@ -1165,9 +1168,12 @@ static void R_InitTextureHash(void)
 //
 static void R_CountFlats()
 {
-   firstflat = W_GetNumForName("F_START") + 1;
-   lastflat  = W_GetNumForName("F_END") - 1;
-   numflats  = lastflat - firstflat + 1;
+   const WadDirectory::namespace_t &ns =
+      wGlobalDir.getNamespace(lumpinfo_t::ns_flats);
+
+   firstflat = ns.firstLump;
+   numflats  = ns.numLumps;
+   lastflat  = ns.firstLump + ns.numLumps - 1;
 }
 
 //

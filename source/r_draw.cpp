@@ -41,6 +41,9 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+// need wad iterator
+#include "w_iterator.h"
+
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
 
@@ -410,7 +413,7 @@ void CB_DrawFuzzColumn_8(void)
 byte **translationtables = NULL;
 
 // haleyjd: new stuff
-int firsttranslationlump, lasttranslationlump;
+int firsttranslationlump;
 int numtranslations = 0;
 
 #define SRCPIXEL \
@@ -1013,18 +1016,17 @@ static const char *translations[TRANSLATIONCOLOURS] =
 //
 // haleyjd 01/12/04: rewritten to support translation lumps
 //
-void R_InitTranslationTables(void)
+void R_InitTranslationTables()
 {
    int numtlumps, i;
+   WadNamespaceIterator wni;
+   
+   const WadDirectory::namespace_t &ns =
+      wGlobalDir.getNamespace(lumpinfo_t::ns_translations);
    
    // count number of lumps
-   firsttranslationlump = W_CheckNumForName("T_START");
-   lasttranslationlump  = W_CheckNumForName("T_END");
-
-   if(firsttranslationlump == -1 || lasttranslationlump == -1)
-      numtlumps = 0;
-   else
-      numtlumps = (lasttranslationlump - firsttranslationlump) - 1;
+   firsttranslationlump = ns.firstLump;
+   numtlumps            = ns.numLumps;
 
    // set numtranslations
    numtranslations = TRANSLATIONCOLOURS + numtlumps;
@@ -1037,11 +1039,12 @@ void R_InitTranslationTables(void)
       translationtables[i] = E_ParseTranslation(translations[i], PU_RENDERER);
 
    // read in the lumps, if any
-   for(; i < numtranslations; i++)
-   {
-      int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
+   wni.begin(wGlobalDir, lumpinfo_t::ns_translations);
 
-      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_RENDERER));
+   for(; wni.current(); wni.next(), i++)
+   {
+      lumpinfo_t *lump = wni.current();
+      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum(lump->selfindex, PU_RENDERER));
    }
 }
 
@@ -1052,12 +1055,13 @@ void R_InitTranslationTables(void)
 //
 int R_TranslationNumForName(const char *name)
 {
-   int result    = -1;
-   int markernum = W_GetNumForName("T_START");
-   int lumpnum   = W_CheckNumForNameNS(name, lumpinfo_t::ns_translations);
+   int result  = -1;
+   int lumpnum = W_CheckNumForNameNS(name, lumpinfo_t::ns_translations);
 
+   // NB: result is + 1 as zero is assumed to be no translation by code 
+   // that uses this function
    if(lumpnum != -1)
-      result = lumpnum - markernum + TRANSLATIONCOLOURS;
+      result = (lumpnum - firsttranslationlump + TRANSLATIONCOLOURS) + 1;
 
    return result;
 }

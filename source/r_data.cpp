@@ -48,6 +48,9 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+// Need wad iterators for colormaps
+#include "w_iterator.h"
+
 // SoM: This has moved to r_textur.c
 void R_LoadDoom1();
 
@@ -65,7 +68,7 @@ void R_LoadDoom1();
 void R_InitTextures(void);
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
-int         firstcolormaplump, lastcolormaplump;      // killough 4/17/98
+int         firstcolormaplump; // killough 4/17/98
 int         firstspritelump, lastspritelump, numspritelumps;
 
 // needed for pre-rendering
@@ -84,10 +87,13 @@ void R_InitSpriteLumps(void)
 {
    int i;
    patch_t *patch;
+
+   const WadDirectory::namespace_t &ns = 
+      wGlobalDir.getNamespace(lumpinfo_t::ns_sprites);
    
-   firstspritelump = W_GetNumForName("S_START") + 1;
-   lastspritelump = W_GetNumForName("S_END") - 1;
-   numspritelumps = lastspritelump - firstspritelump + 1;
+   firstspritelump = ns.firstLump;
+   numspritelumps  = ns.numLumps;
+   lastspritelump  = ns.firstLump + ns.numLumps - 1;
    
    // killough 4/9/98: make columnd offsets 32-bit;
    // clean up malloc-ing to use sizeof
@@ -124,19 +130,28 @@ void R_InitSpriteLumps(void)
 //
 // killough 4/4/98: Add support for C_START/C_END markers
 //
-void R_InitColormaps(void)
+void R_InitColormaps()
 {
-   int i;
+   const WadDirectory::namespace_t &ns =
+      wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
 
-   firstcolormaplump = W_GetNumForName("C_START");
-   lastcolormaplump  = W_GetNumForName("C_END");
-   numcolormaps      = lastcolormaplump - firstcolormaplump;
-   colormaps = (lighttable_t **)(Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0));
-   
-   colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
-   
-   for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum(i + firstcolormaplump, PU_RENDERER));
+   numcolormaps = ns.numLumps + 1;
+
+   // colormaps[0] is always the global COLORMAP lump
+   size_t numbytes = sizeof(*colormaps) * numcolormaps;
+   int    cmlump   = W_GetNumForName("COLORMAP");
+
+   colormaps = (lighttable_t **)(Z_Malloc(numbytes, PU_RENDERER, 0));
+   colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(cmlump, PU_RENDERER));
+
+   // load other colormaps from the colormaps namespace
+   lumpinfo_t *lump;
+   WadNamespaceIterator nsi;
+   nsi.begin(wGlobalDir, lumpinfo_t::ns_colormaps);
+   for(int i = 1; (lump = nsi.current()); nsi.next(), i++)
+      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum(lump->selfindex, PU_RENDERER));
+
+   firstcolormaplump = ns.firstLump;
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -170,7 +185,7 @@ int R_ColormapNumForName(const char *name)
    register int i = 0;
    if(strncasecmp(name, "COLORMAP", 8))     // COLORMAP predefined to return 0
       if((i = W_CheckNumForNameNS(name, lumpinfo_t::ns_colormaps)) != -1)
-         i -= firstcolormaplump;
+         i = (i - firstcolormaplump) + 1;
    return i;
 }
 

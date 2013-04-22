@@ -266,7 +266,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    // run down the hash chain for EMAPINFO
    lump = W_GetLumpNameChain("EMAPINFO");
    
-   for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
+   for(glumpnum = lump->namehash.index; glumpnum >= 0; glumpnum = lump->namehash.next)
    {
       lump = lumpinfo[glumpnum];
 
@@ -486,7 +486,7 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
 
    lump = dir->getLumpNameChain("EMAPINFO");
 
-   for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
+   for(glumpnum = lump->namehash.index; glumpnum >= 0; glumpnum = lump->namehash.next)
    {
       lump = lumpinfo[glumpnum];
 

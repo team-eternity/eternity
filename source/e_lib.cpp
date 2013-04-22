@@ -180,7 +180,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    lump = W_GetLumpNameChain(name);
 
    // walk down the hash chain
-   for(i = lump->index; i >= 0; i = lump->next)
+   for(i = lump->namehash.index; i >= 0; i = lump->namehash.next)
    {
       lump = lumpinfo[i];
 
@@ -374,7 +374,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = lumpinfo[i]->next) >= 0)
+   while((i = lumpinfo[i]->namehash.next) >= 0)
    {
       if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
          !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))

@@ -4315,6 +4315,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\w_iterator.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\w_levels.h"
 						>
 					</File>

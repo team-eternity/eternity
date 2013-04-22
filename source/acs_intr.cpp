@@ -2005,7 +2005,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
-   lump = dir->getLumpNameChain("LOADACS")->index;
+   lump = dir->getLumpNameChain("LOADACS")->namehash.index;
    while(lump != -1)
    {
       if(!strncasecmp(lumpinfo[lump]->name, "LOADACS", 7) &&
@@ -2014,7 +2014,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
          ACS_loadScripts(dir, lump);
       }
 
-      lump = lumpinfo[lump]->next;
+      lump = lumpinfo[lump]->namehash.next;
    }
 
    // Haha, not really! Now we have to process script names.

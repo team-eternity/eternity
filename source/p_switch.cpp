@@ -88,7 +88,7 @@ void P_InitSwitchList(void)
    // haleyjd 08/29/09: run down the hash chain for SWITCHES
    lump = W_GetLumpNameChain("SWITCHES");
    
-   for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
+   for(lumpnum = lump->namehash.index; lumpnum >= 0; lumpnum = lump->namehash.next)
    {
       lump = lumpinfo[lumpnum];
 

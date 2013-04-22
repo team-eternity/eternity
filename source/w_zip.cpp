@@ -84,7 +84,7 @@ static MStructReader<ZIPLocalFileHeader> localFileReader(&lfSignature);
 
 struct ZIPCentralDirEntry
 {
-   uint32_t signature;     // Must be "PK\x1\2"
+   uint32_t signature;     // Must be "PK\x1\x2"
    uint16_t madeByVersion; // Version "made by"
    uint16_t extrVersion;   // Version needed to extract
    uint16_t gpFlags;       // General purpose flags
