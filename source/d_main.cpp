@@ -1837,7 +1837,7 @@ static void D_ProcessDehInWad(int i)
 static void D_ProcessDehInWads(void)
 {
    // haleyjd: start at the top of the hash chain
-   lumpinfo_t *root = W_GetLumpNameChain("DEHACKED");
+   lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
 
    D_ProcessDehInWad(root->namehash.index);
 }

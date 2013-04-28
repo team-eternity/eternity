@@ -1144,25 +1144,14 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 }
 
 //
-// W_GetLumpNameChainInDir
+// WadDirectory::getLumpNameChain
 //
 // haleyjd 03/18/10: routine for getting the lumpinfo hash chain for lumps of a
 // given name, to replace code segments doing this in several different places.
 //
-lumpinfo_t *WadDirectory::getLumpNameChain(const char *name)
+lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 {
    return lumpinfo[LumpNameHash(name) % (unsigned int)numlumps];
-}
-
-//
-// W_GetLumpNameChain
-//
-// haleyjd 03/18/10: convenience routine to do the above on the global wad
-// directory.
-//
-lumpinfo_t *W_GetLumpNameChain(const char *name)
-{
-   return wGlobalDir.getLumpNameChain(name);
 }
 
 //

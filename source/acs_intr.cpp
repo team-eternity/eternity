@@ -51,6 +51,9 @@
 #include "v_misc.h"
 #include "w_wad.h"
 
+// need wad iterators
+#include "w_iterator.h"
+
 //
 // Local Enumerations
 //
@@ -2002,19 +2005,12 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       ACS_LoadScript(&acsLevelScriptVM, dir, lump);
 
    // The rest of the function is LOADACS handling.
+   WadChainIterator wci(*dir, "LOADACS");
 
-   lumpinfo_t **lumpinfo = dir->getLumpInfo();
-
-   lump = dir->getLumpNameChain("LOADACS")->namehash.index;
-   while(lump != -1)
+   for(wci.begin(); wci.current(); wci.next())
    {
-      if(!strncasecmp(lumpinfo[lump]->name, "LOADACS", 7) &&
-         lumpinfo[lump]->li_namespace == lumpinfo_t::ns_global)
-      {
-         ACS_loadScripts(dir, lump);
-      }
-
-      lump = lumpinfo[lump]->namehash.next;
+      if(wci.testLump(lumpinfo_t::ns_global))
+         ACS_loadScripts(dir, (*wci)->selfindex);
    }
 
    // Haha, not really! Now we have to process script names.

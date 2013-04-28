@@ -318,7 +318,7 @@ public:
    bool  writeLump(const char *lumpname, const char *destpath);
    void  close(); // haleyjd 03/09/11
 
-   lumpinfo_t *getLumpNameChain(const char *name);
+   lumpinfo_t *getLumpNameChain(const char *name) const;
 
    const char *getLumpFileName(int lump);
 
@@ -343,8 +343,6 @@ extern WadDirectory wGlobalDir; // the global wad directory
 int         W_CheckNumForName(const char *name);   // killough 4/17/98
 int         W_CheckNumForNameNS(const char *name, int li_namespace);
 int         W_GetNumForName(const char* name);
-
-lumpinfo_t *W_GetLumpNameChain(const char *name);
 
 int         W_LumpLength(int lump);
 uint32_t    W_LumpCheckSum(int lumpnum);

@@ -145,11 +145,11 @@ void R_InitColormaps()
    colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(cmlump, PU_RENDERER));
 
    // load other colormaps from the colormaps namespace
-   lumpinfo_t *lump;
-   WadNamespaceIterator nsi;
-   nsi.begin(wGlobalDir, lumpinfo_t::ns_colormaps);
-   for(int i = 1; (lump = nsi.current()); nsi.next(), i++)
-      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum(lump->selfindex, PU_RENDERER));
+   int i = 1;
+   WadNamespaceIterator nsi(wGlobalDir, lumpinfo_t::ns_colormaps);
+  
+   for(nsi.begin(); nsi.current(); nsi.next(), i++)
+      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum((*nsi)->selfindex, PU_RENDERER));
 
    firstcolormaplump = ns.firstLump;
 }

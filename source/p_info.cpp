@@ -76,6 +76,9 @@
 #include "w_levels.h"
 #include "w_wad.h"
 
+// need wad iterators
+#include "w_iterator.h"
+
 extern char gamemapname[9];
 
 //
@@ -233,10 +236,6 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   lumpinfo_t  *lump;
-   int glumpnum;
-
    // set all the level defaults
    P_ClearLevelVars();
 
@@ -264,18 +263,14 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    foundGlobalMap = false;
 
    // run down the hash chain for EMAPINFO
-   lump = W_GetLumpNameChain("EMAPINFO");
-   
-   for(glumpnum = lump->namehash.index; glumpnum >= 0; glumpnum = lump->namehash.next)
+   WadChainIterator wci(wGlobalDir, "EMAPINFO");
+   for(wci.begin(); wci.current(); wci.next())
    {
-      lump = lumpinfo[glumpnum];
-
-      if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
-         lump->li_namespace == lumpinfo_t::ns_global)
+      if(wci.testLump(lumpinfo_t::ns_global))
       {
-         // reset the parser state         
+         // reset the parser state
          readtype = RT_OTHER;
-         P_ParseLevelInfo(&wGlobalDir, glumpnum, PU_LEVEL); // FIXME
+         P_ParseLevelInfo(&wGlobalDir, (*wci)->selfindex, PU_LEVEL); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
@@ -474,28 +469,20 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 //
 void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t **lumpinfo = dir->getLumpInfo();
-   lumpinfo_t  *lump;
-   int glumpnum;
-
    // if any prototypes exist, delete them
    if(numPrototypes)
       P_clearLevelInfoPrototypes();
 
    limode = LI_MODE_GLOBAL;
 
-   lump = dir->getLumpNameChain("EMAPINFO");
-
-   for(glumpnum = lump->namehash.index; glumpnum >= 0; glumpnum = lump->namehash.next)
+   WadChainIterator wci(*dir, "EMAPINFO");
+   for(wci.begin(); wci.current(); wci.next())
    {
-      lump = lumpinfo[glumpnum];
-
-      if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
-         lump->li_namespace == lumpinfo_t::ns_global)
+      if(wci.testLump(lumpinfo_t::ns_global))
       {
          // reset parser state
          readtype = RT_OTHER;
-         P_ParseLevelInfo(dir, glumpnum, PU_STATIC);
+         P_ParseLevelInfo(dir, (*wci)->selfindex, PU_STATIC);
       }
    }
 }

@@ -1018,18 +1018,14 @@ static const char *translations[TRANSLATIONCOLOURS] =
 //
 void R_InitTranslationTables()
 {
-   int numtlumps, i;
-   WadNamespaceIterator wni;
-   
-   const WadDirectory::namespace_t &ns =
-      wGlobalDir.getNamespace(lumpinfo_t::ns_translations);
+   int i;
+   WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_translations);
    
    // count number of lumps
-   firsttranslationlump = ns.firstLump;
-   numtlumps            = ns.numLumps;
+   firsttranslationlump = wni.getFirstLump();
 
    // set numtranslations
-   numtranslations = TRANSLATIONCOLOURS + numtlumps;
+   numtranslations = TRANSLATIONCOLOURS + wni.getNumLumps();
 
    // allocate the array of pointers
    translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
@@ -1039,13 +1035,8 @@ void R_InitTranslationTables()
       translationtables[i] = E_ParseTranslation(translations[i], PU_RENDERER);
 
    // read in the lumps, if any
-   wni.begin(wGlobalDir, lumpinfo_t::ns_translations);
-
-   for(; wni.current(); wni.next(), i++)
-   {
-      lumpinfo_t *lump = wni.current();
-      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum(lump->selfindex, PU_RENDERER));
-   }
+   for(wni.begin(); wni.current(); wni.next(), i++)
+      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum((*wni)->selfindex, PU_RENDERER));
 }
 
 //

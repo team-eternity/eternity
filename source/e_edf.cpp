@@ -1150,7 +1150,7 @@ static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
       E_EDFLoggedErr(1, "E_ParseEDFLump: lump %s not found\n", lumpname);
 
    // get root of the hash chain for the indicated name
-   root = W_GetLumpNameChain(lumpname);
+   root = wGlobalDir.getLumpNameChain(lumpname);
 
    // parse all lumps of this name recursively in last-to-first order
    E_ParseLumpRecursive(cfg, lumpname, root->namehash.index);

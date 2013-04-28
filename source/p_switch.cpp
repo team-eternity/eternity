@@ -44,6 +44,9 @@
 #include "sounds.h"
 #include "w_wad.h"
 
+// need wad iterators
+#include "w_iterator.h"
+
 // killough 2/8/98: Remove switch limit
 
 static int *switchlist;                           // killough
@@ -74,28 +77,26 @@ int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
 //
 void P_InitSwitchList(void)
 {
-   int i, index = 0;
+   int index = 0;
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
-   int lumpnum;
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   lumpinfo_t  *lump;
+   int lumpnum = -1;
 
    episode = GameModeInfo->switchEpisode;
 
    //jff 3/23/98 read the switch table from a predefined lump
 
    // haleyjd 08/29/09: run down the hash chain for SWITCHES
-   lump = W_GetLumpNameChain("SWITCHES");
-   
-   for(lumpnum = lump->namehash.index; lumpnum >= 0; lumpnum = lump->namehash.next)
+   WadChainIterator wci(wGlobalDir, "SWITCHES");
+   for(wci.begin(); wci.current(); wci.next())
    {
-      lump = lumpinfo[lumpnum];
-
       // look for a lump which is of a possibly good size
-      if(!strcasecmp(lump->name, "SWITCHES") && 
-         lump->size % sizeof(switchlist_t) == 0)
+      if(wci.testLump() &&
+         (*wci)->size % sizeof(switchlist_t) == 0)
+      {
+         lumpnum = (*wci)->selfindex;
          break;
+      }
    }
 
    if(lumpnum < 0)
@@ -103,7 +104,7 @@ void P_InitSwitchList(void)
 
    alphSwitchList = (switchlist_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
-   for(i = 0; ; i++)
+   for(int i = 0; ; i++)
    {
       if(index + 1 >= max_numswitches)
       {
