@@ -31,9 +31,9 @@ ENDIF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 #    * Release (CMAKE_C_FLAGS_RELEASE)
 #    * RelWithDebInfo (CMAKE_C_FLAGS_RELWITHDEBINFO)
 #    * MinSizeRel (CMAKE_C_FLAGS_MINSIZEREL)
-# If no build type requested, default to Debug
+# If no build type requested, default to Release
 IF (NOT CMAKE_BUILD_TYPE)
-        SET (CMAKE_BUILD_TYPE Debug)
+        SET (CMAKE_BUILD_TYPE Release)
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
 INCLUDE(CheckIncludeFiles)
