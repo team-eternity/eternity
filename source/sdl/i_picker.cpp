@@ -206,10 +206,10 @@ static void I_Pick_FreeImages(void)
 //
 // Blanks the picker screen.
 //
-static void I_Pick_ClearScreen(void)
+static void I_Pick_ClearScreen()
 {
    static bool firsttime = true;
-   Uint32 color;
+   static Uint32 color;
    SDL_Rect dstrect;
 
    if(firsttime)
