@@ -100,27 +100,14 @@ IF (GL_LIBRARY)
         TARGET_LINK_LIBRARIES (eternity ${GL_LIBRARY})
 ENDIF (GL_LIBRARY)
 TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+
 INSTALL (TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
         ARCHIVE DESTINATION ${LIB_DIR})
-IF (UNIX)
-        IF (NOT APPLE OR NOT MINGW)
-                SET_TARGET_PROPERTIES (eternity PROPERTIES OUTPUT_NAME eternity.real)
-        ENDIF (NOT APPLE OR NOT MINGW)
-ENDIF (UNIX)
-## FIXME: base really needs to be refactored into read only and writeable
-## data to conform to *NIX and Windows file system standards.
-## On *NIX we use a wrapper script that set's up a per user
-## $HOME/.eternity/base, symlinks in the IWADS, then sets up
-## ETERNITYBASE to point to that directory, before executing
-## eternity. It's a hack,but it will work for now. A solution for
-## Windows would be welcome.
+
 INSTALL (DIRECTORY ${CMAKE_SOURCE_DIR}/base
         DESTINATION ${SHARE_DIR}
+        PATTERN "delete.me" EXCLUDE
         PATTERN ".svn" EXCLUDE)
-IF (UNIX)
-        IF (NOT APPLE OR NOT MINGW)
-                INSTALL (PROGRAMS ../eternity.sh DESTINATION ${BIN_DIR} RENAME eternity)
-        ENDIF (NOT APPLE OR NOT MINGW)
-ENDIF (UNIX)
+
