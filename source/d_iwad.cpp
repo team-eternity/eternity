@@ -61,8 +61,6 @@ void D_CheckGameMusic();
 
 bool d_scaniwads;                     // haleyjd 11/15/12
 
-static char *baseiwad;                // jff 3/23/98: iwad directory
-
 //=============================================================================
 //
 // DOOMWADPATH support
@@ -146,10 +144,10 @@ static void D_parseDoomWadPath(void)
 // will be returned which must be freed by the calling code, if the file is
 // found. Otherwise NULL is returned.
 //
-char *D_FindInDoomWadPath(const char *filename, const char *extension)
+bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *extension)
 {
    qstring qstr;
-   char *concat  = NULL;
+   bool success = false;
    char *currext = NULL;
    size_t numpaths = doomwadpaths.getLength();
 
@@ -165,7 +163,8 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
       {
          if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
          {
-            concat = qstr.duplicate(PU_STATIC);
+            out = qstr;
+            success = true;
             break; // done.
          }
       }
@@ -182,7 +181,8 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
             {
                if(!S_ISDIR(sbuf.st_mode)) // not a dir?
                {
-                  concat = qstr.duplicate(PU_STATIC);
+                  out = qstr;
+                  success = true;
                   break; // done.
                }
             }
@@ -190,7 +190,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
       }
    }
 
-   return concat;
+   return success;
 }
 
 //
@@ -887,37 +887,37 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
 // a file or directory. If neither append .wad and check if it
 // exists as a file then. Else return non-existent.
 //
-static bool WadFileStatus(char *filename, bool *isdir)
+static bool WadFileStatus(qstring &filename, bool *isdir)
 {
    struct stat sbuf;
-   int i;
+   size_t i = filename.length();
 
-   *isdir = false;                //default is directory to false
-   if(!filename || !*filename)    //if path NULL or empty, doesn't exist
+   *isdir = false;   // default is directory to false
+   if(i == 0)        // if path NULL or empty, doesn't exist
       return false;
 
-   if(!stat(filename, &sbuf))      //check for existence
+   if(!stat(filename.constPtr(), &sbuf)) // check for existence
    {
-      *isdir = S_ISDIR(sbuf.st_mode); //if it does, set whether a dir or not
-      return true;                    //return does exist
+      *isdir = S_ISDIR(sbuf.st_mode);    // if it does, set whether a dir or not
+      return true;                       // return does exist
    }
 
-   i = strlen(filename);          //get length of path
    if(i >= 4)
    {
-      if(!strncasecmp(filename + i - 4, ".wad", 4))
-         return false;            //if already ends in .wad, not found
+      if(filename.find(".wad", i - 4) != qstring::npos)
+         return false; // if already ends in .wad, not found
    }
 
-   strcat(filename,".wad");       //try it with .wad added
-   if(!stat(filename, &sbuf))     //if it exists then
+   filename.concat(".wad"); // try it with .wad added
+   
+   if(!stat(filename.constPtr(), &sbuf)) // if it exists then
    {
-      if(S_ISDIR(sbuf.st_mode))   //but is a dir, then say we didn't find it
+      if(S_ISDIR(sbuf.st_mode)) // but is a dir, then say we didn't find it
          return false;
-      return true;                //otherwise return file found, w/ .wad added
+      return true;              // otherwise return file found, w/ .wad added
    }
-   filename[i] = 0;               //remove .wad
-   return false;                  //and report doesn't exist
+   filename.truncate(i);        // remove .wad
+   return false;                // and report doesn't exist
 }
 
 // jff 4/19/98 list of standard IWAD names
@@ -988,15 +988,12 @@ int nstandard_iwads = earrlen(standard_iwads);
 //
 // killough 11/98: simplified, removed error-prone cut-n-pasted code
 //
-static char *D_findIWADFile()
+static void D_findIWADFile(qstring &iwad)
 {
    static const char *envvars[] = { "DOOMWADDIR", "HOME" };
-   static char *iwad = NULL;
-   char *customiwad = NULL;
-   char *gameiwad = NULL;
+   qstring customiwad;
+   qstring gameiwad;
    bool isdir = false;
-   int i, j;
-   char *p;
    const char *basename = NULL;
 
    // haleyjd 01/01/11: support for DOOMWADPATH
@@ -1014,8 +1011,9 @@ static char *D_findIWADFile()
    }
 
    //jff 3/24/98 get -iwad parm if specified else use .
-   if((i = M_CheckParm("-iwad")) && i < myargc - 1)
-      basename = myargv[i + 1];
+   int iwadparm;
+   if((iwadparm = M_CheckParm("-iwad")) && iwadparm < myargc - 1)
+      basename = myargv[iwadparm + 1];
    else
       basename = G_GFSCheckIWAD(); // haleyjd 04/16/03: GFS support
 
@@ -1023,15 +1021,12 @@ static char *D_findIWADFile()
    // specification was used, start off by trying base/game/game.wad
    if(gamepathset && !basename)
    {
-      qstring tempGameIWAD;
-      
-      tempGameIWAD = basegamepath;
-      tempGameIWAD.pathConcatenate(myargv[gamepathparm]);
-      tempGameIWAD.addDefaultExtension(".wad");
-      gameiwad = tempGameIWAD.duplicateAuto();
+      gameiwad = basegamepath;
+      gameiwad.pathConcatenate(myargv[gamepathparm]);
+      gameiwad.addDefaultExtension(".wad");
 
-      if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
-         basename = gameiwad;
+      if(!access(gameiwad.constPtr(), R_OK)) // only if the file exists do we try to use it.
+         basename = gameiwad.constPtr();
       else                        
       {
          // haleyjd 12/31/10: base/game/game.wad doesn't exist;
@@ -1045,33 +1040,30 @@ static char *D_findIWADFile()
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
-      baseiwad = estrdup(basename);
-      M_NormalizeSlashes(baseiwad);
-
-      iwad = ecalloc(char *, 1, strlen(baseiwad) + 1024);
-      strcpy(iwad, baseiwad);
+      iwad = basename;
+      iwad.normalizeSlashes();
       
       if(WadFileStatus(iwad, &isdir))
       {
          if(!isdir)
-            return iwad;
+            return;
          else
          {
-            for(i = 0; i < nstandard_iwads; i++)
+            for(int i = 0; i < nstandard_iwads; i++)
             {
-               int n = strlen(iwad);
-               strcat(iwad, standard_iwads[i]);
+               size_t n = iwad.length();
+               iwad.concat(standard_iwads[i]);
                if(WadFileStatus(iwad, &isdir) && !isdir)
-                  return iwad;
-               iwad[n] = 0; // reset iwad length to former
+                  return;
+               iwad.truncate(n); // reset iwad length to former
             }
          }
       }
-      else if(!strchr(iwad, ':') && !strchr(iwad, '/') && !strchr(iwad, '\\'))
+      else if(!iwad.strChr(':') && !iwad.strChr('/') && !iwad.strChr('\\'))
       {
-         M_StringAlloca(&customiwad, 1, 8, iwad);
-         M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
-         M_NormalizeSlashes(customiwad);
+         customiwad << "/" << iwad;
+         customiwad.addDefaultExtension(".wad");
+         customiwad.normalizeSlashes();
       }
    }
    else if(!gamepathset) // try wad picker
@@ -1079,133 +1071,129 @@ static char *D_findIWADFile()
       const char *name = D_doIWADMenu();
       if(name && *name)
       {
-         baseiwad = estrdup(name);
-         M_NormalizeSlashes(baseiwad);
-         return baseiwad;
+         iwad = name;
+         iwad.normalizeSlashes();
+         return;
       }
    }
 
-   for(j = 0; j < (gamepathset ? 3 : 2); j++)
+   for(int j = 0; j < (gamepathset ? 3 : 2); j++)
    {
       switch(j)
       {
       case 0:
       case 1:
-         if(iwad)
-            efree(iwad);
-         iwad = ecalloc(char *, 1, strlen(D_DoomExeDir()) + 1024);
-         strcpy(iwad, j ? D_DoomExeDir() : ".");
+         iwad = (j ? D_DoomExeDir() : ".");
          break;
       case 2:
          // haleyjd: try basegamepath too when -game was used
-         if(iwad)
-            efree(iwad);
-         iwad = ecalloc(char *, 1, strlen(basegamepath) + 1024);
-         strcpy(iwad, basegamepath);
+         iwad = basegamepath;
          break;
       }
 
-      M_NormalizeSlashes(iwad);
+      iwad.normalizeSlashes();
 
        // sf: only show 'looking in' for devparm
       if(devparm)
          printf("Looking in %s\n",iwad);   // killough 8/8/98
 
-      if(customiwad)
+      if(customiwad.length())
       {
-         strcat(iwad, customiwad);
+         iwad.concat(customiwad);
          if(WadFileStatus(iwad, &isdir) && !isdir)
-            return iwad;
+            return;
       }
       else
       {
-         for(i = 0; i < nstandard_iwads; i++)
+         for(int i = 0; i < nstandard_iwads; i++)
          {
-            int n = strlen(iwad);
-            strcat(iwad, standard_iwads[i]);
+            size_t n = iwad.length();
+            iwad.concat(standard_iwads[i]);
             if(WadFileStatus(iwad, &isdir) && !isdir)
-               return iwad;
-            iwad[n] = 0; // reset iwad length to former
+               return;
+            iwad.truncate(n); // reset iwad length to former
          }
       }
    }
 
    // haleyjd 12/31/10: Try finding a match amongst configured IWAD paths
-   if(customiwad)
+   if(customiwad.length())
    {
-      char *cfgpath = D_IWADPathForIWADParam(customiwad);
+      char *cfgpath = D_IWADPathForIWADParam(customiwad.constPtr());
       if(cfgpath && !access(cfgpath, R_OK))
       {
-         if(iwad)
-            efree(iwad);
-         iwad = estrdup(cfgpath);
-         return iwad;
+         iwad = cfgpath;
+         return;
       }
    }
 
    if(doomwadpaths.getLength()) // If at least one path is specified...
    {
-      if(customiwad) // -iwad was used with a file name?
+      if(customiwad.length()) // -iwad was used with a file name?
       {
-         if(iwad)
-            efree(iwad);
-         if((iwad = D_FindInDoomWadPath(customiwad, ".wad")))
-            return iwad;
+         if(D_FindInDoomWadPath(iwad, customiwad.constPtr(), ".wad"))
+            return;
       }
       else
       {
          // Try all the standard iwad names in the normal order
-         for(i = 0; i < nstandard_iwads; i++)
+         for(int i = 0; i < nstandard_iwads; i++)
          {
-            if(iwad)
-               efree(iwad);
-            if((iwad = D_FindInDoomWadPath(standard_iwads[i], ".wad")))
-               return iwad;
+            if(D_FindInDoomWadPath(iwad, standard_iwads[i], ".wad"))
+               return;
          }
       }
    }
 
-   for(i = 0; i < earrlen(envvars); i++)
+   for(size_t i = 0; i < earrlen(envvars); i++)
    {
+      char *p;
+
       if((p = getenv(envvars[i])))
       {
-         if(iwad)
-            efree(iwad);
-         iwad = ecalloc(char *, 1, sizeof(p) + 1024);
-         M_NormalizeSlashes(strcpy(iwad, p));
+         //iwad = ecalloc(char *, 1, sizeof(p) + 1024);
+         iwad = p;
+         iwad.normalizeSlashes();
          if(WadFileStatus(iwad, &isdir))
          {
             if(!isdir)
             {
-               if(!customiwad)
-                  return printf("Looking for %s\n", iwad), iwad; // killough 8/8/98
-               else if((p = strrchr(iwad, '/')) || (p = strrchr(iwad, '\\')))
+               size_t slashPos;
+
+               if(!customiwad.length())
                {
-                  *p=0;
-                  strcat(iwad, customiwad);
-                  printf("Looking for %s\n",iwad);  // killough 8/8/98
+                  printf("Looking for %s\n", iwad.constPtr());
+                  return; // killough 8/8/98
+               }
+               else if((slashPos = iwad.findLastOf('/'))  != qstring::npos ||
+                       (slashPos = iwad.findLastOf('\\')) != qstring::npos)
+               {
+                  iwad.truncate(slashPos);
+                  iwad.concat(customiwad);
+                  printf("Looking for %s\n", iwad.constPtr());  // killough 8/8/98
                   if(WadFileStatus(iwad, &isdir) && !isdir)
-                     return iwad;
+                     return;
                }
             }
             else
             {
                if(devparm)       // sf: devparm only
-                  printf("Looking in %s\n",iwad);  // killough 8/8/98
-               if(customiwad)
+                  printf("Looking in %s\n", iwad.constPtr());  // killough 8/8/98
+               if(customiwad.length())
                {
-                  if(WadFileStatus(strcat(iwad, customiwad), &isdir) && !isdir)
-                     return iwad;
+                  iwad.concat(customiwad);
+                  if(WadFileStatus(iwad, &isdir) && !isdir)
+                     return;
                }
                else
                {
-                  for(i = 0; i < nstandard_iwads; i++)
+                  for(int wn = 0; wn < nstandard_iwads; wn++)
                   {
-                     int n = strlen(iwad);
-                     strcat(iwad, standard_iwads[i]);
+                     size_t n = iwad.length();
+                     iwad.concat(standard_iwads[wn]);
                      if(WadFileStatus(iwad, &isdir) && !isdir)
-                        return iwad;
-                     iwad[n] = 0; // reset iwad length to former
+                        return;
+                     iwad.truncate(n); // reset iwad length to former
                   }
                } // end else (!*customiwad)
             } // end else (isdir)
@@ -1213,12 +1201,7 @@ static char *D_findIWADFile()
       } // end if((p = getenv(...)))
    } // end for
 
-   // haleyjd 01/17/11: be sure iwad return string is valid...
-   if(!iwad)
-      iwad = emalloc(char *, 1);
-
-   *iwad = 0;
-   return iwad;
+   iwad = "";
 }
 
 //
@@ -1306,17 +1289,17 @@ static void D_identifyDisk()
 //
 static void D_identifyIWAD()
 {
-   char *iwad;
+   qstring       iwad;
    GameMode_t    gamemode;
    GameMission_t gamemission;
 
-   iwad = D_findIWADFile();
+   D_findIWADFile(iwad);
 
-   if(iwad && *iwad)
+   if(iwad.length())
    {
       iwadcheck_t version;
 
-      printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
+      printf("IWAD found: %s\n", iwad.constPtr()); //jff 4/20/98 print only if found
 
       version.gmode      = &gamemode;
       version.gmission   = &gamemission;
@@ -1327,13 +1310,13 @@ static void D_identifyIWAD()
       version.flags      = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;
 
       // joel 10/16/98 gamemission added
-      D_CheckIWAD(iwad, version);
+      D_CheckIWAD(iwad.constPtr(), version);
 
       // setup GameModeInfo
       D_SetGameModeInfo(gamemode, gamemission);
 
       // set and display version name
-      D_SetGameName(iwad);
+      D_SetGameName(iwad.constPtr());
 
       // initialize game/data paths
       D_InitPaths();
@@ -1342,13 +1325,10 @@ static void D_identifyIWAD()
       // fraggle -- this allows better compatibility with new IWADs
       D_loadResourceWad();
 
-      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, false, true);
+      D_AddFile(iwad.constPtr(), lumpinfo_t::ns_global, NULL, 0, false, true);
 
       // 12/24/11: check for game folder hi-def music
       D_CheckGameMusic();
-
-      // done with iwad string
-      efree(iwad);
    }
    else
    {
