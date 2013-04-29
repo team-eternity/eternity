@@ -85,7 +85,7 @@ protected:
 public:
    // Constructor / Destructor
    XLTokenizer(const char *str) 
-      : token(32), state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
+      : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE), token(32)
    { 
    }
 

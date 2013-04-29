@@ -80,7 +80,7 @@ menuwidget_t popup_widget = { MN_PopupDrawer, MN_PopupResponder };
 //
 static void (*popup_callback)(void) = NULL;
 
-enum
+static enum
 {
    popup_alert,
    popup_question

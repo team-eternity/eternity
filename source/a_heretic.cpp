@@ -955,7 +955,6 @@ void A_VolcanoBlast(Mobj *actor)
 void A_VolcBallImpact(Mobj *actor)
 {
    int      sballType = E_SafeThingType(MT_VOLCANOTBLAST);
-   int      i;
    Mobj    *svolcball;
    angle_t  angle;
 
@@ -972,7 +971,7 @@ void A_VolcBallImpact(Mobj *actor)
    P_RadiusAttack(actor, actor->target, 25, 25, actor->info->mod, 0);
 
    // spawn 4 little volcano balls
-   for(i = 0; i < 4; ++i)
+   for(unsigned i = 0; i < 4; ++i)
    {
       svolcball = P_SpawnMobj(actor->x, actor->y, actor->z, sballType);
 
@@ -1592,7 +1591,7 @@ void A_LichIceImpact(Mobj *actor)
    angle_t  angle;
    Mobj    *shard;
    
-   for(int i = 0; i < 8; ++i)
+   for(unsigned i = 0; i < 8; ++i)
    {
       shard = P_SpawnMobj(actor->x, actor->y, actor->z, fxType);      
       P_SetTarget<Mobj>(&shard->target, actor->target);

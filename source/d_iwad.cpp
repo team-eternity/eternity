@@ -1095,7 +1095,7 @@ static void D_findIWADFile(qstring &iwad)
 
        // sf: only show 'looking in' for devparm
       if(devparm)
-         printf("Looking in %s\n",iwad);   // killough 8/8/98
+         printf("Looking in %s\n", iwad.constPtr());   // killough 8/8/98
 
       if(customiwad.length())
       {

@@ -739,8 +739,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 //
 // R_RenderAnchoredPortal
 //
-extern byte *ylookup[MAX_SCREENWIDTH]; 
-extern int  columnofs[MAX_SCREENHEIGHT];
+extern byte *ylookup[];
+extern int  columnofs[];
 extern int showtainted;
 
 
