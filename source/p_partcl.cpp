@@ -325,12 +325,10 @@ static void P_BFGExplosion(Mobj *actor);
 //
 static void P_GenVelocities(void)
 {
-   int i;
+   int i, j;
 
-   for(i = 0; i < NUMVERTEXNORMALS*3; ++i)
-   {
-      avelocities[0][i] = M_Random() * 0.01f;
-   }
+   for(i = 0; i < NUMVERTEXNORMALS; ++i) for(j = 0; j < 3; ++j)
+      avelocities[i][j] = M_Random() * 0.01f;
 }
 
 void P_InitParticleEffects(void)
