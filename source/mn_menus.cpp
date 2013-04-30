@@ -1368,7 +1368,7 @@ menu_t menu_loadgame =
 {
    mn_loadgame_items,
    NULL, NULL, NULL,                 // pages
-   80, 54,                           // x, y
+   80, 44,                           // x, y
    2,                                // starting slot
    mf_skullmenu | mf_emulated,       // skull menu
    MN_LoadGameDrawer,
@@ -1379,7 +1379,7 @@ void MN_LoadGameDrawer()
 {
    static char *emptystr = NULL;
 
-   V_DrawPatch(72, 28, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE));
+   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE));
 
    if(!emptystr)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
@@ -1509,7 +1509,7 @@ menu_t menu_savegame =
 {
    mn_savegame_items,
    NULL, NULL, NULL,                 // pages
-   80, 54,                           // x, y
+   80, 44,                           // x, y
    2,                                // starting slot
    mf_skullmenu | mf_emulated,       // skull menu
    MN_SaveGameDrawer,
@@ -1517,7 +1517,7 @@ menu_t menu_savegame =
 
 void MN_SaveGameDrawer()
 {
-   V_DrawPatch(72, 28, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
+   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
 
    for(int i = 0; i < SAVESLOTS; i++)
       MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);

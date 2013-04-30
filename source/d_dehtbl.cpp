@@ -1021,7 +1021,7 @@ const char *mapnames2[] = // DOOM 2 map names.
 
   "HUSTR_31",
   "HUSTR_32",
-  "HUSTR_33"
+  "HUSTR_33"  // For Betray, in BFG Edition IWAD
 };
 
 const char *mapnamesp[] = // Plutonia WAD map names.
@@ -1058,8 +1058,10 @@ const char *mapnamesp[] = // Plutonia WAD map names.
    "PHUSTR_28",
    "PHUSTR_29",
    "PHUSTR_30",
+
    "PHUSTR_31",
    "PHUSTR_32",
+   "HUSTR_33"   // Can be used through BEX
 };
 
 const char *mapnamest[] = // TNT WAD map names.
@@ -1096,8 +1098,10 @@ const char *mapnamest[] = // TNT WAD map names.
    "THUSTR_28",
    "THUSTR_29",
    "THUSTR_30",
+
    "THUSTR_31",
    "THUSTR_32",
+   "HUSTR_33"   // Can be used through BEX
 };
 
 const char *mapnamesh[] = // haleyjd: heretic map names
@@ -1946,6 +1950,23 @@ bool DEH_StringChanged(const char *mnemonic)
       I_Error("DEH_StringChanged: unknown BEX mnemonic %s\n", mnemonic);
 
    return (dehstr->original != *(dehstr->ppstr));
+}
+
+//
+// DEH_ReplaceString
+//
+// haleyjd 04/29/13: Allows replacing a dehstr at runtime.
+// newstr should be a static string, or one you allocated storage for
+// yourself.
+//
+void DEH_ReplaceString(const char *mnemonic, const char *newstr)
+{
+   dehstr_t *dehstr;
+
+   if(!(dehstr = D_GetBEXStr(mnemonic)))
+      return;
+
+   *dehstr->ppstr = newstr;
 }
 
 //

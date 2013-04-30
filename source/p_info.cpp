@@ -58,6 +58,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"
+#include "dstrings.h"
 #include "e_lib.h"
 #include "e_hash.h"
 #include "e_sound.h"
@@ -874,12 +875,39 @@ static void SynthLevelName(SynthType_e levelNameType)
 }
 
 //
+// P_BFGNameHacks
+//
+// haleyjd 04/29/13: This will run once when we're in pack_disk, 
+// and will check to see if HUSTR 31 or 32 have been DEH/BEX modified. 
+// If so they're left alone. Otherwise, we replace those strings in the
+// BEX string table with different values.
+//
+static void P_BFGNameHacks()
+{
+   static bool firsttime = true;
+
+   // Only applies to DOOM II BFG Edition
+   if(GameModeInfo->id != commercial ||
+      GameModeInfo->missionInfo->id != pack_disk)
+      return;
+
+   if(firsttime)
+   {
+      firsttime = false;
+      if(!DEH_StringChanged("HUSTR_31"))
+         DEH_ReplaceString("HUSTR_31", BFGHUSTR_31);
+      if(!DEH_StringChanged("HUSTR_32"))
+         DEH_ReplaceString("HUSTR_32", BFGHUSTR_32);
+   }
+}
+
+//
 // P_InfoDefaultLevelName
 //
 // Figures out the name to use for this map.
 // Moved here from hu_stuff.c
 //
-static void P_InfoDefaultLevelName(void)
+static void P_InfoDefaultLevelName()
 {
    const char    *bexname      = NULL;
    bool           deh_modified = false;
@@ -894,6 +922,9 @@ static void P_InfoDefaultLevelName(void)
       LevelInfo.levelName = curmetainfo->levelname;
       return;
    }
+
+   // haleyjd 04/29/13: a couple hacks for BFG Edition authenticity
+   P_BFGNameHacks();
 
    // haleyjd 11/03/12: in pack_disk, we have 33 map names.
    // This is also allowed for subsitution through BEX mnemonic HUSTR_33.

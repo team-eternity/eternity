@@ -54,11 +54,12 @@ dehstr_t *D_GetDEHStr(const char *string);
 // haleyjd 10/08/06: new string fetching functions
 const char *DEH_String(const char *mnemonic);
 bool DEH_StringChanged(const char *mnemonic);
+void DEH_ReplaceString(const char *mnemonic, const char *newstr);
 
 deh_bexptr *D_GetBexPtr(const char *mnemonic);
 
-void D_BuildBEXHashChains(void);
-void D_BuildBEXTables(void);
+void D_BuildBEXHashChains();
+void D_BuildBEXTables();
 
 // haleyjd: flag field parsing stuff is now global for EDF and
 // ExtraData usage

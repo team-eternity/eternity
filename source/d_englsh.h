@@ -234,8 +234,13 @@
 #define HUSTR_31    "level 31: wolfenstein"
 #define HUSTR_32    "level 32: grosse"
 
-// haleyjd 10/03/12: only used for pack_disk
+// haleyjd 10/03/12: only used for pack_disk (BFG Edition)
 #define HUSTR_33    "level 33: betray"
+
+// haleyjd 04/29/13: only used for pack_disk, and if the originals
+// have not been modified.
+#define BFGHUSTR_31 "level 31: idkfa"
+#define BFGHUSTR_32 "level 32: keen"
 
 #define PHUSTR_1    "level 1: congo"
 #define PHUSTR_2    "level 2: well of souls"
