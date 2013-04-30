@@ -44,9 +44,6 @@
 // need wad iterator
 #include "w_iterator.h"
 
-#define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
-#define MAXHEIGHT MAX_SCREENHEIGHT
-
 #ifdef DJGPP
 #define USEASM /* sf: changed #ifdef DJGPP to #ifdef USEASM */
 #endif
@@ -71,8 +68,8 @@ int  viewwindowy;
 int  scaledwindowx;
 int  scaledwindowy;
 
-byte *ylookup[MAXHEIGHT]; 
-int  columnofs[MAXWIDTH]; 
+byte *ylookup[MAX_SCREENHEIGHT]; 
+int  columnofs[MAX_SCREENWIDTH]; 
 int  linesize = SCREENWIDTH;  // killough 11/98
 
 // Color tables for different players,

@@ -38,10 +38,7 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
-#define MAXHEIGHT MAX_SCREENHEIGHT
-
-extern int columnofs[MAXWIDTH]; 
+extern int columnofs[MAX_SCREENWIDTH]; 
 
 static void R_LowDrawColumn(void)
 { 
