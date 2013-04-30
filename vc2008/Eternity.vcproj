@@ -4123,6 +4123,10 @@
 					Name="V_ Source"
 					>
 					<File
+						RelativePath="..\source\v_alloc.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\v_block.cpp"
 						>
 						<FileConfiguration
@@ -4266,6 +4270,10 @@
 				<Filter
 					Name="V_ Headers"
 					>
+					<File
+						RelativePath="..\source\v_alloc.h"
+						>
+					</File>
 					<File
 						RelativePath="..\Source\v_block.h"
 						>

@@ -38,6 +38,7 @@
 #include "f_wipe.h"
 #include "i_video.h"
 #include "m_random.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 
@@ -57,7 +58,11 @@ static byte *wipe_buffer = NULL;
 //
 
 // array of column pointers into wipe_buffer for 'superfast' melt
-static byte *start_screen[MAX_SCREENWIDTH] = {0};
+static byte **start_screen;
+VALLOCATION(start_screen)
+{
+   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, NULL);
+}
 
 // y co-ordinate of various columns
 static int worms[SCREENWIDTH];

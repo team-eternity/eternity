@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,37 +20,43 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//  Functions to manipulate linear blocks of graphics data.
+//   Video and rendering related buffers which must allocate and deallocate
+//   with screen resolution changes.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef V_BLOCK_H__
-#define V_BLOCK_H__
+#include "z_zone.h"
+#include "v_alloc.h"
 
-#include "doomtype.h"
+// Global list of all VAllocItem instances
+DLListItem<VAllocItem> *VAllocItem::vAllocList;
 
-struct VBuffer;
+//
+// VAllocItem::FreeAllocs
+//
+// Frees all VAllocItem instances' allocations.
+//
+void VAllocItem::FreeAllocs()
+{
+   Z_FreeTags(PU_VALLOC, PU_VALLOC);
+}
 
-// Scaled color block drawers.
+//
+// VAllocItem::SetNewMode
+//
+// Invokes the allocation method of all VAllocItem instances.
+//
+void VAllocItem::SetNewMode(int w, int h)
+{
+   DLListItem<VAllocItem> *cur = vAllocList;
 
-void V_ColorBlockScaled(VBuffer *buffer, byte color, int x, int y, int w, int h);
+   while(cur)
+   {
+      cur->dllObject->allocator(w, h);
+      cur = cur->dllNext;
+   }
+}
 
-void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
-                          int tl);
-
-// haleyjd 02/02/05: color block drawing functions
-
-void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h);
-
-void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w, 
-                    int h, int tl);
-
-// sets block function pointers for a VBuffer object
-void V_SetBlockFuncs(VBuffer *, int);
-
-#endif
 
 // EOF
-
-
 

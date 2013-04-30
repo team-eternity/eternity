@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,37 +20,48 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//  Functions to manipulate linear blocks of graphics data.
+//   Video and rendering related buffers which must allocate and deallocate
+//   with screen resolution changes.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef V_BLOCK_H__
-#define V_BLOCK_H__
+#ifndef V_ALLOC_H__
+#define V_ALLOC_H__
 
-#include "doomtype.h"
+#include "m_dllist.h"
 
-struct VBuffer;
+class VAllocItem
+{
+public:
+   typedef void (*allocfn_t)(int w, int h);
 
-// Scaled color block drawers.
+protected:
+   static DLListItem<VAllocItem> *vAllocList;
 
-void V_ColorBlockScaled(VBuffer *buffer, byte color, int x, int y, int w, int h);
+   DLListItem<VAllocItem> links;
+   allocfn_t allocator;
 
-void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
-                          int tl);
+public:
+   VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) 
+   {
+      links.insert(this, &vAllocList);
+   }
 
-// haleyjd 02/02/05: color block drawing functions
+   static void FreeAllocs();
+   static void SetNewMode(int w, int h);
+};
 
-void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h);
+#define VALLOCFNNAME(name) VAllocFn_ ## name
+#define VALLOCFNSIG(name)  static void VALLOCFNNAME(name) (int, int)
+#define VALLOCDECL(name)   static VAllocItem vAllocItem_ ## name (VALLOCFNNAME(name))
+#define VALLOCFNDEF(name)  static void VALLOCFNNAME(name) (int w, int h)
 
-void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w, 
-                    int h, int tl);
-
-// sets block function pointers for a VBuffer object
-void V_SetBlockFuncs(VBuffer *, int);
+#define VALLOCATION(name) \
+   VALLOCFNSIG(name);     \
+   VALLOCDECL(name);      \
+   VALLOCFNDEF(name)
 
 #endif
 
 // EOF
-
-
 

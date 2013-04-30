@@ -36,7 +36,7 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-extern int columnofs[MAX_SCREENWIDTH]; 
+extern int *columnofs; 
 
 // SoM: OPTIMIZE for ANYRES
 typedef enum

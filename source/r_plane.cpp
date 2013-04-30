@@ -56,6 +56,7 @@
 #include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -83,8 +84,14 @@ int num_visplanes;      // sf: count visplanes
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-#define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
-float openings[MAXOPENINGS], *lastopening;
+//#define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
+float *openings, *lastopening;
+
+VALLOCATION(openings)
+{
+   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, NULL);
+   lastopening = openings;
+}
 
 
 // Clip values are the solid pixel bounding the range.
@@ -93,12 +100,26 @@ float openings[MAXOPENINGS], *lastopening;
 
 // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
 // to the clipping arrays of portals.
-float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
-float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
+float *floorcliparray, *ceilingcliparray;
+float *floorclip, *ceilingclip;
+
+VALLOCATION(floorcliparray)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+
+   floorclip   = floorcliparray   = buffer;
+   ceilingclip = ceilingcliparray = buffer + w;
+}
 
 // SoM: We have to use secondary clipping arrays for portal overlays
-float overlayfclip[MAX_SCREENWIDTH], overlaycclip[MAX_SCREENWIDTH];
+float *overlayfclip, *overlaycclip;
 
+VALLOCATION(overlayfclip)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   overlayfclip = buffer;
+   overlaycclip = buffer + w;
+}
 
 // spanstart holds the start of a plane span; initialized to 0 at start
 static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
@@ -110,12 +131,6 @@ static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
 // killough 2/8/98: make variables static
 
 static fixed_t cachedheight[MAX_SCREENHEIGHT];
-
-fixed_t *yslope;
-fixed_t origyslope[MAX_SCREENHEIGHT*2];
-
-fixed_t distscale[MAX_SCREENWIDTH];
-int     visplane_view = 0;
 
 cb_span_t      span;
 cb_plane_t     plane;
@@ -131,14 +146,6 @@ void R_Throw(void)
 
 void (*flatfunc)(void)  = R_Throw;
 void (*slopefunc)(void) = R_Throw;
-
-//
-// R_InitPlanes
-// Only at game startup.
-//
-void R_InitPlanes(void)
-{
-}
 
 //
 // R_SpanLight
@@ -312,19 +319,6 @@ static void R_MapPlane(int y, int x1, int x2)
    
    // BIG FLATS
    flatfunc();
-
-   // visplane viewing -- sf
-   if(visplane_view)
-   {
-      if(y >= 0 && y < viewheight)
-      {
-         // SoM: ANYRES
-         if(x1 >= 0 && x1 <= viewwidth)
-            *(vbscreen.data + y*vbscreen.pitch + x1) = GameModeInfo->blackIndex;
-         if(x2 >= 0 && x2 <= viewwidth)
-            *(vbscreen.data + y*vbscreen.pitch + x2) = GameModeInfo->blackIndex;
-      }
-   }
 }
 
 // haleyjd: NOTE: This version below has scaling implemented. Don't delete it!
@@ -380,19 +374,6 @@ static void R_MapPlane(int y, int x1, int x2)
    
    // BIG FLATS
    flatfunc();
-
-   // visplane viewing -- sf
-   if(visplane_view)
-   {
-      if(y >= 0 && y < viewheight)
-      {
-         // SoM: ANYRES
-         if(x1 >= 0 && x1 <= viewwidth)
-            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
-         if(x2 >= 0 && x2 <= viewwidth)
-            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
-      }
-   }
 }
 */
 
@@ -625,12 +606,12 @@ void R_ClearPlaneHash(planehash_t *table)
 // Clears the arrays used to clip portal overlays. This function is called before the start of 
 // each portal rendering.
 //
-void R_ClearOverlayClips(void)
+void R_ClearOverlayClips()
 {
    int i;
    
    // opening / clipping determination
-   for(i = 0; i < MAX_SCREENWIDTH; ++i)
+   for(i = 0; i < video.width; ++i)
    {
       overlayfclip[i] = view.height - 1.0f;
       overlaycclip[i] = 0.0f;
@@ -644,7 +625,7 @@ void R_ClearOverlayClips(void)
 //
 // At begining of frame.
 //
-void R_ClearPlanes(void)
+void R_ClearPlanes()
 {
    int i;
    float a = 0.0f;
@@ -661,7 +642,7 @@ void R_ClearPlanes(void)
    ceilingclip = ceilingcliparray;
 
    // opening / clipping determination
-   for(i = 0; i < MAX_SCREENWIDTH; ++i)
+   for(i = 0; i < video.width; ++i)
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;

@@ -52,6 +52,7 @@
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -62,7 +63,7 @@
 // External Declarations
 //
 
-extern int columnofs[];
+extern int *columnofs;
 extern int global_cmap_index; // haleyjd: NGCS
 
 //=============================================================================
@@ -89,9 +90,16 @@ int r_vissprite_limit;
 // constant arrays
 //  used for psprite clipping and initializing clipping
 
-float zeroarray[MAX_SCREENWIDTH];
-float screenheightarray[MAX_SCREENWIDTH];
-int   lefthanded = 0;
+float *zeroarray;
+float *screenheightarray;
+int    lefthanded = 0;
+
+VALLOCATION(zeroarray)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   zeroarray = buffer;
+   screenheightarray = buffer + w;
+}
 
 // variables used to look up and range check thing_t sprites patches
 
@@ -185,7 +193,12 @@ static drawsegs_xrange_t *drawsegs_xrange;
 static unsigned int drawsegs_xrange_size = 0;
 static int drawsegs_xrange_count = 0;
 
-static float pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+static float *pscreenheightarray; // for psprites
+
+VALLOCATION(pscreenheightarray)
+{
+   pscreenheightarray = ecalloctag(float *, w, sizeof(float), PU_VALLOC, NULL);
+}
 
 static lighttable_t **spritelights; // killough 1/25/98 made static
 
@@ -205,8 +218,15 @@ static int            stackmax     = 0;
 static maskedrange_t *unusedmasked = NULL;
 
 // haleyjd: made static global
-static float clipbot[MAX_SCREENWIDTH];
-static float cliptop[MAX_SCREENWIDTH];
+static float *clipbot;
+static float *cliptop;
+
+VALLOCATION(clipbot)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   clipbot = buffer;
+   cliptop = buffer + w;
+}
 
 //=============================================================================
 //
@@ -458,7 +478,7 @@ static void R_InitSpriteDefs(char **namelist)
 void R_InitSprites(char **namelist)
 {
    int i;
-   for(i = 0; i < MAX_SCREENWIDTH; ++i)    // killough 2/8/98
+   for(i = 0; i < video.width; ++i)    // killough 2/8/98
       zeroarray[i] = 0.0f;
    R_InitSpriteDefs(namelist);
 }
@@ -1195,7 +1215,7 @@ static void R_DrawPlayerSprites(void)
       pscreenheightarray[i] = view.height - 1.0f;
    
    // clip to screen bounds
-   mfloorclip = pscreenheightarray;
+   mfloorclip   = pscreenheightarray;
    mceilingclip = zeroarray;
 
    // add all active psprites
@@ -1483,8 +1503,6 @@ void R_DrawSprite(vissprite_t *spr)
 static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 {
    drawseg_t *ds;
-   //float     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   //float     cliptop[MAX_SCREENWIDTH];       // change to MAX_*
    int     x;
    int     r1;
    int     r2;

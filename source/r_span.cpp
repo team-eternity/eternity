@@ -36,8 +36,8 @@
 #include "d_gi.h"
 #include "r_plane.h"
 
-extern byte *ylookup[MAX_SCREENHEIGHT]; 
-extern int  columnofs[MAX_SCREENWIDTH]; 
+extern byte **ylookup; 
+extern int   *columnofs; 
 
 //==============================================================================
 //

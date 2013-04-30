@@ -41,6 +41,7 @@
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 
 drawseg_t *ds_p;
 
@@ -98,15 +99,25 @@ typedef struct cliprange_s
 // have anything to do with visplanes, but it had everything to do with these
 // clip posts.
 
-#define MAXSEGS (MAX_SCREENWIDTH/2+1)   /* killough 1/11/98, 2/8/98 */
+#define MAXSEGS (w/2+1)   /* killough 1/11/98, 2/8/98 */
 
 // newend is one past the last valid seg
 static cliprange_t *newend;
-static cliprange_t solidsegs[MAXSEGS];
+static cliprange_t *solidsegs;
 
 // addend is one past the last valid added seg.
-static cliprange_t addedsegs[MAXSEGS];
-static cliprange_t *addend = addedsegs;
+static cliprange_t *addedsegs;
+static cliprange_t *addend;
+
+VALLOCATION(solidsegs)
+{
+   cliprange_t *buf = 
+      ecalloctag(cliprange_t *, MAXSEGS*2, sizeof(cliprange_t), PU_VALLOC, NULL);
+
+   solidsegs = buf;
+   addedsegs = buf + MAXSEGS;
+   addend = addedsegs;
+}
 
 
 static void R_AddSolidSeg(int x1, int x2)
@@ -173,7 +184,7 @@ void R_MarkSolidSeg(int x1, int x2)
    addend++;
 }
 
-static void R_AddMarkedSegs(void)
+static void R_AddMarkedSegs()
 {
    cliprange_t *r;
 
@@ -329,7 +340,7 @@ static void R_ClipPassWallSegment(int x1, int x2)
 //
 // R_ClearClipSegs
 //
-void R_ClearClipSegs(void)
+void R_ClearClipSegs()
 {
    solidsegs[0].first = D_MININT + 1;
    solidsegs[0].last = -1;
@@ -339,7 +350,7 @@ void R_ClearClipSegs(void)
    addend = addedsegs;
 
    // haleyjd 09/22/07: must clear seg and segclip structures
-   memset(&seg, 0, sizeof(cb_seg_t));
+   memset(&seg,     0, sizeof(cb_seg_t));
    memset(&segclip, 0, sizeof(cb_seg_t));
 }
 
@@ -671,7 +682,12 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 // to be clipped. This is done so visplanes will still be rendered 
 // fully.
 
-static float slopemark[MAX_SCREENWIDTH];
+static float *slopemark;
+
+VALLOCATION(slopemark)
+{
+   slopemark = ecalloctag(float *, w, sizeof(float), PU_VALLOC, NULL);
+}
 
 void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 {

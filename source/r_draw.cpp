@@ -36,6 +36,7 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "st_stuff.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -68,9 +69,19 @@ int  viewwindowy;
 int  scaledwindowx;
 int  scaledwindowy;
 
-byte *ylookup[MAX_SCREENHEIGHT]; 
-int  columnofs[MAX_SCREENWIDTH]; 
-int  linesize = SCREENWIDTH;  // killough 11/98
+byte **ylookup; 
+int   *columnofs; 
+int    linesize = SCREENWIDTH;  // killough 11/98
+
+VALLOCATION(ylookup)
+{
+   ylookup = ecalloctag(byte **, h, sizeof(byte *), PU_VALLOC, NULL);
+}
+
+VALLOCATION(columnofs)
+{
+   columnofs = ecalloctag(int *, w, sizeof(int), PU_VALLOC, NULL);
+}
 
 // Color tables for different players,
 //  translate a limited part to another

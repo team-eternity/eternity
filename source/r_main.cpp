@@ -59,6 +59,7 @@
 #include "r_state.h"
 #include "s_sound.h"
 #include "st_stuff.h"
+#include "v_alloc.h"
 #include "v_block.h"
 #include "v_misc.h"
 #include "v_video.h"
@@ -121,7 +122,12 @@ int viewangletox[FINEANGLES/2];
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
 
-angle_t xtoviewangle[MAX_SCREENWIDTH+1];   // killough 2/8/98
+angle_t *xtoviewangle;   // killough 2/8/98
+VALLOCATION(xtoviewangle)
+{
+   xtoviewangle = ecalloctag(angle_t *, w+1, sizeof(angle_t), PU_VALLOC, NULL);
+}
+
 
 // killough 3/20/98: Support dynamic colormaps, e.g. deep water
 // killough 4/4/98: support dynamic number of them as well
@@ -647,7 +653,7 @@ void R_SetupViewScaling(void)
 //
 // R_ExecuteSetViewSize
 //
-void R_ExecuteSetViewSize(void)
+void R_ExecuteSetViewSize()
 {
    int i;
 
@@ -706,7 +712,6 @@ void R_Init(void)
 {
    R_InitData();
    R_SetViewSize(screenSize+3);
-   R_InitPlanes();
    R_InitLightTables();
    R_InitTranslationTables();
    R_InitParticles(); // haleyjd
@@ -845,8 +850,6 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    else
    {
       centeryfrac = viewheightfrac;
-
-      yslope = origyslope + (viewheight >> 1);
    }
    
    centery = centeryfrac >> FRACBITS;
@@ -1192,7 +1195,6 @@ static const char *tlstylestr[] = { "none", "boom", "new" };
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
 VARIABLE_BOOLEAN(flashing_hom, NULL,                onoff);
-VARIABLE_BOOLEAN(visplane_view, NULL,               onoff);
 VARIABLE_BOOLEAN(r_precache, NULL,                  onoff);
 VARIABLE_TOGGLE(showpsprites,  NULL,                yesno);
 VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
@@ -1257,7 +1259,6 @@ CONSOLE_VARIABLE(gamma, usegamma, 0)
 CONSOLE_VARIABLE(lefthanded, lefthanded, 0) {}
 CONSOLE_VARIABLE(r_blockmap, r_blockmap, 0) {}
 CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
-CONSOLE_VARIABLE(r_planeview, visplane_view, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
 

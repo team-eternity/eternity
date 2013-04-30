@@ -27,7 +27,7 @@
 #ifndef R_STATE_H__
 #define R_STATE_H__
 
-// Required for: lighttable_t (FIXME?), angle_t, MAX_SCREENWIDTH
+// Required for: lighttable_t (FIXME?), angle_t
 #include "doomdef.h"
 #include "r_lighting.h"
 #include "tables.h"
@@ -118,7 +118,7 @@ extern player_t         *viewplayer;
 extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
-extern angle_t          xtoviewangle[MAX_SCREENWIDTH+1];  // killough 2/8/98
+extern angle_t          *xtoviewangle;  // killough 2/8/98
 extern int              viewgroup; // SoM
 
 extern visplane_t       *floorplane;

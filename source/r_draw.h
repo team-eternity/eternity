@@ -132,9 +132,9 @@ void R_FillBackScreen(void);
 // If the view size is not full screen, draws a border around it.
 void R_DrawViewBorder(void);
 
-extern byte *tranmap;         // translucency filter maps 256x256  // phares 
-extern byte *main_tranmap;    // killough 4/11/98
-extern byte *ylookup[];       // killough 11/98
+extern byte  *tranmap;       // translucency filter maps 256x256  // phares 
+extern byte  *main_tranmap;  // killough 4/11/98
+extern byte **ylookup;       // killough 11/98
 
 #define FUZZTABLE 50 
 #define FUZZOFF (SCREENWIDTH)
