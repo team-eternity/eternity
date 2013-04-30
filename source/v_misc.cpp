@@ -74,16 +74,6 @@ cb_video_t video =
    {NULL, NULL, NULL, NULL, NULL}
 };
 
-//
-// V_ResetMode
-//
-// Called after changing video mode
-//
-void V_ResetMode(void)
-{   
-   I_SetMode(0);
-}
-
 //=============================================================================
 //
 // Box Drawing

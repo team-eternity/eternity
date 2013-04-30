@@ -77,7 +77,7 @@ extern int disk_icon;  // killough 10/98
 
 // video modes
 
-void I_SetMode(int i);
+void I_SetMode();
 
 extern char *i_videomode;
 extern char *i_default_videomode;

@@ -440,7 +440,7 @@ extern void I_DisableSysMenu();
 // killough 11/98: New routine, for setting hires and page flipping
 // sf: now returns true if an error occurred
 //
-static bool I_InitGraphicsMode(void)
+static bool I_InitGraphicsMode()
 {
    bool result; 
 
@@ -481,7 +481,7 @@ static bool I_InitGraphicsMode(void)
 // and then waking up any interested game-code modules that need to know about
 // the screen resolution.
 //
-static void I_ResetScreen(void)
+static void I_ResetScreen()
 {
    int old_disk_icon = disk_icon;
 
@@ -492,7 +492,7 @@ static void I_ResetScreen(void)
    // Switch out of old graphics mode
    if(in_graphics_mode)
    {
-      i_video_driver->ShutdownGraphicsPartway(); // haleyjd 10/15/05: WOOPS!
+      i_video_driver->ShutdownGraphicsPartway();
       in_graphics_mode = false;
       in_textmode = true;
    }
@@ -523,7 +523,7 @@ static void I_ResetScreen(void)
    disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
 }
 
-void I_InitGraphics(void)
+void I_InitGraphics()
 {
    static int firsttime = true;
    haldriveritem_t *driveritem = NULL;
@@ -562,12 +562,12 @@ void I_InitGraphics(void)
    
    atexit(I_ShutdownGraphics);
    
-   V_ResetMode();
+   I_SetMode();
    
    Z_CheckHeap();
 }
 
-void I_SetMode(int i)
+void I_SetMode()
 {
    static int firsttime = true;    // the first time to set mode
    
@@ -589,7 +589,7 @@ VARIABLE_BOOLEAN(disk_icon, NULL,  onoff);
 CONSOLE_VARIABLE(v_diskicon, disk_icon, 0) {}
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
-   V_ResetMode();
+   I_SetMode();
 }
 
 VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
@@ -603,7 +603,7 @@ CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 VARIABLE_STRING(i_videomode, NULL, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
-   V_ResetMode();
+   I_SetMode();
 
    if(i_default_videomode)
       efree(i_default_videomode);
