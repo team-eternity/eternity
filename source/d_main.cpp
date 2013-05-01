@@ -461,6 +461,7 @@ struct cachelevelprint_t
 static cachelevelprint_t cachelevels[] =
 {
    { PU_STATIC,   "static: " },
+   { PU_VALLOC,   " video: " },
    { PU_RENDERER, "render: " },
    { PU_LEVEL,    " level: " },
    { PU_CACHE,    " cache: " },
@@ -474,15 +475,15 @@ static void D_showMemStats(void)
    size_t total_memory = 0;
    double s;
    char buffer[1024];
-   int i;
+   size_t i;
 
-   for(i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+   for(i = 0; i < earrlen(cachelevels) - 1; i++)
       total_memory += memorybytag[cachelevels[i].cachelevel];
    s = 100.0 / total_memory;
 
    font = E_FontForName("ee_consolefont");   
    // draw the labels
-   for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
+   for(i = 0; i < earrlen(cachelevels); i++)
    {
       int tag = cachelevels[i].cachelevel;
       if(tag != PU_MAX)

@@ -36,10 +36,31 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 
 static portal_t *portals = NULL, *last = NULL;
 static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
+
+//
+// VALLOCATION(portals)
+//
+// haleyjd 04/30/13: when the resolution changes, all portals need notification.
+//
+VALLOCATION(portals)
+{
+   for(portal_t *p = portals; p; p = p->next)
+   {
+      planehash_t *hash;
+
+      // clear portal overlay visplane hash tables
+      if((hash = p->poverlay))
+      {
+         for(int i = 0; i < hash->chaincount; i++)
+            hash->chains[i] = NULL;
+      }
+   }
+}
 
 // This flag is set when a portal is being rendered. This flag is checked in 
 // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
@@ -247,7 +268,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 //
 // Function to internally create a new portal.
 //
-static portal_t *R_CreatePortal(void)
+static portal_t *R_CreatePortal()
 {
    portal_t *ret;
 

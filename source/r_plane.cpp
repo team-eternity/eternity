@@ -73,8 +73,26 @@ visplane_t *floorplane, *ceilingplane;
 static visplane_t *mainchains[MAINHASHCHAINS];   // killough
 static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains };
 
-
 int num_visplanes;      // sf: count visplanes
+
+//
+// VALLOCATION(mainhash)
+//
+// haleyjd 04/30/13: When the screen resolution is changed, we need to
+// reset the main visplane hash and related data to its default state,
+// because all visplanes have been destroyed on account of being 
+// allocated with a PU_VALLOC tag.
+//
+VALLOCATION(mainhash)
+{
+   freetail = NULL;
+   freehead = &freetail;
+   floorplane = ceilingplane = NULL;
+
+   memset(mainchains, 0, sizeof(mainchains));
+
+   num_visplanes = 0;
+}
 
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
@@ -84,7 +102,6 @@ int num_visplanes;      // sf: count visplanes
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-//#define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
 float *openings, *lastopening;
 
 VALLOCATION(openings)
@@ -122,15 +139,16 @@ VALLOCATION(overlayfclip)
 }
 
 // spanstart holds the start of a plane span; initialized to 0 at start
-static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
+static int *spanstart;
+
+VALLOCATION(spanstart)
+{
+   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, NULL);
+}
 
 //
 // texture mapping
 //
-
-// killough 2/8/98: make variables static
-
-static fixed_t cachedheight[MAX_SCREENHEIGHT];
 
 cb_span_t      span;
 cb_plane_t     plane;
@@ -559,6 +577,7 @@ static void R_CalcSlope(visplane_t *pl)
 //
 // Allocates and returns a new planehash_t object. The hash object is allocated
 // PU_LEVEL
+//
 planehash_t *R_NewPlaneHash(int chaincount)
 {
    planehash_t*  ret;
@@ -589,16 +608,15 @@ planehash_t *R_NewPlaneHash(int chaincount)
 //
 // Empties the chains of the given hash table and places the planes within 
 // in the free stack.
+//
 void R_ClearPlaneHash(planehash_t *table)
 {
-   int    i;
-   
-   for(i = 0; i < table->chaincount; ++i)    // new code -- killough
+   for(int i = 0; i < table->chaincount; i++)    // new code -- killough
+   {
       for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
          freehead = &(*freehead)->next;
+   }
 }
-
-
 
 //
 // R_ClearOverlayClips
@@ -651,9 +669,6 @@ void R_ClearPlanes()
    R_ClearPlaneHash(&mainhash);
 
    lastopening = openings;
-
-   // texture calculation
-   memset(cachedheight, 0, sizeof(cachedheight));
    
    num_visplanes = 0;    // reset
 }
@@ -669,7 +684,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloc(visplane_t *, 1, sizeof *check);
+      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, NULL);
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -679,15 +694,12 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    
    check->table = table;
 
-   if(check->max_width < (unsigned int)video.width)
+   if(!check->top)
    {
       int *paddedTop, *paddedBottom;
 
-      if(check->top)
-         efree(check->top - 1);
-
-      check->max_width = video.width;
-      paddedTop    = ecalloc(int *, 2 * (video.width + 2), sizeof(int));
+      check->max_width = (unsigned int)video.width;
+      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, NULL);
       paddedBottom = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
@@ -903,8 +915,8 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
 {
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
-   if(b2 >= MAX_SCREENHEIGHT)
-      I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
+   if(b2 >= video.height)
+      I_Error("R_MakeSpans: b2 >= video.height\n");
 #endif
 
    for(; t2 > t1 && t1 <= b1; t1++)

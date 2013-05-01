@@ -1281,9 +1281,10 @@ void R_DrawNewSkyColumn(void)
     return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned int)column.x >= MAX_SCREENWIDTH
+  if (column.x < 0 
+      || column.x >= video.width
       || column.y1 < 0
-      || column.y2 >= MAX_SCREENHEIGHT) 
+      || column.y2 >= video.height) 
     I_Error ("R_DrawNewSkyColumn: %i to %i at %i\n", column.y1, column.y2, column.x); 
 #endif 
 

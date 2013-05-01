@@ -255,7 +255,7 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
    }
    else
    {
-      memcpy(portaltop, top, sizeof(float) * MAX_SCREENWIDTH);
+      memcpy(portaltop,    top,    sizeof(float) * MAX_SCREENWIDTH);
       memcpy(portalbottom, bottom, sizeof(float) * MAX_SCREENWIDTH);
    }
 }
