@@ -396,20 +396,9 @@ IF (NOT HAVE_STDINT_H)
         ENDIF (MSVC)
 ENDIF (NOT HAVE_STDINT_H)
 
-CHECK_INCLUDE_FILES (GL/gl.h HAVE_GL_GL_H)
-
 ################################################################################
 ######################### Find Needed Libs #####################################
-IF (HAVE_GL_GL_H AND NOT GL_LIBRARY_SEARCHED)
-        MESSAGE (STATUS "Looking for OpenGL")
-        FIND_LIBRARY (GL_LIBRARY GL)
-        IF (GL_LIBRARY)
-                MESSAGE (STATUS "Looking for OpenGL - found")
-        ELSE (GL_LIBRARY)
-                MESSAGE (STATUS "Looking for OpenGL - not found")
-        ENDIF (GL_LIBRARY)
-        SET (GL_LIBRARY_SEARCHED TRUE CACHE INTERNAL "")
-ENDIF (HAVE_GL_GL_H AND NOT GL_LIBRARY_SEARCHED)
+FIND_PACKAGE (OpenGL)
 
 FIND_PACKAGE (SDL REQUIRED)
 INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
@@ -444,9 +433,9 @@ ADD_SUBDIRECTORY(libpng)
 ADD_SUBDIRECTORY(snes_spc)
 ADD_SUBDIRECTORY(source)
 
-IF (WIN32)
+IF (WIN32 AND MSVC)
         ADD_SUBDIRECTORY(eecrashreport)
-ENDIF (WIN32)
+ENDIF (WIN32 AND MSVC)
 
 ## FIXME: This is a continuation of the Windows SDL inelegant hack. This does
 ## the actual installation of those support libraries.

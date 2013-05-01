@@ -32,9 +32,9 @@ ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
 ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
-IF (GL_LIBRARY)
+IF (OPENGL_LIBRARY)
         ADD_DEFINITIONS (-DEE_FEATURE_OPENGL)
-ENDIF (GL_LIBRARY)
+ENDIF (OPENGL_LIBRARY)
 
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really mean any *nix ?
 IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -65,6 +65,11 @@ IF (APPLE)
         FILE (GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
 ENDIF (APPLE)
 
+IF (LINUX)
+        INCLUDE_DIRECTORIES (linux/)
+        FILE (GLOB ARCH_SPECIFIC_SOURCES linux/*.cpp)
+ENDIF (LINUX)
+
 INCLUDE_DIRECTORIES (Confuse/)
 FILE (GLOB CONFUSE_SOURCES Confuse/*.cpp)
 
@@ -83,22 +88,15 @@ FILE (GLOB GL_SOURCES gl/*.cpp)
 INCLUDE_DIRECTORIES (sdl/)
 FILE (GLOB SDL_SOURCES sdl/*.cpp)
 
-IF (NOT WIN32)
-        INCLUDE_DIRECTORIES (linux/)
-        FILE (GLOB LINUX_SOURCES linux/*.cpp)
-ELSE (NOT WIN32)
-        SET (LINUX_SOURCES)
-ENDIF (NOT WIN32)
-
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
-                ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES} ${LINUX_SOURCES})
-IF (GL_LIBRARY)
-        TARGET_LINK_LIBRARIES (eternity ${GL_LIBRARY})
-ENDIF (GL_LIBRARY)
+                ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
+IF (OPENGL_LIBRARY)
+        TARGET_LINK_LIBRARIES (eternity ${OPENGL_LIBRARY})
+ENDIF (OPENGL_LIBRARY)
 TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
 
 INSTALL (TARGETS eternity
