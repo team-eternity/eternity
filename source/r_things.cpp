@@ -837,8 +837,8 @@ static void R_ProjectSprite(Mobj *thing)
 
 
    // Calculate the edges of the shape
-   swidth = M_FixedToFloat(spritewidth[lump]);
-   stopoffset = M_FixedToFloat(spritetopoffset[lump]);
+   swidth      = M_FixedToFloat(spritewidth[lump]);
+   stopoffset  = M_FixedToFloat(spritetopoffset[lump]);
    sleftoffset = M_FixedToFloat(spriteoffset[lump]);
 
 
@@ -1275,7 +1275,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
    else
    {
       int i;
-      for(i = 1; i < n; ++i)
+      for(i = 1; i < n; i++)
       {
          vissprite_t *temp = s[i];
          if(s[i-1]->dist < temp->dist)

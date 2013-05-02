@@ -1984,7 +1984,10 @@ static int R_PolyobjCompare(const void *p1, const void *p2)
    const rpolyobj_t *po1 = *(rpolyobj_t **)p1;
    const rpolyobj_t *po2 = *(rpolyobj_t **)p2;
 
-   return po1->zdist - po2->zdist;
+   if(po1->zdist == po2->zdist)
+      return 0;
+
+   return po1->zdist > po2->zdist ? 1 : -1;
 }
 
 //
@@ -2008,7 +2011,10 @@ static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
    {
       rpolyobj_t *rpo = list->dllObject;
 
-      rpo->zdist = R_PointToDist2(viewx, viewy, rpo->cx, rpo->cy);
+      float tx   = rpo->cx - view.x;
+      float ty   = rpo->cy - view.y;
+      rpo->zdist = (ty * view.cos) + (tx * view.sin);
+
       po_ptrs[i++] = rpo;
       list = list->dllNext;
    }

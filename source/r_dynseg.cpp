@@ -431,10 +431,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 static void R_FragmentCenterPoint(rpolyobj_t *rpo)
 {
    dynaseg_t *rover = rpo->dynaSegs;
-   double x, y;
+   float x, y;
    int vcount = 0;
 
-   x = y = 0.0;
+   x = y = 0.0f;
 
    while(rover)
    {
@@ -452,9 +452,8 @@ static void R_FragmentCenterPoint(rpolyobj_t *rpo)
    x /= vcount;
    y /= vcount;
 
-   // convert to fixed point
-   rpo->cx = M_DoubleToFixed(x);
-   rpo->cy = M_DoubleToFixed(y);
+   rpo->cx = x;
+   rpo->cy = y;
 }
 
 //
@@ -534,10 +533,10 @@ void R_AttachPolyObject(polyobj_t *poly)
       R_SplitLine(idseg, numnodes - 1);
    }
 
+   poly->flags |= POF_ATTACHED;
+
    // haleyjd 12/09/12: calculate center points for every fragment
    R_CalcFragmentCenterPoints(poly);
-
-   poly->flags |= POF_ATTACHED;
 }
 
 //
