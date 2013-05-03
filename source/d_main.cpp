@@ -1901,7 +1901,7 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2012 James Haley and Stephen McGranahan\n"
+        "Copyright 2013 James Haley, Stephen McGranahan, et al.\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
