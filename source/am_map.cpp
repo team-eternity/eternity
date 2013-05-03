@@ -721,7 +721,7 @@ void AM_Stop(void)
 }
 
 //
-// AM_Start()
+// AM_Start
 // 
 // Start up automap operations, 
 //  if a new level, or game start, (re)initialize level variables
@@ -730,7 +730,7 @@ void AM_Stop(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_Start(void)
+void AM_Start()
 {
    static int lastlevel = -1, lastepisode = -1, 
               last_width = -1, last_height = -1,

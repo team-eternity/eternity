@@ -323,8 +323,8 @@ static void R_LowDrawFuzzColumn(void)
       column.y1 = 1;
    
    // .. and high.
-   if(column.y2 == viewheight - 1) 
-      column.y2 = viewheight - 2; 
+   if(column.y2 == viewwindow.height - 1) 
+      column.y2 = viewwindow.height - 2; 
 
    count = column.y2 - column.y1; 
 

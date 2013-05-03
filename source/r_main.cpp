@@ -90,6 +90,7 @@ player_t *viewplayer;
 extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
 camera_t *viewcamera;
+
 // SoM: removed the old zoom code infavor of actual field of view!
 int fov = 90;
 
@@ -103,7 +104,7 @@ extern int screenSize;
 
 extern int global_cmap_index; // haleyjd: NGCS
 
-void R_HOMdrawer(void);
+void R_HOMdrawer();
 
 //
 // precalculated math tables
@@ -436,7 +437,7 @@ static void R_InitTextureMapping (void)
    i = 0;
    limit = -M_FloatToFixed(view.xcenter / view.xfoc);
    while(i < FINEANGLES/2 && finetangent[i] < limit)
-      viewangletox[i++] = viewwidth + 1;
+      viewangletox[i++] = viewwindow.width + 1;
 
    limit = -limit;
    while(i < FINEANGLES/2 && finetangent[i] <= limit)
@@ -447,8 +448,8 @@ static void R_InitTextureMapping (void)
       t = (centerxfrac - t + FRACUNIT-1) >> FRACBITS;
       if(t < -1)
          viewangletox[i++] = -1;
-      else if(t > viewwidth+1)
-         viewangletox[i++] = viewwidth+1;
+      else if(t > viewwindow.width+1)
+         viewangletox[i++] = viewwindow.width+1;
       else
          viewangletox[i++] = t;
    }
@@ -460,7 +461,7 @@ static void R_InitTextureMapping (void)
    //  xtoviewangle will give the smallest view angle
    //  that maps to x.
    
-   for(x = 0; x <= viewwidth; ++x)
+   for(x = 0; x <= viewwindow.width; ++x)
    {
       for(i = 0; viewangletox[i] > x; ++i)
          ;
@@ -472,8 +473,8 @@ static void R_InitTextureMapping (void)
       if(viewangletox[i] == -1)
          viewangletox[i] = 0;
       else 
-         if(viewangletox[i] == viewwidth+1)
-            viewangletox[i] = viewwidth;
+         if(viewangletox[i] == viewwindow.width+1)
+            viewangletox[i] = viewwindow.width;
         
    clipangle = xtoviewangle[0];
 }
@@ -539,7 +540,7 @@ void R_SetViewSize(int blocks)
 //
 // R_SetupViewScaling
 //
-void R_SetupViewScaling(void)
+void R_SetupViewScaling()
 {
    int i;
    fixed_t frac = 0, lastfrac;
@@ -600,54 +601,22 @@ void R_SetupViewScaling(void)
    video.y2lookup[199] = video.height - 1;
    video.y1lookup[200] = video.y2lookup[200] = video.height;
 
-   if(setblocks == 11)
-   {
-      scaledviewwidth  = SCREENWIDTH;
-      scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth        = video.width;
-      viewheight       = video.height;
-   }
-   else if(setblocks == 10)                               // haleyjd 07/18/2012
-   {
-      scaledviewwidth  = SCREENWIDTH;
-      scaledviewheight = SCREENHEIGHT - GameModeInfo->StatusBar->height;
-      viewwidth        = video.width;
-      viewheight       = video.y2lookup[scaledviewheight - 1] + 1;
-   }
-   else
-   {
-      int st_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
-      int x1, x2, y1, y2;
+   // haleyjd 05/02/13: set scaledwindow properties
+   scaledwindow.scaledFromScreenBlocks(setblocks);
 
-      scaledviewwidth  = setblocks * 32;
-      scaledviewheight = (setblocks * st_y / 10) & ~7;     // killough 11/98
+   // haleyjd 05/02/13: set viewwindow properties
+   viewwindow.viewFromScaled(setblocks, video.width, video.height, scaledwindow);
 
-      // SoM: phased out realxarray in favor of the *lookup tables.
-      // w = x2 - x1 + 1
-      x1 = (SCREENWIDTH - scaledviewwidth) >> 1;
-      x2 = x1 + scaledviewwidth - 1;
-
-      if(scaledviewwidth == SCREENWIDTH)
-         y1 = 0;
-      else
-         y1 = (st_y - scaledviewheight) >> 1;
-
-      y2 = y1 + scaledviewheight - 1;
-
-      viewwidth  = video.x2lookup[x2] - video.x1lookup[x1] + 1;
-      viewheight = video.y2lookup[y2] - video.y1lookup[y1] + 1;
-   }
-
-   centerx     = viewwidth  / 2;
-   centery     = viewheight / 2;
+   centerx     = viewwindow.width  / 2;
+   centery     = viewwindow.height / 2;
    centerxfrac = centerx << FRACBITS;
    centeryfrac = centery << FRACBITS;
 
    // SoM: Cardboard
-   view.xcenter = (view.width  = (float)viewwidth ) * 0.5f;
-   view.ycenter = (view.height = (float)viewheight) * 0.5f;
+   view.xcenter = (view.width  = (float)viewwindow.width ) * 0.5f;
+   view.ycenter = (view.height = (float)viewwindow.height) * 0.5f;
 
-   R_InitBuffer(scaledviewwidth, scaledviewheight);       // killough 11/98
+   R_InitBuffer(scaledwindow.width, scaledwindow.height);       // killough 11/98
 }
 
 //
@@ -664,7 +633,7 @@ void R_ExecuteSetViewSize()
    R_InitTextureMapping();
     
    // thing clipping
-   for(i = 0; i < viewwidth; ++i)
+   for(i = 0; i < viewwindow.width; ++i)
       screenheightarray[i] = view.height - 1.0f;
 
    // Calculate the light levels to use
@@ -829,7 +798,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 04/03/05: perform calculation for true pitch angle
 
    // make fixed-point viewheight and divide by 2
-   viewheightfrac = viewheight << (FRACBITS - 1);
+   viewheightfrac = viewwindow.height << (FRACBITS - 1);
 
    // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid 
    // unnecessary roundoff error. This is what was causing sky textures to
@@ -1029,8 +998,9 @@ void R_HOMdrawer(void)
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
 
-   V_ColorBlock(&vbscreen, (byte)colour, viewwindowx, viewwindowy, viewwidth,
-                viewheight);
+   V_ColorBlock(&vbscreen, (byte)colour, viewwindow.x, viewwindow.y, 
+                viewwindow.width,
+                viewwindow.height);
 }
 
 //

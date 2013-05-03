@@ -247,7 +247,7 @@ static void R_MapPlane(int y, int x1, int x2)
    float dy, xstep, ystep, realy, slope;
 
 #ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
+   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
       I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
@@ -349,7 +349,7 @@ static void R_MapPlane(int y, int x1, int x2)
    static float scale = 2.0f
 
 #ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
+   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
       I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
@@ -648,14 +648,6 @@ void R_ClearPlanes()
    int i;
    float a = 0.0f;
 
-#if 0
-   // FIXME: borked in widescreen aspect ratios...
-   int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
-
-   a = (float)(consoleactive ? 
-         (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
-#endif
-
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
 
@@ -778,7 +770,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
-   check->minx = viewwidth;            // Was SCREENWIDTH -- killough 11/98
+   check->minx = viewwindow.width;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = -1;
    check->xoffs = xoffs;               // killough 2/28/98: Save offsets
    check->yoffs = yoffs;

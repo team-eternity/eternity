@@ -546,7 +546,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledviewheight != 200 || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || automapactive)
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -578,7 +578,7 @@ void D_Display(void)
    if(setsizeneeded)            // change the view size if needed
    {
       R_ExecuteSetViewSize();
-      R_FillBackScreen();       // redraw backscreen
+      R_FillBackScreen(scaledwindow);       // redraw backscreen
    }
 
    // save the current screen if about to wipe
@@ -600,7 +600,7 @@ void D_Display(void)
       case GS_LEVEL:
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
-            R_FillBackScreen();    // draw the pattern into the back screen
+            R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
          
          if(automapactive)
          {
@@ -612,7 +612,7 @@ void D_Display(void)
             R_RenderPlayerView (&players[displayplayer], camera);
          }
          
-         ST_Drawer(scaledviewheight == 200);  // killough 11/98
+         ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
          HU_Drawer();
          break;
       case GS_INTERMISSION:
@@ -647,7 +647,7 @@ void D_Display(void)
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindowy);
+         int y = 4 + (automapactive ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }

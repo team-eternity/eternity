@@ -1571,7 +1571,7 @@ void P_LoadGame(const char *filename)
       R_ExecuteSetViewSize();
    
    // draw the pattern into the back screen
-   R_FillBackScreen();
+   R_FillBackScreen(scaledwindow);
 
    // haleyjd 02/09/10: wake up status bar again
    ST_Start();

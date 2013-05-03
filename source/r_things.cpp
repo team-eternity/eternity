@@ -595,7 +595,7 @@ static void R_DrawMaskedColumn(column_t *tcolumn)
       column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-      if(column.y1 <= column.y2 && column.y2 < viewheight)
+      if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = (byte *)tcolumn + 3;
          column.texmid = basetexturemid - (tcolumn->topdelta << FRACBITS);
@@ -629,7 +629,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-      if(column.y1 <= column.y2 && column.y2 < viewheight)
+      if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = tex->buffer + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
@@ -919,7 +919,7 @@ static void R_ProjectSprite(Mobj *thing)
 
    // Cardboard
    vis->x1 = x1 < 0.0f ? 0 : intx1;
-   vis->x2 = x2 >= view.width ? viewwidth - 1 : intx2;
+   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : intx2;
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
@@ -1094,7 +1094,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    x1 = (view.xcenter + tx * view.pspritexscale);
    
    // off the right side
-   if(x1 > viewwidth)
+   if(x1 > viewwindow.width)
       return;
    
    tx += w;
@@ -1108,7 +1108,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    {
       float tmpx = x1;
       x1 = view.width - x2;
-      x2 = view.width - tmpx;    // viewwidth-x1
+      x2 = view.width - tmpx;    // viewwindow.width-x1
    }
    
    // store information in a vissprite
@@ -1119,7 +1119,7 @@ static void R_DrawPSprite(pspdef_t *psp)
                       (psp->sy - spritetopoffset[lump]);
 
    vis->x1 = x1 < 0.0f ? 0 : (int)x1;
-   vis->x2 = x2 >= view.width ? viewwidth - 1 : (int)x2;
+   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
    vis->footclip = 0; // haleyjd
@@ -1211,7 +1211,7 @@ static void R_DrawPlayerSprites(void)
    else
       spritelights = scalelight[lightnum];
 
-   for(i = 0; i < viewwidth; ++i)
+   for(i = 0; i < viewwindow.width; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
    
    // clip to screen bounds
@@ -1960,7 +1960,7 @@ static void R_ProjectParticle(particle_t *particle)
    if(x2 < x1) x2 = x1;
    
    // off either side?
-   if(x1 >= viewwidth || x2 < 0)
+   if(x1 >= viewwindow.width || x2 < 0)
       return;
 
    tz = M_FixedToFloat(particle->z) - view.z;
@@ -2017,7 +2017,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->gzt = gzt;
    vis->texturemid = vis->gzt - viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
+   vis->x2 = x2 >= viewwindow.width ? viewwindow.width-1 : x2;
    vis->colour = particle->color;
    vis->patch = -1;
    vis->translucency = static_cast<uint16_t>(particle->trans - 1);
@@ -2086,8 +2086,8 @@ static void R_DrawParticle(vissprite_t *vis)
 
    if(x1 < 0)
       x1 = 0;
-   if(x2 >= viewwidth)
-      x2 = viewwidth - 1;
+   if(x2 >= viewwindow.width)
+      x2 = viewwindow.width - 1;
 
    // due to square shape, it is unnecessary to clip the entire
    // particle

@@ -29,6 +29,22 @@
 
 #include "r_defs.h"
 
+// haleyjd 05/02/13
+struct rrect_t
+{
+   int x;
+   int y;
+   int width;
+   int height;
+
+   void scaledFromScreenBlocks(int blocks);
+   void viewFromScaled(int blocks, int vwidth, int vheight, 
+                       const rrect_t &scaled);
+};
+
+extern rrect_t scaledwindow;
+extern rrect_t viewwindow;
+
 // haleyjd 01/22/11: vissprite drawstyles
 enum
 {
@@ -127,10 +143,10 @@ int R_TranslationNumForName(const char *name);
 byte *R_GetIdentityMap();
 
 // Rendering function.
-void R_FillBackScreen(void);
+void R_FillBackScreen(const rrect_t &window);
 
 // If the view size is not full screen, draws a border around it.
-void R_DrawViewBorder(void);
+void R_DrawViewBorder();
 
 extern byte  *tranmap;       // translucency filter maps 256x256  // phares 
 extern byte  *main_tranmap;  // killough 4/11/98

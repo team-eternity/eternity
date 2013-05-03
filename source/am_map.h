@@ -62,7 +62,7 @@ void AM_Stop(void);
 
 // killough 2/22/98: for saving automap information in savegame:
 
-void AM_Start(void);
+void AM_Start();
 
 //jff 4/16/98 make externally available
 

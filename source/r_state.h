@@ -60,11 +60,6 @@ extern float   *spriteheight;
 extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
 extern lighttable_t  *fullcolormap;      // killough 3/20/98
 
-extern int viewwidth;
-extern int scaledviewwidth;
-extern int viewheight;
-extern int scaledviewheight;              // killough 11/98
-
 extern int firstflat;
 
 // SoM: Because all textures and flats are stored in the same array, the 

@@ -33,6 +33,7 @@
 #include "p_portal.h"
 #include "p_slopes.h"
 #include "r_data.h"
+#include "r_draw.h"
 #include "r_main.h"
 #include "r_pcheck.h"
 #include "r_plane.h"
@@ -75,7 +76,7 @@ void R_ClearDrawSegs(void)
 // see, currently the code has to clip segs to the screen manually, and
 // then clip them based on solid segs. This could be reduced to a single
 // clip based on solidsegs because the first solidseg is from MININT, -1
-// to viewwidth, MAXINT
+// to viewwindow.width, MAXINT
 
 typedef struct cliprange_s
 {
@@ -344,7 +345,7 @@ void R_ClearClipSegs()
 {
    solidsegs[0].first = D_MININT + 1;
    solidsegs[0].last = -1;
-   solidsegs[1].first = viewwidth;
+   solidsegs[1].first = viewwindow.width;
    solidsegs[1].last = D_MAXINT - 1;
    newend = solidsegs+2;
    addend = addedsegs;
@@ -393,7 +394,7 @@ bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
          ++i;
       }
       
-      if(i == viewwidth)
+      if(i == viewwindow.width)
          goto endopen;
 
       // set the solidsegs
@@ -1954,7 +1955,7 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    // SoM: Moved this to before the "does not cross a pixel" check to fix 
    // another slime trail
    if(sx1 > 0) sx1--;
-   if(sx2 < viewwidth - 1) sx2++;
+   if(sx2 < viewwindow.width - 1) sx2++;
 
    // SoM: Removed the "does not cross a pixel" test
 

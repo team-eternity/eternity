@@ -81,7 +81,7 @@ static void R_ClearPortalWindow(pwindow_t *window)
 {
    int i;
    window->maxx = 0;
-   window->minx = viewwidth - 1;
+   window->minx = viewwindow.width - 1;
 
    for(i = 0; i < MAX_SCREENWIDTH; i++)
    {
@@ -676,8 +676,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
       for(i = 0; i < MAX_SCREENWIDTH; ++i)
       {
          if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewheight || window->top[i] < -1 
-            || window->top[i] > viewheight))
+            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+            || window->top[i] > viewwindow.height))
          {
             I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
                     "information:\n"
@@ -827,8 +827,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       for(i = 0; i < MAX_SCREENWIDTH; i++)
       {
          if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewheight || window->top[i] < -1 
-            || window->top[i] > viewheight))
+            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+            || window->top[i] > viewwindow.height))
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 
@@ -923,8 +923,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       for(i = 0; i < MAX_SCREENWIDTH; i++)
       {
          if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewheight || window->top[i] < -1 
-            || window->top[i] > viewheight))
+            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+            || window->top[i] > viewwindow.height))
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 

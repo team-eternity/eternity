@@ -818,7 +818,7 @@ void HU_CenterMessage(const char *s)
    tw->message = qstr.constPtr();
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
-            ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
+            ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
    tw->cleartic = leveltime + (message_timer * 35) / 1000;
    
    // print message to console also
@@ -933,14 +933,14 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
    // haleyjd 04/09/05: this kludge moves the crosshair to within
    // a tolerable distance of the player's true vertical aim when
    // the screen size is less than full.
-   if(scaledviewheight != SCREENHEIGHT)
+   if(scaledwindow.height != SCREENHEIGHT)
    {
       // use 1/5 of the displayplayer's pitch angle in integer degrees
       int angle = players[displayplayer].pitch / (ANGLE_1*5);
-      drawy = scaledwindowy + (scaledviewheight - h) / 2 + angle;
+      drawy = scaledwindow.y + (scaledwindow.height - h) / 2 + angle;
    }
    else
-      drawy = scaledwindowy + (scaledviewheight - h) / 2;
+      drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
   
    if(pal == notargetcolour)
       V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
@@ -1788,7 +1788,7 @@ static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)
 {
    if(hud_enabled && hud_overlaystyle > 0) // Boom HUD enabled, return style
       return (cell)hud_overlaystyle + 1;
-   else if(viewheight == video.height)         // Fullscreen (no HUD)
+   else if(viewwindow.height == video.height)         // Fullscreen (no HUD)
       return 0;			
    else                                    // Vanilla style status bar
       return 1;

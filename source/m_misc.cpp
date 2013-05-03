@@ -85,8 +85,6 @@ int usemouse;
 
 extern int mousebstrafe;
 extern int mousebforward;
-extern int viewwidth;
-extern int viewheight;
 extern double mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
 extern bool mouseSensitivity_vanilla; // [CG] 01/20/12
 extern int leds_always_off;            // killough 3/6/98
