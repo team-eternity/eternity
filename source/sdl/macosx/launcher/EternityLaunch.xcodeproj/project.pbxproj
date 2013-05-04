@@ -39,12 +39,12 @@
 		FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArgument.m; sourceTree = "<group>"; };
 		FA3011F2168A44DF005D25A8 /* ELCommandLineArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArray.h; sourceTree = "<group>"; };
 		FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArray.m; sourceTree = "<group>"; };
-		FA601C711696228000046D2D /* Eternity.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = Eternity.app; path = ../../../../../develop/eternity/Eternity.app; sourceTree = "<group>"; };
+		FA601C711696228000046D2D /* Eternity.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = Eternity.app; path = ../../../../../../develop/eternity/Eternity.app; sourceTree = "<group>"; };
 		FA601C7A1696246800046D2D /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Launcher.xib; sourceTree = "<group>"; };
 		FA730D1A168DFC0D00E39907 /* COPYING.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = COPYING.pdf; path = Resources/COPYING.pdf; sourceTree = "<group>"; };
-		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../../base; sourceTree = SOURCE_ROOT; };
-		FA8216761647128900FF998A /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = docs; path = ../../../docs; sourceTree = SOURCE_ROOT; };
-		FA8216871647128900FF998A /* user */ = {isa = PBXFileReference; lastKnownFileType = folder; name = user; path = ../../../user; sourceTree = SOURCE_ROOT; };
+		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../../../base; sourceTree = SOURCE_ROOT; };
+		FA8216761647128900FF998A /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = docs; path = ../../../../docs; sourceTree = SOURCE_ROOT; };
+		FA8216871647128900FF998A /* user */ = {isa = PBXFileReference; lastKnownFileType = folder; name = user; path = ../../../../user; sourceTree = SOURCE_ROOT; };
 		FA891466165424E40034E860 /* ELTextFieldDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELTextFieldDelegate.h; sourceTree = "<group>"; };
 		FA891467165424E40034E860 /* ELTextFieldDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELTextFieldDelegate.m; sourceTree = "<group>"; };
 		FAB103DB15911F4E00393DE3 /* DumpConsole.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DumpConsole.xib; sourceTree = "<group>"; };

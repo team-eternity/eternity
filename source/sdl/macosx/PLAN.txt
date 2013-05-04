@@ -1,0 +1,79 @@
+Key value observing structure
+-----------------------------
+
+Launcher dialog box
+-------------------
+
+[[ Screenshots, Configs button ]] --> Show Screenshots, Configs (enlarge as 
+                                      necessary)
+What will it do? Simple target-action call that opens the user folder.
+
+<< The user folder >>: always in the application data folder. Depending on plat-
+form:
+- Windows: AppData or Application Data, from the user domain
+- *nix: ~/.eternity (or whatever Team Eternity decides to use)
+- OS X: "~/Library/Application Support/com.eternity.Eternity-Engine".
+  I *could* have used a folder named "Eternity Engine", because most applica-
+  tions (except some ugly ducklings) use human-readable names instead of UTIs.
+  The OS X developer documentations recommended me to use the bundle identifier,
+  which happens to be a UTI. Too late to change, unless pressured. The folder is
+  hidden in OS X 10.7 and later, and it can be accessed from a GUI button anyway
+
+So, saying that, I should just map that location as a constant or rarely changed
+static string, and simply use that action to open the folder, and move on.
+
+[[ Main Game WAD ]] --> Controller observes it in order to update the "-iwad"
+                        parameter.
+[[ Main Game WAD +/-]] --> Actions that update the IWAD set.
+                       *** Controller observes the -iwad set for any changes,
+                           and updates the Popup button accordingly. ***
+
+[[ Save as GFS... ]] --> Action that reads the PWAD array and builds a GFS from
+                         it
+[[ Files and Add-ons +/- ]] --> Action that updates the PWAD array.
+                            *** Controller observes the pwad array and updates
+                                the data source with a touch signal ***
+
+[[ Other parameters ]] --> Controller observes its string change and updates the
+                           parameters. Same with any other text fields
+[[ Check boxes ]] --> Controller observes their change and updates parameters
+
+[[ Output display ]] --> Controller observes parameter change and updates its
+                         text
+                         
+[[ Choose Record Demo... ]] --> Action that gets a file. Updates record demo
+                                text field
+[[ Clear all ]] --> Clears all view fields
+
+
+KVO, in short
+-------------
+Models: parameters, IWAD set, PWAD array.
+NOTE: data source is LauncherController, so only 1 reference to PWAD array
+
+- Observe parameter change, update argument display
+
+- Observe text field change, update parameters
+- Observe checkbox change, update parameters
+- Observe PWAD array change, update table by reloadData, update parameters
+- Observe IWAD popup selection, update parameter
+
+- Respond to tab buttons, update text fields and checkboxes
+- Respond to GFS/+/- buttons, update PWAD array
+- Respond to IWAD +/- buttons, update IWAD set
+- Observe IWAD set change, update popup button content
+
+Flow:
+interface buttons -> data collections -> data fields -> parameters -> display
+
+Preferences (defaults)
+----------------------
+Get the view status from there.
+
+Basically: no change, except that parameters will be updated automatically
+We save and load data collections and data fields there, whichever is higher in
+the flow.
+
+Undo/Redo
+---------
+- 
