@@ -279,6 +279,7 @@ int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
 
 static bool stopped = true;
+static bool am_needbackscreen; // haleyjd 05/03/13
 
 // haleyjd 12/22/02: Heretic stuff
 
@@ -532,13 +533,13 @@ extern void ST_AutomapEvent(int type);
 // Status bar is notified that the automap has been entered
 // Passed nothing, returns nothing
 //
-static void AM_initVariables(void)
+static void AM_initVariables()
 {
    int pnum;   
    
    automapactive = true;
-   //fb = video.screens[0];
-   
+   am_needbackscreen = true; // haleyjd: need to redraw the backscreen
+
    f_oldloc.x = D_MAXINT;
    amclock = 0;
    lightlev = 0;
@@ -672,7 +673,7 @@ static void AM_unloadPics(void)
 // Affects the global variable markpointnum
 // Passed nothing, returns nothing
 //
-void AM_clearMarks(void)
+void AM_clearMarks()
 {
    markpointnum = 0;
 }
@@ -686,7 +687,7 @@ void AM_clearMarks(void)
 // Passed nothing, returns nothing
 // Affects automap's global variables
 //
-static void AM_LevelInit(void)
+static void AM_LevelInit()
 {
    f_x = f_y = 0;
    
@@ -712,12 +713,14 @@ static void AM_LevelInit(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_Stop(void)
+void AM_Stop()
 {  
    AM_unloadPics();
    automapactive = false;
+   am_needbackscreen = false;
    ST_AutomapEvent(AM_MSGEXITED);
    stopped = true;
+   setsizeneeded = true; // haleyjd
 }
 
 //
@@ -957,7 +960,7 @@ bool AM_Responder(event_t *ev)
 //
 // Passed nothing, returns nothing
 //
-static void AM_changeWindowScale(void)
+static void AM_changeWindowScale()
 {
    // Change the scaling multipliers
    scale_mtof = scale_mtof * mtof_zoommul;
@@ -1058,6 +1061,18 @@ void AM_Ticker(void)
 //
 static void AM_clearFB(int color)
 {
+   // haleyjd 05/03/13: redraw the backscreen if needed, so that wings can
+   // be filled in for widescreen modes even if the player's screensize setting
+   // has been fullscreen since startup.
+   if(am_needbackscreen)
+   {
+      rrect_t temprect;
+      temprect.scaledFromScreenBlocks(10);
+      R_FillBackScreen(temprect);
+      D_DrawWings();
+      am_needbackscreen = false;
+   }
+
    // haleyjd 12/22/02: backdrop support
    if(am_usebackdrop && am_backdrop)
    {
