@@ -538,7 +538,9 @@ static void AM_initVariables()
    int pnum;   
    
    automapactive = true;
-   am_needbackscreen = true; // haleyjd: need to redraw the backscreen
+
+   // haleyjd: need to redraw the backscreen?
+   am_needbackscreen = (vbscreen.getVirtualAspectRatio() > 4*FRACUNIT/3);
 
    f_oldloc.x = D_MAXINT;
    amclock = 0;
@@ -1067,7 +1069,7 @@ static void AM_clearFB(int color)
    if(am_needbackscreen)
    {
       rrect_t temprect;
-      temprect.scaledFromScreenBlocks(10);
+      temprect.scaledFromScreenBlocks(10); // use stat-bar-up screensize
       R_FillBackScreen(temprect);
       D_DrawWings();
       am_needbackscreen = false;
