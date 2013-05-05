@@ -1730,6 +1730,7 @@
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				FA930395158DD16C00FD0C80 /* CopyFiles */,
 				FA82164A1647124600FF998A /* Base and User */,
+				4F50E3FD1737058400878167 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1782,6 +1783,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4F50E3FD1737058400878167 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "UPX_PATH='/opt/local/bin/upx'\nUPX_OPTIONS='-9'\n\nif [ -f \"$UPX_PATH\" -a -x \"$UPX_PATH\" ];then\n    $UPX_PATH $UPX_OPTIONS \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\nelse\n    echo \"WARNING: UPX executable packer not found at $UPX_PATH.\"\n    echo \"Eternity file size will not be optimal.\"\n    echo \"You can install UPX via a package manager such as MacPorts.\"\n    echo \"Download and install MacPorts (or equivalent) and say:\"\n    echo \"'sudo port install upx' (or equivalent).\"\nfi\n\nFIND_HFILES_RESULT=\"`find \"$TARGET_BUILD_DIR/$WRAPPER_NAME\" -name \"*.h\"`\"\n\nif [ ! -z \"$FIND_HFILES_RESULT\" ];then\n    rm -f $FIND_HFILES_RESULT\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {
