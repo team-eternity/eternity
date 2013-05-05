@@ -35,17 +35,14 @@
 //
 -(void)dealloc
 {
-   
    // Remove observer
-   [[NSNotificationCenter defaultCenter] removeObserver:self];
-   
    [super dealloc];
 }
 
 //
 // control:textShouldBeginEditing:
 //
--(void)textDidChange:(NSNotification *)aNotification
+- (void)controlTextDidChange:(NSNotification *)aNotification;
 {
    [mOwner updateParameters:[aNotification object]];
 }

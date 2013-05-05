@@ -32,7 +32,7 @@
    IBOutlet id mOwner;
 }
 
--(void)textDidChange:(NSNotification *)aNotification;
+- (void)controlTextDidChange:(NSNotification *)aNotification;
 @end
 
 // EOF
