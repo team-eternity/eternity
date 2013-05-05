@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Dynamic segs for PolyObject re-implementation.
@@ -28,19 +28,29 @@
 #define R_DYNSEG_H__
 
 #include "r_defs.h"
+#include "m_dllist.h"
 #include "polyobj.h"
 
 //
 // dynaseg
 //
-typedef struct dynaseg_s
+struct dynaseg_t
 {
    seg_t seg; // a dynaseg is a seg, after all ;)
 
-   struct dynaseg_s *subnext;  // next dynaseg in subsector
-   struct dynaseg_s *freenext; // next dynaseg on freelist
+   dynaseg_t *subnext;         // next dynaseg in fragment
+   dynaseg_t *freenext;        // next dynaseg on freelist
    struct polyobj_s *polyobj;  // polyobject
-} dynaseg_t;
+
+   DLListItem<dynaseg_t> bsplink;   // link for BSP chains
+   DLListItem<dynaseg_t> ownerlink; // link for owning node chain
+
+   // properties needed for efficiency in the BSP builder
+   double psx, psy, pex, pey; // end points
+   double pdx, pdy;           // delta x, delta y
+   double ptmp;               // general line coefficient 'd'
+   double len;                // length
+};
 
 //
 // rpolyobj_t
