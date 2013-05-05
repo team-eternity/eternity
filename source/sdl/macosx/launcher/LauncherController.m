@@ -433,6 +433,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
    // FIXME: do it in real-time
 	
 	// Add -base and user here
+   /*
 	ELCommandLineArgument *argBase, *argUser;
 	if(![param miscHasWord:@"-base"])
 	{
@@ -446,7 +447,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 		[[argUser extraWords] addObject:userPath];
 		[param addArgument:argUser];
 	}
-   
+   */
 	NSArray *deploy = [param deployArray];
 	// Start console
 	
@@ -460,6 +461,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	task = [[NSTask alloc] init];
 	NSBundle *engineBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"Eternity.app" ofType:nil]];
 	
+   [task setEnvironment:@{@"ETERNITYUSER":userPath, @"ETERNITYBASE":basePath}];
 	[task setLaunchPath:[engineBundle executablePath]];
 	[task setArguments:deploy];
 	
