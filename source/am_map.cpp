@@ -44,6 +44,7 @@
 #include "p_spec.h"
 #include "st_stuff.h"
 #include "r_draw.h"
+#include "r_dynseg.h"
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -95,7 +96,8 @@ int map_secret_after;
 #define FB    0
 
 // haleyjd 05/17/08: ability to draw node lines on map
-bool map_draw_nodelines;
+bool am_drawnodelines;
+bool am_dynasegs_bysubsec;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -1908,14 +1910,14 @@ static void AM_drawWalls(void)
 // haleyjd 05/17/08: Draws node partition lines on the automap as a debugging
 // aid or for the interest of the curious.
 //
-static void AM_drawNodeLines(int bspnum)
+static void AM_drawNodeLines()
 {
    mline_t l;
 
-   while(!(bspnum & NF_SUBSECTOR))
+   for(int i = 0; i < numnodes; i++)
    {
-      node_t  *bsp   = &nodes[bspnum];
-      fnode_t *fnode = &fnodes[bspnum];
+      node_t  *bsp   = &nodes[i];
+      fnode_t *fnode = &fnodes[i];
 
       l.a.x = fnode->fx;
       l.a.y = fnode->fy;
@@ -1923,10 +1925,67 @@ static void AM_drawNodeLines(int bspnum)
       l.b.y = fnode->fy + fnode->fdy;
 
       AM_drawMline(&l, mapcolor_frnd);
+   }
+}
 
-      AM_drawNodeLines(bsp->children[1]);
+//
+// AM_drawDynaSegs
+//
+// haleyjd 05/04/13: experimental debug code to display dynasegs.
+//
+static void AM_drawDynaSegs()
+{
+   int color = 24;
+   int sscolor = 0;
 
-      bspnum = bsp->children[0];
+   for(int i = 0; i < numsubsectors; i++)
+   {
+      subsector_t *subsec = &subsectors[i];
+      DLListItem<rpolyobj_t> *rpo = subsec->polyList;
+
+      sscolor = 0;
+
+      while(rpo)
+      {
+         dynaseg_t *ds = rpo->dllObject->dynaSegs;
+         
+         while(ds)
+         {
+            mline_t l;
+
+            l.a.x = ds->seg.v1->fx;
+            l.a.y = ds->seg.v1->fy;
+            l.b.x = ds->seg.v2->fx;
+            l.b.y = ds->seg.v2->fy;
+            AM_drawMline(&l, color + sscolor);
+
+            ds = ds->subnext;
+         }
+
+         rpo = rpo->dllNext;
+
+         // color by fragment?
+         if(!am_dynasegs_bysubsec)
+         {
+            color += 16;
+            if(color > 216)
+               color = 24;
+         }
+         else
+         {
+            sscolor += 3;
+            if(sscolor > 6)
+               sscolor = 0;
+         }
+      }
+
+      if(am_dynasegs_bysubsec)
+      {
+         // color by subsector.
+         color += 16;
+         if(color > 216)
+            color = 24;
+      }
    }
 }
 
@@ -2317,8 +2376,11 @@ void AM_Drawer(void)
    AM_drawWalls();
 
    // haleyjd 05/17/08:
-   if(map_draw_nodelines)
-      AM_drawNodeLines(numnodes - 1);
+   if(am_drawnodelines)
+   {
+      AM_drawNodeLines();
+      AM_drawDynaSegs();
+   }
 
    AM_drawPlayers();
    
@@ -2328,6 +2390,17 @@ void AM_Drawer(void)
    AM_drawCrosshair(mapcolor_hair); //jff 1/7/98 default crosshair color   
    AM_drawMarks();
 }
+
+//=============================================================================
+//
+// Console Commands
+//
+
+VARIABLE_TOGGLE(am_drawnodelines, NULL, onoff);
+CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
+
+VARIABLE_TOGGLE(am_dynasegs_bysubsec, NULL, yesno);
+CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
 
 //----------------------------------------------------------------------------
 //

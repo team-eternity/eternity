@@ -344,9 +344,6 @@ CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
 VARIABLE_INT(wipetype, NULL, 0, 2, wipetype_strs);
 CONSOLE_VARIABLE(wipetype, wipetype, 0) {}
 
-VARIABLE_TOGGLE(map_draw_nodelines, NULL, onoff);
-CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
-
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 

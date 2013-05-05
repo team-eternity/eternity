@@ -438,12 +438,14 @@ static void R_FragmentCenterPoint(rpolyobj_t *rpo)
 
    while(rover)
    {
-      // only add in the v1 vertices, for speed
-      vertex_t *v = rover->seg.v1;
-      ++vcount;
+      vertex_t *v1 = rover->seg.v1;
+      vertex_t *v2 = rover->seg.v2;
+      vcount += 2;
 
-      x += v->fx;
-      y += v->fy;
+      x += v1->fx;
+      y += v1->fy;
+      x += v2->fx;
+      y += v2->fy;
 
       rover = rover->subnext;
    }

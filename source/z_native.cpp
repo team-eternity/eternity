@@ -627,7 +627,7 @@ void (Z_CheckHeap)(const char *file, int line)
    memblock_t *block;
    int lowtag;
 
-   for(lowtag = PU_FREE; lowtag < PU_MAX; ++lowtag)
+   for(lowtag = PU_FREE+1; lowtag < PU_MAX; ++lowtag)
    {
       for(block = blockbytag[lowtag]; block; block = block->next)
       {
@@ -730,7 +730,6 @@ void Z_PrintZoneHeap(void)
 //
 void Z_DumpCore(void)
 {
-   // FIXME
 }
 
 //=============================================================================
