@@ -96,9 +96,12 @@ int    lefthanded = 0;
 
 VALLOCATION(zeroarray)
 {
-   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   float *buffer = emalloctag(float *, w*2 * sizeof(float), PU_VALLOC, NULL);
    zeroarray = buffer;
    screenheightarray = buffer + w;
+
+   for(float *itr = buffer, *end = itr + w*2; itr != end; ++itr)
+      *itr = 0.0f;
 }
 
 // variables used to look up and range check thing_t sprites patches
@@ -477,9 +480,6 @@ static void R_InitSpriteDefs(char **namelist)
 //
 void R_InitSprites(char **namelist)
 {
-   int i;
-   for(i = 0; i < video.width; ++i)    // killough 2/8/98
-      zeroarray[i] = 0.0f;
    R_InitSpriteDefs(namelist);
 }
 
