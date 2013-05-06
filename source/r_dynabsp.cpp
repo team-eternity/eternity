@@ -135,8 +135,7 @@ static inline bool nearzero(double d)
 static dynaseg_t *R_selectPartition(dseglist_t segs)
 {
    dseglink_t *rover;
-   dynaseg_t *best;
-   dynaseg_t *part;
+   dynaseg_t *best = NULL;
    int bestcost = INT_MAX;
    int cnt = 0;
 
@@ -147,7 +146,7 @@ static dynaseg_t *R_selectPartition(dseglist_t segs)
    // Try each seg as a partition line
    for(rover = segs; rover; rover = rover->dllNext)
    {
-      part = rover->dllObject;
+      dynaseg_t *part = rover->dllObject;
       dseglink_t *crover;
       int cost = 0, tot = 0, diff = cnt;
 
@@ -293,8 +292,7 @@ enum
 //
 static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double pdy)
 {
-   double x, y;
-   double dx2, dy2, dx3, dy3, a, b, l;
+   double dx2, dy2, dx3, dy3, a, b;
 
    // check line against partition
    dx2 = part->psx - seg->psx;
@@ -307,6 +305,8 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
 
    if(!(a*b >= 0) && !nearzero(a) && !nearzero(b))
    {
+      double x = 0.0, y = 0.0;
+
       // line is split
       R_computeIntersection(part, seg, x, y);
 
@@ -318,7 +318,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
          a = 0.0;
       else
       {
-         l = dx2*dx2 + dy2*dy2;
+         double l = dx2*dx2 + dy2*dy2;
          if(l < 4.0)
             a = 0.0;
       }
@@ -329,7 +329,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
          b = 0.0;
       else
       {
-         l = dx3*dx3 + dy3*dy3;
+         double l = dx3*dx3 + dy3*dy3;
          if(l < 4.0)
             b = 0.0;
       }
@@ -363,7 +363,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
 static void R_divideSegs(rpolynode_t *rpn, dseglist_t ts, 
                          dseglist_t *rs, dseglist_t *ls)
 {
-   dynaseg_t *best, *add_to_rs, *add_to_ls;
+   dynaseg_t *best = NULL, *add_to_rs = NULL, *add_to_ls = NULL;
    
    // select best seg to use as partition line
    best = rpn->partition = R_selectPartition(ts);
