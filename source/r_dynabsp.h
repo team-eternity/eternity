@@ -36,8 +36,10 @@ struct rpolynode_t
    rpolynode_t *left;      // left subspace
    rpolynode_t *right;     // right subspace
 
-   DLListItem<dynaseg_t> *owned;  // owned segs created by partition split
+   dseglink_t *owned;  // owned segs created by partition split
 };
+
+rpolynode_t *R_BuildDynaBSP(dseglist_t segs);
 
 #endif
 

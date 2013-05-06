@@ -83,7 +83,7 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 //
 // Gets a vertex from the free list or allocates a new one.
 //
-static vertex_t *R_GetFreeDynaVertex(void)
+vertex_t *R_GetFreeDynaVertex()
 {
    vertex_t *ret = NULL;
 
@@ -228,7 +228,7 @@ void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 //
 // Gets a new dynaseg and initializes it with all needed information.
 //
-static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
+dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 {
    dynaseg_t *ret = R_GetFreeDynaSeg();
 

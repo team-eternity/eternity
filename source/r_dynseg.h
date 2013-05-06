@@ -48,9 +48,12 @@ struct dynaseg_t
    // properties needed for efficiency in the BSP builder
    double psx, psy, pex, pey; // end points
    double pdx, pdy;           // delta x, delta y
-   double ptmp;               // general line coefficient 'd'
+   double ptmp;               // general line coefficient 'c'
    double len;                // length
 };
+
+typedef DLListItem<dynaseg_t> dseglink_t;
+typedef dseglink_t * dseglist_t;
 
 //
 // rpolyobj_t
@@ -73,9 +76,12 @@ struct rpolyobj_t
    float       zdist;    // 12/09/12: z distance
 };
 
+vertex_t *R_GetFreeDynaVertex();
+dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2);
+
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);
-void R_ClearDynaSegs(void);
+void R_ClearDynaSegs();
 
 #endif
 
