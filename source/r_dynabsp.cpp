@@ -413,6 +413,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t ts,
 
             // modify original seg to run from v1 to nv
             seg->seg.v2 = nv;
+            R_setupDSForBSP(*seg);
 
             // add the new seg to the current node's ownership list,
             // so it can get freed later
