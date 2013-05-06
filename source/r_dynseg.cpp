@@ -104,7 +104,7 @@ vertex_t *R_GetFreeDynaVertex()
 //
 // Puts a dynamic vertex onto the free list.
 //
-static void R_FreeDynaVertex(vertex_t *vtx)
+void R_FreeDynaVertex(vertex_t *vtx)
 {
    vtx->dynafree = true;
    vtx->dynanext = dynaVertexFreeList;
@@ -137,7 +137,7 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
 //
 // Puts a dynaseg onto the free list.
 //
-static void R_FreeDynaSeg(dynaseg_t *dseg)
+void R_FreeDynaSeg(dynaseg_t *dseg)
 {
    dseg->freenext = dynaSegFreeList;
    dynaSegFreeList = dseg;

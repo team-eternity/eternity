@@ -27,7 +27,6 @@
 #ifndef R_DYNABSP_H__
 #define R_DYNABSP_H__
 
-#include "m_dllist.h"
 #include "r_dynseg.h"
 
 struct rpolynode_t
@@ -35,11 +34,11 @@ struct rpolynode_t
    dynaseg_t   *partition; // partition dynaseg
    rpolynode_t *left;      // left subspace
    rpolynode_t *right;     // right subspace
-
-   dseglink_t *owned;  // owned segs created by partition split
+   dseglink_t  *owned;      // owned segs created by partition splits
 };
 
 rpolynode_t *R_BuildDynaBSP(dseglist_t segs);
+void R_FreeDynaBSP(rpolynode_t *root);
 
 #endif
 

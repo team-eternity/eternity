@@ -76,8 +76,10 @@ struct rpolyobj_t
    float       zdist;    // 12/09/12: z distance
 };
 
-vertex_t *R_GetFreeDynaVertex();
+vertex_t  *R_GetFreeDynaVertex();
+void       R_FreeDynaVertex(vertex_t *vtx);
 dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2);
+void       R_FreeDynaSeg(dynaseg_t *dseg);
 
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);

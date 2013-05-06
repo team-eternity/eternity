@@ -553,6 +553,43 @@ static bool R_collapseFragmentsToDSList(subsector_t *subsec, dseglist_t *list)
    return (*list != NULL);
 }
 
+//=============================================================================
+//
+// Freeing
+//
+// Almost as much work as building it was :P
+//
+
+//
+// R_returnOwnedList
+//
+// Return all dynasegs on a node's "owned" list. These are dynasegs that were
+// created during the splitting process and are not referenced by rpolyobj_t
+// instances.
+//
+static void R_returnOwnedList(rpolynode_t *node)
+{
+   dseglink_t *dsl = node->owned;
+
+   while(dsl)
+   {
+      dseglink_t *next = dsl->dllNext;
+      dynaseg_t  *ds   = dsl->dllObject;
+
+      vertex_t *v1 = ds->seg.v1;
+      vertex_t *v2 = ds->seg.v2;
+
+      // free dynamic vertices that are not already on the freelist
+      if(!v1->dynafree)
+         R_FreeDynaVertex(v1);
+      if(!v2->dynafree)
+         R_FreeDynaVertex(v2);
+
+      R_FreeDynaSeg(ds);
+
+      dsl = next;
+   }
+}
 
 //=============================================================================
 //
@@ -572,6 +609,27 @@ rpolynode_t *R_BuildDynaBSP(subsector_t *subsec)
       return R_createNode(segs);
    else
       return NULL;
+}
+
+//
+// R_FreeDynaBSP
+//
+// Return all resources owned by a dynamic BSP tree.
+//
+void R_FreeDynaBSP(rpolynode_t *root)
+{
+   if(!root)
+      return;
+
+   // free left and right side
+   R_FreeDynaBSP(root->left);
+   R_FreeDynaBSP(root->right);
+
+   // free resources stored in this node
+   R_returnOwnedList(root);
+
+   // return the bsp node
+   R_FreePolyNode(root);
 }
 
 // EOF
