@@ -72,8 +72,12 @@ struct rpolyobj_t
    dynaseg_t  *dynaSegs; // list of dynasegs
    polyobj_t  *polyobj;  // polyobject of which this rpolyobj_t is a fragment
    rpolyobj_t *freenext; // next on freelist
+
+   // POLYBSP_FIXME: Remove dead code
+#if 0
    float       cx, cy;   // 12/09/12: center point coordinates
    float       zdist;    // 12/09/12: z distance
+#endif
 };
 
 vertex_t  *R_GetFreeDynaVertex();

@@ -54,7 +54,7 @@ static rpolynode_t *R_GetFreePolyNode()
    if(polyNodeFreeList)
    {
       ret = polyNodeFreeList;
-      polyNodeFreeList = polyNodeFreeList->left;
+      polyNodeFreeList = polyNodeFreeList->children[0];
       memset(ret, 0, sizeof(*ret));
    }
    else
@@ -70,7 +70,7 @@ static rpolynode_t *R_GetFreePolyNode()
 //
 static void R_FreePolyNode(rpolynode_t *rpn)
 {
-   rpn->left = polyNodeFreeList;
+   rpn->children[0] = polyNodeFreeList;
    polyNodeFreeList = rpn;
 }
 
@@ -322,6 +322,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
          if(l < 4.0)
             a = 0.0;
       }
+
       dx3 = seg->pex - x;
       dy3 = seg->pey - y;
 
@@ -360,13 +361,15 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
 // Split the input list of segs into left and right lists using one of the segs
 // selected as a partition line for the current node.
 //
-static void R_divideSegs(rpolynode_t *rpn, dseglist_t ts, 
+static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts, 
                          dseglist_t *rs, dseglist_t *ls)
 {
    dynaseg_t *best = NULL, *add_to_rs = NULL, *add_to_ls = NULL;
    
    // select best seg to use as partition line
-   best = rpn->partition = R_selectPartition(ts);
+   best = rpn->partition = R_selectPartition(*ts);
+
+   best->bsplink.remove();
 
 #ifdef RANGECHECK
    // Should not happen.
@@ -380,87 +383,87 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t ts,
    double pdx = best->psx - best->pex;
    double pdy = best->psy - best->pey;
 
-   dseglink_t *cur = ts;
+   dseglink_t *cur;
 
-   while(cur)
+   // iterate from beginning until the original list is empty
+   while((cur = *ts))
    {
-      // save off the next pointer now, as list will be modified
-      dseglink_t *next = cur->dllNext;  
       dynaseg_t  *seg  = cur->dllObject;
       add_to_ls = add_to_rs = NULL;
 
-      if(seg != best)
+      int val = R_classifyDynaSeg(best, seg, pdx, pdy);
+
+      if(val == SPLIT_SR_EL || val == SPLIT_SL_ER)
       {
-         int val = R_classifyDynaSeg(best, seg, pdx, pdy);
+         double x, y;
 
-         if(val == SPLIT_SR_EL || val == SPLIT_SL_ER)
+         // seg is split by the partition
+         R_computeIntersection(best, seg, x, y);
+
+         // create a new vertex at the intersection point
+         vertex_t *nv = R_GetFreeDynaVertex();
+         nv->fx = static_cast<float>(x);
+         nv->fy = static_cast<float>(y);
+         nv->x  = M_DoubleToFixed(x);
+         nv->y  = M_DoubleToFixed(y);
+
+         // create a new dynaseg from nv to v2
+         dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.v2);
+         R_setupDSForBSP(*nds);
+         nds->seg.frontsector = seg->seg.frontsector;
+         nds->seg.backsector  = seg->seg.backsector;
+         nds->seg.len         = static_cast<float>(nds->len);
+
+         // modify original seg to run from v1 to nv
+         seg->seg.v2 = nv;
+         R_setupDSForBSP(*seg);
+
+         // add the new seg to the current node's ownership list,
+         // so it can get freed later
+         nds->ownerlink.insert(seg, &rpn->owned);
+
+         // classify left or right
+         if(val == SPLIT_SR_EL)
          {
-            double x, y;
-
-            // seg is split by the partition
-            R_computeIntersection(best, seg, x, y);
-            
-            // create a new vertex at the intersection point
-            vertex_t *nv = R_GetFreeDynaVertex();
-            nv->fx = static_cast<float>(x);
-            nv->fy = static_cast<float>(y);
-            nv->x  = M_DoubleToFixed(x);
-            nv->y  = M_DoubleToFixed(y);
-
-            // create a new dynaseg from nv to v2
-            dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.v2);
-            R_setupDSForBSP(*nds);
-
-            // modify original seg to run from v1 to nv
-            seg->seg.v2 = nv;
-            R_setupDSForBSP(*seg);
-
-            // add the new seg to the current node's ownership list,
-            // so it can get freed later
-            nds->ownerlink.insert(seg, &rpn->owned);
-
-            // classify left or right
-            if(val == SPLIT_SR_EL)
-            {
-               add_to_ls = nds;
-               add_to_rs = seg;               
-            }
-            else
-            {
-               add_to_ls = seg;
-               add_to_rs = nds;
-            }
+            add_to_ls = nds;
+            add_to_rs = seg;               
          }
          else
          {
-            // Not split; which side?
-            switch(val)
-            {
-            case CLASSIFY_LEFT:
+            add_to_ls = seg;
+            add_to_rs = nds;
+         }
+      }
+      else
+      {
+         // Not split; which side?
+         switch(val)
+         {
+         case CLASSIFY_LEFT:
+            add_to_ls = seg;
+            break;
+         case CLASSIFY_RIGHT:
+            add_to_rs = seg;
+            break;
+         case CLASSIFY_ON:
+            // We know the segs are parallel or nearly so; take their 
+            // dot product to determine their relative orientation
+            if((seg->psx - seg->pex) * pdx + (seg->psy - seg->pey) * pdy < 0.0)
                add_to_ls = seg;
-               break;
-            case CLASSIFY_RIGHT:
+            else
                add_to_rs = seg;
-               break;
-            case CLASSIFY_ON:
-               // We know the segs are parallel or nearly so; take their 
-               // dot product to determine their relative orientation
-               if((seg->psx - seg->pex) * pdx + (seg->psy - seg->pey) * pdy < 0.0)
-                  add_to_ls = seg;
-               else
-                  add_to_rs = seg;
-               break;
-            default: // ???
-               add_to_rs = seg;
-               break; 
-            }
+            break;
+         default: // ???
+            add_to_rs = seg;
+            break; 
          }
       }
 
       // add to right side?
       if(add_to_rs)
       {
-         add_to_rs->bsplink.remove();
+         if(add_to_rs->bsplink.dllPrev)
+            add_to_rs->bsplink.remove();
          add_to_rs->bsplink.dllNext = NULL;
          add_to_rs->bsplink.dllPrev = NULL;
          add_to_rs->bsplink.insert(add_to_rs, rs);
@@ -469,16 +472,12 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t ts,
       // add to left side?
       if(add_to_ls)
       {
-         add_to_ls->bsplink.remove();
+         if(add_to_ls->bsplink.dllPrev)
+            add_to_ls->bsplink.remove();
          add_to_ls->bsplink.dllNext = NULL;
          add_to_ls->bsplink.dllPrev = NULL;
          add_to_ls->bsplink.insert(add_to_ls, ls);
       }
-
-      // The seg we were on in the iteration is likely no longer in the parent
-      // list, so, don't get munged up in the iteration by trying to use its
-      // dllNext pointer here... use the one we saved at the beginning.
-      cur = next;
    }
 }
 
@@ -492,12 +491,12 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t ts,
 // A tree of rpolynode instances is returned. NULL is returned in the terminal
 // case where there are no segs left to classify.
 //
-static rpolynode_t *R_createNode(dseglist_t ts)
+static rpolynode_t *R_createNode(dseglist_t *ts)
 {
    dseglist_t rights = NULL;
    dseglist_t lefts  = NULL;
 
-   if(!ts)
+   if(!*ts)
       return NULL; // terminal case: empty list
 
    rpolynode_t *rpn = R_GetFreePolyNode();
@@ -505,11 +504,11 @@ static rpolynode_t *R_createNode(dseglist_t ts)
    // divide the segs into two lists
    R_divideSegs(rpn, ts, &rights, &lefts);
 
-   // recurse into left space
-   rpn->left = R_createNode(lefts);
-
    // recurse into right space
-   rpn->right = R_createNode(rights);
+   rpn->children[0] = R_createNode(&rights);
+
+   // recurse into left space
+   rpn->children[1] = R_createNode(&lefts);
 
    return rpn;
 }
@@ -591,6 +590,27 @@ static void R_returnOwnedList(rpolynode_t *node)
    }
 }
 
+//
+// R_freeTreeRecursive
+//
+// Recursively free the BSP tree nodes.
+//
+static void R_freeTreeRecursive(rpolynode_t *root)
+{
+   if(!root)
+      return;
+
+   // free right and left sides
+   R_freeTreeRecursive(root->children[0]);
+   R_freeTreeRecursive(root->children[1]);
+
+   // free resources stored in this node
+   R_returnOwnedList(root);
+
+   // return the bsp node
+   R_FreePolyNode(root);
+}
+
 //=============================================================================
 //
 // External Interface
@@ -601,14 +621,19 @@ static void R_returnOwnedList(rpolynode_t *node)
 //
 // Call to build a dynamic BSP sub-tree for sorting of dynasegs.
 //
-rpolynode_t *R_BuildDynaBSP(subsector_t *subsec)
+rpolybsp_t *R_BuildDynaBSP(subsector_t *subsec)
 {
+   rpolybsp_t *bsp = NULL;
    dseglist_t segs = NULL;
 
    if(R_collapseFragmentsToDSList(subsec, &segs))
-      return R_createNode(segs);
-   else
-      return NULL;
+   {
+      bsp = estructalloctag(rpolybsp_t, 1, PU_LEVEL);
+      bsp->dirty = false;
+      bsp->root = R_createNode(&segs);
+   }
+
+   return bsp;
 }
 
 //
@@ -616,20 +641,10 @@ rpolynode_t *R_BuildDynaBSP(subsector_t *subsec)
 //
 // Return all resources owned by a dynamic BSP tree.
 //
-void R_FreeDynaBSP(rpolynode_t *root)
+void R_FreeDynaBSP(rpolybsp_t *bsp)
 {
-   if(!root)
-      return;
-
-   // free left and right side
-   R_FreeDynaBSP(root->left);
-   R_FreeDynaBSP(root->right);
-
-   // free resources stored in this node
-   R_returnOwnedList(root);
-
-   // return the bsp node
-   R_FreePolyNode(root);
+   R_freeTreeRecursive(bsp->root);
+   efree(bsp);
 }
 
 // EOF

@@ -38,6 +38,7 @@
 #include "r_pcheck.h"
 #include "r_plane.h"
 #include "r_dynseg.h"
+#include "r_dynabsp.h"
 #include "r_portal.h"
 #include "r_segs.h"
 #include "r_state.h"
@@ -1969,6 +1970,8 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    return true;
 }
 
+// POLYBSP_FIXME: Remove dead code
+#if 0
 static int numpolys;         // number of polyobjects in current subsector
 static int num_po_ptrs;      // number of polyobject pointers allocated
 static rpolyobj_t **po_ptrs; // temp ptr array to sort polyobject pointers
@@ -2023,6 +2026,29 @@ static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
    // the polyobjects are NOT in any particular order, so use qsort
    qsort(po_ptrs, numpolys, sizeof(rpolyobj_t *), R_PolyobjCompare);
 }
+#endif
+
+//
+// R_RenderPolyNode
+//
+// Recurse through a polynode mini-BSP
+//
+static void R_RenderPolyNode(rpolynode_t *node)
+{
+   while(node)
+   {
+      int side = R_PointOnDynaSegSide(node->partition, view.x, view.y);
+      
+      // render frontspace
+      R_RenderPolyNode(node->children[side]);
+
+      // render partition seg
+      R_AddLine(&(node->partition->seg), true);
+
+      // continue to render backspace
+      node = node->children[side^1];
+   }
+}
 
 //
 // R_AddDynaSegs
@@ -2037,6 +2063,8 @@ static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
 //
 static void R_AddDynaSegs(subsector_t *sub)
 {
+   // POLYBSP_FIXME: Remove dead code
+#if 0
    DLListItem<rpolyobj_t> *link = sub->polyList->dllNext;
    int i;
 
@@ -2076,6 +2104,17 @@ static void R_AddDynaSegs(subsector_t *sub)
          ds = ds->subnext;
       }
    }
+#endif
+   bool needbsp = (!sub->bsp || sub->bsp->dirty);
+
+   if(needbsp)
+   {
+      if(sub->bsp)
+         R_FreeDynaBSP(sub->bsp);
+      sub->bsp = R_BuildDynaBSP(sub);
+   }
+   if(sub->bsp)
+      R_RenderPolyNode(sub->bsp->root);
 }
 
 //

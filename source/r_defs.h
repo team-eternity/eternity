@@ -373,6 +373,7 @@ struct line_t
 };
 
 struct rpolyobj_t;
+struct rpolybsp_t;
 
 //
 // A SubSector.
@@ -389,6 +390,7 @@ struct subsector_t
   int    numlines, firstline;
 
   DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
+  rpolybsp_t *bsp;                  // haleyjd 05/05/13: sub-BSP tree
 };
 
 // phares 3/14/98

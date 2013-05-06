@@ -29,6 +29,7 @@
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
+#include "r_dynabsp.h"
 #include "r_state.h"
 
 extern void P_CalcSegLength(seg_t *);
@@ -60,6 +61,10 @@ static rpolyobj_t *freePolyFragments;
 static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 {
    int i;
+
+   // If the subsector has a BSP tree, it will need to be rebuilt.
+   if(ss->bsp)
+      ss->bsp->dirty = true;
 
    // make sure subsector is not already tracked
    for(i = 0; i < po->numDSS; ++i)
@@ -116,7 +121,7 @@ void R_FreeDynaVertex(vertex_t *vtx)
 //
 // Gets a dynaseg from the free list or allocates a new one.
 //
-static dynaseg_t *R_GetFreeDynaSeg(void)
+static dynaseg_t *R_GetFreeDynaSeg()
 {
    dynaseg_t *ret = NULL;
 
@@ -148,7 +153,7 @@ void R_FreeDynaSeg(dynaseg_t *dseg)
 //
 // Gets an rpolyobj_t from the free list or creates a new one.
 //
-static rpolyobj_t *R_GetFreeRPolyObj(void)
+static rpolyobj_t *R_GetFreeRPolyObj()
 {
    rpolyobj_t *ret = NULL;
 
@@ -421,6 +426,8 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
 }
 
+// POLYBSP_FIXME: Remove dead code
+#if 0
 //
 // R_FragmentCenterPoint
 //
@@ -495,6 +502,7 @@ static void R_CalcFragmentCenterPoints(polyobj_t *poly)
       }
    }
 }
+#endif
 
 //
 // R_AttachPolyObject
@@ -537,8 +545,11 @@ void R_AttachPolyObject(polyobj_t *poly)
 
    poly->flags |= POF_ATTACHED;
 
+   // POLYBSP_FIXME: Remove dead code
+#if 0
    // haleyjd 12/09/12: calculate center points for every fragment
    R_CalcFragmentCenterPoints(poly);
+#endif
 }
 
 //
@@ -570,6 +581,10 @@ void R_DetachPolyObject(polyobj_t *poly)
       subsector_t *ss = poly->dynaSubsecs[i];
       DLListItem<rpolyobj_t> *link = ss->polyList;
       DLListItem<rpolyobj_t> *next;
+
+      // mark BSPs dirty
+      if(ss->bsp)
+         ss->bsp->dirty = true;
       
       // iterate on subsector rpolyobj_t lists
       while(link)
@@ -628,12 +643,18 @@ void R_DetachPolyObject(polyobj_t *poly)
 // If this were not done, all dynasegs, their vertices, and polyobj fragments
 // would be lost.
 //
-void R_ClearDynaSegs(void)
+void R_ClearDynaSegs()
 {
    int i;
 
-   for(i = 0; i < numPolyObjects; ++i)
+   for(i = 0; i < numPolyObjects; i++)
       R_DetachPolyObject(&PolyObjects[i]);
+
+   for(i = 0; i < numsubsectors; i++)
+   {
+      if(subsectors[i].bsp)
+         R_FreeDynaBSP(subsectors[i].bsp);
+   }
 }
 
 // EOF

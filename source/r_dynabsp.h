@@ -31,14 +31,30 @@
 
 struct rpolynode_t
 {
-   dynaseg_t   *partition; // partition dynaseg
-   rpolynode_t *left;      // left subspace
-   rpolynode_t *right;     // right subspace
-   dseglink_t  *owned;      // owned segs created by partition splits
+   dynaseg_t   *partition;   // partition dynaseg
+   rpolynode_t *children[2]; // child node lists (0=right, 1=left)
+   dseglink_t  *owned;       // owned segs created by partition splits
 };
 
-rpolynode_t *R_BuildDynaBSP(dseglist_t segs);
-void R_FreeDynaBSP(rpolynode_t *root);
+struct rpolybsp_t
+{
+   bool         dirty; // needs to be rebuilt if true
+   rpolynode_t *root;  // root of tree
+};
+
+rpolybsp_t *R_BuildDynaBSP(subsector_t *subsec);
+void R_FreeDynaBSP(rpolybsp_t *bsp);
+
+
+//
+// R_PointOnDynaSegSide
+//
+// Returns 0 for front/right, 1 for back/left.
+//
+static inline int R_PointOnDynaSegSide(dynaseg_t *ds, float x, float y)
+{
+   return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
+}
 
 #endif
 
