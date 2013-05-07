@@ -150,6 +150,10 @@ static dynaseg_t *R_selectPartition(dseglist_t segs)
       dseglink_t *crover;
       int cost = 0, tot = 0, diff = cnt;
 
+      // haleyjd: add one seg worth of cost to non-orthogonal lines
+      if(part->seg.linedef->slopetype > ST_VERTICAL)
+         cost += FACTOR;
+
       // Check partition against all segs
       for(crover = segs; crover; crover = crover->dllNext)
       {
