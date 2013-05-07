@@ -420,7 +420,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
 
          // add the new seg to the current node's ownership list,
          // so it can get freed later
-         nds->ownerlink.insert(seg, &rpn->owned);
+         nds->ownerlink.insert(nds, &rpn->owned);
 
          // classify left or right
          if(val == SPLIT_SR_EL)
