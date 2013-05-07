@@ -1970,64 +1970,6 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    return true;
 }
 
-// POLYBSP_FIXME: Remove dead code
-#if 0
-static int numpolys;         // number of polyobjects in current subsector
-static int num_po_ptrs;      // number of polyobject pointers allocated
-static rpolyobj_t **po_ptrs; // temp ptr array to sort polyobject pointers
-
-//
-// R_PolyobjCompare
-//
-// Callback for qsort that compares the z distance of two polyobjects.
-// Returns the difference such that the closer polyobject will be
-// sorted first.
-//
-static int R_PolyobjCompare(const void *p1, const void *p2)
-{
-   const rpolyobj_t *po1 = *(rpolyobj_t **)p1;
-   const rpolyobj_t *po2 = *(rpolyobj_t **)p2;
-
-   if(po1->zdist == po2->zdist)
-      return 0;
-
-   return po1->zdist > po2->zdist ? 1 : -1;
-}
-
-//
-// R_SortPolyObjects
-//
-// haleyjd 03/03/06: Here's the REAL meat of Eternity's polyobject system.
-// Hexen just figured this was impossible, but as mentioned in polyobj.c,
-// it is perfectly doable within the confines of the BSP tree. Polyobjects
-// must be sorted to draw in DOOM's front-to-back order within individual
-// subsectors. This is a modified version of R_SortVisSprites.
-//
-static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
-{
-   int i = 0;
-
-   // haleyjd 12/09/12: The original algorithm held over from pre-dynasegs
-   // polyobjects of comparing the centerpoint of each polyobject is totally
-   // insufficient. For now, we compare the center of each fragment instead. 
-   // Eventually this will be replaced with BSP tree traversal.
-   while(list)
-   {
-      rpolyobj_t *rpo = list->dllObject;
-
-      float tx   = rpo->cx - view.x;
-      float ty   = rpo->cy - view.y;
-      rpo->zdist = (ty * view.cos) + (tx * view.sin);
-
-      po_ptrs[i++] = rpo;
-      list = list->dllNext;
-   }
-   
-   // the polyobjects are NOT in any particular order, so use qsort
-   qsort(po_ptrs, numpolys, sizeof(rpolyobj_t *), R_PolyobjCompare);
-}
-#endif
-
 //
 // R_RenderPolyNode
 //
@@ -2054,57 +1996,18 @@ static void R_RenderPolyNode(rpolynode_t *node)
 // R_AddDynaSegs
 //
 // haleyjd: Adds dynamic segs contained in all of the rpolyobj_t fragments
-// contained inside the given subsector, after z-sorting the polyobject
-// fragments if necessary. This is the ultimate heart of the polyobject
-// code.
+// contained inside the given subsector into a mini-BSP tree and then 
+// renders the BSP. BSPs are only recomputed when polyobject fragments
+// move into or out of the subsector. This is the ultimate heart of the 
+// polyobject code.
 //
-// See r_dynseg.c to see how dynasegs get attached to a subsector in the
+// See r_dynseg.cpp to see how dynasegs get attached to a subsector in the
 // first place :)
+//
+// See r_dynabsp.cpp for rpolybsp generation.
 //
 static void R_AddDynaSegs(subsector_t *sub)
 {
-   // POLYBSP_FIXME: Remove dead code
-#if 0
-   DLListItem<rpolyobj_t> *link = sub->polyList->dllNext;
-   int i;
-
-   numpolys = 1; // we know there is at least one
-
-   // count polyobject fragments
-   while(link)
-   {
-      ++numpolys;
-      link = link->dllNext;
-   }
-
-   // allocate twice the number needed to minimize allocations
-   if(num_po_ptrs < numpolys*2)
-   {
-      // use free instead of realloc since faster (thanks Lee ^_^)
-      efree(po_ptrs);
-      num_po_ptrs = numpolys*2;
-      po_ptrs = emalloc(rpolyobj_t **, num_po_ptrs * sizeof(*po_ptrs));
-   }
-
-   // sort polyobjects if necessary
-   if(numpolys > 1)
-      R_SortPolyObjects(sub->polyList);
-   else
-      po_ptrs[0] = sub->polyList->dllObject;
-
-   // render polyobject fragments
-   for(i = 0; i < numpolys; ++i)
-   {
-      dynaseg_t *ds = po_ptrs[i]->dynaSegs;
-
-      while(ds)
-      {
-         R_AddLine(&ds->seg, true);
-
-         ds = ds->subnext;
-      }
-   }
-#endif
    bool needbsp = (!sub->bsp || sub->bsp->dirty);
 
    if(needbsp)

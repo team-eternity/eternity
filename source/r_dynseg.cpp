@@ -426,84 +426,6 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
 }
 
-// POLYBSP_FIXME: Remove dead code
-#if 0
-//
-// R_FragmentCenterPoint
-//
-// haleyjd 12/09/12: My original sorting method is insufficient because it 
-// considered the polyobject center point to be a proper judge of z depth for
-// every fragment. This new solution is an interim, until BSP trees are added.
-//
-static void R_FragmentCenterPoint(rpolyobj_t *rpo)
-{
-   dynaseg_t *rover = rpo->dynaSegs;
-   float x, y;
-   int vcount = 0;
-
-   x = y = 0.0f;
-
-   while(rover)
-   {
-      vertex_t *v1 = rover->seg.v1;
-      vertex_t *v2 = rover->seg.v2;
-      vcount += 2;
-
-      x += v1->fx;
-      y += v1->fy;
-      x += v2->fx;
-      y += v2->fy;
-
-      rover = rover->subnext;
-   }
-
-   // calculate average coordinates
-   x /= vcount;
-   y /= vcount;
-
-   rpo->cx = x;
-   rpo->cy = y;
-}
-
-//
-// R_CalcFragmentCenterPoints
-//
-// Find all the polyobjects' fragments and calculate their center points.
-// See above for an explanation. This is temporary code, an interim solution
-// until we start using BSP trees for polyobjects and dynamic sectors.
-//
-static void R_CalcFragmentCenterPoints(polyobj_t *poly)
-{
-   // a bad polyobject should never have been attached in the first place
-   if(poly->flags & POF_ISBAD)
-      return;
-
-   // not attached?
-   if(!(poly->flags & POF_ATTACHED))
-      return;
-   
-   // no dynaseg-containing subsecs?
-   if(!poly->dynaSubsecs || !poly->numDSS)
-      return;
-
-   // iterate over stored subsector pointers
-   for(int i = 0; i < poly->numDSS; ++i)
-   {
-      subsector_t *ss = poly->dynaSubsecs[i];
-      DLListItem<rpolyobj_t> *link = ss->polyList;
-      
-      // iterate on subsector rpolyobj_t lists
-      while(link)
-      {
-         rpolyobj_t *rpo = link->dllObject;
-         if(rpo->polyobj == poly)
-            R_FragmentCenterPoint(rpo);
-         link = link->dllNext;
-      }
-   }
-}
-#endif
-
 //
 // R_AttachPolyObject
 //
@@ -544,12 +466,6 @@ void R_AttachPolyObject(polyobj_t *poly)
    }
 
    poly->flags |= POF_ATTACHED;
-
-   // POLYBSP_FIXME: Remove dead code
-#if 0
-   // haleyjd 12/09/12: calculate center points for every fragment
-   R_CalcFragmentCenterPoints(poly);
-#endif
 }
 
 //
