@@ -437,25 +437,18 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
       else
       {
          // Not split; which side?
-         switch(val)
+         if(val & CLASSIFY_LEFT)   
+            add_to_ls = seg; // at least one vertex is left, other is left or on
+         if(val & CLASSIFY_RIGHT)
+            add_to_rs = seg; // at least one vertex is right, other is right or on
+         if(val == CLASSIFY_ON)
          {
-         case CLASSIFY_LEFT:
-            add_to_ls = seg;
-            break;
-         case CLASSIFY_RIGHT:
-            add_to_rs = seg;
-            break;
-         case CLASSIFY_ON:
-            // We know the segs are parallel or nearly so; take their 
-            // dot product to determine their relative orientation
+            // We know the segs are parallel or nearly so; take their dot
+            // product to determine their relative orientation
             if((seg->psx - seg->pex) * pdx + (seg->psy - seg->pey) * pdy < 0.0)
                add_to_ls = seg;
             else
                add_to_rs = seg;
-            break;
-         default: // ???
-            add_to_rs = seg;
-            break; 
          }
       }
 
