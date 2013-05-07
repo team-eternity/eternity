@@ -325,6 +325,7 @@
 		4FD651B216B8033900F9BE74 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../../v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../../v_alloc.h; sourceTree = "<group>"; };
+		4FFDC9661739882600DE48A0 /* exepack.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = exepack.sh; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityEngine-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityEngine-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Eternity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA16D39815E01A3A002318D1 /* acs_acse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = acs_acse.cpp; path = ../../acs_acse.cpp; sourceTree = SOURCE_ROOT; };
@@ -829,6 +830,7 @@
 		29B97314FDCFA39411CA2CEA /* EternityLaunch */ = {
 			isa = PBXGroup;
 			children = (
+				4FFDC9651739880D00DE48A0 /* Build Scripts */,
 				29B97315FDCFA39411CA2CEA /* Code */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -891,6 +893,14 @@
 				4FD651B216B8033900F9BE74 /* SDL.framework */,
 			);
 			name = Installed;
+			sourceTree = "<group>";
+		};
+		4FFDC9651739880D00DE48A0 /* Build Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				4FFDC9661739882600DE48A0 /* exepack.sh */,
+			);
+			name = "Build Scripts";
 			sourceTree = "<group>";
 		};
 		FA1F5705158BC2FD006F8063 /* Main */ = {
@@ -1801,7 +1811,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "UPX_PATH='/opt/local/bin/upx'\nUPX_OPTIONS='-9'\n\nif [ -f \"$UPX_PATH\" -a -x \"$UPX_PATH\" ];then\n    $UPX_PATH $UPX_OPTIONS \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\nelse\n    echo \"WARNING: UPX executable packer not found at $UPX_PATH.\"\n    echo \"Eternity file size will not be optimal.\"\n    echo \"You can install UPX via a package manager such as MacPorts.\"\n    echo \"Download and install MacPorts (or equivalent) and say:\"\n    echo \"'sudo port install upx' (or equivalent).\"\nfi\n\nFIND_HFILES_RESULT=\"`find \"$TARGET_BUILD_DIR/$WRAPPER_NAME\" -name \"*.h\"`\"\n\nif [ ! -z \"$FIND_HFILES_RESULT\" ];then\n    rm -f $FIND_HFILES_RESULT\nfi";
+			shellScript = "script_file=\"exepack.sh\"\n${PROJECT_DIR}/${script_file}";
 		};
 /* End PBXShellScriptBuildPhase section */
 
