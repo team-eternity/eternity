@@ -357,6 +357,39 @@ static void MN_CalcWidestWidth(menu_t *menu)
    }
 }
 
+// 
+// MN_propagateBigFontFlag
+//
+// haleyjd 05/08/13: If a menu has mf_bigfont, set MENUITEM_BIGFONT on all its
+// items.
+//
+static void MN_propagateBigFontFlag(menu_t *menu)
+{
+   int itemnum = 0;
+   menuitem_t *item;
+
+   for(; (item = &menu->menuitems[itemnum])->type != it_end; itemnum++)
+      item->flags |= MENUITEM_BIGFONT;
+}
+
+//
+// MN_initializeMenu
+//
+// haleyjd 05/08/13: Perform all first-time menu initialization tasks here.
+//
+static void MN_initializeMenu(menu_t *menu)
+{
+   if(menu->flags & mf_initialized)
+      return;
+
+   // propagate big font flag
+   if(menu->flags & mf_bigfont)
+      MN_propagateBigFontFlag(menu);
+
+   // mark as initialized
+   menu->flags |= mf_initialized;
+}
+
 //=============================================================================
 //
 // Menu Item Drawers
@@ -1890,6 +1923,9 @@ void MN_StartMenu(menu_t *menu)
    // page the user was last viewing.
    if(current_menu->curpage)
       current_menu = current_menu->curpage;
+
+   // haleyjd 05/09/13: perform initialization tasks on the menu
+   MN_initializeMenu(current_menu);
    
    menu_error_time = 0;      // clear error message
 

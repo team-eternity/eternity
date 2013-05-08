@@ -112,6 +112,7 @@ static dehflags_t mnflagvalues[] =
    { "leftaligned",   mf_leftaligned   },
    { "centeraligned", mf_centeraligned },
    { "emulated",      mf_emulated      },
+   { "bigfont",       mf_bigfont       },
    { NULL,            0                }
 };
 

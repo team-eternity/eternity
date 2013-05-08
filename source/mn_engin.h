@@ -107,6 +107,11 @@ enum
    mf_leftaligned   = 4,   // left-aligned menu
    mf_centeraligned = 8,   // center-aligned menu - haleyjd 02/04/06
    mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
+   mf_bigfont       = 32,  // draw all items big  - haleyjd 05/08/13
+
+   // internal flags - don't expose these to EDF; if you add more 
+   // user flags, put them above and bump the value of these up.
+   mf_initialized   = 64   // already init'd      - haleyjd 05/08/13
 };
 
 struct menu_t
