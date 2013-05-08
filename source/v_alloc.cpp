@@ -52,7 +52,7 @@ void VAllocItem::SetNewMode(int w, int h)
 
    while(cur)
    {
-      cur->dllObject->allocator(w, h);
+      (*cur)->allocator(w, h);
       cur = cur->dllNext;
    }
 }

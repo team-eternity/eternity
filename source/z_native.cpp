@@ -728,8 +728,72 @@ void Z_PrintZoneHeap(void)
 //
 // haleyjd 03/18/07: Write the zone heap to file
 //
-void Z_DumpCore(void)
+void Z_DumpCore()
 {
+   static const char *namefortag[PU_MAX] =
+   {
+      "PU_FREE", 
+      "PU_STATIC",
+      "PU_PERMANENT",
+      "PU_SOUND",
+      "PU_MUSIC",
+      "PU_RENDERER",
+      "PU_VALLOC",
+      "PU_AUTO",
+      "PU_LEVEL",
+      "PU_OBJECT",
+      "PU_CACHE",
+   };
+
+   int tag;
+   memblock_t *block;
+   uint32_t dirofs = 12;
+   uint32_t dirlen;
+   uint32_t numentries = 0;
+
+   for(tag = PU_FREE+1; tag < PU_MAX; tag++)
+   {
+      for(block = blockbytag[tag]; block; block = block->next)
+         ++numentries;
+   }
+
+   dirlen = numentries * 64; // crazy PAK format...
+
+   FILE *f = fopen("coredump.pak", "wb");
+   if(!f)
+      return;
+   fwrite("PACK",  4,              1, f);
+   fwrite(&dirofs, sizeof(dirofs), 1, f);
+   fwrite(&dirlen, sizeof(dirlen), 1, f);
+
+   uint32_t offs = 12 + 64 * numentries;
+   for(tag = PU_FREE+1; tag < PU_MAX; tag++)
+   {
+      for(block = blockbytag[tag]; block; block = block->next)
+      {
+         char     name[56];
+         uint32_t filepos = offs;
+         uint32_t filelen = (uint32_t)(block->size);
+
+         memset(name, 0, sizeof(name));
+         sprintf(name, "/%s/%p", 
+                 block->tag < PU_MAX ? namefortag[block->tag] : "UNKNOWN",
+                 block);
+         fwrite(name,     sizeof(name),    1, f);
+         fwrite(&filepos, sizeof(filepos), 1, f);
+         fwrite(&filelen, sizeof(filelen), 1, f);
+
+         offs += filelen;
+      }
+   }
+
+   for(tag = PU_FREE+1; tag < PU_MAX; tag++)
+   {
+      for(block = blockbytag[tag]; block; block = block->next)
+         fwrite(((byte *)block + header_size), block->size, 1, f);
+   }
+
+   fclose(f);
 }
 
 //=============================================================================

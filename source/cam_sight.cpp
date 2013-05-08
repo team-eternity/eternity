@@ -218,7 +218,7 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
 
    while(plink)
    {
-      polyobj_t *po = plink->dllObject->po;
+      polyobj_t *po = (*plink)->po;
       int polynum = po - PolyObjects;
 
        // if polyobj hasn't been checked

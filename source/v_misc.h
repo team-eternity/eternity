@@ -151,7 +151,7 @@ typedef struct cb_video_s
    float       xstepf, ystepf;
    bool        scaled; // SoM: should be set when the scale values are
 
-   byte        *screens[5];
+   byte        *screens[4];
 
    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
    int x1lookup[321];

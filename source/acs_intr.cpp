@@ -1516,7 +1516,7 @@ void ACSDeferred::ExecuteAll()
    while((item = next))
    {
       next = item->dllNext;
-      item->dllObject->execute();
+      (*item)->execute();
    }
 }
 
@@ -1536,7 +1536,7 @@ bool ACSDeferred::IsDeferredNumber(int32_t number, int mapnum)
 {
    for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
    {
-      ACSDeferred *dacs = item->dllObject;
+      ACSDeferred *dacs = *item;
       if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
          !dacs->name && dacs->number == number)
          return true;
@@ -1552,7 +1552,7 @@ bool ACSDeferred::IsDeferredName(const char *name, int mapnum)
 {
    for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
    {
-      ACSDeferred *dacs = item->dllObject;
+      ACSDeferred *dacs = *item;
       if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
          dacs->name && !strcasecmp(dacs->name, name))
          return true;
@@ -2693,7 +2693,7 @@ void ACSDeferred::ArchiveAll(SaveArchive &arc)
    }
 
    for(item = list; item; item = item->dllNext)
-      item->dllObject->archive(arc);
+      (*item)->archive(arc);
 }
 
 //

@@ -247,7 +247,7 @@ sfxinfo_t *E_SoundForDEHNum(int dehnum)
    DLListItem<sfxinfo_t> *rover = sfx_dehchains[hash];
 
    // haleyjd 04/13/08: rewritten for dynamic hash chains
-   while(rover && rover->dllObject->dehackednum != dehnum)
+   while(rover && (*rover)->dehackednum != dehnum)
       rover = rover->dllNext;
 
    return rover ? rover->dllObject : NULL;
@@ -1092,7 +1092,7 @@ ESoundSeq_t *E_SequenceForNum(int id)
    unsigned int key = id % NUM_EDFSEQ_CHAINS;
    DLListItem<ESoundSeq_t> *link = edf_seq_numchains[key];
 
-   while(link && link->dllObject->index != id)
+   while(link && (*link)->index != id)
       link = link->dllNext;
 
    return link ? link->dllObject : NULL;
@@ -1139,7 +1139,7 @@ ESoundSeq_t *E_EnvironmentSequence(int id)
    unsigned int key = id % NUM_EDFSEQ_ENVCHAINS;
    DLListItem<ESoundSeq_t> *link = edf_seq_envchains[key];
 
-   while(link && link->dllObject->index != id)
+   while(link && (*link)->index != id)
       link = link->dllNext;
 
    return link ? link->dllObject : NULL;

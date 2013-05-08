@@ -1145,7 +1145,7 @@ void P_ArchiveSoundSequences(SaveArchive &arc)
    item = SoundSequences;
    while(item)
    {
-      P_ArchiveSndSeq(arc, item->dllObject);
+      P_ArchiveSndSeq(arc, *item);
       item = item->dllNext;
    }
 

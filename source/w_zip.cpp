@@ -284,11 +284,11 @@ ZipFile::~ZipFile()
       DLListItem<ZipWad> *rover = wads;
       while(rover)
       {
-         ZipWad *zw = rover->dllObject;
+         ZipWad &zw = **rover;
          rover = rover->dllNext;
 
-         efree(zw->buffer); // free the in-memory wad file
-         efree(zw);         // free the ZipWad structure
+         efree(zw.buffer); // free the in-memory wad file
+         efree(&zw);       // free the ZipWad structure
       }
       wads = NULL;
    }

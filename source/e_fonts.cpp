@@ -1067,7 +1067,7 @@ vfont_t *E_FontForNum(int num)
    unsigned int key = num % NUMFONTCHAINS;
    DLListItem<vfont_t> *link = e_font_numchains[key];
 
-   while(link && link->dllObject->num != num)
+   while(link && (*link)->num != num)
       link = link->dllNext;
 
    return link ? link->dllObject : NULL;

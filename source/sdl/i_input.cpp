@@ -474,8 +474,8 @@ struct deferredevent_t
    int tic;
 };
 
-static DLListItem<deferredevent_t> *i_deferredevents;
-static DLListItem<deferredevent_t> *i_deferredfreelist;
+static DLList<deferredevent_t, &deferredevent_t::links> i_deferredevents;
+static DLList<deferredevent_t, &deferredevent_t::links> i_deferredfreelist;
 
 //
 // I_AddDeferredEvent
@@ -490,19 +490,17 @@ static void I_AddDeferredEvent(const event_t &ev, int tic)
 {
    deferredevent_t *de;
 
-   if(i_deferredfreelist)
+   if(i_deferredfreelist.head)
    {
-      de = i_deferredfreelist->dllObject;
-      de->links.remove();
-      de->links.dllNext = NULL;
-      de->links.dllPrev = NULL;
+      de = *i_deferredfreelist.head;
+      i_deferredfreelist.remove(de);
    }
    else
       de = estructalloc(deferredevent_t, 1);
 
    de->ev  = ev;
    de->tic = tic;
-   de->links.insert(de, &i_deferredevents);
+   i_deferredevents.insert(de);
 }
 
 //
@@ -512,11 +510,8 @@ static void I_AddDeferredEvent(const event_t &ev, int tic)
 //
 static void I_PutDeferredEvent(deferredevent_t *de)
 {
-   de->links.remove();
-   de->links.dllNext = NULL;
-   de->links.dllPrev = NULL;
-
-   de->links.insert(de, &i_deferredfreelist);
+   i_deferredevents.remove(de);
+   i_deferredfreelist.insert(de);
 }
 
 //
@@ -526,7 +521,7 @@ static void I_PutDeferredEvent(deferredevent_t *de)
 //
 static void I_RunDeferredEvents()
 {
-   DLListItem<deferredevent_t> *rover = i_deferredevents;
+   DLListItem<deferredevent_t> *rover = i_deferredevents.head;
    static int lasttic;
 
    // Only run once per tic.
@@ -539,7 +534,7 @@ static void I_RunDeferredEvents()
    {
       DLListItem<deferredevent_t> *next = rover->dllNext;
 
-      deferredevent_t *de = rover->dllObject;
+      deferredevent_t *de = *rover;
       if(de->tic <= gametic)
       {
          D_PostEvent(&de->ev);

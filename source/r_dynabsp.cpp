@@ -146,7 +146,7 @@ static dynaseg_t *R_selectPartition(dseglist_t segs)
    // Try each seg as a partition line
    for(rover = segs; rover; rover = rover->dllNext)
    {
-      dynaseg_t *part = rover->dllObject;
+      dynaseg_t  *part = *rover;
       dseglink_t *crover;
       int cost = 0, tot = 0, diff = cnt;
 
@@ -157,7 +157,7 @@ static dynaseg_t *R_selectPartition(dseglist_t segs)
       // Check partition against all segs
       for(crover = segs; crover; crover = crover->dllNext)
       {
-         dynaseg_t *check = crover->dllObject;
+         dynaseg_t *check = *crover;
 
          // classify both end points
          double a = part->pdy * check->psx - part->pdx * check->psy + part->ptmp;
@@ -215,7 +215,7 @@ prune: ; // early exit and skip past the tests above
    // taking any chances that the above algorithm might freak out when that
    // becomes the case. I KNOW the list is not empty.
    if(!best)
-      best = segs->dllObject;
+      best = *segs;
 
    return best; // All finished, return best seg
 }
@@ -392,7 +392,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
    // iterate from beginning until the original list is empty
    while((cur = *ts))
    {
-      dynaseg_t  *seg  = cur->dllObject;
+      dynaseg_t *seg = *cur;
       add_to_ls = add_to_rs = NULL;
 
       int val = R_classifyDynaSeg(best, seg, pdx, pdy);
@@ -459,20 +459,14 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
       // add to right side?
       if(add_to_rs)
       {
-         if(add_to_rs->bsplink.dllPrev)
-            add_to_rs->bsplink.remove();
-         add_to_rs->bsplink.dllNext = NULL;
-         add_to_rs->bsplink.dllPrev = NULL;
+         add_to_rs->bsplink.remove();
          add_to_rs->bsplink.insert(add_to_rs, rs);
       }
 
       // add to left side?
       if(add_to_ls)
       {
-         if(add_to_ls->bsplink.dllPrev)
-            add_to_ls->bsplink.remove();
-         add_to_ls->bsplink.dllNext = NULL;
-         add_to_ls->bsplink.dllPrev = NULL;
+         add_to_ls->bsplink.remove();
          add_to_ls->bsplink.insert(add_to_ls, ls);
       }
    }
@@ -532,7 +526,7 @@ static bool R_collapseFragmentsToDSList(subsector_t *subsec, dseglist_t *list)
 
    while(fragment)
    {
-      dynaseg_t *ds = fragment->dllObject->dynaSegs;
+      dynaseg_t *ds = (*fragment)->dynaSegs;
 
       while(ds)
       {
@@ -569,8 +563,8 @@ static void R_returnOwnedList(rpolynode_t *node)
 
    while(dsl)
    {
-      dseglink_t *next = dsl->dllNext;
-      dynaseg_t  *ds   = dsl->dllObject;
+      dseglink_t *next =  dsl->dllNext;
+      dynaseg_t  *ds   = *dsl;
 
       vertex_t *v1 = ds->seg.v1;
       vertex_t *v2 = ds->seg.v2;

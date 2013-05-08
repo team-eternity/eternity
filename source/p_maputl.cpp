@@ -541,7 +541,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
 
    while(plink)
    {
-      polyobj_t *po = plink->dllObject->po;
+      polyobj_t *po = (*plink)->po;
 
       if(po->validcount != validcount) // if polyobj hasn't been checked
       {

@@ -72,7 +72,7 @@ cb_video_t video =
    FRACUNIT,
    1.0f, 1.0f, 1.0f, 1.0f, 
    false,
-   {NULL, NULL, NULL, NULL, NULL}
+   {NULL, NULL, NULL, NULL}
 };
 
 //=============================================================================
@@ -471,17 +471,15 @@ void V_Init()
    VAllocItem::FreeAllocs();
    VAllocItem::SetNewMode(video.width, video.height);
 
-   // haleyjd 05/30/08: removed screens from zone heap
    if(s)
    {
-      Z_SysFree(s);
+      efree(s);
       I_UnsetPrimaryBuffer();
    }
 
-   video.screens[4] =
-      (video.screens[3] =
-         (video.screens[2] =
-            (video.screens[1] = s = (byte *)(Z_SysCalloc(size, 4))) + size) + size) + size;
+   video.screens[3] =
+      (video.screens[2] =
+         (video.screens[1] = s = (ecalloc(byte *, size, 3))) + size) + size;
    
    // SoM: TODO: implement direct to SDL surface drawing.
    I_SetPrimaryBuffer();
@@ -559,10 +557,6 @@ void V_InitMisc()
 
 const char *str_ticker[] = { "off", "chart", "classic", "text" };
 VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
-
-CONSOLE_COMMAND(v_modelist, 0)
-{
-}
 
 CONSOLE_COMMAND(v_fontcolors, 0)
 {

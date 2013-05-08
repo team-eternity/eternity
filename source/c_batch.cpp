@@ -114,7 +114,7 @@ public:
 
       while(finished_batches)
       {
-         batch = finished_batches->dllObject;
+         batch = *finished_batches;
          finished_batches->remove();
          command_batches.removeObject(batch);
          delete(batch);

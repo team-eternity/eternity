@@ -179,7 +179,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
    {
       while(link)
       {
-         polyobj_t *po = link->dllObject->polyobj;
+         polyobj_t *po = (*link)->polyobj;
 
          if(po->validcount != validcount)
          {

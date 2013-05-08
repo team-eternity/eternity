@@ -753,10 +753,10 @@ static void PSWrapStates(pstate_t *ps)
       // Increment curbufstate and currentstate until end of list is reached,
       // a non-state object is encountered, or the line number changes
       DLListItem<estatebuf_t> *link = DSP.curbufstate;
-      int curlinenum = link->dllObject->linenum;
+      int curlinenum = (*link)->linenum;
 
-      while(link && link->dllObject->linenum == curlinenum && 
-            link->dllObject->type == BUF_STATE)
+      while(link && (*link)->linenum == curlinenum && 
+            (*link)->type == BUF_STATE)
       {
          link = link->dllNext;
          DSP.currentstate++;
@@ -876,18 +876,18 @@ static void doGoto(pstate_t *ps)
    else
    {
       // main parsing pass
-      if(DSP.curbufstate->dllObject->type == BUF_LABEL)
+      if((*DSP.curbufstate)->type == BUF_LABEL)
       {
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
 
          // last noticed state is a label; run down all labels and
          // create relocations that point to the current state.
-         while(link->dllObject->type != BUF_GOTO)
+         while((*link)->type != BUF_GOTO)
          {
             edecstateout_t *dso = DSP.pDSO;
             edecstate_t *s = &(dso->states[dso->numstates]);
             
-            s->label = estrdup(link->dllObject->name);
+            s->label = estrdup((*link)->name);
             s->state = states[DSP.currentstate];
             
             dso->numstates++;
@@ -897,8 +897,8 @@ static void doGoto(pstate_t *ps)
          DSP.curbufstate = link;
 
          // setup the current state as a goto state
-         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = DSP.curbufstate->dllObject;
-         DSP.internalgotos[DSP.numinternalgotos].state    = DSP.currentstate;
+         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = *DSP.curbufstate;
+         DSP.internalgotos[DSP.numinternalgotos].state    =  DSP.currentstate;
 
          DSP.numinternalgotos++; // move forward one internal goto
          DSP.currentstate++;     // move forward to the next state
@@ -906,8 +906,8 @@ static void doGoto(pstate_t *ps)
       else
       {
          // this goto determines the nextstate field for the previous state
-         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = DSP.curbufstate->dllObject;
-         DSP.internalgotos[DSP.numinternalgotos].state    = DSP.currentstate - 1;
+         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = *DSP.curbufstate;
+         DSP.internalgotos[DSP.numinternalgotos].state    =  DSP.currentstate - 1;
 
          DSP.numinternalgotos++; // move forward one internal goto
       }
@@ -976,18 +976,18 @@ static void doKeyword(pstate_t *ps)
             state->nextstate = DSP.lastlabelstate;
          break;
       case KWD_STOP:
-         if(DSP.curbufstate->dllObject->type == BUF_LABEL)
+         if((*DSP.curbufstate)->type == BUF_LABEL)
          {
             DLListItem<estatebuf_t> *link = DSP.curbufstate;
 
             // if we're still on a label and this is a stop keyword, run 
             // forward through the labels and make kill states for each one
-            while(link->dllObject->type != BUF_KEYWORD)
+            while((*link)->type != BUF_KEYWORD)
             {
                edecstateout_t *dso = DSP.pDSO;
                ekillstate_t   *ks  = &(dso->killstates[dso->numkillstates]);
                
-               ks->killname = estrdup(link->dllObject->name);               
+               ks->killname = estrdup((*link)->name);               
                dso->numkillstates++;
 
                link = link->dllNext;
@@ -1045,11 +1045,11 @@ static void doText(pstate_t *ps)
 
       // if we are on a label, all the labels until we reach the next state
       // object should be associated with the current state
-      while(link->dllObject->type == BUF_LABEL)
+      while((*link)->type == BUF_LABEL)
       {
          edecstateout_t *dso = DSP.pDSO;
 
-         dso->states[dso->numstates].label = estrdup(link->dllObject->name);
+         dso->states[dso->numstates].label = estrdup((*link)->name);
          dso->states[dso->numstates].state = states[DSP.currentstate];
          dso->numstates++;
 
@@ -1065,8 +1065,8 @@ static void doText(pstate_t *ps)
       // set sprite number of all frame objects on the list with the same
       // linenumber as the current buffered state object
       while(link && 
-            link->dllObject->linenum == DSP.curbufstate->dllObject->linenum &&
-            link->dllObject->type == BUF_STATE)
+            (*link)->linenum == (*DSP.curbufstate)->linenum &&
+            (*link)->type == BUF_STATE)
       {
          if(states[statenum]->decorate)
             states[statenum]->sprite = sprnum;
@@ -1268,8 +1268,8 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          int statenum = DSP.currentstate;
          unsigned int stridx = 0;
 
-         while(link && link->dllObject->type == BUF_STATE && 
-               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+         while(link && (*link)->type == BUF_STATE && 
+               (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
             char c = toupper(ps->tokenbuffer->charAt(stridx));
 
@@ -1281,7 +1281,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
                {
                   E_EDFLoggedWarning(2,
                      "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
-                     DSP.curbufstate->dllObject->linenum, c);
+                     (*DSP.curbufstate)->linenum, c);
                   ps->error = true;
                   return;
                }
@@ -1322,8 +1322,8 @@ static void DoPSNeedStateTics(pstate_t *ps)
          int statenum = DSP.currentstate;
          int tics = ps->tokenbuffer->toInt();
 
-         while(link && link->dllObject->type == BUF_STATE && 
-               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+         while(link && (*link)->type == BUF_STATE && 
+               (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
             if(states[statenum]->decorate)
             {
@@ -1365,8 +1365,8 @@ static void doAction(pstate_t *ps, const char *fn)
          return;
       }
 
-      while(link && link->dllObject->type == BUF_STATE && 
-            link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+      while(link && (*link)->type == BUF_STATE && 
+            (*link)->linenum == (*DSP.curbufstate)->linenum)
       {
          if(states[statenum]->decorate)
             states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
@@ -1414,8 +1414,8 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
-               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+         while(link && (*link)->type == BUF_STATE && 
+               (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
             if(states[statenum]->decorate)
                states[statenum]->frame |= FF_FULLBRIGHT;
@@ -1482,8 +1482,8 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
-               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+         while(link && (*link)->type == BUF_STATE && 
+               (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
             if(states[statenum]->decorate)
                E_CreateArgList(states[statenum]);
@@ -1521,8 +1521,8 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
-               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+         while(link && (*link)->type == BUF_STATE && 
+               (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
             if(states[statenum]->decorate)
                E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
@@ -1592,8 +1592,8 @@ static void DoPSNeedStateArg(pstate_t *ps)
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(link && link->dllObject->type == BUF_STATE && 
-               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
+         while(link && (*link)->type == BUF_STATE && 
+               (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
             if(states[statenum]->decorate)
                E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
@@ -1822,7 +1822,7 @@ static bool E_checkPrincipalSemantics(const char *firststate)
 
    while(link)
    {
-      estatebuf_t *bstate = link->dllObject;
+      estatebuf_t *bstate = *link;
 
       // Look for orphaned loop and wait keywords immediately after a label,
       // as this is not allowed.
@@ -2049,7 +2049,7 @@ static void E_freeDecorateData(void)
    // free the buffered state list
    while((obj = DSP.statebuffer))
    {
-      estatebuf_t *bs = obj->dllObject;
+      estatebuf_t *bs = *obj;
 
       // remove it
       obj->remove();

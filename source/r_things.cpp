@@ -1026,7 +1026,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_ProjectParticle(link->dllObject);
+         R_ProjectParticle(*link);
    }
 }
 

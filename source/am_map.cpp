@@ -1947,7 +1947,7 @@ static void AM_drawDynaSegs()
 
       while(rpo)
       {
-         dynaseg_t *ds = rpo->dllObject->dynaSegs;
+         dynaseg_t *ds = (*rpo)->dynaSegs;
          
          while(ds)
          {

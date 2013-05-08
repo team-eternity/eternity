@@ -398,7 +398,7 @@ void CCmdRegistry::AddCommands()
 
    while(item)
    {
-      C_AddCommand(item->dllObject->command);
+      C_AddCommand((*item)->command);
       item = item->dllNext;
    }
 }

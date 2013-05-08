@@ -194,8 +194,8 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 
    while(link)
    {
-      if(link->dllObject->polyobj == po)
-         return link->dllObject;
+      if((*link)->polyobj == po)
+         return *link;
 
       link = link->dllNext;
    }
@@ -506,7 +506,7 @@ void R_DetachPolyObject(polyobj_t *poly)
       while(link)
       {
          next = link->dllNext;
-         rpolyobj_t *rpo = link->dllObject;
+         rpolyobj_t *rpo = *link;
 
          if(rpo->polyobj == poly)
          {

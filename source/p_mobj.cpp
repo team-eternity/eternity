@@ -200,7 +200,7 @@ static seenstate_t *P_GetSeenState(void)
 
       item->remove();
 
-      ret = item->dllObject;
+      ret = *item;
       memset(ret, 0, sizeof(seenstate_t));
    }
    else
@@ -234,7 +234,7 @@ static bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 
    while(link)
    {
-      if(statenum == link->dllObject->statenum)
+      if(statenum == (*link)->statenum)
          return true;
 
       link = link->dllNext;
