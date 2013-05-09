@@ -134,7 +134,9 @@ void R_FreeDynaVertex(vertex_t **vtx)
 // R_SetDynaVertexRef
 //
 // Safely set a reference to a dynamic vertex, maintaining the reference count.
-// Do not assign dynavertex pointers without using this routine!
+// Do not assign dynavertex pointers without using this routine! Note that if
+// *target already points to a vertex, that vertex WILL be freed if its ref
+// count reaches zero.
 //
 void R_SetDynaVertexRef(vertex_t **target, vertex_t *vtx)
 {

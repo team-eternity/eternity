@@ -68,8 +68,10 @@ public:
       : Super(), references(0), removed(false), ordinal(0), prev(NULL),
         next(NULL), cprev(NULL), cnext(NULL)
    {
-      ChangeTag(PU_LEVEL);
    }
+
+   // operator new, overriding ZoneObject::operator new (size_t)
+   void *operator new (size_t size) { return ZoneObject::operator new(size, PU_LEVEL); }
 
    // Static functions
    static void InitThinkers();

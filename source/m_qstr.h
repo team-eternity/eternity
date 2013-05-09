@@ -56,10 +56,9 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(size_t startSize = 0, int tag = PU_STATIC) 
+   qstring(size_t startSize = 0) 
       : ZoneObject(), index(0), size(16)
    {
-      ChangeTag(tag);
       buffer = local;
       memset(local, 0, sizeof(local));
       if(startSize)

@@ -1013,7 +1013,7 @@ void R_ResetTrans(void)
 {
    if(general_translucency)
    {
-      R_InitTranMap(0);
+      R_InitTranMap(false);
    }
 }
 

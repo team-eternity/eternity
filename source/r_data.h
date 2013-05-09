@@ -166,7 +166,7 @@ int R_CheckForFlat(const char *name);
 int R_FindWall(const char *name);       // killough -- const added
 int R_CheckForWall(const char *name); 
 
-void R_InitTranMap(int);      // killough 3/6/98: translucency initialization
+void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
 
 void R_InitColormaps(void);   // killough 8/9/98

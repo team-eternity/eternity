@@ -94,7 +94,6 @@ enum
    PU_VALLOC,    // haleyjd 04/29/13: belongs to a video/rendering buffer
    PU_AUTO,      // haleyjd 07/08/10: automatic allocation
    PU_LEVEL,     // allocation belongs to level (freed at next level load)
-   PU_OBJECT,    // haleyjd 04/01/11: for ZoneObject
 
    // cache levels
 
@@ -189,9 +188,7 @@ void Z_DumpCore(void);
 // ZoneObject Class
 //
 // This class serves as a base class for C++ objects that want to support
-// allocation on the zone heap. The actual zone memory is always stored at
-// PU_OBJECT allocation level, and the tag semantics are handled inside this
-// base class.
+// allocation on the zone heap. 
 //
 class ZoneObject
 {
@@ -201,20 +198,25 @@ private:
    static void *newalloc;
 
    // instance data
-   void *zonealloc;       // If non-null, the object is living on the zone heap
-   int   zonetag;         // If zonealloc is valid, the object's zone tag
-   ZoneObject  *zonenext; // Next object on tag chain
-   ZoneObject **zoneprev; // Previous object on tag chain's next pointer
+   void        *zonealloc; // If non-null, the object is living on the zone heap
+   ZoneObject  *zonenext;  // Next object on tag chain
+   ZoneObject **zoneprev;  // Previous object on tag chain's next pointer
+
+   void removeFromTagList();
+   void addToTagList(int tag);
 
 public:
    ZoneObject();
    virtual ~ZoneObject();
    void *operator new (size_t size);
+   void *operator new (size_t size, int tag, void **user = NULL);
    void  operator delete (void *p);
-   void  ChangeTag(int tag);
+   void  operator delete (void *p, int, void **);
+   void  changeTag(int tag);
 
    // zone memblock reflection
-   size_t getZoneSize() const;
+   int         getZoneTag()  const;
+   size_t      getZoneSize() const;
    const void *getBlockPtr() const { return zonealloc; }
 
    static void FreeTags(int lowtag, int hightag);

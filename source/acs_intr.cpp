@@ -1321,7 +1321,7 @@ void ACSThinker::pushPrint()
    qstring *&print = *printPtr++;
 
    if(!print)
-      print = new qstring(qstring::basesize, PU_LEVEL);
+      print = new (PU_LEVEL) qstring(qstring::basesize);
    else
       print->clear();
 
@@ -1656,9 +1656,8 @@ bool ACSDeferred::DeferTerminateName(const char *name, int mapnum)
 //
 // ACSVM::ACSVM
 //
-ACSVM::ACSVM(int tag) : ZoneObject()
+ACSVM::ACSVM() : ZoneObject()
 {
-   ChangeTag(tag);
    reset();
 }
 
@@ -1894,7 +1893,7 @@ ACSVM *ACS_LoadScript(WadDirectory *dir, int lump)
          return *itr;
    }
 
-   vm = new ACSVM(PU_LEVEL);
+   vm = new (PU_LEVEL) ACSVM;
 
    ACS_LoadScript(vm, dir, lump);
 
@@ -2624,7 +2623,7 @@ void ACSThinker::serialize(SaveArchive &arc)
    for(qstring **itr = printStack, **end = printPtr; itr != end; ++itr)
    {
       if(arc.isLoading())
-         *itr = new qstring(0, PU_LEVEL);
+         *itr = new (PU_LEVEL) qstring();
 
       (*itr)->archive(arc);
    }

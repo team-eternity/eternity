@@ -558,7 +558,7 @@ public:
 class ACSVM : public ZoneObject
 {
 public:
-   ACSVM(int tag = PU_STATIC);
+   ACSVM();
    ~ACSVM();
 
    // Used by the loader to sync the global strings to the VM's strings.

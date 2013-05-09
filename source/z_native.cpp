@@ -741,7 +741,6 @@ void Z_DumpCore()
       "PU_VALLOC",
       "PU_AUTO",
       "PU_LEVEL",
-      "PU_OBJECT",
       "PU_CACHE",
    };
 
@@ -986,7 +985,17 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
 //
 void *ZoneObject::operator new (size_t size)
 {
-   return (newalloc = Z_Calloc(1, size, PU_OBJECT, NULL));
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+}
+
+//
+// ZoneObject::operator new
+//
+// Overload supporting full zone allocation semantics.
+//
+void *ZoneObject::operator new(size_t size, int tag, void **user)
+{
+   return (newalloc = Z_Calloc(1, size, tag, user));
 }
 
 //
@@ -996,46 +1005,67 @@ void *ZoneObject::operator new (size_t size)
 // subsequent constructor call and stored in the object that was allocated.
 //
 ZoneObject::ZoneObject() 
-   : zonealloc(NULL), zonetag(PU_FREE), zonenext(NULL), zoneprev(NULL)
+   : zonealloc(NULL), zonenext(NULL), zoneprev(NULL)
 {
    if(newalloc)
    {
       zonealloc = newalloc;
       newalloc  = NULL;
-      ChangeTag(PU_STATIC);
+      addToTagList(getZoneTag());
    }
 }
 
 //
-// ZoneObject::ChangeTag
+// ZoneObject::removeFromTagList
+//
+// Private method. Removes the object from any tag list it may be in.
+//
+void ZoneObject::removeFromTagList()
+{
+   if(zoneprev && (*zoneprev = zonenext))
+      zonenext->zoneprev = zoneprev;
+
+   zonenext = NULL;
+   zoneprev = NULL;
+}
+
+//
+// ZoneObject::addToTagList
+//
+// Private method. Adds the object into the indicated tag list.
+//
+void ZoneObject::addToTagList(int tag)
+{
+   if((zonenext = objectbytag[tag]))
+      zonenext->zoneprev = &zonenext;
+   objectbytag[tag] = this;
+   zoneprev = &objectbytag[tag];
+}
+
+//
+// ZoneObject::changeTag
 //
 // If the object was allocated on the zone heap, the allocation tag will be
 // changed.
 //
-void ZoneObject::ChangeTag(int tag)
+void ZoneObject::changeTag(int tag)
 {
    if(zonealloc) // If not a zone object, this is a no-op
    {
-      if(zonetag != PU_FREE) // already in a list? remove it.
-      {
-         if((*zoneprev = zonenext))
-            zonenext->zoneprev = zoneprev;
-         INSTRUMENT(memorybytag[zonetag] -= getZoneSize());
-      }
-      zonenext = NULL;
-      zoneprev = NULL;
+      int curtag = getZoneTag();
 
-      // unless freeing it, put it in the new list
-      if(tag != PU_FREE)
-      {
-         if((zonenext = objectbytag[tag]))
-            zonenext->zoneprev = &zonenext;
-         objectbytag[tag] = this;
-         zoneprev = &objectbytag[tag];
-         INSTRUMENT(memorybytag[tag] += getZoneSize());
-      }
+      // not actually changing?
+      if(tag == curtag)
+         return;
 
-      zonetag = tag;
+      // remove from current tag list, if in one
+      removeFromTagList();
+
+      // put it in the new list
+      addToTagList(tag);
+
+      // change the actual allocation tag
+      Z_ChangeTag(zonealloc, tag);
    }
 }
 
@@ -1049,7 +1079,7 @@ ZoneObject::~ZoneObject()
 {
    if(zonealloc)
    {
-      ChangeTag(PU_FREE);
+      removeFromTagList();
       zonealloc = NULL;
    }
 }
@@ -1060,6 +1090,17 @@ ZoneObject::~ZoneObject()
 // Calls Z_Free
 //
 void ZoneObject::operator delete (void *p)
+{
+   Z_Free(p);
+}
+
+//
+// ZoneObject::operator delete
+//
+// This overload only exists because of a rule in C++ regarding 
+// exceptions during initialization.
+//
+void ZoneObject::operator delete (void *p, int, void **)
 {
    Z_Free(p);
 }
@@ -1097,6 +1138,25 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
          obj = next;               // Advance to next object
       }
    }
+}
+
+//
+// ZoneObject::getZoneTag
+//
+// Get the object's allocation tag.
+// Returns PU_FREE if the object is not heap-allocated.
+//
+int ZoneObject::getZoneTag() const
+{
+   int tag = PU_FREE;
+
+   if(zonealloc)
+   {
+      memblock_t *block = (memblock_t *)((byte *)zonealloc - header_size);
+      tag = block->tag;
+   }
+
+   return tag;
 }
 
 //

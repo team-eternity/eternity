@@ -50,12 +50,6 @@ protected:
    {
    }
 
-   BaseCollection(int zoneTag)
-      : ZoneObject(), ptrArray(NULL), length(0), numalloc(0), wrapiterator(0)
-   {
-      ChangeTag(zoneTag);
-   }
-
    //
    // resize
    //
