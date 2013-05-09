@@ -73,7 +73,7 @@ struct vertex_t
    float   fx, fy;
 
    struct vertex_t *dynanext;
-   bool dynafree;          // if true, is on free list
+   int refcount;
 };
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
