@@ -300,8 +300,6 @@ void Z_Init(void)
    atexit(Z_Close);            // exit handler
 
    Z_LogPrintf("Initialized zone heap (using native implementation)\n");
-   
-   printf("Z_Init: Init zone memory allocation daemon.\n");
 }
 
 //=============================================================================

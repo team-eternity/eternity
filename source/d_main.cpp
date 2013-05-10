@@ -1928,6 +1928,7 @@ static void D_DoomInit(void)
 
    D_StartupMessage();
 
+   startupmsg("Z_Init", "Init zone memory allocation daemon.");
    Z_Init();
    atexit(I_Quit);
 
