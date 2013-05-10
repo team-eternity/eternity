@@ -1928,6 +1928,9 @@ static void D_DoomInit(void)
 
    D_StartupMessage();
 
+   Z_Init();
+   atexit(I_Quit);
+
    FindResponseFile(); // Append response file arguments to command-line
 
    // haleyjd 08/18/07: set base path and user path

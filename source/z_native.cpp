@@ -228,30 +228,36 @@ INSTRUMENT(int printstats = 0);         // killough 8/23/98
 
 #ifdef ZONEFILE
 static FILE *zonelog;
+static bool  logclosed;
 #endif
 
-static void Z_OpenLogFile(void)
+static void Z_OpenLogFile()
 {
 #ifdef ZONEFILE
-   zonelog = fopen("zonelog.txt", "w");
+   if(!zonelog && !logclosed)
+      zonelog = fopen("zonelog.txt", "w");
 #endif
 }
 
-static void Z_CloseLogFile(void)
+static void Z_CloseLogFile()
 {
 #ifdef ZONEFILE
    if(zonelog)
    {
       fputs("Closing zone log", zonelog);
       fclose(zonelog);
-      zonelog = NULL;
+      zonelog = NULL;      
    }
+   // Do not open a new log after this point.
+   logclosed = true;
 #endif
 }
 
 static void Z_LogPrintf(const char *msg, ...)
 {
 #ifdef ZONEFILE
+   if(!zonelog)
+      Z_OpenLogFile();
    if(zonelog)
    {
       va_list ap;
@@ -268,6 +274,8 @@ static void Z_LogPrintf(const char *msg, ...)
 static void Z_LogPuts(const char *msg)
 {
 #ifdef ZONEFILE
+   if(!zonelog)
+      Z_OpenLogFile();
    if(zonelog)
       fputs(msg, zonelog);
 #endif
@@ -291,8 +299,9 @@ void Z_Init(void)
 {   
    atexit(Z_Close);            // exit handler
 
-   Z_OpenLogFile();
    Z_LogPrintf("Initialized zone heap (using native implementation)\n");
+   
+   printf("Z_Init: Init zone memory allocation daemon.\n");
 }
 
 //=============================================================================

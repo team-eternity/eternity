@@ -51,8 +51,6 @@
 
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
-void I_Quit(void);
-
 // SoM 3/11/2002: Disable the parachute for debugging.
 // haleyjd 07/06/04: changed to a macro to eliminate local variable
 // note: sound init is handled separately in i_sound.c
@@ -113,9 +111,6 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
-
-   Z_Init();
-   atexit(I_Quit);
    
    D_DoomMain();
    
