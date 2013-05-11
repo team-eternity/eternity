@@ -2333,9 +2333,6 @@ static void D_DoomInit(void)
    startupmsg("MN_Init", "Init menu.");
    MN_Init();
 
-   startupmsg("IN_Init", "Init intermission.");
-   IN_Init(); // haleyjd 09/10/12
-
    startupmsg("F_Init", "Init finale.");
    F_Init();
 
