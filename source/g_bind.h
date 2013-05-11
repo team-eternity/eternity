@@ -144,6 +144,8 @@ enum axisaction_e
 // Axis bindings
 extern int axisActions[];
 
+bool G_ExecuteGamepadProfile(const char *name);
+
 #endif
 
 // EOF

@@ -741,14 +741,30 @@ static int G_profileForName(const char *name)
    return wGlobalDir.checkNumForLFN(lfn.constPtr(), lumpinfo_t::ns_pads);
 }
 
+//
+// G_ExecuteGamepadProfile
+//
+// haleyjd 05/11/13: Run a console script that can setup default bindings
+// for a particular model/brand of gamepad.
+//
 bool G_ExecuteGamepadProfile(const char *name)
 {
    int lumpnum;
 
-   if((lumpnum = G_profileForName(name)) < 0)
-      return false;
+   if((lumpnum = G_profileForName(name)) >= 0)
+   {
+      DWFILE dwfile;
 
+      dwfile.openLump(lumpnum);
 
+      if(dwfile.isOpen())
+      {
+         C_RunScript(&dwfile);
+         return true;
+      }
+   }
+
+   return false;
 }
 
 //===========================================================================
