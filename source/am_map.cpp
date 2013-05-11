@@ -120,6 +120,11 @@ bool am_dynasegs_bysubsec;
 #define CXMTOF(x)  (f_x + (int)(MTOF((x) - m_x)))
 #define CYMTOF(y)  (f_y + (f_h - (int)(MTOF((y) - m_y))))
 
+// haleyjd: movement scaling factors for panning consistency at different
+// resolutions
+#define HORZ_PAN_SCALE(x) ((x) * f_w / SCREENWIDTH )
+#define VERT_PAN_SCALE(y) ((y) * f_h / SCREENHEIGHT)
+
 typedef struct fpoint_s
 {
    int x, y;
@@ -361,7 +366,7 @@ static void AM_saveScaleAndLoc(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_restoreScaleAndLoc(void)
+static void AM_restoreScaleAndLoc()
 {
    m_w = old_m_w;
    m_h = old_m_h;
@@ -499,7 +504,7 @@ static void AM_findMinMaxBoundaries(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_changeWindowLoc(void)
+static void AM_changeWindowLoc()
 {
    if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
    {
@@ -653,7 +658,7 @@ static void AM_loadPics(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_unloadPics(void)
+static void AM_unloadPics()
 {
    int i;
    
@@ -863,7 +868,7 @@ bool AM_Responder(event_t *ev)
       case ka_map_right: // pan right
          if(!followplayer)
          {
-            m_paninc.x = FTOM(F_PANINC);
+            m_paninc.x = FTOM(HORZ_PAN_SCALE(F_PANINC));
             return true;
          }
          return false;
@@ -871,7 +876,7 @@ bool AM_Responder(event_t *ev)
       case ka_map_left: // pan left
          if(!followplayer)
          {
-            m_paninc.x = -FTOM(F_PANINC);
+            m_paninc.x = -FTOM(HORZ_PAN_SCALE(F_PANINC));
             return true;
          }
          return false;
@@ -879,7 +884,7 @@ bool AM_Responder(event_t *ev)
       case ka_map_up: // pan up
          if(!followplayer)
          {
-            m_paninc.y = FTOM(F_PANINC);
+            m_paninc.y = FTOM(VERT_PAN_SCALE(F_PANINC));
             return true;
          }
          return false;
@@ -887,7 +892,7 @@ bool AM_Responder(event_t *ev)
       case ka_map_down: // pan down
          if(!followplayer)
          {
-            m_paninc.y = -FTOM(F_PANINC);
+            m_paninc.y = -FTOM(VERT_PAN_SCALE(F_PANINC));
             return true;
          }
          return false;
