@@ -1811,7 +1811,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "script_file=\"exepack.sh\"\n${PROJECT_DIR}/${script_file}";
+			shellScript = "script_file=\"exepack.sh\"\nif [ \"$CONFIGURATION\" == \"Release\" ];then\n${PROJECT_DIR}/${script_file}\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
