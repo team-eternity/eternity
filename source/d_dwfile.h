@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,16 @@
 //
 // DESCRIPTION:
 //
+// File/WAD Standard Input Routines
+//
 // Separated DWFILE functions from d_io.h
+//
+// This code was moved here from d_deh.c and generalized to make a consistent
+// interface for emulating stdio functions on wad lumps. The structure here 
+// handles either external files or wad lumps, depending on how it is 
+// initialized, and emulates stdio regardless.
+//
+// James Haley
 //
 //-----------------------------------------------------------------------------
 
@@ -30,48 +39,50 @@
 
 #include "doomtype.h"
 
-// haleyjd 03/21/10
-enum
+//
+// DWFILE
+//
+// lump/file input abstraction. Converted to a proper class 5/11/2013, with
+// addition of RAII semantics (file will close if open when the object is
+// destroyed, or if it is reopened with a new data source).
+//
+class DWFILE
 {
-   DWF_FILE,
-   DWF_LUMP,
-   DWF_DATA,
-   DWF_NUMTYPES
-};
-
-struct DWFILE
-{
+protected:
    int type;
    byte *inp, *lump, *data; // Pointer to lump, FILE, or data
    int size;
    int origsize;            // for ungetc
    int lumpnum;             // haleyjd 03/08/06: need to save this
+
+public:
+   DWFILE();
+   ~DWFILE();
+
+   char  *getStr(char *buf, size_t n);
+   int    atEof() const;
+   int    getChar();
+   int    unGetChar(int c);
+   void   openFile(const char *filename, const char *mode);
+   void   openLump(int p_lumpnum);
+   void   close();
+   size_t read(void *dest, size_t p_size, size_t p_num);
+   long   fileLength() const;
+
+   inline bool isOpen()     const { return !!inp;   }
+   inline bool isLump()     const { return !!lump;  }
+   inline bool isData()     const { return !!data;  }
+   inline int  getLumpNum() const { return lumpnum; }
+
+   // haleyjd 03/21/10
+   enum DWFType
+   {
+      DWF_FILE,
+      DWF_LUMP,
+      DWF_DATA,
+      DWF_NUMTYPES
+   };
 };
-
-char  *D_Fgets(char *buf, size_t n, DWFILE *fp);
-int    D_Feof(DWFILE *fp);
-int    D_Fgetc(DWFILE *fp);
-int    D_Ungetc(int c, DWFILE *fp);
-void   D_OpenFile(DWFILE *infile, const char *filename, const char *mode);
-void   D_OpenLump(DWFILE *infile, int lumpnum);
-void   D_Fclose(DWFILE *dwfile);
-size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file);
-long   D_FileLength(DWFILE *file);
-
-inline static bool D_IsOpen(DWFILE *dwfile)
-{
-   return !!(dwfile->inp);
-}
-
-inline static bool D_IsLump(DWFILE *dwfile)
-{
-   return !!(dwfile->lump);
-}
-
-inline static bool D_IsData(DWFILE *dwfile)
-{
-   return !!(dwfile->data);
-}
 
 #endif
 

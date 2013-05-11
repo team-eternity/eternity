@@ -105,6 +105,7 @@ struct lumpinfo_t
       ns_translations,
       ns_demos,
       ns_acs,
+      ns_pads,
       ns_max           // keep this last.
    };
    int li_namespace;

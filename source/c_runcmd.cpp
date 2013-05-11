@@ -1513,7 +1513,7 @@ void C_RunScript(DWFILE *dwfile)
    int c;
 
    // parse script
-   while((c = D_Fgetc(dwfile)) != EOF)
+   while((c = dwfile->getChar()) != EOF)
    {
       // turn \r into \n for simplicity
       if(c == '\r')
@@ -1573,21 +1573,19 @@ void C_RunScript(DWFILE *dwfile)
 //
 void C_RunScriptFromFile(const char *filename)
 {
-   DWFILE dwfile, *file = &dwfile;
+   DWFILE dwfile;
 
-   D_OpenFile(file, filename, "r");
+   dwfile.openFile(filename, "r");
 
-   if(!D_IsOpen(file))
+   if(!dwfile.isOpen())
    {
       C_Printf(FC_ERROR "Couldn't exec script '%s'\n", filename);
    }
    else
    {
       C_Printf("Executing script '%s'\n", filename);
-      C_RunScript(file);
+      C_RunScript(&dwfile);
    }
-
-   D_Fclose(file);
 }
 
 //

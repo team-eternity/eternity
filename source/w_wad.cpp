@@ -864,9 +864,16 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { "C_START", "C_END", lumpinfo_t::ns_colormaps    },
    { "T_START", "T_END", lumpinfo_t::ns_translations },
    { NULL,      NULL,    lumpinfo_t::ns_demos        },
-   { "A_START", "A_END", lumpinfo_t::ns_acs          }
+   { "A_START", "A_END", lumpinfo_t::ns_acs          },
+   { NULL,      NULL,    lumpinfo_t::ns_pads         }
 };
 
+//
+// WadNamespace
+//
+// This class is a utility used only during coalesceMarkedResources, to build
+// the namespace_t structures for the WadDirectory instance.
+//
 class WadNamespace
 {
 protected:
@@ -895,8 +902,10 @@ public:
    {
    }
 
+   // Initialize from static data
    void setNSData(nsdata_t *pNsData) { nsdata = pNsData; }
 
+   // Add a lump into this namespace
    void addLump(lumpinfo_t *lump) 
    {
       marked.add(lump); 
@@ -904,6 +913,7 @@ public:
       ++numMarked;
    }
 
+   // Check if a lump belongs in this namespace
    void checkLump(lumpinfo_t *lump)
    {
       if(lumpIsStartMarker(lump))
@@ -912,8 +922,8 @@ public:
          inMarkers = false;
       else if(inMarkers || lump->li_namespace == nsdata->li_namespace)
       {
-         // we are either between markers, or dealing with a pre-marked lump
-         // special cases
+         // we are either between markers, or dealing with a pre-marked lump;
+         // special cases:
          switch(nsdata->li_namespace)
          {
          case lumpinfo_t::ns_sprites:
@@ -935,8 +945,10 @@ public:
       }
    }
 
+   // Get the number of lumps marked as belonging
    int getNumMarked() const { return numMarked; }
 
+   // Merge this namespace back into the master directory
    int mergeToDirectory(lumpinfo_t **lumpinfo, int index)
    {
       int i;
@@ -950,7 +962,7 @@ public:
 };
 
 //
-// W_CoalesceMarkedResource
+// WadDirectory::coalesceMarkedResources
 //
 // killough 4/17/98: add namespace tags
 //
@@ -1459,12 +1471,15 @@ void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 }
 
 //
-// WadDirectory::cacheLumpNumAuto
+// WadDirectory::cacheLumpAuto
 //
 // Cache a copy of a lump into a ZAutoBuffer, by lump num.
 //
 void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer)
 {
+   if(lumpnum < 0 || lumpnum >= numlumps)
+      I_Error("WadDirectory::cacheLumpAuto: %i >= numlumps\n", lumpnum);
+
    size_t size = lumpinfo[lumpnum]->size;
 
    buffer.alloc(size, false);

@@ -1440,7 +1440,7 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
 
    cfg->line = 1;
 
-   cfg->lumpnum = file->lumpnum;
+   cfg->lumpnum = file->getLumpNum();
 
    // haleyjd: initialize the lexer
    if(lexer_init(cfg, file) == 0)
@@ -1458,19 +1458,13 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
 int cfg_parse(cfg_t *cfg, const char *filename)
 {
    DWFILE dwfile; // haleyjd
-   int ret;
 
-   D_OpenFile(&dwfile, filename, "rb");
+   dwfile.openFile(filename, "rb");
    
-   if(!D_IsOpen(&dwfile))
+   if(!dwfile.isOpen())
       return CFG_FILE_ERROR;
 
-   ret = cfg_parse_dwfile(cfg, filename, &dwfile);
-
-   // haleyjd: wow, should probably close the file huh?
-   D_Fclose(&dwfile);
-
-   return ret;
+   return cfg_parse_dwfile(cfg, filename, &dwfile);
 }
 
 // 
@@ -1481,19 +1475,13 @@ int cfg_parse(cfg_t *cfg, const char *filename)
 int cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum)
 {
    DWFILE dwfile; // haleyjd
-   int ret; // haleyjd
 
-   D_OpenLump(&dwfile, lumpnum);
+   dwfile.openLump(lumpnum);
    
-   if(!D_IsOpen(&dwfile))
+   if(!dwfile.isOpen())
       return CFG_FILE_ERROR;
 
-   ret = cfg_parse_dwfile(cfg, lumpname, &dwfile);
-
-   // haleyjd: wow, should probably close the file huh?
-   D_Fclose(&dwfile);
-
-   return ret;
+   return cfg_parse_dwfile(cfg, lumpname, &dwfile);
 }
 
 void cfg_free(cfg_t *cfg)

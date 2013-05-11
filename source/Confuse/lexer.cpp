@@ -99,10 +99,10 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    size_t  size; 
    char   *buffer;
    
-   size   = static_cast<size_t>(D_FileLength(dwfile));
+   size   = static_cast<size_t>(dwfile->fileLength());
    buffer = emalloc(char *, size + 1);
 
-   if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
+   if((foo = dwfile->read(buffer, 1, size)) != size)
    {
       I_Error("lexer_buffer_file: failed on file read (%d of %d bytes)\n", 
               (int)foo, (int)size);
@@ -722,22 +722,17 @@ include:
 char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len)
 {
    DWFILE dwfile;
-   char *ret = NULL;
 
    // haleyjd 02/09/05: revised include handling for data vs file
    if(lumpnum >= 0)
-      D_OpenLump(&dwfile, lumpnum);
+      dwfile.openLump(lumpnum); 
    else
-      D_OpenFile(&dwfile, filename, "rb");
+      dwfile.openFile(filename, "rb");
 
-   if(!D_IsOpen(&dwfile))
+   if(!dwfile.isOpen())
       return NULL;
 
-   ret = lexer_buffer_file(&dwfile, len);
-
-   D_Fclose(&dwfile);
-
-   return ret;
+   return lexer_buffer_file(&dwfile, len);
 }
 
 char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *len)

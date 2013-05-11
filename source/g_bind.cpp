@@ -729,7 +729,27 @@ static void G_clearGamepadBindings()
       axisActions[axis] = axis_none;
 }
 
+//
+// G_profileForName
+//
+// Look up a gamepad profile by name
+//
+static int G_profileForName(const char *name)
+{
+   qstring lfn;
+   lfn << "gamepads/" << name;
+   return wGlobalDir.checkNumForLFN(lfn.constPtr(), lumpinfo_t::ns_pads);
+}
 
+bool G_ExecuteGamepadProfile(const char *name)
+{
+   int lumpnum;
+
+   if((lumpnum = G_profileForName(name)) < 0)
+      return false;
+
+
+}
 
 //===========================================================================
 //
@@ -744,7 +764,7 @@ void G_LoadDefaults()
 {
    char *temp = NULL;
    size_t len;
-   DWFILE dwfile, *file = &dwfile;
+   DWFILE dwfile;
 
    len = M_StringAlloca(&temp, 1, 18, usergamepath);
 
@@ -760,28 +780,25 @@ void G_LoadDefaults()
    if(access(cfg_file, R_OK))
    {
       C_Printf("keys.csc not found, using defaults\n");
-      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
+      dwfile.openLump(W_GetNumForName("KEYDEFS"));
    }
    else
-      D_OpenFile(file, cfg_file, "r");
+      dwfile.openFile(cfg_file, "r");
 
-   if(!D_IsOpen(file))
+   if(!dwfile.isOpen())
       I_Error("G_LoadDefaults: couldn't open default key bindings\n");
 
    // haleyjd 03/08/06: test for zero length
-   if(!D_IsLump(file) && D_FileLength(file) == 0)
+   if(!dwfile.isLump() && dwfile.fileLength() == 0)
    {
       // try the lump because the file is zero-length...
       C_Printf("keys.csc is zero length, trying KEYDEFS\n");
-      D_Fclose(file);
-      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
-      if(!D_IsOpen(file) || D_FileLength(file) == 0)
+      dwfile.openLump(W_GetNumForName("KEYDEFS"));
+      if(!dwfile.isOpen() || dwfile.fileLength() == 0)
          I_Error("G_LoadDefaults: KEYDEFS lump is empty\n");
    }
 
-   C_RunScript(file);
-
-   D_Fclose(file);
+   C_RunScript(&dwfile);
 }
 
 void G_SaveDefaults()

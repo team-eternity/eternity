@@ -363,7 +363,7 @@ const char *C_VariableStringValue(variable_t *command);
 // haleyjd: the SMMU v3.30 script-running functions
 // (with my fixes :P)
 
-struct DWFILE;
+class DWFILE;
 void C_RunScript(DWFILE *);
 void C_RunScriptFromFile(const char *filename);
 

@@ -27,7 +27,7 @@
 #define LEXER_H__
 
 extern const char *mytext; // haleyjd
-struct DWFILE;
+class DWFILE;
 
 int   mylex(cfg_t *cfg);
 int   lexer_init(cfg_t *cfg, DWFILE *);
