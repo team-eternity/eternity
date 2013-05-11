@@ -759,6 +759,7 @@ bool G_ExecuteGamepadProfile(const char *name)
 
       if(dwfile.isOpen())
       {
+         G_clearGamepadBindings();
          C_RunScript(&dwfile);
          return true;
       }
