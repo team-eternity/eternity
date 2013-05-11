@@ -837,19 +837,13 @@ bool AM_Responder(event_t *ev)
          case ka_map_right:   // stop pan left or right
          case ka_map_left:
             if(!followplayer)
-            {
                m_paninc.x = 0;
-               return true;
-            }
             return false;
 
          case ka_map_up:      // stop pan up or down
          case ka_map_down:
             if(!followplayer)
-            {
                m_paninc.y = 0;
-               return true;
-            }
             return false;
 
          case ka_map_zoomin:  // stop zoom in or out
