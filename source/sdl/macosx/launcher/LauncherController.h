@@ -72,7 +72,7 @@
    
    IBOutlet ELTextFieldDelegate *textFieldDelegate;   // the notif. delegate
    
-   IBOutlet NSMenuItem *docMenu;
+   IBOutlet NSMenuItem *docMenu, *runAs32BitMenuItem;
 
 	NSMenu *iwadPopMenu;
 	

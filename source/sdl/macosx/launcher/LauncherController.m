@@ -45,8 +45,7 @@
 
 NSInteger prevState = 0; // heh
 
-static BOOL gCalledAppMainline = FALSE;
-static BOOL gSDLStarted;	// IOAN 20120616
+static BOOL calledAppMainline = FALSE;
 
 @interface LauncherController ()
 -(void)loadDefaults;
@@ -94,6 +93,59 @@ static BOOL gSDLStarted;	// IOAN 20120616
 }
 
 //
+// createAlertBoxes
+//
+// Creates the various alert boxes used by this application
+//
+
+#define CREATE_ALERT_BOX(NAME, BUTTON1, BUTTON2, MESSAGE, INFORMATIVE, STYLE) \
+             (NAME) = [[NSAlert alloc] init]; \
+            [(NAME) addButtonWithTitle:(BUTTON1)]; \
+if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
+            [(NAME) setMessageText:    (MESSAGE)]; \
+            [(NAME) setInformativeText:(INFORMATIVE)]; \
+            [(NAME) setAlertStyle:     (STYLE)]
+
+
+- (void)createAlertBoxes
+{
+   CREATE_ALERT_BOX(noIwadAlert,
+                    @"Choose IWAD",
+                    @"Cancel",
+                    @"No IWAD file prepared",
+                    @"You need to choose a main game WAD before playing Eternity.",
+                    NSInformationalAlertStyle);
+   
+   CREATE_ALERT_BOX(badIwadAlert,
+                    @"Try Another",
+                    @"Cancel",
+                    @"Selected file is not a valid IWAD file.",
+                    @"You cannot load patch WAD (PWAD) files, or the selected file may be corrupted or invalid. You need to load a main WAD that comes shipped with the game.",
+                    NSInformationalAlertStyle);
+   
+   CREATE_ALERT_BOX(nothingForGfsAlert,
+                    @"OK",
+                    nil,
+                    @"There are no files to list in a GFS.",
+                    @"A GFS needs to refer to an IWAD and/or to a set of add-on files.",
+                    NSInformationalAlertStyle);
+   
+   CREATE_ALERT_BOX(overwriteDemoAlert,
+                    @"Cancel Game",
+                    @"Overwrite and Start",
+                    @"Overwrite demo to be recorded?",
+                    @"The target file in the \"Record Demo:\" field already exists and will be overwritten if you proceed. Make sure not to lose valuable data.",
+                    NSCriticalAlertStyle);
+   
+   CREATE_ALERT_BOX(recordDemoIsDir,
+                    @"Dismiss",
+                    nil,
+                    @"Cannot record demo.",
+                    @"The target file in the \"Record Demo:\" field is a directory.",
+                    NSWarningAlertStyle);
+}
+
+//
 // init
 //
 // Initialize members
@@ -105,55 +157,16 @@ static BOOL gSDLStarted;	// IOAN 20120616
       dontUndo = FALSE;
       
 		fileMan = [NSFileManager defaultManager];
-		iwadSet = [[NSMutableSet alloc] initWithCapacity:0];
+		iwadSet = [[NSMutableSet alloc] init];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
                    @"pke", @"zip", @"disk", nil];
 		iwadPopMenu = [[NSMenu alloc] initWithTitle:@"Choose IWAD"];
 		pwadArray = [[NSMutableArray alloc] initWithCapacity:0];
       userSet = [[NSMutableSet alloc] initWithCapacity:0];
-		
-		noIwadAlert = [[NSAlert alloc] init];
-		[noIwadAlert addButtonWithTitle:@"Choose IWAD"];
-		[noIwadAlert addButtonWithTitle:@"Cancel"];
-		[noIwadAlert setMessageText:@"No IWAD file prepared."];
-		[noIwadAlert setInformativeText:
-       @"You need to choose a main game WAD before playing Eternity."];
-		[noIwadAlert setAlertStyle:NSInformationalAlertStyle];
-		
-		badIwadAlert = [[NSAlert alloc] init];
-		[badIwadAlert addButtonWithTitle:@"Try Another"];
-		[badIwadAlert addButtonWithTitle:@"Cancel"];
-		[badIwadAlert setMessageText:@"Selected file is not a valid IWAD file."];
-		[badIwadAlert setInformativeText:
-       @"You cannot load patch WAD (PWAD) files," 
-		 " or the selected file may be corrupted or invalid. You need to load a "
-       "main WAD that comes shipped with the game."];
-		[badIwadAlert setAlertStyle:NSInformationalAlertStyle];
-		
-		nothingForGfsAlert = [[NSAlert alloc] init];
-		[nothingForGfsAlert addButtonWithTitle:@"OK"];
-		[nothingForGfsAlert setMessageText:
-       @"There are no files to list in a GFS."];
-		[nothingForGfsAlert setInformativeText:
-       @"A GFS needs to refer to an IWAD and/or to a set of add-on files."];
-		[nothingForGfsAlert setAlertStyle:NSInformationalAlertStyle];
       
-      overwriteDemoAlert = [[NSAlert alloc] init];
-      [overwriteDemoAlert addButtonWithTitle:@"Cancel Game"];
-      [overwriteDemoAlert addButtonWithTitle:@"Overwrite and Start"];
-      [overwriteDemoAlert setMessageText:@"Overwrite demo to be recorded?"];
-      [overwriteDemoAlert setInformativeText:@"The target file in the \"Record Demo:\" field already exists and will be overwritten if you proceed. Make sure not to lose valuable data."];
-      [overwriteDemoAlert setAlertStyle:NSCriticalAlertStyle];
+      [self createAlertBoxes];
       
-      recordDemoIsDir = [[NSAlert alloc] init];
-		[recordDemoIsDir addButtonWithTitle:@"Dismiss"];
-		[recordDemoIsDir setMessageText:
-       @"Cannot record demo."];
-		[recordDemoIsDir setInformativeText:
-       @"The target file in the \"Record Demo:\" field is a directory."];
-		[recordDemoIsDir setAlertStyle:NSWarningAlertStyle];
-		
 		param = [[ELCommandLineArray alloc] init];
 		basePath = [[NSMutableString alloc] init];
 		userPath = [[NSMutableString alloc] init];
@@ -214,8 +227,6 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	
 	// Set the pop-up button
 	[iwadPopUp setMenu:iwadPopMenu];
-
-
 	
 	
    // TODO: Allow file list view to accept Finder files
@@ -318,7 +329,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-	if (gCalledAppMainline)
+	if (calledAppMainline)
 		return NO;	// ignore this document, it's too late within the game
 
 	[self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
@@ -354,16 +365,15 @@ static BOOL gSDLStarted;	// IOAN 20120616
 {
 	if([notification object] != mainWindow)
 		return;
-	if(!gSDLStarted)
+	if(!calledAppMainline)
 		[self updateParameters:self];
 	
 	// Save GUI configurations
 	[self saveDefaults];	// FIXME: get user configurations into the preferences, 
                         // don't read them from bundle
-	if(!gSDLStarted)
-	{
+	if(!calledAppMainline)
 		[NSApp terminate:[self window]];
-	}
+
 }
 
 //
@@ -410,8 +420,8 @@ static BOOL gSDLStarted;	// IOAN 20120616
 -(void)taskEnded
 {
 	// remove last four parameters
-	gCalledAppMainline = FALSE;
-	gSDLStarted = NO;	// IOAN 20120616
+	calledAppMainline = FALSE;
+
 	[[self window] orderFront:nil];
 	
 	[[param argumentWithIdentifier:@"-base"] setEnabled:NO];
@@ -427,33 +437,18 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 // Everything is set, start the game.
 //
--(void)doLaunchGame:(id)sender
+-(void)doLaunchGameAs64Bit:(BOOL)x64flag
 {
 	[self updateParameters:self];	// Update parameters.
    // FIXME: do it in real-time
 	
 	// Add -base and user here
-   /*
-	ELCommandLineArgument *argBase, *argUser;
-	if(![param miscHasWord:@"-base"])
-	{
-		argBase = [ELCommandLineArgument argWithIdentifier:@"-base"];
-		[[argBase extraWords] addObject:basePath];
-		[param addArgument:argBase];
-	}
-	if(![param miscHasWord:@"-user"])
-	{
-		argUser = [ELCommandLineArgument argWithIdentifier:@"-user"];
-		[[argUser extraWords] addObject:userPath];
-		[param addArgument:argUser];
-	}
-   */
+
 	NSArray *deploy = [param deployArray];
 	// Start console
 	
-	
-	gCalledAppMainline = TRUE;
-	gSDLStarted = YES;	// IOAN 20120616
+	calledAppMainline = TRUE;
+
 	[[self window] orderOut:self];
 	
 	// IOAN 20130103: use Neil's PrBoom-Mac Launcher code
@@ -462,8 +457,17 @@ static BOOL gSDLStarted;	// IOAN 20120616
 	NSBundle *engineBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"Eternity.app" ofType:nil]];
 	
    [task setEnvironment:@{@"ETERNITYUSER":userPath, @"ETERNITYBASE":basePath}];
-	[task setLaunchPath:[engineBundle executablePath]];
-	[task setArguments:deploy];
+   NSString *exePath = [engineBundle executablePath];
+   if (!x64flag)
+   {
+      [task setLaunchPath:@"/usr/bin/arch"];
+      [task setArguments:[[NSArray arrayWithObjects:@"-32", exePath, nil] arrayByAddingObjectsFromArray:deploy]];
+   }
+   else
+   {
+      [task setLaunchPath:exePath];
+      [task setArguments:deploy];
+   }
 	
 	[console startLogging:task];
 	
@@ -482,7 +486,7 @@ static BOOL gSDLStarted;	// IOAN 20120616
 {
    if(returnCode == NSAlertSecondButtonReturn)
 	{
-      [self doLaunchGame:self];
+      [self doLaunchGameAs64Bit:*(BOOL *)contextInfo];
    }
 }
 
@@ -493,6 +497,12 @@ static BOOL gSDLStarted;	// IOAN 20120616
 //
 -(IBAction)launchGame:(id)sender
 {
+   static BOOL x64 = YES;
+   if (sender == runAs32BitMenuItem)
+      x64 = NO;
+   else
+      x64 = YES;
+   
 	if([iwadPopUp numberOfItems] < 1)
 	{
 		// No IWAD selected: look for a GFS anyway
@@ -523,13 +533,13 @@ iwadMightBe:
       }
       else
       {
-         [overwriteDemoAlert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(overwriteDemoDidEnd:returnCode:contextInfo:) contextInfo:nil];
+         [overwriteDemoAlert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(overwriteDemoDidEnd:returnCode:contextInfo:) contextInfo:&x64];
          
          return;
       }
    }
    
-   [self doLaunchGame:sender];
+   [self doLaunchGameAs64Bit:x64];
 }
 
 //
