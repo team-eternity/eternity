@@ -61,7 +61,6 @@
 		FA1F578A158BC552006F8063 /* inftrees.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5774158BC552006F8063 /* inftrees.c */; };
 		FA31940E15B9FC84001F82B9 /* e_gameprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */; };
 		FA601C6716961D9A00046D2D /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FA601C6616961D9A00046D2D /* SDLMain.m */; };
-		FA88983C1628C4660025048A /* in_stats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88983A1628C4660025048A /* in_stats.cpp */; };
 		FA889950162984C20025048A /* i_platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88994E162984C20025048A /* i_platform.cpp */; };
 		FA889951162984C20025048A /* i_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA88994F162984C20025048A /* i_video.cpp */; };
 		FAAC1890163DC8DE004791CB /* w_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAAC188C163DC8DE004791CB /* w_formats.cpp */; };
@@ -553,8 +552,6 @@
 		FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_gameprops.cpp; path = ../../e_gameprops.cpp; sourceTree = SOURCE_ROOT; };
 		FA601C6516961D9A00046D2D /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
 		FA601C6616961D9A00046D2D /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
-		FA88983A1628C4660025048A /* in_stats.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = in_stats.cpp; path = ../../in_stats.cpp; sourceTree = SOURCE_ROOT; };
-		FA88983B1628C4660025048A /* in_stats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = in_stats.h; path = ../../in_stats.h; sourceTree = SOURCE_ROOT; };
 		FA88984C1628C4DA0025048A /* z_auto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = z_auto.h; path = ../../z_auto.h; sourceTree = SOURCE_ROOT; };
 		FA88984D1628C5170025048A /* autopalette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = autopalette.h; path = ../../autopalette.h; sourceTree = SOURCE_ROOT; };
 		FA88994E162984C20025048A /* i_platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_platform.cpp; path = ../../hal/i_platform.cpp; sourceTree = SOURCE_ROOT; };
@@ -1287,8 +1284,6 @@
 				FACACB461652EE1E0091AF2E /* hi_stuff.h */,
 				FABF5CF4158BF42800C49E93 /* in_lude.cpp */,
 				FACACB471652EE360091AF2E /* in_lude.h */,
-				FA88983A1628C4660025048A /* in_stats.cpp */,
-				FA88983B1628C4660025048A /* in_stats.h */,
 				FABF5D56158BF42800C49E93 /* wi_stuff.cpp */,
 				FA16D46D15E01E96002318D1 /* wi_stuff.h */,
 			);
@@ -2050,7 +2045,6 @@
 				FA31940E15B9FC84001F82B9 /* e_gameprops.cpp in Sources */,
 				FA16D39915E01A3A002318D1 /* acs_acse.cpp in Sources */,
 				FA16D3A015E01B82002318D1 /* d_files.cpp in Sources */,
-				FA88983C1628C4660025048A /* in_stats.cpp in Sources */,
 				FA889950162984C20025048A /* i_platform.cpp in Sources */,
 				FA889951162984C20025048A /* i_video.cpp in Sources */,
 				FAAC1890163DC8DE004791CB /* w_formats.cpp in Sources */,
