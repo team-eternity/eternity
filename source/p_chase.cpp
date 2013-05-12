@@ -486,9 +486,15 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
        vitr++)
    {
       vertex_t *v = *vitr;
+      camsightparams_t camparams;
 
-      if(CAM_CheckSight(v->x, v->y, sec->floorheight, 41*FRACUNIT,
-                        target->x, target->y, target->z, target->height))
+      camparams.cx      = v->x;
+      camparams.cy      = v->y;
+      camparams.cz      = sec->floorheight;
+      camparams.cheight = 41 * FRACUNIT;
+      camparams.setTargetMobj(target);
+
+      if(CAM_CheckSight(camparams))
       {
 
          angle_t ang = P_PointToAngle(v->x, v->y, target->x, target->y);
@@ -574,9 +580,11 @@ bool P_FollowCamTicker()
    P_setFollowPitch();
 
    // still visible?
-   return CAM_CheckSight(followcam.x, followcam.y, followcam.z, 41*FRACUNIT,
-                         followtarget->x, followtarget->y, followtarget->z,
-                         followtarget->height);
+   camsightparams_t camparams;
+   camparams.setCamera(followcam, 41 * FRACUNIT);
+   camparams.setTargetMobj(followtarget);
+
+   return CAM_CheckSight(camparams);
 }
 
 #if 0

@@ -57,15 +57,22 @@
 
 #include "z_zone.h"
 
+#include "cam_sight.h"
 #include "e_exdata.h"
 #include "m_collection.h"
 #include "m_fixed.h"
+#include "p_chase.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
+
+//=============================================================================
+//
+// Structures
+//
 
 struct camsight_t
 {
@@ -90,6 +97,55 @@ struct camsight_t
    byte *validlines;
    byte *validpolys;
 };
+
+//=============================================================================
+//
+// Camera Sight Parameter Methods
+//
+
+//
+// camsightparams_t::setCamera
+//
+// Set a camera object as the camera point.
+//
+void camsightparams_t::setCamera(const camera_t &camera, fixed_t height)
+{
+   cx      = camera.x;
+   cy      = camera.y;
+   cz      = camera.z;
+   cheight = height;
+}
+
+//
+// camsightparams_t::setLookerMobj
+//
+// Set an Mobj as the camera point.
+//
+void camsightparams_t::setLookerMobj(const Mobj *mo)
+{
+   cx      = mo->x;
+   cy      = mo->y;
+   cz      = mo->z;
+   cheight = mo->height;
+}
+
+//
+// camsightparams_t::setTargetMobj
+//
+// Set an Mobj as the target point.
+//
+void camsightparams_t::setTargetMobj(const Mobj *mo)
+{
+   tx      = mo->x;
+   ty      = mo->y;
+   tz      = mo->z;
+   theight = mo->height;
+}
+
+//=============================================================================
+//
+// Sight Checking
+//
 
 //
 // CAM_LineOpening
@@ -508,8 +564,7 @@ static bool CAM_SightPathTraverse(camsight_t &cam)
 // Returns true if a straight line between the camera location and a
 // thing's coordinates is unobstructed.
 //
-bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
-                    fixed_t tx, fixed_t ty, fixed_t tz, fixed_t theight)
+bool CAM_CheckSight(const camsightparams_t &params)
 {
    sector_t *csec, *tsec;
    int s1, s2, pnum;
@@ -518,8 +573,8 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
    //
    // check for trivial rejection
    //
-   s1   = (csec = R_PointInSubsector(cx, cy)->sector) - sectors;
-   s2   = (tsec = R_PointInSubsector(tx, ty)->sector) - sectors;
+   s1   = (csec = R_PointInSubsector(params.cx, params.cy)->sector) - sectors;
+   s2   = (tsec = R_PointInSubsector(params.tx, params.ty)->sector) - sectors;
    pnum = s1 * numsectors + s2;
 	
    if(!(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
@@ -528,28 +583,28 @@ bool CAM_CheckSight(fixed_t cx, fixed_t cy, fixed_t cz, fixed_t cheight,
 
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
-          ((cz + cheight <= sectors[csec->heightsec].floorheight &&
-            tz >= sectors[csec->heightsec].floorheight) ||
-           (cz >= sectors[csec->heightsec].ceilingheight &&
-            tz + cheight <= sectors[csec->heightsec].ceilingheight)))
+          ((params.cz + params.cheight <= sectors[csec->heightsec].floorheight &&
+            params.tz >= sectors[csec->heightsec].floorheight) ||
+           (params.cz >= sectors[csec->heightsec].ceilingheight &&
+            params.tz + params.cheight <= sectors[csec->heightsec].ceilingheight)))
          ||
          (tsec->heightsec != -1 &&
-          ((tz + theight <= sectors[tsec->heightsec].floorheight &&
-            cz >= sectors[tsec->heightsec].floorheight) ||
-           (tz >= sectors[tsec->heightsec].ceilingheight &&
-            cz + theight <= sectors[tsec->heightsec].ceilingheight))))
+          ((params.tz + params.theight <= sectors[tsec->heightsec].floorheight &&
+            params.cz >= sectors[tsec->heightsec].floorheight) ||
+           (params.tz >= sectors[tsec->heightsec].ceilingheight &&
+            params.cz + params.theight <= sectors[tsec->heightsec].ceilingheight))))
          return false;
 
       //
       // check precisely
       //
-      newCam.cx          = cx;
-      newCam.cy          = cy;
-      newCam.tx          = tx;
-      newCam.ty          = ty;
-      newCam.sightzstart = cz + cheight - (cheight >> 2);
-      newCam.bottomslope = tz - newCam.sightzstart;
-      newCam.topslope    = newCam.bottomslope + theight;
+      newCam.cx          = params.cx;
+      newCam.cy          = params.cy;
+      newCam.tx          = params.tx;
+      newCam.ty          = params.ty;
+      newCam.sightzstart = params.cz + params.cheight - (params.cheight >> 2);
+      newCam.bottomslope = params.tz - newCam.sightzstart;
+      newCam.topslope    = newCam.bottomslope + params.theight;
       newCam.validlines  = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       newCam.validpolys  = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
 
