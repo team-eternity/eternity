@@ -31,6 +31,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include "a_small.h"
 #include "acs_intr.h"
 #include "d_event.h"
