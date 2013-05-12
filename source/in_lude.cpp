@@ -39,7 +39,6 @@
 #include "e_things.h" 
 #include "g_game.h"
 #include "in_lude.h"
-#include "in_stats.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
