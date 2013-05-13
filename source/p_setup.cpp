@@ -1902,9 +1902,9 @@ void P_GroupLines(void)
       //    except where playability is a concern (ie. in deathmatch).
 
       // set the degenMobj to the middle of the bounding box
-      sector->soundorg.x = sector->blockbox[BOXRIGHT] / 2 + 
-                           sector->blockbox[BOXLEFT] / 2;
-      sector->soundorg.y = sector->blockbox[BOXTOP] / 2 + 
+      sector->soundorg.x = sector->blockbox[BOXRIGHT ] / 2 + 
+                           sector->blockbox[BOXLEFT  ] / 2;
+      sector->soundorg.y = sector->blockbox[BOXTOP   ] / 2 + 
                            sector->blockbox[BOXBOTTOM] / 2;
       // SoM: same for group id.
       // haleyjd: note - groups have not been built yet, so this is just for

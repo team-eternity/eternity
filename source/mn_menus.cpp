@@ -1352,7 +1352,6 @@ void MN_LoadGameDrawer();
 
 static menuitem_t mn_loadgame_items[] =
 {
-   //{it_title,  "Load Game", NULL,         "M_LGTTL"},
    {it_runcmd, "save slot 0",       "mn_load 0"},
    {it_runcmd, "save slot 1",       "mn_load 1"},
    {it_runcmd, "save slot 2",       "mn_load 2"},
@@ -1369,7 +1368,7 @@ menu_t menu_loadgame =
    mn_loadgame_items,
    NULL, NULL, NULL,                 // pages
    80, 44,                           // x, y
-   2,                                // starting slot
+   0,                                // starting slot
    mf_skullmenu | mf_emulated,       // skull menu
    MN_LoadGameDrawer,
 };
@@ -1510,7 +1509,7 @@ menu_t menu_savegame =
    mn_savegame_items,
    NULL, NULL, NULL,                 // pages
    80, 44,                           // x, y
-   2,                                // starting slot
+   0,                                // starting slot
    mf_skullmenu | mf_emulated,       // skull menu
    MN_SaveGameDrawer,
 };
