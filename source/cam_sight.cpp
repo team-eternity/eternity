@@ -81,11 +81,15 @@ struct camsight_t
    fixed_t cy;
    fixed_t tx;          // target coordinates
    fixed_t ty;
+   fixed_t startcx;     // immutable copy of starting coordinates
+   fixed_t startcy;
+   fixed_t starttx;     // immutable copy of dest coordinates
+   fixed_t startty;
    fixed_t sightzstart; // eye z of looker
    fixed_t topslope;    // slope to top of target
    fixed_t bottomslope; // slope to bottom of target
 
-   divline_t trace;
+   divline_t trace;     // for line crossing tests
 
    fixed_t opentop;     // top of linedef silhouette
    fixed_t openbottom;  // bottom of linedef silhouette
@@ -617,6 +621,12 @@ bool CAM_CheckSight(const camsightparams_t &params)
       newCam.topslope    = newCam.bottomslope + params.theight;
       newCam.validlines  = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       newCam.validpolys  = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
+
+      // save starting camera and target coordinates
+      newCam.startcx = newCam.cx;
+      newCam.startcy = newCam.cy;
+      newCam.starttx = newCam.tx;
+      newCam.startty = newCam.ty;
 
       result = CAM_SightPathTraverse(newCam);
 

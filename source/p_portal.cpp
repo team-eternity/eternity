@@ -241,6 +241,7 @@ void P_GatherSectors(sector_t *from, int groupid)
 //
 // This function returns a linkoffset_t object which contains the map-space
 // offset to get from the startgroup to the targetgroup.
+//
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
    if(!linktable)
@@ -311,6 +312,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 // P_CheckLinkedPortal
 //
 // This function performs various consistency and validation checks.
+//
 static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
@@ -389,6 +391,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // This function generates linkoffset_t objects for every group to every other 
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
+//
 static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
                           int from)
 {
@@ -464,7 +467,7 @@ static void P_GlobalPortalStateCheck()
 //
 // P_BuildLinkTable
 //
-bool P_BuildLinkTable(void)
+bool P_BuildLinkTable()
 {
    int i, p;
    sector_t *sec;
@@ -564,7 +567,7 @@ bool P_BuildLinkTable(void)
 //
 // Currently just clears each group for every other group.
 //
-void P_LinkRejectTable(void)
+void P_LinkRejectTable()
 {
    int i, s, p, q;
    sector_t **list, **list2;
