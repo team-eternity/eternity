@@ -34,14 +34,16 @@ class  Mobj;
 
 struct camsightparams_t
 {
-   fixed_t cx;      // camera (or "looker") coordinates
+   fixed_t cx;       // camera (or "looker") coordinates
    fixed_t cy;
    fixed_t cz;
-   fixed_t tx;      // target coordinates
+   fixed_t tx;       // target coordinates
    fixed_t ty;
    fixed_t tz;
-   fixed_t cheight; // top height of camera above cz
-   fixed_t theight; // top height of target above cz
+   fixed_t cheight;  // top height of camera above cz
+   fixed_t theight;  // top height of target above cz
+   int     cgroupid; // camera portal groupid
+   int     tgroupid; // target portal groupid
 
    void setCamera(const camera_t &camera, fixed_t height);
    void setLookerMobj(const Mobj *mo);

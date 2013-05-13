@@ -19,7 +19,8 @@
 //
 //--------------------------------------------------------------------------
 //
-// For portions of code under the ZDoom Source Distribution License:
+// For portions of code explicitly marked as being under the 
+// ZDoom Source Distribution License only:
 //
 // Copyright 1998-2012 Randy Heit  All rights reserved.
 //
@@ -96,6 +97,10 @@ struct camsight_t
    // linedef validcount substitute
    byte *validlines;
    byte *validpolys;
+
+   // portal traversal information
+   int fromid; // current source group id
+   int toid;   // group id of the target
 };
 
 //=============================================================================
@@ -110,10 +115,11 @@ struct camsight_t
 //
 void camsightparams_t::setCamera(const camera_t &camera, fixed_t height)
 {
-   cx      = camera.x;
-   cy      = camera.y;
-   cz      = camera.z;
-   cheight = height;
+   cx       = camera.x;
+   cy       = camera.y;
+   cz       = camera.z;
+   cheight  = height;
+   cgroupid = camera.groupid;
 }
 
 //
@@ -123,10 +129,11 @@ void camsightparams_t::setCamera(const camera_t &camera, fixed_t height)
 //
 void camsightparams_t::setLookerMobj(const Mobj *mo)
 {
-   cx      = mo->x;
-   cy      = mo->y;
-   cz      = mo->z;
-   cheight = mo->height;
+   cx       = mo->x;
+   cy       = mo->y;
+   cz       = mo->z;
+   cheight  = mo->height;
+   cgroupid = mo->groupid;
 }
 
 //
@@ -136,10 +143,11 @@ void camsightparams_t::setLookerMobj(const Mobj *mo)
 //
 void camsightparams_t::setTargetMobj(const Mobj *mo)
 {
-   tx      = mo->x;
-   ty      = mo->y;
-   tz      = mo->z;
-   theight = mo->height;
+   tx       = mo->x;
+   ty       = mo->y;
+   tz       = mo->z;
+   theight  = mo->height;
+   tgroupid = mo->groupid;
 }
 
 //=============================================================================
@@ -602,6 +610,8 @@ bool CAM_CheckSight(const camsightparams_t &params)
       newCam.cy          = params.cy;
       newCam.tx          = params.tx;
       newCam.ty          = params.ty;
+      newCam.fromid      = params.cgroupid;
+      newCam.toid        = params.tgroupid;
       newCam.sightzstart = params.cz + params.cheight - (params.cheight >> 2);
       newCam.bottomslope = params.tz - newCam.sightzstart;
       newCam.topslope    = newCam.bottomslope + params.theight;

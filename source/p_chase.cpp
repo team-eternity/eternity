@@ -488,15 +488,15 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
       vertex_t *v = *vitr;
       camsightparams_t camparams;
 
-      camparams.cx      = v->x;
-      camparams.cy      = v->y;
-      camparams.cz      = sec->floorheight;
-      camparams.cheight = 41 * FRACUNIT;
+      camparams.cx       = v->x;
+      camparams.cy       = v->y;
+      camparams.cz       = sec->floorheight;
+      camparams.cheight  = 41 * FRACUNIT;
+      camparams.cgroupid = sec->groupid;
       camparams.setTargetMobj(target);
 
       if(CAM_CheckSight(camparams))
       {
-
          angle_t ang = P_PointToAngle(v->x, v->y, target->x, target->y);
 
          // Push coordinates in slightly toward the target
