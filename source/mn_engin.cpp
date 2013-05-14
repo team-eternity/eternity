@@ -497,7 +497,9 @@ static void MN_genericDescription(menuitem_t *item,
    // write description
    if(item->flags & MENUITEM_BIGFONT)
    {
-      V_FontWriteText(menu_font_big, item->description, x, y, &subscreen43);
+      V_FontWriteTextColored(menu_font_big, item->description, 
+                             GameModeInfo->bigFontItemColor, x, y, 
+                             &subscreen43);
       *item_height = V_FontStringHeight(menu_font_big, item->description);
    }
    else
@@ -1926,12 +1928,12 @@ void MN_StartMenu(menu_t *menu)
 
    // haleyjd 05/09/13: perform initialization tasks on the menu
    MN_initializeMenu(current_menu);
-   
+
    menu_error_time = 0;      // clear error message
 
    // haleyjd 11/12/09: custom menu open actions
    if(current_menu->open)
-      current_menu->open();
+      current_menu->open(current_menu);
 }
 
 //

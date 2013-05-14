@@ -420,8 +420,9 @@ char *w_masterlevelsdirname;
 int   inmanageddir;          // non-zero if we are playing a managed dir level
 
 // statics
-static mndir_t masterlevelsdir; // menu file loader directory structure
-static bool masterlevelsenum;   // if true, the folder has been enumerated
+static mndir_t masterlevelsdir;      // menu file loader directory structure
+static bool masterlevelsenum;        // if true, the folder has been enumerated
+static int  masterlevelsskill = -1;  // skill level
 
 //
 // W_loadMasterLevelWad
@@ -493,9 +494,14 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
       return;
    }
 
+   // Just in case. We could get here by the user manually using the
+   // w_startlevel command, which doesn't faff about with skills.
+   if(masterlevelsskill == -1)
+      masterlevelsskill = defaultskill - 1;
+
    // Got one. Start playing it!
    MN_ClearMenus();
-   G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), mapname, dir);
+   G_DeferedInitNewFromDir((skill_t)masterlevelsskill, mapname, dir);
 
    // set inmanageddir - this is even saved in savegames :)
    inmanageddir = MD_MASTERLEVELS;
@@ -541,8 +547,10 @@ void W_EnumerateMasterLevels(bool forceRefresh)
 // If allowexit is false, the menu filebox widget will not allow
 // an immediate exit via menu_toggle or menu_previous actions.
 //
-void W_DoMasterLevels(bool allowexit)
+void W_DoMasterLevels(bool allowexit, int skill)
 {
+   masterlevelsskill = skill;
+
    W_EnumerateMasterLevels(false);
 
    if(!masterlevelsenum)
@@ -591,11 +599,11 @@ static WadDirectory *W_loadNR4TL()
 }
 
 //
-// W_doNR4TLStart
+// W_DoNR4TLStart
 //
 // Command handling for starting the NR4TL episode.
 //
-void W_DoNR4TLStart()
+void W_DoNR4TLStart(int skill)
 {
    WadDirectory *dir = NULL;
 
@@ -614,7 +622,7 @@ void W_DoNR4TLStart()
 
    // Start playing it!
    MN_ClearMenus();
-   G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), "MAP01", dir);
+   G_DeferedInitNewFromDir((skill_t)(skill), "MAP01", dir);
 
    // set inmanageddir
    inmanageddir = MD_NR4TL;
@@ -679,7 +687,11 @@ void W_InitManagedMission(int mission)
 //
 CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 {
-   W_DoMasterLevels(true);
+   int skill = -1;
+   if(Console.argc >= 1)
+      skill = Console.argv[0]->toInt();
+
+   W_DoMasterLevels(true, skill);
 }
 
 //
@@ -709,7 +721,12 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
 //
 CONSOLE_COMMAND(w_playnorest, 0)
 {
-   W_DoNR4TLStart();
+   int skill = defaultskill - 1;
+
+   if(Console.argc >= 1)
+      skill = Console.argv[0]->toInt();
+
+   W_DoNR4TLStart(skill);
 }
 
 //

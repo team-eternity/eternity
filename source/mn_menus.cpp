@@ -78,16 +78,14 @@
 
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
+extern menu_t menu_newmission;
 extern menu_t menu_main;
 extern menu_t menu_episode;
 extern menu_t menu_d2episode;
 extern menu_t menu_startmap;
 
-// Blocky mode, has default, 0 = high, 1 = normal
-//int     detailLevel;    obsolete -- killough
 int screenSize;      // screen size
 
-char *mn_phonenum;           // phone number to dial
 char *mn_demoname;           // demo to play
 char *mn_wadname;            // wad to load
 
@@ -103,15 +101,15 @@ char *mn_start_mapname;
 // haleyjd: keep track of valid save slots
 bool savegamepresent[SAVESLOTS];
 
-static void MN_PatchOldMainMenu(void);
-static void MN_InitCustomMenu(void);
-static void MN_InitSearchStr(void);
+static void MN_PatchOldMainMenu();
+static void MN_InitCustomMenu();
+static void MN_InitSearchStr();
+static bool MN_tweakD2EpisodeMenu();
 
-void MN_InitMenus(void)
+void MN_InitMenus()
 {
    int i; // haleyjd
    
-   mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
    mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
    mn_wadname  = Z_Strdup("", PU_STATIC, 0);
    mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
@@ -271,7 +269,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       }
       else
 #endif
-         if(bfgedition && (w_norestpath && *w_norestpath))
+         if(MN_tweakD2EpisodeMenu())
             MN_StartMenu(&menu_d2episode);
          else
             MN_StartMenu(&menu_newgame);
@@ -376,10 +374,68 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
 // BFG Edition No Rest for the Living Special Support
 //
 
+static int mn_missionNo;
+
+// Skill level items for missions
+static menuitem_t mn_newmission_items[] =
+{
+   { it_runcmd, "I'm too young to die", "mn_startmission 0", "M_JKILL" },
+   { it_runcmd, "Hey, not too rough",   "mn_startmission 1", "M_ROUGH" },
+   { it_runcmd, "Hurt me plenty.",      "mn_startmission 2", "M_HURT"  },
+   { it_runcmd, "Ultra-Violence",       "mn_startmission 3", "M_ULTRA" },
+   { it_runcmd, "Nightmare!",           "mn_startmission 4", "M_NMARE" },
+   { it_end }
+};
+
+CONSOLE_COMMAND(mn_startmission, cf_hidden|cf_notnet)
+{
+   if(Console.argc < 1)
+      return;
+   int skill = Console.argv[0]->toInt();
+
+   switch(mn_missionNo)
+   {
+   case 1: // NR4TL
+      W_DoNR4TLStart(skill);
+      break;
+   case 2: // Master Levels
+      W_DoMasterLevels(true, skill);
+      break;
+   default:
+      C_Printf(FC_ERROR "Unknown mission number %d\a\n", mn_missionNo);
+      break;
+   }
+}
+
+CONSOLE_COMMAND(mn_mission, cf_hidden|cf_notnet)
+{
+   if(Console.argc < 1)
+      return;
+   mn_missionNo = Console.argv[0]->toInt();
+   MN_StartMenu(&menu_newmission);
+}
+
+static void MN_D2EpisodeDrawer()
+{
+   V_DrawPatch(54, 38, &subscreen43, 
+               PatchLoader::CacheName(wGlobalDir, "M_BFGEPI", PU_CACHE));
+}
+
+static menuitem_t mn_item_nr4tl =
+{
+   it_runcmd, "No Rest for the Living", "mn_mission 1",  "M_BFGEP2"
+};
+
+static menuitem_t mn_item_masterlevs =
+{
+   it_runcmd, "Master Levels",          "mn_mission 2",  "M_BFGEP3"
+};
+
 static menuitem_t mn_dm2ep_items[] =
 {
-   { it_runcmd, "Hell on Earth",          "mn_episode 1",  "M_EPI1" },
-   { it_runcmd, "No Rest for the Living", "mn_episode 2",  "M_EPI2" },
+   { it_runcmd, "Hell on Earth", "mn_episode 1", "M_BFGEP1" },
+   { it_end }, // reserved
+   { it_end }, // reserved
    { it_end }
 };
 
@@ -390,8 +446,38 @@ menu_t menu_d2episode =
    48, 63,                     // x, y offsets
    0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
-   MN_EpisodeDrawer            // drawer
+   MN_D2EpisodeDrawer,         // drawer
 };
+
+//
+// MN_tweakD2EpisodeMenu
+//
+// haleyjd 05/14/13: We build the managed mission pack selection menu based on
+// the available expansions. Returns true if any expansions were added.
+//
+static bool MN_tweakD2EpisodeMenu()
+{
+   int curitem = 1;
+
+   // start out with nothing enabled
+   menu_d2episode.menuitems[1].type = it_end;
+   menu_d2episode.menuitems[2].type = it_end;
+
+   if(w_norestpath && *w_norestpath) // Have NR4TL?
+   {
+      menu_d2episode.menuitems[curitem] = mn_item_nr4tl;
+      ++curitem;
+   }
+
+   if(w_masterlevelsdirname && *w_masterlevelsdirname) // Have Master levels?
+   {
+      menu_d2episode.menuitems[curitem] = mn_item_masterlevs;
+      ++curitem;
+   }
+
+   // If none are configured, we're not going to even show this menu.
+   return (curitem > 1);
+}
 
 //=============================================================================
 //
@@ -403,12 +489,10 @@ menu_t menu_d2episode =
 //
 // haleyjd 11/12/09: special initialization method for the newgame menu.
 //
-static void MN_openNewGameMenu(void)
+static void MN_openNewGameMenu(menu_t *menu)
 {
-   extern menu_t menu_newgame; // actually just right below...
-   
    // start on defaultskill setting
-   menu_newgame.selected = defaultskill - 1;
+   menu->selected = defaultskill - 1;
 }
 
 //
@@ -424,11 +508,11 @@ static void MN_DrawNewGame()
 
 static menuitem_t mn_newgame_items[] =
 {
-   { it_runcmd, "i'm too young to die", "newgame 0", "M_JKILL" },
-   { it_runcmd, "hey, not too rough",   "newgame 1", "M_ROUGH" },
-   { it_runcmd, "hurt me plenty.",      "newgame 2", "M_HURT"  },
-   { it_runcmd, "ultra-violence",       "newgame 3", "M_ULTRA" },
-   { it_runcmd, "nightmare!",           "newgame 4", "M_NMARE" },
+   { it_runcmd, "I'm too young to die", "newgame 0", "M_JKILL" },
+   { it_runcmd, "Hey, not too rough",   "newgame 1", "M_ROUGH" },
+   { it_runcmd, "Hurt me plenty.",      "newgame 2", "M_HURT"  },
+   { it_runcmd, "Ultra-Violence",       "newgame 3", "M_ULTRA" },
+   { it_runcmd, "Nightmare!",           "newgame 4", "M_NMARE" },
    { it_end }
 };
 
@@ -445,7 +529,20 @@ menu_t menu_newgame =
    MN_openNewGameMenu, // open method
 };
 
-static void MN_DoNightmare(void)
+menu_t menu_newmission =
+{
+   mn_newmission_items,      // items - see above
+   NULL, NULL, NULL,         // pages
+   48, 63,                   // x, y
+   0,                        // starting item
+   mf_skullmenu|mf_emulated, // flags
+   MN_DrawNewGame,           // drawer
+   NULL, NULL,               // toc
+   0,                        // gap override
+   MN_openNewGameMenu,       // open method
+};
+
+static void MN_DoNightmare()
 {
    // haleyjd 05/14/06: check for mn_episode_override
    if(mn_episode_override)
@@ -463,12 +560,9 @@ static void MN_DoNightmare(void)
    else
    {
       // start on first level of selected episode
-      if(bfgedition && start_episode == 2)
-         W_DoNR4TLStart();
-      else
-         G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
+      G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   
+
    MN_ClearMenus();
 }
 
@@ -505,10 +599,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    else
    {
       // start on first level of selected episode
-      if(bfgedition && start_episode == 2)
-         W_DoNR4TLStart();
-      else
-         G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
+      G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    
    MN_ClearMenus();

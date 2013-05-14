@@ -323,6 +323,7 @@ typedef struct gamemodeinfo_s
    int variableColor;            // color of variable text
    int titleColor;               // color of title strings
    int infoColor;                // color of it_info items
+   int bigFontItemColor;         // color of selectable items using big font
    int menuOffset;               // an amount to subtract from menu y coords
 
    // border stuff

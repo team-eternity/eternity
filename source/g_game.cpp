@@ -1588,7 +1588,7 @@ static void G_DoWorldDone(void)
       {
          gameaction = ga_nothing;
          inmanageddir = MD_NONE;
-         W_DoMasterLevels(false);
+         W_DoMasterLevels(false, gameskill);
          return;
       }
    }

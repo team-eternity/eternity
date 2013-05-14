@@ -140,7 +140,7 @@ struct menu_t
    
    int gap_override;              // haleyjd 10/09/05: override gap size
 
-   void (*open)(void);            // haleyjd 11/12/09: special open menu function
+   void (*open)(menu_t *menu);    // haleyjd 11/12/09: special open menu function
 
    // internal fields
    char name[33];                 // haleyjd 03/14/06: for dynamic menus
