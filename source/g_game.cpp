@@ -3114,7 +3114,7 @@ byte *G_ReadOptions(byte *demoptr)
 //
 // haleyjd 02/21/10: Configure everything to run for an old demo.
 //
-void G_SetOldDemoOptions(void)
+void G_SetOldDemoOptions()
 {
    int i;
 
@@ -3161,7 +3161,7 @@ void G_SetOldDemoOptions(void)
 //
 // haleyjd 02/21/10: Support recording of vanilla demos.
 //
-static void G_BeginRecordingOld(void)
+static void G_BeginRecordingOld()
 {
    int i;
 
@@ -3203,7 +3203,7 @@ static void G_BeginRecordingOld(void)
 */
 // NETCODE_FIXME -- DEMO_FIXME: Yet more demo writing.
 
-void G_BeginRecording(void)
+void G_BeginRecording()
 {
    int i;
 
@@ -3324,7 +3324,7 @@ void G_TimeDemo(const char *name, bool showmenu)
 // Called after a death or level completion to allow demos to be cleaned up
 // Returns true if a new demo loop action will take place
 //
-bool G_CheckDemoStatus(void)
+bool G_CheckDemoStatus()
 {
    if(demorecording)
    {
@@ -3376,7 +3376,7 @@ bool G_CheckDemoStatus(void)
    return false;
 }
 
-void G_StopDemo(void)
+void G_StopDemo()
 {
    extern bool advancedemo;
    

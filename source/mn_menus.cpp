@@ -287,7 +287,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
 // menu item to quit doom:
 // pop up a quit message as in the original
 
-void MN_QuitDoom(void)
+void MN_QuitDoom()
 {
    int quitmsgnum;
    char quitmsg[128];
@@ -387,6 +387,13 @@ static menuitem_t mn_newmission_items[] =
    { it_end }
 };
 
+//
+// mn_startmission
+//
+// Console command to start a managed mission pack from the menus.
+// Skill is provided as a parameter; the mission pack number was
+// decided earlier by mn_mission.
+//
 CONSOLE_COMMAND(mn_startmission, cf_hidden|cf_notnet)
 {
    if(Console.argc < 1)
@@ -407,6 +414,12 @@ CONSOLE_COMMAND(mn_startmission, cf_hidden|cf_notnet)
    }
 }
 
+//
+// mn_mission
+//
+// Managed mission pack selection command for the menus. Remember the
+// mission number chosen, for mn_startmission on the next menu.
+//
 CONSOLE_COMMAND(mn_mission, cf_hidden|cf_notnet)
 {
    if(Console.argc < 1)
