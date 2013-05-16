@@ -372,6 +372,11 @@ static void D_parseMetaData(const char *metatext, int mission)
    const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
    int partime = 0, musicnum = 0, index = 0;
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
+   const char *intername = "INTERPIC";
+
+   // Normal doom2.wad doesn't have DMENUPIC
+   if(W_CheckNumForName("DMENUPIC") >= 0)
+      intername = "DMENUPIC";
    
    // get first line, which is an episode id
    D_metaGetLine(buffer, metatext, &index);
@@ -423,7 +428,7 @@ static void D_parseMetaData(const char *metatext, int mission)
                           levelnum == exitreturn - 1 ? secretlevel : 0,
                           levelnum == secretlevel - 1, 
                           (levelnum == secretlevel - 1) ? endtext : NULL,
-                          mission, "DMENUPIC");
+                          mission, intername);
          break;
       }
       ++linenum;
