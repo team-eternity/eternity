@@ -84,7 +84,7 @@
 // Ultimate DOOM and DOOM II have a suitable graphic in the INTERPIC.
 #define CONBACK_DEFAULT "TITLEPIC"
 #define CONBACK_COMRET  "INTERPIC"
-#define CONBACK_DISK    "DMENUPIC"
+#define CONBACK_DISK    "BFGTITLE"
 #define CONBACK_HERETIC "TITLE" 
 
 // Version names
