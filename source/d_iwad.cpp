@@ -374,8 +374,7 @@ static void D_parseMetaData(const char *metatext, int mission)
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    const char *intername = "INTERPIC";
 
-   // Normal doom2.wad doesn't have DMENUPIC
-   if(W_CheckNumForName("DMENUPIC") >= 0)
+   if(GameModeInfo->missionInfo->id == pack_disk)
       intername = "DMENUPIC";
    
    // get first line, which is an episode id
