@@ -725,7 +725,7 @@ void G_SetWeapPref(int prefnum, int newvalue)
 
 const char *weapon_str[NUMWEAPONS] =
 {"fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
- "bfg", "chainsaw", "double shotgun"};
+ "bfg", "chainsaw", "super shotgun"};
 
 void G_WeapPrefHandler(void)
 {

@@ -59,8 +59,13 @@
 const char *yesno[] = { "no",  "yes" };
 const char *onoff[] = { "off", "on"  };
 
-const char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
-                            "gold","sea","black","purple","vomit", "pink", "cream","white"};
+const char *colournames[] = 
+{ 
+   "green",  "indigo", "brown",  "red", 
+   "tomato", "dirt",   "blue",   "gold",
+   "sea",    "black",  "purple", "orange", 
+   "pink",   "cream",  "white"
+};
 
 const char *textcolours[]=
 {
@@ -87,7 +92,7 @@ const char *skills[]=
 
 const char *bfgtypestr[5] = 
 { 
-   "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"
+   "bfg9000", "press release", "bfg11k", "bouncing", "plasma burst"
 };
 const char *dmstr[] = { "single", "coop", "deathmatch" };
 
