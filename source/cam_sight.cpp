@@ -68,6 +68,7 @@
 #include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 
 //=============================================================================
@@ -81,10 +82,6 @@ struct camsight_t
    fixed_t cy;
    fixed_t tx;          // target coordinates
    fixed_t ty;
-   fixed_t startcx;     // immutable copy of starting coordinates
-   fixed_t startcy;
-   fixed_t starttx;     // immutable copy of dest coordinates
-   fixed_t startty;
    fixed_t sightzstart; // eye z of looker
    fixed_t topslope;    // slope to top of target
    fixed_t bottomslope; // slope to bottom of target
@@ -103,8 +100,14 @@ struct camsight_t
    byte *validpolys;
 
    // portal traversal information
-   int fromid; // current source group id
-   int toid;   // group id of the target
+   int  fromid;        // current source group id
+   int  toid;          // group id of the target
+   bool hitpblock;     // traversed a block with a line portal
+   bool portalresult;  // result from portal recursion
+   bool portalexit;    // if true, returned from portal
+
+   // pointer to invocation parameters
+   const camsightparams_t *params;
 };
 
 //=============================================================================
@@ -232,6 +235,49 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
    if(cam.topslope <= cam.bottomslope)
       return false; // stop
 
+   // have we hit a portal line?
+   if(li->pflags & PS_PASSABLE)
+   {
+      camsightparams_t params;
+      int newfromid = li->portal->data.link.toid;
+
+      if(newfromid == cam.fromid) // not taking us anywhere...
+         return true;
+
+      const camsightparams_t *prev = cam.params->prev;
+      while(prev)
+      {
+         // we are trying to walk backward?
+         if(prev->cgroupid == newfromid)
+            return true; // ignore this line
+         prev = prev->prev;
+      }
+
+      linkoffset_t *link = P_GetLinkOffset(cam.fromid, cam.toid);
+
+      params.cx           = cam.params->cx + FixedMul(cam.trace.dx, in->frac);
+      params.cy           = cam.params->cy + FixedMul(cam.trace.dy, in->frac);
+      params.cz           = cam.params->cz;
+      params.cheight      = cam.params->cheight;
+      params.tx           = cam.params->tx;
+      params.ty           = cam.params->ty;
+      params.tz           = cam.params->tz;
+      params.theight      = cam.params->theight;
+      params.cgroupid     = newfromid;
+      params.tgroupid     = cam.toid;
+      params.prev         = cam.params;
+
+      if(link)
+      {
+         params.cx -= link->x;
+         params.cy -= link->y;
+      }
+
+      cam.portalresult = CAM_CheckSight(params);
+      cam.portalexit   = true;
+      return false;    // break out      
+   }
+
    return true; // keep going
 }
 
@@ -255,13 +301,17 @@ static bool CAM_SightCheckLine(camsight_t &cam, int linenum)
    if(s1 == s2)
       return true; // line isn't crossed
 
-   // try to early out the check
-   if(!ld->backsector)
-      return false; // stop checking
+   // Early outs are only possible if we haven't crossed a portal block
+   if(!cam.hitpblock) 
+   {
+      // try to early out the check
+      if(!ld->backsector)
+         return false; // stop checking
 
-   // haleyjd: block-all lines block sight
-   if(ld->extflags & EX_ML_BLOCKALL)
-      return false; // can't see through it
+      // haleyjd: block-all lines block sight
+      if(ld->extflags & EX_ML_BLOCKALL)
+         return false; // can't see through it
+   }
 
    // store the line for later intersection testing
    cam.intercepts.addNew().d.line = ld;
@@ -279,6 +329,12 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
    DLListItem<polymaplink_t> *plink;
 
    offset = y * bmapwidth + x;
+
+   // haleyjd 05/17/13: check portalmap; once we enter a cell with
+   // a line portal in it, we can't short-circuit any further and must
+   // build a full intercepts list.
+   if(portalmap[offset] & PMF_LINE)
+      cam.hitpblock = true;
 
    // Check polyobjects first
    // haleyjd 02/22/06: consider polyobject lines
@@ -581,6 +637,15 @@ bool CAM_CheckSight(const camsightparams_t &params)
    sector_t *csec, *tsec;
    int s1, s2, pnum;
    bool result = false;
+   linkoffset_t *link = NULL;
+
+   // Camera and target are not in same group?
+   if(params.cgroupid != params.tgroupid)
+   {
+      // is there a link between these groups?
+      // if so, ignore reject
+      link = P_GetLinkOffset(params.cgroupid, params.tgroupid);
+   }
 
    //
    // check for trivial rejection
@@ -589,7 +654,7 @@ bool CAM_CheckSight(const camsightparams_t &params)
    s2   = (tsec = R_PointInSubsector(params.tx, params.ty)->sector) - sectors;
    pnum = s1 * numsectors + s2;
 	
-   if(!(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
+   if(link || !(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
       camsight_t newCam;
 
@@ -610,25 +675,42 @@ bool CAM_CheckSight(const camsightparams_t &params)
       //
       // check precisely
       //
-      newCam.cx          = params.cx;
-      newCam.cy          = params.cy;
-      newCam.tx          = params.tx;
-      newCam.ty          = params.ty;
-      newCam.fromid      = params.cgroupid;
-      newCam.toid        = params.tgroupid;
-      newCam.sightzstart = params.cz + params.cheight - (params.cheight >> 2);
-      newCam.bottomslope = params.tz - newCam.sightzstart;
-      newCam.topslope    = newCam.bottomslope + params.theight;
-      newCam.validlines  = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
-      newCam.validpolys  = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
+      newCam.params       = &params;
+      newCam.cx           = params.cx;
+      newCam.cy           = params.cy;
+      newCam.tx           = params.tx;
+      newCam.ty           = params.ty;
+      newCam.fromid       = params.cgroupid;
+      newCam.toid         = params.tgroupid;
+      newCam.hitpblock    = false;
+      newCam.portalresult = false;
+      newCam.portalexit   = false;
+      newCam.sightzstart  = params.cz + params.cheight - (params.cheight >> 2);
+      newCam.bottomslope  = params.tz - newCam.sightzstart;
+      newCam.topslope     = newCam.bottomslope + params.theight;
+      newCam.validlines   = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
+      newCam.validpolys   = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
 
-      // save starting camera and target coordinates
-      newCam.startcx = newCam.cx;
-      newCam.startcy = newCam.cy;
-      newCam.starttx = newCam.tx;
-      newCam.startty = newCam.ty;
+
+      // if there is a valid portal link, adjust the target's coordinates now
+      // so that we trace in the proper direction given the current link
+      if(link)
+      {
+         newCam.tx += link->x;
+         newCam.ty += link->y;
+      }
 
       result = CAM_SightPathTraverse(newCam);
+
+      // if we broke out due to doing a portal recursion, replace the local
+      // result with the result of the portal operation
+      if(newCam.portalexit)
+         result = newCam.portalresult;
+      else if(newCam.fromid != newCam.toid)
+      {
+         // didn't hit a portal but in different groups; not visible.
+         result = false;
+      }
 
       efree(newCam.validlines);
       efree(newCam.validpolys);

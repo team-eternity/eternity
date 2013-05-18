@@ -465,6 +465,39 @@ static void P_GlobalPortalStateCheck()
 }
 
 //
+// P_buildPortalMap
+//
+// haleyjd 05/17/13: Build a blockmap-like array which will instantly tell
+// whether or not a given blockmap cell contains linked portals of different
+// types and may therefore need to be subject to differing clipping behaviors,
+// such as disabling certain short circuit checks.
+//
+static void P_buildPortalMap()
+{
+   for(int y = 0; y < bmapheight; y++)
+   {
+      for(int x = 0; x < bmapwidth; x++)
+      {
+         int offset;
+         int *list;
+
+         offset = y * bmapwidth + x;
+         offset = *(blockmap + offset);
+         list = blockmaplump + offset;
+
+         // skip 0 delimiter
+         ++list;
+
+         for(int *tmplist = list; *tmplist != -1; tmplist++)
+         {
+            if(lines[*tmplist].pflags & PS_PASSABLE)
+               portalmap[y * bmapwidth + x] |= PMF_LINE;
+         }
+      }
+   }
+}
+
+//
 // P_BuildLinkTable
 //
 bool P_BuildLinkTable()
@@ -558,6 +591,9 @@ bool P_BuildLinkTable()
    // Everything checks out... let's run the portals
    useportalgroups = true;
    P_GlobalPortalStateCheck();
+
+   // haleyjd 05/17/13: mark all blockmap cells where portals live.
+   P_buildPortalMap();
    
    return true;
 }

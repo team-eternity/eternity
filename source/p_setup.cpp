@@ -129,7 +129,9 @@ int       *blockmaplump;          // was short -- killough
 
 fixed_t   bmaporgx, bmaporgy;     // origin of block map
 
-Mobj    **blocklinks;           // for thing chains
+Mobj    **blocklinks;             // for thing chains
+
+byte     *portalmap;              // haleyjd: for portals
 
 //
 // REJECT
@@ -1812,12 +1814,16 @@ void P_LoadBlockMap(int lump)
 
    // clear out mobj chains
    count      = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = (Mobj **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   blocklinks = ecalloctag(Mobj **, 1, count, PU_LEVEL, NULL);
    blockmap   = blockmaplump + 4;
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = (DLListItem<polymaplink_t> **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   polyblocklinks = ecalloctag(DLListItem<polymaplink_t> **, 1, count, PU_LEVEL, NULL);
+
+   // haleyjd 05/17/13: setup portalmap
+   count = sizeof(*portalmap) * bmapwidth * bmapheight;
+   portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
 }
 
 

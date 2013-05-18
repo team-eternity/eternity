@@ -2488,8 +2488,8 @@ Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z)
 
    missileinfo.source = source;
    missileinfo.dest   = dest;
-   missileinfo.destx  = dest->x;
-   missileinfo.desty  = dest->y;
+   missileinfo.destx  = getThingX(source, dest);
+   missileinfo.desty  = getThingY(source, dest);
    missileinfo.destz  = dest->z;
    missileinfo.type   = type;
    missileinfo.z      = z;

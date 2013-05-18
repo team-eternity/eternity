@@ -45,6 +45,8 @@ struct camsightparams_t
    int     cgroupid; // camera portal groupid
    int     tgroupid; // target portal groupid
 
+   const camsightparams_t *prev; // previous invocation
+
    void setCamera(const camera_t &camera, fixed_t height);
    void setLookerMobj(const Mobj *mo);
    void setTargetMobj(const Mobj *mo);

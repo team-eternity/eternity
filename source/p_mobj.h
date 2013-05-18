@@ -517,7 +517,9 @@ inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 
-   if(!mo1 || !mo2)
+   if(!mo1)
+      return mo2 ? mo2->x : 0;
+   if(!mo2)
       return 0;
 
    if(mo1->groupid == mo2->groupid ||
@@ -531,7 +533,9 @@ inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 
-   if(!mo1 || !mo2)
+   if(!mo1)
+      return mo2 ? mo2->y : 0;
+   if(!mo2)
       return 0;
 
    if(mo1->groupid == mo2->groupid ||

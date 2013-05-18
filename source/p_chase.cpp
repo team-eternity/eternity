@@ -493,6 +493,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
       camparams.cz       = sec->floorheight;
       camparams.cheight  = 41 * FRACUNIT;
       camparams.cgroupid = sec->groupid;
+      camparams.prev     = NULL;
       camparams.setTargetMobj(target);
 
       if(CAM_CheckSight(camparams))
@@ -581,6 +582,7 @@ bool P_FollowCamTicker()
 
    // still visible?
    camsightparams_t camparams;
+   camparams.prev = NULL;
    camparams.setCamera(followcam, 41 * FRACUNIT);
    camparams.setTargetMobj(followtarget);
 

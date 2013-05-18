@@ -327,6 +327,7 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
    if(full_demo_version >= make_full_version(340, 24))
    {
       camsightparams_t camparams;
+      camparams.prev = NULL;
       camparams.setLookerMobj(t1);
       camparams.setTargetMobj(t2);
       return CAM_CheckSight(camparams);
