@@ -693,7 +693,7 @@ void G_CreateAxisActionVars()
       variable->defines   = axisActionNames;
 
       command = estructalloc(command_t, 1);
-      name << "g_axisaction" << i;
+      name << "g_axisaction" << i+1;
       command->name     = name.duplicate();
       command->type     = ct_variable;
       command->variable = variable;
@@ -724,9 +724,16 @@ static void G_clearGamepadBindings()
          keybindings[vkc].bindings[j] = NULL;      
    }
 
-   // clear axis actions
+   // clear axis actions and trigger bindings
    for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
+   {
       axisActions[axis] = axis_none;
+
+      int vkc = KEYD_AXISON01 + axis;
+
+      for(int j = 0; j < NUMKEYACTIONCLASSES; j++)
+         keybindings[vkc].bindings[j] = NULL;
+   }
 }
 
 //
@@ -738,6 +745,7 @@ static int G_profileForName(const char *name)
 {
    qstring lfn;
    lfn << "gamepads/" << name;
+   lfn.addDefaultExtension(".txt");
    return wGlobalDir.checkNumForLFN(lfn.constPtr(), lumpinfo_t::ns_pads);
 }
 
@@ -766,6 +774,17 @@ bool G_ExecuteGamepadProfile(const char *name)
    }
 
    return false;
+}
+
+CONSOLE_COMMAND(g_padprofile, 0)
+{
+   if(Console.argc < 1)
+   {
+      C_Printf("Usage: g_padprofile profilename\n");
+      return;
+   }
+
+   G_ExecuteGamepadProfile(Console.argv[0]->constPtr());
 }
 
 //===========================================================================
@@ -851,6 +870,17 @@ void G_SaveDefaults()
                     keyname,
                     keybindings[i].bindings[j]->name);
          }
+      }
+   }
+
+   // write axis actions
+
+   for(i = 0; i < HALGamePad::MAXAXES; i++)
+   {
+      if(axisActions[i] != axis_none)
+      {
+         fprintf(file, "g_axisaction%d %s\n",
+                 i+1, axisActionNames[axisActions[i]]);
       }
    }
    

@@ -76,6 +76,9 @@
 #include "w_levels.h"
 #include "w_wad.h"
 
+// need wad iterators
+#include "w_iterator.h"
+
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
 extern menu_t menu_newmission;
@@ -2525,6 +2528,74 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
    MN_ShowBoxWidget();
 }
 
+static const char **mn_prof_desc;
+static const char **mn_prof_cmds;
+
+static void MN_buildProfileTables()
+{
+   static bool menu_built = false;
+
+   // don't build multiple times
+   if(!menu_built)
+   {
+      int numProfiles = wGlobalDir.getNamespace(lumpinfo_t::ns_pads).numLumps;
+
+      if(!numProfiles)
+         return;
+
+      WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_pads);
+
+      // allocate arrays - +1 size for NULL termination
+      mn_prof_desc = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
+      mn_prof_cmds = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
+
+      int i = 0;
+
+      for(wni.begin(); wni.current(); wni.next(), i++)
+      {
+         qstring fullname;
+         qstring base;
+         lumpinfo_t *lump = wni.current();
+
+         if(lump->lfn)
+            fullname = lump->lfn;
+         else
+            fullname = lump->name;
+
+         size_t dot;
+         if((dot = fullname.find(".txt")) != qstring::npos)
+            fullname.truncate(dot);
+
+         fullname.extractFileBase(base);
+
+         mn_prof_desc[i] = base.duplicate();
+
+         base.makeQuoted();
+         base.insert("g_padprofile ", 0);
+         mn_prof_cmds[i] = base.duplicate();
+      }
+
+      mn_prof_desc[numProfiles] = NULL;
+      mn_prof_cmds[numProfiles] = NULL;
+
+      menu_built = true;
+   }
+}
+
+CONSOLE_COMMAND(mn_profiles, cf_hidden)
+{
+   MN_buildProfileTables();
+
+   if(!mn_prof_desc)
+   {
+      MN_ErrorMsg("No profiles available");
+      return;
+   }
+
+   MN_SetupBoxWidget("Choose a Profile: ", mn_prof_desc, 1, NULL, mn_prof_cmds);
+   MN_ShowBoxWidget();
+}
+
 static menuitem_t mn_joystick_items[] =
 {
    { it_title,        "Gamepad Settings",          NULL,   NULL     },
@@ -2533,6 +2604,7 @@ static menuitem_t mn_joystick_items[] =
    { it_runcmd,       "Select gamepad...",         "mn_joysticks"   },
    { it_gap                                                         },
    { it_info,         "Settings"                                    },
+   { it_runcmd,       "Load profile...",           "mn_profiles"    },
    { it_variable,     "DirectInput sensitivity",   "i_joysticksens" },
    { it_end                                                         }
 };

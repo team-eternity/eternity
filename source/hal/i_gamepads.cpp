@@ -81,6 +81,23 @@ void HALGamePadDriver::addDevice(HALGamePad *device)
 IMPLEMENT_RTTI_TYPE(HALGamePad)
 
 //
+// Constructor
+//
+HALGamePad::HALGamePad()
+   : Super(), num(-1), name(), numAxes(0), numButtons(0)
+{
+   // init state and prevstate
+   int i;
+
+   for(i = 0; i < MAXBUTTONS; i++)
+      state.buttons[i] = false;
+   for(i = 0; i < MAXAXES; i++)
+      state.axes[i] = 0.0;
+
+   backupState();
+}
+
+//
 // HALGamePad::backupState
 //
 // Saves the prior state of buttons and axes before polling occurs. Call from
@@ -88,8 +105,11 @@ IMPLEMENT_RTTI_TYPE(HALGamePad)
 //
 void HALGamePad::backupState()
 {
-   memcpy(state.prevaxes,    state.axes,    sizeof(state.axes));
-   memcpy(state.prevbuttons, state.buttons, sizeof(state.buttons));
+   int i;
+   for(i = 0; i < MAXBUTTONS; i++)
+      state.prevbuttons[i] = state.buttons[i];
+   for(i = 0; i < MAXAXES; i++)
+      state.prevaxes[i] = state.axes[i];
 }
 
 //=============================================================================

@@ -190,8 +190,7 @@ bool    dclickstate2;
 int     dclicks2;
 
 // joystick values are repeated
-double joyxmove;
-double joyymove;
+double joyaxes[axis_max];
 
 int  savegameslot;
 char savedescription[32];
@@ -254,7 +253,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    forward = side = 0;
 
    // use two stage accelerative turning on the keyboard and joystick
-   if(joyxmove < 0 || joyxmove > 0 || gameactions[ka_right] || gameactions[ka_left])
+   if(gameactions[ka_right] || gameactions[ka_left])
       turnheld += ticdup;
    else
       turnheld = 0;
@@ -278,10 +277,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          side += pc->sidemove[speed];
       if(gameactions[ka_left])
          side -= pc->sidemove[speed];
-      if(joyxmove > 0)
-         side += pc->sidemove[speed];
-      if(joyxmove < 0)
-         side -= pc->sidemove[speed];
+      
+      // analog axes: turn becomes stafe if strafe-on is held
+      side += (int)(pc->sidemove[1] * joyaxes[axis_turn]);
    }
    else
    {
@@ -289,26 +287,29 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
       if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
-      if(joyxmove > 0)
-         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
-      if(joyxmove < 0)
-         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
+
+      cmd->angleturn -= (int16_t)(pc->angleturn[1] * joyaxes[axis_turn]);
    }
+
+   // gamepad dedicated analog strafe axis applies regardless
+   side += (int)(pc->sidemove[1] * joyaxes[axis_strafe]);
 
    if(gameactions[ka_forward])
       forward += pc->forwardmove[speed];
    if(gameactions[ka_backward])
       forward -= pc->forwardmove[speed];
-   if(joyymove < 0)
-      forward += pc->forwardmove[speed];
-   if(joyymove > 0)
-      forward -= pc->forwardmove[speed];
+
+   // analog movement axis
+   forward += (int)(pc->forwardmove[1] * joyaxes[axis_move]);
+
    if(gameactions[ka_moveright])
       side += pc->sidemove[speed];
    if(gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
+   
    if(gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
+   
    mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
@@ -526,6 +527,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(gameactions[ka_center])
       sendcenterview = true;
 
+   // analog gamepad look
+   look += (int)(pc->lookspeed[1] * joyaxes[axis_look]);
+
    // haleyjd: special value for view centering
    if(sendcenterview)
       look = -32768;
@@ -665,7 +669,8 @@ void G_DoLoadLevel()
    Z_CheckHeap();
 
    // clear cmd building stuff
-   joyxmove = joyymove = 0;
+   for(int i = 0; i < axis_max; i++)
+      joyaxes[i] = 0.0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
@@ -748,9 +753,8 @@ bool G_Responder(event_t* ev)
       {
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
             !automapactive &&
-            ((ev->type == ev_keydown) ||
-             (ev->type == ev_mouse && ev->data1) ||
-             ev->type == ev_joystick))
+            (ev->type == ev_keydown ||
+             (ev->type == ev_mouse && ev->data1)))
          {
             // popup menu
             MN_StartControlPanel();
@@ -811,9 +815,7 @@ bool G_Responder(event_t* ev)
       return true;    // eat events
       
    case ev_joystick:
-      // TODO
-      //joyxmove = ev->data2;
-      //joyymove = ev->data3;
+      joyaxes[axisActions[ev->data1]] = ev->data2;
       return true;    // eat events
       
    default:

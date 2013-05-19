@@ -76,7 +76,7 @@ protected:
    void backupState();
 
 public:
-   HALGamePad() : Super(), num(-1), name(), numAxes(0), numButtons(0), state() {}
+   HALGamePad();
 
    // Selection
    virtual bool select()   = 0; // Select as the input device

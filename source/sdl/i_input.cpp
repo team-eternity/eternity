@@ -295,16 +295,29 @@ static void I_JoystickEvents()
    // read axes
    for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
    {
+      /*
       if(padstate->axes[axis] != padstate->prevaxes[axis])
       {
          edefstructvar(event_t, ev);
          
-         // previously off, fire an axis on keydown event;
-         // previously on, fire key up
-         if(padstate->prevaxes[axis] == 0.0f)
-            ev.type  = ev_keydown;
-         else
-            ev.type  = ev_keyup;
+
+         ev.data1 = KEYD_AXISON01 + axis;
+         D_PostEvent(&ev);
+      }
+      */
+
+      // fire axis state change events
+      if(padstate->axes[axis] != padstate->prevaxes[axis])
+      {
+         edefstructvar(event_t, ev);
+
+         // if previous state was off, key down
+         if(padstate->prevaxes[axis] == 0.0)
+            ev.type = ev_keydown;
+
+         // if new state is off, key up
+         if(padstate->axes[axis] == 0.0)
+            ev.type = ev_keyup;
 
          ev.data1 = KEYD_AXISON01 + axis;
          D_PostEvent(&ev);
