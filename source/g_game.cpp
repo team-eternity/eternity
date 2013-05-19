@@ -145,7 +145,8 @@ int             novert;               // haleyjd
 double          mouseSensitivity_horiz;   // has default   //  killough
 double          mouseSensitivity_vert;    // has default
 bool            mouseSensitivity_vanilla; // [CG] 01/20/12
-int             invert_mouse = true;
+int             invert_mouse = false;
+int             invert_padlook = false;
 int             animscreenshot = 0;       // animated screenshots
 int             mouseAccel_type = 0;
 int             mouseAccel_threshold = 10; // [CG] 01/20/12
@@ -496,7 +497,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       oldmousey = mousey2;
    }
 
-   // YSHEAR_FIXME: add arrow keylook, joystick look?
+   // YSHEAR_FIXME: add arrow keylook?
 
    if(mlook)
    {
@@ -517,8 +518,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(!novert)
          forward += (int)tmousey;
    }
-
    prevmlook = mlook;
+
+   // analog gamepad look
+   look += (int)(pc->lookspeed[1] * joyaxes[axis_look] * (invert_padlook ? -1.0 : 1.0));
    
    if(gameactions[ka_lookup])
       look += pc->lookspeed[speed];
@@ -526,9 +529,6 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       look -= pc->lookspeed[speed];
    if(gameactions[ka_center])
       sendcenterview = true;
-
-   // analog gamepad look
-   look += (int)(pc->lookspeed[1] * joyaxes[axis_look]);
 
    // haleyjd: special value for view centering
    if(sendcenterview)

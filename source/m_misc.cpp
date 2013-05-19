@@ -487,8 +487,11 @@ default_t defaults[] =
    DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no, 
                "set to 1 to always mouselook"),
    
-   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to invert mouse during mouselooking"),
+
+   DEFAULT_INT("invert_padlook", &invert_padlook, NULL, 0, 0, 1, default_t::wad_no,
+               "set to 1 to invert gamepad looking"),
       
    DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable use of mouse"),

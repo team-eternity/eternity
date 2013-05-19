@@ -30,6 +30,41 @@
 #include "r_main.h"
 
 // 
+// M_MagnitudeVec2
+//
+// Get the magnitude of a two-dimensional vector
+//
+float M_MagnitudeVec2(const v2float_t &vec)
+{
+   return sqrt(vec.x * vec.x + vec.y * vec.y);
+}
+
+//
+// M_NormalizeVec2
+//
+// Normalize a two-dimensional vector in-place.
+//
+void M_NormalizeVec2(v2float_t &vec)
+{
+   float mag = M_MagnitudeVec2(vec);
+
+   vec.x /= mag;
+   vec.y /= mag;
+}
+
+//
+// M_NormalizeVec2
+//
+// Normalize a two-dimensional vector in-place using precomputed
+// magnitude.
+//
+void M_NormalizeVec2(v2float_t &vec, float mag)
+{
+   vec.x /= mag;
+   vec.y /= mag;
+}
+
+// 
 // M_TranslateVec3f
 //
 // Translates the given vector (in doom's coordinate system) to the camera

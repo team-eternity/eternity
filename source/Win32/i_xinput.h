@@ -49,7 +49,8 @@ class XInputGamePad : public HALGamePad
 
 protected:
    unsigned long dwUserIndex;
-   float normAxis(int value, int threshold, float maxvalue);
+   float normAxis(int value, int threshold, int maxvalue);
+   void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
 public:
    XInputGamePad(unsigned long userIdx = 0);

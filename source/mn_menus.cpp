@@ -2543,13 +2543,12 @@ static void MN_buildProfileTables()
       if(!numProfiles)
          return;
 
-      WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_pads);
-
       // allocate arrays - +1 size for NULL termination
       mn_prof_desc = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
       mn_prof_cmds = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
 
       int i = 0;
+      WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_pads);
 
       for(wni.begin(); wni.current(); wni.next(), i++)
       {

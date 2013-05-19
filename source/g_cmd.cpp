@@ -195,6 +195,9 @@ CONSOLE_VARIABLE(alwaysmlook, automlook, 0) {}
 VARIABLE_BOOLEAN(invert_mouse, NULL,        onoff);
 CONSOLE_VARIABLE(invertmouse, invert_mouse, 0) {}
 
+VARIABLE_BOOLEAN(invert_padlook, NULL, onoff);
+CONSOLE_VARIABLE(invert_padlook, invert_padlook, 0) {}
+
 // horizontal mouse sensitivity
 
 VARIABLE_FLOAT(mouseSensitivity_horiz, NULL, 0.0, 1024.0);

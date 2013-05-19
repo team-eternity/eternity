@@ -29,6 +29,7 @@
 
 #include "../z_zone.h"
 
+#include "../m_vector.h"
 #include "i_xinput.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -182,12 +183,44 @@ static buttonenum_t buttonTable[] =
 //
 // Normalize an analog axis value after clipping to the minimum threshold value.
 //
-float XInputGamePad::normAxis(int value, int threshold, float maxvalue)
+float XInputGamePad::normAxis(int value, int threshold, int maxvalue)
 {
    if(abs(value) > threshold)
       return static_cast<float>(value) / maxvalue;
    else
       return 0.0f;
+}
+
+//
+// XInputGamePad::normAxisPair
+//
+// Normalize a bonded pair of analog axes.
+//
+void XInputGamePad::normAxisPair(float &axisx, float &axisy, int threshold, 
+                                 int min, int max)
+{
+   float deadzone = (float)threshold / max;
+   v2float_t vec = { axisx, axisy };
+
+   // put components into the range of -1.0 to 1.0
+   vec.x = (vec.x - min) * 2.0f / (max - min) - 1.0f;
+   vec.y = (vec.y - min) * 2.0f / (max - min) - 1.0f;
+
+   float magnitude = M_MagnitudeVec2(vec);
+
+   if(magnitude < deadzone)
+   {
+      axisx = 0.0f;
+      axisy = 0.0f;
+   }
+   else
+   {
+      M_NormalizeVec2(vec, magnitude);
+
+      // rescale to smooth edge of deadzone
+      axisx = vec.x * ((magnitude - deadzone) / (1 - deadzone));
+      axisy = vec.y * ((magnitude - deadzone) / (1 - deadzone));
+   }
 }
 
 //
@@ -213,12 +246,17 @@ void XInputGamePad::poll()
       }
 
       // read axis states
-      state.axes[0] = normAxis(pad.sThumbLX,      XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,  32768.0f);
-      state.axes[1] = normAxis(pad.sThumbLY,      XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,  32768.0f);
-      state.axes[2] = normAxis(pad.sThumbRX,      XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, 32768.0f);
-      state.axes[3] = normAxis(pad.sThumbRY,      XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, 32768.0f);
-      state.axes[4] = normAxis(pad.bLeftTrigger,  XINPUT_GAMEPAD_TRIGGER_THRESHOLD,    255.0f);
-      state.axes[5] = normAxis(pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD,    255.0f);
+      
+      state.axes[0] = pad.sThumbLX;
+      state.axes[1] = pad.sThumbLY;
+      state.axes[2] = pad.sThumbRX;
+      state.axes[3] = pad.sThumbRY;
+
+      normAxisPair(state.axes[0], state.axes[1], XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,  -32768, 32767);
+      normAxisPair(state.axes[2], state.axes[3], XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, -32768, 32767);
+      
+      state.axes[4] = normAxis(pad.bLeftTrigger,  XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
+      state.axes[5] = normAxis(pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
    }
 }
 

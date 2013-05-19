@@ -56,6 +56,23 @@ struct v2float_t
 };
 
 // 
+// M_MagnitudeVec2
+//
+// Get the magnitude of a two-dimensional vector
+//
+float M_MagnitudeVec2(const v2float_t &vec);
+
+//
+// M_NormalizeVec2
+//
+// Normalize a two-dimensional vector.
+// The overload taking a double allows passing in the precomputed magnitude
+// when it is available.
+//
+void M_NormalizeVec2(v2float_t &vec);
+void M_NormalizeVec2(v2float_t &vec, float mag);
+
+// 
 // M_TranslateVec3
 //
 // Translates the given vector (in doom's coordinate system) to the camera

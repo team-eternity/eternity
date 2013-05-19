@@ -98,6 +98,7 @@ extern int  autorun;           // always running?                   // phares
 extern int  runiswalk;
 extern int  automlook;
 extern int  invert_mouse;
+extern int  invert_padlook;
 extern int  bfglook;
 
 //extern angle_t consoleangle;
