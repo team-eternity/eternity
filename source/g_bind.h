@@ -138,11 +138,15 @@ enum axisaction_e
    axis_strafe,     // strafe left/right
    axis_turn,       // turn left/right
    axis_look,       // look up/down
+   axis_fly,        // fly up/down
    axis_max         // keep this last
 };
 
 // Axis bindings
 extern int axisActions[];
+
+// Axis orientations
+extern int axisOrientation[];
 
 bool G_ExecuteGamepadProfile(const char *name);
 

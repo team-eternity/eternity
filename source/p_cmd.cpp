@@ -360,13 +360,12 @@ CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 
 CONSOLE_COMMAND(puke, cf_notnet)
 {
-   int i;
-   int args[5] = { 0, 0, 0, 0, 0 };
-
    if(Console.argc < 1)
       return;
 
-   for(i = 1; i < Console.argc; ++i)
+   int32_t args[5] = { 0, 0, 0, 0, 0 };
+
+   for(int i = 1; i < Console.argc; i++)
       args[i - 1] = Console.argv[i]->toInt();
 
    ACS_ExecuteScriptNumber(Console.argv[0]->toInt(), gamemap, ACS_EXECUTE_ALWAYS,

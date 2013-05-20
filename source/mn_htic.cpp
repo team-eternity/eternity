@@ -44,8 +44,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-extern vfont_t *menu_font_big;
-
 extern int start_episode;
 extern char *start_mapname;
 

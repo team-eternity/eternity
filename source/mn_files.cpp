@@ -313,7 +313,6 @@ static const char *variable_name;
 static const char *help_description;
 static int numfileboxlines;
 static bool select_dismiss;
-extern vfont_t *menu_font;
 static bool allow_exit = true;
 
 //

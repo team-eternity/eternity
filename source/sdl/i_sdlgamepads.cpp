@@ -43,7 +43,7 @@ static int activeIdx = -1;
 //
 // SDLGamePadDriver
 //
-// Implements support for SDL DirectInput gamepad devices.
+// Implements support for SDL MMSYSTEM gamepad devices.
 //
 
 //

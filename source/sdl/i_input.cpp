@@ -295,17 +295,6 @@ static void I_JoystickEvents()
    // read axes
    for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
    {
-      /*
-      if(padstate->axes[axis] != padstate->prevaxes[axis])
-      {
-         edefstructvar(event_t, ev);
-         
-
-         ev.data1 = KEYD_AXISON01 + axis;
-         D_PostEvent(&ev);
-      }
-      */
-
       // fire axis state change events
       if(padstate->axes[axis] != padstate->prevaxes[axis])
       {
@@ -328,6 +317,8 @@ static void I_JoystickEvents()
       ev.type  = ev_joystick;
       ev.data1 = axis;
       ev.data2 = padstate->axes[axis];
+      if(axisOrientation[axis]) // may need to flip, if orientation == -1
+         ev.data2 *= axisOrientation[axis];
       D_PostEvent(&ev);
    }
 }

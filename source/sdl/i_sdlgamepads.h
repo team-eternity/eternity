@@ -33,7 +33,7 @@
 //
 // SDLGamePadDriver
 //
-// Implements the abstract HAL gamepad/joystick interface for SDL's DirectInput
+// Implements the abstract HAL gamepad/joystick interface for SDL's MMSYSTEM
 // based gamepad support.
 //
 class SDLGamePadDriver : public HALGamePadDriver

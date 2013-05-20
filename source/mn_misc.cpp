@@ -51,8 +51,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-extern vfont_t *menu_font_big;
-
 /////////////////////////////////////////////////////////////////////////
 //
 // Pop-up Messages
@@ -85,9 +83,6 @@ static enum
    popup_alert,
    popup_question
 } popup_message_type;
-
-extern vfont_t *menu_font;
-extern vfont_t *menu_font_normal;
 
 //
 // WriteCenteredText
@@ -178,7 +173,7 @@ bool MN_PopupResponder(event_t *ev, int action)
       break;
 
    case popup_question:
-      if(ch == 'y')     // yes!
+      if(ch == 'y' || action == ka_menu_confirm) // yes!
       {
          // run command and kill message
          // haleyjd 02/24/02: restore saved menuactive state

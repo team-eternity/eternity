@@ -36,6 +36,7 @@
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
 #include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
@@ -47,6 +48,7 @@
 #include "dstrings.h"
 #include "e_fonts.h"
 #include "e_states.h"
+#include "g_bind.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_over.h"
@@ -1103,9 +1105,6 @@ CONSOLE_COMMAND(mn_dmflags, cf_server)
 */
 
 // haleyjd 04/14/03: dmflags menu drawer (a big hack, mostly)
-
-extern vfont_t *menu_font;
-extern vfont_t *menu_font_normal;
 
 static void MN_DMFlagsDrawer(void)
 {
@@ -2604,7 +2603,7 @@ static menuitem_t mn_joystick_items[] =
    { it_gap                                                         },
    { it_info,         "Settings"                                    },
    { it_runcmd,       "Load profile...",           "mn_profiles"    },
-   { it_variable,     "DirectInput sensitivity",   "i_joysticksens" },
+   { it_variable,     "SDL sensitivity",           "i_joysticksens" },
    { it_end                                                         }
 };
 
@@ -2627,7 +2626,163 @@ CONSOLE_COMMAND(mn_joymenu, 0)
    MN_StartMenu(&menu_joystick);
 }
 
-/////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+//
+// Pad Test
+//
+
+//
+// Data for padtest widget.
+//
+struct mn_padtestdata_t
+{
+   bool  buttonStates[HALGamePad::MAXBUTTONS];
+   float axisStates[HALGamePad::MAXAXES];
+   int   numButtons;
+   int   numAxes;
+};
+
+static mn_padtestdata_t mn_padtestdata;
+
+//
+// MN_padTestDrawer
+//
+// Drawer for padtest widget.
+// Draw active buttons and axes.
+//
+static void MN_padTestDrawer()
+{
+   qstring qstr;
+   const char *title = "Gamepad Test";
+   int x = 160 - V_FontStringWidth(menu_font_big, title) / 2;
+   int y = 8;
+   int lineHeight = MN_StringHeight("Mg") + 4;
+
+   // draw background
+   V_DrawBackground(mn_background_flat, &vbscreen);
+
+   // draw title
+   if(GameModeInfo->flags & GIF_SHADOWTITLES)
+      V_FontWriteTextShadowed(menu_font_big, title, x, y, &subscreen43, GameModeInfo->titleColor);
+   else
+      V_FontWriteTextColored(menu_font_big, title, GameModeInfo->titleColor, x, y, &subscreen43); 
+
+   y += V_FontStringHeight(menu_font_big, title) + 16;
+
+   // draw axes
+   x = 8;
+   MN_WriteText("Axes:", x, y);
+   y += lineHeight;
+   for(int i = 0; i < mn_padtestdata.numAxes; i++)
+   {
+      int color = 
+         mn_padtestdata.axisStates[i] > 0 ? GameModeInfo->selectColor :
+         mn_padtestdata.axisStates[i] < 0 ? GameModeInfo->unselectColor :
+         GameModeInfo->infoColor;
+
+      qstr.clear() << "A" << (i + 1);
+      MN_WriteTextColored(qstr.constPtr(), color, x, y);
+      x += MN_StringWidth(qstr.constPtr()) + 8;
+
+      if(x > 300 && i != mn_padtestdata.numAxes - 1)
+      {
+         x = 8;
+         y += lineHeight;
+      }
+   }
+
+   // draw buttons
+   y += 2 * lineHeight;
+   x = 8;
+   MN_WriteText("Buttons:", x, y);
+   y += MN_StringHeight("Buttons:") + 4;
+   for(int i = 0; i < mn_padtestdata.numButtons; i++)
+   {
+      int color = mn_padtestdata.buttonStates[i] ? GameModeInfo->selectColor 
+                                                 : GameModeInfo->infoColor;
+
+      qstr.clear() << "B" << (i + 1);
+      MN_WriteTextColored(qstr.constPtr(), color, x, y);
+      x += MN_StringWidth(qstr.constPtr()) + 8;
+
+      if(x > 300 && i != mn_padtestdata.numButtons - 1)
+      {
+         x = 8;
+         y += lineHeight;
+      }
+   }
+
+   const char *help = "Press ESC on keyboard to exit";
+   x = 160 - MN_StringWidth(help) / 2;
+   y += 2 * lineHeight;
+   MN_WriteTextColored(help, GameModeInfo->infoColor, x, y);
+}
+
+//
+// MN_padTestTicker
+//
+// Ticker for padtest widget.
+// Refresh the input state by reading from the active gamepad.
+//
+static void MN_padTestTicker()
+{
+   HALGamePad *gamepad = I_GetActivePad();
+   if(!gamepad)
+   {
+      mn_padtestdata.numAxes = 0;
+      mn_padtestdata.numButtons = 0;
+      return; // woops!?
+   }
+
+   mn_padtestdata.numAxes    = gamepad->numAxes;
+   mn_padtestdata.numButtons = gamepad->numButtons;
+
+   for(int i = 0; i < mn_padtestdata.numAxes; i++)
+      mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
+   for(int i = 0; i < mn_padtestdata.numButtons; i++)
+      mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
+}
+
+//
+// MN_padTestResponder
+//
+static bool MN_padTestResponder(event_t *ev, int action)
+{
+   // only interested in keydown events
+   if(ev->type != ev_keydown)
+      return false;
+
+   if(ev->data1 == KEYD_ESCAPE) // Must be keyboard ESC
+   {
+      // kill the widget
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      MN_PopWidget();
+   }
+
+   // eat other events
+   return true;
+}
+
+static menuwidget_t padtest_widget = 
+{ 
+   MN_padTestDrawer,
+   MN_padTestResponder,
+   MN_padTestTicker,
+   true
+};
+
+CONSOLE_COMMAND(mn_padtest, 0)
+{
+   if(!I_GetActivePad())
+   {
+      MN_ErrorMsg("No active gamepad");
+      return;
+   }
+
+   MN_PushWidget(&padtest_widget);
+}
+
+//=============================================================================
 //
 // HUD Settings
 //

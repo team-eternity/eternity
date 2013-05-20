@@ -32,6 +32,7 @@
 
 struct event_t;
 struct variable_t;
+struct vfont_t;
 
 //
 // menu_t
@@ -213,7 +214,8 @@ void MN_ClearMenus();                    // sf 10/99
 // font functions
 void MN_WriteText(const char *s, int x, int y);
 void MN_WriteTextColored(const char *s, int colour, int x, int y);
-int MN_StringWidth(const char *s);
+int  MN_StringWidth(const char *s);
+int  MN_StringHeight(const char *s);
 
 void MN_ErrorMsg(const char *s, ...);
 
@@ -244,6 +246,10 @@ extern char *mn_bigfontname;
 extern char *mn_normalfontname;
 extern char *mn_background;
 extern const char *mn_background_flat;
+
+extern vfont_t *menu_font;
+extern vfont_t *menu_font_big;
+extern vfont_t *menu_font_normal;
 
 #endif
                             

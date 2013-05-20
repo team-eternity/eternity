@@ -304,9 +304,6 @@ static bool MN_SkinResponder(event_t *ev, int action)
 // haleyjd 05/29/06: got rid of cascading macros in preference of this
 #define INSTR_Y ((SCREENHEIGHT - 1) - (menu_font_normal->cy * 5))
 
-extern vfont_t *menu_font_big;
-extern vfont_t *menu_font_normal;
-
 //
 // MN_SkinInstructions
 //

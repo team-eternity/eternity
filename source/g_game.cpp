@@ -280,7 +280,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          side -= pc->sidemove[speed];
       
       // analog axes: turn becomes stafe if strafe-on is held
-      side += (int)(pc->sidemove[1] * joyaxes[axis_turn]);
+      side += (int)(pc->sidemove[speed] * joyaxes[axis_turn]);
    }
    else
    {
@@ -289,11 +289,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
 
-      cmd->angleturn -= (int16_t)(pc->angleturn[1] * joyaxes[axis_turn]);
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
    }
 
    // gamepad dedicated analog strafe axis applies regardless
-   side += (int)(pc->sidemove[1] * joyaxes[axis_strafe]);
+   side += (int)(pc->sidemove[speed] * joyaxes[axis_strafe]);
 
    if(gameactions[ka_forward])
       forward += pc->forwardmove[speed];
@@ -301,7 +301,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       forward -= pc->forwardmove[speed];
 
    // analog movement axis
-   forward += (int)(pc->forwardmove[1] * joyaxes[axis_move]);
+   forward += (int)(pc->forwardmove[speed] * joyaxes[axis_move]);
 
    if(gameactions[ka_moveright])
       side += pc->sidemove[speed];
@@ -546,11 +546,17 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       flyheight = FLIGHT_IMPULSE_AMT;
    if(gameactions[ka_flydown])
       flyheight = -FLIGHT_IMPULSE_AMT;
+
+   // haleyjd 05/19/13: analog fly axis
+   if(flyheight == 0)
+      flyheight = (int)(joyaxes[axis_fly] * FLIGHT_IMPULSE_AMT);
+
    if(gameactions[ka_flycenter])
    {
       flyheight = FLIGHT_CENTER;
       look = -32768;
    }
+
 
    if(gameactions[ka_strafe])
       side += (int)(tmousex * 2.0);

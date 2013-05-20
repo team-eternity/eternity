@@ -1426,9 +1426,9 @@ bool MN_Responder(event_t *ev)
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
       
-      if(ev->data1 == KEYD_ESCAPE)        // cancel input
+      if(action == ka_menu_toggle || action == ka_menu_previous) // cancel input
          input_command = NULL;      
-      else if(ev->data1 == KEYD_ENTER)
+      else if(action == ka_menu_confirm)
       {
          if(input_buffer[0] || (input_command->flags & cf_allowblank))
          {
@@ -2103,6 +2103,14 @@ void MN_WriteTextColored(const char *s, int colour, int x, int y)
 int MN_StringWidth(const char *s)
 {
    return V_FontStringWidth(menu_font, s);
+}
+
+//
+// MN_StringHeight
+//
+int MN_StringHeight(const char *s)
+{
+   return V_FontStringHeight(menu_font, s);
 }
 
 //=============================================================================

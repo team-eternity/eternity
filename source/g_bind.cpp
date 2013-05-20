@@ -661,6 +661,9 @@ void G_EditBinding(const char *action)
 // Axis action bindings
 int axisActions[HALGamePad::MAXAXES];
 
+// Axis orientations. This should SO not be necessary.
+int axisOrientation[HALGamePad::MAXAXES];
+
 // Names for axis actions
 static const char *axisActionNames[axis_max] =
 {
@@ -668,7 +671,8 @@ static const char *axisActionNames[axis_max] =
    "move",
    "strafe",
    "turn",
-   "look"
+   "look",
+   "fly",
 };
 
 //
@@ -699,6 +703,21 @@ void G_CreateAxisActionVars()
       command->variable = variable;
 
       C_AddCommand(command);
+
+      variable = estructalloc(variable_t, 1);
+      variable->variable  = &axisOrientation[i];
+      variable->v_default = NULL;
+      variable->type      = vt_int;
+      variable->min       = -1;
+      variable->max       =  1;
+
+      command = estructalloc(command_t, 1);
+      name.clear() << "g_axisorientation" << i+1;
+      command->name     = name.duplicate();
+      command->type     = ct_variable;
+      command->variable = variable;
+
+      C_AddCommand(command);
    }
 }
 
@@ -724,10 +743,11 @@ static void G_clearGamepadBindings()
          keybindings[vkc].bindings[j] = NULL;      
    }
 
-   // clear axis actions and trigger bindings
+   // clear axis actions, orientations, and trigger bindings
    for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
    {
       axisActions[axis] = axis_none;
+      axisOrientation[axis] = 0;     // zero is agnostic
 
       int vkc = KEYD_AXISON01 + axis;
 
@@ -873,7 +893,7 @@ void G_SaveDefaults()
       }
    }
 
-   // write axis actions
+   // write axis actions and orientations
 
    for(i = 0; i < HALGamePad::MAXAXES; i++)
    {
@@ -881,6 +901,11 @@ void G_SaveDefaults()
       {
          fprintf(file, "g_axisaction%d %s\n",
                  i+1, axisActionNames[axisActions[i]]);
+      }
+      if(axisOrientation[i] != 0)
+      {
+         fprintf(file, "g_axisorientation%d %d\n",
+                 i+1, axisOrientation[i]);
       }
    }
    
