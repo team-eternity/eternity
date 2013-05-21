@@ -50,6 +50,7 @@
 #include "d_event.h"
 #include "d_files.h"
 #include "d_gi.h"
+#include "d_iface.h"
 #include "d_io.h"
 #include "d_iwad.h"
 #include "d_net.h"
@@ -121,24 +122,22 @@ bool nomusicparm;
 //jff 4/18/98
 extern bool inhelpscreens;
 
-skill_t startskill;
-int     startepisode;
-int     startmap;
+skill_t  startskill;
+int      startepisode;
+int      startmap;
 char    *startlevel;
-bool autostart;
-
-bool advancedemo;
+bool     autostart;
 
 extern bool timingdemo, singledemo, demoplayback, fastdemo; // killough
 
-char    *basedefault;             // default file
-char    *basesavegame;            // killough 2/16/98: savegame directory
+char    *basedefault;  // default file
+char    *basesavegame; // killough 2/16/98: savegame directory
 
-char    *basepath;                // haleyjd 11/23/06: path of "base" directory
-char    *basegamepath;            // haleyjd 11/23/06: path of base/game directory
+char    *basepath;     // haleyjd 11/23/06: path of "base" directory
+char    *basegamepath; // haleyjd 11/23/06: path of base/game directory
 
-char    *userpath;                // haleyjd 02/05/12: path of "user" directory
-char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
+char    *userpath;     // haleyjd 02/05/12: path of "user" directory
+char    *usergamepath; // haleyjd 02/05/12: path of user/game directory
 
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
@@ -214,6 +213,7 @@ void D_PostEvent(event_t *ev)
 void D_ProcessEvents(void)
 {
    event_t *ev = NULL;
+   InputInterface *current_iface = NULL;
 
    // IF STORE DEMO, DO NOT ACCEPT INPUT
    // sf: I don't think SMMU is going to be played in any store any
@@ -230,9 +230,22 @@ void D_ProcessEvents(void)
 
    for(ev = events; ev != current_event; ev++)
    {
-      if(!MN_Responder(ev))
-         if(!C_Responder(ev))
-            G_Responder(ev);
+      key_bindings.handleEvent(ev); // Checks for alt/ctrl/shift keys.
+
+      if(!(current_iface = input_interfaces.getFrontInterface()))
+      {
+         printf("D_ProcessEvents: No interface.\n");
+         return;
+      }
+
+      do
+      {
+         if(current_iface->handlesEvent(ev) && current_iface->handleEvent(ev))
+            break;
+
+         current_iface = current_iface->getParent();
+
+      } while(current_iface);
    }
 
    current_event = events;
@@ -243,189 +256,14 @@ void D_ProcessEvents(void)
 //  DEMO LOOP
 //
 
-static int demosequence;         // killough 5/2/98: made static
-static int pagetic;
-static const char *pagename;
-
-//
-// D_AdvanceDemo
-// Called after each demo or intro demosequence finishes
-//
-void D_AdvanceDemo(void)
-{
-   advancedemo = true;
-}
-
-//
-// D_PageTicker
-// Handles timing for warped projection
-//
-void D_PageTicker(void)
-{
-   // killough 12/98: don't advance internal demos if a single one is
-   // being played. The only time this matters is when using -loadgame with
-   // -fastdemo, -playdemo, or -timedemo, and a consistency error occurs.
-
-   if (/*!singledemo &&*/ --pagetic < 0)
-      D_AdvanceDemo();
-}
-
-//
-// D_PageDrawer
-//
-// killough 11/98: add credits screen
-//
-void D_PageDrawer(void)
-{
-   int l;
-
-   if(pagename && (l = W_CheckNumForName(pagename)) != -1)
-   {
-      // haleyjd 08/15/02: handle Heretic pages
-      V_DrawFSBackground(&subscreen43, l);
-
-      if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
-      {
-         V_DrawPatch(4, 160, &subscreen43,
-                     PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
-      }
-   }
-   else
-      MN_DrawCredits();
-}
-
-// killough 11/98: functions to perform demo sequences
-
-static void D_SetPageName(const char *name)
-{
-   pagename = name;
-}
-
-static void D_DrawTitle(const char *name)
-{
-   S_StartMusic(GameModeInfo->titleMusNum);
-   pagetic = GameModeInfo->titleTics;
-
-   if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
-      D_SetPageName(GameModeInfo->consoleBack);
-   else
-      D_SetPageName(name);
-}
-
-static void D_DrawTitleA(const char *name)
-{
-   pagetic = GameModeInfo->advisorTics;
-   D_SetPageName(name);
-}
-
-// killough 11/98: tabulate demo sequences
-
-const demostate_t demostates_doom[] =
-{
-   { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
-   { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
-   { G_DeferedPlayDemo, "DEMO2"    },
-   { D_SetPageName,     "HELP2"    },
-   { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
-};
-
-const demostate_t demostates_doom2[] =
-{
-   { D_DrawTitle,       "TITLEPIC" }, // commercial
-   { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
-   { G_DeferedPlayDemo, "DEMO2"    },
-   { D_SetPageName,     "CREDIT"   },
-   { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
-};
-
-const demostate_t demostates_udoom[] =
-{
-   { D_DrawTitle,       "TITLEPIC" }, // retail
-   { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
-   { G_DeferedPlayDemo, "DEMO2"    },
-   { D_DrawTitle,       "TITLEPIC" },
-   { G_DeferedPlayDemo, "DEMO3"    },
-   { D_SetPageName,     "CREDIT"   },
-   { G_DeferedPlayDemo, "DEMO4"    },
-   { NULL }
-};
-
-const demostate_t demostates_hsw[] =
-{
-   { D_DrawTitle,       "TITLE" }, // heretic shareware
-   { D_DrawTitleA,      "TITLE" },
-   { G_DeferedPlayDemo, "DEMO1" },
-   { D_SetPageName,     "ORDER" },
-   { G_DeferedPlayDemo, "DEMO2" },
-   { D_SetPageName,     NULL    },
-   { G_DeferedPlayDemo, "DEMO3" },
-   { NULL }
-};
-
-const demostate_t demostates_hreg[] =
-{
-   { D_DrawTitle,       "TITLE"  }, // heretic registered/sosr
-   { D_DrawTitleA,      "TITLE"  },
-   { G_DeferedPlayDemo, "DEMO1"  },
-   { D_SetPageName,     "CREDIT" },
-   { G_DeferedPlayDemo, "DEMO2"  },
-   { D_SetPageName,     NULL     },
-   { G_DeferedPlayDemo, "DEMO3"  },
-   { NULL }
-};
-
-const demostate_t demostates_unknown[] =
-{
-   { D_SetPageName, NULL }, // indetermined - haleyjd 04/01/08
-   { NULL }
-};
-
-//
-// D_DoAdvanceDemo
-//
-// This cycles through the demo sequences.
-// killough 11/98: made table-driven
-//
-void D_DoAdvanceDemo(void)
-{
-   const demostate_t *demostates = GameModeInfo->demoStates;
-   const demostate_t *state;
-
-   players[consoleplayer].playerstate = PST_LIVE;  // not reborn
-   advancedemo = usergame = paused = false;
-   gameaction = ga_nothing;
-
-   pagetic = GameModeInfo->pageTics;
-   G_SetGameState(GS_DEMOSCREEN);
-
-   // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
-   // demo state resource names
-   state = &(demostates[++demosequence]);
-
-   if(!state->func) // time to wrap?
-   {
-      demosequence = 0;
-      state = &(demostates[0]);
-   }
-
-   state->func(DEH_String(state->name));
-
-   C_InstaPopup();       // make console go away
-}
-
 //
 // D_StartTitle
 //
 void D_StartTitle(void)
 {
    gameaction = ga_nothing;
-   demosequence = -1;
-   D_AdvanceDemo();
+   Game.deactivate();
+   DemoScreen.startUpDeferred();
 }
 
 //=============================================================================
@@ -564,9 +402,9 @@ void D_DrawWings()
    if(wingwidth <= 0)
       return;
 
-   if(G_GameStateIs(GS_LEVEL) && !MN_CheckFullScreen())
+   if(G_GameStateIs(GS_LEVEL) && !Menu.isFullScreen())
    {
-      if(scaledviewheight != 200 || automapactive)
+      if(scaledviewheight != 200 || AutoMap.isUpFront())
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -613,33 +451,17 @@ void D_Display(void)
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
-   if(!MN_CheckFullScreen())
+   if(!Menu.isFullScreen())
    {
-      if(G_GameStateIs(GS_LEVEL))
-      {
-         // see if the border needs to be initially drawn
-         if(oldgamestate != GS_LEVEL)
-            R_FillBackScreen();    // draw the pattern into the back screen
-
-         if(automapactive)
-         {
-            AM_Drawer();
-         }
-         else
-         {
-            R_DrawViewBorder();    // redraw border
-            R_RenderPlayerView (&players[displayplayer], camera);
-         }
-
-         ST_Drawer(scaledviewheight == 200);  // killough 11/98
-         HU_Drawer();
-      }
+      // do buffered drawing
+      if(G_GameStateIs(GS_DEMOSCREEN))
+         DemoScreen.draw();
+      else if(G_GameStateIs(GS_LEVEL))
+         Game.draw();
       else if(G_GameStateIs(GS_INTERMISSION))
-         IN_Drawer();
+         Intermission.draw();
       else if(G_GameStateIs(GS_FINALE))
-         F_Drawer();
-      else if(G_GameStateIs(GS_DEMOSCREEN))
-         D_PageDrawer();
+         Finale.draw();
 
       // clean up border stuff
       if(G_GameStateChanged() && !G_GameStateIs(GS_LEVEL))
@@ -659,7 +481,7 @@ void D_Display(void)
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindowy);
+         int y = 4 + (AutoMap.isUpFront() ? 0 : scaledwindowy);
 
          V_DrawPatch(x, y, &subscreen43, patch);
       }
@@ -692,8 +514,8 @@ void D_Display(void)
 
                Wipe_Ticker();
 
-               C_Drawer();
-               MN_Drawer();
+               Console.draw();
+               Menu.draw();
                NetUpdate();
                if(v_ticker)
                   V_FPSDrawer();
@@ -708,12 +530,12 @@ void D_Display(void)
             Wipe_Drawer();
       }
 
-      C_Drawer();
+      Console.draw();
 
-   } // if(!MN_CheckFullScreen())
+   } // if(!Menu.isFullScreen())
 
    // menus go directly to the screen
-   MN_Drawer();         // menu is drawn even on top of everything
+   Menu.draw();         // menu is drawn even on top of everything
    NetUpdate();         // send out any new accumulation
 
    //sf : now system independent
@@ -2314,7 +2136,8 @@ static void D_DoomInit(void)
    V_InitMisc();
 
    startupmsg("C_Init","Init console.");
-   C_Init();
+   Console.init();
+   input_interfaces.registerInterface(&Console);
 
    startupmsg("I_Init","Setting up machine state.");
    I_Init();
@@ -2339,16 +2162,34 @@ static void D_DoomInit(void)
    ST_Init();
 
    startupmsg("MN_Init", "Init menu.");
-   MN_Init();
+   Menu.init();
+   input_interfaces.registerInterface(&Menu);
 
    startupmsg("IN_Init", "Init intermission.");
-   IN_Init(); // haleyjd 09/10/12
+   Intermission.init(); // haleyjd 09/10/12
+   input_interfaces.registerInterface(&Intermission);
 
    startupmsg("F_Init", "Init finale.");
-   F_Init();
+   Finale.init();
+   input_interfaces.registerInterface(&Finale);
 
    startupmsg("S_Init", "Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
+
+   startupmsg("G_Init", "Setting up game interfaces.");
+
+   // [CG] Initialize and register the game interface.
+   Game.init();
+   input_interfaces.registerInterface(&Game);
+
+   // [CG] Initialize and register the demo screen interface.
+   DemoScreen.init();
+   input_interfaces.registerInterface(&DemoScreen);
+
+   // [CG] Initialize and register the automap interface.
+   AutoMap.init();
+   AutoMap.setParent(&Game);
+   input_interfaces.registerInterface(&AutoMap);
 
    //
    // NETCODE_FIXME: Netgame check.
@@ -2372,8 +2213,12 @@ static void D_DoomInit(void)
    }
 
    // haleyjd: this SHOULD be late enough...
+   /*
    startupmsg("G_LoadDefaults", "Init keybindings.");
    G_LoadDefaults();
+   */
+   startupmsg("Key Bindings", "Init keybindings.");
+   key_bindings.loadKeyBindings();
 
    //
    // CONSOLE_FIXME: This may not be the best time for scripts.

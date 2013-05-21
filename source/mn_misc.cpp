@@ -170,7 +170,10 @@ bool MN_PopupResponder(event_t *ev)
    case popup_alert:
       {
          // haleyjd 02/24/02: restore saved menuactive state
-         menuactive = popupMenuActive;
+         if(popupMenuActive)
+            Menu.activate();
+         else
+            Menu.deactivate();
          // kill message
          MN_PopWidget();
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
@@ -182,7 +185,10 @@ bool MN_PopupResponder(event_t *ev)
       {
          // run command and kill message
          // haleyjd 02/24/02: restore saved menuactive state
-         menuactive = popupMenuActive;
+         if(popupMenuActive)
+            Menu.activate();
+         else
+            Menu.deactivate();
          if(popup_callback)
          {
             popup_callback();
@@ -196,12 +202,15 @@ bool MN_PopupResponder(event_t *ev)
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
          MN_PopWidget();  // kill message
       }
-      if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
+      if(ch == 'n' ||
+         Menu.checkAndClearActions("menu_toggle", "menu_previous")) // no!
       {
          // kill message
          // haleyjd 02/24/02: restore saved menuactive state
-         action_menu_toggle = action_menu_previous = false;
-         menuactive = popupMenuActive;
+         if(popupMenuActive)
+            Menu.activate();
+         else
+            Menu.deactivate();
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
          MN_PopWidget(); // kill message
       }
@@ -225,9 +234,9 @@ void MN_Alert(const char *message, ...)
    va_list args;
 
    // haleyjd 02/24/02: bug fix for menuactive state
-   popupMenuActive = menuactive;
+   popupMenuActive = Menu.isActive();
 
-   MN_ActivateMenu();
+   Menu.activate();
 
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
@@ -247,9 +256,9 @@ void MN_Alert(const char *message, ...)
 void MN_Question(const char *message, const char *command)
 {
    // haleyjd 02/24/02: bug fix for menuactive state
-   popupMenuActive = menuactive;
+   popupMenuActive = Menu.isActive();
 
-   MN_ActivateMenu();
+   Menu.activate();
 
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
@@ -273,9 +282,9 @@ void MN_Question(const char *message, const char *command)
 //
 void MN_QuestionFunc(const char *message, void (*handler)(void))
 {
-   popupMenuActive = menuactive;
+   popupMenuActive = Menu.isActive();
 
-   MN_ActivateMenu();
+   Menu.activate();
 
    // hook in widget so message will be displayed
    MN_PushWidget(&popup_widget);
@@ -499,10 +508,8 @@ bool MN_HelpResponder(event_t *ev)
 
    if(ev->type != ev_keydown) return false;
 
-   if(action_menu_previous)
+   if(Menu.checkAndClearAction("menu_previous"))
    {
-      action_menu_previous = false;
-
       // go to previous screen
       // haleyjd: only make sound if we really went back
       viewing_helpscreen--;
@@ -515,10 +522,8 @@ bool MN_HelpResponder(event_t *ev)
          S_StartSound(NULL, menuSounds[MN_SND_PREVIOUS]);
    }
 
-   if(action_menu_confirm)
+   if(Menu.checkAndClearAction("menu_confirm"))
    {
-      action_menu_confirm = false;
-
       // go to next helpscreen
       viewing_helpscreen++;
       if(viewing_helpscreen >= num_helpscreens)
@@ -530,16 +535,14 @@ bool MN_HelpResponder(event_t *ev)
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
    }
 
-   if(action_menu_toggle)
+   if(Menu.checkAndClearAction("menu_toggle"))
    {
-      action_menu_toggle = false;
-
       // cancel helpscreen
 cancel:
       MN_PopWidget();
       // haleyjd 05/29/06: maintain previous menu activation state
       if(!help_prev_menuactive)
-         menuactive = false;
+         Menu.deactivate();
       S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
    }
 
@@ -549,12 +552,12 @@ cancel:
 
 menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, NULL, true};
 
-CONSOLE_COMMAND(help, 0)
+CONSOLE_COMMAND(help, 0, ii_all)
 {
    // haleyjd 05/29/06: record state of menu activation
-   help_prev_menuactive = menuactive;
+   help_prev_menuactive = Menu.isActive();
 
-   MN_ActivateMenu();
+   Menu.activate();
    MN_FindHelpScreens();        // search for help screens
 
    // hook in widget to display menu
@@ -564,12 +567,12 @@ CONSOLE_COMMAND(help, 0)
    viewing_helpscreen = 0;
 }
 
-CONSOLE_COMMAND(credits, 0)
+CONSOLE_COMMAND(credits, 0, ii_all)
 {
    // haleyjd 05/29/06: record state of menu activation
-   help_prev_menuactive = menuactive;
+   help_prev_menuactive = Menu.isActive();
 
-   MN_ActivateMenu();
+   Menu.activate();
    MN_FindCreditScreens();        // search for help screens
 
    // hook in widget to display menu
@@ -636,48 +639,35 @@ void MN_MapColourDrawer(void)
 
 bool MN_MapColourResponder(event_t *ev)
 {
-   if(action_menu_left)
-   {
-      action_menu_left = false;
+   static qstring buf;
+
+   if(Menu.checkAndClearAction("menu_left"))
       selected_colour--;
-   }
 
-   if(action_menu_right)
-   {
-      action_menu_right = false;
+   if(Menu.checkAndClearAction("menu_right"))
       selected_colour++;
-   }
 
-   if(action_menu_up)
-   {
-      action_menu_up = false;
+   if(Menu.checkAndClearAction("menu_up"))
       selected_colour -= 16;
-   }
 
-   if(action_menu_down)
-   {
-      action_menu_down = false;
+   if(Menu.checkAndClearAction("menu_down"))
       selected_colour += 16;
-   }
 
-   if(action_menu_toggle || action_menu_previous)
+   if(Menu.checkAndClearActions("menu_toggle", "menu_previous"))
    {
       // cancel colour selection
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       return true;
    }
 
-   if(action_menu_confirm)
+   if(Menu.checkAndClearAction("menu_confirm"))
    {
-      static char tempstr[128];
-      sprintf(tempstr, "%i", selected_colour);
+      buf.Printf(0, "%i", selected_colour);
 
       // run command
-      C_RunCommand(colour_command, tempstr);
+      C_RunCommand(colour_command, buf.constPtr());
 
       // kill selector
-      action_menu_confirm = false;
       MN_PopWidget();
       return true;
    }
@@ -731,10 +721,9 @@ static void MN_fontTestDrawer()
 
 static bool MN_fontTestResponder(event_t *ev)
 {
-   if(action_menu_toggle || action_menu_previous)
+   if(Menu.checkAndClearActions("menu_toggle", "menu_previous"))
    {
       // exit widget
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       teststr.freeBuffer();
    }
@@ -750,7 +739,7 @@ static menuwidget_t fonttest_widget =
    true
 };
 
-CONSOLE_COMMAND(mn_testfont, 0)
+CONSOLE_COMMAND(mn_testfont, 0, ii_all)
 {
    vfont_t *font;
    const char *fontName;

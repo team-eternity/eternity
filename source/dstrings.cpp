@@ -57,4 +57,3 @@ const char *endmsg[/*NUM_QUITMESSAGES+1*/]=
 };
 
 // EOF
-

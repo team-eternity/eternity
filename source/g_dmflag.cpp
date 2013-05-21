@@ -80,7 +80,7 @@ CONSOLE_NETVAR(dmflags, dmflags, cf_server, netcmd_dmflags) {}
 
 // allows setting of default flags for a certain game mode
 
-CONSOLE_COMMAND(defdmflags, cf_server)
+CONSOLE_COMMAND(defdmflags, cf_server, ii_all)
 {
    int mode;
    unsigned int flags = 0;
@@ -144,3 +144,4 @@ void G_DMAddCommands(void)
 }
 
 // EOF
+

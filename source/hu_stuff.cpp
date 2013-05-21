@@ -299,9 +299,6 @@ void HU_Ticker(void)
    }
 }
 
-// I don't know what this is doing here, but it can stay for now.
-bool altdown = false;
-
 //
 // HU_Responder
 //
@@ -310,9 +307,6 @@ bool altdown = false;
 //
 bool HU_Responder(event_t *ev)
 {
-   if(ev->data1 == KEYD_LALT)
-      altdown = (ev->type == ev_keydown);
-
    // only the chat widget can respond to events (for now at least)
    return HU_ChatRespond(ev);
 }
@@ -644,7 +638,7 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
 
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(tw->flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(tw->flags & TW_AUTOMAP_ONLY && !AutoMap.isUpFront())
       return;
 
    // 10/08/05: boxed message support
@@ -714,7 +708,7 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 {
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
-   tw->message = automapactive ? tw->alloc : NULL;
+   tw->message = AutoMap.isUpFront() ? tw->alloc : NULL;
 }
 
 //
@@ -918,7 +912,8 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
 
    // haleyjd 03/03/07: don't display while showing a center message
    if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 ||
-      viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
+      viewcamera || AutoMap.isUpFront() ||
+      centermessage_widget.cleartic > leveltime)
       return;
 
    patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
@@ -1005,7 +1000,7 @@ static void HU_LevelTimeTick(hu_widget_t *widget)
    int seconds;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
-   if(!automapactive || !hu_showtime)
+   if(!AutoMap.isUpFront() || !hu_showtime)
    {
       tw->message = NULL;
       return;
@@ -1098,7 +1093,7 @@ static void HU_LevelNameTick(hu_widget_t *widget)
 {
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
-   tw->message = automapactive ? LevelInfo.levelName : NULL;
+   tw->message = AutoMap.isUpFront() ? LevelInfo.levelName : NULL;
    tw->color   = hu_levelnamecolor + 1;
 }
 
@@ -1145,7 +1140,7 @@ static void HU_InitLevelName(void)
 
 static hu_textwidget_t chat_widget;
 
-char chatinput[100] = "";
+qstring chatinput;
 
 //
 // HU_ChatTick
@@ -1154,13 +1149,13 @@ char chatinput[100] = "";
 //
 static void HU_ChatTick(hu_widget_t *widget)
 {
-   static char tempchatmsg[128];
+   static qstring tempchatmsg;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
    if(chat_active)
    {
-      psnprintf(tempchatmsg, sizeof(tempchatmsg), "%s_", chatinput);
-      tw->message = tempchatmsg;
+      tempchatmsg.Printf(0, "%s_", chatinput.constPtr());
+      tw->message = tempchatmsg.constPtr();
    }
    else
       tw->message = NULL;
@@ -1202,36 +1197,31 @@ static void HU_InitChat(void)
 static bool HU_ChatRespond(event_t *ev)
 {
    char ch = 0;
-   static bool shiftdown;
+   static qstring msg;
 
    // haleyjd 06/11/08: get HUD actions
+   /*
    G_KeyResponder(ev, kac_hud);
-
-   if(ev->data1 == KEYD_RSHIFT)
-      shiftdown = (ev->type == ev_keydown);
 
    if(ev->type != ev_keydown)
       return false;
-
+   */
    if(!chat_active)
    {
-      if(ev->data1 == key_chat && netgame)
+      if(Game.checkAndClearAction("chat") && netgame)
       {
          chat_active = true; // activate chat
-         chatinput[0] = 0;   // empty input string
+         chatinput.clear();  // empty input string
          return true;
       }
       return false;
    }
 
-   if(altdown && ev->type == ev_keydown &&
-      ev->data1 >= '0' && ev->data1 <= '9')
+   if(key_bindings.altdown && ev->data1 >= '0' && ev->data1 <= '9')
    {
       // chat macro
-      char tempstr[100];
-      psnprintf(tempstr, sizeof(tempstr),
-                "say \"%s\"", chat_macros[ev->data1-'0']);
-      C_RunTextCmd(tempstr);
+      msg.Printf(0, "say \"%s\"", chat_macros[ev->data1 - '0']);
+      C_RunTextCmd(msg.constPtr());
       chat_active = false;
       return true;
    }
@@ -1242,17 +1232,16 @@ static bool HU_ChatRespond(event_t *ev)
       return true;
    }
 
-   if(ev->data1 == KEYD_BACKSPACE && chatinput[0])
+   if(ev->data1 == KEYD_BACKSPACE && chatinput.length())
    {
-      chatinput[strlen(chatinput)-1] = 0;      // remove last char
+      chatinput.Delc(); // remove last char
       return true;
    }
 
    if(ev->data1 == KEYD_ENTER)
    {
-      char tempstr[100];
-      psnprintf(tempstr, sizeof(tempstr), "say \"%s\"", chatinput);
-      C_RunTextCmd(tempstr);
+      msg.Printf(0, "say \"%s\"", chatinput.constPtr());
+      C_RunTextCmd(msg.constPtr());
       chat_active = false;
       return true;
    }
@@ -1260,11 +1249,11 @@ static bool HU_ChatRespond(event_t *ev)
    if(ev->character)
       ch = ev->character;
    else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+      ch = key_bindings.shiftdown ? shiftxform[ev->data1] : ev->data1;
 
    if(ch > 31 && ch < 127)
    {
-      psnprintf(chatinput, sizeof(chatinput), "%s%c", chatinput, ch);
+      chatinput << ch;
       return true;
    }
    return false;
@@ -1302,7 +1291,7 @@ static void HU_CoordTick(hu_widget_t *widget)
    static char coordystr[16];
    static char coordzstr[16];
 
-   if(!automapactive || !hu_showcoords)
+   if(!AutoMap.isUpFront() || !hu_showcoords)
    {
       tw->message = NULL;
       return;
@@ -1456,7 +1445,7 @@ CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
-CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
+CONSOLE_NETCMD(say, cf_netvar, netcmd_chat, ii_playing)
 {
    S_StartSound(NULL, GameModeInfo->c_ChatSound);
 
@@ -1804,7 +1793,7 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
 {
-   return (cell)automapactive;
+   return (cell)AutoMap.isUpFront();
 }
 
 static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)

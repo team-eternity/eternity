@@ -37,8 +37,10 @@
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"              // Ty 3/27/98 deh declarations
+#include "d_dehtbl.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "d_iface.h"
 #include "d_io.h"
 #include "d_main.h"
 #include "d_net.h"
@@ -54,6 +56,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_cheat.h"
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
@@ -82,6 +85,8 @@
 #include "sounds.h"
 #include "st_stuff.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
 #include "version.h"
 #include "w_levels.h" // haleyjd
 #include "w_wad.h"
@@ -92,16 +97,24 @@ extern gamestate_t oldgamestate;
 extern void R_InitPortals(void);
 
 // haleyjd: new demo format stuff
-static char     eedemosig[] = "ETERN";
+static char         eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
-static char     *demoname;
-static bool      netdemo;
-static byte     *demobuffer;   // made some static -- killough
-static size_t   maxdemosize;
-static byte     *demo_p;
-static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
+static char        *demoname;
+static bool         netdemo;
+static byte        *demobuffer;   // made some static -- killough
+static size_t       maxdemosize;
+static byte        *demo_p;
+static int16_t      consistency[MAXPLAYERS][BACKUPTICS];
 static gamestate_t  gamestate; // [CG] Made static.
+
+static void G_DoLoadGame(void);
+static void G_DoSaveGame(void);
+static void G_DoCompleted(void);
+static void G_DoWorldDone(void);
+static void G_ReadDemoTiccmd(ticcmd_t *cmd);
+static void G_WriteDemoTiccmd(ticcmd_t *cmd);
+static void G_CameraTicker(void);
 
 WadDirectory *g_dir = &wGlobalDir;
 
@@ -160,14 +173,6 @@ double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 // controls (have defaults)
 //
 
-// haleyjd: these keys are not dynamically rebindable
-
-int key_escape = KEYD_ESCAPE;
-int key_chat;
-int key_help = KEYD_F1;
-int key_pause;
-int destination_keys[MAXPLAYERS];
-
 // haleyjd: mousebfire is now unused -- removed
 int mousebstrafe;   // double-clicking either of these buttons
 int mousebforward;  // causes a use action, however
@@ -179,7 +184,6 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -216,7 +220,631 @@ int keylookspeed = 5;
 int cooldemo = 0;
 int cooldemo_tics;      // number of tics until changing view
 
+GameInterface Game;
+DemoScreenInterface DemoScreen;
+
 void G_CoolViewPoint();
+
+//--------------------------------------------------------------------------
+// Game Interface
+//
+
+GameInterface::GameInterface() : InputInterface("Game", ii_game, ev_keydown |
+                                                                 ev_keyup   |
+                                                                 ev_mouse   |
+                                                                 ev_joystick)
+{
+   registerHandledActions();
+}
+
+void GameInterface::init()
+{
+   // [CG] Placeholder.
+}
+
+//
+// G_Drawer
+//
+// Draws the game
+//
+void GameInterface::draw()
+{
+   // see if the border needs to be initially drawn
+   if(oldgamestate != GS_LEVEL)
+      R_FillBackScreen();    // draw the pattern into the back screen
+
+   if(AutoMap.isActive())
+   {
+      AutoMap.draw();
+   }
+   else
+   {
+      R_DrawViewBorder();    // redraw border
+      R_RenderPlayerView (&players[displayplayer], camera);
+      HU_Drawer(); // [CG] FIXME: HUD widgets won't display in the automap
+   }
+   ST_Drawer(scaledviewheight == 200);  // killough 11/98
+}
+
+//
+// G_Ticker
+//
+// Make ticcmd_ts for the players.
+//
+void GameInterface::tick()
+{
+   int i;
+
+   // do player reborns if needed
+   for(i = 0; i < MAXPLAYERS; i++)
+   {
+      if(playeringame[i] && players[i].playerstate == PST_REBORN)
+         G_DoReborn(i);
+   }
+
+   // do things to change the game state
+   while (gameaction != ga_nothing)
+   {
+      switch (gameaction)
+      {
+      case ga_loadlevel:
+         G_DoLoadLevel();
+         break;
+      case ga_newgame:
+         G_DoNewGame();
+         break;
+      case ga_loadgame:
+         G_DoLoadGame();
+         break;
+      case ga_savegame:
+         G_DoSaveGame();
+         break;
+      case ga_playdemo:
+         G_DoPlayDemo();
+         break;
+      case ga_completed:
+         G_DoCompleted();
+         break;
+      case ga_victory:
+         Finale.activate();
+         break;
+      case ga_worlddone:
+         G_DoWorldDone();
+         break;
+      case ga_screenshot:
+         M_ScreenShot();
+         gameaction = ga_nothing;
+         break;
+      default:  // killough 9/29/98
+         gameaction = ga_nothing;
+         break;
+      }
+   }
+
+   if(animscreenshot)    // animated screen shots
+   {
+      if(gametic % 16 == 0)
+      {
+         animscreenshot--;
+         M_ScreenShot();
+      }
+   }
+
+   // killough 10/6/98: allow games to be saved during demo
+   // playback, by the playback user (not by demo itself)
+
+   if (demoplayback && sendsave)
+   {
+      sendsave = false;
+      G_DoSaveGame();
+   }
+
+   // killough 9/29/98: Skip some commands while pausing during demo
+   // playback, or while menu is active.
+   //
+   // We increment basetic and skip processing if a demo being played
+   // back is paused or if the menu is active while a non-net game is
+   // being played, to maintain sync while allowing pauses.
+   //
+   // P_Ticker() does not stop netgames if a menu is activated, so
+   // we do not need to stop if a menu is pulled up during netgames.
+
+   if((paused & 2) || (!demoplayback &&
+                       (Menu.isUpFront() || Console.isUpFront()) &&
+                       !netgame))
+   {
+      basetic++;  // For revenant tracers and RNG -- we must maintain sync
+   }
+   else
+   {
+      // get commands, check consistency, and build new consistancy check
+      int buf = (gametic / ticdup) % BACKUPTICS;
+
+      for(i=0; i<MAXPLAYERS; i++)
+      {
+         if(playeringame[i])
+         {
+            ticcmd_t *cmd = &players[i].cmd;
+            playerclass_t *pc = players[i].pclass;
+
+            memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
+
+            if(demoplayback)
+               G_ReadDemoTiccmd(cmd);
+
+            if(demorecording)
+               G_WriteDemoTiccmd(cmd);
+
+            /*
+            if(isconsoletic && netgame)
+               continue;
+            */
+
+            // check for turbo cheats
+            // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
+
+            if((netgame || demoplayback) &&
+               cmd->forwardmove > TURBOTHRESHOLD &&
+               !(gametic&31) && ((gametic>>5)&3) == i)
+            {
+               doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
+            }
+
+            if(netgame && /*!isconsoletic &&*/ !netdemo &&
+               !(gametic % ticdup))
+            {
+               if(gametic > BACKUPTICS &&
+                  consistency[i][buf] != cmd->consistency)
+               {
+                  D_QuitNetGame();
+                  C_Printf(FC_ERROR "consistency failure");
+                  C_Printf(FC_ERROR "(%i should be %i)",
+                              cmd->consistency, consistency[i][buf]);
+               }
+
+               // sf: include y as well as x
+               if(players[i].mo)
+                  consistency[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
+               else
+                  consistency[i][buf] = 0; // killough 2/14/98
+            }
+         }
+      }
+
+      // check for special buttons
+      for(i=0; i<MAXPLAYERS; i++)
+      {
+         if(playeringame[i] &&
+            players[i].cmd.buttons & BT_SPECIAL)
+         {
+            // killough 9/29/98: allow multiple special buttons
+            if(players[i].cmd.buttons & BTS_PAUSE)
+            {
+               if((paused ^= 1))
+                  S_PauseSound();
+               else
+                  S_ResumeSound();
+            }
+
+            if(players[i].cmd.buttons & BTS_SAVEGAME)
+            {
+               if(!savedescription[0])
+                  strcpy(savedescription, "NET GAME");
+               savegameslot =
+                  (players[i].cmd.buttons & BTS_SAVEMASK)>>BTS_SAVESHIFT;
+               gameaction = ga_savegame;
+            }
+         }
+      }
+   }
+
+   // do main actions
+
+   // killough 9/29/98: split up switch statement
+   // into pauseable and unpauseable parts.
+
+   // call other tickers
+   C_NetTicker();        // sf: console network commands
+   if(inwipe)
+      Wipe_Ticker();
+
+#if 0
+   // haleyjd 03/15/03: execute scheduled Small callbacks
+   SM_ExecuteCallbacks();
+#endif
+
+   if(G_GameStateIs(GS_LEVEL))
+   {
+      P_Ticker();
+      G_CameraTicker(); // haleyjd: move cameras
+      ST_Ticker();
+      AutoMap.tick();
+      HU_Ticker();
+   }
+   else if(!(paused & 2)) // haleyjd: refactored
+   {
+      if(G_GameStateIs(GS_INTERMISSION))
+         Intermission.tick();
+      else if(G_GameStateIs(GS_FINALE))
+         Finale.tick();
+      else if(G_GameStateIs(GS_DEMOSCREEN))
+         DemoScreen.tick();
+   }
+}
+
+void GameInterface::registerHandledActions()
+{
+   registerAction("toggle_automap");
+   registerAction("toggle_console");
+   registerAction("forward");
+   registerAction("backward");
+   registerAction("left");
+   registerAction("right");
+   registerAction("flip");
+   registerAction("moveleft");
+   registerAction("moveright");
+   registerAction("strafe");
+   registerAction("speed");
+   registerAction("autorun");
+   registerAction("mlook");
+   registerAction("lookup");
+   registerAction("lookdown");
+   registerAction("center");
+   registerAction("flyup");
+   registerAction("flydown");
+   registerAction("flycenter");
+   registerAction("jump");
+   registerAction("use");
+   registerAction("attack");
+   registerAction("nextweapon");
+   registerAction("weaponup");
+   registerAction("weapondown");
+   registerAction("weapon1");
+   registerAction("weapon2");
+   registerAction("weapon3");
+   registerAction("weapon4");
+   registerAction("weapon5");
+   registerAction("weapon6");
+   registerAction("weapon7");
+   registerAction("weapon8");
+   registerAction("weapon9");
+   registerAction("spectate_prev");
+   registerAction("spectate_next");
+   registerAction("spectate_self");
+   registerAction("show_scoreboard");
+   registerAction("chat");
+   registerAction("pause");
+   registerAction("chat_green");
+   registerAction("chat_indigo");
+   registerAction("chat_brown");
+   registerAction("chat_red");
+}
+
+//
+// G_Responder
+//
+// Get info needed to make ticcmd_ts for the players.
+//
+bool GameInterface::handleEvent(event_t* ev)
+{
+   if(InputInterface::handleEvent(ev))
+      return true;
+
+   // [CG] I'm not totally sure how to handle HU_Responder.  It is strictly for
+   //      the chat widget right now, and chat being part of the HUD makes
+   //      sense.  I don't think I would call the HUD an interface, as it
+   //      doesn't accept input or draw separate from the game interface.
+   //      However, that chat widget does act like a sub-interface of Game, but
+   //      it would have to be pulled out of the HUD's widget system, and I
+   //      feel like that's a job for another day.
+   //
+   //      I did nix ST_Responder and replace it with a call to M_FindCheats,
+   //      because the status bar being responsible for cheats makes very
+   //      little sense.  I left ST_Responder in st_stuff though.
+
+   if(G_GameStateIs(GS_LEVEL) && (ev->type == ev_keydown))
+   {
+      if(HU_Responder(ev))
+         return true;  // HUD ate the event
+      if(M_FindCheats(ev->data1))
+         return true;  // Cheats ate the event
+   }
+
+   if(G_GameStateIs(GS_LEVEL) && checkAndClearAction("toggle_automap"))
+   {
+      AutoMap.toggle();
+      return true;
+   }
+
+   if(checkAndClearAction("toggle_console"))
+   {
+      Console.toggle();
+      return true;
+   }
+
+   /*
+   // killough 9/29/98: reformatted
+   if(G_GameStateIs(GS_LEVEL) &&
+      (HU_Responder(ev) ||  // chat ate the event
+       ST_Responder(ev) ||  // status window ate it
+       AutoMap.handleEvent(ev)))
+   {
+      return true;
+   }
+
+   if(G_KeyResponder(ev, kac_cmd))
+      return true;
+   */
+
+   // any other key pops up menu if in demos
+   //
+   // killough 8/2/98: enable automap in -timedemo demos
+   //
+   // killough 9/29/98: make any key pop up menu regardless of
+   // which kind of demo, and allow other events during playback
+
+   /*
+   if(DemoScreen.isUpFront() && DemoScreen.handleEvent(ev))
+      return true;  // demo screen ate the event
+   */
+
+   if((gameaction == ga_nothing) && (demoplayback))
+   {
+      // killough 9/29/98: allow user to pause demos during playback
+      if (ev->type == ev_keydown && checkAndClearAction("pause"))
+      {
+         if (paused ^= 2)
+            S_PauseSound();
+         else
+            S_ResumeSound();
+         return true;
+      }
+
+      // killough 10/98:
+      // Don't pop up menu, if paused in middle
+      // of demo playback, or if automap active.
+      // Don't suck up keys, which may be cheats
+
+      // haleyjd: deobfuscated into an if statement
+      // fixed a bug introduced in beta 3 that possibly
+      // broke the walkcam
+   }
+
+   if(G_GameStateIs(GS_FINALE) && Finale.handleEvent(ev))
+      return true;  // finale ate the event
+
+   if(checkAndClearAction("autorun"))
+      autorun = !autorun;
+
+   switch(ev->type)
+   {
+   case ev_keydown:
+      if(checkAndClearAction("pause")) // phares
+         C_RunTextCmd("pause");
+      return true;    // eat key down events
+
+   case ev_keyup:
+      return false;   // always let key up events filter down
+
+   case ev_mouse:
+      mousebuttons[0] = !!(ev->data1 & 1);
+      mousebuttons[1] = !!(ev->data1 & 2);
+      mousebuttons[2] = !!(ev->data1 & 4);
+
+      // SoM: this mimics the doom2 behavior better.
+      if(mouseSensitivity_vanilla)
+      {
+          mousex += (ev->data2 * (mouseSensitivity_horiz + 5.0) / 10.0);
+          mousey += (ev->data3 * (mouseSensitivity_vert + 5.0) / 10.0);
+      }
+      else
+      {
+          // [CG] 01/20/12: raw sensitivity
+          mousex += (ev->data2 * mouseSensitivity_horiz / 10.0);
+          mousey += (ev->data3 * mouseSensitivity_vert / 10.0);
+      }
+
+      return true;    // eat events
+
+   case ev_joystick:
+      // haleyjd: joybuttons now obsolete -- removed
+      joyxmove = ev->data2;
+      joyymove = ev->data3;
+      return true;    // eat events
+
+   default:
+      break;
+   }
+
+   return false;
+}
+
+bool GameInterface::isFullScreen()
+{
+   return isUpFront();
+}
+
+//--------------------------------------------------------------------------
+// Demo Screen Interface
+//
+
+DemoScreenInterface::DemoScreenInterface()
+   : InputInterface("DemoScreen", ii_demoscreen, ev_keydown |
+                                                 ev_mouse   |
+                                                 ev_joystick)
+{
+   registerHandledActions();
+}
+
+//
+// D_DoAdvanceDemo
+//
+// This cycles through the demo sequences.
+// killough 11/98: made table-driven
+//
+/* [CG] Removed */
+
+//
+// D_PageDrawer
+//
+// killough 11/98: add credits screen
+//
+void DemoScreenInterface::draw()
+{
+   int l;
+
+   if(pagename && (l = W_CheckNumForName(pagename)) != -1)
+   {
+      // haleyjd 08/15/02: handle Heretic pages
+      V_DrawFSBackground(&subscreen43, l);
+
+      if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
+      {
+         V_DrawPatch(4, 160, &subscreen43,
+                     PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
+      }
+   }
+   else
+      MN_DrawCredits();
+}
+
+//
+// D_PageTicker
+// Handles timing for warped projection
+//
+void DemoScreenInterface::tick()
+{
+   // killough 12/98: don't advance internal demos if a single one is
+   // being played. The only time this matters is when using -loadgame with
+   // -fastdemo, -playdemo, or -timedemo, and a consistency error occurs.
+
+   if (/*!singledemo &&*/ --pagetic < 0)
+      DemoScreen.startUpDeferred();
+}
+
+//
+// D_AdvanceDemo
+// Called after each demo or intro demosequence finishes
+//
+void DemoScreenInterface::registerHandledActions()
+{
+   registerAction("toggle_automap");
+   registerAction("toggle_console");
+   registerAction("pause");
+}
+
+bool DemoScreenInterface::handleEvent(event_t *ev)
+{
+   if(InputInterface::handleEvent(ev))
+      return true;
+
+   // killough 9/29/98: allow user to pause demos during playback
+   if (ev->type == ev_keydown && checkAndClearAction("pause"))
+   {
+      if (paused ^= 2)
+         S_PauseSound();
+      else
+         S_ResumeSound();
+      return true;
+   }
+
+   if(G_GameStateIs(GS_LEVEL) && checkAndClearAction("toggle_automap"))
+   {
+      AutoMap.toggle();
+      return true;
+   }
+
+   if(checkAndClearAction("toggle_console"))
+   {
+      Console.toggle();
+      return true;
+   }
+
+   // killough 10/98:
+   // Don't pop up menu, if paused in middle
+   // of demo playback, or if automap active.
+   // Don't suck up keys, which may be cheats
+
+   // haleyjd: deobfuscated into an if statement
+   // fixed a bug introduced in beta 3 that possibly
+   // broke the walkcam
+
+   if(!walkcam_active &&
+      !(paused & 2) &&
+      !AutoMap.isUpFront() &&
+      ((ev->type == ev_keydown) || ev->data1))
+   {
+      // popup menu
+      MN_StartControlPanel();
+      return true;
+   }
+
+   return false;
+}
+
+bool DemoScreenInterface::isFullScreen()
+{
+   return isUpFront();
+}
+
+// killough 11/98: functions to perform demo sequences
+
+void DemoScreenInterface::drawTitle(const char *name)
+{
+   S_StartMusic(GameModeInfo->titleMusNum);
+   pagetic = GameModeInfo->titleTics;
+
+   if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
+      setPageName(GameModeInfo->consoleBack);
+   else
+      setPageName(name);
+}
+
+void DemoScreenInterface::drawTitleA(const char *name)
+{
+   pagetic = GameModeInfo->advisorTics;
+   setPageName(name);
+}
+
+void DemoScreenInterface::setPageName(const char *name)
+{
+   pagename = name;
+}
+
+void DemoScreenInterface::startUpDeferred()
+{
+   startup_deferred = true;
+}
+
+void DemoScreenInterface::startUpIfDeferred()
+{
+   if(!startup_deferred)
+      return;
+
+   // GameModeInfo->demoStates->setIndex(-1);
+   players[consoleplayer].playerstate = PST_LIVE;  // not reborn
+   deactivate();
+   startup_deferred = usergame = paused = false;
+   gameaction = ga_nothing;
+
+   // pagetic = GameModeInfo->pageTics;
+   G_SetGameState(GS_DEMOSCREEN);
+
+   // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
+   // demo state resource names
+   // [CG] 10/21/12: This is now in the DemoState classes.
+
+   GameModeInfo->demoStates->advance();
+   if(pagetic < 0)
+      pagetic = GameModeInfo->pageTics;
+   C_InstaPopup();       // make console go away
+   activate();
+}
+
+// killough 11/98: tabulate demo sequences
+
+// [CG] For formatting's sake
+#define CHECK_WEAPON(name) Game.checkAndClearAction(name)
 
 //
 // G_BuildTiccmd
@@ -249,17 +877,29 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
 
-   cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
+   cmd->consistency = consistency[consoleplayer][maketic % BACKUPTICS];
 
-   strafe = !!action_strafe;
-   //speed = autorun || action_speed;
-   speed = (autorun ? !(runiswalk && action_speed) : action_speed);
+   strafe = Game.actionIsActive("strafe");
+
+   //speed = autorun || Game.actionIsActive("speed");
+   if(autorun)
+   {
+      if(runiswalk && Game.actionIsActive("speed"))
+         speed = false;
+      else
+         speed = true;
+   }
+   else
+      speed = Game.actionIsActive("speed");
 
    forward = side = 0;
 
    // use two stage accelerative turning on the keyboard and joystick
-   if(joyxmove < 0 || joyxmove > 0 || action_right || action_left)
+   if(joyxmove < 0 || joyxmove > 0 || Game.actionIsActive("right") ||
+                                      Game.actionIsActive("left"))
+   {
       turnheld += ticdup;
+   }
    else
       turnheld = 0;
 
@@ -269,18 +909,15 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       tspeed = speed;
 
    // turn 180 degrees in one keystroke? -- phares
-   if(action_flip)
-   {
+   if(Game.checkAndClearAction("flip"))
       cmd->angleturn += (int16_t)QUICKREVERSE;
-      action_flip = false;
-   }
 
    // let movement keys cancel each other out
    if(strafe)
    {
-      if(action_right)
+      if(Game.actionIsActive("right"))
          side += pc->sidemove[speed];
-      if(action_left)
+      if(Game.actionIsActive("left"))
          side -= pc->sidemove[speed];
       if(joyxmove > 0)
          side += pc->sidemove[speed];
@@ -289,9 +926,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
    else
    {
-      if(action_right)
+      if(Game.actionIsActive("right"))
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
-      if(action_left)
+      if(Game.actionIsActive("left"))
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
       if(joyxmove > 0)
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
@@ -299,29 +936,29 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
    }
 
-   if(action_forward)
+   if(Game.actionIsActive("forward"))
       forward += pc->forwardmove[speed];
-   if(action_backward)
+   if(Game.actionIsActive("backward"))
       forward -= pc->forwardmove[speed];
    if(joyymove < 0)
       forward += pc->forwardmove[speed];
    if(joyymove > 0)
       forward -= pc->forwardmove[speed];
-   if(action_moveright)
+   if(Game.actionIsActive("moveright"))
       side += pc->sidemove[speed];
-   if(action_moveleft)
+   if(Game.actionIsActive("moveleft"))
       side -= pc->sidemove[speed];
-   if(action_jump)                    // -- joek 12/22/07
+   if(Game.actionIsActive("jump"))                   // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
-   mlook = allowmlook && (action_mlook || automlook);
+   mlook = allowmlook && (Game.actionIsActive("mlook") || automlook);
 
    // console commands
    cmd->chatchar = C_dequeueChatChar();
 
-   if(action_attack)
+   if(Game.actionIsActive("attack"))
       cmd->buttons |= BT_ATTACK;
 
-   if(action_use)
+   if(Game.actionIsActive("use"))
    {
       cmd->buttons |= BT_USE;
       // clear double clicks if hit use button
@@ -351,22 +988,22 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    //
 
    if((!demo_compatibility && players[consoleplayer].attackdown &&
-       !P_CheckAmmo(&players[consoleplayer])) || action_nextweapon)
+       !P_CheckAmmo(&players[consoleplayer])) || CHECK_WEAPON("nextweapon"))
    {
       newweapon = P_SwitchWeapon(&players[consoleplayer]); // phares
    }
    else
    {                                 // phares 02/26/98: Added gamemode checks
       newweapon =
-        action_weapon1 ? wp_fist :    // killough 5/2/98: reformatted
-        action_weapon2 ? wp_pistol :
-        action_weapon3 ? wp_shotgun :
-        action_weapon4 ? wp_chaingun :
-        action_weapon5 ? wp_missile :
-        action_weapon6 && GameModeInfo->id != shareware ? wp_plasma :
-        action_weapon7 && GameModeInfo->id != shareware ? wp_bfg :
-        action_weapon8 ? wp_chainsaw :
-        action_weapon9 && enable_ssg ? wp_supershotgun :
+        CHECK_WEAPON("weapon1") ? wp_fist :    // killough 5/2/98: reformatted
+        CHECK_WEAPON("weapon2") ? wp_pistol :
+        CHECK_WEAPON("weapon3") ? wp_shotgun :
+        CHECK_WEAPON("weapon4") ? wp_chaingun :
+        CHECK_WEAPON("weapon5") ? wp_missile :
+        CHECK_WEAPON("weapon6") && GameModeInfo->id != shareware ? wp_plasma :
+        CHECK_WEAPON("weapon7") && GameModeInfo->id != shareware ? wp_bfg :
+        CHECK_WEAPON("weapon8") ? wp_chainsaw :
+        CHECK_WEAPON("weapon9") && enable_ssg ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -420,9 +1057,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 03/06/09: next/prev weapon actions
-   if(action_weaponup)
+   if(Game.checkAction("weaponup"))
       newweapon = P_NextWeapon(&players[consoleplayer]);
-   else if(action_weapondown)
+   else if(Game.checkAction("weapondown"))
       newweapon = P_PrevWeapon(&players[consoleplayer]);
 
    if(newweapon != wp_nochange)
@@ -524,11 +1161,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    prevmlook = mlook;
 
-   if(action_lookup)
+   if(Game.actionIsActive("lookup"))
       look += pc->lookspeed[speed];
-   if(action_lookdown)
+   if(Game.actionIsActive("lookdown"))
       look -= pc->lookspeed[speed];
-   if(action_center)
+   if(Game.actionIsActive("center"))
       sendcenterview = true;
 
    // haleyjd: special value for view centering
@@ -543,11 +1180,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 06/05/12: flight
-   if(action_flyup)
+   if(Game.actionIsActive("flyup"))
       flyheight = FLIGHT_IMPULSE_AMT;
-   if(action_flydown)
+   if(Game.actionIsActive("flydown"))
       flyheight = -FLIGHT_IMPULSE_AMT;
-   if(action_flycenter)
+   if(Game.actionIsActive("flycenter"))
    {
       flyheight = FLIGHT_CENTER;
       look = -32768;
@@ -669,13 +1306,12 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
-   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
-   G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
+   key_bindings.clearKeyStates(); // haleyjd 05/20/05: all bindings off
 
    // killough: make -timedemo work on multilevel demos
    // Move to end of function to minimize noise -- killough 2/22/98:
@@ -697,136 +1333,6 @@ void G_DoLoadLevel(void)
       if(wipegamestate == GS_LEVEL)
          G_ForceWipe(); // force a wipe
    }
-}
-
-//
-// G_Responder
-//
-// Get info needed to make ticcmd_ts for the players.
-//
-bool G_Responder(event_t* ev)
-{
-   // killough 9/29/98: reformatted
-   if(G_GameStateIs(GS_LEVEL) &&
-      (HU_Responder(ev) ||  // chat ate the event
-       ST_Responder(ev) ||  // status window ate it
-       AM_Responder(ev)))
-   {
-      return true;
-   }
-
-   if(G_KeyResponder(ev, kac_cmd))
-      return true;
-
-   // any other key pops up menu if in demos
-   //
-   // killough 8/2/98: enable automap in -timedemo demos
-   //
-   // killough 9/29/98: make any key pop up menu regardless of
-   // which kind of demo, and allow other events during playback
-
-   if(gameaction == ga_nothing && (demoplayback ||
-                                   G_GameStateIs(GS_DEMOSCREEN)))
-   {
-      // killough 9/29/98: allow user to pause demos during playback
-      if (ev->type == ev_keydown && ev->data1 == key_pause)
-      {
-         if (paused ^= 2)
-            S_PauseSound();
-         else
-            S_ResumeSound();
-         return true;
-      }
-
-      // killough 10/98:
-      // Don't pop up menu, if paused in middle
-      // of demo playback, or if automap active.
-      // Don't suck up keys, which may be cheats
-
-      // haleyjd: deobfuscated into an if statement
-      // fixed a bug introduced in beta 3 that possibly
-      // broke the walkcam
-
-      if(!walkcam_active) // if so, we need to go on below
-      {
-         if(G_GameStateIs(GS_DEMOSCREEN) && !(paused & 2) &&
-            !automapactive &&
-            ((ev->type == ev_keydown) ||
-             (ev->type == ev_mouse && ev->data1) ||
-             (ev->type == ev_joystick && ev->data1)))
-         {
-            // popup menu
-            MN_StartControlPanel();
-            return true;
-         }
-         else
-         {
-            return false;
-         }
-      }
-   }
-
-   if(G_GameStateIs(GS_FINALE) && F_Responder(ev))
-      return true;  // finale ate the event
-
-   if(action_autorun)
-   {
-      action_autorun = 0;
-      autorun = !autorun;
-   }
-
-   switch(ev->type)
-   {
-   case ev_keydown:
-      if(ev->data1 == key_pause) // phares
-      {
-         C_RunTextCmd("pause");
-      }
-      else
-      {
-         if(ev->data1 < NUMKEYS)
-            gamekeydown[ev->data1] = true;
-         G_KeyResponder(ev, kac_game); // haleyjd
-      }
-      return true;    // eat key down events
-
-   case ev_keyup:
-      if(ev->data1 < NUMKEYS)
-         gamekeydown[ev->data1] = false;
-      G_KeyResponder(ev, kac_game);   // haleyjd
-      return false;   // always let key up events filter down
-
-   case ev_mouse:
-      mousebuttons[0] = !!(ev->data1 & 1);
-      mousebuttons[1] = !!(ev->data1 & 2);
-      mousebuttons[2] = !!(ev->data1 & 4);
-
-      // SoM: this mimics the doom2 behavior better.
-      if(mouseSensitivity_vanilla)
-      {
-          mousex += (ev->data2 * (mouseSensitivity_horiz + 5.0) / 10.0);
-          mousey += (ev->data3 * (mouseSensitivity_vert + 5.0) / 10.0);
-      }
-      else
-      {
-          // [CG] 01/20/12: raw sensitivity
-          mousex += (ev->data2 * mouseSensitivity_horiz / 10.0);
-          mousey += (ev->data3 * mouseSensitivity_vert / 10.0);
-      }
-
-      return true;    // eat events
-
-   case ev_joystick:
-      // haleyjd: joybuttons now obsolete -- removed
-      joyxmove = ev->data2;
-      joyymove = ev->data3;
-      return true;    // eat events
-
-   default:
-      break;
-   }
-
-   return false;
 }
 
 //
@@ -968,7 +1474,7 @@ void G_DoPlayDemo(void)
       {
          C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
          gameaction = ga_nothing;
-         D_AdvanceDemo();
+         DemoScreen.startUpDeferred();
       }
       return;
    }
@@ -1010,7 +1516,7 @@ void G_DoPlayDemo(void)
          C_Printf(FC_ERROR "Unsupported demo format\n");
          gameaction = ga_nothing;
          Z_ChangeTag(demobuffer, PU_CACHE);
-         D_AdvanceDemo();
+         DemoScreen.startUpDeferred();
       }
       return;
    }
@@ -1471,8 +1977,8 @@ static void G_DoCompleted(void)
    // clear hubs now
    P_ClearHubs();
 
-   if(automapactive)
-      AM_Stop();
+   if(AutoMap.isUpFront())
+      AutoMap.deactivate();
 
    if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
@@ -1543,12 +2049,13 @@ static void G_DoCompleted(void)
    }
 
    G_SetGameState(GS_INTERMISSION);
-   automapactive = false;
+   AutoMap.deactivate();
 
    if(statcopy)
       memcpy(statcopy, &wminfo, sizeof(wminfo));
 
-   IN_Start(&wminfo);
+   Intermission.setStats(&wminfo);
+   Intermission.activate();
 }
 
 static void G_DoWorldDone(void)
@@ -1811,210 +2318,6 @@ static void G_CameraTicker(void)
          cooldemo_tics--;
       else
          G_CoolViewPoint();
-   }
-}
-
-//
-// G_Ticker
-//
-// Make ticcmd_ts for the players.
-//
-void G_Ticker(void)
-{
-   int i;
-
-   // do player reborns if needed
-   for(i = 0; i < MAXPLAYERS; i++)
-   {
-      if(playeringame[i] && players[i].playerstate == PST_REBORN)
-         G_DoReborn(i);
-   }
-
-   // do things to change the game state
-   while (gameaction != ga_nothing)
-   {
-      switch (gameaction)
-      {
-      case ga_loadlevel:
-         G_DoLoadLevel();
-         break;
-      case ga_newgame:
-         G_DoNewGame();
-         break;
-      case ga_loadgame:
-         G_DoLoadGame();
-         break;
-      case ga_savegame:
-         G_DoSaveGame();
-         break;
-      case ga_playdemo:
-         G_DoPlayDemo();
-         break;
-      case ga_completed:
-         G_DoCompleted();
-         break;
-      case ga_victory:
-         F_StartFinale();
-         break;
-      case ga_worlddone:
-         G_DoWorldDone();
-         break;
-      case ga_screenshot:
-         M_ScreenShot();
-         gameaction = ga_nothing;
-         break;
-      default:  // killough 9/29/98
-         gameaction = ga_nothing;
-         break;
-      }
-   }
-
-   if(animscreenshot)    // animated screen shots
-   {
-      if(gametic % 16 == 0)
-      {
-         animscreenshot--;
-         M_ScreenShot();
-      }
-   }
-
-   // killough 10/6/98: allow games to be saved during demo
-   // playback, by the playback user (not by demo itself)
-
-   if (demoplayback && sendsave)
-   {
-      sendsave = false;
-      G_DoSaveGame();
-   }
-
-   // killough 9/29/98: Skip some commands while pausing during demo
-   // playback, or while menu is active.
-   //
-   // We increment basetic and skip processing if a demo being played
-   // back is paused or if the menu is active while a non-net game is
-   // being played, to maintain sync while allowing pauses.
-   //
-   // P_Ticker() does not stop netgames if a menu is activated, so
-   // we do not need to stop if a menu is pulled up during netgames.
-
-   if((paused & 2) || (!demoplayback && (menuactive || consoleactive) && !netgame))
-   {
-      basetic++;  // For revenant tracers and RNG -- we must maintain sync
-   }
-   else
-   {
-      // get commands, check consistency, and build new consistancy check
-      int buf = (gametic / ticdup) % BACKUPTICS;
-
-      for(i=0; i<MAXPLAYERS; i++)
-      {
-         if(playeringame[i])
-         {
-            ticcmd_t *cmd = &players[i].cmd;
-            playerclass_t *pc = players[i].pclass;
-
-            memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
-
-            if(demoplayback)
-               G_ReadDemoTiccmd(cmd);
-
-            if(demorecording)
-               G_WriteDemoTiccmd(cmd);
-
-            /*
-            if(isconsoletic && netgame)
-               continue;
-            */
-
-            // check for turbo cheats
-            // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
-
-            if((netgame || demoplayback) &&
-               cmd->forwardmove > TURBOTHRESHOLD &&
-               !(gametic&31) && ((gametic>>5)&3) == i)
-            {
-               doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
-            }
-
-            if(netgame && /*!isconsoletic &&*/ !netdemo &&
-               !(gametic % ticdup))
-            {
-               if(gametic > BACKUPTICS &&
-                  consistency[i][buf] != cmd->consistency)
-               {
-                  D_QuitNetGame();
-                  C_Printf(FC_ERROR "consistency failure");
-                  C_Printf(FC_ERROR "(%i should be %i)",
-                              cmd->consistency, consistency[i][buf]);
-               }
-
-               // sf: include y as well as x
-               if(players[i].mo)
-                  consistency[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
-               else
-                  consistency[i][buf] = 0; // killough 2/14/98
-            }
-         }
-      }
-
-      // check for special buttons
-      for(i=0; i<MAXPLAYERS; i++)
-      {
-         if(playeringame[i] &&
-            players[i].cmd.buttons & BT_SPECIAL)
-         {
-            // killough 9/29/98: allow multiple special buttons
-            if(players[i].cmd.buttons & BTS_PAUSE)
-            {
-               if((paused ^= 1))
-                  S_PauseSound();
-               else
-                  S_ResumeSound();
-            }
-
-            if(players[i].cmd.buttons & BTS_SAVEGAME)
-            {
-               if(!savedescription[0])
-                  strcpy(savedescription, "NET GAME");
-               savegameslot =
-                  (players[i].cmd.buttons & BTS_SAVEMASK)>>BTS_SAVESHIFT;
-               gameaction = ga_savegame;
-            }
-         }
-      }
-   }
-
-   // do main actions
-
-   // killough 9/29/98: split up switch statement
-   // into pauseable and unpauseable parts.
-
-   // call other tickers
-   C_NetTicker();        // sf: console network commands
-   if(inwipe)
-      Wipe_Ticker();
-
-#if 0
-   // haleyjd 03/15/03: execute scheduled Small callbacks
-   SM_ExecuteCallbacks();
-#endif
-
-   if(G_GameStateIs(GS_LEVEL))
-   {
-      P_Ticker();
-      G_CameraTicker(); // haleyjd: move cameras
-      ST_Ticker();
-      AM_Ticker();
-      HU_Ticker();
-   }
-   else if(!(paused & 2)) // haleyjd: refactored
-   {
-      if(G_GameStateIs(GS_INTERMISSION))
-         IN_Ticker();
-      else if(G_GameStateIs(GS_FINALE))
-         F_Ticker();
-      else if(G_GameStateIs(GS_DEMOSCREEN))
-         D_PageTicker();
    }
 }
 
@@ -2420,7 +2723,7 @@ void G_WorldDone(void)
    if(LevelInfo.interText && !LevelInfo.killFinale &&
       (!LevelInfo.finaleSecretOnly || secretexit))
    {
-      F_StartFinale();
+      Finale.activate();
    }
 }
 
@@ -2822,7 +3125,7 @@ void G_InitNew(skill_t skill, char *name)
 
    //G_StopDemo();
 
-   automapactive = false;
+   //automapactive = false;
    gameskill = skill;
 
    G_SetGameMapName(name);
@@ -2841,6 +3144,9 @@ void G_InitNew(skill_t skill, char *name)
    // to the default value.
    g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
    d_dir = NULL;
+
+   input_interfaces.deactivateAll();
+   Game.activate();
 
    G_DoLoadLevel();
 }
@@ -3362,7 +3668,7 @@ bool G_CheckDemoStatus(void)
       if(wassingledemo)
          C_SetConsole();
       else
-         D_AdvanceDemo();
+         DemoScreen.startUpDeferred();
 
       return !wassingledemo;
    }
@@ -3372,13 +3678,11 @@ bool G_CheckDemoStatus(void)
 
 void G_StopDemo(void)
 {
-   extern bool advancedemo;
-
    if(!demorecording && !demoplayback)
       return;
 
    G_CheckDemoStatus();
-   advancedemo = false;
+   DemoScreen.deactivate();
    if(!G_GameStateIs(GS_CONSOLE))
       C_SetConsole();
 }

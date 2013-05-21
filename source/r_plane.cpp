@@ -650,9 +650,9 @@ void R_ClearPlanes(void)
 
 #if 0
    // FIXME: borked in widescreen aspect ratios...
-   int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
+   int scaled_height = Console.isUpFront() ? video.x1lookup[Console.current_height] : 0;
 
-   a = (float)(consoleactive ?
+   a = (float)(Console.isUpFront() ?
          (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
 #endif
 

@@ -55,6 +55,7 @@
 #include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
+#include "d_iface.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"

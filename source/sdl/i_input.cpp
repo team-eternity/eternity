@@ -38,6 +38,7 @@
 #include "../g_bind.h"
 #include "../g_game.h"
 #include "../m_argv.h"
+#include "../mn_engin.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 
@@ -111,11 +112,11 @@ bool MouseShouldBeGrabbed(void)
       return false;
 
    // when menu is active or game is paused, release the mouse
-   if(menuactive || consoleactive || paused)
+   if(Menu.isUpFront() || Console.isUpFront() || paused)
       return false;
 
    // only grab mouse when playing levels (but not demos)
-   return (G_GameStateIs(GS_LEVEL)) && !demoplayback;
+   return (G_GameStateIs(GS_LEVEL) && !demoplayback);
 }
 
 //
@@ -157,7 +158,7 @@ void UpdateFocus(void)
       }
       else
          SDL_EnableKeyRepeat(0, 0);
-      G_ClearKeyStates();
+      key_bindings.clearKeyStates();
       currently_focused = window_focused;
    }
 }
@@ -741,4 +742,3 @@ void I_StartTic(void)
 }
 
 // EOF
-

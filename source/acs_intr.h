@@ -29,6 +29,7 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
+#include "d_iface.h"
 #include "m_dllist.h"
 #include "p_tick.h"
 #include "r_defs.h"

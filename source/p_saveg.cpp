@@ -776,7 +776,9 @@ static void P_ArchiveRNG(SaveArchive &arc)
 //
 static void P_ArchiveMap(SaveArchive &arc)
 {
-   arc << automapactive << followplayer << automap_grid << markpointnum;
+   bool automap_active = AutoMap.isUpFront();
+
+   arc << automap_active << followplayer << automap_grid << markpointnum;
 
    if(markpointnum)
    {
@@ -787,8 +789,8 @@ static void P_ArchiveMap(SaveArchive &arc)
       }
       else
       {
-         if(automapactive)
-            AM_Start();
+         if(automap_active)
+            AutoMap.activate();
 
          while(markpointnum >= markpointnum_max)
          {

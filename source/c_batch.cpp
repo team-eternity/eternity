@@ -317,4 +317,3 @@ void C_SaveCommandBatches(qstring &buf)
           << "\"\n";
    }
 }
-

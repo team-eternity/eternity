@@ -469,28 +469,6 @@ default_t defaults[] =
    // would be bad, but to do it in real time would be hard. This is
    // a compromise.
 
-   // TODO/FIXME: make ALL keys dynamically rebindable
-
-   DEFAULT_INT("key_pause", &key_pause, NULL, KEYD_PAUSE, 0, 255, default_t::wad_no,
-               "key to pause the game"),
-
-   DEFAULT_INT("key_chat", &key_chat, NULL, 't', 0, 255, default_t::wad_no,
-               "key to enter a chat message"),
-
-   DEFAULT_INT("key_chatplayer1", &destination_keys[0], NULL, 'g', 0, 255, default_t::wad_no,
-               "key to chat with player 1"),
-
-   // killough 11/98: fix 'i'/'b' reversal
-   DEFAULT_INT("key_chatplayer2", &destination_keys[1], NULL, 'i', 0, 255, default_t::wad_no,
-               "key to chat with player 2"),
-
-   // killough 11/98: fix 'i'/'b' reversal
-   DEFAULT_INT("key_chatplayer3", &destination_keys[2], NULL, 'b', 0, 255, default_t::wad_no,
-               "key to chat with player 3"),
-
-   DEFAULT_INT("key_chatplayer4", &destination_keys[3], NULL, 'r', 0, 255, default_t::wad_no,
-               "key to chat with player 4"),
-
    DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to always mouselook"),
 

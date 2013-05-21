@@ -96,7 +96,7 @@ const char *dmstr[] = { "single", "coop", "deathmatch" };
  *************************************************************************/
 
 // haleyjd: had to change this into a command
-CONSOLE_COMMAND(creator, 0)
+CONSOLE_COMMAND(creator, 0, ii_all)
 {
    C_Printf("creator is '%s'\n", LevelInfo.creator);
 }
@@ -264,7 +264,7 @@ CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 {
    if(G_GameStateIs(GS_LEVEL))
       C_Printf("note: nomonsters will not change until next level\n");
-   if(menuactive)
+   if(Menu.isUpFront())
       MN_ErrorMsg("does not take effect until next level");
 }
 
@@ -275,7 +275,7 @@ CONSOLE_NETVAR(respawn, respawnparm, cf_server, netcmd_respawn)
 {
    if(G_GameStateIs(GS_LEVEL))
       C_Printf("note: respawn will change on new game\n");
-   if(menuactive)
+   if(Menu.isUpFront())
       MN_ErrorMsg("will take effect on new game");
 }
 
@@ -350,13 +350,13 @@ CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
-CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
+CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet, ii_level)
 {
    if(G_GameStateIs(GS_LEVEL))
       players[0].mo->momz = 10*FRACUNIT;
 }
 
-CONSOLE_COMMAND(puke, cf_notnet)
+CONSOLE_COMMAND(puke, cf_notnet, ii_all)
 {
    int i;
    int args[5] = { 0, 0, 0, 0, 0 };
@@ -371,13 +371,13 @@ CONSOLE_COMMAND(puke, cf_notnet)
                            args, 5, NULL, NULL, 0);
 }
 
-CONSOLE_COMMAND(enable_lightning, 0)
+CONSOLE_COMMAND(enable_lightning, 0, ii_all)
 {
    LevelInfo.hasLightning = true;
    P_InitLightning();
 }
 
-CONSOLE_COMMAND(thunder, 0)
+CONSOLE_COMMAND(thunder, 0, ii_all)
 {
    P_ForceLightning();
 }

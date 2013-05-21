@@ -415,13 +415,13 @@ VARIABLE_FLOAT(s_highgain, NULL, 0.0, 3.0);
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0)
 {
-   if(snd_card != 0 && menuactive)
+   if(snd_card != 0 && Menu.isUpFront())
       MN_ErrorMsg("takes effect after restart");
 }
 
 CONSOLE_VARIABLE(mus_card, mus_card, 0)
 {
-   if(mus_card != 0 && menuactive)
+   if(mus_card != 0 && Menu.isUpFront())
       MN_ErrorMsg("takes effect after restart");
 }
 

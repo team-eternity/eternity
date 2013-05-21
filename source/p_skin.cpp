@@ -517,14 +517,12 @@ skin_t *P_GetMonsterSkin(spritenum_t sprnum)
 
 /**** console stuff ******/
 
-CONSOLE_COMMAND(listskins, 0)
+CONSOLE_COMMAND(listskins, 0, ii_all)
 {
    int i;
 
    for(i = 0; i < numskins; i++)
-   {
       C_Printf("%s\n", skins[i]->skinname);
-   }
 }
 
 //      helper macro to ensure grammatical correctness :)

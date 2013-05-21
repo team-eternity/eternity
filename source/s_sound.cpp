@@ -1467,7 +1467,7 @@ CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
 CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
 
-CONSOLE_COMMAND(s_playmusic, 0)
+CONSOLE_COMMAND(s_playmusic, 0, ii_all)
 {
    musicinfo_t *music;
    char namebuf[16];

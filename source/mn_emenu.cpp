@@ -417,7 +417,7 @@ void MN_ProcessMenus(cfg_t *cfg)
 // Console.argv[0] -- this can even be used within dynamic menus
 // to reference other dynamic menus from command-type items.
 //
-CONSOLE_COMMAND(mn_dynamenu, 0)
+CONSOLE_COMMAND(mn_dynamenu, 0, ii_all)
 {
    menu_t *menu;
 

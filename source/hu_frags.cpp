@@ -30,6 +30,7 @@
 
 #include "z_zone.h"
 
+#include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_event.h"
@@ -59,8 +60,6 @@
 
 #define FRAGNUMX 175
 
-extern bool gamekeydown[NUMKEYS]; // g_game.c
-
 player_t *sortedplayers[MAXPLAYERS];
 
 int num_players;
@@ -83,8 +82,9 @@ void HU_FragsDrawer(void)
    if(!show_scores)
       return;
 
-   if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
-      && !action_frags) || GameType != gt_dm || automapactive)
+   if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active) &&
+       !Game.actionIsActive("show_scoreboard")) ||
+      GameType != gt_dm || AutoMap.isUpFront())
       return;
 
    // "frags"
@@ -181,7 +181,7 @@ void HU_FragsUpdate(void)
 // Console Commands
 //
 
-CONSOLE_COMMAND(frags, 0)
+CONSOLE_COMMAND(frags, 0, ii_level)
 {
    int i;
 

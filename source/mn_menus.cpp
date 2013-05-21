@@ -210,7 +210,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
       start_mapname = mn_start_mapname = Console.argv[0]->duplicate(PU_STATIC);
    }
 
-   if(menuactive)
+   if(Menu.isUpFront())
       MN_StartMenu(GameModeInfo->newGameMenu);
 }
 
@@ -219,7 +219,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
 // starts menu
 // according to use_startmap, gametype and modifiedgame
 
-CONSOLE_COMMAND(mn_newgame, 0)
+CONSOLE_COMMAND(mn_newgame, 0, ii_all)
 {
    if(netgame && !demoplayback)
    {
@@ -264,7 +264,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          {
             // use start map
             G_DeferedInitNew((skill_t)(defaultskill - 1), "START");
-            MN_ClearMenus();
+            Menu.deactivate();
          }
       }
       else
@@ -310,9 +310,9 @@ void MN_QuitDoom(void)
    MN_Question(quitmsg, "quit");
 }
 
-CONSOLE_COMMAND(mn_quit, 0)
+CONSOLE_COMMAND(mn_quit, 0, ii_all)
 {
-   if(Console.cmdtype != c_menu && menuactive)
+   if(Console.cmdtype != c_menu && Menu.isUpFront())
       return;
 
    MN_QuitDoom();
@@ -350,7 +350,7 @@ menu_t menu_episode =
 
 // console command to select episode
 
-CONSOLE_COMMAND(mn_episode, cf_notnet)
+CONSOLE_COMMAND(mn_episode, cf_notnet, ii_all)
 {
    if(!Console.argc)
    {
@@ -467,10 +467,10 @@ static void MN_DoNightmare(void)
          G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
 
-   MN_ClearMenus();
+   Menu.deactivate();
 }
 
-CONSOLE_COMMAND(newgame, cf_notnet)
+CONSOLE_COMMAND(newgame, cf_notnet, ii_all)
 {
    int skill = gameskill;
 
@@ -509,7 +509,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
          G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
 
-   MN_ClearMenus();
+   Menu.deactivate();
 }
 
 //////////////////////////////////////////////////
@@ -587,7 +587,7 @@ menu_t menu_demos =
 VARIABLE_STRING(mn_demoname,     NULL,           12);
 CONSOLE_VARIABLE(mn_demoname,    mn_demoname,     0) {}
 
-CONSOLE_COMMAND(mn_demos, cf_notnet)
+CONSOLE_COMMAND(mn_demos, cf_notnet, ii_all)
 {
    MN_StartMenu(&menu_demos);
 }
@@ -781,12 +781,12 @@ menu_t menu_wadiwads3 =
 VARIABLE_STRING(mn_wadname,  NULL,       UL);
 CONSOLE_VARIABLE(mn_wadname, mn_wadname,  0) {}
 
-CONSOLE_COMMAND(mn_loadwad, cf_notnet)
+CONSOLE_COMMAND(mn_loadwad, cf_notnet, ii_all)
 {
    MN_StartMenu(&menu_loadwad);
 }
 
-CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
+CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden, ii_all)
 {
    char *filename = NULL;
 
@@ -813,7 +813,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 
    if(D_AddNewFile(filename))
    {
-      MN_ClearMenus();
+      Menu.deactivate();
       G_DeferedInitNew(gameskill, firstlevel);
    }
    else
@@ -899,7 +899,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    }
 }
 
-CONSOLE_COMMAND(mn_gset, 0)            // just setting options from menu
+CONSOLE_COMMAND(mn_gset, 0, ii_all)    // just setting options from menu
 {
    MN_StartMenu(&menu_gamesettings);
 }
@@ -941,7 +941,7 @@ menu_t menu_advanced =
 };
 
 /*
-CONSOLE_COMMAND(mn_advanced, cf_server)
+CONSOLE_COMMAND(mn_advanced, cf_server, ii_all)
 {
    MN_StartMenu(&menu_advanced);
 }
@@ -987,7 +987,7 @@ menu_t menu_dmflags =
 };
 
 /*
-CONSOLE_COMMAND(mn_dmflags, cf_server)
+CONSOLE_COMMAND(mn_dmflags, cf_server, ii_all)
 {
    MN_StartMenu(&menu_dmflags);
 }
@@ -1037,32 +1037,32 @@ static void toggle_dm_flag(unsigned int flag)
    C_RunTextCmd(cmdbuf);
 }
 
-CONSOLE_COMMAND(mn_dfitem, cf_server|cf_hidden)
+CONSOLE_COMMAND(mn_dfitem, cf_server|cf_hidden, ii_all)
 {
    toggle_dm_flag(DM_ITEMRESPAWN);
 }
 
-CONSOLE_COMMAND(mn_dfweapstay, cf_server|cf_hidden)
+CONSOLE_COMMAND(mn_dfweapstay, cf_server|cf_hidden, ii_all)
 {
    toggle_dm_flag(DM_WEAPONSTAY);
 }
 
-CONSOLE_COMMAND(mn_dfbarrel, cf_server|cf_hidden)
+CONSOLE_COMMAND(mn_dfbarrel, cf_server|cf_hidden, ii_all)
 {
    toggle_dm_flag(DM_BARRELRESPAWN);
 }
 
-CONSOLE_COMMAND(mn_dfplyrdrop, cf_server|cf_hidden)
+CONSOLE_COMMAND(mn_dfplyrdrop, cf_server|cf_hidden, ii_all)
 {
    toggle_dm_flag(DM_PLAYERDROP);
 }
 
-CONSOLE_COMMAND(mn_dfrespsupr, cf_server|cf_hidden)
+CONSOLE_COMMAND(mn_dfrespsupr, cf_server|cf_hidden, ii_all)
 {
    toggle_dm_flag(DM_RESPAWNSUPER);
 }
 
-CONSOLE_COMMAND(mn_dfinstagib, cf_server|cf_hidden)
+CONSOLE_COMMAND(mn_dfinstagib, cf_server|cf_hidden, ii_all)
 {
    toggle_dm_flag(DM_INSTAGIB);
 }
@@ -1104,7 +1104,7 @@ menu_t menu_chatmacros =
 };
 
 /*
-CONSOLE_COMMAND(mn_chatmacros, 0)
+CONSOLE_COMMAND(mn_chatmacros, 0, ii_all)
 {
    MN_StartMenu(&menu_chatmacros);
 }
@@ -1185,7 +1185,7 @@ void MN_PlayerDrawer(void)
       );
 }
 
-CONSOLE_COMMAND(mn_player, 0)
+CONSOLE_COMMAND(mn_player, 0, ii_all)
 {
    MN_StartMenu(&menu_player);
 }
@@ -1221,7 +1221,7 @@ void MN_SaveGame(void)
       return; // sanity check
 
    G_SaveGame(save_slot, savegamenames[save_slot]);
-   MN_ClearMenus();
+   Menu.deactivate();
 
    // haleyjd 02/23/02: restored from MBF
    if(quickSaveSlot == -2)
@@ -1405,7 +1405,7 @@ void MN_LoadGameDrawer(void)
    }
 }
 
-CONSOLE_COMMAND(mn_loadgame, 0)
+CONSOLE_COMMAND(mn_loadgame, 0, ii_all)
 {
    if(netgame && !demoplayback)
    {
@@ -1425,7 +1425,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
    MN_StartMenu(GameModeInfo->loadMenu);
 }
 
-CONSOLE_COMMAND(mn_load, 0)
+CONSOLE_COMMAND(mn_load, 0, ii_all)
 {
    char *name;     // killough 3/22/98
    int slot;
@@ -1448,7 +1448,7 @@ CONSOLE_COMMAND(mn_load, 0)
    G_SaveGameName(name, len, slot);
    G_LoadGame(name, slot, false);
 
-   MN_ClearMenus();
+   Menu.deactivate();
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
@@ -1457,7 +1457,7 @@ CONSOLE_COMMAND(mn_load, 0)
 
 // haleyjd 02/23/02: Quick Load -- restored from MBF and converted
 // to use console commands
-CONSOLE_COMMAND(quickload, 0)
+CONSOLE_COMMAND(quickload, 0, ii_all)
 {
    char tempstring[80];
 
@@ -1485,7 +1485,7 @@ CONSOLE_COMMAND(quickload, 0)
    MN_Question(tempstring, "qload");
 }
 
-CONSOLE_COMMAND(qload, cf_hidden)
+CONSOLE_COMMAND(qload, cf_hidden, ii_all)
 {
    char *name = NULL;     // killough 3/22/98
    size_t len;
@@ -1545,7 +1545,7 @@ menu_t menu_savegame =
    MN_SaveGameDrawer,
 };
 
-CONSOLE_COMMAND(mn_savegame, 0)
+CONSOLE_COMMAND(mn_savegame, 0, ii_all)
 {
    // haleyjd 02/23/02: restored from MBF
    // killough 10/6/98: allow savegames during single-player demo
@@ -1567,7 +1567,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
 
 // haleyjd 02/23/02: Quick Save -- restored from MBF, converted to
 // use console commands
-CONSOLE_COMMAND(quicksave, 0)
+CONSOLE_COMMAND(quicksave, 0, ii_all)
 {
    char tempstring[80];
 
@@ -1593,9 +1593,12 @@ CONSOLE_COMMAND(quicksave, 0)
    MN_Question(tempstring, "qsave");
 }
 
-CONSOLE_COMMAND(qsave, cf_hidden)
+CONSOLE_COMMAND(qsave, cf_hidden, ii_playing)
 {
-   G_SaveGame(quickSaveSlot, savegamenames[quickSaveSlot]);
+   if(quickSaveSlot < 0)
+      C_RunTextCmd("quicksave");
+   else
+      G_SaveGame(quickSaveSlot, savegamenames[quickSaveSlot]);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -1680,7 +1683,7 @@ menu_t menu_options =
    mn_options_pages
 };
 
-CONSOLE_COMMAND(mn_options, 0)
+CONSOLE_COMMAND(mn_options, 0, ii_all)
 {
    MN_StartMenu(&menu_options);
 }
@@ -1715,7 +1718,7 @@ menu_t menu_optionsp2 =
    mn_options_pages
 };
 
-CONSOLE_COMMAND(mn_endgame, 0)
+CONSOLE_COMMAND(mn_endgame, 0, ii_all)
 {
    // haleyjd 04/18/03: restored netgame behavior from MBF
    if(netgame)
@@ -1947,7 +1950,7 @@ static void MN_BuildVidmodeTables(void)
    mn_vidmode_cmds[nummodes] = NULL;
 }
 
-CONSOLE_COMMAND(mn_vidmode, cf_hidden)
+CONSOLE_COMMAND(mn_vidmode, cf_hidden, ii_all)
 {
    MN_BuildVidmodeTables();
 
@@ -2053,7 +2056,7 @@ void MN_VideoModeDrawer(void)
    V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
 }
 
-CONSOLE_COMMAND(mn_video, 0)
+CONSOLE_COMMAND(mn_video, 0, ii_all)
 {
    MN_StartMenu(&menu_video);
 }
@@ -2154,7 +2157,7 @@ menu_t menu_particles =
    mn_vidpage_menus
 };
 
-CONSOLE_COMMAND(mn_particle, 0)
+CONSOLE_COMMAND(mn_particle, 0, ii_all)
 {
    MN_StartMenu(&menu_particles);
 }
@@ -2250,7 +2253,7 @@ menu_t menu_sound =
    mn_sndpage_menus
 };
 
-CONSOLE_COMMAND(mn_sound, 0)
+CONSOLE_COMMAND(mn_sound, 0, ii_all)
 {
    MN_StartMenu(&menu_sound);
 }
@@ -2348,7 +2351,7 @@ menu_t menu_mouse =
    mn_mousejoy_pages,
 };
 
-CONSOLE_COMMAND(mn_mouse, 0)
+CONSOLE_COMMAND(mn_mouse, 0, ii_all)
 {
    MN_StartMenu(&menu_mouse);
 }
@@ -2431,7 +2434,7 @@ static void MN_BuildJSTables(void)
    }
 }
 
-CONSOLE_COMMAND(mn_joysticks, cf_hidden)
+CONSOLE_COMMAND(mn_joysticks, cf_hidden, ii_all)
 {
    const char *drv_name;
    static char title[256];
@@ -2478,7 +2481,7 @@ menu_t menu_joystick =
    mn_mousejoy_pages,
 };
 
-CONSOLE_COMMAND(mn_joymenu, 0)
+CONSOLE_COMMAND(mn_joymenu, 0, ii_all)
 {
    MN_StartMenu(&menu_joystick);
 }
@@ -2611,7 +2614,7 @@ static void MN_HUDPg2Drawer(void)
    }
 }
 
-CONSOLE_COMMAND(mn_hud, 0)
+CONSOLE_COMMAND(mn_hud, 0, ii_all)
 {
    MN_StartMenu(&menu_hud);
 }
@@ -2653,7 +2656,7 @@ menu_t menu_statusbar =
    mf_background,
 };
 
-CONSOLE_COMMAND(mn_status, 0)
+CONSOLE_COMMAND(mn_status, 0, ii_all)
 {
    MN_StartMenu(&menu_statusbar);
 }
@@ -2802,7 +2805,7 @@ menu_t menu_automap4 =
    mn_automap_pages,
 };
 
-CONSOLE_COMMAND(mn_automap, 0)
+CONSOLE_COMMAND(mn_automap, 0, ii_all)
 {
    MN_StartMenu(&menu_automapcol1);
 }
@@ -2904,7 +2907,7 @@ menu_t menu_weapons_pref =
    mn_weapons_pages,
 };
 
-CONSOLE_COMMAND(mn_weapons, 0)
+CONSOLE_COMMAND(mn_weapons, 0, ii_all)
 {
    MN_StartMenu(&menu_weapons);
 }
@@ -3032,7 +3035,7 @@ menu_t menu_compat3 =
    mn_compat_pages,
 };
 
-CONSOLE_COMMAND(mn_compat, 0)
+CONSOLE_COMMAND(mn_compat, 0, ii_all)
 {
    MN_StartMenu(&menu_compat1);
 }
@@ -3071,7 +3074,7 @@ menu_t menu_enemies =
    mf_background          // full screen
 };
 
-CONSOLE_COMMAND(mn_enemies, 0)
+CONSOLE_COMMAND(mn_enemies, 0, ii_all)
 {
    MN_StartMenu(&menu_enemies);
 }
@@ -3122,24 +3125,27 @@ static menu_t *mn_binding_contentpages[] =
 // Key Bindings: basic movement keys
 //
 
+#define KB_MENU_ITEM(description, data, interface_name) \
+   {it_binding, description, data, NULL, 0, interface_name}
+
 static menuitem_t mn_movekeys_items[] =
 {
    {it_title,        "Key Bindings",   NULL, "M_KEYBND"},
    {it_gap},
    {it_info,         "Basic Movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding,      "Move forward",    "forward"},
-   {it_binding,      "Move backward",   "backward"},
-   {it_binding,      "Run",             "speed"},
-   {it_binding,      "Turn left",       "left"},
-   {it_binding,      "Turn right",      "right"},
-   {it_binding,      "Strafe on",       "strafe"},
-   {it_binding,      "Strafe left",     "moveleft"},
-   {it_binding,      "Strafe right",    "moveright"},
-   {it_binding,      "180 degree turn", "flip"},
-   {it_binding,      "Use",             "use"},
-   {it_binding,      "Attack/fire",     "attack"},
-   {it_binding,      "Toggle autorun",  "autorun"},
+   KB_MENU_ITEM("Move forward",    "forward",   "Game"),
+   KB_MENU_ITEM("Move backward",   "backward",  "Game"),
+   KB_MENU_ITEM("Run",             "speed",     "Game"),
+   KB_MENU_ITEM("Turn left",       "left",      "Game"),
+   KB_MENU_ITEM("Turn right",      "right",     "Game"),
+   KB_MENU_ITEM("Strafe on",       "strafe",    "Game"),
+   KB_MENU_ITEM("Strafe left",     "moveleft",  "Game"),
+   KB_MENU_ITEM("Strafe right",    "moveright", "Game"),
+   KB_MENU_ITEM("180 degree turn", "flip",      "Game"),
+   KB_MENU_ITEM("Use",             "use",       "Game"),
+   KB_MENU_ITEM("Attack/fire",     "attack",    "Game"),
+   KB_MENU_ITEM("Toggle autorun",  "autorun",   "Game"),
    {it_end}
 };
 
@@ -3149,14 +3155,14 @@ static menuitem_t mn_advkeys_items[] =
    {it_gap},
    {it_info,         "Advanced Movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding,      "Jump",            "jump"},
-   {it_binding,      "MLook on",        "mlook"},
-   {it_binding,      "Look up",         "lookup"},
-   {it_binding,      "Look down",       "lookdown"},
-   {it_binding,      "Center view",     "center"},
-   {it_binding,      "Fly up",          "flyup"},
-   {it_binding,      "Fly down",        "flydown"},
-   {it_binding,      "Fly center",      "flycenter"},
+   KB_MENU_ITEM("Jump",        "jump",      "Game"),
+   KB_MENU_ITEM("MLook on",    "mlook",     "Game"),
+   KB_MENU_ITEM("Look up",     "lookup",    "Game"),
+   KB_MENU_ITEM("Look down",   "lookdown",  "Game"),
+   KB_MENU_ITEM("Center view", "center",    "Game"),
+   KB_MENU_ITEM("Fly up",      "flyup",     "Game"),
+   KB_MENU_ITEM("Fly down",    "flydown",   "Game"),
+   KB_MENU_ITEM("Fly center",  "flycenter", "Game"),
    {it_end}
 };
 
@@ -3188,12 +3194,12 @@ menu_t menu_advkeys =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_movekeys, 0)
+CONSOLE_COMMAND(mn_movekeys, 0, ii_all)
 {
    MN_StartMenu(&menu_movekeys);
 }
 
-CONSOLE_COMMAND(mn_advkeys, 0)
+CONSOLE_COMMAND(mn_advkeys, 0, ii_all)
 {
    MN_StartMenu(&menu_advkeys);
 }
@@ -3209,18 +3215,18 @@ static menuitem_t mn_weaponbindings_items[] =
    {it_gap},
    {it_info,    "Weapon Keys",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Weapon 1",             "weapon1"},
-   {it_binding, "Weapon 2",             "weapon2"},
-   {it_binding, "Weapon 3",             "weapon3"},
-   {it_binding, "Weapon 4",             "weapon4"},
-   {it_binding, "Weapon 5",             "weapon5"},
-   {it_binding, "Weapon 6",             "weapon6"},
-   {it_binding, "Weapon 7",             "weapon7"},
-   {it_binding, "Weapon 8",             "weapon8"},
-   {it_binding, "Weapon 9",             "weapon9"},
-   {it_binding, "Next best weapon",     "nextweapon"},
-   {it_binding, "Next weapon",          "weaponup"},
-   {it_binding, "Previous weapon",      "weapondown"},
+   KB_MENU_ITEM("Weapon 1",         "weapon1",    "Game"),
+   KB_MENU_ITEM("Weapon 2",         "weapon2",    "Game"),
+   KB_MENU_ITEM("Weapon 3",         "weapon3",    "Game"),
+   KB_MENU_ITEM("Weapon 4",         "weapon4",    "Game"),
+   KB_MENU_ITEM("Weapon 5",         "weapon5",    "Game"),
+   KB_MENU_ITEM("Weapon 6",         "weapon6",    "Game"),
+   KB_MENU_ITEM("Weapon 7",         "weapon7",    "Game"),
+   KB_MENU_ITEM("Weapon 8",         "weapon8",    "Game"),
+   KB_MENU_ITEM("Weapon 9",         "weapon9",    "Game"),
+   KB_MENU_ITEM("Next best weapon", "nextweapon", "Game"),
+   KB_MENU_ITEM("Next weapon",      "weaponup",   "Game"),
+   KB_MENU_ITEM("Previous weapon",  "weapondown", "Game"),
    {it_end}
 };
 
@@ -3238,7 +3244,7 @@ menu_t menu_weaponbindings =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_weaponkeys, 0)
+CONSOLE_COMMAND(mn_weaponkeys, 0, ii_all)
 {
    MN_StartMenu(&menu_weaponbindings);
 }
@@ -3256,12 +3262,12 @@ static menuitem_t mn_envbindings_items[] =
    {it_gap},
    {it_info,    "Environment",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Screen size up",       "screensize +"},
-   {it_binding, "Screen size down",     "screensize -"},
-   {it_binding, "Take screenshot",      "screenshot"},
-   {it_binding, "Spectate prev",        "spectate_prev"},
-   {it_binding, "Spectate next",        "spectate_next"},
-   {it_binding, "Spectate self",        "spectate_self"},
+   KB_MENU_ITEM("Screen size up",   "screensize +", NULL),
+   KB_MENU_ITEM("Screen size down", "screensize -", NULL),
+   KB_MENU_ITEM("Take screenshot",  "screenshot",   NULL),
+   KB_MENU_ITEM("Spectate prev",    "spectate_prev", "Game"),
+   KB_MENU_ITEM("Spectate next",    "spectate_next", "Game"),
+   KB_MENU_ITEM("Spectate self",    "spectate_self", "Game"),
    {it_end}
 };
 
@@ -3279,7 +3285,7 @@ menu_t menu_envbindings =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_envkeys, 0)
+CONSOLE_COMMAND(mn_envkeys, 0, ii_all)
 {
    MN_StartMenu(&menu_envbindings);
 }
@@ -3295,16 +3301,16 @@ static menuitem_t mn_function_items[] =
    {it_gap},
    {it_info,    "Game Functions",  NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Save game",            "mn_savegame"},
-   {it_binding, "Load game",            "mn_loadgame"},
-   {it_binding, "Volume",               "mn_sound"},
-   {it_binding, "Toggle hud",           "hu_overlay /"},
-   {it_binding, "Quick save",           "quicksave"},
-   {it_binding, "End game",             "mn_endgame"},
-   {it_binding, "Toggle messages",      "hu_messages /"},
-   {it_binding, "Quick load",           "quickload"},
-   {it_binding, "Quit",                 "mn_quit"},
-   {it_binding, "Gamma correction",     "gamma /"},
+   KB_MENU_ITEM("Save game",        "mn_savegame",   NULL),
+   KB_MENU_ITEM("Load game",        "mn_loadgame",   NULL),
+   KB_MENU_ITEM("Volume",           "mn_sound",      NULL),
+   KB_MENU_ITEM("Toggle hud",       "hu_overlay /",  NULL),
+   KB_MENU_ITEM("Quick save",       "quicksave",     NULL),
+   KB_MENU_ITEM("End game",         "mn_endgame",    NULL),
+   KB_MENU_ITEM("Toggle messages",  "hu_messages /", NULL),
+   KB_MENU_ITEM("Quick load",       "quickload",     NULL),
+   KB_MENU_ITEM("Quit",             "mn_quit",       NULL),
+   KB_MENU_ITEM("Gamma correction", "gamma /",       NULL),
    {it_end}
 };
 
@@ -3322,7 +3328,7 @@ menu_t menu_funcbindings =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_gamefuncs, 0)
+CONSOLE_COMMAND(mn_gamefuncs, 0, ii_all)
 {
    MN_StartMenu(&menu_funcbindings);
 }
@@ -3338,18 +3344,18 @@ static menuitem_t mn_menukeys_items[] =
    {it_gap},
    {it_info,    "Menu Keys", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Toggle menus",         "menu_toggle"},
-   {it_binding, "Previous menu",        "menu_previous"},
-   {it_binding, "Next item",            "menu_down"},
-   {it_binding, "Previous item",        "menu_up"},
-   {it_binding, "Next value",           "menu_right"},
-   {it_binding, "Previous value",       "menu_left"},
-   {it_binding, "Confirm",              "menu_confirm"},
-   {it_binding, "Display help",         "menu_help"},
-   {it_binding, "Display setup",        "menu_setup"},
-   {it_binding, "Previous page",        "menu_pageup"},
-   {it_binding, "Next page",            "menu_pagedown"},
-   {it_binding, "Show contents",        "menu_contents"},
+   KB_MENU_ITEM("Toggle menus",   "toggle_menu", "Menu"),
+   KB_MENU_ITEM("Previous menu",  "previous",    "Menu"),
+   KB_MENU_ITEM("Next item",      "down",        "Menu"),
+   KB_MENU_ITEM("Previous item",  "up",          "Menu"),
+   KB_MENU_ITEM("Next value",     "right",       "Menu"),
+   KB_MENU_ITEM("Previous value", "left",        "Menu"),
+   KB_MENU_ITEM("Confirm",        "confirm",     "Menu"),
+   KB_MENU_ITEM("Display help",   "help_screen", "Menu"),
+   KB_MENU_ITEM("Display setup",  "setup",       "Menu"),
+   KB_MENU_ITEM("Previous page",  "pageup",      "Menu"),
+   KB_MENU_ITEM("Next page",      "pagedown",    "Menu"),
+   KB_MENU_ITEM("Show contents",  "contents",    "Menu"),
    {it_end}
 };
 
@@ -3367,7 +3373,7 @@ menu_t menu_menukeys =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_menukeys, 0)
+CONSOLE_COMMAND(mn_menukeys, 0, ii_all)
 {
    MN_StartMenu(&menu_menukeys);
 }
@@ -3383,18 +3389,18 @@ static menuitem_t mn_automapkeys_items[] =
    {it_gap},
    {it_info,    "Automap",      NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Toggle map",           "map_toggle"},
-   {it_binding, "Move up",              "map_up"},
-   {it_binding, "Move down",            "map_down"},
-   {it_binding, "Move left",            "map_left"},
-   {it_binding, "Move right",           "map_right"},
-   {it_binding, "Zoom in",              "map_zoomin"},
-   {it_binding, "Zoom out",             "map_zoomout"},
-   {it_binding, "Show full map",        "map_gobig"},
-   {it_binding, "Follow mode",          "map_follow"},
-   {it_binding, "Mark spot",            "map_mark"},
-   {it_binding, "Clear spots",          "map_clear"},
-   {it_binding, "Show grid",            "map_grid"},
+   KB_MENU_ITEM("Toggle map",    "toggle_automap", "AutoMap"),
+   KB_MENU_ITEM("Move up",       "forward",        "AutoMap"),
+   KB_MENU_ITEM("Move down",     "backward",       "AutoMap"),
+   KB_MENU_ITEM("Move left",     "left",           "AutoMap"),
+   KB_MENU_ITEM("Move right",    "right",          "AutoMap"),
+   KB_MENU_ITEM("Zoom in",       "zoomin",         "AutoMap"),
+   KB_MENU_ITEM("Zoom out",      "zoomout",        "AutoMap"),
+   KB_MENU_ITEM("Show full map", "gobig",          "AutoMap"),
+   KB_MENU_ITEM("Follow mode",   "follow",         "AutoMap"),
+   KB_MENU_ITEM("Mark spot",     "mark",           "AutoMap"),
+   KB_MENU_ITEM("Clear spots",   "clear",          "AutoMap"),
+   KB_MENU_ITEM("Show grid",     "grid",           "AutoMap"),
    {it_end}
 };
 
@@ -3412,7 +3418,7 @@ menu_t menu_automapkeys =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_automapkeys, 0)
+CONSOLE_COMMAND(mn_automapkeys, 0, ii_all)
 {
    MN_StartMenu(&menu_automapkeys);
 }
@@ -3428,14 +3434,14 @@ static menuitem_t mn_consolekeys_items[] =
    {it_gap},
    {it_info,    "Console",      NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Toggle",               "console_toggle"},
-   {it_binding, "Enter command",        "console_enter"},
-   {it_binding, "Complete command",     "console_tab"},
-   {it_binding, "Previous command",     "console_up"},
-   {it_binding, "Next command",         "console_down"},
-   {it_binding, "Backspace",            "console_backspace"},
-   {it_binding, "Page up",              "console_pageup"},
-   {it_binding, "Page down",            "console_pagedown"},
+   KB_MENU_ITEM("Toggle",           "toggle_console", "Console"),
+   KB_MENU_ITEM("Enter command",    "enter",          "Console"),
+   KB_MENU_ITEM("Complete command", "tab",            "Console"),
+   KB_MENU_ITEM("Previous command", "up",             "Console"),
+   KB_MENU_ITEM("Next command",     "down",           "Console"),
+   KB_MENU_ITEM("Backspace",        "backspace",      "Console"),
+   KB_MENU_ITEM("Page up",          "pageup",         "Console"),
+   KB_MENU_ITEM("Page down",        "pagedown",       "Console"),
    {it_end}
 };
 
@@ -3453,7 +3459,7 @@ menu_t menu_consolekeys =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_consolekeys, 0)
+CONSOLE_COMMAND(mn_consolekeys, 0, ii_all)
 {
    MN_StartMenu(&menu_consolekeys);
 }
@@ -3516,7 +3522,7 @@ static menu_t *mn_search_menus[] =
    NULL
 };
 
-CONSOLE_COMMAND(mn_search, 0)
+CONSOLE_COMMAND(mn_search, 0, ii_all)
 {
    int i = 0;
    menu_t *curMenu;
@@ -3624,7 +3630,7 @@ menu_t menu_menuopts =
    NULL,                    // no drawer
 };
 
-CONSOLE_COMMAND(mn_menus, 0)
+CONSOLE_COMMAND(mn_menus, 0, ii_all)
 {
    MN_StartMenu(&menu_menuopts);
 }
@@ -3654,7 +3660,7 @@ menu_t menu_config =
    NULL,
 };
 
-CONSOLE_COMMAND(mn_config, 0)
+CONSOLE_COMMAND(mn_config, 0, ii_all)
 {
    MN_StartMenu(&menu_config);
 }
@@ -3665,7 +3671,7 @@ CONSOLE_COMMAND(mn_config, 0)
 
 extern void MN_InitSkinViewer(void);
 
-CONSOLE_COMMAND(skinviewer, 0)
+CONSOLE_COMMAND(skinviewer, 0, ii_all)
 {
    MN_InitSkinViewer();
 }
@@ -3778,7 +3784,7 @@ menu_t menu_old_options =
 
 extern int mouseSensitivity_c;
 
-CONSOLE_COMMAND(mn_old_options, 0)
+CONSOLE_COMMAND(mn_old_options, 0, ii_all)
 {
    // propagate horizontal mouse sensitivity to combined setting
    mouseSensitivity_c = (int)(mouseSensitivity_horiz / 4.0);
@@ -3816,7 +3822,7 @@ menu_t menu_old_sound =
    MN_OldSoundDrawer
 };
 
-CONSOLE_COMMAND(mn_old_sound, 0)
+CONSOLE_COMMAND(mn_old_sound, 0, ii_all)
 {
    MN_StartMenu(&menu_old_sound);
 }

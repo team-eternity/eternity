@@ -1479,7 +1479,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionpos(AMX *amx, cell *params)
    fixed_t x, y, z;
    byte col1, col2;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -1503,7 +1503,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionthing(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

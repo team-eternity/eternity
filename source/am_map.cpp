@@ -210,8 +210,6 @@ int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 
 int automap_grid = 0;
 
-bool automapactive = false;
-
 // location of window on screen
 static int  f_x;
 static int  f_y;
@@ -277,8 +275,6 @@ mpoint_t *markpoints = NULL;    // where the points are
 int markpointnum = 0; // next point to be assigned (also number of points now)
 int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
-
-static bool stopped = true;
 
 // haleyjd 12/22/02: Heretic stuff
 
@@ -536,7 +532,6 @@ static void AM_initVariables(void)
 {
    int pnum;
 
-   automapactive = true;
    //fb = video.screens[0];
 
    f_oldloc.x = D_MAXINT;
@@ -705,59 +700,19 @@ static void AM_LevelInit(void)
    scale_ftom = 1.0 / scale_mtof;
 }
 
+//-----------------------------------------------------------------------------
+// AutoMap Interface
 //
-// AM_Stop()
-//
-// Cease automap operations, unload patches, notify status bar
-//
-// Passed nothing, returns nothing
-//
-void AM_Stop(void)
+
+AutoMapInterface AutoMap;
+
+AutoMapInterface::AutoMapInterface()
+   : InputInterface("AutoMap", ii_automap, ev_keydown |
+                                           ev_keyup   |
+                                           ev_mouse   |
+                                           ev_joystick)
 {
-   AM_unloadPics();
-   automapactive = false;
-   ST_AutomapEvent(AM_MSGEXITED);
-   stopped = true;
-}
-
-//
-// AM_Start()
-//
-// Start up automap operations,
-//  if a new level, or game start, (re)initialize level variables
-//  init map variables
-//  load mark patches
-//
-// Passed nothing, returns nothing
-//
-void AM_Start(void)
-{
-   static int lastlevel = -1, lastepisode = -1,
-              last_width = -1, last_height = -1,
-              last_overlay = -1;
-
-   if(!stopped)
-      AM_Stop();
-
-   stopped = false;
-
-   // SoM: ANYRES
-   // haleyjd 06/10/09: added portal overlay
-   if(lastlevel != gamemap || lastepisode != gameepisode ||
-      last_width != video.width || last_height != video.height ||
-      last_overlay != mapportal_overlay)
-   {
-      last_width = video.width;
-      last_height = video.height;
-      last_overlay = mapportal_overlay;
-
-      AM_LevelInit();
-
-      lastlevel = gamemap;
-      lastepisode = gameepisode;
-   }
-   AM_initVariables();
-   AM_loadPics();
+   registerHandledActions();
 }
 
 //
@@ -786,222 +741,6 @@ static void AM_maxOutWindowScale(void)
    scale_mtof = max_scale_mtof;
    scale_ftom = 1.0 / scale_mtof;
    AM_activateNewScale();
-}
-
-static bool am_key_handled;
-
-//
-// AM_Responder()
-//
-// Handle events (user inputs) in automap mode
-//
-// Passed an input event, returns true if its handled
-//
-// haleyjd 07/07/04: rewritten to support new keybindings
-//
-bool AM_Responder(event_t *ev)
-{
-   static int cheatstate=0;
-   static int bigstate=0;
-
-   // haleyjd 07/07/04: dynamic bindings
-   am_key_handled = false;
-   G_KeyResponder(ev, kac_map);
-
-   if(ev->type == ev_keydown && !am_key_handled)
-   {
-      if(!automapactive)
-      {
-         if(action_map_toggle)
-         {
-            AM_Start();
-            am_key_handled = true;
-            action_map_toggle = 0;
-         }
-      }
-      else
-      {
-         am_key_handled = true;
-
-         if(action_map_toggle)
-         {
-            action_map_toggle = bigstate = 0;
-            AM_Stop();
-         }
-         else if(action_map_gobig)
-         {
-            bigstate = !bigstate;
-            if(bigstate)
-            {
-               AM_saveScaleAndLoc();
-               AM_minOutWindowScale();
-            }
-            else
-               AM_restoreScaleAndLoc();
-            action_map_gobig = 0;
-         }
-         else if(action_map_follow)
-         {
-            followplayer = !followplayer;
-            f_oldloc.x = D_MAXINT;
-            // Ty 03/27/98 - externalized
-            doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON"
-                                                      : "AMSTR_FOLLOWOFF"));
-            action_map_follow = 0;
-         }
-         else if(action_map_grid)
-         {
-            automap_grid = !automap_grid;      // killough 2/28/98
-            // Ty 03/27/98 - *not* externalized
-            doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON"
-                                                      : "AMSTR_GRIDOFF"));
-            action_map_grid = 0;
-         }
-         else if(action_map_mark)
-         {
-            // Ty 03/27/98 - *not* externalized
-            // sf: fixed this (buffer at start, presumably from an old sprintf
-            doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
-            AM_addMark();
-            action_map_mark = 0;
-         }
-         else if(action_map_clear)
-         {
-            AM_clearMarks();  // Ty 03/27/98 - *not* externalized
-            doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
-            action_map_clear = 0;
-         }
-         else
-         {
-            cheatstate = 0;
-            am_key_handled = false;
-         }
-      }
-   }
-
-   return am_key_handled;
-}
-
-//
-// action_handler_right
-//
-// Registered as the handler for the "map_right" key binding.
-//
-void AM_HandlerRight(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.x = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.x = 0;
-   }
-}
-
-//
-// action_handler_left
-//
-// Registered as the handler for the "map_left" key binding.
-//
-void AM_HandlerLeft(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.x = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.x = 0;
-   }
-}
-
-//
-// action_handler_up
-//
-// Registered as the handler for the "map_up" key binding.
-//
-void AM_HandlerUp(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.y = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.y = 0;
-   }
-}
-
-//
-// action_handler_down
-//
-// Registered as the handler for the "map_down" key binding.
-//
-void AM_HandlerDown(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.y = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.y = 0;
-   }
-}
-
-//
-// action_handler_zoomout
-//
-// Registered as the handler for the "map_zoomout" key binding.
-//
-void AM_HandlerZoomout(event_t *ev)
-{
-   if(automapactive)
-   {
-      if(ev->type == ev_keydown)
-      {
-         mtof_zoommul = M_ZOOMOUT;
-         ftom_zoommul = M_ZOOMIN;
-         am_key_handled = true;
-      }
-      else
-      {
-         mtof_zoommul = 1.0;
-         ftom_zoommul = 1.0;
-      }
-   }
-}
-
-//
-// action_handler_zoomin
-//
-// Registered as the handler for the "map_zoomin" key binding.
-//
-void AM_HandlerZoomin(event_t *ev)
-{
-   if(automapactive)
-   {
-      if(ev->type == ev_keydown)
-      {
-         mtof_zoommul = M_ZOOMIN;
-         ftom_zoommul = M_ZOOMOUT;
-         am_key_handled = true;
-      }
-      else
-      {
-         mtof_zoommul = 1.0;
-         ftom_zoommul = 1.0;
-      }
-   }
 }
 
 //
@@ -1078,32 +817,6 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
       y = M_DoubleToFixed(m_y + m_h / 2);
       z = R_PointInSubsector(x, y)->sector->floorheight;
    }
-}
-
-//
-// AM_Ticker()
-//
-// Updates on gametic - enter follow mode, zoom, or change map location
-//
-// Passed nothing, returns nothing
-//
-void AM_Ticker(void)
-{
-   if(!automapactive)
-      return;
-
-   amclock++;
-
-   if(followplayer)
-      AM_doFollowPlayer();
-
-   // Change the zoom if necessary
-   if(ftom_zoommul != 1.0)
-      AM_changeWindowScale();
-
-   // Change x,y location
-   if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
-      AM_changeWindowLoc();
 }
 
 
@@ -2334,6 +2047,11 @@ inline static void AM_drawCrosshair(int color)
       color; // single point for now
 }
 
+void AutoMapInterface::init()
+{
+   // [CG] Placeholder.
+}
+
 //
 // AM_Drawer()
 //
@@ -2341,9 +2059,9 @@ inline static void AM_drawCrosshair(int color)
 //
 // Passed nothing, returns nothing
 //
-void AM_Drawer(void)
+void AutoMapInterface::draw()
 {
-   if(!automapactive)
+   if(!isActive())
       return;
 
    AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
@@ -2364,6 +2082,244 @@ void AM_Drawer(void)
 
    AM_drawCrosshair(mapcolor_hair); //jff 1/7/98 default crosshair color
    AM_drawMarks();
+}
+
+//
+// AM_Ticker()
+//
+// Updates on gametic - enter follow mode, zoom, or change map location
+//
+// Passed nothing, returns nothing
+//
+void AutoMapInterface::tick()
+{
+   if(!isUpFront())
+      return;
+
+   amclock++;
+
+   if(followplayer)
+      AM_doFollowPlayer();
+
+   // Change the zoom if necessary
+   if(ftom_zoommul != 1.0)
+      AM_changeWindowScale();
+
+   // Change x,y location
+   if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
+      AM_changeWindowLoc();
+}
+
+bool AutoMapInterface::isFullScreen()
+{
+   return isUpFront();
+}
+
+//
+// AM_Start()
+//
+// Start up automap operations,
+//  if a new level, or game start, (re)initialize level variables
+//  init map variables
+//  load mark patches
+//
+// Passed nothing, returns nothing
+//
+void AutoMapInterface::activate()
+{
+   static int lastlevel = -1, lastepisode = -1,
+              last_width = -1, last_height = -1,
+              last_overlay = -1;
+
+   if(!active)
+      deactivate();
+
+   InputInterface::activate();
+
+   // SoM: ANYRES
+   // haleyjd 06/10/09: added portal overlay
+   if(lastlevel != gamemap || lastepisode != gameepisode ||
+      last_width != video.width || last_height != video.height ||
+      last_overlay != mapportal_overlay)
+   {
+      last_width = video.width;
+      last_height = video.height;
+      last_overlay = mapportal_overlay;
+
+      AM_LevelInit();
+
+      lastlevel = gamemap;
+      lastepisode = gameepisode;
+   }
+   AM_initVariables();
+   AM_loadPics();
+}
+
+//
+// AM_Stop()
+//
+// Cease automap operations, unload patches, notify status bar
+//
+// Passed nothing, returns nothing
+//
+void AutoMapInterface::deactivate()
+{
+   if(!active)
+      return;
+
+   AM_unloadPics();
+   ST_AutomapEvent(AM_MSGEXITED);
+   InputInterface::deactivate();
+}
+
+void AutoMapInterface::registerHandledActions()
+{
+   registerAction("toggle_automap");
+   registerAction("toggle_console");
+   registerAction("right");
+   registerAction("left");
+   registerAction("forward");
+   registerAction("backward");
+   registerAction("zoomin");
+   registerAction("zoomout");
+   registerAction("gobig");
+   registerAction("follow");
+   registerAction("mark");
+   registerAction("clear");
+   registerAction("grid");
+}
+
+//
+// AM_Responder()
+//
+// Handle events (user inputs) in automap mode
+//
+// Passed an input event, returns true if its handled
+//
+// haleyjd 07/07/04: rewritten to support new keybindings
+//
+bool AutoMapInterface::handleEvent(event_t *ev)
+{
+   static bool bigstate = false;
+
+   m_paninc.x = 0;
+   m_paninc.y = 0;
+   mtof_zoommul = 1.0;
+   ftom_zoommul = 1.0;
+
+   if(InputInterface::handleEvent(ev))
+      return true;
+
+   if(!isUpFront())
+   {
+      if(checkAndClearAction("toggle_automap"))
+      {
+         bigstate = true;
+         activate();
+         return true;
+      }
+   }
+
+   if(checkAndClearAction("toggle_automap"))
+   {
+      bigstate = false;
+      deactivate();
+      return true;
+   }
+
+   if(checkAndClearAction("toggle_console"))
+   {
+      Console.toggle();
+      return true;
+   }
+
+   if(!followplayer)
+   {
+      if(checkAction("forward"))
+      {
+         m_paninc.y = FTOM(F_PANINC);
+         return true;
+      }
+      else if(checkAction("backward"))
+      {
+         m_paninc.y = -FTOM(F_PANINC);
+         return true;
+      }
+      else if(checkAction("left"))
+      {
+         m_paninc.x = -FTOM(F_PANINC);
+         return true;
+      }
+      else if(checkAction("right"))
+      {
+         m_paninc.x = FTOM(F_PANINC);
+         return true;
+      }
+   }
+
+   if(checkAction("zoomin"))
+   {
+      mtof_zoommul = M_ZOOMIN;
+      ftom_zoommul = M_ZOOMOUT;
+      return true;
+   }
+   else if(checkAction("zoomout"))
+   {
+      mtof_zoommul = M_ZOOMOUT;
+      ftom_zoommul = M_ZOOMIN;
+      return true;
+   }
+
+   if(checkAndClearAction("gobig"))
+   {
+      bigstate = !bigstate;
+      if(bigstate)
+      {
+         AM_saveScaleAndLoc();
+         AM_minOutWindowScale();
+      }
+      else
+         AM_restoreScaleAndLoc();
+
+      return true;
+   }
+
+   if(checkAndClearAction("follow"))
+   {
+      followplayer = !followplayer;
+      f_oldloc.x = D_MAXINT;
+      // Ty 03/27/98 - externalized
+      doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON"
+                                                : "AMSTR_FOLLOWOFF"));
+      return true;
+   }
+
+   if(checkAndClearAction("mark"))
+   {
+      // Ty 03/27/98 - *not* externalized
+      // sf: fixed this (buffer at start, presumably from an old sprintf
+      doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
+      AM_addMark();
+      return true;
+   }
+
+   if(checkAndClearAction("clear"))
+   {
+      AM_clearMarks();  // Ty 03/27/98 - *not* externalized
+      doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
+      return true;
+   }
+
+   if(checkAndClearAction("grid"))
+   {
+      automap_grid = !automap_grid;      // killough 2/28/98
+      // Ty 03/27/98 - *not* externalized
+      doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON"
+                                                : "AMSTR_GRIDOFF"));
+      return true;
+   }
+
+   return false;
 }
 
 //----------------------------------------------------------------------------
@@ -2437,4 +2393,3 @@ void AM_Drawer(void)
 //
 //
 //----------------------------------------------------------------------------
-

@@ -58,15 +58,15 @@ int comport;
 
 VARIABLE_INT(comport, NULL, 1, 4, NULL);
 
-CONSOLE_COMMAND(nullmodem, cf_notnet | cf_buffered)
+CONSOLE_COMMAND(nullmodem, cf_notnet | cf_buffered, ii_none)
 {
 }
 
-CONSOLE_COMMAND(dial, cf_notnet | cf_buffered)
+CONSOLE_COMMAND(dial, cf_notnet | cf_buffered, ii_none)
 {
 }
 
-CONSOLE_COMMAND(answer, cf_notnet | cf_buffered)
+CONSOLE_COMMAND(answer, cf_notnet | cf_buffered, ii_none)
 {
 }
 

@@ -48,7 +48,6 @@ void C_CloseConsoleLog(void);
 void C_DumpMessages(qstring *filename);
 
 // sf 9/99: made a #define
-#define consoleactive (Console.current_height || G_GameStateIs(GS_CONSOLE))
 #define c_moving      (Console.current_height != Console.current_target)
 
 extern int c_height;     // the height of the console

@@ -45,6 +45,7 @@
 #include "hu_over.h"
 #include "i_system.h"
 #include "i_video.h"
+#include "mn_engin.h"
 #include "v_video.h"
 #include "v_font.h"
 #include "doomstat.h"
@@ -86,7 +87,7 @@ static qstring inputtext;
 static char *input_point;      // left-most point you see of the command line
 
 // for scrolling command line
-static int pgup_down=0, pgdn_down=0;
+// static int pgup_down=0, pgdn_down=0;
 
 // haleyjd 09/07/03: true logging capability
 static FILE *console_log = NULL;
@@ -206,77 +207,6 @@ static void C_initMessageBuffer()
       messages[i] = &msgtext[i * LINELENGTH];
 }
 
-void C_Init(void)
-{
-   // haleyjd: initialize console qstrings
-   inputtext.createSize(100);
-
-   // haleyjd: initialize console message buffer
-   C_initMessageBuffer();
-
-   Console.enabled = true;
-
-   if(!(c_font = E_FontForName(c_fontname)))
-      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
-
-   // sf: stupid american spellings =)
-   C_NewAlias("color", "colour %opt");
-
-   C_AddCommands();
-   C_updateInputPoint();
-
-   // haleyjd
-   G_InitKeyBindings();
-}
-
-// called every tic
-
-void C_Ticker(void)
-{
-   Console.showprompt = true;
-
-   if(!G_GameStateIs(GS_CONSOLE))
-   {
-      // specific to half-screen version only
-
-      // move the console toward its target
-      if(D_abs(Console.current_height - Console.current_target) >= c_speed)
-      {
-         Console.current_height +=
-            (Console.current_target < Console.current_height) ? -c_speed : c_speed;
-      }
-      else
-      {
-         Console.current_height = Console.current_target;
-      }
-   }
-   else
-   {
-      // console gamestate: no moving consoles!
-      Console.current_target = Console.current_height;
-   }
-
-   if(consoleactive)  // no scrolling thru messages when fullscreen
-   {
-      // scroll based on keys down
-      message_pos += pgdn_down - pgup_down;
-
-      // check we're in the area of valid messages
-      if(message_pos < 0)
-         message_pos = 0;
-      if(message_pos > message_last)
-         message_pos = message_last;
-   }
-
-   //
-   // NETCODE_FIXME -- CONSOLE_FIXME: Buffered command crap.
-   // Needs complete rewrite.
-   //
-
-   C_RunBuffer(c_typed);   // run the delayed typed commands
-   C_RunBuffer(c_menu);
-}
-
 //
 // CONSOLE_FIXME: history needs to be more efficient. Use pointers
 // instead of copying strings back and forth.
@@ -324,276 +254,6 @@ static void C_addToHistory(qstring *s)
    history[history_last][0] = '\0';
 }
 
-// respond to keyboard input/events
-
-bool C_Responder(event_t *ev)
-{
-   static int shiftdown;
-   char ch = 0;
-
-   // haleyjd 09/15/09: do not respond to events while the menu is up
-   if(menuactive)
-      return false;
-
-   // haleyjd 05/29/06: dynamic console bindings
-   G_KeyResponder(ev, kac_console);
-
-   if(ev->data1 == KEYD_RSHIFT)
-   {
-      shiftdown = (ev->type==ev_keydown);
-      return consoleactive;   // eat if console active
-   }
-
-   pgup_down = action_console_pageup;
-   if(action_console_pageup)
-      return consoleactive;
-   pgdn_down = action_console_pagedown;
-   if(action_console_pagedown)
-      return consoleactive;
-
-   // only interested in keypresses
-   if(ev->type != ev_keydown)
-      return false;
-
-   //////////////////////////////////
-   // Check for special keypresses
-   //
-   // detect activating of console etc.
-   //
-
-   // activate console?
-   if(action_console_toggle && Console.enabled)
-   {
-      bool goingup = Console.current_target == c_height;
-
-      // set console
-      action_console_toggle = false;
-
-      Console.current_target = goingup ? 0 : c_height;
-
-      return true;
-   }
-
-   if(!consoleactive)
-      return false;
-
-   // not til its stopped moving
-   if(Console.current_target < Console.current_height)
-      return false;
-
-   ///////////////////////////////////////
-   // Console active commands
-   //
-   // keypresses only dealt with if console active
-   //
-
-   // tab-completion
-   if(action_console_tab)
-   {
-      // set inputtext to next or previous in
-      // tab-completion list depending on whether
-      // shift is being held down
-      action_console_tab = false;
-      inputtext = (shiftdown ? C_NextTab(inputtext) : C_PrevTab(inputtext));
-      C_updateInputPoint(); // reset scrolling
-      return true;
-    }
-
-   // run command
-   if(action_console_enter)
-   {
-      action_console_enter = false;
-
-      C_addToHistory(&inputtext); // add to history
-
-      if(inputtext == "r0x0rz delux0rz")
-         Egg(); // shh!
-
-      // run the command
-      Console.cmdtype = c_typed;
-      C_RunTextCmd(inputtext.constPtr());
-
-      C_InitTab();            // reset tab completion
-
-      inputtext.clear(); // clear inputtext now
-      C_updateInputPoint();    // reset scrolling
-
-      return true;
-   }
-
-   ////////////////////////////////
-   // Command history
-   //
-
-   // previous command
-
-   if(action_console_up)
-   {
-      action_console_up = false;
-
-      history_current =
-         (history_current <= 0) ? 0 : history_current - 1;
-
-      // read history from inputtext
-      inputtext = history[history_current];
-
-      C_InitTab();            // reset tab completion
-      C_updateInputPoint();   // reset scrolling
-      return true;
-   }
-
-  // next command
-
-   if(action_console_down)
-   {
-      action_console_down = false;
-
-      history_current = (history_current >= history_last)
-         ? history_last : history_current + 1;
-
-      // the last history is an empty string
-      inputtext = ((history_current == history_last) ?
-                    "" : (char *)history[history_current]);
-
-      C_InitTab();            // reset tab-completion
-      C_updateInputPoint();   // reset scrolling
-      return true;
-   }
-
-   /////////////////////////////////////////
-   // Normal Text Input
-   //
-
-   // backspace
-
-   if(action_console_backspace)
-   {
-      action_console_backspace = false;
-
-      inputtext.Delc();
-
-      C_InitTab();            // reset tab-completion
-      C_updateInputPoint();   // reset scrolling
-      return true;
-   }
-
-   // none of these, probably just a normal character
-
-   if(ev->character)
-      ch = ev->character;
-   else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
-
-   // only care about valid characters
-   // dont allow too many characters on one command line
-
-   if(ch > 31 && ch < 127)
-   {
-      inputtext += ch;
-
-      C_InitTab();            // reset tab-completion
-      C_updateInputPoint();   // reset scrolling
-      return true;
-   }
-
-   return false;   // dont care about this event
-}
-
-
-// draw the console
-
-//
-// CONSOLE_FIXME: Support other fonts. Break messages across lines during
-// drawing instead of during message insertion? It should be possible
-// although it would complicate the scrolling logic.
-//
-
-void C_Drawer(void)
-{
-   int y;
-   int count;
-   int real_height;
-   static int oldscreenheight = 0;
-   static int oldscreenwidth = 0;
-
-   if(!consoleactive)
-      return;   // dont draw if not active
-
-   // Check for change in screen res
-   // SoM: Check width too.
-   if(oldscreenheight != video.height || oldscreenwidth != video.width)
-   {
-      C_initBackdrop();       // re-init to the new screen size
-      oldscreenheight = video.height;
-      oldscreenwidth = video.width;
-   }
-
-   // fullscreen console for fullscreen mode
-   if(G_GameStateIs(GS_CONSOLE))
-      Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
-
-   real_height =
-      cback.scaled ? cback.y2lookup[Console.current_height - 1] + 1 :
-                     Console.current_height;
-
-   // draw backdrop
-   // SoM: use the VBuffer
-   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0,
-                 cback.height - real_height, cback.width, real_height);
-
-   //////////////////////////////////////////////////////////////////////
-   // draw text messages
-
-   // offset starting point up by 8 if we are showing input prompt
-
-   y = Console.current_height -
-         ((Console.showprompt && message_pos == message_last) ? c_font->absh : 0) - 1;
-
-   // start at our position in the message history
-   count = message_pos;
-
-   while(1)
-   {
-      // move up one line on the screen
-      // back one line in the history
-      y -= c_font->absh;
-
-      if(--count < 0) break;        // end of message history?
-      if(y <= -c_font->absh) break; // past top of screen?
-
-      // draw this line
-      V_FontWriteText(c_font, messages[count], 1, y);
-   }
-
-   //////////////////////////////////
-   // Draw input line
-   //
-
-   // input line on screen, not scrolled back in history?
-
-   if(Console.current_height > c_font->absh && Console.showprompt &&
-      message_pos == message_last)
-   {
-      const char *a_prompt;
-      char tempstr[LINELENGTH];
-
-      // if we are scrolled back, dont draw the input line
-      if(message_pos == message_last)
-      {
-         if(G_GameStateIs(GS_LEVEL) && !strcasecmp(players[0].name, "quasar"))
-            a_prompt = altprompt;
-         else
-            a_prompt = inputprompt;
-
-         psnprintf(tempstr, sizeof(tempstr),
-                   "%s%s_", a_prompt, input_point);
-      }
-
-      V_FontWriteText(c_font, tempstr, 1,
-                      Console.current_height - c_font->absh - 1);
-   }
-}
-
 // updates the screen without actually waiting for d_display
 // useful for functions that get input without using the gameloop
 // eg. serial code
@@ -602,7 +262,7 @@ void C_Update(void)
 {
    if(!nodrawers)
    {
-      C_Drawer();
+      Console.draw();
       I_FinishUpdate();
    }
 }
@@ -956,6 +616,8 @@ void C_SetConsole(void)
    S_StopMusic();                  // stop music if any
    S_StopSounds(true);             // and sounds
    G_StopDemo();                   // stop demo playing
+
+   Console.activate();
 }
 
 // make the console go up
@@ -963,6 +625,7 @@ void C_SetConsole(void)
 void C_Popup(void)
 {
    Console.current_target = 0;
+   Console.deactivate();
 }
 
 // make the console disappear
@@ -972,6 +635,7 @@ void C_InstaPopup(void)
    // haleyjd 10/20/08: no popup in GS_CONSOLE gamestate!
    if(!G_GameStateIs(GS_CONSOLE))
       Console.current_target = Console.current_height = 0;
+   Console.deactivate();
 }
 
 #if 0
@@ -1080,6 +744,379 @@ AMX_NATIVE_INFO cons_io_Natives[] =
    { NULL, NULL }
 };
 #endif
+
+//=============================================================================
+// Console Interface
+//
+
+ConsoleInterface::ConsoleInterface()
+   : InputInterface("Console", ii_console, ev_keydown)
+{
+   registerHandledActions();
+}
+
+void ConsoleInterface::init()
+{
+   // haleyjd: initialize console qstrings
+   inputtext.createSize(100);
+
+   // haleyjd: initialize console message buffer
+   C_initMessageBuffer();
+
+   enabled = true;
+
+   if(!(c_font = E_FontForName(c_fontname)))
+      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
+
+   // sf: stupid american spellings =)
+   C_NewAlias("color", "colour %opt");
+
+   C_AddCommands();
+   C_updateInputPoint();
+
+   // haleyjd
+   key_bindings.initialize();
+}
+
+// draw the console
+
+//
+// CONSOLE_FIXME: Support other fonts. Break messages across lines during
+// drawing instead of during message insertion? It should be possible
+// although it would complicate the scrolling logic.
+//
+
+void ConsoleInterface::draw()
+{
+   int y;
+   int count;
+   int real_height;
+   static int oldscreenheight = 0;
+   static int oldscreenwidth = 0;
+
+   if(!current_height)
+      return;   // dont draw if not active
+
+   // Check for change in screen res
+   // SoM: Check width too.
+   if(oldscreenheight != video.height || oldscreenwidth != video.width)
+   {
+      C_initBackdrop();       // re-init to the new screen size
+      oldscreenheight = video.height;
+      oldscreenwidth = video.width;
+   }
+
+   // fullscreen console for fullscreen mode
+   if(G_GameStateIs(GS_CONSOLE))
+      current_height = cback.scaled ? SCREENHEIGHT : cback.height;
+
+   real_height =
+      cback.scaled ? cback.y2lookup[current_height - 1] + 1 :
+                     current_height;
+
+   // draw backdrop
+   // SoM: use the VBuffer
+   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0,
+                 cback.height - real_height, cback.width, real_height);
+
+   //////////////////////////////////////////////////////////////////////
+   // draw text messages
+
+   // offset starting point up by 8 if we are showing input prompt
+
+   y = current_height -
+         ((showprompt && message_pos == message_last) ? c_font->absh : 0) - 1;
+
+   // start at our position in the message history
+   count = message_pos;
+
+   while(1)
+   {
+      // move up one line on the screen
+      // back one line in the history
+      y -= c_font->absh;
+
+      if(--count < 0) break;        // end of message history?
+      if(y <= -c_font->absh) break; // past top of screen?
+
+      // draw this line
+      V_FontWriteText(c_font, messages[count], 1, y);
+   }
+
+   //////////////////////////////////
+   // Draw input line
+   //
+
+   // input line on screen, not scrolled back in history?
+
+   if(current_height > c_font->absh && showprompt &&
+      message_pos == message_last)
+   {
+      const char *a_prompt;
+      char tempstr[LINELENGTH];
+
+      // if we are scrolled back, dont draw the input line
+      if(message_pos == message_last)
+      {
+         if(G_GameStateIs(GS_LEVEL) && !strcasecmp(players[0].name, "quasar"))
+            a_prompt = altprompt;
+         else
+            a_prompt = inputprompt;
+
+         psnprintf(tempstr, sizeof(tempstr),
+                   "%s%s_", a_prompt, input_point);
+      }
+
+      V_FontWriteText(c_font, tempstr, 1, current_height - c_font->absh - 1);
+   }
+}
+
+// called every tic
+
+void ConsoleInterface::tick()
+{
+   showprompt = true;
+
+   if(!G_GameStateIs(GS_CONSOLE))
+   {
+      // specific to half-screen version only
+
+      // move the console toward its target
+      if(D_abs(current_height - current_target) >= c_speed)
+      {
+         current_height +=
+            (current_target < current_height) ? -c_speed : c_speed;
+      }
+      else
+      {
+         current_height = current_target;
+      }
+   }
+   else
+   {
+      // console gamestate: no moving consoles!
+      current_target = current_height;
+   }
+
+   if(isUpFront())  // no scrolling thru messages when fullscreen
+   {
+      // scroll based on keys down
+      // message_pos += pgdn_down - pgup_down;
+      if(Console.checkAction("pagedown") && !Console.checkAction("pageup"))
+         message_pos++;
+      else if(Console.checkAction("pageup") && !Console.checkAction("pagedown"))
+         message_pos--;
+
+      // check we're in the area of valid messages
+      if(message_pos < 0)
+         message_pos = 0;
+      if(message_pos > message_last)
+         message_pos = message_last;
+   }
+
+   //
+   // NETCODE_FIXME -- CONSOLE_FIXME: Buffered command crap.
+   // Needs complete rewrite.
+   //
+
+   C_RunBuffer(c_typed);   // run the delayed typed commands
+   C_RunBuffer(c_menu);
+}
+
+void ConsoleInterface::registerHandledActions()
+{
+   registerAction("toggle_console");
+   registerAction("pageup");
+   registerAction("pagedown");
+   registerAction("tab");
+   registerAction("enter");
+   registerAction("up");
+   registerAction("down");
+   registerAction("backspace");
+}
+
+void ConsoleInterface::toggle()
+{
+   bool goingup = Console.current_target == c_height;
+
+   // set console
+   Console.current_target = goingup ? 0 : c_height;
+
+   if(goingup)
+      Console.deactivate();
+   else
+      Console.activate();
+}
+
+// respond to keyboard input/events
+
+bool ConsoleInterface::handleEvent(event_t *ev)
+{
+   char ch = 0;
+
+   if(InputInterface::handleEvent(ev))
+      return true;
+
+   /*
+   // haleyjd 09/15/09: do not respond to events while the menu is up
+   if(Menu.isUpFront())
+      return false;
+
+   // haleyjd 05/29/06: dynamic console bindings
+   G_KeyResponder(ev, kac_console);
+   */
+
+   if(ev->data1 == KEYD_RSHIFT)
+      return isUpFront();   // eat if console active
+
+   if(Console.actionIsActive("pageup"))
+      return isUpFront();
+
+   if(Console.actionIsActive("pagedown"))
+      return isUpFront();
+
+   // only interested in keypresses
+   /*
+   if(ev->type != ev_keydown)
+      return false;
+   */
+
+   //////////////////////////////////
+   // Check for special keypresses
+   //
+   // detect activating of console etc.
+   //
+
+   // activate console?
+   if(Console.checkAndClearAction("toggle_console") && Console.enabled)
+      toggle();
+
+   if(!isUpFront())
+      return false;
+
+   // not til its stopped moving
+   if(current_target < current_height)
+      return false;
+
+   ///////////////////////////////////////
+   // Console active commands
+   //
+   // keypresses only dealt with if console active
+   //
+
+   // tab-completion
+   if(Console.checkAndClearAction("tab"))
+   {
+      // set inputtext to next or previous in
+      // tab-completion list depending on whether
+      // shift is being held down
+      if(key_bindings.shiftdown)
+         inputtext = C_NextTab(inputtext);
+      else
+         inputtext = C_PrevTab(inputtext);
+      C_updateInputPoint(); // reset scrolling
+      return true;
+    }
+
+   // run command
+   if(Console.checkAndClearAction("enter"))
+   {
+      C_addToHistory(&inputtext); // add to history
+
+      if(inputtext == "r0x0rz delux0rz")
+         Egg(); // shh!
+
+      // run the command
+      cmdtype = c_typed;
+      C_RunTextCmd(inputtext.constPtr());
+
+      C_InitTab();            // reset tab completion
+
+      inputtext.clear(); // clear inputtext now
+      C_updateInputPoint();    // reset scrolling
+
+      return true;
+   }
+
+   ////////////////////////////////
+   // Command history
+   //
+
+   // previous command
+
+   if(Console.checkAndClearAction("up"))
+   {
+      history_current =
+         (history_current <= 0) ? 0 : history_current - 1;
+
+      // read history from inputtext
+      inputtext = history[history_current];
+
+      C_InitTab();            // reset tab completion
+      C_updateInputPoint();   // reset scrolling
+      return true;
+   }
+
+  // next command
+
+   if(Console.checkAndClearAction("down"))
+   {
+      history_current = (history_current >= history_last)
+         ? history_last : history_current + 1;
+
+      // the last history is an empty string
+      inputtext = ((history_current == history_last) ?
+                    "" : (char *)history[history_current]);
+
+      C_InitTab();            // reset tab-completion
+      C_updateInputPoint();   // reset scrolling
+      return true;
+   }
+
+   /////////////////////////////////////////
+   // Normal Text Input
+   //
+
+   // backspace
+
+   if(Console.checkAndClearAction("backspace"))
+   {
+      inputtext.Delc();
+
+      C_InitTab();            // reset tab-completion
+      C_updateInputPoint();   // reset scrolling
+      return true;
+   }
+
+   // none of these, probably just a normal character
+
+   if(ev->character)
+      ch = ev->character;
+   else if(ev->data1 > 31 && ev->data1 < 127) // shifted?
+      ch = (key_bindings.shiftdown ? shiftxform[ev->data1] : ev->data1);
+
+   // only care about valid characters
+   // dont allow too many characters on one command line
+
+   if(ch > 31 && ch < 127)
+   {
+      inputtext += ch;
+
+      C_InitTab();            // reset tab-completion
+      C_updateInputPoint();   // reset scrolling
+      return true;
+   }
+
+   return false;   // dont care about this event
+}
+
+bool ConsoleInterface::isFullScreen()
+{
+   if((current_height == SCREENHEIGHT) && (current_target == SCREENHEIGHT))
+      return true;
+
+   return false;
+}
 
 //
 // Egg

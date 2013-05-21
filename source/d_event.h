@@ -35,10 +35,10 @@
 // Input event types.
 typedef enum
 {
-  ev_keydown,
-  ev_keyup,
-  ev_mouse,
-  ev_joystick
+  ev_keydown  = 1,
+  ev_keyup    = 2,
+  ev_mouse    = 4,
+  ev_joystick = 8
 } evtype_t;
 
 // Event structure.

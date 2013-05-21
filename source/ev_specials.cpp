@@ -1486,7 +1486,7 @@ static bool EV_ActionDoorRaise(ev_action_t *action, ev_instance_t *instance)
    dd.topcountdown = 0;
    dd.delay_value  = instance->args[2];
    dd.altlighttag  = instance->args[3];
-   
+
    dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;

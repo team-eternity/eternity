@@ -27,6 +27,7 @@
 #ifndef __AMMAP_H__
 #define __AMMAP_H__
 
+#include "d_iface.h"
 #include "m_fixed.h"
 
 // Used by ST StatusBar stuff.
@@ -38,8 +39,25 @@ enum
 
 struct event_t;
 
-// Called by main loop.
-bool AM_Responder(event_t *ev);
+class AutoMapInterface : public InputInterface
+{
+public:
+   AutoMapInterface();
+
+   void init();
+   void draw();  // Called by main loop instead of view drawer if active
+   void tick();  // Called by main loop.
+
+   bool isFullScreen();
+
+   void activate();
+   void deactivate();
+   void registerHandledActions();
+
+   bool handleEvent(event_t *ev); // Called by main loop.
+};
+
+extern AutoMapInterface AutoMap;
 
 // haleyjd 10/06/05: key binding handlers made global
 void AM_HandlerRight(event_t *ev);
@@ -48,21 +66,6 @@ void AM_HandlerUp(event_t *ev);
 void AM_HandlerDown(event_t *ev);
 void AM_HandlerZoomin(event_t *ev);
 void AM_HandlerZoomout(event_t *ev);
-
-// Called by main loop.
-void AM_Ticker(void);
-
-// Called by main loop,
-// called instead of view drawer if automap active.
-void AM_Drawer(void);
-
-// Called to force the automap to quit
-// if the level is completed while it is up.
-void AM_Stop(void);
-
-// killough 2/22/98: for saving automap information in savegame:
-
-void AM_Start(void);
 
 //jff 4/16/98 make externally available
 

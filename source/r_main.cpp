@@ -789,7 +789,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
-         !(((menuactive || consoleactive) && !demoplayback && !netgame) || paused))
+         !(((Menu.isUpFront() || Console.isUpFront()) &&
+            !demoplayback && !netgame) || paused))
       {
          int strength = player->quake;
 
@@ -1312,7 +1313,7 @@ CONSOLE_VARIABLE(r_spanengine,   r_span_engine_num,   0) {}
 VARIABLE_INT(r_vissprite_limit, NULL, -1, D_MAXINT, NULL);
 CONSOLE_VARIABLE(r_vissprite_limit, r_vissprite_limit, 0) {}
 
-CONSOLE_COMMAND(p_dumphubs, 0)
+CONSOLE_COMMAND(p_dumphubs, 0, ii_all)
 {
    extern void P_DumpHubs();
    P_DumpHubs();
@@ -1323,7 +1324,7 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
    R_DoomTLStyle();
 }
 
-CONSOLE_COMMAND(r_changesky, 0)
+CONSOLE_COMMAND(r_changesky, 0, ii_game)
 {
    if(Console.argc < 1)
    {

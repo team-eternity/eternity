@@ -34,6 +34,7 @@
 #include "z_zone.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
+#include "d_iface.h"
 #include "f_finale.h"
 #include "info.h"
 

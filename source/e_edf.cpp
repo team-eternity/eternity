@@ -72,6 +72,7 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+#include "d_iface.h"
 #include "d_io.h"
 #include "d_dwfile.h"
 

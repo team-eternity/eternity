@@ -694,8 +694,6 @@ int  oldnettics;
 int  opensocket_count = 0;
 bool opensocket;
 
-extern bool advancedemo;
-
 // Run new game tics.  Returns true if at least one tic
 // was run.
 
@@ -788,9 +786,8 @@ static bool RunGameTics(void)
       D_ProcessEvents();
       //newtics = 1;  // only 1 new tic
       G_BuildTiccmd(&netcmds[consoleplayer][maketic%BACKUPTICS]);
-      if(advancedemo)
-         D_DoAdvanceDemo();
-      G_Ticker();
+      DemoScreen.startUpIfDeferred();
+      Game.tick();
       gametic++;
       maketic++;
       return true;
@@ -829,11 +826,10 @@ static bool RunGameTics(void)
       for(i = 0; i < ticdup; ++i)
       {
          if(gametic/ticdup > lowtic)
-            I_Error("gametic>lowtic\n");
-         if(advancedemo)
-            D_DoAdvanceDemo();
-         //isconsoletic =  gamestate == GS_CONSOLE;
-         G_Ticker();
+            I_Error("gametic > lowtic\n");
+         DemoScreen.startUpIfDeferred();
+         // isconsoletic = G_GameStateIs(GS_CONSOLE);
+         Game.tick();
          gametic++;
 
          // modify command for duplicated tics
@@ -888,8 +884,8 @@ void TryRunTics(void)
       for(i = 0; i < realtics; ++i)   // run tics
       {
          // all independent tickers here
-         MN_Ticker();
-         C_Ticker();
+         Menu.tick();
+         Console.tick();
          V_FPSTicker();
       }
 
@@ -905,7 +901,7 @@ void TryRunTics(void)
 //
 
 /*
-CONSOLE_COMMAND(kick, cf_server)
+CONSOLE_COMMAND(kick, cf_server, ii_all)
 {
    if(!Console.argc)
    {
@@ -917,7 +913,7 @@ CONSOLE_COMMAND(kick, cf_server)
 }
 */
 
-CONSOLE_COMMAND(playerinfo, 0)
+CONSOLE_COMMAND(playerinfo, 0, ii_all)
 {
    int i;
 
@@ -931,7 +927,7 @@ CONSOLE_COMMAND(playerinfo, 0)
 // NETCODE_FIXME: See notes above about kicking out instead of
 // dropping to console.
 //
-CONSOLE_COMMAND(disconnect, cf_netonly)
+CONSOLE_COMMAND(disconnect, cf_netonly, ii_all)
 {
    D_QuitNetGame();
    C_SetConsole();

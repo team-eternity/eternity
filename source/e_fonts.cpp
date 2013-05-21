@@ -34,6 +34,7 @@
 #include "autopalette.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
+#include "d_iface.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "f_finale.h"

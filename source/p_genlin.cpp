@@ -1085,7 +1085,7 @@ static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
    }
    else if(dd->flags & DDF_HAVESPAC) // Hexen-style activation
    {
-      // Must be usable, must be capable of multiple activations, and must be a 
+      // Must be usable, must be capable of multiple activations, and must be a
       // manual door action (ie., zero tag)
       if(dd->spac != SPAC_USE || !(dd->flags & DDF_REUSABLE) || tag)
          return 0;
@@ -1120,7 +1120,7 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
    // haleyjd 01/03/12: BOOM-style, or Hexen-style?
-   if(((dd->flags & DDF_HAVETRIGGERTYPE) && 
+   if(((dd->flags & DDF_HAVETRIGGERTYPE) &&
        (dd->trigger_type == PushOnce || dd->trigger_type == PushMany)) ||
       ((dd->flags & DDF_HAVESPAC) && !tag))
    {
@@ -1281,7 +1281,7 @@ int EV_DoGenLockedDoor(line_t *line)
    default:
       break;
    }
-   
+
    dd.delay_value = VDOORWAIT;
 
    speedType = (value & LockedSpeed) >> LockedSpeedShift;
@@ -1354,7 +1354,7 @@ int EV_DoGenDoor(line_t *line)
    dd.speed_value  = VDOORSPEED * (1 << speedType);
 
    dd.kind = (value & DoorKind) >> DoorKindShift;
-   
+
    return EV_DoParamDoor(line, line->tag, &dd);
 }
 
@@ -2246,7 +2246,7 @@ static cell AMX_NATIVE_CALL sm_changeceilingtex(AMX *amx, cell *params)
    char *flat;
    int tag, err;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2277,7 +2277,7 @@ static cell AMX_NATIVE_CALL sm_changefloortex(AMX *amx, cell *params)
    char *flat;
    int err, tag;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2309,7 +2309,7 @@ static cell AMX_NATIVE_CALL sm_changelinetex(AMX *amx, cell *params)
    char *texname;
    int err, lineid, side, pos;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2343,7 +2343,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
    char *texname;
    int err, tag, side, pos;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -2384,7 +2384,7 @@ static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
    line_t *line  = NULL;
    Mobj *thing = NULL;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

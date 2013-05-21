@@ -58,8 +58,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#define USING_NEW_BINDS 0
-
 #define BINDNUMCHAINS 31
 #define MAX_LOAD_FACTOR 0.7
 
@@ -998,13 +996,11 @@ bool MN_BindResponder(event_t *ev)
    // got a key - close box
    MN_PopWidget();
 
-#if MENU_INTERFACE_ENABLED
    if(Menu.actionIsActive("menu_toggle")) // cancel
    {
       Menu.deactivateAction("menu_toggle");
       return true;
    }
-#endif
 
    if(interface_name)
    {
@@ -1057,14 +1053,12 @@ bool MN_BindResponder(event_t *ev)
 // Console Commands
 //
 
-#if USING_NEW_BINDS
-
 //
 // bind
 //
 // Bind a key to one or more actions.
 //
-CONSOLE_COMMAND(bind, 0)
+CONSOLE_COMMAND(bind, 0, ii_all)
 {
    if((Console.argc < 1) || (Console.argc > 3))
    {
@@ -1158,7 +1152,7 @@ CONSOLE_COMMAND(bind, 0)
 }
 
 // haleyjd: utility functions
-CONSOLE_COMMAND(listactions, 0)
+CONSOLE_COMMAND(listactions, 0, ii_all)
 {
    qstring buf;
 
@@ -1166,7 +1160,7 @@ CONSOLE_COMMAND(listactions, 0)
    C_Printf(buf.constPtr());
 }
 
-CONSOLE_COMMAND(listkeys, 0)
+CONSOLE_COMMAND(listkeys, 0, ii_all)
 {
    int i;
 
@@ -1187,7 +1181,7 @@ CONSOLE_COMMAND(listkeys, 0)
 //      Interfaces must then run their "checkProtectedBinds" method to ensure
 //      that basic functionality is still preserved.
 
-CONSOLE_COMMAND(unbind, 0)
+CONSOLE_COMMAND(unbind, 0, ii_all)
 {
    KeyBind *kb = NULL;
    InputKey *key = NULL;
@@ -1277,7 +1271,7 @@ CONSOLE_COMMAND(unbind, 0)
    }
 }
 
-CONSOLE_COMMAND(unbindall, 0)
+CONSOLE_COMMAND(unbindall, 0, ii_all)
 {
    int i;
 
@@ -1293,7 +1287,7 @@ CONSOLE_COMMAND(unbindall, 0)
 // haleyjd 12/11/01
 // list all active bindings to the console
 //
-CONSOLE_COMMAND(bindings, 0)
+CONSOLE_COMMAND(bindings, 0, ii_all)
 {
    int i;
    KeyBind *kb;
@@ -1317,7 +1311,5 @@ void G_Bind_AddCommands()
    C_AddCommand(unbindall);
    C_AddCommand(bindings);
 }
-
-#endif
 
 // EOF

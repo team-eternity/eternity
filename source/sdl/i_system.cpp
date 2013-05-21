@@ -334,7 +334,7 @@ void I_Quit(void)
 
    IFNOTFATAL(M_SaveDefaults());
    IFNOTFATAL(M_SaveSysConfig());
-   IFNOTFATAL(G_SaveDefaults()); // haleyjd
+   IFNOTFATAL(key_bindings.saveKeyBindings()); // haleyjd
 
 #ifdef _MSC_VER
    // Under Visual C++, the console window likes to rudely slam
@@ -577,7 +577,7 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 // haleyjd 04/15/02: windows joystick commands
-CONSOLE_COMMAND(i_joystick, 0)
+CONSOLE_COMMAND(i_joystick, 0, ii_all)
 {
    if(Console.argc != 1)
       return;
@@ -585,13 +585,9 @@ CONSOLE_COMMAND(i_joystick, 0)
    i_SDLJoystickNum = Console.argv[0]->toInt();
 
    if(i_SDLJoystickNum != -1)
-   {
       joystickpresent = I_SetJoystickDevice(i_SDLJoystickNum);
-   }
    else
-   {
       joystickpresent = false;
-   }
 }
 
 #ifdef _SDL_VER

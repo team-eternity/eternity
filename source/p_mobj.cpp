@@ -3048,7 +3048,7 @@ static cell AMX_NATIVE_CALL sm_thingspawn(AMX *amx, cell *params)
    angle_t angle;
    Mobj *mo;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3104,7 +3104,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
    Mobj *mo, *spawnspot = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3155,7 +3155,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3189,7 +3189,7 @@ static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3219,7 +3219,7 @@ static cell AMX_NATIVE_CALL sm_thinginfosound(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3262,7 +3262,7 @@ static cell AMX_NATIVE_CALL sm_thingmassacre(AMX *amx, cell *params)
 {
    int massacreType = (int)params[1];
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3298,7 +3298,7 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3336,7 +3336,7 @@ static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3371,7 +3371,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3429,7 +3429,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3470,7 +3470,7 @@ static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3497,7 +3497,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3532,7 +3532,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
    int     tid   = params[3];
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3568,7 +3568,7 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3616,7 +3616,7 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
 {
    int tid;
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
@@ -3656,7 +3656,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
    Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
-   if(gamestate != GS_LEVEL)
+   if(!G_GameStateIs(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

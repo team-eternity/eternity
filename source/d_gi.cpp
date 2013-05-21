@@ -32,11 +32,14 @@
 #include "i_system.h"
 
 #include "autopalette.h"
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
+#include "d_iface.h"
 #include "e_things.h"
 #include "f_finale.h"
+#include "g_game.h"
 #include "hi_stuff.h"
 #include "info.h"
 #include "mn_htic.h"
@@ -153,6 +156,12 @@
 // holds the address of the gamemodeinfo_t for the current gamemode,
 // determined at startup
 gamemodeinfo_t *GameModeInfo;
+
+DoomDemoStateAdvancer  DoomDemoState;
+Doom2DemoStateAdvancer Doom2DemoState;
+UDoomDemoStateAdvancer UDoomDemoState;
+HSWDemoStateAdvancer   HSWDemoState;
+HRegDemoStateAdvancer  HRegDemoState;
 
 // data
 
@@ -673,19 +682,19 @@ static missioninfo_t gmDoom2 =
 //
 static missioninfo_t gmFinalTNT =
 {
-   pack_tnt,          // id
-   MI_DEMOIFDEMO4,    // flags
-  "tnt",              // gamePathName
+   pack_tnt,                 // id
+   MI_DEMOIFDEMO4,           // flags
+  "tnt",                     // gamePathName
 
-   VNAME_TNT,         // versionNameOR
-   BANNER_TNT,        // startupBannerOR
-   0,                 // numEpisodesOR
-   &gi_path_tnt,      // iwadPathOR
-   &TNTFinale,        // finaleDataOR
-   NULL,              // menuBackgroundOR
-   NULL,              // creditBackgroundOR
-   NULL,              // consoleBackOR
-   demostates_udoom,  // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
+   VNAME_TNT,                // versionNameOR
+   BANNER_TNT,               // startupBannerOR
+   0,                        // numEpisodesOR
+   &gi_path_tnt,             // iwadPathOR
+   &TNTFinale,               // finaleDataOR
+   NULL,                     // menuBackgroundOR
+   NULL,                     // creditBackgroundOR
+   NULL,                     // consoleBackOR
+   &UDoomDemoState,          // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
 };
 
 //
@@ -693,19 +702,19 @@ static missioninfo_t gmFinalTNT =
 //
 static missioninfo_t gmFinalPlutonia =
 {
-   pack_plut,         // id
-   MI_DEMOIFDEMO4,    // flags
-   "plutonia",        // gamePathName
+   pack_plut,                // id
+   MI_DEMOIFDEMO4,           // flags
+   "plutonia",               // gamePathName
 
-   VNAME_PLUT,        // versionNameOR
-   BANNER_PLUT,       // startupBannerOR
-   0,                 // numEpisodesOR
-   &gi_path_plut,     // iwadPathOR
-   &PlutFinale,       // finaleDataOR
-   NULL,              // menuBackgroundOR
-   NULL,              // creditBackgroundOR
-   NULL,              // consoleBackOR
-   demostates_udoom,  // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
+   VNAME_PLUT,               // versionNameOR
+   BANNER_PLUT,              // startupBannerOR
+   0,                        // numEpisodesOR
+   &gi_path_plut,            // iwadPathOR
+   &PlutFinale,              // finaleDataOR
+   NULL,                     // menuBackgroundOR
+   NULL,                     // creditBackgroundOR
+   NULL,                     // consoleBackOR
+   &UDoomDemoState,          // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
 };
 
 //
@@ -812,6 +821,114 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
    &gmUnknown,       // none - ???
 };
 
+void DoomDemoStateAdvancer::advance() // shareware, registered
+{
+   if(current_index == 0)
+      DemoScreen.drawTitle(DEH_String("TITLEPIC"));
+   else if(current_index == 1)
+      G_DeferedPlayDemo(DEH_String("DEMO1"));
+   else if(current_index == 2)
+      DemoScreen.setPageName(DEH_String(NULL));
+   else if(current_index == 3)
+      G_DeferedPlayDemo(DEH_String("DEMO2"));
+   else if(current_index == 4)
+      DemoScreen.setPageName(DEH_String("HELP2"));
+   else if(current_index == 5)
+      G_DeferedPlayDemo(DEH_String("DEMO3"));
+   else
+      current_index = -1;
+
+   current_index++;
+}
+
+void Doom2DemoStateAdvancer::advance() // commercial
+{
+   if(current_index == 0)
+      DemoScreen.drawTitle(DEH_String("TITLEPIC"));
+   else if(current_index == 1)
+      G_DeferedPlayDemo(DEH_String("DEMO1"));
+   else if(current_index == 2)
+      DemoScreen.setPageName(DEH_String(NULL));
+   else if(current_index == 3)
+      G_DeferedPlayDemo(DEH_String("DEMO2"));
+   else if(current_index == 4)
+      DemoScreen.setPageName(DEH_String("CREDIT"));
+   else if(current_index == 5)
+      G_DeferedPlayDemo(DEH_String("DEMO3"));
+   else
+      current_index = -1;
+
+   current_index++;
+}
+
+void UDoomDemoStateAdvancer::advance() // retail
+{
+   if(current_index == 0)
+      DemoScreen.drawTitle(DEH_String("TITLEPIC"));
+   else if(current_index == 1)
+      G_DeferedPlayDemo(DEH_String("DEMO1"));
+   else if(current_index == 2)
+      DemoScreen.setPageName(DEH_String(NULL));
+   else if(current_index == 3)
+      G_DeferedPlayDemo(DEH_String("DEMO2"));
+   else if(current_index == 4)
+      DemoScreen.drawTitle(DEH_String("TITLEPIC"));
+   else if(current_index == 5)
+      G_DeferedPlayDemo(DEH_String("DEMO3"));
+   else if(current_index == 6)
+      DemoScreen.setPageName(DEH_String("CREDIT"));
+   else if(current_index == 7)
+      G_DeferedPlayDemo(DEH_String("DEMO4"));
+   else
+      current_index = -1;
+
+   current_index++;
+}
+
+void HSWDemoStateAdvancer::advance() // heretic shareware
+{
+   if(current_index == 0)
+      DemoScreen.drawTitle(DEH_String("TITLE"));
+   else if(current_index == 1)
+      DemoScreen.drawTitleA(DEH_String("TITLE"));
+   else if(current_index == 2)
+      G_DeferedPlayDemo(DEH_String("DEMO1"));
+   else if(current_index == 3)
+      DemoScreen.setPageName(DEH_String("ORDER"));
+   else if(current_index == 4)
+      G_DeferedPlayDemo(DEH_String("DEMO2"));
+   else if(current_index == 5)
+      DemoScreen.setPageName(DEH_String(NULL));
+   else if(current_index == 6)
+      G_DeferedPlayDemo(DEH_String("DEMO3"));
+   else
+      current_index = -1;
+
+   current_index++;
+}
+
+void HRegDemoStateAdvancer::advance() // heretic registered/sosr
+{
+   if(current_index == 0)
+      DemoScreen.drawTitle(DEH_String("TITLE"));
+   else if(current_index == 1)
+      DemoScreen.drawTitleA(DEH_String("TITLE"));
+   else if(current_index == 2)
+      G_DeferedPlayDemo(DEH_String("DEMO1"));
+   else if(current_index == 3)
+      DemoScreen.setPageName(DEH_String("CREDIT"));
+   else if(current_index == 4)
+      G_DeferedPlayDemo(DEH_String("DEMO2"));
+   else if(current_index == 5)
+      DemoScreen.setPageName(DEH_String(NULL));
+   else if(current_index == 6)
+      G_DeferedPlayDemo(DEH_String("DEMO3"));
+   else
+      current_index = -1;
+
+   current_index++;
+};
+
 //=============================================================================
 //
 // Game Mode Information Structures
@@ -826,92 +943,92 @@ static gamemodeinfo_t giDoomSW =
    Game_DOOM,                    // type
    GIF_SHAREWARE | DOOM_GIFLAGS, // flags
 
-   VNAME_DOOM_SW,    // versionName
-   FNAME_DOOM_SW,    // freeVerName
-   NULL,             // bfgEditionName
-   BANNER_DOOM_SW,   // startupBanner
-   &gi_path_doomsw,  // iwadPath
+   VNAME_DOOM_SW,           // versionName
+   FNAME_DOOM_SW,           // freeVerName
+   NULL,                    // bfgEditionName
+   BANNER_DOOM_SW,          // startupBanner
+   &gi_path_doomsw,         // iwadPath
 
-   demostates_doom,  // demoStates
-   170,              // titleTics
-   0,                // advisorTics
-   11*TICRATE,       // pageTics
-   mus_intro,        // titleMusNum
+   &DoomDemoState,          // demoStates
+   170,                     // titleTics
+   0,                       // advisorTics
+   11*TICRATE,              // pageTics
+   mus_intro,               // titleMusNum
 
-   DOOMMENUBACK,     // menuBackground
-   DOOMCREDITBK,     // creditBackground
-   20,               // creditY
-   12,               // creditTitleStep
-   &giSkullCursor,   // menuCursor
-   &menu_main,       // mainMenu
-   &menu_savegame,   // saveMenu
-   &menu_loadgame,   // loadMenu
-   &menu_newgame,    // newGameMenu
-   doomMenuSounds,   // menuSounds
-   S_TBALL1,         // transFrame
-   sfx_shotgn,       // skvAtkSound
-   CR_RED,           // unselectColor
-   CR_GRAY,          // selectColor
-   CR_GREEN,         // variableColor
-   CR_RED,           // titleColor
-   CR_GOLD,          // itemColor
-   0,                // menuOffset
+   DOOMMENUBACK,            // menuBackground
+   DOOMCREDITBK,            // creditBackground
+   20,                      // creditY
+   12,                      // creditTitleStep
+   &giSkullCursor,          // menuCursor
+   &menu_main,              // mainMenu
+   &menu_savegame,          // saveMenu
+   &menu_loadgame,          // loadMenu
+   &menu_newgame,           // newGameMenu
+   doomMenuSounds,          // menuSounds
+   S_TBALL1,                // transFrame
+   sfx_shotgn,              // skvAtkSound
+   CR_RED,                  // unselectColor
+   CR_GRAY,                 // selectColor
+   CR_GREEN,                // variableColor
+   CR_RED,                  // titleColor
+   CR_GOLD,                 // itemColor
+   0,                       // menuOffset
 
-   DOOMBRDRFLAT,     // borderFlat
-   &giDoomBorder,    // border
+   DOOMBRDRFLAT,            // borderFlat
+   &giDoomBorder,           // border
 
-   CR_RED,          // defTextTrans
-   CR_RED,           // colorNormal
-   CR_GRAY,          // colorHigh
-   CR_GOLD,          // colorError
-   40,               // c_numCharsPerLine
-   sfx_tink,         // c_BellSound
-   sfx_tink,         // c_ChatSound
-   CONBACK_DEFAULT,  // consoleBack
-   0,                // blackIndex
-   4,                // whiteIndex
-   NUMCARDS,         // numHUDKeys
+   CR_RED,                  // defTextTrans
+   CR_RED,                  // colorNormal
+   CR_GRAY,                 // colorHigh
+   CR_GOLD,                 // colorError
+   40,                      // c_numCharsPerLine
+   sfx_tink,                // c_BellSound
+   sfx_tink,                // c_ChatSound
+   CONBACK_DEFAULT,         // consoleBack
+   0,                       // blackIndex
+   4,                       // whiteIndex
+   NUMCARDS,                // numHUDKeys
 
-   &DoomStatusBar,   // StatusBar
+   &DoomStatusBar,          // StatusBar
 
-   DOOMMARKS,        // markNumFmt
+   DOOMMARKS,               // markNumFmt
 
-   "M_PAUSE",        // pausePatch
+   "M_PAUSE",               // pausePatch
 
-   1,                // numEpisodes
-   DoomExitRules,    // exitRules
-   MT_TFOG,          // teleFogType
-   0,                // teleFogHeight
-   sfx_telept,       // teleSound
-   100,              // thrustFactor
-   "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
-   DoomBossSpecs,    // bossRules
+   1,                       // numEpisodes
+   DoomExitRules,           // exitRules
+   MT_TFOG,                 // teleFogType
+   0,                       // teleFogHeight
+   sfx_telept,              // teleSound
+   100,                     // thrustFactor
+   "DoomMarine",            // defPClassName
+   NULL,                    // defTranslate
+   DoomBossSpecs,           // bossRules
 
-   INTERPIC_DOOM,     // interPic
-   mus_inter,         // interMusNum
-   &giDoomFText,      // fTextPos
-   &DoomIntermission, // interfuncs
-   DEF_DOOM_FINALE,   // teleEndGameFinaleType
-   &DoomFinale,       // finaleData
+   INTERPIC_DOOM,           // interPic
+   mus_inter,               // interMusNum
+   &giDoomFText,            // fTextPos
+   &DoomIntermission,       // interfuncs
+   DEF_DOOM_FINALE,         // teleEndGameFinaleType
+   &DoomFinale,             // finaleData
 
-   S_music,           // s_music
-   S_MusicForMapDoom, // MusicForMap
-   mus_None,          // musMin
-   NUMMUSIC,          // numMusic
-   "D_",              // musPrefix
-   "e1m1",            // defMusName
-   DOOMDEFSOUND,      // defSoundName
-   doom_skindefs,     // skinSounds
-   doom_soundnums,    // playerSounds
+   S_music,                 // s_music
+   S_MusicForMapDoom,       // MusicForMap
+   mus_None,                // musMin
+   NUMMUSIC,                // numMusic
+   "D_",                    // musPrefix
+   "e1m1",                  // defMusName
+   DOOMDEFSOUND,            // defSoundName
+   doom_skindefs,           // skinSounds
+   doom_soundnums,          // playerSounds
 
-   1,                // switchEpisode
-   &DoomSkyData,     // skyData
+   1,                       // switchEpisode
+   &DoomSkyData,            // skyData
 
-   NULL,             // defaultORs
+   NULL,                    // defaultORs
 
-   "ENDOOM",         // endTextName
-   quitsounds,       // exitSounds
+   "ENDOOM",                // endTextName
+   quitsounds,              // exitSounds
 };
 
 //
@@ -919,96 +1036,96 @@ static gamemodeinfo_t giDoomSW =
 //
 static gamemodeinfo_t giDoomReg =
 {
-   registered,       // id
-   Game_DOOM,        // type
-   DOOM_GIFLAGS,     // flags
+   registered,              // id
+   Game_DOOM,               // type
+   DOOM_GIFLAGS,            // flags
 
-   VNAME_DOOM_REG,   // versionName
-   FNAME_DOOM_R,     // freeVerName
-   NULL,             // bfgEditionName
-   BANNER_DOOM_REG,  // startupBanner
-   &gi_path_doomreg, // iwadPath
+   VNAME_DOOM_REG,          // versionName
+   FNAME_DOOM_R,            // freeVerName
+   NULL,                    // bfgEditionName
+   BANNER_DOOM_REG,         // startupBanner
+   &gi_path_doomreg,        // iwadPath
 
-   demostates_doom,  // demoStates
-   170,              // titleTics
-   0,                // advisorTics
-   11*TICRATE,       // pageTics
-   mus_intro,        // titleMusNum
+   &DoomDemoState,          // demoStates
+   170,                     // titleTics
+   0,                       // advisorTics
+   11*TICRATE,              // pageTics
+   mus_intro,               // titleMusNum
 
-   DOOMMENUBACK,     // menuBackground
-   DOOMCREDITBK,     // creditBackground
-   20,               // creditY
-   12,               // creditTitleStep
-   &giSkullCursor,   // menuCursor
-   &menu_main,       // mainMenu
-   &menu_savegame,   // saveMenu
-   &menu_loadgame,   // loadMenu
-   &menu_newgame,    // newGameMenu
-   doomMenuSounds,   // menuSounds
-   S_TBALL1,         // transFrame
-   sfx_shotgn,       // skvAtkSound
-   CR_RED,           // unselectColor
-   CR_GRAY,          // selectColor
-   CR_GREEN,         // variableColor
-   CR_RED,           // titleColor
-   CR_GOLD,          // itemColor
-   0,                // menuOffset
+   DOOMMENUBACK,            // menuBackground
+   DOOMCREDITBK,            // creditBackground
+   20,                      // creditY
+   12,                      // creditTitleStep
+   &giSkullCursor,          // menuCursor
+   &menu_main,              // mainMenu
+   &menu_savegame,          // saveMenu
+   &menu_loadgame,          // loadMenu
+   &menu_newgame,           // newGameMenu
+   doomMenuSounds,          // menuSounds
+   S_TBALL1,                // transFrame
+   sfx_shotgn,              // skvAtkSound
+   CR_RED,                  // unselectColor
+   CR_GRAY,                 // selectColor
+   CR_GREEN,                // variableColor
+   CR_RED,                  // titleColor
+   CR_GOLD,                 // itemColor
+   0,                       // menuOffset
 
-   DOOMBRDRFLAT,     // borderFlat
-   &giDoomBorder,    // border
+   DOOMBRDRFLAT,            // borderFlat
+   &giDoomBorder,           // border
 
-   CR_RED,           // defTextTrans
-   CR_RED,           // colorNormal
-   CR_GRAY,          // colorHigh
-   CR_GOLD,          // colorError
-   40,               // c_numCharsPerLine
-   sfx_tink,         // c_BellSound
-   sfx_tink,         // c_ChatSound
-   CONBACK_DEFAULT,  // consoleBack
-   0,                // blackIndex
-   4,                // whiteIndex
-   NUMCARDS,         // numHUDKeys
+   CR_RED,                  // defTextTrans
+   CR_RED,                  // colorNormal
+   CR_GRAY,                 // colorHigh
+   CR_GOLD,                 // colorError
+   40,                      // c_numCharsPerLine
+   sfx_tink,                // c_BellSound
+   sfx_tink,                // c_ChatSound
+   CONBACK_DEFAULT,         // consoleBack
+   0,                       // blackIndex
+   4,                       // whiteIndex
+   NUMCARDS,                // numHUDKeys
 
-   &DoomStatusBar,   // StatusBar
+   &DoomStatusBar,          // StatusBar
 
-   DOOMMARKS,        // markNumFmt
+   DOOMMARKS,               // markNumFmt
 
-   "M_PAUSE",        // pausePatch
+   "M_PAUSE",               // pausePatch
 
-   3,                // numEpisodes
-   DoomExitRules,    // exitRules
-   MT_TFOG,          // teleFogType
-   0,                // teleFogHeight
-   sfx_telept,       // teleSound
-   100,              // thrustFactor
-   "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
-   DoomBossSpecs,    // bossRules
+   3,                       // numEpisodes
+   DoomExitRules,           // exitRules
+   MT_TFOG,                 // teleFogType
+   0,                       // teleFogHeight
+   sfx_telept,              // teleSound
+   100,                     // thrustFactor
+   "DoomMarine",            // defPClassName
+   NULL,                    // defTranslate
+   DoomBossSpecs,           // bossRules
 
-   INTERPIC_DOOM,     // interPic
-   mus_inter,         // interMusNum
-   &giDoomFText,      // fTextPos
-   &DoomIntermission, // interfuncs
-   DEF_DOOM_FINALE,   // teleEndGameFinaleType
-   &DoomFinale,       // finaleData
+   INTERPIC_DOOM,           // interPic
+   mus_inter,               // interMusNum
+   &giDoomFText,            // fTextPos
+   &DoomIntermission,       // interfuncs
+   DEF_DOOM_FINALE,         // teleEndGameFinaleType
+   &DoomFinale,             // finaleData
 
-   S_music,           // s_music
-   S_MusicForMapDoom, // MusicForMap
-   mus_None,          // musMin
-   NUMMUSIC,          // numMusic
-   "D_",              // musPrefix
-   "e1m1",            // defMusName
-   DOOMDEFSOUND,      // defSoundName
-   doom_skindefs,     // skinSounds
-   doom_soundnums,    // playerSounds
+   S_music,                 // s_music
+   S_MusicForMapDoom,       // MusicForMap
+   mus_None,                // musMin
+   NUMMUSIC,                // numMusic
+   "D_",                    // musPrefix
+   "e1m1",                  // defMusName
+   DOOMDEFSOUND,            // defSoundName
+   doom_skindefs,           // skinSounds
+   doom_soundnums,          // playerSounds
 
-   2,                // switchEpisode
-   &DoomSkyData,     // skyData
+   2,                       // switchEpisode
+   &DoomSkyData,            // skyData
 
-   NULL,             // defaultORs
+   NULL,                    // defaultORs
 
-   "ENDOOM",         // endTextName
-   quitsounds,       // exitSounds
+   "ENDOOM",                // endTextName
+   quitsounds,              // exitSounds
 };
 
 //
@@ -1016,96 +1133,96 @@ static gamemodeinfo_t giDoomReg =
 //
 static gamemodeinfo_t giDoomRetail =
 {
-   retail,           // id
-   Game_DOOM,        // type
-   DOOM_GIFLAGS,     // flags
+   retail,                  // id
+   Game_DOOM,               // type
+   DOOM_GIFLAGS,            // flags
 
-   VNAME_DOOM_RET,   // versionName
-   FNAME_DOOM_R,     // freeVerName
-   BFGNAME_DOOM,     // bfgEditionName
-   BANNER_DOOM_RET,  // startupBanner
-   &gi_path_doomu,   // iwadPath
+   VNAME_DOOM_RET,          // versionName
+   FNAME_DOOM_R,            // freeVerName
+   BFGNAME_DOOM,            // bfgEditionName
+   BANNER_DOOM_RET,         // startupBanner
+   &gi_path_doomu,          // iwadPath
 
-   demostates_udoom, // demoStates
-   170,              // titleTics
-   0,                // advisorTics
-   11*TICRATE,       // pageTics
-   mus_intro,        // titleMusNum
+   &UDoomDemoState,         // demoStates
+   170,                     // titleTics
+   0,                       // advisorTics
+   11*TICRATE,              // pageTics
+   mus_intro,               // titleMusNum
 
-   DOOMMENUBACK,     // menuBackground
-   DOOMCREDITBK,     // creditBackground
-   20,               // creditY
-   12,               // creditTitleStep
-   &giSkullCursor,   // menuCursor
-   &menu_main,       // mainMenu
-   &menu_savegame,   // saveMenu
-   &menu_loadgame,   // loadMenu
-   &menu_newgame,    // newGameMenu
-   doomMenuSounds,   // menuSounds
-   S_TBALL1,         // transFrame
-   sfx_shotgn,       // skvAtkSound
-   CR_RED,           // unselectColor
-   CR_GRAY,          // selectColor
-   CR_GREEN,         // variableColor
-   CR_RED,           // titleColor
-   CR_GOLD,          // itemColor
-   0,                // menuOffset
+   DOOMMENUBACK,            // menuBackground
+   DOOMCREDITBK,            // creditBackground
+   20,                      // creditY
+   12,                      // creditTitleStep
+   &giSkullCursor,          // menuCursor
+   &menu_main,              // mainMenu
+   &menu_savegame,          // saveMenu
+   &menu_loadgame,          // loadMenu
+   &menu_newgame,           // newGameMenu
+   doomMenuSounds,          // menuSounds
+   S_TBALL1,                // transFrame
+   sfx_shotgn,              // skvAtkSound
+   CR_RED,                  // unselectColor
+   CR_GRAY,                 // selectColor
+   CR_GREEN,                // variableColor
+   CR_RED,                  // titleColor
+   CR_GOLD,                 // itemColor
+   0,                       // menuOffset
 
-   DOOMBRDRFLAT,     // borderFlat
-   &giDoomBorder,    // border
+   DOOMBRDRFLAT,            // borderFlat
+   &giDoomBorder,           // border
 
-   CR_RED,          // defTextTrans
-   CR_RED,           // colorNormal
-   CR_GRAY,          // colorHigh
-   CR_GOLD,          // colorError
-   40,               // c_numCharsPerLine
-   sfx_tink,         // c_BellSound
-   sfx_tink,         // c_ChatSound
-   CONBACK_COMRET,   // consoleBack
-   0,                // blackIndex
-   4,                // whiteIndex
-   NUMCARDS,         // numHUDKeys
+   CR_RED,                  // defTextTrans
+   CR_RED,                  // colorNormal
+   CR_GRAY,                 // colorHigh
+   CR_GOLD,                 // colorError
+   40,                      // c_numCharsPerLine
+   sfx_tink,                // c_BellSound
+   sfx_tink,                // c_ChatSound
+   CONBACK_COMRET,          // consoleBack
+   0,                       // blackIndex
+   4,                       // whiteIndex
+   NUMCARDS,                // numHUDKeys
 
-   &DoomStatusBar,   // StatusBar
+   &DoomStatusBar,          // StatusBar
 
-   DOOMMARKS,        // markNumFmt
+   DOOMMARKS,               // markNumFmt
 
-   "M_PAUSE",        // pausePatch
+   "M_PAUSE",               // pausePatch
 
-   4,                // numEpisodes
-   DoomExitRules,    // exitRules
-   MT_TFOG,          // teleFogType
-   0,                // teleFogHeight
-   sfx_telept,       // teleSound
-   100,              // thrustFactor
-   "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
-   DoomBossSpecs,    // bossRules
+   4,                       // numEpisodes
+   DoomExitRules,           // exitRules
+   MT_TFOG,                 // teleFogType
+   0,                       // teleFogHeight
+   sfx_telept,              // teleSound
+   100,                     // thrustFactor
+   "DoomMarine",            // defPClassName
+   NULL,                    // defTranslate
+   DoomBossSpecs,           // bossRules
 
-   INTERPIC_DOOM,     // interPic
-   mus_inter,         // interMusNum
-   &giDoomFText,      // fTextPos
-   &DoomIntermission, // interfuncs
-   DEF_DOOM_FINALE,   // teleEndGameFinaleType
-   &DoomFinale,       // finaleData
+   INTERPIC_DOOM,           // interPic
+   mus_inter,               // interMusNum
+   &giDoomFText,            // fTextPos
+   &DoomIntermission,       // interfuncs
+   DEF_DOOM_FINALE,         // teleEndGameFinaleType
+   &DoomFinale,             // finaleData
 
-   S_music,           // s_music
-   S_MusicForMapDoom, // MusicForMap
-   mus_None,          // musMin
-   NUMMUSIC,          // numMusic
-   "D_",              // musPrefix
-   "e1m1",            // defMusName
-   DOOMDEFSOUND,      // defSoundName
-   doom_skindefs,     // skinSounds
-   doom_soundnums,    // playerSounds
+   S_music,                 // s_music
+   S_MusicForMapDoom,       // MusicForMap
+   mus_None,                // musMin
+   NUMMUSIC,                // numMusic
+   "D_",                    // musPrefix
+   "e1m1",                  // defMusName
+   DOOMDEFSOUND,            // defSoundName
+   doom_skindefs,           // skinSounds
+   doom_soundnums,          // playerSounds
 
-   2,                // switchEpisode
-   &DoomSkyData,     // skyData
+   2,                       // switchEpisode
+   &DoomSkyData,            // skyData
 
-   NULL,             // defaultORs
+   NULL,                    // defaultORs
 
-   "ENDOOM",         // endTextName
-   quitsounds,       // exitSounds
+   "ENDOOM",                // endTextName
+   quitsounds,              // exitSounds
 };
 
 //
@@ -1117,92 +1234,92 @@ static gamemodeinfo_t giDoomCommercial =
    Game_DOOM,        // type
    DOOM_GIFLAGS | GIF_MAPXY | GIF_WOLFHACK | GIF_SETENDOFGAME, // flags
 
-   VNAME_DOOM2,      // versionName
-   FNAME_DOOM2,      // freeVerName
-   BFGNAME_DOOM2,    // bfgEditionName
-   BANNER_DOOM2,     // startupBanner
-   &gi_path_doom2,   // iwadPath
+   VNAME_DOOM2,             // versionName
+   FNAME_DOOM2,             // freeVerName
+   BFGNAME_DOOM2,           // bfgEditionName
+   BANNER_DOOM2,            // startupBanner
+   &gi_path_doom2,          // iwadPath
 
-   demostates_doom2, // demoStates
-   11*TICRATE,       // titleTics
-   0,                // advisorTics
-   11*TICRATE,       // pageTics
-   mus_dm2ttl,       // titleMusNum
+   &Doom2DemoState,         // demoStates
+   11*TICRATE,              // titleTics
+   0,                       // advisorTics
+   11*TICRATE,              // pageTics
+   mus_dm2ttl,              // titleMusNum
 
-   DOOMMENUBACK,     // menuBackground
-   DM2CREDITBK,      // creditBackground
-   20,               // creditY
-   12,               // creditTitleStep
-   &giSkullCursor,   // menuCursor
-   &menu_main,       // mainMenu
-   &menu_savegame,   // saveMenu
-   &menu_loadgame,   // loadMenu
-   &menu_newgame,    // newGameMenu
-   doomMenuSounds,   // menuSounds
-   S_TBALL1,         // transFrame
-   sfx_shotgn,       // skvAtkSound
-   CR_RED,           // unselectColor
-   CR_GRAY,          // selectColor
-   CR_GREEN,         // variableColor
-   CR_RED,           // titleColor
-   CR_GOLD,          // itemColor
-   0,                // menuOffset
+   DOOMMENUBACK,            // menuBackground
+   DM2CREDITBK,             // creditBackground
+   20,                      // creditY
+   12,                      // creditTitleStep
+   &giSkullCursor,          // menuCursor
+   &menu_main,              // mainMenu
+   &menu_savegame,          // saveMenu
+   &menu_loadgame,          // loadMenu
+   &menu_newgame,           // newGameMenu
+   doomMenuSounds,          // menuSounds
+   S_TBALL1,                // transFrame
+   sfx_shotgn,              // skvAtkSound
+   CR_RED,                  // unselectColor
+   CR_GRAY,                 // selectColor
+   CR_GREEN,                // variableColor
+   CR_RED,                  // titleColor
+   CR_GOLD,                 // itemColor
+   0,                       // menuOffset
 
-   DM2BRDRFLAT,      // borderFlat
-   &giDoomBorder,    // border
+   DM2BRDRFLAT,             // borderFlat
+   &giDoomBorder,           // border
 
-   CR_RED,           // defTextTrans
-   CR_RED,           // colorNormal
-   CR_GRAY,          // colorHigh
-   CR_GOLD,          // colorError
-   40,               // c_numCharsPerLine
-   sfx_tink,         // c_BellSound
-   sfx_radio,        // c_ChatSound
-   CONBACK_COMRET,   // consoleBack
-   0,                // blackIndex
-   4,                // whiteIndex
-   NUMCARDS,         // numHUDKeys
+   CR_RED,                  // defTextTrans
+   CR_RED,                  // colorNormal
+   CR_GRAY,                 // colorHigh
+   CR_GOLD,                 // colorError
+   40,                      // c_numCharsPerLine
+   sfx_tink,                // c_BellSound
+   sfx_radio,               // c_ChatSound
+   CONBACK_COMRET,          // consoleBack
+   0,                       // blackIndex
+   4,                       // whiteIndex
+   NUMCARDS,                // numHUDKeys
 
-   &DoomStatusBar,   // StatusBar
+   &DoomStatusBar,          // StatusBar
 
-   DOOMMARKS,        // markNumFmt
+   DOOMMARKS,               // markNumFmt
 
-   "M_PAUSE",        // pausePatch
+   "M_PAUSE",               // pausePatch
 
-   1,                // numEpisodes
-   Doom2ExitRules,   // exitRules
-   MT_TFOG,          // teleFogType
-   0,                // teleFogHeight
-   sfx_telept,       // teleSound
-   100,              // thrustFactor
-   "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
-   Doom2BossSpecs,   // bossRules
+   1,                       // numEpisodes
+   Doom2ExitRules,          // exitRules
+   MT_TFOG,                 // teleFogType
+   0,                       // teleFogHeight
+   sfx_telept,              // teleSound
+   100,                     // thrustFactor
+   "DoomMarine",            // defPClassName
+   NULL,                    // defTranslate
+   Doom2BossSpecs,          // bossRules
 
-   INTERPIC_DOOM,     // interPic
-   mus_dm2int,        // interMusNum
-   &giDoomFText,      // fTextPos
-   &DoomIntermission, // interfuncs
-   FINALE_TEXT,       // teleEndGameFinaleType
-   &Doom2Finale,      // finaleData
+   INTERPIC_DOOM,           // interPic
+   mus_dm2int,              // interMusNum
+   &giDoomFText,            // fTextPos
+   &DoomIntermission,       // interfuncs
+   FINALE_TEXT,             // teleEndGameFinaleType
+   &Doom2Finale,            // finaleData
 
-   S_music,            // s_music
-   S_MusicForMapDoom2, // MusicForMap
-   mus_None,           // musMin
-   NUMMUSIC,           // numMusic
-   "D_",               // musPrefix
-   "runnin",           // defMusName
-   DOOMDEFSOUND,       // defSoundName
-   doom_skindefs,      // skinSounds
-   doom_soundnums,     // playerSounds
+   S_music,                 // s_music
+   S_MusicForMapDoom2,      // MusicForMap
+   mus_None,                // musMin
+   NUMMUSIC,                // numMusic
+   "D_",                    // musPrefix
+   "runnin",                // defMusName
+   DOOMDEFSOUND,            // defSoundName
+   doom_skindefs,           // skinSounds
+   doom_soundnums,          // playerSounds
 
-   3,                // switchEpisode
-   &Doom2SkyData,    // skyData
+   3,                       // switchEpisode
+   &Doom2SkyData,           // skyData
 
-   NULL,             // defaultORs
+   NULL,                    // defaultORs
 
-   "ENDOOM",         // endTextName
-   quitsounds2,      // exitSounds
+   "ENDOOM",                // endTextName
+   quitsounds2,             // exitSounds
 };
 
 //
@@ -1214,92 +1331,92 @@ static gamemodeinfo_t giHereticSW =
    Game_Heretic,     // type
    GIF_SHAREWARE | HERETIC_GIFLAGS, // flags
 
-   VNAME_HTIC_SW,    // versionName
-   NULL,             // freeVerName
-   NULL,             // bfgEditionName
-   BANNER_HTIC_SW,   // startupBanner
-   &gi_path_hticsw,  // iwadPath
+   VNAME_HTIC_SW,           // versionName
+   NULL,                    // freeVerName
+   NULL,                    // bfgEditionName
+   BANNER_HTIC_SW,          // startupBanner
+   &gi_path_hticsw,         // iwadPath
 
-   demostates_hsw,   // demoStates
-   210,              // titleTics
-   140,              // advisorTics
-   200,              // pageTics
-   hmus_titl,        // titleMusNum
+   &HSWDemoState,           // demoStates
+   210,                     // titleTics
+   140,                     // advisorTics
+   200,                     // pageTics
+   hmus_titl,               // titleMusNum
 
-   HTICMENUBACK,     // menuBackground
-   HTICCREDITBK,     // creditBackground
-   8,                // creditY
-   8,                // creditTitleStep
-   &giArrowCursor,   // menuCursor
-   &menu_hmain,      // mainMenu
-   &menu_hsavegame,  // saveMenu
-   &menu_hloadgame,  // loadMenu
-   &menu_hnewgame,   // newGameMenu
-   hticMenuSounds,   // menuSounds
-   S_MUMMYFX1_1,     // transFrame
-   sfx_gldhit,       // skvAtkSound
-   CR_GRAY,          // unselectColor
-   CR_RED,           // selectColor
-   CR_GREEN,         // variableColor
-   CR_GREEN,         // titleColor
-   CR_GOLD,          // itemColor
-   4,                // menuOffset
+   HTICMENUBACK,            // menuBackground
+   HTICCREDITBK,            // creditBackground
+   8,                       // creditY
+   8,                       // creditTitleStep
+   &giArrowCursor,          // menuCursor
+   &menu_hmain,             // mainMenu
+   &menu_hsavegame,         // saveMenu
+   &menu_hloadgame,         // loadMenu
+   &menu_hnewgame,          // newGameMenu
+   hticMenuSounds,          // menuSounds
+   S_MUMMYFX1_1,            // transFrame
+   sfx_gldhit,              // skvAtkSound
+   CR_GRAY,                 // unselectColor
+   CR_RED,                  // selectColor
+   CR_GREEN,                // variableColor
+   CR_GREEN,                // titleColor
+   CR_GOLD,                 // itemColor
+   4,                       // menuOffset
 
-   HSWBRDRFLAT,      // borderFlat
-   &giHticBorder,    // border
+   HSWBRDRFLAT,             // borderFlat
+   &giHticBorder,           // border
 
-   CR_GRAY,          // defTextTrans
-   CR_GRAY,          // colorNormal
-   CR_GOLD,          // colorHigh
-   CR_RED,           // colorError
-   40,               // c_numCharsPerLine
-   sfx_chat,         // c_BellSound
-   sfx_chat,         // c_ChatSound
-   CONBACK_HERETIC,  // consoleBack
-   0,                // blackIndex
-   35,               // whiteIndex
-   3,                // numHUDKeys
+   CR_GRAY,                 // defTextTrans
+   CR_GRAY,                 // colorNormal
+   CR_GOLD,                 // colorHigh
+   CR_RED,                  // colorError
+   40,                      // c_numCharsPerLine
+   sfx_chat,                // c_BellSound
+   sfx_chat,                // c_ChatSound
+   CONBACK_HERETIC,         // consoleBack
+   0,                       // blackIndex
+   35,                      // whiteIndex
+   3,                       // numHUDKeys
 
-   &HticStatusBar,   // StatusBar
+   &HticStatusBar,          // StatusBar
 
-   HTICMARKS,        // markNumFmt
+   HTICMARKS,               // markNumFmt
 
-   "PAUSED",         // pausePatch
+   "PAUSED",                // pausePatch
 
-   1,                // numEpisodes
-   HereticExitRules, // exitRules
-   MT_HTFOG,         // teleFogType
-   32*FRACUNIT,      // teleFogHeight
-   sfx_htelept,      // teleSound
-   150,              // thrustFactor
-   "Corvus",         // defPClassName
-   DEFTL_HERETIC,    // defTranslate
-   HereticBossSpecs, // bossRules
+   1,                       // numEpisodes
+   HereticExitRules,        // exitRules
+   MT_HTFOG,                // teleFogType
+   32*FRACUNIT,             // teleFogHeight
+   sfx_htelept,             // teleSound
+   150,                     // thrustFactor
+   "Corvus",                // defPClassName
+   DEFTL_HERETIC,           // defTranslate
+   HereticBossSpecs,        // bossRules
 
-   INTERPIC_DOOM,     // interPic
-   hmus_intr,         // interMusNum
-   &giHticFText,      // fTextPos
-   &HticIntermission, // interfuncs
-   DEF_HTIC_FINALE,   // teleEndGameFinaleType
-   &HereticFinale,    // finaleData
+   INTERPIC_DOOM,           // interPic
+   hmus_intr,               // interMusNum
+   &giHticFText,            // fTextPos
+   &HticIntermission,       // interfuncs
+   DEF_HTIC_FINALE,         // teleEndGameFinaleType
+   &HereticFinale,          // finaleData
 
-   H_music,           // s_music
-   S_MusicForMapHtic, // MusicForMap
-   hmus_None,         // musMin
-   NUMHTICMUSIC,      // numMusic
-   "MUS_",            // musPrefix
-   "e1m1",            // defMusName
-   HTICDEFSOUND,      // defSoundName
-   htic_skindefs,     // skinSounds
-   htic_soundnums,    // playerSounds
+   H_music,                 // s_music
+   S_MusicForMapHtic,       // MusicForMap
+   hmus_None,               // musMin
+   NUMHTICMUSIC,            // numMusic
+   "MUS_",                  // musPrefix
+   "e1m1",                  // defMusName
+   HTICDEFSOUND,            // defSoundName
+   htic_skindefs,           // skinSounds
+   htic_soundnums,          // playerSounds
 
-   1,                // switchEpisode
-   &HereticSkyData,  // skyData
+   1,                       // switchEpisode
+   &HereticSkyData,         // skyData
 
-   HereticDefaultORs, // defaultORs
+   HereticDefaultORs,       // defaultORs
 
-   "ENDTEXT",        // endTextName
-   NULL,             // exitSounds
+   "ENDTEXT",               // endTextName
+   NULL,                    // exitSounds
 };
 
 //
@@ -1311,96 +1428,96 @@ static gamemodeinfo_t giHereticSW =
 //
 static gamemodeinfo_t giHereticReg =
 {
-   hereticreg,       // id
-   Game_Heretic,     // type
-   HERETIC_GIFLAGS,  // flags
+   hereticreg,              // id
+   Game_Heretic,            // type
+   HERETIC_GIFLAGS,         // flags
 
-   VNAME_HTIC_REG,   // versionName
-   NULL,             // freeVerName
-   NULL,             // bfgEditionName
-   BANNER_HTIC_REG,  // startupBanner
-   &gi_path_hticreg, // iwadPath
+   VNAME_HTIC_REG,          // versionName
+   NULL,                    // freeVerName
+   NULL,                    // bfgEditionName
+   BANNER_HTIC_REG,         // startupBanner
+   &gi_path_hticreg,        // iwadPath
 
-   demostates_hreg,  // demoStates
-   210,              // titleTics
-   140,              // advisorTics
-   200,              // pageTics
-   hmus_titl,        // titleMusNum
+   &HRegDemoState,          // demoStates
+   210,                     // titleTics
+   140,                     // advisorTics
+   200,                     // pageTics
+   hmus_titl,               // titleMusNum
 
-   HTICMENUBACK,     // menuBackground
-   HTICCREDITBK,     // creditBackground
-   8,                // creditY
-   8,                // creditTitleStep
-   &giArrowCursor,   // menuCursor
-   &menu_hmain,      // mainMenu
-   &menu_hsavegame,  // saveMenu
-   &menu_hloadgame,  // loadMenu
-   &menu_hnewgame,   // newGameMenu
-   hticMenuSounds,   // menuSounds
-   S_MUMMYFX1_1,     // transFrame
-   sfx_gldhit,       // skvAtkSound
-   CR_GRAY,          // unselectColor
-   CR_RED,           // selectColor
-   CR_GREEN,         // variableColor
-   CR_GREEN,         // titleColor
-   CR_GOLD,          // itemColor
-   4,                // menuOffset
+   HTICMENUBACK,            // menuBackground
+   HTICCREDITBK,            // creditBackground
+   8,                       // creditY
+   8,                       // creditTitleStep
+   &giArrowCursor,          // menuCursor
+   &menu_hmain,             // mainMenu
+   &menu_hsavegame,         // saveMenu
+   &menu_hloadgame,         // loadMenu
+   &menu_hnewgame,          // newGameMenu
+   hticMenuSounds,          // menuSounds
+   S_MUMMYFX1_1,            // transFrame
+   sfx_gldhit,              // skvAtkSound
+   CR_GRAY,                 // unselectColor
+   CR_RED,                  // selectColor
+   CR_GREEN,                // variableColor
+   CR_GREEN,                // titleColor
+   CR_GOLD,                 // itemColor
+   4,                       // menuOffset
 
-   HREGBRDRFLAT,     // borderFlat
-   &giHticBorder,    // border
+   HREGBRDRFLAT,            // borderFlat
+   &giHticBorder,           // border
 
-   CR_GRAY,          // defTextTrans
-   CR_GRAY,          // colorNormal
-   CR_GOLD,          // colorHigh
-   CR_RED,           // colorError
-   40,               // c_numCharsPerLine
-   sfx_chat,         // c_BellSound
-   sfx_chat,         // c_ChatSound
-   CONBACK_HERETIC,  // consoleBack
-   0,                // blackIndex
-   35,               // whiteIndex
-   3,                // numHUDKeys
+   CR_GRAY,                 // defTextTrans
+   CR_GRAY,                 // colorNormal
+   CR_GOLD,                 // colorHigh
+   CR_RED,                  // colorError
+   40,                      // c_numCharsPerLine
+   sfx_chat,                // c_BellSound
+   sfx_chat,                // c_ChatSound
+   CONBACK_HERETIC,         // consoleBack
+   0,                       // blackIndex
+   35,                      // whiteIndex
+   3,                       // numHUDKeys
 
-   &HticStatusBar,   // StatusBar
+   &HticStatusBar,          // StatusBar
 
-   HTICMARKS,        // markNumFmt
+   HTICMARKS,               // markNumFmt
 
-   "PAUSED",         // pausePatch
+   "PAUSED",                // pausePatch
 
-   4,                // numEpisodes -- note 6 for SoSR gamemission
-   HereticExitRules, // exitRules
-   MT_HTFOG,         // teleFogType
-   32*FRACUNIT,      // teleFogHeight
-   sfx_htelept,      // teleSound
-   150,              // thrustFactor
-   "Corvus",         // defPClassName
-   DEFTL_HERETIC,    // defTranslate
-   HereticBossSpecs, // bossRules
+   4,                       // numEpisodes -- note 6 for SoSR gamemission
+   HereticExitRules,        // exitRules
+   MT_HTFOG,                // teleFogType
+   32*FRACUNIT,             // teleFogHeight
+   sfx_htelept,             // teleSound
+   150,                     // thrustFactor
+   "Corvus",                // defPClassName
+   DEFTL_HERETIC,           // defTranslate
+   HereticBossSpecs,        // bossRules
 
-   INTERPIC_DOOM,     // interPic
-   hmus_intr,         // interMusNum
-   &giHticFText,      // fTextPos
-   &HticIntermission, // interfuncs
-   DEF_HTIC_FINALE,   // teleEndGameFinaleType
-   &HereticFinale,    // finaleData
+   INTERPIC_DOOM,            // interPic
+   hmus_intr,                // interMusNum
+   &giHticFText,             // fTextPos
+   &HticIntermission,        // interfuncs
+   DEF_HTIC_FINALE,          // teleEndGameFinaleType
+   &HereticFinale,           // finaleData
 
-   H_music,           // s_music
-   S_MusicForMapHtic, // MusicForMap
-   hmus_None,         // musMin
-   NUMHTICMUSIC,      // numMusic
-   "MUS_",            // musPrefix
-   "e1m1",            // defMusName
-   HTICDEFSOUND,      // defSoundName
-   htic_skindefs,     // skinSounds
-   htic_soundnums,    // playerSounds
+   H_music,                  // s_music
+   S_MusicForMapHtic,        // MusicForMap
+   hmus_None,                // musMin
+   NUMHTICMUSIC,             // numMusic
+   "MUS_",                   // musPrefix
+   "e1m1",                   // defMusName
+   HTICDEFSOUND,             // defSoundName
+   htic_skindefs,            // skinSounds
+   htic_soundnums,           // playerSounds
 
-   2,                 // switchEpisode
-   &HereticSkyData,   // skyData
+   2,                        // switchEpisode
+   &HereticSkyData,          // skyData
 
-   HereticDefaultORs, // defaultORs
+   HereticDefaultORs,        // defaultORs
 
-   "ENDTEXT",          // endTextName
-   NULL,               // exitSounds
+   "ENDTEXT",                // endTextName
+   NULL,                     // exitSounds
 };
 
 // Game Mode Info Array

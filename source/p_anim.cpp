@@ -190,7 +190,7 @@ void P_InitLightning(void)
 #if 0
 static cell AMX_NATIVE_CALL sm_lightning(AMX *amx, cell *params)
 {
-   if(gamestate != GS_LEVEL)
+   if(!G_SetGameState(GS_LEVEL))
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;

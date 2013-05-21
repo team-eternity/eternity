@@ -80,8 +80,7 @@ bool menu_toggleisback;
 static command_t *input_command = NULL;       // NULL if not typing in
 static int input_cmdtype = c_typed;           // haleyjd 07/15/09
 
-// haleyjd 04/29/02: needs to be unsigned
-static unsigned char input_buffer[1024] = "";
+static qstring input_buffer;
 
 vfont_t *menu_font;
 vfont_t *menu_font_big;
@@ -494,7 +493,9 @@ static void MN_genericDescription(menuitem_t *item,
 static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
                                int desc_width)
 {
-   const char *boundkeys = G_BoundKeys(item->data);
+   const char *boundkeys = key_bindings.getKeysBoundToAction(
+      item->data, item->interface_name
+   );
    int x = item->x;
    int y = item->y;
 
@@ -613,7 +614,7 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
    // display input buffer if inputting new var value
    if(input_command && item->var == input_command->variable)
    {
-      varvalue  = (char *)input_buffer;
+      varvalue  = input_buffer;
       varvalue += '_';
       MN_truncateInput(varvalue, x);
    }
@@ -854,7 +855,7 @@ static const char *MN_variableHelp(menuitem_t *item, char *msgbuffer)
       return "Press escape to cancel";
    else
    {
-      const char *key = G_FirstBoundKey("menu_confirm");
+      const char *key = Menu.getAction("confirm")->getFirstBoundKeyName();
       psnprintf(msgbuffer, 64, "Press %s to change", key);
       return msgbuffer;
    }
@@ -873,7 +874,7 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
    if(item->var->type == vt_toggle ||
       (item->var->type == vt_int && item->var->max - item->var->min == 1))
    {
-      const char *key = G_FirstBoundKey("menu_confirm");
+      const char *key = Menu.getAction("confirm")->getFirstBoundKeyName();
       psnprintf(msgbuffer, 64, "press %s to change", key);
       return msgbuffer;
    }
@@ -888,7 +889,7 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
 //
 static const char *MN_runcmdHelp(menuitem_t *item, char *msgbuffer)
 {
-   const char *key = G_FirstBoundKey("menu_confirm");
+   const char *key = Menu.getAction("confirm")->getFirstBoundKeyName();
    psnprintf(msgbuffer, 64, "press %s to execute", key);
    return msgbuffer;
 }
@@ -979,21 +980,21 @@ static void MN_drawPageIndicator(bool next)
 
    if(next) // drawing a next indicator
    {
-      actionname  = "menu_pagedown"; // name of action
-      speckeyname = "pgdn";          // special default key to check for
-      replkeyname = "page down";     // pretty name to replace with
-      fmtstr      = "%s ->";         // format string for indicator
+      actionname  = "pagedown";  // name of action
+      speckeyname = "pgdn";      // special default key to check for
+      replkeyname = "page down"; // pretty name to replace with
+      fmtstr      = "%s ->";     // format string for indicator
    }
    else     // drawing a prev indicator
    {
-      actionname  = "menu_pageup";
+      actionname  = "pageup";
       speckeyname = "pgup";
       replkeyname = "page up";
       fmtstr      = "<- %s";
    }
 
    // get name of first key bound to the prev or next menu action
-   key = G_FirstBoundKey(actionname);
+   key = Menu.getAction(actionname)->getFirstBoundKeyName();
 
    // replace pgup / pgdn with prettier names, since they are the defaults
    if(!strcasecmp(key, speckeyname))
@@ -1131,7 +1132,7 @@ void MN_DrawMenu(menu_t *menu)
 //
 bool MN_CheckFullScreen(void)
 {
-   if(!menuactive || !current_menu)
+   if(!Menu.isUpFront() || !current_menu)
       return false;
 
    if(!(current_menu->flags & mf_background) || hide_menu ||
@@ -1150,7 +1151,6 @@ bool MN_CheckFullScreen(void)
 
 #define MENU_HISTORY 128
 
-bool menuactive = false;             // menu active?
 menu_t *current_menu;   // the current menu_t being displayed
 static menu_t *menu_history[MENU_HISTORY];   // previously selected menus
 static int menu_history_num;                 // location in history
@@ -1242,641 +1242,14 @@ static void MN_SetBackground(void)
       mn_background_flat = GameModeInfo->menuBackground;
 }
 
-//
-// MN_Init
-//
-// Primary menu initialization. Called at startup.
-//
-void MN_Init(void)
-{
-   const char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
-   const char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
-   int i;
-
-   skulls[0] = W_GetNumForName(cursorPatch1);
-   skulls[1] = W_GetNumForName(cursorPatch2);
-
-   // haleyjd 02/04/06: load small pointer
-   for(i = 0; i < NUMSMALLPTRS; ++i)
-   {
-      char name[9];
-
-      psnprintf(name, 9, "EEMNPTR%d", i);
-
-      smallptrs[i] = W_GetNumForName(name);
-   }
-
-   // get width and height from first patch
-   {
-      patch_t *ptr0 = PatchLoader::CacheNum(wGlobalDir, smallptrs[0], PU_CACHE);
-      smallptr_dims[0] = ptr0->width;
-      smallptr_dims[1] = ptr0->height;
-   }
-
-   quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
-
-   // haleyjd: init heretic stuff if appropriate
-   if(GameModeInfo->type == Game_Heretic)
-      MN_HInitSkull(); // initialize spinning skulls
-
-   MN_InitMenus();     // create menu commands in mn_menus.c
-   MN_InitFonts();     // create menu fonts
-   MN_SetBackground(); // set background
-
-   // haleyjd 07/03/09: sync up mn_classic_menus
-   MN_LinkClassicMenus(mn_classic_menus);
-}
-
-//////////////////////////////////
-// ticker
-
-void MN_Ticker(void)
-{
-   if(menu_error_time)
-      menu_error_time--;
-   if(hide_menu)                   // count down hide_menu
-      hide_menu--;
-   menutime++;
-
-   // haleyjd 02/04/06: determine small pointer index
-   if((menutime & 3) == 0)
-      smallptr_idx = (smallptr_idx + 1) % NUMSMALLPTRS;
-
-   // haleyjd 05/29/06: tick for any widgets
-   if(current_menuwidget && current_menuwidget->ticker)
-      current_menuwidget->ticker();
-}
-
-////////////////////////////////
-// drawer
-
-void MN_Drawer(void)
-{
-   // activate menu if displaying widget
-   if(current_menuwidget && !menuactive)
-      MN_StartControlPanel();
-
-   if(current_menuwidget)
-   {
-      // alternate drawer
-      if(current_menuwidget->drawer)
-         current_menuwidget->drawer();
-      return;
-   }
-
-   // haleyjd: moved down to here
-   if(!menuactive || hide_menu)
-      return;
-
-   MN_DrawMenu(current_menu);
-}
-
 static void MN_ShowContents(void);
 
 extern const char *shiftxform;
-
-//
-// MN_Responder
-//
-// haleyjd 07/03/04: rewritten to use enhanced key binding system
-//
-bool MN_Responder(event_t *ev)
-{
-   // haleyjd 04/29/02: these need to be unsigned
-   unsigned char tempstr[128];
-   unsigned char ch;
-   int *menuSounds = GameModeInfo->menuSounds; // haleyjd
-   static bool ctrldown = false;
-   static bool shiftdown = false;
-   static bool altdown = false;
-
-   memset(tempstr, 0, sizeof(tempstr));
-
-   // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
-   // for menu-class actions
-   G_KeyResponder(ev, kac_menu);
-
-   // haleyjd 10/07/05
-   if(ev->data1 == KEYD_RCTRL)
-      ctrldown = (ev->type == ev_keydown);
-
-   // haleyjd 03/11/06
-   if(ev->data1 == KEYD_RSHIFT)
-      shiftdown = (ev->type == ev_keydown);
-
-   // haleyjd 07/05/10
-   if(ev->data1 == KEYD_RALT)
-      altdown = (ev->type == ev_keydown);
-
-   // menu doesn't want keyup events
-   if(ev->type == ev_keyup)
-      return false;
-
-   // are we displaying a widget?
-   if(current_menuwidget)
-   {
-      current_menuwidget->responder(ev);
-      return true;
-   }
-
-   // are we inputting a new value into a variable?
-   if(ev->type == ev_keydown && input_command)
-   {
-      unsigned char ich = 0;
-      variable_t *var = input_command->variable;
-
-      if(ev->data1 == KEYD_ESCAPE)        // cancel input
-         input_command = NULL;
-      else if(ev->data1 == KEYD_ENTER)
-      {
-         if(input_buffer[0] || (input_command->flags & cf_allowblank))
-         {
-            if(input_buffer[0])
-            {
-               // place " marks round the new value
-               // FIXME/TODO: use qstring for input_buffer
-               char *temp = Z_Strdupa((const char *)input_buffer);
-               psnprintf((char *)input_buffer, sizeof(input_buffer), "\"%s\"", temp);
-            }
-            else
-            {
-               input_buffer[0] = '*';
-               input_buffer[1] = '\0';
-            }
-
-            // set the command
-            Console.cmdtype = input_cmdtype;
-            C_RunCommand(input_command, (const char *)input_buffer);
-            input_command = NULL;
-            input_cmdtype = c_typed;
-            return true; // eat key
-         }
-      }
-      // check for backspace
-      else if(ev->data1 == KEYD_BACKSPACE && input_buffer[0])
-      {
-         input_buffer[strlen((char *)input_buffer)-1] = '\0';
-         return true; // eatkey
-      }
-
-      // probably just a normal character
-
-      // only care about valid characters
-      // dont allow too many characters on one command line
-
-      if(ev->character)
-         ich = (unsigned char)(ev->character);
-      else if(ev->data1 > 31 && ev->data1 < 127)
-         ich = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
-
-      if(ich > 31 && ich < 127)
-      {
-         if(strlen((char *)input_buffer) <=
-            ((var->type == vt_string) ? (unsigned int)var->max :
-             (var->type == vt_int || var->type == vt_toggle) ? 33 : 20))
-         {
-            input_buffer[strlen((char *)input_buffer) + 1] = 0;
-            input_buffer[strlen((char *)input_buffer)] = ich;
-         }
-      }
-
-      return true;
-   }
-
-   if(devparm && ev->data1 == key_help)
-   {
-      G_ScreenShot();
-      return true;
-   }
-
-   if(action_menu_toggle)
-   {
-      // toggle menu
-      action_menu_toggle = false;
-
-      // start up main menu or kill menu
-      if(menuactive)
-      {
-         if(menu_toggleisback) // haleyjd 02/12/06: allow zdoom-style navigation
-            MN_PrevMenu();
-         else
-         {
-            MN_ClearMenus();
-            S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
-         }
-      }
-      else
-         MN_StartControlPanel();
-
-      return true;
-   }
-
-   if(action_menu_help)
-   {
-      action_menu_help = false;
-      C_RunTextCmd("help");
-      return true;
-   }
-
-   if(action_menu_setup)
-   {
-      action_menu_setup = false;
-      C_RunTextCmd("mn_options");
-      return true;
-   }
-
-   // not interested in other keys if not in menu
-   if(!menuactive)
-      return false;
-
-   if(action_menu_up)
-   {
-      bool cancelsnd = false;
-      action_menu_up = false;
-
-      // skip gaps
-      do
-      {
-         if(--current_menu->selected < 0)
-         {
-            int i;
-
-            if(!ctrldown) // 3/13/09: control cancels these behaviors
-            {
-               // haleyjd: in paged menus, go to the previous page
-               if(current_menu->prevpage)
-               {
-                  // set selected item to the first selectable item
-                  current_menu->selected = MN_FindFirstSelectable(current_menu);
-                  cancelsnd = true; // paging makes a sound already, so remember this
-                  MN_PageMenu(current_menu->prevpage); // modifies current_menu!
-               }
-               else if(current_menu->nextpage)
-               {
-                  // 03/13/09: don't do normal wrap behavior on first page
-                  current_menu->selected = MN_FindFirstSelectable(current_menu);
-                  cancelsnd = true; // cancel the sound cuz we didn't do anything
-                  break; // exit the loop
-               }
-            }
-
-            // jump to end of menu
-            for(i = 0; current_menu->menuitems[i].type != it_end; ++i)
-               ; /* do-nothing loop */
-            current_menu->selected = i-1;
-         }
-      }
-      while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
-
-      if(!cancelsnd)
-         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
-
-      return true;  // eatkey
-   }
-
-   if(action_menu_down)
-   {
-      bool cancelsnd = false;
-      action_menu_down = false;
-
-      do
-      {
-         ++current_menu->selected;
-         if(current_menu->menuitems[current_menu->selected].type == it_end)
-         {
-            if(!ctrldown) // 03/13/09: control cancels these behaviors
-            {
-               // haleyjd: in paged menus, go to the next page
-               if(current_menu->nextpage)
-               {
-                  // set selected item to the last selectable item
-                  current_menu->selected = MN_FindLastSelectable(current_menu);
-                  cancelsnd = true;             // don't make a double sound below
-                  MN_PageMenu(current_menu->nextpage); // modifies current_menu!
-               }
-               else if(current_menu->prevpage)
-               {
-                  // don't wrap the pointer when on the last page
-                  current_menu->selected = MN_FindLastSelectable(current_menu);
-                  cancelsnd = true; // cancel the sound cuz we didn't do anything
-                  break; // exit the loop
-               }
-            }
-
-            current_menu->selected = 0;     // jump back to start
-         }
-      }
-      while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
-
-      if(!cancelsnd)
-         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
-
-      return true;  // eatkey
-   }
-
-   if(action_menu_confirm)
-   {
-      menuitem_t *menuitem = &current_menu->menuitems[current_menu->selected];
-
-      action_menu_confirm = false;
-
-      switch(menuitem->type)
-      {
-      case it_runcmd:
-         S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
-         Console.cmdtype = c_menu;
-         C_RunTextCmd(menuitem->data);
-         break;
-
-      case it_toggle:
-         // boolean values only toggled on enter
-         if((menuitem->var->type != vt_toggle && menuitem->var->type != vt_int) ||
-            menuitem->var->max - menuitem->var->min > 1)
-            break;
-
-         // toggle value now
-         psnprintf((char *)tempstr, sizeof(tempstr), "%s /", menuitem->data);
-         C_RunTextCmd((char *)tempstr);
-
-         S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
-         break;
-
-      case it_variable:
-      case it_variable_nd:
-         // get input for new value
-         input_command = C_GetCmdForName(menuitem->data);
-
-         // haleyjd 07/23/04: restore starting input_buffer with
-         // the current value of string variables
-         if(input_command->variable->type == vt_string)
-         {
-            char *str = *(char **)(input_command->variable->variable);
-
-            if(current_menu != GameModeInfo->saveMenu ||
-               strcmp(str, DEH_String("EMPTYSTRING")))
-               strcpy((char *)input_buffer, str);
-            else
-               input_buffer[0] = 0;
-         }
-         else
-            input_buffer[0] = 0;             // clear input buffer
-
-         // haleyjd 07/15/09: set input_cmdtype for it_variable_nd:
-         //   default value will not be set by console for type == c_menu.
-         if(menuitem->type == it_variable_nd)
-            input_cmdtype = c_menu;
-         else
-            input_cmdtype = c_typed;
-
-         break;
-
-      case it_automap:
-         MN_SelectColour(menuitem->data);
-         break;
-
-      case it_binding:
-         G_EditBinding(menuitem->data);
-         break;
-
-      default:
-         break;
-      }
-
-      return true;
-   }
-
-   if(action_menu_previous)
-   {
-      action_menu_previous = false;
-      MN_PrevMenu();
-      return true;
-   }
-
-   // decrease value of variable
-   if(action_menu_left)
-   {
-      menuitem_t *menuitem;
-      action_menu_left = false;
-
-      // haleyjd 10/07/05: if ctrl is down, go to previous menu
-      if(ctrldown)
-      {
-         if(current_menu->prevpage)
-            MN_PageMenu(current_menu->prevpage);
-         else
-            S_StartSound(NULL, GameModeInfo->c_BellSound);
-
-         return true;
-      }
-
-      menuitem = &current_menu->menuitems[current_menu->selected];
-
-      switch(menuitem->type)
-      {
-      case it_slider:
-      case it_bigslider: // haleyjd 08/31/06: old-school big slider
-      case it_toggle:
-         // no on-off int values
-         if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
-         {
-            if(menuitem->var->max - menuitem->var->min == 1)
-               break;
-
-            // change variable
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
-         }
-         else if(menuitem->var->type == vt_float)
-         {
-            double range = menuitem->var->dmax - menuitem->var->dmin;
-            double value = *(double *)(menuitem->var->variable);
-
-            if(altdown)
-               value -= 0.1;
-            else if(shiftdown)
-               value -= 0.01;
-            else
-               value -= range / 10.0;
-
-            if(value < menuitem->var->dmin)
-               value = menuitem->var->dmin;
-            else if(value > menuitem->var->dmax)
-               value = menuitem->var->dmax;
-
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"",
-                      menuitem->data, value);
-         }
-         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
-
-         C_RunTextCmd((char *)tempstr);
-         S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
-         break;
-      default:
-         break;
-      }
-      return true;
-   }
-
-   // increase value of variable
-   if(action_menu_right)
-   {
-      menuitem_t *menuitem;
-      action_menu_right = false;
-
-      // haleyjd 10/07/05: if ctrl is down, go to next menu
-      if(ctrldown)
-      {
-         if(current_menu->nextpage)
-            MN_PageMenu(current_menu->nextpage);
-         else
-            S_StartSound(NULL, GameModeInfo->c_BellSound);
-
-         return true;
-      }
-
-      menuitem = &current_menu->menuitems[current_menu->selected];
-
-      switch(menuitem->type)
-      {
-      case it_slider:
-      case it_bigslider: // haleyjd 08/31/06: old-school big slider
-      case it_toggle:
-         // no on-off int values
-         if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
-         {
-            if(menuitem->var->max - menuitem->var->min == 1)
-               break;
-
-            // change variable
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
-         }
-         else if(menuitem->var->type == vt_float)
-         {
-            double range = menuitem->var->dmax - menuitem->var->dmin;
-            double value = *(double *)(menuitem->var->variable);
-
-            if(altdown)
-               value += 0.1;
-            else if(shiftdown)
-               value += 0.01;
-            else
-               value += range / 10.0;
-
-            if(value < menuitem->var->dmin)
-               value = menuitem->var->dmin;
-            else if(value > menuitem->var->dmax)
-               value = menuitem->var->dmax;
-
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"",
-                      menuitem->data, value);
-         }
-         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
-            psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
-
-         C_RunTextCmd((char *)tempstr);
-         S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
-         break;
-
-      default:
-         break;
-      }
-
-      return true;
-   }
-
-   // haleyjd 10/07/05: page up action -- return to previous page
-   if(action_menu_pageup)
-   {
-      action_menu_pageup = false;
-
-      if(current_menu->prevpage)
-         MN_PageMenu(current_menu->prevpage);
-      else
-         S_StartSound(NULL, GameModeInfo->c_BellSound);
-
-      return true;
-   }
-
-   // haleyjd 10/07/05: page down action -- go to next page
-   if(action_menu_pagedown)
-   {
-      action_menu_pagedown = false;
-
-      if(current_menu->nextpage)
-         MN_PageMenu(current_menu->nextpage);
-      else
-         S_StartSound(NULL, GameModeInfo->c_BellSound);
-
-      return true;
-   }
-
-   // haleyjd 10/15/05: table of contents widget!
-   if(action_menu_contents)
-   {
-      action_menu_contents = false;
-
-      if(current_menu->content_names && current_menu->content_pages)
-         MN_ShowContents();
-      else
-         S_StartSound(NULL, GameModeInfo->c_BellSound);
-
-      return true;
-   }
-
-   // search for matching item in menu
-
-   if(ev->character)
-      ch = tolower((unsigned char)(ev->character));
-   else
-      ch = tolower(ev->data1);
-
-   if(ev->type == ev_keydown && ch >= 'a' && ch <= 'z')
-   {
-      // sf: experimented with various algorithms for this
-      //     this one seems to work as it should
-
-      int n = current_menu->selected;
-
-      do
-      {
-         n++;
-         if(current_menu->menuitems[n].type == it_end)
-            n = 0; // loop round
-
-         // ignore unselectables
-         if(!is_a_gap(&current_menu->menuitems[n]))
-         {
-            if(tolower(current_menu->menuitems[n].description[0]) == ch)
-            {
-               // found a matching item!
-               current_menu->selected = n;
-               return true; // eat key
-            }
-         }
-      } while(n != current_menu->selected);
-   }
-
-   return true;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 //
 // Other Menu Functions
 //
-
-//
-// MN_ActivateMenu
-//
-// make menu 'clunk' sound on opening
-//
-void MN_ActivateMenu(void)
-{
-   if(!menuactive)  // activate menu if not already
-   {
-      menuactive = true;
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
-   }
-}
 
 //
 // MN_StartMenu
@@ -1885,9 +1258,9 @@ void MN_ActivateMenu(void)
 //
 void MN_StartMenu(menu_t *menu)
 {
-   if(!menuactive)
+   if(!Menu.isUpFront())
    {
-      MN_ActivateMenu();
+      Menu.activate();
       current_menu = menu;
       menu_history_num = 0;  // reset history
    }
@@ -1917,7 +1290,7 @@ void MN_StartMenu(menu_t *menu)
 //
 static void MN_PageMenu(menu_t *newpage)
 {
-   if(!menuactive)
+   if(!Menu.isUpFront())
       return;
 
    current_menu = newpage;
@@ -1940,7 +1313,7 @@ static void MN_PageMenu(menu_t *newpage)
 void MN_PrevMenu(void)
 {
    if(--menu_history_num < 0)
-      MN_ClearMenus();
+      Menu.deactivate();
    else
       current_menu = menu_history[menu_history_num];
 
@@ -1949,32 +1322,20 @@ void MN_PrevMenu(void)
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
-//
-// MN_ClearMenus
-//
-// turn off menus
-//
-void MN_ClearMenus(void)
+CONSOLE_COMMAND(mn_clearmenus, 0, ii_menu)
 {
-   Console.enabled = true; // haleyjd 03/11/06: re-enable console
-   menuactive = false;
-   MN_ClearWidgetStack();  // haleyjd 08/31/12: make sure widget stack is empty
+   Menu.deactivate();
 }
 
-CONSOLE_COMMAND(mn_clearmenus, 0)
-{
-   MN_ClearMenus();
-}
-
-CONSOLE_COMMAND(mn_prevmenu, 0)
+CONSOLE_COMMAND(mn_prevmenu, 0, ii_menu)
 {
    MN_PrevMenu();
 }
 
-CONSOLE_COMMAND(forceload, cf_hidden)
+CONSOLE_COMMAND(forceload, cf_hidden, ii_all)
 {
    G_ForcedLoadGame();
-   MN_ClearMenus();
+   Menu.deactivate();
 }
 
 void MN_ForcedLoadGame(char *msg)
@@ -2006,7 +1367,7 @@ void MN_ErrorMsg(const char *s, ...)
 void MN_StartControlPanel(void)
 {
    // haleyjd 08/31/06: not if menu is already active
-   if(menuactive)
+   if(Menu.isUpFront())
       return;
 
    // haleyjd 05/16/04: traditional DOOM main menu support
@@ -2226,18 +1587,16 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    box_widget_t *box = (box_widget_t *)current_menuwidget;
 
    // toggle and previous dismiss the widget
-   if(action_menu_toggle || action_menu_previous)
+   if(Menu.checkAndClearActions("toggle", "previous"))
    {
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
 
    // up/left: move selection to previous item with wrap
-   if(action_menu_up || action_menu_left)
+   if(Menu.checkAndClearActions("up", "left"))
    {
-      action_menu_up = action_menu_left = false;
       if(--box->selection_idx < 0)
          box->selection_idx = box->maxidx;
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -2245,9 +1604,8 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    }
 
    // down/right: move selection to next item with wrap
-   if(action_menu_down || action_menu_right)
+   if(Menu.checkAndClearActions("down", "right"))
    {
-      action_menu_down = action_menu_right = false;
       if(++box->selection_idx > box->maxidx)
          box->selection_idx = 0;
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -2255,9 +1613,8 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    }
 
    // confirm: clear widget and set menu page or run command
-   if(action_menu_confirm)
+   if(Menu.checkAndClearAction("confirm"))
    {
-      action_menu_confirm = false;
       MN_PopWidget();
 
       switch(box->type)
@@ -2353,7 +1710,7 @@ static void MN_ShowContents(void)
    int i = 0;
    menu_t *rover;
 
-   if(!menuactive)
+   if(!Menu.isUpFront())
       return;
 
    MN_SetupBoxWidget("contents", current_menu->content_names, 0,
@@ -2410,6 +1767,613 @@ void MN_AddCommands(void)
    MN_AddMenus();               // add commands to call the menus
    MN_AddMiscCommands();
    MN_AddDynaMenuCommands();    // haleyjd 03/13/06
+}
+
+//=============================================================================
+//
+// Menu Module Functions
+//
+// Drawer, ticker etc.
+//
+
+MenuInterface Menu;
+
+MenuInterface::MenuInterface() : InputInterface("Menu", ii_menu, ev_keydown)
+{
+   registerHandledActions();
+}
+
+//
+// MN_Init
+//
+// Primary menu initialization. Called at startup.
+//
+void MenuInterface::init()
+{
+   int i;
+   const char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
+   const char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
+
+   skulls[0] = W_GetNumForName(cursorPatch1);
+   skulls[1] = W_GetNumForName(cursorPatch2);
+
+   // haleyjd 02/04/06: load small pointer
+   for(i = 0; i < NUMSMALLPTRS; ++i)
+   {
+      char name[9];
+
+      psnprintf(name, 9, "EEMNPTR%d", i);
+
+      smallptrs[i] = W_GetNumForName(name);
+   }
+
+   // get width and height from first patch
+   {
+      patch_t *ptr0 = PatchLoader::CacheNum(wGlobalDir, smallptrs[0], PU_CACHE);
+      smallptr_dims[0] = ptr0->width;
+      smallptr_dims[1] = ptr0->height;
+   }
+
+   quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
+
+   // haleyjd: init heretic stuff if appropriate
+   if(GameModeInfo->type == Game_Heretic)
+      MN_HInitSkull(); // initialize spinning skulls
+
+   MN_InitMenus();     // create menu commands in mn_menus.c
+   MN_InitFonts();     // create menu fonts
+   MN_SetBackground(); // set background
+
+   // haleyjd 07/03/09: sync up mn_classic_menus
+   MN_LinkClassicMenus(mn_classic_menus);
+}
+
+////////////////////////////////
+// drawer
+
+void MenuInterface::draw()
+{
+   // activate menu if displaying widget
+   if(current_menuwidget && !Menu.isUpFront())
+      MN_StartControlPanel();
+
+   if(current_menuwidget)
+   {
+      // alternate drawer
+      if(current_menuwidget->drawer)
+         current_menuwidget->drawer();
+      return;
+   }
+
+   // haleyjd: moved down to here
+   if(!Menu.isUpFront() || hide_menu)
+      return;
+
+   MN_DrawMenu(current_menu);
+}
+
+//////////////////////////////////
+// ticker
+
+void MenuInterface::tick()
+{
+   if(menu_error_time)
+      menu_error_time--;
+   if(hide_menu)                   // count down hide_menu
+      hide_menu--;
+   menutime++;
+
+   // haleyjd 02/04/06: determine small pointer index
+   if((menutime & 3) == 0)
+      smallptr_idx = (smallptr_idx + 1) % NUMSMALLPTRS;
+
+   // haleyjd 05/29/06: tick for any widgets
+   if(current_menuwidget && current_menuwidget->ticker)
+      current_menuwidget->ticker();
+}
+
+//
+// MN_ActivateMenu
+//
+// make menu 'clunk' sound on opening
+//
+void MenuInterface::activate()
+{
+   if(!active) // activate menu if not already
+   {
+      InputInterface::activate();
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+   }
+}
+
+//
+// MN_ClearMenus
+//
+// turn off menus
+//
+void MenuInterface::deactivate()
+{
+   if(active) // deactivate menu if not already
+   {
+      Console.enabled = true; // haleyjd 03/11/06: re-enable console
+      InputInterface::deactivate();
+
+      // haleyjd 08/31/12: make sure widget stack is empty
+      MN_ClearWidgetStack();
+   }
+}
+
+void MenuInterface::registerHandledActions()
+{
+   registerAction("up");
+   registerAction("down");
+   registerAction("confirm");
+   registerAction("previous");
+   registerAction("left");
+   registerAction("right");
+   registerAction("pageup");
+   registerAction("pagedown");
+   registerAction("contents");
+}
+
+//
+// MN_Responder
+//
+// haleyjd 07/03/04: rewritten to use enhanced key binding system
+//
+bool MenuInterface::handleEvent(event_t *ev)
+{
+   static qstring buf;
+   unsigned char ch; // haleyjd 04/29/02: this needs to be unsigned
+   int *menuSounds = GameModeInfo->menuSounds; // haleyjd
+
+   if(InputInterface::handleEvent(ev))
+      return true;
+
+   // are we displaying a widget?
+   if(current_menuwidget)
+   {
+      current_menuwidget->responder(ev);
+      return true;
+   }
+
+   // are we inputting a new value into a variable?
+   if(input_command)
+   {
+      unsigned char ich = 0;
+      variable_t *var = input_command->variable;
+
+      if(ev->data1 == KEYD_ESCAPE)        // cancel input
+         input_command = NULL;
+      else if(ev->data1 == KEYD_ENTER)
+      {
+         if(input_buffer.length() || (input_command->flags & cf_allowblank))
+         {
+            if(input_buffer.length()) // place " marks round the new value
+               input_buffer.makeQuoted();
+            else
+               input_buffer.Printf(0, "*");
+
+            // set the command
+            Console.cmdtype = input_cmdtype;
+            C_RunCommand(input_command, input_buffer.constPtr());
+            input_command = NULL;
+            input_cmdtype = c_typed;
+            return true; // eat key
+         }
+      }
+      // check for backspace
+      else if(ev->data1 == KEYD_BACKSPACE && input_buffer.length())
+      {
+         input_buffer.truncate(input_buffer.length() - 1);
+         return true; // eatkey
+      }
+
+      // probably just a normal character
+
+      // only care about valid characters
+      // dont allow too many characters on one command line
+
+      if(ev->character)
+         ich = (unsigned char)(ev->character);
+      else if(ev->data1 > 31 && ev->data1 < 127)
+         ich = key_bindings.shiftdown ? shiftxform[ev->data1] : ev->data1;
+
+      if(ich > 31 && ich < 127)
+      {
+         if(input_buffer.length() <=
+            ((var->type == vt_string) ? (unsigned int)var->max :
+             (var->type == vt_int || var->type == vt_toggle) ? 33 : 20))
+         {
+            input_buffer.Putc(ich);
+         }
+      }
+
+      return true;
+   }
+
+   if(checkAndClearAction("up"))
+   {
+      bool cancelsnd = false;
+
+      // skip gaps
+      do
+      {
+         if(--current_menu->selected < 0)
+         {
+            int i;
+
+            // 3/13/09: control cancels these behaviors
+            if(!key_bindings.ctrldown)
+            {
+               // haleyjd: in paged menus, go to the previous page
+               if(current_menu->prevpage)
+               {
+                  // set selected item to the first selectable item
+                  current_menu->selected = MN_FindFirstSelectable(current_menu);
+                  cancelsnd = true; // paging makes a sound already, so remember this
+                  MN_PageMenu(current_menu->prevpage); // modifies current_menu!
+               }
+               else if(current_menu->nextpage)
+               {
+                  // 03/13/09: don't do normal wrap behavior on first page
+                  current_menu->selected = MN_FindFirstSelectable(current_menu);
+                  cancelsnd = true; // cancel the sound cuz we didn't do anything
+                  break; // exit the loop
+               }
+            }
+
+            // jump to end of menu
+            for(i = 0; current_menu->menuitems[i].type != it_end; ++i)
+               ; /* do-nothing loop */
+            current_menu->selected = i-1;
+         }
+      }
+      while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
+
+      if(!cancelsnd)
+         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
+      return true;  // eatkey
+   }
+
+   if(checkAndClearAction("down"))
+   {
+      bool cancelsnd = false;
+
+      do
+      {
+         ++current_menu->selected;
+         if(current_menu->menuitems[current_menu->selected].type == it_end)
+         {
+            // 03/13/09: control cancels these behaviors
+            if(!key_bindings.ctrldown)
+            {
+               // haleyjd: in paged menus, go to the next page
+               if(current_menu->nextpage)
+               {
+                  // set selected item to the last selectable item
+                  current_menu->selected = MN_FindLastSelectable(current_menu);
+                  cancelsnd = true;             // don't make a double sound below
+                  MN_PageMenu(current_menu->nextpage); // modifies current_menu!
+               }
+               else if(current_menu->prevpage)
+               {
+                  // don't wrap the pointer when on the last page
+                  current_menu->selected = MN_FindLastSelectable(current_menu);
+                  cancelsnd = true; // cancel the sound cuz we didn't do anything
+                  break; // exit the loop
+               }
+            }
+
+            current_menu->selected = 0;     // jump back to start
+         }
+      }
+      while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
+
+      if(!cancelsnd)
+         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
+      return true;  // eatkey
+   }
+
+   if(checkAndClearAction("confirm"))
+   {
+      menuitem_t *menuitem = &current_menu->menuitems[current_menu->selected];
+
+      switch(menuitem->type)
+      {
+      case it_runcmd:
+         S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
+         Console.cmdtype = c_menu;
+         C_RunTextCmd(menuitem->data);
+         break;
+
+      case it_toggle:
+         // boolean values only toggled on enter
+         if((menuitem->var->type != vt_toggle && menuitem->var->type != vt_int) ||
+            menuitem->var->max - menuitem->var->min > 1)
+            break;
+
+         // toggle value now
+         buf.Printf(0, "%s /", menuitem->data);
+         C_RunTextCmd(buf.constPtr());
+
+         S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
+         break;
+
+      case it_variable:
+      case it_variable_nd:
+         // get input for new value
+         input_command = C_GetCmdForName(menuitem->data);
+
+         // haleyjd 07/23/04: restore starting input_buffer with
+         // the current value of string variables
+         if(input_command->variable->type == vt_string)
+         {
+            char *str = *(char **)(input_command->variable->variable);
+
+            if(current_menu != GameModeInfo->saveMenu ||
+               strcmp(str, DEH_String("EMPTYSTRING")))
+               input_buffer.Printf(0, "%s", str);
+            else
+               input_buffer.clear();
+         }
+         else
+            input_buffer.clear();             // clear input buffer
+
+         // haleyjd 07/15/09: set input_cmdtype for it_variable_nd:
+         //   default value will not be set by console for type == c_menu.
+         if(menuitem->type == it_variable_nd)
+            input_cmdtype = c_menu;
+         else
+            input_cmdtype = c_typed;
+
+         break;
+
+      case it_automap:
+         MN_SelectColour(menuitem->data);
+         break;
+
+      case it_binding:
+         MN_EditKeyBinding(menuitem->data, menuitem->interface_name);
+         break;
+
+      default:
+         break;
+      }
+
+      return true;
+   }
+
+   if(checkAndClearAction("previous"))
+   {
+      MN_PrevMenu();
+      return true;
+   }
+
+   // decrease value of variable
+   if(checkAndClearAction("left"))
+   {
+      menuitem_t *menuitem;
+
+      // haleyjd 10/07/05: if ctrl is down, go to previous menu
+      if(key_bindings.ctrldown)
+      {
+         if(current_menu->prevpage)
+            MN_PageMenu(current_menu->prevpage);
+         else
+            S_StartSound(NULL, GameModeInfo->c_BellSound);
+
+         return true;
+      }
+
+      menuitem = &current_menu->menuitems[current_menu->selected];
+
+      switch(menuitem->type)
+      {
+      case it_slider:
+      case it_bigslider: // haleyjd 08/31/06: old-school big slider
+      case it_toggle:
+         // no on-off int values
+         if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
+         {
+            if(menuitem->var->max - menuitem->var->min == 1)
+               break;
+
+            // change variable
+            buf.Printf(0, "%s -", menuitem->data);
+         }
+         else if(menuitem->var->type == vt_float)
+         {
+            double range = menuitem->var->dmax - menuitem->var->dmin;
+            double value = *(double *)(menuitem->var->variable);
+
+            if(key_bindings.altdown)
+               value -= 0.1;
+            else if(key_bindings.shiftdown)
+               value -= 0.01;
+            else
+               value -= range / 10.0;
+
+            if(value < menuitem->var->dmin)
+               value = menuitem->var->dmin;
+            else if(value > menuitem->var->dmax)
+               value = menuitem->var->dmax;
+
+            buf.Printf(0, "%s \"%.2f\"", menuitem->data, value);
+         }
+         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
+            buf.Printf(0, "%s -", menuitem->data);
+
+         C_RunTextCmd(buf.constPtr());
+         S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
+         break;
+      default:
+         break;
+      }
+      return true;
+   }
+
+   // increase value of variable
+   if(checkAndClearAction("right"))
+   {
+      menuitem_t *menuitem;
+
+      // haleyjd 10/07/05: if ctrl is down, go to next menu
+      if(key_bindings.ctrldown)
+      {
+         if(current_menu->nextpage)
+            MN_PageMenu(current_menu->nextpage);
+         else
+            S_StartSound(NULL, GameModeInfo->c_BellSound);
+
+         return true;
+      }
+
+      menuitem = &current_menu->menuitems[current_menu->selected];
+
+      switch(menuitem->type)
+      {
+      case it_slider:
+      case it_bigslider: // haleyjd 08/31/06: old-school big slider
+      case it_toggle:
+         // no on-off int values
+         if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
+         {
+            if(menuitem->var->max - menuitem->var->min == 1)
+               break;
+
+            // change variable
+            buf.Printf(0, "%s +", menuitem->data);
+         }
+         else if(menuitem->var->type == vt_float)
+         {
+            double range = menuitem->var->dmax - menuitem->var->dmin;
+            double value = *(double *)(menuitem->var->variable);
+
+            if(key_bindings.altdown)
+               value += 0.1;
+            else if(key_bindings.shiftdown)
+               value += 0.01;
+            else
+               value += range / 10.0;
+
+            if(value < menuitem->var->dmin)
+               value = menuitem->var->dmin;
+            else if(value > menuitem->var->dmax)
+               value = menuitem->var->dmax;
+
+            buf.Printf(0, "%s \"%.2f\"", menuitem->data, value);
+         }
+         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
+            buf.Printf(0, "%s +", menuitem->data);
+
+         C_RunTextCmd(buf.constPtr());
+         S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
+         break;
+
+      default:
+         break;
+      }
+
+      return true;
+   }
+
+   // haleyjd 10/07/05: page up action -- return to previous page
+   if(checkAndClearAction("pageup"))
+   {
+      if(current_menu->prevpage)
+         MN_PageMenu(current_menu->prevpage);
+      else
+         S_StartSound(NULL, GameModeInfo->c_BellSound);
+
+      return true;
+   }
+
+   // haleyjd 10/07/05: page down action -- go to next page
+   if(checkAndClearAction("pagedown"))
+   {
+      if(current_menu->nextpage)
+         MN_PageMenu(current_menu->nextpage);
+      else
+         S_StartSound(NULL, GameModeInfo->c_BellSound);
+
+      return true;
+   }
+
+   // haleyjd 10/15/05: table of contents widget!
+   if(checkAndClearAction("contents"))
+   {
+      if(current_menu->content_names && current_menu->content_pages)
+         MN_ShowContents();
+      else
+         S_StartSound(NULL, GameModeInfo->c_BellSound);
+
+      return true;
+   }
+
+   // search for matching item in menu
+
+   if(ev->character)
+      ch = tolower((unsigned char)(ev->character));
+   else
+      ch = tolower(ev->data1);
+
+   if(ch >= 'a' && ch <= 'z')
+   {
+      // sf: experimented with various algorithms for this
+      //     this one seems to work as it should
+
+      int n = current_menu->selected;
+
+      do
+      {
+         n++;
+         if(current_menu->menuitems[n].type == it_end)
+            n = 0; // loop round
+
+         // ignore unselectables
+         if(!is_a_gap(&current_menu->menuitems[n]))
+         {
+            if(tolower(current_menu->menuitems[n].description[0]) == ch)
+            {
+               // found a matching item!
+               current_menu->selected = n;
+               return true; // eat key
+            }
+         }
+      } while(n != current_menu->selected);
+   }
+
+   return true;
+}
+
+//
+// MN_CheckFullScreen
+//
+// Called by D_Drawer to see if the menu is in full-screen mode --
+// this allows the game to skip all other drawing, keeping the
+// framerate at 35 fps.
+//
+bool MenuInterface::isFullScreen()
+{
+   if(!active)
+      return false;
+
+   if(!current_menu)
+      return false;
+
+   if(!(current_menu->flags & mf_background))
+      return false;
+
+   if(hide_menu)
+      return false;
+
+   if(current_menuwidget && !current_menuwidget->fullscreen)
+      return false;
+
+   return true;
 }
 
 // EOF

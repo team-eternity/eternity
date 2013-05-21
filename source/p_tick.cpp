@@ -32,6 +32,7 @@
 #include "d_dehtbl.h"
 #include "d_main.h"
 #include "g_game.h"
+#include "mn_engin.h"
 #include "p_user.h"
 #include "p_chase.h"
 #include "p_saveg.h"
@@ -271,8 +272,8 @@ void P_Ticker(void)
    //
    // All of this complicated mess is used to preserve demo sync.
 
-   if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
-                 players[consoleplayer].viewz != 1))
+   if(paused || ((Menu.isUpFront() || Console.isUpFront()) &&
+      !demoplayback && !netgame && players[consoleplayer].viewz != 1))
       return;
 
    P_ParticleThinker(); // haleyjd: think for particles
