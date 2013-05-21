@@ -2414,7 +2414,7 @@ static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
 // Console Command to execute line specials
 //
 
-CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
+CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level, ii_level)
 {
    int16_t spec;
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };

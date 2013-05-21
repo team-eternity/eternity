@@ -33,7 +33,7 @@
 #include "d_iface.h"
 #include "doomstat.h"
 #include "e_hash.h"
-#include "g_newbind.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "m_collection.h"
 #include "m_dllist.h"

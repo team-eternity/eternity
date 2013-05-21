@@ -45,7 +45,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_hash.h"
-#include "g_newbind.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "i_system.h"
 #include "m_argv.h"
