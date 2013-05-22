@@ -808,14 +808,14 @@ enum
 // Checks a provided path to see that it both exists and that it is a directory
 // and not a plain file.
 //
-static int D_CheckBasePath(const char *pPath)
+static int D_CheckBasePath(const qstring &qpath)
 {
    int ret = -1;
    struct stat sbuf;
    qstring str;
    const char *path;
 
-   str = pPath;
+   str = qpath;
    
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
@@ -883,7 +883,7 @@ static void D_SetBasePath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
-   char *basedir = NULL;
+   qstring basedir;
 
    // Priority:
    // 1. Command-line argument "-base"
@@ -894,7 +894,7 @@ static void D_SetBasePath()
    // check command-line
    if((p = M_CheckParm("-base")) && p < myargc - 1)
    {
-      basedir = D_ExpandTilde(myargv[p + 1]);
+      basedir = myargv[p + 1];
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_CMDLINE;
@@ -903,7 +903,7 @@ static void D_SetBasePath()
    // check environment
    if(res != BASE_ISGOOD && (s = getenv("ETERNITYBASE")))
    {
-      basedir = D_ExpandTilde(s);
+      basedir = s;
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
@@ -912,7 +912,7 @@ static void D_SetBasePath()
    // check working dir
    if(res != BASE_ISGOOD)
    {
-      basedir = Z_Strdupa("./base");
+      basedir = "./base";
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_WORKING;
@@ -921,13 +921,10 @@ static void D_SetBasePath()
    // check exe dir
    if(res != BASE_ISGOOD)
    {
-      const char *exedir = D_DoomExeDir();
-      
-      size_t len = M_StringAlloca(&basedir, 1, 6, exedir);
+      basedir = D_DoomExeDir();
+      basedir.pathConcatenate("/base");
 
-      psnprintf(basedir, len, "%s/base", D_DoomExeDir());
-
-      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+      if((res = D_CheckBasePath(basedir)))
          source = BASE_EXEDIR;
       else
       {
@@ -945,8 +942,8 @@ static void D_SetBasePath()
       }
    }
 
-   basepath = estrdup(basedir);
-   M_NormalizeSlashes(basepath);
+   basedir.normalizeSlashes();
+   basepath = basedir.duplicate();
 
    switch(source)
    {
@@ -976,14 +973,14 @@ static void D_SetBasePath()
 // Checks a provided path to see that it both exists and that it is a directory
 // and not a plain file.
 //
-static int D_CheckUserPath(const char *pPath)
+static int D_CheckUserPath(const qstring &qpath)
 {
    int ret = -1;
    struct stat sbuf;
    qstring str;
    const char *path;
 
-   str = pPath;
+   str = qpath;
    
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
@@ -1039,18 +1036,20 @@ static void D_SetUserPath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
-   char *userdir = NULL;
+   qstring userdir;
 
    // Priority:
    // 1. Command-line argument "-user"
    // 2. Environment variable "ETERNITYUSER"
    // 3. /user under working directory
    // 4. /user under DoomExeDir
+   // 5. basepath/../user
+   // 6. use basepath itself.
 
    // check command-line
    if((p = M_CheckParm("-user")) && p < myargc - 1)
    {
-      userdir = D_ExpandTilde(myargv[p + 1]);
+      userdir = myargv[p + 1];
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_CMDLINE;
@@ -1059,7 +1058,7 @@ static void D_SetUserPath()
    // check environment
    if(res != BASE_ISGOOD && (s = getenv("ETERNITYUSER")))
    {
-      userdir = D_ExpandTilde(s);
+      userdir = s;
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
@@ -1068,7 +1067,7 @@ static void D_SetUserPath()
    // check working dir
    if(res != BASE_ISGOOD)
    {
-      userdir = Z_Strdupa("./user");
+      userdir = "./user";
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_WORKING;
@@ -1077,11 +1076,8 @@ static void D_SetUserPath()
    // check exe dir
    if(res != BASE_ISGOOD)
    {
-      const char *exedir = D_DoomExeDir();
-
-      size_t len = M_StringAlloca(&userdir, 1, 6, exedir);
-
-      psnprintf(userdir, len, "%s/user", D_DoomExeDir());
+      userdir = D_DoomExeDir();
+      userdir.pathConcatenate("/user");
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_EXEDIR;
@@ -1090,9 +1086,8 @@ static void D_SetUserPath()
    // try /user under the base path's immediate parent directory
    if(res != BASE_ISGOOD)
    {
-      size_t len = M_StringAlloca(&userdir, 1, 8, basepath);
-
-      psnprintf(userdir, len, "%s/../user", basepath);
+      userdir = basepath;
+      userdir.pathConcatenate("/../user");
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_BASEPARENT;
@@ -1103,8 +1098,8 @@ static void D_SetUserPath()
    if(res != BASE_ISGOOD)
       userdir = basepath;
 
-   userpath = estrdup(userdir);
-   M_NormalizeSlashes(userpath);
+   userdir.normalizeSlashes();
+   userpath = userdir.duplicate();
 
    switch(source)
    {
