@@ -27,6 +27,8 @@
 #ifndef M_COLLECTION_H__
 #define M_COLLECTION_H__
 
+#include <utility>
+
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_random.h"
@@ -341,7 +343,22 @@ public:
    void add(const T &newItem)
    {
       if(this->length >= this->numalloc)
-         this->resize(this->length ? this->length : 32); // double array size
+      {
+         size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
+
+         if(newnumalloc > this->numalloc)
+         {
+            T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+            for(size_t i = 0; i < this->length; i++)
+            {
+               ::new (&newItems[i]) T(std::move(this->ptrArray[i]));
+               this->ptrArray[i].~T();
+            }
+            efree(this->ptrArray);
+            this->ptrArray = newItems;
+            this->numalloc = newnumalloc;
+         }
+      }
       
       // placement copy construct new item
       ::new (&this->ptrArray[this->length]) T(newItem);

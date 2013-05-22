@@ -81,6 +81,8 @@ public:
       copy(cstr);
    }
 
+   qstring(qstring &&other);
+
    ~qstring() { freeBuffer(); }
 
    // Basic Property Getters

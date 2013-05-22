@@ -1,4 +1,5 @@
 *.lib
+*.opensdf
 *.sdf
 *.suo
 *.user
@@ -7,3 +8,4 @@ Debug
 Release
 UpgradeLog.XML
 _UpgradeReport_Files
+ipch
