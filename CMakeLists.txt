@@ -87,6 +87,15 @@ ELSE (WIN32)
 ENDIF (WIN32)
 INCLUDE(CPack)
 ################################################################################
+######################### Compiler: Features  ##################################
+IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        CHECK_CXX_COMPILER_FLAG (-std=c++11 GCC_CXX_STDCXX11)
+        IF (GCC_CXX_STDCXX11)
+                SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+        ENDIF (GCC_CXX_STDCXX11)
+ENDIF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+
+################################################################################
 ######################### Compiler: Warnings  ##################################
 IF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         CHECK_C_COMPILER_FLAG (-Wall GCC_C_WALL)
