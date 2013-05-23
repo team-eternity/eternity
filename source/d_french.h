@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //  Printed strings, french translation.
@@ -27,9 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
-
-#ifndef __D_FRENCH__
-#define __D_FRENCH__
+#ifndef D_FRENCH_H__
+#define D_FRENCH_H__
 
 //
 // D_Main.C
@@ -43,25 +42,25 @@
 #define PRESSKEY    "APPUYEZ SUR UNE TOUCHE."
 #define PRESSYN     "APPUYEZ SUR Y OU N"
 #define QUITMSG     "VOUS VOULEZ VRAIMENT\nQUITTER CE SUPER JEU?"
-#define LOADNET     "VOUS NE POUVEZ PAS CHARGER\nUN JEU EN RESEAU!\n\n"PRESSKEY
-#define QLOADNET    "CHARGEMENT RAPIDE INTERDIT EN RESEAU!\n\n"PRESSKEY
-#define QSAVESPOT   "VOUS N'AVEZ PAS CHOISI UN EMPLACEMENT!\n\n"PRESSKEY
+#define LOADNET     "VOUS NE POUVEZ PAS CHARGER\nUN JEU EN RESEAU!\n\n" PRESSKEY
+#define QLOADNET    "CHARGEMENT RAPIDE INTERDIT EN RESEAU!\n\n" PRESSKEY
+#define QSAVESPOT   "VOUS N'AVEZ PAS CHOISI UN EMPLACEMENT!\n\n" PRESSKEY
 #define SAVEDEAD    "VOUS NE POUVEZ PAS SAUVER SI VOUS NE JOUEZ "\
-                    "PAS!\n\n"PRESSKEY
-#define QSPROMPT    "SAUVEGARDE RAPIDE DANS LE FICHIER \n\n'%s'?\n\n"PRESSYN
+                    "PAS!\n\n" PRESSKEY
+#define QSPROMPT    "SAUVEGARDE RAPIDE DANS LE FICHIER \n\n'%s'?\n\n" PRESSYN
 #define QLPROMPT    "VOULEZ-VOUS CHARGER LA SAUVEGARDE"\
-                    "\n\n'%s'?\n\n"PRESSYN
+                    "\n\n'%s'?\n\n" PRESSYN
 #define NEWGAME     "VOUS NE POUVEZ PAS LANCER\n"\
-                    "UN NOUVEAU JEU SUR RESEAU.\n\n"PRESSKEY
+                    "UN NOUVEAU JEU SUR RESEAU.\n\n" PRESSKEY
 #define NIGHTMARE   "VOUS CONFIRMEZ? CE NIVEAU EST\n"\
-                    "VRAIMENT IMPITOYABLE!n"PRESSYN
+                    "VRAIMENT IMPITOYABLE!n" PRESSYN
 #define SWSTRING    "CECI EST UNE VERSION SHAREWARE DE DOOM.\n\n"\
-                    "VOUS DEVRIEZ COMMANDER LA TRILOGIE COMPLETE.\n\n"PRESSKEY
+                    "VOUS DEVRIEZ COMMANDER LA TRILOGIE COMPLETE.\n\n" PRESSKEY
 #define MSGOFF      "MESSAGES OFF"
 #define MSGON       "MESSAGES ON"
 #define NETEND      "VOUS NE POUVEZ PAS METTRE FIN A UN JEU SUR "\
-                    "RESEAU!\n\n"PRESSKEY
-#define ENDGAME     "VOUS VOULEZ VRAIMENT METTRE FIN AU JEU?\n\n"PRESSYN
+                    "RESEAU!\n\n" PRESSKEY
+#define ENDGAME     "VOUS VOULEZ VRAIMENT METTRE FIN AU JEU?\n\n" PRESSYN
 
 #define DOSY        "(APPUYEZ SUR Y POUR REVENIR AU OS.)"
 
@@ -275,8 +274,7 @@
 //
 //  F_Finale.C
 //
-#define E1TEXT  
-  "APRES AVOIR VAINCU LES GROS MECHANTS\n"\
+#define E1TEXT  "APRES AVOIR VAINCU LES GROS MECHANTS\n"\
   "ET NETTOYE LA BASE LUNAIRE, VOUS AVEZ\n"\
   "GAGNE, NON? PAS VRAI? OU EST DONC VOTRE\n"\
   " RECOMPENSE ET VOTRE BILLET DE\n"\

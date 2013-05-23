@@ -213,7 +213,7 @@ void C_DealWithChar(unsigned char c, int source)
             netcmdnum = *(incomingmsg[source].constPtr());
             
             if(netcmdnum >= NUMNETCMDS || netcmdnum <= 0)
-               C_Printf(FC_ERROR"unknown netcmd: %i\n", netcmdnum);
+               C_Printf(FC_ERROR "unknown netcmd: %i\n", netcmdnum);
             else
             {
                // C_Printf("%s, %s", c_netcmds[netcmdnum].name,
@@ -241,8 +241,8 @@ void C_SendNetData()
   // display message according to what we're about to do
 
   C_Printf(consoleplayer ?
-           FC_HI"Please Wait"FC_NORMAL" Receiving game data..\n" :
-           FC_HI"Please Wait"FC_NORMAL" Sending game data..\n");
+           FC_HI "Please Wait" FC_NORMAL " Receiving game data..\n" :
+           FC_HI "Please Wait" FC_NORMAL " Sending game data..\n");
 
 
   // go thru all hash chains, check for net sync variables  

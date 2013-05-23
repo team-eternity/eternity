@@ -69,16 +69,16 @@ const char *colournames[] =
 
 const char *textcolours[]=
 {
-   FC_BRICK  "brick" FC_NORMAL,
-   FC_TAN    "tan"   FC_NORMAL,
-   FC_GRAY   "gray"  FC_NORMAL,
-   FC_GREEN  "green" FC_NORMAL,
-   FC_BROWN  "brown" FC_NORMAL,
-   FC_GOLD   "gold"  FC_NORMAL,
-   FC_RED    "red"   FC_NORMAL,
-   FC_BLUE   "blue"  FC_NORMAL,
-   FC_ORANGE "orange"FC_NORMAL,
-   FC_YELLOW "yellow"FC_NORMAL
+   FC_BRICK  "brick"  FC_NORMAL,
+   FC_TAN    "tan"    FC_NORMAL,
+   FC_GRAY   "gray"   FC_NORMAL,
+   FC_GREEN  "green"  FC_NORMAL,
+   FC_BROWN  "brown"  FC_NORMAL,
+   FC_GOLD   "gold"   FC_NORMAL,
+   FC_RED    "red"    FC_NORMAL,
+   FC_BLUE   "blue"   FC_NORMAL,
+   FC_ORANGE "orange" FC_NORMAL,
+   FC_YELLOW "yellow" FC_NORMAL
 };
 
 const char *skills[]=

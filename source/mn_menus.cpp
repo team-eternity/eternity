@@ -1509,7 +1509,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
    if(demorecording) // killough 5/26/98: exclude during demo recordings
    {
       MN_Alert("you can't load a game\n"
-               "while recording a demo!\n\n"PRESSKEY);
+               "while recording a demo!\n\n" PRESSKEY);
       return;
    }
    
@@ -1562,7 +1562,7 @@ CONSOLE_COMMAND(quickload, 0)
    if(demorecording)
    {
       MN_Alert("you can't quickload\n"
-               "while recording a demo!\n\n"PRESSKEY);
+               "while recording a demo!\n\n" PRESSKEY);
       return;
    }
 

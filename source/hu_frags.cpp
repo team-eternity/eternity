@@ -187,7 +187,7 @@ CONSOLE_COMMAND(frags, 0)
    
    for(i = 0; i < num_players; ++i)
    {
-      C_Printf(FC_HI"%i"FC_NORMAL" %s\n",
+      C_Printf(FC_HI "%i" FC_NORMAL " %s\n",
                sortedplayers[i]->totalfrags,
                sortedplayers[i]->name);
    }

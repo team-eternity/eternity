@@ -867,7 +867,7 @@ void G_SaveDefaults()
    
    if(!(file = fopen(cfg_file, "w")))
    {
-      C_Printf(FC_ERROR"Couldn't open keys.csc for write access.\n");
+      C_Printf(FC_ERROR "Couldn't open keys.csc for write access.\n");
       return;
    }
 

@@ -321,7 +321,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
 {
    if(GameModeInfo->flags & GIF_SHAREWARE)
    {
-      C_Printf(FC_ERROR"command not available in shareware games\n");
+      C_Printf(FC_ERROR "command not available in shareware games\n");
       return;
    }
    D_AddNewFile(Console.argv[0]->constPtr());
