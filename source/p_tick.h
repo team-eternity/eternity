@@ -126,7 +126,7 @@ public:
 //
 template<typename T> inline T thinker_cast(Thinker *th)
 {
-   typedef typename eeprestd::remove_pointer<T>::type base_type;
+   typedef typename std::remove_pointer<T>::type base_type;
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(th) : NULL;

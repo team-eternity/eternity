@@ -1442,9 +1442,6 @@
     <ClInclude Include="..\source\Win32\inttypes.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\precpp11.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\psnprntf.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>

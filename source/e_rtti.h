@@ -287,7 +287,7 @@ name::Type name::StaticType(#name, &Super::StaticType);
 //
 template<typename T> inline T runtime_cast(RTTIObject *robj)
 {
-   typedef typename eeprestd::remove_pointer<T>::type base_type;
+   typedef typename std::remove_pointer<T>::type base_type;
 
    return (robj && robj->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(robj) : NULL;

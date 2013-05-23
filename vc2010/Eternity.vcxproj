@@ -1389,7 +1389,6 @@
     <ClInclude Include="..\source\autopalette.h" />
     <ClInclude Include="..\Source\info.h" />
     <ClInclude Include="..\source\Win32\inttypes.h" />
-    <ClInclude Include="..\source\precpp11.h" />
     <ClInclude Include="..\Source\psnprntf.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="..\source\Win32\stdint.h" />
