@@ -800,8 +800,6 @@ static void AM_maxOutWindowScale(void)
    AM_activateNewScale();
 }
 
-static bool am_key_handled;
-
 //
 // AM_Responder()
 //
@@ -1915,7 +1913,6 @@ static void AM_drawNodeLines()
 
    for(int i = 0; i < numnodes; i++)
    {
-      node_t  *bsp   = &nodes[i];
       fnode_t *fnode = &fnodes[i];
 
       l.a.x = fnode->fx;

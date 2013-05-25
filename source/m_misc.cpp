@@ -1920,17 +1920,18 @@ long M_FileLength(FILE *f)
 //
 char *M_LoadStringFromFile(const char *filename)
 {
-   FILE *f   = NULL;
-   char *buf = NULL;
-   long  len = 0;
+   FILE  *f    = NULL;
+   char  *buf  = NULL;
+   size_t len = 0;
    
    if(!(f = fopen(filename, "rb")))
       return NULL;
 
    // allocate at length + 1 for null termination
-   len = M_FileLength(f);
+   len = static_cast<size_t>(M_FileLength(f));
    buf = ecalloc(char *, 1, len + 1);
-   fread(buf, 1, static_cast<size_t>(len), f);
+   if(fread(buf, 1, len, f) != len)
+      usermsg("M_LoadStringFromFile: warning: could not read file %s\n", filename);
    fclose(f);
 
    return buf;
@@ -2108,7 +2109,6 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
 void M_ExtractFileBase(const char *path, char *dest)
 {
    const char *src = path + strlen(path) - 1;
-   const char *filename;
    int length;
    
    // back up until a \ or the start
@@ -2119,8 +2119,6 @@ void M_ExtractFileBase(const char *path, char *dest)
       src--;
    }
 
-   filename = src;
-   
    // copy up to eight characters
    // FIXME: insecure, does not ensure null termination of output string!
    memset(dest, 0, 8);

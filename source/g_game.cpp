@@ -1067,7 +1067,7 @@ void G_DoPlayDemo(void)
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
 
-      if((skill = (skill_t)demover) >= 100)         // For demos from versions >= 1.4
+      if(demover >= 100)         // For demos from versions >= 1.4
       {
          skill = (skill_t)(*demo_p++);
          episode = *demo_p++;
@@ -1080,6 +1080,7 @@ void G_DoPlayDemo(void)
       }
       else
       {
+         skill = (skill_t)demover;
          episode = *demo_p++;
          map = *demo_p++;
          deathmatch = respawnparm = fastparm = nomonsters = false;

@@ -2673,7 +2673,7 @@ static void MN_padTestDrawer()
    x = 8;
    MN_WriteText("Axes:", x, y);
    y += lineHeight;
-   for(int i = 0; i < mn_padtestdata.numAxes; i++)
+   for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
    {
       int color = 
          mn_padtestdata.axisStates[i] > 0 ? GameModeInfo->selectColor :
@@ -2696,7 +2696,7 @@ static void MN_padTestDrawer()
    x = 8;
    MN_WriteText("Buttons:", x, y);
    y += MN_StringHeight("Buttons:") + 4;
-   for(int i = 0; i < mn_padtestdata.numButtons; i++)
+   for(int i = 0; i < mn_padtestdata.numButtons && HALGamePad::MAXBUTTONS; i++)
    {
       int color = mn_padtestdata.buttonStates[i] ? GameModeInfo->selectColor 
                                                  : GameModeInfo->infoColor;
@@ -2737,9 +2737,9 @@ static void MN_padTestTicker()
    mn_padtestdata.numAxes    = gamepad->numAxes;
    mn_padtestdata.numButtons = gamepad->numButtons;
 
-   for(int i = 0; i < mn_padtestdata.numAxes; i++)
+   for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
       mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
-   for(int i = 0; i < mn_padtestdata.numButtons; i++)
+   for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
       mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
 }
 

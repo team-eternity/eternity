@@ -104,10 +104,8 @@ struct deh_block
   void (*const fptr)(DWFILE *, char *); // handler
 };
 
-#define DEH_BUFFERMAX 1024 // input buffer area size, hardcodedfor now
-// killough 8/9/98: make DEH_BLOCKMAX self-adjusting
-#define DEH_BLOCKMAX (sizeof deh_blocks/sizeof*deh_blocks)  // size of array
-#define DEH_MAXKEYLEN 32 // as much of any key as we'll look at
+#define DEH_BUFFERMAX 1024 // input buffer area size, hardcoded for now
+#define DEH_MAXKEYLEN 32   // as much of any key as we'll look at
 #define DEH_MOBJINFOMAX 27 // number of ints in the mobjinfo_t structure (!) haleyjd: 27
 
 // Put all the block header values, and the function to be called when that
@@ -576,8 +574,6 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
 
    while(infile.getStr(inbuffer, sizeof(inbuffer)))
    {
-      int i;
-      
       lfstrip(inbuffer);
 
       deh_LogPrintf("Line='%s'\n", inbuffer);
@@ -630,9 +626,9 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
          continue;
       }
 
-      for(i = 0; i < DEH_BLOCKMAX; i++)
+      for(size_t i = 0; i < earrlen(deh_blocks); i++)
       {
-         if(!strncasecmp(inbuffer,deh_blocks[i].key,strlen(deh_blocks[i].key)))
+         if(!strncasecmp(inbuffer, deh_blocks[i].key, strlen(deh_blocks[i].key)))
          { 
             // matches one
             deh_LogPrintf("Processing function [%d] for %s\n", 

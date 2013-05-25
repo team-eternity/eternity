@@ -66,6 +66,7 @@ const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
 #define STATE_EOF -1
 #define STATE_ERROR 1
 
+#ifndef NDEBUG
 //
 // my_assert
 //
@@ -77,6 +78,7 @@ static void my_assert(const char *msg, const char *file, int line)
 {
    I_Error("Assertion failed at %s line %d: %s\n", file, line, msg);
 }
+#endif
 
 //
 // cfg_strndup

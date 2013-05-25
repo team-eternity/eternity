@@ -213,7 +213,6 @@ static void P_getSlopeProps(int staticFn, bool &frontfloor, bool &backfloor,
 void P_SpawnSlope_Line(int linenum, int staticFn)
 {
    line_t *line = lines + linenum;
-   int special = line->special;
    v3float_t origin, point;
    v2float_t direction;
    float dz, extent;
@@ -328,7 +327,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 void P_CopySectorSlope(line_t *line, int staticFn)
 {
    sector_t *fsec = line->frontsector;
-   int i, special = line->special;
+   int i;
    bool copyFloor   = false;
    bool copyCeiling = false;
 

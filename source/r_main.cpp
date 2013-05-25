@@ -1065,8 +1065,6 @@ static r_tlstyle_t DoomThingStyles[] =
    { "MegaSphere",      { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
 };
 
-#define NUMDOOMTHINGSTYLES (sizeof(DoomThingStyles) / sizeof(r_tlstyle_t))
-
 // Translucency style setting for DOOM thingtypes.
 int r_tlstyle;
 
@@ -1080,10 +1078,9 @@ int r_tlstyle;
 // * Boom - all things use the TRANSLUCENT flag
 // * New  - some things are additive, others are TL, others are normal.
 //
-void R_DoomTLStyle(void)
+void R_DoomTLStyle()
 {
    static bool firsttime = true;
-   int i;
 
    // If the first style set is to BOOM-style, then we don't actually need
    // to do anything at all here. This is safest for older mods that might
@@ -1096,7 +1093,7 @@ void R_DoomTLStyle(void)
       return;
    }
    
-   for(i = 0; i < NUMDOOMTHINGSTYLES; ++i)
+   for(size_t i = 0; i < earrlen(DoomThingStyles); i++)
    {
       int tnum   = E_ThingNumForName(DoomThingStyles[i].className);
       int action = DoomThingStyles[i].actions[r_tlstyle];

@@ -370,13 +370,14 @@ const demostate_t demostates_unknown[] =
 // This cycles through the demo sequences.
 // killough 11/98: made table-driven
 //
-void D_DoAdvanceDemo(void)
+void D_DoAdvanceDemo()
 {
    const demostate_t *demostates = GameModeInfo->demoStates;
    const demostate_t *state;
 
    players[consoleplayer].playerstate = PST_LIVE;  // not reborn
-   advancedemo = usergame = paused = false;
+   advancedemo = usergame = false;
+   paused = 0;
    gameaction = ga_nothing;
 
    pagetic = GameModeInfo->pageTics;
@@ -765,31 +766,6 @@ char *D_DoomExeDir(void)
 //
 // Base and Game Path Determination Code
 //
-
-//
-// D_ExpandTilde
-//     expand tilde in base path name for linux home dir
-//
-static char *D_ExpandTilde(const char *basedir)
-{
-   if(basedir[0] == '~')
-   {
-      char *home = estrdup(getenv("HOME"));
-      char *newalloc = NULL;
-      
-      M_StringAlloca(&newalloc, 2, 0, home, basedir);
-
-      strcpy(newalloc, home);
-      strcpy(newalloc + strlen(home), basedir + 1);
-            
-      if(home)
-         efree(home);
-
-      return newalloc;
-   }
-
-   return Z_Strdupa(basedir);
-}
 
 // return codes for D_CheckBasePath
 enum

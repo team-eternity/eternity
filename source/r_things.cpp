@@ -1288,13 +1288,14 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
    }
 }
 
+#if 0
 //
 // R_SortVisSprites
 //
 // Rewritten by Lee Killough to avoid using unnecessary
 // linked lists, and to use faster sorting algorithm.
 //
-static void R_SortVisSprites(void)
+static void R_SortVisSprites()
 {
    if(num_vissprite)
    {
@@ -1321,7 +1322,7 @@ static void R_SortVisSprites(void)
       msort(vissprite_ptrs, vissprite_ptrs + num_vissprite, num_vissprite);
    }
 }
-
+#endif
 
 //
 // R_SortVisSpriteRange

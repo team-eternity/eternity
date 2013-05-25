@@ -1433,18 +1433,6 @@ void P_BossTeleport(bossteleport_t *bt)
 // be eliminated entirely in a couple of cases.
 //
 
-static const char *kwds_A_PlayerStartScript[] =
-{
-   "gamescript",  // 0
-   "levelscript", // 1
-};
-
-static argkeywd_t psskwds =
-{
-   kwds_A_PlayerStartScript,
-   sizeof(kwds_A_PlayerStartScript) / sizeof(const char *)
-};
-
 //
 // A_PlayerStartScript
 //

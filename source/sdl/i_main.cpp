@@ -63,7 +63,9 @@
 #define INIT_FLAGS BASE_INIT_FLAGS
 #endif
 
-static void VerifySDLVersions(void);
+#ifdef _DEBUG
+static void VerifySDLVersions();
+#endif
 
 int SDLIsInit;
 
@@ -134,7 +136,7 @@ enum
 // differing from the compiled version of SDL libs, I am writing
 // this function to warn about such a thing.
 //
-static void VerifySDLVersions(void)
+static void VerifySDLVersions()
 {
    SDL_version cv;       // compiled version
    const SDL_version *lv; // linked version

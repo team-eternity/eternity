@@ -1392,7 +1392,7 @@ size_t DOOMBindingsLen = earrlen(DOOMBindings);
 // Heretic Bindings
 // Heretic's bindings are additive over DOOM's.
 // Special thanks to Gez for saving me a ton of trouble by reporting missing
-// differences in behavior for types 7, 8, 10, 36, 70, 71, 49, 88, and 98
+// differences in behavior for types 7, 8, 10, 36, 49, 70, 71, 88, and 98
 ev_binding_t HereticBindings[] =
 {
    LINESPEC(  7, S1HereticStairsBuildUp8FS)
@@ -1400,7 +1400,7 @@ ev_binding_t HereticBindings[] =
    LINESPEC( 10, W1HticPlatDownWaitUpStay)
    LINESPEC( 36, W1LowerFloorTurboA)
    LINESPEC( 49, S1CeilingLowerAndCrush)
-   LINESPEC( 70, S1LowerFloorTurboA)
+   LINESPEC( 70, SRLowerFloorTurboA)
    LINESPEC( 71, S1LowerFloorTurboA)
    LINESPEC( 88, WRHticPlatDownWaitUpStay)
    LINESPEC( 98, WRLowerFloorTurboA)

@@ -135,7 +135,6 @@ int idmusnum;
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
-static void S_CreateMusicHashTable(void);
 
 // haleyjd 12/24/11: hi-def music support
 bool s_hidefmusic;

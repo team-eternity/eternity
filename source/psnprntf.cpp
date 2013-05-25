@@ -418,7 +418,8 @@ int pvsnfmt_str(pvsnfmt_vars *info, const char *s)
         else
             nprinted = pad;
 
-        memset(info->pinsertion, ' ', nprinted);
+        if(nprinted)
+           memset(info->pinsertion, ' ', nprinted);
         info->pinsertion += nprinted;
         info->nmax -= nprinted;
     }
@@ -746,7 +747,8 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
         else if ((int) info->nmax - 1 < widthpad)
             widthpad = info->nmax - 1;
 
-        memset(info->pinsertion, ' ', widthpad);
+        if(widthpad)
+           memset(info->pinsertion, ' ', widthpad);
         info->pinsertion += widthpad;
         info->nmax -= widthpad;
     }
@@ -884,10 +886,13 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             else if ((int) info->nmax - 1 < pad )
                 pad  = info->nmax - 1;
 
-            if (flags & FLAG_ZERO_PAD)
-                memset(info->pinsertion, '0', pad );
-            else
-                memset(info->pinsertion, ' ', pad );
+            if(pad)
+            {
+               if (flags & FLAG_ZERO_PAD)
+                  memset(info->pinsertion, '0', pad );
+               else
+                  memset(info->pinsertion, ' ', pad );
+            }
             info->pinsertion += pad ;
             info->nmax -= pad ;
         }
@@ -907,7 +912,8 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             len = 0;
         else if ((int) info->nmax - 1 < len)
             len = info->nmax - 1;
-        memcpy(info->pinsertion, special, len);
+        if(len)
+           memcpy(info->pinsertion, special, len);
         info->pinsertion += len;
         info->nmax -= len;
 
@@ -919,7 +925,8 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             else if ((int) info->nmax - 1 < pad )
                 pad  = info->nmax - 1;
 
-            memset(info->pinsertion, ' ', pad );
+            if(pad)
+               memset(info->pinsertion, ' ', pad );
             info->pinsertion += pad ;
             info->nmax -= pad ;
         }
@@ -1003,10 +1010,13 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             else if ((int) info->nmax - 1 < pad)
                 pad = info->nmax - 1;
 
-            if (flags & FLAG_ZERO_PAD)
-                memset(info->pinsertion, '0', pad);
-            else
-                memset(info->pinsertion, ' ', pad);
+            if(pad)
+            {
+               if (flags & FLAG_ZERO_PAD)
+                  memset(info->pinsertion, '0', pad);
+               else
+                  memset(info->pinsertion, ' ', pad);
+            }
 
             info->pinsertion += pad;
             info->nmax -= pad;
@@ -1061,7 +1071,8 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
                 leadingzeros = info->nmax; /* -1 */
 
             leadingzeros--;
-            memset(info->pinsertion, '0', leadingzeros);
+            if(leadingzeros > 0)
+               memset(info->pinsertion, '0', leadingzeros);
             info->pinsertion += leadingzeros;
             info->nmax -= leadingzeros;
         }
@@ -1076,7 +1087,8 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             else
                 printdigits = dec;
 
-            memcpy(info->pinsertion, digits, printdigits);
+            if(printdigits)
+               memcpy(info->pinsertion, digits, printdigits);
             info->pinsertion += printdigits;
             info->nmax -= printdigits;
 
@@ -1115,7 +1127,8 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
         else
             printdigits = len;
 
-        memcpy(info->pinsertion, digits, printdigits);
+        if(printdigits)
+           memcpy(info->pinsertion, digits, printdigits);
         info->pinsertion += printdigits;
         info->nmax -= printdigits;
 
@@ -1127,7 +1140,8 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             else if ((int) info->nmax - 1 < pad)
                 pad = info->nmax - 1;
 
-            memset(info->pinsertion, ' ', pad);
+            if(pad)
+               memset(info->pinsertion, ' ', pad);
             info->pinsertion += pad;
             info->nmax -= pad;
         }

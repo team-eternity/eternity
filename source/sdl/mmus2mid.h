@@ -42,7 +42,7 @@ typedef struct MIDI                    /* a midi file */
 #endif // DJGPP
 
 bool mmuscheckformat(UBYTE *mus, int size);
-int  mmus2mid(UBYTE *mus, int size, MIDI *mid, UWORD division, int nocomp);
+int  mmus2mid(UBYTE *mus, size_t size, MIDI *mid, UWORD division, int nocomp);
 int  MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen);
 int  MidiToMIDI(UBYTE *mid,MIDI *mididata);
 

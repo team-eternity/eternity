@@ -302,7 +302,7 @@ void R_InitTranMap(bool force)
             int r = pal_w1[0][j] + r1;
             int g = pal_w1[1][j] + g1;
             int b = pal_w1[2][j] + b1;
-            int best = LONG_MAX;
+            int best = INT_MAX;
             do
             {
                if((err = tot[color] - pal[0][color]*r

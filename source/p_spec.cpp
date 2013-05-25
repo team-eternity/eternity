@@ -2792,8 +2792,8 @@ static void P_getPortalProps(int staticFn, portal_type &type, portal_effect &eff
 //
 static void P_SpawnPortal(line_t *line, int staticFn)
 {
-   portal_type   type;
-   portal_effect effects;
+   portal_type   type    = portal_plane;
+   portal_effect effects = portal_ceiling;
    int       CamType = E_ThingNumForName("EESkyboxCam"); // find the skybox camera object
    sector_t *sector;
    portal_t *portal = NULL;

@@ -337,7 +337,7 @@ bool mmuscheckformat(UBYTE *mus, int size)
 //
 // Returns 0 if successful, otherwise an error code (see mmus2mid.h).
 //
-int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
+int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp)
 {
    UWORD TrackCnt = 0;
    UBYTE evt, MUSchannel, MIDIchannel, MIDItrack=0;
@@ -679,9 +679,7 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
 //                  /* it also provides a MUS to MID file converter*/
 // proff: I moved this down, because I need MIDItoMidi
 
-static void FreeTracks(MIDI *mididata);
-static void TWriteLength(UBYTE **midiptr,ULONG length);
-
+#ifdef STANDALONE
 //
 // FreeTracks()
 //
@@ -701,6 +699,7 @@ static void FreeTracks(MIDI *mididata)
       mididata->track[i].len = 0;
    }
 }
+#endif
 
 //
 // TWriteLength()
@@ -712,7 +711,7 @@ static void FreeTracks(MIDI *mididata)
 // Passed a pointer to the pointer to a midi buffer, and the length to write
 // Returns nothing
 //
-static void TWriteLength(UBYTE **midiptr,ULONG length)
+static void TWriteLength(UBYTE **midiptr, ULONG length)
 {
    // proff: Added typecast to avoid warning
    *(*midiptr)++ = (unsigned char)((length >> 24) & 0xff);
@@ -731,7 +730,7 @@ static void TWriteLength(UBYTE **midiptr,ULONG length)
 // a buffer containing midi data, and a pointer to a length return.
 // Returns 0 if successful, MEMALLOC if a memory allocation error occurs
 //
-int MIDIToMidi(MIDI *mididata,UBYTE **mid,int *midlen)
+int MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen)
 {
    size_t total;
    int i,ntrks;

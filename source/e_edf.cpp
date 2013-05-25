@@ -1313,25 +1313,23 @@ static void E_ProcessItems(cfg_t *cfg)
 }
 
 // haleyjd 04/13/08: this replaces S_sfx[0].
-sfxinfo_t NullSound;
-
-//
-// E_AllocSounds
-//
-static void E_AllocSounds(cfg_t *cfg)
+sfxinfo_t NullSound =
 {
-   E_EDFLogPuts("\t* Processing sound definitions\n");
-
-   E_EDFLogPrintf("\t\t%d sound(s) defined\n", NUMSFX);
-
-   // initialize the null sound entry
-   strcpy(NullSound.name,     "none");
-   strcpy(NullSound.mnemonic, "none");
-
-   // 08/10/05: must call this from here now
-
-   E_ProcessSounds(cfg); // see e_sounds.c
-}
+   { 'n', 'o', 'n', 'e', '\0' }, // name
+   { '\0' },                     // pcslump
+   sfxinfo_t::sg_none,           // singularity
+   255, 0, 0,                    // priority, pitch, volume
+   sfxinfo_t::pitch_none,        // pitch_type
+   0,                            // skin sound
+   CHAN_AUTO,                    // subchannel
+   0, 0, 0,                      // flags, clipping_dist, close_dist
+   NULL, NULL, NULL, 0,          // link, alias, random sounds
+   NULL, 0, 0, 0,                // data, length, alen, usefulness
+   { 'n', 'o', 'n', 'e', '\0' }, // mnemomnic
+   { NULL, NULL, NULL, 0 },      // numlinks
+   NULL,                         // next
+   0                             // dehackednum
+};
 
 //
 // E_CollectNames
@@ -1686,7 +1684,7 @@ static void E_ProcessMiscVars(cfg_t *cfg)
 //
 // Shared initialization code for E_ProcessEDF and E_ProcessNewEDF
 //
-static cfg_t *E_InitEDF(void)
+static cfg_t *E_InitEDF()
 {
    // set warning count to zero
    E_EDFResetWarnings();
@@ -1883,7 +1881,7 @@ void E_ProcessEDF(const char *filename)
 // haleyjd 03/24/10: This routine is called to do parsing and processing of new
 // EDF lumps when loading wad files at runtime.
 //
-void E_ProcessNewEDF(void)
+void E_ProcessNewEDF()
 {
    cfg_t *cfg;
    
