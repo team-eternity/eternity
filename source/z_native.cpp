@@ -229,15 +229,13 @@ INSTRUMENT(int printstats = 0);         // killough 8/23/98
 #ifdef ZONEFILE
 static FILE *zonelog;
 static bool  logclosed;
-#endif
 
 static void Z_OpenLogFile()
 {
-#ifdef ZONEFILE
    if(!zonelog && !logclosed)
       zonelog = fopen("zonelog.txt", "w");
-#endif
 }
+#endif
 
 static void Z_CloseLogFile()
 {
