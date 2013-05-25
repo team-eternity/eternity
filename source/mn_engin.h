@@ -83,7 +83,7 @@ struct menuitem_t
 
   const char *patch; // patch to use or NULL
 
-  int flags;   // haleyjd 03/29/05: menu item flags
+  unsigned int flags;   // haleyjd 03/29/05: menu item flags
 
   /*** internal stuff used by menu code ***/
   int x, y;
@@ -132,7 +132,7 @@ struct menu_t
    int selected;
    
    // menu flags
-   int flags;               
+   unsigned int flags;               
    
    void (*drawer)(void);              // separate drawer function 
 

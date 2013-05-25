@@ -291,7 +291,7 @@ void A_LineEffect(Mobj *mo)
 void A_SetFlags(Mobj *actor)
 {
    int flagfield;
-   int *flags;
+   unsigned int *flags;
 
    flagfield = E_ArgAsInt(actor->state->args, 0, 0);
 
@@ -332,7 +332,7 @@ void A_SetFlags(Mobj *actor)
 void A_UnSetFlags(Mobj *actor)
 {
    int flagfield;
-   int *flags;
+   unsigned int *flags;
 
    flagfield = E_ArgAsInt(actor->state->args, 0, 0);
 
@@ -342,22 +342,22 @@ void A_UnSetFlags(Mobj *actor)
    switch(flagfield)
    {
    case 0:
-      actor->flags  &= ~((unsigned int)flags[0]);
-      actor->flags2 &= ~((unsigned int)flags[1]);
-      actor->flags3 &= ~((unsigned int)flags[2]);
-      actor->flags4 &= ~((unsigned int)flags[3]);
+      actor->flags  &= ~flags[0];
+      actor->flags2 &= ~flags[1];
+      actor->flags3 &= ~flags[2];
+      actor->flags4 &= ~flags[3];
       break;
    case 1:
-      actor->flags  &= ~((unsigned int)flags[0]);
+      actor->flags  &= ~flags[0];
       break;
    case 2:
-      actor->flags2 &= ~((unsigned int)flags[1]);
+      actor->flags2 &= ~flags[1];
       break;
    case 3:
-      actor->flags3 &= ~((unsigned int)flags[2]);
+      actor->flags3 &= ~flags[2];
       break;
    case 4:
-      actor->flags4 &= ~((unsigned int)flags[3]);
+      actor->flags4 &= ~flags[3];
       break;
    }
 }

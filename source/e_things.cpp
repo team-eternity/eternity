@@ -220,7 +220,7 @@ static dehflagset_t acs_gamemode_flags =
 };
 
 // table to translate from GameModeInfo->type to acs gamemode flag
-static int gameTypeToACSFlags[NumGameModeTypes] =
+static unsigned int gameTypeToACSFlags[NumGameModeTypes] =
 {
    ACS_MODE_DOOM, // Game_DOOM,
    ACS_MODE_HTIC, // Game_Heretic
@@ -1997,7 +1997,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       }
       else
       {
-         int *results = deh_ParseFlagsCombined(tempstr);
+         unsigned int *results = deh_ParseFlagsCombined(tempstr);
 
          mobjinfo[i]->flags  = results[0];
          mobjinfo[i]->flags2 = results[1];
@@ -2055,7 +2055,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    if(cfg_size(thingsec, ITEM_TNG_ADDFLAGS) > 0)
    {
-      int *results;
+      unsigned int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ADDFLAGS);
          
@@ -2069,7 +2069,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
    {
-      int *results;
+      unsigned int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_REMFLAGS);
 
@@ -2270,7 +2270,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       }
       else if(tempint >= 0) // negative numbers mean no spawn number
       {
-         int flags;
+         unsigned int flags;
 
          // get mode flags
          tempstr = cfg_getstr(acs_sec, ITEM_TNG_ACS_MODES);

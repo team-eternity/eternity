@@ -289,7 +289,7 @@ struct sector_t
    int damage;      // if > 0, sector is damaging
    int damagemask;  // damage is done when !(leveltime % mask)
    int damagemod;   // damage method to use
-   int damageflags; // special damage behaviors
+   unsigned int damageflags; // special damage behaviors
 
    // SoM 5/10/09: Happy birthday to me. Err, Slopes!
    pslope_t *f_slope;
@@ -367,7 +367,7 @@ struct line_t
    float nx, ny;
 
    // haleyjd 02/26/05: ExtraData fields
-   int   extflags;          // activation flags for param specials
+   unsigned int extflags;   // activation flags for param specials
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
 };

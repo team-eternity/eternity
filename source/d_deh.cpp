@@ -738,12 +738,12 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
 //
 void deh_ParseFlags(dehflagset_t *flagset, char **strval)
 {
-   dehflags_t *flaglist = flagset->flaglist; // get flag list
-   int        *results  = flagset->results;  // pointer to results array
-   int        mode      = flagset->mode;     // get mode
+   dehflags_t   *flaglist = flagset->flaglist; // get flag list
+   unsigned int *results  = flagset->results;  // pointer to results array
+   int           mode     = flagset->mode;     // get mode
 
    // haleyjd: init all results to zero
-   memset(results, 0, MAXFLAGFIELDS * sizeof(int));
+   memset(results, 0, MAXFLAGFIELDS * sizeof(*results));
 
    // killough 10/98: replace '+' kludge with strtok() loop
    // Fix error-handling case ('found' var wasn't being reset)
@@ -778,7 +778,7 @@ void deh_ParseFlags(dehflagset_t *flagset, char **strval)
 // the flags data above to be global, and simplifies the external
 // interface.
 //
-int deh_ParseFlagsSingle(const char *strval, int mode)
+unsigned int deh_ParseFlagsSingle(const char *strval, int mode)
 {
    char *buffer;
    char *bufferptr;
@@ -794,7 +794,7 @@ int deh_ParseFlagsSingle(const char *strval, int mode)
    return dehacked_flags.results[mode];
 }
 
-int *deh_ParseFlagsCombined(const char *strval)
+unsigned int *deh_ParseFlagsCombined(const char *strval)
 {
    char *buffer;
    char *bufferptr;

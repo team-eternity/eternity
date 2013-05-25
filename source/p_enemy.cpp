@@ -1582,7 +1582,7 @@ void A_DwarfAlterEgoChase(Mobj *actor)
 // haleyjd 07/05/03: new console commands that can use
 // EDF thing type names instead of internal type numbers
 
-extern int *deh_ParseFlagsCombined(const char *strval);
+extern unsigned int *deh_ParseFlagsCombined(const char *strval);
 
 static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *flags)
 {
@@ -1630,7 +1630,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // tweak the object's flags
    if(flagsmode != -1)
    {
-      int *res = deh_ParseFlagsCombined(flags);
+      unsigned int *res = deh_ParseFlagsCombined(flags);
 
       switch(flagsmode)
       {
@@ -1674,9 +1674,9 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // fountain: random color
    if(type == fountainType)
    {
-      int ft = 9027 + M_Random() % 7;
+      unsigned int ft = 9027u + M_Random() % 7u;
       
-      newmobj->effects |= (ft - 9026) << FX_FOUNTAINSHIFT;
+      newmobj->effects |= (ft - 9026u) << FX_FOUNTAINSHIFT;
    }
 
    // drip: random parameters

@@ -818,7 +818,7 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
+               *(unsigned int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
             }
             break;
          default:

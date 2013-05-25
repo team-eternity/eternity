@@ -514,7 +514,7 @@ int E_StrToNumLinear(const char **strings, int numstrings, const char *value)
 //
 // Parses a single-word options/flags field.
 //
-int E_ParseFlags(const char *str, dehflagset_t *flagset)
+unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset)
 {
    char *buffer, *bufptr;
 

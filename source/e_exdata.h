@@ -79,7 +79,7 @@ typedef struct maplinedefext_s
    maplinedef_t stdfields;
 
    // extended fields
-   int   extflags;
+   unsigned int extflags;
    int   args[NUMLINEARGS];
    int   id;
    float alpha;
@@ -103,18 +103,18 @@ typedef struct mapsectorext_s
    double ceiling_yoffs;
    double floorangle;
    double ceilingangle;
-   int    flags;
-   int    flagsadd;
-   int    flagsrem;
+   unsigned int flags;
+   unsigned int flagsadd;
+   unsigned int flagsrem;
    int    topmap;
    int    midmap;
    int    bottommap;
    int    damage;
    int    damagemask;
    int    damagemod;
-   int    damageflags;
-   int    damageflagsadd;
-   int    damageflagsrem;
+   unsigned int damageflags;
+   unsigned int damageflagsadd;
+   unsigned int damageflagsrem;
 
    unsigned int f_pflags;
    unsigned int c_pflags;

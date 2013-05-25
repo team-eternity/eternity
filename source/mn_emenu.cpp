@@ -195,7 +195,7 @@ static menu_t *MN_CreateDynamicMenu(const char *name)
 //
 static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items, 
                                const char *prev, const char *next, 
-                               int x, int y, int firstitem, int flags)
+                               int x, int y, int firstitem, unsigned int flags)
 {
    // set fields
    newMenu->menuitems = items;
@@ -322,7 +322,8 @@ static void MN_ClearDynamicMenu(menu_t *menu)
 //
 static void MN_ProcessMenu(menu_t *menu, cfg_t *menuSec)
 {
-   int x, y, first, flags;
+   int x, y, first;
+   unsigned int flags;
    const char *flagstr, *prev, *next;
    menuitem_t *items;
 

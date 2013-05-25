@@ -2222,7 +2222,7 @@ spawnit:
 
    // haleyjd: set particle fountain color
    if(mthing->type >= 9027 && mthing->type <= 9033)
-      mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
+      mobj->effects |= (mthing->type - 9026u) << FX_FOUNTAINSHIFT;
 
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)

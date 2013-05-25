@@ -66,7 +66,7 @@ void D_BuildBEXTables();
 struct dehflags_t
 {
    const char *name;
-   int value;
+   unsigned int value;
    int index;
 };
 
@@ -85,12 +85,12 @@ struct dehflagset_t
 {
    dehflags_t *flaglist;
    int mode;
-   int results[MAXFLAGFIELDS];
+   unsigned int results[MAXFLAGFIELDS];
 };
 
-void deh_ParseFlags(dehflagset_t *dehflags, char **strval);
-int  deh_ParseFlagsSingle(const char *strval, int mode);
-int *deh_ParseFlagsCombined(const char *strval);
+void          deh_ParseFlags(dehflagset_t *dehflags, char **strval);
+unsigned int  deh_ParseFlagsSingle(const char *strval, int mode);
+unsigned int *deh_ParseFlagsCombined(const char *strval);
 
 // deh queue stuff
 void D_DEHQueueInit(void);

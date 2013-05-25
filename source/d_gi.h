@@ -289,7 +289,7 @@ typedef struct gamemodeinfo_s
 {
    GameMode_t id;             // id      - replaces "gamemode" variable
    int type;                  // main game mode type: doom, heretic, etc.
-   int flags;                 // game mode flags
+   unsigned int flags;        // game mode flags
    
    // startup stuff
    const char *versionName;       // descriptive version name

@@ -671,7 +671,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
 // exists. The evaluated value will be cached so that it can be returned on 
 // subsequent calls. If the arg does not exist, NULL is returned.
 //
-int *E_ArgAsThingFlags(arglist_t *al, int index)
+unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 {
    evalcache_t *eval;
 
@@ -689,7 +689,7 @@ int *E_ArgAsThingFlags(arglist_t *al, int index)
       // empty string is zero
       if(*(al->args[index]) != '\0')
       {
-         int *flagvals = deh_ParseFlagsCombined(al->args[index]);
+         unsigned int *flagvals = deh_ParseFlagsCombined(al->args[index]);
 
          memcpy(eval->value.flags, flagvals, MAXFLAGFIELDS * sizeof(int));
       }

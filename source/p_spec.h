@@ -879,7 +879,7 @@ struct spectransfer_t
    int damage;
    int damagemask;
    int damagemod;
-   int damageflags;
+   unsigned int damageflags;
 };
 
 // p_doors

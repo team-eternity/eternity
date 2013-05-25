@@ -325,7 +325,7 @@ public:
    // counters - these were known as special1/2/3 in Heretic and Hexen
    int counters[NUMMOBJCOUNTERS];
 
-   int effects;       // particle effect flag field
+   unsigned int effects; // particle effect flag field
    int translucency;  // zdoom-style translucency level
    int alphavelocity; // haleyjd 05/23/08: change in translucency
    int floatbob;      // floatbob offset

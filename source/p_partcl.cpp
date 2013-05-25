@@ -308,7 +308,7 @@ static vec3_t bytedirs[NUMVERTEXNORMALS] =
 //
 
 static particle_t *JitterParticle(int ttl);
-static void P_RunEffect(Mobj *actor, int effects);
+static void P_RunEffect(Mobj *actor, unsigned int effects);
 static void P_FlyEffect(Mobj *actor);
 static void P_BFGEffect(Mobj *actor);
 static void P_DripEffect(Mobj *actor);
@@ -582,7 +582,7 @@ static void MakeFountain(Mobj *actor, byte color1, byte color2)
    }
 }
 
-static void P_RunEffect(Mobj *actor, int effects)
+static void P_RunEffect(Mobj *actor, unsigned int effects)
 {
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
    particle_t *particle;
@@ -688,7 +688,7 @@ static void P_RunEffect(Mobj *actor, int effects)
          &black,  &grey3,
          &grey4,  &white
       };
-      int color = (effects & FX_FOUNTAINMASK) >> 15;
+      unsigned int color = (effects & FX_FOUNTAINMASK) >> 15;
       MakeFountain(actor, *fountainColors[color], *fountainColors[color+1]);
    }
 
