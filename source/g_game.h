@@ -100,6 +100,8 @@ extern int  automlook;
 extern int  invert_mouse;
 extern int  invert_padlook;
 extern int  bfglook;
+extern int mouseb_dblc1;  // double-clicking either of these buttons
+extern int mouseb_dblc2;  // causes a use action
 
 //extern angle_t consoleangle;
 

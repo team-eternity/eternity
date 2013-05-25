@@ -83,8 +83,6 @@
 int config_help;         //jff 3/3/98
 int usemouse;
 
-extern int mousebstrafe;
-extern int mousebforward;
 extern double mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
 extern bool mouseSensitivity_vanilla; // [CG] 01/20/12
 extern int leds_always_off;            // killough 3/6/98
@@ -498,10 +496,10 @@ default_t defaults[] =
    
    //jff 3/8/98 end of lower range change for -1 allowed in mouse binding
    // haleyjd: rename these buttons on the user-side to prevent confusion
-   DEFAULT_INT("mouseb_dblc1", &mousebstrafe, NULL, 1, -1, 2, default_t::wad_no,
+   DEFAULT_INT("mouseb_dblc1", &mouseb_dblc1, NULL, 1, -1, 2, default_t::wad_no,
                "1st mouse button to enable for double-click use action (-1 = disable)"),
    
-   DEFAULT_INT("mouseb_dblc2", &mousebforward, NULL, 2, -1, 2, default_t::wad_no,
+   DEFAULT_INT("mouseb_dblc2", &mouseb_dblc2, NULL, 2, -1, 2, default_t::wad_no,
                "2nd mouse button to enable for double-click use action (-1 = disable)"),
    
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, default_t::wad_yes,

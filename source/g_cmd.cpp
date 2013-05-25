@@ -257,7 +257,7 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
       G_ExitLevel();
 }
 
-//////////////////////////////////////
+//=============================================================================
 //
 // Demo Stuff
 //
@@ -309,7 +309,7 @@ const char *cooldemo_modes[] =
 VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
-///////////////////////////////////////////////////
+//=============================================================================
 //
 // Wads
 //
@@ -375,8 +375,9 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    // i'm not particularly a fan of this myself, but..
 
    // haleyjd 03/12/06: no .wad loading in netgames
+   // haleyjd 05/24/13: or in shareware!
 
-   if(!netgame && Console.argv[0]->length() > 4)
+   if(!netgame && !(GameModeInfo->flags & GIF_SHAREWARE) && Console.argv[0]->length() > 4)
    {
       const char *extension;
       extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
@@ -465,6 +466,12 @@ CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 
 VARIABLE_BOOLEAN(novert, NULL, onoff);
 CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
+
+VARIABLE_INT(mouseb_dblc1, NULL, -1, 2, NULL);
+CONSOLE_VARIABLE(mouseb_dblc1, mouseb_dblc1, 0) {}
+
+VARIABLE_INT(mouseb_dblc2, NULL, -1, 2, NULL);
+CONSOLE_VARIABLE(mouseb_dblc2, mouseb_dblc2, 0) {}
 
 // haleyjd: new stuff
 

@@ -165,8 +165,8 @@ int key_pause;
 int destination_keys[MAXPLAYERS];
 
 // haleyjd: mousebfire is now unused -- removed
-int mousebstrafe;   // double-clicking either of these buttons
-int mousebforward;  // causes a use action, however
+int mouseb_dblc1;  // double-clicking either of these buttons
+int mouseb_dblc2;  // causes a use action, however
 
 // haleyjd: joyb variables are obsolete -- removed
 
@@ -226,7 +226,6 @@ static bool gameactions[NUMKEYACTIONS];
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   bool bstrafe;
    bool sendcenterview = false;
    int speed;
    int tspeed;
@@ -432,9 +431,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // mouse
   
    // forward double click -- haleyjd: still allow double clicks
-   if(mousebuttons[mousebforward] != dclickstate && dclicktime > 1 )
+   if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
    {
-      dclickstate = mousebuttons[mousebforward];
+      dclickstate = mousebuttons[mouseb_dblc2];
       
       if(dclickstate)
          dclicks++;
@@ -455,10 +454,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // strafe double click
 
-   bstrafe = mousebuttons[mousebstrafe];
-   if(bstrafe != dclickstate2 && dclicktime2 > 1 )
+   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1 )
    {
-      dclickstate2 = bstrafe;
+      dclickstate2 = mousebuttons[mouseb_dblc1];
 
       if(dclickstate2)
          dclicks2++;
