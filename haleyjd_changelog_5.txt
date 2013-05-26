@@ -16,6 +16,17 @@ By request of multiple users (ConSiGno and esselfortium), made the game default
 to using /base/doom/eternity.cfg for all DOOM gamemodes. Frankly I had thought
 I had done this already but apparently it slipped under my radar at some point.
 
+Diagnosed a reported crash in HBBeta2.wad as a malformed or misunderstood SEGS
+lump. I do not know what format it is trying to use, but it is not one that
+Eternity understands, and as a result, the second seg in the map crashes the 
+game by trying to access sides[ld->sidenum[3392]], where "3392" ought to be 
+either 0 or 1.
+
+I have added a bounds check and error-out of P_SetupLevel when this type of
+error occurs. There is no sane way to recover loading of a map with such a
+SEGS lump other than to implement the type of node format it's trying to use.
+There's no time for that before the next release.
+
 --------------------------------------------------------------------------------
 05/25/13
 
@@ -449,11 +460,11 @@ when they've not been used since the last resolution change.
   not replaced somehow, I change them to "IDKFA" and "KEEN" respectively, to
   match the intermission names in the IWAD.
   
-*  Moved the save and load menus up 10 pixels, which is an exact medium between
-   their positioning in vanilla, which is too low for the menus to contain 8
-   save slots (puts them over the status bar), and BOOM, which is too high as
-   it scrunches the menu up to the top and leaves all the empty space at the 
-   bottom.
+* Moved the save and load menus up 10 pixels, which is an exact medium between
+  their positioning in vanilla, which is too low for the menus to contain 8
+  save slots (puts them over the status bar), and BOOM, which is too high as
+  it scrunches the menu up to the top and leaves all the empty space at the 
+  bottom.
 
 --------------------------------------------------------------------------------
 04/28/13
@@ -520,7 +531,7 @@ before I can do this though.
 
 (Later)
 * Converted eternity.wad to eternity.pke so that it can start to contain
-  resourced with long file names.
+  resources with long file names.
 
 * Fixed major problems in the namespace coalesce algorithm in the WadDirectory
   class that were exposed by attempts to use namespaces for which no lumps
@@ -598,8 +609,6 @@ delete its virtual factory construction mechanism by using a different macro
 to declare the RTTI interface components in the header of the class.
 
 Such classes should use DECLARE_ABSTRACT_TYPE instead of DECLARE_RTTI_TYPE.
-
-
 
 --------------------------------------------------------------------------------
 03/10/13

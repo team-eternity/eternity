@@ -401,6 +401,13 @@ void P_LoadSegs(int lump)
       ldef = &lines[linedef];
       li->linedef = ldef;
       side = SwapShort(ml->side);
+
+      if(side < 0 || side > 1)
+      {
+         level_error = "Seg line side number out of range";
+         return;
+      }
+
       li->sidedef = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
@@ -2460,7 +2467,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       // possible error: missing nodes
       CHECK_ERROR();
 
-      P_LoadSegs(lumpnum + ML_SEGS);   
+      P_LoadSegs(lumpnum + ML_SEGS); 
+
+      // possible error: malformed segs
+      CHECK_ERROR();
    }
 
    P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
