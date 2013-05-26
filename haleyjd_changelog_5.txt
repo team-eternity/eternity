@@ -13,6 +13,10 @@ locating the base and user directories, by request of ConSiGno.
 Removed num_visplanes variable from r_plane.cpp, which ConSiGno noticed was
 unused since removal of the inaccurate VPO indicator HUD widget in SMMU.
 
+Ryan detected a regression in the menu system which was intended to make use
+of the menus via gamepad more convenient but ended up breaking the ability to
+backspace in text fields.
+
 Updated changelog in preparation for the upcoming release of 3.40.37 Gungnir.
 
 --------------------------------------------------------------------------------
