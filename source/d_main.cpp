@@ -891,7 +891,7 @@ static void D_SetBasePath()
       basedir = D_DoomExeDir();
       basedir.pathConcatenate("/base");
 
-      if((res = D_CheckBasePath(basedir)))
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_EXEDIR;
    }
 
