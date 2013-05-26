@@ -42,6 +42,9 @@ protected:
    void DrawPixels(void *buffer, unsigned int width);
    void LoadPBOExtension();
 
+   virtual void SetPrimaryBuffer();
+   virtual void UnsetPrimaryBuffer();
+
 public:
    // Overrides
    virtual void FinishUpdate();
@@ -50,8 +53,6 @@ public:
    virtual void BeginRead();
    virtual void EndRead();
    virtual void SetPalette(byte *pal);
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
    virtual void ShutdownGraphics();
    virtual void ShutdownGraphicsPartway();
    virtual bool InitGraphicsMode();

@@ -234,18 +234,6 @@ void I_SetPalette(byte *palette)
       i_video_driver->SetPalette(palette);
 }
 
-
-void I_UnsetPrimaryBuffer()
-{
-   i_video_driver->UnsetPrimaryBuffer();
-}
-
-
-void I_SetPrimaryBuffer()
-{
-   i_video_driver->SetPrimaryBuffer();
-}
-
 void I_ShutdownGraphics()
 {
    if(in_graphics_mode)

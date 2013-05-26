@@ -452,9 +452,6 @@ static void V_InitScreenVBuffer()
    V_initSubScreen43();
 }
 
-extern void I_SetPrimaryBuffer();
-extern void I_UnsetPrimaryBuffer();
-
 //
 // V_Init
 //
@@ -472,17 +469,11 @@ void V_Init()
    VAllocItem::SetNewMode(video.width, video.height);
 
    if(s)
-   {
       efree(s);
-      I_UnsetPrimaryBuffer();
-   }
 
    video.screens[3] =
       (video.screens[2] =
-         (video.screens[1] = s = (ecalloc(byte *, size, 3))) + size) + size;
-   
-   // SoM: TODO: implement direct to SDL surface drawing.
-   I_SetPrimaryBuffer();
+         (video.screens[1] = s = (ecalloc(byte *, size, 3))) + size) + size;  
 
    R_SetupViewScaling();
    

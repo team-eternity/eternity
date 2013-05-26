@@ -36,6 +36,10 @@
 //
 class SDLVideoDriver : public HALVideoDriver
 {
+protected:
+   virtual void SetPrimaryBuffer();
+   virtual void UnsetPrimaryBuffer();
+
 public:
    virtual void FinishUpdate();
    virtual void ReadScreen(byte *scr);
@@ -43,8 +47,6 @@ public:
    virtual void BeginRead();
    virtual void EndRead();
    virtual void SetPalette(byte *pal);
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
    virtual void ShutdownGraphics();
    virtual void ShutdownGraphicsPartway();
    virtual bool InitGraphicsMode();

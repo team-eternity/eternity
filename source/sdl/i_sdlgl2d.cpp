@@ -587,6 +587,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
+   UnsetPrimaryBuffer();
+   SetPrimaryBuffer();
+
    // Set initial palette
    SetPalette((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
 

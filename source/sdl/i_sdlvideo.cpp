@@ -224,9 +224,9 @@ static void I_SDLSetPaletteDirect(byte *palette)
 
    for(i = 0; i < 256; ++i)
    {
-      colors[i].r = gammatable[usegamma][*palette++];
-      colors[i].g = gammatable[usegamma][*palette++];
-      colors[i].b = gammatable[usegamma][*palette++];
+      colors[i].r = gammatable[usegamma][(basepal[i].r = *palette++)];
+      colors[i].g = gammatable[usegamma][(basepal[i].g = *palette++)];
+      colors[i].b = gammatable[usegamma][(basepal[i].b = *palette++)];
    }
 
    if(sdlscreen && !crossbitdepth)
@@ -457,6 +457,9 @@ bool SDLVideoDriver::InitGraphicsMode()
    video.height    = v_h;
    video.bitdepth  = 8;
    video.pixelsize = 1;
+
+   UnsetPrimaryBuffer();
+   SetPrimaryBuffer();
    
    // haleyjd 11/12/09: set surface palettes immediately
    I_SDLSetPaletteDirect((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
