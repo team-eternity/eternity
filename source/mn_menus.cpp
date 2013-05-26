@@ -2600,6 +2600,7 @@ static menuitem_t mn_joystick_items[] =
    { it_gap                                                         },
    { it_info,         "Devices"                                     },
    { it_runcmd,       "Select gamepad...",         "mn_joysticks"   },
+   { it_runcmd,       "Test gamepad...",           "mn_padtest"     },
    { it_gap                                                         },
    { it_info,         "Settings"                                    },
    { it_runcmd,       "Load profile...",           "mn_profiles"    },

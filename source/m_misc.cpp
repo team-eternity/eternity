@@ -145,7 +145,7 @@ default_t defaults[] =
                "SDL joystick device number, -1 to disable"),
 
    // joystick sensitivity
-   DEFAULT_INT("i_joysticksens", &i_joysticksens, NULL, 0, 0, 32767, default_t::wad_no,
+   DEFAULT_INT("i_joysticksens", &i_joysticksens, NULL, 7849, 0, 32767, default_t::wad_no,
                "SDL MMSYSTEM joystick sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,

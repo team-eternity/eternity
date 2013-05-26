@@ -19,13 +19,17 @@ I had done this already but apparently it slipped under my radar at some point.
 Diagnosed a reported crash in HBBeta2.wad as a malformed or misunderstood SEGS
 lump. I do not know what format it is trying to use, but it is not one that
 Eternity understands, and as a result, the second seg in the map crashes the 
-game by trying to access sides[ld->sidenum[3392]], where "3392" ought to be 
+game by trying to access sides[ld->sidenum[3397]], where "3397" ought to be 
 either 0 or 1.
 
 I have added a bounds check and error-out of P_SetupLevel when this type of
 error occurs. There is no sane way to recover loading of a map with such a
 SEGS lump other than to implement the type of node format it's trying to use.
 There's no time for that before the next release.
+
+Added mn_padtest to the gamepad settings menu, and set a reasonable default 
+value for SDL analog stick sensitivity (it is based on the XBox 360 pad's 
+deadzone value, which seems to work with my Firestorm Digital just fine).
 
 --------------------------------------------------------------------------------
 05/25/13
