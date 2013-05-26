@@ -2,6 +2,21 @@
 Changes since Eternity Engine v3.40.30
 ================================================================================
 --------------------------------------------------------------------------------
+05/26/13
+
+ConSiGno found a bug in my change to basepath determination that could cause it
+to decide it found a path it did not, or suffered an error when there was not
+one, which resulted in the otherwise impossible message:
+
+  "Base path set to God knows what."
+  
+Fixed it right up.
+
+By request of multiple users (ConSiGno and esselfortium), made the game default
+to using /base/doom/eternity.cfg for all DOOM gamemodes. Frankly I had thought
+I had done this already but apparently it slipped under my radar at some point.
+
+--------------------------------------------------------------------------------
 05/25/13
 
 Applied a massive list of error and warning fixes from both clang and GCC,
@@ -16,6 +31,20 @@ unused since removal of the inaccurate VPO indicator HUD widget in SMMU.
 Ryan detected a regression in the menu system which was intended to make use
 of the menus via gamepad more convenient but ended up breaking the ability to
 backspace in text fields.
+
+Both Ryan and ConSiGno reported a problem where the engine wouldn't display the
+R_Init startup sequence (while in GS_CONSOLE) if the i_videodriverid was set to
+SDL Software. Turned out that I was missing the palette set on primary_surface
+because the primary_surface wasn't being created until *after* initial video
+mode set, in V_Init, which is too late. This would make everything be drawn in
+pure black until the palette was again set at some point during the transition
+to GS_DEMOSCREEN.
+
+Fixing this required changing the HALVideoDriver interface to make unset/set of
+the primary surface a responsibility of its descendants and removing that code
+from V_Init. Frankly it never belonged there anyway, and is part of an overall
+trend of moving all the low-level video init into the i_* modules where it 
+belongs that's been going on for years now.
 
 Updated changelog in preparation for the upcoming release of 3.40.37 Gungnir.
 
