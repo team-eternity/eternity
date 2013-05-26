@@ -864,8 +864,8 @@ static void D_SetBasePath()
    // Priority:
    // 1. Command-line argument "-base"
    // 2. Environment variable "ETERNITYBASE"
-   // 3. /base under working directory
-   // 4. /base under DoomExeDir
+   // 3. /base under DoomExeDir
+   // 4. /base under working directory
 
    // check command-line
    if((p = M_CheckParm("-base")) && p < myargc - 1)
@@ -885,15 +885,6 @@ static void D_SetBasePath()
          source = BASE_ENVIRON;
    }
 
-   // check working dir
-   if(res != BASE_ISGOOD)
-   {
-      basedir = "./base";
-
-      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
-         source = BASE_WORKING;
-   }
-
    // check exe dir
    if(res != BASE_ISGOOD)
    {
@@ -902,6 +893,15 @@ static void D_SetBasePath()
 
       if((res = D_CheckBasePath(basedir)))
          source = BASE_EXEDIR;
+   }
+
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      basedir = "./base";
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
       else
       {
          // final straw.
@@ -1017,8 +1017,8 @@ static void D_SetUserPath()
    // Priority:
    // 1. Command-line argument "-user"
    // 2. Environment variable "ETERNITYUSER"
-   // 3. /user under working directory
-   // 4. /user under DoomExeDir
+   // 3. /user under DoomExeDir
+   // 4. /user under working directory
    // 5. basepath/../user
    // 6. use basepath itself.
 
@@ -1040,15 +1040,6 @@ static void D_SetUserPath()
          source = BASE_ENVIRON;
    }
 
-   // check working dir
-   if(res != BASE_ISGOOD)
-   {
-      userdir = "./user";
-
-      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
-         source = BASE_WORKING;
-   }
-
    // check exe dir
    if(res != BASE_ISGOOD)
    {
@@ -1057,6 +1048,15 @@ static void D_SetUserPath()
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_EXEDIR;
+   }
+
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      userdir = "./user";
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
    }
 
    // try /user under the base path's immediate parent directory

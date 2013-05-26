@@ -7,6 +7,9 @@ Changes since Eternity Engine v3.40.30
 Applied a massive list of error and warning fixes from both clang and GCC,
 courtesy of DavidPH.
 
+Made EXE directory higher priority than the current working directory when
+locating the base and user directories, by request of ConSiGno.
+
 Updated changelog in preparation for the upcoming release of 3.40.37 Gungnir.
 
 --------------------------------------------------------------------------------
