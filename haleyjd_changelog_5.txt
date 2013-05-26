@@ -10,6 +10,9 @@ courtesy of DavidPH.
 Made EXE directory higher priority than the current working directory when
 locating the base and user directories, by request of ConSiGno.
 
+Removed num_visplanes variable from r_plane.cpp, which ConSiGno noticed was
+unused since removal of the inaccurate VPO indicator HUD widget in SMMU.
+
 Updated changelog in preparation for the upcoming release of 3.40.37 Gungnir.
 
 --------------------------------------------------------------------------------

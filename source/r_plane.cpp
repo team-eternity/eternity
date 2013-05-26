@@ -73,8 +73,6 @@ visplane_t *floorplane, *ceilingplane;
 static visplane_t *mainchains[MAINHASHCHAINS];   // killough
 static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains };
 
-int num_visplanes;      // sf: count visplanes
-
 //
 // VALLOCATION(mainhash)
 //
@@ -90,8 +88,6 @@ VALLOCATION(mainhash)
    floorplane = ceilingplane = NULL;
 
    memset(mainchains, 0, sizeof(mainchains));
-
-   num_visplanes = 0;
 }
 
 // killough -- hash function for visplanes
@@ -661,8 +657,6 @@ void R_ClearPlanes()
    R_ClearPlaneHash(&mainhash);
 
    lastopening = openings;
-   
-   num_visplanes = 0;    // reset
 }
 
 
@@ -697,8 +691,6 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
    }
-   
-   num_visplanes++;      // keep track of how many for counter
    
    return check;
 }
