@@ -1426,7 +1426,7 @@ bool MN_Responder(event_t *ev)
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
       
-      if(action == ka_menu_toggle || action == ka_menu_previous) // cancel input
+      if(action == ka_menu_toggle) // cancel input
          input_command = NULL;      
       else if(action == ka_menu_confirm)
       {
