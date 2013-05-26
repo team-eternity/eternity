@@ -2,6 +2,626 @@
 Changes since Eternity Engine v3.40.30
 ================================================================================
 --------------------------------------------------------------------------------
+05/25/13
+
+Applied a massive list of error and warning fixes from both clang and GCC,
+courtesy of DavidPH.
+
+Updated changelog in preparation for the upcoming release of 3.40.37 Gungnir.
+
+--------------------------------------------------------------------------------
+05/23/13
+
+Fixed ConSiGno's issue of mouseb_dblc1/2 being ignored when set to -1 - the 
+double click events would still happen anyway. This is just an ancient logic
+error on my behalf, that has been present ever since mouse buttons were
+transitioned to use virtual key codes to cooperate with the key binding system.
+
+Those variables now have cvars, as well, so you can change them at runtime.
+
+--------------------------------------------------------------------------------
+05/22/13
+
+fraggle says that manual expansion of tildes in the user's base/user paths is
+unnecessary and was probably the result of joe having quotation marks around
+them in his Linux configuration, stopping home directory expansion from
+occurring automatically.
+
+Unfortunately, while removing this code and converting the basepath/userpath
+determination code to use qstring, the mysterious heap corruption crashes
+coming out of d_findiwads.cpp returned suddenly, and this time I was able to
+determine their root cause:
+
+Collection<T> is invoking undefined behavior by relocating non-POD objects in
+memory using realloc.
+
+There is no efficient way to fix this in the present version of C++ that 
+Eternity uses. C++11, which I have already been considering moving toward for
+quite some time now, does however. It adds something called the move constructor
+which, when called, implies that the "other" object is about to die or can
+otherwise relinquish all of its resources directly to the new instance. This is
+exactly what I need in Collection, so, as of today, I will be migrating
+Eternity to Visual Studio 2010 Express for development of the official Windows
+builds, and it will no longer be possible to compile using 2005 or 2008. 
+
+The 2005 and 2008 projects will remain in the repository for a while, in order
+to give dependent branches with modifications in their project files time to
+migrate those changes over to the 2010 project on their branches.
+
+(Later)
+
+Upgrading to C++11 didn't come without a few problems:
+
+* On GCC 4.8, instances of "literal"FOO are interpreted as a new kind of 
+  construct called a user string literal. This is a fundamental change to the
+  rules of C++ language tokenization, and happens during preprocessing. 
+  Unfortunately EE uses a few macros that expand to consecutive string
+  literals, and fixing this requires making sure there's at least one space
+  between the string literal and the macro. Didn't take very long to fix as
+  exactly only 5 macros (FC_HI, FC_NORMAL, FC_ERROR, PRESSYN, and PRESSKEY) 
+  were implicated.
+  
+* EE can't seem to run on certain MacOS X versions when built by XCode...
+
+--------------------------------------------------------------------------------
+05/20/13
+
+Added a gamepad profile for "vanilla", which I suspect was optimized for the 
+two-digital-axis, four-button Gravis Gamepad, which was ubiquitous at the time
+of DOOM's release. I own one of them myself but it cannot be used with any of
+my modern machines as they both lack gamepad ports and driver support for
+port-based gamepads.
+
+Also added a profile for the Thrustmaster Firestorm Digital 3, which I own (it
+is my old go-to pad). It is a 2-digital-axis 8-button pad, notable at least for
+having two sets of shoulder buttons, making it acceptable for PSX emulation.
+Playing DOOM with it is not that hot an experience though.
+
+As a result of retesting this device, I learned of some things that needed to
+be tweaked:
+
+* "speed" now affects the scale of analog and digital axis motion again, like
+  it did before - otherwise with a digital pad, you're almost uncontrollably
+  fast (DOOOOOOM.... O___O ). Turning autorun on has the same effect as the
+  previous code that had your scale always going from not moving to running at
+  the full speed for your player class.
+  
+* Added ability to selectively invert particular gamepad axes, as under the
+  shitty old MMSYSTEM code that SDL is STILL using for its gamepad support 
+  (this entire time I had THOUGHT it was using DirectInput...), the Y axis of
+  most if not all digital pads will assert as negative when the axis is pushed
+  UP instead of when it is pushed DOWN. g_axisorientation1-8 cvars can be set
+  to -1 in order to achieve axis inversion, and these can be included in pad
+  profiles and saved to keys.csc.
+  
+* Added mn_padtest menu widget for testing gamepads. The text indicators, one
+  per axis and button on the pad, light up in different colors depending on the
+  input state (axes highly red or white depending if they are negative or
+  positive; buttons just flash white while depressed).
+
+--------------------------------------------------------------------------------
+05/19/13
+
+* Added ability to invert padlook
+
+* Added some common mathematical tricks that make analog pad input work more
+  smoothly, in the XInput driver.
+
+--------------------------------------------------------------------------------
+05/18/13
+
+* Monsters now properly aim missiles at targets in different portal groups
+  properly, by adjusting the x/y using the link offsets.
+  
+* LOS checks through linked line portals are now fully functional.
+
+* Completed gamepad support with the ability to select and execute profiles, and
+  some bug fixes to the HAL and its driver modules.
+
+--------------------------------------------------------------------------------
+05/17/13
+
+Applied some aesthetic interface patches from ConSiGno's custom Win95 build, and
+upgraded him from a tester/idea person to a patch contributor, so he's now
+listed in AUTHORS. :)
+
+--------------------------------------------------------------------------------
+05/15/13
+
+I fleshed out Eternity's AUTHORS file in the repo, by adding full credits from
+the text file that goes out with every release and then updating it to include
+some of the recent additions, such as code from BSP 5.2.
+
+esselfortium submitted a new in-game version of his mock-up BFG Edition title
+screen for DOOM II, which I've used to replace use of DMENUPIC for the title
+screen and console backdrop when using that IWAD (though, DMENUPIC does still
+appear as the intermission backdrop when playing NR4TL, if you have the BFG
+Edition IWAD loaded).
+
+--------------------------------------------------------------------------------
+05/14/13
+
+* Added a color to GameModeInfo for menu drawing of selectable big text items
+  that are being drawn using the actual big font, and not patches.
+  
+* Managed missions all now support having the starting skill sent into their
+  intialization routine, so that it can be selected from the menus.
+  
+* Added resources to eternity.pke for a managed mission pack selection menu
+  that does *not* depend on having the BFG Edition IWAD loaded or available.
+  These are custom resources with proper text kerning, no stray gray pixels,
+  and better capitalization of the title which stylistically matches the 
+  Ultimate Doom episode selection menu. Please do not steal them from 
+  eternity.pke by using them without giving credit.
+  
+* Finished off the mission pack selection menu for DOOM II, which is built at
+  runtime based on your configured mission pack file paths. If both NR4TL and
+  Master Levels are available for example, both will be listed. If only one
+  or the other is present, that one will appear, alongside Hell on Earth.
+  
+  If you have NO mission packs configured, the menu never appears, as in 
+  vanilla DOOM II.
+
+--------------------------------------------------------------------------------
+05/13/13
+
+Fixed the default item on the save and load menus, which I forgot to change
+after I reworked them earlier for vanilla compatibility.
+
+--------------------------------------------------------------------------------
+05/12/13
+
+Started work on supporting the ability of monsters to see through linked portal
+linedefs, now that we have a re-entrant and side-effect-free line-of-sight
+checking routine that does not require BSP traversal.
+
+--------------------------------------------------------------------------------
+05/11/13
+
+Started back to work on gamepad profiles, adding the ability to lookup and 
+execute profiles by their long lump name.
+
+Converted DWFILE from a struct to a proper C++ class.
+
+Fixed a bug in AM_Responder which surfaced after the earlier change to localize
+keydown state tracking to g_game.cpp which would cause the player to keep
+running straight if he entered the automap in free movement mode (ie., not
+follow mode) while moving. The game loop in g_game.cpp never received key up
+events, so it kept the player going. AM_Responder just needs to let key up
+events filter down, even if it itself is interested in them.
+
+Automap panning speed now scales properly with resolution, so that for example
+it no longer takes 6 seconds to pan across vapordemo at zoom level 0 (fully
+zoomed out) in 1280x800 but only 2 seconds in 320x200 - it now takes 2 seconds
+regardless of the resolution. This has apparently been a problem ever since MBF
+as nobody thought to account for it - it's really the original code's fault for
+defining a speed to scroll the screen by in map units, instead of in screenspace
+units :P
+
+Due to severe problems with removing the player's body before doing a "real"
+intermission camera-based backdrop, it'll be necessary to stop running P_Ticker
+now, so the scene still appears and renders, but Mobj instances will no longer
+animate or think. Textures and flats will still animate, I believe, and looping
+sound sequences will also continue to run.
+
+I removed the in_stats.cpp module, as it didn't really turn out to be able to
+support what I wanted (an in-game scoreboard), and its implementation was 
+already causing some issues that I didn't feel like spending time on to fix.
+I was probably the only person that ever gave it a thought, anyway 9_9
+
+--------------------------------------------------------------------------------
+05/10/13
+
+Re-reading an old thread on Doomworld Forums about what "allocation daemon" and
+"refresh daemon" were supposed to mean prompted me to add back the message for
+the former, which had been lost from the BOOM codebase when Z_Init was changed
+to run from I_Init.
+
+Z_Init no longer has to be called that early, as the native heap requires no
+explicit initialization and actually begins to be used earlier than that anyway
+when C++ objects construct during crt0 execution.
+
+--------------------------------------------------------------------------------
+05/09/13
+
+DavidPH earlier suggested that I rewrite ZoneObject to support an overload for
+operator new that takes the zone allocation tag, and then later read this tag
+out of the object's zone block when necessary instead of maintaining a separate
+tag in ZoneObject itself.
+
+I chewed on this idea for a while and finally decided to implement it.
+
+Amongst changed involved, Thinker overrides the ordinary operator new in
+ZoneObject to call the tag allocator, with tag PU_LEVEL, so that thinkers are
+always PU_LEVEL without needing to change their tag in the constructor.
+
+All this work on zone memory revealed a memory leak in R_InitTranMap. As a 
+result, I removed caching of tranmap.dat as a file entirley just to simplify
+the code, as there's almost no value to it any more. The map will now only be
+rebuilt when actually necessary and, when it IS rebuilt, the existing one if
+any will be freed first instead of being leaked. This resulted in the loss of
+around 64 KB of RAM for every death, IDCLEV or exit switch pressed, a small 
+amount but one that can add up quickly if you start level hopping, especially 
+considering that restarting the same level you were currently playing could 
+cause it.
+
+--------------------------------------------------------------------------------
+05/08/13
+
+Added the ability to specify an mf_bigfont flag on menus, instead of having to
+use MENUITEM_BIGFONT on every single item when they are all big. This required
+addition of a one-time initialization function for menus to be added.
+
+Turns out I really do need rigorous reference counting on dynavertexes now, 
+since multiple entities can reference them (dynasegs attached to rpolyobj_t
+fragments, and dynasegs attached to DynaBSP nodes as partitions).
+
+--------------------------------------------------------------------------------
+05/07/13
+
+Development of DynaBSPs revealed a number of fundamental design and security 
+issues in EE's core list class, DLListItem. As a result, I've made the following
+enhancements:
+
+* Added operator overloads which make the DLListItem behave as if a pointer to
+  one is a pointer-to-pointer to the item containing it. This reduces a lot of
+  the verbose syntax that was added during conversion of this code from C.
+  
+* Added additional safety to DLListItem<T>::remove, so that it will not commit
+  an access violation if an object has this method called on it more than once.
+  
+* Added code to clear dllNext and dllPrev links when removing the DLListItem, 
+  instead of doing this almost everywhere in user code "for safety". Let's just
+  be safe inside the code itself, eh?
+  
+* Added a DLList class which can be optionally used to abstract the notion of
+  the list itself. It includes a pointer to use as the head of the list, and
+  allows cut-down syntax for inserting and removing objects from that particular
+  list (this DOES require you to know what list an item is in when removing it,
+  unlike the bare DLListItem API). It trades some flexibility for security, by
+  not having to repeat the "parent" object twice when invoking insert, such as:
+  
+     item->links.insert(item, &list);
+     
+  becoming:
+  
+     list.insert(item);
+     
+I also took some time off of serious, useful projects to reimplement Z_DumpCore
+as a tiny .pak file writer which neither allocates memory nor has to perform any
+file seeks. So you can now dump EE's entire heap to .pak file directories 
+separated by allocation tag and take a look at all the stuff in there. 
+
+Amongst stuff I found in mine while debugging vapordemo was the music track to 
+vapordemo, entirely intact in .ogg format, which I then extracted and saved so 
+I can listen to it whenever I wish, as I find it inspiring :)
+
+--------------------------------------------------------------------------------
+05/06/13
+
+Debugging and refinement work continues on the dynabsp builder, including:
+
+* Bug fix to an issue that caused polynode owned lists to be corrupted
+
+* Adding a bit of cost to non-orthogonal lines in poly fragments, so that they
+  are chosen as the last resort for node lines. Fixes a "slimetrail" in 
+  vapordemo's glass subway doors.
+
+* Removed all dead code from the previous dynaseg fragment sorting system.
+
+--------------------------------------------------------------------------------
+05/05/13
+
+Added ability to visualize dynasegs on the automap.
+
+Heap checks should not attempt to walk down the block chain slot for tag PU_FREE
+because, under the native heap implementation, this chain is always empty.
+
+Made another incremental improvement to fragment sorting just to see if it would
+help in vapordemo, but nothing was achieved.
+
+(Later - 1:55 PM)
+
+Started work on a dynaseg BSP builder, based on BSP 5.2.
+
+(Much later - 9:04 PM)
+
+Finished the dynaseg BSP builder.
+
+--------------------------------------------------------------------------------
+05/04/13
+
+The game only needs to redraw the border when entering and exiting the automap 
+if vbscreen's virtual aspect ratio is > 4:3.
+
+--------------------------------------------------------------------------------
+05/03/13
+
+I noticed a problem earlier where, if you started the game in fullscreen mode
+(meaning no status bar or view border in this context) and went to the automap,
+there would be no border drawing into the wings of the status bar as there 
+normally would be in widescreen video modes. This was on account of the
+R_FillBackScreen function properly never having been called yet, leaving blits
+from it pulling only black calloc'd pixels.
+
+The first thing I need to do to fix this is to rewrite the border drawing code
+so that it operates on a structure instead of global variables. The new 
+structure is called rrect_t, and it has a couple of methods associated with it
+that can initialize it properly and abstract logic for calculating the border
+size out of R_Init subroutines.
+
+With this in place, I can use a temporary rrect_t instance to redraw the border
+in the automap without stomping the user's actual screensize setting. The game
+must then redraw the border using the user's settings when exiting the automap,
+of course.
+
+--------------------------------------------------------------------------------
+05/02/13
+
+After noticing problems in vapordemo, I made some incremental improvements to
+the interim dynaseg fragment sorting solution which look to sort fragments by
+their proper projected z distance, but, this is not resolving the problems in
+the map. It has become fully evident that the limitations inherent in fragment
+sorting cannot be overcome without transitioning to a BSP system like ZDoom.
+
+Updated all in-engine copyright dates to 2013. Thanks to ConSiGno :P
+
+--------------------------------------------------------------------------------
+05/01/13
+
+MAX_SCREENHEIGHT has more or less been entirely eliminated as a limit within
+the renderer, but MAX_SCREENWIDTH is clinging stubbornly to life as it is used
+extensively within the portal and slope systems. An earlier attempt to quickly
+remove it all resulted in massive undebuggable heap corruption events, so, if
+I'm going to get rid of it, it'll have to be done very carefully.
+
+When the resolution changes, visplanes will now be completely destroyed and all
+the hashes signaled to clear themselves, returning the game to the engine 
+startup state. This is a lot easier than trying to selectively upgrade visplanes
+when they've not been used since the last resolution change.
+
+--------------------------------------------------------------------------------
+04/29/13
+
+* Significant work in d_iwad.cpp to make various routines including
+  D_findIWADFile use qstring rather than combinations of insecure C-style 
+  string handling and the deprecated M_StringAlloca facility.
+  
+* DavidPH noticed that I_Pick_ClearScreen's attempt to cache its background
+  color was screwed up.
+  
+* Eliminated redundant MAXWIDTH, MAXHEIGHT defines in favor of the defines for
+  which they were aliases: MAX_SCREENWIDTH and MAX_SCREENHEIGHT.
+  
+* Eliminated the old V_ResetMode function, which had become nothing more than a
+  thunk to I_SetMode(0). The low-level video code was calling out to
+  V_ResetMode, which was calling back into the low-level video code... makes a
+  lot of sense :P  This was just a development artifact left over from the DOS
+  code, actually.
+
+* Eliminated most uses of MAX_SCREENWIDTH and MAX_SCREENHEIGHT to size static
+  arrays.
+  
+* The game won't crash any longer if HUSTR_33 has been replaced in DEH/BEX but
+  the current game mission is pack_plut or pack_tnt - I forgot to add a 33rd
+  array entry for it into those games' lookup arrays for default level names.
+  
+* When playing the BFG Edition IWAD, and the level names for MAP31 and 32 are
+  not replaced somehow, I change them to "IDKFA" and "KEEN" respectively, to
+  match the intermission names in the IWAD.
+  
+*  Moved the save and load menus up 10 pixels, which is an exact medium between
+   their positioning in vanilla, which is too low for the menus to contain 8
+   save slots (puts them over the status bar), and BOOM, which is too high as
+   it scrunches the menu up to the top and leaves all the empty space at the 
+   bottom.
+
+--------------------------------------------------------------------------------
+04/28/13
+
+Made some refinements and additions to WadIterator, chiefly in the form of 
+operator overloads for shorter syntax.
+
+Added a WadChainIterator descendent which walks over all the lumps on a single
+hash chain, which is necessary when looking for all lumps of a given name. I
+have replaced all places in the code doing ad hoc hash chain walks with this
+class and a lot of code was significantly cleaned up and made more concise.
+
+W_GetLumpNameChain has been removed entirely, as a result.
+
+Deleted portions of the obsolete automake build system, as they were annoying
+and confusing various Linux and *nix system users.
+
+--------------------------------------------------------------------------------
+04/21/13
+
+* Added long file name lookup and hashing for entries inside the WadDirectory,
+  which enables long-name finding of entries in zip/pk3/pke archives.
+  
+* Resource coalescence has been rewritten a second time, so that all the work
+  is now done within a single pass, instead of reallocating the lumpinfo_t
+  directory time and time again for each namespace, which was going to become
+  prohibitive if too many more namespaces were added.
+  
+* Used the new namespace_t structure in WadDirectory to implement WadDirectory
+  iterator classes. WadNamespaceIterator is the first descendent of the
+  WadIterator abstract class, and allows walking over all the lumps inside a
+  single namespace without any knowledge of how lumpinfo_t structures work or
+  are hashed.
+
+--------------------------------------------------------------------------------
+04/16/13
+
+Vertical aiming behavior of the cooldemo followcam has been tweaked so that it
+behaves more correctly, by aiming at Doomguy's viewpoint instead of his feet.
+The UAC patented nipplecam technology employed by the space marine suits sends
+out two infrared signals which can be used to triangulate the proper viewing
+vector.
+
+--------------------------------------------------------------------------------
+04/14/13
+
+Analog and digital axis input events are now populated into ev_joystick-type
+event_t structures, using data1 to indicate the axis number and data2 to hold
+the floating point axis position information.
+
+Axes also now have one trigger-like virtual key code per piece which fires a
+key down when the axis goes from unasserted to asserted, and a keyup when it
+becomes unasserted again.
+
+Started work on the ability to bind axis actions to gamepad axes. Axis actions
+determine what the g_game input system will do with input from that axis, and
+currently include the following possible actions: move, strafe, turn, and look.
+
+I want to add support for gamepad device profiles that can be executed at 
+runtime to set all button bindings, axis bindings, and axis actions for a 
+particular type of device, relieving the user from slowly combing through the
+keybindings and gamepad setup menus. A number of things need to change or happen
+before I can do this though.
+
+(Later)
+* Converted eternity.wad to eternity.pke so that it can start to contain
+  resourced with long file names.
+
+* Fixed major problems in the namespace coalesce algorithm in the WadDirectory
+  class that were exposed by attempts to use namespaces for which no lumps
+  existed.
+  
+* Eternity now makes some Win32 API calls at startup to manage certain aspects
+  of its system console window. The title will be set and the "Close" item will
+  be deleted from the system command menu, so that it's no longer possible to
+  crash Eternity by trying to close it from here (once a console window to which
+  an console application is attached has been closed, the process will be
+  shortly thereafter terminated directly by the operating system, and in all my
+  experience programming, there is no way to defer or prevent that from
+  happening via any API, nor does the program get a chance to shut down properly
+  and clean itself up either, which is why SDL always crashes - its threads 
+  receive no notification that the main thread has died, and keep trying to 
+  run).
+
+--------------------------------------------------------------------------------
+04/13/13
+
+I took INIT_STRUCT out of ev_macros.h and promoted it to a universal global in
+z_zone.h with the name edefstructvar. This can be used anywhere to securely 
+stack-allocate structures and ensure they start out fully initialized to zero.
+
+Introduced new KEYD_JOYxx constants for 16 distinct gamepad buttons. Buttons are
+now generating these virtual key events when pressed again, as code is starting
+to come up in i_input to drive the gamepad HAL now.
+
+I also refactored keybindings a bit yet again so that they set their names in a
+for loop using a dense lookup array, instead of a huge set of single assignments
+that went on for a hundred or more lines.
+
+--------------------------------------------------------------------------------
+04/07/13
+
+By end-user request I've modified Eternty's save and load game menus so that
+they draw in a mostly vanilla compatible manner.
+
+--------------------------------------------------------------------------------
+04/04/13
+
+XInputGamePad class is taking shape, with the ability to select and poll devices
+managed by the XInputGamePadDriver, including retrieval of normalized analog
+axis values.
+
+--------------------------------------------------------------------------------
+04/03/13
+
+I created a /linux subdirectory under source to match the /Win32 directory that
+already exists there and moved i_cpu_posix.cpp into it from the SDL directory,
+so that DavidPH could change Eternity's CMake system to use file masks instead
+of verbose lists that have to be kept up to date constantly.
+
+--------------------------------------------------------------------------------
+04/02/13
+
+Began work on the i_xinput module (specific to Windows; Vista or only later,
+possibly on XP depending on how much crap you have installed to it apparently).
+No input polling is in place, but connected devices are enumerating already.
+
+--------------------------------------------------------------------------------
+03/31/13
+
+I've begun integration of the gamepad HAL into the game engine. The menu is
+once again capable of displaying enumerated gamepad devices, though is no longer
+specific to SDL builds thanks to having a platform agnostic HAL which it can
+query for the master device list.
+
+--------------------------------------------------------------------------------
+03/20/13
+
+In order to allow HALGamePad to be properly abstract, as none of its methods
+contain any logic anyways, I have altered RTTIObject so that it is possible to
+delete its virtual factory construction mechanism by using a different macro
+to declare the RTTI interface components in the header of the class.
+
+Such classes should use DECLARE_ABSTRACT_TYPE instead of DECLARE_RTTI_TYPE.
+
+
+
+--------------------------------------------------------------------------------
+03/10/13
+
+Refactored HAL gamepad polling so that all input state is retrieved through a
+single virtual poll() method and stored into a padstate_t struct that lives in
+the HALGamePad base class.
+
+Finally got around to a much-discussed change which allows console commands and
+variables to self-register at program startup, by instantiating C++ objects in
+their respective macros which put themselves onto a static list when they
+construct.
+
+--------------------------------------------------------------------------------
+03/08/13
+
+It is now possible to poll HALGamePad instances for their state, and I have 
+begun reimplementing the current SDL gamepad support as SDLGamePadDriver and
+SDLGamePad classes.
+
+--------------------------------------------------------------------------------
+03/06/13
+
+Continued with various cleanup tasks in g_bind, such as rewriting G_BoundKeys
+to get rid of a particularly bad use of strcat which remained from the system's
+original version in SMMU.
+
+A proper queue is now used to defer events for supporting trigger-type keys
+such as the mousewheel and, under Windows, the capslock key.
+
+--------------------------------------------------------------------------------
+03/05/13
+
+Eliminated all action_ variables from the keybinding system. Key state is now
+tracked locally where needed, by different engine modules, more like it worked
+originally in vanilla Doom.
+
+--------------------------------------------------------------------------------
+03/04/13
+
+Since it doesn't look like the planned 3.40.27 Gungnir release is going to 
+happen on the previously decided time frame, I am going ahead with a couple of
+other larger projects I've wanted to do for a while.
+
+The first of these is better gamepad support. To that end, I've begun writing a
+HAL for gamepads which will allow me to later add direct support for XInput
+devices, such as the XBox 360 dual analog controller.
+
+Also made some needed changes to the keybinding system which were going to
+hamper my ability to support trigger-like keys.
+
+--------------------------------------------------------------------------------
+02/21/13
+
+I have split up T_MovePlane, the giant function that handled all cases for both
+floors and ceilings, into four different functions which move a single plane
+type in a single direction, and then two additional functions which deal with
+either direction for a single plane type by choosing one or the other (up or
+down) routines based on the thinker's direction field.
+
+--------------------------------------------------------------------------------
 02/20/13
 
 The engine has been modified so that 3D object clipping will always be used on
