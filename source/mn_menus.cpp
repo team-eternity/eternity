@@ -477,6 +477,15 @@ static bool MN_tweakD2EpisodeMenu()
 {
    int curitem = 1;
 
+   // Not for TNT, Plutonia, HacX
+   if(GameModeInfo->missionInfo->id != doom2 &&
+      GameModeInfo->missionInfo->id != pack_disk)
+      return false;
+
+   // Also not when playing PWADs
+   if(modifiedgame)
+      return false;
+
    // start out with nothing enabled
    menu_d2episode.menuitems[1].type = it_end;
    menu_d2episode.menuitems[2].type = it_end;

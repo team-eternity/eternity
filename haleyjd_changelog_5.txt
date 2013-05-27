@@ -2,6 +2,20 @@
 Changes since Eternity Engine v3.40.30
 ================================================================================
 --------------------------------------------------------------------------------
+05/27/13
+
+Some last minute changes before release:
+
+* BFG Edition title renamed to TITLEPIC so that mods can still replace it with
+  their own titlescreen. Since eternity.pke loads first, this doesn't hurt
+  anything.
+  
+* DOOM II expansion selection menu will not appear if:
+
+  - game mission is not doom2 or pack_disk, or
+  - modifiedgame is asserted (PWADs are being played)
+
+--------------------------------------------------------------------------------
 05/26/13
 
 ConSiGno found a bug in my change to basepath determination that could cause it
