@@ -20,13 +20,20 @@
 		4F9F72D316BFB73200C405AE /* p_pushers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D116BFB73200C405AE /* p_pushers.cpp */; };
 		4F9F72D416BFB73200C405AE /* p_scroll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F9F72D216BFB73200C405AE /* p_scroll.cpp */; };
 		4FD651AE16B802BE00F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
-		4FD651B316B8033900F9BE74 /* SDL_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FD651B016B8033900F9BE74 /* SDL_mixer.framework */; };
-		4FD651B416B8033900F9BE74 /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FD651B116B8033900F9BE74 /* SDL_net.framework */; };
-		4FD651B516B8033900F9BE74 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FD651B216B8033900F9BE74 /* SDL.framework */; };
-		4FD651B616B8034300F9BE74 /* SDL_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FD651B016B8033900F9BE74 /* SDL_mixer.framework */; };
-		4FD651B716B8034300F9BE74 /* SDL_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FD651B116B8033900F9BE74 /* SDL_net.framework */; };
-		4FD651B816B8034300F9BE74 /* SDL.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FD651B216B8033900F9BE74 /* SDL.framework */; };
 		4FF640BA1735256700793714 /* v_alloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FF640B81735256700793714 /* v_alloc.cpp */; };
+		4FFFDF6C1753482C00E70FEC /* libFLAC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF691753482C00E70FEC /* libFLAC.a */; };
+		4FFFDF6D1753482C00E70FEC /* libmikmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6A1753482C00E70FEC /* libmikmod.a */; };
+		4FFFDF6E1753482C00E70FEC /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
+		4FFFDF721753485800E70FEC /* libogg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6F1753485800E70FEC /* libogg.a */; };
+		4FFFDF731753485800E70FEC /* libvorbis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF701753485800E70FEC /* libvorbis.a */; };
+		4FFFDF741753485800E70FEC /* libvorbisfile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF711753485800E70FEC /* libvorbisfile.a */; };
+		4FFFDF781753486D00E70FEC /* libSDL_mixer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF751753486D00E70FEC /* libSDL_mixer.a */; };
+		4FFFDF791753486D00E70FEC /* libSDL_net.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF761753486D00E70FEC /* libSDL_net.a */; };
+		4FFFDF7A1753486D00E70FEC /* libSDL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF771753486D00E70FEC /* libSDL.a */; };
+		4FFFDF80175348B600E70FEC /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF7C175348B600E70FEC /* AudioToolbox.framework */; };
+		4FFFDF81175348B600E70FEC /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF7D175348B600E70FEC /* AudioUnit.framework */; };
+		4FFFDF82175348B600E70FEC /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF7E175348B600E70FEC /* Carbon.framework */; };
+		4FFFDF83175348B600E70FEC /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF7F175348B600E70FEC /* IOKit.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		FA16D39915E01A3A002318D1 /* acs_acse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA16D39815E01A3A002318D1 /* acs_acse.cpp */; };
 		FA16D3A015E01B82002318D1 /* d_files.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA16D39E15E01B82002318D1 /* d_files.cpp */; };
@@ -287,9 +294,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				4FD651B616B8034300F9BE74 /* SDL_mixer.framework in CopyFiles */,
-				4FD651B716B8034300F9BE74 /* SDL_net.framework in CopyFiles */,
-				4FD651B816B8034300F9BE74 /* SDL.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,12 +323,21 @@
 		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../../p_scroll.h; sourceTree = "<group>"; };
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../../p_pushers.cpp; sourceTree = "<group>"; };
 		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../../p_scroll.cpp; sourceTree = "<group>"; };
-		4FD651B016B8033900F9BE74 /* SDL_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_mixer.framework; path = ../../../../../../../../Library/Frameworks/SDL_mixer.framework; sourceTree = "<group>"; };
-		4FD651B116B8033900F9BE74 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = ../../../../../../../../Library/Frameworks/SDL_net.framework; sourceTree = "<group>"; };
-		4FD651B216B8033900F9BE74 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = ../../../../../../../../Library/Frameworks/SDL.framework; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../../v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../../v_alloc.h; sourceTree = "<group>"; };
-		4FFDC9661739882600DE48A0 /* exepack.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = exepack.sh; sourceTree = "<group>"; };
+		4FFFDF691753482C00E70FEC /* libFLAC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFLAC.a; path = staticlib/libFLAC.a; sourceTree = "<group>"; };
+		4FFFDF6A1753482C00E70FEC /* libmikmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmikmod.a; path = staticlib/libmikmod.a; sourceTree = "<group>"; };
+		4FFFDF6B1753482C00E70FEC /* libsmpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsmpeg.a; path = staticlib/libsmpeg.a; sourceTree = "<group>"; };
+		4FFFDF6F1753485800E70FEC /* libogg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libogg.a; path = staticlib/libogg.a; sourceTree = "<group>"; };
+		4FFFDF701753485800E70FEC /* libvorbis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvorbis.a; path = staticlib/libvorbis.a; sourceTree = "<group>"; };
+		4FFFDF711753485800E70FEC /* libvorbisfile.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvorbisfile.a; path = staticlib/libvorbisfile.a; sourceTree = "<group>"; };
+		4FFFDF751753486D00E70FEC /* libSDL_mixer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL_mixer.a; path = staticlib/libSDL_mixer.a; sourceTree = "<group>"; };
+		4FFFDF761753486D00E70FEC /* libSDL_net.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL_net.a; path = staticlib/libSDL_net.a; sourceTree = "<group>"; };
+		4FFFDF771753486D00E70FEC /* libSDL.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL.a; path = staticlib/libSDL.a; sourceTree = "<group>"; };
+		4FFFDF7C175348B600E70FEC /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = ../../../../../../../../System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<group>"; };
+		4FFFDF7D175348B600E70FEC /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = ../../../../../../../../System/Library/Frameworks/AudioUnit.framework; sourceTree = "<group>"; };
+		4FFFDF7E175348B600E70FEC /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = ../../../../../../../../System/Library/Frameworks/Carbon.framework; sourceTree = "<group>"; };
+		4FFFDF7F175348B600E70FEC /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = ../../../../../../../../System/Library/Frameworks/IOKit.framework; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityEngine-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityEngine-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Eternity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA16D39815E01A3A002318D1 /* acs_acse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = acs_acse.cpp; path = ../../acs_acse.cpp; sourceTree = SOURCE_ROOT; };
@@ -807,9 +820,19 @@
 			files = (
 				FA1F5680158BB857006F8063 /* OpenGL.framework in Frameworks */,
 				4FD651AE16B802BE00F9BE74 /* Cocoa.framework in Frameworks */,
-				4FD651B316B8033900F9BE74 /* SDL_mixer.framework in Frameworks */,
-				4FD651B416B8033900F9BE74 /* SDL_net.framework in Frameworks */,
-				4FD651B516B8033900F9BE74 /* SDL.framework in Frameworks */,
+				4FFFDF6C1753482C00E70FEC /* libFLAC.a in Frameworks */,
+				4FFFDF6D1753482C00E70FEC /* libmikmod.a in Frameworks */,
+				4FFFDF6E1753482C00E70FEC /* libsmpeg.a in Frameworks */,
+				4FFFDF721753485800E70FEC /* libogg.a in Frameworks */,
+				4FFFDF731753485800E70FEC /* libvorbis.a in Frameworks */,
+				4FFFDF741753485800E70FEC /* libvorbisfile.a in Frameworks */,
+				4FFFDF781753486D00E70FEC /* libSDL_mixer.a in Frameworks */,
+				4FFFDF791753486D00E70FEC /* libSDL_net.a in Frameworks */,
+				4FFFDF7A1753486D00E70FEC /* libSDL.a in Frameworks */,
+				4FFFDF80175348B600E70FEC /* AudioToolbox.framework in Frameworks */,
+				4FFFDF81175348B600E70FEC /* AudioUnit.framework in Frameworks */,
+				4FFFDF82175348B600E70FEC /* Carbon.framework in Frameworks */,
+				4FFFDF83175348B600E70FEC /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -866,7 +889,8 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				4FD651AF16B8032900F9BE74 /* Installed */,
+				4FFFDF7B1753487900E70FEC /* Linked Frameworks */,
+				4FD651AF16B8032900F9BE74 /* Static Libraries */,
 				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 				FA1F567F158BB857006F8063 /* OpenGL.framework */,
 			);
@@ -882,22 +906,38 @@
 			name = T_;
 			sourceTree = "<group>";
 		};
-		4FD651AF16B8032900F9BE74 /* Installed */ = {
+		4FD651AF16B8032900F9BE74 /* Static Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				4FD651B016B8033900F9BE74 /* SDL_mixer.framework */,
-				4FD651B116B8033900F9BE74 /* SDL_net.framework */,
-				4FD651B216B8033900F9BE74 /* SDL.framework */,
+				4FFFDF751753486D00E70FEC /* libSDL_mixer.a */,
+				4FFFDF761753486D00E70FEC /* libSDL_net.a */,
+				4FFFDF771753486D00E70FEC /* libSDL.a */,
+				4FFFDF6F1753485800E70FEC /* libogg.a */,
+				4FFFDF701753485800E70FEC /* libvorbis.a */,
+				4FFFDF711753485800E70FEC /* libvorbisfile.a */,
+				4FFFDF691753482C00E70FEC /* libFLAC.a */,
+				4FFFDF6A1753482C00E70FEC /* libmikmod.a */,
+				4FFFDF6B1753482C00E70FEC /* libsmpeg.a */,
 			);
-			name = Installed;
+			name = "Static Libraries";
 			sourceTree = "<group>";
 		};
 		4FFDC9651739880D00DE48A0 /* Build Scripts */ = {
 			isa = PBXGroup;
 			children = (
-				4FFDC9661739882600DE48A0 /* exepack.sh */,
 			);
 			name = "Build Scripts";
+			sourceTree = "<group>";
+		};
+		4FFFDF7B1753487900E70FEC /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4FFFDF7C175348B600E70FEC /* AudioToolbox.framework */,
+				4FFFDF7D175348B600E70FEC /* AudioUnit.framework */,
+				4FFFDF7E175348B600E70FEC /* Carbon.framework */,
+				4FFFDF7F175348B600E70FEC /* IOKit.framework */,
+			);
+			name = "Linked Frameworks";
 			sourceTree = "<group>";
 		};
 		FA1F5705158BC2FD006F8063 /* Main */ = {
@@ -1740,7 +1780,6 @@
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				FA930395158DD16C00FD0C80 /* CopyFiles */,
 				FA82164A1647124600FF998A /* Base and User */,
-				4F50E3FD1737058400878167 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1793,22 +1832,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		4F50E3FD1737058400878167 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 12;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "script_file=\"exepack.sh\"\nif [ \"$CONFIGURATION\" == \"Release\" ];then\n${PROJECT_DIR}/${script_file}\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {
@@ -2123,6 +2146,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../../EternityMacDev\"",
+					staticlib,
 				);
 				PRODUCT_NAME = Eternity;
 				USER_HEADER_SEARCH_PATHS = "/Library/Frameworks/SDL.framework/** /Library/Frameworks/SDL_mixer.framework/** /Library/Frameworks/SDL_net.framework/**";
@@ -2164,6 +2188,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../../EternityMacDev\"",
+					staticlib,
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = Eternity;
