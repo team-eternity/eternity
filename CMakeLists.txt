@@ -33,9 +33,19 @@ ENDIF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 #    * RelWithDebInfo (CMAKE_C_FLAGS_RELWITHDEBINFO)
 #    * MinSizeRel (CMAKE_C_FLAGS_MINSIZEREL)
 # If no build type requested, default to Release
-IF (NOT CMAKE_BUILD_TYPE)
-        SET (CMAKE_BUILD_TYPE Release)
-ENDIF (NOT CMAKE_BUILD_TYPE)
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# Default to not building shared libraries.
+if(NOT DEFINED BUILD_SHARED_LIBS)
+   set(BUILD_SHARED_LIBS OFF)
+endif()
+
+# Default to not installing any sub-projects.
+if(NOT DEFINED SKIP_INSTALL_ALL)
+   set(SKIP_INSTALL_ALL ON)
+endif()
 
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckCCompilerFlag)
