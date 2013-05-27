@@ -122,13 +122,17 @@ static NSString *getApplicationName(void)
 //
 // Invoked from the Quit menu item
 //
-- (void)terminate:(id)sender
-{
-    /* Post a SDL_QUIT event */
-    SDL_Event event;
-    event.type = SDL_QUIT;
-    SDL_PushEvent(&event);
-}
+//- (void)terminate:(id)sender
+//{
+//    /* Post a SDL_QUIT event */
+//    SDL_Event event;
+//    event.type = SDL_QUIT;
+//    SDL_PushEvent(&event);
+//}
+
+//
+// IOANCH 20130527: commented this out ^
+//
 @end
 
 //
