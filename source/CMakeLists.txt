@@ -41,7 +41,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   add_definitions(-DEE_FEATURE_REGISTRY_SCAN)
+   add_definitions(-DEE_FEATURE_REGISTRYSCAN)
 
    if(MSVC)
       add_definitions(-DEE_FEATURE_MIDIRPC -DEE_FEATURE_XINPUT)
