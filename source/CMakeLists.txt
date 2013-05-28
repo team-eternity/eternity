@@ -50,12 +50,13 @@ endif()
 
 # Source files.
 
-IF (WIN32)
-        IF (MSVC)
-                INCLUDE_DIRECTORIES (Win32/)
-        ENDIF (MSVC)
-        FILE (GLOB ARCH_SPECIFIC_SOURCES Win32/*.cpp)
-ENDIF (WIN32)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   file(GLOB ARCH_SPECIFIC_SOURCES Win32/*.cpp)
+   if(MSVC)
+      set(ARCH_SPECIFIC_SOURCES ${ARCH_SPECIFIC_SOURCES} ../midiproc/midiproc_c.c)
+      include_directories(Win32/)
+   endif()
+endif()
 
 IF (APPLE)
         INCLUDE_DIRECTORIES (sdl/macosx/)
@@ -91,10 +92,16 @@ FILE (GLOB SDL_SOURCES sdl/*.cpp)
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
-IF (OPENGL_LIBRARY)
-        TARGET_LINK_LIBRARIES (eternity ${OPENGL_LIBRARY})
-ENDIF (OPENGL_LIBRARY)
-TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+
+target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+
+if(OPENGL_LIBRARY)
+   target_link_libraries(eternity ${OPENGL_LIBRARY})
+endif()
+
+if(MSVC)
+   target_link_libraries(eternity rpcrt4)
+endif()
 
 INSTALL (TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}
