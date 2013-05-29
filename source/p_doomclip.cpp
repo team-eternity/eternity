@@ -2894,6 +2894,10 @@ void DoomClipEngine::setThingPosition(Mobj *thing)
    }
 }
 
+void DoomClipEngine::mapLoaded() 
+{
+}
+
 
 //----------------------------------------------------------------------------
 //

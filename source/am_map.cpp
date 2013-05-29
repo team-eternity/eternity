@@ -372,7 +372,7 @@ static void AM_restoreScaleAndLoc(void)
    {
       linkoffset_t *link;
 
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
@@ -441,8 +441,7 @@ static void AM_findMinMaxBoundaries(void)
       x2 = lines[i].v2->fx;
       y2 = lines[i].v2->fy;
 
-      if(mapportal_overlay && useportalgroups &&
-         lines[i].frontsector->groupid > 0)
+      if(mapportal_overlay && lines[i].frontsector->groupid > 0)
       {
          linkoffset_t *link;
 
@@ -563,7 +562,7 @@ static void AM_initVariables(void)
    {
       linkoffset_t *link;
 
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
@@ -1037,7 +1036,7 @@ static void AM_doFollowPlayer(void)
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
       linkoffset_t *link;
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x + link->x))) - m_w/2;
@@ -2067,7 +2066,7 @@ static void AM_drawPlayers(void)
 
    if(!netgame)
    {
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          px = plr->mo->x + link->x;
@@ -2120,7 +2119,7 @@ static void AM_drawPlayers(void)
       if(!playeringame[i])
          continue;
       
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          px = p->mo->x + link->x;
@@ -2190,15 +2189,11 @@ static void AM_drawThings(int colors, int colorrange)
          tx = t->x;
          ty = t->y;
 
-         if(mapportal_overlay && useportalgroups && t->subsector->sector->groupid > 0)
+         if(mapportal_overlay && t->subsector->sector->groupid > 0)
          {
-            linkoffset_t *link;
-
-            if((link = P_GetLinkOffset(0, t->subsector->sector->groupid)))
-            {
-               tx += link->x;
-               ty += link->y;
-            }
+            linkoffset_t *link = P_GetLinkOffset(0, t->subsector->sector->groupid);
+            tx += link->x;
+            ty += link->y;
          }
          // FIXME / HTIC_TODO: Heretic support and EDF editing?
 

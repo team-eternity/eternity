@@ -40,7 +40,26 @@ struct linkoffset_t
    fixed_t x, y, z;
 };
 
+extern linkoffset_t **linktable;
+extern linkoffset_t zerolink;
+
+//
+// P_GetLinkOffset
+//
+// This function returns a linkoffset_t object which contains the map-space
+// offset to get from the startgroup to the targetgroup. This will always return 
+// a linkoffset_t object. In cases of invalid input or no link the offset will be
+// (0, 0, 0)
+#ifdef RANGECHECK
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
+#else
+inline linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
+{
+   return (!linktable || !useportalgroups || startgroup < 0 || startgroup >= groupcount || targetgroup < 0 || targetgroup >= groupcount)
+      ? &zerolink
+      : linktable[startgroup * groupcount + targetgroup];
+}
+#endif
 
 
 #endif

@@ -44,6 +44,11 @@ struct sector_t;
 
 
 //
+// P_PortalGroupCount
+//
+int P_PortalGroupCount();
+
+//
 // P_CreatePortalGroup
 // This creates an portal group, and returns the id of that group
 //

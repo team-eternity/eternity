@@ -2522,6 +2522,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);
 
    ACS_LoadLevelScript(dir, acslumpnum);
+   
+   // Determine clipping engine here.
+   
+   clip->mapLoaded();
 }
 
 //

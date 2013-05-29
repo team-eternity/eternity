@@ -69,6 +69,7 @@ class PortalClipEngine : public ClipEngine
       virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc);
       virtual void unsetThingPosition(Mobj *mo);
       virtual void setThingPosition(Mobj *mo);
+      virtual void mapLoaded();
       
       // Clipping contexts
       virtual ClipContext*  getContext();

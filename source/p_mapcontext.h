@@ -113,6 +113,13 @@ class ClipContext : public MapContext
       // Spechit stuff
       PODCollection<line_t *> spechit;
       
+      // Group the center of the thing is inside
+      int centergroup;
+      
+      // All the portal groups the mobj would be touching in the new position.
+      PODCollection<int> adjacent_groups;
+      int *markedgroups;
+      
    private:
       ClipEngine *from;
       

@@ -2837,7 +2837,7 @@ void P_SpawnSpecials(int mapformat)
    {
       // SoM: There was an error... so kill the groupids
       for(i = 0; i < numsectors; i++)
-         R_SetSectorGroupID(sectors + i, R_NOGROUP);
+         R_SetSectorGroupID(sectors + i, 0);
    }
 
    // haleyjd 02/20/06: spawn polyobjects

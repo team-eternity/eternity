@@ -3938,7 +3938,7 @@
 						RelativePath="..\midiproc\midiproc_c.c"
 						>
 					</File>
-			</Filter>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="ST_"
@@ -5167,6 +5167,32 @@
 						RelativePath="..\source\p_mapcontext.h"
 						>
 					</File>
+					<File
+						RelativePath="..\Source\p_maputl.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\Source\p_maputl.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="Classic"
@@ -5203,32 +5229,6 @@
 					</File>
 					<File
 						RelativePath="..\source\p_map3d.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Source\p_maputl.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\Source\p_maputl.h"
 						>
 					</File>
 				</Filter>

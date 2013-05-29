@@ -54,7 +54,7 @@ linkoffset_t **linktable = NULL;
 
 // This guy is a (0, 0, 0) link offset which is used to populate null links in the 
 // linktable and is returned by P_GetLinkOffset for invalid inputs
-static linkoffset_t zerolink = {0, 0, 0};
+linkoffset_t zerolink = {0, 0, 0};
 
 // The group list is allocated PU_STATIC because it isn't level specific, however,
 // each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
@@ -76,6 +76,14 @@ static int      grouplimit = 0;
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
 bool useportalgroups = false;
+
+//
+// P_PortalGroupCount
+//
+int P_PortalGroupCount()
+{
+   return useportalgroups ? groupcount : 1;
+}
 
 //
 // P_InitPortals
@@ -248,9 +256,9 @@ void P_GatherSectors(sector_t *from, int groupid)
 // offset to get from the startgroup to the targetgroup. This will always return 
 // a linkoffset_t object. In cases of invalid input or no link the offset will be
 // (0, 0, 0)
+#ifdef RANGECHECK
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
-#ifdef RANGECHECK
    if(!useportalgroups)
       return &zerolink;
       
@@ -271,13 +279,9 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
       doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
       return &zerolink;
    }
-#else
-   if(!linktable || !useportalgroups || startgroup < 0 || startgroup >= groupcount || targetgroup < 0 || targetgroup >= groupcount)
-      return &zerolink;
-#endif
-
    return linktable[startgroup * groupcount + targetgroup];
 }
+#endif
 
 //
 // P_AddLinkOffset
@@ -540,6 +544,7 @@ bool P_BuildLinkTable(void)
                return false;
             }
          }
+         // This is no longer a valid check, P_GetLinkOffset always returns a value now
          else if(link || backlink)
          {
             C_Printf(FC_ERROR "Portal group %i references group %i without a "

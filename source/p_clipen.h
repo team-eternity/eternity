@@ -124,6 +124,7 @@ class ClipEngine
       virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc) = 0;
       virtual void unsetThingPosition(Mobj *mo) = 0;
       virtual void setThingPosition(Mobj *mo) = 0;
+      virtual void mapLoaded() = 0;
       
       // Clipping contexts
       virtual ClipContext*  getContext() = 0;
