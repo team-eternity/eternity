@@ -135,7 +135,6 @@ int idmusnum;
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
-static void S_CreateMusicHashTable(void);
 
 // haleyjd 12/24/11: hi-def music support
 bool s_hidefmusic;
@@ -1498,18 +1497,6 @@ CONSOLE_COMMAND(s_playmusic, 0)
    }
 
    S_ChangeMusic(music, true);
-}
-
-void S_AddCommands(void)
-{
-  C_AddCommand(s_pitched);
-  C_AddCommand(s_precache);
-  C_AddCommand(snd_channels);
-  C_AddCommand(sfx_volume);
-  C_AddCommand(music_volume);
-  C_AddCommand(s_flippan);
-  C_AddCommand(s_playmusic);
-  C_AddCommand(s_hidefmusic);
 }
 
 #if 0

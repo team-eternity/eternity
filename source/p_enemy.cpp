@@ -201,7 +201,7 @@ bool P_CheckMeleeRange(Mobj *actor)
    Mobj *pl = actor->target;
    
    // haleyjd 02/15/02: revision of joel's fix for z height check
-   if(pl && !comp[comp_overunder])
+   if(pl && P_Use3DClipping())
    {
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
@@ -437,7 +437,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // haleyjd: OVER_UNDER:
    // [RH] Instead of yanking non-floating monsters to the ground,
    // let gravity drop them down, unless they're moving down a step.
-   if(!comp[comp_overunder])
+   if(P_Use3DClipping())
    {
       if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
@@ -519,7 +519,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
          // haleyjd: OVER_UNDER:
          // [RH] Check to make sure there's nothing in the way of the float
-         if(!comp[comp_overunder])
+         if(P_Use3DClipping())
          {
             if(P_TestMobjZ(actor))
             {
@@ -597,7 +597,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
-   if(comp[comp_overunder])
+   if(!P_Use3DClipping())
    {
       if(!(actor->flags & MF_FLOAT) && (!cc->felldown || demo_version < 203))
       {
@@ -793,7 +793,7 @@ void P_NewChaseDir(Mobj *actor)
       if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         (comp[comp_overunder] || 
+         (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !comp[comp_dropoff] && clip->avoidDropoff(actor, cc)) // Move away from dropoff
       {
@@ -1378,18 +1378,6 @@ void P_BossTeleport(bossteleport_t *bt)
 // be eliminated entirely in a couple of cases.
 //
 
-static const char *kwds_A_PlayerStartScript[] =
-{
-   "gamescript",  // 0
-   "levelscript", // 1
-};
-
-static argkeywd_t psskwds =
-{
-   kwds_A_PlayerStartScript,
-   sizeof(kwds_A_PlayerStartScript) / sizeof(const char *)
-};
-
 //
 // A_PlayerStartScript
 //
@@ -1527,7 +1515,7 @@ void A_DwarfAlterEgoChase(Mobj *actor)
 // haleyjd 07/05/03: new console commands that can use
 // EDF thing type names instead of internal type numbers
 
-extern int *deh_ParseFlagsCombined(const char *strval);
+extern unsigned int *deh_ParseFlagsCombined(const char *strval);
 
 static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *flags)
 {
@@ -1579,7 +1567,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // tweak the object's flags
    if(flagsmode != -1)
    {
-      int *res = deh_ParseFlagsCombined(flags);
+      unsigned int *res = deh_ParseFlagsCombined(flags);
 
       switch(flagsmode)
       {
@@ -1627,9 +1615,9 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // fountain: random color
    if(type == fountainType)
    {
-      int ft = 9027 + M_Random() % 7;
+      unsigned int ft = 9027u + M_Random() % 7u;
       
-      newmobj->effects |= (ft - 9026) << FX_FOUNTAINSHIFT;
+      newmobj->effects |= (ft - 9026u) << FX_FOUNTAINSHIFT;
    }
 
    // drip: random parameters
@@ -1902,20 +1890,6 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
 
 VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
 CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
-
-void PE_AddCommands(void)
-{
-   C_AddCommand(summon);
-   C_AddCommand(give);
-   C_AddCommand(viles);
-   C_AddCommand(whistle);
-   C_AddCommand(mdk);
-   C_AddCommand(mdkbomb);
-   C_AddCommand(banish);
-   C_AddCommand(vilehit);
-   C_AddCommand(resurrect);
-   C_AddCommand(p_lastenemyroar);
-}
 
 //----------------------------------------------------------------------------
 //

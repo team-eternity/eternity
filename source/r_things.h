@@ -33,8 +33,8 @@ struct planehash_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
-extern float zeroarray[MAX_SCREENWIDTH];
-extern float screenheightarray[MAX_SCREENWIDTH];
+extern float *zeroarray;
+extern float *screenheightarray;
 
 // Vars for R_DrawMaskedColumn
 

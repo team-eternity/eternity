@@ -49,6 +49,9 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+// need wad iterators
+#include "w_iterator.h"
+
 //=============================================================================
 //
 // Basic Functionality
@@ -164,10 +167,9 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 // 
 static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
-   lumpinfo_t *lump, *inclump;
+   lumpinfo_t  *inclump;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    int includinglumpnum;
-   int i;
 
    // this is not for files
    if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
@@ -176,19 +178,15 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    // get a pointer to the including lump's lumpinfo
    inclump = lumpinfo[includinglumpnum];
 
-   // get a pointer to the hash chain for this lump name
-   lump = W_GetLumpNameChain(name);
+   WadChainIterator wci(wGlobalDir, name);
 
    // walk down the hash chain
-   for(i = lump->index; i >= 0; i = lump->next)
+   for(wci.begin(); wci.current(); wci.next())
    {
-      lump = lumpinfo[i];
-
-      if(!strncasecmp(lump->name, name, 8) &&           // name matches specified
-         lump->li_namespace == lumpinfo_t::ns_global && // is in global namespace
-         lump->source == inclump->source)               // is from same source
+      if(wci.testLump(lumpinfo_t::ns_global) && // name matches, is global
+         (*wci)->source == inclump->source)     // is from same source
       {
-         return i; // haleyjd 07/26/10: i, not lump->index!!!
+         return (*wci)->selfindex;
       }
    }
 
@@ -374,7 +372,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = lumpinfo[i]->next) >= 0)
+   while((i = lumpinfo[i]->namehash.next) >= 0)
    {
       if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
          !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
@@ -516,7 +514,7 @@ int E_StrToNumLinear(const char **strings, int numstrings, const char *value)
 //
 // Parses a single-word options/flags field.
 //
-int E_ParseFlags(const char *str, dehflagset_t *flagset)
+unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset)
 {
    char *buffer, *bufptr;
 
@@ -931,7 +929,6 @@ void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
 //
 char *E_GetHeredocLine(char **src)
 {
-   bool isdone  = false;
    char *srctxt    = *src;
    char *linestart = srctxt;
 

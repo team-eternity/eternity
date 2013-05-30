@@ -40,6 +40,7 @@
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
 
 #include "c_io.h"
+#include "d_dehtbl.h"
 #include "d_files.h"
 #include "m_argv.h"
 #include "m_collection.h"
@@ -167,6 +168,7 @@ WadDirectory::WadDirectory()
  : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(false), type(0), data(NULL)
 {
    pImpl = new WadDirectoryPimpl;
+   memset(m_namespaces, 0, sizeof(m_namespaces));
 }
 
 //
@@ -271,11 +273,12 @@ WadDirectory::openwad_t WadDirectory::openFile(wfileadd_t &addInfo)
 // WadDirectory::reAllocLumpInfo
 //
 // Reallocate the lumpinfo array to contain the indicated number of pointers,
-// and also allocate that number of new lumpinfo_t structures and return them.
+// and, if makelumps is true, will also allocate that number of new lumpinfo_t
+// structures and return them.
 //
 lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 {
-   lumpinfo_t *newlumps;
+   lumpinfo_t *newlumps = NULL;
 
    numlumps += numnew;
 
@@ -287,6 +290,10 @@ lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 
    // haleyjd: keep track of this allocation of lumps
    addInfoPtr(newlumps);
+
+   // haleyjd: fill in new pointers here, instead of everywhere this is used.
+   for(int i = startlump; i < numlumps; i++)
+      lumpinfo[i] = newlumps + (i - startlump);
 
    return newlumps;
 }
@@ -308,7 +315,6 @@ bool WadDirectory::addSingleFile(openwad_t &openData, wfileadd_t &addInfo,
 
    lump_p = reAllocLumpInfo(1, startlump);
 
-   this->lumpinfo[startlump] = lump_p;
    lump_p->type   = lumpinfo_t::lump_direct; // haleyjd: lump type
    lump_p->size   = static_cast<size_t>(singleinfo.size);
    lump_p->source = source;                  // haleyjd: source id
@@ -381,7 +387,6 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, wfileadd_t &addInfo,
    // Merge into the directory
    for(int i = startlump; i < numlumps; i++, lump_p++, fileinfo++)
    {
-      lumpinfo[i]    = lump_p;
       lump_p->type   = lumpinfo_t::lump_memory; // haleyjd
       lump_p->size   = (size_t)(SwapLong(fileinfo->size));
       lump_p->source = source; // haleyjd
@@ -526,7 +531,6 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
    // Merge into the directory
    for(int i = startlump; i < this->numlumps; i++, lump_p++, fileinfo++)
    {
-      this->lumpinfo[i] = lump_p;
       lump_p->type      = lumpinfo_t::lump_direct; // haleyjd
       lump_p->size      = (size_t)(SwapLong(fileinfo->size));
       lump_p->source    = source; // haleyjd
@@ -585,7 +589,6 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
    {
       ZipLump &zipLump = zip->getLump(i - startlump);
 
-      lumpinfo[i]    = lump_p;
       lump_p->type   = lumpinfo_t::lump_zip;
       lump_p->size   = zipLump.size;
       lump_p->source = source;
@@ -643,7 +646,6 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
    };
    
    openwad_t openData;
-   int       startlump;
 
    // When loading a subfile, the physical file is already open.
    if(addInfo.flags & WFA_SUBFILE)
@@ -684,16 +686,13 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       printf(" adding %s\n", openData.filename);   // killough 8/8/98
    }
 
-   // Remember where we started off at in lumpinfo[]
-   startlump = numlumps;
-
    // Call the appropriate file directory addition routine for this format
 #ifdef RANGECHECK
    if(openData.format < 0 || openData.format >= W_FORMAT_MAX)
       I_Error("WadDirectory::addFile: invalid file format %d\n", openData.format);
 #endif
 
-   if(!(this->*fileadders[openData.format])(openData, addInfo, startlump))
+   if(!(this->*fileadders[openData.format])(openData, addInfo, numlumps))
    {
       handleOpenError(openData, addInfo, openData.filename);
       return false;
@@ -710,7 +709,7 @@ struct dirfile_t
 };
 
 //
-// WadDirectory::AddDirectory
+// WadDirectory::addDirectory
 //
 // Add an on-disk file directory to the WadDirectory.
 //
@@ -842,91 +841,172 @@ bool WadDirectory::addInMemoryWad(void *buffer, size_t size)
 //
 // killough 1/24/98 modified routines to be a little faster and smaller
 
-int WadDirectory::IsMarker(const char *marker, const char *name)
+static int W_IsMarker(const char *marker, const char *name)
 {
    return !strncasecmp(name, marker, 8) ||
       (*name == *marker && !strncasecmp(name+1, marker, 7));
 }
 
+// namespace data
+struct nsdata_t
+{
+   const char *startMarker;
+   const char *endMarker;
+   int li_namespace;
+};
+
+// namespaces
+static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
+{
+   { NULL,      NULL,    lumpinfo_t::ns_global       },
+   { "S_START", "S_END", lumpinfo_t::ns_sprites      },
+   { "F_START", "F_END", lumpinfo_t::ns_flats        },
+   { "C_START", "C_END", lumpinfo_t::ns_colormaps    },
+   { "T_START", "T_END", lumpinfo_t::ns_translations },
+   { NULL,      NULL,    lumpinfo_t::ns_demos        },
+   { "A_START", "A_END", lumpinfo_t::ns_acs          },
+   { NULL,      NULL,    lumpinfo_t::ns_pads         }
+};
+
 //
-// W_CoalesceMarkedResource
+// WadNamespace
+//
+// This class is a utility used only during coalesceMarkedResources, to build
+// the namespace_t structures for the WadDirectory instance.
+//
+class WadNamespace
+{
+protected:
+   bool inMarkers;                     // currently between markers?
+   nsdata_t *nsdata;
+   PODCollection<lumpinfo_t *> marked; // lumps in namespace
+   int numMarked;                      // number added
+
+   // Returns true if the lump is a start marker for this namespace
+   bool lumpIsStartMarker(lumpinfo_t *lump) const
+   {
+      return (nsdata->startMarker &&
+              W_IsMarker(nsdata->startMarker, lump->name));
+   }
+
+   // Returns false if the lump is an end marker for this namespace
+   bool lumpIsEndMarker(lumpinfo_t *lump) const
+   {
+      return (nsdata->endMarker &&
+              W_IsMarker(nsdata->endMarker, lump->name));
+   }
+
+public:
+   WadNamespace() 
+      : inMarkers(false), nsdata(NULL), marked(), numMarked(0)
+   {
+   }
+
+   // Initialize from static data
+   void setNSData(nsdata_t *pNsData) { nsdata = pNsData; }
+
+   // Add a lump into this namespace
+   void addLump(lumpinfo_t *lump) 
+   {
+      marked.add(lump); 
+      lump->li_namespace = nsdata->li_namespace;
+      ++numMarked;
+   }
+
+   // Check if a lump belongs in this namespace
+   void checkLump(lumpinfo_t *lump)
+   {
+      if(lumpIsStartMarker(lump))
+         inMarkers = true;
+      else if(lumpIsEndMarker(lump))
+         inMarkers = false;
+      else if(inMarkers || lump->li_namespace == nsdata->li_namespace)
+      {
+         // we are either between markers, or dealing with a pre-marked lump;
+         // special cases:
+         switch(nsdata->li_namespace)
+         {
+         case lumpinfo_t::ns_sprites:
+            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the 
+            // smallest possible) in size -- this was used by some dmadds
+            // wads as an 'empty' graphics resource
+            if(lump->size > 8)
+               addLump(lump);
+            break;
+         case lumpinfo_t::ns_flats:
+            // SoM: Ignore marker lumps inside F_START and F_END
+            if(lump->size > 0)
+               addLump(lump);
+            break;
+         default:
+            addLump(lump);
+            break;
+         }
+      }
+   }
+
+   // Get the number of lumps marked as belonging
+   int getNumMarked() const { return numMarked; }
+
+   // Merge this namespace back into the master directory
+   int mergeToDirectory(lumpinfo_t **lumpinfo, int index)
+   {
+      int i;
+
+      // append the marked list to the current end of the directory
+      for(i = 0; i < numMarked; i++)
+         lumpinfo[index + i] = marked[i];
+
+      return index + i;
+   }
+};
+
+//
+// WadDirectory::coalesceMarkedResources
 //
 // killough 4/17/98: add namespace tags
 //
-void WadDirectory::coalesceMarkedResource(const char *start_marker,
-                                          const char *end_marker, 
-                                          int li_namespace)
+void WadDirectory::coalesceMarkedResources()
 {
-   lumpinfo_t **marked = ecalloc(lumpinfo_t **, sizeof(*marked), this->numlumps);
-   size_t i, num_marked = 0, num_unmarked = 0;
-   int is_marked = 0, mark_end = 0;
-   lumpinfo_t *lump;
-  
-   for(i = 0; i < (unsigned)this->numlumps; i++)
-   {
-      lump = this->lumpinfo[i];
-      
-      // If this is the first start marker, add start marker to marked lumps
-      if(IsMarker(start_marker, lump->name))       // start marker found
-      {
-         if(!num_marked)
-         {
-            marked[0] = lump;
-            marked[0]->li_namespace = lumpinfo_t::ns_global; // killough 4/17/98
-            num_marked = 1;
-         }
-         is_marked = 1;                            // start marking lumps
-      }
-      else if(IsMarker(end_marker, lump->name))    // end marker found
-      {
-         mark_end = 1;                           // add end marker below
-         is_marked = 0;                          // stop marking lumps
-      }
-      else if(is_marked || lump->li_namespace == li_namespace)
-      {
-         // if we are marking lumps,
-         // move lump to marked list
-         // sf: check for namespace already set
+   WadNamespace namespaces[lumpinfo_t::ns_max];
+   int i, ns;
 
-         // sf 26/10/99:
-         // ignore sprite lumps smaller than 8 bytes (the smallest possible)
-         // in size -- this was used by some dmadds wads
-         // as an 'empty' graphics resource
-         
-         // SoM: Ignore marker lumps inside F_START and F_END
-         if((li_namespace == lumpinfo_t::ns_sprites && lump->size > 8) ||
-            (li_namespace == lumpinfo_t::ns_flats && lump->size > 0) ||
-            (li_namespace != lumpinfo_t::ns_sprites && li_namespace != lumpinfo_t::ns_flats))
-         {
-            marked[num_marked] = lump;
-            marked[num_marked]->li_namespace = li_namespace;
-            num_marked++;
-         }
-      }
-      else
-      {
-         this->lumpinfo[num_unmarked] = lump;       // else move down THIS list
-         num_unmarked++;
-      }
+   for(i = 0; i < lumpinfo_t::ns_max; i++)
+      namespaces[i].setNSData(&wadNameSpaces[i]);
+
+   // scan the entire wad directory; save off lumps that belong in each
+   // namespace
+   for(ns = lumpinfo_t::ns_sprites; ns < lumpinfo_t::ns_max; ns++)
+   {
+      for(int lumpnum = 0; lumpnum < numlumps; lumpnum++)
+         namespaces[ns].checkLump(lumpinfo[lumpnum]);
    }
-   
-   // Append marked list to end of unmarked list
-   memcpy(this->lumpinfo + num_unmarked, marked, num_marked * sizeof(lumpinfo_t *));
 
-   efree(marked);                                   // free marked list
-   
-   this->numlumps = num_unmarked + num_marked;      // new total number of lumps
-   
-   if(mark_end)                                     // add end marker
+   // now add any remaining unmarked lumps to ns_global
+   for(i = 0; i < numlumps; i++)
+      namespaces[lumpinfo_t::ns_global].checkLump(lumpinfo[i]);
+
+   // re-allocate lumpinfo if necessary
+   int totalLumps = 0;
+   for(ns = 0; ns < lumpinfo_t::ns_max; ns++)
    {
-      lumpinfo_t *newlump = ecalloc(lumpinfo_t *, 1, sizeof(lumpinfo_t));
-      int lNumLumps = this->numlumps;
-      addInfoPtr(newlump); // haleyjd: track it
-      this->lumpinfo[lNumLumps] = newlump;
-      this->lumpinfo[lNumLumps]->size = 0;  // killough 3/20/98: force size to be 0
-      this->lumpinfo[lNumLumps]->li_namespace = lumpinfo_t::ns_global;   // killough 4/17/98
-      strncpy(this->lumpinfo[lNumLumps]->name, end_marker, 8);
-      this->numlumps++;
+      int numMarked = namespaces[ns].getNumMarked();
+      m_namespaces[ns].numLumps = numMarked;
+      totalLumps += numMarked;
+   }
+
+   if(totalLumps != numlumps)
+   {
+      lumpinfo = erealloc(lumpinfo_t **, lumpinfo, totalLumps * sizeof(*lumpinfo));
+      numlumps = totalLumps;
+   }
+
+   // re-order the directory so that all namespaces are contiguous
+   int curLump = 0;
+   for(ns = 0; ns < lumpinfo_t::ns_max; ns++)
+   {
+      m_namespaces[ns].firstLump = curLump;
+      curLump = namespaces[ns].mergeToDirectory(lumpinfo, curLump);
    }
 }
 
@@ -978,7 +1058,8 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace)
    // Hash function maps the name to one of possibly numlump chains.
    // It has been tuned so that the average chain length never exceeds 2.
    
-   register int i = lumpinfo[LumpNameHash(name) % (unsigned int)numlumps]->index;
+   unsigned int hashkey = LumpNameHash(name) % (unsigned int)numlumps;
+   register int i = lumpinfo[hashkey]->namehash.index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -988,7 +1069,7 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace)
 
    while(i >= 0 && (strncasecmp(lumpinfo[i]->name, name, 8) ||
          lumpinfo[i]->li_namespace != li_namespace))
-      i = lumpinfo[i]->next;
+      i = lumpinfo[i]->namehash.next;
 
    // Return the matching lump, or -1 if none found.   
    return i;
@@ -1053,25 +1134,36 @@ int W_GetNumForName(const char *name)
 }
 
 //
-// W_GetLumpNameChainInDir
+// WadDirectory::checkNumForLFN
+//
+// haleyjd 04/21/13: Support for looking up lumps by their long file name.
+//
+int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
+{
+   unsigned int hashkey = D_HashTableKeyCase(lfn) % (unsigned int)numlumps;
+   register int i = lumpinfo[hashkey]->lfnhash.index;
+
+   for(; i >= 0; i = lumpinfo[i]->lfnhash.next)
+   {
+      if(lumpinfo[i]->lfn &&
+         !strcmp(lumpinfo[i]->lfn, lfn) &&
+         lumpinfo[i]->li_namespace == li_namespace)
+         break; // found it.
+   }
+
+   // Return the matching lump, or -1 if none found.   
+   return i;
+}
+
+//
+// WadDirectory::getLumpNameChain
 //
 // haleyjd 03/18/10: routine for getting the lumpinfo hash chain for lumps of a
 // given name, to replace code segments doing this in several different places.
 //
-lumpinfo_t *WadDirectory::getLumpNameChain(const char *name)
+lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 {
    return lumpinfo[LumpNameHash(name) % (unsigned int)numlumps];
-}
-
-//
-// W_GetLumpNameChain
-//
-// haleyjd 03/18/10: convenience routine to do the above on the global wad
-// directory.
-//
-lumpinfo_t *W_GetLumpNameChain(const char *name)
-{
-   return wGlobalDir.getLumpNameChain(name);
 }
 
 //
@@ -1099,8 +1191,9 @@ void WadDirectory::initLumpHash()
    
    for(i = 0; i < numlumps; i++)
    {
-      lumpinfo[i]->index     = -1; // mark slots empty
-      lumpinfo[i]->selfindex =  i; // haleyjd: record position in array
+      lumpinfo[i]->namehash.index = -1; // mark slots empty
+      lumpinfo[i]->lfnhash.index  = -1;
+      lumpinfo[i]->selfindex      =  i; // haleyjd: record position in array
    }
 
    // Insert nodes to the beginning of each chain, in first-to-last
@@ -1116,8 +1209,16 @@ void WadDirectory::initLumpHash()
          continue;
 
       j = LumpNameHash(lumpinfo[i]->name) % (unsigned int)numlumps;
-      lumpinfo[i]->next = lumpinfo[j]->index;     // Prepend to list
-      lumpinfo[j]->index = i;
+      lumpinfo[i]->namehash.next = lumpinfo[j]->namehash.index; // Prepend to list
+      lumpinfo[j]->namehash.index = i;
+
+      // haleyjd 04/21/12: add to lfn hash also if has a valid LFN
+      if(!(lumpinfo[i]->lfn && *lumpinfo[i]->lfn))
+         continue;
+
+      j = D_HashTableKeyCase(lumpinfo[i]->lfn) % (unsigned int)numlumps;
+      lumpinfo[i]->lfnhash.next = lumpinfo[j]->lfnhash.index;
+      lumpinfo[j]->lfnhash.index = i;
    }
 }
 
@@ -1128,23 +1229,9 @@ void WadDirectory::initLumpHash()
 //
 void WadDirectory::initResources() // sf
 {
-   //jff 1/23/98
+   // jff 1/23/98
    // get all the sprites and flats into one marked block each
-   // killough 1/24/98: change interface to use M_START/M_END explicitly
-   // killough 4/17/98: Add namespace tags to each entry
-   
-   coalesceMarkedResource("S_START", "S_END", lumpinfo_t::ns_sprites);
-   
-   coalesceMarkedResource("F_START", "F_END", lumpinfo_t::ns_flats);
-
-   // killough 4/4/98: add colormap markers
-   coalesceMarkedResource("C_START", "C_END", lumpinfo_t::ns_colormaps);
-   
-   // haleyjd 01/12/04: add translation markers
-   coalesceMarkedResource("T_START", "T_END", lumpinfo_t::ns_translations);
-
-   // davidph 05/29/12: add acs markers
-   coalesceMarkedResource("A_START", "A_END", lumpinfo_t::ns_acs);
+   coalesceMarkedResources();
 
    // set up caching
    // sf: caching now done in the lumpinfo_t's
@@ -1384,12 +1471,15 @@ void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 }
 
 //
-// WadDirectory::cacheLumpNumAuto
+// WadDirectory::cacheLumpAuto
 //
 // Cache a copy of a lump into a ZAutoBuffer, by lump num.
 //
 void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer)
 {
+   if(lumpnum < 0 || lumpnum >= numlumps)
+      I_Error("WadDirectory::cacheLumpAuto: %i >= numlumps\n", lumpnum);
+
    size_t size = lumpinfo[lumpnum]->size;
 
    buffer.alloc(size, false);

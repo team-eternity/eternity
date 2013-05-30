@@ -929,7 +929,6 @@ static void E_ProcessFont(cfg_t *sec)
       for(int col = 0; col < CR_LIMIT; col++)
       {
          qstring translation;
-         const char *fieldname = fontcolornames[col];
          
          E_CfgListToCommaString(colors, fontcolornames[col], translation);
 
@@ -1068,7 +1067,7 @@ vfont_t *E_FontForNum(int num)
    unsigned int key = num % NUMFONTCHAINS;
    DLListItem<vfont_t> *link = e_font_numchains[key];
 
-   while(link && link->dllObject->num != num)
+   while(link && (*link)->num != num)
       link = link->dllNext;
 
    return link ? link->dllObject : NULL;

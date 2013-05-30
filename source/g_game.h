@@ -98,7 +98,10 @@ extern int  autorun;           // always running?                   // phares
 extern int  runiswalk;
 extern int  automlook;
 extern int  invert_mouse;
+extern int  invert_padlook;
 extern int  bfglook;
+extern int mouseb_dblc1;  // double-clicking either of these buttons
+extern int mouseb_dblc2;  // causes a use action
 
 //extern angle_t consoleangle;
 
@@ -116,8 +119,6 @@ extern int  animscreenshot;       // animated screenshots
 // Par times (new item with BOOM) - from g_game.c
 extern int pars[][10];  // hardcoded array size
 extern int cpars[];     // hardcoded array size
-
-#define NUMKEYS   256
 
 extern int cooldemo;
 extern bool hub_changelevel;

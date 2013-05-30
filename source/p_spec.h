@@ -28,6 +28,9 @@
 
 // HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
+// Required for: fixed_t
+#include "m_fixed.h"
+
 // Required for: Thinker
 #include "p_tick.h"
 
@@ -389,24 +392,27 @@ typedef enum
 
 typedef enum
 {
-   up,
-   down,
-   waiting,
-   in_stasis
-} plat_e;
-
-typedef enum
-{
    perpetualRaise,
    downWaitUpStay,
    raiseAndChange,
    raiseToNearestAndChange,
    blazeDWUS,
-   genLift,      //jff added to support generalized Plat types
+   genLift,       // jff added to support generalized Plat types
    genPerpetual, 
-   toggleUpDn,   //jff 3/14/98 added to support instant toggle type
+   toggleUpDn,    // jff 3/14/98 added to support instant toggle type
+   upWaitDownStay // haleyjd 2/18/13: Hexen and Strife reverse plats
 
 } plattype_e;
+
+// haleyjd 02/18/13: parameterized plat trigger types
+typedef enum
+{
+   paramDownWaitUpStay,
+   paramDownByValueWaitUpStay,
+   paramUpWaitDownStay,
+   paramUpByValueWaitDownStay,
+   paramPerpetualRaise
+} paramplattype_e;
 
 // p_doors
 
@@ -526,6 +532,9 @@ typedef enum
    genWaitStair,  // haleyjd 10/10/05: stair resetting
    genDelayStair, // haleyjd 10/13/05: delayed stair
    genResetStair, 
+
+   // new types for supporting other idTech games
+   turboLowerA,   // haleyjd 02/09/13: for Heretic turbo floors
 } floor_e;
 
 typedef enum
@@ -569,14 +578,6 @@ typedef enum
    middle,
    bottom      
 } bwhere_e;
-
-// crush check returns
-typedef enum
-{
-   ok,
-   crushed,
-   pastdest
-} result_e;
 
 //=============================================================================
 //
@@ -756,15 +757,33 @@ class PlatThinker : public SectorThinker
 {
    DECLARE_THINKER_TYPE(PlatThinker, SectorThinker)
 
+public:
+   // Enumerations
+   typedef enum
+   {
+      up,
+      down,
+      waiting,
+      in_stasis
+   } plat_e;
+
 protected:
    void Think();
 
    virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
 
 public:
-   // Methods
+   // Overridden Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
+
+   // Methods
+   void addActivePlat();
+   void removeActivePlat();
+
+   // Static Methods
+   static void ActivateInStasis(int tag);
+   static void RemoveAllActivePlats();    // killough
 
    // Data Members
    fixed_t speed;
@@ -777,16 +796,8 @@ public:
    int crush;
    int tag;
    int type;
-   struct platlist *list;   // killough
+   struct platlist_t *list;   // killough
 };
-
-// New limit-free plat structure -- killough
-
-typedef struct platlist 
-{
-  PlatThinker *plat; 
-  struct platlist *next, **prev;
-} platlist_t;
 
 // p_ceilng
 
@@ -834,20 +845,29 @@ public:
    bool turbo;     // haleyjd: behave as a turbo door, independent of speed
 };
 
+// door data flags
+enum
+{
+   DDF_HAVETRIGGERTYPE = 0x00000001, // BOOM-style generalized trigger
+   DDF_HAVESPAC        = 0x00000002, // Hexen-style parameterized trigger
+   DDF_USEALTLIGHTTAG  = 0x00000004, // use the altlighttag field
+   DDF_REUSABLE        = 0x00000008, // action can be retriggered
+};
+
 // haleyjd 05/04/04: extended data struct for gen/param doors
 typedef struct doordata_s
 {
-   // generalized values
-   int  kind;
+   int     flags;         // flags for action; use DDF values above.
+   int     spac;          // valid IFF DDF_HAVESPAC is set
+   int     trigger_type;  // valid IFF DDF_HAVETRIGGERTYPE is set
 
-   // parameterized values
-   fixed_t speed_value;
-   int     delay_value;
-   int     altlighttag;
-   bool    usealtlighttag;
-   int     topcountdown;
-   int     spac;
-   bool    reuse;
+   int     kind;          // kind of door action
+   fixed_t speed_value;   // speed of door action
+   int     delay_value;   // delay between open and close
+   int     altlighttag;   // alternate light tag, if DDF_USEALTLIGHTTAG is set
+   int     topcountdown;  // delay before initial activation
+
+   Mobj   *thing;         // activating thing, if any
 } doordata_t;
 
 // haleyjd 09/06/07: sector special transfer structure
@@ -859,7 +879,7 @@ struct spectransfer_t
    int damage;
    int damagemask;
    int damagemod;
-   int damageflags;
+   unsigned int damageflags;
 };
 
 // p_doors
@@ -909,11 +929,21 @@ typedef struct ceilinglist
   struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
+// haleyjd 01/09/12: ceiling data flags
+enum
+{
+   CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
+   CDF_HAVESPAC        = 0x00000002  // has Hexen-style spac
+};
+
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
 typedef struct ceilingdata_s
 {   
-   // generalized values
-   int trigger_type;
+   int flags;        // combination of values above
+   int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
+   int spac;         // valid IFF (flags & CDF_HAVESPAC)
+   
+   // generalized values   
    int crush;
    int direction;
    int speed_type;
@@ -962,11 +992,21 @@ public:
    int delayTimer;
 };
 
+// Floor data flags
+enum
+{
+   FDF_HAVESPAC        = 0x00000001, // has Hexen-style SPAC activation
+   FDF_HAVETRIGGERTYPE = 0x00000002  // has BOOM-style generalized trigger type
+};
+
 // haleyjd 05/07/04: extended data struct for parameterized floors
 typedef struct floordata_s
 {   
    // generalized values
-   int trigger_type;
+   int flags;
+   int spac;         // valid IFF flags & FDF_HAVESPAC
+   int trigger_type; // valid IFF flags & FDF_HAVETRIGGERTYPE
+   
    int crush;
    int direction;
    int speed_type;
@@ -979,12 +1019,23 @@ typedef struct floordata_s
    fixed_t speed_value;
 } floordata_t;
 
+// haleyjd 01/21/13: stairdata flags
+enum
+{
+   SDF_HAVESPAC        = 0x00000001, // Hexen-style activation
+   SDF_HAVETRIGGERTYPE = 0x00000002, // BOOM-style activation
+   SDF_IGNORETEXTURES  = 0x00000004, // whether or not to ignore floor textures
+   SDF_SYNCHRONIZED    = 0x00000008, // if set, build in sync
+};
+
 // haleyjd 10/06/05: extended data struct for parameterized stairs
 typedef struct stairdata_s
 {   
-   // generalized values
+   int flags;
+   int spac;
    int trigger_type;
-   int ignore;
+
+   // generalized values
    int direction;
    int stepsize_type;
    int speed_type;
@@ -994,7 +1045,6 @@ typedef struct stairdata_s
    fixed_t speed_value;
    int delay_value;
    int reset_value;
-   int sync_value;
 } stairdata_t;
 
 class ElevatorThinker : public SectorThinker
@@ -1079,37 +1129,6 @@ public:
 
 // p_spec
 
-// killough 3/7/98: Add generalized scroll effects
-
-class ScrollThinker : public Thinker
-{
-   DECLARE_THINKER_TYPE(ScrollThinker, Thinker)
-
-protected:
-   void Think();
-
-public:
-   // Methods
-   virtual void serialize(SaveArchive &arc);
-   
-   // Data Members
-   fixed_t dx, dy;      // (dx,dy) scroll speeds
-   int affectee;        // Number of affected sidedef, sector, tag, or whatever
-   int control;         // Control sector (-1 if none) used to control scrolling
-   fixed_t last_height; // Last known height of control sector
-   fixed_t vdx, vdy;    // Accumulated velocity if accelerative
-   int accel;           // Whether it's accelerative
-   enum
-   {
-      sc_side,
-      sc_floor,
-      sc_ceiling,
-      sc_carry,
-      sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-   };
-   int type;              // Type of scroll effect
-};
-
 // haleyjd 04/11/10: FrictionThinker restored
 // phares 3/12/98: added new model of friction for ice/sludge effects
 
@@ -1130,46 +1149,14 @@ public:
    int affectee;      // Number of affected sector
 };
 
-// phares 3/20/98: added new model of Pushers for push/pull effects
-
-class PushThinker : public Thinker
-{
-   DECLARE_THINKER_TYPE(PushThinker, Thinker)
-
-protected:
-   void Think();
-
-public:
-   // Methods
-   virtual void serialize(SaveArchive &arc);
-   
-   // Data Members
-   enum
-   {
-      p_push,
-      p_pull,
-      p_wind,
-      p_current,
-   }; 
-   int type;
-   Mobj *source;        // Point source if point pusher
-   int x_mag;           // X Strength
-   int y_mag;           // Y Strength
-   int magnitude;       // Vector strength for point pusher
-   int radius;          // Effective radius for point pusher
-   int x;               // X of point source if point pusher
-   int y;               // Y of point source if point pusher
-   int affectee;        // Number of affected sector
-};
-
 // sf: direction plat moving
 
 enum
 {
-  plat_stop     = 0,
-  plat_up       = 1,
-  plat_down     = -1,
-  plat_special  = 2,  // haleyjd 02/24/05
+   plat_stop     =  0,
+   plat_up       =  1,
+   plat_down     = -1,
+   plat_special  =  2,  // haleyjd 02/24/05
 };
 
 
@@ -1186,8 +1173,6 @@ enum
 
 extern int             levelTimeLimit;
 extern int             levelFragLimit;
-
-extern platlist_t *activeplats;        // killough 2/14/98
 
 extern ceilinglist_t *activeceilings;  // jff 2/22/98
 
@@ -1237,8 +1222,6 @@ int P_FindMinSurroundingLight(sector_t *sector, int max);
 
 sector_t *getNextSector(line_t *line, sector_t *sec);
 
-int P_CheckTag(line_t *line); // jff 2/27/98
-
 bool P_CanUnlockGenDoor(line_t *line, player_t *player);
 
 int P_SectorActive(special_e t, sector_t *s);
@@ -1248,19 +1231,6 @@ bool P_IsSecret(sector_t *sec);
 bool P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
-
-void P_ConvertHexenLineSpec(int16_t *special, int *args);
-
-////////////////////////////////////////////////////////////////
-//
-// Linedef and sector special action function prototypes
-//
-////////////////////////////////////////////////////////////////
-
-// p_floor
-
-result_e T_MovePlane(sector_t *sector, fixed_t speed, fixed_t dest,
-                     int crush, int floorOrCeiling, int direction);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1346,31 +1316,32 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
 
-int EV_DoPlat(line_t *line, plattype_e type, int amount);
-
-int EV_StopPlat(line_t *line);
+bool EV_DoPlat(line_t *line, plattype_e type, int amount);
+bool EV_DoParamPlat(line_t *line, int *args, paramplattype_e type);
+bool EV_StopPlatByTag(int tag);
+bool EV_StopPlat(line_t *line);
 
 // p_genlin
 
+int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd);
 int EV_DoGenFloor(line_t *line);
 
+int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd);
 int EV_DoGenCeiling(line_t *line);
 
 int EV_DoGenLift(line_t *line);
 
+int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);
 
 int EV_DoGenCrusher(line_t *line);
 
 int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd);
-int EV_DoGenDoor(line_t *line);
+int EV_DoGenDoor(line_t *line, Mobj *thing);
 
-int EV_DoGenLockedDoor(line_t *line);
+int EV_DoGenLockedDoor(line_t *line, Mobj *thing);
 
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
-
-// haleyjd 02/23/04
-extern Mobj *genDoorThing;
 
 // p_things
 
@@ -1392,14 +1363,14 @@ void P_InitPicAnims(void);
 void P_InitSwitchList(void);
 
 // at map load
-void P_SpawnSpecials(int);
+void P_SpawnSpecials();
 
 // 
 // P_SpawnDeferredSpecials
 //
 // SoM: Specials that copy slopes, ect., need to be collected in a separate 
 // pass
-void P_SpawnDeferredSpecials(int mapformat);
+void P_SpawnDeferredSpecials();
 
 // every tic
 void P_UpdateSpecials(void);
@@ -1417,8 +1388,8 @@ void P_PlayerOnSpecialFlat(player_t *player);
 // p_switch
 
 // haleyjd 10/16/05: moved all button code into p_switch.c
-void P_ClearButtons(void);
-void P_RunButtons(void);
+void P_ClearButtons();
+void P_RunButtons();
 
 // p_lights
 
@@ -1432,14 +1403,6 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 
 // p_plats
-
-void P_AddActivePlat(PlatThinker *plat);
-
-void P_RemoveActivePlat(PlatThinker *plat);
-
-void P_RemoveAllActivePlats(void);    // killough
-
-void P_ActivateInStasis(int tag);
 
 void P_PlatSequence(sector_t *s, const char *seqname);
 
@@ -1470,12 +1433,10 @@ int P_ActivateInStasisCeiling(line_t *line);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
-Mobj *P_GetPushThing(int);                                // phares 3/23/98
-
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachLines(line_t *cline, bool ceiling);
 bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush);
-void P_AttachSectors(line_t *line);
+void P_AttachSectors(line_t *line, int staticFn);
 
 bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush);
 
@@ -1504,10 +1465,6 @@ enum
    SPAC_IMPACT,
    SPAC_PUSH,
 };
-
-bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
-                         int *args, int side, int spac, bool reuse);
 
 extern void P_StartLineScript(line_t *line, Mobj *thing);
 

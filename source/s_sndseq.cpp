@@ -63,8 +63,8 @@ bool S_CheckSequenceLoop(PointThinker *mo)
    {
       next = link->dllNext;
 
-      if(link->dllObject->origin == mo)
-         return ((link->dllObject->flags & SEQ_FLAG_LOOPING) == SEQ_FLAG_LOOPING);
+      if((*link)->origin == mo)
+         return (((*link)->flags & SEQ_FLAG_LOOPING) == SEQ_FLAG_LOOPING);
 
       link = next;
    }
@@ -94,8 +94,8 @@ void S_StopSequence(PointThinker *mo)
 
    while(link)
    {
-      next   = link->dllNext;
-      curSeq = link->dllObject;
+      next   =  link->dllNext;
+      curSeq = *link;
 
       if(curSeq->origin == mo)
       {
@@ -135,7 +135,7 @@ void S_SquashSequence(PointThinker *mo)
    {
       next = link->dllNext;
 
-      if(link->dllObject->origin == mo)
+      if((*link)->origin == mo)
       {
          // unlink and delete this object
          link->remove();
@@ -161,10 +161,10 @@ void S_KillSequence(PointThinker *mo)
    {
       next = link->dllNext;
 
-      if(link->dllObject->origin == mo)
+      if((*link)->origin == mo)
       {
          // stop any sound playing
-         S_StopSound(link->dllObject->origin, CHAN_ALL);
+         S_StopSound((*link)->origin, CHAN_ALL);
 
          // unlink and delete this object
          link->remove();
@@ -550,7 +550,7 @@ void S_RunSequences(void)
    {
       DLListItem<SndSeq_t> *next = link->dllNext;
 
-      S_RunSequence(link->dllObject);
+      S_RunSequence(*link);
 
       link = next;
    } // end while
@@ -760,7 +760,7 @@ void S_SequenceGameLoad(void)
    // modifies the double-linked list; it'll stop running when the last sequence
    // is deleted.
    while((link = SoundSequences))
-      S_KillSequence(link->dllObject->origin);
+      S_KillSequence((*link)->origin);
 
    // reset the enviro sequence engine in a way that lets it start up again
    S_ResetEnviroSeqEngine();
@@ -773,11 +773,6 @@ void S_SequenceGameLoad(void)
 
 VARIABLE_INT(s_enviro_volume, NULL, 0, 16, NULL);
 CONSOLE_VARIABLE(s_enviro_volume, s_enviro_volume, 0) {}
-
-void S_AddSeqCommands(void)
-{
-   C_AddCommand(s_enviro_volume);
-}
 
 // EOF
 

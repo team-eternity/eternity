@@ -786,7 +786,6 @@ static bool RunGameTics(void)
    {
       I_StartTic();
       D_ProcessEvents();
-      //newtics = 1;  // only 1 new tic
       G_BuildTiccmd(&netcmds[consoleplayer][maketic%BACKUPTICS]);
       if(advancedemo)
          D_DoAdvanceDemo();
@@ -832,7 +831,6 @@ static bool RunGameTics(void)
             I_Error("gametic>lowtic\n");
          if(advancedemo)
             D_DoAdvanceDemo();
-         //isconsoletic =  gamestate == GS_CONSOLE;
          G_Ticker();
          gametic++;
          
@@ -854,6 +852,7 @@ static bool RunGameTics(void)
             }
          }
       }
+
       NetUpdate();   // check for new console commands
    }
 
@@ -940,14 +939,6 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 
 VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
-
-void net_AddCommands()
-{
-   //C_AddCommand(kick);
-   //C_AddCommand(disconnect);
-   C_AddCommand(playerinfo);
-   C_AddCommand(d_fastrefresh);
-}
 
 //----------------------------------------------------------------------------
 //

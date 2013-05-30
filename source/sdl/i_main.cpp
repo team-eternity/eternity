@@ -51,8 +51,6 @@
 
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
-void I_Quit(void);
-
 // SoM 3/11/2002: Disable the parachute for debugging.
 // haleyjd 07/06/04: changed to a macro to eliminate local variable
 // note: sound init is handled separately in i_sound.c
@@ -65,7 +63,9 @@ void I_Quit(void);
 #define INIT_FLAGS BASE_INIT_FLAGS
 #endif
 
-static void VerifySDLVersions(void);
+#ifdef _DEBUG
+static void VerifySDLVersions();
+#endif
 
 int SDLIsInit;
 
@@ -113,9 +113,6 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
-
-   Z_Init();
-   atexit(I_Quit);
    
    D_DoomMain();
    
@@ -139,7 +136,7 @@ enum
 // differing from the compiled version of SDL libs, I am writing
 // this function to warn about such a thing.
 //
-static void VerifySDLVersions(void)
+static void VerifySDLVersions()
 {
    SDL_version cv;       // compiled version
    const SDL_version *lv; // linked version

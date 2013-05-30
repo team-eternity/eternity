@@ -32,6 +32,9 @@
 
 #include "SDL.h"
 
+// HAL modules
+#include "../hal/i_gamepads.h"
+
 #include "../z_zone.h"
 #include "../c_io.h"
 #include "../c_runcmd.h"
@@ -54,28 +57,37 @@
 extern int waitAtExit;
 #endif
 
-ticcmd_t *I_BaseTiccmd(void)
+//
+// I_BaseTiccmd
+//
+ticcmd_t *I_BaseTiccmd()
 {
    static ticcmd_t emptycmd; // killough
    return &emptycmd;
 }
 
-
+//
+// I_WaitVBL
+//
 // SoM 3/13/2002: SDL time. 1000 ticks per second.
+//
 void I_WaitVBL(int count)
 {
    SDL_Delay((count*500)/TICRATE);
 }
 
-
-// Most of the following has been rewritten by Lee Killough
-
+//=============================================================================
 //
 // I_GetTime
+// Most of the following has been rewritten by Lee Killough
 //
+
 static Uint32 basetime=0;
 
-int  I_GetTime_RealTime (void)
+//
+// I_GetTime_RealTime
+//
+int I_GetTime_RealTime()
 {
    Uint32        ticks;
    
@@ -90,11 +102,14 @@ int  I_GetTime_RealTime (void)
 //
 // haleyjd 10/26/08
 //
-unsigned int I_GetTicks(void)
+unsigned int I_GetTicks()
 {
    return SDL_GetTicks();
 }
 
+//
+// I_SetTime
+//
 void I_SetTime(int newtime)
 {
    // SoM 3/14/2002: Uh, this function is never called. ??
@@ -107,20 +122,27 @@ void I_SetTime(int newtime)
 int realtic_clock_rate = 100;
 static int64_t I_GetTime_Scale = 1 << CLOCK_BITS;
 
-int I_GetTime_Scaled(void)
+//
+// I_GetTime_Scaled
+//
+int I_GetTime_Scaled()
 {
    return (int)(((int64_t)I_GetTime_RealTime() * I_GetTime_Scale) >> CLOCK_BITS);
 }
 
-
-static int I_GetTime_FastDemo(void)
+//
+// I_GetTime_FastDemo
+//
+static int I_GetTime_FastDemo()
 {
    static int fasttic;
    return fasttic++;
 }
 
-
-static int I_GetTime_Error(void)
+//
+// I_GetTime_Error
+//
+static int I_GetTime_Error()
 {
    I_Error("Error: GetTime() used before initialization\n");
    return 0;
@@ -129,101 +151,30 @@ static int I_GetTime_Error(void)
 int (*I_GetTime)(void) = I_GetTime_Error;  // killough
 
 int mousepresent;
-int joystickpresent;  // phares 4/3/98
-
-// haleyjd 04/15/02: SDL joystick support
-
-// current device number -- saved in config file
-int i_SDLJoystickNum;
- 
-// pointer to current joystick device information
-SDL_Joystick *sdlJoystick = NULL;
 
 int keyboard_installed = 0;
 extern int autorun;          // Autorun state
 static SDLMod oldmod; // SoM 3/20/2002: save old modifier key state
 
-void I_Shutdown(void)
+//
+// I_Shutdown
+//
+// Added as an atexit handler.
+//
+void I_Shutdown()
 {
    SDL_SetModState(oldmod);
    
    // haleyjd 04/15/02: shutdown joystick
-   if(joystickpresent && sdlJoystick && i_SDLJoystickNum >= 0)
-   {
-      if(SDL_JoystickOpened(i_SDLJoystickNum))
-         SDL_JoystickClose(sdlJoystick);
-      
-      joystickpresent = false;
-   }
-}
-
-jsdata_t *joysticks = NULL;
-int numJoysticks = 0;
-int sdlJoystickNumButtons;
-
-//
-// I_EnumerateJoysticks
-//
-// haleyjd 04/15/02
-//
-void I_EnumerateJoysticks(void)
-{
-   int i;
-   
-   numJoysticks = SDL_NumJoysticks();
-
-   if(joysticks)
-   {
-      for(i = 0; joysticks[i].description; i++)
-      {
-	 Z_Free(joysticks[i].description);
-      }
-      Z_Free(joysticks);
-   }
-
-   joysticks = (jsdata_t *)(Z_Malloc((numJoysticks + 1) * sizeof(jsdata_t),
-                                     PU_STATIC, NULL));
-
-   for(i = 0; i < numJoysticks; i++)
-   {
-      joysticks[i].description = 
-	 Z_Strdup(SDL_JoystickName(i), PU_STATIC, NULL);
-   }
-
-   // last element is a dummy
-   joysticks[numJoysticks].description = NULL;
-}
-
-
-//
-// I_SetJoystickDevice
-//
-// haleyjd 04/15/02
-//
-bool I_SetJoystickDevice(int deviceNum)
-{
-   if(deviceNum >= SDL_NumJoysticks())
-      return false;
-   else
-   {
-      sdlJoystick = SDL_JoystickOpen(deviceNum);
-
-      if(!sdlJoystick)
-	 return false;
-
-      // check that the device has at least 2 axes and
-      // 4 buttons
-      if(SDL_JoystickNumAxes(sdlJoystick) < 2 ||
-	 (sdlJoystickNumButtons = SDL_JoystickNumButtons(sdlJoystick)) < 4)
-	 return false;
-
-      return true;
-   }
+   I_ShutdownGamePads();
 }
 
 extern bool unicodeinput;
 
-void I_InitKeyboard(void)
+//
+// I_InitKeyboard
+//
+void I_InitKeyboard()
 {   
    keyboard_installed = 1;
 
@@ -235,7 +186,10 @@ void I_InitKeyboard(void)
    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
-void I_Init(void)
+//
+// I_Init
+//
+void I_Init()
 {
    int clock_rate = realtic_clock_rate, p;
    
@@ -262,27 +216,16 @@ void I_Init(void)
    }
 
    // haleyjd 04/15/02: initialize joystick
-   I_EnumerateJoysticks();
-
-   if(i_SDLJoystickNum != -1)
-   {
-      joystickpresent = I_SetJoystickDevice(i_SDLJoystickNum);
-   }
-   else
-   {
-      joystickpresent = false;
-   }
+   I_InitGamePads();
       
    // killough 3/6/98: end of keyboard / autorun state changes
       
    atexit(I_Shutdown);
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
-   { 
-      extern bool nomusicparm, nosfxparm;
-      if(!(nomusicparm && nosfxparm))
-         I_InitSound();
-   }
+   extern bool nomusicparm, nosfxparm;
+   if(!(nomusicparm && nosfxparm))
+      I_InitSound();
 }
 
 
@@ -488,7 +431,7 @@ int endoomdelay;
 // haleyjd 10/09/05: ENDOOM emulation thanks to fraggle and
 //                   Chocolate DOOM!
 //
-void I_EndDoom(void)
+void I_EndDoom()
 {
    unsigned char *endoom_data;
    unsigned char *screendata;
@@ -534,7 +477,7 @@ void I_EndDoom(void)
 }
 
 // check for ESC button pressed, regardless of keyboard handler
-int I_CheckAbort(void)
+int I_CheckAbort()
 {
    SDL_Event ev;
 
@@ -576,24 +519,6 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
-// haleyjd 04/15/02: windows joystick commands
-CONSOLE_COMMAND(i_joystick, 0)
-{
-   if(Console.argc != 1)
-      return;
-
-   i_SDLJoystickNum = Console.argv[0]->toInt();
-
-   if(i_SDLJoystickNum != -1)
-   {
-      joystickpresent = I_SetJoystickDevice(i_SDLJoystickNum);
-   }
-   else
-   {
-      joystickpresent = false;
-   }
-}
-
 #ifdef _SDL_VER
 VARIABLE_BOOLEAN(waitAtExit, NULL, yesno);
 CONSOLE_VARIABLE(i_waitatexit, waitAtExit, 0) {}
@@ -605,31 +530,5 @@ VARIABLE_INT(endoomdelay, NULL, 35, 3500, NULL);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 
-extern void I_Sound_AddCommands();
-extern void I_Video_AddCommands();
-extern void I_Input_AddCommands();
-extern void Ser_AddCommands();
+// EOF
 
-        // add system specific commands
-void I_AddCommands()
-{
-   C_AddCommand(i_ledsoff);
-   C_AddCommand(i_gamespeed);
-   C_AddCommand(i_joystick);
-
-#ifdef _SDL_VER
-   C_AddCommand(i_waitatexit);
-   C_AddCommand(i_showendoom);
-   C_AddCommand(i_endoomdelay);
-#endif
-   
-   I_Video_AddCommands();
-   I_Sound_AddCommands();
-   Ser_AddCommands();
-}
-
-//----------------------------------------------------------------------------
-//
-// $Log: i_system.c,v $
-//
-//----------------------------------------------------------------------------

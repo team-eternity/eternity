@@ -16,54 +16,57 @@
 ## Boston, MA  02110-1301  USA
 ##
 ################################################################################
-######################### CMake Configuration ##################################
-CMAKE_MINIMUM_REQUIRED (VERSION 2.4)
-IF (COMMAND cmake_policy)
-        CMAKE_POLICY (SET CMP0003 NEW)
-ENDIF (COMMAND cmake_policy)
-
-################################################################################
 ######################### Set Project Source  ##################################
 
-# Some debugging defines.
-IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        ADD_DEFINITIONS (-D_DEBUG -DRANGECHECK -DINSTRUMENTED -DZONEIDCHECK)
-ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+# General flags.
 
-ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
-ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
-IF (GL_LIBRARY)
-        ADD_DEFINITIONS (-DEE_FEATURE_OPENGL)
-ENDIF (GL_LIBRARY)
+add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB)
 
-## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really mean any *nix ?
-IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        ADD_DEFINITIONS (-DLINUX)
-ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+# Library search flags.
 
-IF (WIN32)
-        ADD_DEFINITIONS (-DEE_CDROM_SUPPORT)
-ENDIF (WIN32)
+if(OPENGL_LIBRARY)
+   add_definitions(-DEE_FEATURE_OPENGL)
+endif()
 
-## Small does not work on 64bit systems. The most reliable way
-## to determine if we are building on a 64bit system is to
-## check the size of a pointer - it is 8 bytes under
-## 64bit *NIX and 64bit Windows.
-IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
-        ADD_DEFINITIONS (-DEE_NO_SMALL_SUPPORT)
-ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
+# Build specific flags.
 
-IF (WIN32)
-        IF (MSVC)
-                INCLUDE_DIRECTORIES (win32/)
-        ENDIF (MSVC)
-        FILE (GLOB ARCH_SPECIFIC_SOURCES win32/*.cpp)
-ENDIF (WIN32)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+   add_definitions(-D_DEBUG -DRANGECHECK -DINSTRUMENTED -DZONEIDCHECK)
+endif()
+
+# System specific flags.
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+   add_definitions(-DLINUX)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   add_definitions(-DEE_FEATURE_REGISTRYSCAN)
+
+   if(MSVC)
+      add_definitions(-DEE_FEATURE_MIDIRPC -DEE_FEATURE_XINPUT)
+   endif()
+endif()
+
+# Source files.
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   file(GLOB ARCH_SPECIFIC_SOURCES Win32/*.cpp)
+   if(MSVC)
+      set(ARCH_SPECIFIC_SOURCES ${ARCH_SPECIFIC_SOURCES} ../midiproc/midiproc_c.c)
+      include_directories(Win32/)
+   endif()
+endif()
 
 IF (APPLE)
         INCLUDE_DIRECTORIES (sdl/macosx/)
         FILE (GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
 ENDIF (APPLE)
+
+IF (LINUX)
+        INCLUDE_DIRECTORIES (linux/)
+        FILE (GLOB ARCH_SPECIFIC_SOURCES linux/*.cpp)
+ENDIF (LINUX)
 
 INCLUDE_DIRECTORIES (Confuse/)
 FILE (GLOB CONFUSE_SOURCES Confuse/*.cpp)
@@ -80,15 +83,8 @@ FILE (GLOB HAL_SOURCES hal/*.cpp)
 INCLUDE_DIRECTORIES (gl/)
 FILE (GLOB GL_SOURCES gl/*.cpp)
 
-## FIXME: It would be better to pull i_cpu_posix.c out into a
-## *NIX specfic folder to turn this into a glob to catch new files.
 INCLUDE_DIRECTORIES (sdl/)
-SET (SDL_SOURCES sdl/i_input.cpp sdl/i_main.cpp sdl/i_net.cpp sdl/i_pcsound.cpp
-sdl/i_picker.cpp sdl/i_sdlgl2d.cpp sdl/i_sdlmusic.cpp sdl/i_sdlsound.cpp sdl/i_sound.cpp
-sdl/i_system.cpp sdl/i_sdlvideo.cpp sdl/mmus2mid.cpp sdl/ser_main.cpp)
-IF (NOT WIN32)
-        SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
-ENDIF (NOT WIN32)
+FILE (GLOB SDL_SOURCES sdl/*.cpp)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
@@ -96,31 +92,26 @@ ENDIF (NOT WIN32)
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
-IF (GL_LIBRARY)
-        TARGET_LINK_LIBRARIES (eternity ${GL_LIBRARY})
-ENDIF (GL_LIBRARY)
-TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+
+target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+
+if(OPENGL_LIBRARY)
+   target_link_libraries(eternity ${OPENGL_LIBRARY})
+endif()
+
+if(MSVC)
+   target_link_libraries(eternity rpcrt4)
+endif()
+
 INSTALL (TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
         ARCHIVE DESTINATION ${LIB_DIR})
-IF (UNIX)
-        IF (NOT APPLE OR NOT MINGW)
-                SET_TARGET_PROPERTIES (eternity PROPERTIES OUTPUT_NAME eternity.real)
-        ENDIF (NOT APPLE OR NOT MINGW)
-ENDIF (UNIX)
-## FIXME: base really needs to be refactored into read only and writeable
-## data to conform to *NIX and Windows file system standards.
-## On *NIX we use a wrapper script that set's up a per user
-## $HOME/.eternity/base, symlinks in the IWADS, then sets up
-## ETERNITYBASE to point to that directory, before executing
-## eternity. It's a hack,but it will work for now. A solution for
-## Windows would be welcome.
+
 INSTALL (DIRECTORY ${CMAKE_SOURCE_DIR}/base
         DESTINATION ${SHARE_DIR}
+        PATTERN "delete.me" EXCLUDE
         PATTERN ".svn" EXCLUDE)
-IF (UNIX)
-        IF (NOT APPLE OR NOT MINGW)
-                INSTALL (PROGRAMS ../eternity.sh DESTINATION ${BIN_DIR} RENAME eternity)
-        ENDIF (NOT APPLE OR NOT MINGW)
-ENDIF (UNIX)
+
+## EOF
+

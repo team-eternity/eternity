@@ -263,7 +263,7 @@ static void E_processGamePropsBlock(cfg_t *props)
    if(IS_SET(ITEM_GPROP_FLAGSREM))
    {
       const char *flagstr = cfg_getstr(props, ITEM_GPROP_FLAGSREM);
-      int curFlags = GameModeInfo->flags;
+      unsigned int curFlags = GameModeInfo->flags;
 
       GameModeInfo->flags &= ~E_ParseFlags(flagstr, &gmi_flagset);
 

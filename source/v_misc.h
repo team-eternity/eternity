@@ -17,26 +17,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//
+// Miscellaneous Video Functions
+//
+//-----------------------------------------------------------------------------
 
-#ifndef __V_MISC_H__
-#define __V_MISC_H__
-
-//#include "v_patch.h"
-//#include "v_block.h"
+#ifndef V_MISC_H__
+#define V_MISC_H__
 
 #include "m_fixed.h"
 
-void V_InitMisc(void);
+void V_InitMisc();
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Mode setting
-//
-
-void V_ResetMode(void);
-
-/////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Font
 //
@@ -104,14 +98,14 @@ enum
 // haleyjd 03/29/06: absolute centering toggle
 #define FC_ABSCENTER    "\xff"
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Box Drawing
 //
 
 void V_DrawBox(int, int, int, int);
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Loading box
 //
@@ -121,7 +115,7 @@ void V_SetLoading(int total, const char *mess);
 void V_LoadingIncrease();
 void V_LoadingSetTo(int amount);
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // FPS ticker
 //
@@ -130,7 +124,7 @@ void V_FPSDrawer();
 void V_FPSTicker();
 extern int v_ticker;
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Background 'tile' fill
 //
@@ -157,7 +151,7 @@ typedef struct cb_video_s
    float       xstepf, ystepf;
    bool        scaled; // SoM: should be set when the scale values are
 
-   byte        *screens[5];
+   byte        *screens[4];
 
    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
    int x1lookup[321];

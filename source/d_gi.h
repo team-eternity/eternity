@@ -231,6 +231,15 @@ enum
    NumGameModeTypes
 };
 
+// haleyjd 10/05/05: level translation types
+enum
+{
+   LI_TYPE_DOOM,
+   LI_TYPE_HERETIC,
+   LI_TYPE_HEXEN,
+   LI_TYPE_STRIFE,
+   LI_TYPE_NUMTYPES
+};
 
 // mission flags
 enum
@@ -280,7 +289,7 @@ typedef struct gamemodeinfo_s
 {
    GameMode_t id;             // id      - replaces "gamemode" variable
    int type;                  // main game mode type: doom, heretic, etc.
-   int flags;                 // game mode flags
+   unsigned int flags;        // game mode flags
    
    // startup stuff
    const char *versionName;       // descriptive version name
@@ -314,6 +323,7 @@ typedef struct gamemodeinfo_s
    int variableColor;            // color of variable text
    int titleColor;               // color of title strings
    int infoColor;                // color of it_info items
+   int bigFontItemColor;         // color of selectable items using big font
    int menuOffset;               // an amount to subtract from menu y coords
 
    // border stuff
@@ -352,6 +362,7 @@ typedef struct gamemodeinfo_s
    const char *defPClassName; // default playerclass name
    const char *defTranslate;  // default translation for AUTOTRANSLATE
    bspecrule_t *bossRules;    // default boss specials
+   int levelType;             // level translation type
 
    // Intermission and Finale stuff
    const char *interPic;      // default intermission backdrop

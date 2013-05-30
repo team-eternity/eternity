@@ -29,6 +29,7 @@
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
+#include "r_dynabsp.h"
 #include "r_state.h"
 
 extern void P_CalcSegLength(seg_t *);
@@ -61,6 +62,10 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 {
    int i;
 
+   // If the subsector has a BSP tree, it will need to be rebuilt.
+   if(ss->bsp)
+      ss->bsp->dirty = true;
+
    // make sure subsector is not already tracked
    for(i = 0; i < po->numDSS; ++i)
    {
@@ -83,7 +88,7 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 //
 // Gets a vertex from the free list or allocates a new one.
 //
-static vertex_t *R_GetFreeDynaVertex(void)
+vertex_t *R_GetFreeDynaVertex()
 {
    vertex_t *ret = NULL;
 
@@ -102,13 +107,44 @@ static vertex_t *R_GetFreeDynaVertex(void)
 //
 // R_FreeDynaVertex
 //
-// Puts a dynamic vertex onto the free list.
+// Puts a dynamic vertex onto the free list, if its refcount becomes zero.
 //
-static void R_FreeDynaVertex(vertex_t *vtx)
+void R_FreeDynaVertex(vertex_t **vtx)
 {
-   vtx->dynafree = true;
-   vtx->dynanext = dynaVertexFreeList;
-   dynaVertexFreeList = vtx;
+   if(!*vtx)
+      return;
+
+   vertex_t *v = *vtx;
+
+   if(v->refcount > 0)
+   {
+      v->refcount--;
+      if(v->refcount == 0)
+      {
+         v->refcount = -1;
+         v->dynanext = dynaVertexFreeList;
+         dynaVertexFreeList = v;
+      }
+   }
+
+   *vtx = NULL;
+}
+
+//
+// R_SetDynaVertexRef
+//
+// Safely set a reference to a dynamic vertex, maintaining the reference count.
+// Do not assign dynavertex pointers without using this routine! Note that if
+// *target already points to a vertex, that vertex WILL be freed if its ref
+// count reaches zero.
+//
+void R_SetDynaVertexRef(vertex_t **target, vertex_t *vtx)
+{
+   if(*target)
+      R_FreeDynaVertex(target);
+
+   if((*target = vtx))
+      (*target)->refcount++;
 }
 
 //
@@ -116,7 +152,7 @@ static void R_FreeDynaVertex(vertex_t *vtx)
 //
 // Gets a dynaseg from the free list or allocates a new one.
 //
-static dynaseg_t *R_GetFreeDynaSeg(void)
+static dynaseg_t *R_GetFreeDynaSeg()
 {
    dynaseg_t *ret = NULL;
 
@@ -137,7 +173,7 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
 //
 // Puts a dynaseg onto the free list.
 //
-static void R_FreeDynaSeg(dynaseg_t *dseg)
+void R_FreeDynaSeg(dynaseg_t *dseg)
 {
    dseg->freenext = dynaSegFreeList;
    dynaSegFreeList = dseg;
@@ -148,7 +184,7 @@ static void R_FreeDynaSeg(dynaseg_t *dseg)
 //
 // Gets an rpolyobj_t from the free list or creates a new one.
 //
-static rpolyobj_t *R_GetFreeRPolyObj(void)
+static rpolyobj_t *R_GetFreeRPolyObj()
 {
    rpolyobj_t *ret = NULL;
 
@@ -189,8 +225,8 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 
    while(link)
    {
-      if(link->dllObject->polyobj == po)
-         return link->dllObject;
+      if((*link)->polyobj == po)
+         return *link;
 
       link = link->dllNext;
    }
@@ -228,7 +264,7 @@ void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 //
 // Gets a new dynaseg and initializes it with all needed information.
 //
-static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
+dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 {
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
@@ -238,8 +274,8 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.sidedef = proto->seg.sidedef;
 
    // vertices
-   ret->seg.v1 = v1;
-   ret->seg.v2 = v2;
+   R_SetDynaVertexRef(&(ret->seg.v1), v1);
+   R_SetDynaVertexRef(&(ret->seg.v2), v2);
 
    // calculate texture offset
    R_DynaSegOffset(&ret->seg, proto->seg.linedef, 0);
@@ -358,7 +394,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
 
             // alter current seg to run from seg->v1 to nv
-            lseg->v2 = nv;
+            R_SetDynaVertexRef(&lseg->v2, nv);
 
             // recurse to split v2 side
             R_SplitLine(nds, bsp->children[side_v2]);
@@ -369,7 +405,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             // on computers is not ideal...). Return the dynavertex and do
             // nothing here; the seg will be classified on v1 side for lack of
             // anything better to do with it.
-            R_FreeDynaVertex(nv);
+            R_FreeDynaVertex(&nv);
          }
       }
 
@@ -422,80 +458,6 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 }
 
 //
-// R_FragmentCenterPoint
-//
-// haleyjd 12/09/12: My original sorting method is insufficient because it 
-// considered the polyobject center point to be a proper judge of z depth for
-// every fragment. This new solution is an interim, until BSP trees are added.
-//
-static void R_FragmentCenterPoint(rpolyobj_t *rpo)
-{
-   dynaseg_t *rover = rpo->dynaSegs;
-   double x, y;
-   int vcount = 0;
-
-   x = y = 0.0;
-
-   while(rover)
-   {
-      // only add in the v1 vertices, for speed
-      vertex_t *v = rover->seg.v1;
-      ++vcount;
-
-      x += v->fx;
-      y += v->fy;
-
-      rover = rover->subnext;
-   }
-
-   // calculate average coordinates
-   x /= vcount;
-   y /= vcount;
-
-   // convert to fixed point
-   rpo->cx = M_DoubleToFixed(x);
-   rpo->cy = M_DoubleToFixed(y);
-}
-
-//
-// R_CalcFragmentCenterPoints
-//
-// Find all the polyobjects' fragments and calculate their center points.
-// See above for an explanation. This is temporary code, an interim solution
-// until we start using BSP trees for polyobjects and dynamic sectors.
-//
-static void R_CalcFragmentCenterPoints(polyobj_t *poly)
-{
-   // a bad polyobject should never have been attached in the first place
-   if(poly->flags & POF_ISBAD)
-      return;
-
-   // not attached?
-   if(!(poly->flags & POF_ATTACHED))
-      return;
-   
-   // no dynaseg-containing subsecs?
-   if(!poly->dynaSubsecs || !poly->numDSS)
-      return;
-
-   // iterate over stored subsector pointers
-   for(int i = 0; i < poly->numDSS; ++i)
-   {
-      subsector_t *ss = poly->dynaSubsecs[i];
-      DLListItem<rpolyobj_t> *link = ss->polyList;
-      
-      // iterate on subsector rpolyobj_t lists
-      while(link)
-      {
-         rpolyobj_t *rpo = link->dllObject;
-         if(rpo->polyobj == poly)
-            R_FragmentCenterPoint(rpo);
-         link = link->dllNext;
-      }
-   }
-}
-
-//
 // R_AttachPolyObject
 //
 // Generates dynamic segs for a single polyobject.
@@ -523,19 +485,20 @@ void R_AttachPolyObject(polyobj_t *poly)
       idseg->polyobj     = poly;
       idseg->seg.linedef = line;
       idseg->seg.sidedef = &sides[line->sidenum[0]];
-      idseg->seg.v1      = R_GetFreeDynaVertex();
-      idseg->seg.v2      = R_GetFreeDynaVertex();
+      
+      vertex_t *v1 = R_GetFreeDynaVertex();
+      vertex_t *v2 = R_GetFreeDynaVertex();
 
-      *(idseg->seg.v1) = *(line->v1);
-      *(idseg->seg.v2) = *(line->v2);
+      *v1 = *(line->v1);
+      *v2 = *(line->v2);
+
+      R_SetDynaVertexRef(&(idseg->seg.v1), v1);
+      R_SetDynaVertexRef(&(idseg->seg.v2), v2);
 
       // Split seg into BSP tree to generate more dynasegs;
       // The dynasegs are stored in the subsectors in which they finally end up.
       R_SplitLine(idseg, numnodes - 1);
    }
-
-   // haleyjd 12/09/12: calculate center points for every fragment
-   R_CalcFragmentCenterPoints(poly);
 
    poly->flags |= POF_ATTACHED;
 }
@@ -569,12 +532,16 @@ void R_DetachPolyObject(polyobj_t *poly)
       subsector_t *ss = poly->dynaSubsecs[i];
       DLListItem<rpolyobj_t> *link = ss->polyList;
       DLListItem<rpolyobj_t> *next;
+
+      // mark BSPs dirty
+      if(ss->bsp)
+         ss->bsp->dirty = true;
       
       // iterate on subsector rpolyobj_t lists
       while(link)
       {
          next = link->dllNext;
-         rpolyobj_t *rpo = link->dllObject;
+         rpolyobj_t *rpo = *link;
 
          if(rpo->polyobj == poly)
          {
@@ -584,15 +551,9 @@ void R_DetachPolyObject(polyobj_t *poly)
                dynaseg_t *ds     = rpo->dynaSegs;
                dynaseg_t *nextds = ds->subnext;
                
-               vertex_t *v1 = ds->seg.v1;
-               vertex_t *v2 = ds->seg.v2;
-               
-               // put dynamic vertices on free list if they haven't already been
-               // put there by another seg
-               if(!v1->dynafree)
-                  R_FreeDynaVertex(v1);
-               if(!v2->dynafree)
-                  R_FreeDynaVertex(v2);
+               // free dynamic vertices
+               R_FreeDynaVertex(&(ds->seg.v1));
+               R_FreeDynaVertex(&(ds->seg.v2));
                
                // put this dynaseg on the free list
                R_FreeDynaSeg(ds);
@@ -627,12 +588,18 @@ void R_DetachPolyObject(polyobj_t *poly)
 // If this were not done, all dynasegs, their vertices, and polyobj fragments
 // would be lost.
 //
-void R_ClearDynaSegs(void)
+void R_ClearDynaSegs()
 {
    int i;
 
-   for(i = 0; i < numPolyObjects; ++i)
+   for(i = 0; i < numPolyObjects; i++)
       R_DetachPolyObject(&PolyObjects[i]);
+
+   for(i = 0; i < numsubsectors; i++)
+   {
+      if(subsectors[i].bsp)
+         R_FreeDynaBSP(subsectors[i].bsp);
+   }
 }
 
 // EOF

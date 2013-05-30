@@ -137,12 +137,6 @@ CONSOLE_COMMAND(defdmflags, cf_server)
    C_Printf("dmflags set to default for %s\n", gm);
 }
 
-void G_DMAddCommands(void)
-{
-   C_AddCommand(dmflags);
-   C_AddCommand(defdmflags);
-}
-
 // EOF
 
 

@@ -204,7 +204,7 @@ edf_string_t *E_StringForNum(int num)
    int keyval = num % NUM_EDFSTR_CHAINS;
    DLListItem<edf_string_t> *cur = edf_str_numchains[keyval];
 
-   while(cur && cur->dllObject->numkey != num)
+   while(cur && (*cur)->numkey != num)
       cur = cur->dllNext;
 
    return cur ? cur->dllObject : NULL;

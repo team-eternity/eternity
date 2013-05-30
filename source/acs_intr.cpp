@@ -35,6 +35,7 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_hash.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_buffer.h"
@@ -49,6 +50,9 @@
 #include "r_state.h"
 #include "v_misc.h"
 #include "w_wad.h"
+
+// need wad iterators
+#include "w_iterator.h"
 
 //
 // Local Enumerations
@@ -241,6 +245,27 @@ static void ACS_scriptFinished(ACSThinker *thread)
 }
 
 //
+// ACS_checkTag
+//
+// Returns true if the script should start running again and false if it needs
+// to keep waiting.
+//
+static bool ACS_checkTag(ACSThinker *th)
+{
+   int tag = static_cast<int>(th->sdata);
+   int secnum = -1;
+
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector_t *sec = &sectors[secnum];
+      if(sec->floordata || sec->ceilingdata)
+         return false;
+   }
+
+   return true;
+}
+
+//
 // ACS_stopScript
 //
 // Ultimately terminates the script and removes its thinker.
@@ -305,7 +330,7 @@ static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
 // Executes a line special that has been encoded in the script with
 // immediate operands or on the stack.
 //
-static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
+static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int spec, int side,
                                 int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -315,10 +340,7 @@ static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
    for(; i > 0; --i)
       args[argc-i] = *argv++;
 
-   // translate line specials & args for Hexen maps
-   P_ConvertHexenLineSpec(&spec, args);
-
-   return P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
+   return EV_ActivateACSSpecial(l, spec, args, side, mo);
 }
 
 //
@@ -527,13 +549,22 @@ void ACSThinker::Think()
    int32_t temp;
    ACSFunc *func;
 
-   // should the script terminate?
-   if(this->sreg == ACS_STATE_TERMINATE)
-      ACS_stopScript(this);
+   // Check the script state.
+   switch(sreg)
+   {
+   case ACS_STATE_WAITTAG:
+      if(!ACS_checkTag(this))
+         return;
 
-   // is the script running?
-   if(this->sreg != ACS_STATE_RUNNING)
+      sreg = ACS_STATE_RUNNING;
+   case ACS_STATE_RUNNING:
+      break;
+
+   case ACS_STATE_TERMINATE:
+      ACS_stopScript(this);
+   default:
       return;
+   }
 
    // check for delays
    if(this->delay)
@@ -585,19 +616,19 @@ void ACSThinker::Think()
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
       stp -= temp; // consume args
-      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      ACS_execLineSpec(line, trigger, (int)opcode, lineSide, temp, stp);
       NEXTOP();
    OPCODE(LINESPEC_IMM):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
-      ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, ip);
+      ACS_execLineSpec(line, trigger, (int)opcode, lineSide, temp, ip);
       ip += temp; // consume args
       NEXTOP();
    OPCODE(LINESPEC_RET):
       opcode = IPNEXT(); // read special
       temp = IPNEXT(); // read argcount
       stp -= temp; // consume args
-      temp = ACS_execLineSpec(line, trigger, (int16_t)opcode, lineSide, temp, stp);
+      temp = ACS_execLineSpec(line, trigger, (int)opcode, lineSide, temp, stp);
       PUSH(temp);
       NEXTOP();
 
@@ -1290,7 +1321,7 @@ void ACSThinker::pushPrint()
    qstring *&print = *printPtr++;
 
    if(!print)
-      print = new qstring(qstring::basesize, PU_LEVEL);
+      print = new (PU_LEVEL) qstring(qstring::basesize);
    else
       print->clear();
 
@@ -1485,7 +1516,7 @@ void ACSDeferred::ExecuteAll()
    while((item = next))
    {
       next = item->dllNext;
-      item->dllObject->execute();
+      (*item)->execute();
    }
 }
 
@@ -1505,7 +1536,7 @@ bool ACSDeferred::IsDeferredNumber(int32_t number, int mapnum)
 {
    for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
    {
-      ACSDeferred *dacs = item->dllObject;
+      ACSDeferred *dacs = *item;
       if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
          !dacs->name && dacs->number == number)
          return true;
@@ -1521,7 +1552,7 @@ bool ACSDeferred::IsDeferredName(const char *name, int mapnum)
 {
    for(DLListItem<ACSDeferred> *item = list; item; item = item->dllNext)
    {
-      ACSDeferred *dacs = item->dllObject;
+      ACSDeferred *dacs = *item;
       if(dacs->mapnum == mapnum && !(dacs->flags & ACS_EXECUTE_ALWAYS) &&
          dacs->name && !strcasecmp(dacs->name, name))
          return true;
@@ -1625,9 +1656,8 @@ bool ACSDeferred::DeferTerminateName(const char *name, int mapnum)
 //
 // ACSVM::ACSVM
 //
-ACSVM::ACSVM(int tag) : ZoneObject()
+ACSVM::ACSVM() : ZoneObject()
 {
-   ChangeTag(tag);
    reset();
 }
 
@@ -1863,7 +1893,7 @@ ACSVM *ACS_LoadScript(WadDirectory *dir, int lump)
          return *itr;
    }
 
-   vm = new ACSVM(PU_LEVEL);
+   vm = new (PU_LEVEL) ACSVM;
 
    ACS_LoadScript(vm, dir, lump);
 
@@ -1974,19 +2004,12 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       ACS_LoadScript(&acsLevelScriptVM, dir, lump);
 
    // The rest of the function is LOADACS handling.
+   WadChainIterator wci(*dir, "LOADACS");
 
-   lumpinfo_t **lumpinfo = dir->getLumpInfo();
-
-   lump = dir->getLumpNameChain("LOADACS")->index;
-   while(lump != -1)
+   for(wci.begin(); wci.current(); wci.next())
    {
-      if(!strncasecmp(lumpinfo[lump]->name, "LOADACS", 7) &&
-         lumpinfo[lump]->li_namespace == lumpinfo_t::ns_global)
-      {
-         ACS_loadScripts(dir, lump);
-      }
-
-      lump = lumpinfo[lump]->next;
+      if(wci.testLump(lumpinfo_t::ns_global))
+         ACS_loadScripts(dir, (*wci)->selfindex);
    }
 
    // Haha, not really! Now we have to process script names.
@@ -2600,7 +2623,7 @@ void ACSThinker::serialize(SaveArchive &arc)
    for(qstring **itr = printStack, **end = printPtr; itr != end; ++itr)
    {
       if(arc.isLoading())
-         *itr = new qstring(0, PU_LEVEL);
+         *itr = new (PU_LEVEL) qstring();
 
       (*itr)->archive(arc);
    }
@@ -2669,7 +2692,7 @@ void ACSDeferred::ArchiveAll(SaveArchive &arc)
    }
 
    for(item = list; item; item = item->dllNext)
-      item->dllObject->archive(arc);
+      (*item)->archive(arc);
 }
 
 //

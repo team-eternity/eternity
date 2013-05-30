@@ -27,6 +27,8 @@
 #ifndef M_COLLECTION_H__
 #define M_COLLECTION_H__
 
+#include <utility>
+
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_random.h"
@@ -50,12 +52,6 @@ protected:
    {
    }
 
-   BaseCollection(int zoneTag)
-      : ZoneObject(), ptrArray(NULL), length(0), numalloc(0), wrapiterator(0)
-   {
-      ChangeTag(zoneTag);
-   }
-
    //
    // resize
    //
@@ -67,7 +63,8 @@ protected:
       if(newnumalloc > numalloc)
       {
          ptrArray = erealloc(T *, ptrArray, newnumalloc * sizeof(T));
-         memset(ptrArray + numalloc, 0, (newnumalloc - numalloc) * sizeof(T));
+         memset(static_cast<void *>(ptrArray + numalloc), 0, 
+                (newnumalloc - numalloc) * sizeof(T));
          numalloc = newnumalloc;
       }
    }
@@ -333,7 +330,7 @@ public:
          for(size_t i = 0; i < this->length; i++)
             this->ptrArray[i].~T();
 
-         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+         memset(static_cast<void *>(this->ptrArray), 0, this->numalloc * sizeof(T));
       }
       this->length = this->wrapiterator = 0;
    }
@@ -346,7 +343,22 @@ public:
    void add(const T &newItem)
    {
       if(this->length >= this->numalloc)
-         this->resize(this->length ? this->length : 32); // double array size
+      {
+         size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
+
+         if(newnumalloc > this->numalloc)
+         {
+            T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+            for(size_t i = 0; i < this->length; i++)
+            {
+               ::new (&newItems[i]) T(std::move(this->ptrArray[i]));
+               this->ptrArray[i].~T();
+            }
+            efree(this->ptrArray);
+            this->ptrArray = newItems;
+            this->numalloc = newnumalloc;
+         }
+      }
       
       // placement copy construct new item
       ::new (&this->ptrArray[this->length]) T(newItem);

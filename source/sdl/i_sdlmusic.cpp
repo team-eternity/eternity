@@ -510,7 +510,7 @@ static int I_SDLRegisterSong(void *data, int size)
       rw = NULL;
       memset(&mididata, 0, sizeof(MIDI));
 
-      if((err = mmus2mid((byte *)data, size, &mididata, 89, 0)))
+      if((err = mmus2mid((byte *)data, (size_t)size, &mididata, 89, 0)))
       {
          doom_printf("Error loading music: %d", err);
          return 0;

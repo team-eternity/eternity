@@ -46,6 +46,8 @@ enum EVActionFlags
    EV_POSTCHANGESWITCH = 0x00000040, // Changes switch texture if successful
    EV_POSTCHANGEALWAYS = 0x00000080, // Changes switch texture even if fails
    EV_POSTCHANGESIDED  = 0x00000100, // Switch texture changes on proper side of line
+
+   EV_PARAMLINESPEC    = 0x00000200, // Is a parameterized line special
 };
 
 // Data related to an instance of a special activation.
@@ -53,7 +55,8 @@ struct ev_instance_t
 {
    Mobj   *actor;   // actor, if any
    line_t *line;    // line, if any
-   int    *args;    // arguments (may point to line->args
+   int     special; // special to activate (may == line->special)
+   int    *args;    // arguments (may point to line->args)
    int     tag;     // tag (may == line->tag or line->args[0])
    int     side;    // side of activation
    int     spac;    // special activation type
@@ -116,9 +119,64 @@ struct ev_binding_t
 {
    int actionNumber;    // line action number
    ev_action_t *action; // the actual action to execute
+   const char *name;    // name, if this binding has one
 
-   DLListItem<ev_binding_t> links; // hash links
+   DLListItem<ev_binding_t> links;     // hash links by number
+   DLListItem<ev_binding_t> namelinks; // hash links by name
 };
+
+//
+// EV_CompositeActionFlags
+//
+// Returns the composition of the action's flags with the flags imposed by the
+// action's type. Always call this rather than directly accessing action->flags,
+// because all flags that are implied by an action's type will only be set by
+// the type and never by the action. For example, W1ActionType sets 
+// EV_POSTCLEARSPECIAL for all DOOM-style W1 actions.
+//
+inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
+{
+   return (action->type->flags | action->flags);
+}
+
+// Action Types
+extern ev_actiontype_t NullActionType;
+extern ev_actiontype_t WRActionType;
+extern ev_actiontype_t W1ActionType;
+extern ev_actiontype_t SRActionType;
+extern ev_actiontype_t S1ActionType;
+extern ev_actiontype_t DRActionType;
+extern ev_actiontype_t GRActionType;
+extern ev_actiontype_t G1ActionType;
+extern ev_actiontype_t BoomGenActionType;
+extern ev_actiontype_t ParamActionType;
+
+// Interface
+
+// Binding for Special
+ev_binding_t *EV_DOOMBindingForSpecial(int special);
+ev_binding_t *EV_HereticBindingForSpecial(int special);
+ev_binding_t *EV_HexenBindingForSpecial(int special);
+
+// Binding for Name
+ev_binding_t *EV_DOOMBindingForName(const char *name);
+ev_binding_t *EV_HexenBindingForName(const char *name);
+ev_binding_t *EV_BindingForName(const char *name);
+
+// Action for Special 
+ev_action_t  *EV_DOOMActionForSpecial(int special);
+ev_action_t  *EV_HereticActionForSpecial(int special);
+ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_ActionForSpecial(int special);
+
+// Testing
+bool EV_IsParamLineSpec(int special);
+
+// Activation
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac);
+bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
+bool EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
+bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //
 // Static Init Line Types
@@ -127,6 +185,7 @@ struct ev_binding_t
 enum
 {
    // Enumerator                               DOOM/BOOM/MBF/EE Line Special
+   EV_STATIC_NULL,                          // No-op placeholder
    EV_STATIC_SCROLL_LINE_LEFT,              // 48
    EV_STATIC_SCROLL_LINE_RIGHT,             // 85
    EV_STATIC_LIGHT_TRANSFER_FLOOR,          // 213
@@ -207,6 +266,10 @@ enum
    EV_STATIC_SLOPE_FRONTCEILING_TAG,        // 395
    EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG,   // 396
    EV_STATIC_EXTRADATA_SECTOR,              // 401
+   EV_STATIC_SCROLL_LEFT_PARAM,             // 406
+   EV_STATIC_SCROLL_RIGHT_PARAM,            // 407
+   EV_STATIC_SCROLL_UP_PARAM,               // 408
+   EV_STATIC_SCROLL_DOWN_PARAM,             // 409
 
    EV_STATIC_MAX
 };
@@ -217,8 +280,16 @@ struct ev_static_t
    int actionNumber; // numeric line special
    int staticFn;     // static init function enumeration value
 
-   DLListItem<ev_static_t> links; // hash links
+   DLListItem<ev_static_t> staticLinks; // hash links for static->special
+   DLListItem<ev_static_t> actionLinks; // hash links for special->static
 };
+
+// Interface
+
+int  EV_SpecialForStaticInit(int staticFn);
+int  EV_StaticInitForSpecial(int special);
+int  EV_SpecialForStaticInitName(const char *name);
+bool EV_IsParamStaticInit(int special);
 
 #endif
 

@@ -1,1 +1,128 @@
-James 'Quasar' Haley, Steven 'SoM' McGranahan et al.
+"The Eternity Engine"
+Copyright (c) 2013 James Haley, Stephen McGranahan, et al.
+
+
+Team Eternity is:
+-----------------
+James Haley <haleyjd@hotmail.com>
+Stephen McGranahan
+David Hill
+Charles Gunyon
+Ioan Chera
+
+
+Previous Team Members
+---------------------
+Joe Kennedy
+Julian Aubourg
+
+
+Feature and Patch Contributors
+------------------------------
+4mer
+Anders Astrand
+Cephaler
+Claude Freeman
+Gez
+Joel Murdoch
+Kate Stone
+MP2E
+Russel Rice
+Samuel "Kaiser" Villarreal
+Simon "fraggle" Howard
+SargeBaldy
+Yagisan
+
+
+Artistic Assets By
+------------------
+Michael Mancuso
+Sven Ruthner
+Bob Satori
+
+
+Based On Works
+--------------
+
+GPL DOOM Source
+   id Software
+
+GPL Heretic and Hexen Source
+   Raven Software
+
+DosDOOM
+   Chi Hoang
+
+BOOM, by TeamTNT
+   Lee Killough
+   Jim Flynn
+   Rand Phares
+   Ty Halderman
+   Stan Gula
+   
+MBF - "Marine's Best Friend"
+   Lee Killough
+   
+SMMU - "Smack My Marine Up"
+   Simon "fraggle" Howard
+
+
+Significant Code Utilized From
+------------------------------
+
+Quake 2 Source, Quake 3 Source
+   id Software
+   Gilles Vollant
+
+Chocolate Doom
+   Simon "fraggle" Howard
+                              
+PrBoom
+   Colin Phipps
+   Florian Schulze
+
+PrBoom-Plus
+   Andrey Budko
+   
+ZDoom
+   Randy Heit
+   Graf Zahl
+   Braden Obrzut
+   
+BSP 5.2
+   Raphael Quinet
+   Colin Reed
+   Lee Killough
+   Colin Phipps
+   Simon Howard
+   
+
+Libraries/Code Utilized
+-----------------------
+
+libConfuse Parser Library
+   Martin Hedenfalk
+   
+SpiderMonkey 1.8.0
+   Mozilla Foundation; Brendan Eich et al.
+   
+zlib
+   Jean-loup Gailly, Mark Adler, et al.
+   
+libpng
+   Glenn Randers-Pehrson, Andreas Dilger, Guy Eric Schalnat, et al.
+   
+snes_spc 0.9.0
+   Shay Green
+   
+DJGPP libc
+   DJ Delorie et al.
+   
+MinGW libc
+   Matt Weinstein et al.
+   
+SDL and Support Libraries
+   Sam Lantinga et al.
+                          
+Three-Band EQ and Rational-tanh Clipper
+   Neil C / Etanza Systems, cschueler

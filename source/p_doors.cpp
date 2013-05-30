@@ -43,6 +43,7 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "t_plane.h"
 
 //
 // P_DoorSequence
@@ -159,7 +160,7 @@ void VerticalDoorThinker::Think()
 
    case plat_down:
       // Door is moving down
-      res = T_MovePlane(sector, speed, sector->floorheight, -1, 1, direction);
+      res = T_MoveCeilingDown(sector, speed, sector->floorheight, -1);
 
       // killough 10/98: implement gradual lighting effects
       if(lighttag && topheight - sector->floorheight)
@@ -220,7 +221,7 @@ void VerticalDoorThinker::Think()
 
    case plat_up:
       // Door is moving up
-      res = T_MovePlane(sector, speed, topheight, -1, 1, direction);
+      res = T_MoveCeilingUp(sector, speed, topheight, -1);
 
       // killough 10/98: implement gradual lighting effects
       if(lighttag && topheight - sector->floorheight)
@@ -621,28 +622,28 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    case 26:
    case 27:
    case 28:
-      door->type      = doorNormal;
+      door->type = doorNormal;
       break;
 
    case 31:
    case 32:
    case 33:
    case 34:
-      door->type      = doorOpen;
-      line->special   = 0;
+      door->type    = doorOpen;
+      line->special = 0;
       break;
 
    case 117: // blazing door raise
-      door->type      = blazeRaise;
-      door->speed     = VDOORSPEED*4;
-      door->turbo     = true;
+      door->type  = blazeRaise;
+      door->speed = VDOORSPEED*4;
+      door->turbo = true;
       break;
 
    case 118: // blazing door open
-      door->type      = blazeOpen;
-      line->special   = 0;
-      door->speed     = VDOORSPEED*4;
-      door->turbo     = true;
+      door->type    = blazeOpen;
+      line->special = 0;
+      door->speed   = VDOORSPEED*4;
+      door->turbo   = true;
       break;
 
    default:
@@ -656,12 +657,10 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    return 1;
 }
 
-
-///////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Sector type door spawners
 //
-///////////////////////////////////////////////////////////////
 
 //
 // P_SpawnDoorCloseIn30()
@@ -670,7 +669,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 //
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
-
+//
 void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;

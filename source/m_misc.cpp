@@ -37,6 +37,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "hal/i_platform.h"
+#include "hal/i_gamepads.h"
 
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -65,7 +66,7 @@
 #include "p_chase.h"
 #include "p_enemy.h"
 #include "p_clipen.h"
-#include "p_doomclip.h"
+#include "p_map.h"
 #include "p_partcl.h"
 #include "p_user.h"
 #include "r_draw.h"
@@ -82,12 +83,7 @@
 
 int config_help;         //jff 3/3/98
 int usemouse;
-int usejoystick;
 
-extern int mousebstrafe;
-extern int mousebforward;
-extern int viewwidth;
-extern int viewheight;
 extern double mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
 extern bool mouseSensitivity_vanilla; // [CG] 01/20/12
 extern int leds_always_off;            // killough 3/6/98
@@ -145,18 +141,13 @@ default_t defaults[] =
    DEFAULT_INT("music_card", &mus_card, NULL, MUS_DEFAULT, MUS_MIN, MUS_MAX, default_t::wad_no,
                MUS_DESCR),
 
-#ifdef _SDL_VER
    // haleyjd 04/15/02: SDL joystick device number
-   DEFAULT_INT("joystick_num", &i_SDLJoystickNum, NULL, -1, -1, UL, default_t::wad_no,
+   DEFAULT_INT("joystick_num", &i_joysticknum, NULL, -1, -1, UL, default_t::wad_no,
                "SDL joystick device number, -1 to disable"),
-    
-   // joystick sensitivities
-   DEFAULT_INT("joystickSens_x", &joystickSens_x, NULL, 0, -32768, 32767, default_t::wad_no,
-               "SDL joystick horizontal sensitivity"),
 
-   DEFAULT_INT("joystickSens_y", &joystickSens_y, NULL, 0, -32768, 32767, default_t::wad_no,
-               "SDL joystick vertical sensitivity"),
-#endif
+   // joystick sensitivity
+   DEFAULT_INT("i_joysticksens", &i_joysticksens, NULL, 7849, 0, 32767, default_t::wad_no,
+               "SDL MMSYSTEM joystick sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
@@ -495,23 +486,23 @@ default_t defaults[] =
    DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no, 
                "set to 1 to always mouselook"),
    
-   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to invert mouse during mouselooking"),
+
+   DEFAULT_INT("invert_padlook", &invert_padlook, NULL, 0, 0, 1, default_t::wad_no,
+               "set to 1 to invert gamepad looking"),
       
    DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable use of mouse"),
    
    //jff 3/8/98 end of lower range change for -1 allowed in mouse binding
    // haleyjd: rename these buttons on the user-side to prevent confusion
-   DEFAULT_INT("mouseb_dblc1", &mousebstrafe, NULL, 1, -1, 2, default_t::wad_no,
+   DEFAULT_INT("mouseb_dblc1", &mouseb_dblc1, NULL, 1, -1, 2, default_t::wad_no,
                "1st mouse button to enable for double-click use action (-1 = disable)"),
    
-   DEFAULT_INT("mouseb_dblc2", &mousebforward, NULL, 2, -1, 2, default_t::wad_no,
+   DEFAULT_INT("mouseb_dblc2", &mouseb_dblc2, NULL, 2, -1, 2, default_t::wad_no,
                "2nd mouse button to enable for double-click use action (-1 = disable)"),
    
-   DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, default_t::wad_no,
-               "1 to enable use of joystick"),
-      
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, default_t::wad_yes,
                "chat string associated with 0 key"),
    
@@ -725,6 +716,9 @@ default_t defaults[] =
    // below is green, above blue
    DEFAULT_INT("armor_green",&armor_green, NULL, 100, 0, 200, default_t::wad_yes,
                "amount of armor for green to blue transition"),
+
+   DEFAULT_BOOL("armor_byclass", &armor_byclass, NULL, true, default_t::wad_yes,
+                "reflect armor class using blue or green color"),
    
    // below 25% is red
    DEFAULT_INT("ammo_red",&ammo_red, NULL, 25, 0, 100, default_t::wad_yes,
@@ -1927,17 +1921,18 @@ long M_FileLength(FILE *f)
 //
 char *M_LoadStringFromFile(const char *filename)
 {
-   FILE *f   = NULL;
-   char *buf = NULL;
-   long  len = 0;
+   FILE  *f    = NULL;
+   char  *buf  = NULL;
+   size_t len = 0;
    
    if(!(f = fopen(filename, "rb")))
       return NULL;
 
    // allocate at length + 1 for null termination
-   len = M_FileLength(f);
+   len = static_cast<size_t>(M_FileLength(f));
    buf = ecalloc(char *, 1, len + 1);
-   fread(buf, 1, static_cast<size_t>(len), f);
+   if(fread(buf, 1, len, f) != len)
+      usermsg("M_LoadStringFromFile: warning: could not read file %s\n", filename);
    fclose(f);
 
    return buf;
@@ -2115,7 +2110,6 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
 void M_ExtractFileBase(const char *path, char *dest)
 {
    const char *src = path + strlen(path) - 1;
-   const char *filename;
    int length;
    
    // back up until a \ or the start
@@ -2126,8 +2120,6 @@ void M_ExtractFileBase(const char *path, char *dest)
       src--;
    }
 
-   filename = src;
-   
    // copy up to eight characters
    // FIXME: insecure, does not ensure null termination of output string!
    memset(dest, 0, 8);

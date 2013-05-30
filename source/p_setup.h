@@ -58,10 +58,19 @@ extern int      bmapwidth;
 extern int      bmapheight;      // in mapblocks
 extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
+extern byte    *portalmap;       // haleyjd: for fast linked portal checks
 
 struct mobjblocklink_t;
 
 extern mobjblocklink_t    **blocklinks;
+
+// haleyjd 05/17/13: portalmap flags
+enum
+{
+   PMF_LINE    = 0x01, // block contains one or more line portals
+   PMF_FLOOR   = 0x02, // block contains one or more floor portals
+   PMF_CEILING = 0x04  // block contains one or more ceiling portals
+};
 
 extern bool     newlevel;
 extern int      doom1level;

@@ -161,8 +161,8 @@ MetaObject::MetaObject(const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), type(), 
-     key(other.key), keyIdx(other.keyIdx)
+   : RTTIObject(), links(), typelinks(), key(other.key),
+     type(), keyIdx(other.keyIdx)
 {   
 }
 

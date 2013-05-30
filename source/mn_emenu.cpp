@@ -112,6 +112,7 @@ static dehflags_t mnflagvalues[] =
    { "leftaligned",   mf_leftaligned   },
    { "centeraligned", mf_centeraligned },
    { "emulated",      mf_emulated      },
+   { "bigfont",       mf_bigfont       },
    { NULL,            0                }
 };
 
@@ -194,7 +195,7 @@ static menu_t *MN_CreateDynamicMenu(const char *name)
 //
 static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items, 
                                const char *prev, const char *next, 
-                               int x, int y, int firstitem, int flags)
+                               int x, int y, int firstitem, unsigned int flags)
 {
    // set fields
    newMenu->menuitems = items;
@@ -321,7 +322,8 @@ static void MN_ClearDynamicMenu(menu_t *menu)
 //
 static void MN_ProcessMenu(menu_t *menu, cfg_t *menuSec)
 {
-   int x, y, first, flags;
+   int x, y, first;
+   unsigned int flags;
    const char *flagstr, *prev, *next;
    menuitem_t *items;
 
@@ -434,16 +436,6 @@ CONSOLE_COMMAND(mn_dynamenu, 0)
    }
 
    MN_StartMenu(menu);
-}
-
-//
-// MN_AddDynaMenuCommands
-//
-// Adds console commands related to the dynamic menu system.
-//
-void MN_AddDynaMenuCommands(void)
-{
-   C_AddCommand(mn_dynamenu);
 }
 
 // EOF

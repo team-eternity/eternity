@@ -31,6 +31,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include "a_small.h"
 #include "acs_intr.h"
 #include "d_event.h"
@@ -845,15 +847,12 @@ static void ACS_funcSetLineMonsterBlocking(ACS_FUNCARG)
 static void ACS_funcSetLineSpecial(ACS_FUNCARG)
 {
    int     tag  = args[0];
-   int16_t spec = args[1];
+   int     spec = args[1];
    int     larg[NUMLINEARGS];
    line_t *l;
    int     linenum = -1;
 
    memcpy(larg, args+2, sizeof(larg));
-
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, larg);
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
@@ -1001,18 +1000,15 @@ static void ACS_funcSetThingPosition(ACS_FUNCARG)
 static void ACS_funcSetThingSpecial(ACS_FUNCARG)
 {
    int     tid  = args[0];
-   int16_t spec = args[1];
+   int     spec = args[1];
    int     larg[NUMLINEARGS];
    Mobj   *mo   = NULL;
 
    memcpy(larg, args+2, sizeof(larg));
 
-   // do special/args translation for Hexen maps
-   P_ConvertHexenLineSpec(&spec, larg);
-
    while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
    {
-    //mo->special = spec;
+    //mo->special = spec; HEXEN_TODO
       memcpy(mo->args, larg, sizeof(larg));
    }
 }

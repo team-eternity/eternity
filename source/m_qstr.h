@@ -56,10 +56,9 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(size_t startSize = 0, int tag = PU_STATIC) 
+   qstring(size_t startSize = 0) 
       : ZoneObject(), index(0), size(16)
    {
-      ChangeTag(tag);
       buffer = local;
       memset(local, 0, sizeof(local));
       if(startSize)
@@ -81,6 +80,8 @@ public:
       memset(local, 0, sizeof(local));
       copy(cstr);
    }
+
+   qstring(qstring &&other);
 
    ~qstring() { freeBuffer(); }
 
@@ -179,7 +180,7 @@ public:
    void     extractFileBase(qstring &dest);
 
    // Zone strdup wrappers
-   char *duplicate(int tag) const;
+   char *duplicate(int tag = PU_STATIC) const;
    char *duplicateAuto() const;
 
    // Numeric Conversions

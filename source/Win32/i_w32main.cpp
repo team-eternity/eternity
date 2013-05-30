@@ -39,11 +39,32 @@ extern void I_FatalError(int code, const char *error, ...);
 
 int disable_sysmenu;
 
+//
+// I_TweakConsole
+//
+// Disable the Win32 console window's close button and set its title.
+//
+static void I_TweakConsole()
+{
+#if _WIN32_WINNT > 0x500
+   HWND hwnd = GetConsoleWindow();
+
+   if(hwnd)
+   {
+      HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+      DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+   }
+   SetConsoleTitle("Eternity Engine System Console");
+#endif
+}
+
+
 #if !defined(_DEBUG)
 int main(int argc, char **argv)
 {
    __try
    {
+      I_TweakConsole();
       common_main(argc, argv);
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))
@@ -74,7 +95,7 @@ int main(int argc, char **argv)
 // option, the default control scheme for DOOM becomes broken in windowed
 // mode under the default SDL setup.
 //
-void I_DisableSysMenu(void)
+void I_DisableSysMenu()
 {
    if(disable_sysmenu)
    {

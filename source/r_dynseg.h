@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Dynamic segs for PolyObject re-implementation.
@@ -28,19 +28,32 @@
 #define R_DYNSEG_H__
 
 #include "r_defs.h"
+#include "m_dllist.h"
 #include "polyobj.h"
 
 //
 // dynaseg
 //
-typedef struct dynaseg_s
+struct dynaseg_t
 {
    seg_t seg; // a dynaseg is a seg, after all ;)
 
-   struct dynaseg_s *subnext;  // next dynaseg in subsector
-   struct dynaseg_s *freenext; // next dynaseg on freelist
+   dynaseg_t *subnext;         // next dynaseg in fragment
+   dynaseg_t *freenext;        // next dynaseg on freelist
    struct polyobj_s *polyobj;  // polyobject
-} dynaseg_t;
+
+   DLListItem<dynaseg_t> bsplink;   // link for BSP chains
+   DLListItem<dynaseg_t> ownerlink; // link for owning node chain
+
+   // properties needed for efficiency in the BSP builder
+   double psx, psy, pex, pey; // end points
+   double pdx, pdy;           // delta x, delta y
+   double ptmp;               // general line coefficient 'c'
+   double len;                // length
+};
+
+typedef DLListItem<dynaseg_t> dseglink_t;
+typedef dseglink_t * dseglist_t;
 
 //
 // rpolyobj_t
@@ -59,13 +72,17 @@ struct rpolyobj_t
    dynaseg_t  *dynaSegs; // list of dynasegs
    polyobj_t  *polyobj;  // polyobject of which this rpolyobj_t is a fragment
    rpolyobj_t *freenext; // next on freelist
-   fixed_t     cx, cy;   // 12/09/12: center point coordinates
-   fixed_t     zdist;    // 12/09/12: z distance
 };
+
+vertex_t  *R_GetFreeDynaVertex();
+void       R_FreeDynaVertex(vertex_t **vtx);
+void       R_SetDynaVertexRef(vertex_t **target, vertex_t *vtx);
+dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2);
+void       R_FreeDynaSeg(dynaseg_t *dseg);
 
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);
-void R_ClearDynaSegs(void);
+void R_ClearDynaSegs();
 
 #endif
 

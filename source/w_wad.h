@@ -85,7 +85,11 @@ struct lumpinfo_t
    size_t size;
    
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
-   int index, next;
+   struct hash_t
+   {
+      int index, next;
+   };
+   hash_t namehash, lfnhash;
 
    // haleyjd 03/27/11: array index into lumpinfo in the parent wad directory,
    // for fast reverse lookup.
@@ -100,7 +104,9 @@ struct lumpinfo_t
       ns_colormaps,
       ns_translations,
       ns_demos,
-      ns_acs
+      ns_acs,
+      ns_pads,
+      ns_max           // keep this last.
    };
    int li_namespace;
 
@@ -233,6 +239,12 @@ public:
    static int IWADSource;   // source # of the global IWAD file
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
+   struct namespace_t
+   {
+      int firstLump; // first lump
+      int numLumps;  // number of lumps in namespace
+   };
+
 private:
    WadDirectoryPimpl *pImpl; // private implementation object
 
@@ -256,13 +268,14 @@ protected:
    int        type;       // directory type
    void       *data;      // user data (mainly for w_levels code)
 
+   namespace_t m_namespaces[lumpinfo_t::ns_max];
+
    // Protected methods
    void initLumpHash();
+   void initLFNHash();
    void initResources();
    void addInfoPtr(lumpinfo_t *infoptr);
-   void coalesceMarkedResource(const char *start_marker, 
-                               const char *end_marker, 
-                               int li_namespace);
+   void coalesceMarkedResources();
    void incrementSource(openwad_t &openData);
    void handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
                         const char *filename);
@@ -277,7 +290,6 @@ protected:
    void freeDirectoryAllocs(); // haleyjd 06/06/10
 
    // Utilities
-   static int          IsMarker(const char *marker, const char *name);
    static unsigned int LumpNameHash(const char *s);
 
 public:
@@ -289,6 +301,7 @@ public:
    int   checkNumForName(const char *name, int li_namespace = lumpinfo_t::ns_global);
    int   checkNumForNameNSG(const char *name, int li_namespace);
    int   getNumForName(const char *name);
+   int   checkNumForLFN(const char *lfn, int li_namespace = lumpinfo_t::ns_global);
    
    // sf: add a new wad file after the game has already begun
    bool  addNewFile(const char *filename);
@@ -306,7 +319,7 @@ public:
    bool  writeLump(const char *lumpname, const char *destpath);
    void  close(); // haleyjd 03/09/11
 
-   lumpinfo_t *getLumpNameChain(const char *name);
+   lumpinfo_t *getLumpNameChain(const char *name) const;
 
    const char *getLumpFileName(int lump);
 
@@ -319,6 +332,11 @@ public:
    // Read-only properties
    int          getNumLumps() const { return numlumps; }
    lumpinfo_t **getLumpInfo() const { return lumpinfo; }
+
+   const namespace_t &getNamespace(int li_namespace) const
+   {
+      return m_namespaces[li_namespace];
+   }
 };
 
 extern WadDirectory wGlobalDir; // the global wad directory
@@ -326,8 +344,6 @@ extern WadDirectory wGlobalDir; // the global wad directory
 int         W_CheckNumForName(const char *name);   // killough 4/17/98
 int         W_CheckNumForNameNS(const char *name, int li_namespace);
 int         W_GetNumForName(const char* name);
-
-lumpinfo_t *W_GetLumpNameChain(const char *name);
 
 int         W_LumpLength(int lump);
 uint32_t    W_LumpCheckSum(int lumpnum);

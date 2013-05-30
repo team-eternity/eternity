@@ -44,6 +44,7 @@
 #include "p_spec.h"
 #include "st_stuff.h"
 #include "r_draw.h"
+#include "r_dynseg.h"
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -95,7 +96,8 @@ int map_secret_after;
 #define FB    0
 
 // haleyjd 05/17/08: ability to draw node lines on map
-bool map_draw_nodelines;
+bool am_drawnodelines;
+bool am_dynasegs_bysubsec;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -117,6 +119,11 @@ bool map_draw_nodelines;
 // translates between frame-buffer and map coordinates
 #define CXMTOF(x)  (f_x + (int)(MTOF((x) - m_x)))
 #define CYMTOF(y)  (f_y + (f_h - (int)(MTOF((y) - m_y))))
+
+// haleyjd: movement scaling factors for panning consistency at different
+// resolutions
+#define HORZ_PAN_SCALE(x) ((x) * f_w / SCREENWIDTH )
+#define VERT_PAN_SCALE(y) ((y) * f_h / SCREENHEIGHT)
 
 typedef struct fpoint_s
 {
@@ -279,6 +286,7 @@ int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
 
 static bool stopped = true;
+static bool am_needbackscreen; // haleyjd 05/03/13
 
 // haleyjd 12/22/02: Heretic stuff
 
@@ -358,7 +366,7 @@ static void AM_saveScaleAndLoc(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_restoreScaleAndLoc(void)
+static void AM_restoreScaleAndLoc()
 {
    m_w = old_m_w;
    m_h = old_m_h;
@@ -495,7 +503,7 @@ static void AM_findMinMaxBoundaries(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_changeWindowLoc(void)
+static void AM_changeWindowLoc()
 {
    if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
    {
@@ -531,13 +539,15 @@ extern void ST_AutomapEvent(int type);
 // Status bar is notified that the automap has been entered
 // Passed nothing, returns nothing
 //
-static void AM_initVariables(void)
+static void AM_initVariables()
 {
    int pnum;   
    
    automapactive = true;
-   //fb = video.screens[0];
-   
+
+   // haleyjd: need to redraw the backscreen?
+   am_needbackscreen = (vbscreen.getVirtualAspectRatio() > 4*FRACUNIT/3);
+
    f_oldloc.x = D_MAXINT;
    amclock = 0;
    lightlev = 0;
@@ -647,7 +657,7 @@ static void AM_loadPics(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_unloadPics(void)
+static void AM_unloadPics()
 {
    int i;
    
@@ -671,7 +681,7 @@ static void AM_unloadPics(void)
 // Affects the global variable markpointnum
 // Passed nothing, returns nothing
 //
-void AM_clearMarks(void)
+void AM_clearMarks()
 {
    markpointnum = 0;
 }
@@ -685,7 +695,7 @@ void AM_clearMarks(void)
 // Passed nothing, returns nothing
 // Affects automap's global variables
 //
-static void AM_LevelInit(void)
+static void AM_LevelInit()
 {
    f_x = f_y = 0;
    
@@ -711,16 +721,18 @@ static void AM_LevelInit(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_Stop(void)
+void AM_Stop()
 {  
    AM_unloadPics();
    automapactive = false;
+   am_needbackscreen = false;
    ST_AutomapEvent(AM_MSGEXITED);
    stopped = true;
+   setsizeneeded = true; // haleyjd
 }
 
 //
-// AM_Start()
+// AM_Start
 // 
 // Start up automap operations, 
 //  if a new level, or game start, (re)initialize level variables
@@ -729,7 +741,7 @@ void AM_Stop(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_Start(void)
+void AM_Start()
 {
    static int lastlevel = -1, lastepisode = -1, 
               last_width = -1, last_height = -1,
@@ -787,8 +799,6 @@ static void AM_maxOutWindowScale(void)
    AM_activateNewScale();
 }
 
-static bool am_key_handled;
-
 //
 // AM_Responder()
 //
@@ -800,205 +810,145 @@ static bool am_key_handled;
 //
 bool AM_Responder(event_t *ev)
 {
-   static int cheatstate=0;
-   static int bigstate=0;
-     
+   static int bigstate = 0;
+  
    // haleyjd 07/07/04: dynamic bindings
-   am_key_handled = false;
-   G_KeyResponder(ev, kac_map);
+   int action = G_KeyResponder(ev, kac_map);
 
-   if(ev->type == ev_keydown && !am_key_handled)
+   if(!automapactive)
    {
-      if(!automapactive)
-      {
-         if(action_map_toggle)
-         {
-            AM_Start();
-            am_key_handled = true;
-            action_map_toggle = 0;
-         }
-      }
-      else
-      {
-         am_key_handled = true;
+      if(ev->type != ev_keydown)
+         return false;
 
-         if(action_map_toggle)
-         {
-            action_map_toggle = bigstate = 0;
-            AM_Stop();
-         }
-         else if(action_map_gobig)
-         {
-            bigstate = !bigstate;
-            if(bigstate)
-            {
-               AM_saveScaleAndLoc();
-               AM_minOutWindowScale();
-            }
-            else
-               AM_restoreScaleAndLoc();
-            action_map_gobig = 0;
-         }
-         else if(action_map_follow)
-         {
-            followplayer = !followplayer;
-            f_oldloc.x = D_MAXINT;
-            // Ty 03/27/98 - externalized
-            doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON" 
-                                                      : "AMSTR_FOLLOWOFF"));
-            action_map_follow = 0;
-         }
-         else if(action_map_grid)
-         {
-            automap_grid = !automap_grid;      // killough 2/28/98
-            // Ty 03/27/98 - *not* externalized
-            doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
-                                                      : "AMSTR_GRIDOFF"));
-            action_map_grid = 0;
-         }
-         else if(action_map_mark)
-         {
-            // Ty 03/27/98 - *not* externalized     
-            // sf: fixed this (buffer at start, presumably from an old sprintf
-            doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
-            AM_addMark();
-            action_map_mark = 0;
-         }
-         else if(action_map_clear)
-         {
-            AM_clearMarks();  // Ty 03/27/98 - *not* externalized
-            doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
-            action_map_clear = 0;
-         }
-         else
-         {
-            cheatstate = 0;
-            am_key_handled = false;
-         }
+      switch(action)
+      {
+      case ka_map_toggle: // activate automap
+         AM_Start();
+         return true;
+      default:
+         return false;
       }
    }
-
-   return am_key_handled;
-}
-
-//
-// action_handler_right
-//
-// Registered as the handler for the "map_right" key binding.
-//
-void AM_HandlerRight(event_t *ev)
-{
-   if(automapactive && !followplayer)
+   else
    {
-      if(ev->type == ev_keydown)
+      // handle end of pan or zoom on keyup
+      if(ev->type == ev_keyup)
       {
-         m_paninc.x = FTOM(F_PANINC);
-         am_key_handled = true;
+         switch(action)
+         {
+         case ka_map_right:   // stop pan left or right
+         case ka_map_left:
+            if(!followplayer)
+               m_paninc.x = 0;
+            return false;
+
+         case ka_map_up:      // stop pan up or down
+         case ka_map_down:
+            if(!followplayer)
+               m_paninc.y = 0;
+            return false;
+
+         case ka_map_zoomin:  // stop zoom in or out
+         case ka_map_zoomout:
+            mtof_zoommul = 1.0;
+            ftom_zoommul = 1.0;
+            return true;
+         }
       }
-      else
-         m_paninc.x = 0;
-   }
-}
 
-//
-// action_handler_left
-//
-// Registered as the handler for the "map_left" key binding.
-//
-void AM_HandlerLeft(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.x = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.x = 0;
-   }
-}
+      // all other events are keydown only
+      if(ev->type != ev_keydown)
+         return false;
 
-//
-// action_handler_up
-//
-// Registered as the handler for the "map_up" key binding.
-//
-void AM_HandlerUp(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
+      switch(action)
       {
-         m_paninc.y = FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.y = 0;
-   }
-}
+      case ka_map_right: // pan right
+         if(!followplayer)
+         {
+            m_paninc.x = FTOM(HORZ_PAN_SCALE(F_PANINC));
+            return true;
+         }
+         return false;
 
-//
-// action_handler_down
-//
-// Registered as the handler for the "map_down" key binding.
-//
-void AM_HandlerDown(event_t *ev)
-{
-   if(automapactive && !followplayer)
-   {
-      if(ev->type == ev_keydown)
-      {
-         m_paninc.y = -FTOM(F_PANINC);
-         am_key_handled = true;
-      }
-      else
-         m_paninc.y = 0;
-   }
-}
+      case ka_map_left: // pan left
+         if(!followplayer)
+         {
+            m_paninc.x = -FTOM(HORZ_PAN_SCALE(F_PANINC));
+            return true;
+         }
+         return false;
 
-//
-// action_handler_zoomout
-//
-// Registered as the handler for the "map_zoomout" key binding.
-//
-void AM_HandlerZoomout(event_t *ev)
-{
-   if(automapactive)
-   {
-      if(ev->type == ev_keydown)
-      {
+      case ka_map_up: // pan up
+         if(!followplayer)
+         {
+            m_paninc.y = FTOM(VERT_PAN_SCALE(F_PANINC));
+            return true;
+         }
+         return false;
+
+      case ka_map_down: // pan down
+         if(!followplayer)
+         {
+            m_paninc.y = -FTOM(VERT_PAN_SCALE(F_PANINC));
+            return true;
+         }
+         return false;
+
+      case ka_map_zoomout: // zoom out
          mtof_zoommul = M_ZOOMOUT;
          ftom_zoommul = M_ZOOMIN;
-         am_key_handled = true;
-      }
-      else
-      {
-         mtof_zoommul = 1.0;
-         ftom_zoommul = 1.0;
-      }
-   }
-}
+         return true;
 
-//
-// action_handler_zoomin
-//
-// Registered as the handler for the "map_zoomin" key binding.
-//
-void AM_HandlerZoomin(event_t *ev)
-{
-   if(automapactive)
-   {
-      if(ev->type == ev_keydown)
-      {
+      case ka_map_zoomin: // zoom in
          mtof_zoommul = M_ZOOMIN;
          ftom_zoommul = M_ZOOMOUT;
-         am_key_handled = true;
-      }
-      else
-      {
-         mtof_zoommul = 1.0;
-         ftom_zoommul = 1.0;
+         return true;
+
+      case ka_map_toggle: // deactivate map
+         bigstate = 0;
+         AM_Stop();
+         return true;
+
+      case ka_map_gobig: // "go big"
+         bigstate = !bigstate;
+         if(bigstate)
+         {
+            AM_saveScaleAndLoc();
+            AM_minOutWindowScale();
+         }
+         else
+            AM_restoreScaleAndLoc();
+         return true;
+
+      case ka_map_follow: // toggle follow mode
+         followplayer = !followplayer;
+         f_oldloc.x = D_MAXINT;
+         // Ty 03/27/98 - externalized
+         doom_printf("%s", DEH_String(followplayer ? "AMSTR_FOLLOWON"
+                                                   : "AMSTR_FOLLOWOFF"));
+         return true;
+
+      case ka_map_grid: // toggle grid
+         automap_grid = !automap_grid; // killough 2/28/98
+         // Ty 03/27/98 - *not* externalized
+         doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
+                                                   : "AMSTR_GRIDOFF"));
+         return true;
+
+      case ka_map_mark: // mark a spot
+         // Ty 03/27/98 - *not* externalized     
+         // sf: fixed this (buffer at start, presumably from an old sprintf
+         doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
+         AM_addMark();
+         return true;
+
+      case ka_map_clear: // clear all marked spots
+         AM_clearMarks();  // Ty 03/27/98 - *not* externalized
+         doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
+         return true;
+
+      default:
+         return false;
       }
    }
 }
@@ -1010,7 +960,7 @@ void AM_HandlerZoomin(event_t *ev)
 //
 // Passed nothing, returns nothing
 //
-static void AM_changeWindowScale(void)
+static void AM_changeWindowScale()
 {
    // Change the scaling multipliers
    scale_mtof = scale_mtof * mtof_zoommul;
@@ -1111,6 +1061,18 @@ void AM_Ticker(void)
 //
 static void AM_clearFB(int color)
 {
+   // haleyjd 05/03/13: redraw the backscreen if needed, so that wings can
+   // be filled in for widescreen modes even if the player's screensize setting
+   // has been fullscreen since startup.
+   if(am_needbackscreen)
+   {
+      rrect_t temprect;
+      temprect.scaledFromScreenBlocks(10); // use stat-bar-up screensize
+      R_FillBackScreen(temprect);
+      D_DrawWings();
+      am_needbackscreen = false;
+   }
+
    // haleyjd 12/22/02: backdrop support
    if(am_usebackdrop && am_backdrop)
    {
@@ -1944,14 +1906,13 @@ static void AM_drawWalls(void)
 // haleyjd 05/17/08: Draws node partition lines on the automap as a debugging
 // aid or for the interest of the curious.
 //
-static void AM_drawNodeLines(int bspnum)
+static void AM_drawNodeLines()
 {
    mline_t l;
 
-   while(!(bspnum & NF_SUBSECTOR))
+   for(int i = 0; i < numnodes; i++)
    {
-      node_t  *bsp   = &nodes[bspnum];
-      fnode_t *fnode = &fnodes[bspnum];
+      fnode_t *fnode = &fnodes[i];
 
       l.a.x = fnode->fx;
       l.a.y = fnode->fy;
@@ -1959,10 +1920,67 @@ static void AM_drawNodeLines(int bspnum)
       l.b.y = fnode->fy + fnode->fdy;
 
       AM_drawMline(&l, mapcolor_frnd);
+   }
+}
 
-      AM_drawNodeLines(bsp->children[1]);
+//
+// AM_drawDynaSegs
+//
+// haleyjd 05/04/13: experimental debug code to display dynasegs.
+//
+static void AM_drawDynaSegs()
+{
+   int color = 24;
+   int sscolor = 0;
 
-      bspnum = bsp->children[0];
+   for(int i = 0; i < numsubsectors; i++)
+   {
+      subsector_t *subsec = &subsectors[i];
+      DLListItem<rpolyobj_t> *rpo = subsec->polyList;
+
+      sscolor = 0;
+
+      while(rpo)
+      {
+         dynaseg_t *ds = (*rpo)->dynaSegs;
+         
+         while(ds)
+         {
+            mline_t l;
+
+            l.a.x = ds->seg.v1->fx;
+            l.a.y = ds->seg.v1->fy;
+            l.b.x = ds->seg.v2->fx;
+            l.b.y = ds->seg.v2->fy;
+            AM_drawMline(&l, color + sscolor);
+
+            ds = ds->subnext;
+         }
+
+         rpo = rpo->dllNext;
+
+         // color by fragment?
+         if(!am_dynasegs_bysubsec)
+         {
+            color += 16;
+            if(color > 216)
+               color = 24;
+         }
+         else
+         {
+            sscolor += 3;
+            if(sscolor > 6)
+               sscolor = 0;
+         }
+      }
+
+      if(am_dynasegs_bysubsec)
+      {
+         // color by subsector.
+         color += 16;
+         if(color > 216)
+            color = 24;
+      }
    }
 }
 
@@ -2349,8 +2367,11 @@ void AM_Drawer(void)
    AM_drawWalls();
 
    // haleyjd 05/17/08:
-   if(map_draw_nodelines)
-      AM_drawNodeLines(numnodes - 1);
+   if(am_drawnodelines)
+   {
+      AM_drawNodeLines();
+      AM_drawDynaSegs();
+   }
 
    AM_drawPlayers();
    
@@ -2360,6 +2381,17 @@ void AM_Drawer(void)
    AM_drawCrosshair(mapcolor_hair); //jff 1/7/98 default crosshair color   
    AM_drawMarks();
 }
+
+//=============================================================================
+//
+// Console Commands
+//
+
+VARIABLE_TOGGLE(am_drawnodelines, NULL, onoff);
+CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
+
+VARIABLE_TOGGLE(am_dynasegs_bysubsec, NULL, yesno);
+CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
 
 //----------------------------------------------------------------------------
 //

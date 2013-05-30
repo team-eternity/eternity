@@ -112,7 +112,7 @@ set(ZLIB_SRCS
     trees.c
     uncompr.c
     zutil.c
-    win32/zlib1.rc
+   #win32/zlib1.rc # [DH] This seems to be unneeded, but breaks cross-compile...
 )
 
 # parse the full version number from zlib.h and include in ZLIB_FULL_VERSION
@@ -123,7 +123,7 @@ string(REGEX REPLACE ".*#define[ \t]+ZLIB_VERSION[ \t]+\"([0-9A-Za-z.]+)\".*"
 if(MINGW)
     # This gets us DLL resource information when compiling on MinGW.
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/zlib1rc.obj
-                       COMMAND windres.exe
+                       COMMAND ${CMAKE_RC_COMPILER}
                             -D GCC_WINDRES
                             -I ${CMAKE_CURRENT_SOURCE_DIR}
                             -I ${CMAKE_CURRENT_BINARY_DIR}

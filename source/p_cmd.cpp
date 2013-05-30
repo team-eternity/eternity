@@ -44,7 +44,7 @@
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_clipen.h"
-#include "p_doomclip.h"
+#include "p_map.h"
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_spec.h"
@@ -60,21 +60,26 @@
 const char *yesno[] = { "no",  "yes" };
 const char *onoff[] = { "off", "on"  };
 
-const char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
-                            "gold","sea","black","purple","vomit", "pink", "cream","white"};
+const char *colournames[] = 
+{ 
+   "green",  "indigo", "brown",  "red", 
+   "tomato", "dirt",   "blue",   "gold",
+   "sea",    "black",  "purple", "orange", 
+   "pink",   "cream",  "white"
+};
 
 const char *textcolours[]=
 {
-   FC_BRICK  "brick" FC_NORMAL,
-   FC_TAN    "tan"   FC_NORMAL,
-   FC_GRAY   "gray"  FC_NORMAL,
-   FC_GREEN  "green" FC_NORMAL,
-   FC_BROWN  "brown" FC_NORMAL,
-   FC_GOLD   "gold"  FC_NORMAL,
-   FC_RED    "red"   FC_NORMAL,
-   FC_BLUE   "blue"  FC_NORMAL,
-   FC_ORANGE "orange"FC_NORMAL,
-   FC_YELLOW "yellow"FC_NORMAL
+   FC_BRICK  "brick"  FC_NORMAL,
+   FC_TAN    "tan"    FC_NORMAL,
+   FC_GRAY   "gray"   FC_NORMAL,
+   FC_GREEN  "green"  FC_NORMAL,
+   FC_BROWN  "brown"  FC_NORMAL,
+   FC_GOLD   "gold"   FC_NORMAL,
+   FC_RED    "red"    FC_NORMAL,
+   FC_BLUE   "blue"   FC_NORMAL,
+   FC_ORANGE "orange" FC_NORMAL,
+   FC_YELLOW "yellow" FC_NORMAL
 };
 
 const char *skills[]=
@@ -88,7 +93,7 @@ const char *skills[]=
 
 const char *bfgtypestr[5] = 
 { 
-   "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"
+   "bfg9000", "press release", "bfg11k", "bouncing", "plasma burst"
 };
 const char *dmstr[] = { "single", "coop", "deathmatch" };
 
@@ -345,9 +350,6 @@ CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
 VARIABLE_INT(wipetype, NULL, 0, 2, wipetype_strs);
 CONSOLE_VARIABLE(wipetype, wipetype, 0) {}
 
-VARIABLE_TOGGLE(map_draw_nodelines, NULL, onoff);
-CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
-
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
@@ -359,13 +361,12 @@ CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 
 CONSOLE_COMMAND(puke, cf_notnet)
 {
-   int i;
-   int args[5] = { 0, 0, 0, 0, 0 };
-
    if(Console.argc < 1)
       return;
 
-   for(i = 1; i < Console.argc; ++i)
+   int32_t args[5] = { 0, 0, 0, 0, 0 };
+
+   for(int i = 1; i < Console.argc; i++)
       args[i - 1] = Console.argv[i]->toInt();
 
    ACS_ExecuteScriptNumber(Console.argv[0]->toInt(), gamemap, ACS_EXECUTE_ALWAYS,
@@ -381,56 +382,6 @@ CONSOLE_COMMAND(enable_lightning, 0)
 CONSOLE_COMMAND(thunder, 0)
 {
    P_ForceLightning();
-}
-
-void P_AddCommands(void)
-{
-   C_AddCommand(creator);
-   
-   C_AddCommand(colour);
-   C_AddCommand(gametype);
-   C_AddCommand(skill);
-   C_AddCommand(allowmlook);
-   C_AddCommand(bfgtype);
-   C_AddCommand(autoaim);
-   C_AddCommand(recoil);
-   C_AddCommand(pushers);
-   C_AddCommand(varfriction);
-   C_AddCommand(nukage);
-   C_AddCommand(weapspeed);
-   C_AddCommand(bfglook);
-   C_AddCommand(p_pitchedflight);
-   
-   C_AddCommand(fast);
-   C_AddCommand(nomonsters);
-   C_AddCommand(respawn);
-   C_AddCommand(mon_remember);
-   C_AddCommand(mon_infight);
-   C_AddCommand(mon_backing);
-   C_AddCommand(mon_avoid);
-   C_AddCommand(mon_friction);
-   C_AddCommand(mon_climb);
-   C_AddCommand(mon_helpfriends);
-   C_AddCommand(mon_distfriend);
-   
-   C_AddCommand(timelimit);
-   C_AddCommand(fraglimit);
-
-   C_AddCommand(spechits_emulation);
-   C_AddCommand(donut_emulation);
-   C_AddCommand(p_markunknowns);
-   C_AddCommand(wipewait);
-   C_AddCommand(wipetype);
-   C_AddCommand(am_drawnodelines);
-
-   C_AddCommand(spacejump);
-   C_AddCommand(puke);
-
-   C_AddCommand(enable_lightning);
-   C_AddCommand(thunder);
-   
-   P_Chase_AddCommands();
-   P_Skin_AddCommands();
 }
 
 // EOF

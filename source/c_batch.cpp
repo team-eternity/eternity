@@ -114,7 +114,7 @@ public:
 
       while(finished_batches)
       {
-         batch = finished_batches->dllObject;
+         batch = *finished_batches;
          finished_batches->remove();
          command_batches.removeObject(batch);
          delete(batch);
@@ -270,7 +270,7 @@ void C_AddCommandBatch(const char *name, const char *commands)
       command->handler = C_ActivateCommandBatch;
       command->netcmd = 0;
 
-      (C_AddCommand)(command);
+      C_AddCommand(command);
    }
 
    if((batch = saved_command_batches.getBatch(name)))

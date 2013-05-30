@@ -145,7 +145,8 @@ int             novert;               // haleyjd
 double          mouseSensitivity_horiz;   // has default   //  killough
 double          mouseSensitivity_vert;    // has default
 bool            mouseSensitivity_vanilla; // [CG] 01/20/12
-int             invert_mouse = true;
+int             invert_mouse = false;
+int             invert_padlook = false;
 int             animscreenshot = 0;       // animated screenshots
 int             mouseAccel_type = 0;
 int             mouseAccel_threshold = 10; // [CG] 01/20/12
@@ -164,8 +165,8 @@ int key_pause;
 int destination_keys[MAXPLAYERS];
 
 // haleyjd: mousebfire is now unused -- removed
-int mousebstrafe;   // double-clicking either of these buttons
-int mousebforward;  // causes a use action, however
+int mouseb_dblc1;  // double-clicking either of these buttons
+int mouseb_dblc2;  // causes a use action, however
 
 // haleyjd: joyb variables are obsolete -- removed
 
@@ -174,7 +175,6 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -191,8 +191,7 @@ bool    dclickstate2;
 int     dclicks2;
 
 // joystick values are repeated
-double joyxmove;
-double joyymove;
+double joyaxes[axis_max];
 
 int  savegameslot;
 char savedescription[32];
@@ -213,6 +212,8 @@ int cooldemo_tics;      // number of tics until changing view
 
 void G_CoolViewPoint();
 
+static bool gameactions[NUMKEYACTIONS];
+
 //
 // G_BuildTiccmd
 //
@@ -225,8 +226,6 @@ void G_CoolViewPoint();
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   bool strafe;
-   bool bstrafe;
    bool sendcenterview = false;
    int speed;
    int tspeed;
@@ -246,14 +245,15 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
-   strafe = !!action_strafe;
-   //speed = autorun || action_speed;
-   speed = (autorun ? !(runiswalk && action_speed) : action_speed);
-   
+   if(autorun)
+      speed = !(runiswalk && gameactions[ka_speed]);
+   else
+      speed = gameactions[ka_speed];
+
    forward = side = 0;
 
    // use two stage accelerative turning on the keyboard and joystick
-   if(joyxmove < 0 || joyxmove > 0 || action_right || action_left)
+   if(gameactions[ka_right] || gameactions[ka_left])
       turnheld += ticdup;
    else
       turnheld = 0;
@@ -264,59 +264,61 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       tspeed = speed;
 
    // turn 180 degrees in one keystroke? -- phares
-   if(action_flip)
+   if(gameactions[ka_flip])
    {
       cmd->angleturn += (int16_t)QUICKREVERSE;
-      action_flip = false;
+      gameactions[ka_flip] = false;
    }
 
    // let movement keys cancel each other out
-   if(strafe)
+   if(gameactions[ka_strafe])
    {
-      if(action_right)
+      if(gameactions[ka_right])
          side += pc->sidemove[speed];
-      if(action_left)
+      if(gameactions[ka_left])
          side -= pc->sidemove[speed];
-      if(joyxmove > 0)
-         side += pc->sidemove[speed];
-      if(joyxmove < 0)
-         side -= pc->sidemove[speed];
+      
+      // analog axes: turn becomes stafe if strafe-on is held
+      side += (int)(pc->sidemove[speed] * joyaxes[axis_turn]);
    }
    else
    {
-      if(action_right)
+      if(gameactions[ka_right])
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
-      if(action_left)
+      if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
-      if(joyxmove > 0)
-         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
-      if(joyxmove < 0)
-         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
+
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
    }
 
-   if(action_forward)
+   // gamepad dedicated analog strafe axis applies regardless
+   side += (int)(pc->sidemove[speed] * joyaxes[axis_strafe]);
+
+   if(gameactions[ka_forward])
       forward += pc->forwardmove[speed];
-   if(action_backward)
+   if(gameactions[ka_backward])
       forward -= pc->forwardmove[speed];
-   if(joyymove < 0)
-      forward += pc->forwardmove[speed];
-   if(joyymove > 0)
-      forward -= pc->forwardmove[speed];
-   if(action_moveright)
+
+   // analog movement axis
+   forward += (int)(pc->forwardmove[speed] * joyaxes[axis_move]);
+
+   if(gameactions[ka_moveright])
       side += pc->sidemove[speed];
-   if(action_moveleft)
+   if(gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
-   if(action_jump)                    // -- joek 12/22/07
+   
+   if(gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
-   mlook = allowmlook && (action_mlook || automlook);
+   
+   mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
    cmd->chatchar = C_dequeueChatChar();
 
-   if(action_attack)
+   if(gameactions[ka_attack])
       cmd->buttons |= BT_ATTACK;
 
-   if(action_use)
+   if(gameactions[ka_use])
    {
       cmd->buttons |= BT_USE;
       // clear double clicks if hit use button
@@ -346,22 +348,22 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    //
  
    if((!demo_compatibility && players[consoleplayer].attackdown &&
-       !P_CheckAmmo(&players[consoleplayer])) || action_nextweapon)
+       !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
    {
       newweapon = P_SwitchWeapon(&players[consoleplayer]); // phares
    }
    else
    {                                 // phares 02/26/98: Added gamemode checks
       newweapon =
-        action_weapon1 ? wp_fist :    // killough 5/2/98: reformatted
-        action_weapon2 ? wp_pistol :
-        action_weapon3 ? wp_shotgun :
-        action_weapon4 ? wp_chaingun :
-        action_weapon5 ? wp_missile :
-        action_weapon6 && GameModeInfo->id != shareware ? wp_plasma :
-        action_weapon7 && GameModeInfo->id != shareware ? wp_bfg :
-        action_weapon8 ? wp_chainsaw :
-        action_weapon9 && enable_ssg ? wp_supershotgun :
+        gameactions[ka_weapon1] ? wp_fist :    // killough 5/2/98: reformatted
+        gameactions[ka_weapon2] ? wp_pistol :
+        gameactions[ka_weapon3] ? wp_shotgun :
+        gameactions[ka_weapon4] ? wp_chaingun :
+        gameactions[ka_weapon5] ? wp_missile :
+        gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
+        gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
+        gameactions[ka_weapon8] ? wp_chainsaw :
+        gameactions[ka_weapon9] && enable_ssg ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -415,9 +417,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 03/06/09: next/prev weapon actions
-   if(action_weaponup)
+   if(gameactions[ka_weaponup])
       newweapon = P_NextWeapon(&players[consoleplayer]);
-   else if(action_weapondown)
+   else if(gameactions[ka_weapondown])
       newweapon = P_PrevWeapon(&players[consoleplayer]);
 
    if(newweapon != wp_nochange)
@@ -426,12 +428,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= newweapon << BT_WEAPONSHIFT;
    }
 
-   // mouse -- haleyjd: some of this is obsolete now -- removed
+   // mouse
   
    // forward double click -- haleyjd: still allow double clicks
-   if(mousebuttons[mousebforward] != dclickstate && dclicktime > 1 )
+   if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
    {
-      dclickstate = mousebuttons[mousebforward];
+      dclickstate = mousebuttons[mouseb_dblc2];
       
       if(dclickstate)
          dclicks++;
@@ -452,10 +454,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // strafe double click
 
-   bstrafe = mousebuttons[mousebstrafe]; // haleyjd: removed joybstrafe
-   if(bstrafe != dclickstate2 && dclicktime2 > 1 )
+   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1 )
    {
-      dclickstate2 = bstrafe;
+      dclickstate2 = mousebuttons[mouseb_dblc1];
 
       if(dclickstate2)
          dclicks2++;
@@ -476,10 +477,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // sf: smooth out the mouse movement
    // change to use tmousex, y   
-   // divide by the number of new tics so each gets an equal share
 
-   tmousex = mousex /* / newtics */;
-   tmousey = mousey /* / newtics */;
+   tmousex = mousex;
+   tmousey = mousey;
 
    // we average the mouse movement as well
    // this is most important in smoothing movement
@@ -495,7 +495,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       oldmousey = mousey2;
    }
 
-   // YSHEAR_FIXME: add arrow keylook, joystick look?
+   // YSHEAR_FIXME: add arrow keylook?
 
    if(mlook)
    {
@@ -516,14 +516,16 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(!novert)
          forward += (int)tmousey;
    }
-
    prevmlook = mlook;
+
+   // analog gamepad look
+   look += (int)(pc->lookspeed[1] * joyaxes[axis_look] * (invert_padlook ? -1.0 : 1.0));
    
-   if(action_lookup)
+   if(gameactions[ka_lookup])
       look += pc->lookspeed[speed];
-   if(action_lookdown)
+   if(gameactions[ka_lookdown])
       look -= pc->lookspeed[speed];
-   if(action_center)
+   if(gameactions[ka_center])
       sendcenterview = true;
 
    // haleyjd: special value for view centering
@@ -538,17 +540,23 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 06/05/12: flight
-   if(action_flyup)
+   if(gameactions[ka_flyup])
       flyheight = FLIGHT_IMPULSE_AMT;
-   if(action_flydown)
+   if(gameactions[ka_flydown])
       flyheight = -FLIGHT_IMPULSE_AMT;
-   if(action_flycenter)
+
+   // haleyjd 05/19/13: analog fly axis
+   if(flyheight == 0)
+      flyheight = (int)(joyaxes[axis_fly] * FLIGHT_IMPULSE_AMT);
+
+   if(gameactions[ka_flycenter])
    {
       flyheight = FLIGHT_CENTER;
       look = -32768;
    }
 
-   if(strafe)
+
+   if(gameactions[ka_strafe])
       side += (int)(tmousex * 2.0);
    else
       cmd->angleturn -= (int)(tmousex * 8.0);
@@ -632,15 +640,11 @@ void G_SetGameMapName(const char *s)
 extern gamestate_t wipegamestate;
 extern gamestate_t oldgamestate;
 
-extern void R_InitPortals(void);
-
 //
 // G_DoLoadLevel
 //
-void G_DoLoadLevel(void)
+void G_DoLoadLevel()
 {
-   int i;
-   
    levelstarttic = gametic; // for time calculation
    
    if(!demo_compatibility && demo_version < 203)   // killough 9/29/98
@@ -653,7 +657,7 @@ void G_DoLoadLevel(void)
 
    if(gamestate != GS_LEVEL)       // level load error
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(int i = 0; i < MAXPLAYERS; i++)
          players[i].playerstate = PST_LIVE;
       return;
    }
@@ -669,13 +673,14 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
-   memset(gamekeydown, 0, sizeof(gamekeydown));
-   joyxmove = joyymove = 0;
+   for(int i = 0; i < axis_max; i++)
+      joyaxes[i] = 0.0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
-   memset(mousebuttons, 0, sizeof(mousebuttons));
-   G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
+   memset(mousearray,  0, sizeof(mousearray));
+   memset(gameactions, 0, sizeof(gameactions)); // haleyjd 05/20/05: all bindings off
+   G_ClearKeyStates(); 
 
    // killough: make -timedemo work on multilevel demos
    // Move to end of function to minimize noise -- killough 2/22/98:
@@ -706,6 +711,8 @@ void G_DoLoadLevel(void)
 //
 bool G_Responder(event_t* ev)
 {
+   int action;
+
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -750,9 +757,8 @@ bool G_Responder(event_t* ev)
       {
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
             !automapactive &&
-            ((ev->type == ev_keydown) ||
-             (ev->type == ev_mouse && ev->data1) ||
-             (ev->type == ev_joystick && ev->data1)))
+            (ev->type == ev_keydown ||
+             (ev->type == ev_mouse && ev->data1)))
          {
             // popup menu
             MN_StartControlPanel();
@@ -768,31 +774,28 @@ bool G_Responder(event_t* ev)
    if(gamestate == GS_FINALE && F_Responder(ev))
       return true;  // finale ate the event
 
-   if(action_autorun)
-   {
-      action_autorun = 0;
-      autorun = !autorun;
-   }
-
    switch(ev->type)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
-      {
          C_RunTextCmd("pause");
-      }
       else
       {
-         if(ev->data1 < NUMKEYS)
-            gamekeydown[ev->data1] = true;         
-         G_KeyResponder(ev, kac_game); // haleyjd
+         action = G_KeyResponder(ev, kac_game); // haleyjd
+         gameactions[action] = true;
       }
+
+      if(gameactions[ka_autorun])
+      {
+         gameactions[ka_autorun] = 0;
+         autorun = !autorun;
+      }
+
       return true;    // eat key down events
       
    case ev_keyup:
-      if(ev->data1 < NUMKEYS)
-         gamekeydown[ev->data1] = false;
-      G_KeyResponder(ev, kac_game);   // haleyjd
+      action = G_KeyResponder(ev, kac_game);   // haleyjd
+      gameactions[action] = false;
       return false;   // always let key up events filter down
       
    case ev_mouse:
@@ -816,9 +819,7 @@ bool G_Responder(event_t* ev)
       return true;    // eat events
       
    case ev_joystick:
-      // haleyjd: joybuttons now obsolete -- removed
-      joyxmove = ev->data2;
-      joyymove = ev->data3;
+      joyaxes[axisActions[ev->data1]] = ev->data2;
       return true;    // eat events
       
    default:
@@ -1066,7 +1067,7 @@ void G_DoPlayDemo(void)
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
 
-      if((skill = (skill_t)demover) >= 100)         // For demos from versions >= 1.4
+      if(demover >= 100)         // For demos from versions >= 1.4
       {
          skill = (skill_t)(*demo_p++);
          episode = *demo_p++;
@@ -1079,6 +1080,7 @@ void G_DoPlayDemo(void)
       }
       else
       {
+         skill = (skill_t)demover;
          episode = *demo_p++;
          map = *demo_p++;
          deathmatch = respawnparm = fastparm = nomonsters = false;
@@ -1593,7 +1595,7 @@ static void G_DoWorldDone(void)
       {
          gameaction = ga_nothing;
          inmanageddir = MD_NONE;
-         W_DoMasterLevels(false);
+         W_DoMasterLevels(false, gameskill);
          return;
       }
    }
@@ -3119,7 +3121,7 @@ byte *G_ReadOptions(byte *demoptr)
 //
 // haleyjd 02/21/10: Configure everything to run for an old demo.
 //
-void G_SetOldDemoOptions(void)
+void G_SetOldDemoOptions()
 {
    int i;
 
@@ -3166,7 +3168,7 @@ void G_SetOldDemoOptions(void)
 //
 // haleyjd 02/21/10: Support recording of vanilla demos.
 //
-static void G_BeginRecordingOld(void)
+static void G_BeginRecordingOld()
 {
    int i;
 
@@ -3208,7 +3210,7 @@ static void G_BeginRecordingOld(void)
 */
 // NETCODE_FIXME -- DEMO_FIXME: Yet more demo writing.
 
-void G_BeginRecording(void)
+void G_BeginRecording()
 {
    int i;
 
@@ -3329,7 +3331,7 @@ void G_TimeDemo(const char *name, bool showmenu)
 // Called after a death or level completion to allow demos to be cleaned up
 // Returns true if a new demo loop action will take place
 //
-bool G_CheckDemoStatus(void)
+bool G_CheckDemoStatus()
 {
    if(demorecording)
    {
@@ -3381,7 +3383,7 @@ bool G_CheckDemoStatus(void)
    return false;
 }
 
-void G_StopDemo(void)
+void G_StopDemo()
 {
    extern bool advancedemo;
    

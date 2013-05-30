@@ -85,7 +85,7 @@ protected:
 public:
    // Constructor / Destructor
    XLTokenizer(const char *str) 
-      : token(32), state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
+      : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE), token(32)
    { 
    }
 
@@ -285,8 +285,8 @@ void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
    lumpinfo_t **lumpinfo = dir.getLumpInfo();
 
    // Recurse to parse next lump on the chain first
-   if(curlump->next != -1)
-      parseLumpRecursive(dir, lumpinfo[curlump->next]);
+   if(curlump->namehash.next != -1)
+      parseLumpRecursive(dir, lumpinfo[curlump->namehash.next]);
 
    // Parse this lump, provided it matches by name and is global
    if(!strncasecmp(curlump->name, lumpname, 8) &&
@@ -303,8 +303,8 @@ void XLParser::parseAll(WadDirectory &dir)
 {
    lumpinfo_t **lumpinfo = dir.getLumpInfo();
    lumpinfo_t  *root     = dir.getLumpNameChain(lumpname);
-   if(root->index >= 0)
-      parseLumpRecursive(dir, lumpinfo[root->index]);
+   if(root->namehash.index >= 0)
+      parseLumpRecursive(dir, lumpinfo[root->namehash.index]);
 }
 
 //

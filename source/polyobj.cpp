@@ -32,6 +32,7 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "d_mod.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_queue.h"
@@ -337,10 +338,17 @@ static void Polyobj_findExplicit(polyobj_t *po)
 
    int i;
 
+   int explicitspec = EV_SpecialForStaticInit(EV_STATIC_POLYOBJ_EXPLICIT_LINE);
+   if(!explicitspec) // special is not defined, cannot spawn polyobjects
+   {
+      po->flags |= POF_ISBAD;
+      return;
+   }
+
    // first loop: save off all segs with polyobject's id number
    for(i = 0; i < numlines; ++i)
    {
-      if(lines[i].special == POLYOBJ_EXPLICIT_LINE  && 
+      if(lines[i].special == explicitspec && 
          lines[i].args[0] == po->id &&
          lines[i].args[1] > 0)
       {
@@ -411,6 +419,13 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
    // TODO: support customized thrust?
    po->thrust = FRACUNIT;
 
+   int startspec = EV_SpecialForStaticInit(EV_STATIC_POLYOBJ_START_LINE);
+   if(!startspec) // special is not defined, cannot spawn polyobjects
+   {
+      po->flags |= POF_ISBAD;
+      return;
+   }
+
    // 1. Search lines for "line start" special with tag matching this 
    //    polyobject's id number. If found, iterate through lines which
    //    share common vertices and record them into the polyobject.
@@ -419,7 +434,7 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
       line_t *line = &lines[i];
 
       // is it a START line with this polyobject's id?
-      if(line->special == POLYOBJ_START_LINE && 
+      if(line->special == startspec && 
          line->args[0] == po->id)
       {
          Polyobj_findLines(po, line);

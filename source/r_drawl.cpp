@@ -38,10 +38,7 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
-#define MAXHEIGHT MAX_SCREENHEIGHT
-
-extern int columnofs[MAXWIDTH]; 
+extern int *columnofs; 
 
 static void R_LowDrawColumn(void)
 { 
@@ -326,8 +323,8 @@ static void R_LowDrawFuzzColumn(void)
       column.y1 = 1;
    
    // .. and high.
-   if(column.y2 == viewheight - 1) 
-      column.y2 = viewheight - 2; 
+   if(column.y2 == viewwindow.height - 1) 
+      column.y2 = viewwindow.height - 2; 
 
    count = column.y2 - column.y1; 
 

@@ -22,6 +22,8 @@
 #ifndef __HU_FRAGS_H__
 #define __HU_FRAGS_H__
 
+extern bool hu_showfrags;
+
 void HU_FragsInit();
 
 void HU_FragsDump();

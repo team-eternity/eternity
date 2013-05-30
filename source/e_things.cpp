@@ -220,7 +220,7 @@ static dehflagset_t acs_gamemode_flags =
 };
 
 // table to translate from GameModeInfo->type to acs gamemode flag
-static int gameTypeToACSFlags[NumGameModeTypes] =
+static unsigned int gameTypeToACSFlags[NumGameModeTypes] =
 {
    ACS_MODE_DOOM, // Game_DOOM,
    ACS_MODE_HTIC, // Game_Heretic
@@ -1517,24 +1517,23 @@ static void E_CopyThing(int num, int pnum)
 {
    mobjinfo_t *this_mi;
    DLListItem<mobjinfo_t> namelinks, numlinks;
-   int         dehnum;
    char       *name;
+   int         dehnum;
    MetaTable  *meta;
    int         index;
    int         generation;
    
    this_mi = mobjinfo[num];
 
-   // must save the following fields in the destination thing
+   // must save the following fields in the destination thing:
    namelinks  = this_mi->namelinks;
    numlinks   = this_mi->numlinks;
-   dehnum     = this_mi->dehnum;
    name       = this_mi->name;
+   dehnum     = this_mi->dehnum;
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
-   memcpy(name, this_mi->name, sizeof(this_mi->name));
-
+   
    // copy from source to destination
    memcpy(this_mi, mobjinfo[pnum], sizeof(mobjinfo_t));
 
@@ -1559,7 +1558,6 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
-   memcpy(this_mi->name, name, sizeof(this_mi->name));
 
    // other fields not inherited:
 
@@ -1999,7 +1997,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       }
       else
       {
-         int *results = deh_ParseFlagsCombined(tempstr);
+         unsigned int *results = deh_ParseFlagsCombined(tempstr);
 
          mobjinfo[i]->flags  = results[0];
          mobjinfo[i]->flags2 = results[1];
@@ -2057,7 +2055,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    if(cfg_size(thingsec, ITEM_TNG_ADDFLAGS) > 0)
    {
-      int *results;
+      unsigned int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ADDFLAGS);
          
@@ -2071,7 +2069,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
    {
-      int *results;
+      unsigned int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_REMFLAGS);
 
@@ -2272,7 +2270,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       }
       else if(tempint >= 0) // negative numbers mean no spawn number
       {
-         int flags;
+         unsigned int flags;
 
          // get mode flags
          tempstr = cfg_getstr(acs_sec, ITEM_TNG_ACS_MODES);

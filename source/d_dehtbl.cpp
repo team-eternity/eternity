@@ -62,7 +62,7 @@ const char *s_D_DEVSTR    = D_DEVSTR;
 const char *s_D_CDROM     = D_CDROM;
 const char *s_PRESSKEY    = PRESSKEY;
 const char *s_PRESSYN     = PRESSYN;
-const char *s_QUITMSG     = "";    // sf: optional quitmsg replacement
+const char *s_QUITMSG     = "";        // sf: optional quitmsg replacement
 const char *s_LOADNET     = LOADNET;   // PRESSKEY; // killough 4/4/98:
 const char *s_QLOADNET    = QLOADNET;  // PRESSKEY;
 const char *s_QSAVESPOT   = QSAVESPOT; // PRESSKEY;
@@ -1021,7 +1021,7 @@ const char *mapnames2[] = // DOOM 2 map names.
 
   "HUSTR_31",
   "HUSTR_32",
-  "HUSTR_33"
+  "HUSTR_33"  // For Betray, in BFG Edition IWAD
 };
 
 const char *mapnamesp[] = // Plutonia WAD map names.
@@ -1058,8 +1058,10 @@ const char *mapnamesp[] = // Plutonia WAD map names.
    "PHUSTR_28",
    "PHUSTR_29",
    "PHUSTR_30",
+
    "PHUSTR_31",
    "PHUSTR_32",
+   "HUSTR_33"   // Can be used through BEX
 };
 
 const char *mapnamest[] = // TNT WAD map names.
@@ -1096,8 +1098,10 @@ const char *mapnamest[] = // TNT WAD map names.
    "THUSTR_28",
    "THUSTR_29",
    "THUSTR_30",
+
    "THUSTR_31",
    "THUSTR_32",
+   "HUSTR_33"   // Can be used through BEX
 };
 
 const char *mapnamesh[] = // haleyjd: heretic map names
@@ -1251,6 +1255,7 @@ void A_SetFlags(Mobj *);
 void A_UnSetFlags(Mobj *);
 void A_BetaSkullAttack(Mobj *);
 void A_StartScript(Mobj *); // haleyjd 1/25/00: Script wrapper
+void A_StartScriptNamed(Mobj *);
 void A_PlayerStartScript(Mobj *);
 void A_GenRefire(Mobj *);
 void A_FireGrenade(Mobj *);
@@ -1542,6 +1547,7 @@ deh_bexptr deh_bexptrs[] =
 
   // haleyjd: start new eternity codeptrs
   POINTER(StartScript),
+  POINTER(StartScriptNamed),
   POINTER(PlayerStartScript),
   POINTER(SetFlags),
   POINTER(UnSetFlags),
@@ -1944,6 +1950,23 @@ bool DEH_StringChanged(const char *mnemonic)
       I_Error("DEH_StringChanged: unknown BEX mnemonic %s\n", mnemonic);
 
    return (dehstr->original != *(dehstr->ppstr));
+}
+
+//
+// DEH_ReplaceString
+//
+// haleyjd 04/29/13: Allows replacing a dehstr at runtime.
+// newstr should be a static string, or one you allocated storage for
+// yourself.
+//
+void DEH_ReplaceString(const char *mnemonic, const char *newstr)
+{
+   dehstr_t *dehstr;
+
+   if(!(dehstr = D_GetBEXStr(mnemonic)))
+      return;
+
+   *dehstr->ppstr = newstr;
 }
 
 //

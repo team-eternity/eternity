@@ -66,15 +66,15 @@ void P_GatherSectors(sector_t *from, int groupid);
 // Builds the link table. This should only be called after all the portals for
 // the level have been created.
 //
-bool P_BuildLinkTable(void);
+bool P_BuildLinkTable();
 
 //
 // P_LinkRejectTable
 // Currently just clears each group for every other group.
 //
-void P_LinkRejectTable(void);
+void P_LinkRejectTable();
 
-void P_InitPortals(void);
+void P_InitPortals();
 
 bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link);
 

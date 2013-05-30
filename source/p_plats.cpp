@@ -39,8 +39,18 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "t_plane.h"
 
-platlist_t *activeplats;       // killough 2/14/98: made global again
+// New limit-free plat structure -- killough
+
+struct platlist_t
+{
+   PlatThinker  *plat; 
+   platlist_t   *next;
+   platlist_t  **prev;
+};
+
+static platlist_t *activeplats;
 
 //
 // P_PlatSequence
@@ -73,45 +83,45 @@ IMPLEMENT_THINKER_TYPE(PlatThinker)
 //
 void PlatThinker::Think()
 {
-   result_e      res;
+   result_e res;
    
-   // handle plat moving, up, down, waiting, or in stasis,
-   switch(this->status)
+   // handle plat moving, up, down, waiting, or in stasis
+   switch(status)
    {
    case up: // plat moving up
-      res = T_MovePlane(this->sector,this->speed,this->high,this->crush,0,1);
+      res = T_MoveFloorUp(sector, speed, high, crush);
                                         
       // if a pure raise type, make the plat moving sound
       // haleyjd: now handled through sound sequences
       
       // if encountered an obstacle, and not a crush type, reverse direction
-      if(res == crushed && this->crush <= 0)
+      if(res == crushed && crush <= 0)
       {
-         this->count = this->wait;
-         this->status = down;
-         P_PlatSequence(this->sector, "EEPlatNormal"); // haleyjd
+         count  = wait;
+         status = down;
+         P_PlatSequence(sector, "EEPlatNormal"); // haleyjd
       }
       else  // else handle reaching end of up stroke
       {
          if(res == pastdest) // end of stroke
          {
-            S_StopSectorSequence(this->sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
+            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
 
             // if not an instant toggle type, wait, make plat stop sound
-            if(this->type != toggleUpDn)
+            if(type != toggleUpDn)
             {
-               this->count = this->wait;
-               this->status = waiting;
+               count  = wait;
+               status = waiting;
             }
             else // else go into stasis awaiting next toggle activation
             {
-               this->oldstatus = this->status;//jff 3/14/98 after action wait  
-               this->status = in_stasis;      //for reactivation of toggle
+               oldstatus = status;    //jff 3/14/98 after action wait  
+               status    = in_stasis; //for reactivation of toggle
             }
 
             // lift types and pure raise types are done at end of up stroke
             // only the perpetual type waits then goes back up
-            switch(this->type)
+            switch(type)
             {
             case raiseToNearestAndChange:
                // haleyjd 07/16/04: In Heretic, this type of plat goes into 
@@ -122,7 +132,7 @@ void PlatThinker::Think()
             case downWaitUpStay:
             case raiseAndChange:
             case genLift:
-               P_RemoveActivePlat(this);     // killough
+               removeActivePlat();     // killough
             default:
                break;
             }
@@ -131,66 +141,69 @@ void PlatThinker::Think()
       break;
         
    case down: // plat moving down
-      res = T_MovePlane(this->sector, this->speed, this->low, -1, 0, -1);
+      res = T_MoveFloorDown(sector, speed, low, -1);
 
       // handle reaching end of down stroke
       // SoM: attached sectors means the plat can crush when heading down too
       // if encountered an obstacle, and not a crush type, reverse direction
-      if(demo_version >= 333 && res == crushed && this->crush <= 0)
+      if(demo_version >= 333 && res == crushed && crush <= 0)
       {
-         this->count = this->wait;
-         this->status = up;
-         P_PlatSequence(this->sector, "EEPlatNormal"); // haleyjd
+         count  = wait;
+         status = up;
+         P_PlatSequence(sector, "EEPlatNormal"); // haleyjd
       }
       else if(res == pastdest)
       {
-         S_StopSectorSequence(this->sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
+         S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
-         if(this->type!=toggleUpDn) //jff 3/14/98 toggle up down
+         if(type != toggleUpDn) //jff 3/14/98 toggle up down
          {                           // is silent, instant, no waiting
-            this->count = this->wait;
-            this->status = waiting;
+            count  = wait;
+            status = waiting;
          }
          else // instant toggles go into stasis awaiting next activation
          {
-            this->oldstatus = this->status;//jff 3/14/98 after action wait  
-            this->status = in_stasis;      //for reactivation of toggle
+            oldstatus = status;    //jff 3/14/98 after action wait  
+            status    = in_stasis; //for reactivation of toggle
          }
 
-         //jff 1/26/98 remove the plat if it bounced so it can be tried again
-         //only affects plats that raise and bounce
-         //killough 1/31/98: relax compatibility to demo_compatibility
-         
-         // remove the plat if its a pure raise type
-         if(demo_version < 203 ? !demo_compatibility : !comp[comp_floors])
+         // jff 1/26/98 remove the plat if it bounced so it can be tried again
+         //   only affects plats that raise and bounce
+         // killough 1/31/98: relax compatibility to demo_compatibility
+         // haleyjd 02/18/13: made demo check specific to cases to which it 
+         //   applies only, for the benefit of upWaitDownStay plats
+
+         switch(type)
          {
-            switch(this->type)
-            {
-            case raiseAndChange:
-            case raiseToNearestAndChange:
-               P_RemoveActivePlat(this);
-            default:
-               break;
-            }
+         case raiseAndChange:
+         case raiseToNearestAndChange:
+            if(demo_version < 203 ? !demo_compatibility : !comp[comp_floors])
+               removeActivePlat();
+            break;
+         case upWaitDownStay: // haleyjd 02/18/13: Hexen/Strife reverse plats
+            removeActivePlat();
+            break;
+         default:
+            break;
          }
       }
       break;
 
    case waiting: // plat is waiting
-      if(!--this->count)  // downcount and check for delay elapsed
+      if(!--count)  // downcount and check for delay elapsed
       {
-         if(this->sector->floorheight == this->low)
-            this->status = up;     // if at bottom, start up
+         if(sector->floorheight == low)
+            status = up;     // if at bottom, start up
          else
-            this->status = down;   // if at top, start down
+            status = down;   // if at top, start down
          
          // make plat start sound
          // haleyjd: changed for sound sequences
-         if(this->type == toggleUpDn)
-            P_PlatSequence(this->sector, "EEPlatSilent");
+         if(type == toggleUpDn)
+            P_PlatSequence(sector, "EEPlatSilent");
          else
-            P_PlatSequence(this->sector, "EEPlatNormal");
+            P_PlatSequence(sector, "EEPlatNormal");
       }
       break; //jff 1/27/98 don't pickup code added later to in_stasis
 
@@ -213,7 +226,7 @@ void PlatThinker::serialize(SaveArchive &arc)
 
    // Reattach to active plats list
    if(arc.isLoading())
-      P_AddActivePlat(this);
+      addActivePlat();
 }
 
 //
@@ -250,26 +263,26 @@ bool PlatThinker::reTriggerVerticalDoor(bool player)
 // and for some plat types, an amount to raise
 // Returns true if a thinker is started, or restarted from stasis
 //
-int EV_DoPlat(line_t *line, plattype_e type, int amount )
+bool EV_DoPlat(line_t *line, plattype_e type, int amount )
 {
-   PlatThinker   *plat;
-   int       secnum;
-   int       rtn;
-   sector_t *sec;
+   PlatThinker *plat;
+   int          secnum;
+   bool         rtn;
+   sector_t    *sec;
    
    secnum = -1;
-   rtn = 0;
+   rtn    = false;
 
    // Activate all <type> plats that are in_stasis
    switch(type)
    {
    case perpetualRaise:
-      P_ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->tag);
       break;
       
    case toggleUpDn:
-      P_ActivateInStasis(line->tag);
-      rtn=1;
+      PlatThinker::ActivateInStasis(line->tag);
+      rtn = true;
       break;
       
    default:
@@ -286,15 +299,15 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          continue;
       
       // Create a thinker
-      rtn = 1;
+      rtn = true;
       plat = new PlatThinker;
       plat->addThinker();
       
-      plat->type = type;
+      plat->type   = type;
+      plat->crush  = -1;
+      plat->tag    = line->tag;
       plat->sector = sec;
       plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
-      plat->crush = -1;
-      plat->tag = line->tag;
 
       //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
       //going down forever -- default low to plat height when triggered
@@ -304,55 +317,55 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       switch(type)
       {
       case raiseToNearestAndChange:
-         plat->speed = PLATSPEED/2;
+         plat->speed   = PLATSPEED/2;
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
-         plat->wait = 0;
-         plat->status = up;
+         plat->high    = P_FindNextHighestFloor(sec,sec->floorheight);
+         plat->wait    = 0;
+         plat->status  = PlatThinker::up;
          //jff 3/14/98 clear old field as well
          P_ZeroSectorSpecial(sec);
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           
       case raiseAndChange:
-         plat->speed = PLATSPEED/2;
+         plat->speed   = PLATSPEED/2;
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = sec->floorheight + amount*FRACUNIT;
-         plat->wait = 0;
-         plat->status = up;
+         plat->high    = sec->floorheight + amount*FRACUNIT;
+         plat->wait    = 0;
+         plat->status  = PlatThinker::up;
          
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           
       case downWaitUpStay:
          plat->speed = PLATSPEED * 4;
-         plat->low = P_FindLowestFloorSurrounding(sec);
+         plat->low   = P_FindLowestFloorSurrounding(sec);
          
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
          
-         plat->high = sec->floorheight;
-         plat->wait = 35*PLATWAIT;
-         plat->status = down;
+         plat->high   = sec->floorheight;
+         plat->wait   = 35*PLATWAIT;
+         plat->status = PlatThinker::down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
       case blazeDWUS:
          plat->speed = PLATSPEED * 8;
-         plat->low = P_FindLowestFloorSurrounding(sec);
+         plat->low   = P_FindLowestFloorSurrounding(sec);
          
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
          
-         plat->high = sec->floorheight;
-         plat->wait = 35*PLATWAIT;
-         plat->status = down;
+         plat->high   = sec->floorheight;
+         plat->wait   = 35*PLATWAIT;
+         plat->status = PlatThinker::down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
       case perpetualRaise:
          plat->speed = PLATSPEED;
-         plat->low = P_FindLowestFloorSurrounding(sec);
+         plat->low   = P_FindLowestFloorSurrounding(sec);
          
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
@@ -362,8 +375,8 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          if(plat->high < sec->floorheight)
             plat->high = sec->floorheight;
          
-         plat->wait = 35*PLATWAIT;
-         plat->status = (P_Random(pr_plats) & 1) ? down : up;
+         plat->wait   = 35*PLATWAIT;
+         plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
          
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
@@ -376,7 +389,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          // set up toggling between ceiling, floor inclusive
          plat->low    = sec->ceilingheight;
          plat->high   = sec->floorheight;
-         plat->status = down;
+         plat->status = PlatThinker::down;
 
          P_PlatSequence(plat->sector, "EEPlatSilent");
          break;
@@ -384,8 +397,119 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       default:
          break;
       }
-      P_AddActivePlat(plat);  // add plat to list of active plats
+
+      plat->addActivePlat();  // add plat to list of active plats
    }
+
+   return rtn;
+}
+
+//
+// EV_DoParamPlat
+//
+// haleyjd 02/18/13: Implements parameterized plat types for Hexen
+// support.
+//
+bool EV_DoParamPlat(line_t *line, int *args, paramplattype_e type)
+{
+   sector_t *sec    = NULL;
+   int       secnum = -1;
+   bool      manual = false;
+   bool      rtn    = false;
+
+   if(!args[0])
+   {
+      if(!line || !line->backsector)
+         return false;
+      sec    = line->backsector;
+      secnum = sec - sectors;
+      manual = true;
+      goto manual_plat;
+   }
+
+   while((secnum = P_FindSectorFromTag(args[0], secnum)) >= 0)
+   {
+      sec = &sectors[secnum];
+
+manual_plat:
+      if(P_SectorActive(floor_special, sec))
+      {
+         if(manual)
+            return false;
+         continue;
+      }
+
+      rtn = true;
+      PlatThinker *plat = new PlatThinker;
+      plat->addThinker();
+
+      plat->crush  = -1;
+      plat->tag    = args[0];
+      plat->speed  = args[1] * FRACUNIT / 8;
+      plat->wait   = args[2];
+      plat->sector = sec;
+      plat->sector->floordata = plat;
+
+      switch(type)
+      {
+      case paramDownWaitUpStay:
+         plat->type   = downWaitUpStay;
+         plat->status = PlatThinker::down;
+         plat->high   = sec->floorheight;
+         plat->low    = P_FindLowestFloorSurrounding(sec) + 8 * FRACUNIT;
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
+         break;
+
+      case paramDownByValueWaitUpStay:
+         plat->type   = downWaitUpStay;
+         plat->status = PlatThinker::down;
+         plat->high   = sec->floorheight;
+         plat->low    = sec->floorheight - args[3] * 8 * FRACUNIT;
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
+         break;
+      
+      case paramUpWaitDownStay:
+         plat->type   = upWaitDownStay;
+         plat->status = PlatThinker::up;
+         plat->low    = sec->floorheight;
+         plat->high   = P_FindHighestFloorSurrounding(sec);
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
+         break;
+      
+      case paramUpByValueWaitDownStay:
+         plat->type   = upWaitDownStay;
+         plat->status = PlatThinker::up;
+         plat->low    = sec->floorheight;
+         plat->high   = sec->floorheight + args[3] * 8 * FRACUNIT;
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
+         break;
+      
+      case paramPerpetualRaise:
+         plat->type   = perpetualRaise;
+         plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
+         plat->low    = P_FindLowestFloorSurrounding(sec) + 8 * FRACUNIT;
+         plat->high   = P_FindHighestFloorSurrounding(sec);
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
+         break;
+
+      default:
+         break;
+      }
+
+      plat->addActivePlat();
+      P_PlatSequence(sec, "EEPlatNormal");
+
+      if(manual)
+         return rtn;
+   }
+
    return rtn;
 }
 
@@ -403,16 +527,16 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
 // Passed the tag of the plat that should be reactivated
 // Returns nothing
 //
-void P_ActivateInStasis(int tag)
+void PlatThinker::ActivateInStasis(int tag)
 {
-   platlist_t *pl;
-   for(pl = activeplats; pl; pl = pl->next)   // search the active plats
+   // search the active plats
+   for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
-      PlatThinker *plat = pl->plat;              // for one in stasis with right tag
+      PlatThinker *plat = pl->plat;   // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
-         if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
-            plat->status = plat->oldstatus==up? down : up;
+         if(plat->type == toggleUpDn) //jff 3/14/98 reactivate toggle type
+            plat->status = plat->oldstatus == up ? down : up;
          else
             plat->status = plat->oldstatus;
       }
@@ -420,7 +544,7 @@ void P_ActivateInStasis(int tag)
 }
 
 //
-// EV_StopPlat()
+// EV_StopPlatByTag
 //
 // Handler for "stop perpetual floor" linedef type
 //
@@ -429,34 +553,45 @@ void P_ActivateInStasis(int tag)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_StopPlat(line_t *line)
+bool EV_StopPlatByTag(int tag)
 {
-   platlist_t *pl;
-   for(pl = activeplats; pl; pl = pl->next)  // search the active plats
+   // search the active plats
+   for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
-      PlatThinker *plat = pl->plat;             // for one with the tag not in stasis
-      if(plat->status != in_stasis && plat->tag == line->tag)
+      PlatThinker *plat = pl->plat;      // for one with the tag not in stasis
+      if(plat->status != PlatThinker::in_stasis && plat->tag == tag)
       {
-         plat->oldstatus = plat->status;    // put it in stasis
-         plat->status = in_stasis;
+         // put it in stasis
+         plat->oldstatus = plat->status; 
+         plat->status    = PlatThinker::in_stasis;
       }
    }
-   return 1;
+
+   return true;
 }
 
 //
-// P_AddActivePlat()
+// EV_StopPlat
+//
+// haleyjd 02/18/13: Refactored to call common implementation above.
+//
+bool EV_StopPlat(line_t *line)
+{
+   return EV_StopPlatByTag(line->tag);
+}
+
+//
+// P_AddActivePlat
 //
 // Add a plat to the head of the active plat list
 //
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(PlatThinker *plat)
+void PlatThinker::addActivePlat()
 {
-   platlist_t *list = estructalloc(platlist_t, 1);
-   list->plat = plat;
-   plat->list = list;
+   list = estructalloc(platlist_t, 1);
+   list->plat = this;
    if((list->next = activeplats))
       list->next->prev = &list->next;
    list->prev = &activeplats;
@@ -464,31 +599,30 @@ void P_AddActivePlat(PlatThinker *plat)
 }
 
 //
-// P_RemoveActivePlat()
+// P_RemoveActivePlat
 //
 // Remove a plat from the active plat list
 //
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(PlatThinker *plat)
+void PlatThinker::removeActivePlat()
 {
-   platlist_t *list = plat->list;
-   plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   plat->removeThinker();
+   sector->floordata = NULL; //jff 2/23/98 multiple thinkers
+   removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);
 }
 
 //
-// P_RemoveAllActivePlats()
+// P_RemoveAllActivePlats
 //
 // Remove all plats from the active plat list
 //
 // Passed nothing, returns nothing
 //
-void P_RemoveAllActivePlats(void)
+void PlatThinker::RemoveAllActivePlats()
 {
    while(activeplats)
    {  

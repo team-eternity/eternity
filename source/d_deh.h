@@ -51,41 +51,41 @@ extern const char *s_PRESSKEY; // = PRESSKEY;
 extern const char *s_PRESSYN; // = PRESSYN;
 //#define QUITMSG       "are you sure you want to\nquit this great game?"
 extern const char *s_QUITMSG; // = QUITMSG;
-//#define LOADNET       "you can't do load while in a net game!\n\n"PRESSKEY
+//#define LOADNET       "you can't do load while in a net game!\n\n" PRESSKEY
 extern const char *s_LOADNET; // = LOADNET;
-//#define QLOADNET      "you can't quickload during a netgame!\n\n"PRESSKEY
+//#define QLOADNET      "you can't quickload during a netgame!\n\n" PRESSKEY
 extern const char *s_QLOADNET; // = QLOADNET;
-//#define QSAVESPOT     "you haven't picked a quicksave slot yet!\n\n"PRESSKEY
+//#define QSAVESPOT     "you haven't picked a quicksave slot yet!\n\n" PRESSKEY
 extern const char *s_QSAVESPOT; // = QSAVESPOT;
-//#define SAVEDEAD      "you can't save if you aren't playing!\n\n"PRESSKEY
+//#define SAVEDEAD      "you can't save if you aren't playing!\n\n" PRESSKEY
 extern const char *s_SAVEDEAD; // = SAVEDEAD;
-//#define QSPROMPT      "quicksave over your game named\n\n'%s'?\n\n"PRESSYN
+//#define QSPROMPT      "quicksave over your game named\n\n'%s'?\n\n" PRESSYN
 extern const char *s_QSPROMPT; // = QSPROMPT;
-//#define QLPROMPT      "do you want to quickload the game named\n\n'%s'?\n\n"PRESSYN
+//#define QLPROMPT      "do you want to quickload the game named\n\n'%s'?\n\n" PRESSYN
 extern const char *s_QLPROMPT; // = QLPROMPT;
 
 //#define NEWGAME       
 //"you can't start a new game\n"
-//"while in a network game.\n\n"PRESSKEY
+//"while in a network game.\n\n" PRESSKEY
 extern const char *s_NEWGAME; // = NEWGAME;
 
 //#define NIGHTMARE     
 //"are you sure? this skill level\n"
-//"isn't even remotely fair.\n\n"PRESSYN
+//"isn't even remotely fair.\n\n" PRESSYN
 extern const char *s_NIGHTMARE; // = NIGHTMARE;
 
 //#define SWSTRING      
 //"this is the shareware version of doom.\n\n"
-//"you need to order the entire trilogy.\n\n"PRESSKEY
+//"you need to order the entire trilogy.\n\n" PRESSKEY
 extern const char *s_SWSTRING; // = SWSTRING;
 
 //#define MSGOFF        "Messages OFF"
 extern const char *s_MSGOFF; // = MSGOFF;
 //#define MSGON         "Messages ON"
 extern const char *s_MSGON; // = MSGON;
-//#define NETEND        "you can't end a netgame!\n\n"PRESSKEY
+//#define NETEND        "you can't end a netgame!\n\n" PRESSKEY
 extern const char *s_NETEND; // = NETEND;
-//#define ENDGAME       "are you sure you want to end the game?\n\n"PRESSYN
+//#define ENDGAME       "are you sure you want to end the game?\n\n" PRESSYN
 extern const char *s_ENDGAME; // = ENDGAME;
 
 //#define DOSY          "(press y to quit)"

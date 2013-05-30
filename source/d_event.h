@@ -50,7 +50,6 @@ struct event_t
   double    data3;     // mouse/joystick y move
   char      character; // actual character input when supported
 };
-
  
 typedef enum
 {
@@ -65,8 +64,6 @@ typedef enum
   ga_worlddone,
   ga_screenshot
 } gameaction_t;
-
-
 
 //
 // Button/action code definitions.
@@ -112,7 +109,6 @@ typedef enum
    // Bouncy bouncy jump jump
    AC_JUMP       = 1,
 } actioncode_t;
-
 
 //
 // GLOBAL VARIABLES

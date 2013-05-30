@@ -285,7 +285,7 @@ static void D_addCollectorsEdition(Collection<qstring> &paths)
 
    if(D_getRegistryString(collectorsEditionValue, str))
    {
-      for(int i = 0; i < earrlen(collectorsEditionSubDirs); i++)
+      for(size_t i = 0; i < earrlen(collectorsEditionSubDirs); i++)
       {
          qstring &newPath = paths.addNew();
 
@@ -307,7 +307,7 @@ static void D_addSteamPaths(Collection<qstring> &paths)
 
    if(D_getRegistryString(steamInstallValue, str))
    {
-      for(int i = 0; i < earrlen(steamInstallSubDirs); i++)
+      for(size_t i = 0; i < earrlen(steamInstallSubDirs); i++)
       {
          qstring &newPath = paths.addNew();
          
@@ -347,7 +347,7 @@ static const char *dkotdcDOSPath       = "\\hexendk"; // TODO: not used yet
 //
 static void D_addDOSPaths(Collection<qstring> &paths)
 {
-   for(int i = 0; i < earrlen(dosInstallPaths); i++)
+   for(size_t i = 0; i < earrlen(dosInstallPaths); i++)
       paths.addNew() = dosInstallPaths[i];
 }
 
@@ -520,7 +520,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
          if(PATHEMPTY(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
       }
-      else if(PATHEMPTY(gi_path_doomu))          // Ultimate Doom
+      else if(PATHEMPTY(gi_path_doomu)) // Ultimate Doom
          var = &gi_path_doomu;
       break;
    case commercial: // DOOM II

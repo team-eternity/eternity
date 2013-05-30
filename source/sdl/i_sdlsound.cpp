@@ -861,8 +861,6 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 //
 static int I_SDLInitSound(void)
 {
-   int success = 0;
-   
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
    {

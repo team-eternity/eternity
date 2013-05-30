@@ -180,10 +180,29 @@ public:
 };
 
 //
-// DECLARE_RTTI_TYPE
+// RTTI_VIRTUAL_CONSTRUCTOR
 //
-// Use this macro once per RTTIObject descendant, inside the class definition.
-// The following public members are declared:
+// Defines the virtual factory construction method for an RTTIObject descendant.
+// This is now optional in order to allow abstract classes to use RTTI.
+//
+#define RTTI_VIRTUAL_CONSTRUCTOR(name) \
+   virtual name *newObject() const { return new name ; }
+
+//
+// RTTI_ABSTRACT_CONSTRUCTOR
+//
+// Defines the virtual factory construction method for an abstract descendant
+// of RTTIObject. As a result of the class being abstract, it cannot be 
+// instantiated and therefore this method returns NULL.
+//
+#define RTTI_ABSTRACT_CONSTRUCTOR(name) \
+   virtual name *newObject() const { return NULL; }
+
+//
+// DECLARE_RTTI_TYPE_CTOR
+//
+// Use this macro once per RTTIObject descendant, via one of the below macros,
+// inside the class definition. The following public members are declared:
 //
 // typedef inherited Super;
 // * This allows name::Super to be used as a type which implicitly references
@@ -193,8 +212,9 @@ public:
 // * This is the class's RTTI proxy type and it automatically inherits from the
 //   Super class's proxy. The constructor is protected. The proxy class exposes
 //   the type it proxies for (ie., name) as Type::Class, and a virtual 
-//   newObject() factory constructor method. Note using this macro will exact
-//   the requirement of a default constructor on the RTTIObject descendant.
+//   newObject() factory constructor method. Note that the DECLARE_RTTI_TYPE 
+//   macro will exact the requirement of a default constructor on the RTTIObject
+//   descendant. Otherwise, use DECLARE_ABSTRACT_TYPE.
 //
 // static Type StaticType;
 // * This is the singleton instance of RTTI proxy type for the RTTIObject
@@ -208,7 +228,7 @@ public:
 //   hidden in each descendant scope).
 //
 
-#define DECLARE_RTTI_TYPE(name, inherited) \
+#define DECLARE_RTTI_TYPE_CTOR(name, inherited, ctor) \
 public: \
    typedef inherited Super; \
    class Type : public Super::Type \
@@ -219,11 +239,28 @@ public: \
    public: \
       typedef name Class; \
       friend class name; \
-      virtual name *newObject() const { return new name ; } \
+      ctor \
    }; \
    static Type StaticType; \
    virtual const Type *getDynamicType() const { return &StaticType; } \
 private:
+
+//
+// DECLARE_RTTI_TYPE
+//
+// Instantiates the above macro with an ordinary virtual factory constructor.
+//
+#define DECLARE_RTTI_TYPE(name, inherited) \
+   DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_VIRTUAL_CONSTRUCTOR(name))
+
+//
+// DECLARE_ABSTRACT_TYPE
+//
+// Instantiates the above macro for an abstract class or any class that doesn't
+// support default construction. Factory construction is not supported.
+//
+#define DECLARE_ABSTRACT_TYPE(name, inherited) \
+   DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_ABSTRACT_CONSTRUCTOR(name))
 
 //
 // IMPLEMENT_RTTI_TYPE
@@ -250,7 +287,7 @@ name::Type name::StaticType(#name, &Super::StaticType);
 //
 template<typename T> inline T runtime_cast(RTTIObject *robj)
 {
-   typedef typename eeprestd::remove_pointer<T>::type base_type;
+   typedef typename std::remove_pointer<T>::type base_type;
 
    return (robj && robj->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(robj) : NULL;

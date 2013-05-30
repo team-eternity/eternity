@@ -61,7 +61,6 @@ struct iwadcheck_t
 
 void D_CheckIWAD(const char *iwadname, iwadcheck_t &version);
 
-char   *D_FindInDoomWadPath(const char *filename, const char *extension);
 size_t  D_GetNumDoomWadPaths();
 char   *D_GetDoomWadPath(size_t i);
 

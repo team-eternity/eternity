@@ -39,7 +39,6 @@
 #include "e_things.h" 
 #include "g_game.h"
 #include "in_lude.h"
-#include "in_stats.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -106,19 +105,18 @@ void IN_AddCameras(void)
 //
 // Set up the intermissions camera
 //
-void IN_StartCamera(void)
+void IN_StartCamera()
 {
-   int i;
-   
    if(!camerathings.isEmpty())
    {
       realbackdrop = 1;
 
       // pick a camera at random
       wi_camera = camerathings.getRandom(pr_misc);
-      
+
+#ifdef UNSAFE_BACKDROP
       // remove the player mobjs (look silly in camera view)
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(int i = 0; i < MAXPLAYERS; ++i)
       {
          if(!playeringame[i])
             continue;
@@ -128,6 +126,7 @@ void IN_StartCamera(void)
          players[i].mo->flags &= ~MF_SHOOTABLE;
          players[i].mo->removeThinker();
       }
+#endif
             
       intercam.x = wi_camera->x;
       intercam.y = wi_camera->y;
@@ -160,7 +159,7 @@ void IN_StartCamera(void)
 // Args:    none
 // Returns: void
 //
-void IN_slamBackground(void)
+void IN_slamBackground()
 {
    if(realbackdrop)
       R_RenderPlayerView(players+displayplayer, &intercam);
@@ -227,9 +226,11 @@ void IN_Ticker(void)
 
    InterFuncs->Ticker();
 
+#ifdef UNSAFE_BACKDROP
    // keep the level running when using an intermission camera
    if(realbackdrop)
       P_Ticker();
+#endif
 }
 
 //
@@ -237,7 +238,7 @@ void IN_Ticker(void)
 //
 // Calls the gamemode-specific intermission drawer.
 //
-void IN_Drawer(void)
+void IN_Drawer()
 {
    InterFuncs->Drawer();
 }
@@ -251,7 +252,7 @@ void IN_Drawer(void)
 // InterFuncs variable hasn't been initialized yet.
 // Called from system-specific code when the video mode changes.
 //
-void IN_DrawBackground(void)
+void IN_DrawBackground()
 {
    GameModeInfo->interfuncs->DrawBackground();
 }
@@ -265,9 +266,6 @@ void IN_DrawBackground(void)
 //
 void IN_Start(wbstartstruct_t *wbstartstruct)
 {
-   // haleyjd 09/10/12: record high scores
-   INStatsManager::Get().recordStats(wbstartstruct);
-   
    // haleyjd 03/24/05: allow skipping stats intermission
    if(LevelInfo.killStats)
    {
@@ -290,29 +288,6 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    InterFuncs = GameModeInfo->interfuncs;
 
    InterFuncs->Start(wbstartstruct);
-}
-
-//
-// IN_shutDown
-//
-// atexit handler.
-//
-static void IN_shutDown()
-{
-   INStatsManager::Get().saveStats();
-}
-
-//
-// IN_Init
-//
-// Called at startup.
-//
-void IN_Init()
-{
-   // haleyjd 09/10/12: Initialize the statistics manager.
-   INStatsManager::Init();
-
-   atexit(IN_shutDown);
 }
 
 // EOF

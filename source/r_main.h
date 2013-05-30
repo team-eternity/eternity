@@ -42,13 +42,6 @@ struct spandrawer_t;
 
 extern fixed_t  viewcos;
 extern fixed_t  viewsin;
-extern int      viewwidth;
-extern int      viewheight;
-extern int      viewwindowx;
-extern int      viewwindowy;
-// SoM: ANYRES
-extern int      scaledwindowx;
-extern int      scaledwindowy;
 
 extern int      centerx;
 extern int      centery;
@@ -117,15 +110,15 @@ void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_
 //
 void R_ResetFOV(int width, int height);
 
-void R_Init(void);                           // Called by startup code.
-void R_SetViewSize(int blocks);              // Called by M_Responder.
+void R_Init();                           // Called by startup code.
+void R_SetViewSize(int blocks);          // Called by M_Responder.
 
-void R_InitLightTables(void);                // killough 8/9/98
+void R_InitLightTables();                // killough 8/9/98
 
 extern bool setsizeneeded;
 // SoM
-void R_SetupViewScaling(void);
-void R_ExecuteSetViewSize(void);
+void R_SetupViewScaling();
+void R_ExecuteSetViewSize();
 
 angle_t R_WadToAngle(int wadangle);
 
@@ -139,8 +132,8 @@ extern int r_span_engine_num;
 extern columndrawer_t *r_column_engine;
 extern spandrawer_t *r_span_engine;
 
-void R_SetColumnEngine(void);
-void R_SetSpanEngine(void);
+void R_SetColumnEngine();
+void R_SetSpanEngine();
 
 // haleyjd 09/19/07: missing extern!
 extern const float PI;

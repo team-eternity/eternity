@@ -36,13 +36,14 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "st_stuff.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
-#define MAXHEIGHT MAX_SCREENHEIGHT
+// need wad iterator
+#include "w_iterator.h"
 
 #ifdef DJGPP
 #define USEASM /* sf: changed #ifdef DJGPP to #ifdef USEASM */
@@ -58,19 +59,23 @@
 //
 
 byte *viewimage; 
-int  viewwidth;
-int  scaledviewwidth;
-int  scaledviewheight;        // killough 11/98
-int  viewheight;
-int  viewwindowx;
-int  viewwindowy; 
-// SoM: ANYRES
-int  scaledwindowx;
-int  scaledwindowy;
 
-byte *ylookup[MAXHEIGHT]; 
-int  columnofs[MAXWIDTH]; 
-int  linesize = SCREENWIDTH;  // killough 11/98
+rrect_t viewwindow;   // haleyjd 05/02/13
+rrect_t scaledwindow; // haleyjd 05/02/13
+
+byte **ylookup; 
+int   *columnofs; 
+int    linesize = SCREENWIDTH;  // killough 11/98
+
+VALLOCATION(ylookup)
+{
+   ylookup = ecalloctag(byte **, h, sizeof(byte *), PU_VALLOC, NULL);
+}
+
+VALLOCATION(columnofs)
+{
+   columnofs = ecalloctag(int *, w, sizeof(int), PU_VALLOC, NULL);
+}
 
 // Color tables for different players,
 //  translate a limited part to another
@@ -359,8 +364,8 @@ void CB_DrawFuzzColumn_8(void)
       column.y1 = 1;
    
    // .. and high.
-   if(column.y2 == viewheight - 1) 
-      column.y2 = viewheight - 2; 
+   if(column.y2 == viewwindow.height - 1) 
+      column.y2 = viewwindow.height - 2; 
 
    count = column.y2 - column.y1 + 1;
    if(count <= 0) return;
@@ -410,7 +415,7 @@ void CB_DrawFuzzColumn_8(void)
 byte **translationtables = NULL;
 
 // haleyjd: new stuff
-int firsttranslationlump, lasttranslationlump;
+int firsttranslationlump;
 int numtranslations = 0;
 
 #define SRCPIXEL \
@@ -1013,21 +1018,16 @@ static const char *translations[TRANSLATIONCOLOURS] =
 //
 // haleyjd 01/12/04: rewritten to support translation lumps
 //
-void R_InitTranslationTables(void)
+void R_InitTranslationTables()
 {
-   int numtlumps, i;
+   int i;
+   WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_translations);
    
    // count number of lumps
-   firsttranslationlump = W_CheckNumForName("T_START");
-   lasttranslationlump  = W_CheckNumForName("T_END");
-
-   if(firsttranslationlump == -1 || lasttranslationlump == -1)
-      numtlumps = 0;
-   else
-      numtlumps = (lasttranslationlump - firsttranslationlump) - 1;
+   firsttranslationlump = wni.getFirstLump();
 
    // set numtranslations
-   numtranslations = TRANSLATIONCOLOURS + numtlumps;
+   numtranslations = TRANSLATIONCOLOURS + wni.getNumLumps();
 
    // allocate the array of pointers
    translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
@@ -1037,12 +1037,8 @@ void R_InitTranslationTables(void)
       translationtables[i] = E_ParseTranslation(translations[i], PU_RENDERER);
 
    // read in the lumps, if any
-   for(; i < numtranslations; i++)
-   {
-      int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
-
-      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_RENDERER));
-   }
+   for(wni.begin(); wni.current(); wni.next(), i++)
+      translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum((*wni)->selfindex, PU_RENDERER));
 }
 
 //
@@ -1052,12 +1048,13 @@ void R_InitTranslationTables(void)
 //
 int R_TranslationNumForName(const char *name)
 {
-   int result    = -1;
-   int markernum = W_GetNumForName("T_START");
-   int lumpnum   = W_CheckNumForNameNS(name, lumpinfo_t::ns_translations);
+   int result  = -1;
+   int lumpnum = W_CheckNumForNameNS(name, lumpinfo_t::ns_translations);
 
+   // NB: result is + 1 as zero is assumed to be no translation by code 
+   // that uses this function
    if(lumpnum != -1)
-      result = lumpnum - markernum + TRANSLATIONCOLOURS;
+      result = (lumpnum - firsttranslationlump + TRANSLATIONCOLOURS) + 1;
 
    return result;
 }
@@ -1090,6 +1087,87 @@ byte *R_GetIdentityMap()
 ////////////////////////////////////////////////////////////////
 
 //
+// rrect_t::scaledFromScreenBlocks
+//
+// haleyjd 05/02/13: Sets up a rendering rect to represent the
+// scaled view window.
+//
+void rrect_t::scaledFromScreenBlocks(int blocks)
+{
+   int st_height = GameModeInfo->StatusBar->height; // height of bar
+   int st_screen = SCREENHEIGHT - st_height;        // height of screen, less bar
+
+   switch(blocks)
+   {
+   case 11: // fullscreen
+      width  = SCREENWIDTH;
+      height = SCREENHEIGHT;
+      x = y = 0;
+      break;
+   case 10: // status bar up
+      width  = SCREENWIDTH;
+      height = st_screen;
+      x = y = 0;
+      break;
+   default: // reduced screen size
+      width  = blocks * 32;
+      height = (blocks * st_screen / 10) & ~7;
+      x      = (SCREENWIDTH - width ) >> 1;
+      y      = (st_screen   - height) >> 1;
+      break;
+   }
+}
+
+//
+// rrect_t::viewFromScaled
+//
+// haleyjd 05/02/13: Setup the main view window using an already calculated
+// scaled window rect and video width/height properties.
+//
+void rrect_t::viewFromScaled(int blocks, int vwidth, int vheight, 
+                             const rrect_t &scaled)
+{
+   int st_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
+   int x1, x2, y1, y2;
+
+   switch(blocks)
+   {
+   case 11: // fullscreen
+      width  = vwidth;
+      height = vheight;
+      break;
+   case 10: // stat bar up
+      width  = vwidth;
+      height = video.y2lookup[scaled.height - 1] + 1;
+      break;
+   default: // reduced screen size
+      // SoM: phased out realxarray in favor of the *lookup tables.
+      // w = x2 - x1 + 1
+      x1 = (SCREENWIDTH - scaled.width) >> 1;
+      x2 = x1 + scaled.width - 1;
+
+      if(scaled.width == SCREENWIDTH)
+         y1 = 0;
+      else
+         y1 = (st_y - scaled.height) >> 1;
+
+      y2 = y1 + scaled.height - 1;
+
+      width  = video.x2lookup[x2] - video.x1lookup[x1] + 1;
+      height = video.y2lookup[y2] - video.y1lookup[y1] + 1;
+      break;
+   }
+
+   x = video.x1lookup[scaled.x];
+
+   // Same with base row offset.
+   if(width == vwidth)
+      y = 0;
+   else
+      y = video.y1lookup[scaled.y];
+}
+
+//
 // R_InitBuffer
 //
 // Creates lookup tables that avoid multiplies and other hazzles
@@ -1099,8 +1177,6 @@ byte *R_GetIdentityMap()
 void R_InitBuffer(int width, int height)
 { 
    int i; 
-   int st_height;
-   int tviewwidth = viewwidth;
    
    // SoM: use pitch damn you!
    linesize = video.pitch;    // killough 11/98
@@ -1108,27 +1184,14 @@ void R_InitBuffer(int width, int height)
    // Handle resize,
    //  e.g. smaller view windows
    //  with border and/or status bar.
-   scaledwindowx = (SCREENWIDTH - width) >> 1;
-   viewwindowx   = video.x1lookup[scaledwindowx];
 
    // Column offset. For windows.
-   for (i = tviewwidth ; i--; )   // killough 11/98
-      columnofs[i] = viewwindowx + i;
-   
-   // Same with base row offset.
-   st_height = GameModeInfo->StatusBar->height;
-   
-   if(tviewwidth == video.width)
-      viewwindowy = scaledwindowy = 0;
-   else
-   {
-      scaledwindowy = (SCREENHEIGHT - st_height - height) >> 1;
-      viewwindowy = video.y1lookup[scaledwindowy];
-   }
+   for(i = viewwindow.width ; i--; )   // killough 11/98
+      columnofs[i] = viewwindow.x + i;
    
    // Precalculate all row offsets.
-   for(i = viewheight; i--; )
-      ylookup[i] = video.screens[0] + (i + viewwindowy) * linesize; // killough 11/98
+   for(i = viewwindow.height; i--; )
+      ylookup[i] = video.screens[0] + (i + viewwindow.y) * linesize; // killough 11/98
 } 
 
 //
@@ -1137,10 +1200,10 @@ void R_InitBuffer(int width, int height)
 // Fills the back screen with a pattern for variable screen sizes.
 // Also draws a beveled edge.
 //
-void R_FillBackScreen(void) 
+void R_FillBackScreen(const rrect_t &window) 
 { 
    // killough 11/98: trick to shadow variables
-   // SoM: ANYRES use scaledwindowx and scaledwindowy instead
+   // SoM: ANYRES use scaledwindow.x and scaledwindow.y instead
    int x, y; 
    patch_t *patch;
    giborder_t *border = GameModeInfo->border;
@@ -1148,8 +1211,7 @@ void R_FillBackScreen(void)
    int offset = border->offset;
    int size   = border->size;
 
-   //if(scaledviewwidth == SCREENWIDTH)
-   if(scaledviewheight == SCREENHEIGHT)
+   if(window.height == SCREENHEIGHT)
       return;
 
    // haleyjd 08/16/02: some restructuring to use GameModeInfo
@@ -1159,42 +1221,42 @@ void R_FillBackScreen(void)
 
    patch = PatchLoader::CacheName(wGlobalDir, border->top, PU_CACHE);
 
-   for(x = 0; x < scaledviewwidth; x += size)
-      V_DrawPatch(scaledwindowx+x,scaledwindowy-offset,&backscreen1,patch);
+   for(x = 0; x < window.width; x += size)
+      V_DrawPatch(window.x+x, window.y-offset, &backscreen1, patch);
 
    patch = PatchLoader::CacheName(wGlobalDir, border->bottom, PU_CACHE);
 
-   for(x = 0; x < scaledviewwidth; x += size)   // killough 11/98:
-      V_DrawPatch(scaledwindowx+x,scaledwindowy+scaledviewheight,&backscreen1,patch);
+   for(x = 0; x < window.width; x += size)   // killough 11/98:
+      V_DrawPatch(window.x+x, window.y+window. height, &backscreen1, patch);
 
    patch = PatchLoader::CacheName(wGlobalDir, border->left, PU_CACHE);
 
-   for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
-      V_DrawPatch(scaledwindowx-offset,scaledwindowy+y,&backscreen1,patch);
+   for(y = 0; y < window.height; y += size)  // killough 11/98
+      V_DrawPatch(window.x-offset, window.y+y, &backscreen1, patch);
 
    patch = PatchLoader::CacheName(wGlobalDir, border->right, PU_CACHE);
 
-   for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
-      V_DrawPatch(scaledwindowx+scaledviewwidth,scaledwindowy+y,&backscreen1,patch);
+   for(y = 0; y < window.height; y += size)  // killough 11/98
+      V_DrawPatch(window.x+window.width, window.y+y, &backscreen1, patch);
 
    // Draw beveled edge. 
-   V_DrawPatch(scaledwindowx-offset,
-               scaledwindowy-offset,
+   V_DrawPatch(window.x-offset,
+               window.y-offset,
                &backscreen1,
                PatchLoader::CacheName(wGlobalDir, border->c_tl, PU_CACHE));
 
-   V_DrawPatch(scaledwindowx+scaledviewwidth,
-               scaledwindowy-offset,
+   V_DrawPatch(window.x+window.width,
+               window.y-offset,
                &backscreen1,
                PatchLoader::CacheName(wGlobalDir, border->c_tr, PU_CACHE));
 
-   V_DrawPatch(scaledwindowx-offset,
-               scaledwindowy+scaledviewheight,    // killough 11/98
+   V_DrawPatch(window.x-offset,
+               window.y+window.height,    // killough 11/98
                &backscreen1,
                PatchLoader::CacheName(wGlobalDir, border->c_bl, PU_CACHE));
 
-   V_DrawPatch(scaledwindowx+scaledviewwidth,
-               scaledwindowy+scaledviewheight,     // killough 11/98
+   V_DrawPatch(window.x+window.width,
+               window.y+window.height,     // killough 11/98
                &backscreen1,
                PatchLoader::CacheName(wGlobalDir, border->c_br, PU_CACHE));
 } 
@@ -1244,24 +1306,24 @@ void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned
 //
 // SoM: Removed old killough hack and reformatted to use new R_VideoErase
 //
-void R_DrawViewBorder(void) 
+void R_DrawViewBorder() 
 { 
    int side;
    
-   if(scaledviewwidth == SCREENWIDTH) 
+   if(scaledwindow.width == SCREENWIDTH) 
       return;
 
    // copy top
    // SoM: ANYRES
-   R_VideoErase(0, 0, SCREENWIDTH, scaledwindowy);
+   R_VideoErase(0, 0, SCREENWIDTH, scaledwindow.y);
 
    // copy sides
-   side = scaledwindowx;
-   R_VideoErase(0, scaledwindowy, side, scaledviewheight);
-   R_VideoErase(SCREENWIDTH - side, scaledwindowy, side, scaledviewheight);
+   side = scaledwindow.x;
+   R_VideoErase(0, scaledwindow.y, side, scaledwindow.height);
+   R_VideoErase(SCREENWIDTH - side, scaledwindow.y, side, scaledwindow.height);
 
    // copy bottom 
-   R_VideoErase(0, scaledwindowy + scaledviewheight, SCREENWIDTH, scaledwindowy);
+   R_VideoErase(0, scaledwindow.y + scaledwindow.height, SCREENWIDTH, scaledwindow.y);
 } 
 
 // haleyjd: experimental column drawer for masked sky textures
@@ -1278,9 +1340,10 @@ void R_DrawNewSkyColumn(void)
     return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned int)column.x >= MAX_SCREENWIDTH
+  if (column.x < 0 
+      || column.x >= video.width
       || column.y1 < 0
-      || column.y2 >= MAX_SCREENHEIGHT) 
+      || column.y2 >= video.height) 
     I_Error ("R_DrawNewSkyColumn: %i to %i at %i\n", column.y1, column.y2, column.x); 
 #endif 
 

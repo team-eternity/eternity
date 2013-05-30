@@ -151,6 +151,36 @@ void qstring::freeBuffer()
    clear();
 }
 
+//
+// qstring Move Constructor
+//
+// haleyjd 05/22/2013: Enable C++11 move semantics for qstring instances.
+// Required for efficiency when using qstring with Collection<T>.
+//
+qstring::qstring(qstring &&other)
+   : ZoneObject(), index(0), size(16)
+{
+   // When other is not localized, take direct ownership of its buffer
+   if(!other.isLocal())
+   {
+      buffer = other.buffer;
+      index  = other.index;
+      size   = other.size;
+      memset(local, 0, sizeof(local));
+
+      // leave the other object in a usable state, it's not necessarily dead.
+      other.buffer = NULL;
+      other.freeBuffer();
+   }
+   else
+   {
+      // Copy the local buffer
+      memcpy(local, other.local, sizeof(local));
+      buffer = local;
+      index  = other.index;
+   }
+}
+
 //=============================================================================
 //
 // Basic Properties
@@ -1272,10 +1302,7 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
       char c;                     // current character
       const char *s = fmt;        // pointer into format string
       bool pctstate = false;      // seen a percentage?
-      int dummyint;               // dummy vars just to get args
-      double dummydbl;
       const char *dummystr;
-      void *dummyptr;
       size_t charcount = fmtsize; // start at strlen of format string
 
       va_start(va1, fmt);
@@ -1294,12 +1321,12 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'o':
             case 'u':
                // highest 32-bit octal is 11, plus 1 for possible sign
-               dummyint = va_arg(va1, int);
+               (void)(va_arg(va1, int));
                charcount += 12; 
                pctstate = false;
                break;
             case 'p': // Pointer
-               dummyptr = va_arg(va1, void *);
+               (void)(va_arg(va1, void *));
                charcount += 8 * sizeof(void *) / 4 + 2;
                pctstate = false;
                break;
@@ -1309,7 +1336,7 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
             case 'g':
             case 'G':
                // extremely excessive, but it's possible 
-               dummydbl = va_arg(va1, double);
+               (void)(va_arg(va1, double));
                charcount += 1078; 
                pctstate = false;
                break;

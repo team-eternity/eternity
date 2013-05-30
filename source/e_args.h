@@ -66,7 +66,7 @@ typedef struct evalcache_s
       double        d;
       sfxinfo_t    *s;
       edf_string_t *estr;
-      int           flags[MAXFLAGFIELDS];
+      unsigned int  flags[MAXFLAGFIELDS];
    } value;
 } evalcache_t;
 
@@ -84,6 +84,7 @@ typedef struct argkeywd_s
 } argkeywd_t;
 
 bool          E_AddArgToList(arglist_t *al, const char *value);
+inline int    E_GetArgCount(arglist_t *al) { return al ? al->numargs : 0; }
 bool          E_SetArg(arglist_t *al, int index, const char *value);
 bool          E_SetArgFromNumber(arglist_t *al, int index, int value);
 void          E_DisposeArgs(arglist_t *al);
@@ -100,7 +101,7 @@ state_t      *E_ArgAsStateLabel(Mobj *mo, int index);
 int           E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo);
 int           E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo);
 int           E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo);
-int          *E_ArgAsThingFlags(arglist_t *al, int index);
+unsigned int *E_ArgAsThingFlags(arglist_t *al, int index);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index);

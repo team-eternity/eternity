@@ -228,30 +228,34 @@ INSTRUMENT(int printstats = 0);         // killough 8/23/98
 
 #ifdef ZONEFILE
 static FILE *zonelog;
-#endif
+static bool  logclosed;
 
-static void Z_OpenLogFile(void)
+static void Z_OpenLogFile()
 {
-#ifdef ZONEFILE
-   zonelog = fopen("zonelog.txt", "w");
-#endif
+   if(!zonelog && !logclosed)
+      zonelog = fopen("zonelog.txt", "w");
 }
+#endif
 
-static void Z_CloseLogFile(void)
+static void Z_CloseLogFile()
 {
 #ifdef ZONEFILE
    if(zonelog)
    {
       fputs("Closing zone log", zonelog);
       fclose(zonelog);
-      zonelog = NULL;
+      zonelog = NULL;      
    }
+   // Do not open a new log after this point.
+   logclosed = true;
 #endif
 }
 
 static void Z_LogPrintf(const char *msg, ...)
 {
 #ifdef ZONEFILE
+   if(!zonelog)
+      Z_OpenLogFile();
    if(zonelog)
    {
       va_list ap;
@@ -268,6 +272,8 @@ static void Z_LogPrintf(const char *msg, ...)
 static void Z_LogPuts(const char *msg)
 {
 #ifdef ZONEFILE
+   if(!zonelog)
+      Z_OpenLogFile();
    if(zonelog)
       fputs(msg, zonelog);
 #endif
@@ -291,7 +297,6 @@ void Z_Init(void)
 {   
    atexit(Z_Close);            // exit handler
 
-   Z_OpenLogFile();
    Z_LogPrintf("Initialized zone heap (using native implementation)\n");
 }
 
@@ -627,7 +632,7 @@ void (Z_CheckHeap)(const char *file, int line)
    memblock_t *block;
    int lowtag;
 
-   for(lowtag = PU_FREE; lowtag < PU_MAX; ++lowtag)
+   for(lowtag = PU_FREE+1; lowtag < PU_MAX; ++lowtag)
    {
       for(block = blockbytag[lowtag]; block; block = block->next)
       {
@@ -728,9 +733,71 @@ void Z_PrintZoneHeap(void)
 //
 // haleyjd 03/18/07: Write the zone heap to file
 //
-void Z_DumpCore(void)
+void Z_DumpCore()
 {
-   // FIXME
+   static const char *namefortag[PU_MAX] =
+   {
+      "PU_FREE", 
+      "PU_STATIC",
+      "PU_PERMANENT",
+      "PU_SOUND",
+      "PU_MUSIC",
+      "PU_RENDERER",
+      "PU_VALLOC",
+      "PU_AUTO",
+      "PU_LEVEL",
+      "PU_CACHE",
+   };
+
+   int tag;
+   memblock_t *block;
+   uint32_t dirofs = 12;
+   uint32_t dirlen;
+   uint32_t numentries = 0;
+
+   for(tag = PU_FREE+1; tag < PU_MAX; tag++)
+   {
+      for(block = blockbytag[tag]; block; block = block->next)
+         ++numentries;
+   }
+
+   dirlen = numentries * 64; // crazy PAK format...
+
+   FILE *f = fopen("coredump.pak", "wb");
+   if(!f)
+      return;
+   fwrite("PACK",  4,              1, f);
+   fwrite(&dirofs, sizeof(dirofs), 1, f);
+   fwrite(&dirlen, sizeof(dirlen), 1, f);
+
+   uint32_t offs = 12 + 64 * numentries;
+   for(tag = PU_FREE+1; tag < PU_MAX; tag++)
+   {
+      for(block = blockbytag[tag]; block; block = block->next)
+      {
+         char     name[56];
+         uint32_t filepos = offs;
+         uint32_t filelen = (uint32_t)(block->size);
+
+         memset(name, 0, sizeof(name));
+         sprintf(name, "/%s/%p", 
+                 block->tag < PU_MAX ? namefortag[block->tag] : "UNKNOWN",
+                 block);
+         fwrite(name,     sizeof(name),    1, f);
+         fwrite(&filepos, sizeof(filepos), 1, f);
+         fwrite(&filelen, sizeof(filelen), 1, f);
+
+         offs += filelen;
+      }
+   }
+
+   for(tag = PU_FREE+1; tag < PU_MAX; tag++)
+   {
+      for(block = blockbytag[tag]; block; block = block->next)
+         fwrite(((byte *)block + header_size), block->size, 1, f);
+   }
+
+   fclose(f);
 }
 
 //=============================================================================
@@ -777,7 +844,7 @@ void *Z_SysCalloc(size_t n1, size_t n2)
    {
       I_FatalError(I_ERR_KILL,
                    "Z_SysCalloc: failed on allocation of %u bytes\n", 
-                   (unsigned int)n1*n2);
+                   (unsigned int)(n1*n2));
    }
 
    return ret;
@@ -923,7 +990,17 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
 //
 void *ZoneObject::operator new (size_t size)
 {
-   return (newalloc = Z_Calloc(1, size, PU_OBJECT, NULL));
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+}
+
+//
+// ZoneObject::operator new
+//
+// Overload supporting full zone allocation semantics.
+//
+void *ZoneObject::operator new(size_t size, int tag, void **user)
+{
+   return (newalloc = Z_Calloc(1, size, tag, user));
 }
 
 //
@@ -933,46 +1010,67 @@ void *ZoneObject::operator new (size_t size)
 // subsequent constructor call and stored in the object that was allocated.
 //
 ZoneObject::ZoneObject() 
-   : zonealloc(NULL), zonetag(PU_FREE), zonenext(NULL), zoneprev(NULL)
+   : zonealloc(NULL), zonenext(NULL), zoneprev(NULL)
 {
    if(newalloc)
    {
       zonealloc = newalloc;
       newalloc  = NULL;
-      ChangeTag(PU_STATIC);
+      addToTagList(getZoneTag());
    }
 }
 
 //
-// ZoneObject::ChangeTag
+// ZoneObject::removeFromTagList
+//
+// Private method. Removes the object from any tag list it may be in.
+//
+void ZoneObject::removeFromTagList()
+{
+   if(zoneprev && (*zoneprev = zonenext))
+      zonenext->zoneprev = zoneprev;
+
+   zonenext = NULL;
+   zoneprev = NULL;
+}
+
+//
+// ZoneObject::addToTagList
+//
+// Private method. Adds the object into the indicated tag list.
+//
+void ZoneObject::addToTagList(int tag)
+{
+   if((zonenext = objectbytag[tag]))
+      zonenext->zoneprev = &zonenext;
+   objectbytag[tag] = this;
+   zoneprev = &objectbytag[tag];
+}
+
+//
+// ZoneObject::changeTag
 //
 // If the object was allocated on the zone heap, the allocation tag will be
 // changed.
 //
-void ZoneObject::ChangeTag(int tag)
+void ZoneObject::changeTag(int tag)
 {
    if(zonealloc) // If not a zone object, this is a no-op
    {
-      if(zonetag != PU_FREE) // already in a list? remove it.
-      {
-         if((*zoneprev = zonenext))
-            zonenext->zoneprev = zoneprev;
-         INSTRUMENT(memorybytag[zonetag] -= getZoneSize());
-      }
-      zonenext = NULL;
-      zoneprev = NULL;
+      int curtag = getZoneTag();
 
-      // unless freeing it, put it in the new list
-      if(tag != PU_FREE)
-      {
-         if((zonenext = objectbytag[tag]))
-            zonenext->zoneprev = &zonenext;
-         objectbytag[tag] = this;
-         zoneprev = &objectbytag[tag];
-         INSTRUMENT(memorybytag[tag] += getZoneSize());
-      }
+      // not actually changing?
+      if(tag == curtag)
+         return;
 
-      zonetag = tag;
+      // remove from current tag list, if in one
+      removeFromTagList();
+
+      // put it in the new list
+      addToTagList(tag);
+
+      // change the actual allocation tag
+      Z_ChangeTag(zonealloc, tag);
    }
 }
 
@@ -986,7 +1084,7 @@ ZoneObject::~ZoneObject()
 {
    if(zonealloc)
    {
-      ChangeTag(PU_FREE);
+      removeFromTagList();
       zonealloc = NULL;
    }
 }
@@ -997,6 +1095,17 @@ ZoneObject::~ZoneObject()
 // Calls Z_Free
 //
 void ZoneObject::operator delete (void *p)
+{
+   Z_Free(p);
+}
+
+//
+// ZoneObject::operator delete
+//
+// This overload only exists because of a rule in C++ regarding 
+// exceptions during initialization.
+//
+void ZoneObject::operator delete (void *p, int, void **)
 {
    Z_Free(p);
 }
@@ -1034,6 +1143,25 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
          obj = next;               // Advance to next object
       }
    }
+}
+
+//
+// ZoneObject::getZoneTag
+//
+// Get the object's allocation tag.
+// Returns PU_FREE if the object is not heap-allocated.
+//
+int ZoneObject::getZoneTag() const
+{
+   int tag = PU_FREE;
+
+   if(zonealloc)
+   {
+      memblock_t *block = (memblock_t *)((byte *)zonealloc - header_size);
+      tag = block->tag;
+   }
+
+   return tag;
 }
 
 //

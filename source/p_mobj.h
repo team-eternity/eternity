@@ -326,7 +326,7 @@ public:
    // counters - these were known as special1/2/3 in Heretic and Hexen
    int counters[NUMMOBJCOUNTERS];
 
-   int effects;       // particle effect flag field
+   unsigned int effects; // particle effect flag field
    int translucency;  // zdoom-style translucency level
    int alphavelocity; // haleyjd 05/23/08: change in translucency
    int floatbob;      // floatbob offset
@@ -477,17 +477,23 @@ extern fixed_t FloatBobOffsets[64];
 
 inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
 {
-   return (mo1 && mo2) ? mo2->x + P_GetLinkOffset(mo1->groupid, mo2->groupid)->x : 0;
+   if(!mo2) return 0;
+   if(!mo1) return mo2->x;
+   return mo2->x + P_GetLinkOffset(mo1->groupid, mo2->groupid)->x;
 }
 
 inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 {
-   return (mo1 && mo2) ? mo2->y + P_GetLinkOffset(mo1->groupid, mo2->groupid)->y : 0;
+   if(!mo2) return 0;
+   if(!mo1) return mo2->y;
+   return mo2->y + P_GetLinkOffset(mo1->groupid, mo2->groupid)->y;
 }
 
 inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
 {
-   return (mo1 && mo2) ? mo2->z + P_GetLinkOffset(mo1->groupid, mo2->groupid)->z : 0;
+   if(!mo2) return 0;
+   if(!mo1) return mo2->z;
+   return mo2->z + P_GetLinkOffset(mo1->groupid, mo2->groupid)->z;
 }
 
 #endif

@@ -76,19 +76,5 @@ CONSOLE_VARIABLE(gl_use_extensions, cfg_gl_use_extensions, 0) {}
 VARIABLE_TOGGLE(cfg_gl_arb_pixelbuffer, NULL, yesno);
 CONSOLE_VARIABLE(gl_arb_pixelbuffer, cfg_gl_arb_pixelbuffer, 0) {}
 
-//
-// GL_AddCommands
-//
-// Add all GL-related console variables.
-//
-void GL_AddCommands()
-{
-   C_AddCommand(gl_colordepth);
-   C_AddCommand(gl_filter_type);
-   C_AddCommand(gl_texture_format);
-   C_AddCommand(gl_use_extensions);
-   C_AddCommand(gl_arb_pixelbuffer);
-}
-
 // EOF
 

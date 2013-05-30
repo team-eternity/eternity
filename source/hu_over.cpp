@@ -318,11 +318,16 @@ static void HU_drawArmor(int x, int y)
    x += GAP; // leave a gap between name and bar
 
    // decide on colour
-   fontcolor =
-      hu_player.armorpoints < armor_red    ? *FC_RED   :
-      hu_player.armorpoints < armor_yellow ? *FC_GOLD  :
-      hu_player.armorpoints <= armor_green ? *FC_GREEN :
-      *FC_BLUE;
+   if(hu_player.armorpoints < armor_red)
+      fontcolor = *FC_RED;
+   else if(hu_player.armorpoints < armor_yellow)
+      fontcolor = *FC_GOLD;
+   else if(armor_byclass)
+      fontcolor = (hu_player.armortype == 2 ? *FC_BLUE : *FC_GREEN);
+   else if(hu_player.armorpoints <= armor_green)
+      fontcolor = *FC_GREEN;
+   else
+      fontcolor = *FC_BLUE;
 
    tempstr << static_cast<char>(fontcolor);
 
@@ -578,7 +583,7 @@ void HU_DisableHUD()
 void HU_OverlayDraw()
 {
    // SoM 2-4-04: ANYRES
-   if(viewheight != video.height || automapactive || !hud_enabled) 
+   if(viewwindow.height != video.height || automapactive || !hud_enabled) 
       return;  // fullscreen only
   
    HU_overlaySetup();
@@ -605,11 +610,5 @@ CONSOLE_VARIABLE(hu_overlay, hud_overlaystyle, 0) {}
 
 VARIABLE_BOOLEAN(hud_hidestatus, NULL, yesno);
 CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
-
-void HU_OverAddCommands()
-{
-   C_AddCommand(hu_overlay);
-   C_AddCommand(hu_hidesecrets);
-}
 
 // EOF

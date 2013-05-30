@@ -420,10 +420,6 @@ public:
             // remove from old hash
             chain->remove();
 
-            // clear out fields for safety
-            chain->dllNext = NULL;
-            chain->dllPrev = NULL;
-
             // re-add to new hash at end of list
             hashcode = chain->dllData % numChains;
 

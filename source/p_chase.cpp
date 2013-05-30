@@ -489,11 +489,18 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
        vitr++)
    {
       vertex_t *v = *vitr;
+      camsightparams_t camparams;
 
-      if(CAM_CheckSight(v->x, v->y, sec->floorheight, 41*FRACUNIT,
-                        target->x, target->y, target->z, target->height))
+      camparams.cx       = v->x;
+      camparams.cy       = v->y;
+      camparams.cz       = sec->floorheight;
+      camparams.cheight  = 41 * FRACUNIT;
+      camparams.cgroupid = sec->groupid;
+      camparams.prev     = NULL;
+      camparams.setTargetMobj(target);
+
+      if(CAM_CheckSight(camparams))
       {
-
          angle_t ang = P_PointToAngle(v->x, v->y, target->x, target->y);
 
          // Push coordinates in slightly toward the target
@@ -515,22 +522,17 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 //
 static void P_setFollowPitch()
 {
-   fixed_t zabs = abs(followtarget->z - followcam.z);
-
-   if(zabs <= 41*FRACUNIT)
-   {
-      followcam.pitch = 0;
-      return;
-   }
+   fixed_t aimz = followtarget->z + 41*FRACUNIT;
+   fixed_t zabs = abs(aimz - followcam.z);
 
    fixed_t fixedang;
    double  zdist;
-   bool    camlower = (followcam.z < followtarget->z);
+   bool    camlower = (followcam.z < aimz);
    double  xydist = M_FixedToDouble(P_AproxDistance(followtarget->x - followcam.x,
                                                     followtarget->y - followcam.y));
 
    zdist    = M_FixedToDouble(zabs);
-   fixedang = (fixed_t)(atan2(zdist, xydist) * (ANG180 / PI));
+   fixedang = (fixed_t)(atan2(zdist, xydist) * ((unsigned int)ANG180 / PI));
       
    if(fixedang > ANGLE_1 * 32)
       fixedang = ANGLE_1 * 32;
@@ -582,18 +584,12 @@ bool P_FollowCamTicker()
    P_setFollowPitch();
 
    // still visible?
-   return CAM_CheckSight(followcam.x, followcam.y, followcam.z, 41*FRACUNIT,
-                         followtarget->x, followtarget->y, followtarget->z,
-                         followtarget->height);
-}
+   camsightparams_t camparams;
+   camparams.prev = NULL;
+   camparams.setCamera(followcam, 41 * FRACUNIT);
+   camparams.setTargetMobj(followtarget);
 
-void P_Chase_AddCommands(void)
-{
-   C_AddCommand(chasecam);
-   C_AddCommand(chasecam_height);
-   C_AddCommand(chasecam_dist);
-   C_AddCommand(chasecam_speed);
-   C_AddCommand(walkcam);
+   return CAM_CheckSight(camparams);
 }
 
 #if 0

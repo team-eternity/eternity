@@ -27,7 +27,9 @@
 
 #include "SDL.h"
 
+// HAL modules
 #include "../hal/i_platform.h"
+#include "../hal/i_gamepads.h"
 
 #include "../c_io.h"
 #include "../c_runcmd.h"
@@ -37,6 +39,8 @@
 #include "../doomstat.h"
 #include "../g_bind.h"
 #include "../m_argv.h"
+#include "../m_dllist.h"
+#include "../p_chase.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 
@@ -109,8 +113,11 @@ bool MouseShouldBeGrabbed(void)
    if(!grabmouse)
       return false;
 
-   // when menu is active or game is paused, release the mouse
-   if(menuactive || consoleactive || paused)
+   // when menu is active or game is paused, release the mouse, but:
+   // * menu and console do not pause during netgames
+   // * walkcam needs mouse when game is paused
+   if(((menuactive || consoleactive) && !netgame) || 
+      (paused && !walkcam_active))
       return false;
 
    // only grab mouse when playing levels (but not demos)
@@ -259,86 +266,60 @@ int I_DoomCode2ScanCode(int a)
 // Joystick                                                    // phares 4/3/98
 //
 
-extern SDL_Joystick *sdlJoystick;
-extern int          usejoystick;
-extern int          joystickpresent;
-extern int          sdlJoystickNumButtons;
-
-int joystickSens_x;
-int joystickSens_y;
-
-static int keyForButtonNum[8] =
-{
-   KEYD_JOY1, KEYD_JOY2, KEYD_JOY3, KEYD_JOY4,
-   KEYD_JOY5, KEYD_JOY6, KEYD_JOY7, KEYD_JOY8
-};
-
 //
 // I_JoystickEvents
 //
 // Gathers joystick data and creates an event_t for later processing
 // by G_Responder().
 //
-static void I_JoystickEvents(void)
+static void I_JoystickEvents()
 {
-   // haleyjd 04/15/02: SDL joystick support
+   HALGamePad::padstate_t *padstate;
 
-   event_t event;
-   int i, joyb[8];
-   Sint16 joy_x, joy_y;
-   static int old_joyb[8];
-
-   memset(joyb, 0, sizeof(joyb));
-
-   if(!joystickpresent || !usejoystick || !sdlJoystick ||
-      !sdlJoystickNumButtons)
+   if(!(padstate = I_PollActiveGamePad()))
       return;
 
-   SDL_JoystickUpdate(); // read the current joystick settings
-   event.type = ev_joystick;
-   event.data1 = 0;
-
-   // read the button settings
-   for(i = 0; i < 8 && i < sdlJoystickNumButtons; ++i)
+   // turn padstate into button input events
+   for(int button = 0; button < HALGamePad::MAXBUTTONS; button++)
    {
-      if((joyb[i] = SDL_JoystickGetButton(sdlJoystick, i)))
-         event.data1 |= (1 << i);
+      edefstructvar(event_t, ev);
+
+      if(padstate->buttons[button] != padstate->prevbuttons[button])
+      {
+         ev.type  = padstate->buttons[button] ? ev_keydown : ev_keyup;
+         ev.data1 = KEYD_JOY01 + button;
+         D_PostEvent(&ev);
+      }
    }
 
-   // Read the x,y settings. Convert to -1 or 0 or +1.
-   joy_x = SDL_JoystickGetAxis(sdlJoystick, 0);
-   joy_y = SDL_JoystickGetAxis(sdlJoystick, 1);
-
-   if(joy_x < -joystickSens_x)
-      event.data2 = -1;
-   else if(joy_x > joystickSens_x)
-      event.data2 = 1;
-   else
-      event.data2 = 0;
-
-   if(joy_y < -joystickSens_y)
-      event.data3 = -1;
-   else if(joy_y > joystickSens_y)
-      event.data3 = 1;
-   else
-      event.data3 = 0;
-
-   // post what you found
-
-   D_PostEvent(&event);
-
-   // build button events (make joystick buttons virtual keyboard keys
-   // as originally suggested by lee killough in the boom suggestions file)
-
-   for(i = 0; i < 8; ++i)
+   // read axes
+   for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
    {
-      if(joyb[i] != old_joyb[i])
+      // fire axis state change events
+      if(padstate->axes[axis] != padstate->prevaxes[axis])
       {
-         event.type  = joyb[i] ? ev_keydown : ev_keyup;
-         event.data1 = keyForButtonNum[i];
-         D_PostEvent(&event);
-         old_joyb[i] = joyb[i];
+         edefstructvar(event_t, ev);
+
+         // if previous state was off, key down
+         if(padstate->prevaxes[axis] == 0.0)
+            ev.type = ev_keydown;
+
+         // if new state is off, key up
+         if(padstate->axes[axis] == 0.0)
+            ev.type = ev_keyup;
+
+         ev.data1 = KEYD_AXISON01 + axis;
+         D_PostEvent(&ev);
       }
+
+      // post analog axis state
+      edefstructvar(event_t, ev);
+      ev.type  = ev_joystick;
+      ev.data1 = axis;
+      ev.data2 = padstate->axes[axis];
+      if(axisOrientation[axis]) // may need to flip, if orientation == -1
+         ev.data2 *= axisOrientation[axis];
+      D_PostEvent(&ev);
    }
 }
 
@@ -346,7 +327,7 @@ static void I_JoystickEvents(void)
 //
 // I_StartFrame
 //
-void I_StartFrame(void)
+void I_StartFrame()
 {
    I_JoystickEvents(); // Obtain joystick data                 phares 4/3/98
 }
@@ -356,7 +337,7 @@ void I_StartFrame(void)
 // Mouse
 //
 
-extern void MN_QuitDoom(void);
+extern void MN_QuitDoom();
 extern int mouseAccel_type;
 extern int mouseAccel_threshold;
 extern double mouseAccel_value;
@@ -406,7 +387,7 @@ static double CustomAccelerateMouse(int val)
 // haleyjd 10/23/08: from Choco-Doom:
 // Warp the mouse back to the middle of the screen
 //
-static void CenterMouse(void)
+static void CenterMouse()
 {
    // Warp the the screen center
 
@@ -428,7 +409,7 @@ static void CenterMouse(void)
 // This is to combine all mouse movement for a tic into one mouse
 // motion event.
 //
-static void I_ReadMouse(void)
+static void I_ReadMouse()
 {
    int x, y;
    event_t ev;
@@ -450,12 +431,12 @@ static void I_ReadMouse(void)
       {
          // SoM: So the values that go to Eternity should be 16.16 fixed
          //      point...
-         ev.data2 = AccelerateMouse(x);
+         ev.data2 =  AccelerateMouse(x);
          ev.data3 = -AccelerateMouse(y);
       }
       else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
       {
-         ev.data2 = CustomAccelerateMouse(x);
+         ev.data2 =  CustomAccelerateMouse(x);
          ev.data3 = -CustomAccelerateMouse(y);
       }
 
@@ -490,51 +471,130 @@ void I_InitMouse()
 
 extern int gametic;
 
-static void I_GetEvent(void)
+struct deferredevent_t
 {
-   static int    buttons = 0;
-   static Uint32 mwheeluptic = 0, mwheeldowntic = 0;
+   DLListItem<deferredevent_t> links;
+   event_t ev;
+   int tic;
+};
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   static Uint32 capslocktic = 0;
-#endif
-   Uint32        calltic;
+static DLList<deferredevent_t, &deferredevent_t::links> i_deferredevents;
+static DLList<deferredevent_t, &deferredevent_t::links> i_deferredfreelist;
 
-   SDL_Event  event;
+//
+// I_AddDeferredEvent
+//
+// haleyjd 03/06/13: Some received input events need to be deferred until at
+// least one tic has passed before they are posted to the event queue. 
+// "Trigger" style keys such as mousewheel up and down are the chief offenders.
+// Rather than shoehorning a bunch of code for this into I_GetEvent, it is
+// now handled here uniformly for all event types.
+//
+static void I_AddDeferredEvent(const event_t &ev, int tic)
+{
+   deferredevent_t *de;
+
+   if(i_deferredfreelist.head)
+   {
+      de = *i_deferredfreelist.head;
+      i_deferredfreelist.remove(de);
+   }
+   else
+      de = estructalloc(deferredevent_t, 1);
+
+   de->ev  = ev;
+   de->tic = tic;
+   i_deferredevents.insert(de);
+}
+
+//
+// I_PutDeferredEvent
+//
+// Put a deferredevent_t back on the freelist.
+//
+static void I_PutDeferredEvent(deferredevent_t *de)
+{
+   i_deferredevents.remove(de);
+   i_deferredfreelist.insert(de);
+}
+
+//
+// I_RunDeferredEvents
+//
+// Check the deferred events queue for events that are ready to be posted.
+//
+static void I_RunDeferredEvents()
+{
+   DLListItem<deferredevent_t> *rover = i_deferredevents.head;
+   static int lasttic;
+
+   // Only run once per tic.
+   if(lasttic == gametic)
+      return;
+
+   lasttic = gametic;
+
+   while(rover)
+   {
+      DLListItem<deferredevent_t> *next = rover->dllNext;
+
+      deferredevent_t *de = *rover;
+      if(de->tic <= gametic)
+      {
+         D_PostEvent(&de->ev);
+         I_PutDeferredEvent(de);
+      }
+
+      rover = next;
+   }
+}
+
+static void I_GetEvent()
+{
+   static int buttons = 0;
+
+   SDL_Event  ev;
    int        sendmouseevent = 0;
    event_t    d_event        = { ev_keydown, 0, 0, 0 };
    event_t    mouseevent     = { ev_mouse,   0, 0, 0 };
-
-   calltic = gametic;
+   event_t    tempevent      = { ev_keydown, 0, 0, 0 }; 
 
    // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
    //                  grabbing.
    UpdateFocus();
    UpdateGrab();
 
-   while(SDL_PollEvent(&event))
+   while(SDL_PollEvent(&ev))
    {
       // haleyjd 10/08/05: from Chocolate DOOM
       if(!window_focused &&
-         (event.type == SDL_MOUSEMOTION     ||
-          event.type == SDL_MOUSEBUTTONDOWN ||
-          event.type == SDL_MOUSEBUTTONUP))
+         (ev.type == SDL_MOUSEMOTION     ||
+          ev.type == SDL_MOUSEBUTTONDOWN ||
+          ev.type == SDL_MOUSEBUTTONUP))
       {
          continue;
       }
 
-      switch(event.type)
+      switch(ev.type)
       {
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
-         d_event.data1 = I_TranslateKey(event.key.keysym.sym);
+         d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
+
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+         // Capslock on Windows alternates between key down and key up
+         // events. When we get a keydown, we need to defer a keyup event.
          if(d_event.data1 == KEYD_CAPSLOCK)
-            capslocktic = gametic;
+         {
+            // oPS I HITTED TEH CAPDLOCK!
+            tempevent.type  = ev_keyup;
+            tempevent.data1 = KEYD_CAPSLOCK;
+            I_AddDeferredEvent(tempevent, gametic + 1);
+         }
 #endif
          if(unicodeinput &&
-            event.key.keysym.unicode > 31 && event.key.keysym.unicode < 127)
-            d_event.character = (char)(event.key.keysym.unicode);
+            ev.key.keysym.unicode > 31 && ev.key.keysym.unicode < 127)
+            d_event.character = (char)(ev.key.keysym.unicode);
          else
             d_event.character = 0;
 
@@ -543,12 +603,18 @@ static void I_GetEvent(void)
 
       case SDL_KEYUP:
          d_event.type = ev_keyup;
-         d_event.data1 = I_TranslateKey(event.key.keysym.sym);
+         d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
+
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+         // When we get a keyup for capslock, we need to change it into a 
+         // keydown, and then enqueue a keyup to happen later.
          if(d_event.data1 == KEYD_CAPSLOCK)
          {
             d_event.type = ev_keydown;
-            capslocktic = gametic;
+
+            tempevent.type  = ev_keyup;
+            tempevent.data1 = KEYD_CAPSLOCK;
+            I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif
          D_PostEvent(&d_event);
@@ -566,17 +632,15 @@ static void I_GetEvent(void)
          // people like it the most.
          if(mouseAccel_type == 0)
          {
-            mouseevent.data2 += event.motion.xrel;
-            mouseevent.data3 -= event.motion.yrel;
+            mouseevent.data2 += ev.motion.xrel;
+            mouseevent.data3 -= ev.motion.yrel;
          }
          else if(mouseAccel_type == 1)
          {
             // Simple linear acceleration
             // Evaluates to 1.25 * x. So Why don't I just do that? .... shut up
-            mouseevent.data2 += (event.motion.xrel +
-                                 (float)(event.motion.xrel * 0.25f));
-            mouseevent.data3 -= (event.motion.yrel +
-                                 (float)(event.motion.yrel * 0.25f));
+            mouseevent.data2 += (ev.motion.xrel + (float)(ev.motion.xrel * 0.25f));
+            mouseevent.data3 -= (ev.motion.yrel + (float)(ev.motion.yrel * 0.25f));
          }
 
          sendmouseevent = 1;
@@ -587,7 +651,7 @@ static void I_GetEvent(void)
             continue;
          d_event.type =  ev_keydown;
 
-         switch(event.button.button)
+         switch(ev.button.button)
          {
          case SDL_BUTTON_LEFT:
             sendmouseevent = 1;
@@ -607,11 +671,18 @@ static void I_GetEvent(void)
             break;
          case SDL_BUTTON_WHEELUP:
             d_event.data1 = KEYD_MWHEELUP;
-            mwheeluptic = calltic;
+            // WHEELUP sends a button up event immediately. That won't work;
+            // we need an input latency gap of at least one gametic.
+            tempevent.type  = ev_keyup;
+            tempevent.data1 = KEYD_MWHEELUP;
+            I_AddDeferredEvent(tempevent, gametic + 1);
             break;
          case SDL_BUTTON_WHEELDOWN:
             d_event.data1 = KEYD_MWHEELDOWN;
-            mwheeldowntic = calltic;
+            // ditto, as above.
+            tempevent.type  = ev_keyup;
+            tempevent.data1 = KEYD_MWHEELDOWN;
+            I_AddDeferredEvent(tempevent, gametic + 1);
             break;
 #if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
@@ -632,7 +703,7 @@ static void I_GetEvent(void)
          d_event.type = ev_keyup;
          d_event.data1 = 0;
 
-         switch(event.button.button)
+         switch(ev.button.button)
          {
          case SDL_BUTTON_LEFT:
             sendmouseevent = 1;
@@ -651,8 +722,12 @@ static void I_GetEvent(void)
             d_event.data1 = KEYD_MOUSE2;
             break;
          case SDL_BUTTON_WHEELUP:
+            // Ignore actual wheelup key up events, because they occur
+            // immediately, and we need a delay of at least 1 tic for the
+            // action to be visible to the game engine.
             break;
          case SDL_BUTTON_WHEELDOWN:
+            // As above.
             break;
 #if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
@@ -685,32 +760,6 @@ static void I_GetEvent(void)
       }
    }
 
-   if(mwheeluptic && mwheeluptic + 1 < calltic)
-   {
-      d_event.type = ev_keyup;
-      d_event.data1 = KEYD_MWHEELUP;
-      D_PostEvent(&d_event);
-      mwheeluptic = 0;
-   }
-
-   if(mwheeldowntic && mwheeldowntic + 1 < calltic)
-   {
-      d_event.type = ev_keyup;
-      d_event.data1 = KEYD_MWHEELDOWN;
-      D_PostEvent(&d_event);
-      mwheeldowntic = 0;
-   }
-
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-   if(capslocktic && capslocktic + 1 < calltic)
-   {
-      d_event.type  = ev_keyup;
-      d_event.data1 = KEYD_CAPSLOCK;
-      D_PostEvent(&d_event);
-      capslocktic = 0;
-   }
-#endif
-
    if(sendmouseevent)
    {
       mouseevent.data1 = buttons;
@@ -727,8 +776,9 @@ static void I_GetEvent(void)
 //
 // I_StartTic
 //
-void I_StartTic(void)
+void I_StartTic()
 {
+   I_RunDeferredEvents();
    I_GetEvent();
 
    if(usemouse && ((mouseAccel_type == 2) || (mouseAccel_type == 3)))

@@ -36,11 +36,8 @@
 #include "d_gi.h"
 #include "r_plane.h"
 
-#define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
-#define MAXHEIGHT MAX_SCREENHEIGHT
-
-extern byte *ylookup[MAXHEIGHT]; 
-extern int  columnofs[MAXWIDTH]; 
+extern byte **ylookup; 
+extern int   *columnofs; 
 
 //==============================================================================
 //

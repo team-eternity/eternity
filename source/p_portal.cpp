@@ -257,6 +257,7 @@ void P_GatherSectors(sector_t *from, int groupid)
 // a linkoffset_t object. In cases of invalid input or no link the offset will be
 // (0, 0, 0)
 #ifdef RANGECHECK
+//
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
    if(!useportalgroups)
@@ -324,6 +325,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 // P_CheckLinkedPortal
 //
 // This function performs various consistency and validation checks.
+//
 static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
@@ -402,6 +404,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // This function generates linkoffset_t objects for every group to every other 
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
+//
 static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
                           int from)
 {
@@ -475,9 +478,42 @@ static void P_GlobalPortalStateCheck()
 }
 
 //
+// P_buildPortalMap
+//
+// haleyjd 05/17/13: Build a blockmap-like array which will instantly tell
+// whether or not a given blockmap cell contains linked portals of different
+// types and may therefore need to be subject to differing clipping behaviors,
+// such as disabling certain short circuit checks.
+//
+static void P_buildPortalMap()
+{
+   for(int y = 0; y < bmapheight; y++)
+   {
+      for(int x = 0; x < bmapwidth; x++)
+      {
+         int offset;
+         int *list;
+
+         offset = y * bmapwidth + x;
+         offset = *(blockmap + offset);
+         list = blockmaplump + offset;
+
+         // skip 0 delimiter
+         ++list;
+
+         for(int *tmplist = list; *tmplist != -1; tmplist++)
+         {
+            if(lines[*tmplist].pflags & PS_PASSABLE)
+               portalmap[y * bmapwidth + x] |= PMF_LINE;
+         }
+      }
+   }
+}
+
+//
 // P_BuildLinkTable
 //
-bool P_BuildLinkTable(void)
+bool P_BuildLinkTable()
 {
    int i, p;
    sector_t *sec;
@@ -576,6 +612,9 @@ bool P_BuildLinkTable(void)
    // Everything checks out... let's run the portals
    useportalgroups = true;
    P_GlobalPortalStateCheck();
+
+   // haleyjd 05/17/13: mark all blockmap cells where portals live.
+   P_buildPortalMap();
    
    return true;
 }
@@ -585,7 +624,7 @@ bool P_BuildLinkTable(void)
 //
 // Currently just clears each group for every other group.
 //
-void P_LinkRejectTable(void)
+void P_LinkRejectTable()
 {
    int i, s, p, q;
    sector_t **list, **list2;
@@ -626,7 +665,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
    fixed_t momx = mo->momx;
    fixed_t momy = mo->momy;
    fixed_t momz = mo->momz;
-   fixed_t vh = mo->player ? mo->player->viewheight : 0;
+   //fixed_t vh = mo->player ? mo->player->viewheight : 0;
 
    if(!mo || !link)
       return 0;
@@ -641,7 +680,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if (mo->player)
+   if(mo->player)
    {
       // Save the current deltaviewheight, used in stepping
       fixed_t deltaviewheight = mo->player->deltaviewheight;
@@ -655,7 +694,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
       // Reset the delta to have the same dynamics as before
       mo->player->deltaviewheight = deltaviewheight;
 
-      if(mo->player == players+displayplayer)
+      if(mo->player == players + displayplayer)
           P_ResetChasecam();
    }
 

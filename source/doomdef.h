@@ -25,8 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __DOOMDEF__
-#define __DOOMDEF__
+#ifndef DOOMDEF_H__
+#define DOOMDEF_H__
 
 // killough 4/25/98: Make gcc extensions mean nothing on other compilers
 // haleyjd 05/22/02: moved to d_keywds.h
@@ -210,101 +210,118 @@ typedef enum {
 // This is the stuff configured by Setup.Exe.
 // Most key data are simple ascii (uppercased).
 
-#define KEYD_TAB        0x09
-#define KEYD_ENTER      0x0d
-#define KEYD_ESCAPE     0x1b
+enum keycode_e
+{
+   KEYD_TAB            = 0x09,
+   KEYD_ENTER          = 0x0d,
+   KEYD_ESCAPE         = 0x1b,
 
-#define KEYD_SPACEBAR   0x20
+   KEYD_SPACEBAR       = 0x20,
 
-#define KEYD_MINUS      0x2d
-#define KEYD_EQUALS     0x3d
+   KEYD_COMMA          = 0x2c,
+   KEYD_MINUS,
+   KEYD_PERIOD,
 
-#define KEYD_BACKSPACE  0x7f
+   KEYD_EQUALS         = 0x3d,
+   
+   KEYD_ACCGRAVE       = 0x60,
 
-#define KEYD_RCTRL      0x9d //(0x80+0x1d)
+   KEYD_BACKSPACE      = 0x7f,
 
-#define KEYD_LEFTARROW  0xac
-#define KEYD_UPARROW    0xad
-#define KEYD_RIGHTARROW 0xae
-#define KEYD_DOWNARROW  0xaf
+   KEYD_RCTRL          = 0x9d,
 
-// haleyjd: extra mouse buttons
-#define KEYD_MOUSE4     0xb0
-#define KEYD_MOUSE5     0xb1
+   KEYD_LEFTARROW      = 0xac,
+   KEYD_UPARROW,
+   KEYD_RIGHTARROW,
+   KEYD_DOWNARROW,
 
-#define KEYD_RSHIFT     0xb6 //(0x80+0x36)
-#define KEYD_RALT       0xb8 //(0x80+0x38)
-#define KEYD_LALT       KEYD_RALT
+   KEYD_RSHIFT         = 0xb6,
+   KEYD_RALT           = 0xb8,
+   KEYD_LALT           = KEYD_RALT,
 
-#define KEYD_CAPSLOCK   0xba                 // phares 
+   KEYD_CAPSLOCK       = 0xba, // phares 
 
-#define KEYD_F1         0xbb //(0x80+0x3b)
-#define KEYD_F2         0xbc //(0x80+0x3c)
-#define KEYD_F3         0xbd //(0x80+0x3d)
-#define KEYD_F4         0xbe //(0x80+0x3e)
-#define KEYD_F5         0xbf //(0x80+0x3f)
-#define KEYD_F6         0xc0 //(0x80+0x40)
-#define KEYD_F7         0xc1 //(0x80+0x41)
-#define KEYD_F8         0xc2 //(0x80+0x42)
-#define KEYD_F9         0xc3 //(0x80+0x43)
-#define KEYD_F10        0xc4 //(0x80+0x44)
+   KEYD_F1             = 0xbb,
+   KEYD_F2,
+   KEYD_F3,
+   KEYD_F4,
+   KEYD_F5,
+   KEYD_F6,
+   KEYD_F7,
+   KEYD_F8,
+   KEYD_F9,
+   KEYD_F10,
+   KEYD_NUMLOCK,
+   KEYD_SCROLLLOCK,
+   KEYD_HOME,
+   
+   KEYD_PAGEUP         = 0xc9,
+   KEYD_END            = 0xcf,
+   KEYD_PAGEDOWN       = 0xd1,
+   KEYD_INSERT         = 0xd2,
 
-#define KEYD_NUMLOCK    0xc5                 // killough 3/6/98
-#define KEYD_SCROLLLOCK 0xc6
-#define KEYD_HOME       0xc7
-#define KEYD_PAGEUP     0xc9
-#define KEYD_END        0xcf
-#define KEYD_PAGEDOWN   0xd1
-#define KEYD_INSERT     0xd2
+   KEYD_F11            = 0xd7,
+   KEYD_F12,
 
-#define KEYD_F11        0xd7 //(0x80+0x57)
-#define KEYD_F12        0xd8 //(0x80+0x58)
+   // haleyjd: virtual keys for mouse
+   KEYD_MOUSE1         = 0xe0,
+   KEYD_MOUSE2,
+   KEYD_MOUSE3,
+   KEYD_MOUSE4,
+   KEYD_MOUSE5,
+   KEYD_MWHEELUP,
+   KEYD_MWHEELDOWN,
 
-// haleyjd: virtual keys
-#define KEYD_MOUSE1     0xe0 //(0x80 + 0x60)
-#define KEYD_MOUSE2     0xe1 //(0x80 + 0x61)
-#define KEYD_MOUSE3     0xe2 //(0x80 + 0x62)
-#define KEYD_JOY1       0xe3 //(0x80 + 0x63)
-#define KEYD_JOY2       0xe4 //(0x80 + 0x64)
-#define KEYD_JOY3       0xe5 //(0x80 + 0x65)
-#define KEYD_JOY4       0xe6 //(0x80 + 0x66)
-#define KEYD_JOY5       0xe7 //(0x80 + 0x67)
-#define KEYD_JOY6       0xe8 //(0x80 + 0x68)
-#define KEYD_JOY7       0xe9 //(0x80 + 0x69)
-#define KEYD_JOY8       0xea //(0x80 + 0x6a)
-#define KEYD_MWHEELUP   0xeb //(0x80 + 0x6b)
-#define KEYD_MWHEELDOWN 0xec //(0x80 + 0x6c)
+   KEYD_KP0            = 0xed,
+   KEYD_KP1,
+   KEYD_KP2,
+   KEYD_KP3,
+   KEYD_KP4,
+   KEYD_KP5,
+   KEYD_KP6,
+   KEYD_KP7,
+   KEYD_KP8,
+   KEYD_KP9,
+   KEYD_KPPERIOD,
+   KEYD_KPDIVIDE,
+   KEYD_KPMULTIPLY,
+   KEYD_KPMINUS,
+   KEYD_KPPLUS,
+   KEYD_KPENTER,
+   KEYD_KPEQUALS,
+   KEYD_DEL,
+   KEYD_PAUSE, // 0xff
 
-// haleyjd: key pad
-#define KEYD_KP0        0xed
-#define KEYD_KP1        0xee
-#define KEYD_KP2        0xef
-#define KEYD_KP3        0xf0
-#define KEYD_KP4        0xf1
-#define KEYD_KP5        0xf2
-#define KEYD_KP6        0xf3
-#define KEYD_KP7        0xf4
-#define KEYD_KP8        0xf5
-#define KEYD_KP9        0xf6
-#define KEYD_KPPERIOD   0xf7
-#define KEYD_KPDIVIDE   0xf8
-#define KEYD_KPMULTIPLY 0xf9
-#define KEYD_KPMINUS    0xfa
-#define KEYD_KPPLUS     0xfb
-#define KEYD_KPENTER    0xfc
-#define KEYD_KPEQUALS   0xfd
+   // virtual key codes for gamepad buttons
+   KEYD_JOY01          = 0x100,
+   KEYD_JOY02,
+   KEYD_JOY03,
+   KEYD_JOY04,
+   KEYD_JOY05,
+   KEYD_JOY06,
+   KEYD_JOY07,
+   KEYD_JOY08,
+   KEYD_JOY09,
+   KEYD_JOY10,
+   KEYD_JOY11,
+   KEYD_JOY12,
+   KEYD_JOY13,
+   KEYD_JOY14,
+   KEYD_JOY15,
+   KEYD_JOY16,
 
-// haleyjd: remap delete here
-#define KEYD_DEL        0xfe
+   // axis activation events
+   KEYD_AXISON01,
+   KEYD_AXISON02,
+   KEYD_AXISON03,
+   KEYD_AXISON04,
+   KEYD_AXISON05,
+   KEYD_AXISON06,
+   KEYD_AXISON07,
+   KEYD_AXISON08,
 
-#define KEYD_PAUSE      0xff
-
-// phares 3/2/98:
-
-// phares 3/2/98
-
-// sf: console key
-#define KEYD_ACCGRAVE   '`'
+   NUMKEYS
+};
 
 // phares 4/19/98:
 // Defines Setup Screen groups that config variables appear in.

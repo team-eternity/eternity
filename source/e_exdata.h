@@ -47,9 +47,6 @@
 // the ExtraData control object has doomednum 5004
 #define ED_CTRL_DOOMEDNUM 5004
 
-// the ExtraData line special has number 270
-#define ED_LINE_SPECIAL 270
-
 // ExtraData mapthing structure
 
 // haleyjd 03/03/07: usurped by new unified mapthing_t in doomdata.h
@@ -82,7 +79,7 @@ typedef struct maplinedefext_s
    maplinedef_t stdfields;
 
    // extended fields
-   int   extflags;
+   unsigned int extflags;
    int   args[NUMLINEARGS];
    int   id;
    float alpha;
@@ -106,18 +103,18 @@ typedef struct mapsectorext_s
    double ceiling_yoffs;
    double floorangle;
    double ceilingangle;
-   int    flags;
-   int    flagsadd;
-   int    flagsrem;
+   unsigned int flags;
+   unsigned int flagsadd;
+   unsigned int flagsrem;
    int    topmap;
    int    midmap;
    int    bottommap;
    int    damage;
    int    damagemask;
    int    damagemod;
-   int    damageflags;
-   int    damageflagsadd;
-   int    damageflagsrem;
+   unsigned int damageflags;
+   unsigned int damageflagsadd;
+   unsigned int damageflagsrem;
 
    unsigned int f_pflags;
    unsigned int c_pflags;
@@ -140,10 +137,9 @@ typedef struct mapsectorext_s
 void    E_LoadExtraData(void);
 Mobj   *E_SpawnMapThingExt(mapthing_t *mt);
 void    E_LoadLineDefExt(line_t *line, bool applySpecial);
-bool    E_IsParamSpecial(int16_t special);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
-int16_t E_LineSpecForName(const char *name);
+int     E_LineSpecForName(const char *name);
 void    E_LoadSectorExt(line_t *line);
 
 #endif

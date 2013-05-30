@@ -43,6 +43,7 @@
 #include "c_io.h"
 #include "d_gi.h"
 #include "doomstat.h"
+#include "ev_specials.h"
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_slopes.h"
@@ -55,6 +56,7 @@
 #include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -71,8 +73,22 @@ visplane_t *floorplane, *ceilingplane;
 static visplane_t *mainchains[MAINHASHCHAINS];   // killough
 static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains };
 
+//
+// VALLOCATION(mainhash)
+//
+// haleyjd 04/30/13: When the screen resolution is changed, we need to
+// reset the main visplane hash and related data to its default state,
+// because all visplanes have been destroyed on account of being 
+// allocated with a PU_VALLOC tag.
+//
+VALLOCATION(mainhash)
+{
+   freetail = NULL;
+   freehead = &freetail;
+   floorplane = ceilingplane = NULL;
 
-int num_visplanes;      // sf: count visplanes
+   memset(mainchains, 0, sizeof(mainchains));
+}
 
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
@@ -82,8 +98,13 @@ int num_visplanes;      // sf: count visplanes
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-#define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
-float openings[MAXOPENINGS], *lastopening;
+float *openings, *lastopening;
+
+VALLOCATION(openings)
+{
+   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, NULL);
+   lastopening = openings;
+}
 
 
 // Clip values are the solid pixel bounding the range.
@@ -92,29 +113,38 @@ float openings[MAXOPENINGS], *lastopening;
 
 // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
 // to the clipping arrays of portals.
-float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
-float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
+float *floorcliparray, *ceilingcliparray;
+float *floorclip, *ceilingclip;
+
+VALLOCATION(floorcliparray)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+
+   floorclip   = floorcliparray   = buffer;
+   ceilingclip = ceilingcliparray = buffer + w;
+}
 
 // SoM: We have to use secondary clipping arrays for portal overlays
-float overlayfclip[MAX_SCREENWIDTH], overlaycclip[MAX_SCREENWIDTH];
+float *overlayfclip, *overlaycclip;
 
+VALLOCATION(overlayfclip)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   overlayfclip = buffer;
+   overlaycclip = buffer + w;
+}
 
 // spanstart holds the start of a plane span; initialized to 0 at start
-static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
+static int *spanstart;
+
+VALLOCATION(spanstart)
+{
+   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, NULL);
+}
 
 //
 // texture mapping
 //
-
-// killough 2/8/98: make variables static
-
-static fixed_t cachedheight[MAX_SCREENHEIGHT];
-
-fixed_t *yslope;
-fixed_t origyslope[MAX_SCREENHEIGHT*2];
-
-fixed_t distscale[MAX_SCREENWIDTH];
-int     visplane_view = 0;
 
 cb_span_t      span;
 cb_plane_t     plane;
@@ -130,14 +160,6 @@ void R_Throw(void)
 
 void (*flatfunc)(void)  = R_Throw;
 void (*slopefunc)(void) = R_Throw;
-
-//
-// R_InitPlanes
-// Only at game startup.
-//
-void R_InitPlanes(void)
-{
-}
 
 //
 // R_SpanLight
@@ -221,7 +243,7 @@ static void R_MapPlane(int y, int x1, int x2)
    float dy, xstep, ystep, realy, slope;
 
 #ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
+   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
       I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
@@ -311,19 +333,6 @@ static void R_MapPlane(int y, int x1, int x2)
    
    // BIG FLATS
    flatfunc();
-
-   // visplane viewing -- sf
-   if(visplane_view)
-   {
-      if(y >= 0 && y < viewheight)
-      {
-         // SoM: ANYRES
-         if(x1 >= 0 && x1 <= viewwidth)
-            *(vbscreen.data + y*vbscreen.pitch + x1) = GameModeInfo->blackIndex;
-         if(x2 >= 0 && x2 <= viewwidth)
-            *(vbscreen.data + y*vbscreen.pitch + x2) = GameModeInfo->blackIndex;
-      }
-   }
 }
 
 // haleyjd: NOTE: This version below has scaling implemented. Don't delete it!
@@ -336,7 +345,7 @@ static void R_MapPlane(int y, int x1, int x2)
    static float scale = 2.0f
 
 #ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
+   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
       I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
@@ -379,19 +388,6 @@ static void R_MapPlane(int y, int x1, int x2)
    
    // BIG FLATS
    flatfunc();
-
-   // visplane viewing -- sf
-   if(visplane_view)
-   {
-      if(y >= 0 && y < viewheight)
-      {
-         // SoM: ANYRES
-         if(x1 >= 0 && x1 <= viewwidth)
-            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
-         if(x2 >= 0 && x2 <= viewwidth)
-            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
-      }
-   }
 }
 */
 
@@ -577,6 +573,7 @@ static void R_CalcSlope(visplane_t *pl)
 //
 // Allocates and returns a new planehash_t object. The hash object is allocated
 // PU_LEVEL
+//
 planehash_t *R_NewPlaneHash(int chaincount)
 {
    planehash_t*  ret;
@@ -607,16 +604,15 @@ planehash_t *R_NewPlaneHash(int chaincount)
 //
 // Empties the chains of the given hash table and places the planes within 
 // in the free stack.
+//
 void R_ClearPlaneHash(planehash_t *table)
 {
-   int    i;
-   
-   for(i = 0; i < table->chaincount; ++i)    // new code -- killough
+   for(int i = 0; i < table->chaincount; i++)    // new code -- killough
+   {
       for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
          freehead = &(*freehead)->next;
+   }
 }
-
-
 
 //
 // R_ClearOverlayClips
@@ -624,12 +620,12 @@ void R_ClearPlaneHash(planehash_t *table)
 // Clears the arrays used to clip portal overlays. This function is called before the start of 
 // each portal rendering.
 //
-void R_ClearOverlayClips(void)
+void R_ClearOverlayClips()
 {
    int i;
    
    // opening / clipping determination
-   for(i = 0; i < MAX_SCREENWIDTH; ++i)
+   for(i = 0; i < video.width; ++i)
    {
       overlayfclip[i] = view.height - 1.0f;
       overlaycclip[i] = 0.0f;
@@ -643,24 +639,16 @@ void R_ClearOverlayClips(void)
 //
 // At begining of frame.
 //
-void R_ClearPlanes(void)
+void R_ClearPlanes()
 {
    int i;
    float a = 0.0f;
-
-#if 0
-   // FIXME: borked in widescreen aspect ratios...
-   int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
-
-   a = (float)(consoleactive ? 
-         (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
-#endif
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
 
    // opening / clipping determination
-   for(i = 0; i < MAX_SCREENWIDTH; ++i)
+   for(i = 0; i < video.width; ++i)
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;
@@ -669,11 +657,6 @@ void R_ClearPlanes(void)
    R_ClearPlaneHash(&mainhash);
 
    lastopening = openings;
-
-   // texture calculation
-   memset(cachedheight, 0, sizeof(cachedheight));
-   
-   num_visplanes = 0;    // reset
 }
 
 
@@ -687,7 +670,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloc(visplane_t *, 1, sizeof *check);
+      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, NULL);
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -697,22 +680,17 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    
    check->table = table;
 
-   if(check->max_width < (unsigned int)video.width)
+   if(!check->top)
    {
       int *paddedTop, *paddedBottom;
 
-      if(check->top)
-         efree(check->top - 1);
-
-      check->max_width = video.width;
-      paddedTop    = ecalloc(int *, 2 * (video.width + 2), sizeof(int));
+      check->max_width = (unsigned int)video.width;
+      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, NULL);
       paddedBottom = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
    }
-   
-   num_visplanes++;      // keep track of how many for counter
    
    return check;
 }
@@ -784,7 +762,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
-   check->minx = viewwidth;            // Was SCREENWIDTH -- killough 11/98
+   check->minx = viewwindow.width;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = -1;
    check->xoffs = xoffs;               // killough 2/28/98: Save offsets
    check->yoffs = yoffs;
@@ -921,8 +899,8 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
 {
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
-   if(b2 >= MAX_SCREENHEIGHT)
-      I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
+   if(b2 >= video.height)
+      I_Error("R_MakeSpans: b2 >= video.height\n");
 #endif
 
    for(; t2 > t1 && t1 <= b1; t1++)
@@ -1120,8 +1098,8 @@ static void do_draw_plane(visplane_t *pl)
          // Doom always flipped the picture, so we make it optional,
          // to make it easier to use the new feature, while to still
          // allow old sky textures to be used.
-         
-         flip = l->special == 272 ? 0u : ~0u;
+         int staticFn = EV_StaticInitForSpecial(l->special);
+         flip = (staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED) ? 0u : ~0u;
       }
       else 	 // Normal Doom sky, only one allowed per level
       {

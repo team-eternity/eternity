@@ -278,6 +278,8 @@ int armor_red;     // armor amount less than which status is red
 int armor_yellow;  // armor amount less than which status is yellow
 int armor_green;   // armor amount above is blue, below is green
 
+bool armor_byclass; // haleyjd 01/28/13: reflect armor class via blue or green
+
 int st_fsalpha;    // haleyjd 02/27/10: alpha level for fullscreen HUD
 
  // in deathmatch only, summary of frags stats
@@ -755,9 +757,9 @@ static void ST_drawCommonWidgets(int alpha)
    //jff 2/16/98 make color of armor depend on amount
    if(*w_armor.n.num < armor_red)
       STlib_updatePercent(&w_armor, cr_red, alpha);
-   else if (*w_armor.n.num < armor_yellow)
+   else if(*w_armor.n.num < armor_yellow)
       STlib_updatePercent(&w_armor, cr_gold, alpha);
-   else if (*w_armor.n.num <= armor_green)
+   else if(*w_armor.n.num <= armor_green)
       STlib_updatePercent(&w_armor, cr_green, alpha);
    else
       STlib_updatePercent(&w_armor, cr_blue_status, alpha); //killough 2/28/98
@@ -1357,53 +1359,36 @@ void ST_Init(void)
         CONSOLE COMMANDS
  ***********************/
 
-VARIABLE_INT(ammo_red, NULL,               0, 100, NULL);
-VARIABLE_INT(ammo_yellow, NULL,            0, 100, NULL);
-VARIABLE_INT(health_red, NULL,             0, 200, NULL);
+VARIABLE_INT(ammo_red,      NULL,          0, 100, NULL);
+VARIABLE_INT(ammo_yellow,   NULL,          0, 100, NULL);
+VARIABLE_INT(health_red,    NULL,          0, 200, NULL);
 VARIABLE_INT(health_yellow, NULL,          0, 200, NULL);
-VARIABLE_INT(health_green, NULL,           0, 200, NULL);
-VARIABLE_INT(armor_red, NULL,              0, 200, NULL);
-VARIABLE_INT(armor_yellow, NULL,           0, 200, NULL);
-VARIABLE_INT(armor_green, NULL,            0, 200, NULL);
+VARIABLE_INT(health_green,  NULL,          0, 200, NULL);
+VARIABLE_INT(armor_red,     NULL,          0, 200, NULL);
+VARIABLE_INT(armor_yellow,  NULL,          0, 200, NULL);
+VARIABLE_INT(armor_green,   NULL,          0, 200, NULL);
 
+VARIABLE_TOGGLE(armor_byclass,             NULL,   yesno);
 VARIABLE_BOOLEAN(sts_pct_always_gray,      NULL,   yesno);
 VARIABLE_BOOLEAN(sts_always_red,           NULL,   yesno);
 VARIABLE_BOOLEAN(sts_traditional_keys,     NULL,   yesno);
 
 VARIABLE_INT(st_fsalpha, NULL,             0, 100, NULL);
 
-CONSOLE_VARIABLE(ammo_red, ammo_red, 0) { }
-CONSOLE_VARIABLE(ammo_yellow, ammo_yellow, 0) { }
-CONSOLE_VARIABLE(health_red, health_red, 0) { }
-CONSOLE_VARIABLE(health_yellow, health_yellow, 0) { }
-CONSOLE_VARIABLE(health_green, health_green, 0) { }
-CONSOLE_VARIABLE(armor_red, armor_red, 0) { }
-CONSOLE_VARIABLE(armor_yellow, armor_yellow, 0) { }
-CONSOLE_VARIABLE(armor_green, armor_green, 0) { }
+CONSOLE_VARIABLE(ammo_red,      ammo_red,      0) {}
+CONSOLE_VARIABLE(ammo_yellow,   ammo_yellow,   0) {}
+CONSOLE_VARIABLE(health_red,    health_red,    0) {}
+CONSOLE_VARIABLE(health_yellow, health_yellow, 0) {}
+CONSOLE_VARIABLE(health_green,  health_green,  0) {}
+CONSOLE_VARIABLE(armor_red,     armor_red,     0) {}
+CONSOLE_VARIABLE(armor_yellow,  armor_yellow,  0) {}
+CONSOLE_VARIABLE(armor_green,   armor_green,   0) {}
+CONSOLE_VARIABLE(armor_byclass, armor_byclass, 0) {}
 
-CONSOLE_VARIABLE(st_graypct, sts_pct_always_gray, 0) {}
-CONSOLE_VARIABLE(st_rednum, sts_always_red, 0) {}
+CONSOLE_VARIABLE(st_graypct,   sts_pct_always_gray,  0) {}
+CONSOLE_VARIABLE(st_rednum,    sts_always_red,       0) {}
 CONSOLE_VARIABLE(st_singlekey, sts_traditional_keys, 0) {}
-CONSOLE_VARIABLE(st_fsalpha, st_fsalpha, 0) {}
-
-void ST_AddCommands(void)
-{
-   C_AddCommand(ammo_red);
-   C_AddCommand(ammo_yellow);
-   
-   C_AddCommand(health_red);
-   C_AddCommand(health_yellow);
-   C_AddCommand(health_green);
-   
-   C_AddCommand(armor_red);
-   C_AddCommand(armor_yellow);
-   C_AddCommand(armor_green);
-   
-   C_AddCommand(st_graypct);
-   C_AddCommand(st_rednum);
-   C_AddCommand(st_singlekey);
-   C_AddCommand(st_fsalpha);
-}
+CONSOLE_VARIABLE(st_fsalpha,   st_fsalpha,           0) {}
 
 //----------------------------------------------------------------------------
 //

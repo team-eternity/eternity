@@ -32,6 +32,7 @@
 
 struct event_t;
 struct variable_t;
+struct vfont_t;
 
 //
 // menu_t
@@ -82,7 +83,7 @@ struct menuitem_t
 
   const char *patch; // patch to use or NULL
 
-  int flags;   // haleyjd 03/29/05: menu item flags
+  unsigned int flags;   // haleyjd 03/29/05: menu item flags
 
   /*** internal stuff used by menu code ***/
   int x, y;
@@ -107,6 +108,11 @@ enum
    mf_leftaligned   = 4,   // left-aligned menu
    mf_centeraligned = 8,   // center-aligned menu - haleyjd 02/04/06
    mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
+   mf_bigfont       = 32,  // draw all items big  - haleyjd 05/08/13
+
+   // internal flags - don't expose these to EDF; if you add more 
+   // user flags, put them above and bump the value of these up.
+   mf_initialized   = 64   // already init'd      - haleyjd 05/08/13
 };
 
 struct menu_t
@@ -126,7 +132,7 @@ struct menu_t
    int selected;
    
    // menu flags
-   int flags;               
+   unsigned int flags;               
    
    void (*drawer)(void);              // separate drawer function 
 
@@ -135,7 +141,7 @@ struct menu_t
    
    int gap_override;              // haleyjd 10/09/05: override gap size
 
-   void (*open)(void);            // haleyjd 11/12/09: special open menu function
+   void (*open)(menu_t *menu);    // haleyjd 11/12/09: special open menu function
 
    // internal fields
    char name[33];                 // haleyjd 03/14/06: for dynamic menus
@@ -157,7 +163,7 @@ struct menu_t
 struct menuwidget_t
 {
   void (*drawer)();
-  bool (*responder)(event_t *ev);
+  bool (*responder)(event_t *ev, int);
   void (*ticker)();   // haleyjd 05/29/06
   bool fullscreen;    // haleyjd: optimization for fullscreen widgets
   
@@ -176,45 +182,46 @@ bool MN_Responder(event_t *ev);
 // Called by main loop,
 // only used for menu (skull cursor) animation.
 
-void MN_Ticker(void);
+void MN_Ticker();
 
 // Called by main loop,
 // draws the menus directly into the screen buffer.
 
 void MN_DrawMenu(menu_t *menu);
-void MN_Drawer(void);
+void MN_Drawer();
 
-bool MN_CheckFullScreen(void);
+bool MN_CheckFullScreen();
 
 // Called by D_DoomMain,
 // loads the config file.
 
-void MN_Init(void);
+void MN_Init();
 
 // Called by intro code to force menu up upon a keypress,
 // does nothing if menu is already up.
 
-void MN_StartControlPanel(void);
+void MN_StartControlPanel();
 
 void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
 
-void MN_DrawCredits(void);    // killough 11/98
+void MN_DrawCredits();    // killough 11/98
 
-void MN_ActivateMenu(void);
+void MN_ActivateMenu();
 void MN_StartMenu(menu_t *menu);         // sf 10/99
-void MN_PrevMenu(void);
-void MN_ClearMenus(void);                    // sf 10/99
+void MN_PrevMenu();
+void MN_ClearMenus();                    // sf 10/99
 
 // font functions
 void MN_WriteText(const char *s, int x, int y);
 void MN_WriteTextColored(const char *s, int colour, int x, int y);
-int MN_StringWidth(const char *s);
+int  MN_StringWidth(const char *s);
+int  MN_StringHeight(const char *s);
 
 void MN_ErrorMsg(const char *s, ...);
 
-void MN_SetupBoxWidget(const char *, const char **, int, menu_t **, 
-                       const char **);
-void MN_ShowBoxWidget(void);
+void MN_SetupBoxWidget(const char *title, const char **item_names,
+                       int type, menu_t **pages, const char **cmds);
+void MN_ShowBoxWidget();
 
 void MN_DrawSmallPtr(int x, int y); // haleyjd 03/13/06
 
@@ -239,6 +246,10 @@ extern char *mn_bigfontname;
 extern char *mn_normalfontname;
 extern char *mn_background;
 extern const char *mn_background_flat;
+
+extern vfont_t *menu_font;
+extern vfont_t *menu_font_big;
+extern vfont_t *menu_font_normal;
 
 #endif
                             

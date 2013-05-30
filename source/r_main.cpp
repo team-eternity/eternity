@@ -59,6 +59,7 @@
 #include "r_state.h"
 #include "s_sound.h"
 #include "st_stuff.h"
+#include "v_alloc.h"
 #include "v_block.h"
 #include "v_misc.h"
 #include "v_video.h"
@@ -89,6 +90,7 @@ player_t *viewplayer;
 extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
 camera_t *viewcamera;
+
 // SoM: removed the old zoom code infavor of actual field of view!
 int fov = 90;
 
@@ -102,7 +104,7 @@ extern int screenSize;
 
 extern int global_cmap_index; // haleyjd: NGCS
 
-void R_HOMdrawer(void);
+void R_HOMdrawer();
 
 //
 // precalculated math tables
@@ -121,7 +123,12 @@ int viewangletox[FINEANGLES/2];
 // to the lowest viewangle that maps back to x ranges
 // from clipangle to -clipangle.
 
-angle_t xtoviewangle[MAX_SCREENWIDTH+1];   // killough 2/8/98
+angle_t *xtoviewangle;   // killough 2/8/98
+VALLOCATION(xtoviewangle)
+{
+   xtoviewangle = ecalloctag(angle_t *, w+1, sizeof(angle_t), PU_VALLOC, NULL);
+}
+
 
 // killough 3/20/98: Support dynamic colormaps, e.g. deep water
 // killough 4/4/98: support dynamic number of them as well
@@ -430,7 +437,7 @@ static void R_InitTextureMapping (void)
    i = 0;
    limit = -M_FloatToFixed(view.xcenter / view.xfoc);
    while(i < FINEANGLES/2 && finetangent[i] < limit)
-      viewangletox[i++] = viewwidth + 1;
+      viewangletox[i++] = viewwindow.width + 1;
 
    limit = -limit;
    while(i < FINEANGLES/2 && finetangent[i] <= limit)
@@ -441,8 +448,8 @@ static void R_InitTextureMapping (void)
       t = (centerxfrac - t + FRACUNIT-1) >> FRACBITS;
       if(t < -1)
          viewangletox[i++] = -1;
-      else if(t > viewwidth+1)
-         viewangletox[i++] = viewwidth+1;
+      else if(t > viewwindow.width+1)
+         viewangletox[i++] = viewwindow.width+1;
       else
          viewangletox[i++] = t;
    }
@@ -454,7 +461,7 @@ static void R_InitTextureMapping (void)
    //  xtoviewangle will give the smallest view angle
    //  that maps to x.
    
-   for(x = 0; x <= viewwidth; ++x)
+   for(x = 0; x <= viewwindow.width; ++x)
    {
       for(i = 0; viewangletox[i] > x; ++i)
          ;
@@ -466,8 +473,8 @@ static void R_InitTextureMapping (void)
       if(viewangletox[i] == -1)
          viewangletox[i] = 0;
       else 
-         if(viewangletox[i] == viewwidth+1)
-            viewangletox[i] = viewwidth;
+         if(viewangletox[i] == viewwindow.width+1)
+            viewangletox[i] = viewwindow.width;
         
    clipangle = xtoviewangle[0];
 }
@@ -533,7 +540,7 @@ void R_SetViewSize(int blocks)
 //
 // R_SetupViewScaling
 //
-void R_SetupViewScaling(void)
+void R_SetupViewScaling()
 {
    int i;
    fixed_t frac = 0, lastfrac;
@@ -594,60 +601,28 @@ void R_SetupViewScaling(void)
    video.y2lookup[199] = video.height - 1;
    video.y1lookup[200] = video.y2lookup[200] = video.height;
 
-   if(setblocks == 11)
-   {
-      scaledviewwidth  = SCREENWIDTH;
-      scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth        = video.width;
-      viewheight       = video.height;
-   }
-   else if(setblocks == 10)                               // haleyjd 07/18/2012
-   {
-      scaledviewwidth  = SCREENWIDTH;
-      scaledviewheight = SCREENHEIGHT - GameModeInfo->StatusBar->height;
-      viewwidth        = video.width;
-      viewheight       = video.y2lookup[scaledviewheight - 1] + 1;
-   }
-   else
-   {
-      int st_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
-      int x1, x2, y1, y2;
+   // haleyjd 05/02/13: set scaledwindow properties
+   scaledwindow.scaledFromScreenBlocks(setblocks);
 
-      scaledviewwidth  = setblocks * 32;
-      scaledviewheight = (setblocks * st_y / 10) & ~7;     // killough 11/98
+   // haleyjd 05/02/13: set viewwindow properties
+   viewwindow.viewFromScaled(setblocks, video.width, video.height, scaledwindow);
 
-      // SoM: phased out realxarray in favor of the *lookup tables.
-      // w = x2 - x1 + 1
-      x1 = (SCREENWIDTH - scaledviewwidth) >> 1;
-      x2 = x1 + scaledviewwidth - 1;
-
-      if(scaledviewwidth == SCREENWIDTH)
-         y1 = 0;
-      else
-         y1 = (st_y - scaledviewheight) >> 1;
-
-      y2 = y1 + scaledviewheight - 1;
-
-      viewwidth  = video.x2lookup[x2] - video.x1lookup[x1] + 1;
-      viewheight = video.y2lookup[y2] - video.y1lookup[y1] + 1;
-   }
-
-   centerx     = viewwidth  / 2;
-   centery     = viewheight / 2;
+   centerx     = viewwindow.width  / 2;
+   centery     = viewwindow.height / 2;
    centerxfrac = centerx << FRACBITS;
    centeryfrac = centery << FRACBITS;
 
    // SoM: Cardboard
-   view.xcenter = (view.width  = (float)viewwidth ) * 0.5f;
-   view.ycenter = (view.height = (float)viewheight) * 0.5f;
+   view.xcenter = (view.width  = (float)viewwindow.width ) * 0.5f;
+   view.ycenter = (view.height = (float)viewwindow.height) * 0.5f;
 
-   R_InitBuffer(scaledviewwidth, scaledviewheight);       // killough 11/98
+   R_InitBuffer(scaledwindow.width, scaledwindow.height);       // killough 11/98
 }
 
 //
 // R_ExecuteSetViewSize
 //
-void R_ExecuteSetViewSize(void)
+void R_ExecuteSetViewSize()
 {
    int i;
 
@@ -658,7 +633,7 @@ void R_ExecuteSetViewSize(void)
    R_InitTextureMapping();
     
    // thing clipping
-   for(i = 0; i < viewwidth; ++i)
+   for(i = 0; i < viewwindow.width; ++i)
       screenheightarray[i] = view.height - 1.0f;
 
    // Calculate the light levels to use
@@ -706,7 +681,6 @@ void R_Init(void)
 {
    R_InitData();
    R_SetViewSize(screenSize+3);
-   R_InitPlanes();
    R_InitLightTables();
    R_InitTranslationTables();
    R_InitParticles(); // haleyjd
@@ -824,7 +798,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 04/03/05: perform calculation for true pitch angle
 
    // make fixed-point viewheight and divide by 2
-   viewheightfrac = viewheight << (FRACBITS - 1);
+   viewheightfrac = viewwindow.height << (FRACBITS - 1);
 
    // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid 
    // unnecessary roundoff error. This is what was causing sky textures to
@@ -845,8 +819,6 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    else
    {
       centeryfrac = viewheightfrac;
-
-      yslope = origyslope + (viewheight >> 1);
    }
    
    centery = centeryfrac >> FRACBITS;
@@ -1026,8 +998,9 @@ void R_HOMdrawer(void)
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
 
-   V_ColorBlock(&vbscreen, (byte)colour, viewwindowx, viewwindowy, viewwidth,
-                viewheight);
+   V_ColorBlock(&vbscreen, (byte)colour, viewwindow.x, viewwindow.y, 
+                viewwindow.width,
+                viewwindow.height);
 }
 
 //
@@ -1040,7 +1013,7 @@ void R_ResetTrans(void)
 {
    if(general_translucency)
    {
-      R_InitTranMap(0);
+      R_InitTranMap(false);
    }
 }
 
@@ -1092,8 +1065,6 @@ static r_tlstyle_t DoomThingStyles[] =
    { "MegaSphere",      { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
 };
 
-#define NUMDOOMTHINGSTYLES (sizeof(DoomThingStyles) / sizeof(r_tlstyle_t))
-
 // Translucency style setting for DOOM thingtypes.
 int r_tlstyle;
 
@@ -1107,10 +1078,9 @@ int r_tlstyle;
 // * Boom - all things use the TRANSLUCENT flag
 // * New  - some things are additive, others are TL, others are normal.
 //
-void R_DoomTLStyle(void)
+void R_DoomTLStyle()
 {
    static bool firsttime = true;
-   int i;
 
    // If the first style set is to BOOM-style, then we don't actually need
    // to do anything at all here. This is safest for older mods that might
@@ -1123,7 +1093,7 @@ void R_DoomTLStyle(void)
       return;
    }
    
-   for(i = 0; i < NUMDOOMTHINGSTYLES; ++i)
+   for(size_t i = 0; i < earrlen(DoomThingStyles); i++)
    {
       int tnum   = E_ThingNumForName(DoomThingStyles[i].className);
       int action = DoomThingStyles[i].actions[r_tlstyle];
@@ -1192,7 +1162,6 @@ static const char *tlstylestr[] = { "none", "boom", "new" };
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
 VARIABLE_BOOLEAN(flashing_hom, NULL,                onoff);
-VARIABLE_BOOLEAN(visplane_view, NULL,               onoff);
 VARIABLE_BOOLEAN(r_precache, NULL,                  onoff);
 VARIABLE_TOGGLE(showpsprites,  NULL,                yesno);
 VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
@@ -1257,7 +1226,6 @@ CONSOLE_VARIABLE(gamma, usegamma, 0)
 CONSOLE_VARIABLE(lefthanded, lefthanded, 0) {}
 CONSOLE_VARIABLE(r_blockmap, r_blockmap, 0) {}
 CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
-CONSOLE_VARIABLE(r_planeview, visplane_view, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
 
@@ -1340,33 +1308,6 @@ CONSOLE_COMMAND(r_changesky, 0)
       skytexture = texnum;
    else
       C_Printf(FC_ERROR "No such texture %s", name.constPtr());
-}
-
-void R_AddCommands(void)
-{
-   C_AddCommand(r_fov);
-   C_AddCommand(lefthanded);
-   C_AddCommand(r_blockmap);
-   C_AddCommand(r_homflash);
-   C_AddCommand(r_planeview);
-   C_AddCommand(r_precache);
-   C_AddCommand(r_showgun);
-   C_AddCommand(r_showhom);
-   C_AddCommand(r_stretchsky);
-   C_AddCommand(r_swirl);
-   C_AddCommand(r_trans);
-   C_AddCommand(r_tranpct);
-   C_AddCommand(screensize);
-   C_AddCommand(gamma);
-   C_AddCommand(r_ptcltrans);
-   C_AddCommand(r_columnengine);
-   C_AddCommand(r_spanengine);
-   C_AddCommand(r_vissprite_limit);
-   C_AddCommand(r_showrefused);
-   C_AddCommand(r_tlstyle);
-   C_AddCommand(r_changesky);
-
-   C_AddCommand(p_dumphubs);
 }
 
 //----------------------------------------------------------------------------

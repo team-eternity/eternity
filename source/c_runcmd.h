@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,11 +17,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+//
+// Console Commands - Macros and Command Execution
+//
+//----------------------------------------------------------------------------
 
-#ifndef __C_RUNCMD_H__
-#define __C_RUNCMD_H__
+#ifndef C_RUNCMD_H__
+#define C_RUNCMD_H__
 
+#include "m_dllist.h"
 #include "m_qstr.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
@@ -35,66 +40,85 @@ struct command_t;
 struct default_t;
 struct variable_t;
 
-/******************************** #defines ********************************/
+//=============================================================================
+//
+// Macros
+//
 
 #define MAXTOKENS 64
 #define CMDCHAINS 16
 
 // zdoom _inspired_:
 
-// create a new console command, eg.
+//
+// CONSOLE_COMMAND
+//
+// Create a new console command, eg.
 //        CONSOLE_COMMAND(say_something, cf_notnet)
 //        {
 //              C_Printf("hello!\n");
 //        }
+//
+#define CONSOLE_COMMAND(name, flags)                     \
+   static void Handler_ ## name(void);                   \
+   static command_t Cmd_ ## name = { # name, ct_command, \
+                  flags, NULL, Handler_ ## name,         \
+                  0, NULL };                             \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
+   static void Handler_ ## name(void)
 
-#define CONSOLE_COMMAND(name, flags)                    \
-        void Handler_ ## name(void);                    \
-        command_t Cmd_ ## name = { # name, ct_command,  \
-                       flags, NULL, Handler_ ## name,   \
-                       0, NULL };                       \
-        void Handler_ ## name(void)
+//
+// CONSOLE_VARIABLE
+//
+// You must define the range of values etc. for the variable using the other 
+// macros below. You must also provide a handler function even if it is just {}
+//
+#define CONSOLE_VARIABLE(name, variable, flags)                \
+   static void Handler_ ## name(void);                         \
+   static command_t Cmd_ ## name = { # name, ct_variable,      \
+                   flags, &var_ ## variable, Handler_ ## name, \
+                   0, NULL };                                  \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);         \
+   static void Handler_ ## name(void)
 
-		 
-// console variable. you must define the range of values etc. for
-//      the variable using the other macros below.
-//      You must also provide a handler function even
-//      if it is just {}
-
-#define CONSOLE_VARIABLE(name, variable, flags)                      \
-        void Handler_ ## name(void);                                 \
-        command_t Cmd_ ## name = { # name, ct_variable,              \
-                        flags, &var_ ## variable, Handler_ ## name,  \
-                        0, NULL };                                   \
-        void Handler_ ## name(void)
-
-// Same as CONSOLE_COMMAND, but sync-ed across network. When
-//      this command is executed, it is run on all computers.
-//      You must assign your variable a unique netgame
-//      variable (list in c_net.h)
-
+//
+// CONSOLE_NETCMD
+//
+// Same as CONSOLE_COMMAND, but sync-ed across network. When this command is 
+// executed, it is run on all computers. You must assign your variable a unique
+// netgame variable (list in c_net.h)
+//
 #define CONSOLE_NETCMD(name, flags, netcmd)              \
-        void Handler_ ## name(void);                     \
-        command_t Cmd_ ## name = { # name, ct_command,   \
-                       (flags) | cf_netvar, NULL,        \
-                       Handler_ ## name, netcmd, NULL }; \
-        void Handler_ ## name()
+   static void Handler_ ## name(void);                   \
+   static command_t Cmd_ ## name = { # name, ct_command, \
+                  (flags) | cf_netvar, NULL,             \
+                  Handler_ ## name, netcmd, NULL };      \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
+   static void Handler_ ## name()
 
+//
+// CONSOLE_NETVAR
+//
 // As for CONSOLE_VARIABLE, but for net, see above
+//
+#define CONSOLE_NETVAR(name, variable, flags, netcmd)      \
+   static void Handler_ ## name(void);                     \
+   static command_t Cmd_ ## name = { # name, ct_variable,  \
+                   cf_netvar | (flags), &var_ ## variable, \
+                   Handler_ ## name, netcmd, NULL };       \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);     \
+   static void Handler_ ## name(void)
 
-#define CONSOLE_NETVAR(name, variable, flags, netcmd)               \
-        void Handler_ ## name(void);                                \
-        command_t Cmd_ ## name = { # name, ct_variable,             \
-                        cf_netvar | (flags), &var_ ## variable,     \
-                        Handler_ ## name, netcmd, NULL };           \
-        void Handler_ ## name(void)
-
-// Create a constant. You must declare the variable holding
-//      the constant using the variable macros below.
-
-#define CONSOLE_CONST(name, variable)                           \
-        command_t Cmd_ ## name = { # name, ct_constant, 0,      \
-                &var_ ## variable, NULL, 0, NULL };
+//
+// CONSOLE_CONST
+//
+// Create a constant. You must declare the variable holding the constant using
+// the variable macros below.
+//
+#define CONSOLE_CONST(name, variable)                         \
+    static command_t Cmd_ ## name = { # name, ct_constant, 0, \
+       &var_ ## variable, NULL, 0, NULL };                    \
+    static CCmdRegistry regCmd ## name (&Cmd_ ## name);
 
         /*********** variable macros *************/
 
@@ -104,44 +128,67 @@ struct variable_t;
 // take, etc. These macros allow you to define variable_t's
 // more easily.
 
-// basic VARIABLE macro. You must specify all the data needed
-
+//
+// VARIABLE
+//
+// Basic VARIABLE macro. You must specify all the data needed.
+//
 #define VARIABLE(name, defaultvar, type, min, max, strings)  \
         variable_t var_ ## name = { &name, defaultvar,       \
                   type, min, max, strings, 0, 0, NULL, NULL};
 
-// simpler macro for int. You do not need to specify the type
-
+//
+// VARIABLE_INT
+//
+// Simpler macro for int. You do not need to specify the type.
+//
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_int, min, max, strings, 0, 0, NULL, NULL };
 
+//
+// VARIABLE_STRING
+//
 // Simplified to create strings: 'max' is the maximum string length
-
+//
 #define VARIABLE_STRING(name, defaultvar, max)               \
         variable_t var_ ## name = { &name, defaultvar,       \
                   vt_string, 0, max, NULL, 0, 0, NULL, NULL};
 
+//
+// VARIABLE_CHARARRAY
+//
 // haleyjd 03/13/06: support static strings as cvars
-
+//
 #define VARIABLE_CHARARRAY(name, defaultvar, max)            \
         variable_t var_ ## name = { name, defaultvar,        \
                   vt_chararray, 0, max, NULL, 0, 0, NULL, NULL};
 
-// Boolean. Note that although the name here is boolean, the
-// actual type is int. haleyjd 07/05/10: For real booleans, use
-// the vt_toggle type with VARIABLE_TOGGLE
-
+//
+// VARIABLE_BOOLEAN
+//
+// Boolean. Note that although the name here is boolean, the actual type is 
+// int. 
+// haleyjd 07/05/10: For real booleans, use vt_toggle type with VARIABLE_TOGGLE
+//
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
                   vt_int, 0, 1, strings, 0, 0, NULL, NULL };
 
+//
+// VARIABLE_TOGGLE
+//
+// haleyjd: for actual C++ "bool" variables.
+//
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
         variable_t var_ ## name = { &name, defaultvar,       \
                    vt_toggle, 0, 1, strings, 0, 0, NULL, NULL };
 
+//
+// VARIABLE_FLOAT
+//
 // haleyjd 04/21/10: support for vt_float
-
+//
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
         variable_t var_ ## name = { &name, defaultvar,       \
                   vt_float, 0, 0, NULL, min, max, NULL, NULL };
@@ -156,12 +203,13 @@ struct variable_t;
         variable_t var_ ## name = { &name, NULL,             \
                   vt_string, -1, -1, NULL, 0, 0, NULL, NULL };
 
+//=============================================================================
+//
+// Enumerations
+//
 
-#define C_AddCommand(c)  (C_AddCommand)(&Cmd_ ## c) 
-
-/********************************* ENUMS **********************************/
-
-enum    // cmdtype values
+// cmdtype values
+enum
 {
   c_typed,        // typed at console
   c_menu,
@@ -170,7 +218,8 @@ enum    // cmdtype values
   C_CMDTYPES
 };
 
-enum    // command type
+// command type
+enum
 {
   ct_command,
   ct_variable,
@@ -178,7 +227,8 @@ enum    // command type
   ct_end
 };
 
-enum    // command flag
+// command flags
+enum
 {
   cf_notnet       = 0x001, // not in netgames
   cf_netonly      = 0x002, // only in netgames
@@ -193,16 +243,20 @@ enum    // command flag
   cf_allowblank   = 0x100, // string variable allows empty value
 };
 
-enum    // variable type
+// variable types
+enum
 {
   vt_int,       // normal integer 
   vt_float,     // decimal
   vt_string,    // string
   vt_chararray, // char array -- haleyjd 03/13/06
-  vt_toggle     // boolean (for real boolean-type variables)
+  vt_toggle     // boolean (for real bool-type variables)
 };
 
-/******************************** STRUCTS ********************************/
+//=============================================================================
+// 
+// Structures
+//
 
 struct variable_t
 {  
@@ -230,16 +284,51 @@ struct command_t
   command_t *next;       // for hashing
 };
 
-typedef struct alias_s
+struct alias_t
 {
   char *name;
   char *command;
   
-  struct alias_s *next; // haleyjd 04/14/03
+  alias_t *next; // haleyjd 04/14/03
+};
 
-} alias_t;
+//=============================================================================
+//
+// Console Command Registering Class
+//
+// haleyjd 3/10/13: replaces need to call C_AddCommand for every command and
+// variable manually. An instance is created by every console command and cvar
+// macro pointing to the corresponding command_t structure.
+//
 
-/************************** PROTOTYPES/EXTERNS ****************************/
+class CCmdRegistry
+{
+protected:
+   DLListItem<CCmdRegistry> links; // list links
+   command_t *command;             // command to register
+   
+   static DLListItem<CCmdRegistry> *commands; // static list of commands
+
+public:
+   //
+   // Constructor
+   //
+   // Register the command on the global list of commands. The list is walked
+   // during program init (after all instances have constructed).
+   //
+   CCmdRegistry(command_t *pCmd)
+   {
+      command = pCmd;
+      links.insert(this, &commands);
+   }
+
+   static void AddCommands();
+};
+
+//=============================================================================
+//
+// Prototypes and Externs
+//
 
 //
 // haleyjd 05/20/10
@@ -274,7 +363,7 @@ const char *C_VariableStringValue(variable_t *command);
 // haleyjd: the SMMU v3.30 script-running functions
 // (with my fixes :P)
 
-struct DWFILE;
+class DWFILE;
 void C_RunScript(DWFILE *);
 void C_RunScriptFromFile(const char *filename);
 
@@ -308,7 +397,7 @@ void C_ClearBuffer(int);
 
 extern command_t *cmdroots[CMDCHAINS];   // the commands in hash chains
 
-void (C_AddCommand)(command_t *command);
+void C_AddCommand(command_t *command);
 void C_AddCommandList(command_t *list);
 void C_AddCommands();
 command_t *C_GetCmdForName(const char *cmdname);

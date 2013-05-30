@@ -560,11 +560,5 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
    P_SetSkin(skin, Console.cmdsrc);
 }
 
-void P_Skin_AddCommands(void)
-{
-   C_AddCommand(skin);
-   C_AddCommand(listskins);
-}
-
 // EOF
 

@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // Command running functions
 //
@@ -30,9 +30,7 @@
 // Parts of this module also are involved in the netcode cmd problems.
 // Mainly, the buffering issue. Commands need to work without being
 // delayed an arbitrary amount of time, that won't work with netgames
-// properly. Also, command parsing is extremely messy and needs to
-// be rewritten. It should be possible to use qstring to clean this
-// up significantly.
+// properly. 
 //
 //-----------------------------------------------------------------------------
 
@@ -50,7 +48,7 @@
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_misc.h"
-#include "m_qstr.h" // haleyjd
+#include "m_qstr.h"
 #include "mn_engin.h"
 #include "v_misc.h"
 #include "w_wad.h"
@@ -59,17 +57,17 @@ static void C_EchoValue(command_t *command);
 static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int  C_Sync(command_t *command);
-static void C_ArgvtoArgs(void);
+static void C_ArgvtoArgs();
 static bool C_Strcmp(const char *pa, const char *pb);
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // The Console (TM)
 //
 
 console_t Console;
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Parsing/Running Commands
 //
@@ -83,7 +81,7 @@ static int numtokensalloc;
 //
 // haleyjd 08/08/10: Used to remove SMMU limit on console command tokens.
 //
-static void C_nextCmdToken(void)
+static void C_nextCmdToken()
 {
    if(numtokens >= numtokensalloc)
    {
@@ -110,7 +108,7 @@ static void C_nextCmdToken(void)
 //
 // haleyjd 07/05/10: create qstrings for the console tokenizer.
 //
-static void C_initCmdTokens(void)
+static void C_initCmdTokens()
 {
    static bool cmdtokensinit;
 
@@ -142,7 +140,7 @@ static void C_initCmdTokens(void)
 //
 // haleyjd 07/05/10: clear all console tokens
 //
-static void C_clearCmdTokens(void)
+static void C_clearCmdTokens()
 {
    int i;
 
@@ -319,10 +317,12 @@ static void C_doErrorMsg(command_t *command, const char *errormsg)
    }
 }
 
-// C_RunCommand.
-// call with the command to run and the command-line options.
-// buffers the commands which will be run later.
-
+//
+// C_RunCommand
+//
+// Call with the command to run and the command-line options.
+// Buffers the commands which will be run later.
+//
 void C_RunCommand(command_t *command, const char *options)
 {
    // do not run straight away, we might be in the middle of rendering
@@ -453,7 +453,7 @@ static void C_ArgvtoArgs(void)
 // Return a string of all the argvs linked together, but with each
 // argv in quote marks "
 //
-static const char *C_QuotedArgvToArgs(void)
+static const char *C_QuotedArgvToArgs()
 {
    int i;
    static qstring returnbuf;
@@ -1003,7 +1003,7 @@ static int thistab = -1;
 //
 // haleyjd 07/25/10: Removed dangerous unchecked limit on tab completion.
 //
-static void CheckTabs(void)
+static void CheckTabs()
 {
    if(numtabs >= numtabsalloc)
    {
@@ -1068,7 +1068,7 @@ static void GetTabs(qstring &qkey)
 //
 // Reset the tab list 
 //
-void C_InitTab(void)
+void C_InitTab()
 {
    numtabs = 0;
 
@@ -1140,7 +1140,7 @@ qstring &C_PrevTab(qstring &key)
    }
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Aliases
 //
@@ -1250,7 +1250,7 @@ void C_RunAlias(alias_t *alias)
    C_RunTextCmd(alias->command);   // run the command
 }
 
-//////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Command Bufferring
 //
@@ -1372,7 +1372,7 @@ void C_RunBuffer(int cmtype)
    }
 }
 
-void C_RunBuffers(void)
+void C_RunBuffers()
 {
    int i;
    
@@ -1419,7 +1419,7 @@ static bool C_Strcmp(const char *pa, const char *pb)
    return false;       // no difference in them
 }
 
-//////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Command hashing
 //
@@ -1427,7 +1427,7 @@ static bool C_Strcmp(const char *pa, const char *pb)
 
 command_t *cmdroots[CMDCHAINS];
 
-void (C_AddCommand)(command_t *command)
+void C_AddCommand(command_t *command)
 {
    unsigned int hash = D_HashTableKey(command->name) % CMDCHAINS;
    
@@ -1455,7 +1455,7 @@ void (C_AddCommand)(command_t *command)
 void C_AddCommandList(command_t *list)
 {
    for(; list->type != ct_end; list++)
-      (C_AddCommand)(list);
+      C_AddCommand(list);
 }
 
 // get a command from a string if possible
@@ -1513,7 +1513,7 @@ void C_RunScript(DWFILE *dwfile)
    int c;
 
    // parse script
-   while((c = D_Fgetc(dwfile)) != EOF)
+   while((c = dwfile->getChar()) != EOF)
    {
       // turn \r into \n for simplicity
       if(c == '\r')
@@ -1521,13 +1521,6 @@ void C_RunScript(DWFILE *dwfile)
 
       switch(state)
       {
-#if 0
-      case CSC_COMMENT:
-         if(c == '\n')        // eat up to the next \n
-            state = CSC_NONE;
-         continue;
-#endif
-
       case CSC_SLASH:
          if(c == '/')         // start the comment now
             state = CSC_COMMENT;
@@ -1556,16 +1549,8 @@ void C_RunScript(DWFILE *dwfile)
       case '\f':
       case '\n':
          continue;
-#if 0
-      case '#':
-      case ';':
-         state = CSC_COMMENT; // start a comment
-         continue;
-      case '/':
-         state = CSC_SLASH;   // maybe start a comment...
-         continue;
-#endif
-      default:                // anything else starts a command
+
+      default:  // anything else starts a command
          qstr.clear() << static_cast<char>(c);
          state = CSC_COMMAND;
          continue;
@@ -1588,21 +1573,19 @@ void C_RunScript(DWFILE *dwfile)
 //
 void C_RunScriptFromFile(const char *filename)
 {
-   DWFILE dwfile, *file = &dwfile;
+   DWFILE dwfile;
 
-   D_OpenFile(file, filename, "r");
+   dwfile.openFile(filename, "r");
 
-   if(!D_IsOpen(file))
+   if(!dwfile.isOpen())
    {
       C_Printf(FC_ERROR "Couldn't exec script '%s'\n", filename);
    }
    else
    {
       C_Printf("Executing script '%s'\n", filename);
-      C_RunScript(file);
+      C_RunScript(&dwfile);
    }
-
-   D_Fclose(file);
 }
 
 //
@@ -1611,7 +1594,7 @@ void C_RunScriptFromFile(const char *filename)
 // Called at startup to look for scripts to run specified via the -exec command
 // line parameter.
 //
-void C_RunCmdLineScripts(void)
+void C_RunCmdLineScripts()
 {
    int p;
 

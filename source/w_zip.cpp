@@ -84,7 +84,7 @@ static MStructReader<ZIPLocalFileHeader> localFileReader(&lfSignature);
 
 struct ZIPCentralDirEntry
 {
-   uint32_t signature;     // Must be "PK\x1\2"
+   uint32_t signature;     // Must be "PK\x1\x2"
    uint16_t madeByVersion; // Version "made by"
    uint16_t extrVersion;   // Version needed to extract
    uint16_t gpFlags;       // General purpose flags
@@ -284,11 +284,11 @@ ZipFile::~ZipFile()
       DLListItem<ZipWad> *rover = wads;
       while(rover)
       {
-         ZipWad *zw = rover->dllObject;
+         ZipWad &zw = **rover;
          rover = rover->dllNext;
 
-         efree(zw->buffer); // free the in-memory wad file
-         efree(zw);         // free the ZipWad structure
+         efree(zw.buffer); // free the in-memory wad file
+         efree(&zw);       // free the ZipWad structure
       }
       wads = NULL;
    }
@@ -430,7 +430,6 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 {
    int lumpidx   = 0; // current index into lumps[]
-   int skipLumps = 0; // number of lumps skipped
 
    // seek to start of directory
    if(fin.seek(offset, SEEK_SET))
@@ -541,6 +540,12 @@ void ZipFile::linkTo(DLListItem<ZipFile> **head)
    links.insert(this, head);
 }
 
+//
+// ZipFile::getLump
+//
+// Range-checking accessor function returning a reference to a given lump
+// structure. Fatal if the index is out of range.
+//
 ZipLump &ZipFile::getLump(int lumpNum)
 {
    if(lumpNum < 0 || lumpNum >= numLumps)

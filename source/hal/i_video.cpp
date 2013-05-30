@@ -154,7 +154,6 @@ static haldriveritem_t *I_DefaultVideoDriver()
 // WM-related stuff (see i_input.c)
 //
 
-extern int  usejoystick;
 extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
@@ -233,18 +232,6 @@ void I_SetPalette(byte *palette)
 {
    if(in_graphics_mode)             // killough 8/11/98
       i_video_driver->SetPalette(palette);
-}
-
-
-void I_UnsetPrimaryBuffer()
-{
-   i_video_driver->UnsetPrimaryBuffer();
-}
-
-
-void I_SetPrimaryBuffer()
-{
-   i_video_driver->SetPrimaryBuffer();
 }
 
 void I_ShutdownGraphics()
@@ -432,7 +419,7 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
 }
 
 #ifdef _MSC_VER
-extern void I_DisableSysMenu(void);
+extern void I_DisableSysMenu();
 #endif
 
 //
@@ -441,7 +428,7 @@ extern void I_DisableSysMenu(void);
 // killough 11/98: New routine, for setting hires and page flipping
 // sf: now returns true if an error occurred
 //
-static bool I_InitGraphicsMode(void)
+static bool I_InitGraphicsMode()
 {
    bool result; 
 
@@ -459,7 +446,7 @@ static bool I_InitGraphicsMode(void)
       R_ResetFOV(video.width, video.height);
 
 #ifdef _MSC_VER
-      // Win32 specific hack: disable system menu
+      // Win32 specific hacks
       I_DisableSysMenu();
 #endif
 
@@ -482,7 +469,7 @@ static bool I_InitGraphicsMode(void)
 // and then waking up any interested game-code modules that need to know about
 // the screen resolution.
 //
-static void I_ResetScreen(void)
+static void I_ResetScreen()
 {
    int old_disk_icon = disk_icon;
 
@@ -493,7 +480,7 @@ static void I_ResetScreen(void)
    // Switch out of old graphics mode
    if(in_graphics_mode)
    {
-      i_video_driver->ShutdownGraphicsPartway(); // haleyjd 10/15/05: WOOPS!
+      i_video_driver->ShutdownGraphicsPartway();
       in_graphics_mode = false;
       in_textmode = true;
    }
@@ -524,7 +511,7 @@ static void I_ResetScreen(void)
    disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
 }
 
-void I_InitGraphics(void)
+void I_InitGraphics()
 {
    static int firsttime = true;
    haldriveritem_t *driveritem = NULL;
@@ -563,12 +550,12 @@ void I_InitGraphics(void)
    
    atexit(I_ShutdownGraphics);
    
-   V_ResetMode();
+   I_SetMode();
    
    Z_CheckHeap();
 }
 
-void I_SetMode(int i)
+void I_SetMode()
 {
    static int firsttime = true;    // the first time to set mode
    
@@ -590,21 +577,12 @@ VARIABLE_BOOLEAN(disk_icon, NULL,  onoff);
 CONSOLE_VARIABLE(v_diskicon, disk_icon, 0) {}
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
-   V_ResetMode();
+   I_SetMode();
 }
 
 VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
-VARIABLE_BOOLEAN(usejoystick, NULL, yesno);
 
 CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
-CONSOLE_VARIABLE(i_usejoystick, usejoystick, 0) {}
-
-// haleyjd 04/15/02: joystick sensitivity variables
-VARIABLE_INT(joystickSens_x, NULL, -32768, 32767, NULL);
-VARIABLE_INT(joystickSens_y, NULL, -32768, 32767, NULL);
-
-CONSOLE_VARIABLE(joySens_x, joystickSens_x, 0) {}
-CONSOLE_VARIABLE(joySens_y, joystickSens_y, 0) {}
 
 // haleyjd 03/27/06: mouse grabbing
 VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
@@ -613,7 +591,7 @@ CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 VARIABLE_STRING(i_videomode, NULL, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
-   V_ResetMode();
+   I_SetMode();
 
    if(i_default_videomode)
       efree(i_default_videomode);
@@ -643,27 +621,6 @@ CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
 
 VARIABLE_INT(i_softbitdepth, NULL, 8, 32, NULL);
 CONSOLE_VARIABLE(i_softbitdepth, i_softbitdepth, 0) {}
-
-void I_Video_AddCommands(void)
-{
-   C_AddCommand(i_usemouse);
-   C_AddCommand(i_usejoystick);
-   
-   C_AddCommand(v_diskicon);
-   C_AddCommand(v_retrace);
-   
-   C_AddCommand(joySens_x);
-   C_AddCommand(joySens_y);
-
-   C_AddCommand(i_grabmouse);
-
-   C_AddCommand(i_videomode);
-   C_AddCommand(i_default_videomode);
-
-   C_AddCommand(i_videodriverid);
-
-   C_AddCommand(i_softbitdepth);
-}
 
 // EOF
 

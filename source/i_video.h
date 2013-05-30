@@ -36,6 +36,10 @@
 //
 class HALVideoDriver
 {
+protected:
+   virtual void SetPrimaryBuffer()        = 0;
+   virtual void UnsetPrimaryBuffer()      = 0;
+
 public:
    virtual void FinishUpdate()            = 0;
    virtual void ReadScreen(byte *scr)     = 0;
@@ -43,8 +47,6 @@ public:
    virtual void BeginRead()               = 0;
    virtual void EndRead()                 = 0;
    virtual void SetPalette(byte *pal)     = 0;
-   virtual void SetPrimaryBuffer()        = 0;
-   virtual void UnsetPrimaryBuffer()      = 0;
    virtual void ShutdownGraphics()        = 0;
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
@@ -77,15 +79,7 @@ extern int disk_icon;  // killough 10/98
 
 // video modes
 
-typedef struct videomode_s
-{
-  bool hires;
-  bool pageflip;
-  bool vesa;
-  const char *description;
-} videomode_t;
-
-void I_SetMode(int i);
+void I_SetMode();
 
 extern char *i_videomode;
 extern char *i_default_videomode;
@@ -104,10 +98,6 @@ extern const char *const i_videohelpstr;
 
 // Below here has been moved to i_input.c
 // haleyjd
-#ifdef _SDL_VER
-extern int joystickSens_x;
-extern int joystickSens_y;
-#endif
 
 int I_DoomCode2ScanCode(int);   // killough
 int I_ScanCode2DoomCode(int);   // killough

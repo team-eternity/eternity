@@ -220,16 +220,6 @@ extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display
 extern  bool viewactive;
 extern  bool nodrawers;
 extern  bool noblit;
-extern  int  viewwindowx;
-extern  int  viewwindowy;
-// SoM 2-4-04: ANYRES
-extern  int  scaledwindowx;
-extern  int  scaledwindowy;
-
-extern  int  viewheight;
-extern  int  viewwidth;
-extern  int  scaledviewwidth;
-extern  int  scaledviewheight;         // killough 11/98
 extern  int  lefthanded; //sf
 
 // This one is related to the 3-screen display mode.

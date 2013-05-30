@@ -1,0 +1,11 @@
+*.lib
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.vcproj
+Debug
+Release
+UpgradeLog.XML
+_UpgradeReport_Files
+ipch

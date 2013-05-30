@@ -181,7 +181,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
    {
       while(link)
       {
-         polyobj_t *po = link->dllObject->polyobj;
+         polyobj_t *po = (*link)->polyobj;
 
          if(po->validcount != validcount)
          {
@@ -339,8 +339,11 @@ bool DoomTraceEngine::checkSight(Mobj *t1, Mobj *t2)
 {
    if(full_demo_version >= make_full_version(340, 24))
    {
-      return CAM_CheckSight(t1->x, t1->y, t1->z, t1->height,
-                            t2->x, t2->y, t2->z, t2->height);
+      camsightparams_t camparams;
+      camparams.prev = NULL;
+      camparams.setLookerMobj(t1);
+      camparams.setTargetMobj(t2);
+      return CAM_CheckSight(camparams);
    }
 
    const sector_t *s1 = t1->subsector->sector;

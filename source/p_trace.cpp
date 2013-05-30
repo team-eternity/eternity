@@ -732,14 +732,20 @@ static bool PTR_NoWayTraverse(intercept_t *in, TracerContext *tc)
 {
    line_t *ld = in->d.line;                       // This linedef
 
+   if(ld->special) // Ignore specials
+      return true;
+
+   if(ld->flags & ML_BLOCKING) // Always blocking
+      return false;
+
+   // Find openings
    open_t opening;
-   bool res = ld->special ||                          // Ignore specials
-     !(ld->flags & ML_BLOCKING ||                     // Always blocking
-       (clip->lineOpening(ld, NULL, &opening),        // Find openings
-        opening.range <= 0 ||                         // No opening
-        opening.bottom > usething->z+24*FRACUNIT ||   // Too high it blocks
-        opening.top < usething->z+usething->height)); // Too low it blocks
-   return res;
+   clip->lineOpening(ld, NULL, &opening);
+
+   return 
+      !(opening.range  <= 0 ||                            // No opening
+        opening.bottom > usething->z + 24 * FRACUNIT ||   // Too high, it blocks
+        opening.top    < usething->z + usething->height); // Too low, it blocks
 }
 
 //

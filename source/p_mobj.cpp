@@ -202,7 +202,7 @@ static seenstate_t *P_GetSeenState(void)
 
       item->remove();
 
-      ret = item->dllObject;
+      ret = *item;
       memset(ret, 0, sizeof(seenstate_t));
    }
    else
@@ -236,7 +236,7 @@ static bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 
    while(link)
    {
-      if(statenum == link->dllObject->statenum)
+      if(statenum == (*link)->statenum)
          return true;
 
       link = link->dllNext;
@@ -619,7 +619,7 @@ void P_XYMovement(Mobj* mo)
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
-      (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
+      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
    // killough 8/11/98: add bouncers
@@ -1059,7 +1059,7 @@ void P_NightmareRespawn(Mobj* mobj)
    if(demo_version >= 331)
       mobj->flags |= MF_SOLID;
 
-   if(!comp[comp_overunder]) // haleyjd: OVER_UNDER
+   if(P_Use3DClipping()) // haleyjd: OVER_UNDER
    {
       fixed_t sheight = mobj->height;
 
@@ -1236,7 +1236,7 @@ void Mobj::Think()
       }
    }
 
-   if(comp[comp_overunder])
+   if(!P_Use3DClipping())
       cc->BlockingMobj = NULL;
 
    lz = z;
@@ -1252,8 +1252,7 @@ void Mobj::Think()
    // haleyjd: OVER_UNDER: major changes
    if(momz || cc->BlockingMobj || lz != floorz)
    {
-      if(!comp[comp_overunder]  &&
-         ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
+      if(P_Use3DClipping() && ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
       {
          Mobj *onmo;
 
@@ -2240,7 +2239,7 @@ spawnit:
 
    // haleyjd: set particle fountain color
    if(mthing->type >= 9027 && mthing->type <= 9033)
-      mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
+      mobj->effects |= (mthing->type - 9026u) << FX_FOUNTAINSHIFT;
 
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)
@@ -2506,8 +2505,8 @@ Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z)
 
    missileinfo.source = source;
    missileinfo.dest   = dest;
-   missileinfo.destx  = dest->x;
-   missileinfo.desty  = dest->y;
+   missileinfo.destx  = getThingX(source, dest);
+   missileinfo.desty  = getThingY(source, dest);
    missileinfo.destz  = dest->z;
    missileinfo.type   = type;
    missileinfo.z      = z;

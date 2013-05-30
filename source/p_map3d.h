@@ -31,6 +31,7 @@ class Mobj;
 class ClipContext;
 struct sector_t;
 
+bool  P_Use3DClipping();
 bool  P_TestMobjZ(Mobj *mo);
 bool  P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc);
 bool  P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y);

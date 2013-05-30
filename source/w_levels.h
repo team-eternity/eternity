@@ -54,9 +54,9 @@ WadDirectory *W_GetManagedWad(const char *filename);
 const char   *W_GetManagedDirFN(WadDirectory *waddir);
 wadlevel_t   *W_FindAllMapsInLevelWad(WadDirectory *dir);
 wadlevel_t   *W_FindLevelInDir(WadDirectory *waddir, const char *name);
-void          W_DoMasterLevels(bool allowexit);
+void          W_DoMasterLevels(bool allowexit, int skill);
 void          W_EnumerateMasterLevels(bool forceRefresh);
-void          W_DoNR4TLStart();
+void          W_DoNR4TLStart(int skill);
 void          W_InitManagedMission(int mission);
 
 #endif

@@ -820,7 +820,7 @@ void HU_CenterMessage(const char *s)
    tw->message = qstr.constPtr();
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
-            ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
+            ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
    tw->cleartic = leveltime + (message_timer * 35) / 1000;
    
    // print message to console also
@@ -937,14 +937,14 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
    // haleyjd 04/09/05: this kludge moves the crosshair to within
    // a tolerable distance of the player's true vertical aim when
    // the screen size is less than full.
-   if(scaledviewheight != SCREENHEIGHT)
+   if(scaledwindow.height != SCREENHEIGHT)
    {
       // use 1/5 of the displayplayer's pitch angle in integer degrees
       int angle = players[displayplayer].pitch / (ANGLE_1*5);
-      drawy = scaledwindowy + (scaledviewheight - h) / 2 + angle;
+      drawy = scaledwindow.y + (scaledwindow.height - h) / 2 + angle;
    }
    else
-      drawy = scaledwindowy + (scaledviewheight - h) / 2;
+      drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
   
    if(pal == notargetcolour)
       V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
@@ -1209,14 +1209,17 @@ static bool HU_ChatRespond(event_t *ev)
    static bool shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
-   G_KeyResponder(ev, kac_hud);
+   int action = G_KeyResponder(ev, kac_hud);
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);
-   
+
+   if(action == ka_frags)
+      hu_showfrags = (ev->type == ev_keydown);
+
    if(ev->type != ev_keydown)
       return false;
-   
+
    if(!chat_active)
    {
       if(ev->data1 == key_chat && netgame) 
@@ -1477,32 +1480,6 @@ CONSOLE_VARIABLE(hu_showcoords, hu_showcoords, 0) {}
 CONSOLE_VARIABLE(hu_timecolor, hu_timecolor, 0) {}
 CONSOLE_VARIABLE(hu_levelnamecolor, hu_levelnamecolor, 0) {}
 CONSOLE_VARIABLE(hu_coordscolor, hu_coordscolor, 0) {}
-
-
-extern void HU_FragsAddCommands(void);
-extern void HU_OverAddCommands(void);
-
-void HU_AddCommands(void)
-{
-   C_AddCommand(hu_obituaries);
-   C_AddCommand(hu_obitcolor);
-   C_AddCommand(hu_crosshair);
-   C_AddCommand(hu_crosshair_hilite);
-   C_AddCommand(hu_messages);
-   C_AddCommand(hu_messagecolor);
-   C_AddCommand(say);   
-   C_AddCommand(hu_messagelines);
-   C_AddCommand(hu_messagescroll);
-   C_AddCommand(hu_messagetime);
-   C_AddCommand(hu_showtime);
-   C_AddCommand(hu_showcoords);
-   C_AddCommand(hu_timecolor);
-   C_AddCommand(hu_levelnamecolor);
-   C_AddCommand(hu_coordscolor);
-   
-   HU_FragsAddCommands();
-   HU_OverAddCommands();
-}
 
 #if 0
 //
@@ -1815,7 +1792,7 @@ static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)
 {
    if(hud_enabled && hud_overlaystyle > 0) // Boom HUD enabled, return style
       return (cell)hud_overlaystyle + 1;
-   else if(viewheight == video.height)         // Fullscreen (no HUD)
+   else if(viewwindow.height == video.height)         // Fullscreen (no HUD)
       return 0;			
    else                                    // Vanilla style status bar
       return 1;

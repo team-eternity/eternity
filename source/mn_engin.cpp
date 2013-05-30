@@ -357,6 +357,39 @@ static void MN_CalcWidestWidth(menu_t *menu)
    }
 }
 
+// 
+// MN_propagateBigFontFlag
+//
+// haleyjd 05/08/13: If a menu has mf_bigfont, set MENUITEM_BIGFONT on all its
+// items.
+//
+static void MN_propagateBigFontFlag(menu_t *menu)
+{
+   int itemnum = 0;
+   menuitem_t *item;
+
+   for(; (item = &menu->menuitems[itemnum])->type != it_end; itemnum++)
+      item->flags |= MENUITEM_BIGFONT;
+}
+
+//
+// MN_initializeMenu
+//
+// haleyjd 05/08/13: Perform all first-time menu initialization tasks here.
+//
+static void MN_initializeMenu(menu_t *menu)
+{
+   if(menu->flags & mf_initialized)
+      return;
+
+   // propagate big font flag
+   if(menu->flags & mf_bigfont)
+      MN_propagateBigFontFlag(menu);
+
+   // mark as initialized
+   menu->flags |= mf_initialized;
+}
+
 //=============================================================================
 //
 // Menu Item Drawers
@@ -400,12 +433,6 @@ static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
       //V_DrawPatchTranslated(x, y, &vbscreen, patch, colrngs[color], 0);
 
       V_DrawPatch(x, y, &subscreen43, patch);
-
-
-      // haleyjd 05/16/04: hack for traditional menu support;
-      // this was hard-coded in the old system
-      if(drawing_menu->flags & mf_emulated)
-         *item_height = EMULATED_ITEM_SIZE; 
 
       if(item->type != it_bigslider)
          return true; // return from MN_DrawMenuItem
@@ -470,7 +497,9 @@ static void MN_genericDescription(menuitem_t *item,
    // write description
    if(item->flags & MENUITEM_BIGFONT)
    {
-      V_FontWriteText(menu_font_big, item->description, x, y, &subscreen43);
+      V_FontWriteTextColored(menu_font_big, item->description, 
+                             GameModeInfo->bigFontItemColor, x, y, 
+                             &subscreen43);
       *item_height = V_FontStringHeight(menu_font_big, item->description);
    }
    else
@@ -494,9 +523,11 @@ static void MN_genericDescription(menuitem_t *item,
 static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
                                int desc_width)
 {
-   const char *boundkeys = G_BoundKeys(item->data);
+   qstring boundkeys;
    int x = item->x;
    int y = item->y;
+
+   G_BoundKeys(item->data, boundkeys);
 
    if(drawing_menu->flags & mf_background)
    {
@@ -509,7 +540,7 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
    }
          
    // write variable value text
-   MN_WriteTextColored(boundkeys, color, 
+   MN_WriteTextColored(boundkeys.constPtr(), color, 
                        x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
 }
 
@@ -819,7 +850,14 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
    // haleyjd: gamemodes that use big menu font don't use pics, ever
    if(item->patch && !(GameModeInfo->flags & GIF_MNBIGFONT) &&
       MN_drawPatchForItem(item, &item_height, color, alignment))
+   {
+      // haleyjd 05/16/04: hack for traditional menu support;
+      // this was hard-coded in the old system
+      if(drawing_menu->flags & mf_emulated)
+         item_height = EMULATED_ITEM_SIZE; 
+
       return item_height; // if returned true, we are done.
+   }
 
    // draw description text
    
@@ -832,6 +870,9 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
    if(MN_itemDrawerFuncs[item->type])
       MN_itemDrawerFuncs[item->type](item, color, alignment, desc_width);
+
+   if(drawing_menu->flags & mf_emulated)
+      item_height = EMULATED_ITEM_SIZE;
 
    return item_height;
 }
@@ -1354,7 +1395,7 @@ bool MN_Responder(event_t *ev)
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
-   G_KeyResponder(ev, kac_menu);
+   int action = G_KeyResponder(ev, kac_menu);
 
    // haleyjd 10/07/05
    if(ev->data1 == KEYD_RCTRL)
@@ -1375,7 +1416,7 @@ bool MN_Responder(event_t *ev)
    // are we displaying a widget?
    if(current_menuwidget)
    {
-      current_menuwidget->responder(ev);
+      current_menuwidget->responder(ev, action);
       return true;
    }
 
@@ -1385,9 +1426,9 @@ bool MN_Responder(event_t *ev)
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
       
-      if(ev->data1 == KEYD_ESCAPE)        // cancel input
+      if(action == ka_menu_toggle) // cancel input
          input_command = NULL;      
-      else if(ev->data1 == KEYD_ENTER)
+      else if(action == ka_menu_confirm)
       {
          if(input_buffer[0] || (input_command->flags & cf_allowblank))
          {
@@ -1449,11 +1490,8 @@ bool MN_Responder(event_t *ev)
       return true;
    }
   
-   if(action_menu_toggle)
+   if(action == ka_menu_toggle)
    {
-      // toggle menu
-      action_menu_toggle = false;
-
       // start up main menu or kill menu
       if(menuactive)
       {
@@ -1471,16 +1509,14 @@ bool MN_Responder(event_t *ev)
       return true;
    }
 
-   if(action_menu_help)
+   if(action == ka_menu_help)
    {
-      action_menu_help = false;
       C_RunTextCmd("help");
       return true;
    }
 
-   if(action_menu_setup)
+   if(action == ka_menu_setup)
    {
-      action_menu_setup = false;
       C_RunTextCmd("mn_options");
       return true;
    }
@@ -1489,10 +1525,9 @@ bool MN_Responder(event_t *ev)
    if(!menuactive)
       return false;
 
-   if(action_menu_up)
+   if(action == ka_menu_up)
    {
       bool cancelsnd = false;
-      action_menu_up = false;
       
       // skip gaps
       do
@@ -1534,10 +1569,9 @@ bool MN_Responder(event_t *ev)
       return true;  // eatkey
    }
   
-   if(action_menu_down)
+   if(action == ka_menu_down)
    {
       bool cancelsnd = false;
-      action_menu_down = false;
       
       do
       {
@@ -1574,12 +1608,10 @@ bool MN_Responder(event_t *ev)
       return true;  // eatkey
    }
    
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
       menuitem_t *menuitem = &current_menu->menuitems[current_menu->selected];
-
-      action_menu_confirm = false;
-      
+     
       switch(menuitem->type)
       {
       case it_runcmd:
@@ -1645,19 +1677,17 @@ bool MN_Responder(event_t *ev)
       return true;
    }
   
-   if(action_menu_previous)
+   if(action == ka_menu_previous)
    {
-      action_menu_previous = false;
       MN_PrevMenu();
       return true;
    }
    
    // decrease value of variable
-   if(action_menu_left)
+   if(action == ka_menu_left)
    {
       menuitem_t *menuitem;
-      action_menu_left = false;
-      
+
       // haleyjd 10/07/05: if ctrl is down, go to previous menu
       if(ctrldown)
       {
@@ -1718,10 +1748,9 @@ bool MN_Responder(event_t *ev)
    }
   
    // increase value of variable
-   if(action_menu_right)
+   if(action == ka_menu_right)
    {
       menuitem_t *menuitem;
-      action_menu_right = false;
       
       // haleyjd 10/07/05: if ctrl is down, go to next menu
       if(ctrldown)
@@ -1785,10 +1814,8 @@ bool MN_Responder(event_t *ev)
    }
 
    // haleyjd 10/07/05: page up action -- return to previous page
-   if(action_menu_pageup)
+   if(action == ka_menu_pageup)
    {
-      action_menu_pageup = false;
-
       if(current_menu->prevpage)
          MN_PageMenu(current_menu->prevpage);
       else
@@ -1798,10 +1825,8 @@ bool MN_Responder(event_t *ev)
    }
 
    // haleyjd 10/07/05: page down action -- go to next page
-   if(action_menu_pagedown)
+   if(action == ka_menu_pagedown)
    {
-      action_menu_pagedown = false;
-
       if(current_menu->nextpage)
          MN_PageMenu(current_menu->nextpage);
       else
@@ -1811,10 +1836,8 @@ bool MN_Responder(event_t *ev)
    }
 
    // haleyjd 10/15/05: table of contents widget!
-   if(action_menu_contents)
+   if(action == ka_menu_contents)
    {
-      action_menu_contents = false;
-
       if(current_menu->content_names && current_menu->content_pages)
          MN_ShowContents();
       else
@@ -1902,12 +1925,15 @@ void MN_StartMenu(menu_t *menu)
    // page the user was last viewing.
    if(current_menu->curpage)
       current_menu = current_menu->curpage;
-   
+
+   // haleyjd 05/09/13: perform initialization tasks on the menu
+   MN_initializeMenu(current_menu);
+
    menu_error_time = 0;      // clear error message
 
    // haleyjd 11/12/09: custom menu open actions
    if(current_menu->open)
-      current_menu->open();
+      current_menu->open(current_menu);
 }
 
 //
@@ -2079,6 +2105,14 @@ int MN_StringWidth(const char *s)
    return V_FontStringWidth(menu_font, s);
 }
 
+//
+// MN_StringHeight
+//
+int MN_StringHeight(const char *s)
+{
+   return V_FontStringHeight(menu_font, s);
+}
+
 //=============================================================================
 // 
 // Box Widget
@@ -2220,24 +2254,22 @@ static void MN_BoxWidgetDrawer(void)
 //
 // Handle events to a menu box widget.
 //
-static bool MN_BoxWidgetResponder(event_t *ev)
+static bool MN_BoxWidgetResponder(event_t *ev, int action)
 {
    // get a pointer to the box widget
    box_widget_t *box = (box_widget_t *)current_menuwidget;
 
    // toggle and previous dismiss the widget
-   if(action_menu_toggle || action_menu_previous)
+   if(action == ka_menu_toggle || action == ka_menu_previous)
    {
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
 
    // up/left: move selection to previous item with wrap
-   if(action_menu_up || action_menu_left)
+   if(action == ka_menu_up || action == ka_menu_left)
    {
-      action_menu_up = action_menu_left = false;
       if(--box->selection_idx < 0)
          box->selection_idx = box->maxidx;
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -2245,9 +2277,8 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    }
 
    // down/right: move selection to next item with wrap
-   if(action_menu_down || action_menu_right)
+   if(action == ka_menu_down || action == ka_menu_right)
    {
-      action_menu_down = action_menu_right = false;
       if(++box->selection_idx > box->maxidx)
          box->selection_idx = 0;
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -2255,9 +2286,8 @@ static bool MN_BoxWidgetResponder(event_t *ev)
    }
 
    // confirm: clear widget and set menu page or run command
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
-      action_menu_confirm = false;
       MN_PopWidget();
 
       switch(box->type)
@@ -2394,22 +2424,6 @@ VARIABLE_STRING(mn_background, NULL, 8);
 CONSOLE_VARIABLE(mn_background, mn_background, 0)
 {
    MN_SetBackground();
-}
-
-extern void MN_AddMenus(void);              // mn_menus.c
-extern void MN_AddMiscCommands(void);       // mn_misc.c
-
-void MN_AddCommands(void)
-{
-   C_AddCommand(mn_clearmenus);
-   C_AddCommand(mn_prevmenu);
-   C_AddCommand(forceload);
-   C_AddCommand(mn_toggleisback);
-   C_AddCommand(mn_background);
-   
-   MN_AddMenus();               // add commands to call the menus
-   MN_AddMiscCommands();
-   MN_AddDynaMenuCommands();    // haleyjd 03/13/06
 }
 
 // EOF

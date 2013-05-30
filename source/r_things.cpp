@@ -52,6 +52,7 @@
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -62,7 +63,7 @@
 // External Declarations
 //
 
-extern int columnofs[];
+extern int *columnofs;
 extern int global_cmap_index; // haleyjd: NGCS
 
 //=============================================================================
@@ -89,9 +90,19 @@ int r_vissprite_limit;
 // constant arrays
 //  used for psprite clipping and initializing clipping
 
-float zeroarray[MAX_SCREENWIDTH];
-float screenheightarray[MAX_SCREENWIDTH];
-int   lefthanded = 0;
+float *zeroarray;
+float *screenheightarray;
+int    lefthanded = 0;
+
+VALLOCATION(zeroarray)
+{
+   float *buffer = emalloctag(float *, w*2 * sizeof(float), PU_VALLOC, NULL);
+   zeroarray = buffer;
+   screenheightarray = buffer + w;
+
+   for(float *itr = buffer, *end = itr + w*2; itr != end; ++itr)
+      *itr = 0.0f;
+}
 
 // variables used to look up and range check thing_t sprites patches
 
@@ -185,7 +196,12 @@ static drawsegs_xrange_t *drawsegs_xrange;
 static unsigned int drawsegs_xrange_size = 0;
 static int drawsegs_xrange_count = 0;
 
-static float pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+static float *pscreenheightarray; // for psprites
+
+VALLOCATION(pscreenheightarray)
+{
+   pscreenheightarray = ecalloctag(float *, w, sizeof(float), PU_VALLOC, NULL);
+}
 
 static lighttable_t **spritelights; // killough 1/25/98 made static
 
@@ -205,8 +221,15 @@ static int            stackmax     = 0;
 static maskedrange_t *unusedmasked = NULL;
 
 // haleyjd: made static global
-static float clipbot[MAX_SCREENWIDTH];
-static float cliptop[MAX_SCREENWIDTH];
+static float *clipbot;
+static float *cliptop;
+
+VALLOCATION(clipbot)
+{
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   clipbot = buffer;
+   cliptop = buffer + w;
+}
 
 //=============================================================================
 //
@@ -235,7 +258,7 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
    }
    else
    {
-      memcpy(portaltop, top, sizeof(float) * MAX_SCREENWIDTH);
+      memcpy(portaltop,    top,    sizeof(float) * MAX_SCREENWIDTH);
       memcpy(portalbottom, bottom, sizeof(float) * MAX_SCREENWIDTH);
    }
 }
@@ -457,9 +480,6 @@ static void R_InitSpriteDefs(char **namelist)
 //
 void R_InitSprites(char **namelist)
 {
-   int i;
-   for(i = 0; i < MAX_SCREENWIDTH; ++i)    // killough 2/8/98
-      zeroarray[i] = 0.0f;
    R_InitSpriteDefs(namelist);
 }
 
@@ -575,7 +595,7 @@ static void R_DrawMaskedColumn(column_t *tcolumn)
       column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-      if(column.y1 <= column.y2 && column.y2 < viewheight)
+      if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = (byte *)tcolumn + 3;
          column.texmid = basetexturemid - (tcolumn->topdelta << FRACBITS);
@@ -609,7 +629,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-      if(column.y1 <= column.y2 && column.y2 < viewheight)
+      if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = tex->buffer + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
@@ -817,8 +837,8 @@ static void R_ProjectSprite(Mobj *thing)
 
 
    // Calculate the edges of the shape
-   swidth = M_FixedToFloat(spritewidth[lump]);
-   stopoffset = M_FixedToFloat(spritetopoffset[lump]);
+   swidth      = M_FixedToFloat(spritewidth[lump]);
+   stopoffset  = M_FixedToFloat(spritetopoffset[lump]);
    sleftoffset = M_FixedToFloat(spriteoffset[lump]);
 
 
@@ -899,7 +919,7 @@ static void R_ProjectSprite(Mobj *thing)
 
    // Cardboard
    vis->x1 = x1 < 0.0f ? 0 : intx1;
-   vis->x2 = x2 >= view.width ? viewwidth - 1 : intx2;
+   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : intx2;
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
@@ -1006,7 +1026,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_ProjectParticle(link->dllObject);
+         R_ProjectParticle(*link);
    }
 }
 
@@ -1074,7 +1094,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    x1 = (view.xcenter + tx * view.pspritexscale);
    
    // off the right side
-   if(x1 > viewwidth)
+   if(x1 > viewwindow.width)
       return;
    
    tx += w;
@@ -1088,7 +1108,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    {
       float tmpx = x1;
       x1 = view.width - x2;
-      x2 = view.width - tmpx;    // viewwidth-x1
+      x2 = view.width - tmpx;    // viewwindow.width-x1
    }
    
    // store information in a vissprite
@@ -1099,7 +1119,7 @@ static void R_DrawPSprite(pspdef_t *psp)
                       (psp->sy - spritetopoffset[lump]);
 
    vis->x1 = x1 < 0.0f ? 0 : (int)x1;
-   vis->x2 = x2 >= view.width ? viewwidth - 1 : (int)x2;
+   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
    vis->footclip = 0; // haleyjd
@@ -1134,8 +1154,8 @@ static void R_DrawPSprite(pspdef_t *psp)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;         // shadow draw
       vis->colormap  = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
    }
-   else if(viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
-           viewplayer->powers[pw_ghost] & 8 &&
+   else if((viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
+            viewplayer->powers[pw_ghost] & 8) &&
            general_translucency)
    {
       vis->drawstyle    = VS_DRAWSTYLE_ALPHA;
@@ -1191,11 +1211,11 @@ static void R_DrawPlayerSprites(void)
    else
       spritelights = scalelight[lightnum];
 
-   for(i = 0; i < viewwidth; ++i)
+   for(i = 0; i < viewwindow.width; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
    
    // clip to screen bounds
-   mfloorclip = pscreenheightarray;
+   mfloorclip   = pscreenheightarray;
    mceilingclip = zeroarray;
 
    // add all active psprites
@@ -1255,7 +1275,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
    else
    {
       int i;
-      for(i = 1; i < n; ++i)
+      for(i = 1; i < n; i++)
       {
          vissprite_t *temp = s[i];
          if(s[i-1]->dist < temp->dist)
@@ -1268,13 +1288,14 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
    }
 }
 
+#if 0
 //
 // R_SortVisSprites
 //
 // Rewritten by Lee Killough to avoid using unnecessary
 // linked lists, and to use faster sorting algorithm.
 //
-static void R_SortVisSprites(void)
+static void R_SortVisSprites()
 {
    if(num_vissprite)
    {
@@ -1301,7 +1322,7 @@ static void R_SortVisSprites(void)
       msort(vissprite_ptrs, vissprite_ptrs + num_vissprite, num_vissprite);
    }
 }
-
+#endif
 
 //
 // R_SortVisSpriteRange
@@ -1483,8 +1504,6 @@ void R_DrawSprite(vissprite_t *spr)
 static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 {
    drawseg_t *ds;
-   //float     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   //float     cliptop[MAX_SCREENWIDTH];       // change to MAX_*
    int     x;
    int     r1;
    int     r2;
@@ -1942,7 +1961,7 @@ static void R_ProjectParticle(particle_t *particle)
    if(x2 < x1) x2 = x1;
    
    // off either side?
-   if(x1 >= viewwidth || x2 < 0)
+   if(x1 >= viewwindow.width || x2 < 0)
       return;
 
    tz = M_FixedToFloat(particle->z) - view.z;
@@ -1999,7 +2018,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->gzt = gzt;
    vis->texturemid = vis->gzt - viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
+   vis->x2 = x2 >= viewwindow.width ? viewwindow.width-1 : x2;
    vis->colour = particle->color;
    vis->patch = -1;
    vis->translucency = static_cast<uint16_t>(particle->trans - 1);
@@ -2068,8 +2087,8 @@ static void R_DrawParticle(vissprite_t *vis)
 
    if(x1 < 0)
       x1 = 0;
-   if(x2 >= viewwidth)
-      x2 = viewwidth - 1;
+   if(x2 >= viewwindow.width)
+      x2 = viewwindow.width - 1;
 
    // due to square shape, it is unnecessary to clip the entire
    // particle

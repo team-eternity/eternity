@@ -39,6 +39,7 @@
 #include "f_finale.h"
 #include "hi_stuff.h"
 #include "info.h"
+#include "m_misc.h"
 #include "mn_htic.h"
 #include "mn_menus.h"
 #include "p_info.h"
@@ -83,7 +84,6 @@
 // Ultimate DOOM and DOOM II have a suitable graphic in the INTERPIC.
 #define CONBACK_DEFAULT "TITLEPIC"
 #define CONBACK_COMRET  "INTERPIC"
-#define CONBACK_DISK    "DMENUPIC"
 #define CONBACK_HERETIC "TITLE" 
 
 // Version names
@@ -106,8 +106,8 @@
 #define FNAME_DOOM2     "FreeDoom II version"
 
 // BFG Edition override names
-#define BFGNAME_DOOM    "Ultimate DOOM BFG Edition version"
-#define BFGNAME_DOOM2   "DOOM II BFG Edition version"
+#define BFGNAME_DOOM    "Ultimate DOOM - BFG Edition version"
+#define BFGNAME_DOOM2   "DOOM II - BFG Edition version"
 
 // Startup banners
 #define BANNER_DOOM_SW   "DOOM Shareware Startup"
@@ -714,7 +714,7 @@ static missioninfo_t gmFinalPlutonia =
 static missioninfo_t gmDisk =
 {
    pack_disk,       // id
-   MI_CONBACKTITLE, // flags
+   0,               // flags
    "doom2",         // gamePathName
 
    VNAME_DISK,      // versionNameOR
@@ -724,7 +724,7 @@ static missioninfo_t gmDisk =
    NULL,            // finaleDataOR
    NULL,            // menuBackgroundOR
    NULL,            // creditBackgroundOR
-   CONBACK_DISK,    // consoleBackOR
+   CONBACK_DEFAULT, // consoleBackOR
    NULL,            // demoStatesOR
    NULL,            // interPicOR
    DiskExitRules,   // exitRulesOR
@@ -855,6 +855,7 @@ static gamemodeinfo_t giDoomSW =
    CR_GREEN,         // variableColor
    CR_RED,           // titleColor
    CR_GOLD,          // itemColor
+   CR_RED,           // bigFontItemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
@@ -887,6 +888,7 @@ static gamemodeinfo_t giDoomSW =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -952,6 +954,7 @@ static gamemodeinfo_t giDoomReg =
    CR_GREEN,         // variableColor
    CR_RED,           // titleColor
    CR_GOLD,          // itemColor
+   CR_RED,           // bigFontItemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
@@ -984,6 +987,7 @@ static gamemodeinfo_t giDoomReg =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1049,6 +1053,7 @@ static gamemodeinfo_t giDoomRetail =
    CR_GREEN,         // variableColor
    CR_RED,           // titleColor
    CR_GOLD,          // itemColor
+   CR_RED,           // bigFontItemColor
    0,                // menuOffset
 
    DOOMBRDRFLAT,     // borderFlat
@@ -1081,6 +1086,7 @@ static gamemodeinfo_t giDoomRetail =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1146,6 +1152,7 @@ static gamemodeinfo_t giDoomCommercial =
    CR_GREEN,         // variableColor
    CR_RED,           // titleColor
    CR_GOLD,          // itemColor
+   CR_RED,           // bigFontItemColor
    0,                // menuOffset
 
    DM2BRDRFLAT,      // borderFlat
@@ -1178,6 +1185,7 @@ static gamemodeinfo_t giDoomCommercial =
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    Doom2BossSpecs,   // bossRules
+   LI_TYPE_DOOM,     // levelType
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1243,6 +1251,7 @@ static gamemodeinfo_t giHereticSW =
    CR_GREEN,         // variableColor
    CR_GREEN,         // titleColor
    CR_GOLD,          // itemColor
+   CR_GREEN,         // bigFontItemColor
    4,                // menuOffset
 
    HSWBRDRFLAT,      // borderFlat
@@ -1275,6 +1284,7 @@ static gamemodeinfo_t giHereticSW =
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
+   LI_TYPE_HERETIC,  // levelType
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1344,6 +1354,7 @@ static gamemodeinfo_t giHereticReg =
    CR_GREEN,         // variableColor
    CR_GREEN,         // titleColor
    CR_GOLD,          // itemColor
+   CR_GREEN,         // bigFontItemColor
    4,                // menuOffset
 
    HREGBRDRFLAT,     // borderFlat
@@ -1376,6 +1387,7 @@ static gamemodeinfo_t giHereticReg =
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
+   LI_TYPE_HERETIC,  // levelType
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

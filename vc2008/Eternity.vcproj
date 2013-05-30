@@ -52,7 +52,7 @@
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC;EE_FEATURE_XINPUT"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -148,7 +148,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32;..\libpng"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC;EE_FEATURE_XINPUT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -1681,14 +1681,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\source\in_stats.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\source\in_stats.h"
-					>
-				</File>
-				<File
 					RelativePath="..\Source\wi_stuff.cpp"
 					>
 					<FileConfiguration
@@ -2509,6 +2501,72 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\Source\p_map.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\p_map3d.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\Source\p_maputl.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath="..\Source\p_mobj.cpp"
 						>
 						<FileConfiguration
@@ -2625,6 +2683,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_pushers.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_saveg.cpp"
 						>
 						<FileConfiguration
@@ -2645,6 +2707,10 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\p_scroll.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\source\p_sector.cpp"
@@ -2969,6 +3035,18 @@
 						>
 					</File>
 					<File
+						RelativePath="..\Source\p_map.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_map3d.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Source\p_maputl.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_mobj.h"
 						>
 					</File>
@@ -2989,7 +3067,15 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\p_pushers.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_saveg.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_scroll.h"
 						>
 					</File>
 					<File
@@ -3010,10 +3096,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_tick.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\p_traceengine.h"
 						>
 					</File>
 					<File
@@ -3145,6 +3227,10 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\r_dynabsp.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\source\r_dynseg.cpp"
@@ -3378,6 +3464,10 @@
 					</File>
 					<File
 						RelativePath="..\source\r_drawq.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\r_dynabsp.h"
 						>
 					</File>
 					<File
@@ -3725,6 +3815,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlgamepads.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\sdl\i_sdlgl2d.cpp"
 						>
 					</File>
@@ -3907,6 +4001,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlgamepads.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\sdl\i_sdlgl2d.h"
 						>
 					</File>
@@ -4024,6 +4122,10 @@
 				<Filter
 					Name="V_ Source"
 					>
+					<File
+						RelativePath="..\source\v_alloc.cpp"
+						>
+					</File>
 					<File
 						RelativePath="..\Source\v_block.cpp"
 						>
@@ -4169,6 +4271,10 @@
 					Name="V_ Headers"
 					>
 					<File
+						RelativePath="..\source\v_alloc.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\v_block.h"
 						>
 					</File>
@@ -4214,6 +4320,10 @@
 					</File>
 					<File
 						RelativePath="..\source\w_hacks.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\w_iterator.h"
 						>
 					</File>
 					<File
@@ -5002,6 +5112,10 @@
 					Name="HAL Source"
 					>
 					<File
+						RelativePath="..\source\hal\i_gamepads.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\hal\i_platform.cpp"
 						>
 					</File>
@@ -5013,6 +5127,10 @@
 				<Filter
 					Name="HAL Headers"
 					>
+					<File
+						RelativePath="..\source\hal\i_gamepads.h"
+						>
+					</File>
 					<File
 						RelativePath="..\source\hal\i_picker.h"
 						>
@@ -5138,18 +5256,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="EV_"
-				>
-				<File
-					RelativePath="..\source\ev_specials.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\source\ev_specials.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="Clip"
 				>
 				<Filter
@@ -5241,6 +5347,82 @@
 					</File>
 					<File
 						RelativePath="..\source\p_portalclip.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="EV_"
+				>
+				<Filter
+					Name="EV_ Headers"
+					>
+					<File
+						RelativePath="..\source\ev_actions.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_bindings.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_macros.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_specials.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="EV_ Source"
+					>
+					<File
+						RelativePath="..\source\ev_actions.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_bindings.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_specials.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\ev_static.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="T_"
+				>
+				<File
+					RelativePath="..\source\t_plane.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\t_plane.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Win32"
+				>
+				<Filter
+					Name="Win32 Headers"
+					>
+					<File
+						RelativePath="..\source\Win32\i_xinput.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Win32 Source"
+					>
+					<File
+						RelativePath="..\source\Win32\i_xinput.cpp"
 						>
 					</File>
 				</Filter>

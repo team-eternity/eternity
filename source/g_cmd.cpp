@@ -195,6 +195,9 @@ CONSOLE_VARIABLE(alwaysmlook, automlook, 0) {}
 VARIABLE_BOOLEAN(invert_mouse, NULL,        onoff);
 CONSOLE_VARIABLE(invertmouse, invert_mouse, 0) {}
 
+VARIABLE_BOOLEAN(invert_padlook, NULL, onoff);
+CONSOLE_VARIABLE(invert_padlook, invert_padlook, 0) {}
+
 // horizontal mouse sensitivity
 
 VARIABLE_FLOAT(mouseSensitivity_horiz, NULL, 0.0, 1024.0);
@@ -254,7 +257,7 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
       G_ExitLevel();
 }
 
-//////////////////////////////////////
+//=============================================================================
 //
 // Demo Stuff
 //
@@ -306,7 +309,7 @@ const char *cooldemo_modes[] =
 VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
-///////////////////////////////////////////////////
+//=============================================================================
 //
 // Wads
 //
@@ -318,7 +321,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
 {
    if(GameModeInfo->flags & GIF_SHAREWARE)
    {
-      C_Printf(FC_ERROR"command not available in shareware games\n");
+      C_Printf(FC_ERROR "command not available in shareware games\n");
       return;
    }
    D_AddNewFile(Console.argv[0]->constPtr());
@@ -372,8 +375,9 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    // i'm not particularly a fan of this myself, but..
 
    // haleyjd 03/12/06: no .wad loading in netgames
+   // haleyjd 05/24/13: or in shareware!
 
-   if(!netgame && Console.argv[0]->length() > 4)
+   if(!netgame && !(GameModeInfo->flags & GIF_SHAREWARE) && Console.argv[0]->length() > 4)
    {
       const char *extension;
       extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
@@ -463,11 +467,21 @@ CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 VARIABLE_BOOLEAN(novert, NULL, onoff);
 CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
 
+VARIABLE_INT(mouseb_dblc1, NULL, -1, 2, NULL);
+CONSOLE_VARIABLE(mouseb_dblc1, mouseb_dblc1, 0) {}
+
+VARIABLE_INT(mouseb_dblc2, NULL, -1, 2, NULL);
+CONSOLE_VARIABLE(mouseb_dblc2, mouseb_dblc2, 0) {}
+
 // haleyjd: new stuff
 
 extern int map_point_coordinates;
 VARIABLE_BOOLEAN(map_point_coordinates, NULL, onoff);
 CONSOLE_VARIABLE(map_coords, map_point_coordinates, 0) {}
+
+extern int map_secret_after;
+VARIABLE_BOOLEAN(map_secret_after, NULL, yesno);
+CONSOLE_VARIABLE(map_secret_after, map_secret_after, 0) {}
 
 VARIABLE_INT(dogs, &default_dogs, 0, 3, NULL);
 CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
@@ -695,7 +709,7 @@ void G_AddChatMacros(void)
       command->handler = NULL;
       command->netcmd = 0;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
 }
 
@@ -721,7 +735,7 @@ void G_SetWeapPref(int prefnum, int newvalue)
 
 const char *weapon_str[NUMWEAPONS] =
 {"fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
- "bfg", "chainsaw", "double shotgun"};
+ "bfg", "chainsaw", "super shotgun"};
 
 void G_WeapPrefHandler(void)
 {
@@ -765,7 +779,7 @@ void G_AddWeapPrefs(void)
       command->handler = G_WeapPrefHandler;
       command->netcmd = 0;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
 }
 
@@ -826,7 +840,7 @@ void G_AddAutoloadFiles(void)
       command->handler = NULL;
       command->netcmd = 0;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
 }
 
@@ -873,7 +887,7 @@ static void Handler_CompTHeights(void)
    P_ChangeThingHeights();
 }
 
-void G_AddCompat(void)
+void G_AddCompat()
 {
    int i;
 
@@ -914,97 +928,8 @@ void G_AddCompat(void)
       command->variable = variable;
       command->netcmd = netcmd_comp_0 + i;
 
-      (C_AddCommand)(command); // hook into cmdlist
+      C_AddCommand(command); // hook into cmdlist
    }
-}
-
-void G_AddCommands(void)
-{
-   C_AddCommand(i_exitwithmessage);
-   C_AddCommand(i_fatalerror);
-   C_AddCommand(i_error);
-   C_AddCommand(z_print);
-   C_AddCommand(z_dumpcore);
-   C_AddCommand(starttitle);
-   C_AddCommand(endgame);
-   C_AddCommand(pause);
-   C_AddCommand(quit);
-   C_AddCommand(animshot);
-   C_AddCommand(screenshot);
-   C_AddCommand(shot_type);
-   C_AddCommand(shot_gamma);
-   C_AddCommand(alwaysmlook);
-   C_AddCommand(bobbing);
-   C_AddCommand(doom_weapon_toggles);
-   C_AddCommand(sens_horiz);
-   C_AddCommand(sens_vert);
-   C_AddCommand(sens_combined);
-   C_AddCommand(sens_vanilla);
-   C_AddCommand(mouse_accel_type);
-   C_AddCommand(mouse_accel_threshold);
-   C_AddCommand(mouse_accel_value);
-   C_AddCommand(mouse_novert);
-   C_AddCommand(invertmouse);
-   C_AddCommand(turbo);
-   C_AddCommand(playdemo);
-   C_AddCommand(timedemo);
-   C_AddCommand(cooldemo);
-   C_AddCommand(stopdemo);
-   C_AddCommand(exitlevel);
-   C_AddCommand(addfile);
-   C_AddCommand(listwads);
-   C_AddCommand(rngseed);
-   C_AddCommand(kill);
-   C_AddCommand(map);
-   C_AddCommand(name);
-   C_AddCommand(textmode_startup);
-   C_AddCommand(demo_insurance);
-   C_AddCommand(smooth_turning);
-
-   // haleyjd: new stuff
-   C_AddCommand(map_coords);
-   C_AddCommand(numhelpers);
-   C_AddCommand(dogjumping);
-   C_AddCommand(draw_particles);
-   C_AddCommand(bloodsplattype);
-   C_AddCommand(bulletpufftype);
-   C_AddCommand(rocket_trails);
-   C_AddCommand(grenade_trails);
-   C_AddCommand(bfg_cloud);
-   C_AddCommand(startonnewmap);
-   C_AddCommand(autorun);
-   C_AddCommand(runiswalk);
-   C_AddCommand(m_resetcomments);
-
-   // [CG] 01/29/2012: Spectate previous, next and self
-   C_AddCommand(spectate_prev);
-   C_AddCommand(spectate_next);
-   C_AddCommand(spectate_self);
-
-   // haleyjd 03/22/09: iwad paths
-   C_AddCommand(iwad_doom_shareware);
-   C_AddCommand(iwad_doom);
-   C_AddCommand(iwad_ultimate_doom);
-   C_AddCommand(iwad_doom2);
-   C_AddCommand(iwad_tnt);
-   C_AddCommand(iwad_plutonia);
-   C_AddCommand(iwad_hacx);
-   C_AddCommand(iwad_heretic_shareware);
-   C_AddCommand(iwad_heretic);
-   C_AddCommand(iwad_heretic_sosr);
-   C_AddCommand(iwad_freedoom);
-   C_AddCommand(iwad_freedoomu);
-   C_AddCommand(iwad_freedm);
-   C_AddCommand(master_levels_dir);
-   C_AddCommand(w_norestpath);
-
-   C_AddCommand(use_doom_config);
-
-   G_AddChatMacros();
-   G_AddWeapPrefs();
-   G_AddCompat();
-   G_AddAutoloadFiles(); // haleyjd
-   P_AddEventVars(); // haleyjd
 }
 
 // EOF

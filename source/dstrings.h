@@ -17,16 +17,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //	DOOM strings, by language.
 //
 //-----------------------------------------------------------------------------
 
-
-#ifndef __DSTRINGS__
-#define __DSTRINGS__
+#ifndef DSTRINGS_H__
+#define DSTRINGS_H__
 
 
 // All important printed strings.

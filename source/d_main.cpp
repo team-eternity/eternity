@@ -370,13 +370,14 @@ const demostate_t demostates_unknown[] =
 // This cycles through the demo sequences.
 // killough 11/98: made table-driven
 //
-void D_DoAdvanceDemo(void)
+void D_DoAdvanceDemo()
 {
    const demostate_t *demostates = GameModeInfo->demoStates;
    const demostate_t *state;
 
    players[consoleplayer].playerstate = PST_LIVE;  // not reborn
-   advancedemo = usergame = paused = false;
+   advancedemo = usergame = false;
+   paused = 0;
    gameaction = ga_nothing;
 
    pagetic = GameModeInfo->pageTics;
@@ -461,6 +462,7 @@ struct cachelevelprint_t
 static cachelevelprint_t cachelevels[] =
 {
    { PU_STATIC,   "static: " },
+   { PU_VALLOC,   " video: " },
    { PU_RENDERER, "render: " },
    { PU_LEVEL,    " level: " },
    { PU_CACHE,    " cache: " },
@@ -474,15 +476,15 @@ static void D_showMemStats(void)
    size_t total_memory = 0;
    double s;
    char buffer[1024];
-   int i;
+   size_t i;
 
-   for(i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+   for(i = 0; i < earrlen(cachelevels) - 1; i++)
       total_memory += memorybytag[cachelevels[i].cachelevel];
    s = 100.0 / total_memory;
 
    font = E_FontForName("ee_consolefont");   
    // draw the labels
-   for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
+   for(i = 0; i < earrlen(cachelevels); i++)
    {
       int tag = cachelevels[i].cachelevel;
       if(tag != PU_MAX)
@@ -545,7 +547,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledviewheight != 200 || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || automapactive)
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -577,7 +579,7 @@ void D_Display(void)
    if(setsizeneeded)            // change the view size if needed
    {
       R_ExecuteSetViewSize();
-      R_FillBackScreen();       // redraw backscreen
+      R_FillBackScreen(scaledwindow);       // redraw backscreen
    }
 
    // save the current screen if about to wipe
@@ -599,7 +601,7 @@ void D_Display(void)
       case GS_LEVEL:
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
-            R_FillBackScreen();    // draw the pattern into the back screen
+            R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
          
          if(automapactive)
          {
@@ -611,7 +613,7 @@ void D_Display(void)
             R_RenderPlayerView (&players[displayplayer], camera);
          }
          
-         ST_Drawer(scaledviewheight == 200);  // killough 11/98
+         ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
          HU_Drawer();
          break;
       case GS_INTERMISSION:
@@ -646,7 +648,7 @@ void D_Display(void)
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindowy);
+         int y = 4 + (automapactive ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }
@@ -765,31 +767,6 @@ char *D_DoomExeDir(void)
 // Base and Game Path Determination Code
 //
 
-//
-// D_ExpandTilde
-//     expand tilde in base path name for linux home dir
-//
-static char *D_ExpandTilde(const char *basedir)
-{
-   if(basedir[0] == '~')
-   {
-      char *home = estrdup(getenv("HOME"));
-      char *newalloc = NULL;
-      
-      M_StringAlloca(&newalloc, 2, 0, home, basedir);
-
-      strcpy(newalloc, home);
-      strcpy(newalloc + strlen(home), basedir + 1);
-            
-      if(home)
-         efree(home);
-
-      return newalloc;
-   }
-
-   return Z_Strdupa(basedir);
-}
-
 // return codes for D_CheckBasePath
 enum
 {
@@ -807,14 +784,14 @@ enum
 // Checks a provided path to see that it both exists and that it is a directory
 // and not a plain file.
 //
-static int D_CheckBasePath(const char *pPath)
+static int D_CheckBasePath(const qstring &qpath)
 {
    int ret = -1;
    struct stat sbuf;
    qstring str;
    const char *path;
 
-   str = pPath;
+   str = qpath;
    
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
@@ -882,18 +859,18 @@ static void D_SetBasePath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
-   char *basedir = NULL;
+   qstring basedir;
 
    // Priority:
    // 1. Command-line argument "-base"
    // 2. Environment variable "ETERNITYBASE"
-   // 3. /base under working directory
-   // 4. /base under DoomExeDir
+   // 3. /base under DoomExeDir
+   // 4. /base under working directory
 
    // check command-line
    if((p = M_CheckParm("-base")) && p < myargc - 1)
    {
-      basedir = D_ExpandTilde(myargv[p + 1]);
+      basedir = myargv[p + 1];
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_CMDLINE;
@@ -902,32 +879,29 @@ static void D_SetBasePath()
    // check environment
    if(res != BASE_ISGOOD && (s = getenv("ETERNITYBASE")))
    {
-      basedir = D_ExpandTilde(s);
+      basedir = s;
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
    }
 
-   // check working dir
-   if(res != BASE_ISGOOD)
-   {
-      basedir = Z_Strdupa("./base");
-
-      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
-         source = BASE_WORKING;
-   }
-
    // check exe dir
    if(res != BASE_ISGOOD)
    {
-      const char *exedir = D_DoomExeDir();
-      
-      size_t len = M_StringAlloca(&basedir, 1, 6, exedir);
-
-      psnprintf(basedir, len, "%s/base", D_DoomExeDir());
+      basedir = D_DoomExeDir();
+      basedir.pathConcatenate("/base");
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_EXEDIR;
+   }
+
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      basedir = "./base";
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
       else
       {
          // final straw.
@@ -944,8 +918,8 @@ static void D_SetBasePath()
       }
    }
 
-   basepath = estrdup(basedir);
-   M_NormalizeSlashes(basepath);
+   basedir.normalizeSlashes();
+   basepath = basedir.duplicate();
 
    switch(source)
    {
@@ -975,14 +949,14 @@ static void D_SetBasePath()
 // Checks a provided path to see that it both exists and that it is a directory
 // and not a plain file.
 //
-static int D_CheckUserPath(const char *pPath)
+static int D_CheckUserPath(const qstring &qpath)
 {
    int ret = -1;
    struct stat sbuf;
    qstring str;
    const char *path;
 
-   str = pPath;
+   str = qpath;
    
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
@@ -1038,18 +1012,20 @@ static void D_SetUserPath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
-   char *userdir = NULL;
+   qstring userdir;
 
    // Priority:
    // 1. Command-line argument "-user"
    // 2. Environment variable "ETERNITYUSER"
-   // 3. /user under working directory
-   // 4. /user under DoomExeDir
+   // 3. /user under DoomExeDir
+   // 4. /user under working directory
+   // 5. basepath/../user
+   // 6. use basepath itself.
 
    // check command-line
    if((p = M_CheckParm("-user")) && p < myargc - 1)
    {
-      userdir = D_ExpandTilde(myargv[p + 1]);
+      userdir = myargv[p + 1];
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_CMDLINE;
@@ -1058,40 +1034,36 @@ static void D_SetUserPath()
    // check environment
    if(res != BASE_ISGOOD && (s = getenv("ETERNITYUSER")))
    {
-      userdir = D_ExpandTilde(s);
+      userdir = s;
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
    }
 
-   // check working dir
-   if(res != BASE_ISGOOD)
-   {
-      userdir = Z_Strdupa("./user");
-
-      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
-         source = BASE_WORKING;
-   }
-
    // check exe dir
    if(res != BASE_ISGOOD)
    {
-      const char *exedir = D_DoomExeDir();
-
-      size_t len = M_StringAlloca(&userdir, 1, 6, exedir);
-
-      psnprintf(userdir, len, "%s/user", D_DoomExeDir());
+      userdir = D_DoomExeDir();
+      userdir.pathConcatenate("/user");
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_EXEDIR;
    }
 
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      userdir = "./user";
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
+   }
+
    // try /user under the base path's immediate parent directory
    if(res != BASE_ISGOOD)
    {
-      size_t len = M_StringAlloca(&userdir, 1, 8, basepath);
-
-      psnprintf(userdir, len, "%s/../user", basepath);
+      userdir = basepath;
+      userdir.pathConcatenate("/../user");
 
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_BASEPARENT;
@@ -1102,8 +1074,8 @@ static void D_SetUserPath()
    if(res != BASE_ISGOOD)
       userdir = basepath;
 
-   userpath = estrdup(userdir);
-   M_NormalizeSlashes(userpath);
+   userdir.normalizeSlashes();
+   userpath = userdir.duplicate();
 
    switch(source)
    {
@@ -1827,7 +1799,7 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-      D_ProcessDehInWad(lumpinfo[i]->next);
+      D_ProcessDehInWad(lumpinfo[i]->namehash.next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
@@ -1837,9 +1809,9 @@ static void D_ProcessDehInWad(int i)
 static void D_ProcessDehInWads(void)
 {
    // haleyjd: start at the top of the hash chain
-   lumpinfo_t *root = W_GetLumpNameChain("DEHACKED");
+   lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
 
-   D_ProcessDehInWad(root->index);
+   D_ProcessDehInWad(root->namehash.index);
 }
 
 //=============================================================================
@@ -1900,7 +1872,7 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2012 James Haley and Stephen McGranahan\n"
+        "Copyright 2013 James Haley, Stephen McGranahan, et al.\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
@@ -1926,6 +1898,10 @@ static void D_DoomInit(void)
    gamestate = GS_STARTUP; // haleyjd 01/01/10
 
    D_StartupMessage();
+
+   startupmsg("Z_Init", "Init zone memory allocation daemon.");
+   Z_Init();
+   atexit(I_Quit);
 
    FindResponseFile(); // Append response file arguments to command-line
 
@@ -2328,9 +2304,6 @@ static void D_DoomInit(void)
    startupmsg("MN_Init", "Init menu.");
    MN_Init();
 
-   startupmsg("IN_Init", "Init intermission.");
-   IN_Init(); // haleyjd 09/10/12
-
    startupmsg("F_Init", "Init finale.");
    F_Init();
 
@@ -2604,11 +2577,6 @@ void D_DoomMain(void)
 
 VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
 CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
-
-void D_AddCommands(void)
-{
-   C_AddCommand(d_drawfps);
-}
 
 //----------------------------------------------------------------------------
 //

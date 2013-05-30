@@ -51,8 +51,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-extern vfont_t *menu_font_big;
-
 /////////////////////////////////////////////////////////////////////////
 //
 // Pop-up Messages
@@ -69,7 +67,7 @@ static char        popup_message[1024];
 static const char *popup_message_command; // console command to run
 
 static void MN_PopupDrawer();
-static bool MN_PopupResponder(event_t *ev);
+static bool MN_PopupResponder(event_t *ev, int action);
 
 // widget for popup message alternate draw
 menuwidget_t popup_widget = { MN_PopupDrawer, MN_PopupResponder };
@@ -80,14 +78,11 @@ menuwidget_t popup_widget = { MN_PopupDrawer, MN_PopupResponder };
 //
 static void (*popup_callback)(void) = NULL;
 
-enum
+static enum
 {
    popup_alert,
    popup_question
 } popup_message_type;
-
-extern vfont_t *menu_font;
-extern vfont_t *menu_font_normal;
 
 //
 // WriteCenteredText
@@ -152,7 +147,7 @@ void MN_PopupDrawer(void)
    WriteCenteredText(popup_message);
 }
 
-bool MN_PopupResponder(event_t *ev)
+bool MN_PopupResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
@@ -178,7 +173,7 @@ bool MN_PopupResponder(event_t *ev)
       break;
 
    case popup_question:
-      if(ch == 'y')     // yes!
+      if(ch == 'y' || action == ka_menu_confirm) // yes!
       {
          // run command and kill message
          // haleyjd 02/24/02: restore saved menuactive state
@@ -196,11 +191,10 @@ bool MN_PopupResponder(event_t *ev)
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
          MN_PopWidget();  // kill message
       }
-      if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
+      if(ch == 'n' || action == ka_menu_toggle || action == ka_menu_previous) // no!
       {
          // kill message
          // haleyjd 02/24/02: restore saved menuactive state
-         action_menu_toggle = action_menu_previous = false;
          menuactive = popupMenuActive;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
          MN_PopWidget(); // kill message
@@ -463,7 +457,7 @@ void MN_DrawCredits(void)
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2012 Team Eternity et al.", 
+                   FC_ABSCENTER "Copyright 2013 Team Eternity et al.", 
                    0, y, &subscreen43);
 }
 
@@ -493,16 +487,14 @@ void MN_HelpDrawer(void)
 // haleyjd 05/29/06: record state of menu activation
 static bool help_prev_menuactive;
 
-bool MN_HelpResponder(event_t *ev)
+bool MN_HelpResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    
    if(ev->type != ev_keydown) return false;
    
-   if(action_menu_previous)
+   if(action == ka_menu_previous)
    {
-      action_menu_previous = false;
-
       // go to previous screen
       // haleyjd: only make sound if we really went back
       viewing_helpscreen--;
@@ -515,10 +507,8 @@ bool MN_HelpResponder(event_t *ev)
          S_StartSound(NULL, menuSounds[MN_SND_PREVIOUS]);
    }
 
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
-      action_menu_confirm = false;
-
       // go to next helpscreen
       viewing_helpscreen++;
       if(viewing_helpscreen >= num_helpscreens)
@@ -530,10 +520,8 @@ bool MN_HelpResponder(event_t *ev)
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
    }
 
-   if(action_menu_toggle)
+   if(action == ka_menu_toggle)
    {
-      action_menu_toggle = false;
-
       // cancel helpscreen
 cancel:
       MN_PopWidget();
@@ -634,41 +622,28 @@ void MN_MapColourDrawer(void)
    }
 }
 
-bool MN_MapColourResponder(event_t *ev)
+bool MN_MapColourResponder(event_t *ev, int action)
 {
-   if(action_menu_left)
-   {
-      action_menu_left = false;
+   if(action == ka_menu_left)
       selected_colour--;
-   }
 
-   if(action_menu_right)
-   {
-      action_menu_right = false;
+   if(action == ka_menu_right)
       selected_colour++;
-   }
    
-   if(action_menu_up)
-   {
-      action_menu_up = false;
+   if(action == ka_menu_up)
       selected_colour -= 16;
-   }
    
-   if(action_menu_down)
-   {
-      action_menu_down = false;
+   if(action == ka_menu_down)
       selected_colour += 16;
-   }
    
-   if(action_menu_toggle || action_menu_previous)
+   if(action == ka_menu_toggle || action == ka_menu_previous)
    {
       // cancel colour selection
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       return true;
    }
 
-   if(action_menu_confirm)
+   if(action == ka_menu_confirm)
    {
       static char tempstr[128];
       sprintf(tempstr, "%i", selected_colour);
@@ -677,7 +652,6 @@ bool MN_MapColourResponder(event_t *ev)
       C_RunCommand(colour_command, tempstr);
       
       // kill selector
-      action_menu_confirm = false;
       MN_PopWidget();
       return true;
    }
@@ -729,12 +703,11 @@ static void MN_fontTestDrawer()
    }
 }
 
-static bool MN_fontTestResponder(event_t *ev)
+static bool MN_fontTestResponder(event_t *ev, int action)
 {
-   if(action_menu_toggle || action_menu_previous)
+   if(action == ka_menu_toggle || action == ka_menu_previous)
    {
       // exit widget
-      action_menu_toggle = action_menu_previous = false;
       MN_PopWidget();
       teststr.freeBuffer();
    }
@@ -775,14 +748,6 @@ CONSOLE_COMMAND(mn_testfont, 0)
 
    testfont = font;   
    MN_PushWidget(&fonttest_widget);
-}
-
-
-void MN_AddMiscCommands(void)
-{
-   C_AddCommand(credits);
-   C_AddCommand(help);
-   C_AddCommand(mn_testfont);
 }
 
 // EOF

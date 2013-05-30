@@ -308,7 +308,7 @@ static vec3_t bytedirs[NUMVERTEXNORMALS] =
 //
 
 static particle_t *JitterParticle(int ttl);
-static void P_RunEffect(Mobj *actor, int effects);
+static void P_RunEffect(Mobj *actor, unsigned int effects);
 static void P_FlyEffect(Mobj *actor);
 static void P_BFGEffect(Mobj *actor);
 static void P_DripEffect(Mobj *actor);
@@ -325,12 +325,10 @@ static void P_BFGExplosion(Mobj *actor);
 //
 static void P_GenVelocities(void)
 {
-   int i;
+   int i, j;
 
-   for(i = 0; i < NUMVERTEXNORMALS*3; ++i)
-   {
-      avelocities[0][i] = M_Random() * 0.01f;
-   }
+   for(i = 0; i < NUMVERTEXNORMALS; ++i) for(j = 0; j < 3; ++j)
+      avelocities[i][j] = M_Random() * 0.01f;
 }
 
 void P_InitParticleEffects(void)
@@ -584,7 +582,7 @@ static void MakeFountain(Mobj *actor, byte color1, byte color2)
    }
 }
 
-static void P_RunEffect(Mobj *actor, int effects)
+static void P_RunEffect(Mobj *actor, unsigned int effects)
 {
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
    particle_t *particle;
@@ -690,7 +688,7 @@ static void P_RunEffect(Mobj *actor, int effects)
          &black,  &grey3,
          &grey4,  &white
       };
-      int color = (effects & FX_FOUNTAINMASK) >> 15;
+      unsigned int color = (effects & FX_FOUNTAINMASK) >> 15;
       MakeFountain(actor, *fountainColors[color], *fountainColors[color+1]);
    }
 
@@ -1440,7 +1438,7 @@ static void P_BFGExplosion(Mobj *actor)
 }
 
 // Generate console variables for the enabled flags on each event
-void P_AddEventVars(void)
+void P_AddEventVars()
 {
    int i;
 
@@ -1465,7 +1463,7 @@ void P_AddEventVars(void)
       command->handler = NULL;
       command->netcmd = 0;
 
-      (C_AddCommand)(command);
+      C_AddCommand(command);
    }
 }
 

@@ -33,14 +33,17 @@
 #include "p_portal.h"
 #include "p_slopes.h"
 #include "r_data.h"
+#include "r_draw.h"
 #include "r_main.h"
 #include "r_pcheck.h"
 #include "r_plane.h"
 #include "r_dynseg.h"
+#include "r_dynabsp.h"
 #include "r_portal.h"
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 
 drawseg_t *ds_p;
 
@@ -74,7 +77,7 @@ void R_ClearDrawSegs(void)
 // see, currently the code has to clip segs to the screen manually, and
 // then clip them based on solid segs. This could be reduced to a single
 // clip based on solidsegs because the first solidseg is from MININT, -1
-// to viewwidth, MAXINT
+// to viewwindow.width, MAXINT
 
 typedef struct cliprange_s
 {
@@ -98,15 +101,25 @@ typedef struct cliprange_s
 // have anything to do with visplanes, but it had everything to do with these
 // clip posts.
 
-#define MAXSEGS (MAX_SCREENWIDTH/2+1)   /* killough 1/11/98, 2/8/98 */
+#define MAXSEGS (w/2+1)   /* killough 1/11/98, 2/8/98 */
 
 // newend is one past the last valid seg
 static cliprange_t *newend;
-static cliprange_t solidsegs[MAXSEGS];
+static cliprange_t *solidsegs;
 
 // addend is one past the last valid added seg.
-static cliprange_t addedsegs[MAXSEGS];
-static cliprange_t *addend = addedsegs;
+static cliprange_t *addedsegs;
+static cliprange_t *addend;
+
+VALLOCATION(solidsegs)
+{
+   cliprange_t *buf = 
+      ecalloctag(cliprange_t *, MAXSEGS*2, sizeof(cliprange_t), PU_VALLOC, NULL);
+
+   solidsegs = buf;
+   addedsegs = buf + MAXSEGS;
+   addend = addedsegs;
+}
 
 
 static void R_AddSolidSeg(int x1, int x2)
@@ -173,7 +186,7 @@ void R_MarkSolidSeg(int x1, int x2)
    addend++;
 }
 
-static void R_AddMarkedSegs(void)
+static void R_AddMarkedSegs()
 {
    cliprange_t *r;
 
@@ -329,17 +342,17 @@ static void R_ClipPassWallSegment(int x1, int x2)
 //
 // R_ClearClipSegs
 //
-void R_ClearClipSegs(void)
+void R_ClearClipSegs()
 {
    solidsegs[0].first = D_MININT + 1;
    solidsegs[0].last = -1;
-   solidsegs[1].first = viewwidth;
+   solidsegs[1].first = viewwindow.width;
    solidsegs[1].last = D_MAXINT - 1;
    newend = solidsegs+2;
    addend = addedsegs;
 
    // haleyjd 09/22/07: must clear seg and segclip structures
-   memset(&seg, 0, sizeof(cb_seg_t));
+   memset(&seg,     0, sizeof(cb_seg_t));
    memset(&segclip, 0, sizeof(cb_seg_t));
 }
 
@@ -382,7 +395,7 @@ bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
          ++i;
       }
       
-      if(i == viewwidth)
+      if(i == viewwindow.width)
          goto endopen;
 
       // set the solidsegs
@@ -671,7 +684,12 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 // to be clipped. This is done so visplanes will still be rendered 
 // fully.
 
-static float slopemark[MAX_SCREENWIDTH];
+static float *slopemark;
+
+VALLOCATION(slopemark)
+{
+   slopemark = ecalloctag(float *, w, sizeof(float), PU_VALLOC, NULL);
+}
 
 void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 {
@@ -1938,7 +1956,7 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    // SoM: Moved this to before the "does not cross a pixel" check to fix 
    // another slime trail
    if(sx1 > 0) sx1--;
-   if(sx2 < viewwidth - 1) sx2++;
+   if(sx2 < viewwindow.width - 1) sx2++;
 
    // SoM: Removed the "does not cross a pixel" test
 
@@ -1952,107 +1970,54 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    return true;
 }
 
-static int numpolys;         // number of polyobjects in current subsector
-static int num_po_ptrs;      // number of polyobject pointers allocated
-static rpolyobj_t **po_ptrs; // temp ptr array to sort polyobject pointers
-
 //
-// R_PolyobjCompare
+// R_RenderPolyNode
 //
-// Callback for qsort that compares the z distance of two polyobjects.
-// Returns the difference such that the closer polyobject will be
-// sorted first.
+// Recurse through a polynode mini-BSP
 //
-static int R_PolyobjCompare(const void *p1, const void *p2)
+static void R_RenderPolyNode(rpolynode_t *node)
 {
-   const rpolyobj_t *po1 = *(rpolyobj_t **)p1;
-   const rpolyobj_t *po2 = *(rpolyobj_t **)p2;
-
-   return po1->zdist - po2->zdist;
-}
-
-//
-// R_SortPolyObjects
-//
-// haleyjd 03/03/06: Here's the REAL meat of Eternity's polyobject system.
-// Hexen just figured this was impossible, but as mentioned in polyobj.c,
-// it is perfectly doable within the confines of the BSP tree. Polyobjects
-// must be sorted to draw in DOOM's front-to-back order within individual
-// subsectors. This is a modified version of R_SortVisSprites.
-//
-static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
-{
-   int i = 0;
-
-   // haleyjd 12/09/12: The original algorithm held over from pre-dynasegs
-   // polyobjects of comparing the centerpoint of each polyobject is totally
-   // insufficient. For now, we compare the center of each fragment instead. 
-   // Eventually this will be replaced with BSP tree traversal.
-   while(list)
+   while(node)
    {
-      rpolyobj_t *rpo = list->dllObject;
+      int side = R_PointOnDynaSegSide(node->partition, view.x, view.y);
+      
+      // render frontspace
+      R_RenderPolyNode(node->children[side]);
 
-      rpo->zdist = R_PointToDist2(viewx, viewy, rpo->cx, rpo->cy);
-      po_ptrs[i++] = rpo;
-      list = list->dllNext;
+      // render partition seg
+      R_AddLine(&(node->partition->seg), true);
+
+      // continue to render backspace
+      node = node->children[side^1];
    }
-   
-   // the polyobjects are NOT in any particular order, so use qsort
-   qsort(po_ptrs, numpolys, sizeof(rpolyobj_t *), R_PolyobjCompare);
 }
 
 //
 // R_AddDynaSegs
 //
 // haleyjd: Adds dynamic segs contained in all of the rpolyobj_t fragments
-// contained inside the given subsector, after z-sorting the polyobject
-// fragments if necessary. This is the ultimate heart of the polyobject
-// code.
+// contained inside the given subsector into a mini-BSP tree and then 
+// renders the BSP. BSPs are only recomputed when polyobject fragments
+// move into or out of the subsector. This is the ultimate heart of the 
+// polyobject code.
 //
-// See r_dynseg.c to see how dynasegs get attached to a subsector in the
+// See r_dynseg.cpp to see how dynasegs get attached to a subsector in the
 // first place :)
+//
+// See r_dynabsp.cpp for rpolybsp generation.
 //
 static void R_AddDynaSegs(subsector_t *sub)
 {
-   DLListItem<rpolyobj_t> *link = sub->polyList->dllNext;
-   int i;
+   bool needbsp = (!sub->bsp || sub->bsp->dirty);
 
-   numpolys = 1; // we know there is at least one
-
-   // count polyobject fragments
-   while(link)
+   if(needbsp)
    {
-      ++numpolys;
-      link = link->dllNext;
+      if(sub->bsp)
+         R_FreeDynaBSP(sub->bsp);
+      sub->bsp = R_BuildDynaBSP(sub);
    }
-
-   // allocate twice the number needed to minimize allocations
-   if(num_po_ptrs < numpolys*2)
-   {
-      // use free instead of realloc since faster (thanks Lee ^_^)
-      efree(po_ptrs);
-      num_po_ptrs = numpolys*2;
-      po_ptrs = emalloc(rpolyobj_t **, num_po_ptrs * sizeof(*po_ptrs));
-   }
-
-   // sort polyobjects if necessary
-   if(numpolys > 1)
-      R_SortPolyObjects(sub->polyList);
-   else
-      po_ptrs[0] = sub->polyList->dllObject;
-
-   // render polyobject fragments
-   for(i = 0; i < numpolys; ++i)
-   {
-      dynaseg_t *ds = po_ptrs[i]->dynaSegs;
-
-      while(ds)
-      {
-         R_AddLine(&ds->seg, true);
-
-         ds = ds->subnext;
-      }
-   }
+   if(sub->bsp)
+      R_RenderPolyNode(sub->bsp->root);
 }
 
 //

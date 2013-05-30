@@ -58,6 +58,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"
+#include "dstrings.h"
 #include "e_lib.h"
 #include "e_hash.h"
 #include "e_sound.h"
@@ -75,6 +76,9 @@
 #include "sounds.h"
 #include "w_levels.h"
 #include "w_wad.h"
+
+// need wad iterators
+#include "w_iterator.h"
 
 extern char gamemapname[9];
 
@@ -201,19 +205,6 @@ typedef struct textvals_s
    int defaultval;
 } textvals_t;
 
-static const char *ltstrs[] =
-{
-   "doom",
-   "heretic",
-};
-
-static textvals_t levelTypeVals =
-{
-   ltstrs,
-   2,
-   0
-};
-
 static const char *finaleTypeStrs[] =
 {
    "text",
@@ -246,10 +237,6 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   lumpinfo_t  *lump;
-   int glumpnum;
-
    // set all the level defaults
    P_ClearLevelVars();
 
@@ -277,18 +264,14 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    foundGlobalMap = false;
 
    // run down the hash chain for EMAPINFO
-   lump = W_GetLumpNameChain("EMAPINFO");
-   
-   for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
+   WadChainIterator wci(wGlobalDir, "EMAPINFO");
+   for(wci.begin(); wci.current(); wci.next())
    {
-      lump = lumpinfo[glumpnum];
-
-      if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
-         lump->li_namespace == lumpinfo_t::ns_global)
+      if(wci.testLump(lumpinfo_t::ns_global))
       {
-         // reset the parser state         
+         // reset the parser state
          readtype = RT_OTHER;
-         P_ParseLevelInfo(&wGlobalDir, glumpnum, PU_LEVEL); // FIXME
+         P_ParseLevelInfo(&wGlobalDir, (*wci)->selfindex, PU_LEVEL); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
@@ -441,7 +424,6 @@ static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *inf
    LI_COPY(NEXTLEVELPIC,     nextLevelPic);
    LI_COPY(NEXTSECRETPIC,    nextSecretPic);
    LI_COPY(SCRIPTLUMP,       scriptLump);
-   LI_COPY(LEVELTYPE,        levelType);
    LI_COPY(HASLIGHTNING,     hasLightning);
    LI_COPY(MUSICNAME,        musicName);
    LI_COPY(NEXTLEVEL,        nextLevel);
@@ -488,28 +470,20 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 //
 void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t **lumpinfo = dir->getLumpInfo();
-   lumpinfo_t  *lump;
-   int glumpnum;
-
    // if any prototypes exist, delete them
    if(numPrototypes)
       P_clearLevelInfoPrototypes();
 
    limode = LI_MODE_GLOBAL;
 
-   lump = dir->getLumpNameChain("EMAPINFO");
-
-   for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
+   WadChainIterator wci(*dir, "EMAPINFO");
+   for(wci.begin(); wci.current(); wci.next())
    {
-      lump = lumpinfo[glumpnum];
-
-      if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
-         lump->li_namespace == lumpinfo_t::ns_global)
+      if(wci.testLump(lumpinfo_t::ns_global))
       {
          // reset parser state
          readtype = RT_OTHER;
-         P_ParseLevelInfo(dir, glumpnum, PU_STATIC);
+         P_ParseLevelInfo(dir, (*wci)->selfindex, PU_STATIC);
       }
    }
 }
@@ -579,7 +553,6 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
 {
    unsigned int len;
    const char *label = NULL;
-   LevelInfoProto_t *curproto = NULL;
 
    line->replace("\t\r\n", ' '); // erase any control characters
    line->toLower();              // make everything lowercase
@@ -722,7 +695,6 @@ levelvar_t levelvars[]=
    LI_STRING("levelpicnext",    NEXTLEVELPIC,     nextLevelPic),
    LI_STRING("levelpicsecret",  NEXTSECRETPIC,    nextSecretPic),
    LI_STRING("levelscript",     SCRIPTLUMP,       scriptLump),
-   LI_STRNUM("leveltype",       LEVELTYPE,        levelType,        levelTypeVals),
    LI_BOOLNF("lightning",       HASLIGHTNING,     hasLightning),
    LI_STRING("music",           MUSICNAME,        musicName),
    LI_STRING("nextlevel",       NEXTLEVEL,        nextLevel),
@@ -846,7 +818,7 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
+               *(unsigned int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
             }
             break;
          default:
@@ -903,12 +875,39 @@ static void SynthLevelName(SynthType_e levelNameType)
 }
 
 //
+// P_BFGNameHacks
+//
+// haleyjd 04/29/13: This will run once when we're in pack_disk, 
+// and will check to see if HUSTR 31 or 32 have been DEH/BEX modified. 
+// If so they're left alone. Otherwise, we replace those strings in the
+// BEX string table with different values.
+//
+static void P_BFGNameHacks()
+{
+   static bool firsttime = true;
+
+   // Only applies to DOOM II BFG Edition
+   if(GameModeInfo->id != commercial ||
+      GameModeInfo->missionInfo->id != pack_disk)
+      return;
+
+   if(firsttime)
+   {
+      firsttime = false;
+      if(!DEH_StringChanged("HUSTR_31"))
+         DEH_ReplaceString("HUSTR_31", BFGHUSTR_31);
+      if(!DEH_StringChanged("HUSTR_32"))
+         DEH_ReplaceString("HUSTR_32", BFGHUSTR_32);
+   }
+}
+
+//
 // P_InfoDefaultLevelName
 //
 // Figures out the name to use for this map.
 // Moved here from hu_stuff.c
 //
-static void P_InfoDefaultLevelName(void)
+static void P_InfoDefaultLevelName()
 {
    const char    *bexname      = NULL;
    bool           deh_modified = false;
@@ -923,6 +922,9 @@ static void P_InfoDefaultLevelName(void)
       LevelInfo.levelName = curmetainfo->levelname;
       return;
    }
+
+   // haleyjd 04/29/13: a couple hacks for BFG Edition authenticity
+   P_BFGNameHacks();
 
    // haleyjd 11/03/12: in pack_disk, we have 33 map names.
    // This is also allowed for subsitution through BEX mnemonic HUSTR_33.
@@ -1380,15 +1382,7 @@ static void P_ClearLevelVars(void)
    curmetainfo = P_GetMetaInfoForLevel(gamemap);
 
    // set default level type depending on game mode
-   switch(GameModeInfo->type)
-   {
-   case Game_DOOM:
-      LevelInfo.levelType = LI_TYPE_DOOM;
-      break;
-   case Game_Heretic:
-      LevelInfo.levelType = LI_TYPE_HERETIC;
-      break;
-   }
+   LevelInfo.levelType = GameModeInfo->levelType;
 
    LevelInfo.levelPic        = NULL;
    LevelInfo.nextLevelPic    = NULL;

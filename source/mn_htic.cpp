@@ -44,8 +44,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-extern vfont_t *menu_font_big;
-
 extern int start_episode;
 extern char *start_mapname;
 
@@ -64,32 +62,31 @@ int HSkullLumpNums[NUM_HSKULL];
 
 // Main Heretic Menu
 
-static void MN_HMainMenuDrawer(void);
+static void MN_HMainMenuDrawer();
 
 static menuitem_t mn_hmain_items[] =
 {
    // 'heretic' title and skulls drawn by the drawer
    
-   {it_runcmd, "new game",  "mn_hnewgame", NULL, MENUITEM_BIGFONT },
-   {it_runcmd, "options",   "mn_options",  NULL, MENUITEM_BIGFONT },
-   {it_runcmd, "load game", "mn_loadgame", NULL, MENUITEM_BIGFONT },
-   {it_runcmd, "save game", "mn_savegame", NULL, MENUITEM_BIGFONT },
-   {it_runcmd, "end game",  "mn_endgame",  NULL, MENUITEM_BIGFONT },
-   {it_runcmd, "quit game", "mn_quit",     NULL, MENUITEM_BIGFONT },
+   {it_runcmd, "new game",  "mn_hnewgame", NULL },
+   {it_runcmd, "options",   "mn_options",  NULL },
+   {it_runcmd, "load game", "mn_loadgame", NULL },
+   {it_runcmd, "save game", "mn_savegame", NULL },
+   {it_runcmd, "quit game", "mn_quit",     NULL },
    {it_end}
 };
 
 menu_t menu_hmain =
 {
-   mn_hmain_items,        // menu items
-   NULL, NULL, NULL,      // pages
-   100, 56,               // x, y offsets
-   0,                     // start with 'new game' selected
-   mf_skullmenu,          // a skull menu
-   MN_HMainMenuDrawer     // special drawer
+   mn_hmain_items,            // menu items
+   NULL, NULL, NULL,          // pages
+   100, 56,                   // x, y offsets
+   0,                         // start with 'new game' selected
+   mf_skullmenu | mf_bigfont, // a skull menu
+   MN_HMainMenuDrawer         // special drawer
 };
 
-void MN_HInitSkull(void)
+void MN_HInitSkull()
 {
    int i;
    char tempstr[10];
@@ -101,7 +98,7 @@ void MN_HInitSkull(void)
    }
 }
 
-static void MN_HMainMenuDrawer(void)
+static void MN_HMainMenuDrawer()
 {
    int skullIndex;
 
@@ -121,23 +118,23 @@ static void MN_HMainMenuDrawer(void)
 
 static menuitem_t mn_hepisode_items[] =
 {
-   {it_info,   "which episode?",       NULL,         NULL, MENUITEM_BIGFONT},
+   {it_info,   "which episode?",       NULL,         NULL },
    {it_gap},
-   {it_runcmd, "city of the damned",   "mn_hepis 1", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "hell's maw",           "mn_hepis 2", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "the dome of d'sparil", "mn_hepis 3", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "the ossuary",          "mn_hepis 4", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "the stagnant demesne", "mn_hepis 5", NULL, MENUITEM_BIGFONT},
+   {it_runcmd, "city of the damned",   "mn_hepis 1", NULL },
+   {it_runcmd, "hell's maw",           "mn_hepis 2", NULL },
+   {it_runcmd, "the dome of d'sparil", "mn_hepis 3", NULL },
+   {it_runcmd, "the ossuary",          "mn_hepis 4", NULL },
+   {it_runcmd, "the stagnant demesne", "mn_hepis 5", NULL },
    {it_end}
 };
 
 menu_t menu_hepisode =
 {
-   mn_hepisode_items,    // menu items
-   NULL, NULL, NULL,     // pages
-   38, 26,               // x,y offsets
-   2,                    // starting item: city of the damned
-   mf_skullmenu,         // is a skull menu
+   mn_hepisode_items,         // menu items
+   NULL, NULL, NULL,          // pages
+   38, 26,                    // x,y offsets
+   2,                         // starting item: city of the damned
+   mf_skullmenu | mf_bigfont, // is a skull menu
 };
 
 CONSOLE_COMMAND(mn_hnewgame, 0)
@@ -168,23 +165,23 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
 
 static menuitem_t mn_hnewgame_items[] =
 {
-   {it_info,   "choose skill level",          NULL,        NULL, MENUITEM_BIGFONT},
+   {it_info,   "choose skill level",          NULL,        NULL },
    {it_gap},
-   {it_runcmd, "thou needeth a wet nurse",    "newgame 0", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "yellowbellies-r-us",          "newgame 1", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "bringest them oneth",         "newgame 2", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "thou art a smite-meister",    "newgame 3", NULL, MENUITEM_BIGFONT},
-   {it_runcmd, "black plague possesses thee", "newgame 4", NULL, MENUITEM_BIGFONT},
+   {it_runcmd, "thou needeth a wet nurse",    "newgame 0", NULL },
+   {it_runcmd, "yellowbellies-r-us",          "newgame 1", NULL },
+   {it_runcmd, "bringest them oneth",         "newgame 2", NULL },
+   {it_runcmd, "thou art a smite-meister",    "newgame 3", NULL },
+   {it_runcmd, "black plague possesses thee", "newgame 4", NULL },
    {it_end}
 };
 
 menu_t menu_hnewgame =
 {
-   mn_hnewgame_items,    // menu items
-   NULL, NULL, NULL,     // pages
-   38, 26,               // x,y offsets
-   4,                    // starting item: bringest them oneth
-   mf_skullmenu,         // is a skull menu
+   mn_hnewgame_items,         // menu items
+   NULL, NULL, NULL,          // pages
+   38, 26,                    // x,y offsets
+   4,                         // starting item: bringest them oneth
+   mf_skullmenu | mf_bigfont, // is a skull menu
 };
 
 CONSOLE_COMMAND(mn_hepis, cf_notnet)
@@ -226,7 +223,7 @@ static menuitem_t mn_hsavegame_items[] =
    {it_end}
 };
 
-static void MN_HSaveDrawer(void);
+static void MN_HSaveDrawer();
 
 #define HSAVEGAME_BOX_X 70
 #define HSAVEGAME_BOX_Y 30
@@ -245,7 +242,7 @@ menu_t menu_hsavegame =
    11                             // gap size override
 };
 
-static void MN_HSaveDrawer(void)
+static void MN_HSaveDrawer()
 {
    int x, y, i;
    const char *title = "save game";
@@ -285,7 +282,7 @@ static menuitem_t mn_hloadgame_items[] =
    {it_end}
 };
 
-static void MN_HLoadDrawer(void);
+static void MN_HLoadDrawer();
 
 #define HLOADGAME_BOX_X 70
 #define HLOADGAME_BOX_Y 30
@@ -308,7 +305,7 @@ menu_t menu_hloadgame =
 
 extern char *savegamenames[];
 
-static void MN_HLoadDrawer(void)
+static void MN_HLoadDrawer()
 {
    int x, y, i;
    const char *title = "load game";
@@ -337,12 +334,6 @@ static void MN_HLoadDrawer(void)
       menu_hloadgame.menuitems[y].description =
          savegamenames[i] ? savegamenames[i] : emptystr;
    }
-}
-
-void MN_AddHMenus(void)
-{
-   C_AddCommand(mn_hnewgame);
-   C_AddCommand(mn_hepis);
 }
 
 // EOF

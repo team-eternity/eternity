@@ -36,10 +36,31 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 
 static portal_t *portals = NULL, *last = NULL;
 static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
+
+//
+// VALLOCATION(portals)
+//
+// haleyjd 04/30/13: when the resolution changes, all portals need notification.
+//
+VALLOCATION(portals)
+{
+   for(portal_t *p = portals; p; p = p->next)
+   {
+      planehash_t *hash;
+
+      // clear portal overlay visplane hash tables
+      if((hash = p->poverlay))
+      {
+         for(int i = 0; i < hash->chaincount; i++)
+            hash->chains[i] = NULL;
+      }
+   }
+}
 
 // This flag is set when a portal is being rendered. This flag is checked in 
 // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
@@ -60,7 +81,7 @@ static void R_ClearPortalWindow(pwindow_t *window)
 {
    int i;
    window->maxx = 0;
-   window->minx = viewwidth - 1;
+   window->minx = viewwindow.width - 1;
 
    for(i = 0; i < MAX_SCREENWIDTH; i++)
    {
@@ -247,7 +268,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 //
 // Function to internally create a new portal.
 //
-static portal_t *R_CreatePortal(void)
+static portal_t *R_CreatePortal()
 {
    portal_t *ret;
 
@@ -655,8 +676,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
       for(i = 0; i < MAX_SCREENWIDTH; ++i)
       {
          if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewheight || window->top[i] < -1 
-            || window->top[i] > viewheight))
+            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+            || window->top[i] > viewwindow.height))
          {
             I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
                     "information:\n"
@@ -739,9 +760,9 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 //
 // R_RenderAnchoredPortal
 //
-extern byte *ylookup[MAX_SCREENWIDTH]; 
-extern int  columnofs[MAX_SCREENHEIGHT];
-extern int showtainted;
+extern byte **ylookup;
+extern int   *columnofs;
+extern int    showtainted;
 
 
 static void R_ShowTainted(pwindow_t *window)
@@ -806,8 +827,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       for(i = 0; i < MAX_SCREENWIDTH; i++)
       {
          if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewheight || window->top[i] < -1 
-            || window->top[i] > viewheight))
+            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+            || window->top[i] > viewwindow.height))
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 
@@ -902,8 +923,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       for(i = 0; i < MAX_SCREENWIDTH; i++)
       {
          if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewheight || window->top[i] < -1 
-            || window->top[i] > viewheight))
+            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+            || window->top[i] > viewwindow.height))
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 

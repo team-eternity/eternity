@@ -32,14 +32,12 @@
 #include "doomstat.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
-#define MAXHEIGHT MAX_SCREENHEIGHT
-
-extern int columnofs[MAXWIDTH]; 
+extern int *columnofs; 
 
 // SoM: OPTIMIZE for ANYRES
 typedef enum
@@ -54,7 +52,6 @@ typedef enum
 
 static int    temp_x = 0;
 static int    tempyl[4], tempyh[4];
-static byte   tempbuf[MAX_SCREENHEIGHT * 4];
 static int    startx = 0;
 static int    temptype = COL_NONE;
 static int    commontop, commonbot;
@@ -65,6 +62,12 @@ static unsigned int *temp_fg2rgb;
 static unsigned int *temp_bg2rgb;
 // SoM 7-28-04: Fix the fuzz problem.
 static byte   *tempfuzzmap;
+static byte   *tempbuf;
+
+VALLOCATION(tempbuf)
+{
+   tempbuf = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, NULL);
+}
 
 //
 // Do-nothing functions that will just return if R_FlushColumns tries to flush 
@@ -1143,8 +1146,8 @@ static void R_QDrawFuzzColumn(void)
       column.y1 = 1;
    
    // .. and high.
-   if(column.y2 == viewheight - 1) 
-      column.y2 = viewheight - 2; 
+   if(column.y2 == viewwindow.height - 1) 
+      column.y2 = viewwindow.height - 2; 
    
    // Zero length?
    if((column.y2 - column.y1) < 0) 

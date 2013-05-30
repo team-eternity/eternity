@@ -354,16 +354,16 @@ struct mobjinfo_t
    int damage;          // If this is a missile, how much does it hurt?
    int activesound;     // What sound it makes wandering around, once
                         //  in a while.  Chance is 3/256 it will.
-   int flags;           // Bit masks for lots of things.  See p_mobj.h
-   int flags2;          // More bit masks for lots of other things -- haleyjd
-   int flags3;          // haleyjd 11/03/02: flags3
-   int flags4;          // haleyjd 09/13/09: flags4
+   unsigned int flags;  // Bit masks for lots of things.  See p_mobj.h
+   unsigned int flags2; // More bit masks for lots of other things -- haleyjd
+   unsigned int flags3; // haleyjd 11/03/02: flags3
+   unsigned int flags4; // haleyjd 09/13/09: flags4
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.
    int translucency;    // haleyjd 09/01/02: zdoom-style translucency
    int bloodcolor;      // haleyjd 05/08/03: particle blood color
-   int particlefx;      // haleyjd 07/13/03: particle effects
+   unsigned int particlefx; // haleyjd 07/13/03: particle effects
    int droptype;        // haleyjd 07/13/03: item drop type
    int mod;             // haleyjd 07/13/03: method of death
    char *obituary;      // haleyjd 07/13/03: normal obituary

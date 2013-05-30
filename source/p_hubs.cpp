@@ -251,8 +251,10 @@ void P_SavePlayerPosition(player_t *player, int sectag)
    save_yoffset = player->mo->y - sec->soundorg.y;
    
    // save mobj so we can restore various bits of data
-   
+   // haleyjd 02/04/13: not legit for C++; must replace if rehabilitated
+#if 0   
    memcpy(&save_mobj, player->mo, sizeof(Mobj));
+#endif
 }
 
 // restore the players position -- sector must be the same shape

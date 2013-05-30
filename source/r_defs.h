@@ -73,7 +73,7 @@ struct vertex_t
    float   fx, fy;
 
    struct vertex_t *dynanext;
-   bool dynafree;          // if true, is on free list
+   int refcount;
 };
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
@@ -161,9 +161,9 @@ struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int16_t special;
-   int     args[NUMLINEARGS];
-   int     actionflags;
+   int special;
+   int args[NUMLINEARGS];
+   int actionflags;
 };
 
 //
@@ -289,7 +289,7 @@ struct sector_t
    int damage;      // if > 0, sector is damaging
    int damagemask;  // damage is done when !(leveltime % mask)
    int damagemod;   // damage method to use
-   int damageflags; // special damage behaviors
+   unsigned int damageflags; // special damage behaviors
 
    // SoM 5/10/09: Happy birthday to me. Err, Slopes!
    pslope_t *f_slope;
@@ -343,7 +343,7 @@ struct line_t
    vertex_t *v1, *v2;      // Vertices, from v1 to v2.
    fixed_t  dx, dy;        // Precalculated v2 - v1 for side checking.
    int16_t  flags;         // Animation related.
-   int16_t  special;         
+   int      special;         
    int      tag;           // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
@@ -367,12 +367,13 @@ struct line_t
    float nx, ny;
 
    // haleyjd 02/26/05: ExtraData fields
-   int   extflags;          // activation flags for param specials
+   unsigned int extflags;   // activation flags for param specials
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
 };
 
 struct rpolyobj_t;
+struct rpolybsp_t;
 
 //
 // A SubSector.
@@ -389,6 +390,7 @@ struct subsector_t
   int    numlines, firstline;
 
   DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
+  rpolybsp_t *bsp;                  // haleyjd 05/05/13: sub-BSP tree
 };
 
 // phares 3/14/98

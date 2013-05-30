@@ -62,22 +62,51 @@ public:
    {
       DLListItem<T> *next = *head;
 
-      if((this->dllNext = next))
-         next->dllPrev = &this->dllNext;
-      this->dllPrev = head;
+      if((dllNext = next))
+         next->dllPrev = &dllNext;
+      dllPrev = head;
       *head = this;
 
-      this->dllObject = parentObject; // set to object, which is generally distinct
+      dllObject = parentObject; // set to object, which is generally distinct
    }
 
    inline void remove()
    {
-      DLListItem<T> **prev = this->dllPrev;
-      DLListItem<T>  *next = this->dllNext;
+      DLListItem<T> **prev = dllPrev;
+      DLListItem<T>  *next = dllNext;
 
-      if((*prev = next))
+      // haleyjd 05/07/13: safety #1: only if prev is non-null
+      if(prev && (*prev = next))
          next->dllPrev = prev;
+
+      // haleyjd 05/07/13: safety #2: clear links.
+      dllPrev = NULL;
+      dllNext = NULL;
    }
+
+   inline    operator T * () const { return dllObject; }
+   inline T *operator ->  () const { return dllObject; }
+
+   /*
+   inline T &operator *   () const { return *dllObject; }
+   */
+};
+
+//
+// DLList
+//
+// haleyjd 05/07/13: Added a list type which makes use of DLListItem more
+// regulated. Use is strictly optional. Provide the type and a member to
+// pointer to the DLListItem field in the class the list will use for links.
+//
+template<typename T, DLListItem<T> T::* link> class DLList
+{
+public:
+   DLListItem<T> *head;
+   inline void insert(T *object) { (object->*link).insert(object, &head); }
+   inline void remove(T *object) { (object->*link).remove();              }
+   inline void insert(T &object) { insert(&object);                       }
+   inline void remove(T &object) { remove(&object);                       }
 };
 
 #endif

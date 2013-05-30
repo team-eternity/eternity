@@ -68,8 +68,10 @@ public:
       : Super(), references(0), removed(false), ordinal(0), prev(NULL),
         next(NULL), cprev(NULL), cnext(NULL)
    {
-      ChangeTag(PU_LEVEL);
    }
+
+   // operator new, overriding ZoneObject::operator new (size_t)
+   void *operator new (size_t size) { return ZoneObject::operator new(size, PU_LEVEL); }
 
    // Static functions
    static void InitThinkers();
@@ -124,7 +126,7 @@ public:
 //
 template<typename T> inline T thinker_cast(Thinker *th)
 {
-   typedef typename eeprestd::remove_pointer<T>::type base_type;
+   typedef typename std::remove_pointer<T>::type base_type;
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(th) : NULL;

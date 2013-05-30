@@ -38,6 +38,7 @@
 #include "doomstat.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -130,6 +131,8 @@ fixed_t   bmaporgx, bmaporgy;     // origin of block map
 
 // Blockmap link rings
 mobjblocklink_t           **blocklinks;
+byte     *portalmap;              // haleyjd: for portals
+
 //
 // REJECT
 // For fast sight rejection.
@@ -149,9 +152,6 @@ size_t     num_deathmatchstarts;   // killough
 
 mapthing_t *deathmatch_p;
 mapthing_t playerstarts[MAXPLAYERS];
-
-// haleyjd 12/28/08: made module-global
-static int mapformat;
 
 // haleyjd 06/14/10: level wad directory
 static WadDirectory *setupwad;
@@ -401,6 +401,13 @@ void P_LoadSegs(int lump)
       ldef = &lines[linedef];
       li->linedef = ldef;
       side = SwapShort(ml->side);
+
+      if(side < 0 || side > 1)
+      {
+         level_error = "Seg line side number out of range";
+         return;
+      }
+
       li->sidedef = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
@@ -533,7 +540,7 @@ void P_LoadSectors(int lumpnum)
 
       // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
       //         12/31/08: convert BOOM generalized damage
-      if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
       {
          int damagetype;
 
@@ -1173,7 +1180,7 @@ void P_LoadLineDefs(int lump)
       line_t *ld = lines + i;
 
       ld->flags   = SwapShort(mld->flags);
-      ld->special = SwapShort(mld->special);
+      ld->special = (int)(SwapShort(mld->special)) & 0xffff;
       ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
@@ -1187,13 +1194,15 @@ void P_LoadLineDefs(int lump)
       // haleyjd 03/28/11: do shared loading logic in one place
       P_InitLineDef(ld);
 
+      // haleyjd 02/03/13: get ExtraData static init binding
+      int edlinespec = EV_SpecialForStaticInit(EV_STATIC_EXTRADATA_LINEDEF);
+
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
-      if(ld->special == ED_LINE_SPECIAL)
+      if(edlinespec && ld->special == edlinespec)
          E_LoadLineDefExt(ld, true);
-      else if(E_IsParamSpecial(ld->special) || 
-              ld->special == POLYOBJ_START_LINE || 
-              ld->special == POLYOBJ_EXPLICIT_LINE)
+      else if(EV_IsParamLineSpec(ld->special) || 
+              EV_IsParamStaticInit(ld->special))
       {
          E_LoadLineDefExt(ld, false);
       }
@@ -1292,9 +1301,6 @@ void P_LoadHexenLineDefs(int lump)
       for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
          ld->args[argnum] = mld->args[argnum];
 
-      // Do Hexen special translation
-      P_ConvertHexenLineSpec(&(ld->special), ld->args);
-
       // Convert line flags after setting special?
       P_ConvertHexenLineFlags(ld);
 
@@ -1349,10 +1355,13 @@ void P_LoadLineDefs2(void)
       ld->frontsector = sides[ld->sidenum[0]].sector;
       ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
       
-      switch(ld->special)
+      // haleyjd 02/06/13: lookup static init
+      int staticFn = EV_StaticInitForSpecial(ld->special);
+
+      switch(staticFn)
       {                       // killough 4/11/98: handle special types
          int lump, j;
-      case 260:               // killough 4/11/98: translucent 2s textures
+      case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
          if(!ld->tag)                        // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
@@ -1364,6 +1373,9 @@ void P_LoadLineDefs2(void)
                   lines[j].tranlump = lump;
             }
          }
+         break;
+
+      default:
          break;
       }
    } // end for
@@ -1421,10 +1433,14 @@ void P_LoadSideDefs2(int lumpnum)
       // killough 4/4/98: allow sidedef texture names to be overloaded
       // killough 4/11/98: refined to allow colormaps to work as wall
       // textures if invalid as colormaps but valid as textures.
+      // haleyjd 02/06/13: look up static init function
 
-      switch(sd->special)
+      int staticFn = EV_StaticInitForSpecial(sd->special);
+
+      switch(staticFn)
       {
-      case 242:                  // variable colormap via 242 linedef
+      case EV_STATIC_TRANSFER_HEIGHTS: 
+         // variable colormap via 242 linedef
          if((cmap = R_ColormapNumForName(bottomtexture)) < 0)
             sd->bottomtexture = R_FindWall(bottomtexture);
          else
@@ -1448,7 +1464,8 @@ void P_LoadSideDefs2(int lumpnum)
          }
          break;
 
-      case 260: // killough 4/11/98: apply translucency to 2s normal texture
+      case EV_STATIC_TRANSLUCENT: 
+         // killough 4/11/98: apply translucency to 2s normal texture
          if(strncasecmp("TRANMAP", midtexture, 8))
          {
             sd->special = W_CheckNumForName(midtexture);
@@ -1804,14 +1821,18 @@ void P_LoadBlockMap(int lump)
 
    // clear out mobj chains
    count      = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = (mobjblocklink_t **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   blocklinks = ecalloctag(mobjblocklink_t **, 1, count, PU_LEVEL, NULL);
    blockmap   = blockmaplump + 4;
    
    P_InitMobjBlockLinks();
    
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = (DLListItem<polymaplink_t> **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   polyblocklinks = ecalloctag(DLListItem<polymaplink_t> **, 1, count, PU_LEVEL, NULL);
+
+   // haleyjd 05/17/13: setup portalmap
+   count = sizeof(*portalmap) * bmapwidth * bmapheight;
+   portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
 }
 
 
@@ -2381,7 +2402,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
 
    // determine map format; if invalid, abort
-   if((mapformat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
+   if((LevelInfo.mapFormat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
    {
       P_SetupLevelError("Not a valid level", mapname);
       return;
@@ -2420,7 +2441,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(mapformat)
+   switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
       P_LoadLineDefs(lumpnum + ML_LINEDEFS);
@@ -2449,6 +2470,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       CHECK_ERROR();
 
       P_LoadSegs(lumpnum + ML_SEGS);   
+
+      // possible error: malformed segs
+      CHECK_ERROR();
    }
 
    P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
@@ -2463,7 +2487,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    deathmatch_p = deathmatchstarts;
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(mapformat)
+   switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
       P_LoadThings(lumpnum + ML_THINGS);
@@ -2486,14 +2510,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    iquehead = iquetail = 0;
    
    // haleyjd 10/05/05: convert heretic specials
-   if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
       P_ConvertHereticSpecials();
    
    // set up world state
-   P_SpawnSpecials(mapformat);
+   P_SpawnSpecials();
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials(mapformat);
+   P_SpawnDeferredSpecials();
 
    // haleyjd
    P_InitLightning();
@@ -2516,7 +2540,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo
-   if(mapformat == LEVEL_FORMAT_HEXEN)
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
       acslumpnum = lumpnum + ML_BEHAVIOR;
    else if(LevelInfo.acsScriptLump)
       acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);

@@ -41,6 +41,7 @@
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
 #include "r_state.h"
+#include "v_alloc.h"
 #include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
@@ -71,18 +72,8 @@ cb_video_t video =
    FRACUNIT,
    1.0f, 1.0f, 1.0f, 1.0f, 
    false,
-   {NULL, NULL, NULL, NULL, NULL}
+   {NULL, NULL, NULL, NULL}
 };
-
-//
-// V_ResetMode
-//
-// Called after changing video mode
-//
-void V_ResetMode(void)
-{   
-   I_SetMode(0);
-}
 
 //=============================================================================
 //
@@ -123,7 +114,7 @@ void V_DrawBox(int x, int y, int w, int h)
    V_DrawPatchShadowed(j, i, &subscreen43, bgp[8], NULL, 65536);
 }
 
-void V_InitBox(void)
+void V_InitBox()
 {
    bgp[0] = PatchLoader::CacheName(wGlobalDir, "BOXUL", PU_STATIC);
    bgp[1] = PatchLoader::CacheName(wGlobalDir, "BOXUC", PU_STATIC);
@@ -148,7 +139,7 @@ static const char *loading_message;
 //
 // V_DrawLoading
 //
-void V_DrawLoading(void)
+void V_DrawLoading()
 {
    int x, y;
    int linelen;
@@ -214,7 +205,7 @@ void V_SetLoading(int total, const char *mess)
 //
 // V_LoadingIncrease
 //
-void V_LoadingIncrease(void)
+void V_LoadingIncrease()
 {
    loading_amount++;
    if(in_textmode)
@@ -260,13 +251,13 @@ int v_ticker = 0;
 static int history[FPS_HISTORY];
 int current_count = 0;
 
-void V_ClassicFPSDrawer(void);
-void V_TextFPSDrawer(void);
+void V_ClassicFPSDrawer();
+void V_TextFPSDrawer();
 
 //
 // V_FPSDrawer
 //
-void V_FPSDrawer(void)
+void V_FPSDrawer()
 {
    int i;
    int x,y;          // screen x,y
@@ -300,7 +291,7 @@ void V_FPSDrawer(void)
 //
 // V_FPSTicker
 //
-void V_FPSTicker(void)
+void V_FPSTicker()
 {
    static int lasttic;
    int thistic;
@@ -325,7 +316,7 @@ void V_FPSTicker(void)
 //
 // sf: classic fps ticker kept seperate
 //
-void V_ClassicFPSDrawer(void)
+void V_ClassicFPSDrawer()
 {
   static int lasttic;
   
@@ -355,7 +346,7 @@ void V_ClassicFPSDrawer(void)
 //
 // V_TextFPSDrawer
 //
-void V_TextFPSDrawer(void)
+void V_TextFPSDrawer()
 {
    static char fpsStr[16];
    static int  fhistory[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -430,7 +421,7 @@ static void V_initSubScreen43()
 //
 // V_InitScreenVBuffer
 //
-static void V_InitScreenVBuffer(void)
+static void V_InitScreenVBuffer()
 {
    if(vbscreenneedsfree)
    {
@@ -461,35 +452,28 @@ static void V_InitScreenVBuffer(void)
    V_initSubScreen43();
 }
 
-extern void I_SetPrimaryBuffer(void);
-extern void I_UnsetPrimaryBuffer(void);
-
 //
 // V_Init
 //
 // Allocates the 4 full screen buffers in low DOS memory
 // No return value
 //
-void V_Init(void)
+void V_Init()
 {
    static byte *s = NULL;
    
    int size = video.width * video.height;
 
-   // haleyjd 05/30/08: removed screens from zone heap
-   if(s)
-   {
-      Z_SysFree(s);
-      I_UnsetPrimaryBuffer();
-   }
+   // haleyjd 04/29/13: purge and reallocate all VAllocItem instances
+   VAllocItem::FreeAllocs();
+   VAllocItem::SetNewMode(video.width, video.height);
 
-   video.screens[4] =
-      (video.screens[3] =
-         (video.screens[2] =
-            (video.screens[1] = s = (byte *)(Z_SysCalloc(size, 4))) + size) + size) + size;
-   
-   // SoM: TODO: implement direct to SDL surface drawing.
-   I_SetPrimaryBuffer();
+   if(s)
+      efree(s);
+
+   video.screens[3] =
+      (video.screens[2] =
+         (video.screens[1] = s = (ecalloc(byte *, size, 3))) + size) + size;  
 
    R_SetupViewScaling();
    
@@ -545,7 +529,7 @@ void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 // Init
 //
 
-void V_InitMisc(void)
+void V_InitMisc()
 {
    V_InitBox();
 
@@ -564,10 +548,6 @@ void V_InitMisc(void)
 
 const char *str_ticker[] = { "off", "chart", "classic", "text" };
 VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
-
-CONSOLE_COMMAND(v_modelist, 0)
-{
-}
 
 CONSOLE_COMMAND(v_fontcolors, 0)
 {
@@ -641,14 +621,6 @@ CONSOLE_COMMAND(v_dumppatch, 0)
       fillcolor = 247;
 
    V_WritePatchAsPNG(lump, filename.constPtr(), static_cast<byte>(fillcolor));
-}
-
-void V_AddCommands(void)
-{
-   C_AddCommand(v_modelist);
-   C_AddCommand(v_fontcolors);
-   C_AddCommand(v_ticker);
-   C_AddCommand(v_dumppatch);
 }
 
 // EOF

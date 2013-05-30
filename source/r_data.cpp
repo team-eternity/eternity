@@ -48,6 +48,9 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+// Need wad iterators for colormaps
+#include "w_iterator.h"
+
 // SoM: This has moved to r_textur.c
 void R_LoadDoom1();
 
@@ -65,7 +68,7 @@ void R_LoadDoom1();
 void R_InitTextures(void);
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
-int         firstcolormaplump, lastcolormaplump;      // killough 4/17/98
+int         firstcolormaplump; // killough 4/17/98
 int         firstspritelump, lastspritelump, numspritelumps;
 
 // needed for pre-rendering
@@ -84,10 +87,13 @@ void R_InitSpriteLumps(void)
 {
    int i;
    patch_t *patch;
+
+   const WadDirectory::namespace_t &ns = 
+      wGlobalDir.getNamespace(lumpinfo_t::ns_sprites);
    
-   firstspritelump = W_GetNumForName("S_START") + 1;
-   lastspritelump = W_GetNumForName("S_END") - 1;
-   numspritelumps = lastspritelump - firstspritelump + 1;
+   firstspritelump = ns.firstLump;
+   numspritelumps  = ns.numLumps;
+   lastspritelump  = ns.firstLump + ns.numLumps - 1;
    
    // killough 4/9/98: make columnd offsets 32-bit;
    // clean up malloc-ing to use sizeof
@@ -124,19 +130,28 @@ void R_InitSpriteLumps(void)
 //
 // killough 4/4/98: Add support for C_START/C_END markers
 //
-void R_InitColormaps(void)
+void R_InitColormaps()
 {
-   int i;
+   const WadDirectory::namespace_t &ns =
+      wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
 
-   firstcolormaplump = W_GetNumForName("C_START");
-   lastcolormaplump  = W_GetNumForName("C_END");
-   numcolormaps      = lastcolormaplump - firstcolormaplump;
-   colormaps = (lighttable_t **)(Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0));
-   
-   colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
-   
-   for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum(i + firstcolormaplump, PU_RENDERER));
+   numcolormaps = ns.numLumps + 1;
+
+   // colormaps[0] is always the global COLORMAP lump
+   size_t numbytes = sizeof(*colormaps) * numcolormaps;
+   int    cmlump   = W_GetNumForName("COLORMAP");
+
+   colormaps = (lighttable_t **)(Z_Malloc(numbytes, PU_RENDERER, 0));
+   colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(cmlump, PU_RENDERER));
+
+   // load other colormaps from the colormaps namespace
+   int i = 1;
+   WadNamespaceIterator nsi(wGlobalDir, lumpinfo_t::ns_colormaps);
+  
+   for(nsi.begin(); nsi.current(); nsi.next(), i++)
+      colormaps[i] = (lighttable_t *)(wGlobalDir.cacheLumpNum((*nsi)->selfindex, PU_RENDERER));
+
+   firstcolormaplump = ns.firstLump;
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -170,7 +185,7 @@ int R_ColormapNumForName(const char *name)
    register int i = 0;
    if(strncasecmp(name, "COLORMAP", 8))     // COLORMAP predefined to return 0
       if((i = W_CheckNumForNameNS(name, lumpinfo_t::ns_colormaps)) != -1)
-         i -= firstcolormaplump;
+         i = (i - firstcolormaplump) + 1;
    return i;
 }
 
@@ -179,26 +194,6 @@ int tran_filter_pct = 66;       // filter percent
 
 #define TSC 12        /* number of fixed point digits in filter percent */
 
-// haleyjd 06/09/09: moved outside and added packing pragmas
-
-#if defined(_MSC_VER) || defined(__GNUC__)
-#pragma pack(push, 1)
-#endif
-
-struct trmapcache_s 
-{
-   char signature[4];          // haleyjd 06/09/09: added
-   byte pct;
-   byte playpal[768]; // haleyjd 06/09/09: corrected 256->768
-};
-
-#if defined(_MSC_VER) || defined(__GNUC__)
-#pragma pack(pop)
-#endif
-
-// haleyjd 06/09/09: for version control of tranmap.dat
-#define TRANMAPSIG "Etm1"
-
 //
 // R_InitTranMap
 //
@@ -206,131 +201,117 @@ struct trmapcache_s
 //
 // By Lee Killough 2/21/98
 //
-void R_InitTranMap(int progress)
+void R_InitTranMap(bool force)
 {
+   static bool prev_fromlump = false;
+   static int  prev_lumpnum  = -1;
+   static bool prev_built    = false;
+   static int  prev_tran_pct = -1;
+   static byte prev_palette[768];
+
+   AutoPalette pal(wGlobalDir);
+   byte *playpal = pal.get();
+
+   // if forced to rebuild, do it now regardless of settings
+   if(force)
+   {
+      prev_fromlump = false;
+      prev_lumpnum  = -1;
+      prev_built    = false;
+      prev_tran_pct = -1;
+      memset(prev_palette, 0, sizeof(prev_palette));
+   }
+
    int lump = W_CheckNumForName("TRANMAP");
    
    // If a translucency filter map lump is present, use it
    
    if(lump != -1)  // Set a pointer to the translucency filter maps.
-      main_tranmap = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
+   {
+      // check if is same as already loaded
+      if(prev_fromlump && prev_lumpnum == lump && 
+         prev_tran_pct == tran_filter_pct && 
+         !memcmp(playpal, prev_palette, 768))
+         return;
+
+      if(main_tranmap)
+         efree(main_tranmap);
+      main_tranmap  = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_STATIC));   // killough 4/11/98
+      prev_fromlump = true;
+      prev_lumpnum  = lump;
+      prev_built    = false;
+      prev_tran_pct = tran_filter_pct;
+      memcpy(prev_palette, playpal, 768);
+   }
    else
    {
+      // check if is same as already loaded
+      if(prev_built && prev_tran_pct == tran_filter_pct &&
+         !memcmp(playpal, prev_palette, 768))
+         return;
+
       // Compose a default transparent filter map based on PLAYPAL.
-      AutoPalette pal(wGlobalDir);
-      byte *playpal = pal.get();
+      if(main_tranmap)
+         efree(main_tranmap);
+      main_tranmap  = ecalloc(byte *, 256, 256);  // killough 4/11/98
+      prev_fromlump = false;
+      prev_lumpnum  = -1;
+      prev_built    = true;
+      prev_tran_pct = tran_filter_pct;
+      memcpy(prev_palette, playpal, 768);
       
-      char *fname = NULL;
-      unsigned int fnamesize;
-      
-      struct trmapcache_s cache;
-      
-      FILE *cachefp;
+      int pal[3][256], tot[256], pal_w1[3][256];
+      int w1 = ((unsigned int) tran_filter_pct<<TSC)/100;
+      int w2 = (1l<<TSC)-w1;
 
-      // haleyjd 11/23/06: use basegamepath
-      // haleyjd 12/06/06: use Z_Alloca for path length limit removal
-      fnamesize = M_StringAlloca(&fname, 1, 12, usergamepath);
-
-      psnprintf(fname, fnamesize, "%s/tranmap.dat", usergamepath);
-      
-      cachefp = fopen(fname, "r+b");
-
-      main_tranmap = (byte *)(Z_Malloc(256*256, PU_RENDERER, 0));  // killough 4/11/98
-      
-      // Use cached translucency filter if it's available
-
-      if(!cachefp ? cachefp = fopen(fname, "wb") , 1 :
-         fread(&cache, 1, sizeof cache, cachefp) != sizeof cache ||
-         strncmp(cache.signature, TRANMAPSIG, 4) ||
-         cache.pct != tran_filter_pct ||
-         memcmp(cache.playpal, playpal, sizeof cache.playpal) ||
-         fread(main_tranmap, 256, 256, cachefp) != 256 ) // killough 4/11/98
+      // First, convert playpal into long int type, and transpose array,
+      // for fast inner-loop calculations. Precompute tot array.
       {
-         int pal[3][256], tot[256], pal_w1[3][256];
-         int w1 = ((unsigned int) tran_filter_pct<<TSC)/100;
-         int w2 = (1l<<TSC)-w1;
-
-         // First, convert playpal into long int type, and transpose array,
-         // for fast inner-loop calculations. Precompute tot array.
-
+         register int i = 255;
+         register const unsigned char *p = playpal + 255 * 3;
+         do
          {
-            register int i = 255;
-            register const unsigned char *p = playpal + 255 * 3;
+            register int t,d;
+            pal_w1[0][i] = (pal[0][i] = t = p[0]) * w1;
+            d = t*t;
+            pal_w1[1][i] = (pal[1][i] = t = p[1]) * w1;
+            d += t*t;
+            pal_w1[2][i] = (pal[2][i] = t = p[2]) * w1;
+            d += t*t;
+            p -= 3;
+            tot[i] = d << (TSC - 1);
+         }
+         while (--i >= 0);
+      }
+
+      // Next, compute all entries using minimum arithmetic.
+      byte *tp = main_tranmap;
+      for(int i = 0; i < 256; ++i)
+      {
+         int r1 = pal[0][i] * w2;
+         int g1 = pal[1][i] * w2;
+         int b1 = pal[2][i] * w2;
+
+         if(!(i & 31) && force)
+            V_LoadingIncrease();        //sf 
+
+         for(int j = 0; j < 256; ++j, ++tp)
+         {
+            register int color = 255;
+            register int err;
+            int r = pal_w1[0][j] + r1;
+            int g = pal_w1[1][j] + g1;
+            int b = pal_w1[2][j] + b1;
+            int best = INT_MAX;
             do
             {
-               register int t,d;
-               pal_w1[0][i] = (pal[0][i] = t = p[0]) * w1;
-               d = t*t;
-               pal_w1[1][i] = (pal[1][i] = t = p[1]) * w1;
-               d += t*t;
-               pal_w1[2][i] = (pal[2][i] = t = p[2]) * w1;
-               d += t*t;
-               p -= 3;
-               tot[i] = d << (TSC - 1);
+               if((err = tot[color] - pal[0][color]*r
+                  - pal[1][color]*g - pal[2][color]*b) < best)
+                  best = err, *tp = color;
             }
-            while (--i >= 0);
-         }
-
-         // Next, compute all entries using minimum arithmetic.
-         
-         {
-            int i,j;
-            byte *tp = main_tranmap;
-            for(i = 0; i < 256; ++i)
-            {
-               int r1 = pal[0][i] * w2;
-               int g1 = pal[1][i] * w2;
-               int b1 = pal[2][i] * w2;
-               
-               if(!(i & 31) && progress)
-                  V_LoadingIncrease();        //sf 
-               
-               if(!(~i & 15))
-               {
-                  if (i & 32)       // killough 10/98: display flashing disk
-                     I_EndRead();
-                  else
-                     I_BeginRead();
-               }
-
-               for(j = 0; j < 256; ++j, ++tp)
-               {
-                  register int color = 255;
-                  register int err;
-                  int r = pal_w1[0][j] + r1;
-                  int g = pal_w1[1][j] + g1;
-                  int b = pal_w1[2][j] + b1;
-                  int best = LONG_MAX;
-                  do
-                  {
-                     if((err = tot[color] - pal[0][color]*r
-                        - pal[1][color]*g - pal[2][color]*b) < best)
-                        best = err, *tp = color;
-                  }
-                  while(--color >= 0);
-               }
-            }
-         }
-
-         if(cachefp)        // write out the cached translucency map
-         {
-            strncpy(cache.signature, TRANMAPSIG, 4);
-            cache.pct = tran_filter_pct;
-            memcpy(cache.playpal, playpal, 768); // haleyjd: corrected 256->768
-            fseek(cachefp, 0, SEEK_SET);
-            fwrite(&cache, 1, sizeof cache, cachefp);
-            fwrite(main_tranmap, 256, 256, cachefp);
+            while(--color >= 0);
          }
       }
-      else if(progress)
-      {
-         int i;
-         for(i = 0; i < 8; ++i)
-            V_LoadingIncrease();    // 8 '.'s
-      }
-      
-      if(cachefp)              // killough 11/98: fix filehandle leak
-         fclose(cachefp);
    }
 }
 
@@ -353,7 +334,7 @@ void R_InitData(void)
 
    if(general_translucency)             // killough 3/1/98, 10/98
    {
-      R_InitTranMap(1);          // killough 2/21/98, 3/6/98
+      R_InitTranMap(true);          // killough 2/21/98, 3/6/98
    }
    else
    {

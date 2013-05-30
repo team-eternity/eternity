@@ -695,16 +695,16 @@ static void E_ParseMiscField(const char *value, int *target)
          }
          break;
       case PREFIX_FLAGS:
-         *target = deh_ParseFlagsSingle(strval, DEHFLAGS_MODE1);
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE1);
          break;
       case PREFIX_FLAGS2:
-         *target = deh_ParseFlagsSingle(strval, DEHFLAGS_MODE2);
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE2);
          break;
       case PREFIX_FLAGS3:
-         *target = deh_ParseFlagsSingle(strval, DEHFLAGS_MODE3);
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE3);
          break;
       case PREFIX_FLAGS4:
-         *target = deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
          break;
       case PREFIX_BEXPTR:
          {

@@ -30,10 +30,13 @@
 
 #include "z_zone.h"
 
+#include "hal/i_gamepads.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
 #include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
@@ -45,6 +48,7 @@
 #include "dstrings.h"
 #include "e_fonts.h"
 #include "e_states.h"
+#include "g_bind.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_over.h"
@@ -74,18 +78,19 @@
 #include "w_levels.h"
 #include "w_wad.h"
 
+// need wad iterators
+#include "w_iterator.h"
+
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
+extern menu_t menu_newmission;
 extern menu_t menu_main;
 extern menu_t menu_episode;
 extern menu_t menu_d2episode;
 extern menu_t menu_startmap;
 
-// Blocky mode, has default, 0 = high, 1 = normal
-//int     detailLevel;    obsolete -- killough
 int screenSize;      // screen size
 
-char *mn_phonenum;           // phone number to dial
 char *mn_demoname;           // demo to play
 char *mn_wadname;            // wad to load
 
@@ -101,15 +106,15 @@ char *mn_start_mapname;
 // haleyjd: keep track of valid save slots
 bool savegamepresent[SAVESLOTS];
 
-static void MN_PatchOldMainMenu(void);
-static void MN_InitCustomMenu(void);
-static void MN_InitSearchStr(void);
+static void MN_PatchOldMainMenu();
+static void MN_InitCustomMenu();
+static void MN_InitSearchStr();
+static bool MN_tweakD2EpisodeMenu();
 
-void MN_InitMenus(void)
+void MN_InitMenus()
 {
    int i; // haleyjd
    
-   mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
    mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
    mn_wadname  = Z_Strdup("", PU_STATIC, 0);
    mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
@@ -269,7 +274,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       }
       else
 #endif
-         if(bfgedition && (w_norestpath && *w_norestpath))
+         if(MN_tweakD2EpisodeMenu())
             MN_StartMenu(&menu_d2episode);
          else
             MN_StartMenu(&menu_newgame);
@@ -287,7 +292,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
 // menu item to quit doom:
 // pop up a quit message as in the original
 
-void MN_QuitDoom(void)
+void MN_QuitDoom()
 {
    int quitmsgnum;
    char quitmsg[128];
@@ -374,10 +379,81 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
 // BFG Edition No Rest for the Living Special Support
 //
 
+static int mn_missionNo;
+
+// Skill level items for missions
+static menuitem_t mn_newmission_items[] =
+{
+   { it_runcmd, "I'm too young to die", "mn_startmission 0", "M_JKILL" },
+   { it_runcmd, "Hey, not too rough",   "mn_startmission 1", "M_ROUGH" },
+   { it_runcmd, "Hurt me plenty.",      "mn_startmission 2", "M_HURT"  },
+   { it_runcmd, "Ultra-Violence",       "mn_startmission 3", "M_ULTRA" },
+   { it_runcmd, "Nightmare!",           "mn_startmission 4", "M_NMARE" },
+   { it_end }
+};
+
+//
+// mn_startmission
+//
+// Console command to start a managed mission pack from the menus.
+// Skill is provided as a parameter; the mission pack number was
+// decided earlier by mn_mission.
+//
+CONSOLE_COMMAND(mn_startmission, cf_hidden|cf_notnet)
+{
+   if(Console.argc < 1)
+      return;
+   int skill = Console.argv[0]->toInt();
+
+   switch(mn_missionNo)
+   {
+   case 1: // NR4TL
+      W_DoNR4TLStart(skill);
+      break;
+   case 2: // Master Levels
+      W_DoMasterLevels(true, skill);
+      break;
+   default:
+      C_Printf(FC_ERROR "Unknown mission number %d\a\n", mn_missionNo);
+      break;
+   }
+}
+
+//
+// mn_mission
+//
+// Managed mission pack selection command for the menus. Remember the
+// mission number chosen, for mn_startmission on the next menu.
+//
+CONSOLE_COMMAND(mn_mission, cf_hidden|cf_notnet)
+{
+   if(Console.argc < 1)
+      return;
+   mn_missionNo = Console.argv[0]->toInt();
+   MN_StartMenu(&menu_newmission);
+}
+
+static void MN_D2EpisodeDrawer()
+{
+   V_DrawPatch(54, 38, &subscreen43, 
+               PatchLoader::CacheName(wGlobalDir, "M_BFGEPI", PU_CACHE));
+}
+
+static menuitem_t mn_item_nr4tl =
+{
+   it_runcmd, "No Rest for the Living", "mn_mission 1",  "M_BFGEP2"
+};
+
+static menuitem_t mn_item_masterlevs =
+{
+   it_runcmd, "Master Levels",          "mn_mission 2",  "M_BFGEP3"
+};
+
 static menuitem_t mn_dm2ep_items[] =
 {
-   { it_runcmd, "Hell on Earth",          "mn_episode 1",  "M_EPI1" },
-   { it_runcmd, "No Rest for the Living", "mn_episode 2",  "M_EPI2" },
+   { it_runcmd, "Hell on Earth", "mn_episode 1", "M_BFGEP1" },
+   { it_end }, // reserved
+   { it_end }, // reserved
    { it_end }
 };
 
@@ -388,8 +464,47 @@ menu_t menu_d2episode =
    48, 63,                     // x, y offsets
    0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
-   MN_EpisodeDrawer            // drawer
+   MN_D2EpisodeDrawer,         // drawer
 };
+
+//
+// MN_tweakD2EpisodeMenu
+//
+// haleyjd 05/14/13: We build the managed mission pack selection menu based on
+// the available expansions. Returns true if any expansions were added.
+//
+static bool MN_tweakD2EpisodeMenu()
+{
+   int curitem = 1;
+
+   // Not for TNT, Plutonia, HacX
+   if(GameModeInfo->missionInfo->id != doom2 &&
+      GameModeInfo->missionInfo->id != pack_disk)
+      return false;
+
+   // Also not when playing PWADs
+   if(modifiedgame)
+      return false;
+
+   // start out with nothing enabled
+   menu_d2episode.menuitems[1].type = it_end;
+   menu_d2episode.menuitems[2].type = it_end;
+
+   if(w_norestpath && *w_norestpath) // Have NR4TL?
+   {
+      menu_d2episode.menuitems[curitem] = mn_item_nr4tl;
+      ++curitem;
+   }
+
+   if(w_masterlevelsdirname && *w_masterlevelsdirname) // Have Master levels?
+   {
+      menu_d2episode.menuitems[curitem] = mn_item_masterlevs;
+      ++curitem;
+   }
+
+   // If none are configured, we're not going to even show this menu.
+   return (curitem > 1);
+}
 
 //=============================================================================
 //
@@ -401,12 +516,10 @@ menu_t menu_d2episode =
 //
 // haleyjd 11/12/09: special initialization method for the newgame menu.
 //
-static void MN_openNewGameMenu(void)
+static void MN_openNewGameMenu(menu_t *menu)
 {
-   extern menu_t menu_newgame; // actually just right below...
-   
    // start on defaultskill setting
-   menu_newgame.selected = defaultskill - 1;
+   menu->selected = defaultskill - 1;
 }
 
 //
@@ -422,11 +535,11 @@ static void MN_DrawNewGame()
 
 static menuitem_t mn_newgame_items[] =
 {
-   { it_runcmd, "i'm too young to die", "newgame 0", "M_JKILL" },
-   { it_runcmd, "hey, not too rough",   "newgame 1", "M_ROUGH" },
-   { it_runcmd, "hurt me plenty.",      "newgame 2", "M_HURT"  },
-   { it_runcmd, "ultra-violence",       "newgame 3", "M_ULTRA" },
-   { it_runcmd, "nightmare!",           "newgame 4", "M_NMARE" },
+   { it_runcmd, "I'm too young to die", "newgame 0", "M_JKILL" },
+   { it_runcmd, "Hey, not too rough",   "newgame 1", "M_ROUGH" },
+   { it_runcmd, "Hurt me plenty.",      "newgame 2", "M_HURT"  },
+   { it_runcmd, "Ultra-Violence",       "newgame 3", "M_ULTRA" },
+   { it_runcmd, "Nightmare!",           "newgame 4", "M_NMARE" },
    { it_end }
 };
 
@@ -443,7 +556,20 @@ menu_t menu_newgame =
    MN_openNewGameMenu, // open method
 };
 
-static void MN_DoNightmare(void)
+menu_t menu_newmission =
+{
+   mn_newmission_items,      // items - see above
+   NULL, NULL, NULL,         // pages
+   48, 63,                   // x, y
+   0,                        // starting item
+   mf_skullmenu|mf_emulated, // flags
+   MN_DrawNewGame,           // drawer
+   NULL, NULL,               // toc
+   0,                        // gap override
+   MN_openNewGameMenu,       // open method
+};
+
+static void MN_DoNightmare()
 {
    // haleyjd 05/14/06: check for mn_episode_override
    if(mn_episode_override)
@@ -461,12 +587,9 @@ static void MN_DoNightmare(void)
    else
    {
       // start on first level of selected episode
-      if(bfgedition && start_episode == 2)
-         W_DoNR4TLStart();
-      else
-         G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
+      G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   
+
    MN_ClearMenus();
 }
 
@@ -503,10 +626,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    else
    {
       // start on first level of selected episode
-      if(bfgedition && start_episode == 2)
-         W_DoNR4TLStart();
-      else
-         G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
+      G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    
    MN_ClearMenus();
@@ -995,9 +1115,6 @@ CONSOLE_COMMAND(mn_dmflags, cf_server)
 
 // haleyjd 04/14/03: dmflags menu drawer (a big hack, mostly)
 
-extern vfont_t *menu_font;
-extern vfont_t *menu_font_normal;
-
 static void MN_DMFlagsDrawer(void)
 {
    int i;
@@ -1122,7 +1239,7 @@ static menuitem_t mn_player_items[] =
    {it_title,          "Player Setup",         NULL,         "M_PLAYER"},
    {it_gap},
    {it_variable,       "player name",          "name"},
-   {it_toggle,         "player colour",        "colour"},
+   {it_toggle,         "player color",         "colour"},
    {it_toggle,         "player skin",          "skin"},
    {it_runcmd,         "skin viewer...",       "skinviewer"},
    {it_gap},
@@ -1209,7 +1326,7 @@ CONSOLE_COMMAND(mn_player, 0)
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
 
-void MN_SaveGame(void)
+void MN_SaveGame()
 {
    int save_slot = 
       (char **)(Console.command->variable->variable) - savegamenames;
@@ -1236,7 +1353,7 @@ void MN_SaveGame(void)
 }
 
 // create the savegame console commands
-void MN_CreateSaveCmds(void)
+void MN_CreateSaveCmds()
 {
    // haleyjd: something about the way these commands are being created
    //          is causing the console code to free a ptr with no zone id...
@@ -1271,7 +1388,7 @@ void MN_CreateSaveCmds(void)
       save_command->handler = MN_SaveGame;
       save_command->netcmd = 0;
       
-      (C_AddCommand)(save_command); // hook into cmdlist
+      C_AddCommand(save_command); // hook into cmdlist
    }
 }
 
@@ -1281,7 +1398,7 @@ void MN_CreateSaveCmds(void)
 //  read the strings from the savegame files
 // based on the mbf sources
 //
-void MN_ReadSaveStrings(void)
+void MN_ReadSaveStrings()
 {
    int i;
    
@@ -1322,24 +1439,21 @@ void MN_ReadSaveStrings(void)
    }
 }
 
-void MN_DrawLoadBox(int x, int y)
+void MN_DrawSaveLoadBorder(int x, int y)
 {
-   int i;
-   
    patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
    patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
-   V_DrawPatch(x, y, &subscreen43, patch_left);
-   x += patch_left->width;
+   V_DrawPatch(x - 8, y + 7, &subscreen43, patch_left);
    
-   for(i=0; i<24; i++)
+   for(int i = 0; i < 24; i++)
    {
-      V_DrawPatch(x, y, &subscreen43, patch_mid);
-      x += patch_mid->width;
+      V_DrawPatch(x, y + 7, &subscreen43, patch_mid);
+      x += 8;
    }
    
-   V_DrawPatch(x, y, &subscreen43, patch_right);
+   V_DrawPatch(x, y + 7, &subscreen43, patch_right);
 
    // haleyjd: make purgable
    Z_ChangeTag(patch_left,  PU_CACHE);
@@ -1347,28 +1461,19 @@ void MN_DrawLoadBox(int x, int y)
    Z_ChangeTag(patch_right, PU_CACHE);
 }
 
-void MN_LoadGameDrawer(void);
+void MN_LoadGameDrawer();
 
 // haleyjd: all saveslot names changed to be consistent
 
 static menuitem_t mn_loadgame_items[] =
 {
-   {it_title,  "Load Game", NULL,         "M_LGTTL"},
-   {it_gap},
    {it_runcmd, "save slot 0",       "mn_load 0"},
-   {it_gap},
    {it_runcmd, "save slot 1",       "mn_load 1"},
-   {it_gap},
    {it_runcmd, "save slot 2",       "mn_load 2"},
-   {it_gap},
    {it_runcmd, "save slot 3",       "mn_load 3"},
-   {it_gap},
    {it_runcmd, "save slot 4",       "mn_load 4"},
-   {it_gap},
    {it_runcmd, "save slot 5",       "mn_load 5"},
-   {it_gap},
    {it_runcmd, "save slot 6",       "mn_load 6"},
-   {it_gap},
    {it_runcmd, "save slot 7",       "mn_load 7"},
    {it_end}
 };
@@ -1377,30 +1482,26 @@ menu_t menu_loadgame =
 {
    mn_loadgame_items,
    NULL, NULL, NULL,                 // pages
-   50, 15,                           // x, y
-   2,                                // starting slot
-   mf_skullmenu | mf_leftaligned,    // skull menu
+   80, 44,                           // x, y
+   0,                                // starting slot
+   mf_skullmenu | mf_emulated,       // skull menu
    MN_LoadGameDrawer,
 };
 
 
-void MN_LoadGameDrawer(void)
+void MN_LoadGameDrawer()
 {
    static char *emptystr = NULL;
-   int i, y;
+
+   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE));
 
    if(!emptystr)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
    
-   for(i = 0, y = 46; i < SAVESLOTS; ++i, y += 16) // haleyjd
+   for(int i = 0;  i < SAVESLOTS; i++)
    {
-      MN_DrawLoadBox(45, y);
-   }
-   
-   // this is lame
-   for(i = 0, y = 2; i < SAVESLOTS; ++i, y += 2)  // haleyjd
-   {
-      menu_loadgame.menuitems[y].description =
+      MN_DrawSaveLoadBorder(menu_loadgame.x, menu_loadgame.y + i*16);
+      menu_loadgame.menuitems[i].description =
          savegamenames[i] ? savegamenames[i] : emptystr;
    }
 }
@@ -1417,7 +1518,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
    if(demorecording) // killough 5/26/98: exclude during demo recordings
    {
       MN_Alert("you can't load a game\n"
-               "while recording a demo!\n\n"PRESSKEY);
+               "while recording a demo!\n\n" PRESSKEY);
       return;
    }
    
@@ -1470,7 +1571,7 @@ CONSOLE_COMMAND(quickload, 0)
    if(demorecording)
    {
       MN_Alert("you can't quickload\n"
-               "while recording a demo!\n\n"PRESSKEY);
+               "while recording a demo!\n\n" PRESSKEY);
       return;
    }
 
@@ -1501,36 +1602,19 @@ CONSOLE_COMMAND(qload, cf_hidden)
 // Save Game
 //
 
-// haleyjd: fixes continue here from 8-17 build
+void MN_SaveGameDrawer();
 
-void MN_SaveGameDrawer(void)
-{
-   int i, y;
-   
-   for(i = 0, y = 46; i < SAVESLOTS; i++, y += 16) // haleyjd
-   {
-      MN_DrawLoadBox(45, y);
-   }
-}
+// haleyjd: fixes continue here from 8-17 build
 
 static menuitem_t mn_savegame_items[] =
 {
-   {it_title,    "Save Game",           NULL,              "M_SGTTL"},
-   {it_gap},
    {it_variable, "",                          "savegame_0"},
-   {it_gap},
    {it_variable, "",                          "savegame_1"},
-   {it_gap},
    {it_variable, "",                          "savegame_2"},
-   {it_gap},
    {it_variable, "",                          "savegame_3"},
-   {it_gap},
    {it_variable, "",                          "savegame_4"},
-   {it_gap},
    {it_variable, "",                          "savegame_5"},
-   {it_gap},
    {it_variable, "",                          "savegame_6"},
-   {it_gap},
    {it_variable, "",                          "savegame_7"},
    {it_end}
 };
@@ -1539,11 +1623,19 @@ menu_t menu_savegame =
 {
    mn_savegame_items,
    NULL, NULL, NULL,                 // pages
-   50, 15,                           // x, y
-   2,                                // starting slot
-   mf_skullmenu | mf_leftaligned,    // skull menu
+   80, 44,                           // x, y
+   0,                                // starting slot
+   mf_skullmenu | mf_emulated,       // skull menu
    MN_SaveGameDrawer,
 };
+
+void MN_SaveGameDrawer()
+{
+   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
+
+   for(int i = 0; i < SAVESLOTS; i++)
+      MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);
+}
 
 CONSOLE_COMMAND(mn_savegame, 0)
 {
@@ -2063,7 +2155,7 @@ static menuitem_t mn_sysvideo_items[] =
    {it_title,    "Video Options",           NULL, "m_video"},
    {it_gap},
    {it_info,     "System"},
-   {it_toggle,   "Textmode startup",        "textmode_startup"},
+   {it_toggle,   "DOS-like startup",        "textmode_startup"},
 #ifdef _SDL_VER
    {it_toggle,   "Wait at exit",            "i_waitatexit"},
    {it_toggle,   "Show ENDOOM",             "i_showendoom"},
@@ -2071,8 +2163,8 @@ static menuitem_t mn_sysvideo_items[] =
 #endif
    {it_gap},
    {it_info,     "Console"},
-   {it_variable, "Console speed",           "c_speed"},
-   {it_variable, "Console height",          "c_height"},
+   {it_variable, "Dropdown speed",           "c_speed"},
+   {it_variable, "Console size",             "c_height"},
    {it_gap},
    {it_info,     "Screenshots"},
    {it_toggle,   "Screenshot format",       "shot_type"},
@@ -2099,8 +2191,8 @@ static menuitem_t mn_video_page2_items[] =
    {it_title,   "Video Options",            NULL, "m_video"},
    {it_gap},
    {it_info,    "Screen Wipe"},
-   {it_toggle,  "Wipe type",                "wipetype"},
-   {it_toggle,  "Game waits",               "wipewait"},
+   {it_toggle,  "Wipe style",               "wipetype"},
+   {it_toggle,  "Game waits for wipe",      "wipewait"},
    {it_gap},
    {it_info,    "Misc."},
    {it_toggle,  "Loading disk icon",       "v_diskicon"},
@@ -2132,11 +2224,11 @@ static menuitem_t mn_particles_items[] =
    {it_info,   "Effects"},
    {it_toggle, "Blood splat type",         "bloodsplattype"},
    {it_toggle, "Bullet puff type",         "bulletpufftype"},
-   {it_toggle, "Enable rocket trail",      "rocket_trails"},
-   {it_toggle, "Enable grenade trail",     "grenade_trails"},
+   {it_toggle, "Enable rocket trails",     "rocket_trails"},
+   {it_toggle, "Enable grenade trails",    "grenade_trails"},
    {it_toggle, "Enable bfg cloud",         "bfg_cloud"},
-   {it_toggle, "Enable rocket explosion",  "pevt_rexpl"},
-   {it_toggle, "Enable bfg explosion",     "pevt_bfgexpl"},
+   {it_toggle, "Enable rocket explosions", "pevt_rexpl"},
+   {it_toggle, "Enable bfg explosions",    "pevt_bfgexpl"},
    {it_end}
 };
 
@@ -2225,9 +2317,9 @@ static menuitem_t mn_sound_items[] =
    {it_slider,     "Music volume",                 "music_volume"},
    {it_gap},
    {it_info,       "Setup"},
-   {it_toggle,     "Sound card",                   "snd_card"},
-   {it_toggle,     "Music card",                   "mus_card"},
-   {it_toggle,     "Sound channels",               "snd_channels"},
+   {it_toggle,     "Sound driver",                 "snd_card"},
+   {it_toggle,     "Music driver",                 "mus_card"},
+   {it_toggle,     "Max sound channels",           "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_gap},
    {it_info,       "Misc"},
@@ -2291,11 +2383,9 @@ menu_t menu_soundeq =
 
 static const char *mn_mousejoy_names[] =
 {
-   "mouse",
-   "mouselook",
-#ifdef _SDL_VER
-   "joystick",
-#endif
+   "Mouse Settings",
+   "Acceleration / Mouselook",
+   "Gamepad Settings",
    NULL
 };
 
@@ -2307,15 +2397,13 @@ static menu_t *mn_mousejoy_pages[] =
 {
    &menu_mouse,
    &menu_mouse_accel_and_mlook,
-#ifdef _SDL_VER
    &menu_joystick,
-#endif
    NULL
 };
 
 static menuitem_t mn_mouse_items[] =
 {
-   {it_title,      "Mouse Settings",                NULL, "m_mouse"  },
+   {it_title,      "Mouse Settings",                NULL, "M_MOUSE"  },
    {it_gap},
    {it_toggle,     "Enable mouse",                  "i_usemouse"     },
    {it_gap},
@@ -2355,7 +2443,7 @@ CONSOLE_COMMAND(mn_mouse, 0)
 
 static menuitem_t mn_mouse_accel_and_mlook_items[] =
 {
-   {it_title,      "Mouse Settings",       NULL,   "m_mouse"},
+   {it_title,      "Mouse Settings",       NULL,   "M_MOUSE"},
    {it_gap},
    {it_info,       "Acceleration"},
    {it_toggle,     "Type",                "mouse_accel_type"},
@@ -2373,11 +2461,7 @@ menu_t menu_mouse_accel_and_mlook =
 {
    mn_mouse_accel_and_mlook_items, // menu items
    &menu_mouse,                    // previous page
-#ifdef _SDL_VER
    &menu_joystick,                 // next page
-#else
-   NULL,
-#endif
    &menu_mouse,                    // rootpage
    200, 15,                        // x, y offset
    3,                              // first selectable
@@ -2389,79 +2473,148 @@ menu_t menu_mouse_accel_and_mlook =
 
 //------------------------------------------------------------------------
 //
-// SDL-specific joystick configuration menu
+// Joystick Configuration Menu
 //
-
-#ifdef _SDL_VER
 
 static const char **mn_js_desc;
 static const char **mn_js_cmds;
 
-extern int numJoysticks;
-
-static void MN_BuildJSTables(void)
+static void MN_BuildJSTables()
 {
    static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
    {
-      int jsnum;
-      char tempstr[20];
+      qstring tempstr;
+      size_t numpads = I_GetNumGamePads();
 
       // allocate arrays
-      mn_js_desc = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *), 
-                                            PU_STATIC, NULL));
-      mn_js_cmds = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
-                                            PU_STATIC, NULL));
-      
+      mn_js_desc = ecalloc(const char **, (numpads + 2), sizeof(char *));
+      mn_js_cmds = ecalloc(const char **, (numpads + 2), sizeof(char *));
+
+      // first item is "none", for disabling gamepad input altogether
       mn_js_desc[0] = "none";
       mn_js_cmds[0] = "i_joystick -1";
-            
-      for(jsnum = 0; jsnum < numJoysticks; ++jsnum)
+
+      // add every active gamepad
+      for(size_t jsnum = 0; jsnum < numpads; jsnum++)
       {
-         mn_js_desc[jsnum+1] = joysticks[jsnum].description;
-         sprintf(tempstr, "i_joystick %i", jsnum);
-         mn_js_cmds[jsnum+1] = estrdup(tempstr);
+         HALGamePad *pad = I_GetGamePad(jsnum);
+
+         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);         
+         
+         tempstr.Printf(0, "i_joystick %i", pad->num);
+         mn_js_cmds[jsnum + 1] = tempstr.duplicate(PU_STATIC);
       }
-      mn_js_desc[numJoysticks + 1] = NULL;
-      mn_js_cmds[numJoysticks + 1] = NULL;
-          
+
+      // add a null terminator to the end of the list
+      mn_js_desc[numpads + 1] = NULL;
+      mn_js_cmds[numpads + 1] = NULL;
+
       menu_built = true;
    }
 }
 
 CONSOLE_COMMAND(mn_joysticks, cf_hidden)
 {
-   const char *drv_name;
    static char title[256];
-
+   const char *drv_name;
+   HALGamePad *pad;
    MN_BuildJSTables();
 
-   if(i_SDLJoystickNum != -1)
-      drv_name = joysticks[i_SDLJoystickNum].description;
+   if((pad = I_GetActivePad()))
+      drv_name = pad->name.constPtr();
    else
       drv_name = "none";
 
-   psnprintf(title, sizeof(title), 
-             "choose a joystick\n\n  current device:\n  %s",
+   psnprintf(title, sizeof(title),
+             "Choose a Gamepad\n\nCurrent device:\n  %s",
              drv_name);
 
    MN_SetupBoxWidget(title, mn_js_desc, 1, NULL, mn_js_cmds);
    MN_ShowBoxWidget();
 }
 
+static const char **mn_prof_desc;
+static const char **mn_prof_cmds;
+
+static void MN_buildProfileTables()
+{
+   static bool menu_built = false;
+
+   // don't build multiple times
+   if(!menu_built)
+   {
+      int numProfiles = wGlobalDir.getNamespace(lumpinfo_t::ns_pads).numLumps;
+
+      if(!numProfiles)
+         return;
+
+      // allocate arrays - +1 size for NULL termination
+      mn_prof_desc = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
+      mn_prof_cmds = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
+
+      int i = 0;
+      WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_pads);
+
+      for(wni.begin(); wni.current(); wni.next(), i++)
+      {
+         qstring fullname;
+         qstring base;
+         lumpinfo_t *lump = wni.current();
+
+         if(lump->lfn)
+            fullname = lump->lfn;
+         else
+            fullname = lump->name;
+
+         size_t dot;
+         if((dot = fullname.find(".txt")) != qstring::npos)
+            fullname.truncate(dot);
+
+         fullname.extractFileBase(base);
+
+         mn_prof_desc[i] = base.duplicate();
+
+         base.makeQuoted();
+         base.insert("g_padprofile ", 0);
+         mn_prof_cmds[i] = base.duplicate();
+      }
+
+      mn_prof_desc[numProfiles] = NULL;
+      mn_prof_cmds[numProfiles] = NULL;
+
+      menu_built = true;
+   }
+}
+
+CONSOLE_COMMAND(mn_profiles, cf_hidden)
+{
+   MN_buildProfileTables();
+
+   if(!mn_prof_desc)
+   {
+      MN_ErrorMsg("No profiles available");
+      return;
+   }
+
+   MN_SetupBoxWidget("Choose a Profile: ", mn_prof_desc, 1, NULL, mn_prof_cmds);
+   MN_ShowBoxWidget();
+}
+
 static menuitem_t mn_joystick_items[] =
 {
-   {it_title,        "Joystick Settings",         NULL, "M_JOYSET" },
-   {it_gap},
-   {it_toggle,       "Enable joystick",           "i_usejoystick"},
-   {it_runcmd,       "Select joystick...",        "mn_joysticks" },
-   {it_gap},
-   {it_info,         "Sensitivity"},
-   {it_variable,     "Horizontal",                "joySens_x" },
-   {it_variable,     "Vertical",                  "joySens_y" },
-   {it_end}
+   { it_title,        "Gamepad Settings",          NULL,   NULL     },
+   { it_gap                                                         },
+   { it_info,         "Devices"                                     },
+   { it_runcmd,       "Select gamepad...",         "mn_joysticks"   },
+   { it_runcmd,       "Test gamepad...",           "mn_padtest"     },
+   { it_gap                                                         },
+   { it_info,         "Settings"                                    },
+   { it_runcmd,       "Load profile...",           "mn_profiles"    },
+   { it_variable,     "SDL sensitivity",           "i_joysticksens" },
+   { it_end                                                         }
 };
 
 menu_t menu_joystick =
@@ -2483,9 +2636,163 @@ CONSOLE_COMMAND(mn_joymenu, 0)
    MN_StartMenu(&menu_joystick);
 }
 
-#endif // _SDL_VER
+//-----------------------------------------------------------------------------
+//
+// Pad Test
+//
 
-/////////////////////////////////////////////////////////////////
+//
+// Data for padtest widget.
+//
+struct mn_padtestdata_t
+{
+   bool  buttonStates[HALGamePad::MAXBUTTONS];
+   float axisStates[HALGamePad::MAXAXES];
+   int   numButtons;
+   int   numAxes;
+};
+
+static mn_padtestdata_t mn_padtestdata;
+
+//
+// MN_padTestDrawer
+//
+// Drawer for padtest widget.
+// Draw active buttons and axes.
+//
+static void MN_padTestDrawer()
+{
+   qstring qstr;
+   const char *title = "Gamepad Test";
+   int x = 160 - V_FontStringWidth(menu_font_big, title) / 2;
+   int y = 8;
+   int lineHeight = MN_StringHeight("Mg") + 4;
+
+   // draw background
+   V_DrawBackground(mn_background_flat, &vbscreen);
+
+   // draw title
+   if(GameModeInfo->flags & GIF_SHADOWTITLES)
+      V_FontWriteTextShadowed(menu_font_big, title, x, y, &subscreen43, GameModeInfo->titleColor);
+   else
+      V_FontWriteTextColored(menu_font_big, title, GameModeInfo->titleColor, x, y, &subscreen43); 
+
+   y += V_FontStringHeight(menu_font_big, title) + 16;
+
+   // draw axes
+   x = 8;
+   MN_WriteText("Axes:", x, y);
+   y += lineHeight;
+   for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
+   {
+      int color = 
+         mn_padtestdata.axisStates[i] > 0 ? GameModeInfo->selectColor :
+         mn_padtestdata.axisStates[i] < 0 ? GameModeInfo->unselectColor :
+         GameModeInfo->infoColor;
+
+      qstr.clear() << "A" << (i + 1);
+      MN_WriteTextColored(qstr.constPtr(), color, x, y);
+      x += MN_StringWidth(qstr.constPtr()) + 8;
+
+      if(x > 300 && i != mn_padtestdata.numAxes - 1)
+      {
+         x = 8;
+         y += lineHeight;
+      }
+   }
+
+   // draw buttons
+   y += 2 * lineHeight;
+   x = 8;
+   MN_WriteText("Buttons:", x, y);
+   y += MN_StringHeight("Buttons:") + 4;
+   for(int i = 0; i < mn_padtestdata.numButtons && HALGamePad::MAXBUTTONS; i++)
+   {
+      int color = mn_padtestdata.buttonStates[i] ? GameModeInfo->selectColor 
+                                                 : GameModeInfo->infoColor;
+
+      qstr.clear() << "B" << (i + 1);
+      MN_WriteTextColored(qstr.constPtr(), color, x, y);
+      x += MN_StringWidth(qstr.constPtr()) + 8;
+
+      if(x > 300 && i != mn_padtestdata.numButtons - 1)
+      {
+         x = 8;
+         y += lineHeight;
+      }
+   }
+
+   const char *help = "Press ESC on keyboard to exit";
+   x = 160 - MN_StringWidth(help) / 2;
+   y += 2 * lineHeight;
+   MN_WriteTextColored(help, GameModeInfo->infoColor, x, y);
+}
+
+//
+// MN_padTestTicker
+//
+// Ticker for padtest widget.
+// Refresh the input state by reading from the active gamepad.
+//
+static void MN_padTestTicker()
+{
+   HALGamePad *gamepad = I_GetActivePad();
+   if(!gamepad)
+   {
+      mn_padtestdata.numAxes = 0;
+      mn_padtestdata.numButtons = 0;
+      return; // woops!?
+   }
+
+   mn_padtestdata.numAxes    = gamepad->numAxes;
+   mn_padtestdata.numButtons = gamepad->numButtons;
+
+   for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
+      mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
+   for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
+      mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
+}
+
+//
+// MN_padTestResponder
+//
+static bool MN_padTestResponder(event_t *ev, int action)
+{
+   // only interested in keydown events
+   if(ev->type != ev_keydown)
+      return false;
+
+   if(ev->data1 == KEYD_ESCAPE) // Must be keyboard ESC
+   {
+      // kill the widget
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      MN_PopWidget();
+   }
+
+   // eat other events
+   return true;
+}
+
+static menuwidget_t padtest_widget = 
+{ 
+   MN_padTestDrawer,
+   MN_padTestResponder,
+   MN_padTestTicker,
+   true
+};
+
+CONSOLE_COMMAND(mn_padtest, 0)
+{
+   if(!I_GetActivePad())
+   {
+      MN_ErrorMsg("No active gamepad");
+      return;
+   }
+
+   MN_PushWidget(&padtest_widget);
+}
+
+//=============================================================================
 //
 // HUD Settings
 //
@@ -2515,12 +2822,12 @@ static menuitem_t mn_hud_items[] =
    {it_gap},
    {it_info,       "Message Options"},
    {it_toggle,     "Messages",                     "hu_messages"},
-   {it_toggle,     "Message colour",               "hu_messagecolor"},
+   {it_toggle,     "Message color",                "hu_messagecolor"},
    {it_toggle,     "Messages scroll",              "hu_messagescroll"},
    {it_toggle,     "Message lines",                "hu_messagelines"},
    {it_variable,   "Message time (ms)",            "hu_messagetime"},
    {it_toggle,     "Obituaries",                   "hu_obituaries"},
-   {it_toggle,     "Obituary colour",              "hu_obitcolor"},
+   {it_toggle,     "Obituary color",               "hu_obitcolor"},
    {it_gap},
    {it_info,       "BOOM HUD options"},
    {it_toggle,     "Display type",                 "hu_overlay"},
@@ -2626,7 +2933,7 @@ static menuitem_t mn_statusbar_items[] =
 {
    {it_title,      "Status Bar",           NULL,           "M_STATUS"},
    {it_gap},
-   {it_toggle,     "Numbers always red",           "st_rednum"},
+   {it_toggle,     "Numbers like DOOM",            "st_rednum"},
    {it_toggle,     "Percent sign grey",            "st_graypct"},
    {it_toggle,     "Single key display",           "st_singlekey"},
    {it_gap},
@@ -2693,7 +3000,7 @@ static menuitem_t mn_automapcolbgl_items[] =
    {it_gap},
    {it_info,     "Background and Lines", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap,  "Background colour",            "mapcolor_back"},
+   {it_automap,  "Background color",             "mapcolor_back"},
    {it_automap,  "Crosshair",                    "mapcolor_hair"},
    {it_automap,  "Grid",                         "mapcolor_grid"},
    {it_automap,  "One-sided walls",              "mapcolor_wall"},
@@ -3156,7 +3463,7 @@ static menuitem_t mn_advkeys_items[] =
    {it_binding,      "Center view",     "center"},
    {it_binding,      "Fly up",          "flyup"},
    {it_binding,      "Fly down",        "flydown"},
-   {it_binding,      "Fly center",      "flycenter"},
+   {it_binding,      "Land",            "flycenter"},
    {it_end}
 };
 
@@ -3823,104 +4130,5 @@ CONSOLE_COMMAND(mn_old_sound, 0)
 
 // TODO: Original Save and Load Menus?
 // TODO: Draw skull cursor on Credits pages?
-
-//
-// MN_AddMenus
-//
-// Adds all menu system commands to the console command chains.
-// 
-void MN_AddMenus(void)
-{
-   C_AddCommand(mn_newgame);
-   C_AddCommand(mn_episode);
-   C_AddCommand(startlevel);
-   C_AddCommand(use_startmap);
-   C_AddCommand(mn_start_mapname); // haleyjd 05/14/06
-   
-   C_AddCommand(mn_loadgame);
-   C_AddCommand(mn_load);
-   C_AddCommand(mn_savegame);
-
-   C_AddCommand(mn_loadwad);
-   C_AddCommand(mn_loadwaditem);
-   C_AddCommand(mn_wadname);
-   C_AddCommand(mn_demos);
-   C_AddCommand(mn_demoname);
-   C_AddCommand(mn_player);
-
-   // haleyjd: dmflags
-   C_AddCommand(mn_dfitem);
-   C_AddCommand(mn_dfweapstay);
-   C_AddCommand(mn_dfbarrel);
-   C_AddCommand(mn_dfplyrdrop);
-   C_AddCommand(mn_dfrespsupr);
-   C_AddCommand(mn_dfinstagib);
-   
-   // different connect types
-   C_AddCommand(mn_gset);
-   
-   C_AddCommand(mn_options);
-   C_AddCommand(mn_mouse);
-   C_AddCommand(mn_video);
-   C_AddCommand(mn_particle);  // haleyjd: particle options menu
-   C_AddCommand(mn_vidmode);
-   C_AddCommand(mn_favaspectratio);
-   C_AddCommand(mn_favscreentype);
-   C_AddCommand(mn_sound);
-   C_AddCommand(mn_weapons);
-   C_AddCommand(mn_compat);
-   C_AddCommand(mn_enemies);
-   C_AddCommand(mn_hud);
-   C_AddCommand(mn_status);
-   C_AddCommand(mn_automap);
-
-   C_AddCommand(mn_movekeys);
-   C_AddCommand(mn_advkeys);
-   C_AddCommand(mn_weaponkeys);
-   C_AddCommand(mn_envkeys);
-   C_AddCommand(mn_gamefuncs);
-   C_AddCommand(mn_menukeys);
-   C_AddCommand(mn_automapkeys);
-   C_AddCommand(mn_consolekeys);
-   C_AddCommand(newgame);
-   
-   // prompt messages
-   C_AddCommand(mn_quit);
-   C_AddCommand(mn_endgame);
-
-   // haleyjd 03/15/06: the "menu" menu
-   C_AddCommand(mn_menus);
-   C_AddCommand(mn_searchstr);
-   C_AddCommand(mn_search);
-
-   C_AddCommand(mn_config);
-   
-   // haleyjd: quicksave, quickload
-   C_AddCommand(quicksave);
-   C_AddCommand(quickload);
-   C_AddCommand(qsave);
-   C_AddCommand(qload);
-   
-   // haleyjd 04/15/02: SDL joystick devices
-#ifdef _SDL_VER
-   C_AddCommand(mn_joysticks);
-   C_AddCommand(mn_joymenu);
-#endif
-
-   C_AddCommand(skinviewer);
-
-   // haleyjd: "old" menus
-   C_AddCommand(mn_classic_menus);
-   C_AddCommand(mn_old_options);
-   C_AddCommand(mn_old_sound);
-   
-   // haleyjd: add Heretic-specific menus (in mn_htic.c)
-   MN_AddHMenus();
-   
-   MN_CreateSaveCmds();
-
-   // haleyjd 03/11/06: file dialog cmds
-   MN_File_AddCommands();
-}
 
 // EOF

@@ -26,7 +26,7 @@
 
 
 #include "p_mobj.h"
-#include "p_doomclip.h"
+#include "p_map.h"
 #include "p_traceengine.h"
 
 #include "m_bbox.h"

@@ -54,18 +54,19 @@ dehstr_t *D_GetDEHStr(const char *string);
 // haleyjd 10/08/06: new string fetching functions
 const char *DEH_String(const char *mnemonic);
 bool DEH_StringChanged(const char *mnemonic);
+void DEH_ReplaceString(const char *mnemonic, const char *newstr);
 
 deh_bexptr *D_GetBexPtr(const char *mnemonic);
 
-void D_BuildBEXHashChains(void);
-void D_BuildBEXTables(void);
+void D_BuildBEXHashChains();
+void D_BuildBEXTables();
 
 // haleyjd: flag field parsing stuff is now global for EDF and
 // ExtraData usage
 struct dehflags_t
 {
    const char *name;
-   int value;
+   unsigned int value;
    int index;
 };
 
@@ -84,12 +85,12 @@ struct dehflagset_t
 {
    dehflags_t *flaglist;
    int mode;
-   int results[MAXFLAGFIELDS];
+   unsigned int results[MAXFLAGFIELDS];
 };
 
-void deh_ParseFlags(dehflagset_t *dehflags, char **strval);
-int  deh_ParseFlagsSingle(const char *strval, int mode);
-int *deh_ParseFlagsCombined(const char *strval);
+void          deh_ParseFlags(dehflagset_t *dehflags, char **strval);
+unsigned int  deh_ParseFlagsSingle(const char *strval, int mode);
+unsigned int *deh_ParseFlagsCombined(const char *strval);
 
 // deh queue stuff
 void D_DEHQueueInit(void);

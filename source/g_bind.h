@@ -25,91 +25,26 @@
 #ifndef G_BIND_H__
 #define G_BIND_H__
 
-void G_InitKeyBindings(void);
-bool G_KeyResponder(event_t *ev, int bclass);
+struct event_t;
+class  qstring;
 
-void G_ClearKeyStates(void);
+void G_InitKeyBindings();
+int  G_KeyResponder(event_t *ev, int bclass);
+
+void G_ClearKeyStates();
 
 typedef void (*binding_handler)(event_t *ev);
 
 void G_EditBinding(const char *action);
-const char *G_BoundKeys(const char *action);
+void G_BoundKeys(const char *action, qstring &outstr);
 const char *G_FirstBoundKey(const char *action);
 
 // default file loading
 
-void G_LoadDefaults(void);
-void G_SaveDefaults(void);
+void G_LoadDefaults();
+void G_SaveDefaults();
 
-void G_Bind_AddCommands(void);
-
-// action variables
-
-extern int action_forward;
-extern int action_backward;
-extern int action_left;
-extern int action_right;
-extern int action_moveleft;
-extern int action_moveright;
-extern int action_lookup;
-extern int action_lookdown;
-extern int action_flyup;
-extern int action_flydown;
-extern int action_flycenter;
-extern int action_use;
-extern int action_speed;
-extern int action_attack;
-extern int action_strafe;
-extern int action_flip;
-extern int action_jump;
-extern int action_autorun;
-
-extern int action_mlook;
-extern int action_center;
-extern int action_weapon1;
-extern int action_weapon2;
-extern int action_weapon3;
-extern int action_weapon4;
-extern int action_weapon5;
-extern int action_weapon6;
-extern int action_weapon7;
-extern int action_weapon8;
-extern int action_weapon9;
-extern int action_nextweapon;
-extern int action_weaponup;
-extern int action_weapondown;
-
-
-extern int action_frags;
-
-extern int action_menu_help;
-extern int action_menu_toggle;
-extern int action_menu_setup;
-extern int action_menu_up;
-extern int action_menu_down;
-extern int action_menu_confirm;
-extern int action_menu_previous;
-extern int action_menu_left;
-extern int action_menu_right;
-extern int action_menu_pageup;
-extern int action_menu_pagedown;
-extern int action_menu_contents;
-
-extern int action_map_toggle;
-extern int action_map_gobig;
-extern int action_map_follow;
-extern int action_map_mark;
-extern int action_map_clear;
-extern int action_map_grid;
-
-extern int action_console_pageup;
-extern int action_console_pagedown;
-extern int action_console_toggle;
-extern int action_console_tab;
-extern int action_console_enter;
-extern int action_console_up;
-extern int action_console_down;
-extern int action_console_backspace;
+void G_Bind_AddCommands();
 
 // haleyjd 07/03/04: key binding classes
 enum keyactionclass
@@ -123,8 +58,10 @@ enum keyactionclass
    NUMKEYACTIONCLASSES
 };
 
+// key actions
 enum keyaction_e
 {
+   ka_nothing,
    ka_forward,
    ka_backward,
    ka_left,      
@@ -192,6 +129,26 @@ enum keyaction_e
    ka_console_backspace,
    NUMKEYACTIONS
 };
+
+// Possible action types for analog axis input
+enum axisaction_e
+{
+   axis_none,       // input is ignored
+   axis_move,       // forward/backward movement
+   axis_strafe,     // strafe left/right
+   axis_turn,       // turn left/right
+   axis_look,       // look up/down
+   axis_fly,        // fly up/down
+   axis_max         // keep this last
+};
+
+// Axis bindings
+extern int axisActions[];
+
+// Axis orientations
+extern int axisOrientation[];
+
+bool G_ExecuteGamepadProfile(const char *name);
 
 #endif
 
