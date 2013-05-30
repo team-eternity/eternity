@@ -1,0 +1,397 @@
+# CONFIG ?= config.default
+# -include $(CONFIG)
+MACOSX_DEPLOYMENT_TARGET = 10.5
+export MACOSX_DEPLOYMENT_TARGET
+
+CC = /Users/ioan/Applications/clang+llvm-3.2-x86_64-apple-darwin11/bin/clang
+CXX = /Users/ioan/Applications/clang+llvm-3.2-x86_64-apple-darwin11/bin/clang++
+
+BINARY    ?= eternity
+PREFIX    ?= /usr/local
+# MANPREFIX ?= $(PREFIX)
+
+# SDL_CONFIG  ?= sdl-config
+# CFLAGS_SDL  ?= $(shell $(SDL_CONFIG) --cflags)
+# LDFLAGS_SDL ?= $(shell $(SDL_CONFIG) --libs)
+
+CFLAGS += -arch x86_64
+
+# CFLAGS += -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
+
+CFLAGS += -O3
+CFLAGS += -Iclang/include
+# CCFLAGS += -I/Library/Frameworks/SDL.framework/Headers
+# CCFLAGS += -I/Library/Frameworks/SDL_mixer.framework/Headers
+# CCFLAGS += -I/Library/Frameworks/SDL_net.framework/Headers
+CFLAGS += -I/opt/local/include/SDL
+CFLAGS += -I../source
+CFLAGS += -I../libpng
+CFLAGS += -mmacosx-version-min=10.5
+
+CFLAGS += $(CFLAGS_SDL)
+
+# CFLAGS += -Wall
+# CFLAGS += -W
+# CFLAGS += -Wpointer-arith
+# CFLAGS += -Wreturn-type
+# CFLAGS += -Wwrite-strings
+# CFLAGS += -Wcast-align
+
+# CFLAGS += -N
+
+CCFLAGS += $(CFLAGS)
+
+# CCFLAGS += -nostdinc++
+
+CFLAGS += -DNDEBUG
+CFLAGS += -DR_LINKEDPORTALS
+CFLAGS += -D_SDL_VER
+CFLAGS += -DHAVE_SPCLIB
+CFLAGS += -DEE_FEATURE_OPENGL
+CFLAGS += -DHAVE_STDINT_H
+
+# CCFLAGS += -include /Users/ioan/Library/Developer/Xcode/DerivedData/EternityEngine-amiowacgsiitfefljtrajzjsweon/Build/Intermediates/PrecompiledHeaders/EternityLaunch_Prefix-deqryybjibafylbtiyyjuiwrsntf/EternityLaunch_Prefix.pch
+
+
+
+# CCFLAGS += -std=gnu99
+CCFLAGS += -Werror-implicit-function-declaration
+CCFLAGS += -Wimplicit-int
+CCFLAGS += -Wsequence-point
+
+CXXFLAGS += $(CFLAGS)
+CXXFLAGS += -std=c++11
+CXXFLAGS += -stdlib=libc++
+CXXFLAGS += -nostdinc++
+
+
+LDFLAGS += -stdlib=libc++
+# LDFLAGS += -fobjc-link-runtime
+LDFLAGS += -framework OpenGL
+LDFLAGS += -framework Cocoa
+LDFLAGS += -framework AudioToolbox
+LDFLAGS += -framework AudioUnit
+LDFLAGS += -framework Carbon
+LDFLAGS += -framework IOKit
+LDFLAGS += -Llibc++
+LDFLAGS += -Lstaticlib
+LDFLAGS += -lFLAC
+LDFLAGS += -lmikmod
+LDFLAGS += -lsmpeg
+LDFLAGS += -logg
+LDFLAGS += -lvorbis
+LDFLAGS += -lvorbisfile
+LDFLAGS += -lSDL_mixer
+LDFLAGS += -lSDL_net
+LDFLAGS += -lSDL
+
+SRCS :=
+SRCS += ../source/a_common.cpp
+SRCS += ../source/a_counters.cpp
+SRCS += ../source/a_decorate.cpp
+SRCS += ../source/a_doom.cpp
+SRCS += ../source/a_fixed.cpp
+SRCS += ../source/a_general.cpp
+SRCS += ../source/a_heretic.cpp
+SRCS += ../source/a_hexen.cpp
+SRCS += ../source/a_small.cpp
+SRCS += ../source/acs_acs0.cpp
+SRCS += ../source/acs_acse.cpp
+SRCS += ../source/acs_func.cpp
+SRCS += ../source/acs_intr.cpp
+SRCS += ../source/am_color.cpp
+SRCS += ../source/am_map.cpp
+SRCS += ../source/c_batch.cpp
+SRCS += ../source/c_cmd.cpp
+SRCS += ../source/c_io.cpp
+SRCS += ../source/c_net.cpp
+SRCS += ../source/c_runcmd.cpp
+SRCS += ../source/cam_sight.cpp
+SRCS += ../source/d_deh.cpp
+SRCS += ../source/d_dehtbl.cpp
+SRCS += ../source/d_diskfile.cpp
+SRCS += ../source/d_files.cpp
+SRCS += ../source/d_findiwads.cpp
+SRCS += ../source/d_gi.cpp
+SRCS += ../source/d_io.cpp
+SRCS += ../source/d_items.cpp
+SRCS += ../source/d_iwad.cpp
+SRCS += ../source/d_main.cpp
+SRCS += ../source/d_net.cpp
+SRCS += ../source/doomdef.cpp
+SRCS += ../source/doomstat.cpp
+SRCS += ../source/dstrings.cpp
+SRCS += ../source/e_args.cpp
+SRCS += ../source/e_cmd.cpp
+SRCS += ../source/e_dstate.cpp
+SRCS += ../source/e_edf.cpp
+SRCS += ../source/e_exdata.cpp
+SRCS += ../source/e_fonts.cpp
+SRCS += ../source/e_gameprops.cpp
+SRCS += ../source/e_hash.cpp
+SRCS += ../source/e_inventory.cpp
+SRCS += ../source/e_lib.cpp
+SRCS += ../source/e_mod.cpp
+SRCS += ../source/e_player.cpp
+SRCS += ../source/e_rtti.cpp
+SRCS += ../source/e_sound.cpp
+SRCS += ../source/e_sprite.cpp
+SRCS += ../source/e_states.cpp
+SRCS += ../source/e_string.cpp
+SRCS += ../source/e_things.cpp
+SRCS += ../source/e_ttypes.cpp
+SRCS += ../source/ev_actions.cpp
+SRCS += ../source/ev_bindings.cpp
+SRCS += ../source/ev_specials.cpp
+SRCS += ../source/ev_static.cpp
+SRCS += ../source/f_finale.cpp
+SRCS += ../source/f_wipe.cpp
+SRCS += ../source/g_bind.cpp
+SRCS += ../source/g_cmd.cpp
+SRCS += ../source/g_dmflag.cpp
+SRCS += ../source/g_game.cpp
+SRCS += ../source/g_gfs.cpp
+SRCS += ../source/hi_stuff.cpp
+SRCS += ../source/hu_frags.cpp
+SRCS += ../source/hu_over.cpp
+SRCS += ../source/hu_stuff.cpp
+SRCS += ../source/in_lude.cpp
+SRCS += ../source/info.cpp
+SRCS += ../source/m_argv.cpp
+SRCS += ../source/m_bbox.cpp
+SRCS += ../source/m_buffer.cpp
+SRCS += ../source/m_cheat.cpp
+SRCS += ../source/m_fcvt.cpp
+SRCS += ../source/m_hash.cpp
+SRCS += ../source/m_misc.cpp
+SRCS += ../source/m_qstr.cpp
+SRCS += ../source/m_queue.cpp
+SRCS += ../source/m_random.cpp
+SRCS += ../source/m_shots.cpp
+SRCS += ../source/m_strcasestr.cpp
+SRCS += ../source/m_syscfg.cpp
+SRCS += ../source/m_vector.cpp
+SRCS += ../source/metaapi.cpp
+SRCS += ../source/metaqstring.cpp
+SRCS += ../source/mn_emenu.cpp
+SRCS += ../source/mn_engin.cpp
+SRCS += ../source/mn_files.cpp
+SRCS += ../source/mn_htic.cpp
+SRCS += ../source/mn_menus.cpp
+SRCS += ../source/mn_misc.cpp
+SRCS += ../source/mn_skinv.cpp
+SRCS += ../source/p_anim.cpp
+SRCS += ../source/p_ceilng.cpp
+SRCS += ../source/p_chase.cpp
+SRCS += ../source/p_cmd.cpp
+SRCS += ../source/p_doors.cpp
+SRCS += ../source/p_enemy.cpp
+SRCS += ../source/p_floor.cpp
+SRCS += ../source/p_genlin.cpp
+SRCS += ../source/p_hubs.cpp
+SRCS += ../source/p_info.cpp
+SRCS += ../source/p_inter.cpp
+SRCS += ../source/p_lights.cpp
+SRCS += ../source/p_map.cpp
+SRCS += ../source/p_map3d.cpp
+SRCS += ../source/p_maputl.cpp
+SRCS += ../source/p_mobj.cpp
+SRCS += ../source/p_mobjcol.cpp
+SRCS += ../source/p_partcl.cpp
+SRCS += ../source/p_plats.cpp
+SRCS += ../source/p_portal.cpp
+SRCS += ../source/p_pspr.cpp
+SRCS += ../source/p_pushers.cpp
+SRCS += ../source/p_saveg.cpp
+SRCS += ../source/p_scroll.cpp
+SRCS += ../source/p_sector.cpp
+SRCS += ../source/p_setup.cpp
+SRCS += ../source/p_sight.cpp
+SRCS += ../source/p_skin.cpp
+SRCS += ../source/p_slopes.cpp
+SRCS += ../source/p_spec.cpp
+SRCS += ../source/p_switch.cpp
+SRCS += ../source/p_telept.cpp
+SRCS += ../source/p_things.cpp
+SRCS += ../source/p_tick.cpp
+SRCS += ../source/p_trace.cpp
+SRCS += ../source/p_user.cpp
+SRCS += ../source/p_xenemy.cpp
+SRCS += ../source/polyobj.cpp
+SRCS += ../source/psnprntf.cpp
+SRCS += ../source/r_bsp.cpp
+SRCS += ../source/r_data.cpp
+SRCS += ../source/r_draw.cpp
+SRCS += ../source/r_drawl.cpp
+SRCS += ../source/r_drawq.cpp
+SRCS += ../source/r_dynabsp.cpp
+SRCS += ../source/r_dynseg.cpp
+SRCS += ../source/r_main.cpp
+SRCS += ../source/r_plane.cpp
+SRCS += ../source/r_portal.cpp
+SRCS += ../source/r_ripple.cpp
+SRCS += ../source/r_segs.cpp
+SRCS += ../source/r_sky.cpp
+SRCS += ../source/r_span.cpp
+SRCS += ../source/r_textur.cpp
+SRCS += ../source/r_things.cpp
+SRCS += ../source/r_voxels.cpp
+SRCS += ../source/s_sndseq.cpp
+SRCS += ../source/s_sound.cpp
+SRCS += ../source/sounds.cpp
+SRCS += ../source/st_hbar.cpp
+SRCS += ../source/st_lib.cpp
+SRCS += ../source/st_stuff.cpp
+SRCS += ../source/t_plane.cpp
+SRCS += ../source/tables.cpp
+SRCS += ../source/v_alloc.cpp
+SRCS += ../source/v_block.cpp
+SRCS += ../source/v_buffer.cpp
+SRCS += ../source/v_font.cpp
+SRCS += ../source/v_misc.cpp
+SRCS += ../source/v_patch.cpp
+SRCS += ../source/v_patchfmt.cpp
+SRCS += ../source/v_png.cpp
+SRCS += ../source/v_video.cpp
+SRCS += ../source/version.cpp
+SRCS += ../source/w_formats.cpp
+SRCS += ../source/w_hacks.cpp
+SRCS += ../source/w_levels.cpp
+SRCS += ../source/w_wad.cpp
+SRCS += ../source/w_zip.cpp
+SRCS += ../source/wi_stuff.cpp
+SRCS += ../source/xl_scripts.cpp
+SRCS += ../source/z_native.cpp
+
+SRCS += ../source/Confuse/confuse.cpp
+SRCS += ../source/Confuse/lexer.cpp
+
+SRCS += ../source/gl/gl_init.cpp
+SRCS += ../source/gl/gl_primitives.cpp
+SRCS += ../source/gl/gl_projection.cpp
+SRCS += ../source/gl/gl_texture.cpp
+SRCS += ../source/gl/gl_vars.cpp
+
+SRCS += ../source/hal/i_directory.cpp
+SRCS += ../source/hal/i_gamepads.cpp
+SRCS += ../source/hal/i_platform.cpp
+SRCS += ../source/hal/i_video.cpp
+
+SRCS += ../source/sdl/i_input.cpp
+SRCS += ../source/sdl/i_main.cpp
+SRCS += ../source/sdl/i_net.cpp
+SRCS += ../source/sdl/i_pcsound.cpp
+SRCS += ../source/sdl/i_picker.cpp
+SRCS += ../source/sdl/i_sdlgamepads.cpp
+SRCS += ../source/sdl/i_sdlgl2d.cpp
+SRCS += ../source/sdl/i_sdlmusic.cpp
+SRCS += ../source/sdl/i_sdlsound.cpp
+SRCS += ../source/sdl/i_sdlvideo.cpp
+SRCS += ../source/sdl/i_sound.cpp
+SRCS += ../source/sdl/i_system.cpp
+SRCS += ../source/sdl/mmus2mid.cpp
+SRCS += ../source/sdl/ser_main.cpp
+
+SRCS += ../source/sdl/macosx/SDLMain.m
+
+SRCS += ../source/textscreen/txt_button.c
+SRCS += ../source/textscreen/txt_checkbox.c
+SRCS += ../source/textscreen/txt_desktop.c
+SRCS += ../source/textscreen/txt_dropdown.c
+SRCS += ../source/textscreen/txt_gui.c
+SRCS += ../source/textscreen/txt_inputbox.c
+SRCS += ../source/textscreen/txt_io.c
+SRCS += ../source/textscreen/txt_label.c
+SRCS += ../source/textscreen/txt_radiobutton.c
+SRCS += ../source/textscreen/txt_scrollpane.c
+SRCS += ../source/textscreen/txt_sdl.c
+SRCS += ../source/textscreen/txt_separator.c
+SRCS += ../source/textscreen/txt_spinctrl.c
+SRCS += ../source/textscreen/txt_strut.c
+SRCS += ../source/textscreen/txt_table.c
+SRCS += ../source/textscreen/txt_widget.c
+SRCS += ../source/textscreen/txt_window_action.c
+SRCS += ../source/textscreen/txt_window.c
+
+SRCS += ../zlib/adler32.c
+SRCS += ../zlib/crc32.c
+SRCS += ../zlib/deflate.c
+SRCS += ../zlib/inffast.c
+SRCS += ../zlib/inflate.c
+SRCS += ../zlib/inftrees.c
+SRCS += ../zlib/trees.c
+SRCS += ../zlib/zutil.c
+
+SRCS += ../snes_spc/dsp.cpp
+SRCS += ../snes_spc/SNES_SPC_misc.cpp
+SRCS += ../snes_spc/SNES_SPC_state.cpp
+SRCS += ../snes_spc/SNES_SPC.cpp
+SRCS += ../snes_spc/SPC_DSP.cpp
+SRCS += ../snes_spc/SPC_Filter.cpp
+SRCS += ../snes_spc/spc.cpp
+
+SRCS += ../libpng/png.c
+SRCS += ../libpng/pngerror.c
+SRCS += ../libpng/pngget.c
+SRCS += ../libpng/pngmem.c
+SRCS += ../libpng/pngpread.c
+SRCS += ../libpng/pngread.c
+SRCS += ../libpng/pngrio.c
+SRCS += ../libpng/pngrtran.c
+SRCS += ../libpng/pngrutil.c
+SRCS += ../libpng/pngset.c
+SRCS += ../libpng/pngtrans.c
+SRCS += ../libpng/pngwio.c
+SRCS += ../libpng/pngwrite.c
+SRCS += ../libpng/pngwtran.c
+SRCS += ../libpng/pngwutil.c
+
+DEPS = $(filter %.d, $(SRCS:.c=.d) $(SRCS:.cpp=.d) $(SRCS:.m=.d) $(SRCS:.mm=.d))
+OBJS = $(filter %.o, $(SRCS:.c=.o) $(SRCS:.cpp=.o) $(SRCS:.m=.o) $(SRCS:.mm=.o))
+
+.SUFFIXES:
+.SUFFIXES: .c .cpp .m .mm .d .o
+
+Q ?= @
+
+all: $(BINARY)
+
+ifndef NO_DEPS
+depend: $(DEPS)
+
+ifeq ($(findstring $(MAKECMDGOALS), clean depend Data),)
+-include $(DEPS)
+endif
+endif
+
+$(BINARY): $(OBJS)
+	@echo '===> LD $@'
+	$(Q)$(CXX) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@
+
+.c.o:
+	@echo '===> CC $<'
+	$(Q)$(CC) $(CCFLAGS) -c $< -o $@
+	
+.m.o:
+	@echo '===> CC $<'
+	$(Q)$(CC) $(CCFLAGS) -c $< -o $@
+
+.cpp.o:
+	@echo '===> CXX $<'
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.mm.o:
+	@echo '===> CXX $<'
+	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.c.d:
+	@echo '===> DEP $<'
+	$(Q)$(CC) $(CCFLAGS) -MM $< | sed 's#^$(@F:%.d=%.o):#$@ $(@:%.d=%.o):#' > $@
+
+.cpp.d:
+	@echo '===> DEP $<'
+	$(Q)$(CXX) $(CXXFLAGS) -MM $< | sed 's#^$(@F:%.d=%.o):#$@ $(@:%.d=%.o):#' > $@
+
+clean distclean:
+	@echo '===> CLEAN'
+	$(Q)rm -fr $(DEPS) $(OBJS) $(BINARY) $(BINARY).exe
