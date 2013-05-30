@@ -446,6 +446,7 @@
     </ClCompile>
     <ClCompile Include="..\source\p_clipen.cpp" />
     <ClCompile Include="..\source\p_map.cpp" />
+    <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1278,6 +1279,7 @@
     <ClInclude Include="..\source\p_clipen.h" />
     <ClInclude Include="..\source\p_map.h" />
     <ClInclude Include="..\source\p_mapcontext.h" />
+    <ClInclude Include="..\source\p_portalclip.h" />
     <ClInclude Include="..\source\p_traceengine.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />
     <ClInclude Include="..\Source\m_argv.h" />

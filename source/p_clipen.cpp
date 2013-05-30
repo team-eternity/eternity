@@ -218,6 +218,36 @@ msecnode_t* ClipEngine::addSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnod
 
 
 
+void ClipEngine::linkMobjToSector(Mobj *mobj, sector_t *sector)
+{
+   msecnode_t *node = getSecnode();
+
+   node->m_sector = sector;
+   node->m_thing = mobj;
+
+   node->m_tnext = mobj->sectorlinks;
+   node->m_tprev = NULL;
+   mobj->sectorlinks = node;
+
+   (node->m_sprev = sector->thinglist->m_sprev)->m_snext = node;
+   (node->m_snext = sector->thinglist)->m_sprev = node;
+}
+
+void ClipEngine::unlinkMobjFromSectors(Mobj *mobj)
+{
+   msecnode_t *next;
+   for(msecnode_t *node = mobj->sectorlinks; node; node = next)
+   {
+      next = node->m_tnext;
+      (node->m_snext->m_sprev = node->m_sprev)->m_snext = node->m_snext;
+      putSecnode(node);
+   }
+
+   mobj->sectorlinks = NULL;
+}
+
+
+
 msecnode_t* ClipEngine::delSecnode(msecnode_t *node)
 {
    if(node)

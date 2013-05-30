@@ -710,7 +710,8 @@ static void ACS_funcSectorDamage(ACS_FUNCARG)
    {
       sector = &sectors[secnum];
 
-      for(Mobj *mo = sector->thinglist; mo; mo = mo->snext)
+	  Mobj *mo;
+      for(msecnode_t *node = sector->thinglist->m_snext; (mo = node->m_thing); node = node->m_snext)
       {
          if(mo->player && !(flags & SECDAM_PLAYERS))
             continue;
@@ -1427,7 +1428,8 @@ static int32_t ACS_thingCountSector(int32_t tag, mobjtype_t type, int32_t tid)
    {
       sector = &sectors[secnum];
 
-      for(Mobj *mo = sector->thinglist; mo; mo = mo->snext)
+      Mobj *mo;
+      for(msecnode_t *node = sector->thinglist->m_snext; mo = node->m_thing; node = node->m_snext)
       {
          if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
          {

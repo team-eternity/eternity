@@ -75,7 +75,7 @@ class PortalClipEngine : public ClipEngine
       virtual ClipContext*  getContext();
       virtual void          freeContext(ClipContext *);
       
-   private:
+   protected:
       ClipContext    *unused;
 };
 

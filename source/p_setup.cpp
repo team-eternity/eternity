@@ -527,6 +527,13 @@ void P_LoadSectors(int lumpnum)
       ss->c_portal = ss->f_portal = NULL;
       ss->groupid = R_NOGROUP;
 
+      // SoM: Init things list ring node
+      ss->thinglist = clip->getSecnode();
+	  memset(ss->thinglist, 0, sizeof(*ss->thinglist));
+
+      ss->thinglist->m_snext = ss->thinglist->m_sprev = ss->thinglist;
+	  ss->thinglist->m_sector = ss;
+
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf   = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);

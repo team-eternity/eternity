@@ -2836,13 +2836,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       break;
 
    case portal_skybox:
-      skycam = sector->thinglist;
-      while(skycam)
+      msecnode_t *node;
+      for(node = sector->thinglist->m_snext; skycam = node->m_thing; node = node->m_snext)
       {
          if(skycam->type == CamType)
             break;
-         skycam = skycam->snext;
       }
+
       if(!skycam)
       {
          C_Printf(FC_ERROR "Skybox found with no skybox camera\a\n");

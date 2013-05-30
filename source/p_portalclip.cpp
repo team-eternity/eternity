@@ -43,7 +43,6 @@
 #include "p_mobj.h"
 #include "p_maputl.h"
 #include "p_map3d.h"
-#include "p_mapcontext.h"
 #include "p_portalclip.h"
 #include "p_partcl.h"
 #include "p_portal.h"
@@ -109,8 +108,6 @@ static inline void HitPortalGroup(int groupid, ClipContext *cc)
 //
 static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context)
 {
-   sector_t *secs[2];
-   
    ClipContext *cc = context->clipContext();
    if(cc->bbox[BOXRIGHT]  <= line->bbox[BOXLEFT]   || 
       cc->bbox[BOXLEFT]   >= line->bbox[BOXRIGHT]  || 
@@ -135,12 +132,13 @@ static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context)
    
    if(line->frontsector->f_pflags & PS_PASSABLE && cc->thing->z < line->frontsector->ceilingheight)
       HitPortalGroup(line->frontsector->f_portal->data.link.toid, cc);
+   
+   return true;
 }
 
 
-static void findAdjacentPortals(ClipContext *cc)
+static void FindAdjacentPortals(ClipContext *cc)
 {
-   int top, left, right, bottom;
    int yh, yl, xh, xl;
    int bx, by;
    
@@ -195,10 +193,7 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
    
    if(!(thing->flags & MF_NOSECTOR))
    {
-      Mobj **sprev = thing->sprev;
-      Mobj  *snext = thing->snext;
-      if((*sprev = snext))  // unlink from sector list
-         snext->sprev = sprev;
+      unlinkMobjFromSectors(thing);
 
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
@@ -214,38 +209,11 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
 
 
 
-void PortalClipEngine::setThingPosition(Mobj *thing)
+void P_AddMobjBlockLinks(ClipContext *cc)
 {
-   // link into subsector
-   subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
-
-   thing->groupid = ss->sector->groupid;
-
-   P_LogThingPosition(thing, " set ");
-   
-   // Collect the portal groups
-   ClipContext *cc = getContext();
-   cc->thing = thing;
-   cc->adjacent_groups.makeEmpty();
-   cc->adjacent_groups.add(ss->sector->groupid);
-   memset(cc->markedgroups, 0, sizeof(*(cc->markedgroups)) * markcells);
-
-   // Link into sector here
-   if(!(thing->flags & MF_NOSECTOR))
-   {
-      Mobj **link = &ss->sector->thinglist;
-      Mobj *snext = *link;
-      if((thing->snext = snext))
-         snext->sprev = &thing->snext;
-      thing->sprev = link;
-      *link = thing;
-
-      thing->touching_sectorlist = createSecNodeList(thing, thing->x, thing->y);
-      //thing->old_sectorlist = NULL;
-   }
-
    int xl, xh, yl, yh, mask;
    int xc, yc, bx, by;
+   Mobj *thing = cc->thing;
 
    for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
    {
@@ -272,27 +240,50 @@ void PortalClipEngine::setThingPosition(Mobj *thing)
             if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
                continue;
 
-            // link into blockmap
-            if(!(thing->flags & MF_NOBLOCKMAP))
-            {
-               P_AddMobjBlockLink
-               (
-                  thing, bx, by, 
-                  mask | (by < yh ? SOUTH_ADJACENT : 0) | (bx < xh ? EAST_ADJACENT : 0) | (bx == xc && by == yc ? CENTER_ADJACENT : 0)
-               );
-            }
-
-            // Get adjacent portal groups
-            P_BlockLinesIterator(bx, by, PIT_FindAdjacentPortals, cc);
-
+            P_AddMobjBlockLink
+            (
+               thing, bx, by, 
+               mask | (by < yh ? SOUTH_ADJACENT : 0) | (bx < xh ? EAST_ADJACENT : 0) | (bx == xc && by == yc ? CENTER_ADJACENT : 0)
+            );
             mask |= WEST_ADJACENT;
          }
          mask |= NORTH_ADJACENT;
          mask &= ~WEST_ADJACENT;
       }
    }
+}
 
 
+void PortalClipEngine::setThingPosition(Mobj *thing)
+{
+   // link into subsector
+   subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
+
+   thing->groupid = ss->sector->groupid;
+
+   P_LogThingPosition(thing, " set ");
+   
+   // Collect the portal groups
+   ClipContext *cc = getContext();
+   cc->thing = thing;
+   cc->adjacent_groups.makeEmpty();
+   cc->adjacent_groups.add(ss->sector->groupid);
+   memset(cc->markedgroups, 0, sizeof(*(cc->markedgroups)) * markcells);
+   FindAdjacentPortals(cc);
+
+   // Link into sector here
+   if(!(thing->flags & MF_NOSECTOR))
+   {
+      linkMobjToSector(thing, ss->sector);
+
+      thing->touching_sectorlist = createSecNodeList(thing, thing->x, thing->y);
+      thing->old_sectorlist = NULL;
+   }
+
+   if(!(thing->flags & MF_NOBLOCKMAP))
+   {
+      P_AddMobjBlockLinks(cc);
+   }
 }
 
 

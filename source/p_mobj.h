@@ -216,9 +216,9 @@ public:
    
    // Data members
 
-   // More list: links in sector (if needed)
-   Mobj             *snext;
-   Mobj            **sprev; // killough 8/10/98: change to ptr-to-ptr
+   // SoM: Sector links. This is the list of all sectors a mobj center is inside
+   // the list of sectors a mobj is in is chained along the m_t* links.
+   msecnode_t         *sectorlinks;
 
    //More drawing info: to determine current sprite.
    angle_t             angle;  // orientation

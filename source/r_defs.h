@@ -186,7 +186,9 @@ struct sector_t
    PointThinker soundorg;   // origin for any sounds played by the sector
    PointThinker csoundorg;  // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;          // if == validcount, already checked
-   Mobj *thinglist;         // list of mobjs in sector
+
+   // SoM: Things can now technically be inside multiple sectors
+   msecnode_t  *thinglist;
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in Mobj, but presented performance problems

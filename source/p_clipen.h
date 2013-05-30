@@ -35,9 +35,6 @@ struct sector_t;
 
 class  ClipContext;
 
-#include "m_collection.h"
-
-
 #define USERANGE        (64*FRACUNIT)
 #define MELEERANGE      (64*FRACUNIT)
 #define MISSILERANGE    (32*64*FRACUNIT)
@@ -143,6 +140,12 @@ class ClipEngine
       // Returns a node to the freelist.
       //
       static void          putSecnode(msecnode_t *node);
+
+      // Links a mobj to a sector.
+      static void          linkMobjToSector(Mobj *mobj, sector_t *sector);
+
+      // Removes all sector links for a given mobj.
+      static void          unlinkMobjFromSectors(Mobj *mobj);
       
       // phares 3/16/98
       // Searches the current list to see if this sector is already there. If 

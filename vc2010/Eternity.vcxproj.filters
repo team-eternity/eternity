@@ -235,6 +235,9 @@
     <Filter Include="Source Files\Clip\Classic">
       <UniqueIdentifier>{a91de23b-584b-4f7d-9945-306a3c0c6313}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Clip\Portal">
+      <UniqueIdentifier>{2998062c-0ba6-4793-8477-fc64a6aeac97}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -917,6 +920,9 @@
     </ClCompile>
     <ClCompile Include="..\source\p_map.cpp">
       <Filter>Source Files\Clip\Classic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portalclip.cpp">
+      <Filter>Source Files\Clip\Portal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1609,6 +1615,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_map.h">
       <Filter>Source Files\Clip\Classic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalclip.h">
+      <Filter>Source Files\Clip\Portal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

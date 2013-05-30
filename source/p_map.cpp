@@ -2796,13 +2796,7 @@ void DoomClipEngine::unsetThingPosition(Mobj *thing)
    {
       // invisible things don't need to be in sector list
       // unlink from subsector
-      
-      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
-      // pointers, allows head node pointers to be treated like everything else
-      Mobj **sprev = thing->sprev;
-      Mobj  *snext = thing->snext;
-      if((*sprev = snext))  // unlink from sector list
-         snext->sprev = sprev;
+      unlinkMobjFromSectors(thing);
 
       // phares 3/14/98
       //
@@ -2853,16 +2847,7 @@ void DoomClipEngine::setThingPosition(Mobj *thing)
    if(!(thing->flags & MF_NOSECTOR))
    {
       // invisible things don't go into the sector links
-      
-      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-      // pointers, allows head nodes to be treated like everything else
-      
-      Mobj **link = &ss->sector->thinglist;
-      Mobj *snext = *link;
-      if((thing->snext = snext))
-         snext->sprev = &thing->snext;
-      thing->sprev = link;
-      *link = thing;
+      linkMobjToSector(thing, ss->sector);      
 
       // phares 3/16/98
       //
