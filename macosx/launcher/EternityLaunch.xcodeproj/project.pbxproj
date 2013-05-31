@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4F74E18E17589B250066CD25 /* Eternity.app in Resources */ = {isa = PBXBuildFile; fileRef = FA601C711696228000046D2D /* Eternity.app */; };
+		4F74E1911758B53A0066CD25 /* Eternity-106.app in Resources */ = {isa = PBXBuildFile; fileRef = 4F74E18C17589A2D0066CD25 /* Eternity-106.app */; };
 		4FD651B916B8183500F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */; };
@@ -219,6 +220,7 @@
 				FA8216A41647129700FF998A /* docs in Resources */,
 				FA8216A51647129700FF998A /* user in Resources */,
 				4F74E18E17589B250066CD25 /* Eternity.app in Resources */,
+				4F74E1911758B53A0066CD25 /* Eternity-106.app in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

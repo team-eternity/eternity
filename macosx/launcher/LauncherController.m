@@ -25,6 +25,10 @@
 //
 //----------------------------------------------------------------------------
 
+//
+// gArgc and gArgv
+//
+extern NSArray *gArgArray;
 
 // TODO:
 //
@@ -51,6 +55,7 @@ static BOOL calledAppMainline = FALSE;
 -(void)loadDefaults;
 -(void)saveDefaults;
 -(void)doAddPwadFromURL:(NSURL *)wURL;
+-(void)executeGame:(BOOL)x64flag withArgs:(NSArray *)deploy;
 @end
 
 //
@@ -241,6 +246,15 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    
    // Add documents to list
    [self makeDocumentMenu];
+   
+   [self setupWorkingDirectory];
+   
+   // If game got given several arguments, start the game now
+   if([gArgArray count] > 0)
+   {
+      BOOL runAsX64 = [[NSRunningApplication currentApplication] executableArchitecture] == NSBundleExecutableArchitectureX86_64;
+      [self executeGame:runAsX64 withArgs:gArgArray];
+   }
 }
 
 //
@@ -318,7 +332,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	// NOTE: since Eternity may still use "." directly, I'm still using the shell chdir command.
 	// TODO: copy bundled prototype user data into workingDirPath, if it doesn't exist there yet
 	// FIXME: make workingDirPath a member variable.
-	
+	// COPIED from SDLMain.m
 }
 
 //
@@ -329,11 +343,11 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 //
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-	if (calledAppMainline)
-		return NO;	// ignore this document, it's too late within the game
+	// if (calledAppMainline)
+	//	return NO;	// ignore this document, it's too late within the game
 
-	[self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
-	[self updateParameters:self];
+	// [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
+	// [self updateParameters:self];
 
    return YES;
 }
@@ -344,7 +358,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 - (void) applicationDidFinishLaunching: (NSNotification *) note
 {
 	// Set the working directory to the .app's parent directory
-	[self setupWorkingDirectory];
+	// [self setupWorkingDirectory];
 
 	// IOAN 20121104: no need to fix the menu
 	// IOAN 20121203: no longer relevant if launched from Finder or not
@@ -433,22 +447,17 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 }
 
 //
-// doLaunchGame
+// executeGame:withArgs:
 //
-// Everything is set, start the game.
+// Run the game given the args and arch
 //
--(void)doLaunchGameAs64Bit:(BOOL)x64flag
+- (void)executeGame:(BOOL)x64flag withArgs:(NSArray *)deploy
 {
-	[self updateParameters:self];	// Update parameters.
-   // FIXME: do it in real-time
-	
-	// Add -base and user here
-
-	NSArray *deploy = [param deployArray];
+   //
 	// Start console
-	
-	calledAppMainline = TRUE;
-
+   //
+   [deploy retain];
+   
 	[[self window] orderOut:self];
 	
 	// IOAN 20130103: use Neil's PrBoom-Mac Launcher code
@@ -460,7 +469,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    if(!enginePath)
    {
       NSBeep();   // Unexpected error not to have an EE executable, at any rate
-                  // Beep of death
+      // Beep of death
       return;
    }
 	NSBundle *engineBundle = [NSBundle bundleWithPath:enginePath];
@@ -477,6 +486,8 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
       [task setLaunchPath:exePath];
       [task setArguments:deploy];
    }
+   
+   calledAppMainline = TRUE;
 	
 	[console startLogging:task];
 	
@@ -484,6 +495,27 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    // We're done, thank you for playing
    //   if(status == 0)   // only exit if it's all ok
    //    exit(status);
+   
+   [deploy release];
+}
+
+//
+// doLaunchGame
+//
+// Everything is set, start the game.
+//
+-(void)doLaunchGameAs64Bit:(BOOL)x64flag
+{
+	[self updateParameters:self];	// Update parameters.
+   // FIXME: do it in real-time
+	
+	// Add -base and user here
+
+	NSArray *deploy = [[param deployArray] retain];
+   
+   [self executeGame:x64flag withArgs:deploy];
+   
+   [deploy release];
 }
 
 //
