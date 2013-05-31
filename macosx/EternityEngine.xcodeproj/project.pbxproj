@@ -277,28 +277,6 @@
 		FAEB990716666A65004B0CD1 /* ev_specials.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAEB990516666A65004B0CD1 /* ev_specials.cpp */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		FA82164A1647124600FF998A /* Base and User */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 1;
-			files = (
-			);
-			name = "Base and User";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FA930395158DD16C00FD0C80 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -315,6 +293,8 @@
 		4F69650716C3B1EB00FF2028 /* ev_bindings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_bindings.h; path = ../source/ev_bindings.h; sourceTree = "<group>"; };
 		4F69650816C3B1EB00FF2028 /* ev_macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_macros.h; path = ../source/ev_macros.h; sourceTree = "<group>"; };
 		4F69650916C3B1EB00FF2028 /* ev_static.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_static.cpp; path = ../source/ev_static.cpp; sourceTree = "<group>"; };
+		4F74E16D175882C20066CD25 /* Makefile.osx106 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.osx106; sourceTree = "<group>"; };
+		4F74E1701758870C0066CD25 /* buildforosx106.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = buildforosx106.sh; sourceTree = "<group>"; };
 		4F7BB78C175797640079E263 /* i_directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_directory.cpp; path = ../source/hal/i_directory.cpp; sourceTree = "<group>"; };
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
@@ -897,6 +877,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		4F74E16C175882B80066CD25 /* OSX10.6 */ = {
+			isa = PBXGroup;
+			children = (
+				4F74E16D175882C20066CD25 /* Makefile.osx106 */,
+				4F74E1701758870C0066CD25 /* buildforosx106.sh */,
+			);
+			name = OSX10.6;
+			sourceTree = "<group>";
+		};
 		4F9A249116D9585E002BE852 /* T_ */ = {
 			isa = PBXGroup;
 			children = (
@@ -925,6 +914,7 @@
 		4FFDC9651739880D00DE48A0 /* Build Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				4F74E16C175882B80066CD25 /* OSX10.6 */,
 			);
 			name = "Build Scripts";
 			sourceTree = "<group>";
@@ -1778,8 +1768,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				FA930395158DD16C00FD0C80 /* CopyFiles */,
-				FA82164A1647124600FF998A /* Base and User */,
+				4F74E16F1758854D0066CD25 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1831,6 +1820,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4F74E16F1758854D0066CD25 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$CONFIGURATION\" == \"Release\" ];then\n    cd \"$SRCROOT\"\n    ./buildforosx106.sh\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {

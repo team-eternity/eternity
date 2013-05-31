@@ -1,12 +1,15 @@
+# IMPORTANT: THIS RECEIVES ONE ENVIRONMENT VARIABLE FROM COMMAND-LINE:
+# arch=i386 or arch=x86_64
+
 # CONFIG ?= config.default
 # -include $(CONFIG)
 MACOSX_DEPLOYMENT_TARGET = 10.5
 export MACOSX_DEPLOYMENT_TARGET
 
-CC = /Users/ioan/Applications/clang+llvm-3.2-x86_64-apple-darwin11/bin/clang
-CXX = /Users/ioan/Applications/clang+llvm-3.2-x86_64-apple-darwin11/bin/clang++
+# IMPORTANT: change this value to your location of clang
+CC = /Applications/clang+llvm-3.2-x86_64-apple-darwin11/bin/clang
+CXX = /Applications/clang+llvm-3.2-x86_64-apple-darwin11/bin/clang++
 
-BINARY    ?= eternity
 PREFIX    ?= /usr/local
 # MANPREFIX ?= $(PREFIX)
 
@@ -14,12 +17,15 @@ PREFIX    ?= /usr/local
 # CFLAGS_SDL  ?= $(shell $(SDL_CONFIG) --cflags)
 # LDFLAGS_SDL ?= $(shell $(SDL_CONFIG) --libs)
 
-CFLAGS += -arch x86_64
+# IMPORTANT: Set architecture from command-line
+CFLAGS += -arch $(arch)
+BINARY    ?= eternity-$(arch)
 
 # CFLAGS += -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
 
+# IMPORTANT: change libcxx location to a proper one if needed
 CFLAGS += -O3
-CFLAGS += -Iclang/include
+CFLAGS += -I../../libcxx/include
 # CCFLAGS += -I/Library/Frameworks/SDL.framework/Headers
 # CCFLAGS += -I/Library/Frameworks/SDL_mixer.framework/Headers
 # CCFLAGS += -I/Library/Frameworks/SDL_net.framework/Headers

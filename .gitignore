@@ -23,3 +23,7 @@ macosx/launcher/EternityLaunch.xcodeproj/xcuserdata/ioan.xcuserdatad/xcschemes/E
 macosx/launcher/EternityLaunch.xcodeproj/xcuserdata/ioan.xcuserdatad/xcschemes/xcschememanagement.plist
 macosx/EternityEngine.xcodeproj/xcuserdata/ioan.xcuserdatad/xcschemes/Eternity Engine.xcscheme
 macosx/EternityEngine.xcodeproj/xcuserdata/ioan.xcuserdatad/xcschemes/xcschememanagement.plist
+Eternity Engine copy.xcscheme
+macosx/libc++/libc++.1.dylib
+macosx/libc++/libc++.dylib
+macosx/libc++/libc++abi.dylib
