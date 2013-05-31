@@ -68,6 +68,6 @@ cp libc++/libc++.1.dylib "$(dirname "$EXECPATH")"
 cp libc++/libc++abi.dylib "$(dirname "$EXECPATH")"
 
 # Remove info.plist unwanted data
-PLISTPATH="$CONFIGURATION_BUILD_DIR/$INFOPLIST_PATH"
+PLISTPATH="$CONFIGURATION_BUILD_DIR/$OSX106WRAPPER/Contents/Info.plist"
 sed 's/macosx10\.8//g' "$PLISTPATH" | sed 's/<string>10\.7<\/string>/<string>10\.5<\/string>/g' > "$PLISTPATH"2
 mv "$PLISTPATH"2 "$PLISTPATH"
