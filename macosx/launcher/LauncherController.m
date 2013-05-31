@@ -474,7 +474,24 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    }
 	NSBundle *engineBundle = [NSBundle bundleWithPath:enginePath];
 	
-   [task setEnvironment:@{@"ETERNITYUSER":userPath, @"ETERNITYBASE":basePath}];
+   __block char *env;
+   NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithCapacity:2];
+   [environment setDictionary:@{@"ETERNITYUSER":userPath, @"ETERNITYBASE":basePath}];
+   
+   
+   void (^AddEnv)(const char *) = ^(const char *envname)
+   {
+      env = getenv(envname);
+      if(env)
+         [environment setObject:[NSString stringWithCString:env encoding:NSUTF8StringEncoding] forKey:[NSString stringWithCString:envname encoding:NSUTF8StringEncoding]];
+   };
+   
+   AddEnv("DOOMWADDIR");
+   AddEnv("DOOMWADPATH");
+   
+   [task setEnvironment:environment];
+   [environment release];
+   
    NSString *exePath = [engineBundle executablePath];
    if (!x64flag)
    {
