@@ -121,6 +121,9 @@ DJGPP libc
 MinGW libc
    Matt Weinstein et al.
    
+LLVM libc++
+   LLVM Team, University of Illinois at Urbana-Champaign; Howard Hinnant et al.
+   
 SDL and Support Libraries
    Sam Lantinga et al.
                           
