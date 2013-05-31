@@ -39,12 +39,12 @@
 ClipContext::ClipContext() : spechit()
 {
    this->from = NULL;
+   this->markedgroups = NULL;
 }
 
 
 ClipContext::~ClipContext()
 {
-   done();
 }
 
 

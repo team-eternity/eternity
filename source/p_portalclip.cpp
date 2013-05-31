@@ -66,7 +66,7 @@
 
 // ----------------------------------------------------------------------------
 // PortalClip
-static int markcells;
+static int groupcells;
 
 
 ClipContext*  PortalClipEngine::getContext()
@@ -74,7 +74,7 @@ ClipContext*  PortalClipEngine::getContext()
    if(unused == NULL) {
       ClipContext *ret = new ClipContext();
       ret->setEngine(this);
-      ret->markedgroups = ecalloctag(int *, markcells, sizeof(*(ret->markedgroups)), PU_LEVEL, NULL);
+      ret->markedgroups = ecalloctag(int *, groupcells, sizeof(*(ret->markedgroups)), PU_LEVEL, NULL);
       return ret;
    }
    
@@ -209,7 +209,7 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
 
 
 
-void P_AddMobjBlockLinks(ClipContext *cc)
+void PortalClipEngine::addMobjBlockLinks(ClipContext *cc)
 {
    int xl, xh, yl, yh, mask;
    int xc, yc, bx, by;
@@ -254,6 +254,26 @@ void P_AddMobjBlockLinks(ClipContext *cc)
 }
 
 
+void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
+{
+	for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
+	{
+      // link into subsector
+      linkoffset_t *link = P_GetLinkOffset(thing->groupid, cc->adjacent_groups[groupindex]);
+	   subsector_t *ss = R_PointInSubsector(thing->x + link->x, thing->y + link->y);
+      linkMobjToSector(thing, ss->sector);
+
+
+	}
+}
+
+
+
+msecnode_t *PortalClipEngine::gatherSecNodes(Mobj *thing, int x, int y, ClipContext *cc)
+{
+   return NULL;
+}
+
 void PortalClipEngine::setThingPosition(Mobj *thing)
 {
    // link into subsector
@@ -268,33 +288,32 @@ void PortalClipEngine::setThingPosition(Mobj *thing)
    cc->thing = thing;
    cc->adjacent_groups.makeEmpty();
    cc->adjacent_groups.add(ss->sector->groupid);
-   memset(cc->markedgroups, 0, sizeof(*(cc->markedgroups)) * markcells);
+   memset(cc->markedgroups, 0, sizeof(*(cc->markedgroups)) * groupcells);
    FindAdjacentPortals(cc);
 
    // Link into sector here
    if(!(thing->flags & MF_NOSECTOR))
    {
-      linkMobjToSector(thing, ss->sector);
-
-      thing->touching_sectorlist = createSecNodeList(thing, thing->x, thing->y);
-      thing->old_sectorlist = NULL;
+      gatherSectorLinks(thing, cc);
    }
 
    if(!(thing->flags & MF_NOBLOCKMAP))
    {
-      P_AddMobjBlockLinks(cc);
+      addMobjBlockLinks(cc);
    }
+
+   cc->done();
 }
 
 
 void PortalClipEngine::mapLoaded()
 {
-   markcells = (P_PortalGroupCount() >> 5) + (P_PortalGroupCount() % 32 ? 1 : 0);
+   groupcells = (P_PortalGroupCount() >> 5) + (P_PortalGroupCount() % 32 ? 1 : 0);
    
    ClipContext *cc = unused;   
    while(cc)
    {
-      cc->markedgroups = ecalloctag(int *, markcells, sizeof(*(cc->markedgroups)), PU_LEVEL, NULL);
+      cc->markedgroups = ecalloctag(int *, groupcells, sizeof(*(cc->markedgroups)), PU_LEVEL, NULL);
       cc = cc->next;
    }
 }

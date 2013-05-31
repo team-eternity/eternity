@@ -2862,7 +2862,7 @@ void DoomClipEngine::setThingPosition(Mobj *thing)
       // at sector_t->touching_thinglist) are broken. When a node is
       // added, new sector links are created.
 
-      thing->touching_sectorlist = clip->createSecNodeList(thing, thing->x, thing->y);
+      thing->touching_sectorlist = createSecNodeList(thing, thing->x, thing->y);
       thing->old_sectorlist = NULL;
    }
 

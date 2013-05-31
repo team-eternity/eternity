@@ -103,7 +103,6 @@ class ClipEngine
 
       virtual void        delSeclist(msecnode_t *) = 0;
       virtual void        freeSecNodeList(void);
-      virtual msecnode_t *createSecNodeList(Mobj *,fixed_t, fixed_t) = 0;
       
       virtual int  getMoveFactor(Mobj *mo, int *friction) = 0;
       virtual int  getFriction(const Mobj *mo, int *factor) = 0;

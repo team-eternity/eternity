@@ -54,9 +54,6 @@ class PortalClipEngine : public ClipEngine
       virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc);
       virtual bool checkSides(Mobj *actor, int x, int y, ClipContext *cc);
 
-      virtual void delSeclist(msecnode_t *);
-      virtual msecnode_t *createSecNodeList(Mobj *,fixed_t, fixed_t);
-      
       virtual int  getMoveFactor(Mobj *mo, int *friction);
       virtual int  getFriction(const Mobj *mo, int *factor);
       virtual void applyTorque(Mobj *mo, ClipContext *cc);
@@ -77,6 +74,12 @@ class PortalClipEngine : public ClipEngine
       
    protected:
       ClipContext    *unused;
+
+      // Internal utilities
+      void gatherSectorLinks(Mobj *thing, ClipContext *cc);
+      void addMobjBlockLinks(ClipContext *cc);
+      void delSeclist(msecnode_t *);
+      msecnode_t *gatherSecNodes(Mobj *thing, int x, int y, ClipContext *cc);
 };
 
 
