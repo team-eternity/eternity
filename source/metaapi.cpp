@@ -78,7 +78,7 @@ static EHashTable<metakey_t, ENCStringHashKey, &metakey_t::key, &metakey_t::link
    metaKeyHash;
 
 // Collection of all key objects
-static PODCollection<metakey_t> metaKeys;
+static PODCollection<metakey_t *> metaKeys;
 
 //
 // MetaKey
@@ -94,10 +94,17 @@ static metakey_t &MetaKey(const char *key)
    // Do we already have this key?
    if(!(keyObj = metaKeyHash.objectForKey(key)))
    {
-      keyObj = &metaKeys.addNew();
+      keyObj = estructalloc(metakey_t, 1);
+      
+      // add it to the list
+      metaKeys.add(keyObj);
+
       keyObj->key     = estrdup(key);
       keyObj->index   = metaKeys.getLength() - 1;
       keyObj->unmodHC = ENCStringHashKey::HashCode(key);
+
+      // add it to the list
+      metaKeys.add(keyObj);
 
       // hash it
       metaKeyHash.addObject(keyObj, keyObj->unmodHC);
@@ -116,7 +123,7 @@ static metakey_t &MetaKeyForIndex(size_t index)
    if(index >= metaKeys.getLength())
       I_Error("MetaKeyForIndex: illegal key index requested\n");
 
-   return metaKeys[index];
+   return *metaKeys[index];
 }
 
 //=============================================================================

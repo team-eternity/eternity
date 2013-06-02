@@ -1048,13 +1048,14 @@ void R_InitTranslationTables()
 //
 int R_TranslationNumForName(const char *name)
 {
+   auto &ns = wGlobalDir.getNamespace(lumpinfo_t::ns_translations);
    int result  = -1;
    int lumpnum = W_CheckNumForNameNS(name, lumpinfo_t::ns_translations);
 
    // NB: result is + 1 as zero is assumed to be no translation by code 
    // that uses this function
    if(lumpnum != -1)
-      result = (lumpnum - firsttranslationlump + TRANSLATIONCOLOURS) + 1;
+      result = (lumpnum - ns.firstLump + TRANSLATIONCOLOURS) + 1;
 
    return result;
 }
