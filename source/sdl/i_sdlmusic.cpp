@@ -225,6 +225,9 @@ static int I_SDLInitSoundForMusic(void)
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
       return 0;
+
+   if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
+      audio_buffers = I_MakeSoundBufferSize(audio_buffers);
    
    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
       return 0;

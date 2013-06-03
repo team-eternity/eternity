@@ -447,7 +447,7 @@ int EV_SpecialForStaticInitName(const char *name)
 //
 // EV_IsParamStaticInit
 //
-// Test if a given line special is bound to a parameterized statc init
+// Test if a given line special is bound to a parameterized static init
 // function. There are only a handful of these, so they are hard-coded
 // here rather than being tablified.
 //

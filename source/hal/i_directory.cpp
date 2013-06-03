@@ -27,7 +27,7 @@
 #include "i_directory.h"
 
 #include "i_platform.h"
-#include "m_qstr.h"
+#include "../m_qstr.h"
 
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
 #include <sys/stat.h>

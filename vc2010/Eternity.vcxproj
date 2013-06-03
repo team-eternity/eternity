@@ -414,6 +414,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\hal\i_directory.cpp" />
     <ClCompile Include="..\Source\hu_frags.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1274,6 +1275,7 @@
     <ClInclude Include="..\Source\g_dmflag.h" />
     <ClInclude Include="..\Source\g_game.h" />
     <ClInclude Include="..\Source\g_gfs.h" />
+    <ClInclude Include="..\source\hal\i_directory.h" />
     <ClInclude Include="..\Source\Hu_frags.h" />
     <ClInclude Include="..\Source\Hu_over.h" />
     <ClInclude Include="..\Source\Hu_stuff.h" />

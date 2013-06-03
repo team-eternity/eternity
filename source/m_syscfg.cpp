@@ -152,7 +152,7 @@ static default_t sysdefaults[] =
                "Directory containing Master Levels wad files"),
 
    DEFAULT_STR("w_norestpath", &w_norestpath, NULL, "", default_t::wad_no,
-               "Path to No Rest for the Living"),
+               "Path to 'No Rest for the Living'"),
 
    // 11/04/09: system-level options moved here from the main config
 
