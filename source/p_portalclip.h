@@ -83,5 +83,21 @@ class PortalClipEngine : public ClipEngine
 };
 
 
+class MarkVector : public ZoneObject
+{
+public:
+   MarkVector(size_t size);
+   virtual ~MarkVector();
+
+   void clearMarks();
+   void mark(size_t itemIndex);
+   bool isMarked(size_t itemIndex) const { return !!(markArray[itemIndex >> 3] & (1 << (itemIndex & 7))); };
+
+protected:
+   size_t  arraySize;
+   byte   *markArray;
+};
+
+
 
 #endif // P_PORTALCLIP_H

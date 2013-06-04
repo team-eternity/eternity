@@ -64,7 +64,7 @@
 
 
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------
 // PortalClip
 static int groupcells;
 
@@ -74,7 +74,7 @@ ClipContext*  PortalClipEngine::getContext()
    if(unused == NULL) {
       ClipContext *ret = new ClipContext();
       ret->setEngine(this);
-      ret->markedgroups = ecalloctag(int *, groupcells, sizeof(*(ret->markedgroups)), PU_LEVEL, NULL);
+      ret->markedgroups = new (PU_LEVEL) MarkVector(groupcells);
       return ret;
    }
    
@@ -96,10 +96,10 @@ void PortalClipEngine::freeContext(ClipContext *cc)
 
 static inline void HitPortalGroup(int groupid, ClipContext *cc)
 {
-   if(cc->markedgroups[groupid >> 5] & 1 << (groupid % 32))
+   if(cc->markedgroups->isMarked(groupid))
       return;
       
-   cc->markedgroups[groupid >> 5] |= 1 << (groupid % 32);
+   cc->markedgroups->mark(groupid);
    cc->adjacent_groups.add(groupid);
 }
 
@@ -288,7 +288,7 @@ void PortalClipEngine::setThingPosition(Mobj *thing)
    cc->thing = thing;
    cc->adjacent_groups.makeEmpty();
    cc->adjacent_groups.add(ss->sector->groupid);
-   memset(cc->markedgroups, 0, sizeof(*(cc->markedgroups)) * groupcells);
+   cc->markedgroups->clearMarks();
    FindAdjacentPortals(cc);
 
    // Link into sector here
@@ -313,7 +313,37 @@ void PortalClipEngine::mapLoaded()
    ClipContext *cc = unused;   
    while(cc)
    {
-      cc->markedgroups = ecalloctag(int *, groupcells, sizeof(*(cc->markedgroups)), PU_LEVEL, NULL);
+      cc->markedgroups = new (PU_LEVEL) MarkVector(groupcells);
       cc = cc->next;
    }
+}
+
+
+
+// --------------------------------------------------------------------------------------
+// MarkVector
+
+MarkVector::MarkVector(size_t numItems) : ZoneObject()
+{
+   arraySize = ((numItems + 7) & ~7) / 8;
+   markArray = ecalloctag(byte *, arraySize, sizeof(byte), PU_STATIC, NULL);
+}
+
+
+MarkVector::~MarkVector() 
+{
+   efree(markArray);
+   arraySize = 0;
+}
+
+
+void MarkVector::clearMarks()
+{
+   memset(markArray, 0, sizeof(byte) * arraySize);
+}
+
+
+void MarkVector::mark(size_t itemIndex)
+{
+   markArray[itemIndex >> 3] |= 1 << (itemIndex & 7);
 }

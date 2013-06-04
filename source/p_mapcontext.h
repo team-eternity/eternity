@@ -37,6 +37,7 @@ class  ClipEngine;
 class  TracerEngine;
 class  ClipContext;
 class  TracerContext;
+class  MarkVector;
 
 
 #include "m_collection.h"
@@ -118,7 +119,7 @@ class ClipContext : public MapContext
       
       // All the portal groups the mobj would be touching in the new position.
       PODCollection<int> adjacent_groups;
-      int *markedgroups;
+      MarkVector *markedgroups;
       
    private:
       ClipEngine *from;
