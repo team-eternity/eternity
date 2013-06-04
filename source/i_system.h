@@ -78,8 +78,6 @@ ticcmd_t* I_BaseTiccmd (void);
 
 void I_Quit(void);
 
-#define I_Tactile(on, off, total)
-
 // haleyjd 05/21/10: error codes for I_FatalError
 enum
 {

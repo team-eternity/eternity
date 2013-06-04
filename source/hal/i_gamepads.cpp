@@ -332,5 +332,84 @@ CONSOLE_COMMAND(i_joystick, 0)
    I_SelectDefaultGamePad();
 }
 
+//=============================================================================
+//
+// Haptic Output
+//
+
+IMPLEMENT_RTTI_TYPE(HALHapticInterface)
+
+// Enable or disable force feedback regardless of whether the device supports
+// it or not.
+bool i_forcefeedback;
+
+//
+// I_StartHaptic
+//
+// Start a haptic effect with an argument which may affect the strength or
+// duration of the effect, depending on the type of effect being ordered.
+//
+void I_StartHaptic(HALHapticInterface::effect_e effect, int data)
+{
+   HALHapticInterface *hhi;
+   
+   if(i_forcefeedback && activePad && (hhi = activePad->getHapticInterface()))
+      hhi->startEffect(effect, data);
+}
+
+//
+// I_PauseHaptics
+//
+// Pause or unpause all running haptic effects.
+// Call when the game is paused or is not the active process.
+//
+void I_PauseHaptics(bool effectsPaused)
+{
+   HALHapticInterface *hhi;
+
+   if(activePad && (hhi = activePad->getHapticInterface()))
+      hhi->pauseEffects(effectsPaused);
+}
+
+//
+// I_UpdateHaptics
+//
+// Update haptic effects.
+// Call from the main game loop, as often as possible.
+//
+void I_UpdateHaptics()
+{
+   HALHapticInterface *hhi;
+
+   if(i_forcefeedback && activePad && (hhi = activePad->getHapticInterface()))
+      hhi->updateEffects();
+}
+
+//
+// I_ClearHaptics
+//
+// Clear haptic effects.
+// Call when toggling haptic output, when changing devices, or when shutting 
+// down the program.
+// NB: This is NOT invoked by the HAL when changing pads. Invoke your own
+//   HALGamePad's haptic interface clearEffects method when your pad is
+//   selected and deselected.
+//
+void I_ClearHaptics()
+{
+   HALHapticInterface *hhi;
+
+   if(activePad && (hhi = activePad->getHapticInterface()))
+      hhi->clearEffects();
+}
+
+VARIABLE_TOGGLE(i_forcefeedback, NULL, onoff);
+CONSOLE_VARIABLE(i_forcefeedback, i_forcefeedback, 0)
+{
+   // stop any running effects immediately if false
+   if(!i_forcefeedback)
+      I_ClearHaptics();
+}
+
 // EOF
 

@@ -89,10 +89,19 @@ bool XInputGamePadDriver::initialize()
    return true;
 }
 
+//
+// XInputGamePadDriver::shutdown
+//
 void XInputGamePadDriver::shutdown()
 {
 }
-   
+
+//
+// XInputGamePadDriver::enumerateDevices
+//
+// Test connected state of all XInput devices and instantiate an instance of
+// XInputGamePad for each one detected.
+//
 void XInputGamePadDriver::enumerateDevices()
 {
    XINPUT_STATE testState;
@@ -123,7 +132,7 @@ IMPLEMENT_RTTI_TYPE(XInputGamePad)
 // Constructor
 //
 XInputGamePad::XInputGamePad(unsigned long userIdx)
-   : Super(), dwUserIndex(userIdx)
+   : Super(), dwUserIndex(userIdx), haptics(userIdx)
 {
    int index = static_cast<int>(dwUserIndex);
    name << "XInput Gamepad " << index + 1;
@@ -140,10 +149,17 @@ XInputGamePad::XInputGamePad(unsigned long userIdx)
 bool XInputGamePad::select()
 {
    XINPUT_STATE testState;
+   bool connected = false;
 
    memset(&testState, 0, sizeof(testState));
 
-   return !pXInputGetState(dwUserIndex, &testState);
+   if(!pXInputGetState(dwUserIndex, &testState))
+   {
+      haptics.clearEffects();
+      connected = true;
+   }
+
+   return connected;
 }
 
 //
@@ -151,7 +167,7 @@ bool XInputGamePad::select()
 //
 void XInputGamePad::deselect()
 {
-   // Nothing to be done here.
+   haptics.clearEffects();
 }
 
 struct buttonenum_t
@@ -258,6 +274,95 @@ void XInputGamePad::poll()
       state.axes[4] = normAxis(pad.bLeftTrigger,  XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
       state.axes[5] = normAxis(pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
    }
+}
+
+//=============================================================================
+//
+// XInputHapticInterface
+//
+// Support for force feedback through the XInput API.
+//
+
+IMPLEMENT_RTTI_TYPE(XInputHapticInterface)
+
+//
+// Constructor
+//
+XInputHapticInterface::XInputHapticInterface(unsigned long userIdx)
+   : Super(), dwUserIndex(userIdx), pauseState(false) 
+{
+}
+
+//
+// XInputHapticInterface::zeroState
+//
+// Protected method. Zeroes out the vibration state.
+//
+void XInputHapticInterface::zeroState()
+{
+   edefstructvar(XINPUT_VIBRATION, xvib);
+   pXInputSetState(dwUserIndex, &xvib);
+}
+
+//
+// XInputHapticInterface::startEffect
+//
+// Schedule a haptic effect for execution.
+//
+void XInputHapticInterface::startEffect(effect_e effect, int data)
+{
+   // TODO
+}
+
+//
+// XInputHapticInterface::pauseEffects
+//
+// If effectsPaused is true, then silence any current vibration and stop
+// scheduled effects from running, but don't cancel them so that they can
+// be resumed. Pass false to restart the effects.
+//
+void XInputHapticInterface::pauseEffects(bool effectsPaused)
+{
+   if(!pauseState && effectsPaused)
+   {
+      zeroState();
+      pauseState = true;
+   }
+   else
+   {
+      // TODO: anything special needed here?
+      pauseState = false;
+   }
+}
+
+//
+// XInputHapticInterface::updateEffects
+//
+// Called from the main loop; push the newest summation of state to the
+// XInput force motors (high and low frequency) while ticking the 
+// scheduled effects. Remove effects once they have completed.
+//
+void XInputHapticInterface::updateEffects()
+{
+   // Paused?
+   if(pauseState)
+   {
+      zeroState();
+      return;
+   }
+
+   // TODO: run effects here
+}
+
+//
+// XInputHapticInterface::clearEffects
+//
+// Stop any current vibration and also remove all scheduled effects.
+//
+void XInputHapticInterface::clearEffects()
+{
+   zeroState();
+   // TODO: clear effects list
 }
 
 #endif

@@ -29,6 +29,7 @@
 
 #include "../e_rtti.h"
 #include "../m_collection.h"
+#include "../m_dllist.h"
 #include "../m_qstr.h"
 
 class HALGamePad;
@@ -64,6 +65,34 @@ public:
 };
 
 //
+// HALHapticInterface
+//
+// A HALGamePad needs to expose one of these in order to support "force
+// feedback" effects.
+//
+class HALHapticInterface : public RTTIObject
+{
+   DECLARE_ABSTRACT_TYPE(HALHapticInterface, RTTIObject)
+
+public:
+   HALHapticInterface() : Super() {}
+
+   // Generic device-independent haptic effect names
+   enum effect_e
+   {
+      EFFECT_DAMAGE, // taking damage 
+      EFFECT_FIRE,   // firing weapon
+      EFFECT_IMPACT, // hitting something (floor or wall)
+      EFFECT_RUMBLE  // earthquake or other random buzz
+   };
+
+   virtual void startEffect(effect_e effect, int data) = 0;
+   virtual void pauseEffects(bool effectsPaused)       = 0;
+   virtual void updateEffects() = 0;
+   virtual void clearEffects()  = 0;
+};
+
+//
 // HALGamePad
 //
 // Base class for gamepad devices.
@@ -84,6 +113,9 @@ public:
    
    // Input
    virtual void poll() = 0;     // Refresh all input state data
+
+   // Haptic interface
+   virtual HALHapticInterface *getHapticInterface() { return NULL; }
 
    // Data
    int     num;         // Device number
@@ -111,6 +143,7 @@ public:
 
 // Global interface
 
+
 bool I_SelectDefaultGamePad();
 void I_InitGamePads();
 void I_ShutdownGamePads();
@@ -119,6 +152,25 @@ HALGamePad::padstate_t *I_PollActiveGamePad();
 size_t I_GetNumGamePads();
 HALGamePad *I_GetGamePad(size_t index);
 HALGamePad *I_GetActivePad();
+
+// Haptics
+
+// Enable or disable force feedback regardless of whether the device supports
+// it or not.
+extern bool i_forcefeedback;
+
+// Start a haptic effect with an argument which may affect the strength or
+// duration of the effect, depending on the type of effect being ordered.
+void I_StartHaptic(HALHapticInterface::effect_e effect, int data);
+
+// Pause all running haptic effects
+void I_PauseHaptics(bool effectsPaused);
+
+// Update haptic effects
+void I_UpdateHaptics();
+
+// Clear haptic effects
+void I_ClearHaptics();
 
 #endif
 
