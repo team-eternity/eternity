@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2013 James Haley et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      System specific interface stuff.
@@ -30,19 +30,15 @@
 struct ticcmd_t;
 
 // Called by DoomMain.
-void I_Init(void);
+void I_Init();
 
 // Called by D_DoomLoop,
 // returns current time in tics.
-// int I_GetTime (void);
 
-extern int (*I_GetTime)();           // killough
+extern int (*I_GetTime)();    // killough
 int I_GetTime_RealTime();     // killough
-int I_GetTime_Adaptive(void); // killough 4/10/98
 void I_SetTime(int newtime);
-extern int GetTime_Scale;
-
-unsigned int I_GetTicks(void);
+unsigned int I_GetTicks();
 
 //
 // Called by D_DoomLoop,
@@ -53,7 +49,7 @@ unsigned int I_GetTicks(void);
 // Can call D_PostEvent.
 //
 
-void I_StartFrame (void);
+void I_StartFrame();
 
 //
 // Called by D_DoomLoop,
@@ -61,7 +57,7 @@ void I_StartFrame (void);
 // Quick syncronous operations are performed here.
 // Can call D_PostEvent.
 
-void I_StartTic(void);
+void I_StartTic();
 
 // Asynchronous interrupt functions should maintain private queues
 // that are read by the synchronous functions
@@ -72,11 +68,11 @@ void I_StartTic(void);
 // This ticcmd will then be modified by the gameloop
 // for normal input.
 
-ticcmd_t* I_BaseTiccmd (void);
+ticcmd_t* I_BaseTiccmd();
 
 // atexit handler -- killough
 
-void I_Quit(void);
+void I_Quit();
 
 // haleyjd 05/21/10: error codes for I_FatalError
 enum
@@ -109,38 +105,9 @@ void I_ErrorVA(const char *error, va_list args);
 
 extern int mousepresent;                // killough
 
-#ifdef DJGPP
-extern int leds_always_off;   // killough 10/98
-void I_ResetLEDs(void);       // killough 10/98
-#endif
-
-void I_EndDoom(void);         // killough 2/22/98: endgame screen
-
-// SoM 3/14/2002: Gyah!
-#ifdef DJGPP
-// killough 3/21/98: keyboard queue
-
-#define KQSIZE 256
-
-extern struct keyboard_queue_s {
-  volatile int head,tail,queue[KQSIZE];
-} keyboard_queue;
-#endif
+void I_EndDoom();         // killough 2/22/98: endgame screen
 
 int I_CheckAbort();
-
-// haleyjd 04/15/02: SDL joystick stuff
-
-#ifdef _SDL_VER
-
-typedef struct jsdata_s
-{
-   char *description;
-} jsdata_t;
-
-extern jsdata_t *joysticks;
-
-#endif
 
 // haleyjd 06/16/09: I_Sleep prototype
 void I_Sleep(int ms);
