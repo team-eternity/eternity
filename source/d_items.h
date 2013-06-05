@@ -43,6 +43,7 @@ enum
    WPF_NOAUTOFIRE   = 0x00000040, // weapon won't autofire in A_WeaponReady
    WPF_FLEEMELEE    = 0x00000080, // monsters consider it a melee weapon
    WPF_ALWAYSRECOIL = 0x00000100, // weapon always has recoil
+   WPF_HAPTICRECOIL = 0x00000200, // use recoil-style haptic effect
 };
 
 // Weapon info: sprite frames, ammunition use.
@@ -61,6 +62,7 @@ typedef struct weaponinfo_s
    int         flags;
    int         mod;
    int         recoil;
+   int         hapticrecoil; // haptic recoil strength, from 1 to 10
 } weaponinfo_t;
 
 extern weaponinfo_t weaponinfo[NUMWEAPONS];

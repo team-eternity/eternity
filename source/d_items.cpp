@@ -77,9 +77,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PISTOL1,
     S_PISTOLFLASH,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_PISTOL,
     10,
+    1
   },  
   {
     // shotgun
@@ -90,9 +91,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SGUN1,
     S_SGUNFLASH1,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_SHOTGUN,
     30,
+    3
   },
   {
     // chaingun
@@ -103,9 +105,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_CHAIN1,
     S_CHAINFLASH1,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_CHAINGUN,
     10,
+    1
   },
   {
     // missile launcher
@@ -116,9 +119,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_MISSILE1,
     S_MISSILEFLASH1,
     1, false,
-    WPF_NOAUTOFIRE | WPF_SILENCER,
+    WPF_NOAUTOFIRE | WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_UNKNOWN,
     100,
+    6
   },
   {
     // plasma rifle
@@ -129,9 +133,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PLASMA1,
     S_PLASMAFLASH1,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_UNKNOWN,
     20,
+    2
   },
   {
     // bfg 9000
@@ -142,9 +147,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_BFG1,
     S_BFGFLASH1,
     40, false,
-    WPF_NOAUTOFIRE | WPF_SILENCER,
+    WPF_NOAUTOFIRE | WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_UNKNOWN,
     100,
+    10
   },
   {
     // chainsaw
@@ -168,9 +174,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_DSGUN1,
     S_DSGUNFLASH1,
     2, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_SSHOTGUN,
     80,
+    5
   },  
 };
 

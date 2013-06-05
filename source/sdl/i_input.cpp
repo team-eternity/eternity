@@ -59,7 +59,7 @@ bool unicodeinput;
 
 void I_InitKeyboard();      // i_system.c
 
-bool MouseShouldBeGrabbed(void);
+bool MouseShouldBeGrabbed();
 
 //=============================================================================
 //
@@ -71,7 +71,7 @@ bool MouseShouldBeGrabbed(void);
 //
 // haleyjd 10/08/05: from Chocolate DOOM
 //
-void UpdateGrab(void)
+void UpdateGrab()
 {
    static bool currently_grabbed = false;
    bool grab;
@@ -98,7 +98,7 @@ void UpdateGrab(void)
 //
 // haleyjd 10/08/05: From Chocolate DOOM, fairly self-explanatory.
 //
-bool MouseShouldBeGrabbed(void)
+bool MouseShouldBeGrabbed()
 {
    // if the window doesnt have focus, never grab it
    if(!window_focused)
@@ -134,7 +134,7 @@ bool MouseShouldBeGrabbed(void)
 // is removed if we lose focus (such as a popup window appearing),
 // and we dont move the mouse around if we aren't focused either.
 //
-void UpdateFocus(void)
+void UpdateFocus()
 {
    Uint8 state;
    SDL_Event  event;
@@ -147,6 +147,10 @@ void UpdateFocus(void)
    // We should have input (keyboard) focus and be visible
    // (not minimised)
    window_focused = (state & SDL_APPINPUTFOCUS) && (state & SDL_APPACTIVE);
+
+   // Stop haptic effects if the window loses focus
+   if(!window_focused)
+      I_ClearHaptics();
 
    // Should the screen be grabbed?
    screenvisible = (state & SDL_APPACTIVE) != 0;
@@ -330,6 +334,7 @@ static void I_JoystickEvents()
 void I_StartFrame()
 {
    I_JoystickEvents(); // Obtain joystick data                 phares 4/3/98
+   I_UpdateHaptics();  // Run haptic output                   haleyjd 6/4/13
 }
 
 //=============================================================================
@@ -780,6 +785,7 @@ void I_StartTic()
 {
    I_RunDeferredEvents();
    I_GetEvent();
+   I_UpdateHaptics();
 
    if(usemouse && ((mouseAccel_type == 2) || (mouseAccel_type == 3)))
       I_ReadMouse();

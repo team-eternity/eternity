@@ -33,6 +33,10 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+// Need gamepad hal
+#include "hal/i_gamepads.h"
+
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_mod.h"
@@ -683,7 +687,11 @@ void A_WeaponReady(Mobj *mo)
 
    if(player->readyweapon == wp_chainsaw && 
       psp->state == states[E_SafeState(S_SAW)])
+   {
       S_StartSound(player->mo, sfx_sawidl);
+      if(player == &players[consoleplayer])
+         I_StartHaptic(HALHapticInterface::EFFECT_BUZZ, 2);
+   }
 
    // check for change
    //  if player is dead, put the weapon away
@@ -856,17 +864,23 @@ void A_Raise(Mobj *mo)
 //
 void P_WeaponRecoil(player_t *player)
 {
+   weaponinfo_t *readyweapon = P_GetReadyWeapon(player);
+
    // killough 3/27/98: prevent recoil in no-clipping mode
    if(!(player->mo->flags & MF_NOCLIP))
    {
       // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
-      if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
+      if(readyweapon->flags & WPF_ALWAYSRECOIL ||
          (weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
          P_Thrust(player, ANG180 + player->mo->angle, 0,
-                  2048*weaponinfo[player->readyweapon].recoil); // phares
+                  2048 * readyweapon->recoil); // phares
       }
    }
+
+   // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
+   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_HAPTICRECOIL))
+      I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil);
 }
 
 // Weapons now recoil, amount depending on the weapon.              // phares
@@ -930,36 +944,6 @@ static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
    
    return P_AimLineAttack(mo, angle, distance, 0);
 }
-
-/*
-   // killough 7/19/98: autoaiming was not in original beta
-   // sf: made a multiplayer option
-   if(autoaim)
-   {
-      // killough 8/2/98: prefer autoaiming at enemies
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
-      do
-      {
-         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-         {
-            an = source->angle;
-            // haleyjd: use true slope angle
-            slope = P_PlayerPitchSlope(source->player);
-         }
-      }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
-   }
-   else
-   {
-      // haleyjd: use true slope angle
-      slope = P_PlayerPitchSlope(source->player);
-   }
-*/
 
 //=============================================================================
 //
@@ -1664,6 +1648,9 @@ void A_BFGBurst(Mobj *mo)
 void A_BFGsound(Mobj *mo)
 {
    P_WeaponSound(mo, sfx_bfg);
+
+   if(mo->player == &players[consoleplayer])
+      I_StartHaptic(HALHapticInterface::EFFECT_BUZZ, 3);
 }
 
 //

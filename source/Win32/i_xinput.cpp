@@ -29,6 +29,7 @@
 
 #include "../z_zone.h"
 
+#include "../i_system.h"
 #include "../m_vector.h"
 #include "i_xinput.h"
 
@@ -94,6 +95,8 @@ bool XInputGamePadDriver::initialize()
 //
 void XInputGamePadDriver::shutdown()
 {
+   for(auto it = devices.begin(); it != devices.end(); it++)
+      (*it)->getHapticInterface()->clearEffects();
 }
 
 //
@@ -285,6 +288,134 @@ void XInputGamePad::poll()
 
 IMPLEMENT_RTTI_TYPE(XInputHapticInterface)
 
+// motor types
+enum motor_e
+{
+   MOTOR_LEFT,
+   MOTOR_RIGHT
+};
+
+//
+// Effect Structures
+//
+
+//
+// xilineardecay structure
+//
+// Tracks a single-motor effect that starts at a given strength and fades to 0
+// with a linear decrease over the time period.
+//
+struct xilineardecay_t
+{
+   motor_e  which;        // which motor to apply the effect to
+   WORD     initStrength; // initial strength of effect
+   uint32_t duration;     // duration in milliseconds
+   uint32_t startTime;    // starting time
+   bool     active;       // currently running?
+};
+
+// Current linear decay effect
+static xilineardecay_t xiLinearDecay;
+
+//
+// xirumble structure
+//
+// Tracks a single motor effect that sends randomized impulses to a single 
+// motor.
+//
+struct xirumble_t
+{
+   motor_e  which;          // which motor to apply the effect to
+   WORD     maxStrength;    // maximum strength
+   WORD     minStrength;    // minimum strength
+   uint32_t duration;       // duration in milliseconds
+   uint32_t startTime;      // starting time
+   bool     active;         // currently running?
+};
+
+// Current rumble effect
+static xirumble_t xiRumble;
+
+//
+// AddClamped
+//
+// Static routine to do saturating math on the motor values.
+//
+static WORD AddClamped(WORD currentValue, WORD addValue)
+{
+   DWORD expanded = currentValue;
+   expanded += addValue;
+   
+   if(expanded > 65535)
+      expanded = 65535;
+
+   return static_cast<WORD>(expanded);
+}
+
+//
+// Evolution functions
+//
+
+//
+// EvolveLinearDecay
+//
+// A linear decay decreases constantly to zero from its initial strength.
+// Returns true if the effect is still running.
+//
+static void EvolveLinearDecay(XINPUT_VIBRATION &xvib, uint32_t curTime)
+{
+   if(curTime > xiLinearDecay.startTime + xiLinearDecay.duration)
+   {
+      xiLinearDecay.active = false; // done.
+      return;
+   }
+
+   // calculate state
+   WORD curStrength = xiLinearDecay.initStrength;
+
+   curStrength -= curStrength * (curTime - xiLinearDecay.startTime) / xiLinearDecay.duration;
+
+   // which motor?
+   switch(xiLinearDecay.which)
+   {
+   case MOTOR_LEFT:
+      xvib.wLeftMotorSpeed  = AddClamped(xvib.wLeftMotorSpeed,  curStrength);
+      break;
+   case MOTOR_RIGHT:
+      xvib.wRightMotorSpeed = AddClamped(xvib.wRightMotorSpeed, curStrength);
+      break;
+   }
+}
+
+//
+// EvolveRumble
+//
+// The rumble effect is entirely chaotic within a given min to max range.
+//
+static void EvolveRumble(XINPUT_VIBRATION &xvib, uint32_t curTime)
+{
+   if(curTime > xiRumble.startTime + xiRumble.duration)
+   {
+      xiRumble.active = false;
+      return;
+   }
+
+   int minStr = xiRumble.minStrength;
+   int rndStr = abs(rand()) % (xiRumble.maxStrength - xiRumble.minStrength);
+
+   WORD totStr = static_cast<WORD>(minStr + rndStr);
+
+   switch(xiRumble.which)
+   {
+   case MOTOR_LEFT:
+      xvib.wLeftMotorSpeed  = AddClamped(xvib.wLeftMotorSpeed, totStr);
+      break;
+   case MOTOR_RIGHT:
+      xvib.wRightMotorSpeed = AddClamped(xvib.wRightMotorSpeed, totStr);
+      break;
+   }
+}
+
 //
 // Constructor
 //
@@ -300,7 +431,7 @@ XInputHapticInterface::XInputHapticInterface(unsigned long userIdx)
 //
 void XInputHapticInterface::zeroState()
 {
-   edefstructvar(XINPUT_VIBRATION, xvib);
+   XINPUT_VIBRATION xvib = { 0, 0 };
    pXInputSetState(dwUserIndex, &xvib);
 }
 
@@ -311,7 +442,29 @@ void XInputHapticInterface::zeroState()
 //
 void XInputHapticInterface::startEffect(effect_e effect, int data)
 {
-   // TODO
+   uint32_t curTime = I_GetTicks();
+
+   switch(effect)
+   {
+   case EFFECT_FIRE: // weapon fire (data should be power scale from 1 to 10)
+      xiLinearDecay.startTime    = curTime;
+      xiLinearDecay.which        = MOTOR_LEFT;
+      xiLinearDecay.initStrength = 21000 + 3100 * data;
+      xiLinearDecay.duration     = 200 + 15 * data;
+      xiLinearDecay.active       = true;
+      break;
+   case EFFECT_RUMBLE: // rumble effect (data should be richters from 1 to 10)
+   case EFFECT_BUZZ:   // buzz; same deal, but uses high frequency motor
+      xiRumble.startTime         = curTime;
+      xiRumble.which             = (effect == EFFECT_RUMBLE) ? MOTOR_LEFT : MOTOR_RIGHT;
+      xiRumble.minStrength       = 0;
+      xiRumble.maxStrength       = 5000 + 6700 * (data - 1);
+      xiRumble.duration          = 1000;
+      xiRumble.active            = true;
+      break;
+   default:
+      break;
+   }
 }
 
 //
@@ -329,10 +482,7 @@ void XInputHapticInterface::pauseEffects(bool effectsPaused)
       pauseState = true;
    }
    else
-   {
-      // TODO: anything special needed here?
       pauseState = false;
-   }
 }
 
 //
@@ -344,14 +494,26 @@ void XInputHapticInterface::pauseEffects(bool effectsPaused)
 //
 void XInputHapticInterface::updateEffects()
 {
-   // Paused?
+   // paused?
    if(pauseState)
    {
       zeroState();
       return;
    }
 
-   // TODO: run effects here
+   XINPUT_VIBRATION xvib = { 0, 0 };
+   auto curTime = I_GetTicks();
+
+   // run linear decay effect
+   if(xiLinearDecay.active)
+      EvolveLinearDecay(xvib, curTime);
+
+   // run rumble effect
+   if(xiRumble.active)
+      EvolveRumble(xvib, curTime);
+   
+   // set state to the device using the summation of the effects
+   pXInputSetState(dwUserIndex, &xvib);
 }
 
 //
@@ -362,7 +524,9 @@ void XInputHapticInterface::updateEffects()
 void XInputHapticInterface::clearEffects()
 {
    zeroState();
-   // TODO: clear effects list
+   
+   // clear effects
+   memset(&xiLinearDecay, 0, sizeof(xiLinearDecay));
 }
 
 #endif

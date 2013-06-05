@@ -82,7 +82,9 @@ public:
       EFFECT_DAMAGE, // taking damage 
       EFFECT_FIRE,   // firing weapon
       EFFECT_IMPACT, // hitting something (floor or wall)
-      EFFECT_RUMBLE  // earthquake or other random buzz
+      EFFECT_BUZZ,   // light shaking
+      EFFECT_RUMBLE, // earthquake or other heavy shaking
+      EFFECT_MAX
    };
 
    virtual void startEffect(effect_e effect, int data) = 0;

@@ -389,8 +389,7 @@ void I_UpdateHaptics()
 // I_ClearHaptics
 //
 // Clear haptic effects.
-// Call when toggling haptic output, when changing devices, or when shutting 
-// down the program.
+// Call when toggling haptic output, when changing devices, etc.
 // NB: This is NOT invoked by the HAL when changing pads. Invoke your own
 //   HALGamePad's haptic interface clearEffects method when your pad is
 //   selected and deselected.

@@ -30,6 +30,9 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+// Need gamepad HAL
+#include "hal/i_gamepads.h"
+
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
@@ -1820,7 +1823,7 @@ static void G_CameraTicker(void)
 //
 // Make ticcmd_ts for the players.
 //
-void G_Ticker(void)
+void G_Ticker()
 {
    int i;
 
@@ -1922,11 +1925,6 @@ void G_Ticker(void)
             if(demorecording)
                G_WriteDemoTiccmd(cmd);
             
-            /*
-            if(isconsoletic && netgame)
-               continue;
-            */
-            
             // check for turbo cheats
             // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
             
@@ -1937,8 +1935,7 @@ void G_Ticker(void)
                doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
             }
             
-            if(netgame && /*!isconsoletic &&*/ !netdemo && 
-               !(gametic % ticdup))
+            if(netgame && !netdemo && !(gametic % ticdup))
             {
                if(gametic > BACKUPTICS && 
                   consistency[i][buf] != cmd->consistency)
@@ -1959,7 +1956,7 @@ void G_Ticker(void)
       }
       
       // check for special buttons
-      for(i=0; i<MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && 
             players[i].cmd.buttons & BT_SPECIAL)
@@ -1968,9 +1965,15 @@ void G_Ticker(void)
             if(players[i].cmd.buttons & BTS_PAUSE)
             {
                if((paused ^= 1))
+               {
+                  I_PauseHaptics(true);
                   S_PauseSound();
+               }
                else
+               {
+                  I_PauseHaptics(false);
                   S_ResumeSound();
+               }
             }
             
             if(players[i].cmd.buttons & BTS_SAVEGAME)
