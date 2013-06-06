@@ -53,11 +53,14 @@ extern linkoffset_t zerolink;
 #ifdef RANGECHECK
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
 #else
+extern bool useportalgroups;
+int P_PortalGroupCount();
+
 inline linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
-   return (!linktable || !useportalgroups || startgroup < 0 || startgroup >= groupcount || targetgroup < 0 || targetgroup >= groupcount)
+   return (!linktable || !useportalgroups || startgroup < 0 || startgroup >= P_PortalGroupCount() || targetgroup < 0 || targetgroup >= P_PortalGroupCount())
       ? &zerolink
-      : linktable[startgroup * groupcount + targetgroup];
+      : linktable[startgroup * P_PortalGroupCount() + targetgroup];
 }
 #endif
 
