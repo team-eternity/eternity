@@ -71,18 +71,22 @@ static int groupcells;
 
 ClipContext*  PortalClipEngine::getContext()
 {
+   ClipContext *ret;
+
    if(unused == NULL) {
-      ClipContext *ret = new ClipContext();
+      ret = new ClipContext();
       ret->setEngine(this);
-      ret->markedgroups = new (PU_LEVEL) MarkVector(groupcells);
-      return ret;
    }
-   
-   ClipContext *res = unused;
-   
-   unused = unused->next;
-   res->next = NULL;
-   return res;
+   else {  
+      ret = unused;
+      unused = unused->next;
+      ret->next = NULL;
+   }
+
+   if(ret->markedgroups == NULL)
+      ret->markedgroups = new (PU_LEVEL) MarkVector(groupcells);
+
+   return ret;
 }
 
 
@@ -313,7 +317,7 @@ void PortalClipEngine::mapLoaded()
    ClipContext *cc = unused;   
    while(cc)
    {
-      cc->markedgroups = new (PU_LEVEL) MarkVector(groupcells);
+      cc->markedgroups = NULL;
       cc = cc->next;
    }
 }
