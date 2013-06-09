@@ -68,7 +68,7 @@ protected:
 
 public:
    XInputHapticInterface(unsigned long userIdx = 0);
-   virtual void startEffect(effect_e effect, int data);
+   virtual void startEffect(effect_e effect, int data1, int data2);
    virtual void pauseEffects(bool effectsPaused);
    virtual void updateEffects();
    virtual void clearEffects();

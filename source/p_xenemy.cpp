@@ -88,7 +88,7 @@ void QuakeThinker::Think()
          {
             p->quake = this->intensity;
             if(p == &players[consoleplayer])
-               I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, this->intensity);
+               I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, this->intensity, 1000/TICRATE);
          }
 
          // every 2 tics, the player may be damaged

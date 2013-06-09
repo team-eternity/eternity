@@ -30,6 +30,7 @@
 #include "../z_zone.h"
 
 #include "../i_system.h"
+#include "../m_dllist.h"
 #include "../m_vector.h"
 #include "i_xinput.h"
 
@@ -281,7 +282,7 @@ void XInputGamePad::poll()
 
 //=============================================================================
 //
-// XInputHapticInterface
+// XInputHapticInterface Effects
 //
 // Support for force feedback through the XInput API.
 //
@@ -296,125 +297,355 @@ enum motor_e
 };
 
 //
-// Effect Structures
+// Effect Base Class
 //
-
-//
-// xilineardecay structure
-//
-// Tracks a single-motor effect that starts at a given strength and fades to 0
-// with a linear decrease over the time period.
-//
-struct xilineardecay_t
+class XIBaseEffect : public ZoneObject
 {
-   motor_e  which;        // which motor to apply the effect to
-   WORD     initStrength; // initial strength of effect
-   uint32_t duration;     // duration in milliseconds
-   uint32_t startTime;    // starting time
-   bool     active;       // currently running?
+protected:
+   uint32_t startTime;   
+   uint32_t duration;
+   static void AddClamped(XINPUT_VIBRATION &xvib, motor_e which, WORD addValue);
+
+   bool checkDone(uint32_t curTime) { return (curTime > startTime + duration); }
+
+public:
+   XIBaseEffect(uint32_t p_startTime, uint32_t p_duration);
+   virtual ~XIBaseEffect();
+
+   DLListItem<XIBaseEffect> links;
+
+   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime) = 0;
+
+   static void RunEffectsList(XINPUT_VIBRATION &xvib, uint32_t curTime);
+   static void ClearEffectsList();
 };
 
-// Current linear decay effect
-static xilineardecay_t xiLinearDecay;
+static DLList<XIBaseEffect, &XIBaseEffect::links> effects;
 
 //
-// xirumble structure
+// XIBaseEffect Constructor
 //
-// Tracks a single motor effect that sends randomized impulses to a single 
-// motor.
-//
-struct xirumble_t
+XIBaseEffect::XIBaseEffect(uint32_t p_startTime, uint32_t p_duration)
+   : ZoneObject(), startTime(p_startTime), duration(p_duration), links() 
 {
-   motor_e  which;          // which motor to apply the effect to
-   WORD     maxStrength;    // maximum strength
-   WORD     minStrength;    // minimum strength
-   uint32_t duration;       // duration in milliseconds
-   uint32_t startTime;      // starting time
-   bool     active;         // currently running?
-};
+   effects.insert(this);
+}
 
-// Current rumble effect
-static xirumble_t xiRumble;
+//
+// XIBaseEffect Destructor
+//
+XIBaseEffect::~XIBaseEffect()
+{
+   effects.remove(this);
+}
 
 //
 // AddClamped
 //
 // Static routine to do saturating math on the motor values.
 //
-static WORD AddClamped(WORD currentValue, WORD addValue)
+void XIBaseEffect::AddClamped(XINPUT_VIBRATION &xvib, motor_e which, WORD addValue)
 {
-   DWORD expanded = currentValue;
+   DWORD expanded;
+   WORD XINPUT_VIBRATION::* value;
+
+   switch(which)
+   {
+   case MOTOR_LEFT:
+      value = &XINPUT_VIBRATION::wLeftMotorSpeed;
+      break;
+   case MOTOR_RIGHT:
+      value = &XINPUT_VIBRATION::wRightMotorSpeed;
+      break;
+   default:
+      return;
+   }
+
+   expanded = xvib.*value;
    expanded += addValue;
-   
+
    if(expanded > 65535)
       expanded = 65535;
 
-   return static_cast<WORD>(expanded);
+   xvib.*value = static_cast<WORD>(expanded);
 }
+
+//
+// XIBaseEffect::RunEffectsList
+//
+// Apply all the active effects to the XINPUT_VIBRATION structure. Effects are
+// deleted from the list when they expire automatically.
+//
+void XIBaseEffect::RunEffectsList(XINPUT_VIBRATION &xvib, uint32_t curTime)
+{
+   auto link = effects.head;
+
+   while(link)
+   {
+      auto next = link->dllNext;
+      (*link)->evolve(xvib, curTime);
+      link = next;
+   }
+}
+
+// 
+// XIBaseEffect::ClearEffectsList
+//
+// Delete all active effects.
+//
+void XIBaseEffect::ClearEffectsList()
+{
+   auto link = effects.head;
+
+   while(link)
+   {
+      auto next = link->dllNext;
+      delete link->dllObject;
+      link = next;
+   }
+}
+
+//
+// Effect Classes
+//
+
+//
+// XILinearEffect
+//
+// Tracks a single-motor effect that starts at a given strength and moves up or
+// down to another strength with a linear slope over the time period.
+//
+class XILinearEffect : public XIBaseEffect
+{
+protected:
+   motor_e  which;
+   WORD     initStrength;
+   WORD     endStrength;
+   int      direction;
+
+public:
+   XILinearEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
+                  WORD p_initStrength, WORD p_endStrength)
+      : XIBaseEffect(p_startTime, p_duration), which(p_which), 
+        initStrength(p_initStrength), endStrength(p_endStrength)
+   {
+      direction = (initStrength < endStrength) ? 1 : -1;
+   }
+   virtual ~XILinearEffect() {}
+
+   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
+};
+
+//
+// XIRumbleEffect
+//
+// Tracks a single motor effect that sends randomized impulses to a single 
+// motor.
+//
+class XIRumbleEffect : public XIBaseEffect
+{
+protected:
+   motor_e  which;          // which motor to apply the effect to
+   WORD     minStrength;    // minimum strength
+   WORD     maxStrength;    // maximum strength
+
+public:
+   XIRumbleEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
+                  WORD p_minStrength, WORD p_maxStrength)
+      : XIBaseEffect(p_startTime, p_duration), which(p_which), 
+        minStrength(p_minStrength), maxStrength(p_maxStrength)
+   {
+   }
+   virtual ~XIRumbleEffect() {}
+
+   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
+};
+
+//
+// XIConstantEffect
+//
+// Pulses the motor with a steady pattern.
+//
+class XIConstantEffect : public XIBaseEffect
+{
+protected:
+   motor_e which;
+   WORD    strength;
+   static XIConstantEffect *CurrentLeft;
+   static XIConstantEffect *CurrentRight;
+
+public:
+   XIConstantEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
+                    WORD p_strength)
+      : XIBaseEffect(p_startTime, p_duration), which(p_which), strength(p_strength)
+   {
+      // this effect is singleton
+      if(which == MOTOR_LEFT)
+      {
+         if(CurrentLeft)
+            delete CurrentLeft;
+         CurrentLeft = this;
+      }
+      else
+      {
+         if(CurrentRight)
+            delete CurrentRight;
+         CurrentRight = this;
+      }
+
+   }
+   virtual ~XIConstantEffect() 
+   {
+      if(CurrentLeft == this)
+         CurrentLeft = NULL;
+      if(CurrentRight == this)
+         CurrentRight = NULL;
+   }
+
+   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
+};
+   
+XIConstantEffect *XIConstantEffect::CurrentLeft;
+XIConstantEffect *XIConstantEffect::CurrentRight;
+
+//
+// XIDamageEffect
+//
+// Does a damage hit effect.
+//
+class XIDamageEffect : public XIBaseEffect
+{
+protected:
+   WORD strength;
+
+public:
+   XIDamageEffect(uint32_t p_startTime, uint32_t p_duration, WORD p_strength)
+      : XIBaseEffect(p_startTime, p_duration), strength(p_strength)
+   {
+   }
+   virtual ~XIDamageEffect() {}
+
+   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curtime);
+};
 
 //
 // Evolution functions
 //
 
 //
-// EvolveLinearDecay
+// XILinearEffect::evolve
 //
-// A linear decay decreases constantly to zero from its initial strength.
-// Returns true if the effect is still running.
+// A linear effect ramps up or down from the initial value to the end value
+// over a set course of time.
 //
-static void EvolveLinearDecay(XINPUT_VIBRATION &xvib, uint32_t curTime)
+void XILinearEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   if(curTime > xiLinearDecay.startTime + xiLinearDecay.duration)
+   if(checkDone(curTime))
    {
-      xiLinearDecay.active = false; // done.
+      delete this;
       return;
    }
 
-   // calculate state
-   WORD curStrength = xiLinearDecay.initStrength;
+   WORD curStrength;
 
-   curStrength -= curStrength * (curTime - xiLinearDecay.startTime) / xiLinearDecay.duration;
-
-   // which motor?
-   switch(xiLinearDecay.which)
+   if(direction < 0)
    {
-   case MOTOR_LEFT:
-      xvib.wLeftMotorSpeed  = AddClamped(xvib.wLeftMotorSpeed,  curStrength);
-      break;
-   case MOTOR_RIGHT:
-      xvib.wRightMotorSpeed = AddClamped(xvib.wRightMotorSpeed, curStrength);
-      break;
+      // slope down
+      WORD deltaStrength = (initStrength - endStrength);
+      curStrength = initStrength - deltaStrength * (curTime - startTime) / duration;
    }
+   else
+   {
+      // slope up
+      WORD deltaStrength = (endStrength - initStrength);
+
+      curStrength = initStrength + deltaStrength * (curTime - startTime) / duration;
+   }
+   
+   AddClamped(xvib, which, curStrength);   
 }
 
 //
-// EvolveRumble
+// XIRumbleEffect::evolve
 //
 // The rumble effect is entirely chaotic within a given min to max range.
 //
-static void EvolveRumble(XINPUT_VIBRATION &xvib, uint32_t curTime)
+void XIRumbleEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   if(curTime > xiRumble.startTime + xiRumble.duration)
+   if(checkDone(curTime))
    {
-      xiRumble.active = false;
+      delete this;
       return;
    }
 
-   int minStr = xiRumble.minStrength;
-   int rndStr = abs(rand()) % (xiRumble.maxStrength - xiRumble.minStrength);
+   int minStr = minStrength;
+   int rndStr = abs(rand()) % (maxStrength - minStrength);
 
    WORD totStr = static_cast<WORD>(minStr + rndStr);
+   AddClamped(xvib, which, totStr);
+}
 
-   switch(xiRumble.which)
+//
+// XIConstantEffect::evolve
+//
+// Pulse the motor at a constant strength. Due to the behavior of the XBox360
+// controller's non-solenoid motors however, there's a bit of "catch" which 
+// adds some unavoidable pseudo-random variance into the mix. Depending on 
+// where it stopped last time, you get no response at all until it seems to 
+// "roll over" the catch, at which point you get more than you asked for.
+//
+void XIConstantEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
+{
+   if(checkDone(curTime))
    {
-   case MOTOR_LEFT:
-      xvib.wLeftMotorSpeed  = AddClamped(xvib.wLeftMotorSpeed, totStr);
-      break;
-   case MOTOR_RIGHT:
-      xvib.wRightMotorSpeed = AddClamped(xvib.wRightMotorSpeed, totStr);
-      break;
+      delete this;
+      return;
+   }
+   AddClamped(xvib, which, strength);
+}
+
+//
+// XIDamageEffect::evolve
+//
+// Damage utilizes both motors to do effects that decay at different rates.
+//
+void XIDamageEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
+{
+   if(checkDone(curTime))
+   {
+      delete this;
+      return;
+   }
+
+   // Do left motor processing
+   DWORD endStrength   = strength * 40 / 64;
+   DWORD deltaStrength = (strength - endStrength);
+   DWORD curStrength   = strength - deltaStrength * (curTime - startTime) / duration;
+   
+   AddClamped(xvib, MOTOR_LEFT, static_cast<WORD>(curStrength));
+
+   // Do right motor processing
+   if(curTime - startTime < duration / 2)
+   {
+      // Right motor is constant during first half of effect
+      AddClamped(xvib, MOTOR_RIGHT, strength / 2);
+   }
+   else
+   {
+      // Linear descent to zero
+      curStrength = strength / 2;
+      curStrength -= curStrength * (curTime - startTime) / duration;
+      AddClamped(xvib, MOTOR_RIGHT, static_cast<WORD>(curStrength));
    }
 }
+
+//=============================================================================
+//
+// XInputHapticInterface
+//
+// Implements HALHapticInterface with an experience optimized for the XBox360
+// controller.
+//
 
 //
 // Constructor
@@ -440,27 +671,47 @@ void XInputHapticInterface::zeroState()
 //
 // Schedule a haptic effect for execution.
 //
-void XInputHapticInterface::startEffect(effect_e effect, int data)
+void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
 {
    uint32_t curTime = I_GetTicks();
+   DWORD damage;
 
    switch(effect)
    {
-   case EFFECT_FIRE: // weapon fire (data should be power scale from 1 to 10)
-      xiLinearDecay.startTime    = curTime;
-      xiLinearDecay.which        = MOTOR_LEFT;
-      xiLinearDecay.initStrength = 21000 + 3100 * data;
-      xiLinearDecay.duration     = 200 + 15 * data;
-      xiLinearDecay.active       = true;
+   case EFFECT_FIRE:   
+      // weapon fire 
+      // * data1 should be power scale from 1 to 10
+      // * data2 should be duration scale from 1 to 10
+      new XILinearEffect(curTime, 175 + 20 * data2, MOTOR_LEFT, 21000 + 4400 * data1, 0);
       break;
-   case EFFECT_RUMBLE: // rumble effect (data should be richters from 1 to 10)
-   case EFFECT_BUZZ:   // buzz; same deal, but uses high frequency motor
-      xiRumble.startTime         = curTime;
-      xiRumble.which             = (effect == EFFECT_RUMBLE) ? MOTOR_LEFT : MOTOR_RIGHT;
-      xiRumble.minStrength       = 0;
-      xiRumble.maxStrength       = 5000 + 6700 * (data - 1);
-      xiRumble.duration          = 1000;
-      xiRumble.active            = true;
+   case EFFECT_RAMPUP:
+      // ramping up effect, ie. for BFG warmup
+      // * data1 is max strength, scale 1 to 10
+      // * data2 is duration in ms
+      new XILinearEffect(curTime, data2, MOTOR_RIGHT, 1000, 21000 + 3100 * data1);
+      break;
+   case EFFECT_RUMBLE: 
+      // rumble effect 
+      // * data1 should be richters from 1 to 10
+      // * data2 should be duration in ms
+      new XIRumbleEffect(curTime, data2, MOTOR_LEFT, 0, 5000 + 6700 * (data1 - 1));
+      break;
+   case EFFECT_BUZZ:   
+      // buzz; same as rumble, but uses high frequency motor
+      new XIRumbleEffect(curTime, data2, MOTOR_RIGHT, 0, 5000 + 6700 * (data1 - 1));
+      break;
+   case EFFECT_CONSTANT:
+      // constant: continue pulsing the motor at a steady rate
+      // * data1 should be strength from 1 to 10
+      // * data2 should be duration in ms
+      new XIConstantEffect(curTime, data2, MOTOR_RIGHT, 6500 * data1);
+      break;
+   case EFFECT_DAMAGE:
+      // damage: taking a hit form something
+      // * data1 should be strength from 1 to 100
+      // * data2 should be duration in ms
+      damage = 25000 + (data1 * 400);
+      new XIDamageEffect(curTime, data2, static_cast<WORD>(damage));
       break;
    default:
       break;
@@ -504,13 +755,7 @@ void XInputHapticInterface::updateEffects()
    XINPUT_VIBRATION xvib = { 0, 0 };
    auto curTime = I_GetTicks();
 
-   // run linear decay effect
-   if(xiLinearDecay.active)
-      EvolveLinearDecay(xvib, curTime);
-
-   // run rumble effect
-   if(xiRumble.active)
-      EvolveRumble(xvib, curTime);
+   XIBaseEffect::RunEffectsList(xvib, curTime);
    
    // set state to the device using the summation of the effects
    pXInputSetState(dwUserIndex, &xvib);
@@ -526,7 +771,7 @@ void XInputHapticInterface::clearEffects()
    zeroState();
    
    // clear effects
-   memset(&xiLinearDecay, 0, sizeof(xiLinearDecay));
+   XIBaseEffect::ClearEffectsList();
 }
 
 #endif

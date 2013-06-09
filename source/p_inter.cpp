@@ -26,6 +26,8 @@
 
 #include "z_zone.h"
 
+#include "hal/i_gamepads.h"
+
 #include "a_small.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -1432,22 +1434,9 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->damagecount < 0)
          player->damagecount = 0;
 
-#if 0
-      // killough 11/98: 
-      // This is unused -- perhaps it was designed for
-      // a hand-connected input device or VR helmet,
-      // to pinch the player when they're hurt :)
-
-      // haleyjd: this was for the "CyberMan" 3D mouse ^_^
-      
-      {
-         int temp = damage < 100 ? damage : 100;
-         
-         if(player == &players[consoleplayer])
-            I_Tactile(40,10,40+temp*2);
-      }
-#endif
-      
+      // haleyjd 06/08/13: reimplement support for tactile damage feedback :)
+      if(player == &players[consoleplayer])
+         I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);      
    }
 
    // do the damage

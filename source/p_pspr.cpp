@@ -690,7 +690,7 @@ void A_WeaponReady(Mobj *mo)
    {
       S_StartSound(player->mo, sfx_sawidl);
       if(player == &players[consoleplayer])
-         I_StartHaptic(HALHapticInterface::EFFECT_BUZZ, 2);
+         I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
    }
 
    // check for change
@@ -880,7 +880,7 @@ void P_WeaponRecoil(player_t *player)
 
    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
    if(player == &players[consoleplayer] && (readyweapon->flags & WPF_HAPTICRECOIL))
-      I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil);
+      I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
 // Weapons now recoil, amount depending on the weapon.              // phares
@@ -1021,6 +1021,8 @@ void A_Saw(Mobj *mo)
    slope = P_doAutoAim(mo, angle, MELEERANGE + 1);
    P_LineAttack(mo, angle, MELEERANGE+1, slope, damage);
    
+   I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 4, 108);   
+   
    if(!clip.linetarget)
    {
       P_WeaponSound(mo, sfx_sawful);
@@ -1028,6 +1030,7 @@ void A_Saw(Mobj *mo)
    }
 
    P_WeaponSound(mo, sfx_sawhit);
+   I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
    
    // turn to face target
    angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
@@ -1650,7 +1653,7 @@ void A_BFGsound(Mobj *mo)
    P_WeaponSound(mo, sfx_bfg);
 
    if(mo->player == &players[consoleplayer])
-      I_StartHaptic(HALHapticInterface::EFFECT_BUZZ, 3);
+      I_StartHaptic(HALHapticInterface::EFFECT_RAMPUP, 5, 850);
 }
 
 //

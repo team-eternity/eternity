@@ -79,16 +79,18 @@ public:
    // Generic device-independent haptic effect names
    enum effect_e
    {
-      EFFECT_DAMAGE, // taking damage 
-      EFFECT_FIRE,   // firing weapon
-      EFFECT_IMPACT, // hitting something (floor or wall)
-      EFFECT_BUZZ,   // light shaking
-      EFFECT_RUMBLE, // earthquake or other heavy shaking
+      EFFECT_DAMAGE,   // taking damage 
+      EFFECT_FIRE,     // firing weapon
+      EFFECT_IMPACT,   // hitting something (floor or wall)
+      EFFECT_BUZZ,     // light shaking
+      EFFECT_RUMBLE,   // earthquake or other heavy shaking
+      EFFECT_CONSTANT, // constant effect
+      EFFECT_RAMPUP,   // ramping up effect
       EFFECT_MAX
    };
 
-   virtual void startEffect(effect_e effect, int data) = 0;
-   virtual void pauseEffects(bool effectsPaused)       = 0;
+   virtual void startEffect(effect_e effect, int data1, int data2) = 0;
+   virtual void pauseEffects(bool effectsPaused) = 0;
    virtual void updateEffects() = 0;
    virtual void clearEffects()  = 0;
 };
@@ -162,7 +164,7 @@ extern bool i_forcefeedback;
 
 // Start a haptic effect with an argument which may affect the strength or
 // duration of the effect, depending on the type of effect being ordered.
-void I_StartHaptic(HALHapticInterface::effect_e effect, int data);
+void I_StartHaptic(HALHapticInterface::effect_e effect, int data1, int data2);
 
 // Pause all running haptic effects
 void I_PauseHaptics(bool effectsPaused);

@@ -63,6 +63,7 @@ typedef struct weaponinfo_s
    int         mod;
    int         recoil;
    int         hapticrecoil; // haptic recoil strength, from 1 to 10
+   int         haptictime;   // haptic recoil duration, from 1 to 10
 } weaponinfo_t;
 
 extern weaponinfo_t weaponinfo[NUMWEAPONS];
