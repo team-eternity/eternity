@@ -558,7 +558,6 @@ void XILinearEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
    {
       // slope up
       WORD deltaStrength = (endStrength - initStrength);
-
       curStrength = initStrength + deltaStrength * (curTime - startTime) / duration;
    }
    
@@ -674,7 +673,6 @@ void XInputHapticInterface::zeroState()
 void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
 {
    uint32_t curTime = I_GetTicks();
-   DWORD damage;
 
    switch(effect)
    {
@@ -707,11 +705,10 @@ void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
       new XIConstantEffect(curTime, data2, MOTOR_RIGHT, 6500 * data1);
       break;
    case EFFECT_DAMAGE:
-      // damage: taking a hit form something
+      // damage: taking a hit from something
       // * data1 should be strength from 1 to 100
       // * data2 should be duration in ms
-      damage = 25000 + (data1 * 400);
-      new XIDamageEffect(curTime, data2, static_cast<WORD>(damage));
+      new XIDamageEffect(curTime, data2, 25000 + data1 * 400);
       break;
    default:
       break;
