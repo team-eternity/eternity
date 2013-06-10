@@ -2605,16 +2605,17 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
 
 static menuitem_t mn_joystick_items[] =
 {
-   { it_title,        "Gamepad Settings",          NULL,   NULL     },
-   { it_gap                                                         },
-   { it_info,         "Devices"                                     },
-   { it_runcmd,       "Select gamepad...",         "mn_joysticks"   },
-   { it_runcmd,       "Test gamepad...",           "mn_padtest"     },
-   { it_gap                                                         },
-   { it_info,         "Settings"                                    },
-   { it_runcmd,       "Load profile...",           "mn_profiles"    },
-   { it_variable,     "SDL sensitivity",           "i_joysticksens" },
-   { it_end                                                         }
+   { it_title,        "Gamepad Settings",          NULL,   NULL      },
+   { it_gap                                                          },
+   { it_info,         "Devices"                                      },
+   { it_runcmd,       "Select gamepad...",         "mn_joysticks"    },
+   { it_runcmd,       "Test gamepad...",           "mn_padtest"      },
+   { it_gap                                                          },
+   { it_info,         "Settings"                                     },
+   { it_runcmd,       "Load profile...",           "mn_profiles"     },
+   { it_variable,     "SDL sensitivity",           "i_joysticksens"  },
+   { it_variable,     "Force feedback",            "i_forcefeedback" },
+   { it_end                                                          }
 };
 
 menu_t menu_joystick =
@@ -3783,7 +3784,7 @@ CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
    lastMatch = NULL;
 }
 
-static void MN_InitSearchStr(void)
+static void MN_InitSearchStr()
 {
    mn_searchstr = estrdup("");
 }
@@ -3970,7 +3971,7 @@ CONSOLE_COMMAND(mn_config, 0)
 // Skin Viewer Command
 //
 
-extern void MN_InitSkinViewer(void);
+extern void MN_InitSkinViewer();
 
 CONSOLE_COMMAND(skinviewer, 0)
 {
@@ -4061,7 +4062,7 @@ static menuitem_t mn_old_option_items[] =
 static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
 static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 
-static void MN_OldOptionsDrawer(void)
+static void MN_OldOptionsDrawer()
 {
    V_DrawPatch(108, 15, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_OPTTTL", PU_CACHE));
