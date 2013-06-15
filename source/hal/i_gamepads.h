@@ -146,7 +146,6 @@ public:
 
 // Global interface
 
-
 bool I_SelectDefaultGamePad();
 void I_InitGamePads();
 void I_ShutdownGamePads();

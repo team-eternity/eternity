@@ -49,8 +49,6 @@ public:
 
 extern XInputGamePadDriver i_xinputGamePadDriver;
 
-class XInputGamePad;
-
 //
 // XInputHapticInterface
 //
