@@ -707,7 +707,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
          arc.ArchiveLString(className, len);
 
          // Find the ThinkerType matching this name
-         if(!(thinkerType = RTTIObject::Type::FindType<Thinker::Type>(className)))
+         if(!(thinkerType = RTTIObject::FindTypeCls<Thinker>(className)))
          {
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
