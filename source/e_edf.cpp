@@ -100,7 +100,6 @@
 #include "e_args.h"
 #include "e_fonts.h"
 #include "e_gameprops.h"
-#include "e_inventory.h"
 #include "e_mod.h"
 #include "e_player.h"
 #include "e_sound.h"
