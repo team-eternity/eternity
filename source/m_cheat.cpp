@@ -120,43 +120,43 @@ struct cheat_s cheat[] = {
   {"idmus",      "Change music",      always,
    cheat_mus,      -2},
 
-  {"idchoppers", "Chainsaw",          not_net | not_demo | no_score,
+  {"idchoppers", "Chainsaw",          not_net | not_demo,
    cheat_choppers, 0 },
 
-  {"iddqd",      "God mode",          not_net | not_demo | no_score,
+  {"iddqd",      "God mode",          not_net | not_demo,
    cheat_god, 0  },
 
-  {"idk",        NULL,                not_net | not_demo | not_deh | no_score,
+  {"idk",        NULL,                not_net | not_demo | not_deh,
    cheat_k, 0 },  // The most controversial cheat code in Doom history!!!
 
-  {"idkfa",      "Ammo & Keys",       not_net | not_demo | no_score,
+  {"idkfa",      "Ammo & Keys",       not_net | not_demo,
    cheat_kfa, 0 },
 
-  {"idfa",       "Ammo",              not_net | not_demo | no_score,
+  {"idfa",       "Ammo",              not_net | not_demo,
    cheat_fa, 0  },
 
-  {"idspispopd", "No Clipping 1",     not_net | not_demo | no_score,
+  {"idspispopd", "No Clipping 1",     not_net | not_demo,
    cheat_noclip, 0 },
 
   {"idclip",     "No Clipping 2",     not_net | not_demo,
    cheat_noclip, 0 },
 
-  {"idbeholdv",  "Invincibility",     not_net | not_demo | no_score,
+  {"idbeholdv",  "Invincibility",     not_net | not_demo,
    cheat_pw,  pw_invulnerability },
 
-  {"idbeholds",  "Berserk",           not_net | not_demo | no_score,
+  {"idbeholds",  "Berserk",           not_net | not_demo,
    cheat_pw,  pw_strength        },
 
-  {"idbeholdi",  "Invisibility",      not_net | not_demo | no_score,  
+  {"idbeholdi",  "Invisibility",      not_net | not_demo,  
    cheat_pw,  pw_invisibility    },
 
-  {"idbeholdr",  "Radiation Suit",    not_net | not_demo | no_score,
+  {"idbeholdr",  "Radiation Suit",    not_net | not_demo,
    cheat_pw,  pw_ironfeet        },
 
-  {"idbeholda",  "Auto-map",          not_net | not_demo | no_score,
+  {"idbeholda",  "Auto-map",          not_net | not_demo,
    cheat_pw,  pw_allmap          },
 
-  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo | no_score,
+  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo,
    cheat_pw,  pw_infrared        },
 
   {"idbehold",   "BEHOLD menu",       not_net | not_demo,
@@ -171,7 +171,7 @@ struct cheat_s cheat[] = {
   {"comp",    NULL,                   not_net | not_demo,
    cheat_comp, 0     },     // phares
 
-  {"killem",     NULL,                not_net | not_demo | no_score,
+  {"killem",     NULL,                not_net | not_demo,
    cheat_massacre, 0 },     // jff 2/01/98 kill all monsters
 
   {"iddt",       "Map cheat",         not_dm,
@@ -180,46 +180,46 @@ struct cheat_s cheat[] = {
   {"hom",     NULL,                   always,
    cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
 
-  {"key",     NULL,                   not_net | not_demo | no_score, 
+  {"key",     NULL,                   not_net | not_demo, 
    cheat_key, 0   },     // killough 2/16/98: generalized key cheats
 
-  {"keyr",    NULL,                   not_net | not_demo | no_score,
+  {"keyr",    NULL,                   not_net | not_demo,
    cheat_keyx, 0  },
 
-  {"keyy",    NULL,                   not_net | not_demo | no_score,
+  {"keyy",    NULL,                   not_net | not_demo,
    cheat_keyx, 0  },
 
-  {"keyb",    NULL,                   not_net | not_demo | no_score,
+  {"keyb",    NULL,                   not_net | not_demo,
    cheat_keyx, 0  },
 
-  {"keyrc",   NULL,                   not_net | not_demo | no_score, 
+  {"keyrc",   NULL,                   not_net | not_demo, 
    cheat_keyxx, it_redcard    },
 
-  {"keyyc",   NULL,                   not_net | not_demo | no_score,
+  {"keyyc",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_yellowcard },
 
-  {"keybc",   NULL,                   not_net | not_demo | no_score, 
+  {"keybc",   NULL,                   not_net | not_demo, 
    cheat_keyxx, it_bluecard   },
 
-  {"keyrs",   NULL,                   not_net | not_demo | no_score,
+  {"keyrs",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_redskull   },
 
-  {"keyys",   NULL,                   not_net | not_demo | no_score,
+  {"keyys",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_yellowskull},
 
-  {"keybs",   NULL,                   not_net | not_demo | no_score,
+  {"keybs",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_blueskull  },  // killough 2/16/98: end generalized keys
 
-  {"weap",    NULL,                   not_net | not_demo | no_score,
+  {"weap",    NULL,                   not_net | not_demo,
    cheat_weap, 0  },     // killough 2/16/98: generalized weapon cheats
 
-  {"weap",    NULL,                   not_net | not_demo | no_score,
+  {"weap",    NULL,                   not_net | not_demo,
    cheat_weapx, -1},
 
-  {"ammo",    NULL,                   not_net | not_demo | no_score,
+  {"ammo",    NULL,                   not_net | not_demo,
    cheat_ammo, 0  },
 
-  {"ammo",    NULL,                   not_net | not_demo | no_score,
+  {"ammo",    NULL,                   not_net | not_demo,
    cheat_ammox, -1},  // killough 2/16/98: end generalized weapons
 
   {"tran",    NULL,                   always,
@@ -240,20 +240,20 @@ struct cheat_s cheat[] = {
 #endif
 
   // haleyjd: total invis cheat -- hideme
-  {"hideme", NULL,      not_net | not_demo | no_score,
+  {"hideme", NULL,      not_net | not_demo,
     cheat_pw, pw_totalinvis     },
 
   // haleyjd: heretic ghost 
-  {"ghost",  NULL,      not_net | not_demo | no_score,
+  {"ghost",  NULL,      not_net | not_demo,
     cheat_pw, pw_ghost },
 
-  {"infshots", NULL,    not_net | not_demo | no_score,
+  {"infshots", NULL,    not_net | not_demo,
     cheat_infammo, 0 },
 
-  {"silence", NULL,     not_net | not_demo | no_score,
+  {"silence", NULL,     not_net | not_demo,
     cheat_pw, pw_silencer },
 
-  {"iamtheone", NULL,   not_net | not_demo | no_score,
+  {"iamtheone", NULL,   not_net | not_demo,
     cheat_one, 0 },
 
   {NULL, NULL, 0, NULL, 0 } // end-of-list marker
@@ -537,7 +537,7 @@ static void cheat_comp(const void *arg)
       DEH_String((compatibility = !compatibility) ? "STSTR_COMPON"
                                                   : "STSTR_COMPOFF"));
 
-   for(i = 0; i < COMP_TOTAL; ++i) // killough 10/98: reset entire vector
+   for(i = 0; i < COMP_TOTAL; i++) // killough 10/98: reset entire vector
       comp[i] = compatibility;
 }
 
@@ -809,10 +809,6 @@ bool M_FindCheats(int key)
             matchedbefore = 1;              // responder has eaten key
             ret = true;
             cheat[i].func(&(cheat[i].arg)); // call cheat handler
-
-            // haleyjd 09/10/12: if cheat disables scores, mark the player
-            if(cheat[i].when & no_score)
-               players[consoleplayer].cheats |= CF_CHEATED;
          }
       }
    }

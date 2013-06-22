@@ -246,13 +246,6 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
 
-   // haleyjd 09/22/12: mark all players as "cheated" to disable scoring
-   for(int i = 0; i < MAXPLAYERS; i++)
-   {
-      if(playeringame[i])
-         players[i].cheats |= CF_CHEATED;
-   }
-
    if((player->health > 0) || comp[comp_zombie])
       G_ExitLevel();
 }

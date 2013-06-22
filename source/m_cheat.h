@@ -36,7 +36,6 @@ enum
    not_menu  = 8,
    not_deh   = 16,
    beta_only = 32,                  // killough 7/24/98
-   no_score  = 64,                  // haleyjd  9/10/12: cancels high scores
    not_net = not_dm | not_coop
 }; 
 

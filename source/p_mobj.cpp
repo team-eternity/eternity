@@ -408,7 +408,7 @@ void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move)
 // Attempts to move something if it has momentum.
 //
 // killough 11/98: minor restructuring
-
+//
 void P_XYMovement(Mobj* mo)
 {
    player_t *player = mo->player;
@@ -422,14 +422,9 @@ void P_XYMovement(Mobj* mo)
       if(mo->flags & MF_SKULLFLY)
       {
          // the skull slammed into something
-
          mo->flags &= ~MF_SKULLFLY;
          mo->momz = 0;
-
-         if(demo_version >= 335)
-            P_SetMobjStateNF(mo, mo->info->spawnstate);
-         else
-            P_SetMobjState(mo, mo->info->spawnstate);
+         P_SetMobjState(mo, mo->info->spawnstate);
       }
 
       return;

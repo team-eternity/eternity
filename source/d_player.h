@@ -80,8 +80,6 @@ typedef enum
   CF_INFAMMO          = 8,
   // haleyjd 12/29/10: immortality cheat
   CF_IMMORTAL         = 0x10,
-  // haleyjd 09/10/12: used any score-cancelling cheat
-  CF_CHEATED          = 0x20
 } cheat_t;
 
 
