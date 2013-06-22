@@ -339,9 +339,6 @@
     <ClCompile Include="..\source\e_hash.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\e_inventory.cpp">
-      <Filter>Source Files\E_\E_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\e_lib.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
@@ -1044,9 +1041,6 @@
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\e_hashkeys.h">
-      <Filter>Source Files\E_\E_ Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\e_inventory.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\e_lib.h">

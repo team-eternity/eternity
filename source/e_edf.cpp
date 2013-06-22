@@ -306,7 +306,6 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_INVENTORY,   edf_inv_opts,      EDF_TSEC_FLAGS),
    CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
@@ -322,7 +321,6 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_INVDELTA,    edf_invdelta_opts, EDF_NSEC_FLAGS),
    CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
@@ -1341,7 +1339,6 @@ static void E_CollectNames(cfg_t *cfg)
 {
    E_CollectStates(cfg);    // see e_states.cpp
    E_CollectThings(cfg);    // see e_things.cpp
-   E_CollectInventory(cfg); // see e_inventory.cpp
 }
 
 //
@@ -1770,10 +1767,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process frame and thing definitions (made dynamic 11/06/11)
    E_ProcessStatesAndThings(cfg);
-   
-   // Process inventory definitions
-   E_ProcessInventoryDefs(cfg);
-   
+ 
    // process sprite-related variables (made dynamic 11/21/11)
    E_ProcessSpriteVars(cfg);
 
@@ -1805,7 +1799,6 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
    E_ProcessStateDeltas(cfg);       // see e_states.cpp
    E_ProcessThingDeltas(cfg);       // see e_things.cpp
-   E_ProcessInventoryDeltas(cfg);   // see e_inventory.cpp
 
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
