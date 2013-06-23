@@ -97,12 +97,12 @@ static metakey_t &MetaKey(const char *key)
    {
       keyObj = estructalloc(metakey_t, 1);
 
+      // add it to the list
+      metaKeys.add(keyObj);
+
       keyObj->key     = estrdup(key);
       keyObj->index   = metaKeys.getLength() - 1;
       keyObj->unmodHC = unmodHC;
-
-      // add it to the list
-      metaKeys.add(keyObj);
 
       // hash it
       metaKeyHash.addObject(keyObj, keyObj->unmodHC);
