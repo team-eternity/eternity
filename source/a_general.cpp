@@ -29,6 +29,7 @@
 
 #include "z_zone.h"
 
+#include "a_args.h"
 #include "a_common.h"
 #include "a_small.h"
 #include "acs_intr.h"
@@ -61,8 +62,10 @@
 // killough 9/98: a mushroom explosion effect, sorta :)
 // Original idea: Linguica
 //
-void A_Mushroom(Mobj *actor)
+void A_Mushroom(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int i, j, n = actor->damage;
    int ShotType;
    
@@ -75,12 +78,12 @@ void A_Mushroom(Mobj *actor)
    // haleyjd: extended parameter support requested by Mordeth:
    // allow specification of thing type in args[0]
 
-   ShotType = E_ArgAsThingNumG0(actor->state->args, 0);
+   ShotType = E_ArgAsThingNumG0(args, 0);
 
    if(ShotType < 0 || ShotType == -1)
       ShotType = E_SafeThingType(MT_FATSHOT);
    
-   A_Explode(actor);               // make normal explosion
+   A_Explode(actionargs);         // make normal explosion
 
    for(i = -n; i <= n; i += 8)    // launch mushroom cloud
    {
@@ -117,15 +120,17 @@ void A_Mushroom(Mobj *actor)
 // A small set of highly-sought-after code pointers
 //
 
-void A_Spawn(Mobj *mo)
+void A_Spawn(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    if(mo->state->misc1)
    {
       Mobj *newmobj;
 
       // haleyjd 03/06/03 -- added error check
       //         07/05/03 -- adjusted for EDF
-      int thingtype = E_SafeThingType((int)(mo->state->misc1));
+      int thingtype = E_SafeThingType(mo->state->misc1);
       
       newmobj = 
          P_SpawnMobj(mo->x, mo->y, 
@@ -136,13 +141,15 @@ void A_Spawn(Mobj *mo)
    }
 }
 
-void A_Turn(Mobj *mo)
+void A_Turn(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
    mo->angle += (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
 
-void A_Face(Mobj *mo)
+void A_Face(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
    mo->angle = (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
 
@@ -176,8 +183,10 @@ static argkeywd_t scratchkwds =
 // * args[1] == counter number for mode 2; constant for mode 3
 // * args[2] == EDF sound name
 //
-void A_Scratch(Mobj *mo)
+void A_Scratch(actionargs_t *actionargs)
 {
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
    int damage, cnum;
    int mode;
 
@@ -185,7 +194,7 @@ void A_Scratch(Mobj *mo)
    if(!mo->target)
       return;
 
-   mode = E_ArgAsKwd(mo->state->args, 0, &scratchkwds, 0);
+   mode = E_ArgAsKwd(args, 0, &scratchkwds, 0);
 
    // haleyjd 08/02/04: extensions to get damage from multiple sources
    switch(mode)
@@ -198,7 +207,7 @@ void A_Scratch(Mobj *mo)
       damage = mo->damage;
       break;
    case 2: // use a counter
-      cnum = E_ArgAsInt(mo->state->args, 1, 0);
+      cnum = E_ArgAsInt(args, 1, 0);
 
       if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
          return; // invalid
@@ -206,11 +215,11 @@ void A_Scratch(Mobj *mo)
       damage = mo->counters[cnum];
       break;
    case 3: // use constant ("immediate operand" mode)
-      damage = E_ArgAsInt(mo->state->args, 1, 0);
+      damage = E_ArgAsInt(args, 1, 0);
       break;
    }
 
-   A_FaceTarget(mo);
+   A_FaceTarget(actionargs);
 
    if(P_CheckMeleeRange(mo))
    {
@@ -219,7 +228,7 @@ void A_Scratch(Mobj *mo)
       else
       {
          // check to see if args[2] is a valid sound
-         sfxinfo_t *sfx = E_ArgAsSound(mo->state->args, 2);
+         sfxinfo_t *sfx = E_ArgAsSound(args, 2);
          if(sfx)
             S_StartSfxInfo(mo, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
       }
@@ -228,13 +237,16 @@ void A_Scratch(Mobj *mo)
    }
 }
 
-void A_PlaySound(Mobj *mo)
+void A_PlaySound(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
    S_StartSound(mo->state->misc2 ? NULL : mo, mo->state->misc1);
 }
 
-void A_RandomJump(Mobj *mo)
+void A_RandomJump(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    // haleyjd 03/06/03: rewrote to be failsafe
    //         07/05/03: adjusted for EDF
    int statenum = mo->state->misc1;
@@ -250,8 +262,10 @@ void A_RandomJump(Mobj *mo)
 //
 // This allows linedef effects to be activated inside deh frames.
 //
-void A_LineEffect(Mobj *mo)
+void A_LineEffect(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    // haleyjd 05/02/04: bug fix:
    // This line can end up being referred to long after this
    // function returns, thus it must be made static or memory
@@ -288,14 +302,16 @@ void A_LineEffect(Mobj *mo)
 // args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
 // args[1] == flags value to OR with thing flags
 //
-void A_SetFlags(Mobj *actor)
+void A_SetFlags(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int flagfield;
    unsigned int *flags;
 
-   flagfield = E_ArgAsInt(actor->state->args, 0, 0);
+   flagfield = E_ArgAsInt(args, 0, 0);
 
-   if(!(flags = E_ArgAsThingFlags(actor->state->args, 1)))
+   if(!(flags = E_ArgAsThingFlags(args, 1)))
       return;
    
    switch(flagfield)
@@ -329,14 +345,16 @@ void A_SetFlags(Mobj *actor)
 // args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
 // args[1] == flags value to inverse AND with thing flags
 //
-void A_UnSetFlags(Mobj *actor)
+void A_UnSetFlags(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int flagfield;
    unsigned int *flags;
 
-   flagfield = E_ArgAsInt(actor->state->args, 0, 0);
+   flagfield = E_ArgAsInt(args, 0, 0);
 
-   if(!(flags = E_ArgAsThingFlags(actor->state->args, 1)))
+   if(!(flags = E_ArgAsThingFlags(args, 1)))
       return;
 
    switch(flagfield)
@@ -384,10 +402,12 @@ static argkeywd_t sscriptkwds =
 // args[1] - select vm (0 == gamescript, 1 == levelscript, 2 == ACS levelscript)
 // args[2-MAX] - parameters to script (must accept 3 params)
 //
-void A_StartScript(Mobj *actor)
+void A_StartScript(actionargs_t *actionargs)
 {
-   int scriptnum = E_ArgAsInt(actor->state->args, 0, 0);
-   int selectvm  = E_ArgAsKwd(actor->state->args, 1, &sscriptkwds, 0);
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int scriptnum = E_ArgAsInt(args, 0, 0);
+   int selectvm  = E_ArgAsKwd(args, 1, &sscriptkwds, 0);
    
    if(selectvm < 2)
    {
@@ -396,7 +416,7 @@ void A_StartScript(Mobj *actor)
    else
    {
       int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
-      int argc = E_GetArgCount(actor->state->args);
+      int argc = E_GetArgCount(args);
 
       if(argc > 2)
       {
@@ -404,7 +424,7 @@ void A_StartScript(Mobj *actor)
          argc -= 2;
 
          for(int i = 0; i < argc; ++i)
-             argv[i] = E_ArgAsInt(actor->state->args, i + 2, 0);
+             argv[i] = E_ArgAsInt(args, i + 2, 0);
 
          ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, argv, argc, actor, NULL, 0);
       }
@@ -420,10 +440,12 @@ void A_StartScript(Mobj *actor)
 //
 // Same as A_StartScript, but for named scripts.
 //
-void A_StartScriptNamed(Mobj *actor)
+void A_StartScriptNamed(actionargs_t *actionargs)
 {
-   const char *scriptname = E_ArgAsString(actor->state->args, 0, "");
-   int selectvm = E_ArgAsKwd(actor->state->args, 1, &sscriptkwds, 0);
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   const char *scriptname = E_ArgAsString(args, 0, "");
+   int selectvm = E_ArgAsKwd(args, 1, &sscriptkwds, 0);
 
    if(selectvm < 2)
    {
@@ -432,7 +454,7 @@ void A_StartScriptNamed(Mobj *actor)
    else
    {
       int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
-      int argc = E_GetArgCount(actor->state->args);
+      int argc = E_GetArgCount(args);
 
       if(argc > 2)
       {
@@ -440,7 +462,7 @@ void A_StartScriptNamed(Mobj *actor)
          argc -= 2;
 
          for(int i = 0; i < argc; ++i)
-             argv[i] = E_ArgAsInt(actor->state->args, i + 2, 0);
+             argv[i] = E_ArgAsInt(args, i + 2, 0);
 
          ACS_ExecuteScriptName(scriptname, gamemap, flags, argv, argc, actor, NULL, 0);
       }
@@ -457,9 +479,10 @@ void A_StartScriptNamed(Mobj *actor)
 // Face a walking object in the direction it is moving.
 // haleyjd TODO: this is not documented or available in BEX yet.
 //
-void A_FaceMoveDir(Mobj *actor)
+void A_FaceMoveDir(actionargs_t *actionargs)
 {
-   angle_t moveangles[NUMDIRS] = { 0, 32, 64, 96, 128, 160, 192, 224 };
+   Mobj *actor = actionargs->actor;
+   static angle_t moveangles[NUMDIRS] = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
    if(actor->movedir != DI_NODIR)
       actor->angle = moveangles[actor->movedir] << 24;
@@ -473,15 +496,17 @@ void A_FaceMoveDir(Mobj *actor)
 // args[0] : state to branch to when ceasing to fire
 // args[1] : random chance of still firing if target out of sight
 //
-void A_GenRefire(Mobj *actor)
+void A_GenRefire(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int statenum;
    int chance;
 
-   statenum = E_ArgAsStateNum(actor->state->args, 0, actor);
-   chance   = E_ArgAsInt(actor->state->args, 1, 0);
+   statenum = E_ArgAsStateNum(args, 0, actor);
+   chance   = E_ArgAsInt(args, 1, 0);
 
-   A_FaceTarget(actor);
+   A_FaceTarget(actionargs);
 
    // check for friends in the way
    if(actor->flags & MF_FRIEND && P_HitFriend(actor))
@@ -509,12 +534,13 @@ void A_GenRefire(Mobj *actor)
 //
 // Generic homing missile maintenance
 //
-void A_GenTracer(Mobj *actor)
+void A_GenTracer(actionargs_t *actionargs)
 {
-   angle_t       exact;
-   fixed_t       dist;
-   fixed_t       slope;
-   Mobj        *dest;
+   Mobj    *actor = actionargs->actor;
+   angle_t  exact;
+   fixed_t  dist;
+   fixed_t  slope;
+   Mobj    *dest;
   
    // adjust direction
    dest = actor->tracer;
@@ -581,11 +607,13 @@ static argkeywd_t settickwds =
 // * args[1] : randomizer modulus value (0 == not randomized)
 // * args[2] : counter toggle
 //
-void A_SetTics(Mobj *actor)
+void A_SetTics(actionargs_t *actionargs)
 {
-   int baseamt = E_ArgAsInt(actor->state->args, 0, 0);
-   int rnd     = E_ArgAsInt(actor->state->args, 1, 0);
-   int counter = E_ArgAsKwd(actor->state->args, 2, &settickwds, 0);
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int baseamt = E_ArgAsInt(args, 0, 0);
+   int rnd     = E_ArgAsInt(args, 1, 0);
+   int counter = E_ArgAsKwd(args, 2, &settickwds, 0);
 
    // if counter toggle is set, args[0] is a counter number
    if(counter)
@@ -621,28 +649,28 @@ static argkeywd_t missileatkkwds =
 // * args[3] = amount to add to actor angle
 // * args[4] = optional state to enter for melee attack
 //
-void A_MissileAttack(Mobj *actor)
+void A_MissileAttack(actionargs_t *actionargs)
 {
-   int type, a;
-   fixed_t z, momz;
-   bool homing;
-   angle_t ang;
-   Mobj *mo;
-   int statenum;
-   bool hastarget = true;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   Mobj      *mo;
+   int        type, a, statenum;
+   bool       homing, hastarget = true;
+   fixed_t    z, momz;
+   angle_t    ang;
 
    if(!actor->target || actor->target->health <= 0)
       hastarget = false;
 
-   type     = E_ArgAsThingNum(actor->state->args,      0);   
-   homing   = !!E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);   
-   z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
-   a        = E_ArgAsInt(actor->state->args,           3, 0);
-   statenum = E_ArgAsStateNumG0(actor->state->args,    4, actor);
+   type     = E_ArgAsThingNum(args, 0);   
+   homing   = !!E_ArgAsKwd(args, 1, &missileatkkwds, 0);   
+   z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+   a        = E_ArgAsInt(args, 3, 0);
+   statenum = E_ArgAsStateNumG0(args, 4, actor);
 
    if(hastarget)
    {
-      A_FaceTarget(actor);
+      A_FaceTarget(actionargs);
 
       if(statenum >= 0 && statenum < NUMSTATES)
       {
@@ -701,26 +729,28 @@ void A_MissileAttack(Mobj *actor)
 // * args[3] = total angular sweep
 // * args[4] = optional state to enter for melee attack
 //
-void A_MissileSpread(Mobj *actor)
+void A_MissileSpread(actionargs_t *actionargs)
 {
-   int type, num, a, i;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int     type, num, a, i;
    fixed_t z, momz;
    angle_t angsweep, ang, astep;
-   int statenum;
+   int     statenum;
 
    if(!actor->target)
       return;
 
-   type     = E_ArgAsThingNum(actor->state->args,      0);
-   num      = E_ArgAsInt(actor->state->args,           1, 0);
-   z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
-   a        = E_ArgAsInt(actor->state->args,           3, 0);
-   statenum = E_ArgAsStateNumG0(actor->state->args,    4, actor);
+   type     = E_ArgAsThingNum(args,      0);
+   num      = E_ArgAsInt(args,           1, 0);
+   z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+   a        = E_ArgAsInt(args,           3, 0);
+   statenum = E_ArgAsStateNumG0(args,    4, actor);
 
    if(num < 2)
       return;
 
-   A_FaceTarget(actor);
+   A_FaceTarget(actionargs);
 
    if(statenum >= 0 && statenum < NUMSTATES)
    {
@@ -808,29 +838,31 @@ static argkeywd_t bulletkwdsnew =
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
 //
-void A_BulletAttack(Mobj *actor)
+void A_BulletAttack(actionargs_t *actionargs)
 {
-   int i, accurate, numbullets, damage, dmgmod, slope;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args = actionargs->args;
    sfxinfo_t *sfx;
-
+   int i, accurate, numbullets, damage, dmgmod, slope;
+   
    if(!actor->target)
       return;
 
-   sfx        = E_ArgAsSound(actor->state->args, 0);
-   numbullets = E_ArgAsInt(actor->state->args,   2, 0);
-   damage     = E_ArgAsInt(actor->state->args,   3, 0);
-   dmgmod     = E_ArgAsInt(actor->state->args,   4, 0);
+   sfx        = E_ArgAsSound(args, 0);
+   numbullets = E_ArgAsInt(args,   2, 0);
+   damage     = E_ArgAsInt(args,   3, 0);
+   dmgmod     = E_ArgAsInt(args,   4, 0);
 
    // handle accuracy
 
    // try old keywords first
-   accurate = E_ArgAsKwd(actor->state->args, 1, &bulletkwdsold, -1);
+   accurate = E_ArgAsKwd(args, 1, &bulletkwdsold, -1);
 
    // try new keywords second
    if(accurate == -1)
    {
-      E_ResetArgEval(actor->state->args, 1);
-      accurate = E_ArgAsKwd(actor->state->args, 1, &bulletkwdsnew, 0);
+      E_ResetArgEval(args, 1);
+      accurate = E_ArgAsKwd(args, 1, &bulletkwdsnew, 0);
    }
 
    if(!accurate)
@@ -841,7 +873,7 @@ void A_BulletAttack(Mobj *actor)
    else if(dmgmod > 256)
       dmgmod = 256;
 
-   A_FaceTarget(actor);
+   A_FaceTarget(actionargs);
    S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
 
    slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
@@ -898,19 +930,21 @@ static argkeywd_t makechildkwds =
    2
 };
 
-void A_ThingSummon(Mobj *actor)
+void A_ThingSummon(actionargs_t *actionargs)
 {
-   fixed_t x, y, z;
-   Mobj  *newmobj;
-   angle_t an;
-   int     type, prestep, deltaz, kill_or_remove, make_child;
+   fixed_t    x, y, z;
+   Mobj      *actor = actionargs->actor;
+   Mobj      *newmobj;
+   arglist_t *args = actionargs->args;
+   angle_t    an;
+   int        type, prestep, deltaz, kill_or_remove, make_child;
 
-   type    = E_ArgAsThingNum(actor->state->args, 0);
-   prestep = E_ArgAsInt(actor->state->args,      1, 0) << FRACBITS;
-   deltaz  = E_ArgAsInt(actor->state->args,      2, 0) << FRACBITS;
+   type    = E_ArgAsThingNum(args, 0);
+   prestep = E_ArgAsInt(args, 1, 0) << FRACBITS;
+   deltaz  = E_ArgAsInt(args, 2, 0) << FRACBITS;
 
-   kill_or_remove = !!E_ArgAsKwd(actor->state->args, 3, &killremovekwds, 0);
-   make_child     = !!E_ArgAsKwd(actor->state->args, 4, &makechildkwds, 0);
+   kill_or_remove = !!E_ArgAsKwd(args, 3, &killremovekwds, 0);
+   make_child     = !!E_ArgAsKwd(args, 4, &makechildkwds, 0);
    
    // good old-fashioned pain elemental style spawning
    
@@ -938,11 +972,18 @@ void A_ThingSummon(Mobj *actor)
       (newmobj->subsector->sector->ceilingheight - newmobj->height)) ||
       (newmobj->z < newmobj->subsector->sector->floorheight))
    {
+      actionargs_t dieaction;
+
+      dieaction.actiontype = actionargs_t::MOBJFRAME;
+      dieaction.actor      = newmobj;
+      dieaction.args       = ESAFEARGS(newmobj);
+      dieaction.pspr       = NULL;
+
       // kill it immediately
       switch(kill_or_remove)
       {
       case 0:
-         A_Die(newmobj);
+         A_Die(&dieaction);
          break;
       case 1:
          newmobj->removeThinker();
@@ -962,11 +1003,18 @@ void A_ThingSummon(Mobj *actor)
 
    if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
    {
+      actionargs_t dieaction;
+
+      dieaction.actiontype = actionargs_t::MOBJFRAME;
+      dieaction.actor      = newmobj;
+      dieaction.args       = ESAFEARGS(newmobj);
+      dieaction.pspr       = NULL;
+
       // kill it immediately
       switch(kill_or_remove)
       {
       case 0:
-         A_Die(newmobj);
+         A_Die(&dieaction);
          break;
       case 1:
          newmobj->removeThinker();
@@ -986,10 +1034,12 @@ void A_ThingSummon(Mobj *actor)
    }
 }
 
-void A_KillChildren(Mobj *actor)
+void A_KillChildren(actionargs_t *actionargs)
 {
-   Thinker *th;
-   int kill_or_remove = !!E_ArgAsKwd(actor->state->args, 0, &killremovekwds, 0);
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   Thinker   *th;
+   int kill_or_remove = !!E_ArgAsKwd(args, 0, &killremovekwds, 0);
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
@@ -1000,10 +1050,17 @@ void A_KillChildren(Mobj *actor)
 
       if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)
       {
+         actionargs_t dieaction;
+
+         dieaction.actiontype = actionargs_t::MOBJFRAME;
+         dieaction.actor      = mo;
+         dieaction.args       = ESAFEARGS(mo);
+         dieaction.pspr       = NULL;
+
          switch(kill_or_remove)
          {
          case 0:
-            A_Die(mo);
+            A_Die(&dieaction);
             break;
          case 1:
             mo->removeThinker();
@@ -1020,13 +1077,15 @@ void A_KillChildren(Mobj *actor)
 // a thing and its target in the indicated counter.
 // * args[0] == destination counter
 //
-void A_AproxDistance(Mobj *actor)
+void A_AproxDistance(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int *dest = NULL;
    fixed_t distance;
    int cnum;
 
-   cnum = E_ArgAsInt(actor->state->args, 0, 0);
+   cnum = E_ArgAsInt(args, 0, 0);
 
    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
       return; // invalid
@@ -1072,16 +1131,17 @@ static argkeywd_t messagekwds =
 // args[0] = EDF message number
 // args[1] = message type
 //
-void A_ShowMessage(Mobj *actor)
+void A_ShowMessage(actionargs_t *actionargs)
 {
+   arglist_t *args = actionargs->args;
    edf_string_t *msg;
    int type;
 
    // find the message
-   if(!(msg = E_ArgAsEDFString(actor->state->args, 0)))
+   if(!(msg = E_ArgAsEDFString(args, 0)))
       return;
 
-   type = E_ArgAsKwd(actor->state->args, 1, &messagekwds, 0);
+   type = E_ArgAsKwd(args, 1, &messagekwds, 0);
 
    switch(type)
    {
@@ -1102,8 +1162,9 @@ void A_ShowMessage(Mobj *actor)
 //
 // haleyjd 05/31/06: Ambient sound driver function
 //
-void A_AmbientThinker(Mobj *mo)
+void A_AmbientThinker(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
    EAmbience_t *amb = E_AmbienceForNum(mo->args[0]);
    bool loop = false;
 
@@ -1137,8 +1198,10 @@ void A_AmbientThinker(Mobj *mo)
    S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop, CHAN_AUTO);
 }
 
-void A_SteamSpawn(Mobj *mo)
+void A_SteamSpawn(actionargs_t *actionargs)
 {
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
    Mobj *steamthing;
    int thingtype;
    int vrange, hrange;
@@ -1147,18 +1210,18 @@ void A_SteamSpawn(Mobj *mo)
    fixed_t speed, angularspeed;
    
    // Get the thingtype of the thing we're spewing (a steam cloud for example)
-   thingtype = E_ArgAsThingNum(mo->state->args, 0);
+   thingtype = E_ArgAsThingNum(args, 0);
    
    // And the speed to fire it out at
-   speed = (fixed_t)(E_ArgAsInt(mo->state->args, 4, 0) << FRACBITS);
+   speed = (fixed_t)(E_ArgAsInt(args, 4, 0) << FRACBITS);
 
    // Make our angles byteangles
    hangle = (mo->angle / (ANG90/64));
    thangle = hangle;
-   tvangle = (E_ArgAsInt(mo->state->args, 2, 0) * 256) / 360;
+   tvangle = (E_ArgAsInt(args, 2, 0) * 256) / 360;
    // As well as the spread ranges
-   hrange = (E_ArgAsInt(mo->state->args, 1, 0) * 256) / 360;
-   vrange = (E_ArgAsInt(mo->state->args, 3, 0) * 256) / 360;
+   hrange = (E_ArgAsInt(args, 1, 0) * 256) / 360;
+   vrange = (E_ArgAsInt(args, 3, 0) * 256) / 360;
    
    // Get the angles we'll be firing the things in, factoring in 
    // where within the range it will lie
@@ -1184,10 +1247,10 @@ void A_SteamSpawn(Mobj *mo)
    
    // Give it some momentum
    // angular speed is the hypotenuse of the x and y speeds
-   angularspeed = FixedMul(speed, finecosine[vangle >> ANGLETOFINESHIFT]);
+   angularspeed     = FixedMul(speed,        finecosine[vangle >> ANGLETOFINESHIFT]);
    steamthing->momx = FixedMul(angularspeed, finecosine[hangle >> ANGLETOFINESHIFT]);
    steamthing->momy = FixedMul(angularspeed, finesine[hangle >> ANGLETOFINESHIFT]);
-   steamthing->momz = FixedMul(speed, finesine[vangle >> ANGLETOFINESHIFT]);
+   steamthing->momz = FixedMul(speed,        finesine[vangle >> ANGLETOFINESHIFT]);
 }
 
 //
@@ -1198,11 +1261,13 @@ void A_SteamSpawn(Mobj *mo)
 //
 // args[0] : state number
 //
-void A_TargetJump(Mobj *mo)
+void A_TargetJump(actionargs_t *actionargs)
 {
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0, mo)) < 0)
+   if((statenum = E_ArgAsStateNumNI(args, 0, mo)) < 0)
       return;
    
    // 1) must be valid
@@ -1224,22 +1289,24 @@ void A_TargetJump(Mobj *mo)
 //   args[2] : z height relative to player's viewpoint in 16th's of a unit
 //   args[3] : thingtype to toss
 //
-void A_EjectCasing(Mobj *actor)
+void A_EjectCasing(actionargs_t *actionargs)
 {
-   angle_t angle = actor->angle;
-   fixed_t x, y, z;
-   fixed_t frontdist;
-   int     frontdisti;
-   fixed_t sidedist;
-   fixed_t zheight;
-   int     thingtype;
-   Mobj *mo;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   angle_t    angle = actor->angle;
+   fixed_t    x, y, z;
+   fixed_t    frontdist;
+   int        frontdisti;
+   fixed_t    sidedist;
+   fixed_t    zheight;
+   int        thingtype;
+   Mobj      *mo;
 
-   frontdisti = E_ArgAsInt(actor->state->args, 0, 0);
+   frontdisti = E_ArgAsInt(args, 0, 0);
    
    frontdist  = frontdisti * FRACUNIT / 16;
-   sidedist   = E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 16;
-   zheight    = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT / 16;
+   sidedist   = E_ArgAsInt(args, 1, 0) * FRACUNIT / 16;
+   zheight    = E_ArgAsInt(args, 2, 0) * FRACUNIT / 16;
 
    // account for mlook - EXPERIMENTAL
    if(actor->player)
@@ -1263,7 +1330,7 @@ void A_EjectCasing(Mobj *actor)
    x += FixedMul(sidedist, finecosine[angle>>ANGLETOFINESHIFT]);
    y += FixedMul(sidedist, finesine[angle>>ANGLETOFINESHIFT]);
 
-   thingtype = E_ArgAsThingNum(actor->state->args, 3);
+   thingtype = E_ArgAsThingNum(args, 3);
 
    mo = P_SpawnMobj(x, y, z, thingtype);
 
@@ -1277,12 +1344,14 @@ void A_EjectCasing(Mobj *actor)
 //    args[0] : lateral force in 16ths of a unit
 //    args[1] : z force in 16ths of a unit
 //
-void A_CasingThrust(Mobj *actor)
+void A_CasingThrust(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    fixed_t moml, momz;
 
-   moml = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 16;
-   momz = E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 16;
+   moml = E_ArgAsInt(args, 0, 0) * FRACUNIT / 16;
+   momz = E_ArgAsInt(args, 1, 0) * FRACUNIT / 16;
    
    actor->momx = FixedMul(moml, finecosine[actor->angle>>ANGLETOFINESHIFT]);
    actor->momy = FixedMul(moml, finesine[actor->angle>>ANGLETOFINESHIFT]);
@@ -1290,7 +1359,7 @@ void A_CasingThrust(Mobj *actor)
    // randomize
    actor->momx += P_SubRandom(pr_casing) << 8;
    actor->momy += P_SubRandom(pr_casing) << 8;
-   actor->momz = momz + (P_SubRandom(pr_casing) << 8);
+   actor->momz  = momz + (P_SubRandom(pr_casing) << 8);
 }
 
 //
@@ -1308,14 +1377,16 @@ void A_CasingThrust(Mobj *actor)
 // args[7] : z clip?
 // args[8] : spot is source?
 //
-void A_DetonateEx(Mobj *actor)
+void A_DetonateEx(actionargs_t *actionargs)
 {
-   int   damage   =  E_ArgAsInt(actor->state->args, 0, 128);
-   int   radius   =  E_ArgAsInt(actor->state->args, 1, 128);
-   bool  hurtself = (E_ArgAsInt(actor->state->args, 2, 1) == 1);
-   bool  alert    = (E_ArgAsInt(actor->state->args, 3, 1) == 1);
-   bool  zclip    = (E_ArgAsInt(actor->state->args, 7, 0) == 1);
-   bool  spotsrc  = (E_ArgAsInt(actor->state->args, 8, 0) == 1);
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int   damage   =  E_ArgAsInt(args, 0, 128);
+   int   radius   =  E_ArgAsInt(args, 1, 128);
+   bool  hurtself = (E_ArgAsInt(args, 2, 1) == 1);
+   bool  alert    = (E_ArgAsInt(args, 3, 1) == 1);
+   bool  zclip    = (E_ArgAsInt(args, 7, 0) == 1);
+   bool  spotsrc  = (E_ArgAsInt(args, 8, 0) == 1);
    Mobj *source   = actor->target;
    unsigned int flags = 0;
 

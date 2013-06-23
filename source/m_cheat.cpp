@@ -34,6 +34,7 @@
 
 #include "z_zone.h"
 
+#include "a_args.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -913,27 +914,27 @@ CONSOLE_COMMAND(fly, cf_notnet|cf_level)
    doom_printf(p->powers[pw_flight] ? "Flight on" : "Flight off");
 }
 
-extern void A_Fall(Mobj *);
-extern void A_PainDie(Mobj *);
+extern void A_Fall(actionargs_t *);
+extern void A_PainDie(actionargs_t *);
 
 // haleyjd 07/13/03: special actions for killem cheat
 
 //
 // Pain Elemental -- spawn lost souls now so they get killed
 //
-void A_PainNukeSpec(Mobj *actor)
+void A_PainNukeSpec(actionargs_t *actionargs)
 {
-   A_PainDie(actor);  // killough 2/8/98
-   P_SetMobjState(actor, E_SafeState(S_PAIN_DIE6));
+   A_PainDie(actionargs);  // killough 2/8/98
+   P_SetMobjState(actionargs->actor, E_SafeState(S_PAIN_DIE6));
 }
 
 //
 // D'Sparil (first form) -- don't spawn second form
 //
-void A_SorcNukeSpec(Mobj *actor)
+void A_SorcNukeSpec(actionargs_t *actionargs)
 {
-   A_Fall(actor);
-   P_SetMobjStateNF(actor, E_SafeState(S_SRCR1_DIE17));
+   A_Fall(actionargs);
+   P_SetMobjStateNF(actionargs->actor, E_SafeState(S_SRCR1_DIE17));
 }
 
 //
@@ -977,7 +978,16 @@ static void M_NukeMonsters(void)
 
             // haleyjd: made behavior customizable
             if(mi->nukespec)
-               mi->nukespec(mo);
+            {
+               actionargs_t actionargs;
+
+               actionargs.actiontype = actionargs_t::MOBJFRAME;
+               actionargs.actor      = mo;
+               actionargs.args       = NULL;
+               actionargs.pspr       = NULL;
+
+               mi->nukespec(&actionargs);
+            }
          }
       }
    }

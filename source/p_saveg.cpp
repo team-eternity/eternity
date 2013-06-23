@@ -460,8 +460,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
-             << p.colormap     << p.curpsprite      << p.quake
-             << p.jumptime;
+             << p.colormap     << p.quake           << p.jumptime;
          
          for(j = 0; j < NUMPOWERS; j++)
             arc << p.powers[j];

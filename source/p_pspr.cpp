@@ -37,6 +37,7 @@
 // Need gamepad hal
 #include "hal/i_gamepads.h"
 
+#include "a_args.h"
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_mod.h"
@@ -65,11 +66,8 @@
 #include "e_args.h"
 #include "e_player.h"
 
-int weapon_speed = 6;
-int default_weapon_speed = 6;
-
-#define LOWERSPEED   (FRACUNIT*weapon_speed)
-#define RAISESPEED   (FRACUNIT*weapon_speed)
+#define LOWERSPEED   (FRACUNIT*6)
+#define RAISESPEED   (FRACUNIT*6)
 #define WEAPONBOTTOM (FRACUNIT*128)
 #define WEAPONTOP    (FRACUNIT*32)
 
@@ -78,134 +76,16 @@ int default_weapon_speed = 6;
 // The following array holds the recoil values         // phares
 // haleyjd 08/18/08: recoil moved into weaponinfo
 
-// haleyjd 05/21/08:
-// This global is only asserted while an action function is being dispatched
-// from inside P_SetPsprite. This allows codepointer functions to behave 
-// differently if called by Mobj's or by player weapons.
-
-int action_from_pspr;
-
-//=============================================================================
-//
-// Gun actions
-//
-// This structure is used to support copying of args between gun and player
-// mobj states during execution of gun codepointer actions so that pointers
-// designed to work with Mobj's can work seamlessly with guns as well.
-//
-
-typedef struct gunaction_s
-{
-   state_t *s;               // state args were copied to
-   arglist_t *args;          // pointer to args object
-   struct gunaction_s *next; // next action
-} gunaction_t;
-
-static gunaction_t *gunactions;
-static gunaction_t *freegunactions;
-
-//
-// P_GetGunAction
-//
-// haleyjd 07/20/09: Keep gunactions on a freelist to avoid a ton of
-// allocator noise.
-//
-static gunaction_t *P_GetGunAction(void)
-{
-   gunaction_t *ret;
-
-   if(freegunactions)
-   {
-      ret = freegunactions;
-      freegunactions = ret->next;
-   }
-   else
-      ret = ecalloc(gunaction_t *, 1, sizeof(gunaction_t));
-
-   return ret;
-}
-
-//
-// P_PutGunAction
-//
-// Put a gunaction onto the freelist.
-//
-static void P_PutGunAction(gunaction_t *ga)
-{
-   memset(ga, 0, sizeof(gunaction_t));
-
-   ga->next = freegunactions;
-   freegunactions = ga;
-}
-
-//
-// P_SetupPlayerGunAction
-//
-// Enables copying of psp->state->args to mo->state->args during psprite
-// action function callback so that parameterized pointers work seamlessly.
-//
-static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
-{
-   // create a new gunaction
-   gunaction_t *ga;
-   Mobj *mo = player->mo;
-
-   ga = P_GetGunAction();
-
-   ga->args        = mo->state->args;  // save the original args
-   mo->state->args = psp->state->args; // copy from the psprite frame
-
-   action_from_pspr++;
-
-   // save pointer to state
-   ga->s = mo->state;
-
-   // put gun action on the stack
-   ga->next   = gunactions;
-   gunactions = ga;
-}
-
-//
-// P_FinishPlayerGunAction
-//
-// Fixes the state args back up after a psprite action call.
-//
-static void P_FinishPlayerGunAction(void)
-{
-   gunaction_t *ga;
-
-   // take the current gunaction off the stack
-   if(!gunactions)
-      I_Error("P_FinishPlayerGunAction: stack underflow\n");
-
-   ga = gunactions;
-   gunactions = ga->next;
-
-   // restore saved args object to the state
-   ga->s->args = ga->args;
-
-   action_from_pspr--;
-
-   // free the gunaction
-   P_PutGunAction(ga);
-}
-
 //=============================================================================
 
 //
-// P_SetPsprite
+// P_SetPspritePtr
 //
-// haleyjd 03/31/06: Removed static.
+// haleyjd 06/22/13: Set psprite state from pspdef_t
 //
-void P_SetPsprite(player_t *player, int position, statenum_t stnum)
+void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum)
 {
-   pspdef_t *psp = &player->psprites[position];
-
-   // haleyjd 04/05/07: codepointer rewrite -- use same prototype for
-   // all codepointers by getting player and psp from mo->player. This
-   // requires stashing the "position" parameter in player_t, however.
-   // 5/29/12: see below...
-
+   // haleyjd 06/22/13: rewrote again to use actionargs structure
    do
    {
       state_t *state;
@@ -238,15 +118,14 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       // Modified handling.
       if(state->action)
       {
-         P_SetupPlayerGunAction(player, psp);
+         actionargs_t action;
 
-         // haleyjd 05/29/12: this must be set before every action call, due to
-         // the possibility of recursive calls to P_SetPsprite.
-         player->curpsprite = position;
+         action.actiontype = actionargs_t::WEAPONFRAME;
+         action.actor      = player->mo;
+         action.args       = state->args;
+         action.pspr       = psp;
 
-         state->action(player->mo);
-         
-         P_FinishPlayerGunAction();
+         state->action(&action);
          
          if(!psp->state)
             break;
@@ -254,6 +133,16 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       stnum = psp->state->nextstate;
    }
    while(!psp->tics);   // an initial state of 0 could cycle through
+}
+
+//
+// P_SetPsprite
+//
+// haleyjd 03/31/06: Removed static.
+//
+void P_SetPsprite(player_t *player, int position, statenum_t stnum)
+{
+   P_SetPspritePtr(player, &player->psprites[position], stnum);
 }
 
 //
@@ -666,15 +555,17 @@ static void P_WeaponSound(Mobj *mo, int sfx_id)
 // Follows after getting weapon up,
 // or after previous attack/fire sequence.
 //
-void A_WeaponReady(Mobj *mo)
+void A_WeaponReady(actionargs_t *actionargs)
 {
+   Mobj     *mo = actionargs->actor;
    player_t *player;
    pspdef_t *psp;
 
    if(!(player = mo->player))
       return;
 
-   psp = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
    // WEAPON_FIXME: chainsaw particulars (idle sound)
 
@@ -735,9 +626,9 @@ void A_WeaponReady(Mobj *mo)
 // The player can re-fire the weapon
 // without lowering it entirely.
 //
-void A_ReFire(Mobj *mo)
+void A_ReFire(actionargs_t *actionargs)
 {
-   player_t *player = mo->player;
+   player_t *player = actionargs->actor->player;
 
    if(!player)
       return;
@@ -767,9 +658,9 @@ void A_ReFire(Mobj *mo)
 // don't need to complete the reload frames for the weapon here. 
 // G_BuildTiccmd will set ->pendingweapon for us later on.
 //
-void A_CheckReload(Mobj *mo)
+void A_CheckReload(actionargs_t *actionargs)
 {
-   player_t *player = mo->player;
+   player_t *player = actionargs->actor->player;
 
    if(!player)
       return;
@@ -786,15 +677,16 @@ void A_CheckReload(Mobj *mo)
 //
 // Lowers current weapon, and changes weapon at bottom.
 //
-void A_Lower(Mobj *mo)
+void A_Lower(actionargs_t *actionargs)
 {
    player_t *player;
    pspdef_t *psp;
 
-   if(!(player = mo->player))
+   if(!(player = actionargs->actor->player))
       return;
 
-   psp = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
    // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
    psp->sy += LOWERSPEED;
@@ -829,16 +721,17 @@ void A_Lower(Mobj *mo)
 //
 // A_Raise
 //
-void A_Raise(Mobj *mo)
+void A_Raise(actionargs_t *actionargs)
 {
    statenum_t newstate;
    player_t *player;
    pspdef_t *psp;
 
-   if(!(player = mo->player))
+   if(!(player = actionargs->actor->player))
       return;
 
-   psp = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
    // WEAPON_FIXME: RAISESPEED property of EDF weapons?
    
@@ -904,14 +797,14 @@ static void A_FireSomething(player_t* player, int adder)
 // A_GunFlash
 //
 
-void A_GunFlash(Mobj *mo)
+void A_GunFlash(actionargs_t *actionargs)
 {
-   player_t *player = mo->player;
+   player_t *player = actionargs->actor->player;
 
    if(!player)
       return;
 
-   P_SetMobjState(mo, player->pclass->altattack);
+   P_SetMobjState(actionargs->actor, player->pclass->altattack);
    
    A_FireSomething(player, 0);                               // phares
 }
@@ -971,12 +864,13 @@ static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
 //
 // A_Punch
 //
-void A_Punch(Mobj *mo)
+void A_Punch(actionargs_t *actionargs)
 {
    angle_t angle;
    fixed_t slope;
    int damage = (P_Random(pr_punch) % 10 + 1) << 1;
-   player_t *player  = mo->player;
+   Mobj     *mo     = actionargs->actor;
+   player_t *player = mo->player;
 
    if(!player)
       return;
@@ -1008,11 +902,12 @@ void A_Punch(Mobj *mo)
 //
 // A_Saw
 //
-void A_Saw(Mobj *mo)
+void A_Saw(actionargs_t *actionargs)
 {
    fixed_t slope;
-   int damage = 2 * (P_Random(pr_saw) % 10 + 1);
-   angle_t angle     = mo->angle;
+   int     damage = 2 * (P_Random(pr_saw) % 10 + 1);
+   Mobj   *mo    = actionargs->actor;
+   angle_t angle = mo->angle;
    
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_saw) << 18;
@@ -1056,9 +951,9 @@ void A_Saw(Mobj *mo)
 //
 // A_FireMissile
 //
-void A_FireMissile(Mobj *mo)
+void A_FireMissile(actionargs_t *actionargs)
 {
-   player_t *player = mo->player;
+   player_t *player = actionargs->actor->player;
 
    if(!player)
       return;
@@ -1074,17 +969,17 @@ void A_FireMissile(Mobj *mo)
 
 #define BFGBOUNCE 16
 
-void A_FireBFG(Mobj *actor)
+void A_FireBFG(actionargs_t *actionargs)
 {
    Mobj *mo;
-   player_t *player = actor->player;
+   player_t *player = actionargs->actor->player;
 
    if(!player)
       return;
 
    P_SubtractAmmo(player, BFGCELLS);
    
-   mo = P_SpawnPlayerMissile(actor, E_SafeThingType(MT_BFG));
+   mo = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
    mo->extradata.bfgcount = BFGBOUNCE;   // for bouncing bfg - redundant
 }
 
@@ -1097,8 +992,9 @@ void A_FireBFG(Mobj *actor)
 // This code may not be used in other mods without appropriate credit given.
 // Code leeches will be telefragged.
 //
-void A_FireOldBFG(Mobj *mo)
+void A_FireOldBFG(actionargs_t *actionargs)
 {
+   Mobj *mo  = actionargs->actor;
    int type1 = E_SafeThingType(MT_PLASMA1);
    int type2 = E_SafeThingType(MT_PLASMA2);
    int type;
@@ -1195,8 +1091,9 @@ void A_FireOldBFG(Mobj *mo)
 //
 // A_FirePlasma
 //
-void A_FirePlasma(Mobj *mo)
+void A_FirePlasma(actionargs_t *actionargs)
 {
+   Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
 
    if(!player)
@@ -1261,8 +1158,9 @@ void P_GunShot(Mobj *mo, bool accurate)
 //
 // A_FirePistol
 //
-void A_FirePistol(Mobj *mo)
+void A_FirePistol(actionargs_t *actionargs)
 {
+   Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
 
    if(!player)
@@ -1284,9 +1182,10 @@ void A_FirePistol(Mobj *mo)
 //
 // A_FireShotgun
 //
-void A_FireShotgun(Mobj *mo)
+void A_FireShotgun(actionargs_t *actionargs)
 {
    int i;
+   Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
 
    if(!player)
@@ -1310,9 +1209,10 @@ void A_FireShotgun(Mobj *mo)
 //
 // A_FireShotgun2
 //
-void A_FireShotgun2(Mobj *mo)
+void A_FireShotgun2(actionargs_t *actionargs)
 {
    int i;
+   Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
 
    if(!player)
@@ -1343,34 +1243,36 @@ void A_FireShotgun2(Mobj *mo)
 
 // haleyjd 04/05/07: moved all SSG codepointers here
 
-void A_OpenShotgun2(Mobj *mo)
+void A_OpenShotgun2(actionargs_t *actionargs)
 {
-   P_WeaponSound(mo, sfx_dbopn);
+   P_WeaponSound(actionargs->actor, sfx_dbopn);
 }
 
-void A_LoadShotgun2(Mobj *mo)
+void A_LoadShotgun2(actionargs_t *actionargs)
 {
-   P_WeaponSound(mo, sfx_dbload);
+   P_WeaponSound(actionargs->actor, sfx_dbload);
 }
 
-void A_CloseShotgun2(Mobj *mo)
+void A_CloseShotgun2(actionargs_t *actionargs)
 {
-   P_WeaponSound(mo, sfx_dbcls);
-   A_ReFire(mo);
+   P_WeaponSound(actionargs->actor, sfx_dbcls);
+   A_ReFire(actionargs);
 }
 
 //
 // A_FireCGun
 //
-void A_FireCGun(Mobj *mo)
+void A_FireCGun(actionargs_t *actionargs)
 {
+   Mobj     *mo = actionargs->actor;
    player_t *player;
    pspdef_t *psp;
 
    if(!(player = mo->player))
       return;
 
-   psp = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
    P_WeaponSound(mo, sfx_chgun);
 
@@ -1401,16 +1303,20 @@ void A_FireCGun(Mobj *mo)
    P_GunShot(mo, !player->refire);
 }
 
-void A_Light0(Mobj *mo)
+void A_Light0(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    if(!mo->player)
       return;
 
    mo->player->extralight = 0;
 }
 
-void A_Light1(Mobj *mo)
+void A_Light1(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    if(!mo->player)
       return;
 
@@ -1418,8 +1324,10 @@ void A_Light1(Mobj *mo)
       mo->player->extralight = 1;
 }
 
-void A_Light2(Mobj *mo)
+void A_Light2(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    if(!mo->player)
       return;
 
@@ -1427,36 +1335,36 @@ void A_Light2(Mobj *mo)
       mo->player->extralight = 2;
 }
 
-void A_BouncingBFG(Mobj *mo);
-void A_BFG11KHit(Mobj *mo);
-void A_BFGBurst(Mobj *mo); // haleyjd
+void A_BouncingBFG(actionargs_t *actionargs);
+void A_BFG11KHit(actionargs_t *actionargs);
+void A_BFGBurst(actionargs_t *actionargs); // haleyjd
 
 //
 // A_BFGSpray
 //
 // Spawn a BFG explosion on every monster in view
 //
-void A_BFGSpray(Mobj *mo)
+void A_BFGSpray(actionargs_t *actionargs)
 {
-   int i;
-
    // WEAPON_FIXME: BFG type stuff
    switch(bfgtype)
    {
    case bfg_11k:
-      A_BFG11KHit(mo);
+      A_BFG11KHit(actionargs);
       return;
    case bfg_bouncing:
-      A_BouncingBFG(mo);
+      A_BouncingBFG(actionargs);
       return;
    case bfg_burst:
-      A_BFGBurst(mo);
+      A_BFGBurst(actionargs);
       return;
    default:
       break;
    }
+
+   Mobj *mo = actionargs->actor;
    
-   for(i = 0; i < 40; i++)  // offset angles from its attack angle
+   for(int i = 0; i < 40; i++)  // offset angles from its attack angle
    {
       int j, damage;
       angle_t an = mo->angle - ANG90/2 + ANG90/40*i;
@@ -1489,15 +1397,15 @@ void A_BFGSpray(Mobj *mo)
 //
 // haleyjd: The bouncing BFG from SMMU, but fixed to work better.
 //
-void A_BouncingBFG(Mobj *mo)
+void A_BouncingBFG(actionargs_t *actionargs)
 {
-   int i;
+   Mobj *mo = actionargs->actor;
    Mobj *newmo;
    
    if(!mo->extradata.bfgcount)
       return;
    
-   for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
+   for(int i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
    {
       angle_t an2, an = (ANG360/40)*i;
       int dist;
@@ -1557,11 +1465,12 @@ void A_BouncingBFG(Mobj *mo)
 //
 // Explosion pointer for SMMU BFG11k.
 //
-void A_BFG11KHit(Mobj *mo)
+void A_BFG11KHit(actionargs_t *actionargs)
 {
    int i = 0;
    int j, damage;
    int origdist;
+   Mobj *mo = actionargs->actor;
 
    if(!mo->target)
       return;
@@ -1622,10 +1531,11 @@ void A_BFG11KHit(Mobj *mo)
 // when he stopped working on it. This is a tribute to his bold
 // spirit ^_^
 //
-void A_BFGBurst(Mobj *mo)
+void A_BFGBurst(actionargs_t *actionargs)
 {
    int      a;
    angle_t  an = 0;
+   Mobj    *mo = actionargs->actor;
    Mobj    *th;
    int      plasmaType = E_SafeThingType(MT_PLASMA3);
 
@@ -1648,8 +1558,10 @@ void A_BFGBurst(Mobj *mo)
 //
 // A_BFGsound
 //
-void A_BFGsound(Mobj *mo)
+void A_BFGsound(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    P_WeaponSound(mo, sfx_bfg);
 
    if(mo->player == &players[consoleplayer])
@@ -1705,7 +1617,7 @@ void P_MovePsprites(player_t *player)
 //===============================
 
 // FIXME/TODO: get rid of this?
-void A_FireGrenade(Mobj *mo)
+void A_FireGrenade(actionargs_t *actionargs)
 {
 }
 
@@ -1737,8 +1649,10 @@ static argkeywd_t fcbkwds =
 // args[4] : damage modulus of bullets
 // args[5] : if not zero, set specific flash state; if < 0, don't change it.
 //
-void A_FireCustomBullets(Mobj *mo)
+void A_FireCustomBullets(actionargs_t *actionargs)
 {
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
    int i, accurate, numbullets, damage, dmgmod;
    int flashint, flashstate;
    sfxinfo_t *sfx;
@@ -1748,16 +1662,17 @@ void A_FireCustomBullets(Mobj *mo)
    if(!(player = mo->player))
       return;
 
-   psp = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
-   sfx        = E_ArgAsSound(psp->state->args, 0);
-   accurate   = E_ArgAsKwd(psp->state->args, 1, &fcbkwds, 0);
-   numbullets = E_ArgAsInt(psp->state->args, 2, 0);
-   damage     = E_ArgAsInt(psp->state->args, 3, 0);
-   dmgmod     = E_ArgAsInt(psp->state->args, 4, 0);
+   sfx        = E_ArgAsSound(args, 0);
+   accurate   = E_ArgAsKwd(args, 1, &fcbkwds, 0);
+   numbullets = E_ArgAsInt(args, 2, 0);
+   damage     = E_ArgAsInt(args, 3, 0);
+   dmgmod     = E_ArgAsInt(args, 4, 0);
    
-   flashint   = E_ArgAsInt(psp->state->args, 5, 0);
-   flashstate = E_ArgAsStateNum(psp->state->args, 5, NULL);
+   flashint   = E_ArgAsInt(args, 5, 0);
+   flashstate = E_ArgAsStateNum(args, 5, NULL);
 
    if(!accurate)
       accurate = 1;
@@ -1840,22 +1755,24 @@ static argkeywd_t seekkwds =
 // args[1] : whether or not to home at current autoaim target
 //           (missile requires homing maintenance pointers, however)
 //
-void A_FirePlayerMissile(Mobj *actor)
+void A_FirePlayerMissile(actionargs_t *actionargs)
 {
    int thingnum;
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    bool seek;
-   player_t *player;
-   pspdef_t *psp;
+   player_t  *player;
+   pspdef_t  *psp;
+   arglist_t *args = actionargs->args;
 
-   if(!actor->player)
+   if(!(player = actor->player))
       return;
 
-   player = actor->player;
-   psp    = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
-   thingnum = E_ArgAsThingNumG0(psp->state->args, 0);
-   seek     = !!E_ArgAsKwd(psp->state->args, 1, &seekkwds, 0);
+   thingnum = E_ArgAsThingNumG0(args, 0);
+   seek     = !!E_ArgAsKwd(args, 1, &seekkwds, 0);
 
    // validate thingtype
    if(thingnum < 0 || thingnum == -1)
@@ -1904,25 +1821,28 @@ static argkeywd_t cpmkwds =
 // args[3] : angle deflection type (none, punch, chainsaw)
 // args[4] : sound to make (dehacked number)
 //
-void A_CustomPlayerMelee(Mobj *mo)
+void A_CustomPlayerMelee(actionargs_t *actionargs)
 {
    angle_t angle;
    fixed_t slope;
    int damage, dmgfactor, dmgmod, berzerkmul, deftype;
    sfxinfo_t *sfx;
-   player_t *player;
-   pspdef_t *psp;
+   Mobj      *mo = actionargs->actor;
+   player_t  *player;
+   pspdef_t  *psp;
+   arglist_t *args = actionargs->args;
 
    if(!(player = mo->player))
       return;
 
-   psp = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
-   dmgfactor  = E_ArgAsInt(psp->state->args, 0, 0);
-   dmgmod     = E_ArgAsInt(psp->state->args, 1, 0);
-   berzerkmul = E_ArgAsInt(psp->state->args, 2, 0);
-   deftype    = E_ArgAsKwd(psp->state->args, 3, &cpmkwds, 0);
-   sfx        = E_ArgAsSound(psp->state->args, 4);
+   dmgfactor  = E_ArgAsInt(args, 0, 0);
+   dmgmod     = E_ArgAsInt(args, 1, 0);
+   berzerkmul = E_ArgAsInt(args, 2, 0);
+   deftype    = E_ArgAsKwd(args, 3, &cpmkwds, 0);
+   sfx        = E_ArgAsSound(args, 4);
 
    // adjust parameters
 
@@ -2031,7 +1951,7 @@ static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
 // args[3] : bool, 1 == set player's target to autoaim target
 // args[4] : bool, 1 == use ammo on current weapon if attack succeeds
 //
-void A_PlayerThunk(Mobj *mo)
+void A_PlayerThunk(actionargs_t *actionargs)
 {
    bool face;
    bool settarget;
@@ -2039,19 +1959,22 @@ void A_PlayerThunk(Mobj *mo)
    int cptrnum, statenum;
    state_t *oldstate = 0;
    Mobj *oldtarget = NULL, *localtarget = NULL;
-   player_t *player;
-   pspdef_t *psp;
+   Mobj *mo = actionargs->actor;
+   player_t  *player;
+   pspdef_t  *psp;
+   arglist_t *args = actionargs->args;
 
    if(!(player = mo->player))
       return;
 
-   psp    = &player->psprites[player->curpsprite];
+   if(!(psp = actionargs->pspr))
+      return;
 
-   cptrnum   =   E_ArgAsBexptr(psp->state->args, 0);
-   face      = !!E_ArgAsKwd(psp->state->args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(psp->state->args, 2, NULL);
-   settarget = !!E_ArgAsKwd(psp->state->args, 3, &targetkwds, 0);
-   useammo   = !!E_ArgAsKwd(psp->state->args, 4, &ammokwds, 0);
+   cptrnum   =   E_ArgAsBexptr(args, 0);
+   face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
+   statenum  =   E_ArgAsStateNumG0(args, 2, NULL);
+   settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
+   useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
 
    // validate codepointer index
    if(cptrnum < 0)
@@ -2095,8 +2018,14 @@ void A_PlayerThunk(Mobj *mo)
       }
    }
 
+   actionargs_t thunkargs;
+   thunkargs.actiontype = actionargs_t::WEAPONFRAME;
+   thunkargs.actor      = mo;
+   thunkargs.args       = ESAFEARGS(mo);
+   thunkargs.pspr       = actionargs->pspr;
+
    // execute the codepointer
-   deh_bexptrs[cptrnum].cptr(mo);
+   deh_bexptrs[cptrnum].cptr(&thunkargs);
 
    // remove MIF_NOFACE
    mo->intflags &= ~MIF_NOFACE;

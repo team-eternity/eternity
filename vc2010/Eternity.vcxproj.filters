@@ -1589,6 +1589,9 @@
     <ClInclude Include="..\source\hal\i_directory.h">
       <Filter>Source Files\HAL\HAL Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\a_args.h">
+      <Filter>Source Files\A_\A_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

@@ -29,6 +29,7 @@
 
 #include "z_zone.h"
 
+#include "a_args.h"
 #include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -99,10 +100,11 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
 //
 // Stay in state until a player is sighted.
 //
-void A_Look(Mobj *actor)
+void A_Look(actionargs_t *actionargs)
 {
+   Mobj *actor     = actionargs->actor;
    Mobj *sndtarget = actor->subsector->sector->soundtarget;
-   bool allaround = false;
+   bool  allaround = false;
 
    // killough 7/18/98:
    // Friendly monsters go after other monsters first, but 
@@ -161,7 +163,7 @@ void A_Look(Mobj *actor)
 // killough 10/98:
 // Allows monsters to continue movement while attacking
 //
-void A_KeepChasing(Mobj *actor)
+void A_KeepChasing(actionargs_t *actionargs)
 {
    /*
    if(actor->movecount)
@@ -172,7 +174,7 @@ void A_KeepChasing(Mobj *actor)
       P_SmartMove(actor);
    }
    */
-   P_SmartMove(actor);
+   P_SmartMove(actionargs->actor);
 }
 
 //
@@ -228,8 +230,10 @@ static void P_MakeActiveSound(Mobj *actor)
 //
 // A_FaceTarget
 //
-void A_FaceTarget(Mobj *actor)
+void A_FaceTarget(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target)
       return;
 
@@ -258,8 +262,9 @@ void A_FaceTarget(Mobj *actor)
 // Actor has a melee attack,
 // so it tries to close as fast as possible
 //
-void A_Chase(Mobj *actor)
+void A_Chase(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    bool superfriend = false;
 
    if(actor->reactiontime)
@@ -278,7 +283,7 @@ void A_Chase(Mobj *actor)
    // killough 9/7/98: keep facing towards target if strafing or backing out
 
    if(actor->strafecount)
-      A_FaceTarget(actor);
+      A_FaceTarget(actionargs);
    else
    {
       if(actor->movedir < 8)
@@ -294,27 +299,8 @@ void A_Chase(Mobj *actor)
 
    if(!actor->target || !(actor->target->flags & MF_SHOOTABLE))
    {
-      // haleyjd 07/26/04: Detect and prevent infinite recursion if
-      // Chase is called from a thing's spawnstate.
-      static bool recursion = false;
-
-      // if recursion is true at this point, P_SetMobjState sent
-      // us back here -- print an error message and return
-      if(recursion)
-      {
-         doom_printf("Warning: Chase recursion detected\n");
-         return;
-      }
-
-      // set the flag true before calling P_SetMobjState
-      recursion = true;
-
       if(!P_LookForTargets(actor,true)) // look for a new target
          P_SetMobjState(actor, actor->info->spawnstate); // no new target
-
-      // clear the flag after the state set occurs
-      recursion = false;
-
       return;
    }
 
@@ -336,24 +322,10 @@ void A_Chase(Mobj *actor)
    if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && 
       !superfriend)
    {
-      // haleyjd 05/01/05: Detect and prevent infinite recursion if
-      // Chase is called from a thing's attack state
-      static bool recursion = false;
-
-      if(recursion)
-      {
-         doom_printf("Warning: Chase recursion detected\n");
-         return;
-      }
-
       S_StartSound(actor, actor->info->attacksound);
       
-      recursion = true;
-
       P_SetMobjState(actor, actor->info->meleestate);
 
-      recursion = false;
-      
       if(actor->info->missilestate == NullStateNum)
          actor->flags |= MF_JUSTHIT; // killough 8/98: remember an attack
       return;
@@ -362,25 +334,13 @@ void A_Chase(Mobj *actor)
    // check for missile attack
    if(actor->info->missilestate != NullStateNum && !superfriend)
    {
-      // haleyjd 05/01/05: Detect and prevent infinite recursion if
-      // Chase is called from a thing's attack state
-      static bool recursion = false;
-
-      if(recursion)
-      {
-         doom_printf("Warning: Chase recursion detected\n");
-         return;
-      }
-
       // haleyjd 05/22/06: ALWAYSFAST flag
       if(!actor->movecount || gameskill >= sk_nightmare || fastparm || 
          (actor->flags3 & MF3_ALWAYSFAST))
       {
          if(P_CheckMissileRange(actor))
          {
-            recursion = true;
             P_SetMobjState(actor, actor->info->missilestate);
-            recursion = false;
             actor->flags |= MF_JUSTATTACKED;
             return;
          }
@@ -459,8 +419,9 @@ void A_Chase(Mobj *actor)
 // haleyjd 06/15/05: Makes an object walk in random directions without
 // following or attacking any target.
 //
-void A_RandomWalk(Mobj *actor)
+void A_RandomWalk(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    int i, checkdirs[NUMDIRS];
 
    for(i = 0; i < NUMDIRS; ++i)
@@ -557,8 +518,9 @@ void A_RandomWalk(Mobj *actor)
    P_MakeActiveSound(actor);
 }
 
-void A_Scream(Mobj *actor)
+void A_Scream(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    int sound;
    
    switch(actor->info->deathsound)
@@ -590,8 +552,9 @@ void A_Scream(Mobj *actor)
       S_StartSound(actor, sound);
 }
 
-void A_PlayerScream(Mobj *mo)
+void A_PlayerScream(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
    int sound;
 
    if(mo->player && strcasecmp(mo->player->skin->sounds[sk_plwdth], "none") &&
@@ -622,8 +585,9 @@ void A_PlayerScream(Mobj *mo)
 // PCLASS_FIXME: skull height a playerclass property?
 #define SKULLHEIGHT (48 * FRACUNIT)
 
-void A_PlayerSkull(Mobj *actor)
+void A_PlayerSkull(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *head;
 
    // PCLASS_FIXME: skull type a playerclass property?
@@ -655,9 +619,10 @@ void A_PlayerSkull(Mobj *actor)
    head->momz =  64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
 }
 
-void A_XScream(Mobj *actor)
+void A_XScream(actionargs_t *actionargs)
 {
-   int sound = GameModeInfo->playerSounds[sk_slop];
+   Mobj *actor = actionargs->actor;
+   int sound   = GameModeInfo->playerSounds[sk_slop];
    
    // haleyjd: falling damage
    if(!comp[comp_fallingdmg] && demo_version >= 329)
@@ -669,20 +634,21 @@ void A_XScream(Mobj *actor)
    S_StartSound(actor, sound);
 }
 
-void A_Pain(Mobj *actor)
+void A_Pain(actionargs_t *actionargs)
 {
-   S_StartSound(actor, actor->info->painsound);
+   S_StartSound(actionargs->actor, actionargs->actor->info->painsound);
 }
 
-void A_Fall(Mobj *actor)
+void A_Fall(actionargs_t *actionargs)
 {
    // actor is on ground, it can be walked over
-   actor->flags &= ~MF_SOLID;
+   actionargs->actor->flags &= ~MF_SOLID;
 }
 
 // killough 11/98: kill an object
-void A_Die(Mobj *actor)
+void A_Die(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    actor->flags2 &= ~MF2_INVULNERABLE;  // haleyjd: just in case
    P_DamageMobj(actor, NULL, NULL, actor->health, MOD_UNKNOWN);
 }
@@ -690,16 +656,18 @@ void A_Die(Mobj *actor)
 //
 // A_Explode
 //
-void A_Explode(Mobj *thingy)
+void A_Explode(actionargs_t *actionargs)
 {
+   Mobj *thingy = actionargs->actor;
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
       E_HitWater(thingy, thingy->subsector->sector);
 }
 
-void A_Nailbomb(Mobj *thing)
+void A_Nailbomb(actionargs_t *actionargs)
 {
+   Mobj *thing = actionargs->actor;
    int i;
    
    P_RadiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
@@ -718,8 +686,10 @@ void A_Nailbomb(Mobj *thing)
 //
 // killough 8/9/98: same as A_Explode, except that the damage is variable
 //
-void A_Detonate(Mobj *mo)
+void A_Detonate(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
+
    P_RadiusAttack(mo, mo->target, mo->damage, mo->damage, mo->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked

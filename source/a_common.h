@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Action Pointer Functions
@@ -33,17 +33,18 @@
 // Required for pr_class_t:
 #include "m_random.h"
 
-class Mobj;
+struct actionargs_t;
+class  Mobj;
 
 void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum);
 
-void A_Chase(Mobj *actor);
-void A_Die(Mobj *actor);
-void A_Explode(Mobj *thingy);
-void A_FaceTarget(Mobj *actor);
-void A_Fall(Mobj *actor);
-void A_Look(Mobj *actor);
-void A_Pain(Mobj *actor);
+void A_Chase(actionargs_t *actionargs);
+void A_Die(actionargs_t *actionargs);
+void A_Explode(actionargs_t *actionargs);
+void A_FaceTarget(actionargs_t *actionargs);
+void A_Fall(actionargs_t *actionargs);
+void A_Look(actionargs_t *actionargs);
+void A_Pain(actionargs_t *actionargs);
 
 #endif
 

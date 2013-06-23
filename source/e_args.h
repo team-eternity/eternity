@@ -33,12 +33,15 @@
 #include "m_fixed.h"
 
 struct edf_string_t;
+class  Mobj;
 struct mobjinfo_t;
 struct sfxinfo_t;
 struct state_t;
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16
+
+#define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : NULL)
 
 typedef enum
 {
@@ -70,12 +73,12 @@ typedef struct evalcache_s
    } value;
 } evalcache_t;
 
-typedef struct arglist_s
+struct arglist_t
 {
    char *args[EMAXARGS];         // argument strings stored from EDF
    evalcache_t values[EMAXARGS]; // if type != EVALTYPE_NONE, cached value
    int numargs;                  // number of arguments
-} arglist_t;
+};
 
 typedef struct argkeywd_s
 {

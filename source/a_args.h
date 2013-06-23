@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2010 James Haley
+// Copyright(C) 2013 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,22 +17,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Action Pointer Functions
-//      that are associated with states/frames.
-//
-//      DOOM action functions.
+//      Argument structure
 //
 //-----------------------------------------------------------------------------
 
-#ifndef A_DOOM_H__
-#define A_DOOM_H__
+#ifndef A_ARGS_H__
+#define A_ARGS_H__
 
-struct actionargs_t;
+struct arglist_t;
+class  Mobj;
+struct pspdef_t;
 
-void A_Fire(actionargs_t *actor);
+struct actionargs_t
+{
+   // activation type enumeration
+   enum actiontype_e
+   {
+      MOBJFRAME,   // invoked from P_SetMobjState
+      WEAPONFRAME  // invoked from P_SetPSprite
+   } actiontype;
+
+   Mobj      *actor; // Actor for either type of invocation; use mo->player when needed
+   pspdef_t  *pspr;  // psprite, only valid if actiontype is WEAPONFRAME
+   arglist_t *args;  // EDF arguments list
+};
 
 #endif
 

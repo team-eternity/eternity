@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "a_args.h"
 #include "a_small.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
@@ -290,7 +291,16 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       // Call action functions when the state is set
 
       if(st->action)
-         st->action(mobj);
+      {
+         actionargs_t actionargs;
+
+         actionargs.actiontype = actionargs_t::MOBJFRAME;
+         actionargs.actor      = mobj;
+         actionargs.args       = st->args;
+         actionargs.pspr       = NULL;
+
+         st->action(&actionargs);
+      }
 
       // haleyjd 05/20/02: run particle events
       if(st->particle_evt)

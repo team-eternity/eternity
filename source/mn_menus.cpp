@@ -3145,11 +3145,6 @@ static menu_t *mn_weapons_pages[] =
    NULL
 };
 
-/*
-YSHEAR_FIXME: this feature may return after EDF for weapons
-{it_toggle,   "allow mlook with bfg",       "bfglook"},
-*/
-
 static menuitem_t mn_weapons_items[] =
 {
    {it_title,      "Weapons",                NULL, "M_WEAP"},

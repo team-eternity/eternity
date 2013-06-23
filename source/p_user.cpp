@@ -570,7 +570,7 @@ void P_PlayerThink(player_t *player)
       }
    }
   
-   P_CalcHeight (player); // Determines view height and bobbing
+   P_CalcHeight(player); // Determines view height and bobbing
    
    // haleyjd: are we falling? might need to scream :->
    if(!comp[comp_fallingdmg] && demo_version >= 329)
@@ -598,22 +598,6 @@ void P_PlayerThink(player_t *player)
 
    // haleyjd: Heretic current specials
    P_HereticCurrent(player);
-
-   // Sprite Height problem...                                         // phares
-   // Future code:                                                     //  |
-   // It's possible that at this point the player is standing on top   //  V
-   // of a Thing that could cause him some damage, like a torch or
-   // burning barrel. We need a way to generalize Thing damage by
-   // grabbing a bit in the Thing's options to indicate damage. Since
-   // this is competing with other attributes we may want to add,
-   // we'll put this off for future consideration when more is
-   // known.
-
-   // Future Code:                                                     //  ^
-   // Check to see if the object you've been standing on has moved     //  |
-   // out from underneath you.                                         // phares
-
-   // haleyjd: burn damage is now implemented, but is handled elsewhere.
    
    // Check for weapon change.
    

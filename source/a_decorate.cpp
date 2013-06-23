@@ -28,8 +28,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "a_args.h"
+#include "a_small.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "e_args.h"
+#include "e_sound.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "e_ttypes.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -43,13 +51,6 @@
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
-#include "a_small.h"
-
-#include "e_args.h"
-#include "e_sound.h"
-#include "e_states.h"
-#include "e_things.h"
-#include "e_ttypes.h"
 
 //
 // A_AlertMonsters
@@ -57,8 +58,9 @@
 // ZDoom codepointer #3, implemented from scratch using wiki
 // documentation. 100% GPL version.
 // 
-void A_AlertMonsters(Mobj *mo)
+void A_AlertMonsters(actionargs_t *actionargs)
 {
+   Mobj *mo = actionargs->actor;
    if(mo->target)
       P_NoiseAlert(mo->target, mo->target);
 }
@@ -70,11 +72,12 @@ void A_AlertMonsters(Mobj *mo)
 // Extension: 
 //    args[0] == state DeHackEd number to transfer into
 //
-void A_CheckPlayerDone(Mobj *actor)
+void A_CheckPlayerDone(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(actor->state->args, 0, actor)) < 0)
+   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor)) < 0)
       return;
 
    if(!actor->player)
@@ -86,8 +89,9 @@ void A_CheckPlayerDone(Mobj *actor)
 //
 // Codepointer needed for Heretic/Hexen/Strife support.
 //
-void A_ClearSkin(Mobj *mo)
+void A_ClearSkin(actionargs_t *actionargs)
 {
+   Mobj *mo   = actionargs->actor;
    mo->skin   = NULL;
    mo->sprite = mo->state->sprite;
 }
@@ -99,9 +103,10 @@ void A_ClearSkin(Mobj *mo)
 //
 // args[0] : alpha step
 //
-void A_FadeIn(Mobj *mo)
+void A_FadeIn(actionargs_t *actionargs)
 {
-   mo->translucency += E_ArgAsFixed(mo->state->args, 0, 0);
+   Mobj *mo = actionargs->actor;
+   mo->translucency += E_ArgAsFixed(actionargs->args, 0, 0);
    
    if(mo->translucency < 0)
       mo->translucency = 0;
@@ -116,9 +121,10 @@ void A_FadeIn(Mobj *mo)
 //
 // args[0] : alpha step
 //
-void A_FadeOut(Mobj *mo)
+void A_FadeOut(actionargs_t *actionargs)
 {
-   mo->translucency -= E_ArgAsFixed(mo->state->args, 0, 0);
+   Mobj *mo = actionargs->actor;
+   mo->translucency -= E_ArgAsFixed(actionargs->args, 0, 0);
    
    if(mo->translucency < 0)
       mo->translucency = 0;
@@ -134,11 +140,12 @@ void A_FadeOut(Mobj *mo)
 // args[0] : chance
 // args[N] : offset || state label
 //
-void A_Jump(Mobj *actor)
+void A_Jump(actionargs_t *actionargs)
 {
-   int     chance, choice;
-   arglist_t *al = actor->state->args;
-   state_t *state;
+   int        chance, choice;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *al    = actionargs->args;
+   state_t   *state;
 
    // no args?
    if(!al || al->numargs < 2)
@@ -167,13 +174,12 @@ void A_Jump(Mobj *actor)
 // ZDoom-compatible ammo jump. For weapons only!
 //    args[0] : state to jump to if not enough ammo
 //
-void A_JumpIfNoAmmo(Mobj *mo)
+void A_JumpIfNoAmmo(actionargs_t *actionargs)
 {
-   if(action_from_pspr)
+   if(actionargs->pspr)
    {
-      player_t *p     = mo->player;
-      state_t  *s     = p->psprites[p->curpsprite].state;
-      int statenum    = E_ArgAsStateNumNI(s->args, 0, NULL);
+      player_t *p     = actionargs->actor->player;
+      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, NULL);
       weaponinfo_t *w = P_GetReadyWeapon(p);
 
       // validate state
@@ -181,7 +187,7 @@ void A_JumpIfNoAmmo(Mobj *mo)
          return;
 
       if(w->ammo < NUMAMMO && p->ammo[w->ammo] < w->ammopershot)
-         P_SetPsprite(p, p->curpsprite, statenum);
+         P_SetPspritePtr(p, actionargs->pspr, statenum);
    }
 }
 
@@ -195,35 +201,37 @@ void A_JumpIfNoAmmo(Mobj *mo)
 // args[1] : fov
 // args[2] : proj_target
 //
-void A_JumpIfTargetInLOS(Mobj *mo)
+void A_JumpIfTargetInLOS(actionargs_t *actionargs)
 {
-   int     statenum;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int statenum;
 
-   if(action_from_pspr)
+   if(actionargs->pspr)
    {
       // called from a weapon frame
-      player_t *player = mo->player;
-      pspdef_t *pspr   = &(player->psprites[player->curpsprite]);
+      player_t *player = actor->player;
+      pspdef_t *pspr   = actionargs->pspr;
 
       // see if the player has an autoaim target
-      P_BulletSlope(mo);
+      P_BulletSlope(actor);
       if(!clip.linetarget)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0, NULL)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, NULL)) < 0)
          return;
 
-      P_SetPsprite(player, player->curpsprite, statenum);
+      P_SetPspritePtr(player, pspr, statenum);
    }
    else
    {
-      Mobj *target = mo->target;
-      int seek = !!E_ArgAsInt(mo->state->args, 2, 0);
-      int ifov =   E_ArgAsInt(mo->state->args, 1, 0);
+      Mobj *target = actor->target;
+      int seek = !!E_ArgAsInt(args, 2, 0);
+      int ifov =   E_ArgAsInt(args, 1, 0);
 
       // if a missile, determine what to do from args[2]
-      if(mo->flags & MF_MISSILE)
+      if(actor->flags & MF_MISSILE)
       {
          switch(seek)
          {
@@ -231,7 +239,7 @@ void A_JumpIfTargetInLOS(Mobj *mo)
          case 0: // 0 == use originator (mo->target)
             break;
          case 1: // 1 == use seeker target
-            target = mo->tracer;
+            target = actor->tracer;
             break;
          }
       }
@@ -244,15 +252,15 @@ void A_JumpIfTargetInLOS(Mobj *mo)
       if(ifov)
       {
          angle_t fov  = FixedToAngle(ifov);
-         angle_t tang = P_PointToAngle(mo->x, mo->y,
+         angle_t tang = P_PointToAngle(actor->x, actor->y,
 #ifdef R_LINKEDPORTALS
-                                        getThingX(mo, target), 
-                                        getThingY(mo, target));
+                                        getThingX(actor, target), 
+                                        getThingY(actor, target));
 #else
                                         target->x, target->y);
 #endif
-         angle_t minang = mo->angle - fov / 2;
-         angle_t maxang = mo->angle + fov / 2;
+         angle_t minang = actor->angle - fov / 2;
+         angle_t maxang = actor->angle + fov / 2;
 
          // if the angles are backward, compare differently
          if((minang > maxang) ? tang < minang && tang > maxang 
@@ -263,14 +271,14 @@ void A_JumpIfTargetInLOS(Mobj *mo)
       }
 
       // check line of sight 
-      if(!P_CheckSight(mo, target))
+      if(!P_CheckSight(actor, target))
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0, mo)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, actor)) < 0)
          return;
       
-      P_SetMobjState(mo, statenum);
+      P_SetMobjState(actor, statenum);
    }
 }
 
@@ -283,10 +291,12 @@ void A_JumpIfTargetInLOS(Mobj *mo)
 // args[0] : alpha
 // args[1] : mode
 //
-void A_SetTranslucent(Mobj *mo)
+void A_SetTranslucent(actionargs_t *actionargs)
 {
-   fixed_t alpha = E_ArgAsFixed(mo->state->args, 0, 0);
-   int     mode  = E_ArgAsInt(mo->state->args, 1, 0);
+   Mobj      *mo    = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   fixed_t    alpha = E_ArgAsFixed(args, 0, 0);
+   int        mode  = E_ArgAsInt(args, 1, 0);
 
    // rangecheck alpha
    if(alpha < 0)
@@ -382,34 +392,36 @@ static argkeywd_t attnkwdsnew = { kwds_attn_new, ATTN_NUM };
 // args[3] : attenuation
 // args[4] : EE extension - volume
 //
-void A_PlaySoundEx(Mobj *mo)
+void A_PlaySoundEx(actionargs_t *actionargs)
 {
-   sfxinfo_t *sfx = NULL;
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   sfxinfo_t *sfx  = NULL;
    int channel, attn, volume;
    bool loop;
 
-   sfx = E_ArgAsSound(mo->state->args, 0);
+   sfx = E_ArgAsSound(args, 0);
    
    // handle channel
-   channel = E_ArgAsKwd(mo->state->args, 1, &channelkwdsold, -1);
+   channel = E_ArgAsKwd(args, 1, &channelkwdsold, -1);
    if(channel == -1)
    {
-      E_ResetArgEval(mo->state->args, 1);
-      channel = E_ArgAsKwd(mo->state->args, 1, &channelkwdsnew, 0);
+      E_ResetArgEval(args, 1);
+      channel = E_ArgAsKwd(args, 1, &channelkwdsnew, 0);
    }
 
-   loop = !!E_ArgAsInt(mo->state->args, 2, 0);
+   loop = !!E_ArgAsInt(args, 2, 0);
 
    // handle attenuation
-   attn = E_ArgAsKwd(mo->state->args, 3, &attnkwdsold, -1);
+   attn = E_ArgAsKwd(args, 3, &attnkwdsold, -1);
    
    if(attn == -1)
    {
-      E_ResetArgEval(mo->state->args, 3);
-      attn = E_ArgAsKwd(mo->state->args, 3, &attnkwdsnew, 0);
+      E_ResetArgEval(args, 3);
+      attn = E_ArgAsKwd(args, 3, &attnkwdsnew, 0);
    }
 
-   volume = E_ArgAsInt(mo->state->args, 4, 0);
+   volume = E_ArgAsInt(args, 4, 0);
 
    if(!sfx)
       return;

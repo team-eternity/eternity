@@ -28,6 +28,7 @@
 #include "i_system.h"
 
 // Some action functions are still needed here.
+#include "a_args.h"
 #include "a_common.h"
 #include "a_doom.h"
 
@@ -1334,7 +1335,14 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
    dest = actor->target;
    actor->flags |= MF_SKULLFLY;
 
-   A_FaceTarget(actor);
+   actionargs_t actionargs;
+
+   actionargs.actiontype = actionargs_t::MOBJFRAME;
+   actionargs.actor      = actor;
+   actionargs.args       = ESAFEARGS(actor);
+   actionargs.pspr       = NULL;
+
+   A_FaceTarget(&actionargs);
    an = actor->angle >> ANGLETOFINESHIFT;
    actor->momx = FixedMul(speed, finecosine[an]);
    actor->momy = FixedMul(speed, finesine[an]);
@@ -1443,7 +1451,7 @@ void P_BossTeleport(bossteleport_t *bt)
 // args[1] - select vm (0 == gamescript, 1 == levelscript)
 // args[2-4] - parameters to script (must accept 3 params)
 //
-void A_PlayerStartScript(Mobj *mo)
+void A_PlayerStartScript(actionargs_t *actionargs)
 {
    // FIXME: support ACS, Aeon here
 }
@@ -1463,8 +1471,9 @@ void A_PlayerStartScript(Mobj *mo)
 #define FOGSPEED 2
 #define FOGFREQUENCY 8
 
-void A_FogSpawn(Mobj *actor)
+void A_FogSpawn(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo = NULL;
    angle_t delta;
 
@@ -1504,8 +1513,9 @@ void A_FogSpawn(Mobj *actor)
 // A_FogMove
 //
 
-void A_FogMove(Mobj *actor)
+void A_FogMove(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    int speed = actor->args[0]<<FRACBITS;
    angle_t angle;
    int weaveindex;
@@ -1549,7 +1559,6 @@ void P_ClericTeleport(Mobj *actor)
 
    P_BossTeleport(&bt);
 }
-#endif
 
 void A_DwarfAlterEgoChase(Mobj *actor)
 {
@@ -1561,6 +1570,7 @@ void A_DwarfAlterEgoChase(Mobj *actor)
    else
       A_Die(actor);
 }
+#endif
 
 //=============================================================================
 //
@@ -1653,7 +1663,14 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       {
          P_SetTarget<Mobj>(&newmobj->target, plyr->mo);
          P_SetTarget<Mobj>(&newmobj->tracer, clip.linetarget);
-         A_Fire(newmobj);
+
+         actionargs_t fireargs;
+         fireargs.actiontype = actionargs_t::MOBJFRAME;
+         fireargs.actor      = newmobj;
+         fireargs.args       = ESAFEARGS(newmobj);
+         fireargs.pspr       = NULL;
+
+         A_Fire(&fireargs);
       }
    }
 

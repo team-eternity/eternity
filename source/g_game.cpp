@@ -140,7 +140,6 @@ byte            *savebuffer;
 int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
 int             automlook = false;
-int             bfglook = 1;
 int             smooth_turning = 0;   // sf
 int             novert;               // haleyjd
 
