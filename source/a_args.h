@@ -38,12 +38,12 @@ struct actionargs_t
    enum actiontype_e
    {
       MOBJFRAME,   // invoked from P_SetMobjState
-      WEAPONFRAME  // invoked from P_SetPSprite
+      WEAPONFRAME  // invoked from P_SetPsprite
    } actiontype;
 
    Mobj      *actor; // Actor for either type of invocation; use mo->player when needed
    pspdef_t  *pspr;  // psprite, only valid if actiontype is WEAPONFRAME
-   arglist_t *args;  // EDF arguments list
+   arglist_t *args;  // EDF arguments list; potentially NULL, but all e_args funcs check.
 };
 
 #endif

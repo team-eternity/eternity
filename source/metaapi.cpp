@@ -90,18 +90,16 @@ static PODCollection<metakey_t *> metaKeys;
 static metakey_t &MetaKey(const char *key)
 {
    metakey_t *keyObj;
+   unsigned int unmodHC = ENCStringHashKey::HashCode(key);
 
    // Do we already have this key?
-   if(!(keyObj = metaKeyHash.objectForKey(key)))
+   if(!(keyObj = metaKeyHash.objectForKey(key, unmodHC)))
    {
       keyObj = estructalloc(metakey_t, 1);
-      
-      // add it to the list
-      metaKeys.add(keyObj);
 
       keyObj->key     = estrdup(key);
       keyObj->index   = metaKeys.getLength() - 1;
-      keyObj->unmodHC = ENCStringHashKey::HashCode(key);
+      keyObj->unmodHC = unmodHC;
 
       // add it to the list
       metaKeys.add(keyObj);
@@ -140,7 +138,7 @@ IMPLEMENT_RTTI_TYPE(MetaObject)
 // requires it.
 //
 MetaObject::MetaObject()
-   : RTTIObject(), links(), typelinks(), type()
+   : Super(), links(), typelinks(), type()
 {
    metakey_t &keyObj = MetaKey("default"); // TODO: GUID?
 
@@ -151,10 +149,10 @@ MetaObject::MetaObject()
 //
 // MetaObject(const char *pKey)
 //
-// Constructor for MetaObject when type and/or key are known.
+// Constructor for MetaObject when key is known.
 //
 MetaObject::MetaObject(const char *pKey) 
-   : RTTIObject(), links(), typelinks(), type()
+   : Super(), links(), typelinks(), type()
 {
    metakey_t &keyObj = MetaKey(pKey);
 
@@ -168,7 +166,7 @@ MetaObject::MetaObject(const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), key(other.key),
+   : Super(), links(), typelinks(), key(other.key),
      type(), keyIdx(other.keyIdx)
 {   
 }
@@ -501,7 +499,7 @@ IMPLEMENT_RTTI_TYPE(MetaTable)
 //
 // MetaTable Default Constructor
 //
-MetaTable::MetaTable() : MetaObject()
+MetaTable::MetaTable() : Super()
 {
    // Construct the private implementation object that holds our dual hashes
    pImpl = new metaTablePimpl();
@@ -510,7 +508,7 @@ MetaTable::MetaTable() : MetaObject()
 //
 // MetaTable(name)
 //
-MetaTable::MetaTable(const char *name) : MetaObject(name)
+MetaTable::MetaTable(const char *name) : Super(name)
 {
    // Construct the private implementation object that holds our dual hashes
    pImpl = new metaTablePimpl();
@@ -521,7 +519,7 @@ MetaTable::MetaTable(const char *name) : MetaObject(name)
 //
 // Copy constructor
 //
-MetaTable::MetaTable(const MetaTable &other) : MetaObject(other)
+MetaTable::MetaTable(const MetaTable &other) : Super(other)
 {
    pImpl = new metaTablePimpl();
    copyTableFrom(&other);

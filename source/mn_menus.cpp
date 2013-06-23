@@ -3982,8 +3982,8 @@ int mn_classic_menus;
 // MN_LinkClassicMenus
 //
 // haleyjd 08/31/06: This function is called to turn classic menu system support
-// on or off. When it's on, the old main menu above is patched to point to the
-// other old menus.
+// on or off. When it's on, the main menu is patched to point to the old classic
+// menus.
 //
 void MN_LinkClassicMenus(int link)
 {
@@ -4088,7 +4088,6 @@ CONSOLE_COMMAND(mn_old_sound, 0)
    MN_StartMenu(&menu_old_sound);
 }
 
-// TODO: Original Save and Load Menus?
 // TODO: Draw skull cursor on Credits pages?
 
 // EOF
