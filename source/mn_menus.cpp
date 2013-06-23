@@ -3129,19 +3129,16 @@ CONSOLE_COMMAND(mn_automap, 0)
 //
 
 extern menu_t menu_weapons;
-extern menu_t menu_weapons_pref;
 
 static const char *mn_weapons_names[] =
 {
    "options",
-   "preferences",
    NULL
 };
 
 static menu_t *mn_weapons_pages[] =
 {
    &menu_weapons,
-   &menu_weapons_pref,
    NULL
 };
 
@@ -3156,7 +3153,6 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Fist/SSG toggle",                "doom_weapon_toggles"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
-   {it_variable,   "Change time",                    "weapspeed"},
    {it_gap},
    {it_end},
 };
@@ -3165,45 +3161,13 @@ menu_t menu_weapons =
 {
    mn_weapons_items,
    NULL, 
-   &menu_weapons_pref,                  // next page
+   NULL,                                // next page
    &menu_weapons,                       // rootpage
    200, 15,                             // x,y offset
    4,                                   // starting item
    mf_background,                       // full screen
    NULL,                                // no drawer
    mn_weapons_names,                    // TOC stuff
-   mn_weapons_pages,
-};
-
-static menuitem_t mn_weapons_pref_items[] =
-{
-   {it_title,      "Weapons",       NULL, "M_WEAP"},
-   {it_gap},
-   {it_info,       "Preferences", NULL, NULL, MENUITEM_CENTERED},
-   {it_gap},
-   {it_variable,   "1",                     "weappref_1"},
-   {it_variable,   "2",                     "weappref_2"},
-   {it_variable,   "3",                     "weappref_3"},
-   {it_variable,   "4",                     "weappref_4"},
-   {it_variable,   "5",                     "weappref_5"},
-   {it_variable,   "6",                     "weappref_6"},
-   {it_variable,   "7",                     "weappref_7"},
-   {it_variable,   "8",                     "weappref_8"},
-   {it_variable,   "9",                     "weappref_9"},
-   {it_end},
-};
-
-menu_t menu_weapons_pref =
-{
-   mn_weapons_pref_items,         // items
-   &menu_weapons,                 // previous page
-   NULL,                          // next page
-   &menu_weapons,                 // rootpage
-   88, 15,                        // coords
-   4,                             // first item
-   mf_background|mf_leftaligned,  // flags
-   NULL,                          // no drawer
-   mn_weapons_names,              // TOC stuff
    mn_weapons_pages,
 };
 
