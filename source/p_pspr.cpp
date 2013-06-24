@@ -267,7 +267,7 @@ int P_PrevWeapon(player_t *player)
 // in DOOM2 to bring up the weapon, i.e. 6 = plasma gun. These    //    |
 // are NOT the wp_* constants.                                    //    V
 
-int weapon_preferences[2][NUMWEAPONS+1] =
+static int weapon_preferences[2][NUMWEAPONS+1] =
 {
    { 6, 9, 4, 3, 2, 8, 5, 7, 1, 0 },  // !compatibility preferences
    { 6, 9, 4, 3, 2, 8, 5, 7, 1, 0 },  //  compatibility preferences

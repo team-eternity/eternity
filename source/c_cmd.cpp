@@ -405,7 +405,6 @@ void CCmdRegistry::AddCommands()
 
 // Special command adding functions that still need to be called:
 extern void G_AddChatMacros();
-extern void G_AddWeapPrefs();
 extern void G_AddAutoloadFiles();
 extern void G_AddCompat();
 extern void G_CreateAxisActionVars();
@@ -422,7 +421,6 @@ void C_AddCommands()
 
    // Some commands are created dynamically:
    G_AddChatMacros();
-   G_AddWeapPrefs();
    G_AddAutoloadFiles();
    G_AddCompat();
    G_CreateAxisActionVars();
