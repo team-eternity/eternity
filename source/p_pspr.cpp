@@ -158,19 +158,23 @@ static void P_BringUpWeapon(player_t *player)
    if(player->pendingweapon == wp_nochange)
       player->pendingweapon = player->readyweapon;
    
-   // WEAPON_FIXME: weaponup sound must become EDF property of weapons
-   if(player->pendingweapon == wp_chainsaw)
-      S_StartSound(player->mo, sfx_sawup);
+   weaponinfo_t *pendingweapon;
+   if((pendingweapon = P_GetPendingWeapon(player)))
+   {
+      // haleyjd 06/28/13: weapon upsound
+      if(pendingweapon->upsound)
+         S_StartSound(player->mo, pendingweapon->upsound);
+  
+      newstate = pendingweapon->upstate;
+  
+      player->pendingweapon = wp_nochange;
    
-   newstate = weaponinfo[player->pendingweapon].upstate;
+      // killough 12/98: prevent pistol from starting visibly at bottom of screen:
+      player->psprites[ps_weapon].sy = demo_version >= 203 ? 
+         WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
    
-   player->pendingweapon = wp_nochange;
-   
-   // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-   player->psprites[ps_weapon].sy = demo_version >= 203 ? 
-      WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
-   
-   P_SetPsprite(player, ps_weapon, newstate);
+      P_SetPsprite(player, ps_weapon, newstate);
+   }
 }
 
 // weaponinfo are in a stupid order, so let's do next/last in 
@@ -501,6 +505,23 @@ weaponinfo_t *P_GetReadyWeapon(player_t *player)
 }
 
 //
+// P_GetPendingWeapon
+//
+// haleyjd 06/28/13:
+// Retrieves a pointer to the proper weaponinfo_t structure for the
+// pendingweapon index stored in the player.
+//
+// WEAPON_TODO: Will need to change as system evolves.
+// PCLASS_FIXME: weapons
+//
+weaponinfo_t *P_GetPendingWeapon(player_t *player)
+{
+   return 
+      (player->pendingweapon >= 0 && player->pendingweapon < NUMWEAPONS) ? 
+       &(weaponinfo[player->pendingweapon]) : NULL;
+}
+
+//
 // P_GetPlayerWeapon
 //
 // haleyjd 09/16/07:
@@ -618,12 +639,10 @@ void A_WeaponReady(actionargs_t *actionargs)
       player->attackdown = false;
 
    // bob the weapon based on movement speed
-   {
-      int angle = (128*leveltime) & FINEMASK;
-      psp->sx = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
-      angle &= FINEANGLES/2-1;
-      psp->sy = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
-   }
+   int angle = (128*leveltime) & FINEMASK;
+   psp->sx = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+   angle &= FINEANGLES/2-1;
+   psp->sy = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
 }
 
 //
@@ -881,9 +900,6 @@ void A_Punch(actionargs_t *actionargs)
    if(!player)
       return;
    
-   // WEAPON_FIXME: berserk and/or other damage multipliers -> EDF weapon property?
-   // WEAPON_FIXME: tracer damage, range, etc possible weapon properties?
-
    if(player->powers[pw_strength])
       damage *= 10;
    

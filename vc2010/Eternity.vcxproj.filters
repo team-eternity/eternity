@@ -906,6 +906,9 @@
     <ClCompile Include="..\source\hal\i_directory.cpp">
       <Filter>Source Files\HAL\HAL Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\e_weapons.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1591,6 +1594,9 @@
     </ClInclude>
     <ClInclude Include="..\source\a_args.h">
       <Filter>Source Files\A_\A_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_weapons.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

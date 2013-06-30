@@ -948,7 +948,7 @@ void A_SorcNukeSpec(actionargs_t *actionargs)
 // killough 7/20/98: kill friendly monsters only if no others to kill
 // haleyjd 01/10/02: reformatted some code
 //
-static void M_NukeMonsters(void)
+static void M_NukeMonsters()
 {   
    int killcount = 0;
    Thinker *th = &thinkercap;

@@ -622,6 +622,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       break;
 
+      // WEAPON_FIXME: Weapon collection
       // weapons
    case PFX_BFG:
       if(!P_GiveWeapon(player, wp_bfg, false))

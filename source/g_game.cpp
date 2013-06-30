@@ -340,7 +340,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
    //
-   // NETCODE_FIXME -- WEAPON_FIXME
+   // NETCODE_FIXME -- WEAPON_FIXME -- G_BuildTiccmd
    //
    // In order to later support dynamic weapons, the way weapon
    // changes are handled is going to have to be different from
