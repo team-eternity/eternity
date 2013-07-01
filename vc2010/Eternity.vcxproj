@@ -321,6 +321,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_inventory.cpp" />
     <ClCompile Include="..\Source\e_lib.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1258,6 +1259,7 @@
     <ClInclude Include="..\source\e_gameprops.h" />
     <ClInclude Include="..\source\e_hash.h" />
     <ClInclude Include="..\source\e_hashkeys.h" />
+    <ClInclude Include="..\source\e_inventory.h" />
     <ClInclude Include="..\Source\e_lib.h" />
     <ClInclude Include="..\source\e_metastate.h" />
     <ClInclude Include="..\source\e_mod.h" />

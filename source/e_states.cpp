@@ -515,7 +515,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
                           const char **argv)
 {
    if(argc > 0)
-      cfg_setlistptr(cfg, "args", argc, (void *)argv);
+      cfg_setlistptr(cfg, "args", argc, (const void *)argv);
 
    return 0; // everything is good
 }

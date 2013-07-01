@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // $Id: d_deh.c,v 1.20 1998/06/01 22:30:38 thldrmn Exp $
 //
@@ -26,9 +26,9 @@
 //
 // Author: Ty Halderman, TeamTNT
 //
-//--------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-// killough 5/2/98: fixed headers, removed rendunant external declarations:
+// killough 5/2/98: fixed headers, removed redundant external declarations:
 #include "z_zone.h"
 
 #include "d_dehtbl.h"

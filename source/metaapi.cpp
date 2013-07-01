@@ -50,13 +50,45 @@ static const unsigned int metaPrimes[] =
    3079,  6151, 12289, 24593, 49157, 98317
 };
 
-#define METANUMPRIMES (sizeof(metaPrimes) / sizeof(unsigned int))
+#define METANUMPRIMES earrlen(metaPrimes)
 
 // Globals
 
 // metaerrno represents the last error to occur. All routines that can cause
 // an error will reset this to 0 if no error occurs.
 int metaerrno = 0;
+
+//=============================================================================
+//
+// Hash Table Tuning
+//
+
+//
+// MetaHashRebuild
+//
+// Static method for rebuilding an EHashTable when its load factor has exceeded
+// the metatable load factor. Expansion is limited; once the table is too large,
+// load factor will increase indefinitely. Hash chain table size is currently
+// limited to approximately 384 KB, which would require almost 400K objects to
+// be in the table to hit 100% load factor... I'm not really concerned :P
+//
+template<typename HashType>
+static void MetaHashRebuild(HashType &hash)
+{
+   auto curNumChains = hash.getNumChains();
+
+   // check for key table overload
+   if(hash.getLoadFactor() > METALOADFACTOR && 
+      curNumChains < metaPrimes[METANUMPRIMES - 1])
+   {
+      int i;
+
+      // find the next larger prime
+      for(i = 0; curNumChains < metaPrimes[i]; i++);
+
+      hash.rebuild(metaPrimes[i]);
+   }
+}
 
 //=============================================================================
 //
@@ -104,7 +136,8 @@ static metakey_t &MetaKey(const char *key)
       keyObj->index   = metaKeys.getLength() - 1;
       keyObj->unmodHC = unmodHC;
 
-      // hash it
+      // check for table overload, and hash it
+      MetaHashRebuild<>(metaKeyHash);
       metaKeyHash.addObject(keyObj, keyObj->unmodHC);
    }
 
@@ -668,19 +701,8 @@ int MetaTable::countOfKeyAndType(const char *key, const char *type)
 //
 void MetaTable::addObject(MetaObject *object)
 {
-   unsigned int curNumChains = pImpl->keyhash.getNumChains();
-
-   // check for key table overload
-   if(pImpl->keyhash.getLoadFactor() > METALOADFACTOR && 
-      curNumChains < metaPrimes[METANUMPRIMES - 1])
-   {
-      int i;
-
-      // find a prime larger than the current number of chains
-      for(i = 0; curNumChains < metaPrimes[i]; ++i);
-
-      pImpl->keyhash.rebuild(metaPrimes[i]);
-   }
+   // Check for rehash
+   MetaHashRebuild<>(pImpl->keyhash);
 
    // Initialize type name
    object->setType();

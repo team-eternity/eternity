@@ -164,8 +164,7 @@ public:
    }
    
    // Parameterized constructor
-   PODCollection(size_t initSize, int zoneTag = PU_STATIC) 
-      : BaseCollection<T>(zoneTag)
+   PODCollection(size_t initSize) : BaseCollection<T>()
    {
       this->resize(initSize);
    }
@@ -280,8 +279,7 @@ public:
    }
    
    // Parameterized constructor
-   Collection(size_t initSize, int zoneTag = PU_STATIC) 
-      : BaseCollection<T>(zoneTag), prototype(NULL)
+   Collection(size_t initSize) : BaseCollection<T>(), prototype(NULL)
    {
       this->resize(initSize);
    }

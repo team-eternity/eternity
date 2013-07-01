@@ -1728,25 +1728,25 @@ void cfg_addlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...)
 // libConfuse callback functions, which use an argc/argv system.
 
 static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
-                                    unsigned int nvalues, void *values)
+                                    unsigned int nvalues, const void *values)
 {
    const cfg_type_t type = opt->type; // haleyjd: a little compiler sugar ;)
    unsigned int i;
-   int         *intptr    = 0;
-   double      *doubleptr = 0;
-   bool        *boolptr   = 0;
-   const char **strptr    = 0;
+   const int     *intptr    = 0;
+   const double  *doubleptr = 0;
+   const bool    *boolptr   = 0;
+   const char   **strptr    = 0;
 
    switch(type)
    {
    case CFGT_INT:
-      intptr = (int *)values;
+      intptr = (const int *)values;
       break;
    case CFGT_FLOAT:
-      doubleptr = (double *)values;
+      doubleptr = (const double *)values;
       break;
    case CFGT_BOOL:
-      boolptr = (bool *)values;
+      boolptr = (const bool *)values;
       break;
    case CFGT_STR:
       strptr = (const char **)values;
@@ -1782,14 +1782,14 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
 }
 
 void cfg_setlistptr(cfg_t *cfg, const char *name, unsigned int nvalues, 
-                    void *array)
+                    const void *valarray)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
 
    if(opt)
    {
       cfg_free_value(opt);
-      cfg_addlistptr_internal(cfg, opt, nvalues, array);
+      cfg_addlistptr_internal(cfg, opt, nvalues, valarray);
    }
 }
 

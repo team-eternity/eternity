@@ -37,8 +37,8 @@
  * <em>If you can't convince, confuse.</em>
  */
 
-#ifndef _cfg_h_
-#define _cfg_h_
+#ifndef CONFUSE_H__
+#define CONFUSE_H__
 
 #include "../z_zone.h"
 
@@ -814,7 +814,7 @@ void cfg_addlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...);
  * @param array Pointer to an array of the appropriate type cast to void pointer.
  */
 void cfg_setlistptr(cfg_t *cfg, const char *name, unsigned int nvalues, 
-                    void *array);
+                    const void *valarray);
 #endif
 
 /** @example cfgtest.c
