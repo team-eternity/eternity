@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
+		4F0165DE178375EF00D04FAE /* e_weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0165DC178375EF00D04FAE /* e_weapons.cpp */; };
 		4F0A2C7616ED36E500400F41 /* i_gamepads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */; };
 		4F0A2C7916ED36FD00400F41 /* i_sdlgamepads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0A2C7716ED36FD00400F41 /* i_sdlgamepads.cpp */; };
 		4F50E400173770EC00878167 /* r_dynabsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F50E3FE173770EC00878167 /* r_dynabsp.cpp */; };
@@ -281,6 +282,8 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
+		4F0165DC178375EF00D04FAE /* e_weapons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_weapons.cpp; path = ../source/e_weapons.cpp; sourceTree = "<group>"; };
+		4F0165DD178375EF00D04FAE /* e_weapons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_weapons.h; path = ../source/e_weapons.h; sourceTree = "<group>"; };
 		4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_gamepads.cpp; path = ../source/hal/i_gamepads.cpp; sourceTree = "<group>"; };
 		4F0A2C7516ED36E500400F41 /* i_gamepads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_gamepads.h; path = ../source/hal/i_gamepads.h; sourceTree = "<group>"; };
 		4F0A2C7716ED36FD00400F41 /* i_sdlgamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_sdlgamepads.cpp; path = ../source/sdl/i_sdlgamepads.cpp; sourceTree = "<group>"; };
@@ -1262,6 +1265,8 @@
 				FA16D3EF15E01E96002318D1 /* e_things.h */,
 				FABF5CE8158BF42800C49E93 /* e_ttypes.cpp */,
 				FA16D3F015E01E96002318D1 /* e_ttypes.h */,
+				4F0165DC178375EF00D04FAE /* e_weapons.cpp */,
+				4F0165DD178375EF00D04FAE /* e_weapons.h */,
 			);
 			name = E_;
 			sourceTree = "<group>";
@@ -2092,6 +2097,7 @@
 				4FF640BA1735256700793714 /* v_alloc.cpp in Sources */,
 				4F50E400173770EC00878167 /* r_dynabsp.cpp in Sources */,
 				4F7BB78E175797640079E263 /* i_directory.cpp in Sources */,
+				4F0165DE178375EF00D04FAE /* e_weapons.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
