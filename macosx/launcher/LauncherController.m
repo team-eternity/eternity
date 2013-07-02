@@ -247,14 +247,8 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    // Add documents to list
    [self makeDocumentMenu];
    
-   [self setupWorkingDirectory];
    
-   // If game got given several arguments, start the game now
-   if([gArgArray count] > 0)
-   {
-      BOOL runAsX64 = [[NSRunningApplication currentApplication] executableArchitecture] == NSBundleExecutableArchitectureX86_64;
-      [self executeGame:runAsX64 withArgs:gArgArray];
-   }
+   [self setupWorkingDirectory];
 }
 
 //
@@ -343,11 +337,11 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 //
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-	// if (calledAppMainline)
-	//	return NO;	// ignore this document, it's too late within the game
+	 if (calledAppMainline)
+		return NO;	// ignore this document, it's too late within the game
 
-	// [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
-	// [self updateParameters:self];
+	 [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
+	 [self updateParameters:self];
 
    return YES;
 }
