@@ -49,6 +49,15 @@ struct inventoryslot_t
 // inventory items defined).
 typedef inventoryslot_t * inventory_t;
 
+// Effect Types
+enum
+{
+   ITEMFX_NONE,   // has no effect
+   ITEMFX_HEALTH, // an immediate-use health pickup
+   NUMITEMFX
+};
+typedef int itemeffecttype_t;
+
 //
 // Item Effect
 // 
@@ -61,8 +70,24 @@ typedef MetaTable itemeffect_t;
 // Functions
 //
 
+// Get an item effect type number by name
+itemeffecttype_t E_EffectTypeForName(const char *name);
+
 // Find an item effect by name
 itemeffect_t *E_ItemEffectForName(const char *name);
+
+#ifdef NEED_EDF_DEFINITIONS
+
+// Section Names
+#define EDF_SEC_HEALTHFX "healtheffect"
+
+// Section Defs
+extern cfg_opt_t edf_healthfx_opts[];
+
+// Functions
+void E_ProcessInventory(cfg_t *cfg);
+
+#endif
 
 #endif
 

@@ -100,6 +100,7 @@
 #include "e_args.h"
 #include "e_fonts.h"
 #include "e_gameprops.h"
+#include "e_inventory.h"
 #include "e_mod.h"
 #include "e_player.h"
 #include "e_sound.h"
@@ -304,6 +305,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_HEALTHFX,    edf_healthfx_opts, EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
@@ -373,7 +375,7 @@ static FILE *edf_output = NULL;
 // haleyjd 08/10/05: now works like screenshots, so it won't
 // overwrite old log files.
 //
-static void E_EDFOpenVerboseLog(void)
+static void E_EDFOpenVerboseLog()
 {
    if(edf_output)
       return;
@@ -403,7 +405,7 @@ static void E_EDFOpenVerboseLog(void)
 //
 // Closes the verbose log, if one is open.
 //
-static void E_EDFCloseVerboseLog(void)
+static void E_EDFCloseVerboseLog()
 {
    if(edf_output)
    {
@@ -474,7 +476,7 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
    va_end(va);
 }
 
-static int edf_warning_count;
+static int  edf_warning_count;
 static bool edf_warning_out;
 
 //
@@ -520,7 +522,7 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
 //
 // Displays the EDF warning count after EDF processing.
 //
-void E_EDFPrintWarningCount(void)
+void E_EDFPrintWarningCount()
 {
    if(in_textmode && edf_warning_count)
    {
@@ -536,7 +538,7 @@ void E_EDFPrintWarningCount(void)
 //
 // Resets the count of warnings to zero.
 //
-void E_EDFResetWarnings(void)
+void E_EDFResetWarnings()
 {
    edf_warning_count = 0;
 
@@ -658,13 +660,12 @@ static E_Enable_t edf_enables[] =
 // 
 // E_EDFSetEnableValue
 //
-// This function lets the rest of the engine be able to set
-// EDF enable values before parsing begins. This is used to
-// turn DOOM and HERETIC modes on and off when loading the
-// default root.edf. This saves time and memory. Note that
-// they are enabled when user EDFs are loaded, but users
-// can use the disable function to turn them off explicitly
-// in that case when the definitions are not needed.
+// This function lets the rest of the engine be able to set EDF enable values 
+// before parsing begins. This is used to turn DOOM and HERETIC modes on and 
+// off when loading the default root.edf. This saves time and memory. Note 
+// that they are enabled when user EDFs are loaded, but users can use the 
+// disable function to turn them off explicitly in that case when the 
+// definitions are not needed.
 //
 void E_EDFSetEnableValue(const char *name, int value)
 {
@@ -674,7 +675,7 @@ void E_EDFSetEnableValue(const char *name, int value)
       edf_enables[idx].enabled = value;
 }
 
-static void E_EchoEnables(void)
+static void E_EchoEnables()
 {
    E_Enable_t *enable = edf_enables;
 
@@ -1770,7 +1771,11 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // process sprite-related variables (made dynamic 11/21/11)
    E_ProcessSpriteVars(cfg);
 
+   // process inventory
+   E_ProcessInventory(cfg);
+
    // process sprite-related pickup item effects (made dynamic 11/21/11)
+   // INVENTORY_TODO: move into inventory subsystem
    E_ProcessItems(cfg);
 
    // process player sections
