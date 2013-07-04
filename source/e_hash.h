@@ -354,7 +354,7 @@ public:
    // Pass NULL in object to start a new search. NULL is returned when the 
    // entire table has been iterated over.
    //
-   item_type *tableIterator(item_type *object)
+   const item_type *tableIterator(const item_type *object)
    {
       item_type *ret = NULL;
 
@@ -365,7 +365,7 @@ public:
       if(object)
       {
          // is there another object on the same chain?
-         link_type &link = object->*linkPtr;
+         const link_type &link = object->*linkPtr;
 
          if(link.dllNext)
             ret = link.dllNext->dllObject;
@@ -383,6 +383,16 @@ public:
       }
 
       return ret;
+   }
+
+   //
+   // tableIterator
+   //
+   // Mutable pointer overload.
+   //
+   item_type *tableIterator(item_type *object)
+   {
+      return const_cast<item_type *>(tableIterator(const_cast<const item_type *>(object)));
    }
 
    //

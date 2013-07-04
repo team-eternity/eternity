@@ -1,0 +1,10 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// Shared Inventory Items
+//
+
+// DOOM Items -----------------------------------------------------------------
+
+includeifenabled("doom/items.edf", "DOOM");
+

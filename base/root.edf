@@ -1,5 +1,5 @@
 //
-// Default Root EDF file for Eternity Engine v3.40.27
+// Default Root EDF file for Eternity Engine v3.40.50
 //
 // This file can contain any definitions, but should remain limited to
 // include statements for the purpose of organization.
@@ -14,6 +14,7 @@ include("things.edf");
 include("cast.edf");
 include("misc.edf");
 include("terrain.edf");
+include("items.edf");
 include("player.edf");
 include("fonts.edf");
 

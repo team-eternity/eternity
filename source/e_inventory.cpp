@@ -103,6 +103,17 @@ itemeffect_t *E_ItemEffectForName(const char *name)
    return runtime_cast<itemeffect_t *>(e_effectsTable.getObject(name));
 }
 
+//
+// E_GetItemEffects
+//
+// Get the whole effects table, for the few places it is needed externally
+// (mainly for console debugging features).
+//
+MetaTable *E_GetItemEffects()
+{
+   return &e_effectsTable;
+}
+
 //=============================================================================
 //
 // Effect Processing

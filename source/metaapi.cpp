@@ -952,13 +952,23 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, cons
 // MetaTable::tableIterator
 //
 // Iterates on all objects in the metatable, regardless of key or type.
+// Const version.
+//
+const MetaObject *MetaTable::tableIterator(const MetaObject *object) const
+{
+   return pImpl->keyhash.tableIterator(object);
+}
+
+//
+// MetaTable::tableIterator
+//
+// Iterates on all objects in the metatable, regardless of key or type.
+// Mutable version.
 //
 MetaObject *MetaTable::tableIterator(MetaObject *object) const
 {
    return pImpl->keyhash.tableIterator(object);
 }
-
-
 
 //
 // MetaTable::addInt
@@ -1312,11 +1322,11 @@ void MetaTable::clearTable()
    MetaObject *obj = NULL;
 
    // iterate on the source table
-   while((obj = tableIterator(NULL)))
+   while((obj = tableIterator(obj)))
    {
       removeObject(obj);
-
       delete obj;
+      obj = NULL; // restart from the beginning
    }
 }
 

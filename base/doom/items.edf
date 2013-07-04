@@ -1,0 +1,13 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// DOOM Inventory Items
+//
+
+healtheffect TestEffect1
+{
+   amount:      25;
+   maxamount:  100;
+   lowmessage: "$GOTMEDINEED";
+}
+

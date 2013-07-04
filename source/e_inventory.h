@@ -76,6 +76,9 @@ itemeffecttype_t E_EffectTypeForName(const char *name);
 // Find an item effect by name
 itemeffect_t *E_ItemEffectForName(const char *name);
 
+// Get the item effects table
+MetaTable *E_GetItemEffects();
+
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
