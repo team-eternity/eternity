@@ -46,7 +46,7 @@ enum
 
 extern int metaerrno;
 
-class metaTablePimpl;
+class MetaTablePimpl;
 
 //
 // MetaObject
@@ -62,27 +62,57 @@ protected:
    const char *type;                 // type hash key
    size_t      keyIdx;               // index of interned key
 
-   friend class metaTablePimpl;
+   // For efficiency, we are friends with the private implementation
+   // object for MetaTable. It needs direct access to the links and
+   // typelinks for use with EHashTable.
+   friend class MetaTablePimpl;
 
 public:
    // Constructors/Destructor
    MetaObject();
    MetaObject(const char *pKey);
-   MetaObject(const MetaObject &other);
-   virtual ~MetaObject();
+   MetaObject(const MetaObject &other)
+      : Super(), links(), typelinks(), key(other.key),
+        type(NULL), keyIdx(other.keyIdx)
+   {
+   }
 
-   void setType();
+   virtual ~MetaObject() {}
 
-   const char *getKey() const    { return key;    }
+   //
+   // MetaObject::setType
+   //
+   // This will set the MetaObject's internal type to its RTTI class name. This
+   // is really only for use by MetaTable but calling it yourself wouldn't screw
+   // anything up. It's just redundant.
+   //
+   void setType() { type = getClassName(); }
+
+   const char *getKey()    const { return key;    }
    size_t      getKeyIdx() const { return keyIdx; }
 
    // Virtual Methods
-   virtual MetaObject *clone() const;
+
+   //
+   // MetaObject::clone
+   //
+   // Virtual factory method for metaobjects; when invoked through the metatable,
+   // a descendent class will return an object of the proper type matching itself.
+   // This base class implementation doesn't really do anything, but I'm not fond
+   // of pure virtuals so here it is. Don't call it from the parent implementation
+   // as that is not what any of the implementations should do.
+   //
+   virtual MetaObject *clone()    const { return new MetaObject(*this); }
    virtual const char *toString() const;   
 };
 
 // MetaObject specializations for basic types
 
+//
+// MetaInteger
+//
+// Wrap a simple int value.
+//
 class MetaInteger : public MetaObject
 {
    DECLARE_RTTI_TYPE(MetaInteger, MetaObject)
@@ -91,12 +121,18 @@ protected:
    int value;
 
 public:
-   MetaInteger() : MetaObject(), value(0) {}
-   MetaInteger(const char *key, int i);
-   MetaInteger(const MetaInteger &other);
+   MetaInteger() : Super(), value(0) {}
+   MetaInteger(const char *key, int i) 
+      : Super(key), value(i)
+   {
+   }
+   MetaInteger(const MetaInteger &other)
+      : Super(other), value(other.value)
+   {
+   }
 
    // Virtual Methods
-   virtual MetaObject *clone() const;
+   virtual MetaObject *clone()    const { return new MetaInteger(*this); }
    virtual const char *toString() const; 
 
    // Accessors
@@ -106,6 +142,11 @@ public:
    friend class MetaTable;
 };
 
+//
+// MetaDouble
+//
+// Wrap a simple double floating-point value.
+//
 class MetaDouble : public MetaObject
 {
    DECLARE_RTTI_TYPE(MetaDouble, MetaObject)
@@ -114,12 +155,18 @@ protected:
    double value;
 
 public:
-   MetaDouble() : MetaObject(), value(0.0) {}
-   MetaDouble(const char *key, double d);
-   MetaDouble(const MetaDouble &other);
+   MetaDouble() : Super(), value(0.0) {}
+   MetaDouble(const char *key, double d)
+      : Super(key), value(d)
+   {
+   }
+   MetaDouble(const MetaDouble &other)
+      : Super(other), value(other.value)
+   {
+   }
 
    // Virtual Methods
-   virtual MetaObject *clone() const;
+   virtual MetaObject *clone()    const { return new MetaDouble(*this); }
    virtual const char *toString() const;
 
    // Accessors
@@ -129,6 +176,12 @@ public:
    friend class MetaTable;
 };
 
+//
+// MetaString
+//
+// Wrap a dynamically allocated string value. The string is owned by the
+// MetaObject.
+//
 class MetaString : public MetaObject
 {
    DECLARE_RTTI_TYPE(MetaString, MetaObject)
@@ -137,14 +190,25 @@ protected:
    char *value;
 
 public:
-   MetaString();
-   MetaString(const char *key, const char *s);
-   MetaString(const MetaString &other);
-   virtual ~MetaString();
+   MetaString() : Super(), value(estrdup("")) {}
+   MetaString(const char *key, const char *s)
+      : Super(key), value(estrdup(s))
+   {
+   }
+   MetaString(const MetaString &other)
+      : Super(other), value(estrdup(other.value))
+   {
+   }
+   virtual ~MetaString()
+   {
+      if(value)
+         efree(value);
+      value = NULL;
+   }
 
    // Virtual Methods
-   virtual MetaObject *clone() const;
-   virtual const char *toString() const;
+   virtual MetaObject *clone()    const { return new MetaString(*this); }
+   virtual const char *toString() const { return value; }
 
    // Accessors
    const char *getValue() const { return value; }
@@ -153,14 +217,57 @@ public:
    friend class MetaTable;
 };
 
-// MetaTable
+//
+// MetaConstString
+//
+// Wrap a string constant/literal value. The string is *not* owned by the
+// MetaObject and can be shared between multiple MetaTable properties.
+//
+class MetaConstString : public MetaObject
+{
+   DECLARE_RTTI_TYPE(MetaConstString, MetaObject)
 
+protected:
+   const char *value;
+
+public:
+   MetaConstString() : Super(), value(NULL) {}
+   MetaConstString(const char *key, const char *s)
+      : Super(key), value(s)
+   {
+   }
+   MetaConstString(const MetaConstString &other)
+      : Super(other), value(other.value)
+   {
+   }
+   virtual ~MetaConstString() {}
+
+   // Virtual Methods
+   virtual MetaObject *clone()    const { return new MetaConstString(*this); }
+   virtual const char *toString() const { return value; }
+
+   // Accessors
+   const char *getValue() const { return value; }
+   void setValue(const char *s) { value = s;    }
+
+   friend class MetaTable;
+};
+
+//
+// MetaTable
+//
+// The MetaTable is a MetaObject which may itself manage other MetaObjects in
+// the form of an associative array (or hash table, in other words) by key and
+// by type. It is more or less exactly equivalent in functionality to an object
+// in the JavaScript language.
+//
 class MetaTable : public MetaObject
 {
    DECLARE_RTTI_TYPE(MetaTable, MetaObject)
 
 private:
-   metaTablePimpl *pImpl;
+   // Private implementation details are in metaapi.cpp
+   MetaTablePimpl *pImpl;
 
 public:
    MetaTable();
@@ -171,6 +278,10 @@ public:
    // MetaObject overrides
    virtual MetaObject *clone() const;
    virtual const char *toString() const;
+
+   // EHashTable API exposures
+   float        getLoadFactor() const; // returns load factor of the key hash table
+   unsigned int getNumItems()   const; // returns number of items in the table
 
    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
    bool hasKey(const char *key);
@@ -230,6 +341,12 @@ public:
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
    void        removeStringNR(const char *key);
+
+   // Constant shared strings
+   void        addConstString(const char *key, const char *value);
+   const char *getConstString(const char *key, const char *defValue);
+   void        setConstString(const char *key, const char *newValue);
+   const char *removeConstString(const char *key);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

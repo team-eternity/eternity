@@ -160,7 +160,7 @@ static void E_processItemEffects(cfg_t *cfg)
 
          // add the item effect type and name as properties
          newEffect->setInt("class", i);
-         newEffect->setString("classname", className);
+         newEffect->setConstString("classname", className);
 
          E_EDFLogPrintf("\t\t* Processed item '%s'\n", newEffect->getKey());
       }
