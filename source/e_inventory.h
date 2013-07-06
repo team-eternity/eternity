@@ -67,6 +67,13 @@ typedef int itemeffecttype_t;
 typedef MetaTable itemeffect_t;
 
 //
+// Effect Bindings
+//
+
+// INVENTORY_TODO: alter as needed
+extern int *pickupfx;
+
+//
 // Functions
 //
 
@@ -83,9 +90,11 @@ MetaTable *E_GetItemEffects();
 
 // Section Names
 #define EDF_SEC_HEALTHFX "healtheffect"
+#define EDF_SEC_PICKUPFX "pickupitem"
 
 // Section Defs
 extern cfg_opt_t edf_healthfx_opts[];
+extern cfg_opt_t edf_pickup_opts[];
 
 // Functions
 void E_ProcessInventory(cfg_t *cfg);

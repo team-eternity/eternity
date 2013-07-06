@@ -39,6 +39,7 @@
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_edf.h"
+#include "e_inventory.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"

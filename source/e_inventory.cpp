@@ -34,7 +34,9 @@
 #include "e_hash.h"
 #include "e_inventory.h"
 #include "e_lib.h"
+#include "e_sprite.h"
 
+#include "info.h"
 #include "metaapi.h"
 
 //=============================================================================
@@ -174,6 +176,155 @@ static void E_processItemEffects(cfg_t *cfg)
 // Effects can be bound to sprites.
 //
 
+// Sprite pick-up effects
+#define ITEM_PICKUPFX "effect"
+
+// sprite-based pickup items
+cfg_opt_t edf_pickup_opts[] =
+{
+   CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
+   CFG_END()
+};
+
+// pickup variables
+
+// pickup effect names (these are currently searched linearly)
+// matching enum values are defined in e_edf.h
+
+// INVENTORY_FIXME: make this a "compatibility name" for the effect
+const char *pickupnames[PFX_NUMFX] =
+{
+   "PFX_NONE",
+   "PFX_GREENARMOR",
+   "PFX_BLUEARMOR",
+   "PFX_POTION",
+   "PFX_ARMORBONUS",
+   "PFX_SOULSPHERE",
+   "PFX_MEGASPHERE",
+   "PFX_BLUEKEY",
+   "PFX_YELLOWKEY",
+   "PFX_REDKEY",
+   "PFX_BLUESKULL",
+   "PFX_YELLOWSKULL",
+   "PFX_REDSKULL",
+   "PFX_STIMPACK",
+   "PFX_MEDIKIT",
+   "PFX_INVULNSPHERE",
+   "PFX_BERZERKBOX",
+   "PFX_INVISISPHERE",
+   "PFX_RADSUIT",
+   "PFX_ALLMAP",
+   "PFX_LIGHTAMP",
+   "PFX_CLIP",
+   "PFX_CLIPBOX",
+   "PFX_ROCKET",
+   "PFX_ROCKETBOX",
+   "PFX_CELL",
+   "PFX_CELLPACK",
+   "PFX_SHELL",
+   "PFX_SHELLBOX",
+   "PFX_BACKPACK",
+   "PFX_BFG",
+   "PFX_CHAINGUN",
+   "PFX_CHAINSAW",
+   "PFX_LAUNCHER",
+   "PFX_PLASMA",
+   "PFX_SHOTGUN",
+   "PFX_SSG",
+   "PFX_HGREENKEY",
+   "PFX_HBLUEKEY",
+   "PFX_HYELLOWKEY",
+   "PFX_HPOTION",
+   "PFX_SILVERSHIELD",
+   "PFX_ENCHANTEDSHIELD",
+   "PFX_BAGOFHOLDING",
+   "PFX_HMAP",
+   "PFX_GWNDWIMPY",
+   "PFX_GWNDHEFTY",
+   "PFX_MACEWIMPY",
+   "PFX_MACEHEFTY",
+   "PFX_CBOWWIMPY",
+   "PFX_CBOWHEFTY",
+   "PFX_BLSRWIMPY",
+   "PFX_BLSRHEFTY",
+   "PFX_PHRDWIMPY",
+   "PFX_PHRDHEFTY",
+   "PFX_SKRDWIMPY",
+   "PFX_SKRDHEFTY",
+   "PFX_TOTALINVIS",
+};
+
+// pickupfx lookup table used in P_TouchSpecialThing (is allocated
+// with size NUMSPRITES)
+int *pickupfx = NULL;
+
+
+//
+// E_processPickupItems
+//
+// Allocates the pickupfx array used in P_TouchSpecialThing,
+// and loads all pickupitem definitions, using the sprite hash
+// table to resolve what sprite owns the specified effect.
+//
+static void E_processPickupItems(cfg_t *cfg)
+{
+   static int oldnumsprites;
+   int i, numnew, numpickups;
+
+   E_EDFLogPuts("\t* Processing pickup items\n");
+
+   // allocate and initialize pickup effects array
+   // haleyjd 11/21/11: allow multiple runs
+   numnew = NUMSPRITES - oldnumsprites;
+   if(numnew > 0)
+   {
+      pickupfx = erealloc(int *, pickupfx, NUMSPRITES * sizeof(int));
+      for(i = oldnumsprites; i < NUMSPRITES; i++)
+         pickupfx[i] = PFX_NONE;
+      oldnumsprites = NUMSPRITES;
+   }
+
+   // sanity check
+   if(!pickupfx)
+      E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
+   
+   // load pickupfx
+   numpickups = cfg_size(cfg, EDF_SEC_PICKUPFX);
+   E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
+   for(i = 0; i < numpickups; ++i)
+   {
+      int fxnum, sprnum;
+      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PICKUPFX, i);
+      const char *title = cfg_title(sec);
+      const char *pfx = cfg_getstr(sec, ITEM_PICKUPFX);
+
+      // validate the sprite name given in the section title and
+      // resolve to a sprite number (hashed)
+      sprnum = E_SpriteNumForName(title);
+
+      if(sprnum == -1)
+      {
+         // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
+         E_EDFLoggedWarning(2,
+            "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
+            title);
+         sprnum = blankSpriteNum;
+      }
+
+      // find the proper pickup effect number (linear search)
+      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, pfx);
+      if(fxnum == PFX_NUMFX)
+      {
+         E_EDFLoggedErr(2, "E_ProcessItems: invalid pickup effect: '%s'\n", pfx);
+      }
+      
+      E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
+                     title, sprnum, pfx, fxnum);
+
+      pickupfx[sprnum] = fxnum;
+   }
+}
+
 //=============================================================================
 //
 // Inventory Items
@@ -196,6 +347,9 @@ void E_ProcessInventory(cfg_t *cfg)
 {
    // process item effects
    E_processItemEffects(cfg);
+
+   // process pickup item bindings
+   E_processPickupItems(cfg);
 
    // TODO: MOAR
 }
