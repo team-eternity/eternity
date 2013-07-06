@@ -747,7 +747,10 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
    if(!(fp = fopen(iwadname, "rb")))
    {
       if(version.flags & IWADF_FATALNOTOPEN)
-         I_Error("Can't open IWAD: %s\n", iwadname);
+      {
+         I_Error("Can't open IWAD: %s (%s)\n", iwadname,
+                 errno ? strerror(errno) : "unknown error");
+      }
       version.error = true;
       return;
    }
