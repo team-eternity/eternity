@@ -99,7 +99,7 @@ static void D_addDoomWadPath(const char *path)
 // Looks for the DOOMWADPATH environment variable. If it is defined, then
 // doomwadpaths will consist of the components of the decomposed variable.
 //
-static void D_parseDoomWadPath(void)
+static void D_parseDoomWadPath()
 {
    const char *dwp;
 
@@ -243,7 +243,7 @@ static int disktype;         // type of disk file
 //
 // haleyjd 05/28/10: Looks for -disk and sets up diskfile loading.
 //
-static void D_CheckDiskFileParm(void)
+static void D_CheckDiskFileParm()
 {
    int p;
    const char *fn;
@@ -270,7 +270,7 @@ static void D_CheckDiskFileParm(void)
 // Finds an IWAD in a disk file.
 // If this fails, the disk file will be closed.
 //
-static void D_FindDiskFileIWAD(void)
+static void D_FindDiskFileIWAD()
 {
    diskiwad = D_FindWadInDiskFile(diskfile, "doom");
 
@@ -299,7 +299,7 @@ static void D_FindDiskFileIWAD(void)
 //
 // Loads an IWAD from the disk file.
 //
-static void D_LoadDiskFileIWAD(void)
+static void D_LoadDiskFileIWAD()
 {
    if(diskiwad.f)
       D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, false, true);
@@ -312,7 +312,7 @@ static void D_LoadDiskFileIWAD(void)
 //
 // Loads a PWAD from the disk file.
 //
-static void D_LoadDiskFilePWAD(void)
+static void D_LoadDiskFilePWAD()
 {
    diskwad_t wad = D_FindWadInDiskFile(diskfile, diskpwad);
 
@@ -527,7 +527,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
 // stored can be picked from the menu.
 // This feature is only available for SDL builds.
 //
-static const char *D_doIWADMenu(void)
+static const char *D_doIWADMenu()
 {
    const char *iwadToUse = NULL;
 
@@ -539,8 +539,18 @@ static const char *D_doIWADMenu(void)
    // populate haveIWADs array based on system.cfg variables
    for(i = 0; i < NUMPICKIWADS; ++i)
    {
-      if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
-         foundone = true;
+      const char *path = *iwadVarForNum[i];
+      if(path && *path != '\0')
+      {
+         struct stat sbuf;
+
+         // 07/06/13: Needs to actually exist.
+         if(!stat(path, &sbuf) && !S_ISDIR(sbuf.st_mode))
+         {
+            haveIWADs[i] = true;
+            foundone = true;
+         }
+      }
    }
 
    if(foundone) // at least one IWAD must be specified!
