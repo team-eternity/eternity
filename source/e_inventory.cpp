@@ -126,14 +126,47 @@ MetaTable *E_GetItemEffects()
 // Effect Processing
 //
 
+// metakey vocabulary
+#define KEY_ALWAYSPICKUP   "alwayspickup"
+#define KEY_AMOUNT         "amount"
+#define KEY_BONUS          "bonus"
+#define KEY_CLASS          "class"
+#define KEY_CLASSNAME      "classname"
+#define KEY_FULLAMOUNTONLY "fullamountonly"
+#define KEY_ICON           "icon"
+#define KEY_INTERHUBAMOUNT "interhubamount"
+#define KEY_INVBAR         "invbar"
+#define KEY_ITEMID         "itemid"
+#define KEY_KEEPDEPLETED   "keepdepleted"
+#define KEY_LOWMESSAGE     "lowmessage"
+#define KEY_MAXAMOUNT      "maxamount"
+#define KEY_MAXSAVEAMOUNT  "maxsaveamount"
+#define KEY_SAVEAMOUNT     "saveamount"
+#define KEY_SAVEDIVISOR    "savedivisor"
+#define KEY_SAVEFACTOR     "savefactor"
+#define KEY_SORTORDER      "sortorder"
+#define KEY_UNDROPPABLE    "undroppable"
+#define KEY_USEEFFECT      "useeffect"
+#define KEY_USESOUND       "usesound"
+
+// Interned metatable keys
+static MetaKeyIndex keyAmount        (KEY_AMOUNT        );
+static MetaKeyIndex keyClass         (KEY_CLASS         );
+static MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
+static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
+static MetaKeyIndex keyItemID        (KEY_ITEMID        );
+static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
+static MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
+static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
+
 // Health fields
 cfg_opt_t edf_healthfx_opts[] =
 {
-   CFG_INT("amount",     0,  CFGF_NONE), // amount to recover
-   CFG_INT("maxamount",  0,  CFGF_NONE), // max that can be recovered
-   CFG_STR("lowmessage", "", CFGF_NONE), // message if health < amount
+   CFG_INT(KEY_AMOUNT,     0,  CFGF_NONE), // amount to recover
+   CFG_INT(KEY_MAXAMOUNT,  0,  CFGF_NONE), // max that can be recovered
+   CFG_STR(KEY_LOWMESSAGE, "", CFGF_NONE), // message if health < amount
    
-   CFG_FLAG("alwayspickup", 0,  CFGF_SIGNPREFIX), // if +, always pick up
+   CFG_FLAG(KEY_ALWAYSPICKUP, 0,  CFGF_SIGNPREFIX), // if +, always pick up
    
    CFG_END()
 };
@@ -141,13 +174,13 @@ cfg_opt_t edf_healthfx_opts[] =
 // Armor fields
 cfg_opt_t edf_armorfx_opts[] =
 {
-   CFG_INT("saveamount",    0,  CFGF_NONE), // amount of armor given
-   CFG_INT("savefactor",    1,  CFGF_NONE), // numerator of save percentage
-   CFG_INT("savedivisor",   3,  CFGF_NONE), // denominator of save percentage
-   CFG_INT("maxsaveamount", 0,  CFGF_NONE), // max save amount, for bonuses
+   CFG_INT(KEY_SAVEAMOUNT,    0,  CFGF_NONE), // amount of armor given
+   CFG_INT(KEY_SAVEFACTOR,    1,  CFGF_NONE), // numerator of save percentage
+   CFG_INT(KEY_SAVEDIVISOR,   3,  CFGF_NONE), // denominator of save percentage
+   CFG_INT(KEY_MAXSAVEAMOUNT, 0,  CFGF_NONE), // max save amount, for bonuses
    
-   CFG_FLAG("alwayspickup", 0, CFGF_SIGNPREFIX), // if +, always pick up
-   CFG_FLAG("bonus",        0, CFGF_SIGNPREFIX), // if +, is a bonus (adds to current armor type)
+   CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), // if +, always pick up
+   CFG_FLAG(KEY_BONUS,        0, CFGF_SIGNPREFIX), // if +, is a bonus (adds to current armor type)
 
    CFG_END()
 };
@@ -155,18 +188,18 @@ cfg_opt_t edf_armorfx_opts[] =
 // Artifact fields
 cfg_opt_t edf_artifact_opts[] =
 {
-   CFG_INT("amount",         0,  CFGF_NONE), // amount gained with one pickup
-   CFG_INT("maxamount",      0,  CFGF_NONE), // max amount that can be carried in inventory
-   CFG_INT("interhubamount", 0,  CFGF_NONE), // amount carryable between hubs (or levels)
-   CFG_INT("sortorder",      0,  CFGF_NONE), // relative ordering within inventory
-   CFG_STR("icon",           "", CFGF_NONE), // icon used on inventory bars
-   CFG_STR("usesound",       "", CFGF_NONE), // sound to play when used
-   CFG_STR("useeffect",      "", CFGF_NONE), // effect to activate when used
+   CFG_INT(KEY_AMOUNT,         0,  CFGF_NONE), // amount gained with one pickup
+   CFG_INT(KEY_MAXAMOUNT,      0,  CFGF_NONE), // max amount that can be carried in inventory
+   CFG_INT(KEY_INTERHUBAMOUNT, 0,  CFGF_NONE), // amount carryable between hubs (or levels)
+   CFG_INT(KEY_SORTORDER,      0,  CFGF_NONE), // relative ordering within inventory
+   CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
+   CFG_STR(KEY_USESOUND,       "", CFGF_NONE), // sound to play when used
+   CFG_STR(KEY_USEEFFECT,      "", CFGF_NONE), // effect to activate when used
 
-   CFG_FLAG("undroppable",    0, CFGF_SIGNPREFIX), // if +, cannot be dropped
-   CFG_FLAG("invbar",         0, CFGF_SIGNPREFIX), // if +, appears in inventory bar
-   CFG_FLAG("keepdepleted",   0, CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
-   CFG_FLAG("fullamountonly", 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
+   CFG_FLAG(KEY_UNDROPPABLE,    0, CFGF_SIGNPREFIX), // if +, cannot be dropped
+   CFG_FLAG(KEY_INVBAR,         0, CFGF_SIGNPREFIX), // if +, appears in inventory bar
+   CFG_FLAG(KEY_KEEPDEPLETED,   0, CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
+   CFG_FLAG(KEY_FULLAMOUNTONLY, 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
 
    CFG_END()
 };
@@ -200,8 +233,8 @@ static void E_processItemEffects(cfg_t *cfg)
          auto newEffect = E_addItemEffect(cfg_getnsec(cfg, cfgSecName, secNum));
 
          // add the item effect type and name as properties
-         newEffect->setInt("class", i);
-         newEffect->setConstString("classname", className);
+         newEffect->setInt(keyClass, i);
+         newEffect->setConstString(keyClassName, className);
 
          E_EDFLogPrintf("\t\t* Processed item '%s'\n", newEffect->getKey());
       }
@@ -394,7 +427,7 @@ static void E_allocateInventoryItemIDs()
    // scan the effects table and add artifacts to the table
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
    {
-      itemeffecttype_t fxtype = item->getInt("class", ITEMFX_NONE);
+      itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
       
       // only interested in effects that are recorded in the inventory
       if(fxtype == ITEMFX_ARTIFACT)
@@ -403,7 +436,7 @@ static void E_allocateInventoryItemIDs()
          e_InventoryItemsByID.add(item);
 
          // add the ID to the artifact definition
-         item->setInt("itemid", e_maxitemid++);
+         item->setInt(keyItemID, e_maxitemid++);
       }
    }
 }
@@ -478,7 +511,7 @@ inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
 {
    inventoryitemid_t id;
 
-   if((id = effect->getInt("itemid", -1)) >= 0)
+   if((id = effect->getInt(keyItemID, -1)) >= 0)
       return E_InventorySlotForItemID(player, id);
    else
       return NULL;
@@ -537,7 +570,7 @@ static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sor
 
       if((effect = E_EffectForInventoryIndex(player, idx)))
       {
-         int thatorder = effect->getInt("sortorder", 0);
+         int thatorder = effect->getInt(keySortOrder, 0);
          if(thatorder < sortorder)
             continue;
          else
@@ -561,16 +594,16 @@ static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sor
 //
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
 {
-   itemeffecttype_t  fxtype = artifact->getInt("class", ITEMFX_NONE);
-   inventoryitemid_t itemid = artifact->getInt("itemid", -1);
+   itemeffecttype_t  fxtype = artifact->getInt(keyClass, ITEMFX_NONE);
+   inventoryitemid_t itemid = artifact->getInt(keyItemID, -1);
 
    // Not an artifact??
    if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
       return false;
    
    inventoryindex_t newSlot = -1;
-   int amountToGive = artifact->getInt("amount",    0);
-   int maxAmount    = artifact->getInt("maxamount", 0);
+   int amountToGive = artifact->getInt(keyAmount,    0);
+   int maxAmount    = artifact->getInt(keyMaxAmount, 0);
 
    // Does the player already have this item?
    inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
@@ -584,7 +617,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
    }
    
    // If must collect full amount, but it won't fit, return now.
-   if(artifact->getInt("fullamountonly", 0) && 
+   if(artifact->getInt(keyFullAmountOnly, 0) && 
       slot->amount + amountToGive > maxAmount)
       return false;
 
@@ -597,7 +630,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
 
    // sort if needed
    if(newSlot > 0)
-      E_sortInventory(player, newSlot, artifact->getInt("sortorder", 0));
+      E_sortInventory(player, newSlot, artifact->getInt(keySortOrder, 0));
 
    return true;
 }
@@ -654,7 +687,7 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
    {
       // check for "keep depleted" flag to see if item stays even when we have
       // a zero amount of it.
-      if(!artifact->getInt("keepdepleted", 0))
+      if(!artifact->getInt(keyKeepDepleted, 0))
       {
          // otherwise, we need to remove that item and collapse the player's 
          // inventory

@@ -180,6 +180,20 @@ MetaObject::MetaObject()
 }
 
 //
+// MetaObject(size_t keyIndex)
+//
+// Constructor for MetaObject using an interned key index
+//
+MetaObject::MetaObject(size_t keyIndex)
+   : Super(), links(), typelinks(), type()
+{
+   metakey_t &keyObj = MetaKeyForIndex(keyIndex);
+
+   key    = keyObj.key;
+   keyIdx = keyObj.index;
+}
+
+//
 // MetaObject(const char *pKey)
 //
 // Constructor for MetaObject when key is known.
@@ -837,7 +851,17 @@ MetaObject *MetaTable::tableIterator(MetaObject *object) const
 //
 // MetaTable::addInt
 //
-// Add an integer to the metatable.
+// Add an integer to the metatable using an interned key index.
+//
+void MetaTable::addInt(size_t keyIndex, int value)
+{
+   addObject(new MetaInteger(keyIndex, value));
+}
+
+//
+// MetaTable::addInt
+//
+// Add an integer to the metatable using a raw string key.
 //
 void MetaTable::addInt(const char *key, int value)
 {
@@ -890,14 +914,24 @@ int MetaTable::getInt(const char *key, int defValue)
 // be edited to have the provided value. Otherwise, a new metaint will be
 // added to the table with that value.
 //
-void MetaTable::setInt(const char *key, int newValue)
+void MetaTable::setInt(size_t keyIndex, int newValue)
 {
    MetaObject *obj;
 
-   if(!(obj = getObjectKeyAndType(key, RTTI(MetaInteger))))
-      addInt(key, newValue);
+   if(!(obj = getObjectKeyAndType(keyIndex, RTTI(MetaInteger))))
+      addInt(keyIndex, newValue);
    else
       static_cast<MetaInteger *>(obj)->value = newValue;
+}
+
+//
+// MetaTable::setInt
+//
+// Overload for raw key strings.
+//
+void MetaTable::setInt(const char *key, int newValue)
+{
+   setInt(MetaKey(key).index, newValue);
 }
 
 //
@@ -1148,6 +1182,17 @@ void MetaTable::removeStringNR(const char *key)
 //
 // MetaTable::addConstString
 //
+// Add a sharable string constant/literal value to the MetaTable,
+// using an interned key index.
+//
+void MetaTable::addConstString(size_t keyIndex, const char *value)
+{
+   addObject(new MetaConstString(keyIndex, value));
+}
+
+//
+// MetaTable::addConstString
+//
 // Add a sharable string constant/literal value to the MetaTable.
 //
 void MetaTable::addConstString(const char *key, const char *value)
@@ -1189,14 +1234,24 @@ const char *MetaTable::getConstString(const char *key, const char *defValue)
 // value will be set to newValue. Otherwise, a new MetaConstString will be
 // created with this key and value and will be added to the table.
 //
-void MetaTable::setConstString(const char *key, const char *newValue)
+void MetaTable::setConstString(size_t keyIndex, const char *newValue)
 {
    MetaObject *obj;
 
-   if(!(obj = getObjectKeyAndType(key, RTTI(MetaConstString))))
-      addConstString(key, newValue);
+   if(!(obj = getObjectKeyAndType(keyIndex, RTTI(MetaConstString))))
+      addConstString(keyIndex, newValue);
    else
       static_cast<MetaConstString *>(obj)->setValue(newValue);
+}
+
+//
+// MetaTable::setConstString
+//
+// Overload for raw string keys.
+//
+void MetaTable::setConstString(const char *key, const char *newValue)
+{
+   setConstString(MetaKey(key).index, newValue);
 }
 
 //

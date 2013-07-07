@@ -70,6 +70,7 @@ protected:
 public:
    // Constructors/Destructor
    MetaObject();
+   MetaObject(size_t keyIndex);
    MetaObject(const char *pKey);
    MetaObject(const MetaObject &other)
       : Super(), links(), typelinks(), key(other.key),
@@ -122,6 +123,10 @@ protected:
 
 public:
    MetaInteger() : Super(), value(0) {}
+   MetaInteger(size_t keyIndex, int i)
+      : Super(keyIndex), value(i)
+   {
+   }
    MetaInteger(const char *key, int i) 
       : Super(key), value(i)
    {
@@ -232,6 +237,10 @@ protected:
 
 public:
    MetaConstString() : Super(), value(NULL) {}
+   MetaConstString(size_t keyIndex, const char *s)
+      : Super(keyIndex), value(s)
+   {
+   }
    MetaConstString(const char *key, const char *s)
       : Super(key), value(s)
    {
@@ -323,9 +332,11 @@ public:
    // Add/Get/Set Convenience Methods for Basic MetaObjects
    
    // Signed integer
+   void addInt(size_t keyIndex, int value);
    void addInt(const char *key, int value);
    int  getInt(size_t keyIndex, int defValue);
    int  getInt(const char *key, int defValue);
+   void setInt(size_t keyIndex, int newValue);
    void setInt(const char *key, int newValue);
    int  removeInt(const char *key);
 
@@ -343,8 +354,10 @@ public:
    void        removeStringNR(const char *key);
 
    // Constant shared strings
+   void        addConstString(size_t keyIndex, const char *value);
    void        addConstString(const char *key, const char *value);
    const char *getConstString(const char *key, const char *defValue);
+   void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);
 
@@ -387,6 +400,8 @@ public:
       }
       return keyIndex;
    }
+
+   operator size_t () { return getIndex(); }
 };
 
 #endif

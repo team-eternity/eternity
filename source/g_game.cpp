@@ -2716,9 +2716,8 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
    MetaTable  *meta = mobjinfo[thingtype]->meta;
-   size_t metaKey = speedsetKey.getIndex();
 
-   if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
+   if((o = meta->getObjectKeyAndType(speedsetKey, RTTI(MetaSpeedSet))))
    {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }
