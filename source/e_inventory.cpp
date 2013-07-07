@@ -163,9 +163,10 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_STR("usesound",       "", CFGF_NONE), // sound to play when used
    CFG_STR("useeffect",      "", CFGF_NONE), // effect to activate when used
 
-   CFG_FLAG("undroppable",   0,  CFGF_SIGNPREFIX), // if +, cannot be dropped
-   CFG_FLAG("invbar",        0,  CFGF_SIGNPREFIX), // if +, appears in inventory bar
-   CFG_FLAG("keepdepleted",  0,  CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
+   CFG_FLAG("undroppable",    0, CFGF_SIGNPREFIX), // if +, cannot be dropped
+   CFG_FLAG("invbar",         0, CFGF_SIGNPREFIX), // if +, appears in inventory bar
+   CFG_FLAG("keepdepleted",   0, CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
+   CFG_FLAG("fullamountonly", 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
 
    CFG_END()
 };
@@ -485,6 +486,106 @@ inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
    }
 
    return NULL;
+}
+
+//
+// E_findInventorySlot
+//
+// Finds the first unused inventory slot index.
+//
+static inventoryindex_t E_findInventorySlot(inventory_t inventory)
+{
+   // find the first unused slot and return it
+   for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
+   {
+      if(inventory[idx].item == -1)
+         return idx;
+   }
+
+   // should be unreachable
+   return -1;
+}
+
+//
+// E_sortInventory
+//
+// After a new slot is added to the inventory, it needs to be placed into its
+// proper sorted position based on the item effects' sortorder fields.
+//
+static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sortorder)
+{
+   inventory_t inventory = player->inventory;
+   inventoryslot_t tempSlot = inventory[newIndex];
+
+   for(inventoryindex_t idx = 0; idx < newIndex; idx++)
+   {
+      itemeffect_t *effect;
+
+      if((effect = E_EffectForInventoryIndex(player, idx)))
+      {
+         int thatorder = effect->getInt("sortorder", 0);
+         if(thatorder < sortorder)
+            continue;
+         else
+         {
+            // shift everything up
+            for(inventoryindex_t up = newIndex; up > idx; up--)
+               inventory[up] = inventory[up - 1];
+
+            // put the saved slot into its proper place
+            inventory[idx] = tempSlot;
+            return;
+         }
+      }
+   }
+}
+
+//
+// E_GiveInventoryItem
+//
+// Place an artifact effect into the player's inventory, if it will fit.
+//
+bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
+{
+   itemeffecttype_t  fxtype = artifact->getInt("class", ITEMFX_NONE);
+   inventoryitemid_t itemid = artifact->getInt("itemid", -1);
+
+   // Not an artifact??
+   if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
+      return false;
+   
+   inventoryindex_t newSlot = -1;
+   int amountToGive = artifact->getInt("amount",    0);
+   int maxAmount    = artifact->getInt("maxamount", 0);
+
+   // Does the player already have this item?
+   inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
+
+   // If not, make a slot for it
+   if(!slot)
+   {
+      if((newSlot = E_findInventorySlot(player->inventory)) < 0)
+         return false; // internal error, actually... shouldn't happen
+      slot = &player->inventory[newSlot];
+   }
+   
+   // If must collect full amount, but it won't fit, return now.
+   if(artifact->getInt("fullamountonly", 0) && 
+      slot->amount + amountToGive > maxAmount)
+      return false;
+
+   // set the item type in case the slot is new, and increment the amount owned
+   // by the amount this item gives, capping to the maximum allowed amount
+   slot->item    = itemid;
+   slot->amount += amountToGive;
+   if(slot->amount > maxAmount)
+      slot->amount = maxAmount;
+
+   // sort if needed
+   if(newSlot > 0)
+      E_sortInventory(player, newSlot, artifact->getInt("sortorder", 0));
+
+   return true;
 }
 
 //=============================================================================

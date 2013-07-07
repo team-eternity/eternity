@@ -108,6 +108,9 @@ inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id
 // exists. Returns NULL if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
 
+// Place an item into a player's inventory. 
+bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact);
+
 //
 // EDF-Only Definitions
 //
