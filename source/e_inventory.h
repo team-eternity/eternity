@@ -27,11 +27,17 @@
 #ifndef E_INVENTORY_H__
 #define E_INVENTORY_H__
 
-class MetaTable;
+class  MetaTable;
+struct player_t;
 
 // Inventory item ID is just an integer. The inventory item type can be looked
 // up using this.
 typedef int inventoryitemid_t;
+
+// Inventory index is an index into a player's inventory_t array. It is NOT
+// the same as the item ID. You get from one to the other by using:
+//   inventory[index].item
+typedef int inventoryindex_t;
 
 // Inventory Slot
 // Every slot in an inventory is composed of this structure. It references the
@@ -52,8 +58,10 @@ typedef inventoryslot_t * inventory_t;
 // Effect Types
 enum
 {
-   ITEMFX_NONE,   // has no effect
-   ITEMFX_HEALTH, // an immediate-use health pickup
+   ITEMFX_NONE,     // has no effect
+   ITEMFX_HEALTH,   // an immediate-use health item
+   ITEMFX_ARMOR,    // an immediate-use armor item
+   ITEMFX_ARTIFACT, // an item that enters the inventory, for later use or tracking
    NUMITEMFX
 };
 typedef int itemeffecttype_t;
@@ -86,15 +94,38 @@ itemeffect_t *E_ItemEffectForName(const char *name);
 // Get the item effects table
 MetaTable *E_GetItemEffects();
 
+// Obtain an item effect definition for its inventory item ID
+itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
+
+// Obtain an item effect definition for a player's inventory index
+itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx);
+
+// Get the slot being used for a particular inventory item, by ID, if one
+// exists. Returns NULL if the item isn't in the player's inventory.
+inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id);
+
+// Get the slot being used for a particular inventory item, by name, if one 
+// exists. Returns NULL if the item isn't in the player's inventory.
+inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
+
+//
+// EDF-Only Definitions
+//
+
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
 #define EDF_SEC_HEALTHFX "healtheffect"
+#define EDF_SEC_ARMORFX  "armoreffect"
+#define EDF_SEC_ARTIFACT "artifact"
 #define EDF_SEC_PICKUPFX "pickupitem"
 
 // Section Defs
 extern cfg_opt_t edf_healthfx_opts[];
+extern cfg_opt_t edf_armorfx_opts[];
 extern cfg_opt_t edf_pickup_opts[];
+extern cfg_opt_t edf_artifact_opts[];
+extern cfg_opt_t edf_artifact_opts[];
 
 // Functions
 void E_ProcessInventory(cfg_t *cfg);

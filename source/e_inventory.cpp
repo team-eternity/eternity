@@ -36,7 +36,10 @@
 #include "e_lib.h"
 #include "e_sprite.h"
 
+#include "d_player.h"
+#include "doomstat.h"
 #include "info.h"
+#include "m_collection.h"
 #include "metaapi.h"
 
 //=============================================================================
@@ -48,7 +51,9 @@
 static const char *e_ItemEffectTypeNames[NUMITEMFX] =
 {
    "None",
-   "Health"
+   "Health",
+   "Armor",
+   "Artifact"
 };
 
 //
@@ -122,22 +127,55 @@ MetaTable *E_GetItemEffects()
 //
 
 // Health fields
-#define ITEM_HEALTH_AMOUNT     "amount"
-#define ITEM_HEALTH_MAXAMOUNT  "maxamount"
-#define ITEM_HEALTH_LOWMESSAGE "lowmessage"
-
 cfg_opt_t edf_healthfx_opts[] =
 {
-   CFG_INT(ITEM_HEALTH_AMOUNT,     0,  CFGF_NONE), // amount to recover
-   CFG_INT(ITEM_HEALTH_MAXAMOUNT,  0,  CFGF_NONE), // max that can be recovered
-   CFG_STR(ITEM_HEALTH_LOWMESSAGE, "", CFGF_NONE), // message if health < amount
+   CFG_INT("amount",     0,  CFGF_NONE), // amount to recover
+   CFG_INT("maxamount",  0,  CFGF_NONE), // max that can be recovered
+   CFG_STR("lowmessage", "", CFGF_NONE), // message if health < amount
+   
+   CFG_FLAG("alwayspickup", 0,  CFGF_SIGNPREFIX), // if +, always pick up
+   
+   CFG_END()
+};
+
+// Armor fields
+cfg_opt_t edf_armorfx_opts[] =
+{
+   CFG_INT("saveamount",    0,  CFGF_NONE), // amount of armor given
+   CFG_INT("savefactor",    1,  CFGF_NONE), // numerator of save percentage
+   CFG_INT("savedivisor",   3,  CFGF_NONE), // denominator of save percentage
+   CFG_INT("maxsaveamount", 0,  CFGF_NONE), // max save amount, for bonuses
+   
+   CFG_FLAG("alwayspickup", 0, CFGF_SIGNPREFIX), // if +, always pick up
+   CFG_FLAG("bonus",        0, CFGF_SIGNPREFIX), // if +, is a bonus (adds to current armor type)
+
+   CFG_END()
+};
+
+// Artifact fields
+cfg_opt_t edf_artifact_opts[] =
+{
+   CFG_INT("amount",         0,  CFGF_NONE), // amount gained with one pickup
+   CFG_INT("maxamount",      0,  CFGF_NONE), // max amount that can be carried in inventory
+   CFG_INT("interhubamount", 0,  CFGF_NONE), // amount carryable between hubs (or levels)
+   CFG_INT("sortorder",      0,  CFGF_NONE), // relative ordering within inventory
+   CFG_STR("icon",           "", CFGF_NONE), // icon used on inventory bars
+   CFG_STR("usesound",       "", CFGF_NONE), // sound to play when used
+   CFG_STR("useeffect",      "", CFGF_NONE), // effect to activate when used
+
+   CFG_FLAG("undroppable",   0,  CFGF_SIGNPREFIX), // if +, cannot be dropped
+   CFG_FLAG("invbar",        0,  CFGF_SIGNPREFIX), // if +, appears in inventory bar
+   CFG_FLAG("keepdepleted",  0,  CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
+
    CFG_END()
 };
 
 static const char *e_ItemSectionNames[NUMITEMFX] =
 {
    "",
-   EDF_SEC_HEALTHFX
+   EDF_SEC_HEALTHFX,
+   EDF_SEC_ARMORFX,
+   EDF_SEC_ARTIFACT
 };
 
 //
@@ -258,7 +296,6 @@ const char *pickupnames[PFX_NUMFX] =
 // with size NUMSPRITES)
 int *pickupfx = NULL;
 
-
 //
 // E_processPickupItems
 //
@@ -333,6 +370,123 @@ static void E_processPickupItems(cfg_t *cfg)
 // inventory.
 //
 
+// Lookup table of inventory item types by assigned ID number
+static PODCollection<itemeffect_t *> e_InventoryItemsByID;
+static inventoryitemid_t e_maxitemid;
+
+//
+// E_allocateInventoryItemIDs
+//
+// First, if the item ID table has already been built, we need to wipe it out.
+// Then, regardless, build the artifact ID table by scanning the effects table
+// for items of classes which enter the inventory, and assign each one a unique
+// artifact ID. The ID will be added to the object.
+//
+static void E_allocateInventoryItemIDs()
+{
+   itemeffect_t *item = NULL;
+
+   // empty the table if it was already created before
+   e_InventoryItemsByID.clear();
+   e_maxitemid = 0;
+
+   // scan the effects table and add artifacts to the table
+   while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
+   {
+      itemeffecttype_t fxtype = item->getInt("class", ITEMFX_NONE);
+      
+      // only interested in effects that are recorded in the inventory
+      if(fxtype == ITEMFX_ARTIFACT)
+      {
+         // add it to the table
+         e_InventoryItemsByID.add(item);
+
+         // add the ID to the artifact definition
+         item->setInt("itemid", e_maxitemid++);
+      }
+   }
+}
+
+//
+// E_allocatePlayerInventories
+//
+// Allocate inventory arrays for the player_t structures.
+//
+static void E_allocatePlayerInventories()
+{
+   for(int i = 0; i < MAXPLAYERS; i++)
+   {
+      if(players[i].inventory)
+         efree(players[i].inventory);
+
+      players[i].inventory = estructalloc(inventoryslot_t, e_maxitemid);
+
+      for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
+         players[i].inventory[idx].item = -1;
+   }
+}
+
+//
+// E_EffectForInventoryItemID
+//
+// Return the effect definition associated with an inventory item ID.
+//
+itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id)
+{
+   return (id >= 0 && id < e_maxitemid) ? e_InventoryItemsByID[id] : NULL;
+}
+
+//
+// E_EffectForInventoryIndex
+//
+// Get the item effect for a particular index in a given player's inventory.
+//
+itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx)
+{
+   return (idx >= 0 && idx < e_maxitemid) ? 
+      E_EffectForInventoryItemID(player->inventory[idx].item) : NULL;
+}
+
+//
+// E_InventorySlotForItemID
+//
+// Find the slot being used by an item in the player's inventory, if one exists.
+// NULL is returned if the item is not in the player's inventory.
+//
+inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id)
+{
+   inventory_t inventory = player->inventory;
+
+   for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
+   {
+      if(inventory[idx].item == id)
+         return &inventory[idx];
+   }
+
+   return NULL;
+}
+
+//
+// E_InventorySlotForItemName
+//
+// Find the slot being used by an item in the player's inventory, if one exists.
+// NULL is returned if the item is not in the player's inventory.
+//
+inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
+{
+   inventory_t   inventory = player->inventory;
+   itemeffect_t *namedEffect;
+
+   if((namedEffect = E_ItemEffectForName(name)))
+   {
+      inventoryitemid_t id;
+      if((id = namedEffect->getInt("itemid", -1)) >= 0)
+         return E_InventorySlotForItemID(player, id);
+   }
+
+   return NULL;
+}
+
 //=============================================================================
 //
 // Global Processing
@@ -347,6 +501,12 @@ void E_ProcessInventory(cfg_t *cfg)
 {
    // process item effects
    E_processItemEffects(cfg);
+
+   // allocate inventory item IDs
+   E_allocateInventoryItemIDs();
+
+   // allocate player inventories
+   E_allocatePlayerInventories();
 
    // process pickup item bindings
    E_processPickupItems(cfg);

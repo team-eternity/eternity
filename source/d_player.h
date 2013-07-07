@@ -35,6 +35,9 @@
 
 #include "p_pspr.h"
 
+// haleyjd 07/06/13: Need inventory definitions
+#include "e_inventory.h"
+
 // In addition, the player is just a special
 // case of the generic moving object/actor.
 
@@ -161,6 +164,9 @@ struct player_t
    int            quake;         // If > 0, player is experiencing an earthquake
    int            jumptime;      // If > 0, player can't jump again yet
    int            flyheight;     // haleyjd 06/05/12: flying
+
+   // Inventory
+   inventory_t    inventory;     // haleyjd 07/06/13: player's inventory
    
    // Player name
    char           name[20];
