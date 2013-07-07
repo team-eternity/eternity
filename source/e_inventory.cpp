@@ -622,6 +622,8 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
          // clear the top slot
          inventory[e_maxitemid - 1].item   = -1;
          inventory[e_maxitemid - 1].amount =  0;
+
+         return;
       }
    }
 }
