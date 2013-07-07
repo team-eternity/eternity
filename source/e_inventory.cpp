@@ -468,10 +468,28 @@ inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id
 }
 
 //
+// E_InventorySlotForItem
+//
+// Find the slot bieng used by an item in the player's inventory, by pointer,
+// if one exists. NULL is returned if the item is not in the player's 
+// inventory.
+//
+inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
+{
+   inventoryitemid_t id;
+
+   if((id = effect->getInt("itemid", -1)) >= 0)
+      return E_InventorySlotForItemID(player, id);
+   else
+      return NULL;
+}
+
+//
 // E_InventorySlotForItemName
 //
-// Find the slot being used by an item in the player's inventory, if one exists.
-// NULL is returned if the item is not in the player's inventory.
+// Find the slot being used by an item in the player's inventory, by name,
+// if one exists. NULL is returned if the item is not in the player's 
+// inventory.
 //
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
 {
@@ -479,13 +497,9 @@ inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
    itemeffect_t *namedEffect;
 
    if((namedEffect = E_ItemEffectForName(name)))
-   {
-      inventoryitemid_t id;
-      if((id = namedEffect->getInt("itemid", -1)) >= 0)
-         return E_InventorySlotForItemID(player, id);
-   }
-
-   return NULL;
+      return E_InventorySlotForItem(player, namedEffect);
+   else
+      return NULL;
 }
 
 //
@@ -584,6 +598,67 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
    // sort if needed
    if(newSlot > 0)
       E_sortInventory(player, newSlot, artifact->getInt("sortorder", 0));
+
+   return true;
+}
+
+//
+// E_removeInventorySlot
+//
+// Remove a slot from the player's inventory.
+//
+static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
+{
+   inventory_t inventory = player->inventory;
+
+   for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
+   {
+      if(slot == &inventory[idx])
+      {
+         // shift everything down
+         for(inventoryindex_t down = e_maxitemid - 1; down > idx; down--)
+            inventory[down - 1] = inventory[down];
+
+         // clear the top slot
+         inventory[e_maxitemid - 1].item   = -1;
+         inventory[e_maxitemid - 1].amount =  0;
+      }
+   }
+}
+
+//
+// E_RemoveInventoryItem
+//
+// Remove some amount of a specific item from the player's inventory, if
+// possible.
+//
+bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+{
+   inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
+
+   // don't have that item at all?
+   if(!slot)
+      return false;
+
+   // don't own that many?
+   if(slot->amount < amount)
+      return false;
+
+   // subtract the amount requested
+   slot->amount -= amount;
+
+   // are they used up?
+   if(slot->amount == 0)
+   {
+      // check for "keep depleted" flag to see if item stays even when we have
+      // a zero amount of it.
+      if(!artifact->getInt("keepdepleted", 0))
+      {
+         // otherwise, we need to remove that item and collapse the player's 
+         // inventory
+         E_removeInventorySlot(player, slot);
+      }
+   }
 
    return true;
 }

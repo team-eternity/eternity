@@ -104,12 +104,19 @@ itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx);
 // exists. Returns NULL if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id);
 
+// Get the slot being used for a particular inventory item, by item pointer, if
+// one exists. Returns NULL if the item isn't in the player's inventory.
+inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect);
+
 // Get the slot being used for a particular inventory item, by name, if one 
 // exists. Returns NULL if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
 
 // Place an item into a player's inventory. 
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact);
+
+// Remove an item from a player's inventory.
+bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount);
 
 //
 // EDF-Only Definitions
