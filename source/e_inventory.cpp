@@ -526,7 +526,6 @@ inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
 //
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
 {
-   inventory_t   inventory = player->inventory;
    itemeffect_t *namedEffect;
 
    if((namedEffect = E_ItemEffectForName(name)))
