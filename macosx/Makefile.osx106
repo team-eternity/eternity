@@ -146,6 +146,7 @@ SRCS += ../source/e_states.cpp
 SRCS += ../source/e_string.cpp
 SRCS += ../source/e_things.cpp
 SRCS += ../source/e_ttypes.cpp
+SRCS += ../source/e_weapons.cpp
 SRCS += ../source/ev_actions.cpp
 SRCS += ../source/ev_bindings.cpp
 SRCS += ../source/ev_specials.cpp
