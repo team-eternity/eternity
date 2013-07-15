@@ -53,6 +53,7 @@ static const char *e_ItemEffectTypeNames[NUMITEMFX] =
    "None",
    "Health",
    "Armor",
+   "Power",
    "Artifact"
 };
 
@@ -127,11 +128,14 @@ MetaTable *E_GetItemEffects()
 //
 
 // metakey vocabulary
+#define KEY_ADDITIVETIME   "additivetime"
 #define KEY_ALWAYSPICKUP   "alwayspickup"
 #define KEY_AMOUNT         "amount"
+#define KEY_ARTIFACTTYPE   "artifacttype"
 #define KEY_BONUS          "bonus"
 #define KEY_CLASS          "class"
 #define KEY_CLASSNAME      "classname"
+#define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
 #define KEY_ICON           "icon"
 #define KEY_INTERHUBAMOUNT "interhubamount"
@@ -145,12 +149,14 @@ MetaTable *E_GetItemEffects()
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
 #define KEY_SORTORDER      "sortorder"
+#define KEY_TYPE           "type"
 #define KEY_UNDROPPABLE    "undroppable"
 #define KEY_USEEFFECT      "useeffect"
 #define KEY_USESOUND       "usesound"
 
 // Interned metatable keys
 static MetaKeyIndex keyAmount        (KEY_AMOUNT        );
+static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
 static MetaKeyIndex keyClass         (KEY_CLASS         );
 static MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
@@ -185,6 +191,48 @@ cfg_opt_t edf_armorfx_opts[] =
    CFG_END()
 };
 
+// Powerup fields
+cfg_opt_t edf_powerfx_opts[] =
+{
+   CFG_INT(KEY_DURATION,  -1, CFGF_NONE), // length of time to last
+   CFG_STR(KEY_TYPE,      "", CFGF_NONE), // name of powerup effect to give
+
+   CFG_FLAG(KEY_ADDITIVETIME, 0, CFGF_SIGNPREFIX), // if +, adds to current duration
+
+   // TODO: support HUBPOWER and PERSISTENTPOWER properties, etc.
+
+   CFG_END()
+};
+
+// Artifact subtype names
+static const char *artiTypeNames[NUMARTITYPES] =
+{
+   "NORMAL",   // an ordinary artifact
+   "AMMO",     // ammo type
+   "BACKPACK", // backpack token
+   "PUZZLE",   // puzzle item
+   "POWER",    // powerup token
+   "WEAPON",   // weapon token
+   "QUEST"     // quest token
+};
+
+//
+// E_artiTypeCB
+//
+// Value parsing callback for artifact type
+//
+static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
+{
+   int res;
+
+   if((res = E_StrToNumLinear(artiTypeNames, NUMARTITYPES, value)) == NUMARTITYPES)
+      res = ARTI_NORMAL;
+
+   *(int *)result = res;
+
+   return 0;
+}
+
 // Artifact fields
 cfg_opt_t edf_artifact_opts[] =
 {
@@ -201,6 +249,8 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_FLAG(KEY_KEEPDEPLETED,   0, CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
    CFG_FLAG(KEY_FULLAMOUNTONLY, 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
 
+   CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), // artifact sub-type
+   
    CFG_END()
 };
 
@@ -209,6 +259,7 @@ static const char *e_ItemSectionNames[NUMITEMFX] =
    "",
    EDF_SEC_HEALTHFX,
    EDF_SEC_ARMORFX,
+   EDF_SEC_POWERFX,
    EDF_SEC_ARTIFACT
 };
 

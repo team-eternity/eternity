@@ -963,8 +963,6 @@ void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop)
 //
 void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
 {
-   cfg_opt_t *opt = cfg->opts;
-
    table->clearTable();
 
    if(prototype)
@@ -973,8 +971,11 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
       table->setString("super", prototype->getKey());
    }
 
-   while(opt->type != CFGT_NONE)
+   for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
    {
+      if(cfg_size(cfg, opt->name) == 0)
+         continue;
+
       switch(opt->type)
       {
       case CFGT_INT:
@@ -992,7 +993,6 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
       default:
          break;
       }
-      ++opt;
    }
 }
 

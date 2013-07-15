@@ -225,6 +225,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_HEALTHFX,    edf_healthfx_opts, EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ARMORFX,     edf_armorfx_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_POWERFX,     edf_powerfx_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ARTIFACT,    edf_artifact_opts, EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),

@@ -61,10 +61,25 @@ enum
    ITEMFX_NONE,     // has no effect
    ITEMFX_HEALTH,   // an immediate-use health item
    ITEMFX_ARMOR,    // an immediate-use armor item
+   ITEMFX_POWER,    // a power-up giver
    ITEMFX_ARTIFACT, // an item that enters the inventory, for later use or tracking
    NUMITEMFX
 };
 typedef int itemeffecttype_t;
+
+// Artifact sub-types
+enum
+{
+   ARTI_NORMAL,   // an ordinary artifact
+   ARTI_AMMO,     // ammo type
+   ARTI_BACKPACK, // backpack token
+   ARTI_PUZZLE,   // puzzle item
+   ARTI_POWER,    // powerup token
+   ARTI_WEAPON,   // weapon token
+   ARTI_QUEST,    // quest token
+   NUMARTITYPES
+};
+typedef int artitype_t;
 
 //
 // Item Effect
@@ -127,15 +142,16 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 // Section Names
 #define EDF_SEC_HEALTHFX "healtheffect"
 #define EDF_SEC_ARMORFX  "armoreffect"
+#define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_ARTIFACT "artifact"
 #define EDF_SEC_PICKUPFX "pickupitem"
 
 // Section Defs
 extern cfg_opt_t edf_healthfx_opts[];
 extern cfg_opt_t edf_armorfx_opts[];
+extern cfg_opt_t edf_powerfx_opts[];
+extern cfg_opt_t edf_artifact_opts[];
 extern cfg_opt_t edf_pickup_opts[];
-extern cfg_opt_t edf_artifact_opts[];
-extern cfg_opt_t edf_artifact_opts[];
 
 // Functions
 void E_ProcessInventory(cfg_t *cfg);
