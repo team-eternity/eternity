@@ -132,9 +132,12 @@ MetaTable *E_GetItemEffects()
 #define KEY_ALWAYSPICKUP   "alwayspickup"
 #define KEY_AMOUNT         "amount"
 #define KEY_ARTIFACTTYPE   "artifacttype"
+#define KEY_BACKPACKAMOUNT "ammo.backpackamount"
+#define KEY_BACKPACKMAXAMT "ammo.backpackmaxamount"
 #define KEY_BONUS          "bonus"
 #define KEY_CLASS          "class"
 #define KEY_CLASSNAME      "classname"
+#define KEY_DROPAMOUNT     "ammo.dropamount"
 #define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
 #define KEY_ICON           "icon"
@@ -163,7 +166,11 @@ static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
 static MetaKeyIndex keyItemID        (KEY_ITEMID        );
 static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
 static MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
+static MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
 static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
+
+// Keys for specially treated artifact types
+static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
 
 // Health fields
 cfg_opt_t edf_healthfx_opts[] =
@@ -250,6 +257,15 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_FLAG(KEY_FULLAMOUNTONLY, 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
 
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), // artifact sub-type
+
+   // Sub-Type Specific Fields
+   // These only have meaning if the value of artifacttype is the expected value.
+   // You can set the keys on other artifacts, but they'll have no effect.
+
+   // Ammo sub-type
+   CFG_INT(KEY_BACKPACKAMOUNT, 0, CFGF_NONE),
+   CFG_INT(KEY_BACKPACKMAXAMT, 0, CFGF_NONE),
+   CFG_INT(KEY_DROPAMOUNT,     0, CFGF_NONE),
    
    CFG_END()
 };
@@ -289,6 +305,61 @@ static void E_processItemEffects(cfg_t *cfg)
 
          E_EDFLogPrintf("\t\t* Processed item '%s'\n", newEffect->getKey());
       }
+   }
+}
+
+//=============================================================================
+//
+// Ammo Types
+//
+// Solely for efficiency, a collection of all ammo type artifacts is kept.
+// This allows iterating over all ammo types without having hard-coded sets
+// of metakeys or scanning the entire artifacts table.
+//
+
+// The ammo types lookup provides fast lookup of every artifact type that is of
+// subtype ARTI_AMMO. This is for benefit of effects like the backpack, and
+// cheats that give all ammo.
+static PODCollection<itemeffect_t *> e_ammoTypesLookup;
+
+//
+// E_GetNumAmmoTypes
+//
+// Returns the total number of ammo types defined.
+//
+size_t E_GetNumAmmoTypes()
+{
+   return e_ammoTypesLookup.getLength();
+}
+
+//
+// E_AmmoTypeForIndex
+//
+// Get an ammo type for its index in the ammotypes lookup table.
+// There is no extra bounds check here, so an illegal request will exit the 
+// game engine. Use E_GetNumAmmoTypes to get the upper array bound.
+//
+itemeffect_t *E_AmmoTypeForIndex(size_t idx)
+{
+   return e_ammoTypesLookup[idx];
+}
+
+//
+// E_collectAmmoTypes
+//
+// Scan the effects table for all effects that are of type ARTI_AMMO and add
+// them to the ammo types lookup.
+//
+static void E_collectAmmoTypes()
+{
+   e_ammoTypesLookup.makeEmpty();
+
+   itemeffect_t *itr = NULL;
+
+   while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
+   {
+      if(itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_AMMO)
+         e_ammoTypesLookup.add(itr);
    }
 }
 
@@ -554,7 +625,7 @@ inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id
 //
 // E_InventorySlotForItem
 //
-// Find the slot bieng used by an item in the player's inventory, by pointer,
+// Find the slot being used by an item in the player's inventory, by pointer,
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
@@ -638,6 +709,48 @@ static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sor
 }
 
 //
+// E_PlayerHasBackpack
+//
+// Special lookup function to test if the player has a backpack.
+//
+bool E_PlayerHasBackpack(player_t *player)
+{
+   auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
+   inventoryslot_t *slot = NULL;
+
+   if(backpackItem && (slot = E_InventorySlotForItem(player, backpackItem)))
+      return (slot->amount > 0);
+   else
+      return false;
+}
+
+//
+// E_GetMaxAmountForArtifact
+//
+// Get the max amount of an artifact that can be carried. There are some
+// special cases for different token subtypes of artifact.
+//
+int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
+{
+   inventoryslot_t *backpackSlot = NULL;
+   int subType = artifact->getInt(keyArtifactType, ARTI_NORMAL);
+
+   switch(subType)
+   {
+   case ARTI_AMMO:
+      // ammo may increase the max amount if the player is carrying a backpack
+      if(E_PlayerHasBackpack(player))
+         return artifact->getInt(keyBackpackMaxAmt, 0);
+      break;
+   default:
+      break;
+   }
+
+   // The default case is to return the ordinary max amount.
+   return artifact->getInt(keyMaxAmount, 0);
+}
+
+//
 // E_GiveInventoryItem
 //
 // Place an artifact effect into the player's inventory, if it will fit.
@@ -653,7 +766,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
    
    inventoryindex_t newSlot = -1;
    int amountToGive = artifact->getInt(keyAmount,    0);
-   int maxAmount    = artifact->getInt(keyMaxAmount, 0);
+   int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
 
    // Does the player already have this item?
    inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
@@ -769,10 +882,13 @@ void E_ProcessInventory(cfg_t *cfg)
    // allocate player inventories
    E_allocatePlayerInventories();
 
+   // collect ammo types
+   E_collectAmmoTypes();
+
    // process pickup item bindings
    E_processPickupItems(cfg);
 
-   // TODO: MOAR
+   // TODO: MOAR?
 }
 
 // EOF

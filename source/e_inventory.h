@@ -81,6 +81,9 @@ enum
 };
 typedef int artitype_t;
 
+// Hard-coded names for specially treated artifact types
+#define ARTI_BACKPACKITEM "BackpackItem"
+
 //
 // Item Effect
 // 
@@ -109,6 +112,12 @@ itemeffect_t *E_ItemEffectForName(const char *name);
 // Get the item effects table
 MetaTable *E_GetItemEffects();
 
+// Get the number of ammo type artifacts defined.
+size_t E_GetNumAmmoTypes();
+
+// Get an ammo type for its index in the fast lookup table.
+itemeffect_t *E_AmmoTypeForIndex(size_t idx);
+
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
 
@@ -126,6 +135,12 @@ inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect);
 // Get the slot being used for a particular inventory item, by name, if one 
 // exists. Returns NULL if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
+
+// Special function to test for player backpack.
+bool E_PlayerHasBackpack(player_t *player);
+
+// Lookup the maximum amount a player can carry of a specific artifact type.
+int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact);
 
 // Place an item into a player's inventory. 
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact);
