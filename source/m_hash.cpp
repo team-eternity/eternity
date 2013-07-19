@@ -431,7 +431,7 @@ void MD5Hash::wrapUp(HashData *hash)
       processBlock(hash);
       
       // finish padding in the new block with zeroes
-      while(hash->messageidx <= 64 - 5)
+      while(hash->messageidx < 64)
          hash->message[hash->messageidx++] = 0;
    }
    else
@@ -440,18 +440,26 @@ void MD5Hash::wrapUp(HashData *hash)
       hash->message[hash->messageidx++] = 0x80;
       
       // .. and fill the rest with 0, up to the space needed for the msg length
-      while(hash->messageidx <= 64 - 5)
+      while(hash->messageidx < 64)
          hash->message[hash->messageidx++] = 0;
    }
    
    // fill the remainder of the final block with the encoded length
-   hash->message[60] = (uint8_t)((hash->messagelen      ) & 0xFF);
-   hash->message[61] = (uint8_t)((hash->messagelen >>  8) & 0xFF);
-   hash->message[62] = (uint8_t)((hash->messagelen >> 16) & 0xFF);
-   hash->message[63] = (uint8_t)((hash->messagelen >> 24) & 0xFF);
+   hash->message[56] = (uint8_t)((hash->messagelen      ) & 0xFF);
+   hash->message[57] = (uint8_t)((hash->messagelen >>  8) & 0xFF);
+   hash->message[58] = (uint8_t)((hash->messagelen >> 16) & 0xFF);
+   hash->message[59] = (uint8_t)((hash->messagelen >> 24) & 0xFF);
    
    // process the final padded block.
    processBlock(hash);
+
+   // byte swap digest words
+   for(int i = 0; i < 4; i++)
+   {
+      uint32_t word = hash->digest[i];
+      hash->digest[i] = (((word << 8 ) | (word >> 24)) & 0x00ff00ff) |
+                        (((word << 24) | (word >> 8 )) & 0xff00ff00);
+   }
 }
 
 
