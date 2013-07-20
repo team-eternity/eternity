@@ -217,6 +217,7 @@ static const char *artiTypeNames[NUMARTITYPES] =
    "NORMAL",   // an ordinary artifact
    "AMMO",     // ammo type
    "BACKPACK", // backpack token
+   "KEY",      // key
    "PUZZLE",   // puzzle item
    "POWER",    // powerup token
    "WEAPON",   // weapon token
@@ -243,8 +244,8 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
 // Artifact fields
 cfg_opt_t edf_artifact_opts[] =
 {
-   CFG_INT(KEY_AMOUNT,         0,  CFGF_NONE), // amount gained with one pickup
-   CFG_INT(KEY_MAXAMOUNT,      0,  CFGF_NONE), // max amount that can be carried in inventory
+   CFG_INT(KEY_AMOUNT,         1,  CFGF_NONE), // amount gained with one pickup
+   CFG_INT(KEY_MAXAMOUNT,      1,  CFGF_NONE), // max amount that can be carried in inventory
    CFG_INT(KEY_INTERHUBAMOUNT, 0,  CFGF_NONE), // amount carryable between hubs (or levels)
    CFG_INT(KEY_SORTORDER,      0,  CFGF_NONE), // relative ordering within inventory
    CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
@@ -360,6 +361,58 @@ static void E_collectAmmoTypes()
    {
       if(itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_AMMO)
          e_ammoTypesLookup.add(itr);
+   }
+}
+
+//=============================================================================
+//
+// Keys
+//
+// For similar reasons as for ammo, we keep a direct lookup table for artifacts
+// of "key" type, so we can look them all up quickly when checking for locks,
+// etc.
+//
+
+static PODCollection<itemeffect_t *> e_keysLookup;
+
+//
+// E_GetNumKeyItems
+//
+// Returns the total number of keys defined.
+//
+size_t E_GetNumKeyItems()
+{
+   return e_keysLookup.getLength();
+}
+
+//
+// E_KeyItemForIndex
+//
+// Get a key type for its index in the ammotypes lookup table.
+// There is no extra bounds check here, so an illegal request will exit the 
+// game engine. Use E_GetNumKeyItems to get the upper array bound.
+//
+itemeffect_t *E_KeyItemForIndex(size_t idx)
+{
+   return e_keysLookup[idx];
+}
+
+//
+// E_collectKeyItems
+//
+// Scan the effects table for all effects that are of type ARTI_KEY and add
+// them to the keys lookup.
+//
+static void E_collectKeyItems()
+{
+   e_keysLookup.makeEmpty();
+
+   itemeffect_t *itr = NULL;
+
+   while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
+   {
+      if(itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_KEY)
+         e_keysLookup.add(itr);
    }
 }
 
@@ -882,8 +935,9 @@ void E_ProcessInventory(cfg_t *cfg)
    // allocate player inventories
    E_allocatePlayerInventories();
 
-   // collect ammo types
+   // collect special artifact type definitions
    E_collectAmmoTypes();
+   E_collectKeyItems();
 
    // process pickup item bindings
    E_processPickupItems(cfg);

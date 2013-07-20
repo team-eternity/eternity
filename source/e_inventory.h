@@ -73,6 +73,7 @@ enum
    ARTI_NORMAL,   // an ordinary artifact
    ARTI_AMMO,     // ammo type
    ARTI_BACKPACK, // backpack token
+   ARTI_KEY,      // key
    ARTI_PUZZLE,   // puzzle item
    ARTI_POWER,    // powerup token
    ARTI_WEAPON,   // weapon token
@@ -117,6 +118,12 @@ size_t E_GetNumAmmoTypes();
 
 // Get an ammo type for its index in the fast lookup table.
 itemeffect_t *E_AmmoTypeForIndex(size_t idx);
+
+// Get the number of key type artifacts defined.
+size_t E_GetNumKeyItems();
+
+// Get a key item for its index in the fast lookup table.
+itemeffect_t *E_KeyItemForIndex(size_t idx);
 
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);

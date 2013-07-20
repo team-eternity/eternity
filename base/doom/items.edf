@@ -11,3 +11,37 @@ healtheffect TestEffect1
    lowmessage: "$GOTMEDINEED";
 }
 
+//=============================================================================
+//
+// Keys
+//
+
+artifact RedCard
+{
+   artifacttype: Key;
+}
+
+artifact RedSkull
+{
+   artifacttype: Key;
+}
+
+artifact YellowCard
+{
+   artifacttype: Key;
+}
+
+artifact YellowSkull
+{
+   artifacttype: Key;
+}
+
+artifact BlueCard
+{
+   artifacttype: Key;
+}
+
+artifact BlueSkull
+{
+   artifacttype: Key;
+}

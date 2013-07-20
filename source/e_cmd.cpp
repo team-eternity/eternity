@@ -232,6 +232,23 @@ CONSOLE_COMMAND(e_dumpitemeffect, 0)
 }
 
 //
+// e_listkeyitems
+//
+// Lists all key-type artifact definitions.
+//
+CONSOLE_COMMAND(e_listkeyitems, 0)
+{
+   size_t numKeys = E_GetNumKeyItems();
+
+   C_Printf(FC_HI "Keys:\n");
+   for(size_t i = 0; i < numKeys; i++)
+   {
+      auto effect = E_KeyItemForIndex(i);
+      C_Printf(" %s\n", effect->getKey());
+   }
+}
+
+//
 // e_dumpstate
 //
 // Displays information on one EDF state definition.
