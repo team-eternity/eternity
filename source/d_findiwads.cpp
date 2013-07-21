@@ -425,6 +425,7 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
    // Default Linux locations
    paths.addNew() = "/usr/local/share/games/doom";
    paths.addNew() = "/usr/share/games/doom";
+   paths.addNew() = "/usr/share/doom";
 #endif
 
    // add base/game paths
