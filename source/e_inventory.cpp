@@ -36,11 +36,14 @@
 #include "e_lib.h"
 #include "e_sprite.h"
 
+#include "d_dehtbl.h"
 #include "d_player.h"
 #include "doomstat.h"
+#include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
 #include "metaapi.h"
+#include "s_sound.h"
 
 //=============================================================================
 //
@@ -414,6 +417,357 @@ static void E_collectKeyItems()
       if(itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_KEY)
          e_keysLookup.add(itr);
    }
+}
+
+//=============================================================================
+//
+// Lockdefs
+//
+
+struct anykey_t
+{
+   unsigned int numKeys;
+   itemeffect_t **keys;
+};
+
+struct lockdef_t
+{
+   DLListItem<lockdef_t> links; // list links
+   int id;                      // lock ID, for ACS and internal use
+
+   // Keys which are required to open the lock. If this list is empty, and
+   // there are no "any" keys, then possession of any artifact of the "Key"
+   // subtype is sufficient to open the lock.
+   unsigned int numRequiredKeys;
+   itemeffect_t **requiredKeys;
+
+   // Groups of keys in which at least one key is needed in each group to
+   // open the lock - this forms a two-dimensional grid of lists.
+   unsigned int numAnyLists; // number of anykey_t structures
+   unsigned int numAnyKeys;  // total number of keys in the structures
+   anykey_t *anyKeys;
+
+   char *message;        // message to give if attempt to open fails
+   char *remoteMessage;  // message to give if remote attempt to open fails
+   char *lockedSound;    // name of sound to play on failure
+};
+
+// Lockdefs hash, by ID number
+static EHashTable<lockdef_t, EIntHashKey, &lockdef_t::id, &lockdef_t::links> e_lockDefs;
+
+#define ITEM_LOCKDEF_REQUIRE  "require"
+#define ITEM_LOCKDEF_ANY      "any"
+#define ITEM_LOCKDEF_MESSAGE  "message"
+#define ITEM_LOCKDEF_REMOTE   "remotemessage"
+#define ITEM_LOCKDEF_ANY_KEYS "keys"
+#define ITEM_LOCKDEF_LOCKSND  "lockedsound"
+
+// "any" section options
+static cfg_opt_t any_opts[] =
+{
+   CFG_STR(ITEM_LOCKDEF_ANY_KEYS, "", CFGF_LIST),
+   CFG_END()
+};
+
+// Lockdef section options
+cfg_opt_t edf_lockdef_opts[] =
+{
+   CFG_STR(ITEM_LOCKDEF_REQUIRE, "",       CFGF_MULTI),
+   CFG_SEC(ITEM_LOCKDEF_ANY,     any_opts, CFGF_MULTI),
+   CFG_STR(ITEM_LOCKDEF_MESSAGE, NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REMOTE,  NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_LOCKSND, NULL,     CFGF_NONE ),
+   CFG_END()
+};
+
+//
+// E_LockDefForID
+//
+// Look up a lockdef by its id number.
+//
+static lockdef_t *E_LockDefForID(int id)
+{
+   return e_lockDefs.objectForKey(id);
+}
+
+//
+// E_freeLockDefData
+//
+// Free the data in a lockdef and return it to its default state.
+//
+static void E_freeLockDefData(lockdef_t *lockdef)
+{
+   if(lockdef->requiredKeys)
+   {
+      efree(lockdef->requiredKeys);
+      lockdef->requiredKeys = NULL;
+   }
+   lockdef->numRequiredKeys = 0;
+
+   if(lockdef->anyKeys)
+   {
+      for(unsigned int i = 0; i < lockdef->numAnyLists; i++)
+      {
+         anykey_t *any = &lockdef->anyKeys[i];
+
+         if(any->keys)
+            efree(any->keys);
+      }
+      efree(lockdef->anyKeys);
+      lockdef->anyKeys = NULL;
+   }
+   lockdef->numAnyLists = 0;
+   lockdef->numAnyKeys  = 0;
+
+   if(lockdef->message)
+   {
+      efree(lockdef->message);
+      lockdef->message = NULL;
+   }
+   if(lockdef->remoteMessage)
+   {
+      efree(lockdef->remoteMessage);
+      lockdef->remoteMessage = NULL;
+   }
+   if(lockdef->lockedSound)
+   {
+      efree(lockdef->lockedSound);
+      lockdef->lockedSound = NULL;
+   }
+}
+
+//
+// E_processKeyList
+//
+// Resolve a list of key names into a set of itemeffect pointers.
+//
+static void E_processKeyList(itemeffect_t **effects, unsigned int numKeys,
+                             cfg_t *sec, const char *fieldName)
+{
+   for(unsigned int i = 0; i < numKeys; i++)
+   {
+      const char   *name = cfg_getnstr(sec, fieldName, i);
+      itemeffect_t *fx   = E_ItemEffectForName(name);
+
+      if(!fx || fx->getInt(keyClass, ITEMFX_NONE) != ITEMFX_ARTIFACT)
+         E_EDFLoggedWarning(2, "Warning: lockdef key '%s' is not an artifact\n", name);
+
+      effects[i] = fx;
+   }
+}
+
+//
+// E_processLockDef
+//
+// Process a single lock definition.
+//
+static void E_processLockDef(cfg_t *lock)
+{
+   lockdef_t *lockdef = NULL;
+
+   // the ID of the lockdef is the title of the section; it will be interpreted
+   // as an integer
+   int id = atoi(cfg_title(lock));
+
+   // ID must be greater than 0
+   if(id <= 0)
+   {
+      E_EDFLoggedWarning(2, "Warning: lockdef with invalid ID %d has been ignored\n", id);
+      return;
+   }
+
+   // do we have this lock already?
+   if((lockdef = E_LockDefForID(id)))
+   {
+      // free the existing data for this lock
+      E_freeLockDefData(lockdef);
+   }
+   else
+   {
+      // create a new lockdef and hash it by key
+      lockdef = estructalloc(lockdef_t, 1);
+      lockdef->id = id;
+      e_lockDefs.addObject(lockdef);
+   }
+
+   // process required key definitions
+   if((lockdef->numRequiredKeys = cfg_size(lock, ITEM_LOCKDEF_REQUIRE)))
+   {
+      lockdef->requiredKeys = estructalloc(itemeffect_t *, lockdef->numRequiredKeys);
+      E_processKeyList(lockdef->requiredKeys, lockdef->numRequiredKeys, 
+                       lock, ITEM_LOCKDEF_REQUIRE);
+   }
+
+   // process "any" key lists
+   if((lockdef->numAnyLists = cfg_size(lock, ITEM_LOCKDEF_ANY)))
+   {
+      lockdef->anyKeys = estructalloc(anykey_t, lockdef->numAnyLists);
+      for(unsigned int i = 0; i < lockdef->numAnyLists; i++)
+      {
+         cfg_t    *anySec    = cfg_getnsec(lock, ITEM_LOCKDEF_ANY, i);
+         anykey_t *curAnyKey = &lockdef->anyKeys[i];
+
+         if((curAnyKey->numKeys = cfg_size(anySec, ITEM_LOCKDEF_ANY_KEYS)))
+         {
+            curAnyKey->keys = estructalloc(itemeffect_t *, curAnyKey->numKeys);
+            E_processKeyList(curAnyKey->keys, curAnyKey->numKeys, 
+                             anySec, ITEM_LOCKDEF_ANY_KEYS);
+            lockdef->numAnyKeys += curAnyKey->numKeys;
+         }
+      }
+   }
+
+   // process messages and sounds
+   const char *tempstr;
+   if((tempstr = cfg_getstr(lock, ITEM_LOCKDEF_MESSAGE))) // message
+      lockdef->message = estrdup(tempstr);
+   if((tempstr = cfg_getstr(lock, ITEM_LOCKDEF_REMOTE)))  // remote message
+      lockdef->remoteMessage = estrdup(tempstr);
+   if((tempstr = cfg_getstr(lock, ITEM_LOCKDEF_LOCKSND))) // locked sound
+      lockdef->lockedSound = estrdup(tempstr);
+}
+
+//
+// E_processLockDefs
+//
+// Process all lock definitions.
+//
+static void E_processLockDefs(cfg_t *cfg)
+{
+   unsigned int numLockDefs = cfg_size(cfg, EDF_SEC_LOCKDEF);
+
+   E_EDFLogPrintf("\t* Processing lockdefs (%u defined)\n", numLockDefs);
+
+   for(unsigned int i = 0; i < numLockDefs; i++)
+      E_processLockDef(cfg_getnsec(cfg, EDF_SEC_LOCKDEF, i));
+}
+
+//
+// E_failPlayerUnlock
+//
+// Routine to call when unlocking a lock has failed.
+//
+static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
+{
+   const char *msg = NULL;
+
+   if(remote && lock->remoteMessage)
+   {
+      // if remote and have a remote message, give remote message
+      msg = lock->remoteMessage;
+      if(msg[0] == '$')
+         msg = DEH_String(msg + 1);
+   }
+   else if(lock->message)
+   {
+      // otherwise, give normal message
+      msg = lock->message;
+      if(msg[0] == '$')
+         msg = DEH_String(msg + 1);
+   }
+   if(msg)
+      player_printf(player, "%s", msg);
+
+   // play sound if one is specified
+   S_StartSoundName(player->mo, lock->lockedSound);
+}
+
+//
+// E_PlayerCanUnlock
+//
+// Check if a player has the keys necessary to unlock an object that is
+// protected by a lock with the given key.
+//
+bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
+{
+   lockdef_t *lock;
+
+   if(!(lock = E_LockDefForID(lockID)))
+      return true; // there's no such lock, so you can open it.
+
+   // does this lock have required keys?
+   if(lock->numRequiredKeys > 0)
+   {
+      unsigned int numRequiredHave = 0;
+
+      for(unsigned int i = 0; i < lock->numRequiredKeys; i++)
+      {
+         inventoryslot_t *slot;
+         itemeffect_t    *key = lock->requiredKeys[i];
+
+         if(!key ||
+            ((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0))
+            ++numRequiredHave;
+      }
+
+      // check that the full number of required keys is present
+      if(numRequiredHave < lock->numRequiredKeys)
+      {
+         E_failPlayerUnlock(player, lock, remote);
+         return false;
+      }
+   }
+
+   // does this lock have "any" key sets?
+   if(lock->numAnyKeys > 0)
+   {
+      unsigned int numAnyHave = 0;
+
+      for(unsigned int i = 0; i < lock->numAnyLists; i++)
+      {
+         anykey_t *any = &lock->anyKeys[i];
+
+         if(!any->numKeys)
+            continue;
+
+         // we need at least one key in this set
+         for(unsigned int keynum = 0; keynum < any->numKeys; keynum++)
+         {
+            inventoryslot_t *slot;
+            itemeffect_t    *key = any->keys[keynum];
+
+            if(!key ||
+               ((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0))
+            {
+               numAnyHave += any->numKeys; // credit for full set
+               break; // can break out of inner loop, player has a key in this set
+            }
+         }
+      }
+
+      // missing one or more categories of "any" list keys?
+      if(numAnyHave < lock->numAnyKeys)
+      {
+         E_failPlayerUnlock(player, lock, remote);
+         return false;
+      }
+   }
+
+   // if a lockdef has neither required nor "any" keys, then it opens if the
+   // player possesses at least one item of class "Key"
+   if(!lock->numRequiredKeys && !lock->numAnyKeys)
+   {
+      int numKeys = 0;
+
+      for(size_t i = 0; i < E_GetNumKeyItems(); i++)
+      {
+         inventoryslot_t *slot;
+         itemeffect_t    *key = E_KeyItemForIndex(i);
+
+         if((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0)
+            ++numKeys;
+      }
+
+      // if no keys are possessed, fail the lock
+      if(!numKeys)
+      {
+         E_failPlayerUnlock(player, lock, remote);
+         return false;
+      }
+   }
+
+   // you can unlock it!
+   return true;
 }
 
 //=============================================================================

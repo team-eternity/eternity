@@ -125,6 +125,9 @@ size_t E_GetNumKeyItems();
 // Get a key item for its index in the fast lookup table.
 itemeffect_t *E_KeyItemForIndex(size_t idx);
 
+// Check if a player is able to unlock a lock, by its lock ID.
+bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote);
+
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
 
@@ -167,6 +170,7 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 #define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_ARTIFACT "artifact"
 #define EDF_SEC_PICKUPFX "pickupitem"
+#define EDF_SEC_LOCKDEF  "lockdef"
 
 // Section Defs
 extern cfg_opt_t edf_healthfx_opts[];
@@ -174,6 +178,7 @@ extern cfg_opt_t edf_armorfx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
 extern cfg_opt_t edf_pickup_opts[];
+extern cfg_opt_t edf_lockdef_opts[];
 
 // Functions
 void E_ProcessInventory(cfg_t *cfg);

@@ -1071,7 +1071,7 @@ static void D_SetUserPath()
    }
 
    // check OS-specific home dir
-   #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    if(res != BASE_ISGOOD && (s = getenv("HOME")))
    {
       qstring tmp;
@@ -1091,7 +1091,7 @@ static void D_SetUserPath()
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_HOMEDIR;
    }
-   #endif
+#endif
 
    // check exe dir
    if(res != BASE_ISGOOD)
