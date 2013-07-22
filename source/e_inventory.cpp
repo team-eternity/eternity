@@ -1174,7 +1174,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
       return false;
    
    inventoryindex_t newSlot = -1;
-   int amountToGive = artifact->getInt(keyAmount,    0);
+   int amountToGive = artifact->getInt(keyAmount, 0);
    int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
 
    // Does the player already have this item?
