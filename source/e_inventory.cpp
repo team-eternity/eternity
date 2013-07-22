@@ -625,6 +625,8 @@ static void E_processLockDef(cfg_t *lock)
       lockdef->remoteMessage = estrdup(tempstr);
    if((tempstr = cfg_getstr(lock, ITEM_LOCKDEF_LOCKSND))) // locked sound
       lockdef->lockedSound = estrdup(tempstr);
+
+   E_EDFLogPrintf("\t\tDefined lockdef %d\n", lockdef->id);
 }
 
 //
@@ -1295,6 +1297,9 @@ void E_ProcessInventory(cfg_t *cfg)
 
    // process pickup item bindings
    E_processPickupItems(cfg);
+
+   // process lockdefs
+   E_processLockDefs(cfg);
 
    // TODO: MOAR?
 }

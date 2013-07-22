@@ -45,3 +45,166 @@ artifact BlueSkull
 {
    artifacttype: Key;
 }
+
+//=============================================================================
+//
+// DOOM Lockdefs
+//
+
+ifgametype("DOOM")
+
+// Red Card lock
+lockdef 1
+{
+   require: RedCard;
+   
+   message:       "$PD_REDC";
+   remotemessage: "You need a red card to activate this object";
+}
+
+// Blue Card lock
+lockdef 2
+{
+   require: BlueCard;
+   
+   message:       "$PD_BLUEC";
+   remotemessage: "You need a blue card to activate this object";
+}
+
+// YellowCard lock
+lockdef 3
+{
+   require: YellowCard
+   
+   message:       "$PD_YELLOWC";
+   remotemessage: "You need a yellow card to activate this object";
+}
+
+// Red Skull lock
+lockdef 4
+{
+   require: RedSkull;
+   
+   message:       "$PD_REDS";
+   remotemessage: "You need a red skull to activate this object";
+}
+
+// Blue Skull lock
+lockdef 5
+{
+   require: BlueSkull;
+   
+   message:       "$PD_BLUES";
+   remotemessage: "You need a blue skull to activate this object";
+}
+
+// Yellow Skull lock
+lockdef 6
+{
+   require: YellowSkull;
+   
+   message:       "$PD_YELLOWS";
+   remotemessage: "You need a yellow skull to activate this object";
+}
+
+// Red Card or Skull lock
+lockdef 129
+{
+   any { keys: RedCard, RedSkull }
+   
+   message:       "$PD_REDK";
+   remotemessage: "$PD_REDO";
+}
+
+// Blue Card or Skull lock
+lockdef 130
+{
+   any { keys: BlueCard, BlueSkull }
+   
+   message:       "$PD_BLUEK";
+   remotemessage: "$PD_BLUEO";
+}
+
+// Yellow Card or Skull lock
+lockdef 131
+{
+   any { keys: YellowCard, YellowSkull }
+   
+   message:       "$PD_YELLOWK";
+   remotemessage: "$PD_YELLOWO";
+}
+
+// Copy of Red Card or Skull lock, for ZDoom comp
+lockdef 132
+{
+   any { keys: RedCard, RedSkull }
+   
+   message:      "$PD_REDK";
+   remotemessage;"$PD_REDO";
+}
+
+// Copy of Blue Card or Skull lock, for ZDoom comp
+lockdef 133
+{
+   any { keys: BlueCard, BlueSkull }
+   
+   message:       "$PD_BLUEK";
+   remotemessage: "$PD_BLUEO";
+}
+
+// Copy of Yellow Card or Skull lock, for ZDoom comp
+lockdef 134
+{
+   any { keys: YellowCard, YellowSkull }
+   
+   message:       "$PD_YELLOWK";
+   remotemessage: "$PD_YELLOWO";
+}
+
+// Any key lock
+lockdef 100
+{
+   message:       "$PD_ANY";
+   remotemessage: "Any key will activate this object";
+}
+
+// Copy of Any key lock, for ZDoom comp
+lockdef 228
+{
+   message:       "$PD_ANY";
+   remotemessage: "Any key will activate this object";
+}
+
+//
+// BOOM three-key lock
+//
+// NB: This lock is subject to a compatibility hack when MBF demos are being
+// played back; in that event, the YellowSkull's presence in the player's
+// inventory will be inverted before the lock is activated, and then restored
+// afterward.
+//
+lockdef 229
+{
+   any { keys: BlueCard,   BlueSkull   }
+   any { keys: YellowCard, YellowSkull }
+   any { keys: RedCard,    RedSkull    }
+   
+   message;       "$PD_ALL3";
+   remotemessage: "You need all 3 keys to activate this object";
+}
+
+// BOOM six-key lock
+lockdef 101
+{
+   require: BlueCard;
+   require: BlueSkull;
+   require: YellowCard;
+   require: YellowSkull;
+   require: RedCard;
+   require: RedSkull;
+   
+   message:       "$PD_ALL6";
+   remotemessage: "You need all 6 keys to activate this object";
+}
+
+endif()
