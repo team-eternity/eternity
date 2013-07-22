@@ -1072,24 +1072,35 @@ static void D_SetUserPath()
 
    // check OS-specific home dir
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
-   if(res != BASE_ISGOOD && (s = getenv("HOME")))
+   if(res != BASE_ISGOOD)
    {
       qstring tmp;
 
-      // Under Linux (and POSIX generally) use ~/.config/eternity/user.
-      userdir = s;
-
-      // Try to create this directory and populate it with needed directories.
-      I_CreateDirectory(userdir.pathConcatenate("/.config"));
-      I_CreateDirectory(userdir.pathConcatenate("/eternity"));
-      if(I_CreateDirectory(userdir.pathConcatenate("/user")))
+      // Under Linux (and POSIX generally) use $XDG_CONFIG_HOME/eternity/user.
+      if((s = getenv("XDG_CONFIG_HOME")) && *s)
       {
-         for(size_t i = 0; i != earrlen(userdirs); ++i)
-            I_CreateDirectory((tmp = userdir).pathConcatenate(userdirs[i]));
+         userdir = s;
+      }
+      // But fall back to $HOME/.config/eternity/user.
+      else if((s = getenv("HOME")))
+      {
+         userdir = s;
+         I_CreateDirectory(userdir.pathConcatenate("/.config"));
       }
 
-      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
-         source = BASE_HOMEDIR;
+      if(s)
+      {
+         // Try to create this directory and populate it with needed directories.
+         I_CreateDirectory(userdir.pathConcatenate("/eternity"));
+         if(I_CreateDirectory(userdir.pathConcatenate("/user")))
+         {
+            for(size_t i = 0; i != earrlen(userdirs); ++i)
+               I_CreateDirectory((tmp = userdir).pathConcatenate(userdirs[i]));
+         }
+
+         if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+            source = BASE_HOMEDIR;
+      }
    }
 #endif
 
