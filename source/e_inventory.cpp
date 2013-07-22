@@ -1091,8 +1091,8 @@ static inventoryindex_t E_findInventorySlot(inventory_t inventory)
 //
 static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sortorder)
 {
-   inventory_t inventory = player->inventory;
-   inventoryslot_t tempSlot = inventory[newIndex];
+   inventory_t     inventory = player->inventory;
+   inventoryslot_t tempSlot  = inventory[newIndex];
 
    for(inventoryindex_t idx = 0; idx < newIndex; idx++)
    {

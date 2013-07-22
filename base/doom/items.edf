@@ -74,7 +74,7 @@ lockdef 2
 // YellowCard lock
 lockdef 3
 {
-   require: YellowCard
+   require: YellowCard;
    
    message:       "$PD_YELLOWC";
    remotemessage: "You need a yellow card to activate this object";
