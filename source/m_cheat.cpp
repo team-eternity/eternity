@@ -400,18 +400,8 @@ static void cheat_fa(const void *arg)
 
 static void cheat_k(const void *arg)
 {
-   int i, k = 0;
-
-   for(i = 0; i < NUMCARDS; i++)
-   {
-      if(!plyr->cards[i])     // only print message if at least one key added
-      {                       // however, caller may overwrite message anyway
-         plyr->cards[i] = true;
-         k++; // sf: fix multiple 'keys added' messages
-      }
-   }
-
-   if(k)
+   // sf: fix multiple 'keys added' messages
+   if(E_GiveAllKeys(plyr))
       doom_printf("Keys Added");
 }
 
@@ -601,12 +591,39 @@ static void cheat_keyx(const void *arg)
    doom_printf("Card, Skull");        // Ty 03/27/98 - *not* externalized
 }
 
+static const char *artifactForKeyxx[NUMCARDS] =
+{
+   ARTI_BLUECARD,
+   ARTI_YELLOWCARD,
+   ARTI_REDCARD,
+   ARTI_BLUESKULL,
+   ARTI_YELLOWSKULL,
+   ARTI_REDSKULL
+};
+
 static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
+   const char *msg = NULL;
 
-   doom_printf((plyr->cards[key] = !plyr->cards[key]) ? 
-     "Key Added" : "Key Removed");  // Ty 03/27/98 - *not* externalized
+   itemeffect_t    *fx   = E_ItemEffectForName(artifactForKeyxx[key]);
+   inventoryslot_t *slot = E_InventorySlotForItem(plyr, fx);
+
+   if(!fx)
+      return;
+
+   if(!slot || slot->amount == 0)
+   {
+      E_GiveInventoryItem(plyr, fx);
+      msg = "Key Added"; // Ty 03/27/98 - *not* externalized
+   }
+   else
+   {
+      E_RemoveInventoryItem(plyr, fx, 1);
+      msg = "Key Removed";
+   }
+
+   doom_printf(msg);
 }
 
 // killough 2/16/98: generalized weapon cheats

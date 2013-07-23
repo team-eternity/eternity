@@ -169,6 +169,9 @@ ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
+// Lockdef ID for Special
+int EV_LockDefIDForSpecial(int special);
+
 // Testing
 bool EV_IsParamLineSpec(int special);
 

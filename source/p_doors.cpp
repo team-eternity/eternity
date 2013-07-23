@@ -328,51 +328,17 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 // and the thing that activated the line
 // Returns true if a thinker created
 //
-int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
+int EV_DoLockedDoor(line_t *line, vldoor_e type, int lockID, Mobj *thing)
 {
    player_t *p = thing->player;
    
    if(!p)          // only players can open locked doors
       return 0;
 
-   // check type of linedef, and if key is possessed to open it
-   switch(line->special)
-   {
-   case 99:  // Blue Lock
-   case 133:
-      if(!p->cards[it_bluecard] && !p->cards[it_blueskull])
-      {
-         // Ty 03/27/98 - externalized
-         player_printf(p, "%s", DEH_String("PD_BLUEO"));
-         S_StartSound(p->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
-         return 0;
-      }
-      break;
-
-   case 134: // Red Lock
-   case 135:
-      if(!p->cards[it_redcard] && !p->cards[it_redskull])
-      {
-         const char *msg = (GameModeInfo->type == Game_Heretic) 
-                           ? DEH_String("HPD_GREENO") : DEH_String("PD_REDO");
-         player_printf(p, "%s", msg);  // Ty 03/27/98 - externalized
-         S_StartSound(p->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
-         return 0;
-      }
-      break;
-
-   case 136: // Yellow Lock
-   case 137:
-      if (!p->cards[it_yellowcard] && !p->cards[it_yellowskull])
-      {
-         // Ty 03/27/98 - externalized
-         player_printf(p, "%s", DEH_String("PD_YELLOWO"));
-         S_StartSound(p->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
-         return 0;
-      }
-      break;
-   }
-
+   // check if key is possessed to open it
+   if(!E_PlayerCanUnlock(p, lockID, true))
+      return 0;
+   
    // got the key, so open the door
    return EV_DoDoor(line,type);
 }
@@ -478,60 +444,20 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 //
 // jff 2/12/98 added int return value, fixed all returns
 //
-int EV_VerticalDoor(line_t *line, Mobj *thing)
+int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID)
 {
-   player_t *player;
+   player_t *player = thing->player;
    sector_t *sec;
    VerticalDoorThinker *door;
    SectorThinker       *secThinker;
    
-   //  Check for locks
-   player = thing->player;
-   
-   switch(line->special)
+   // Check for locks
+   if(lockID)
    {
-   case 26: // Blue Lock
-   case 32:
       if(!player)
          return 0;
-      if(!player->cards[it_bluecard] && !player->cards[it_blueskull])
-      {
-         // Ty 03/27/98 - externalized
-         player_printf(player, "%s", DEH_String("PD_BLUEK"));
-         S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
+      if(!E_PlayerCanUnlock(player, lockID, false))
          return 0;
-      }
-      break;
-
-   case 27: // Yellow Lock
-   case 34:
-      if( !player )
-         return 0;
-      if(!player->cards[it_yellowcard] && !player->cards[it_yellowskull])
-      {
-         // Ty 03/27/98 - externalized
-         player_printf(player, "%s", DEH_String("PD_YELLOWK"));
-         S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
-         return 0;
-      }
-      break;
-
-   case 28: // Red Lock
-   case 33:
-      if( !player )
-         return 0;
-      if(!player->cards[it_redcard] && !player->cards[it_redskull])
-      {
-         const char *msg = (GameModeInfo->type == Game_Heretic)
-                           ? DEH_String("HPD_GREENK") : DEH_String("PD_REDK");
-         player_printf(player, "%s", msg);  // Ty 03/27/98 - externalized
-         S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
-         return 0;
-      }
-      break;
-
-   default:
-      break;
    }
 
    // if the wrong side of door is pushed, give oof sound

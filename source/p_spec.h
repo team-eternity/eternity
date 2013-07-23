@@ -364,6 +364,7 @@ typedef enum
    BSkull,
    YSkull,
    AllKeys,
+   MaxKeyKind
 } keykind_e;
 
 //////////////////////////////////////////////////////////////////
@@ -1222,8 +1223,6 @@ int P_FindMinSurroundingLight(sector_t *sector, int max);
 
 sector_t *getNextSector(line_t *line, sector_t *sec);
 
-bool P_CanUnlockGenDoor(line_t *line, player_t *player);
-
 int P_SectorActive(special_e t, sector_t *s);
 
 bool P_IsSecret(sector_t *sec);
@@ -1267,11 +1266,11 @@ void P_ChangeCeilingTex(const char *name, int tag);
 
 // p_doors
 
-int EV_VerticalDoor(line_t *line, Mobj *thing);
+int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID);
 
 int EV_DoDoor(line_t *line, vldoor_e type);
 
-int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing);
+int EV_DoLockedDoor(line_t *line, vldoor_e type, int lockID, Mobj *thing);
 
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 

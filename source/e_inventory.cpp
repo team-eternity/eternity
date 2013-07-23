@@ -37,12 +37,14 @@
 #include "e_sprite.h"
 
 #include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_player.h"
 #include "doomstat.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
 #include "metaapi.h"
+#include "p_skin.h"
 #include "s_sound.h"
 
 //=============================================================================
@@ -166,6 +168,7 @@ static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
 static MetaKeyIndex keyClass         (KEY_CLASS         );
 static MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
+static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
 static MetaKeyIndex keyItemID        (KEY_ITEMID        );
 static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
 static MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
@@ -247,10 +250,10 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
 // Artifact fields
 cfg_opt_t edf_artifact_opts[] =
 {
-   CFG_INT(KEY_AMOUNT,         1,  CFGF_NONE), // amount gained with one pickup
-   CFG_INT(KEY_MAXAMOUNT,      1,  CFGF_NONE), // max amount that can be carried in inventory
-   CFG_INT(KEY_INTERHUBAMOUNT, 0,  CFGF_NONE), // amount carryable between hubs (or levels)
-   CFG_INT(KEY_SORTORDER,      0,  CFGF_NONE), // relative ordering within inventory
+   CFG_INT(KEY_AMOUNT,          1, CFGF_NONE), // amount gained with one pickup
+   CFG_INT(KEY_MAXAMOUNT,       1, CFGF_NONE), // max amount that can be carried in inventory
+   CFG_INT(KEY_INTERHUBAMOUNT,  0, CFGF_NONE), // amount carryable between hubs (or levels)
+   CFG_INT(KEY_SORTORDER,       0, CFGF_NONE), // relative ordering within inventory
    CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
    CFG_STR(KEY_USESOUND,       "", CFGF_NONE), // sound to play when used
    CFG_STR(KEY_USEEFFECT,      "", CFGF_NONE), // effect to activate when used
@@ -670,8 +673,11 @@ static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
    if(msg)
       player_printf(player, "%s", msg);
 
-   // play sound if one is specified
-   S_StartSoundName(player->mo, lock->lockedSound);
+   // play sound if specified; if not, use skin default
+   if(lock->lockedSound)
+      S_StartSoundName(player->mo, lock->lockedSound);
+   else
+      S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]);
 }
 
 //
@@ -697,8 +703,7 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
          inventoryslot_t *slot;
          itemeffect_t    *key = lock->requiredKeys[i];
 
-         if(!key ||
-            ((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0))
+         if((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0)
             ++numRequiredHave;
       }
 
@@ -728,8 +733,7 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
             inventoryslot_t *slot;
             itemeffect_t    *key = any->keys[keynum];
 
-            if(!key ||
-               ((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0))
+            if((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0)
             {
                numAnyHave += any->numKeys; // credit for full set
                break; // can break out of inner loop, player has a key in this set
@@ -770,6 +774,58 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 
    // you can unlock it!
    return true;
+}
+
+//
+// E_GiveAllKeys
+//
+// Give a player every artifact type that is considered a key and is not
+// already owned. Returns the number of keys given.
+//
+int E_GiveAllKeys(player_t *player)
+{
+   size_t numKeys = E_GetNumKeyItems();
+   int keysGiven  = 0;
+
+   for(size_t i = 0; i < numKeys; i++)
+   {
+      itemeffect_t    *key  = E_KeyItemForIndex(i);
+      inventoryslot_t *slot = E_InventorySlotForItem(player, key);
+
+      if(!slot || slot->amount == 0)
+      {
+         if(E_GiveInventoryItem(player, key))
+            ++keysGiven;
+      }
+   }
+
+   return keysGiven;
+}
+
+// 
+// E_TakeAllKeys
+//
+// Take away every artifact a player has that is of "key" type.
+// Returns the number of keys taken away.
+//
+int E_TakeAllKeys(player_t *player)
+{
+   size_t numKeys = E_GetNumKeyItems();
+   int keysTaken  = 0;
+
+   for(size_t i = 0; i < numKeys; i++)
+   {
+      itemeffect_t    *key  = E_KeyItemForIndex(i);
+      inventoryslot_t *slot = E_InventorySlotForItem(player, key);
+
+      if(slot && slot->amount > 0)
+      {
+         E_RemoveInventoryItem(player, key, slot->amount);
+         ++keysTaken;
+      }
+   }
+
+   return keysTaken;
 }
 
 //=============================================================================
@@ -1042,7 +1098,7 @@ inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
 {
    inventoryitemid_t id;
 
-   if((id = effect->getInt(keyItemID, -1)) >= 0)
+   if(effect && (id = effect->getInt(keyItemID, -1)) >= 0)
       return E_InventorySlotForItemID(player, id);
    else
       return NULL;
@@ -1057,12 +1113,7 @@ inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
 //
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
 {
-   itemeffect_t *namedEffect;
-
-   if((namedEffect = E_ItemEffectForName(name)))
-      return E_InventorySlotForItem(player, namedEffect);
-   else
-      return NULL;
+   return E_InventorySlotForItem(player, E_ItemEffectForName(name));
 }
 
 //
@@ -1127,7 +1178,7 @@ bool E_PlayerHasBackpack(player_t *player)
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    inventoryslot_t *slot = NULL;
 
-   if(backpackItem && (slot = E_InventorySlotForItem(player, backpackItem)))
+   if(slot = E_InventorySlotForItem(player, backpackItem))
       return (slot->amount > 0);
    else
       return false;
@@ -1156,7 +1207,7 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
    }
 
    // The default case is to return the ordinary max amount.
-   return artifact->getInt(keyMaxAmount, 0);
+   return artifact->getInt(keyMaxAmount, 1);
 }
 
 //
@@ -1166,6 +1217,9 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
 //
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
 {
+   if(!artifact)
+      return false;
+
    itemeffecttype_t  fxtype = artifact->getInt(keyClass, ITEMFX_NONE);
    inventoryitemid_t itemid = artifact->getInt(keyItemID, -1);
 
@@ -1174,7 +1228,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
       return false;
    
    inventoryindex_t newSlot = -1;
-   int amountToGive = artifact->getInt(keyAmount, 0);
+   int amountToGive = artifact->getInt(keyAmount, 1);
    int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
 
    // Does the player already have this item?
@@ -1268,6 +1322,43 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
    }
 
    return true;
+}
+
+//
+// E_InventoryEndHub
+//
+// At the end of a hub (or a level that is not part of a hub), call this 
+// function to strip all inventory items that are not meant to remain across
+// levels to their max hub amount.
+//
+void E_InventoryEndHub(player_t *player)
+{
+   for(inventoryindex_t i = 0; i < e_maxitemid; i++)
+   {
+      int amount = player->inventory[i].amount;
+      itemeffect_t *item = E_EffectForInventoryIndex(player, i);
+
+      if(item)
+      {
+         int interHubAmount = item->getInt(keyInterHubAmount, 0);
+         if(amount > interHubAmount)
+            E_RemoveInventoryItem(player, item, amount - interHubAmount);
+      }
+   }
+}
+
+//
+// E_ClearInventory
+//
+// Completely clear a player's inventory.
+//
+void E_ClearInventory(player_t *player)
+{
+   for(inventoryindex_t i = 0; i < e_maxitemid; i++)
+   {
+      player->inventory[i].amount =  0;
+      player->inventory[i].item   = -1;
+   }
 }
 
 //=============================================================================

@@ -1883,10 +1883,8 @@ void P_SpawnPlayer(mapthing_t* mthing)
    player_t* p;
    fixed_t   x, y, z;
    Mobj*   mobj;
-   int       i;
 
    // not playing?
-
    if(!playeringame[mthing->type - 1])
       return;
 
@@ -1903,16 +1901,16 @@ void P_SpawnPlayer(mapthing_t* mthing)
    // sf: set color translations for player sprites
    mobj->colour = players[mthing->type - 1].colormap;
 
-   mobj->angle      = R_WadToAngle(mthing->angle);
-   mobj->player     = p;
-   mobj->health     = p->health;
+   mobj->angle  = R_WadToAngle(mthing->angle);
+   mobj->player = p;
+   mobj->health = p->health;
 
    // haleyjd: verify that the player skin is valid
    if(!p->skin)
       I_Error("P_SpawnPlayer: player skin undefined!\n");
 
-   mobj->skin       = p->skin;
-   mobj->sprite     = p->skin->sprite;
+   mobj->skin   = p->skin;
+   mobj->sprite = p->skin->sprite;
 
    p->mo            = mobj;
    p->playerstate   = PST_LIVE;
@@ -1931,14 +1929,10 @@ void P_SpawnPlayer(mapthing_t* mthing)
    P_SetupPsprites(p);
 
    // give all cards in death match mode
-
    if(GameType == gt_dm)
-   {
-      for(i = 0 ; i < NUMCARDS ; i++)
-         p->cards[i] = true;
-   }
+      E_GiveAllKeys(p);
 
-   if(mthing->type-1 == consoleplayer)
+   if(mthing->type - 1 == consoleplayer)
    {
       ST_Start(); // wake up the status bar
       HU_Start(); // wake up the heads up text

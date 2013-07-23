@@ -277,12 +277,14 @@ bool P_GiveArmor(player_t *player, int armortype, bool htic)
 //
 // P_GiveCard
 //
-void P_GiveCard(player_t *player, card_t card)
+void P_GiveCard(player_t *player, itemeffect_t *card)
 {
-   if(player->cards[card])
-      return;
-   player->bonuscount = BONUSADD;
-   player->cards[card] = 1;
+   inventoryslot_t *slot = E_InventorySlotForItem(player, card);
+
+   if(slot && slot->amount > 0)
+      return;   
+   player->bonuscount = BONUSADD; // INVENTORY_TODO: hard-coded for now
+   E_GiveInventoryItem(player, card);
 }
 
 //
@@ -347,6 +349,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    bool       removeobj = true;
    bool       pickup_fx = true; // haleyjd 04/14/03
    fixed_t    delta = special->z - toucher->z;
+   
+   // INVENTORY_TODO: transitional logic is in place below until this function
+   // can be fully converted to being based on itemeffects
+   itemeffect_t    *effect = NULL;
+   inventoryslot_t *slot   = NULL;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
       return;        // out of reach
@@ -426,44 +433,62 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // cards
       // leave cards for everyone
    case PFX_BLUEKEY:
-      if(!player->cards[it_bluecard])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_BLUECARD);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_bluecard);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_YELLOWKEY:
-      if(!player->cards[it_yellowcard])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_YELLOWCARD);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_yellowcard);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_REDKEY:
-      if(!player->cards[it_redcard])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_REDCARD);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_redcard);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
    case PFX_BLUESKULL:
-      if(!player->cards[it_blueskull])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_BLUESKULL);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_blueskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
    case PFX_YELLOWSKULL:
-      if(!player->cards[it_yellowskull])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_yellowskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_REDSKULL:
-      if(!player->cards[it_redskull])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_REDSKULL);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_redskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
@@ -682,30 +707,35 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       // haleyjd 10/10/02: Heretic powerups
 
-      // heretic keys: give both card and skull equivalent DOOM keys
-   case PFX_HGREENKEY: // green key (red in doom)
-      if(!player->cards[it_redcard])
+   case PFX_HGREENKEY: // green key
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_KEYGREEN);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("HGOTGREENKEY");
-      P_GiveCard(player, it_redcard);
-      P_GiveCard(player, it_redskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
 
-   case PFX_HBLUEKEY: // blue key (blue in doom)
-      if(!player->cards[it_bluecard])
+   case PFX_HBLUEKEY: // blue key
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_KEYBLUE);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("HGOTBLUEKEY");
-      P_GiveCard(player, it_bluecard);
-      P_GiveCard(player, it_blueskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
 
-   case PFX_HYELLOWKEY: // yellow key (yellow in doom)
-      if(!player->cards[it_yellowcard])
+   case PFX_HYELLOWKEY: // yellow key
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_KEYYELLOW);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("HGOTYELLOWKEY");
-      P_GiveCard(player, it_yellowcard);
-      P_GiveCard(player, it_yellowskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;

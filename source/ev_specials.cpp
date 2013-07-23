@@ -27,10 +27,12 @@
 #include "z_zone.h"
 
 #include "acs_intr.h"
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "ev_actions.h"
 #include "ev_macros.h"
 #include "ev_specials.h"
@@ -337,6 +339,72 @@ static bool EV_DOOMPostShootLine(ev_action_t *action, bool result,
 // thanks to a reckless implementation by the BOOM team, not quite.
 //
 
+// Obtain an EDF lockdef ID for a generalized lock number
+static int lockdefIDForGenLock[MaxKeyKind][2] =
+{
+   // !skulliscard,           skulliscard
+   {  EV_LOCKDEF_ANYKEY,      EV_LOCKDEF_ANYKEY   }, // AnyKey
+   {  EV_LOCKDEF_REDCARD,     EV_LOCKDEF_REDGREEN }, // RCard
+   {  EV_LOCKDEF_BLUECARD,    EV_LOCKDEF_BLUE     }, // BCard
+   {  EV_LOCKDEF_YELLOWCARD,  EV_LOCKDEF_YELLOW   }, // YCard
+   {  EV_LOCKDEF_REDSKULL,    EV_LOCKDEF_REDGREEN }, // RSkull
+   {  EV_LOCKDEF_BLUESKULL,   EV_LOCKDEF_BLUE     }, // BSkull
+   {  EV_LOCKDEF_YELLOWSKULL, EV_LOCKDEF_YELLOW   }, // YSkull
+   {  EV_LOCKDEF_ALL6,        EV_LOCKDEF_ALL3     }, // AllKeys
+};
+
+//
+// EV_canUnlockGenDoor()
+//
+// Passed a generalized locked door linedef and a player, returns whether
+// the player has the keys necessary to unlock that door.
+//
+// Note: The linedef passed MUST be a generalized locked door type
+//       or results are undefined.
+//
+// jff 02/05/98 routine added to test for unlockability of
+//  generalized locked doors
+//
+// killough 11/98: reformatted
+//
+// haleyjd 08/22/00: fixed bug found by fraggle
+//
+static bool EV_canUnlockGenDoor(line_t *line, player_t *player)
+{
+   // does this line special distinguish between skulls and keys?
+   int skulliscard = (line->special & LockedNKeys) >> LockedNKeysShift;
+   int genLock     = (line->special & LockedKey) >> LockedKeyShift;
+   int lockdefID   = lockdefIDForGenLock[genLock][skulliscard];
+
+   itemeffect_t    *yskull = E_ItemEffectForName(ARTI_YELLOWSKULL);
+   inventoryslot_t *slot   = E_InventorySlotForItem(player, yskull);
+   bool hasYellowSkull     = (slot && slot->amount > 0);
+
+   // MBF compatibility hack - if lockdef ID is ALL3 and the player has the 
+   // YellowSkull, we have to take it away; if he doesn't have it, we have to 
+   // give it.
+   if(demo_version == 203 && lockdefID == EV_LOCKDEF_ALL3)
+   {
+      if(hasYellowSkull)
+         E_RemoveInventoryItem(player, yskull, 1);
+      else
+         E_GiveInventoryItem(player, yskull);
+   }
+
+   bool result = E_PlayerCanUnlock(player, lockdefID, false);
+
+   // restore inventory state if lockdef was ALL3 and playing back an MBF demo
+   if(demo_version == 203 && lockdefID == EV_LOCKDEF_ALL3)
+   {
+      if(hasYellowSkull)
+         E_GiveInventoryItem(player, yskull);
+      else
+         E_RemoveInventoryItem(player, yskull, 1);
+   }
+
+   return result;
+}
+
 //
 // EV_BOOMGenPreActivate
 //
@@ -426,7 +494,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    switch(instance->gentype)
    {
    case GenTypeLocked:
-      if(thing->player && !P_CanUnlockGenDoor(line, thing->player))
+      if(thing->player && !EV_canUnlockGenDoor(line, thing->player))
          return false;
       break;
    case GenTypeCrusher:
@@ -995,6 +1063,29 @@ ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
    }
 
    return EV_ActionForSpecial(instance.special);
+}
+
+//
+// EV_LockDefIDForSpecial
+//
+// Test lockdef ID bindings for the current gamemode. Returns zero
+// when there's no lockdef ID binding for that special.
+//
+int EV_LockDefIDForSpecial(int special)
+{
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+      return 0; // Hexen doesn't work this way.
+   else
+   {
+      // STRIFE_TODO: hard-coded for now, as DOOM and Heretic are the same
+      for(size_t i = 0; i < DOOMLockDefsLen; i++)
+      {
+         if(DOOMLockDefs[i].special == special)
+            return DOOMLockDefs[i].lockID; // got one.
+      }
+
+      return 0; // nothing was found.
+   }
 }
 
 //=============================================================================

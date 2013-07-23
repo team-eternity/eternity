@@ -84,6 +84,15 @@ typedef int artitype_t;
 
 // Hard-coded names for specially treated artifact types
 #define ARTI_BACKPACKITEM "BackpackItem"
+#define ARTI_BLUECARD     "BlueCard"
+#define ARTI_BLUESKULL    "BlueSkull"
+#define ARTI_REDCARD      "RedCard"
+#define ARTI_REDSKULL     "RedSkull"
+#define ARTI_YELLOWCARD   "YellowCard"
+#define ARTI_YELLOWSKULL  "YellowSkull"
+#define ARTI_KEYGREEN     "KeyGreen"
+#define ARTI_KEYYELLOW    "KeyYellow"
+#define ARTI_KEYBLUE      "KeyBlue"
 
 //
 // Item Effect
@@ -125,6 +134,12 @@ size_t E_GetNumKeyItems();
 // Get a key item for its index in the fast lookup table.
 itemeffect_t *E_KeyItemForIndex(size_t idx);
 
+// Give all "key" type artifacts to a player
+int E_GiveAllKeys(player_t *player);
+
+// Take all "key" type artifacts from a player
+int E_TakeAllKeys(player_t *player);
+
 // Check if a player is able to unlock a lock, by its lock ID.
 bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote);
 
@@ -157,6 +172,13 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact);
 
 // Remove an item from a player's inventory.
 bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount);
+
+// Call at the end of a hub, or a level that isn't part of a hub, to clear
+// out items that don't persist.
+void E_InventoryEndHub(player_t *player);
+
+// Call to completely clear a player's inventory.
+void E_ClearInventory(player_t *player);
 
 //
 // EDF-Only Definitions

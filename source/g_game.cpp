@@ -1413,15 +1413,19 @@ void G_SecretExitLevel(void)
 static void G_PlayerFinishLevel(int player)
 {
    player_t *p = &players[player];
+
+   // INVENTORY_TODO: convert powers to inventory
    memset(p->powers, 0, sizeof p->powers);
-   memset(p->cards, 0, sizeof p->cards);
-   p->mo->flags &= ~MF_SHADOW;     // cancel invisibility
+   p->mo->flags  &= ~MF_SHADOW;    // cancel invisibility
    p->mo->flags2 &= ~MF2_DONTDRAW; // haleyjd: cancel total invis.
    p->mo->flags3 &= ~MF3_GHOST;    // haleyjd: cancel ghost
-   p->extralight = 0;      // cancel gun flashes
+
+   E_InventoryEndHub(p);   // haleyjd: strip inventory
+
+   p->extralight    = 0;   // cancel gun flashes
    p->fixedcolormap = 0;   // cancel ir gogles
-   p->damagecount = 0;     // no palette changes
-   p->bonuscount = 0;
+   p->damagecount   = 0;   // no palette changes
+   p->bonuscount    = 0;
 }
 
 //
@@ -2043,50 +2047,55 @@ void G_Ticker()
 void G_PlayerReborn(int player)
 {
    player_t *p;
-   int i;
    int frags[MAXPLAYERS];
    int totalfrags;
    int killcount;
    int itemcount;
    int secretcount;
-   char playername[20];
+   int cheats;
    int playercolour;
+   char playername[20];
    skin_t *playerskin;
    playerclass_t *playerclass;
+   inventory_t inventory;
 
-   memcpy (frags, players[player].frags, sizeof frags);
-   killcount = players[player].killcount;
-   itemcount = players[player].itemcount;
-   secretcount = players[player].secretcount;
-   strncpy(playername, players[player].name, 20);
-   playercolour = players[player].colormap;
-   totalfrags = players[player].totalfrags;
-   playerskin = players[player].skin;
-   playerclass = players[player].pclass; // haleyjd: playerclass
-   
    p = &players[player];
 
-   // killough 3/10/98,3/21/98: preserve cheats across idclev
-   {
-      int cheats = p->cheats;
-      memset(p, 0, sizeof(*p));
-      p->cheats = cheats;
-   }
+   memcpy(frags, p->frags, sizeof frags);
+   strncpy(playername, p->name, 20);
 
-   memcpy(players[player].frags, frags, sizeof(players[player].frags));
-   players[player].colormap = playercolour;
-   strcpy(players[player].name, playername);
-   players[player].killcount = killcount;
-   players[player].itemcount = itemcount;
-   players[player].secretcount = secretcount;
-   players[player].totalfrags = totalfrags;
-   players[player].skin = playerskin;
-   players[player].pclass = playerclass; // haleyjd: playerclass
+   killcount    = p->killcount;
+   itemcount    = p->itemcount;
+   secretcount  = p->secretcount;
+   cheats       = p->cheats;     // killough 3/10/98,3/21/98: preserve cheats across idclev
+   playercolour = p->colormap;
+   totalfrags   = p->totalfrags;
+   playerskin   = p->skin;
+   playerclass  = p->pclass;     // haleyjd: playerclass
+   inventory    = p->inventory;  // haleyjd: inventory
+  
+   memset(p, 0, sizeof(*p));
+
+   memcpy(p->frags, frags, sizeof(p->frags));
+   strcpy(p->name, playername);
+   
+   p->killcount   = killcount;
+   p->itemcount   = itemcount;
+   p->secretcount = secretcount;
+   p->cheats      = cheats;
+   p->colormap    = playercolour;
+   p->totalfrags  = totalfrags;
+   p->skin        = playerskin;
+   p->pclass      = playerclass; // haleyjd: playerclass
+   p->inventory   = inventory;   // haleyjd: inventory
    
    p->usedown = p->attackdown = true;  // don't do anything immediately
    p->playerstate = PST_LIVE;
    p->health = initial_health;  // Ty 03/12/98 - use dehacked values
    p->quake = 0;                // haleyjd 01/21/07
+
+   // INVENTORY_TODO: reborn inventory
+   E_ClearInventory(p);
 
    // WEAPON_FIXME: default reborn weapon
    // PCLASS_FIXME: default reborn weapon
@@ -2105,7 +2114,7 @@ void G_PlayerReborn(int player)
    // PCLASS_FIXME: default ammo stuff
    p->ammo[am_clip] = initial_bullets; // Ty 03/12/98 - use dehacked values
    
-   for(i = 0; i < NUMAMMO; i++)
+   for(int i = 0; i < NUMAMMO; i++)
       p->maxammo[i] = maxammo[i];
 }
 
