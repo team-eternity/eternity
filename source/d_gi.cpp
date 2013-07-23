@@ -599,12 +599,40 @@ static bspecrule_t HereticBossSpecs[] =
 };
 
 //
+// Key card name lookups
+//
+// These arrays are used by the status bar, HUD, cheats, etc. to map
+// from old-style card numbers to the new artifact names, where it's
+// still convenient to do this. Eventually we'll have some scripting
+// solutions that take care of this kind of stuff.
+//
+
+// Key names in the original DOOM order, for use by HUD, status bar, cheats, etc.
+static const char *DOOMCardNames[] =
+{
+   ARTI_BLUECARD,
+   ARTI_YELLOWCARD,
+   ARTI_REDCARD,
+   ARTI_BLUESKULL,
+   ARTI_YELLOWSKULL,
+   ARTI_REDSKULL
+};
+
+// Names for Heretic cards
+static const char *HticCardNames[] =
+{
+   ARTI_KEYBLUE,
+   ARTI_KEYYELLOW,
+   ARTI_KEYGREEN
+};
+
+//
 // Music Selection Routines - defined in s_sound.c
 //
 
-extern int S_MusicForMapDoom(void);
-extern int S_MusicForMapDoom2(void);
-extern int S_MusicForMapHtic(void);
+extern int S_MusicForMapDoom();
+extern int S_MusicForMapDoom2();
+extern int S_MusicForMapHtic();
 
 //
 // IWAD paths
@@ -872,6 +900,7 @@ static gamemodeinfo_t giDoomSW =
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
+   DOOMCardNames,    // cardNames
 
    &DoomStatusBar,   // StatusBar
 
@@ -971,6 +1000,7 @@ static gamemodeinfo_t giDoomReg =
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
+   DOOMCardNames,    // cardNames
 
    &DoomStatusBar,   // StatusBar
 
@@ -1070,6 +1100,7 @@ static gamemodeinfo_t giDoomRetail =
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
+   DOOMCardNames,    // cardNames
 
    &DoomStatusBar,   // StatusBar
 
@@ -1169,6 +1200,7 @@ static gamemodeinfo_t giDoomCommercial =
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
+   DOOMCardNames,    // cardNames
 
    &DoomStatusBar,   // StatusBar
 
@@ -1268,6 +1300,7 @@ static gamemodeinfo_t giHereticSW =
    0,                // blackIndex
    35,               // whiteIndex
    3,                // numHUDKeys
+   HticCardNames,    // cardNames
 
    &HticStatusBar,   // StatusBar
 
@@ -1371,6 +1404,7 @@ static gamemodeinfo_t giHereticReg =
    0,                // blackIndex
    35,               // whiteIndex
    3,                // numHUDKeys
+   HticCardNames,    // cardNames
 
    &HticStatusBar,   // StatusBar
 

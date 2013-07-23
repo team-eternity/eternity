@@ -591,22 +591,17 @@ static void cheat_keyx(const void *arg)
    doom_printf("Card, Skull");        // Ty 03/27/98 - *not* externalized
 }
 
-static const char *artifactForKeyxx[NUMCARDS] =
-{
-   ARTI_BLUECARD,
-   ARTI_YELLOWCARD,
-   ARTI_REDCARD,
-   ARTI_BLUESKULL,
-   ARTI_YELLOWSKULL,
-   ARTI_REDSKULL
-};
-
 static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
    const char *msg = NULL;
 
-   itemeffect_t    *fx   = E_ItemEffectForName(artifactForKeyxx[key]);
+   // CHEATS_FIXME: this is a DOOM cheat; Need to add ability to have different
+   // cheats in each game, and then add Heretic's cheats.
+   if(key >= GameModeInfo->numHUDKeys)
+      return;
+
+   itemeffect_t    *fx   = E_ItemEffectForName(GameModeInfo->cardNames[key]);
    inventoryslot_t *slot = E_InventorySlotForItem(plyr, fx);
 
    if(!fx)

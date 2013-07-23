@@ -629,13 +629,15 @@ static void ST_updateWidgets(void)
    // update keycard multiple widgets
    for(i = 0; i < 3; i++)
    {
-      keyboxes[i] = plyr->cards[i] ? i : -1;
+      auto slot = E_InventorySlotForItemName(plyr, GameModeInfo->cardNames[i]);
+      keyboxes[i] = ((slot && slot->amount > 0) ? i : -1);
       
       //jff 2/24/98 select double key
       //killough 2/28/98: preserve traditional keys by config option
       
-      if(plyr->cards[i+3])
-         keyboxes[i] = keyboxes[i]==-1 || sts_traditional_keys ? i+3 : i+6;
+      slot = E_InventorySlotForItemName(plyr, GameModeInfo->cardNames[i + 3]);
+      if(slot && slot->amount > 0)
+         keyboxes[i] = (keyboxes[i] == -1 || (sts_traditional_keys ? i + 3 : i + 6));
    }
 
    // refresh everything if this is him coming back to life
@@ -949,7 +951,7 @@ void ST_Drawer(bool fullscreen)
       StatusBar->Drawer();
 }
 
-static void ST_loadGraphics(void)
+static void ST_loadGraphics()
 {
    int  i;
    char namebuf[9];

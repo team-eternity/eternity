@@ -59,7 +59,7 @@ static int chainwiggle;        // small randomized addend for chain y coord.
 // Initializes the Heretic status bar:
 // * Caches most patch graphics used throughout
 //
-static void ST_HticInit(void)
+static void ST_HticInit()
 {
    int i;
 
@@ -87,7 +87,7 @@ static void ST_HticInit(void)
 //
 // ST_HticStart
 //
-static void ST_HticStart(void)
+static void ST_HticStart()
 {
 }
 
@@ -96,7 +96,7 @@ static void ST_HticStart(void)
 //
 // Processing code for Heretic status bar
 //
-static void ST_HticTicker(void)
+static void ST_HticTicker()
 {
    int playerHealth;
 
@@ -181,7 +181,7 @@ static void ST_drawInvNum(int num, int x, int y)
 //
 // Draws the basic status bar background
 //
-static void ST_drawBackground(void)
+static void ST_drawBackground()
 {
    // draw the background
    V_DrawPatch(0, 158, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE));
@@ -257,7 +257,7 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
 // Draws two 16x10 shaded areas on the ends of the life chain, using
 // the light-fading colormaps to darken what's already been drawn.
 //
-static void ST_chainShadow(void)
+static void ST_chainShadow()
 {
    ST_BlockDrawerS(277, 190,  9,  1);
    ST_BlockDrawerS( 19, 190, 23, -1);
@@ -268,7 +268,7 @@ static void ST_chainShadow(void)
 //
 // Draws the chain & gem health indicator at the bottom
 //
-static void ST_drawLifeChain(void)
+static void ST_drawLifeChain()
 {
    int y = 191;
    int chainpos = chainhealth;
@@ -312,10 +312,11 @@ static void ST_drawLifeChain(void)
 // Draws the main status bar, shown when the inventory is not
 // active.
 //
-static void ST_drawStatBar(void)
+static void ST_drawStatBar()
 {
    int temp;
    patch_t *statbar;
+   inventoryslot_t *slot;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -351,11 +352,11 @@ static void ST_drawStatBar(void)
    ST_drawInvNum(plyr->armorpoints, 255, 170);
 
    // draw key icons
-   if(plyr->cards[it_yellowcard])
+   if((slot = E_InventorySlotForItemName(plyr, ARTI_KEYYELLOW)) && slot->amount > 0)
       V_DrawPatch(153, 164, &subscreen43, PatchLoader::CacheName(wGlobalDir, "YKEYICON", PU_CACHE));
-   if(plyr->cards[it_redcard])
+   if((slot = E_InventorySlotForItemName(plyr, ARTI_KEYGREEN)) && slot->amount > 0)
       V_DrawPatch(153, 172, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GKEYICON", PU_CACHE));
-   if(plyr->cards[it_bluecard])
+   if((slot = E_InventorySlotForItemName(plyr, ARTI_KEYBLUE)) && slot->amount > 0)
       V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
    // TODO: ammo icon stuff
@@ -374,7 +375,7 @@ static void ST_drawStatBar(void)
 //
 // Draws the Heretic status bar
 //
-static void ST_HticDrawer(void)
+static void ST_HticDrawer()
 {
    ST_drawBackground();
    ST_drawLifeChain();
@@ -389,7 +390,7 @@ static void ST_HticDrawer(void)
 //
 // Draws the Heretic fullscreen hud/status information.
 //
-static void ST_HticFSDrawer(void)
+static void ST_HticFSDrawer()
 {
 }
 

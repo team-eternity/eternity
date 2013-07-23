@@ -465,8 +465,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          for(j = 0; j < NUMPOWERS; j++)
             arc << p.powers[j];
 
-         for(j = 0; j < NUMCARDS; j++)
-            arc << p.cards[j];
+         // INVENTORY_TODO: save and restore inventory
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];

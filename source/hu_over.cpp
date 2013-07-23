@@ -412,7 +412,8 @@ static void HU_drawKeys(int x, int y)
    // haleyjd 10/09/05: don't show double keys in Heretic
    for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(hu_player.cards[i])
+      auto slot = E_InventorySlotForItemName(&hu_player, GameModeInfo->cardNames[i]);
+      if(slot && slot->amount > 0)
       {
          // got that key
          V_DrawPatch(x, y, &subscreen43, keys[i]);

@@ -119,7 +119,6 @@ struct player_t
 
    // Power ups. invinc and invis are tic counters.
    int            powers[NUMPOWERS];
-   bool           cards[NUMCARDS];
    bool           backpack;
   
    // Frags, kills of other players.

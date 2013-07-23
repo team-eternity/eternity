@@ -342,6 +342,7 @@ typedef struct gamemodeinfo_s
    unsigned char blackIndex;  // palette index for black {0,0,0}
    unsigned char whiteIndex;  // palette index for white {255,255,255}
    int numHUDKeys;            // number of keys to show in HUD
+   const char **cardNames;    // names of default key card artifact types
 
    // Status bar
    stbarfns_t *StatusBar;     // status bar function set
