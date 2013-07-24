@@ -637,7 +637,7 @@ static void ST_updateWidgets(void)
       
       slot = E_InventorySlotForItemName(plyr, GameModeInfo->cardNames[i + 3]);
       if(slot && slot->amount > 0)
-         keyboxes[i] = (keyboxes[i] == -1 || (sts_traditional_keys ? i + 3 : i + 6));
+         keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
    }
 
    // refresh everything if this is him coming back to life
