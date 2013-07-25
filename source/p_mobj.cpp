@@ -1721,22 +1721,24 @@ int iquehead, iquetail;
 //
 void Mobj::removeThinker()
 {
-   // haleyjd 04/14/03: restructured
    bool respawnitem = false;
 
-   if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
+   if(this->flags3 & MF3_SUPERITEM)
    {
-      respawnitem = true; // respawning super powerups
-   }
-   else if((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL))
-   {
-      respawnitem = true; // respawning barrels
+      // super items ONLY respawn when enabled through dmflags
+      respawnitem = ((dmflags & DM_RESPAWNSUPER) == DM_RESPAWNSUPER);
    }
    else
    {
-      respawnitem =
-         !((this->flags ^ MF_SPECIAL) & (MF_SPECIAL | MF_DROPPED)) &&
-         !(this->flags3 & MF3_NOITEMRESP);
+      // normal items respawn, and respawning barrels dmflag
+      bool mayrespawn = 
+         ((this->flags & MF_SPECIAL) || 
+          ((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL)));
+
+      if(mayrespawn &&
+         !(this->flags  & MF_DROPPED) &&   // dropped items don't respawn
+         !(this->flags3 & MF3_NOITEMRESP)) // NOITEMRESP items don't respawn
+         respawnitem = true;
    }
 
    if(respawnitem)
@@ -1745,15 +1747,16 @@ void Mobj::removeThinker()
       itemrespawnque[iquehead] = this->spawnpoint;
       itemrespawntime[iquehead++] = leveltime;
       if((iquehead &= ITEMQUESIZE-1) == iquetail)
+      {
          // lose one off the end?
          iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+      }
    }
 
    // haleyjd 02/02/04: remove from tid hash
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-
    P_UnsetThingPosition(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
@@ -1769,17 +1772,12 @@ void Mobj::removeThinker()
    }
 
    // stop any playing sound
-
    S_StopSound(this, CHAN_ALL);
 
-   // killough 11/98:
-   //
-   // Remove any references to other mobjs.
-   //
-   // Older demos might depend on the fields being left alone, however,
-   // if multiple thinkers reference each other indirectly before the
-   // end of the current tic.
-
+   // killough 11/98: Remove any references to other mobjs.
+   // Older demos might depend on the fields being left alone, however, if 
+   // multiple thinkers reference each other indirectly before the end of the
+   // current tic.
    if(demo_version >= 203)
    {
       P_SetTarget<Mobj>(&this->target,    NULL);
@@ -1787,7 +1785,7 @@ void Mobj::removeThinker()
       P_SetTarget<Mobj>(&this->lastenemy, NULL);
    }
 
-   // free block
+   // remove from thinker list
    Thinker::removeThinker();
 }
 
@@ -1828,7 +1826,7 @@ int P_FindDoomedNum(int type)
 //
 // P_RespawnSpecials
 //
-void P_RespawnSpecials(void)
+void P_RespawnSpecials()
 {
    fixed_t x, y, z;
    subsector_t*  ss;
@@ -1847,9 +1845,6 @@ void P_RespawnSpecials(void)
    y = mthing->y << FRACBITS;
 
    // spawn a teleport fog at the new spot
-
-   // FIXME: Heretic support?
-
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);

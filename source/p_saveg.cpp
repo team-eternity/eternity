@@ -343,6 +343,13 @@ SaveArchive &SaveArchive::operator << (mapthing_t &mt)
    return *this;
 }
 
+// Serialize an inventory_t structure
+SaveArchive &SaveArchive::operator << (inventoryslot_t &slot)
+{
+   *this << slot.amount << slot.item;
+   return *this;
+}
+
 //=============================================================================
 //
 // Thinker Enumeration
@@ -355,12 +362,12 @@ static Thinker **thinker_p;  // killough 2/14/98: Translation table
 // sf: made these into separate functions
 //     for FraggleScript saving object ptrs too
 
-static void P_FreeThinkerTable(void)
+static void P_FreeThinkerTable()
 {
    efree(thinker_p);    // free translation table
 }
 
-static void P_NumberThinkers(void)
+static void P_NumberThinkers()
 {
    Thinker *th;
    
@@ -380,7 +387,7 @@ static void P_NumberThinkers(void)
    }
 }
 
-static void P_DeNumberThinkers(void)
+static void P_DeNumberThinkers()
 {
    Thinker *th;
 
@@ -461,11 +468,23 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
              << p.colormap     << p.quake           << p.jumptime;
-         
+
+         int inventorySize;
+         if(arc.isSaving())
+         {
+            inventorySize = E_GetInventoryAllocSize();
+            arc << inventorySize;
+         }
+         else
+         {
+            arc << inventorySize;
+            if(inventorySize != E_GetInventoryAllocSize())
+               I_Error("P_ArchivePlayers: inventory size mismatch\n");
+         }
+         P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
+
          for(j = 0; j < NUMPOWERS; j++)
             arc << p.powers[j];
-
-         // INVENTORY_TODO: save and restore inventory
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];

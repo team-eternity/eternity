@@ -106,8 +106,26 @@ typedef MetaTable itemeffect_t;
 // Effect Bindings
 //
 
+enum pickupflags_e
+{
+   PFXF_ALWAYSPICKUP    = 0x00000001, // item is picked up even if not useful
+   PFXF_LEAVEINMULTI    = 0x00000002, // item is left in multiplayer games
+   PFXF_NOSCREENFLASH   = 0x00000004, // does not cause bonuscount increment
+   PFXF_SILENTNOBENEFIT = 0x00000008, // no pickup effects if picked up without benefit
+};
+
+struct e_pickupfx_t
+{
+   itemeffect_t *effect;  // item given, if any
+   char         *message; // message, if any
+   char         *sound;   // sound, if any
+   unsigned int  flags;   // pickup flags
+
+   int tempeffect;        // INVENTORY_FIXME: temporary transitional field
+};
+
 // INVENTORY_TODO: alter as needed
-extern int *pickupfx;
+extern e_pickupfx_t *pickupfx;
 
 //
 // Functions
@@ -179,6 +197,9 @@ void E_InventoryEndHub(player_t *player);
 
 // Call to completely clear a player's inventory.
 void E_ClearInventory(player_t *player);
+
+// Get allocated size of player inventory arrays
+int E_GetInventoryAllocSize();
 
 //
 // EDF-Only Definitions

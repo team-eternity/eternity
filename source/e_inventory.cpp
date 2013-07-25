@@ -836,12 +836,17 @@ int E_TakeAllKeys(player_t *player)
 //
 
 // Sprite pick-up effects
-#define ITEM_PICKUPFX "effect"
+#define ITEM_PICKUP_FX       "effect"
+#define ITEM_PICKUP_MSG      "message"
+#define ITEM_PICKUP_SOUND    "sound"
 
 // sprite-based pickup items
 cfg_opt_t edf_pickup_opts[] =
 {
-   CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_FX,    "PFX_NONE", CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_MSG,   NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND, NULL,       CFGF_NONE),
+
    CFG_END()
 };
 
@@ -915,7 +920,7 @@ const char *pickupnames[PFX_NUMFX] =
 
 // pickupfx lookup table used in P_TouchSpecialThing (is allocated
 // with size NUMSPRITES)
-int *pickupfx = NULL;
+e_pickupfx_t *pickupfx = NULL;
 
 //
 // E_processPickupItems
@@ -936,9 +941,9 @@ static void E_processPickupItems(cfg_t *cfg)
    numnew = NUMSPRITES - oldnumsprites;
    if(numnew > 0)
    {
-      pickupfx = erealloc(int *, pickupfx, NUMSPRITES * sizeof(int));
+      pickupfx = erealloc(e_pickupfx_t *, pickupfx, NUMSPRITES * sizeof(*pickupfx));
       for(i = oldnumsprites; i < NUMSPRITES; i++)
-         pickupfx[i] = PFX_NONE;
+         memset(&pickupfx[i], 0, sizeof(e_pickupfx_t));
       oldnumsprites = NUMSPRITES;
    }
 
@@ -954,7 +959,7 @@ static void E_processPickupItems(cfg_t *cfg)
       int fxnum, sprnum;
       cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PICKUPFX, i);
       const char *title = cfg_title(sec);
-      const char *pfx = cfg_getstr(sec, ITEM_PICKUPFX);
+      const char *str   = cfg_getstr(sec, ITEM_PICKUP_FX);
 
       // validate the sprite name given in the section title and
       // resolve to a sprite number (hashed)
@@ -966,20 +971,48 @@ static void E_processPickupItems(cfg_t *cfg)
          E_EDFLoggedWarning(2,
             "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
             title);
-         sprnum = blankSpriteNum;
+         continue;
       }
 
+      // INVENTORY_FIXME: old names need to become a compat feature only;
+      //   "effect" should start referring to an itemeffect_t.
       // find the proper pickup effect number (linear search)
-      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, pfx);
+      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, str);
       if(fxnum == PFX_NUMFX)
       {
-         E_EDFLoggedErr(2, "E_ProcessItems: invalid pickup effect: '%s'\n", pfx);
+         E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
+         continue;
       }
       
       E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
-                     title, sprnum, pfx, fxnum);
+                     title, sprnum, str, fxnum);
 
-      pickupfx[sprnum] = fxnum;
+      e_pickupfx_t &pfx = pickupfx[sprnum];
+
+      // INVENTORY_FIXME: replace with effect pointer
+      pfx.tempeffect = fxnum;
+
+      // free any strings that might have been previously set
+      if(pfx.message)
+      {
+         efree(pfx.message);
+         pfx.message = NULL;
+      }
+      if(pfx.sound)
+      {
+         efree(pfx.sound);
+         pfx.sound = NULL;
+      }
+
+      // process effect properties
+
+      // message
+      if((str = cfg_getstr(sec, ITEM_PICKUP_MSG)))
+         pfx.message = estrdup(str);
+
+      // sound
+      if((str = cfg_getstr(sec, ITEM_PICKUP_SOUND)))
+         pfx.sound = estrdup(str);
    }
 }
 
@@ -1359,6 +1392,17 @@ void E_ClearInventory(player_t *player)
       player->inventory[i].amount =  0;
       player->inventory[i].item   = -1;
    }
+}
+
+//
+// E_GetInventoryAllocSize
+//
+// Return the allocated size of a player's inventory in number of slots.
+// This has nothing to do with the number of items owned.
+//
+int E_GetInventoryAllocSize()
+{
+   return e_maxitemid;
 }
 
 //=============================================================================

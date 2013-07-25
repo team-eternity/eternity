@@ -339,6 +339,98 @@ bool P_GivePower(player_t *player, int power)
 }
 
 //
+// P_TouchSpecialThingNew
+//
+// INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
+// when it is finished, replacing the below.
+//
+void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
+{
+   player_t     *player;
+   e_pickupfx_t *pickup;
+   itemeffect_t *effect;
+   bool          pickedup = false;
+   const char   *message  = NULL;
+   const char   *sound    = NULL;
+
+   fixed_t delta = special->z - toucher->z;
+   if(delta > toucher->height || delta < -8*FRACUNIT)
+      return; // out of reach
+
+   // haleyjd: don't crash if a monster gets here.
+   if(!(player = toucher->player))
+      return;
+
+   // Dead thing touching.
+   // Can happen with a sliding player corpse.
+   if(toucher->health <= 0)
+      return;
+
+   // haleyjd 05/11/03: EDF pickups modifications
+   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
+      return;
+
+   pickup = &pickupfx[special->sprite];
+   effect = pickup->effect;
+
+   if(!effect)
+      return;
+
+   // set defaults
+   message = pickup->message;
+   sound   = pickup->sound;
+
+   switch(effect->getInt("class", ITEMFX_NONE))
+   {
+   case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
+      pickedup = E_GiveInventoryItem(player, effect);
+      break;
+   default:
+      return;
+   }
+
+   // perform post-processing if the item was collected beneficially, or if the
+   // pickup is flagged to always be picked up even without benefit.
+   if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
+   {
+      // INVENTORY_TODO: support Heretic/Hexen-style item respawning via
+      // setting to a state instead of removing (should be a property of
+      // the "special" object).
+
+      // Remove the object, provided it doesn't stay in multiplayer games
+      if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
+      {
+         // Award item count
+         if(special->flags & MF_COUNTITEM)
+            player->itemcount++;
+         special->removeThinker();
+      }
+
+      // if picked up for benefit, or not silent when picked up without, do
+      // all the "noisy" pickup effects
+      if(pickedup || !(pickup->flags & PFXF_SILENTNOBENEFIT))
+      {
+         // Give message
+         if(message)
+         {
+            // check for BEX string
+            if(message[0] == '$')
+               message = DEH_String(message + 1);
+            player_printf(player, "%s", message);
+         }
+
+         // Play pickup sound
+         if(sound)
+            S_StartSoundName(player->mo, sound);
+
+         // Increment bonuscount
+         if(!(pickup->flags & PFXF_NOSCREENFLASH))
+            player->bonuscount += BONUSADD;
+      }
+   }
+}
+
+//
 // P_TouchSpecialThing
 //
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
@@ -374,7 +466,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       return;
 
    // Identify by sprite.
-   switch(pickupfx[special->sprite])
+   // INVENTORY_FIXME: apply pickupfx[].effect instead!
+   switch(pickupfx[special->sprite].tempeffect)
    {
       // armor
    case PFX_GREENARMOR:
@@ -642,7 +735,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 #endif
       {
          for(i = 0; i < NUMAMMO; ++i)
-            P_GiveAmmo(player, i, 1);
+         P_GiveAmmo(player, i, 1);
          message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       }
 

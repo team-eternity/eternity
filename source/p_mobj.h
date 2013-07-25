@@ -394,7 +394,7 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity);
 extern int iquehead;
 extern int iquetail;
 
-void  P_RespawnSpecials(void);
+void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);

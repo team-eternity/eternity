@@ -1389,7 +1389,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(415, ParamPlatUpByValue,              "Plat_UpByValue")
 };
 
-size_t DOOMBindingsLen = earrlen(DOOMBindings);
+const size_t DOOMBindingsLen = earrlen(DOOMBindings);
 
 // DOOM Lockdef ID Lookup (Doubles for Heretic)
 ev_lockdef_t DOOMLockDefs[] =
@@ -1408,7 +1408,7 @@ ev_lockdef_t DOOMLockDefs[] =
    { 137, EV_LOCKDEF_YELLOW   },
 };
 
-size_t DOOMLockDefsLen = earrlen(DOOMLockDefs);
+const size_t DOOMLockDefsLen = earrlen(DOOMLockDefs);
 
 // Heretic Bindings
 // Heretic's bindings are additive over DOOM's.
@@ -1432,7 +1432,7 @@ ev_binding_t HereticBindings[] =
    LINESPEC(107, S1HereticStairsBuildUp16FS)
 };
 
-size_t HereticBindingsLen = earrlen(HereticBindings);
+const size_t HereticBindingsLen = earrlen(HereticBindings);
 
 // Hexen Bindings
 ev_binding_t HexenBindings[] =
@@ -1508,7 +1508,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")
 };
 
-size_t HexenBindingsLen = earrlen(HexenBindings);
+const size_t HexenBindingsLen = earrlen(HexenBindings);
 
 // EOF
 
