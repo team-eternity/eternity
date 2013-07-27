@@ -710,35 +710,17 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_BACKPACK:
-      if(!player->backpack)
+      if(!E_PlayerHasBackpack(player))
       {
-         for (i=0 ; i<NUMAMMO ; i++)
+         // INVENTORY_FIXME: eliminate once ammo types are managed by inventory
+         for(i = 0; i < NUMAMMO; i++)
             player->maxammo[i] *= 2;
-         player->backpack = true;
+         E_GiveBackpack(player);
       }
-      // EDF FIXME: needs a ton of work
-#if 0
-      if(special->flags & MF_DROPPED)
-      {
-         int i;
-         for(i=0 ; i<NUMAMMO ; i++)
-         {
-            player->ammo[i] +=special->extradata.backpack->ammo[i];
-            if(player->ammo[i]>player->maxammo[i])
-               player->ammo[i]=player->maxammo[i];
-         }
-         P_GiveWeapon(player,special->extradata.backpack->weapon,true);
-         Z_Free(special->extradata.backpack);
-         message = "got player backpack";
-      }
-      else
-#endif
-      {
-         for(i = 0; i < NUMAMMO; ++i)
+      // INVENTORY_TODO: use ammo types' backpack amounts
+      for(i = 0; i < NUMAMMO; i++)
          P_GiveAmmo(player, i, 1);
-         message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
-      }
-
+      message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       break;
 
       // WEAPON_FIXME: Weapon collection
@@ -1067,7 +1049,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    {
       if(target->player)
       {
-         // players only drop backpacks if so indicated
+         // players only drop items if so indicated
          if(!(dmflags & DM_PLAYERDROP))
             return;
       }
@@ -1078,29 +1060,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       return;
 
    mo = P_SpawnMobj(target->x, target->y, ONFLOORZ, item);
-   mo->flags |= MF_DROPPED;    // special versions of items
-   
-   // EDF FIXME: problematic, needed work to begin with
-#if 0
-   if(mo->type == MT_MISC24) // put all the players stuff into the
-   {                         // backpack
-      int a;
-      mo->extradata.backpack = (backpack_t *)(Z_Malloc(sizeof(backpack_t), PU_LEVEL, NULL));
-      for(a=0; a<NUMAMMO; a++)
-         mo->extradata.backpack->ammo[a] = target->player->ammo[a];
-      mo->extradata.backpack->weapon = target->player->readyweapon;
-      // set the backpack moving slightly faster than the player
-      
-      // start it moving in a (fairly) random direction
-      // i cant be bothered to create a new random number
-      // class right now
-      // haleyjd: not demo safe, fix later (TODO)
-      /*
-      mo->momx = target->momx * (gametic-basetic) % 5;
-      mo->momy = target->momy * (gametic-basetic+30) % 5;
-      */
-   }
-#endif
+   mo->flags |= MF_DROPPED;    // special versions of items   
 }
 
 //

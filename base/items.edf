@@ -15,6 +15,17 @@ includeifenabled("heretic/items.edf", "HERETIC");
 // Shared Items ---------------------------------------------------------------
 
 //
+// BackpackItem
+//
+// This token item represents whether or not the player has a backpack, which
+// causes all ammo capacities to increase to their max backpack amount.
+//
+artifact BackpackItem
+{
+   interhubamount: 1;
+}
+
+//
 // Common Lockdefs
 //
 

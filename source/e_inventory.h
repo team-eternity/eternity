@@ -72,7 +72,6 @@ enum
 {
    ARTI_NORMAL,   // an ordinary artifact
    ARTI_AMMO,     // ammo type
-   ARTI_BACKPACK, // backpack token
    ARTI_KEY,      // key
    ARTI_PUZZLE,   // puzzle item
    ARTI_POWER,    // powerup token
@@ -181,6 +180,12 @@ inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
 
 // Special function to test for player backpack.
 bool E_PlayerHasBackpack(player_t *player);
+
+// Special function to give the player a backpack.
+bool E_GiveBackpack(player_t *player);
+
+// Special function to remove backpack.
+bool E_RemoveBackpack(player_t *player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
 int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact);

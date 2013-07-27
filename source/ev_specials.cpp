@@ -386,7 +386,7 @@ static bool EV_canUnlockGenDoor(line_t *line, player_t *player)
    if(demo_version == 203 && lockdefID == EV_LOCKDEF_ALL3)
    {
       if(hasYellowSkull)
-         E_RemoveInventoryItem(player, yskull, 1);
+         E_RemoveInventoryItem(player, yskull, -1);
       else
          E_GiveInventoryItem(player, yskull);
    }
@@ -399,7 +399,7 @@ static bool EV_canUnlockGenDoor(line_t *line, player_t *player)
       if(hasYellowSkull)
          E_GiveInventoryItem(player, yskull);
       else
-         E_RemoveInventoryItem(player, yskull, 1);
+         E_RemoveInventoryItem(player, yskull, -1);
    }
 
    return result;

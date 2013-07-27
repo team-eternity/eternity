@@ -228,8 +228,6 @@ enum
   MT_TELEPORTMAN,
   MT_EXTRABFG,
 
-  MT_MISC24 = 72, // backpack
-
   MT_PUSH = 138, // controls push source -- phares
   MT_PULL,       // controls pull source -- phares 3/20/98
   MT_DOGS,       // killough 7/19/98: Marine's best friend

@@ -222,7 +222,6 @@ static const char *artiTypeNames[NUMARTITYPES] =
 {
    "NORMAL",   // an ordinary artifact
    "AMMO",     // ammo type
-   "BACKPACK", // backpack token
    "KEY",      // key
    "PUZZLE",   // puzzle item
    "POWER",    // powerup token
@@ -815,14 +814,8 @@ int E_TakeAllKeys(player_t *player)
 
    for(size_t i = 0; i < numKeys; i++)
    {
-      itemeffect_t    *key  = E_KeyItemForIndex(i);
-      inventoryslot_t *slot = E_InventorySlotForItem(player, key);
-
-      if(slot && slot->amount > 0)
-      {
-         E_RemoveInventoryItem(player, key, slot->amount);
+      if(E_RemoveInventoryItem(player, E_KeyItemForIndex(i), -1))
          ++keysTaken;
-      }
    }
 
    return keysTaken;
@@ -1211,10 +1204,31 @@ bool E_PlayerHasBackpack(player_t *player)
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    inventoryslot_t *slot = NULL;
 
-   if(slot = E_InventorySlotForItem(player, backpackItem))
-      return (slot->amount > 0);
-   else
-      return false;
+   return ((slot = E_InventorySlotForItem(player, backpackItem)) && slot->amount > 0);
+}
+
+//
+// E_GiveBackpack
+//
+// Special function to give a backpack.
+//
+bool E_GiveBackpack(player_t *player)
+{
+   auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
+
+   return E_GiveInventoryItem(player, backpackItem);
+}
+
+//
+// E_RemoveBackpack
+//
+// Special function to remove a backpack.
+//
+bool E_RemoveBackpack(player_t *player)
+{
+   auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
+
+   return E_RemoveInventoryItem(player, backpackItem, -1);
 }
 
 //
@@ -1324,7 +1338,7 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
 // E_RemoveInventoryItem
 //
 // Remove some amount of a specific item from the player's inventory, if
-// possible.
+// possible. If amount is less than zero, then all of the item will be removed.
 //
 bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 {
@@ -1333,6 +1347,10 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
    // don't have that item at all?
    if(!slot)
       return false;
+
+   // a negative amount means to remove the full possessed amount
+   if(amount < 0)
+      amount = slot->amount;
 
    // don't own that many?
    if(slot->amount < amount)

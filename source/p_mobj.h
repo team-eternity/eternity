@@ -141,14 +141,6 @@ struct subsector_t;
 // Any questions?
 //
 
-// ammo + weapon in a dropped backpack 
-
-typedef struct backpack_s
-{
-   int16_t ammo[NUMAMMO];
-   char    weapon;
-} backpack_t;
-
 // Each sector has a degenmobj in its center for sound origin purposes.
 // haleyjd 11/22/10: degenmobj, which has become PointThinker, is now the base
 // class for all thinkers that want to be located somewhere in the game world.
@@ -254,10 +246,10 @@ public:
 
    int colour; // sf: the sprite colour
 
+   // INVENTORY_FIXME: eliminate union
    union
    {
       int            bfgcount;
-      backpack_t*    backpack;       // for if its a backpack
    } extradata;
 
    int                 tics;   // state tic counter

@@ -369,15 +369,18 @@ static void cheat_fa(const void *arg)
 {
    int i;
    
-   if(!plyr->backpack)
+   if(!E_PlayerHasBackpack(plyr))
    {
+      // INVENTORY_FIXME: once ammo types are managed under inventory,
+      // this will become unnecessary; the adjustment is automated through
+      // E_GetMaxAmountForArtifact.
       for(i = 0; i < NUMAMMO; i++)
          plyr->maxammo[i] *= 2;
-      plyr->backpack = true;
+      E_GiveBackpack(plyr);
    }
    
-   plyr->armorpoints = idfa_armor;      // Ty 03/09/98 - deh
-   plyr->armortype = idfa_armor_class;  // Ty 03/09/98 - deh
+   plyr->armorpoints = idfa_armor;       // Ty 03/09/98 - deh
+   plyr->armortype   = idfa_armor_class; // Ty 03/09/98 - deh
 
    // WEAPON_FIXME: IDFA cheat
    
@@ -614,7 +617,7 @@ static void cheat_keyxx(const void *arg)
    }
    else
    {
-      E_RemoveInventoryItem(plyr, fx, 1);
+      E_RemoveInventoryItem(plyr, fx, -1);
       msg = "Key Removed";
    }
 
@@ -673,20 +676,26 @@ static void cheat_ammox(const void *arg)
 
    if(*buf == 'b')
    {
-      if((plyr->backpack = !plyr->backpack))
+      if(!E_PlayerHasBackpack(plyr))
       {
          doom_printf("Backpack Added");
-         
-         for(a = 0; a < NUMAMMO; ++a)
-            plyr->maxammo[a] <<= 1;
+         E_GiveBackpack(plyr);
+
+         // INVENTORY_FIXME: eliminate once ammo types are in inventory
+         for(a = 0; a < NUMAMMO; a++)
+            plyr->maxammo[a] *= 2;
       }
       else
       {
-         doom_printf("Backpack removed");
+         doom_printf("Backpack Removed");
+         E_RemoveBackpack(plyr);
 
-         for(a = 0; a < NUMAMMO; ++a)
+         // INVENTORY_FIXME: modify once ammo types are in inventory
+         // (must still strip extra ammo... maybe E_RemoveBackpack
+         //  should handle that, using the ammo lookup).
+         for(a = 0; a < NUMAMMO; a++)
          {
-            if(plyr->ammo[a] > (plyr->maxammo[a] >>= 1))
+            if(plyr->ammo[a] > (plyr->maxammo[a] /= 2))
                plyr->ammo[a] = plyr->maxammo[a];
          }
       }
