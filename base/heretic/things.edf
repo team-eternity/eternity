@@ -1301,7 +1301,6 @@ thingtype HereticPlayer
   radius = 16.0
   height = 56.0
   cflags  = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
-  droptype = BagOfHolding // this is currently disabled due to bugs!
   mod = PlayerMisc
   dehackednum = 398
 }
