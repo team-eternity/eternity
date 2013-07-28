@@ -38,11 +38,13 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "g_game.h"
 #include "info.h"
+#include "metaapi.h"
 #include "m_cheat.h"
 #include "m_misc.h"
 #include "p_inter.h"
@@ -1688,6 +1690,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
    int  value;      // All deh values are ints or longs
+   itemeffect_t *fx;
    
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
@@ -1714,7 +1717,14 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key,deh_misc[1]))  // Initial Bullets
          initial_bullets = value;
       else if(!strcasecmp(key,deh_misc[2]))  // Max Health
-         maxhealth = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
+            fx->setInt("maxamount", value * 2);
+         if((fx = E_ItemEffectForName(ITEMNAME_MEDIKIT)))
+            fx->setInt("compatmaxamount", value);
+         if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
+            fx->setInt("compatmaxamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[3]))  // Max Armor
          max_armor = value;
       else if(!strcasecmp(key,deh_misc[4]))  // Green Armor Class
@@ -1722,11 +1732,23 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key,deh_misc[5]))  // Blue Armor Class
          blue_armor_class = value;
       else if(!strcasecmp(key,deh_misc[6]))  // Max Soulsphere
-         max_soul = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
+            fx->setInt("maxamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[7]))  // Soulsphere Health
-         soul_health = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
+            fx->setInt("amount", value);
+      }
       else if(!strcasecmp(key,deh_misc[8]))  // Megasphere Health
-         mega_health = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
+         {
+            fx->setInt("amount",    value);
+            fx->setInt("maxamount", value);
+         }
+      }
       else if(!strcasecmp(key,deh_misc[9]))  // God Mode Health
          god_health = value;
       else if(!strcasecmp(key,deh_misc[10])) // IDFA Armor

@@ -81,6 +81,14 @@ enum
 };
 typedef int artitype_t;
 
+// Hard-coded names for specially treated items (needed in DeHackEd, etc.)
+#define ITEMNAME_BERSERKHEALTH "BerserkHealth"
+#define ITEMNAME_HEALTHBONUS   "HealthBonus"
+#define ITEMNAME_MEDIKIT       "Medikit"
+#define ITEMNAME_MEGASPHERE    "MegasphereHealth"
+#define ITEMNAME_SOULSPHERE    "Soulsphere"
+#define ITEMNAME_STIMPACK      "Stimpack"
+
 // Hard-coded names for specially treated artifact types
 #define ARTI_BACKPACKITEM "BackpackItem"
 #define ARTI_BLUECARD     "BlueCard"

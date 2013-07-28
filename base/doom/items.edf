@@ -4,11 +4,44 @@
 // DOOM Inventory Items
 //
 
-healtheffect TestEffect1
+//=============================================================================
+//
+// Health Effects
+//
+
+healtheffect HealthBonus
 {
-   amount:      25;
+   amount:    1;
+   maxamount: 200;
+   +alwayspickup
+}
+
+healtheffect Medikit
+{
+   amount:     25;
    maxamount:  100;
    lowmessage: "$GOTMEDINEED";
+}
+
+healtheffect MegasphereHealth
+{
+   amount:    200;
+   maxamount: 200;
+   +alwayspickup
+   +sethealth
+}
+
+healtheffect Soulsphere
+{
+   amount:    100;
+   maxamount: 200;
+   +alwayspickup
+}
+
+healtheffect Stimpack
+{
+   amount:    10;
+   maxamount: 100;
 }
 
 //=============================================================================

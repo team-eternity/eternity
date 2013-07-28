@@ -26,6 +26,18 @@ artifact BackpackItem
 }
 
 //
+// BerserkHealth
+//
+// This effect determines the qualities of the health boost awarded by getting
+// the berserk strength power.
+//
+healtheffect BerserkHealth
+{
+   amount:     100;
+   maxamount:  100;
+}
+
+//
 // Common Lockdefs
 //
 

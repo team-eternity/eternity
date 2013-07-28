@@ -229,25 +229,41 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, int num)
+bool P_GiveBody(player_t *player, itemeffect_t *effect)
 {
-   int maxhealthtouse;
+   if(!effect)
+      return false;
 
-   // haleyjd 11/14/09: compatibility fix.
-   // The DeHackEd maxhealth setting was only supposed to affect health
-   // potions, but when Ty replaced the MAXHEALTH define in this module,
-   // he replaced all uses of it, including here. We need to handle 
-   // multiple cases for demo compatibility.
-   if(demo_version >= 200 && demo_version < 335) 
-      maxhealthtouse = maxhealth;
+   int amount    = effect->getInt("amount",       0);
+   int maxamount = effect->getInt("maxamount",    0);
+
+   // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
+   // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
+   // define in this module, he replaced all uses of it, including here. We need
+   // to handle multiple cases for demo compatibility.
+   if(demo_version >= 200 && demo_version < 335)
+   {
+      // only applies to items that actually have this key added to them by
+      // DeHackEd; otherwise, the behavior defined through EDF prevails
+      if(effect->hasKey("compatmaxamount"))
+         maxamount = effect->getInt("compatmaxamount", 0);
+   }
+
+   // if not alwayspickup, and have more health than the max, don't pick it up
+   if(!effect->getInt("alwayspickup", 0) && player->health >= maxamount)
+      return false;
+
+   // give the health
+   if(effect->getInt("sethealth", 0))
+      player->health = amount;  // some items set health directly
    else
-      maxhealthtouse = 100;
+      player->health += amount; // most items add to health
 
-   if(player->health >= maxhealthtouse)
-      return false; // Ty 03/09/98 externalized MAXHEALTH to maxhealth
-   player->health += num;
-   if(player->health > maxhealthtouse)
-      player->health = maxhealthtouse;
+   // cap to maxamount
+   if(player->health > maxamount)
+      player->health = maxamount;
+
+   // propagate to player's Mobj
    player->mo->health = player->health;
    return true;
 }
@@ -317,7 +333,7 @@ bool P_GivePower(player_t *player, int power)
          return false;
       break;
    case pw_strength:
-      P_GiveBody(player,100);
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_BERSERKHEALTH));
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
       player->mo->flags2 |= MF2_DONTDRAW;
@@ -382,6 +398,11 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 
    switch(effect->getInt("class", ITEMFX_NONE))
    {
+   case ITEMFX_HEALTH:   // Health - heal up the player automatically
+      pickedup = P_GiveBody(player, effect);
+      if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+         message = effect->getString("lowmessage", message);
+      break;
    case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
       pickedup = E_GiveInventoryItem(player, effect);
       break;
@@ -484,11 +505,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       // bonus items
    case PFX_POTION:
-      // sf: removed beta
-      player->health++;               // can go over 100%
-      if(player->health > (maxhealth * 2))
-         player->health = (maxhealth * 2);
-      player->mo->health = player->health;
+      // INVENTORY_TODO: harcoded for now
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_HEALTHBONUS));
       message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
       break;
 
@@ -505,19 +523,18 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // sf: removed beta items
       
    case PFX_SOULSPHERE:
-      player->health += soul_health;
-      if(player->health > max_soul)
-         player->health = max_soul;
-      player->mo->health = player->health;
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_SOULSPHERE));
       message = DEH_String("GOTSUPER"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
+
       break;
 
    case PFX_MEGASPHERE:
       if(demo_version < 335 && GameModeInfo->id != commercial)
          return;
-      player->health = mega_health;
-      player->mo->health = player->health;
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
       P_GiveArmor(player,blue_armor_class, false);
       message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
@@ -587,13 +604,16 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    // medikits, heals
    case PFX_STIMPACK:
-      if(!P_GiveBody(player, 10))
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveBody(player, E_ItemEffectForName(ITEMNAME_STIMPACK)))
          return;
       message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_MEDIKIT:
-      if(!P_GiveBody(player, 25))
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ITEMNAME_MEDIKIT);
+      if(!P_GiveBody(player, effect))
          return;
       // sf: fix medineed 
       // (check for below 25, but medikit gives 25, so always > 25)
@@ -621,7 +641,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_INVISISPHERE:
-      if(!P_GivePower (player, pw_invisibility))
+      if(!P_GivePower(player, pw_invisibility))
          return;
       message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
@@ -630,8 +650,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_RADSUIT:
       if(!P_GivePower(player, pw_ironfeet))
          return;
-      // sf:removed beta
-      
       message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
@@ -644,10 +662,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_LIGHTAMP:
-      
       if(!P_GivePower(player, pw_infrared))
          return;
-      // sf:removed beta
       sound = sfx_getpow;
       message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
       break;
@@ -816,7 +832,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_HPOTION: // heretic potion
-      if(!P_GiveBody(player, 10))
+      if(!P_GiveBody(player, E_ItemEffectForName("CrystalVial")))
          return;
       message = DEH_String("HITEMHEALTH");
       sound = sfx_hitemup;

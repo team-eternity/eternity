@@ -156,6 +156,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_SAVEAMOUNT     "saveamount"
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
+#define KEY_SETHEALTH      "sethealth"
 #define KEY_SORTORDER      "sortorder"
 #define KEY_TYPE           "type"
 #define KEY_UNDROPPABLE    "undroppable"
@@ -185,7 +186,8 @@ cfg_opt_t edf_healthfx_opts[] =
    CFG_INT(KEY_MAXAMOUNT,  0,  CFGF_NONE), // max that can be recovered
    CFG_STR(KEY_LOWMESSAGE, "", CFGF_NONE), // message if health < amount
    
-   CFG_FLAG(KEY_ALWAYSPICKUP, 0,  CFGF_SIGNPREFIX), // if +, always pick up
+   CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), // if +, always pick up
+   CFG_FLAG(KEY_SETHEALTH,    0, CFGF_SIGNPREFIX), // if +, sets health  
    
    CFG_END()
 };

@@ -6,6 +6,31 @@
 
 //=============================================================================
 //
+// Health Effects
+//
+
+healtheffect CrystalVial
+{
+   amount:    10;
+   maxamount: 100;
+}
+
+// Use effect for ArtiHealth
+healtheffect QuartzFlask
+{
+   amount:    25;
+   maxamount: 100;
+}
+
+// Use effect for ArtiSuperHealth
+healtheffect MysticUrn
+{
+   amount:    100;
+   maxamount: 100;
+}
+
+//=============================================================================
+//
 // Keys
 //
 
