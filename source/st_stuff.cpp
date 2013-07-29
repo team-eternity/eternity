@@ -905,7 +905,10 @@ static void ST_DoomFSDrawer(void)
    V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
    
    // armor
-   if(plyr->armortype == 2)
+   fixed_t armorclass = 0;
+   if(plyr->armordivisor)
+      armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
+   if(armorclass > FRACUNIT/3)
       V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
    else
       V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);

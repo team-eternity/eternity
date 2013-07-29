@@ -46,6 +46,47 @@ healtheffect Stimpack
 
 //=============================================================================
 //
+// Armor Effects
+//
+
+armoreffect GreenArmor
+{
+   saveamount:  100;
+   savefactor:  1;
+   savedivisor: 3;   // 33% absorption (1/3)   
+}
+
+armoreffect BlueArmor
+{
+   saveamount:  200;
+   savefactor:  1;
+   savedivisor: 2;   // 50% absorption (1/2)
+}
+
+armoreffect ArmorBonus
+{
+   saveamount:    1;
+   savefactor:    1;
+   savedivisor:   3;   // 33% absorption, if player has no armor
+   maxsaveamount: 200;
+   +alwayspickup
+   +bonus
+}
+
+// This armor is what is given when using IDFA or IDKFA cheats in DOOM.
+// Changing the cheat armor factor in DeHackEd will change this armor in 
+// the following way:
+// * saveamount will be set to class * 100
+// * if class is <= 1, the absorption rate will be cut to 1/3
+armoreffect IDFAArmor
+{
+   saveamount:  200;
+   savefactor:  1;
+   savedivisor: 2;
+}
+
+//=============================================================================
+//
 // Keys
 //
 

@@ -461,8 +461,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
-             << p.health       << p.armorpoints     << p.armortype
-             << p.hereticarmor << p.totalfrags
+             << p.health       << p.armorpoints     << p.armorfactor
+             << p.armordivisor << p.totalfrags
              << p.readyweapon  << p.pendingweapon   << p.extralight
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret

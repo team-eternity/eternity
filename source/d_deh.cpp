@@ -1726,11 +1726,34 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             fx->setInt("compatmaxamount", value);
       }
       else if(!strcasecmp(key,deh_misc[3]))  // Max Armor
-         max_armor = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
+            fx->setInt("maxsaveamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[4]))  // Green Armor Class
-         green_armor_class = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_GREENARMOR)))
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value > 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 2);
+            }
+         }
+      }
       else if(!strcasecmp(key,deh_misc[5]))  // Blue Armor Class
-         blue_armor_class = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value <= 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 3);
+            }
+         }
+      }
       else if(!strcasecmp(key,deh_misc[6]))  // Max Soulsphere
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
@@ -1752,13 +1775,22 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key,deh_misc[9]))  // God Mode Health
          god_health = value;
       else if(!strcasecmp(key,deh_misc[10])) // IDFA Armor
-         idfa_armor = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
+            fx->setInt("saveamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[11])) // IDFA Armor Class
-         idfa_armor_class = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
+         {
+            fx->setInt("savefactor", 1);
+            fx->setInt("savedivisor", value > 1 ? 2 : 3);
+         }
+      }
       else if(!strcasecmp(key,deh_misc[12])) // IDKFA Armor
-         idkfa_armor = value;
+         ; //idkfa_armor = value;
       else if(!strcasecmp(key,deh_misc[13])) // IDKFA Armor Class
-         idkfa_armor_class = value;
+         ; //idkfa_armor_class = value;
       else if(!strcasecmp(key,deh_misc[14])) // BFG Cells/Shot
       {
          // WEAPON_FIXME: BFG ammopershot

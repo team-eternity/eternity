@@ -323,7 +323,12 @@ static void HU_drawArmor(int x, int y)
    else if(hu_player.armorpoints < armor_yellow)
       fontcolor = *FC_GOLD;
    else if(armor_byclass)
-      fontcolor = (hu_player.armortype == 2 ? *FC_BLUE : *FC_GREEN);
+   {
+      fixed_t armorclass = 0;
+      if(hu_player.armordivisor)
+         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
+      fontcolor = (armorclass > FRACUNIT/3 ? *FC_BLUE : *FC_GREEN);
+   }
    else if(hu_player.armorpoints <= armor_green)
       fontcolor = *FC_GREEN;
    else

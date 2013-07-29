@@ -72,19 +72,7 @@
 
 int initial_health = 100;
 int initial_bullets = 50;
-int maxhealth = 100; // was MAXHEALTH as a #define, used only in this module
-int max_armor = 200;
-int green_armor_class = 1;  // these are involved with armortype below
-int blue_armor_class = 2;
-int max_soul = 200;
-int soul_health = 100;
-int mega_health = 200;
 int god_health = 100;   // these are used in cheats (see st_stuff.c)
-int idfa_armor = 200;
-int idfa_armor_class = 2;
-// not actually used due to pairing of cheat_k and cheat_fa
-int idkfa_armor = 200;
-int idkfa_armor_class = 2;
 
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
@@ -274,19 +262,47 @@ bool P_GiveBody(player_t *player, itemeffect_t *effect)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, int armortype, bool htic)
+bool P_GiveArmor(player_t *player, itemeffect_t *effect)
 {
-   int hits = armortype*100;
+   if(!effect)
+      return false;
 
-   if(player->armorpoints >= hits)
-      return false;   // don't pick up
+   int hits        = effect->getInt("saveamount",  0);
+   int savefactor  = effect->getInt("savefactor",  1);
+   int savedivisor = effect->getInt("savedivisor", 3);
 
-   player->armortype = armortype;
-   player->armorpoints = hits;
-   
-   // haleyjd 10/10/02 -- TODO/FIXME: hack!
-   player->hereticarmor = player->hereticarmor || htic;
-   
+   // check for validity
+   if(!hits || !savefactor || !savedivisor)
+      return false;
+
+   // check if needed
+   if(!(effect->getInt("alwayspickup", 0)) && player->armorpoints >= hits)
+      return false; // don't pick up
+
+   // bonuses add to your armor and preserve your current absorption qualities;
+   // normal pickups set your armor and override any existing qualities
+   if(effect->getInt("bonus", 0))
+   {
+      int maxsaveamount = effect->getInt("maxsaveamount", 0);
+      player->armorpoints += hits;
+      if(player->armorpoints > maxsaveamount)
+         player->armorpoints = maxsaveamount;
+
+      // bonuses only change the player's armor absorption quality if the player
+      // currently has no armor
+      if(!player->armorfactor)
+      {
+         player->armorfactor  = savefactor;
+         player->armordivisor = savedivisor;
+      }
+   }
+   else
+   {
+      player->armorpoints  = hits;
+      player->armorfactor  = savefactor;
+      player->armordivisor = savedivisor;
+   }
+
    return true;
 }
 
@@ -403,6 +419,9 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
       if(pickedup && player->health < effect->getInt("amount", 0) * 2)
          message = effect->getString("lowmessage", message);
       break;
+   case ITEMFX_ARMOR:
+      pickedup = P_GiveArmor(player, effect);
+      break;
    case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
       pickedup = E_GiveInventoryItem(player, effect);
       break;
@@ -492,31 +511,28 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    {
       // armor
    case PFX_GREENARMOR:
-      if(!P_GiveArmor(player, green_armor_class, false))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_GREENARMOR)))
          return;
       message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BLUEARMOR:
-      if(!P_GiveArmor(player, blue_armor_class, false))
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
          return;
       message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
       break;
 
       // bonus items
    case PFX_POTION:
-      // INVENTORY_TODO: harcoded for now
+      // INVENTORY_TODO: hardcoded for now
       P_GiveBody(player, E_ItemEffectForName(ITEMNAME_HEALTHBONUS));
       message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ARMORBONUS:
-      // sf: removed beta
-      player->armorpoints++;          // can go over 100%
-      if(player->armorpoints > max_armor)
-         player->armorpoints = max_armor;
-      if(!player->armortype)
-         player->armortype = green_armor_class;
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ARMORBONUS));
       message = DEH_String("GOTARMBONUS"); // Ty 03/22/98 - externalized
       break;
 
@@ -535,7 +551,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          return;
       // INVENTORY_TODO: hardcoded for now
       P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
-      P_GiveArmor(player,blue_armor_class, false);
+      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR));
       message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
@@ -839,14 +855,16 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_SILVERSHIELD: // heretic shield 1
-      if(!P_GiveArmor(player, 1, true))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_SILVERSHIELD)))
          return;
       message = DEH_String("HITEMSHIELD1");
       sound = sfx_hitemup;
       break;
 
    case PFX_ENCHANTEDSHIELD: // heretic shield 2
-      if(!P_GiveArmor(player, 2, true))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ENCHANTEDSHLD)))
          return;
       message = DEH_String("HITEMSHIELD2");
       sound = sfx_hitemup;
@@ -1498,24 +1516,15 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
-      if(player->armortype)
+      if(player->armorfactor && player->armordivisor)
       {
-         int saved;
-         
-         // haleyjd 10/10/02: heretic armor -- its better! :P
-         // HTIC_FIXME
-         if(player->hereticarmor)
-            saved = player->armortype == 1 ? damage/2 : (damage*3)/4;
-         else
-            saved = player->armortype == 1 ? damage/3 : damage/2;
+         int saved = damage * player->armorfactor / player->armordivisor;
          
          if(player->armorpoints <= saved)
          {
             // armor is used up
             saved = player->armorpoints;
-            player->armortype = 0;
-            // haleyjd 10/10/02
-            player->hereticarmor = false;
+            player->armorfactor = player->armordivisor = 0;
          }
          player->armorpoints -= saved;
          damage -= saved;

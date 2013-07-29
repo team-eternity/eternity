@@ -46,6 +46,7 @@
 #include "dstrings.h"
 #include "e_states.h"
 #include "g_game.h"
+#include "metaapi.h"
 #include "m_argv.h"
 #include "m_cheat.h"
 #include "p_inter.h"
@@ -379,8 +380,13 @@ static void cheat_fa(const void *arg)
       E_GiveBackpack(plyr);
    }
    
-   plyr->armorpoints = idfa_armor;       // Ty 03/09/98 - deh
-   plyr->armortype   = idfa_armor_class; // Ty 03/09/98 - deh
+   itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
+   if(armor)
+   {
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
+   }
 
    // WEAPON_FIXME: IDFA cheat
    
