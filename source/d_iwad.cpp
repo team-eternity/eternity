@@ -533,11 +533,13 @@ static const char *D_doIWADMenu()
 
 #ifdef _SDL_VER
    bool haveIWADs[NUMPICKIWADS];
-   int i, choice = -1;
+   int  choice   = -1;
    bool foundone = false;
 
+   memset(haveIWADs, 0, sizeof(haveIWADs));
+
    // populate haveIWADs array based on system.cfg variables
-   for(i = 0; i < NUMPICKIWADS; ++i)
+   for(int i = 0; i < NUMPICKIWADS; i++)
    {
       const char *path = *iwadVarForNum[i];
       if(path && *path != '\0')
