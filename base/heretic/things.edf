@@ -1,1595 +1,1823 @@
-// EDF for Eternity Engine v3.35.90
-//  Thing type definitions for Heretic gamemode.
-
-thingtype CrystalVial 
-{
-  doomednum = 7081
-  spawnstate = S_ITEM_PTN1_1
-  cflags = SPECIAL|FLOATBOB
-  acs_spawndata { num = 23; modes = heretic }
-  dehackednum = 300
-}
-
-thingtype SilverShield 
-{
-  doomednum = 7085
-  spawnstate = S_ITEM_SHLD1
-  cflags = SPECIAL|FLOATBOB
-  acs_spawndata { num = 68; modes = heretic }
-  dehackednum = 301
-}
-
-thingtype EnchantedShield 
-{
-  doomednum = 7031
-  spawnstate = S_ITEM_SHD2_1
-  cflags = SPECIAL|FLOATBOB
-  acs_spawndata { num = 69; modes = heretic }
-  dehackednum = 302
-}
-
-thingtype BagOfHolding 
-{
-  doomednum = 7008
-  spawnstate = S_ITEM_BAGH1
-  cflags = SPECIAL|COUNTITEM|FLOATBOB
-  acs_spawndata { num = 136; modes = heretic }
-  dehackednum = 303
-}
-
-thingtype MapScroll 
-{
-  doomednum = 7035
-  spawnstate = S_ITEM_SPMP1
-  cflags = SPECIAL|COUNTITEM|FLOATBOB
-  acs_spawndata { num = 137; modes = heretic }
-  dehackednum = 304
-}
-
-thingtype Pod 
-{
-  doomednum = 7235
-  spawnstate = S_POD_WAIT1
-  spawnhealth = 45
-  painstate = S_POD_PAIN1
-  painchance = 255
-  deathstate = S_POD_DIE1
-  deathsound = ht_podexp
-  radius = 16.0
-  height = 54.0
-  cflags = SOLID|SHOOTABLE|DROPOFF|NOBLOOD|NORESPAWN|PUSHABLE|SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
-  mod = Barrel
-  acs_spawndata { num = 125; modes = heretic }
-  dehackednum = 305
-}
-
-thingtype PodGoo 
-{
-  spawnstate = S_PODGOO1
-  deathstate = S_PODGOOX
-  radius = 2.0
-  height = 4.0
-  cflags = NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE
-  dehackednum = 306
-}
-
-thingtype PodGenerator 
-{
-  doomednum = 7043
-  spawnstate = S_PODGENERATOR
-  flags = NOSECTOR|NOBLOCKMAP
-  acs_spawndata { num = 126; modes = heretic }
-  dehackednum = 307
-}
-
-thingtype HangingSkull70 
-{
-  doomednum = 7017
-  spawnstate = S_SKULLHANG70_1
-  height = 70.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 308
-}
-
-thingtype HangingSkull60 
-{
-  doomednum = 7024
-  spawnstate = S_SKULLHANG60_1
-  height = 60.0000
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 309
-}
-
-thingtype HangingSkull45 
-{
-  doomednum = 7025
-  spawnstate = S_SKULLHANG45_1
-  height = 45.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 310
-}
-
-thingtype HangingSkull35 
-{
-  doomednum = 7026
-  spawnstate = S_SKULLHANG35_1
-  height = 35.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 311
-}
-
-thingtype Chandelier 
-{
-  doomednum = 7028
-  spawnstate = S_CHANDELIER1
-  height = 60.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 312
-}
-
-thingtype SerpentTorch 
-{
-  doomednum = 7027
-  spawnstate = S_SERPTORCH1
-  radius = 12.0
-  height = 54.0
-  topdamage = 2
-  topdamagemask = 3
-  flags = SOLID
-  dehackednum = 313
-}
-
-thingtype HereticPillarSmall 
-{
-  doomednum = 7029
-  spawnstate = S_SMALLPILLAR
-  radius = 16.0
-  height = 34.0
-  flags = SOLID
-  dehackednum = 314
-}
-
-thingtype HereticStalagmiteSmall 
-{
-  doomednum = 7037
-  spawnstate = S_STALAGMITESMALL
-  radius = 8.0
-  height = 32.0
-  flags = SOLID
-  dehackednum = 315
-}
-
-thingtype HereticStalagmiteLarge 
-{
-  doomednum = 7038
-  spawnstate = S_STALAGMITELARGE
-  radius = 12.0
-  height = 64.0
-  flags = SOLID
-  dehackednum = 316
-}
-
-thingtype HereticStalactiteSmall 
-{
-  doomednum = 7039
-  spawnstate = S_STALACTITESMALL
-  radius = 8.0
-  height = 36.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 317
-}
-
-thingtype HereticStalactiteLarge 
-{
-  doomednum = 7040
-  spawnstate = S_STALACTITELARGE
-  radius = 12.0
-  height = 68.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 318
-}
-
-thingtype FireBrazier 
-{
-  doomednum = 7076
-  spawnstate = S_FIREBRAZIER1
-  radius = 16.0
-  height = 44.0
-  topdamage = 4
-  topdamagemask = 3
-  flags = SOLID
-  dehackednum = 319
-}
-
-thingtype HereticBarrel 
-{
-  doomednum = 7044
-  spawnstate = S_WOODBARREL
-  radius = 12.0
-  height = 32.0
-  flags = SOLID
-  dehackednum = 320
-}
-
-thingtype HornedPillar 
-{
-  doomednum = 7047
-  spawnstate = S_BCOLUMN
-  radius = 14.0
-  height = 128.0
-  flags = SOLID
-  dehackednum = 321
-}
-
-thingtype HereticMoss1 
-{
-  doomednum = 7048
-  spawnstate = S_MOSS1
-  height = 23.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 322
-}
-
-thingtype HereticMoss2 
-{
-  doomednum = 7049
-  spawnstate = S_MOSS2
-  height = 27.0
-  flags = SPAWNCEILING|NOGRAVITY
-  dehackednum = 323
-}
-
-thingtype HereticWallTorch 
-{
-  doomednum = 7050
-  spawnstate = S_WALLTORCH1
-  flags = NOGRAVITY
-  dehackednum = 324
-}
-
-thingtype HereticCorpse 
-{
-  doomednum = 7051
-  spawnstate = S_HTICCORPSE
-  radius = 8.0
-  height = 104.0
-  flags = SOLID|SPAWNCEILING|NOGRAVITY
-  dehackednum = 325
-}
-
-thingtype KeyGizmoBlue 
-{
-  doomednum = 7094
-  spawnstate = S_KEYGIZMOB
-  radius = 16.0
-  height = 50.0
-  flags = SOLID
-  dehackednum = 326
-}
-
-thingtype KeyGizmoGreen 
-{
-  doomednum = 7095
-  spawnstate = S_KEYGIZMOG
-  radius = 16.0
-  height = 50.0
-  flags = SOLID
-  dehackednum = 327
-}
-
-thingtype KeyGizmoYellow 
-{
-  doomednum = 7096
-  spawnstate = S_KEYGIZMOY
-  radius = 16.0
-  height = 50.0
-  flags = SOLID
-  dehackednum = 328
-}
-
-thingtype KeyGizmoOrb 
-{
-  spawnstate = S_KGZ_START
-  radius = 16.0
-  flags = SOLID|NOGRAVITY
-  dehackednum = 329
-}
-
-thingtype TeleGlitterGenRed 
-{
-  doomednum = 7074
-  spawnstate = S_TELEGLITGEN1
-  //flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
-  cflags = DONTDRAW
-  dehackednum = 330
-}
-
-thingtype TeleGlitterGenBlue 
-{
-  doomednum = 7052
-  spawnstate = S_TELEGLITGEN2
-  //flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
-  cflags = DONTDRAW
-  dehackednum = 331
-}
-
-thingtype TeleGlitterRed 
-{
-  spawnstate = S_TELEGLITTER1_1
-  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
-  acs_spawndata { num = 166; modes = heretic }
-  dehackednum = 332
-}
-
-thingtype TeleGlitterBlue 
-{
-  spawnstate = S_TELEGLITTER2_1
-  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
-  acs_spawndata { num = 167; modes = heretic }
-  dehackednum = 333
-}
-
-thingtype HereticTeleFog 
-{
-  spawnstate = S_HTFOG1
-  flags = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 334
-}
-
-thingtype HereticBlood 
-{
-  spawnstate = S_HTICBLOOD1
-  cflags = NOBLOCKMAP|NOSPLASH
-  dehackednum = 335
-}
-
-thingtype Golem 
-{
-  doomednum = 7068
-  spawnstate = S_MUMMY_LOOK1
-  spawnhealth = 80
-  seestate = S_MUMMY_WALK1
-  seesound = ht_mumsit
-  attacksound = ht_mumat1
-  painstate = S_MUMMY_PAIN1
-  painchance = 128
-  painsound = ht_mumpai
-  meleestate = S_MUMMY_ATK1
-  deathstate = S_MUMMY_DIE1
-  deathsound = ht_mumdth
-  speed = 12
-  radius = 22.0
-  height = 62.0
-  mass = 75
-  activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 4; modes = heretic }
-  obituary_melee = "was pummeled by a Golem"
-  dehackednum = 336
-}
-
-thingtype NitroGolem 
-{
-  doomednum = 7045
-  spawnstate = S_MUMMY_LOOK1
-  spawnhealth = 100
-  seestate = S_MUMMY_WALK1
-  seesound = ht_mumsit
-  attacksound = ht_mumat1
-  painstate = S_MUMMY_PAIN1
-  painchance = 64
-  painsound = ht_mumpai
-  meleestate = S_MUMMY_ATK1
-  missilestate = S_MUMMYL_ATK1
-  deathstate = S_MUMMY_DIE1
-  deathsound = ht_mumdth
-  speed = 12
-  radius = 22.0
-  height = 62.0
-  mass = 75
-  activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 2; modes = heretic }
-  obituary_normal = "was burned by a Nitrogolem"
-  obituary_melee  = "was beaten by a Nitrogolem"
-  dehackednum = 337
-}
-
-thingtype GolemGhost 
-{
-  doomednum = 7069
-  spawnstate = S_MUMMY_LOOK1
-  spawnhealth = 80
-  seestate = S_MUMMY_WALK1
-  seesound = ht_mumsit
-  attacksound = ht_mumat1
-  painstate = S_MUMMY_PAIN1
-  painchance = 128
-  painsound = ht_mumpai
-  meleestate = S_MUMMY_ATK1
-  deathstate = S_MUMMY_DIE1
-  deathsound = ht_mumdth
-  speed = 12
-  radius = 22.0
-  height = 62.0
-  mass = 75
-  activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 8; modes = heretic }
-  obituary_melee = "was spooked by a Golem Ghost"
-  dehackednum = 338
-}
-
-thingtype NitroGolemGhost 
-{
-  doomednum = 7046
-  spawnstate = S_MUMMY_LOOK1
-  spawnhealth = 100
-  seestate = S_MUMMY_WALK1
-  seesound = ht_mumsit
-  attacksound = ht_mumat1
-  painstate = S_MUMMY_PAIN1
-  painchance = 64
-  painsound = ht_mumpai
-  meleestate = S_MUMMY_ATK1
-  missilestate = S_MUMMYL_ATK1
-  deathstate = S_MUMMY_DIE1
-  deathsound = ht_mumdth
-  speed = 12
-  radius = 22.0
-  height = 62.0
-  mass = 75
-  activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 9; modes = heretic }
-  obituary_normal = "was burned by a Nitrogolem Ghost"
-  obituary_melee  = "was beaten by a Nitrogolem Ghost"
-  dehackednum = 339
-}
-
-thingtype GolemSoul 
-{
-  spawnstate = S_MUMMY_SOUL1
-  flags = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 340
-}
-
-thingtype GolemShot 
-{
-  spawnstate = S_MUMMYFX1_1
-  deathstate = S_MUMMYFXI1_1
-  speed = 9.0
-  fastspeed = 18.0
-  radius = 8.0
-  height = 14.0
-  damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE|NORANDOMIZE
-  acs_spawndata { num = 131; modes = heretic }
-  dehackednum = 341
-}
-
-thingtype Weredragon 
-{
-  doomednum = 7070
-  spawnstate = S_BEAST_LOOK1
-  spawnhealth = 220
-  seestate = S_BEAST_WALK1
-  seesound = ht_bstsit
-  attacksound = ht_bstatk
-  painstate = S_BEAST_PAIN1
-  painchance = 100
-  painsound = ht_bstpai
-  missilestate = S_BEAST_ATK1
-  deathstate = S_BEAST_DIE1
-  xdeathstate = S_BEAST_XDIE1
-  deathsound = ht_bstdth
-  speed = 14
-  radius = 32.0
-  height = 74.0
-  mass = 200
-  activesound = ht_bstact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 3; modes = heretic }
-  obituary_normal = "was flamed by a Weredragon"
-  obituary_melee  = "was torn apart by a Weredragon"
-  dehackednum = 342
-}
-
-thingtype WeredragonShot 
-{
-  spawnstate = S_BEASTBALL1
-  deathstate = S_BEASTBALLX1
-  speed = 12.0
-  fastspeed = 20.0
-  radius = 9.0
-  height = 8.0
-  damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
-  acs_spawndata { num = 120; modes = heretic }
-  dehackednum = 343
-}
-
-thingtype WeredragonSmoke 
-{
-  spawnstate = S_PUFFY1
-  deathstate = S_PUFFY1
-  speed = 10.0
-  radius = 6.0
-  height = 8.0
-  damage = 2
-  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE
-  dehackednum = 344
-}
-
-thingtype Ophidian 
-{
-  doomednum = 7092
-  spawnstate = S_SNAKE_LOOK1
-  spawnhealth = 280
-  seestate = S_SNAKE_WALK1
-  seesound = ht_snksit
-  attacksound = ht_snkatk
-  painstate = S_SNAKE_PAIN1
-  painchance = 48
-  painsound = ht_snkpai
-  missilestate = S_SNAKE_ATK1
-  deathstate = S_SNAKE_DIE1
-  deathsound = ht_snkdth
-  speed = 10
-  radius = 22.0
-  height = 70.0
-  activesound = ht_snkact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 132; modes = heretic }
-  obituary_normal = "was smoked by an Ophidian"
-  dehackednum = 345
-}
-
-thingtype OphidianShotA 
-{
-  spawnstate = S_SNAKEPRO_A1
-  deathstate = S_SNAKEPRO_AX1
-  speed = 14.0
-  fastspeed = 20.0
-  radius = 12.0
-  height = 8.0
-  damage = 1
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
-  acs_spawndata { num = 138; modes = heretic }
-  dehackednum = 346
-}
-
-thingtype OphidianShotB 
-{
-  spawnstate = S_SNAKEPRO_B1
-  deathstate = S_SNAKEPRO_BX1
-  speed = 14.0
-  fastspeed = 20.0
-  radius = 12.0
-  height = 8.0
-  damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
-  acs_spawndata { num = 139; modes = heretic }
-  dehackednum = 347
-}
-
-thingtype SabreClaw 
-{
-  doomednum = 7090
-  spawnstate = S_CLINK_LOOK1
-  spawnhealth = 150
-  seestate = S_CLINK_WALK1
-  seesound = ht_clksit
-  attacksound = ht_clkatk
-  painstate = S_CLINK_PAIN1
-  painchance = 32
-  painsound = ht_clkpai
-  meleestate = S_CLINK_ATK1
-  deathstate = S_CLINK_DIE1
-  deathsound = ht_clkdth
-  speed = 14
-  height = 64.0
-  mass = 75
-  activesound = ht_clkact
-  cflags = SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 1; modes = heretic }
-  obituary_melee = "was sliced to bits by a Sabreclaw"
-  dehackednum = 348
-}
-
-thingtype Disciple 
-{
-  doomednum = 7015
-  spawnstate = S_WIZARD_LOOK1
-  spawnhealth = 180
-  seestate = S_WIZARD_WALK1
-  seesound = ht_wizsit
-  attacksound = ht_wizatk
-  painstate = S_WIZARD_PAIN1
-  painchance = 64
-  painsound = ht_wizpai
-  missilestate = S_WIZARD_ATK1
-  deathstate = S_WIZARD_DIE1
-  deathsound = ht_wizdth
-  speed = 12
-  radius = 16.0
-  height = 68.0
-  activesound = ht_wizact
-  flags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
-  flags3 = ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
-  acs_spawndata { num = 19; modes = heretic }
-  obituary_normal = "was schooled by a Disciple"
-  obituary_melee  = "was slapped by a Disciple"
-  dehackednum = 349
-}
-
-thingtype DiscipleShot 
-{
-  spawnstate = S_WIZFX1_1
-  deathstate = S_WIZFXI1_1
-  speed = 18.0
-  fastspeed = 24.0
-  radius = 10.0
-  height = 6.0
-  damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
-  acs_spawndata { num = 140; modes = heretic }
-  dehackednum = 350
-}
-
-thingtype DeathKnight 
-{
-  doomednum = 7064
-  spawnstate = S_KNIGHT_STND1
-  spawnhealth = 200
-  seestate = S_KNIGHT_WALK1
-  seesound = ht_kgtsit
-  attacksound = ht_kgtatk
-  painstate = S_KNIGHT_PAIN1
-  painchance = 100
-  painsound = ht_kgtpai
-  meleestate = S_KNIGHT_ATK1
-  missilestate = S_KNIGHT_ATK1
-  deathstate = S_KNIGHT_DIE1
-  deathsound = ht_kgtdth
-  speed = 12
-  radius = 24.0
-  height = 78.0
-  mass = 150
-  activesound = ht_kgtsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 6; modes = heretic }
-  obituary_normal = "was axed by a Death Knight"
-  obituary_melee  = "was chopped down by a Death Knight"
-  dehackednum = 351
-}
-
-thingtype DeathKnightGhost 
-{
-  doomednum = 7065
-  spawnstate = S_KNIGHT_STND1
-  spawnhealth = 200
-  seestate = S_KNIGHT_WALK1
-  seesound = ht_kgtsit
-  attacksound = ht_kgtatk
-  painstate = S_KNIGHT_PAIN1
-  painchance = 100
-  painsound = ht_kgtpai
-  meleestate = S_KNIGHT_ATK1
-  missilestate = S_KNIGHT_ATK1
-  deathstate = S_KNIGHT_DIE1
-  deathsound = ht_kgtdth
-  speed = 12
-  radius = 24.0
-  height = 78.0
-  mass = 150
-  activesound = ht_kgtsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 129; modes = heretic }
-  obituary_normal = "was spooked by a Knight Ghost"
-  obituary_melee  = "was chopped by a Knight Ghost"
-  dehackednum = 352
-}
-
-thingtype KnightAxe 
-{
-  spawnstate = S_SPINAXE1
-  deathstate = S_SPINAXEX1
-  deathsound = ht_hrnhit
-  speed = 9.0
-  fastspeed = 18.0
-  radius = 10.0
-  height = 8.0
-  damage = 2
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NORANDOMIZE|NOCROSS|THRUGHOST|WINDTHRUST
-  acs_spawndata { num = 127; modes = heretic }
-  dehackednum = 353
-}
-
-thingtype KnightAxeRed 
-{
-  spawnstate = S_REDAXE1
-  deathstate = S_REDAXEX1
-  deathsound = ht_hrnhit
-  speed = 9.0
-  fastspeed = 18.0
-  radius = 10.0
-  height = 8.0
-  damage = 7
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST|NORANDOMIZE
-  acs_spawndata { num = 128; modes = heretic }
-  dehackednum = 354
-}
-
-thingtype SerpentRiderDsparil 
-{
-  doomednum = 7007
-  spawnstate = S_SRCR1_LOOK1
-  spawnhealth = 2000
-  seestate = S_SRCR1_WALK1
-  seesound = ht_bstsit
-  attacksound = ht_bstatk
-  painstate = S_SRCR1_PAIN1
-  painchance = 56
-  painsound = ht_sbtpai
-  missilestate = S_SRCR1_ATK1
-  deathstate = S_SRCR1_DIE1
-  deathsound = ht_sbtdth
-  speed = 16
-  radius = 28.0
-  height = 100.0
-  mass = 800
-  activesound = ht_sbtact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  nukespecial = SorcNukeSpec
-  acs_spawndata { num = 142; modes = heretic }
-  obituary_normal = "was burned by D'Sparil's serpent"
-  obituary_melee  = "was devoured by D'Sparil's serpent"
-  dehackednum = 355
-}
-
-thingtype SRDsparilShot1 
-{
-  spawnstate = S_SRCRFX1_1
-  deathstate = S_SRCRFXI1_1
-  speed = 20.0
-  fastspeed = 28.0
-  radius = 10.0
-  height = 10.0
-  damage = 10
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
-  acs_spawndata { num = 144; modes = heretic }
-  dehackednum = 356
-}
-
-thingtype Dsparil 
-{
-  spawnstate = S_SOR2_LOOK1
-  spawnhealth = 3500
-  seestate = S_SOR2_WALK1
-  seesound = ht_sorsit
-  attacksound = ht_soratk
-  painstate = S_SOR2_PAIN1
-  painchance = 32
-  painsound = ht_sorpai
-  missilestate = S_SOR2_ATK1
-  deathstate = S_SOR2_DIE1
-  speed = 14
-  radius = 16.0
-  height = 70.0
-  mass = 300
-  activesound = ht_soract
-  cflags  = SOLID|SHOOTABLE|DROPOFF|COUNTKILL|E3M8BOSS|BOSS|FOOTCLIP|LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 143; modes = heretic }
-  obituary_normal = "brought about the end of Parthoris"
-  obituary_melee  = "utterly failed to save Parthoris"
-  dehackednum = 357
-}
-
-thingtype DsparilShot1 
-{
-  spawnstate = S_SOR2FX1_1
-  deathstate = S_SOR2FXI1_1
-  speed = 20.0
-  fastspeed = 28.0
-  radius = 10.0
-  height = 6.0
-  damage = 1
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
-  acs_spawndata { num = 146; modes = heretic }
-  dehackednum = 358
-}
-
-thingtype DsparilSpark 
-{
-  spawnstate = S_SOR2FXSPARK1
-  cflags = NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
-  dehackednum = 359
-}
-
-thingtype DsparilShot2 
-{
-  spawnstate = S_SOR2FX2_1
-  deathstate = S_SOR2FXI2_1
-  speed = 6.0
-  radius = 10.0
-  height = 6.0
-  damage = 10
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
-  acs_spawndata { num = 145; modes = heretic }
-  dehackednum = 360
-}
-
-thingtype DsparilTeleFade 
-{
-  spawnstate = S_SOR2TELEFADE1
-  flags = NOBLOCKMAP
-  dehackednum = 361
-}
-
-thingtype HereticGreenKey 
-{
-  doomednum = 7073
-  spawnstate = S_AKYY1
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 86; modes = heretic }
-  dehackednum = 362
-}
-
-thingtype HereticBlueKey 
-{
-  doomednum = 7079
-  spawnstate = S_BKYY1
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 85; modes = heretic }
-  dehackednum = 363
-}
-
-thingtype HereticYellowKey 
-{
-  doomednum = 7080
-  spawnstate = S_CKYY1
-  flags = SPECIAL|NOTDMATCH
-  acs_spawndata { num = 87; modes = heretic }
-  dehackednum = 364
-}
-
-thingtype HereticAmbienceWind 
-{
-  doomednum = 7042
-  spawnstate = S_SND_WIND
-  cflags = DONTDRAW
-  acs_spawndata { num = 110; modes = heretic }
-  dehackednum = 365
-}
-
-thingtype HereticAmbienceWater 
-{
-  doomednum = 7041
-  spawnstate = S_SND_WATERFALL
-  cflags = DONTDRAW
-  acs_spawndata { num = 111; modes = heretic }
-  dehackednum = 366
-}
-
-thingtype DsparilTeleSpot 
-{
-  doomednum = 7056
-  height = 32.0
-  flags = NOSECTOR|NOBLOCKMAP
-  dehackednum = 367
-}
-
-thingtype HereticVolcano 
-{
-  doomednum = 7087
-  spawnstate = S_VOLCANO1
-  radius = 12.0
-  height = 20.0
-  flags = SOLID
-  acs_spawndata { num = 150; modes = heretic }
-  obituary_normal = "needs to stay away from volcanoes"
-  dehackednum = 368
-}
-
-thingtype VolcanoBall 
-{
-  spawnstate = S_VOLCANOBALL1
-  deathstate = S_VOLCANOBALLX1
-  deathsound = ht_lobhit
-  speed  = 2.0
-  radius = 8.0
-  height = 8.0
-  damage = 2
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
-  acs_spawndata { num = 123; modes = heretic }
-  dehackednum = 369
-}
-
-thingtype VolcanoBallSmall 
-{
-  spawnstate = S_VOLCANOTBALL1
-  deathstate = S_VOLCANOTBALLX1
-  speed  = 2.0
-  radius = 8.0
-  height = 6.0
-  damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
-  acs_spawndata { num = 124; modes = heretic }
-  dehackednum = 370
-}
-
-thingtype Maulotaur 
-{
-  doomednum = 7009
-  spawnstate = S_MNTR_LOOK1
-  spawnhealth = 3000
-  seestate = S_MNTR_WALK1
-  seesound = ht_minsit
-  attacksound = ht_minat1
-  painstate = S_MNTR_PAIN1
-  painchance = 25
-  painsound = ht_minpai
-  meleestate = S_MNTR_ATK1_1
-  missilestate = S_MNTR_ATK2_1
-  deathstate = S_MNTR_DIE1
-  deathsound = ht_mindth
-  speed = 16
-  radius = 28.0
-  height = 100.0
-  mass = 800
-  damage = 7
-  dmgspecial = MinotaurCharge
-  activesound = ht_minact
-  cflags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 114; modes = heretic } // note: different from zdoom
-  obituary_normal = "bowed down before the Maulotaur"
-  obituary_melee  = "was pounded flat by the Maulotaur"
-  dehackednum = 371
-}
-
-thingtype MaulotaurShot 
-{
-  spawnstate = S_MNTRFX1_1
-  deathstate = S_MNTRFXI1_1
-  speed = 20.0
-  fastspeed = 26.0
-  radius = 10.0
-  height = 6.0
-  damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
-  acs_spawndata { num = 115; modes = heretic } // note: different from zdoom  
-  dehackednum = 372
-}
-
-thingtype MaulotaurFloorFire 
-{
-  spawnstate = S_MNTRFX2_1
-  deathstate = S_MNTRFXI2_1
-  deathsound = ht_phohit
-  speed = 14.0
-  fastspeed = 20.0
-  radius = 5.0
-  height = 12.0
-  damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FLOORMISSILE|FIREDAMAGE|NOSPLASH|NORANDOMIZE
-  acs_spawndata { num = 116; modes = heretic } // note: different from zdoom
-  dehackednum = 373
-}
-
-thingtype MaulotaurFloorFlame 
-{
-  spawnstate = S_MNTRFX3_1
-  deathstate = S_MNTRFXI2_1
-  deathsound = ht_phohit
-  radius = 8.0
-  damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
-  acs_spawndata { num = 117; modes = heretic } // note : different from zdoom
-  dehackednum = 374
-}
-
-thingtype HereticPhoenixPuff 
-{
-  spawnstate = S_PHOENIXPUFF1
-  cflags = NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
-  translucency = 26624
-  dehackednum = 375
-}
-
-thingtype IronLich 
-{
-  doomednum = 7006
-  spawnstate = S_LICH_LOOK
-  spawnhealth = 700
-  painchance = 32
-  painsound = ht_hedpai
-  seestate = S_LICH_FLOAT
-  seesound = ht_hedsit
-  attacksound = ht_hedat1
-  painstate = S_LICH_PAIN1
-  missilestate = S_LICH_ATK1
-  deathstate = S_LICH_DIE1
-  deathsound = ht_heddth
-  activesound = ht_hedact
-  speed = 6
-  radius = 40.0
-  height = 72.0
-  mass = 325
-  cflags = SOLID|SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
-  acs_spawndata { num = 20; modes = heretic }
-  obituary_normal = "was punished by the Iron Lich"
-  obituary_melee  = "was bitten by the Iron Lich"
-  dehackednum = 376
-}
-
-thingtype IronLichShot1 
-{
-  spawnstate = S_LICHFX1_1
-  deathstate = S_LICHFXI1_1
-  speed = 13.0
-  fastspeed = 20.0
-  radius = 12.0
-  height = 6.0
-  damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST|NORANDOMIZE
-  acs_spawndata { num = 164; modes = heretic }
-  dehackednum = 377
-}
-
-thingtype IronLichShot2 
-{
-  spawnstate = S_LICHFX2_1
-  deathstate = S_LICHFXI2_1
-  speed = 8.0
-  radius = 12.0
-  height = 6.0
-  damage = 3
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE
-  dehackednum = 378
-}
-
-thingtype IronLichShot3 
-{
-  spawnstate = S_LICHFX3_1
-  deathstate = S_LICHFXI3_1
-  speed = 10.0
-  fastspeed = 18.0
-  radius = 14.0
-  height = 12.0
-  damage = 5
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE
-  dehackednum = 379
-}
-
-thingtype LichWhirlwind 
-{
-  spawnstate = S_LICHFX4_1
-  deathstate = S_LICHFXI4_1
-  speed = 10.0
-  radius = 16.0
-  height = 74.0
-  damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|SEEKERMISSILE|EXPLOCOUNT|NORANDOMIZE
-  translucency = 26624
-  dmgspecial = Whirlwind
-  acs_spawndata { num = 165; modes = heretic }
-  dehackednum = 380
-}
-
-thingtype HAmmoWandWimpy 
-{
-  doomednum = 7010
-  spawnstate = S_AMG1
-  spawnhealth = 10
-  flags = SPECIAL
-  acs_spawndata { num = 11; modes = heretic }
-  dehackednum = 381
-}
-
-thingtype HAmmoWandHefty 
-{
-  doomednum = 7012
-  spawnstate = S_AMG2_1
-  spawnhealth = 50
-  flags = SPECIAL
-  acs_spawndata { num = 12; modes = heretic }
-  dehackednum = 382
-}
-
-thingtype HAmmoMaceWimpy 
-{
-  doomednum = 7013
-  spawnstate = S_AMM1
-  spawnhealth = 20
-  flags = SPECIAL
-  acs_spawndata { num = 35; modes = heretic }
-  dehackednum = 383
-}
-
-thingtype HAmmoMaceHefty 
-{
-  doomednum = 7016
-  spawnstate = S_AMM2
-  spawnhealth = 100
-  flags = SPECIAL
-  acs_spawndata { num = 36; modes = heretic }
-  dehackednum = 384
-}
-
-thingtype HAmmoCBowWimpy 
-{
-  doomednum = 7018
-  spawnstate = S_AMC1
-  spawnhealth = 5
-  flags = SPECIAL
-  acs_spawndata { num = 33; modes = heretic }
-  dehackednum = 385
-}
-
-thingtype HAmmoCBowHefty 
-{
-  doomednum = 7019
-  spawnstate = S_AMC2_1
-  spawnhealth = 20
-  flags = SPECIAL
-  acs_spawndata { num = 34; modes = heretic }
-  dehackednum = 386
-}
-
-thingtype HAmmoSkullWimpy 
-{
-  doomednum = 7020
-  spawnstate = S_AMS1_1
-  spawnhealth = 20
-  flags = SPECIAL
-  acs_spawndata { num = 158; modes = heretic }
-  dehackednum = 387
-}
-
-thingtype HAmmoSkullHefty 
-{
-  doomednum = 7021
-  spawnstate = S_AMS2_1
-  spawnhealth = 100
-  flags = SPECIAL
-  acs_spawndata { num = 159; modes = heretic }
-  dehackednum = 388
-}
-
-thingtype HAmmoPhoenixWimpy 
-{
-  doomednum = 7022
-  spawnstate = S_AMP1_1
-  spawnhealth = 1
-  flags = SPECIAL
-  acs_spawndata { num = 161; modes = heretic }
-  dehackednum = 389
-}
-
-thingtype HAmmoPhoenixHefty 
-{
-  doomednum = 7023
-  spawnstate = S_AMP2_1
-  spawnhealth = 10
-  flags = SPECIAL
-  acs_spawndata { num = 162; modes = heretic }
-  dehackednum = 390
-}
-
-thingtype HAmmoBlasterWimpy 
-{
-  doomednum = 7054
-  spawnstate = S_AMB1_1
-  spawnhealth = 10
-  flags = SPECIAL
-  acs_spawndata { num = 37; modes = heretic }
-  dehackednum = 391
-}
-
-thingtype HAmmoBlasterHefty 
-{
-  doomednum = 7055
-  spawnstate = S_AMB2_1
-  spawnhealth = 25
-  flags = SPECIAL
-  acs_spawndata { num = 38; modes = heretic }
-  dehackednum = 392
-}
-
-thingtype HereticImp 
-{
-  doomednum = 7066
-  spawnstate = S_IMP_LOOK1
-  spawnhealth = 40
-  seestate = S_IMP_FLY1
-  seesound = ht_impsit
-  attacksound = ht_impat1
-  painstate = S_IMP_PAIN1
-  painchance = 200
-  painsound = ht_imppai
-  meleestate = S_IMP_MEATK1
-  missilestate = S_IMP_MSATK1_1
-  crashstate = S_IMP_CRASH1
-  deathstate = S_IMP_DIE1
-  xdeathstate = S_IMP_XDIE1
-  deathsound = ht_impdth
-  speed = 10
-  radius = 16.0
-  height = 36.0
-  mass = 50
-  activesound = ht_impsit
-  cflags = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|NOSTRAFE|SPAWNFLOAT|RANGEHALF|SPACMONSTER|PASSMOBJ|DONTOVERLAP
-  acs_spawndata { num = 5; modes = heretic }
-  obituary_melee = "was scratched by a Gargoyle"
-  dehackednum = 393
-}
-
-thingtype HereticImpLeader 
-{
-  doomednum = 7005
-  spawnstate = S_IMP_LOOK1
-  spawnhealth = 80
-  seestate = S_IMP_FLY1
-  seesound = ht_impsit
-  attacksound = ht_impat2
-  painstate = S_IMP_PAIN1
-  painchance = 200
-  painsound = ht_imppai
-  missilestate = S_IMP_MSATK2_1
-  crashstate = S_IMP_CRASH1
-  deathstate = S_IMP_DIE1
-  xdeathstate = S_IMP_XDIE1
-  deathsound = ht_impdth
-  speed = 10
-  radius = 16.0
-  height = 36.0
-  mass = 50
-  activesound = ht_impsit
-  cflags  = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|SPAWNFLOAT|SPACMONSTER|PASSMOBJ|DONTOVERLAP
-  acs_spawndata { num = 7; modes = heretic }
-  obituary_normal = "was burned by a Gargoyle Leader"
-  obituary_melee  = "was scratched by a Gargoyle Leader"
-  dehackednum = 394
-}
-
-thingtype HereticImpChunk1 
-{
-  spawnstate = S_IMP_CHUNKA1
-  dehackednum = 395
-}
-
-thingtype HereticImpChunk2 
-{
-  spawnstate = S_IMP_CHUNKB1
-  dehackednum = 396
-}
-
-thingtype HereticImpShot 
-{
-  spawnstate = S_IMPFX1
-  deathstate = S_IMPFXI1
-  speed = 10.0
-  fastspeed = 20.0
-  radius = 8.0
-  height = 8.0
-  damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS|NORANDOMIZE
-  acs_spawndata { num = 10; modes = heretic }
-  dehackednum = 397
-}
-
-thingtype HereticPlayer 
-{
-  spawnstate = S_HPLAY
-  spawnhealth = 100
-  seestate = S_HPLAY_RUN1
-  reactiontime = 0
-  painstate = S_HPLAY_PAIN
-  painchance = 255
-  painsound = ht_plrpai
-  missilestate = S_HPLAY_ATK1
-  deathstate = S_HPLAY_DIE1
-  // custom damagetype deathstates
-  dmg_deathstates =
+//
+// EDF for Eternity Engine v3.40.50
+//
+// Thing type definitions for Heretic gamemode.
+//
+
+thingtype CrystalVial : Mobj, 7081, 300
+{
+  cflags SPECIAL|FLOATBOB
+  acs_spawndata 
+  { 
+    num   23 
+    modes heretic
+  } 
+  
+  firstdecoratestate S_ITEM_PTN1_1
+  states
+  @"
+  Spawn:
+    PTN1 ABC 3
+    loop
+  "@
+}
+
+thingtype SilverShield : Mobj, 7085, 301
+{
+  cflags SPECIAL|FLOATBOB
+  acs_spawndata 
   {
-     Fire, S_HPLAY_FDTH1,
-     Lava, S_HPLAY_FDTH1
-  }  
-  xdeathstate = S_HPLAY_XDIE1
-  deathsound = ht_plrdth
-  radius = 16.0
-  height = 56.0
-  cflags  = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
-  mod = PlayerMisc
-  dehackednum = 398
+    num   68 
+    modes heretic
+  }
+  
+  firstdecoratestate S_ITEM_SHLD1
+  states
+  @"
+  Spawn:
+    SHLD A -1
+    stop
+  "@
 }
 
-thingtype HereticPlayerSkull 
+thingtype EnchantedShield : Mobj, 7031, 302
 {
-  spawnstate = S_HPLAYERSKULL1
-  crashstate = S_HPLAYERSKULLX
-  radius = 4.0
-  height = 4.0
-  cflags = CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
-  dehackednum = 399
+  cflags SPECIAL|FLOATBOB
+  acs_spawndata
+  {
+    num   69 
+    modes heretic
+  }
+  
+  firstdecoratestate S_ITEM_SHD2_1
+  states
+  @"
+  Spawn:
+    SHD2 A -1
+    stop
+  "@
+}
+
+thingtype BagOfHolding : Mobj, 7008, 303
+{
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  acs_spawndata 
+  {
+    num   136 
+    modes heretic
+  }
+  
+  firstdecoratestate S_ITEM_BAGH1
+  states
+  @"
+  Spawn:
+    BAGH A -1
+    stop
+  "@
+}
+
+thingtype MapScroll : Mobj, 7035, 304
+{
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  acs_spawndata 
+  { 
+    num 137
+    modes heretic
+  }
+  
+  firstdecoratestate S_ITEM_SPMP1
+  states
+  @"
+  Spawn:
+    SPMP A -1
+    stop
+  "@
+}
+
+thingtype Pod : Mobj, 7235, 305
+{
+  spawnhealth 45
+  painchance  255
+  deathsound  ht_podexp
+  radius      16.0
+  height      54.0
+  cflags      SOLID|SHOOTABLE|DROPOFF|NOBLOOD|NORESPAWN|PUSHABLE|SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
+  mod         Barrel
+  acs_spawndata
+  {
+    num   125 
+    modes heretic
+  }
+  
+  firstdecoratestate S_POD_WAIT1
+  states
+  @"
+  Spawn:
+    PPOD A 10
+    loop
+  Pain:
+    PPOD B 14 A_PodPain
+    goto Spawn
+  Death:
+    PPOD C  5 bright A_RemovePod
+    PPOD D  5 bright A_Scream
+    PPOD E  5 bright A_Explode
+    PPOD F 10 bright
+    stop
+  PodGrow:
+    PPOD IJKLMNOP 3
+    goto Spawn
+  "@
+}
+
+thingtype PodGoo : Mobj, -1, 306
+{
+  radius 2.0
+  height 4.0
+  cflags NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE
+  
+  firstdecoratestate S_PODGOO1
+  states
+  @"
+  Spawn:
+    PPOD GH 8
+    loop
+  Death:
+    PPOD G 10
+    stop
+  "@
+}
+
+thingtype PodGenerator : Mobj, 7043, 307
+{
+  flags NOSECTOR|NOBLOCKMAP
+  acs_spawndata
+  {
+    num   126 
+    modes heretic
+  }
+  
+  firstdecoratestate S_PODGENERATOR
+  states
+  @"
+  Spawn:
+    TNT1 A 35 A_MakePod
+    loop
+  "@
+}
+
+thingtype HangingSkull70 : Mobj, 7017, 308
+{
+  height 70.0
+  flags  SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_SKULLHANG70_1
+  states
+  @"
+  Spawn:
+    SKH1 A -1
+    stop
+  "@
+}
+
+thingtype HangingSkull60 : Mobj, 7024, 309 
+{
+  height 60.0
+  flags  SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_SKULLHANG60_1
+  states
+  @"
+  Spawn:
+    SKH2 A -1
+    stop
+  "@
+}
+
+thingtype HangingSkull45 : Mobj, 7025, 310
+{
+  height 45.0
+  flags  SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_SKULLHANG45_1
+  states
+  @"
+  Spawn:
+    SKH3 A -1
+    stop
+  "@
+}
+
+thingtype HangingSkull35 : Mobj, 7026, 311
+{
+  height 35.0
+  flags  SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_SKULLHANG35_1
+  states
+  @"
+  Spawn:
+    SKH4 A -1
+    stop
+  "@
+}
+
+thingtype Chandelier : Mobj, 7028, 312 
+{
+  height 60.0
+  flags  SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_CHANDELIER1
+  states
+  @"
+  Spawn:
+    CHDL ABC 4
+    loop
+  "@
+}
+
+thingtype SerpentTorch : Mobj, 7027, 313
+{
+  radius 12.0
+  height 54.0
+  flags  SOLID
+  
+  firstdecoratestate S_SERPTORCH1
+  states
+  @"
+  Spawn:
+    SRTC ABC 4
+    loop
+  "@
+}
+
+thingtype HereticPillarSmall : Mobj, 7029, 314
+{
+  radius 16.0
+  height 34.0
+  flags  SOLID
+  
+  firstdecoratestate S_SMALLPILLAR
+  states
+  @"
+  Spawn:
+    SMPL A -1
+    stop
+  "@
+}
+
+thingtype HereticStalagmiteSmall : Mobj, 7037, 315
+{
+  radius 8.0
+  height 32.0
+  flags  SOLID
+  
+  firstdecoratestate S_STALAGMITESMALL
+  states
+  @"
+  Spawn:
+    STGS A -1
+    stop
+  "@
+}
+
+thingtype HereticStalagmiteLarge : Mobj, 7038, 316
+{
+  radius 12.0
+  height 64.0
+  flags  SOLID
+  
+  firstdecoratestate S_STALAGMITELARGE
+  states
+  @"
+  Spawn:
+    STGL A -1
+    stop
+  "@
+}
+
+thingtype HereticStalactiteSmall : Mobj, 7039, 317
+{
+  radius 8.0
+  height 36.0
+  flags  SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_STALACTITESMALL
+  states
+  @"
+  Spawn:
+    STCS A -1
+    stop
+  "@
+}
+
+thingtype HereticStalactiteLarge : Mobj, 7040, 318
+{
+  radius 12.0
+  height 68.0
+  flags  SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_STALACTITELARGE
+  states
+  @"
+  Spawn:
+    STCL A -1
+    stop
+  "@
+}
+
+thingtype FireBrazier : Mobj, 7076, 319
+{
+  radius 16.0
+  height 44.0
+  flags  SOLID
+  
+  firstdecoratestate S_FIREBRAZIER1
+  states
+  @"
+  Spawn:
+    KFR1 ABCDEFGH 3 bright
+    loop
+  "@
+}
+
+thingtype HereticBarrel : Mobj, 7044, 320
+{
+  radius 12.0
+  height 32.0
+  flags  SOLID
+  
+  firstdecoratestate S_WOODBARREL
+  states
+  @"
+  Spawn:
+    BARL A -1
+    stop
+  "@
+}
+
+thingtype HornedPillar : Mobj, 7047, 321
+{
+  radius 14.0
+  height 128.0
+  flags  SOLID
+  
+  firstdecoratestate S_BCOLUMN
+  states
+  @"
+  Spawn:
+    BRPL A -1
+    stop
+  "@
+}
+
+thingtype HereticMoss1 : Mobj, 7048, 322
+{
+  height 23.0
+  flags  SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_MOSS1
+  states
+  @"
+  Spawn:
+    MOS1 A -1
+    stop
+  "@
+}
+
+thingtype HereticMoss2 : Mobj, 7049, 323
+{
+  spawnstate S_MOSS2
+  height     27.0
+  flags      SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_MOSS2
+  states
+  @"
+  Spawn:
+    MOS2 A -1
+    stop
+  "@
+}
+
+
+thingtype HereticWallTorch : Mobj, 7050, 324
+{
+  flags NOGRAVITY
+  
+  firstdecoratestate S_WALLTORCH1
+  states
+  @"
+  Spawn:
+    WTRH ABC 6 bright
+    loop
+  "@
+}
+
+thingtype HereticCorpse : Mobj, 7051, 325
+{
+  radius 8.0
+  height 104.0
+  flags  SOLID|SPAWNCEILING|NOGRAVITY
+  
+  firstdecoratestate S_HTICCORPSE
+  states
+  @"
+  Spawn:
+    HCOR A -1
+    stop
+  "@
+}
+
+thingtype KeyGizmoBlue : Mobj, 7094, 326
+{
+  spawnstate S_KEYGIZMOB
+  radius     16.0
+  height     50.0
+  flags      SOLID
+}
+
+thingtype KeyGizmoGreen : Mobj, 7095, 327
+{
+  spawnstate S_KEYGIZMOG
+  radius     16.0
+  height     50.0
+  flags      SOLID
+}
+
+thingtype KeyGizmoYellow : Mobj, 7096, 328
+{
+  spawnstate S_KEYGIZMOY
+  radius     16.0
+  height     50.0
+  flags      SOLID
+}
+
+thingtype KeyGizmoOrb : Mobj, -1, 329
+{
+  spawnstate S_KGZ_START
+  radius     16.0
+  flags      SOLID|NOGRAVITY
+}
+
+thingtype TeleGlitterGenRed : Mobj, 7074, 330
+{
+  spawnstate S_TELEGLITGEN1
+  cflags     DONTDRAW
+}
+
+thingtype TeleGlitterGenBlue : Mobj, 7052, 331
+{
+  spawnstate S_TELEGLITGEN2
+  cflags     DONTDRAW
+}
+
+thingtype TeleGlitterRed : Mobj, -1, 332
+{
+  spawnstate S_TELEGLITTER1_1
+  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  acs_spawndata
+  {
+    num   166 
+    modes heretic
+  }
+}
+
+thingtype TeleGlitterBlue : Mobj, -1, 333
+{
+  spawnstate S_TELEGLITTER2_1
+  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  acs_spawndata
+  {
+    num   167
+    modes heretic
+  }
+}
+
+thingtype HereticTeleFog : Mobj, -1, 334
+{
+  spawnstate S_HTFOG1
+  flags      NOBLOCKMAP|NOGRAVITY
+}
+
+thingtype HereticBlood : Mobj, -1, 335
+{
+  spawnstate S_HTICBLOOD1
+  cflags     NOBLOCKMAP|NOSPLASH
+}
+
+thingtype Golem : Mobj, 7068, 336
+{
+  spawnstate     S_MUMMY_LOOK1
+  spawnhealth    80
+  seestate       S_MUMMY_WALK1
+  seesound       ht_mumsit
+  attacksound    ht_mumat1
+  painstate      S_MUMMY_PAIN1
+  painchance     128
+  painsound      ht_mumpai
+  meleestate     S_MUMMY_ATK1
+  deathstate     S_MUMMY_DIE1
+  deathsound     ht_mumdth
+  speed          12
+  radius         22.0
+  height         62.0
+  mass           75
+  activesound    ht_mumsit
+  cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_melee "was pummeled by a Golem"
+  acs_spawndata
+  {
+    num   4
+    modes heretic
+  }
+}
+
+thingtype NitroGolem : Mobj, 7045, 337
+{
+  spawnstate      S_MUMMY_LOOK1
+  spawnhealth     100
+  seestate        S_MUMMY_WALK1
+  seesound        ht_mumsit
+  attacksound     ht_mumat1
+  painstate       S_MUMMY_PAIN1
+  painchance      64
+  painsound       ht_mumpai
+  meleestate      S_MUMMY_ATK1
+  missilestate    S_MUMMYL_ATK1
+  deathstate      S_MUMMY_DIE1
+  deathsound      ht_mumdth
+  speed           12
+  radius          22.0
+  height          62.0
+  mass            75
+  activesound     ht_mumsit
+  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was burned by a Nitrogolem"
+  obituary_melee  "was beaten by a Nitrogolem"
+  acs_spawndata
+  {
+    num   2 
+    modes heretic
+  }
+}
+
+thingtype GolemGhost : Mobj, 7069, 338
+{
+  spawnstate     S_MUMMY_LOOK1
+  spawnhealth    80
+  seestate       S_MUMMY_WALK1
+  seesound       ht_mumsit
+  attacksound    ht_mumat1
+  painstate      S_MUMMY_PAIN1
+  painchance     128
+  painsound      ht_mumpai
+  meleestate     S_MUMMY_ATK1
+  deathstate     S_MUMMY_DIE1
+  deathsound     ht_mumdth
+  speed          12
+  radius         22.0
+  height         62.0
+  mass           75
+  activesound    ht_mumsit
+  cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  obituary_melee "was spooked by a Golem Ghost"
+  acs_spawndata
+  {
+    num   8 
+    modes heretic
+  }
+}
+
+thingtype NitroGolemGhost : Mobj, 7046, 339
+{
+  spawnstate      S_MUMMY_LOOK1
+  spawnhealth     100
+  seestate        S_MUMMY_WALK1
+  seesound        ht_mumsit
+  attacksound     ht_mumat1
+  painstate       S_MUMMY_PAIN1
+  painchance      64
+  painsound       ht_mumpai
+  meleestate      S_MUMMY_ATK1
+  missilestate    S_MUMMYL_ATK1
+  deathstate      S_MUMMY_DIE1
+  deathsound      ht_mumdth
+  speed           12
+  radius          22.0
+  height          62.0
+  mass            75
+  activesound     ht_mumsit
+  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  obituary_normal "was burned by a Nitrogolem Ghost"
+  obituary_melee  "was beaten by a Nitrogolem Ghost"
+  acs_spawndata
+  {
+    num   9
+    modes heretic
+  }
+}
+
+thingtype GolemSoul : Mobj, -1, 340
+{
+  spawnstate S_MUMMY_SOUL1
+  flags      NOBLOCKMAP|NOGRAVITY
+}
+
+thingtype GolemShot : Mobj, -1, 341
+{
+  spawnstate S_MUMMYFX1_1
+  deathstate S_MUMMYFXI1_1
+  speed      9.0
+  fastspeed  18.0
+  radius     8.0
+  height     14.0
+  damage     4
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE|NORANDOMIZE
+  acs_spawndata
+  {
+    num   131
+    modes heretic 
+  }
+}
+
+thingtype Weredragon : Mobj, 7070, 342
+{
+  spawnstate      S_BEAST_LOOK1
+  spawnhealth     220
+  seestate        S_BEAST_WALK1
+  seesound        ht_bstsit
+  attacksound     ht_bstatk
+  painstate       S_BEAST_PAIN1
+  painchance      100
+  painsound       ht_bstpai
+  missilestate    S_BEAST_ATK1
+  deathstate      S_BEAST_DIE1
+  xdeathstate     S_BEAST_XDIE1
+  deathsound      ht_bstdth
+  speed           14
+  radius          32.0
+  height          74.0
+  mass            200
+  activesound     ht_bstact
+  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was flamed by a Weredragon"
+  obituary_melee  "was torn apart by a Weredragon"
+  acs_spawndata
+  {
+    num   3
+    modes heretic 
+  }
+}
+
+thingtype WeredragonShot : Mobj, -1, 343
+{
+  spawnstate S_BEASTBALL1
+  deathstate S_BEASTBALLX1
+  speed      12.0
+  fastspeed  20.0
+  radius     9.0
+  height     8.0
+  damage     4
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
+  acs_spawndata
+  {
+    num   120
+    modes heretic
+  }
+}
+
+thingtype WeredragonSmoke : Mobj, -1, 344
+{
+  spawnstate S_PUFFY1
+  deathstate S_PUFFY1
+  speed      10.0
+  radius     6.0
+  height     8.0
+  damage     2
+  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE
+}
+
+thingtype Ophidian : Mobj, 7092, 345
+{
+  spawnstate      S_SNAKE_LOOK1
+  spawnhealth     280
+  seestate        S_SNAKE_WALK1
+  seesound        ht_snksit
+  attacksound     ht_snkatk
+  painstate       S_SNAKE_PAIN1
+  painchance      48
+  painsound       ht_snkpai
+  missilestate    S_SNAKE_ATK1
+  deathstate      S_SNAKE_DIE1
+  deathsound      ht_snkdth
+  speed           10
+  radius          22.0
+  height          70.0
+  activesound     ht_snkact
+  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was smoked by an Ophidian"
+  acs_spawndata
+  {
+    num   132
+    modes heretic 
+  }
+}
+
+thingtype OphidianShotA : Mobj, -1, 346
+{
+  spawnstate S_SNAKEPRO_A1
+  deathstate S_SNAKEPRO_AX1
+  speed      14.0
+  fastspeed  20.0
+  radius     12.0
+  height     8.0
+  damage     1
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
+  acs_spawndata
+  {
+    num   138
+    modes heretic 
+  }
+}
+
+thingtype OphidianShotB : Mobj, -1, 347
+{
+  spawnstate S_SNAKEPRO_B1
+  deathstate S_SNAKEPRO_BX1
+  speed      14.0
+  fastspeed  20.0
+  radius     12.0
+  height     8.0
+  damage     3
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
+  acs_spawndata
+  {
+    num   139
+    modes heretic
+  }
+}
+
+thingtype SabreClaw : Mobj, 7090, 348
+{
+  spawnstate     S_CLINK_LOOK1
+  spawnhealth    150
+  seestate       S_CLINK_WALK1
+  seesound       ht_clksit
+  attacksound    ht_clkatk
+  painstate      S_CLINK_PAIN1
+  painchance     32
+  painsound      ht_clkpai
+  meleestate     S_CLINK_ATK1
+  deathstate     S_CLINK_DIE1
+  deathsound     ht_clkdth
+  speed          14
+  height         64.0
+  mass           75
+  activesound    ht_clkact
+  cflags         SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_melee "was sliced to bits by a Sabreclaw"
+  acs_spawndata
+  {
+    num   1
+    modes heretic
+  }
+}
+
+thingtype Disciple : Mobj, 7015, 349
+{
+  spawnstate      S_WIZARD_LOOK1
+  spawnhealth     180
+  seestate        S_WIZARD_WALK1
+  seesound        ht_wizsit
+  attacksound     ht_wizatk
+  painstate       S_WIZARD_PAIN1
+  painchance      64
+  painsound       ht_wizpai
+  missilestate    S_WIZARD_ATK1
+  deathstate      S_WIZARD_DIE1
+  deathsound      ht_wizdth
+  speed           12
+  radius          16.0
+  height          68.0
+  activesound     ht_wizact
+  flags           SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
+  flags3          ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  obituary_normal "was schooled by a Disciple"
+  obituary_melee  "was slapped by a Disciple"
+  acs_spawndata
+  {
+    num   19
+    modes heretic
+  }
+}
+
+thingtype DiscipleShot : Mobj, -1, 350
+{
+  spawnstate S_WIZFX1_1
+  deathstate S_WIZFXI1_1
+  speed      18.0
+  fastspeed  24.0
+  radius     10.0
+  height     6.0
+  damage     3
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
+  acs_spawndata
+  {
+    num   140
+    modes heretic
+  }
+}
+
+thingtype DeathKnight : Mobj, 7064, 351
+{
+  spawnstate      S_KNIGHT_STND1
+  spawnhealth     200
+  seestate        S_KNIGHT_WALK1
+  seesound        ht_kgtsit
+  attacksound     ht_kgtatk
+  painstate       S_KNIGHT_PAIN1
+  painchance      100
+  painsound       ht_kgtpai
+  meleestate      S_KNIGHT_ATK1
+  missilestate    S_KNIGHT_ATK1
+  deathstate      S_KNIGHT_DIE1
+  deathsound      ht_kgtdth
+  speed           12
+  radius          24.0
+  height          78.0
+  mass            150
+  activesound     ht_kgtsit
+  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  obituary_normal "was axed by a Death Knight"
+  obituary_melee  "was chopped down by a Death Knight"
+  acs_spawndata
+  {
+    num   6
+    modes heretic
+  }
+}
+
+thingtype DeathKnightGhost : Mobj, 7065, 352
+{
+  spawnstate      S_KNIGHT_STND1
+  spawnhealth     200
+  seestate        S_KNIGHT_WALK1
+  seesound        ht_kgtsit
+  attacksound     ht_kgtatk
+  painstate       S_KNIGHT_PAIN1
+  painchance      100
+  painsound       ht_kgtpai
+  meleestate      S_KNIGHT_ATK1
+  missilestate    S_KNIGHT_ATK1
+  deathstate      S_KNIGHT_DIE1
+  deathsound      ht_kgtdth
+  speed           12
+  radius          24.0
+  height          78.0
+  mass            150
+  activesound     ht_kgtsit
+  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  obituary_normal "was spooked by a Knight Ghost"
+  obituary_melee  "was chopped by a Knight Ghost"
+  acs_spawndata
+  {
+    num   129
+    modes heretic 
+  }
+}
+
+thingtype KnightAxe : Mobj, -1, 353
+{
+  spawnstate S_SPINAXE1
+  deathstate S_SPINAXEX1
+  deathsound ht_hrnhit
+  speed      9.0
+  fastspeed  18.0
+  radius     10.0
+  height     8.0
+  damage     2
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NORANDOMIZE|NOCROSS|THRUGHOST|WINDTHRUST
+  acs_spawndata
+  {
+    num   127
+    modes heretic
+  }
+}
+
+thingtype KnightAxeRed : Mobj, -1, 354
+{
+  spawnstate S_REDAXE1
+  deathstate S_REDAXEX1
+  deathsound ht_hrnhit
+  speed      9.0
+  fastspeed  18.0
+  radius     10.0
+  height     8.0
+  damage     7
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST|NORANDOMIZE
+  acs_spawndata
+  {
+    num   128
+    modes heretic
+  }
+}
+
+thingtype SerpentRiderDsparil : Mobj, 7007, 355
+{
+  spawnstate      S_SRCR1_LOOK1
+  spawnhealth     2000
+  seestate        S_SRCR1_WALK1
+  seesound        ht_bstsit
+  attacksound     ht_bstatk
+  painstate       S_SRCR1_PAIN1
+  painchance      56
+  painsound       ht_sbtpai
+  missilestate    S_SRCR1_ATK1
+  deathstate      S_SRCR1_DIE1
+  deathsound      ht_sbtdth
+  speed           16
+  radius          28.0
+  height          100.0
+  mass            800
+  activesound     ht_sbtact
+  cflags          SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  nukespecial     SorcNukeSpec
+  obituary_normal "was burned by D'Sparil's serpent"
+  obituary_melee  "was devoured by D'Sparil's serpent"
+  acs_spawndata
+  {
+    num   142
+    modes heretic 
+  }
+}
+
+thingtype SRDsparilShot1 : Mobj, -1, 356
+{
+  spawnstate S_SRCRFX1_1
+  deathstate S_SRCRFXI1_1
+  speed      20.0
+  fastspeed  28.0
+  radius     10.0
+  height     10.0
+  damage     10
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
+  acs_spawndata
+  {
+    num   144
+    modes heretic 
+  }
+}
+
+thingtype Dsparil : Mobj, -1, 357
+{
+  spawnstate      S_SOR2_LOOK1
+  spawnhealth     3500
+  seestate        S_SOR2_WALK1
+  seesound        ht_sorsit
+  attacksound     ht_soratk
+  painstate       S_SOR2_PAIN1
+  painchance      32
+  painsound       ht_sorpai
+  missilestate    S_SOR2_ATK1
+  deathstate      S_SOR2_DIE1
+  speed           14
+  radius          16.0
+  height          70.0
+  mass            300
+  activesound     ht_soract
+  cflags          SOLID|SHOOTABLE|DROPOFF|COUNTKILL|E3M8BOSS|BOSS|FOOTCLIP|LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
+  obituary_normal "brought about the end of Parthoris"
+  obituary_melee  "utterly failed to save Parthoris"
+  acs_spawndata
+  {
+    num   143
+    modes heretic
+  }
+}
+
+thingtype DsparilShot1 : Mobj, -1, 358
+{
+  spawnstate S_SOR2FX1_1
+  deathstate S_SOR2FXI1_1
+  speed      20.0
+  fastspeed  28.0
+  radius     10.0
+  height     6.0
+  damage     1
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
+  acs_spawndata
+  {
+    num   146
+    modes heretic
+  }
+}
+
+thingtype DsparilSpark : Mobj, -1, 359
+{
+  spawnstate S_SOR2FXSPARK1
+  cflags     NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
+}
+
+thingtype DsparilShot2 : Mobj, -1, 360
+{
+  spawnstate S_SOR2FX2_1
+  deathstate S_SOR2FXI2_1
+  speed      6.0
+  radius     10.0
+  height     6.0
+  damage     10
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
+  acs_spawndata
+  {
+    num   145
+    modes heretic
+  }
+}
+
+thingtype DsparilTeleFade : Mobj, -1, 361
+{
+  spawnstate S_SOR2TELEFADE1
+  flags      NOBLOCKMAP
+}
+
+thingtype HereticGreenKey : Mobj, 7073, 362
+{
+  spawnstate S_AKYY1
+  flags      SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   86
+    modes heretic
+  }
+}
+
+thingtype HereticBlueKey : Mobj, 7079, 363
+{
+  spawnstate S_BKYY1
+  flags      SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   85
+    modes heretic
+  }
+}
+
+thingtype HereticYellowKey : Mobj, 7080, 364
+{
+  spawnstate S_CKYY1
+  flags      SPECIAL|NOTDMATCH
+  acs_spawndata
+  {
+    num   87
+    modes heretic
+  }
+}
+
+thingtype HereticAmbienceWind : Mobj, 7042, 365
+{
+  spawnstate S_SND_WIND
+  cflags     DONTDRAW
+  acs_spawndata
+  {
+    num   110
+    modes heretic
+  }
+}
+
+thingtype HereticAmbienceWater : Mobj, 7041, 366
+{
+  spawnstate S_SND_WATERFALL
+  cflags     DONTDRAW
+  acs_spawndata
+  {
+    num   111
+    modes heretic
+  }
+}
+
+thingtype DsparilTeleSpot : Mobj, 7056, 367
+{
+  height 32.0
+  flags  NOSECTOR|NOBLOCKMAP
+}
+
+thingtype HereticVolcano : Mobj, 7087, 368
+{
+  spawnstate      S_VOLCANO1
+  radius          12.0
+  height          20.0
+  flags           SOLID
+  obituary_normal "needs to stay away from volcanoes"
+  acs_spawndata
+  {
+    num   150
+    modes heretic
+  }
+}
+
+thingtype VolcanoBall : Mobj, -1, 369
+{
+  spawnstate S_VOLCANOBALL1
+  deathstate S_VOLCANOBALLX1
+  deathsound ht_lobhit
+  speed      2.0
+  radius     8.0
+  height     8.0
+  damage     2
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  acs_spawndata
+  {
+    num   123
+    modes heretic 
+  }
+}
+
+thingtype VolcanoBallSmall : Mobj, -1, 370
+{
+  spawnstate S_VOLCANOTBALL1
+  deathstate S_VOLCANOTBALLX1
+  speed      2.0
+  radius     8.0
+  height     6.0
+  damage     1
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  acs_spawndata
+  {
+    num   124
+    modes heretic
+  }
+}
+
+thingtype Maulotaur : Mobj, 7009, 371
+{
+  spawnstate      S_MNTR_LOOK1
+  spawnhealth     3000
+  seestate        S_MNTR_WALK1
+  seesound        ht_minsit
+  attacksound     ht_minat1
+  painstate       S_MNTR_PAIN1
+  painchance      25
+  painsound       ht_minpai
+  meleestate      S_MNTR_ATK1_1
+  missilestate    S_MNTR_ATK2_1
+  deathstate      S_MNTR_DIE1
+  deathsound      ht_mindth
+  speed           16
+  radius          28.0
+  height          100.0
+  mass            800
+  damage          7
+  dmgspecial      MinotaurCharge
+  activesound     ht_minact
+  cflags          SOLID|SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
+  obituary_normal "bowed down before the Maulotaur"
+  obituary_melee  "was pounded flat by the Maulotaur"
+  acs_spawndata
+  {
+    num   114     // note: different from zdoom
+    modes heretic
+  }
+}
+
+thingtype MaulotaurShot : Mobj, -1, 372
+{
+  spawnstate S_MNTRFX1_1
+  deathstate S_MNTRFXI1_1
+  speed      20.0
+  fastspeed  26.0
+  radius     10.0
+  height     6.0
+  damage     3
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
+  acs_spawndata
+  {
+    num   115     // note: different from zdoom  
+    modes heretic
+  }
+}
+
+thingtype MaulotaurFloorFire : Mobj, -1, 373
+{
+  spawnstate S_MNTRFX2_1
+  deathstate S_MNTRFXI2_1
+  deathsound ht_phohit
+  speed      14.0
+  fastspeed  20.0
+  radius     5.0
+  height     12.0
+  damage     4
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FLOORMISSILE|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  acs_spawndata
+  {
+    num   116     // note: different from zdoom
+    modes heretic
+  }
+}
+
+thingtype MaulotaurFloorFlame : Mobj, -1, 374
+{
+  spawnstate S_MNTRFX3_1
+  deathstate S_MNTRFXI2_1
+  deathsound ht_phohit
+  radius     8.0
+  damage     4
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  acs_spawndata
+  {
+    num   117     // note : different from zdoom
+    modes heretic
+  }
+}
+
+thingtype HereticPhoenixPuff : Mobj, -1, 375
+{
+  spawnstate   S_PHOENIXPUFF1
+  cflags       NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
+  translucency 26624
+}
+
+thingtype IronLich : Mobj, 7006, 376
+{
+  spawnstate      S_LICH_LOOK
+  spawnhealth     700
+  painchance      32
+  painsound       ht_hedpai
+  seestate        S_LICH_FLOAT
+  seesound        ht_hedsit
+  attacksound     ht_hedat1
+  painstate       S_LICH_PAIN1
+  missilestate    S_LICH_ATK1
+  deathstate      S_LICH_DIE1
+  deathsound      ht_heddth
+  activesound     ht_hedact
+  speed           6
+  radius          40.0
+  height          72.0
+  mass            325
+  cflags          SOLID|SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
+  obituary_normal "was punished by the Iron Lich"
+  obituary_melee  "was bitten by the Iron Lich"
+  acs_spawndata
+  {
+    num   20
+    modes heretic
+  }
+}
+
+thingtype IronLichShot1 : Mobj, -1, 377
+{
+  spawnstate S_LICHFX1_1
+  deathstate S_LICHFXI1_1
+  speed      13.0
+  fastspeed  20.0
+  radius     12.0
+  height     6.0
+  damage     1
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST|NORANDOMIZE
+  acs_spawndata
+  {
+    num   164
+    modes heretic
+  }
+}
+
+thingtype IronLichShot2 : Mobj, -1, 378
+{
+  spawnstate S_LICHFX2_1
+  deathstate S_LICHFXI2_1
+  speed      8.0
+  radius     12.0
+  height     6.0
+  damage     3
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE
+}
+
+thingtype IronLichShot3 : Mobj, -1, 379
+{
+  spawnstate S_LICHFX3_1
+  deathstate S_LICHFXI3_1
+  speed      10.0
+  fastspeed  18.0
+  radius     14.0
+  height     12.0
+  damage     5
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE
+}
+
+thingtype LichWhirlwind : Mobj, -1, 380
+{
+  spawnstate   S_LICHFX4_1
+  deathstate   S_LICHFXI4_1
+  speed        10.0
+  radius       16.0
+  height       74.0
+  damage       1
+  cflags       NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|SEEKERMISSILE|EXPLOCOUNT|NORANDOMIZE
+  translucency 26624
+  dmgspecial   Whirlwind
+  acs_spawndata
+  {
+    num   165
+    modes heretic
+  }
+}
+
+thingtype HAmmoWandWimpy : Mobj, 7010, 381
+{
+  spawnstate  S_AMG1
+  spawnhealth 10
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   11
+    modes heretic
+  }
+}
+
+thingtype HAmmoWandHefty : Mobj, 7012, 382
+{
+  spawnstate  S_AMG2_1
+  spawnhealth 50
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   12
+    modes heretic
+  }
+}
+
+thingtype HAmmoMaceWimpy : Mobj, 7013, 383
+{
+  spawnstate  S_AMM1
+  spawnhealth 20
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   35
+    modes heretic
+  }
+}
+
+thingtype HAmmoMaceHefty : Mobj, 7016, 384
+{
+  spawnstate  S_AMM2
+  spawnhealth 100
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   36
+    modes heretic
+  }
+}
+
+thingtype HAmmoCBowWimpy : Mobj, 7018, 385
+{
+  spawnstate  S_AMC1
+  spawnhealth 5
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   33
+    modes heretic
+  }
+}
+
+thingtype HAmmoCBowHefty : Mobj, 7019, 386
+{
+  spawnstate  S_AMC2_1
+  spawnhealth 20
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   34
+    modes heretic
+  }
+}
+
+thingtype HAmmoSkullWimpy : Mobj, 7020, 387
+{
+  spawnstate  S_AMS1_1
+  spawnhealth 20
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   158 
+    modes heretic
+  }
+}
+
+thingtype HAmmoSkullHefty : Mobj, 7021, 388
+{
+  spawnstate  S_AMS2_1
+  spawnhealth 100
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   159
+    modes heretic
+  }
+}
+
+thingtype HAmmoPhoenixWimpy : Mobj, 7022, 389
+{
+  spawnstate  S_AMP1_1
+  spawnhealth 1
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   161
+    modes heretic
+  }
+}
+
+thingtype HAmmoPhoenixHefty : Mobj, 7023, 390
+{
+  spawnstate  S_AMP2_1
+  spawnhealth 10
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   162
+    modes heretic
+  }
+}
+
+thingtype HAmmoBlasterWimpy : Mobj, 7054, 391
+{
+  spawnstate  S_AMB1_1
+  spawnhealth 10
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   37
+    modes heretic
+  }
+}
+
+thingtype HAmmoBlasterHefty : Mobj, 7055, 392
+{
+  spawnstate  S_AMB2_1
+  spawnhealth 25
+  flags       SPECIAL
+  acs_spawndata
+  {
+    num   38
+    modes heretic
+  }
+}
+
+thingtype HereticImp : Mobj, 7066, 393
+{
+  spawnstate     S_IMP_LOOK1
+  spawnhealth    40
+  seestate       S_IMP_FLY1
+  seesound       ht_impsit
+  attacksound    ht_impat1
+  painstate      S_IMP_PAIN1
+  painchance     200
+  painsound      ht_imppai
+  meleestate     S_IMP_MEATK1
+  missilestate   S_IMP_MSATK1_1
+  crashstate     S_IMP_CRASH1
+  deathstate     S_IMP_DIE1
+  xdeathstate    S_IMP_XDIE1
+  deathsound     ht_impdth
+  speed          10
+  radius         16.0
+  height         36.0
+  mass           50
+  activesound    ht_impsit
+  cflags         SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|NOSTRAFE|SPAWNFLOAT|RANGEHALF|SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  obituary_melee "was scratched by a Gargoyle"
+  acs_spawndata
+  {
+    num   5
+    modes heretic
+  }
+}
+
+thingtype HereticImpLeader : Mobj, 7005, 394
+{
+  spawnstate      S_IMP_LOOK1
+  spawnhealth     80
+  seestate        S_IMP_FLY1
+  seesound        ht_impsit
+  attacksound     ht_impat2
+  painstate       S_IMP_PAIN1
+  painchance      200
+  painsound       ht_imppai
+  missilestate    S_IMP_MSATK2_1
+  crashstate      S_IMP_CRASH1
+  deathstate      S_IMP_DIE1
+  xdeathstate     S_IMP_XDIE1
+  deathsound      ht_impdth
+  speed           10
+  radius          16.0
+  height          36.0
+  mass            50
+  activesound     ht_impsit
+  cflags          SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|SPAWNFLOAT|SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  obituary_normal "was burned by a Gargoyle Leader"
+  obituary_melee  "was scratched by a Gargoyle Leader"
+  acs_spawndata
+  {
+    num   7
+    modes heretic
+  }
+}
+
+thingtype HereticImpChunk1 : Mobj, -1, 395
+{
+  spawnstate S_IMP_CHUNKA1
+}
+
+thingtype HereticImpChunk2 : Mobj, -1, 396
+{
+  spawnstate S_IMP_CHUNKB1
+}
+
+thingtype HereticImpShot : Mobj, -1, 397
+{
+  spawnstate S_IMPFX1
+  deathstate S_IMPFXI1
+  speed      10.0
+  fastspeed  20.0
+  radius     8.0
+  height     8.0
+  damage     1
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS|NORANDOMIZE
+  acs_spawndata
+  {
+    num   10
+    modes heretic
+  }
+}
+
+thingtype HereticPlayer : Mobj, -1, 398
+{
+  spawnstate   S_HPLAY
+  spawnhealth  100
+  seestate     S_HPLAY_RUN1
+  reactiontime 0
+  painstate    S_HPLAY_PAIN
+  painchance   255
+  painsound    ht_plrpai
+  missilestate S_HPLAY_ATK1
+  deathstate   S_HPLAY_DIE1
+  xdeathstate  S_HPLAY_XDIE1
+  deathsound   ht_plrdth
+  radius       16.0
+  height       56.0
+  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  mod          PlayerMisc
+   
+  // custom damagetype deathstates
+  dmg_deathstates
+  {
+    Fire, S_HPLAY_FDTH1,
+    Lava, S_HPLAY_FDTH1
+  }  
+}
+
+thingtype HereticPlayerSkull : Mobj, -1, 399
+{
+  spawnstate S_HPLAYERSKULL1
+  crashstate S_HPLAYERSKULLX
+  radius     4.0
+  height     4.0
+  cflags     CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
 }
 
 // Artifacts
 
-thingtype HArtiInvisibility
+thingtype HArtiInvisibility : Mobj, 7075, 400
 {
-  doomednum    = 7075
-  spawnstate   = S_ARTI_INVS1
-  cflags       = SPECIAL|COUNTITEM|FLOATBOB
-  translucency = 26624
-  dehackednum  = 400
+  spawnstate   S_ARTI_INVS1
+  cflags       SPECIAL|COUNTITEM|FLOATBOB
+  translucency 26624
 }
 
-thingtype HArtiQuartzFlask
+thingtype HArtiQuartzFlask : Mobj, 7082, 401
 {
-  doomednum   = 7082
-  spawnstate  = S_ARTI_PTN2_1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 401
+  spawnstate S_ARTI_PTN2_1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiFly
+thingtype HArtiFly : Mobj, 7083, 402
 {
-  doomednum   = 7083
-  spawnstate  = S_ARTI_SOAR1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 402
+  spawnstate S_ARTI_SOAR1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiInvulnerability 
+thingtype HArtiInvulnerability : Mobj, 7084, 403 
 {
-  doomednum   = 7084
-  spawnstate  = S_ARTI_INVU1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 403
+  spawnstate S_ARTI_INVU1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiTomeOfPower 
+thingtype HArtiTomeOfPower : Mobj, 7086, 404
 {
-  doomednum   = 7086
-  spawnstate  = S_ARTI_PWBK1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 404
+  spawnstate S_ARTI_PWBK1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiEgg
+thingtype HArtiEgg : Mobj, 7030, 405
 {
-  doomednum   = 7030
-  spawnstate  = S_ARTI_EGGC1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 405
+  spawnstate S_ARTI_EGGC1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiSuperHeal
+thingtype HArtiSuperHeal : Mobj, 7032, 406
 {
-  doomednum   = 7032
-  spawnstate  = S_ARTI_SPHL1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 406
+  spawnstate S_ARTI_SPHL1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiTorch 
+thingtype HArtiTorch : Mobj, 7033, 407
 {
-  doomednum   = 7033
-  spawnstate  = S_ARTI_TRCH1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 407
+  spawnstate S_ARTI_TRCH1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HArtiFireBomb
+thingtype HArtiFireBomb : Mobj, 7034, 408
 {
-  doomednum   = 7034
-  spawnstate  = S_ARTI_FBMB1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 408
+  spawnstate S_ARTI_FBMB1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
-thingtype HereticFireBomb
+thingtype HereticFireBomb : Mobj, -1, 409
 {
-  spawnstate   = S_HFIREBOMB1
-  deathsound   = ht_phohit
-  cflags       = NOGRAVITY
-  translucency = 26624
-  dehackednum  = 409
+  spawnstate   S_HFIREBOMB1
+  deathsound   ht_phohit
+  cflags       NOGRAVITY
+  translucency 26624
 }
 
-thingtype HArtiTeleport
+thingtype HArtiTeleport : Mobj, 7036, 410
 {
-  doomednum   = 7036
-  spawnstate  = S_ARTI_ATLP1
-  cflags      = SPECIAL|COUNTITEM|FLOATBOB
-  dehackednum = 410
+  spawnstate S_ARTI_ATLP1
+  cflags     SPECIAL|COUNTITEM|FLOATBOB
 }
 
 // Weapons
 
-thingtype HWeaponGauntlets 
+thingtype HWeaponGauntlets : Mobj, 7205, 411
 {
-  doomednum   = 7205
-  spawnstate  = S_WGNT
-  cflags      = SPECIAL
-  dehackednum = 411
+  spawnstate S_WGNT
+  cflags     SPECIAL
 }
 
-thingtype HWeaponBlaster
+thingtype HWeaponBlaster : Mobj, 7053, 412
 {
-  doomednum   = 7053
-  spawnstate  = S_BLSR
-  cflags      = SPECIAL
-  dehackednum = 412
+  spawnstate S_BLSR
+  cflags     SPECIAL
 }
 
-thingtype HWeaponSkullRod
+thingtype HWeaponSkullRod : Mobj, 7204, 413
 {
-  doomednum   = 7204
-  spawnstate  = S_WSKL
-  cflags      = SPECIAL
-  dehackednum = 413
+  spawnstate S_WSKL
+  cflags     SPECIAL
 }
 
-thingtype HWeaponPhoenixRod
+thingtype HWeaponPhoenixRod : Mobj, 7203, 414
 {
-  doomednum   = 7203
-  spawnstate  = S_WPHX
-  cflags      = SPECIAL
-  dehackednum = 414
+  spawnstate S_WPHX
+  cflags     SPECIAL
 }
 
-thingtype HWeaponCrossbow
+thingtype HWeaponCrossbow : Mobj, 7201, 415
 {
-  doomednum   = 7201
-  spawnstate  = S_WBOW
-  cflags      = SPECIAL
-  dehackednum = 415
+  spawnstate S_WBOW
+  cflags     SPECIAL
 }
 
 // Weapon FX
 
-thingtype HereticStaffPuff
+thingtype HereticStaffPuff : Mobj, -1, 416
 {
-  spawnstate  = S_STAFFPUFF1
-  attacksound = ht_stfhit
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 416
+  spawnstate  S_STAFFPUFF1
+  attacksound ht_stfhit
+  cflags      NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticStaffPuff2
+thingtype HereticStaffPuff2 : Mobj, -1, 417
 {
-  spawnstate  = S_STAFFPUFF2_1
-  attacksound = ht_stfpow
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 417
+  spawnstate  S_STAFFPUFF2_1
+  attacksound ht_stfpow
+  cflags      NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticBeakPuff
+thingtype HereticBeakPuff : Mobj, -1, 418
 {
-  spawnstate  = S_STAFFPUFF1
-  attacksound = ht_chicatk
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 418
+  spawnstate  S_STAFFPUFF1
+  attacksound ht_chicatk
+  cflags      NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticGauntletPuff1 
+thingtype HereticGauntletPuff1 : Mobj, -1, 419
 {
-  spawnstate   = S_GAUNTLETPUFF1_1
-  cflags       = NOBLOCKMAP|NOGRAVITY
-  translucency = 26624
-  dehackednum  = 419
+  spawnstate   S_GAUNTLETPUFF1_1
+  cflags       NOBLOCKMAP|NOGRAVITY
+  translucency 26624
 }
 
-thingtype HereticGauntletPuff2
+thingtype HereticGauntletPuff2 : Mobj, -1, 420
 {
-  spawnstate   = S_GAUNTLETPUFF2_1
-  cflags       = NOBLOCKMAP|NOGRAVITY
-  translucency = 26624
-  dehackednum  = 420
+  spawnstate   S_GAUNTLETPUFF2_1
+  cflags       NOBLOCKMAP|NOGRAVITY
+  translucency 26624
 }
 
-thingtype HereticBlasterSmoke
+thingtype HereticBlasterSmoke : Mobj, -1, 421
 {
-  spawnstate   = S_BLASTERSMOKE1
-  cflags       = NOBLOCKMAP|NOGRAVITY|CANNOTPUSH
-  translucency = 26624
-  dehackednum  = 421
+  spawnstate   S_BLASTERSMOKE1
+  cflags       NOBLOCKMAP|NOGRAVITY|CANNOTPUSH
+  translucency 26624
 }
 
-thingtype HereticRipper
+thingtype HereticRipper : Mobj, -1, 422
 {
-  spawnstate = S_HRIPPER1
-  deathstate = S_HRIPPERX1
-  deathsound = ht_hrnhit
-  speed = 14.0
-  radius = 8.0
-  height = 6.0
-  damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP|NORANDOMIZE
-  dehackednum = 422
+  spawnstate S_HRIPPER1
+  deathstate S_HRIPPERX1
+  deathsound ht_hrnhit
+  speed      14.0
+  radius     8.0
+  height     6.0
+  damage     1
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP|NORANDOMIZE
 }
 
-thingtype HereticBlasterPuff1 
+thingtype HereticBlasterPuff1 : Mobj, -1, 423
 {
-  spawnstate  = S_BLASTERPUFF1_1
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 423
+  spawnstate S_BLASTERPUFF1_1
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticBlasterPuff2
+thingtype HereticBlasterPuff2 : Mobj, -1, 424
 {
-  spawnstate  = S_BLASTERPUFF2_1
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 424
+  spawnstate S_BLASTERPUFF2_1
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticHornRodFX1
+thingtype HereticHornRodFX1 : Mobj, -1, 425
 {
-  spawnstate  = S_HRODFX1_1
-  seesound    = ht_hrnsht
-  deathstate  = S_HRODFXI1_1
-  deathsound  = ht_hrnhit
-  speed       = 22.0
-  radius      = 12.0
-  height      = 8.0
-  damage      = 3
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NORANDOMIZE
-  dehackednum = 425
+  spawnstate S_HRODFX1_1
+  seesound   ht_hrnsht
+  deathstate S_HRODFXI1_1
+  deathsound ht_hrnhit
+  speed      22.0
+  radius     12.0
+  height     8.0
+  damage     3
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NORANDOMIZE
 }
 
-thingtype HereticGoldWandFX1
+thingtype HereticGoldWandFX1 : Mobj, -1, 426
 {
-  spawnstate  = S_GWANDFX1_1
-  deathstate  = S_GWANDFXI1_1
-  deathsound  = ht_gldhit
-  speed       = 22.0
-  radius      = 10.0
-  height      = 6.0
-  damage      = 2
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
-  dehackednum = 426
+  spawnstate S_GWANDFX1_1
+  deathstate S_GWANDFXI1_1
+  deathsound ht_gldhit
+  speed      22.0
+  radius     10.0
+  height     6.0
+  damage     2
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
 }
 
-thingtype HereticGoldWandFX2
+thingtype HereticGoldWandFX2 : Mobj, -1, 427
 {
-  spawnstate  = S_GWANDFX2_1
-  deathstate  = S_GWANDFXI1_1
-  speed       = 18.0
-  radius      = 10.0
-  height      = 6.0
-  damage      = 1
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
-  dehackednum = 427
+  spawnstate S_GWANDFX2_1
+  deathstate S_GWANDFXI1_1
+  speed      18.0
+  radius     10.0
+  height     6.0
+  damage     1
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
 }
 
-thingtype HereticGoldWandPuff1
+thingtype HereticGoldWandPuff1 : Mobj, -1, 428
 {
-  spawnstate  = S_GWANDPUFF1_1
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 428
+  spawnstate S_GWANDPUFF1_1
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticGoldWandPuff2
+thingtype HereticGoldWandPuff2 : Mobj, -1, 429
 {
-  spawnstate  = S_GWANDFXI1_1
-  cflags      = NOBLOCKMAP|NOGRAVITY
-  dehackednum = 429
+  spawnstate S_GWANDFXI1_1
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype HereticPhoenixFX1
+thingtype HereticPhoenixFX1 : Mobj, -1, 430
 {
-  spawnstate  = S_PHOENIXFX1_1
-  seesound    = ht_phosht
-  deathstate  = S_PHOENIXFXI1_1
-  deathsound  = ht_phohit
-  speed       = 20.0
-  radius      = 11.0
-  height      = 8.0
-  damage      = 20
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST|NORANDOMIZE
-  dehackednum = 430
+  spawnstate S_PHOENIXFX1_1
+  seesound   ht_phosht
+  deathstate S_PHOENIXFXI1_1
+  deathsound ht_phohit
+  speed      20.0
+  radius     11.0
+  height     8.0
+  damage     20
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST|NORANDOMIZE
 }
 
