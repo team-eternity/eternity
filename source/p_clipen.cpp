@@ -220,30 +220,25 @@ msecnode_t* ClipEngine::addSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnod
 
 void ClipEngine::linkMobjToSector(Mobj *mobj, sector_t *sector)
 {
-   msecnode_t *node = getSecnode();
-
-   node->m_sector = sector;
-   node->m_thing = mobj;
-
-   node->m_tnext = mobj->sectorlinks;
-   node->m_tprev = NULL;
-   mobj->sectorlinks = node;
-
-   (node->m_sprev = sector->thinglist->m_sprev)->m_snext = node;
-   (node->m_snext = sector->thinglist)->m_sprev = node;
+   // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+   // pointers, allows head nodes to be treated like everything else
+      
+   Mobj **link = &sector->thinglist;
+   Mobj *snext = *link;
+   if((mobj->snext = snext))
+      snext->sprev = &mobj->snext;
+   mobj->sprev = link;
+   *link = mobj;
 }
 
 void ClipEngine::unlinkMobjFromSectors(Mobj *mobj)
 {
-   msecnode_t *next;
-   for(msecnode_t *node = mobj->sectorlinks; node; node = next)
-   {
-      next = node->m_tnext;
-      (node->m_snext->m_sprev = node->m_sprev)->m_snext = node->m_snext;
-      putSecnode(node);
-   }
-
-   mobj->sectorlinks = NULL;
+   // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+   // pointers, allows head node pointers to be treated like everything else
+   Mobj **sprev = mobj->sprev;
+   Mobj  *snext = mobj->snext;
+   if((*sprev = snext))  // unlink from sector list
+      snext->sprev = sprev;
 }
 
 

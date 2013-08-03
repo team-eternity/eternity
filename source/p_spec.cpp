@@ -2836,8 +2836,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       break;
 
    case portal_skybox:
-      msecnode_t *node;
-      for(node = sector->thinglist->m_snext; skycam = node->m_thing; node = node->m_snext)
+      for(skycam = sector->thinglist; skycam; skycam = skycam->snext)
       {
          if(skycam->type == CamType)
             break;

@@ -1015,8 +1015,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
       spritelights = scalelight[lightnum];
    
    // Handle all things in sector.
-   msecnode_t *node;
-   for(node = sec->thinglist->m_snext; thing = node->m_thing; node = node->m_snext)
+   for(thing = sec->thinglist; thing; thing = thing->snext)
       R_ProjectSprite(thing);
 
    // haleyjd 02/20/04: Handle all particles in sector.

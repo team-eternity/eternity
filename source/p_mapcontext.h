@@ -120,6 +120,7 @@ class ClipContext : public MapContext
       // All the portal groups the mobj would be touching in the new position.
       PODCollection<int> adjacent_groups;
       MarkVector *markedgroups;
+      MarkVector *markedsectors;
       
    private:
       ClipEngine *from;

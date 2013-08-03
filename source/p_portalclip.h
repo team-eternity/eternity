@@ -76,6 +76,9 @@ class PortalClipEngine : public ClipEngine
       ClipContext    *unused;
 
       // Internal utilities
+      virtual void linkMobjToSector(Mobj *mobj, sector_t *sector);
+      virtual void unlinkMobjFromSectors(Mobj *mobj);
+
       void gatherSectorLinks(Mobj *thing, ClipContext *cc);
       void addMobjBlockLinks(ClipContext *cc);
       void delSeclist(msecnode_t *);

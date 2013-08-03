@@ -109,7 +109,6 @@ void P_InitPortals(void)
 //
 void R_SetSectorGroupID(sector_t *sector, int groupid)
 {
-   msecnode_t *node;
    Mobj *mo;
    int i;
 
@@ -119,7 +118,7 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
    sector->soundorg.groupid  = groupid;
    sector->csoundorg.groupid = groupid;
 
-   for(node = sector->thinglist->m_snext; mo = node->m_thing; node = node->m_snext)
+   for(mo = sector->thinglist; mo; mo = mo->snext)
       mo->groupid = groupid;
 
    // haleyjd 04/19/09: propagate to line sound origins

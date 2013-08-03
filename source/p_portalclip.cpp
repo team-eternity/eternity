@@ -85,6 +85,8 @@ ClipContext*  PortalClipEngine::getContext()
 
    if(ret->markedgroups == NULL)
       ret->markedgroups = new (PU_LEVEL) MarkVector(groupcells);
+   if(ret->markedsectors == NULL)
+      ret->markedsectors = new (PU_LEVEL) MarkVector(numsectors);
 
    return ret;
 }
@@ -258,8 +260,77 @@ void PortalClipEngine::addMobjBlockLinks(ClipContext *cc)
 }
 
 
+
+void PortalClipEngine::linkMobjToSector(Mobj *mobj, sector_t *sector)
+{
+   ClipEngine::linkMobjToSector(mobj, sector);
+
+   msecnode_t *node = getSecnode();
+
+   node->m_sector = sector;
+   node->m_thing = mobj;
+
+   node->m_tnext = mobj->sectorlinks;
+   node->m_tprev = NULL;
+   mobj->sectorlinks = node;
+
+   (node->m_sprev = sector->thingnodelist->m_sprev)->m_snext = node;
+   (node->m_snext = sector->thingnodelist)->m_sprev = node;
+}
+
+
+void PortalClipEngine::unlinkMobjFromSectors(Mobj *mobj)
+{
+   ClipEngine::unlinkMobjFromSectors(mobj);
+
+   msecnode_t *next;
+   for(msecnode_t *node = mobj->sectorlinks; node; node = next)
+   {
+      next = node->m_tnext;
+      (node->m_snext->m_sprev = node->m_sprev)->m_snext = node->m_snext;
+      putSecnode(node);
+   }
+
+   mobj->sectorlinks = NULL;
+}
+
+
+
+void CheckTouchedSector(sector_t *sector, ClipContext *cc)
+{
+   int secnum = sector - sectors;
+
+   if(cc->markedsectors->isMarked(secnum))
+      return;
+
+   cc->markedsectors->mark(secnum);
+   //cc->thing->
+}
+
+
+
+bool PIT_FindSectors(line_t *line, MapContext *context)
+{
+   ClipContext *cc = context->clipContext();
+   if(cc->bbox[BOXRIGHT]  <= line->bbox[BOXLEFT]   || 
+      cc->bbox[BOXLEFT]   >= line->bbox[BOXRIGHT]  || 
+      cc->bbox[BOXTOP]    <= line->bbox[BOXBOTTOM] || 
+      cc->bbox[BOXBOTTOM] >= line->bbox[BOXTOP] ||
+      P_BoxOnLineSide(cc->bbox, line) != -1)
+      return true;
+
+   CheckTouchedSector(line->frontsector, cc);
+   CheckTouchedSector(line->backsector, cc);
+   return true;
+}
+
 void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
 {
+   int xl, xh, yl, yh;
+   int bx, by;
+
+   cc->markedsectors->clearMarks();
+
 	for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
 	{
       // link into subsector
@@ -267,7 +338,26 @@ void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
 	   subsector_t *ss = R_PointInSubsector(thing->x + link->x, thing->y + link->y);
       linkMobjToSector(thing, ss->sector);
 
+      cc->bbox[BOXLEFT]   = thing->x + thing->radius + link->x;
+      cc->bbox[BOXRIGHT]  = thing->x - thing->radius + link->x;
+      cc->bbox[BOXTOP]    = thing->y + thing->radius + link->y;
+      cc->bbox[BOXBOTTOM] = thing->y - thing->radius + link->y;
+   
+      yh = (cc->bbox[BOXTOP]    - bmaporgy)>>MAPBLOCKSHIFT;
+      yl = (cc->bbox[BOXBOTTOM] - bmaporgy)>>MAPBLOCKSHIFT;
+      xh = (cc->bbox[BOXLEFT]   - bmaporgx)>>MAPBLOCKSHIFT;
+      xl = (cc->bbox[BOXRIGHT]  - bmaporgx)>>MAPBLOCKSHIFT;
 
+      for(by = yl; by <= yh; ++by)
+      {
+         for(bx = xl; bx <= xh; ++bx)
+         {
+            if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
+               continue;
+
+            // DO STUFF
+         }
+      }
 	}
 }
 
@@ -314,10 +404,11 @@ void PortalClipEngine::mapLoaded()
 {
    groupcells = (P_PortalGroupCount() >> 5) + (P_PortalGroupCount() % 32 ? 1 : 0);
    
-   ClipContext *cc = unused;   
+   ClipContext *cc = unused;
    while(cc)
    {
       cc->markedgroups = NULL;
+      cc->markedsectors = NULL;
       cc = cc->next;
    }
 }

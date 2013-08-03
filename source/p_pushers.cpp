@@ -342,7 +342,6 @@ void PushThinker::serialize(SaveArchive &arc)
 //
 Mobj* P_GetPushThing(int s)
 {
-   msecnode_t *node;
    Mobj *thing;
    sector_t *sec;
    int PushType = E_ThingNumForDEHNum(MT_PUSH); 
@@ -350,7 +349,7 @@ Mobj* P_GetPushThing(int s)
 
    sec = sectors + s;
 
-   for(node = sec->thinglist->m_snext; thing = node->m_thing; node = node->m_snext)
+   for(thing = sec->thinglist->snext; thing; thing = thing->snext)
    {
       if(thing->type == PushType || thing->type == PullType)
          return thing;

@@ -2194,17 +2194,16 @@ static void AM_drawPlayers(void)
 static void AM_drawThings(int colors, int colorrange)
 {
    int     i;
-   msecnode_t *node;
+   Mobj    *t;
    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
    
    // for all sectors
    for(i = 0; i < numsectors; ++i)
    {
-      node = sectors[i].thinglist->m_snext;
+      t = sectors[i].thinglist;
 
-      while(node != sectors[i].thinglist) // for all things in that sector
+      while(t) // for all things in that sector
       {
-         Mobj *t = node->m_thing;
          tx = t->x;
          ty = t->y;
 
@@ -2233,7 +2232,7 @@ static void AM_drawThings(int colors, int colorrange)
                    tx,
                    ty
                   );
-               node = node->m_snext;
+               t = t->snext;
                continue;
             case 39: case 6: //jff yellow key
                AM_drawLineCharacter
@@ -2246,7 +2245,7 @@ static void AM_drawThings(int colors, int colorrange)
                    tx,
                    ty
                   );
-               node = node->m_snext;
+               t = t->snext;
                continue;
             case 40: case 5: //jff blue key
                AM_drawLineCharacter
@@ -2259,7 +2258,7 @@ static void AM_drawThings(int colors, int colorrange)
                    tx,
                    ty
                   );
-               node = node->m_snext;
+               t = t->snext;
                continue;
             default:
                break;
@@ -2279,7 +2278,7 @@ static void AM_drawThings(int colors, int colorrange)
              tx,
              ty
             );
-         node = node->m_snext;
+         t = t->snext;
       } // end if
    } // end for
 }
