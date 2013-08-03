@@ -912,11 +912,88 @@ void E_ReplaceString(char *&dest, char *newvalue)
 //
 // Utility function.
 // Adds a MetaString property to the passed-in table with the same name and
-// value as the cfg_t property.
+// value as the cfg_t string property.
 //
 void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
 {
    meta->setString(prop, cfg_getstr(cfg, prop));
+}
+
+//
+// E_MetaIntFromCfgInt
+//
+// Utility function.
+// Adds a MetaInteger property to the passed-in table with the same name
+// and value as the cfg_t integer property.
+//
+void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   meta->setInt(prop, cfg_getint(cfg, prop));
+}
+
+//
+// E_MetaIntFromCfgBool
+//
+// Utility function.
+// Adds a MetaInteger property to the passed-in table with the same name
+// and value as the cfg_t bool property.
+//
+void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   meta->setInt(prop, cfg_getbool(cfg, prop));
+}
+
+//
+// E_MetaIntFromCfgFlag
+//
+// Utility function.
+// Adds a MetaInteger property to the passed-in table with the same name
+// and value as the cfg_t flag property.
+//
+void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   meta->setInt(prop, cfg_getflag(cfg, prop));
+}
+
+//
+// E_MetaTableFromCfg
+//
+// haleyjd 06/30/13: Convert a cfg_t to fields in a MetaTable, with optional
+// inheritance from a prototype table.
+//
+void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
+{
+   table->clearTable();
+
+   if(prototype)
+   {
+      table->copyTableFrom(prototype);
+      table->setString("super", prototype->getKey());
+   }
+
+   for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
+   {
+      if(cfg_size(cfg, opt->name) == 0)
+         continue;
+
+      switch(opt->type)
+      {
+      case CFGT_INT:
+         E_MetaIntFromCfgInt(table, cfg, opt->name);
+         break;
+      case CFGT_STR:
+         E_MetaStringFromCfgString(table, cfg, opt->name);
+         break;
+      case CFGT_BOOL:
+         E_MetaIntFromCfgBool(table, cfg, opt->name);
+         break;
+      case CFGT_FLAG:
+         E_MetaIntFromCfgFlag(table, cfg, opt->name);
+         break;
+      default:
+         break;
+      }
+   }
 }
 
 //

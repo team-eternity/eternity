@@ -34,6 +34,7 @@ extern int blankSpriteNum;
 
 // pickup effects enumeration
 
+// INVENTORY_FIXME: eliminate
 enum
 {
    PFX_NONE,
@@ -96,8 +97,6 @@ enum
    PFX_TOTALINVIS,
    PFX_NUMFX
 };
-
-extern int *pickupfx;
 
 void E_ProcessEDF(const char *filename);
 void E_ProcessNewEDF(void);

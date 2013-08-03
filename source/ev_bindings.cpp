@@ -29,6 +29,8 @@
 #include "ev_actions.h"
 #include "ev_specials.h"
 
+#include "ev_bindings.h"
+
 //=============================================================================
 //
 // DOOM Line Actions
@@ -522,7 +524,7 @@ SRLINE(SRDoorBlazeOpenRed, DoLockedDoor, 0, 0);
 // DOOM Line Type 135 - S1 Door Blaze Open Red Key
 S1LINE(S1DoorBlazeOpenRed, DoLockedDoor, 0, 0);
 
-// DOOM Line Type 136 - SR Door BLaze Open Yellow Key
+// DOOM Line Type 136 - SR Door Blaze Open Yellow Key
 SRLINE(SRDoorBlazeOpenYellow, DoLockedDoor, 0, 0);
 
 // DOOM Line Type 137 - S1 Door Blaze Open Yellow Key
@@ -1387,7 +1389,26 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(415, ParamPlatUpByValue,              "Plat_UpByValue")
 };
 
-size_t DOOMBindingsLen = earrlen(DOOMBindings);
+const size_t DOOMBindingsLen = earrlen(DOOMBindings);
+
+// DOOM Lockdef ID Lookup (Doubles for Heretic)
+ev_lockdef_t DOOMLockDefs[] =
+{
+   {  26, EV_LOCKDEF_BLUE     },
+   {  27, EV_LOCKDEF_YELLOW   },
+   {  28, EV_LOCKDEF_REDGREEN },
+   {  32, EV_LOCKDEF_BLUE     },
+   {  33, EV_LOCKDEF_REDGREEN },
+   {  34, EV_LOCKDEF_YELLOW   },
+   {  99, EV_LOCKDEF_BLUE     },
+   { 133, EV_LOCKDEF_BLUE     }, 
+   { 134, EV_LOCKDEF_REDGREEN },
+   { 135, EV_LOCKDEF_REDGREEN },
+   { 136, EV_LOCKDEF_YELLOW   },
+   { 137, EV_LOCKDEF_YELLOW   },
+};
+
+const size_t DOOMLockDefsLen = earrlen(DOOMLockDefs);
 
 // Heretic Bindings
 // Heretic's bindings are additive over DOOM's.
@@ -1411,7 +1432,7 @@ ev_binding_t HereticBindings[] =
    LINESPEC(107, S1HereticStairsBuildUp16FS)
 };
 
-size_t HereticBindingsLen = earrlen(HereticBindings);
+const size_t HereticBindingsLen = earrlen(HereticBindings);
 
 // Hexen Bindings
 ev_binding_t HexenBindings[] =
@@ -1487,7 +1508,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")
 };
 
-size_t HexenBindingsLen = earrlen(HexenBindings);
+const size_t HexenBindingsLen = earrlen(HexenBindings);
 
 // EOF
 

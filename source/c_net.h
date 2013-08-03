@@ -45,7 +45,6 @@ enum
   netcmd_allowmlook,
   netcmd_bobbing, // haleyjd
   netcmd_autoaim,
-  netcmd_bfglook,
   netcmd_bfgtype,
   netcmd_recoil,
   netcmd_pushers,
@@ -60,7 +59,6 @@ enum
   netcmd_monhelpfriends,
   netcmd_mondistfriend,
   netcmd_map,
-  netcmd_weapspeed,
   netcmd_nukage,
   netcmd_timelimit,
   netcmd_fraglimit,

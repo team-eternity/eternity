@@ -17,7 +17,6 @@ thingtype DoomPlayer
   flags        SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
   flags2       FOOTCLIP
   flags3       SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
-  droptype     Backpack // this is currently disabled due to bugs!
   mod          PlayerMisc
   
   firstdecoratestate S_PLAY

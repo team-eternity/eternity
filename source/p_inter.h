@@ -31,9 +31,6 @@
 struct player_t;
 class  Mobj;
 
-// Ty 03/09/98 Moved to an int in p_inter.c for deh and externalization 
-#define MAXHEALTH maxhealth
-
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
@@ -46,25 +43,10 @@ void P_Whistle(Mobj *actor, int mobjtype);
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 
 extern int god_health;   // Ty 03/09/98 - deh support, see also p_inter.c
-extern int idfa_armor;
-extern int idfa_armor_class;
-extern int idkfa_armor;
-extern int idkfa_armor_class;  // Ty - end
 // Ty 03/13/98 - externalized initial settings for respawned player
 extern int initial_health;
 extern int initial_bullets;
-extern int maxhealth;
-extern int max_armor;
-extern int green_armor_class;
-extern int blue_armor_class;
-extern int max_soul;
-extern int soul_health;
-extern int mega_health;
 extern int god_health;
-extern int idfa_armor;
-extern int idfa_armor_class;
-extern int idkfa_armor;
-extern int idkfa_armor_class;
 extern int bfgcells;
 extern int maxammo[], clipammo[];
 

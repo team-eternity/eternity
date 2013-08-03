@@ -29,6 +29,7 @@
 
 #include "z_zone.h"
 
+#include "a_args.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_event.h"
@@ -88,11 +89,11 @@ static statenum_t skview_atkstate2;
 static PODCollection<MetaState *> skview_metadeaths;
 static MetaState *skview_metadeath = NULL;
 
-extern void A_PlaySoundEx(Mobj *);
-extern void A_Pain(Mobj *);
-extern void A_Scream(Mobj *);
-extern void A_PlayerScream(Mobj *);
-extern void A_XScream(Mobj *);
+extern void A_PlaySoundEx(actionargs_t *);
+extern void A_Pain(actionargs_t *);
+extern void A_Scream(actionargs_t *);
+extern void A_PlayerScream(actionargs_t *);
+extern void A_XScream(actionargs_t *);
 
 //
 // MN_skinEmulateAction

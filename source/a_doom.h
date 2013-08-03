@@ -30,7 +30,9 @@
 #ifndef A_DOOM_H__
 #define A_DOOM_H__
 
-void A_Fire(Mobj *actor);
+struct actionargs_t;
+
+void A_Fire(actionargs_t *actor);
 
 #endif
 

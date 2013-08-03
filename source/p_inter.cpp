@@ -26,6 +26,8 @@
 
 #include "z_zone.h"
 
+#include "hal/i_gamepads.h"
+
 #include "a_small.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -37,6 +39,7 @@
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_edf.h"
+#include "e_inventory.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -69,19 +72,7 @@
 
 int initial_health = 100;
 int initial_bullets = 50;
-int maxhealth = 100; // was MAXHEALTH as a #define, used only in this module
-int max_armor = 200;
-int green_armor_class = 1;  // these are involved with armortype below
-int blue_armor_class = 2;
-int max_soul = 200;
-int soul_health = 100;
-int mega_health = 200;
 int god_health = 100;   // these are used in cheats (see st_stuff.c)
-int idfa_armor = 200;
-int idfa_armor_class = 2;
-// not actually used due to pairing of cheat_k and cheat_fa
-int idkfa_armor = 200;
-int idkfa_armor_class = 2;
 
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
@@ -226,25 +217,41 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, int num)
+bool P_GiveBody(player_t *player, itemeffect_t *effect)
 {
-   int maxhealthtouse;
+   if(!effect)
+      return false;
 
-   // haleyjd 11/14/09: compatibility fix.
-   // The DeHackEd maxhealth setting was only supposed to affect health
-   // potions, but when Ty replaced the MAXHEALTH define in this module,
-   // he replaced all uses of it, including here. We need to handle 
-   // multiple cases for demo compatibility.
-   if(demo_version >= 200 && demo_version < 335) 
-      maxhealthtouse = maxhealth;
+   int amount    = effect->getInt("amount",       0);
+   int maxamount = effect->getInt("maxamount",    0);
+
+   // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
+   // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
+   // define in this module, he replaced all uses of it, including here. We need
+   // to handle multiple cases for demo compatibility.
+   if(demo_version >= 200 && demo_version < 335)
+   {
+      // only applies to items that actually have this key added to them by
+      // DeHackEd; otherwise, the behavior defined through EDF prevails
+      if(effect->hasKey("compatmaxamount"))
+         maxamount = effect->getInt("compatmaxamount", 0);
+   }
+
+   // if not alwayspickup, and have more health than the max, don't pick it up
+   if(!effect->getInt("alwayspickup", 0) && player->health >= maxamount)
+      return false;
+
+   // give the health
+   if(effect->getInt("sethealth", 0))
+      player->health = amount;  // some items set health directly
    else
-      maxhealthtouse = 100;
+      player->health += amount; // most items add to health
 
-   if(player->health >= maxhealthtouse)
-      return false; // Ty 03/09/98 externalized MAXHEALTH to maxhealth
-   player->health += num;
-   if(player->health > maxhealthtouse)
-      player->health = maxhealthtouse;
+   // cap to maxamount
+   if(player->health > maxamount)
+      player->health = maxamount;
+
+   // propagate to player's Mobj
    player->mo->health = player->health;
    return true;
 }
@@ -255,31 +262,61 @@ bool P_GiveBody(player_t *player, int num)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, int armortype, bool htic)
+bool P_GiveArmor(player_t *player, itemeffect_t *effect)
 {
-   int hits = armortype*100;
+   if(!effect)
+      return false;
 
-   if(player->armorpoints >= hits)
-      return false;   // don't pick up
+   int hits        = effect->getInt("saveamount",  0);
+   int savefactor  = effect->getInt("savefactor",  1);
+   int savedivisor = effect->getInt("savedivisor", 3);
 
-   player->armortype = armortype;
-   player->armorpoints = hits;
-   
-   // haleyjd 10/10/02 -- TODO/FIXME: hack!
-   player->hereticarmor = player->hereticarmor || htic;
-   
+   // check for validity
+   if(!hits || !savefactor || !savedivisor)
+      return false;
+
+   // check if needed
+   if(!(effect->getInt("alwayspickup", 0)) && player->armorpoints >= hits)
+      return false; // don't pick up
+
+   // bonuses add to your armor and preserve your current absorption qualities;
+   // normal pickups set your armor and override any existing qualities
+   if(effect->getInt("bonus", 0))
+   {
+      int maxsaveamount = effect->getInt("maxsaveamount", 0);
+      player->armorpoints += hits;
+      if(player->armorpoints > maxsaveamount)
+         player->armorpoints = maxsaveamount;
+
+      // bonuses only change the player's armor absorption quality if the player
+      // currently has no armor
+      if(!player->armorfactor)
+      {
+         player->armorfactor  = savefactor;
+         player->armordivisor = savedivisor;
+      }
+   }
+   else
+   {
+      player->armorpoints  = hits;
+      player->armorfactor  = savefactor;
+      player->armordivisor = savedivisor;
+   }
+
    return true;
 }
 
 //
 // P_GiveCard
 //
-void P_GiveCard(player_t *player, card_t card)
+void P_GiveCard(player_t *player, itemeffect_t *card)
 {
-   if(player->cards[card])
-      return;
-   player->bonuscount = BONUSADD;
-   player->cards[card] = 1;
+   inventoryslot_t *slot = E_InventorySlotForItem(player, card);
+
+   if(slot && slot->amount > 0)
+      return;   
+   player->bonuscount = BONUSADD; // INVENTORY_TODO: hard-coded for now
+   E_GiveInventoryItem(player, card);
 }
 
 //
@@ -312,7 +349,7 @@ bool P_GivePower(player_t *player, int power)
          return false;
       break;
    case pw_strength:
-      P_GiveBody(player,100);
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_BERSERKHEALTH));
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
       player->mo->flags2 |= MF2_DONTDRAW;
@@ -334,6 +371,106 @@ bool P_GivePower(player_t *player, int power)
 }
 
 //
+// P_TouchSpecialThingNew
+//
+// INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
+// when it is finished, replacing the below.
+//
+void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
+{
+   player_t     *player;
+   e_pickupfx_t *pickup;
+   itemeffect_t *effect;
+   bool          pickedup = false;
+   const char   *message  = NULL;
+   const char   *sound    = NULL;
+
+   fixed_t delta = special->z - toucher->z;
+   if(delta > toucher->height || delta < -8*FRACUNIT)
+      return; // out of reach
+
+   // haleyjd: don't crash if a monster gets here.
+   if(!(player = toucher->player))
+      return;
+
+   // Dead thing touching.
+   // Can happen with a sliding player corpse.
+   if(toucher->health <= 0)
+      return;
+
+   // haleyjd 05/11/03: EDF pickups modifications
+   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
+      return;
+
+   pickup = &pickupfx[special->sprite];
+   effect = pickup->effect;
+
+   if(!effect)
+      return;
+
+   // set defaults
+   message = pickup->message;
+   sound   = pickup->sound;
+
+   switch(effect->getInt("class", ITEMFX_NONE))
+   {
+   case ITEMFX_HEALTH:   // Health - heal up the player automatically
+      pickedup = P_GiveBody(player, effect);
+      if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+         message = effect->getString("lowmessage", message);
+      break;
+   case ITEMFX_ARMOR:
+      pickedup = P_GiveArmor(player, effect);
+      break;
+   case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
+      pickedup = E_GiveInventoryItem(player, effect);
+      break;
+   default:
+      return;
+   }
+
+   // perform post-processing if the item was collected beneficially, or if the
+   // pickup is flagged to always be picked up even without benefit.
+   if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
+   {
+      // INVENTORY_TODO: support Heretic/Hexen-style item respawning via
+      // setting to a state instead of removing (should be a property of
+      // the "special" object).
+
+      // Remove the object, provided it doesn't stay in multiplayer games
+      if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
+      {
+         // Award item count
+         if(special->flags & MF_COUNTITEM)
+            player->itemcount++;
+         special->removeThinker();
+      }
+
+      // if picked up for benefit, or not silent when picked up without, do
+      // all the "noisy" pickup effects
+      if(pickedup || !(pickup->flags & PFXF_SILENTNOBENEFIT))
+      {
+         // Give message
+         if(message)
+         {
+            // check for BEX string
+            if(message[0] == '$')
+               message = DEH_String(message + 1);
+            player_printf(player, "%s", message);
+         }
+
+         // Play pickup sound
+         if(sound)
+            S_StartSoundName(player->mo, sound);
+
+         // Increment bonuscount
+         if(!(pickup->flags & PFXF_NOSCREENFLASH))
+            player->bonuscount += BONUSADD;
+      }
+   }
+}
+
+//
 // P_TouchSpecialThing
 //
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
@@ -344,6 +481,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    bool       removeobj = true;
    bool       pickup_fx = true; // haleyjd 04/14/03
    fixed_t    delta = special->z - toucher->z;
+   
+   // INVENTORY_TODO: transitional logic is in place below until this function
+   // can be fully converted to being based on itemeffects
+   itemeffect_t    *effect = NULL;
+   inventoryslot_t *slot   = NULL;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
       return;        // out of reach
@@ -364,58 +506,52 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       return;
 
    // Identify by sprite.
-   switch(pickupfx[special->sprite])
+   // INVENTORY_FIXME: apply pickupfx[].effect instead!
+   switch(pickupfx[special->sprite].tempeffect)
    {
       // armor
    case PFX_GREENARMOR:
-      if(!P_GiveArmor(player, green_armor_class, false))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_GREENARMOR)))
          return;
       message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BLUEARMOR:
-      if(!P_GiveArmor(player, blue_armor_class, false))
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
          return;
       message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
       break;
 
       // bonus items
    case PFX_POTION:
-      // sf: removed beta
-      player->health++;               // can go over 100%
-      if(player->health > (maxhealth * 2))
-         player->health = (maxhealth * 2);
-      player->mo->health = player->health;
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_HEALTHBONUS));
       message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ARMORBONUS:
-      // sf: removed beta
-      player->armorpoints++;          // can go over 100%
-      if(player->armorpoints > max_armor)
-         player->armorpoints = max_armor;
-      if(!player->armortype)
-         player->armortype = green_armor_class;
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ARMORBONUS));
       message = DEH_String("GOTARMBONUS"); // Ty 03/22/98 - externalized
       break;
 
       // sf: removed beta items
       
    case PFX_SOULSPHERE:
-      player->health += soul_health;
-      if(player->health > max_soul)
-         player->health = max_soul;
-      player->mo->health = player->health;
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_SOULSPHERE));
       message = DEH_String("GOTSUPER"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
+
       break;
 
    case PFX_MEGASPHERE:
       if(demo_version < 335 && GameModeInfo->id != commercial)
          return;
-      player->health = mega_health;
-      player->mo->health = player->health;
-      P_GiveArmor(player,blue_armor_class, false);
+      // INVENTORY_TODO: hardcoded for now
+      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
+      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR));
       message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
@@ -423,56 +559,77 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // cards
       // leave cards for everyone
    case PFX_BLUEKEY:
-      if(!player->cards[it_bluecard])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_BLUECARD);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_bluecard);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_YELLOWKEY:
-      if(!player->cards[it_yellowcard])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_YELLOWCARD);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_yellowcard);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_REDKEY:
-      if(!player->cards[it_redcard])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_REDCARD);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_redcard);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
    case PFX_BLUESKULL:
-      if(!player->cards[it_blueskull])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_BLUESKULL);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_blueskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
    case PFX_YELLOWSKULL:
-      if(!player->cards[it_yellowskull])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_yellowskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_REDSKULL:
-      if(!player->cards[it_redskull])
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_REDSKULL);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, it_redskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    // medikits, heals
    case PFX_STIMPACK:
-      if(!P_GiveBody(player, 10))
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveBody(player, E_ItemEffectForName(ITEMNAME_STIMPACK)))
          return;
       message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_MEDIKIT:
-      if(!P_GiveBody(player, 25))
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ITEMNAME_MEDIKIT);
+      if(!P_GiveBody(player, effect))
          return;
       // sf: fix medineed 
       // (check for below 25, but medikit gives 25, so always > 25)
@@ -500,7 +657,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_INVISISPHERE:
-      if(!P_GivePower (player, pw_invisibility))
+      if(!P_GivePower(player, pw_invisibility))
          return;
       message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
@@ -509,8 +666,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_RADSUIT:
       if(!P_GivePower(player, pw_ironfeet))
          return;
-      // sf:removed beta
-      
       message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
@@ -523,10 +678,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_LIGHTAMP:
-      
       if(!P_GivePower(player, pw_infrared))
          return;
-      // sf:removed beta
       sound = sfx_getpow;
       message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
       break;
@@ -589,37 +742,20 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_BACKPACK:
-      if(!player->backpack)
+      if(!E_PlayerHasBackpack(player))
       {
-         for (i=0 ; i<NUMAMMO ; i++)
+         // INVENTORY_FIXME: eliminate once ammo types are managed by inventory
+         for(i = 0; i < NUMAMMO; i++)
             player->maxammo[i] *= 2;
-         player->backpack = true;
+         E_GiveBackpack(player);
       }
-      // EDF FIXME: needs a ton of work
-#if 0
-      if(special->flags & MF_DROPPED)
-      {
-         int i;
-         for(i=0 ; i<NUMAMMO ; i++)
-         {
-            player->ammo[i] +=special->extradata.backpack->ammo[i];
-            if(player->ammo[i]>player->maxammo[i])
-               player->ammo[i]=player->maxammo[i];
-         }
-         P_GiveWeapon(player,special->extradata.backpack->weapon,true);
-         Z_Free(special->extradata.backpack);
-         message = "got player backpack";
-      }
-      else
-#endif
-      {
-         for(i = 0; i < NUMAMMO; ++i)
-            P_GiveAmmo(player, i, 1);
-         message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
-      }
-
+      // INVENTORY_TODO: use ammo types' backpack amounts
+      for(i = 0; i < NUMAMMO; i++)
+         P_GiveAmmo(player, i, 1);
+      message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       break;
 
+      // WEAPON_FIXME: Weapon collection
       // weapons
    case PFX_BFG:
       if(!P_GiveWeapon(player, wp_bfg, false))
@@ -678,50 +814,57 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       // haleyjd 10/10/02: Heretic powerups
 
-      // heretic keys: give both card and skull equivalent DOOM keys
-   case PFX_HGREENKEY: // green key (red in doom)
-      if(!player->cards[it_redcard])
+   case PFX_HGREENKEY: // green key
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_KEYGREEN);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("HGOTGREENKEY");
-      P_GiveCard(player, it_redcard);
-      P_GiveCard(player, it_redskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
 
-   case PFX_HBLUEKEY: // blue key (blue in doom)
-      if(!player->cards[it_bluecard])
+   case PFX_HBLUEKEY: // blue key
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_KEYBLUE);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("HGOTBLUEKEY");
-      P_GiveCard(player, it_bluecard);
-      P_GiveCard(player, it_blueskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
 
-   case PFX_HYELLOWKEY: // yellow key (yellow in doom)
-      if(!player->cards[it_yellowcard])
+   case PFX_HYELLOWKEY: // yellow key
+      // INVENTORY_TODO: hardcoded for now
+      effect = E_ItemEffectForName(ARTI_KEYYELLOW);
+      slot   = E_InventorySlotForItem(player, effect);
+      if(!slot || slot->amount == 0)
          message = DEH_String("HGOTYELLOWKEY");
-      P_GiveCard(player, it_yellowcard);
-      P_GiveCard(player, it_yellowskull);
+      P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
 
    case PFX_HPOTION: // heretic potion
-      if(!P_GiveBody(player, 10))
+      if(!P_GiveBody(player, E_ItemEffectForName("CrystalVial")))
          return;
       message = DEH_String("HITEMHEALTH");
       sound = sfx_hitemup;
       break;
 
    case PFX_SILVERSHIELD: // heretic shield 1
-      if(!P_GiveArmor(player, 1, true))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_SILVERSHIELD)))
          return;
       message = DEH_String("HITEMSHIELD1");
       sound = sfx_hitemup;
       break;
 
    case PFX_ENCHANTEDSHIELD: // heretic shield 2
-      if(!P_GiveArmor(player, 2, true))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ENCHANTEDSHLD)))
          return;
       message = DEH_String("HITEMSHIELD2");
       sound = sfx_hitemup;
@@ -940,7 +1083,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    {
       if(target->player)
       {
-         // players only drop backpacks if so indicated
+         // players only drop items if so indicated
          if(!(dmflags & DM_PLAYERDROP))
             return;
       }
@@ -951,29 +1094,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       return;
 
    mo = P_SpawnMobj(target->x, target->y, ONFLOORZ, item);
-   mo->flags |= MF_DROPPED;    // special versions of items
-   
-   // EDF FIXME: problematic, needed work to begin with
-#if 0
-   if(mo->type == MT_MISC24) // put all the players stuff into the
-   {                         // backpack
-      int a;
-      mo->extradata.backpack = (backpack_t *)(Z_Malloc(sizeof(backpack_t), PU_LEVEL, NULL));
-      for(a=0; a<NUMAMMO; a++)
-         mo->extradata.backpack->ammo[a] = target->player->ammo[a];
-      mo->extradata.backpack->weapon = target->player->readyweapon;
-      // set the backpack moving slightly faster than the player
-      
-      // start it moving in a (fairly) random direction
-      // i cant be bothered to create a new random number
-      // class right now
-      // haleyjd: not demo safe, fix later (TODO)
-      /*
-      mo->momx = target->momx * (gametic-basetic) % 5;
-      mo->momy = target->momy * (gametic-basetic+30) % 5;
-      */
-   }
-#endif
+   mo->flags |= MF_DROPPED;    // special versions of items   
 }
 
 //
@@ -1395,24 +1516,15 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
-      if(player->armortype)
+      if(player->armorfactor && player->armordivisor)
       {
-         int saved;
-         
-         // haleyjd 10/10/02: heretic armor -- its better! :P
-         // HTIC_FIXME
-         if(player->hereticarmor)
-            saved = player->armortype == 1 ? damage/2 : (damage*3)/4;
-         else
-            saved = player->armortype == 1 ? damage/3 : damage/2;
+         int saved = damage * player->armorfactor / player->armordivisor;
          
          if(player->armorpoints <= saved)
          {
             // armor is used up
             saved = player->armorpoints;
-            player->armortype = 0;
-            // haleyjd 10/10/02
-            player->hereticarmor = false;
+            player->armorfactor = player->armordivisor = 0;
          }
          player->armorpoints -= saved;
          damage -= saved;
@@ -1432,22 +1544,9 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->damagecount < 0)
          player->damagecount = 0;
 
-#if 0
-      // killough 11/98: 
-      // This is unused -- perhaps it was designed for
-      // a hand-connected input device or VR helmet,
-      // to pinch the player when they're hurt :)
-
-      // haleyjd: this was for the "CyberMan" 3D mouse ^_^
-      
-      {
-         int temp = damage < 100 ? damage : 100;
-         
-         if(player == &players[consoleplayer])
-            I_Tactile(40,10,40+temp*2);
-      }
-#endif
-      
+      // haleyjd 06/08/13: reimplement support for tactile damage feedback :)
+      if(player == &players[consoleplayer])
+         I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);      
    }
 
    // do the damage

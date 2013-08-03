@@ -802,14 +802,7 @@ bool P_SkullHit(Mobj *thing, ClipContext *cc)
       // causes another state-set to the seestate, which calls A_Chase.
       // A_Chase in turn calls P_TryMove and that can cause a lot of shit
       // to explode.
-      //
-      // 09/29/09: Repair outside of old demos by calling P_SetMobjStateNF.
-      // This function cannot cause recursion, since it does not execute the
-      // state's action function. This actually fixes a lot of problems.
 
-      if(demo_version >= 335)
-         P_SetMobjStateNF(cc->thing, cc->thing->info->spawnstate);
-      else
          P_SetMobjState(cc->thing, cc->thing->info->spawnstate);
 
       cc->BlockingMobj = NULL; // haleyjd: from zdoom

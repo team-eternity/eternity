@@ -86,10 +86,6 @@ public:
 
    inline    operator T * () const { return dllObject; }
    inline T *operator ->  () const { return dllObject; }
-
-   /*
-   inline T &operator *   () const { return *dllObject; }
-   */
 };
 
 //

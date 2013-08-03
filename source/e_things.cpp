@@ -1161,7 +1161,7 @@ void E_SplitTypeAndState(char *src, char **type, char **state)
    colon1 = strchr(src, ':');
    colon2 = strrchr(src, ':');
 
-   if(!colon1 || !colon2)
+   if(!colon1 || !colon2 || colon1 == colon2)
       return;
 
    *colon1 = *colon2 = '\0';
@@ -2388,7 +2388,7 @@ void E_ProcessThingDeltas(cfg_t *cfg)
 // Post-processing routine; sets things' unspecified default sprites to the
 // sprite in the thing's spawnstate.
 //
-void E_SetThingDefaultSprites(void)
+void E_SetThingDefaultSprites()
 {
    int i;
 
@@ -2442,7 +2442,7 @@ enum
    NSTATE_INACTIVE
 };
 
-#define NUMNATIVESTATES (sizeof(nativeStateLabels) / sizeof(const char *))
+#define NUMNATIVESTATES earrlen(nativeStateLabels)
 
 //
 // E_GetNativeStateLoc
@@ -2505,7 +2505,7 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 //
 // E_GetStateForMobj
 //
-// Convenience routine to call the above give an Mobj.
+// Convenience routine to call the above given an Mobj.
 //
 state_t *E_GetStateForMobj(Mobj *mo, const char *label)
 {

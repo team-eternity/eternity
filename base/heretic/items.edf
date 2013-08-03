@@ -1,0 +1,162 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// Heretic Inventory Items
+//
+
+//=============================================================================
+//
+// Health Effects
+//
+
+healtheffect CrystalVial
+{
+   amount:    10;
+   maxamount: 100;
+}
+
+// Use effect for ArtiHealth
+healtheffect QuartzFlask
+{
+   amount:    25;
+   maxamount: 100;
+}
+
+// Use effect for ArtiSuperHealth
+healtheffect MysticUrn
+{
+   amount:    100;
+   maxamount: 100;
+}
+
+//=============================================================================
+//
+// Armor Effects
+//
+
+armoreffect SilverShield
+{
+   saveamount:  100;
+   savefactor:  1;
+   savedivisor: 2;   // 50% absorption rate (1/2)
+}
+
+armoreffect EnchantedShield
+{
+   saveamount:  200;
+   savefactor:  3;
+   savedivisor: 4;   // 75% absorption rate (3/4)
+}
+
+armoreffect RAMBOArmor
+{
+   saveamount:  200;
+   savefactor:  3;
+   savedivisor: 4;
+}
+
+//=============================================================================
+//
+// Keys
+//
+
+artifact KeyBlue
+{
+   artifacttype: Key;
+}
+
+artifact KeyYellow
+{
+   artifacttype: Key;
+}
+
+artifact KeyGreen
+{
+   artifacttype: Key;
+}
+
+//=============================================================================
+//
+// Heretic Lockdefs
+//
+
+ifgametype("HERETIC")
+
+// Green Key Lock
+lockdef 1
+{
+   require: KeyGreen;
+   
+   message:       "$HPD_GREENK";
+   remotemessage: "$HPD_GREENO";
+}
+
+// Blue Key Lock
+lockdef 2
+{
+   require: KeyBlue;
+   
+   message:       "$PD_BLUEK";
+   remotemessage: "$PD_BLUEO";
+}
+
+// Yellow Key Lock
+lockdef 3
+{
+   require: KeyYellow;
+   
+   message:       "$PD_YELLOWK";
+   remotemessage: "$PD_YELLOWO";
+}
+
+// Green Key Lock
+lockdef 129
+{
+   require: KeyGreen;
+   
+   message:       "$HPD_GREENK";
+   remotemessage: "$HPD_GREENO";
+}
+
+// Blue Key Lock
+lockdef 130
+{
+   require: KeyBlue;
+   
+   message:       "$PD_BLUEK";
+   remotemessage: "$PD_BLUEO";
+}
+
+// Yellow Key Lock
+lockdef 131
+{
+   require: KeyYellow;
+   
+   message:       "$PD_YELLOWK";
+   remotemessage: "$PD_YELLOWO";
+}
+
+// All three keys lock
+lockdef 229
+{
+   require: KeyGreen;
+   require: KeyYellow;
+   require: KeyBlue;
+   
+   message:       "$PD_ALL3";
+   remotemessage: "You need all 3 keys to activate this object";
+}
+
+// All three keys lock
+lockdef 101
+{
+   require: KeyGreen;
+   require: KeyYellow;
+   require: KeyBlue;
+   
+   message:       "$PD_ALL3";
+   remotemessage: "You need all 3 keys to activate this object";
+}
+
+endif()
+

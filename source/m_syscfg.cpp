@@ -32,6 +32,7 @@
 #include "d_main.h"
 #include "d_gi.h"
 #include "gl/gl_vars.h"
+#include "hal/i_gamepads.h"
 #include "hal/i_picker.h"
 #include "hal/i_platform.h"
 #include "i_sound.h"
@@ -152,7 +153,7 @@ static default_t sysdefaults[] =
                "Directory containing Master Levels wad files"),
 
    DEFAULT_STR("w_norestpath", &w_norestpath, NULL, "", default_t::wad_no,
-               "Path to No Rest for the Living"),
+               "Path to 'No Rest for the Living'"),
 
    // 11/04/09: system-level options moved here from the main config
 
@@ -243,6 +244,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
+
+   DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, NULL, true, default_t::wad_no,
+                "1 to enable force feedback through gamepads where supported"),
 
 #ifdef _SDL_VER
    DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,

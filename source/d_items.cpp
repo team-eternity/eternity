@@ -32,6 +32,7 @@
 #include "d_gi.h"
 #include "d_mod.h"
 #include "e_states.h"
+#include "sounds.h"
 #include "w_wad.h"
 
 // haleyjd 11/28/08: bit of a hack - replace checks on gamemode == commercial
@@ -53,10 +54,12 @@ bool enable_ssg = false;
 //  haleyjd 08/10/02: added ammopershot field to allow customized
 //   ammo usage for any weapon via DeHackEd
 //
-weaponinfo_t    weaponinfo[NUMWEAPONS] =
+weaponinfo_t weaponinfo[NUMWEAPONS] =
 {
   {
     // fist
+    wp_fist,
+    "Fist",
     am_noammo,
     S_PUNCHUP,
     S_PUNCHDOWN,
@@ -70,6 +73,8 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
   },  
   {
     // pistol
+    wp_pistol,
+    "Pistol",
     am_clip,
     S_PISTOLUP,
     S_PISTOLDOWN,
@@ -77,12 +82,15 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PISTOL1,
     S_PISTOLFLASH,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_PISTOL,
     10,
+    1, 1
   },  
   {
     // shotgun
+    wp_shotgun,
+    "Shotgun",
     am_shell,
     S_SGUNUP,
     S_SGUNDOWN,
@@ -90,12 +98,15 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SGUN1,
     S_SGUNFLASH1,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_SHOTGUN,
     30,
+    3, 3
   },
   {
     // chaingun
+    wp_chaingun,
+    "Chaingun",
     am_clip,
     S_CHAINUP,
     S_CHAINDOWN,
@@ -103,12 +114,15 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_CHAIN1,
     S_CHAINFLASH1,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_CHAINGUN,
     10,
+    1, 1
   },
   {
     // missile launcher
+    wp_missile,
+    "MissileLauncher",
     am_misl,
     S_MISSILEUP,
     S_MISSILEDOWN,
@@ -116,12 +130,15 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_MISSILE1,
     S_MISSILEFLASH1,
     1, false,
-    WPF_NOAUTOFIRE | WPF_SILENCER,
+    WPF_NOAUTOFIRE | WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_UNKNOWN,
     100,
+    6, 8
   },
   {
     // plasma rifle
+    wp_plasma,
+    "PlasmaRifle",
     am_cell,
     S_PLASMAUP,
     S_PLASMADOWN,
@@ -129,12 +146,15 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PLASMA1,
     S_PLASMAFLASH1,
     1, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL | WPF_NOTSHAREWARE,
     MOD_UNKNOWN,
     20,
+    2, 1
   },
   {
     // bfg 9000
+    wp_bfg,
+    "BFG9000",
     am_cell,
     S_BFGUP,
     S_BFGDOWN,
@@ -142,12 +162,15 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_BFG1,
     S_BFGFLASH1,
     40, false,
-    WPF_NOAUTOFIRE | WPF_SILENCER,
+    WPF_NOAUTOFIRE | WPF_SILENCER | WPF_HAPTICRECOIL | WPF_NOTSHAREWARE,
     MOD_UNKNOWN,
     100,
+    10, 10
   },
   {
     // chainsaw
+    wp_chainsaw,
+    "Chainsaw",
     am_noammo,
     S_SAWUP,
     S_SAWDOWN,
@@ -158,9 +181,13 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     WPF_NOTHRUST | WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER,
     MOD_CHAINSAW,
     0,
+    0, 0,
+    sfx_sawup
   },
   {
     // super shotgun
+    wp_supershotgun,
+    "SuperShotgun",
     am_shell,
     S_DSGUNUP,
     S_DSGUNDOWN,
@@ -168,9 +195,10 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_DSGUN1,
     S_DSGUNFLASH1,
     2, false,
-    WPF_SILENCER,
+    WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_SSHOTGUN,
     80,
+    5, 5
   },  
 };
 
@@ -179,7 +207,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
 // until EDF weapon support is in place
 // WEAPON_FIXME
 //
-void D_InitWeaponInfo(void)
+void D_InitWeaponInfo()
 {
    int i;
 

@@ -33,12 +33,17 @@
 #include "m_fixed.h"
 
 struct edf_string_t;
+class  Mobj;
 struct mobjinfo_t;
 struct sfxinfo_t;
 struct state_t;
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16
+
+// Get an arglist safely from an Mobj * even if the pointer or the 
+// Mobj's state is NULL (NULL is returned in either case).
+#define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : NULL)
 
 typedef enum
 {
@@ -70,12 +75,12 @@ typedef struct evalcache_s
    } value;
 } evalcache_t;
 
-typedef struct arglist_s
+struct arglist_t
 {
    char *args[EMAXARGS];         // argument strings stored from EDF
    evalcache_t values[EMAXARGS]; // if type != EVALTYPE_NONE, cached value
    int numargs;                  // number of arguments
-} arglist_t;
+};
 
 typedef struct argkeywd_s
 {
@@ -89,7 +94,7 @@ bool          E_SetArg(arglist_t *al, int index, const char *value);
 bool          E_SetArgFromNumber(arglist_t *al, int index, int value);
 void          E_DisposeArgs(arglist_t *al);
 void          E_ResetArgEval(arglist_t *al, int index);
-void          E_ResetAllArgEvals(void);
+void          E_ResetAllArgEvals();
 
 const char   *E_ArgAsString(arglist_t *al, int index, const char *defvalue);
 int           E_ArgAsInt(arglist_t *al, int index, int defvalue);

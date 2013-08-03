@@ -68,20 +68,19 @@ typedef enum
   NUMPSPRITES
 } psprnum_t;
 
-typedef struct pspdef_s
+struct pspdef_t
 {
   state_t *state;       // a NULL state means not active
   int     tics;
   fixed_t sx;
   fixed_t sy;
   int trans;
-} pspdef_t;
+};
 
-extern int weapon_preferences[2][NUMWEAPONS+1];      // killough 5/2/98
 int P_WeaponPreferred(int w1, int w2);
-extern int weapon_speed, default_weapon_speed;
 extern int action_from_pspr;                     // haleyjd 05/21/08
 
+void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 int P_NextWeapon(player_t *player);
@@ -96,6 +95,7 @@ void P_DropWeapon(player_t *player);
 void P_BulletSlope(Mobj *mo, TracerContext *tc);
 
 weaponinfo_t *P_GetReadyWeapon(player_t *player);
+weaponinfo_t *P_GetPendingWeapon(player_t *player);
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);
 
 void P_WeaponRecoil(player_t *player);

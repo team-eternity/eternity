@@ -266,7 +266,6 @@ protected:
    int        numlumps;   // number of lumps
    bool       ispublic;   // if false, don't call D_NewWadLumps
    int        type;       // directory type
-   void       *data;      // user data (mainly for w_levels code)
 
    namespace_t m_namespaces[lumpinfo_t::ns_max];
 
@@ -326,8 +325,6 @@ public:
    // Accessors
    int   getType() const  { return type; }
    void  setType(int i)   { type = i;    }
-   void *getData() const  { return data; }
-   void  setData(void *d) { data = d;    }
    
    // Read-only properties
    int          getNumLumps() const { return numlumps; }

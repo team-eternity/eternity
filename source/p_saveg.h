@@ -34,6 +34,7 @@ class  Thinker;
 class  Mobj;
 class  OutBuffer;
 class  InBuffer;
+struct inventoryslot_t;
 struct spectransfer_t;
 struct mapthing_t;
 struct sector_t;
@@ -81,8 +82,9 @@ public:
    SaveArchive &operator << (sector_t *&s);
    SaveArchive &operator << (line_t   *&ln);
    // Structures:
-   SaveArchive &operator << (spectransfer_t &st);
-   SaveArchive &operator << (mapthing_t     &mt);
+   SaveArchive &operator << (spectransfer_t  &st);
+   SaveArchive &operator << (mapthing_t      &mt);
+   SaveArchive &operator << (inventoryslot_t &slot);
 };
 
 // Global template functions for SaveArchive

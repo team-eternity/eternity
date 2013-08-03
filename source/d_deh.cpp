@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // $Id: d_deh.c,v 1.20 1998/06/01 22:30:38 thldrmn Exp $
 //
@@ -26,9 +26,9 @@
 //
 // Author: Ty Halderman, TeamTNT
 //
-//--------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-// killough 5/2/98: fixed headers, removed rendunant external declarations:
+// killough 5/2/98: fixed headers, removed redundant external declarations:
 #include "z_zone.h"
 
 #include "d_dehtbl.h"
@@ -38,11 +38,13 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "g_game.h"
 #include "info.h"
+#include "metaapi.h"
 #include "m_cheat.h"
 #include "m_misc.h"
 #include "p_inter.h"
@@ -1688,6 +1690,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
    int  value;      // All deh values are ints or longs
+   itemeffect_t *fx;
    
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
@@ -1714,31 +1717,83 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key,deh_misc[1]))  // Initial Bullets
          initial_bullets = value;
       else if(!strcasecmp(key,deh_misc[2]))  // Max Health
-         maxhealth = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
+            fx->setInt("maxamount", value * 2);
+         if((fx = E_ItemEffectForName(ITEMNAME_MEDIKIT)))
+            fx->setInt("compatmaxamount", value);
+         if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
+            fx->setInt("compatmaxamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[3]))  // Max Armor
-         max_armor = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
+            fx->setInt("maxsaveamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[4]))  // Green Armor Class
-         green_armor_class = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_GREENARMOR)))
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value > 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 2);
+            }
+         }
+      }
       else if(!strcasecmp(key,deh_misc[5]))  // Blue Armor Class
-         blue_armor_class = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value <= 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 3);
+            }
+         }
+      }
       else if(!strcasecmp(key,deh_misc[6]))  // Max Soulsphere
-         max_soul = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
+            fx->setInt("maxamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[7]))  // Soulsphere Health
-         soul_health = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
+            fx->setInt("amount", value);
+      }
       else if(!strcasecmp(key,deh_misc[8]))  // Megasphere Health
-         mega_health = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
+         {
+            fx->setInt("amount",    value);
+            fx->setInt("maxamount", value);
+         }
+      }
       else if(!strcasecmp(key,deh_misc[9]))  // God Mode Health
          god_health = value;
       else if(!strcasecmp(key,deh_misc[10])) // IDFA Armor
-         idfa_armor = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
+            fx->setInt("saveamount", value);
+      }
       else if(!strcasecmp(key,deh_misc[11])) // IDFA Armor Class
-         idfa_armor_class = value;
+      {
+         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
+         {
+            fx->setInt("savefactor", 1);
+            fx->setInt("savedivisor", value > 1 ? 2 : 3);
+         }
+      }
       else if(!strcasecmp(key,deh_misc[12])) // IDKFA Armor
-         idkfa_armor = value;
+         ; //idkfa_armor = value;
       else if(!strcasecmp(key,deh_misc[13])) // IDKFA Armor Class
-         idkfa_armor_class = value;
+         ; //idkfa_armor_class = value;
       else if(!strcasecmp(key,deh_misc[14])) // BFG Cells/Shot
       {
+         // WEAPON_FIXME: BFG ammopershot
          // haleyjd 08/10/02: propagate to weapon info
          bfgcells = weaponinfo[wp_bfg].ammopershot = value;
       }

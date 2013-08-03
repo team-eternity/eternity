@@ -30,6 +30,9 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+// Need gamepad HAL
+#include "hal/i_gamepads.h"
+
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
@@ -137,7 +140,6 @@ byte            *savebuffer;
 int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
 int             automlook = false;
-int             bfglook = 1;
 int             smooth_turning = 0;   // sf
 int             novert;               // haleyjd
 
@@ -338,7 +340,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
    //
-   // NETCODE_FIXME -- WEAPON_FIXME
+   // NETCODE_FIXME -- WEAPON_FIXME -- G_BuildTiccmd
    //
    // In order to later support dynamic weapons, the way weapon
    // changes are handled is going to have to be different from
@@ -1411,15 +1413,19 @@ void G_SecretExitLevel(void)
 static void G_PlayerFinishLevel(int player)
 {
    player_t *p = &players[player];
+
+   // INVENTORY_TODO: convert powers to inventory
    memset(p->powers, 0, sizeof p->powers);
-   memset(p->cards, 0, sizeof p->cards);
-   p->mo->flags &= ~MF_SHADOW;     // cancel invisibility
+   p->mo->flags  &= ~MF_SHADOW;    // cancel invisibility
    p->mo->flags2 &= ~MF2_DONTDRAW; // haleyjd: cancel total invis.
    p->mo->flags3 &= ~MF3_GHOST;    // haleyjd: cancel ghost
-   p->extralight = 0;      // cancel gun flashes
+
+   E_InventoryEndHub(p);   // haleyjd: strip inventory
+
+   p->extralight    = 0;   // cancel gun flashes
    p->fixedcolormap = 0;   // cancel ir gogles
-   p->damagecount = 0;     // no palette changes
-   p->bonuscount = 0;
+   p->damagecount   = 0;   // no palette changes
+   p->bonuscount    = 0;
 }
 
 //
@@ -1820,7 +1826,7 @@ static void G_CameraTicker(void)
 //
 // Make ticcmd_ts for the players.
 //
-void G_Ticker(void)
+void G_Ticker()
 {
    int i;
 
@@ -1922,11 +1928,6 @@ void G_Ticker(void)
             if(demorecording)
                G_WriteDemoTiccmd(cmd);
             
-            /*
-            if(isconsoletic && netgame)
-               continue;
-            */
-            
             // check for turbo cheats
             // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
             
@@ -1937,8 +1938,7 @@ void G_Ticker(void)
                doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
             }
             
-            if(netgame && /*!isconsoletic &&*/ !netdemo && 
-               !(gametic % ticdup))
+            if(netgame && !netdemo && !(gametic % ticdup))
             {
                if(gametic > BACKUPTICS && 
                   consistency[i][buf] != cmd->consistency)
@@ -1959,7 +1959,7 @@ void G_Ticker(void)
       }
       
       // check for special buttons
-      for(i=0; i<MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && 
             players[i].cmd.buttons & BT_SPECIAL)
@@ -1968,9 +1968,15 @@ void G_Ticker(void)
             if(players[i].cmd.buttons & BTS_PAUSE)
             {
                if((paused ^= 1))
+               {
+                  I_PauseHaptics(true);
                   S_PauseSound();
+               }
                else
+               {
+                  I_PauseHaptics(false);
                   S_ResumeSound();
+               }
             }
             
             if(players[i].cmd.buttons & BTS_SAVEGAME)
@@ -2041,50 +2047,55 @@ void G_Ticker(void)
 void G_PlayerReborn(int player)
 {
    player_t *p;
-   int i;
    int frags[MAXPLAYERS];
    int totalfrags;
    int killcount;
    int itemcount;
    int secretcount;
-   char playername[20];
+   int cheats;
    int playercolour;
+   char playername[20];
    skin_t *playerskin;
    playerclass_t *playerclass;
+   inventory_t inventory;
 
-   memcpy (frags, players[player].frags, sizeof frags);
-   killcount = players[player].killcount;
-   itemcount = players[player].itemcount;
-   secretcount = players[player].secretcount;
-   strncpy(playername, players[player].name, 20);
-   playercolour = players[player].colormap;
-   totalfrags = players[player].totalfrags;
-   playerskin = players[player].skin;
-   playerclass = players[player].pclass; // haleyjd: playerclass
-   
    p = &players[player];
 
-   // killough 3/10/98,3/21/98: preserve cheats across idclev
-   {
-      int cheats = p->cheats;
-      memset(p, 0, sizeof(*p));
-      p->cheats = cheats;
-   }
+   memcpy(frags, p->frags, sizeof frags);
+   strncpy(playername, p->name, 20);
 
-   memcpy(players[player].frags, frags, sizeof(players[player].frags));
-   players[player].colormap = playercolour;
-   strcpy(players[player].name, playername);
-   players[player].killcount = killcount;
-   players[player].itemcount = itemcount;
-   players[player].secretcount = secretcount;
-   players[player].totalfrags = totalfrags;
-   players[player].skin = playerskin;
-   players[player].pclass = playerclass; // haleyjd: playerclass
+   killcount    = p->killcount;
+   itemcount    = p->itemcount;
+   secretcount  = p->secretcount;
+   cheats       = p->cheats;     // killough 3/10/98,3/21/98: preserve cheats across idclev
+   playercolour = p->colormap;
+   totalfrags   = p->totalfrags;
+   playerskin   = p->skin;
+   playerclass  = p->pclass;     // haleyjd: playerclass
+   inventory    = p->inventory;  // haleyjd: inventory
+  
+   memset(p, 0, sizeof(*p));
+
+   memcpy(p->frags, frags, sizeof(p->frags));
+   strcpy(p->name, playername);
+   
+   p->killcount   = killcount;
+   p->itemcount   = itemcount;
+   p->secretcount = secretcount;
+   p->cheats      = cheats;
+   p->colormap    = playercolour;
+   p->totalfrags  = totalfrags;
+   p->skin        = playerskin;
+   p->pclass      = playerclass; // haleyjd: playerclass
+   p->inventory   = inventory;   // haleyjd: inventory
    
    p->usedown = p->attackdown = true;  // don't do anything immediately
    p->playerstate = PST_LIVE;
    p->health = initial_health;  // Ty 03/12/98 - use dehacked values
    p->quake = 0;                // haleyjd 01/21/07
+
+   // INVENTORY_TODO: reborn inventory
+   E_ClearInventory(p);
 
    // WEAPON_FIXME: default reborn weapon
    // PCLASS_FIXME: default reborn weapon
@@ -2103,7 +2114,7 @@ void G_PlayerReborn(int player)
    // PCLASS_FIXME: default ammo stuff
    p->ammo[am_clip] = initial_bullets; // Ty 03/12/98 - use dehacked values
    
-   for(i = 0; i < NUMAMMO; i++)
+   for(int i = 0; i < NUMAMMO; i++)
       p->maxammo[i] = maxammo[i];
 }
 
@@ -2714,9 +2725,8 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
    MetaTable  *meta = mobjinfo[thingtype]->meta;
-   size_t metaKey = speedsetKey.getIndex();
 
-   if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
+   if((o = meta->getObjectKeyAndType(speedsetKey, RTTI(MetaSpeedSet))))
    {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }

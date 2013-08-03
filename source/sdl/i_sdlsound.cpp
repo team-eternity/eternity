@@ -869,6 +869,9 @@ static int I_SDLInitSound(void)
       nomusicparm = true;
       return 0;
    }
+
+   if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
+      audio_buffers = I_MakeSoundBufferSize(audio_buffers);
    
    if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
    {

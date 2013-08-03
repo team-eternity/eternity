@@ -27,6 +27,9 @@
 
 #include "z_zone.h"
 
+// Need gamepad HAL
+#include "hal/i_gamepads.h"
+
 #include "a_small.h"
 #include "d_mod.h"
 #include "doomstat.h"
@@ -82,7 +85,11 @@ void QuakeThinker::Think()
          // haleyjd 04/16/07: only set p->quake when qt->intensity is greater;
          // this way, the strongest quake in effect always wins out
          if(dst < this->quakeRadius && p->quake < this->intensity)
+         {
             p->quake = this->intensity;
+            if(p == &players[consoleplayer])
+               I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, this->intensity, 1000/TICRATE);
+         }
 
          // every 2 tics, the player may be damaged
          if(!(tics & 1))

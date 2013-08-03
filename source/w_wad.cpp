@@ -165,7 +165,7 @@ Collection<qstring> WadDirectoryPimpl::SourceFileNames;
 // WadDirectory Constructor
 //
 WadDirectory::WadDirectory()
- : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(false), type(0), data(NULL)
+ : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(false), type(0)
 {
    pImpl = new WadDirectoryPimpl;
    memset(m_namespaces, 0, sizeof(m_namespaces));
@@ -1259,7 +1259,7 @@ void WadDirectory::initMultipleFiles(wfileadd_t *files)
    lumpinfo = NULL;
    ispublic = true;   // Is a public wad directory
    type     = NORMAL; // Not a managed directory
-   data     = NULL;   // No special data
+   //data     = NULL;   // No special data
 
    curfile = files;
    

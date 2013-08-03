@@ -1,0 +1,57 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// Shared Inventory Items
+//
+
+// DOOM Items -----------------------------------------------------------------
+
+includeifenabled("doom/items.edf", "DOOM");
+
+// Heretic Items --------------------------------------------------------------
+
+includeifenabled("heretic/items.edf", "HERETIC");
+
+// Shared Items ---------------------------------------------------------------
+
+//
+// BackpackItem
+//
+// This token item represents whether or not the player has a backpack, which
+// causes all ammo capacities to increase to their max backpack amount.
+//
+artifact BackpackItem
+{
+   interhubamount: 1;
+}
+
+//
+// BerserkHealth
+//
+// This effect determines the qualities of the health boost awarded by getting
+// the berserk strength power.
+//
+healtheffect BerserkHealth
+{
+   amount:     100;
+   maxamount:  100;
+}
+
+//
+// Common Lockdefs
+//
+
+// Any key lock
+lockdef 100
+{
+   message:       "$PD_ANY";
+   remotemessage: "Any key will activate this object";
+}
+
+// Copy of Any key lock, for ZDoom comp
+lockdef 228
+{
+   message:       "$PD_ANY";
+   remotemessage: "Any key will activate this object";
+}
+

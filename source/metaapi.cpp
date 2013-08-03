@@ -50,13 +50,45 @@ static const unsigned int metaPrimes[] =
    3079,  6151, 12289, 24593, 49157, 98317
 };
 
-#define METANUMPRIMES (sizeof(metaPrimes) / sizeof(unsigned int))
+#define METANUMPRIMES earrlen(metaPrimes)
 
 // Globals
 
 // metaerrno represents the last error to occur. All routines that can cause
 // an error will reset this to 0 if no error occurs.
 int metaerrno = 0;
+
+//=============================================================================
+//
+// Hash Table Tuning
+//
+
+//
+// MetaHashRebuild
+//
+// Static method for rebuilding an EHashTable when its load factor has exceeded
+// the metatable load factor. Expansion is limited; once the table is too large,
+// load factor will increase indefinitely. Hash chain table size is currently
+// limited to approximately 384 KB, which would require almost 400K objects to
+// be in the table to hit 100% load factor... I'm not really concerned :P
+//
+template<typename HashType>
+static void MetaHashRebuild(HashType &hash)
+{
+   auto curNumChains = hash.getNumChains();
+
+   // check for key table overload
+   if(hash.getLoadFactor() > METALOADFACTOR && 
+      curNumChains < metaPrimes[METANUMPRIMES - 1])
+   {
+      int i;
+
+      // find the next larger prime
+      for(i = 0; curNumChains < metaPrimes[i]; i++);
+
+      hash.rebuild(metaPrimes[i]);
+   }
+}
 
 //=============================================================================
 //
@@ -78,7 +110,7 @@ static EHashTable<metakey_t, ENCStringHashKey, &metakey_t::key, &metakey_t::link
    metaKeyHash;
 
 // Collection of all key objects
-static PODCollection<metakey_t> metaKeys;
+static PODCollection<metakey_t *> metaKeys;
 
 //
 // MetaKey
@@ -90,16 +122,22 @@ static PODCollection<metakey_t> metaKeys;
 static metakey_t &MetaKey(const char *key)
 {
    metakey_t *keyObj;
+   unsigned int unmodHC = ENCStringHashKey::HashCode(key);
 
    // Do we already have this key?
-   if(!(keyObj = metaKeyHash.objectForKey(key)))
+   if(!(keyObj = metaKeyHash.objectForKey(key, unmodHC)))
    {
-      keyObj = &metaKeys.addNew();
+      keyObj = estructalloc(metakey_t, 1);
+
+      // add it to the list
+      metaKeys.add(keyObj);
+
       keyObj->key     = estrdup(key);
       keyObj->index   = metaKeys.getLength() - 1;
-      keyObj->unmodHC = ENCStringHashKey::HashCode(key);
+      keyObj->unmodHC = unmodHC;
 
-      // hash it
+      // check for table overload, and hash it
+      MetaHashRebuild<>(metaKeyHash);
       metaKeyHash.addObject(keyObj, keyObj->unmodHC);
    }
 
@@ -116,7 +154,7 @@ static metakey_t &MetaKeyForIndex(size_t index)
    if(index >= metaKeys.getLength())
       I_Error("MetaKeyForIndex: illegal key index requested\n");
 
-   return metaKeys[index];
+   return *metaKeys[index];
 }
 
 //=============================================================================
@@ -133,7 +171,7 @@ IMPLEMENT_RTTI_TYPE(MetaObject)
 // requires it.
 //
 MetaObject::MetaObject()
-   : RTTIObject(), links(), typelinks(), type()
+   : Super(), links(), typelinks(), type()
 {
    metakey_t &keyObj = MetaKey("default"); // TODO: GUID?
 
@@ -142,51 +180,31 @@ MetaObject::MetaObject()
 }
 
 //
-// MetaObject(const char *pKey)
+// MetaObject(size_t keyIndex)
 //
-// Constructor for MetaObject when type and/or key are known.
+// Constructor for MetaObject using an interned key index
 //
-MetaObject::MetaObject(const char *pKey) 
-   : RTTIObject(), links(), typelinks(), type()
+MetaObject::MetaObject(size_t keyIndex)
+   : Super(), links(), typelinks(), type()
 {
-   metakey_t &keyObj = MetaKey(pKey);
+   metakey_t &keyObj = MetaKeyForIndex(keyIndex);
 
    key    = keyObj.key;
    keyIdx = keyObj.index;
 }
 
 //
-// MetaObject(MetaObject &)
+// MetaObject(const char *pKey)
 //
-// Copy constructor
+// Constructor for MetaObject when key is known.
 //
-MetaObject::MetaObject(const MetaObject &other)
-   : RTTIObject(), links(), typelinks(), key(other.key),
-     type(), keyIdx(other.keyIdx)
-{   
-}
-
-//
-// ~MetaObject
-//
-// Virtual destructor for metaobjects.
-//
-MetaObject::~MetaObject()
+MetaObject::MetaObject(const char *pKey) 
+   : Super(), links(), typelinks(), type()
 {
-}
+   metakey_t &keyObj = MetaKey(pKey);
 
-//
-// MetaObject::clone
-//
-// Virtual factory method for metaobjects; when invoked through the metatable,
-// a descendent class will return an object of the proper type matching itself.
-// This base class implementation doesn't really do anything, but I'm not fond
-// of pure virtuals so here it is. Don't call it from the parent implementation
-// as that is not what any of the implementations should do.
-//
-MetaObject *MetaObject::clone() const
-{
-   return new MetaObject(*this);
+   key    = keyObj.key;
+   keyIdx = keyObj.index;
 }
 
 //
@@ -233,18 +251,6 @@ const char *MetaObject::toString() const
    return qstr.constPtr();
 }
 
-//
-// MetaObject::setType
-//
-// This will set the MetaObject's internal type to its class name. This is
-// really only for use by MetaTable but calling it yourself wouldn't screw
-// anything up. It's just redundant.
-//
-void MetaObject::setType()
-{
-   type = getClassName();
-}
-
 //=============================================================================
 //
 // Metaobject Specializations
@@ -260,37 +266,6 @@ void MetaObject::setType()
 //
 
 IMPLEMENT_RTTI_TYPE(MetaInteger)
-
-//
-// MetaInteger(char *, int)
-//
-// Key/Value Constructor
-//
-MetaInteger::MetaInteger(const char *key, int i)
-   : MetaObject(key), value(i)
-{
-}
-
-//
-// MetaInteger(MetaInteger &)
-//
-// Copy Constructor
-//
-MetaInteger::MetaInteger(const MetaInteger &other) : MetaObject(other)
-{
-   this->value = other.value;
-}
-
-//
-// MetaInteger::clone
-//
-// Virtual factory method to create a new MetaInteger with the same properties
-// as the original.
-//
-MetaObject *MetaInteger::clone() const
-{
-   return new MetaInteger(*this);
-}
 
 //
 // MetaInteger::toString
@@ -313,34 +288,6 @@ const char *MetaInteger::toString() const
 //
 
 IMPLEMENT_RTTI_TYPE(MetaDouble)
-
-//
-// MetaDouble(char *, double)
-//
-MetaDouble::MetaDouble(const char *key, double d) 
-   : MetaObject(key), value(d)
-{
-}
-
-//
-// MetaDouble(const MetaDouble &)
-//
-// Copy Constructor
-//
-MetaDouble::MetaDouble(const MetaDouble &other) : MetaObject(other)
-{
-   this->value = other.value;
-}
-
-//
-// MetaDouble::clone
-//
-// Virtual factory method to create a copy of a MetaDouble.
-//
-MetaObject *MetaDouble::clone() const
-{
-   return new MetaDouble(*this);
-}
 
 //
 // MetaDouble::toString
@@ -367,67 +314,6 @@ const char *MetaDouble::toString() const
 IMPLEMENT_RTTI_TYPE(MetaString)
 
 //
-// MetaString Default Constructor
-//
-MetaString::MetaString() : MetaObject()
-{
-   this->value = estrdup("");
-}
-
-//
-// MetaString(char *, const char *)
-//
-// Key/Value Constructor
-//
-MetaString::MetaString(const char *key, const char *s) : MetaObject(key)
-{
-   this->value = estrdup(s);
-}
-
-//
-// MetaString(const MetaString &)
-//
-// Copy Constructor
-//
-MetaString::MetaString(const MetaString &other) : MetaObject(other)
-{
-   this->value = estrdup(other.value);
-}
-
-//
-// ~MetaString
-//
-// Virtual destructor. The string value will be freed if it is valid.
-//
-MetaString::~MetaString()
-{
-   if(value)
-      efree(value);
-
-   value = NULL;
-}
-
-//
-// MetaString::clone
-//
-// Virtual factory method to create a copy of a MetaString.
-//
-MetaObject *MetaString::clone() const
-{
-   return new MetaString(*this);
-}
-
-//
-// MetaString::toString
-//
-// toString method for metastrings
-//
-const char *MetaString::toString() const
-{
-   return value; // simplest of them all!
-}
-
-//
 // MetaString::setValue
 //
 // Non-trivial, unlike the other MetaObjects' setValue methods.
@@ -449,6 +335,16 @@ void MetaString::setValue(const char *s, char **ret)
 }
 
 //
+// Const Strings
+//
+// Const strings are not owned by their metaobject; they are simply referenced.
+// These are for efficient storage of string constants/literals as meta fields.
+//
+
+// All we need here is the RTTIObject proxy type instance
+IMPLEMENT_RTTI_TYPE(MetaConstString)
+
+//
 // End MetaObject Specializations
 //
 //=============================================================================
@@ -459,15 +355,15 @@ void MetaString::setValue(const char *s, char **ret)
 //
 
 //
-// metaTablePimpl
+// MetaTablePimpl
 //
 // Private implementation structure for the MetaTable class. Because I am not
 // about to expose the entire engine to the EHashTable template if I can help
 // it.
 //
-// A metatable is just a pair of hash tables, one on keys and one on types.
+// A MetaTable is just a pair of hash tables, one on keys and one on types.
 //
-class metaTablePimpl : public ZoneObject
+class MetaTablePimpl : public ZoneObject
 {
 public:
    // the key hash is growable; keys are case-insensitive.
@@ -480,9 +376,9 @@ public:
    EHashTable<MetaObject, EStringHashKey, 
               &MetaObject::type, &MetaObject::typelinks> typehash;
 
-   metaTablePimpl() : ZoneObject(), keyhash(METANUMCHAINS), typehash(METANUMCHAINS) {}
+   MetaTablePimpl() : ZoneObject(), keyhash(METANUMCHAINS), typehash(METANUMCHAINS) {}
 
-   virtual ~metaTablePimpl()
+   virtual ~MetaTablePimpl()
    {
       keyhash.destroy();
       typehash.destroy();
@@ -494,19 +390,19 @@ IMPLEMENT_RTTI_TYPE(MetaTable)
 //
 // MetaTable Default Constructor
 //
-MetaTable::MetaTable() : MetaObject()
+MetaTable::MetaTable() : Super()
 {
    // Construct the private implementation object that holds our dual hashes
-   pImpl = new metaTablePimpl();
+   pImpl = new MetaTablePimpl();
 }
 
 //
 // MetaTable(name)
 //
-MetaTable::MetaTable(const char *name) : MetaObject(name)
+MetaTable::MetaTable(const char *name) : Super(name)
 {
    // Construct the private implementation object that holds our dual hashes
-   pImpl = new metaTablePimpl();
+   pImpl = new MetaTablePimpl();
 }
 
 //
@@ -514,9 +410,9 @@ MetaTable::MetaTable(const char *name) : MetaObject(name)
 //
 // Copy constructor
 //
-MetaTable::MetaTable(const MetaTable &other) : MetaObject(other)
+MetaTable::MetaTable(const MetaTable &other) : Super(other)
 {
-   pImpl = new metaTablePimpl();
+   pImpl = new MetaTablePimpl();
    copyTableFrom(&other);
 }
 
@@ -539,6 +435,26 @@ MetaTable::~MetaTable()
 MetaObject *MetaTable::clone() const
 {
    return new MetaTable(*this);
+}
+
+//
+// MetaTable::getLoadFactor
+//
+// Returns load factor of the key hash table.
+//
+float MetaTable::getLoadFactor() const
+{
+   return pImpl->keyhash.getLoadFactor();
+}
+ 
+//
+// MetaTable::getNumItems
+//
+// Returns the number of items in the table.
+//
+unsigned int MetaTable::getNumItems() const
+{
+   return pImpl->keyhash.getNumItems();
 }
 
 //
@@ -663,19 +579,8 @@ int MetaTable::countOfKeyAndType(const char *key, const char *type)
 //
 void MetaTable::addObject(MetaObject *object)
 {
-   unsigned int curNumChains = pImpl->keyhash.getNumChains();
-
-   // check for key table overload
-   if(pImpl->keyhash.getLoadFactor() > METALOADFACTOR && 
-      curNumChains < metaPrimes[METANUMPRIMES - 1])
-   {
-      int i;
-
-      // find a prime larger than the current number of chains
-      for(i = 0; curNumChains < metaPrimes[i]; ++i);
-
-      pImpl->keyhash.rebuild(metaPrimes[i]);
-   }
+   // Check for rehash
+   MetaHashRebuild<>(pImpl->keyhash);
 
    // Initialize type name
    object->setType();
@@ -925,18 +830,38 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, cons
 // MetaTable::tableIterator
 //
 // Iterates on all objects in the metatable, regardless of key or type.
+// Const version.
+//
+const MetaObject *MetaTable::tableIterator(const MetaObject *object) const
+{
+   return pImpl->keyhash.tableIterator(object);
+}
+
+//
+// MetaTable::tableIterator
+//
+// Iterates on all objects in the metatable, regardless of key or type.
+// Mutable version.
 //
 MetaObject *MetaTable::tableIterator(MetaObject *object) const
 {
    return pImpl->keyhash.tableIterator(object);
 }
 
-
+//
+// MetaTable::addInt
+//
+// Add an integer to the metatable using an interned key index.
+//
+void MetaTable::addInt(size_t keyIndex, int value)
+{
+   addObject(new MetaInteger(keyIndex, value));
+}
 
 //
 // MetaTable::addInt
 //
-// Add an integer to the metatable.
+// Add an integer to the metatable using a raw string key.
 //
 void MetaTable::addInt(const char *key, int value)
 {
@@ -989,14 +914,24 @@ int MetaTable::getInt(const char *key, int defValue)
 // be edited to have the provided value. Otherwise, a new metaint will be
 // added to the table with that value.
 //
-void MetaTable::setInt(const char *key, int newValue)
+void MetaTable::setInt(size_t keyIndex, int newValue)
 {
    MetaObject *obj;
 
-   if(!(obj = getObjectKeyAndType(key, RTTI(MetaInteger))))
-      addInt(key, newValue);
+   if(!(obj = getObjectKeyAndType(keyIndex, RTTI(MetaInteger))))
+      addInt(keyIndex, newValue);
    else
       static_cast<MetaInteger *>(obj)->value = newValue;
+}
+
+//
+// MetaTable::setInt
+//
+// Overload for raw key strings.
+//
+void MetaTable::setInt(const char *key, int newValue)
+{
+   setInt(MetaKey(key).index, newValue);
 }
 
 //
@@ -1245,6 +1180,112 @@ void MetaTable::removeStringNR(const char *key)
 }
 
 //
+// MetaTable::addConstString
+//
+// Add a sharable string constant/literal value to the MetaTable,
+// using an interned key index.
+//
+void MetaTable::addConstString(size_t keyIndex, const char *value)
+{
+   addObject(new MetaConstString(keyIndex, value));
+}
+
+//
+// MetaTable::addConstString
+//
+// Add a sharable string constant/literal value to the MetaTable.
+//
+void MetaTable::addConstString(const char *key, const char *value)
+{
+   addObject(new MetaConstString(key, value));
+}
+
+//
+// MetaTable::getConstString
+//
+// Get a sharable string constant/literal value from the MetaTable. If the
+// requested property does not exist as a MetaConstString, the value provided
+// by the defValue parameter will be returned, and metaerrno will be set to
+// META_ERR_NOSUCHOBJECT. Otherwise, the string constant value is returned and
+// metaerrno is META_ERR_NOERR.
+//
+const char *MetaTable::getConstString(const char *key, const char *defValue)
+{
+   const char *retval;
+   MetaObject *obj;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaConstString))))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval    = defValue;
+   }
+   else
+      retval = static_cast<MetaConstString *>(obj)->value;
+
+   return retval;
+}
+
+//
+// MetaTable::setConstString
+//
+// If the table already contains a MetaConstString with the provided key, its
+// value will be set to newValue. Otherwise, a new MetaConstString will be
+// created with this key and value and will be added to the table.
+//
+void MetaTable::setConstString(size_t keyIndex, const char *newValue)
+{
+   MetaObject *obj;
+
+   if(!(obj = getObjectKeyAndType(keyIndex, RTTI(MetaConstString))))
+      addConstString(keyIndex, newValue);
+   else
+      static_cast<MetaConstString *>(obj)->setValue(newValue);
+}
+
+//
+// MetaTable::setConstString
+//
+// Overload for raw string keys.
+//
+void MetaTable::setConstString(const char *key, const char *newValue)
+{
+   setConstString(MetaKey(key).index, newValue);
+}
+
+//
+// MetaTable::removeConstString
+//
+// Removes a constant string from the table with the given key. If no such
+// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and NULL is returned.
+// Otherwise, metaerrno is META_ERR_NOERR and the shared string value that 
+// was in the MetaConstString instance is returned.
+//
+const char *MetaTable::removeConstString(const char *key)
+{
+   MetaObject *obj;
+   MetaConstString *str;
+   const char *value;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaConstString))))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      return NULL;
+   }
+
+   removeObject(obj);
+
+   str = static_cast<MetaConstString *>(obj);
+   value = str->value;
+   delete str;
+
+   return value;
+}
+
+//
 // MetaTable::copyTableTo
 //
 // Adds copies of all objects in the source table to the destination table.
@@ -1285,11 +1326,11 @@ void MetaTable::clearTable()
    MetaObject *obj = NULL;
 
    // iterate on the source table
-   while((obj = tableIterator(NULL)))
+   while((obj = tableIterator(obj)))
    {
       removeObject(obj);
-
       delete obj;
+      obj = NULL; // restart from the beginning
    }
 }
 

@@ -56,9 +56,9 @@ public:
    }
 
    // Copy constructor
-   MetaState(const MetaState &other) : MetaObject(other)
+   MetaState(const MetaState &other) 
+      : Super(other), state(other.state)
    {
-      this->state = other.state;
    }
    
    // Accessors

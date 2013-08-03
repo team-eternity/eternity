@@ -323,7 +323,12 @@ static void HU_drawArmor(int x, int y)
    else if(hu_player.armorpoints < armor_yellow)
       fontcolor = *FC_GOLD;
    else if(armor_byclass)
-      fontcolor = (hu_player.armortype == 2 ? *FC_BLUE : *FC_GREEN);
+   {
+      fixed_t armorclass = 0;
+      if(hu_player.armordivisor)
+         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
+      fontcolor = (armorclass > FRACUNIT/3 ? *FC_BLUE : *FC_GREEN);
+   }
    else if(hu_player.armorpoints <= armor_green)
       fontcolor = *FC_GREEN;
    else
@@ -412,7 +417,8 @@ static void HU_drawKeys(int x, int y)
    // haleyjd 10/09/05: don't show double keys in Heretic
    for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(hu_player.cards[i])
+      auto slot = E_InventorySlotForItemName(&hu_player, GameModeInfo->cardNames[i]);
+      if(slot && slot->amount > 0)
       {
          // got that key
          V_DrawPatch(x, y, &subscreen43, keys[i]);

@@ -35,6 +35,9 @@
 
 #include "p_pspr.h"
 
+// haleyjd 07/06/13: Need inventory definitions
+#include "e_inventory.h"
+
 // In addition, the player is just a special
 // case of the generic moving object/actor.
 
@@ -80,8 +83,6 @@ typedef enum
   CF_INFAMMO          = 8,
   // haleyjd 12/29/10: immortality cheat
   CF_IMMORTAL         = 0x10,
-  // haleyjd 09/10/12: used any score-cancelling cheat
-  CF_CHEATED          = 0x20
 } cheat_t;
 
 
@@ -113,13 +114,12 @@ struct player_t
 
    int            health;       // This is only used between levels
    int            armorpoints;
-   int            armortype;    // Armor type is 0-2.  
+   int            armorfactor;  // haleyjd 07/29/13: numerator for armor save calculation
+   int            armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
    bool           hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
 
    // Power ups. invinc and invis are tic counters.
    int            powers[NUMPOWERS];
-   bool           cards[NUMCARDS];
-   bool           backpack;
   
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];
@@ -159,11 +159,13 @@ struct player_t
 
    // Overlay view sprites (gun, etc).
    pspdef_t       psprites[NUMPSPRITES];
-   int            curpsprite;    // haleyjd 04/05/07: for codeptr rewrite
   
    int            quake;         // If > 0, player is experiencing an earthquake
    int            jumptime;      // If > 0, player can't jump again yet
    int            flyheight;     // haleyjd 06/05/12: flying
+
+   // Inventory
+   inventory_t    inventory;     // haleyjd 07/06/13: player's inventory
    
    // Player name
    char           name[20];

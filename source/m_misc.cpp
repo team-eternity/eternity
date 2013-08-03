@@ -731,34 +731,6 @@ default_t defaults[] =
    DEFAULT_INT("st_fsalpha", &st_fsalpha, NULL, 100, 0, 100, default_t::wad_yes,
                "fullscreen HUD translucency level"),
    
-   // killough 2/8/98: weapon preferences set by user:
-   DEFAULT_INT("weapon_choice_1",&weapon_preferences[0][0], NULL, 6, 1, 9, default_t::wad_yes,
-               "first choice for weapon (best)"),
-   
-   DEFAULT_INT("weapon_choice_2",&weapon_preferences[0][1], NULL, 9, 1, 9, default_t::wad_yes,
-               "second choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_3",&weapon_preferences[0][2], NULL, 4, 1, 9, default_t::wad_yes,
-               "third choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_4",&weapon_preferences[0][3], NULL, 3, 1, 9, default_t::wad_yes,
-               "fourth choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_5",&weapon_preferences[0][4], NULL, 2, 1, 9, default_t::wad_yes,
-               "fifth choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_6",&weapon_preferences[0][5], NULL, 8, 1, 9, default_t::wad_yes,
-               "sixth choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_7",&weapon_preferences[0][6], NULL, 5, 1, 9, default_t::wad_yes,
-               "seventh choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_8",&weapon_preferences[0][7], NULL, 7, 1, 9, default_t::wad_yes,
-               "eighth choice for weapon"),
-   
-   DEFAULT_INT("weapon_choice_9",&weapon_preferences[0][8], NULL, 1, 1, 9, default_t::wad_yes,
-               "ninth choice for weapon (worst)"),
-   
    DEFAULT_INT("c_speed",&c_speed, NULL, 10, 1, 200, default_t::wad_no,
                "console speed, pixels/tic"),
    

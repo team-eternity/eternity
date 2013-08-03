@@ -117,10 +117,6 @@
 #define ITEM_PLAYERSPRITE "playersprite"
 #define ITEM_BLANKSPRITE  "blanksprite"
 
-// Sprite pick-up effects
-#define SEC_PICKUPFX  "pickupitem"
-#define ITEM_PICKUPFX "effect"
-
 // Cast call
 #define SEC_CAST             "castinfo"
 #define ITEM_CAST_TYPE       "type"
@@ -147,77 +143,6 @@
 // sprite variables (global)
 
 int blankSpriteNum;
-
-// pickup variables
-
-// pickup effect names (these are currently searched linearly)
-// matching enum values are defined in e_edf.h
-
-const char *pickupnames[PFX_NUMFX] =
-{
-   "PFX_NONE",
-   "PFX_GREENARMOR",
-   "PFX_BLUEARMOR",
-   "PFX_POTION",
-   "PFX_ARMORBONUS",
-   "PFX_SOULSPHERE",
-   "PFX_MEGASPHERE",
-   "PFX_BLUEKEY",
-   "PFX_YELLOWKEY",
-   "PFX_REDKEY",
-   "PFX_BLUESKULL",
-   "PFX_YELLOWSKULL",
-   "PFX_REDSKULL",
-   "PFX_STIMPACK",
-   "PFX_MEDIKIT",
-   "PFX_INVULNSPHERE",
-   "PFX_BERZERKBOX",
-   "PFX_INVISISPHERE",
-   "PFX_RADSUIT",
-   "PFX_ALLMAP",
-   "PFX_LIGHTAMP",
-   "PFX_CLIP",
-   "PFX_CLIPBOX",
-   "PFX_ROCKET",
-   "PFX_ROCKETBOX",
-   "PFX_CELL",
-   "PFX_CELLPACK",
-   "PFX_SHELL",
-   "PFX_SHELLBOX",
-   "PFX_BACKPACK",
-   "PFX_BFG",
-   "PFX_CHAINGUN",
-   "PFX_CHAINSAW",
-   "PFX_LAUNCHER",
-   "PFX_PLASMA",
-   "PFX_SHOTGUN",
-   "PFX_SSG",
-   "PFX_HGREENKEY",
-   "PFX_HBLUEKEY",
-   "PFX_HYELLOWKEY",
-   "PFX_HPOTION",
-   "PFX_SILVERSHIELD",
-   "PFX_ENCHANTEDSHIELD",
-   "PFX_BAGOFHOLDING",
-   "PFX_HMAP",
-   "PFX_GWNDWIMPY",
-   "PFX_GWNDHEFTY",
-   "PFX_MACEWIMPY",
-   "PFX_MACEHEFTY",
-   "PFX_CBOWWIMPY",
-   "PFX_CBOWHEFTY",
-   "PFX_BLSRWIMPY",
-   "PFX_BLSRHEFTY",
-   "PFX_PHRDWIMPY",
-   "PFX_PHRDHEFTY",
-   "PFX_SKRDWIMPY",
-   "PFX_SKRDHEFTY",
-   "PFX_TOTALINVIS",
-};
-
-// pickupfx lookup table used in P_TouchSpecialThing (is allocated
-// with size NUMSPRITES)
-int *pickupfx = NULL;
 
 // function prototypes for libConfuse callbacks (aka EDF functions)
 
@@ -259,13 +184,6 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 // EDF libConfuse option structures
 //
 
-// sprite-based pickup items
-static cfg_opt_t pickup_opts[] =
-{
-   CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
-   CFG_END()
-};
-
 // cast call
 static cfg_opt_t cast_sound_opts[] =
 {
@@ -296,7 +214,7 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(SEC_SPRITE,          0,                 CFGF_LIST),
    CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
    CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
-   CFG_SEC(SEC_PICKUPFX,        pickup_opts,       EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_PICKUPFX,    edf_pickup_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SOUND,       edf_sound_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
@@ -305,8 +223,12 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_HEALTHFX,    edf_healthfx_opts, EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_ARMORFX,     edf_armorfx_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_POWERFX,     edf_powerfx_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_ARTIFACT,    edf_artifact_opts, EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_LOCKDEF,     edf_lockdef_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_INVENTORY,   edf_inv_opts,      EDF_TSEC_FLAGS),
    CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
@@ -322,7 +244,6 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_INVDELTA,    edf_invdelta_opts, EDF_NSEC_FLAGS),
    CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
@@ -376,7 +297,7 @@ static FILE *edf_output = NULL;
 // haleyjd 08/10/05: now works like screenshots, so it won't
 // overwrite old log files.
 //
-static void E_EDFOpenVerboseLog(void)
+static void E_EDFOpenVerboseLog()
 {
    if(edf_output)
       return;
@@ -406,7 +327,7 @@ static void E_EDFOpenVerboseLog(void)
 //
 // Closes the verbose log, if one is open.
 //
-static void E_EDFCloseVerboseLog(void)
+static void E_EDFCloseVerboseLog()
 {
    if(edf_output)
    {
@@ -477,7 +398,7 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
    va_end(va);
 }
 
-static int edf_warning_count;
+static int  edf_warning_count;
 static bool edf_warning_out;
 
 //
@@ -523,7 +444,7 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
 //
 // Displays the EDF warning count after EDF processing.
 //
-void E_EDFPrintWarningCount(void)
+void E_EDFPrintWarningCount()
 {
    if(in_textmode && edf_warning_count)
    {
@@ -539,7 +460,7 @@ void E_EDFPrintWarningCount(void)
 //
 // Resets the count of warnings to zero.
 //
-void E_EDFResetWarnings(void)
+void E_EDFResetWarnings()
 {
    edf_warning_count = 0;
 
@@ -661,13 +582,12 @@ static E_Enable_t edf_enables[] =
 // 
 // E_EDFSetEnableValue
 //
-// This function lets the rest of the engine be able to set
-// EDF enable values before parsing begins. This is used to
-// turn DOOM and HERETIC modes on and off when loading the
-// default root.edf. This saves time and memory. Note that
-// they are enabled when user EDFs are loaded, but users
-// can use the disable function to turn them off explicitly
-// in that case when the definitions are not needed.
+// This function lets the rest of the engine be able to set EDF enable values 
+// before parsing begins. This is used to turn DOOM and HERETIC modes on and 
+// off when loading the default root.edf. This saves time and memory. Note 
+// that they are enabled when user EDFs are loaded, but users can use the 
+// disable function to turn them off explicitly in that case when the 
+// definitions are not needed.
 //
 void E_EDFSetEnableValue(const char *name, int value)
 {
@@ -677,7 +597,7 @@ void E_EDFSetEnableValue(const char *name, int value)
       edf_enables[idx].enabled = value;
 }
 
-static void E_EchoEnables(void)
+static void E_EchoEnables()
 {
    E_Enable_t *enable = edf_enables;
 
@@ -1246,72 +1166,6 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
    blankSpriteNum = sprnum;
 }
 
-//
-// E_ProcessItems
-//
-// Allocates the pickupfx array used in P_TouchSpecialThing,
-// and loads all pickupitem definitions, using the sprite hash
-// table to resolve what sprite owns the specified effect.
-//
-static void E_ProcessItems(cfg_t *cfg)
-{
-   static int oldnumsprites;
-   int i, numnew, numpickups;
-
-   E_EDFLogPuts("\t* Processing pickup items\n");
-
-   // allocate and initialize pickup effects array
-   // haleyjd 11/21/11: allow multiple runs
-   numnew = NUMSPRITES - oldnumsprites;
-   if(numnew > 0)
-   {
-      pickupfx = erealloc(int *, pickupfx, NUMSPRITES * sizeof(int));
-      for(i = oldnumsprites; i < NUMSPRITES; i++)
-         pickupfx[i] = PFX_NONE;
-      oldnumsprites = NUMSPRITES;
-   }
-
-   // sanity check
-   if(!pickupfx)
-      E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
-   
-   // load pickupfx
-   numpickups = cfg_size(cfg, SEC_PICKUPFX);
-   E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
-   for(i = 0; i < numpickups; ++i)
-   {
-      int fxnum, sprnum;
-      cfg_t *sec = cfg_getnsec(cfg, SEC_PICKUPFX, i);
-      const char *title = cfg_title(sec);
-      const char *pfx = cfg_getstr(sec, ITEM_PICKUPFX);
-
-      // validate the sprite name given in the section title and
-      // resolve to a sprite number (hashed)
-      sprnum = E_SpriteNumForName(title);
-
-      if(sprnum == -1)
-      {
-         // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
-         E_EDFLoggedWarning(2,
-            "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
-            title);
-         sprnum = blankSpriteNum;
-      }
-
-      // find the proper pickup effect number (linear search)
-      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, pfx);
-      if(fxnum == PFX_NUMFX)
-      {
-         E_EDFLoggedErr(2, "E_ProcessItems: invalid pickup effect: '%s'\n", pfx);
-      }
-      
-      E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
-                     title, sprnum, pfx, fxnum);
-
-      pickupfx[sprnum] = fxnum;
-   }
-}
-
 // haleyjd 04/13/08: this replaces S_sfx[0].
 sfxinfo_t NullSound =
 {
@@ -1341,7 +1195,6 @@ static void E_CollectNames(cfg_t *cfg)
 {
    E_CollectStates(cfg);    // see e_states.cpp
    E_CollectThings(cfg);    // see e_things.cpp
-   E_CollectInventory(cfg); // see e_inventory.cpp
 }
 
 //
@@ -1770,15 +1623,12 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process frame and thing definitions (made dynamic 11/06/11)
    E_ProcessStatesAndThings(cfg);
-   
-   // Process inventory definitions
-   E_ProcessInventoryDefs(cfg);
-   
+ 
    // process sprite-related variables (made dynamic 11/21/11)
    E_ProcessSpriteVars(cfg);
 
-   // process sprite-related pickup item effects (made dynamic 11/21/11)
-   E_ProcessItems(cfg);
+   // process inventory
+   E_ProcessInventory(cfg);
 
    // process player sections
    E_ProcessPlayerData(cfg);
@@ -1805,7 +1655,6 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
    E_ProcessStateDeltas(cfg);       // see e_states.cpp
    E_ProcessThingDeltas(cfg);       // see e_things.cpp
-   E_ProcessInventoryDeltas(cfg);   // see e_inventory.cpp
 
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp

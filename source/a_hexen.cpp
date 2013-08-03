@@ -28,6 +28,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#if 0
+
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
@@ -1121,6 +1123,7 @@ void A_FreezeDeathChunks(Mobj *actor)
 
 // HEXEN_TODO: KORAX >:O >:O >:O
 
+#endif
 
 // EOF
 

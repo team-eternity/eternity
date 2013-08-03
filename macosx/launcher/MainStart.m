@@ -28,6 +28,11 @@
 #import <Cocoa/Cocoa.h>
 #import "LauncherController.h"
 
+int           gArgc;   // Argument count
+const char  **gArgv;   // Argument values
+
+NSArray *gArgArray;
+
 //
 // eternityApplicationMain
 //
@@ -69,6 +74,19 @@ static int eternityApplicationMain(int argc, const char **argv)
 //
 int main(int argc, const char **argv)
 {
+   // Copy the arguments into a global variable
+   // This is passed if we are launched by double-clicking
+   NSMutableArray *argArray = [[NSMutableArray alloc] initWithCapacity:(NSUInteger)argc];
+   for(int i = 0; i < argc; ++i)
+      [argArray addObject:[NSString stringWithCString:argv[i] encoding:NSUTF8StringEncoding]];
+   
+   if ([argArray count] >= 2 && [[[argArray objectAtIndex:1] substringToIndex:4] isEqualToString:@"-psn"])
+      [argArray removeObjectAtIndex:1];   // remove Finder gimmick
+
+   [argArray removeObjectAtIndex:0];   // remove executable name
+   gArgArray = [argArray retain];
+   [argArray release];
+
 	return eternityApplicationMain(argc, argv);
 }
 

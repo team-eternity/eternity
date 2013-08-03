@@ -34,6 +34,7 @@
 
 #include "z_zone.h"
 
+#include "a_args.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -45,6 +46,7 @@
 #include "dstrings.h"
 #include "e_states.h"
 #include "g_game.h"
+#include "metaapi.h"
 #include "m_argv.h"
 #include "m_cheat.h"
 #include "p_inter.h"
@@ -120,43 +122,43 @@ struct cheat_s cheat[] = {
   {"idmus",      "Change music",      always,
    cheat_mus,      -2},
 
-  {"idchoppers", "Chainsaw",          not_net | not_demo | no_score,
+  {"idchoppers", "Chainsaw",          not_net | not_demo,
    cheat_choppers, 0 },
 
-  {"iddqd",      "God mode",          not_net | not_demo | no_score,
+  {"iddqd",      "God mode",          not_net | not_demo,
    cheat_god, 0  },
 
-  {"idk",        NULL,                not_net | not_demo | not_deh | no_score,
+  {"idk",        NULL,                not_net | not_demo | not_deh,
    cheat_k, 0 },  // The most controversial cheat code in Doom history!!!
 
-  {"idkfa",      "Ammo & Keys",       not_net | not_demo | no_score,
+  {"idkfa",      "Ammo & Keys",       not_net | not_demo,
    cheat_kfa, 0 },
 
-  {"idfa",       "Ammo",              not_net | not_demo | no_score,
+  {"idfa",       "Ammo",              not_net | not_demo,
    cheat_fa, 0  },
 
-  {"idspispopd", "No Clipping 1",     not_net | not_demo | no_score,
+  {"idspispopd", "No Clipping 1",     not_net | not_demo,
    cheat_noclip, 0 },
 
   {"idclip",     "No Clipping 2",     not_net | not_demo,
    cheat_noclip, 0 },
 
-  {"idbeholdv",  "Invincibility",     not_net | not_demo | no_score,
+  {"idbeholdv",  "Invincibility",     not_net | not_demo,
    cheat_pw,  pw_invulnerability },
 
-  {"idbeholds",  "Berserk",           not_net | not_demo | no_score,
+  {"idbeholds",  "Berserk",           not_net | not_demo,
    cheat_pw,  pw_strength        },
 
-  {"idbeholdi",  "Invisibility",      not_net | not_demo | no_score,  
+  {"idbeholdi",  "Invisibility",      not_net | not_demo,  
    cheat_pw,  pw_invisibility    },
 
-  {"idbeholdr",  "Radiation Suit",    not_net | not_demo | no_score,
+  {"idbeholdr",  "Radiation Suit",    not_net | not_demo,
    cheat_pw,  pw_ironfeet        },
 
-  {"idbeholda",  "Auto-map",          not_net | not_demo | no_score,
+  {"idbeholda",  "Auto-map",          not_net | not_demo,
    cheat_pw,  pw_allmap          },
 
-  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo | no_score,
+  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo,
    cheat_pw,  pw_infrared        },
 
   {"idbehold",   "BEHOLD menu",       not_net | not_demo,
@@ -171,7 +173,7 @@ struct cheat_s cheat[] = {
   {"comp",    NULL,                   not_net | not_demo,
    cheat_comp, 0     },     // phares
 
-  {"killem",     NULL,                not_net | not_demo | no_score,
+  {"killem",     NULL,                not_net | not_demo,
    cheat_massacre, 0 },     // jff 2/01/98 kill all monsters
 
   {"iddt",       "Map cheat",         not_dm,
@@ -180,46 +182,46 @@ struct cheat_s cheat[] = {
   {"hom",     NULL,                   always,
    cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
 
-  {"key",     NULL,                   not_net | not_demo | no_score, 
+  {"key",     NULL,                   not_net | not_demo, 
    cheat_key, 0   },     // killough 2/16/98: generalized key cheats
 
-  {"keyr",    NULL,                   not_net | not_demo | no_score,
+  {"keyr",    NULL,                   not_net | not_demo,
    cheat_keyx, 0  },
 
-  {"keyy",    NULL,                   not_net | not_demo | no_score,
+  {"keyy",    NULL,                   not_net | not_demo,
    cheat_keyx, 0  },
 
-  {"keyb",    NULL,                   not_net | not_demo | no_score,
+  {"keyb",    NULL,                   not_net | not_demo,
    cheat_keyx, 0  },
 
-  {"keyrc",   NULL,                   not_net | not_demo | no_score, 
+  {"keyrc",   NULL,                   not_net | not_demo, 
    cheat_keyxx, it_redcard    },
 
-  {"keyyc",   NULL,                   not_net | not_demo | no_score,
+  {"keyyc",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_yellowcard },
 
-  {"keybc",   NULL,                   not_net | not_demo | no_score, 
+  {"keybc",   NULL,                   not_net | not_demo, 
    cheat_keyxx, it_bluecard   },
 
-  {"keyrs",   NULL,                   not_net | not_demo | no_score,
+  {"keyrs",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_redskull   },
 
-  {"keyys",   NULL,                   not_net | not_demo | no_score,
+  {"keyys",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_yellowskull},
 
-  {"keybs",   NULL,                   not_net | not_demo | no_score,
+  {"keybs",   NULL,                   not_net | not_demo,
    cheat_keyxx, it_blueskull  },  // killough 2/16/98: end generalized keys
 
-  {"weap",    NULL,                   not_net | not_demo | no_score,
+  {"weap",    NULL,                   not_net | not_demo,
    cheat_weap, 0  },     // killough 2/16/98: generalized weapon cheats
 
-  {"weap",    NULL,                   not_net | not_demo | no_score,
+  {"weap",    NULL,                   not_net | not_demo,
    cheat_weapx, -1},
 
-  {"ammo",    NULL,                   not_net | not_demo | no_score,
+  {"ammo",    NULL,                   not_net | not_demo,
    cheat_ammo, 0  },
 
-  {"ammo",    NULL,                   not_net | not_demo | no_score,
+  {"ammo",    NULL,                   not_net | not_demo,
    cheat_ammox, -1},  // killough 2/16/98: end generalized weapons
 
   {"tran",    NULL,                   always,
@@ -240,20 +242,20 @@ struct cheat_s cheat[] = {
 #endif
 
   // haleyjd: total invis cheat -- hideme
-  {"hideme", NULL,      not_net | not_demo | no_score,
+  {"hideme", NULL,      not_net | not_demo,
     cheat_pw, pw_totalinvis     },
 
   // haleyjd: heretic ghost 
-  {"ghost",  NULL,      not_net | not_demo | no_score,
+  {"ghost",  NULL,      not_net | not_demo,
     cheat_pw, pw_ghost },
 
-  {"infshots", NULL,    not_net | not_demo | no_score,
+  {"infshots", NULL,    not_net | not_demo,
     cheat_infammo, 0 },
 
-  {"silence", NULL,     not_net | not_demo | no_score,
+  {"silence", NULL,     not_net | not_demo,
     cheat_pw, pw_silencer },
 
-  {"iamtheone", NULL,   not_net | not_demo | no_score,
+  {"iamtheone", NULL,   not_net | not_demo,
     cheat_one, 0 },
 
   {NULL, NULL, 0, NULL, 0 } // end-of-list marker
@@ -368,15 +370,23 @@ static void cheat_fa(const void *arg)
 {
    int i;
    
-   if(!plyr->backpack)
+   if(!E_PlayerHasBackpack(plyr))
    {
+      // INVENTORY_FIXME: once ammo types are managed under inventory,
+      // this will become unnecessary; the adjustment is automated through
+      // E_GetMaxAmountForArtifact.
       for(i = 0; i < NUMAMMO; i++)
          plyr->maxammo[i] *= 2;
-      plyr->backpack = true;
+      E_GiveBackpack(plyr);
    }
    
-   plyr->armorpoints = idfa_armor;      // Ty 03/09/98 - deh
-   plyr->armortype = idfa_armor_class;  // Ty 03/09/98 - deh
+   itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
+   if(armor)
+   {
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
+   }
 
    // WEAPON_FIXME: IDFA cheat
    
@@ -399,18 +409,8 @@ static void cheat_fa(const void *arg)
 
 static void cheat_k(const void *arg)
 {
-   int i, k = 0;
-
-   for(i = 0; i < NUMCARDS; i++)
-   {
-      if(!plyr->cards[i])     // only print message if at least one key added
-      {                       // however, caller may overwrite message anyway
-         plyr->cards[i] = true;
-         k++; // sf: fix multiple 'keys added' messages
-      }
-   }
-
-   if(k)
+   // sf: fix multiple 'keys added' messages
+   if(E_GiveAllKeys(plyr))
       doom_printf("Keys Added");
 }
 
@@ -537,7 +537,7 @@ static void cheat_comp(const void *arg)
       DEH_String((compatibility = !compatibility) ? "STSTR_COMPON"
                                                   : "STSTR_COMPOFF"));
 
-   for(i = 0; i < COMP_TOTAL; ++i) // killough 10/98: reset entire vector
+   for(i = 0; i < COMP_TOTAL; i++) // killough 10/98: reset entire vector
       comp[i] = compatibility;
 }
 
@@ -603,9 +603,31 @@ static void cheat_keyx(const void *arg)
 static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
+   const char *msg = NULL;
 
-   doom_printf((plyr->cards[key] = !plyr->cards[key]) ? 
-     "Key Added" : "Key Removed");  // Ty 03/27/98 - *not* externalized
+   // CHEATS_FIXME: this is a DOOM cheat; Need to add ability to have different
+   // cheats in each game, and then add Heretic's cheats.
+   if(key >= GameModeInfo->numHUDKeys)
+      return;
+
+   itemeffect_t    *fx   = E_ItemEffectForName(GameModeInfo->cardNames[key]);
+   inventoryslot_t *slot = E_InventorySlotForItem(plyr, fx);
+
+   if(!fx)
+      return;
+
+   if(!slot || slot->amount == 0)
+   {
+      E_GiveInventoryItem(plyr, fx);
+      msg = "Key Added"; // Ty 03/27/98 - *not* externalized
+   }
+   else
+   {
+      E_RemoveInventoryItem(plyr, fx, -1);
+      msg = "Key Removed";
+   }
+
+   doom_printf(msg);
 }
 
 // killough 2/16/98: generalized weapon cheats
@@ -660,20 +682,26 @@ static void cheat_ammox(const void *arg)
 
    if(*buf == 'b')
    {
-      if((plyr->backpack = !plyr->backpack))
+      if(!E_PlayerHasBackpack(plyr))
       {
          doom_printf("Backpack Added");
-         
-         for(a = 0; a < NUMAMMO; ++a)
-            plyr->maxammo[a] <<= 1;
+         E_GiveBackpack(plyr);
+
+         // INVENTORY_FIXME: eliminate once ammo types are in inventory
+         for(a = 0; a < NUMAMMO; a++)
+            plyr->maxammo[a] *= 2;
       }
       else
       {
-         doom_printf("Backpack removed");
+         doom_printf("Backpack Removed");
+         E_RemoveBackpack(plyr);
 
-         for(a = 0; a < NUMAMMO; ++a)
+         // INVENTORY_FIXME: modify once ammo types are in inventory
+         // (must still strip extra ammo... maybe E_RemoveBackpack
+         //  should handle that, using the ammo lookup).
+         for(a = 0; a < NUMAMMO; a++)
          {
-            if(plyr->ammo[a] > (plyr->maxammo[a] >>= 1))
+            if(plyr->ammo[a] > (plyr->maxammo[a] /= 2))
                plyr->ammo[a] = plyr->maxammo[a];
          }
       }
@@ -809,10 +837,6 @@ bool M_FindCheats(int key)
             matchedbefore = 1;              // responder has eaten key
             ret = true;
             cheat[i].func(&(cheat[i].arg)); // call cheat handler
-
-            // haleyjd 09/10/12: if cheat disables scores, mark the player
-            if(cheat[i].when & no_score)
-               players[consoleplayer].cheats |= CF_CHEATED;
          }
       }
    }
@@ -917,27 +941,27 @@ CONSOLE_COMMAND(fly, cf_notnet|cf_level)
    doom_printf(p->powers[pw_flight] ? "Flight on" : "Flight off");
 }
 
-extern void A_Fall(Mobj *);
-extern void A_PainDie(Mobj *);
+extern void A_Fall(actionargs_t *);
+extern void A_PainDie(actionargs_t *);
 
 // haleyjd 07/13/03: special actions for killem cheat
 
 //
 // Pain Elemental -- spawn lost souls now so they get killed
 //
-void A_PainNukeSpec(Mobj *actor)
+void A_PainNukeSpec(actionargs_t *actionargs)
 {
-   A_PainDie(actor);  // killough 2/8/98
-   P_SetMobjState(actor, E_SafeState(S_PAIN_DIE6));
+   A_PainDie(actionargs);  // killough 2/8/98
+   P_SetMobjState(actionargs->actor, E_SafeState(S_PAIN_DIE6));
 }
 
 //
 // D'Sparil (first form) -- don't spawn second form
 //
-void A_SorcNukeSpec(Mobj *actor)
+void A_SorcNukeSpec(actionargs_t *actionargs)
 {
-   A_Fall(actor);
-   P_SetMobjStateNF(actor, E_SafeState(S_SRCR1_DIE17));
+   A_Fall(actionargs);
+   P_SetMobjStateNF(actionargs->actor, E_SafeState(S_SRCR1_DIE17));
 }
 
 //
@@ -951,7 +975,7 @@ void A_SorcNukeSpec(Mobj *actor)
 // killough 7/20/98: kill friendly monsters only if no others to kill
 // haleyjd 01/10/02: reformatted some code
 //
-static void M_NukeMonsters(void)
+static void M_NukeMonsters()
 {   
    int killcount = 0;
    Thinker *th = &thinkercap;
@@ -981,7 +1005,16 @@ static void M_NukeMonsters(void)
 
             // haleyjd: made behavior customizable
             if(mi->nukespec)
-               mi->nukespec(mo);
+            {
+               actionargs_t actionargs;
+
+               actionargs.actiontype = actionargs_t::MOBJFRAME;
+               actionargs.actor      = mo;
+               actionargs.args       = NULL;
+               actionargs.pspr       = NULL;
+
+               mi->nukespec(&actionargs);
+            }
          }
       }
    }

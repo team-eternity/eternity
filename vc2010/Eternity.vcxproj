@@ -372,6 +372,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_weapons.cpp" />
     <ClCompile Include="..\Source\f_finale.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -414,6 +415,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\hal\i_directory.cpp" />
     <ClCompile Include="..\Source\hu_frags.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1211,6 +1213,7 @@
     <ClInclude Include="..\source\acs_intr.h" />
     <ClInclude Include="..\source\acs_op.h" />
     <ClInclude Include="..\Source\am_map.h" />
+    <ClInclude Include="..\source\a_args.h" />
     <ClInclude Include="..\Source\a_small.h" />
     <ClInclude Include="..\source\c_batch.h" />
     <ClInclude Include="..\Source\c_io.h" />
@@ -1265,12 +1268,14 @@
     <ClInclude Include="..\Source\e_string.h" />
     <ClInclude Include="..\Source\e_things.h" />
     <ClInclude Include="..\Source\e_ttypes.h" />
+    <ClInclude Include="..\source\e_weapons.h" />
     <ClInclude Include="..\Source\f_finale.h" />
     <ClInclude Include="..\Source\f_wipe.h" />
     <ClInclude Include="..\Source\g_bind.h" />
     <ClInclude Include="..\Source\g_dmflag.h" />
     <ClInclude Include="..\Source\g_game.h" />
     <ClInclude Include="..\Source\g_gfs.h" />
+    <ClInclude Include="..\source\hal\i_directory.h" />
     <ClInclude Include="..\Source\Hu_frags.h" />
     <ClInclude Include="..\Source\Hu_over.h" />
     <ClInclude Include="..\Source\Hu_stuff.h" />

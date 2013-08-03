@@ -351,9 +351,6 @@
     <ClCompile Include="..\source\e_hash.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\e_inventory.cpp">
-      <Filter>Source Files\E_\E_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\e_lib.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
@@ -906,6 +903,15 @@
     <ClCompile Include="..\source\Win32\i_xinput.cpp">
       <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\hal\i_directory.cpp">
+      <Filter>Source Files\HAL\HAL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_weapons.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_inventory.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\p_clipen.cpp">
       <Filter>Source Files\Clip\Interface</Filter>
     </ClCompile>
@@ -1059,9 +1065,6 @@
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\e_hashkeys.h">
-      <Filter>Source Files\E_\E_ Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\e_inventory.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\e_lib.h">
@@ -1597,6 +1600,18 @@
     </ClInclude>
     <ClInclude Include="..\source\Win32\i_xinput.h">
       <Filter>Source Files\Win32\Win32 Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hal\i_directory.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\a_args.h">
+      <Filter>Source Files\A_\A_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_weapons.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_inventory.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\p_clipen.h">
       <Filter>Source Files\Clip\Interface</Filter>

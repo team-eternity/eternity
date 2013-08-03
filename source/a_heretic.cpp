@@ -29,6 +29,7 @@
 
 #include "z_zone.h"
 
+#include "a_args.h"
 #include "a_common.h"
 #include "a_small.h"
 #include "d_gi.h"
@@ -65,15 +66,17 @@
 // args[0] - object type (use DeHackEd number)
 // args[1] - z momentum (scaled by FRACUNIT/8)
 //
-void A_SpawnGlitter(Mobj *actor)
+void A_SpawnGlitter(actionargs_t *actionargs)
 {
-   Mobj *glitter;
-   int glitterType;
-   fixed_t initMomentum;
-   fixed_t x, y, z;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   Mobj      *glitter;
+   int        glitterType;
+   fixed_t    initMomentum;
+   fixed_t    x, y, z;
 
-   glitterType  = E_ArgAsThingNum(actor->state->args, 0);
-   initMomentum = (fixed_t)(E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 8);
+   glitterType  = E_ArgAsThingNum(args, 0);
+   initMomentum = (fixed_t)(E_ArgAsInt(args, 1, 0) * FRACUNIT / 8);
 
    // special defaults
 
@@ -98,8 +101,9 @@ void A_SpawnGlitter(Mobj *actor)
 //
 // Increases object's z momentum by 50%
 //
-void A_AccelGlitter(Mobj *actor)
+void A_AccelGlitter(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    actor->momz += actor->momz / 2;
 }
 
@@ -113,16 +117,18 @@ void A_AccelGlitter(Mobj *actor)
 // args[1] -- state number (< 0 == no state transition)
 // args[2] -- amount to add to z coordinate
 //
-void A_SpawnAbove(Mobj *actor)
+void A_SpawnAbove(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int thingtype;
    int statenum;
    fixed_t zamt;
    Mobj *mo;
 
-   thingtype = E_ArgAsThingNum(actor->state->args, 0);
-   statenum  = E_ArgAsStateNumG0(actor->state->args, 1, actor);
-   zamt      = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
+   thingtype = E_ArgAsThingNum(args, 0);
+   statenum  = E_ArgAsStateNumG0(args, 1, actor);
+   zamt      = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
 
@@ -135,8 +141,10 @@ void A_SpawnAbove(Mobj *actor)
 // Heretic Mummy
 //
 
-void A_MummyAttack(Mobj *actor)
+void A_MummyAttack(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target)
       return;
 
@@ -153,8 +161,9 @@ void A_MummyAttack(Mobj *actor)
    S_StartSound(actor, sfx_mumat1);
 }
 
-void A_MummyAttack2(Mobj *actor)
+void A_MummyAttack2(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    
    if(!actor->target)
@@ -174,8 +183,9 @@ void A_MummyAttack2(Mobj *actor)
    P_SetTarget<Mobj>(&mo->tracer, actor->target);
 }
 
-void A_MummySoul(Mobj *actor)
+void A_MummySoul(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    int soulType = E_SafeThingType(MT_MUMMYSOUL);
    
@@ -214,15 +224,9 @@ void P_HticDrop(Mobj *actor, int special, mobjtype_t type)
 // HTIC_FIXME / HTIC_TODO: Just get rid of this and make item
 // drops a sole property of thing types, where it belongs.
 //
-// Parameterized code pointer, drops one or two items at random
-//
-// args[0] -- thing type 1 (0 == none)
-// args[1] -- thing type 1 drop chance
-// args[2] -- thing type 2 (0 == none)
-// args[3] -- thing type 2 drop chance
-//
-void A_HticDrop(Mobj *actor)
+void A_HticDrop(actionargs_t *actionargs)
 {
+#if 0
    int thingtype1, thingtype2, chance1, chance2;
    int drop1 = 0, drop2 = 0;
 
@@ -254,6 +258,7 @@ void A_HticDrop(Mobj *actor)
       if(P_Random(pr_hdrop2) <= chance2)
          P_HticDrop(actor, drop2, thingtype2);
    }
+#endif
 }
 
 void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
@@ -336,12 +341,14 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 // args[0]: threshold in degrees
 // args[1]: maxturn in degrees
 //
-void A_HticTracer(Mobj *actor)
+void A_HticTracer(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    angle_t threshold, maxturn;
 
-   threshold = (angle_t)(E_ArgAsInt(actor->state->args, 0, 0));
-   maxturn   = (angle_t)(E_ArgAsInt(actor->state->args, 1, 0));
+   threshold = (angle_t)(E_ArgAsInt(args, 0, 0));
+   maxturn   = (angle_t)(E_ArgAsInt(args, 1, 0));
 
    // convert from integer angle to angle_t
    threshold = (angle_t)(((uint64_t)threshold << 32) / 360);
@@ -355,8 +362,9 @@ void A_HticTracer(Mobj *actor)
 //
 // Sabreclaw's melee attack
 //
-void A_ClinkAttack(Mobj *actor)
+void A_ClinkAttack(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    int dmg;
 
    if(!actor->target)
@@ -376,20 +384,21 @@ void A_ClinkAttack(Mobj *actor)
 // Disciple Actions
 //
 
-void A_WizardAtk1(Mobj *actor)
+void A_WizardAtk1(actionargs_t *actionargs)
 {
-   A_FaceTarget(actor);
-   actor->flags3 &= ~MF3_GHOST;
+   A_FaceTarget(actionargs);
+   actionargs->actor->flags3 &= ~MF3_GHOST;
 }
 
-void A_WizardAtk2(Mobj *actor)
+void A_WizardAtk2(actionargs_t *actionargs)
 {
-   A_FaceTarget(actor);
-   actor->flags3 |= MF3_GHOST;
+   A_FaceTarget(actionargs);
+   actionargs->actor->flags3 |= MF3_GHOST;
 }
 
-void A_WizardAtk3(Mobj *actor)
+void A_WizardAtk3(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    angle_t angle;
    fixed_t momz;
@@ -421,8 +430,10 @@ void A_WizardAtk3(Mobj *actor)
 // Serpent Rider D'Sparil Actions
 //
 
-void A_Sor1Chase(Mobj *actor)
+void A_Sor1Chase(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(actor->counters[0])
    {
       // decrement fast walk timer
@@ -433,17 +444,18 @@ void A_Sor1Chase(Mobj *actor)
          actor->tics = 1;
    }
 
-   A_Chase(actor);
+   A_Chase(actionargs);
 }
 
-void A_Sor1Pain(Mobj *actor)
+void A_Sor1Pain(actionargs_t *actionargs)
 {
-   actor->counters[0] = 20; // Number of steps to walk fast
-   A_Pain(actor);
+   actionargs->actor->counters[0] = 20; // Number of steps to walk fast
+   A_Pain(actionargs);
 }
 
-void A_Srcr1Attack(Mobj *actor)
+void A_Srcr1Attack(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    fixed_t momz;
    angle_t angle;
@@ -500,8 +512,9 @@ void A_Srcr1Attack(Mobj *actor)
 //
 // Spawns the normal D'Sparil after the Chaos Serpent dies.
 //
-void A_SorcererRise(Mobj *actor)
+void A_SorcererRise(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    int   sorc2Type = E_SafeThingType(MT_SORCERER2);
    
@@ -535,17 +548,19 @@ void A_SorcererRise(Mobj *actor)
 
 MobjCollection sorcspots;
 
-void P_SpawnSorcSpots(void)
+void P_SpawnSorcSpots()
 {
    sorcspots.setMobjType("DsparilTeleSpot");
    sorcspots.makeEmpty();
    sorcspots.collectThings();
 }
 
-void A_Srcr2Decide(Mobj *actor)
+void A_Srcr2Decide(actionargs_t *actionargs)
 {
-   int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
-   int index    = actor->health / (actor->info->spawnhealth / 8);
+   static int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
+
+   Mobj *actor = actionargs->actor;
+   int   index = actor->health / (actor->info->spawnhealth / 8);
    
    // if no spots, no teleportation
    if(sorcspots.isEmpty())
@@ -569,8 +584,9 @@ void A_Srcr2Decide(Mobj *actor)
    }
 }
 
-void A_Srcr2Attack(Mobj *actor)
+void A_Srcr2Attack(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    int chance;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
    int sor2fx1Type = E_SafeThingType(MT_SOR2FX1);
@@ -615,13 +631,13 @@ void A_Srcr2Attack(Mobj *actor)
    }
 }
 
-void A_BlueSpark(Mobj *actor)
+void A_BlueSpark(actionargs_t *actionargs)
 {
-   int i;
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
-   int sparkType = E_SafeThingType(MT_SOR2FXSPARK);
+   int   sparkType = E_SafeThingType(MT_SOR2FXSPARK);
    
-   for(i = 0; i < 2; ++i)
+   for(int i = 0; i < 2; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, sparkType);
       
@@ -631,8 +647,9 @@ void A_BlueSpark(Mobj *actor)
    }
 }
 
-void A_GenWizard(Mobj *actor)
+void A_GenWizard(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    Mobj *fog;
    int wizType = E_SafeThingType(MT_WIZARD);
@@ -676,8 +693,10 @@ void A_GenWizard(Mobj *actor)
    S_StartSound(fog, sfx_htelept);
 }
 
-void A_Sor2DthInit(Mobj *actor)
+void A_Sor2DthInit(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    actor->counters[0] = 7; // Animation loop counter
 
    // kill monsters early
@@ -685,8 +704,10 @@ void A_Sor2DthInit(Mobj *actor)
    P_Massacre((actor->flags & MF_FRIEND) ? 1 : 2);
 }
 
-void A_Sor2DthLoop(Mobj *actor)
+void A_Sor2DthLoop(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(--actor->counters[0])
    { 
       // Need to loop
@@ -714,11 +735,13 @@ static argkeywd_t hticexpkwds =
 // Parameterized pointer, enables several different Heretic
 // explosion actions
 //
-void A_HticExplode(Mobj *actor)
+void A_HticExplode(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
    int damage = 128;
 
-   int action = E_ArgAsKwd(actor->state->args, 0, &hticexpkwds, 0);
+   int action = E_ArgAsKwd(args, 0, &hticexpkwds, 0);
 
    switch(action)
    {
@@ -765,13 +788,13 @@ static boss_spec_htic_t hboss_specs[NUM_HBOSS_SPECS] =
 //
 // Heretic boss deaths
 //
-void A_HticBossDeath(Mobj *actor)
+void A_HticBossDeath(actionargs_t *actionargs)
 {
+   Mobj    *actor = actionargs->actor;
    Thinker *th;
-   line_t    junk;
-   int       i;
+   line_t   junk;
 
-   for(i = 0; i < NUM_HBOSS_SPECS; ++i)
+   for(int i = 0; i < NUM_HBOSS_SPECS; ++i)
    {
       unsigned int flags = 
          hboss_specs[i].flagfield == 2 ? actor->flags2 : actor->flags3;
@@ -822,11 +845,11 @@ void A_HticBossDeath(Mobj *actor)
 // Pods and Pod Generators
 //
 
-void A_PodPain(Mobj *actor)
+void A_PodPain(actionargs_t *actionargs)
 {
-   int   i;
    int   count;
    int   chance;
+   Mobj *actor = actionargs->actor;
    Mobj *goo;
    int   gooType = E_SafeThingType(MT_PODGOO);
    
@@ -837,7 +860,7 @@ void A_PodPain(Mobj *actor)
    
    count = (chance > 240) ? 2 : 1;
    
-   for(i = 0; i < count; ++i)
+   for(int i = 0; i < count; ++i)
    {
       goo = P_SpawnMobj(actor->x, actor->y,
                         actor->z + 48*FRACUNIT, gooType);
@@ -849,8 +872,10 @@ void A_PodPain(Mobj *actor)
    }
 }
 
-void A_RemovePod(Mobj *actor)
+void A_RemovePod(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    // actor->tracer points to the generator that made this pod --
    // this method is save game safe and doesn't require any new
    // fields
@@ -870,11 +895,12 @@ void A_RemovePod(Mobj *actor)
 
 #define MAXGENPODS 16
 
-void A_MakePod(Mobj *actor)
+void A_MakePod(actionargs_t *actionargs)
 {
    angle_t angle;
    fixed_t move;
-   Mobj *mo;
+   Mobj   *actor = actionargs->actor;
+   Mobj   *mo;
    fixed_t x, y;
 
    // limit pods per generator to avoid crowding, slow-down
@@ -916,10 +942,11 @@ void A_MakePod(Mobj *actor)
 //
 // Called when a volcano is ready to erupt.
 //
-void A_VolcanoBlast(Mobj *actor)
+void A_VolcanoBlast(actionargs_t *actionargs)
 {
    int      ballType = E_SafeThingType(MT_VOLCANOBLAST);
    int      i, numvolcballs;
+   Mobj    *actor = actionargs->actor;
    Mobj    *volcball;
    angle_t  angle;
  
@@ -952,9 +979,10 @@ void A_VolcanoBlast(Mobj *actor)
 //
 // Called when a volcano ball hits something.
 //
-void A_VolcBallImpact(Mobj *actor)
+void A_VolcBallImpact(actionargs_t *actionargs)
 {
    int      sballType = E_SafeThingType(MT_VOLCANOTBLAST);
+   Mobj    *actor = actionargs->actor;
    Mobj    *svolcball;
    angle_t  angle;
 
@@ -1002,8 +1030,9 @@ void A_VolcBallImpact(Mobj *actor)
 // Shoots one of two missiles, depending on whether a Knight
 // Ghost or some other object uses it.
 //
-void A_KnightAttack(Mobj *actor)
+void A_KnightAttack(actionargs_t *actionargs)
 {
+   Mobj *actor    = actionargs->actor;
    int ghostType  = E_ThingNumForDEHNum(MT_KNIGHTGHOST);
    int axeType    = E_SafeThingType(MT_KNIGHTAXE);
    int redAxeType = E_SafeThingType(MT_REDAXE);
@@ -1039,8 +1068,9 @@ void A_KnightAttack(Mobj *actor)
 //
 // Throws some Heretic blood objects out from the source thing.
 //
-void A_DripBlood(Mobj *actor)
+void A_DripBlood(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
    fixed_t x, y;
 
@@ -1060,8 +1090,10 @@ void A_DripBlood(Mobj *actor)
 // Beast Actions
 //
 
-void A_BeastAttack(Mobj *actor)
+void A_BeastAttack(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target)
       return;
 
@@ -1089,10 +1121,13 @@ static argkeywd_t beastkwds =
    sizeof(kwds_A_BeastPuff) / sizeof(const char *)
 };
 
-void A_BeastPuff(Mobj *actor)
+void A_BeastPuff(actionargs_t *actionargs)
 {
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+
    // 07/29/04: allow momentum to be disabled
-   int momentumToggle = E_ArgAsKwd(actor->state->args, 0, &beastkwds, 0);
+   int momentumToggle = E_ArgAsKwd(args, 0, &beastkwds, 0);
 
    if(P_Random(pr_puffy) > 64)
    {
@@ -1128,8 +1163,10 @@ void A_BeastPuff(Mobj *actor)
 // Ophidian Actions
 //
 
-void A_SnakeAttack(Mobj *actor)
+void A_SnakeAttack(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target)
    {
       // avoid going through other attack frames if target is gone
@@ -1138,13 +1175,15 @@ void A_SnakeAttack(Mobj *actor)
    }
 
    S_StartSound(actor, actor->info->attacksound);
-   A_FaceTarget(actor);
+   A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_SNAKEPRO_A),
                   actor->z + DEFAULTMISSILEZ);
 }
 
-void A_SnakeAttack2(Mobj *actor)
+void A_SnakeAttack2(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target)
    {
       // avoid going through other attack frames if target is gone
@@ -1153,7 +1192,7 @@ void A_SnakeAttack2(Mobj *actor)
    }
 
    S_StartSound(actor, actor->info->attacksound);
-   A_FaceTarget(actor);
+   A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_SNAKEPRO_B),
                   actor->z + DEFAULTMISSILEZ);
 }
@@ -1168,8 +1207,9 @@ void A_SnakeAttack2(Mobj *actor)
 //
 // Maulotaur melee attack. Big hammer, squishes player.
 //
-void A_MinotaurAtk1(Mobj *actor)
+void A_MinotaurAtk1(actionargs_t *actionargs)
 {
+   Mobj     *actor = actionargs->actor;
    player_t *player;
 
    if(!actor->target)
@@ -1219,9 +1259,10 @@ inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 //
 // Picks a Maulotaur attack.
 //
-void A_MinotaurDecide(Mobj *actor)
+void A_MinotaurDecide(actionargs_t *actionargs)
 {
    angle_t angle;
+   Mobj *actor = actionargs->actor;
    Mobj *target;
    int dist;
 
@@ -1240,10 +1281,11 @@ void A_MinotaurDecide(Mobj *actor)
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
    {
+      A_FaceTarget(actionargs);
+
       // set to charge state and start skull-flying
       P_SetMobjStateNF(actor, E_SafeState(S_MNTR_ATK4_1));
       actor->flags |= MF_SKULLFLY;
-      A_FaceTarget(actor);
       
       // give him momentum
       angle = actor->angle >> ANGLETOFINESHIFT;
@@ -1260,7 +1302,7 @@ void A_MinotaurDecide(Mobj *actor)
       actor->counters[1] = 0;
    }
    else
-      A_FaceTarget(actor);
+      A_FaceTarget(actionargs);
       
    // Fall through to swing attack
 }
@@ -1270,9 +1312,10 @@ void A_MinotaurDecide(Mobj *actor)
 //
 // Called while the Maulotaur is charging.
 //
-void A_MinotaurCharge(Mobj *actor)
+void A_MinotaurCharge(actionargs_t *actionargs)
 {
    int   puffType = E_SafeThingType(MT_PHOENIXPUFF);
+   Mobj *actor = actionargs->actor;
    Mobj *puff;
    
    if(actor->counters[0]) // test charge timer
@@ -1295,9 +1338,10 @@ void A_MinotaurCharge(Mobj *actor)
 //
 // Fireball attack for Maulotaur
 //
-void A_MinotaurAtk2(Mobj *actor)
+void A_MinotaurAtk2(actionargs_t *actionargs)
 {
    int      mntrfxType = E_SafeThingType(MT_MNTRFX1);
+   Mobj    *actor = actionargs->actor;
    Mobj    *mo;
    angle_t  angle;
    fixed_t  momz;
@@ -1335,9 +1379,10 @@ void A_MinotaurAtk2(Mobj *actor)
 //
 // Performs floor fire attack, or melee if in range.
 //
-void A_MinotaurAtk3(Mobj *actor)
+void A_MinotaurAtk3(actionargs_t *actionargs)
 {
    int       mntrfxType = E_SafeThingType(MT_MNTRFX2);
+   Mobj     *actor = actionargs->actor;
    Mobj     *mo;
    player_t *player;
 
@@ -1373,9 +1418,10 @@ void A_MinotaurAtk3(Mobj *actor)
 // Called by floor fire missile as it moves.
 // Spawns small burning flames.
 //
-void A_MntrFloorFire(Mobj *actor)
+void A_MntrFloorFire(actionargs_t *actionargs)
 {
    int      mntrfxType = E_SafeThingType(MT_MNTRFX3);
+   Mobj    *actor = actionargs->actor;
    Mobj    *mo;
    fixed_t  x, y;
 
@@ -1408,9 +1454,10 @@ void A_MntrFloorFire(Mobj *actor)
 // Spawns a column of expanding fireballs. Called by A_LichAttack,
 // but also available separately.
 //
-void A_LichFire(Mobj *actor)
+void A_LichFire(actionargs_t *actionargs)
 {
    int headfxType, frameNum;
+   Mobj *actor = actionargs->actor;
    Mobj *target, *baseFire, *fire;
    int i;
 
@@ -1458,10 +1505,11 @@ void A_LichFire(Mobj *actor)
 // Spawns a heat-seeking tornado. Called by A_LichAttack, but also
 // available separately.
 //
-void A_LichWhirlwind(Mobj *actor)
+void A_LichWhirlwind(actionargs_t *actionargs)
 {
    int wwType = E_SafeThingType(MT_WHIRLWIND);
    Mobj *mo, *target;
+   Mobj *actor = actionargs->actor;
 
    if(!(target = actor->target))
       return;
@@ -1483,9 +1531,10 @@ void A_LichWhirlwind(Mobj *actor)
 //
 // Main Iron Lich attack logic.
 //
-void A_LichAttack(Mobj *actor)
+void A_LichAttack(actionargs_t *actionargs)
 {
    int fxType = E_SafeThingType(MT_LICHFX1);
+   Mobj *actor = actionargs->actor;
    Mobj *target;
    int randAttack, dist;
 
@@ -1500,7 +1549,7 @@ void A_LichAttack(Mobj *actor)
    if(!(target = actor->target))
       return;
 
-   A_FaceTarget(actor);
+   A_FaceTarget(actionargs);
    
    // hit directly when in melee range
    if(P_CheckMeleeRange(actor))
@@ -1528,9 +1577,9 @@ void A_LichAttack(Mobj *actor)
       S_StartSound(actor, sfx_hedat2);	
    }
    else if(randAttack < (dist ? 200 : 150))
-      A_LichFire(actor);
+      A_LichFire(actionargs);
    else
-      A_LichWhirlwind(actor);
+      A_LichWhirlwind(actionargs);
 }
 
 //
@@ -1538,8 +1587,10 @@ void A_LichAttack(Mobj *actor)
 //
 // Special homing maintenance pointer for whirlwinds.
 //
-void A_WhirlwindSeek(Mobj *actor)
+void A_WhirlwindSeek(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    // decrement duration counter
    if((actor->counters[0] -= 3) < 0)
    {
@@ -1585,10 +1636,11 @@ void A_WhirlwindSeek(Mobj *actor)
 // Called when a Lich ice ball hits something. Shatters into
 // shards that fly in all directions.
 //
-void A_LichIceImpact(Mobj *actor)
+void A_LichIceImpact(actionargs_t *actionargs)
 {
    int      fxType = E_SafeThingType(MT_LICHFX2);
    angle_t  angle;
+   Mobj    *actor = actionargs->actor;
    Mobj    *shard;
    
    for(unsigned int i = 0; i < 8; ++i)
@@ -1615,9 +1667,10 @@ void A_LichIceImpact(Mobj *actor)
 //
 // Called by Lich fire pillar fireballs so that they can expand.
 //
-void A_LichFireGrow(Mobj *actor)
+void A_LichFireGrow(actionargs_t *actionargs)
 {
    int frameNum = E_SafeState(S_LICHFX3_4);
+   Mobj *actor  = actionargs->actor;
 
    clip->makeZMove(actor, actor->z + 9*FRACUNIT);
    
@@ -1641,8 +1694,10 @@ void A_LichFireGrow(Mobj *actor)
 // Note that this makes them nearly paralyzed in "Black Plague" 
 // skill level, however...
 //
-void A_ImpChargeAtk(Mobj *actor)
+void A_ImpChargeAtk(actionargs_t *actionargs)
 {   
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target || P_Random(pr_impcharge) > 64)
    {
       P_SetMobjState(actor, actor->info->seestate);
@@ -1658,8 +1713,10 @@ void A_ImpChargeAtk(Mobj *actor)
 //
 // A_ImpMeleeAtk
 //
-void A_ImpMeleeAtk(Mobj *actor)
+void A_ImpMeleeAtk(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    if(!actor->target)
       return;
 
@@ -1677,9 +1734,10 @@ void A_ImpMeleeAtk(Mobj *actor)
 //
 // Leader Imp's missile/melee attack
 //
-void A_ImpMissileAtk(Mobj *actor)
+void A_ImpMissileAtk(actionargs_t *actionargs)
 {
    int fxType = E_SafeThingType(MT_IMPBALL);
+   Mobj *actor = actionargs->actor;
 
    if(!actor->target)
       return;
@@ -1700,8 +1758,10 @@ void A_ImpMissileAtk(Mobj *actor)
 //
 // Called when the imp dies normally.
 //
-void A_ImpDeath(Mobj *actor)
+void A_ImpDeath(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    actor->flags &= ~MF_SOLID;
    actor->flags2 |= MF2_FOOTCLIP;
    
@@ -1717,8 +1777,10 @@ void A_ImpDeath(Mobj *actor)
 //
 // Called on imp extreme death. First half of action
 //
-void A_ImpXDeath1(Mobj *actor)
+void A_ImpXDeath1(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    actor->flags &= ~MF_SOLID;
    actor->flags |= MF_NOGRAVITY;
    actor->flags2 |= MF2_FOOTCLIP;
@@ -1733,8 +1795,10 @@ void A_ImpXDeath1(Mobj *actor)
 //
 // Called on imp extreme death. Second half of action.
 //
-void A_ImpXDeath2(Mobj *actor)
+void A_ImpXDeath2(actionargs_t *actionargs)
 {
+   Mobj *actor = actionargs->actor;
+
    actor->flags &= ~MF_NOGRAVITY;
 
    if(actor->z <= actor->floorz && actor->info->crashstate != NullStateNum)
@@ -1749,9 +1813,10 @@ void A_ImpXDeath2(Mobj *actor)
 //
 // Called from imp crashstate.
 //
-void A_ImpExplode(Mobj *actor)
+void A_ImpExplode(actionargs_t *actionargs)
 {
    int fxType1, fxType2, stateNum;
+   Mobj *actor = actionargs->actor;
    Mobj *mo;
 
    // haleyjd 09/13/04: it's possible for an imp to enter its
@@ -1791,13 +1856,15 @@ void A_ImpExplode(Mobj *actor)
 // Parameters:
 // * args[0] : thing type
 //
-void A_PhoenixPuff(Mobj *actor)
+void A_PhoenixPuff(actionargs_t *actionargs)
 {
    int thingtype;
+   Mobj *actor = actionargs->actor;
    Mobj *puff;
    angle_t angle;
+   arglist_t *args = actionargs->args;
 
-   thingtype = E_ArgAsThingNum(actor->state->args, 0);
+   thingtype = E_ArgAsThingNum(args, 0);
    
    P_HticTracer(actor, ANGLE_1 * 5, ANGLE_1 * 10);
    

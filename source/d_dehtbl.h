@@ -21,13 +21,13 @@
 #ifndef D_DEHTBL_H__
 #define D_DEHTBL_H__
 
-class Mobj;
+struct actionargs_t;
 
 typedef struct deh_bexptr_s
 {
-   void (*cptr)(Mobj *); // actual pointer to the subroutine
-   const char *lookup;   // mnemonic lookup string to be specified in BEX
-   int next;             // haleyjd: for bex hash chaining   
+   void (*cptr)(actionargs_t *); // actual pointer to the subroutine
+   const char *lookup;           // mnemonic lookup string to be specified in BEX
+   int next;                     // haleyjd: for bex hash chaining   
 } deh_bexptr;
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c

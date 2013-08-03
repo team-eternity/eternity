@@ -1040,7 +1040,8 @@ DEFINE_ACTION(EV_ActionVerticalDoor)
    // TODO: move special-specific logic out of EV_VerticalDoor to here,
    // or to preamble function. Or, break up function altogether.
 
-   return !!EV_VerticalDoor(instance->line, instance->actor);
+   int lockID = EV_LockDefIDForSpecial(instance->special);
+   return !!EV_VerticalDoor(instance->line, instance->actor, lockID);
 }
 
 //
@@ -1055,9 +1056,8 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 136: (SR) BlzOpenDoor YELLOW
    // case 137: (S1) BlzOpenDoor YELLOW
 
-   // TODO: move special-specific logic out of EV_DoLockedDoor
-   
-   return !!EV_DoLockedDoor(instance->line, blazeOpen, instance->actor);
+   int lockID = EV_LockDefIDForSpecial(instance->special);
+   return !!EV_DoLockedDoor(instance->line, blazeOpen, lockID, instance->actor);
 }
 
 //

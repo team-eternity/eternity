@@ -246,13 +246,6 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
 
-   // haleyjd 09/22/12: mark all players as "cheated" to disable scoring
-   for(int i = 0; i < MAXPLAYERS; i++)
-   {
-      if(playeringame[i])
-         players[i].cheats |= CF_CHEATED;
-   }
-
    if((player->health > 0) || comp[comp_zombie])
       G_ExitLevel();
 }
@@ -707,76 +700,6 @@ void G_AddChatMacros(void)
       command->flags = 0;
       command->variable = variable;
       command->handler = NULL;
-      command->netcmd = 0;
-
-      C_AddCommand(command); // hook into cmdlist
-   }
-}
-
-///////////////////////////////////////////////////////////////
-//
-// Weapon Prefs
-//
-
-extern int weapon_preferences[2][NUMWEAPONS+1];
-
-void G_SetWeapPref(int prefnum, int newvalue)
-{
-   int i;
-
-   // find the pref which has the new value
-
-   for(i=0; i<NUMWEAPONS; i++)
-      if(weapon_preferences[0][i] == newvalue) break;
-
-   weapon_preferences[0][i] = weapon_preferences[0][prefnum];
-   weapon_preferences[0][prefnum] = newvalue;
-}
-
-const char *weapon_str[NUMWEAPONS] =
-{"fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
- "bfg", "chainsaw", "super shotgun"};
-
-void G_WeapPrefHandler(void)
-{
-   if(Console.argc)
-   {
-      int prefnum =
-         (int *)(Console.command->variable->variable) - weapon_preferences[0];
-      G_SetWeapPref(prefnum, Console.argv[0]->toInt());
-   }
-}
-
-void G_AddWeapPrefs(void)
-{
-   int i;
-
-   for(i=0; i<NUMWEAPONS; i++)   // haleyjd
-   {
-      variable_t *variable;
-      command_t *command;
-      char tempstr[16]; // haleyjd: increased size -- bug fix!
-
-      memset(tempstr, 0, 16);
-
-      // create the variable first
-      variable = estructalloc(variable_t, 1);
-      variable->variable = &weapon_preferences[0][i];
-      variable->v_default = NULL;
-      variable->type = vt_int;
-      variable->min = 1;
-      variable->max = NUMWEAPONS; // haleyjd
-      variable->defines = weapon_str;  // use weapon string defines
-
-      // now the command
-      command = estructalloc(command_t, 1);
-
-      sprintf(tempstr, "weappref_%i", i+1);
-      command->name = estrdup(tempstr);
-      command->type = ct_variable;
-      command->flags = cf_handlerset;
-      command->variable = variable;
-      command->handler = G_WeapPrefHandler;
       command->netcmd = 0;
 
       C_AddCommand(command); // hook into cmdlist

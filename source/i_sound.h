@@ -45,14 +45,14 @@ typedef struct i_sounddriver_s
 } i_sounddriver_t;
 
 // Init at program start...
-void I_InitSound(void);
+void I_InitSound();
 
 // ... update sound buffer and audio device at runtime...
-void I_UpdateSound(void);
-void I_SubmitSound(void);
+void I_UpdateSound();
+void I_SubmitSound();
 
 // ... shut down and relase at program termination.
-void I_ShutdownSound(void);
+void I_ShutdownSound();
 
 // Cache sound data
 void I_CacheSound(sfxinfo_t *sound);
@@ -98,8 +98,8 @@ typedef struct i_musicdriver_s
    int  (*QrySongPlaying)(int);
 } i_musicdriver_t;
 
-void I_InitMusic(void);
-void I_ShutdownMusic(void);
+void I_InitMusic();
+void I_ShutdownMusic();
 
 // Volume.
 void I_SetMusicVolume(int volume);
@@ -137,6 +137,24 @@ extern double  s_eqpreamp;  // preamp factor
 extern double  s_lowgain;   // low band gain
 extern double  s_midgain;   // mid band gain
 extern double  s_highgain;  // high band gain
+
+static inline bool I_IsSoundBufferSizePowerOf2(int i)
+{
+   return (i & (i - 1)) == 0;
+}
+
+static inline int I_MakeSoundBufferSize(int i)
+{
+   --i;
+   i |= i >> 1;
+   i |= i >> 2;
+   i |= i >> 4;
+   i |= i >> 8;
+   i |= i >> 16;
+   ++i;
+
+   return i;
+}
 
 #endif
 

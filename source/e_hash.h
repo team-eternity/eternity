@@ -31,16 +31,16 @@
 #include "m_dllist.h"
 
 //
-// EHashTable<T, K>
+// EHashTable<item_type, key_type, hashKey, linkPtr>
 //
 // This class replaces the ehash_t structure to provide a generic,
 // high-performance hash table which utilizes the in-structure link capability
 // provided by DLListItem<T>, meaning no cache-harmful separately allocated
 // links to traverse through.
 //
-// Provide the template the primary type of object to be stored in T, and the
-// type of HashKey class being used in K (see e_hashkeys.h for some basic key 
-// class types that implement the required interface).
+// Provide the template the primary type of object to be stored in item_type, 
+// and the type of HashKey class being used in key_type (see e_hashkeys.h for
+// some basic key class types that implement the required interface).
 //
 // Pass the pointer-to-member from the contained type for the key and the
 // link (must be a DLListItem<T>). The hash table uses these pointer-to-
@@ -65,7 +65,7 @@ protected:
    unsigned int   numChains;   // number of chains
    unsigned int   numItems;    // number of items currently in table
    float          loadFactor;  // load = numitems / numchains
-   int            iteratorPos;
+   int            iteratorPos; // current position of tableIterator
    
    void calcLoadFactor() { loadFactor = (float)numItems / numChains; }
 
@@ -354,9 +354,9 @@ public:
    // Pass NULL in object to start a new search. NULL is returned when the 
    // entire table has been iterated over.
    //
-   item_type *tableIterator(item_type *object)
+   const item_type *tableIterator(const item_type *object)
    {
-      item_type *ret = NULL;
+      const item_type *ret = NULL;
 
       if(!isInit)
          return NULL;
@@ -365,7 +365,7 @@ public:
       if(object)
       {
          // is there another object on the same chain?
-         link_type &link = object->*linkPtr;
+         const link_type &link = object->*linkPtr;
 
          if(link.dllNext)
             ret = link.dllNext->dllObject;
@@ -383,6 +383,16 @@ public:
       }
 
       return ret;
+   }
+
+   //
+   // tableIterator
+   //
+   // Mutable pointer overload.
+   //
+   item_type *tableIterator(item_type *object)
+   {
+      return const_cast<item_type *>(tableIterator(const_cast<const item_type *>(object)));
    }
 
    //

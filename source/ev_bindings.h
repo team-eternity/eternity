@@ -27,6 +27,25 @@
 #ifndef EV_BINDINGS_H__
 #define EV_BINDINGS_H__
 
+struct ev_lockdef_t
+{
+   int special; // special number
+   int lockID;  // lockdef ID number
+};
+
+#define EV_LOCKDEF_REDCARD     1
+#define EV_LOCKDEF_BLUECARD    2
+#define EV_LOCKDEF_YELLOWCARD  3
+#define EV_LOCKDEF_REDSKULL    4
+#define EV_LOCKDEF_BLUESKULL   5
+#define EV_LOCKDEF_YELLOWSKULL 6
+#define EV_LOCKDEF_ANYKEY      100
+#define EV_LOCKDEF_ALL6        101
+#define EV_LOCKDEF_REDGREEN    129
+#define EV_LOCKDEF_BLUE        130
+#define EV_LOCKDEF_YELLOW      131
+#define EV_LOCKDEF_ALL3        229
+
 extern ev_action_t  NullAction;
 extern ev_action_t  BoomGenAction;
 
@@ -34,9 +53,13 @@ extern ev_binding_t DOOMBindings[];
 extern ev_binding_t HereticBindings[];
 extern ev_binding_t HexenBindings[];
 
-extern size_t DOOMBindingsLen;
-extern size_t HereticBindingsLen;
-extern size_t HexenBindingsLen;
+extern const size_t DOOMBindingsLen;
+extern const size_t HereticBindingsLen;
+extern const size_t HexenBindingsLen;
+
+extern ev_lockdef_t DOOMLockDefs[];
+
+extern const size_t DOOMLockDefsLen;
 
 #endif
 

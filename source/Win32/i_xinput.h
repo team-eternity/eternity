@@ -32,6 +32,12 @@
 
 #include "../hal/i_gamepads.h"
 
+//
+// XInputGamePadDriver
+//
+// Implements support for XBox 360 controller and compatible devices through
+// their native interface.
+//
 class XInputGamePadDriver : public HALGamePadDriver
 {
 public:
@@ -43,12 +49,42 @@ public:
 
 extern XInputGamePadDriver i_xinputGamePadDriver;
 
+//
+// XInputHapticInterface
+//
+// Exposes support for force feedback effects through XInput gamepads.
+//
+class XInputHapticInterface : public HALHapticInterface
+{
+   DECLARE_RTTI_TYPE(XInputHapticInterface, HALHapticInterface)
+
+protected:
+   unsigned long dwUserIndex;
+   bool pauseState;
+
+   void zeroState();
+
+public:
+   XInputHapticInterface(unsigned long userIdx = 0);
+   virtual void startEffect(effect_e effect, int data1, int data2);
+   virtual void pauseEffects(bool effectsPaused);
+   virtual void updateEffects();
+   virtual void clearEffects();
+};
+
+//
+// XInputGamePad
+//
+// Represents an actual XInput device.
+//
 class XInputGamePad : public HALGamePad
 {
    DECLARE_RTTI_TYPE(XInputGamePad, HALGamePad)
 
 protected:
    unsigned long dwUserIndex;
+   XInputHapticInterface haptics;
+
    float normAxis(int value, int threshold, int maxvalue);
    void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
@@ -58,6 +94,8 @@ public:
    virtual bool select();
    virtual void deselect();
    virtual void poll();
+   
+   virtual HALHapticInterface *getHapticInterface() { return &haptics; }
 };
 
 #endif

@@ -178,7 +178,7 @@ static void HSendPacket(int node, int flags)
 // HGetPacket
 // Returns false if no packet is waiting
 //
-static bool HGetPacket(void)
+static bool HGetPacket()
 {       
    if(reboundpacket)
    {
@@ -209,7 +209,7 @@ static bool HGetPacket(void)
 //
 // GetPackets
 //
-static void GetPackets(void)
+static void GetPackets()
 {
    int         netconsole;
    int         netnode;
@@ -267,15 +267,6 @@ static void GetPackets(void)
          continue;
       }
 
-      /*
-      // check for a remote game kill
-      if(netbuffer->checksum & NCMD_KILL)
-      {
-         C_Printf(FC_ERROR "Killed by network driver\n");
-         D_QuitNetGame();
-      }
-      */
-
       // check for a remote game kill
       if(netbuffer->checksum & NCMD_KILL)
          I_Error("Killed by network driver\n");
@@ -326,17 +317,13 @@ static void GetPackets(void)
 
 int gametime;
 
-/*
-int newtics, ticnum;    // the number of tics being built, tic number
-*/
-
 //
 // NetUpdate
 //
 // Builds ticcmds for console player,
 // sends out a packet
 //
-void NetUpdate(void)
+void NetUpdate()
 {
    int nowtime;
    int newtics;
@@ -427,11 +414,10 @@ void D_KickPlayer(int playernum)
 }
 */
 
-
 //
 // CheckAbort
 //
-static void CheckAbort(void)
+static void CheckAbort()
 {
    int stoptic;
    
@@ -453,7 +439,7 @@ static void CheckAbort(void)
 // their proper names, colors, and skins in netgames. This shows how
 // ridiculous the current system really is, if nothing else.
 //
-static void D_InitPlayers(void)
+static void D_InitPlayers()
 {
    int i;
 
@@ -480,7 +466,7 @@ static void D_InitPlayers(void)
 //
 // D_ArbitrateNetStart
 //
-static void D_ArbitrateNetStart(void)
+static void D_ArbitrateNetStart()
 {
    int     i;
    bool gotinfo[MAXNETNODES];
@@ -581,7 +567,7 @@ extern int viewangleoffset;
 //
 // Works out player numbers among the net participants
 //
-void D_CheckNetGame(void)
+void D_CheckNetGame()
 {
    int i;
    
@@ -604,7 +590,7 @@ void D_CheckNetGame(void)
    atexit(D_QuitNetGame);       // killough
 }
 
-void D_InitNetGame(void)
+void D_InitNetGame()
 {
    int i;
    
@@ -639,7 +625,7 @@ void D_InitNetGame(void)
 // Called before quitting to leave a net game
 // without hanging the other players
 //
-void D_QuitNetGame(void)
+void D_QuitNetGame()
 {
    int i, j;
       
@@ -699,7 +685,7 @@ extern bool advancedemo;
 // Run new game tics.  Returns true if at least one tic
 // was run.
 
-static bool RunGameTics(void)
+static bool RunGameTics()
 {
    static int  oldentertic;
    int         i;
@@ -859,7 +845,7 @@ static bool RunGameTics(void)
    return true;
 }
 
-void TryRunTics(void)
+void TryRunTics()
 {
    int i;
    static int oldentertic;

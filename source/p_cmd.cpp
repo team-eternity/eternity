@@ -225,20 +225,7 @@ extern int enable_nuke;         // p_spec.c
 VARIABLE_BOOLEAN(enable_nuke, NULL, onoff);
 CONSOLE_NETVAR(nukage, enable_nuke, cf_server, netcmd_nukage) {}
 
-// weapon changing speed
-
-VARIABLE_INT(weapon_speed, &default_weapon_speed, 1, 200, NULL);
-CONSOLE_NETVAR(weapspeed, weapon_speed, cf_server, netcmd_weapspeed) {}
-
 // allow mlook with bfg
-
-//
-// NETCODE_FIXME: bfglook is currently a dead option.
-//
-
-const char *str_bfglook[] = { "off", "on", "fixedgun" };
-VARIABLE_INT(bfglook,   NULL,                   0, 2, str_bfglook);
-CONSOLE_NETVAR(bfglook, bfglook, cf_server, netcmd_bfglook) {}
 
 // davidph 06/06/12 -- haleyjd 06/07/12: promoted to netvar since sync-critical
 VARIABLE_TOGGLE(pitchedflight, &default_pitchedflight, onoff)

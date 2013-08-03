@@ -32,6 +32,7 @@
 #include "c_runcmd.h"
 #include "e_args.h"
 #include "e_exdata.h"
+#include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -160,14 +161,29 @@ CONSOLE_COMMAND(e_thingtype, 0)
 }
 
 //
+// E_dumpMetaTableToConsole
+//
+// Routine for pretty output of the properties stored in a metatable.
+//
+static void E_dumpMetaTableToConsole(const MetaTable *meta)
+{
+   const MetaObject *obj = NULL;
+
+   while((obj = meta->tableIterator(obj)))
+   {
+      C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
+               FC_NORMAL "%s", 
+               obj->getKey(), obj->getClassName(), obj->toString());
+   }
+}
+
+//
 // e_dumpmeta
 //
 // Displays the properties stored in the metatable for the given thingtype.
 //
 CONSOLE_COMMAND(e_dumpmeta, 0)
 {
-   MetaTable  *meta;
-   MetaObject *obj = NULL;
    int num;
 
    if(!Console.argc)
@@ -186,13 +202,49 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 
    C_Printf(FC_HI "Metadata for Thing Type %s:\n", mobjinfo[num]->name);
 
-   meta = mobjinfo[num]->meta;
+   E_dumpMetaTableToConsole(mobjinfo[num]->meta);
+}
 
-   while((obj = meta->tableIterator(obj)))
+//
+// e_dumpitemeffect
+//
+// Displays the properties of an item effect metatable.
+//
+CONSOLE_COMMAND(e_dumpitemeffect, 0)
+{
+   if(!Console.argc)
    {
-      C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
-               FC_NORMAL "%s", 
-               obj->getKey(), obj->getClassName(), obj->toString());
+      C_Printf("usage: e_dumpitemeffect mnemonic\n");
+      return;
+   }
+
+   itemeffect_t *item = E_ItemEffectForName(Console.argv[0]->constPtr());
+
+   if(!item)
+   {
+      C_Printf("Item effect not found\n");
+      return;
+   }
+
+   C_Printf(FC_HI "Metadata for item effect %s:\n", item->getKey());
+
+   E_dumpMetaTableToConsole(item);
+}
+
+//
+// e_listkeyitems
+//
+// Lists all key-type artifact definitions.
+//
+CONSOLE_COMMAND(e_listkeyitems, 0)
+{
+   size_t numKeys = E_GetNumKeyItems();
+
+   C_Printf(FC_HI "Keys:\n");
+   for(size_t i = 0; i < numKeys; i++)
+   {
+      auto effect = E_KeyItemForIndex(i);
+      C_Printf(" %s\n", effect->getKey());
    }
 }
 

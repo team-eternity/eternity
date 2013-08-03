@@ -62,8 +62,12 @@ int E_TranslucCB2  (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 
 // MetaTable adapter utilities
-class  MetaTable;
+class MetaTable;
 void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype = NULL);
 
 // Advanced libConfuse utilities
 class qstring;

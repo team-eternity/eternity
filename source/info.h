@@ -31,7 +31,10 @@
 
 #include "m_dllist.h"
 
-class MetaTable;
+struct actionargs_t;
+struct arglist_t;
+class  MetaTable;
+class  Mobj;
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -151,26 +154,23 @@ enum
 
 typedef int statenum_t;
 
-class Mobj;
-
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
 struct state_t
 {
-   DLListItem<state_t> namelinks;      // haleyjd 03/30/10: new hashing: by name
-   DLListItem<state_t> numlinks;       // haleyjd 03/30/10: new hashing: by dehnum
+   DLListItem<state_t> namelinks;            // haleyjd 03/30/10: new hashing: by name
+   DLListItem<state_t> numlinks;             // haleyjd 03/30/10: new hashing: by dehnum
 
-   spritenum_t sprite;                 // sprite number to show
-   int         frame;                  // which frame/subframe of the sprite is shown
-   int         tics;                   // number of gametics this frame should last
-   void        (*action)(Mobj *);      // code pointer to function for action if any
-   void        (*oldaction)(Mobj *);   // haleyjd: original action, for DeHackEd
-   statenum_t  nextstate;              // index of next state, or -1
-   int         misc1, misc2;           // used for psprite positioning
-   int         particle_evt;           // haleyjd: determines an event to run
-   
-   struct arglist_s *args;             // haleyjd: state arguments
+   spritenum_t sprite;                       // sprite number to show
+   int         frame;                        // which frame/subframe of the sprite is shown
+   int         tics;                         // number of gametics this frame should last
+   void        (*action)(actionargs_t *);    // code pointer to function for action if any
+   void        (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
+   statenum_t  nextstate;                    // index of next state, or -1
+   int         misc1, misc2;                 // used for psprite positioning
+   int         particle_evt;                 // haleyjd: determines an event to run  
+   arglist_t  *args;                         // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
@@ -227,8 +227,6 @@ enum
   MT_IFOG,
   MT_TELEPORTMAN,
   MT_EXTRABFG,
-
-  MT_MISC24 = 72, // backpack
 
   MT_PUSH = 138, // controls push source -- phares
   MT_PULL,       // controls pull source -- phares 3/20/98
@@ -386,7 +384,7 @@ struct mobjinfo_t
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
 
-   void (*nukespec)(Mobj *); // haleyjd 08/18/09: nukespec made a native property
+   void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
    DLListItem<mobjinfo_t> namelinks; // haleyjd 11/03/11: new hashing: by name

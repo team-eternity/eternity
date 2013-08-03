@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "a_args.h"
 #include "a_small.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
@@ -292,7 +293,16 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       // Call action functions when the state is set
 
       if(st->action)
-         st->action(mobj);
+      {
+         actionargs_t actionargs;
+
+         actionargs.actiontype = actionargs_t::MOBJFRAME;
+         actionargs.actor      = mobj;
+         actionargs.args       = st->args;
+         actionargs.pspr       = NULL;
+
+         st->action(&actionargs);
+      }
 
       // haleyjd 05/20/02: run particle events
       if(st->particle_evt)
@@ -410,7 +420,7 @@ void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move)
 // Attempts to move something if it has momentum.
 //
 // killough 11/98: minor restructuring
-
+//
 void P_XYMovement(Mobj* mo)
 {
    player_t *player = mo->player;
@@ -424,14 +434,9 @@ void P_XYMovement(Mobj* mo)
       if(mo->flags & MF_SKULLFLY)
       {
          // the skull slammed into something
-
          mo->flags &= ~MF_SKULLFLY;
          mo->momz = 0;
-
-         if(demo_version >= 335)
-            P_SetMobjStateNF(mo, mo->info->spawnstate);
-         else
-            P_SetMobjState(mo, mo->info->spawnstate);
+         P_SetMobjState(mo, mo->info->spawnstate);
       }
 
       return;
@@ -1733,22 +1738,24 @@ int iquehead, iquetail;
 //
 void Mobj::removeThinker()
 {
-   // haleyjd 04/14/03: restructured
    bool respawnitem = false;
 
-   if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
+   if(this->flags3 & MF3_SUPERITEM)
    {
-      respawnitem = true; // respawning super powerups
-   }
-   else if((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL))
-   {
-      respawnitem = true; // respawning barrels
+      // super items ONLY respawn when enabled through dmflags
+      respawnitem = ((dmflags & DM_RESPAWNSUPER) == DM_RESPAWNSUPER);
    }
    else
    {
-      respawnitem =
-         !((this->flags ^ MF_SPECIAL) & (MF_SPECIAL | MF_DROPPED)) &&
-         !(this->flags3 & MF3_NOITEMRESP);
+      // normal items respawn, and respawning barrels dmflag
+      bool mayrespawn = 
+         ((this->flags & MF_SPECIAL) || 
+          ((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL)));
+
+      if(mayrespawn &&
+         !(this->flags  & MF_DROPPED) &&   // dropped items don't respawn
+         !(this->flags3 & MF3_NOITEMRESP)) // NOITEMRESP items don't respawn
+         respawnitem = true;
    }
 
    if(respawnitem)
@@ -1757,15 +1764,16 @@ void Mobj::removeThinker()
       itemrespawnque[iquehead] = this->spawnpoint;
       itemrespawntime[iquehead++] = leveltime;
       if((iquehead &= ITEMQUESIZE-1) == iquetail)
+      {
          // lose one off the end?
          iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+      }
    }
 
    // haleyjd 02/02/04: remove from tid hash
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-
    clip->unsetThingPosition(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
@@ -1781,17 +1789,12 @@ void Mobj::removeThinker()
    }
 
    // stop any playing sound
-
    S_StopSound(this, CHAN_ALL);
 
-   // killough 11/98:
-   //
-   // Remove any references to other mobjs.
-   //
-   // Older demos might depend on the fields being left alone, however,
-   // if multiple thinkers reference each other indirectly before the
-   // end of the current tic.
-
+   // killough 11/98: Remove any references to other mobjs.
+   // Older demos might depend on the fields being left alone, however, if 
+   // multiple thinkers reference each other indirectly before the end of the
+   // current tic.
    if(demo_version >= 203)
    {
       P_SetTarget<Mobj>(&this->target,    NULL);
@@ -1799,7 +1802,7 @@ void Mobj::removeThinker()
       P_SetTarget<Mobj>(&this->lastenemy, NULL);
    }
 
-   // free block
+   // remove from thinker list
    Thinker::removeThinker();
 }
 
@@ -1840,7 +1843,7 @@ int P_FindDoomedNum(int type)
 //
 // P_RespawnSpecials
 //
-void P_RespawnSpecials(void)
+void P_RespawnSpecials()
 {
    fixed_t x, y, z;
    subsector_t*  ss;
@@ -1859,9 +1862,6 @@ void P_RespawnSpecials(void)
    y = mthing->y << FRACBITS;
 
    // spawn a teleport fog at the new spot
-
-   // FIXME: Heretic support?
-
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
@@ -1895,10 +1895,8 @@ void P_SpawnPlayer(mapthing_t* mthing)
    player_t* p;
    fixed_t   x, y, z;
    Mobj*   mobj;
-   int       i;
 
    // not playing?
-
    if(!playeringame[mthing->type - 1])
       return;
 
@@ -1915,16 +1913,16 @@ void P_SpawnPlayer(mapthing_t* mthing)
    // sf: set color translations for player sprites
    mobj->colour = players[mthing->type - 1].colormap;
 
-   mobj->angle      = R_WadToAngle(mthing->angle);
-   mobj->player     = p;
-   mobj->health     = p->health;
+   mobj->angle  = R_WadToAngle(mthing->angle);
+   mobj->player = p;
+   mobj->health = p->health;
 
    // haleyjd: verify that the player skin is valid
    if(!p->skin)
       I_Error("P_SpawnPlayer: player skin undefined!\n");
 
-   mobj->skin       = p->skin;
-   mobj->sprite     = p->skin->sprite;
+   mobj->skin   = p->skin;
+   mobj->sprite = p->skin->sprite;
 
    p->mo            = mobj;
    p->playerstate   = PST_LIVE;
@@ -1943,14 +1941,10 @@ void P_SpawnPlayer(mapthing_t* mthing)
    P_SetupPsprites(p);
 
    // give all cards in death match mode
-
    if(GameType == gt_dm)
-   {
-      for(i = 0 ; i < NUMCARDS ; i++)
-         p->cards[i] = true;
-   }
+      E_GiveAllKeys(p);
 
-   if(mthing->type-1 == consoleplayer)
+   if(mthing->type - 1 == consoleplayer)
    {
       ST_Start(); // wake up the status bar
       HU_Start(); // wake up the heads up text

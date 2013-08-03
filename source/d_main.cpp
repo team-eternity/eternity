@@ -38,6 +38,7 @@
 
 #include "z_zone.h"
 
+#include "hal/i_directory.h"
 #include "hal/i_platform.h"
 
 #include "acs_intr.h"
@@ -843,6 +844,8 @@ enum
 {
    BASE_CMDLINE,
    BASE_ENVIRON,
+   BASE_HOMEDIR,
+   BASE_INSTALL,
    BASE_WORKING,
    BASE_EXEDIR,
    BASE_BASEPARENT, // for user dir only
@@ -864,8 +867,9 @@ static void D_SetBasePath()
    // Priority:
    // 1. Command-line argument "-base"
    // 2. Environment variable "ETERNITYBASE"
-   // 3. /base under DoomExeDir
-   // 4. /base under working directory
+   // 3. OS-specific install directory.
+   // 4. /base under DoomExeDir
+   // 5. /base under working directory
 
    // check command-line
    if((p = M_CheckParm("-base")) && p < myargc - 1)
@@ -883,6 +887,15 @@ static void D_SetBasePath()
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
+   }
+
+   // check OS-specific install dir
+   if(res != BASE_ISGOOD && (s = I_PlatformInstallDirectory()))
+   {
+      basedir = s;
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_INSTALL;
    }
 
    // check exe dir
@@ -929,6 +942,9 @@ static void D_SetBasePath()
    case BASE_ENVIRON:
       s = "by environment";
       break;
+   case BASE_INSTALL:
+      s = "to install directory";
+      break;
    case BASE_WORKING:
       s = "to working directory";
       break;
@@ -942,6 +958,19 @@ static void D_SetBasePath()
 
    printf("Base path set %s.\n", s);
 }
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+static const char *const userdirs[] =
+{
+   "/doom",
+   "/doom2",
+   "/hacx",
+   "/heretic",
+   "/plutonia",
+   "/shots",
+   "/tnt",
+};
+#endif
 
 //
 // D_CheckUserPath
@@ -1017,10 +1046,11 @@ static void D_SetUserPath()
    // Priority:
    // 1. Command-line argument "-user"
    // 2. Environment variable "ETERNITYUSER"
-   // 3. /user under DoomExeDir
-   // 4. /user under working directory
-   // 5. basepath/../user
-   // 6. use basepath itself.
+   // 3. OS-specific home directory.
+   // 4. /user under DoomExeDir
+   // 5. /user under working directory
+   // 6. basepath/../user
+   // 7. use basepath itself.
 
    // check command-line
    if((p = M_CheckParm("-user")) && p < myargc - 1)
@@ -1039,6 +1069,40 @@ static void D_SetUserPath()
       if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
    }
+
+   // check OS-specific home dir
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+   if(res != BASE_ISGOOD)
+   {
+      qstring tmp;
+
+      // Under Linux (and POSIX generally) use $XDG_CONFIG_HOME/eternity/user.
+      if((s = getenv("XDG_CONFIG_HOME")) && *s)
+      {
+         userdir = s;
+      }
+      // But fall back to $HOME/.config/eternity/user.
+      else if((s = getenv("HOME")))
+      {
+         userdir = s;
+         I_CreateDirectory(userdir.pathConcatenate("/.config"));
+      }
+
+      if(s)
+      {
+         // Try to create this directory and populate it with needed directories.
+         I_CreateDirectory(userdir.pathConcatenate("/eternity"));
+         if(I_CreateDirectory(userdir.pathConcatenate("/user")))
+         {
+            for(size_t i = 0; i != earrlen(userdirs); ++i)
+               I_CreateDirectory((tmp = userdir).pathConcatenate(userdirs[i]));
+         }
+
+         if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+            source = BASE_HOMEDIR;
+      }
+   }
+#endif
 
    // check exe dir
    if(res != BASE_ISGOOD)
@@ -1084,6 +1148,9 @@ static void D_SetUserPath()
       break;
    case BASE_ENVIRON:
       s = "by environment";
+      break;
+   case BASE_HOMEDIR:
+      s = "to home directory";
       break;
    case BASE_WORKING:
       s = "to working directory";
@@ -2200,6 +2267,9 @@ static void D_DoomInit(void)
    // that kludge
    if(modifiedgame && (GameModeInfo->flags & GIF_SHAREWARE))
       I_Error("\nYou cannot -file with the shareware version. Register!\n");
+
+   // haleyjd 08/03/13: load any deferred mission metadata
+   D_DoDeferredMissionMetaData();
 
    // haleyjd 11/12/09: Initialize post-W_InitMultipleFiles GameModeInfo
    // overrides and adjustments here.

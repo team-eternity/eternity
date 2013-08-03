@@ -494,7 +494,6 @@ inline static bool P_SectorIsSpecial(sector_t *sector)
 void P_PlayerThink(player_t *player)
 {
    ticcmd_t*    cmd;
-   weapontype_t newweapon;
 
    // killough 2/8/98, 3/21/98:
    // (this code is necessary despite questions raised elsewhere in a comment)
@@ -572,7 +571,7 @@ void P_PlayerThink(player_t *player)
       }
    }
   
-   P_CalcHeight (player); // Determines view height and bobbing
+   P_CalcHeight(player); // Determines view height and bobbing
    
    // haleyjd: are we falling? might need to scream :->
    if(!comp[comp_fallingdmg] && demo_version >= 329)
@@ -600,22 +599,6 @@ void P_PlayerThink(player_t *player)
 
    // haleyjd: Heretic current specials
    P_HereticCurrent(player);
-
-   // Sprite Height problem...                                         // phares
-   // Future code:                                                     //  |
-   // It's possible that at this point the player is standing on top   //  V
-   // of a Thing that could cause him some damage, like a torch or
-   // burning barrel. We need a way to generalize Thing damage by
-   // grabbing a bit in the Thing's options to indicate damage. Since
-   // this is competing with other attributes we may want to add,
-   // we'll put this off for future consideration when more is
-   // known.
-
-   // Future Code:                                                     //  ^
-   // Check to see if the object you've been standing on has moved     //  |
-   // out from underneath you.                                         // phares
-
-   // haleyjd: burn damage is now implemented, but is handled elsewhere.
    
    // Check for weapon change.
    
@@ -630,13 +613,13 @@ void P_PlayerThink(player_t *player)
       //  when the weapon psprite can do it
       //  (read: not in the middle of an attack).
       
-      newweapon = (weapontype_t)((cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT);
+      weapontype_t newweapon = (cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT;
       
       // killough 3/22/98: For demo compatibility we must perform the fist
       // and SSG weapons switches here, rather than in G_BuildTiccmd(). For
       // other games which rely on user preferences, we must use the latter.
 
-      // WEAPON_FIXME: bunch of crap.
+      // WEAPON_FIXME: bunch of crap (compat weapon changing)
 
       if(demo_compatibility)
       { 
@@ -654,14 +637,20 @@ void P_PlayerThink(player_t *player)
 
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
 
-      // WEAPON_FIXME: shareware availability -> weapon property
+      // WEAPON_FIXME: setting pendingweapon
 
       if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
-         if((newweapon != wp_plasma && newweapon != wp_bfg)
-            || (GameModeInfo->id != shareware) )
+         // haleyjd 06/28/13: generalized for EDF weapon system
+         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
+         
+         if(pendingweapon && 
+            !(GameModeInfo->flags & GIF_SHAREWARE && 
+              pendingweapon->flags & WPF_NOTSHAREWARE))
+         {
             player->pendingweapon = newweapon;
+         }
       }
    }
 

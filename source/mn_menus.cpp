@@ -2605,16 +2605,17 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
 
 static menuitem_t mn_joystick_items[] =
 {
-   { it_title,        "Gamepad Settings",          NULL,   NULL     },
-   { it_gap                                                         },
-   { it_info,         "Devices"                                     },
-   { it_runcmd,       "Select gamepad...",         "mn_joysticks"   },
-   { it_runcmd,       "Test gamepad...",           "mn_padtest"     },
-   { it_gap                                                         },
-   { it_info,         "Settings"                                    },
-   { it_runcmd,       "Load profile...",           "mn_profiles"    },
-   { it_variable,     "SDL sensitivity",           "i_joysticksens" },
-   { it_end                                                         }
+   { it_title,        "Gamepad Settings",          NULL,   NULL      },
+   { it_gap                                                          },
+   { it_info,         "Devices"                                      },
+   { it_runcmd,       "Select gamepad...",         "mn_joysticks"    },
+   { it_runcmd,       "Test gamepad...",           "mn_padtest"      },
+   { it_gap                                                          },
+   { it_info,         "Settings"                                     },
+   { it_runcmd,       "Load profile...",           "mn_profiles"     },
+   { it_variable,     "SDL sensitivity",           "i_joysticksens"  },
+   { it_variable,     "Force feedback",            "i_forcefeedback" },
+   { it_end                                                          }
 };
 
 menu_t menu_joystick =
@@ -3128,26 +3129,18 @@ CONSOLE_COMMAND(mn_automap, 0)
 //
 
 extern menu_t menu_weapons;
-extern menu_t menu_weapons_pref;
 
 static const char *mn_weapons_names[] =
 {
    "options",
-   "preferences",
    NULL
 };
 
 static menu_t *mn_weapons_pages[] =
 {
    &menu_weapons,
-   &menu_weapons_pref,
    NULL
 };
-
-/*
-YSHEAR_FIXME: this feature may return after EDF for weapons
-{it_toggle,   "allow mlook with bfg",       "bfglook"},
-*/
 
 static menuitem_t mn_weapons_items[] =
 {
@@ -3160,7 +3153,6 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Fist/SSG toggle",                "doom_weapon_toggles"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
-   {it_variable,   "Change time",                    "weapspeed"},
    {it_gap},
    {it_end},
 };
@@ -3169,45 +3161,13 @@ menu_t menu_weapons =
 {
    mn_weapons_items,
    NULL, 
-   &menu_weapons_pref,                  // next page
+   NULL,                                // next page
    &menu_weapons,                       // rootpage
    200, 15,                             // x,y offset
    4,                                   // starting item
    mf_background,                       // full screen
    NULL,                                // no drawer
    mn_weapons_names,                    // TOC stuff
-   mn_weapons_pages,
-};
-
-static menuitem_t mn_weapons_pref_items[] =
-{
-   {it_title,      "Weapons",       NULL, "M_WEAP"},
-   {it_gap},
-   {it_info,       "Preferences", NULL, NULL, MENUITEM_CENTERED},
-   {it_gap},
-   {it_variable,   "1",                     "weappref_1"},
-   {it_variable,   "2",                     "weappref_2"},
-   {it_variable,   "3",                     "weappref_3"},
-   {it_variable,   "4",                     "weappref_4"},
-   {it_variable,   "5",                     "weappref_5"},
-   {it_variable,   "6",                     "weappref_6"},
-   {it_variable,   "7",                     "weappref_7"},
-   {it_variable,   "8",                     "weappref_8"},
-   {it_variable,   "9",                     "weappref_9"},
-   {it_end},
-};
-
-menu_t menu_weapons_pref =
-{
-   mn_weapons_pref_items,         // items
-   &menu_weapons,                 // previous page
-   NULL,                          // next page
-   &menu_weapons,                 // rootpage
-   88, 15,                        // coords
-   4,                             // first item
-   mf_background|mf_leftaligned,  // flags
-   NULL,                          // no drawer
-   mn_weapons_names,              // TOC stuff
    mn_weapons_pages,
 };
 
@@ -3783,7 +3743,7 @@ CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
    lastMatch = NULL;
 }
 
-static void MN_InitSearchStr(void)
+static void MN_InitSearchStr()
 {
    mn_searchstr = estrdup("");
 }
@@ -3970,7 +3930,7 @@ CONSOLE_COMMAND(mn_config, 0)
 // Skin Viewer Command
 //
 
-extern void MN_InitSkinViewer(void);
+extern void MN_InitSkinViewer();
 
 CONSOLE_COMMAND(skinviewer, 0)
 {
@@ -4022,8 +3982,8 @@ int mn_classic_menus;
 // MN_LinkClassicMenus
 //
 // haleyjd 08/31/06: This function is called to turn classic menu system support
-// on or off. When it's on, the old main menu above is patched to point to the
-// other old menus.
+// on or off. When it's on, the main menu is patched to point to the old classic
+// menus.
 //
 void MN_LinkClassicMenus(int link)
 {
@@ -4061,7 +4021,7 @@ static menuitem_t mn_old_option_items[] =
 static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
 static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 
-static void MN_OldOptionsDrawer(void)
+static void MN_OldOptionsDrawer()
 {
    V_DrawPatch(108, 15, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "M_OPTTTL", PU_CACHE));
@@ -4128,7 +4088,6 @@ CONSOLE_COMMAND(mn_old_sound, 0)
    MN_StartMenu(&menu_old_sound);
 }
 
-// TODO: Original Save and Load Menus?
 // TODO: Draw skull cursor on Credits pages?
 
 // EOF

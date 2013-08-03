@@ -88,8 +88,11 @@ public:
          return false;
       }
 
+      // Find a type by name at runtime
       static Type *FindType(const char *pName);
 
+      // Find a type by name at runtime, and require that it be a descendant of
+      // a particular RTTIObject-inheriting class at the same time.
       template<typename T> static T *FindType(const char *pName)
       {
          Type *type = FindType(pName);
@@ -100,7 +103,7 @@ public:
          return static_cast<T *>(type);
       }
 
-      // virtual constructor factory method
+      // Virtual constructor factory method
       virtual RTTIObject *newObject() const { return new RTTIObject; }
    };
 
@@ -163,17 +166,22 @@ public:
    // Forwarding statics for Type class utilities
    //
 
+   // Find a type by name at runtime.
    static Type *FindType(const char *pName)
    {
       return Type::FindType(pName);
    }
 
-   template<typename T> T *FindType(const char *pName)
+   // Find a type by name at runtime, and require that it be a descendant of a
+   // particular RTTIObject-inheriting class at the same time.
+   template<typename T> static T *FindType(const char *pName)
    {
       return Type::FindType<T>(pName);
    }
 
-   template<typename T> typename T::Type *FindTypeCls(const char *pName)
+   // As above, but phrased in terms of the base type rather than its RTTI
+   // proxy inner class. Just a convenience shortcut, really.
+   template<typename T> static typename T::Type *FindTypeCls(const char *pName)
    {
       return Type::FindType<typename T::Type>(pName);
    }
@@ -227,22 +235,24 @@ public:
 //   name::StaticType (the parent instances of StaticType are progressively
 //   hidden in each descendant scope).
 //
-
 #define DECLARE_RTTI_TYPE_CTOR(name, inherited, ctor) \
-public: \
-   typedef inherited Super; \
-   class Type : public Super::Type \
-   { \
-   protected: \
-      Type(char const *pName, Super::Type *pParent) \
-       : Super::Type( pName, pParent ) {} \
-   public: \
-      typedef name Class; \
-      friend class name; \
-      ctor \
-   }; \
-   static Type StaticType; \
-   virtual const Type *getDynamicType() const { return &StaticType; } \
+public:                                               \
+   typedef inherited Super;                           \
+   class Type : public Super::Type                    \
+   {                                                  \
+   protected:                                         \
+      Type(char const *pName, Super::Type *pParent)   \
+       : Super::Type( pName, pParent ) {}             \
+   public:                                            \
+      typedef name Class;                             \
+      friend class name;                              \
+      ctor                                            \
+   };                                                 \
+   static Type StaticType;                            \
+   virtual const Type *getDynamicType() const         \
+   {                                                  \
+      return &StaticType;                             \
+   }                                                  \
 private:
 
 //
@@ -273,10 +283,14 @@ private:
 //   This defines FireFlickerThinker::StaticType and constructs it with 
 //   "FireFlickerThinker" as its class name.
 // 
-
 #define IMPLEMENT_RTTI_TYPE(name) \
 name::Type name::StaticType(#name, &Super::StaticType);
 
+//
+// RTTI
+//
+// Shorthand for getting a class's runtime type object instance.
+//
 #define RTTI(cls) (&cls::StaticType)
 
 //
