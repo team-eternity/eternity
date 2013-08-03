@@ -2268,6 +2268,9 @@ static void D_DoomInit(void)
    if(modifiedgame && (GameModeInfo->flags & GIF_SHAREWARE))
       I_Error("\nYou cannot -file with the shareware version. Register!\n");
 
+   // haleyjd 08/03/13: load any deferred mission metadata
+   D_DoDeferredMissionMetaData();
+
    // haleyjd 11/12/09: Initialize post-W_InitMultipleFiles GameModeInfo
    // overrides and adjustments here.
    D_InitGMIPostWads();

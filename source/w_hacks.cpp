@@ -25,7 +25,9 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_iwad.h"
 #include "m_hash.h"
+#include "w_levels.h"
 #include "w_wad.h"
 
 typedef void (*hackhandler_t)(filelump_t *, int);
@@ -84,6 +86,24 @@ static void W_doGothic2Hack(filelump_t *fileinfo, int numlumps)
 }
 
 //
+// W_doNerveHack
+//
+// If NERVE.WAD (No Rest for the Living) is added on the command line, rather
+// than through the managed directory system, I still want to load its metadata.
+//
+static void W_doNerveHack(filelump_t *fileinfo, int numlumps)
+{
+   static bool firsttime = true;
+
+   if(firsttime) // don't do this more than once, in case of runtime loading
+   {
+      // When loaded this way, the metadata definitions apply to global gameplay
+      D_DeferredMissionMetaData("ENRVMETA", MD_NONE);
+      firsttime = false;
+   }
+}
+
+//
 // Wad Directory Hacks
 //
 // Some very prominent and historically significant wads such as GothicDM2
@@ -95,6 +115,7 @@ static void W_doGothic2Hack(filelump_t *fileinfo, int numlumps)
 static w_dirhack_t w_dirhacks[] =
 {
    { "9a296941da455d0009ee3988b55d50ea363a4a84", W_doGothic2Hack }, // gothic2.wad
+   { "fe650cc58c8f12a3642b6f5ef2b3368630a4aaa6", W_doNerveHack   }, // nerve.wad
 
    // Terminator, must be last
    { NULL, NULL }

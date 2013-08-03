@@ -66,6 +66,8 @@ char   *D_GetDoomWadPath(size_t i);
 
 void D_IdentifyVersion();
 void D_MissionMetaData(const char *lump, int mission);
+void D_DeferredMissionMetaData(const char *lump, int mission);
+void D_DoDeferredMissionMetaData();
 
 #endif
 

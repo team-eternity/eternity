@@ -501,6 +501,39 @@ void D_MissionMetaData(const char *lump, int mission)
    D_parseMetaData(metatext, mission);
 }
 
+struct deferredmetadata_t
+{
+   const char *lumpname;
+   int mission;
+};
+
+static deferredmetadata_t d_deferredMetaData;
+
+//
+// D_DeferredMissionMetaData
+//
+// Defer loading of a mission metadata file at startup, so that it can be
+// scheduled during W_InitMultipleFiles but not done until after the process
+// is complete, since lumps cannot be looked up at that point.
+//
+void D_DeferredMissionMetaData(const char *lump, int mission)
+{
+   d_deferredMetaData.lumpname = lump;
+   d_deferredMetaData.mission  = mission;
+}
+
+//
+// D_DoDeferredMissionMetaData
+//
+// Execute a deferred mission metadata load.
+// This is called right after W_InitMultipleFiles.
+//
+void D_DoDeferredMissionMetaData()
+{
+   if(d_deferredMetaData.lumpname != NULL)
+      D_MissionMetaData(d_deferredMetaData.lumpname, d_deferredMetaData.mission);
+}
+
 //=============================================================================
 //
 // IWAD Detection / Verification Code
