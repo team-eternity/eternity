@@ -30,6 +30,8 @@
 #include "doomdef.h"
 #include "m_dllist.h"
 
+class MetaTable;
+
 //
 // haleyjd 09/11/07: weapon flags
 //
@@ -53,7 +55,7 @@ struct weaponinfo_t
    weapontype_t id;           // haleyjd 06/28/13: weapontype id number
    const char  *name;         // haleyjd 06/29/13: name of weapon
 
-   ammotype_t   ammo;
+   MetaTable   *ammo;         // haleyjd 08/05/13: ammo artifact type
    int          upstate;
    int          downstate;
    int          readystate;
@@ -69,6 +71,10 @@ struct weaponinfo_t
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
+   int          dmstayammo;   // amount of ammo given on pickup in DM when weapons stay
+   int          coopstayammo; // amount of ammo given on pickup in coop when weapons stay
+   int          giveammo;     // normal amount of ammo to give
+   int          dropammo;     // amount of ammo given when dropped
 
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id

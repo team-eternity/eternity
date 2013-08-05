@@ -41,6 +41,7 @@
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_mod.h"
+#include "e_inventory.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_enemy.h"
@@ -196,6 +197,23 @@ static int wpToOrdinal[NUMWEAPONS] =
 };
 
 //
+// P_WeaponHasAmmo
+//
+// haleyjd 08/05/13: Test if a player has ammo for a weapon
+//
+bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
+{
+   itemeffect_t *ammoType = weapon->ammo;
+
+   // a weapon without an ammotype has infinite ammo
+   if(!ammoType)
+      return true;
+
+   // otherwise, read the inventory slot
+   return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot);
+}
+
+//
 // P_NextWeapon
 //
 // haleyjd 03/06/09: Yes this will have to be rewritten for EDF weapons,
@@ -203,10 +221,10 @@ static int wpToOrdinal[NUMWEAPONS] =
 //
 int P_NextWeapon(player_t *player)
 {
-   int currentweapon = wpToOrdinal[player->readyweapon];
-   int newweapon     = currentweapon;
-   int weaptotry;
-   int ammototry;
+   int  currentweapon = wpToOrdinal[player->readyweapon];
+   int  newweapon     = currentweapon;
+   int  weaptotry;
+   bool ammototry;
 
    do
    {
@@ -216,11 +234,9 @@ int P_NextWeapon(player_t *player)
          newweapon = 0;
 
       weaptotry = ordinalToWp[newweapon];
-      ammototry = weaponinfo[weaptotry].ammo;
+      ammototry = P_WeaponHasAmmo(player, &weaponinfo[weaptotry]);
    }
-   while((!player->weaponowned[weaptotry] ||
-          (ammototry != am_noammo &&
-           player->ammo[ammototry] <= 0)) && 
+   while((!player->weaponowned[weaptotry] || !ammototry) && 
           newweapon != currentweapon);
 
    newweapon = ordinalToWp[newweapon];
@@ -238,10 +254,10 @@ int P_NextWeapon(player_t *player)
 //
 int P_PrevWeapon(player_t *player)
 {
-   int currentweapon = wpToOrdinal[player->readyweapon];
-   int newweapon     = currentweapon;
-   int weaptotry;
-   int ammototry;
+   int  currentweapon = wpToOrdinal[player->readyweapon];
+   int  newweapon     = currentweapon;
+   int  weaptotry;
+   bool ammototry;
 
    do
    {
@@ -251,11 +267,9 @@ int P_PrevWeapon(player_t *player)
          newweapon = NUMWEAPONS - 1;
 
       weaptotry = ordinalToWp[newweapon];
-      ammototry = weaponinfo[weaptotry].ammo;
+      ammototry = P_WeaponHasAmmo(player, &weaponinfo[weaptotry]);
    }
-   while((!player->weaponowned[weaptotry] ||
-          (ammototry != am_noammo &&
-           player->ammo[ammototry] <= 0)) && 
+   while((!player->weaponowned[weaptotry] || !ammototry) && 
          newweapon != currentweapon);
 
    newweapon = ordinalToWp[newweapon];
@@ -306,6 +320,14 @@ weapontype_t P_SwitchWeapon(player_t *player)
    // haleyjd WEAPON_FIXME: must support arbitrary weapons
    // haleyjd WEAPON_FIXME: chainsaw/fist issues
 
+   // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
+   // How in the sweet fuck am I supposed to generalize this mess, AND remain
+   // backwardly compatible with DeHackEd bullshit??
+   int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
+   int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
+   int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
+   int rockets = E_GetItemOwnedAmountName(player, "AmmoMissile");
+
    do
    {
       switch(*prefer++)
@@ -317,29 +339,28 @@ weapontype_t P_SwitchWeapon(player_t *player)
          newweapon = wp_fist;
          break;
       case 2:
-         if(player->ammo[am_clip])
+         if(clips)
             newweapon = wp_pistol;
          break;
       case 3:
-         if(player->weaponowned[wp_shotgun] && player->ammo[am_shell])
+         if(player->weaponowned[wp_shotgun] && shells)
             newweapon = wp_shotgun;
          break;
       case 4:
-         if(player->weaponowned[wp_chaingun] && player->ammo[am_clip])
+         if(player->weaponowned[wp_chaingun] && clips)
             newweapon = wp_chaingun;
          break;
       case 5:
-         if(player->weaponowned[wp_missile] && player->ammo[am_misl])
+         if(player->weaponowned[wp_missile] && rockets)
             newweapon = wp_missile;
          break;
       case 6:
-         if(player->weaponowned[wp_plasma] && player->ammo[am_cell] &&
-            GameModeInfo->id != shareware)
+         if(player->weaponowned[wp_plasma] && cells && GameModeInfo->id != shareware)
             newweapon = wp_plasma;
          break;
       case 7:
          if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
-            player->ammo[am_cell] >= (demo_compatibility ? 41 : 40))
+            cells >= (demo_compatibility ? 41 : 40))
             newweapon = wp_bfg;
          break;
       case 8:
@@ -349,7 +370,7 @@ weapontype_t P_SwitchWeapon(player_t *player)
       case 9:
          if(player->weaponowned[wp_supershotgun] && 
             enable_ssg &&
-            player->ammo[am_shell] >= (demo_compatibility ? 3 : 2))
+            shells >= (demo_compatibility ? 3 : 2))
             newweapon = wp_supershotgun;
          break;
       }
@@ -387,16 +408,8 @@ int P_WeaponPreferred(int w1, int w2)
 //
 bool P_CheckAmmo(player_t *player)
 {
-   ammotype_t ammo = weaponinfo[player->readyweapon].ammo;
-
-   // haleyjd 08/10/02: get count from weaponinfo_t
-   // (BFGCELLS value is now written into struct by DeHackEd code)
-   int count = weaponinfo[player->readyweapon].ammopershot;
-      
-   // Some do not need ammunition anyway.
    // Return if current ammunition sufficient.
-   
-   if(ammo == am_noammo || player->ammo[ammo] >= count)
+   if(P_WeaponHasAmmo(player, P_GetReadyWeapon(player)))
       return true;
    
    // Out of ammo, pick a weapon to change to.
@@ -431,17 +444,13 @@ bool P_CheckAmmo(player_t *player)
 //
 void P_SubtractAmmo(player_t *player, int compat_amt)
 {
-   weapontype_t weapontype = player->readyweapon;
-   weaponinfo_t *weapon    = &weaponinfo[weapontype]; 
-   ammotype_t   ammotype   = weapon->ammo;
+   weaponinfo_t *weapon = P_GetReadyWeapon(player);
 
-   // WEAPON_FIXME/TODO: comp flag for corruption of player->maxammo by DeHackEd
-   if(player->cheats & CF_INFAMMO || 
-      (demo_version >= 329 && ammotype >= NUMAMMO))
+   if(player->cheats & CF_INFAMMO || !weapon->ammo)
       return;
-   
-   player->ammo[ammotype] -= 
-      (weapon->enableaps || compat_amt < 0) ? weapon->ammopershot : compat_amt;
+
+   int amount = (weapon->enableaps || compat_amt < 0) ? weapon->ammopershot : compat_amt;
+   E_RemoveInventoryItem(player, weapon->ammo, amount);
 }
 
 int lastshottic; // killough 3/22/98
@@ -868,24 +877,6 @@ static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
 // WEAPON ATTACKS
 //
 
-// haleyjd 09/24/00: Infamous DeHackEd Problem Fix
-//   Its been known for years that setting weapons to use am_noammo
-//   that normally use non-infinite ammo types causes your max shells
-//   to reduce, now I know why:
-//
-//   player->ammo[weaponinfo[player->readyweapon].ammo]--;
-//
-//   If weaponinfo[].ammo evaluates to am_noammo, then it is equal
-//   to NUMAMMO+1. In the player struct we find:
-//
-//   int ammo[NUMAMMO];
-//   int maxammo[NUMAMMO];
-//
-//   It is indexing 2 past the end of ammo into maxammo, and the
-//   second ammo type just happens to be shells. How funny, eh?
-//   All the functions below are fixed to check for this, optioned 
-//   with demo compatibility.
-
 //
 // A_Punch
 //
@@ -1040,13 +1031,10 @@ void A_FireOldBFG(actionargs_t *actionargs)
                512*weaponinfo[wp_plasma].recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
-
-   if((demo_version < 329 ||
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      player->ammo[weaponinfo[player->readyweapon].ammo]--;
-   }
+   auto weapon   = P_GetReadyWeapon(player);
+   auto ammoType = weapon->ammo;   
+   if(ammoType && !(player->cheats & CF_INFAMMO))
+      E_RemoveInventoryItem(player, ammoType, 1);
 
    if(LevelInfo.useFullBright) // haleyjd
       player->extralight = 2;
@@ -1298,11 +1286,9 @@ void A_FireCGun(actionargs_t *actionargs)
 
    P_WeaponSound(mo, sfx_chgun);
 
-   if(!player->ammo[weaponinfo[player->readyweapon].ammo])
+   if(!P_WeaponHasAmmo(player, P_GetReadyWeapon(player)))
       return;
    
-   // sf: removed beta
-
    P_SetMobjState(mo, player->pclass->altattack);
    
    P_SubtractAmmo(player, 1);
@@ -1709,12 +1695,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    P_SetMobjState(mo, player->pclass->altattack);
 
    // subtract ammo amount
-   if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
-      !(player->cheats & CF_INFAMMO))
-   {
-      // now settable in weapon, not needed as a parameter here
-      P_SubtractAmmo(player, -1);
-   }
+   P_SubtractAmmo(player, -1);
 
    // have a flash state?
    if(flashint >= 0 && flashstate != NullStateNum)
@@ -1801,11 +1782,7 @@ void A_FirePlayerMissile(actionargs_t *actionargs)
       return;
 
    // decrement ammo if appropriate
-   if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
-     !(player->cheats & CF_INFAMMO))
-   {
-      P_SubtractAmmo(player, -1);
-   }
+   P_SubtractAmmo(player, -1);
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
 
@@ -1881,11 +1858,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
       damage *= berzerkmul;
 
    // decrement ammo if appropriate
-   if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
-      !(player->cheats & CF_INFAMMO))
-   {
-      P_SubtractAmmo(player, -1);
-   }
+   P_SubtractAmmo(player, -1);
    
    angle = player->mo->angle;
    
@@ -2032,13 +2005,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
 
    // if ammo should be used, subtract it now
    if(useammo)
-   {
-      if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
-         !(player->cheats & CF_INFAMMO))
-      {
-         P_SubtractAmmo(player, -1);
-      }
-   }
+      P_SubtractAmmo(player, -1);
 
    actionargs_t thunkargs;
    thunkargs.actiontype = actionargs_t::WEAPONFRAME;

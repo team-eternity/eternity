@@ -57,43 +57,39 @@
 #include "sounds.h"
 
 //
-// A_SpawnGlitter
+// P_spawnGlitter
 //
-// Parameterized code pointer to spawn inert objects with some
-// positive z momentum
+// haleyjd 08/02/13: shared code for teleglitter spawners.
 //
-// Parameters:
-// args[0] - object type (use DeHackEd number)
-// args[1] - z momentum (scaled by FRACUNIT/8)
-//
-void A_SpawnGlitter(actionargs_t *actionargs)
+static void P_spawnGlitter(Mobj *actor, int type)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   Mobj      *glitter;
-   int        glitterType;
-   fixed_t    initMomentum;
-   fixed_t    x, y, z;
+   fixed_t x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
 
-   glitterType  = E_ArgAsThingNum(args, 0);
-   initMomentum = (fixed_t)(E_ArgAsInt(args, 1, 0) * FRACUNIT / 8);
+   Mobj *mo = P_SpawnMobj(x, y, actor->subsector->sector->floorheight, type);
+   mo->momz = FRACUNIT / 4;
+}
 
-   // special defaults
+//
+// A_SpawnTeleGlitter
+//
+// haleyjd 08/02/13: Original teleglitter spawn, for better Heretic action
+// function compatibility. This is a special case of A_SpawnGlitter (see 
+// a_general.cpp)
+//
+void A_SpawnTeleGlitter(actionargs_t *actionargs)
+{
+   P_spawnGlitter(actionargs->actor, E_SafeThingName("TeleGlitterRed"));
+}
 
-   // default momentum of zero == 1/4 unit per tic
-   if(!initMomentum)
-      initMomentum = FRACUNIT >> 2;
-
-   // randomize spawning coordinates within a 32-unit square
-   x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-
-   z = actor->floorz;
-
-   glitter = P_SpawnMobj(x, y, z, glitterType);
-
-   // give it some upward momentum
-   glitter->momz = initMomentum;
+//
+// A_SpawnTeleGlitter2
+//
+// As above.
+//
+void A_SpawnTeleGlitter2(actionargs_t *actionargs)
+{
+   P_spawnGlitter(actionargs->actor, E_SafeThingName("TeleGlitterBlue"));
 }
 
 //
@@ -108,32 +104,33 @@ void A_AccelGlitter(actionargs_t *actionargs)
 }
 
 //
-// A_SpawnAbove
+// A_InitKeyGizmo
 //
-// Parameterized pointer to spawn a solid object above the one
-// calling the pointer. Used by the key gizmos.
+// haleyjd 08/02/13: Original key gizmo init, for better Heretic action function
+// compatibility. This is a special case of A_SpawnAbove (see a_general.cpp)
 //
-// args[0] -- thing type (DeHackEd num)
-// args[1] -- state number (< 0 == no state transition)
-// args[2] -- amount to add to z coordinate
-//
-void A_SpawnAbove(actionargs_t *actionargs)
+void A_InitKeyGizmo(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int thingtype;
-   int statenum;
-   fixed_t zamt;
-   Mobj *mo;
+   Mobj *gizmo = actionargs->actor;
+   const char *stateName = NULL;
 
-   thingtype = E_ArgAsThingNum(args, 0);
-   statenum  = E_ArgAsStateNumG0(args, 1, actor);
-   zamt      = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+   if(gizmo->type == E_ThingNumForName("KeyGizmoBlue"))
+      stateName = "Blue";
+   else if(gizmo->type == E_ThingNumForName("KeyGizmoGreen"))
+      stateName = "Green";
+   else if(gizmo->type == E_ThingNumForName("KeyGizmoYellow"))
+      stateName = "Yellow";
 
-   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
+   if(!stateName)
+      return;
 
-   if(statenum >= 0 && statenum < NUMSTATES)
-      P_SetMobjState(mo, statenum);
+   int         orbType = E_SafeThingName("KeyGizmoOrb");
+   mobjinfo_t *mi      = mobjinfo[orbType];
+   state_t    *state   = E_GetStateForMobjInfo(mi, stateName);
+
+   Mobj *mo = P_SpawnMobj(gizmo->x, gizmo->y, gizmo->z + 60*FRACUNIT, orbType);
+   if(state)
+      P_SetMobjState(mo, state->index);
 }
 
 //=============================================================================
@@ -226,6 +223,8 @@ void P_HticDrop(Mobj *actor, int special, mobjtype_t type)
 //
 void A_HticDrop(actionargs_t *actionargs)
 {
+   A_Fall(actionargs); // still need this, temporarily
+
 #if 0
    int thingtype1, thingtype2, chance1, chance2;
    int drop1 = 0, drop2 = 0;
@@ -234,17 +233,6 @@ void A_HticDrop(actionargs_t *actionargs)
    chance1    = E_ArgAsInt(actor->state->args,      1, 0);
    thingtype2 = E_ArgAsThingNumG0(actor->state->args, 2);
    chance2    = E_ArgAsInt(actor->state->args,      3, 0);
-
-   // this is hackish, but it'll work
-   /*
-   if((dt = actor->state->args[4]))
-   {
-      drop1 = (int)(dt & 0x00007fff);
-      drop2 = (int)((dt & 0x7fff0000) >> 16);
-   }
-   */
-
-   A_Fall(actor);
 
    // haleyjd 07/05/03: adjusted for EDF
    if(thingtype1 >= 0)

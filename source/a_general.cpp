@@ -295,6 +295,75 @@ void A_LineEffect(actionargs_t *actionargs)
 //
 
 //
+// A_SpawnAbove
+//
+// Parameterized pointer to spawn a solid object above the one
+// calling the pointer.
+//
+// args[0] -- thing type (DeHackEd num)
+// args[1] -- state number (< 0 == no state transition)
+// args[2] -- amount to add to z coordinate
+//
+void A_SpawnAbove(actionargs_t *actionargs)
+{
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int thingtype;
+   int statenum;
+   fixed_t zamt;
+   Mobj *mo;
+
+   thingtype = E_ArgAsThingNum(args, 0);
+   statenum  = E_ArgAsStateNumG0(args, 1, actor);
+   zamt      = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+
+   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
+
+   if(statenum >= 0 && statenum < NUMSTATES)
+      P_SetMobjState(mo, statenum);
+}
+
+//
+// A_SpawnGlitter
+//
+// Parameterized code pointer to spawn inert objects with some
+// positive z momentum
+//
+// Parameters:
+// args[0] - object type (use DeHackEd number)
+// args[1] - z momentum (scaled by FRACUNIT/8)
+//
+void A_SpawnGlitter(actionargs_t *actionargs)
+{
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   Mobj      *glitter;
+   int        glitterType;
+   fixed_t    initMomentum;
+   fixed_t    x, y, z;
+
+   glitterType  = E_ArgAsThingNum(args, 0);
+   initMomentum = (fixed_t)(E_ArgAsInt(args, 1, 0) * FRACUNIT / 8);
+
+   // special defaults
+
+   // default momentum of zero == 1/4 unit per tic
+   if(!initMomentum)
+      initMomentum = FRACUNIT >> 2;
+
+   // randomize spawning coordinates within a 32-unit square
+   x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+
+   z = actor->floorz;
+
+   glitter = P_SpawnMobj(x, y, z, glitterType);
+
+   // give it some upward momentum
+   glitter->momz = initMomentum;
+}
+
+//
 // A_SetFlags
 //
 // A parameterized codepointer that turns on thing flags

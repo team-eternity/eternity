@@ -48,7 +48,6 @@ extern int initial_health;
 extern int initial_bullets;
 extern int god_health;
 extern int bfgcells;
-extern int maxammo[], clipammo[];
 
 // haleyjd 08/01/04: special inflictor types
 typedef enum

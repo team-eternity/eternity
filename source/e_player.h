@@ -35,6 +35,13 @@ struct skin_t;
 
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 
+// default inventory items
+struct reborninventory_t
+{
+   char *itemname; // EDF itemeffect name
+   int   amount;   // amount of item to give when reborn
+};
+
 //
 // playerclass_t structure
 //
@@ -53,6 +60,10 @@ struct playerclass_t
    // original speeds - before turbo is applied.
    fixed_t oforwardmove[2];
    fixed_t osidemove[2];
+
+   // reborn inventory
+   unsigned int       numrebornitems;
+   reborninventory_t *rebornitems;
 
    // hashing data
    char mnemonic[129];

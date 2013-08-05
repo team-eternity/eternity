@@ -35,6 +35,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
+#include "e_inventory.h"
 #include "e_things.h"
 #include "f_finale.h"
 #include "hi_stuff.h"

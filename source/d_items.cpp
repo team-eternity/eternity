@@ -31,6 +31,7 @@
 #include "d_items.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "e_inventory.h"
 #include "e_states.h"
 #include "sounds.h"
 #include "w_wad.h"
@@ -60,7 +61,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // fist
     wp_fist,
     "Fist",
-    am_noammo,
+    NULL,
     S_PUNCHUP,
     S_PUNCHDOWN,
     S_PUNCH,
@@ -69,13 +70,13 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     0, false,
     WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER,
     MOD_FIST,
-    10,
+    10
   },  
   {
     // pistol
     wp_pistol,
     "Pistol",
-    am_clip,
+    NULL,
     S_PISTOLUP,
     S_PISTOLDOWN,
     S_PISTOL,
@@ -85,13 +86,15 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_PISTOL,
     10,
-    1, 1
+    1, 1,
+    0,
+    50, 20, 20, 10
   },  
   {
     // shotgun
     wp_shotgun,
     "Shotgun",
-    am_shell,
+    NULL,
     S_SGUNUP,
     S_SGUNDOWN,
     S_SGUN,
@@ -101,13 +104,15 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_SHOTGUN,
     30,
-    3, 3
+    3, 3,
+    0,
+    20, 8, 8, 4
   },
   {
     // chaingun
     wp_chaingun,
     "Chaingun",
-    am_clip,
+    NULL,
     S_CHAINUP,
     S_CHAINDOWN,
     S_CHAIN,
@@ -117,13 +122,15 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_CHAINGUN,
     10,
-    1, 1
+    1, 1,
+    0,
+    50, 20, 20, 10
   },
   {
     // missile launcher
     wp_missile,
     "MissileLauncher",
-    am_misl,
+    NULL,
     S_MISSILEUP,
     S_MISSILEDOWN,
     S_MISSILE,
@@ -133,13 +140,15 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_NOAUTOFIRE | WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_UNKNOWN,
     100,
-    6, 8
+    6, 8,
+    0,
+    5, 2, 2, 1
   },
   {
     // plasma rifle
     wp_plasma,
     "PlasmaRifle",
-    am_cell,
+    NULL,
     S_PLASMAUP,
     S_PLASMADOWN,
     S_PLASMA,
@@ -149,13 +158,15 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_SILENCER | WPF_HAPTICRECOIL | WPF_NOTSHAREWARE,
     MOD_UNKNOWN,
     20,
-    2, 1
+    2, 1,
+    0,
+    100, 40, 40, 20
   },
   {
     // bfg 9000
     wp_bfg,
     "BFG9000",
-    am_cell,
+    NULL,
     S_BFGUP,
     S_BFGDOWN,
     S_BFG,
@@ -165,13 +176,15 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_NOAUTOFIRE | WPF_SILENCER | WPF_HAPTICRECOIL | WPF_NOTSHAREWARE,
     MOD_UNKNOWN,
     100,
-    10, 10
+    10, 10,
+    0,
+    100, 40, 40, 20
   },
   {
     // chainsaw
     wp_chainsaw,
     "Chainsaw",
-    am_noammo,
+    NULL,
     S_SAWUP,
     S_SAWDOWN,
     S_SAW,
@@ -188,7 +201,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // super shotgun
     wp_supershotgun,
     "SuperShotgun",
-    am_shell,
+    NULL,
     S_DSGUNUP,
     S_DSGUNDOWN,
     S_DSGUN,
@@ -198,14 +211,32 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     WPF_SILENCER | WPF_HAPTICRECOIL,
     MOD_SSHOTGUN,
     80,
-    5, 5
+    5, 5,
+    0,
+    20, 8, 8, 4
   },  
+};
+
+// INVENTORY_FIXME: temporary default ammo type names for each weapon;
+// eventually to be specified via EDF
+static const char *d_ammoTypesForWeapons[NUMWEAPONS] =
+{
+   NULL,          // fist
+   "AmmoClip",    // pistol
+   "AmmoShell",   // shotgun
+   "AmmoClip",    // chaingun
+   "AmmoMissile", // rocket launcher
+   "AmmoCell",    // plasma gun
+   "AmmoCell",    // BFG
+   NULL,          // chainsaw
+   "AmmoShell"    // SSG
 };
 
 //
 // haleyjd 07/25/03: temporary hack to resolve weapon states
 // until EDF weapon support is in place
 // WEAPON_FIXME
+// INVENTORY_TODO: weapon init
 //
 void D_InitWeaponInfo()
 {
@@ -218,6 +249,9 @@ void D_InitWeaponInfo()
       weaponinfo[i].flashstate = E_SafeState(weaponinfo[i].flashstate);
       weaponinfo[i].readystate = E_SafeState(weaponinfo[i].readystate);
       weaponinfo[i].upstate    = E_SafeState(weaponinfo[i].upstate);
+
+      if(d_ammoTypesForWeapons[i])
+         weaponinfo[i].ammo = E_ItemEffectForName(d_ammoTypesForWeapons[i]);
    }
 
    // haleyjd 11/28/08: SSG enable

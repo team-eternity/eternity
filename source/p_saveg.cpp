@@ -38,6 +38,7 @@
 #include "d_net.h"
 #include "doomstat.h"
 #include "e_edf.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -491,9 +492,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
 
          for(j = 0; j < NUMWEAPONS; j++)
             arc << p.weaponowned[j];
-
-         for(j = 0; j < NUMAMMO; j++)
-            arc << p.ammo[j] << p.maxammo[j];
 
          for(j = 0; j < NUMWEAPONS; j++)
          {

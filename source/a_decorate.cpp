@@ -34,6 +34,7 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"
+#include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -181,12 +182,18 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
       player_t *p     = actionargs->actor->player;
       int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, NULL);
       weaponinfo_t *w = P_GetReadyWeapon(p);
+      int ammo;
 
       // validate state
       if(statenum < 0)
          return;
 
-      if(w->ammo < NUMAMMO && p->ammo[w->ammo] < w->ammopershot)
+      if(!w->ammo) // no-ammo weapon?
+         return;
+
+      ammo = E_GetItemOwnedAmount(p, w->ammo);
+
+      if(ammo < w->ammopershot)
          P_SetPspritePtr(p, actionargs->pspr, statenum);
    }
 }

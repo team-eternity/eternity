@@ -1,7 +1,9 @@
-# EDF File for Eternity Engine v3.33.50
-#
-# This file contains player-related definitions, including
-# skins, player classes, and weapons.
+//
+// EDF File for Eternity Engine v3.40.50
+//
+// This file contains player-related definitions, including
+// skins, player classes, and weapons.
+//
 
 ifenabled(DOOM)
 
@@ -9,9 +11,12 @@ skin marine {}
 
 playerclass DoomMarine
 {
-   defaultskin    = marine
-   thingtype      = DoomPlayer
-   altattackstate = S_PLAY_ATK2
+   defaultskin    marine
+   thingtype      DoomPlayer
+   altattackstate S_PLAY_ATK2
+   
+   // INVENTORY_TODO: reborn weapons
+   rebornitem AmmoClip, 50
 }
 
 endif()
@@ -22,9 +27,12 @@ skin corvus {}
 
 playerclass Corvus
 {
-   defaultskin    = corvus
-   thingtype      = HereticPlayer
-   altattackstate = S_HPLAY_ATK2
+   defaultskin    corvus
+   thingtype      HereticPlayer
+   altattackstate S_HPLAY_ATK2
+   
+   // INVENTORY_TODO: reborn items
 }
 
 endif()
+

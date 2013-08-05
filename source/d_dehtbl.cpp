@@ -1251,6 +1251,8 @@ void A_LineEffect(actionargs_t *);      // killough 11/98
 void A_Nailbomb(actionargs_t *);
 
 // haleyjd: start new eternity action functions
+void A_SpawnAbove(actionargs_t *);
+void A_SpawnGlitter(actionargs_t *);
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
 void A_BetaSkullAttack(actionargs_t *);
@@ -1300,9 +1302,10 @@ void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
-void A_SpawnGlitter(actionargs_t *);
+void A_SpawnTeleGlitter(actionargs_t *actionargs);
+void A_SpawnTeleGlitter2(actionargs_t *);
 void A_AccelGlitter(actionargs_t *);
-void A_SpawnAbove(actionargs_t *);
+void A_InitKeyGizmo(actionargs_t *actionargs);
 void A_MummyAttack(actionargs_t *);
 void A_MummyAttack2(actionargs_t *);
 void A_MummySoul(actionargs_t *);
@@ -1548,6 +1551,8 @@ deh_bexptr deh_bexptrs[] =
   POINTER(Nailbomb),
 
   // haleyjd: start new eternity codeptrs
+  POINTER(SpawnAbove),
+  POINTER(SpawnGlitter),
   POINTER(StartScript),
   POINTER(StartScriptNamed),
   POINTER(PlayerStartScript),
@@ -1601,9 +1606,10 @@ deh_bexptr deh_bexptrs[] =
   POINTER(SorcNukeSpec),
 
   // haleyjd: Heretic pointers
-  POINTER(SpawnGlitter),
+  POINTER(SpawnTeleGlitter),
+  POINTER(SpawnTeleGlitter2),
   POINTER(AccelGlitter),      
-  POINTER(SpawnAbove),        
+  POINTER(InitKeyGizmo),
   POINTER(MummyAttack),       
   POINTER(MummyAttack2),      
   POINTER(MummySoul),         

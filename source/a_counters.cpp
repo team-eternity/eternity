@@ -34,6 +34,7 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"
+#include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -1067,27 +1068,23 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
 void A_CheckReloadEx(actionargs_t *actionargs)
 {
    bool branch = false;
-   int statenum, checktype, psprnum;
-   int value;
-   player_t     *player;
-   pspdef_t     *pspr;
-   arglist_t    *args = actionargs->args;
-   weaponinfo_t *w;
-   int ammo;
+   int statenum, checktype, psprnum, value, ammo;
+   player_t        *player;
+   pspdef_t        *pspr;
+   arglist_t       *args = actionargs->args;
+   weaponinfo_t    *w;
 
    if(!(player = actionargs->actor->player))
       return;
 
-   w = P_GetReadyWeapon(player);
-
-   if(w->ammo >= am_noammo)
-      return;
-
-   ammo = player->ammo[w->ammo];
-
    if(!(pspr = actionargs->pspr))
       return;
 
+   w = P_GetReadyWeapon(player);
+   if(!w->ammo) // no-ammo weapon?
+      return;
+
+   ammo      = E_GetItemOwnedAmount(player, w->ammo);
    statenum  = E_ArgAsStateNumNI(args, 0, NULL);
    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(args, 2, 0);

@@ -35,8 +35,11 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_inventory.h"
+#include "e_lib.h"
 #include "hu_over.h"    // haleyjd
 #include "i_video.h"
+#include "metaapi.h"
 #include "m_cheat.h"
 #include "m_random.h"
 #include "p_skin.h"
@@ -333,7 +336,7 @@ extern byte     **translationtables;
 // STATUS BAR CODE
 //
 
-static void ST_refreshBackground(void)
+static void ST_refreshBackground()
 {
    if(st_statusbaron)
    {
@@ -393,7 +396,7 @@ bool ST_Responder(event_t *ev)
    return false;
 }
 
-static int ST_calcPainOffset(void)
+static int ST_calcPainOffset()
 {
    static int lastcalc;
    static int oldhealth = -1;
@@ -431,7 +434,7 @@ enum
 // the precedence of expressions is:
 //  dead > evil grin > turned head > straight ahead
 //
-static void ST_updateFaceWidget(void)
+static void ST_updateFaceWidget()
 {
    int        i;
    angle_t    badguyangle;
@@ -471,7 +474,7 @@ static void ST_updateFaceWidget(void)
 
          for(i = 0; i < NUMWEAPONS; i++)
          {
-            if (oldweaponsowned[i] != plyr->weaponowned[i])
+            if(oldweaponsowned[i] != plyr->weaponowned[i])
             {
                doevilgrin = true;
                oldweaponsowned[i] = plyr->weaponowned[i];
@@ -613,30 +616,50 @@ static void ST_updateFaceWidget(void)
 
 int sts_traditional_keys; // killough 2/28/98: traditional status bar keys
 
-static void ST_updateWidgets(void)
+static const char *st_AmmoForNum[NUMAMMO] =
 {
-   static int  largeammo = 1994; // means "n/a"
-   int         i;
+   "AmmoClip",
+   "AmmoShell",
+   "AmmoCell",
+   "AmmoMissile"
+};
 
-   // must redirect the pointer if the ready weapon has changed.
-   if(weaponinfo[plyr->readyweapon].ammo == am_noammo)
-      w_ready.num = &largeammo;
-   else
-      w_ready.num = &plyr->ammo[weaponinfo[plyr->readyweapon].ammo];
+static void ST_updateWidgets()
+{
+   // update ready weapon ammo
+   w_ready.data  = plyr->readyweapon;
+   auto weapon   = P_GetReadyWeapon(plyr);
+   auto ammoType = weapon->ammo;
 
-   w_ready.data = plyr->readyweapon;
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
+   w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
+
+   // update armor
+   w_armor.n.num = plyr->armorpoints;
+
+   // update health
+   w_health.n.num = plyr->health;
+
+   // update ammo widgets
+   for(int i = 0; i < NUMAMMO; i++)
+   {
+      ammoType = E_ItemEffectForName(st_AmmoForNum[i]);
+      
+      w_ammo[i].num    = E_GetItemOwnedAmount(plyr, ammoType);
+      w_maxammo[i].num = E_GetMaxAmountForArtifact(plyr, ammoType);      
+   }
 
    // update keycard multiple widgets
-   for(i = 0; i < 3; i++)
+   for(int i = 0; i < 3; i++)
    {
-      auto slot = E_InventorySlotForItemName(plyr, GameModeInfo->cardNames[i]);
-      keyboxes[i] = ((slot && slot->amount > 0) ? i : -1);
+      int amount  = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i]);
+      keyboxes[i] = (amount > 0 ? i : -1);
       
       //jff 2/24/98 select double key
       //killough 2/28/98: preserve traditional keys by config option
       
-      slot = E_InventorySlotForItemName(plyr, GameModeInfo->cardNames[i + 3]);
-      if(slot && slot->amount > 0)
+      amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
+      if(amount > 0)
          keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
    }
 
@@ -653,6 +676,7 @@ static void ST_updateWidgets(void)
    st_fragson = st_statusbaron && GameType == gt_dm;
 
    st_fragscount = plyr->totalfrags;     // sf 15/10/99 use totalfrags
+   w_frags.num   = st_fragscount;
 }
 
 //
@@ -660,10 +684,9 @@ static void ST_updateWidgets(void)
 //
 // Performs ticker actions for DOOM's status bar.
 //
-static void ST_DoomTicker(void)
+static void ST_DoomTicker()
 {
    st_clock++;
-   ST_updateWidgets();
    st_oldhealth = plyr->health;
 }
 
@@ -672,7 +695,7 @@ static void ST_DoomTicker(void)
 //
 // Calls the current gamemode's status bar ticker function.
 //
-void ST_Ticker(void)
+void ST_Ticker()
 {
    GameModeInfo->StatusBar->Ticker();
 }
@@ -685,7 +708,7 @@ static int st_palette = 0;
 // Performs player palette flashes for damage, item pickups, etc.
 // This code is shared by all status bars.
 //
-static void ST_doPaletteStuff(void)
+static void ST_doPaletteStuff()
 {
    int  palette;
    byte *pal;
@@ -737,36 +760,33 @@ static void ST_drawCommonWidgets(int alpha)
    int i;
 
    //jff 2/16/98 make color of ammo depend on amount
-   if(*w_ready.num*100 < ammo_red*plyr->maxammo[weaponinfo[w_ready.data].ammo])
+   if(w_ready.num*100 < ammo_red * w_ready.max)
       STlib_updateNum(&w_ready, cr_red, alpha);
-   else
-    if(*w_ready.num*100 <
-       ammo_yellow*plyr->maxammo[weaponinfo[w_ready.data].ammo])
+   else if(w_ready.num*100 < ammo_yellow * w_ready.max)
       STlib_updateNum(&w_ready, cr_gold, alpha);
     else
       STlib_updateNum(&w_ready, cr_green, alpha);
 
    //jff 2/16/98 make color of health depend on amount
-   if(*w_health.n.num < health_red)
+   if(w_health.n.num < health_red)
       STlib_updatePercent(&w_health, cr_red, alpha);
-   else if(*w_health.n.num < health_yellow)
+   else if(w_health.n.num < health_yellow)
       STlib_updatePercent(&w_health, cr_gold, alpha);
-   else if(*w_health.n.num <= health_green)
+   else if(w_health.n.num <= health_green)
       STlib_updatePercent(&w_health, cr_green, alpha);
    else
       STlib_updatePercent(&w_health, cr_blue_status, alpha); //killough 2/28/98
 
    //jff 2/16/98 make color of armor depend on amount
-   if(*w_armor.n.num < armor_red)
+   if(w_armor.n.num < armor_red)
       STlib_updatePercent(&w_armor, cr_red, alpha);
-   else if(*w_armor.n.num < armor_yellow)
+   else if(w_armor.n.num < armor_yellow)
       STlib_updatePercent(&w_armor, cr_gold, alpha);
-   else if(*w_armor.n.num <= armor_green)
+   else if(w_armor.n.num <= armor_green)
       STlib_updatePercent(&w_armor, cr_green, alpha);
    else
       STlib_updatePercent(&w_armor, cr_blue_status, alpha); //killough 2/28/98
 
-   // test
    for(i = 0; i < 3; i++)
       STlib_updateMultIcon(&w_keyboxes[i], alpha);
 }
@@ -800,23 +820,15 @@ static void ST_drawWidgets()
    STlib_updateNum(&w_frags, NULL, FRACUNIT);
 }
 
-static void ST_doRefresh(void)
+static void ST_doRefresh()
 {
    // draw status bar background to off-screen buffer
    ST_refreshBackground();
    
    // and refresh all widgets
+   ST_updateWidgets();
    ST_drawWidgets();
 }
-
-/*
-// haleyjd 04/16/11: no more status bar caching
-static void ST_diffDraw(void)
-{
-   // update all widgets
-   ST_drawWidgets(false);
-}
-*/
 
 // Locations for graphical HUD elements
 
@@ -877,7 +889,7 @@ static void ST_moveWidgets(bool fs)
 //
 // Draws stuff specific to the DOOM status bar.
 //
-static void ST_DoomDrawer(void)
+static void ST_DoomDrawer()
 {
    // possibly update widget positions
    ST_moveWidgets(false);
@@ -892,10 +904,8 @@ static void ST_DoomDrawer(void)
 //
 // Draws DOOM's new fullscreen hud/status information.
 //
-static void ST_DoomFSDrawer(void)
+static void ST_DoomFSDrawer()
 {
-   ammotype_t ammo;
-
    // possibly update widget positions
    ST_moveWidgets(true);
 
@@ -913,10 +923,16 @@ static void ST_DoomFSDrawer(void)
    else
       V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
 
-   // ammo
-   if((ammo = weaponinfo[w_ready.data].ammo) < NUMAMMO)
-      V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[ammo], NULL, ST_ALPHA);
+   ST_updateWidgets();
 
+   // ammo
+   itemeffect_t *ammo = weaponinfo[w_ready.data].ammo;
+   if(ammo)
+   {
+      int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
+      if(num != NUMAMMO)
+         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], NULL, ST_ALPHA);
+   }
 
    // draw common number widgets (always refresh since no background)
    ST_drawCommonWidgets(ST_ALPHA);
@@ -1057,7 +1073,7 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 
-static void ST_loadData(void)
+static void ST_loadData()
 {
    ST_loadGraphics();
 }
@@ -1067,7 +1083,7 @@ static void ST_loadData(void)
 // haleyjd FIXME: the following two functions are never called -- ???
 // they look like they should be, so this needs investigation.
 
-static void ST_unloadGraphics(void)
+static void ST_unloadGraphics()
 {
    int i;
 
@@ -1104,14 +1120,14 @@ static void ST_unloadGraphics(void)
    // Note: nobody ain't seen no unloading of stminus yet. Dude.
 }
 
-void ST_unloadData(void)
+void ST_unloadData()
 {
   ST_unloadGraphics();
 }
 
 #endif
 
-static void ST_initData(void)
+static void ST_initData()
 {
    int i;
 
@@ -1134,7 +1150,7 @@ static void ST_initData(void)
    STlib_init();
 }
 
-static void ST_createWidgets(void)
+static void ST_createWidgets()
 {
    int i;
 
@@ -1143,7 +1159,7 @@ static void ST_createWidgets(void)
                  ST_AMMOX,
                  ST_AMMOY,
                  tallnum,
-                 &plyr->ammo[weaponinfo[plyr->readyweapon].ammo],
+                 0, 0,
                  &st_statusbaron,
                  ST_AMMOWIDTH );
 
@@ -1155,7 +1171,7 @@ static void ST_createWidgets(void)
                      ST_HEALTHX,
                      ST_HEALTHY,
                      tallnum,
-                     &plyr->health,
+                     0,
                      &st_statusbaron,
                      tallpercent);
 
@@ -1182,7 +1198,7 @@ static void ST_createWidgets(void)
                  ST_FRAGSX,
                  ST_FRAGSY,
                  tallnum,
-                 &st_fragscount,
+                 0, 0,
                  &st_fragson,
                  ST_FRAGSWIDTH);
 
@@ -1199,7 +1215,7 @@ static void ST_createWidgets(void)
                      ST_ARMORX,
                      ST_ARMORY,
                      tallnum,
-                     &plyr->armorpoints,
+                     0,
                      &st_statusbaron,
                      tallpercent);
 
@@ -1230,7 +1246,7 @@ static void ST_createWidgets(void)
                  ST_AMMO0X,
                  ST_AMMO0Y,
                  shortnum,
-                 &plyr->ammo[0],
+                 0, 0,
                  &st_statusbaron,
                  ST_AMMO0WIDTH);
 
@@ -1238,7 +1254,7 @@ static void ST_createWidgets(void)
                  ST_AMMO1X,
                  ST_AMMO1Y,
                  shortnum,
-                 &plyr->ammo[1],
+                 0, 0,
                  &st_statusbaron,
                  ST_AMMO1WIDTH);
 
@@ -1246,7 +1262,7 @@ static void ST_createWidgets(void)
                  ST_AMMO2X,
                  ST_AMMO2Y,
                  shortnum,
-                 &plyr->ammo[2],
+                 0, 0,
                  &st_statusbaron,
                  ST_AMMO2WIDTH);
 
@@ -1254,7 +1270,7 @@ static void ST_createWidgets(void)
                  ST_AMMO3X,
                  ST_AMMO3Y,
                  shortnum,
-                 &plyr->ammo[3],
+                 0, 0,
                  &st_statusbaron,
                  ST_AMMO3WIDTH);
 
@@ -1263,7 +1279,7 @@ static void ST_createWidgets(void)
                  ST_MAXAMMO0X,
                  ST_MAXAMMO0Y,
                  shortnum,
-                 &plyr->maxammo[0],
+                 0, 0,
                  &st_statusbaron,
                  ST_MAXAMMO0WIDTH);
 
@@ -1271,7 +1287,7 @@ static void ST_createWidgets(void)
                  ST_MAXAMMO1X,
                  ST_MAXAMMO1Y,
                  shortnum,
-                 &plyr->maxammo[1],
+                 0, 0,
                  &st_statusbaron,
                  ST_MAXAMMO1WIDTH);
 
@@ -1279,7 +1295,7 @@ static void ST_createWidgets(void)
                  ST_MAXAMMO2X,
                  ST_MAXAMMO2Y,
                  shortnum,
-                 &plyr->maxammo[2],
+                 0, 0,
                  &st_statusbaron,
                  ST_MAXAMMO2WIDTH);
 
@@ -1287,7 +1303,7 @@ static void ST_createWidgets(void)
                  ST_MAXAMMO3X,
                  ST_MAXAMMO3Y,
                  shortnum,
-                 &plyr->maxammo[3],
+                 0, 0,
                  &st_statusbaron,
                  ST_MAXAMMO3WIDTH);
 }
@@ -1297,7 +1313,7 @@ static void ST_createWidgets(void)
 //
 // Startup function for the DOOM status bar.
 //
-static void ST_DoomStart(void)
+static void ST_DoomStart()
 {
    ST_initData();
    ST_createWidgets();
@@ -1312,7 +1328,7 @@ static bool st_stopped = true;
 // status bars.
 // haleyjd: moved up and made static.
 //
-static void ST_Stop(void)
+static void ST_Stop()
 {
    if(st_stopped)
       return;
@@ -1326,7 +1342,7 @@ static void ST_Stop(void)
 // Main startup function. Calls the current gamemode's
 // status bar startup function as well.
 //
-void ST_Start(void)
+void ST_Start()
 {
    if(!st_stopped)
       ST_Stop();
@@ -1339,7 +1355,7 @@ void ST_Start(void)
 //
 // Initializes the DOOM gamemode status bar
 //
-static void ST_DoomInit(void)
+static void ST_DoomInit()
 {
    ST_loadData();
 }
@@ -1351,7 +1367,7 @@ static void ST_DoomInit(void)
 // Calls the current gamemode's status bar initialization
 // function as well.
 //
-void ST_Init(void)
+void ST_Init()
 {
    // haleyjd: moved palette initialization here, because all
    // game modes will need it.

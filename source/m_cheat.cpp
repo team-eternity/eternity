@@ -44,6 +44,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_inventory.h"
 #include "e_states.h"
 #include "g_game.h"
 #include "metaapi.h"
@@ -371,14 +372,7 @@ static void cheat_fa(const void *arg)
    int i;
    
    if(!E_PlayerHasBackpack(plyr))
-   {
-      // INVENTORY_FIXME: once ammo types are managed under inventory,
-      // this will become unnecessary; the adjustment is automated through
-      // E_GetMaxAmountForArtifact.
-      for(i = 0; i < NUMAMMO; i++)
-         plyr->maxammo[i] *= 2;
       E_GiveBackpack(plyr);
-   }
    
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
    if(armor)
@@ -397,12 +391,9 @@ static void cheat_fa(const void *arg)
          (i == wp_supershotgun && !enable_ssg)))
          plyr->weaponowned[i] = true;
    }
-      
-   for(i = 0; i < NUMAMMO; i++)
-   {
-      if(i != am_cell || GameModeInfo->id != shareware)
-         plyr->ammo[i] = plyr->maxammo[i];
-   }
+
+   // give full ammo
+   E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
 
    doom_printf("%s", DEH_String("STSTR_FAADDED"));
 }
@@ -610,13 +601,11 @@ static void cheat_keyxx(const void *arg)
    if(key >= GameModeInfo->numHUDKeys)
       return;
 
-   itemeffect_t    *fx   = E_ItemEffectForName(GameModeInfo->cardNames[key]);
-   inventoryslot_t *slot = E_InventorySlotForItem(plyr, fx);
-
-   if(!fx)
+   itemeffect_t *fx;
+   if(!(fx = E_ItemEffectForName(GameModeInfo->cardNames[key])))
       return;
 
-   if(!slot || slot->amount == 0)
+   if(!E_GetItemOwnedAmount(plyr, fx))
    {
       E_GiveInventoryItem(plyr, fx);
       msg = "Key Added"; // Ty 03/27/98 - *not* externalized
@@ -675,6 +664,14 @@ static void cheat_ammo(const void *arg)
    doom_printf("Ammo 1-4, Backpack");  // Ty 03/27/98 - *not* externalized
 }
 
+static const char *cheat_AmmoForNum[NUMAMMO] =
+{
+   "AmmoClip",
+   "AmmoShell",
+   "AmmoMissile",
+   "AmmoCell"
+};
+
 static void cheat_ammox(const void *arg)
 {
    const char *buf = (const char *)arg;
@@ -686,42 +683,33 @@ static void cheat_ammox(const void *arg)
       {
          doom_printf("Backpack Added");
          E_GiveBackpack(plyr);
-
-         // INVENTORY_FIXME: eliminate once ammo types are in inventory
-         for(a = 0; a < NUMAMMO; a++)
-            plyr->maxammo[a] *= 2;
       }
       else
       {
          doom_printf("Backpack Removed");
          E_RemoveBackpack(plyr);
-
-         // INVENTORY_FIXME: modify once ammo types are in inventory
-         // (must still strip extra ammo... maybe E_RemoveBackpack
-         //  should handle that, using the ammo lookup).
-         for(a = 0; a < NUMAMMO; a++)
-         {
-            if(plyr->ammo[a] > (plyr->maxammo[a] /= 2))
-               plyr->ammo[a] = plyr->maxammo[a];
-         }
       }
    }
    else if(a >= 0 && a < NUMAMMO)
    { 
-      // killough 5/5/98: switch plasma and rockets for now -- KLUDGE 
-      a = (a == am_cell ? am_misl : a == am_misl ? am_cell : a);  // HACK
-
       // haleyjd 10/24/09: altered behavior:
       // * Add ammo if ammo is not at maxammo.
       // * Remove ammo otherwise.
-      if(plyr->ammo[a] != plyr->maxammo[a])
+      auto item = E_ItemEffectForName(cheat_AmmoForNum[a]);
+      if(!item)
+         return;
+
+      int amount    = E_GetItemOwnedAmount(plyr, item);
+      int maxamount = E_GetMaxAmountForArtifact(plyr, item);
+
+      if(amount != maxamount)
       {
-         plyr->ammo[a] = plyr->maxammo[a];
+         E_GiveInventoryItem(plyr, item, maxamount);
          doom_printf("Ammo Added");
       }
       else
       {
-         plyr->ammo[a] = 0;
+         E_RemoveInventoryItem(plyr, item, -1);
          doom_printf("Ammo Removed");
       }
    }

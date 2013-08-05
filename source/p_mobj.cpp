@@ -35,6 +35,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"

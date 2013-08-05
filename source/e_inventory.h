@@ -27,33 +27,9 @@
 #ifndef E_INVENTORY_H__
 #define E_INVENTORY_H__
 
+#include "d_player.h"
+
 class  MetaTable;
-struct player_t;
-
-// Inventory item ID is just an integer. The inventory item type can be looked
-// up using this.
-typedef int inventoryitemid_t;
-
-// Inventory index is an index into a player's inventory_t array. It is NOT
-// the same as the item ID. You get from one to the other by using:
-//   inventory[index].item
-typedef int inventoryindex_t;
-
-// Inventory Slot
-// Every slot in an inventory is composed of this structure. It references the
-// type of item in the slot via ID number, and tells how many of the item is
-// being carried. That's all it does.
-struct inventoryslot_t
-{
-   inventoryitemid_t item;   // The item.
-   int               amount; // Amount possessed.
-};
-
-// Inventory
-// An inventory is an array of inventoryslot structures, allocated at the max
-// number of inventory items it is possible to carry (ie. the number of distinct
-// inventory items defined).
-typedef inventoryslot_t * inventory_t;
 
 // Effect Types
 enum
@@ -61,6 +37,7 @@ enum
    ITEMFX_NONE,     // has no effect
    ITEMFX_HEALTH,   // an immediate-use health item
    ITEMFX_ARMOR,    // an immediate-use armor item
+   ITEMFX_AMMO,     // an ammo giving item; not to be confused with an ammo type
    ITEMFX_POWER,    // a power-up giver
    ITEMFX_ARTIFACT, // an item that enters the inventory, for later use or tracking
    NUMITEMFX
@@ -157,6 +134,17 @@ MetaTable *E_GetItemEffects();
 // Get the number of ammo type artifacts defined.
 size_t E_GetNumAmmoTypes();
 
+// enum for E_GiveAllAmmo behavior
+enum giveallammo_e
+{
+   GAA_BACKPACKAMOUNT, // give backpack amount
+   GAA_MAXAMOUNT,      // give max amount
+   GAA_CUSTOM          // use amount argument
+};
+
+// Give the player a certain amount of all ammo types
+void E_GiveAllAmmo(player_t *player, giveallammo_e op, int amount = -1);
+
 // Get an ammo type for its index in the fast lookup table.
 itemeffect_t *E_AmmoTypeForIndex(size_t idx);
 
@@ -205,11 +193,25 @@ bool E_RemoveBackpack(player_t *player);
 // Lookup the maximum amount a player can carry of a specific artifact type.
 int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact);
 
+// Get amount of an item owned for a specific artifact type
+int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact);
+
+// Get amount of an item owned by name
+int E_GetItemOwnedAmountName(player_t *player, const char *name);
+
 // Place an item into a player's inventory. 
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact);
+bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);
+
+// return value enumeration for E_RemoveInventoryItem
+enum itemremoved_e
+{
+   INV_NOTREMOVED, // could not remove
+   INV_REMOVED,    // removed requested number but left slot
+   INV_REMOVEDSLOT // removed number AND slot
+};
 
 // Remove an item from a player's inventory.
-bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount);
+itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.
@@ -230,6 +232,7 @@ int E_GetInventoryAllocSize();
 // Section Names
 #define EDF_SEC_HEALTHFX "healtheffect"
 #define EDF_SEC_ARMORFX  "armoreffect"
+#define EDF_SEC_AMMOFX   "ammoeffect"
 #define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_ARTIFACT "artifact"
 #define EDF_SEC_PICKUPFX "pickupitem"
@@ -238,6 +241,7 @@ int E_GetInventoryAllocSize();
 // Section Defs
 extern cfg_opt_t edf_healthfx_opts[];
 extern cfg_opt_t edf_armorfx_opts[];
+extern cfg_opt_t edf_ammofx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
 extern cfg_opt_t edf_pickup_opts[];

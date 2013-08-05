@@ -87,75 +87,53 @@ frame S_FIREBRAZIER7    { +decorate; dehackednum 2054 }
 frame S_FIREBRAZIER8    { +decorate; dehackednum 2055 }
 
 // KeyGizmo frames
-frame S_KEYGIZMOB { cmp = "KGZ1|A|*|*|*|@next"; dehackednum 2056 }
-frame S_KEYGIZMOBINIT    
-{ 
-   cmp = "KGZ1|A|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_BLUEFLOAT1, 60)|S_KEYGIZMO3"
-   dehackednum 2057 
-}
+frame S_KEYGIZMOB     { +decorate; dehackednum 2056 }
+frame S_KEYGIZMOBINIT { +decorate; dehackednum 2057 }
+frame S_KEYGIZMOG     { +decorate; dehackednum 2058 }
+frame S_KEYGIZMOGINIT { +decorate; dehackednum 2059 }
+frame S_KEYGIZMOY     { +decorate; dehackednum 2060 }
+frame S_KEYGIZMOYINIT { +decorate; dehackednum 2061 }
+frame S_KEYGIZMO3     { +decorate; dehackednum 2062 }
 
-frame S_KEYGIZMOG { cmp = "KGZ1|A|*|*|*|@next"; dehackednum 2058 }
-frame S_KEYGIZMOGINIT 
-{ 
-   cmp = "KGZ1|A|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_GREENFLOAT1, 60)|S_KEYGIZMO3"
-   dehackednum 2059 
-}
-
-frame S_KEYGIZMOY { cmp = "KGZ1|A|*|*|*|@next"; dehackednum 2060 }
-frame S_KEYGIZMOYINIT
-{ 
-   cmp = "KGZ1|A|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_YELLOWFLOAT1, 60)|S_KEYGIZMO3"
-   dehackednum 2061 
-}
-
-frame S_KEYGIZMO3        { cmp = "KGZ1|A|*|-1";        dehackednum 2062 }
-frame S_KGZ_START        { cmp = "KGZB|A|*|*|*|@this"; dehackednum 2063 }
-frame S_KGZ_BLUEFLOAT1   { cmp = "KGZB|A|T|-1";        dehackednum 2064 }
-frame S_KGZ_GREENFLOAT1  { cmp = "KGZG|A|T|-1";        dehackednum 2065 }
-frame S_KGZ_YELLOWFLOAT1 { cmp = "KGZY|A|T|-1";        dehackednum 2066 }
+// KeyGizmoOrb frames
+frame S_KGZ_START        { +decorate; dehackednum 2063 }
+frame S_KGZ_BLUEFLOAT1   { +decorate; dehackednum 2064 }
+frame S_KGZ_GREENFLOAT1  { +decorate; dehackednum 2065 }
+frame S_KGZ_YELLOWFLOAT1 { +decorate; dehackednum 2066 }
 
 // TeleGlitterGen / TeleGlitter frames
-frame S_TELEGLITGEN1
-{ 
-   cmp  = "TGLT|A|*|8|SpawnGlitter(TeleGlitterRed)|@this"
-   dehackednum 2067 
-}
-frame S_TELEGLITGEN2
-{ 
-   cmp  = "TGLT|F|*|8|SpawnGlitter(TeleGlitterBlue)|@this"
-   dehackednum 2068 
-}
-
-frame S_TELEGLITTER1_1 { cmp = "TGLT|A|T|2|*           |@next";            dehackednum 2069 }
-frame S_TELEGLITTER1_2 { cmp = "TGLT|B|T|2|AccelGlitter|@next";            dehackednum 2070 }
-frame S_TELEGLITTER1_3 { cmp = "TGLT|C|T|2|*           |@next";            dehackednum 2071 }
-frame S_TELEGLITTER1_4 { cmp = "TGLT|D|T|2|AccelGlitter|@next";            dehackednum 2072 }
-frame S_TELEGLITTER1_5 { cmp = "TGLT|E|T|2|*           |S_TELEGLITTER1_1"; dehackednum 2073 }
-frame S_TELEGLITTER2_1 { cmp = "TGLT|F|T|2|*           |@next";            dehackednum 2074 }
-frame S_TELEGLITTER2_2 { cmp = "TGLT|G|T|2|AccelGlitter|@next";            dehackednum 2075 }
-frame S_TELEGLITTER2_3 { cmp = "TGLT|H|T|2|*           |@next";            dehackednum 2076 }
-frame S_TELEGLITTER2_4 { cmp = "TGLT|I|T|2|AccelGlitter|@next";            dehackednum 2077 }
-frame S_TELEGLITTER2_5 { cmp = "TGLT|J|T|2|*           |S_TELEGLITTER2_1"; dehackednum 2078 }
+frame S_TELEGLITGEN1   { +decorate; dehackednum 2067 }
+frame S_TELEGLITGEN2   { +decorate; dehackednum 2068 }
+frame S_TELEGLITTER1_1 { +decorate; dehackednum 2069 }
+frame S_TELEGLITTER1_2 { +decorate; dehackednum 2070 }
+frame S_TELEGLITTER1_3 { +decorate; dehackednum 2071 }
+frame S_TELEGLITTER1_4 { +decorate; dehackednum 2072 }
+frame S_TELEGLITTER1_5 { +decorate; dehackednum 2073 }
+frame S_TELEGLITTER2_1 { +decorate; dehackednum 2074 }
+frame S_TELEGLITTER2_2 { +decorate; dehackednum 2075 }
+frame S_TELEGLITTER2_3 { +decorate; dehackednum 2076 }
+frame S_TELEGLITTER2_4 { +decorate; dehackednum 2077 }
+frame S_TELEGLITTER2_5 { +decorate; dehackednum 2078 }
 
 // HereticTeleFog frames
-frame S_HTFOG1  { cmp = "TELE|A|T|6|*|@next"; dehackednum 2079 }
-frame S_HTFOG2  { cmp = "TELE|B|T|6|*|@next"; dehackednum 2080 }
-frame S_HTFOG3  { cmp = "TELE|C|T|6|*|@next"; dehackednum 2081 }
-frame S_HTFOG4  { cmp = "TELE|D|T|6|*|@next"; dehackednum 2082 }
-frame S_HTFOG5  { cmp = "TELE|E|T|6|*|@next"; dehackednum 2083 }
-frame S_HTFOG6  { cmp = "TELE|F|T|6|*|@next"; dehackednum 2084 }
-frame S_HTFOG7  { cmp = "TELE|G|T|6|*|@next"; dehackednum 2085 }
-frame S_HTFOG8  { cmp = "TELE|H|T|6|*|@next"; dehackednum 2086 }
-frame S_HTFOG9  { cmp = "TELE|G|T|6|*|@next"; dehackednum 2087 }
-frame S_HTFOG10 { cmp = "TELE|F|T|6|*|@next"; dehackednum 2088 }
-frame S_HTFOG11 { cmp = "TELE|E|T|6|*|@next"; dehackednum 2089 }
-frame S_HTFOG12 { cmp = "TELE|D|T|6|*|@next"; dehackednum 2090 }
-frame S_HTFOG13 { cmp = "TELE|C|T|6";         dehackednum 2091 }
+frame S_HTFOG1  { +decorate; dehackednum 2079 }
+frame S_HTFOG2  { +decorate; dehackednum 2080 }
+frame S_HTFOG3  { +decorate; dehackednum 2081 }
+frame S_HTFOG4  { +decorate; dehackednum 2082 }
+frame S_HTFOG5  { +decorate; dehackednum 2083 }
+frame S_HTFOG6  { +decorate; dehackednum 2084 }
+frame S_HTFOG7  { +decorate; dehackednum 2085 }
+frame S_HTFOG8  { +decorate; dehackednum 2086 }
+frame S_HTFOG9  { +decorate; dehackednum 2087 }
+frame S_HTFOG10 { +decorate; dehackednum 2088 }
+frame S_HTFOG11 { +decorate; dehackednum 2089 }
+frame S_HTFOG12 { +decorate; dehackednum 2090 }
+frame S_HTFOG13 { +decorate; dehackednum 2091 }
 
 // HereticBlood frames
-frame S_HTICBLOOD1 { cmp = "BLOD|C|*|8|*|@next"; dehackednum 2092 }
-frame S_HTICBLOOD2 { cmp = "BLOD|B|*|8|*|@next"; dehackednum 2093 }
-frame S_HTICBLOOD3 { cmp = "BLOD|A|*|8";         dehackednum 2094 }
+frame S_HTICBLOOD1 { +decorate; dehackednum 2092 }
+frame S_HTICBLOOD2 { +decorate; dehackednum 2093 }
+frame S_HTICBLOOD3 { +decorate; dehackednum 2094 }
 
 // Golem frames
 frame S_MUMMY_LOOK1 { cmp = "MUMM|A|*|10|Look        |@next"; dehackednum 2095 }

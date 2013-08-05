@@ -77,11 +77,6 @@ int god_health = 100;   // these are used in cheats (see st_stuff.c)
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
 
-// a weapon is found with two clip loads,
-// a big item has five clip loads
-int maxammo[NUMAMMO]  = {200, 50, 300, 50};
-int clipammo[NUMAMMO] = { 10,  4,  20,  1};
-
 //
 // GET STUFF
 //
@@ -89,42 +84,26 @@ int clipammo[NUMAMMO] = { 10,  4,  20,  1};
 //
 // P_GiveAmmo
 //
-// Num is the number of clip loads,
-// not the individual count (0= 1/2 clip).
 // Returns false if the ammo can't be picked up at all
 //
-bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
+bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 {
-   int oldammo;
-   
-   if(ammo == am_noammo)
-      return false;
-   
-   // haleyjd: Part of the campaign to eliminate unnecessary
-   //   I_Error bombouts for things that can be ignored safely
-   if((unsigned int)ammo >= NUMAMMO)
-   {
-      doom_printf(FC_ERROR "P_GiveAmmo: bad type %d\a\n", ammo);
-      return false;
-   }
-
-   if(player->ammo[ammo] == player->maxammo[ammo])
+   if(!ammo)
       return false;
 
-   if(num)
-      num *= clipammo[ammo];
-   else
-      num = clipammo[ammo]/2;
+   // check if needed
+   int oldammo   = E_GetItemOwnedAmount(player, ammo);
+   int maxamount = E_GetMaxAmountForArtifact(player, ammo);
+
+   if(oldammo == maxamount)
+      return false;
 
    // give double ammo in trainer mode, you'll need in nightmare
    if(gameskill == sk_baby || gameskill == sk_nightmare)
       num <<= 1;
 
-   oldammo = player->ammo[ammo];
-   player->ammo[ammo] += num;
-   
-   if(player->ammo[ammo] > player->maxammo[ammo])
-      player->ammo[ammo] = player->maxammo[ammo];
+   if(!E_GiveInventoryItem(player, ammo, num))
+      return false; // don't need this ammo
    
    // If non zero ammo, don't change up weapons, player was lower on purpose.
    if(oldammo)
@@ -134,9 +113,9 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
    // Preferences are not user selectable.
    
    // WEAPON_FIXME: ammo reception behaviors
-   switch (ammo)
+   // INVENTORY_TODO: hardcoded behaviors for now...
+   if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-   case am_clip:
       if(player->readyweapon == wp_fist)
       {
          if(player->weaponowned[wp_chaingun])
@@ -144,30 +123,46 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
          else
             player->pendingweapon = wp_pistol;
       }
-      break;
-
-   case am_shell:
+   }
+   else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
+   {
       if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
          if(player->weaponowned[wp_shotgun])
             player->pendingweapon = wp_shotgun;
-      break;
-
-   case am_cell:
+   }
+   else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
+   {
       if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
          if(player->weaponowned[wp_plasma])
             player->pendingweapon = wp_plasma;
-      break;
-
-   case am_misl:
+   }
+   else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
+   {
       if(player->readyweapon == wp_fist)
          if(player->weaponowned[wp_missile])
             player->pendingweapon = wp_missile;
-      break;
-
-   default:
-      break;
    }
+
    return true;
+}
+
+//
+// P_GiveAmmoPickup
+//
+// Give the player ammo from an ammoeffect pickup.
+//
+bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped)
+{
+   if(!pickup)
+      return false;
+
+   itemeffect_t *give = E_ItemEffectForName(pickup->getString("ammo", ""));
+   int giveamount     = pickup->getInt("amount", 0);
+
+   if(dropped)
+      giveamount = pickup->getInt("dropamount", giveamount);
+
+   return P_GiveAmmo(player, give, giveamount);
 }
 
 //
@@ -178,8 +173,8 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
 bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 {
    bool gaveweapon = false;
-   bool gaveammo;
-   
+   weaponinfo_t *wp = &weaponinfo[weapon];
+
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
@@ -188,9 +183,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 
       player->bonuscount += BONUSADD;
       player->weaponowned[weapon] = true;
-      
-      P_GiveAmmo(player, weaponinfo[weapon].ammo, 
-                 (GameType == gt_dm) ? 5 : 2);
+      P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
       
       player->pendingweapon = weapon;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
@@ -198,8 +191,8 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
    }
 
    // give one clip with a dropped weapon, two clips with a found weapon
-   gaveammo = weaponinfo[weapon].ammo != am_noammo &&
-      P_GiveAmmo(player, weaponinfo[weapon].ammo, dropped ? 1 : 2);
+   int  amount   = dropped ? wp->dropammo : wp->giveammo;
+   bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
    
    // haleyjd 10/4/11: de-Killoughized
    if(!player->weaponowned[weapon])
@@ -311,10 +304,9 @@ bool P_GiveArmor(player_t *player, itemeffect_t *effect)
 //
 void P_GiveCard(player_t *player, itemeffect_t *card)
 {
-   inventoryslot_t *slot = E_InventorySlotForItem(player, card);
+   if(E_GetItemOwnedAmount(player, card))
+      return;
 
-   if(slot && slot->amount > 0)
-      return;   
    player->bonuscount = BONUSADD; // INVENTORY_TODO: hard-coded for now
    E_GiveInventoryItem(player, card);
 }
@@ -382,6 +374,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    e_pickupfx_t *pickup;
    itemeffect_t *effect;
    bool          pickedup = false;
+   bool          dropped  = false;
    const char   *message  = NULL;
    const char   *sound    = NULL;
 
@@ -411,6 +404,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    // set defaults
    message = pickup->message;
    sound   = pickup->sound;
+   dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
    switch(effect->getInt("class", ITEMFX_NONE))
    {
@@ -419,8 +413,11 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
       if(pickedup && player->health < effect->getInt("amount", 0) * 2)
          message = effect->getString("lowmessage", message);
       break;
-   case ITEMFX_ARMOR:
+   case ITEMFX_ARMOR:    // Armor - give the player some armor
       pickedup = P_GiveArmor(player, effect);
+      break;
+   case ITEMFX_AMMO:     // Ammo - give the player some ammo
+      pickedup = P_GiveAmmoPickup(player, effect, dropped);
       break;
    case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
       pickedup = E_GiveInventoryItem(player, effect);
@@ -476,10 +473,11 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t   *player;
-   int        i, sound;
+   int        sound;
    const char *message = NULL;
    bool       removeobj = true;
    bool       pickup_fx = true; // haleyjd 04/14/03
+   bool       dropped   = false;
    fixed_t    delta = special->z - toucher->z;
    
    // INVENTORY_TODO: transitional logic is in place below until this function
@@ -504,6 +502,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    // haleyjd 05/11/03: EDF pickups modifications
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
       return;
+
+   dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
    // Identify by sprite.
    // INVENTORY_FIXME: apply pickupfx[].effect instead!
@@ -561,8 +561,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_BLUEKEY:
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_BLUECARD);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -571,8 +570,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_YELLOWKEY:
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_YELLOWCARD);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -581,8 +579,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_REDKEY:
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_REDCARD);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -591,8 +588,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_BLUESKULL:
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_BLUESKULL);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -601,8 +597,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_YELLOWSKULL:
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -611,8 +606,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_REDSKULL:
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_REDSKULL);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -686,72 +680,66 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       // ammo
    case PFX_CLIP:
-      if(special->flags & MF_DROPPED)
-      {
-         if(!P_GiveAmmo(player,am_clip,0))
-            return;
-      }
-      else
-      {
-         if(!P_GiveAmmo(player,am_clip,1))
-            return;
-      }
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped))
+         return;
       message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CLIPBOX:
-      if(!P_GiveAmmo(player, am_clip,5))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false))
          return;
       message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKET:
-      if(!P_GiveAmmo(player, am_misl,1))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false))
          return;
       message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKETBOX:
-      if(!P_GiveAmmo(player, am_misl,5))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false))
          return;
       message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELL:
-      if(!P_GiveAmmo(player, am_cell,1))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false))
          return;
       message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELLPACK:
-      if(!P_GiveAmmo(player, am_cell,5))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false))
          return;
       message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELL:
-      if(!P_GiveAmmo(player, am_shell,1))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false))
          return;
       message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELLBOX:
-      if(!P_GiveAmmo(player, am_shell,5))
+      // INVENTORY_TODO: hardcoded for now
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false))
          return;
       message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BACKPACK:
+      // INVENTORY_TODO: hardcoded for now
       if(!E_PlayerHasBackpack(player))
-      {
-         // INVENTORY_FIXME: eliminate once ammo types are managed by inventory
-         for(i = 0; i < NUMAMMO; i++)
-            player->maxammo[i] *= 2;
          E_GiveBackpack(player);
-      }
-      // INVENTORY_TODO: use ammo types' backpack amounts
-      for(i = 0; i < NUMAMMO; i++)
-         P_GiveAmmo(player, i, 1);
+      E_GiveAllAmmo(player, GAA_BACKPACKAMOUNT);
       message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       break;
 
@@ -771,7 +759,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, !!(special->flags & MF_DROPPED)))
+      if(!P_GiveWeapon(player, wp_chaingun, dropped))
          return;
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
@@ -785,7 +773,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_LAUNCHER:
-      if(!P_GiveWeapon(player, wp_missile, false) )
+      if(!P_GiveWeapon(player, wp_missile, false))
          return;
       message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
@@ -799,14 +787,14 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, !!(special->flags & MF_DROPPED)))
+      if(!P_GiveWeapon(player, wp_shotgun, dropped))
          return;
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, !!(special->flags & MF_DROPPED)))
+      if(!P_GiveWeapon(player, wp_supershotgun, dropped))
          return;
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
@@ -817,8 +805,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_HGREENKEY: // green key
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_KEYGREEN);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("HGOTGREENKEY");
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -828,8 +815,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_HBLUEKEY: // blue key
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_KEYBLUE);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("HGOTBLUEKEY");
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -839,8 +825,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_HYELLOWKEY: // yellow key
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ARTI_KEYYELLOW);
-      slot   = E_InventorySlotForItem(player, effect);
-      if(!slot || slot->amount == 0)
+      if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("HGOTYELLOWKEY");
       P_GiveCard(player, effect);
       removeobj = pickup_fx = (GameType == gt_single);

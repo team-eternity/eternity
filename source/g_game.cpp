@@ -47,6 +47,7 @@
 #include "d_net.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -2094,14 +2095,20 @@ void G_PlayerReborn(int player)
    p->health = initial_health;  // Ty 03/12/98 - use dehacked values
    p->quake = 0;                // haleyjd 01/21/07
 
-   // INVENTORY_TODO: reborn inventory
+   // haleyjd 08/05/13: give reborn inventory
    E_ClearInventory(p);
+   for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
+   {
+      const char *name   = playerclass->rebornitems[i].itemname;
+      int         amount = playerclass->rebornitems[i].amount;
+      
+      E_GiveInventoryItem(p, E_ItemEffectForName(name), amount);
+   }
 
-   // WEAPON_FIXME: default reborn weapon
-   // PCLASS_FIXME: default reborn weapon
+   // INVENTORY_TODO: reborn weapons
    p->readyweapon = p->pendingweapon = wp_pistol;
 
-   // WEAPON_FIXME: revive "weaponowned" feature?
+   // INVENTORY_TODO: eliminate?
    // sf: different weapons owned
    memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
    
@@ -2109,13 +2116,6 @@ void G_PlayerReborn(int player)
    // PCLASS_FIXME: always owned weapons
    p->weaponowned[wp_fist] = true;     // always fist and pistol
    p->weaponowned[wp_pistol] = true;
-   
-   // WEAPON_FIXME: default ammo stuff
-   // PCLASS_FIXME: default ammo stuff
-   p->ammo[am_clip] = initial_bullets; // Ty 03/12/98 - use dehacked values
-   
-   for(int i = 0; i < NUMAMMO; i++)
-      p->maxammo[i] = maxammo[i];
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

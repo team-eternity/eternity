@@ -1347,6 +1347,15 @@ void deh_procSounds(DWFILE *fpin, char *line)
    return;
 }
 
+static const char *deh_itemsForAmmoNum[NUMAMMO][3] =
+{
+   // ammotype,     small item,   large item
+   { "AmmoClip",    "Clip",       "ClipBox"   },
+   { "AmmoShell",   "Shell",      "ShellBox"  },
+   { "AmmoCell",    "Cell",       "CellPack"  },
+   { "AmmoMissile", "RocketAmmo", "RocketBox" },
+};
+
 // ====================================================================
 // deh_procAmmo
 // Purpose: Handle DEH Ammo block
@@ -1360,6 +1369,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
    char inbuffer[DEH_BUFFERMAX];
    int value;      // All deh values are ints or longs
    int indexnum;
+   itemeffect_t *smallitem, *largeitem, *ammotype;
    
    strncpy(inbuffer, line, DEH_BUFFERMAX);
    
@@ -1373,6 +1383,10 @@ void deh_procAmmo(DWFILE *fpin, char *line)
       deh_LogPrintf("Bad ammo number %d of %d\n", indexnum, NUMAMMO);
       return; // haleyjd 10/08/06: bugfix!
    }
+
+   ammotype  = E_ItemEffectForName(deh_itemsForAmmoNum[indexnum][0]);
+   smallitem = E_ItemEffectForName(deh_itemsForAmmoNum[indexnum][1]);
+   largeitem = E_ItemEffectForName(deh_itemsForAmmoNum[indexnum][2]);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
@@ -1390,9 +1404,51 @@ void deh_procAmmo(DWFILE *fpin, char *line)
       }
       
       if(!strcasecmp(key, deh_ammo[0]))  // Max ammo
-         maxammo[indexnum] = value;
+      {
+         // max ammo is now stored in the ammotype effect
+         if(ammotype)
+         {
+            ammotype->setInt("maxamount", value);
+            ammotype->setInt("ammo.backpackmaxamount", value*2);
+         }
+      }
       else if(!strcasecmp(key, deh_ammo[1]))  // Per ammo
-         clipammo[indexnum] = value;
+      {
+         // modify the small pickup item
+         if(smallitem)
+         {
+            smallitem->setInt("amount", value);
+            
+            // may also modify dropped amount; original is 1/2 clip, but
+            // only bullet clips originally obeyed this
+            if(indexnum == am_clip) 
+               smallitem->setInt("dropamount", value / 2);
+         }
+
+         // modify the large pickup item; original behavior was 5 clips of
+         // the small item amount
+         if(largeitem)
+            largeitem->setInt("amount", value*5);
+
+         // modify the ammotype's backpack amount; original behavior was 1 clip
+         // of the small item amount
+         if(ammotype)
+            ammotype->setInt("ammo.backpackamount", value);
+
+         // INVENTORY_TODO / INVENTORY_FIXME: weapon modifications will need 
+         // adjustment later to loop over all weapons defined via EDF
+         for(int wp = 0; wp < NUMWEAPONS; wp++)
+         {
+            weaponinfo_t *weapon = &weaponinfo[wp];
+            if(weapon->ammo == ammotype)
+            {
+               weapon->dmstayammo   = value * 5;
+               weapon->coopstayammo = value * 2;
+               weapon->giveammo     = value * 2;
+               weapon->dropammo     = value;
+            }
+         }
+      }
       else
          deh_LogPrintf("Invalid ammo string index for '%s'\n", key);
    }
@@ -1443,7 +1499,12 @@ void deh_procWeapon(DWFILE *fpin, char *line)
 
       // haleyjd: resolution adjusted for EDF
       if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
-         weaponinfo[indexnum].ammo = value;
+      {
+         if(value < 0 || value >= NUMAMMO)
+            weaponinfo[indexnum].ammo = NULL; // no ammo
+         else
+            weaponinfo[indexnum].ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
+      }
       else if(!strcasecmp(key, deh_weapon[1]))  // Deselect frame
          weaponinfo[indexnum].upstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[2]))  // Select frame

@@ -49,7 +49,7 @@ patch_t*    sttminus;
 //
 // Passed nothing, returns nothing
 //
-void STlib_init(void)
+void STlib_init()
 {
    sttminus = PatchLoader::CacheName(wGlobalDir, "STTMINUS", PU_STATIC);
 }
@@ -63,13 +63,14 @@ void STlib_init(void)
 // to the value displayed, a pointer to the on/off control, and the width
 // Returns nothing
 //
-void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
-                   bool *on, int width)
+void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int num,
+                   int max, bool *on, int width)
 {
    n->x     = x;
    n->y     = y;
    n->width = width;
    n->num   = num;
+   n->max   = max;
    n->on    = on;
    n->p     = pl;
 }
@@ -89,7 +90,7 @@ void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
 static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 {
    int   numdigits = n->width;
-   int   num = *n->num;
+   int   num = n->num;
    int   w = n->p[0]->width;
    int   x;
 
@@ -172,10 +173,10 @@ void STlib_updateNum(st_number_t *n, byte *outrng, int alpha)
 // for the percent sign.
 // Returns nothing.
 //
-void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
+void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int num,
                        bool *on, patch_t *percent)
 {
-   STlib_initNum(&p->n, x, y, pl, num, on, 3);
+   STlib_initNum(&p->n, x, y, pl, num, 200, on, 3);
    p->p = percent;
 }
 

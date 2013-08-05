@@ -35,9 +35,6 @@
 
 #include "p_pspr.h"
 
-// haleyjd 07/06/13: Need inventory definitions
-#include "e_inventory.h"
-
 // In addition, the player is just a special
 // case of the generic moving object/actor.
 
@@ -51,6 +48,31 @@
 
 struct playerclass_t;
 struct skin_t;
+
+// Inventory item ID is just an integer. The inventory item type can be looked
+// up using this.
+typedef int inventoryitemid_t;
+
+// Inventory index is an index into a player's inventory_t array. It is NOT
+// the same as the item ID. You get from one to the other by using:
+//   inventory[index].item
+typedef int inventoryindex_t;
+
+// Inventory Slot
+// Every slot in an inventory is composed of this structure. It references the
+// type of item in the slot via ID number, and tells how many of the item is
+// being carried. That's all it does.
+struct inventoryslot_t
+{
+   inventoryitemid_t item;   // The item.
+   int               amount; // Amount possessed.
+};
+
+// Inventory
+// An inventory is an array of inventoryslot structures, allocated at the max
+// number of inventory items it is possible to carry (ie. the number of distinct
+// inventory items defined).
+typedef inventoryslot_t * inventory_t;
 
 //
 // Player states.
@@ -129,8 +151,6 @@ struct player_t
    weapontype_t   pendingweapon; // Is wp_nochange if not changing.
 
    int            weaponowned[NUMWEAPONS];
-   int            ammo[NUMAMMO];
-   int            maxammo[NUMAMMO];
    int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.

@@ -37,6 +37,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
+#include "e_inventory.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_over.h"
@@ -121,25 +122,54 @@ enum
 #define hu_player (players[displayplayer])
 
 // Get the player's ammo for the given weapon, or 0 if am_noammo
-#define wc_pammo(w) \
-   (weaponinfo[w].ammo == am_noammo ? 0 : hu_player.ammo[weaponinfo[w].ammo])
+static int wc_pammo(int w)
+{
+   return E_GetItemOwnedAmount(&hu_player, weaponinfo[w].ammo);
+}
 
 // Determine if the player has enough ammo for one shot with the given weapon
-#define wc_noammo(w) \
-   (weaponinfo[w].ammo == am_noammo ? 0 : \
-    (hu_player.ammo[weaponinfo[w].ammo] < weaponinfo[w].ammopershot))
+static bool wc_noammo(int w)
+{
+   bool outofammo = false;
+   itemeffect_t *ammo = weaponinfo[w].ammo;
+
+   // no-ammo weapons are always considered to have ammo
+   if(ammo)
+   {
+      int amount = E_GetItemOwnedAmount(&hu_player, ammo);
+      if(amount)
+         outofammo = (amount < weaponinfo[w].ammopershot);
+   }
+
+   return outofammo;
+}
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
-#define wc_mammo(w) \
-   (weaponinfo[w].ammo == am_noammo ? 0 : hu_player.maxammo[weaponinfo[w].ammo])
+static int wc_mammo(int w)
+{
+   int amount = 0;
+   itemeffect_t *ammo = weaponinfo[w].ammo;
+
+   if(ammo)
+      amount = E_GetMaxAmountForArtifact(&hu_player, ammo);
+
+   return amount;
+}
 
 // Determine the color to use for the given weapon's number and ammo bar/count
-#define weapcolor(w)                                                \
-   (!wc_mammo(w)  ? *FC_GRAY    :                                   \
-     wc_noammo(w) ? *FC_CUSTOM1 :                                   \
-     wc_pammo(w) < ((wc_mammo(w) * ammo_red)    / 100) ? *FC_RED  : \
-     wc_pammo(w) < ((wc_mammo(w) * ammo_yellow) / 100) ? *FC_GOLD : \
-     *FC_GREEN )
+static char weapcolor(int w)
+{
+   int  maxammo = wc_mammo(w);
+   bool noammo  = wc_noammo(w);
+   int  pammo   = wc_pammo(w);
+
+   return
+      (!maxammo ? *FC_GRAY :
+       noammo   ? *FC_CUSTOM1 :
+       pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED  :
+       pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD :
+       *FC_GREEN);
+}
 
 // Get the amount of ammo the displayplayer has left in his/her readyweapon
 #define playerammo    wc_pammo(hu_player.readyweapon)
@@ -417,8 +447,7 @@ static void HU_drawKeys(int x, int y)
    // haleyjd 10/09/05: don't show double keys in Heretic
    for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
-      auto slot = E_InventorySlotForItemName(&hu_player, GameModeInfo->cardNames[i]);
-      if(slot && slot->amount > 0)
+      if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
          V_DrawPatch(x, y, &subscreen43, keys[i]);

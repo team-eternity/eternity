@@ -429,81 +429,175 @@ thingtype HereticCorpse : Mobj, 7051, 325
   "@
 }
 
-thingtype KeyGizmoBlue : Mobj, 7094, 326
+// Base class thingtype for all key gizmos
+thingtype KeyGizmo
 {
-  spawnstate S_KEYGIZMOB
-  radius     16.0
-  height     50.0
-  flags      SOLID
+  radius 16.0
+  height 50.0
+  flags  SOLID
+
+  firstdecoratestate S_KEYGIZMO3
+  states
+  @"
+  Spawn:
+    KGZ1 A -1
+    stop
+  "@
 }
 
-thingtype KeyGizmoGreen : Mobj, 7095, 327
+thingtype KeyGizmoBlue : KeyGizmo, 7094, 326
 {
-  spawnstate S_KEYGIZMOG
-  radius     16.0
-  height     50.0
-  flags      SOLID
+  firstdecoratestate S_KEYGIZMOB
+  states
+  @"
+  Spawn:
+    KGZ1 A 1
+    KGZ1 A 1 A_InitKeyGizmo
+    goto Super::Spawn
+  "@
 }
 
-thingtype KeyGizmoYellow : Mobj, 7096, 328
+thingtype KeyGizmoGreen : KeyGizmo, 7095, 327
 {
-  spawnstate S_KEYGIZMOY
-  radius     16.0
-  height     50.0
-  flags      SOLID
+  firstdecoratestate S_KEYGIZMOG
+  states
+  @"
+  Spawn:
+    KGZ1 A 1
+    KGZ1 A 1 A_InitKeyGizmo
+    goto Super::Spawn
+  "@
+}
+
+thingtype KeyGizmoYellow : KeyGizmo, 7096, 328
+{
+  firstdecoratestate S_KEYGIZMOY
+  states
+  @"
+  Spawn:
+    KGZ1 A 1
+    KGZ1 A 1 A_InitKeyGizmo
+    goto Super::Spawn
+  "@
 }
 
 thingtype KeyGizmoOrb : Mobj, -1, 329
 {
-  spawnstate S_KGZ_START
-  radius     16.0
-  flags      SOLID|NOGRAVITY
+  radius 16.0
+  flags  SOLID|NOGRAVITY
+  
+  firstdecoratestate S_KGZ_START
+  states
+  @"
+  Spawn:
+    KGZB A 1
+    loop
+  Blue:
+    KGZB A -1 bright
+    stop
+  Green:
+    KGZG A -1 bright
+    stop
+  Yellow:
+    KGZY A -1 bright
+    stop
+  "@
 }
 
 thingtype TeleGlitterGenRed : Mobj, 7074, 330
 {
-  spawnstate S_TELEGLITGEN1
-  cflags     DONTDRAW
+  cflags DONTDRAW
+  
+  firstdecoratestate S_TELEGLITGEN1
+  states
+  @"
+  Spawn:
+    TGLT A 8 A_SpawnTeleGlitter
+    loop
+  "@
 }
 
 thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 {
-  spawnstate S_TELEGLITGEN2
   cflags     DONTDRAW
+  
+  firstdecoratestate S_TELEGLITGEN2
+  states
+  @"
+  Spawn:
+    TGLT F 8 A_SpawnTeleGlitter2
+    loop
+  "@
 }
 
 thingtype TeleGlitterRed : Mobj, -1, 332
 {
-  spawnstate S_TELEGLITTER1_1
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
   acs_spawndata
   {
     num   166 
     modes heretic
   }
+  
+  firstdecoratestate S_TELEGLITTER1_1
+  states
+  @"
+  Spawn:
+    TGLT A 2 bright
+    TGLT B 2 bright A_AccelGlitter
+    TGLT C 2 bright
+    TGLT D 2 bright A_AccelGlitter
+    TGLT E 2 bright
+    loop
+  "@
 }
 
 thingtype TeleGlitterBlue : Mobj, -1, 333
 {
-  spawnstate S_TELEGLITTER2_1
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
   acs_spawndata
   {
     num   167
     modes heretic
   }
+  
+  firstdecoratestate S_TELEGLITTER2_1
+  states
+  @"
+  Spawn:
+    TGLT F 2 bright
+    TGLT G 2 bright A_AccelGlitter
+    TGLT H 2 bright
+    TGLT I 2 bright A_AccelGlitter
+    TGLT J 2 bright
+    loop
+  "@
 }
 
 thingtype HereticTeleFog : Mobj, -1, 334
 {
-  spawnstate S_HTFOG1
-  flags      NOBLOCKMAP|NOGRAVITY
+  flags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_HTFOG1
+  states
+  @"
+  Spawn:
+    TELE ABCDEFGHGFEDC 6 bright
+    stop
+  "@
 }
 
 thingtype HereticBlood : Mobj, -1, 335
 {
-  spawnstate S_HTICBLOOD1
-  cflags     NOBLOCKMAP|NOSPLASH
+  cflags NOBLOCKMAP|NOSPLASH
+  
+  firstdecoratestate S_HTICBLOOD1
+  states
+  @"
+  Spawn:
+    BLOD CBA 8
+    stop
+  "@
 }
 
 thingtype Golem : Mobj, 7068, 336
