@@ -82,7 +82,11 @@ class PortalClipEngine : public ClipEngine
       void gatherSectorLinks(Mobj *thing, ClipContext *cc);
       void addMobjBlockLinks(ClipContext *cc);
       void delSeclist(msecnode_t *);
-      msecnode_t *gatherSecNodes(Mobj *thing, int x, int y, ClipContext *cc);
+
+      // Iterators
+      static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context);
+      static void PortalClipEngine::findAdjacentPortals(ClipContext *cc);
+
 };
 
 

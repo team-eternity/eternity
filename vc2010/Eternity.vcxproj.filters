@@ -930,6 +930,9 @@
     <ClCompile Include="..\source\p_portalclip.cpp">
       <Filter>Source Files\Clip\Portal</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\p_portalcliplinking.cpp">
+      <Filter>Source Files\Clip\Portal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">

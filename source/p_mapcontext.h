@@ -41,6 +41,7 @@ class  MarkVector;
 
 
 #include "m_collection.h"
+#include "p_mobj.h"
 
 class MapContext
 {
