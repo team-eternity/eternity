@@ -643,6 +643,9 @@ void A_Fall(actionargs_t *actionargs)
 {
    // actor is on ground, it can be walked over
    actionargs->actor->flags &= ~MF_SOLID;
+
+   // haleyjd 08/06/13: toss-type dropitems are spawned now
+   P_DropItems(actionargs->actor, true);
 }
 
 // killough 11/98: kill an object

@@ -190,29 +190,6 @@ void A_MummySoul(actionargs_t *actionargs)
    mo->momz = FRACUNIT;
 }
 
-void P_HticDrop(Mobj *actor, int special, mobjtype_t type)
-{
-   Mobj *item;
-
-   item = P_SpawnMobj(actor->x, actor->y, 
-                      actor->z + (actor->height >> 1),
-                      type);
-   
-   item->momx = P_SubRandom(pr_hdropmom) << 8;
-   item->momy = P_SubRandom(pr_hdropmom) << 8;
-   item->momz = (P_Random(pr_hdropmom) << 10) + 5*FRACUNIT;
-
-   /*
-   // GROSS! We are not doing this in EE.
-   if(special)
-   {
-      item->health = special;
-   }
-   */
-
-   item->flags |= MF_DROPPED;
-}
-
 //
 // A_HticDrop
 //
@@ -224,29 +201,6 @@ void P_HticDrop(Mobj *actor, int special, mobjtype_t type)
 void A_HticDrop(actionargs_t *actionargs)
 {
    A_Fall(actionargs); // still need this, temporarily
-
-#if 0
-   int thingtype1, thingtype2, chance1, chance2;
-   int drop1 = 0, drop2 = 0;
-
-   thingtype1 = E_ArgAsThingNumG0(actor->state->args, 0);
-   chance1    = E_ArgAsInt(actor->state->args,      1, 0);
-   thingtype2 = E_ArgAsThingNumG0(actor->state->args, 2);
-   chance2    = E_ArgAsInt(actor->state->args,      3, 0);
-
-   // haleyjd 07/05/03: adjusted for EDF
-   if(thingtype1 >= 0)
-   {
-      if(P_Random(pr_hdrop1) <= chance1)
-         P_HticDrop(actor, drop1, thingtype1);
-   }
-
-   if(thingtype2 >= 0)
-   {
-      if(P_Random(pr_hdrop2) <= chance2)
-         P_HticDrop(actor, drop2, thingtype2);
-   }
-#endif
 }
 
 void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)

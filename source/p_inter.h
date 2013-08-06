@@ -37,6 +37,7 @@ class  Mobj;
 bool P_GivePower(player_t *, int);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
+void P_DropItems(Mobj *actor, bool tossitems);
 
 void P_Whistle(Mobj *actor, int mobjtype);
 

@@ -985,8 +985,10 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 // P_DropItems
 //
 // Drop all items as specified in an actor's MetaTable.
+// If tossitems is false, only non-toss items are spawned.
+// If tossitems is true, only toss items are spawned.
 //
-static void P_DropItems(Mobj *actor)
+void P_DropItems(Mobj *actor, bool tossitems)
 {
    MetaTable  *meta = actor->info->meta;
    MetaObject *obj  = NULL;
@@ -998,6 +1000,10 @@ static void P_DropItems(Mobj *actor)
    while((obj = meta->getNextType(obj, METATYPE(MetaDropItem))))
    {
       MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
+
+      // check if we spawn this sort of item at the present time
+      if(mdi->toss != tossitems)
+         continue;
 
       int type = E_SafeThingName(mdi->item.constPtr());
 
@@ -1038,9 +1044,6 @@ static void P_DropItems(Mobj *actor)
 //
 static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
-   mobjtype_t item;
-   Mobj     *mo;
-
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
    
@@ -1122,7 +1125,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // Drop stuff.
    // This determines the kind of object spawned
    // during the death frame of a thing.
-   P_DropItems(target);
+   P_DropItems(target, false);
 }
 
 //
