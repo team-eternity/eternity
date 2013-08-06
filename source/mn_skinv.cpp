@@ -268,7 +268,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
       if(skview_action != SKV_DEAD && !skview_metadeaths.isEmpty())
       {
          skview_metadeath = skview_metadeaths.wrapIterator();
-         MN_SkinSetState(skview_metadeath->getValue());
+         MN_SkinSetState(skview_metadeath->state);
          skview_action = SKV_DEAD;
       }
       break;

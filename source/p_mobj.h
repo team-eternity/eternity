@@ -322,6 +322,7 @@ public:
    int alphavelocity; // haleyjd 05/23/08: change in translucency
    int floatbob;      // floatbob offset
    int damage;        // haleyjd 08/02/04: copy damage to mobj now
+   int dropamount;    // haleyjd 08/05/13: for ammo drops, overrides ammoeffect
    fixed_t floorclip; // haleyjd 08/07/04: floor clip amount
 
    float xscale;      // haleyjd 11/22/09: x scaling

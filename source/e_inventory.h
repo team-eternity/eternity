@@ -27,9 +27,11 @@
 #ifndef E_INVENTORY_H__
 #define E_INVENTORY_H__
 
+// Basic inventory definitions are now in d_player.h, so that the entire engine
+// doesn't rebuild if you modify this header.
 #include "d_player.h"
 
-class  MetaTable;
+class MetaTable;
 
 // Effect Types
 enum

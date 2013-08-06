@@ -620,11 +620,12 @@ thingtype Golem : Mobj, 7068, 336
   activesound    ht_mumsit
   cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was pummeled by a Golem"
+  dropitem       HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   4
     modes heretic
-  }
+  }  
 }
 
 thingtype NitroGolem : Mobj, 7045, 337
@@ -649,6 +650,7 @@ thingtype NitroGolem : Mobj, 7045, 337
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was burned by a Nitrogolem"
   obituary_melee  "was beaten by a Nitrogolem"
+  dropitem        HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   2 
@@ -676,6 +678,7 @@ thingtype GolemGhost : Mobj, 7069, 338
   activesound    ht_mumsit
   cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   obituary_melee "was spooked by a Golem Ghost"
+  dropitem       HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   8 
@@ -705,6 +708,7 @@ thingtype NitroGolemGhost : Mobj, 7046, 339
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   obituary_normal "was burned by a Nitrogolem Ghost"
   obituary_melee  "was beaten by a Nitrogolem Ghost"
+  dropitem        HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   9
@@ -757,6 +761,7 @@ thingtype Weredragon : Mobj, 7070, 342
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was flamed by a Weredragon"
   obituary_melee  "was torn apart by a Weredragon"
+  dropitem        HAmmoCBowWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   3
@@ -811,6 +816,7 @@ thingtype Ophidian : Mobj, 7092, 345
   activesound     ht_snkact
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was smoked by an Ophidian"
+  dropitem        HAmmoPhoenixWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   132
@@ -871,6 +877,7 @@ thingtype SabreClaw : Mobj, 7090, 348
   activesound    ht_clkact
   cflags         SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was sliced to bits by a Sabreclaw"
+  dropitem       HAmmoSkullWimpy, 84, 20, +toss
   acs_spawndata
   {
     num   1
@@ -899,6 +906,8 @@ thingtype Disciple : Mobj, 7015, 349
   flags3          ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_normal "was schooled by a Disciple"
   obituary_melee  "was slapped by a Disciple"
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
+  dropitem        HArtiTomeOfPower,   4,  0, +toss
   acs_spawndata
   {
     num   19
@@ -945,6 +954,7 @@ thingtype DeathKnight : Mobj, 7064, 351
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was axed by a Death Knight"
   obituary_melee  "was chopped down by a Death Knight"
+  dropitem        HAmmoCBowWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   6
@@ -974,6 +984,7 @@ thingtype DeathKnightGhost : Mobj, 7065, 352
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   obituary_normal "was spooked by a Knight Ghost"
   obituary_melee  "was chopped by a Knight Ghost"
+  dropitem        HAmmoCBowWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   129
@@ -1267,6 +1278,8 @@ thingtype Maulotaur : Mobj, 7009, 371
   cflags          SOLID|SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   obituary_normal "bowed down before the Maulotaur"
   obituary_melee  "was pounded flat by the Maulotaur"
+  dropitem        HArtiSuperHeal,    51,  0, +toss
+  dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   114     // note: different from zdoom
@@ -1352,6 +1365,8 @@ thingtype IronLich : Mobj, 7006, 376
   cflags          SOLID|SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
   obituary_normal "was punished by the Iron Lich"
   obituary_melee  "was bitten by the Iron Lich"
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
+  dropitem        HArtiEgg,          51,  0, +toss
   acs_spawndata
   {
     num   20

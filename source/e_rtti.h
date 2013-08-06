@@ -43,7 +43,7 @@ public:
    class Type
    {
    private:
-      enum { NUMTYPECHAINS = 31 };
+      enum { NUMTYPECHAINS = 67 };
 
       // addType is invoked by the constructor and places the type into a
       // global hash table for lookups by class name.

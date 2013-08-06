@@ -119,14 +119,13 @@ CONSOLE_COMMAND(e_thingtype, 0)
    C_Printf(FC_ERROR "Metrics:\n"
             FC_HI "Spawnhealth: " FC_NORMAL "%d\n"
             FC_HI "Painchance: " FC_NORMAL "%d\n"
-            FC_HI "Droptype: " FC_NORMAL "%d\n"
             FC_HI "Radius: " FC_NORMAL "%d\n"
             FC_HI "Height: " FC_NORMAL "%d\n"
             FC_HI "Mass: " FC_NORMAL "%d\n"
             FC_HI "Speed: " FC_NORMAL "%d\n"
             FC_HI "Reaction time: " FC_NORMAL "%d\n\n",
             mobjinfo[num]->spawnhealth, mobjinfo[num]->painchance,
-            mobjinfo[num]->droptype, mobjinfo[num]->radius >> FRACBITS,
+            mobjinfo[num]->radius >> FRACBITS,
             mobjinfo[num]->height >> FRACBITS, mobjinfo[num]->mass,
             mobjinfo[num]->speed, mobjinfo[num]->reactiontime);
 

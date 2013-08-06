@@ -40,6 +40,7 @@
 #include "dstrings.h"
 #include "e_edf.h"
 #include "e_inventory.h"
+#include "e_metastate.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -151,7 +152,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped)
+bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int dropamount)
 {
    if(!pickup)
       return false;
@@ -160,7 +161,13 @@ bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped)
    int giveamount     = pickup->getInt("amount", 0);
 
    if(dropped)
-      giveamount = pickup->getInt("dropamount", giveamount);
+   {
+      // actor may override dropamount
+      if(dropamount)
+         giveamount = dropamount;
+      else
+         giveamount = pickup->getInt("dropamount", giveamount);
+   }
 
    return P_GiveAmmo(player, give, giveamount);
 }
@@ -417,7 +424,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
       pickedup = P_GiveArmor(player, effect);
       break;
    case ITEMFX_AMMO:     // Ammo - give the player some ammo
-      pickedup = P_GiveAmmoPickup(player, effect, dropped);
+      pickedup = P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
       break;
    case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
       pickedup = E_GiveInventoryItem(player, effect);
@@ -681,56 +688,56 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // ammo
    case PFX_CLIP:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped, special->dropamount))
          return;
       message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CLIPBOX:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false, 0))
          return;
       message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKET:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false, 0))
          return;
       message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKETBOX:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false, 0))
          return;
       message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELL:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false, 0))
          return;
       message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELLPACK:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false, 0))
          return;
       message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELL:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false, 0))
          return;
       message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELLBOX:
       // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false, 0))
          return;
       message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
       break;
@@ -975,6 +982,58 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 }
 
 //
+// P_DropItems
+//
+// Drop all items as specified in an actor's MetaTable.
+//
+static void P_DropItems(Mobj *actor)
+{
+   MetaTable  *meta = actor->info->meta;
+   MetaObject *obj  = NULL;
+
+   // players only drop items if so indicated
+   if(actor->player && !(dmflags & DM_PLAYERDROP))
+      return;
+
+   while((obj = meta->getNextType(obj, METATYPE(MetaDropItem))))
+   {
+      MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
+
+      int type = E_SafeThingName(mdi->item.constPtr());
+
+      // if chance is less than 255, do a dice roll for the drop
+      if(mdi->chance != 255)
+      {
+         if(P_Random(pr_hdrop1) > mdi->chance)
+            continue;
+      }
+
+      // determine z coordinate; if tossing, start at mid-height
+      fixed_t z = ONFLOORZ;
+      if(mdi->toss)
+         z = actor->z + (actor->height / 2);
+      
+      // spawn the object
+      Mobj *item = P_SpawnMobj(actor->x, actor->y, z, type);
+
+      // special versions of items
+      item->flags |= MF_DROPPED;
+
+      // the dropitem may override the dropamount of ammo givers
+      if(mdi->amount)
+         item->dropamount = mdi->amount;
+
+      // if tossing, give it randomized momenta
+      if(mdi->toss)
+      {
+         item->momx = P_SubRandom(pr_hdropmom) << 8;
+         item->momy = P_SubRandom(pr_hdropmom) << 8;
+         item->momz = (P_Random(pr_hdropmom) << 10) + 5 * FRACUNIT;
+      }
+   }
+}
+
+//
 // P_KillMobj
 //
 static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
@@ -1063,23 +1122,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // Drop stuff.
    // This determines the kind of object spawned
    // during the death frame of a thing.
-
-   if(target->info->droptype != -1)
-   {
-      if(target->player)
-      {
-         // players only drop items if so indicated
-         if(!(dmflags & DM_PLAYERDROP))
-            return;
-      }
-
-      item = target->info->droptype;
-   }
-   else
-      return;
-
-   mo = P_SpawnMobj(target->x, target->y, ONFLOORZ, item);
-   mo->flags |= MF_DROPPED;    // special versions of items   
+   P_DropItems(target);
 }
 
 //
