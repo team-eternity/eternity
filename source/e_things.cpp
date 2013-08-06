@@ -1463,7 +1463,7 @@ static MetaDropItem *E_findDropItemForType(mobjinfo_t *mi, const char *item)
    while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
    {
       MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
-      if(mdi->item == item)
+      if(!mdi->item.strCaseCmp(item)) // be case insensitive
          return mdi;
    }
 
