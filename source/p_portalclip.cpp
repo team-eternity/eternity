@@ -43,6 +43,100 @@
 static int groupcells;
 
 
+//
+// tryMove
+//
+// Attempt to move to a new position,
+// crossing special lines unless MF_TELEPORT is set.
+//
+// killough 3/15/98: allow dropoff as option
+//
+bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc)
+{
+   return false;
+}
+
+bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc)
+{
+   return false;
+}
+
+bool makeZMove(Mobj *thing, fixed_t z, ClipContext *cc)
+{
+   return false;
+}
+
+
+bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
+{
+   return false;
+}
+
+bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
+{
+   return false;
+}
+
+bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
+{
+   return false;
+}
+
+
+void slideMove(Mobj *mo)
+{
+}
+
+bool checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
+{
+   return false;
+}
+
+
+bool changeSector(sector_t *sector, int crunch, ClipContext *cc)
+{
+   return false;
+}
+
+bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc)
+{
+   return false;
+}
+
+bool checkSides(Mobj *actor, int x, int y, ClipContext *cc)
+{
+   return false;
+}
+
+int  getMoveFactor(Mobj *mo, int *friction)
+{
+   return FRACUNIT;
+}
+
+int  getFriction(const Mobj *mo, int *factor)
+{
+   return FRACUNIT;
+}
+
+void applyTorque(Mobj *mo, ClipContext *cc)
+{
+}
+
+void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc)
+{
+}
+
+fixed_t avoidDropoff(Mobj *actor, ClipContext *cc)
+{
+   return 0;
+}
+      
+// Utility functions
+void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
+{
+}
+
+
 ClipContext*  PortalClipEngine::getContext()
 {
    ClipContext *ret;
@@ -70,20 +164,6 @@ void PortalClipEngine::freeContext(ClipContext *cc)
 {
    cc->next = unused;
    unused = cc;
-}
-
-
-//
-// tryMove
-//
-// Attempt to move to a new position,
-// crossing special lines unless MF_TELEPORT is set.
-//
-// killough 3/15/98: allow dropoff as option
-//
-bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc)
-{
-   return false;
 }
 
 
