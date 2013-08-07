@@ -387,9 +387,8 @@ thingtype HereticMoss1 : Mobj, 7048, 322
 
 thingtype HereticMoss2 : Mobj, 7049, 323
 {
-  spawnstate S_MOSS2
-  height     27.0
-  flags      SPAWNCEILING|NOGRAVITY
+  height 27.0
+  flags  SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_MOSS2
   states
@@ -429,130 +428,233 @@ thingtype HereticCorpse : Mobj, 7051, 325
   "@
 }
 
-thingtype KeyGizmoBlue : Mobj, 7094, 326
+// Base class thingtype for all key gizmos
+thingtype KeyGizmo
 {
-  spawnstate S_KEYGIZMOB
-  radius     16.0
-  height     50.0
-  flags      SOLID
+  radius 16.0
+  height 50.0
+  flags  SOLID
+
+  firstdecoratestate S_KEYGIZMO3
+  states
+  @"
+  Spawn:
+    KGZ1 A -1
+    stop
+  "@
 }
 
-thingtype KeyGizmoGreen : Mobj, 7095, 327
+thingtype KeyGizmoBlue : KeyGizmo, 7094, 326
 {
-  spawnstate S_KEYGIZMOG
-  radius     16.0
-  height     50.0
-  flags      SOLID
+  firstdecoratestate S_KEYGIZMOB
+  states
+  @"
+  Spawn:
+    KGZ1 A 1
+    KGZ1 A 1 A_InitKeyGizmo
+    goto Super::Spawn
+  "@
 }
 
-thingtype KeyGizmoYellow : Mobj, 7096, 328
+thingtype KeyGizmoGreen : KeyGizmo, 7095, 327
 {
-  spawnstate S_KEYGIZMOY
-  radius     16.0
-  height     50.0
-  flags      SOLID
+  firstdecoratestate S_KEYGIZMOG
+  states
+  @"
+  Spawn:
+    KGZ1 A 1
+    KGZ1 A 1 A_InitKeyGizmo
+    goto Super::Spawn
+  "@
+}
+
+thingtype KeyGizmoYellow : KeyGizmo, 7096, 328
+{
+  firstdecoratestate S_KEYGIZMOY
+  states
+  @"
+  Spawn:
+    KGZ1 A 1
+    KGZ1 A 1 A_InitKeyGizmo
+    goto Super::Spawn
+  "@
 }
 
 thingtype KeyGizmoOrb : Mobj, -1, 329
 {
-  spawnstate S_KGZ_START
-  radius     16.0
-  flags      SOLID|NOGRAVITY
+  radius 16.0
+  flags  SOLID|NOGRAVITY
+  
+  firstdecoratestate S_KGZ_START
+  states
+  @"
+  Spawn:
+    KGZB A 1
+    loop
+  Blue:
+    KGZB A -1 bright
+    stop
+  Green:
+    KGZG A -1 bright
+    stop
+  Yellow:
+    KGZY A -1 bright
+    stop
+  "@
 }
 
 thingtype TeleGlitterGenRed : Mobj, 7074, 330
 {
-  spawnstate S_TELEGLITGEN1
-  cflags     DONTDRAW
+  cflags DONTDRAW
+  
+  firstdecoratestate S_TELEGLITGEN1
+  states
+  @"
+  Spawn:
+    TGLT A 8 A_SpawnTeleGlitter
+    loop
+  "@
 }
 
 thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 {
-  spawnstate S_TELEGLITGEN2
   cflags     DONTDRAW
+  
+  firstdecoratestate S_TELEGLITGEN2
+  states
+  @"
+  Spawn:
+    TGLT F 8 A_SpawnTeleGlitter2
+    loop
+  "@
 }
 
 thingtype TeleGlitterRed : Mobj, -1, 332
 {
-  spawnstate S_TELEGLITTER1_1
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
   acs_spawndata
   {
     num   166 
     modes heretic
   }
+  
+  firstdecoratestate S_TELEGLITTER1_1
+  states
+  @"
+  Spawn:
+    TGLT A 2 bright
+    TGLT B 2 bright A_AccelGlitter
+    TGLT C 2 bright
+    TGLT D 2 bright A_AccelGlitter
+    TGLT E 2 bright
+    loop
+  "@
 }
 
 thingtype TeleGlitterBlue : Mobj, -1, 333
 {
-  spawnstate S_TELEGLITTER2_1
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
   acs_spawndata
   {
     num   167
     modes heretic
   }
+  
+  firstdecoratestate S_TELEGLITTER2_1
+  states
+  @"
+  Spawn:
+    TGLT F 2 bright
+    TGLT G 2 bright A_AccelGlitter
+    TGLT H 2 bright
+    TGLT I 2 bright A_AccelGlitter
+    TGLT J 2 bright
+    loop
+  "@
 }
 
 thingtype HereticTeleFog : Mobj, -1, 334
 {
-  spawnstate S_HTFOG1
-  flags      NOBLOCKMAP|NOGRAVITY
+  flags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_HTFOG1
+  states
+  @"
+  Spawn:
+    TELE ABCDEFGHGFEDC 6 bright
+    stop
+  "@
 }
 
 thingtype HereticBlood : Mobj, -1, 335
 {
-  spawnstate S_HTICBLOOD1
-  cflags     NOBLOCKMAP|NOSPLASH
+  cflags NOBLOCKMAP|NOSPLASH
+  
+  firstdecoratestate S_HTICBLOOD1
+  states
+  @"
+  Spawn:
+    BLOD CBA 8
+    stop
+  "@
 }
 
 thingtype Golem : Mobj, 7068, 336
 {
-  spawnstate     S_MUMMY_LOOK1
   spawnhealth    80
-  seestate       S_MUMMY_WALK1
-  seesound       ht_mumsit
-  attacksound    ht_mumat1
-  painstate      S_MUMMY_PAIN1
   painchance     128
-  painsound      ht_mumpai
-  meleestate     S_MUMMY_ATK1
-  deathstate     S_MUMMY_DIE1
-  deathsound     ht_mumdth
   speed          12
   radius         22.0
   height         62.0
   mass           75
+  seesound       ht_mumsit
+  attacksound    ht_mumat1
+  painsound      ht_mumpai
+  deathsound     ht_mumdth
   activesound    ht_mumsit
   cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was pummeled by a Golem"
+  dropitem       HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   4
     modes heretic
   }
+  
+  firstdecoratestate S_MUMMY_LOOK1
+  states
+  @"
+  Spawn:
+    MUMM AB 10 A_Look
+    loop
+  See:
+    MUMM ABCD 4 A_Chase
+    loop
+  Melee:
+    MUMM E 6 A_FaceTarget
+    MUMM F 6 A_MummyAttack
+    MUMM G 6 A_FaceTarget
+    goto See
+  Pain:
+    MUMM H 4
+    MUMM H 4 A_Pain
+    goto See
+  Death:
+    MUMM I  5
+    MUMM J  5 A_Scream
+    MUMM K  5 A_MummySoul
+    MUMM L  5
+    MUMM M  5 A_Fall
+    MUMM NO 5
+    MUMM P -1
+    stop
+  "@
 }
 
-thingtype NitroGolem : Mobj, 7045, 337
+thingtype NitroGolem : Golem, 7045, 337
 {
-  spawnstate      S_MUMMY_LOOK1
   spawnhealth     100
-  seestate        S_MUMMY_WALK1
-  seesound        ht_mumsit
-  attacksound     ht_mumat1
-  painstate       S_MUMMY_PAIN1
   painchance      64
-  painsound       ht_mumpai
-  meleestate      S_MUMMY_ATK1
-  missilestate    S_MUMMYL_ATK1
-  deathstate      S_MUMMY_DIE1
-  deathsound      ht_mumdth
-  speed           12
-  radius          22.0
-  height          62.0
-  mass            75
-  activesound     ht_mumsit
-  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was burned by a Nitrogolem"
   obituary_melee  "was beaten by a Nitrogolem"
   acs_spawndata
@@ -560,27 +662,24 @@ thingtype NitroGolem : Mobj, 7045, 337
     num   2 
     modes heretic
   }
+  
+  firstdecoratestate S_MUMMYL_ATK1
+  states
+  @"
+  Missile:
+    MUMM X  5        A_FaceTarget
+    MUMM Y  5 bright A_FaceTarget
+    MUMM X  5        A_FaceTarget
+    MUMM Y  5 bright A_FaceTarget
+    MUMM X  5        A_FaceTarget
+    MUMM Y 15 bright A_MummyAttack2
+    goto See
+  "@
 }
 
-thingtype GolemGhost : Mobj, 7069, 338
+thingtype GolemGhost : Golem, 7069, 338
 {
-  spawnstate     S_MUMMY_LOOK1
-  spawnhealth    80
-  seestate       S_MUMMY_WALK1
-  seesound       ht_mumsit
-  attacksound    ht_mumat1
-  painstate      S_MUMMY_PAIN1
-  painchance     128
-  painsound      ht_mumpai
-  meleestate     S_MUMMY_ATK1
-  deathstate     S_MUMMY_DIE1
-  deathsound     ht_mumdth
-  speed          12
-  radius         22.0
-  height         62.0
-  mass           75
-  activesound    ht_mumsit
-  cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  addflags       GHOST
   obituary_melee "was spooked by a Golem Ghost"
   acs_spawndata
   {
@@ -589,26 +688,9 @@ thingtype GolemGhost : Mobj, 7069, 338
   }
 }
 
-thingtype NitroGolemGhost : Mobj, 7046, 339
+thingtype NitroGolemGhost : NitroGolem, 7046, 339
 {
-  spawnstate      S_MUMMY_LOOK1
-  spawnhealth     100
-  seestate        S_MUMMY_WALK1
-  seesound        ht_mumsit
-  attacksound     ht_mumat1
-  painstate       S_MUMMY_PAIN1
-  painchance      64
-  painsound       ht_mumpai
-  meleestate      S_MUMMY_ATK1
-  missilestate    S_MUMMYL_ATK1
-  deathstate      S_MUMMY_DIE1
-  deathsound      ht_mumdth
-  speed           12
-  radius          22.0
-  height          62.0
-  mass            75
-  activesound     ht_mumsit
-  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  addflags        GHOST
   obituary_normal "was burned by a Nitrogolem Ghost"
   obituary_melee  "was beaten by a Nitrogolem Ghost"
   acs_spawndata
@@ -620,14 +702,21 @@ thingtype NitroGolemGhost : Mobj, 7046, 339
 
 thingtype GolemSoul : Mobj, -1, 340
 {
-  spawnstate S_MUMMY_SOUL1
-  flags      NOBLOCKMAP|NOGRAVITY
+  flags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_MUMMY_SOUL1
+  states
+  @"
+  Spawn:
+    MUMM QRS 5
+    MUMM T   9
+    MUMM UVW 5
+    stop
+  "@
 }
 
 thingtype GolemShot : Mobj, -1, 341
 {
-  spawnstate S_MUMMYFX1_1
-  deathstate S_MUMMYFXI1_1
   speed      9.0
   fastspeed  18.0
   radius     8.0
@@ -639,6 +728,20 @@ thingtype GolemShot : Mobj, -1, 341
     num   131
     modes heretic 
   }
+  
+  firstdecoratestate S_MUMMYFX1_1
+  states
+  @"
+  Spawn:
+    FX15 A 5 bright A_ContMobjSound
+    FX15 B 5 bright A_MummyFX1Seek
+    FX15 C 5 bright
+    FX15 B 5 bright A_MummyFX1Seek
+    loop
+  Death:
+    FX15 DEFG 5 bright
+    stop
+  "@
 }
 
 thingtype Weredragon : Mobj, 7070, 342
@@ -663,6 +766,7 @@ thingtype Weredragon : Mobj, 7070, 342
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was flamed by a Weredragon"
   obituary_melee  "was torn apart by a Weredragon"
+  dropitem        HAmmoCBowWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   3
@@ -717,6 +821,7 @@ thingtype Ophidian : Mobj, 7092, 345
   activesound     ht_snkact
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was smoked by an Ophidian"
+  dropitem        HAmmoPhoenixWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   132
@@ -777,6 +882,7 @@ thingtype SabreClaw : Mobj, 7090, 348
   activesound    ht_clkact
   cflags         SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was sliced to bits by a Sabreclaw"
+  dropitem       HAmmoSkullWimpy, 84, 20, +toss
   acs_spawndata
   {
     num   1
@@ -805,6 +911,8 @@ thingtype Disciple : Mobj, 7015, 349
   flags3          ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_normal "was schooled by a Disciple"
   obituary_melee  "was slapped by a Disciple"
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
+  dropitem        HArtiTomeOfPower,   4,  0, +toss
   acs_spawndata
   {
     num   19
@@ -851,6 +959,7 @@ thingtype DeathKnight : Mobj, 7064, 351
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was axed by a Death Knight"
   obituary_melee  "was chopped down by a Death Knight"
+  dropitem        HAmmoCBowWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   6
@@ -880,6 +989,7 @@ thingtype DeathKnightGhost : Mobj, 7065, 352
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   obituary_normal "was spooked by a Knight Ghost"
   obituary_melee  "was chopped by a Knight Ghost"
+  dropitem        HAmmoCBowWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   129
@@ -1173,6 +1283,8 @@ thingtype Maulotaur : Mobj, 7009, 371
   cflags          SOLID|SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   obituary_normal "bowed down before the Maulotaur"
   obituary_melee  "was pounded flat by the Maulotaur"
+  dropitem        HArtiSuperHeal,    51,  0, +toss
+  dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   114     // note: different from zdoom
@@ -1258,6 +1370,8 @@ thingtype IronLich : Mobj, 7006, 376
   cflags          SOLID|SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
   obituary_normal "was punished by the Iron Lich"
   obituary_melee  "was bitten by the Iron Lich"
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
+  dropitem        HArtiEgg,          51,  0, +toss
   acs_spawndata
   {
     num   20

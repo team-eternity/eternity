@@ -58,6 +58,7 @@ static const char *e_ItemEffectTypeNames[NUMITEMFX] =
    "None",
    "Health",
    "Armor",
+   "Ammo",
    "Power",
    "Artifact"
 };
@@ -135,6 +136,7 @@ MetaTable *E_GetItemEffects()
 // metakey vocabulary
 #define KEY_ADDITIVETIME   "additivetime"
 #define KEY_ALWAYSPICKUP   "alwayspickup"
+#define KEY_AMMO           "ammo"
 #define KEY_AMOUNT         "amount"
 #define KEY_ARTIFACTTYPE   "artifacttype"
 #define KEY_BACKPACKAMOUNT "ammo.backpackamount"
@@ -142,10 +144,11 @@ MetaTable *E_GetItemEffects()
 #define KEY_BONUS          "bonus"
 #define KEY_CLASS          "class"
 #define KEY_CLASSNAME      "classname"
-#define KEY_DROPAMOUNT     "ammo.dropamount"
+#define KEY_DROPAMOUNT     "dropamount"
 #define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
 #define KEY_ICON           "icon"
+#define KEY_IGNORESKILL    "ignoreskill"
 #define KEY_INTERHUBAMOUNT "interhubamount"
 #define KEY_INVBAR         "invbar"
 #define KEY_ITEMID         "itemid"
@@ -166,6 +169,7 @@ MetaTable *E_GetItemEffects()
 // Interned metatable keys
 static MetaKeyIndex keyAmount        (KEY_AMOUNT        );
 static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
+static MetaKeyIndex keyBackpackAmount(KEY_BACKPACKAMOUNT);
 static MetaKeyIndex keyClass         (KEY_CLASS         );
 static MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
@@ -202,6 +206,18 @@ cfg_opt_t edf_armorfx_opts[] =
    
    CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), // if +, always pick up
    CFG_FLAG(KEY_BONUS,        0, CFGF_SIGNPREFIX), // if +, is a bonus (adds to current armor type)
+
+   CFG_END()
+};
+
+// Ammo giver fields
+cfg_opt_t edf_ammofx_opts[] =
+{
+   CFG_STR(KEY_AMMO,       "", CFGF_NONE), // name of ammo type artifact to give
+   CFG_INT(KEY_AMOUNT,      0, CFGF_NONE), // amount of ammo given
+   CFG_INT(KEY_DROPAMOUNT,  0, CFGF_NONE), // amount of ammo given when item is dropped
+
+   CFG_FLAG(KEY_IGNORESKILL, 0, CFGF_NONE), // if +, does not double on skills that double ammo
 
    CFG_END()
 };
@@ -273,7 +289,6 @@ cfg_opt_t edf_artifact_opts[] =
    // Ammo sub-type
    CFG_INT(KEY_BACKPACKAMOUNT, 0, CFGF_NONE),
    CFG_INT(KEY_BACKPACKMAXAMT, 0, CFGF_NONE),
-   CFG_INT(KEY_DROPAMOUNT,     0, CFGF_NONE),
    
    CFG_END()
 };
@@ -283,6 +298,7 @@ static const char *e_ItemSectionNames[NUMITEMFX] =
    "",
    EDF_SEC_HEALTHFX,
    EDF_SEC_ARMORFX,
+   EDF_SEC_AMMOFX,
    EDF_SEC_POWERFX,
    EDF_SEC_ARTIFACT
 };
@@ -368,6 +384,40 @@ static void E_collectAmmoTypes()
    {
       if(itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_AMMO)
          e_ammoTypesLookup.add(itr);
+   }
+}
+
+//
+// E_GiveAllAmmo
+//
+// Function to give the player a certain amount of all ammo types; the amount 
+// given can be controlled using enumeration values in e_inventory.h
+//
+void E_GiveAllAmmo(player_t *player, giveallammo_e op, int amount)
+{
+   size_t numAmmo = E_GetNumAmmoTypes();
+
+   for(size_t i = 0; i < numAmmo; i++)
+   {
+      int  giveamount = 0;
+      auto ammoType   = E_AmmoTypeForIndex(i);
+
+      switch(op)
+      {
+      case GAA_BACKPACKAMOUNT:
+         giveamount = ammoType->getInt(keyBackpackAmount, 0);
+         break;
+      case GAA_MAXAMOUNT:
+         giveamount = E_GetMaxAmountForArtifact(player, ammoType);
+         break;
+      case GAA_CUSTOM:
+         giveamount = amount;
+         break;
+      default:
+         break;
+      }
+
+      E_GiveInventoryItem(player, ammoType, giveamount);
    }
 }
 
@@ -701,10 +751,8 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 
       for(unsigned int i = 0; i < lock->numRequiredKeys; i++)
       {
-         inventoryslot_t *slot;
-         itemeffect_t    *key = lock->requiredKeys[i];
-
-         if((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0)
+         itemeffect_t *key = lock->requiredKeys[i];
+         if(E_GetItemOwnedAmount(player, key) > 0)
             ++numRequiredHave;
       }
 
@@ -731,10 +779,8 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
          // we need at least one key in this set
          for(unsigned int keynum = 0; keynum < any->numKeys; keynum++)
          {
-            inventoryslot_t *slot;
-            itemeffect_t    *key = any->keys[keynum];
-
-            if((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0)
+            itemeffect_t *key = any->keys[keynum];
+            if(E_GetItemOwnedAmount(player, key) > 0)
             {
                numAnyHave += any->numKeys; // credit for full set
                break; // can break out of inner loop, player has a key in this set
@@ -758,10 +804,8 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 
       for(size_t i = 0; i < E_GetNumKeyItems(); i++)
       {
-         inventoryslot_t *slot;
-         itemeffect_t    *key = E_KeyItemForIndex(i);
-
-         if((slot = E_InventorySlotForItem(player, key)) && slot->amount > 0)
+         itemeffect_t *key = E_KeyItemForIndex(i);
+         if(E_GetItemOwnedAmount(player, key) > 0)
             ++numKeys;
       }
 
@@ -790,10 +834,8 @@ int E_GiveAllKeys(player_t *player)
 
    for(size_t i = 0; i < numKeys; i++)
    {
-      itemeffect_t    *key  = E_KeyItemForIndex(i);
-      inventoryslot_t *slot = E_InventorySlotForItem(player, key);
-
-      if(!slot || slot->amount == 0)
+      itemeffect_t *key = E_KeyItemForIndex(i);
+      if(!E_GetItemOwnedAmount(player, key))
       {
          if(E_GiveInventoryItem(player, key))
             ++keysGiven;
@@ -816,7 +858,7 @@ int E_TakeAllKeys(player_t *player)
 
    for(size_t i = 0; i < numKeys; i++)
    {
-      if(E_RemoveInventoryItem(player, E_KeyItemForIndex(i), -1))
+      if(E_RemoveInventoryItem(player, E_KeyItemForIndex(i), -1) != INV_NOTREMOVED)
          ++keysTaken;
    }
 
@@ -1204,9 +1246,7 @@ static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sor
 bool E_PlayerHasBackpack(player_t *player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
-   inventoryslot_t *slot = NULL;
-
-   return ((slot = E_InventorySlotForItem(player, backpackItem)) && slot->amount > 0);
+   return (E_GetItemOwnedAmount(player, backpackItem) > 0);
 }
 
 //
@@ -1229,8 +1269,28 @@ bool E_GiveBackpack(player_t *player)
 bool E_RemoveBackpack(player_t *player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
+   bool removed = false;
+   itemremoved_e code;
 
-   return E_RemoveInventoryItem(player, backpackItem, -1);
+   if((code = E_RemoveInventoryItem(player, backpackItem, -1)) != INV_NOTREMOVED)
+   {
+      removed = true;
+
+      // cut all ammo types to their normal max amount
+      size_t numAmmo = E_GetNumAmmoTypes();
+
+      for(size_t i = 0; i < numAmmo; i++)
+      {
+         auto ammo      = E_AmmoTypeForIndex(i);
+         int  maxamount = ammo->getInt(keyMaxAmount, 0);         
+         auto slot      = E_InventorySlotForItem(player, ammo);
+
+         if(slot && slot->amount > maxamount)
+            slot->amount = maxamount;
+      }
+   }
+   
+   return removed;
 }
 
 //
@@ -1241,6 +1301,9 @@ bool E_RemoveBackpack(player_t *player)
 //
 int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
 {
+   if(!artifact)
+      return 0;
+
    inventoryslot_t *backpackSlot = NULL;
    int subType = artifact->getInt(keyArtifactType, ARTI_NORMAL);
 
@@ -1260,11 +1323,37 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
 }
 
 //
+// E_GetItemOwnedAmount
+//
+// If you do not need the inventory slot for any other purpose, you can lookup
+// the amount of an item owned in one step by using this function.
+//
+int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact)
+{
+   auto slot = E_InventorySlotForItem(player, artifact);
+
+   return (slot ? slot->amount : 0);
+}
+
+//
+// E_GetItemOwnedAmountName
+//
+// As above, but also doing a lookup on name.
+//
+int E_GetItemOwnedAmountName(player_t *player, const char *name)
+{
+   auto slot = E_InventorySlotForItemName(player, name);
+
+   return (slot ? slot->amount : 0);
+}
+
+
+//
 // E_GiveInventoryItem
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
+bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 {
    if(!artifact)
       return false;
@@ -1279,6 +1368,10 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact)
    inventoryindex_t newSlot = -1;
    int amountToGive = artifact->getInt(keyAmount, 1);
    int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
+
+   // may override amount to give via parameter "amount", if > 0
+   if(amount > 0)
+      amountToGive = amount;
 
    // Does the player already have this item?
    inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
@@ -1324,8 +1417,8 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
       if(slot == &inventory[idx])
       {
          // shift everything down
-         for(inventoryindex_t down = e_maxitemid - 1; down > idx; down--)
-            inventory[down - 1] = inventory[down];
+         for(inventoryindex_t down = idx; down < e_maxitemid - 1; down++)
+            inventory[down] = inventory[down + 1];
 
          // clear the top slot
          inventory[e_maxitemid - 1].item   = -1;
@@ -1342,13 +1435,13 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
 //
-bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 {
    inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
    // don't have that item at all?
    if(!slot)
-      return false;
+      return INV_NOTREMOVED;
 
    // a negative amount means to remove the full possessed amount
    if(amount < 0)
@@ -1356,7 +1449,9 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 
    // don't own that many?
    if(slot->amount < amount)
-      return false;
+      return INV_NOTREMOVED;
+
+   itemremoved_e ret = INV_REMOVED;
 
    // subtract the amount requested
    slot->amount -= amount;
@@ -1371,10 +1466,11 @@ bool E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
          // otherwise, we need to remove that item and collapse the player's 
          // inventory
          E_removeInventorySlot(player, slot);
+         ret = INV_REMOVEDSLOT;
       }
    }
 
-   return true;
+   return ret;
 }
 
 //
@@ -1394,8 +1490,14 @@ void E_InventoryEndHub(player_t *player)
       if(item)
       {
          int interHubAmount = item->getInt(keyInterHubAmount, 0);
-         if(amount > interHubAmount)
-            E_RemoveInventoryItem(player, item, amount - interHubAmount);
+         
+         // an interhubamount less than zero means no stripping occurs
+         if(interHubAmount >= 0 && amount > interHubAmount)
+         {
+            auto code = E_RemoveInventoryItem(player, item, amount - interHubAmount);
+            if(code == INV_REMOVEDSLOT)
+               --i; // back up one slot, because the current one was removed
+         }
       }
    }
 }

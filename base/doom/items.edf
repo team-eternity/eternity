@@ -268,3 +268,109 @@ lockdef 101
 }
 
 endif()
+
+//=============================================================================
+//
+// Ammo Types
+//
+// An artifact is defined for each distinct type of ammo the player can own,
+// and ammoeffect definitions actually give ammo of those types when they are
+// picked up.
+//
+
+artifact AmmoClip
+{
+   artifacttype:   Ammo;
+   maxamount:      200;
+   interhubamount:  -1;
+   
+   ammo.backpackamount:     10;
+   ammo.backpackmaxamount: 400;
+}
+
+artifact AmmoShell
+{
+   artifacttype:   Ammo;
+   maxamount:      50;
+   interhubamount: -1;
+   
+   ammo.backpackamount:      4;
+   ammo.backpackmaxamount: 100;
+}
+
+artifact AmmoCell
+{
+   artifacttype:   Ammo;
+   maxamount:      300;
+   interhubamount:  -1;
+   
+   ammo.backpackamount:     20;
+   ammo.backpackmaxamount: 600;
+}
+
+artifact AmmoMissile
+{
+   artifacttype:   Ammo;
+   maxamount:      50;
+   interhubamount: -1;
+   
+   ammo.backpackamount:      1;
+   ammo.backpackmaxamount: 100;
+}
+
+//=============================================================================
+//
+// Ammo Givers
+//
+
+ammoeffect Clip
+{
+   ammo:       AmmoClip;
+   amount:     10;
+   dropamount: 5;
+}
+
+ammoeffect ClipBox
+{
+   ammo:   AmmoClip;
+   amount: 50;
+}
+
+ammoeffect Shell
+{
+   ammo:   AmmoShell;
+   amount: 4;
+}
+
+ammoeffect ShellBox
+{
+   ammo:   AmmoShell;
+   amount: 20;
+}
+
+ammoeffect Cell
+{
+   ammo:   AmmoCell;
+   amount: 20;
+}
+
+ammoeffect CellPack
+{
+   ammo:   AmmoCell;
+   amount: 100;
+}
+
+ammoeffect RocketAmmo
+{
+   ammo:   AmmoMissile;
+   amount: 1;
+}
+
+ammoeffect RocketBox
+{
+   ammo:   AmmoMissile;
+   amount: 5;
+}
+
+
+

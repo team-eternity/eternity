@@ -30,6 +30,7 @@
 
 #include "info.h"
 #include "metaapi.h"
+#include "m_qstr.h"
 
 //
 // MetaState
@@ -41,17 +42,16 @@ class MetaState : public MetaObject
 {
    DECLARE_RTTI_TYPE(MetaState, MetaObject)
 
-protected:
+public:
    state_t *state;      // the state
 
-public:
    // Default constructor
-   MetaState() : MetaObject(), state(NULL)
+   MetaState() : Super(), state(NULL)
    {
    }
 
    // Parameterized constructor
-   MetaState(const char *key, state_t *pState) : MetaObject(key), state(pState)
+   MetaState(const char *key, state_t *pState) : Super(key), state(pState)
    {
    }
 
@@ -60,16 +60,54 @@ public:
       : Super(other), state(other.state)
    {
    }
-   
-   // Accessors
-   state_t *getValue() const { return state; }
-   void setValue(state_t *s) { state = s;    }
 
    // Clone - virtual copy constructor
    virtual MetaObject *clone() const { return new MetaState(*this); }
 
    // toString - virtual method for nice display of metastate properties.
    virtual const char *toString() const { return state->name; }
+};
+
+//
+// MetaDropItem
+//
+// Allow storage of multiple drop item types in mobjinfo
+//
+class MetaDropItem : public MetaObject
+{
+   DECLARE_RTTI_TYPE(MetaDropItem, MetaObject)
+
+public:
+   qstring item;
+   int     chance;
+   int     amount;
+   bool    toss;
+
+   // Default constructor
+   MetaDropItem() : Super(), item(), chance(255), amount(0), toss(false)
+   {
+   }
+
+   // Parameterized constructor
+   MetaDropItem(const char *key, const char *p_item, int p_chance, 
+                int p_amount, bool p_toss)
+      : Super(key), item(p_item), chance(p_chance), amount(p_amount), 
+        toss(p_toss)
+   {
+   }
+
+   // Copy constructor
+   MetaDropItem(const MetaDropItem &other) 
+      : Super(other), item(other.item), chance(other.chance), 
+        amount(other.amount), toss(other.toss)
+   {
+   }
+
+   // Clone - virtual copy constructor
+   virtual MetaObject *clone() const { return new MetaDropItem(*this); }
+
+   // toString - virtual method for nice display of metastate properties.
+   virtual const char *toString() const { return item.constPtr(); }
 };
 
 #endif

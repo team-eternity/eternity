@@ -362,7 +362,6 @@ struct mobjinfo_t
    int translucency;    // haleyjd 09/01/02: zdoom-style translucency
    int bloodcolor;      // haleyjd 05/08/03: particle blood color
    unsigned int particlefx; // haleyjd 07/13/03: particle effects
-   int droptype;        // haleyjd 07/13/03: item drop type
    int mod;             // haleyjd 07/13/03: method of death
    char *obituary;      // haleyjd 07/13/03: normal obituary
    char *meleeobit;     // haleyjd 07/13/03: melee obituary

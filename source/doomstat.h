@@ -285,10 +285,6 @@ extern  mapthing_t playerstarts[];
 // Parameters for world map / intermission.
 extern wbstartstruct_t wminfo;
 
-// LUT of ammunition limits for each kind.
-// This doubles with BackPack powerup item.
-extern int maxammo[];
-
 //extern angle_t consoleangle;
 
 //-----------------------------------------

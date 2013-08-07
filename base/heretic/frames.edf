@@ -2,6 +2,9 @@
 // EDF for Eternity Engine v3.40.50
 //
 // Frames for Heretic gamemode objects.
+// These largely persist only for backward compatibility with earlier versions
+// of Eternity, which assigned the names and DeHackEd numbers seen below to
+// the Heretic states. Otherwise this file could be eliminated.
 //
 
 // Heretic items
@@ -87,130 +90,101 @@ frame S_FIREBRAZIER7    { +decorate; dehackednum 2054 }
 frame S_FIREBRAZIER8    { +decorate; dehackednum 2055 }
 
 // KeyGizmo frames
-frame S_KEYGIZMOB { cmp = "KGZ1|A|*|*|*|@next"; dehackednum 2056 }
-frame S_KEYGIZMOBINIT    
-{ 
-   cmp = "KGZ1|A|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_BLUEFLOAT1, 60)|S_KEYGIZMO3"
-   dehackednum 2057 
-}
+frame S_KEYGIZMOB     { +decorate; dehackednum 2056 }
+frame S_KEYGIZMOBINIT { +decorate; dehackednum 2057 }
+frame S_KEYGIZMOG     { +decorate; dehackednum 2058 }
+frame S_KEYGIZMOGINIT { +decorate; dehackednum 2059 }
+frame S_KEYGIZMOY     { +decorate; dehackednum 2060 }
+frame S_KEYGIZMOYINIT { +decorate; dehackednum 2061 }
+frame S_KEYGIZMO3     { +decorate; dehackednum 2062 }
 
-frame S_KEYGIZMOG { cmp = "KGZ1|A|*|*|*|@next"; dehackednum 2058 }
-frame S_KEYGIZMOGINIT 
-{ 
-   cmp = "KGZ1|A|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_GREENFLOAT1, 60)|S_KEYGIZMO3"
-   dehackednum 2059 
-}
-
-frame S_KEYGIZMOY { cmp = "KGZ1|A|*|*|*|@next"; dehackednum 2060 }
-frame S_KEYGIZMOYINIT
-{ 
-   cmp = "KGZ1|A|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_YELLOWFLOAT1, 60)|S_KEYGIZMO3"
-   dehackednum 2061 
-}
-
-frame S_KEYGIZMO3        { cmp = "KGZ1|A|*|-1";        dehackednum 2062 }
-frame S_KGZ_START        { cmp = "KGZB|A|*|*|*|@this"; dehackednum 2063 }
-frame S_KGZ_BLUEFLOAT1   { cmp = "KGZB|A|T|-1";        dehackednum 2064 }
-frame S_KGZ_GREENFLOAT1  { cmp = "KGZG|A|T|-1";        dehackednum 2065 }
-frame S_KGZ_YELLOWFLOAT1 { cmp = "KGZY|A|T|-1";        dehackednum 2066 }
+// KeyGizmoOrb frames
+frame S_KGZ_START        { +decorate; dehackednum 2063 }
+frame S_KGZ_BLUEFLOAT1   { +decorate; dehackednum 2064 }
+frame S_KGZ_GREENFLOAT1  { +decorate; dehackednum 2065 }
+frame S_KGZ_YELLOWFLOAT1 { +decorate; dehackednum 2066 }
 
 // TeleGlitterGen / TeleGlitter frames
-frame S_TELEGLITGEN1
-{ 
-   cmp  = "TGLT|A|*|8|SpawnGlitter(TeleGlitterRed)|@this"
-   dehackednum 2067 
-}
-frame S_TELEGLITGEN2
-{ 
-   cmp  = "TGLT|F|*|8|SpawnGlitter(TeleGlitterBlue)|@this"
-   dehackednum 2068 
-}
-
-frame S_TELEGLITTER1_1 { cmp = "TGLT|A|T|2|*           |@next";            dehackednum 2069 }
-frame S_TELEGLITTER1_2 { cmp = "TGLT|B|T|2|AccelGlitter|@next";            dehackednum 2070 }
-frame S_TELEGLITTER1_3 { cmp = "TGLT|C|T|2|*           |@next";            dehackednum 2071 }
-frame S_TELEGLITTER1_4 { cmp = "TGLT|D|T|2|AccelGlitter|@next";            dehackednum 2072 }
-frame S_TELEGLITTER1_5 { cmp = "TGLT|E|T|2|*           |S_TELEGLITTER1_1"; dehackednum 2073 }
-frame S_TELEGLITTER2_1 { cmp = "TGLT|F|T|2|*           |@next";            dehackednum 2074 }
-frame S_TELEGLITTER2_2 { cmp = "TGLT|G|T|2|AccelGlitter|@next";            dehackednum 2075 }
-frame S_TELEGLITTER2_3 { cmp = "TGLT|H|T|2|*           |@next";            dehackednum 2076 }
-frame S_TELEGLITTER2_4 { cmp = "TGLT|I|T|2|AccelGlitter|@next";            dehackednum 2077 }
-frame S_TELEGLITTER2_5 { cmp = "TGLT|J|T|2|*           |S_TELEGLITTER2_1"; dehackednum 2078 }
+frame S_TELEGLITGEN1   { +decorate; dehackednum 2067 }
+frame S_TELEGLITGEN2   { +decorate; dehackednum 2068 }
+frame S_TELEGLITTER1_1 { +decorate; dehackednum 2069 }
+frame S_TELEGLITTER1_2 { +decorate; dehackednum 2070 }
+frame S_TELEGLITTER1_3 { +decorate; dehackednum 2071 }
+frame S_TELEGLITTER1_4 { +decorate; dehackednum 2072 }
+frame S_TELEGLITTER1_5 { +decorate; dehackednum 2073 }
+frame S_TELEGLITTER2_1 { +decorate; dehackednum 2074 }
+frame S_TELEGLITTER2_2 { +decorate; dehackednum 2075 }
+frame S_TELEGLITTER2_3 { +decorate; dehackednum 2076 }
+frame S_TELEGLITTER2_4 { +decorate; dehackednum 2077 }
+frame S_TELEGLITTER2_5 { +decorate; dehackednum 2078 }
 
 // HereticTeleFog frames
-frame S_HTFOG1  { cmp = "TELE|A|T|6|*|@next"; dehackednum 2079 }
-frame S_HTFOG2  { cmp = "TELE|B|T|6|*|@next"; dehackednum 2080 }
-frame S_HTFOG3  { cmp = "TELE|C|T|6|*|@next"; dehackednum 2081 }
-frame S_HTFOG4  { cmp = "TELE|D|T|6|*|@next"; dehackednum 2082 }
-frame S_HTFOG5  { cmp = "TELE|E|T|6|*|@next"; dehackednum 2083 }
-frame S_HTFOG6  { cmp = "TELE|F|T|6|*|@next"; dehackednum 2084 }
-frame S_HTFOG7  { cmp = "TELE|G|T|6|*|@next"; dehackednum 2085 }
-frame S_HTFOG8  { cmp = "TELE|H|T|6|*|@next"; dehackednum 2086 }
-frame S_HTFOG9  { cmp = "TELE|G|T|6|*|@next"; dehackednum 2087 }
-frame S_HTFOG10 { cmp = "TELE|F|T|6|*|@next"; dehackednum 2088 }
-frame S_HTFOG11 { cmp = "TELE|E|T|6|*|@next"; dehackednum 2089 }
-frame S_HTFOG12 { cmp = "TELE|D|T|6|*|@next"; dehackednum 2090 }
-frame S_HTFOG13 { cmp = "TELE|C|T|6";         dehackednum 2091 }
+frame S_HTFOG1  { +decorate; dehackednum 2079 }
+frame S_HTFOG2  { +decorate; dehackednum 2080 }
+frame S_HTFOG3  { +decorate; dehackednum 2081 }
+frame S_HTFOG4  { +decorate; dehackednum 2082 }
+frame S_HTFOG5  { +decorate; dehackednum 2083 }
+frame S_HTFOG6  { +decorate; dehackednum 2084 }
+frame S_HTFOG7  { +decorate; dehackednum 2085 }
+frame S_HTFOG8  { +decorate; dehackednum 2086 }
+frame S_HTFOG9  { +decorate; dehackednum 2087 }
+frame S_HTFOG10 { +decorate; dehackednum 2088 }
+frame S_HTFOG11 { +decorate; dehackednum 2089 }
+frame S_HTFOG12 { +decorate; dehackednum 2090 }
+frame S_HTFOG13 { +decorate; dehackednum 2091 }
 
 // HereticBlood frames
-frame S_HTICBLOOD1 { cmp = "BLOD|C|*|8|*|@next"; dehackednum 2092 }
-frame S_HTICBLOOD2 { cmp = "BLOD|B|*|8|*|@next"; dehackednum 2093 }
-frame S_HTICBLOOD3 { cmp = "BLOD|A|*|8";         dehackednum 2094 }
+frame S_HTICBLOOD1 { +decorate; dehackednum 2092 }
+frame S_HTICBLOOD2 { +decorate; dehackednum 2093 }
+frame S_HTICBLOOD3 { +decorate; dehackednum 2094 }
 
 // Golem frames
-frame S_MUMMY_LOOK1 { cmp = "MUMM|A|*|10|Look        |@next"; dehackednum 2095 }
-frame S_MUMMY_LOOK2 { cmp = "MUMM|B|*|10|Look        |@prev"; dehackednum 2096 }
-frame S_MUMMY_WALK1 { cmp = "MUMM|A|*| 4|Chase       |@next"; dehackednum 2097 }
-frame S_MUMMY_WALK2 { cmp = "MUMM|B|*| 4|Chase       |@next"; dehackednum 2098 }
-frame S_MUMMY_WALK3 { cmp = "MUMM|C|*| 4|Chase       |@next"; dehackednum 2099 }
-frame S_MUMMY_WALK4 { cmp = "MUMM|D|*| 4|Chase       |S_MUMMY_WALK1"; dehackednum 2100 }
-frame S_MUMMY_ATK1  { cmp = "MUMM|E|*| 6|FaceTarget  |@next"; dehackednum 2101 }
-frame S_MUMMY_ATK2  { cmp = "MUMM|F|*| 6|MummyAttack |@next"; dehackednum 2102 }
-frame S_MUMMY_ATK3  { cmp = "MUMM|G|*| 6|FaceTarget  |S_MUMMY_WALK1"; dehackednum 2103 }
-frame S_MUMMYL_ATK1 { cmp = "MUMM|X|*| 5|FaceTarget  |@next"; dehackednum 2104 }
-frame S_MUMMYL_ATK2 { cmp = "MUMM|Y|T| 5|FaceTarget  |@next"; dehackednum 2105 }
-frame S_MUMMYL_ATK3 { cmp = "MUMM|X|*| 5|FaceTarget  |@next"; dehackednum 2106 }
-frame S_MUMMYL_ATK4 { cmp = "MUMM|Y|T| 5|FaceTarget  |@next"; dehackednum 2107 }
-frame S_MUMMYL_ATK5 { cmp = "MUMM|X|*| 5|FaceTarget  |@next"; dehackednum 2108 }
-frame S_MUMMYL_ATK6 { cmp = "MUMM|Y|T|15|MummyAttack2|S_MUMMY_WALK1"; dehackednum 2109 }
-frame S_MUMMY_PAIN1 { cmp = "MUMM|H|*| 4|*           |@next"; dehackednum 2110 }
-frame S_MUMMY_PAIN2 { cmp = "MUMM|H|*| 4|Pain        |S_MUMMY_WALK1"; dehackednum 2111 }
-frame S_MUMMY_DIE1  { cmp = "MUMM|I|*| 5|*           |@next"; dehackednum 2112 }
-frame S_MUMMY_DIE2  { cmp = "MUMM|J|*| 5|Scream      |@next"; dehackednum 2113 }
-frame S_MUMMY_DIE3  { cmp = "MUMM|K|*| 5|MummySoul   |@next"; dehackednum 2114 }
-frame S_MUMMY_DIE4  { cmp = "MUMM|L|*| 5|*           |@next"; dehackednum 2115 }
+frame S_MUMMY_LOOK1 { +decorate; dehackednum 2095 }
+frame S_MUMMY_LOOK2 { +decorate; dehackednum 2096 }
+frame S_MUMMY_WALK1 { +decorate; dehackednum 2097 }
+frame S_MUMMY_WALK2 { +decorate; dehackednum 2098 }
+frame S_MUMMY_WALK3 { +decorate; dehackednum 2099 }
+frame S_MUMMY_WALK4 { +decorate; dehackednum 2100 }
+frame S_MUMMY_ATK1  { +decorate; dehackednum 2101 }
+frame S_MUMMY_ATK2  { +decorate; dehackednum 2102 }
+frame S_MUMMY_ATK3  { +decorate; dehackednum 2103 }
+frame S_MUMMY_PAIN1 { +decorate; dehackednum 2110 }
+frame S_MUMMY_PAIN2 { +decorate; dehackednum 2111 }
+frame S_MUMMY_DIE1  { +decorate; dehackednum 2112 }
+frame S_MUMMY_DIE2  { +decorate; dehackednum 2113 }
+frame S_MUMMY_DIE3  { +decorate; dehackednum 2114 }
+frame S_MUMMY_DIE4  { +decorate; dehackednum 2115 }
+frame S_MUMMY_DIE5  { +decorate; dehackednum 2116 }
+frame S_MUMMY_DIE6  { +decorate; dehackednum 2117 }
+frame S_MUMMY_DIE7  { +decorate; dehackednum 2118 }
+frame S_MUMMY_DIE8  { +decorate; dehackednum 2119 }
 
-// FIXME: Eliminate HticDrop pointer
-frame S_MUMMY_DIE5  
-{ 
-   cmp  = "MUMM|M|*| 5|HticDrop|@next"
-   args = { HAmmoWandWimpy, 84, 0, 0, 3 } 
-   dehackednum 2116 
-}
-
-frame S_MUMMY_DIE6  { cmp = "MUMM|N|*| 5|*|@next"; dehackednum 2117 }
-frame S_MUMMY_DIE7  { cmp = "MUMM|O|*| 5|*|@next"; dehackednum 2118 }
-frame S_MUMMY_DIE8  { cmp = "MUMM|P|*|-1";         dehackednum 2119 }
+// Golem Leader (NitroGolem) Attack
+frame S_MUMMYL_ATK1 { +decorate; dehackednum 2104 }
+frame S_MUMMYL_ATK2 { +decorate; dehackednum 2105 }
+frame S_MUMMYL_ATK3 { +decorate; dehackednum 2106 }
+frame S_MUMMYL_ATK4 { +decorate; dehackednum 2107 }
+frame S_MUMMYL_ATK5 { +decorate; dehackednum 2108 }
+frame S_MUMMYL_ATK6 { +decorate; dehackednum 2109 }
 
 // GolemSoul frames
-frame S_MUMMY_SOUL1 { cmp = "MUMM|Q|*|5|*|@next"; dehackednum 2120 }
-frame S_MUMMY_SOUL2 { cmp = "MUMM|R|*|5|*|@next"; dehackednum 2121 }
-frame S_MUMMY_SOUL3 { cmp = "MUMM|S|*|5|*|@next"; dehackednum 2122 }
-frame S_MUMMY_SOUL4 { cmp = "MUMM|T|*|9|*|@next"; dehackednum 2123 }
-frame S_MUMMY_SOUL5 { cmp = "MUMM|U|*|5|*|@next"; dehackednum 2124 }
-frame S_MUMMY_SOUL6 { cmp = "MUMM|V|*|5|*|@next"; dehackednum 2125 }
-frame S_MUMMY_SOUL7 { cmp = "MUMM|W|*|5";         dehackednum 2126 }
+frame S_MUMMY_SOUL1 { +decorate; dehackednum 2120 }
+frame S_MUMMY_SOUL2 { +decorate; dehackednum 2121 }
+frame S_MUMMY_SOUL3 { +decorate; dehackednum 2122 }
+frame S_MUMMY_SOUL4 { +decorate; dehackednum 2123 }
+frame S_MUMMY_SOUL5 { +decorate; dehackednum 2124 }
+frame S_MUMMY_SOUL6 { +decorate; dehackednum 2125 }
+frame S_MUMMY_SOUL7 { +decorate; dehackednum 2126 }
 
 // GolemShot frames
-frame S_MUMMYFX1_1  { cmp = "FX15|A|T|5|PlaySoundEx(ht_mumhed)|@next";    dehackednum 2127 }
-frame S_MUMMYFX1_2  { cmp = "FX15|B|T|5|HticTracer(10, 20)    |@next";    dehackednum 2128 }
-frame S_MUMMYFX1_3  { cmp = "FX15|C|T|5|*                     |@next";    dehackednum 2129 }
-frame S_MUMMYFX1_4  { cmp = "FX15|B|T|5|HticTracer(10, 20)|S_MUMMYFX1_1"; dehackednum 2130 }
-
-frame S_MUMMYFXI1_1 { cmp = "FX15|D|T|5|*|@next"; dehackednum 2131 }
-frame S_MUMMYFXI1_2 { cmp = "FX15|E|T|5|*|@next"; dehackednum 2132 }
-frame S_MUMMYFXI1_3 { cmp = "FX15|F|T|5|*|@next"; dehackednum 2133 }
-frame S_MUMMYFXI1_4 { cmp = "FX15|G|T|5";         dehackednum 2134 }
+frame S_MUMMYFX1_1  { +decorate; dehackednum 2127 }
+frame S_MUMMYFX1_2  { +decorate; dehackednum 2128 }
+frame S_MUMMYFX1_3  { +decorate; dehackednum 2129 }
+frame S_MUMMYFX1_4  { +decorate; dehackednum 2130 }
+frame S_MUMMYFXI1_1 { +decorate; dehackednum 2131 }
+frame S_MUMMYFXI1_2 { +decorate; dehackednum 2132 }
+frame S_MUMMYFXI1_3 { +decorate; dehackednum 2133 }
+frame S_MUMMYFXI1_4 { +decorate; dehackednum 2134 }
 
 // Weredragon frames
 frame S_BEAST_LOOK1 { cmp = "BEAS|A|*|10|Look       |@next"; dehackednum 2135 }
@@ -230,14 +204,7 @@ frame S_BEAST_DIE2  { cmp = "BEAS|S|*| 6|Scream     |@next"; dehackednum 2148 }
 frame S_BEAST_DIE3  { cmp = "BEAS|T|*| 6|*          |@next"; dehackednum 2149 }
 frame S_BEAST_DIE4  { cmp = "BEAS|U|*| 6|*          |@next"; dehackednum 2150 }
 frame S_BEAST_DIE5  { cmp = "BEAS|V|*| 6|*          |@next"; dehackednum 2151 }
-
-// FIXME: Eliminate HticDrop pointer
-frame S_BEAST_DIE6
-{ 
-   cmp  = "BEAS|W|*| 6|HticDrop|@next"
-   args = { HAmmoCBowWimpy, 84, 0, 0, 10 }
-   dehackednum 2152 
-}
+frame S_BEAST_DIE6  { cmp = "BEAS|W|*| 6|Fall       |@next"; dehackednum 2152 }
 frame S_BEAST_DIE7  { cmp = "BEAS|X|*| 6|*          |@next"; dehackednum 2153 }
 frame S_BEAST_DIE8  { cmp = "BEAS|Y|*| 6|*          |@next"; dehackednum 2154 }
 frame S_BEAST_DIE9  { cmp = "BEAS|Z|*|-1";                   dehackednum 2155 }
@@ -246,14 +213,7 @@ frame S_BEAST_XDIE2 { cmp = "BEAS|K|*| 6|Scream     |@next"; dehackednum 2157 }
 frame S_BEAST_XDIE3 { cmp = "BEAS|L|*| 5|*          |@next"; dehackednum 2158 }
 frame S_BEAST_XDIE4 { cmp = "BEAS|M|*| 6|*          |@next"; dehackednum 2159 }
 frame S_BEAST_XDIE5 { cmp = "BEAS|N|*| 5|*          |@next"; dehackednum 2160 }
-
-// FIXME: Eliminate HticDrop pointer
-frame S_BEAST_XDIE6
-{ 
-   cmp  = "BEAS|O|*|6|HticDrop|@next"
-   args = { HAmmoCBowWimpy, 84, 0, 0, 10 } 
-   dehackednum 2161 
-}
+frame S_BEAST_XDIE6 { cmp = "BEAS|O|*| 6|Fall       |@next"; dehackednum 2161 }
 frame S_BEAST_XDIE7 { cmp = "BEAS|P|*| 5|*          |@next"; dehackednum 2162 }
 frame S_BEAST_XDIE8 { cmp = "BEAS|Q|*|-1";                   dehackednum 2163 }
 

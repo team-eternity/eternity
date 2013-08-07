@@ -28,6 +28,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
+#include "e_inventory.h"
 #include "m_random.h"
 #include "m_swap.h"
 #include "p_mobj.h"
@@ -316,7 +317,6 @@ static void ST_drawStatBar()
 {
    int temp;
    patch_t *statbar;
-   inventoryslot_t *slot;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -352,22 +352,18 @@ static void ST_drawStatBar()
    ST_drawInvNum(plyr->armorpoints, 255, 170);
 
    // draw key icons
-   if((slot = E_InventorySlotForItemName(plyr, ARTI_KEYYELLOW)) && slot->amount > 0)
+   if(E_GetItemOwnedAmountName(plyr, ARTI_KEYYELLOW) > 0)
       V_DrawPatch(153, 164, &subscreen43, PatchLoader::CacheName(wGlobalDir, "YKEYICON", PU_CACHE));
-   if((slot = E_InventorySlotForItemName(plyr, ARTI_KEYGREEN)) && slot->amount > 0)
+   if(E_GetItemOwnedAmountName(plyr, ARTI_KEYGREEN) > 0)
       V_DrawPatch(153, 172, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GKEYICON", PU_CACHE));
-   if((slot = E_InventorySlotForItemName(plyr, ARTI_KEYBLUE)) && slot->amount > 0)
+   if(E_GetItemOwnedAmountName(plyr, ARTI_KEYBLUE) > 0)
       V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
    // TODO: ammo icon stuff
    // draw ammo amount
-   temp = plyr->readyweapon;
-   temp = weaponinfo[temp].ammo;
-   if(temp < NUMAMMO)
-   {
-      temp = plyr->ammo[temp];
-      ST_drawInvNum(temp, 136, 162);
-   }
+   itemeffect_t *ammo = P_GetReadyWeapon(plyr)->ammo;
+   if(ammo)
+      ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
 }
 
 //

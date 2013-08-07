@@ -158,7 +158,7 @@ int lexer_init(cfg_t *cfg, DWFILE *file)
 // important for this to be called by the libConfuse parser before parsing
 // each independent cfg_t.
 //
-void lexer_reset(void)
+void lexer_reset()
 {
    // clear include stack
    memset(include_stack, 0, MAX_INCLUDE_DEPTH*sizeof(struct cfginclude_s));

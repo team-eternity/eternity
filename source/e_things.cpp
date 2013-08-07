@@ -135,6 +135,9 @@ int UnknownThingType;
 #define ITEM_TNG_BLOODCOLOR   "bloodcolor"
 #define ITEM_TNG_NUKESPEC     "nukespecial"
 #define ITEM_TNG_DROPTYPE     "droptype"
+#define ITEM_TNG_DROPITEM     "dropitem"
+#define ITEM_TNG_REMDROPITEM  "dropitem.remove"
+#define ITEM_TNG_CLRDROPITEM  "cleardropitems"
 
 // Flags
 #define ITEM_TNG_CFLAGS       "cflags"
@@ -169,6 +172,11 @@ int UnknownThingType;
 #define ITEM_TNG_DMGF_MODNAME "mod"
 #define ITEM_TNG_DMGF_FACTOR  "factor"
 
+// DropItem multi-value property internal fields
+#define ITEM_TNG_DROPITEM_ITEM   "item"
+#define ITEM_TNG_DROPITEM_CHANCE "chance"
+#define ITEM_TNG_DROPITEM_AMOUNT "amount"
+#define ITEM_TNG_DROPITEM_TOSS   "toss"
 
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
@@ -412,77 +420,92 @@ static cfg_opt_t dmgf_opts[] =
    CFG_END()
 };
 
+// dropitem multi-value property options
+static cfg_opt_t dropitem_opts[] =
+{
+   CFG_STR(ITEM_TNG_DROPITEM_ITEM,   NULL, CFGF_NONE),
+   CFG_INT(ITEM_TNG_DROPITEM_CHANCE, 255,  CFGF_NONE),
+   CFG_INT(ITEM_TNG_DROPITEM_AMOUNT, 0,    CFGF_NONE),
+
+   CFG_FLAG(ITEM_TNG_DROPITEM_TOSS,  0,    CFGF_SIGNPREFIX),
+
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 #define THINGTYPE_FIELDS \
-   CFG_INT(   ITEM_TNG_DOOMEDNUM,     -1,        CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_DEHNUM,        -1,        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_BASICTYPE,     "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_SPAWNSTATE,    "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_SEESTATE,      "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PAINSTATE,     "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PAINSTATES,    0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_PNSTATESADD,   0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_PNSTATESREM,   0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_MELEESTATE,    "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_MISSILESTATE,  "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEATHSTATE,    "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEATHSTATES,   0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_DTHSTATESADD,  0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_DTHSTATESREM,  0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_XDEATHSTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_RAISESTATE,    "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_CRASHSTATE,    "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ACTIVESTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_INACTIVESTATE, "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FIRSTDECSTATE, NULL,      CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_STATES,        0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_SEESOUND,      "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ATKSOUND,      "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PAINSOUND,     "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEATHSOUND,    "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ACTIVESOUND,   "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ACTIVATESND,   "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEACTIVATESND, "none",    CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_SPAWNHEALTH,   1000,      CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_REACTTIME,     8,         CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_PAINCHANCE,    0,         CFGF_NONE                ), \
-   CFG_INT_CB(ITEM_TNG_SPEED,         0,         CFGF_NONE, E_IntOrFixedCB), \
-   CFG_INT_CB(ITEM_TNG_FASTSPEED,     0,         CFGF_NONE, E_IntOrFixedCB), \
-   CFG_FLOAT( ITEM_TNG_RADIUS,        20.0f,     CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_HEIGHT,        16.0f,     CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_C3DHEIGHT,     0.0f,      CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_MASS,          100,       CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_RESPAWNTIME,   (12*35),   CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_RESPCHANCE,    4,         CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_DAMAGE,        0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DMGSPECIAL,    "NONE",    CFGF_NONE                ), \
-   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR,  dmgf_opts, CFGF_MULTI|CFGF_NOCASE   ), \
-   CFG_INT(   ITEM_TNG_TOPDAMAGE,     0,         CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_TOPDMGMASK,    0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_MOD,           "Unknown", CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_OBIT1,         "NONE",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_OBIT2,         "NONE",    CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_BLOODCOLOR,    0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_NUKESPEC,      "NULL",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DROPTYPE,      "NONE",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_CFLAGS,        "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ADDFLAGS,      "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_REMFLAGS,      "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS,         "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS2,        "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS3,        "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS4,        "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PARTICLEFX,    "",        CFGF_NONE                ), \
-   CFG_INT_CB(ITEM_TNG_TRANSLUC,      65536,     CFGF_NONE, E_TranslucCB  ), \
-   CFG_INT_CB(ITEM_TNG_COLOR,         0,         CFGF_NONE, E_ColorCB     ), \
-   CFG_STR(   ITEM_TNG_SKINSPRITE,    "noskin",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEFSPRITE,     NULL,      CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_AVELOCITY,     0.0f,      CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_XSCALE,        1.0f,      CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_YSCALE,        1.0f,      CFGF_NONE                ), \
-   CFG_SEC(   ITEM_TNG_ACS_SPAWN,     acs_data,  CFGF_NOCASE              ), \
+   CFG_INT(ITEM_TNG_DOOMEDNUM,       -1,            CFGF_NONE), \
+   CFG_INT(ITEM_TNG_DEHNUM,          -1,            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_BASICTYPE,       "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SPAWNSTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SEESTATE,        "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PAINSTATE,       "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PAINSTATES,      0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PNSTATESADD,     0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PNSTATESREM,     0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_MELEESTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MISSILESTATE,    "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEATHSTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEATHSTATES,     0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DTHSTATESADD,    0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DTHSTATESREM,    0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_XDEATHSTATE,     "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_RAISESTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_CRASHSTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ACTIVESTATE,     "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_INACTIVESTATE,   "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FIRSTDECSTATE,   NULL,          CFGF_NONE), \
+   CFG_STR(ITEM_TNG_STATES,          0,             CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SEESOUND,        "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ATKSOUND,        "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PAINSOUND,       "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEATHSOUND,      "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ACTIVESOUND,     "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ACTIVATESND,     "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEACTIVATESND,   "none",        CFGF_NONE), \
+   CFG_INT(ITEM_TNG_SPAWNHEALTH,     1000,          CFGF_NONE), \
+   CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
+   CFG_INT(ITEM_TNG_PAINCHANCE,      0,             CFGF_NONE), \
+   CFG_INT(ITEM_TNG_MASS,            100,           CFGF_NONE), \
+   CFG_INT(ITEM_TNG_RESPAWNTIME,     (12*35),       CFGF_NONE), \
+   CFG_INT(ITEM_TNG_RESPCHANCE,      4,             CFGF_NONE), \
+   CFG_INT(ITEM_TNG_DAMAGE,          0,             CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DMGSPECIAL,      "NONE",        CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TOPDAMAGE,       0,             CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TOPDMGMASK,      0,             CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MOD,             "Unknown",     CFGF_NONE), \
+   CFG_STR(ITEM_TNG_OBIT1,           "NONE",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_OBIT2,           "NONE",        CFGF_NONE), \
+   CFG_INT(ITEM_TNG_BLOODCOLOR,      0,             CFGF_NONE), \
+   CFG_STR(ITEM_TNG_NUKESPEC,        "NULL",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DROPTYPE,        "NONE",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_CFLAGS,          "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ADDFLAGS,        "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_REMFLAGS,        "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS,           "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS2,          "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS3,          "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS4,          "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PARTICLEFX,      "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SKINSPRITE,      "noskin",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEFSPRITE,       NULL,          CFGF_NONE), \
+   CFG_SEC(ITEM_TNG_ACS_SPAWN,       acs_data,      CFGF_NOCASE), \
+   CFG_STR(ITEM_TNG_REMDROPITEM,     "",            CFGF_MULTI), \
+   CFG_FLAG(ITEM_TNG_CLRDROPITEM,    0,             CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_RADIUS,        20.0f,         CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_HEIGHT,        16.0f,         CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_C3DHEIGHT,     0.0f,          CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_AVELOCITY,     0.0f,          CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_XSCALE,        1.0f,          CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_YSCALE,        1.0f,          CFGF_NONE), \
+   CFG_INT_CB(ITEM_TNG_SPEED,        0,             CFGF_NONE, E_IntOrFixedCB), \
+   CFG_INT_CB(ITEM_TNG_FASTSPEED,    0,             CFGF_NONE, E_IntOrFixedCB), \
+   CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,         CFGF_NONE, E_TranslucCB  ), \
+   CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
+   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -948,7 +971,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
    MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
-      ret = mstate->getValue();
+      ret = mstate->state;
 
    return ret;
 }
@@ -984,7 +1007,7 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
    
    // if one exists for this mod already, use it, else create a new one.
    if((msnode = E_GetMetaState(info, E_ModFieldName(base, mod))))
-      msnode->setValue(state);
+      msnode->state = state;
    else
       E_AddMetaState(info, state, E_ModFieldName(base, mod));
 }
@@ -1273,7 +1296,7 @@ static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
          // there is not a matching native field, so add the state as a 
          // metastate
          if((msnode = E_GetMetaState(mi, dso->states[i].label)))
-            msnode->setValue(dso->states[i].state);
+            msnode->state = dso->states[i].state;
          else
             E_AddMetaState(mi, dso->states[i].state, dso->states[i].label);
       }
@@ -1404,6 +1427,97 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 }
 
 //
+// DropItems
+//
+// haleyjd 08/05/13: multiple dropitems can now be assigned to thing types.
+//
+
+IMPLEMENT_RTTI_TYPE(MetaDropItem)
+
+//
+// E_clearDropItems
+//
+// Clear all dropitems from an mobjinfo's MetaTable
+//
+static void E_clearDropItems(mobjinfo_t *mi)
+{
+   MetaObject *obj = NULL;
+
+   while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
+   {
+      mi->meta->removeObject(obj);
+      delete obj;
+      obj = NULL; // must restart search
+   }
+}
+
+//
+// E_findDropItemForType
+//
+// Find a dropitem for a particular item type
+// 
+static MetaDropItem *E_findDropItemForType(mobjinfo_t *mi, const char *item)
+{
+   MetaObject *obj = NULL;
+
+   while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
+   {
+      MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
+      if(!mdi->item.strCaseCmp(item)) // be case insensitive
+         return mdi;
+   }
+
+   return NULL;
+}
+
+//
+// E_addDropItem
+//
+// Add a new dropitem to the mobjinfo's MetaTable
+//
+static void E_addDropItem(mobjinfo_t *mi, const char *item, int chance, 
+                          int amount, bool toss)
+{
+   mi->meta->addObject(new MetaDropItem("dropitem", item, chance, amount, toss));
+}
+
+//
+// E_removeDropItem
+//
+// Remove a particular dropitem from the mobjinfo's MetaTable
+//
+static void E_removeDropItem(mobjinfo_t *mi, const char *item)
+{
+   MetaDropItem *mdi;
+   while((mdi = E_findDropItemForType(mi, item)))
+   {
+      mi->meta->removeObject(mdi);
+      delete mdi;
+   }
+}
+
+//
+// E_processDropItems
+//
+// Process dropitem multi-valued property defintions inside a thingtype.
+//
+static void E_processDropItems(mobjinfo_t *mi, cfg_t *thingsec)
+{
+   unsigned int numDropItems = cfg_size(thingsec, ITEM_TNG_DROPITEM);
+
+   for(unsigned int i = 0; i < numDropItems; i++)
+   {
+      cfg_t *prop = cfg_getnmvprop(thingsec, ITEM_TNG_DROPITEM, i);
+
+      E_addDropItem(mi,
+         cfg_getstr(prop, ITEM_TNG_DROPITEM_ITEM),
+         cfg_getint(prop, ITEM_TNG_DROPITEM_CHANCE),
+         cfg_getint(prop, ITEM_TNG_DROPITEM_AMOUNT),
+         !!cfg_getflag(prop, ITEM_TNG_DROPITEM_TOSS));
+   }
+}
+
+//
 // E_ColorCB
 //
 // libConfuse value-parsing callback for the thingtype translation
@@ -1498,7 +1612,7 @@ static void E_AddThingToPStack(int num)
 // Resets the thingtype inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
-static void E_ResetThingPStack(void)
+static void E_ResetThingPStack()
 {
    int i;
 
@@ -2108,28 +2222,33 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       else
          mobjinfo[i]->particlefx = E_ParseFlags(tempstr, &particle_flags);
    }
-      
-   // 07/13/03: process droptype
+
+   // 08/06/13: check for cleardropitems flag
+   if(cfg_size(thingsec, ITEM_TNG_CLRDROPITEM) > 0)
+      E_clearDropItems(mobjinfo[i]);
+
+   // 08/06/13: check for dropitem.remove statements
+   unsigned int numRem;
+   if((numRem = cfg_size(thingsec, ITEM_TNG_REMDROPITEM)) > 0)
+   {
+      for(unsigned int i = 0; i < numRem; i++)
+      {
+         const char *item = cfg_getnstr(thingsec, ITEM_TNG_REMDROPITEM, i);
+         E_removeDropItem(mobjinfo[i], item);
+      }
+   }
+
+   // 07/13/03: process droptype (deprecated in favor of dropitem, but will
+   // never be removed as it's good shorthand for DOOM-style item drops)
    if(IS_SET(ITEM_TNG_DROPTYPE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DROPTYPE);
-      if(!strcasecmp(tempstr, "NONE"))
-         mobjinfo[i]->droptype = -1;
-      else
-      {
-         tempint = E_ThingNumForName(tempstr);
-
-         if(tempint == -1)
-         {
-            // haleyjd 05/31/06: demoted to warning
-            E_EDFLoggedWarning(2, "Warning: thing '%s': bad drop type '%s'\n",
-                               mobjinfo[i]->name, tempstr);
-            tempint = UnknownThingType;
-         }
-
-         mobjinfo[i]->droptype = tempint;
-      }
+      if(strcasecmp(tempstr, "NONE"))
+         E_addDropItem(mobjinfo[i], tempstr, 255, 0, false);
    }
+
+   // 08/06/13: process dropitems
+   E_processDropItems(mobjinfo[i], thingsec);
 
    // 07/13/03: process mod
    if(IS_SET(ITEM_TNG_MOD))
@@ -2491,7 +2610,7 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 
    // check metastates
    if((ms = E_GetMetaState(mi, label)))
-      ret = ms->getValue();
+      ret = ms->state;
    else if((nativefield = E_GetNativeStateLoc(mi, label)))
    {
       // only if not S_NULL

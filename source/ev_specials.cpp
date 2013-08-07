@@ -391,8 +391,7 @@ static bool EV_canUnlockGenDoor(line_t *line, player_t *player)
    int lockdefID   = lockdefIDForGenLock[genLock][skulliscard];
 
    itemeffect_t    *yskull = E_ItemEffectForName(ARTI_YELLOWSKULL);
-   inventoryslot_t *slot   = E_InventorySlotForItem(player, yskull);
-   bool hasYellowSkull     = (slot && slot->amount > 0);
+   bool hasYellowSkull = (E_GetItemOwnedAmount(player, yskull) > 0);
 
    // MBF compatibility hack - if lockdef ID is ALL3 and the player has the 
    // YellowSkull, we have to take it away; if he doesn't have it, we have to 

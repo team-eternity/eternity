@@ -107,6 +107,17 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDTURNSLOW  "speedturnslow"
 #define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
 #define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
+#define ITEM_PCLASS_REBORNITEM     "rebornitem"
+
+#define ITEM_REBORN_NAME   "name"
+#define ITEM_REBORN_AMOUNT "amount"
+
+static cfg_opt_t edf_reborn_opts[] =
+{
+   CFG_STR(ITEM_REBORN_NAME,   "", CFGF_NONE),
+   CFG_INT(ITEM_REBORN_AMOUNT,  1, CFGF_NONE),
+   CFG_END()
+};
 
 cfg_opt_t edf_pclass_opts[] =
 {
@@ -126,6 +137,9 @@ cfg_opt_t edf_pclass_opts[] =
    CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE),
 
    CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),
+
+   // reborn inventory items
+   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, edf_reborn_opts, CFGF_MULTI|CFGF_NOCASE),
 
    CFG_END()
 };
@@ -365,6 +379,39 @@ playerclass_t *E_PlayerClassForName(const char *name)
 }
 
 //
+// E_freeRebornItems
+//
+// Free a player class's default inventory when recreating it.
+//
+static void E_freeRebornItems(playerclass_t *pc)
+{
+   if(pc->rebornitems)
+   {
+      for(unsigned int i = 0; i < pc->numrebornitems; i++)
+      {
+         if(pc->rebornitems[i].itemname)
+            efree(pc->rebornitems[i].itemname);
+      }
+      efree(pc->rebornitems);
+      pc->rebornitems    = NULL;
+      pc->numrebornitems = 0;
+   }
+}
+
+//
+// E_processRebornItem
+//
+// Process a single rebornitem for the player's default inventory.
+//
+static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int index)
+{
+   reborninventory_t *ri = &pc->rebornitems[index];
+
+   ri->itemname = estrdup(cfg_getstr(item, ITEM_REBORN_NAME));
+   ri->amount   = cfg_getint(item, ITEM_REBORN_AMOUNT);
+}
+
+//
 // E_ProcessPlayerClass
 //
 // Processes a single EDF player class section.
@@ -500,6 +547,17 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       if(tmp == true)
          GameModeInfo->defPClassName = pc->mnemonic;
    }
+
+   unsigned int numitems;
+   if((numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM)) > 0)
+   {
+      E_freeRebornItems(pc);
+      pc->numrebornitems = numitems;
+      pc->rebornitems    = estructalloc(reborninventory_t, numitems);
+
+      for(unsigned int i = 0; i < numitems; i++)
+         E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
+   }
 }
 
 //
@@ -533,7 +591,7 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
 // Called after EDF processing. Verifies that the current gamemode possesses a
 // valid default player class. If not, we can't run the game!
 //
-void E_VerifyDefaultPlayerClass(void)
+void E_VerifyDefaultPlayerClass()
 {
    if(E_PlayerClassForName(GameModeInfo->defPClassName) == NULL)
    {

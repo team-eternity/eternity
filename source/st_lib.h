@@ -41,7 +41,8 @@ typedef struct st_number_s
    int       x;      // upper right-hand corner
    int       y;      //  of the number (right-justified)
    int       width;  // max # of digits in number
-   int      *num;    // pointer to current value
+   int       num;    // current value
+   int       max;    // max value
    bool     *on;     // pointer to bool stating whether to update number
    patch_t **p;      // list of patches for 0-9
    int       data;   // user data
@@ -88,17 +89,17 @@ typedef struct st_binicon_s
 // Initializes widget library.
 // More precisely, initialize STMINUS,
 //  everything else is done somewhere else.
-void STlib_init(void);
+void STlib_init();
 
 // Number widget routines
-void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num, 
-                   bool *on, int width);
+void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int num, 
+                   int max, bool *on, int width);
 
 // jff 1/16/98 add color translation to digit output
 void STlib_updateNum(st_number_t *n, byte *outrng, int alpha);
 
 // Percent widget routines
-void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
+void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int num,
                        bool *on, patch_t *percent);
 
 // jff 1/16/98 add color translation to percent output

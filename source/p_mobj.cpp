@@ -35,6 +35,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -193,7 +194,7 @@ static void P_FreeSeenStates(DLListItem<seenstate_t> *list)
 // Gets a seenstate from the free list if one is available, or creates a
 // new one.
 //
-static seenstate_t *P_GetSeenState(void)
+static seenstate_t *P_GetSeenState()
 {
    seenstate_t *ret;
 
@@ -1461,7 +1462,9 @@ void Mobj::serialize(SaveArchive &arc)
       // Appearance
       << colour                                            // Translations
       << translucency << alphavelocity                     // Alpha blending
-      << xscale << yscale;                                 // Scaling
+      << xscale << yscale                                  // Scaling
+      // Inventory related fields
+      << dropamount;
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
