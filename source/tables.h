@@ -69,6 +69,10 @@ extern const fixed_t finetangent[FINEANGLES/2];
 
 #define ANGLE_1 (ANG45/45)
 
+// haleyjd 08/06/13: Heretic uses a value of "ANGLE_1" that is off
+// by 40% - the correct value is 0xb60b60. This is rougly 1.4 degrees.
+#define HTICANGLE_1 0x1000000
+
 #define SLOPERANGE 2048
 #define SLOPEBITS    11
 #define DBITS      (FRACBITS-SLOPEBITS)

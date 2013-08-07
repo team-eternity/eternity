@@ -193,14 +193,11 @@ void A_MummySoul(actionargs_t *actionargs)
 //
 // A_HticDrop
 //
-// DEPRECATED! DO NOT USE!!!
-//
-// HTIC_FIXME / HTIC_TODO: Just get rid of this and make item
-// drops a sole property of thing types, where it belongs.
+// Deprecated; is now just an alias for A_Fall.
 //
 void A_HticDrop(actionargs_t *actionargs)
 {
-   A_Fall(actionargs); // still need this, temporarily
+   A_Fall(actionargs);
 }
 
 void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
@@ -297,6 +294,18 @@ void A_HticTracer(actionargs_t *actionargs)
    maxturn   = (angle_t)(((uint64_t)maxturn << 32) / 360);
 
    P_HticTracer(actor, threshold, maxturn);
+}
+
+// Non-parameterized versions
+
+//
+// A_MummyFX1Seek
+//
+// Nitrogolem missile seeking
+//
+void A_MummyFX1Seek(actionargs_t *actionargs)
+{
+   P_HticTracer(actionargs->actor, HTICANGLE_1*10, HTICANGLE_1*20);
 }
 
 //
@@ -1785,6 +1794,27 @@ void A_ImpExplode(actionargs_t *actionargs)
    // extreme death crash
    if(actor->counters[0] == 666)
       P_SetMobjState(actor, stateNum);
+}
+
+//=============================================================================
+//
+// Shared Routines
+//
+
+//
+// A_ContMobjSound
+//
+// For Heretic state layout compatibility only; plays specific sounds for 
+// specific objects.
+//
+void A_ContMobjSound(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+
+   if(actor->type == E_ThingNumForName("KnightAxe"))
+      S_StartSoundName(actor, "ht_kgtatk");
+   else if(actor->type == E_ThingNumForName("GolemShot"))
+      S_StartSoundName(actor, "ht_mumhed");
 }
 
 //=============================================================================

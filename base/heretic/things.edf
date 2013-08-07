@@ -387,9 +387,8 @@ thingtype HereticMoss1 : Mobj, 7048, 322
 
 thingtype HereticMoss2 : Mobj, 7049, 323
 {
-  spawnstate S_MOSS2
-  height     27.0
-  flags      SPAWNCEILING|NOGRAVITY
+  height 27.0
+  flags  SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_MOSS2
   states
@@ -602,21 +601,16 @@ thingtype HereticBlood : Mobj, -1, 335
 
 thingtype Golem : Mobj, 7068, 336
 {
-  spawnstate     S_MUMMY_LOOK1
   spawnhealth    80
-  seestate       S_MUMMY_WALK1
-  seesound       ht_mumsit
-  attacksound    ht_mumat1
-  painstate      S_MUMMY_PAIN1
   painchance     128
-  painsound      ht_mumpai
-  meleestate     S_MUMMY_ATK1
-  deathstate     S_MUMMY_DIE1
-  deathsound     ht_mumdth
   speed          12
   radius         22.0
   height         62.0
   mass           75
+  seesound       ht_mumsit
+  attacksound    ht_mumat1
+  painsound      ht_mumpai
+  deathsound     ht_mumdth
   activesound    ht_mumsit
   cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was pummeled by a Golem"
@@ -625,60 +619,68 @@ thingtype Golem : Mobj, 7068, 336
   {
     num   4
     modes heretic
-  }  
+  }
+  
+  firstdecoratestate S_MUMMY_LOOK1
+  states
+  @"
+  Spawn:
+    MUMM AB 10 A_Look
+    loop
+  See:
+    MUMM ABCD 4 A_Chase
+    loop
+  Melee:
+    MUMM E 6 A_FaceTarget
+    MUMM F 6 A_MummyAttack
+    MUMM G 6 A_FaceTarget
+    goto See
+  Pain:
+    MUMM H 4
+    MUMM H 4 A_Pain
+    goto See
+  Death:
+    MUMM I  5
+    MUMM J  5 A_Scream
+    MUMM K  5 A_MummySoul
+    MUMM L  5
+    MUMM M  5 A_Fall
+    MUMM NO 5
+    MUMM P -1
+    stop
+  "@
 }
 
-thingtype NitroGolem : Mobj, 7045, 337
+thingtype NitroGolem : Golem, 7045, 337
 {
-  spawnstate      S_MUMMY_LOOK1
   spawnhealth     100
-  seestate        S_MUMMY_WALK1
-  seesound        ht_mumsit
-  attacksound     ht_mumat1
-  painstate       S_MUMMY_PAIN1
   painchance      64
-  painsound       ht_mumpai
-  meleestate      S_MUMMY_ATK1
-  missilestate    S_MUMMYL_ATK1
-  deathstate      S_MUMMY_DIE1
-  deathsound      ht_mumdth
-  speed           12
-  radius          22.0
-  height          62.0
-  mass            75
-  activesound     ht_mumsit
-  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was burned by a Nitrogolem"
   obituary_melee  "was beaten by a Nitrogolem"
-  dropitem        HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   2 
     modes heretic
   }
+  
+  firstdecoratestate S_MUMMYL_ATK1
+  states
+  @"
+  Missile:
+    MUMM X  5        A_FaceTarget
+    MUMM Y  5 bright A_FaceTarget
+    MUMM X  5        A_FaceTarget
+    MUMM Y  5 bright A_FaceTarget
+    MUMM X  5        A_FaceTarget
+    MUMM Y 15 bright A_MummyAttack2
+    goto See
+  "@
 }
 
-thingtype GolemGhost : Mobj, 7069, 338
+thingtype GolemGhost : Golem, 7069, 338
 {
-  spawnstate     S_MUMMY_LOOK1
-  spawnhealth    80
-  seestate       S_MUMMY_WALK1
-  seesound       ht_mumsit
-  attacksound    ht_mumat1
-  painstate      S_MUMMY_PAIN1
-  painchance     128
-  painsound      ht_mumpai
-  meleestate     S_MUMMY_ATK1
-  deathstate     S_MUMMY_DIE1
-  deathsound     ht_mumdth
-  speed          12
-  radius         22.0
-  height         62.0
-  mass           75
-  activesound    ht_mumsit
-  cflags         SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  addflags       GHOST
   obituary_melee "was spooked by a Golem Ghost"
-  dropitem       HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   8 
@@ -686,29 +688,11 @@ thingtype GolemGhost : Mobj, 7069, 338
   }
 }
 
-thingtype NitroGolemGhost : Mobj, 7046, 339
+thingtype NitroGolemGhost : NitroGolem, 7046, 339
 {
-  spawnstate      S_MUMMY_LOOK1
-  spawnhealth     100
-  seestate        S_MUMMY_WALK1
-  seesound        ht_mumsit
-  attacksound     ht_mumat1
-  painstate       S_MUMMY_PAIN1
-  painchance      64
-  painsound       ht_mumpai
-  meleestate      S_MUMMY_ATK1
-  missilestate    S_MUMMYL_ATK1
-  deathstate      S_MUMMY_DIE1
-  deathsound      ht_mumdth
-  speed           12
-  radius          22.0
-  height          62.0
-  mass            75
-  activesound     ht_mumsit
-  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  addflags        GHOST
   obituary_normal "was burned by a Nitrogolem Ghost"
   obituary_melee  "was beaten by a Nitrogolem Ghost"
-  dropitem        HAmmoWandWimpy, 84, 3, +toss
   acs_spawndata
   {
     num   9
@@ -718,14 +702,21 @@ thingtype NitroGolemGhost : Mobj, 7046, 339
 
 thingtype GolemSoul : Mobj, -1, 340
 {
-  spawnstate S_MUMMY_SOUL1
-  flags      NOBLOCKMAP|NOGRAVITY
+  flags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_MUMMY_SOUL1
+  states
+  @"
+  Spawn:
+    MUMM QRS 5
+    MUMM T   9
+    MUMM UVW 5
+    stop
+  "@
 }
 
 thingtype GolemShot : Mobj, -1, 341
 {
-  spawnstate S_MUMMYFX1_1
-  deathstate S_MUMMYFXI1_1
   speed      9.0
   fastspeed  18.0
   radius     8.0
@@ -737,6 +728,20 @@ thingtype GolemShot : Mobj, -1, 341
     num   131
     modes heretic 
   }
+  
+  firstdecoratestate S_MUMMYFX1_1
+  states
+  @"
+  Spawn:
+    FX15 A 5 bright A_ContMobjSound
+    FX15 B 5 bright A_MummyFX1Seek
+    FX15 C 5 bright
+    FX15 B 5 bright A_MummyFX1Seek
+    loop
+  Death:
+    FX15 DEFG 5 bright
+    stop
+  "@
 }
 
 thingtype Weredragon : Mobj, 7070, 342

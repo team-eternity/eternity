@@ -1936,9 +1936,7 @@ static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
 //
 // A_PlayerThunk
 //
-// Allows the player's weapons to use a certain class of monster
-// codepointers that are deemed safe (these have the BPF_PTHUNK
-// flag in the deh_bexptrs array).
+// Allows the player's weapons to use monster codepointers
 // Parameters:
 // args[0] : index of codepointer to call (is validated)
 // args[1] : bool, 0 disables the FaceTarget cp for the player
