@@ -51,88 +51,88 @@ static int groupcells;
 //
 // killough 3/15/98: allow dropoff as option
 //
-bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc)
+bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc)
 {
    return false;
 }
 
-bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc)
+bool PortalClipEngine::tryZMove(Mobj *thing, fixed_t z, ClipContext *cc)
 {
    return false;
 }
 
-bool makeZMove(Mobj *thing, fixed_t z, ClipContext *cc)
-{
-   return false;
-}
-
-
-bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
-{
-   return false;
-}
-
-bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
-{
-   return false;
-}
-
-bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
+bool PortalClipEngine::makeZMove(Mobj *thing, fixed_t z, ClipContext *cc)
 {
    return false;
 }
 
 
-void slideMove(Mobj *mo)
+bool PortalClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
+   return false;
 }
 
-bool checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
+bool PortalClipEngine::teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
+{
+   return false;
+}
+
+bool PortalClipEngine::portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 {
    return false;
 }
 
 
-bool changeSector(sector_t *sector, int crunch, ClipContext *cc)
+void PortalClipEngine::slideMove(Mobj *mo)
+{
+}
+
+bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
 {
    return false;
 }
 
-bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc)
+
+bool PortalClipEngine::changeSector(sector_t *sector, int crunch, ClipContext *cc)
 {
    return false;
 }
 
-bool checkSides(Mobj *actor, int x, int y, ClipContext *cc)
+bool PortalClipEngine::checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc)
 {
    return false;
 }
 
-int  getMoveFactor(Mobj *mo, int *friction)
+bool PortalClipEngine::checkSides(Mobj *actor, int x, int y, ClipContext *cc)
+{
+   return false;
+}
+
+int  PortalClipEngine::getMoveFactor(Mobj *mo, int *friction)
 {
    return FRACUNIT;
 }
 
-int  getFriction(const Mobj *mo, int *factor)
+int  PortalClipEngine::getFriction(const Mobj *mo, int *factor)
 {
    return FRACUNIT;
 }
 
-void applyTorque(Mobj *mo, ClipContext *cc)
+void PortalClipEngine::applyTorque(Mobj *mo, ClipContext *cc)
 {
 }
 
-void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc)
+void PortalClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc)
 {
 }
 
-fixed_t avoidDropoff(Mobj *actor, ClipContext *cc)
+fixed_t PortalClipEngine::avoidDropoff(Mobj *actor, ClipContext *cc)
 {
    return 0;
 }
       
 // Utility functions
-void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
+void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
 {
 }
 
