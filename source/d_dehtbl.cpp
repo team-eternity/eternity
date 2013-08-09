@@ -1314,9 +1314,16 @@ void A_HticTracer(actionargs_t *);
 void A_MummyFX1Seek(actionargs_t *actionargs);
 void A_ContMobjSound(actionargs_t *actionargs);
 void A_ClinkAttack(actionargs_t *);
+void A_GhostOff(actionargs_t *actionargs);
 void A_WizardAtk1(actionargs_t *);
 void A_WizardAtk2(actionargs_t *);
 void A_WizardAtk3(actionargs_t *);
+void A_SorZap(actionargs_t *);
+void A_SorRise(actionargs_t *);
+void A_SorDSph(actionargs_t *);
+void A_SorDExp(actionargs_t *);
+void A_SorDBon(actionargs_t *);
+void A_SorSightSnd(actionargs_t *);
 void A_Srcr2Decide(actionargs_t *);
 void A_Srcr2Attack(actionargs_t *);
 void A_BlueSpark(actionargs_t *);
@@ -1620,9 +1627,16 @@ deh_bexptr deh_bexptrs[] =
    POINTER(MummyFX1Seek),
    POINTER(ContMobjSound),
    POINTER(ClinkAttack),
+   POINTER(GhostOff),
    POINTER(WizardAtk1),
    POINTER(WizardAtk2),
    POINTER(WizardAtk3),
+   POINTER(SorZap),
+   POINTER(SorRise),
+   POINTER(SorDSph),
+   POINTER(SorDExp),
+   POINTER(SorDBon),
+   POINTER(SorSightSnd),
    POINTER(Srcr2Decide),
    POINTER(Srcr2Attack),
    POINTER(BlueSpark),

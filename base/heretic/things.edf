@@ -518,7 +518,7 @@ thingtype TeleGlitterGenRed : Mobj, 7074, 330
 
 thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 {
-  cflags     DONTDRAW
+  cflags DONTDRAW
   
   firstdecoratestate S_TELEGLITGEN2
   states
@@ -746,23 +746,17 @@ thingtype GolemShot : Mobj, -1, 341
 
 thingtype Weredragon : Mobj, 7070, 342
 {
-  spawnstate      S_BEAST_LOOK1
   spawnhealth     220
-  seestate        S_BEAST_WALK1
-  seesound        ht_bstsit
-  attacksound     ht_bstatk
-  painstate       S_BEAST_PAIN1
   painchance      100
-  painsound       ht_bstpai
-  missilestate    S_BEAST_ATK1
-  deathstate      S_BEAST_DIE1
-  xdeathstate     S_BEAST_XDIE1
-  deathsound      ht_bstdth
   speed           14
   radius          32.0
   height          74.0
   mass            200
   activesound     ht_bstact
+  seesound        ht_bstsit
+  attacksound     ht_bstatk
+  painsound       ht_bstpai
+  deathsound      ht_bstdth
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was flamed by a Weredragon"
   obituary_melee  "was torn apart by a Weredragon"
@@ -772,12 +766,47 @@ thingtype Weredragon : Mobj, 7070, 342
     num   3
     modes heretic 
   }
+  
+  firstdecoratestate S_BEAST_LOOK1
+  states
+  @"
+  Spawn:
+    BEAS AB 10 A_Look
+    loop
+  See:
+    BEAS ABCDEF 3 A_Chase
+    loop
+  Missile:
+    BEAS H 10 A_FaceTarget
+    BEAS I 10 A_BeastAttack
+    goto See
+  Pain:
+    BEAS G 3
+    BEAS G 3 A_Pain
+    goto See
+  Death:
+    BEAS R   6
+    BEAS S   6 A_Scream
+    BEAS TUV 6
+    BEAS W   6 A_Fall
+    BEAS XY  6
+    BEAS Z  -1
+    stop
+  XDeath:
+    BEAS J  5
+    BEAS K  6 A_Scream
+    BEAS L  5
+    BEAS M  6
+    BEAS N  5
+    BEAS O  6 A_Fall
+    BEAS P  5 
+    BEAS Q -1
+    stop
+  "@
 }
 
 thingtype WeredragonShot : Mobj, -1, 343
 {
-  spawnstate S_BEASTBALL1
-  deathstate S_BEASTBALLX1
   speed      12.0
   fastspeed  20.0
   radius     9.0
@@ -789,36 +818,49 @@ thingtype WeredragonShot : Mobj, -1, 343
     num   120
     modes heretic
   }
+  
+  firstdecoratestate S_BEASTBALL1
+  states
+  @"
+  Spawn:
+    FRB1 AABBCC 2 A_BeastPuff
+    loop
+  Death:
+    FRB1 DEFGH 4
+    stop
+  "@
 }
 
 thingtype WeredragonSmoke : Mobj, -1, 344
 {
-  spawnstate S_PUFFY1
-  deathstate S_PUFFY1
   speed      10.0
   radius     6.0
   height     8.0
   damage     2
   cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE
+  
+  firstdecoratestate S_PUFFY1
+  states
+  @"
+  Spawn:
+  Death:
+    FRB1 DEFGH 4
+    stop
+  "@
 }
 
 thingtype Ophidian : Mobj, 7092, 345
 {
-  spawnstate      S_SNAKE_LOOK1
   spawnhealth     280
-  seestate        S_SNAKE_WALK1
-  seesound        ht_snksit
-  attacksound     ht_snkatk
-  painstate       S_SNAKE_PAIN1
   painchance      48
-  painsound       ht_snkpai
-  missilestate    S_SNAKE_ATK1
-  deathstate      S_SNAKE_DIE1
-  deathsound      ht_snkdth
   speed           10
   radius          22.0
   height          70.0
   activesound     ht_snkact
+  seesound        ht_snksit
+  attacksound     ht_snkatk
+  painsound       ht_snkpai
+  deathsound      ht_snkdth
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was smoked by an Ophidian"
   dropitem        HAmmoPhoenixWimpy, 84, 5, +toss
@@ -827,12 +869,39 @@ thingtype Ophidian : Mobj, 7092, 345
     num   132
     modes heretic 
   }
+  
+  firstdecoratestate S_SNAKE_LOOK1
+  states
+  @"
+  Spawn:
+    SNKE AB 10 A_Look
+    loop
+  See:
+    SNKE ABCD 4 A_Chase
+    loop
+  Missile:
+    SNKE FF  5 A_FaceTarget
+    SNKE FFF 4 A_SnakeAttack
+    SNKE FFF 5 A_FaceTarget
+    SNKE F   4 A_SnakeAttack2
+    goto See
+  Pain:
+    SNKE E 3
+    SNKE E 3 A_Pain
+    goto See
+  Death:
+    SNKE G    5
+    SNKE H    5 A_Scream
+    SNKE IJKL 5
+    SNKE M    5 A_Fall
+    SNKE NO   5
+    SNKE P   -1
+    stop
+  "@
 }
 
 thingtype OphidianShotA : Mobj, -1, 346
 {
-  spawnstate S_SNAKEPRO_A1
-  deathstate S_SNAKEPRO_AX1
   speed      14.0
   fastspeed  20.0
   radius     12.0
@@ -844,12 +913,23 @@ thingtype OphidianShotA : Mobj, -1, 346
     num   138
     modes heretic 
   }
+  
+  firstdecoratestate S_SNAKEPRO_A1
+  states
+  @"
+  Spawn:
+    SNFX ABCD 5 bright
+    loop
+  Death:
+    SNFX EF 5 bright
+    SNFX G  4 bright
+    SNFX HI 3 bright
+    stop
+  "@
 }
 
 thingtype OphidianShotB : Mobj, -1, 347
 {
-  spawnstate S_SNAKEPRO_B1
-  deathstate S_SNAKEPRO_BX1
   speed      14.0
   fastspeed  20.0
   radius     12.0
@@ -861,25 +941,33 @@ thingtype OphidianShotB : Mobj, -1, 347
     num   139
     modes heretic
   }
+  
+  firstdecoratestate S_SNAKEPRO_B1
+  states
+  @"
+  Spawn:
+    SNFX JK 6 bright
+    loop
+  Death:
+    SNFX LM 5 bright
+    SNFX N  4 bright
+    SNFX O  3 bright
+    stop
+  "@
 }
 
 thingtype SabreClaw : Mobj, 7090, 348
 {
-  spawnstate     S_CLINK_LOOK1
   spawnhealth    150
-  seestate       S_CLINK_WALK1
-  seesound       ht_clksit
-  attacksound    ht_clkatk
-  painstate      S_CLINK_PAIN1
   painchance     32
-  painsound      ht_clkpai
-  meleestate     S_CLINK_ATK1
-  deathstate     S_CLINK_DIE1
-  deathsound     ht_clkdth
   speed          14
   height         64.0
   mass           75
   activesound    ht_clkact
+  seesound       ht_clksit
+  attacksound    ht_clkatk
+  painsound      ht_clkpai
+  deathsound     ht_clkdth
   cflags         SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was sliced to bits by a Sabreclaw"
   dropitem       HAmmoSkullWimpy, 84, 20, +toss
@@ -888,25 +976,47 @@ thingtype SabreClaw : Mobj, 7090, 348
     num   1
     modes heretic
   }
+  
+  firstdecoratestate S_CLINK_LOOK1
+  states
+  @"
+  Spawn:
+    CLNK AB 10 A_Look
+    loop
+  See:
+    CLNK ABCD 3 A_Chase
+    loop
+  Melee:
+    CLNK E 5 A_FaceTarget
+    CLNK F 4 A_FaceTarget
+    CLNK G 7 A_ClinkAttack
+    goto See
+  Pain:
+    CLNK H 3
+    CLNK H 3 A_Pain
+    goto See
+  Death:
+    CLNK IJ 6
+    CLNK K  5 A_Scream
+    CLNK L  5 A_Fall
+    CLNK MN 5
+    CLNK O -1
+    stop
+  "@
 }
 
 thingtype Disciple : Mobj, 7015, 349
 {
-  spawnstate      S_WIZARD_LOOK1
   spawnhealth     180
-  seestate        S_WIZARD_WALK1
-  seesound        ht_wizsit
-  attacksound     ht_wizatk
-  painstate       S_WIZARD_PAIN1
   painchance      64
-  painsound       ht_wizpai
-  missilestate    S_WIZARD_ATK1
-  deathstate      S_WIZARD_DIE1
-  deathsound      ht_wizdth
   speed           12
   radius          16.0
   height          68.0
   activesound     ht_wizact
+  seesound        ht_wizsit
+  attacksound     ht_wizatk
+  painsound       ht_wizpai
+  deathsound      ht_wizdth
   flags           SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
   flags3          ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_normal "was schooled by a Disciple"
@@ -918,12 +1028,51 @@ thingtype Disciple : Mobj, 7015, 349
     num   19
     modes heretic
   }
+  
+  firstdecoratestate S_WIZARD_LOOK1
+  states
+  @"
+  Spawn:
+    WZRD AB 10 A_Look
+    loop
+  See:
+    WZRD A 3 A_Chase
+    WZRD A 4 A_Chase
+    WZRD A 3 A_Chase
+    WZRD A 4 A_Chase
+    WZRD B 3 A_Chase
+    WZRD B 4 A_Chase
+    WZRD B 3 A_Chase
+    WZRD B 4 A_Chase
+    loop
+  Missile:
+    WZRD C  4 A_WizardAtk1
+    WZRD C  4 A_WizardAtk2
+    WZRD C  4 A_WizardAtk1
+    WZRD C  4 A_WizardAtk2
+    WZRD C  4 A_WizardAtk1
+    WZRD C  4 A_WizardAtk2
+    WZRD C  4 A_WizardAtk1
+    WZRD C  4 A_WizardAtk2
+    WZRD D 12 A_WizardAtk3
+    goto See
+  Pain:
+    WZRD E 3 A_GhostOff
+    WZRD E 3 A_Pain
+    goto See
+  Death:
+    WZRD F  6 A_GhostOff
+    WZRD G  6 A_Scream
+    WZRD HI 6 
+    WZRD J  6 A_Fall
+    WZRD KL 6
+    WZRD M -1
+    stop
+  "@
 }
 
 thingtype DiscipleShot : Mobj, -1, 350
 {
-  spawnstate S_WIZFX1_1
-  deathstate S_WIZFXI1_1
   speed      18.0
   fastspeed  24.0
   radius     10.0
@@ -935,27 +1084,32 @@ thingtype DiscipleShot : Mobj, -1, 350
     num   140
     modes heretic
   }
+  
+  firstdecoratestate S_WIZFX1_1
+  states
+  @"
+  Spawn:
+    FX11 AB 6 bright
+    loop
+  Death:
+    FX11 CDEFG 5 bright
+    stop
+  "@
 }
 
 thingtype DeathKnight : Mobj, 7064, 351
 {
-  spawnstate      S_KNIGHT_STND1
   spawnhealth     200
-  seestate        S_KNIGHT_WALK1
-  seesound        ht_kgtsit
-  attacksound     ht_kgtatk
-  painstate       S_KNIGHT_PAIN1
   painchance      100
-  painsound       ht_kgtpai
-  meleestate      S_KNIGHT_ATK1
-  missilestate    S_KNIGHT_ATK1
-  deathstate      S_KNIGHT_DIE1
-  deathsound      ht_kgtdth
   speed           12
   radius          24.0
   height          78.0
   mass            150
   activesound     ht_kgtsit
+  seesound        ht_kgtsit
+  attacksound     ht_kgtatk
+  painsound       ht_kgtpai
+  deathsound      ht_kgtdth
   cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was axed by a Death Knight"
   obituary_melee  "was chopped down by a Death Knight"
@@ -965,31 +1119,45 @@ thingtype DeathKnight : Mobj, 7064, 351
     num   6
     modes heretic
   }
+  
+  firstdecoratestate S_KNIGHT_STND1
+  states
+  @"
+  Spawn:
+    KNIG AB 10 A_Look
+    loop
+  See:
+    KNIG ABCD 4 A_Chase
+    loop
+  Melee:
+  Missile:
+    KNIG E 10 A_FaceTarget
+    KNIG F  8 A_FaceTarget
+    KNIG G  8 A_KnightAttack
+    KNIG E 10 A_FaceTarget
+    KNIG F  8 A_FaceTarget
+    KNIG G  8 A_KnightAttack
+    goto See
+  Pain:
+    KNIG H 3
+    KNIG H 3 A_Pain
+    goto See
+  Death:
+    KNIG I  6
+    KNIG J  6 A_Scream
+    KNIG K  6
+    KNIG L  6 A_Fall
+    KNIG MN 6
+    KNIG O -1
+    stop
+  "@
 }
 
-thingtype DeathKnightGhost : Mobj, 7065, 352
+thingtype DeathKnightGhost : DeathKnight, 7065, 352
 {
-  spawnstate      S_KNIGHT_STND1
-  spawnhealth     200
-  seestate        S_KNIGHT_WALK1
-  seesound        ht_kgtsit
-  attacksound     ht_kgtatk
-  painstate       S_KNIGHT_PAIN1
-  painchance      100
-  painsound       ht_kgtpai
-  meleestate      S_KNIGHT_ATK1
-  missilestate    S_KNIGHT_ATK1
-  deathstate      S_KNIGHT_DIE1
-  deathsound      ht_kgtdth
-  speed           12
-  radius          24.0
-  height          78.0
-  mass            150
-  activesound     ht_kgtsit
-  cflags          SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  addflags        GHOST
   obituary_normal "was spooked by a Knight Ghost"
   obituary_melee  "was chopped by a Knight Ghost"
-  dropitem        HAmmoCBowWimpy, 84, 5, +toss
   acs_spawndata
   {
     num   129
@@ -999,58 +1167,72 @@ thingtype DeathKnightGhost : Mobj, 7065, 352
 
 thingtype KnightAxe : Mobj, -1, 353
 {
-  spawnstate S_SPINAXE1
-  deathstate S_SPINAXEX1
-  deathsound ht_hrnhit
   speed      9.0
   fastspeed  18.0
   radius     10.0
   height     8.0
   damage     2
+  deathsound ht_hrnhit
   cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NORANDOMIZE|NOCROSS|THRUGHOST|WINDTHRUST
   acs_spawndata
   {
     num   127
     modes heretic
   }
+  
+  firstdecoratestate S_SPINAXE1
+  states
+  @"
+  Spawn:
+    SPAX A  3 bright A_ContMobjSound
+    SPAX BC 3 bright
+    loop
+  Death:
+    SPAX DEF 6 bright
+    stop
+  "@
 }
 
 thingtype KnightAxeRed : Mobj, -1, 354
 {
-  spawnstate S_REDAXE1
-  deathstate S_REDAXEX1
-  deathsound ht_hrnhit
   speed      9.0
   fastspeed  18.0
   radius     10.0
   height     8.0
   damage     7
+  deathsound ht_hrnhit
   cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST|NORANDOMIZE
   acs_spawndata
   {
     num   128
     modes heretic
   }
+  
+  firstdecoratestate S_REDAXE1
+  states
+  @"
+  Spawn:
+    RAXE AB 5 bright A_DripBlood
+    loop
+  Death:
+    RAXE CDE 6 bright
+    stop
+  "@
 }
 
 thingtype SerpentRiderDsparil : Mobj, 7007, 355
 {
-  spawnstate      S_SRCR1_LOOK1
   spawnhealth     2000
-  seestate        S_SRCR1_WALK1
-  seesound        ht_bstsit
-  attacksound     ht_bstatk
-  painstate       S_SRCR1_PAIN1
   painchance      56
-  painsound       ht_sbtpai
-  missilestate    S_SRCR1_ATK1
-  deathstate      S_SRCR1_DIE1
-  deathsound      ht_sbtdth
   speed           16
   radius          28.0
   height          100.0
   mass            800
   activesound     ht_sbtact
+  seesound        ht_bstsit
+  attacksound     ht_bstatk
+  painsound       ht_sbtpai
+  deathsound      ht_sbtdth
   cflags          SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
   nukespecial     SorcNukeSpec
   obituary_normal "was burned by D'Sparil's serpent"
@@ -1060,12 +1242,49 @@ thingtype SerpentRiderDsparil : Mobj, 7007, 355
     num   142
     modes heretic 
   }
+  
+  firstdecoratestate S_SRCR1_LOOK1
+  states
+  @"
+  Spawn:
+    SRCR AB 10 A_Look
+    loop
+  See:
+    SRCR ABCD 5 A_Sor1Chase
+    loop
+  Pain:
+    SRCR Q 6 A_Sor1Pain
+    goto See
+  Missile:
+    SRCR Q  7 A_FaceTarget
+    SRCR R  6 A_FaceTarget
+    SRCR S 10 A_Srcr1Attack
+    goto See
+  ExtraAttack:
+    SRCR S 10 A_FaceTarget
+    SRCR Q  7 A_FaceTarget
+    SRCR R  6 A_FaceTarget
+    SRCR S 10 A_Srcr1Attack
+    goto See
+  Death:
+    SRCR E     7
+    SRCR F     7 A_Scream
+    SRCR G     7
+    SRCR HIJK  6
+    SRCR L    25 A_SorZap
+    SRCR MN    5
+    SRCR O     4
+    SRCR L    20 A_SorZap
+    SRCR MN    5
+    SRCR O     4
+    SRCR L    12
+    SRCR P    -1 A_SorcererRise
+    stop
+  "@
 }
 
 thingtype SRDsparilShot1 : Mobj, -1, 356
 {
-  spawnstate S_SRCRFX1_1
-  deathstate S_SRCRFXI1_1
   speed      20.0
   fastspeed  28.0
   radius     10.0
@@ -1077,25 +1296,31 @@ thingtype SRDsparilShot1 : Mobj, -1, 356
     num   144
     modes heretic 
   }
+  
+  firstdecoratestate S_SRCRFX1_1
+  states
+  @"
+  Spawn:
+    FX14 ABC 6 bright
+    loop
+  Death:
+    FX14 DEFGH 5 bright
+    stop
+  "@
 }
 
 thingtype Dsparil : Mobj, -1, 357
 {
-  spawnstate      S_SOR2_LOOK1
   spawnhealth     3500
-  seestate        S_SOR2_WALK1
-  seesound        ht_sorsit
-  attacksound     ht_soratk
-  painstate       S_SOR2_PAIN1
   painchance      32
-  painsound       ht_sorpai
-  missilestate    S_SOR2_ATK1
-  deathstate      S_SOR2_DIE1
   speed           14
   radius          16.0
   height          70.0
   mass            300
   activesound     ht_soract
+  seesound        ht_sorsit
+  attacksound     ht_soratk
+  painsound       ht_sorpai
   cflags          SOLID|SHOOTABLE|DROPOFF|COUNTKILL|E3M8BOSS|BOSS|FOOTCLIP|LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   obituary_normal "brought about the end of Parthoris"
   obituary_melee  "utterly failed to save Parthoris"
@@ -1104,6 +1329,49 @@ thingtype Dsparil : Mobj, -1, 357
     num   143
     modes heretic
   }
+  
+  firstdecoratestate S_SOR2_RISE1
+  states
+  @"
+  Sor2Rise:
+    SOR2 AB   4
+    SOR2 C    4 A_SorRise
+    SOR2 DEF  4
+    SOR2 G   12 A_SorSightSnd
+    goto See
+  Spawn:
+    SOR2 MN 10 A_Look
+    loop
+  See:
+    SOR2 MNOP A_Chase
+    loop
+  Pain:
+    SOR2 Q 3
+    SOR2 Q 6 A_Pain
+    goto See
+  Missile:
+    SOR2 R  9 A_Srcr2Decide
+    SOR2 S  9 A_FaceTarget
+    SOR2 T 20 A_Srcr2Attack
+    goto See
+  Sor2Teleport:
+    SOR2 LKJIHG 6
+    goto See
+  Death:
+    SDTH A   8 A_Sor2DthInit
+    SDTH B   8
+    SDTH C   8 A_SorDSph
+    SDTH DE  7
+    SDTH F   7 A_Sor2DthLoop
+    SDTH G   6 A_SorDExp
+    SDTH H   6
+    SDTH I  18
+    SDTH J   6 A_Fall
+    SDTH K   6 A_SorDBon
+    SDTH LMN 6
+    SDTH O  -1 A_HticBossDeath
+    stop
+  "@
 }
 
 thingtype DsparilShot1 : Mobj, -1, 358
@@ -1125,14 +1393,19 @@ thingtype DsparilShot1 : Mobj, -1, 358
 
 thingtype DsparilSpark : Mobj, -1, 359
 {
-  spawnstate S_SOR2FXSPARK1
-  cflags     NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
+  cflags NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
+  
+  firstdecoratestate S_SOR2FXSPARK1
+  states
+  @"
+  Spawn:
+    FX16 DEF 12 bright
+    stop
+  "@
 }
 
 thingtype DsparilShot2 : Mobj, -1, 360
 {
-  spawnstate S_SOR2FX2_1
-  deathstate S_SOR2FXI2_1
   speed      6.0
   radius     10.0
   height     6.0
@@ -1143,45 +1416,87 @@ thingtype DsparilShot2 : Mobj, -1, 360
     num   145
     modes heretic
   }
+  
+  firstdecoratestate S_SOR2FX2_1
+  states
+  @"
+  Spawn:
+    FX11 A 35 bright
+    FX11 A  5 bright A_GenWizard
+    FX11 B  5 bright
+    loop
+  Death:
+    FX11 CDEFG 5 bright
+    stop
+  "@
 }
 
 thingtype DsparilTeleFade : Mobj, -1, 361
 {
-  spawnstate S_SOR2TELEFADE1
-  flags      NOBLOCKMAP
+  flags NOBLOCKMAP
+  
+  firstdecoratestate S_SOR2TELEFADE1
+  states
+  @"
+  Spawn:
+    SOR2 G     8
+    SOR2 HIJKL 6
+    stop
+  "@
 }
 
 thingtype HereticGreenKey : Mobj, 7073, 362
 {
-  spawnstate S_AKYY1
-  flags      SPECIAL|NOTDMATCH
+  flags SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   86
     modes heretic
   }
+  
+  firstdecoratestate S_AKYY1
+  states
+  @"
+  Spawn:
+    AKYY ABCDEFGHIJ 3 bright
+    loop
+  "@
 }
 
 thingtype HereticBlueKey : Mobj, 7079, 363
 {
-  spawnstate S_BKYY1
-  flags      SPECIAL|NOTDMATCH
+  flags SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   85
     modes heretic
   }
+  
+  firstdecoratestate S_BKYY1
+  states
+  @"
+  Spawn:
+    BKYY ABCDEFGHIJ 3 bright
+    loop
+  "@
 }
 
 thingtype HereticYellowKey : Mobj, 7080, 364
 {
-  spawnstate S_CKYY1
-  flags      SPECIAL|NOTDMATCH
+  flags SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   87
     modes heretic
   }
+  
+  firstdecoratestate S_CKYY1
+  states
+  @"
+  Spawn:
+    CKYY ABCDEFGHI 3 bright
+    loop
+  "@
 }
 
 thingtype HereticAmbienceWind : Mobj, 7042, 365
@@ -1228,8 +1543,6 @@ thingtype HereticVolcano : Mobj, 7087, 368
 
 thingtype VolcanoBall : Mobj, -1, 369
 {
-  spawnstate S_VOLCANOBALL1
-  deathstate S_VOLCANOBALLX1
   deathsound ht_lobhit
   speed      2.0
   radius     8.0
@@ -1241,37 +1554,52 @@ thingtype VolcanoBall : Mobj, -1, 369
     num   123
     modes heretic 
   }
+  
+  firstdecoratestate S_VOLCANOBALL1
+  states
+  @"
+  Spawn:
+    VFBL AB 4 A_BeastPuff
+    loop
+  Death:
+    XPL1 A     4 A_VolcBallImpact
+    XPL1 BCDEF 4
+    stop
+  "@
 }
 
 thingtype VolcanoBallSmall : Mobj, -1, 370
 {
-  spawnstate S_VOLCANOTBALL1
-  deathstate S_VOLCANOTBALLX1
-  speed      2.0
-  radius     8.0
-  height     6.0
-  damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  speed  2.0
+  radius 8.0
+  height 6.0
+  damage 1
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
   acs_spawndata
   {
     num   124
     modes heretic
   }
+  
+  firstdecoratestate S_VOLCANOTBALL1
+  states
+  @"
+  Spawn:
+    VTFB AB 4
+    loop
+  Death:
+    SFFI CDABCDE 4
+    stop
+  "@
 }
 
 thingtype Maulotaur : Mobj, 7009, 371
 {
-  spawnstate      S_MNTR_LOOK1
   spawnhealth     3000
-  seestate        S_MNTR_WALK1
   seesound        ht_minsit
   attacksound     ht_minat1
-  painstate       S_MNTR_PAIN1
   painchance      25
   painsound       ht_minpai
-  meleestate      S_MNTR_ATK1_1
-  missilestate    S_MNTR_ATK2_1
-  deathstate      S_MNTR_DIE1
   deathsound      ht_mindth
   speed           16
   radius          28.0
@@ -1290,12 +1618,63 @@ thingtype Maulotaur : Mobj, 7009, 371
     num   114     // note: different from zdoom
     modes heretic
   }
+  
+  firstdecoratestate S_MNTR_LOOK1
+  states
+  @"
+  Spawn:
+    MNTR AB 10 A_Look
+    loop
+  See:
+    MNTR ABCD 5 A_Chase
+    loop
+  Melee:
+    MNTR V 10 A_FaceTarget
+    MNTR W  7 A_FaceTarget
+    MNTR X 12 A_MinotaurAtk1
+    goto See
+  Missile:
+    MNTR V 10 A_MinotaurDecide
+    MNTR Y  4 A_FaceTarget
+    MNTR Z  9 A_MinotaurAtk2
+    goto See
+  MinotaurAtk3:
+    MNTR V 10 A_FaceTarget
+    MNTR W  7 A_FaceTarget
+    MNTR X 12 A_MinotaurAtk3
+    goto See
+  MinotaurDoubleAttack:
+    MNTR X 12
+    goto MinotaurAtk3
+  MinotaurCharge:
+    MNTR U 2 A_MinotaurCharge
+    loop
+  Pain:
+    MNTR E 3
+    MNTR E 6 A_Pain
+    goto See
+  Death:
+    MNTR F  6
+    MNTR G  5
+    MNTR H  6 A_Scream
+    MNTR I  5
+    MNTR J  6
+    MNTR K  5
+    MNTR L  6
+    MNTR M  5 A_Fall
+    MNTR N  6
+    MNTR O  5
+    MNTR P  6
+    MNTR Q  5
+    MNTR R  6
+    MNTR S  5
+    MNTR T -1 A_HticBossDeath
+    stop
+  "@
 }
 
 thingtype MaulotaurShot : Mobj, -1, 372
 {
-  spawnstate S_MNTRFX1_1
-  deathstate S_MNTRFXI1_1
   speed      20.0
   fastspeed  26.0
   radius     10.0
@@ -1307,6 +1686,17 @@ thingtype MaulotaurShot : Mobj, -1, 372
     num   115     // note: different from zdoom  
     modes heretic
   }
+  
+  firstdecoratestate S_MNTRFX1_1
+  states
+  @"
+  Spawn:
+    FX12 AB 6 bright
+    loop
+  Death:
+    FX12 CDEFGH 5 bright
+    stop
+  "@
 }
 
 thingtype MaulotaurFloorFire : Mobj, -1, 373
@@ -1329,8 +1719,7 @@ thingtype MaulotaurFloorFire : Mobj, -1, 373
 
 thingtype MaulotaurFloorFlame : Mobj, -1, 374
 {
-  spawnstate S_MNTRFX3_1
-  deathstate S_MNTRFXI2_1
+  deathstate S_MNTRFXI2_1  // FIXME: !!!
   deathsound ht_phohit
   radius     8.0
   damage     4
@@ -1340,33 +1729,46 @@ thingtype MaulotaurFloorFlame : Mobj, -1, 374
     num   117     // note : different from zdoom
     modes heretic
   }
+  
+  firstdecoratestate S_MNTRFX3_1
+  states
+  @"
+  Spawn:
+    FX13 DC   4
+    FX13 BCDE 5
+    FX13 FGH  4
+    stop
+  "@
+  // TODO: Death states are shared with MaulotaurFloorFire
 }
 
 thingtype HereticPhoenixPuff : Mobj, -1, 375
 {
-  spawnstate   S_PHOENIXPUFF1
   cflags       NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
   translucency 26624
+  
+  firstdecoratestate S_PHOENIXPUFF1
+  states
+  @"
+  Spawn:
+    FX04 BCDEF 4
+    stop
+  "@
 }
 
 thingtype IronLich : Mobj, 7006, 376
 {
-  spawnstate      S_LICH_LOOK
   spawnhealth     700
   painchance      32
-  painsound       ht_hedpai
-  seestate        S_LICH_FLOAT
-  seesound        ht_hedsit
-  attacksound     ht_hedat1
-  painstate       S_LICH_PAIN1
-  missilestate    S_LICH_ATK1
-  deathstate      S_LICH_DIE1
-  deathsound      ht_heddth
-  activesound     ht_hedact
   speed           6
   radius          40.0
   height          72.0
   mass            325
+  painsound       ht_hedpai
+  seesound        ht_hedsit
+  attacksound     ht_hedat1
+  deathsound      ht_heddth
+  activesound     ht_hedact
   cflags          SOLID|SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
   obituary_normal "was punished by the Iron Lich"
   obituary_melee  "was bitten by the Iron Lich"
@@ -1377,6 +1779,32 @@ thingtype IronLich : Mobj, 7006, 376
     num   20
     modes heretic
   }
+  
+  firstdecoratestate S_LICH_LOOK
+  states
+  @"
+  Spawn:
+    HEAD A 10 A_Look
+    loop
+  See:
+    HEAD A 4 A_Chase
+    loop
+  Missile:
+    HEAD A  5 A_FaceTarget
+    HEAD B 20 A_LichAttack
+    goto See
+  Pain:
+    HEAD A 4
+    HEAD A 4 A_Pain
+    goto See
+  Death:
+    HEAD C  7
+    HEAD D  7 A_Scream
+    HEAD EF 7
+    HEAD G  7 A_Fall
+    HEAD H  7
+    HEAD I -1 A_HticBossDeath
+  "@
 }
 
 thingtype IronLichShot1 : Mobj, -1, 377

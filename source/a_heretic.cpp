@@ -335,6 +335,11 @@ void A_ClinkAttack(actionargs_t *actionargs)
 // Disciple Actions
 //
 
+void A_GhostOff(actionargs_t *actionargs)
+{
+   actionargs->actor->flags3 &= ~MF3_GHOST;
+}
+
 void A_WizardAtk1(actionargs_t *actionargs)
 {
    A_FaceTarget(actionargs);
@@ -483,6 +488,43 @@ void A_SorcererRise(actionargs_t *actionargs)
       P_SetTarget<Mobj>(&mo->target, actor->target);
    
    P_SetMobjState(mo, E_SafeState(S_SOR2_RISE1));
+}
+
+//=============================================================================
+//
+// D'Sparil Sound Actions
+//
+// For Heretic state layout compatibility; for user mods, use A_PlaySoundEx.
+//
+
+void A_SorZap(actionargs_t *actionargs)
+{
+   S_StartSound(NULL, sfx_sorzap);
+}
+
+void A_SorRise(actionargs_t *actionargs)
+{
+   S_StartSound(NULL, sfx_sorrise);
+}
+
+void A_SorDSph(actionargs_t *actionargs)
+{
+   S_StartSound(NULL, sfx_sordsph);
+}
+
+void A_SorDExp(actionargs_t *actionargs)
+{
+   S_StartSound(NULL, sfx_sordexp);
+}
+
+void A_SorDBon(actionargs_t *actionargs)
+{
+   S_StartSound(NULL, sfx_sordbon);
+}
+
+void A_SorSightSnd(actionargs_t *actionargs)
+{
+   S_StartSound(NULL, sfx_sorsit);
 }
 
 //=============================================================================
@@ -1060,49 +1102,20 @@ void A_BeastAttack(actionargs_t *actionargs)
                      actor->z + DEFAULTMISSILEZ);
 }
 
-static const char *kwds_A_BeastPuff[] =
-{
-   "momentum",       // 0
-   "nomomentum",     // 1
-};
-
-static argkeywd_t beastkwds =
-{
-   kwds_A_BeastPuff,
-   sizeof(kwds_A_BeastPuff) / sizeof(const char *)
-};
-
 void A_BeastPuff(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-
-   // 07/29/04: allow momentum to be disabled
-   int momentumToggle = E_ArgAsKwd(args, 0, &beastkwds, 0);
+   Mobj *actor = actionargs->actor;
 
    if(P_Random(pr_puffy) > 64)
    {
       fixed_t x, y, z;
       Mobj *mo;
 
-      // Note: this actually didn't work as intended in Heretic
-      // because there, they gave it no momenta. A missile has
-      // to be moving to inflict any damage. Doing this makes the
-      // smoke a little dangerous. It also requires the missile's
-      // target to be passed on, however, since otherwise the 
-      // Weredragon that shot this missile can get hurt by it.
-
       x = actor->x + (P_SubRandom(pr_puffy) << 10);      
       y = actor->y + (P_SubRandom(pr_puffy) << 10);
       z = actor->z + (P_SubRandom(pr_puffy) << 10);
 
       mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFFY));
-
-      if(!momentumToggle)
-      {
-         mo->momx = -(actor->momx / 16);
-         mo->momy = -(actor->momy / 16);
-      }
 
       // pass on the beast so that it doesn't hurt itself
       P_SetTarget<Mobj>(&mo->target, actor->target);
