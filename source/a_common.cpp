@@ -202,7 +202,6 @@ static void P_MakeActiveSound(Mobj *actor)
    if(actor->info->activesound && P_Random(pr_see) < 3)
    {
       int sound = actor->info->activesound;
-      int attn  = ATTN_NORMAL;
 
       // haleyjd: some heretic enemies use their seesound on
       // occasion, so I've made this a general feature
@@ -213,17 +212,10 @@ static void P_MakeActiveSound(Mobj *actor)
       }
 
       // haleyjd: some heretic enemies snort at full volume :)
-      // haleyjd: but when they do so, they do not cut off a sound
-      // they are already playing.
       if(actor->flags3 & MF3_LOUDACTIVE)
-      {
-         sfxinfo_t *sfx = E_SoundForDEHNum(sound);
-         if(sfx && S_CheckSoundPlaying(actor, sfx))
-            return;
-         attn = ATTN_NONE;
-      }
+         actor = NULL;
 
-      S_StartSoundAtVolume(actor, sound, 127, attn, CHAN_AUTO);
+      S_StartSound(actor, sound);
    }
 }
 
