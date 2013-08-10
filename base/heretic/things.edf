@@ -1343,7 +1343,7 @@ thingtype Dsparil : Mobj, -1, 357
     SOR2 MN 10 A_Look
     loop
   See:
-    SOR2 MNOP A_Chase
+    SOR2 MNOP 4 A_Chase
     loop
   Pain:
     SOR2 Q 3
