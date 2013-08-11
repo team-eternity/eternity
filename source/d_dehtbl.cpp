@@ -1313,6 +1313,7 @@ void A_HticDrop(actionargs_t *);
 void A_HticTracer(actionargs_t *);
 void A_MummyFX1Seek(actionargs_t *actionargs);
 void A_ContMobjSound(actionargs_t *actionargs);
+void A_ESound(actionargs_t *actionargs);
 void A_ClinkAttack(actionargs_t *);
 void A_GhostOff(actionargs_t *actionargs);
 void A_WizardAtk1(actionargs_t *);
@@ -1345,6 +1346,7 @@ void A_Sor1Chase(actionargs_t *);
 void A_Sor1Pain(actionargs_t *);
 void A_Srcr1Attack(actionargs_t *);
 void A_SorcererRise(actionargs_t *);
+void A_VolcanoSet(actionargs_t *actionargs);
 void A_VolcanoBlast(actionargs_t *);
 void A_VolcBallImpact(actionargs_t *);
 void A_MinotaurAtk1(actionargs_t *);
@@ -1367,8 +1369,8 @@ void A_ImpXDeath1(actionargs_t *);
 void A_ImpXDeath2(actionargs_t *);
 void A_ImpExplode(actionargs_t *);
 void A_PlayerSkull(actionargs_t *);
-void A_ClearSkin(actionargs_t *mo);
-void A_PhoenixPuff(actionargs_t *mo);
+void A_ClearSkin(actionargs_t *);
+void A_PhoenixPuff(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1626,6 +1628,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(HticTracer),
    POINTER(MummyFX1Seek),
    POINTER(ContMobjSound),
+   POINTER(ESound),
    POINTER(ClinkAttack),
    POINTER(GhostOff),
    POINTER(WizardAtk1),
@@ -1658,6 +1661,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(Sor1Pain),
    POINTER(Srcr1Attack),
    POINTER(SorcererRise),
+   POINTER(VolcanoSet),
    POINTER(VolcanoBlast),
    POINTER(VolcBallImpact),
    POINTER(MinotaurAtk1),

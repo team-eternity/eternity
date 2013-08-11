@@ -1376,19 +1376,29 @@ thingtype Dsparil : Mobj, -1, 357
 
 thingtype DsparilShot1 : Mobj, -1, 358
 {
-  spawnstate S_SOR2FX1_1
-  deathstate S_SOR2FXI1_1
-  speed      20.0
-  fastspeed  28.0
-  radius     10.0
-  height     6.0
-  damage     1
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
+  speed     20.0
+  fastspeed 28.0
+  radius    10.0
+  height    6.0
+  damage    1
+  cflags    NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
   acs_spawndata
   {
     num   146
     modes heretic
   }
+  
+  firstdecoratestate S_SOR2FX1_1
+  states
+  @"
+  Spawn:
+    FX16 ABC 3 bright A_BlueSpark
+    loop
+  Death:
+    FX16 G     5 bright A_HticExplode("dsparilbspark")
+    FX16 HIJKL 5 bright
+    stop
+  "@
 }
 
 thingtype DsparilSpark : Mobj, -1, 359
@@ -1501,13 +1511,20 @@ thingtype HereticYellowKey : Mobj, 7080, 364
 
 thingtype HereticAmbienceWind : Mobj, 7042, 365
 {
-  spawnstate S_SND_WIND
-  cflags     DONTDRAW
+  cflags DONTDRAW
   acs_spawndata
   {
     num   110
     modes heretic
   }
+  
+  firstdecoratestate S_SND_WIND
+  states
+  @"
+  Spawn:
+    AMG1 A 100 A_ESound
+    loop
+  "@
 }
 
 thingtype HereticAmbienceWater : Mobj, 7041, 366
@@ -1519,6 +1536,14 @@ thingtype HereticAmbienceWater : Mobj, 7041, 366
     num   111
     modes heretic
   }
+  
+  firstdecoratestate S_SND_WATERFALL
+  states
+  @"
+  Spawn:
+    AMG1 A 85 A_ESound
+    loop
+  "@
 }
 
 thingtype DsparilTeleSpot : Mobj, 7056, 367
@@ -1529,16 +1554,26 @@ thingtype DsparilTeleSpot : Mobj, 7056, 367
 
 thingtype HereticVolcano : Mobj, 7087, 368
 {
-  spawnstate      S_VOLCANO1
   radius          12.0
   height          20.0
   flags           SOLID
-  obituary_normal "needs to stay away from volcanoes"
+  obituary_normal "made a poor volcanologist"
   acs_spawndata
   {
     num   150
     modes heretic
   }
+  
+  firstdecoratestate S_VOLCANO1
+  states
+  @"
+  Spawn:
+    VLCO A      350
+    VLCO A       35 A_VolcanoSet
+    VLCO BCDBCD   3
+    VLCO E       10 A_VolcanoBlast
+    goto Spawn+1
+  "@
 }
 
 thingtype VolcanoBall : Mobj, -1, 369
@@ -1699,31 +1734,48 @@ thingtype MaulotaurShot : Mobj, -1, 372
   "@
 }
 
-thingtype MaulotaurFloorFire : Mobj, -1, 373
+// Base class for Maulotaur floor fire and floor flame
+thingtype MaulotaurFireProto
 {
-  spawnstate S_MNTRFX2_1
-  deathstate S_MNTRFXI2_1
   deathsound ht_phohit
+  damage     4
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  
+  firstdecoratestate S_MNTRFXI2_1
+  states
+  @"
+  Death:
+    FX13 I    4 bright A_HticExplode("floorfire")
+    FX13 JKLM 4 bright
+    stop
+  "@
+}
+
+thingtype MaulotaurFloorFire : MaulotaurFireProto, -1, 373
+{
   speed      14.0
   fastspeed  20.0
   radius     5.0
   height     12.0
-  damage     4
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FLOORMISSILE|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  addflags   FLOORMISSILE
   acs_spawndata
   {
     num   116     // note: different from zdoom
     modes heretic
   }
+  
+  firstdecoratestate S_MNTRFX2_1
+  states
+  @"
+  Spawn:
+    FX13 A 2 A_MntrFloorFire
+    loop
+  "@
 }
 
-thingtype MaulotaurFloorFlame : Mobj, -1, 374
+thingtype MaulotaurFloorFlame : MaulotaurFireProto, -1, 374
 {
-  deathstate S_MNTRFXI2_1  // FIXME: !!!
-  deathsound ht_phohit
-  radius     8.0
-  damage     4
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
+  radius 8.0
   acs_spawndata
   {
     num   117     // note : different from zdoom
@@ -1739,7 +1791,6 @@ thingtype MaulotaurFloorFlame : Mobj, -1, 374
     FX13 FGH  4
     stop
   "@
-  // TODO: Death states are shared with MaulotaurFloorFire
 }
 
 thingtype HereticPhoenixPuff : Mobj, -1, 375
@@ -1809,48 +1860,77 @@ thingtype IronLich : Mobj, 7006, 376
 
 thingtype IronLichShot1 : Mobj, -1, 377
 {
-  spawnstate S_LICHFX1_1
-  deathstate S_LICHFXI1_1
-  speed      13.0
-  fastspeed  20.0
-  radius     12.0
-  height     6.0
-  damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST|NORANDOMIZE
+  speed     13.0
+  fastspeed 20.0
+  radius    12.0
+  height    6.0
+  damage    1
+  cflags    NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST|NORANDOMIZE
   acs_spawndata
   {
     num   164
     modes heretic
   }
+  
+  firstdecoratestate S_LICHFX1_1
+  states
+  @"
+  Spawn:
+    FX05 ABC 6
+    loop
+  Death:
+    FX05 D   5 A_LichIceImpact
+    FX05 EFG 5
+    stop
+  "@
 }
 
 thingtype IronLichShot2 : Mobj, -1, 378
 {
-  spawnstate S_LICHFX2_1
-  deathstate S_LICHFXI2_1
-  speed      8.0
-  radius     12.0
-  height     6.0
-  damage     3
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE
+  speed  8.0
+  radius 12.0
+  height 6.0
+  damage 3
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE
+  
+  firstdecoratestate S_LICHFX2_1
+  states
+  @"
+  Spawn:
+    FX05 HIJ 6
+    loop
+  Death:
+    FX05 DEFG 5
+    stop
+  "@
 }
 
 thingtype IronLichShot3 : Mobj, -1, 379
 {
-  spawnstate S_LICHFX3_1
-  deathstate S_LICHFXI3_1
-  speed      10.0
-  fastspeed  18.0
-  radius     14.0
-  height     12.0
-  damage     5
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE
+  speed     10.0
+  fastspeed 18.0
+  radius    14.0
+  height    12.0
+  damage    5
+  cflags    NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE
+  
+  firstdecoratestate S_LICHFX3_1
+  states
+  @"
+  Spawn:
+    FX06 ABC 4 A_LichFireGrow
+    loop
+  LichFireFull:
+    FX06 ABC 5
+    loop
+  Death:
+    FX06 DEFG 5
+    stop
+  "@
 }
 
 thingtype LichWhirlwind : Mobj, -1, 380
 {
-  spawnstate   S_LICHFX4_1
-  deathstate   S_LICHFXI4_1
   speed        10.0
   radius       16.0
   height       74.0
@@ -1863,6 +1943,18 @@ thingtype LichWhirlwind : Mobj, -1, 380
     num   165
     modes heretic
   }
+  
+  firstdecoratestate S_LICHFX4_1
+  states
+  @"
+  Spawn:
+    FX07 DEFG 3
+    FX07 ABC  3 A_WhirlwindSeek
+    goto Spawn+4
+  Death:
+    FX07 GFED 4
+    stop
+  "@
 }
 
 thingtype HAmmoWandWimpy : Mobj, 7010, 381
@@ -2011,25 +2103,17 @@ thingtype HAmmoBlasterHefty : Mobj, 7055, 392
 
 thingtype HereticImp : Mobj, 7066, 393
 {
-  spawnstate     S_IMP_LOOK1
   spawnhealth    40
-  seestate       S_IMP_FLY1
-  seesound       ht_impsit
-  attacksound    ht_impat1
-  painstate      S_IMP_PAIN1
   painchance     200
-  painsound      ht_imppai
-  meleestate     S_IMP_MEATK1
-  missilestate   S_IMP_MSATK1_1
-  crashstate     S_IMP_CRASH1
-  deathstate     S_IMP_DIE1
-  xdeathstate    S_IMP_XDIE1
-  deathsound     ht_impdth
   speed          10
   radius         16.0
   height         36.0
   mass           50
   activesound    ht_impsit
+  seesound       ht_impsit
+  attacksound    ht_impat1
+  painsound      ht_imppai
+  deathsound     ht_impdth
   cflags         SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|NOSTRAFE|SPAWNFLOAT|RANGEHALF|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_melee "was scratched by a Gargoyle"
   acs_spawndata
@@ -2037,29 +2121,57 @@ thingtype HereticImp : Mobj, 7066, 393
     num   5
     modes heretic
   }
+  
+  firstdecoratestate S_IMP_LOOK1
+  states
+  @"
+  Spawn:
+    IMPX ABCB 10 A_Look
+    loop
+  See:
+    IMPX AABBCCBB 3 A_Chase
+    loop
+  Melee:
+    IMPX DE 6 A_FaceTarget
+    IMPX F  6 A_ImpMeleeAtk
+    goto See
+  Missile:
+    IMPX A    10 A_FaceTarget
+    IMPX B     6 A_ImpChargeAtk
+    IMPX CBAB  6
+    goto Missile+2
+  Pain:
+    IMPX G 3
+    IMPX G 3 A_Pain
+    goto See
+  Death:
+    IMPX G 4 A_ImpDeath
+    IMPX H 5
+    goto Death+1
+  XDeath:
+    IMPX S  5 A_ImpXDeath1
+    IMPX TU 5
+    IMPX V  5 A_ImpXDeath2
+    IMPX W  5
+    goto XDeath+4
+  Crash:
+    IMPX I 7 A_ImpExplode
+    IMPX J 7 A_Scream
+    IMPX K 7
+    IMPX L -1
+    stop
+  XCrash:
+    IMPX XY  7
+    IMPX Z  -1
+    stop
+  "@
 }
 
-thingtype HereticImpLeader : Mobj, 7005, 394
+thingtype HereticImpLeader : HereticImp, 7005, 394
 {
-  spawnstate      S_IMP_LOOK1
   spawnhealth     80
-  seestate        S_IMP_FLY1
-  seesound        ht_impsit
   attacksound     ht_impat2
-  painstate       S_IMP_PAIN1
-  painchance      200
-  painsound       ht_imppai
-  missilestate    S_IMP_MSATK2_1
-  crashstate      S_IMP_CRASH1
-  deathstate      S_IMP_DIE1
-  xdeathstate     S_IMP_XDIE1
-  deathsound      ht_impdth
-  speed           10
-  radius          16.0
-  height          36.0
-  mass            50
-  activesound     ht_impsit
-  cflags          SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|SPAWNFLOAT|SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  remflags        NOSTRAFE|RANGEHALF
   obituary_normal "was burned by a Gargoyle Leader"
   obituary_melee  "was scratched by a Gargoyle Leader"
   acs_spawndata
@@ -2067,16 +2179,43 @@ thingtype HereticImpLeader : Mobj, 7005, 394
     num   7
     modes heretic
   }
+  
+  firstdecoratestate S_IMP_MSATK2_1
+  states
+  @"
+  Missile:
+    IMPX DE 6 A_FaceTarget
+    IMPX F  6 A_ImpMissileAtk
+    goto See
+  Melee:
+    stop
+  "@
 }
 
 thingtype HereticImpChunk1 : Mobj, -1, 395
 {
-  spawnstate S_IMP_CHUNKA1
+  firstdecoratestate S_IMP_CHUNKA1
+  states
+  @"
+  Spawn:
+    IMPX M 5
+    IMPX N 700
+    IMPX O 700
+    stop
+  "@
 }
 
 thingtype HereticImpChunk2 : Mobj, -1, 396
 {
-  spawnstate S_IMP_CHUNKB1
+  firstdecoratestate S_IMP_CHUNKB1
+  states
+  @"
+  Spawn:
+    IMPX P 5
+    IMPX Q 700
+    IMPX R 700
+    stop
+  "@
 }
 
 thingtype HereticImpShot : Mobj, -1, 397

@@ -468,19 +468,15 @@ frame S_SOR2_DIE14 { +decorate; dehackednum 2384 }
 frame S_SOR2_DIE15 { +decorate; dehackednum 2385 }
 
 // DSparilShot1 frames
-frame S_SOR2FX1_1  { cmp = "FX16| *|T|3|BlueSpark|@next";       dehackednum 2386 }
-frame S_SOR2FX1_2  { cmp = "FX16| 1|T|3|BlueSpark|@next";       dehackednum 2387 }
-frame S_SOR2FX1_3  { cmp = "FX16| 2|T|3|BlueSpark|S_SOR2FX1_1"; dehackednum 2388 }
-frame S_SOR2FXI1_1 
-{ 
-   cmp = "FX16|6|T|5|HticExplode(dsparilbspark)|@next"
-   dehackednum 2389 
-}
-frame S_SOR2FXI1_2 { cmp = "FX16| 7|T|5|*          |@next"; dehackednum 2390 }
-frame S_SOR2FXI1_3 { cmp = "FX16| 8|T|5|*          |@next"; dehackednum 2391 }
-frame S_SOR2FXI1_4 { cmp = "FX16| 9|T|5|*          |@next"; dehackednum 2392 }
-frame S_SOR2FXI1_5 { cmp = "FX16|10|T|5|*          |@next"; dehackednum 2393 }
-frame S_SOR2FXI1_6 { cmp = "FX16|11|T|5";                   dehackednum 2394 }
+frame S_SOR2FX1_1  { +decorate; dehackednum 2386 }
+frame S_SOR2FX1_2  { +decorate; dehackednum 2387 }
+frame S_SOR2FX1_3  { +decorate; dehackednum 2388 }
+frame S_SOR2FXI1_1 { +decorate; dehackednum 2389 }
+frame S_SOR2FXI1_2 { +decorate; dehackednum 2390 }
+frame S_SOR2FXI1_3 { +decorate; dehackednum 2391 }
+frame S_SOR2FXI1_4 { +decorate; dehackednum 2392 }
+frame S_SOR2FXI1_5 { +decorate; dehackednum 2393 }
+frame S_SOR2FXI1_6 { +decorate; dehackednum 2394 }
 
 // DSparilSpark frames
 frame S_SOR2FXSPARK1 { +decorate; dehackednum 2395 }
@@ -538,19 +534,19 @@ frame S_CKYY9  { +decorate; dehackednum 2440 }
 
 // Static ambient sound object frames
 
-frame S_SND_WIND      { cmp = "TNT1|A|*|100|PlaySoundEx(ht_wind)   |@this"; dehackednum 2441 }
-frame S_SND_WATERFALL { cmp = "TNT1|A|*| 85|PlaySoundEx(ht_waterfl)|@this"; dehackednum 2442 }
+frame S_SND_WIND      { +decorate; dehackednum 2441 }
+frame S_SND_WATERFALL { +decorate; dehackednum 2442 }
 
 // Volcano frames
-frame S_VOLCANO1 { cmp = "VLCO|0|*|350|*                |@next"; dehackednum 2443 }
-frame S_VOLCANO2 { cmp = "VLCO|0|*| 35|SetTics(105, 128)|@next"; dehackednum 2444 }
-frame S_VOLCANO3 { cmp = "VLCO|1|*|  3|*                |@next"; dehackednum 2445 }
-frame S_VOLCANO4 { cmp = "VLCO|2|*|  3|*                |@next"; dehackednum 2446 }
-frame S_VOLCANO5 { cmp = "VLCO|3|*|  3|*                |@next"; dehackednum 2447 }
-frame S_VOLCANO6 { cmp = "VLCO|1|*|  3|*                |@next"; dehackednum 2448 }
-frame S_VOLCANO7 { cmp = "VLCO|2|*|  3|*                |@next"; dehackednum 2449 }
-frame S_VOLCANO8 { cmp = "VLCO|3|*|  3|*                |@next"; dehackednum 2450 }
-frame S_VOLCANO9 { cmp = "VLCO|4|*| 10|VolcanoBlast|S_VOLCANO2"; dehackednum 2451 }
+frame S_VOLCANO1 { +decorate; dehackednum 2443 }
+frame S_VOLCANO2 { +decorate; dehackednum 2444 }
+frame S_VOLCANO3 { +decorate; dehackednum 2445 }
+frame S_VOLCANO4 { +decorate; dehackednum 2446 }
+frame S_VOLCANO5 { +decorate; dehackednum 2447 }
+frame S_VOLCANO6 { +decorate; dehackednum 2448 }
+frame S_VOLCANO7 { +decorate; dehackednum 2449 }
+frame S_VOLCANO8 { +decorate; dehackednum 2450 }
+frame S_VOLCANO9 { +decorate; dehackednum 2451 }
 
 // Volcano fire ball frames
 frame S_VOLCANOBALL1  { +decorate; dehackednum 2452 }
@@ -620,12 +616,12 @@ frame S_MNTRFXI1_5 { +decorate; dehackednum 2509 }
 frame S_MNTRFXI1_6 { +decorate; dehackednum 2510 }
 
 // MaulotaurFloorFire frames
-frame S_MNTRFX2_1  { cmp = "FX13| 0|*|2|MntrFloorFire         |@this"; dehackednum 2511 }
-frame S_MNTRFXI2_1 { cmp = "FX13| 8|T|4|HticExplode(floorfire)|@next"; dehackednum 2512 }
-frame S_MNTRFXI2_2 { cmp = "FX13| 9|T|4|*                     |@next"; dehackednum 2513 }
-frame S_MNTRFXI2_3 { cmp = "FX13|10|T|4|*                     |@next"; dehackednum 2514 }
-frame S_MNTRFXI2_4 { cmp = "FX13|11|T|4|*                     |@next"; dehackednum 2515 }
-frame S_MNTRFXI2_5 { cmp = "FX13|12|T|4";                              dehackednum 2516 }
+frame S_MNTRFX2_1  { +decorate; dehackednum 2511 }
+frame S_MNTRFXI2_1 { +decorate; dehackednum 2512 }
+frame S_MNTRFXI2_2 { +decorate; dehackednum 2513 }
+frame S_MNTRFXI2_3 { +decorate; dehackednum 2514 }
+frame S_MNTRFXI2_4 { +decorate; dehackednum 2515 }
+frame S_MNTRFXI2_5 { +decorate; dehackednum 2516 }
 
 // MaulotaurFloorFlame frames
 frame S_MNTRFX3_1 { +decorate; dehackednum 2517 }
@@ -661,47 +657,47 @@ frame S_LICH_DIE6  { +decorate; dehackednum 2542 }
 frame S_LICH_DIE7  { +decorate; dehackednum 2543 }
 
 // IronLichShot1 frames
-frame S_LICHFX1_1  { cmp = "FX05|0|*|6|*            |@next"; dehackednum 2544 }
-frame S_LICHFX1_2  { cmp = "FX05|1|*|6|*            |@next"; dehackednum 2545 }
-frame S_LICHFX1_3  { cmp = "FX05|2|*|6|*            |S_LICHFX1_1"; dehackednum 2546 }
-frame S_LICHFXI1_1 { cmp = "FX05|3|*|5|LichIceImpact|@next"; dehackednum 2547 }
-frame S_LICHFXI1_2 { cmp = "FX05|4|*|5|*            |@next"; dehackednum 2548 }
-frame S_LICHFXI1_3 { cmp = "FX05|5|*|5|*            |@next"; dehackednum 2549 }
-frame S_LICHFXI1_4 { cmp = "FX05|6|*|5";                     dehackednum 2550 }
+frame S_LICHFX1_1  { +decorate; dehackednum 2544 }
+frame S_LICHFX1_2  { +decorate; dehackednum 2545 }
+frame S_LICHFX1_3  { +decorate; dehackednum 2546 }
+frame S_LICHFXI1_1 { +decorate; dehackednum 2547 }
+frame S_LICHFXI1_2 { +decorate; dehackednum 2548 }
+frame S_LICHFXI1_3 { +decorate; dehackednum 2549 }
+frame S_LICHFXI1_4 { +decorate; dehackednum 2550 }
 
 // IronLichShot2 frames
-frame S_LICHFX2_1  { cmp = "FX05|7|*|6|*|@next";       dehackednum 2551 }
-frame S_LICHFX2_2  { cmp = "FX05|8|*|6|*|@next";       dehackednum 2552 }
-frame S_LICHFX2_3  { cmp = "FX05|9|*|6|*|S_LICHFX2_1"; dehackednum 2553 }
-frame S_LICHFXI2_1 { cmp = "FX05|3|*|5|*|@next";       dehackednum 2554 }
-frame S_LICHFXI2_2 { cmp = "FX05|4|*|5|*|@next";       dehackednum 2555 }
-frame S_LICHFXI2_3 { cmp = "FX05|5|*|5|*|@next";       dehackednum 2556 }
-frame S_LICHFXI2_4 { cmp = "FX05|6|*|5";               dehackednum 2557 }
+frame S_LICHFX2_1  { +decorate; dehackednum 2551 }
+frame S_LICHFX2_2  { +decorate; dehackednum 2552 }
+frame S_LICHFX2_3  { +decorate; dehackednum 2553 }
+frame S_LICHFXI2_1 { +decorate; dehackednum 2554 }
+frame S_LICHFXI2_2 { +decorate; dehackednum 2555 }
+frame S_LICHFXI2_3 { +decorate; dehackednum 2556 }
+frame S_LICHFXI2_4 { +decorate; dehackednum 2557 }
 
 // IronLichShot3 frames
-frame S_LICHFX3_1  { cmp = "FX06|0|*|4|LichFireGrow|@next"; dehackednum 2558 }
-frame S_LICHFX3_2  { cmp = "FX06|1|*|4|LichFireGrow|@next"; dehackednum 2559 }
-frame S_LICHFX3_3  { cmp = "FX06|2|*|4|LichFireGrow|S_LICHFX3_1"; dehackednum 2560 }
-frame S_LICHFX3_4  { cmp = "FX06|0|*|5|*           |@next"; dehackednum 2561 }
-frame S_LICHFX3_5  { cmp = "FX06|1|*|5|*           |@next"; dehackednum 2562 }
-frame S_LICHFX3_6  { cmp = "FX06|2|*|5|*           |S_LICHFX3_4"; dehackednum 2563 }
-frame S_LICHFXI3_1 { cmp = "FX06|3|*|5|*           |@next"; dehackednum 2564 }
-frame S_LICHFXI3_2 { cmp = "FX06|4|*|5|*           |@next"; dehackednum 2565 }
-frame S_LICHFXI3_3 { cmp = "FX06|5|*|5|*           |@next"; dehackednum 2566 }
-frame S_LICHFXI3_4 { cmp = "FX06|6|*|5";                    dehackednum 2567 }
+frame S_LICHFX3_1  { +decorate; dehackednum 2558 }
+frame S_LICHFX3_2  { +decorate; dehackednum 2559 }
+frame S_LICHFX3_3  { +decorate; dehackednum 2560 }
+frame S_LICHFX3_4  { +decorate; dehackednum 2561 }
+frame S_LICHFX3_5  { +decorate; dehackednum 2562 }
+frame S_LICHFX3_6  { +decorate; dehackednum 2563 }
+frame S_LICHFXI3_1 { +decorate; dehackednum 2564 }
+frame S_LICHFXI3_2 { +decorate; dehackednum 2565 }
+frame S_LICHFXI3_3 { +decorate; dehackednum 2566 }
+frame S_LICHFXI3_4 { +decorate; dehackednum 2567 }
 
 // LichWhirlwind frames
-frame S_LICHFX4_1  { cmp = "FX07|3|*|3|*            |@next"; dehackednum 2568 }
-frame S_LICHFX4_2  { cmp = "FX07|4|*|3|*            |@next"; dehackednum 2569 }
-frame S_LICHFX4_3  { cmp = "FX07|5|*|3|*            |@next"; dehackednum 2570 }
-frame S_LICHFX4_4  { cmp = "FX07|6|*|3|*            |@next"; dehackednum 2571 }
-frame S_LICHFX4_5  { cmp = "FX07|0|*|3|WhirlwindSeek|@next"; dehackednum 2572 }
-frame S_LICHFX4_6  { cmp = "FX07|1|*|3|WhirlwindSeek|@next"; dehackednum 2573 }
-frame S_LICHFX4_7  { cmp = "FX07|2|*|3|WhirlwindSeek|S_LICHFX4_5"; dehackednum 2574 }
-frame S_LICHFXI4_1 { cmp = "FX07|6|*|4|*            |@next"; dehackednum 2575 }
-frame S_LICHFXI4_2 { cmp = "FX07|5|*|4|*            |@next"; dehackednum 2576 }
-frame S_LICHFXI4_3 { cmp = "FX07|4|*|4|*            |@next"; dehackednum 2577 }
-frame S_LICHFXI4_4 { cmp = "FX07|3|*|4";                     dehackednum 2578 }
+frame S_LICHFX4_1  { +decorate; dehackednum 2568 }
+frame S_LICHFX4_2  { +decorate; dehackednum 2569 }
+frame S_LICHFX4_3  { +decorate; dehackednum 2570 }
+frame S_LICHFX4_4  { +decorate; dehackednum 2571 }
+frame S_LICHFX4_5  { +decorate; dehackednum 2572 }
+frame S_LICHFX4_6  { +decorate; dehackednum 2573 }
+frame S_LICHFX4_7  { +decorate; dehackednum 2574 }
+frame S_LICHFXI4_1 { +decorate; dehackednum 2575 }
+frame S_LICHFXI4_2 { +decorate; dehackednum 2576 }
+frame S_LICHFXI4_3 { +decorate; dehackednum 2577 }
+frame S_LICHFXI4_4 { +decorate; dehackednum 2578 }
 
 // Heretic Ammo frames
 frame S_AMG1   { cmp = "AMG1|0|*|-1";            dehackednum 2579  }
@@ -732,54 +728,57 @@ frame S_AMB2_2 { cmp = "AMB2|1|*| 4|*|@next";    dehackednum 2603  }
 frame S_AMB2_3 { cmp = "AMB2|2|*| 4|*|S_AMB2_1"; dehackednum 2604  }
 
 // HereticImp frames
-frame S_IMP_LOOK1    { cmp = "IMPX| 0|*|10|Look         |@next"; dehackednum 2605 }
-frame S_IMP_LOOK2    { cmp = "IMPX| 1|*|10|Look         |@next"; dehackednum 2606 }
-frame S_IMP_LOOK3    { cmp = "IMPX| 2|*|10|Look         |@next"; dehackednum 2607 }
-frame S_IMP_LOOK4    { cmp = "IMPX| 1|*|10|Look         |S_IMP_LOOK1"; dehackednum 2608 }
-frame S_IMP_FLY1     { cmp = "IMPX| 0|*| 3|Chase        |@next"; dehackednum 2609 }
-frame S_IMP_FLY2     { cmp = "IMPX| 0|*| 3|Chase        |@next"; dehackednum 2610 }
-frame S_IMP_FLY3     { cmp = "IMPX| 1|*| 3|Chase        |@next"; dehackednum 2611 }
-frame S_IMP_FLY4     { cmp = "IMPX| 1|*| 3|Chase        |@next"; dehackednum 2612 }
-frame S_IMP_FLY5     { cmp = "IMPX| 2|*| 3|Chase        |@next"; dehackednum 2613 }
-frame S_IMP_FLY6     { cmp = "IMPX| 2|*| 3|Chase        |@next"; dehackednum 2614 }
-frame S_IMP_FLY7     { cmp = "IMPX| 1|*| 3|Chase        |@next"; dehackednum 2615 }
-frame S_IMP_FLY8     { cmp = "IMPX| 1|*| 3|Chase        |S_IMP_FLY1"; dehackednum 2616 }
-frame S_IMP_MEATK1   { cmp = "IMPX| 3|*| 6|FaceTarget   |@next"; dehackednum 2617 }
-frame S_IMP_MEATK2   { cmp = "IMPX| 4|*| 6|FaceTarget   |@next"; dehackednum 2618 }
-frame S_IMP_MEATK3   { cmp = "IMPX| 5|*| 6|ImpMeleeAtk  |S_IMP_FLY1"; dehackednum 2619 }
-frame S_IMP_MSATK1_1 { cmp = "IMPX| 0|*|10|FaceTarget   |@next"; dehackednum 2620 }
-frame S_IMP_MSATK1_2 { cmp = "IMPX| 1|*| 6|ImpChargeAtk |@next"; dehackednum 2621 }
-frame S_IMP_MSATK1_3 { cmp = "IMPX| 2|*| 6|*            |@next"; dehackednum 2622 }
-frame S_IMP_MSATK1_4 { cmp = "IMPX| 1|*| 6|*            |@next"; dehackednum 2623 }
-frame S_IMP_MSATK1_5 { cmp = "IMPX| 0|*| 6|*            |@next"; dehackednum 2624 }
-frame S_IMP_MSATK1_6 { cmp = "IMPX| 1|*| 6|*            |S_IMP_MSATK1_3"; dehackednum 2625 }
-frame S_IMP_MSATK2_1 { cmp = "IMPX| 3|*| 6|FaceTarget   |@next"; dehackednum 2626 }
-frame S_IMP_MSATK2_2 { cmp = "IMPX| 4|*| 6|FaceTarget   |@next"; dehackednum 2627 }
-frame S_IMP_MSATK2_3 { cmp = "IMPX| 5|*| 6|ImpMissileAtk|S_IMP_FLY1"; dehackednum 2628 }
-frame S_IMP_PAIN1    { cmp = "IMPX| 6|*| 3|*            |@next"; dehackednum 2629 }
-frame S_IMP_PAIN2    { cmp = "IMPX| 6|*| 3|Pain         |S_IMP_FLY1"; dehackednum 2630 }
-frame S_IMP_DIE1     { cmp = "IMPX| 6|*| 4|ImpDeath     |@next"; dehackednum 2631 }
-frame S_IMP_DIE2     { cmp = "IMPX| 7|*| 5|*            |@this"; dehackednum 2632 }
-frame S_IMP_XDIE1    { cmp = "IMPX|18|*| 5|ImpXDeath1   |@next"; dehackednum 2633 }
-frame S_IMP_XDIE2    { cmp = "IMPX|19|*| 5|*            |@next"; dehackednum 2634 }
-frame S_IMP_XDIE3    { cmp = "IMPX|20|*| 5|*            |@next"; dehackednum 2635 }
-frame S_IMP_XDIE4    { cmp = "IMPX|21|*| 5|ImpXDeath2   |@next"; dehackednum 2636 }
-frame S_IMP_XDIE5    { cmp = "IMPX|22|*| 5|*            |@this"; dehackednum 2637 }
-frame S_IMP_CRASH1   { cmp = "IMPX| 8|*| 7|ImpExplode   |@next"; dehackednum 2638 }
-frame S_IMP_CRASH2   { cmp = "IMPX| 9|*| 7|Scream       |@next"; dehackednum 2639 }
-frame S_IMP_CRASH3   { cmp = "IMPX|10|*| 7|*            |@next"; dehackednum 2640 }
-frame S_IMP_CRASH4   { cmp = "IMPX|11|*|-1";                     dehackednum 2641 }
-frame S_IMP_XCRASH1  { cmp = "IMPX|23|*| 7|*            |@next"; dehackednum 2642 }
-frame S_IMP_XCRASH2  { cmp = "IMPX|24|*| 7|*            |@next"; dehackednum 2643 }
-frame S_IMP_XCRASH3  { cmp = "IMPX|25|*|-1";                     dehackednum 2644 }
+frame S_IMP_LOOK1    { +decorate; dehackednum 2605 }
+frame S_IMP_LOOK2    { +decorate; dehackednum 2606 }
+frame S_IMP_LOOK3    { +decorate; dehackednum 2607 }
+frame S_IMP_LOOK4    { +decorate; dehackednum 2608 }
+frame S_IMP_FLY1     { +decorate; dehackednum 2609 }
+frame S_IMP_FLY2     { +decorate; dehackednum 2610 }
+frame S_IMP_FLY3     { +decorate; dehackednum 2611 }
+frame S_IMP_FLY4     { +decorate; dehackednum 2612 }
+frame S_IMP_FLY5     { +decorate; dehackednum 2613 }
+frame S_IMP_FLY6     { +decorate; dehackednum 2614 }
+frame S_IMP_FLY7     { +decorate; dehackednum 2615 }
+frame S_IMP_FLY8     { +decorate; dehackednum 2616 }
+frame S_IMP_MEATK1   { +decorate; dehackednum 2617 }
+frame S_IMP_MEATK2   { +decorate; dehackednum 2618 }
+frame S_IMP_MEATK3   { +decorate; dehackednum 2619 }
+frame S_IMP_MSATK1_1 { +decorate; dehackednum 2620 }
+frame S_IMP_MSATK1_2 { +decorate; dehackednum 2621 }
+frame S_IMP_MSATK1_3 { +decorate; dehackednum 2622 }
+frame S_IMP_MSATK1_4 { +decorate; dehackednum 2623 }
+frame S_IMP_MSATK1_5 { +decorate; dehackednum 2624 }
+frame S_IMP_MSATK1_6 { +decorate; dehackednum 2625 }
+frame S_IMP_PAIN1    { +decorate; dehackednum 2629 }
+frame S_IMP_PAIN2    { +decorate; dehackednum 2630 }
+frame S_IMP_DIE1     { +decorate; dehackednum 2631 }
+frame S_IMP_DIE2     { +decorate; dehackednum 2632 }
+frame S_IMP_XDIE1    { +decorate; dehackednum 2633 }
+frame S_IMP_XDIE2    { +decorate; dehackednum 2634 }
+frame S_IMP_XDIE3    { +decorate; dehackednum 2635 }
+frame S_IMP_XDIE4    { +decorate; dehackednum 2636 }
+frame S_IMP_XDIE5    { +decorate; dehackednum 2637 }
+frame S_IMP_CRASH1   { +decorate; dehackednum 2638 }
+frame S_IMP_CRASH2   { +decorate; dehackednum 2639 }
+frame S_IMP_CRASH3   { +decorate; dehackednum 2640 }
+frame S_IMP_CRASH4   { +decorate; dehackednum 2641 }
+frame S_IMP_XCRASH1  { +decorate; dehackednum 2642 }
+frame S_IMP_XCRASH2  { +decorate; dehackednum 2643 }
+frame S_IMP_XCRASH3  { +decorate; dehackednum 2644 }
+
+// HereticImpLeader frames
+frame S_IMP_MSATK2_1 { +decorate; dehackednum 2626 }
+frame S_IMP_MSATK2_2 { +decorate; dehackednum 2627 }
+frame S_IMP_MSATK2_3 { +decorate; dehackednum 2628 }
+
 
 // HereticImpChunk frames
-frame S_IMP_CHUNKA1  { cmp = "IMPX|12|*|  5|*|@next"; dehackednum 2645 }
-frame S_IMP_CHUNKA2  { cmp = "IMPX|13|*|700|*|@next"; dehackednum 2646 }
-frame S_IMP_CHUNKA3  { cmp = "IMPX|14|*|700";         dehackednum 2647 }
-frame S_IMP_CHUNKB1  { cmp = "IMPX|15|*|  5|*|@next"; dehackednum 2648 }
-frame S_IMP_CHUNKB2  { cmp = "IMPX|16|*|700|*|@next"; dehackednum 2649 }
-frame S_IMP_CHUNKB3  { cmp = "IMPX|17|*|700";         dehackednum 2650 }
+frame S_IMP_CHUNKA1  { +decorate; dehackednum 2645 }
+frame S_IMP_CHUNKA2  { +decorate; dehackednum 2646 }
+frame S_IMP_CHUNKA3  { +decorate; dehackednum 2647 }
+frame S_IMP_CHUNKB1  { +decorate; dehackednum 2648 }
+frame S_IMP_CHUNKB2  { +decorate; dehackednum 2649 }
+frame S_IMP_CHUNKB3  { +decorate; dehackednum 2650 }
 
 // HereticImpShot frames
 frame S_IMPFX1  { cmp = "FX10|0|T|6|*|@next";    dehackednum 2651 }

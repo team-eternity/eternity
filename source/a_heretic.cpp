@@ -931,6 +931,16 @@ void A_MakePod(actionargs_t *actionargs)
 //
 
 //
+// A_VolcanoSet
+//
+// For Heretic state layout compatibility. A more general pointer is A_SetTics.
+//
+void A_VolcanoSet(actionargs_t *actionargs)
+{
+   actionargs->actor->tics = 105 + (P_Random(pr_settics) & 127);
+}
+
+//
 // A_VolcanoBlast
 //
 // Called when a volcano is ready to erupt.
@@ -1828,6 +1838,16 @@ void A_ContMobjSound(actionargs_t *actionargs)
       S_StartSoundName(actor, "ht_kgtatk");
    else if(actor->type == E_ThingNumForName("GolemShot"))
       S_StartSoundName(actor, "ht_mumhed");
+}
+
+void A_ESound(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor;
+
+   if(mo->type == E_ThingNumForName("HereticAmbienceWater"))
+      S_StartSoundName(mo, "ht_waterfl");
+   else if(mo->type == E_ThingNumForName("HereticAmbienceWind"))
+      S_StartSoundName(mo, "ht_wind");
 }
 
 //=============================================================================
