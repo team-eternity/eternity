@@ -483,20 +483,15 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
 //
 static void D_determineIWADVersion(const qstring &fullpath)
 {
-   GameMode_t    gamemode    = indetermined;
-   GameMission_t gamemission = none;
-   bool          hassec      = false;
-   bool          isfreever   = false;
-   bool          isbfged     = false;
    iwadcheck_t   version;
 
-   version.gmode      = &gamemode;
-   version.gmission   = &gamemission;
-   version.hassec     = &hassec;
-   version.freedoom   = &isfreever;
-   version.bfgedition = &isbfged;
-   version.error      = false;
-   version.flags      = IWADF_NOERRORS;
+   version.gamemode    = indetermined;
+   version.gamemission = none;
+   version.hassecrets  = false;
+   version.freedoom    = false;
+   version.bfgedition  = false;
+   version.error       = false;
+   version.flags       = IWADF_NOERRORS;
 
    D_CheckIWAD(fullpath.constPtr(), version);
 
@@ -505,7 +500,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 
    char **var = NULL;
 
-   switch(gamemode)
+   switch(version.gamemode)
    {
    case shareware: // DOOM Shareware
       if(PATHEMPTY(gi_path_doomsw))
@@ -516,7 +511,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
          var = &gi_path_doomreg;
       break;
    case retail: // The Ultimate DOOM   
-      if(isfreever)
+      if(version.freedoom)
       { 
          if(PATHEMPTY(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
@@ -525,14 +520,14 @@ static void D_determineIWADVersion(const qstring &fullpath)
          var = &gi_path_doomu;
       break;
    case commercial: // DOOM II
-      if(isfreever)
+      if(version.freedoom)
       {
          if(PATHEMPTY(gi_path_fdoom)) // FreeDoom
             var = &gi_path_fdoom;
       }
       else
       {
-         switch(gamemission)
+         switch(version.gamemission)
          {
          case doom2:     // DOOM II
             if(PATHEMPTY(gi_path_doom2))
@@ -564,7 +559,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
          var = &gi_path_hticsw;
       break;
    case hereticreg: // Heretic Registered
-      switch(gamemission)
+      switch(version.gamemission)
       {
       case heretic: // Registered Version (3 episodes)
          if(PATHEMPTY(gi_path_hticreg))

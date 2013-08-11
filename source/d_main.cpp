@@ -1955,7 +1955,7 @@ static void D_StartupMessage(void)
 // Broke D_DoomMain into two functions in order to keep
 // initialization stuff off the main line of execution.
 //
-static void D_DoomInit(void)
+static void D_DoomInit()
 {
    int p, slot;
    int dmtype = 0;             // haleyjd 04/14/03
