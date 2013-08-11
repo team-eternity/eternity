@@ -430,26 +430,6 @@ camera_t followcam;
 static Mobj *followtarget;
 
 //
-// VertexDistanceCompare
-//
-// Predicate functor for finding the most distant vertex.
-//
-class VertexDistanceCompare
-{
-public:
-   fixed_t targetx;
-   fixed_t targety;
-
-   bool operator ()(vertex_t *a, vertex_t *b)
-   {
-      fixed_t distA = P_AproxDistance((targetx - a->x), (targety - a->y));
-      fixed_t distB = P_AproxDistance((targetx - b->x), (targety - b->y));
-
-      return (distA > distB);
-   }
-};
-
-//
 // P_LocateFollowCam
 //
 // Find a suitable location for the followcam by finding the furthest vertex
@@ -458,7 +438,6 @@ public:
 //
 void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 {
-   VertexDistanceCompare predicate;
    PODCollection<vertex_t *> vertexes;
    sector_t *sec = target->subsector->sector;
 
@@ -474,11 +453,12 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
          vertexes.add(v2);
    }
 
-   predicate.targetx = target->x;
-   predicate.targety = target->y;
-
    // Sort by distance from the target, with the furthest vertex first.
-   std::sort(vertexes.begin(), vertexes.end(), predicate);
+   std::sort(vertexes.begin(), vertexes.end(), [&] (vertex_t *a, vertex_t *b)
+   {
+      return (P_AproxDistance((target->x - a->x), (target->y - a->y)) >
+              P_AproxDistance((target->x - b->x), (target->y - b->y)));
+   });
 
    // Find the furthest one from which the target is visible
    for(PODCollection<vertex_t *>::iterator vitr = vertexes.begin();
@@ -576,8 +556,9 @@ bool P_FollowCamTicker()
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z         = subsec->sector->floorheight + 41*FRACUNIT;
    followcam.heightsec = subsec->sector->heightsec;
+   followcam.groupid   = subsec->sector->groupid;
    P_setFollowPitch();
 
    // still visible?
