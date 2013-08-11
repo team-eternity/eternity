@@ -59,7 +59,7 @@ int targetgroupid;
 #endif
 int chasecam_turnoff = 0;
 
-void P_ChaseSetupFrame(void)
+void P_ChaseSetupFrame()
 {
    viewx = chasecam.x;
    viewy = chasecam.y;
@@ -74,7 +74,7 @@ void P_ChaseSetupFrame(void)
 int chasecam_height;
 int chasecam_dist;
 
-void P_GetChasecamTarget(void)
+void P_GetChasecamTarget()
 {
    int aimfor;
    subsector_t *ss;
@@ -121,7 +121,7 @@ void P_GetChasecamTarget(void)
 // get to the target each tic
 int chasecam_speed;
 
-void P_ChaseTicker(void)
+void P_ChaseTicker()
 {
    int xdist, ydist, zdist;
    subsector_t *subsec; // haleyjd
@@ -176,17 +176,15 @@ CONSOLE_VARIABLE(chasecam_dist, chasecam_dist, 0) {}
 VARIABLE_INT(chasecam_speed, NULL, 1, 100, NULL);
 CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
 
-void P_ChaseStart(void)
+void P_ChaseStart()
 {
-   // if(chasecam_active) return;     // already active
    chasecam_active = true;
    camera = &chasecam;
    P_ResetChasecam();
 }
 
-void P_ChaseEnd(void)
+void P_ChaseEnd()
 {
-   // if(!chasecam_active) return;
    chasecam_active = false;
    camera = NULL;
 }
@@ -277,10 +275,12 @@ bool PTR_chasetraverse(intercept_t *in)
 
 // reset chasecam eg after teleporting etc
 
-void P_ResetChasecam(void)
+void P_ResetChasecam()
 {
-   if(!chasecam_active) return;
-   if(gamestate != GS_LEVEL) return;       // only in level
+   if(!chasecam_active)
+      return;
+   if(gamestate != GS_LEVEL) 
+      return; // only in level
 
    // find the chasecam target
    P_GetChasecamTarget();
@@ -309,7 +309,7 @@ void P_ResetChasecam(void)
 camera_t walkcamera;
 int walkcam_active = 0;
 
-void P_WalkTicker(void)
+void P_WalkTicker()
 {
    ticcmd_t *walktic = &netcmds[consoleplayer][(gametic/ticdup)%BACKUPTICS];
    int look   = walktic->look;
@@ -387,7 +387,7 @@ void P_WalkTicker(void)
    }
 }
 
-void P_ResetWalkcam(void)
+void P_ResetWalkcam()
 {
    sector_t *sec;
    walkcamera.x      = playerstarts[0].x << FRACBITS;
@@ -456,14 +456,12 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
    // Sort by distance from the target, with the furthest vertex first.
    std::sort(vertexes.begin(), vertexes.end(), [&] (vertex_t *a, vertex_t *b)
    {
-      return (P_AproxDistance((target->x - a->x), (target->y - a->y)) >
-              P_AproxDistance((target->x - b->x), (target->y - b->y)));
+      return (P_AproxDistance(target->x - a->x, target->y - a->y) >
+              P_AproxDistance(target->x - b->x, target->y - b->y));
    });
 
    // Find the furthest one from which the target is visible
-   for(PODCollection<vertex_t *>::iterator vitr = vertexes.begin();
-       vitr != vertexes.end();
-       vitr++)
+   for(auto vitr = vertexes.begin(); vitr != vertexes.end(); vitr++)
    {
       vertex_t *v = *vitr;
       camsightparams_t camparams;
