@@ -63,7 +63,7 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "w_wad.h"
-
+#include "xl_scripts.h"
 
 //
 // Sound keywords
@@ -92,7 +92,7 @@
 // Static sound hash tables
 //
 #define NUMSFXCHAINS 307
-static sfxinfo_t              *sfxchains[NUMSFXCHAINS];
+static sfxinfo_t             *sfxchains[NUMSFXCHAINS];
 static DLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
 
 //
@@ -253,9 +253,6 @@ sfxinfo_t *E_SoundForDEHNum(int dehnum)
    return rover ? rover->dllObject : NULL;
 }
 
-// haleyjd 04/13/08: for last-chance defaults, keep count of sounds
-static int e_sound_count;
-
 //
 // E_AddSoundToHash
 //
@@ -276,8 +273,6 @@ static void E_AddSoundToHash(sfxinfo_t *sfx)
    // link it in
    sfx->next = sfxchains[hash];
    sfxchains[hash] = sfx;
-
-   ++e_sound_count; // 04/13/08: count sounds added
 }
 
 //
@@ -416,12 +411,13 @@ sfxinfo_t *E_NewWadSound(const char *name)
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
 
-      sfx->flags = SFXF_WAD; // born as implicit wad sound
-      sfx->priority = 64;
-      sfx->pitch = sfx->volume = -1;
+      sfx->flags         = SFXF_WAD;        // born as implicit wad sound
+      sfx->priority      = 64;
+      sfx->pitch         = -1;
+      sfx->volume        = -1;
       sfx->clipping_dist = S_CLIPPING_DIST;
-      sfx->close_dist = S_CLOSE_DIST;
-      sfx->dehackednum = -1; // not accessible to DeHackEd
+      sfx->close_dist    = S_CLOSE_DIST;
+      sfx->dehackednum   = -1;              // not accessible to DeHackEd
       
       E_AddSoundToHash(sfx);
    }
@@ -445,12 +441,13 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
    strncpy(sfx->name,     name,      9);
    strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
 
-   sfx->flags = SFXF_SNDINFO; // born via SNDINFO
-   sfx->priority = 64;
-   sfx->pitch = sfx->volume = -1;
+   sfx->flags         = SFXF_SNDINFO;    // born via SNDINFO
+   sfx->priority      = 64;
+   sfx->pitch         = -1;
+   sfx->volume        = -1;
    sfx->clipping_dist = S_CLIPPING_DIST;
-   sfx->close_dist = S_CLOSE_DIST;
-   sfx->dehackednum = -1; // not accessible to DeHackEd
+   sfx->close_dist    = S_CLOSE_DIST;
+   sfx->dehackednum   = -1;              // not accessible to DeHackEd
 
    E_AddSoundToHash(sfx);
 
@@ -465,7 +462,7 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
 // only precached entries in the S_sfx array. This is called at 
 // startup when sound precaching is enabled.
 //
-void E_PreCacheSounds(void)
+void E_PreCacheSounds()
 {
    int i;
    sfxinfo_t *cursfx;
@@ -491,7 +488,7 @@ void E_PreCacheSounds(void)
 // haleyjd 03/28/10: For loading EDF definitions at runtime, we need to purge
 // the sound cache.
 //
-void E_UpdateSoundCache(void)
+void E_UpdateSoundCache()
 {
    int i;
    sfxinfo_t *cursfx;
@@ -747,10 +744,16 @@ void E_ProcessSounds(cfg_t *cfg)
    unsigned int i, numsfx = cfg_size(cfg, EDF_SEC_SOUND);
    sfxinfo_t *sfx;
 
+   // haleyjd 08/11/13: process SNDINFO lumps here, first, instead of later and
+   // having them be concerned with cross-port issues with wads that contain
+   // both DECORATE and EDF.
+   E_EDFLogPuts("\t\tProcessing Hexen SNDINFO\n");
+   XL_ParseSoundInfo();
+
    E_EDFLogPuts("\t\tHashing sounds\n");
       
    // now, let's collect the mnemonics (this must be done ahead of time)
-   for(i = 0; i < numsfx; ++i)
+   for(i = 0; i < numsfx; i++)
    {
       const char *mnemonic;
       cfg_t *sndsection = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
@@ -809,7 +812,7 @@ void E_ProcessSounds(cfg_t *cfg)
    E_EDFLogPuts("\t\tProcessing data\n");
 
    // finally, process the individual sounds
-   for(i = 0; i < numsfx; ++i)
+   for(i = 0; i < numsfx; i++)
    {
       cfg_t *section = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
       const char *mnemonic = cfg_title(section);

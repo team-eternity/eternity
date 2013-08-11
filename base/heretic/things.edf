@@ -1855,6 +1855,7 @@ thingtype IronLich : Mobj, 7006, 376
     HEAD G  7 A_Fall
     HEAD H  7
     HEAD I -1 A_HticBossDeath
+    stop
   "@
 }
 
@@ -2147,13 +2148,13 @@ thingtype HereticImp : Mobj, 7066, 393
   Death:
     IMPX G 4 A_ImpDeath
     IMPX H 5
-    goto Death+1
+    wait
   XDeath:
     IMPX S  5 A_ImpXDeath1
     IMPX TU 5
     IMPX V  5 A_ImpXDeath2
     IMPX W  5
-    goto XDeath+4
+    wait
   Crash:
     IMPX I 7 A_ImpExplode
     IMPX J 7 A_Scream
@@ -2220,54 +2221,120 @@ thingtype HereticImpChunk2 : Mobj, -1, 396
 
 thingtype HereticImpShot : Mobj, -1, 397
 {
-  spawnstate S_IMPFX1
-  deathstate S_IMPFXI1
-  speed      10.0
-  fastspeed  20.0
-  radius     8.0
-  height     8.0
-  damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS|NORANDOMIZE
+  speed     10.0
+  fastspeed 20.0
+  radius    8.0
+  height    8.0
+  damage    1
+  cflags    NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS|NORANDOMIZE
   acs_spawndata
   {
     num   10
     modes heretic
   }
+  
+  firstdecoratestate S_IMPFX1
+  states
+  @"
+  Spawn:
+    FX10 ABC 6 bright
+    loop
+  Death:
+    FX10 DEFG 5 bright
+    stop
+  "@
 }
 
 thingtype HereticPlayer : Mobj, -1, 398
 {
-  spawnstate   S_HPLAY
   spawnhealth  100
-  seestate     S_HPLAY_RUN1
   reactiontime 0
-  painstate    S_HPLAY_PAIN
   painchance   255
-  painsound    ht_plrpai
-  missilestate S_HPLAY_ATK1
-  deathstate   S_HPLAY_DIE1
-  xdeathstate  S_HPLAY_XDIE1
-  deathsound   ht_plrdth
   radius       16.0
   height       56.0
-  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  painsound    ht_plrpai
+  deathsound   ht_plrdth
+  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|NOSOUNDCUTOFF
   mod          PlayerMisc
-   
-  // custom damagetype deathstates
-  dmg_deathstates
-  {
-    Fire, S_HPLAY_FDTH1,
-    Lava, S_HPLAY_FDTH1
-  }  
+  
+  firstdecoratestate S_HPLAY
+  states
+  @"
+  Spawn:
+    PLAY A -1
+    stop
+  See:
+    PLAY ABCD 4
+    loop
+  Missile:
+    PLAY E 12
+    goto Spawn
+  AltAttack:
+    PLAY F 6 bright
+    goto Missile
+  Pain:
+    PLAY G 4
+    PLAY G 4 A_Pain
+    goto Spawn
+  Death:
+    PLAY H   6
+    PLAY I   6 A_PlayerScream
+    PLAY JK  6
+    PLAY L   6 A_Fall
+    PLAY MNO 6
+    PLAY P  -1
+    stop
+  XDeath:
+    PLAY Q     5 A_XScream
+    PLAY R     5 A_PlayerSkull
+    PLAY S     5 A_Fall
+    PLAY TUVWX 5
+    PLAY Y    -1
+    stop
+  Death.Fire:
+  Death.Lava:
+    FDTH A  5 bright A_FlameSnd
+    FDTH B  4 bright
+    FDTH C  5 bright
+    FDTH D  4 bright A_Scream
+    FDTH E  5 bright
+    FDTH F  4 bright
+    FDTH G  5 bright A_FlameSnd
+    FDTH H  4 bright
+    FDTH I  5 bright
+    FDTH J  4 bright
+    FDTH K  5 bright
+    FDTH L  4 bright
+    FDTH M  5 bright
+    FDTH N  4 bright
+    FDTH O  5 bright A_Fall
+    FDTH P  4 bright
+    FDTH Q  5 bright
+    FDTH R  4 bright
+    ACLO E 35        A_CheckPlayerDone("PlayerDone")
+    wait
+  PlayerDone:
+    ACLO E  8
+    stop
+  "@
 }
 
 thingtype HereticPlayerSkull : Mobj, -1, 399
 {
-  spawnstate S_HPLAYERSKULL1
-  crashstate S_HPLAYERSKULLX
-  radius     4.0
-  height     4.0
-  cflags     CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
+  radius 4.0
+  height 4.0
+  cflags CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
+  
+  firstdecoratestate S_HPLAYERSKULL1
+  states
+  @"
+  Spawn:
+    BSKL ABCDE 5
+    loop
+  Crash:
+    BSKL F -1
+    stop
+  "@
 }
 
 // Artifacts

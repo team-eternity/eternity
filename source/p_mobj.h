@@ -149,7 +149,7 @@ class PointThinker : public Thinker
    DECLARE_THINKER_TYPE(PointThinker, Thinker)
 
 public:
-   PointThinker() : Thinker(), x(0), y(0), z(0), groupid(0) {}
+   PointThinker() : Super(), x(0), y(0), z(0), groupid(0) {}
 
    // Methods
    virtual void serialize(SaveArchive &arc);
@@ -207,42 +207,42 @@ public:
    // Data members
 
    // More list: links in sector (if needed)
-   Mobj             *snext;
-   Mobj            **sprev; // killough 8/10/98: change to ptr-to-ptr
+   Mobj  *snext;
+   Mobj **sprev; // killough 8/10/98: change to ptr-to-ptr
 
    //More drawing info: to determine current sprite.
-   angle_t             angle;  // orientation
-   spritenum_t         sprite; // used to find patch_t and flip value
-   int                 frame;  // might be ORed with FF_FULLBRIGHT
+   angle_t     angle;  // orientation
+   spritenum_t sprite; // used to find patch_t and flip value
+   int         frame;  // might be ORed with FF_FULLBRIGHT
 
    // Interaction info, by BLOCKMAP.
    // Links in blocks (if needed).
-   Mobj             *bnext;
-   Mobj            **bprev; // killough 8/11/98: change to ptr-to-ptr
+   Mobj  *bnext;
+   Mobj **bprev; // killough 8/11/98: change to ptr-to-ptr
 
-   subsector_t        *subsector;
+   subsector_t *subsector;
 
    // The closest interval over all contacted Sectors.
-   fixed_t             floorz;
-   fixed_t             ceilingz;
+   fixed_t floorz;
+   fixed_t ceilingz;
 
    // killough 11/98: the lowest floor over all contacted Sectors.
-   fixed_t             dropoffz;
+   fixed_t dropoffz;
 
    // For movement checking.
-   fixed_t             radius;
-   fixed_t             height; 
+   fixed_t radius;
+   fixed_t height; 
 
    // Momentums, used to update position.
-   fixed_t             momx;
-   fixed_t             momy;
-   fixed_t             momz;
+   fixed_t momx;
+   fixed_t momy;
+   fixed_t momz;
 
    // If == validcount, already checked.
-   int                 validcount;
+   int validcount;
 
-   mobjtype_t          type;
-   mobjinfo_t*         info;   // mobjinfo[mobj->type]
+   mobjtype_t  type;
+   mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
 
@@ -252,53 +252,53 @@ public:
       int            bfgcount;
    } extradata;
 
-   int                 tics;   // state tic counter
-   state_t*            state;
-   unsigned int        flags;
-   unsigned int        flags2;    // haleyjd 04/09/99: I know, kill me now
-   unsigned int        flags3;    // haleyjd 11/03/02
-   unsigned int        flags4;    // haleyjd 09/13/09
-   int                 intflags;  // killough 9/15/98: internal flags
-   int                 health;
+   int           tics;   // state tic counter
+   state_t      *state;
+   unsigned int  flags;
+   unsigned int  flags2;    // haleyjd 04/09/99: I know, kill me now
+   unsigned int  flags3;    // haleyjd 11/03/02
+   unsigned int  flags4;    // haleyjd 09/13/09
+   int           intflags;  // killough 9/15/98: internal flags
+   int           health;
 
    // Movement direction, movement generation (zig-zagging).
-   int16_t             movedir;        // 0-7
-   int16_t             movecount;      // when 0, select a new dir
-   int16_t             strafecount;    // killough 9/8/98: monster strafing
+   int16_t movedir;        // 0-7
+   int16_t movecount;      // when 0, select a new dir
+   int16_t strafecount;    // killough 9/8/98: monster strafing
 
    // Thing being chased/attacked (or NULL),
    // also the originator for missiles.
-   Mobj             *target;
+   Mobj *target;
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
-   int16_t             reactiontime;   
+   int16_t reactiontime;   
 
    // If >0, the current target will be chased no
    // matter what (even if shot by another object)
-   int16_t             threshold;
+   int16_t threshold;
 
    // killough 9/9/98: How long a monster pursues a target.
-   int16_t             pursuecount;
+   int16_t pursuecount;
 
-   int16_t             gear; // killough 11/98: used in torque simulation
+   int16_t gear; // killough 11/98: used in torque simulation
 
    // Additional info record for player avatars only.
    // Only valid if thing is a player
-   player_t *          player;
-   skin_t *            skin;   //sf: skin
+   player_t *player;
+   skin_t   *skin;   //sf: skin
 
    // Player number last looked for.
-   int16_t             lastlook;       
+   int16_t lastlook;       
 
    // For nightmare respawn.
-   mapthing_t          spawnpoint;     
+   mapthing_t spawnpoint;     
 
    // Thing being chased/attacked for tracers.
-   Mobj             *tracer; 
+   Mobj *tracer; 
 
    // new field: last known enemy -- killough 2/15/98
-   Mobj             *lastenemy;
+   Mobj *lastenemy;
 
    // killough 8/2/98: friction properties part of sectors,
    // not objects -- removed friction properties from here
@@ -317,12 +317,15 @@ public:
    // counters - these were known as special1/2/3 in Heretic and Hexen
    int counters[NUMMOBJCOUNTERS];
 
-   unsigned int effects; // particle effect flag field
+   // particle effect flag field
+   unsigned int effects; 
+   
    int translucency;  // zdoom-style translucency level
    int alphavelocity; // haleyjd 05/23/08: change in translucency
    int floatbob;      // floatbob offset
    int damage;        // haleyjd 08/02/04: copy damage to mobj now
    int dropamount;    // haleyjd 08/05/13: for ammo drops, overrides ammoeffect
+   
    fixed_t floorclip; // haleyjd 08/07/04: floor clip amount
 
    float xscale;      // haleyjd 11/22/09: x scaling
@@ -545,10 +548,6 @@ inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 // Misc. mobj flags
 //
 
-#ifdef _MSC_VER
-enum {}; // Fixes a retarded glitch in the Visual Studio IDE.
-#endif
-
 enum
 {
    MF_SPECIAL      = 0x00000001, // Call P_SpecialThing when touched.
@@ -671,7 +670,8 @@ enum
    MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
    MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
    MF4_FLY            = 0x00000100, // Actor is flying
-   MF4_NORADIUSHACK   = 0x00000200  // Bouncing missiles obey normal radius attack flags
+   MF4_NORADIUSHACK   = 0x00000200, // Bouncing missiles obey normal radius attack flags
+   MF4_NOSOUNDCUTOFF  = 0x00000400  // Actor can play any number of sounds
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

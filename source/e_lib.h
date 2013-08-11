@@ -75,6 +75,8 @@ void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output);
 
 #endif
 
+bool E_CheckInclude(const char *data, size_t size);
+
 const char *E_BuildDefaultFn(const char *filename);
 
 // misc utilities

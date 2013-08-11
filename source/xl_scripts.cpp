@@ -268,10 +268,14 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
    lumpdata = ecalloc(char *, 1, lump->size + 1);
    dir.readLump(lump->selfindex, lumpdata);
 
-   XLTokenizer tokenizer = XLTokenizer(lumpdata);
+   // check with EDF SHA-1 cache that this lump hasn't already been processed
+   if(E_CheckInclude(lumpdata, lump->size))
+   {
+      XLTokenizer tokenizer = XLTokenizer(lumpdata);
 
-   while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
-      doToken(tokenizer);
+      while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
+         doToken(tokenizer);
+   }
 }
 
 //
@@ -337,7 +341,6 @@ protected:
      KWD_ALIAS,
      KWD_AMBIENT,     
      KWD_ARCHIVEPATH,
-     KWD_EDFOVERRIDE,
      KWD_ENDIF,
      KWD_IFDOOM,
      KWD_IFHERETIC,
@@ -372,7 +375,6 @@ protected:
 
    int     state;
    qstring soundname;
-   bool    edfOverRide; // if true, definitions can override EDF sounds
    int     musicmapnum;
 
    void doStateExpectCmd(XLTokenizer &token);
@@ -390,7 +392,7 @@ protected:
 public:
    // Constructor
    XLSndInfoParser() 
-      : XLParser("SNDINFO"), soundname(32), edfOverRide(false), musicmapnum(0)
+      : XLParser("SNDINFO"), soundname(32), musicmapnum(0)
    {
    }
 };
@@ -404,7 +406,6 @@ const char *XLSndInfoParser::sndInfoKwds[] =
    "$alias",
    "$ambient",
    "$archivepath",
-   "$edfoverride",
    "$endif",
    "$ifdoom",
    "$ifheretic",
@@ -444,9 +445,6 @@ void XLSndInfoParser::doStateExpectCmd(XLTokenizer &token)
       {
       case KWD_ARCHIVEPATH:
          state = STATE_EATTOKEN; // eat the path token
-         break;
-      case KWD_EDFOVERRIDE:
-         edfOverRide = true; // set EDF override flag
          break;
       case KWD_MAP:
          state = STATE_EXPECTMAPNUM;
@@ -534,14 +532,14 @@ void XLSndInfoParser::doStateExpectSndLump(XLTokenizer &token)
 
          if((sfx = E_SoundForName(soundname.constPtr()))) // defined already?
          {
-            if(!(sfx->flags & SFXF_EDF) || edfOverRide)
-            {
-               sfx->flags &= ~SFXF_PREFIX;
-               soundname.copyInto(sfx->name, 9);
-            }
-         } // create a new sound
+            sfx->flags &= ~SFXF_PREFIX;
+            soundname.copyInto(sfx->name, 9);
+         } 
          else
+         {
+            // create a new sound
             E_NewSndInfoSound(soundname.constPtr(), soundlump.constPtr());
+         }
 
          // Return to expecting a command
          state = STATE_EXPECTCMD;
@@ -591,7 +589,6 @@ void XLSndInfoParser::doToken(XLTokenizer &token)
 void XLSndInfoParser::startLump()
 {
    state = STATE_EXPECTCMD; // starting state
-   edfOverRide = false;
 }
 
 //=============================================================================
@@ -763,16 +760,26 @@ void XLMusInfoParser::startLump()
 //
 
 //
+// XL_ParseSoundInfo
+//
+// Parse SNDINFO scripts
+//
+void XL_ParseSoundInfo()
+{
+   XLSndInfoParser sndInfoParser;
+
+   sndInfoParser.parseAll(wGlobalDir);
+}
+
+//
 // XL_ParseHexenScripts
 //
 // Parses all Hexen script lumps.
 //
 void XL_ParseHexenScripts()
 {
-   XLSndInfoParser sndInfoParser;
    XLMusInfoParser musInfoParser;
 
-   sndInfoParser.parseAll(wGlobalDir);
    musInfoParser.parseAll(wGlobalDir);
 }
 

@@ -31,6 +31,9 @@
 #ifndef XL_SCRIPTS_H__
 #define XL_SCRIPTS_H__
 
+// Parse SNDINFO lumps
+void XL_ParseSoundInfo();
+
 void XL_ParseHexenScripts();
 
 #endif

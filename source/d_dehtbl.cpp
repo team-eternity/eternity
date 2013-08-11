@@ -1369,6 +1369,7 @@ void A_ImpXDeath1(actionargs_t *);
 void A_ImpXDeath2(actionargs_t *);
 void A_ImpExplode(actionargs_t *);
 void A_PlayerSkull(actionargs_t *);
+void A_FlameSnd(actionargs_t *actionargs);
 void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
 
@@ -1684,6 +1685,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(ImpXDeath2),
    POINTER(ImpExplode),
    POINTER(PlayerSkull),
+   POINTER(FlameSnd),
    POINTER(ClearSkin),
    POINTER(PhoenixPuff),
 

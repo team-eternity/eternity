@@ -323,6 +323,7 @@ dehflags_t deh_mobjflags[] =
   {"BRIGHT",           0x00000080, 3}, // actor is always fullbright
   {"FLY",              0x00000100, 3}, // actor is flying
   {"NORADIUSHACK",     0x00000200, 3}, // bouncing missile obeys normal radius attack flags
+  {"NOSOUNDCUTOFF",    0x00000400, 3}, // actor can play any number of sounds
 
   { NULL,              0 }             // NULL terminator
 };

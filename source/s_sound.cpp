@@ -331,7 +331,8 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 //   Note that a higher priority number means lower priority!
 //
 static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
-                        int priority, int singularity, int schan)
+                        int priority, int singularity, int schan,
+                        bool nocutoff)
 {
    // channel number to use
    int cnum;
@@ -343,25 +344,30 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    // being played, we can use that channel. There is no need to
    // search for a free one again because we already know of one.
 
-   // kill old sound
-   // killough 12/98: replace is_pickup hack with singularity flag
-   // haleyjd 06/12/08: only if subchannel matches
-   for(cnum = 0; cnum < numChannels; ++cnum)
+   // kill old sound?
+   if(nocutoff)
+      cnum = numChannels;
+   else
    {
-      // haleyjd 04/09/11: Allow different sounds played on NULL
-      // channel to not cut each other off
-      if(origin == NULL)
-         origin_equivalent = (channels[cnum].sfxinfo == sfxinfo);
-      else
-         origin_equivalent = (channels[cnum].origin == origin);
-
-      if(channels[cnum].sfxinfo &&
-         channels[cnum].singularity == singularity &&
-         origin_equivalent &&
-         channels[cnum].subchannel == schan)
+      // killough 12/98: replace is_pickup hack with singularity flag
+      // haleyjd 06/12/08: only if subchannel matches
+      for(cnum = 0; cnum < numChannels; cnum++)
       {
-         S_StopChannel(cnum);
-         break;
+         // haleyjd 04/09/11: Allow different sounds played on NULL
+         // channel to not cut each other off
+         if(origin == NULL)
+            origin_equivalent = (channels[cnum].sfxinfo == sfxinfo);
+         else
+            origin_equivalent = (channels[cnum].origin == origin);
+
+         if(channels[cnum].sfxinfo &&
+            channels[cnum].singularity == singularity &&
+            origin_equivalent &&
+            channels[cnum].subchannel == schan)
+         {
+            S_StopChannel(cnum);
+            break;
+         }
       }
    }
    
@@ -372,7 +378,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
       // the same singularity class again, as we just did that above. Here
       // we are looking for an open channel. We will also keep track of the
       // channel found with the lowest sound priority while doing this.
-      for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; ++cnum)
+      for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; cnum++)
       {
          if(channels[cnum].priority > lowestpriority)
          {
@@ -434,10 +440,11 @@ static int S_countChannels(void)
 void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
                     int volumeScale, int attenuation, bool loop, int subchannel)
 {
-   int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
+   int  sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
+   int  volume         = snd_SfxVolume;
    bool priority_boost = false;
-   int volume = snd_SfxVolume;
-   bool extcamera = false;
+   bool extcamera      = false;
+   bool nocutoff       = false;
    camera_t playercam;
    camera_t *listener = &playercam;
    Mobj *mo;
@@ -472,8 +479,12 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 
    // haleyjd:  we must weed out degenMobj's before trying to 
    // dereference these fields -- a thinker check perhaps?
-   if(origin && (mo = thinker_cast<Mobj *>(origin)))
+   if((mo = thinker_cast<Mobj *>(origin)))
    {
+      // haleyjd 08/11/13: check for no cut off flag
+      if(mo->flags4 & MF4_NOSOUNDCUTOFF)
+         nocutoff = true;
+
       if(sfx->skinsound) // check for skin sounds
       {
          const char *sndname = "";
@@ -623,7 +634,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       subchannel = sfx->subchannel;
 
    // try to find a channel
-   if((cnum = S_getChannel(origin, sfx, priority, singularity, subchannel)) < 0)
+   if((cnum = S_getChannel(origin, sfx, priority, singularity, subchannel, nocutoff)) < 0)
       return;
 
 #ifdef RANGECHECK
@@ -763,7 +774,7 @@ void S_StopSound(const PointThinker *origin, int subchannel)
    if(!snd_card || nosfxparm)
       return;
 
-   for(cnum = 0; cnum < numChannels; ++cnum)
+   for(cnum = 0; cnum < numChannels; cnum++)
    {
       if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
          channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
@@ -1251,7 +1262,7 @@ int S_MusicForMapHtic(void)
 // Kills playing sounds at start of level,
 //  determines music if any, changes music.
 //
-void S_Start(void)
+void S_Start()
 {
    int mnum;
    

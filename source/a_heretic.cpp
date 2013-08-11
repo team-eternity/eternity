@@ -1850,6 +1850,11 @@ void A_ESound(actionargs_t *actionargs)
       S_StartSoundName(mo, "ht_wind");
 }
 
+void A_FlameSnd(actionargs_t *actionargs)
+{
+   S_StartSound(actionargs->actor, sfx_hedat1); // Burn sound
+}
+
 //=============================================================================
 //
 // Player Projectiles
