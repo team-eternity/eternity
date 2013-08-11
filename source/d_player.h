@@ -138,7 +138,6 @@ struct player_t
    int            armorpoints;
    int            armorfactor;  // haleyjd 07/29/13: numerator for armor save calculation
    int            armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
-   bool           hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
 
    // Power ups. invinc and invis are tic counters.
    int            powers[NUMPOWERS];

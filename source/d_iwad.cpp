@@ -894,6 +894,12 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
       }
       else if(sw >= 9)
          *version.gmode = hereticsw;
+      else if(sw == 3)
+      {
+         // haleyjd 08/10/13: Heretic beta version support
+         *version.gmission = hticbeta;
+         *version.gmode    = hereticsw;
+      }
       else
          *version.gmode = indetermined;
    }

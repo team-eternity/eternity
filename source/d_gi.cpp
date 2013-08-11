@@ -98,6 +98,7 @@
 #define VNAME_DISK      "DOOM II disk version"
 #define VNAME_HTIC_SW   "Heretic Shareware version"
 #define VNAME_HTIC_REG  "Heretic Registered version"
+#define VNAME_HTIC_BETA "Heretic Beta version"
 #define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
 #define VNAME_UNKNOWN   "Unknown Game version. May not work."
 
@@ -600,6 +601,35 @@ static bspecrule_t HereticBossSpecs[] =
 };
 
 //
+// "Same Level" mappings
+//
+// Entirely for various versions of Heretic; these rules make you 
+// return to the same map you just finished when exiting the very
+// last map in the IWAD.
+//
+
+// Heretic Registered
+static samelevel_t hticRegSameLevels[] =
+{
+   {  4,  2 },
+   { -1, -1 }
+};
+
+// Heretic Beta
+static samelevel_t hticBetaSameLevels[] =
+{
+   {  1,  4 },
+   { -1, -1 }
+};
+
+// Heretic SoSR
+static samelevel_t hticSoSRSameLevels[] =
+{
+   {  6,  4 },
+   { -1, -1 }
+};
+
+//
 // Key card name lookups
 //
 // These arrays are used by the status bar, HUD, cheats, etc. to map
@@ -673,6 +703,7 @@ static missioninfo_t gmDoom =
    doom,   // id
    0,      // flags
    "doom", // gamePathName
+   NULL,   // sameLevels
 
    NULL,   // versionNameOR
    NULL,   // startupBannerOR
@@ -689,6 +720,7 @@ static missioninfo_t gmDoom2 =
    doom2,   // id
    0,       // flags
    "doom2", // gamePathName
+   NULL,   // sameLevels
 
    NULL,    // versionNameOR
    NULL,    // startupBannerOR
@@ -705,6 +737,7 @@ static missioninfo_t gmFinalTNT =
    pack_tnt,          // id
    MI_DEMOIFDEMO4,    // flags
   "tnt",              // gamePathName
+  NULL,               // sameLevels
 
    VNAME_TNT,         // versionNameOR
    BANNER_TNT,        // startupBannerOR
@@ -725,6 +758,7 @@ static missioninfo_t gmFinalPlutonia =
    pack_plut,         // id
    MI_DEMOIFDEMO4,    // flags
    "plutonia",        // gamePathName
+   NULL,              // sameLevels
 
    VNAME_PLUT,        // versionNameOR
    BANNER_PLUT,       // startupBannerOR
@@ -745,6 +779,7 @@ static missioninfo_t gmDisk =
    pack_disk,       // id
    0,               // flags
    "doom2",         // gamePathName
+   NULL,            // sameLevels
 
    VNAME_DISK,      // versionNameOR
    NULL,            // startupBannerOR
@@ -767,6 +802,7 @@ static missioninfo_t gmHacx =
    pack_hacx,       // id
    0,               // flags
    "hacx",          // gamePathName
+   NULL,            // sameLevels
 
    VNAME_HACX,      // versionNameOR
    BANNER_HACX,     // startupBannerOR
@@ -783,9 +819,10 @@ static missioninfo_t gmHacx =
 //
 static missioninfo_t gmHeretic =
 {
-   heretic,   // id
-   0,         // flags
-   "heretic", // gamePathName
+   heretic,           // id
+   0,                 // flags
+   "heretic",         // gamePathName
+   hticRegSameLevels, // sameLevels
 
    NULL,      // versionNameOR
    NULL,      // startupBannerOR
@@ -795,13 +832,33 @@ static missioninfo_t gmHeretic =
 };
 
 //
+// Heretic Beta Version
+//
+// Only difference here is that this mission only has three maps.
+//
+static missioninfo_t gmHereticBeta =
+{
+   heretic,            // id
+   0,                  // flags
+   "heretic",          // gamePathName
+   hticBetaSameLevels, // sameLevels
+
+   VNAME_HTIC_BETA,     // versionNameOR
+   NULL,                // startupBannerOR
+   0,                   // numEpisodesOR
+   NULL,                // iwadPathOR
+   NULL,                // finaleDataOR
+};
+
+//
 // Heretic: Shadow of the Serpent Riders
 //
 static missioninfo_t gmHereticSoSR =
 {
-   hticsosr,         // id
-   0,                // flags
-   "heretic",        // gamePathName
+   hticsosr,           // id
+   0,                  // flags
+   "heretic",          // gamePathName
+   hticSoSRSameLevels, // sameLevels
 
    VNAME_HTIC_SOSR,  // versionNameOR
    BANNER_HTIC_SOSR, // startupBannerOR
@@ -818,6 +875,7 @@ static missioninfo_t gmUnknown =
    none,           // id
    0,              // flags
    "doom",         // gamePathName
+   NULL,           // sameLevels
 
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
@@ -837,6 +895,7 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
    &gmDisk,          // pack_disk
    &gmHacx,          // pack_hacx
    &gmHeretic,       // heretic
+   &gmHereticBeta,   // hticbeta
    &gmHereticSoSR,   // hticsosr
    &gmUnknown,       // none - ???
 };

@@ -1559,19 +1559,25 @@ static void G_DoCompleted(void)
    IN_Start(&wminfo);
 }
 
-static void G_DoWorldDone(void)
+static void G_DoWorldDone()
 {
-   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
-
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LOADING;
    gamemap = wminfo.next+1;
 
-   // haleyjd: handle heretic hidden levels
-   if((missionInfo->id == hticsosr && gameepisode == 6 && gamemap == 4) ||
-      (missionInfo->id == heretic  && gameepisode == 4 && gamemap == 2))
+   // haleyjd: handle heretic hidden levels via missioninfo samelevel rules
+   if(GameModeInfo->missionInfo->sameLevels)
    {
-      gamemap--; // return to same level
+      samelevel_t *sameLevel = GameModeInfo->missionInfo->sameLevels;
+      while(sameLevel->episode != -1)
+      {
+         if(gameepisode == sameLevel->episode && gamemap == sameLevel->map)
+         {
+            --gamemap; // return to same level by default
+            break;
+         }
+         ++sameLevel;
+      }
    }
    
    // haleyjd: customizable secret exits
