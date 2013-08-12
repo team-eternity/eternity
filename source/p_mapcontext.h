@@ -77,6 +77,8 @@ class ClipContext : public MapContext
       Mobj       *thing;    // current thing being clipped
       fixed_t    x;         // x position, usually where we want to move
       fixed_t    y;         // y position, usually where we want to move
+      fixed_t    z;         // z position, usually where we want to move
+      fixed_t    height;    // height of the thing
 
       fixed_t    bbox[4];   // bounding box for thing/line intersection checks
       fixed_t    floorz;    // floor you'd hit if free to fall

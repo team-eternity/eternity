@@ -450,6 +450,7 @@
     <ClCompile Include="..\source\p_map.cpp" />
     <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\p_portalcliplinking.cpp" />
+    <ClCompile Include="..\source\p_portalclipmovement.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

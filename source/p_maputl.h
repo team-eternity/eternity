@@ -136,7 +136,7 @@ enum
    SOUTH_ADJACENT = 0x4,
    WEST_ADJACENT = 0x8,
    CENTER_ADJACENT = 0x10
-};
+} adjacencyflags_e;
 
 //
 // P_SetupBlockLinks

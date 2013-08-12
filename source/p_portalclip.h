@@ -65,7 +65,9 @@ class PortalClipEngine : public ClipEngine
       // Utility functions
       virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc);
       virtual void unsetThingPosition(Mobj *mo);
-      virtual void setThingPosition(Mobj *mo);
+      virtual void setThingPosition(Mobj *mo) { setThingPosition(mo, true); }
+      virtual void setThingPosition(Mobj *mo, bool findPortals);
+
       virtual void mapLoaded();
       
       // Clipping contexts
@@ -86,6 +88,7 @@ class PortalClipEngine : public ClipEngine
       // Iterators
       static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context);
       static void PortalClipEngine::findAdjacentPortals(ClipContext *cc);
+
 
 };
 

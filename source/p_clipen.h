@@ -44,6 +44,13 @@ class  ClipContext;
 #define MAXRADIUS       (32*FRACUNIT)
 
 
+typedef enum
+{
+   OF_SETSCEILINGZ = 0x0001, // Indicates this line could lower the ceilingz (not an open ceiling portal)
+   OF_SETSFLOORZ   = 0x0002, // Indicates this line could raise the floorz (not an open floor portal)
+   OF_TOUCH3DSIDE  = 0x0004, // Indicates the mobj 
+} openingflags_e;
+
 typedef struct 
 {
    fixed_t    top;      // top of line opening
@@ -52,6 +59,9 @@ typedef struct
    fixed_t    lowfloor;     // lowest floorheight involved   
    fixed_t    secfloor; // SoM 11/3/02: considering only sector floor
    fixed_t    secceil;  // SoM 11/3/02: considering only sector ceiling
+
+   // SoM: Flags describing attributes of the line
+   int        openflags;
 
    // moved front and back outside P_LineOpening and changed -- phares 3/7/98
    // them to these so we can pick up the new friction value

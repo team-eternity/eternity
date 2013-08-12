@@ -32,6 +32,7 @@
 #include "p_maputl.h"
 #include "p_portalclip.h"
 #include "p_portal.h"
+#include "p_spec.h"
 #include "p_traceengine.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -43,54 +44,7 @@
 static int groupcells;
 
 
-//
-// tryMove
-//
-// Attempt to move to a new position,
-// crossing special lines unless MF_TELEPORT is set.
-//
-// killough 3/15/98: allow dropoff as option
-//
-bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc)
-{
-   return false;
-}
 
-bool PortalClipEngine::tryZMove(Mobj *thing, fixed_t z, ClipContext *cc)
-{
-   return false;
-}
-
-bool PortalClipEngine::makeZMove(Mobj *thing, fixed_t z, ClipContext *cc)
-{
-   return false;
-}
-
-
-bool PortalClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
-{
-   return false;
-}
-
-bool PortalClipEngine::teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
-{
-   return false;
-}
-
-bool PortalClipEngine::portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
-{
-   return false;
-}
-
-
-void PortalClipEngine::slideMove(Mobj *mo)
-{
-}
-
-bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
-{
-   return false;
-}
 
 
 bool PortalClipEngine::changeSector(sector_t *sector, int crunch, ClipContext *cc)
