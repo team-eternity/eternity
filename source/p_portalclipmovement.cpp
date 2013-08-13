@@ -26,6 +26,7 @@
 //-----------------------------------------------------------------------------
 
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "e_things.h"
 #include "m_bbox.h"
 #include "m_collection.h"
@@ -35,8 +36,10 @@
 #include "p_portalclip.h"
 #include "p_portal.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_traceengine.h"
+#include "r_data.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -173,34 +176,201 @@ void PortalClipEngine::slideMove(Mobj *mo)
 }
 
 
+void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
+{
+   fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
+   // SoM: used for 3dmidtex
+   fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
+
+   opening->openflags = 0;
+
+   if(linedef->sidenum[1] == -1)      // single sided line
+   {
+      opening->range = 0;
+      return;
+   }
+   
+   opening->frontsector = linedef->frontsector;
+   opening->backsector  = linedef->backsector;
+
+   // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
+   // z is if both sides of that line have the same portal.
+   {
+      if(mo && 
+         opening->frontsector->c_pflags & PS_PASSABLE &&
+         opening->backsector->c_pflags & PS_PASSABLE && 
+         opening->frontsector->c_portal == opening->backsector->c_portal)
+      {
+         frontceilz = backceilz = D_MAXINT;
+      }
+      else
+      {
+         opening->openflags |= OF_SETSCEILINGZ;
+         frontceilz = opening->frontsector->ceilingheight;
+         backceilz  = opening->backsector->ceilingheight;
+
+         if(frontceilz < backceilz)
+            opening->top = frontceilz;
+         else
+            opening->top = backceilz;
+
+         opening->secceil  = opening->top;
+      }
+      
+      frontcz = opening->frontsector->ceilingheight;
+      backcz  = opening->backsector->ceilingheight;
+   }
+
+
+   {
+      if(mo &&
+         opening->frontsector->f_pflags & PS_PASSABLE &&
+         opening->backsector->f_pflags & PS_PASSABLE && 
+         opening->frontsector->f_portal == opening->backsector->f_portal)
+      {
+         frontfloorz = backfloorz = D_MININT;
+      }
+      else 
+      {
+         opening->openflags |= OF_SETSFLOORZ;
+         frontfloorz = opening->frontsector->floorheight;
+         backfloorz  = opening->backsector->floorheight;
+
+         opening->secfloor = opening->bottom;
+
+         if(frontfloorz > backfloorz)
+         {
+            opening->bottom = frontfloorz;
+            opening->lowfloor = backfloorz;
+            // haleyjd
+            cc->floorpic = opening->frontsector->floorpic;
+         }
+         else
+         {
+            opening->bottom = backfloorz;
+            opening->lowfloor = frontfloorz;
+            // haleyjd
+            cc->floorpic = opening->backsector->floorpic;
+         }
+      }
+
+      frontfz = opening->frontsector->floorheight;
+      backfz = opening->backsector->floorheight;
+   }
+   
+   if(frontcz < backcz)
+      otop = frontcz;
+   else
+      otop = backcz;
+
+   if(frontfz > backfz)
+      obot = frontfz;
+   else
+      obot = backfz;
+
+   // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
+   // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
+   if(linedef->flags & ML_3DMIDTEX && sides[linedef->sidenum[0]].midtexture)
+   {
+      fixed_t textop, texbot, texmid;
+      side_t *side = &sides[linedef->sidenum[0]];
+      
+      if(linedef->flags & ML_DONTPEGBOTTOM)
+      {
+         texbot = side->rowoffset + obot;
+         textop = texbot + textures[side->midtexture]->heightfrac;
+      }
+      else
+      {
+         textop = otop + side->rowoffset;
+         texbot = textop - textures[side->midtexture]->heightfrac;
+      }
+      texmid = (textop + texbot)/2;
+
+      // SoM 9/7/02: use monster blocking line to provide better
+      // clipping
+      if((linedef->flags & ML_BLOCKMONSTERS) && 
+         !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
+         D_abs(mo->z - textop) <= 24*FRACUNIT)
+      {
+         opening->top = opening->bottom;
+         opening->range = 0;
+         return;
+      }
+      
+      if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
+      {
+         if(texbot < opening->top)
+         {
+            opening->top = texbot;
+            opening->openflags |= OF_SETSCEILINGZ;
+         }
+      }
+      else
+      {
+         if(textop > opening->bottom)
+         {
+            opening->bottom = textop;
+            opening->openflags |= OF_SETSFLOORZ;
+         }
+
+         // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
+         // SoM 01/12/06: let monsters walk over dropoffs
+         if(abs(mo->z - textop) <= 24*FRACUNIT)
+            cc->touch3dside = 1;
+      }
+   }
+
+   if(!(opening->openflags & (OF_SETSCEILINGZ|OF_SETSFLOORZ)) )
+      opening->range = D_MAXINT;
+   else
+      opening->range = opening->top - opening->bottom;
+}
+
+
+
+static inline fixed_t GetCeilingHeight(sector_t *s, fixed_t x, fixed_t y)
+{
+   return s->c_slope ? P_GetZAt(s->c_slope, x, y) : s->ceilingheight;
+}
+
+
+static inline fixed_t GetFloorHeight(sector_t *s, fixed_t x, fixed_t y)
+{
+   return s->f_slope ? P_GetZAt(s->f_slope, x, y) : s->floorheight;
+}
+
+
 void CheckSubsectorPosition(ClipContext *cc)
 {
    auto subsec = R_PointInSubsector(cc->x, cc->y);
    if(subsec->sector->c_pflags & PS_PASSABLE)
    {
-      if(cc->z + cc->height > R_CPLink(subsec->sector)->planez)
-         HitPortalGroup(R_CPLink(subsec->sector)->toid, cc);
+      HitPortalGroup(R_CPLink(subsec->sector)->toid, cc);
    }
    else 
    {
-      if(subsec->sector->ceilingheight < cc->ceilingz)
-         cc->ceilingz = subsec->sector->ceilingheight;
-      if(subsec->sector->ceilingheight < cc->secceilz)
-         cc->secceilz = subsec->sector->ceilingheight;
+      fixed_t h = GetCeilingHeight(subsec->sector, cc->x, cc->y);
+
+      if(h < cc->ceilingz)
+         cc->ceilingz = h;
+      if(h < cc->secceilz)
+         cc->secceilz = h;
    }
 
    if(subsec->sector->f_pflags & PS_PASSABLE)
    {
-      if(cc->z < R_FPLink(subsec->sector)->planez)
-         HitPortalGroup(R_FPLink(subsec->sector)->toid, cc);
+      HitPortalGroup(R_FPLink(subsec->sector)->toid, cc);
    }
    else
    {
-      if(subsec->sector->floorheight > cc->floorz)
-         cc->floorz = subsec->sector->floorheight;
-      if(subsec->sector->floorheight > cc->secfloorz)
+      fixed_t h = GetFloorHeight(subsec->sector, cc->x, cc->y);
+
+      if(h > cc->floorz)
+         cc->floorz = h;
+      if(h > cc->secfloorz)
       {
-         cc->secfloorz = subsec->sector->floorheight;
+         cc->secfloorz = h;
          cc->floorpic = subsec->sector->floorpic;
       }
    }
@@ -223,6 +393,7 @@ bool CheckThing(Mobj *mo, ClipContext *cc)
       return true;
 
    fixed_t topz = mo->z + mo->height;
+   cc->BlockingMobj = mo;
 
    // Raise floorz/lower ceilingz and check the new opening height to see if the player can step-up and fit
    if(cc->thing->flags3 & MF3_PASSMOBJ)
@@ -246,6 +417,7 @@ bool CheckThing(Mobj *mo, ClipContext *cc)
          }
       }
 
+      // Adjust the floorz/ceilingz
       if(cc->thing->z + 24 * FRACUNIT >= topz)
       {
          if(topz > cc->floorz)
@@ -254,6 +426,7 @@ bool CheckThing(Mobj *mo, ClipContext *cc)
       else if(cc->ceilingz > mo->z)
          cc->ceilingz = mo->z;
 
+      // Return true if cc->thing can still stepup and fit within the new floor/ceiling
       if(cc->ceilingz >= cc->thing->z + cc->thing->height && 
          cc->floorz <= cc->thing->z + 24 * FRACUNIT &&
          cc->ceilingz - cc->floorz >= cc->thing->height)
@@ -413,6 +586,108 @@ bool CheckThing(Mobj *mo, ClipContext *cc)
 
 
 
+bool CheckLineThing(line_t *line, MapContext *mc)
+{
+   ClipContext *cc = mc->clipContext();
+   if(cc->bbox[BOXRIGHT]  <= line->bbox[BOXLEFT]   || 
+      cc->bbox[BOXLEFT]   >= line->bbox[BOXRIGHT]  || 
+      cc->bbox[BOXTOP]    <= line->bbox[BOXBOTTOM] || 
+      cc->bbox[BOXBOTTOM] >= line->bbox[BOXTOP])
+      return true; // didn't hit it
+
+   if(P_BoxOnLineSide(cc->bbox, line) != -1)
+      return true; // didn't hit it
+
+   // A line has been hit
+   
+   // The moving thing's destination position will cross the given line.
+   // If this should not be allowed, return false.
+   // If the line is special, keep track of it
+   // to process later if the move is proven ok.
+   // NOTE: specials are NOT sorted by order,
+   // so two special lines that are only 8 pixels apart
+   // could be crossed in either order.
+
+   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
+   // haleyjd 04/30/11: treat block-everything lines like they're 1S
+   if(!line->backsector || (line->extflags & EX_ML_BLOCKALL)) // one sided line
+   {
+      cc->blockline = line;
+      return cc->unstuck &&
+         FixedMul(cc->x - cc->thing->x, line->dy) > FixedMul(cc->y - cc->thing->y, line->dx);
+   }
+   // killough 8/10/98: allow bouncing objects to pass through as missiles
+   if(!(cc->thing->flags & (MF_MISSILE | MF_BOUNCES)))
+   {
+      if(line->flags & ML_BLOCKING)           // explicitly blocking everything
+         return !!cc->unstuck;  // killough 8/1/98: allow escape
+
+      // killough 8/9/98: monster-blockers don't affect friends
+      // SoM 9/7/02: block monsters standing on 3dmidtex only
+      if(!(cc->thing->flags & MF_FRIEND || cc->thing->player) && 
+         line->flags & ML_BLOCKMONSTERS && 
+         !(line->flags & ML_3DMIDTEX))
+         return false; // block monsters only
+   }
+
+   // set openrange, opentop, openbottom
+   // these define a 'window' from one sector to another across this line
+   
+   open_t opening;
+   clip->lineOpening(line, cc->thing, &opening, cc);
+
+   // adjust floor & ceiling heights
+   
+   if(opening.top < cc->ceilingz)
+   {
+      cc->ceilingz = opening.top;
+      cc->ceilingline = line;
+      cc->blockline = line;
+   }
+
+   if(opening.bottom > cc->floorz)
+   {
+      cc->floorz = opening.bottom;
+
+      cc->floorline = line;          // killough 8/1/98: remember floor linedef
+      cc->blockline = line;
+   }
+
+   if(opening.lowfloor < cc->dropoffz)
+      cc->dropoffz = opening.lowfloor;
+
+   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+   // touching 3DMidTex lines.
+   if(cc->touch3dside)
+      cc->dropoffz = cc->floorz;
+
+   if(opening.secfloor > cc->secfloorz)
+      cc->secfloorz = opening.secfloor;
+   if(opening.secceil < cc->secceilz)
+      cc->secceilz = opening.secceil;
+
+   // SoM 11/6/02: AGHAH
+   if(cc->floorz > cc->passfloorz)
+      cc->passfloorz = cc->floorz;
+   if(cc->ceilingz < cc->passceilz)
+      cc->passceilz = cc->ceilingz;
+
+   // if contacted a special line, add it to the list
+   if(line->special || line->portal)
+   {
+      if(line->pflags & PS_PASSABLE && !cc->markedgroups->isMarked(line->portal->data.link.toid))
+      {
+         cc->markedgroups->mark(line->portal->data.link.toid);
+         cc->adjacent_groups.add(line->portal->data.link.toid);
+      }
+
+      cc->spechit.add(line);
+   }
+   
+   return true;
+}
+
+
 
 bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc)
 {
@@ -459,27 +734,34 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
       GetBlockmapBoundsFromBBox(cc, xl, yl, xh, yh);
 
       int rejectmask = 0;
-      for(int by = yl; by <= yh; ++by)
+      int bx, by;
+      for(by = yl; by <= yh; ++by)
       {
          rejectmask &= ~EAST_ADJACENT;
 
-         for(int bx = xl; bx <= xh; ++bx)
+         for(bx = xl; bx <= xh; ++bx)
          {
             auto link = blocklinks[y * bmapwidth + x];
 
             while(link)
             {
-               while((link->adjacencymask & rejectmask) || CheckThing(link->mo, cc))
+               if(link->adjacencymask & rejectmask || CheckThing(link->mo, cc))
                   link = link->bnext;
-
-               
+               else
+                  return false;
             }
 
             rejectmask |= EAST_ADJACENT;
          }
 
+         if(!(thing->flags & MF_NOCLIP))
+         {
+            if(!P_BlockLinesIterator(bx, by, CheckLineThing, cc))
+               return false; // doesn't fit
+         }
+
          rejectmask |= NORTH_ADJACENT;
       }
    }
-   return false;
+   return true;
 }

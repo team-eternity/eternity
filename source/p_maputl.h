@@ -129,14 +129,14 @@ struct mobjblocklink_t
    mobjblocklink_t *mnext;
 };
 
-enum
+typedef enum
 {
    NORTH_ADJACENT = 0x1,
    EAST_ADJACENT = 0x2,
    SOUTH_ADJACENT = 0x4,
    WEST_ADJACENT = 0x8,
    CENTER_ADJACENT = 0x10
-} adjacencyflags_e;
+} blockadjacentflags_e;
 
 //
 // P_SetupBlockLinks

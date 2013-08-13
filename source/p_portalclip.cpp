@@ -86,11 +86,6 @@ fixed_t PortalClipEngine::avoidDropoff(Mobj *actor, ClipContext *cc)
 }
       
 // Utility functions
-void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
-{
-}
-
-
 ClipContext*  PortalClipEngine::getContext()
 {
    ClipContext *ret;

@@ -118,7 +118,7 @@ void PortalClipEngine::findAdjacentPortals(ClipContext *cc)
    {
       linkoffset_t *link = P_GetLinkOffset(cc->adjacent_groups[0], cc->adjacent_groups[i]);
       
-      CalculateBBoxForThing(cc, cc->thing, link);
+      CalculateBBoxForThing(cc, cc->x, cc->y, cc->thing->radius, link);
       GetBlockmapBoundsFromBBox(cc, xl, yl, xh, yh);
       
       for(by = yl; by <= yh; by++)
@@ -304,7 +304,7 @@ void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
 	   subsector_t *ss = R_PointInSubsector(thing->x + link->x, thing->y + link->y);
       linkMobjToSector(thing, ss->sector);
 
-      CalculateBBoxForThing(cc, thing, link);
+      CalculateBBoxForThing(cc, cc->x, cc->y, cc->thing->radius, link);
       GetBlockmapBoundsFromBBox(cc, xl, yl, xh, yh);
 
       for(by = yl; by <= yh; ++by)
