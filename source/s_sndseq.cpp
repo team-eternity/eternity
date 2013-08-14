@@ -624,9 +624,9 @@ static void S_ResetEnviroSeqEngine(void)
 // Puts all the environmental sequence spots on the map into an MobjCollection
 // and gets the environmental sequence engine ready to run.
 //
-void S_InitEnviroSpots(void)
+void S_InitEnviroSpots()
 {
-   enviroSpots.setMobjType("EEEnviroSequence");
+   enviroSpots.mobjType = "EEEnviroSequence";
    enviroSpots.makeEmpty();
    enviroSpots.collectThings();
 

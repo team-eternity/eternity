@@ -88,9 +88,9 @@ Mobj *wi_camera;
 // P_CollectThings to remove limit, and actually uses spawned
 // things of type 5003 rather than just storing the mapthing_t's.
 //
-void IN_AddCameras(void)
+void IN_AddCameras()
 {
-   camerathings.setMobjType("SMMUCameraSpot");
+   camerathings.mobjType = "SMMUCameraSpot";
    camerathings.makeEmpty();
 
    // no camera view if we're in an older demo.
@@ -175,7 +175,7 @@ void IN_slamBackground()
 // Args:    none
 // Returns: void
 //
-void IN_checkForAccelerate(void)
+void IN_checkForAccelerate()
 {
    int   i;
    player_t  *player;
@@ -213,7 +213,7 @@ void IN_checkForAccelerate(void)
 // when user presses a key, and runs the level if an intermission
 // camera is active. Gamemode-specific ticker is called.
 //
-void IN_Ticker(void)
+void IN_Ticker()
 {
    // counter for general background animation
    intertime++;  

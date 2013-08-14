@@ -31,21 +31,11 @@
 #include "z_zone.h"
 
 #include "e_hash.h"
-#include "e_hashkeys.h"
 #include "e_lib.h"
 #include "e_things.h"
+#include "m_qstrkeys.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
-
-//
-// MobjCollection::setMobjType
-//
-// Set the type of object this collection tracks.
-//
-void MobjCollection::setMobjType(const char *mt)
-{
-   E_ReplaceString(mobjType, estrdup(mt));
-}
 
 //
 // MobjCollection::collectThings
@@ -58,10 +48,10 @@ void MobjCollection::collectThings()
    Thinker *th;
    int typenum;
 
-   if(!enabled || !mobjType)
+   if(!enabled || mobjType.empty())
       return;
 
-   if((typenum = E_ThingNumForName(mobjType)) < 0)
+   if((typenum = E_ThingNumForName(mobjType.constPtr())) < 0)
       return;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
@@ -88,7 +78,7 @@ class mobjCollectionSetPimpl : public ZoneObject
 {
 public:
    EHashTable<MobjCollection, 
-              ENCStringHashKey, 
+              ENCQStrHashKey, 
               &MobjCollection::mobjType, 
               &MobjCollection::hashLinks> collectionHash;
 
@@ -124,7 +114,7 @@ void MobjCollectionSet::addCollection(const char *mobjType)
    if(!pImpl->collectionHash.objectForKey(mobjType))
    {
       MobjCollection *newcol = new MobjCollection();
-      newcol->setMobjType(mobjType);
+      newcol->mobjType = mobjType;
       pImpl->collectionHash.addObject(newcol);
    }
 }
@@ -139,7 +129,7 @@ void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
    MobjCollection *col = pImpl->collectionHash.objectForKey(mobjType);
 
    if(col)
-      col->setEnabled(enabled);
+      col->enabled = enabled;
 }
 
 //

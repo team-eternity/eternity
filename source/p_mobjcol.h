@@ -33,6 +33,7 @@
 
 #include "m_collection.h"
 #include "m_dllist.h"
+#include "m_qstr.h"
 
 class Mobj;
 class mobjCollectionSetPimpl;
@@ -41,21 +42,18 @@ class MobjCollection : public PODCollection<Mobj *>
 {
 protected:
    DLListItem<MobjCollection> hashLinks; // links for MobjCollectionSet hash
-   char *mobjType;
-   bool  enabled;
 
    friend class mobjCollectionSetPimpl;
 
 public:
    MobjCollection() 
-      : PODCollection<Mobj *>(), hashLinks(), mobjType(NULL), enabled(true) 
+      : PODCollection<Mobj *>(), hashLinks(), mobjType(), enabled(true) 
    {
    }
 
-   const char *getMobjType() const  { return mobjType; }
-   void setMobjType(const char *mt);
-   bool isEnabled() const   { return enabled;  }
-   void setEnabled(bool en) { enabled = en;    }
+   // public properties
+   qstring mobjType;
+   bool    enabled;
 
    void collectThings();
 };

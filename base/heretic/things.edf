@@ -1960,7 +1960,6 @@ thingtype LichWhirlwind : Mobj, -1, 380
 
 thingtype HAmmoWandWimpy : Mobj, 7010, 381
 {
-  spawnstate  S_AMG1
   spawnhealth 10
   flags       SPECIAL
   acs_spawndata
@@ -1968,11 +1967,18 @@ thingtype HAmmoWandWimpy : Mobj, 7010, 381
     num   11
     modes heretic
   }
+  
+  firstdecoratestate S_AMG1
+  states
+  @"
+  Spawn:
+    AMG1 A -1
+    stop
+  "@
 }
 
 thingtype HAmmoWandHefty : Mobj, 7012, 382
 {
-  spawnstate  S_AMG2_1
   spawnhealth 50
   flags       SPECIAL
   acs_spawndata
@@ -1980,11 +1986,18 @@ thingtype HAmmoWandHefty : Mobj, 7012, 382
     num   12
     modes heretic
   }
+  
+  firstdecoratestate S_AMG2_1
+  states
+  @"
+  Spawn:
+    AMG2 ABC 4
+    loop
+  "@
 }
 
 thingtype HAmmoMaceWimpy : Mobj, 7013, 383
 {
-  spawnstate  S_AMM1
   spawnhealth 20
   flags       SPECIAL
   acs_spawndata
@@ -1992,11 +2005,18 @@ thingtype HAmmoMaceWimpy : Mobj, 7013, 383
     num   35
     modes heretic
   }
+  
+  firstdecoratestate S_AMM1
+  states
+  @"
+  Spawn:
+    AMM1 A -1
+    stop
+  "@
 }
 
 thingtype HAmmoMaceHefty : Mobj, 7016, 384
 {
-  spawnstate  S_AMM2
   spawnhealth 100
   flags       SPECIAL
   acs_spawndata
@@ -2004,11 +2024,18 @@ thingtype HAmmoMaceHefty : Mobj, 7016, 384
     num   36
     modes heretic
   }
+  
+  firstdecoratestate S_AMM2
+  states
+  @"
+  Spawn:
+    AMM2 A -1
+    stop
+  "@
 }
 
 thingtype HAmmoCBowWimpy : Mobj, 7018, 385
 {
-  spawnstate  S_AMC1
   spawnhealth 5
   flags       SPECIAL
   acs_spawndata
@@ -2016,11 +2043,18 @@ thingtype HAmmoCBowWimpy : Mobj, 7018, 385
     num   33
     modes heretic
   }
+  
+  firstdecoratestate S_AMC1
+  states
+  @"
+  Spawn:
+    AMC1 A -1
+    stop
+  "@
 }
 
 thingtype HAmmoCBowHefty : Mobj, 7019, 386
 {
-  spawnstate  S_AMC2_1
   spawnhealth 20
   flags       SPECIAL
   acs_spawndata
@@ -2028,11 +2062,18 @@ thingtype HAmmoCBowHefty : Mobj, 7019, 386
     num   34
     modes heretic
   }
+  
+  firstdecoratestate S_AMC2_1
+  states
+  @"
+  Spawn:
+    AMC2 ABC 5
+    loop
+  "@
 }
 
 thingtype HAmmoSkullWimpy : Mobj, 7020, 387
 {
-  spawnstate  S_AMS1_1
   spawnhealth 20
   flags       SPECIAL
   acs_spawndata
@@ -2040,11 +2081,18 @@ thingtype HAmmoSkullWimpy : Mobj, 7020, 387
     num   158 
     modes heretic
   }
+  
+  firstdecoratestate S_AMS1_1
+  states
+  @"
+  Spawn:
+    AMS1 AB 5
+    loop
+  "@
 }
 
 thingtype HAmmoSkullHefty : Mobj, 7021, 388
 {
-  spawnstate  S_AMS2_1
   spawnhealth 100
   flags       SPECIAL
   acs_spawndata
@@ -2052,11 +2100,18 @@ thingtype HAmmoSkullHefty : Mobj, 7021, 388
     num   159
     modes heretic
   }
+  
+  firstdecoratestate S_AMS2_1
+  states
+  @"
+  Spawn:
+    AMS2 AB 5
+    loop
+  "@
 }
 
 thingtype HAmmoPhoenixWimpy : Mobj, 7022, 389
 {
-  spawnstate  S_AMP1_1
   spawnhealth 1
   flags       SPECIAL
   acs_spawndata
@@ -2064,11 +2119,18 @@ thingtype HAmmoPhoenixWimpy : Mobj, 7022, 389
     num   161
     modes heretic
   }
+  
+  firstdecoratestate S_AMP1_1
+  states
+  @"
+  Spawn:
+    AMP1 ABC 4
+    loop
+  "@
 }
 
 thingtype HAmmoPhoenixHefty : Mobj, 7023, 390
 {
-  spawnstate  S_AMP2_1
   spawnhealth 10
   flags       SPECIAL
   acs_spawndata
@@ -2076,11 +2138,18 @@ thingtype HAmmoPhoenixHefty : Mobj, 7023, 390
     num   162
     modes heretic
   }
+  
+  firstdecoratestate S_AMP2_1
+  states
+  @"
+  Spawn:
+    AMP2 ABC 4
+    loop
+  "@
 }
 
 thingtype HAmmoBlasterWimpy : Mobj, 7054, 391
 {
-  spawnstate  S_AMB1_1
   spawnhealth 10
   flags       SPECIAL
   acs_spawndata
@@ -2088,11 +2157,18 @@ thingtype HAmmoBlasterWimpy : Mobj, 7054, 391
     num   37
     modes heretic
   }
+  
+  firstdecoratestate S_AMB1_1
+  states
+  @"
+  Spawn:
+    AMB1 ABC 4
+    loop
+  "@
 }
 
 thingtype HAmmoBlasterHefty : Mobj, 7055, 392
 {
-  spawnstate  S_AMB2_1
   spawnhealth 25
   flags       SPECIAL
   acs_spawndata
@@ -2100,6 +2176,14 @@ thingtype HAmmoBlasterHefty : Mobj, 7055, 392
     num   38
     modes heretic
   }
+  
+  firstdecoratestate S_AMB2_1
+  states
+  @"
+  Spawn:
+    AMB2 ABC 4
+    loop
+  "@
 }
 
 thingtype HereticImp : Mobj, 7066, 393
@@ -2341,213 +2425,420 @@ thingtype HereticPlayerSkull : Mobj, -1, 399
 
 thingtype HArtiInvisibility : Mobj, 7075, 400
 {
-  spawnstate   S_ARTI_INVS1
   cflags       SPECIAL|COUNTITEM|FLOATBOB
   translucency 26624
+  
+  firstdecoratestate S_ARTI_INVS1
+  states
+  @"
+  Spawn:
+    INVS A -1 bright
+    stop
+  "@
 }
 
 thingtype HArtiQuartzFlask : Mobj, 7082, 401
 {
-  spawnstate S_ARTI_PTN2_1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_PTN2_1
+  states
+  @"
+  Spawn:
+    PTN2 ABC 4
+    loop
+  "@
 }
 
 thingtype HArtiFly : Mobj, 7083, 402
 {
-  spawnstate S_ARTI_SOAR1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_SOAR1
+  states
+  @"
+  Spawn:
+    SOAR ABCB 5
+    loop
+  "@
 }
 
 thingtype HArtiInvulnerability : Mobj, 7084, 403 
 {
-  spawnstate S_ARTI_INVU1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_INVU1
+  states
+  @"
+  Spawn:
+    INVU ABCD 3
+    loop
+  "@
 }
 
 thingtype HArtiTomeOfPower : Mobj, 7086, 404
 {
-  spawnstate S_ARTI_PWBK1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_PWBK1
+  states
+  @"
+  Spawn:
+    PWBK A -1
+    stop
+  "@
 }
 
 thingtype HArtiEgg : Mobj, 7030, 405
 {
-  spawnstate S_ARTI_EGGC1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_EGGC1
+  states
+  @"
+  Spawn:
+    EGGC ABCB 6
+    loop
+  "@
 }
 
 thingtype HArtiSuperHeal : Mobj, 7032, 406
 {
-  spawnstate S_ARTI_SPHL1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_SPHL1
+  states
+  @"
+  Spawn:
+    SPHL A -1
+    stop
+  "@
 }
 
 thingtype HArtiTorch : Mobj, 7033, 407
 {
-  spawnstate S_ARTI_TRCH1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_TRCH1
+  states
+  @"
+  Spawn:
+    TRCH ABC 3 bright
+    loop
+  "@
 }
 
 thingtype HArtiFireBomb : Mobj, 7034, 408
 {
-  spawnstate S_ARTI_FBMB1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_FBMB1
+  states
+  @"
+  Spawn:
+    FBMB E -1
+    stop
+  "@
 }
 
 thingtype HereticFireBomb : Mobj, -1, 409
 {
-  spawnstate   S_HFIREBOMB1
   deathsound   ht_phohit
   cflags       NOGRAVITY
   translucency 26624
+  
+  firstdecoratestate S_HFIREBOMB1
+  states
+  @"
+  Spawn:
+    FBMB ABCD 10
+    FBMB E     6        A_Scream
+    XPL1 A     4 bright A_HticExplode("timebomb")
+    XPL1 BCDEF 4 bright
+    stop
+  "@
 }
 
 thingtype HArtiTeleport : Mobj, 7036, 410
 {
-  spawnstate S_ARTI_ATLP1
-  cflags     SPECIAL|COUNTITEM|FLOATBOB
+  cflags SPECIAL|COUNTITEM|FLOATBOB
+  
+  firstdecoratestate S_ARTI_ATLP1
+  states
+  @"
+  Spawn:
+    ATLP ABCB 4
+    loop
+  "@
 }
 
 // Weapons
 
 thingtype HWeaponGauntlets : Mobj, 7205, 411
 {
-  spawnstate S_WGNT
-  cflags     SPECIAL
+  cflags SPECIAL
+  
+  firstdecoratestate S_WGNT
+  states
+  @"
+  Spawn:
+    WGNT A -1
+    stop
+  "@
 }
 
 thingtype HWeaponBlaster : Mobj, 7053, 412
 {
-  spawnstate S_BLSR
-  cflags     SPECIAL
+  cflags SPECIAL
+  
+  firstdecoratestate S_BLSR
+  states
+  @"
+  Spawn:
+    WBLS A -1
+    stop
+  "@
 }
+
+// HERETIC_TODO: FIRE MACE!!!
 
 thingtype HWeaponSkullRod : Mobj, 7204, 413
 {
-  spawnstate S_WSKL
-  cflags     SPECIAL
+  cflags SPECIAL
+  
+  firstdecoratestate S_WSKL
+  states
+  @"
+  Spawn:
+    WSKL A -1
+    stop
+  "@
 }
 
 thingtype HWeaponPhoenixRod : Mobj, 7203, 414
 {
-  spawnstate S_WPHX
-  cflags     SPECIAL
+  cflags SPECIAL
+  
+  firstdecoratestate S_WPHX
+  states
+  @"
+  Spawn:
+    WPHX A -1
+    stop
+  "@
 }
 
 thingtype HWeaponCrossbow : Mobj, 7201, 415
 {
-  spawnstate S_WBOW
-  cflags     SPECIAL
+  cflags SPECIAL
+  
+  firstdecoratestate S_WBOW
+  states
+  @"
+  Spawn:
+    WBOW A -1
+    stop
+  "@
 }
 
 // Weapon FX
 
 thingtype HereticStaffPuff : Mobj, -1, 416
 {
-  spawnstate  S_STAFFPUFF1
   attacksound ht_stfhit
   cflags      NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_STAFFPUFF1
+  states
+  @"
+  Spawn:
+    PUF3 A   4 bright
+    PUF3 BCD 4
+    stop
+  "@
 }
 
 thingtype HereticStaffPuff2 : Mobj, -1, 417
 {
-  spawnstate  S_STAFFPUFF2_1
   attacksound ht_stfpow
   cflags      NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_STAFFPUFF2_1
+  states
+  @"
+  Spawn:
+    PUF4 ABCDEF 4 bright
+    stop
+  "@
 }
 
-thingtype HereticBeakPuff : Mobj, -1, 418
+thingtype HereticBeakPuff : HereticStaffPuff, -1, 418
 {
-  spawnstate  S_STAFFPUFF1
   attacksound ht_chicatk
-  cflags      NOBLOCKMAP|NOGRAVITY
 }
 
 thingtype HereticGauntletPuff1 : Mobj, -1, 419
 {
-  spawnstate   S_GAUNTLETPUFF1_1
   cflags       NOBLOCKMAP|NOGRAVITY
   translucency 26624
+  
+  firstdecoratestate S_GAUNTLETPUFF1_1
+  states
+  @"
+  Spawn:
+    PUF1 ABCD 4 bright
+    stop
+  "@
 }
 
 thingtype HereticGauntletPuff2 : Mobj, -1, 420
 {
-  spawnstate   S_GAUNTLETPUFF2_1
   cflags       NOBLOCKMAP|NOGRAVITY
   translucency 26624
+  
+  firstdecoratestate S_GAUNTLETPUFF2_1
+  states
+  @"
+  Spawn:
+    PUF1 EFGH 4 bright
+    stop
+  "@
 }
 
 thingtype HereticBlasterSmoke : Mobj, -1, 421
 {
-  spawnstate   S_BLASTERSMOKE1
   cflags       NOBLOCKMAP|NOGRAVITY|CANNOTPUSH
   translucency 26624
+  
+  firstdecoratestate S_BLASTERSMOKE1
+  states
+  @"
+  Spawn:
+    FX18 HIJKL 4
+    stop
+  "@
 }
 
 thingtype HereticRipper : Mobj, -1, 422
 {
-  spawnstate S_HRIPPER1
-  deathstate S_HRIPPERX1
   deathsound ht_hrnhit
   speed      14.0
   radius     8.0
   height     6.0
   damage     1
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP|NORANDOMIZE
+  
+  firstdecoratestate S_HRIPPER1
+  states
+  @"
+  Spawn:
+    FX18 M 4
+    FX18 N 5
+    loop
+  Death:
+    FX18 OPQRS 4 bright
+    stop
+  "@
 }
 
 thingtype HereticBlasterPuff1 : Mobj, -1, 423
 {
-  spawnstate S_BLASTERPUFF1_1
-  cflags     NOBLOCKMAP|NOGRAVITY
+  cflags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_BLASTERPUFF1_1
+  states
+  @"
+  Spawn:
+    FX17 ABCDE 4 bright
+    stop
+  "@
 }
 
 thingtype HereticBlasterPuff2 : Mobj, -1, 424
 {
-  spawnstate S_BLASTERPUFF2_1
-  cflags     NOBLOCKMAP|NOGRAVITY
+  cflags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_BLASTERPUFF2_1
+  states
+  @"
+  Spawn:
+    FX17 FG    3 bright
+    FX17 HIJKL 4 bright
+    stop
+  "@
 }
 
 thingtype HereticHornRodFX1 : Mobj, -1, 425
 {
-  spawnstate S_HRODFX1_1
-  seesound   ht_hrnsht
-  deathstate S_HRODFXI1_1
-  deathsound ht_hrnhit
   speed      22.0
   radius     12.0
   height     8.0
   damage     3
+  seesound   ht_hrnsht
+  deathsound ht_hrnhit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NORANDOMIZE
+  
+  firstdecoratestate S_HRODFX1_1
+  states
+  @"
+  Spawn:
+    FX00 AB 6 bright
+    loop
+  Death:
+    FX00 HI 5 bright
+    FX00 JK 4 bright
+    FX00 LM 3 bright
+    stop
+  "@
 }
 
 thingtype HereticGoldWandFX1 : Mobj, -1, 426
 {
-  spawnstate S_GWANDFX1_1
-  deathstate S_GWANDFXI1_1
-  deathsound ht_gldhit
   speed      22.0
   radius     10.0
   height     6.0
   damage     2
+  deathsound ht_gldhit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
+  
+  firstdecoratestate S_GWANDFX1_1
+  states
+  @"
+  Spawn:
+    FX01 AB 6 bright
+    loop
+  Death:
+    FX01 EFGH 3 bright
+    stop
+  "@
 }
 
-thingtype HereticGoldWandFX2 : Mobj, -1, 427
+thingtype HereticGoldWandFX2 : HereticGoldWandFX1, -1, 427
 {
-  spawnstate S_GWANDFX2_1
-  deathstate S_GWANDFXI1_1
   speed      18.0
-  radius     10.0
-  height     6.0
   damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
+  deathsound none
+  
+  firstdecoratestate S_GWANDFX2_1
+  states
+  @"
+  Spawn:
+    FX01 CD 6 bright
+    loop
+  "@
 }
 
 thingtype HereticGoldWandPuff1 : Mobj, -1, 428
 {
-  spawnstate S_GWANDPUFF1_1
-  cflags     NOBLOCKMAP|NOGRAVITY
+  cflags NOBLOCKMAP|NOGRAVITY
+  
+  firstdecoratestate S_GWANDPUFF1_1
+  states
+  @"
+  Spawn:
+    PUF2 ABCDE 3 bright
+    stop
+  "@
 }
 
 thingtype HereticGoldWandPuff2 : Mobj, -1, 429
@@ -2558,14 +2849,25 @@ thingtype HereticGoldWandPuff2 : Mobj, -1, 429
 
 thingtype HereticPhoenixFX1 : Mobj, -1, 430
 {
-  spawnstate S_PHOENIXFX1_1
-  seesound   ht_phosht
-  deathstate S_PHOENIXFXI1_1
-  deathsound ht_phohit
   speed      20.0
   radius     11.0
   height     8.0
   damage     20
+  seesound   ht_phosht
+  deathsound ht_phohit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST|NORANDOMIZE
+  
+  firstdecoratestate S_PHOENIXFX1_1
+  states
+  @"
+  Spawn:
+    FX04 A 4 bright A_PhoenixPuff
+    loop
+  Death:
+    FX08 A     6 bright A_HticExplode
+    FX08 BC    5 bright
+    FX08 DEFGH 4 bright
+    stop
+  "@
 }
 

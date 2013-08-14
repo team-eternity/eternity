@@ -305,7 +305,7 @@ void A_HticTracer(actionargs_t *actionargs)
 //
 void A_MummyFX1Seek(actionargs_t *actionargs)
 {
-   P_HticTracer(actionargs->actor, HTICANGLE_1*10, HTICANGLE_1*20);
+   P_HticTracer(actionargs->actor, HTICANGLE_1 * 10, HTICANGLE_1 * 20);
 }
 
 //
@@ -543,7 +543,7 @@ MobjCollection sorcspots;
 
 void P_SpawnSorcSpots()
 {
-   sorcspots.setMobjType("DsparilTeleSpot");
+   sorcspots.mobjType = "DsparilTeleSpot";
    sorcspots.makeEmpty();
    sorcspots.collectThings();
 }
@@ -1601,7 +1601,7 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
    }
 
    // follow the target
-   P_HticTracer(actor, ANGLE_1 * 10, ANGLE_1 * 30);
+   P_HticTracer(actor, HTICANGLE_1 * 10, HTICANGLE_1 * 30);
 }
 
 //
@@ -1868,15 +1868,12 @@ void A_FlameSnd(actionargs_t *actionargs)
 //
 void A_PhoenixPuff(actionargs_t *actionargs)
 {
-   int thingtype;
+   int thingtype = E_SafeThingName("HereticPhoenixPuff");
    Mobj *actor = actionargs->actor;
    Mobj *puff;
    angle_t angle;
-   arglist_t *args = actionargs->args;
 
-   thingtype = E_ArgAsThingNum(args, 0);
-   
-   P_HticTracer(actor, ANGLE_1 * 5, ANGLE_1 * 10);
+   P_HticTracer(actor, HTICANGLE_1 * 5, HTICANGLE_1 * 10);
    
    puff = P_SpawnMobj(actor->x, actor->y, actor->z, thingtype);
    
