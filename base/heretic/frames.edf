@@ -913,7 +913,7 @@ frame S_ARTI_ATPL4 { +decorate; dehackednum 2747 }
 
 frame S_WGNT { +decorate; dehackednum 2748 } // Gauntlets of the Necromancer
 frame S_BLSR { +decorate; dehackednum 2749 } // Dragonclaw
-frame S_WMCE { cmp = "WMCE|A|*|-1"; dehackednum 2750 } // Fire Mace
+frame S_WMCE { +decorate; dehackednum 2750 } // Fire Mace
 frame S_WSKL { +decorate; dehackednum 2751 } // Skull Rod
 frame S_WPHX { +decorate; dehackednum 2752 } // Phoenix Rod
 frame S_WBOW { +decorate; dehackednum 2753 } // Ethereal Crossbow

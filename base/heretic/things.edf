@@ -2600,8 +2600,6 @@ thingtype HWeaponBlaster : Mobj, 7053, 412
   "@
 }
 
-// HERETIC_TODO: FIRE MACE!!!
-
 thingtype HWeaponSkullRod : Mobj, 7204, 413
 {
   cflags SPECIAL
@@ -2871,3 +2869,36 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
   "@
 }
 
+//
+// Fire Mace
+//
+// The fire mace weapon has very special behavior in that it spawns randomly at
+// a given spot in the map, and in single player, may not spawn at all.
+//
+
+thingtype HereticMaceSpot : Mobj, 7202, 431
+{
+  cflags NOSECTOR|NOBLOCKMAP
+   
+  collectionspawn HWeaponFireMace, 64, 64
+   
+  states
+  @"
+  Spawn:
+    TNT1 A -1
+    stop
+  "@
+}
+
+thingtype HWeaponFireMace : Mobj, -1, 432
+{
+  cflags SPECIAL
+  
+  firstdecoratestate S_WMCE
+  states
+  @"
+  Spawn:
+    WMCE A -1
+    stop
+  "@
+}

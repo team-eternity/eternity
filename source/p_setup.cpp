@@ -53,6 +53,7 @@
 #include "p_info.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
@@ -2340,7 +2341,7 @@ static void P_DeathMatchSpawnPlayers(void)
 //
 // haleyjd 11/19/02: Sets up all dynamically allocated thing lists.
 //
-void P_InitThingLists(void)
+void P_InitThingLists()
 {
    // haleyjd: allow to work in any game mode
    // killough 3/26/98: Spawn icon landings:
@@ -2349,6 +2350,9 @@ void P_InitThingLists(void)
 
    // haleyjd: spawn D'Sparil teleport spots
    P_SpawnSorcSpots();
+
+   // haleyjd 08/15/13: spawn EDF-specified collections
+   MobjCollections.collectAllThings();
 
    // haleyjd 04/08/03: spawn camera spots
    IN_AddCameras();

@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //   Random number generator
@@ -25,8 +25,8 @@
 //-----------------------------------------------------------------------------
 
 
-#ifndef __M_RANDOM__
-#define __M_RANDOM__
+#ifndef M_RANDOM_H__
+#define M_RANDOM_H__
 
 // killough 1/19/98: rewritten to use to use a better random number generator
 // in the new engine, although the old one is available for compatibility.
@@ -217,6 +217,7 @@ typedef enum {
   pr_genrefire,  // A_GenRefire
   pr_decjump,    // A_Jump
   pr_decjump2,
+  pr_spotspawn,  // For use with MobjCollection::spawnAtRandom
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

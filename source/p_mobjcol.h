@@ -34,6 +34,7 @@
 #include "m_collection.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
+#include "m_random.h"
 
 class Mobj;
 class mobjCollectionSetPimpl;
@@ -56,6 +57,8 @@ public:
    bool    enabled;
 
    void collectThings();
+   bool spawnAtRandom(const char *type, pr_class_t prnum, 
+                      int spchance, int coopchance, int dmchance);
 };
 
 // MobjCollectionSet maintains a global hash of MobjCollection objects that
@@ -66,6 +69,8 @@ class MobjCollectionSet
 {
 private:
    mobjCollectionSetPimpl *pImpl; // yet another private implementation idiom
+
+   void startupSpawn(MobjCollection *collection);
 
 public:
    MobjCollectionSet();

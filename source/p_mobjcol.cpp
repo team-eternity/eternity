@@ -30,9 +30,12 @@
 
 #include "z_zone.h"
 
+#include "doomstat.h"
 #include "e_hash.h"
 #include "e_lib.h"
 #include "e_things.h"
+#include "metaapi.h"
+#include "metaspawn.h"
 #include "m_qstrkeys.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
@@ -64,6 +67,53 @@ void MobjCollection::collectThings()
             add(mo);
       }
    }
+}
+
+//
+// MobjCollection::spawnAtRandom
+//
+// Spawn an Mobj of the indicated type at a random spot in the collection.
+// The three chance parameters allow for the spawn itself to be randomized,
+// as if a RNG call falls outside the threshold specified for the current
+// game type, the spawn won't take place at all.
+//
+bool MobjCollection::spawnAtRandom(const char *type, pr_class_t prnum,
+                                   int spchance, int coopchance, int dmchance)
+{
+   int chance;
+
+   // need spots to spawn at.
+   if(isEmpty())
+      return false;
+
+   // check for failure to spawn
+   switch(GameType)
+   {
+   case gt_single:
+      chance = spchance;
+      break;
+   case gt_coop:
+      chance = coopchance;
+      break;
+   case gt_dm:
+      chance = dmchance;
+      break;
+   default:
+      chance = 0;
+      break;
+   }
+
+   if(P_Random(prnum) < chance)
+      return false;
+
+   // get a random spot
+   Mobj *spot;
+   
+   spot = getRandom(prnum);
+
+   // spawn the object there
+   P_SpawnMobj(spot->x, spot->y, spot->z, E_SafeThingName(type));
+   return true;
 }
 
 //=============================================================================
@@ -133,6 +183,30 @@ void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
 }
 
 //
+// MobjCollectionSet::startupSpawn
+//
+// Handle a potential startup random spawn associated with a collection.
+// The data necessary for the spawn consists of meta fields on the 
+// collection's thingtype's mobjinfo.
+//
+void MobjCollectionSet::startupSpawn(MobjCollection *collection)
+{
+   int type = E_ThingNumForName(collection->mobjType.constPtr());
+   if(type < 0)
+      return;
+
+   MetaTable  *meta = mobjinfo[type]->meta;
+   MetaObject *obj  = NULL;
+
+   if((obj = meta->getObjectType(METATYPE(MetaCollectionSpawn))))
+   {
+      auto mcs = static_cast<MetaCollectionSpawn *>(obj);
+      collection->spawnAtRandom(mcs->type.constPtr(), pr_spotspawn, 
+                                mcs->spchance, mcs->coopchance, mcs->dmchance);
+   }
+}
+
+//
 // MobjCollectionSet::collectAllThings
 //
 // Called at the start of each level to collect all spawned mapthings into
@@ -146,6 +220,7 @@ void MobjCollectionSet::collectAllThings()
    {
       rover->clear();
       rover->collectThings();
+      startupSpawn(rover);
    }
 }
 

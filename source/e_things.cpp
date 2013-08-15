@@ -53,7 +53,9 @@
 #include "m_cheat.h"
 #include "m_qstr.h"
 #include "metaapi.h"
+#include "metaspawn.h"
 #include "p_inter.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "r_defs.h"
 #include "r_draw.h"
@@ -121,6 +123,9 @@ int UnknownThingType;
 #define ITEM_TNG_RESPAWNTIME  "respawntime"
 #define ITEM_TNG_RESPCHANCE   "respawnchance"
 
+// Special Spawning
+#define ITEM_TNG_COLSPAWN     "collectionspawn"
+
 // Damage Properties
 #define ITEM_TNG_DAMAGE       "damage"
 #define ITEM_TNG_DMGSPECIAL   "dmgspecial"
@@ -177,6 +182,12 @@ int UnknownThingType;
 #define ITEM_TNG_DROPITEM_CHANCE "chance"
 #define ITEM_TNG_DROPITEM_AMOUNT "amount"
 #define ITEM_TNG_DROPITEM_TOSS   "toss"
+
+// Collection spawn multi-value property internal fields
+#define ITEM_TNG_COLSPAWN_TYPE   "type"
+#define ITEM_TNG_COLSPAWN_SP     "spchance"
+#define ITEM_TNG_COLSPAWN_COOP   "coopchance"
+#define ITEM_TNG_COLSPAWN_DM     "dmchance"
 
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
@@ -432,6 +443,16 @@ static cfg_opt_t dropitem_opts[] =
    CFG_END()
 };
 
+// collectionspawn multi-value property options
+static cfg_opt_t colspawn_opts[] =
+{
+   CFG_STR(ITEM_TNG_COLSPAWN_TYPE, "", CFGF_NONE),
+   CFG_INT(ITEM_TNG_COLSPAWN_SP,    0, CFGF_NONE),
+   CFG_INT(ITEM_TNG_COLSPAWN_COOP,  0, CFGF_NONE),
+   CFG_INT(ITEM_TNG_COLSPAWN_DM,    0, CFGF_NONE),
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
@@ -506,6 +527,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1518,6 +1540,33 @@ static void E_processDropItems(mobjinfo_t *mi, cfg_t *thingsec)
 }
 
 //
+// Collection Spawn
+//
+// A thingtype that specifies this will have a global collection created
+// for all of its instances in each map. At level start, a thing of the
+// type it indicates will (or may, depending on specified chances) spawn
+// at one of the spots.
+//
+
+IMPLEMENT_RTTI_TYPE(MetaCollectionSpawn)
+
+static void E_processCollectionSpawn(mobjinfo_t *mi, cfg_t *spawn)
+{
+   const char *type       = cfg_getstr(spawn, ITEM_TNG_COLSPAWN_TYPE);
+   int         spchance   = cfg_getint(spawn, ITEM_TNG_COLSPAWN_SP);
+   int         coopchance = cfg_getint(spawn, ITEM_TNG_COLSPAWN_COOP);
+   int         dmchance   = cfg_getint(spawn, ITEM_TNG_COLSPAWN_DM);
+
+   auto mcs = new MetaCollectionSpawn("collectionspawn", type, 
+                                      spchance, coopchance, dmchance);
+   mi->meta->addObject(mcs);
+
+   // create the global collection for the spot thingtype, if it hasn't been
+   // created already.
+   MobjCollections.addCollection(mi->name);
+}
+
+//
 // E_ColorCB
 //
 // libConfuse value-parsing callback for the thingtype translation
@@ -2317,6 +2366,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       mobjinfo[i]->dmgspecial = tempint;
    }
+
+   // 08/15/13: process collection spawn
+   if(cfg_size(thingsec, ITEM_TNG_COLSPAWN) > 0)
+      E_processCollectionSpawn(mobjinfo[i], cfg_getmvprop(thingsec, ITEM_TNG_COLSPAWN));
 
    // 09/26/04: process alternate sprite
    if(IS_SET(ITEM_TNG_SKINSPRITE))
