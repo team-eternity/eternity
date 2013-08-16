@@ -663,9 +663,6 @@ static void ST_updateWidgets()
          keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
    }
 
-   // refresh everything if this is him coming back to life
-   ST_updateFaceWidget();
-
    // used by the w_armsbg widget
    st_notdeathmatch = (GameType != gt_dm);
 
@@ -687,6 +684,8 @@ static void ST_updateWidgets()
 static void ST_DoomTicker()
 {
    st_clock++;
+   // refresh everything if this is him coming back to life
+   ST_updateFaceWidget();
    st_oldhealth = plyr->health;
 }
 
