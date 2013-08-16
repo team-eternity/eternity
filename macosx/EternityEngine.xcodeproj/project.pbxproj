@@ -291,6 +291,7 @@
 		4F0A2C7816ED36FD00400F41 /* i_sdlgamepads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_sdlgamepads.h; path = ../source/sdl/i_sdlgamepads.h; sourceTree = "<group>"; };
 		4F50E3FE173770EC00878167 /* r_dynabsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynabsp.cpp; path = ../source/r_dynabsp.cpp; sourceTree = "<group>"; };
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
+		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
 		4F69650416C3B1EB00FF2028 /* ev_actions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_actions.cpp; path = ../source/ev_actions.cpp; sourceTree = "<group>"; };
 		4F69650516C3B1EB00FF2028 /* ev_actions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_actions.h; path = ../source/ev_actions.h; sourceTree = "<group>"; };
 		4F69650616C3B1EB00FF2028 /* ev_bindings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_bindings.cpp; path = ../source/ev_bindings.cpp; sourceTree = "<group>"; };
@@ -1739,6 +1740,7 @@
 		FACACB861653019A0091AF2E /* MetaAPI */ = {
 			isa = PBXGroup;
 			children = (
+				4F579A4317BE860B0088B797 /* metaspawn.h */,
 				FACACB87165301C70091AF2E /* metaadapter.h */,
 				FABF5D04158BF42800C49E93 /* metaapi.cpp */,
 				FA16D41C15E01E96002318D1 /* metaapi.h */,
