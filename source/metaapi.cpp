@@ -655,6 +655,16 @@ MetaObject *MetaTable::getObjectType(const char *type)
 }
 
 //
+// MetaTable::getObjectType
+//
+// Overload taking a MetaObject::Type instance.
+//
+MetaObject *MetaTable::getObjectType(const MetaObject::Type &type)
+{
+   return pImpl->typehash.objectForKey(type.getName());
+}
+
+//
 // MetaTable::getObjectKeyAndType
 //
 // As above, but satisfying both conditions at once.

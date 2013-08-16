@@ -70,6 +70,10 @@ public:
       typedef RTTIObject Class; // Type of the class being proxied
       friend class RTTIObject;  // The proxied class is always a friend.
 
+      // Accessors
+      Type       *getParent() const { return parent; }
+      const char *getName()   const { return name;   }
+
       //
       // isAncestorOf
       //

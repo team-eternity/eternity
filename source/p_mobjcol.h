@@ -59,6 +59,7 @@ public:
    void collectThings();
    bool spawnAtRandom(const char *type, pr_class_t prnum, 
                       int spchance, int coopchance, int dmchance);
+   bool startupSpawn();
 };
 
 // MobjCollectionSet maintains a global hash of MobjCollection objects that
@@ -69,8 +70,6 @@ class MobjCollectionSet
 {
 private:
    mobjCollectionSetPimpl *pImpl; // yet another private implementation idiom
-
-   void startupSpawn(MobjCollection *collection);
 
 public:
    MobjCollectionSet();

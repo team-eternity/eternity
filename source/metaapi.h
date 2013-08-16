@@ -314,11 +314,18 @@ public:
    MetaObject *getObject(size_t keyIndex);
    // * By Type
    MetaObject *getObjectType(const char *type);
+   MetaObject *getObjectType(const MetaObject::Type &type);
    // * By Key AND Type
    MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(const char *key, const char *type);
    MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
+
+   // Template getters
+   template<typename M> M *getObjectTypeEx()
+   {
+      return static_cast<M *>(getObjectType(M::StaticType));
+   }
 
    // Iterators
    MetaObject *getNextObject(MetaObject *object, const char *key);

@@ -116,6 +116,32 @@ bool MobjCollection::spawnAtRandom(const char *type, pr_class_t prnum,
    return true;
 }
 
+//
+// MobjCollection::startupSpawn
+//
+// Handle a potential startup random spawn associated with a collection.
+// The data necessary for the spawn consists of meta fields on the 
+// collection's thingtype's mobjinfo.
+//
+bool MobjCollection::startupSpawn()
+{
+   int type = E_ThingNumForName(mobjType.constPtr());
+   if(type < 0)
+      return false;
+
+   MetaTable  *meta = mobjinfo[type]->meta;
+   auto        mcs  = meta->getObjectTypeEx<MetaCollectionSpawn>();
+   bool        res  = false;
+
+   if(mcs)
+   {
+      res = spawnAtRandom(mcs->type.constPtr(), pr_spotspawn,
+                          mcs->spchance, mcs->coopchance, mcs->dmchance);
+   }
+
+   return res;
+}
+
 //=============================================================================
 //
 // MobjCollectionSet Methods
@@ -183,30 +209,6 @@ void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
 }
 
 //
-// MobjCollectionSet::startupSpawn
-//
-// Handle a potential startup random spawn associated with a collection.
-// The data necessary for the spawn consists of meta fields on the 
-// collection's thingtype's mobjinfo.
-//
-void MobjCollectionSet::startupSpawn(MobjCollection *collection)
-{
-   int type = E_ThingNumForName(collection->mobjType.constPtr());
-   if(type < 0)
-      return;
-
-   MetaTable  *meta = mobjinfo[type]->meta;
-   MetaObject *obj  = NULL;
-
-   if((obj = meta->getObjectType(METATYPE(MetaCollectionSpawn))))
-   {
-      auto mcs = static_cast<MetaCollectionSpawn *>(obj);
-      collection->spawnAtRandom(mcs->type.constPtr(), pr_spotspawn, 
-                                mcs->spchance, mcs->coopchance, mcs->dmchance);
-   }
-}
-
-//
 // MobjCollectionSet::collectAllThings
 //
 // Called at the start of each level to collect all spawned mapthings into
@@ -220,7 +222,7 @@ void MobjCollectionSet::collectAllThings()
    {
       rover->clear();
       rover->collectThings();
-      startupSpawn(rover);
+      rover->startupSpawn();
    }
 }
 
