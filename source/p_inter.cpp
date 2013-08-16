@@ -990,17 +990,15 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 //
 void P_DropItems(Mobj *actor, bool tossitems)
 {
-   MetaTable  *meta = actor->info->meta;
-   MetaObject *obj  = NULL;
+   MetaTable    *meta = actor->info->meta;
+   MetaDropItem *mdi  = NULL;
 
    // players only drop items if so indicated
    if(actor->player && !(dmflags & DM_PLAYERDROP))
       return;
 
-   while((obj = meta->getNextType(obj, METATYPE(MetaDropItem))))
+   while((mdi = meta->getNextTypeEx(mdi)))
    {
-      MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
-
       // check if we spawn this sort of item at the present time
       if(mdi->toss != tossitems)
          continue;

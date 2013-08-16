@@ -457,15 +457,15 @@ static void MN_initMetaDeaths()
 {
    playerclass_t *pclass = players[consoleplayer].pclass;
    MetaTable     *meta   = mobjinfo[pclass->type]->meta;
-   MetaObject    *obj    = NULL;
+   MetaState     *state  = NULL;
    
    skview_metadeaths.clear();
 
-   while((obj = meta->getNextType(obj, METATYPE(MetaState))))
+   while((state = meta->getNextTypeEx(state)))
    {
       // NB: also matches XDeath implicitly.
-      if(M_StrCaseStr(obj->getKey(), "Death."))
-         skview_metadeaths.add(static_cast<MetaState *>(obj));
+      if(M_StrCaseStr(state->getKey(), "Death."))
+         skview_metadeaths.add(state);
    }
 }
 

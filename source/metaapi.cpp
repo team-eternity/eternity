@@ -783,6 +783,25 @@ MetaObject *MetaTable::getNextType(MetaObject *object, const char *type)
 }
 
 //
+// MetaTable::getNextType
+//
+// Overload accepting a pointer to a MetaObject RTTI proxy. If object is valid,
+// type is optional, but otherwise it must be valid.
+//
+MetaObject *MetaTable::getNextType(MetaObject *object, const MetaObject::Type *type)
+{
+   // Same as above
+   if(object && !type)
+      type = object->getDynamicType();
+
+   // Must have a type
+   if(!type)
+      return NULL;
+
+   return pImpl->typehash.keyIterator(object, type->getName());
+}
+
+//
 // MetaTable::getNextKeyAndType
 //
 // As above, but satisfying both conditions at once.

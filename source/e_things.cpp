@@ -1041,21 +1041,19 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
 //
 static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
 {
-   MetaObject *obj  = NULL;
+   MetaState *state = NULL;
 
    // iterate on the metatable to look for metastate_t objects with
    // the base string as the initial part of their name
 
-   while((obj = mi->meta->getNextType(obj, METATYPE(MetaState))))
+   while((state = mi->meta->getNextTypeEx(state)))
    {
-      if(!strncasecmp(obj->getKey(), base, strlen(base)))
+      if(!strncasecmp(state->getKey(), base, strlen(base)))
       {
-         MetaState *state = static_cast<MetaState *>(obj);
-
          E_RemoveMetaStatePtr(mi, state);
 
          // must restart search (iterator invalidated)
-         obj = NULL;
+         state = NULL;
       }
    }
 }
@@ -1463,13 +1461,13 @@ IMPLEMENT_RTTI_TYPE(MetaDropItem)
 //
 static void E_clearDropItems(mobjinfo_t *mi)
 {
-   MetaObject *obj = NULL;
+   MetaDropItem *mdi = NULL;
 
-   while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
+   while((mdi = mi->meta->getNextTypeEx(mdi)))
    {
-      mi->meta->removeObject(obj);
-      delete obj;
-      obj = NULL; // must restart search
+      mi->meta->removeObject(mdi);
+      delete mdi;
+      mdi = NULL; // must restart search
    }
 }
 
@@ -1480,11 +1478,10 @@ static void E_clearDropItems(mobjinfo_t *mi)
 // 
 static MetaDropItem *E_findDropItemForType(mobjinfo_t *mi, const char *item)
 {
-   MetaObject *obj = NULL;
+   MetaDropItem *mdi = NULL;
 
-   while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
+   while((mdi = mi->meta->getNextTypeEx(mdi)))
    {
-      MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
       if(!mdi->item.strCaseCmp(item)) // be case insensitive
          return mdi;
    }
