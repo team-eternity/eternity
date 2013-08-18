@@ -336,7 +336,9 @@ public:
    MetaObject *getNextType(MetaObject *object, const MetaObject::Type *type);
    // * By Key AND Type
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type);
-   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type);
    // * Full table iterators
    MetaObject *tableIterator(MetaObject *object) const;
    const MetaObject *tableIterator(const MetaObject *object) const;
@@ -345,6 +347,16 @@ public:
    template<typename M> M *getNextTypeEx(M *object)
    {
       return static_cast<M *>(getNextType(object, RTTI(M)));
+   }
+
+   template<typename M> M *getNextKeyAndTypeEx(M *object, const char *key)
+   {
+      return static_cast<M *>(getNextKeyAndType(object, key, RTTI(M)));
+   }
+
+   template<typename M> M *getNextKeyAndTypeEx(M *object, size_t keyIdx)
+   {
+      return static_cast<M *>(getNextKeyAndType(object, keyIdx, RTTI(M)));
    }
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects

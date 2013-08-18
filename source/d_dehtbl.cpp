@@ -1300,6 +1300,11 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_HideThing(actionargs_t *);
+void A_UnHideThing(actionargs_t *);
+void A_RestoreArtifact(actionargs_t *);
+void A_RestoreSpecialThing1(actionargs_t *);
+void A_RestoreSpecialThing2(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1612,6 +1617,11 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(HideThing),
+   POINTER(UnHideThing),
+   POINTER(RestoreArtifact),
+   POINTER(RestoreSpecialThing1),
+   POINTER(RestoreSpecialThing2),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),

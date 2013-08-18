@@ -39,6 +39,7 @@
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_inventory.h"
+#include "e_player.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -324,6 +325,7 @@ dehflags_t deh_mobjflags[] =
   {"FLY",              0x00000100, 3}, // actor is flying
   {"NORADIUSHACK",     0x00000200, 3}, // bouncing missile obeys normal radius attack flags
   {"NOSOUNDCUTOFF",    0x00000400, 3}, // actor can play any number of sounds
+  {"RAVENRESPAWN",     0x00000800, 3}, // special respawns Raven style
 
   { NULL,              0 }             // NULL terminator
 };
@@ -1775,9 +1777,23 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       deh_LogPrintf("Processing Misc item '%s'\n", key);
       
       if(!strcasecmp(key,deh_misc[0]))       // Initial Health
-         initial_health = value;
+      {
+         playerclass_t *pc;
+         if((pc = E_PlayerClassForName("DoomMarine")))
+            pc->initialhealth = value;
+      }
       else if(!strcasecmp(key,deh_misc[1]))  // Initial Bullets
-         initial_bullets = value;
+      {
+         playerclass_t *pc;
+         if((pc = E_PlayerClassForName("DoomMarine")))
+         {
+            for(unsigned int i = 0; i < pc->numrebornitems; i++)
+            {
+               if(!strcasecmp(pc->rebornitems[i].itemname, "AmmoClip"))
+                  pc->rebornitems[i].amount = value;
+            }
+         }
+      }
       else if(!strcasecmp(key,deh_misc[2]))  // Max Health
       {
          if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
@@ -1835,7 +1851,9 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
          }
       }
       else if(!strcasecmp(key,deh_misc[9]))  // God Mode Health
+      {
          god_health = value;
+      }
       else if(!strcasecmp(key,deh_misc[10])) // IDFA Armor
       {
          if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))

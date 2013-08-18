@@ -38,7 +38,7 @@ enum
    DM_INSTAGIB      = 0x00000020, // any damage gibs players
 };
 
-// default dmflags for certain game modes
+// Default dmflags for certain game modes
 
 #define DMD_SINGLE      (0)
 #define DMD_COOP        (DM_WEAPONSTAY)

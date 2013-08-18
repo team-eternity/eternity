@@ -1,8 +1,10 @@
-// EDF for Eternity Engine v3.35.00
-//  This file contains sound definitions. Note that some fields in the
-//  sound block have very special semantics, so you should read the docs
-//  before you mess with this at all. Confusion is bound to result otherwise.
-
+//
+// EDF for Eternity Engine v3.40.50
+//
+// This file contains sound definitions. Note that some fields in the
+// sound block have very special semantics, so you should read the docs
+// before you mess with this at all. Confusion is bound to result otherwise.
+//
 
 // Include gamemode-specific sounds --------------------------------------------
 
@@ -16,77 +18,77 @@ includeifenabled("heretic/sounds.edf", "HERETIC")
 
 // MBF sounds ------------------------------------------------------------------
 
-# killough 11/98: dog sounds
+// killough 11/98: dog sounds
 
-sound dgsit  { pitchvariance = Doom; priority =  98; dehackednum = 109 }
-sound dgatk  { pitchvariance = Doom; priority =  70; dehackednum = 110 }
-sound dgact  { pitchvariance = Doom; priority = 120; dehackednum = 111 }
-sound dgdth  { pitchvariance = Doom; priority =  70; dehackednum = 112 }
-sound dgpain { pitchvariance = Doom; priority =  96; dehackednum = 113 }
+sound dgsit  { pitchvariance Doom; priority  98; dehackednum 109 }
+sound dgatk  { pitchvariance Doom; priority  70; dehackednum 110 }
+sound dgact  { pitchvariance Doom; priority 120; dehackednum 111 }
+sound dgdth  { pitchvariance Doom; priority  70; dehackednum 112 }
+sound dgpain { pitchvariance Doom; priority  96; dehackednum 113 }
 
 // Eternity Engine sounds ------------------------------------------------------
 
 sound eefly
 {
-   priority = 120
-   dehackednum = 114
-   clipping_dist = 512
-   close_dist = 64
+  priority      120
+  dehackednum   114
+  clipping_dist 512
+  close_dist    64
 }
 
-sound gloop  { pitchvariance = Doom; priority =  100; dehackednum = 115 }
-sound thundr { pitchvariance = Doom; priority =  96;  dehackednum = 116 }
-sound muck   { pitchvariance = Doom; priority =  100; dehackednum = 117 }
+sound gloop  { pitchvariance Doom; priority 100; dehackednum 115 }
+sound thundr { pitchvariance Doom; priority  96; dehackednum 116 }
+sound muck   { pitchvariance Doom; priority 100; dehackednum 117 }
 
 sound plfeet
 {
-   pitchvariance = Doom
-   priority = 96
-   dehackednum = 118
-   singularity = sg_oof
-   skinindex = sk_plfeet
+  pitchvariance Doom
+  priority      96
+  dehackednum   118
+  singularity   sg_oof
+  skinindex     sk_plfeet
 }
 
 sound plfall
 {
-   pitchvariance = Doom
-   priority = 96
-   dehackednum = 119
-   skinindex = sk_plfall
+  pitchvariance Doom
+  priority      96
+  dehackednum   119
+  skinindex     sk_plfall
 }
 
 sound fallht
 {
-   pitchvariance = Doom
-   priority = 96;
-   dehackednum = 120
-   skinindex = sk_fallht
+  pitchvariance Doom
+  priority      96
+  dehackednum   120
+  skinindex     sk_fallht
 }
 
-sound burn { pitchvariance = Doom; priority =  32; dehackednum = 121 }
+sound burn { pitchvariance Doom; priority 32; dehackednum 121 }
 
 sound eehtsz
 { 
-   pitchvariance = Doom
-   priority = 100
-   dehackednum = 122
-   clipping_dist = 640
-   close_dist = 96
+  pitchvariance Doom
+  priority      100
+  dehackednum   122
+  clipping_dist 640
+  close_dist    96
 }
 
 sound eedrip
 {
-   pitchvariance = Doom
-   priority = 100
-   dehackednum = 123
-   clipping_dist = 640
-   close_dist = 96
+  pitchvariance Doom
+  priority      100
+  dehackednum   123
+  clipping_dist 640
+  close_dist    96
 }
 
 sound Earthquake
 {
-   lump = "quake2";
-   dehackednum = 124
+  lump        "quake2";
+  dehackednum 124
 }
 
 // NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
@@ -98,20 +100,20 @@ sound Earthquake
 
 soundsequence EEDoorOpenNormal
 {
-   commands
-   @"
-      play EE_DoorOpen
-      nostopcutoff
-   "@
+  commands
+  @"
+    play EE_DoorOpen
+    nostopcutoff
+  "@
 }
 
 soundsequence EEDoorOpenBlazing
 {
-   commands
-   @"
-      play EE_BDoorOpen
-      nostopcutoff
-   "@
+  commands
+  @"
+    play EE_BDoorOpen
+    nostopcutoff
+  "@
 }
 
 // Note: All gamemode sequences will be kept here since they are related.
@@ -122,20 +124,20 @@ ifgametype(DOOM)
 
 soundsequence EEDoorCloseNormal
 {
-   commands
-   @"
-      play EE_DoorClose
-      nostopcutoff
-   "@
+  commands
+  @"
+    play EE_DoorClose
+    nostopcutoff
+  "@
 }
 
 soundsequence EEDoorCloseBlazing
 {
-   commands
-   @"
-      play EE_BDoorClose
-      nostopcutoff
-   "@
+  commands
+  @"
+    play EE_BDoorClose
+    nostopcutoff
+  "@
 }
 
 // Note: This sequence is only used in DOOM when comp_blazing is enabled.
@@ -143,11 +145,11 @@ soundsequence EEDoorCloseBlazing
 
 soundsequence EEDoorCloseBlazingComp
 {
-   commands
-   @"
-      play EE_BDoorClose
-      stopsound EE_BDoorClose
-   "@
+  commands
+  @"
+    play EE_BDoorClose
+    stopsound EE_BDoorClose
+  "@
 }
 
 endif()
@@ -158,20 +160,20 @@ ifgametype(HERETIC)
 
 soundsequence EEDoorCloseNormal
 {
-   commands
-   @"
-      play EE_DoorOpen
-      stopsound EE_DoorClose
-   "@
+  commands
+  @"
+    play EE_DoorOpen
+    stopsound EE_DoorClose
+  "@
 }
 
 soundsequence EEDoorCloseBlazing
 {
-   commands
-   @"
-      play EE_BDoorOpen
-      stopsound EE_BDoorClose
-   "@
+  commands
+  @"
+    play EE_BDoorOpen
+    stopsound EE_BDoorClose
+  "@
 }
 
 endif()
@@ -181,21 +183,21 @@ endif()
 // This is used by most plat types, like the ordinary down-wait-up-stay type
 soundsequence EEPlatNormal
 {
-   commands
-   @"
-      play EE_PlatStart
-      stopsound EE_PlatStop
-   "@
+  commands
+  @"
+    play EE_PlatStart
+    stopsound EE_PlatStop
+  "@
 }
 
 // This is used by raise-and-change plat types.
 soundsequence EEPlatRaise
 {
-   commands
-   @"
-      playloop EE_PlatMove 8
-      stopsound EE_PlatStop
-   "@
+  commands
+  @"
+    playloop EE_PlatMove 8
+    stopsound EE_PlatStop
+  "@
 }
 
 // This may seem pointless, but defining it allows the silent behavior of 
@@ -209,19 +211,19 @@ soundsequence EEPlatSilent
 // Used by most ceiling actions
 soundsequence EECeilingNormal
 {
-   commands
-   @"
-      playloop EE_FCMove 8
-   "@
+  commands
+  @"
+    playloop EE_FCMove 8
+  "@
 }
 
 // Used by "silent" crushers that aren't really silent
 soundsequence EECeilingSemiSilent
 {
-   commands
-   @"
-      stopsound EE_PlatStop
-   "@
+  commands
+  @"
+    stopsound EE_PlatStop
+  "@
 }
 
 // Like above for plats, but for ceilings.
@@ -233,10 +235,10 @@ soundsequence EECeilingSilent
 
 soundsequence EEFloor
 {
-   commands
-   @"
-      playloop EE_FCMove 8
-      stopsound EE_PlatStop
-   "@
+  commands
+  @"
+    playloop EE_FCMove 8
+    stopsound EE_PlatStop
+  "@
 }
 

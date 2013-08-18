@@ -71,8 +71,6 @@
 // dehacked support (and future flexibility).  Most var names came from the key
 // strings used in dehacked.
 
-int initial_health = 100;
-int initial_bullets = 50;
 int god_health = 100;   // these are used in cheats (see st_stuff.c)
 
 int bfgcells = 40;      // used in p_pspr.c
@@ -370,6 +368,50 @@ bool P_GivePower(player_t *player, int power)
 }
 
 //
+// P_RavenRespawn
+//
+// haleyjd 08/17/13: Perform Raven-style item respawning logic.
+//
+static void P_RavenRespawn(Mobj *special)
+{
+   // item respawning has to be turned on
+   bool willrespawn = ((dmflags & DM_ITEMRESPAWN) == DM_ITEMRESPAWN);
+
+   // Remove special status. Note this exempts the object from the DOOM-style
+   // item respawning code in Mobj::removeThinker.
+   special->flags &= ~MF_SPECIAL;
+
+   // Super items only respawn if so specified
+   if(special->flags3 & MF3_SUPERITEM && !(dmflags & DM_RESPAWNSUPER))
+      willrespawn = false; 
+
+   // NOITEMRESP items never respawn.
+   if(special->flags3 & MF3_NOITEMRESP)
+      willrespawn = false;
+
+   // DROPPED items never respawn.
+   if(special->flags & MF_DROPPED)
+      willrespawn = false;
+
+   // get states
+   state_t *respawn = E_GetStateForMobjInfo(special->info, "Pickup.Respawn");
+   state_t *remove  = E_GetStateForMobjInfo(special->info, "Pickup.Remove");
+
+   // Want to respawn, and can respawn?
+   if(willrespawn && respawn)
+      P_SetMobjState(special, respawn->index);
+   else
+   {
+      // Removing the item. If it has a remove state, set it.
+      // Otherwise, the item is removed now.
+      if(remove)
+         P_SetMobjState(special, remove->index);
+      else
+         special->removeThinker();
+   }
+}
+
+//
 // P_TouchSpecialThingNew
 //
 // INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
@@ -437,17 +479,18 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    // pickup is flagged to always be picked up even without benefit.
    if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
    {
-      // INVENTORY_TODO: support Heretic/Hexen-style item respawning via
-      // setting to a state instead of removing (should be a property of
-      // the "special" object).
-
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
       {
          // Award item count
          if(special->flags & MF_COUNTITEM)
             player->itemcount++;
-         special->removeThinker();
+
+         // Check for item respawning style: DOOM, or Raven
+         if(special->flags4 & MF4_RAVENRESPAWN)
+            P_RavenRespawn(special);
+         else
+            special->removeThinker();
       }
 
       // if picked up for benefit, or not silent when picked up without, do
@@ -971,7 +1014,12 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       player->itemcount++;
 
    if(removeobj)
-      special->removeThinker();
+   {
+      if(special->flags4 & MF4_RAVENRESPAWN)
+         P_RavenRespawn(special);
+      else
+         special->removeThinker();
+   }
 
    // haleyjd 07/08/05: inverted condition
    if(pickup_fx)

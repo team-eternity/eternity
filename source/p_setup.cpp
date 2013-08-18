@@ -2138,9 +2138,9 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
    return LEVEL_FORMAT_HEXEN;
 }
 
-void P_ConvertHereticSpecials(void); // haleyjd
+void P_ConvertHereticSpecials(); // haleyjd
 
-void P_InitThingLists(void); // haleyjd
+void P_InitThingLists(); // haleyjd
 
 //=============================================================================
 //
@@ -2553,7 +2553,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 //
 // P_Init
 //
-void P_Init(void)
+void P_Init()
 {
    P_InitParticleEffects();  // haleyjd 09/30/01
    P_InitSwitchList();

@@ -222,7 +222,7 @@ cfg_opt_t edf_ammofx_opts[] =
    CFG_END()
 };
 
-// Powerup fields
+// Powerup effect fields
 cfg_opt_t edf_powerfx_opts[] =
 {
    CFG_INT(KEY_DURATION,  -1, CFGF_NONE), // length of time to last

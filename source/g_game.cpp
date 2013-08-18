@@ -2093,13 +2093,13 @@ void G_PlayerReborn(int player)
    p->colormap    = playercolour;
    p->totalfrags  = totalfrags;
    p->skin        = playerskin;
-   p->pclass      = playerclass; // haleyjd: playerclass
-   p->inventory   = inventory;   // haleyjd: inventory
-   
-   p->usedown = p->attackdown = true;  // don't do anything immediately
+   p->pclass      = playerclass;              // haleyjd: playerclass
+   p->inventory   = inventory;                // haleyjd: inventory
    p->playerstate = PST_LIVE;
-   p->health = initial_health;  // Ty 03/12/98 - use dehacked values
-   p->quake = 0;                // haleyjd 01/21/07
+   p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
+   p->quake       = 0;                        // haleyjd 01/21/07
+
+   p->usedown = p->attackdown = true;         // don't do anything immediately
 
    // haleyjd 08/05/13: give reborn inventory
    E_ClearInventory(p);

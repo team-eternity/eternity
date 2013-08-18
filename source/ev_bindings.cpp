@@ -902,7 +902,7 @@ W1LINE(W1HticPlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
 W1LINE(W1LowerFloorTurboA, LowerFloorTurboA, 0, 0);
 
 // Heretic Line Type 70 - SR Lower Floor Turbo, Floorheight + 8
-WRLINE(SRLowerFloorTurboA, LowerFloorTurboA, 0, 0);
+SRLINE(SRLowerFloorTurboA, LowerFloorTurboA, 0, 0);
 
 // Heretic Line Type 71 - S1 Lower Floor Turbo, Floorheight + 8
 S1LINE(S1LowerFloorTurboA, LowerFloorTurboA, 0, 0);

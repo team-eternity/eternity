@@ -1958,7 +1958,7 @@ static void D_StartupMessage(void)
 static void D_DoomInit()
 {
    int p, slot;
-   int dmtype = 0;             // haleyjd 04/14/03
+   int dmtype = 0;          // haleyjd 04/14/03
    bool haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
 

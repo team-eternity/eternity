@@ -45,8 +45,6 @@ void P_Whistle(Mobj *actor, int mobjtype);
 
 extern int god_health;   // Ty 03/09/98 - deh support, see also p_inter.c
 // Ty 03/13/98 - externalized initial settings for respawned player
-extern int initial_health;
-extern int initial_bullets;
 extern int god_health;
 extern int bfgcells;
 

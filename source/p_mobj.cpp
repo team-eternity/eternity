@@ -1726,22 +1726,21 @@ void Mobj::removeThinker()
 {
    bool respawnitem = false;
 
-   if(this->flags3 & MF3_SUPERITEM)
+   // normal items respawn, and respawning barrels dmflag
+   if((this->flags & MF_SPECIAL) ||
+      ((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL)))
    {
-      // super items ONLY respawn when enabled through dmflags
-      respawnitem = ((dmflags & DM_RESPAWNSUPER) == DM_RESPAWNSUPER);
-   }
-   else
-   {
-      // normal items respawn, and respawning barrels dmflag
-      bool mayrespawn = 
-         ((this->flags & MF_SPECIAL) || 
-          ((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL)));
-
-      if(mayrespawn &&
-         !(this->flags  & MF_DROPPED) &&   // dropped items don't respawn
-         !(this->flags3 & MF3_NOITEMRESP)) // NOITEMRESP items don't respawn
-         respawnitem = true;
+      if(this->flags3 & MF3_SUPERITEM)
+      {
+         // super items ONLY respawn when enabled through dmflags
+         respawnitem = ((dmflags & DM_RESPAWNSUPER) == DM_RESPAWNSUPER);
+      }
+      else
+      {
+         if(!(this->flags  & MF_DROPPED) &&   // dropped items don't respawn
+            !(this->flags3 & MF3_NOITEMRESP)) // NOITEMRESP items don't respawn
+            respawnitem = true;
+      }
    }
 
    if(respawnitem)

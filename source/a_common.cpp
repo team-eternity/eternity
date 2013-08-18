@@ -692,5 +692,47 @@ void A_Detonate(actionargs_t *actionargs)
       E_HitWater(mo, mo->subsector->sector);
 }
 
+//=============================================================================
+//
+// Raven-style Item Respawn Actions
+//
+
+void A_HideThing(actionargs_t *actionargs)
+{
+   actionargs->actor->flags2 |= MF2_DONTDRAW;
+}
+
+void A_UnHideThing(actionargs_t *actionargs)
+{
+   actionargs->actor->flags2 &= ~MF2_DONTDRAW;
+}
+
+void A_RestoreArtifact(actionargs_t *actionargs)
+{
+   Mobj *arti = actionargs->actor;
+
+   arti->flags |= MF_SPECIAL;
+   P_SetMobjState(arti, arti->info->spawnstate);
+   S_StartSound(arti, arti->info->seesound);
+}
+
+void A_RestoreSpecialThing1(actionargs_t *actionargs)
+{
+   Mobj *thing = actionargs->actor;
+
+   // TODO
+   // Check for randomized respawns at collections (was Fire Mace specific)
+   thing->flags2 &= ~MF2_DONTDRAW;
+   S_StartSound(thing, thing->info->seesound);
+}
+
+void A_RestoreSpecialThing2(actionargs_t *actionargs)
+{
+   Mobj *thing = actionargs->actor;
+
+   thing->flags |= MF_SPECIAL;
+   P_SetMobjState(thing, thing->info->spawnstate);
+}
+
 // EOF
 

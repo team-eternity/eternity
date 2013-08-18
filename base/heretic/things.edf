@@ -4,9 +4,45 @@
 // Thing type definitions for Heretic gamemode.
 //
 
-thingtype CrystalVial : Mobj, 7081, 300
+// Pickup and Artifact base types, for Raven-style item respawning behavior
+
+thingtype HereticPickup
 {
-  cflags SPECIAL|FLOATBOB
+  cflags   SPECIAL|RAVENRESPAWN
+  seesound ht_respawn
+  states
+  @"
+  Pickup.Respawn:
+    ACLO E        1400 A_HideThing
+    ACLO A        4    A_RestoreSpecialThing1
+    ACLO BABCBCDC 4
+    ACLO D        4    A_RestoreSpecialThing2
+    stop
+  "@
+}
+
+thingtype HereticArtifact
+{
+  cflags   SPECIAL|RAVENRESPAWN
+  seesound ht_respawn
+  states
+  @"
+  Pickup.Respawn:
+    ACLO DCDCBCBABA 3
+    ACLO A          1400 A_HideThing
+    ACLO A          3    A_UnHideThing
+    ACLO BABCBCDC   3
+    ACLO D          3    A_RestoreArtifact
+    stop
+  Pickup.Remove:
+    ACLO DCDCBCBABA 3
+    stop
+  "@
+}
+
+thingtype CrystalVial : HereticPickup, 7081, 300
+{
+  addflags FLOATBOB
   acs_spawndata 
   { 
     num   23 
@@ -22,9 +58,9 @@ thingtype CrystalVial : Mobj, 7081, 300
   "@
 }
 
-thingtype SilverShield : Mobj, 7085, 301
+thingtype SilverShield : HereticPickup, 7085, 301
 {
-  cflags SPECIAL|FLOATBOB
+  addflags FLOATBOB
   acs_spawndata 
   {
     num   68 
@@ -40,9 +76,9 @@ thingtype SilverShield : Mobj, 7085, 301
   "@
 }
 
-thingtype EnchantedShield : Mobj, 7031, 302
+thingtype EnchantedShield : HereticPickup, 7031, 302
 {
-  cflags SPECIAL|FLOATBOB
+  addflags FLOATBOB
   acs_spawndata
   {
     num   69 
@@ -58,9 +94,9 @@ thingtype EnchantedShield : Mobj, 7031, 302
   "@
 }
 
-thingtype BagOfHolding : Mobj, 7008, 303
+thingtype BagOfHolding : HereticPickup, 7008, 303
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   acs_spawndata 
   {
     num   136 
@@ -76,9 +112,9 @@ thingtype BagOfHolding : Mobj, 7008, 303
   "@
 }
 
-thingtype MapScroll : Mobj, 7035, 304
+thingtype MapScroll : HereticPickup, 7035, 304
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   acs_spawndata 
   { 
     num 137
@@ -1457,7 +1493,7 @@ thingtype DsparilTeleFade : Mobj, -1, 361
 
 thingtype HereticGreenKey : Mobj, 7073, 362
 {
-  flags SPECIAL|NOTDMATCH
+  flags SPECIAL|RAVENRESPAWN|NOTDMATCH
   acs_spawndata
   {
     num   86
@@ -1475,7 +1511,7 @@ thingtype HereticGreenKey : Mobj, 7073, 362
 
 thingtype HereticBlueKey : Mobj, 7079, 363
 {
-  flags SPECIAL|NOTDMATCH
+  flags SPECIAL|RAVENRESPAWN|NOTDMATCH
   acs_spawndata
   {
     num   85
@@ -1493,7 +1529,7 @@ thingtype HereticBlueKey : Mobj, 7079, 363
 
 thingtype HereticYellowKey : Mobj, 7080, 364
 {
-  flags SPECIAL|NOTDMATCH
+  flags SPECIAL|RAVENRESPAWN|NOTDMATCH
   acs_spawndata
   {
     num   87
@@ -1958,10 +1994,9 @@ thingtype LichWhirlwind : Mobj, -1, 380
   "@
 }
 
-thingtype HAmmoWandWimpy : Mobj, 7010, 381
+thingtype HAmmoWandWimpy : HereticPickup, 7010, 381
 {
   spawnhealth 10
-  flags       SPECIAL
   acs_spawndata
   {
     num   11
@@ -1977,10 +2012,9 @@ thingtype HAmmoWandWimpy : Mobj, 7010, 381
   "@
 }
 
-thingtype HAmmoWandHefty : Mobj, 7012, 382
+thingtype HAmmoWandHefty : HereticPickup, 7012, 382
 {
   spawnhealth 50
-  flags       SPECIAL
   acs_spawndata
   {
     num   12
@@ -1996,10 +2030,9 @@ thingtype HAmmoWandHefty : Mobj, 7012, 382
   "@
 }
 
-thingtype HAmmoMaceWimpy : Mobj, 7013, 383
+thingtype HAmmoMaceWimpy : HereticPickup, 7013, 383
 {
   spawnhealth 20
-  flags       SPECIAL
   acs_spawndata
   {
     num   35
@@ -2015,10 +2048,9 @@ thingtype HAmmoMaceWimpy : Mobj, 7013, 383
   "@
 }
 
-thingtype HAmmoMaceHefty : Mobj, 7016, 384
+thingtype HAmmoMaceHefty : HereticPickup, 7016, 384
 {
   spawnhealth 100
-  flags       SPECIAL
   acs_spawndata
   {
     num   36
@@ -2034,10 +2066,9 @@ thingtype HAmmoMaceHefty : Mobj, 7016, 384
   "@
 }
 
-thingtype HAmmoCBowWimpy : Mobj, 7018, 385
+thingtype HAmmoCBowWimpy : HereticPickup, 7018, 385
 {
   spawnhealth 5
-  flags       SPECIAL
   acs_spawndata
   {
     num   33
@@ -2053,10 +2084,9 @@ thingtype HAmmoCBowWimpy : Mobj, 7018, 385
   "@
 }
 
-thingtype HAmmoCBowHefty : Mobj, 7019, 386
+thingtype HAmmoCBowHefty : HereticPickup, 7019, 386
 {
   spawnhealth 20
-  flags       SPECIAL
   acs_spawndata
   {
     num   34
@@ -2072,10 +2102,9 @@ thingtype HAmmoCBowHefty : Mobj, 7019, 386
   "@
 }
 
-thingtype HAmmoSkullWimpy : Mobj, 7020, 387
+thingtype HAmmoSkullWimpy : HereticPickup, 7020, 387
 {
   spawnhealth 20
-  flags       SPECIAL
   acs_spawndata
   {
     num   158 
@@ -2091,10 +2120,9 @@ thingtype HAmmoSkullWimpy : Mobj, 7020, 387
   "@
 }
 
-thingtype HAmmoSkullHefty : Mobj, 7021, 388
+thingtype HAmmoSkullHefty : HereticPickup, 7021, 388
 {
   spawnhealth 100
-  flags       SPECIAL
   acs_spawndata
   {
     num   159
@@ -2110,10 +2138,9 @@ thingtype HAmmoSkullHefty : Mobj, 7021, 388
   "@
 }
 
-thingtype HAmmoPhoenixWimpy : Mobj, 7022, 389
+thingtype HAmmoPhoenixWimpy : HereticPickup, 7022, 389
 {
   spawnhealth 1
-  flags       SPECIAL
   acs_spawndata
   {
     num   161
@@ -2129,10 +2156,9 @@ thingtype HAmmoPhoenixWimpy : Mobj, 7022, 389
   "@
 }
 
-thingtype HAmmoPhoenixHefty : Mobj, 7023, 390
+thingtype HAmmoPhoenixHefty : HereticPickup, 7023, 390
 {
   spawnhealth 10
-  flags       SPECIAL
   acs_spawndata
   {
     num   162
@@ -2148,10 +2174,9 @@ thingtype HAmmoPhoenixHefty : Mobj, 7023, 390
   "@
 }
 
-thingtype HAmmoBlasterWimpy : Mobj, 7054, 391
+thingtype HAmmoBlasterWimpy : HereticPickup, 7054, 391
 {
   spawnhealth 10
-  flags       SPECIAL
   acs_spawndata
   {
     num   37
@@ -2167,10 +2192,9 @@ thingtype HAmmoBlasterWimpy : Mobj, 7054, 391
   "@
 }
 
-thingtype HAmmoBlasterHefty : Mobj, 7055, 392
+thingtype HAmmoBlasterHefty : HereticPickup, 7055, 392
 {
   spawnhealth 25
-  flags       SPECIAL
   acs_spawndata
   {
     num   38
@@ -2423,9 +2447,9 @@ thingtype HereticPlayerSkull : Mobj, -1, 399
 
 // Artifacts
 
-thingtype HArtiInvisibility : Mobj, 7075, 400
+thingtype HArtiInvisibility : HereticArtifact, 7075, 400
 {
-  cflags       SPECIAL|COUNTITEM|FLOATBOB
+  addflags     COUNTITEM|FLOATBOB|SUPERITEM
   translucency 26624
   
   firstdecoratestate S_ARTI_INVS1
@@ -2437,9 +2461,9 @@ thingtype HArtiInvisibility : Mobj, 7075, 400
   "@
 }
 
-thingtype HArtiQuartzFlask : Mobj, 7082, 401
+thingtype HArtiQuartzFlask : HereticArtifact, 7082, 401
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_PTN2_1
   states
@@ -2450,9 +2474,9 @@ thingtype HArtiQuartzFlask : Mobj, 7082, 401
   "@
 }
 
-thingtype HArtiFly : Mobj, 7083, 402
+thingtype HArtiFly : HereticArtifact, 7083, 402
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_SOAR1
   states
@@ -2463,9 +2487,9 @@ thingtype HArtiFly : Mobj, 7083, 402
   "@
 }
 
-thingtype HArtiInvulnerability : Mobj, 7084, 403 
+thingtype HArtiInvulnerability : HereticArtifact, 7084, 403 
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB|SUPERITEM
   
   firstdecoratestate S_ARTI_INVU1
   states
@@ -2476,9 +2500,9 @@ thingtype HArtiInvulnerability : Mobj, 7084, 403
   "@
 }
 
-thingtype HArtiTomeOfPower : Mobj, 7086, 404
+thingtype HArtiTomeOfPower : HereticArtifact, 7086, 404
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_PWBK1
   states
@@ -2489,9 +2513,9 @@ thingtype HArtiTomeOfPower : Mobj, 7086, 404
   "@
 }
 
-thingtype HArtiEgg : Mobj, 7030, 405
+thingtype HArtiEgg : HereticArtifact, 7030, 405
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_EGGC1
   states
@@ -2502,9 +2526,9 @@ thingtype HArtiEgg : Mobj, 7030, 405
   "@
 }
 
-thingtype HArtiSuperHeal : Mobj, 7032, 406
+thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_SPHL1
   states
@@ -2515,9 +2539,9 @@ thingtype HArtiSuperHeal : Mobj, 7032, 406
   "@
 }
 
-thingtype HArtiTorch : Mobj, 7033, 407
+thingtype HArtiTorch : HereticArtifact, 7033, 407
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_TRCH1
   states
@@ -2528,9 +2552,9 @@ thingtype HArtiTorch : Mobj, 7033, 407
   "@
 }
 
-thingtype HArtiFireBomb : Mobj, 7034, 408
+thingtype HArtiFireBomb : HereticArtifact, 7034, 408
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_FBMB1
   states
@@ -2559,9 +2583,9 @@ thingtype HereticFireBomb : Mobj, -1, 409
   "@
 }
 
-thingtype HArtiTeleport : Mobj, 7036, 410
+thingtype HArtiTeleport : HereticArtifact, 7036, 410
 {
-  cflags SPECIAL|COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB
   
   firstdecoratestate S_ARTI_ATLP1
   states
@@ -2574,10 +2598,8 @@ thingtype HArtiTeleport : Mobj, 7036, 410
 
 // Weapons
 
-thingtype HWeaponGauntlets : Mobj, 7205, 411
+thingtype HWeaponGauntlets : HereticPickup, 7205, 411
 {
-  cflags SPECIAL
-  
   firstdecoratestate S_WGNT
   states
   @"
@@ -2587,10 +2609,8 @@ thingtype HWeaponGauntlets : Mobj, 7205, 411
   "@
 }
 
-thingtype HWeaponBlaster : Mobj, 7053, 412
+thingtype HWeaponBlaster : HereticPickup, 7053, 412
 {
-  cflags SPECIAL
-  
   firstdecoratestate S_BLSR
   states
   @"
@@ -2600,10 +2620,8 @@ thingtype HWeaponBlaster : Mobj, 7053, 412
   "@
 }
 
-thingtype HWeaponSkullRod : Mobj, 7204, 413
+thingtype HWeaponSkullRod : HereticPickup, 7204, 413
 {
-  cflags SPECIAL
-  
   firstdecoratestate S_WSKL
   states
   @"
@@ -2613,10 +2631,8 @@ thingtype HWeaponSkullRod : Mobj, 7204, 413
   "@
 }
 
-thingtype HWeaponPhoenixRod : Mobj, 7203, 414
+thingtype HWeaponPhoenixRod : HereticPickup, 7203, 414
 {
-  cflags SPECIAL
-  
   firstdecoratestate S_WPHX
   states
   @"
@@ -2626,10 +2642,8 @@ thingtype HWeaponPhoenixRod : Mobj, 7203, 414
   "@
 }
 
-thingtype HWeaponCrossbow : Mobj, 7201, 415
+thingtype HWeaponCrossbow : HereticPickup, 7201, 415
 {
-  cflags SPECIAL
-  
   firstdecoratestate S_WBOW
   states
   @"
@@ -2890,10 +2904,8 @@ thingtype HereticMaceSpot : Mobj, 7202, 431
   "@
 }
 
-thingtype HWeaponFireMace : Mobj, -1, 432
+thingtype HWeaponFireMace : HereticPickup, -1, 432
 {
-  cflags SPECIAL
-  
   firstdecoratestate S_WMCE
   states
   @"

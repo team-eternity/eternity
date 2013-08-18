@@ -671,7 +671,8 @@ enum
    MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
    MF4_FLY            = 0x00000100, // Actor is flying
    MF4_NORADIUSHACK   = 0x00000200, // Bouncing missiles obey normal radius attack flags
-   MF4_NOSOUNDCUTOFF  = 0x00000400  // Actor can play any number of sounds
+   MF4_NOSOUNDCUTOFF  = 0x00000400, // Actor can play any number of sounds
+   MF4_RAVENRESPAWN   = 0x00000800, // Special item respawns Raven-style
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
