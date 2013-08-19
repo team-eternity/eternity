@@ -1755,6 +1755,9 @@ void Mobj::removeThinker()
       }
    }
 
+   // haleyjd 08/19/13: ensure object is no longer in player body queue
+   G_DeQueuePlayerCorpse(this);
+
    // haleyjd 02/02/04: remove from tid hash
    P_RemoveThingTID(this);
 

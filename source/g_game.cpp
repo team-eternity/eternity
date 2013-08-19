@@ -204,7 +204,8 @@ extern skill_t startskill;      //note 0-based
 int defaultskill;               //note 1-based
 
 // killough 2/8/98: make corpse queue variable in size
-int bodyqueslot, bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
+size_t bodyqueslot; 
+int    bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 
 void *statcopy;       // for statistics driver
 
@@ -2126,34 +2127,63 @@ void G_PlayerReborn(int player)
 
 void P_SpawnPlayer(mapthing_t *mthing);
 
-// haleyjd 08/19/13: externalized player corpse queue from G_CheckSpot
-static Mobj   **bodyque;
-static size_t   queuesize;
+// haleyjd 08/19/13: externalized player corpse queue from G_CheckSpot; 
+// made into a PODCollection for encapsulation and safety.
+static PODCollection<Mobj *> bodyque;
 
 //
 // G_queuePlayerCorpse
 //
-// haleyjd 08/19/13: enqueue a player corpse; externalized from G_CheckSpot
+// haleyjd 08/19/13: enqueue a player corpse; externalized from G_CheckSpot.
+// * When bodyquesize is negative, player corpses are never removed.
+// * When bodyquesize is zero, player corpses get removed immediately.
+// * When bodyquesize is positive, that number of corpses are allowed to exist,
+//   and are removed from the queue FIFO when it fills up.
 //
-static void G_queuePlayerCorpse(int playernum)
+static void G_queuePlayerCorpse(Mobj *mo)
 {
    if(bodyquesize > 0)
    {
-      if(queuesize < (size_t)bodyquesize)
-      {
-         bodyque = erealloc(Mobj **, bodyque, bodyquesize * sizeof(*bodyque));
-         memset(bodyque+queuesize, 0, 
-                (bodyquesize-queuesize) * sizeof(*bodyque));
-         queuesize = bodyquesize;
-      }
+      size_t queuesize = static_cast<size_t>(bodyquesize);
+      size_t index     = bodyqueslot % queuesize;
+
+      if(bodyque.getLength() < queuesize)
+         bodyque.resize(queuesize);
       
-      if(bodyqueslot >= bodyquesize)
-         bodyque[bodyqueslot % bodyquesize]->removeThinker();
+      if(bodyque[index] != NULL)
+         bodyque[index]->removeThinker();
       
-      bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo;
+      bodyque[index] = mo;
+      bodyqueslot = (bodyqueslot + 1) % queuesize;
    }
    else if(!bodyquesize)
-      players[playernum].mo->removeThinker();   
+      mo->removeThinker();   
+}
+
+//
+// G_DeQueuePlayerCorpse
+//
+// haleyjd 08/19/13: If an Mobj in the bodyque is removed elsewhere, a dangling
+// reference would remain in the array. Call this to cleanse the queue.
+//
+void G_DeQueuePlayerCorpse(Mobj *mo)
+{
+   for(auto itr = bodyque.begin(); itr != bodyque.end(); itr++)
+   {
+      if(mo == *itr)
+         *itr = NULL;
+   }
+}
+
+//
+// G_ClearPlayerCorpseQueue
+//
+// haleyjd 08/19/13: For safety, we clear the queue fully now between levels.
+//
+void G_ClearPlayerCorpseQueue()
+{
+   bodyque.zero();
+   bodyqueslot = 0;
 }
 
 //
@@ -2203,7 +2233,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // flush an old corpse if needed
    // killough 2/8/98: make corpse queue have an adjustable limit
    // killough 8/1/98: Fix bugs causing strange crashes
-   G_queuePlayerCorpse(playernum);
+   G_queuePlayerCorpse(players[playernum].mo);
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);

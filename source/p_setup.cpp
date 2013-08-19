@@ -2483,9 +2483,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // killough 10/98: remove slime trails from wad
    P_RemoveSlimeTrails(); 
 
-   // Note: you don't need to clear player queue slots --
-   // a much simpler fix is in g_game.c -- killough 10/98   
-   bodyqueslot = 0;
+   // haleyjd 08/19/13: call new function to handle bodyque
+   G_ClearPlayerCorpseQueue();
    deathmatch_p = deathmatchstarts;
 
    // haleyjd 10/03/05: handle multiple map formats

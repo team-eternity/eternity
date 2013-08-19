@@ -217,7 +217,20 @@ public:
    void makeEmpty()
    {
       this->length = this->wrapiterator = 0;
-      memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+      if(this->ptrArray)
+         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+   }
+
+   //
+   // zero
+   //
+   // Zero out the storage but do not change any other properties, including
+   // length.
+   //
+   void zero()
+   {
+      if(this->ptrArray)
+         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
    }
 
    //
