@@ -267,18 +267,17 @@ public:
    //
    void resize(size_t n)
    {
-      if(n == this->length)
-         return; // nothing to do
-
-      if(n < this->length)
-         this->length = n;
-      else
+      // increasing?
+      if(n > this->length)
       {
+         // need to reallocate?
          if(n > this->numalloc)
             this->baseResize(n - this->numalloc);
-         this->length = n;
-         // TODO: new storage not initialized!
+         // ensure newly available slots are initialized
+         memset(&(this->ptrArray[this->length]), 0, (n - this->length) * sizeof(T));
       }
+      // set the new length, in all cases.
+      this->length = n;
    }
 };
 
