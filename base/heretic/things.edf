@@ -78,7 +78,7 @@ thingtype SilverShield : HereticPickup, 7085, 301
 
 thingtype EnchantedShield : HereticPickup, 7031, 302
 {
-  addflags FLOATBOB
+  addflags FLOATBOB|NOTSHAREWARE
   acs_spawndata
   {
     num   69 
@@ -186,7 +186,7 @@ thingtype PodGoo : Mobj, -1, 306
 
 thingtype PodGenerator : Mobj, 7043, 307
 {
-  flags NOSECTOR|NOBLOCKMAP
+  cflags NOSECTOR|NOBLOCKMAP
   acs_spawndata
   {
     num   126 
@@ -205,7 +205,7 @@ thingtype PodGenerator : Mobj, 7043, 307
 thingtype HangingSkull70 : Mobj, 7017, 308
 {
   height 70.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_SKULLHANG70_1
   states
@@ -219,7 +219,7 @@ thingtype HangingSkull70 : Mobj, 7017, 308
 thingtype HangingSkull60 : Mobj, 7024, 309 
 {
   height 60.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_SKULLHANG60_1
   states
@@ -233,7 +233,7 @@ thingtype HangingSkull60 : Mobj, 7024, 309
 thingtype HangingSkull45 : Mobj, 7025, 310
 {
   height 45.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_SKULLHANG45_1
   states
@@ -247,7 +247,7 @@ thingtype HangingSkull45 : Mobj, 7025, 310
 thingtype HangingSkull35 : Mobj, 7026, 311
 {
   height 35.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_SKULLHANG35_1
   states
@@ -261,7 +261,7 @@ thingtype HangingSkull35 : Mobj, 7026, 311
 thingtype Chandelier : Mobj, 7028, 312 
 {
   height 60.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_CHANDELIER1
   states
@@ -276,7 +276,7 @@ thingtype SerpentTorch : Mobj, 7027, 313
 {
   radius 12.0
   height 54.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_SERPTORCH1
   states
@@ -291,7 +291,7 @@ thingtype HereticPillarSmall : Mobj, 7029, 314
 {
   radius 16.0
   height 34.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_SMALLPILLAR
   states
@@ -306,7 +306,7 @@ thingtype HereticStalagmiteSmall : Mobj, 7037, 315
 {
   radius 8.0
   height 32.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_STALAGMITESMALL
   states
@@ -321,7 +321,7 @@ thingtype HereticStalagmiteLarge : Mobj, 7038, 316
 {
   radius 12.0
   height 64.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_STALAGMITELARGE
   states
@@ -336,7 +336,7 @@ thingtype HereticStalactiteSmall : Mobj, 7039, 317
 {
   radius 8.0
   height 36.0
-  flags  SOLID|SPAWNCEILING|NOGRAVITY
+  cflags SOLID|SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_STALACTITESMALL
   states
@@ -351,7 +351,7 @@ thingtype HereticStalactiteLarge : Mobj, 7040, 318
 {
   radius 12.0
   height 68.0
-  flags  SOLID|SPAWNCEILING|NOGRAVITY
+  cflags SOLID|SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_STALACTITELARGE
   states
@@ -366,7 +366,7 @@ thingtype FireBrazier : Mobj, 7076, 319
 {
   radius 16.0
   height 44.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_FIREBRAZIER1
   states
@@ -381,7 +381,7 @@ thingtype HereticBarrel : Mobj, 7044, 320
 {
   radius 12.0
   height 32.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_WOODBARREL
   states
@@ -396,7 +396,7 @@ thingtype HornedPillar : Mobj, 7047, 321
 {
   radius 14.0
   height 128.0
-  flags  SOLID
+  cflags SOLID
   
   firstdecoratestate S_BCOLUMN
   states
@@ -410,7 +410,7 @@ thingtype HornedPillar : Mobj, 7047, 321
 thingtype HereticMoss1 : Mobj, 7048, 322
 {
   height 23.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_MOSS1
   states
@@ -424,7 +424,7 @@ thingtype HereticMoss1 : Mobj, 7048, 322
 thingtype HereticMoss2 : Mobj, 7049, 323
 {
   height 27.0
-  flags  SPAWNCEILING|NOGRAVITY
+  cflags SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_MOSS2
   states
@@ -438,7 +438,7 @@ thingtype HereticMoss2 : Mobj, 7049, 323
 
 thingtype HereticWallTorch : Mobj, 7050, 324
 {
-  flags NOGRAVITY
+  cflags NOGRAVITY
   
   firstdecoratestate S_WALLTORCH1
   states
@@ -453,7 +453,7 @@ thingtype HereticCorpse : Mobj, 7051, 325
 {
   radius 8.0
   height 104.0
-  flags  SOLID|SPAWNCEILING|NOGRAVITY
+  cflags SOLID|SPAWNCEILING|NOGRAVITY
   
   firstdecoratestate S_HTICCORPSE
   states
@@ -469,7 +469,7 @@ thingtype KeyGizmo
 {
   radius 16.0
   height 50.0
-  flags  SOLID
+  cflags SOLID
 
   firstdecoratestate S_KEYGIZMO3
   states
@@ -519,7 +519,7 @@ thingtype KeyGizmoYellow : KeyGizmo, 7096, 328
 thingtype KeyGizmoOrb : Mobj, -1, 329
 {
   radius 16.0
-  flags  SOLID|NOGRAVITY
+  cflags SOLID|NOGRAVITY
   
   firstdecoratestate S_KGZ_START
   states
@@ -611,7 +611,7 @@ thingtype TeleGlitterBlue : Mobj, -1, 333
 
 thingtype HereticTeleFog : Mobj, -1, 334
 {
-  flags NOBLOCKMAP|NOGRAVITY
+  cflags NOBLOCKMAP|NOGRAVITY
   
   firstdecoratestate S_HTFOG1
   states
@@ -738,7 +738,7 @@ thingtype NitroGolemGhost : NitroGolem, 7046, 339
 
 thingtype GolemSoul : Mobj, -1, 340
 {
-  flags NOBLOCKMAP|NOGRAVITY
+  cflags NOBLOCKMAP|NOGRAVITY
   
   firstdecoratestate S_MUMMY_SOUL1
   states
@@ -843,12 +843,12 @@ thingtype Weredragon : Mobj, 7070, 342
 
 thingtype WeredragonShot : Mobj, -1, 343
 {
-  speed      12.0
-  fastspeed  20.0
-  radius     9.0
-  height     8.0
-  damage     4
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
+  speed     12.0
+  fastspeed 20.0
+  radius    9.0
+  height    8.0
+  damage    4
+  cflags    NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
   acs_spawndata
   {
     num   120
@@ -869,11 +869,11 @@ thingtype WeredragonShot : Mobj, -1, 343
 
 thingtype WeredragonSmoke : Mobj, -1, 344
 {
-  speed      10.0
-  radius     6.0
-  height     8.0
-  damage     2
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE
+  speed  10.0
+  radius 6.0
+  height 8.0
+  damage 2
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE
   
   firstdecoratestate S_PUFFY1
   states
@@ -1053,8 +1053,7 @@ thingtype Disciple : Mobj, 7015, 349
   attacksound     ht_wizatk
   painsound       ht_wizpai
   deathsound      ht_wizdth
-  flags           SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
-  flags3          ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  cflags          SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_normal "was schooled by a Disciple"
   obituary_melee  "was slapped by a Disciple"
   dropitem        HAmmoBlasterWimpy, 84, 10, +toss
@@ -1321,12 +1320,12 @@ thingtype SerpentRiderDsparil : Mobj, 7007, 355
 
 thingtype SRDsparilShot1 : Mobj, -1, 356
 {
-  speed      20.0
-  fastspeed  28.0
-  radius     10.0
-  height     10.0
-  damage     10
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
+  speed     20.0
+  fastspeed 28.0
+  radius    10.0
+  height    10.0
+  damage    10
+  cflags    NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
   acs_spawndata
   {
     num   144
@@ -1452,11 +1451,11 @@ thingtype DsparilSpark : Mobj, -1, 359
 
 thingtype DsparilShot2 : Mobj, -1, 360
 {
-  speed      6.0
-  radius     10.0
-  height     6.0
-  damage     10
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
+  speed  6.0
+  radius 10.0
+  height 6.0
+  damage 10
+  cflags NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
   acs_spawndata
   {
     num   145
@@ -1479,7 +1478,7 @@ thingtype DsparilShot2 : Mobj, -1, 360
 
 thingtype DsparilTeleFade : Mobj, -1, 361
 {
-  flags NOBLOCKMAP
+  cflags NOBLOCKMAP
   
   firstdecoratestate S_SOR2TELEFADE1
   states
@@ -1493,7 +1492,7 @@ thingtype DsparilTeleFade : Mobj, -1, 361
 
 thingtype HereticGreenKey : Mobj, 7073, 362
 {
-  flags SPECIAL|RAVENRESPAWN|NOTDMATCH
+  cflags SPECIAL|RAVENRESPAWN|NOTDMATCH
   acs_spawndata
   {
     num   86
@@ -1511,7 +1510,7 @@ thingtype HereticGreenKey : Mobj, 7073, 362
 
 thingtype HereticBlueKey : Mobj, 7079, 363
 {
-  flags SPECIAL|RAVENRESPAWN|NOTDMATCH
+  cflags SPECIAL|RAVENRESPAWN|NOTDMATCH
   acs_spawndata
   {
     num   85
@@ -1529,7 +1528,7 @@ thingtype HereticBlueKey : Mobj, 7079, 363
 
 thingtype HereticYellowKey : Mobj, 7080, 364
 {
-  flags SPECIAL|RAVENRESPAWN|NOTDMATCH
+  cflags SPECIAL|RAVENRESPAWN|NOTDMATCH
   acs_spawndata
   {
     num   87
@@ -1565,8 +1564,7 @@ thingtype HereticAmbienceWind : Mobj, 7042, 365
 
 thingtype HereticAmbienceWater : Mobj, 7041, 366
 {
-  spawnstate S_SND_WATERFALL
-  cflags     DONTDRAW
+  cflags DONTDRAW
   acs_spawndata
   {
     num   111
@@ -1585,14 +1583,14 @@ thingtype HereticAmbienceWater : Mobj, 7041, 366
 thingtype DsparilTeleSpot : Mobj, 7056, 367
 {
   height 32.0
-  flags  NOSECTOR|NOBLOCKMAP
+  cflags NOSECTOR|NOBLOCKMAP
 }
 
 thingtype HereticVolcano : Mobj, 7087, 368
 {
   radius          12.0
   height          20.0
-  flags           SOLID
+  cflags          SOLID
   obituary_normal "made a poor volcanologist"
   acs_spawndata
   {
@@ -1667,11 +1665,7 @@ thingtype VolcanoBallSmall : Mobj, -1, 370
 thingtype Maulotaur : Mobj, 7009, 371
 {
   spawnhealth     3000
-  seesound        ht_minsit
-  attacksound     ht_minat1
   painchance      25
-  painsound       ht_minpai
-  deathsound      ht_mindth
   speed           16
   radius          28.0
   height          100.0
@@ -1679,6 +1673,10 @@ thingtype Maulotaur : Mobj, 7009, 371
   damage          7
   dmgspecial      MinotaurCharge
   activesound     ht_minact
+  seesound        ht_minsit
+  attacksound     ht_minat1
+  painsound       ht_minpai
+  deathsound      ht_mindth
   cflags          SOLID|SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   obituary_normal "bowed down before the Maulotaur"
   obituary_melee  "was pounded flat by the Maulotaur"
@@ -1746,12 +1744,12 @@ thingtype Maulotaur : Mobj, 7009, 371
 
 thingtype MaulotaurShot : Mobj, -1, 372
 {
-  speed      20.0
-  fastspeed  26.0
-  radius     10.0
-  height     6.0
-  damage     3
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
+  speed     20.0
+  fastspeed 26.0
+  radius    10.0
+  height    6.0
+  damage    3
+  cflags    NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
   acs_spawndata
   {
     num   115     // note: different from zdoom  
@@ -2032,6 +2030,7 @@ thingtype HAmmoWandHefty : HereticPickup, 7012, 382
 
 thingtype HAmmoMaceWimpy : HereticPickup, 7013, 383
 {
+  addflags NOTSHAREWARE
   spawnhealth 20
   acs_spawndata
   {
@@ -2050,6 +2049,7 @@ thingtype HAmmoMaceWimpy : HereticPickup, 7013, 383
 
 thingtype HAmmoMaceHefty : HereticPickup, 7016, 384
 {
+  addflags NOTSHAREWARE
   spawnhealth 100
   acs_spawndata
   {
@@ -2105,6 +2105,7 @@ thingtype HAmmoCBowHefty : HereticPickup, 7019, 386
 thingtype HAmmoSkullWimpy : HereticPickup, 7020, 387
 {
   spawnhealth 20
+  addflags    NOTSHAREWARE
   acs_spawndata
   {
     num   158 
@@ -2123,6 +2124,7 @@ thingtype HAmmoSkullWimpy : HereticPickup, 7020, 387
 thingtype HAmmoSkullHefty : HereticPickup, 7021, 388
 {
   spawnhealth 100
+  addflags    NOTSHAREWARE
   acs_spawndata
   {
     num   159
@@ -2141,6 +2143,7 @@ thingtype HAmmoSkullHefty : HereticPickup, 7021, 388
 thingtype HAmmoPhoenixWimpy : HereticPickup, 7022, 389
 {
   spawnhealth 1
+  addflags    NOTSHAREWARE
   acs_spawndata
   {
     num   161
@@ -2159,6 +2162,7 @@ thingtype HAmmoPhoenixWimpy : HereticPickup, 7022, 389
 thingtype HAmmoPhoenixHefty : HereticPickup, 7023, 390
 {
   spawnhealth 10
+  addflags    NOTSHAREWARE
   acs_spawndata
   {
     num   162
@@ -2528,7 +2532,7 @@ thingtype HArtiEgg : HereticArtifact, 7030, 405
 
 thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
 {
-  addflags COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB|NOTSHAREWARE
   
   firstdecoratestate S_ARTI_SPHL1
   states
@@ -2585,7 +2589,7 @@ thingtype HereticFireBomb : Mobj, -1, 409
 
 thingtype HArtiTeleport : HereticArtifact, 7036, 410
 {
-  addflags COUNTITEM|FLOATBOB
+  addflags COUNTITEM|FLOATBOB|NOTSHAREWARE
   
   firstdecoratestate S_ARTI_ATLP1
   states
@@ -2622,6 +2626,8 @@ thingtype HWeaponBlaster : HereticPickup, 7053, 412
 
 thingtype HWeaponSkullRod : HereticPickup, 7204, 413
 {
+  addflags NOTSHAREWARE
+  
   firstdecoratestate S_WSKL
   states
   @"
@@ -2633,6 +2639,8 @@ thingtype HWeaponSkullRod : HereticPickup, 7204, 413
 
 thingtype HWeaponPhoenixRod : HereticPickup, 7203, 414
 {
+  addflags NOTSHAREWARE
+  
   firstdecoratestate S_WPHX
   states
   @"
@@ -2892,7 +2900,7 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
 
 thingtype HereticMaceSpot : Mobj, 7202, 431
 {
-  cflags NOSECTOR|NOBLOCKMAP
+  cflags NOSECTOR|NOBLOCKMAP|NOTSHAREWARE
    
   collectionspawn HWeaponFireMace, 64, 64
    

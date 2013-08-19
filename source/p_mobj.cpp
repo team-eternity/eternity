@@ -2130,6 +2130,13 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
        (mobjinfo[i]->flags & MF_COUNTKILL)))
       return NULL;        // sf
 
+   // haleyjd 08/18/13: Heretic includes some registered-only items in its
+   // first episode, as a bonus for play on the registered version. Unlike
+   // some other checks EE has removed, we still need to enforce this one as
+   // the items have no resources in the shareware IWAD.
+   if(GameModeInfo->flags & GIF_SHAREWARE && mobjinfo[i]->flags4 & MF4_NOTSHAREWARE)
+      return NULL;
+
    // spawn it
 spawnit:
 

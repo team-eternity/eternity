@@ -326,6 +326,7 @@ dehflags_t deh_mobjflags[] =
   {"NORADIUSHACK",     0x00000200, 3}, // bouncing missile obeys normal radius attack flags
   {"NOSOUNDCUTOFF",    0x00000400, 3}, // actor can play any number of sounds
   {"RAVENRESPAWN",     0x00000800, 3}, // special respawns Raven style
+  {"NOTSHAREWARE",     0x00001000, 3}, // item won't spawn in shareware gamemodes
 
   { NULL,              0 }             // NULL terminator
 };
