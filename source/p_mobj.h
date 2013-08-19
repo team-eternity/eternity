@@ -696,6 +696,7 @@ enum
    MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
+   MIF_PLYRCORPSE  = 0x00008000, // haleyjd: object has been in the player corpse queue
 };
 
 #endif
