@@ -53,11 +53,11 @@ protected:
    }
 
    //
-   // resize
+   // baseResize
    //
    // Resizes the internal array by the amount provided
    //
-   void resize(size_t amtToAdd)
+   void baseResize(size_t amtToAdd)
    {
       size_t newnumalloc = numalloc + amtToAdd;
       if(newnumalloc > numalloc)
@@ -166,7 +166,7 @@ public:
    // Parameterized constructor
    PODCollection(size_t initSize) : BaseCollection<T>()
    {
-      this->resize(initSize);
+      this->baseResize(initSize);
    }
 
    // Assignment
@@ -181,7 +181,7 @@ public:
       this->wrapiterator = other.wrapiterator;
       
       if(this->length > this->numalloc)
-         this->resize(this->length - oldlength);
+         this->baseResize(this->length - oldlength);
 
       memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));
    }
@@ -228,7 +228,7 @@ public:
    void add(const T &newItem)
    {
       if(this->length >= this->numalloc)
-         this->resize(this->length ? this->length : 32); // double array size
+         this->baseResize(this->length ? this->length : 32); // double array size
       this->ptrArray[this->length] = newItem;
       ++this->length;
    }
@@ -241,7 +241,7 @@ public:
    T &addNew()
    {
       if(this->length >= this->numalloc)
-         this->resize(this->length ? this->length : 32);
+         this->baseResize(this->length ? this->length : 32);
       memset(&(this->ptrArray[this->length]), 0, sizeof(T));
       
       return this->ptrArray[this->length++];
@@ -258,6 +258,27 @@ public:
          I_Error("PODCollection::pop: array underflow\n");
       
       return this->ptrArray[--this->length];
+   }
+
+   //
+   // resize
+   //
+   // Change the length of the array.
+   //
+   void resize(size_t n)
+   {
+      if(n == this->length)
+         return; // nothing to do
+
+      if(n < this->length)
+         this->length = n;
+      else
+      {
+         if(n > this->numalloc)
+            this->baseResize(n - this->numalloc);
+         this->length = n;
+         // TODO: new storage not initialized!
+      }
    }
 };
 
@@ -281,7 +302,7 @@ public:
    // Parameterized constructor
    Collection(size_t initSize) : BaseCollection<T>(), prototype(NULL)
    {
-      this->resize(initSize);
+      this->baseResize(initSize);
    }
    
    // Destructor

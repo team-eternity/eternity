@@ -528,7 +528,7 @@ static void D_ArbitrateNetStart()
             netbuffer->starttic = (startepisode-1) * 64 + startmap;
             netbuffer->player = version;
 
-            if(GAME_OPTION_SIZE > sizeof netbuffer->d.data)
+            if(GAME_OPTION_SIZE > sizeof(netbuffer->d.data))
                I_Error("D_ArbitrateNetStart: GAME_OPTION_SIZE"
                        " too large w.r.t. BACKUPTICS\n");
 

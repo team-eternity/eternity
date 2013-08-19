@@ -58,6 +58,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
@@ -94,11 +95,11 @@
 static char     eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
-static char     *demoname;
-static bool      netdemo;
-static byte     *demobuffer;   // made some static -- killough
+static char    *demoname;
+static bool     netdemo;
+static byte    *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
-static byte     *demo_p;
+static byte    *demo_p;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 
 WadDirectory *g_dir = &wGlobalDir;
@@ -132,7 +133,6 @@ int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
 bool            demorecording;
 bool            demoplayback;
-/*bool           timedemo_menuscreen;*/
 bool            singledemo;           // quit after playing a demo from cmdline
 bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
@@ -2126,6 +2126,36 @@ void G_PlayerReborn(int player)
 
 void P_SpawnPlayer(mapthing_t *mthing);
 
+// haleyjd 08/19/13: externalized player corpse queue from G_CheckSpot
+static Mobj   **bodyque;
+static size_t   queuesize;
+
+//
+// G_queuePlayerCorpse
+//
+// haleyjd 08/19/13: enqueue a player corpse; externalized from G_CheckSpot
+//
+static void G_queuePlayerCorpse(int playernum)
+{
+   if(bodyquesize > 0)
+   {
+      if(queuesize < (size_t)bodyquesize)
+      {
+         bodyque = erealloc(Mobj **, bodyque, bodyquesize * sizeof(*bodyque));
+         memset(bodyque+queuesize, 0, 
+                (bodyquesize-queuesize) * sizeof(*bodyque));
+         queuesize = bodyquesize;
+      }
+      
+      if(bodyqueslot >= bodyquesize)
+         bodyque[bodyqueslot % bodyquesize]->removeThinker();
+      
+      bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo;
+   }
+   else if(!bodyquesize)
+      players[playernum].mo->removeThinker();   
+}
+
 //
 // G_CheckSpot
 //
@@ -2173,27 +2203,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // flush an old corpse if needed
    // killough 2/8/98: make corpse queue have an adjustable limit
    // killough 8/1/98: Fix bugs causing strange crashes
-
-   if(bodyquesize > 0)
-   {
-      static Mobj **bodyque;
-      static size_t queuesize;
-
-      if(queuesize < (unsigned int)bodyquesize)
-      {
-         bodyque = erealloc(Mobj **, bodyque, bodyquesize*sizeof*bodyque);
-         memset(bodyque+queuesize, 0, 
-                (bodyquesize-queuesize)*sizeof*bodyque);
-         queuesize = bodyquesize;
-      }
-      
-      if(bodyqueslot >= bodyquesize) 
-         bodyque[bodyqueslot % bodyquesize]->removeThinker();
-      
-      bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo; 
-   } 
-   else if(!bodyquesize)
-      players[playernum].mo->removeThinker();
+   G_queuePlayerCorpse(playernum);
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);
@@ -2951,13 +2961,13 @@ byte *G_WriteOptions(byte *demoptr)
    *demoptr++ = (byte)( rngseed        & 0xff); // byte 14
    
    // Options new to v2.03 begin here
-   *demoptr++ = monster_infighting;   // killough 7/19/98 -- byte 15
+   *demoptr++ = monster_infighting;        // killough 7/19/98 -- byte 15
    
-   *demoptr++ = dogs;                 // killough 7/19/98 -- byte 16
+   *demoptr++ = dogs;                      // killough 7/19/98 -- byte 16
    
-   *demoptr++ = bfgtype;              // killough 7/19/98 -- byte 17
+   *demoptr++ = bfgtype;                   // killough 7/19/98 -- byte 17
    
-   *demoptr++ = 0;                    // unused - (beta mode) -- byte 18
+   *demoptr++ = 0;                         // unused - (beta mode) -- byte 18
    
    *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
    *demoptr++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
@@ -2970,27 +2980,24 @@ byte *G_WriteOptions(byte *demoptr)
    
    *demoptr++ = help_friends;              // killough 9/9/98 -- byte 24
    
-   *demoptr++ = dog_jumping; // byte 25
+   *demoptr++ = dog_jumping;               // byte 25
    
-   *demoptr++ = monkeys;     // byte 26
+   *demoptr++ = monkeys;                   // byte 26
    
-   {   // killough 10/98: a compatibility vector now
-      int i;
-      for(i = 0; i < COMP_TOTAL; i++)
-         *demoptr++ = comp[i] != 0;
-   }
-   // bytes 27 - 58 : comp
+   // killough 10/98: a compatibility vector now
+   for(int i = 0; i < COMP_TOTAL; i++)
+      *demoptr++ = comp[i] != 0;           // bytes 27 - 58 : comp   
    
    // haleyjd 05/23/04: autoaim is sync critical
-   *demoptr++ = autoaim; // byte 59
+   *demoptr++ = autoaim;                   // byte 59
 
    // haleyjd 04/06/05: allowmlook is sync critical
-   *demoptr++ = allowmlook; // byte 60
+   *demoptr++ = allowmlook;                // byte 60
 
    // haleyjd 06/07/12: pitchedflight
-   *demoptr++ = pitchedflight; // byte 61
+   *demoptr++ = pitchedflight;             // byte 61
    
-   // CURRENT BYTES LEFT: 2
+   // CURRENT BYTES LEFT: 3
 
    //----------------
    // Padding at end
