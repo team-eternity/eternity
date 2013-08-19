@@ -2151,7 +2151,10 @@ static void G_queuePlayerCorpse(Mobj *mo)
          bodyque.resize(queuesize);
       
       if(bodyque[index] != NULL)
+      {
+         bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
          bodyque[index]->removeThinker();
+      }
       
       mo->intflags |= MIF_PLYRCORPSE;
       bodyque[index] = mo;
