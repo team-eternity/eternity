@@ -110,6 +110,9 @@ public:
       return ret;
    }
    
+   // Obtain the wrap iterator position
+   size_t getWrapIteratorPos() const { return wrapiterator; }
+
    //
    // at
    //
@@ -142,6 +145,7 @@ public:
       return ptrArray[index];
    }
 
+   // STL-compatible iterator semantics
    typedef T *iterator;
 
    T *begin() const { return ptrArray; }
