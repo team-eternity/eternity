@@ -327,6 +327,11 @@ public:
       return static_cast<M *>(getObjectType(M::StaticType));
    }
 
+   template<typename M> M *getObjectKeyAndTypeEx(size_t keyIndex)
+   {
+      return static_cast<M *>(getObjectKeyAndType(keyIndex, RTTI(M)));
+   }
+
    // Iterators
    // * By Key
    MetaObject *getNextObject(MetaObject *object, const char *key);

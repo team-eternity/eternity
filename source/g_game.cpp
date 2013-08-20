@@ -2199,12 +2199,12 @@ void G_ClearPlayerCorpseQueue()
 //
 static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 {
-   fixed_t     x, y;
+   fixed_t      x, y;
    subsector_t *ss;
-   unsigned    an;
-   Mobj      *mo;
-   int         i;
-   fixed_t     mtcos, mtsin;
+   unsigned     an;
+   Mobj        *mo;
+   int          i;
+   fixed_t      mtcos, mtsin;
 
    if(!players[playernum].mo)
    {
@@ -2402,7 +2402,7 @@ void G_DoReborn(int playernum)
       int i;
       Mobj *fog = NULL;
       
-      // first dissasociate the corpse
+      // first disassociate the corpse
       players[playernum].mo->player = NULL;
 
       // spawn at random spot if in deathmatch
@@ -2448,7 +2448,7 @@ void G_DoReborn(int playernum)
    }
 }
 
-void G_ScreenShot(void)
+void G_ScreenShot()
 {
    gameaction = ga_screenshot;
 }
@@ -2474,7 +2474,7 @@ int cpars[34] =
 //
 // G_WorldDone
 //
-void G_WorldDone(void)
+void G_WorldDone()
 {
    gameaction = ga_worlddone;
 
@@ -2589,7 +2589,7 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 }
 
 // killough 7/19/98: Marine's best friend :)
-static int G_GetHelpers(void)
+static int G_GetHelpers()
 {
    int j = M_CheckParm ("-dog");
    
@@ -2602,7 +2602,7 @@ static int G_GetHelpers(void)
 // killough 3/1/98: function to reload all the default parameter
 // settings before a new game begins
 
-void G_ReloadDefaults(void)
+void G_ReloadDefaults()
 {
    // killough 3/1/98: Initialize options based on config file
    // (allows functions above to load different values for demos
@@ -2679,16 +2679,20 @@ void G_ReloadDefaults(void)
    G_ScrambleRand();
 }
 
-        // sf: seperate function
+//
+// G_ScrambleRand
+//
+// killough 3/26/98: shuffle random seed
+// sf: seperate function
+//
 void G_ScrambleRand()
-{                            // killough 3/26/98: shuffle random seed
-   // haleyjd: restored MBF code
+{
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
    rngseed = (unsigned int) time(NULL);
 }
 
-void G_DoNewGame (void)
+void G_DoNewGame()
 {
    //G_StopDemo();
    G_ReloadDefaults();            // killough 3/1/98
@@ -2773,13 +2777,11 @@ static MetaKeyIndex speedsetKey("speedset");
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   MetaObject *o;
-   MetaTable  *meta = mobjinfo[thingtype]->meta;
+   MetaSpeedSet *mss;
+   MetaTable    *meta = mobjinfo[thingtype]->meta;
 
-   if((o = meta->getObjectKeyAndType(speedsetKey, RTTI(MetaSpeedSet))))
-   {
-      static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
-   }
+   if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
+      mss->setSpeeds(nspeed, fspeed);
    else
       meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
@@ -2791,8 +2793,7 @@ void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
    int i;
-   MetaObject *o;
-   size_t metaKey = speedsetKey.getIndex();
+   MetaSpeedSet *mss;
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2814,10 +2815,8 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
-            {
-               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
-            }
+            if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
+               mobjinfo[i]->speed = mss->getFastSpeed();
          }
       }
       else
@@ -2828,16 +2827,16 @@ void G_SetFastParms(int fast_pending)
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
-            {
-               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
-            }
+            if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
+               mobjinfo[i]->speed = mss->getNormalSpeed();
          }
       }
    }
 }
 
-
+//
+// G_InitNewNum
+//
 void G_InitNewNum(skill_t skill, int episode, int map)
 {
    G_InitNew(skill, G_GetNameForMap(episode, map) );
@@ -3244,7 +3243,7 @@ static void G_BeginRecordingOld()
    *demo_p++ = nomonsters;
    *demo_p++ = consoleplayer;
 
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
       *demo_p++ = playeringame[i];
 }
 
