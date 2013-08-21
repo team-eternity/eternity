@@ -84,6 +84,17 @@ protected:
       wrapiterator = 0;
    }
 
+   //
+   // checkWrapIterator
+   //
+   // Certain operations may invalidate the wrap iterator.
+   //
+   void checkWrapIterator()
+   {
+      if(wrapiterator >= length)
+         wrapiterator = 0;
+   }
+
 public:
    // getLength
    size_t getLength() const { return length; }
@@ -112,6 +123,14 @@ public:
    
    // Obtain the wrap iterator position
    size_t getWrapIteratorPos() const { return wrapiterator; }
+   
+   // Set the wrap iterator position, if the indicated position is valid
+   void setWrapIteratorPos(size_t i)
+   {
+      if(i < length)
+         wrapiterator = i;
+   }
+
 
    //
    // at
@@ -274,7 +293,10 @@ public:
       if(!this->ptrArray || !this->length)
          I_Error("PODCollection::pop: array underflow\n");
       
-      return this->ptrArray[--this->length];
+      const T &ret = this->ptrArray[--this->length];
+      this->checkWrapIterator();
+
+      return ret;
    }
 
    //
@@ -295,6 +317,7 @@ public:
       }
       // set the new length, in all cases.
       this->length = n;
+      this->checkWrapIterator();
    }
 };
 
