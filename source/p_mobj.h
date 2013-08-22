@@ -203,6 +203,9 @@ public:
    virtual void removeThinker();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
+
+   // Methods
+   void copyPosition(const Mobj *other);
    
    // Data members
 

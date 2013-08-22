@@ -39,12 +39,14 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "metaapi.h"
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_mobjcol.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -718,10 +720,14 @@ void A_RestoreArtifact(actionargs_t *actionargs)
 
 void A_RestoreSpecialThing1(actionargs_t *actionargs)
 {
-   Mobj *thing = actionargs->actor;
+   Mobj       *thing = actionargs->actor;
+   const char *spot  = thing->info->meta->getString("itemrespawnat", "");
+ 
+   // Check for randomized respawns at collections (was Fire Mace specific)   
+   MobjCollection *col;
+   if(*spot && (col = MobjCollections.collectionForName(spot)))
+      col->moveToRandom(thing);
 
-   // TODO
-   // Check for randomized respawns at collections (was Fire Mace specific)
    thing->flags2 &= ~MF2_DONTDRAW;
    S_StartSound(thing, thing->info->seesound);
 }

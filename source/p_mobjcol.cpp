@@ -37,6 +37,7 @@
 #include "metaapi.h"
 #include "metaspawn.h"
 #include "m_qstrkeys.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
 
@@ -140,6 +141,23 @@ bool MobjCollection::startupSpawn()
    }
 
    return res;
+}
+
+//
+// MobjCollection::moveToRandom
+//
+// Move an object to a random spot in the collection.
+//
+void MobjCollection::moveToRandom(Mobj *actor)
+{
+   if(isEmpty())
+      return;
+
+   const Mobj *spot = getRandom(pr_moverandom);
+   P_UnsetThingPosition(actor);
+   actor->copyPosition(spot);
+   P_SetThingPosition(actor);
+   P_AdjustFloorClip(actor);
 }
 
 //=============================================================================

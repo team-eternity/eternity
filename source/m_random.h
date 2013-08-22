@@ -203,21 +203,22 @@ typedef enum {
   pr_wraithfx4b,
   pr_wraithfx4c,
   pr_ettin,
-  pr_affritrock, // A_AffritSpawnRock
-  pr_smbounce,   // A_SmBounce
-  pr_affrits,    // A_AffritSplotch
-  pr_icelook,    // A_IceGuyLook
+  pr_affritrock,  // A_AffritSpawnRock
+  pr_smbounce,    // A_SmBounce
+  pr_affrits,     // A_AffritSplotch
+  pr_icelook,     // A_IceGuyLook
   pr_icelook2,
-  pr_icechase,   // A_IceGuyChase
+  pr_icechase,    // A_IceGuyChase
   pr_icechase2, 
-  pr_dragonfx,   // A_DragonFX2
-  pr_dropmace,   // A_DropMace
-  pr_rip,        // ripper missile damage
-  pr_casing,     // A_CasingThrust
-  pr_genrefire,  // A_GenRefire
-  pr_decjump,    // A_Jump
+  pr_dragonfx,    // A_DragonFX2
+  pr_dropmace,    // A_DropMace
+  pr_rip,         // ripper missile damage
+  pr_casing,      // A_CasingThrust
+  pr_genrefire,   // A_GenRefire
+  pr_decjump,     // A_Jump
   pr_decjump2,
-  pr_spotspawn,  // For use with MobjCollection::spawnAtRandom
+  pr_spotspawn,   // For use with MobjCollection::spawnAtRandom
+  pr_moverandom,  // For use with MobjCollection::moveToRandom
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

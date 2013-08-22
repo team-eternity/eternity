@@ -1569,6 +1569,29 @@ void Mobj::updateThinker()
    addToThreadedList(tclass);
 }
 
+//
+// Mobj::copyPosition
+//
+// Copy all the location data from one Mobj to another.
+//
+void Mobj::copyPosition(const Mobj *other)
+{
+   x          = other->x;
+   y          = other->y;
+   z          = other->z;
+   groupid    = other->groupid;
+   floorz     = other->floorz;
+   ceilingz   = other->ceilingz;
+   dropoffz   = other->dropoffz;
+   passfloorz = other->passfloorz;
+   passceilz  = other->passceilz;
+   secfloorz  = other->secfloorz;
+   secceilz   = other->secceilz;
+
+   intflags  &= ~(MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ);
+   intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
+}
+
 extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 

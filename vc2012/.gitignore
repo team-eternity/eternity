@@ -4,3 +4,4 @@
 *.user
 Debug
 Release
+*.opensdf

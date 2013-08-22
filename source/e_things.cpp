@@ -125,6 +125,7 @@ int UnknownThingType;
 
 // Special Spawning
 #define ITEM_TNG_COLSPAWN     "collectionspawn"
+#define ITEM_TNG_ITEMRESPAT   "itemrespawnat"
 
 // Damage Properties
 #define ITEM_TNG_DAMAGE       "damage"
@@ -514,6 +515,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_DEFSPRITE,       NULL,          CFGF_NONE), \
    CFG_SEC(ITEM_TNG_ACS_SPAWN,       acs_data,      CFGF_NOCASE), \
    CFG_STR(ITEM_TNG_REMDROPITEM,     "",            CFGF_MULTI), \
+   CFG_STR(ITEM_TNG_ITEMRESPAT,      "",            CFGF_NONE), \
    CFG_FLAG(ITEM_TNG_CLRDROPITEM,    0,             CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_RADIUS,        20.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_HEIGHT,        16.0f,         CFGF_NONE), \
@@ -1563,6 +1565,28 @@ static void E_processCollectionSpawn(mobjinfo_t *mi, cfg_t *spawn)
    MobjCollections.addCollection(mi->name);
 }
 
+// Collection item respawning
+
+static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
+{
+   if(*name)
+   {
+      if(E_ThingNumForName(name) < 0)
+      {
+         E_EDFLoggedWarning(2, 
+            "Warning: Unknown thingtype '%s' specified as itemrespawnat for '%s'",
+            name, mi->name);
+      }
+      mi->meta->setString("itemrespawnat", name);
+
+      // create a collection for the respawn spot thingtype, if it hasn't been
+      // created already.
+      MobjCollections.addCollection(name);
+   }
+   else
+      mi->meta->removeStringNR("itemrespawnat");
+}
+
 //
 // E_ColorCB
 //
@@ -2269,6 +2293,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          mobjinfo[i]->particlefx = E_ParseFlags(tempstr, &particle_flags);
    }
 
+   // *************************** ITEM PROPERTIES ****************************
+
    // 08/06/13: check for cleardropitems flag
    if(cfg_size(thingsec, ITEM_TNG_CLRDROPITEM) > 0)
       E_clearDropItems(mobjinfo[i]);
@@ -2295,6 +2321,16 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    // 08/06/13: process dropitems
    E_processDropItems(mobjinfo[i], thingsec);
+
+   // 08/15/13: process collection spawn
+   if(cfg_size(thingsec, ITEM_TNG_COLSPAWN) > 0)
+      E_processCollectionSpawn(mobjinfo[i], cfg_getmvprop(thingsec, ITEM_TNG_COLSPAWN));
+
+   // 08/22/13: item respawn at collection
+   if(IS_SET(ITEM_TNG_ITEMRESPAT))
+      E_processItemRespawnAt(mobjinfo[i], cfg_getstr(thingsec, ITEM_TNG_ITEMRESPAT));
+
+   // ************************************************************************
 
    // 07/13/03: process mod
    if(IS_SET(ITEM_TNG_MOD))
@@ -2363,10 +2399,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       mobjinfo[i]->dmgspecial = tempint;
    }
-
-   // 08/15/13: process collection spawn
-   if(cfg_size(thingsec, ITEM_TNG_COLSPAWN) > 0)
-      E_processCollectionSpawn(mobjinfo[i], cfg_getmvprop(thingsec, ITEM_TNG_COLSPAWN));
 
    // 09/26/04: process alternate sprite
    if(IS_SET(ITEM_TNG_SKINSPRITE))

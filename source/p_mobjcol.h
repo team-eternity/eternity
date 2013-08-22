@@ -60,6 +60,7 @@ public:
    bool spawnAtRandom(const char *type, pr_class_t prnum, 
                       int spchance, int coopchance, int dmchance);
    bool startupSpawn();
+   void moveToRandom(Mobj *actor);
 };
 
 // MobjCollectionSet maintains a global hash of MobjCollection objects that
