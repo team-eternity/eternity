@@ -108,7 +108,7 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 // The second argument is its DEH name, or NULL if it's not supported by -deh.
 //
 // The third argument is a combination of the bitmasks:
-// {always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh, beta_only},
+// { always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh },
 // which excludes the cheat during certain modes of play.
 //
 // The fourth argument is the handler function.
@@ -119,147 +119,58 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 // via a pointer to a buffer (after folding any letters to lowercase).
 //
 
-struct cheat_s cheat[] = {
-  {"idmus",      "Change music",      always,
-   cheat_mus,      -2},
-
-  {"idchoppers", "Chainsaw",          not_net | not_demo,
-   cheat_choppers, 0 },
-
-  {"iddqd",      "God mode",          not_net | not_demo,
-   cheat_god, 0  },
-
-  {"idk",        NULL,                not_net | not_demo | not_deh,
-   cheat_k, 0 },  // The most controversial cheat code in Doom history!!!
-
-  {"idkfa",      "Ammo & Keys",       not_net | not_demo,
-   cheat_kfa, 0 },
-
-  {"idfa",       "Ammo",              not_net | not_demo,
-   cheat_fa, 0  },
-
-  {"idspispopd", "No Clipping 1",     not_net | not_demo,
-   cheat_noclip, 0 },
-
-  {"idclip",     "No Clipping 2",     not_net | not_demo,
-   cheat_noclip, 0 },
-
-  {"idbeholdv",  "Invincibility",     not_net | not_demo,
-   cheat_pw,  pw_invulnerability },
-
-  {"idbeholds",  "Berserk",           not_net | not_demo,
-   cheat_pw,  pw_strength        },
-
-  {"idbeholdi",  "Invisibility",      not_net | not_demo,  
-   cheat_pw,  pw_invisibility    },
-
-  {"idbeholdr",  "Radiation Suit",    not_net | not_demo,
-   cheat_pw,  pw_ironfeet        },
-
-  {"idbeholda",  "Auto-map",          not_net | not_demo,
-   cheat_pw,  pw_allmap          },
-
-  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo,
-   cheat_pw,  pw_infrared        },
-
-  {"idbehold",   "BEHOLD menu",       not_net | not_demo,
-   cheat_behold, 0 },
-
-  {"idclev",     "Level Warp",        not_net | not_demo | not_menu,
-   cheat_clev,    -2},
-
-  {"idmypos",    "Player Position",   not_net | not_demo,
-   cheat_mypos, 0    },
-
-  {"comp",    NULL,                   not_net | not_demo,
-   cheat_comp, 0     },     // phares
-
-  {"killem",     NULL,                not_net | not_demo,
-   cheat_massacre, 0 },     // jff 2/01/98 kill all monsters
-
-  {"iddt",       "Map cheat",         not_dm,
-   cheat_ddt, 0      },     // killough 2/07/98: moved from am_map.c
-
-  {"hom",     NULL,                   always,
-   cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
-
-  {"key",     NULL,                   not_net | not_demo, 
-   cheat_key, 0   },     // killough 2/16/98: generalized key cheats
-
-  {"keyr",    NULL,                   not_net | not_demo,
-   cheat_keyx, 0  },
-
-  {"keyy",    NULL,                   not_net | not_demo,
-   cheat_keyx, 0  },
-
-  {"keyb",    NULL,                   not_net | not_demo,
-   cheat_keyx, 0  },
-
-  {"keyrc",   NULL,                   not_net | not_demo, 
-   cheat_keyxx, it_redcard    },
-
-  {"keyyc",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_yellowcard },
-
-  {"keybc",   NULL,                   not_net | not_demo, 
-   cheat_keyxx, it_bluecard   },
-
-  {"keyrs",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_redskull   },
-
-  {"keyys",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_yellowskull},
-
-  {"keybs",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_blueskull  },  // killough 2/16/98: end generalized keys
-
-  {"weap",    NULL,                   not_net | not_demo,
-   cheat_weap, 0  },     // killough 2/16/98: generalized weapon cheats
-
-  {"weap",    NULL,                   not_net | not_demo,
-   cheat_weapx, -1},
-
-  {"ammo",    NULL,                   not_net | not_demo,
-   cheat_ammo, 0  },
-
-  {"ammo",    NULL,                   not_net | not_demo,
-   cheat_ammox, -1},  // killough 2/16/98: end generalized weapons
-
-  {"tran",    NULL,                   always,
-   cheat_tran, 0  },     // invoke translucency         // phares
-
-  {"ice",     NULL,                   not_net | not_demo,
-   cheat_friction, 0   },   // phares 3/10/98: toggle variable friction effects
-
-  {"push",    NULL,                   not_net | not_demo, 
-   cheat_pushers, 0    },   // phares 3/10/98: toggle pushers
-
-  {"nuke",    NULL,                   not_net | not_demo,
-   cheat_nuke, 0       },   // killough 12/98: disable nukage damage
+cheat_s cheat[CHEAT_NUMCHEATS] = 
+{
+   { "idmus",      always,   cheat_mus,      -2                  },
+   { "idchoppers", not_sync, cheat_choppers,  0                  },
+   { "iddqd",      not_sync, cheat_god,       0                  },
+   { "idk",        not_sync, cheat_k,         0                  }, // The most controversial cheat code in Doom history!!!
+   { "idkfa",      not_sync, cheat_kfa,       0                  },
+   { "idfa",       not_sync, cheat_fa,        0                  },
+   { "idspispopd", not_sync, cheat_noclip,    0                  },
+   { "idclip",     not_sync, cheat_noclip,    0                  },
+   { "idbeholdv",  not_sync, cheat_pw,        pw_invulnerability },
+   { "idbeholds",  not_sync, cheat_pw,        pw_strength        },
+   { "idbeholdi",  not_sync, cheat_pw,        pw_invisibility    },
+   { "idbeholdr",  not_sync, cheat_pw,        pw_ironfeet        },
+   { "idbeholda",  not_sync, cheat_pw,        pw_allmap          },
+   { "idbeholdl",  not_sync, cheat_pw,        pw_infrared        },
+   { "idbehold",   not_sync, cheat_behold,    0                  },
+   { "idclev",     not_sync, cheat_clev,     -2                  },
+   { "idmypos",    not_sync, cheat_mypos,     0                  },
+   { "comp",       not_sync, cheat_comp,      0                  }, // phares
+   { "killem",     not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
+   { "iddt",       not_dm,   cheat_ddt,       0                  }, // killough 2/07/98: moved from am_map.c
+   { "hom",        always,   cheat_hom,       0                  }, // killough 2/07/98: HOM autodetector
+   { "key",        not_sync, cheat_key,       0                  }, // killough 2/16/98: generalized key cheats
+   { "keyr",       not_sync, cheat_keyx,      0                  },
+   { "keyy",       not_sync, cheat_keyx,      0                  },
+   { "keyb",       not_sync, cheat_keyx,      0                  },
+   { "keyrc",      not_sync, cheat_keyxx,     it_redcard         },
+   { "keyyc",      not_sync, cheat_keyxx,     it_yellowcard      },
+   { "keybc",      not_sync, cheat_keyxx,     it_bluecard        },
+   { "keyrs",      not_sync, cheat_keyxx,     it_redskull        },
+   { "keyys",      not_sync, cheat_keyxx,     it_yellowskull     },
+   { "keybs",      not_sync, cheat_keyxx,     it_blueskull       }, // killough 2/16/98: end generalized keys
+   { "weap",       not_sync, cheat_weap,      0                  }, // killough 2/16/98: generalized weapon cheats
+   { "weap",       not_sync, cheat_weapx,    -1                  },
+   { "ammo",       not_sync, cheat_ammo,      0                  },
+   { "ammo",       not_sync, cheat_ammox,    -1                  }, // killough 2/16/98: end generalized weapons
+   { "tran",       always,   cheat_tran,      0                  }, // invoke translucency         // phares
+   { "ice",        not_sync, cheat_friction,  0                  }, // phares 3/10/98: toggle variable friction effects
+   { "push",       not_sync, cheat_pushers,   0                  }, // phares 3/10/98: toggle pushers
+   { "nuke",       not_sync, cheat_nuke,      0                  }, // killough 12/98: disable nukage damage
+   { "hideme",     not_sync, cheat_pw,        pw_totalinvis      }, // haleyjd: total invis cheat -- hideme
+   { "ghost",      not_sync, cheat_pw,        pw_ghost           }, // haleyjd: heretic ghost 
+   { "infshots",   not_sync, cheat_infammo,   0                  },
+   { "silence",    not_sync, cheat_pw,        pw_silencer        },
+   { "iamtheone",  not_sync, cheat_one,       0                  },
 
 #ifdef INSTRUMENTED
-  {"stat",       NULL,                always,
-   cheat_printstats, 0 },
+   { "stat",       always,           cheat_printstats, 0 },
 #endif
 
-  // haleyjd: total invis cheat -- hideme
-  {"hideme", NULL,      not_net | not_demo,
-    cheat_pw, pw_totalinvis     },
-
-  // haleyjd: heretic ghost 
-  {"ghost",  NULL,      not_net | not_demo,
-    cheat_pw, pw_ghost },
-
-  {"infshots", NULL,    not_net | not_demo,
-    cheat_infammo, 0 },
-
-  {"silence", NULL,     not_net | not_demo,
-    cheat_pw, pw_silencer },
-
-  {"iamtheone", NULL,   not_net | not_demo,
-    cheat_one, 0 },
-
-  {NULL, NULL, 0, NULL, 0 } // end-of-list marker
+   { NULL, 0, NULL, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -746,6 +657,10 @@ bool M_FindCheats(int key)
    int i, matchedbefore; 
    bool ret;
 
+   // haleyjd: no cheats in menus, at all.
+   if(menuactive)
+      return false;
+
    // If we are expecting arguments to a cheat
    // (e.g. idclev), put them in the arg buffer
 
@@ -810,8 +725,7 @@ bool M_FindCheats(int key)
          !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
          !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
          !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
-         !(cheat[i].when & not_menu && menuactive) &&
-         !(cheat[i].when & not_deh  && cheat[i].deh_modified))
+         !cheat[i].deh_disabled)
       {
          if(cheat[i].arg < 0)               // if additional args are required
          {

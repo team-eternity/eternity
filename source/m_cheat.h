@@ -24,31 +24,87 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __M_CHEAT__
-#define __M_CHEAT__
+#ifndef M_CHEAT_H__
+#define M_CHEAT_H__
 
 enum 
 { 
-   always    = 0,
-   not_dm    = 1,
-   not_coop  = 2,
-   not_demo  = 4, 
-   not_menu  = 8,
-   not_deh   = 16,
-   beta_only = 32,                  // killough 7/24/98
-   not_net = not_dm | not_coop
+   always   = 0,
+   not_dm   = 1,
+   not_coop = 2,
+   not_demo = 4, 
+   not_net  = not_dm | not_coop,
+   not_sync = not_net | not_demo
 }; 
 
+// haleyjd 08/21/13: cheat enumeration
+enum cheatnum_e
+{
+   CHEAT_IDMUS,
+   CHEAT_IDCHOPPERS,
+   CHEAT_IDDQD,
+   CHEAT_IDK,
+   CHEAT_IDKFA,
+   CHEAT_IDFA,
+   CHEAT_IDSPISPOPD,
+   CHEAT_IDCLIP,
+   CHEAT_IDBEHOLDV,
+   CHEAT_IDBEHOLDS,
+   CHEAT_IDBEHOLDI,
+   CHEAT_IDBEHOLDR,
+   CHEAT_IDBEHOLDA,
+   CHEAT_IDBEHOLDL,
+   CHEAT_IDBEHOLD,
+   CHEAT_IDCLEV,
+   CHEAT_IDMYPOS,
+   CHEAT_COMP,
+   CHEAT_KILLEM,
+   CHEAT_IDDT,
+   CHEAT_HOM,
+   CHEAT_KEY,
+   CHEAT_KEYR,
+   CHEAT_KEYY,
+   CHEAT_KEYB,
+   CHEAT_KEYRC,
+   CHEAT_KEYYC,
+   CHEAT_KEYBC,
+   CHEAT_KEYRS,
+   CHEAT_KEYYS,
+   CHEAT_KEYBS,
+   CHEAT_WEAP,
+   CHEAT_WEAPX,
+   CHEAT_AMMO,
+   CHEAT_AMMOX,
+   CHEAT_TRAN,
+   CHEAT_ICE,
+   CHEAT_PUSH,
+   CHEAT_NUKE,
+   CHEAT_HIDEME,
+   CHEAT_GHOST,
+   CHEAT_INFSHOTS,
+   CHEAT_SILENCE,
+   CHEAT_IAMTHEONE,
+
+#ifdef INSTRUMENTED
+   CHEAT_STAT,
+#endif
+
+   CHEAT_END,
+   CHEAT_NUMCHEATS
+};
+
 // killough 4/16/98: Cheat table structure
-extern struct cheat_s {
-  const char *cheat;
-  const char *const deh_cheat;
-  const int when;
-  void (*const func)(const void *);
-  const int arg;
-  uint64_t code, mask;
-  bool deh_modified;                // killough 9/12/98
-} cheat[];
+struct cheat_s 
+{
+   const char *cheat;
+   const int when;
+   void (*const func)(const void *);
+   const int arg;
+   uint64_t code, mask;
+   bool deh_disabled;                // killough 9/12/98
+};
+
+extern cheat_s cheat[CHEAT_NUMCHEATS];
 
 bool M_FindCheats(int key);
 void M_DoCheat(char *cheatname);

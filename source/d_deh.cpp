@@ -426,13 +426,6 @@ const char *deh_weapon[] =
   "Ammo per shot",  // haleyjd 08/10/02: .ammopershot 
 };
 
-// CHEATS - Dehacked block name = "Cheat"
-// Usage: Cheat 0
-// Always uses a zero in the dehacked file, for consistency.  No meaning.
-// These are just plain funky terms compared with id's
-//
-// killough 4/18/98: integrated into main cheat table now (see st_stuff.c)
-
 // MISC - Dehacked block name = "Misc"
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
@@ -457,6 +450,42 @@ const char *deh_misc[] =
   "Monsters Infight"   // Unknown--not a specific number it seems, but
                        // the logic has to be here somewhere or
                        // it'd happen always
+};
+
+// CHEATS - Dehacked block name = "Cheat"
+// Usage: Cheat 0
+// Always uses a zero in the dehacked file, for consistency.  No meaning.
+// These are just plain funky terms compared with id's
+//
+// killough 4/18/98: integrated into main cheat table now (see st_stuff.c)
+// haleyjd 08/21/13: Moved DEH-related cheat data back here where it belongs,
+// instead of having it pollute the main cheat table.
+
+struct dehcheat_t
+{
+   cheatnum_e cheatnum; // index of the cheat in the cheat array
+   const char *name;    // DEH name of the cheat
+};
+
+static dehcheat_t deh_cheats[] =
+{
+   { CHEAT_IDMUS,      "Change music"     },
+   { CHEAT_IDCHOPPERS, "Chainsaw"         },
+   { CHEAT_IDDQD,      "God mode"         },
+   { CHEAT_IDKFA,      "Ammo & Keys"      },
+   { CHEAT_IDFA,       "Ammo"             },
+   { CHEAT_IDSPISPOPD, "No Clipping 1"    },
+   { CHEAT_IDCLIP,     "No Clipping 2"    },
+   { CHEAT_IDBEHOLDV,  "Invincibility"    },
+   { CHEAT_IDBEHOLDS,  "Berserk"          },
+   { CHEAT_IDBEHOLDI,  "Invisibility"     },
+   { CHEAT_IDBEHOLDR,  "Radiation Suit"   },
+   { CHEAT_IDBEHOLDA,  "Auto-map"         },
+   { CHEAT_IDBEHOLDL,  "Lite-Amp Goggles" },
+   { CHEAT_IDBEHOLD,   "BEHOLD menu"      },
+   { CHEAT_IDCLEV,     "Level Warp"       },
+   { CHEAT_IDMYPOS,    "Player Position"  },
+   { CHEAT_IDDT,       "Map cheat"        }
 };
 
 // TEXT - Dehacked block name = "Text"
@@ -1243,7 +1272,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
          // for(i=0;i<NUMSTATES;i++)
          
-         for(i = 0; i < num_bexptrs; ++i)
+         for(i = 0; i < num_bexptrs; i++)
          {
             if(deh_bexptrs[i].cptr == states[value]->oldaction)
             {
@@ -1665,16 +1694,15 @@ void deh_procPars(DWFILE *fpin, char *line) // extension
 //
 void deh_procCheat(DWFILE *fpin, char *line) // done
 {
-   char key[DEH_MAXKEYLEN];
-   char inbuffer[DEH_BUFFERMAX];
-   int value;      // All deh values are ints or longs
-   char *strval;  // pointer to the value area
-   int ix, iy;   // array indices
-   char *p;  // utility pointer
+   char  key[DEH_MAXKEYLEN];
+   char  inbuffer[DEH_BUFFERMAX];
+   int   value;  // All deh values are ints or longs
+   char *strval; // pointer to the value area
+   char *p;      // utility pointer
    
    deh_LogPrintf("Processing Cheat: %s\n", line);
 
-   strncpy(inbuffer,line,DEH_BUFFERMAX);
+   strncpy(inbuffer, line, DEH_BUFFERMAX);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
@@ -1690,51 +1718,36 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
       }
-      // Otherwise we got a (perhaps valid) cheat name,
-      // so look up the key in the array
 
-      // killough 4/18/98: use main cheat code table in st_stuff.c now
-      for(ix = 0; cheat[ix].cheat; ++ix)
+      // Otherwise we got a (perhaps valid) cheat name, so look up the key in 
+      // the array
+      for(size_t ix = 0; ix < earrlen(deh_cheats); ix++)
       {
-         if(cheat[ix].deh_cheat)   // killough 4/18/98: skip non-deh
+         if(!strcasecmp(key, deh_cheats[ix].name)) // found the cheat, ignored case
          {
-            if(!strcasecmp(key, cheat[ix].deh_cheat)) // found the cheat, ignored case
-            {
-               // replace it but don't overflow it.  Use current length as limit.
-               // Ty 03/13/98 - add 0xff code
-               // Deal with the fact that the cheats in deh files are extended
-               // with character 0xFF to the original cheat length, which we don't do.
-               for(iy = 0; strval[iy]; ++iy)
-                  strval[iy] = (strval[iy] == (char)0xff) ? '\0' : strval[iy];
+            // haleyjd: get a reference to the cheat in the main cheat table
+            cheat_s &cht = cheat[deh_cheats[ix].cheatnum];
 
-               iy = ix;     // killough 4/18/98
+            // replace it but don't overflow it.  Use current length as limit.
+            // Ty 03/13/98 - add 0xff code
+            // Deal with the fact that the cheats in deh files are extended
+            // with character 0xFF to the original cheat length, which we don't do.
+            for(size_t iy = 0; strval[iy]; iy++)
+               strval[iy] = (strval[iy] == (char)0xff) ? '\0' : strval[iy];
+
+            // Ty 03/14/98 - skip leading spaces
+            p = strval;
+            while(*p == ' ') ++p;
+
+            // killough 9/12/98: disable cheats which are prefixes of this one
+            // haleyjd 08/21/13: talk about overkill...
+            if(deh_cheats[ix].cheatnum == CHEAT_IDKFA)
+               cheat[CHEAT_IDK].deh_disabled = true;
                
-               // Ty 03/14/98 - skip leading spaces
-               p = strval;
-               while(*p == ' ') ++p;
-               
-               // Ty 03/16/98 - change to use a strdup and orphan the original
-               // Also has the advantage of allowing length changes.
-               // strncpy(cheat[iy].cheat,p,strlen(cheat[iy].cheat));
-               
-               {    // killough 9/12/98: disable cheats which are prefixes of this one
-                  int i;
-                  for(i = 0; cheat[i].cheat; ++i)
-                  {
-                    if(cheat[i].when & not_deh &&
-                       !strncasecmp((const char *)(cheat[i].cheat),
-                                    (const char *)(cheat[iy].cheat),
-                                    strlen((const char *)(cheat[i].cheat))) && 
-                       i != iy)
-                    {
-                       cheat[i].deh_modified = true;
-                    }
-                  }
-                }
-                cheat[iy].cheat = estrdup(p);
-                deh_LogPrintf("Assigned new cheat '%s' to cheat '%s'at index %d\n",
-                              p, cheat[ix].deh_cheat, iy); // killough 4/18/98
-            }
+            // Ty 03/16/98 - change to use a strdup and orphan the original
+            // Also has the advantage of allowing length changes.
+            cht.cheat = estrdup(p);
+            deh_LogPrintf("Assigned new cheat '%s' to cheat '%s'\n", p, deh_cheats[ix].name);
          }
       } // end for
       
