@@ -2900,7 +2900,7 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
 
 thingtype HereticMaceSpot : Mobj, 7202, 431
 {
-  cflags NOSECTOR|NOTSHAREWARE
+  cflags NOTSHAREWARE
    
   collectionspawn HWeaponFireMace, 64, 64
    
@@ -2924,4 +2924,3 @@ thingtype HWeaponFireMace : HereticPickup, -1, 432
     stop
   "@
 }
-
