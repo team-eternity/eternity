@@ -121,56 +121,61 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 
 cheat_s cheat[CHEAT_NUMCHEATS] = 
 {
-   { "idmus",      always,   cheat_mus,      -2                  },
-   { "idchoppers", not_sync, cheat_choppers,  0                  },
-   { "iddqd",      not_sync, cheat_god,       0                  },
-   { "idk",        not_sync, cheat_k,         0                  }, // The most controversial cheat code in Doom history!!!
-   { "idkfa",      not_sync, cheat_kfa,       0                  },
-   { "idfa",       not_sync, cheat_fa,        0                  },
-   { "idspispopd", not_sync, cheat_noclip,    0                  },
-   { "idclip",     not_sync, cheat_noclip,    0                  },
-   { "idbeholdv",  not_sync, cheat_pw,        pw_invulnerability },
-   { "idbeholds",  not_sync, cheat_pw,        pw_strength        },
-   { "idbeholdi",  not_sync, cheat_pw,        pw_invisibility    },
-   { "idbeholdr",  not_sync, cheat_pw,        pw_ironfeet        },
-   { "idbeholda",  not_sync, cheat_pw,        pw_allmap          },
-   { "idbeholdl",  not_sync, cheat_pw,        pw_infrared        },
-   { "idbehold",   not_sync, cheat_behold,    0                  },
-   { "idclev",     not_sync, cheat_clev,     -2                  },
-   { "idmypos",    not_sync, cheat_mypos,     0                  },
-   { "comp",       not_sync, cheat_comp,      0                  }, // phares
-   { "killem",     not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
-   { "iddt",       not_dm,   cheat_ddt,       0                  }, // killough 2/07/98: moved from am_map.c
-   { "hom",        always,   cheat_hom,       0                  }, // killough 2/07/98: HOM autodetector
-   { "key",        not_sync, cheat_key,       0                  }, // killough 2/16/98: generalized key cheats
-   { "keyr",       not_sync, cheat_keyx,      0                  },
-   { "keyy",       not_sync, cheat_keyx,      0                  },
-   { "keyb",       not_sync, cheat_keyx,      0                  },
-   { "keyrc",      not_sync, cheat_keyxx,     it_redcard         },
-   { "keyyc",      not_sync, cheat_keyxx,     it_yellowcard      },
-   { "keybc",      not_sync, cheat_keyxx,     it_bluecard        },
-   { "keyrs",      not_sync, cheat_keyxx,     it_redskull        },
-   { "keyys",      not_sync, cheat_keyxx,     it_yellowskull     },
-   { "keybs",      not_sync, cheat_keyxx,     it_blueskull       }, // killough 2/16/98: end generalized keys
-   { "weap",       not_sync, cheat_weap,      0                  }, // killough 2/16/98: generalized weapon cheats
-   { "weap",       not_sync, cheat_weapx,    -1                  },
-   { "ammo",       not_sync, cheat_ammo,      0                  },
-   { "ammo",       not_sync, cheat_ammox,    -1                  }, // killough 2/16/98: end generalized weapons
-   { "tran",       always,   cheat_tran,      0                  }, // invoke translucency         // phares
-   { "ice",        not_sync, cheat_friction,  0                  }, // phares 3/10/98: toggle variable friction effects
-   { "push",       not_sync, cheat_pushers,   0                  }, // phares 3/10/98: toggle pushers
-   { "nuke",       not_sync, cheat_nuke,      0                  }, // killough 12/98: disable nukage damage
-   { "hideme",     not_sync, cheat_pw,        pw_totalinvis      }, // haleyjd: total invis cheat -- hideme
-   { "ghost",      not_sync, cheat_pw,        pw_ghost           }, // haleyjd: heretic ghost 
-   { "infshots",   not_sync, cheat_infammo,   0                  },
-   { "silence",    not_sync, cheat_pw,        pw_silencer        },
-   { "iamtheone",  not_sync, cheat_one,       0                  },
+   // DOOM Cheats
+   { "idmus",      Game_DOOM, always,   cheat_mus,      -2                  },
+   { "idchoppers", Game_DOOM, not_sync, cheat_choppers,  0                  },
+   { "iddqd",      Game_DOOM, not_sync, cheat_god,       0                  },
+   { "idk",        Game_DOOM, not_sync, cheat_k,         0                  }, // The most controversial cheat code in Doom history!!!
+   { "idkfa",      Game_DOOM, not_sync, cheat_kfa,       0                  },
+   { "idfa",       Game_DOOM, not_sync, cheat_fa,        0                  },
+   { "idspispopd", Game_DOOM, not_sync, cheat_noclip,    0                  },
+   { "idclip",     Game_DOOM, not_sync, cheat_noclip,    0                  },
+   { "idbeholdv",  Game_DOOM, not_sync, cheat_pw,        pw_invulnerability },
+   { "idbeholds",  Game_DOOM, not_sync, cheat_pw,        pw_strength        },
+   { "idbeholdi",  Game_DOOM, not_sync, cheat_pw,        pw_invisibility    },
+   { "idbeholdr",  Game_DOOM, not_sync, cheat_pw,        pw_ironfeet        },
+   { "idbeholda",  Game_DOOM, not_sync, cheat_pw,        pw_allmap          },
+   { "idbeholdl",  Game_DOOM, not_sync, cheat_pw,        pw_infrared        },
+   { "idbehold",   Game_DOOM, not_sync, cheat_behold,    0                  },
+   { "idclev",     Game_DOOM, not_sync, cheat_clev,     -2                  },
+   { "idmypos",    Game_DOOM, not_sync, cheat_mypos,     0                  },
+   { "iddt",       Game_DOOM, not_dm,   cheat_ddt,       0                  }, // killough 2/07/98: moved from am_map.c
+   { "key",        Game_DOOM, not_sync, cheat_key,       0                  }, // killough 2/16/98: generalized key cheats
+   { "keyr",       Game_DOOM, not_sync, cheat_keyx,      0                  },
+   { "keyy",       Game_DOOM, not_sync, cheat_keyx,      0                  },
+   { "keyb",       Game_DOOM, not_sync, cheat_keyx,      0                  },
+   { "keyrc",      Game_DOOM, not_sync, cheat_keyxx,     it_redcard         },
+   { "keyyc",      Game_DOOM, not_sync, cheat_keyxx,     it_yellowcard      },
+   { "keybc",      Game_DOOM, not_sync, cheat_keyxx,     it_bluecard        },
+   { "keyrs",      Game_DOOM, not_sync, cheat_keyxx,     it_redskull        },
+   { "keyys",      Game_DOOM, not_sync, cheat_keyxx,     it_yellowskull     },
+   { "keybs",      Game_DOOM, not_sync, cheat_keyxx,     it_blueskull       }, // killough 2/16/98: end generalized keys
+   { "weap",       Game_DOOM, not_sync, cheat_weap,      0                  }, // killough 2/16/98: generalized weapon cheats
+   { "weap",       Game_DOOM, not_sync, cheat_weapx,    -1                  },
+   { "ammo",       Game_DOOM, not_sync, cheat_ammo,      0                  },
+   { "ammo",       Game_DOOM, not_sync, cheat_ammox,    -1                  }, // killough 2/16/98: end generalized weapons
+   { "iamtheone",  Game_DOOM, not_sync, cheat_one,       0                  },
+
+   // Heretic Cheats
+
+   // Shared Cheats
+   { "comp",       -1,        not_sync, cheat_comp,      0                  }, // phares
+   { "killem",     -1,        not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
+   { "hom",        -1,        always,   cheat_hom,       0                  }, // killough 2/07/98: HOM autodetector
+   { "tran",       -1,        always,   cheat_tran,      0                  }, // invoke translucency - phares
+   { "ice",        -1,        not_sync, cheat_friction,  0                  }, // phares 3/10/98: toggle variable friction effects
+   { "push",       -1,        not_sync, cheat_pushers,   0                  }, // phares 3/10/98: toggle pushers
+   { "nuke",       -1,        not_sync, cheat_nuke,      0                  }, // killough 12/98: disable nukage damage
+   { "hideme",     -1,        not_sync, cheat_pw,        pw_totalinvis      }, // haleyjd: total invis cheat -- hideme
+   { "ghost",      -1,        not_sync, cheat_pw,        pw_ghost           }, // haleyjd: heretic ghost 
+   { "infshots",   -1,        not_sync, cheat_infammo,   0                  },
+   { "silence",    -1,        not_sync, cheat_pw,        pw_silencer        },
 
 #ifdef INSTRUMENTED
-   { "stat",       always,           cheat_printstats, 0 },
+   { "stat",       -1,        always,   cheat_printstats, 0 },
 #endif
 
-   { NULL, 0, NULL, 0 } // end-of-list marker
+   { NULL, -1, 0, NULL, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -631,6 +636,15 @@ static void cheat_nuke(const void *arg)
    extern int enable_nuke;
    doom_printf((enable_nuke = !enable_nuke) ? "Nukage Enabled" :
                                               "Nukage Disabled");
+}
+
+//=============================================================================
+//
+// Heretic Cheats
+//
+
+static void cheat_hticgod(const void *arg)
+{
 }
 
 //-----------------------------------------------------------------------------

@@ -1585,7 +1585,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
 //
 // 07/15/2012: Added runtime adjustment of blackIndex and whiteIndex.
 //
-void D_InitGMIPostWads(void)
+void D_InitGMIPostWads()
 {
    AutoPalette pal(wGlobalDir);
    gamemodeinfo_t *gi = GameModeInfo;

@@ -57,10 +57,7 @@ enum cheatnum_e
    CHEAT_IDBEHOLD,
    CHEAT_IDCLEV,
    CHEAT_IDMYPOS,
-   CHEAT_COMP,
-   CHEAT_KILLEM,
    CHEAT_IDDT,
-   CHEAT_HOM,
    CHEAT_KEY,
    CHEAT_KEYR,
    CHEAT_KEYY,
@@ -75,6 +72,10 @@ enum cheatnum_e
    CHEAT_WEAPX,
    CHEAT_AMMO,
    CHEAT_AMMOX,
+   CHEAT_IAMTHEONE,
+   CHEAT_COMP,
+   CHEAT_KILLEM,
+   CHEAT_HOM,
    CHEAT_TRAN,
    CHEAT_ICE,
    CHEAT_PUSH,
@@ -83,7 +84,6 @@ enum cheatnum_e
    CHEAT_GHOST,
    CHEAT_INFSHOTS,
    CHEAT_SILENCE,
-   CHEAT_IAMTHEONE,
 
 #ifdef INSTRUMENTED
    CHEAT_STAT,
@@ -97,6 +97,7 @@ enum cheatnum_e
 struct cheat_s 
 {
    const char *cheat;
+   const int gametype;
    const int when;
    void (*const func)(const void *);
    const int arg;

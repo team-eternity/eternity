@@ -38,8 +38,8 @@ typedef struct dehstr_s
    const char **ppstr;   // doubly indirect pointer to string   
    const char *lookup;   // pointer to lookup string name
    const char *original; // haleyjd 10/08/06: original string
-   int bnext;            // haleyjd: for bex hash chaining (by mnemonic)
-   int dnext;            // haleyjd: for deh hash chaining (by value)
+   size_t bnext;         // haleyjd: for bex hash chaining (by mnemonic)
+   size_t dnext;         // haleyjd: for deh hash chaining (by value)
 } dehstr_t;
 
 extern char **deh_spritenames;

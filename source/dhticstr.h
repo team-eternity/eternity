@@ -218,10 +218,30 @@
 #define HAMMOPHOENIXROD1    "FLAME ORB"
 #define HAMMOPHOENIXROD2    "INFERNO ORB"
 
-
 // key messages
 #define HPD_GREENO "You need a green key to activate this object"
 #define HPD_GREENK "You need a green key to open this door"
+
+// cheats
+#define TXT_CHEATGODON         "GOD MODE ON"
+#define TXT_CHEATGODOFF        "GOD MODE OFF"
+#define TXT_CHEATNOCLIPON      "NO CLIPPING ON"
+#define TXT_CHEATNOCLIPOFF     "NO CLIPPING OFF"
+#define TXT_CHEATWEAPONS       "ALL WEAPONS"
+#define TXT_CHEATPOWERON       "POWER ON"
+#define TXT_CHEATPOWEROFF      "POWER OFF"
+#define TXT_CHEATHEALTH        "FULL HEALTH"
+#define TXT_CHEATKEYS          "ALL KEYS"
+#define TXT_CHEATARTIFACTS1    "CHOOSE AN ARTIFACT ( A - J )"
+#define TXT_CHEATARTIFACTS2    "HOW MANY ( 1 - 9 )"
+#define TXT_CHEATARTIFACTS3    "YOU GOT IT"
+#define TXT_CHEATARTIFACTSFAIL "BAD INPUT"
+#define TXT_CHEATWARP          "LEVEL WARP"
+#define TXT_CHEATCHICKENON     "CHICKEN ON"
+#define TXT_CHEATCHICKENOFF    "CHICKEN OFF"
+#define TXT_CHEATMASSACRE      "MASSACRE"
+#define TXT_CHEATIDDQD         "TRYING TO CHEAT, EH?  NOW YOU DIE!"
+#define TXT_CHEATIDKFA         "CHEATER - YOU DON'T DESERVE WEAPONS"
 
 #endif
 

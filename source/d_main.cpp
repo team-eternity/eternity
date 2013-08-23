@@ -328,9 +328,8 @@ const demostate_t demostates_udoom[] =
    { G_DeferedPlayDemo, "DEMO1"    },
    { D_SetPageName,     NULL       },
    { G_DeferedPlayDemo, "DEMO2"    },
-   { D_DrawTitle,       "TITLEPIC" },
-   { G_DeferedPlayDemo, "DEMO3"    },
    { D_SetPageName,     "CREDIT"   },
+   { G_DeferedPlayDemo, "DEMO3"    },
    { G_DeferedPlayDemo, "DEMO4"    },
    { NULL }
 };
