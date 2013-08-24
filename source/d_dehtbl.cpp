@@ -1854,8 +1854,10 @@ unsigned int D_HashTableKey(const char *str)
    int c;
    unsigned int h = 0;
 
+#ifdef RANGECHECK
    if(!ustr)
       I_Error("D_HashTableKey: cannot hash NULL string!\n");
+#endif
 
    // note: this needs to be case insensitive for EDF mnemonics
    while((c = *ustr++))
@@ -1875,8 +1877,10 @@ unsigned int D_HashTableKeyCase(const char *str)
    int c;
    unsigned int h = 0;
 
+#ifdef RANGECHECK
    if(!ustr)
       I_Error("D_HashTableKeyCase: cannot hash NULL string!\n");
+#endif
 
    while((c = *ustr++))
       h = c + (h << 6) + (h << 16) - h;

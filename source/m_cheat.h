@@ -40,6 +40,7 @@ enum
 // haleyjd 08/21/13: cheat enumeration
 enum cheatnum_e
 {
+   // DOOM Cheats
    CHEAT_IDMUS,
    CHEAT_IDCHOPPERS,
    CHEAT_IDDQD,
@@ -73,8 +74,20 @@ enum cheatnum_e
    CHEAT_AMMO,
    CHEAT_AMMOX,
    CHEAT_IAMTHEONE,
-   CHEAT_COMP,
    CHEAT_KILLEM,
+
+   // Heretic Cheats
+   CHEAT_HTICGOD,
+   CHEAT_HTICHEALTH,
+   CHEAT_HTICIDDQD,
+   CHEAT_HTICKEYS,
+   CHEAT_HTICKILL,
+   CHEAT_HTICNOCLIP,
+   CHEAT_HTICWARP,
+   CHEAT_HTICMAP,
+
+   // Shared Cheats
+   CHEAT_COMP,
    CHEAT_HOM,
    CHEAT_TRAN,
    CHEAT_ICE,
@@ -86,6 +99,7 @@ enum cheatnum_e
    CHEAT_SILENCE,
 
 #ifdef INSTRUMENTED
+   // Debug Cheats
    CHEAT_STAT,
 #endif
 

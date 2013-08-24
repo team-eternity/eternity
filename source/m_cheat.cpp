@@ -45,6 +45,7 @@
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_inventory.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "g_game.h"
 #include "metaapi.h"
@@ -61,30 +62,26 @@
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
+static int M_NukeMonsters();
+
 //=============================================================================
 //
 // CHEAT SEQUENCE PACKAGE
 //
 
+// Doom Cheats
 static void cheat_mus(const void *);
 static void cheat_choppers(const void *);
 static void cheat_god(const void *);
-static void cheat_infammo(const void *);
 static void cheat_fa(const void *);
 static void cheat_k(const void *);
 static void cheat_kfa(const void *);
 static void cheat_noclip(const void *);
-static void cheat_pw(const void *);
 static void cheat_behold(const void *);
 static void cheat_clev(const void *);
 static void cheat_mypos(const void *);
-static void cheat_comp(const void *);
-static void cheat_friction(const void *);
-static void cheat_pushers(const void *);
-static void cheat_tran(const void *);
 static void cheat_massacre(const void *);
 static void cheat_ddt(const void *);
-static void cheat_hom(const void *);
 static void cheat_key(const void *);
 static void cheat_keyx(const void *);
 static void cheat_keyxx(const void *);
@@ -92,8 +89,26 @@ static void cheat_weap(const void *);
 static void cheat_weapx(const void *);
 static void cheat_ammo(const void *);
 static void cheat_ammox(const void *);
-static void cheat_nuke(const void *);
 static void cheat_one(const void *);
+
+// Heretic cheats
+static void cheat_hticgod(const void *);
+static void cheat_htichealth(const void *);
+static void cheat_hticiddqd(const void *);
+static void cheat_htickeys(const void *);
+static void cheat_htickill(const void *);
+static void cheat_hticnoclip(const void *);
+static void cheat_hticwarp(const void *);
+
+// Shared cheats
+static void cheat_pw(const void *);
+static void cheat_infammo(const void *);
+static void cheat_comp(const void *);
+static void cheat_friction(const void *);
+static void cheat_pushers(const void *);
+static void cheat_tran(const void *);
+static void cheat_hom(const void *);
+static void cheat_nuke(const void *);
 
 #ifdef INSTRUMENTED
 static void cheat_printstats(const void *);   // killough 8/23/98
@@ -138,7 +153,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "idbeholdl",  Game_DOOM, not_sync, cheat_pw,        pw_infrared        },
    { "idbehold",   Game_DOOM, not_sync, cheat_behold,    0                  },
    { "idclev",     Game_DOOM, not_sync, cheat_clev,     -2                  },
-   { "idmypos",    Game_DOOM, not_sync, cheat_mypos,     0                  },
+   { "idmypos",    Game_DOOM, always,   cheat_mypos,     0                  },
    { "iddt",       Game_DOOM, not_dm,   cheat_ddt,       0                  }, // killough 2/07/98: moved from am_map.c
    { "key",        Game_DOOM, not_sync, cheat_key,       0                  }, // killough 2/16/98: generalized key cheats
    { "keyr",       Game_DOOM, not_sync, cheat_keyx,      0                  },
@@ -155,24 +170,33 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ammo",       Game_DOOM, not_sync, cheat_ammo,      0                  },
    { "ammo",       Game_DOOM, not_sync, cheat_ammox,    -1                  }, // killough 2/16/98: end generalized weapons
    { "iamtheone",  Game_DOOM, not_sync, cheat_one,       0                  },
+   { "killem",     Game_DOOM, not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
 
    // Heretic Cheats
+   { "quicken",  Game_Heretic, not_sync, cheat_hticgod,     0 },
+   { "ponce",    Game_Heretic, not_sync, cheat_htichealth,  0 },
+   { "iddqd",    Game_Heretic, not_sync, cheat_hticiddqd,   0 },
+   { "skel",     Game_Heretic, not_sync, cheat_htickeys,    0 },
+   { "massacre", Game_Heretic, not_sync, cheat_htickill,    0 },
+   { "kitty",    Game_Heretic, not_sync, cheat_hticnoclip,  0 },
+   { "engage",   Game_Heretic, not_sync, cheat_hticwarp,   -2 },
+   { "ravmap",   Game_Heretic, not_dm,   cheat_ddt,         0 },
 
    // Shared Cheats
-   { "comp",       -1,        not_sync, cheat_comp,      0                  }, // phares
-   { "killem",     -1,        not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
-   { "hom",        -1,        always,   cheat_hom,       0                  }, // killough 2/07/98: HOM autodetector
-   { "tran",       -1,        always,   cheat_tran,      0                  }, // invoke translucency - phares
-   { "ice",        -1,        not_sync, cheat_friction,  0                  }, // phares 3/10/98: toggle variable friction effects
-   { "push",       -1,        not_sync, cheat_pushers,   0                  }, // phares 3/10/98: toggle pushers
-   { "nuke",       -1,        not_sync, cheat_nuke,      0                  }, // killough 12/98: disable nukage damage
-   { "hideme",     -1,        not_sync, cheat_pw,        pw_totalinvis      }, // haleyjd: total invis cheat -- hideme
-   { "ghost",      -1,        not_sync, cheat_pw,        pw_ghost           }, // haleyjd: heretic ghost 
-   { "infshots",   -1,        not_sync, cheat_infammo,   0                  },
-   { "silence",    -1,        not_sync, cheat_pw,        pw_silencer        },
+   { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
+   { "hom",      -1, always,   cheat_hom,      0             }, // killough 2/07/98: HOM autodetector
+   { "tran",     -1, always,   cheat_tran,     0             }, // invoke translucency - phares
+   { "ice",      -1, not_sync, cheat_friction, 0             }, // phares 3/10/98: toggle variable friction effects
+   { "push",     -1, not_sync, cheat_pushers,  0             }, // phares 3/10/98: toggle pushers
+   { "nuke",     -1, not_sync, cheat_nuke,     0             }, // killough 12/98: disable nukage damage
+   { "hideme",   -1, not_sync, cheat_pw,       pw_totalinvis }, // haleyjd: total invis cheat -- hideme
+   { "ghost",    -1, not_sync, cheat_pw,       pw_ghost      }, // haleyjd: heretic ghost 
+   { "infshots", -1, not_sync, cheat_infammo,  0             },
+   { "silence",  -1, not_sync, cheat_pw,       pw_silencer   },
 
 #ifdef INSTRUMENTED
-   { "stat",       -1,        always,   cheat_printstats, 0 },
+   // Debug Cheats
+   { "stat", -1, always, cheat_printstats, 0 },
 #endif
 
    { NULL, -1, 0, NULL, 0 } // end-of-list marker
@@ -358,10 +382,13 @@ static void cheat_behold(const void *arg)
    doom_printf("%s", DEH_String("STSTR_BEHOLD")); // Ty 03/27/98 - externalized
 }
 
-// 'clev' change-level cheat
-static void cheat_clev(const void *arg)
+//
+// cht_levelWarp
+//
+// haleyjd 08/23/13: Shared logic for warp cheats
+//
+static bool cht_levelWarp(const char *buf)
 {
-   const char *buf = (const char *)arg;
    char mapname[9];
    int epsd, map, lumpnum;
    bool foundit = false;
@@ -371,7 +398,7 @@ static void cheat_clev(const void *arg)
    // return silently on nonsense input
    if(buf[0] < '0' || buf[0] > '9' ||
       buf[1] < '0' || buf[1] > '9')
-      return;
+      return false;
 
    // haleyjd: build mapname
    memset(mapname, 0, sizeof(mapname));
@@ -379,14 +406,14 @@ static void cheat_clev(const void *arg)
    if(GameModeInfo->flags & GIF_MAPXY)
    {
       epsd = 1; //jff was 0, but espd is 1-based 
-      map = (buf[0] - '0')*10 + buf[1] - '0';
+      map  = (buf[0] - '0')*10 + buf[1] - '0';
 
       psnprintf(mapname, sizeof(mapname), "MAP%02d", map);
    }
    else
    {
       epsd = buf[0] - '0';
-      map = buf[1] - '0';
+      map  = buf[1] - '0';
 
       psnprintf(mapname, sizeof(mapname), "E%dM%d", epsd, map);
    }
@@ -406,32 +433,40 @@ static void cheat_clev(const void *arg)
 
    if(!foundit)
    {
-      doom_printf("%s not found or is not a valid map", mapname);
-      return;
+      player_printf(plyr, "%s not found or is not a valid map", mapname);
+      return false;
    }
-   
+
    // So be it.
 
    idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
-
-   doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
    G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
    
    // restore mission if appropriate
    if(levelDir != &wGlobalDir)
       inmanageddir = mission;
+
+   return true;
+}
+
+// 'clev' change-level cheat
+static void cheat_clev(const void *arg)
+{
+   if(cht_levelWarp(static_cast<const char *>(arg)))
+      player_printf(plyr, "%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
+
 }
 
 // 'mypos' for player position
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
 static void cheat_mypos(const void *arg)
 {
-   doom_printf("Position (%d,%d,%d)\tAngle %-.0f", 
-               players[consoleplayer].mo->x >> FRACBITS,
-               players[consoleplayer].mo->y >> FRACBITS,
-               players[consoleplayer].mo->z >> FRACBITS,
-               players[consoleplayer].mo->angle * (90.0/ANG90));
+   player_printf(plyr, "Position (%d,%d,%d)\tAngle %-.0f", 
+                 plyr->mo->x / FRACUNIT,
+                 plyr->mo->y / FRACUNIT,
+                 plyr->mo->z / FRACUNIT,
+                 plyr->mo->angle / ANGLE_1);
 }
 
 // compatibility cheat
@@ -512,8 +547,6 @@ static void cheat_keyxx(const void *arg)
    int key = *(const int *)arg;
    const char *msg = NULL;
 
-   // CHEATS_FIXME: this is a DOOM cheat; Need to add ability to have different
-   // cheats in each game, and then add Heretic's cheats.
    if(key >= GameModeInfo->numHUDKeys)
       return;
 
@@ -643,8 +676,84 @@ static void cheat_nuke(const void *arg)
 // Heretic Cheats
 //
 
+//
+// Heretic God Mode cheat - quicken
+//
 static void cheat_hticgod(const void *arg)
 {
+   plyr->cheats ^= CF_GODMODE;
+
+   if(plyr->cheats & CF_GODMODE)
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATGODON"));
+   else
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATGODOFF"));
+}
+
+//
+// Heretic No Clip cheat - kitty
+//
+static void cheat_hticnoclip(const void *arg)
+{
+   plyr->cheats ^= CF_NOCLIP;
+
+   if(plyr->cheats & CF_NOCLIP)
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATNOCLIPON"));
+   else
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATNOCLIPOFF"));
+}
+
+// HTIC_TODO: weapons cheat "rambo"
+// HTIC_TODO: tome of power cheat "shazam"
+
+//
+// Heretic Full Health cheat - ponce
+//
+static void cheat_htichealth(const void *arg)
+{
+   plyr->health = plyr->mo->health = plyr->pclass->initialhealth;
+   player_printf(plyr, "%s", DEH_String("TXT_CHEATHEALTH"));
+}
+
+//
+// Heretic Keys cheat - skel
+//
+static void cheat_htickeys(const void *arg)
+{
+   if(E_GiveAllKeys(plyr))
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATKEYS"));
+}
+
+// HTIC_TODO: artifacts cheat "gimme"
+
+//
+// Heretic Warp cheat - engage
+//
+static void cheat_hticwarp(const void *arg)
+{
+   if(cht_levelWarp(static_cast<const char *>(arg)))
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATWARP"));
+}
+
+// HTIC_TODO: chicken cheat - cockadoodledoo
+
+//
+// Heretic Kill-All cheat - massacre
+//
+static void cheat_htickill(const void *arg)
+{
+   M_NukeMonsters();
+   doom_printf("%s", DEH_String("TXT_CHEATMASSACRE"));
+}
+
+// HTIC_TODO: idkfa - remove player's weapons
+
+//
+// Heretic IDDQD - kill yourself. Best cheat ever!
+//
+static void cheat_hticiddqd(const void *arg)
+{
+   P_DamageMobj(plyr->mo, NULL, plyr->mo, 10000, MOD_UNKNOWN);
+   player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
 }
 
 //-----------------------------------------------------------------------------
@@ -735,24 +844,28 @@ bool M_FindCheats(int key)
    ret = false;
    for(matchedbefore = i = 0; cheat[i].cheat; i++)
    {
-      if((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
-         !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
-         !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
-         !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
-         !cheat[i].deh_disabled)
+      cheat_s &curcht = cheat[i];
+
+      // if match found & allowed
+      if((curcht.gametype == -1 || curcht.gametype == GameModeInfo->type) &&
+         (sr & curcht.mask) == curcht.code && 
+         !(curcht.when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
+         !(curcht.when & not_coop && netgame && GameType == gt_coop) &&
+         !(curcht.when & not_demo && (demorecording || demoplayback)) &&
+         !curcht.deh_disabled)
       {
-         if(cheat[i].arg < 0)               // if additional args are required
+         if(curcht.arg < 0)               // if additional args are required
          {
-            cht = i;                        // remember this cheat code
-            arg = argbuf;                   // point to start of arg buffer
-            argsleft = -cheat[i].arg;       // number of args expected
-            ret = true;                     // responder has eaten key
+            cht = i;                      // remember this cheat code
+            arg = argbuf;                 // point to start of arg buffer
+            argsleft = -curcht.arg;       // number of args expected
+            ret = true;                   // responder has eaten key
          }
-         else if(!matchedbefore)            // allow only one cheat at a time 
+         else if(!matchedbefore)          // allow only one cheat at a time 
          {
-            matchedbefore = 1;              // responder has eaten key
+            matchedbefore = 1;            // responder has eaten key
             ret = true;
-            cheat[i].func(&(cheat[i].arg)); // call cheat handler
+            curcht.func(&(curcht.arg));   // call cheat handler
          }
       }
    }
@@ -891,7 +1004,7 @@ void A_SorcNukeSpec(actionargs_t *actionargs)
 // killough 7/20/98: kill friendly monsters only if no others to kill
 // haleyjd 01/10/02: reformatted some code
 //
-static void M_NukeMonsters()
+static int M_NukeMonsters()
 {   
    int killcount = 0;
    Thinker *th = &thinkercap;
@@ -935,15 +1048,17 @@ static void M_NukeMonsters()
       }
    }
    while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98
-   
-   // killough 3/22/98: make more intelligent about plural
-   // Ty 03/27/98 - string(s) *not* externalized
-   doom_printf("%d Monster%s Killed", killcount,  (killcount == 1) ? "" : "s");
+
+   return killcount;
 }
 
 CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
 {
-   M_NukeMonsters();
+   int kills = M_NukeMonsters();
+
+   // killough 3/22/98: make more intelligent about plural
+   // Ty 03/27/98 - string(s) *not* externalized
+   doom_printf("%d Monster%s Killed", kills,  (kills == 1) ? "" : "s");
 }
 
 //----------------------------------------------------------------------------
