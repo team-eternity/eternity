@@ -99,6 +99,27 @@ struct vfont_t
    int patchnumoffset;       // used during font loading only
 };
 
+enum vtextflags_e
+{
+   VTXT_NORMAL     = 0,
+   VTXT_FIXEDCOLOR = 0x01,
+   VTXT_SHADOW     = 0x02,
+   VTXT_ABSCENTER  = 0x04
+};
+
+struct vtextdraw_t
+{
+   vfont_t     *font;
+   const char  *s;
+   int          x;
+   int          y;
+   VBuffer     *screen;
+   int          fixedColNum;
+   char        *altMap;
+   unsigned int flags;
+};
+
+void    V_FontWriteTextEx(const vtextdraw_t &textdraw);
 void    V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen = NULL);
 void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y,
                                VBuffer *screen = NULL);
@@ -109,7 +130,6 @@ void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
 int     V_FontStringHeight(vfont_t *font, const char *s);
 int     V_FontStringWidth(vfont_t *font, const char *s);
 int     V_FontCharWidth(vfont_t *font, char pChar);
-void    V_FontSetAbsCentered(void);
 int16_t V_FontMaxWidth(vfont_t *font);
 
 void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2);
