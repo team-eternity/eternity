@@ -132,7 +132,7 @@ static void R_DetermineFlatSize(texture_t *t)
    {
    case 4096:  // 64x64
       t->flatsize = FLAT_64;
-	  break;
+      break;
    case 16384: // 128x128
       t->flatsize = FLAT_128;
       break;
@@ -1183,12 +1183,11 @@ static void R_CountFlats()
 //
 static void R_AddFlats(void)
 {
-   int       i;
-   byte      flatsize;
-   uint16_t  width, height;
+   byte     flatsize;
+   uint16_t width, height;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
-   for(i = 0; i < numflats; ++i)
+   for(int i = 0; i < numflats; i++)
    {
       lumpinfo_t *lump = lumpinfo[i + firstflat];
       texture_t  *tex;

@@ -84,13 +84,6 @@ extern int   *columnofs;
 #define SPAN_PRIMEDEST_8() dest = ylookup[span.y] + columnofs[span.x1];
 
 //
-// LD_SPAN_PRIMEDEST_8
-//
-// For low detail. The x coordinate is multiplied by a factor of two.
-//
-#define LD_SPAN_PRIMEDEST_8() dest = ylookup[span.y] + columnofs[span.x1 << 1];
-
-//
 // PUTPIXEL_8
 //
 // Normal pixel write, and step to the next texel.
@@ -169,99 +162,12 @@ extern int   *columnofs;
    yf += ys;
 
 //
-// LD_PUTPIXEL_8
-//
-// Low detail pixel write.
-// This has been made slightly suboptimal in interest of using the same loop macro.
-// This is only supported as a gimmick and so I don't really care too much ;)
-// Two writes are accomplished at once due to half-width rendering.
-//
-#define LD_PUTPIXEL_8(i, xshift, yshift, xmask) \
-   dest[i<<1] = dest[(i<<1)+1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// LD_PUTPIXEL_EXTRA_8
-//
-#define LD_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
-   dest[0] = dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-   dest += 2; \
-   xf += xs; \
-   yf += ys;
-
-//
-// LDTL_PUTPIXEL_8
-//
-#define LDTL_PUTPIXEL_8(i, xshift, yshift, xmask) \
-   t = span.bg2rgb[dest[i<<1]] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   t |= 0x01f07c1f; \
-   dest[i<<1] = dest[(i<<1)+1] = RGB32k[0][0][t & (t >> 15)]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// LDTL_PUTPIXEL_EXTRA_8
-//
-#define LDTL_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
-   t = span.bg2rgb[*dest] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   t |= 0x01f07c1f; \
-   dest[0] = dest[1] = RGB32k[0][0][t & (t >> 15)]; \
-   dest += 2; \
-   xf += xs; \
-   yf += ys;
-
-//
-// LDA_PUTPIXEL_8
-//
-#define LDA_PUTPIXEL_8(i, xshift, yshift, xmask) \
-   a = span.bg2rgb[dest[i<<1]] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   b = a; \
-   a |= 0x01f07c1f; \
-   b &= 0x40100400; \
-   a &= 0x3fffffff; \
-   b  = b - (b >> 5); \
-   a |= b; \
-   dest[i<<1] = dest[(i<<1)+1] = RGB32k[0][0][a & (a >> 15)]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// LDA_PUTPIXEL_EXTRA_8
-//
-#define LDA_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
-   a = span.bg2rgb[*dest] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   b = a; \
-   a |= 0x01f07c1f; \
-   b &= 0x40100400; \
-   a &= 0x3fffffff; \
-   b  = b - (b >> 5); \
-   a |= b; \
-   dest[0] = dest[1] = RGB32k[0][0][a & (a >> 15)]; \
-   dest += 2; \
-   xf += xs; \
-   yf += ys;
-
-//
 // DESTSTEP_8
 //
 // Steps to next destination and counts down pixels in unrolled loop.
 //
 #define DESTSTEP_8() \
    dest += 4; \
-   count -= 4;
-
-//
-// LD_DESTSTEP_8
-//
-// As above, but for low detail mode. Steps twice as far in screenspace.
-//
-#define LD_DESTSTEP_8() \
-   dest += 8; \
    count -= 4;
 
 //
@@ -430,56 +336,6 @@ SPAN_FUNC(R_DrawSpanAdd_8_512, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x
 
 SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
           (span.yshift), (span.xmask), ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
-
-//==============================================================================
-//
-// Low-Detail Span Drawers
-//
-// haleyjd 09/10/06: These are for low-detail mode. They use the high-precision
-// drawing code but double up on pixels, making it blocky.
-// Low detail shall only be supported in 8-bit color.
-//
-
-SPAN_FUNC(R_DrawSpan_LD64,  SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
-          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpan_LD128, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
-          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpan_LD256, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
-          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpan_LD512, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
-          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-// Translucent variants
-
-SPAN_FUNC(R_DrawSpanTL_LD64,  TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
-          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanTL_LD128, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
-          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanTL_LD256, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
-          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanTL_LD512, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
-          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-// Additive variants
-
-SPAN_FUNC(R_DrawSpanAdd_LD64,  ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
-          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanAdd_LD128, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
-          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanAdd_LD256, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
-          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanAdd_LD512, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
-          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
-
 
 //==============================================================================
 //
@@ -984,26 +840,6 @@ spandrawer_t r_spandrawer =
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-   },
-
-   false
-};
-
-// low-detail spandrawer
-spandrawer_t r_lowspandrawer =
-{
-   {
-      { R_DrawSpan_LD64,    R_DrawSpan_LD128,    R_DrawSpan_LD256,    R_DrawSpan_LD512,    R_DrawSpan_CB_NOP},
-      { R_DrawSpanTL_LD64,  R_DrawSpanTL_LD128,  R_DrawSpanTL_LD256,  R_DrawSpanTL_LD512,  R_DrawSpan_CB_NOP},
-      { R_DrawSpanAdd_LD64, R_DrawSpanAdd_LD128, R_DrawSpanAdd_LD256, R_DrawSpanAdd_LD512, R_DrawSpan_CB_NOP},
-   },
-
-   // SoM: Sloped span drawers
-   // TODO: TL and ADD drawers
-   {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
    },
 
    false

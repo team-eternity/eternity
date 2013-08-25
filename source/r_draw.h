@@ -104,6 +104,7 @@ enum
 // haleyjd 06/22/08: Flat sizes enumeration
 enum
 {
+   FLAT_BAD = -1,     // malformed (<
    FLAT_64,           // 64x64
    FLAT_128,          // 128x128
    FLAT_256,          // 256x256
@@ -129,7 +130,6 @@ struct spandrawer_t
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
 extern spandrawer_t r_spandrawer;    // normal
-extern spandrawer_t r_lowspandrawer; // low-detail
 
 void R_InitBuffer(int width, int height);
 

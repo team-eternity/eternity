@@ -2056,7 +2056,7 @@ void DEH_ReplaceString(const char *mnemonic, const char *newstr)
 // BEX Code Pointer Hash Table
 //
 
-#define NUMCPTRCHAINS 257
+#define NUMCPTRCHAINS (earrlen(deh_bexptrs) + 35)
 
 static int bexcpchains[NUMCPTRCHAINS];
 
@@ -2064,7 +2064,8 @@ static void D_BEXPtrHashInit()
 {
    int i;
 
-   memset(bexcpchains, -1, NUMCPTRCHAINS*sizeof(int));
+   for(i = 0; i < NUMCPTRCHAINS; i++)
+      bexcpchains[i] = -1;
 
    for(i = 0; i < num_bexptrs; i++)
    {
