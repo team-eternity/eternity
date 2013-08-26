@@ -1075,21 +1075,39 @@ CONSOLE_COMMAND(mn_advanced, cf_server)
 // NETCODE_FIXME -- CONSOLE_FIXME: Dm flags may require special treatment
 //
 
-static void MN_DMFlagsDrawer(void);
+static void MN_DMFlagsDrawer();
 
-static menuitem_t mn_dmflags_items[] =
+enum
 {
-   {it_title,    "Deathmatch Flags",           NULL,            "M_DMFLAG"},
-   {it_gap},
-   {it_runcmd,   "items respawn",              "mn_dfitem"},
-   {it_runcmd,   "weapons stay",               "mn_dfweapstay"},
-   {it_runcmd,   "respawning barrels",         "mn_dfbarrel"},
-   {it_runcmd,   "players drop items",         "mn_dfplyrdrop"},
-   {it_runcmd,   "respawning super items",     "mn_dfrespsupr"},
-   {it_runcmd,   "instagib",                   "mn_dfinstagib"},
-   {it_gap},
-   {it_info,     "dmflags =",                  NULL,            NULL, MENUITEM_CENTERED},
-   {it_end}
+   DMF_MENU_TITLE,
+   DMF_MENU_TITLEGAP,
+   DMF_MENU_ITEMSRESPAWN,
+   DMF_MENU_WEAPONSSTAY,
+   DMF_MENU_RESPAWNBARRELS,
+   DMF_MENU_PLAYERDROP,
+   DMF_MENU_SUPERITEMS,
+   DMF_MENU_INSTAGIB,
+   DMF_MENU_KEEPITEMS,
+   DMF_MENU_FLAGS_GAP,
+   DMF_MENU_DMFLAGS,
+   DMF_END,
+   DMF_NUMITEMS
+};
+
+static menuitem_t mn_dmflags_items[DMF_NUMITEMS] =
+{
+   { it_title,    "Deathmatch Flags",           NULL,            "M_DMFLAG"},
+   { it_gap },
+   { it_runcmd,   "Items respawn",              "mn_dfitem"      },
+   { it_runcmd,   "Weapons stay",               "mn_dfweapstay"  },
+   { it_runcmd,   "Respawning barrels",         "mn_dfbarrel"    },
+   { it_runcmd,   "Players drop items",         "mn_dfplyrdrop"  },
+   { it_runcmd,   "Respawning super items",     "mn_dfrespsupr"  },
+   { it_runcmd,   "Instagib",                   "mn_dfinstagib"  },
+   { it_runcmd,   "Keep items on respawn",      "mn_dfkeepitems" },
+   { it_gap },
+   { it_info,     "dmflags =",                  NULL,            NULL, MENUITEM_CENTERED },
+   { it_end }
 };
 
 menu_t menu_dmflags =
@@ -1106,16 +1124,9 @@ menu_t menu_dmflags =
    mn_gset_pages,
 };
 
-/*
-CONSOLE_COMMAND(mn_dmflags, cf_server)
-{
-   MN_StartMenu(&menu_dmflags);
-}
-*/
-
 // haleyjd 04/14/03: dmflags menu drawer (a big hack, mostly)
 
-static void MN_DMFlagsDrawer(void)
+static void MN_DMFlagsDrawer()
 {
    int i;
    char buf[64];
@@ -1126,7 +1137,7 @@ static void MN_DMFlagsDrawer(void)
    if(!(menu_dmflags.menuitems[9].flags & MENUITEM_POSINIT))
       return;
 
-   for(i = 2; i < 8; i++)
+   for(i = DMF_MENU_ITEMSRESPAWN; i < DMF_MENU_FLAGS_GAP; i++)
    {
       menuitem = &(menu_dmflags.menuitems[i]);
                   
@@ -1140,7 +1151,7 @@ static void MN_DMFlagsDrawer(void)
         );
    }
 
-   menuitem = &(menu_dmflags.menuitems[9]);
+   menuitem = &(menu_dmflags.menuitems[DMF_MENU_DMFLAGS]);
    // draw dmflags value
    psnprintf(buf, sizeof(buf), "%c%lu", GameModeInfo->infoColor, dmflags);
    V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y, &subscreen43);
@@ -1182,6 +1193,11 @@ CONSOLE_COMMAND(mn_dfrespsupr, cf_server|cf_hidden)
 CONSOLE_COMMAND(mn_dfinstagib, cf_server|cf_hidden)
 {
    toggle_dm_flag(DM_INSTAGIB);
+}
+
+CONSOLE_COMMAND(mn_dfkeepitems, cf_server|cf_hidden)
+{
+   toggle_dm_flag(DM_KEEPITEMS);
 }
 
 /////////////////////////////////////////////////////////////////

@@ -2102,14 +2102,20 @@ void G_PlayerReborn(int player)
 
    p->usedown = p->attackdown = true;         // don't do anything immediately
 
+   // clear inventory unless otherwise indicated
+   if(!(dmflags & DM_KEEPITEMS))
+      E_ClearInventory(p);
+   
    // haleyjd 08/05/13: give reborn inventory
-   E_ClearInventory(p);
    for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
    {
-      const char *name   = playerclass->rebornitems[i].itemname;
-      int         amount = playerclass->rebornitems[i].amount;
-      
-      E_GiveInventoryItem(p, E_ItemEffectForName(name), amount);
+      const char   *name   = playerclass->rebornitems[i].itemname;
+      int           amount = playerclass->rebornitems[i].amount;
+      itemeffect_t *effect = E_ItemEffectForName(name);
+
+      // only if have none, in the case that DM_KEEPITEMS is specified
+      if(!E_GetItemOwnedAmount(p, effect))
+         E_GiveInventoryItem(p, effect, amount);
    }
 
    // INVENTORY_TODO: reborn weapons

@@ -697,9 +697,7 @@ void R_DrawSlope_8_512(void)
    }
 }
 
-
-
-void R_DrawSlope_8_GEN(void)
+void R_DrawSlope_8_GEN()
 {
    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;

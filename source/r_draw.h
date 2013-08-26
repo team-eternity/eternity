@@ -104,7 +104,6 @@ enum
 // haleyjd 06/22/08: Flat sizes enumeration
 enum
 {
-   FLAT_BAD = -1,     // malformed (<
    FLAT_64,           // 64x64
    FLAT_128,          // 128x128
    FLAT_256,          // 256x256
