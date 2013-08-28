@@ -2288,6 +2288,9 @@ static void D_DoomInit()
    // haleyjd 09/06/12: need to do this before EDF
    V_InitColorTranslation(); 
 
+   // haleyjd 08/28/13: init console command list
+   C_AddCommands();
+
    // haleyjd 09/11/03: All EDF and DeHackEd processing is now
    // centralized here, in order to allow EDF to load from wads.
    // As noted in comments, the other DEH functions above now add
@@ -2296,9 +2299,6 @@ static void D_DoomInit()
 
    // Init bex hash chaining before EDF
    D_BuildBEXHashChains();
-
-   startupmsg("C_Init", "Init console.");
-   C_Init();
 
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
@@ -2347,6 +2347,9 @@ static void D_DoomInit()
 
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();
+
+   startupmsg("C_Init", "Init console.");
+   C_Init();
 
    startupmsg("I_Init","Setting up machine state.");
    I_Init();
