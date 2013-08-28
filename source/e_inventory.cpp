@@ -36,6 +36,9 @@
 #include "e_lib.h"
 #include "e_sprite.h"
 
+#include "autopalette.h"
+#include "am_map.h"
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_player.h"
@@ -46,6 +49,7 @@
 #include "metaapi.h"
 #include "p_skin.h"
 #include "s_sound.h"
+#include "v_video.h"
 
 //=============================================================================
 //
@@ -478,6 +482,13 @@ static void E_collectKeyItems()
 // Lockdefs
 //
 
+// lockdef color types
+enum lockdefcolor_e
+{
+   LOCKDEF_COLOR_CONSTANT, // use a constant value
+   LOCKDEF_COLOR_VARIABLE  // use a console variable
+};
+
 struct anykey_t
 {
    unsigned int numKeys;
@@ -504,6 +515,11 @@ struct lockdef_t
    char *message;        // message to give if attempt to open fails
    char *remoteMessage;  // message to give if remote attempt to open fails
    char *lockedSound;    // name of sound to play on failure
+
+   // Lock color data
+   lockdefcolor_e colorType; // either constant or variable
+   int  color;               // constant color, if colorType == LOCKDEF_COLOR_CONSTANT
+   int *colorVar;            // cvar color, if colorType == LOCKDEF_COLOR_VARIABLE    
 };
 
 // Lockdefs hash, by ID number
@@ -607,6 +623,57 @@ static void E_processKeyList(itemeffect_t **effects, unsigned int numKeys,
          E_EDFLoggedWarning(2, "Warning: lockdef key '%s' is not an artifact\n", name);
 
       effects[i] = fx;
+   }
+}
+
+//
+// E_processLockDefColor
+//
+// Process a lockdef color field.
+//
+static void E_processLockDefColor(lockdef_t *lock, const char *value)
+{
+   // Default behavior - act like a closed door.
+   lock->colorType = LOCKDEF_COLOR_VARIABLE;
+   lock->colorVar  = &mapcolor_clsd;
+
+   if(!value || !*value)
+      return;
+   
+   AutoPalette pal(wGlobalDir);
+   long        lresult = 0;
+   command_t  *cmd     = NULL;
+
+   switch(*value)
+   {
+   case '$':
+      // cvar value
+      if((cmd = C_GetCmdForName(value + 1)) &&
+         cmd->type == ct_variable &&
+         cmd->variable->type == vt_int)
+      {
+         lock->colorType = LOCKDEF_COLOR_VARIABLE;
+         lock->colorVar  = (int *)(cmd->variable->variable);
+      }
+      break;
+   case '#':
+      // hex constant
+      lresult = strtol(value + 1, NULL, 16);
+      lock->colorType = LOCKDEF_COLOR_CONSTANT;
+      lock->color = V_FindBestColor(pal.get(),
+                       (int)((lresult >> 16) & 0xff),
+                       (int)((lresult >>  8) & 0xff),
+                       (int)( lresult        & 0xff));
+      break;
+   default:
+      // decimal palette index
+      lresult = strtol(value, NULL, 10);
+      if(lresult >= 0 && lresult <= 255)
+      {
+         lock->colorType = LOCKDEF_COLOR_CONSTANT;
+         lock->color     = (int)lresult;
+      }
+      break;
    }
 }
 
@@ -735,7 +802,7 @@ static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
 // E_PlayerCanUnlock
 //
 // Check if a player has the keys necessary to unlock an object that is
-// protected by a lock with the given key.
+// protected by a lock with the given ID.
 //
 bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 {

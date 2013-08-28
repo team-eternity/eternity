@@ -1872,7 +1872,7 @@ static void D_ProcessDehInWad(int i)
    }
 }
 
-static void D_ProcessDehInWads(void)
+static void D_ProcessDehInWads()
 {
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
@@ -1935,7 +1935,7 @@ extern int levelFragLimit;
 //
 // A little reminder for Certain People (Ichaelmay Ardyhay)
 //
-static void D_StartupMessage(void)
+static void D_StartupMessage()
 {
    puts("The Eternity Engine\n"
         "Copyright 2013 James Haley, Stephen McGranahan, et al.\n"
@@ -2297,6 +2297,9 @@ static void D_DoomInit()
    // Init bex hash chaining before EDF
    D_BuildBEXHashChains();
 
+   startupmsg("C_Init", "Init console.");
+   C_Init();
+
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
 
@@ -2344,9 +2347,6 @@ static void D_DoomInit()
 
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();
-
-   startupmsg("C_Init","Init console.");
-   C_Init();
 
    startupmsg("I_Init","Setting up machine state.");
    I_Init();

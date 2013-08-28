@@ -206,7 +206,7 @@ static void C_initMessageBuffer()
       messages[i] = &msgtext[i * LINELENGTH];
 }
 
-void C_Init(void)
+void C_Init()
 {
    // haleyjd: initialize console qstrings
    inputtext.createSize(100);

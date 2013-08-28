@@ -527,6 +527,7 @@ unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset)
    return flagset->results[0];
 }
 
+//=============================================================================
 //
 // Value-Parsing Callbacks
 //
@@ -842,6 +843,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    return 0;
 }
 
+//=============================================================================
 //
 // Prefix:Value Syntax Parsing
 //
@@ -889,6 +891,7 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
    return colonloc;
 }
 
+//=============================================================================
 //
 // Other String Utilities
 //

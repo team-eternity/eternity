@@ -1371,38 +1371,31 @@ void MN_SaveGame()
 // create the savegame console commands
 void MN_CreateSaveCmds()
 {
-   // haleyjd: something about the way these commands are being created
-   //          is causing the console code to free a ptr with no zone id...
-   //          08/08/00: fixed -- was trying to Z_Free a string on the C
-   //                    heap - see initializers above in MN_InitMenus
-
-   int i;
-   
-   for(i=0; i<SAVESLOTS; i++)  // haleyjd
+   for(int i = 0; i < SAVESLOTS; i++)  // haleyjd
    {
-      command_t *save_command;
+      command_t  *save_command;
       variable_t *save_variable;
       char tempstr[16];
 
       // create the variable first
       save_variable = (variable_t *)(Z_Malloc(sizeof(*save_variable), PU_STATIC, 0)); // haleyjd
-      save_variable->variable = &savegamenames[i];
+      save_variable->variable  = &savegamenames[i];
       save_variable->v_default = NULL;
-      save_variable->type = vt_string;      // string value
-      save_variable->min = 0;
-      save_variable->max = SAVESTRINGSIZE;
-      save_variable->defines = NULL;
+      save_variable->type      = vt_string;      // string value
+      save_variable->min       = 0;
+      save_variable->max       = SAVESTRINGSIZE;
+      save_variable->defines   = NULL;
       
       // now the command
       save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
       
       sprintf(tempstr, "savegame_%i", i);
-      save_command->name = estrdup(tempstr);
-      save_command->type = ct_variable;
-      save_command->flags = 0;
+      save_command->name     = estrdup(tempstr);
+      save_command->type     = ct_variable;
+      save_command->flags    = 0;
       save_command->variable = save_variable;
-      save_command->handler = MN_SaveGame;
-      save_command->netcmd = 0;
+      save_command->handler  = MN_SaveGame;
+      save_command->netcmd   = 0;
       
       C_AddCommand(save_command); // hook into cmdlist
    }

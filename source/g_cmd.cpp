@@ -670,37 +670,35 @@ CONSOLE_COMMAND(spectate_self, 0)
 // Chat Macros
 //
 
-void G_AddChatMacros(void)
+void G_AddChatMacros()
 {
-   int i;
-
-   for(i=0; i<10; i++)
+   for(int i = 0; i < 10; i++)
    {
       variable_t *variable;
-      command_t *command;
+      command_t  *command;
       char tempstr[32];
 
       memset(tempstr, 0, 32);
 
       // create the variable first
       variable = estructalloc(variable_t, 1);
-      variable->variable = &chat_macros[i];
+      variable->variable  = &chat_macros[i];
       variable->v_default = NULL;
-      variable->type = vt_string;      // string value
-      variable->min = 0;
-      variable->max = 128;
-      variable->defines = NULL;
+      variable->type      = vt_string;      // string value
+      variable->min       = 0;
+      variable->max       = 128;
+      variable->defines   = NULL;
 
       // now the command
       command = estructalloc(command_t, 1);
 
       sprintf(tempstr, "chatmacro%i", i);
-      command->name = estrdup(tempstr);
-      command->type = ct_variable;
-      command->flags = 0;
+      command->name     = estrdup(tempstr);
+      command->type     = ct_variable;
+      command->flags    = 0;
       command->variable = variable;
-      command->handler = NULL;
-      command->netcmd = 0;
+      command->handler  = NULL;
+      command->netcmd   = 0;
 
       C_AddCommand(command); // hook into cmdlist
    }
@@ -737,31 +735,30 @@ static char **autoload_ptrs[] =
    &csc_files[1],
 };
 
-void G_AddAutoloadFiles(void)
+void G_AddAutoloadFiles()
 {
    variable_t *variable;
-   command_t *command;
-   int i;
+   command_t  *command;
 
-   for(i = 0; i < 6; ++i)
+   for(int i = 0; i < 6; i++)
    {
       // create the variable first
       variable = estructalloc(variable_t, 1);
-      variable->variable = autoload_ptrs[i];
+      variable->variable  = autoload_ptrs[i];
       variable->v_default = NULL;
-      variable->type = vt_string;
-      variable->min = 0;
-      variable->max = 1024;
-      variable->defines = NULL;
+      variable->type      = vt_string;
+      variable->min       = 0;
+      variable->max       = 1024;
+      variable->defines   = NULL;
 
       // now the command
       command = estructalloc(command_t, 1);
-      command->name = autoload_names[i];
-      command->type = ct_variable;
-      command->flags = cf_allowblank;
+      command->name     = autoload_names[i];
+      command->type     = ct_variable;
+      command->flags    = cf_allowblank;
       command->variable = variable;
-      command->handler = NULL;
-      command->netcmd = 0;
+      command->handler  = NULL;
+      command->netcmd   = 0;
 
       C_AddCommand(command); // hook into cmdlist
    }
@@ -805,29 +802,27 @@ const char *comp_strings[] =
   "ninja",      //          04/18/10: ninja spawn
 };
 
-static void Handler_CompTHeights(void)
+static void Handler_CompTHeights()
 {
    P_ChangeThingHeights();
 }
 
 void G_AddCompat()
 {
-   int i;
-
-   for(i = 0; i <= comp_ninja; i++)   // haleyjd: update this regularly
+   for(int i = 0; i <= comp_ninja; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
-      command_t *command;
+      command_t  *command;
       char tempstr[32];
 
       // create the variable first
       variable = estructalloc(variable_t, 1);
-      variable->variable = &comp[i];
+      variable->variable  = &comp[i];
       variable->v_default = &default_comp[i];
-      variable->type = vt_int;      // string value
-      variable->min = 0;
-      variable->max = 1;
-      variable->defines = yesno;
+      variable->type      = vt_int;
+      variable->min       = 0;
+      variable->max       = 1;
+      variable->defines   = yesno;
 
       // now the command
       command = estructalloc(command_t, 1);
@@ -839,17 +834,17 @@ void G_AddCompat()
       switch(i)
       {
       case comp_theights:
-         command->flags = cf_server | cf_netvar;
+         command->flags   = cf_server | cf_netvar;
          command->handler = Handler_CompTHeights;
          break;
       default:
-         command->flags = cf_server | cf_netvar;
+         command->flags   = cf_server | cf_netvar;
          command->handler = NULL;
          break;
       }
 
       command->variable = variable;
-      command->netcmd = netcmd_comp_0 + i;
+      command->netcmd   = netcmd_comp_0 + i;
 
       C_AddCommand(command); // hook into cmdlist
    }
