@@ -37,6 +37,8 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_inventory.h"
+#include "ev_specials.h"
 #include "g_bind.h"
 #include "p_maputl.h"
 #include "p_portal.h"
@@ -1526,31 +1528,12 @@ static void AM_drawGrid(int color)
 //
 static int AM_DoorColor(int type)
 {
-   if(GenLockedBase <= type && type < GenDoorBase)
-   {
-      type -= GenLockedBase;
-      type = (type & LockedKey) >> LockedKeyShift;
-      if(!type || type==7)
-         return 3;  //any or all keys
-      else 
-         return (type - 1) % 3;
-   }
+   int lockdefID = EV_LockDefIDForSpecial(type);
 
-   switch(type)  // closed keyed door
-   {
-   case 26: case 32: case 99: case 133:
-      /*bluekey*/
-      return 1;
-   case 27: case 34: case 136: case 137:
-      /*yellowkey*/
-      return 2;
-   case 28: case 33: case 134: case 135:
-      /*redkey*/
-      return 0;
-   default:
-      return -1; // not a keyed door
-   }
-   return -1;    // not a keyed door
+   if(lockdefID)
+      return E_GetLockDefColor(lockdefID);
+   else
+      return -1;
 }
 
 // haleyjd 07/07/04: Support routines to clean up the horrible
@@ -1637,17 +1620,9 @@ inline static bool AM_drawAsTeleporter(line_t *line)
 // Returns true if a line is a locked door for which the corresponding
 // map color is defined; returns false otherwise.
 //
-// FIXME / HTIC_TODO: Heretic support
-//
 inline static bool AM_drawAsLockedDoor(line_t *line)
 {
-   return ((mapcolor_bdor || mapcolor_ydor || mapcolor_rdor) &&
-           ((line->special >=  26 && line->special <=  28) ||
-            (line->special >=  32 && line->special <=  34) ||
-            (line->special >= 133 && line->special <= 137) ||
-            line->special == 99 ||
-            (line->special >= GenLockedBase && 
-             line->special <  GenDoorBase)));
+   return E_GetLockDefColor(EV_LockDefIDForSpecial(line->special)) != 0;
 }
 
 //
@@ -1827,29 +1802,9 @@ static void AM_drawWalls(void)
                //jff 1/5/98 this clause implements showing keyed doors
                if(AM_isDoorClosed(line))
                {
-                  switch(AM_DoorColor(line->special)) // closed keyed door
-                  {
-                  case 1:
-                     /*bluekey*/
-                     AM_drawMline(&l,
-                        mapcolor_bdor ? mapcolor_bdor : mapcolor_cchg);
-                     break;
-                  case 2:
-                     /*yellowkey*/
-                     AM_drawMline(&l,
-                        mapcolor_ydor ? mapcolor_ydor : mapcolor_cchg);
-                     break;
-                  case 0:
-                     /*redkey*/
-                     AM_drawMline(&l,
-                        mapcolor_rdor ? mapcolor_rdor : mapcolor_cchg);
-                     break;
-                  case 3:
-                     /*any or all*/
-                     AM_drawMline(&l,
-                        mapcolor_clsd ? mapcolor_clsd : mapcolor_cchg);
-                     break;
-                  }
+                  int lockColor;
+                  if((lockColor = AM_DoorColor(line->special)) >= 0)
+                     AM_drawMline(&l, lockColor ? lockColor : mapcolor_cchg);
                }
                else
                   AM_drawMline(&l, mapcolor_cchg); // open keyed door

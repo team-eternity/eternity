@@ -354,6 +354,20 @@ static int lockdefIDForGenLock[MaxKeyKind][2] =
 };
 
 //
+// EV_lockdefIDForGenSpec
+//
+// Get the lockdef ID used for a generalized line special.
+//
+static int EV_lockdefIDForGenSpec(int special)
+{
+   // does this line special distinguish between skulls and keys?
+   int skulliscard = (special & LockedNKeys) >> LockedNKeysShift;
+   int genLock     = (special & LockedKey  ) >> LockedKeyShift;
+   
+   return lockdefIDForGenLock[genLock][skulliscard];
+}
+
+//
 // EV_canUnlockGenDoor()
 //
 // Passed a generalized locked door linedef and a player, returns whether
@@ -371,13 +385,10 @@ static int lockdefIDForGenLock[MaxKeyKind][2] =
 //
 static bool EV_canUnlockGenDoor(line_t *line, player_t *player)
 {
-   // does this line special distinguish between skulls and keys?
-   int skulliscard = (line->special & LockedNKeys) >> LockedNKeysShift;
-   int genLock     = (line->special & LockedKey) >> LockedKeyShift;
-   int lockdefID   = lockdefIDForGenLock[genLock][skulliscard];
+   int lockdefID = EV_lockdefIDForGenSpec(line->special);
 
-   itemeffect_t    *yskull = E_ItemEffectForName(ARTI_YELLOWSKULL);
-   bool hasYellowSkull = (E_GetItemOwnedAmount(player, yskull) > 0);
+   itemeffect_t *yskull = E_ItemEffectForName(ARTI_YELLOWSKULL);
+   bool hasYellowSkull  = (E_GetItemOwnedAmount(player, yskull) > 0);
 
    // MBF compatibility hack - if lockdef ID is ALL3 and the player has the 
    // YellowSkull, we have to take it away; if he doesn't have it, we have to 
@@ -1072,8 +1083,14 @@ ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
 //
 int EV_LockDefIDForSpecial(int special)
 {
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   if(special >= GenLockedBase && special < GenDoorBase) 
+   {
+      return EV_lockdefIDForGenSpec(special); // generalized lock
+   }
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   {
       return 0; // Hexen doesn't work this way.
+   }
    else
    {
       // STRIFE_TODO: hard-coded for now, as DOOM and Heretic are the same

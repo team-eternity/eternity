@@ -531,6 +531,7 @@ static EHashTable<lockdef_t, EIntHashKey, &lockdef_t::id, &lockdef_t::links> e_l
 #define ITEM_LOCKDEF_REMOTE   "remotemessage"
 #define ITEM_LOCKDEF_ANY_KEYS "keys"
 #define ITEM_LOCKDEF_LOCKSND  "lockedsound"
+#define ITEM_LOCKDEF_MAPCOLOR "mapcolor"
 
 // "any" section options
 static cfg_opt_t any_opts[] =
@@ -542,11 +543,12 @@ static cfg_opt_t any_opts[] =
 // Lockdef section options
 cfg_opt_t edf_lockdef_opts[] =
 {
-   CFG_STR(ITEM_LOCKDEF_REQUIRE, "",       CFGF_MULTI),
-   CFG_SEC(ITEM_LOCKDEF_ANY,     any_opts, CFGF_MULTI),
-   CFG_STR(ITEM_LOCKDEF_MESSAGE, NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_REMOTE,  NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_LOCKSND, NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REQUIRE,  "",       CFGF_MULTI),
+   CFG_SEC(ITEM_LOCKDEF_ANY,      any_opts, CFGF_MULTI),
+   CFG_STR(ITEM_LOCKDEF_MESSAGE,  NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REMOTE,   NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_LOCKSND,  NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_MAPCOLOR, NULL,     CFGF_NONE ),
    CFG_END()
 };
 
@@ -747,6 +749,9 @@ static void E_processLockDef(cfg_t *lock)
    if((tempstr = cfg_getstr(lock, ITEM_LOCKDEF_LOCKSND))) // locked sound
       lockdef->lockedSound = estrdup(tempstr);
 
+   // process map color
+   E_processLockDefColor(lockdef, cfg_getstr(lock, ITEM_LOCKDEF_MAPCOLOR));
+
    E_EDFLogPrintf("\t\tDefined lockdef %d\n", lockdef->id);
 }
 
@@ -886,6 +891,34 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 
    // you can unlock it!
    return true;
+}
+
+//
+// E_GetLockDefColor
+//
+// Get the automap color for a lockdef.
+//
+int E_GetLockDefColor(int lockID)
+{
+   int color = 0;
+   lockdef_t *lock;
+
+   if((lock = E_LockDefForID(lockID)))
+   {
+      switch(lock->colorType)
+      {
+      case LOCKDEF_COLOR_CONSTANT:
+         color = lock->color;
+         break;
+      case LOCKDEF_COLOR_VARIABLE:
+         color = *lock->colorVar;
+         break;
+      default:
+         break;
+      }
+   }
+
+   return color;
 }
 
 //
