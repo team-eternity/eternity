@@ -652,7 +652,9 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
       // cvar value
       if((cmd = C_GetCmdForName(value + 1)) &&
          cmd->type == ct_variable &&
-         cmd->variable->type == vt_int)
+         cmd->variable->type == vt_int &&
+         cmd->variable->min == 0 &&
+         cmd->variable->max == 255)
       {
          lock->colorType = LOCKDEF_COLOR_VARIABLE;
          lock->colorVar  = (int *)(cmd->variable->variable);
