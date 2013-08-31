@@ -186,7 +186,6 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ravpowerg", Game_Heretic, not_sync, cheat_pw,          pw_ghost           },
    { "ravpowera", Game_Heretic, not_sync, cheat_pw,          pw_allmap          },
    { "ravpowert", Game_Heretic, not_sync, cheat_pw,          pw_torch           },
-   { "ravpowerw", Game_Heretic, not_sync, cheat_pw,          pw_strength        }, // HTIC_TODO
    { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
    { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
    { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
@@ -776,7 +775,7 @@ static void cheat_hticiddqd(const void *arg)
 //
 static void cheat_hticbehold(const void *arg)
 {
-   player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Wp2, Fly or Rad");
+   player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
 }
 
 //-----------------------------------------------------------------------------
