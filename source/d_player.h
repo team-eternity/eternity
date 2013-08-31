@@ -128,7 +128,7 @@ struct player_t
    fixed_t        bob;             // bounded/scaled total momentum.
    fixed_t        pitch;           // haleyjd 04/03/05: true pitch angle
 
-    // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
+   // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
    // mo->momx and mo->momy represent true momenta experienced by player.
    // This only represents the thrust that the player applies himself.
    // This avoids anomolies with such things as Boom ice and conveyors.
@@ -171,6 +171,8 @@ struct player_t
    int            damagecount;
    int            bonuscount;
    int            fixedcolormap; // Current PLAYPAL, for pain etc.
+   int            newtorch;      // haleyjd 08/31/13: change torch level?
+   int            torchdelta;    // haleyjd 08/31/13: amount to change torch level
 
    Mobj          *attacker;      // Who did damage (NULL for floors/ceilings).
 

@@ -38,6 +38,7 @@
 #include "e_states.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "m_random.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_map3d.h"
@@ -477,6 +478,89 @@ static void P_HereticCurrent(player_t *player)
 }
 
 //
+// P_doTorchFlicker
+//
+// haleyjd 08/31/13: apply flickering effect when player has a torch
+//
+static void P_doTorchFlicker(player_t *player)
+{
+   // if infinite duration, or just starting, set fixedcolormap
+   // if it's out of range of the torch effect
+   if(player->powers[pw_torch] < 0 ||
+      player->powers[pw_torch] >= INFRATICS - 1)
+   {
+      if(!player->fixedcolormap || player->fixedcolormap > 7)
+         player->fixedcolormap = 1;
+   }
+
+   if(leveltime & 16)
+      return;
+
+   if(player->newtorch)
+   {
+      if(player->fixedcolormap + player->torchdelta > 7 ||
+         player->fixedcolormap + player->torchdelta < 1 ||
+         player->newtorch == player->fixedcolormap)
+      {
+         player->newtorch = 0;
+      }
+      else
+         player->fixedcolormap += player->torchdelta;
+   }
+   else
+   {
+      player->newtorch = (M_Random() & 7) + 1;
+      if(player->newtorch == player->fixedcolormap)
+         player->torchdelta = 0;
+      else if(player->newtorch > player->fixedcolormap)
+         player->torchdelta = 1;
+      else
+         player->torchdelta = -1;
+   }
+}
+
+enum
+{
+   PLS_NONE,
+   PLS_LIGHTAMP,
+   PLS_TORCH
+};
+
+//
+// P_PlayerLightSourceType
+//
+// Return the type of light source the player is using.
+//
+static int P_PlayerLightSourceType(player_t *player)
+{
+   // infrared is higher priority than torch
+   if(player->powers[pw_infrared])
+      return PLS_LIGHTAMP;
+   else if(player->powers[pw_torch])
+      return PLS_TORCH;
+   else
+      return PLS_NONE;
+}
+
+//
+// P_PlayerLightTics
+//
+// haleyjd 08/31/13: get the player's light power tics
+//
+static int P_PlayerLightTics(player_t *player)
+{
+   switch(P_PlayerLightSourceType(player))
+   {
+   case PLS_LIGHTAMP:
+      return player->powers[pw_infrared];
+   case PLS_TORCH:
+      return player->powers[pw_torch];
+   default:
+      return 0;
+   }
+}
+
+//
 // P_SectorIsSpecial
 //
 // haleyjd 12/28/08: Determines whether or not a sector is special.
@@ -690,6 +774,10 @@ void P_PlayerThink(player_t *player)
    if(player->powers[pw_infrared] > 0)        // killough
       player->powers[pw_infrared]--;
 
+   // haleyjd: torch
+   if(player->powers[pw_torch] > 0)
+      player->powers[pw_torch]--;
+
    if(player->powers[pw_ironfeet] > 0)        // killough
       player->powers[pw_ironfeet]--;
 
@@ -701,13 +789,8 @@ void P_PlayerThink(player_t *player)
 
    if(player->powers[pw_totalinvis] > 0) // haleyjd
    {
-      player->mo->flags2 &= ~MF2_DONTDRAW; // flash   
-      player->powers[pw_totalinvis]--;  
-      player->mo->flags2 |=               
-         player->powers[pw_totalinvis] &&
-         (player->powers[pw_totalinvis] > 4*32 ||
-          player->powers[pw_totalinvis] & 8)
-          ? MF2_DONTDRAW : 0;
+      if(!--player->powers[pw_totalinvis])
+         player->mo->flags2 &= ~MF2_DONTDRAW;
    }
 
    if(player->powers[pw_flight] > 0) // haleyjd 06/05/12
@@ -722,15 +805,34 @@ void P_PlayerThink(player_t *player)
    if(player->bonuscount)
       player->bonuscount--;
 
+   // get length of time left on any active lighting powerup
+   int lighttics   = P_PlayerLightTics(player);
+   int lightsource = P_PlayerLightSourceType(player);
+
    // Handling colormaps.
-   // killough 3/20/98: reformat to terse C syntax
-
-   // sf: removed MBF beta stuff
-
-   player->fixedcolormap = 
-      (player->powers[pw_invulnerability] > 4*32 ||    
-       player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
-      (player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8);
+   if(player->powers[pw_invulnerability])
+   {
+      if(player->powers[pw_invulnerability] > 4*32 || 
+         player->powers[pw_invulnerability] & 8)
+         player->fixedcolormap = INVERSECOLORMAP;
+      else
+         player->fixedcolormap = 0;
+   }
+   else if(lightsource != PLS_NONE)
+   {
+      if(lighttics > 0 && lighttics <= 4*32) // fading out?
+         player->fixedcolormap = ((lighttics & 8) != 0);
+      else
+      {
+         // haleyjd: if player has a torch, do flickering
+         if(lightsource == PLS_TORCH)
+            P_doTorchFlicker(player);
+         else
+            player->fixedcolormap = 1; // almost full bright
+      }
+   }
+   else
+      player->fixedcolormap = 0;
 
    // haleyjd 01/21/07: clear earthquake flag before running quake thinkers later
    player->quake = 0;

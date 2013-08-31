@@ -316,6 +316,21 @@ void P_GiveCard(player_t *player, itemeffect_t *card)
    E_GiveInventoryItem(player, card);
 }
 
+/*
+  pw_invulnerability,
+  pw_strength,
+  pw_invisibility,
+  pw_ironfeet,
+  pw_allmap,
+  pw_infrared,
+  pw_totalinvis,  // haleyjd: total invisibility
+  pw_ghost,       // haleyjd: heretic ghost
+  pw_silencer,    // haleyjd: silencer
+  pw_flight,      // haleyjd: flight
+  pw_torch,       // haleyjd: infrared w/flicker
+  NUMPOWERS
+*/
+
 //
 // P_GivePower
 //
@@ -326,14 +341,16 @@ bool P_GivePower(player_t *player, int power)
    static const int tics[NUMPOWERS] = 
    {
       INVULNTICS,
-      1,          /* strength */
+      1,          // strength 
       INVISTICS,
       IRONTICS, 
-      1,          /* allmap */
+      1,          // allmap 
       INFRATICS,
-      INVISTICS,  /* haleyjd: totalinvis */
-      INVISTICS,  /* haleyjd: ghost */
-      1,          /* haleyjd: silencer */
+      INVISTICS,  // haleyjd: totalinvis
+      INVISTICS,  // haleyjd: ghost 
+      1,          // haleyjd: silencer 
+      FLIGHTTICS, // haleyjd: flight
+      INFRATICS,  // haleyjd: torch
    };
 
    switch(power)
@@ -357,13 +374,17 @@ bool P_GivePower(player_t *player, int power)
    case pw_silencer:
       if(player->powers[pw_silencer])
          return false;
+   case pw_flight:       // haleyjd: flight
+      if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4*32)
+         return false;
+      P_PlayerStartFlight(player, true);
       break;
    }
 
-   // Unless player has infinite duration cheat, set duration (killough)
-   
+   // Unless player has infinite duration cheat, set duration (killough)   
    if(player->powers[power] >= 0)
       player->powers[power] = tics[power];
+
    return true;
 }
 

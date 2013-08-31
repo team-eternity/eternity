@@ -99,6 +99,7 @@ static void cheat_htickeys(const void *);
 static void cheat_htickill(const void *);
 static void cheat_hticnoclip(const void *);
 static void cheat_hticwarp(const void *);
+static void cheat_hticbehold(const void *);
 
 // Shared cheats
 static void cheat_pw(const void *);
@@ -173,14 +174,22 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "killem",     Game_DOOM, not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
 
    // Heretic Cheats
-   { "quicken",  Game_Heretic, not_sync, cheat_hticgod,     0 },
-   { "ponce",    Game_Heretic, not_sync, cheat_htichealth,  0 },
-   { "iddqd",    Game_Heretic, not_sync, cheat_hticiddqd,   0 },
-   { "skel",     Game_Heretic, not_sync, cheat_htickeys,    0 },
-   { "massacre", Game_Heretic, not_sync, cheat_htickill,    0 },
-   { "kitty",    Game_Heretic, not_sync, cheat_hticnoclip,  0 },
-   { "engage",   Game_Heretic, not_sync, cheat_hticwarp,   -2 },
-   { "ravmap",   Game_Heretic, not_dm,   cheat_ddt,         0 },
+   { "quicken",   Game_Heretic, not_sync, cheat_hticgod,     0                  },
+   { "ponce",     Game_Heretic, not_sync, cheat_htichealth,  0                  },
+   { "iddqd",     Game_Heretic, not_sync, cheat_hticiddqd,   0                  },
+   { "skel",      Game_Heretic, not_sync, cheat_htickeys,    0                  },
+   { "massacre",  Game_Heretic, not_sync, cheat_htickill,    0                  },
+   { "kitty",     Game_Heretic, not_sync, cheat_hticnoclip,  0                  },
+   { "engage",    Game_Heretic, not_sync, cheat_hticwarp,   -2                  },
+   { "ravmap",    Game_Heretic, not_dm,   cheat_ddt,         0                  },
+   { "ravpowerv", Game_Heretic, not_sync, cheat_pw,          pw_invulnerability },
+   { "ravpowerg", Game_Heretic, not_sync, cheat_pw,          pw_ghost           },
+   { "ravpowera", Game_Heretic, not_sync, cheat_pw,          pw_allmap          },
+   { "ravpowert", Game_Heretic, not_sync, cheat_pw,          pw_torch           },
+   { "ravpowerw", Game_Heretic, not_sync, cheat_pw,          pw_strength        }, // HTIC_TODO
+   { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
+   { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
+   { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
 
    // Shared Cheats
    { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
@@ -372,6 +381,10 @@ static void cheat_pw(const void *arg)
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
+
+   // haleyjd: stop flight if necessary
+   if(pw == pw_flight && !plyr->powers[pw_flight])
+      P_PlayerStopFlight(plyr);
    
    doom_printf("%s", DEH_String("STSTR_BEHOLDX")); // Ty 03/27/98 - externalized
 }
@@ -754,6 +767,16 @@ static void cheat_hticiddqd(const void *arg)
 {
    P_DamageMobj(plyr->mo, NULL, plyr->mo, 10000, MOD_UNKNOWN);
    player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
+}
+
+// New cheats, to fill in for Heretic's shortcomings
+
+//
+// Heretic Powerup cheat
+//
+static void cheat_hticbehold(const void *arg)
+{
+   player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Wp2, Fly or Rad");
 }
 
 //-----------------------------------------------------------------------------
