@@ -201,7 +201,7 @@ void D_PostEvent(event_t *ev)
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
 //
-void D_ProcessEvents(void)
+void D_ProcessEvents()
 {
    // IF STORE DEMO, DO NOT ACCEPT INPUT
    // sf: I don't think SMMU is going to be played in any store any

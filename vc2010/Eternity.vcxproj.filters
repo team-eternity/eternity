@@ -1607,6 +1607,9 @@
     <ClInclude Include="..\source\metaspawn.h">
       <Filter>Source Files\MetaAPI</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\m_compare.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

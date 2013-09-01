@@ -37,6 +37,7 @@
 #include "e_exdata.h"
 #include "ev_specials.h"
 #include "g_game.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_info.h"
 #include "p_spec.h"
@@ -1568,7 +1569,7 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
    {
       if(EV_CompositeActionFlags(bind->action) & EV_PARAMLINESPEC)
       {
-         int numargs = Console.argc - 1;
+         int numargs = emin(Console.argc - 1, NUMLINEARGS);
          for(int i = 0; i < numargs; i++)
             args[i] = Console.argv[i + 1]->toInt();
 
