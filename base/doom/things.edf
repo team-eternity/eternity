@@ -598,15 +598,15 @@ thingtype Demon
     SARG AB 10 A_Look
     loop
   See:
-    SARG AABBCCDD 2 A_Chase
+    SARG AABBCCDD 2 fast A_Chase
     loop
   Melee:
-    SARG EF 8 A_FaceTarget
-    SARG G  8 A_SargAttack
+    SARG EF 8 fast A_FaceTarget
+    SARG G  8 fast A_SargAttack
     goto See
   Pain:
-    SARG H 2
-    SARG H 2 A_Pain
+    SARG H 2 fast
+    SARG H 2 fast A_Pain
     goto See
   Death:
     SARG I  8

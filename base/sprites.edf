@@ -3,6 +3,7 @@
 //
 // This file contains the spritenames array, and definitions for sprite-based
 // pickup items.
+//
 
 // Sprite names -- strings MUST be four characters each, order is unimportant.
 //    Sprites can be added to this list by another file through use of this 
@@ -105,6 +106,6 @@ pickupitem AMP2 { effect PFX_PHRDHEFTY }
 
 endif()
 
-pickupitem PNS2 { effect = PFX_TOTALINVIS }
+pickupitem PNS2 { effect PFX_TOTALINVIS }
 
 

@@ -2792,33 +2792,34 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
       meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
 
+//
+// G_SetFastParms
+//
 // killough 4/10/98: New function to fix bug which caused Doom
 // lockups when idclev was used in conjunction with -fast.
-
+//
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
    int i;
    MetaSpeedSet *mss;
-
-   // TODO: Heretic support?
-   // EDF FIXME: demon frame speedup difficult to generalize
-   int demonRun1  = E_SafeState(S_SARG_RUN1);
-   int demonPain2 = E_SafeState(S_SARG_PAIN2);
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
-         for(i = demonRun1; i <= demonPain2; i++)
+         for(i = 0; i < NUMSTATES; i++)
          {
-            // killough 4/10/98
-            // don't change 1->0 since it causes cycles
-            if(states[i]->tics != 1 || demo_compatibility)
-               states[i]->tics >>= 1;  
+            if(states[i]->flags & STATEF_SKILL5FAST)
+            {
+               // killough 4/10/98
+               // don't change 1->0 since it causes cycles
+               if(states[i]->tics != 1 || demo_compatibility)
+                  states[i]->tics >>= 1;
+            }
          }
 
-         for(i = 0; i < NUMMOBJTYPES; ++i)
+         for(i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
             if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
@@ -2827,10 +2828,13 @@ void G_SetFastParms(int fast_pending)
       }
       else
       {
-         for(i = demonRun1; i <= demonPain2; i++)
-            states[i]->tics <<= 1;
+         for(i = 0; i < NUMSTATES; i++)
+         {
+            if(states[i]->flags & STATEF_SKILL5FAST)
+               states[i]->tics <<= 1;
+         }
 
-         for(i = 0; i < NUMMOBJTYPES; ++i)
+         for(i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
             if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))

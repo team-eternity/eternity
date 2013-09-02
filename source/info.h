@@ -158,7 +158,7 @@ typedef int statenum_t;
 enum stateflags_e
 {
    STATEF_DECORATE   = 0x00000001, // 01/01/12: reserved for DECORATE definition
-   STATEF_SKILL5FAST = 0x00000002, // 08/02/13: tics double on nightmare skill
+   STATEF_SKILL5FAST = 0x00000002, // 08/02/13: tics halve on nightmare skill
 };
 
 // ********************************************************************
