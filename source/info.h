@@ -154,29 +154,36 @@ enum
 
 typedef int statenum_t;
 
+// state flags
+enum stateflags_e
+{
+   STATEF_DECORATE   = 0x00000001, // 01/01/12: reserved for DECORATE definition
+   STATEF_SKILL5FAST = 0x00000002, // 08/02/13: tics double on nightmare skill
+};
+
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
 struct state_t
 {
-   DLListItem<state_t> namelinks;            // haleyjd 03/30/10: new hashing: by name
-   DLListItem<state_t> numlinks;             // haleyjd 03/30/10: new hashing: by dehnum
+   DLListItem<state_t> namelinks;             // haleyjd 03/30/10: new hashing: by name
+   DLListItem<state_t> numlinks;              // haleyjd 03/30/10: new hashing: by dehnum
 
-   spritenum_t sprite;                       // sprite number to show
-   int         frame;                        // which frame/subframe of the sprite is shown
-   int         tics;                         // number of gametics this frame should last
-   void        (*action)(actionargs_t *);    // code pointer to function for action if any
-   void        (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
-   statenum_t  nextstate;                    // index of next state, or -1
-   int         misc1, misc2;                 // used for psprite positioning
-   int         particle_evt;                 // haleyjd: determines an event to run  
-   arglist_t  *args;                         // haleyjd: state arguments
+   spritenum_t  sprite;                       // sprite number to show
+   int          frame;                        // which frame/subframe of the sprite is shown
+   int          tics;                         // number of gametics this frame should last
+   void         (*action)(actionargs_t *);    // code pointer to function for action if any
+   void         (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
+   statenum_t   nextstate;                    // index of next state, or -1
+   int          misc1, misc2;                 // used for psprite positioning
+   int          particle_evt;                 // haleyjd: determines an event to run  
+   arglist_t   *args;                         // haleyjd: state arguments
+   unsigned int flags;                        // haleyjd: flags
    
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
    int         dehnum;    // DeHackEd number for fast access, comp.
    int         index;     // 06/12/09: number of state in states array
-   bool        decorate;  // 01/01/12: reserved for DECORATE definition
 };
 
 // these are in info.c

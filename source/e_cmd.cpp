@@ -288,7 +288,7 @@ CONSOLE_COMMAND(e_dumpstate, 0)
             state->name, 
             state->dehnum,
             state->index,
-            state->decorate ? "true" : "false",
+            (state->flags & STATEF_DECORATE) ? "true" : "false",
             state->sprite, 
             state->frame & FF_FRAMEMASK,
             state->frame & FF_FULLBRIGHT ? "true" : "false",
