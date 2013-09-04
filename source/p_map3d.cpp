@@ -703,7 +703,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 //
 bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
 {
-   int flags;
+   unsigned int flags;
    bool xygood;
    
    // save the thing's flags, some flags must be removed to avoid side effects
