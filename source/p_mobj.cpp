@@ -1586,6 +1586,29 @@ void Mobj::updateThinker()
    addToThreadedList(tclass);
 }
 
+//
+// Mobj::copyPosition
+//
+// Copy all the location data from one Mobj to another.
+//
+void Mobj::copyPosition(const Mobj *other)
+{
+   x          = other->x;
+   y          = other->y;
+   z          = other->z;
+   groupid    = other->groupid;
+   floorz     = other->floorz;
+   ceilingz   = other->ceilingz;
+   dropoffz   = other->dropoffz;
+   passfloorz = other->passfloorz;
+   passceilz  = other->passceilz;
+   secfloorz  = other->secfloorz;
+   secceilz   = other->secceilz;
+
+   intflags  &= ~(MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ);
+   intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
+}
+
 extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 
@@ -1743,22 +1766,21 @@ void Mobj::removeThinker()
 {
    bool respawnitem = false;
 
-   if(this->flags3 & MF3_SUPERITEM)
+   // normal items respawn, and respawning barrels dmflag
+   if((this->flags & MF_SPECIAL) ||
+      ((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL)))
    {
-      // super items ONLY respawn when enabled through dmflags
-      respawnitem = ((dmflags & DM_RESPAWNSUPER) == DM_RESPAWNSUPER);
-   }
-   else
-   {
-      // normal items respawn, and respawning barrels dmflag
-      bool mayrespawn = 
-         ((this->flags & MF_SPECIAL) || 
-          ((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL)));
-
-      if(mayrespawn &&
-         !(this->flags  & MF_DROPPED) &&   // dropped items don't respawn
-         !(this->flags3 & MF3_NOITEMRESP)) // NOITEMRESP items don't respawn
-         respawnitem = true;
+      if(this->flags3 & MF3_SUPERITEM)
+      {
+         // super items ONLY respawn when enabled through dmflags
+         respawnitem = ((dmflags & DM_RESPAWNSUPER) == DM_RESPAWNSUPER);
+      }
+      else
+      {
+         if(!(this->flags  & MF_DROPPED) &&   // dropped items don't respawn
+            !(this->flags3 & MF3_NOITEMRESP)) // NOITEMRESP items don't respawn
+            respawnitem = true;
+      }
    }
 
    if(respawnitem)
@@ -1772,6 +1794,10 @@ void Mobj::removeThinker()
          iquetail = (iquetail+1)&(ITEMQUESIZE-1);
       }
    }
+
+   // haleyjd 08/19/13: ensure object is no longer in player body queue
+   if(this->intflags & MIF_PLYRCORPSE)
+      G_DeQueuePlayerCorpse(this);
 
    // haleyjd 02/02/04: remove from tid hash
    P_RemoveThingTID(this);
@@ -2147,6 +2173,13 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       ((mobjinfo[i]->flags3 & MF3_KILLABLE) ||
        (mobjinfo[i]->flags & MF_COUNTKILL)))
       return NULL;        // sf
+
+   // haleyjd 08/18/13: Heretic includes some registered-only items in its
+   // first episode, as a bonus for play on the registered version. Unlike
+   // some other checks EE has removed, we still need to enforce this one as
+   // the items have no resources in the shareware IWAD.
+   if(GameModeInfo->flags & GIF_SHAREWARE && mobjinfo[i]->flags4 & MF4_NOTSHAREWARE)
+      return NULL;
 
    // spawn it
 spawnit:

@@ -319,7 +319,7 @@ extern  double          mouseAccel_value;
 // debug flag to cancel adaptiveness
 extern  bool            singletics;
 
-extern  int             bodyqueslot;
+extern  size_t          bodyqueslot;
 
 // Needed to store the number of the dummy sky flat.
 // Used for rendering, as well as tracking projectiles etc.

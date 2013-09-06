@@ -129,7 +129,6 @@ struct spandrawer_t
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
 extern spandrawer_t r_spandrawer;    // normal
-extern spandrawer_t r_lowspandrawer; // low-detail
 
 void R_InitBuffer(int width, int height);
 

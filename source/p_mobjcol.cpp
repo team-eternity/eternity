@@ -30,22 +30,16 @@
 
 #include "z_zone.h"
 
+#include "doomstat.h"
 #include "e_hash.h"
-#include "e_hashkeys.h"
 #include "e_lib.h"
 #include "e_things.h"
+#include "metaapi.h"
+#include "metaspawn.h"
+#include "m_qstrkeys.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
-
-//
-// MobjCollection::setMobjType
-//
-// Set the type of object this collection tracks.
-//
-void MobjCollection::setMobjType(const char *mt)
-{
-   E_ReplaceString(mobjType, estrdup(mt));
-}
 
 //
 // MobjCollection::collectThings
@@ -58,10 +52,10 @@ void MobjCollection::collectThings()
    Thinker *th;
    int typenum;
 
-   if(!enabled || !mobjType)
+   if(!enabled || mobjType.empty())
       return;
 
-   if((typenum = E_ThingNumForName(mobjType)) < 0)
+   if((typenum = E_ThingNumForName(mobjType.constPtr())) < 0)
       return;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
@@ -76,6 +70,96 @@ void MobjCollection::collectThings()
    }
 }
 
+//
+// MobjCollection::spawnAtRandom
+//
+// Spawn an Mobj of the indicated type at a random spot in the collection.
+// The three chance parameters allow for the spawn itself to be randomized,
+// as if a RNG call falls outside the threshold specified for the current
+// game type, the spawn won't take place at all.
+//
+bool MobjCollection::spawnAtRandom(const char *type, pr_class_t prnum,
+                                   int spchance, int coopchance, int dmchance)
+{
+   int chance;
+
+   // need spots to spawn at.
+   if(isEmpty())
+      return false;
+
+   // check for failure to spawn
+   switch(GameType)
+   {
+   case gt_single:
+      chance = spchance;
+      break;
+   case gt_coop:
+      chance = coopchance;
+      break;
+   case gt_dm:
+      chance = dmchance;
+      break;
+   default:
+      chance = 0;
+      break;
+   }
+
+   if(P_Random(prnum) < chance)
+      return false;
+
+   // get a random spot
+   Mobj *spot;
+   
+   spot = getRandom(prnum);
+
+   // spawn the object there
+   P_SpawnMobj(spot->x, spot->y, spot->z, E_SafeThingName(type));
+   return true;
+}
+
+//
+// MobjCollection::startupSpawn
+//
+// Handle a potential startup random spawn associated with a collection.
+// The data necessary for the spawn consists of meta fields on the 
+// collection's thingtype's mobjinfo.
+//
+bool MobjCollection::startupSpawn()
+{
+   int type = E_ThingNumForName(mobjType.constPtr());
+   if(type < 0)
+      return false;
+
+   MetaTable  *meta = mobjinfo[type]->meta;
+   auto        mcs  = meta->getObjectTypeEx<MetaCollectionSpawn>();
+   bool        res  = false;
+
+   if(mcs)
+   {
+      res = spawnAtRandom(mcs->type.constPtr(), pr_spotspawn,
+                          mcs->spchance, mcs->coopchance, mcs->dmchance);
+   }
+
+   return res;
+}
+
+//
+// MobjCollection::moveToRandom
+//
+// Move an object to a random spot in the collection.
+//
+void MobjCollection::moveToRandom(Mobj *actor)
+{
+   if(isEmpty())
+      return;
+
+   const Mobj *spot = getRandom(pr_moverandom);
+   P_UnsetThingPosition(actor);
+   actor->copyPosition(spot);
+   P_SetThingPosition(actor);
+   P_AdjustFloorClip(actor);
+}
+
 //=============================================================================
 //
 // MobjCollectionSet Methods
@@ -88,7 +172,7 @@ class mobjCollectionSetPimpl : public ZoneObject
 {
 public:
    EHashTable<MobjCollection, 
-              ENCStringHashKey, 
+              ENCQStrHashKey, 
               &MobjCollection::mobjType, 
               &MobjCollection::hashLinks> collectionHash;
 
@@ -124,7 +208,7 @@ void MobjCollectionSet::addCollection(const char *mobjType)
    if(!pImpl->collectionHash.objectForKey(mobjType))
    {
       MobjCollection *newcol = new MobjCollection();
-      newcol->setMobjType(mobjType);
+      newcol->mobjType = mobjType;
       pImpl->collectionHash.addObject(newcol);
    }
 }
@@ -139,7 +223,7 @@ void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
    MobjCollection *col = pImpl->collectionHash.objectForKey(mobjType);
 
    if(col)
-      col->setEnabled(enabled);
+      col->enabled = enabled;
 }
 
 //
@@ -156,6 +240,7 @@ void MobjCollectionSet::collectAllThings()
    {
       rover->clear();
       rover->collectThings();
+      rover->startupSpawn();
    }
 }
 

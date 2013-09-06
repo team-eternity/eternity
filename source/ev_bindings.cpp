@@ -902,7 +902,7 @@ W1LINE(W1HticPlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
 W1LINE(W1LowerFloorTurboA, LowerFloorTurboA, 0, 0);
 
 // Heretic Line Type 70 - SR Lower Floor Turbo, Floorheight + 8
-WRLINE(SRLowerFloorTurboA, LowerFloorTurboA, 0, 0);
+SRLINE(SRLowerFloorTurboA, LowerFloorTurboA, 0, 0);
 
 // Heretic Line Type 71 - S1 Lower Floor Turbo, Floorheight + 8
 S1LINE(S1LowerFloorTurboA, LowerFloorTurboA, 0, 0);
@@ -1409,6 +1409,17 @@ ev_lockdef_t DOOMLockDefs[] =
 };
 
 const size_t DOOMLockDefsLen = earrlen(DOOMLockDefs);
+
+// Heretic Lockdef ID Lookup
+// All this does is remap line type 99 to lockdef 0, as linetype
+// 99 is not a locked door in Heretic. All other bindings will defer
+// to the DOOM lookup.
+ev_lockdef_t HereticLockDefs[] =
+{
+   { 99, EV_LOCKDEF_NULL },
+};
+
+const size_t HereticLockDefsLen = earrlen(HereticLockDefs);
 
 // Heretic Bindings
 // Heretic's bindings are additive over DOOM's.

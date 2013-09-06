@@ -58,6 +58,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
@@ -94,11 +95,11 @@
 static char     eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
-static char     *demoname;
-static bool      netdemo;
-static byte     *demobuffer;   // made some static -- killough
+static char    *demoname;
+static bool     netdemo;
+static byte    *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
-static byte     *demo_p;
+static byte    *demo_p;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 
 WadDirectory *g_dir = &wGlobalDir;
@@ -132,7 +133,6 @@ int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
 bool            demorecording;
 bool            demoplayback;
-/*bool           timedemo_menuscreen;*/
 bool            singledemo;           // quit after playing a demo from cmdline
 bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
@@ -204,7 +204,8 @@ extern skill_t startskill;      //note 0-based
 int defaultskill;               //note 1-based
 
 // killough 2/8/98: make corpse queue variable in size
-int bodyqueslot, bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
+size_t bodyqueslot; 
+int    bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 
 void *statcopy;       // for statistics driver
 
@@ -1559,19 +1560,25 @@ static void G_DoCompleted(void)
    IN_Start(&wminfo);
 }
 
-static void G_DoWorldDone(void)
+static void G_DoWorldDone()
 {
-   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
-
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LOADING;
    gamemap = wminfo.next+1;
 
-   // haleyjd: handle heretic hidden levels
-   if((missionInfo->id == hticsosr && gameepisode == 6 && gamemap == 4) ||
-      (missionInfo->id == heretic  && gameepisode == 4 && gamemap == 2))
+   // haleyjd: handle heretic hidden levels via missioninfo samelevel rules
+   if(GameModeInfo->missionInfo->sameLevels)
    {
-      gamemap--; // return to same level
+      samelevel_t *sameLevel = GameModeInfo->missionInfo->sameLevels;
+      while(sameLevel->episode != -1)
+      {
+         if(gameepisode == sameLevel->episode && gamemap == sameLevel->map)
+         {
+            --gamemap; // return to same level by default
+            break;
+         }
+         ++sameLevel;
+      }
    }
    
    // haleyjd: customizable secret exits
@@ -2087,22 +2094,28 @@ void G_PlayerReborn(int player)
    p->colormap    = playercolour;
    p->totalfrags  = totalfrags;
    p->skin        = playerskin;
-   p->pclass      = playerclass; // haleyjd: playerclass
-   p->inventory   = inventory;   // haleyjd: inventory
-   
-   p->usedown = p->attackdown = true;  // don't do anything immediately
+   p->pclass      = playerclass;              // haleyjd: playerclass
+   p->inventory   = inventory;                // haleyjd: inventory
    p->playerstate = PST_LIVE;
-   p->health = initial_health;  // Ty 03/12/98 - use dehacked values
-   p->quake = 0;                // haleyjd 01/21/07
+   p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
+   p->quake       = 0;                        // haleyjd 01/21/07
 
+   p->usedown = p->attackdown = true;         // don't do anything immediately
+
+   // clear inventory unless otherwise indicated
+   if(!(dmflags & DM_KEEPITEMS))
+      E_ClearInventory(p);
+   
    // haleyjd 08/05/13: give reborn inventory
-   E_ClearInventory(p);
    for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
    {
-      const char *name   = playerclass->rebornitems[i].itemname;
-      int         amount = playerclass->rebornitems[i].amount;
-      
-      E_GiveInventoryItem(p, E_ItemEffectForName(name), amount);
+      const char   *name   = playerclass->rebornitems[i].itemname;
+      int           amount = playerclass->rebornitems[i].amount;
+      itemeffect_t *effect = E_ItemEffectForName(name);
+
+      // only if have none, in the case that DM_KEEPITEMS is specified
+      if(!E_GetItemOwnedAmount(p, effect))
+         E_GiveInventoryItem(p, effect, amount);
    }
 
    // INVENTORY_TODO: reborn weapons
@@ -2120,6 +2133,69 @@ void G_PlayerReborn(int player)
 
 void P_SpawnPlayer(mapthing_t *mthing);
 
+// haleyjd 08/19/13: externalized player corpse queue from G_CheckSpot; 
+// made into a PODCollection for encapsulation and safety.
+static PODCollection<Mobj *> bodyque;
+
+//
+// G_queuePlayerCorpse
+//
+// haleyjd 08/19/13: enqueue a player corpse; externalized from G_CheckSpot.
+// * When bodyquesize is negative, player corpses are never removed.
+// * When bodyquesize is zero, player corpses get removed immediately.
+// * When bodyquesize is positive, that number of corpses are allowed to exist,
+//   and are removed from the queue FIFO when it fills up.
+//
+static void G_queuePlayerCorpse(Mobj *mo)
+{
+   if(bodyquesize > 0)
+   {
+      size_t queuesize = static_cast<size_t>(bodyquesize);
+      size_t index     = bodyqueslot % queuesize;
+
+      if(bodyque.getLength() < queuesize)
+         bodyque.resize(queuesize);
+      
+      if(bodyque[index] != NULL)
+      {
+         bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
+         bodyque[index]->removeThinker();
+      }
+      
+      mo->intflags |= MIF_PLYRCORPSE;
+      bodyque[index] = mo;
+      bodyqueslot = (bodyqueslot + 1) % queuesize;
+   }
+   else if(!bodyquesize)
+      mo->removeThinker();   
+}
+
+//
+// G_DeQueuePlayerCorpse
+//
+// haleyjd 08/19/13: If an Mobj in the bodyque is removed elsewhere, a dangling
+// reference would remain in the array. Call this to cleanse the queue.
+//
+void G_DeQueuePlayerCorpse(Mobj *mo)
+{
+   for(auto itr = bodyque.begin(); itr != bodyque.end(); itr++)
+   {
+      if(mo == *itr)
+         *itr = NULL;
+   }
+}
+
+//
+// G_ClearPlayerCorpseQueue
+//
+// haleyjd 08/19/13: For safety, we clear the queue fully now between levels.
+//
+void G_ClearPlayerCorpseQueue()
+{
+   bodyque.zero();
+   bodyqueslot = 0;
+}
+
 //
 // G_CheckSpot
 //
@@ -2129,12 +2205,12 @@ void P_SpawnPlayer(mapthing_t *mthing);
 //
 static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 {
-   fixed_t     x, y;
+   fixed_t      x, y;
    subsector_t *ss;
-   unsigned    an;
-   Mobj      *mo;
-   int         i;
-   fixed_t     mtcos, mtsin;
+   unsigned     an;
+   Mobj        *mo;
+   int          i;
+   fixed_t      mtcos, mtsin;
 
    if(!players[playernum].mo)
    {
@@ -2167,27 +2243,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // flush an old corpse if needed
    // killough 2/8/98: make corpse queue have an adjustable limit
    // killough 8/1/98: Fix bugs causing strange crashes
-
-   if(bodyquesize > 0)
-   {
-      static Mobj **bodyque;
-      static size_t queuesize;
-
-      if(queuesize < (unsigned int)bodyquesize)
-      {
-         bodyque = erealloc(Mobj **, bodyque, bodyquesize*sizeof*bodyque);
-         memset(bodyque+queuesize, 0, 
-                (bodyquesize-queuesize)*sizeof*bodyque);
-         queuesize = bodyquesize;
-      }
-      
-      if(bodyqueslot >= bodyquesize) 
-         bodyque[bodyqueslot % bodyquesize]->removeThinker();
-      
-      bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo; 
-   } 
-   else if(!bodyquesize)
-      players[playernum].mo->removeThinker();
+   G_queuePlayerCorpse(players[playernum].mo);
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);
@@ -2352,7 +2408,7 @@ void G_DoReborn(int playernum)
       int i;
       Mobj *fog = NULL;
       
-      // first dissasociate the corpse
+      // first disassociate the corpse
       players[playernum].mo->player = NULL;
 
       // spawn at random spot if in deathmatch
@@ -2398,7 +2454,7 @@ void G_DoReborn(int playernum)
    }
 }
 
-void G_ScreenShot(void)
+void G_ScreenShot()
 {
    gameaction = ga_screenshot;
 }
@@ -2424,7 +2480,7 @@ int cpars[34] =
 //
 // G_WorldDone
 //
-void G_WorldDone(void)
+void G_WorldDone()
 {
    gameaction = ga_worlddone;
 
@@ -2539,7 +2595,7 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 }
 
 // killough 7/19/98: Marine's best friend :)
-static int G_GetHelpers(void)
+static int G_GetHelpers()
 {
    int j = M_CheckParm ("-dog");
    
@@ -2552,7 +2608,7 @@ static int G_GetHelpers(void)
 // killough 3/1/98: function to reload all the default parameter
 // settings before a new game begins
 
-void G_ReloadDefaults(void)
+void G_ReloadDefaults()
 {
    // killough 3/1/98: Initialize options based on config file
    // (allows functions above to load different values for demos
@@ -2629,16 +2685,20 @@ void G_ReloadDefaults(void)
    G_ScrambleRand();
 }
 
-        // sf: seperate function
+//
+// G_ScrambleRand
+//
+// killough 3/26/98: shuffle random seed
+// sf: seperate function
+//
 void G_ScrambleRand()
-{                            // killough 3/26/98: shuffle random seed
-   // haleyjd: restored MBF code
+{
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
    rngseed = (unsigned int) time(NULL);
 }
 
-void G_DoNewGame (void)
+void G_DoNewGame()
 {
    //G_StopDemo();
    G_ReloadDefaults();            // killough 3/1/98
@@ -2723,71 +2783,70 @@ static MetaKeyIndex speedsetKey("speedset");
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   MetaObject *o;
-   MetaTable  *meta = mobjinfo[thingtype]->meta;
+   MetaSpeedSet *mss;
+   MetaTable    *meta = mobjinfo[thingtype]->meta;
 
-   if((o = meta->getObjectKeyAndType(speedsetKey, RTTI(MetaSpeedSet))))
-   {
-      static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
-   }
+   if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
+      mss->setSpeeds(nspeed, fspeed);
    else
       meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
 
+//
+// G_SetFastParms
+//
 // killough 4/10/98: New function to fix bug which caused Doom
 // lockups when idclev was used in conjunction with -fast.
-
+//
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
    int i;
-   MetaObject *o;
-   size_t metaKey = speedsetKey.getIndex();
-
-   // TODO: Heretic support?
-   // EDF FIXME: demon frame speedup difficult to generalize
-   int demonRun1  = E_SafeState(S_SARG_RUN1);
-   int demonPain2 = E_SafeState(S_SARG_PAIN2);
+   MetaSpeedSet *mss;
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
-         for(i = demonRun1; i <= demonPain2; i++)
+         for(i = 0; i < NUMSTATES; i++)
          {
-            // killough 4/10/98
-            // don't change 1->0 since it causes cycles
-            if(states[i]->tics != 1 || demo_compatibility)
-               states[i]->tics >>= 1;  
+            if(states[i]->flags & STATEF_SKILL5FAST)
+            {
+               // killough 4/10/98
+               // don't change 1->0 since it causes cycles
+               if(states[i]->tics != 1 || demo_compatibility)
+                  states[i]->tics >>= 1;
+            }
          }
 
-         for(i = 0; i < NUMMOBJTYPES; ++i)
+         for(i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
-            {
-               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
-            }
+            if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
+               mobjinfo[i]->speed = mss->getFastSpeed();
          }
       }
       else
       {
-         for(i = demonRun1; i <= demonPain2; i++)
-            states[i]->tics <<= 1;
+         for(i = 0; i < NUMSTATES; i++)
+         {
+            if(states[i]->flags & STATEF_SKILL5FAST)
+               states[i]->tics <<= 1;
+         }
 
-         for(i = 0; i < NUMMOBJTYPES; ++i)
+         for(i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
-            if((o = meta->getObjectKeyAndType(metaKey, RTTI(MetaSpeedSet))))
-            {
-               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
-            }
+            if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
+               mobjinfo[i]->speed = mss->getNormalSpeed();
          }
       }
    }
 }
 
-
+//
+// G_InitNewNum
+//
 void G_InitNewNum(skill_t skill, int episode, int map)
 {
    G_InitNew(skill, G_GetNameForMap(episode, map) );
@@ -2945,13 +3004,13 @@ byte *G_WriteOptions(byte *demoptr)
    *demoptr++ = (byte)( rngseed        & 0xff); // byte 14
    
    // Options new to v2.03 begin here
-   *demoptr++ = monster_infighting;   // killough 7/19/98 -- byte 15
+   *demoptr++ = monster_infighting;        // killough 7/19/98 -- byte 15
    
-   *demoptr++ = dogs;                 // killough 7/19/98 -- byte 16
+   *demoptr++ = dogs;                      // killough 7/19/98 -- byte 16
    
-   *demoptr++ = bfgtype;              // killough 7/19/98 -- byte 17
+   *demoptr++ = bfgtype;                   // killough 7/19/98 -- byte 17
    
-   *demoptr++ = 0;                    // unused - (beta mode) -- byte 18
+   *demoptr++ = 0;                         // unused - (beta mode) -- byte 18
    
    *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
    *demoptr++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
@@ -2964,27 +3023,24 @@ byte *G_WriteOptions(byte *demoptr)
    
    *demoptr++ = help_friends;              // killough 9/9/98 -- byte 24
    
-   *demoptr++ = dog_jumping; // byte 25
+   *demoptr++ = dog_jumping;               // byte 25
    
-   *demoptr++ = monkeys;     // byte 26
+   *demoptr++ = monkeys;                   // byte 26
    
-   {   // killough 10/98: a compatibility vector now
-      int i;
-      for(i = 0; i < COMP_TOTAL; i++)
-         *demoptr++ = comp[i] != 0;
-   }
-   // bytes 27 - 58 : comp
+   // killough 10/98: a compatibility vector now
+   for(int i = 0; i < COMP_TOTAL; i++)
+      *demoptr++ = comp[i] != 0;           // bytes 27 - 58 : comp   
    
    // haleyjd 05/23/04: autoaim is sync critical
-   *demoptr++ = autoaim; // byte 59
+   *demoptr++ = autoaim;                   // byte 59
 
    // haleyjd 04/06/05: allowmlook is sync critical
-   *demoptr++ = allowmlook; // byte 60
+   *demoptr++ = allowmlook;                // byte 60
 
    // haleyjd 06/07/12: pitchedflight
-   *demoptr++ = pitchedflight; // byte 61
+   *demoptr++ = pitchedflight;             // byte 61
    
-   // CURRENT BYTES LEFT: 2
+   // CURRENT BYTES LEFT: 3
 
    //----------------
    // Padding at end
@@ -3197,7 +3253,7 @@ static void G_BeginRecordingOld()
    *demo_p++ = nomonsters;
    *demo_p++ = consoleplayer;
 
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
       *demo_p++ = playeringame[i];
 }
 

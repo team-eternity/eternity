@@ -11,22 +11,22 @@
 
 healtheffect CrystalVial
 {
-   amount:    10;
-   maxamount: 100;
+  amount    10
+  maxamount 100
 }
 
 // Use effect for ArtiHealth
 healtheffect QuartzFlask
 {
-   amount:    25;
-   maxamount: 100;
+  amount    25
+  maxamount 100
 }
 
 // Use effect for ArtiSuperHealth
 healtheffect MysticUrn
 {
-   amount:    100;
-   maxamount: 100;
+  amount    100
+  maxamount 100
 }
 
 //=============================================================================
@@ -36,23 +36,23 @@ healtheffect MysticUrn
 
 armoreffect SilverShield
 {
-   saveamount:  100;
-   savefactor:  1;
-   savedivisor: 2;   // 50% absorption rate (1/2)
+  saveamount  100
+  savefactor  1
+  savedivisor 2   // 50% absorption rate (1/2)
 }
 
 armoreffect EnchantedShield
 {
-   saveamount:  200;
-   savefactor:  3;
-   savedivisor: 4;   // 75% absorption rate (3/4)
+  saveamount  200
+  savefactor  3
+  savedivisor 4   // 75% absorption rate (3/4)
 }
 
 armoreffect RAMBOArmor
 {
-   saveamount:  200;
-   savefactor:  3;
-   savedivisor: 4;
+  saveamount  200
+  savefactor  3
+  savedivisor 4
 }
 
 //=============================================================================
@@ -62,17 +62,17 @@ armoreffect RAMBOArmor
 
 artifact KeyBlue
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact KeyYellow
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact KeyGreen
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 //=============================================================================
@@ -85,77 +85,83 @@ ifgametype("HERETIC")
 // Green Key Lock
 lockdef 1
 {
-   require: KeyGreen;
+  require  KeyGreen
+  mapcolor 220
    
-   message:       "$HPD_GREENK";
-   remotemessage: "$HPD_GREENO";
+  message       "$HPD_GREENK"
+  remotemessage "$HPD_GREENO"
 }
 
 // Blue Key Lock
 lockdef 2
 {
-   require: KeyBlue;
+  require  KeyBlue
+  mapcolor 197
    
-   message:       "$PD_BLUEK";
-   remotemessage: "$PD_BLUEO";
+  message       "$PD_BLUEK"
+  remotemessage "$PD_BLUEO"
 }
 
 // Yellow Key Lock
 lockdef 3
 {
-   require: KeyYellow;
+  require  KeyYellow
+  mapcolor 144
    
-   message:       "$PD_YELLOWK";
-   remotemessage: "$PD_YELLOWO";
+  message       "$PD_YELLOWK"
+  remotemessage "$PD_YELLOWO"
 }
 
 // Green Key Lock
 lockdef 129
 {
-   require: KeyGreen;
+  require  KeyGreen
+  mapcolor 220
    
-   message:       "$HPD_GREENK";
-   remotemessage: "$HPD_GREENO";
+  message       "$HPD_GREENK"
+  remotemessage "$HPD_GREENO"
 }
 
 // Blue Key Lock
 lockdef 130
 {
-   require: KeyBlue;
+  require  KeyBlue
+  mapcolor 197
    
-   message:       "$PD_BLUEK";
-   remotemessage: "$PD_BLUEO";
+  message       "$PD_BLUEK"
+  remotemessage "$PD_BLUEO"
 }
 
 // Yellow Key Lock
 lockdef 131
 {
-   require: KeyYellow;
+  require  KeyYellow
+  mapcolor 144
    
-   message:       "$PD_YELLOWK";
-   remotemessage: "$PD_YELLOWO";
+  message       "$PD_YELLOWK"
+  remotemessage "$PD_YELLOWO"
 }
 
 // All three keys lock
 lockdef 229
 {
-   require: KeyGreen;
-   require: KeyYellow;
-   require: KeyBlue;
+  require KeyGreen
+  require KeyYellow
+  require KeyBlue
    
-   message:       "$PD_ALL3";
-   remotemessage: "You need all 3 keys to activate this object";
+  message       "$PD_ALL3"
+  remotemessage "You need all 3 keys to activate this object"
 }
 
 // All three keys lock
 lockdef 101
 {
-   require: KeyGreen;
-   require: KeyYellow;
-   require: KeyBlue;
+  require KeyGreen
+  require KeyYellow
+  require KeyBlue
    
-   message:       "$PD_ALL3";
-   remotemessage: "You need all 3 keys to activate this object";
+  message       "$PD_ALL3"
+  remotemessage "You need all 3 keys to activate this object"
 }
 
 endif()

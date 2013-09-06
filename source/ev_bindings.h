@@ -33,6 +33,7 @@ struct ev_lockdef_t
    int lockID;  // lockdef ID number
 };
 
+#define EV_LOCKDEF_NULL        0
 #define EV_LOCKDEF_REDCARD     1
 #define EV_LOCKDEF_BLUECARD    2
 #define EV_LOCKDEF_YELLOWCARD  3
@@ -58,8 +59,10 @@ extern const size_t HereticBindingsLen;
 extern const size_t HexenBindingsLen;
 
 extern ev_lockdef_t DOOMLockDefs[];
+extern ev_lockdef_t HereticLockDefs[];
 
 extern const size_t DOOMLockDefsLen;
+extern const size_t HereticLockDefsLen;
 
 #endif
 

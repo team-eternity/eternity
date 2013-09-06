@@ -36,9 +36,10 @@ enum
    DM_PLAYERDROP    = 0x00000008, // players drop items (dm3)
    DM_RESPAWNSUPER  = 0x00000010, // respawning super powerups
    DM_INSTAGIB      = 0x00000020, // any damage gibs players
+   DM_KEEPITEMS     = 0x00000040, // keep items when reborn
 };
 
-// default dmflags for certain game modes
+// Default dmflags for certain game modes
 
 #define DMD_SINGLE      (0)
 #define DMD_COOP        (DM_WEAPONSTAY)

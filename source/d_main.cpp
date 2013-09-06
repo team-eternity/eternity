@@ -201,7 +201,7 @@ void D_PostEvent(event_t *ev)
 // D_ProcessEvents
 // Send all the events of the given timestamp down the responder chain
 //
-void D_ProcessEvents(void)
+void D_ProcessEvents()
 {
    // IF STORE DEMO, DO NOT ACCEPT INPUT
    // sf: I don't think SMMU is going to be played in any store any
@@ -328,9 +328,8 @@ const demostate_t demostates_udoom[] =
    { G_DeferedPlayDemo, "DEMO1"    },
    { D_SetPageName,     NULL       },
    { G_DeferedPlayDemo, "DEMO2"    },
-   { D_DrawTitle,       "TITLEPIC" },
-   { G_DeferedPlayDemo, "DEMO3"    },
    { D_SetPageName,     "CREDIT"   },
+   { G_DeferedPlayDemo, "DEMO3"    },
    { G_DeferedPlayDemo, "DEMO4"    },
    { NULL }
 };
@@ -1873,7 +1872,7 @@ static void D_ProcessDehInWad(int i)
    }
 }
 
-static void D_ProcessDehInWads(void)
+static void D_ProcessDehInWads()
 {
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
@@ -1936,7 +1935,7 @@ extern int levelFragLimit;
 //
 // A little reminder for Certain People (Ichaelmay Ardyhay)
 //
-static void D_StartupMessage(void)
+static void D_StartupMessage()
 {
    puts("The Eternity Engine\n"
         "Copyright 2013 James Haley, Stephen McGranahan, et al.\n"
@@ -1955,10 +1954,10 @@ static void D_StartupMessage(void)
 // Broke D_DoomMain into two functions in order to keep
 // initialization stuff off the main line of execution.
 //
-static void D_DoomInit(void)
+static void D_DoomInit()
 {
    int p, slot;
-   int dmtype = 0;             // haleyjd 04/14/03
+   int dmtype = 0;          // haleyjd 04/14/03
    bool haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
 
@@ -2289,6 +2288,9 @@ static void D_DoomInit(void)
    // haleyjd 09/06/12: need to do this before EDF
    V_InitColorTranslation(); 
 
+   // haleyjd 08/28/13: init console command list
+   C_AddCommands();
+
    // haleyjd 09/11/03: All EDF and DeHackEd processing is now
    // centralized here, in order to allow EDF to load from wads.
    // As noted in comments, the other DEH functions above now add
@@ -2346,7 +2348,7 @@ static void D_DoomInit(void)
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();
 
-   startupmsg("C_Init","Init console.");
+   startupmsg("C_Init", "Init console.");
    C_Init();
 
    startupmsg("I_Init","Setting up machine state.");

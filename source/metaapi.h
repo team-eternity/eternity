@@ -314,20 +314,55 @@ public:
    MetaObject *getObject(size_t keyIndex);
    // * By Type
    MetaObject *getObjectType(const char *type);
+   MetaObject *getObjectType(const MetaObject::Type &type);
    // * By Key AND Type
    MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(const char *key, const char *type);
    MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type);
    MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
 
+   // Template finders
+   template<typename M> M *getObjectTypeEx()
+   {
+      return static_cast<M *>(getObjectType(M::StaticType));
+   }
+
+   template<typename M> M *getObjectKeyAndTypeEx(size_t keyIndex)
+   {
+      return static_cast<M *>(getObjectKeyAndType(keyIndex, RTTI(M)));
+   }
+
    // Iterators
+   // * By Key
    MetaObject *getNextObject(MetaObject *object, const char *key);
    MetaObject *getNextObject(MetaObject *object, size_t keyIndex);
+   // * By Type
    MetaObject *getNextType(MetaObject *object, const char *type);
+   MetaObject *getNextType(MetaObject *object, const MetaObject::Type *type);
+   // * By Key AND Type
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type);
-   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type);
+   // * Full table iterators
    MetaObject *tableIterator(MetaObject *object) const;
    const MetaObject *tableIterator(const MetaObject *object) const;
+
+   // Template iterators
+   template<typename M> M *getNextTypeEx(M *object)
+   {
+      return static_cast<M *>(getNextType(object, RTTI(M)));
+   }
+
+   template<typename M> M *getNextKeyAndTypeEx(M *object, const char *key)
+   {
+      return static_cast<M *>(getNextKeyAndType(object, key, RTTI(M)));
+   }
+
+   template<typename M> M *getNextKeyAndTypeEx(M *object, size_t keyIdx)
+   {
+      return static_cast<M *>(getNextKeyAndType(object, keyIdx, RTTI(M)));
+   }
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects
    

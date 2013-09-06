@@ -414,6 +414,8 @@ extern void P_AddEventVars();
 //
 // C_AddCommands
 //
+// Invoked directly from D_DoomSetup as of 08/28/13.
+//
 void C_AddCommands()
 {
    // Add global commands through the registry

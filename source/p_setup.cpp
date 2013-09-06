@@ -53,6 +53,7 @@
 #include "p_info.h"
 #include "p_maputl.h"
 #include "p_clipen.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
@@ -2146,9 +2147,9 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
    return LEVEL_FORMAT_HEXEN;
 }
 
-void P_ConvertHereticSpecials(void); // haleyjd
+void P_ConvertHereticSpecials(); // haleyjd
 
-void P_InitThingLists(void); // haleyjd
+void P_InitThingLists(); // haleyjd
 
 //=============================================================================
 //
@@ -2349,7 +2350,7 @@ static void P_DeathMatchSpawnPlayers(void)
 //
 // haleyjd 11/19/02: Sets up all dynamically allocated thing lists.
 //
-void P_InitThingLists(void)
+void P_InitThingLists()
 {
    // haleyjd: allow to work in any game mode
    // killough 3/26/98: Spawn icon landings:
@@ -2358,6 +2359,9 @@ void P_InitThingLists(void)
 
    // haleyjd: spawn D'Sparil teleport spots
    P_SpawnSorcSpots();
+
+   // haleyjd 08/15/13: spawn EDF-specified collections
+   MobjCollections.collectAllThings();
 
    // haleyjd 04/08/03: spawn camera spots
    IN_AddCameras();
@@ -2488,9 +2492,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // killough 10/98: remove slime trails from wad
    P_RemoveSlimeTrails(); 
 
-   // Note: you don't need to clear player queue slots --
-   // a much simpler fix is in g_game.c -- killough 10/98   
-   bodyqueslot = 0;
+   // haleyjd 08/19/13: call new function to handle bodyque
+   G_ClearPlayerCorpseQueue();
    deathmatch_p = deathmatchstarts;
 
    // haleyjd 10/03/05: handle multiple map formats
@@ -2562,7 +2565,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 //
 // P_Init
 //
-void P_Init(void)
+void P_Init()
 {
    P_InitParticleEffects();  // haleyjd 09/30/01
    P_InitSwitchList();

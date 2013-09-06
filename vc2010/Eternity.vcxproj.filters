@@ -1619,6 +1619,12 @@
     <ClInclude Include="..\source\e_inventory.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\metaspawn.h">
+      <Filter>Source Files\MetaAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_compare.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\p_clipen.h">
       <Filter>Source Files\Clip\Interface</Filter>
     </ClInclude>

@@ -860,7 +860,7 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
       else if(!lumpnamecmp(n, "EXTENDED"))
          ++sosr;
       else if(!lumpnamecmp(n, "FREEDOOM"))
-         *version.freedoom = true;
+         version.freedoom = true;
       else if(!lumpnamecmp(n, "HACX-R"))
          ++hacx;
       else if(!lumpnamecmp(n, "M_ACPT"  ) || // haleyjd 11/03/12: BFG Edition
@@ -871,64 +871,78 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
       {
         ++bfg;
         if(bfg >= 5) // demand all 5 new lumps for safety.
-           *version.bfgedition = true;
+           version.bfgedition = true;
       }
    }
 
    fclose(fp);
 
-   *version.hassec = false;
+   version.hassecrets = false;
 
    // haleyjd 10/09/05: "Raven mode" detection
    if(raven == 3)
    {
       // TODO: Hexen
-      *version.gmission = heretic;
+      version.gamemission = heretic;
 
       if(rg >= 18)
       {
          // require both E4 and EXTENDED lump for SoSR
          if(sosr && ud >= 9)
-            *version.gmission = hticsosr;
-         *version.gmode = hereticreg;
+            version.gamemission = hticsosr;
+         version.gamemode = hereticreg;
       }
       else if(sw >= 9)
-         *version.gmode = hereticsw;
+      {
+         version.gamemode = hereticsw;
+      }
+      else if(sw == 3)
+      {
+         // haleyjd 08/10/13: Heretic beta version support
+         version.gamemission = hticbeta;
+         version.gamemode    = hereticsw;
+      }
       else
-         *version.gmode = indetermined;
+         version.gamemode = indetermined;
    }
    else
    {
-      *version.gmission = doom;
+      version.gamemission = doom;
 
       if(cm >= 30 || (cm && !rg))
       {
-         if(*version.freedoom) // FreeDoom is meant to be Doom II, not TNT
-            *version.gmission = doom2;
-         else if(*version.bfgedition) // BFG Edition - Behaves same as XBox 360 disk version
-            *version.gmission = pack_disk;
+         if(version.freedoom)
+         {
+            // FreeDoom is meant to be Doom II, not TNT
+            version.gamemission = doom2;
+         }
+         else if(version.bfgedition) 
+         {
+            // BFG Edition - Behaves same as XBox 360 disk version
+            version.gamemission = pack_disk;
+         }
          else
          {
             if(tnt >= 4)
-               *version.gmission = pack_tnt;
+               version.gamemission = pack_tnt;
             else if(plut >= 8)
-               *version.gmission = pack_plut;
+               version.gamemission = pack_plut;
             else if(hacx)
-               *version.gmission = pack_hacx;
+               version.gamemission = pack_hacx;
             else
-               *version.gmission = doom2;
+               version.gamemission = doom2;
          }
-         *version.hassec = (sc >= 2) || hacx;
-         *version.gmode = commercial;
+         version.hassecrets = (sc >= 2) || hacx;
+         version.gamemode = commercial;
       }
       else if(ud >= 9)
-         *version.gmode = retail;
+         version.gamemode = retail;
       else if(rg >= 18)
-         *version.gmode = registered;
+         version.gamemode = registered;
       else if(sw >= 9)
-         *version.gmode = shareware;
+         version.gamemode = shareware;
       else
-         *version.gmode = indetermined;
+         version.gamemode = indetermined;
    }
 }
 
@@ -1341,10 +1355,8 @@ static void D_identifyDisk()
 //
 static void D_identifyIWAD()
 {
-   qstring       iwad;
-   GameMode_t    gamemode;
-   GameMission_t gamemission;
-
+   qstring iwad;
+   
    D_findIWADFile(iwad);
 
    if(iwad.length())
@@ -1353,19 +1365,24 @@ static void D_identifyIWAD()
 
       printf("IWAD found: %s\n", iwad.constPtr()); //jff 4/20/98 print only if found
 
-      version.gmode      = &gamemode;
-      version.gmission   = &gamemission;
-      version.hassec     = &haswolflevels;
-      version.freedoom   = &freedoom;
-      version.bfgedition = &bfgedition;
-      version.error      = false;
-      version.flags      = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;
+      version.gamemode    = indetermined;
+      version.gamemission = none;
+      version.hassecrets  = false;
+      version.freedoom    = false;
+      version.bfgedition  = false;
+      version.error       = false;
+      version.flags       = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;
 
       // joel 10/16/98 gamemission added
       D_CheckIWAD(iwad.constPtr(), version);
 
+      // propagate some info to globals
+      haswolflevels = version.hassecrets;
+      freedoom      = version.freedoom;
+      bfgedition    = version.bfgedition;
+
       // setup GameModeInfo
-      D_SetGameModeInfo(gamemode, gamemission);
+      D_SetGameModeInfo(version.gamemode, version.gamemission);
 
       // set and display version name
       D_SetGameName(iwad.constPtr());

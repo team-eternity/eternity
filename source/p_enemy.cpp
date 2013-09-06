@@ -871,10 +871,10 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
       {
          // when distant and moving slow, target is considered
          // to be "sneaking"
-         return 0;
+         return false;
       }
       if(P_Random(pr_ghostsneak) < 225)
-         return 0;
+         return false;
    }
 
    if(!allaround)
@@ -883,7 +883,7 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
                                    mo->x, mo->y) - actor->angle;
       if(an > ANG90 && an < ANG270 &&
          P_AproxDistance(mo->x-actor->x, mo->y-actor->y) > MELEERANGE)
-         return 0;
+         return false;
    }
 
    return trace->checkSight(actor, mo);

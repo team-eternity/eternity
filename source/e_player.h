@@ -50,6 +50,7 @@ struct playerclass_t
    skin_t *defaultskin;  // pointer to default skin
    mobjtype_t type;      // index of mobj type used
    statenum_t altattack; // index of alternate attack state for weapon code
+   int initialhealth;    // initial health when reborn
 
    // speeds
    fixed_t forwardmove[2];

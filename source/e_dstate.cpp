@@ -183,11 +183,12 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
         <keyword> := "stop" | "wait" | "loop" | "goto" <jumplabel>
           <jumplabel> := <jlabel> | <jlabel> '+' number
             <jlabel> := [A-Za-z0-9_:]+('.'[A-Za-z0-9_]+)?
-        <frame_token_list> := <sprite><frameletters><tics><bright><action>
+        <frame_token_list> := <sprite><frameletters><tics><flagslist><action>
           <sprite> := [A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]
           <frameletters> := [A-Z\[\\\]]+
           <tics> := [0-9]+
-          <bright> := "bright" | nil
+          <flagslist> := <flag><flagslist>
+            <flag> := "bright" | "fast" | nil
           <action> := <name>
                     | <name> '(' <arglist> ')'
                     | nil
@@ -221,13 +222,11 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
       <text> : NEEDSTATETICS
    NEEDSTATETICS:
       <number> : NEEDSTATEBRIGHTORACTION
-   NEEDSTATEBRIGHTORACTION:
-      "bright" : NEEDSTATEACTION
+   NEEDSTATEFLAGORACTION:
+      "bright" : NEEDSTATEFLAGORACTION
+      "fast"   : NEEDSTATEFLAGORACTION
       <text>   : NEEDSTATEEOLORPAREN
       EOL      : NEEDLABELORKWORSTATE
-   NEEDSTATEACTION:
-      <text> : NEEDSTATEEOLORPAREN
-      EOL    : NEEDLABELORKWORSTATE
    NEEDSTATEEOLORPAREN:
       EOL : NEEDLABELORKWORSTATE
       '(' : NEEDSTATEARGORPAREN
@@ -257,8 +256,7 @@ enum
    PSTATE_NEEDKWEOL,             // need kw EOL
    PSTATE_NEEDSTATEFRAMES,       // after state sprite, need frames
    PSTATE_NEEDSTATETICS,         // after state frames, need tics
-   PSTATE_NEEDBRIGHTORACTION,    // after tics, need "bright" or action name
-   PSTATE_NEEDSTATEACTION,       // after "bright", need action name
+   PSTATE_NEEDFLAGORACTION,      // after tics, need "bright" or action name
    PSTATE_NEEDSTATEEOLORPAREN,   // after action name, need EOL or '('
    PSTATE_NEEDSTATEARGORPAREN,   // after '(', need argument or ')'
    PSTATE_NEEDSTATECOMMAORPAREN, // after argument, need ',' or ')'
@@ -742,7 +740,7 @@ static void PSExpectedErr(pstate_t *ps, const char *expected)
 //
 // haleyjd 06/23/10: shared logic to handle the end of a set of one or more 
 // DECORATE state definitions. This is invoked from the following states:
-// * PSTATE_NEEDBRIGHTORACTION
+// * PSTATE_NEEDFLAGORACTION
 // * PSTATE_NEEDSTATEEOLORPAREN
 // * PSTATE_NEEDSTATEEOL
 //
@@ -964,7 +962,7 @@ static void doKeyword(pstate_t *ps)
       switch(kwdcode)
       {
       case KWD_WAIT:
-         if(state->decorate)
+         if(state->flags & STATEF_DECORATE)
          {
             state->nextstate = DSP.currentstate - 1; // self-referential
             if(state->tics == 0)
@@ -972,7 +970,7 @@ static void doKeyword(pstate_t *ps)
          }
          break;
       case KWD_LOOP:
-         if(state->decorate)
+         if(state->flags & STATEF_DECORATE)
             state->nextstate = DSP.lastlabelstate;
          break;
       case KWD_STOP:
@@ -994,7 +992,7 @@ static void doKeyword(pstate_t *ps)
             }
             DSP.curbufstate = link;
          }
-         else if(state->decorate)
+         else if(state->flags & STATEF_DECORATE)
             state->nextstate = NullStateNum; // next state is null state
          break;
       default:
@@ -1068,7 +1066,7 @@ static void doText(pstate_t *ps)
             (*link)->linenum == (*DSP.curbufstate)->linenum &&
             (*link)->type == BUF_STATE)
       {
-         if(states[statenum]->decorate)
+         if(states[statenum]->flags & STATEF_DECORATE)
             states[statenum]->sprite = sprnum;
          link = link->dllNext;
          ++statenum;
@@ -1273,7 +1271,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          {
             char c = toupper(ps->tokenbuffer->charAt(stridx));
 
-            if(states[statenum]->decorate)
+            if(states[statenum]->flags & STATEF_DECORATE)
             {
                states[statenum]->frame = c - 'A';
 
@@ -1325,7 +1323,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->decorate)
+            if(states[statenum]->flags & STATEF_DECORATE)
             {
                states[statenum]->tics = tics;
 
@@ -1337,7 +1335,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
             link = link->dllNext; // move forward one buffered state
          }
       }
-      ps->state = PSTATE_NEEDBRIGHTORACTION;
+      ps->state = PSTATE_NEEDFLAGORACTION;
    }
 }
 
@@ -1368,7 +1366,7 @@ static void doAction(pstate_t *ps, const char *fn)
       while(link && (*link)->type == BUF_STATE && 
             (*link)->linenum == (*DSP.curbufstate)->linenum)
       {
-         if(states[statenum]->decorate)
+         if(states[statenum]->flags & STATEF_DECORATE)
             states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
 
          ++statenum;           // move forward one state in states[]
@@ -1378,16 +1376,72 @@ static void doAction(pstate_t *ps, const char *fn)
    ps->state = PSTATE_NEEDSTATEEOLORPAREN;
 }
 
+enum
+{
+   DSFK_BRIGHT,
+   DSFK_FAST,
+   DSFK_NUMFLAGS
+};
+
+static const char *decStateFlagKeywords[DSFK_NUMFLAGS] =
+{
+   "bright",
+   "fast"
+};
+
 //
-// DoPSNeedBrightOrAction
+// applyStateBright
 //
-// Expecting either "bright", which modifies the current state block to use
-// fullbright frames, or the action name.
+// Apply brightness to all the states in the current range.
+//
+static void applyStateBright()
+{
+   DLListItem<estatebuf_t> *link = DSP.curbufstate;
+   int statenum = DSP.currentstate;
+
+   // Apply fullbright to all states in the current range
+   while(link && (*link)->type == BUF_STATE && 
+      (*link)->linenum == (*DSP.curbufstate)->linenum)
+   {
+      if(states[statenum]->flags & STATEF_DECORATE)
+         states[statenum]->frame |= FF_FULLBRIGHT;
+
+      ++statenum;           // move forward one state in states[]
+      link = link->dllNext; // move forward one buffered state
+   }
+}
+
+//
+// applyStateFlag
+//
+// Apply a state flag to all the states in the current range.
+//
+static void applyStateFlag(unsigned int flag)
+{
+   DLListItem<estatebuf_t> *link = DSP.curbufstate;
+   int statenum = DSP.currentstate;
+
+   // Apply flag to all states in the current range
+   while(link && (*link)->type == BUF_STATE &&
+      (*link)->linenum == (*DSP.curbufstate)->linenum)
+   {
+      if(states[statenum]->flags & STATEF_DECORATE)
+         states[statenum]->flags |= flag;
+
+      ++statenum;
+      link = link->dllNext;
+   }
+}
+
+//
+// DoPSNeedFlagOrAction
+//
+// Expecting either one or more state flag keywords or the action name.
 //
 // 06/23/10: We also accept EOL here so as not to require "Null" on frames 
 //           that use the null action. (woops!)
 //
-static void DoPSNeedBrightOrAction(pstate_t *ps)
+static void DoPSNeedFlagOrAction(pstate_t *ps)
 {
    E_GetDSToken(ps);
 
@@ -1401,62 +1455,34 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
 
    if(ps->tokentype != TOKEN_TEXT)
    {
-      PSExpectedErr(ps, "bright keyword or action name");
+      PSExpectedErr(ps, "state flag keyword or action name");
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       return;
    }
 
-   if(!ps->tokenbuffer->strCaseCmp("bright"))
+   int flagnum = E_StrToNumLinear(decStateFlagKeywords, DSFK_NUMFLAGS, 
+                                  ps->tokenbuffer->constPtr());
+
+   if(flagnum != DSFK_NUMFLAGS)
    {
-      // Apply fullbright to all states in the current range
       if(!ps->principals)
       {
-         DLListItem<estatebuf_t> *link = DSP.curbufstate;
-         int statenum = DSP.currentstate;
-
-         while(link && (*link)->type == BUF_STATE && 
-               (*link)->linenum == (*DSP.curbufstate)->linenum)
+         switch(flagnum)
          {
-            if(states[statenum]->decorate)
-               states[statenum]->frame |= FF_FULLBRIGHT;
-
-            ++statenum;           // move forward one state in states[]
-            link = link->dllNext; // move forward one buffered state
+         case DSFK_BRIGHT:
+            applyStateBright();
+            break;
+         case DSFK_FAST:
+            applyStateFlag(STATEF_SKILL5FAST);
+            break;
+         default:
+            break;
          }
       }
-      ps->state = PSTATE_NEEDSTATEACTION;
+      // stay in the current state
    }
    else
       doAction(ps, "DoPSNeedBrightOrAction"); // otherwise verify & assign action
-}
-
-//
-// DoPSNeedStateAction
-//
-// Expecting an action name after having dealt with the "bright" command.
-//
-// 08/15/10: Bugfix - we also need to accept EOL here as well!
-//  
-//
-static void DoPSNeedStateAction(pstate_t *ps)
-{
-   E_GetDSToken(ps);
-
-   // Allow EOL here to indicate null action
-   if(ps->tokentype == TOKEN_EOL)
-   {
-      PSWrapStates(ps);
-      ps->state = PSTATE_NEEDLABELORKWORSTATE;
-      return;
-   }
-
-   if(ps->tokentype != TOKEN_TEXT)
-   {
-      PSExpectedErr(ps, "action name");
-      ps->state = PSTATE_NEEDLABELORKWORSTATE;
-   }
-   else
-      doAction(ps, "DoPSNeedStateAction"); // otherwise verify & assign action
 }
 
 //
@@ -1485,7 +1511,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->decorate)
+            if(states[statenum]->flags & STATEF_DECORATE)
                E_CreateArgList(states[statenum]);
 
             ++statenum;           // move forward one state in states[]
@@ -1524,7 +1550,7 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->decorate)
+            if(states[statenum]->flags & STATEF_DECORATE)
                E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
@@ -1595,7 +1621,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->decorate)
+            if(states[statenum]->flags & STATEF_DECORATE)
                E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
@@ -1631,7 +1657,7 @@ static void DoPSNeedStateEOL(pstate_t *ps)
 typedef void (*psfunc_t)(pstate_t *);
 
 // parser state function table
-static psfunc_t pstatefuncs[] =
+static psfunc_t pstatefuncs[PSTATE_NUMSTATES] =
 {
    DoPSNeedLabel,
    DoPSNeedLabelOrKWOrState,
@@ -1641,8 +1667,7 @@ static psfunc_t pstatefuncs[] =
    DoPSNeedKWEOL,
    DoPSNeedStateFrames,
    DoPSNeedStateTics,
-   DoPSNeedBrightOrAction,
-   DoPSNeedStateAction,
+   DoPSNeedFlagOrAction,
    DoPSNeedStateEOLOrParen,
    DoPSNeedStateArgOrParen,
    DoPSNeedStateCommaOrParen,
@@ -1912,7 +1937,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input, const char *first
             states[i]->dehnum = -1;
             states[i]->sprite = blankSpriteNum;
             states[i]->nextstate = NullStateNum;
-            states[i]->decorate = true;
+            states[i]->flags |= STATEF_DECORATE;
          }
       }
    }
@@ -1991,7 +2016,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
          {
             foundmatch = true;
 
-            if(!states[igt->state]->decorate)
+            if(!(states[igt->state]->flags & STATEF_DECORATE))
                continue;
 
             states[igt->state]->nextstate = ds->state->index;
@@ -2016,7 +2041,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
       } // end for
 
       // no match? generate a goto in the DSO
-      if(!foundmatch && states[igt->state]->decorate)
+      if(!foundmatch && states[igt->state]->flags & STATEF_DECORATE)
       {
          egoto_t *egoto   = &(dso->gotos[dso->numgotos]);
          egoto->label     = estrdup(gotoInfo->gotodest);
@@ -2036,7 +2061,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
 // Frees all the dynamic structures created to support parsing of DECORATE
 // states.
 //
-static void E_freeDecorateData(void)
+static void E_freeDecorateData()
 {
    DLListItem<estatebuf_t> *obj = NULL;
 
@@ -2129,7 +2154,7 @@ void E_FreeDSO(edecstateout_t *dso)
 
    if(dso->states)
    {
-      for(i = 0; i < dso->numstates; ++i)
+      for(i = 0; i < dso->numstates; i++)
       {
          if(dso->states[i].label)
             efree(dso->states[i].label);
@@ -2140,7 +2165,7 @@ void E_FreeDSO(edecstateout_t *dso)
 
    if(dso->gotos)
    {
-      for(i = 0; i < dso->numgotos; ++i)
+      for(i = 0; i < dso->numgotos; i++)
       {
          if(dso->gotos[i].label)
             efree(dso->gotos[i].label);
@@ -2151,7 +2176,7 @@ void E_FreeDSO(edecstateout_t *dso)
 
    if(dso->killstates)
    {
-      for(i = 0; i < dso->numkillstates; ++i)
+      for(i = 0; i < dso->numkillstates; i++)
       {
          if(dso->killstates[i].killname)
             efree(dso->killstates[i].killname);

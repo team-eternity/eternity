@@ -53,11 +53,11 @@ protected:
    }
 
    //
-   // resize
+   // baseResize
    //
    // Resizes the internal array by the amount provided
    //
-   void resize(size_t amtToAdd)
+   void baseResize(size_t amtToAdd)
    {
       size_t newnumalloc = numalloc + amtToAdd;
       if(newnumalloc > numalloc)
@@ -82,6 +82,17 @@ protected:
       length = 0;
       numalloc = 0;
       wrapiterator = 0;
+   }
+
+   //
+   // checkWrapIterator
+   //
+   // Certain operations may invalidate the wrap iterator.
+   //
+   void checkWrapIterator()
+   {
+      if(wrapiterator >= length)
+         wrapiterator = 0;
    }
 
 public:
@@ -110,6 +121,17 @@ public:
       return ret;
    }
    
+   // Obtain the wrap iterator position
+   size_t getWrapIteratorPos() const { return wrapiterator; }
+   
+   // Set the wrap iterator position, if the indicated position is valid
+   void setWrapIteratorPos(size_t i)
+   {
+      if(i < length)
+         wrapiterator = i;
+   }
+
+
    //
    // at
    //
@@ -142,6 +164,7 @@ public:
       return ptrArray[index];
    }
 
+   // STL-compatible iterator semantics
    typedef T *iterator;
 
    T *begin() const { return ptrArray; }
@@ -166,7 +189,7 @@ public:
    // Parameterized constructor
    PODCollection(size_t initSize) : BaseCollection<T>()
    {
-      this->resize(initSize);
+      this->baseResize(initSize);
    }
 
    // Assignment
@@ -181,7 +204,7 @@ public:
       this->wrapiterator = other.wrapiterator;
       
       if(this->length > this->numalloc)
-         this->resize(this->length - oldlength);
+         this->baseResize(this->length - oldlength);
 
       memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));
    }
@@ -217,7 +240,20 @@ public:
    void makeEmpty()
    {
       this->length = this->wrapiterator = 0;
-      memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+      if(this->ptrArray)
+         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+   }
+
+   //
+   // zero
+   //
+   // Zero out the storage but do not change any other properties, including
+   // length.
+   //
+   void zero()
+   {
+      if(this->ptrArray)
+         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
    }
 
    //
@@ -228,7 +264,7 @@ public:
    void add(const T &newItem)
    {
       if(this->length >= this->numalloc)
-         this->resize(this->length ? this->length : 32); // double array size
+         this->baseResize(this->length ? this->length : 32); // double array size
       this->ptrArray[this->length] = newItem;
       ++this->length;
    }
@@ -241,7 +277,7 @@ public:
    T &addNew()
    {
       if(this->length >= this->numalloc)
-         this->resize(this->length ? this->length : 32);
+         this->baseResize(this->length ? this->length : 32);
       memset(&(this->ptrArray[this->length]), 0, sizeof(T));
       
       return this->ptrArray[this->length++];
@@ -257,7 +293,31 @@ public:
       if(!this->ptrArray || !this->length)
          I_Error("PODCollection::pop: array underflow\n");
       
-      return this->ptrArray[--this->length];
+      const T &ret = this->ptrArray[--this->length];
+      this->checkWrapIterator();
+
+      return ret;
+   }
+
+   //
+   // resize
+   //
+   // Change the length of the array.
+   //
+   void resize(size_t n)
+   {
+      // increasing?
+      if(n > this->length)
+      {
+         // need to reallocate?
+         if(n > this->numalloc)
+            this->baseResize(n - this->numalloc);
+         // ensure newly available slots are initialized
+         memset(&(this->ptrArray[this->length]), 0, (n - this->length) * sizeof(T));
+      }
+      // set the new length, in all cases.
+      this->length = n;
+      this->checkWrapIterator();
    }
 };
 
@@ -281,7 +341,7 @@ public:
    // Parameterized constructor
    Collection(size_t initSize) : BaseCollection<T>(), prototype(NULL)
    {
-      this->resize(initSize);
+      this->baseResize(initSize);
    }
    
    // Destructor

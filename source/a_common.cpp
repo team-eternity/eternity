@@ -39,6 +39,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "metaapi.h"
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
@@ -47,6 +48,7 @@
 #include "p_mapcontext.h"
 #include "p_traceengine.h"
 #include "p_mobj.h"
+#include "p_mobjcol.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -204,7 +206,6 @@ static void P_MakeActiveSound(Mobj *actor)
    if(actor->info->activesound && P_Random(pr_see) < 3)
    {
       int sound = actor->info->activesound;
-      int attn  = ATTN_NORMAL;
 
       // haleyjd: some heretic enemies use their seesound on
       // occasion, so I've made this a general feature
@@ -215,17 +216,10 @@ static void P_MakeActiveSound(Mobj *actor)
       }
 
       // haleyjd: some heretic enemies snort at full volume :)
-      // haleyjd: but when they do so, they do not cut off a sound
-      // they are already playing.
       if(actor->flags3 & MF3_LOUDACTIVE)
-      {
-         sfxinfo_t *sfx = E_SoundForDEHNum(sound);
-         if(sfx && S_CheckSoundPlaying(actor, sfx))
-            return;
-         attn = ATTN_NONE;
-      }
+         actor = NULL;
 
-      S_StartSoundAtVolume(actor, sound, 127, attn, CHAN_AUTO);
+      S_StartSound(actor, sound);
    }
 }
 
@@ -700,6 +694,52 @@ void A_Detonate(actionargs_t *actionargs)
    // haleyjd: added here as of 3.31b3 -- was overlooked
    if(demo_version >= 331 && mo->z <= mo->secfloorz + mo->damage*FRACUNIT)
       E_HitWater(mo, mo->subsector->sector);
+}
+
+//=============================================================================
+//
+// Raven-style Item Respawn Actions
+//
+
+void A_HideThing(actionargs_t *actionargs)
+{
+   actionargs->actor->flags2 |= MF2_DONTDRAW;
+}
+
+void A_UnHideThing(actionargs_t *actionargs)
+{
+   actionargs->actor->flags2 &= ~MF2_DONTDRAW;
+}
+
+void A_RestoreArtifact(actionargs_t *actionargs)
+{
+   Mobj *arti = actionargs->actor;
+
+   arti->flags |= MF_SPECIAL;
+   P_SetMobjState(arti, arti->info->spawnstate);
+   S_StartSound(arti, arti->info->seesound);
+}
+
+void A_RestoreSpecialThing1(actionargs_t *actionargs)
+{
+   Mobj       *thing = actionargs->actor;
+   const char *spot  = thing->info->meta->getString("itemrespawnat", "");
+ 
+   // Check for randomized respawns at collections (was Fire Mace specific)   
+   MobjCollection *col;
+   if(*spot && (col = MobjCollections.collectionForName(spot)))
+      col->moveToRandom(thing);
+
+   thing->flags2 &= ~MF2_DONTDRAW;
+   S_StartSound(thing, thing->info->seesound);
+}
+
+void A_RestoreSpecialThing2(actionargs_t *actionargs)
+{
+   Mobj *thing = actionargs->actor;
+
+   thing->flags |= MF_SPECIAL;
+   P_SetMobjState(thing, thing->info->spawnstate);
 }
 
 // EOF

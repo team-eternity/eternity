@@ -27,56 +27,58 @@
 
 struct event_t;
 struct player_t;
-class WadDirectory;
+class  Mobj;
+class  WadDirectory;
 
 //
 // GAME
 //
 
 char *G_GetNameForMap(int episode, int map);
-int G_GetMapForName(const char *name);
+int   G_GetMapForName(const char *name);
 
 bool G_Responder(event_t *ev);
-bool G_CheckDemoStatus(void);
-bool G_CheckDemoStatus(void);
+bool G_CheckDemoStatus();
 void G_DeathMatchSpawnPlayer(int playernum);
+void G_DeQueuePlayerCorpse(Mobj *mo);
+void G_ClearPlayerCorpseQueue();
 void G_DeferedInitNewNum(skill_t skill, int episode, int map);
 void G_DeferedInitNew(skill_t skill, const char *levelname);
 void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir);
 void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(const char *name, bool showmenu);
 void G_LoadGame(char *name, int slot, bool is_command); // killough 5/15/98
-void G_ForcedLoadGame(void);           // killough 5/15/98: forced loadgames
+void G_ForcedLoadGame();                      // killough 5/15/98: forced loadgames
 void G_SaveGame(int slot, char *description); // Called by M_Responder.
-void G_RecordDemo(char *name);              // Only called by startup code.
-void G_SetOldDemoOptions(void);
-void G_BeginRecording(void);
+void G_RecordDemo(char *name);                // Only called by startup code.
+void G_SetOldDemoOptions();
+void G_BeginRecording();
 void G_PlayDemo(char *name);
 void G_StopDemo();
 void G_ScrambleRand();
-void G_ExitLevel(void);
-void G_SecretExitLevel(void);
-void G_WorldDone(void);
-void G_ForceFinale(void);
-void G_Ticker(void);
-void G_ScreenShot(void);
-void G_ReloadDefaults(void);     // killough 3/1/98: loads game defaults
+void G_ExitLevel();
+void G_SecretExitLevel();
+void G_WorldDone();
+void G_ForceFinale();
+void G_Ticker();
+void G_ScreenShot();
+void G_ReloadDefaults();                // killough 3/01/98: loads game defaults
 void G_SaveGameName(char *,size_t,int); // killough 3/22/98: sets savegame filename
-void G_SetFastParms(int);        // killough 4/10/98: sets -fast parameters
-void G_DoNewGame(void);
+void G_SetFastParms(int);               // killough 4/10/98: sets -fast parameters
+void G_DoNewGame();
 void G_DoReborn(int playernum);
-void G_DoLoadLevel(void);
+void G_DoLoadLevel();
 byte *G_ReadOptions(byte *demoptr);         // killough 3/1/98
 byte *G_WriteOptions(byte *demoptr);        // killough 3/1/98
 void G_PlayerReborn(int player);
 void G_InitNewNum(skill_t skill, int episode, int map);
 void G_InitNew(skill_t skill, char*);
-void G_DoVictory(void);
+void G_DoVictory();
 void G_SetGameMapName(const char *s); // haleyjd
-void G_SetGameMap(void);
+void G_SetGameMap();
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 uint64_t G_Signature(WadDirectory *dir);
-void G_DoPlayDemo(void);
+void G_DoPlayDemo();
 
 void R_InitPortals();
 

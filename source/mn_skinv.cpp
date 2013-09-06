@@ -94,6 +94,7 @@ extern void A_Pain(actionargs_t *);
 extern void A_Scream(actionargs_t *);
 extern void A_PlayerScream(actionargs_t *);
 extern void A_XScream(actionargs_t *);
+extern void A_FlameSnd(actionargs_t *);
 
 //
 // MN_skinEmulateAction
@@ -151,6 +152,10 @@ static void MN_skinEmulateAction(state_t *state)
    else if(state->action == A_XScream)
    {
       S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_slop]);
+   }
+   else if(state->action == A_FlameSnd)
+   {
+      S_StartSoundName(NULL, "ht_hedat1");
    }
 }
 
@@ -452,15 +457,15 @@ static void MN_initMetaDeaths()
 {
    playerclass_t *pclass = players[consoleplayer].pclass;
    MetaTable     *meta   = mobjinfo[pclass->type]->meta;
-   MetaObject    *obj    = NULL;
+   MetaState     *state  = NULL;
    
    skview_metadeaths.clear();
 
-   while((obj = meta->getNextType(obj, METATYPE(MetaState))))
+   while((state = meta->getNextTypeEx(state)))
    {
       // NB: also matches XDeath implicitly.
-      if(M_StrCaseStr(obj->getKey(), "Death."))
-         skview_metadeaths.add(static_cast<MetaState *>(obj));
+      if(M_StrCaseStr(state->getKey(), "Death."))
+         skview_metadeaths.add(state);
    }
 }
 

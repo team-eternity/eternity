@@ -71,8 +71,6 @@
 // dehacked support (and future flexibility).  Most var names came from the key
 // strings used in dehacked.
 
-int initial_health = 100;
-int initial_bullets = 50;
 int god_health = 100;   // these are used in cheats (see st_stuff.c)
 
 int bfgcells = 40;      // used in p_pspr.c
@@ -318,6 +316,21 @@ void P_GiveCard(player_t *player, itemeffect_t *card)
    E_GiveInventoryItem(player, card);
 }
 
+/*
+  pw_invulnerability,
+  pw_strength,
+  pw_invisibility,
+  pw_ironfeet,
+  pw_allmap,
+  pw_infrared,
+  pw_totalinvis,  // haleyjd: total invisibility
+  pw_ghost,       // haleyjd: heretic ghost
+  pw_silencer,    // haleyjd: silencer
+  pw_flight,      // haleyjd: flight
+  pw_torch,       // haleyjd: infrared w/flicker
+  NUMPOWERS
+*/
+
 //
 // P_GivePower
 //
@@ -328,14 +341,16 @@ bool P_GivePower(player_t *player, int power)
    static const int tics[NUMPOWERS] = 
    {
       INVULNTICS,
-      1,          /* strength */
+      1,          // strength 
       INVISTICS,
       IRONTICS, 
-      1,          /* allmap */
+      1,          // allmap 
       INFRATICS,
-      INVISTICS,  /* haleyjd: totalinvis */
-      INVISTICS,  /* haleyjd: ghost */
-      1,          /* haleyjd: silencer */
+      INVISTICS,  // haleyjd: totalinvis
+      INVISTICS,  // haleyjd: ghost 
+      1,          // haleyjd: silencer 
+      FLIGHTTICS, // haleyjd: flight
+      INFRATICS,  // haleyjd: torch
    };
 
    switch(power)
@@ -359,14 +374,62 @@ bool P_GivePower(player_t *player, int power)
    case pw_silencer:
       if(player->powers[pw_silencer])
          return false;
+   case pw_flight:       // haleyjd: flight
+      if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4*32)
+         return false;
+      P_PlayerStartFlight(player, true);
       break;
    }
 
-   // Unless player has infinite duration cheat, set duration (killough)
-   
+   // Unless player has infinite duration cheat, set duration (killough)   
    if(player->powers[power] >= 0)
       player->powers[power] = tics[power];
+
    return true;
+}
+
+//
+// P_RavenRespawn
+//
+// haleyjd 08/17/13: Perform Raven-style item respawning logic.
+//
+static void P_RavenRespawn(Mobj *special)
+{
+   // item respawning has to be turned on
+   bool willrespawn = ((dmflags & DM_ITEMRESPAWN) == DM_ITEMRESPAWN);
+
+   // Remove special status. Note this exempts the object from the DOOM-style
+   // item respawning code in Mobj::removeThinker.
+   special->flags &= ~MF_SPECIAL;
+
+   // Super items only respawn if so specified
+   if(special->flags3 & MF3_SUPERITEM && !(dmflags & DM_RESPAWNSUPER))
+      willrespawn = false; 
+
+   // NOITEMRESP items never respawn.
+   if(special->flags3 & MF3_NOITEMRESP)
+      willrespawn = false;
+
+   // DROPPED items never respawn.
+   if(special->flags & MF_DROPPED)
+      willrespawn = false;
+
+   // get states
+   state_t *respawn = E_GetStateForMobjInfo(special->info, "Pickup.Respawn");
+   state_t *remove  = E_GetStateForMobjInfo(special->info, "Pickup.Remove");
+
+   // Want to respawn, and can respawn?
+   if(willrespawn && respawn)
+      P_SetMobjState(special, respawn->index);
+   else
+   {
+      // Removing the item. If it has a remove state, set it.
+      // Otherwise, the item is removed now.
+      if(remove)
+         P_SetMobjState(special, remove->index);
+      else
+         special->removeThinker();
+   }
 }
 
 //
@@ -437,17 +500,18 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    // pickup is flagged to always be picked up even without benefit.
    if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
    {
-      // INVENTORY_TODO: support Heretic/Hexen-style item respawning via
-      // setting to a state instead of removing (should be a property of
-      // the "special" object).
-
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
       {
          // Award item count
          if(special->flags & MF_COUNTITEM)
             player->itemcount++;
-         special->removeThinker();
+
+         // Check for item respawning style: DOOM, or Raven
+         if(special->flags4 & MF4_RAVENRESPAWN)
+            P_RavenRespawn(special);
+         else
+            special->removeThinker();
       }
 
       // if picked up for benefit, or not silent when picked up without, do
@@ -971,7 +1035,12 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       player->itemcount++;
 
    if(removeobj)
-      special->removeThinker();
+   {
+      if(special->flags4 & MF4_RAVENRESPAWN)
+         P_RavenRespawn(special);
+      else
+         special->removeThinker();
+   }
 
    // haleyjd 07/08/05: inverted condition
    if(pickup_fx)
@@ -990,17 +1059,15 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 //
 void P_DropItems(Mobj *actor, bool tossitems)
 {
-   MetaTable  *meta = actor->info->meta;
-   MetaObject *obj  = NULL;
+   MetaTable    *meta = actor->info->meta;
+   MetaDropItem *mdi  = NULL;
 
    // players only drop items if so indicated
    if(actor->player && !(dmflags & DM_PLAYERDROP))
       return;
 
-   while((obj = meta->getNextType(obj, METATYPE(MetaDropItem))))
+   while((mdi = meta->getNextTypeEx(mdi)))
    {
-      MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
-
       // check if we spawn this sort of item at the present time
       if(mdi->toss != tossitems)
          continue;

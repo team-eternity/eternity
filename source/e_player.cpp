@@ -98,6 +98,7 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_DEFAULTSKIN    "defaultskin"
 #define ITEM_PCLASS_THINGTYPE      "thingtype"
 #define ITEM_PCLASS_ALTATTACK      "altattackstate"
+#define ITEM_PCLASS_INITIALHEALTH  "initialhealth"
 #define ITEM_PCLASS_SPEEDWALK      "speedwalk"
 #define ITEM_PCLASS_SPEEDRUN       "speedrun"
 #define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
@@ -121,9 +122,10 @@ static cfg_opt_t edf_reborn_opts[] =
 
 cfg_opt_t edf_pclass_opts[] =
 {
-   CFG_STR(ITEM_PCLASS_DEFAULTSKIN, NULL, CFGF_NONE),
-   CFG_STR(ITEM_PCLASS_THINGTYPE,   NULL, CFGF_NONE),
-   CFG_STR(ITEM_PCLASS_ALTATTACK,   NULL, CFGF_NONE),
+   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   NULL, CFGF_NONE),
+   CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),
+   CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),
 
    // speeds
    CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE),
@@ -503,6 +505,10 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       
       pc->altattack = statenum;
    }
+
+   // initial health
+   if(IS_SET(pcsec, ITEM_PCLASS_INITIALHEALTH))
+      pc->initialhealth = cfg_getint(pcsec, ITEM_PCLASS_INITIALHEALTH);
 
    // process player speed fields
 

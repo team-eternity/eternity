@@ -85,13 +85,13 @@ static Collection<HashData> eincludes;
 // data sources that have been sent into this function. Returns true if the
 // data should be included, and false otherwise (ie. there was a match).
 //
-static bool E_CheckInclude(const char *data, size_t size)
+bool E_CheckInclude(const char *data, size_t size)
 {
-   size_t i, numincludes;
+   size_t numincludes;
    char *digest;
    
    // calculate the SHA-1 hash of the data   
-   HashData newHash = HashData(HashData::SHA1, (const uint8_t *)data, (uint32_t)size);
+   HashData newHash(HashData::SHA1, (const uint8_t *)data, (uint32_t)size);
 
    // output digest string
    digest = newHash.digestToString();
@@ -103,7 +103,7 @@ static bool E_CheckInclude(const char *data, size_t size)
    numincludes = eincludes.getLength();
 
    // compare against existing includes
-   for(i = 0; i < numincludes; ++i)
+   for(size_t i = 0; i < numincludes; i++)
    {
       // found a match?
       if(newHash == eincludes[i])
@@ -527,6 +527,7 @@ unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset)
    return flagset->results[0];
 }
 
+//=============================================================================
 //
 // Value-Parsing Callbacks
 //
@@ -842,6 +843,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    return 0;
 }
 
+//=============================================================================
 //
 // Prefix:Value Syntax Parsing
 //
@@ -889,6 +891,7 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
    return colonloc;
 }
 
+//=============================================================================
 //
 // Other String Utilities
 //

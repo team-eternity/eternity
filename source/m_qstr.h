@@ -112,6 +112,13 @@ public:
    size_t length() const { return index; }
 
    //
+   // qstring::empty
+   //
+   // For C++ std::string compatibility.
+   //
+   bool empty() const { return (index == 0); }
+
+   //
    // qstring::getSize
    //
    // Returns the amount of size allocated for this qstring (will be >= strlen).

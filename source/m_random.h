@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //   Random number generator
@@ -25,8 +25,8 @@
 //-----------------------------------------------------------------------------
 
 
-#ifndef __M_RANDOM__
-#define __M_RANDOM__
+#ifndef M_RANDOM_H__
+#define M_RANDOM_H__
 
 // killough 1/19/98: rewritten to use to use a better random number generator
 // in the new engine, although the old one is available for compatibility.
@@ -203,20 +203,22 @@ typedef enum {
   pr_wraithfx4b,
   pr_wraithfx4c,
   pr_ettin,
-  pr_affritrock, // A_AffritSpawnRock
-  pr_smbounce,   // A_SmBounce
-  pr_affrits,    // A_AffritSplotch
-  pr_icelook,    // A_IceGuyLook
+  pr_affritrock,  // A_AffritSpawnRock
+  pr_smbounce,    // A_SmBounce
+  pr_affrits,     // A_AffritSplotch
+  pr_icelook,     // A_IceGuyLook
   pr_icelook2,
-  pr_icechase,   // A_IceGuyChase
+  pr_icechase,    // A_IceGuyChase
   pr_icechase2, 
-  pr_dragonfx,   // A_DragonFX2
-  pr_dropmace,   // A_DropMace
-  pr_rip,        // ripper missile damage
-  pr_casing,     // A_CasingThrust
-  pr_genrefire,  // A_GenRefire
-  pr_decjump,    // A_Jump
+  pr_dragonfx,    // A_DragonFX2
+  pr_dropmace,    // A_DropMace
+  pr_rip,         // ripper missile damage
+  pr_casing,      // A_CasingThrust
+  pr_genrefire,   // A_GenRefire
+  pr_decjump,     // A_Jump
   pr_decjump2,
+  pr_spotspawn,   // For use with MobjCollection::spawnAtRandom
+  pr_moverandom,  // For use with MobjCollection::moveToRandom
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

@@ -165,6 +165,9 @@ int E_TakeAllKeys(player_t *player);
 // Check if a player is able to unlock a lock, by its lock ID.
 bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote);
 
+// Get the automap color for a lockdef
+int E_GetLockDefColor(int lockID);
+
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
 

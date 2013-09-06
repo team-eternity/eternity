@@ -45,6 +45,7 @@
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_inventory.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "g_game.h"
 #include "metaapi.h"
@@ -61,30 +62,26 @@
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
+static int M_NukeMonsters();
+
 //=============================================================================
 //
 // CHEAT SEQUENCE PACKAGE
 //
 
+// Doom Cheats
 static void cheat_mus(const void *);
 static void cheat_choppers(const void *);
 static void cheat_god(const void *);
-static void cheat_infammo(const void *);
 static void cheat_fa(const void *);
 static void cheat_k(const void *);
 static void cheat_kfa(const void *);
 static void cheat_noclip(const void *);
-static void cheat_pw(const void *);
 static void cheat_behold(const void *);
 static void cheat_clev(const void *);
 static void cheat_mypos(const void *);
-static void cheat_comp(const void *);
-static void cheat_friction(const void *);
-static void cheat_pushers(const void *);
-static void cheat_tran(const void *);
 static void cheat_massacre(const void *);
 static void cheat_ddt(const void *);
-static void cheat_hom(const void *);
 static void cheat_key(const void *);
 static void cheat_keyx(const void *);
 static void cheat_keyxx(const void *);
@@ -92,8 +89,27 @@ static void cheat_weap(const void *);
 static void cheat_weapx(const void *);
 static void cheat_ammo(const void *);
 static void cheat_ammox(const void *);
-static void cheat_nuke(const void *);
 static void cheat_one(const void *);
+
+// Heretic cheats
+static void cheat_hticgod(const void *);
+static void cheat_htichealth(const void *);
+static void cheat_hticiddqd(const void *);
+static void cheat_htickeys(const void *);
+static void cheat_htickill(const void *);
+static void cheat_hticnoclip(const void *);
+static void cheat_hticwarp(const void *);
+static void cheat_hticbehold(const void *);
+
+// Shared cheats
+static void cheat_pw(const void *);
+static void cheat_infammo(const void *);
+static void cheat_comp(const void *);
+static void cheat_friction(const void *);
+static void cheat_pushers(const void *);
+static void cheat_tran(const void *);
+static void cheat_hom(const void *);
+static void cheat_nuke(const void *);
 
 #ifdef INSTRUMENTED
 static void cheat_printstats(const void *);   // killough 8/23/98
@@ -108,7 +124,7 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 // The second argument is its DEH name, or NULL if it's not supported by -deh.
 //
 // The third argument is a combination of the bitmasks:
-// {always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh, beta_only},
+// { always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh },
 // which excludes the cheat during certain modes of play.
 //
 // The fourth argument is the handler function.
@@ -119,147 +135,79 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 // via a pointer to a buffer (after folding any letters to lowercase).
 //
 
-struct cheat_s cheat[] = {
-  {"idmus",      "Change music",      always,
-   cheat_mus,      -2},
+cheat_s cheat[CHEAT_NUMCHEATS] = 
+{
+   // DOOM Cheats
+   { "idmus",      Game_DOOM, always,   cheat_mus,      -2                  },
+   { "idchoppers", Game_DOOM, not_sync, cheat_choppers,  0                  },
+   { "iddqd",      Game_DOOM, not_sync, cheat_god,       0                  },
+   { "idk",        Game_DOOM, not_sync, cheat_k,         0                  }, // The most controversial cheat code in Doom history!!!
+   { "idkfa",      Game_DOOM, not_sync, cheat_kfa,       0                  },
+   { "idfa",       Game_DOOM, not_sync, cheat_fa,        0                  },
+   { "idspispopd", Game_DOOM, not_sync, cheat_noclip,    0                  },
+   { "idclip",     Game_DOOM, not_sync, cheat_noclip,    0                  },
+   { "idbeholdv",  Game_DOOM, not_sync, cheat_pw,        pw_invulnerability },
+   { "idbeholds",  Game_DOOM, not_sync, cheat_pw,        pw_strength        },
+   { "idbeholdi",  Game_DOOM, not_sync, cheat_pw,        pw_invisibility    },
+   { "idbeholdr",  Game_DOOM, not_sync, cheat_pw,        pw_ironfeet        },
+   { "idbeholda",  Game_DOOM, not_sync, cheat_pw,        pw_allmap          },
+   { "idbeholdl",  Game_DOOM, not_sync, cheat_pw,        pw_infrared        },
+   { "idbehold",   Game_DOOM, not_sync, cheat_behold,    0                  },
+   { "idclev",     Game_DOOM, not_sync, cheat_clev,     -2                  },
+   { "idmypos",    Game_DOOM, always,   cheat_mypos,     0                  },
+   { "iddt",       Game_DOOM, not_dm,   cheat_ddt,       0                  }, // killough 2/07/98: moved from am_map.c
+   { "key",        Game_DOOM, not_sync, cheat_key,       0                  }, // killough 2/16/98: generalized key cheats
+   { "keyr",       Game_DOOM, not_sync, cheat_keyx,      0                  },
+   { "keyy",       Game_DOOM, not_sync, cheat_keyx,      0                  },
+   { "keyb",       Game_DOOM, not_sync, cheat_keyx,      0                  },
+   { "keyrc",      Game_DOOM, not_sync, cheat_keyxx,     it_redcard         },
+   { "keyyc",      Game_DOOM, not_sync, cheat_keyxx,     it_yellowcard      },
+   { "keybc",      Game_DOOM, not_sync, cheat_keyxx,     it_bluecard        },
+   { "keyrs",      Game_DOOM, not_sync, cheat_keyxx,     it_redskull        },
+   { "keyys",      Game_DOOM, not_sync, cheat_keyxx,     it_yellowskull     },
+   { "keybs",      Game_DOOM, not_sync, cheat_keyxx,     it_blueskull       }, // killough 2/16/98: end generalized keys
+   { "weap",       Game_DOOM, not_sync, cheat_weap,      0                  }, // killough 2/16/98: generalized weapon cheats
+   { "weap",       Game_DOOM, not_sync, cheat_weapx,    -1                  },
+   { "ammo",       Game_DOOM, not_sync, cheat_ammo,      0                  },
+   { "ammo",       Game_DOOM, not_sync, cheat_ammox,    -1                  }, // killough 2/16/98: end generalized weapons
+   { "iamtheone",  Game_DOOM, not_sync, cheat_one,       0                  },
+   { "killem",     Game_DOOM, not_sync, cheat_massacre,  0                  }, // jff 2/01/98 kill all monsters
 
-  {"idchoppers", "Chainsaw",          not_net | not_demo,
-   cheat_choppers, 0 },
+   // Heretic Cheats
+   { "quicken",   Game_Heretic, not_sync, cheat_hticgod,     0                  },
+   { "ponce",     Game_Heretic, not_sync, cheat_htichealth,  0                  },
+   { "iddqd",     Game_Heretic, not_sync, cheat_hticiddqd,   0                  },
+   { "skel",      Game_Heretic, not_sync, cheat_htickeys,    0                  },
+   { "massacre",  Game_Heretic, not_sync, cheat_htickill,    0                  },
+   { "kitty",     Game_Heretic, not_sync, cheat_hticnoclip,  0                  },
+   { "engage",    Game_Heretic, not_sync, cheat_hticwarp,   -2                  },
+   { "ravmap",    Game_Heretic, not_dm,   cheat_ddt,         0                  },
+   { "ravpowerv", Game_Heretic, not_sync, cheat_pw,          pw_invulnerability },
+   { "ravpowerg", Game_Heretic, not_sync, cheat_pw,          pw_ghost           },
+   { "ravpowera", Game_Heretic, not_sync, cheat_pw,          pw_allmap          },
+   { "ravpowert", Game_Heretic, not_sync, cheat_pw,          pw_torch           },
+   { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
+   { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
+   { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
 
-  {"iddqd",      "God mode",          not_net | not_demo,
-   cheat_god, 0  },
-
-  {"idk",        NULL,                not_net | not_demo | not_deh,
-   cheat_k, 0 },  // The most controversial cheat code in Doom history!!!
-
-  {"idkfa",      "Ammo & Keys",       not_net | not_demo,
-   cheat_kfa, 0 },
-
-  {"idfa",       "Ammo",              not_net | not_demo,
-   cheat_fa, 0  },
-
-  {"idspispopd", "No Clipping 1",     not_net | not_demo,
-   cheat_noclip, 0 },
-
-  {"idclip",     "No Clipping 2",     not_net | not_demo,
-   cheat_noclip, 0 },
-
-  {"idbeholdv",  "Invincibility",     not_net | not_demo,
-   cheat_pw,  pw_invulnerability },
-
-  {"idbeholds",  "Berserk",           not_net | not_demo,
-   cheat_pw,  pw_strength        },
-
-  {"idbeholdi",  "Invisibility",      not_net | not_demo,  
-   cheat_pw,  pw_invisibility    },
-
-  {"idbeholdr",  "Radiation Suit",    not_net | not_demo,
-   cheat_pw,  pw_ironfeet        },
-
-  {"idbeholda",  "Auto-map",          not_net | not_demo,
-   cheat_pw,  pw_allmap          },
-
-  {"idbeholdl",  "Lite-Amp Goggles",  not_net | not_demo,
-   cheat_pw,  pw_infrared        },
-
-  {"idbehold",   "BEHOLD menu",       not_net | not_demo,
-   cheat_behold, 0 },
-
-  {"idclev",     "Level Warp",        not_net | not_demo | not_menu,
-   cheat_clev,    -2},
-
-  {"idmypos",    "Player Position",   not_net | not_demo,
-   cheat_mypos, 0    },
-
-  {"comp",    NULL,                   not_net | not_demo,
-   cheat_comp, 0     },     // phares
-
-  {"killem",     NULL,                not_net | not_demo,
-   cheat_massacre, 0 },     // jff 2/01/98 kill all monsters
-
-  {"iddt",       "Map cheat",         not_dm,
-   cheat_ddt, 0      },     // killough 2/07/98: moved from am_map.c
-
-  {"hom",     NULL,                   always,
-   cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
-
-  {"key",     NULL,                   not_net | not_demo, 
-   cheat_key, 0   },     // killough 2/16/98: generalized key cheats
-
-  {"keyr",    NULL,                   not_net | not_demo,
-   cheat_keyx, 0  },
-
-  {"keyy",    NULL,                   not_net | not_demo,
-   cheat_keyx, 0  },
-
-  {"keyb",    NULL,                   not_net | not_demo,
-   cheat_keyx, 0  },
-
-  {"keyrc",   NULL,                   not_net | not_demo, 
-   cheat_keyxx, it_redcard    },
-
-  {"keyyc",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_yellowcard },
-
-  {"keybc",   NULL,                   not_net | not_demo, 
-   cheat_keyxx, it_bluecard   },
-
-  {"keyrs",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_redskull   },
-
-  {"keyys",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_yellowskull},
-
-  {"keybs",   NULL,                   not_net | not_demo,
-   cheat_keyxx, it_blueskull  },  // killough 2/16/98: end generalized keys
-
-  {"weap",    NULL,                   not_net | not_demo,
-   cheat_weap, 0  },     // killough 2/16/98: generalized weapon cheats
-
-  {"weap",    NULL,                   not_net | not_demo,
-   cheat_weapx, -1},
-
-  {"ammo",    NULL,                   not_net | not_demo,
-   cheat_ammo, 0  },
-
-  {"ammo",    NULL,                   not_net | not_demo,
-   cheat_ammox, -1},  // killough 2/16/98: end generalized weapons
-
-  {"tran",    NULL,                   always,
-   cheat_tran, 0  },     // invoke translucency         // phares
-
-  {"ice",     NULL,                   not_net | not_demo,
-   cheat_friction, 0   },   // phares 3/10/98: toggle variable friction effects
-
-  {"push",    NULL,                   not_net | not_demo, 
-   cheat_pushers, 0    },   // phares 3/10/98: toggle pushers
-
-  {"nuke",    NULL,                   not_net | not_demo,
-   cheat_nuke, 0       },   // killough 12/98: disable nukage damage
+   // Shared Cheats
+   { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
+   { "hom",      -1, always,   cheat_hom,      0             }, // killough 2/07/98: HOM autodetector
+   { "tran",     -1, always,   cheat_tran,     0             }, // invoke translucency - phares
+   { "ice",      -1, not_sync, cheat_friction, 0             }, // phares 3/10/98: toggle variable friction effects
+   { "push",     -1, not_sync, cheat_pushers,  0             }, // phares 3/10/98: toggle pushers
+   { "nuke",     -1, not_sync, cheat_nuke,     0             }, // killough 12/98: disable nukage damage
+   { "hideme",   -1, not_sync, cheat_pw,       pw_totalinvis }, // haleyjd: total invis cheat -- hideme
+   { "ghost",    -1, not_sync, cheat_pw,       pw_ghost      }, // haleyjd: heretic ghost 
+   { "infshots", -1, not_sync, cheat_infammo,  0             },
+   { "silence",  -1, not_sync, cheat_pw,       pw_silencer   },
 
 #ifdef INSTRUMENTED
-  {"stat",       NULL,                always,
-   cheat_printstats, 0 },
+   // Debug Cheats
+   { "stat", -1, always, cheat_printstats, 0 },
 #endif
 
-  // haleyjd: total invis cheat -- hideme
-  {"hideme", NULL,      not_net | not_demo,
-    cheat_pw, pw_totalinvis     },
-
-  // haleyjd: heretic ghost 
-  {"ghost",  NULL,      not_net | not_demo,
-    cheat_pw, pw_ghost },
-
-  {"infshots", NULL,    not_net | not_demo,
-    cheat_infammo, 0 },
-
-  {"silence", NULL,     not_net | not_demo,
-    cheat_pw, pw_silencer },
-
-  {"iamtheone", NULL,   not_net | not_demo,
-    cheat_one, 0 },
-
-  {NULL, NULL, 0, NULL, 0 } // end-of-list marker
+   { NULL, -1, 0, NULL, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -432,6 +380,10 @@ static void cheat_pw(const void *arg)
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
+
+   // haleyjd: stop flight if necessary
+   if(pw == pw_flight && !plyr->powers[pw_flight])
+      P_PlayerStopFlight(plyr);
    
    doom_printf("%s", DEH_String("STSTR_BEHOLDX")); // Ty 03/27/98 - externalized
 }
@@ -442,10 +394,13 @@ static void cheat_behold(const void *arg)
    doom_printf("%s", DEH_String("STSTR_BEHOLD")); // Ty 03/27/98 - externalized
 }
 
-// 'clev' change-level cheat
-static void cheat_clev(const void *arg)
+//
+// cht_levelWarp
+//
+// haleyjd 08/23/13: Shared logic for warp cheats
+//
+static bool cht_levelWarp(const char *buf)
 {
-   const char *buf = (const char *)arg;
    char mapname[9];
    int epsd, map, lumpnum;
    bool foundit = false;
@@ -455,7 +410,7 @@ static void cheat_clev(const void *arg)
    // return silently on nonsense input
    if(buf[0] < '0' || buf[0] > '9' ||
       buf[1] < '0' || buf[1] > '9')
-      return;
+      return false;
 
    // haleyjd: build mapname
    memset(mapname, 0, sizeof(mapname));
@@ -463,14 +418,14 @@ static void cheat_clev(const void *arg)
    if(GameModeInfo->flags & GIF_MAPXY)
    {
       epsd = 1; //jff was 0, but espd is 1-based 
-      map = (buf[0] - '0')*10 + buf[1] - '0';
+      map  = (buf[0] - '0')*10 + buf[1] - '0';
 
       psnprintf(mapname, sizeof(mapname), "MAP%02d", map);
    }
    else
    {
       epsd = buf[0] - '0';
-      map = buf[1] - '0';
+      map  = buf[1] - '0';
 
       psnprintf(mapname, sizeof(mapname), "E%dM%d", epsd, map);
    }
@@ -490,32 +445,40 @@ static void cheat_clev(const void *arg)
 
    if(!foundit)
    {
-      doom_printf("%s not found or is not a valid map", mapname);
-      return;
+      player_printf(plyr, "%s not found or is not a valid map", mapname);
+      return false;
    }
-   
+
    // So be it.
 
    idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
-
-   doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
    G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
    
    // restore mission if appropriate
    if(levelDir != &wGlobalDir)
       inmanageddir = mission;
+
+   return true;
+}
+
+// 'clev' change-level cheat
+static void cheat_clev(const void *arg)
+{
+   if(cht_levelWarp(static_cast<const char *>(arg)))
+      player_printf(plyr, "%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
+
 }
 
 // 'mypos' for player position
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
 static void cheat_mypos(const void *arg)
 {
-   doom_printf("Position (%d,%d,%d)\tAngle %-.0f", 
-               players[consoleplayer].mo->x >> FRACBITS,
-               players[consoleplayer].mo->y >> FRACBITS,
-               players[consoleplayer].mo->z >> FRACBITS,
-               players[consoleplayer].mo->angle * (90.0/ANG90));
+   player_printf(plyr, "Position (%d,%d,%d)\tAngle %-.0f", 
+                 plyr->mo->x / FRACUNIT,
+                 plyr->mo->y / FRACUNIT,
+                 plyr->mo->z / FRACUNIT,
+                 plyr->mo->angle / ANGLE_1);
 }
 
 // compatibility cheat
@@ -596,8 +559,6 @@ static void cheat_keyxx(const void *arg)
    int key = *(const int *)arg;
    const char *msg = NULL;
 
-   // CHEATS_FIXME: this is a DOOM cheat; Need to add ability to have different
-   // cheats in each game, and then add Heretic's cheats.
    if(key >= GameModeInfo->numHUDKeys)
       return;
 
@@ -722,6 +683,101 @@ static void cheat_nuke(const void *arg)
                                               "Nukage Disabled");
 }
 
+//=============================================================================
+//
+// Heretic Cheats
+//
+
+//
+// Heretic God Mode cheat - quicken
+//
+static void cheat_hticgod(const void *arg)
+{
+   plyr->cheats ^= CF_GODMODE;
+
+   if(plyr->cheats & CF_GODMODE)
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATGODON"));
+   else
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATGODOFF"));
+}
+
+//
+// Heretic No Clip cheat - kitty
+//
+static void cheat_hticnoclip(const void *arg)
+{
+   plyr->cheats ^= CF_NOCLIP;
+
+   if(plyr->cheats & CF_NOCLIP)
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATNOCLIPON"));
+   else
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATNOCLIPOFF"));
+}
+
+// HTIC_TODO: weapons cheat "rambo"
+// HTIC_TODO: tome of power cheat "shazam"
+
+//
+// Heretic Full Health cheat - ponce
+//
+static void cheat_htichealth(const void *arg)
+{
+   plyr->health = plyr->mo->health = plyr->pclass->initialhealth;
+   player_printf(plyr, "%s", DEH_String("TXT_CHEATHEALTH"));
+}
+
+//
+// Heretic Keys cheat - skel
+//
+static void cheat_htickeys(const void *arg)
+{
+   if(E_GiveAllKeys(plyr))
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATKEYS"));
+}
+
+// HTIC_TODO: artifacts cheat "gimme"
+
+//
+// Heretic Warp cheat - engage
+//
+static void cheat_hticwarp(const void *arg)
+{
+   if(cht_levelWarp(static_cast<const char *>(arg)))
+      player_printf(plyr, "%s", DEH_String("TXT_CHEATWARP"));
+}
+
+// HTIC_TODO: chicken cheat - cockadoodledoo
+
+//
+// Heretic Kill-All cheat - massacre
+//
+static void cheat_htickill(const void *arg)
+{
+   M_NukeMonsters();
+   doom_printf("%s", DEH_String("TXT_CHEATMASSACRE"));
+}
+
+// HTIC_TODO: idkfa - remove player's weapons
+
+//
+// Heretic IDDQD - kill yourself. Best cheat ever!
+//
+static void cheat_hticiddqd(const void *arg)
+{
+   P_DamageMobj(plyr->mo, NULL, plyr->mo, 10000, MOD_UNKNOWN);
+   player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
+}
+
+// New cheats, to fill in for Heretic's shortcomings
+
+//
+// Heretic Powerup cheat
+//
+static void cheat_hticbehold(const void *arg)
+{
+   player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
+}
+
 //-----------------------------------------------------------------------------
 // 2/7/98: Cheat detection rewritten by Lee Killough, to avoid
 // scrambling and to use a more general table-driven approach.
@@ -745,6 +801,10 @@ bool M_FindCheats(int key)
    static int init, argsleft, cht;
    int i, matchedbefore; 
    bool ret;
+
+   // haleyjd: no cheats in menus, at all.
+   if(menuactive)
+      return false;
 
    // If we are expecting arguments to a cheat
    // (e.g. idclev), put them in the arg buffer
@@ -806,25 +866,28 @@ bool M_FindCheats(int key)
    ret = false;
    for(matchedbefore = i = 0; cheat[i].cheat; i++)
    {
-      if((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
-         !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
-         !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
-         !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
-         !(cheat[i].when & not_menu && menuactive) &&
-         !(cheat[i].when & not_deh  && cheat[i].deh_modified))
+      cheat_s &curcht = cheat[i];
+
+      // if match found & allowed
+      if((curcht.gametype == -1 || curcht.gametype == GameModeInfo->type) &&
+         (sr & curcht.mask) == curcht.code && 
+         !(curcht.when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
+         !(curcht.when & not_coop && netgame && GameType == gt_coop) &&
+         !(curcht.when & not_demo && (demorecording || demoplayback)) &&
+         !curcht.deh_disabled)
       {
-         if(cheat[i].arg < 0)               // if additional args are required
+         if(curcht.arg < 0)               // if additional args are required
          {
-            cht = i;                        // remember this cheat code
-            arg = argbuf;                   // point to start of arg buffer
-            argsleft = -cheat[i].arg;       // number of args expected
-            ret = true;                     // responder has eaten key
+            cht = i;                      // remember this cheat code
+            arg = argbuf;                 // point to start of arg buffer
+            argsleft = -curcht.arg;       // number of args expected
+            ret = true;                   // responder has eaten key
          }
-         else if(!matchedbefore)            // allow only one cheat at a time 
+         else if(!matchedbefore)          // allow only one cheat at a time 
          {
-            matchedbefore = 1;              // responder has eaten key
+            matchedbefore = 1;            // responder has eaten key
             ret = true;
-            cheat[i].func(&(cheat[i].arg)); // call cheat handler
+            curcht.func(&(curcht.arg));   // call cheat handler
          }
       }
    }
@@ -963,7 +1026,7 @@ void A_SorcNukeSpec(actionargs_t *actionargs)
 // killough 7/20/98: kill friendly monsters only if no others to kill
 // haleyjd 01/10/02: reformatted some code
 //
-static void M_NukeMonsters()
+static int M_NukeMonsters()
 {   
    int killcount = 0;
    Thinker *th = &thinkercap;
@@ -1007,15 +1070,17 @@ static void M_NukeMonsters()
       }
    }
    while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98
-   
-   // killough 3/22/98: make more intelligent about plural
-   // Ty 03/27/98 - string(s) *not* externalized
-   doom_printf("%d Monster%s Killed", killcount,  (killcount == 1) ? "" : "s");
+
+   return killcount;
 }
 
 CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
 {
-   M_NukeMonsters();
+   int kills = M_NukeMonsters();
+
+   // killough 3/22/98: make more intelligent about plural
+   // Ty 03/27/98 - string(s) *not* externalized
+   doom_printf("%d Monster%s Killed", kills,  (kills == 1) ? "" : "s");
 }
 
 //----------------------------------------------------------------------------

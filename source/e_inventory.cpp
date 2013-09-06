@@ -36,6 +36,9 @@
 #include "e_lib.h"
 #include "e_sprite.h"
 
+#include "autopalette.h"
+#include "am_map.h"
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_player.h"
@@ -46,6 +49,7 @@
 #include "metaapi.h"
 #include "p_skin.h"
 #include "s_sound.h"
+#include "v_video.h"
 
 //=============================================================================
 //
@@ -222,7 +226,7 @@ cfg_opt_t edf_ammofx_opts[] =
    CFG_END()
 };
 
-// Powerup fields
+// Powerup effect fields
 cfg_opt_t edf_powerfx_opts[] =
 {
    CFG_INT(KEY_DURATION,  -1, CFGF_NONE), // length of time to last
@@ -478,6 +482,13 @@ static void E_collectKeyItems()
 // Lockdefs
 //
 
+// lockdef color types
+enum lockdefcolor_e
+{
+   LOCKDEF_COLOR_CONSTANT, // use a constant value
+   LOCKDEF_COLOR_VARIABLE  // use a console variable
+};
+
 struct anykey_t
 {
    unsigned int numKeys;
@@ -504,6 +515,11 @@ struct lockdef_t
    char *message;        // message to give if attempt to open fails
    char *remoteMessage;  // message to give if remote attempt to open fails
    char *lockedSound;    // name of sound to play on failure
+
+   // Lock color data
+   lockdefcolor_e colorType; // either constant or variable
+   int  color;               // constant color, if colorType == LOCKDEF_COLOR_CONSTANT
+   int *colorVar;            // cvar color, if colorType == LOCKDEF_COLOR_VARIABLE    
 };
 
 // Lockdefs hash, by ID number
@@ -515,6 +531,7 @@ static EHashTable<lockdef_t, EIntHashKey, &lockdef_t::id, &lockdef_t::links> e_l
 #define ITEM_LOCKDEF_REMOTE   "remotemessage"
 #define ITEM_LOCKDEF_ANY_KEYS "keys"
 #define ITEM_LOCKDEF_LOCKSND  "lockedsound"
+#define ITEM_LOCKDEF_MAPCOLOR "mapcolor"
 
 // "any" section options
 static cfg_opt_t any_opts[] =
@@ -526,11 +543,12 @@ static cfg_opt_t any_opts[] =
 // Lockdef section options
 cfg_opt_t edf_lockdef_opts[] =
 {
-   CFG_STR(ITEM_LOCKDEF_REQUIRE, "",       CFGF_MULTI),
-   CFG_SEC(ITEM_LOCKDEF_ANY,     any_opts, CFGF_MULTI),
-   CFG_STR(ITEM_LOCKDEF_MESSAGE, NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_REMOTE,  NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_LOCKSND, NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REQUIRE,  "",       CFGF_MULTI),
+   CFG_SEC(ITEM_LOCKDEF_ANY,      any_opts, CFGF_MULTI),
+   CFG_STR(ITEM_LOCKDEF_MESSAGE,  NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REMOTE,   NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_LOCKSND,  NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_MAPCOLOR, NULL,     CFGF_NONE ),
    CFG_END()
 };
 
@@ -611,6 +629,59 @@ static void E_processKeyList(itemeffect_t **effects, unsigned int numKeys,
 }
 
 //
+// E_processLockDefColor
+//
+// Process a lockdef color field.
+//
+static void E_processLockDefColor(lockdef_t *lock, const char *value)
+{
+   // Default behavior - act like a closed door.
+   lock->colorType = LOCKDEF_COLOR_VARIABLE;
+   lock->colorVar  = &mapcolor_clsd;
+
+   if(!value || !*value)
+      return;
+   
+   AutoPalette pal(wGlobalDir);
+   long        lresult = 0;
+   command_t  *cmd     = NULL;
+
+   switch(*value)
+   {
+   case '$':
+      // cvar value
+      if((cmd = C_GetCmdForName(value + 1)) &&
+         cmd->type == ct_variable &&
+         cmd->variable->type == vt_int &&
+         cmd->variable->min == 0 &&
+         cmd->variable->max == 255)
+      {
+         lock->colorType = LOCKDEF_COLOR_VARIABLE;
+         lock->colorVar  = (int *)(cmd->variable->variable);
+      }
+      break;
+   case '#':
+      // hex constant
+      lresult = strtol(value + 1, NULL, 16);
+      lock->colorType = LOCKDEF_COLOR_CONSTANT;
+      lock->color = V_FindBestColor(pal.get(),
+                       (int)((lresult >> 16) & 0xff),
+                       (int)((lresult >>  8) & 0xff),
+                       (int)( lresult        & 0xff));
+      break;
+   default:
+      // decimal palette index
+      lresult = strtol(value, NULL, 10);
+      if(lresult >= 0 && lresult <= 255)
+      {
+         lock->colorType = LOCKDEF_COLOR_CONSTANT;
+         lock->color     = (int)lresult;
+      }
+      break;
+   }
+}
+
+//
 // E_processLockDef
 //
 // Process a single lock definition.
@@ -680,6 +751,9 @@ static void E_processLockDef(cfg_t *lock)
    if((tempstr = cfg_getstr(lock, ITEM_LOCKDEF_LOCKSND))) // locked sound
       lockdef->lockedSound = estrdup(tempstr);
 
+   // process map color
+   E_processLockDefColor(lockdef, cfg_getstr(lock, ITEM_LOCKDEF_MAPCOLOR));
+
    E_EDFLogPrintf("\t\tDefined lockdef %d\n", lockdef->id);
 }
 
@@ -735,7 +809,7 @@ static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
 // E_PlayerCanUnlock
 //
 // Check if a player has the keys necessary to unlock an object that is
-// protected by a lock with the given key.
+// protected by a lock with the given ID.
 //
 bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 {
@@ -819,6 +893,34 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 
    // you can unlock it!
    return true;
+}
+
+//
+// E_GetLockDefColor
+//
+// Get the automap color for a lockdef.
+//
+int E_GetLockDefColor(int lockID)
+{
+   int color = 0;
+   lockdef_t *lock;
+
+   if((lock = E_LockDefForID(lockID)))
+   {
+      switch(lock->colorType)
+      {
+      case LOCKDEF_COLOR_CONSTANT:
+         color = lock->color;
+         break;
+      case LOCKDEF_COLOR_VARIABLE:
+         color = *lock->colorVar;
+         break;
+      default:
+         break;
+      }
+   }
+
+   return color;
 }
 
 //

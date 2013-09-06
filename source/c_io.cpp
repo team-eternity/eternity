@@ -105,7 +105,7 @@ char *c_fontname;
 // ticker, responder, drawer, init etc.
 //
 
-static void C_initBackdrop(void)
+static void C_initBackdrop()
 {
    const char *lumpname;
    int lumpnum, cmapnum = 16;
@@ -186,7 +186,7 @@ static void C_initBackdrop(void)
 //
 // CONSOLE_FIXME: See how Quake 2 does this, it's much better.
 //
-static void C_updateInputPoint(void)
+static void C_updateInputPoint()
 {
    for(input_point = inputtext.getBuffer();
        V_FontStringWidth(c_font, input_point) > SCREENWIDTH-20; input_point++);
@@ -206,7 +206,7 @@ static void C_initMessageBuffer()
       messages[i] = &msgtext[i * LINELENGTH];
 }
 
-void C_Init(void)
+void C_Init()
 {
    // haleyjd: initialize console qstrings
    inputtext.createSize(100);
@@ -222,7 +222,6 @@ void C_Init(void)
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
    
-   C_AddCommands();
    C_updateInputPoint();
    
    // haleyjd
@@ -231,7 +230,7 @@ void C_Init(void)
 
 // called every tic
 
-void C_Ticker(void)
+void C_Ticker()
 {
    Console.showprompt = true;
    

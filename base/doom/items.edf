@@ -11,37 +11,37 @@
 
 healtheffect HealthBonus
 {
-   amount:    1;
-   maxamount: 200;
-   +alwayspickup
+  amount    1
+  maxamount 200
+  +alwayspickup
 }
 
 healtheffect Medikit
 {
-   amount:     25;
-   maxamount:  100;
-   lowmessage: "$GOTMEDINEED";
+  amount     25
+  maxamount  100
+  lowmessage "$GOTMEDINEED"
 }
 
 healtheffect MegasphereHealth
 {
-   amount:    200;
-   maxamount: 200;
-   +alwayspickup
-   +sethealth
+  amount    200
+  maxamount 200
+  +alwayspickup
+  +sethealth
 }
 
 healtheffect Soulsphere
 {
-   amount:    100;
-   maxamount: 200;
-   +alwayspickup
+  amount    100
+  maxamount 200
+  +alwayspickup
 }
 
 healtheffect Stimpack
 {
-   amount:    10;
-   maxamount: 100;
+  amount    10
+  maxamount 100
 }
 
 //=============================================================================
@@ -51,26 +51,26 @@ healtheffect Stimpack
 
 armoreffect GreenArmor
 {
-   saveamount:  100;
-   savefactor:  1;
-   savedivisor: 3;   // 33% absorption (1/3)   
+  saveamount  100
+  savefactor  1
+  savedivisor 3   // 33% absorption (1/3)   
 }
 
 armoreffect BlueArmor
 {
-   saveamount:  200;
-   savefactor:  1;
-   savedivisor: 2;   // 50% absorption (1/2)
+  saveamount  200
+  savefactor  1
+  savedivisor 2   // 50% absorption (1/2)
 }
 
 armoreffect ArmorBonus
 {
-   saveamount:    1;
-   savefactor:    1;
-   savedivisor:   3;   // 33% absorption, if player has no armor
-   maxsaveamount: 200;
-   +alwayspickup
-   +bonus
+  saveamount    1
+  savefactor    1
+  savedivisor   3   // 33% absorption, if player has no armor
+  maxsaveamount 200
+  +alwayspickup
+  +bonus
 }
 
 // This armor is what is given when using IDFA or IDKFA cheats in DOOM.
@@ -80,9 +80,9 @@ armoreffect ArmorBonus
 // * if class is <= 1, the absorption rate will be cut to 1/3
 armoreffect IDFAArmor
 {
-   saveamount:  200;
-   savefactor:  1;
-   savedivisor: 2;
+  saveamount  200
+  savefactor  1
+  savedivisor 2
 }
 
 //=============================================================================
@@ -92,32 +92,32 @@ armoreffect IDFAArmor
 
 artifact RedCard
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact RedSkull
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact YellowCard
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact YellowSkull
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact BlueCard
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 artifact BlueSkull
 {
-   artifacttype: Key;
+  artifacttype Key
 }
 
 //=============================================================================
@@ -130,109 +130,121 @@ ifgametype("DOOM")
 // Red Card lock
 lockdef 1
 {
-   require: RedCard;
+  require  RedCard
+  mapcolor "$mapcolor_rdor"
    
-   message:       "$PD_REDC";
-   remotemessage: "You need a red card to activate this object";
+  message       "$PD_REDC"
+  remotemessage "You need a red card to activate this object"
 }
 
 // Blue Card lock
 lockdef 2
 {
-   require: BlueCard;
+  require  BlueCard
+  mapcolor "$mapcolor_bdor"
    
-   message:       "$PD_BLUEC";
-   remotemessage: "You need a blue card to activate this object";
+  message       "$PD_BLUEC"
+  remotemessage "You need a blue card to activate this object"
 }
 
 // YellowCard lock
 lockdef 3
 {
-   require: YellowCard;
+  require  YellowCard
+  mapcolor "$mapcolor_ydor"
    
-   message:       "$PD_YELLOWC";
-   remotemessage: "You need a yellow card to activate this object";
+  message       "$PD_YELLOWC"
+  remotemessage "You need a yellow card to activate this object"
 }
 
 // Red Skull lock
 lockdef 4
 {
-   require: RedSkull;
+  require  RedSkull
+  mapcolor "$mapcolor_rdor"
    
-   message:       "$PD_REDS";
-   remotemessage: "You need a red skull to activate this object";
+  message       "$PD_REDS"
+  remotemessage "You need a red skull to activate this object"
 }
 
 // Blue Skull lock
 lockdef 5
 {
-   require: BlueSkull;
+  require  BlueSkull
+  mapcolor "$mapcolor_bdor"
    
-   message:       "$PD_BLUES";
-   remotemessage: "You need a blue skull to activate this object";
+  message       "$PD_BLUES"
+  remotemessage "You need a blue skull to activate this object"
 }
 
 // Yellow Skull lock
 lockdef 6
 {
-   require: YellowSkull;
+  require  YellowSkull
+  mapcolor "$mapcolor_ydor"
    
-   message:       "$PD_YELLOWS";
-   remotemessage: "You need a yellow skull to activate this object";
+  message       "$PD_YELLOWS"
+  remotemessage "You need a yellow skull to activate this object"
 }
 
 // Red Card or Skull lock
 lockdef 129
 {
-   any { keys: RedCard, RedSkull }
+  any { keys: RedCard, RedSkull }
+  mapcolor "$mapcolor_rdor"
    
-   message:       "$PD_REDK";
-   remotemessage: "$PD_REDO";
+  message       "$PD_REDK"
+  remotemessage "$PD_REDO"
 }
 
 // Blue Card or Skull lock
 lockdef 130
 {
-   any { keys: BlueCard, BlueSkull }
+  any { keys: BlueCard, BlueSkull }
+  mapcolor "$mapcolor_bdor"
    
-   message:       "$PD_BLUEK";
-   remotemessage: "$PD_BLUEO";
+  message       "$PD_BLUEK"
+  remotemessage "$PD_BLUEO"
 }
 
 // Yellow Card or Skull lock
 lockdef 131
 {
-   any { keys: YellowCard, YellowSkull }
+  any { keys: YellowCard, YellowSkull }
+  mapcolor "$mapcolor_ydor"
    
-   message:       "$PD_YELLOWK";
-   remotemessage: "$PD_YELLOWO";
+  message       "$PD_YELLOWK"
+  remotemessage "$PD_YELLOWO"
 }
 
 // Copy of Red Card or Skull lock, for ZDoom comp
 lockdef 132
 {
-   any { keys: RedCard, RedSkull }
+  any { keys: RedCard, RedSkull }
+  mapcolor "$mapcolor_rdor"
    
-   message:      "$PD_REDK";
-   remotemessage;"$PD_REDO";
+  message       "$PD_REDK"
+  remotemessage "$PD_REDO"
 }
 
 // Copy of Blue Card or Skull lock, for ZDoom comp
 lockdef 133
 {
-   any { keys: BlueCard, BlueSkull }
+  any { keys: BlueCard, BlueSkull }
+  mapcolor "$mapcolor_bdor"
    
-   message:       "$PD_BLUEK";
-   remotemessage: "$PD_BLUEO";
+  message       "$PD_BLUEK"
+  remotemessage "$PD_BLUEO"
 }
 
 // Copy of Yellow Card or Skull lock, for ZDoom comp
 lockdef 134
 {
-   any { keys: YellowCard, YellowSkull }
+  any { keys: YellowCard, YellowSkull }
+  mapcolor "$mapcolor_ydor"
    
-   message:       "$PD_YELLOWK";
-   remotemessage: "$PD_YELLOWO";
+  message       "$PD_YELLOWK"
+  remotemessage "$PD_YELLOWO"
 }
 
 //
@@ -245,26 +257,26 @@ lockdef 134
 //
 lockdef 229
 {
-   any { keys: BlueCard,   BlueSkull   }
-   any { keys: YellowCard, YellowSkull }
-   any { keys: RedCard,    RedSkull    }
+  any { keys: BlueCard,   BlueSkull   }
+  any { keys: YellowCard, YellowSkull }
+  any { keys: RedCard,    RedSkull    }
    
-   message;       "$PD_ALL3";
-   remotemessage: "You need all 3 keys to activate this object";
+  message       "$PD_ALL3"
+  remotemessage "You need all 3 keys to activate this object"
 }
 
 // BOOM six-key lock
 lockdef 101
 {
-   require: BlueCard;
-   require: BlueSkull;
-   require: YellowCard;
-   require: YellowSkull;
-   require: RedCard;
-   require: RedSkull;
+  require BlueCard
+  require BlueSkull
+  require YellowCard
+  require YellowSkull
+  require RedCard
+  require RedSkull
    
-   message:       "$PD_ALL6";
-   remotemessage: "You need all 6 keys to activate this object";
+  message       "$PD_ALL6"
+  remotemessage "You need all 6 keys to activate this object"
 }
 
 endif()
@@ -280,42 +292,42 @@ endif()
 
 artifact AmmoClip
 {
-   artifacttype:   Ammo;
-   maxamount:      200;
-   interhubamount:  -1;
+  artifacttype   Ammo
+  maxamount      200
+  interhubamount  -1
    
-   ammo.backpackamount:     10;
-   ammo.backpackmaxamount: 400;
+  ammo.backpackamount     10
+  ammo.backpackmaxamount 400
 }
 
 artifact AmmoShell
 {
-   artifacttype:   Ammo;
-   maxamount:      50;
-   interhubamount: -1;
+  artifacttype   Ammo
+  maxamount      50
+  interhubamount -1
    
-   ammo.backpackamount:      4;
-   ammo.backpackmaxamount: 100;
+  ammo.backpackamount      4
+  ammo.backpackmaxamount 100
 }
 
 artifact AmmoCell
 {
-   artifacttype:   Ammo;
-   maxamount:      300;
-   interhubamount:  -1;
+  artifacttype   Ammo
+  maxamount      300
+  interhubamount  -1
    
-   ammo.backpackamount:     20;
-   ammo.backpackmaxamount: 600;
+  ammo.backpackamount     20
+  ammo.backpackmaxamount 600
 }
 
 artifact AmmoMissile
 {
-   artifacttype:   Ammo;
-   maxamount:      50;
-   interhubamount: -1;
+  artifacttype   Ammo
+  maxamount      50
+  interhubamount -1
    
-   ammo.backpackamount:      1;
-   ammo.backpackmaxamount: 100;
+  ammo.backpackamount      1
+  ammo.backpackmaxamount 100
 }
 
 //=============================================================================
@@ -325,51 +337,51 @@ artifact AmmoMissile
 
 ammoeffect Clip
 {
-   ammo:       AmmoClip;
-   amount:     10;
-   dropamount: 5;
+  ammo       AmmoClip
+  amount     10
+  dropamount 5
 }
 
 ammoeffect ClipBox
 {
-   ammo:   AmmoClip;
-   amount: 50;
+  ammo   AmmoClip
+  amount 50
 }
 
 ammoeffect Shell
 {
-   ammo:   AmmoShell;
-   amount: 4;
+  ammo   AmmoShell
+  amount 4
 }
 
 ammoeffect ShellBox
 {
-   ammo:   AmmoShell;
-   amount: 20;
+  ammo   AmmoShell
+  amount 20
 }
 
 ammoeffect Cell
 {
-   ammo:   AmmoCell;
-   amount: 20;
+  ammo   AmmoCell
+  amount 20
 }
 
 ammoeffect CellPack
 {
-   ammo:   AmmoCell;
-   amount: 100;
+  ammo   AmmoCell
+  amount 100
 }
 
 ammoeffect RocketAmmo
 {
-   ammo:   AmmoMissile;
-   amount: 1;
+  ammo   AmmoMissile
+  amount 1
 }
 
 ammoeffect RocketBox
 {
-   ammo:   AmmoMissile;
-   amount: 5;
+  ammo   AmmoMissile
+  amount 5
 }
 
 

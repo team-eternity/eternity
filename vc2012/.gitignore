@@ -1,0 +1,7 @@
+*.lib
+*.sdf
+*.suo
+*.user
+Debug
+Release
+*.opensdf

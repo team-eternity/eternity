@@ -110,6 +110,7 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
    {
       wadfiles[numwadfiles].requiredFmt = W_FORMAT_WAD;
       flags |= (WFA_SUBFILE | WFA_REQUIREFORMAT);
+      flags &= ~WFA_ALLOWHACKS; // don't hack subfiles.
    }
 
    // private directory?

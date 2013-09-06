@@ -1,6 +1,9 @@
-// sprites.edf - EDF file for Eternity Engine v3.35.90
-//    This file contains the spritenames array, and definitions for sprite-based
-//    pickup items.
+//
+// EDF for Eternity Engine v3.40.50
+//
+// This file contains the spritenames array, and definitions for sprite-based
+// pickup items.
+//
 
 // Sprite names -- strings MUST be four characters each, order is unimportant.
 //    Sprites can be added to this list by another file through use of this 
@@ -12,7 +15,7 @@
 ifenabled(DOOM)
 
 // Doom Sprites
-spritenames =
+spritenames
 {
   TROO, SHTG, PUNG, PISG, PISF, SHTF, SHT2, CHGG, CHGF, MISG, MISF, SAWG, PLSG,
   PLSF, BFGG, BFGF, BLUD, PUFF, BAL1, BAL2, PLSS, PLSE, MISL, BFS1, BFE1, BFE2,
@@ -39,70 +42,70 @@ spritenames += { TNT1, DOGS, PLS1, PLS2, UNKN, SPSH, SLDG, LVAS, EERV }
 
 ifenabled(DOOM)
 
-pickupitem ARM1 { effect = PFX_GREENARMOR }
-pickupitem ARM2 { effect = PFX_BLUEARMOR }
-pickupitem BON1 { effect = PFX_POTION }
-pickupitem BON2 { effect = PFX_ARMORBONUS }
-pickupitem SOUL { effect = PFX_SOULSPHERE }
-pickupitem MEGA { effect = PFX_MEGASPHERE }
-pickupitem BKEY { effect = PFX_BLUEKEY }
-pickupitem YKEY { effect = PFX_YELLOWKEY }
-pickupitem RKEY { effect = PFX_REDKEY }
-pickupitem BSKU { effect = PFX_BLUESKULL }
-pickupitem YSKU { effect = PFX_YELLOWSKULL }
-pickupitem RSKU { effect = PFX_REDSKULL }
-pickupitem STIM { effect = PFX_STIMPACK }
-pickupitem MEDI { effect = PFX_MEDIKIT }
-pickupitem PINV { effect = PFX_INVULNSPHERE }
-pickupitem PSTR { effect = PFX_BERZERKBOX }
-pickupitem PINS { effect = PFX_INVISISPHERE }
-pickupitem SUIT { effect = PFX_RADSUIT }
-pickupitem PMAP { effect = PFX_ALLMAP }
-pickupitem PVIS { effect = PFX_LIGHTAMP }
-pickupitem CLIP { effect = PFX_CLIP }
-pickupitem AMMO { effect = PFX_CLIPBOX }
-pickupitem ROCK { effect = PFX_ROCKET }
-pickupitem BROK { effect = PFX_ROCKETBOX }
-pickupitem CELL { effect = PFX_CELL }
-pickupitem CELP { effect = PFX_CELLPACK }
-pickupitem SHEL { effect = PFX_SHELL }
-pickupitem SBOX { effect = PFX_SHELLBOX }
-pickupitem BPAK { effect = PFX_BACKPACK }
-pickupitem BFUG { effect = PFX_BFG }
-pickupitem MGUN { effect = PFX_CHAINGUN }
-pickupitem CSAW { effect = PFX_CHAINSAW }
-pickupitem LAUN { effect = PFX_LAUNCHER }
-pickupitem PLAS { effect = PFX_PLASMA }
-pickupitem SHOT { effect = PFX_SHOTGUN }
-pickupitem SGN2 { effect = PFX_SSG }
+pickupitem ARM1 { effect PFX_GREENARMOR }
+pickupitem ARM2 { effect PFX_BLUEARMOR }
+pickupitem BON1 { effect PFX_POTION }
+pickupitem BON2 { effect PFX_ARMORBONUS }
+pickupitem SOUL { effect PFX_SOULSPHERE }
+pickupitem MEGA { effect PFX_MEGASPHERE }
+pickupitem BKEY { effect PFX_BLUEKEY }
+pickupitem YKEY { effect PFX_YELLOWKEY }
+pickupitem RKEY { effect PFX_REDKEY }
+pickupitem BSKU { effect PFX_BLUESKULL }
+pickupitem YSKU { effect PFX_YELLOWSKULL }
+pickupitem RSKU { effect PFX_REDSKULL }
+pickupitem STIM { effect PFX_STIMPACK }
+pickupitem MEDI { effect PFX_MEDIKIT }
+pickupitem PINV { effect PFX_INVULNSPHERE }
+pickupitem PSTR { effect PFX_BERZERKBOX }
+pickupitem PINS { effect PFX_INVISISPHERE }
+pickupitem SUIT { effect PFX_RADSUIT }
+pickupitem PMAP { effect PFX_ALLMAP }
+pickupitem PVIS { effect PFX_LIGHTAMP }
+pickupitem CLIP { effect PFX_CLIP }
+pickupitem AMMO { effect PFX_CLIPBOX }
+pickupitem ROCK { effect PFX_ROCKET }
+pickupitem BROK { effect PFX_ROCKETBOX }
+pickupitem CELL { effect PFX_CELL }
+pickupitem CELP { effect PFX_CELLPACK }
+pickupitem SHEL { effect PFX_SHELL }
+pickupitem SBOX { effect PFX_SHELLBOX }
+pickupitem BPAK { effect PFX_BACKPACK }
+pickupitem BFUG { effect PFX_BFG }
+pickupitem MGUN { effect PFX_CHAINGUN }
+pickupitem CSAW { effect PFX_CHAINSAW }
+pickupitem LAUN { effect PFX_LAUNCHER }
+pickupitem PLAS { effect PFX_PLASMA }
+pickupitem SHOT { effect PFX_SHOTGUN }
+pickupitem SGN2 { effect PFX_SSG }
 
 endif()
 
 ifenabled(HERETIC)
 
-pickupitem AKYY { effect = PFX_HGREENKEY }
-pickupitem BKYY { effect = PFX_HBLUEKEY }
-pickupitem CKYY { effect = PFX_HYELLOWKEY }
-pickupitem PTN1 { effect = PFX_HPOTION }
-pickupitem SHLD { effect = PFX_SILVERSHIELD }
-pickupitem SHD2 { effect = PFX_ENCHANTEDSHIELD }
-pickupitem BAGH { effect = PFX_BAGOFHOLDING }
-pickupitem SPMP { effect = PFX_HMAP }
-pickupitem AMG1 { effect = PFX_GWNDWIMPY }
-pickupitem AMG2 { effect = PFX_GWNDHEFTY }
-pickupitem AMM1 { effect = PFX_MACEWIMPY }
-pickupitem AMM2 { effect = PFX_MACEHEFTY }
-pickupitem AMC1 { effect = PFX_CBOWWIMPY }
-pickupitem AMC2 { effect = PFX_CBOWHEFTY }
-pickupitem AMB1 { effect = PFX_BLSRWIMPY }
-pickupitem AMB2 { effect = PFX_BLSRHEFTY }
-pickupitem AMS1 { effect = PFX_SKRDWIMPY }
-pickupitem AMS2 { effect = PFX_SKRDHEFTY }
-pickupitem AMP1 { effect = PFX_PHRDWIMPY }
-pickupitem AMP2 { effect = PFX_PHRDHEFTY }
+pickupitem AKYY { effect PFX_HGREENKEY }
+pickupitem BKYY { effect PFX_HBLUEKEY }
+pickupitem CKYY { effect PFX_HYELLOWKEY }
+pickupitem PTN1 { effect PFX_HPOTION }
+pickupitem SHLD { effect PFX_SILVERSHIELD }
+pickupitem SHD2 { effect PFX_ENCHANTEDSHIELD }
+pickupitem BAGH { effect PFX_BAGOFHOLDING }
+pickupitem SPMP { effect PFX_HMAP }
+pickupitem AMG1 { effect PFX_GWNDWIMPY }
+pickupitem AMG2 { effect PFX_GWNDHEFTY }
+pickupitem AMM1 { effect PFX_MACEWIMPY }
+pickupitem AMM2 { effect PFX_MACEHEFTY }
+pickupitem AMC1 { effect PFX_CBOWWIMPY }
+pickupitem AMC2 { effect PFX_CBOWHEFTY }
+pickupitem AMB1 { effect PFX_BLSRWIMPY }
+pickupitem AMB2 { effect PFX_BLSRHEFTY }
+pickupitem AMS1 { effect PFX_SKRDWIMPY }
+pickupitem AMS2 { effect PFX_SKRDHEFTY }
+pickupitem AMP1 { effect PFX_PHRDWIMPY }
+pickupitem AMP2 { effect PFX_PHRDHEFTY }
 
 endif()
 
-pickupitem PNS2 { effect = PFX_TOTALINVIS }
+pickupitem PNS2 { effect PFX_TOTALINVIS }
 
 

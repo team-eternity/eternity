@@ -1193,11 +1193,11 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
 
       if(decoratestate)
       {
-         states[i]->decorate = true;
+         states[i]->flags |= STATEF_DECORATE;
          goto hitdecorate; // skip most processing
       }
       else
-         states[i]->decorate = false;
+         states[i]->flags &= ~STATEF_DECORATE;
 
       if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
       {

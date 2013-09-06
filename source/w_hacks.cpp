@@ -104,6 +104,41 @@ static void W_doNerveHack(filelump_t *fileinfo, int numlumps)
 }
 
 //
+// W_doOtakonHack
+//
+// Hack for otakugfx.wad
+//
+static void W_doOtakonHack(filelump_t *fileinfo, int numlumps)
+{
+   // ensure the expected directory size
+   if(numlumps != 268)
+      return;
+
+   filelump_t *templumps = estructalloc(filelump_t, 72);
+   int curnum = 0;
+
+   // back up lumps that are in the wrong namespace
+   for(int i = 109; i < 176; i++, curnum++)
+      templumps[curnum] = fileinfo[i]; // STFST01-DSSAWHIT
+   for(int i = 251; i < 255; i++, curnum++)
+      templumps[curnum] = fileinfo[i]; // D_DDTBLU-D_COUNTD
+   templumps[curnum] = fileinfo[256];  // D_STALKS
+
+   // move up sprites into the cleared out space
+   curnum = 109;
+   for(int i = 176; i < 251; i++, curnum++)
+      fileinfo[curnum] = fileinfo[i];  // CHGFA0-CSAWA0
+   fileinfo[curnum++] = fileinfo[255]; // SGN2A0
+   fileinfo[curnum++] = fileinfo[257]; // S_END
+
+   // fill the saved off lumps back in at the end
+   for(int i = 0; i < 72; i++, curnum++)
+      fileinfo[curnum] = templumps[i];
+
+   efree(templumps);
+}
+
+//
 // Wad Directory Hacks
 //
 // Some very prominent and historically significant wads such as GothicDM2
@@ -116,6 +151,7 @@ static w_dirhack_t w_dirhacks[] =
 {
    { "9a296941da455d0009ee3988b55d50ea363a4a84", W_doGothic2Hack }, // gothic2.wad
    { "fe650cc58c8f12a3642b6f5ef2b3368630a4aaa6", W_doNerveHack   }, // nerve.wad
+   { "9f823104462d9575750bf0ba6a4a3a6df0f766e3", W_doOtakonHack  }, // otakugfx.wad
 
    // Terminator, must be last
    { NULL, NULL }

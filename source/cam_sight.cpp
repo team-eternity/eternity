@@ -104,6 +104,7 @@ struct camsight_t
    int  fromid;        // current source group id
    int  toid;          // group id of the target
    bool hitpblock;     // traversed a block with a line portal
+   bool addedportal;   // added a portal line to the intercepts list in current block
    bool portalresult;  // result from portal recursion
    bool portalexit;    // if true, returned from portal
 
@@ -317,6 +318,10 @@ static bool CAM_SightCheckLine(camsight_t &cam, int linenum)
    // store the line for later intersection testing
    cam.intercepts.addNew().d.line = ld;
 
+   // if this is a passable portal line, remember we just added it
+   if(ld->pflags & PS_PASSABLE)
+      cam.addedportal = true;
+
    return true;
 }
 
@@ -385,6 +390,12 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
       if(!CAM_SightCheckLine(cam, linenum))
          return false;
    }
+
+   // haleyjd 08/20/13: optimization
+   // we can go back to short-circuiting in future blockmap cells if we haven't 
+   // actually intercepted any portal lines yet.
+   if(!cam.addedportal)
+      cam.hitpblock = false;
 
    return true; // everything was checked
 }
@@ -657,7 +668,7 @@ bool CAM_CheckSight(const camsightparams_t &params)
 	
    if(link || !(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
-      camsight_t newCam;
+      edefstructvar(camsight_t, newCam);
 
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
@@ -683,9 +694,6 @@ bool CAM_CheckSight(const camsightparams_t &params)
       newCam.ty           = params.ty;
       newCam.fromid       = params.cgroupid;
       newCam.toid         = params.tgroupid;
-      newCam.hitpblock    = false;
-      newCam.portalresult = false;
-      newCam.portalexit   = false;
       newCam.sightzstart  = params.cz + params.cheight - (params.cheight >> 2);
       newCam.bottomslope  = params.tz - newCam.sightzstart;
       newCam.topslope     = newCam.bottomslope + params.theight;

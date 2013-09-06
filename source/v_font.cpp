@@ -44,11 +44,13 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+/*
 static bool fixedColor = false;
 static int fixedColNum = 0;
 static char *altMap = NULL;
 static bool shadowChar = false;
 static bool absCentered = false; // 03/04/06: every line will be centered
+*/
 
 //
 // V_FontLineWidth
@@ -94,7 +96,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 }
 
 //
-// V_FontWriteText
+// V_FontWriteTextEx
 //
 // Generalized bitmapped font drawing code. A vfont_t object contains
 // all the information necessary to format the text. Support for
@@ -103,7 +105,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 // fonts which center their characters within uniformly spaced blocks
 // have been added or absorbed from other code.
 //
-void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen)
+void V_FontWriteTextEx(const vtextdraw_t &textdraw)
 {
    patch_t *patch = NULL;   // patch for current character -OR-
    byte    *src   = NULL;   // source char for linear font
@@ -117,6 +119,10 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
    bool tl = false;         // current translucency state
    bool useAltMap = false;  // using alternate colormap source?
 
+   vfont_t *font      = textdraw.font;
+   VBuffer *screen    = textdraw.screen;
+   unsigned int flags = textdraw.flags;
+
    if(!screen)
       screen = &vbscreen;
 
@@ -124,31 +130,27 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
    {
       // haleyjd 03/27/03: use fixedColor if it was set, else use default,
       // which may come from GameModeInfo.
-      if(fixedColor)
-      {         
-         color = font->colrngs[fixedColNum];
-         fixedColor = false;
-      }
+      if(flags & VTXT_FIXEDCOLOR)
+         color = font->colrngs[textdraw.fixedColNum];
       else
          color = font->colrngs[font->colorDefault];
    }
    
    // haleyjd 10/04/05: support alternate colormap sources
-   if(altMap)
+   if(textdraw.altMap)
    {
-      color = (byte *)altMap;
-      altMap = NULL;
+      color = (byte *)textdraw.altMap;
       useAltMap = true;
    }
       
-   ch = (const unsigned char *)s;
+   ch = (const unsigned char *)textdraw.s;
 
    // haleyjd 03/29/06: special treatment - if first character is 143
    // (abscenter toggle), then center line
    
    cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
-          (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
-   cy = y;
+          (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+   cy = textdraw.y;
    
    while((c = *ch++))
    {
@@ -161,10 +163,10 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
             tl ^= true;
             break;
          case TEXT_CONTROL_SHADOW: // shadow toggle
-            shadowChar ^= true;
+            flags ^= VTXT_SHADOW;
             break;
          case TEXT_CONTROL_ABSCENTER: // abscenter toggle
-            absCentered ^= true;
+            flags ^= VTXT_ABSCENTER;
             break;
          default:
             if(font->color && !useAltMap) // not all fonts support translations
@@ -206,7 +208,8 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       }
       else if(c == '\n')
       {
-         cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
+         cx = (flags & VTXT_ABSCENTER) ? 
+               (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
          cy += font->cy;
          continue;
       }
@@ -253,7 +256,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
          else
          {
             // haleyjd 10/04/05: text shadowing
-            if(shadowChar)
+            if(flags & VTXT_SHADOW)
                V_DrawPatchShadowed(tx, cy, screen, patch, color, FRACUNIT);
             else
                V_DrawPatchTranslated(tx, cy, screen, patch, color, false);
@@ -262,13 +265,26 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen
       
       // move over in x direction, applying width delta if appropriate
       cx += (font->centered ? font->cw : (w - font->dw));
-   }
-   
-   // reset text shadowing on exit
-   shadowChar = false;
+   }   
+}
 
-   // reset absCentered on exit
-   absCentered = false;
+//
+// V_FontWriteText
+//
+// Write text normally.
+//
+void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen)
+{
+   edefstructvar(vtextdraw_t, text);
+
+   text.font   = font;
+   text.s      = s;
+   text.x      = x;
+   text.y      = y;
+   text.screen = screen;
+   text.flags  = VTXT_NORMAL;
+
+   V_FontWriteTextEx(text);
 }
 
 //
@@ -285,10 +301,18 @@ void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int 
       return;
    }
 
-   fixedColor  = true;
-   fixedColNum = color;
+   edefstructvar(vtextdraw_t, text);
 
-   V_FontWriteText(font, s, x, y, screen);
+   text.font   = font;
+   text.s      = s;
+   text.x      = x;
+   text.y      = y;
+   text.screen = screen;
+   
+   text.flags       = VTXT_FIXEDCOLOR;
+   text.fixedColNum = color;
+
+   V_FontWriteTextEx(text);
 }
 
 //
@@ -299,8 +323,17 @@ void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int 
 void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
                            VBuffer *screen)
 {
-   altMap = map;
-   V_FontWriteText(font, s, x, y, screen);
+   edefstructvar(vtextdraw_t, text);
+
+   text.font   = font;
+   text.s      = s;
+   text.x      = x;
+   text.y      = y;
+   text.screen = screen;
+   text.flags  = VTXT_NORMAL;
+   text.altMap = map;
+
+   V_FontWriteTextEx(text);
 }
 
 //
@@ -311,24 +344,22 @@ void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map
 void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y,
                              VBuffer *screen, int color)
 {
-   shadowChar = true;
+   edefstructvar(vtextdraw_t, text);
+
+   text.font   = font;
+   text.s      = s;
+   text.x      = x;
+   text.y      = y;
+   text.screen = screen;
+   text.flags  = VTXT_SHADOW;
+
    if(color >= 0 && color < CR_LIMIT)
    {
-      fixedColor  = true;
-      fixedColNum = color;
+      text.flags |= VTXT_FIXEDCOLOR;
+      text.fixedColNum = color;
    }
-   
-   V_FontWriteText(font, s, x, y, screen);
-}
 
-//
-// V_FontSetAbsCentered
-//
-// Sets the next string to be printed with absolute centering.
-//
-void V_FontSetAbsCentered(void)
-{
-   absCentered = true;
+   V_FontWriteTextEx(text);
 }
 
 //

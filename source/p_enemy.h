@@ -63,8 +63,8 @@ void P_NewChaseDir(Mobj *actor);
 bool P_SmartMove(Mobj *actor);
 
 void P_NoiseAlert (Mobj *target, Mobj *emmiter);
-void P_SpawnBrainTargets(void); // killough 3/26/98: spawn icon landings
-void P_SpawnSorcSpots(void);    // haleyjd 11/19/02: spawn dsparil spots
+void P_SpawnBrainTargets();     // killough 3/26/98: spawn icon landings
+void P_SpawnSorcSpots();        // haleyjd 11/19/02: spawn dsparil spots
 
 extern struct brain_s {         // killough 3/26/98: global state of boss brain
   int easy;
@@ -95,17 +95,17 @@ class MobjCollection;
 //
 typedef struct bossteleport_s
 {
-   MobjCollection *mc;  // mobj collection to use
-   pr_class_t rngNum;   // rng number to use for selecting spot
+   MobjCollection *mc;          // mobj collection to use
+   pr_class_t      rngNum;      // rng number to use for selecting spot
 
-   Mobj *boss;        // boss to teleport
-   statenum_t state;    // number of state to put boss in (-1 to not)
+   Mobj           *boss;        // boss to teleport
+   statenum_t      state;       // number of state to put boss in (-1 to not)
 
-   mobjtype_t fxtype;   // type of effect object to spawn
-   fixed_t zpamt;       // amount to add of z coordinate of effect
-   int hereThere;       // locations to spawn effects at (0, 1, or 2)
-   int soundNum;        // sound to play at locations
-   fixed_t minDistance; // minimum distance a spot must be from origin
+   mobjtype_t      fxtype;      // type of effect object to spawn
+   fixed_t         zpamt;       // amount to add of z coordinate of effect
+   int             hereThere;   // locations to spawn effects at (0, 1, or 2)
+   int             soundNum;    // sound to play at locations
+   fixed_t         minDistance; // minimum distance a spot must be from origin
 } bossteleport_t;
 
 void P_BossTeleport(bossteleport_t *bt);

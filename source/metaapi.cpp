@@ -372,7 +372,7 @@ public:
 
    // the type hash is fixed size since there are a limited number of types
    // defined in the source code; types are case sensitive, because they are 
-   // based on C types.
+   // based on C++ types.
    EHashTable<MetaObject, EStringHashKey, 
               &MetaObject::type, &MetaObject::typelinks> typehash;
 
@@ -655,6 +655,16 @@ MetaObject *MetaTable::getObjectType(const char *type)
 }
 
 //
+// MetaTable::getObjectType
+//
+// Overload taking a MetaObject::Type instance.
+//
+MetaObject *MetaTable::getObjectType(const MetaObject::Type &type)
+{
+   return pImpl->typehash.objectForKey(type.getName());
+}
+
+//
 // MetaTable::getObjectKeyAndType
 //
 // As above, but satisfying both conditions at once.
@@ -726,10 +736,6 @@ MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, const char *type)
 // in the table if NULL is passed in the object pointer. Returns NULL
 // when no further objects of the same key are available.
 //
-// This is just a wrapper around E_HashObjectIterator, but you should
-// call this anyway if you want to pretend you don't know how the
-// metatable is implemented.
-//
 MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key)
 {
    // If no key is provided but object is valid, get the next object with the 
@@ -770,6 +776,25 @@ MetaObject *MetaTable::getNextType(MetaObject *object, const char *type)
       type = object->getClassName();
 
    return pImpl->typehash.keyIterator(object, type);
+}
+
+//
+// MetaTable::getNextType
+//
+// Overload accepting a pointer to a MetaObject RTTI proxy. If object is valid,
+// type is optional, but otherwise it must be valid.
+//
+MetaObject *MetaTable::getNextType(MetaObject *object, const MetaObject::Type *type)
+{
+   // Same as above
+   if(object && !type)
+      type = object->getDynamicType();
+
+   // Must have a type
+   if(!type)
+      return NULL;
+
+   return pImpl->typehash.keyIterator(object, type->getName());
 }
 
 //
@@ -815,6 +840,62 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, cons
       // As above, allow NULL in type to mean "same as current"
       if(!type)
          type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+
+//
+// MetaTable::getNextKeyAndType
+//
+// Overload taking a key string and a MetaObject RTTI proxy object.
+//
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, 
+                                         const MetaObject::Type *type)
+{
+   MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow NULL in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+
+//
+// MetaTable::getNextKeyAndType
+//
+// Overload taking a MetaKey index and a MetaObject RTTI proxy object.
+//
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, 
+                                         const MetaObject::Type *type)
+{
+   MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow NULL in type to mean "same as current"
+      if(!type)
+         type = object->getDynamicType();
    }
 
    while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))

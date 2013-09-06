@@ -457,6 +457,25 @@ const char *s_HAMMOSKULLROD1 = HAMMOSKULLROD1;
 const char *s_HAMMOSKULLROD2 = HAMMOSKULLROD2;
 const char *s_HAMMOPHOENIXROD1 = HAMMOPHOENIXROD1;
 const char *s_HAMMOPHOENIXROD2 = HAMMOPHOENIXROD2;
+const char *s_TXT_CHEATGODON         = TXT_CHEATGODON;
+const char *s_TXT_CHEATGODOFF        = TXT_CHEATGODOFF;
+const char *s_TXT_CHEATNOCLIPON      = TXT_CHEATNOCLIPON;
+const char *s_TXT_CHEATNOCLIPOFF     = TXT_CHEATNOCLIPOFF;
+const char *s_TXT_CHEATWEAPONS       = TXT_CHEATWEAPONS;
+const char *s_TXT_CHEATPOWERON       = TXT_CHEATPOWERON;
+const char *s_TXT_CHEATPOWEROFF      = TXT_CHEATPOWEROFF;
+const char *s_TXT_CHEATHEALTH        = TXT_CHEATHEALTH;
+const char *s_TXT_CHEATKEYS          = TXT_CHEATKEYS;
+const char *s_TXT_CHEATARTIFACTS1    = TXT_CHEATARTIFACTS1;
+const char *s_TXT_CHEATARTIFACTS2    = TXT_CHEATARTIFACTS2;
+const char *s_TXT_CHEATARTIFACTS3    = TXT_CHEATARTIFACTS3;
+const char *s_TXT_CHEATARTIFACTSFAIL = TXT_CHEATARTIFACTSFAIL;
+const char *s_TXT_CHEATWARP          = TXT_CHEATWARP;
+const char *s_TXT_CHEATCHICKENON     = TXT_CHEATCHICKENON;
+const char *s_TXT_CHEATCHICKENOFF    = TXT_CHEATCHICKENOFF;
+const char *s_TXT_CHEATMASSACRE      = TXT_CHEATMASSACRE;
+const char *s_TXT_CHEATIDDQD         = TXT_CHEATIDDQD;
+const char *s_TXT_CHEATIDKFA         = TXT_CHEATIDKFA;
 
 // obituaries
 const char *s_OB_SUICIDE = OB_SUICIDE;
@@ -904,6 +923,25 @@ dehstr_t deh_strlookup[] =
    { &s_HAMMOPHOENIXROD2,  "HAMMOPHOENIXROD2"  },
    { &s_HPD_GREENO,        "HPD_GREENO"        },
    { &s_HPD_GREENK,        "HPD_GREENK"        },
+   { &s_TXT_CHEATGODON,         "TXT_CHEATGODON"        },
+   { &s_TXT_CHEATGODOFF,        "TXT_CHEATGODOFF"        },
+   { &s_TXT_CHEATNOCLIPON,      "TXT_CHEATNOCLIPON"      },
+   { &s_TXT_CHEATNOCLIPOFF,     "TXT_CHEATNOCLIPOFF"     },
+   { &s_TXT_CHEATWEAPONS,       "TXT_CHEATWEAPONS"       },
+   { &s_TXT_CHEATPOWERON,       "TXT_CHEATPOWERON"       },
+   { &s_TXT_CHEATPOWEROFF,      "TXT_CHEATPOWEROFF"      },
+   { &s_TXT_CHEATHEALTH,        "TXT_CHEATHEALTH"        },
+   { &s_TXT_CHEATKEYS,          "TXT_CHEATKEYS"          },
+   { &s_TXT_CHEATARTIFACTS1,    "TXT_CHEATARTIFACTS1"    },
+   { &s_TXT_CHEATARTIFACTS2,    "TXT_CHEATARTIFACTS2"    },
+   { &s_TXT_CHEATARTIFACTS3,    "TXT_CHEATARTIFACTS3"    },
+   { &s_TXT_CHEATARTIFACTSFAIL, "TXT_CHEATARTIFACTSFAIL" },
+   { &s_TXT_CHEATWARP,          "TXT_CHEATWARP"          },
+   { &s_TXT_CHEATCHICKENON,     "TXT_CHEATCHICKENON"     },
+   { &s_TXT_CHEATCHICKENOFF,    "TXT_CHEATCHICKENOFF"    },
+   { &s_TXT_CHEATMASSACRE,      "TXT_CHEATMASSACRE"      },
+   { &s_TXT_CHEATIDDQD,         "TXT_CHEATIDDQD"         },
+   { &s_TXT_CHEATIDKFA,         "TXT_CHEATIDKFA"         },
    { &s_OB_SUICIDE,        "OB_SUICIDE"        },
    { &s_OB_FALLING,        "OB_FALLING"        },
    { &s_OB_CRUSH,          "OB_CRUSH"          },
@@ -935,7 +973,7 @@ dehstr_t deh_strlookup[] =
    { &s_OB_QUAKE,          "OB_QUAKE"          },
 };
 
-static int deh_numstrlookup = sizeof(deh_strlookup)/sizeof(dehstr_t);
+static size_t deh_numstrlookup = earrlen(deh_strlookup);
 
 // level name tables
 
@@ -1300,6 +1338,11 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_HideThing(actionargs_t *);
+void A_UnHideThing(actionargs_t *);
+void A_RestoreArtifact(actionargs_t *);
+void A_RestoreSpecialThing1(actionargs_t *);
+void A_RestoreSpecialThing2(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1313,10 +1356,18 @@ void A_HticDrop(actionargs_t *);
 void A_HticTracer(actionargs_t *);
 void A_MummyFX1Seek(actionargs_t *actionargs);
 void A_ContMobjSound(actionargs_t *actionargs);
+void A_ESound(actionargs_t *actionargs);
 void A_ClinkAttack(actionargs_t *);
+void A_GhostOff(actionargs_t *actionargs);
 void A_WizardAtk1(actionargs_t *);
 void A_WizardAtk2(actionargs_t *);
 void A_WizardAtk3(actionargs_t *);
+void A_SorZap(actionargs_t *);
+void A_SorRise(actionargs_t *);
+void A_SorDSph(actionargs_t *);
+void A_SorDExp(actionargs_t *);
+void A_SorDBon(actionargs_t *);
+void A_SorSightSnd(actionargs_t *);
 void A_Srcr2Decide(actionargs_t *);
 void A_Srcr2Attack(actionargs_t *);
 void A_BlueSpark(actionargs_t *);
@@ -1338,6 +1389,7 @@ void A_Sor1Chase(actionargs_t *);
 void A_Sor1Pain(actionargs_t *);
 void A_Srcr1Attack(actionargs_t *);
 void A_SorcererRise(actionargs_t *);
+void A_VolcanoSet(actionargs_t *actionargs);
 void A_VolcanoBlast(actionargs_t *);
 void A_VolcBallImpact(actionargs_t *);
 void A_MinotaurAtk1(actionargs_t *);
@@ -1360,8 +1412,9 @@ void A_ImpXDeath1(actionargs_t *);
 void A_ImpXDeath2(actionargs_t *);
 void A_ImpExplode(actionargs_t *);
 void A_PlayerSkull(actionargs_t *);
-void A_ClearSkin(actionargs_t *mo);
-void A_PhoenixPuff(actionargs_t *mo);
+void A_FlameSnd(actionargs_t *actionargs);
+void A_ClearSkin(actionargs_t *);
+void A_PhoenixPuff(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1602,6 +1655,11 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(HideThing),
+   POINTER(UnHideThing),
+   POINTER(RestoreArtifact),
+   POINTER(RestoreSpecialThing1),
+   POINTER(RestoreSpecialThing2),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
@@ -1619,10 +1677,18 @@ deh_bexptr deh_bexptrs[] =
    POINTER(HticTracer),
    POINTER(MummyFX1Seek),
    POINTER(ContMobjSound),
+   POINTER(ESound),
    POINTER(ClinkAttack),
+   POINTER(GhostOff),
    POINTER(WizardAtk1),
    POINTER(WizardAtk2),
    POINTER(WizardAtk3),
+   POINTER(SorZap),
+   POINTER(SorRise),
+   POINTER(SorDSph),
+   POINTER(SorDExp),
+   POINTER(SorDBon),
+   POINTER(SorSightSnd),
    POINTER(Srcr2Decide),
    POINTER(Srcr2Attack),
    POINTER(BlueSpark),
@@ -1644,6 +1710,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(Sor1Pain),
    POINTER(Srcr1Attack),
    POINTER(SorcererRise),
+   POINTER(VolcanoSet),
    POINTER(VolcanoBlast),
    POINTER(VolcBallImpact),
    POINTER(MinotaurAtk1),
@@ -1666,6 +1733,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(ImpXDeath2),
    POINTER(ImpExplode),
    POINTER(PlayerSkull),
+   POINTER(FlameSnd),
    POINTER(ClearSkin),
    POINTER(PhoenixPuff),
 
@@ -1778,21 +1846,22 @@ int num_bexptrs = earrlen(deh_bexptrs);
 // tables so there's not much use trying to make it perfect. It'll 
 // save time anyways.
 // 08/28/03: vastly simplified, is now similar to SGI's STL hash
+// 08/23/13: rewritten to use sdbm hash algorithm
 //
 unsigned int D_HashTableKey(const char *str)
 {
-   const char *c = str;
+   auto ustr = reinterpret_cast<const unsigned char *>(str);
+   int c;
    unsigned int h = 0;
 
-   if(!str)
+#ifdef RANGECHECK
+   if(!ustr)
       I_Error("D_HashTableKey: cannot hash NULL string!\n");
+#endif
 
    // note: this needs to be case insensitive for EDF mnemonics
-   while(*c)
-   {
-      h = 5 * h + toupper(*c);
-      ++c;
-   }
+   while((c = *ustr++))
+      h = toupper(c) + (h << 6) + (h << 16) - h;
 
    return h;
 }
@@ -1804,17 +1873,17 @@ unsigned int D_HashTableKey(const char *str)
 //
 unsigned int D_HashTableKeyCase(const char *str)
 {
-   const char *c = str;
+   auto ustr = reinterpret_cast<const unsigned char *>(str);
+   int c;
    unsigned int h = 0;
 
-   if(!str)
+#ifdef RANGECHECK
+   if(!ustr)
       I_Error("D_HashTableKeyCase: cannot hash NULL string!\n");
+#endif
 
-   while(*c)
-   {
-      h = 5 * h + *c;
-      ++c;
-   }
+   while((c = *ustr++))
+      h = c + (h << 6) + (h << 16) - h;
 
    return h;
 }
@@ -1827,19 +1896,19 @@ unsigned int D_HashTableKeyCase(const char *str)
 // value (DEH style).
 //
 
-// number of strings = 416, 419 = closest greater prime
-#define NUMSTRCHAINS 419
-static int bexstrhashchains[NUMSTRCHAINS];
-static int dehstrhashchains[NUMSTRCHAINS];
+#define NUMSTRCHAINS (earrlen(deh_strlookup) + 61)
+static size_t bexstrhashchains[NUMSTRCHAINS];
+static size_t dehstrhashchains[NUMSTRCHAINS];
 
-static void D_DEHStrHashInit(void)
+static void D_DEHStrHashInit()
 {
-   int i;
+   for(size_t i = 0; i < NUMSTRCHAINS; i++)
+   {
+      bexstrhashchains[i] = deh_numstrlookup;
+      dehstrhashchains[i] = deh_numstrlookup;
+   }
 
-   memset(bexstrhashchains, -1, NUMSTRCHAINS*sizeof(int));
-   memset(dehstrhashchains, -1, NUMSTRCHAINS*sizeof(int));
-
-   for(i = 0; i < deh_numstrlookup; ++i)
+   for(size_t i = 0; i < deh_numstrlookup; i++)
    {
       unsigned int bkey, dkey;
 
@@ -1875,7 +1944,7 @@ dehstr_t *D_GetBEXStr(const char *string)
    key = D_HashTableKey(string) % NUMSTRCHAINS;
 
    // hash chain empty -- not found
-   if(bexstrhashchains[key] == -1)
+   if(bexstrhashchains[key] == deh_numstrlookup)
       return NULL;
 
    dehstr = &deh_strlookup[bexstrhashchains[key]];
@@ -1884,7 +1953,7 @@ dehstr_t *D_GetBEXStr(const char *string)
    while(strcasecmp(string, dehstr->lookup))
    {
       // end of hash chain -- not found
-      if(dehstr->bnext == -1)
+      if(dehstr->bnext == deh_numstrlookup)
          return NULL;
       else
          dehstr = &deh_strlookup[dehstr->bnext];
@@ -1909,7 +1978,7 @@ dehstr_t *D_GetDEHStr(const char *string)
    key = D_HashTableKey(string) % NUMSTRCHAINS;
 
    // hash chain empty -- not found
-   if(dehstrhashchains[key] == -1)
+   if(dehstrhashchains[key] == deh_numstrlookup)
       return NULL;
 
    dehstr = &deh_strlookup[dehstrhashchains[key]];
@@ -1918,7 +1987,7 @@ dehstr_t *D_GetDEHStr(const char *string)
    while(strcasecmp(dehstr->original, string))
    {
       // end of hash chain -- not found
-      if(dehstr->dnext == -1)
+      if(dehstr->dnext == deh_numstrlookup)
          return NULL;
       else
          dehstr = &deh_strlookup[dehstr->dnext];
@@ -1987,15 +2056,16 @@ void DEH_ReplaceString(const char *mnemonic, const char *newstr)
 // BEX Code Pointer Hash Table
 //
 
-#define NUMCPTRCHAINS 257
+#define NUMCPTRCHAINS (earrlen(deh_bexptrs) + 35)
 
 static int bexcpchains[NUMCPTRCHAINS];
 
-static void D_BEXPtrHashInit(void)
+static void D_BEXPtrHashInit()
 {
    int i;
 
-   memset(bexcpchains, -1, NUMCPTRCHAINS*sizeof(int));
+   for(i = 0; i < NUMCPTRCHAINS; i++)
+      bexcpchains[i] = -1;
 
    for(i = 0; i < num_bexptrs; i++)
    {
@@ -2047,7 +2117,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
 // must be called before E_ProcessEDF, whereas the one below must
 // be called afterward.
 //
-void D_BuildBEXHashChains(void)
+void D_BuildBEXHashChains()
 {
    // build string hash chains
    D_DEHStrHashInit();
@@ -2068,7 +2138,7 @@ char **deh_musicnames;
 // store their own mnemonics and thus a table for them
 // is unnecessary.
 //
-void D_BuildBEXTables(void)
+void D_BuildBEXTables()
 {
    char *spritestr;
    char *musicstr;
@@ -2121,7 +2191,7 @@ typedef struct dehqueueitem_s
 
 static mqueue_t dehqueue;
 
-void D_DEHQueueInit(void)
+void D_DEHQueueInit()
 {
    M_QueueInit(&dehqueue);
 }
@@ -2160,7 +2230,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lump);
 // killough 10/98: support -dehout filename
 // cph - made const, don't cache results
 // haleyjd 09/11/03: moved here from d_main.c
-static const char *D_dehout(void)
+static const char *D_dehout()
 {
    int p = M_CheckParm("-dehout");
 
@@ -2176,7 +2246,7 @@ static const char *D_dehout(void)
 // Processes all the DeHackEd/BEX files queued during startup, including
 // command-line DEHs, GFS DEHs, preincluded DEHs, and in-wad DEHs.
 //
-void D_ProcessDEHQueue(void)
+void D_ProcessDEHQueue()
 {
    // Start at the head node and process each DeHackEd -- the queue
    // has preserved the proper processing order.

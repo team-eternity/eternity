@@ -132,7 +132,7 @@ static void R_DetermineFlatSize(texture_t *t)
    {
    case 4096:  // 64x64
       t->flatsize = FLAT_64;
-	  break;
+      break;
    case 16384: // 128x128
       t->flatsize = FLAT_128;
       break;
@@ -147,7 +147,6 @@ static void R_DetermineFlatSize(texture_t *t)
       break;
    }
 }
-
 
 //
 // R_AllocTexStruct
@@ -1040,7 +1039,7 @@ static void R_MakeMissingTexture(int count)
 //
 // haleyjd 10/27/08: split out of R_InitTextures
 //
-static void R_InitLoading(void)
+static void R_InitLoading()
 {
    // Really complex printing shit...
    const WadDirectory::namespace_t &ns =
@@ -1062,7 +1061,7 @@ static void R_InitLoading(void)
 //
 // haleyjd 10/27/08: split out of R_InitTextures
 //
-static int *R_LoadPNames(void)
+static int *R_LoadPNames()
 {
    int  i;
    int  nummappatches;
@@ -1113,7 +1112,7 @@ static int *R_LoadPNames(void)
 // haleyjd 10/27/08: split out of R_InitTextures
 // SoM: Renamed because now it does only one thing :D
 //
-static void R_InitTranslationLUT(void)
+static void R_InitTranslationLUT()
 {
    int i;
 
@@ -1141,7 +1140,7 @@ static EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::lin
 // This function now inits the two ehash tables and inserts the loaded textures
 // into them.
 //
-static void R_InitTextureHash(void)
+static void R_InitTextureHash()
 {
    int i;
    
@@ -1177,24 +1176,56 @@ static void R_CountFlats()
 }
 
 //
+// R_linearOptimalSize
+//
+// Try to find the most rectangular size for a linear raw graphic, preferring
+// a wider width than height when the graphic is not square.
+//
+// Rational log2(N) courtesy of Sean Eron Anderson's famous bit hacks:
+// http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
+//
+static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
+{
+   if(!lumpsize)
+   {
+      w = h = 0;
+      return;
+   }
+
+   size_t v = lumpsize;
+   size_t r = 0;
+   
+   while(v >>= 1)
+      ++r;
+
+   h = static_cast<uint16_t>(1 << (r / 2));
+   w = static_cast<uint16_t>(lumpsize / h);
+}
+
+//
 // R_AddFlats
 //
 // Second half of the old R_InitFlats. This is also called by R_InitTextures
 //
-static void R_AddFlats(void)
+static void R_AddFlats()
 {
-   int       i;
-   byte      flatsize;
-   uint16_t  width, height;
+   byte     flatsize;
+   uint16_t width, height;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
-   for(i = 0; i < numflats; ++i)
+   for(int i = 0; i < numflats; i++)
    {
       lumpinfo_t *lump = lumpinfo[i + firstflat];
       texture_t  *tex;
       
       switch(lump->size)
       {
+      case 4096: // normal 64x64 flats
+      case 4160: // Heretic 64x65 scrolling flats
+      case 8192: // Hexen 64x128 scrolling flats
+         flatsize = FLAT_64;
+         width = height = 64;
+         break;
       case 16384: // 128x128
          flatsize = FLAT_128;
          width = height = 128;
@@ -1207,15 +1238,15 @@ static void R_AddFlats(void)
          flatsize = FLAT_512;
          width = height = 512;
          break;
-      default: // all other sizes are treated as 64x64
-         flatsize = FLAT_64;
-         width = height = 64;
+      default: // something odd...
+         flatsize = FLAT_GENERALIZED;
+         R_linearOptimalSize(lump->size, width, height);
          break;
       }
-      
+
       tex = textures[i + flatstart] = 
          R_AllocTexStruct(lump->name, width, height, 1);
-     
+
       tex->flatsize = flatsize;
       tex->index = i + flatstart;
       tex->components[0].lump = i + firstflat;
@@ -1225,13 +1256,12 @@ static void R_AddFlats(void)
    }
 }
 
-
 //
 // R_InitTextures
 //
 // Initializes the texture list with the textures from the world map.
 //
-void R_InitTextures(void)
+void R_InitTextures()
 {
    int *patchlookup;
    int errors = 0;

@@ -28,6 +28,7 @@
 
 #include "i_system.h"
 #include "m_buffer.h"
+#include "m_compare.h"
 #include "m_qstr.h"
 #include "m_structio.h"
 #include "m_swap.h"
@@ -164,11 +165,6 @@ static MStructReader<ZIPEndOfCentralDir> endCentralDirReader(&endSignature);
 #define ZF_ENCRYPTED   0x01
 #define BUFREADCOMMENT 0x400
 
-template<typename T> static inline T zipmin(T a, T b) 
-{
-   return (a < b ? a : b);
-}
-
 //
 // ZIP_FindEndOfCentralDir
 //
@@ -213,7 +209,7 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
       return false;
 
    FileSize  = fin.Tell();
-   uMaxBack  = zipmin<long>(0xffff, FileSize);
+   uMaxBack  = emin<long>(0xffff, FileSize);
    uBackRead = 4;
 
    while(uBackRead < uMaxBack)
@@ -226,7 +222,7 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
          uBackRead += BUFREADCOMMENT;
 
       uReadPos  = FileSize - uBackRead;
-      uReadSize = zipmin<long>(BUFREADCOMMENT + 4, FileSize - uReadPos);
+      uReadSize = emin<long>(BUFREADCOMMENT + 4, FileSize - uReadPos);
 
       if(fin.seek(uReadPos, SEEK_SET))
          return false;

@@ -156,6 +156,12 @@ typedef struct skydata_s
    skyrule_t *rules; // rules array
 } skydata_t;
 
+struct samelevel_t
+{
+   int episode; // episode number
+   int map;     // map number
+};
+
 // Default boss specs
 
 typedef struct bspecrule_s
@@ -212,6 +218,7 @@ typedef enum
   pack_disk,    // Disk version
   pack_hacx,    // HacX stand-alone IWAD
   heretic,      // Heretic
+  hticbeta,     // Heretic Beta Version
   hticsosr,     // Heretic - Shadow of the Serpent Riders
   none,
   NumGameMissions
@@ -260,6 +267,7 @@ typedef struct missioninfo_s
    GameMission_t  id;            // mission id - replaces "gamemission" variable
    unsigned int   flags;         // missioninfo flags
    const char    *gamePathName;  // name of base/game folder used for this mission
+   samelevel_t   *sameLevels;    // pointer to samelevel structures
    
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.

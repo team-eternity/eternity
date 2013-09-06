@@ -46,8 +46,8 @@ class WadDirectory;
 int P_CheckLevel(WadDirectory *dir, int lumpnum); // haleyjd: now used in d_main.c
 
 void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_t skill);
-void P_Init(void);               // Called by startup code.
-void P_InitThingLists(void);
+void P_Init();                   // Called by startup code.
+void P_InitThingLists();
 
 extern byte     *rejectmatrix;   // for fast sight rejection
 

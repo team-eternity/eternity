@@ -136,9 +136,8 @@ qstring &qstring::initCreateSize(size_t pSize)
 //
 // qstring::freeBuffer
 //
-// Frees the qstring object. It should not be used after this,
-// unless qstring::create is called on it. You don't have to free
-// a qstring before recreating it, however, since it uses realloc.
+// Frees the qstring object's buffer, if it is not localized. The qstring
+// returns to being localized at that point, and will be empty.
 //
 void qstring::freeBuffer()
 {
@@ -170,7 +169,7 @@ qstring::qstring(qstring &&other)
 
       // leave the other object in a usable state, it's not necessarily dead.
       other.buffer = NULL;
-      other.freeBuffer();
+      other.freeBuffer(); // returns to being localized
    }
    else
    {

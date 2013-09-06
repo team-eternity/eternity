@@ -50,13 +50,13 @@ enum IWADCheckFlags_e
 
 struct iwadcheck_t
 {
-   unsigned int   flags;
-   bool           error;
-   GameMode_t    *gmode;
-   GameMission_t *gmission;
-   bool          *hassec;
-   bool          *freedoom;
-   bool          *bfgedition;
+   unsigned int  flags;
+   bool          error;
+   GameMode_t    gamemode;
+   GameMission_t gamemission;
+   bool          hassecrets;
+   bool          freedoom;
+   bool          bfgedition;
 };
 
 void D_CheckIWAD(const char *iwadname, iwadcheck_t &version);

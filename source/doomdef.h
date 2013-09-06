@@ -195,6 +195,7 @@ typedef enum {
   pw_ghost,       // haleyjd: heretic ghost
   pw_silencer,    // haleyjd: silencer
   pw_flight,      // haleyjd: flight
+  pw_torch,       // haleyjd: infrared w/flicker
   NUMPOWERS
 } powertype_t;
 
@@ -203,7 +204,8 @@ typedef enum {
   INVULNTICS  = (30*TICRATE),
   INVISTICS   = (60*TICRATE),
   INFRATICS   = (120*TICRATE),
-  IRONTICS    = (60*TICRATE)
+  IRONTICS    = (60*TICRATE),
+  FLIGHTTICS  = (60*TICRATE),  // flight tics, for Heretic
 } powerduration_t;
 
 // DOOM keyboard definition.

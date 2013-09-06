@@ -53,7 +53,9 @@
 #include "m_cheat.h"
 #include "m_qstr.h"
 #include "metaapi.h"
+#include "metaspawn.h"
 #include "p_inter.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "r_defs.h"
 #include "r_draw.h"
@@ -121,6 +123,10 @@ int UnknownThingType;
 #define ITEM_TNG_RESPAWNTIME  "respawntime"
 #define ITEM_TNG_RESPCHANCE   "respawnchance"
 
+// Special Spawning
+#define ITEM_TNG_COLSPAWN     "collectionspawn"
+#define ITEM_TNG_ITEMRESPAT   "itemrespawnat"
+
 // Damage Properties
 #define ITEM_TNG_DAMAGE       "damage"
 #define ITEM_TNG_DMGSPECIAL   "dmgspecial"
@@ -177,6 +183,12 @@ int UnknownThingType;
 #define ITEM_TNG_DROPITEM_CHANCE "chance"
 #define ITEM_TNG_DROPITEM_AMOUNT "amount"
 #define ITEM_TNG_DROPITEM_TOSS   "toss"
+
+// Collection spawn multi-value property internal fields
+#define ITEM_TNG_COLSPAWN_TYPE   "type"
+#define ITEM_TNG_COLSPAWN_SP     "spchance"
+#define ITEM_TNG_COLSPAWN_COOP   "coopchance"
+#define ITEM_TNG_COLSPAWN_DM     "dmchance"
 
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
@@ -432,6 +444,16 @@ static cfg_opt_t dropitem_opts[] =
    CFG_END()
 };
 
+// collectionspawn multi-value property options
+static cfg_opt_t colspawn_opts[] =
+{
+   CFG_STR(ITEM_TNG_COLSPAWN_TYPE, "", CFGF_NONE),
+   CFG_INT(ITEM_TNG_COLSPAWN_SP,    0, CFGF_NONE),
+   CFG_INT(ITEM_TNG_COLSPAWN_COOP,  0, CFGF_NONE),
+   CFG_INT(ITEM_TNG_COLSPAWN_DM,    0, CFGF_NONE),
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
@@ -493,6 +515,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_DEFSPRITE,       NULL,          CFGF_NONE), \
    CFG_SEC(ITEM_TNG_ACS_SPAWN,       acs_data,      CFGF_NOCASE), \
    CFG_STR(ITEM_TNG_REMDROPITEM,     "",            CFGF_MULTI), \
+   CFG_STR(ITEM_TNG_ITEMRESPAT,      "",            CFGF_NONE), \
    CFG_FLAG(ITEM_TNG_CLRDROPITEM,    0,             CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_RADIUS,        20.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_HEIGHT,        16.0f,         CFGF_NONE), \
@@ -506,6 +529,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1019,21 +1043,19 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
 //
 static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
 {
-   MetaObject *obj  = NULL;
+   MetaState *state = NULL;
 
    // iterate on the metatable to look for metastate_t objects with
    // the base string as the initial part of their name
 
-   while((obj = mi->meta->getNextType(obj, METATYPE(MetaState))))
+   while((state = mi->meta->getNextTypeEx(state)))
    {
-      if(!strncasecmp(obj->getKey(), base, strlen(base)))
+      if(!strncasecmp(state->getKey(), base, strlen(base)))
       {
-         MetaState *state = static_cast<MetaState *>(obj);
-
          E_RemoveMetaStatePtr(mi, state);
 
          // must restart search (iterator invalidated)
-         obj = NULL;
+         state = NULL;
       }
    }
 }
@@ -1441,13 +1463,13 @@ IMPLEMENT_RTTI_TYPE(MetaDropItem)
 //
 static void E_clearDropItems(mobjinfo_t *mi)
 {
-   MetaObject *obj = NULL;
+   MetaDropItem *mdi = NULL;
 
-   while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
+   while((mdi = mi->meta->getNextTypeEx(mdi)))
    {
-      mi->meta->removeObject(obj);
-      delete obj;
-      obj = NULL; // must restart search
+      mi->meta->removeObject(mdi);
+      delete mdi;
+      mdi = NULL; // must restart search
    }
 }
 
@@ -1458,11 +1480,10 @@ static void E_clearDropItems(mobjinfo_t *mi)
 // 
 static MetaDropItem *E_findDropItemForType(mobjinfo_t *mi, const char *item)
 {
-   MetaObject *obj = NULL;
+   MetaDropItem *mdi = NULL;
 
-   while((obj = mi->meta->getNextType(obj, METATYPE(MetaDropItem))))
+   while((mdi = mi->meta->getNextTypeEx(mdi)))
    {
-      MetaDropItem *mdi = static_cast<MetaDropItem *>(obj);
       if(!mdi->item.strCaseCmp(item)) // be case insensitive
          return mdi;
    }
@@ -1515,6 +1536,55 @@ static void E_processDropItems(mobjinfo_t *mi, cfg_t *thingsec)
          cfg_getint(prop, ITEM_TNG_DROPITEM_AMOUNT),
          !!cfg_getflag(prop, ITEM_TNG_DROPITEM_TOSS));
    }
+}
+
+//
+// Collection Spawn
+//
+// A thingtype that specifies this will have a global collection created
+// for all of its instances in each map. At level start, a thing of the
+// type it indicates will (or may, depending on specified chances) spawn
+// at one of the spots.
+//
+
+IMPLEMENT_RTTI_TYPE(MetaCollectionSpawn)
+
+static void E_processCollectionSpawn(mobjinfo_t *mi, cfg_t *spawn)
+{
+   const char *type       = cfg_getstr(spawn, ITEM_TNG_COLSPAWN_TYPE);
+   int         spchance   = cfg_getint(spawn, ITEM_TNG_COLSPAWN_SP);
+   int         coopchance = cfg_getint(spawn, ITEM_TNG_COLSPAWN_COOP);
+   int         dmchance   = cfg_getint(spawn, ITEM_TNG_COLSPAWN_DM);
+
+   auto mcs = new MetaCollectionSpawn("collectionspawn", type, 
+                                      spchance, coopchance, dmchance);
+   mi->meta->addObject(mcs);
+
+   // create the global collection for the spot thingtype, if it hasn't been
+   // created already.
+   MobjCollections.addCollection(mi->name);
+}
+
+// Collection item respawning
+
+static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
+{
+   if(*name)
+   {
+      if(E_ThingNumForName(name) < 0)
+      {
+         E_EDFLoggedWarning(2, 
+            "Warning: Unknown thingtype '%s' specified as itemrespawnat for '%s'",
+            name, mi->name);
+      }
+      mi->meta->setString("itemrespawnat", name);
+
+      // create a collection for the respawn spot thingtype, if it hasn't been
+      // created already.
+      MobjCollections.addCollection(name);
+   }
+   else
+      mi->meta->removeStringNR("itemrespawnat");
 }
 
 //
@@ -2223,6 +2293,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          mobjinfo[i]->particlefx = E_ParseFlags(tempstr, &particle_flags);
    }
 
+   // *************************** ITEM PROPERTIES ****************************
+
    // 08/06/13: check for cleardropitems flag
    if(cfg_size(thingsec, ITEM_TNG_CLRDROPITEM) > 0)
       E_clearDropItems(mobjinfo[i]);
@@ -2249,6 +2321,16 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    // 08/06/13: process dropitems
    E_processDropItems(mobjinfo[i], thingsec);
+
+   // 08/15/13: process collection spawn
+   if(cfg_size(thingsec, ITEM_TNG_COLSPAWN) > 0)
+      E_processCollectionSpawn(mobjinfo[i], cfg_getmvprop(thingsec, ITEM_TNG_COLSPAWN));
+
+   // 08/22/13: item respawn at collection
+   if(IS_SET(ITEM_TNG_ITEMRESPAT))
+      E_processItemRespawnAt(mobjinfo[i], cfg_getstr(thingsec, ITEM_TNG_ITEMRESPAT));
+
+   // ************************************************************************
 
    // 07/13/03: process mod
    if(IS_SET(ITEM_TNG_MOD))

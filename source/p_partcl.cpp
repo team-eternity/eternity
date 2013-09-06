@@ -1440,28 +1440,26 @@ static void P_BFGExplosion(Mobj *actor)
 // Generate console variables for the enabled flags on each event
 void P_AddEventVars()
 {
-   int i;
-
-   for(i = 1; i < P_EVENT_NUMEVENTS; i++)
+   for(int i = 1; i < P_EVENT_NUMEVENTS; i++)
    {
       variable_t *variable;
       command_t  *command;
 
       variable = (variable_t *)(Z_Malloc(sizeof(variable_t), PU_STATIC, NULL));
-      variable->variable = &(particleEvents[i].enabled);
+      variable->variable  = &(particleEvents[i].enabled);
       variable->v_default = NULL;
-      variable->type = vt_int;
-      variable->min = 0;
-      variable->max = 1;
-      variable->defines = onoff;
+      variable->type      = vt_int;
+      variable->min       = 0;
+      variable->max       = 1;
+      variable->defines   = onoff;
 
       command = (command_t *)(Z_Malloc(sizeof(command_t), PU_STATIC, NULL));
-      command->name = particleEvents[i].name;
-      command->type = ct_variable;
-      command->flags = 0;
+      command->name     = particleEvents[i].name;
+      command->type     = ct_variable;
+      command->flags    = 0;
       command->variable = variable;
-      command->handler = NULL;
-      command->netcmd = 0;
+      command->handler  = NULL;
+      command->netcmd   = 0;
 
       C_AddCommand(command);
    }
