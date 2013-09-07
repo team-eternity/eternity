@@ -56,6 +56,19 @@ bool D_LooseEDF(char **buffer);
 // EDF
 void D_LoadEDF(gfs_t *gfs);
 
+// Base, User, and Game Paths
+extern bool gamepathset;
+
+void D_SetGamePath();
+void D_SetBasePath();
+void D_SetUserPath();
+void D_CheckGamePathParam();
+void D_EnumerateAutoloadDir();
+void D_GameAutoloadWads();
+void D_GameAutoloadDEH();
+void D_GameAutoloadCSC();
+void D_CloseAutoloadDir();
+
 #endif
 
 // EOF
