@@ -293,6 +293,7 @@ void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, C
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
          D_abs(mo->z - textop) <= 24*FRACUNIT)
       {
+         opening->openflags |= OF_SETSCEILINGZ|OF_SETSFLOORZ;
          opening->top = opening->bottom;
          opening->range = 0;
          return;
@@ -638,39 +639,45 @@ bool CheckLineThing(line_t *line, MapContext *mc)
 
    // adjust floor & ceiling heights
    
-   if(opening.top < cc->ceilingz)
+   if(opening.openflags & OF_SETSCEILINGZ) 
    {
-      cc->ceilingz = opening.top;
-      cc->ceilingline = line;
-      cc->blockline = line;
+      if(opening.top < cc->ceilingz)
+      {
+         cc->ceilingz = opening.top;
+         cc->ceilingline = line;
+         cc->blockline = line;
+      }
+
+      if(opening.secceil < cc->secceilz)
+         cc->secceilz = opening.secceil;
+      if(cc->ceilingz < cc->passceilz)
+         cc->passceilz = cc->ceilingz;
    }
 
-   if(opening.bottom > cc->floorz)
+   if(opening.openflags & OF_SETSFLOORZ)
    {
-      cc->floorz = opening.bottom;
+      if(opening.bottom > cc->floorz)
+      {
+         cc->floorz = opening.bottom;
 
-      cc->floorline = line;          // killough 8/1/98: remember floor linedef
-      cc->blockline = line;
+         cc->floorline = line;          // killough 8/1/98: remember floor linedef
+         cc->blockline = line;
+      }
+
+      if(opening.lowfloor < cc->dropoffz)
+         cc->dropoffz = opening.lowfloor;
+
+      // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+      // touching 3DMidTex lines.
+      if(cc->touch3dside)
+         cc->dropoffz = cc->floorz;
+
+      if(opening.secfloor > cc->secfloorz)
+         cc->secfloorz = opening.secfloor;
+      if(cc->floorz > cc->passfloorz)
+         cc->passfloorz = cc->floorz;
    }
 
-   if(opening.lowfloor < cc->dropoffz)
-      cc->dropoffz = opening.lowfloor;
-
-   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-   // touching 3DMidTex lines.
-   if(cc->touch3dside)
-      cc->dropoffz = cc->floorz;
-
-   if(opening.secfloor > cc->secfloorz)
-      cc->secfloorz = opening.secfloor;
-   if(opening.secceil < cc->secceilz)
-      cc->secceilz = opening.secceil;
-
-   // SoM 11/6/02: AGHAH
-   if(cc->floorz > cc->passfloorz)
-      cc->passfloorz = cc->floorz;
-   if(cc->ceilingz < cc->passceilz)
-      cc->passceilz = cc->ceilingz;
 
    // if contacted a special line, add it to the list
    if(line->special || line->portal)
