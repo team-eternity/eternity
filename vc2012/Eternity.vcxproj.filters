@@ -226,6 +226,18 @@
     <Filter Include="Source Files\M_\HU_\HU_ Headers">
       <UniqueIdentifier>{adac8b7e-981e-409e-801b-fbfc2ce5243a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Clip">
+      <UniqueIdentifier>{0d1b23b2-524b-419f-930d-2781fb2aa196}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Clip\Interface">
+      <UniqueIdentifier>{8aaacf0b-3b03-46a0-ae16-ef742267035e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Clip\Classic">
+      <UniqueIdentifier>{1b606f8a-f161-4c39-8098-2c7bcbcc0451}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Clip\Advanced">
+      <UniqueIdentifier>{390f7d8b-ca5f-4add-8af5-935a149595a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -508,12 +520,6 @@
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\p_map.cpp">
-      <Filter>Source Files\P_\P_ Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\p_map3d.cpp">
-      <Filter>Source Files\P_\P_ Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\p_maputl.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\p_mobj.cpp">
@@ -912,6 +918,28 @@
     <ClCompile Include="..\source\e_inventory.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\p_clipen.cpp">
+      <Filter>Source Files\Clip\Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_map.cpp">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portalclip.cpp">
+      <Filter>Source Files\Clip\Advanced</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portalcliplinking.cpp">
+      <Filter>Source Files\Clip\Advanced</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portalclipmovement.cpp">
+      <Filter>Source Files\Clip\Advanced</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_maputl.cpp">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_map3d.cpp">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\p_map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1218,15 +1246,6 @@
       <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\p_inter.h">
-      <Filter>Source Files\P_\P_ Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\p_map.h">
-      <Filter>Source Files\P_\P_ Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\p_map3d.h">
-      <Filter>Source Files\P_\P_ Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\p_maputl.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\p_mobj.h">
@@ -1609,6 +1628,27 @@
     </ClInclude>
     <ClInclude Include="..\source\m_compare.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_clipen.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_mapcontext.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_traceengine.h">
+      <Filter>Source Files\Misc\Misc Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_map.h">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_map3d.h">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\p_maputl.h">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalclip.h">
+      <Filter>Source Files\Clip\Advanced</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

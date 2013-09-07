@@ -40,6 +40,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
+#include "p_clipen.h"
 
 //
 // MobjCollection::collectThings
@@ -154,9 +155,9 @@ void MobjCollection::moveToRandom(Mobj *actor)
       return;
 
    const Mobj *spot = getRandom(pr_moverandom);
-   P_UnsetThingPosition(actor);
+   clip->unsetThingPosition(actor);
    actor->copyPosition(spot);
-   P_SetThingPosition(actor);
+   clip->setThingPosition(actor);
    P_AdjustFloorClip(actor);
 }
 
