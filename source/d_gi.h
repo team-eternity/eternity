@@ -42,14 +42,14 @@ struct stbarfns_t;
 // inspired by, but not taken from, zdoom
 
 // Menu cursor -- a 2 patch alternating graphic
-typedef struct gimenucursor_s
+struct gimenucursor_t
 {
    const char *patch1;
    const char *patch2;
-} gimenucursor_t;
+};
 
 // Screen border used to fill backscreen for small screen sizes
-typedef struct giborder_s
+struct giborder_t
 {
    int offset;
    int size;
@@ -61,12 +61,12 @@ typedef struct giborder_s
    const char *c_bl;
    const char *bottom;
    const char *c_br;
-} giborder_t;
+};
 
-typedef struct giftextpos_s
+struct giftextpos_t
 {
    int x, y;   // initial coordinates (for finale)
-} giftextpos_t;
+};
 
 //
 // enum for menu sounds
@@ -86,11 +86,11 @@ enum
 
 typedef void (*dsfunc_t)(const char *);
 
-typedef struct demostate_s
+struct demostate_t
 {
    dsfunc_t func;
    const char *name;
-} demostate_t;
+};
 
 extern const demostate_t demostates_doom[];
 extern const demostate_t demostates_doom2[];
@@ -102,14 +102,14 @@ extern const demostate_t demostates_hreg[];
 // Exit Rule Sets
 //
 
-typedef struct exitrule_s
+struct exitrule_t
 {
    int gameepisode; // current episode (1 for games like DOOM 2, 
                     //   -1 if doesn't matter, -2 to terminate array)
    int gamemap;     // current map the game is on (1-based, -1 if doesn't matter)   
    int destmap;     // destination map (0-based for wminfo)
    bool isSecret;   // this rule applies for secret exits   
-} exitrule_t;
+};
 
 //
 // MapInfo-related Stuff
@@ -117,7 +117,7 @@ typedef struct exitrule_s
 
 // Default finale data
 
-typedef struct finalerule_s
+struct finalerule_t
 {
    int gameepisode;       // episode where applies, or -1 to match all; -2 ends.
    int gamemap;           // map where applies, or -1 to match all
@@ -126,14 +126,14 @@ typedef struct finalerule_s
    int finaleType;        // transferred to LevelInfo.finaleType
    bool endOfGame;        // if true, LevelInfo.endOfGame is set
    bool secretOnly;       // if true, LevelInfo.finaleSecretOnly is set
-} finalerule_t;
+};
 
-typedef struct finaledata_s
+struct finaledata_t
 {
    int musicnum;        // index into gamemodeinfo_t::s_music
    bool killStatsHack;  // kill stats if !GIF_SHAREWARE && episode >= numEpisodes
    finalerule_t *rules; // rules array
-} finaledata_t;
+};
 
 // Default sky data
 
@@ -144,17 +144,17 @@ enum
    GI_SKY_IFMAPLESSTHAN  // rules test map #'s with <
 };
 
-typedef struct skyrule_s
+struct skyrule_t
 {
    int data;               // data for rule; -1 == match any; -2 == end
    const char *skyTexture; // name of default sky texture
-} skyrule_t;
+};
 
-typedef struct skydata_s
+struct skydata_t
 {
    int testtype;     // if tests maps or episodes
    skyrule_t *rules; // rules array
-} skydata_t;
+};
 
 struct samelevel_t
 {
@@ -164,12 +164,12 @@ struct samelevel_t
 
 // Default boss specs
 
-typedef struct bspecrule_s
+struct bspecrule_t
 {
    int episode;
    int map;
    unsigned int flags;
-} bspecrule_t;
+};
 
 //
 // Game Mode Flags
@@ -262,7 +262,7 @@ enum
 // gamemodeinfo_t structure. The gamemode info structure must be
 // assigned a missioninfo_t object during startup in d_main.c:IdentifyVersion.
 //
-typedef struct missioninfo_s
+struct missioninfo_t
 {
    GameMission_t  id;            // mission id - replaces "gamemission" variable
    unsigned int   flags;         // missioninfo flags
@@ -283,7 +283,7 @@ typedef struct missioninfo_s
    const demostate_t *demoStatesOR;  // if not NULL, overrides demostates
    const char   *interPicOR;         // if not NULL, overrides interPic
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
-} missioninfo_t;
+};
 
 //
 // gamemodeinfo_t
@@ -293,7 +293,7 @@ typedef struct missioninfo_s
 // the source. This approach, as mentioned above, was inspired
 // by zdoom, but I've taken it and really run with it.
 //
-typedef struct gamemodeinfo_s
+struct gamemodeinfo_t
 {
    GameMode_t id;             // id      - replaces "gamemode" variable
    int type;                  // main game mode type: doom, heretic, etc.
@@ -364,7 +364,7 @@ typedef struct gamemodeinfo_s
    // Game interaction stuff
    int numEpisodes;           // number of game episodes
    exitrule_t *exitRules;     // exit rule set
-   int teleFogType;           // DeHackEd number of telefog object
+   const char *teleFogType;   // Name of telefog object
    fixed_t teleFogHeight;     // amount to add to telefog z coord
    int teleSound;             // sound id for teleportation
    int16_t thrustFactor;      // damage thrust factor
@@ -406,7 +406,7 @@ typedef struct gamemodeinfo_s
    // Internal fields - these are set at runtime, so keep them last.
    missioninfo_t *missionInfo; // gamemission-dependent info
 
-} gamemodeinfo_t;
+};
 
 extern missioninfo_t  *MissionInfoObjects[NumGameMissions];
 extern gamemodeinfo_t *GameModeInfoObjects[NumGameModes];
@@ -431,7 +431,7 @@ extern char *gi_path_freedm;
 
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
-void D_InitGMIPostWads(void);
+void D_InitGMIPostWads();
 
 #endif
 

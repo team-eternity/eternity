@@ -64,7 +64,7 @@
 #include "r_pcheck.h"
 
 // I HATE GLOBALS!!!
-extern fixed_t   FloatBobOffsets[64];
+extern fixed_t FloatBobOffsets[64];
 
 //
 // P_Use3DClipping

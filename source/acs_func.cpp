@@ -971,12 +971,12 @@ static void ACS_funcSetThingPosition(ACS_FUNCARG)
          {
             // Teleport fog at source...
             fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
-                                E_SafeThingType(GameModeInfo->teleFogType));
+                                E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
 
             // ... and destination.
             fogmo = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
-                                E_SafeThingType(GameModeInfo->teleFogType));
+                                E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
          }
 

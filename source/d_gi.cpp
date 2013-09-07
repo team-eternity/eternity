@@ -970,7 +970,7 @@ static gamemodeinfo_t giDoomSW =
 
    1,                // numEpisodes
    DoomExitRules,    // exitRules
-   MT_TFOG,          // teleFogType
+   "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
@@ -1070,7 +1070,7 @@ static gamemodeinfo_t giDoomReg =
 
    3,                // numEpisodes
    DoomExitRules,    // exitRules
-   MT_TFOG,          // teleFogType
+   "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
@@ -1170,7 +1170,7 @@ static gamemodeinfo_t giDoomRetail =
 
    4,                // numEpisodes
    DoomExitRules,    // exitRules
-   MT_TFOG,          // teleFogType
+   "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
@@ -1270,7 +1270,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    1,                // numEpisodes
    Doom2ExitRules,   // exitRules
-   MT_TFOG,          // teleFogType
+   "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
@@ -1370,7 +1370,7 @@ static gamemodeinfo_t giHereticSW =
 
    1,                // numEpisodes
    HereticExitRules, // exitRules
-   MT_HTFOG,         // teleFogType
+   "HereticTeleFog", // teleFogType
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
    150,              // thrustFactor
@@ -1474,7 +1474,7 @@ static gamemodeinfo_t giHereticReg =
 
    4,                // numEpisodes -- note 6 for SoSR gamemission
    HereticExitRules, // exitRules
-   MT_HTFOG,         // teleFogType
+   "HereticTeleFog", // teleFogType
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
    150,              // thrustFactor
