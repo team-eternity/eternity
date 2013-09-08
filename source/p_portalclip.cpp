@@ -76,7 +76,7 @@ void PortalClipEngine::applyTorque(Mobj *mo, ClipContext *cc)
 {
 }
 
-void PortalClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc)
+void PortalClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int distance, int mod, unsigned int flags, ClipContext *cc)
 {
 }
 

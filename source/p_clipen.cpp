@@ -28,6 +28,7 @@
 #include "p_mobj.h"
 #include "p_map.h"
 #include "p_traceengine.h"
+#include "p_portalclip.h"
 
 #include "m_bbox.h"
 #include "r_defs.h"
@@ -334,7 +335,7 @@ TracerEngine *trace = &doomte;
 // Clipping engine selection
 
 DoomClipEngine doomen = DoomClipEngine();
-
+PortalClipEngine portalen = PortalClipEngine();
 
 ClipEngine *clip = &doomen;
 
@@ -342,11 +343,16 @@ void P_SetClippingEngine(DoomClipper_e engine)
 {
    switch(engine)
    {
-      case Doom:
-      case Doom3D:
-      case Portal:
+      case CLIP_DOOM:
          clip = &doomen;
          trace = &doomte;
+         break;
+      case CLIP_PORTAL:
+         clip = &portalen;
+         trace = &doomte;
+         break;
+      default:
+         I_Error("P_SetClippingEngine called with invalid engine id.\n");
          break;
    };
 }

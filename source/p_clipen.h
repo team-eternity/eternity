@@ -185,9 +185,8 @@ class ClipEngine
 
 enum DoomClipper_e
 {
-   Doom,
-   Doom3D,
-   Portal,
+   CLIP_DOOM,
+   CLIP_PORTAL,
 };
 
 // Global function to set the clipping engine

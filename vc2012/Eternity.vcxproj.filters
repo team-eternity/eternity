@@ -519,9 +519,6 @@
     <ClCompile Include="..\Source\p_lights.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\p_map.cpp">
-      <Filter>Source Files\P_\P_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\p_mobj.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
@@ -940,6 +937,9 @@
       <Filter>Source Files\Clip\Classic</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\p_map.cpp" />
+    <ClCompile Include="..\source\p_map.cpp">
+      <Filter>Source Files\Clip\Classic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1629,9 +1629,6 @@
     <ClInclude Include="..\source\m_compare.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\p_clipen.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\p_mapcontext.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
@@ -1649,6 +1646,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_portalclip.h">
       <Filter>Source Files\Clip\Advanced</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_clipen.h">
+      <Filter>Source Files\Clip\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

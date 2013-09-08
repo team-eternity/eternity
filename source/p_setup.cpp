@@ -2558,7 +2558,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    ACS_LoadLevelScript(dir, acslumpnum);
    
    // Determine clipping engine here.
-   
+   P_SetClippingEngine((P_PortalGroupCount() > 1) ? CLIP_PORTAL : CLIP_DOOM);
    clip->mapLoaded();
 }
 

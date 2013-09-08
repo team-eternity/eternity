@@ -58,7 +58,7 @@ class PortalClipEngine : public ClipEngine
       virtual int  getFriction(const Mobj *mo, int *factor);
       virtual void applyTorque(Mobj *mo, ClipContext *cc);
       
-      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc);
+      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int distance, int mod, unsigned int flags, ClipContext *cc);
 
       virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc);
       
