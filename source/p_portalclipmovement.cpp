@@ -25,6 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_things.h"
