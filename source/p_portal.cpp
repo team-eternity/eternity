@@ -329,7 +329,6 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
-   linkoffset_t *link;
 
    if(!portal || !sec)
       return true;
@@ -369,9 +368,10 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
+   auto link = linktable[sec->groupid * groupcount + portal->data.link.toid];
 
    // We've found a linked portal so add the entry to the table
-   if(!(link = P_GetLinkOffset(sec->groupid, portal->data.link.toid)))
+   if(!link)
    {
       int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
                                 portal->data.link.deltax, 
@@ -406,10 +406,10 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // can be found to go from A to C.
 //
 static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
-                          int from)
+                          int via)
 {
    int i, p;
-   linkoffset_t *link, **linklist, **fromlist;
+   linkoffset_t *link, **linklist, **grouplinks;
 
    // The main group has an indrect link with every group that links to a group
    // that has a direct link to it, or any group that has a link to a group the 
@@ -417,7 +417,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
 
    // First step: run through the list of groups this group has direct links to
    // from there, run the function again with each direct link.
-   if(from == R_NOGROUP)
+   if(via == R_NOGROUP)
    {
       linklist = linktable + group * groupcount;
 
@@ -433,18 +433,18 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       return;
    }
 
-   linklist = linktable + group * groupcount;
-   fromlist = linktable + from * groupcount;
+   linklist = linktable + via * groupcount;
+   grouplinks = linktable + group * groupcount;
 
    // Second step run through the linked group's link list. Ignore any groups 
    // the main group is already linked to. Add the deltas and add the entries,
    // then call this function for groups the linked group links to.
    for(p = 0; p < groupcount; ++p)
    {
-      if(p == group || p == from)
+      if(p == group || p == via)
          continue;
 
-      if(!(link = fromlist[p]) || linklist[p])
+      if(!(link = linklist[p]) || grouplinks[p])
          continue;
 
       P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
@@ -580,15 +580,8 @@ bool P_BuildLinkTable()
                return false;
             }
          }
-         // This is no longer a valid check, P_GetLinkOffset always returns a value now
-         else if(link || backlink)
-         {
-            C_Printf(FC_ERROR "Portal group %i references group %i without a "
-                     "backlink.\nLinked portals are disabled\a\n", i, p);
-            return false;
          }
       }
-   }
 
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; ++i)
@@ -603,7 +596,7 @@ bool P_BuildLinkTable()
    }
    
    // Last step is to put zerolink in every link position that is currently null
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount * groupcount; ++i)
    {
       if(!linktable[i])
          linktable[i] = &zerolink;
@@ -669,10 +662,10 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 
    if(!mo || !link)
       return 0;
-   if(!clip->portalTeleportMove(mo, mo->x - link->x, mo->y - link->y))
+   if(!clip->portalTeleportMove(mo, mo->x + link->x, mo->y + link->y))
       return 0;
 
-   mo->z = moz - link->z;
+   mo->z = moz + link->z;
 
    mo->momx = momx;
    mo->momy = momy;

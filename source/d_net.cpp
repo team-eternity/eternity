@@ -250,7 +250,7 @@ static void GetPackets()
                                  players[netconsole].mo->y,
                                  players[netconsole].mo->z + 
                                     GameModeInfo->teleFogHeight,
-                                 E_SafeThingType(GameModeInfo->teleFogType));
+                                 E_SafeThingName(GameModeInfo->teleFogType));
 	      
             tflash->momx = players[netconsole].mo->momx;
             tflash->momy = players[netconsole].mo->momy;

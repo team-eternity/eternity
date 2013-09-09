@@ -115,14 +115,14 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             // spawn teleport fog and emit sound at source
             S_StartSound(P_SpawnMobj(oldx, oldy, 
                                      oldz + GameModeInfo->teleFogHeight, 
-                                     E_SafeThingType(GameModeInfo->teleFogType)), 
+                                     E_SafeThingName(GameModeInfo->teleFogType)), 
                          GameModeInfo->teleSound);
 
             // spawn teleport fog and emit sound at destination
             S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
                                      m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
                                      thing->z + GameModeInfo->teleFogHeight, 
-                                     E_SafeThingType(GameModeInfo->teleFogType)),
+                                     E_SafeThingName(GameModeInfo->teleFogType)),
                          GameModeInfo->teleSound);
 
             P_AdjustFloorClip(thing);

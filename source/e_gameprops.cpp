@@ -110,6 +110,7 @@ enum
    GI_STR_CBACKDROP,
    GI_STR_PAUSEPATCH,
    GI_STR_DEFPCLASS,
+   GI_STR_TELEFOGTYPE,
    GI_STR_INTERPIC,
    GI_STR_DEFMUSNAME,
    GI_STR_DEFSNDNAME,
@@ -431,13 +432,10 @@ static void E_processGamePropsBlock(cfg_t *props)
 
    if(IS_SET(ITEM_GPROP_TELEFOGTYPE))
    {
-      int thingNum = E_ThingNumForName(cfg_getstr(props, ITEM_GPROP_TELEFOGTYPE));
+      const char *name = cfg_getstr(props, ITEM_GPROP_TELEFOGTYPE);
 
-      if(thingNum >= 0 &&
-         (mobjinfo[thingNum]->dehnum >= 0 || E_AutoAllocThingDEHNum(thingNum)))
-      {
-         GameModeInfo->teleFogType = mobjinfo[thingNum]->dehnum;
-      }
+      if(E_ThingNumForName(name) >= 0)
+         E_setDynamicString(GameModeInfo->teleFogType, GI_STR_TELEFOGTYPE, name);
    }
 
    if(IS_SET(ITEM_GPROP_TELEFOGHT))

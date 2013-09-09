@@ -449,9 +449,9 @@ void P_ParticleThinker(void)
          linkdata_t *ldata = R_FPLink(psec);
 
          P_UnsetParticlePosition(particle);
-         particle->x -= ldata->deltax;
-         particle->y -= ldata->deltay;
-         particle->z -= ldata->deltaz;
+         particle->x += ldata->deltax;
+         particle->y += ldata->deltay;
+         particle->z += ldata->deltaz;
          P_SetParticlePosition(particle);
       }
       else if(particle->z < floorheight)

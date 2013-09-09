@@ -1560,16 +1560,14 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       unsigned ang;
 
       {
-         linkoffset_t *link;
-
-         if(inflictor->groupid == target->groupid ||
-            !(link = P_GetLinkOffset(inflictor->groupid, target->groupid)))
+         if(inflictor->groupid == target->groupid)
          {
             ang = P_PointToAngle (inflictor->x, inflictor->y, 
                                    target->x, target->y);
          }
          else
          {
+            auto link = P_GetLinkOffset(inflictor->groupid, target->groupid);
             ang = P_PointToAngle(inflictor->x, inflictor->y, 
                                   target->x + link->x, target->y + link->y);
          }
@@ -1851,11 +1849,11 @@ void P_Whistle(Mobj *actor, int mobjtype)
       {
          Mobj *fog = P_SpawnMobj(prevx, prevy, 
                                    prevz + GameModeInfo->teleFogHeight,
-                                   E_SafeThingType(GameModeInfo->teleFogType));
+                                   E_SafeThingName(GameModeInfo->teleFogType));
          S_StartSound(fog, GameModeInfo->teleSound);
 
          fog = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
-                           E_SafeThingType(GameModeInfo->teleFogType));
+                           E_SafeThingName(GameModeInfo->teleFogType));
          S_StartSound(fog, GameModeInfo->teleSound);
 
          // put the thing into its spawnstate and keep it still

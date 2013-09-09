@@ -271,8 +271,8 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
 
       if(link)
       {
-         params.cx -= link->x;
-         params.cy -= link->y;
+         params.cx += link->x;
+         params.cy += link->y;
       }
 
       cam.portalresult = CAM_CheckSight(params);
@@ -705,8 +705,8 @@ bool CAM_CheckSight(const camsightparams_t &params)
       // so that we trace in the proper direction given the current link
       if(link)
       {
-         newCam.tx += link->x;
-         newCam.ty += link->y;
+         newCam.tx -= link->x;
+         newCam.ty -= link->y;
       }
 
       result = CAM_SightPathTraverse(newCam);

@@ -2303,7 +2303,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
                     y + 20 * mtsin,
                     ss->sector->floorheight + 
                        GameModeInfo->teleFogHeight, 
-                    E_SafeThingType(GameModeInfo->teleFogType));
+                    E_SafeThingName(GameModeInfo->teleFogType));
 
    // haleyjd: There was a hack here trying to avoid playing the sound on the
    // "first frame"; but if this is done, then you miss your own spawn sound

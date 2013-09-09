@@ -341,7 +341,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, int lockID, Mobj *thing)
       return 0;
    
    // got the key, so open the door
-   return EV_DoDoor(line,type);
+   return EV_DoDoor(line, type);
 }
 
 //
