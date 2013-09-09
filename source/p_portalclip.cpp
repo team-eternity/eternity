@@ -25,6 +25,9 @@
 //
 //-----------------------------------------------------------------------------
 
+// The First Commandment of EE: Thou shalt include z_zone.h. Thus sayeth the LORD.
+#include "z_zone.h"
+
 #include "doomstat.h"
 #include "m_bbox.h"
 #include "m_collection.h"
