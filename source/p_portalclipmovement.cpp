@@ -727,9 +727,9 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
    if(cc->thing->flags & MF_NOCLIP && !(cc->thing->flags & MF_SKULLFLY))
       return true;
 
-   auto i = 0;
-   for(auto groupid = cc->adjacent_groups.at(i); i < cc->adjacent_groups.getLength(); groupid = cc->adjacent_groups.at(++i))
+   for(auto i = 0; i < cc->adjacent_groups.getLength(); ++i)
    {
+      auto groupid = cc->adjacent_groups.at(i);
       auto link = P_GetLinkOffset(startgroup, groupid);
 
       cc->x = x + link->x;
@@ -746,9 +746,21 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
       {
          rejectmask &= ~EAST_ADJACENT;
 
+         if(by < 0 || by >= bmapheight)
+         {
+            rejectmask |= NORTH_ADJACENT;
+            continue;
+         }
+
          for(bx = xl; bx <= xh; ++bx)
          {
-            auto link = blocklinks[y * bmapwidth + x];
+            if(bx < 0 || bx >= bmapwidth)
+            {
+               rejectmask |= EAST_ADJACENT;
+               continue;
+            }
+
+            auto link = blocklinks[by * bmapwidth + bx];
 
             while(link)
             {
@@ -766,8 +778,6 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
             if(!P_BlockLinesIterator(bx, by, CheckLineThing, cc))
                return false; // doesn't fit
          }
-
-         rejectmask |= NORTH_ADJACENT;
       }
    }
    return true;

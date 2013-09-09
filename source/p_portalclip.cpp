@@ -93,6 +93,7 @@ ClipContext*  PortalClipEngine::getContext()
    if(unused == NULL) {
       ret = new ClipContext();
       ret->setEngine(this);
+      ret->markedgroups = ret->markedsectors = NULL;
    }
    else {  
       ret = unused;
