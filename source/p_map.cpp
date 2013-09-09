@@ -1833,7 +1833,8 @@ static void P_HitSlideLine(line_t *ld)
       if(icyfloor && D_abs(tmymove) > D_abs(tmxmove))
       {
          // haleyjd: only the player should oof
-         if(slidemo->player)
+         // 09/08/13: ... and only when he's alive.
+         if(slidemo->player && slidemo->health > 0)
             S_StartSound(slidemo, GameModeInfo->playerSounds[sk_oof]); // oooff!
          tmxmove /= 2; // absorb half the momentum
          tmymove = -tmymove/2;
@@ -1848,7 +1849,8 @@ static void P_HitSlideLine(line_t *ld)
       if(icyfloor && D_abs(tmxmove) > D_abs(tmymove))
       {
          // haleyjd: only the player should oof
-         if(slidemo->player)
+         // 09/08/13: ... and again, only when alive.
+         if(slidemo->player && slidemo->health > 0)
             S_StartSound(slidemo, GameModeInfo->playerSounds[sk_oof]); // oooff!
          tmxmove = -tmxmove/2; // absorb half the momentum
          tmymove /= 2;
@@ -1882,7 +1884,8 @@ static void P_HitSlideLine(line_t *ld)
    if(icyfloor && deltaangle > ANG45 && deltaangle < ANG90+ANG45)
    {
       // haleyjd: only the player should oof
-      if(slidemo->player)
+      // 09/08/13: ... only LIVING players
+      if(slidemo->player && slidemo->health > 0)
          S_StartSound(slidemo, GameModeInfo->playerSounds[sk_oof]); // oooff!
       moveangle = lineangle - deltaangle;
       movelen /= 2; // absorb
