@@ -87,7 +87,7 @@ class PortalClipEngine : public ClipEngine
 
       // Iterators
       static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context);
-      static void PortalClipEngine::findAdjacentPortals(ClipContext *cc);
+      static void findAdjacentPortals(ClipContext *cc);
 
 
 };
