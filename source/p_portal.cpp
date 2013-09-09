@@ -51,6 +51,11 @@
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
 linkoffset_t **linktable = NULL;
 
+
+// This guy is a (0, 0, 0) link offset which is used to populate null links in the 
+// linktable and is returned by P_GetLinkOffset for invalid inputs
+linkoffset_t zerolink = {0, 0, 0};
+
 // The group list is allocated PU_STATIC because it isn't level specific, however,
 // each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
 // count back to 0
@@ -71,6 +76,14 @@ static int      grouplimit = 0;
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
 bool useportalgroups = false;
+
+//
+// P_PortalGroupCount
+//
+int P_PortalGroupCount()
+{
+   return useportalgroups ? groupcount : 1;
+}
 
 //
 // P_InitPortals
@@ -240,36 +253,36 @@ void P_GatherSectors(sector_t *from, int groupid)
 // P_GetLinkOffset
 //
 // This function returns a linkoffset_t object which contains the map-space
-// offset to get from the startgroup to the targetgroup.
+// offset to get from the startgroup to the targetgroup. This will always return 
+// a linkoffset_t object. In cases of invalid input or no link the offset will be
+// (0, 0, 0)
+#ifdef RANGECHECK
 //
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
+   if(!useportalgroups)
+      return &zerolink;
+      
    if(!linktable)
    {
-#ifdef RANGECHECK
-      doom_printf("P_GetLinkOffset called with no linktable allocated.\n");
-#endif
-      return NULL;
+      doom_printf("P_GetLinkOffset called with no link table.\n");
+      return &zerolink;
    }
-
+   
    if(startgroup < 0 || startgroup >= groupcount)
    {
-#ifdef RANGECHECK
       doom_printf("P_GetLinkOffset called with start groupid out of bounds.\n");
-#endif
-      return NULL;
+      return &zerolink;
    }
 
    if(targetgroup < 0 || targetgroup >= groupcount)
    {
-#ifdef RANGECHECK
       doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
-#endif
-      return NULL;
+      return &zerolink;
    }
-
    return linktable[startgroup * groupcount + targetgroup];
 }
+#endif
 
 //
 // P_AddLinkOffset
@@ -316,7 +329,6 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
-   linkoffset_t *link;
 
    if(!portal || !sec)
       return true;
@@ -356,9 +368,10 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
+   auto link = linktable[sec->groupid * groupcount + portal->data.link.toid];
 
    // We've found a linked portal so add the entry to the table
-   if(!(link = P_GetLinkOffset(sec->groupid, portal->data.link.toid)))
+   if(!link)
    {
       int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
                                 portal->data.link.deltax, 
@@ -393,10 +406,10 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // can be found to go from A to C.
 //
 static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
-                          int from)
+                          int via)
 {
    int i, p;
-   linkoffset_t *link, **linklist, **fromlist;
+   linkoffset_t *link, **linklist, **grouplinks;
 
    // The main group has an indrect link with every group that links to a group
    // that has a direct link to it, or any group that has a link to a group the 
@@ -404,7 +417,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
 
    // First step: run through the list of groups this group has direct links to
    // from there, run the function again with each direct link.
-   if(from == R_NOGROUP)
+   if(via == R_NOGROUP)
    {
       linklist = linktable + group * groupcount;
 
@@ -420,18 +433,18 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       return;
    }
 
-   linklist = linktable + group * groupcount;
-   fromlist = linktable + from * groupcount;
+   linklist = linktable + via * groupcount;
+   grouplinks = linktable + group * groupcount;
 
    // Second step run through the linked group's link list. Ignore any groups 
    // the main group is already linked to. Add the deltas and add the entries,
    // then call this function for groups the linked group links to.
    for(p = 0; p < groupcount; ++p)
    {
-      if(p == group || p == from)
+      if(p == group || p == via)
          continue;
 
-      if(!(link = fromlist[p]) || linklist[p])
+      if(!(link = linklist[p]) || grouplinks[p])
          continue;
 
       P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
@@ -567,12 +580,6 @@ bool P_BuildLinkTable()
                return false;
             }
          }
-         else if(link || backlink)
-         {
-            C_Printf(FC_ERROR "Portal group %i references group %i without a "
-                     "backlink.\nLinked portals are disabled\a\n", i, p);
-            return false;
-         }
       }
    }
 
@@ -586,6 +593,13 @@ bool P_BuildLinkTable()
    {
       if(sectors[i].groupid == R_NOGROUP)
          R_SetSectorGroupID(sectors + i, 0);
+   }
+   
+   // Last step is to put zerolink in every link position that is currently null
+   for(i = 0; i < groupcount * groupcount; ++i)
+   {
+      if(!linktable[i])
+         linktable[i] = &zerolink;
    }
 
    // Everything checks out... let's run the portals
@@ -648,10 +662,10 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 
    if(!mo || !link)
       return 0;
-   if(!P_PortalTeleportMove(mo, mo->x - link->x, mo->y - link->y))
+   if(!P_PortalTeleportMove(mo, mo->x + link->x, mo->y + link->y))
       return 0;
 
-   mo->z = moz - link->z;
+   mo->z = moz + link->z;
 
    mo->momx = momx;
    mo->momy = momy;
@@ -838,25 +852,6 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
    line->pflags = newbehavior;
    P_CheckLPortalState(line);
 }
-
-//=============================================================================
-//
-// SoM: Begin dummy mobj code
-//
-
-#if 0
-void P_DummyMobjThinker(Mobj *mobj)
-{
-   
-}
-
-void P_CreateDummy(Mobj *owner)
-{
-   if(owner->portaldummy)
-      return;
-
-}
-#endif
 
 // EOF
 

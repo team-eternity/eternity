@@ -1560,16 +1560,14 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       unsigned ang;
 
       {
-         linkoffset_t *link;
-
-         if(inflictor->groupid == target->groupid ||
-            !(link = P_GetLinkOffset(inflictor->groupid, target->groupid)))
+         if(inflictor->groupid == target->groupid)
          {
             ang = P_PointToAngle (inflictor->x, inflictor->y, 
                                    target->x, target->y);
          }
          else
          {
+            auto link = P_GetLinkOffset(inflictor->groupid, target->groupid);
             ang = P_PointToAngle(inflictor->x, inflictor->y, 
                                   target->x + link->x, target->y + link->y);
          }

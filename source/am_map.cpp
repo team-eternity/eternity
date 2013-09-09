@@ -380,11 +380,10 @@ static void AM_restoreScaleAndLoc()
    }
    else
    {
-      linkoffset_t *link;
-
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
-         (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(mapportal_overlay && plr->mo->groupid > 0)
       {
+         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
+
          m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
          m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
       }
@@ -451,18 +450,14 @@ static void AM_findMinMaxBoundaries(void)
       x2 = lines[i].v2->fx;
       y2 = lines[i].v2->fy;
 
-      if(mapportal_overlay && useportalgroups &&
-         lines[i].frontsector->groupid > 0)
+      if(mapportal_overlay && lines[i].frontsector->groupid > 0)
       {
-         linkoffset_t *link;
+         auto link = P_GetLinkOffset(lines[i].frontsector->groupid, 0);
 
-         if((link = P_GetLinkOffset(0, lines[i].frontsector->groupid)))
-         {
-            x1 += M_FixedToDouble(link->x);
-            y1 += M_FixedToDouble(link->y);
-            x2 += M_FixedToDouble(link->x);
-            y2 += M_FixedToDouble(link->y);
-         }
+         x1 += M_FixedToDouble(link->x);
+         y1 += M_FixedToDouble(link->y);
+         x2 += M_FixedToDouble(link->x);
+         y2 += M_FixedToDouble(link->y);
       }
 
       if(x1 < min_x)
@@ -573,11 +568,9 @@ static void AM_initVariables()
    plr = &players[pnum];
 
    {
-      linkoffset_t *link;
-
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
-         (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(mapportal_overlay && plr->mo->groupid > 0)
       {
+         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
          m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
          m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
       }
@@ -988,10 +981,9 @@ static void AM_doFollowPlayer(void)
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
-      linkoffset_t *link;
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
-         (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(mapportal_overlay && plr->mo->groupid > 0)
       {
+         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
          m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x + link->x))) - m_w/2;
          m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y + link->y))) - m_h/2;
       }
@@ -1690,15 +1682,12 @@ static void AM_drawWalls(void)
 
          if(line->frontsector->groupid > 0)
          {
-            linkoffset_t *link;
+            auto link = P_GetLinkOffset(line->frontsector->groupid, 0);
 
-            if((link = P_GetLinkOffset(0, line->frontsector->groupid)))
-            {
-               l.a.x += M_FixedToDouble(link->x);
-               l.a.y += M_FixedToDouble(link->y);
-               l.b.x += M_FixedToDouble(link->x);
-               l.b.y += M_FixedToDouble(link->y);
-            }
+            l.a.x += M_FixedToDouble(link->x);
+            l.a.y += M_FixedToDouble(link->y);
+            l.b.x += M_FixedToDouble(link->x);
+            l.b.y += M_FixedToDouble(link->y);
          }
          // if line has been seen or IDDT has been used
          if(ddt_cheating || (line->flags & ML_MAPPED))
@@ -1749,15 +1738,12 @@ static void AM_drawWalls(void)
 
          if(line->frontsector && line->frontsector->groupid > 0)
          {
-            linkoffset_t *link;
+            linkoffset_t *link = P_GetLinkOffset(line->frontsector->groupid, 0);
 
-            if((link = P_GetLinkOffset(0, line->frontsector->groupid)))
-            {
-               l.a.x += M_FixedToDouble(link->x);
-               l.a.y += M_FixedToDouble(link->y);
-               l.b.x += M_FixedToDouble(link->x);
-               l.b.y += M_FixedToDouble(link->y);
-            }
+            l.a.x += M_FixedToDouble(link->x);
+            l.a.y += M_FixedToDouble(link->y);
+            l.b.x += M_FixedToDouble(link->x);
+            l.b.y += M_FixedToDouble(link->y);
          }
       }
 
@@ -2036,13 +2022,12 @@ static void AM_drawPlayers(void)
    int   color;
    // SoM: player x and y
    fixed_t px, py;
-   linkoffset_t *link;
 
    if(!netgame)
    {
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
-         (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(mapportal_overlay && plr->mo->groupid > 0)
       {
+         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
          px = plr->mo->x + link->x;
          py = plr->mo->y + link->y;
       }
@@ -2093,9 +2078,9 @@ static void AM_drawPlayers(void)
       if(!playeringame[i])
          continue;
       
-      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
-         (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(mapportal_overlay && plr->mo->groupid > 0)
       {
+         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
          px = p->mo->x + link->x;
          py = p->mo->y + link->y;
       }
@@ -2150,7 +2135,7 @@ static void AM_drawPlayers(void)
 static void AM_drawThings(int colors, int colorrange)
 {
    int     i;
-   Mobj *t;
+   Mobj    *t;
    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
    
    // for all sectors
@@ -2163,15 +2148,11 @@ static void AM_drawThings(int colors, int colorrange)
          tx = t->x;
          ty = t->y;
 
-         if(mapportal_overlay && useportalgroups && t->subsector->sector->groupid > 0)
+         if(mapportal_overlay && t->subsector->sector->groupid > 0)
          {
-            linkoffset_t *link;
-
-            if((link = P_GetLinkOffset(0, t->subsector->sector->groupid)))
-            {
-               tx += link->x;
-               ty += link->y;
-            }
+            auto link = P_GetLinkOffset(t->subsector->sector->groupid, 0);
+            tx += link->x;
+            ty += link->y;
          }
          // FIXME / HTIC_TODO: Heretic support and EDF editing?
 

@@ -300,8 +300,8 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
    line_t *m = lines + markerlinenum;
    line_t *a = lines + anchorlinenum;
 
-   *dx = ((a->v1->x + a->v2->x) / 2) - ((m->v1->x + m->v2->x) / 2);
-   *dy = ((a->v1->y + a->v2->y) / 2) - ((m->v1->y + m->v2->y) / 2);
+   *dx = ((m->v1->x + m->v2->x) / 2) - ((a->v1->x + a->v2->x) / 2);
+   *dy = ((m->v1->y + m->v2->y) / 2) - ((a->v1->y + a->v2->y) / 2);
    *dz = 0; /// ???
 }
 
@@ -867,9 +867,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx - portal->data.anchor.deltax;
-   viewy  = window->vy - portal->data.anchor.deltay;
-   viewz  = window->vz - portal->data.anchor.deltaz;
+   viewx  = window->vx + portal->data.anchor.deltax;
+   viewy  = window->vy + portal->data.anchor.deltay;
+   viewz  = window->vz + portal->data.anchor.deltaz;
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -963,9 +963,9 @@ static void R_RenderLinkedPortal(pwindow_t *window)
 
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx - portal->data.link.deltax;
-   viewy  = window->vy - portal->data.link.deltay;
-   viewz  = window->vz - portal->data.link.deltaz;
+   viewx  = window->vx + portal->data.link.deltax;
+   viewy  = window->vy + portal->data.link.deltay;
+   viewz  = window->vz + portal->data.link.deltaz;
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
