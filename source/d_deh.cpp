@@ -327,6 +327,8 @@ dehflags_t deh_mobjflags[] =
   {"NOSOUNDCUTOFF",    0x00000400, 3}, // actor can play any number of sounds
   {"RAVENRESPAWN",     0x00000800, 3}, // special respawns Raven style
   {"NOTSHAREWARE",     0x00001000, 3}, // item won't spawn in shareware gamemodes
+  {"NOTORQUE",         0x00002000, 3}, // never subject to torque simulation
+  {"ALWAYSTORQUE",     0x00004000, 3}, // torque not restricted by comp_falloff
 
   { NULL,              0 }             // NULL terminator
 };

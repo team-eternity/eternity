@@ -1774,13 +1774,13 @@ static bool P_ThingHeightClip(Mobj *thing)
 //
 
 // killough 8/2/98: make variables static
-static fixed_t   bestslidefrac;
-static fixed_t   secondslidefrac;
-static line_t    *bestslideline;
-static line_t    *secondslideline;
+static fixed_t  bestslidefrac;
+static fixed_t  secondslidefrac;
+static line_t  *bestslideline;
+static line_t  *secondslideline;
 static Mobj    *slidemo;
-static fixed_t   tmxmove;
-static fixed_t   tmymove;
+static fixed_t  tmxmove;
+static fixed_t  tmymove;
 
 //
 // P_HitSlideLine

@@ -1233,7 +1233,7 @@ thingtype BossBrain
   deathsound  bosdth
   radius      16.0
   mass        10000000
-  flags       SOLID|SHOOTABLE
+  cflags      SOLID|SHOOTABLE|NOTORQUE
   
   firstdecoratestate S_BRAIN
   states
@@ -2504,7 +2504,7 @@ thingtype EvilEye
   dehackednum    89
   radius         16.0
   correct_height 50.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_EVILEYE
   states
@@ -2521,7 +2521,7 @@ thingtype FloatingSkulls
   dehackednum    90
   radius         16.0
   correct_height 48.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_FLOATSKULL
   states
@@ -2538,7 +2538,7 @@ thingtype TreeGrayShort
   dehackednum    91
   radius         16.0
   correct_height 62.0
-  cflags = SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
 
   firstdecoratestate S_TORCHTREE
   states
@@ -2606,7 +2606,7 @@ thingtype TorchBlueShort
   dehackednum    95
   radius         16.0
   correct_height 64.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_BTORCHSHRT
   states
@@ -2623,7 +2623,7 @@ thingtype TorchGreenShort
   dehackednum    96
   radius         16.0
   correct_height 64.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_GTORCHSHRT
   states
@@ -2640,7 +2640,7 @@ thingtype TorchRedShort
   dehackednum    97
   radius         16.0
   correct_height 64.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
 
   firstdecoratestate S_RTORCHSHRT
   states
@@ -2657,7 +2657,7 @@ thingtype ThornySpikes
   dehackednum    98
   radius         16.0
   correct_height 47.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
 
   firstdecoratestate S_STALAGTITE
   states
@@ -2939,7 +2939,7 @@ thingtype HeadShishkabob
   dehackednum    121
   radius         16.0
   correct_height 60.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_HEADSONSTICK
   states
@@ -2975,7 +2975,7 @@ thingtype HeadOnStick
   dehackednum    123
   radius         16.0
   correct_height 54.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
 
   firstdecoratestate S_HEADONASTICK
   states
@@ -3010,7 +3010,7 @@ thingtype ImpaledZombieman
   dehackednum    125
   radius         16.0
   correct_height 64.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_DEADSTICK
   states 
@@ -3027,7 +3027,7 @@ thingtype ImpaledZombiemanAlive
   dehackednum    126
   radius         16.0
   correct_height 64.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
   
   firstdecoratestate S_LIVESTICK
   states
@@ -3045,7 +3045,7 @@ thingtype TreeTanLarge
   dehackednum    127
   radius         32.0
   correct_height 124.0
-  cflags         SOLID|3DDECORATION
+  cflags         SOLID|3DDECORATION|NOTORQUE
 
   firstdecoratestate S_BIGTREE
   states

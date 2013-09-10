@@ -196,6 +196,8 @@ protected:
    // Methods
    void Think();
 
+   bool shouldApplyTorque();
+
 public:   
    // Virtual methods (overridables)
    // Inherited from Thinker:
@@ -627,6 +629,8 @@ enum
    MF4_NOSOUNDCUTOFF  = 0x00000400, // Actor can play any number of sounds
    MF4_RAVENRESPAWN   = 0x00000800, // Special item respawns Raven-style
    MF4_NOTSHAREWARE   = 0x00001000, // Item won't spawn in shareware gamemodes
+   MF4_NOTORQUE       = 0x00002000, // Never subject to torque simulation
+   MF4_ALWAYSTORQUE   = 0x00004000, // Subject to torque even if comp_falloff is on
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

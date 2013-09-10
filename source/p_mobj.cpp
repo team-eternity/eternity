@@ -1187,6 +1187,27 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
 }
 #endif
 
+//
+// Mobj::shouldApplyTorque
+//
+// Returns true or false if the Mobj should have torque simulation applied.
+//
+bool Mobj::shouldApplyTorque()
+{
+   if(demo_version < 203)
+      return false; // never in old demos
+   if(comp[comp_falloff] && !(flags4 & MF4_ALWAYSTORQUE))
+      return false; // torque is disabled
+   if(flags & MF_NOGRAVITY  ||
+      flags2 & MF2_FLOATBOB ||
+      (flags4 & MF4_NOTORQUE && full_demo_version >= make_full_version(340, 46)))
+      return false; // flags say no.
+   
+   // all else considered, only dependent on presence of a dropoff
+   return z > dropoffz;
+}
+
+// Mobj RTTI Proxy Type
 IMPLEMENT_THINKER_TYPE(Mobj)
 
 //
@@ -1314,13 +1335,10 @@ void Mobj::Think()
       // killough 9/12/98: objects fall off ledges if they are hanging off
       // slightly push off of ledge if hanging more than halfway off
 
-      if(z > dropoffz       &&  // Only objects contacting dropoff
-         !(flags & MF_NOGRAVITY)  &&  // Only objects which fall
-         !(flags2 & MF2_FLOATBOB) &&  // haleyjd: not floatbobbers
-         !comp[comp_falloff] && demo_version >= 203) // Not in old demos
-         P_ApplyTorque(this);               // Apply torque
+      if(shouldApplyTorque())
+         P_ApplyTorque(this);                // Apply torque
       else
-         intflags &= ~MIF_FALLING, gear = 0;  // Reset torque
+         intflags &= ~MIF_FALLING, gear = 0; // Reset torque
    }
 
 #ifdef R_LINKEDPORTALS
