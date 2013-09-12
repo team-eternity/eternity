@@ -171,6 +171,13 @@ struct bspecrule_t
    unsigned int flags;
 };
 
+// Default gibhealth behaviors
+enum
+{
+   GI_GIBFULLHEALTH, // DOOM/Strife behavior (gib at -spawnhealth)
+   GI_GIBHALFHEALTH  // Heretic/Hexen behavior (gib at -spawnhealth/2)   
+};
+
 //
 // Game Mode Flags
 //
@@ -368,6 +375,7 @@ struct gamemodeinfo_t
    fixed_t teleFogHeight;     // amount to add to telefog z coord
    int teleSound;             // sound id for teleportation
    int16_t thrustFactor;      // damage thrust factor
+   int defaultGibHealth;      // default gibhealth behavior
    const char *defPClassName; // default playerclass name
    const char *defTranslate;  // default translation for AUTOTRANSLATE
    bspecrule_t *bossRules;    // default boss specials
@@ -405,7 +413,6 @@ struct gamemodeinfo_t
 
    // Internal fields - these are set at runtime, so keep them last.
    missioninfo_t *missionInfo; // gamemission-dependent info
-
 };
 
 extern missioninfo_t  *MissionInfoObjects[NumGameMissions];

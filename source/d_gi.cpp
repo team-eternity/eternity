@@ -949,7 +949,7 @@ static gamemodeinfo_t giDoomSW =
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   CR_RED,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -974,6 +974,7 @@ static gamemodeinfo_t giDoomSW =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
+   GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
@@ -1074,6 +1075,7 @@ static gamemodeinfo_t giDoomReg =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
+   GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
@@ -1149,7 +1151,7 @@ static gamemodeinfo_t giDoomRetail =
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
 
-   CR_RED,          // defTextTrans
+   CR_RED,           // defTextTrans
    CR_RED,           // colorNormal
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
@@ -1174,6 +1176,7 @@ static gamemodeinfo_t giDoomRetail =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
+   GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
@@ -1274,6 +1277,7 @@ static gamemodeinfo_t giDoomCommercial =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
+   GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
    Doom2BossSpecs,   // bossRules
@@ -1374,6 +1378,7 @@ static gamemodeinfo_t giHereticSW =
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
    150,              // thrustFactor
+   GI_GIBHALFHEALTH, // defaultGibHealth
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
@@ -1478,6 +1483,7 @@ static gamemodeinfo_t giHereticReg =
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
    150,              // thrustFactor
+   GI_GIBHALFHEALTH, // defaultGibHealth
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules

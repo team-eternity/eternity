@@ -112,6 +112,7 @@ int UnknownThingType;
 
 // Basic Stats
 #define ITEM_TNG_SPAWNHEALTH  "spawnhealth"
+#define ITEM_TNG_GIBHEALTH    "gibhealth"
 #define ITEM_TNG_REACTTIME    "reactiontime"
 #define ITEM_TNG_PAINCHANCE   "painchance"
 #define ITEM_TNG_SPEED        "speed"
@@ -285,7 +286,7 @@ static const char *BasicTypeNames[] =
    "ControlPointGrav",  // a control point with gravity
 };
 
-#define NUMBASICTYPES (sizeof(BasicTypeNames) / sizeof(char *))
+#define NUMBASICTYPES earrlen(BasicTypeNames)
 
 typedef struct basicttype_s
 {
@@ -488,6 +489,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_ACTIVATESND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEACTIVATESND,   "none",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_SPAWNHEALTH,     1000,          CFGF_NONE), \
+   CFG_INT(ITEM_TNG_GIBHEALTH,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_PAINCHANCE,      0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_MASS,            100,           CFGF_NONE), \
@@ -2077,8 +2079,35 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    // ******************************* METRICS ********************************
 
    // process spawnhealth
+   bool setspawnhealth = false;
    if(IS_SET(ITEM_TNG_SPAWNHEALTH))
+   {
       mobjinfo[i]->spawnhealth = cfg_getint(thingsec, ITEM_TNG_SPAWNHEALTH);
+      setspawnhealth = true;
+   }
+
+   // process gibhealth
+   if(IS_SET(ITEM_TNG_GIBHEALTH) || setspawnhealth)
+   {
+      // if spawnhealth was set and we're going to inherit gibhealth, or
+      // get the EDF default for gibhealth, use the default behavior instead.
+      if(setspawnhealth && !cfg_size(thingsec, ITEM_TNG_GIBHEALTH))
+      {
+         switch(GameModeInfo->defaultGibHealth)
+         {
+         case GI_GIBFULLHEALTH: // Doom and Strife
+            mobjinfo[i]->gibhealth = -mobjinfo[i]->spawnhealth;
+            break;
+         case GI_GIBHALFHEALTH: // Heretic and Hexen
+            mobjinfo[i]->gibhealth = -mobjinfo[i]->spawnhealth/2;
+            break;
+         default:
+            break;
+         }
+      }
+      else
+         mobjinfo[i]->gibhealth = cfg_getint(thingsec, ITEM_TNG_GIBHEALTH);
+   }
 
    // process reactiontime
    if(IS_SET(ITEM_TNG_REACTTIME))

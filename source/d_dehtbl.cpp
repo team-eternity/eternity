@@ -1228,6 +1228,7 @@ void A_BFGSpray(actionargs_t *);
 void A_Explode(actionargs_t *);
 void A_Pain(actionargs_t *);
 void A_PlayerScream(actionargs_t *);
+void A_RavenPlayerScream(actionargs_t *);
 void A_Fall(actionargs_t *);
 void A_XScream(actionargs_t *);
 void A_Look(actionargs_t *);
@@ -1542,6 +1543,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(Explode),
    POINTER(Pain),
    POINTER(PlayerScream),
+   POINTER(RavenPlayerScream),
    POINTER(Fall),
    POINTER(XScream),
    POINTER(Look),

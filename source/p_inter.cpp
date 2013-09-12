@@ -1168,7 +1168,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       }
    }
 
-   if(target->health < -target->info->spawnhealth &&
+   if(target->health < target->info->gibhealth &&
       target->info->xdeathstate != NullStateNum)
       P_SetMobjState(target, target->info->xdeathstate);
    else

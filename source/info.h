@@ -389,6 +389,7 @@ struct mobjinfo_t
    int inactivestate;   // haleyjd 03/19/11: Hexen deactivation state
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
+   int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
 
    void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
    
