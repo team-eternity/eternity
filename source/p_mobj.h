@@ -631,6 +631,7 @@ enum
    MF4_NOTSHAREWARE   = 0x00001000, // Item won't spawn in shareware gamemodes
    MF4_NOTORQUE       = 0x00002000, // Never subject to torque simulation
    MF4_ALWAYSTORQUE   = 0x00004000, // Subject to torque even if comp_falloff is on
+   MF4_NOZERODAMAGE   = 0x00008000, // Missile won't inflict damage if damage is 0
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

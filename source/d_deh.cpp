@@ -329,6 +329,7 @@ dehflags_t deh_mobjflags[] =
   {"NOTSHAREWARE",     0x00001000, 3}, // item won't spawn in shareware gamemodes
   {"NOTORQUE",         0x00002000, 3}, // never subject to torque simulation
   {"ALWAYSTORQUE",     0x00004000, 3}, // torque not restricted by comp_falloff
+  {"NOZERODAMAGE",     0x00008000, 3}, // missile won't inflict damage if damage is 0
 
   { NULL,              0 }             // NULL terminator
 };

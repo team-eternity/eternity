@@ -1002,8 +1002,15 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
       // damage / explode
       
       damage = ((P_Random(pr_damage)%8)+1)*clip.thing->damage;
-      P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
-                   clip.thing->info->mod);
+      
+      // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
+      if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
+      {
+         // HTIC_TODO: ability for missiles to draw blood is checked here
+
+         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
+                      clip.thing->info->mod);
+      }
 
       // don't traverse any more
       return false;

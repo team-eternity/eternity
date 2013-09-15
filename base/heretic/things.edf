@@ -170,7 +170,7 @@ thingtype PodGoo : Mobj, -1, 306
 {
   radius 2.0
   height 4.0
-  cflags NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE
+  cflags NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE|NOZERODAMAGE
   
   firstdecoratestate S_PODGOO1
   states
@@ -567,7 +567,7 @@ thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 
 thingtype TeleGlitterRed : Mobj, -1, 332
 {
-  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE|NOZERODAMAGE
   acs_spawndata
   {
     num   166 
@@ -589,7 +589,7 @@ thingtype TeleGlitterRed : Mobj, -1, 332
 
 thingtype TeleGlitterBlue : Mobj, -1, 333
 {
-  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE|NOZERODAMAGE
   acs_spawndata
   {
     num   167

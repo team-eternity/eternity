@@ -1716,19 +1716,14 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       else
          target->flags |= MF_JUSTHIT;    // fight back!
 
-      // haleyjd 10/06/99: remove pain for zero-damage projectiles
-      // FIXME: this needs a comp flag
-      if(damage > 0 || demo_version < 329)
-      {
-         statenum_t st = target->info->painstate;
-         state_t *state = NULL;
+      statenum_t st = target->info->painstate;
+      state_t *state = NULL;
 
-         // haleyjd  06/05/08: check for special damagetype painstate
-         if(mod > 0 && (state = E_StateForMod(target->info, "Pain", emod)))
-            st = state->index;
+      // haleyjd  06/05/08: check for special damagetype painstate
+      if(mod > 0 && (state = E_StateForMod(target->info, "Pain", emod)))
+         st = state->index;
 
-         P_SetMobjState(target, st);
-      }
+      P_SetMobjState(target, st);
    }
    
    target->reactiontime = 0;           // we're awake now...
