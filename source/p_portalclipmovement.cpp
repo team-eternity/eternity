@@ -120,7 +120,7 @@ bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, C
    thing->x = x;
    thing->y = y;
    
-   setThingPosition(thing, false);
+   setThingPosition(thing, cc, false);
 
    // haleyjd 08/07/04: new footclip system
    P_AdjustFloorClip(thing);

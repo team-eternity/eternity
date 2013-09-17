@@ -65,8 +65,8 @@ class PortalClipEngine : public ClipEngine
       // Utility functions
       virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc);
       virtual void unsetThingPosition(Mobj *mo);
-      virtual void setThingPosition(Mobj *mo) { setThingPosition(mo, true); }
-      virtual void setThingPosition(Mobj *mo, bool findPortals);
+      virtual void setThingPosition(Mobj *mo);
+      virtual void setThingPosition(Mobj *mo, ClipContext *cc, bool findPortals);
 
       virtual void mapLoaded();
       

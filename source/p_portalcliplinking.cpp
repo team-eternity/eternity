@@ -195,8 +195,6 @@ void PortalClipEngine::addMobjBlockLinks(ClipContext *cc)
    int xc, yc, bx, by;
    Mobj *thing = cc->thing;
 
-
-
    for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
    {
       linkoffset_t *link = P_GetLinkOffset(cc->adjacent_groups[0], cc->adjacent_groups[groupindex]);
@@ -325,7 +323,15 @@ void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
 
 
 
-void PortalClipEngine::setThingPosition(Mobj *thing, bool findPortals)
+void PortalClipEngine::setThingPosition(Mobj *thing)
+{
+   auto *cc = getContext();
+   setThingPosition(thing, cc, true);
+   cc->done();
+}
+
+
+void PortalClipEngine::setThingPosition(Mobj *thing, ClipContext *cc, bool findPortals)
 {
    // link into subsector
    subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
@@ -336,7 +342,6 @@ void PortalClipEngine::setThingPosition(Mobj *thing, bool findPortals)
    if(!(thing->flags & (MF_NOSECTOR|MF_NOBLOCKMAP)))
    {
       // Collect the portal groups
-      ClipContext *cc = getContext();
       cc->thing = thing;
 
       if(findPortals)
