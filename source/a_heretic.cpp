@@ -1464,7 +1464,8 @@ void A_LichFire(actionargs_t *actionargs)
       fire->momz  = baseFire->momz;
       
       // start out with zero damage
-      fire->damage = 0;
+      fire->damage  = 0;
+      fire->flags4 |= MF4_NOZERODAMAGE;
 
       // set a counter for growth
       fire->counters[0] = (i + 1) << 1;
