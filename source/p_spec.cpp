@@ -824,43 +824,6 @@ int P_FindSectorFromTag(const int tag, int start)
 }
 
 //
-// P_InitTagLists
-//
-// Hash the sector tags across the sectors and linedefs.
-//
-static void P_InitTagLists()
-{
-   register int i;
-   
-   for(i = numsectors; --i >= 0; )   // Initially make all slots empty.
-      sectors[i].firsttag = -1;
-   
-   for(i = numsectors; --i >= 0; )   // Proceed from last to first sector
-   {                                 // so that lower sectors appear first
-      int j = (unsigned int)sectors[i].tag % (unsigned int)numsectors; // Hash func
-      sectors[i].nexttag = sectors[j].firsttag;   // Prepend sector to chain
-      sectors[j].firsttag = i;
-   }
-   
-   // killough 4/17/98: same thing, only for linedefs
-   
-   for(i = numlines; --i >= 0; )   // Initially make all slots empty.
-      lines[i].firsttag = -1;
-   
-   for(i = numlines; --i >= 0; )   // Proceed from last to first linedef
-   {                               // so that lower linedefs appear first
-      // haleyjd 05/16/09: unified id into tag;
-      // added mapformat parameter to test here:
-      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
-      {
-         int j = (unsigned int)lines[i].tag % (unsigned int)numlines; // Hash func
-         lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
-         lines[j].firsttag = i;
-      }
-   }
-}
-
-//
 // P_FindMinSurroundingLight
 //
 // Passed a sector and a light level, returns the smallest light level
@@ -1346,10 +1309,7 @@ void P_SpawnSpecials()
    // clear buttons (haleyjd 10/16/05: button stuff -> p_switch.c)
    P_ClearButtons();
 
-   // P_InitTagLists() must be called before P_FindSectorFromLineTag()
-   // or P_FindLineFromLineTag() can be called.
-
-   P_InitTagLists();   // killough 1/30/98: Create xref tables for tags
+   // SoM: Moved P_InitTagLists to p_setup.c
    
    P_SpawnScrollers(); // killough 3/7/98: Add generalized scrollers
    
@@ -1418,28 +1378,6 @@ void P_SpawnSpecials()
          P_AttachLines(&lines[i], true);
          break;
 
-      // SoM 12/10/03: added skybox/portal specials
-      // haleyjd 01/24/04: functionalized code to reduce footprint
-      case EV_STATIC_PORTAL_PLANE_CEILING:
-      case EV_STATIC_PORTAL_PLANE_FLOOR:
-      case EV_STATIC_PORTAL_PLANE_CEILING_FLOOR:
-      case EV_STATIC_PORTAL_HORIZON_CEILING:
-      case EV_STATIC_PORTAL_HORIZON_FLOOR:
-      case EV_STATIC_PORTAL_HORIZON_CEILING_FLOOR:
-      case EV_STATIC_PORTAL_SKYBOX_CEILING:
-      case EV_STATIC_PORTAL_SKYBOX_FLOOR:
-      case EV_STATIC_PORTAL_SKYBOX_CEILING_FLOOR:
-      case EV_STATIC_PORTAL_ANCHORED_CEILING:
-      case EV_STATIC_PORTAL_ANCHORED_FLOOR:
-      case EV_STATIC_PORTAL_ANCHORED_CEILING_FLOOR:
-      case EV_STATIC_PORTAL_TWOWAY_CEILING:
-      case EV_STATIC_PORTAL_TWOWAY_FLOOR:
-      case EV_STATIC_PORTAL_LINKED_CEILING:
-      case EV_STATIC_PORTAL_LINKED_FLOOR:
-      case EV_STATIC_PORTAL_LINKED_LINE2LINE:
-         P_SpawnPortal(&lines[i], staticFn);
-         break;
-      
          // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
       case EV_STATIC_LINE_SET_IDENTIFICATION: 
@@ -1475,14 +1413,6 @@ void P_SpawnSpecials()
       }
    }
 
-   // SoM: This seems like the place to put this.
-   if(!P_BuildLinkTable())
-   {
-      // SoM: There was an error... so kill the groupids
-      for(i = 0; i < numsectors; i++)
-         R_SetSectorGroupID(sectors + i, 0);
-   }
-
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
 }
@@ -1515,9 +1445,62 @@ void P_SpawnDeferredSpecials()
 
       default: // Not a function handled here
       break;
-         }
       }
    }
+}
+
+//
+// P_SpawnPortals
+//
+// SoM: Portals need to be spawned in a separate phase from the normal line specials (need to be done before things load)
+//
+void P_SpawnPortals()
+{
+   int i;
+
+   for(i = 0; i < numlines; ++i)
+   {
+      line_t *line = &lines[i];
+      int staticFn = EV_StaticInitForSpecial(line->special);
+
+      switch(staticFn)
+      {
+         // SoM 12/10/03: added skybox/portal specials
+         // haleyjd 01/24/04: functionalized code to reduce footprint
+         case EV_STATIC_PORTAL_PLANE_CEILING:
+         case EV_STATIC_PORTAL_PLANE_FLOOR:
+         case EV_STATIC_PORTAL_PLANE_CEILING_FLOOR:
+         case EV_STATIC_PORTAL_HORIZON_CEILING:
+         case EV_STATIC_PORTAL_HORIZON_FLOOR:
+         case EV_STATIC_PORTAL_HORIZON_CEILING_FLOOR:
+         case EV_STATIC_PORTAL_SKYBOX_CEILING:
+         case EV_STATIC_PORTAL_SKYBOX_FLOOR:
+         case EV_STATIC_PORTAL_SKYBOX_CEILING_FLOOR:
+         case EV_STATIC_PORTAL_ANCHORED_CEILING:
+         case EV_STATIC_PORTAL_ANCHORED_FLOOR:
+         case EV_STATIC_PORTAL_ANCHORED_CEILING_FLOOR:
+         case EV_STATIC_PORTAL_TWOWAY_CEILING:
+         case EV_STATIC_PORTAL_TWOWAY_FLOOR:
+         case EV_STATIC_PORTAL_LINKED_CEILING:
+         case EV_STATIC_PORTAL_LINKED_FLOOR:
+         case EV_STATIC_PORTAL_LINKED_LINE2LINE:
+            P_SpawnPortal(&lines[i], staticFn);
+            break;
+      
+         default: // Not a static special, or not handled here
+            break;
+      }
+   }
+
+   // SoM: Build the link table, run all validation on the current portal state
+   if(!P_BuildLinkTable())
+   {
+      // SoM: There was an error... so kill the groupids
+      for(i = 0; i < numsectors; i++)
+         R_SetSectorGroupID(sectors + i, 0);
+   }
+}
+
 
 // haleyjd 04/11/10:
 // e6y

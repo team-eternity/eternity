@@ -2346,6 +2346,43 @@ static void P_DeathMatchSpawnPlayers(void)
 }
 
 //
+// P_InitTagLists
+//
+// Hash the sector tags across the sectors and linedefs.
+//
+static void P_InitTagLists()
+{
+   register int i;
+   
+   for(i = numsectors; --i >= 0; )   // Initially make all slots empty.
+      sectors[i].firsttag = -1;
+   
+   for(i = numsectors; --i >= 0; )   // Proceed from last to first sector
+   {                                 // so that lower sectors appear first
+      int j = (unsigned int)sectors[i].tag % (unsigned int)numsectors; // Hash func
+      sectors[i].nexttag = sectors[j].firsttag;   // Prepend sector to chain
+      sectors[j].firsttag = i;
+   }
+   
+   // killough 4/17/98: same thing, only for linedefs
+   
+   for(i = numlines; --i >= 0; )   // Initially make all slots empty.
+      lines[i].firsttag = -1;
+   
+   for(i = numlines; --i >= 0; )   // Proceed from last to first linedef
+   {                               // so that lower linedefs appear first
+      // haleyjd 05/16/09: unified id into tag;
+      // added mapformat parameter to test here:
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
+      {
+         int j = (unsigned int)lines[i].tag % (unsigned int)numlines; // Hash func
+         lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
+         lines[j].firsttag = i;
+      }
+   }
+}
+
+//
 // P_InitThingLists
 //
 // haleyjd 11/19/02: Sets up all dynamically allocated thing lists.
@@ -2496,6 +2533,18 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    G_ClearPlayerCorpseQueue();
    deathmatch_p = deathmatchstarts;
 
+   // SoM: Portals must be spawned before things are loaded so when mobjs are linked into the map structures,
+   // the portal groups (which the portal clipping code relies on) will be setup correctly.
+
+   // P_InitTagLists() must be called before P_FindSectorFromLineTag()
+   // or P_FindLineFromLineTag() can be called.
+   P_InitTagLists();   // killough 1/30/98: Create xref tables for tags
+
+   P_SpawnPortals();
+
+   // Determine clipping engine here.
+   P_SetClippingEngine(P_PortalGroupCount() ? CLIP_PORTAL : CLIP_DOOM);
+
    // haleyjd 10/03/05: handle multiple map formats
    switch(LevelInfo.mapFormat)
    {
@@ -2557,8 +2606,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    ACS_LoadLevelScript(dir, acslumpnum);
    
-   // Determine clipping engine here.
-   P_SetClippingEngine((P_PortalGroupCount() > 1) ? CLIP_PORTAL : CLIP_DOOM);
    clip->mapLoaded();
 }
 

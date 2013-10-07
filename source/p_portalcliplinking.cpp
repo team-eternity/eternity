@@ -343,6 +343,8 @@ void PortalClipEngine::setThingPosition(Mobj *thing, ClipContext *cc, bool findP
    {
       // Collect the portal groups
       cc->thing = thing;
+      cc->x = thing->x;
+      cc->y = thing->y;
 
       if(findPortals)
          findAdjacentPortals(cc);

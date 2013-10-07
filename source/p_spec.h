@@ -1371,6 +1371,9 @@ void P_SpawnSpecials();
 // pass
 void P_SpawnDeferredSpecials();
 
+// SoM: Portals need to be spawned in a separate phase from the normal line specials (need to be done before things load)
+void P_SpawnPortals();
+
 // every tic
 void P_UpdateSpecials(void);
 
