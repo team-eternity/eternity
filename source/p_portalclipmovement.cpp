@@ -729,7 +729,7 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
    if(cc->thing->flags & MF_NOCLIP && !(cc->thing->flags & MF_SKULLFLY))
       return true;
 
-   for(auto i = 0; i < cc->adjacent_groups.getLength(); ++i)
+   for(size_t i = 0; i < cc->adjacent_groups.getLength(); ++i)
    {
       auto groupid = cc->adjacent_groups.at(i);
       auto link = P_GetLinkOffset(startgroup, groupid);

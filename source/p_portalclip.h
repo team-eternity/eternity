@@ -101,11 +101,13 @@ public:
 
    void clearMarks();
    void mark(size_t itemIndex);
-   bool isMarked(size_t itemIndex) const { return !!(markArray[itemIndex >> 3] & (1 << (itemIndex & 7))); };
+   bool isMarked(size_t itemIndex) const { return !!(markArray[itemIndex >> 5] & (1 << (itemIndex & 31))); };
 
 protected:
    size_t  arraySize;
-   byte   *markArray;
+   size_t  firstDirty;
+   size_t  lastDirty;
+   int     *markArray;
 };
 
 

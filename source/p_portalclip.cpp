@@ -105,9 +105,9 @@ ClipContext*  PortalClipEngine::getContext()
    }
 
    if(ret->markedgroups == NULL)
-      ret->markedgroups = new (PU_LEVEL) MarkVector(P_PortalGroupCount());
+      ret->markedgroups = new (PU_LEVEL, (void **)&ret->markedgroups) MarkVector(P_PortalGroupCount());
    if(ret->markedsectors == NULL)
-      ret->markedsectors = new (PU_LEVEL) MarkVector(numsectors);
+      ret->markedsectors = new (PU_LEVEL, (void **)&ret->markedsectors) MarkVector(numsectors);
 
    return ret;
 }
@@ -141,8 +141,11 @@ void PortalClipEngine::mapLoaded()
 
 MarkVector::MarkVector(size_t numItems) : ZoneObject()
 {
-   arraySize = ((numItems + 7) & ~7) / 8;
-   markArray = ecalloctag(byte *, arraySize, sizeof(byte), PU_STATIC, NULL);
+   arraySize = (numItems + 31) >> 5;
+   markArray = ecalloc(int *, arraySize, sizeof(int));
+
+   firstDirty = arraySize;
+   lastDirty = 0;
 }
 
 
@@ -155,11 +158,18 @@ MarkVector::~MarkVector()
 
 void MarkVector::clearMarks()
 {
-   memset(markArray, 0, sizeof(byte) * arraySize);
+   if(lastDirty >= firstDirty)
+      memset(markArray, 0, sizeof(int) * (lastDirty - firstDirty + 1));
 }
 
 
 void MarkVector::mark(size_t itemIndex)
 {
-   markArray[itemIndex >> 3] |= 1 << (itemIndex & 7);
+   size_t index = itemIndex >> 5;
+   if(index > lastDirty) 
+      lastDirty = index;
+   if(index < firstDirty)
+      firstDirty = index;
+
+   markArray[index] |= 1 << (itemIndex & 31);
 }
