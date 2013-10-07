@@ -88,6 +88,10 @@ void UpdateGrab()
    {
       SDL_ShowCursor(SDL_ENABLE);
       SDL_WM_GrabInput(SDL_GRAB_OFF);
+      
+      SDL_Surface *screen = SDL_GetVideoSurface();
+      if(screen)
+         SDL_WarpMouse((Uint16)(screen->w - 16), (Uint16)(screen->h - 16));
    }
 
    currently_grabbed = grab;

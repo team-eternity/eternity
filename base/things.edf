@@ -141,7 +141,7 @@ thingtype EETerrainWaterSplash : Mobj, -1, 147
   deathstate  S_SPLASHX
   radius      2.0
   height      4.0
-  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
 }
 
 thingtype EETerrainWaterBase : Mobj, -1, 148
@@ -157,7 +157,7 @@ thingtype EETerrainSludgeChunk : Mobj, -1, 149
   radius      2.0
   height      4.0
   mass        150
-  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
 }
 
 thingtype EETerrainSludgeBase : Mobj, -1, 150

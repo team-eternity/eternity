@@ -280,7 +280,40 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
       doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
       return &zerolink;
    }
-   return linktable[startgroup * groupcount + targetgroup];
+   auto link = linktable[startgroup * groupcount + targetgroup];
+   return link ? link : &zerolink;
+}
+#endif
+
+//
+// P_GetLinkIfExists
+//
+// Returns a link offset to get from 'fromgroup' to 'togroup' if one exists. 
+// Returns NULL otherwise
+#ifdef RANGECHECK
+linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
+{
+   if(!useportalgroups)
+      return NULL;
+
+   if(!linktable)
+   {
+      doom_printf("P_GetLinkIfExists called with no link table.\n");
+      return NULL;
+   }
+   
+   if(fromgroup < 0 || fromgroup >= groupcount)
+   {
+      doom_printf("P_GetLinkIfExists called with from groupid out of bounds.\n");
+      return NULL;
+   }
+
+   if(togroup < 0 || togroup >= groupcount)
+   {
+      doom_printf("P_GetLinkIfExists called with to groupid out of bounds.\n");
+      return NULL;
+   }
+   return linktable[fromgroup * groupcount + togroup];
 }
 #endif
 
@@ -595,11 +628,11 @@ bool P_BuildLinkTable()
          R_SetSectorGroupID(sectors + i, 0);
    }
    
-   // Last step is to put zerolink in every link position that is currently null
-   for(i = 0; i < groupcount * groupcount; ++i)
+   // Last step is to put zerolink in every link that goes from a group to that same group
+   for(i = 0; i < groupcount; ++i)
    {
-      if(!linktable[i])
-         linktable[i] = &zerolink;
+      if(!linktable[i * groupcount + i])
+         linktable[i * groupcount + i] = &zerolink;
    }
 
    // Everything checks out... let's run the portals

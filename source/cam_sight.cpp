@@ -255,7 +255,7 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
          prev = prev->prev;
       }
 
-      linkoffset_t *link = P_GetLinkOffset(cam.fromid, cam.toid);
+      linkoffset_t *link = P_GetLinkIfExists(cam.fromid, cam.toid);
 
       params.cx           = cam.params->cx + FixedMul(cam.trace.dx, in->frac);
       params.cy           = cam.params->cy + FixedMul(cam.trace.dy, in->frac);
@@ -656,7 +656,7 @@ bool CAM_CheckSight(const camsightparams_t &params)
    {
       // is there a link between these groups?
       // if so, ignore reject
-      link = P_GetLinkOffset(params.cgroupid, params.tgroupid);
+      link = P_GetLinkIfExists(params.cgroupid, params.tgroupid);
    }
 
    //

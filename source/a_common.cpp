@@ -578,6 +578,46 @@ void A_PlayerScream(actionargs_t *actionargs)
    S_StartSound(mo, GameModeInfo->playerSounds[sound]);
 }
 
+//
+// A_RavenPlayerScream
+//
+// Version of A_PlayerScream compatible with Raven's games.
+//
+void A_RavenPlayerScream(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+   int sound;
+
+   if(actor->player && 
+      strcasecmp(actor->player->skin->sounds[sk_plwdth], "none") &&
+      actor->intflags & MIF_WIMPYDEATH)
+   {
+      // Wimpy death sound
+      sound = sk_plwdth;
+   }
+   else if(actor->health > -50)
+   {
+      // Normal death sound
+      sound = sk_pldeth; 
+   }
+   else if(actor->health > -100)
+   {
+      // Crazy death sound
+      sound = sk_pdiehi;
+   }
+   else
+   {
+      // Extreme death sound
+      sound = sk_slop;
+   }
+
+   // if died falling, gross falling death sound
+   if(!comp[comp_fallingdmg] && actor->intflags & MIF_DIEDFALLING)
+      sound = sk_fallht;
+      
+   S_StartSound(actor, GameModeInfo->playerSounds[sound]);
+}
+
 // PCLASS_FIXME: skull height a playerclass property?
 #define SKULLHEIGHT (48 * FRACUNIT)
 

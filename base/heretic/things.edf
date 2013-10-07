@@ -170,7 +170,7 @@ thingtype PodGoo : Mobj, -1, 306
 {
   radius 2.0
   height 4.0
-  cflags NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE
+  cflags NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE|NOZERODAMAGE
   
   firstdecoratestate S_PODGOO1
   states
@@ -567,7 +567,7 @@ thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 
 thingtype TeleGlitterRed : Mobj, -1, 332
 {
-  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE|NOZERODAMAGE
   acs_spawndata
   {
     num   166 
@@ -589,7 +589,7 @@ thingtype TeleGlitterRed : Mobj, -1, 332
 
 thingtype TeleGlitterBlue : Mobj, -1, 333
 {
-  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
+  cflags NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE|NOZERODAMAGE
   acs_spawndata
   {
     num   167
@@ -2390,14 +2390,14 @@ thingtype HereticPlayer : Mobj, -1, 398
     goto Spawn
   Death:
     PLAY H   6
-    PLAY I   6 A_PlayerScream
+    PLAY I   6 A_RavenPlayerScream
     PLAY JK  6
     PLAY L   6 A_Fall
     PLAY MNO 6
     PLAY P  -1
     stop
   XDeath:
-    PLAY Q     5 A_XScream
+    PLAY Q     5 A_RavenPlayerScream
     PLAY R     5 A_PlayerSkull
     PLAY S     5 A_Fall
     PLAY TUVWX 5

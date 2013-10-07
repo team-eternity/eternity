@@ -980,8 +980,15 @@ static bool PIT_CheckThing(Mobj *thing, MapContext *mc)
       // damage / explode
       
       damage = ((P_Random(pr_damage)%8)+1)*cc->thing->damage;
-      P_DamageMobj(thing, cc->thing, cc->thing->target, damage,
-                   cc->thing->info->mod);
+      
+      // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
+      if(damage || !(cc->thing->flags4 & MF4_NOZERODAMAGE))
+      {
+         // HTIC_TODO: ability for missiles to draw blood is checked here
+
+         P_DamageMobj(thing, cc->thing, cc->thing->target, damage,
+                      cc->thing->info->mod);
+      }
 
       // don't traverse any more
       return false;
