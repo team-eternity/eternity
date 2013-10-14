@@ -1913,7 +1913,8 @@ static const char *sixteenTenModes[] =
    "1440x900",
    "1680x1050", // WSXGA+
    "1920x1200", // WUXGA
-   "2560x1600", // WQXGA (This is the current max resolution)
+   "2560x1600", // WQXGA
+   "2880x1800", // Apple Retina Display (current max resolution)
    NULL
 };
 
