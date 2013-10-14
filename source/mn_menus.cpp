@@ -1980,15 +1980,13 @@ static char **mn_vidmode_cmds;
 // from the precomposited lists above based on the user's favorite aspect
 // ratio and fullscreen/windowed settings.
 //
-static void MN_BuildVidmodeTables(void)
+static void MN_BuildVidmodeTables()
 {
    int useraspect = mn_favaspectratio;
    int userfs     = mn_favscreentype;
    const char **reslist = NULL;
    int i = 0;
    int nummodes;
-   qstring description;
-   qstring cmd;
 
    if(mn_vidmode_desc)
    {
@@ -2023,6 +2021,8 @@ static void MN_BuildVidmodeTables(void)
 
    for(i = 0; i < nummodes; i++)
    {
+      qstring cmd, description;
+
       description = reslist[i];
       switch(userfs)
       {
@@ -2036,12 +2036,11 @@ static void MN_BuildVidmodeTables(void)
       }
 
       // set the mode description
-      mn_vidmode_desc[i] = description.duplicate(PU_STATIC);
+      mn_vidmode_desc[i] = description.duplicate();
       
-      cmd  = "i_videomode ";
-      cmd += description;
+      cmd << "i_videomode " << description;
       
-      mn_vidmode_cmds[i] = cmd.duplicate(PU_STATIC);
+      mn_vidmode_cmds[i] = cmd.duplicate();
    }
 
    // null-terminate the lists
