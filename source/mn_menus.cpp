@@ -1948,6 +1948,7 @@ static const char *sixteenNineModes[] =
    "1600x900",  // HD+
    "1920x1080", // HD1080
    "2048x1152",
+   "2880x1620",
    NULL
 };
 
