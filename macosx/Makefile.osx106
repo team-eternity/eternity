@@ -401,4 +401,4 @@ $(BINARY): $(OBJS)
 
 clean distclean:
 	@echo '===> CLEAN'
-	$(Q)rm -fr $(DEPS) $(OBJS) $(BINARY) $(BINARY).exe
+	$(Q)rm -fr $(DEPS) $(OBJS)

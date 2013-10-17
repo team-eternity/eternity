@@ -31,7 +31,7 @@
 //       Non-NIB-Code & other changes: Max Horn <max@quendi.de>
 //    Feel free to customize this file to suit your needs
 
-#include <SDL/SDL.h>    // IOANCH 20130129: changed to SDL/SDL.h.
+#include "SDL.h"    // IOANCH 20130129: changed to SDL/SDL.h.
 #import "SDLMain.h"     // IOANCH 20130129: use #import
 #include <sys/param.h>  // for MAXPATHLEN
 #include <unistd.h>
