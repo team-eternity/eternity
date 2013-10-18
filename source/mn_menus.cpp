@@ -3982,8 +3982,6 @@ CONSOLE_COMMAND(skinviewer, 0)
 // maybe having a laugh at our expense ;)  Keep DOOMing forever, my friend.
 //
 
-#define EMULATED_ITEM_SIZE 16
-
 // haleyjd 05/16/04: traditional DOOM main menu support
 
 int mn_classic_menus;

@@ -912,6 +912,9 @@
     <ClCompile Include="..\source\e_inventory.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\mn_items.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1609,6 +1612,9 @@
     </ClInclude>
     <ClInclude Include="..\source\m_compare.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\mn_items.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
