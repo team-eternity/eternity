@@ -100,6 +100,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Release/Eternity.bsc</OutputFile>
     </Bscmake>
+    <Manifest>
+      <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -145,6 +148,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Debug/Eternity.bsc</OutputFile>
     </Bscmake>
+    <Manifest>
+      <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp" />
