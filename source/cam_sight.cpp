@@ -111,15 +111,21 @@ public:
    // pointer to invocation parameters
    const camsightparams_t *params;
 
-   CamSight()
-      : cx(0), cy(0), tx(0), ty(0), sightzstart(0), topslope(0), bottomslope(0),
+   CamSight(const camsightparams_t &sp)
+      : cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
-        fromid(0), toid(0), hitpblock(false), addedportal(false), 
+        fromid(sp.cgroupid), toid(sp.tgroupid), 
+        hitpblock(false), addedportal(false), 
         portalresult(false), portalexit(false),
-        params(NULL)
+        params(&sp)
    {
       memset(&trace, 0, sizeof(trace));
+    
+      sightzstart  = params->cz + params->cheight - (params->cheight >> 2);
+      bottomslope  = params->tz - sightzstart;
+      topslope     = bottomslope + params->theight;
+
       validlines = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       validpolys = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
    }
@@ -701,22 +707,10 @@ bool CAM_CheckSight(const camsightparams_t &params)
             params.cz + params.theight <= sectors[tsec->heightsec].ceilingheight))))
          return false;
 
-      CamSight newCam;
-
       //
       // check precisely
       //
-      newCam.params       = &params;
-      newCam.cx           = params.cx;
-      newCam.cy           = params.cy;
-      newCam.tx           = params.tx;
-      newCam.ty           = params.ty;
-      newCam.fromid       = params.cgroupid;
-      newCam.toid         = params.tgroupid;
-      newCam.sightzstart  = params.cz + params.cheight - (params.cheight >> 2);
-      newCam.bottomslope  = params.tz - newCam.sightzstart;
-      newCam.topslope     = newCam.bottomslope + params.theight;
-
+      CamSight newCam(params);
 
       // if there is a valid portal link, adjust the target's coordinates now
       // so that we trace in the proper direction given the current link
