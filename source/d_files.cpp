@@ -1290,8 +1290,8 @@ void D_CloseAutoloadDir()
    {
       closedir(autoloads);
       autoloads = NULL;
-      autoload_dirname.freeBuffer();
    }
+   autoload_dirname.freeBuffer();
 }
 
 // EOF

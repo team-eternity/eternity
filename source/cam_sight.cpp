@@ -76,8 +76,9 @@
 // Structures
 //
 
-struct camsight_t
+class CamSight
 {
+public:
    fixed_t cx;          // camera coordinates
    fixed_t cy;
    fixed_t tx;          // target coordinates
@@ -109,6 +110,25 @@ struct camsight_t
 
    // pointer to invocation parameters
    const camsightparams_t *params;
+
+   CamSight()
+      : cx(0), cy(0), tx(0), ty(0), sightzstart(0), topslope(0), bottomslope(0),
+        opentop(0), openbottom(0), openrange(0),
+        intercepts(),
+        fromid(0), toid(0), hitpblock(false), addedportal(false), 
+        portalresult(false), portalexit(false),
+        params(NULL)
+   {
+      memset(&trace, 0, sizeof(trace));
+      validlines = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
+      validpolys = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
+   }
+
+   ~CamSight()
+   {
+      efree(validlines);
+      efree(validpolys);
+   }
 };
 
 //=============================================================================
@@ -169,7 +189,7 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
 // Sets opentop and openbottom to the window
 // through a two sided line.
 //
-void CAM_LineOpening(camsight_t &cam, line_t *linedef)
+void CAM_LineOpening(CamSight &cam, line_t *linedef)
 {
    sector_t *front, *back;
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
@@ -204,7 +224,7 @@ void CAM_LineOpening(camsight_t &cam, line_t *linedef)
 //
 // CAM_SightTraverse
 //
-static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
+static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
 {
    line_t  *li;
    fixed_t slope;
@@ -282,7 +302,7 @@ static bool CAM_SightTraverse(camsight_t &cam, intercept_t *in)
    return true; // keep going
 }
 
-static bool CAM_SightCheckLine(camsight_t &cam, int linenum)
+static bool CAM_SightCheckLine(CamSight &cam, int linenum)
 {
    line_t *ld = &lines[linenum];
    int s1, s2;
@@ -327,7 +347,7 @@ static bool CAM_SightCheckLine(camsight_t &cam, int linenum)
 //
 // CAM_SightBlockLinesIterator
 //
-static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
+static bool CAM_SightBlockLinesIterator(CamSight &cam, int x, int y)
 {
    int  offset;
    int *list;
@@ -404,7 +424,7 @@ static bool CAM_SightBlockLinesIterator(camsight_t &cam, int x, int y)
 //
 // Returns true if the traverser function returns true for all lines
 //
-static bool CAM_SightTraverseIntercepts(camsight_t &cam)
+static bool CAM_SightTraverseIntercepts(CamSight &cam)
 {
    size_t    count;
    fixed_t   dist;
@@ -459,7 +479,7 @@ static bool CAM_SightTraverseIntercepts(camsight_t &cam)
 // Traces a line from x1,y1 to x2,y2, calling the traverser function for each
 // Returns true if the traverser function returns true for all lines
 //
-static bool CAM_SightPathTraverse(camsight_t &cam)
+static bool CAM_SightPathTraverse(CamSight &cam)
 {
    fixed_t xt1, yt1, xt2, yt2;
    fixed_t xstep, ystep;
@@ -667,8 +687,6 @@ bool CAM_CheckSight(const camsightparams_t &params)
 	
    if(link || !(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))
    {
-      edefstructvar(camsight_t, newCam);
-
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
           ((params.cz + params.cheight <= sectors[csec->heightsec].floorheight &&
@@ -683,6 +701,8 @@ bool CAM_CheckSight(const camsightparams_t &params)
             params.cz + params.theight <= sectors[tsec->heightsec].ceilingheight))))
          return false;
 
+      CamSight newCam;
+
       //
       // check precisely
       //
@@ -696,8 +716,6 @@ bool CAM_CheckSight(const camsightparams_t &params)
       newCam.sightzstart  = params.cz + params.cheight - (params.cheight >> 2);
       newCam.bottomslope  = params.tz - newCam.sightzstart;
       newCam.topslope     = newCam.bottomslope + params.theight;
-      newCam.validlines   = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
-      newCam.validpolys   = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
 
 
       // if there is a valid portal link, adjust the target's coordinates now
@@ -719,9 +737,6 @@ bool CAM_CheckSight(const camsightparams_t &params)
          // didn't hit a portal but in different groups; not visible.
          result = false;
       }
-
-      efree(newCam.validlines);
-      efree(newCam.validpolys);
    }
 
    return result;
