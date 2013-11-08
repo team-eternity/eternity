@@ -1106,13 +1106,13 @@ void D_SetGamePath()
 }
 
 //
-// D_CheckUserFile
+// D_CheckGamePathFile
 //
 // Check for a file or directory in the user or base gamepath, preferring the
 // former over the latter when it exists. Returns the path of the file to use,
 // or NULL if neither location has that file.
 //
-char *D_CheckUserFile(const char *name, bool isDir)
+char *D_CheckGamePathFile(const char *name, bool isDir)
 {
    struct stat sbuf;   
 
@@ -1145,7 +1145,7 @@ char *D_CheckUserFile(const char *name, bool isDir)
 //
 char *D_CheckGameEDF()
 {
-   return D_CheckUserFile("root.edf", false);
+   return D_CheckGamePathFile("root.edf", false);
 }
 
 //
@@ -1158,7 +1158,7 @@ void D_CheckGameMusic()
 {
    if(s_hidefmusic)
    {
-      char *music_dir = D_CheckUserFile("music", true);
+      char *music_dir = D_CheckGamePathFile("music", true);
       if(music_dir)
          D_AddDirectory(music_dir); // add as if it's a wad file
    }
@@ -1184,7 +1184,7 @@ void D_EnumerateAutoloadDir()
    {
       char *autoDir;
 
-      if((autoDir = D_CheckUserFile("autoload", true)))
+      if((autoDir = D_CheckGamePathFile("autoload", true)))
       {
          autoload_dirname = autoDir;
          autoloads = opendir(autoload_dirname.constPtr());
