@@ -645,15 +645,6 @@
     <ClCompile Include="..\Source\sounds.cpp">
       <Filter>Source Files\S_</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_cpu.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\Win32\i_exception.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Win32\i_fnames.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\sdl\i_input.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
@@ -664,9 +655,6 @@
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\sdl\i_net.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\Win32\i_opndir.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\source\sdl\i_pcsound.cpp">
@@ -694,9 +682,6 @@
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\sdl\i_system.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\Win32\i_w32main.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\sdl\mmus2mid.cpp">
@@ -914,6 +899,21 @@
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp">
       <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_w32main.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_cpu.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_exception.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Win32\i_fnames.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_opndir.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1349,16 +1349,10 @@
     <ClInclude Include="..\Source\sounds.h">
       <Filter>Source Files\S_</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Win32\i_fnames.h">
-      <Filter>Source Files\SDL\SDL Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\sdl\i_midirpc.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\i_net.h">
-      <Filter>Source Files\SDL\SDL Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Win32\i_opndir.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\sdl\i_sdlgamepads.h">
@@ -1615,6 +1609,12 @@
     </ClInclude>
     <ClInclude Include="..\source\mn_items.h">
       <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Win32\i_fnames.h">
+      <Filter>Source Files\Win32\Win32 Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Win32\i_opndir.h">
+      <Filter>Source Files\Win32\Win32 Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

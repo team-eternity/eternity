@@ -273,7 +273,7 @@ void D_LooseWads()
    const char *dot;
    char *filename;
 
-   for(i = 1; i < myargc; ++i)
+   for(i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -303,11 +303,10 @@ void D_LooseWads()
 
 void D_LooseDehs()
 {
-   int i;
    const char *dot;
    char *filename;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -330,10 +329,9 @@ void D_LooseDehs()
 
 gfs_t *D_LooseGFS()
 {
-   int i;
    const char *dot;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -363,11 +361,10 @@ gfs_t *D_LooseGFS()
 //
 const char *D_LooseDemo()
 {
-   int i;
    const char *dot;
    const char *ret = NULL;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -395,10 +392,9 @@ const char *D_LooseDemo()
 //
 bool D_LooseEDF(char **buffer)
 {
-   int i;
    const char *dot;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -505,14 +501,14 @@ static void D_reInitWadfiles()
 // FIXME: various parts of this routine need tightening up
 void D_NewWadLumps(int source)
 {
-   int i, format;
+   int format;
    char wad_firstlevel[9];
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
    memset(wad_firstlevel, 0, 9);
 
-   for(i = 0; i < numlumps; ++i)
+   for(int i = 0; i < numlumps; i++)
    {
       if(lumpinfo[i]->source != source)
          continue;
@@ -1110,22 +1106,46 @@ void D_SetGamePath()
 }
 
 //
+// D_CheckUserFile
+//
+// Check for a file or directory in the user or base gamepath, preferring the
+// former over the latter when it exists. Returns the path of the file to use,
+// or NULL if neither location has that file.
+//
+char *D_CheckUserFile(const char *name, bool isDir)
+{
+   struct stat sbuf;   
+
+   // check for existence under user/<game>
+   char *fullpath = M_SafeFilePath(usergamepath, name);
+   if(!stat(fullpath, &sbuf)) 
+   {
+      // check that it is or is not a directory as requested
+      if(S_ISDIR(sbuf.st_mode) == isDir) 
+         return fullpath;
+   }
+
+   // check for existence under base/<game>
+   fullpath = M_SafeFilePath(basegamepath, name);
+   if(!stat(fullpath, &sbuf))
+   {      
+      if(S_ISDIR(sbuf.st_mode) == isDir)
+         return fullpath;
+   }
+
+   // not found, or not a file or directory as expected
+   return NULL;
+}
+
+
+//
 // D_CheckGameEDF
 //
 // Looks for an optional root.edf file in base/game
 //
 char *D_CheckGameEDF()
 {
-   struct stat sbuf;
-   char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
-
-   if(!stat(game_edf, &sbuf)) // check for existence
-   {
-      if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
-         return game_edf;        // return the filename
-   }
-
-   return NULL; // return NULL to indicate the file doesn't exist
+   return D_CheckUserFile("root.edf", false);
 }
 
 //
@@ -1138,14 +1158,9 @@ void D_CheckGameMusic()
 {
    if(s_hidefmusic)
    {
-      struct stat sbuf;
-      char *music_dir = M_SafeFilePath(basegamepath, "music");
-
-      if(!stat(music_dir, &sbuf))
-      {
-         if(S_ISDIR(sbuf.st_mode))
-            D_AddDirectory(music_dir); // add as if it's a wad file
-      }
+      char *music_dir = D_CheckUserFile("music", true);
+      if(music_dir)
+         D_AddDirectory(music_dir); // add as if it's a wad file
    }
 }
 
