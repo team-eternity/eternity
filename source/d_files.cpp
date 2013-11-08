@@ -1195,22 +1195,22 @@ void D_EnumerateAutoloadDir()
 //
 // D_GameAutoloadWads
 //
-// Loads all wad files in the base/game/autoload directory.
+// Loads all wad files in the gamepath autoload directory.
 //
 void D_GameAutoloadWads()
 {
    char *fn = NULL;
 
-   // haleyjd 09/30/08: not in shareware gamemodes, otherwise having any wads
-   // in your base/game/autoload directory will make shareware unplayable
-   if(GameModeInfo->flags & GIF_SHAREWARE)
-   {
-      startupmsg("D_GameAutoloadWads", "ignoring base/game/autoload wad files");
-      return;
-   }
-
    if(autoloads)
    {
+      // haleyjd 09/30/08: not in shareware gamemodes, otherwise having any wads
+      // in your base/game/autoload directory will make shareware unplayable
+      if(GameModeInfo->flags & GIF_SHAREWARE)
+      {
+         startupmsg("D_GameAutoloadWads", "shareware; ignoring gamepath autoload wad files");
+         return;
+      }
+
       struct dirent *direntry;
       
       while((direntry = readdir(autoloads)))
@@ -1229,7 +1229,7 @@ void D_GameAutoloadWads()
 //
 // D_GameAutoloadDEH
 //
-// Queues all deh/bex files in the base/game/autoload directory.
+// Queues all deh/bex files in the gamepath autoload directory.
 //
 void D_GameAutoloadDEH()
 {
