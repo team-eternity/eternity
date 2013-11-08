@@ -1170,8 +1170,8 @@ void D_CheckGameMusic()
 //
 
 // haleyjd 08/20/07: gamepath autload directory structure
-static DIR  *autoloads;
-static char *autoload_dirname;
+static DIR     *autoloads;
+static qstring  autoload_dirname;
 
 //
 // D_EnumerateAutoloadDir
@@ -1182,12 +1182,13 @@ void D_EnumerateAutoloadDir()
 {
    if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
    {
-      size_t len = strlen(basegamepath) + 10;
-      autoload_dirname = emalloc(char *, len);
+      char *autoDir;
 
-      psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
-      
-      autoloads = opendir(autoload_dirname);
+      if((autoDir = D_CheckUserFile("autoload", true)))
+      {
+         autoload_dirname = autoDir;
+         autoloads = opendir(autoload_dirname.constPtr());
+      }
    }
 }
 
@@ -1216,7 +1217,7 @@ void D_GameAutoloadWads()
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
             D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, false, false);
          }
       }
@@ -1243,7 +1244,7 @@ void D_GameAutoloadDEH()
          if(strstr(direntry->d_name, ".deh") || 
             strstr(direntry->d_name, ".bex"))
          {
-            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
             D_QueueDEH(fn, 0);
          }
       }
@@ -1269,7 +1270,7 @@ void D_GameAutoloadCSC()
       {
          if(strstr(direntry->d_name, ".csc"))
          {
-            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
             C_RunScriptFromFile(fn);
          }
       }
@@ -1289,6 +1290,7 @@ void D_CloseAutoloadDir()
    {
       closedir(autoloads);
       autoloads = NULL;
+      autoload_dirname.freeBuffer();
    }
 }
 
