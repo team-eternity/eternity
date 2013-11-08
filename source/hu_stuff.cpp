@@ -21,10 +21,8 @@
 //
 // Heads-Up Display
 //
-// haleyjd: Rewritten a second time. Displays widgets using a system
-// of pseudoclass structures, complete with pseudo-inheritance and
-// pseudo-polymorphism. This may as well be C++, except it's actually
-// more flexible. This module is more open to scripting now, as a result.
+// haleyjd: Rewritten a third time. Displays widgets using a system
+// of C++ classes.
 //
 // By James Haley and Simon Howard
 //
@@ -84,28 +82,59 @@ char *hud_fontname;
 
 static bool HU_ChatRespond(event_t *ev);
 
-// haleyjd 06/04/05: Complete HUD rewrite.
-
-// Widget Hashing
-
-#define NUMWIDGETCHAINS 17
-
-static hu_widget_t *hu_chains[NUMWIDGETCHAINS];
-
+//=============================================================================
 //
 // Widget Superclass Functionality
 //
+// haleyjd 06/04/05: Complete HUD rewrite.
+//
+
+class HUDWidget : public ZoneObject
+{
+protected:
+   int  type;         // widget type
+   char name[33];     // name of this widget
+   HUDWidget *next;   // next in hash chain
+   bool disabled;     // disable flag
+
+   enum { NUMWIDGETCHAINS = 17 };
+
+   static HUDWidget *hu_chains[NUMWIDGETCHAINS];
+
+public:
+   void setName(const char *widgetName)
+   {
+      strncpy(name, widgetName, sizeof(name));
+   }
+
+   void setType(int widgetType) { type = widgetType; }
+   
+   // overridable functions (virtuals in a sense)
+   virtual void ticker() {} // ticker: called each gametic
+   virtual void drawer() {} // drawer: called when drawn
+   virtual void eraser() {} // eraser: called when erased
+   virtual void clear()  {} // clear : called on reinit
+
+   static HUDWidget *WidgetForName(const char *name);
+   static bool       AddWidgetToHash(HUDWidget *widget);
+   static void       StartWidgets();
+   static void       DrawWidgets();
+   static void       TickWidgets();
+};
+
+// widget hash table
+HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
 
 //
-// HU_WidgetForName
+// HUDWidget::WidgetForName
 //
 // Retrieves a widget given its name, using hashing.
 // Returns NULL if no such widget exists.
 //
-static hu_widget_t *HU_WidgetForName(const char *name)
+HUDWidget *HUDWidget::WidgetForName(const char *name)
 {
    int key = D_HashTableKey(name) % NUMWIDGETCHAINS;
-   hu_widget_t *cur = hu_chains[key];
+   HUDWidget *cur = hu_chains[key];
 
    while(cur && strncasecmp(name, cur->name, 33))
       cur = cur->next;
@@ -114,21 +143,21 @@ static hu_widget_t *HU_WidgetForName(const char *name)
 }
 
 //
-// HU_AddWidgetToHash
+// HUDWidget::AddWidgetToHash
 //
 // Adds a widget to the hash table, but only if one of the given
 // name doesn't exist. Returns true if successful.
 //
-static bool HU_AddWidgetToHash(hu_widget_t *widget)
+bool HUDWidget::AddWidgetToHash(HUDWidget *widget)
 {
    int key;
 
    // make sure one doesn't already exist by this name
-   if(HU_WidgetForName(widget->name))
+   if(WidgetForName(widget->name))
    {
 #ifdef RANGECHECK
       // for debug, cause an error to alert programmer of internal mishaps
-      I_Error("HU_AddWidgetToHash: duplicate mnemonic %s\n", widget->name);
+      I_Error("HUDWidget::AddWidgetToHash: duplicate mnemonic %s\n", widget->name);
 #endif
       return false;
    }
@@ -141,37 +170,85 @@ static bool HU_AddWidgetToHash(hu_widget_t *widget)
 }
 
 //
-// HU_ToggleWidget
+// HUDWidget::StartWidgets
 //
-// Sets the disable flag on a widget and properly propagates the state
-// to the previous disable state member, so that widgets can still
-// erase properly.
+// Called from HU_Start to clear all widgets.
 //
-inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
+void HUDWidget::StartWidgets()
 {
-   widget->prevdisabled = widget->disabled;
-   widget->disabled = disable;
+   // call all widget clear functions
+   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   {
+      HUDWidget *widget = hu_chains[i];
+
+      while(widget)
+      {
+         widget->clear();
+         widget = widget->next;
+      }
+   }
 }
 
+//
+// HUDWidget::DrawWidgets
+//
+// Called from HU_Drawer to draw all widgets
+//
+void HUDWidget::DrawWidgets()
+{
+   // call all widget drawer functions
+   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   {
+      HUDWidget *widget = hu_chains[i];
+
+      while(widget && !widget->disabled)
+      {
+         widget->drawer();
+         widget = widget->next;
+      }
+   }
+}
+
+//
+// HUDWidget::TickWidgets
+//
+// Called from HU_Ticker to drive all per-tic widget logic.
+//
+void HUDWidget::TickWidgets()
+{
+   // call all widget ticker functions
+   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   {
+      HUDWidget *widget = hu_chains[i];
+
+      while(widget)
+      {
+         widget->ticker();
+         widget = widget->next;
+      }
+   }
+}
+
+//=============================================================================
 //
 // Main HUD System Functions; Called externally.
 //
 
-static void HU_InitMsgWidget(void);
-static void HU_InitCrossHair(void);
-static void HU_InitWarnings(void);
-static void HU_InitCenterMessage(void);
-static void HU_InitLevelTime(void);
-static void HU_InitLevelName(void);
-static void HU_InitChat(void);
-static void HU_InitCoords(void);
+static void HU_InitMsgWidget();
+static void HU_InitCrossHair();
+static void HU_InitWarnings();
+static void HU_InitCenterMessage();
+static void HU_InitLevelTime();
+static void HU_InitLevelName();
+static void HU_InitChat();
+static void HU_InitCoords();
 
 //
 // HU_InitNativeWidgets
 //
 // Sets up all the native widgets. Called from HU_Init below at startup.
 //
-static void HU_InitNativeWidgets(void)
+static void HU_InitNativeWidgets()
 {   
    HU_InitMsgWidget();
    HU_InitCrossHair();
@@ -191,7 +268,7 @@ static void HU_InitNativeWidgets(void)
 //
 // Called once at game startup to initialize the HUD system.
 //
-void HU_Init(void)
+void HU_Init()
 {
    shiftxform = english_shiftxform;
 
@@ -208,23 +285,9 @@ void HU_Init(void)
 // Called to reinitialize the HUD system due to start of a new map
 // or change of player viewpoint.
 //
-void HU_Start(void)
+void HU_Start()
 {
-   int i;
-   hu_widget_t *widget;
-
-   // call all widget clear functions
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget)
-      {
-         if(widget->clear)
-            widget->clear(widget);
-         widget = widget->next;
-      }
-   }
+   HUDWidget::StartWidgets();
 
 #if 0
    // execute script event handlers
@@ -241,11 +304,8 @@ void HU_Start(void)
 //
 // Called from D_Display to draw all HUD elements.
 //
-void HU_Drawer(void)
+void HU_Drawer()
 {
-   int i;
-   hu_widget_t *widget;
-
 #if 0
    // execute script event handlers
    if(gameScriptLoaded)
@@ -255,18 +315,7 @@ void HU_Drawer(void)
       SM_OptScriptCallback(&LevelScript, "OnHUDPreDraw");
 #endif
 
-   // call all widget drawer functions
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget && !widget->disabled) // haleyjd 06/15/06: oops!
-      {
-         if(widget->drawer)
-            widget->drawer(widget);
-         widget = widget->next;
-      }
-   }
+   HUDWidget::DrawWidgets();
 
    // HUD_FIXME: generalize?
    // draw different modules
@@ -280,23 +329,9 @@ void HU_Drawer(void)
 // Called from G_Ticker when gamestate is GS_LEVEL. Updates widgets
 // for the current gametic.
 //
-void HU_Ticker(void)
+void HU_Ticker()
 {
-   int i;
-   hu_widget_t *widget;
-
-   // call all widget ticker functions
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget)
-      {
-         if(widget->ticker)
-            widget->ticker(widget);
-         widget = widget->next;
-      }
-   }
+   HUDWidget::TickWidgets();
 }
 
 // I don't know what this is doing here, but it can stay for now.
@@ -317,6 +352,7 @@ bool HU_Responder(event_t *ev)
    return HU_ChatRespond(ev);
 }
 
+//=============================================================================
 //
 // Normal Player Message Widget
 //
@@ -324,71 +360,71 @@ bool HU_Responder(event_t *ev)
 #define MAXHUDMESSAGES 16
 #define MAXHUDMSGLEN   256
 
-typedef struct hu_msgwidget_s
+class HUDMessageWidget : public HUDWidget
 {
-   hu_widget_t widget; // parent widget
-
+protected:
    char messages[MAXHUDMESSAGES][MAXHUDMSGLEN]; // messages
-   int  current_messages;              // number of messages
-   int  scrolltime;                    // leveltime when message will scroll up
-} hu_msgwidget_t;
+   int  current_messages;                       // number of messages
+   int  scrolltime;                             // leveltime when message will scroll up
 
-static hu_msgwidget_t msg_widget;
+public:
+   void addMessage(const char *s);
+
+   virtual void ticker();
+   virtual void drawer();
+   virtual void clear();
+};
+
+static HUDMessageWidget msg_widget;
 
 // globals related to the msg_widget
 
-int hud_msg_lines;   // number of message lines in window up to 16
-int hud_msg_scrollup;// whether message list scrolls up
-int message_timer;   // timer used for normal messages
-int showMessages;    // Show messages has default, 0 = off, 1 = on
-int mess_colour = CR_RED;      // the colour of normal messages
+int hud_msg_lines;        // number of message lines in window up to 16
+int hud_msg_scrollup;     // whether message list scrolls up
+int message_timer;        // timer used for normal messages
+int showMessages;         // Show messages has default, 0 = off, 1 = on
+int mess_colour = CR_RED; // the colour of normal messages
 
 //
-// HU_MessageTick
+// HUDMessageWidget::ticker
 //
 // Updates the message widget on each gametic.
 //
-static void HU_MessageTick(hu_widget_t *widget)
+void HUDMessageWidget::ticker()
 {
-   int i;
-   hu_msgwidget_t *mw = (hu_msgwidget_t *)widget;
-   
    // check state of message scrolling
    if(!hud_msg_scrollup)
       return;
 
    // move up messages
-   if(leveltime >= mw->scrolltime)
+   if(leveltime >= scrolltime)
    {
-      for(i = 0; i < mw->current_messages - 1; ++i)
-         strncpy(mw->messages[i], mw->messages[i + 1], MAXHUDMSGLEN);
+      for(int i = 0; i < current_messages - 1; i++)
+         strncpy(messages[i], messages[i + 1], MAXHUDMSGLEN);
 
-      if(mw->current_messages)
-         mw->current_messages--;
-      mw->scrolltime = leveltime + (message_timer * 35) / 1000;
+      if(current_messages)
+         --current_messages;
+      scrolltime = leveltime + (message_timer * 35) / 1000;
    }
 }
 
 //
-// HU_MessageDraw
+// HUDMessageWidget::drawer
 //
 // Drawer for the player message widget.
 //
-static void HU_MessageDraw(hu_widget_t *widget)
+void HUDMessageWidget::drawer()
 {
-   int i, y;
-   hu_msgwidget_t *mw = (hu_msgwidget_t *)widget;
-   
    if(!showMessages)
       return;
    
    // go down a bit if chat active
-   y = chat_active ? 8 : 0;
+   int y = chat_active ? 8 : 0;
    
-   for(i = 0; i < mw->current_messages; i++, y += 8)
+   for(int i = 0; i < current_messages; i++, y += 8)
    {
       int x = 0;
-      char *msg = mw->messages[i];
+      char *msg = messages[i];
 
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
@@ -405,13 +441,37 @@ static void HU_MessageDraw(hu_widget_t *widget)
 }
 
 //
-// HU_MessageClear
+// HUDMessageWidget::clear
 //
 // Sets the number of messages being displayed to zero.
 //
-static void HU_MessageClear(hu_widget_t *widget)
+void HUDMessageWidget::clear()
 {
-   ((hu_msgwidget_t *)widget)->current_messages = 0;
+   current_messages = 0;
+}
+
+//
+// HUDMessageWidget::addMessage
+//
+// Add a message to the message widget.
+//
+void HUDMessageWidget::addMessage(const char *s)
+{
+   if(current_messages == hud_msg_lines) // display full
+   {
+      // scroll up      
+      for(int i = 0; i < hud_msg_lines - 1; i++)
+         strncpy(messages[i], messages[i+1], MAXHUDMSGLEN);
+      
+      strncpy(messages[hud_msg_lines - 1], s, MAXHUDMSGLEN);
+   }
+   else // add one to the end
+   {
+      strncpy(messages[current_messages], s, MAXHUDMSGLEN);
+      ++current_messages;
+   }
+   
+   scrolltime = leveltime + (message_timer * 35) / 1000;
 }
 
 //
@@ -419,20 +479,14 @@ static void HU_MessageClear(hu_widget_t *widget)
 //
 // Called from HU_InitNativeWidgets. Sets up the player message widget.
 //
-static void HU_InitMsgWidget(void)
+static void HU_InitMsgWidget()
 {
    // set up the object id
-   strcpy(msg_widget.widget.name, "_HU_MsgWidget");
-
-   msg_widget.widget.type = WIDGET_MISC;
-
-   // set up object virtuals
-   msg_widget.widget.ticker = HU_MessageTick;
-   msg_widget.widget.drawer = HU_MessageDraw;
-   msg_widget.widget.clear  = HU_MessageClear;
+   msg_widget.setName("_HU_MsgWidget");
+   msg_widget.setType(WIDGET_MISC);
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&msg_widget);
+   HUDWidget::AddWidgetToHash(&msg_widget);   
 }
 
 //
@@ -446,70 +500,58 @@ static void HU_InitMsgWidget(void)
 //
 void HU_PlayerMsg(const char *s)
 {
-   if(msg_widget.current_messages == hud_msg_lines)  // display full
-   {
-      int i;
-      
-      // scroll up      
-      for(i = 0; i < hud_msg_lines - 1; ++i)
-         strncpy(msg_widget.messages[i], msg_widget.messages[i+1], MAXHUDMSGLEN);
-      
-      strncpy(msg_widget.messages[hud_msg_lines - 1], s, MAXHUDMSGLEN);
-   }
-   else            // add one to the end
-   {
-      strncpy(msg_widget.messages[msg_widget.current_messages], s, MAXHUDMSGLEN);
-      msg_widget.current_messages++;
-   }
-   
-   msg_widget.scrolltime = leveltime + (message_timer * 35) / 1000;
+   msg_widget.addMessage(s);
 }
 
+//=============================================================================
 //
 // Patch Widget: this type of widget just displays a screen patch.
 //
 
-typedef struct hu_patchwidget_s
+class HUDPatchWidget : public HUDWidget
 {
-   hu_widget_t widget; // parent widget
+protected:
+   int      x;            // x coordinate
+   int      y;            // y coordinate
+   byte    *color;        // color range table
+   int      tl_level;     // translucency level
+   char     patchname[9]; // patch name
+   patch_t *patch;        // screen patch
 
-   int x, y;           // screen location
-   byte *color;        // color range translation to use
-   int tl_level;       // translucency level
-   char patchname[9];  // patch name -- haleyjd 06/15/06
-   patch_t *patch;     // screen patch
-} hu_patchwidget_t;
+public:
+   virtual void drawer();
+
+   void initProps(int px, int py, int pcol, int ptl, char ppatch[9])
+   {
+      // set properties
+      x = px;
+      y = py;
+      if(pcol >= 0 && pcol < CR_LIMIT)
+         color = colrngs[pcol];
+      tl_level = ptl;
+
+      // 06/15/06: copy patch name
+      strncpy(patchname, ppatch, 9);
+
+      // pre-cache patch -- haleyjd 06/15/06: use PU_CACHE
+      patch = PatchLoader::CacheName(wGlobalDir, ppatch, PU_CACHE);
+   }
+};
 
 //
-// HU_PatchWidgetDraw
+// HUDPatchWidget::drawer
 //
 // Default drawing function for patch widgets. All the logic for
 // deciding whether the patch is translucent and/or translated is
 // already implemented in V_DrawPatchTL via the generalized patch
 // drawing system.
 //
-static void HU_PatchWidgetDraw(hu_widget_t *widget)
+void HUDPatchWidget::drawer()
 {
-   hu_patchwidget_t *pw = (hu_patchwidget_t *)widget;
-
-   if(!pw->patch)
-      return;
-
    // be sure the patch is loaded
-   pw->patch = PatchLoader::CacheName(wGlobalDir, pw->patchname, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE);
 
-   V_DrawPatchTL(pw->x, pw->y, &subscreen43, pw->patch, pw->color, pw->tl_level);
-}
-
-//
-// HU_PatchWidgetDefaults
-//
-// Sets up default handler functions for a patch widget.
-//
-static void HU_PatchWidgetDefaults(hu_patchwidget_t *pw)
-{
-   pw->widget.drawer = HU_PatchWidgetDraw;
-   pw->widget.type   = WIDGET_PATCH;
+   V_DrawPatchTL(x, y, &subscreen43, patch, color, tl_level);
 }
 
 //
@@ -521,36 +563,24 @@ static void HU_PatchWidgetDefaults(hu_patchwidget_t *pw)
 static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
                                   int tl_level, char *patch)
 {
-   hu_patchwidget_t *newpw = ecalloc(hu_patchwidget_t *, 1, sizeof(hu_patchwidget_t));
+   HUDPatchWidget *newpw = new HUDPatchWidget();
 
    // set id
-   strncpy(newpw->widget.name, name, 33);
+   newpw->setName(name);
+   newpw->setType(WIDGET_PATCH);
 
    // add to hash
-   if(!HU_AddWidgetToHash((hu_widget_t *)newpw))
+   if(!HUDWidget::AddWidgetToHash(newpw))
    {
       // if addition was unsuccessful, we delete it now
-      efree(newpw);
+      delete newpw;
       return;
    }
 
-   // set virtuals
-   HU_PatchWidgetDefaults(newpw);
-
-   // set properties
-   newpw->x = x;
-   newpw->y = y;
-   if(color >= 0 && color < CR_LIMIT)
-      newpw->color = colrngs[color];
-   newpw->tl_level = tl_level;
-
-   // 06/15/06: copy patch name
-   strncpy(newpw->patchname, patch, 9);
-
-   // pre-cache patch -- haleyjd 06/15/06: use PU_CACHE
-   newpw->patch = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE);
+   newpw->initProps(x, y, color, tl_level, patch);
 }
 
+//=============================================================================
 //
 // Pop-up Warning Boxes
 //
@@ -558,11 +588,19 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
 // problems.
 //
 
+class HUDOpenSocketWidget : public HUDPatchWidget
+{
+public:
+   virtual void drawer();
+
+   void init();
+};
+
 // Open Socket Warning
 //
 // Problem with network leads or something like that
 
-static hu_patchwidget_t opensocket_widget;
+static HUDOpenSocketWidget opensocket_widget;
 
 //
 // HU_WarningsDrawer
@@ -572,42 +610,40 @@ static hu_patchwidget_t opensocket_widget;
 // conditions via a ticker but for opensocket that won't work if the
 // game is frozen.
 //
-static void HU_WarningsDrawer(hu_widget_t *widget)
+void HUDOpenSocketWidget::drawer()
 {
-   hu_patchwidget_t *pw = (hu_patchwidget_t *)widget;
+   if(opensocket)
+      HUDPatchWidget::drawer();
+}
 
-   if(pw == &opensocket_widget)
-   {
-      if(opensocket)
-         HU_PatchWidgetDraw(widget);
-   }
+void HUDOpenSocketWidget::init()
+{
+   strncpy(patchname, "OPENSOCK", 9);
+   patch    = PatchLoader::CacheName(wGlobalDir, "OPENSOCK", PU_CACHE);
+   color    = NULL;
+   tl_level = FRACUNIT;
+   x        = 20;
+   y        = 20;
 }
 
 //
 // HU_InitWarnings
 //
-// Sets up the VPO and open socket warning patch widgets.
+// Sets up the open socket warning patch widget.
 //
-static void HU_InitWarnings(void)
+static void HU_InitWarnings()
 {   
    // set up socket
-   strcpy(opensocket_widget.widget.name, "_HU_OpenSocketWidget");
-
-   opensocket_widget.widget.type = WIDGET_PATCH;
-
-   opensocket_widget.widget.drawer = HU_WarningsDrawer;
+   opensocket_widget.setName("_HU_OpenSocketWidget");
+   opensocket_widget.setType(WIDGET_PATCH);
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&opensocket_widget);
-   
-   strncpy(opensocket_widget.patchname, "OPENSOCK", 9);
-   opensocket_widget.patch = PatchLoader::CacheName(wGlobalDir, "OPENSOCK", PU_CACHE);
-   opensocket_widget.color = NULL;
-   opensocket_widget.tl_level = FRACUNIT;
-   opensocket_widget.x = 20;
-   opensocket_widget.y = 20;
+   HUDWidget::AddWidgetToHash(&opensocket_widget);
+ 
+   opensocket_widget.init();
 }
 
+//=============================================================================
 //
 // Text Widgets
 //
@@ -620,101 +656,119 @@ enum
    TW_BOXED        = 0x00000004, // 10/08/05: optional box around text
 };
 
-typedef struct hu_textwidget_s
+class HUDTextWidget : public HUDWidget
 {
-   hu_widget_t widget;   // parent widget
-   
-   int x, y;             // coords on screen
-   vfont_t *font;        // font object
+protected:
+   int         x;        // x coordinate
+   int         y;        // y coordinate
+   vfont_t    *font;     // font object
    const char *message;  // text to draw
-   char *alloc;          // if non-NULL, widget owns the message
-   int cleartic;         // gametic in which to clear the widget (0=never)
-   int flags;            // special flags
-   int color;            // 02/12/06: needed to allow colored text drawing (col # + 1)
-} hu_textwidget_t;
+   char       *alloc;    // if non-NULL, widget owns the message
+   int         flags;    // special flags
+   int         color;    // allow colored text drawing (col # + 1)
+
+public:
+   int cleartic; // gametic in which to clear (0 = never)
+
+   virtual void drawer();
+   virtual void clear();
+
+   void initProps(int px, int py, int fontNum, int pcleartic, int pflags,
+                  const char *pmsg)
+   {
+      x = px;
+      y = py;   
+      
+      if(!(font = E_FontForNum(fontNum)))
+         font = hud_font;
+      
+      cleartic = pcleartic >= 0 ? pcleartic : 0;
+      flags    = pflags;
+
+      message = alloc = estrdup(pmsg);
+   }
+
+   void initEmpty()
+   {
+      x        = 0;
+      y        = 0;
+      message  = NULL;
+      cleartic = 0;
+      font     = hud_font;
+   }
+
+   void setMessage(const char *pmsg, int px, int py, int pcleartic)
+   {
+      message  = pmsg;
+      x        = px;
+      y        = py;
+      cleartic = pcleartic;
+   }
+};
 
 //
-// HU_TextWidgetDraw
+// HUDTextWidget::drawer
 //
 // Default drawing function for a text widget.
 //
-static void HU_TextWidgetDraw(hu_widget_t *widget)
+void HUDTextWidget::drawer()
 {
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(tw->flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(flags & TW_AUTOMAP_ONLY && !automapactive)
       return;
 
    // 10/08/05: boxed message support
-   if(tw->flags & TW_BOXED)
+   if(flags & TW_BOXED)
    {
       int width, height;
 
-      width  = V_FontStringWidth (tw->font, tw->message);
-      height = V_FontStringHeight(tw->font, tw->message);
+      width  = V_FontStringWidth (font, message);
+      height = V_FontStringHeight(font, message);
 
-      V_DrawBox(tw->x - 4, tw->y - 4, width + 8, height + 8);
+      V_DrawBox(x - 4, y - 4, width + 8, height + 8);
    }
 
-   if(tw->message && (!tw->cleartic || leveltime < tw->cleartic))
+   if(message && (!cleartic || leveltime < cleartic))
    {
-      if(tw->color)
+      edefstructvar(vtextdraw_t, vdt);
+      
+      vdt.font   = font;
+      vdt.s      = message;
+      vdt.x      = x;
+      vdt.y      = y;
+      vdt.screen = &subscreen43;
+      if(color)
       {
-         V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, 
-                                tw->x, tw->y, &subscreen43);
+         vdt.flags       = VTXT_FIXEDCOLOR;
+         vdt.fixedColNum = color - 1;
       }
       else
-         V_FontWriteText(tw->font, tw->message, tw->x, tw->y, &subscreen43);
+         vdt.flags = VTXT_NORMAL;
+
+      V_FontWriteTextEx(vdt);
    }
 }
 
 //
-// HU_TextWidgetClear
+// HUDTextWidget::clear
 //
 // Default clear function for a text widget.
 //
-static void HU_TextWidgetClear(hu_widget_t *widget)
+void HUDTextWidget::clear()
 {
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+   if(flags & TW_NOCLEAR)
+      return;
 
    // if this widget owns its message, free it
-   if(tw->alloc)
+   if(alloc)
    {
-      efree(tw->alloc);
-      tw->alloc = NULL;
+      efree(alloc);
+      alloc = NULL;
    }
    
-   tw->message  = NULL;
-   tw->cleartic = 0;    // haleyjd 08/23/07: woops!
-}
-
-//
-// HU_TextWidgetDefaults
-//
-// Sets up default values for a normal text widget.
-//
-static void HU_TextWidgetDefaults(hu_textwidget_t *tw)
-{
-   tw->widget.drawer = HU_TextWidgetDraw;
-   tw->widget.clear  = HU_TextWidgetClear;
-   tw->widget.type   = WIDGET_TEXT;
-
-   // all widgets default to normal hud font
-   tw->font = hud_font;
-}
-
-//
-// HU_DynAutomapTick
-//
-// A suitable ticker for dynamic automap-only text widgets.
-//
-static void HU_DynAutomapTick(hu_widget_t *widget)
-{
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-
-   tw->message = automapactive ? tw->alloc : NULL;
+   message  = NULL;
+   cleartic = 0;
 }
 
 //
@@ -726,69 +780,47 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                                  char *message, int cleartic, int flags)
 {
-   hu_textwidget_t *newtw = ecalloc(hu_textwidget_t *, 1, sizeof(hu_textwidget_t));
+   HUDTextWidget *newtw = new HUDTextWidget();
 
    // set id
-   strncpy(newtw->widget.name, name, 33);
+   //strncpy(newtw->widget.name, name, 33);
+   newtw->setName(name);
+   newtw->setType(WIDGET_TEXT);
 
    // add to hash
-   if(!HU_AddWidgetToHash((hu_widget_t *)newtw))
+   if(!HUDWidget::AddWidgetToHash(newtw))
    {
       // if addition was unsuccessful, we delete it now
-      efree(newtw);
+      delete newtw;
       return;
    }
 
-   // set virtuals
-   HU_TextWidgetDefaults(newtw);
-
-   // for automap-only widgets, add a ticker
-   if(flags & TW_AUTOMAP_ONLY)
-      newtw->widget.ticker = HU_DynAutomapTick;
-
-   // if no clear, remove the clear func
-   if(flags & TW_NOCLEAR)
-      newtw->widget.clear = NULL;
-
    // set properties
-   newtw->x = x;
-   newtw->y = y;   
-   if(!(newtw->font = E_FontForNum(font)))
-      newtw->font = hud_font;
-   newtw->cleartic = cleartic >= 0 ? cleartic : 0;
-   newtw->flags = flags;
-
-   // set message
-   newtw->message = newtw->alloc = estrdup(message);
+   newtw->initProps(x, y, font, cleartic, flags, message);
 }
 
+//=============================================================================
 //
 // Center-of-screen, Quake-style Message
 //
 
-static hu_textwidget_t centermessage_widget;
+static HUDTextWidget centermessage_widget;
 
 //
 // HU_InitCenterMessage
 //
 // Sets up the center message widget.
 //
-static void HU_InitCenterMessage(void)
+static void HU_InitCenterMessage()
 {
    // set id
-   strcpy(centermessage_widget.widget.name, "_HU_CenterMsgWidget");
-
-   // set virtuals
-   HU_TextWidgetDefaults(&centermessage_widget);
+   centermessage_widget.setName("_HU_CenterMsgWidget");
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&centermessage_widget);
+   HUDWidget::AddWidgetToHash(&centermessage_widget);
 
    // set data
-   centermessage_widget.x = 0;
-   centermessage_widget.y = 0;
-   centermessage_widget.message = NULL;
-   centermessage_widget.cleartic = 0;
+   centermessage_widget.initEmpty();
 }
 
 static const char *centermsg_color;
@@ -800,11 +832,10 @@ static const char *centermsg_color;
 //
 void HU_CenterMessage(const char *s)
 {
-   static qstring qstr;
+   static qstring qstr(128);
    int st_height = GameModeInfo->StatusBar->height;
-   hu_textwidget_t *tw = &centermessage_widget;
 
-   qstr.clearOrCreate(128);
+   qstr.clear();
 
    // haleyjd 02/28/06: colored center message
    if(centermsg_color)
@@ -815,11 +846,11 @@ void HU_CenterMessage(const char *s)
    
    qstr += s;
   
-   tw->message = qstr.constPtr();
-   tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
-   tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
-            ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
-   tw->cleartic = leveltime + (message_timer * 35) / 1000;
+   centermessage_widget.setMessage(qstr.constPtr(),
+      (SCREENWIDTH - V_FontStringWidth(hud_font, s)) / 2,
+      (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
+       ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) / 2,
+       leveltime + (message_timer * 35) / 1000);
    
    // print message to console also
    C_Printf("%s\n", s);
@@ -848,13 +879,12 @@ void HU_CenterMsgTimedColor(const char *s, const char *color, int tics)
    HU_CenterMessageTimed(s, tics);
 }
 
-// haleyjd 03/03/07: moved crosshair widget down below centermessage for fix
-
+//=============================================================================
 //
 // Crosshair Widget
 //
-
-static hu_patchwidget_t crosshair_widget;
+// haleyjd 03/03/07: moved crosshair widget down below centermessage for fix
+//
 
 // globals related to the crosshair
 int crosshairs[CROSSHAIRS];
@@ -863,17 +893,30 @@ int crosshairnum;       // 0 = none
 bool crosshair_hilite; // haleyjd 06/07/05
 const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
+class HUDCrossHairWidget : public HUDPatchWidget
+{
+public:
+   virtual void ticker();
+   virtual void drawer();
+
+   void initProps()
+   {
+      color = notargetcolour;
+      patch = NULL; // determined dynamically
+   }
+};
+
+static HUDCrossHairWidget crosshair_widget;
+
 //
-// HU_CrossHairTick
+// HUDCrossHairWidget::ticker
 //
 // Updates the crosshair on each gametic.
 //
-static void HU_CrossHairTick(hu_widget_t *widget)
+void HUDCrossHairWidget::ticker()
 {
-   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
-
    // default to no target
-   crosshair->color = notargetcolour;
+   color = notargetcolour;
 
    // fast as possible: don't bother with this crap if the crosshair 
    // isn't going to be displayed anyway   
@@ -889,32 +932,30 @@ static void HU_CrossHairTick(hu_widget_t *widget)
    if(clip.linetarget)
    {
       // target found
-      crosshair->color = targetcolour; // default
+      color = targetcolour; // default
       
       // haleyjd 06/06/09: some special behaviors
       if(clip.linetarget->flags & MF_FRIEND)
-         crosshair->color = friendcolour;
+         color = friendcolour;
 
       if(((clip.linetarget->flags  & MF_SHADOW || 
            clip.linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
          clip.linetarget->flags2 & MF2_DONTDRAW)
       {
-         crosshair->color = notargetcolour;
+         color = notargetcolour;
       }
    }
 }
 
 //
-// HU_CrossHairDraw
+// HUDCrossHairWidget::drawer
 //
 // Draws the crosshair patch.
 //
-static void HU_CrossHairDraw(hu_widget_t *widget)
+void HUDCrossHairWidget::drawer()
 {
-   int drawx, drawy, h, w;
-   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
-   byte *pal = crosshair->color;
-   patch_t *patch;
+   int   drawx, drawy, h, w;
+   byte *pal = color;
    
    // haleyjd 03/03/07: don't display while showing a center message
    if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
@@ -924,7 +965,6 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
    patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
 
    // where to draw??
-
    w = patch->width;
    h = patch->height;
    
@@ -953,7 +993,7 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
 //
 // Sets up the crosshair widget and associated globals.
 //
-void HU_InitCrossHair(void)
+void HU_InitCrossHair()
 {
    // haleyjd TODO: support user-added crosshairs
    crosshairs[0] = W_CheckNumForName("CROSS1");
@@ -964,50 +1004,66 @@ void HU_InitCrossHair(void)
    friendcolour   = cr_blue;
 
    // set up widget object
-   crosshair_widget.color = notargetcolour;
-   crosshair_widget.patch = NULL; // determined dynamically
+   crosshair_widget.initProps();
 
    // set up the object id
-   strcpy(crosshair_widget.widget.name, "_HU_CrosshairWidget");
-
-   // set type
-   crosshair_widget.widget.type = WIDGET_PATCH;
-
-   // set up object virtuals
-   crosshair_widget.widget.ticker = HU_CrossHairTick;
-   crosshair_widget.widget.drawer = HU_CrossHairDraw;
+   crosshair_widget.setName("_HU_CrosshairWidget");
+   crosshair_widget.setType(WIDGET_PATCH);
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&crosshair_widget);
+   HUDWidget::AddWidgetToHash(&crosshair_widget);
 }
 
-
-
-
+//=============================================================================
 //
 // Elapsed level time (automap)
 //
 
-static hu_textwidget_t leveltime_widget;
+class HUDLevelTimeWidget : public HUDTextWidget
+{
+public:
+   virtual void ticker();
+   virtual void clear();
+
+   void initProps()
+   {
+      if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
+      {
+         x = 240;
+         y = 10;
+      }
+      else
+      {
+         // haleyjd: use proper font metrics
+         x = SCREENWIDTH - 60;
+         y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
+      }
+      message  = NULL;
+      font     = hud_font;
+      cleartic = 0;
+      flags    = TW_AUTOMAP_ONLY;
+   }
+};
+
+static HUDLevelTimeWidget leveltime_widget;
 
 // haleyjd 02/12/06: configuration variables
 bool hu_showtime;       // enable/disable flag for level time
 int hu_timecolor;          // color of time text
 
 //
-// HU_LevelTimeTick
+// HUDLevelTimeWidget::ticker
 //
 // Updates the automap level timer.
 //
-static void HU_LevelTimeTick(hu_widget_t *widget)
+void HUDLevelTimeWidget::ticker()
 {
    static char timestr[32];
    int seconds;
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
    
    if(!automapactive || !hu_showtime)
    {
-      tw->message = NULL;
+      message = NULL;
       return;
    }
    
@@ -1017,28 +1073,26 @@ static void HU_LevelTimeTick(hu_widget_t *widget)
    psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i", 
              hu_timecolor + 128, seconds/3600, (seconds%3600)/60, seconds%60);
    
-   tw->message = timestr;        
+   message = timestr;        
 }
 
 //
-// HU_LevelTimeClear
+// HUDLevelTimeWidget::clear
 //
 // Handles HU_Start actions for the level time widget
 //
-static void HU_LevelTimeClear(hu_widget_t *widget)
+void HUDLevelTimeWidget::clear()
 {
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-
    if(GameModeInfo->flags & GIF_HUDSTATBARNAME && LevelInfo.levelName)
    {
       int len = V_FontStringWidth(hud_font, LevelInfo.levelName);
 
       // If level name is too long, move the timer up one row;
       // otherwise, restore to the normal position.
-      if(len >= tw->x)
-         tw->y = SCREENHEIGHT - ST_HEIGHT - (hud_font->absh * 2 + 1);
+      if(len >= x)
+         y = SCREENHEIGHT - ST_HEIGHT - (hud_font->absh * 2 + 1);
       else
-         tw->y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
+         y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
    }
 }
 
@@ -1047,59 +1101,63 @@ static void HU_LevelTimeClear(hu_widget_t *widget)
 //
 // Sets up the level time widget for the automap.
 //
-static void HU_InitLevelTime(void)
+static void HU_InitLevelTime()
 {
    // set id
-   strcpy(leveltime_widget.widget.name, "_HU_LevelTimeWidget");
+   leveltime_widget.setName("_HU_LevelTimeWidget");
+   leveltime_widget.setType(WIDGET_TEXT);
 
-   leveltime_widget.widget.type = WIDGET_TEXT;
-
-   // set virtuals
-   leveltime_widget.widget.drawer = HU_TextWidgetDraw;
-   leveltime_widget.widget.ticker = HU_LevelTimeTick;
-   leveltime_widget.widget.clear  = HU_LevelTimeClear;
-   
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&leveltime_widget);
+   HUDWidget::AddWidgetToHash(&leveltime_widget);
 
    // set data
-   if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
-   {
-      leveltime_widget.x = 240;
-      leveltime_widget.y = 10;
-   }
-   else
-   {
-      // haleyjd: use proper font metrics
-      leveltime_widget.x = SCREENWIDTH - 60;
-      leveltime_widget.y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
-   }
-   leveltime_widget.message = NULL;
-   leveltime_widget.font = hud_font;
-   leveltime_widget.cleartic = 0;
-   leveltime_widget.flags = TW_AUTOMAP_ONLY;
+   leveltime_widget.initProps();
 }
 
+//=============================================================================
 //
 // Automap level name display
 //
 
-static hu_textwidget_t levelname_widget;
+class HUDLevelNameWidget : public HUDTextWidget
+{
+public:
+   virtual void ticker();
+
+   void initProps()
+   {
+      if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
+      {
+         x = 20;
+         y = 145;
+      }
+      else
+      {
+         // haleyjd: use proper font metrics
+         x = 0;
+         y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
+      }
+      message  = NULL;
+      font     = hud_font;
+      cleartic = 0;
+      flags    = TW_AUTOMAP_ONLY;
+   }
+};
+
+static HUDLevelNameWidget levelname_widget;
 
 // haleyjd 02/12/06: configuration variables
 int hu_levelnamecolor;
 
 //
-// HU_LevelNameTick
+// HUDLevelNameWidget::ticker
 //
 // Updates the automap level name widget.
 //
-static void HU_LevelNameTick(hu_widget_t *widget)
+void HUDLevelNameWidget::ticker()
 {
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-
-   tw->message = automapactive ? LevelInfo.levelName : NULL;
-   tw->color   = hu_levelnamecolor + 1;
+   message = automapactive ? LevelInfo.levelName : NULL;
+   color   = hu_levelnamecolor + 1;
 }
 
 //
@@ -1107,63 +1165,51 @@ static void HU_LevelNameTick(hu_widget_t *widget)
 //
 // Sets up the level name widget for the automap.
 //
-static void HU_InitLevelName(void)
+static void HU_InitLevelName()
 {
    // set id
-   strcpy(levelname_widget.widget.name, "_HU_LevelNameWidget");
-
-   levelname_widget.widget.type = WIDGET_TEXT;
-
-   // set virtuals
-   levelname_widget.widget.drawer = HU_TextWidgetDraw;
-   levelname_widget.widget.ticker = HU_LevelNameTick;
+   levelname_widget.setName("_HU_LevelNameWidget");
+   levelname_widget.setType(WIDGET_TEXT);
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&levelname_widget);
+   HUDWidget::AddWidgetToHash(&levelname_widget);
 
    // set data
-   if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
-   {
-      levelname_widget.x = 20;
-      levelname_widget.y = 145;
-   }
-   else
-   {
-      // haleyjd: use proper font metrics
-      levelname_widget.x = 0;
-      levelname_widget.y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
-   }
-   levelname_widget.message = NULL;
-   levelname_widget.font = hud_font;
-   levelname_widget.cleartic = 0;
-   levelname_widget.flags = TW_AUTOMAP_ONLY;
+   levelname_widget.initProps();
 }
 
+//=============================================================================
 //
 // Chat message display
 //
 
-static hu_textwidget_t chat_widget;
+class HUDChatWidget : public HUDTextWidget
+{
+public:
+   virtual void ticker();
+   virtual void clear() {}
+};
+
+static HUDChatWidget chat_widget;
 
 char chatinput[100] = "";
 
 //
-// HU_ChatTick
+// HUDChatWidget::ticker
 //
 // Updates the chat message widget.
 //
-static void HU_ChatTick(hu_widget_t *widget)
+void HUDChatWidget::ticker()
 {
    static char tempchatmsg[128];
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
    
    if(chat_active)
    {
       psnprintf(tempchatmsg, sizeof(tempchatmsg), "%s_", chatinput);
-      tw->message = tempchatmsg;
+      message = tempchatmsg;
    }
    else
-      tw->message = NULL;
+      message = NULL;
 }
 
 //
@@ -1171,27 +1217,17 @@ static void HU_ChatTick(hu_widget_t *widget)
 //
 // Sets up the chat message widget.
 //
-static void HU_InitChat(void)
+static void HU_InitChat()
 {
    // set id
-   strcpy(chat_widget.widget.name, "_HU_ChatWidget");
-
-   // set virtuals
-   HU_TextWidgetDefaults(&chat_widget);
-   
-   // overrides
-   chat_widget.widget.ticker = HU_ChatTick;
-   chat_widget.widget.clear  = NULL;
+   chat_widget.setName("_HU_ChatWidget");
+   chat_widget.setType(WIDGET_TEXT);
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&chat_widget);
+   HUDWidget::AddWidgetToHash(&chat_widget);
 
    // set data
-   chat_widget.x = 0;
-   chat_widget.y = 0;
-   chat_widget.message = NULL;
-   chat_widget.font = hud_font;
-   chat_widget.cleartic = 0;
+   chat_widget.initEmpty();
 }
 
 //
@@ -1273,6 +1309,7 @@ static bool HU_ChatRespond(event_t *ev)
    return false;
 }
 
+//=============================================================================
 //
 // Automap coordinate display
 //
@@ -1280,54 +1317,115 @@ static bool HU_ChatRespond(event_t *ev)
 //   Restored by Quasar (tm)
 //
 
-static hu_textwidget_t coordx_widget;
-static hu_textwidget_t coordy_widget;
-static hu_textwidget_t coordz_widget;
+class HUDAutomapCoordWidget : public HUDTextWidget
+{
+public:
+   enum
+   {
+      COORDTYPE_X,
+      COORDTYPE_Y,
+      COORDTYPE_Z
+   };
+
+protected:
+   int coordType;
+
+public:
+   virtual void ticker();
+
+   void initProps(int ct)
+   {
+      coordType = ct;
+
+      // HTIC_FIXME: Handle through GameModeInfo directly?
+      if(GameModeInfo->type == Game_Heretic)
+      {
+         x = 20;
+         switch(coordType)
+         {
+         case COORDTYPE_X:
+            y = 10;
+            break;
+         case COORDTYPE_Y:
+            y = 19;
+            break;
+         case COORDTYPE_Z:
+            y = 28;
+            break;
+         default:
+            break;
+         }
+      }
+      else
+      {
+         x = SCREENWIDTH - 64;
+         switch(coordType)
+         {
+         case COORDTYPE_X:
+            y = 8;
+            break;
+         case COORDTYPE_Y:
+            y = 17;
+            break;
+         case COORDTYPE_Z:
+            y = 25;
+            break;
+         default:
+            break;
+         }
+      }
+      message  = NULL;
+      font     = hud_font;
+      cleartic = 0;
+      flags    = TW_AUTOMAP_ONLY;
+   }
+};
+
+static HUDAutomapCoordWidget coordx_widget;
+static HUDAutomapCoordWidget coordy_widget;
+static HUDAutomapCoordWidget coordz_widget;
 
 // haleyjd 02/12/06: configuration variables
 bool hu_showcoords;
 int  hu_coordscolor;
 
 //
-// HU_CoordTick
+// HUDAutomapCoordWidget::ticker
 //
 // Updates automap coordinate widgets.
 //
-static void HU_CoordTick(hu_widget_t *widget)
+void HUDAutomapCoordWidget::ticker()
 {
    player_t *plyr;
    fixed_t x, y, z;
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
    
-   // haleyjd: wow, big bug here -- these buffers were not static
-   // and thus corruption was occuring when the function returned
    static char coordxstr[16];
    static char coordystr[16];
    static char coordzstr[16];
 
    if(!automapactive || !hu_showcoords)
    {
-      tw->message = NULL;
+      message = NULL;
       return;
    }
    plyr = &players[displayplayer];
 
    AM_Coordinates(plyr->mo, x, y, z);
 
-   if(tw == &coordx_widget)
+   if(coordType == COORDTYPE_X)
    {
       sprintf(coordxstr, "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
-      tw->message = coordxstr;
+      message = coordxstr;
    }
-   else if(tw == &coordy_widget)
+   else if(coordType == COORDTYPE_Y)
    {
       sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
-      tw->message = coordystr;
+      message = coordystr;
    }
    else
    {
       sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
-      tw->message = coordzstr;
+      message = coordzstr;
    }
 }
 
@@ -1336,49 +1434,27 @@ static void HU_CoordTick(hu_widget_t *widget)
 //
 // Initializes the automap coordinate widgets.
 //   
-static void HU_InitCoords(void)
+static void HU_InitCoords()
 {
    // set ids
-   strcpy(coordx_widget.widget.name, "_HU_CoordXWidget");
-   strcpy(coordy_widget.widget.name, "_HU_CoordYWidget");
-   strcpy(coordz_widget.widget.name, "_HU_CoordZWidget");
+   coordx_widget.setName("_HU_CoordXWidget");
+   coordy_widget.setName("_HU_CoordYWidget");
+   coordz_widget.setName("_HU_CoordZWidget");
 
-   coordx_widget.widget.type =
-      coordy_widget.widget.type =
-      coordz_widget.widget.type = WIDGET_TEXT;
-
-   // set virtuals
-   coordx_widget.widget.drawer = HU_TextWidgetDraw;
-   coordy_widget.widget.drawer = HU_TextWidgetDraw;
-   coordz_widget.widget.drawer = HU_TextWidgetDraw;
-   coordx_widget.widget.ticker = HU_CoordTick;
-   coordy_widget.widget.ticker = HU_CoordTick;
-   coordz_widget.widget.ticker = HU_CoordTick;
+   // set types
+   coordx_widget.setType(WIDGET_TEXT);
+   coordy_widget.setType(WIDGET_TEXT);
+   coordz_widget.setType(WIDGET_TEXT);
 
    // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&coordx_widget);
-   HU_AddWidgetToHash((hu_widget_t *)&coordy_widget);
-   HU_AddWidgetToHash((hu_widget_t *)&coordz_widget);
+   HUDWidget::AddWidgetToHash(&coordx_widget);
+   HUDWidget::AddWidgetToHash(&coordy_widget);
+   HUDWidget::AddWidgetToHash(&coordz_widget);
 
    // set data
-   if(GameModeInfo->type == Game_Heretic)
-   {
-      coordx_widget.x = coordy_widget.x = coordz_widget.x = 20;
-      coordx_widget.y = 10;
-      coordy_widget.y = 19;
-      coordz_widget.y = 28;
-   }
-   else
-   {
-      coordx_widget.x = coordy_widget.x = coordz_widget.x = SCREENWIDTH - 64;
-      coordx_widget.y = 8;
-      coordy_widget.y = 17;
-      coordz_widget.y = 25;
-   }
-   coordx_widget.message = coordy_widget.message = coordz_widget.message = NULL;
-   coordx_widget.font = coordy_widget.font = coordz_widget.font = hud_font;
-   coordx_widget.cleartic = coordy_widget.cleartic = coordz_widget.cleartic = 0;
-   coordx_widget.flags = coordy_widget.flags = coordz_widget.flags = TW_AUTOMAP_ONLY;
+   coordx_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_X);
+   coordy_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_Y);
+   coordz_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_Z);
 }
 
 ////////////////////////////////////////////////////////////////////////

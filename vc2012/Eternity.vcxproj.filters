@@ -217,13 +217,13 @@
       <UniqueIdentifier>{f508b859-c713-472e-9f57-6c830f4015f8}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
-    <Filter Include="Source Files\M_\HU_">
+    <Filter Include="Source Files\HU_">
       <UniqueIdentifier>{8b988616-fb19-4f45-a018-ab8486c1f4da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\M_\HU_\HU_ Source">
+    <Filter Include="Source Files\HU_\HU_ Source">
       <UniqueIdentifier>{430ac966-e835-4c8f-a47f-494cc732bd59}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\M_\HU_\HU_ Headers">
+    <Filter Include="Source Files\HU_\HU_ Headers">
       <UniqueIdentifier>{adac8b7e-981e-409e-801b-fbfc2ce5243a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -391,13 +391,13 @@
       <Filter>Source Files\G_\G_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\hu_frags.cpp">
-      <Filter>Source Files\M_\HU_\HU_ Source</Filter>
+      <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\hu_over.cpp">
-      <Filter>Source Files\M_\HU_\HU_ Source</Filter>
+      <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\hu_stuff.cpp">
-      <Filter>Source Files\M_\HU_\HU_ Source</Filter>
+      <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\hi_stuff.cpp">
       <Filter>Source Files\IN</Filter>
@@ -1104,13 +1104,13 @@
       <Filter>Source Files\G_\G_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Hu_frags.h">
-      <Filter>Source Files\M_\HU_\HU_ Headers</Filter>
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Hu_over.h">
-      <Filter>Source Files\M_\HU_\HU_ Headers</Filter>
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Hu_stuff.h">
-      <Filter>Source Files\M_\HU_\HU_ Headers</Filter>
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\hi_stuff.h">
       <Filter>Source Files\IN</Filter>

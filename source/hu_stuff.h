@@ -31,25 +31,6 @@ enum
    WIDGET_TEXT,
 };
 
-// haleyjd 06/04/05: HUD rewrite
-
-typedef struct hu_widget_s
-{
-   // overridable functions (virtuals in a sense)
-
-   void (*ticker)(struct hu_widget_s *); // ticker: called each gametic
-   void (*drawer)(struct hu_widget_s *); // drawer: called when drawn
-   void (*eraser)(struct hu_widget_s *); // eraser: called when erased
-   void (*clear) (struct hu_widget_s *); // clear : called on reinit
-
-   // id data
-   int type;                 // widget type
-   char name[33];            // name of this widget
-   struct hu_widget_s *next; // next in hash chain
-   bool disabled;            // disable flag
-   bool prevdisabled;        // previous state of disable flag
-} hu_widget_t;
-
 extern bool chat_on;
 extern int obituaries;
 extern int obcolour;       // the colour of death messages

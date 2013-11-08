@@ -122,9 +122,9 @@ public:
    {
       memset(&trace, 0, sizeof(trace));
     
-      sightzstart  = params->cz + params->cheight - (params->cheight >> 2);
-      bottomslope  = params->tz - sightzstart;
-      topslope     = bottomslope + params->theight;
+      sightzstart = params->cz + params->cheight - (params->cheight >> 2);
+      bottomslope = params->tz - sightzstart;
+      topslope    = bottomslope + params->theight;
 
       validlines = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       validpolys = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
