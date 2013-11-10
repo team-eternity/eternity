@@ -114,15 +114,18 @@ void MenuItem::drawDescription(menuitem_t *item, int &item_height,
    y = item->y;
 
    // write description
-   if(item->flags & MENUITEM_BIGFONT)
+   if(shouldDrawDescription(item))
    {
-      V_FontWriteTextColored(menu_font_big, item->description, 
-                             GameModeInfo->bigFontItemColor, x, y, 
-                             &subscreen43);
-      item_height = V_FontStringHeight(menu_font_big, item->description);
+      if(item->flags & MENUITEM_BIGFONT)
+      {
+         V_FontWriteTextColored(menu_font_big, item->description, 
+                                GameModeInfo->bigFontItemColor, x, y, 
+                                &subscreen43);
+         item_height = V_FontStringHeight(menu_font_big, item->description);
+      }
+      else
+         MN_WriteTextColored(item->description, color, x, y);
    }
-   else
-      MN_WriteTextColored(item->description, color, x, y);
 
    // haleyjd 02/04/06: set coordinates for small pointers
    // left pointer:
