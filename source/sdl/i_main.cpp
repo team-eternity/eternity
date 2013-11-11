@@ -146,9 +146,9 @@ static void VerifySDLVersions()
    // must update these when SDL is updated.
    static SDL_version ex_vers[3] = 
    {
-      { 1, 2, 14 }, // SDL
-      { 1, 2, 11 }, // SDL_mixer
-      { 1, 2,  7 }, // SDL_net
+      { 1, 2, 15 }, // SDL
+      { 1, 2, 12 }, // SDL_mixer
+      { 1, 2,  8 }, // SDL_net
    };
 
    // test SDL
