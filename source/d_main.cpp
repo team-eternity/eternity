@@ -1523,15 +1523,6 @@ static void D_DoomInit()
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
 
-   // haleyjd 01/11/09: process affinity mask stuff
-#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
-   {
-      extern void I_SetAffinityMask(void);
-
-      I_SetAffinityMask();
-   }
-#endif
-
    bodyquesize = default_bodyquesize; // killough 10/98
 
    G_ReloadDefaults();    // killough 3/4/98: set defaults just loaded.

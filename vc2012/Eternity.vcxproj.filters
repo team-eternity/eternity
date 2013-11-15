@@ -903,9 +903,6 @@
     <ClCompile Include="..\source\Win32\i_w32main.cpp">
       <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_cpu.cpp">
-      <Filter>Source Files\Win32\Win32 Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\Win32\i_exception.cpp">
       <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>

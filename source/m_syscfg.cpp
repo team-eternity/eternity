@@ -60,10 +60,6 @@ extern bool unicodeinput;
 extern int audio_buffers;
 #endif
 
-#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
-extern unsigned int process_affinity_mask;
-#endif
-
 #if defined _MSC_VER
 extern int disable_sysmenu;
 #endif
@@ -261,11 +257,6 @@ static default_t sysdefaults[] =
    DEFAULT_INT("audio_buffers", &audio_buffers, NULL, 2048, 1024, 8192, default_t::wad_no,
                "SDL_mixer audio buffer size"),
 
-#endif
-
-#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
-   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, default_t::wad_no, 
-               "process affinity mask - warning: expert setting only!"),
 #endif
 
 #ifdef _MSC_VER
