@@ -417,26 +417,37 @@ void HUDMessageWidget::drawer()
 {
    if(!showMessages)
       return;
+
+   edefstructvar(vtextdraw_t, vtd);
+
+   vtd.font        = hud_font;
+   vtd.screen      = &subscreen43;
+   vtd.flags       = VTXT_FIXEDCOLOR;
+   vtd.fixedColNum = mess_colour;
    
    // go down a bit if chat active
-   int y = chat_active ? 8 : 0;
+   vtd.y = chat_active ? hud_font->absh : 0;
    
-   for(int i = 0; i < current_messages; i++, y += 8)
+   for(int i = 0; i < current_messages; i++)
    {
-      int x = 0;
       char *msg = messages[i];
-
+      
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
       if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
          vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
       {
-         x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
+         vtd.x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) / 2;
+         vtd.flags |= VTXT_ABSCENTER;
       }
+      else
+         vtd.x = 0;
       
-      // haleyjd 06/04/05: use V_FontWriteTextColored like it should.
-      // Color codes within strings will still override the default.
-      V_FontWriteTextColored(hud_font, msg, mess_colour, x, y, &subscreen43);
+      vtd.s = msg;
+
+      V_FontWriteTextEx(vtd);
+
+      vtd.y += V_FontStringHeight(hud_font, msg);
    }
 }
 
@@ -457,20 +468,26 @@ void HUDMessageWidget::clear()
 //
 void HUDMessageWidget::addMessage(const char *s)
 {
+   char *dest;
+
    if(current_messages == hud_msg_lines) // display full
    {
       // scroll up      
       for(int i = 0; i < hud_msg_lines - 1; i++)
          strncpy(messages[i], messages[i+1], MAXHUDMSGLEN);
       
-      strncpy(messages[hud_msg_lines - 1], s, MAXHUDMSGLEN);
+      dest = messages[hud_msg_lines - 1];
    }
-   else // add one to the end
+   else 
    {
-      strncpy(messages[current_messages], s, MAXHUDMSGLEN);
+      // add one to the end
+      dest = messages[current_messages];
       ++current_messages;
    }
-   
+
+   psnprintf(dest, MAXHUDMSGLEN, "%s", s);
+   V_FontFitTextToRect(hud_font, dest, 0, 0, 320, 200);
+
    scrolltime = leveltime + (message_timer * 35) / 1000;
 }
 

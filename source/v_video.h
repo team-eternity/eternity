@@ -27,8 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __V_VIDEO__
-#define __V_VIDEO__
+#ifndef V_VIDEO_H__
+#define V_VIDEO_H__
 
 #include "doomtype.h"
 #include "doomdef.h"
