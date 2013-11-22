@@ -344,6 +344,7 @@ castinfo_t      *castorder; // Ty 03/22/98 - externalized and init moved into f_
 int             castnum;
 int             casttics;
 state_t*        caststate;
+int             castrot;
 bool            castdeath;
 int             castframes;
 int             castonmelee;
@@ -380,7 +381,7 @@ static const char *oldnames[OLDCASTMAX] =
 //
 // haleyjd 07/05/03: rewritten for EDF support
 //
-void F_StartCast(void)
+void F_StartCast()
 {
    int i;
 
@@ -397,13 +398,14 @@ void F_StartCast(void)
    }
 
    wipegamestate = GS_NOSTATE;         // force a screen wipe
-   castnum = 0;
-   caststate = states[mobjinfo[castorder[castnum].type]->seestate];
-   casttics = caststate->tics;
-   castdeath = false;
-   finalestage = 2;    
-   castframes = 0;
-   castonmelee = 0;
+   castnum       = 0;
+   caststate     = states[mobjinfo[castorder[castnum].type]->seestate];
+   casttics      = caststate->tics;
+   castrot       = 0;
+   castdeath     = false;
+   finalestage   = 2;    
+   castframes    = 0;
+   castonmelee   = 0;
    castattacking = false;
    S_ChangeMusicNum(mus_evil, true);
 }
@@ -411,7 +413,7 @@ void F_StartCast(void)
 //
 // F_CastTicker
 //
-void F_CastTicker(void)
+void F_CastTicker()
 {
    int st;
    int sfx;
@@ -528,11 +530,31 @@ bool F_CastResponder(event_t* ev)
    
    if(castdeath)
       return true;                    // already in dying frames
+
+   if(ev->data1 == KEYD_LEFTARROW)
+   {
+      if(castrot == 7)
+         castrot = 0;
+      else
+         ++castrot;
+      return true;
+   }
+   
+   if(ev->data1 == KEYD_RIGHTARROW)
+   {
+      if(castrot == 0)
+         castrot = 7;
+      else
+         --castrot;
+      return true;
+   }
+
    
    // go into death frame
    castdeath  = true;
    caststate  = states[mobjinfo[castorder[castnum].type]->deathstate];
    casttics   = caststate->tics;
+   castrot    = 0;
    castframes = 0;
    castattacking = false;
    if(mobjinfo[castorder[castnum].type]->deathsound)
@@ -566,11 +588,11 @@ void F_CastPrint(const char *text)
 //
 // F_CastDrawer
 //
-void F_CastDrawer(void)
+void F_CastDrawer()
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int            lump;
+   int            lump, rot = 0;
    bool           flip;
    patch_t       *patch;
    byte          *translate = NULL;
@@ -607,8 +629,10 @@ void F_CastDrawer(void)
       return;
    
    sprframe = &sprdef->spriteframes[caststate->frame & FF_FRAMEMASK];
-   lump = sprframe->lump[0];
-   flip = !!sprframe->flip[0];
+   if(sprframe->rotate)
+      rot = castrot;
+   lump =   sprframe->lump[rot];
+   flip = !!sprframe->flip[rot];
    
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    

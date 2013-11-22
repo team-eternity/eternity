@@ -1540,7 +1540,7 @@ static void G_DoCompleted(void)
 
    wminfo.pnum = consoleplayer;
 
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
    {
       wminfo.plyr[i].in      = playeringame[i];
       wminfo.plyr[i].skills  = players[i].killcount;
