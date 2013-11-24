@@ -1568,7 +1568,7 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    //jff 3/3/98 skip lines not starting with an alphanum
    // killough 10/98: move to be made part of main test, add comment-handling
 
-   if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum(*name) ||
+   if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum((unsigned char)*name) ||
       !(dp = M_LookupDefault(df, name)) || 
       (*strparm == '"') == (dp->type != dt_string) ||
       (wad && !dp->wad_allowed))

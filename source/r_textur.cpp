@@ -1566,7 +1566,7 @@ void R_LoadDoom1(void)
       case D1_STATE_SCAN:
          if(*rover == ';')
             state = D1_STATE_COMMENT;
-         else if(isalnum(*rover))
+         else if(isalnum((unsigned char)*rover))
          {
             texture1[tx1++] = *rover;
             state = D1_STATE_TEX1;

@@ -370,7 +370,7 @@ static void DoTokenStateScan(tkstate_t *tks)
    qstring *token  = tks->token;
 
    // allow A-Za-z0-9, underscore, and leading - for numbers
-   if(isalnum(str[i]) || str[i] == '_' || str[i] == '-')
+   if(isalnum((unsigned char)str[i]) || str[i] == '_' || str[i] == '-')
    {
       // start a text token - we'll determine the more specific type, if any,
       // later.
@@ -505,7 +505,7 @@ static void DoTokenStateText(tkstate_t *tks)
    int i           = tks->i;
    qstring *token  = tks->token;
 
-   if(isalnum(str[i]) || str[i] == '_')
+   if(isalnum((unsigned char)str[i]) || str[i] == '_')
    {
       // continuing in label, keyword, or text
       *token += str[i];
@@ -591,7 +591,7 @@ static void DoTokenStateLabel(tkstate_t *tks)
    int i           = tks->i;
    qstring *token  = tks->token;
 
-   if(isalnum(str[i]) || str[i] == '_')
+   if(isalnum((unsigned char)str[i]) || str[i] == '_')
    {
       // continuing in label
       *token += str[i];
