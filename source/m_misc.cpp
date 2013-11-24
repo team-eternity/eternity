@@ -1025,7 +1025,7 @@ static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
    int len = strlen(src) - 1;
 
-   while(isspace(src[len]))
+   while(isspace((unsigned char)(src[len])))
       len--;
 
    if(src[len] == '"')
@@ -1562,7 +1562,7 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    char name[80], strparm[100];
    default_t *dp;
    
-   while(isspace(*p))  // killough 10/98: skip leading whitespace
+   while(isspace((unsigned char)*p))  // killough 10/98: skip leading whitespace
       p++;
 
    //jff 3/3/98 skip lines not starting with an alphanum
@@ -1663,7 +1663,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
          {             // Remember comment lines
             const char *p = s;
             
-            while(isspace(*p))  // killough 10/98: skip leading whitespace
+            while(isspace((unsigned char)*p))  // killough 10/98: skip leading whitespace
                p++;
 
             if(*p)                // If this is not a blank line,

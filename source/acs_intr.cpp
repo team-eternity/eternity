@@ -1959,18 +1959,18 @@ static void ACS_loadScripts(WadDirectory *dir, int lump)
    for(;;)
    {
       // Discard any whitespace.
-      while(itr != end && isspace(*itr)) ++itr;
+      while(itr != end && isspace((unsigned char)*itr)) ++itr;
 
       if(itr == end) break;
 
       // Read a name.
       nameItr = lumpname;
-      while(itr != end && nameItr != nameEnd && !isspace(*itr))
+      while(itr != end && nameItr != nameEnd && !isspace((unsigned char)*itr))
          *nameItr++ = *itr++;
       *nameItr = '\0';
 
       // Discard excess letters.
-      while(itr != end && !isspace(*itr)) ++itr;
+      while(itr != end && !isspace((unsigned char)*itr)) ++itr;
 
       if((lump = dir->checkNumForName(lumpname, lumpinfo_t::ns_acs)) != -1)
          ACS_LoadScript(dir, lump);

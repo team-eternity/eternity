@@ -1031,7 +1031,7 @@ char *E_GetHeredocLine(char **src)
       }
 
       // parse out spaces at the start of the line
-      while(isspace(*linestart))
+      while(isspace((unsigned char)*linestart))
          ++linestart;
    }
 

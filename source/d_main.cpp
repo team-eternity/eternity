@@ -926,7 +926,7 @@ void FindResponseFile()
             indexinfile++;  // skip past argv[0] (keep it)
             do
             {
-               while(size > 0 && isspace(*infile))
+               while(size > 0 && isspace((unsigned char)*infile))
                {
                   infile++;
                   size--;
@@ -941,7 +941,7 @@ void FindResponseFile()
                   while (size > 0)
                   {
                      // Whitespace terminates the token unless quoted
-                     if(!quoted && isspace(*infile))
+                     if(!quoted && isspace((unsigned char)*infile))
                         break;
                      if(*infile == '\"')
                      {
@@ -1051,7 +1051,7 @@ static void D_ProcessWadPreincludes(void)
       for(i = 0; i < MAXLOADFILES; ++i)
          if((s = wad_files[i]))
          {
-            while(isspace(*s))
+            while(isspace((unsigned char)*s))
                s++;
             if(*s)
             {
@@ -1080,7 +1080,7 @@ static void D_ProcessDehPreincludes(void)
       {
          if((s = deh_files[i]))
          {
-            while(isspace(*s))
+            while(isspace((unsigned char)*s))
                s++;
             if(*s)
             {
@@ -1118,7 +1118,7 @@ static void D_AutoExecScripts(void)
       for(i = 0; i < MAXLOADFILES; ++i)
          if((s = csc_files[i]))
          {
-            while(isspace(*s))
+            while(isspace((unsigned char)*s))
                s++;
             if(*s)
             {

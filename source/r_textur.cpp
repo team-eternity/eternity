@@ -1582,7 +1582,7 @@ void R_LoadDoom1(void)
          if(*rover == 0x0D || *rover == 0x0A) // no linebreak during this state
             I_Error("R_LoadDoom1: malformed TXTRCONV lump: bad linebreak\n");
 
-         if(isspace(*rover))
+         if(isspace((unsigned char)*rover))
             state = D1_STATE_TEX2;
          else
          {
@@ -1617,7 +1617,7 @@ void R_LoadDoom1(void)
 
             state = D1_STATE_SCAN;
          }
-         else if(!isspace(*rover)) // skip spaces
+         else if(!isspace((unsigned char)*rover)) // skip spaces
          {
             if(tx2 >= 8)
                I_Error("R_LoadDoom1: malformed TXTRCONV lump: tx2 >= 8 chars\n");
