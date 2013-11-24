@@ -1917,12 +1917,12 @@ char *M_LoadStringFromFile(const char *filename)
 // haleyjd: portable strupr function
 char *M_Strupr(char *string)
 {
-   char *s = string;
+   unsigned char *s = reinterpret_cast<unsigned char *>(string);
 
    while(*s)
    {
-      char c = *s;
-      *s++ = toupper(c);
+      int c = toupper(*s);
+      *s++ = c;
    }
 
    return string;
@@ -1931,12 +1931,12 @@ char *M_Strupr(char *string)
 // haleyjd: portable strlwr function
 char *M_Strlwr(char *string)
 {
-   char *s = string;
+   unsigned char *s = reinterpret_cast<unsigned char *>(string);
 
    while(*s)
    {
-      char c = *s;
-      *s++ = tolower(c);
+      int c = tolower(*s);
+      *s++ = c;
    }
 
    return string;
