@@ -1114,7 +1114,8 @@ bool MN_Responder(event_t *ev)
          // ignore unselectables
          if(!is_a_gap(&current_menu->menuitems[n])) 
          {
-            if(tolower(current_menu->menuitems[n].description[0]) == ch)
+            auto uch = (unsigned char)(current_menu->menuitems[n].description[0]);
+            if(tolower(uch) == ch)
             {
                // found a matching item!
                current_menu->selected = n;

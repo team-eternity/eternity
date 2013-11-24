@@ -156,7 +156,7 @@ bool MN_PopupResponder(event_t *ev, int action)
       return false;
 
    if(ev->character)
-      ch = tolower(ev->character);
+      ch = tolower((unsigned char)ev->character);
    else
       ch = ev->data1;
    

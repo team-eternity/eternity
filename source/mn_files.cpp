@@ -535,7 +535,8 @@ static bool MN_FileResponder(event_t *ev, int action)
          if(n >= mn_currentdir->numfiles) 
             n = 0; // loop round
          
-         if(tolower((mn_currentdir->filenames)[n][0]) == ch)
+         auto uch = (unsigned char)((mn_currentdir->filenames)[n][0]);
+         if(tolower(uch) == ch)
          {
             // found a matching item!
             if(n != selected_item) // only make sound if actually moving
