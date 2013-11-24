@@ -50,6 +50,7 @@
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
+#include "d_dehtbl.h"
 #include "d_englsh.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -907,12 +908,7 @@ static defaultfile_t maindefaults =
 // killough 11/98: hash function for name lookup
 static unsigned int default_hash(defaultfile_t *df, const char *name)
 {
-   unsigned int hash = 0;
-   
-   while(*name)
-      hash = hash*2 + toupper(*name++);
-   
-   return hash % df->numdefaults;
+   return D_HashTableKey(name) % df->numdefaults;
 }
 
 //
@@ -2101,7 +2097,7 @@ void M_ExtractFileBase(const char *path, char *dest)
       if(length >= 8)
          break; // stop at 8
 
-      dest[length++] = toupper(*src++);
+      dest[length++] = toupper((unsigned char)*src++);
    }
 }
 

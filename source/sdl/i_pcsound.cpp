@@ -306,7 +306,8 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
       nameToTry = true;
       psnprintf(soundName, 9, "DP%s", sfx->name);
    }
-   else if(toupper(sfx->name[0]) == 'D' && toupper(sfx->name[1]) == 'S')
+   else if(toupper((unsigned char)sfx->name[0]) == 'D' && 
+           toupper((unsigned char)sfx->name[1]) == 'S')
    {
       nameToTry = true;
       psnprintf(soundName, 9, "DP%s", sfx->name + 2);

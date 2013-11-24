@@ -1269,7 +1269,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            char c = toupper(ps->tokenbuffer->charAt(stridx));
+            char c = toupper(ps->tokenbuffer->ucharAt(stridx));
 
             if(states[statenum]->flags & STATEF_DECORATE)
             {
