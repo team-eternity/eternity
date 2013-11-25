@@ -645,9 +645,6 @@
     <ClCompile Include="..\Source\sounds.cpp">
       <Filter>Source Files\S_</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_cpu.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\Win32\i_exception.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
@@ -1615,6 +1612,9 @@
     </ClInclude>
     <ClInclude Include="..\source\mn_items.h">
       <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_ctype.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
