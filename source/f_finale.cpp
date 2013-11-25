@@ -306,7 +306,7 @@ void F_TextWrite(void)
       }
       
       // haleyjd: added null pointer check
-      c = toupper(c) - f_font->start;
+      c = ectype::toUpper(c) - f_font->start;
 
       if(c >= f_font->size || !f_font->fontgfx[c])
       {

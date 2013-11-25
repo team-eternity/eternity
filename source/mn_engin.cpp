@@ -1094,11 +1094,11 @@ bool MN_Responder(event_t *ev)
    // search for matching item in menu
 
    if(ev->character)
-      ch = tolower((unsigned char)(ev->character));
+      ch = ectype::toLower(ev->character);
    else
-      ch = tolower(ev->data1);
+      ch = ectype::toLower(ev->data1);
    
-   if(ev->type == ev_keydown && ch >= 'a' && ch <= 'z')
+   if(ev->type == ev_keydown && ectype::isLower(ch))
    {  
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should
@@ -1114,8 +1114,7 @@ bool MN_Responder(event_t *ev)
          // ignore unselectables
          if(!is_a_gap(&current_menu->menuitems[n])) 
          {
-            auto uch = (unsigned char)(current_menu->menuitems[n].description[0]);
-            if(tolower(uch) == ch)
+            if(ectype::toLower(current_menu->menuitems[n].description[0]) == ch)
             {
                // found a matching item!
                current_menu->selected = n;

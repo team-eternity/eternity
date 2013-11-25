@@ -1613,6 +1613,9 @@
     <ClInclude Include="..\source\Win32\i_opndir.h">
       <Filter>Source Files\Win32\Win32 Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\m_ctype.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

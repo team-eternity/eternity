@@ -1411,7 +1411,7 @@ static bool C_Strcmp(const char *pa, const char *pb)
          b++; continue;
       }
       // regardless of case also
-      if(toupper(*a) != toupper(*b))
+      if(ectype::toUpper(*a) != ectype::toUpper(*b))
          return true;
       a++; b++;
    }

@@ -1297,6 +1297,7 @@
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
     <ClInclude Include="..\source\m_compare.h" />
+    <ClInclude Include="..\source\m_ctype.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />
     <ClInclude Include="..\Source\m_argv.h" />
     <ClInclude Include="..\Source\m_bbox.h" />

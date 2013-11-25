@@ -24,7 +24,6 @@
 // brand spankin' new.
 
 #include <errno.h>
-#include <ctype.h>
 
 #include "../z_zone.h"
 #include "../d_io.h"

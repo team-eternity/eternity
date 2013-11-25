@@ -2490,7 +2490,7 @@ void lfstrip(char *s)  // strip the \r and/or \n off of a line
 void rstrip(char *s)  // strip trailing whitespace
 {
    char *p = s + strlen(s);         // killough 4/4/98: same here
-   while(p > s && isspace((unsigned char)(*--p))) // break on first non-whitespace
+   while(p > s && ectype::isSpace(*--p)) // break on first non-whitespace
       *p='\0';
 }
 
@@ -2503,7 +2503,7 @@ void rstrip(char *s)  // strip trailing whitespace
 //
 char *ptr_lstrip(char *p)  // point past leading whitespace
 {
-   while(isspace(*p))
+   while(ectype::isSpace(*p))
       p++;
    return p;
 }

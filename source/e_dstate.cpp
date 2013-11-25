@@ -370,7 +370,7 @@ static void DoTokenStateScan(tkstate_t *tks)
    qstring *token  = tks->token;
 
    // allow A-Za-z0-9, underscore, and leading - for numbers
-   if(isalnum((unsigned char)str[i]) || str[i] == '_' || str[i] == '-')
+   if(ectype::isAlnum(str[i]) || str[i] == '_' || str[i] == '-')
    {
       // start a text token - we'll determine the more specific type, if any,
       // later.
@@ -505,7 +505,7 @@ static void DoTokenStateText(tkstate_t *tks)
    int i           = tks->i;
    qstring *token  = tks->token;
 
-   if(isalnum((unsigned char)str[i]) || str[i] == '_')
+   if(ectype::isAlnum(str[i]) || str[i] == '_')
    {
       // continuing in label, keyword, or text
       *token += str[i];
@@ -591,7 +591,7 @@ static void DoTokenStateLabel(tkstate_t *tks)
    int i           = tks->i;
    qstring *token  = tks->token;
 
-   if(isalnum((unsigned char)str[i]) || str[i] == '_')
+   if(ectype::isAlnum(str[i]) || str[i] == '_')
    {
       // continuing in label
       *token += str[i];
@@ -1269,7 +1269,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            char c = toupper(ps->tokenbuffer->ucharAt(stridx));
+            char c = ectype::toUpper(ps->tokenbuffer->charAt(stridx));
 
             if(states[statenum]->flags & STATEF_DECORATE)
             {

@@ -1025,7 +1025,7 @@ static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
    int len = strlen(src) - 1;
 
-   while(isspace((unsigned char)(src[len])))
+   while(ectype::isSpace(src[len]))
       len--;
 
    if(src[len] == '"')
@@ -1562,13 +1562,13 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    char name[80], strparm[100];
    default_t *dp;
    
-   while(isspace((unsigned char)*p))  // killough 10/98: skip leading whitespace
+   while(ectype::isSpace(*p))  // killough 10/98: skip leading whitespace
       p++;
 
    //jff 3/3/98 skip lines not starting with an alphanum
    // killough 10/98: move to be made part of main test, add comment-handling
 
-   if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum((unsigned char)*name) ||
+   if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !ectype::isAlnum(*name) ||
       !(dp = M_LookupDefault(df, name)) || 
       (*strparm == '"') == (dp->type != dt_string) ||
       (wad && !dp->wad_allowed))
@@ -1663,7 +1663,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
          {             // Remember comment lines
             const char *p = s;
             
-            while(isspace((unsigned char)*p))  // killough 10/98: skip leading whitespace
+            while(ectype::isSpace(*p))  // killough 10/98: skip leading whitespace
                p++;
 
             if(*p)                // If this is not a blank line,
@@ -1913,11 +1913,11 @@ char *M_LoadStringFromFile(const char *filename)
 // haleyjd: portable strupr function
 char *M_Strupr(char *string)
 {
-   unsigned char *s = reinterpret_cast<unsigned char *>(string);
+   char *s = string;
 
    while(*s)
    {
-      int c = toupper(*s);
+      int c = ectype::toUpper(*s);
       *s++ = c;
    }
 
@@ -1927,11 +1927,11 @@ char *M_Strupr(char *string)
 // haleyjd: portable strlwr function
 char *M_Strlwr(char *string)
 {
-   unsigned char *s = reinterpret_cast<unsigned char *>(string);
+   char *s = string;
 
    while(*s)
    {
-      int c = tolower(*s);
+      int c = ectype::toLower(*s);
       *s++ = c;
    }
 
@@ -2097,7 +2097,7 @@ void M_ExtractFileBase(const char *path, char *dest)
       if(length >= 8)
          break; // stop at 8
 
-      dest[length++] = toupper((unsigned char)*src++);
+      dest[length++] = ectype::toUpper(*src++);
    }
 }
 
