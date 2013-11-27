@@ -26,10 +26,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <ctype.h>
-
 #include "z_zone.h"
+#include "m_ctype.h"
 #include "i_system.h"
+
 
 //
 // Knuth-Morris-Pratt algorithm.
@@ -60,11 +60,11 @@ static bool knuth_morris_pratt(const char *haystack, const char *needle,
 
       for(i = 2; i < m; i++)
       {
-         unsigned char b = tolower((unsigned char)needle[i - 1]);
+         unsigned char b = ectype::toLower(needle[i - 1]);
 
          for(;;)
          {
-            if(b == tolower((unsigned char)needle[j]))
+            if(b == ectype::toLower(needle[j]))
             {
                table[i] = i - ++j;
                break;
@@ -91,7 +91,7 @@ static bool knuth_morris_pratt(const char *haystack, const char *needle,
       // Invariant: phaystack = rhaystack + j
       while(*phaystack != '\0')
       {
-         if(tolower((unsigned char)needle[j]) == tolower((unsigned char)*phaystack))
+         if(ectype::toLower(needle[j]) == ectype::toLower(*phaystack))
          {
             j++;
             phaystack++;
@@ -158,7 +158,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
       const char *needle_last_ccount = needle; // = needle + last_ccount
 
       // Speed up the following searches of needle by caching its first character
-      unsigned char b = tolower((unsigned char)*needle);
+      unsigned char b = ectype::toLower(*needle);
       ++needle;
       for(;; haystack++)
       {
@@ -192,7 +192,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
 
          ++outer_loop_count;
          ++comparison_count;
-         if(tolower((unsigned char)*haystack) == b)
+         if(ectype::toLower(*haystack) == b)
          {
             // The first character matches
             const char *rhaystack = haystack + 1;
@@ -205,7 +205,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
                   return NULL; // No match.
                
                ++comparison_count;
-               if(tolower((unsigned char)*rhaystack) != tolower((unsigned char)*rneedle))
+               if(ectype::toLower(*rhaystack) != ectype::toLower(*rneedle))
                   break; // Nothing in this round.
             }
          }
