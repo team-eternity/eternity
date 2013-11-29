@@ -194,12 +194,6 @@ void V_DrawBlockFS(VBuffer *buffer, byte *src);
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
 void V_DrawFSBackground(VBuffer *dest, int lumpnum);
 
-#ifdef DJGPP
-// Reads a linear block of pixels into the view buffer.
-void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest);
-#endif
-
-
 // V_FindBestColor (haleyjd)
 // A function that requantizes a color into the default game palette
 byte V_FindBestColor(const byte *palette, int r, int g, int b);

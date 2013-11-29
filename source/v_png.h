@@ -60,6 +60,8 @@ public:
    int       getNumColors()  const;
    byte     *getPalette()    const;
    byte     *expandPalette() const;
+   int32_t   getXOffset()    const;
+   int32_t   getYOffset()    const;
 
    // conversions
    byte     *getAs8Bit(const byte *outpal) const;
