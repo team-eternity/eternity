@@ -206,7 +206,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    try
    {
       // set unknown chunk handler
-      png_set_read_user_chunk_fn(png_ptr, &ioStruct.offsets, V_pngReadUnknownChunk);
+      png_set_read_user_chunk_fn(png_ptr, &ioStruct, V_pngReadUnknownChunk);
 
       // set read function, since we are reading from a data source in memory
       png_set_read_fn(png_ptr, &ioStruct, V_pngReadFunc);
