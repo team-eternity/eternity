@@ -632,6 +632,7 @@ enum
    MF4_NOTORQUE       = 0x00002000, // Never subject to torque simulation
    MF4_ALWAYSTORQUE   = 0x00004000, // Subject to torque even if comp_falloff is on
    MF4_NOZERODAMAGE   = 0x00008000, // Missile won't inflict damage if damage is 0
+   MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

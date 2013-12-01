@@ -14,7 +14,7 @@
 // Doom Thing Types ------------------------------------------------------------
 
 // DoomEdNums: 1 - 3999
-// DeHackEd Nums: 0 - 137, 141, 142, 144
+// DeHackEd Nums: 0 - 137, 141, 142, 144, 158
 
 includeifenabled("doom/things.edf", "DOOM")
 

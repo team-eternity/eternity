@@ -47,7 +47,6 @@
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
-#include "r_drawl.h"
 #include "r_drawq.h"
 #include "r_dynseg.h"
 #include "r_main.h"
@@ -1009,11 +1008,12 @@ void R_HOMdrawer(void)
 // Builds BOOM tranmap. 
 // Called when general_translucency is changed at run-time.
 //
-void R_ResetTrans(void)
+void R_ResetTrans()
 {
    if(general_translucency)
    {
       R_InitTranMap(false);
+      R_InitSubMap(false);
    }
 }
 

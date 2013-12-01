@@ -1568,6 +1568,7 @@ columndrawer_t r_quad_drawer =
       { R_QDrawFuzzColumn, R_QDrawFuzzColumn   }, // SHADOW
       { R_QDrawFlexColumn, R_QDrawFlexTRColumn }, // ALPHA
       { R_QDrawAddColumn,  R_QDrawAddTRColumn  }, // ADD
+      { R_QDrawTLColumn,   R_QDrawTLTRColumn   }, // SUB
       { R_QDrawTLColumn,   R_QDrawTLTRColumn   }, // TRANMAP
    },
 };

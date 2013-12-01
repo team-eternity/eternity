@@ -84,6 +84,7 @@ VALLOCATION(columnofs)
  
 byte *tranmap;          // translucency filter maps 256x256   // phares 
 byte *main_tranmap;     // killough 4/11/98
+byte *main_submap;      // haleyjd 11/30/13
 
 //
 // R_DrawColumn
@@ -980,6 +981,7 @@ columndrawer_t r_normal_drawer =
       { CB_DrawFuzzColumn_8, CB_DrawFuzzColumn_8   }, // SHADOW
       { CB_DrawFlexColumn_8, CB_DrawFlexTRColumn_8 }, // ALPHA
       { CB_DrawAddColumn_8,  CB_DrawAddTRColumn_8  }, // ADD
+      { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // SUB
       { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // TRANMAP
    },
 };

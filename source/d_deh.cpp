@@ -330,6 +330,7 @@ dehflags_t deh_mobjflags[] =
   {"NOTORQUE",         0x00002000, 3}, // never subject to torque simulation
   {"ALWAYSTORQUE",     0x00004000, 3}, // torque not restricted by comp_falloff
   {"NOZERODAMAGE",     0x00008000, 3}, // missile won't inflict damage if damage is 0
+  {"TLSTYLESUB",       0x00010000, 3}, // use subtractive blending map
 
   { NULL,              0 }             // NULL terminator
 };

@@ -33,6 +33,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_hash.h"
+#include "m_compare.h"
 #include "m_misc.h"
 #include "m_swap.h"
 #include "p_info.h"   // haleyjd
@@ -316,13 +317,124 @@ void R_InitTranMap(bool force)
 }
 
 //
+// R_InitSubMap
+//
+// Initialize translucency filter map
+//
+// By Lee Killough 2/21/98
+//
+void R_InitSubMap(bool force)
+{
+   static bool prev_fromlump = false;
+   static int  prev_lumpnum  = -1;
+   static bool prev_built    = false;
+   static byte prev_palette[768];
+
+   AutoPalette pal(wGlobalDir);
+   byte *playpal = pal.get();
+
+   // if forced to rebuild, do it now regardless of settings
+   if(force)
+   {
+      prev_fromlump = false;
+      prev_lumpnum  = -1;
+      prev_built    = false;
+      memset(prev_palette, 0, sizeof(prev_palette));
+   }
+
+   int lump = W_CheckNumForName("SUBMAP");
+   
+   // If a translucency filter map lump is present, use it
+   
+   if(lump != -1)  // Set a pointer to the translucency filter maps.
+   {
+      // check if is same as already loaded
+      if(prev_fromlump && prev_lumpnum == lump && 
+         !memcmp(playpal, prev_palette, 768))
+         return;
+
+      if(main_submap)
+         efree(main_submap);
+      main_submap  = (byte *)(wGlobalDir.cacheLumpNum(lump, PU_STATIC));   // killough 4/11/98
+      prev_fromlump = true;
+      prev_lumpnum  = lump;
+      prev_built    = false;
+      memcpy(prev_palette, playpal, 768);
+   }
+   else
+   {
+      // check if is same as already loaded
+      if(prev_built && !memcmp(playpal, prev_palette, 768))
+         return;
+
+      // Compose a default transparent filter map based on PLAYPAL.
+      if(main_submap)
+         efree(main_submap);
+      main_submap  = ecalloc(byte *, 256, 256);  // killough 4/11/98
+      prev_fromlump = false;
+      prev_lumpnum  = -1;
+      prev_built    = true;
+      memcpy(prev_palette, playpal, 768);
+      
+      int pal[3][256], tot[256];
+
+      // First, convert playpal into long int type, and transpose array,
+      // for fast inner-loop calculations. Precompute tot array.
+      {
+         register int i = 255;
+         register const unsigned char *p = playpal + 255 * 3;
+         do
+         {
+            register int t,d;
+            pal[0][i] = t = p[0];
+            d = t*t;
+            pal[1][i] = t = p[1];
+            d += t*t;
+            pal[2][i] = t = p[2];
+            d += t*t;
+            p -= 3;
+            tot[i] = d/2;
+         }
+         while (--i >= 0);
+      }
+
+      // Next, compute all entries using minimum arithmetic.
+      byte *tp = main_submap;
+      for(int i = 0; i < 256; i++)
+      {
+         int r1 = pal[0][i];
+         int g1 = pal[1][i];
+         int b1 = pal[2][i];
+
+         for(int j = 0; j < 256; j++, tp++)
+         {
+            register int color = 255;
+            register int err;
+            // haleyjd: subtract and clamp to 0
+            int r = emax(r1 - pal[0][j], 0);
+            int g = emax(g1 - pal[1][j], 0);
+            int b = emax(b1 - pal[2][j], 0);
+            int best = INT_MAX;
+            do
+            {
+               if((err = tot[color] - pal[0][color]*r
+                  - pal[1][color]*g - pal[2][color]*b) < best)
+                  best = err, *tp = color;
+            }
+            while(--color >= 0);
+         }
+      }
+   }
+}
+
+//
 // R_InitData
 //
 // Locates all the lumps
 //  that will be used by all views
 // Must be called after W_Init.
 //
-void R_InitData(void)
+void R_InitData()
 {
    static bool firsttime = true;
 
@@ -335,6 +447,7 @@ void R_InitData(void)
    if(general_translucency)             // killough 3/1/98, 10/98
    {
       R_InitTranMap(true);          // killough 2/21/98, 3/6/98
+      R_InitSubMap(true);
    }
    else
    {

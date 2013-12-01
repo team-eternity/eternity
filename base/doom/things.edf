@@ -1,5 +1,5 @@
 //
-// EDF for Eternity Engine v3.40.21
+// EDF for Eternity Engine v3.40.50
 //
 // Thing type definitions for Doom gamemodes.
 //
@@ -3290,4 +3290,15 @@ thingtype EEBetaPlasma3
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS
   mod         BFGBurst
 }
+
+thingtype EENightmareSpectre : Spectre, 889, 158
+{
+  spawnhealth 300
+  addflags    TLSTYLESUB|BRIGHT
+  remflags    SHADOW
+  
+  obituary_melee "was devoured by a Nightmare Spectre!"
+}
+
+// EOF
 
