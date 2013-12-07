@@ -612,11 +612,13 @@ void P_LoadNodes(int lump)
    
    numnodes = setupwad->lumpLength(lump) / sizeof(mapnode_t);
 
-   // haleyjd 09/01/02:
-   // Long-needed fix: bomb out on zero-length nodes
+   // haleyjd 12/07/13: Doom engine is supposed to tolerate zero-length
+   // nodes. All vanilla BSP walks are hacked to account for it by returning
+   // subsector 0 if an attempt is made to access nodes[-1]
    if(!numnodes)
    {
-      level_error = "No nodes defined for level";
+      nodes  = NULL;
+      fnodes = NULL;
       return;
    }
 
@@ -624,7 +626,7 @@ void P_LoadNodes(int lump)
    fnodes = estructalloctag(fnode_t, numnodes, PU_LEVEL);
    data   = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
-   for(i = 0; i < numnodes; ++i)
+   for(i = 0; i < numnodes; i++)
    {
       node_t *no = nodes + i;
       mapnode_t *mn = (mapnode_t *)data + i;
@@ -2453,9 +2455,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       break;
    }
 
-   P_LoadSideDefs2 (lumpnum + ML_SIDEDEFS);
-   P_LoadLineDefs2 ();                      // killough 4/4/98
-   P_LoadBlockMap  (lumpnum + ML_BLOCKMAP); // killough 3/1/98
+   P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
+   P_LoadLineDefs2();                      // killough 4/4/98
+   P_LoadBlockMap (lumpnum + ML_BLOCKMAP); // killough 3/1/98
    
    if(P_CheckForZDoomUncompressedNodes(lumpnum))
    {

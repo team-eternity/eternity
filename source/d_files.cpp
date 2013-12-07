@@ -66,9 +66,6 @@ char *D_CheckGameEDF();
 // note: needed extern in g_game.c
 wfileadd_t *wadfiles;
 
-// set from iwad: level to start new games from
-char firstlevel[9] = "";
-
 //=============================================================================
 //
 // WAD File Loading
@@ -486,8 +483,11 @@ void D_LoadEDF(gfs_t *gfs)
 // SMMU Runtime WAD File Loading
 //
 
-// re init everything after loading a wad
-
+//
+// D_reInitWadfiles
+//
+// Re-init everything after loading a wad
+//
 static void D_reInitWadfiles()
 {
    R_FreeData();
@@ -501,35 +501,13 @@ static void D_reInitWadfiles()
 // FIXME: various parts of this routine need tightening up
 void D_NewWadLumps(int source)
 {
-   int format;
-   char wad_firstlevel[9];
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-
-   memset(wad_firstlevel, 0, 9);
 
    for(int i = 0; i < numlumps; i++)
    {
       if(lumpinfo[i]->source != source)
          continue;
-
-      // haleyjd: changed check for "THINGS" lump to a fullblown
-      // P_CheckLevel call -- this should fix some problems with
-      // some crappy wads that have partial levels sitting around
-
-      if((format = P_CheckLevel(&wGlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
-      {
-         char *name = lumpinfo[i]->name;
-
-         // ignore ones called 'start' as these are checked elsewhere
-         if((!*wad_firstlevel && strcmp(name, "START")) ||
-            strncmp(name, wad_firstlevel, 8) < 0)
-            strncpy(wad_firstlevel, name, 8);
-
-         // haleyjd: move up to the level's last lump
-         i += (format == LEVEL_FORMAT_HEXEN ? 11 : 10);
-         continue;
-      }
 
       // new sound
       if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
@@ -537,7 +515,6 @@ void D_NewWadLumps(int source)
          S_Chgun();
          continue;
       }
-
       // haleyjd 03/26/11: sounds are not handled here any more
       // haleyjd 04/10/11: music is not handled here now either
 
@@ -548,10 +525,6 @@ void D_NewWadLumps(int source)
          continue;
       }
    }
-
-   if(*wad_firstlevel && (!*firstlevel ||
-      strncmp(wad_firstlevel, firstlevel, 8) < 0)) // a new first level?
-      strcpy(firstlevel, wad_firstlevel);
 }
 
 // add a new .wad file

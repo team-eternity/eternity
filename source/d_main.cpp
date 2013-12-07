@@ -395,7 +395,7 @@ void D_DoAdvanceDemo()
 //
 // D_StartTitle
 //
-void D_StartTitle(void)
+void D_StartTitle()
 {
    gameaction = ga_nothing;
    demosequence = -1;

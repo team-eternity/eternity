@@ -689,13 +689,14 @@ void R_Init(void)
 // R_PointInSubsector
 //
 // killough 5/2/98: reformatted, cleaned up
+// haleyjd 12/7/13: restored compatibility for levels with 0 nodes.
 //
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y)
 {
-   int nodenum = numnodes-1;
+   int nodenum = numnodes - 1;
    while(!(nodenum & NF_SUBSECTOR))
       nodenum = nodes[nodenum].children[R_PointOnSide(x, y, nodes+nodenum)];
-   return &subsectors[nodenum & ~NF_SUBSECTOR];
+   return &subsectors[(nodenum == -1 ? 0 : nodenum & ~NF_SUBSECTOR)];
 }
 
 int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag

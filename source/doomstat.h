@@ -409,8 +409,6 @@ extern int drawbfgcloud;
 
 extern int forceFlipPan;
 
-extern int startOnNewMap;
-
 // haleyjd 04/10/03: game type, replaces limiting mess of netgame
 // and deathmatch variables being used to mean multiple things
 // haleyjd 04/14/03: deathmatch type is now controlled via dmflags

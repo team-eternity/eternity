@@ -261,7 +261,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          mapPresent = false;
 
       // dont use new game menu if not needed
-      if(!(modifiedgame && startOnNewMap) && use_startmap && mapPresent)
+      if(use_startmap && mapPresent)
       {
          if(use_startmap == -1)              // not asked yet
             MN_StartMenu(&menu_startmap);
@@ -579,11 +579,6 @@ static void MN_DoNightmare()
       else
          G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
-   {
-      // start on newest level from wad
-      G_DeferedInitNew(sk_nightmare, firstlevel);
-   }
    else
    {
       // start on first level of selected episode
@@ -616,12 +611,6 @@ CONSOLE_COMMAND(newgame, cf_notnet)
          G_DeferedInitNew((skill_t)skill, start_mapname);
       else
          G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
-   }
-   else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
-   {  
-      // haleyjd 03/02/03: changed to use startOnNewMap config variable
-      // start on newest level from wad
-      G_DeferedInitNew((skill_t)skill, firstlevel);
    }
    else
    {
@@ -728,7 +717,7 @@ extern menu_t menu_wadiwads3;
 static const char *mn_wad_names[] =
 {
    "File Selection / Master Levels",
-   "Misc Settings / Autoloads",
+   "Autoloads",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
    "IWAD Paths - Freedoom / Mission Packs",
@@ -768,11 +757,11 @@ static menuitem_t mn_wadmisc_items[] =
 {
    {it_title,    "Wad Options",          NULL,                   "M_WADOPT"},
    {it_gap},
-   {it_info,     "Misc Settings",        NULL,                   NULL, MENUITEM_CENTERED },
-   {it_gap},
-   {it_toggle,   "Use start map",        "use_startmap" },
-   {it_toggle,   "Start on 1st new map", "startonnewmap" },
-   {it_gap},
+   // FIXME: startmap restoration?
+   //{it_info,     "Misc Settings",        NULL,                   NULL, MENUITEM_CENTERED },
+   //{it_gap},
+   //{it_toggle,   "Use start map",        "use_startmap" },
+   //{it_gap},
    {it_info,     "Autoloaded Files",     NULL,                   NULL, MENUITEM_CENTERED },
    {it_gap},
    {it_variable, "WAD file 1:",          "auto_wad_1",           NULL, MENUITEM_LALIGNED },
@@ -934,7 +923,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
    if(D_AddNewFile(filename))
    {
       MN_ClearMenus();
-      G_DeferedInitNew(gameskill, firstlevel);
+      D_StartTitle();
    }
    else
       MN_ErrorMsg("Failed to load wad file");

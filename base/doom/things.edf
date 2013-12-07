@@ -3291,6 +3291,8 @@ thingtype EEBetaPlasma3
   mod         BFGBurst
 }
 
+// Nightmare Spectre, from the PlayStation verson of Doom
+
 thingtype EENightmareSpectre : Spectre, 889, 158
 {
   spawnhealth 300

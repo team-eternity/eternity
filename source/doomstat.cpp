@@ -129,9 +129,6 @@ int forceFlipPan; // haleyjd 12/08/01
 // haleyjd 9/22/99
 int HelperThing = -1; // in P_SpawnMapThing to substitute helper thing
 
-// haleyjd 03/02/03: optionalize starting on first map
-int startOnNewMap = 0;
-
 // haleyjd 04/10/03: unified game type variable
 gametype_t GameType = gt_single, DefaultGameType = gt_single;
 

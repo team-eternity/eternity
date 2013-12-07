@@ -772,10 +772,6 @@ default_t defaults[] =
 
    DEFAULT_INT("stretchsky", &stretchsky, NULL, 0, 0, 1, default_t::wad_yes,
                "stretch short sky textures for mlook"),
-   
-   DEFAULT_INT("startnewmap", &startOnNewMap, NULL, 0, 0, 1, default_t::wad_yes,
-               "start game on first new map (DOOM II only)"),
-   
 
 #ifdef _SDL_VER   
    DEFAULT_INT("showendoom", &showendoom, NULL, 1, 0, 1, default_t::wad_yes,
