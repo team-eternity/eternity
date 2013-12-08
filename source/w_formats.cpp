@@ -210,6 +210,7 @@ static namespace_matcher_t matchers[] =
    { "sprites/",      lumpinfo_t::ns_sprites      },
    { "translations/", lumpinfo_t::ns_translations }, // EE extension
    { "gamepads/",     lumpinfo_t::ns_pads         }, // EE extension
+   { "textures/",     lumpinfo_t::ns_textures     },
 
    { NULL,            -1                          }  // keep this last
 
@@ -217,7 +218,6 @@ static namespace_matcher_t matchers[] =
    /*
    { "hires/",        lumpinfo_t::ns_hires        },
    { "patches/",      lumpinfo_t::ns_patches      },
-   { "textures/",     lumpinfo_t::ns_textures     },
    { "voices/",       lumpinfo_t::ns_voices       },
    { "voxels/",       lumpinfo_t::ns_voxels       },
    */

@@ -106,6 +106,7 @@ struct lumpinfo_t
       ns_demos,
       ns_acs,
       ns_pads,
+      ns_textures,
       ns_max           // keep this last.
    };
    int li_namespace;

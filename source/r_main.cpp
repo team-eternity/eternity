@@ -676,7 +676,7 @@ void R_ExecuteSetViewSize()
 //
 // R_Init
 //
-void R_Init(void)
+void R_Init()
 {
    R_InitData();
    R_SetViewSize(screenSize+3);

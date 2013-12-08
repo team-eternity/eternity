@@ -44,6 +44,7 @@
 #include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
+#include "w_iterator.h"
 
 //
 // Texture definition.
@@ -530,6 +531,44 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
       }
       
       R_TextureHacks(texture);
+   }
+
+   return texnum;
+}
+
+//
+// R_ReadTextureNamespace
+//
+// Add lone-patch textures that exist in the TX_START/TX_END or textures/
+// namespace.
+//
+int R_ReadTextureNamespace(int texnum)
+{
+   WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_textures);
+
+   for(wni.begin(); wni.current(); wni.next())
+   {
+      if(!(texnum & 127))
+         V_LoadingIncrease();
+
+      lumpinfo_t *lump = wni.current();
+      texture_t  *texture;
+      patch_t    *patch  = PatchLoader::CacheNum(wGlobalDir, lump->selfindex, PU_CACHE);
+      uint16_t    width  = patch->width;
+      uint16_t    height = patch->height;
+
+      texture = textures[texnum] = R_AllocTexStruct(lump->name, width, height, 1);
+      texture->index = texnum;
+
+      auto component = texture->components;
+      component->originx = 0;
+      component->originy = 0;
+      component->lump    = lump->selfindex;
+      component->type    = TC_PATCH;
+      component->width   = width;
+      component->height  = height;
+
+      ++texnum;
    }
 
    return texnum;
@@ -1263,6 +1302,7 @@ static void R_AddFlats()
 //
 void R_InitTextures()
 {
+   auto &tns = wGlobalDir.getNamespace(lumpinfo_t::ns_textures);
    int *patchlookup;
    int errors = 0;
    int i, texnum = 0;   
@@ -1280,7 +1320,7 @@ void R_InitTextures()
    maptex2 = R_InitTextureLump("TEXTURE2", false);
 
    // calculate total textures
-   numwalls  = maptex1->numtextures + maptex2->numtextures;
+   numwalls  = maptex1->numtextures + maptex2->numtextures + tns.numLumps;
    wallstart = 0;
    wallstop  = wallstart + numwalls;
    
@@ -1309,7 +1349,8 @@ void R_InitTextures()
 
    // read texture lumps
    texnum = R_ReadTextureLump(maptex1, patchlookup, texnum, &errors);
-   R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
+   texnum = R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
+   texnum = R_ReadTextureNamespace(texnum);
 
    // done with patch lookup
    efree(patchlookup);
@@ -1324,7 +1365,7 @@ void R_InitTextures()
    // SoM: This REALLY hits us when starting EE with large wads. Caching 
    // textures on map start would probably be preferable 99.9% of the time...
    // Precache textures
-   for(i = wallstart; i < wallstop; ++i)
+   for(i = wallstart; i < wallstop; i++)
       R_CacheTexture(i);
    
    if(errors)
@@ -1533,7 +1574,7 @@ enum
 // Parses the DOOM -> DOOM II texture conversion table.
 // haleyjd: rewritten 01/27/09 to remove heap corruption.
 //
-void R_LoadDoom1(void)
+void R_LoadDoom1()
 {
    char *lump;
    char *rover;
