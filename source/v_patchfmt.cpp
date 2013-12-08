@@ -32,6 +32,7 @@
 #include "v_patch.h"
 #include "v_patchfmt.h"
 #include "v_png.h"
+#include "z_auto.h"
 
 // A global instance of PatchLoader for passing to WadDirectory methods
 PatchLoader PatchLoader::patchFmt;
@@ -111,6 +112,36 @@ bool PatchLoader::checkData(void *data, size_t size) const
    return true;
 }
 
+static bool isLinearSize(size_t size, int &w, int &h)
+{
+   switch(size)
+   {
+   case 4096:
+   case 4160:
+      w = h = 64;
+      return true;
+   case 8192:
+      w = 64;
+      h = 128;
+      return true;
+   case 16384:
+      w = h = 128;
+      return true;
+   case 64000:
+      w = 320;
+      h = 200;
+      return true;
+   case 65536:
+      w = h = 256;
+      return true;
+   case 262144:
+      w = h = 512;
+      return true;
+   default:
+      return false;
+   }
+}
+
 //
 // PatchLoader::verifyData
 //
@@ -128,6 +159,21 @@ WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
          int curTag = Z_CheckTag(lump->cache[fmt]);
          Z_Free(lump->cache[fmt]);
          VPNGImage::LoadAsPatch(lump->selfindex, curTag, &lump->cache[fmt]);
+         if(lump->cache[fmt])
+            return CODE_NOFMT;
+      }
+
+      // Maybe it's linear?
+      int w = 0, h = 0;
+      if(isLinearSize(lump->size, w, h))
+      {
+         int curTag = Z_CheckTag(lump->cache[fmt]);
+         Z_ChangeTag(lump->cache[fmt], PU_STATIC);
+         ZAutoBuffer buf;
+         buf.alloc(lump->size, false);
+         memcpy(buf.get(), lump->cache[fmt], lump->size);
+         Z_Free(lump->cache[fmt]);
+         V_LinearToPatch(buf.getAs<byte *>(), w, h, NULL, curTag, &lump->cache[fmt]);
          if(lump->cache[fmt])
             return CODE_NOFMT;
       }
