@@ -137,7 +137,7 @@ public:
    //
    // Get the item at a given index. Index must be in range from 0 to length-1.
    //
-   T &at(size_t index)
+   T &at(size_t index) const
    {
       if(!ptrArray || index >= length)
          I_Error("BaseCollection::at: array index out of bounds\n");
@@ -145,7 +145,7 @@ public:
    }
 
    // operator[] - Overloaded operator wrapper for at method.
-   T &operator [] (size_t index) { return at(index); }
+   T &operator [] (size_t index) const { return at(index); }
    
    //
    // getRandom
@@ -210,7 +210,7 @@ public:
    }
 
    // Copy constructor
-   PODCollection(const PODCollection<T> &other) : BaseCollection<T>()
+   PODCollection(const PODCollection<T> &other)
    {
       this->assign(other);
    }
@@ -344,6 +344,25 @@ public:
       this->baseResize(initSize);
    }
    
+   // Assignment
+   void assign(const Collection<T> &other)
+   {
+      if(this->ptrArray == other.ptrArray) // same object?
+         return;
+
+      this->clear();
+      for(size_t i = 0; i < other.length; i++)
+         this->add(other[i]);
+
+      this->prototype = other.prototype;
+   }
+
+   // Copy constructor
+   Collection(const Collection<T> &other)
+   {
+      assign(other);
+   }
+
    // Destructor
    ~Collection() { this->clear(); }
 
