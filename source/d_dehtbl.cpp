@@ -1863,7 +1863,7 @@ unsigned int D_HashTableKey(const char *str)
 
    // note: this needs to be case insensitive for EDF mnemonics
    while((c = *ustr++))
-      h = toupper(c) + (h << 6) + (h << 16) - h;
+      h = ectype::toUpper(c) + (h << 6) + (h << 16) - h;
 
    return h;
 }

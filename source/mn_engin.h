@@ -30,6 +30,7 @@
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__
 
+struct command_t;
 struct event_t;
 struct variable_t;
 struct vfont_t;
@@ -51,16 +52,22 @@ struct vfont_t;
 #define is_a_gap(it) \
    ((it)->type == it_gap  || (it)->type == it_title || (it)->type == it_info)
 
+// haleyjd 05/01/10: item alignment defines
+enum
+{
+   ALIGNMENT_RIGHT,
+   ALIGNMENT_LEFT,
+   ALIGNMENT_CENTER
+};
+
 // item types
 enum
 {
    it_gap,              // empty line
    it_runcmd,           // run console command
-   it_variable,         // variable
-                        // enter pressed to type in new value
+   it_variable,         // variable; enter pressed to type in new value
    it_variable_nd,      // variable, but doesn't set default value -- haleyjd
-   it_toggle,           // togglable variable
-                        // can use left/right to change value
+   it_toggle,           // togglable variable; can use left/right to change value
    it_title,            // the menu title
    it_info,             // information / section header
    it_slider,           // slider
@@ -68,6 +75,8 @@ enum
    it_automap,          // an automap colour
    it_binding,		// haleyjd: a key binding
    it_end,              // last menuitem in the list
+
+   it_numtypes          // number of item types
 };
 
 struct menuitem_t
@@ -224,12 +233,20 @@ void MN_SetupBoxWidget(const char *title, const char **item_names,
 void MN_ShowBoxWidget();
 
 void MN_DrawSmallPtr(int x, int y); // haleyjd 03/13/06
+void MN_SetLeftSmallPtr(int x, int y, int height);
+void MN_SetRightSmallPtr(int x, int y, int width, int height);
 
-extern menu_t *current_menu;                  // current menu being drawn
+void MN_GetItemVariable(menuitem_t *item);
+
+extern menu_t *current_menu;                  // current menu active
+extern menu_t *drawing_menu;                  // current menu drawing
 extern menuwidget_t *current_menuwidget;      // current widget being drawn
 
 // size of automap colour blocks
 #define BLOCK_SIZE 9
+
+// haleyjd 08/30/06: emulated old menus have fixed item size of 16
+#define EMULATED_ITEM_SIZE 16 
 
 // menu error message
 extern char menu_error_message[128];
@@ -250,6 +267,10 @@ extern const char *mn_background_flat;
 extern vfont_t *menu_font;
 extern vfont_t *menu_font_big;
 extern vfont_t *menu_font_normal;
+
+extern command_t *input_command;
+extern int input_cmdtype;
+extern unsigned char input_buffer[1024];
 
 #endif
                             

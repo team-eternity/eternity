@@ -61,8 +61,8 @@ typedef enum {
 // when multiple screen sizes are supported
 
 // SoM 2-4-04: ANYRES
-#define MAX_SCREENWIDTH  2560
-#define MAX_SCREENHEIGHT 1600
+#define MAX_SCREENWIDTH  2880
+#define MAX_SCREENHEIGHT 1800
 
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200

@@ -52,6 +52,7 @@ enum
    VS_DRAWSTYLE_SHADOW,  // Spectre draw
    VS_DRAWSTYLE_ALPHA,   // Flex translucent
    VS_DRAWSTYLE_ADD,     // Additive flex translucent
+   VS_DRAWSTYLE_SUB,     // Static SUBMAP translucent
    VS_DRAWSTYLE_TRANMAP, // Static TRANMAP translucent
    VS_NUMSTYLES
 };
@@ -149,6 +150,7 @@ void R_DrawViewBorder();
 
 extern byte  *tranmap;       // translucency filter maps 256x256  // phares 
 extern byte  *main_tranmap;  // killough 4/11/98
+extern byte  *main_submap;   // haleyjd 11/30/13
 extern byte **ylookup;       // killough 11/98
 
 #define FUZZTABLE 50 

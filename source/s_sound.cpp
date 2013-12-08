@@ -32,6 +32,7 @@
 #include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
@@ -68,19 +69,7 @@
 
 static inline int sound_hash(const char *s)
 {
-   int i = 0, hash;
-   const char *t = s;
-
-   hash = toupper(*t);
-   t++;
-
-   while(*t && i < 8)
-   {
-      hash = hash * 3 + toupper(*t);
-      i++; t++;
-   }
-
-   return hash % SOUND_HASHSLOTS;
+   return D_HashTableKey(s) % SOUND_HASHSLOTS;
 }
 
 //jff 1/22/98 make sound enabling variables readable here

@@ -34,9 +34,11 @@
 #include "autopalette.h"
 #include "c_io.h"
 #include "doomtype.h"
+#include "m_swap.h"
 #include "v_misc.h"
 #include "v_png.h"
 #include "v_video.h"
+#include "r_patch.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
@@ -63,6 +65,8 @@ public:
    int         color_key;
    png_byte    channels;
    byte       *surface;
+   int32_t     xoffset;
+   int32_t     yoffset;
 
    struct palette_t
    {
@@ -94,7 +98,13 @@ public:
 
 struct vpngiostruct_t
 {
-   const byte *data;
+   const byte    *data;
+
+   struct offsets_t
+   {
+      int32_t x;
+      int32_t y;
+   } offsets;
 };
 
 //
@@ -126,12 +136,33 @@ static void V_pngWarning(png_structp png_ptr, png_const_charp error_msg)
 //
 static void V_pngReadFunc(png_structp png_ptr, png_bytep area, png_size_t size)
 {
-   vpngiostruct_t *io = static_cast<vpngiostruct_t *>(png_get_io_ptr(png_ptr));
+   auto io = static_cast<vpngiostruct_t *>(png_get_io_ptr(png_ptr));
    
    memcpy(area, io->data, size);
    io->data += size;
 }
 
+//
+// V_pngReadUnknownChunk
+//
+// Read DOOM-community-standard chunks, including offsets.
+//
+static int V_pngReadUnknownChunk(png_structp png_ptr, png_unknown_chunkp chunk)
+{
+   int res = 0;
+   static png_byte grAb_id[4] = { 'g', 'r', 'A', 'b' };
+   auto io = static_cast<vpngiostruct_t *>(png_get_user_chunk_ptr(png_ptr));
+
+   // grAb offsets chunk
+   if(!memcmp(chunk->name, grAb_id, sizeof(grAb_id)) && chunk->size >= 8)
+   {
+      io->offsets.x = SwapBigLong(*reinterpret_cast<int32_t *>(chunk->data));
+      io->offsets.y = SwapBigLong(*reinterpret_cast<int32_t *>(chunk->data + 4));
+      res = 1;
+   }
+
+   return res;
+}
 
 //=============================================================================
 //
@@ -147,8 +178,8 @@ static void V_pngReadFunc(png_structp png_ptr, png_bytep area, png_size_t size)
 //
 bool VPNGImagePimpl::readImage(const void *data)
 {
-   bool readSuccess = true;
-   vpngiostruct_t ioStruct;
+   edefstructvar(vpngiostruct_t, ioStruct);
+   bool readSuccess = true;   
    png_color_16 *transv;
 
    ioStruct.data = static_cast<const byte *>(data);
@@ -174,6 +205,9 @@ bool VPNGImagePimpl::readImage(const void *data)
    // propagates past the C calls on the stack and ends up here without incident.
    try
    {
+      // set unknown chunk handler
+      png_set_read_user_chunk_fn(png_ptr, &ioStruct, V_pngReadUnknownChunk);
+
       // set read function, since we are reading from a data source in memory
       png_set_read_fn(png_ptr, &ioStruct, V_pngReadFunc);
 
@@ -592,6 +626,16 @@ int VPNGImage::getNumColors() const
    return pImpl->palette.numColors;
 }
 
+int32_t VPNGImage::getXOffset() const
+{
+   return pImpl->xoffset;
+}
+
+int32_t VPNGImage::getYOffset() const
+{
+   return pImpl->yoffset;
+}
+
 //
 // VPNGImage::getPalette
 //
@@ -668,6 +712,9 @@ patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
    int      h      = static_cast<int>(getHeight());
 
    patch = V_LinearToPatch(linear, w, h, size, tag, user);
+
+   patch->leftoffset = static_cast<int16_t>(pImpl->xoffset);
+   patch->topoffset  = static_cast<int16_t>(pImpl->yoffset);
 
    efree(linear);
 

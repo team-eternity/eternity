@@ -1566,7 +1566,7 @@ void R_LoadDoom1(void)
       case D1_STATE_SCAN:
          if(*rover == ';')
             state = D1_STATE_COMMENT;
-         else if(isalnum(*rover))
+         else if(ectype::isAlnum(*rover))
          {
             texture1[tx1++] = *rover;
             state = D1_STATE_TEX1;
@@ -1582,7 +1582,7 @@ void R_LoadDoom1(void)
          if(*rover == 0x0D || *rover == 0x0A) // no linebreak during this state
             I_Error("R_LoadDoom1: malformed TXTRCONV lump: bad linebreak\n");
 
-         if(isspace(*rover))
+         if(ectype::isSpace((unsigned char)*rover))
             state = D1_STATE_TEX2;
          else
          {
@@ -1617,7 +1617,7 @@ void R_LoadDoom1(void)
 
             state = D1_STATE_SCAN;
          }
-         else if(!isspace(*rover)) // skip spaces
+         else if(!ectype::isSpace(*rover)) // skip spaces
          {
             if(tx2 >= 8)
                I_Error("R_LoadDoom1: malformed TXTRCONV lump: tx2 >= 8 chars\n");

@@ -76,17 +76,6 @@ int main(int argc, char **argv)
 }
 #endif
 
-// haleyjd 02/04/10: use GetWindowLongPtr on platforms that support 64-bit
-// compilation, but not on 6.0, because it doesn't have the function in the
-// default headers.
-#if _MSC_VER >= 1400
-#define EEGETWINDOWLONG GetWindowLongPtr
-#define EESETWINDOWLONG SetWindowLongPtr
-#else
-#define EEGETWINDOWLONG GetWindowLong
-#define EESETWINDOWLONG SetWindowLong
-#endif
-
 //
 // I_DisableSysMenu
 //
@@ -105,9 +94,9 @@ void I_DisableSysMenu()
       
       if(SDL_GetWMInfo(&info))
       {
-         LONG window_style = EEGETWINDOWLONG(info.window, GWL_STYLE);
+         LONG window_style = GetWindowLongPtr(info.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         EESETWINDOWLONG(info.window, GWL_STYLE, window_style);
+         SetWindowLongPtr(info.window, GWL_STYLE, window_style);
       }
    }
 }

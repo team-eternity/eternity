@@ -261,7 +261,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          mapPresent = false;
 
       // dont use new game menu if not needed
-      if(!(modifiedgame && startOnNewMap) && use_startmap && mapPresent)
+      if(use_startmap && mapPresent)
       {
          if(use_startmap == -1)              // not asked yet
             MN_StartMenu(&menu_startmap);
@@ -579,11 +579,6 @@ static void MN_DoNightmare()
       else
          G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
-   {
-      // start on newest level from wad
-      G_DeferedInitNew(sk_nightmare, firstlevel);
-   }
    else
    {
       // start on first level of selected episode
@@ -616,12 +611,6 @@ CONSOLE_COMMAND(newgame, cf_notnet)
          G_DeferedInitNew((skill_t)skill, start_mapname);
       else
          G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
-   }
-   else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
-   {  
-      // haleyjd 03/02/03: changed to use startOnNewMap config variable
-      // start on newest level from wad
-      G_DeferedInitNew((skill_t)skill, firstlevel);
    }
    else
    {
@@ -728,7 +717,7 @@ extern menu_t menu_wadiwads3;
 static const char *mn_wad_names[] =
 {
    "File Selection / Master Levels",
-   "Misc Settings / Autoloads",
+   "Autoloads",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
    "IWAD Paths - Freedoom / Mission Packs",
@@ -768,11 +757,11 @@ static menuitem_t mn_wadmisc_items[] =
 {
    {it_title,    "Wad Options",          NULL,                   "M_WADOPT"},
    {it_gap},
-   {it_info,     "Misc Settings",        NULL,                   NULL, MENUITEM_CENTERED },
-   {it_gap},
-   {it_toggle,   "Use start map",        "use_startmap" },
-   {it_toggle,   "Start on 1st new map", "startonnewmap" },
-   {it_gap},
+   // FIXME: startmap restoration?
+   //{it_info,     "Misc Settings",        NULL,                   NULL, MENUITEM_CENTERED },
+   //{it_gap},
+   //{it_toggle,   "Use start map",        "use_startmap" },
+   //{it_gap},
    {it_info,     "Autoloaded Files",     NULL,                   NULL, MENUITEM_CENTERED },
    {it_gap},
    {it_variable, "WAD file 1:",          "auto_wad_1",           NULL, MENUITEM_LALIGNED },
@@ -934,7 +923,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
    if(D_AddNewFile(filename))
    {
       MN_ClearMenus();
-      G_DeferedInitNew(gameskill, firstlevel);
+      D_StartTitle();
    }
    else
       MN_ErrorMsg("Failed to load wad file");
@@ -1913,7 +1902,8 @@ static const char *sixteenTenModes[] =
    "1440x900",
    "1680x1050", // WSXGA+
    "1920x1200", // WUXGA
-   "2560x1600", // WQXGA (This is the current max resolution)
+   "2560x1600", // WQXGA
+   "2880x1800", // Apple Retina Display (current max resolution)
    NULL
 };
 
@@ -1947,6 +1937,7 @@ static const char *sixteenNineModes[] =
    "1600x900",  // HD+
    "1920x1080", // HD1080
    "2048x1152",
+   "2880x1620",
    NULL
 };
 
@@ -1979,15 +1970,13 @@ static char **mn_vidmode_cmds;
 // from the precomposited lists above based on the user's favorite aspect
 // ratio and fullscreen/windowed settings.
 //
-static void MN_BuildVidmodeTables(void)
+static void MN_BuildVidmodeTables()
 {
    int useraspect = mn_favaspectratio;
    int userfs     = mn_favscreentype;
    const char **reslist = NULL;
    int i = 0;
    int nummodes;
-   qstring description;
-   qstring cmd;
 
    if(mn_vidmode_desc)
    {
@@ -2022,6 +2011,8 @@ static void MN_BuildVidmodeTables(void)
 
    for(i = 0; i < nummodes; i++)
    {
+      qstring cmd, description;
+
       description = reslist[i];
       switch(userfs)
       {
@@ -2035,12 +2026,11 @@ static void MN_BuildVidmodeTables(void)
       }
 
       // set the mode description
-      mn_vidmode_desc[i] = description.duplicate(PU_STATIC);
+      mn_vidmode_desc[i] = description.duplicate();
       
-      cmd  = "i_videomode ";
-      cmd += description;
+      cmd << "i_videomode " << description;
       
-      mn_vidmode_cmds[i] = cmd.duplicate(PU_STATIC);
+      mn_vidmode_cmds[i] = cmd.duplicate();
    }
 
    // null-terminate the lists
@@ -3980,8 +3970,6 @@ CONSOLE_COMMAND(skinviewer, 0)
 // To Toke: We still miss ya, buddy, but I know you're somewhere having fun and
 // maybe having a laugh at our expense ;)  Keep DOOMing forever, my friend.
 //
-
-#define EMULATED_ITEM_SIZE 16
 
 // haleyjd 05/16/04: traditional DOOM main menu support
 

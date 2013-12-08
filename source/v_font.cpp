@@ -75,7 +75,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 
       // normalize character
       if(font->upper)
-         c = toupper(c) - font->start;
+         c = ectype::toUpper(c) - font->start;
       else
          c = c - font->start;
 
@@ -218,7 +218,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
       
       // normalize character
       if(font->upper)
-         c = toupper(c) - font->start;
+         c = ectype::toUpper(c) - font->start;
       else
          c = c - font->start;
 
@@ -413,7 +413,7 @@ int V_FontStringWidth(vfont_t *font, const char *s)
 
       // normalize character
       if(font->upper)
-         c = toupper(c) - font->start;
+         c = ectype::toUpper(c) - font->start;
       else
          c = c - font->start;
 
@@ -457,7 +457,7 @@ int V_FontCharWidth(vfont_t *font, char pChar)
 
    // normalize character
    if(font->upper)
-      c = toupper(c) - font->start;
+      c = ectype::toUpper(c) - font->start;
    else
       c = c - font->start;
 

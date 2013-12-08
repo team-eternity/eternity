@@ -31,7 +31,6 @@ struct gfs_t;
 
 struct wfileadd_t;
 extern wfileadd_t *wadfiles;     // killough 11/98
-extern char firstlevel[9];
 
 // WAD Files
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,

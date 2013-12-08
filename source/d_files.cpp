@@ -66,9 +66,6 @@ char *D_CheckGameEDF();
 // note: needed extern in g_game.c
 wfileadd_t *wadfiles;
 
-// set from iwad: level to start new games from
-char firstlevel[9] = "";
-
 //=============================================================================
 //
 // WAD File Loading
@@ -273,7 +270,7 @@ void D_LooseWads()
    const char *dot;
    char *filename;
 
-   for(i = 1; i < myargc; ++i)
+   for(i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -303,11 +300,10 @@ void D_LooseWads()
 
 void D_LooseDehs()
 {
-   int i;
    const char *dot;
    char *filename;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -330,10 +326,9 @@ void D_LooseDehs()
 
 gfs_t *D_LooseGFS()
 {
-   int i;
    const char *dot;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -363,11 +358,10 @@ gfs_t *D_LooseGFS()
 //
 const char *D_LooseDemo()
 {
-   int i;
    const char *dot;
    const char *ret = NULL;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -395,10 +389,9 @@ const char *D_LooseDemo()
 //
 bool D_LooseEDF(char **buffer)
 {
-   int i;
    const char *dot;
 
-   for(i = 1; i < myargc; ++i)
+   for(int i = 1; i < myargc; i++)
    {
       // stop at first param with '-' or '@'
       if(myargv[i][0] == '-' || myargv[i][0] == '@')
@@ -490,8 +483,11 @@ void D_LoadEDF(gfs_t *gfs)
 // SMMU Runtime WAD File Loading
 //
 
-// re init everything after loading a wad
-
+//
+// D_reInitWadfiles
+//
+// Re-init everything after loading a wad
+//
 static void D_reInitWadfiles()
 {
    R_FreeData();
@@ -505,35 +501,13 @@ static void D_reInitWadfiles()
 // FIXME: various parts of this routine need tightening up
 void D_NewWadLumps(int source)
 {
-   int i, format;
-   char wad_firstlevel[9];
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
-   memset(wad_firstlevel, 0, 9);
-
-   for(i = 0; i < numlumps; ++i)
+   for(int i = 0; i < numlumps; i++)
    {
       if(lumpinfo[i]->source != source)
          continue;
-
-      // haleyjd: changed check for "THINGS" lump to a fullblown
-      // P_CheckLevel call -- this should fix some problems with
-      // some crappy wads that have partial levels sitting around
-
-      if((format = P_CheckLevel(&wGlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
-      {
-         char *name = lumpinfo[i]->name;
-
-         // ignore ones called 'start' as these are checked elsewhere
-         if((!*wad_firstlevel && strcmp(name, "START")) ||
-            strncmp(name, wad_firstlevel, 8) < 0)
-            strncpy(wad_firstlevel, name, 8);
-
-         // haleyjd: move up to the level's last lump
-         i += (format == LEVEL_FORMAT_HEXEN ? 11 : 10);
-         continue;
-      }
 
       // new sound
       if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
@@ -541,7 +515,6 @@ void D_NewWadLumps(int source)
          S_Chgun();
          continue;
       }
-
       // haleyjd 03/26/11: sounds are not handled here any more
       // haleyjd 04/10/11: music is not handled here now either
 
@@ -552,10 +525,6 @@ void D_NewWadLumps(int source)
          continue;
       }
    }
-
-   if(*wad_firstlevel && (!*firstlevel ||
-      strncmp(wad_firstlevel, firstlevel, 8) < 0)) // a new first level?
-      strcpy(firstlevel, wad_firstlevel);
 }
 
 // add a new .wad file
@@ -1110,22 +1079,46 @@ void D_SetGamePath()
 }
 
 //
+// D_CheckGamePathFile
+//
+// Check for a file or directory in the user or base gamepath, preferring the
+// former over the latter when it exists. Returns the path of the file to use,
+// or NULL if neither location has that file.
+//
+char *D_CheckGamePathFile(const char *name, bool isDir)
+{
+   struct stat sbuf;   
+
+   // check for existence under user/<game>
+   char *fullpath = M_SafeFilePath(usergamepath, name);
+   if(!stat(fullpath, &sbuf)) 
+   {
+      // check that it is or is not a directory as requested
+      if(S_ISDIR(sbuf.st_mode) == isDir) 
+         return fullpath;
+   }
+
+   // check for existence under base/<game>
+   fullpath = M_SafeFilePath(basegamepath, name);
+   if(!stat(fullpath, &sbuf))
+   {      
+      if(S_ISDIR(sbuf.st_mode) == isDir)
+         return fullpath;
+   }
+
+   // not found, or not a file or directory as expected
+   return NULL;
+}
+
+
+//
 // D_CheckGameEDF
 //
 // Looks for an optional root.edf file in base/game
 //
 char *D_CheckGameEDF()
 {
-   struct stat sbuf;
-   char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
-
-   if(!stat(game_edf, &sbuf)) // check for existence
-   {
-      if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
-         return game_edf;        // return the filename
-   }
-
-   return NULL; // return NULL to indicate the file doesn't exist
+   return D_CheckGamePathFile("root.edf", false);
 }
 
 //
@@ -1138,14 +1131,9 @@ void D_CheckGameMusic()
 {
    if(s_hidefmusic)
    {
-      struct stat sbuf;
-      char *music_dir = M_SafeFilePath(basegamepath, "music");
-
-      if(!stat(music_dir, &sbuf))
-      {
-         if(S_ISDIR(sbuf.st_mode))
-            D_AddDirectory(music_dir); // add as if it's a wad file
-      }
+      char *music_dir = D_CheckGamePathFile("music", true);
+      if(music_dir)
+         D_AddDirectory(music_dir); // add as if it's a wad file
    }
 }
 
@@ -1155,8 +1143,8 @@ void D_CheckGameMusic()
 //
 
 // haleyjd 08/20/07: gamepath autload directory structure
-static DIR  *autoloads;
-static char *autoload_dirname;
+static DIR     *autoloads;
+static qstring  autoload_dirname;
 
 //
 // D_EnumerateAutoloadDir
@@ -1167,41 +1155,42 @@ void D_EnumerateAutoloadDir()
 {
    if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
    {
-      size_t len = strlen(basegamepath) + 10;
-      autoload_dirname = emalloc(char *, len);
+      char *autoDir;
 
-      psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
-      
-      autoloads = opendir(autoload_dirname);
+      if((autoDir = D_CheckGamePathFile("autoload", true)))
+      {
+         autoload_dirname = autoDir;
+         autoloads = opendir(autoload_dirname.constPtr());
+      }
    }
 }
 
 //
 // D_GameAutoloadWads
 //
-// Loads all wad files in the base/game/autoload directory.
+// Loads all wad files in the gamepath autoload directory.
 //
 void D_GameAutoloadWads()
 {
    char *fn = NULL;
 
-   // haleyjd 09/30/08: not in shareware gamemodes, otherwise having any wads
-   // in your base/game/autoload directory will make shareware unplayable
-   if(GameModeInfo->flags & GIF_SHAREWARE)
-   {
-      startupmsg("D_GameAutoloadWads", "ignoring base/game/autoload wad files");
-      return;
-   }
-
    if(autoloads)
    {
+      // haleyjd 09/30/08: not in shareware gamemodes, otherwise having any wads
+      // in your base/game/autoload directory will make shareware unplayable
+      if(GameModeInfo->flags & GIF_SHAREWARE)
+      {
+         startupmsg("D_GameAutoloadWads", "shareware; ignoring gamepath autoload wad files");
+         return;
+      }
+
       struct dirent *direntry;
       
       while((direntry = readdir(autoloads)))
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
             D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, false, false);
          }
       }
@@ -1213,7 +1202,7 @@ void D_GameAutoloadWads()
 //
 // D_GameAutoloadDEH
 //
-// Queues all deh/bex files in the base/game/autoload directory.
+// Queues all deh/bex files in the gamepath autoload directory.
 //
 void D_GameAutoloadDEH()
 {
@@ -1228,7 +1217,7 @@ void D_GameAutoloadDEH()
          if(strstr(direntry->d_name, ".deh") || 
             strstr(direntry->d_name, ".bex"))
          {
-            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
             D_QueueDEH(fn, 0);
          }
       }
@@ -1254,7 +1243,7 @@ void D_GameAutoloadCSC()
       {
          if(strstr(direntry->d_name, ".csc"))
          {
-            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
             C_RunScriptFromFile(fn);
          }
       }
@@ -1275,6 +1264,7 @@ void D_CloseAutoloadDir()
       closedir(autoloads);
       autoloads = NULL;
    }
+   autoload_dirname.freeBuffer();
 }
 
 // EOF

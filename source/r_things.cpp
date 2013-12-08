@@ -679,7 +679,10 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    
    column.translevel = vis->translucency;
    column.translevel += 1;
-   tranmap = main_tranmap; // killough 4/11/98   
+   if(vis->drawstyle == VS_DRAWSTYLE_SUB)
+      tranmap = main_submap;
+   else
+      tranmap = main_tranmap; // killough 4/11/98   
    
    // haleyjd: faster selection for drawstyles
    colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];
@@ -976,6 +979,8 @@ static void R_ProjectSprite(Mobj *thing)
    {   
       if(thing->flags3 & MF3_TLSTYLEADD)
          vis->drawstyle = VS_DRAWSTYLE_ADD;
+      else if(thing->flags4 & MF4_TLSTYLESUB)
+         vis->drawstyle = VS_DRAWSTYLE_SUB;
       else if(vis->translucency < FRACUNIT - 1)
          vis->drawstyle = VS_DRAWSTYLE_ALPHA;
       else if(thing->flags & MF_TRANSLUCENT)

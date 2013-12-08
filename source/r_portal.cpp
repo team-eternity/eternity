@@ -730,7 +730,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(numnodes-1);
+   R_RenderBSPNode(numnodes - 1);
    
    // Only push the overlay if this is the head window
    R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
@@ -875,7 +875,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    view.z = M_FixedToFloat(viewz);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(numnodes-1);
+   R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
@@ -971,7 +971,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    view.z = M_FixedToFloat(viewz);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(numnodes-1);
+   R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);

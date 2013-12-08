@@ -557,7 +557,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    int        maxw;
    void       (*maskcolfunc)(column_t *);
 
-   w = patch->width; // haleyjd: holy crap, stop calling this 800 times
+   w = patch->width;
    
    patchcol.buffer = buffer;
 

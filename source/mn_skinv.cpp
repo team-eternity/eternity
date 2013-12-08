@@ -316,7 +316,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
 // Draws some v_font strings to the screen to tell the user how
 // to operate this beast.
 //
-static void MN_SkinInstructions(void)
+static void MN_SkinInstructions()
 {
    const char *msg = FC_RED "skin viewer";
 
@@ -353,16 +353,15 @@ static void MN_SkinInstructions(void)
 //
 // MN_SkinDrawer
 //
-// The skin viewer widget drawer function. Basically implements a
-// small state machine and sprite drawer all in one function. Since
-// state transition timing is done through the drawer and not a ticker,
-// it's not absolutely precise, but it's good enough.
+// The skin viewer widget drawer function. Puts the player sprite on
+// screen with the currently active properties (frame, rotation, and
+// lighting).
 //
-static void MN_SkinDrawer(void)
+static void MN_SkinDrawer()
 {
    spritedef_t *sprdef;
    spriteframe_t *sprframe;
-   int lump;
+   int lump, rot = 0;
    bool flip;
    patch_t *patch;
    int pctype;
@@ -377,32 +376,21 @@ static void MN_SkinDrawer(void)
 
    pctype = players[consoleplayer].pclass->type;
 
+   // get the player skin sprite definition
    if(skview_state->sprite == mobjinfo[pctype]->defsprite)
-   {
-      // get the player skin sprite definition
       sprdef = &sprites[players[consoleplayer].skin->sprite];
-      if(!(sprdef->spriteframes))
-         return;
-   }
    else
-   {
       sprdef = &sprites[skview_state->sprite];
-      if(!(sprdef->spriteframes))
-         return;
-   }
+
+   if(!(sprdef->spriteframes))
+      return;
 
    // get the current frame, using the skin state and rotation vars
    sprframe = &sprdef->spriteframes[skview_state->frame&FF_FRAMEMASK];
    if(sprframe->rotate)
-   {
-      lump = sprframe->lump[skview_rot];
-      flip = !!sprframe->flip[skview_rot];
-   }
-   else
-   {
-      lump = sprframe->lump[0];
-      flip = !!sprframe->flip[0];
-   }
+      rot = skview_rot;
+   lump = sprframe->lump[rot];
+   flip = !!sprframe->flip[rot];
 
    lighttouse = (skview_state->frame & FF_FULLBRIGHT ? 0 : skview_light);
 
@@ -424,7 +412,7 @@ static void MN_SkinDrawer(void)
 // haleyjd 05/29/06: separated out from the drawer and added ticker
 // support to widgets to enable precise state transition timing.
 //
-void MN_SkinTicker(void)
+void MN_SkinTicker()
 {
    if(skview_tics != -1 && menutime >= skview_tics)
    {
@@ -480,7 +468,7 @@ menuwidget_t skinviewer = { MN_SkinDrawer, MN_SkinResponder, MN_SkinTicker, true
 // all the skview internal state variables to their defaults, and
 // activates the skinviewer menu widget.
 //
-void MN_InitSkinViewer(void)
+void MN_InitSkinViewer()
 {
    playerclass_t *pclass = players[consoleplayer].pclass; // haleyjd 09/29/07
 

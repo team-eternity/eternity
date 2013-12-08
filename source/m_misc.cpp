@@ -50,6 +50,7 @@
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
+#include "d_dehtbl.h"
 #include "d_englsh.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -772,10 +773,6 @@ default_t defaults[] =
 
    DEFAULT_INT("stretchsky", &stretchsky, NULL, 0, 0, 1, default_t::wad_yes,
                "stretch short sky textures for mlook"),
-   
-   DEFAULT_INT("startnewmap", &startOnNewMap, NULL, 0, 0, 1, default_t::wad_yes,
-               "start game on first new map (DOOM II only)"),
-   
 
 #ifdef _SDL_VER   
    DEFAULT_INT("showendoom", &showendoom, NULL, 1, 0, 1, default_t::wad_yes,
@@ -908,12 +905,7 @@ static defaultfile_t maindefaults =
 // killough 11/98: hash function for name lookup
 static unsigned int default_hash(defaultfile_t *df, const char *name)
 {
-   unsigned int hash = 0;
-   
-   while(*name)
-      hash = hash*2 + toupper(*name++);
-   
-   return hash % df->numdefaults;
+   return D_HashTableKey(name) % df->numdefaults;
 }
 
 //
@@ -1030,7 +1022,7 @@ static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
    int len = strlen(src) - 1;
 
-   while(isspace(src[len]))
+   while(ectype::isSpace(src[len]))
       len--;
 
    if(src[len] == '"')
@@ -1567,13 +1559,13 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    char name[80], strparm[100];
    default_t *dp;
    
-   while(isspace(*p))  // killough 10/98: skip leading whitespace
+   while(ectype::isSpace(*p))  // killough 10/98: skip leading whitespace
       p++;
 
    //jff 3/3/98 skip lines not starting with an alphanum
    // killough 10/98: move to be made part of main test, add comment-handling
 
-   if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum(*name) ||
+   if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !ectype::isAlnum(*name) ||
       !(dp = M_LookupDefault(df, name)) || 
       (*strparm == '"') == (dp->type != dt_string) ||
       (wad && !dp->wad_allowed))
@@ -1668,7 +1660,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
          {             // Remember comment lines
             const char *p = s;
             
-            while(isspace(*p))  // killough 10/98: skip leading whitespace
+            while(ectype::isSpace(*p))  // killough 10/98: skip leading whitespace
                p++;
 
             if(*p)                // If this is not a blank line,
@@ -1922,8 +1914,8 @@ char *M_Strupr(char *string)
 
    while(*s)
    {
-      char c = *s;
-      *s++ = toupper(c);
+      int c = ectype::toUpper(*s);
+      *s++ = c;
    }
 
    return string;
@@ -1936,8 +1928,8 @@ char *M_Strlwr(char *string)
 
    while(*s)
    {
-      char c = *s;
-      *s++ = tolower(c);
+      int c = ectype::toLower(*s);
+      *s++ = c;
    }
 
    return string;
@@ -2102,7 +2094,7 @@ void M_ExtractFileBase(const char *path, char *dest)
       if(length >= 8)
          break; // stop at 8
 
-      dest[length++] = toupper(*src++);
+      dest[length++] = ectype::toUpper(*src++);
    }
 }
 

@@ -291,14 +291,13 @@ static bool P_CrossSubsector(int num, register los_t *los)
 
 //
 // P_CrossBSPNode
-// Returns true
-//  if strace crosses the given node successfully.
 //
+// Returns true if strace crosses the given node successfully.
 // killough 4/20/98: rewritten to remove tail recursion, clean up, and optimize
-
+//
 static bool P_CrossBSPNode(int bspnum, register los_t *los)
 {
-   while (!(bspnum & NF_SUBSECTOR))
+   while(!(bspnum & NF_SUBSECTOR))
    {
       register const node_t *bsp = nodes + bspnum;
       int side = P_DivlineSide(los->strace.x,los->strace.y,(divline_t *)bsp)&1;

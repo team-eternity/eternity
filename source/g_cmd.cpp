@@ -357,8 +357,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    if(!Console.argc)
    {
-      C_Printf("usage: map <mapname>\n"
-               "   or map <wadfile.wad>\n");
+      C_Printf("usage: map <mapname>\n");
       return;
    }
 
@@ -378,7 +377,8 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
       {
          if(D_AddNewFile(Console.argv[0]->constPtr()))
          {
-            G_DeferedInitNew(gameskill, firstlevel);
+            C_Popup();
+            D_StartTitle();
          }
          return;
       }
@@ -388,9 +388,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
 
    if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
-   {
       G_DeferedInitNew(gameskill, Console.argv[0]->constPtr());
-   }
    else
       C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
@@ -481,9 +479,6 @@ CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
 
 VARIABLE_BOOLEAN(dog_jumping, &default_dog_jumping, onoff);
 CONSOLE_NETVAR(dogjumping, dog_jumping, cf_server, netcmd_dogjumping) {}
-
-VARIABLE_BOOLEAN(startOnNewMap, NULL, yesno);
-CONSOLE_VARIABLE(startonnewmap, startOnNewMap, 0) {}
 
 VARIABLE_BOOLEAN(autorun, NULL, onoff);
 CONSOLE_VARIABLE(autorun, autorun, 0) {}

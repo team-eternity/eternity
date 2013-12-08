@@ -1020,15 +1020,16 @@ void WadDirectory::coalesceMarkedResources()
 //
 unsigned int WadDirectory::LumpNameHash(const char *s)
 {
+  using namespace ectype;
   unsigned int hash;
-  (void) ((hash =        toupper(s[0]), s[1]) &&
-          (hash = hash*3+toupper(s[1]), s[2]) &&
-          (hash = hash*2+toupper(s[2]), s[3]) &&
-          (hash = hash*2+toupper(s[3]), s[4]) &&
-          (hash = hash*2+toupper(s[4]), s[5]) &&
-          (hash = hash*2+toupper(s[5]), s[6]) &&
-          (hash = hash*2+toupper(s[6]),
-           hash = hash*2+toupper(s[7]))
+  (void) ((hash =        toUpper(s[0]), s[1]) &&
+          (hash = hash*3+toUpper(s[1]), s[2]) &&
+          (hash = hash*2+toUpper(s[2]), s[3]) &&
+          (hash = hash*2+toUpper(s[3]), s[4]) &&
+          (hash = hash*2+toUpper(s[4]), s[5]) &&
+          (hash = hash*2+toUpper(s[5]), s[6]) &&
+          (hash = hash*2+toUpper(s[6]),
+           hash = hash*2+toUpper(s[7]))
          );
   return hash;
 }

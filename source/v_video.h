@@ -27,8 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __V_VIDEO__
-#define __V_VIDEO__
+#ifndef V_VIDEO_H__
+#define V_VIDEO_H__
 
 #include "doomtype.h"
 #include "doomdef.h"
@@ -193,12 +193,6 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 void V_DrawBlockFS(VBuffer *buffer, byte *src);
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
 void V_DrawFSBackground(VBuffer *dest, int lumpnum);
-
-#ifdef DJGPP
-// Reads a linear block of pixels into the view buffer.
-void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest);
-#endif
-
 
 // V_FindBestColor (haleyjd)
 // A function that requantizes a color into the default game palette

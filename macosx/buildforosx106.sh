@@ -41,9 +41,9 @@ mak="make -f Makefile.osx106"
 arch1=i386
 arch2=x86_64
 $mak clean
-$mak -j arch=$arch1
+$mak -j8 arch=$arch1
 $mak clean
-$mak -j arch=$arch2
+$mak -j8 arch=$arch2
 $mak clean
 
 # Merge the executables into a universal binary

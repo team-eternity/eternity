@@ -228,7 +228,7 @@ static void cheat_mus(const void *arg)
    //jff 3/20/98 note: this cheat allowed in netgame/demorecord
    
    //jff 3/17/98 avoid musnum being negative and crashing
-   if(!isdigit(buf[0]) || !isdigit(buf[1]))
+   if(!ectype::isDigit(buf[0]) || !ectype::isDigit(buf[1]))
       return;
 
    doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
@@ -811,13 +811,13 @@ bool M_FindCheats(int key)
 
    if(argsleft)
    {
-      *arg++ = tolower(key);             // store key in arg buffer
+      *arg++ = ectype::toLower(key);     // store key in arg buffer
       if(!--argsleft)                    // if last key in arg list,
          cheat[cht].func(argbuf);        // process the arg buffer
-      return true;                          // affirmative response
+      return true;                       // affirmative response
    }
 
-   key = tolower(key) - 'a';
+   key = ectype::toLower(key) - 'a';
    if(key < 0 || key >= 32)              // ignore most non-alpha cheat letters
    {
       sr = 0;        // clear shift register
@@ -835,7 +835,7 @@ bool M_FindCheats(int key)
 
          for(p = (const unsigned char *)cheat[i].cheat; *p; p++)
          {
-            unsigned int ikey = tolower(*p) - 'a'; // convert to 0-31
+            unsigned int ikey = ectype::toLower(*p) - 'a'; // convert to 0-31
 
             if(ikey >= 32)             // ignore most non-alpha cheat letters
                continue;

@@ -395,7 +395,7 @@ void D_DoAdvanceDemo()
 //
 // D_StartTitle
 //
-void D_StartTitle(void)
+void D_StartTitle()
 {
    gameaction = ga_nothing;
    demosequence = -1;
@@ -926,7 +926,7 @@ void FindResponseFile()
             indexinfile++;  // skip past argv[0] (keep it)
             do
             {
-               while(size > 0 && isspace(*infile))
+               while(size > 0 && ectype::isSpace(*infile))
                {
                   infile++;
                   size--;
@@ -941,7 +941,7 @@ void FindResponseFile()
                   while (size > 0)
                   {
                      // Whitespace terminates the token unless quoted
-                     if(!quoted && isspace(*infile))
+                     if(!quoted && ectype::isSpace(*infile))
                         break;
                      if(*infile == '\"')
                      {
@@ -1051,7 +1051,7 @@ static void D_ProcessWadPreincludes(void)
       for(i = 0; i < MAXLOADFILES; ++i)
          if((s = wad_files[i]))
          {
-            while(isspace(*s))
+            while(ectype::isSpace(*s))
                s++;
             if(*s)
             {
@@ -1080,7 +1080,7 @@ static void D_ProcessDehPreincludes(void)
       {
          if((s = deh_files[i]))
          {
-            while(isspace(*s))
+            while(ectype::isSpace(*s))
                s++;
             if(*s)
             {
@@ -1104,21 +1104,24 @@ static void D_ProcessDehPreincludes(void)
    } // end if
 }
 
+//
+// D_AutoExecScripts
+//
 // haleyjd: auto-executed console scripts
-
-static void D_AutoExecScripts(void)
+//
+static void D_AutoExecScripts()
 {
    // haleyjd 05/31/06: run command-line scripts first
    C_RunCmdLineScripts();
 
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
-      int i;
       char *s;
-      for(i = 0; i < MAXLOADFILES; ++i)
+      for(int i = 0; i < MAXLOADFILES; i++)
+      {
          if((s = csc_files[i]))
          {
-            while(isspace(*s))
+            while(ectype::isSpace(*s))
                s++;
             if(*s)
             {
@@ -1132,6 +1135,7 @@ static void D_AutoExecScripts(void)
                   usermsg("\nWarning: could not open console script %s\n", s);
             }
          }
+      }
    }
 }
 
@@ -1522,15 +1526,6 @@ static void D_DoomInit()
 
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
-
-   // haleyjd 01/11/09: process affinity mask stuff
-#if defined(_MSC_VER) || defined(HAVE_SCHED_SETAFFINITY)
-   {
-      extern void I_SetAffinityMask(void);
-
-      I_SetAffinityMask();
-   }
-#endif
 
    bodyquesize = default_bodyquesize; // killough 10/98
 

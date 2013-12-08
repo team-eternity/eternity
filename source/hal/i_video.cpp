@@ -314,7 +314,7 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
          }
          break;
       case STATE_FLAGS:
-         switch(tolower(*c))
+         switch(ectype::toLower(*c))
          {
          case 'w': // window
             *fs = false;

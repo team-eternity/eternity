@@ -314,7 +314,7 @@ void G_InitKeyBindings()
          char tempstr[32];
          
          // build generic name
-         if(i > 0 && i < 128 && isprint(i))
+         if(ectype::isPrint(i))
             sprintf(tempstr, "%c", i);
          else
             sprintf(tempstr, "key%x", i);
@@ -419,7 +419,7 @@ static int G_KeyForName(const char *name)
    for(int i = 0; i < NUMKEYS; i++)
    {
       if(!strcasecmp(keybindings[i].name, name))
-         return tolower(i);
+         return ectype::toLower(i);
    }
    
    return -1;
@@ -528,7 +528,7 @@ int G_KeyResponder(event_t *ev, int bclass)
    
    if(ev->type == ev_keydown)
    {
-      int key = tolower(ev->data1);
+      int key = ectype::toLower(ev->data1);
 
       keybindings[key].keydown[bclass] = true;
 
@@ -550,7 +550,7 @@ int G_KeyResponder(event_t *ev, int bclass)
    }
    else if(ev->type == ev_keyup)
    {
-      int key = tolower(ev->data1);
+      int key = ectype::toLower(ev->data1);
 
       keybindings[key].keydown[bclass] = false;
 

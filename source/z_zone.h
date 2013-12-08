@@ -46,7 +46,6 @@
 #endif
 
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
@@ -73,6 +72,7 @@
 #include <type_traits>
 
 // haleyjd: portable replacement function headers
+#include "m_ctype.h"
 #include "psnprntf.h"
 
 // ZONE MEMORY

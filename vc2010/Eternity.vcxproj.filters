@@ -645,9 +645,6 @@
     <ClCompile Include="..\Source\sounds.cpp">
       <Filter>Source Files\S_</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_cpu.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\Win32\i_exception.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
@@ -911,6 +908,9 @@
     </ClCompile>
     <ClCompile Include="..\source\e_inventory.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\mn_items.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\source\p_clipen.cpp">
       <Filter>Source Files\Clip\Interface</Filter>
@@ -1625,7 +1625,7 @@
     <ClInclude Include="..\source\m_compare.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\p_clipen.h">
+<<<<<<< .mine    <ClInclude Include="..\source\p_clipen.h">
       <Filter>Source Files\Clip\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\source\p_mapcontext.h">
@@ -1646,7 +1646,13 @@
     <ClInclude Include="..\source\p_portalclip.h">
       <Filter>Source Files\Clip\Portal</Filter>
     </ClInclude>
-  </ItemGroup>
+=======    <ClInclude Include="..\source\mn_items.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_ctype.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+>>>>>>> .theirs  </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">
       <Filter>Resource Files</Filter>

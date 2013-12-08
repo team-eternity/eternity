@@ -521,9 +521,9 @@ static bool MN_FileResponder(event_t *ev, int action)
    // search for matching item in file list
 
    if(ev->character)
-      ch = tolower((unsigned char)(ev->character));
+      ch = ectype::toLower(ev->character);
    else
-      ch = tolower(ev->data1);
+      ch = ectype::toLower(ev->data1);
 
    if(ch >= 'a' && ch <= 'z')
    {  
@@ -535,7 +535,7 @@ static bool MN_FileResponder(event_t *ev, int action)
          if(n >= mn_currentdir->numfiles) 
             n = 0; // loop round
          
-         if(tolower((mn_currentdir->filenames)[n][0]) == ch)
+         if(ectype::toLower((mn_currentdir->filenames)[n][0]) == ch)
          {
             // found a matching item!
             if(n != selected_item) // only make sound if actually moving

@@ -141,6 +141,8 @@ public:
    char  charAt(size_t idx) const;
    char *bufferAt(size_t idx);
 
+   unsigned char ucharAt(size_t idx) const { return (unsigned char)charAt(idx); }
+
    // Concatenation and insertion/deletion
    qstring &Putc(char ch);
    qstring &Delc();

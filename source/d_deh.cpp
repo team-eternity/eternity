@@ -330,6 +330,7 @@ dehflags_t deh_mobjflags[] =
   {"NOTORQUE",         0x00002000, 3}, // never subject to torque simulation
   {"ALWAYSTORQUE",     0x00004000, 3}, // torque not restricted by comp_falloff
   {"NOZERODAMAGE",     0x00008000, 3}, // missile won't inflict damage if damage is 0
+  {"TLSTYLESUB",       0x00010000, 3}, // use subtractive blending map
 
   { NULL,              0 }             // NULL terminator
 };
@@ -2490,7 +2491,7 @@ void lfstrip(char *s)  // strip the \r and/or \n off of a line
 void rstrip(char *s)  // strip trailing whitespace
 {
    char *p = s + strlen(s);         // killough 4/4/98: same here
-   while(p > s && isspace(*--p)) // break on first non-whitespace
+   while(p > s && ectype::isSpace(*--p)) // break on first non-whitespace
       *p='\0';
 }
 
@@ -2503,7 +2504,7 @@ void rstrip(char *s)  // strip trailing whitespace
 //
 char *ptr_lstrip(char *p)  // point past leading whitespace
 {
-   while(isspace(*p))
+   while(ectype::isSpace(*p))
       p++;
    return p;
 }
