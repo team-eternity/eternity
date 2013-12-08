@@ -73,7 +73,7 @@ void TracerContext::done()
       TracerEngine *te = from;
       
       from = NULL;
-      te->freeContext(this);
+      te->releaseContext(this);
    }
 }
 
@@ -671,7 +671,7 @@ void DoomTraceEngine::lineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                   (demo_version < 329 || comp[comp_planeshoot]) ?
                       PTR_ShootTraverseComp : PTR_ShootTraverse, tc);
                       
-   freeContext(tc);
+   releaseContext(tc);
 }
 
 //
@@ -782,7 +782,7 @@ void DoomTraceEngine::useLines(player_t *player)
       if(!pathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse, tc))
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
          
-   freeContext(tc);
+   releaseContext(tc);
 }
 
 //
@@ -1094,7 +1094,7 @@ bool DoomTraceEngine::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y
 {
    TracerContext *tc = getContext();
    bool res = pathTraverse(x1, y1, x2, y2, flags, trav, tc);
-   freeContext(tc);
+   releaseContext(tc);
    return res;
 }
 

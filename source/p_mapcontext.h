@@ -46,11 +46,17 @@ class  MarkVector;
 class MapContext
 {
    public:
-      virtual ~MapContext() {}
+      MapContext();
+      virtual ~MapContext();
       
       virtual ClipContext *clipContext(void) { I_Error("Internal error: MapContext::clipContext called on non ClipContext object."); return NULL; }
       virtual TracerContext *tracerContext(void) { I_Error("Internal error: MapContext::tracerContext called on non TracerContext object."); return NULL; }
       virtual void done() = 0;
+
+      MarkVector *getMarkedLines();
+
+   private:
+      MarkVector *markedlines;
 };
 
 
@@ -122,12 +128,16 @@ class ClipContext : public MapContext
       
       // All the portal groups the mobj would be touching in the new position.
       PODCollection<int> adjacent_groups;
-      MarkVector *markedgroups;
-      MarkVector *markedsectors;
+
+      MarkVector *getMarkedGroups();
+      MarkVector *getMarkedSectors();
       
    private:
+      MarkVector *markedgroups;
+      MarkVector *markedsectors;
+
       ClipEngine *from;
-      
+
       ClipContext *next;
       friend class ClipEngine;
       friend class PortalClipEngine;

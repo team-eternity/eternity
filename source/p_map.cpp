@@ -87,7 +87,7 @@ ClipContext* DoomClipEngine::getContext()
    return &clipc;
 }
 
-void DoomClipEngine::freeContext(ClipContext *cc)
+void DoomClipEngine::releaseContext(ClipContext *cc)
 {
 }
 
@@ -280,7 +280,7 @@ bool DoomClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
       {
          if(!P_BlockThingsIterator(bx, by, func, cc))
          {
-            freeContext(cc);
+            releaseContext(cc);
             return false;
          }
       }
@@ -305,7 +305,7 @@ bool DoomClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    setThingPosition(thing);
 
-   freeContext(cc);   
+   releaseContext(cc);   
    return true;
 }
 
@@ -2092,7 +2092,7 @@ void DoomClipEngine::slideMove(Mobj *mo)
    }  // killough 3/15/98: Allow objects to drop off ledges:
    while(!tryMove(mo, mo->x+tmxmove, mo->y+tmymove, true, cc));
    
-   freeContext(cc);
+   releaseContext(cc);
 }
 
 //
@@ -2879,10 +2879,6 @@ void DoomClipEngine::setThingPosition(Mobj *thing)
       if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
          P_AddMobjBlockLink(thing, blockx, blocky, CENTER_ADJACENT);
    }
-}
-
-void DoomClipEngine::mapLoaded() 
-{
 }
 
 

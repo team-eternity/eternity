@@ -528,12 +528,7 @@ void P_LoadSectors(int lumpnum)
       ss->c_portal = ss->f_portal = NULL;
       ss->groupid = R_NOGROUP;
 
-      // SoM: Init things list ring node
-      ss->thingnodelist = clip->getSecnode();
-	   memset(ss->thingnodelist, 0, sizeof(*ss->thingnodelist));
-
-      ss->thingnodelist->m_snext = ss->thingnodelist->m_sprev = ss->thingnodelist;
-	   ss->thingnodelist->m_sector = ss;
+      ss->thingnodelist = NULL;
 
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf   = M_FixedToFloat(ss->floorheight);
@@ -2542,7 +2537,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    P_SpawnPortals();
 
-   // Determine clipping engine here.
+   // Determine clipping engine here. 
+   // TODO: Might need to include slopes in determining which engine to choose
    P_SetClippingEngine(P_PortalGroupCount() ? CLIP_PORTAL : CLIP_DOOM);
 
    // haleyjd 10/03/05: handle multiple map formats
@@ -2605,8 +2601,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);
 
    ACS_LoadLevelScript(dir, acslumpnum);
-   
-   clip->mapLoaded();
 }
 
 //

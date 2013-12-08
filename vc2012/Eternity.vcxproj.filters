@@ -1629,12 +1629,6 @@
     <ClInclude Include="..\source\m_compare.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\p_mapcontext.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\p_traceengine.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\p_map.h">
       <Filter>Source Files\Clip\Classic</Filter>
     </ClInclude>
@@ -1648,6 +1642,12 @@
       <Filter>Source Files\Clip\Advanced</Filter>
     </ClInclude>
     <ClInclude Include="..\source\p_clipen.h">
+      <Filter>Source Files\Clip\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_mapcontext.h">
+      <Filter>Source Files\Clip\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_traceengine.h">
       <Filter>Source Files\Clip\Interface</Filter>
     </ClInclude>
   </ItemGroup>

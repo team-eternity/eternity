@@ -55,7 +55,7 @@ class TracerEngine
                                    pathfunc_t trav) = 0;
                              
       virtual TracerContext   *getContext() = 0;
-      virtual void            freeContext(TracerContext *) = 0;
+      virtual void            releaseContext(TracerContext *) = 0;
       
       // HAX
       virtual fixed_t         tracerPuffAttackRange() = 0;
@@ -82,7 +82,7 @@ class DoomTraceEngine : public TracerEngine
       virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int, pathfunc_t trav);      
       
       virtual TracerContext   *getContext() {return &tracec;}
-      virtual void            freeContext(TracerContext *) {}
+      virtual void            releaseContext(TracerContext *) {}
       
       // HAX
       virtual fixed_t         tracerPuffAttackRange();

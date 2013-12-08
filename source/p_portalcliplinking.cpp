@@ -65,16 +65,14 @@ static inline void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, 
 
 static inline void HitPortalGroup(int groupid, ClipContext *cc)
 {
-   if(cc->markedgroups->isMarked(groupid))
+   if(cc->getMarkedGroups()->mark(groupid))
       return;
       
-   cc->markedgroups->mark(groupid);
    cc->adjacent_groups.add(groupid);
 }
 
 //
 // Populates the given list with all the portal groups (by index) the mobj touches
-//
 bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context)
 {
    ClipContext *cc = context->clipContext();
@@ -86,31 +84,40 @@ bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context
       HitPortalGroup(line->portal->data.link.toid, cc);
    
    // Floor/ceiling portals
-   if(line->frontsector->c_pflags & PS_PASSABLE && cc->thing->z + cc->thing->height > line->frontsector->ceilingheight)
-      HitPortalGroup(line->frontsector->c_portal->data.link.toid, cc);
+   if(line->frontsector)
+   {
+      if(line->frontsector->c_pflags & PS_PASSABLE && cc->thing->z + cc->thing->height > line->frontsector->ceilingheight)
+         HitPortalGroup(line->frontsector->c_portal->data.link.toid, cc);
    
-   if(line->frontsector->f_pflags & PS_PASSABLE && cc->thing->z < line->frontsector->ceilingheight)
-      HitPortalGroup(line->frontsector->f_portal->data.link.toid, cc);
-      
-   if(line->backsector->c_pflags & PS_PASSABLE && cc->thing->z + cc->thing->height > line->backsector->ceilingheight)
-      HitPortalGroup(line->backsector->c_portal->data.link.toid, cc);
+      if(line->frontsector->f_pflags & PS_PASSABLE && cc->thing->z < line->frontsector->ceilingheight)
+         HitPortalGroup(line->frontsector->f_portal->data.link.toid, cc);
+   }
    
-   if(line->backsector->f_pflags & PS_PASSABLE && cc->thing->z < line->backsector->ceilingheight)
-      HitPortalGroup(line->backsector->f_portal->data.link.toid, cc);
+   if(line->backsector)
+   {
+      if(line->backsector->c_pflags & PS_PASSABLE && cc->thing->z + cc->thing->height > line->backsector->ceilingheight)
+         HitPortalGroup(line->backsector->c_portal->data.link.toid, cc);
    
+      if(line->backsector->f_pflags & PS_PASSABLE && cc->thing->z < line->backsector->ceilingheight)
+         HitPortalGroup(line->backsector->f_portal->data.link.toid, cc);
+   }
+
    return true;
 }
 
 
+//
+// findAdjacentPortals
+//
+// Does what it says, says what it does.
 void PortalClipEngine::findAdjacentPortals(ClipContext *cc)
 {
    Mobj *thing = cc->thing;
    int yh, yl, xh, xl;
    int bx, by;
-   
 
    cc->adjacent_groups.makeEmpty();
-   cc->markedgroups->clearMarks();
+   cc->getMarkedGroups()->clearMarks();
 
    HitPortalGroup(cc->thing->subsector->sector->groupid, cc);
 
@@ -128,7 +135,7 @@ void PortalClipEngine::findAdjacentPortals(ClipContext *cc)
             if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
                continue;
             
-            P_BlockLinesIterator(bx, by, PortalClipEngine::PIT_FindAdjacentPortals, cc);
+            blockLinesIterator(bx, by, PortalClipEngine::PIT_FindAdjacentPortals, cc);
          }
       }
    }
@@ -140,14 +147,7 @@ void PortalClipEngine::unlinkMobjFromSectors(Mobj *mobj)
 {
    ClipEngine::unlinkMobjFromSectors(mobj);
 
-   msecnode_t *next;
-   for(msecnode_t *node = mobj->sectorlinks; node; node = next)
-   {
-      next = node->m_tnext;
-      (node->m_snext->m_sprev = node->m_sprev)->m_snext = node->m_snext;
-      putSecnode(node);
-   }
-
+   delSeclist(mobj->sectorlinks);
    mobj->sectorlinks = NULL;
 }
 
@@ -162,12 +162,20 @@ void PortalClipEngine::delSeclist(msecnode_t *node)
 
       if(rover->m_snext)
          rover->m_snext->m_sprev = rover->m_sprev;
+
       if(rover->m_sprev)
          rover->m_sprev->m_snext = rover->m_snext;
+      else
+      {
+         rover->m_sector->touching_thinglist = rover->m_snext;
+         if(rover->m_snext)
+            rover->m_snext->m_sprev = NULL;
+      }
 
       putSecnode(rover);
    }
 }
+
 
 void PortalClipEngine::unsetThingPosition(Mobj *thing)
 {
@@ -177,9 +185,10 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
    {
       unlinkMobjFromSectors(thing);
       delSeclist(thing->touching_sectorlist);
+      thing->touching_sectorlist = NULL;
    }
 
-   if(!(thing->flags & MF_NOBLOCKMAP))
+   if(!(thing->flags & MF_NOBLOCKMAP) && thing->blocklinks)
    {
       P_RemoveMobjBlockLinks(thing);
    }
@@ -188,7 +197,11 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
 }
 
 
-
+//
+// addMobjBlockLinks
+//
+// Iterates through the blockmap nodes a thing is touching, and adds links to them including 
+// flags to indicate adjacency information.
 void PortalClipEngine::addMobjBlockLinks(ClipContext *cc)
 {
    int xl, xh, yl, yh, mask;
@@ -228,11 +241,13 @@ void PortalClipEngine::addMobjBlockLinks(ClipContext *cc)
 }
 
 
-
-void PortalClipEngine::linkMobjToSector(Mobj *mobj, sector_t *sector)
+//
+// addMobjSectorLink
+//
+// Adds a node to the sector's thingnodelist which allows things to be attached to multiple
+// sectors at the same time (portals, you know)
+void PortalClipEngine::addMobjSectorLink(Mobj *mobj, sector_t *sector)
 {
-   ClipEngine::linkMobjToSector(mobj, sector);
-
    msecnode_t *node = getSecnode();
 
    node->m_sector = sector;
@@ -242,19 +257,26 @@ void PortalClipEngine::linkMobjToSector(Mobj *mobj, sector_t *sector)
    node->m_tprev = NULL;
    mobj->sectorlinks = node;
 
-   (node->m_sprev = sector->thingnodelist->m_sprev)->m_snext = node;
-   (node->m_snext = sector->thingnodelist)->m_sprev = node;
+   if(sector->thingnodelist)
+      sector->thingnodelist->m_sprev = node;
+
+   node->m_snext = sector->thingnodelist;
+   node->m_sprev = NULL;
+   sector->thingnodelist = node;
 }
 
 
+//
+// CheckTouchedSector
+//
+// Checks to see if a sector has been marked in the give context, and if not, the context's mobj
+// is added as a touching mobj for the sector.
 static void CheckTouchedSector(sector_t *sector, ClipContext *cc)
 {
    int secnum = sector - sectors;
 
-   if(cc->markedsectors->isMarked(secnum))
+   if(!sector || cc->getMarkedSectors()->mark(secnum))
       return;
-
-   cc->markedsectors->mark(secnum);
 
    msecnode_t *node = ClipEngine::getSecnode();
    Mobj *thing = cc->thing;
@@ -289,20 +311,28 @@ static bool PIT_FindSectors(line_t *line, MapContext *context)
    return true;
 }
 
+
+//
+// gatherSectorLinks
+//
+// Generates linking nodes for each sector a thing is inside of, and nodes for sectors a thing is touching.
+// This function assumes that the cc->adjacent_groups collection is current for the mobj.
 void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
 {
    int xl, xh, yl, yh;
    int bx, by;
 
-   cc->markedsectors->clearMarks();
+   cc->getMarkedSectors()->clearMarks();
    CheckTouchedSector(thing->subsector->sector, cc);
 
-	for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
-	{
+   linkMobjToSector(thing, thing->subsector->sector);
+
+   for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
+   {
       // link into subsector
       linkoffset_t *link = P_GetLinkOffset(thing->groupid, cc->adjacent_groups[groupindex]);
-	   subsector_t *ss = R_PointInSubsector(thing->x + link->x, thing->y + link->y);
-      linkMobjToSector(thing, ss->sector);
+      subsector_t *ss = R_PointInSubsector(thing->x + link->x, thing->y + link->y);
+      addMobjSectorLink(thing, ss->sector);
 
       CalculateBBoxForThing(cc, cc->x, cc->y, cc->thing->radius, link);
       GetBlockmapBoundsFromBBox(cc, xl, yl, xh, yh);
@@ -314,13 +344,11 @@ void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
             if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
                continue;
 
-            P_BlockLinesIterator(bx, by, PIT_FindSectors, cc);
+            blockLinesIterator(bx, by, PIT_FindSectors, cc);
          }
       }
 	}
 }
-
-
 
 
 void PortalClipEngine::setThingPosition(Mobj *thing)
@@ -331,6 +359,11 @@ void PortalClipEngine::setThingPosition(Mobj *thing)
 }
 
 
+//
+// setThingPosition
+//
+// Links the given Mobj into the map structures based on mobj flags. If findPortals is false,
+// the function assumes that cc->adjacent_portals is current for the thing at the thing's position.
 void PortalClipEngine::setThingPosition(Mobj *thing, ClipContext *cc, bool findPortals)
 {
    // link into subsector
@@ -339,7 +372,7 @@ void PortalClipEngine::setThingPosition(Mobj *thing, ClipContext *cc, bool findP
 
    P_LogThingPosition(thing, " set ");
    
-   if(!(thing->flags & (MF_NOSECTOR|MF_NOBLOCKMAP)))
+   if(!(thing->flags & (MF_NOSECTOR|MF_NOBLOCKMAP) == (MF_NOSECTOR|MF_NOBLOCKMAP)))
    {
       // Collect the portal groups
       cc->thing = thing;
@@ -355,8 +388,5 @@ void PortalClipEngine::setThingPosition(Mobj *thing, ClipContext *cc, bool findP
 
       if(!(thing->flags & MF_NOBLOCKMAP))
          addMobjBlockLinks(cc);
-
-      cc->done();
    }
-
 }

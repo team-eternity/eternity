@@ -28,24 +28,61 @@
 #include "p_mobj.h"
 #include "p_map.h"
 #include "p_traceengine.h"
+#include "p_portal.h"
 #include "p_portalclip.h"
 
 #include "m_bbox.h"
 #include "r_defs.h"
-
+#include "r_state.h"
 
 
 // ----------------------------------------------------------------------------
-// ClipContext
-ClipContext::ClipContext() : spechit()
+// MapContext
+MapContext::MapContext()
 {
-   this->from = NULL;
-   this->markedgroups = NULL;
+   markedlines = NULL;
+}
+
+MapContext::~MapContext()
+{
+   if(markedlines != NULL)
+   {
+      delete markedlines;
+      markedlines = NULL;
+   }
+}
+
+MarkVector *MapContext::getMarkedLines()
+{
+   if(markedlines == NULL)
+      markedlines = new MarkVector(numlines);
+
+   return markedlines;
+}
+
+// ----------------------------------------------------------------------------
+// ClipContext
+ClipContext::ClipContext() : MapContext(), spechit()
+{
+   from = NULL;
+   markedgroups = NULL;
+   markedsectors = NULL;
 }
 
 
 ClipContext::~ClipContext()
 {
+   if(markedgroups != NULL)
+   {
+      delete markedgroups;
+      markedgroups = NULL;
+   }
+
+   if(markedsectors != NULL)
+   {
+      delete markedsectors;
+      markedsectors = NULL;
+   }
 }
 
 
@@ -61,10 +98,25 @@ void ClipContext::done()
       ClipEngine *c = from;
       
       from = NULL;
-      c->freeContext(this);
+      c->releaseContext(this);
    }
 }
 
+MarkVector *ClipContext::getMarkedGroups()
+{
+   if(markedgroups == NULL)
+      markedgroups = new MarkVector(P_PortalGroupCount());
+
+   return markedgroups;
+}
+
+MarkVector *ClipContext::getMarkedSectors()
+{
+   if(markedsectors == NULL)
+      markedsectors = new MarkVector(numsectors);
+
+   return markedsectors;
+}
 
 
 
@@ -76,7 +128,7 @@ bool ClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    ClipContext *cc = getContext();
    bool ret = tryMove(thing, x, y, dropoff, cc);
-   freeContext(cc);
+   releaseContext(cc);
    return ret;
 }
 
@@ -105,7 +157,7 @@ bool ClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y)
 {
    ClipContext *cc = getContext();
    bool ret = checkPosition(thing, x, y, cc);
-   freeContext(cc);
+   releaseContext(cc);
    return ret;
 }
 
@@ -115,7 +167,7 @@ bool ClipEngine::checkSector(sector_t *sector, int crunch, int amt, int floorOrC
 {
    ClipContext *cc = getContext();
    bool ret = checkSector(sector, crunch, amt, floorOrCeil, cc);
-   freeContext(cc);
+   releaseContext(cc);
    return ret;
 }
 
@@ -124,7 +176,7 @@ bool ClipEngine::checkSides(Mobj *actor, int x, int y)
 {
    ClipContext *cc = getContext();
    bool ret = checkSides(actor, x, y, cc);
-   freeContext(cc);
+   releaseContext(cc);
    return ret;
 } 
 
@@ -133,7 +185,7 @@ bool ClipEngine::changeSector(sector_t *sector, int crunch)
 {
    ClipContext *cc = getContext();
    bool res = changeSector(sector, crunch, cc);
-   freeContext(cc);
+   releaseContext(cc);
    return res;
 }
 
@@ -142,7 +194,7 @@ void ClipEngine::applyTorque(Mobj *mo)
 {
    ClipContext *cc = getContext();
    applyTorque(mo, cc);
-   freeContext(cc);
+   releaseContext(cc);
 }
 
 
@@ -151,7 +203,7 @@ void ClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int distance
 {
    ClipContext *cc = getContext();
    radiusAttack(spot, source, damage, distance, mod, flags, cc);
-   freeContext(cc);
+   releaseContext(cc);
 }
 
 
@@ -162,17 +214,20 @@ msecnode_t* ClipEngine::headsecnode = NULL;
 msecnode_t* ClipEngine::getSecnode()
 {
    msecnode_t *node;
-   
-   return headsecnode ?
-      node = headsecnode, headsecnode = node->m_snext, node :
-      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
+
+   if(!headsecnode)
+      return (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL));
+
+   node = headsecnode;
+   headsecnode = node->m_tnext;
+   return node;
 }
 
 
 
 void ClipEngine::putSecnode(msecnode_t *node)
 {
-   node->m_snext = headsecnode;
+   node->m_tnext = headsecnode;
    headsecnode = node;
 }
 
@@ -335,7 +390,6 @@ TracerEngine *trace = &doomte;
 // Clipping engine selection
 
 DoomClipEngine doomen = DoomClipEngine();
-PortalClipEngine portalen = PortalClipEngine();
 
 ClipEngine *clip = &doomen;
 
@@ -348,7 +402,7 @@ void P_SetClippingEngine(DoomClipper_e engine)
          trace = &doomte;
          break;
       case CLIP_PORTAL:
-         clip = &portalen;
+         clip = new (PU_LEVEL) PortalClipEngine();
          trace = &doomte;
          break;
       default:

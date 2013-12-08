@@ -79,7 +79,7 @@ enum
 };
 
 
-class ClipEngine
+class ClipEngine : public ZoneObject
 {
    public:
       virtual ~ClipEngine() {}
@@ -130,11 +130,10 @@ class ClipEngine
       virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc) = 0;
       virtual void unsetThingPosition(Mobj *mo) = 0;
       virtual void setThingPosition(Mobj *mo) = 0;
-      virtual void mapLoaded() = 0;
       
       // Clipping contexts
       virtual ClipContext*  getContext() = 0;
-      virtual void          freeContext(ClipContext *) = 0;
+      virtual void          releaseContext(ClipContext *) = 0;
       
      
       // Secnodes

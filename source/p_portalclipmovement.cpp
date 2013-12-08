@@ -79,10 +79,9 @@ static inline void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, 
 
 static inline void HitPortalGroup(int groupid, ClipContext *cc)
 {
-   if(cc->markedgroups->isMarked(groupid))
+   if(cc->getMarkedGroups()->mark(groupid))
       return;
-      
-   cc->markedgroups->mark(groupid);
+
    cc->adjacent_groups.add(groupid);
 }
 
@@ -684,11 +683,8 @@ bool CheckLineThing(line_t *line, MapContext *mc)
    // if contacted a special line, add it to the list
    if(line->special || line->portal)
    {
-      if(line->pflags & PS_PASSABLE && !cc->markedgroups->isMarked(line->portal->data.link.toid))
-      {
-         cc->markedgroups->mark(line->portal->data.link.toid);
+      if(line->pflags & PS_PASSABLE && !cc->getMarkedGroups()->mark(line->portal->data.link.toid))
          cc->adjacent_groups.add(line->portal->data.link.toid);
-      }
 
       cc->spechit.add(line);
    }
@@ -714,10 +710,10 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
    
    cc->spechit.makeEmpty();
    cc->adjacent_groups.makeEmpty();
-   cc->markedgroups->clearMarks();
+   cc->getMarkedGroups()->clearMarks();
 
    cc->adjacent_groups.add(startgroup);
-   cc->markedgroups->mark(startgroup);
+   cc->getMarkedGroups()->mark(startgroup);
 
    // SoM: 09/07/02: 3dsides monster fix
    cc->touch3dside = 0;
@@ -777,7 +773,7 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
 
          if(!(thing->flags & MF_NOCLIP))
          {
-            if(!P_BlockLinesIterator(bx, by, CheckLineThing, cc))
+            if(!blockLinesIterator(bx, by, CheckLineThing, cc))
                return false; // doesn't fit
          }
       }

@@ -36,7 +36,7 @@ class PortalClipEngine : public ClipEngine
 {
    public:
       PortalClipEngine() : unused(NULL) {}
-      virtual ~PortalClipEngine() {}
+      virtual ~PortalClipEngine();
       
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
       virtual bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc);
@@ -68,17 +68,15 @@ class PortalClipEngine : public ClipEngine
       virtual void setThingPosition(Mobj *mo);
       virtual void setThingPosition(Mobj *mo, ClipContext *cc, bool findPortals);
 
-      virtual void mapLoaded();
-      
       // Clipping contexts
       virtual ClipContext*  getContext();
-      virtual void          freeContext(ClipContext *);
+      virtual void          releaseContext(ClipContext *);
       
    protected:
       ClipContext    *unused;
 
       // Internal utilities
-      virtual void linkMobjToSector(Mobj *mobj, sector_t *sector);
+      virtual void addMobjSectorLink(Mobj *mobj, sector_t *sector);
       virtual void unlinkMobjFromSectors(Mobj *mobj);
 
       void gatherSectorLinks(Mobj *thing, ClipContext *cc);
@@ -89,18 +87,28 @@ class PortalClipEngine : public ClipEngine
       static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context);
       static void findAdjacentPortals(ClipContext *cc);
 
-
+      // Blockmap iterators
+      static bool blockThingsIterator(int x, int y, bool (*func)(Mobj *, MapContext *), MapContext *mc);
+      static bool blockLinesIterator(int x, int y, bool (*func)(line_t *, MapContext *), MapContext *mc);
 };
 
 
+//
+// MarkVector
+//
 class MarkVector : public ZoneObject
 {
 public:
    MarkVector(size_t size);
    virtual ~MarkVector();
 
+   // Clears all marks in the vector. This will only memset over the range of words that have been marked
    void clearMarks();
-   void mark(size_t itemIndex);
+
+   // Sets the bit at the given index. Returns true if the bit was previously set.
+   bool mark(size_t itemIndex);
+
+   // Returns true if the bit at the given index is set.
    bool isMarked(size_t itemIndex) const { return !!(markArray[itemIndex >> 5] & (1 << (itemIndex & 31))); };
 
 protected:
