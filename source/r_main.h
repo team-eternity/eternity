@@ -152,7 +152,7 @@ typedef struct cb_view_s
    float tan;
 
    float pspritexscale, pspriteyscale;
-   float pspritexstep, pspriteystep;
+   float pspriteystep;
 } cb_view_t;
 
 // haleyjd 3/11/10: markflags

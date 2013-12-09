@@ -358,8 +358,6 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y)
    return R_PointToAngle2(viewx, viewy, x, y);
 }
 
-float maxtangent = 1.0f;
-
 //
 // R_ResetFOV
 // 
@@ -389,8 +387,6 @@ void R_ResetFOV(int width, int height)
       fov = 20;
    else if(fov > 179)
       fov = 179;
-
-   maxtangent = (float)tan((float)fov * PI / 360.0f);
 }
 
 extern float slopevis; // SoM: used in slope lighting
