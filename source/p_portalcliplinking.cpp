@@ -71,6 +71,7 @@ static inline void HitPortalGroup(int groupid, ClipContext *cc)
    cc->adjacent_groups.add(groupid);
 }
 
+
 //
 // Populates the given list with all the portal groups (by index) the mobj touches
 bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context)
@@ -147,12 +148,17 @@ void PortalClipEngine::unlinkMobjFromSectors(Mobj *mobj)
 {
    ClipEngine::unlinkMobjFromSectors(mobj);
 
-   delSeclist(mobj->sectorlinks);
+   delSectorLinks(mobj->sectorlinks);
    mobj->sectorlinks = NULL;
 }
 
 
 void PortalClipEngine::delSeclist(msecnode_t *node)
+{
+   I_Error("delSeclist not used in portal clipping engine.");
+}
+
+void PortalClipEngine::delSectorLinks(msecnode_t *node)
 {
    msecnode_t *rover, *next;
 
@@ -166,11 +172,28 @@ void PortalClipEngine::delSeclist(msecnode_t *node)
       if(rover->m_sprev)
          rover->m_sprev->m_snext = rover->m_snext;
       else
-      {
+         rover->m_sector->thingnodelist = rover->m_snext;
+
+      putSecnode(rover);
+   }
+}
+
+
+void PortalClipEngine::delTouchingThingChain(msecnode_t *node)
+{
+   msecnode_t *rover, *next;
+
+   for(rover = node; rover; rover = next)
+   {
+      next = rover->m_tnext;
+
+      if(rover->m_snext)
+         rover->m_snext->m_sprev = rover->m_sprev;
+
+      if(rover->m_sprev)
+         rover->m_sprev->m_snext = rover->m_snext;
+      else
          rover->m_sector->touching_thinglist = rover->m_snext;
-         if(rover->m_snext)
-            rover->m_snext->m_sprev = NULL;
-      }
 
       putSecnode(rover);
    }
@@ -184,7 +207,7 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
    if(!(thing->flags & MF_NOSECTOR))
    {
       unlinkMobjFromSectors(thing);
-      delSeclist(thing->touching_sectorlist);
+      delTouchingThingChain(thing->touching_sectorlist);
       thing->touching_sectorlist = NULL;
    }
 
@@ -372,7 +395,7 @@ void PortalClipEngine::setThingPosition(Mobj *thing, ClipContext *cc, bool findP
 
    P_LogThingPosition(thing, " set ");
    
-   if(!(thing->flags & (MF_NOSECTOR|MF_NOBLOCKMAP) == (MF_NOSECTOR|MF_NOBLOCKMAP)))
+   if((thing->flags & (MF_NOSECTOR|MF_NOBLOCKMAP)) != (MF_NOSECTOR|MF_NOBLOCKMAP))
    {
       // Collect the portal groups
       cc->thing = thing;

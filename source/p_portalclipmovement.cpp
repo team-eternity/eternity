@@ -271,7 +271,7 @@ void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, C
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
-   if(linedef->flags & ML_3DMIDTEX && sides[linedef->sidenum[0]].midtexture)
+   if(mo && linedef->flags & ML_3DMIDTEX && sides[linedef->sidenum[0]].midtexture)
    {
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
