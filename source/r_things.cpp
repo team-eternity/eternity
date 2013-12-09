@@ -1229,30 +1229,7 @@ static void R_DrawPlayerSprites(void)
          R_DrawPSprite(psp);
 }
 
-
-// killough 9/22/98: inlined memcpy of pointer arrays
-
-/* Julian 6/7/2001
-
-        1) cleansed macro layout
-        2) remove esi,edi,ecx from cloberred regs since used in constraints
-           (useless on old gcc, error maker on modern versions)
-*/
-
-#ifdef DJGPP
-
-#define bcopyp(d, s, n) \
-asm(\
-" cld\n"\
-"rep\n" \
-"movsl" :\
-: "D"(d), "S"(s), "c"(n) : "%cc")
-
-#else
-
 #define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
-
-#endif
 
 //
 // killough 9/2/98: merge sort
