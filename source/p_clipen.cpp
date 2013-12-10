@@ -96,8 +96,6 @@ void ClipContext::done()
    if(from != NULL)
    {
       ClipEngine *c = from;
-      
-      from = NULL;
       c->releaseContext(this);
    }
 }

@@ -72,6 +72,17 @@ static inline void HitPortalGroup(int groupid, ClipContext *cc)
 }
 
 
+static inline void CheckSectorPortals(sector_t *sector, ClipContext *cc)
+{
+   Mobj *thing = cc->thing;
+
+   if(sector->c_pflags & PS_PASSABLE && thing->z + thing->height > sector->ceilingheight)
+      HitPortalGroup(sector->c_portal->data.link.toid, cc);
+   
+   if(sector->f_pflags & PS_PASSABLE && thing->z < sector->floorheight)
+      HitPortalGroup(sector->f_portal->data.link.toid, cc);
+}
+
 //
 // Populates the given list with all the portal groups (by index) the mobj touches
 bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context)
@@ -86,22 +97,10 @@ bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context
    
    // Floor/ceiling portals
    if(line->frontsector)
-   {
-      if(line->frontsector->c_pflags & PS_PASSABLE && cc->thing->z + cc->thing->height > line->frontsector->ceilingheight)
-         HitPortalGroup(line->frontsector->c_portal->data.link.toid, cc);
-   
-      if(line->frontsector->f_pflags & PS_PASSABLE && cc->thing->z < line->frontsector->ceilingheight)
-         HitPortalGroup(line->frontsector->f_portal->data.link.toid, cc);
-   }
+      CheckSectorPortals(line->frontsector, cc);
    
    if(line->backsector)
-   {
-      if(line->backsector->c_pflags & PS_PASSABLE && cc->thing->z + cc->thing->height > line->backsector->ceilingheight)
-         HitPortalGroup(line->backsector->c_portal->data.link.toid, cc);
-   
-      if(line->backsector->f_pflags & PS_PASSABLE && cc->thing->z < line->backsector->ceilingheight)
-         HitPortalGroup(line->backsector->f_portal->data.link.toid, cc);
-   }
+      CheckSectorPortals(line->backsector, cc);
 
    return true;
 }
