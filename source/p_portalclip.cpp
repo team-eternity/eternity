@@ -174,7 +174,6 @@ ClipContext*  PortalClipEngine::getContext()
 
    if(unused == NULL) {
       ret = new ClipContext();
-      ret->setEngine(this);
    }
    else {  
       ret = unused;
@@ -182,14 +181,19 @@ ClipContext*  PortalClipEngine::getContext()
       ret->next = NULL;
    }
 
+   ret->setEngine(this);
    return ret;
 }
 
 
 void PortalClipEngine::releaseContext(ClipContext *cc)
 {
-   cc->next = unused;
-   unused = cc;
+   if(cc->from)
+   {
+      cc->next = unused;
+      unused = cc;
+      cc->from = NULL;
+   }
 }
 
 

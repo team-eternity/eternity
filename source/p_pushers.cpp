@@ -242,6 +242,7 @@ void PushThinker::Think()
          for(by = yl; by <= yh; by++)
             P_BlockThingsIterator(bx, by, PIT_PushThing, cc);
       }
+      cc->done();
       return;
    }
 

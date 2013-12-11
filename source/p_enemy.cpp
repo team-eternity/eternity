@@ -143,8 +143,6 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    }
 #endif
 
-   ClipContext *cc = clip->getContext();
-   
    for(i=0; i<sec->linecount; i++)
    {
       sector_t *other;
@@ -165,8 +163,11 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
+      ClipContext *cc = clip->getContext();
       open_t opening;
+
       clip->lineOpening(check, NULL, &opening, cc);
+      cc->done();
       
       if(opening.range <= 0)
          continue;       // closed door
@@ -178,8 +179,6 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       else if(!soundblocks)
          P_RecursiveSound(other, 1, soundtarget);
    }
-   
-   cc->done();
 }
 
 //
