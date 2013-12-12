@@ -849,7 +849,9 @@ static void P_InitTagLists()
    {                               // so that lower linedefs appear first
       // haleyjd 05/16/09: unified id into tag;
       // added mapformat parameter to test here:
-      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM || 
+         LevelInfo.mapFormat == LEVEL_FORMAT_PSX  ||
+         lines[i].tag != -1)
       {
          int j = (unsigned int)lines[i].tag % (unsigned int)numlines; // Hash func
          lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain

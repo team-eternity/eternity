@@ -74,6 +74,7 @@
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
@@ -334,6 +335,39 @@ static void GetLevelString(byte **data, char *dest, int len)
 // Level Loading
 //
 
+#define DOOM_VERTEX_LEN 4
+#define PSX_VERTEX_LEN  8
+
+//
+// P_LoadConsoleVertexes
+//
+// haleyjd 12/12/13: Support for console maps' fixed-point vertices.
+//
+void P_LoadConsoleVertexes(int lump)
+{
+   ZAutoBuffer buf;
+
+   // Determine number of vertexes
+   numvertexes = setupwad->lumpLength(lump) / PSX_VERTEX_LEN;
+
+   // Allocate
+   vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
+
+   // Load lump
+   setupwad->cacheLumpAuto(lump, buf);
+   auto data = buf.getAs<byte *>();
+
+   // Copy and convert vertex coordinates
+   for(int i = 0; i < numvertexes; i++)
+   {
+      vertexes[i].x = GetLevelDWord(&data);
+      vertexes[i].y = GetLevelDWord(&data);
+
+      vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
+      vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
+   }
+}
+
 //
 // P_LoadVertexes
 //
@@ -341,32 +375,29 @@ static void GetLevelString(byte **data, char *dest, int len)
 //
 void P_LoadVertexes(int lump)
 {
-   byte *data;
-   int i;
+   ZAutoBuffer buf;
    
    // Determine number of vertexes:
    //  total lump length / vertex record length.
-   numvertexes = setupwad->lumpLength(lump) / sizeof(mapvertex_t);
+   numvertexes = setupwad->lumpLength(lump) / DOOM_VERTEX_LEN;
 
    // Allocate zone memory for buffer.
    vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
    
    // Load data into cache.
-   data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+   setupwad->cacheLumpAuto(lump, buf);
+   auto data = buf.getAs<byte *>();
    
    // Copy and convert vertex coordinates, internal representation as fixed.
-   for(i = 0; i < numvertexes; ++i)
+   for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = SwapShort(((mapvertex_t *) data)[i].x) << FRACBITS;
-      vertexes[i].y = SwapShort(((mapvertex_t *) data)[i].y) << FRACBITS;
+      vertexes[i].x = GetLevelWord(&data) << FRACBITS;
+      vertexes[i].y = GetLevelWord(&data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
    }
-
-   // Free buffer memory.
-   Z_Free(data);
 }
 
 //
@@ -463,28 +494,152 @@ void P_LoadSubsectors(int lump)
 }
 
 //
+// P_InitSector
+//
+// Shared initialization code for sectors across all map formats.
+//
+static void P_InitSector(sector_t *ss)
+{
+   // haleyjd 09/24/06: determine what the default sound sequence is
+   int defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
+
+   ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
+   ss->prevsec = -1; // stair retriggering until build completes
+
+   // killough 3/7/98:
+   ss->heightsec     = -1;   // sector used to get floor and ceiling height
+   ss->floorlightsec = -1;   // sector used to get floor lighting
+   // killough 3/7/98: end changes
+
+   // killough 4/11/98 sector used to get ceiling lighting:
+   ss->ceilinglightsec = -1;
+
+   // killough 4/4/98: colormaps:
+   // haleyjd 03/04/07: modifications for per-sector colormap logic
+   ss->bottommap = ss->midmap = ss->topmap =
+      ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+
+   // SoM 9/19/02: Initialize the attached sector list for 3dsides
+   ss->c_attached = ss->f_attached = NULL;
+   // SoM 11/9/04: 
+   ss->c_attsectors = ss->f_attsectors = NULL;
+
+   // SoM 10/14/07:
+   ss->c_asurfaces = ss->f_asurfaces = NULL;
+
+   // SoM: init portals
+   ss->c_pflags = ss->f_pflags = 0;
+   ss->c_portal = ss->f_portal = NULL;
+   ss->groupid = R_NOGROUP;
+
+   // SoM: These are kept current with floorheight and ceilingheight now
+   ss->floorheightf   = M_FixedToFloat(ss->floorheight);
+   ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
+
+   // haleyjd 09/24/06: sound sequences -- set default
+   ss->sndSeqID = defaultSndSeq;
+
+   // CPP_FIXME: temporary placement construction for sound origins
+   ::new (&ss->soundorg)  PointThinker;
+   ::new (&ss->csoundorg) PointThinker;
+
+   // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
+   //         12/31/08: convert BOOM generalized damage
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
+   {
+      int damagetype;
+
+      // convert special bits into flags (correspondence is direct by design)
+      ss->flags |= (ss->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
+
+      // convert damage
+      damagetype = (ss->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
+      switch(damagetype)
+      {
+      case 1:
+         ss->damage     = 5;
+         ss->damagemask = 32;
+         ss->damagemod  = MOD_SLIME;
+         break;
+      case 2:
+         ss->damage     = 10;
+         ss->damagemask = 32;
+         ss->damagemod  = MOD_SLIME;
+         break;
+      case 3:
+         ss->damage       = 20;
+         ss->damagemask   = 32;
+         ss->damagemod    = MOD_SLIME;
+         ss->damageflags |= SDMG_LEAKYSUIT;
+         break;
+      default:
+         break;
+      }
+   }
+}
+
+#define DOOM_SECTOR_SIZE 26
+#define PSX_SECTOR_SIZE  28
+
+//
+// P_LoadPSXSectors
+//
+// haleyjd 12/12/13: support for PSX port's sector format.
+//
+void P_LoadPSXSectors(int lumpnum)
+{
+   ZAutoBuffer buf;
+   char namebuf[9];
+   
+   numsectors  = setupwad->lumpLength(lumpnum) / PSX_SECTOR_SIZE;
+   sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
+   
+   setupwad->cacheLumpAuto(lumpnum, buf);
+   auto data = buf.getAs<byte *>();
+
+   // init texture name buffer to ensure null-termination
+   memset(namebuf, 0, sizeof(namebuf));
+
+   for(int i = 0; i < numsectors; i++)
+   {
+      sector_t *ss = sectors + i;
+
+      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
+      GetLevelString(&data, namebuf, 8);
+      ss->floorpic           = R_FindFlat(namebuf);
+      GetLevelString(&data, namebuf, 8);
+      P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
+      ss->lightlevel         = *data++;
+      ++data;                // skip color ID for now
+      ss->special            = GetLevelWord(&data);
+      ss->tag                = GetLevelWord(&data);
+      data += 2;             // skip padding/unknown field for now
+    
+      P_InitSector(ss);
+   }
+}
+
+//
 // P_LoadSectors
 //
 // killough 5/3/98: reformatted, cleaned up
 //
 void P_LoadSectors(int lumpnum)
 {
-   byte *lump, *data;
-   int  i;
-   int  defaultSndSeq;
+   ZAutoBuffer buf;
    char namebuf[9];
    
-   numsectors  = setupwad->lumpLength(lumpnum) / sizeof(mapsector_t);
+   numsectors  = setupwad->lumpLength(lumpnum) / DOOM_SECTOR_SIZE;
    sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
-   lump = data = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
-
-   // haleyjd 09/24/06: determine what the default sound sequence is
-   defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
+   
+   setupwad->cacheLumpAuto(lumpnum, buf);
+   auto data = buf.getAs<byte *>();
 
    // init texture name buffer to ensure null-termination
    memset(namebuf, 0, sizeof(namebuf));
 
-   for(i = 0; i < numsectors; ++i)
+   for(int i = 0; i < numsectors; i++)
    {
       sector_t *ss = sectors + i;
 
@@ -498,83 +653,9 @@ void P_LoadSectors(int lumpnum)
       ss->lightlevel         = GetLevelWord(&data);
       ss->special            = GetLevelWord(&data);
       ss->tag                = GetLevelWord(&data);
-      
-      ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
-      ss->prevsec = -1; // stair retriggering until build completes
-
-      // killough 3/7/98:
-      ss->heightsec     = -1;   // sector used to get floor and ceiling height
-      ss->floorlightsec = -1;   // sector used to get floor lighting
-      // killough 3/7/98: end changes
-
-      // killough 4/11/98 sector used to get ceiling lighting:
-      ss->ceilinglightsec = -1;
-      
-      // killough 4/4/98: colormaps:
-      // haleyjd 03/04/07: modifications for per-sector colormap logic
-      ss->bottommap = ss->midmap = ss->topmap =
-         ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
-            
-      // SoM 9/19/02: Initialize the attached sector list for 3dsides
-      ss->c_attached = ss->f_attached = NULL;
-      // SoM 11/9/04: 
-      ss->c_attsectors = ss->f_attsectors = NULL;
-
-      // SoM 10/14/07:
-      ss->c_asurfaces = ss->f_asurfaces = NULL;
-
-      // SoM: init portals
-      ss->c_pflags = ss->f_pflags = 0;
-      ss->c_portal = ss->f_portal = NULL;
-      ss->groupid = R_NOGROUP;
-
-      // SoM: These are kept current with floorheight and ceilingheight now
-      ss->floorheightf   = M_FixedToFloat(ss->floorheight);
-      ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
-
-      // haleyjd 09/24/06: sound sequences -- set default
-      ss->sndSeqID = defaultSndSeq;
-
-      // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ss->soundorg)  PointThinker;
-      ::new (&ss->csoundorg) PointThinker;
-
-      // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
-      //         12/31/08: convert BOOM generalized damage
-      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
-      {
-         int damagetype;
-
-         // convert special bits into flags (correspondence is direct by design)
-         ss->flags |= (ss->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
-
-         // convert damage
-         damagetype = (ss->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
-         switch(damagetype)
-         {
-         case 1:
-            ss->damage     = 5;
-            ss->damagemask = 32;
-            ss->damagemod  = MOD_SLIME;
-            break;
-         case 2:
-            ss->damage     = 10;
-            ss->damagemask = 32;
-            ss->damagemod  = MOD_SLIME;
-            break;
-         case 3:
-            ss->damage       = 20;
-            ss->damagemask   = 32;
-            ss->damagemod    = MOD_SLIME;
-            ss->damageflags |= SDMG_LEAKYSUIT;
-            break;
-         default:
-            break;
-         }
-      }
+    
+      P_InitSector(ss);
    }
-
-   Z_Free(lump);
 }
 
 //
@@ -2108,6 +2189,43 @@ static const char *levellumps[] =
 };
 
 //
+// Lumps that are used in console map formats
+//
+static const char *consolelumps[] =
+{
+   "LEAFS",
+   "LIGHTS",
+   "MACROS"
+};
+
+//
+// P_checkConsoleFormat
+//
+// haleyjd 12/12/13: Check for supported console map formats
+//
+static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
+{
+   int          numlumps = dir->getNumLumps();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
+
+   for(int i = ML_LEAFS; i <= ML_MACROS; i++)
+   {
+      int ln = lumpnum + i;
+      if(ln >= numlumps ||     // past the last lump?
+         strncmp(lumpinfo[ln]->name, consolelumps[i - ML_LEAFS], 8))
+      {
+         if(i == ML_LIGHTS)
+            return LEVEL_FORMAT_PSX; // PSX
+         else
+            return LEVEL_FORMAT_INVALID; // invalid map
+      }
+   }
+
+   // If we got here, dealing with Doom 64 format. (TODO: Not supported ... yet?)
+   return LEVEL_FORMAT_INVALID; //LEVEL_FORMAT_DOOM64;
+}
+
+//
 // P_CheckLevel
 //
 // sf 11/9/99: We need to do this now because we no longer have to conform to
@@ -2115,13 +2233,12 @@ static const char *levellumps[] =
 //
 int P_CheckLevel(WadDirectory *dir, int lumpnum)
 {
-   int i, ln;
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
    
-   for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
+   for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
    {
-      ln = lumpnum + i;
+      int ln = lumpnum + i;
       if(ln >= numlumps ||     // past the last lump?
          strncmp(lumpinfo[ln]->name, levellumps[i], 8))
       {
@@ -2130,7 +2247,13 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
          // lump means the map is invalid.
 
          if(i == ML_BEHAVIOR)
-            return LEVEL_FORMAT_DOOM;
+         {
+            // If the current lump is named LEAFS, it's a console map
+            if(ln < numlumps && !strncmp(lumpinfo[ln]->name, "LEAFS", 8))
+               return P_checkConsoleFormat(dir, lumpnum);
+            else
+               return LEVEL_FORMAT_DOOM;
+         }
          else
             return LEVEL_FORMAT_INVALID;
       }
@@ -2436,8 +2559,17 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    level_error = NULL; // reset
    
-   P_LoadVertexes(lumpnum + ML_VERTEXES);
-   P_LoadSectors (lumpnum + ML_SECTORS);
+   switch(LevelInfo.mapFormat)
+   {
+   case LEVEL_FORMAT_PSX:
+      P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
+      P_LoadPSXSectors(lumpnum + ML_SECTORS);
+      break;
+   default:
+      P_LoadVertexes(lumpnum + ML_VERTEXES);
+      P_LoadSectors (lumpnum + ML_SECTORS);
+      break;
+   }
    
    // possible error: missing flats
    CHECK_ERROR();
@@ -2448,6 +2580,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
+   case LEVEL_FORMAT_PSX:
       P_LoadLineDefs(lumpnum + ML_LINEDEFS);
       break;
    case LEVEL_FORMAT_HEXEN:
@@ -2470,7 +2603,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_LoadSubsectors(lumpnum + ML_SSECTORS);
       P_LoadNodes     (lumpnum + ML_NODES);
 
-      // possible error: missing nodes
+      // possible error: missing nodes or subsectors
       CHECK_ERROR();
 
       P_LoadSegs(lumpnum + ML_SEGS); 
@@ -2493,6 +2626,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
+   case LEVEL_FORMAT_PSX:
       P_LoadThings(lumpnum + ML_THINGS);
       break;
    case LEVEL_FORMAT_HEXEN:
