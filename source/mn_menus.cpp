@@ -1941,11 +1941,9 @@ static const char *sixteenNineModes[] =
    NULL
 };
 
-// FIXME/TODO: Not supported as menu choices yet:
+// TODO: Not supported as menu choices yet:
 // 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
 // 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
-// These are not choices here because EE doesn't support them properly yet.
-// Weapons will float above the status bar in these aspect ratios.
 
 static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
 {

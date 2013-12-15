@@ -1026,119 +1026,6 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
    }
 }
 
-/*
-void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z, 
-                   angle_t angle, int updown, int kind)
-{
-   int color1, color2;
-   int zvel, zvelmod, zspread, zadd;
-   // SoM: zvelocity should depend on particle effect type.
-   bool smoke = false, consistant = false;
-   int mod = 31;
-   byte ttl = 12;
-   
-   switch(kind)
-   {
-   case 0:              // Blood
-      color1 = red;
-      color2 = dred;
-      break;
-   case 1:              // Gunshot
-      if(!comp[comp_terrain])
-      {
-         // 06/21/02: make bullet puff colors responsive to 
-         // TerrainTypes -- this is very cool and Quake-2-like ^_^      
-         
-         int terrain = P_GetTerrainTypeForPt(x, y, updown);
-         
-         switch(terrain)
-         {
-         case FLOOR_WATER:
-            color1 = blue1;
-            color2 = blue;
-            zadd = -512;
-            smoke = true;
-            break;
-         case FLOOR_LAVA:
-            color1 = orange;
-            color2 = mdred;
-            zadd = -512;
-            smoke = true;
-            break;
-         default:
-            color1 = grey1;
-            color2 = grey5;
-            zadd = 64;
-            smoke = true;
-            break;
-         }
-      }
-      else
-      {
-         color1 = grey1;
-         color2 = grey5;
-         zadd = 64;
-         smoke = true;
-      }
-      break;
-   case 2:		// Smoke
-      color1 = grey3;
-      color2 = grey1;
-      zadd = 64;
-      smoke = true;
-      break;
-   default:
-      return;
-   }
-   
-   if(smoke)
-   {
-      zvel = 512;
-      zspread = (updown ? -2000 : 2000);
-      mod = 14;
-      ttl = 15;
-   }
-   else
-   {
-      zvel = -3000;
-      zspread = (updown ? -2400 : 2400);
-      zadd = ((updown == 2) ? -128 : 0);
-      mod = 10;
-      ttl = 35;
-      consistant = true;
-   }
-   
-   for(; count; count--)
-   {
-      particle_t *p = newParticle();
-      angle_t an;
-      
-      if(!p)
-         break;
-      
-      p->ttl = ttl;
-      p->fade = FADEFROMTTL(ttl);
-      p->trans = FRACUNIT;
-      p->size = 4;
-      p->color = M_Random() & 0x80 ? color1 : color2;
-      p->velz = !consistant ? (M_Random() * zvel) : 128 * zvel + M_Random();
-      p->accz = -FRACUNIT/22;
-      if(kind)
-      {
-         an = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
-         p->velx = (M_Random() * finecosine[an]) >> 11;
-         p->vely = (M_Random() * finesine[an]) >> 11;
-         p->accx = p->velx >> 4;
-         p->accy = p->vely >> 4;
-      }
-      p->z = z + (M_Random() + zadd) * zspread;
-      an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
-      p->x = x + (M_Random() & mod)*finecosine[an];
-      p->y = y + (M_Random() & mod)*finesine[an];
-   }
-}
-*/
-
 void P_DisconnectEffect(Mobj *actor)
 {
    int i;
@@ -1163,8 +1050,6 @@ void P_DisconnectEffect(Mobj *actor)
       p->styleflags = PS_FULLBRIGHT;
    }
 }
-
-//#define FLYCOUNT 162
 
 //
 // P_FlyEffect
