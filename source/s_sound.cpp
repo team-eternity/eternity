@@ -39,6 +39,7 @@
 #include "doomstat.h"
 #include "e_sound.h"
 #include "i_sound.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "m_queue.h"
 #include "p_chase.h"
@@ -1188,7 +1189,7 @@ void S_StopMusic(void)
 // original episodes and the addition of episode 4, which is all 
 // over the place.
 //
-int S_MusicForMapDoom(void)
+int S_MusicForMapDoom()
 {
    static const int spmus[] =     // Song - Who? - Where?
    {
@@ -1202,12 +1203,12 @@ int S_MusicForMapDoom(void)
       mus_e2m5,     // Shawn        e4m8
       mus_e1m9      // Tim          e4m9
    };
+
+   int episode = eclamp(gameepisode, 1, 4);
+   int map     = eclamp(gamemap,     1, 9);
             
    // sf: simplified
-   return 
-      gameepisode < 4 ?
-         mus_e1m1 + (gameepisode-1)*9 + gamemap-1 :
-         spmus[gamemap-1];
+   return episode < 4 ? mus_e1m1 + (episode-1)*9 + map-1 : spmus[map-1];
 }
 
 //
@@ -1215,9 +1216,10 @@ int S_MusicForMapDoom(void)
 //
 // Drastically simpler.
 //
-int S_MusicForMapDoom2(void)
+int S_MusicForMapDoom2()
 {
-   return (mus_runnin + gamemap - 1);
+   int map = eclamp(gamemap, 1, 35);
+   return (mus_runnin + map - 1);
 }
 
 //
@@ -1225,18 +1227,12 @@ int S_MusicForMapDoom2(void)
 //
 // Also simple, thanks to H_Mus_Matrix, which is my own invention.
 //
-int S_MusicForMapHtic(void)
+int S_MusicForMapHtic()
 {
-   int gep = gameepisode;
-   int gmp = gamemap;
-   
    // ensure bounds just for safety
-   if(gep < 1) gep = 1;
-   if(gep > 6) gep = 6;
-   
-   if(gmp < 1) gmp = 1;
-   if(gmp > 9) gmp = 9;
-   
+   int gep = eclamp(gameepisode, 1, 6);
+   int gmp = eclamp(gamemap,     1, 9);
+     
    return H_Mus_Matrix[gep - 1][gmp - 1];
 }
 

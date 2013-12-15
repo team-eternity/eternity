@@ -47,6 +47,16 @@ template<typename T> inline const T &emax(const T &a, const T &b)
    return ((a < b) ? b : a);
 }
 
+//
+// eclamp
+//
+// Clamp a value to a given range, inclusive.
+//
+template<typename T> inline const T &eclamp(const T &a, const T &min, const T &max)
+{
+   return (a < min ? min : (max < a ? max : a));
+}
+
 #endif
 
 // EOF
