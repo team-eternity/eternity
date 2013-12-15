@@ -172,7 +172,7 @@ struct side_t;
 struct visplane_t;
 struct portal_t;
 
-typedef struct cb_seg_s
+struct cb_seg_t
 {
    int x1, x2;
    float x1frac, x2frac;
@@ -202,6 +202,7 @@ typedef struct cb_seg_s
 
    // 8 bit tables
    lighttable_t **walllights;
+   byte color;
 
    side_t *side;
    sector_t *frontsec, *backsec;
@@ -213,19 +214,17 @@ typedef struct cb_seg_s
 
    // SoM: used for portals
    fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;
-} cb_seg_t;
+};
 
 
-extern cb_view_t  view;
-extern cb_seg_t   seg;
-extern cb_seg_t   segclip;
+extern cb_view_t view;
+extern cb_seg_t  seg;
+extern cb_seg_t  segclip;
 
 // SoM: frameid frame counter.
-void R_IncrementFrameid(void); // Needed by the portal functions... 
+void R_IncrementFrameid(); // Needed by the portal functions... 
 extern unsigned   frameid;
 
-// SoM: include these prototypes after the map data definitions:
-//#include "r_pcheck.h"
 #endif
 
 //----------------------------------------------------------------------------

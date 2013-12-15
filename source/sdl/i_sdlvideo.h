@@ -49,7 +49,12 @@ public:
    virtual void SetPalette(byte *pal);
    virtual void ShutdownGraphics();
    virtual void ShutdownGraphicsPartway();
-   virtual bool InitGraphicsMode();
+   virtual bool InitGraphicsMode();  
+   
+   // no colors support
+   virtual bool hasColors() const { return false; }
+   virtual void drawColorColumn(int x, int y1, int y2, byte color) {}
+   virtual void drawColorSpan(int y, int x1, int x2, byte color)   {}
 };
 
 // Global singleton instance

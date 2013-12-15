@@ -50,6 +50,10 @@ public:
    virtual void ShutdownGraphics()        = 0;
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
+   virtual bool hasColors() const         = 0;
+   
+   virtual void drawColorColumn(int x, int y1, int y2, byte color) = 0;
+   virtual void drawColorSpan(int y, int x1, int x2, byte color)   = 0;
 };
 
 
@@ -76,6 +80,10 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 extern int disk_icon;  // killough 10/98
+
+// Color palettes support
+void I_DrawColorColumn(int x, int y1, int y2, byte color);
+void I_DrawColorSpan(int y, int x1, int x2, byte color);
 
 // video modes
 

@@ -31,6 +31,7 @@
 
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "i_video.h"
 #include "p_info.h"
 #include "p_user.h"
 #include "r_draw.h"
@@ -114,9 +115,11 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
    
+   auto sector = R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false);
+
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false)
-               ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
+   lightnum = (sector->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
+   column.color = sector->color;
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
@@ -386,6 +389,7 @@ static void R_RenderSegLoop(void)
                column.texheight = segclip.midtexh;
 
                colfunc();
+               I_DrawColorColumn(column.x, column.y1, column.y2, segclip.color);
 
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -406,6 +410,7 @@ static void R_RenderSegLoop(void)
                   column.texheight = segclip.toptexh;
 
                   colfunc();
+                  I_DrawColorColumn(column.x, column.y1, column.y2, segclip.color);
 
                   ceilingclip[i] = (float)(column.y2 + 1);
                }
@@ -431,6 +436,7 @@ static void R_RenderSegLoop(void)
                   column.texheight = segclip.bottomtexh;
 
                   colfunc();
+                  I_DrawColorColumn(column.x, column.y1, column.y2, segclip.color);
 
                   floorclip[i] = (float)(column.y1 - 1);
                }

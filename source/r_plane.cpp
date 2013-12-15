@@ -44,6 +44,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "ev_specials.h"
+#include "i_video.h"
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_slopes.h"
@@ -263,46 +264,6 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio;
    ystep = plane.pviewsin * slope * view.focratio;
 
-   // haleyjd: #if 0 for test
-#if 0
-#ifdef __APPLE__
-   {
-      double value;
-      
-      value = fmod(plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width); 
-      if(value < 0) value += plane.tex->width;
-      span.xfrac = (int)(value * plane.fixedunitx);
-      span.xfrac <<= 2;
-
-      value = fmod(-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                   + (x1 - view.xcenter) * ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.yfrac = (int)(value * plane.fixedunity);
-      span.yfrac <<= 2;
-      
-      value = fmod(xstep, (double)plane.tex->width);
-      if(value < 0) value += plane.tex->width;
-      span.xstep = (int)(value * plane.fixedunitx);
-      span.xstep <<= 2;
-            
-      value = fmod(ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.ystep = (int)(value * plane.fixedunity);
-      span.ystep <<= 2;
-   }
-#else
-   span.xfrac = 
-      (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
-   span.yfrac = 
-      (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
-   span.xstep = (unsigned int)(xstep * plane.fixedunitx);
-   span.ystep = (unsigned int)(ystep * plane.fixedunity);
-#endif
-#endif
-
    // haleyjd: TEST
    // Use Mozilla routine for portable double->uint32 conversion
    {
@@ -333,6 +294,7 @@ static void R_MapPlane(int y, int x1, int x2)
    
    // BIG FLATS
    flatfunc();
+   I_DrawColorSpan(y, x1, x2, plane.color);
 }
 
 // haleyjd: NOTE: This version below has scaling implemented. Don't delete it!
@@ -472,6 +434,7 @@ static void R_MapSlope(int y, int x1, int x2)
    R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
  
    slopefunc();
+   I_DrawColorSpan(y, x1, x2, plane.color);
 }
 
 #define CompFloats(x, y) (fabs(x - y) < 0.001f)
@@ -632,8 +595,6 @@ void R_ClearOverlayClips()
    }
 }
 
-
-
 //
 // R_ClearPlanes
 //
@@ -658,7 +619,6 @@ void R_ClearPlanes()
 
    lastopening = openings;
 }
-
 
 //
 // new_visplane
@@ -704,7 +664,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
                         fixed_t xoffs, fixed_t yoffs, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
-                        planehash_t *table)
+                        byte color, planehash_t *table)
 {
    visplane_t *check;
    unsigned int hash;                      // killough
@@ -752,6 +712,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          viewz == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
+         color == check->color &&
          R_CompareSlopes(check->pslope, slope)
         )
         return check;
@@ -779,8 +740,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->xoffsf  = M_FixedToFloat(xoffs);
    check->yoffsf  = M_FixedToFloat(yoffs);
    
-   check->bflags = blendflags;
+   check->bflags  = blendflags;
    check->opacity = opacity;
+   check->color   = color;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
    check->viewsin = (float) sin(view.angle + check->angle);
@@ -872,8 +834,9 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->xoffsf = pl->xoffsf;
       new_pl->yoffsf = pl->yoffsf;
       
-      new_pl->bflags = pl->bflags;
+      new_pl->bflags  = pl->bflags;
       new_pl->opacity = pl->opacity;
+      new_pl->color   = pl->color;
 
       new_pl->pslope = pl->pslope;
       memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
@@ -957,6 +920,7 @@ void do_draw_newsky(visplane_t *pl)
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
             
             colfunc();
+            I_DrawColorColumn(column.x, column.y1, column.y2, 0);
          }
       }
       
@@ -979,6 +943,7 @@ void do_draw_newsky(visplane_t *pl)
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
             
             colfunc();
+            I_DrawColorColumn(column.x, column.y1, column.y2, 0);
          }
       }
    }
@@ -1019,6 +984,7 @@ void do_draw_newsky(visplane_t *pl)
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
 
             colfunc();
+            I_DrawColorColumn(column.x, column.y1, column.y2, 0);
          }
       }
    }
@@ -1142,6 +1108,7 @@ static void do_draw_plane(visplane_t *pl)
                ((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT);
             
             colfunc();
+            I_DrawColorColumn(column.x, column.y1, column.y2, 0);
          }
       }
    }
@@ -1269,6 +1236,7 @@ static void do_draw_plane(visplane_t *pl)
       plane.colormap      = pl->fullcolormap;
       plane.fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
       plane.lightlevel    = pl->lightlevel;
+      plane.color         = pl->color;
 
       R_PlaneLight();
 

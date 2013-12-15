@@ -172,6 +172,7 @@ typedef struct cb_column_s
    // 8-bit lighting
    lighttable_t *colormap;
    byte *translation;
+   byte color;
    fixed_t translevel; // haleyjd: zdoom style trans level
 
    void *source;

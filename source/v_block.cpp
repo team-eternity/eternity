@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "i_video.h"
 #include "v_video.h"
 
 //==============================================================================
@@ -75,11 +76,13 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    src  = source + dy * width + dx;
    dest = buffer->ylut[cy1] + buffer->xlut[cx1];
 
+   int yc = cy1;
    while(ch--)
    {
       memcpy(dest, src, cw);
       src += width;
       dest += buffer->pitch;
+      ++yc;
    }
 }
 

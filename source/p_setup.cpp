@@ -611,7 +611,7 @@ void P_LoadPSXSectors(int lumpnum)
       GetLevelString(&data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
-      ++data;                // skip color ID for now
+      ss->color              = *data++;
       ss->special            = GetLevelWord(&data);
       ss->tag                = GetLevelWord(&data);
       data += 2;             // skip padding/unknown field for now

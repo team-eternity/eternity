@@ -1177,6 +1177,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    else
       seg.c_window   = NULL;
 
+   // FIXME: enormous
    if(seg.ceilingplane && 
        (mark || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
@@ -1186,6 +1187,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
+        seg.frontsec->color != seg.backsec->color ||
         seg.frontsec->c_portal != seg.backsec->c_portal ||
         !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope) || markblend)) // haleyjd
    {
@@ -1224,6 +1226,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    else
       seg.f_window = NULL;
 
+   // FIXME: again, damn, this is huge
    if(seg.floorplane && 
       (mark || seg.clipsolid || heightchange ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
@@ -1233,6 +1236,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
+       seg.frontsec->color != seg.backsec->color ||
        seg.frontsec->f_portal != seg.backsec->f_portal ||
        !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope) || markblend)) // haleyjd
    {
@@ -1359,6 +1363,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
             && seg.backsec->c_portal != NULL 
             && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
                
+   // FIXME: ginormous
    if(mark || seg.clipsolid || frontc != backc || 
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
@@ -1367,6 +1372,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
        seg.frontsec->topmap != seg.backsec->topmap ||
+       seg.frontsec->color != seg.backsec->color ||
        seg.frontsec->c_portal != seg.backsec->c_portal || markblend) // haleyjd
    {
       seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : 
@@ -1403,6 +1409,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
             && seg.backsec->f_portal != NULL 
             && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
              
+   // FIXME: humongous
    if(mark || seg.clipsolid ||  
        seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
@@ -1412,6 +1419,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
+       seg.frontsec->color != seg.backsec->color ||
        seg.frontsec->f_portal != seg.backsec->f_portal || 
        markblend) // haleyjd
    {
@@ -1535,6 +1543,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
         viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
+   // FIXME/TODO: holy SHIT... gotta be a way to do this better.
    // Reject empty two-sided lines used for line specials.
    if(seg.backsec && seg.frontsec
       && seg.backsec->ceilingpic == seg.frontsec->ceilingpic 
@@ -1566,6 +1575,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       && seg.backsec->bottommap == seg.frontsec->bottommap 
       && seg.backsec->midmap    == seg.frontsec->midmap 
       && seg.backsec->topmap    == seg.frontsec->topmap
+      && seg.backsec->color     == seg.frontsec->color
 
       // SoM 12/10/03: PORTALS
       && seg.backsec->c_portal == seg.frontsec->c_portal
@@ -2061,7 +2071,10 @@ static void R_Subsector(int num)
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
-
+   
+   // haleyjd: propagate color value
+   seg.color = seg.frontsec->color; // TEST
+   
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
    ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
@@ -2101,7 +2114,7 @@ static void R_Subsector(int num)
                     seg.frontsec->floor_yoffs,
                     floorangle, seg.frontsec->f_slope, 
                     seg.frontsec->f_pflags,
-                    fpalpha,
+                    fpalpha, seg.frontsec->color,
                     seg.f_portal->poverlay) : NULL;
    }
    else
@@ -2118,7 +2131,8 @@ static void R_Subsector(int num)
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
-                    floorangle, seg.frontsec->f_slope, 0, 255, NULL) : NULL;
+                    floorangle, seg.frontsec->f_slope, 0, 255, 
+                    seg.frontsec->color, NULL) : NULL;
    }
    
 
@@ -2148,7 +2162,7 @@ static void R_Subsector(int num)
                     seg.frontsec->ceiling_yoffs,
                     ceilingangle, seg.frontsec->c_slope, 
                     seg.frontsec->c_pflags,
-                    cpalpha,
+                    cpalpha, seg.frontsec->color,
                     seg.c_portal->poverlay) : NULL;
    }
    else
@@ -2165,7 +2179,8 @@ static void R_Subsector(int num)
                     ceilinglightlevel,              // killough 4/11/98
                     seg.frontsec->ceiling_xoffs,     // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
-                    ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
+                    ceilingangle, seg.frontsec->c_slope, 0, 255, 
+                    seg.frontsec->color, NULL) : NULL;
    }
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 

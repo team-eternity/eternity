@@ -66,12 +66,16 @@ void UpdateFocus(void);
 // Surface returned from SDL_SetVideoMode; not really useful for anything.
 static SDL_Surface *surface;
 
+static bool havecolors;
+
 // Temporary screen surface; this is what the game will draw itself into.
 static SDL_Surface *screen; 
+static SDL_Surface *colors;
 
 // 32-bit converted palette for translation of the screen to 32-bit pixel data.
-static Uint32 RGB8to32[256];
-static byte   cachedpal[768];
+static Uint32    RGB8to32[256][256];
+static byte      cachedpal[768];
+static SDL_Color cachedpalcols[256];
 
 // GL texture sizes sufficient to hold the screen buffer as a texture
 static unsigned int framebuffer_umax;
@@ -108,6 +112,8 @@ static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = NULL;
 // Graphics Code
 //
 
+static void (SDLGL2DVideoDriver::*draw)(void *, unsigned int);
+
 //
 // SDLGL2DVideoDriver::DrawPixels
 //
@@ -124,8 +130,33 @@ void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
 
       for(int x = 0; x < screen->w - bump; x++)
       {
-         *dest = RGB8to32[*src];
+         *dest = RGB8to32[0][*src];
          ++src;
+         ++dest;
+      }
+   }
+}
+
+//
+// SDLGL2DVideoDriver::DrawColorPixels
+//
+// Protected method.
+//
+void SDLGL2DVideoDriver::DrawColorPixels(void *buffer, unsigned int destwidth)
+{
+   Uint32 *fb = (Uint32 *)buffer;
+
+   for(int y = 0; y < screen->h; y++)
+   {
+      byte   *src  = (byte *)screen->pixels + y * screen->pitch;
+      byte   *col  = (byte *)colors->pixels + y * colors->pitch;
+      Uint32 *dest = fb + y * destwidth;
+
+      for(int x = 0; x < screen->w - bump; x++)
+      {
+         *dest = RGB8to32[*col][*src];
+         ++src;
+         ++col;
          ++dest;
       }
    }
@@ -145,10 +176,15 @@ void SDLGL2DVideoDriver::FinishUpdate()
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
 
+   if(colors && havecolors)
+      draw = &SDLGL2DVideoDriver::DrawColorPixels;
+   else
+      draw = &SDLGL2DVideoDriver::DrawPixels;
+
    if(!use_arb_pbo)
    {
       // Convert the game's 8-bit output to the 32-bit texture buffer
-      DrawPixels(framebuffer, (unsigned int)video.width);
+      (this->*draw)(framebuffer, (unsigned int)video.width);
 
       // bind the framebuffer texture if necessary
       GL_BindTextureIfNeeded(textureid);
@@ -187,7 +223,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
       if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
       {
          // draw directly into video memory
-         DrawPixels(ptr, framebuffer_umax);
+         (this->*draw)(ptr, framebuffer_umax);
 
          // release pointer
          pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
@@ -255,11 +291,67 @@ void SDLGL2DVideoDriver::EndRead()
 }
 
 //
+// I_loadLights
+//
+// Calculate static light colors
+//
+static void I_loadLights()
+{
+   int lump;
+
+   if((lump = wGlobalDir.checkNumForName("PALLIGHT")) > 0 &&
+      wGlobalDir.lumpLength(lump) == 768)
+   {
+      byte *lights = (byte *)wGlobalDir.cacheLumpNum(lump, PU_CACHE);
+      havecolors = true;
+
+      // tweak white light
+      for(int i = 0; i < 256; i++)
+      {
+         Uint8 &r = cachedpalcols[i].r;
+         Uint8 &g = cachedpalcols[i].g;
+         Uint8 &b = cachedpalcols[i].b;
+         Uint32 t;
+         r = (Uint8)((t = (Uint32)r + (r > 160 ? r - 160 : 0)) > 255 ? 255 : t);
+         g = (Uint8)((t = (Uint32)g + (g > 160 ? g - 160 : 0)) > 255 ? 255 : t);
+         b = (Uint8)((t = (Uint32)b + (b > 160 ? b - 160 : 0)) > 255 ? 255 : t);
+         RGB8to32[0][i] = ((Uint32)0xff << 24) | (r << 16) | (g <<  8) | b;
+      }
+
+      // copy base palette to color palettes
+      byte *light = lights;
+      for(int i = 1; i < 256; i++)
+      {
+         memcpy(RGB8to32[i], RGB8to32[0], 256*sizeof(Uint32));
+
+         // modulate with light
+         byte lr = *light++;
+         byte lg = *light++;
+         byte lb = *light++;
+
+         if(lr | lg | lb)
+         {
+            for(int j = 0; j < 256; j++)
+            {
+               Uint32 r = ((Uint32)cachedpalcols[j].r * lr) / 256;
+               Uint32 g = ((Uint32)cachedpalcols[j].g * lg) / 256;
+               Uint32 b = ((Uint32)cachedpalcols[j].b * lb) / 256;
+               RGB8to32[i][j] = ((Uint32)0xff << 24) | (r << 16) | (g <<  8) | b;
+            }
+         }
+      }
+   }
+   else
+      havecolors = false;
+}
+
+//
 // SDLGL2DVideoDriver::SetPalette
 //
 void SDLGL2DVideoDriver::SetPalette(byte *pal)
 {
    byte *temppal;
+   SDL_Color *col;
 
    // Cache palette if a new one is being set (otherwise the gamma setting is 
    // being changed)
@@ -267,18 +359,21 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
       memcpy(cachedpal, pal, 768);
 
    temppal = cachedpal;
+   col     = cachedpalcols;
  
    // Create 32-bit translation lookup
    for(int i = 0; i < 256; i++)
    {
-      RGB8to32[i] =
+      RGB8to32[0][i] =
          ((Uint32)0xff << 24) |
-         ((Uint32)(gammatable[usegamma][*(temppal + 0)]) << 16) |
-         ((Uint32)(gammatable[usegamma][*(temppal + 1)]) <<  8) |
-         ((Uint32)(gammatable[usegamma][*(temppal + 2)]) <<  0);
+         ((Uint32)(col->r = gammatable[usegamma][*(temppal + 0)]) << 16) |
+         ((Uint32)(col->g = gammatable[usegamma][*(temppal + 1)]) <<  8) |
+         ((Uint32)(col->b = gammatable[usegamma][*(temppal + 2)]) <<  0);
       
       temppal += 3;
+      ++col;
    }
+   I_loadLights();
 }
 
 //
@@ -294,6 +389,10 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
 
    // Create screen surface for the high-level code to render the game into
    screen = SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
+                                 8, 0, 0, 0, 0);
+
+   // Create colors surface
+   colors = SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
                                  8, 0, 0, 0, 0);
 
    if(!screen)
@@ -594,6 +693,67 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    SetPalette((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
 
    return false;
+}
+
+//
+// Colors Support
+//
+
+//
+// SDLGL2DVideoDriver::hasColors
+//
+bool SDLGL2DVideoDriver::hasColors() const
+{
+   return (colors != NULL && havecolors);
+}
+
+//
+// SDLGL2DVideoDriver::drawColorColumn
+//
+void SDLGL2DVideoDriver::drawColorColumn(int x, int y1, int y2, byte color)
+{
+   int count;
+   byte *dest;
+   
+   count = y2 - y1 + 1;
+   if(count <= 0)
+      return;
+
+#ifdef RANGECHECK
+   if(x < 0 || x >= colors->w || 
+      y1 < 0 || y1 >= colors->h || y2 < 0 || y2 >= colors->h)
+      I_Error("SDLGL2DVideoDriver::drawColorColumn: column out of range\n");
+#endif
+
+   dest = (byte *)colors->pixels + y1 * colors->pitch + x;
+   do
+   {
+      *dest = color;
+      dest += colors->pitch;
+   }
+   while(--count);
+}
+
+//
+// SDLGL2DVideoDriver::drawColorSpan
+//
+void SDLGL2DVideoDriver::drawColorSpan(int y, int x1, int x2, byte color)
+{
+   int count;
+   byte *dest;
+
+   count = x2 - x1 + 1;
+   if(count <= 0)
+      return;
+
+#ifdef RANGECHECK
+   if(y < 0 || y >= colors->h ||
+      x1 < 0 || x1 >= colors->w || x2 < 0 || x2 >= colors->w)
+      I_Error("SDLGL2DVideoDriver::drawColorSpan: span out of range\n");
+#endif
+
+   dest = (byte *)colors->pixels + y * colors->pitch + x1;
+   memset(dest, color, count);
 }
 
 // The one and only global instance of the SDL GL 2D-in-3D video driver.

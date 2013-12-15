@@ -543,7 +543,7 @@ static void R_RenderPlanePortal(pwindow_t *window)
                         *portal->data.plane.lightlevel, 
                         *portal->data.plane.xoff, 
                         *portal->data.plane.yoff,
-                        angle, NULL, 0, 255, NULL);
+                        angle, NULL, 0, 255, 0, NULL);
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
 
@@ -592,14 +592,14 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                           *portal->data.horizon.ceilinglight, 
                           *portal->data.horizon.ceilingxoff, 
                           *portal->data.horizon.ceilingyoff,
-                          ceilingangle, NULL, 0, 255, NULL);
+                          ceilingangle, NULL, 0, 255, 0, NULL);
 
    bottomplane = R_FindPlane(*portal->data.horizon.floorz, 
                              *portal->data.horizon.floorpic, 
                              *portal->data.horizon.floorlight, 
                              *portal->data.horizon.floorxoff, 
                              *portal->data.horizon.flooryoff,
-                             floorangle, NULL, 0, 255, NULL);
+                             floorangle, NULL, 0, 255, 0, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
    bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
