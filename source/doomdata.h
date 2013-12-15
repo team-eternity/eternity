@@ -58,7 +58,14 @@ enum
   ML_SECTORS,           // Sectors, from editing
   ML_REJECT,            // LUT, sector-sector visibility
   ML_BLOCKMAP,          // LUT, motion clipping, walls/grid element
-  ML_BEHAVIOR           // haleyjd 10/03/05: behavior, used to id hexen maps
+  ML_BEHAVIOR,          // haleyjd 10/03/05: behavior, used to id hexen maps
+
+  // PSX
+  ML_LEAFS = ML_BEHAVIOR, // haleyjd 12/12/13: for identifying console map formats
+
+  // Doom 64
+  ML_LIGHTS,
+  ML_MACROS
 };
 
 // A single Vertex.

@@ -364,14 +364,10 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
    else if(tl == 0)
       return;
 
-   {
-      unsigned int fglevel, bglevel;
-      
-      fglevel = tl & ~0x3ff;
-      bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB8[fglevel >> 10];
-      bg2rgb  = Col2RGB8[bglevel >> 10];
-   }
+   unsigned int fglevel = tl & ~0x3ff;
+   unsigned int bglevel = FRACUNIT - fglevel;
+   fg2rgb  = Col2RGB8[fglevel >> 10];
+   bg2rgb  = Col2RGB8[bglevel >> 10];
 
    x2 = x + w - 1;
    y2 = y + h - 1;
@@ -467,14 +463,10 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
    else if(tl == 0)
       return;
 
-   {
-      unsigned int fglevel, bglevel;
-
-      fglevel = tl & ~0x3ff;
-      bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB8[fglevel >> 10];
-      bg2rgb  = Col2RGB8[bglevel >> 10];
-   }
+   unsigned int fglevel = tl & ~0x3ff;
+   unsigned int bglevel = FRACUNIT - fglevel;
+   fg2rgb  = Col2RGB8[fglevel >> 10];
+   bg2rgb  = Col2RGB8[bglevel >> 10];
 
    dest = buffer->ylut[y] + buffer->xlut[x];
    
@@ -511,10 +503,10 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
    // if width % 64 != 0, we must do some extra copying at the end
    if((wmod = buffer->width & 63))
    {
-      for(y = 0; y < buffer->height; ++y)
+      for(y = 0; y < buffer->height; y++)
       {
          row = dest;
-         for(x = 0; x < buffer->width >> 6; ++x)
+         for(x = 0; x < buffer->width >> 6; x++)
          {
             memcpy(row, src + ((y & 63) << 6), 64);
             row += 64;
@@ -525,7 +517,7 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
    }
    else
    {
-      for(y = 0; y < buffer->height; ++y)
+      for(y = 0; y < buffer->height; y++)
       {
          row = dest;         
          for(x = 0; x < buffer->width >> 6; ++x)
