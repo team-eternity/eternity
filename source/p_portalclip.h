@@ -71,7 +71,7 @@ class PortalClipEngine : public ClipEngine
       // Clipping contexts
       virtual ClipContext*  getContext();
       virtual void          releaseContext(ClipContext *);
-      
+
    protected:
       ClipContext    *unused;
 
@@ -94,6 +94,13 @@ class PortalClipEngine : public ClipEngine
       static bool blockLinesIterator(int x, int y, bool (*func)(line_t *, MapContext *), MapContext *mc);
 };
 
+
+// Utility
+bool LineIntersectsBBox(ClipContext *cc, line_t *line);
+void CalculateBBoxForThing(ClipContext *cc, fixed_t x, fixed_t y, fixed_t radius, linkoffset_t *link);
+void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, int &xh, int &yh);
+void HitPortalGroup(int groupid, ClipContext *cc);
+void CheckSectorPortals(sector_t *sector, ClipContext *cc);
 
 //
 // MarkVector

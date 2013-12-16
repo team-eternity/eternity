@@ -50,41 +50,6 @@
 
 
 
-static inline bool LineIntersectsBBox(ClipContext *cc, line_t *line)
-{
-   return !(cc->bbox[BOXRIGHT]  <= line->bbox[BOXLEFT] || 
-      cc->bbox[BOXLEFT]   >= line->bbox[BOXRIGHT]  || 
-      cc->bbox[BOXTOP]    <= line->bbox[BOXBOTTOM] || 
-      cc->bbox[BOXBOTTOM] >= line->bbox[BOXTOP] ||
-      P_BoxOnLineSide(cc->bbox, line) != -1);
-}
-
-
-static inline void CalculateBBoxForThing(ClipContext *cc, fixed_t x, fixed_t y, fixed_t radius, linkoffset_t *link)
-{
-   cc->bbox[BOXLEFT]   = x + radius + link->x;
-   cc->bbox[BOXRIGHT]  = x - radius + link->x;
-   cc->bbox[BOXTOP]    = y + radius + link->y;
-   cc->bbox[BOXBOTTOM] = y - radius + link->y;
-}
-
-
-static inline void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, int &xh, int &yh)
-{
-   yh = (cc->bbox[BOXTOP]    - bmaporgy)>>MAPBLOCKSHIFT;
-   yl = (cc->bbox[BOXBOTTOM] - bmaporgy)>>MAPBLOCKSHIFT;
-   xh = (cc->bbox[BOXLEFT]   - bmaporgx)>>MAPBLOCKSHIFT;
-   xl = (cc->bbox[BOXRIGHT]  - bmaporgx)>>MAPBLOCKSHIFT;
-}
-
-static inline void HitPortalGroup(int groupid, ClipContext *cc)
-{
-   if(cc->getMarkedGroups()->mark(groupid))
-      return;
-
-   cc->adjacent_groups.add(groupid);
-}
-
 //
 // tryMove
 //
@@ -99,6 +64,7 @@ bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, C
 
    if(!checkPosition(thing, x, y, cc))
    {
+      return false;
    }
 
    // the move is ok,
@@ -343,12 +309,19 @@ static inline fixed_t GetFloorHeight(sector_t *s, fixed_t x, fixed_t y)
 }
 
 
+//
+// CheckSubsectorPosition
+//
+// Adjusts the thing's floor/ceilingz based on the sector it occupies.
 void CheckSubsectorPosition(ClipContext *cc)
 {
    auto subsec = R_PointInSubsector(cc->x, cc->y);
-   if(subsec->sector->c_pflags & PS_PASSABLE)
+   bool noclip = !!(cc->thing->flags & MF_NOCLIP);
+
+   if(subsec->sector->c_pflags & PS_PASSABLE && !noclip)
    {
-      HitPortalGroup(R_CPLink(subsec->sector)->toid, cc);
+      if(subsec->sector->ceilingheight < cc->z + cc->height)
+         HitPortalGroup(R_CPLink(subsec->sector)->toid, cc);
    }
    else 
    {
@@ -360,9 +333,10 @@ void CheckSubsectorPosition(ClipContext *cc)
          cc->secceilz = h;
    }
 
-   if(subsec->sector->f_pflags & PS_PASSABLE)
+   if(subsec->sector->f_pflags & PS_PASSABLE && !noclip)
    {
-      HitPortalGroup(R_FPLink(subsec->sector)->toid, cc);
+      if(subsec->sector->floorheight > cc->z)
+         HitPortalGroup(R_FPLink(subsec->sector)->toid, cc);
    }
    else
    {
@@ -723,7 +697,17 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
 
    // haleyjd 06/28/06: skullfly check from zdoom
    if(cc->thing->flags & MF_NOCLIP && !(cc->thing->flags & MF_SKULLFLY))
+   {
+      // Emulate old noclip behavior
+      cc->x = x;
+      cc->y = y;
+      CheckSubsectorPosition(cc);
       return true;
+   }
+
+   if(!(thing->flags & MF_NOCLIP))
+      cc->getMarkedLines()->clearMarks();
+
 
    for(size_t i = 0; i < cc->adjacent_groups.getLength(); ++i)
    {
@@ -745,18 +729,12 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
          rejectmask &= ~EAST_ADJACENT;
 
          if(by < 0 || by >= bmapheight)
-         {
-            rejectmask |= NORTH_ADJACENT;
             continue;
-         }
 
          for(bx = xl; bx <= xh; ++bx)
          {
             if(bx < 0 || bx >= bmapwidth)
-            {
-               rejectmask |= EAST_ADJACENT;
                continue;
-            }
 
             auto link = blocklinks[by * bmapwidth + bx];
 
@@ -769,12 +747,12 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
             }
 
             rejectmask |= EAST_ADJACENT;
-         }
 
-         if(!(thing->flags & MF_NOCLIP))
-         {
-            if(!blockLinesIterator(bx, by, CheckLineThing, cc))
-               return false; // doesn't fit
+            if(!(thing->flags & MF_NOCLIP))
+            {
+               if(!blockLinesIterator(bx, by, CheckLineThing, cc))
+                  return false; // doesn't fit
+            }
          }
       }
    }

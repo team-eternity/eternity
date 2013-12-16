@@ -35,44 +35,40 @@
 #include "r_state.h"
 
 
-
-static inline bool LineIntersectsBBox(ClipContext *cc, line_t *line)
+bool LineIntersectsBBox(ClipContext *cc, line_t *line)
 {
    return !(cc->bbox[BOXRIGHT]  <= line->bbox[BOXLEFT] || 
       cc->bbox[BOXLEFT]   >= line->bbox[BOXRIGHT]  || 
       cc->bbox[BOXTOP]    <= line->bbox[BOXBOTTOM] || 
       cc->bbox[BOXBOTTOM] >= line->bbox[BOXTOP] ||
       P_BoxOnLineSide(cc->bbox, line) != -1);
-}
+};
 
-
-static inline void CalculateBBoxForThing(ClipContext *cc, fixed_t x, fixed_t y, fixed_t radius, linkoffset_t *link)
+void CalculateBBoxForThing(ClipContext *cc, fixed_t x, fixed_t y, fixed_t radius, linkoffset_t *link)
 {
-   cc->bbox[BOXLEFT]   = x + radius + link->x;
-   cc->bbox[BOXRIGHT]  = x - radius + link->x;
    cc->bbox[BOXTOP]    = y + radius + link->y;
    cc->bbox[BOXBOTTOM] = y - radius + link->y;
-}
+   cc->bbox[BOXRIGHT]  = x + radius + link->x;
+   cc->bbox[BOXLEFT]   = x - radius + link->x;
+};
 
-
-static inline void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, int &xh, int &yh)
+void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, int &xh, int &yh)
 {
-   yh = (cc->bbox[BOXTOP]    - bmaporgy)>>MAPBLOCKSHIFT;
-   yl = (cc->bbox[BOXBOTTOM] - bmaporgy)>>MAPBLOCKSHIFT;
-   xh = (cc->bbox[BOXLEFT]   - bmaporgx)>>MAPBLOCKSHIFT;
-   xl = (cc->bbox[BOXRIGHT]  - bmaporgx)>>MAPBLOCKSHIFT;
-}
+   xl = (cc->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
+   xh = (cc->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
+   yl = (cc->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   yh = (cc->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
+};
 
-static inline void HitPortalGroup(int groupid, ClipContext *cc)
+void HitPortalGroup(int groupid, ClipContext *cc)
 {
    if(cc->getMarkedGroups()->mark(groupid))
       return;
-      
+
    cc->adjacent_groups.add(groupid);
-}
+};
 
-
-static inline void CheckSectorPortals(sector_t *sector, ClipContext *cc)
+void CheckSectorPortals(sector_t *sector, ClipContext *cc)
 {
    Mobj *thing = cc->thing;
 
@@ -81,7 +77,7 @@ static inline void CheckSectorPortals(sector_t *sector, ClipContext *cc)
    
    if(sector->f_pflags & PS_PASSABLE && thing->z < sector->floorheight)
       HitPortalGroup(sector->f_portal->data.link.toid, cc);
-}
+};
 
 //
 // Populates the given list with all the portal groups (by index) the mobj touches

@@ -198,7 +198,10 @@ void PortalClipEngine::releaseContext(ClipContext *cc)
 
 
 
-
+//
+// blockLinesIterator
+//
+// This function iterates through blockmap lines in a re-entrant way. This function will NOT clear the mark vector for lines.
 bool PortalClipEngine::blockLinesIterator(int x, int y, bool func(line_t *line, MapContext *mc), MapContext *mc)
 {
    int        offset;
