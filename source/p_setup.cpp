@@ -940,6 +940,7 @@ static void P_LoadZNodes(int lump)
 //=============================================================================
 
 static void P_ConvertHereticThing(mapthing_t *mthing);
+static void P_ConvertPSXThing(mapthing_t *mthing);
 
 //
 // P_LoadThings
@@ -996,6 +997,10 @@ void P_LoadThings(int lump)
       ft->angle   = SwapShort(mt->angle);      
       ft->options = SwapShort(mt->options);
 
+      // PSX special behaviors
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+         P_ConvertPSXThing(ft);
+
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
@@ -1006,7 +1011,7 @@ void P_LoadThings(int lump)
    // haleyjd: all player things for players in this game should now be valid
    if(GameType != gt_dm)
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && !players[i].mo)
             level_error = "Missing required player start";
@@ -1166,13 +1171,12 @@ static void P_PostProcessLineFlags(line_t *ld)
 void P_LoadLineDefs(int lump)
 {
    byte *data;
-   int  i;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedef_t);
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
-   for(i = 0; i < numlines; ++i)
+   for(int i = 0; i < numlines; i++)
    {
       maplinedef_t *mld = (maplinedef_t *)data + i;
       line_t *ld = lines + i;
@@ -1408,13 +1412,9 @@ void P_LoadSideDefs2(int lumpnum)
 
    for(i = 0; i < numsides; ++i)
    {
-      //register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
       int cmap, secnum;
-
-      //sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
-      //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
 
       sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
       sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
@@ -2670,6 +2670,35 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
       // handle items numbered > 2000
       mthing->type = (mthing->type - 2000) + 7200;
    }
+}
+
+#define DEN_PSXCHAIN   64
+#define DEN_NMSPECTRE  889
+#define DEN_PSXSPECTRE 890
+#define DEN_EECHAIN    891
+#define DEN_DEMON      3002
+
+//
+// P_ConvertPSXThing
+//
+// Take care of oddities in the PSX map format.
+//
+static void P_ConvertPSXThing(mapthing_t *mthing)
+{
+   // Demon spawn redirections
+   if(mthing->type == DEN_DEMON)
+   {
+      int16_t flags = mthing->options & MTF_PSX_SPECTRE;
+
+      if(flags == MTF_PSX_SPECTRE)
+         mthing->type = DEN_PSXSPECTRE;
+      else if(flags == MTF_PSX_NIGHTMARE)
+         mthing->type = DEN_NMSPECTRE;
+   }
+   else if(mthing->type == DEN_PSXCHAIN)
+      mthing->type = DEN_EECHAIN;
+
+   mthing->options &= ~MTF_PSX_SPECTRE;
 }
 
 //----------------------------------------------------------------------------

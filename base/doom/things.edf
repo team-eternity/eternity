@@ -3293,13 +3293,36 @@ thingtype EEBetaPlasma3
 
 // Nightmare Spectre, from the PlayStation verson of Doom
 
-thingtype EENightmareSpectre : Spectre, 889, 158
+thingtype EENightmareSpectre : Demon, 889, 158
 {
   spawnhealth 300
-  addflags    TLSTYLESUB|BRIGHT
-  remflags    SHADOW
+  addflags    TLSTYLESUB
   
   obituary_melee "was devoured by a Nightmare Spectre!"
+}
+
+// PlayStation-style Spectre
+
+thingtype EEPSXSpectre : Spectre, 890, 159
+{
+  addflags     TLSTYLEADD
+  remflags     SHADOW
+  translucency 30%
+}
+
+// PlayStation bloody chain object
+
+thingtype EEPSXBloodyChain : Mobj, 891, 160
+{
+  cflags SPAWNCEILING|NOGRAVITY
+  radius 8.0
+  height 99.0
+  
+  states
+  @"
+  Spawn:
+    BLCH A -1
+  "@
 }
 
 // EOF
