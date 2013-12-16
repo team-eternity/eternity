@@ -86,7 +86,6 @@ class PortalClipEngine : public ClipEngine
       void delTouchingThingChain(msecnode_t *node);
 
       // Iterators
-      static bool PIT_FindAdjacentPortals(line_t *line, MapContext *context);
       static void findAdjacentPortals(ClipContext *cc);
 
       // Blockmap iterators
@@ -99,8 +98,9 @@ class PortalClipEngine : public ClipEngine
 bool LineIntersectsBBox(ClipContext *cc, line_t *line);
 void CalculateBBoxForThing(ClipContext *cc, fixed_t x, fixed_t y, fixed_t radius, linkoffset_t *link);
 void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, int &xh, int &yh);
-void HitPortalGroup(int groupid, ClipContext *cc);
+void HitPortalGroup(int groupid, adjacencytype_e type, ClipContext *cc);
 void CheckSectorPortals(sector_t *sector, ClipContext *cc);
+bool PIT_FindAdjacentPortals(line_t *line, MapContext *context);
 
 //
 // MarkVector

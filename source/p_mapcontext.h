@@ -60,6 +60,20 @@ class MapContext
 };
 
 
+typedef enum
+{
+   AG_CURRENTLOCATION,
+   AG_FLOORPORTAL,
+   AG_CEILPORTAL,
+   AG_LINEPORTAL
+} adjacencytype_e;
+
+typedef struct
+{
+   int group;
+   adjacencytype_e linktype;
+} adjacentgroup_t;
+
 // SoM: This functions as a clipping 'context' now.
 class ClipContext : public MapContext
 {
@@ -127,7 +141,10 @@ class ClipContext : public MapContext
       int centergroup;
       
       // All the portal groups the mobj would be touching in the new position.
-      PODCollection<int> adjacent_groups;
+      PODCollection<adjacentgroup_t> adjacent_groups;
+
+      // Adjacency type for the current adjacent group
+      adjacencytype_e adjacencytype;
 
       MarkVector *getMarkedGroups();
       MarkVector *getMarkedSectors();

@@ -160,8 +160,6 @@ void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, C
    opening->frontsector = linedef->frontsector;
    opening->backsector  = linedef->backsector;
 
-   // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
-   // z is if both sides of that line have the same portal.
    {
       if(mo && 
          opening->frontsector->c_pflags & PS_PASSABLE &&
@@ -321,7 +319,7 @@ void CheckSubsectorPosition(ClipContext *cc)
    if(subsec->sector->c_pflags & PS_PASSABLE && !noclip)
    {
       if(subsec->sector->ceilingheight < cc->z + cc->height)
-         HitPortalGroup(R_CPLink(subsec->sector)->toid, cc);
+         HitPortalGroup(R_CPLink(subsec->sector)->toid, AG_CEILPORTAL, cc);
    }
    else 
    {
@@ -336,7 +334,7 @@ void CheckSubsectorPosition(ClipContext *cc)
    if(subsec->sector->f_pflags & PS_PASSABLE && !noclip)
    {
       if(subsec->sector->floorheight > cc->z)
-         HitPortalGroup(R_FPLink(subsec->sector)->toid, cc);
+         HitPortalGroup(R_FPLink(subsec->sector)->toid, AG_FLOORPORTAL, cc);
    }
    else
    {
@@ -614,7 +612,7 @@ bool CheckLineThing(line_t *line, MapContext *mc)
 
    // adjust floor & ceiling heights
    
-   if(opening.openflags & OF_SETSCEILINGZ) 
+   if(opening.openflags & OF_SETSCEILINGZ && cc->adjacencytype != AG_FLOORPORTAL) 
    {
       if(opening.top < cc->ceilingz)
       {
@@ -629,7 +627,7 @@ bool CheckLineThing(line_t *line, MapContext *mc)
          cc->passceilz = cc->ceilingz;
    }
 
-   if(opening.openflags & OF_SETSFLOORZ)
+   if(opening.openflags & OF_SETSFLOORZ  && cc->adjacencytype != AG_CEILPORTAL)
    {
       if(opening.bottom > cc->floorz)
       {
@@ -653,13 +651,11 @@ bool CheckLineThing(line_t *line, MapContext *mc)
          cc->passfloorz = cc->floorz;
    }
 
+   PIT_FindAdjacentPortals(line, mc);
 
    // if contacted a special line, add it to the list
    if(line->special || line->portal)
    {
-      if(line->pflags & PS_PASSABLE && !cc->getMarkedGroups()->mark(line->portal->data.link.toid))
-         cc->adjacent_groups.add(line->portal->data.link.toid);
-
       cc->spechit.add(line);
    }
    
@@ -686,8 +682,7 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
    cc->adjacent_groups.makeEmpty();
    cc->getMarkedGroups()->clearMarks();
 
-   cc->adjacent_groups.add(startgroup);
-   cc->getMarkedGroups()->mark(startgroup);
+   HitPortalGroup(startgroup, AG_CURRENTLOCATION, cc);
 
    // SoM: 09/07/02: 3dsides monster fix
    cc->touch3dside = 0;
@@ -708,14 +703,14 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
    if(!(thing->flags & MF_NOCLIP))
       cc->getMarkedLines()->clearMarks();
 
-
    for(size_t i = 0; i < cc->adjacent_groups.getLength(); ++i)
    {
-      auto groupid = cc->adjacent_groups.at(i);
-      auto link = P_GetLinkOffset(startgroup, groupid);
+      auto adjacentgroup = cc->adjacent_groups.at(i);
+      auto link = P_GetLinkOffset(startgroup, adjacentgroup.group);
 
       cc->x = x + link->x;
       cc->y = y + link->y;
+      cc->adjacencytype = adjacentgroup.linktype;
 
       CheckSubsectorPosition(cc);
 

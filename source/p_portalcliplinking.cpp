@@ -60,12 +60,14 @@ void GetBlockmapBoundsFromBBox(ClipContext *cc, int &xl, int &yl, int &xh, int &
    yh = (cc->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
 };
 
-void HitPortalGroup(int groupid, ClipContext *cc)
+void HitPortalGroup(int groupid, adjacencytype_e type, ClipContext *cc)
 {
    if(cc->getMarkedGroups()->mark(groupid))
       return;
 
-   cc->adjacent_groups.add(groupid);
+   auto &adjacencydata = cc->adjacent_groups.addNew();
+   adjacencydata.group = groupid;
+   adjacencydata.linktype = type;
 };
 
 void CheckSectorPortals(sector_t *sector, ClipContext *cc)
@@ -73,15 +75,15 @@ void CheckSectorPortals(sector_t *sector, ClipContext *cc)
    Mobj *thing = cc->thing;
 
    if(sector->c_pflags & PS_PASSABLE && thing->z + thing->height > sector->ceilingheight)
-      HitPortalGroup(sector->c_portal->data.link.toid, cc);
+      HitPortalGroup(sector->c_portal->data.link.toid, AG_CEILPORTAL, cc);
    
    if(sector->f_pflags & PS_PASSABLE && thing->z < sector->floorheight)
-      HitPortalGroup(sector->f_portal->data.link.toid, cc);
+      HitPortalGroup(sector->f_portal->data.link.toid, AG_FLOORPORTAL, cc);
 };
 
 //
 // Populates the given list with all the portal groups (by index) the mobj touches
-bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context)
+bool PIT_FindAdjacentPortals(line_t *line, MapContext *context)
 {
    ClipContext *cc = context->clipContext();
    if(!LineIntersectsBBox(cc, line))
@@ -89,7 +91,7 @@ bool PortalClipEngine::PIT_FindAdjacentPortals(line_t *line, MapContext *context
    
    // Line portals
    if(line->pflags & PS_PASSABLE)
-      HitPortalGroup(line->portal->data.link.toid, cc);
+      HitPortalGroup(line->portal->data.link.toid, AG_LINEPORTAL, cc);
    
    // Floor/ceiling portals
    if(line->frontsector)
@@ -115,11 +117,11 @@ void PortalClipEngine::findAdjacentPortals(ClipContext *cc)
    cc->adjacent_groups.makeEmpty();
    cc->getMarkedGroups()->clearMarks();
 
-   HitPortalGroup(cc->thing->subsector->sector->groupid, cc);
+   HitPortalGroup(cc->thing->subsector->sector->groupid, AG_CURRENTLOCATION, cc);
 
    for(size_t i = 0; i < cc->adjacent_groups.getLength(); ++i)
    {
-      linkoffset_t *link = P_GetLinkOffset(cc->adjacent_groups[0], cc->adjacent_groups[i]);
+      linkoffset_t *link = P_GetLinkOffset(cc->adjacent_groups[0].group, cc->adjacent_groups[i].group);
       
       CalculateBBoxForThing(cc, cc->x, cc->y, cc->thing->radius, link);
       GetBlockmapBoundsFromBBox(cc, xl, yl, xh, yh);
@@ -131,7 +133,7 @@ void PortalClipEngine::findAdjacentPortals(ClipContext *cc)
             if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
                continue;
             
-            blockLinesIterator(bx, by, PortalClipEngine::PIT_FindAdjacentPortals, cc);
+            blockLinesIterator(bx, by, PIT_FindAdjacentPortals, cc);
          }
       }
    }
@@ -228,7 +230,7 @@ void PortalClipEngine::addMobjBlockLinks(ClipContext *cc)
 
    for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
    {
-      linkoffset_t *link = P_GetLinkOffset(cc->adjacent_groups[0], cc->adjacent_groups[groupindex]);
+      linkoffset_t *link = P_GetLinkOffset(cc->adjacent_groups[0].group, cc->adjacent_groups[groupindex].group);
       
       xc = (thing->x - bmaporgx)>>MAPBLOCKSHIFT;
       yc = (thing->y - bmaporgy)>>MAPBLOCKSHIFT;
@@ -345,10 +347,12 @@ void PortalClipEngine::gatherSectorLinks(Mobj *thing, ClipContext *cc)
 
    linkMobjToSector(thing, thing->subsector->sector);
 
+   cc->getMarkedLines()->clearMarks();
+
    for(size_t groupindex = 0; groupindex < cc->adjacent_groups.getLength(); ++groupindex)
    {
       // link into subsector
-      linkoffset_t *link = P_GetLinkOffset(thing->groupid, cc->adjacent_groups[groupindex]);
+      linkoffset_t *link = P_GetLinkOffset(thing->groupid, cc->adjacent_groups[groupindex].group);
       subsector_t *ss = R_PointInSubsector(thing->x + link->x, thing->y + link->y);
       addMobjSectorLink(thing, ss->sector);
 
