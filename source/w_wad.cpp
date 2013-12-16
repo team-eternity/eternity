@@ -867,6 +867,7 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { "A_START",  "A_END",  lumpinfo_t::ns_acs          },
    { NULL,       NULL,     lumpinfo_t::ns_pads         },
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
+   { NULL,       NULL,     lumpinfo_t::ns_graphics     },
 };
 
 //
@@ -1098,7 +1099,7 @@ int W_CheckNumForNameNS(register const char *name, register int li_namespace)
 }
 
 //
-// W_CheckNumForNameNSG
+// WadDirectory::checkNumForNameNSG
 //
 // haleyjd 02/15/10: Looks in specified namespace and if not found, then looks
 // in the global namespace.
@@ -1155,6 +1156,26 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 
    // Return the matching lump, or -1 if none found.   
    return i;
+}
+
+//
+// WadDirectory::checkNumForLFNNSG
+//
+// As above but falling back to ns_global if not initially found in
+// preferred namespace.
+//
+int WadDirectory::checkNumForLFNNSG(const char *name, int ns)
+{
+   int num = -1;
+   int curnamespace = ns;
+
+   do
+   {
+      num = checkNumForLFN(name, curnamespace);
+   }
+   while(num < 0 && curnamespace == ns ? curnamespace = lumpinfo_t::ns_global, 1 : 0);
+
+   return num;
 }
 
 //

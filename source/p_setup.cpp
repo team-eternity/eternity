@@ -45,7 +45,7 @@
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_bbox.h"
-#include "m_swap.h"
+#include "m_binary.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -246,92 +246,6 @@ inline static int SafeRealUintIndex(uint16_t input, int limit,
 
 //=============================================================================
 //
-// Lump Data Reading Routines
-//
-// haleyjd 05/26/10: These routines replace direct mapping of structures to
-// lumps in memory where this is needed. Eventually I'd like to replace all
-// such direct mapping.
-//
-
-// haleyjd 10/30/10: Read a little-endian short without alignment assumptions
-#define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
-
-// haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
-#define read32_le(b, t) \
-   ((b)[0] | \
-    ((t)((b)[1]) <<  8) | \
-    ((t)((b)[2]) << 16) | \
-    ((t)((b)[3]) << 24))
-
-//
-// GetLevelWord
-//
-// Reads an int16 from the lump data and increments the read pointer.
-//
-static int16_t GetLevelWord(byte **data)
-{
-   int16_t val = SwapShort(read16_le(*data, int16_t));
-   *data += 2;
-
-   return val;
-}
-
-//
-// GetLevelWordU
-//
-// Reads a uint16 from the lump data and increments the read pointer.
-//
-static uint16_t GetLevelWordU(byte **data)
-{
-   uint16_t val = SwapUShort(read16_le(*data, uint16_t));
-   *data += 2;
-
-   return val;
-}
-
-//
-// GetLevelDWord
-//
-// Reads an int32 from the lump data and increments the read pointer.
-//
-static int32_t GetLevelDWord(byte **data)
-{
-   int32_t val = SwapLong(read32_le(*data, int32_t));
-   *data += 4;
-
-   return val;
-}
-
-//
-// GetLevelDwordU
-//
-// Reads a uint32 from the lump data and increments the read pointer.
-//
-static uint32_t GetLevelDWordU(byte **data)
-{
-   uint32_t val = SwapULong(read32_le(*data, uint32_t));
-   *data += 4;
-
-   return val;
-}
-
-//
-// GetLevelString
-//
-// Reads a "len"-byte string from the lump data and writes it into the 
-// destination buffer. The read pointer is incremented by len bytes.
-//
-static void GetLevelString(byte **data, char *dest, int len)
-{
-   char *loc = (char *)(*data);
-
-   memcpy(dest, loc, len);
-
-   *data += len;
-}
-
-//=============================================================================
-//
 // Level Loading
 //
 
@@ -360,8 +274,8 @@ void P_LoadConsoleVertexes(int lump)
    // Copy and convert vertex coordinates
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetLevelDWord(&data);
-      vertexes[i].y = GetLevelDWord(&data);
+      vertexes[i].x = GetBinaryDWord(&data);
+      vertexes[i].y = GetBinaryDWord(&data);
 
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
@@ -391,8 +305,8 @@ void P_LoadVertexes(int lump)
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetLevelWord(&data) << FRACBITS;
-      vertexes[i].y = GetLevelWord(&data) << FRACBITS;
+      vertexes[i].x = GetBinaryWord(&data) << FRACBITS;
+      vertexes[i].y = GetBinaryWord(&data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
@@ -604,16 +518,16 @@ void P_LoadPSXSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
-      GetLevelString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
+      GetBinaryString(&data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
-      GetLevelString(&data, namebuf, 8);
+      GetBinaryString(&data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
       ++data;                // skip color ID for now
-      ss->special            = GetLevelWord(&data);
-      ss->tag                = GetLevelWord(&data);
+      ss->special            = GetBinaryWord(&data);
+      ss->tag                = GetBinaryWord(&data);
       data += 2;             // skip padding/unknown field for now
     
       P_InitSector(ss);
@@ -643,16 +557,16 @@ void P_LoadSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
-      GetLevelString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
+      GetBinaryString(&data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      GetLevelString(&data, namebuf, 8);
+      GetBinaryString(&data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
-      ss->lightlevel         = GetLevelWord(&data);
-      ss->special            = GetLevelWord(&data);
-      ss->tag                = GetLevelWord(&data);
+      ss->lightlevel         = GetBinaryWord(&data);
+      ss->special            = GetBinaryWord(&data);
+      ss->tag                = GetBinaryWord(&data);
     
       P_InitSector(ss);
    }
@@ -821,9 +735,9 @@ static void P_LoadZSegs(byte *data)
       mapseg_znod_t ml;
 
       // haleyjd: FIXME - see no verification of vertex indices
-      v1 = ml.v1 = GetLevelDWordU(&data);
-      v2 = ml.v2 = GetLevelDWordU(&data);
-      ml.linedef = GetLevelWordU(&data);
+      v1 = ml.v1 = GetBinaryUDWord(&data);
+      v2 = ml.v2 = GetBinaryUDWord(&data);
+      ml.linedef = GetBinaryUWord(&data);
       ml.side    = *data++;
 
       linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
@@ -887,10 +801,10 @@ static void P_LoadZNodes(int lump)
 
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
-   orgVerts = GetLevelDWordU(&data);
+   orgVerts = GetBinaryUDWord(&data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
-   newVerts = GetLevelDWordU(&data);
+   newVerts = GetBinaryUDWord(&data);
 
    if(orgVerts + newVerts == (unsigned int)numvertexes)
    {
@@ -907,8 +821,8 @@ static void P_LoadZNodes(int lump)
    {
       int vindex = i + orgVerts;
 
-      newvertarray[vindex].x = (fixed_t)GetLevelDWord(&data);
-      newvertarray[vindex].y = (fixed_t)GetLevelDWord(&data);
+      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(&data);
+      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(&data);
 
       // SoM: Cardboard stores float versions of vertices.
       newvertarray[vindex].fx = M_FixedToFloat(newvertarray[vindex].x);
@@ -930,7 +844,7 @@ static void P_LoadZNodes(int lump)
 
    // Read the subsectors
    CheckZNodesOverflow(len, sizeof(numSubs));
-   numSubs = GetLevelDWordU(&data);
+   numSubs = GetBinaryUDWord(&data);
 
    numsubsectors = (int)numSubs;
    if(numsubsectors <= 0)
@@ -945,13 +859,13 @@ static void P_LoadZNodes(int lump)
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
-      subsectors[i].numlines = (int)(GetLevelDWordU(&data));
+      subsectors[i].numlines  = (int)(GetBinaryUDWord(&data));
       currSeg += subsectors[i].numlines;
    }
 
    // Read the segs
    CheckZNodesOverflow(len, sizeof(numSegs));
-   numSegs = GetLevelDWordU(&data);
+   numSegs = GetBinaryUDWord(&data);
 
    // The number of segs stored should match the number of
    // segs used by subsectors.
@@ -971,7 +885,7 @@ static void P_LoadZNodes(int lump)
 
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
-   numNodes = GetLevelDWordU(&data);
+   numNodes = GetBinaryUDWord(&data);
 
    numnodes = numNodes;
    nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
@@ -984,17 +898,17 @@ static void P_LoadZNodes(int lump)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      mn.x  = GetLevelWord(&data);
-      mn.y  = GetLevelWord(&data);
-      mn.dx = GetLevelWord(&data);
-      mn.dy = GetLevelWord(&data);
+      mn.x  = GetBinaryWord(&data);
+      mn.y  = GetBinaryWord(&data);
+      mn.dx = GetBinaryWord(&data);
+      mn.dy = GetBinaryWord(&data);
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
-            mn.bbox[j][k] = GetLevelWord(&data);
+            mn.bbox[j][k] = GetBinaryWord(&data);
 
       for(j = 0; j < 2; j++)
-         mn.children[j] = GetLevelDWord(&data);
+         mn.children[j] = GetBinaryDWord(&data);
 
       no->x  = mn.x; 
       no->y  = mn.y; 
@@ -1502,16 +1416,16 @@ void P_LoadSideDefs2(int lumpnum)
       //sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
       //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
 
-      sd->textureoffset = GetLevelWord(&data) << FRACBITS;
-      sd->rowoffset     = GetLevelWord(&data) << FRACBITS; 
+      sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
+      sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
-      GetLevelString(&data, toptexture,    8);
-      GetLevelString(&data, bottomtexture, 8);
-      GetLevelString(&data, midtexture,    8);
+      GetBinaryString(&data, toptexture,    8);
+      GetBinaryString(&data, bottomtexture, 8);
+      GetBinaryString(&data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", i, "sector");
+      secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
       sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
