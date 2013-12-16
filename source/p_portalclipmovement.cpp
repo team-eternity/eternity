@@ -63,9 +63,12 @@ bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, C
    auto oldz = thing->z;
 
    if(!checkPosition(thing, x, y, cc))
-   {
       return false;
-   }
+
+   if(cc->ceilingz - cc->floorz < thing->height ||
+      cc->floorz > thing->z + 24*FRACUNIT ||
+      cc->ceilingz < thing->z + thing->height)
+      return false;
 
    // the move is ok,
    // so unlink from the old position and link into the new position
@@ -318,8 +321,7 @@ void CheckSubsectorPosition(ClipContext *cc)
 
    if(subsec->sector->c_pflags & PS_PASSABLE && !noclip)
    {
-      if(subsec->sector->ceilingheight < cc->z + cc->height)
-         HitPortalGroup(R_CPLink(subsec->sector)->toid, AG_CEILPORTAL, cc);
+      HitPortalGroup(R_CPLink(subsec->sector)->toid, AG_CEILPORTAL, cc);
    }
    else 
    {
@@ -333,8 +335,7 @@ void CheckSubsectorPosition(ClipContext *cc)
 
    if(subsec->sector->f_pflags & PS_PASSABLE && !noclip)
    {
-      if(subsec->sector->floorheight > cc->z)
-         HitPortalGroup(R_FPLink(subsec->sector)->toid, AG_FLOORPORTAL, cc);
+      HitPortalGroup(R_FPLink(subsec->sector)->toid, AG_FLOORPORTAL, cc);
    }
    else
    {
@@ -567,10 +568,10 @@ bool CheckLineThing(line_t *line, MapContext *mc)
       cc->bbox[BOXLEFT]   >= line->bbox[BOXRIGHT]  || 
       cc->bbox[BOXTOP]    <= line->bbox[BOXBOTTOM] || 
       cc->bbox[BOXBOTTOM] >= line->bbox[BOXTOP])
-      return true; // didn't hit it
+      return true;
 
    if(P_BoxOnLineSide(cc->bbox, line) != -1)
-      return true; // didn't hit it
+      return true;
 
    // A line has been hit
    
@@ -582,26 +583,31 @@ bool CheckLineThing(line_t *line, MapContext *mc)
    // so two special lines that are only 8 pixels apart
    // could be crossed in either order.
 
-   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   // haleyjd 04/30/11: treat block-everything lines like they're 1S
-   if(!line->backsector || (line->extflags & EX_ML_BLOCKALL)) // one sided line
+   // The follow scenarios only make sense in cases of current location and through line-based
+   // portals.
+   if(cc->adjacencytype == AG_CURRENTLOCATION || cc->adjacencytype == AG_LINEPORTAL)
    {
-      cc->blockline = line;
-      return cc->unstuck &&
-         FixedMul(cc->x - cc->thing->x, line->dy) > FixedMul(cc->y - cc->thing->y, line->dx);
-   }
-   // killough 8/10/98: allow bouncing objects to pass through as missiles
-   if(!(cc->thing->flags & (MF_MISSILE | MF_BOUNCES)))
-   {
-      if(line->flags & ML_BLOCKING)           // explicitly blocking everything
-         return !!cc->unstuck;  // killough 8/1/98: allow escape
+      // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
+      // haleyjd 04/30/11: treat block-everything lines like they're 1S
+      if(!line->backsector || line->extflags & EX_ML_BLOCKALL) // one sided line
+      {
+         cc->blockline = line;
+         return cc->unstuck &&
+            FixedMul(cc->x - cc->thing->x, line->dy) > FixedMul(cc->y - cc->thing->y, line->dx);
+      }
+      // killough 8/10/98: allow bouncing objects to pass through as missiles
+      if(!(cc->thing->flags & (MF_MISSILE | MF_BOUNCES)))
+      {
+         if(line->flags & ML_BLOCKING)           // explicitly blocking everything
+            return !!cc->unstuck;  // killough 8/1/98: allow escape
 
-      // killough 8/9/98: monster-blockers don't affect friends
-      // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(!(cc->thing->flags & MF_FRIEND || cc->thing->player) && 
-         line->flags & ML_BLOCKMONSTERS && 
-         !(line->flags & ML_3DMIDTEX))
-         return false; // block monsters only
+         // killough 8/9/98: monster-blockers don't affect friends
+         // SoM 9/7/02: block monsters standing on 3dmidtex only
+         if(!(cc->thing->flags & MF_FRIEND || cc->thing->player) && 
+            line->flags & ML_BLOCKMONSTERS && 
+            !(line->flags & ML_3DMIDTEX))
+            return false; // block monsters only
+      }
    }
 
    // set openrange, opentop, openbottom
@@ -651,7 +657,10 @@ bool CheckLineThing(line_t *line, MapContext *mc)
          cc->passfloorz = cc->floorz;
    }
 
-   PIT_FindAdjacentPortals(line, mc);
+   if(line->pflags & PS_PASSABLE)
+      HitPortalGroup(line->portal->data.link.toid, AG_LINEPORTAL, cc);
+   CheckSectorPortals(line->frontsector, cc);
+   CheckSectorPortals(line->backsector, cc);
 
    // if contacted a special line, add it to the list
    if(line->special || line->portal)

@@ -74,6 +74,9 @@ void CheckSectorPortals(sector_t *sector, ClipContext *cc)
 {
    Mobj *thing = cc->thing;
 
+   if(!sector || !thing)
+      return;
+
    if(sector->c_pflags & PS_PASSABLE && thing->z + thing->height > sector->ceilingheight)
       HitPortalGroup(sector->c_portal->data.link.toid, AG_CEILPORTAL, cc);
    
@@ -94,11 +97,8 @@ bool PIT_FindAdjacentPortals(line_t *line, MapContext *context)
       HitPortalGroup(line->portal->data.link.toid, AG_LINEPORTAL, cc);
    
    // Floor/ceiling portals
-   if(line->frontsector)
-      CheckSectorPortals(line->frontsector, cc);
-   
-   if(line->backsector)
-      CheckSectorPortals(line->backsector, cc);
+   CheckSectorPortals(line->frontsector, cc);
+   CheckSectorPortals(line->backsector, cc);
 
    return true;
 }
