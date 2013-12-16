@@ -700,7 +700,8 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
       return true;
    }
 
-   if(!(thing->flags & MF_NOCLIP))
+   auto checklines = !(thing->flags & MF_NOCLIP);
+   if(checklines)
       cc->getMarkedLines()->clearMarks();
 
    for(size_t i = 0; i < cc->adjacent_groups.getLength(); ++i)
@@ -743,7 +744,7 @@ bool PortalClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipCont
 
             rejectmask |= EAST_ADJACENT;
 
-            if(!(thing->flags & MF_NOCLIP))
+            if(checklines)
             {
                if(!blockLinesIterator(bx, by, CheckLineThing, cc))
                   return false; // doesn't fit

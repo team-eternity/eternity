@@ -285,7 +285,7 @@ void MarkVector::clearMarks()
 {
    if(lastDirty >= firstDirty)
    {
-      memset(markArray, 0, sizeof(int) * (lastDirty - firstDirty + 1));
+      memset(markArray + firstDirty, 0, sizeof(int) * (lastDirty - firstDirty + 1));
       firstDirty = arraySize;
       lastDirty = 0;
    }

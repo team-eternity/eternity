@@ -116,6 +116,7 @@ void PortalClipEngine::findAdjacentPortals(ClipContext *cc)
 
    cc->adjacent_groups.makeEmpty();
    cc->getMarkedGroups()->clearMarks();
+   cc->getMarkedLines()->clearMarks();
 
    HitPortalGroup(cc->thing->subsector->sector->groupid, AG_CURRENTLOCATION, cc);
 
