@@ -1215,7 +1215,7 @@ void P_LoadLineDefs(int lump)
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
-      if(ld->special == edlinespec ||
+      if((edlinespec && ld->special == edlinespec) ||
          EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
          E_LoadLineDefExt(ld, ld->special == edlinespec);
 
