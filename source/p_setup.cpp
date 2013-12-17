@@ -1145,6 +1145,9 @@ static void P_InitLineDef(line_t *ld)
    ld->soundorg.groupid = R_NOGROUP;
 }
 
+#define ML_PSX_TRANSLUCENT 0x400
+#define ML_PSX_UNKNOWN     0x800
+
 //
 // P_PostProcessLineFlags
 //
@@ -1155,6 +1158,17 @@ static void P_PostProcessLineFlags(line_t *ld)
    // EX_ML_BLOCKALL implies that ML_BLOCKING should be set.
    if(ld->extflags & EX_ML_BLOCKALL)
       ld->flags |= ML_BLOCKING;
+
+   // handle PSX line flags
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+   {
+      if(ld->flags & ML_PSX_TRANSLUCENT)
+      {
+         ld->alpha = 3.0f/4.0f;
+         ld->extflags |= EX_ML_ADDITIVE;
+      }
+      ld->flags &= 0x1FF; // clear all extended flags
+   }
 }
 
 //
@@ -1201,13 +1215,9 @@ void P_LoadLineDefs(int lump)
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
-      if(edlinespec && ld->special == edlinespec)
-         E_LoadLineDefExt(ld, true);
-      else if(EV_IsParamLineSpec(ld->special) || 
-              EV_IsParamStaticInit(ld->special))
-      {
-         E_LoadLineDefExt(ld, false);
-      }
+      if(ld->special == edlinespec ||
+         EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
+         E_LoadLineDefExt(ld, ld->special == edlinespec);
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -1328,12 +1338,11 @@ void P_LoadHexenLineDefs(int lump)
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadLineDefs2(void)
+void P_LoadLineDefs2()
 {
-   int i = numlines;
    register line_t *ld = lines;
 
-   for(; i--; ld++)
+   for(int i = numlines; i--; ld++)
    {
       // killough 11/98: fix common wad errors (missing sidedefs):
       
@@ -1349,9 +1358,7 @@ void P_LoadLineDefs2(void)
       // haleyjd 05/02/06: Reserved line flag. If set, we must clear all
       // BOOM or later extended line flags. This is necessitated by E2M7.
       if(ld->flags & ML_RESERVED)
-         ld->flags &= ML_BLOCKING|ML_BLOCKMONSTERS|ML_TWOSIDED|ML_DONTPEGTOP|
-                      ML_DONTPEGBOTTOM|ML_SECRET|ML_SOUNDBLOCK|ML_DONTDRAW|
-                      ML_MAPPED;
+         ld->flags &= 0x1FF;
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;

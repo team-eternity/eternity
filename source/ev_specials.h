@@ -100,18 +100,20 @@ typedef bool (*EVActionFunc)(ev_action_t *, ev_instance_t *);
 //
 struct ev_actiontype_t
 {
-   int          activation; // activation type of this special, if restricted
-   EVPreFunc    pre;        // pre-action callback
-   EVPostFunc   post;       // post-action callback
-   unsigned int flags;      // flags; the action may add additional flags.
+   int           activation; // activation type of this special, if restricted
+   EVPreFunc     pre;        // pre-action callback
+   EVPostFunc    post;       // post-action callback
+   unsigned int  flags;      // flags; the action may add additional flags.
+   const char   *name;       // name for display purposes
 };
 
 struct ev_action_t
 {
-   ev_actiontype_t *type;   // actiontype structure
-   EVActionFunc action;     // action function
-   unsigned int flags;      // action flags
-   int          minversion; // minimum demo version
+   ev_actiontype_t *type;       // actiontype structure
+   EVActionFunc     action;     // action function
+   unsigned int     flags;      // action flags
+   int              minversion; // minimum demo version
+   const char      *name;       // name for display purposes
 };
 
 // Binds a line special action to a specific action number.
