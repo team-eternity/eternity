@@ -157,12 +157,22 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
       samplerate = (data[3] << 8) | data[2];
       samplelen  = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
 
+      // need at least 1 slice left after removal of DMX padding bytes
+      if(samplelen < 48)
+      {
+         Z_ChangeTag(data, PU_CACHE);
+         return false;
+      }
+
       // don't play sounds that think they're longer than they really are
       if(samplelen > lumplen - SOUNDHDRSIZE)
       {
          Z_ChangeTag(data, PU_CACHE);
          return false;
       }
+
+      // remove DMX padding bytes from length
+      samplelen -= 32;
 
       sfx->alen = (Uint32)(((Uint64)samplelen * snd_samplerate) / samplerate);
       sfx->data = Z_Malloc(sfx->alen, PU_STATIC, &sfx->data);
@@ -172,7 +182,7 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
       {  
          unsigned int i;
          byte *dest = (byte *)sfx->data;
-         byte *src  = data + SOUNDHDRSIZE;
+         byte *src  = data + SOUNDHDRSIZE + 16; // skip DMX pad bytes
          
          unsigned int step = (samplerate << 16) / snd_samplerate;
          unsigned int stepremainder = 0, j = 0;
@@ -202,7 +212,7 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
       else
       {
          // sound is already at target samplerate, copy data
-         memcpy(sfx->data, data + SOUNDHDRSIZE, samplelen);
+         memcpy(sfx->data, data + SOUNDHDRSIZE + 16, samplelen);
       }
 
       // haleyjd 06/03/06: don't need original lump data any more

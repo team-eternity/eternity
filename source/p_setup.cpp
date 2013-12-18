@@ -1145,8 +1145,9 @@ static void P_InitLineDef(line_t *ld)
    ld->soundorg.groupid = R_NOGROUP;
 }
 
-#define ML_PSX_TRANSLUCENT 0x400
-#define ML_PSX_UNKNOWN     0x800
+#define ML_PSX_MIDMASKED      0x200
+#define ML_PSX_MIDTRANSLUCENT 0x400
+#define ML_PSX_MIDSOLID       0x800
 
 //
 // P_PostProcessLineFlags
@@ -1158,17 +1159,6 @@ static void P_PostProcessLineFlags(line_t *ld)
    // EX_ML_BLOCKALL implies that ML_BLOCKING should be set.
    if(ld->extflags & EX_ML_BLOCKALL)
       ld->flags |= ML_BLOCKING;
-
-   // handle PSX line flags
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
-   {
-      if(ld->flags & ML_PSX_TRANSLUCENT)
-      {
-         ld->alpha = 3.0f/4.0f;
-         ld->extflags |= EX_ML_ADDITIVE;
-      }
-      ld->flags &= 0x1FF; // clear all extended flags
-   }
 }
 
 //
@@ -1354,6 +1344,23 @@ void P_LoadLineDefs2()
 
       if(ld->sidenum[1] == -1)
          ld->flags &= ~ML_TWOSIDED;  // Clear 2s flag for missing left side
+
+      // handle PSX line flags
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+      {
+         if(ld->flags & ML_PSX_MIDTRANSLUCENT)
+         {
+            ld->alpha = 3.0f/4.0f;
+            ld->extflags |= EX_ML_ADDITIVE;
+         }
+
+         // 2S line midtextures without any of the 3 flags set don't draw.
+         if(ld->sidenum[1] != -1 &&
+            !(ld->flags & (ML_PSX_MIDMASKED|ML_PSX_MIDTRANSLUCENT|ML_PSX_MIDSOLID)))
+            sides[ld->sidenum[0]].midtexture = 0;
+
+         ld->flags &= 0x1FF; // clear all extended flags
+      }
 
       // haleyjd 05/02/06: Reserved line flag. If set, we must clear all
       // BOOM or later extended line flags. This is necessitated by E2M7.
