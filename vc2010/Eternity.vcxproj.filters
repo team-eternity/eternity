@@ -912,6 +912,9 @@
     <ClCompile Include="..\source\mn_items.cpp">
       <Filter>Source Files\Mn_\Mn_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\v_image.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1615,6 +1618,12 @@
     </ClInclude>
     <ClInclude Include="..\source\m_ctype.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_binary.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\v_image.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -494,7 +494,6 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 //
 // V_DrawBackground
 //
-//
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
    int         tnum = R_FindFlat(patchname) - flatstart;

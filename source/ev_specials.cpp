@@ -27,6 +27,8 @@
 #include "z_zone.h"
 
 #include "acs_intr.h"
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "doomstat.h"
@@ -645,7 +647,8 @@ ev_actiontype_t NullActionType =
    -1,
    EV_NullPreCrossLine,
    EV_NullPostCrossLine,
-   0
+   0,
+   "None"
 };
 
 // DOOM-Style Action Types
@@ -656,7 +659,8 @@ ev_actiontype_t WRActionType =
    SPAC_CROSS,           // line must be crossed
    EV_DOOMPreCrossLine,  // pre-activation callback
    EV_DOOMPostCrossLine, // post-activation callback
-   0                     // no default flags
+   0,                    // no default flags
+   "WR"                  // display name
 };
 
 // W1-Type lines may be activated once. Semantics are implemented in the 
@@ -668,7 +672,8 @@ ev_actiontype_t W1ActionType =
    SPAC_CROSS,           // line must be crossed
    EV_DOOMPreCrossLine,  // pre-activation callback
    EV_DOOMPostCrossLine, // post-activation callback
-   EV_POSTCLEARSPECIAL   // special will be cleared after activation
+   EV_POSTCLEARSPECIAL,  // special will be cleared after activation
+   "W1"                  // display name
 };
 
 // SR-Type lines may be activated multiple times by using them.
@@ -677,7 +682,8 @@ ev_actiontype_t SRActionType =
    SPAC_USE,             // line must be used
    EV_DOOMPreUseLine,    // pre-activation callback
    EV_DOOMPostUseLine,   // post-activation callback
-   EV_POSTCHANGESWITCH   // change switch texture
+   EV_POSTCHANGESWITCH,  // change switch texture
+   "SR"                  // display name
 };
 
 // S1-Type lines may be activated once, by using them.
@@ -686,7 +692,8 @@ ev_actiontype_t S1ActionType =
    SPAC_USE,             // line must be used
    EV_DOOMPreUseLine,    // pre-activation callback
    EV_DOOMPostUseLine,   // post-activation callback
-   EV_POSTCHANGESWITCH | EV_POSTCLEARSPECIAL // change switch and clear special
+   EV_POSTCHANGESWITCH | EV_POSTCLEARSPECIAL, // change switch and clear special
+   "S1"                  // display name
 };
 
 // DR-Type lines may be activated repeatedly by pushing; the main distinctions
@@ -698,7 +705,8 @@ ev_actiontype_t DRActionType =
    SPAC_USE,             // line must be used
    EV_DOOMPreUseLine,    // pre-activation callback
    EV_DOOMPostUseLine,   // post-activation callback
-   EV_PREALLOWZEROTAG    // tags are never used for activation purposes
+   EV_PREALLOWZEROTAG,   // tags are never used for activation purposes
+   "DR"                  // display name
 };
 
 // GR-Type lines may be activated multiple times by hitscan attacks
@@ -708,7 +716,8 @@ ev_actiontype_t GRActionType =
    SPAC_IMPACT,          // line must be hit
    EV_DOOMPreShootLine,  // pre-activation callback
    EV_DOOMPostShootLine, // post-activation callback (same as use)
-   EV_POSTCHANGESWITCH   // change switch texture
+   EV_POSTCHANGESWITCH,  // change switch texture
+   "GR"                  // display name
 };
 
 // G1-Type lines may be activated once, by a hitscan attack.
@@ -717,7 +726,8 @@ ev_actiontype_t G1ActionType =
    SPAC_IMPACT,          // line must be hit
    EV_DOOMPreShootLine,  // pre-activation callback
    EV_DOOMPostShootLine, // post-activation callback
-   EV_POSTCHANGESWITCH | EV_POSTCLEARSPECIAL // change switch and clear special
+   EV_POSTCHANGESWITCH | EV_POSTCLEARSPECIAL, // change switch and clear special
+   "G1"                  // display name
 };
 
 // BOOM Generalized Action Type (there is but one)
@@ -727,7 +737,8 @@ ev_actiontype_t BoomGenActionType =
    -1,                     // SPAC is determined by the line special
    EV_BOOMGenPreActivate,  // pre-activation callback
    EV_BOOMGenPostActivate, // post-activation callback
-   0                       // flags are not used by this type
+   0,                      // flags are not used by this type
+   "Generalized"           // display name
 };
 
 // Parameterized Action Type (there is but one)
@@ -737,7 +748,8 @@ ev_actiontype_t ParamActionType =
    -1,                    // SPAC is determined by line flags
    EV_ParamPreActivate,   // pre-activation callback
    EV_ParamPostActivate,  // post-activation callback
-   EV_PARAMLINESPEC       // is parameterized
+   EV_PARAMLINESPEC,      // is parameterized
+   "Parameterized"        // display name
 };
 
 //=============================================================================
@@ -1366,6 +1378,25 @@ bool EV_IsParamLineSpec(int special)
    }
 
    return result;
+}
+
+//=============================================================================
+//
+// Development Commands
+//
+
+CONSOLE_COMMAND(ev_mapspecials, cf_level)
+{
+   for(int i = 0; i < numlines; i++)
+   {
+      auto action = EV_ActionForSpecial(lines[i].special);
+      if(action)
+      {
+         auto type = action->type;
+         C_Printf("%5d: %3d %3d %s%s\n", i, lines[i].special, lines[i].tag,
+            action->name, action->minversion > 0 ? "*" : "");
+      }
+   }
 }
 
 // EOF

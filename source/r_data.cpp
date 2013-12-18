@@ -321,8 +321,6 @@ void R_InitTranMap(bool force)
 //
 // Initialize translucency filter map
 //
-// By Lee Killough 2/21/98
-//
 void R_InitSubMap(bool force)
 {
    static bool prev_fromlump = false;

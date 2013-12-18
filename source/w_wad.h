@@ -107,6 +107,7 @@ struct lumpinfo_t
       ns_acs,
       ns_pads,
       ns_textures,
+      ns_graphics,
       ns_max           // keep this last.
    };
    int li_namespace;
@@ -302,6 +303,7 @@ public:
    int   checkNumForNameNSG(const char *name, int li_namespace);
    int   getNumForName(const char *name);
    int   checkNumForLFN(const char *lfn, int li_namespace = lumpinfo_t::ns_global);
+   int   checkNumForLFNNSG(const char *name, int ns);
    
    // sf: add a new wad file after the game has already begun
    bool  addNewFile(const char *filename);

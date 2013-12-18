@@ -976,7 +976,7 @@ static void R_ProjectSprite(Mobj *thing)
       vis->colormap = spritelights[index];
       vis->seccolor = thing->subsector->sector->color;
    }
-
+      
    vis->drawstyle = VS_DRAWSTYLE_NORMAL;
 
    // haleyjd 01/22/11: determine special drawstyles

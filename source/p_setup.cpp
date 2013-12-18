@@ -45,7 +45,7 @@
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_bbox.h"
-#include "m_swap.h"
+#include "m_binary.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -246,92 +246,6 @@ inline static int SafeRealUintIndex(uint16_t input, int limit,
 
 //=============================================================================
 //
-// Lump Data Reading Routines
-//
-// haleyjd 05/26/10: These routines replace direct mapping of structures to
-// lumps in memory where this is needed. Eventually I'd like to replace all
-// such direct mapping.
-//
-
-// haleyjd 10/30/10: Read a little-endian short without alignment assumptions
-#define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
-
-// haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
-#define read32_le(b, t) \
-   ((b)[0] | \
-    ((t)((b)[1]) <<  8) | \
-    ((t)((b)[2]) << 16) | \
-    ((t)((b)[3]) << 24))
-
-//
-// GetLevelWord
-//
-// Reads an int16 from the lump data and increments the read pointer.
-//
-static int16_t GetLevelWord(byte **data)
-{
-   int16_t val = SwapShort(read16_le(*data, int16_t));
-   *data += 2;
-
-   return val;
-}
-
-//
-// GetLevelWordU
-//
-// Reads a uint16 from the lump data and increments the read pointer.
-//
-static uint16_t GetLevelWordU(byte **data)
-{
-   uint16_t val = SwapUShort(read16_le(*data, uint16_t));
-   *data += 2;
-
-   return val;
-}
-
-//
-// GetLevelDWord
-//
-// Reads an int32 from the lump data and increments the read pointer.
-//
-static int32_t GetLevelDWord(byte **data)
-{
-   int32_t val = SwapLong(read32_le(*data, int32_t));
-   *data += 4;
-
-   return val;
-}
-
-//
-// GetLevelDwordU
-//
-// Reads a uint32 from the lump data and increments the read pointer.
-//
-static uint32_t GetLevelDWordU(byte **data)
-{
-   uint32_t val = SwapULong(read32_le(*data, uint32_t));
-   *data += 4;
-
-   return val;
-}
-
-//
-// GetLevelString
-//
-// Reads a "len"-byte string from the lump data and writes it into the 
-// destination buffer. The read pointer is incremented by len bytes.
-//
-static void GetLevelString(byte **data, char *dest, int len)
-{
-   char *loc = (char *)(*data);
-
-   memcpy(dest, loc, len);
-
-   *data += len;
-}
-
-//=============================================================================
-//
 // Level Loading
 //
 
@@ -360,8 +274,8 @@ void P_LoadConsoleVertexes(int lump)
    // Copy and convert vertex coordinates
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetLevelDWord(&data);
-      vertexes[i].y = GetLevelDWord(&data);
+      vertexes[i].x = GetBinaryDWord(&data);
+      vertexes[i].y = GetBinaryDWord(&data);
 
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
@@ -391,8 +305,8 @@ void P_LoadVertexes(int lump)
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetLevelWord(&data) << FRACBITS;
-      vertexes[i].y = GetLevelWord(&data) << FRACBITS;
+      vertexes[i].x = GetBinaryWord(&data) << FRACBITS;
+      vertexes[i].y = GetBinaryWord(&data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
@@ -604,16 +518,16 @@ void P_LoadPSXSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
-      GetLevelString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
+      GetBinaryString(&data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
-      GetLevelString(&data, namebuf, 8);
+      GetBinaryString(&data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
       ss->color              = *data++;
-      ss->special            = GetLevelWord(&data);
-      ss->tag                = GetLevelWord(&data);
+      ss->special            = GetBinaryWord(&data);
+      ss->tag                = GetBinaryWord(&data);
       data += 2;             // skip padding/unknown field for now
     
       P_InitSector(ss);
@@ -643,16 +557,16 @@ void P_LoadSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
-      GetLevelString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
+      GetBinaryString(&data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      GetLevelString(&data, namebuf, 8);
+      GetBinaryString(&data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
-      ss->lightlevel         = GetLevelWord(&data);
-      ss->special            = GetLevelWord(&data);
-      ss->tag                = GetLevelWord(&data);
+      ss->lightlevel         = GetBinaryWord(&data);
+      ss->special            = GetBinaryWord(&data);
+      ss->tag                = GetBinaryWord(&data);
     
       P_InitSector(ss);
    }
@@ -821,9 +735,9 @@ static void P_LoadZSegs(byte *data)
       mapseg_znod_t ml;
 
       // haleyjd: FIXME - see no verification of vertex indices
-      v1 = ml.v1 = GetLevelDWordU(&data);
-      v2 = ml.v2 = GetLevelDWordU(&data);
-      ml.linedef = GetLevelWordU(&data);
+      v1 = ml.v1 = GetBinaryUDWord(&data);
+      v2 = ml.v2 = GetBinaryUDWord(&data);
+      ml.linedef = GetBinaryUWord(&data);
       ml.side    = *data++;
 
       linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
@@ -887,10 +801,10 @@ static void P_LoadZNodes(int lump)
 
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
-   orgVerts = GetLevelDWordU(&data);
+   orgVerts = GetBinaryUDWord(&data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
-   newVerts = GetLevelDWordU(&data);
+   newVerts = GetBinaryUDWord(&data);
 
    if(orgVerts + newVerts == (unsigned int)numvertexes)
    {
@@ -907,8 +821,8 @@ static void P_LoadZNodes(int lump)
    {
       int vindex = i + orgVerts;
 
-      newvertarray[vindex].x = (fixed_t)GetLevelDWord(&data);
-      newvertarray[vindex].y = (fixed_t)GetLevelDWord(&data);
+      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(&data);
+      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(&data);
 
       // SoM: Cardboard stores float versions of vertices.
       newvertarray[vindex].fx = M_FixedToFloat(newvertarray[vindex].x);
@@ -930,7 +844,7 @@ static void P_LoadZNodes(int lump)
 
    // Read the subsectors
    CheckZNodesOverflow(len, sizeof(numSubs));
-   numSubs = GetLevelDWordU(&data);
+   numSubs = GetBinaryUDWord(&data);
 
    numsubsectors = (int)numSubs;
    if(numsubsectors <= 0)
@@ -945,13 +859,13 @@ static void P_LoadZNodes(int lump)
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
-      subsectors[i].numlines = (int)(GetLevelDWordU(&data));
+      subsectors[i].numlines  = (int)(GetBinaryUDWord(&data));
       currSeg += subsectors[i].numlines;
    }
 
    // Read the segs
    CheckZNodesOverflow(len, sizeof(numSegs));
-   numSegs = GetLevelDWordU(&data);
+   numSegs = GetBinaryUDWord(&data);
 
    // The number of segs stored should match the number of
    // segs used by subsectors.
@@ -971,7 +885,7 @@ static void P_LoadZNodes(int lump)
 
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
-   numNodes = GetLevelDWordU(&data);
+   numNodes = GetBinaryUDWord(&data);
 
    numnodes = numNodes;
    nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
@@ -984,17 +898,17 @@ static void P_LoadZNodes(int lump)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      mn.x  = GetLevelWord(&data);
-      mn.y  = GetLevelWord(&data);
-      mn.dx = GetLevelWord(&data);
-      mn.dy = GetLevelWord(&data);
+      mn.x  = GetBinaryWord(&data);
+      mn.y  = GetBinaryWord(&data);
+      mn.dx = GetBinaryWord(&data);
+      mn.dy = GetBinaryWord(&data);
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
-            mn.bbox[j][k] = GetLevelWord(&data);
+            mn.bbox[j][k] = GetBinaryWord(&data);
 
       for(j = 0; j < 2; j++)
-         mn.children[j] = GetLevelDWord(&data);
+         mn.children[j] = GetBinaryDWord(&data);
 
       no->x  = mn.x; 
       no->y  = mn.y; 
@@ -1026,6 +940,7 @@ static void P_LoadZNodes(int lump)
 //=============================================================================
 
 static void P_ConvertHereticThing(mapthing_t *mthing);
+static void P_ConvertPSXThing(mapthing_t *mthing);
 
 //
 // P_LoadThings
@@ -1082,6 +997,10 @@ void P_LoadThings(int lump)
       ft->angle   = SwapShort(mt->angle);      
       ft->options = SwapShort(mt->options);
 
+      // PSX special behaviors
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+         P_ConvertPSXThing(ft);
+
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
@@ -1092,7 +1011,7 @@ void P_LoadThings(int lump)
    // haleyjd: all player things for players in this game should now be valid
    if(GameType != gt_dm)
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && !players[i].mo)
             level_error = "Missing required player start";
@@ -1226,6 +1145,9 @@ static void P_InitLineDef(line_t *ld)
    ld->soundorg.groupid = R_NOGROUP;
 }
 
+#define ML_PSX_TRANSLUCENT 0x400
+#define ML_PSX_UNKNOWN     0x800
+
 //
 // P_PostProcessLineFlags
 //
@@ -1236,6 +1158,17 @@ static void P_PostProcessLineFlags(line_t *ld)
    // EX_ML_BLOCKALL implies that ML_BLOCKING should be set.
    if(ld->extflags & EX_ML_BLOCKALL)
       ld->flags |= ML_BLOCKING;
+
+   // handle PSX line flags
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+   {
+      if(ld->flags & ML_PSX_TRANSLUCENT)
+      {
+         ld->alpha = 3.0f/4.0f;
+         ld->extflags |= EX_ML_ADDITIVE;
+      }
+      ld->flags &= 0x1FF; // clear all extended flags
+   }
 }
 
 //
@@ -1252,13 +1185,12 @@ static void P_PostProcessLineFlags(line_t *ld)
 void P_LoadLineDefs(int lump)
 {
    byte *data;
-   int  i;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedef_t);
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
-   for(i = 0; i < numlines; ++i)
+   for(int i = 0; i < numlines; i++)
    {
       maplinedef_t *mld = (maplinedef_t *)data + i;
       line_t *ld = lines + i;
@@ -1283,13 +1215,9 @@ void P_LoadLineDefs(int lump)
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
-      if(edlinespec && ld->special == edlinespec)
-         E_LoadLineDefExt(ld, true);
-      else if(EV_IsParamLineSpec(ld->special) || 
-              EV_IsParamStaticInit(ld->special))
-      {
-         E_LoadLineDefExt(ld, false);
-      }
+      if((edlinespec && ld->special == edlinespec) ||
+         EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
+         E_LoadLineDefExt(ld, ld->special == edlinespec);
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -1410,12 +1338,11 @@ void P_LoadHexenLineDefs(int lump)
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadLineDefs2(void)
+void P_LoadLineDefs2()
 {
-   int i = numlines;
    register line_t *ld = lines;
 
-   for(; i--; ld++)
+   for(int i = numlines; i--; ld++)
    {
       // killough 11/98: fix common wad errors (missing sidedefs):
       
@@ -1431,9 +1358,7 @@ void P_LoadLineDefs2(void)
       // haleyjd 05/02/06: Reserved line flag. If set, we must clear all
       // BOOM or later extended line flags. This is necessitated by E2M7.
       if(ld->flags & ML_RESERVED)
-         ld->flags &= ML_BLOCKING|ML_BLOCKMONSTERS|ML_TWOSIDED|ML_DONTPEGTOP|
-                      ML_DONTPEGBOTTOM|ML_SECRET|ML_SOUNDBLOCK|ML_DONTDRAW|
-                      ML_MAPPED;
+         ld->flags &= 0x1FF;
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
@@ -1494,24 +1419,20 @@ void P_LoadSideDefs2(int lumpnum)
 
    for(i = 0; i < numsides; ++i)
    {
-      //register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
       int cmap, secnum;
 
-      //sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
-      //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
-
-      sd->textureoffset = GetLevelWord(&data) << FRACBITS;
-      sd->rowoffset     = GetLevelWord(&data) << FRACBITS; 
+      sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
+      sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
-      GetLevelString(&data, toptexture,    8);
-      GetLevelString(&data, bottomtexture, 8);
-      GetLevelString(&data, midtexture,    8);
+      GetBinaryString(&data, toptexture,    8);
+      GetBinaryString(&data, bottomtexture, 8);
+      GetBinaryString(&data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", i, "sector");
+      secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
       sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
@@ -2756,6 +2677,35 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
       // handle items numbered > 2000
       mthing->type = (mthing->type - 2000) + 7200;
    }
+}
+
+#define DEN_PSXCHAIN   64
+#define DEN_NMSPECTRE  889
+#define DEN_PSXSPECTRE 890
+#define DEN_EECHAIN    891
+#define DEN_DEMON      3002
+
+//
+// P_ConvertPSXThing
+//
+// Take care of oddities in the PSX map format.
+//
+static void P_ConvertPSXThing(mapthing_t *mthing)
+{
+   // Demon spawn redirections
+   if(mthing->type == DEN_DEMON)
+   {
+      int16_t flags = mthing->options & MTF_PSX_SPECTRE;
+
+      if(flags == MTF_PSX_SPECTRE)
+         mthing->type = DEN_PSXSPECTRE;
+      else if(flags == MTF_PSX_NIGHTMARE)
+         mthing->type = DEN_NMSPECTRE;
+   }
+   else if(mthing->type == DEN_PSXCHAIN)
+      mthing->type = DEN_EECHAIN;
+
+   mthing->options &= ~MTF_PSX_SPECTRE;
 }
 
 //----------------------------------------------------------------------------

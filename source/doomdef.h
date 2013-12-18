@@ -117,6 +117,10 @@ typedef enum {
 // haleyjd
 #define MTF_DORMANT           512
 
+// haleyjd: PSX flags
+#define MTF_PSX_NIGHTMARE (32|128)
+#define MTF_PSX_SPECTRE   (32|64|128)
+
 // sf: sector flags, not me =)
                 // kill all sound in sector
 #define SF_KILLSOUND          1024
