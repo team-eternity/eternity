@@ -168,9 +168,6 @@ static default_t sysdefaults[] =
                "Force reversal of stereo audio channels: 0 = normal, 1 = reverse"),
 
    // haleyjd 04/21/10
-   DEFAULT_INT("s_equalizer", &s_equalizer, NULL, 1, 0, 1, default_t::wad_no,
-               "1 to enable three-band equalizer"),
-
    DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, NULL, 880.0, 0, UL, default_t::wad_no,
                  "High end of low pass band"),
    

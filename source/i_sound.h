@@ -130,7 +130,6 @@ extern  int mus_card;
 extern  int detect_voices; // jff 3/4/98 option to disable voice detection
 
 // haleyjd 04/21/10: equalization parameters
-extern int     s_equalizer; // if true, use equalizer
 extern double  s_lowfreq;   // low band cutoff frequency
 extern double  s_highfreq;  // high band cutoff frequency
 extern double  s_eqpreamp;  // preamp factor

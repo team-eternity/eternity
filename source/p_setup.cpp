@@ -1357,7 +1357,10 @@ void P_LoadLineDefs2()
          // 2S line midtextures without any of the 3 flags set don't draw.
          if(ld->sidenum[1] != -1 &&
             !(ld->flags & (ML_PSX_MIDMASKED|ML_PSX_MIDTRANSLUCENT|ML_PSX_MIDSOLID)))
+         {
             sides[ld->sidenum[0]].midtexture = 0;
+            sides[ld->sidenum[1]].midtexture = 0;
+         }
 
          ld->flags &= 0x1FF; // clear all extended flags
       }

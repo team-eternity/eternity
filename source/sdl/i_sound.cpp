@@ -50,7 +50,6 @@ int detect_voices; //jff 3/4/98 enables voice detection prior to install_sound
 //jff 1/22/98 make these visible here to disable sound/music on install err
 
 // haleyjd 04/21/10: equalization parameters
-int     s_equalizer; // if true, use equalizer
 double  s_lowfreq;   // low band cutoff frequency
 double  s_highfreq;  // high band cutoff frequency
 double  s_eqpreamp;  // preamp factor
@@ -402,8 +401,6 @@ VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 
 // Equalizer variables
 
-VARIABLE_BOOLEAN(s_equalizer, NULL, onoff);
-
 VARIABLE_FLOAT(s_lowfreq,  NULL, 0.0, UL);
 VARIABLE_FLOAT(s_highfreq, NULL, 0.0, UL);
 VARIABLE_FLOAT(s_eqpreamp, NULL, 0.0, 1.0);
@@ -453,7 +450,6 @@ static void I_UpdateEQ(void)
       i_sounddriver->UpdateEQParams();
 }
 
-CONSOLE_VARIABLE(s_equalizer, s_equalizer, 0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_lowfreq,   s_lowfreq,   0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_highfreq,  s_highfreq,  0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_eqpreamp,  s_eqpreamp,  0) { I_UpdateEQ(); }

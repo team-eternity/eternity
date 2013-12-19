@@ -2349,7 +2349,6 @@ static menuitem_t mn_soundeq_items[] =
    { it_title,      "Sound Options",          NULL, "m_sound" },
    { it_gap },
    { it_info,       "Equalizer"                               },
-   { it_toggle,     "Enable equalizer",       "s_equalizer"   },
    { it_slider,     "Low band gain",          "s_lowgain"     },
    { it_slider,     "Midrange gain",          "s_midgain"     },
    { it_slider,     "High band gain",         "s_highgain"    },
