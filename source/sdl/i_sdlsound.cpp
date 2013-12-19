@@ -405,48 +405,60 @@ static double rational_tanh(double x)
 // The author assumes NO RESPONSIBILITY for any problems caused by the use of
 // this software.
 //
-static double do_3band(EQSTATE *es, double sample)
+// haleyjd 12/19/13: rewritten to loop over the sample buffer and do output
+// directly back to the SDL audio stream.
+//
+static void do_3band(double *stream, double *end, Sint16 *dest)
 {
+   int esnum = 0;
+
    // haleyjd: This "very small addend" is supposed to take care of P4
    // denormalization problems. Do we actually need it?
    static double vsa = (1.0 / 4294967295.0);
-
    // Locals
-   double l, m, h;    // Low / Mid / High - Sample Values
+   double sample, l, m, h;    // Low / Mid / High - Sample Values
 
-   // Filter #1 (lowpass)
-   es->f1p0  += (es->lf * (sample   - es->f1p0)) + vsa;
-   es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
-   es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
-   es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
+   while(stream != end)
+   {
+      auto es = &eqstate[esnum];
+      esnum ^= 1; // haleyjd: toggle between equalizer channels
 
-   l          = es->f1p3;
+      sample = *stream++ * preampmul;
 
-   // Filter #2 (highpass)
-   es->f2p0  += (es->hf * (sample   - es->f2p0)) + vsa;
-   es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
-   es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
-   es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
+      // Filter #1 (lowpass)
+      es->f1p0  += (es->lf * (sample   - es->f1p0)) + vsa;
+      es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
+      es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
+      es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
 
-   h          = es->sdm3 - es->f2p3;
+      l          = es->f1p3;
 
-   // Calculate midrange (signal - (low + high))
-   m          = es->sdm3 - (h + l); // haleyjd 07/05/10: which is right?
-   //m          = sample - (h + l); // the one above seems more correct to me.
+      // Filter #2 (highpass)
+      es->f2p0  += (es->hf * (sample   - es->f2p0)) + vsa;
+      es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
+      es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
+      es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
 
-   // Scale, Combine and store
-   l         *= es->lg;
-   m         *= es->mg;
-   h         *= es->hg;
+      h          = es->sdm3 - es->f2p3;
 
-   // Shuffle history buffer
-   es->sdm3   = es->sdm2;
-   es->sdm2   = es->sdm1;
-   es->sdm1   = sample;                
+      // Calculate midrange (signal - (low + high))
+      m          = es->sdm3 - (h + l); // haleyjd 07/05/10: which is right?
+      //m          = sample - (h + l); // the one above seems more correct to me.
 
-   // Return result
-   // haleyjd: use rational_tanh for soft clipping
-   return rational_tanh(l + m + h);
+      // Scale, Combine and store
+      l         *= es->lg;
+      m         *= es->mg;
+      h         *= es->hg;
+
+      // Shuffle history buffer
+      es->sdm3   = es->sdm2;
+      es->sdm2   = es->sdm1;
+      es->sdm1   = sample;                
+
+      // Return result
+      // haleyjd: use rational_tanh for soft clipping
+      *dest++ = (Sint16)(rational_tanh(l + m + h) * 32767.0);
+   }
 }
 
 //
@@ -572,18 +584,8 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       SDL_SemPost(chan->semaphore);
    }
 
-   // haleyjd 04/21/10: equalization pass
-   leftout = mixbuffer;
-   Sint16 *flout = (Sint16 *)stream;
-   
-   while(leftout != leftend)
-   {
-      *(flout + 0) = (Sint16)(do_3band(&eqstate[0], *(leftout+0) * preampmul) * 32767.0);
-      *(flout + 1) = (Sint16)(do_3band(&eqstate[1], *(leftout+1) * preampmul) * 32767.0);
-
-      leftout += STEP;
-      flout   += STEP;
-   }
+   // haleyjd 04/21/10: equalization output pass
+   do_3band(mixbuffer, leftend, (Sint16 *)stream);
 }
 
 //
