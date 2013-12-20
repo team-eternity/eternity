@@ -43,6 +43,7 @@
 #include "../m_argv.h"
 #include "../m_compare.h"
 #include "../mn_engin.h"
+#include "../s_reverb.h"
 #include "../s_sound.h"
 #include "../v_misc.h"
 #include "../w_wad.h"
@@ -583,6 +584,9 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       // release semaphore and move on to the next channel
       SDL_SemPost(chan->semaphore);
    }
+
+   // TEST REVERB
+   //S_ProcessReverb(mixbuffer, mixbuffer_size/2);
 
    // haleyjd 04/21/10: equalization output pass
    do_3band(mixbuffer, leftend, (Sint16 *)stream);
