@@ -37,7 +37,8 @@ enum s_reverbparam_e
    S_REVERB_DAMP,
    S_REVERB_WET,
    S_REVERB_DRY,
-   S_REVERB_WIDTH
+   S_REVERB_WIDTH,
+   S_REVERB_PREDELAY
 };
 
 void S_SuspendReverb();

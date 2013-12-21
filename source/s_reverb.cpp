@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include "s_reverb.h"
 
 //
@@ -47,6 +49,7 @@
 #define INITIALDRY   0
 #define INITIALWIDTH 1
 #define INITIALMODE  0
+#define INITIALDELAY 0
 #define FREEZEMODE   0.5
 #define STEREOSPREAD 23
 
@@ -87,6 +90,58 @@ static inline void undenormalize(double &d)
    static const double anti_denormal = 1e-18;
    d += anti_denormal;
    d -= anti_denormal;
+}
+
+//=============================================================================
+//
+// delay
+//
+
+#define MAXDELAY 250u
+#define MAXSR    44100u
+
+static double delayBuffer[MAXDELAY*MAXSR/1000];
+
+static size_t delaySize;
+static size_t readPos;
+static size_t writePos;
+
+static void delay_clearBuffer()
+{
+   for(size_t i = 0; i < delaySize; i++)
+      delayBuffer[i] = 0.0;
+}
+
+static void delay_set(size_t delayms, size_t sr = MAXSR)
+{
+   if(delayms > MAXDELAY)
+      delayms = MAXDELAY;
+   if(sr > MAXSR)
+      sr = MAXSR;
+   size_t curDelaySize = delaySize;
+   delaySize = delayms * sr / 1000;
+
+   if(delaySize != curDelaySize)
+   {
+      readPos  = 0;
+      writePos = delaySize - 1;
+      delay_clearBuffer();
+   }
+}
+
+static void delay_writeSample(double sample)
+{
+   delayBuffer[writePos] = sample;
+   if(++writePos >= delaySize)
+      writePos = 0;
+}
+
+static double delay_readSample()
+{
+   double ret = delayBuffer[readPos];
+   if(++readPos >= delaySize)
+      readPos = 0;
+   return ret;
 }
 
 //=============================================================================
@@ -186,6 +241,56 @@ public:
 
 //=============================================================================
 //
+// fir_movavg
+//
+
+class fir_movavg
+{
+public:
+   struct z1
+   {
+      double value;
+      bool   dirty;
+
+      double process(double d)
+      {
+         if(!dirty)
+         {
+            dirty = true;
+            return (value = d);
+         }
+         else
+         {
+            double t = value;
+            value = d;
+            return t;
+         }
+      }
+   } one, two, three;
+
+   fir_movavg()
+   {
+      reset();
+   }
+
+   void reset()
+   {
+      one.value = two.value = three.value = 0.0;
+      one.dirty = two.dirty = three.dirty = false;
+   }
+
+   double process(double d)
+   {
+      double d2, d3, d4;
+      d2 = one.process(d);
+      d3 = two.process(d2);
+      d4 = three.process(d3);
+      return (d + d2 + d3 + d4) / 4.0;
+   }
+};
+
+//=============================================================================
+//
 // revmodel
 //
 
@@ -199,6 +304,7 @@ public:
    double dry;
    double width;
    double mode;
+   size_t delay;
 
    // comb filters
    comb combL[NUMCOMBS];
@@ -207,6 +313,9 @@ public:
    // allpass filters
    allpass allpassL[NUMALLPASSES];
    allpass allpassR[NUMALLPASSES];
+
+   // moving average fir
+   fir_movavg firL, firR;
 
    // Buffers for the combs
    double bufcombL1[COMBTUNINGL1];
@@ -280,6 +389,9 @@ public:
       damp     = INITIALDAMP * SCALEDAMP;
       width    = INITIALWIDTH;
       mode     = INITIALMODE;
+      //delay    = INITIALDELAY;
+      delay    = 25;
+      delay_set(delay);
       update();
 
       // Buffer will be full of rubbish - so we MUST mute them
@@ -306,6 +418,10 @@ public:
          allpassL[i].mute();
          allpassR[i].mute();
       }
+
+      delay_clearBuffer();
+      firL.reset();
+      firR.reset();
    }
 
    void processReplace(double *inputL, double *inputR, 
@@ -318,6 +434,12 @@ public:
       {
          outL = outR = 0;
          input = (*inputL + *inputR) * gain;
+
+         if(delay)
+         {
+            delay_writeSample(input);
+            input = delay_readSample();
+         }
 
          // accumulate comb filters in parallel
          for(int i = 0; i < NUMCOMBS; i++)
@@ -332,6 +454,10 @@ public:
             outL = allpassL[i].process(outL);
             outR = allpassR[i].process(outR);
          }
+
+         // moving average filter
+         outL = firL.process(outL);
+         outR = firR.process(outR);
 
          // calculate output replacing anything already there
          *outputL = outL * wet1 + outR * wet2 + *inputL * dry;
@@ -356,6 +482,12 @@ public:
          outL = outR = 0;
          input = (*inputL + *inputR) * gain;
 
+         if(delay)
+         {
+            delay_writeSample(input);
+            input = delay_readSample();
+         }
+
          // accumulate comb filters in parallel
          for(int i = 0; i < NUMCOMBS; i++)
          {
@@ -369,6 +501,10 @@ public:
             outL = allpassL[i].process(outL);
             outR = allpassR[i].process(outR);
          }
+
+         // moving average filter
+         outL = firL.process(outL);
+         outR = firR.process(outR);
 
          // calculate output mixing with anything already there
          *outputL += outL * wet1 + outR * wet2 + *inputL * dry;
@@ -411,24 +547,30 @@ public:
 
    void setRoomSize(double value)
    {
+      double curroomsize = roomsize;
       roomsize = (value * SCALEROOM) + OFFSETROOM;
-      update();
+      if(roomsize != curroomsize)
+         update();
    }
 
    double getRoomSize() const { return (roomsize - OFFSETROOM) / SCALEROOM; }
 
    void setDamp(double value)
    {
+      double curdamp = damp;
       damp = value * SCALEDAMP;
-      update();
+      if(damp != curdamp)
+         update();
    }
 
    double getDamp() const { return damp / SCALEDAMP; }
 
    void setWet(double value)
    {
+      double curwet = wet;
       wet = value * SCALEWET;
-      update();
+      if(wet != curwet)
+         update();
    }
 
    double getWet() const { return wet / SCALEWET; }
@@ -438,14 +580,26 @@ public:
 
    void setWidth(double value)
    {
+      double curwidth = width;
       width = value;
-      update();
+      if(width != curwidth)
+         update();
    }
 
    void setMode(double value)
    {
+      double curmode = mode;
       mode = value;
-      update();
+      if(mode != curmode)
+         update();
+   }
+
+   void setDelay(size_t value)
+   {
+      size_t curdelay = delay;
+      delay = value;
+      if(delay != curdelay)
+         delay_set(delay);
    }
 };
 
@@ -487,6 +641,9 @@ void S_ReverbSetParam(s_reverbparam_e param, double value)
       break;
    case S_REVERB_WIDTH:
       reverb.setWidth(value);
+      break;
+   case S_REVERB_PREDELAY:
+      reverb.setDelay((size_t)value);
       break;
    default:
       break;
