@@ -50,6 +50,7 @@
 #define INITIALWIDTH 1
 #define INITIALMODE  0
 #define INITIALDELAY 0
+#define INITIALBPF   false
 #define FREEZEMODE   0.5
 #define STEREOSPREAD 23
 
@@ -78,7 +79,6 @@
 #define ALLPASSTUNINGR3 341+STEREOSPREAD
 #define ALLPASSTUNINGL4 225
 #define ALLPASSTUNINGR4 225+STEREOSPREAD
-
 
 //=============================================================================
 //
@@ -241,51 +241,102 @@ public:
 
 //=============================================================================
 //
-// fir_movavg
+// band pass filter
 //
 
-class fir_movavg
+#define SND_PI 3.14159265
+#define MAXTAPS 128
+
+// default parameters
+#define DEFAULTBPF  S_REVERB_LPF
+#define DEFAULTFX   8000.0
+#define DEFAULTTAPS 10
+
+class bandpassfilter
 {
 public:
-   struct z1
-   {
-      double value;
-      bool   dirty;
+   double taps[MAXTAPS];
+   double history[MAXTAPS];
+   double fx;
+   double fu;
+   double lambda;
+   double phi;
+   s_reverbeq_e mode;
+   int    numtaps;
 
-      double process(double d)
+   template<typename fn> void initTaps(fn functor)
+   {
+      for(int i = 0; i < numtaps; i++)
+         taps[i] = functor(i - (numtaps - 1.0) / 2.0);
+   }
+
+   void init(s_reverbeq_e pmode, double pfx, double pfu, int pnumtaps)
+   {
+      numtaps = pnumtaps;
+      if(numtaps > MAXTAPS)
+         numtaps = MAXTAPS;
+      
+      fx      = pfx;
+      fu      = pfu;
+      mode    = pmode;
+
+      // setup terms
+      switch(mode)
       {
-         if(!dirty)
-         {
-            dirty = true;
-            return (value = d);
-         }
-         else
-         {
-            double t = value;
-            value = d;
-            return t;
-         }
+      case S_REVERB_LPF:
+      case S_REVERB_HPF:
+         lambda = SND_PI * fx / (MAXSR / 2);
+         break;
+      case S_REVERB_BPF:
+         lambda = SND_PI * fx / (MAXSR / 2);
+         phi    = SND_PI * fu / (MAXSR / 2);
+         break;
       }
-   } one, two, three;
 
-   fir_movavg()
-   {
-      reset();
+      // initialize taps
+      switch(mode)
+      {
+      case S_REVERB_LPF:
+         initTaps([this] (double t) { 
+            return (t == 0.0) ? lambda / SND_PI : 
+               sin(t * lambda) / (t * SND_PI);
+         });
+         break;
+      case S_REVERB_HPF:
+         initTaps([this] (double t) {
+            return (t == 0.0) ? 1.0 - lambda / SND_PI : 
+               -sin(t * lambda) / (t * SND_PI);
+         });
+         break;
+      case S_REVERB_BPF:
+         initTaps([this] (double t) {
+            return (t == 0.0) ? (phi - lambda) / SND_PI : 
+               (sin(t * phi) - sin(t * lambda)) / (t * SND_PI);
+         });
+         break;
+      }
    }
 
-   void reset()
+   double process(double sample)
    {
-      one.value = two.value = three.value = 0.0;
-      one.dirty = two.dirty = three.dirty = false;
+      double res = 0.0;
+
+      // shuffle history
+      for(int i = numtaps - 1; i >= 1; i--)
+         history[i] = history[i - 1];
+      history[0] = sample;
+
+      // apply taps
+      for(int i = 0; i < numtaps; i++)
+         res += history[i] * taps[i];
+
+      return res;
    }
 
-   double process(double d)
+   void clearBuffer()
    {
-      double d2, d3, d4;
-      d2 = one.process(d);
-      d3 = two.process(d2);
-      d4 = three.process(d3);
-      return (d + d2 + d3 + d4) / 4.0;
+      for(int i = 0; i < numtaps; i++)
+         history[i] = 0.0;
    }
 };
 
@@ -305,6 +356,10 @@ public:
    double width;
    double mode;
    size_t delay;
+   bool   bandpass;
+
+   // equalizer
+   bandpassfilter bpfL, bpfR;
 
    // comb filters
    comb combL[NUMCOMBS];
@@ -313,9 +368,6 @@ public:
    // allpass filters
    allpass allpassL[NUMALLPASSES];
    allpass allpassR[NUMALLPASSES];
-
-   // moving average fir
-   fir_movavg firL, firR;
 
    // Buffers for the combs
    double bufcombL1[COMBTUNINGL1];
@@ -389,9 +441,11 @@ public:
       damp     = INITIALDAMP * SCALEDAMP;
       width    = INITIALWIDTH;
       mode     = INITIALMODE;
-      //delay    = INITIALDELAY;
-      delay    = 25;
+      delay    = INITIALDELAY;
       delay_set(delay);
+      bandpass = INITIALBPF;
+      bpfL.init(DEFAULTBPF, DEFAULTFX, 0, DEFAULTTAPS);
+      bpfR.init(DEFAULTBPF, DEFAULTFX, 0, DEFAULTTAPS);
       update();
 
       // Buffer will be full of rubbish - so we MUST mute them
@@ -420,8 +474,8 @@ public:
       }
 
       delay_clearBuffer();
-      firL.reset();
-      firR.reset();
+      bpfL.clearBuffer();
+      bpfR.clearBuffer();
    }
 
    void processReplace(double *inputL, double *inputR, 
@@ -435,6 +489,7 @@ public:
          outL = outR = 0;
          input = (*inputL + *inputR) * gain;
 
+         // pre-delay
          if(delay)
          {
             delay_writeSample(input);
@@ -455,9 +510,12 @@ public:
             outR = allpassR[i].process(outR);
          }
 
-         // moving average filter
-         outL = firL.process(outL);
-         outR = firR.process(outR);
+         // equalization pass
+         if(bandpass)
+         {
+            outL = bpfL.process(outL);
+            outR = bpfR.process(outR);
+         }
 
          // calculate output replacing anything already there
          *outputL = outL * wet1 + outR * wet2 + *inputL * dry;
@@ -482,6 +540,7 @@ public:
          outL = outR = 0;
          input = (*inputL + *inputR) * gain;
 
+         // pre-delay
          if(delay)
          {
             delay_writeSample(input);
@@ -502,9 +561,12 @@ public:
             outR = allpassR[i].process(outR);
          }
 
-         // moving average filter
-         outL = firL.process(outL);
-         outR = firR.process(outR);
+         // equalization pass
+         if(bandpass)
+         {
+            outL = bpfL.process(outL);
+            outR = bpfR.process(outR);
+         }
 
          // calculate output mixing with anything already there
          *outputL += outL * wet1 + outR * wet2 + *inputL * dry;

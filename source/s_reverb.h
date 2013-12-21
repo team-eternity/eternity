@@ -41,6 +41,14 @@ enum s_reverbparam_e
    S_REVERB_PREDELAY
 };
 
+// equalization types
+enum s_reverbeq_e
+{
+   S_REVERB_LPF,
+   S_REVERB_HPF,
+   S_REVERB_BPF
+};
+
 void S_SuspendReverb();
 void S_ResumeReverb();
 void S_ReverbSetParam(s_reverbparam_e param, double value);
