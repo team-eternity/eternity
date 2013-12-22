@@ -586,7 +586,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    }
 
    // TEST REVERB
-   //S_ProcessReverb(mixbuffer, mixbuffer_size/2);
+   S_ProcessReverb(mixbuffer, mixbuffer_size/2);
 
    // haleyjd 04/21/10: equalization output pass
    do_3band(mixbuffer, leftend, (Sint16 *)stream);
