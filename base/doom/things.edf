@@ -3325,5 +3325,42 @@ thingtype EEPSXBloodyChain : Mobj, 891, 160
   "@
 }
 
+// Pre-Beta Lost Soul, restored from MBF
+
+thingtype EEBetaLostSoul : LostSoul, 9037, 161
+{
+  addflags COUNTKILL
+  remflags KILLABLE|DEADFLOAT
+  damage   1
+  
+  firstdecoratestate S_DUMMY3
+  states
+  @"
+  Spawn:
+    EEBS A 10 A_Look
+    loop
+  See:
+    EEBS BCDA 5 bright A_Chase
+    loop
+  Missile:
+    EEBS E 4 bright A_FaceTarget
+    EEBS F 5 bright A_BetaSkullAttack
+    EEBS F 4 bright
+    goto See
+  Pain:
+    EEBS G 4 bright
+    EEBS H 2 bright A_Pain
+    EEBS I 4 bright
+    goto See
+  Death:
+    EEBS JKLM 5 bright
+    EEBS N    5 bright A_Scream
+    EEBS O    5 bright
+    EEBS P    5 bright A_Fall
+    EEBS Q   -1
+    stop
+  "@
+}
+
 // EOF
 

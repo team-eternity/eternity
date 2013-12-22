@@ -217,29 +217,6 @@ frame S_OLDBFG41 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1039 }
 frame S_OLDBFG42 { cmp = "BFGG|1|*| 0|Light0    |@next"; dehackednum = 1040 }
 frame S_OLDBFG43 { cmp = "BFGG|1|*|20|ReFire    |S_BFG"; dehackednum = 1041 }
 
-// Dummy frames -- there used to be beta emulation items here; now they are free for use.
-frame S_DUMMY1  { cmp = "TNT1|*|*|0"; dehackednum = 1054 }
-frame S_DUMMY2  { cmp = "TNT1|*|*|0"; dehackednum = 1055 }
-frame S_DUMMY3  { cmp = "TNT1|*|*|0"; dehackednum = 1056 }
-frame S_DUMMY4  { cmp = "TNT1|*|*|0"; dehackednum = 1057 }
-frame S_DUMMY5  { cmp = "TNT1|*|*|0"; dehackednum = 1058 }
-frame S_DUMMY6  { cmp = "TNT1|*|*|0"; dehackednum = 1059 }
-frame S_DUMMY7  { cmp = "TNT1|*|*|0"; dehackednum = 1060 }
-frame S_DUMMY8  { cmp = "TNT1|*|*|0"; dehackednum = 1061 }
-frame S_DUMMY9  { cmp = "TNT1|*|*|0"; dehackednum = 1062 }
-frame S_DUMMY10 { cmp = "TNT1|*|*|0"; dehackednum = 1063 }
-frame S_DUMMY11 { cmp = "TNT1|*|*|0"; dehackednum = 1064 }
-frame S_DUMMY12 { cmp = "TNT1|*|*|0"; dehackednum = 1065 }
-frame S_DUMMY13 { cmp = "TNT1|*|*|0"; dehackednum = 1066 }
-frame S_DUMMY14 { cmp = "TNT1|*|*|0"; dehackednum = 1067 }
-frame S_DUMMY15 { cmp = "TNT1|*|*|0"; dehackednum = 1068 }
-frame S_DUMMY16 { cmp = "TNT1|*|*|0"; dehackednum = 1069 }
-frame S_DUMMY17 { cmp = "TNT1|*|*|0"; dehackednum = 1070 }
-frame S_DUMMY18 { cmp = "TNT1|*|*|0"; dehackednum = 1071 }
-frame S_DUMMY19 { cmp = "TNT1|*|*|0"; dehackednum = 1072 }
-frame S_DUMMY20 { cmp = "TNT1|*|*|0"; dehackednum = 1073 }
-frame S_DUMMY21 { cmp = "TNT1|*|*|0"; dehackednum = 1074 }
-
 // Eternity Engine Frames ------------------------------------------------------
 
 // Unknown frame (used by Unknown placeholder thing type)
