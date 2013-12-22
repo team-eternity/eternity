@@ -3322,6 +3322,7 @@ thingtype EEPSXBloodyChain : Mobj, 891, 160
   @"
   Spawn:
     BLCH A -1
+    stop
   "@
 }
 
