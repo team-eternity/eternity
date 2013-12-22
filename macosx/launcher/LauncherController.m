@@ -457,16 +457,13 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	// IOAN 20130103: use Neil's PrBoom-Mac Launcher code
 	[task release];
 	task = [[NSTask alloc] init];
-   NSString *enginePath = [[NSBundle mainBundle] pathForResource:@"Eternity.app" ofType:nil];
-   if(!enginePath)
-      enginePath = [[NSBundle mainBundle] pathForResource:@"Eternity-106.app" ofType:nil];
+   NSString *enginePath = [[NSBundle mainBundle] pathForResource:@"eternity" ofType:nil];
    if(!enginePath)
    {
       NSBeep();   // Unexpected error not to have an EE executable, at any rate
       // Beep of death
       return;
    }
-	NSBundle *engineBundle = [NSBundle bundleWithPath:enginePath];
 	
    __block char *env;
    NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithCapacity:2];
@@ -486,17 +483,10 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    [task setEnvironment:environment];
    [environment release];
    
-   NSString *exePath = [engineBundle executablePath];
-   if (!x64flag)
-   {
-      [task setLaunchPath:@"/usr/bin/arch"];
-      [task setArguments:[[NSArray arrayWithObjects:@"-32", exePath, nil] arrayByAddingObjectsFromArray:deploy]];
-   }
-   else
-   {
-      [task setLaunchPath:exePath];
-      [task setArguments:deploy];
-   }
+   NSString *exePath = enginePath;
+
+   [task setLaunchPath:exePath];
+   [task setArguments:deploy];
    
    calledAppMainline = TRUE;
 	
