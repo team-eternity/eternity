@@ -83,6 +83,15 @@ static bool S_checkDMXPadded(byte *data)
    return !memcmp(pcmstart, testarray, sizeof(testarray));
 }
 
+//
+// S_isDMXSample
+//
+// Test against sane properties for DMX sample format 0x03:
+// * Must have valid header
+// * Minimum sample that will play must be > 32 bytes (rf. DSSMFIRE in strife1.wad)
+// * Sanity check length and samplerate
+// * Account for possible presence of DMX's DMA alignment padding bytes
+//
 static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
 {
    // must have a header
@@ -97,6 +106,9 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
    sd.samplerate  = GetBinaryUWord(&r);
    sd.samplecount = GetBinaryUDWord(&r);
 
+   if(!sd.samplerate)
+      return false;
+
    // don't play samples that are less than one chunk in size, or state that
    // they are larger than the actual data source
    if(sd.samplecount <= 32 || sd.samplecount > len - DMX_SOUNDHDRSIZE)
@@ -105,12 +117,10 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
    sd.samplestart = data + DMX_SOUNDHDRSIZE;
 
    // check for padding
-   bool padded = S_checkDMXPadded(data);
-
-   // remove DMX padding bytes from length if the sample is padded, and advance
-   // the sample pointer
-   if(padded)
+   if(S_checkDMXPadded(data))
    {
+      // remove DMX padding bytes from length if the sample is padded, and advance
+      // the sample pointer
       sd.samplecount -= 32;
       sd.samplestart += 16;
    }
@@ -129,6 +139,14 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
 // so-called canonical waves in either 8- or 16-bit PCM, mono only.
 //
 
+//
+// S_isWaveSample
+//
+// * Need 44-byte header and at least some sample information.
+// * Must be canonical RIFF WAVEfmt file; no bullshit tolerated.
+// * Currently 8- or 16-bit mono PCM only.
+// * Samplerate and sample count are sanity-checked.
+//
 static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
 {
    // minimum length check
@@ -155,6 +173,8 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    sd.samplerate = GetBinaryUDWord(&r);
+   if(!sd.samplerate)
+      return false;
 
    r = data + 34;
    int bps = GetBinaryWord(&r);
@@ -169,12 +189,12 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    case 16:
       sd.fmt = S_FMT_16;
       break;
-   // TODO: support 24- and 32-bit PCM
+   // TODO: support 24- and 32-bit PCM?
    }
 
    r = data + 40;
    size_t bytes = GetBinaryUDWord(&r);
-   if(bytes + 44 > len) // truncated sample stream
+   if(!bytes || bytes + 44 > len) // empty or truncated sample stream
       return false;
 
    sd.samplecount = bytes / (bps/8);
@@ -183,6 +203,14 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    return true;
 }
 
+//
+// S_detectSoundFormat
+//
+// Tries the lump data against every supported sound format in a predetermined
+// order. If true is returned, then sd contains information needed to transform
+// the lump data into floating point PCM for playback. If false is returned,
+// the contents of sd are undefined, and the sound should not be played.
+//
 static bool S_detectSoundFormat(sounddata_t &sd, byte *data, size_t len)
 {
    // Is it a DMX digital sample?
@@ -204,6 +232,12 @@ static bool S_detectSoundFormat(sounddata_t &sd, byte *data, size_t len)
 
 #define TARGETSAMPLERATE 44100u
 
+//
+// S_alenForSample
+//
+// Calculate the "actual" sample length for a digital sound effect after 
+// conversion from its native samplerate to the samplerate used for output.
+//
 static unsigned int S_alenForSample(const sounddata_t &sd)
 {
    return (unsigned int)(((uint64_t)sd.samplecount * TARGETSAMPLERATE) / sd.samplerate);
