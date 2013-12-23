@@ -463,6 +463,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
     <ClCompile Include="..\source\v_image.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
@@ -1297,6 +1298,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\s_formats.h" />
     <ClInclude Include="..\source\s_reverb.h" />
     <ClInclude Include="..\source\v_image.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />

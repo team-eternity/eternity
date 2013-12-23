@@ -207,7 +207,7 @@ static namespace_matcher_t matchers[] =
    //{ "graphics/",     lumpinfo_t::ns_graphics     }, FIXME - as soon as VImage is done!
    { "graphics/",     lumpinfo_t::ns_global       }, 
    { "music/",        lumpinfo_t::ns_global       }, // Treated as global in EE
-   { "sounds/",       lumpinfo_t::ns_global       }, // Treated as global in EE
+   { "sounds/",       lumpinfo_t::ns_sounds       }, 
    { "sprites/",      lumpinfo_t::ns_sprites      },
    { "translations/", lumpinfo_t::ns_translations }, // EE extension
    { "gamepads/",     lumpinfo_t::ns_pads         }, // EE extension

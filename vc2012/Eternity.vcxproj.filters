@@ -924,6 +924,9 @@
     <ClCompile Include="..\source\e_reverbs.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\s_formats.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1636,6 +1639,9 @@
     </ClInclude>
     <ClInclude Include="..\source\e_reverbs.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_formats.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
