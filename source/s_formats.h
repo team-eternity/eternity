@@ -17,43 +17,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//
-//  Freeverb algorithm implementation
-//  Based on original public domain implementation by Jezar at Dreampoint
+//   Sound loading
 //
 //-----------------------------------------------------------------------------
 
-#ifndef S_REVERB_H__
-#define S_REVERB_H__
+#ifndef S_FORMATS_H__
+#define S_FORMATS_H__
 
-// reverb parameters
-enum s_reverbparam_e
-{
-   S_REVERB_MODE,
-   S_REVERB_ROOMSIZE,
-   S_REVERB_DAMP,
-   S_REVERB_WET,
-   S_REVERB_DRY,
-   S_REVERB_WIDTH,
-   S_REVERB_PREDELAY
-};
+struct sfxinfo_t;
 
-// equalization types
-enum s_reverbeq_e
-{
-   S_REVERB_LPF,
-   S_REVERB_HPF,
-   S_REVERB_BPF
-};
-
-void S_SuspendReverb();
-void S_ResumeReverb();
-void S_ReverbSetParam(s_reverbparam_e param, double value);
-void S_ProcessReverb(double *stream, int samples);
-void S_ProcessReverbReplace(double *stream, int samples);
+bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx);
+void S_CacheDigitalSoundLump(sfxinfo_t *sfx);
 
 #endif
 

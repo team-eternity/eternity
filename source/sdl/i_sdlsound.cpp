@@ -44,6 +44,7 @@
 #include "../m_compare.h"
 #include "../mn_engin.h"
 #include "../s_reverb.h"
+#include "../s_formats.h"
 #include "../s_sound.h"
 #include "../v_misc.h"
 #include "../w_wad.h"
@@ -99,10 +100,6 @@ static int steptable[256];
 // Volume lookups.
 //static int vol_lookup[128*256];
 
-static int I_GetSfxLumpNum(sfxinfo_t *sfx);
-
-#define SOUNDHDRSIZE 8
-
 //
 // addsfx
 //
@@ -117,9 +114,6 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx);
 //
 static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
 {
-   size_t lumplen;
-   int lump;
-
 #ifdef RANGECHECK
    if(channel < 0 || channel >= MAX_CHANNELS)
       I_Error("addsfx: channel out of range!\n");
@@ -129,105 +123,9 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
    if(!snd_init || !sfx)
       return false;
 
-   // We will handle the new SFX.
-   // Set pointer to raw data.
-
-   // haleyjd: Eternity sfxinfo_t does not have a lumpnum field
-   lump = I_GetSfxLumpNum(sfx);
-   
-   // replace missing sounds with a reasonable default
-   if(lump == -1)
-      lump = W_GetNumForName(GameModeInfo->defSoundName);
-   
-   lumplen = W_LumpLength(lump);
-   
-   // haleyjd 10/08/04: do not play zero-length sound lumps
-   if(lumplen <= SOUNDHDRSIZE)
+   // haleyjd 12/23/13: invoke high-level PCM loader
+   if(!S_LoadDigitalSoundEffect(sfx))
       return false;
-
-   // haleyjd 06/03/06: rewrote again to make sound data properly freeable
-   if(sfx->data == NULL)
-   {   
-      byte *data;
-      Uint32 samplerate, samplelen;
-
-      // haleyjd: this should always be called (if lump is already loaded,
-      // wGlobalDir.CacheLumpNum handles that for us).
-      data = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
-
-      // Check the header, and ensure this is a valid sound
-      if(data[0] != 0x03 || data[1] != 0x00)
-      {
-         Z_ChangeTag(data, PU_CACHE);
-         return false;
-      }
-
-      samplerate = (data[3] << 8) | data[2];
-      samplelen  = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
-
-      // need at least 1 slice left after removal of DMX padding bytes
-      if(samplelen < 48)
-      {
-         Z_ChangeTag(data, PU_CACHE);
-         return false;
-      }
-
-      // don't play sounds that think they're longer than they really are
-      if(samplelen > lumplen - SOUNDHDRSIZE)
-      {
-         Z_ChangeTag(data, PU_CACHE);
-         return false;
-      }
-
-      // remove DMX padding bytes from length
-      samplelen -= 32;
-
-      sfx->alen = (Uint32)(((Uint64)samplelen * snd_samplerate) / samplerate);
-      sfx->data = Z_Malloc(sfx->alen*sizeof(double), PU_STATIC, &sfx->data);
-
-      // haleyjd 12/18/13: Convert sound to target samplerate and into floating
-      // point samples.
-      if(sfx->alen != samplelen)
-      {
-         unsigned int i;
-         double *dest = (double *)sfx->data;
-         byte   *src  = data + SOUNDHDRSIZE + 16; // skip DMX pad bytes
-
-         unsigned int step = (samplerate << 16) / snd_samplerate;
-         unsigned int stepremainder = 0, j = 0;
-
-         // do linear filtering operation
-         for(i = 0; i < sfx->alen && j < samplelen - 1; i++)
-         {
-            double d = (((unsigned int)src[j  ] * (0x10000 - stepremainder)) +
-                        ((unsigned int)src[j+1] * stepremainder));
-            d /= 65536.0;
-            dest[i] = eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0);
-
-            stepremainder += step;
-            j += (stepremainder >> 16);
-
-            stepremainder &= 0xffff;
-         }
-         // fill remainder (if any) with final sample byte
-         for(; i < sfx->alen; i++)
-            dest[i] = eclamp(src[j] * 2.0 / 255.0 - 1.0, -1.0, 1.0);
-      }
-      else
-      {
-         // sound is already at target samplerate, just convert to doubles
-         double *dest = (double *)sfx->data;
-         byte   *src  = data + SOUNDHDRSIZE + 16; // skip DMX pad bytes
-
-         for(unsigned int i = 0; i < sfx->alen; i++)
-            dest[i] = eclamp(src[i] * 2.0 / 255.0 - 1.0, -1.0, 1.0);
-      }
-      
-      // haleyjd 06/03/06: don't need original lump data any more
-      Z_ChangeTag(data, PU_CACHE);
-   }
-   else
-      Z_ChangeTag(sfx->data, PU_STATIC); // reset to static cache level
 
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
@@ -586,7 +484,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    }
 
    // TEST REVERB
-   //S_ProcessReverb(mixbuffer, mixbuffer_size/2);
+   S_ProcessReverb(mixbuffer, mixbuffer_size/2);
 
    // haleyjd 04/21/10: equalization output pass
    do_3band(mixbuffer, leftend, (Sint16 *)stream);
@@ -645,28 +543,6 @@ static void I_SetChannels()
 
    // Calculate preamplification factor
    preampmul = s_eqpreamp;
-}
-
-//
-// I_GetSfxLumpNum
-//
-// Retrieve the raw data lump index
-//  for a given SFX name.
-//
-static int I_GetSfxLumpNum(sfxinfo_t *sfx)
-{
-   char namebuf[16];
-
-   memset(namebuf, 0, sizeof(namebuf));
-
-   // haleyjd 09/03/03: determine whether to apply DS prefix to
-   // name or not using new prefix flag
-   if(sfx->flags & SFXF_PREFIX)
-      psnprintf(namebuf, sizeof(namebuf), "ds%s", sfx->name);
-   else
-      strcpy(namebuf, sfx->name);
-
-   return W_CheckNumForName(namebuf);
 }
 
 //=============================================================================
@@ -830,13 +706,8 @@ static void I_SDLShutdownSound()
 //
 static void I_SDLCacheSound(sfxinfo_t *sound)
 {
-   int lump = I_GetSfxLumpNum(sound);
-   
-   // replace missing sounds with a reasonable default
-   if(lump == -1)
-      lump = W_GetNumForName(GameModeInfo->defSoundName);
-   
-   wGlobalDir.cacheLumpNum(lump, PU_CACHE);
+   // 12/23/13: invoke high level lump cacher
+   S_CacheDigitalSoundLump(sound);
 }
 
 static void I_SDLDummyCallback(void *, Uint8 *, int) {} 

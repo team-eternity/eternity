@@ -103,6 +103,7 @@
 #include "e_inventory.h"
 #include "e_mod.h"
 #include "e_player.h"
+#include "e_reverbs.h"
 #include "e_sound.h"
 #include "e_sprite.h"
 #include "e_states.h"
@@ -219,6 +220,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ENVIROMGR,   edf_seqmgr_opts,   CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_REVERB,      edf_reverb_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_MOD,         edf_dmgtype_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
@@ -1106,6 +1108,7 @@ static const char *edf_lumpnames[] =
    "ESNDSEQ",
    "ESNDINFO",
    "EFONTS",
+   "EREVERBS",
    NULL
 };
 
@@ -1618,6 +1621,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process sound sequences
    E_ProcessSndSeqs(cfg);
+
+   // process reverb definitions (12/22/13)
+   E_ProcessReverbs(cfg);
 
    // process damage types
    E_ProcessDamageTypes(cfg);

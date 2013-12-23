@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include "s_reverb.h"
 
 //
@@ -47,6 +49,7 @@
 #define INITIALDRY   0
 #define INITIALWIDTH 1
 #define INITIALMODE  0
+#define INITIALDELAY 0
 #define FREEZEMODE   0.5
 #define STEREOSPREAD 23
 
@@ -76,7 +79,6 @@
 #define ALLPASSTUNINGL4 225
 #define ALLPASSTUNINGR4 225+STEREOSPREAD
 
-
 //=============================================================================
 //
 // denorms
@@ -87,6 +89,58 @@ static inline void undenormalize(double &d)
    static const double anti_denormal = 1e-18;
    d += anti_denormal;
    d -= anti_denormal;
+}
+
+//=============================================================================
+//
+// delay
+//
+
+#define MAXDELAY 250u
+#define MAXSR    44100u
+
+static double delayBuffer[MAXDELAY*MAXSR/1000];
+
+static size_t delaySize;
+static size_t readPos;
+static size_t writePos;
+
+static void delay_clearBuffer()
+{
+   for(size_t i = 0; i < delaySize; i++)
+      delayBuffer[i] = 0.0;
+}
+
+static void delay_set(size_t delayms, size_t sr = MAXSR)
+{
+   if(delayms > MAXDELAY)
+      delayms = MAXDELAY;
+   if(sr > MAXSR)
+      sr = MAXSR;
+   size_t curDelaySize = delaySize;
+   delaySize = delayms * sr / 1000;
+
+   if(delaySize != curDelaySize)
+   {
+      readPos  = 0;
+      writePos = delaySize - 1;
+      delay_clearBuffer();
+   }
+}
+
+static void delay_writeSample(double sample)
+{
+   delayBuffer[writePos] = sample;
+   if(++writePos >= delaySize)
+      writePos = 0;
+}
+
+static double delay_readSample()
+{
+   double ret = delayBuffer[readPos];
+   if(++readPos >= delaySize)
+      readPos = 0;
+   return ret;
 }
 
 //=============================================================================
@@ -186,6 +240,119 @@ public:
 
 //=============================================================================
 //
+// Equalizer
+//
+
+#define SND_PI       3.14159265
+#define INITIALEQ    false
+#define INITIALLG    1.0
+#define INITIALMG    1.0
+#define INITIALHG    1.0
+#define INITIALLF    880.0
+#define INITIALHF    5000.0
+
+struct EQSTATE
+{
+  // Filter #1 (Low band)
+
+  double  lf;       // Frequency
+  double  f1p0;     // Poles ...
+  double  f1p1;    
+  double  f1p2;
+  double  f1p3;
+
+  // Filter #2 (High band)
+
+  double  hf;       // Frequency
+  double  f2p0;     // Poles ...
+  double  f2p1;
+  double  f2p2;
+  double  f2p3;
+
+  // Sample history buffer
+
+  double  sdm1;     // Sample data minus 1
+  double  sdm2;     //                   2
+  double  sdm3;     //                   3
+
+  // Gain Controls
+
+  double  lg;       // low  gain
+  double  mg;       // mid  gain
+  double  hg;       // high gain
+};
+
+struct eqparams_t
+{
+   double lowfreq;
+   double highfreq;
+   double lowgain;
+   double midgain;
+   double highgain;
+};
+
+static double do_3band(EQSTATE &es, double sample)
+{
+   static double vsa = (1.0 / 4294967295.0);
+   
+   // Locals
+   double l, m, h;    // Low / Mid / High - Sample Values
+
+   // Filter #1 (lowpass)
+   es.f1p0  += (es.lf * (sample  - es.f1p0)) + vsa;
+   es.f1p1  += (es.lf * (es.f1p0 - es.f1p1));
+   es.f1p2  += (es.lf * (es.f1p1 - es.f1p2));
+   es.f1p3  += (es.lf * (es.f1p2 - es.f1p3));
+
+   l         = es.f1p3;
+
+   // Filter #2 (highpass)
+   es.f2p0  += (es.hf * (sample  - es.f2p0)) + vsa;
+   es.f2p1  += (es.hf * (es.f2p0 - es.f2p1));
+   es.f2p2  += (es.hf * (es.f2p1 - es.f2p2));
+   es.f2p3  += (es.hf * (es.f2p2 - es.f2p3));
+
+   h         = es.sdm3 - es.f2p3;
+
+   // Calculate midrange (signal - (low + high))
+   m         = es.sdm3 - (h + l); // haleyjd 07/05/10: which is right?
+
+   // Scale, Combine and store
+   l        *= es.lg;
+   m        *= es.mg;
+   h        *= es.hg;
+
+   // Shuffle history buffer
+   es.sdm3   = es.sdm2;
+   es.sdm2   = es.sdm1;
+   es.sdm1   = sample;                
+
+   return (l + m + h);
+}
+
+static void init_3band(const eqparams_t &params, EQSTATE &eql, EQSTATE &eqr)
+{
+   // flush out state of equalizers
+   memset(&eql, 0, sizeof(eql));
+   memset(&eqr, 0, sizeof(eqr));
+
+   // Set Low/Mid/High gains 
+   eql.lg = eqr.lg = params.lowgain;
+   eql.mg = eqr.mg = params.midgain;
+   eql.hg = eqr.hg = params.highgain;
+
+   // Calculate filter cutoff frequencies
+   eql.lf = eqr.lf = 2 * sin(SND_PI * (params.lowfreq  / (double)MAXSR));
+   eql.hf = eqr.hf = 2 * sin(SND_PI * (params.highfreq / (double)MAXSR));
+}
+
+static void clear_3band(EQSTATE &eq)
+{
+   eq.sdm1 = eq.sdm2 = eq.sdm3 = 0.0;
+}
+
+//=============================================================================
+//
 // revmodel
 //
 
@@ -199,6 +366,12 @@ public:
    double dry;
    double width;
    double mode;
+   size_t delay;
+   bool   doEQ;
+
+   // equalizer
+   EQSTATE eql, eqr;
+   eqparams_t eqparams;
 
    // comb filters
    comb combL[NUMCOMBS];
@@ -275,11 +448,21 @@ public:
       
       // set initial parameters
       wet      = INITIALWET * SCALEWET;
-      roomsize = (INITIALROOM * SCALEROOM) + OFFSETROOM;
+      roomsize = (0.87/*INITIALROOM*/ * SCALEROOM) + OFFSETROOM;
       dry      = INITIALDRY * SCALEDRY;
-      damp     = INITIALDAMP * SCALEDAMP;
+      damp     = 0.57 /*INITIALDAMP*/ * SCALEDAMP;
       width    = INITIALWIDTH;
       mode     = INITIALMODE;
+      //delay    = INITIALDELAY;
+      delay = 20;
+      delay_set(delay);
+      doEQ = true; //INITIALEQ;
+      eqparams.lowgain  = 0.98; //INITIALLG;
+      eqparams.midgain  = 0.45; //INITIALMG;
+      eqparams.highgain = 0.00; //INITIALHG;
+      eqparams.lowfreq  = INITIALLF;
+      eqparams.highfreq = INITIALHF;
+      init_3band(eqparams, eql, eqr);
       update();
 
       // Buffer will be full of rubbish - so we MUST mute them
@@ -306,6 +489,10 @@ public:
          allpassL[i].mute();
          allpassR[i].mute();
       }
+
+      delay_clearBuffer();
+      clear_3band(eql);
+      clear_3band(eqr);
    }
 
    void processReplace(double *inputL, double *inputR, 
@@ -319,6 +506,13 @@ public:
          outL = outR = 0;
          input = (*inputL + *inputR) * gain;
 
+         // pre-delay
+         if(delay)
+         {
+            delay_writeSample(input);
+            input = delay_readSample();
+         }
+
          // accumulate comb filters in parallel
          for(int i = 0; i < NUMCOMBS; i++)
          {
@@ -331,6 +525,13 @@ public:
          {
             outL = allpassL[i].process(outL);
             outR = allpassR[i].process(outR);
+         }
+
+         // equalization pass
+         if(doEQ)
+         {
+            outL = do_3band(eql, outL);
+            outR = do_3band(eqr, outR);
          }
 
          // calculate output replacing anything already there
@@ -356,6 +557,13 @@ public:
          outL = outR = 0;
          input = (*inputL + *inputR) * gain;
 
+         // pre-delay
+         if(delay)
+         {
+            delay_writeSample(input);
+            input = delay_readSample();
+         }
+
          // accumulate comb filters in parallel
          for(int i = 0; i < NUMCOMBS; i++)
          {
@@ -368,6 +576,13 @@ public:
          {
             outL = allpassL[i].process(outL);
             outR = allpassR[i].process(outR);
+         }
+
+         // equalization pass
+         if(doEQ)
+         {
+            outL = do_3band(eql, outL);
+            outR = do_3band(eqr, outR);
          }
 
          // calculate output mixing with anything already there
@@ -411,24 +626,30 @@ public:
 
    void setRoomSize(double value)
    {
+      double curroomsize = roomsize;
       roomsize = (value * SCALEROOM) + OFFSETROOM;
-      update();
+      if(roomsize != curroomsize)
+         update();
    }
 
    double getRoomSize() const { return (roomsize - OFFSETROOM) / SCALEROOM; }
 
    void setDamp(double value)
    {
+      double curdamp = damp;
       damp = value * SCALEDAMP;
-      update();
+      if(damp != curdamp)
+         update();
    }
 
    double getDamp() const { return damp / SCALEDAMP; }
 
    void setWet(double value)
    {
+      double curwet = wet;
       wet = value * SCALEWET;
-      update();
+      if(wet != curwet)
+         update();
    }
 
    double getWet() const { return wet / SCALEWET; }
@@ -438,14 +659,26 @@ public:
 
    void setWidth(double value)
    {
+      double curwidth = width;
       width = value;
-      update();
+      if(width != curwidth)
+         update();
    }
 
    void setMode(double value)
    {
+      double curmode = mode;
       mode = value;
-      update();
+      if(mode != curmode)
+         update();
+   }
+
+   void setDelay(size_t value)
+   {
+      size_t curdelay = delay;
+      delay = value;
+      if(delay != curdelay)
+         delay_set(delay);
    }
 };
 
@@ -487,6 +720,9 @@ void S_ReverbSetParam(s_reverbparam_e param, double value)
       break;
    case S_REVERB_WIDTH:
       reverb.setWidth(value);
+      break;
+   case S_REVERB_PREDELAY:
+      reverb.setDelay((size_t)value);
       break;
    default:
       break;

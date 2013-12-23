@@ -868,6 +868,7 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { NULL,       NULL,     lumpinfo_t::ns_pads         },
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
    { NULL,       NULL,     lumpinfo_t::ns_graphics     },
+   { NULL,       NULL,     lumpinfo_t::ns_sounds       },
 };
 
 //

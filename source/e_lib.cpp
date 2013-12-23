@@ -250,7 +250,7 @@ int E_SetDialect(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 // The normal include function. cfg_include is insufficient since it 
 // looks in the current working directory unless provided a full path.
-// This function interprets paths relative to the  current file when 
+// This function interprets paths relative to the current file when 
 // called from a physical input file, and uses the argument as a lump 
 // name otherwise.
 //
