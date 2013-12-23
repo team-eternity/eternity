@@ -1,0 +1,707 @@
+================================================================================
+Changes since Eternity Engine v3.40.37
+================================================================================
+--------------------------------------------------------------------------------
+08/31/13
+
+Added pw_torch powerup effect from Heretic/Hexen, and did some refactoring of
+the fixedcolormap handling code in P_PlayerThink to make things work cleaner.
+
+Added code that can give pw_flight in P_GivePower.
+
+Added a custom "ravpower" cheat for Heretic, which makes up for its lacking of
+an equivalent to idbehold in the vanilla game (to get powers there, you had to
+slowly cheat for inventory items, find them, and then use them).
+
+Heretic's KEYDEFS lump now includes default bindings for flight and keylook.
+
+--------------------------------------------------------------------------------
+08/30/13
+
+Restricted lockdefs to using integer-type cvars with a range of 0 to 255.
+
+Line type 99 in Heretic incorrectly had a lockdef binding, making it appear
+colored on the automap. Added the ability to override lockdefs through the EV
+binding system to take care of this.
+
+--------------------------------------------------------------------------------
+08/28/13
+
+The console command hash table build was moved to before EDF processing so that
+EDF is capable of making reference to cvars in definitions.
+
+Added support for mapcolor property inside EDF lockdefs; its value may be any
+of the following:
+* A 6-digit hex constant starting with # (ie., #FF0000) which will be closest-
+  color matched to the PLAYPAL.
+* A cvar name, starting with $, specifying a console variable which contains the
+  value to use (ie., $mapcolor_ydor).
+* A decimal integer between 0 and 255, indicating a palette index to use.
+
+--------------------------------------------------------------------------------
+08/26/13
+
+Added a w_hacks handler for ConSiGno's really broken otakon wad, which is just
+absolutely terrible to play, and has an equally broken wad directory. Worth the
+effort? Unlikely :P
+
+--------------------------------------------------------------------------------
+08/25/13
+
+Removed the extinct low-detail span drawer engine code.
+
+The number of BEX pointer hash chains is now defined in terms of the pointer
+table size, so that it naturally grows along with the input set size.
+
+Linear lumps are now handled in a more flexible manner by the flat loading code
+to avoid out-of-bounds reading of truncated resources.
+
+Added a DM_KEEPITEMS deathmatch flag, which allows players to keep their current
+inventory when respawning during multiplayer games. I noted this option makes
+co-op a lot more fun in games like Heretic where there's just too much stuff you
+need to effectively play from a pistol start every time you die. Of course since
+EE's inventory system is not entirely complete yet, this currently only affects
+keys, backpacks, and ammo.
+
+--------------------------------------------------------------------------------
+08/24/13
+
+For some reason SLADE turned F_SKY2 in heretic/eternity.pke into a patch, so I
+fixed it.
+
+--------------------------------------------------------------------------------
+08/23/13
+
+Started work on adding Heretic's cheat codes. Added quicken, ponce, skel, 
+massacre, kitty, engage, ravmap, and the "mean" iddqd cheat that kills you.
+
+Changed from the SGI STL string hash to sdbm, which was profiled by a blogger on
+the Internet to have the absolute best trade-off between speed and collision
+frequency when given input consisting of the entire English lexicon. There is
+one faster algorithm, but it had similar collision behavior and is significantly
+more complicated code-wise, making it not worth the implementation effort.
+
+After observing strange behavior in the "stat" memory instrumentation display
+in Heretic, I have refactored the font engine to not use globals to store text
+display state, adding V_FontDrawTextEx which takes all possible parameters in
+a clean structure.
+
+--------------------------------------------------------------------------------
+08/22/13
+
+Added respawnat property to EDF thingtypes to fully complete support for the
+Heretic fire mace - this allows items which are collection-spawned to then 
+respawn at a random position in that (or a different) spot collection when 
+item respawning is enabled.
+
+Fixed Heretic mace spots to NOT be NOSECTOR, since this causes them to float in
+the air when sectors move underneath them.
+
+--------------------------------------------------------------------------------
+08/21/13
+
+Refactored cheats in preparation for adding support for multiple games' cheats.
+
+Added experimental VC2012 project. I'll probably be sunsetting 2010 rapidly, 
+since there's no advantage to using it over 2012.
+
+--------------------------------------------------------------------------------
+08/20/13
+
+Made a tweak to portal line-of-sight calculations which should improve
+efficiency when the scan passes through a portal block but does not actually end
+up intersecting any portal lines inside that block - when this happens, all
+short-circuiting behaviors in the algorithm can be re-enabled so long as no
+portal lines have been previously crossed.
+
+Added BaseCollection<T>::checkWrapItertor. When collections shrink, they need to
+reset their wrap iterator position in case it now points at an invalid location.
+
+--------------------------------------------------------------------------------
+08/19/13
+
+Found that a NOTSHAREWARE flag for thingtypes is needed due to Heretic using
+unmodified commercial-version maps in its shareware IWAD, which during 
+mutiplayer spawn items not normally in the episode. In Heretic, these were 
+hacked out by doomednum in P_SpawnMapThing (disgusting). In Eternity, we'll 
+just use a flag to control it.
+
+ZDoom uses the presence of sprites in the IWAD to control such things, but that
+isn't satisfactory to me for various reasons; ie, those objects STILL shouldn't
+be available in shareware, even if somebody hacks in their sprites.
+
+A bug has surfaced in the DOOM bodyque used to track player corpses; Heretic's
+behavior when a player skull pops (removing the body that is left behind after
+a short period of time) interferes with this and causes undefined behavior by
+not using proper Mobj reference counting.
+
+I have refactored the bodyque to use PODCollection, to clear itself for safety
+between maps, and to use a MIF_PLYRCORPSE flag so that corpses which are 
+removed via Mobj::remove can be scanned for in the player bodyque and removed
+from it.
+
+--------------------------------------------------------------------------------
+08/17/13
+
+Refactored base/sounds.edf and heretic/sounds.edf to use modern EDF syntax.
+
+Raven-style item respawning is now fully supported, with addition of the
+following EDF properties:
+
+* Pickup.Respawn and Pickup.Remove states are now supported in DECORATE-style
+  state blocks to define state sequences for objects to be set to when they 
+  respawn Raven-style or are picked up and will not respawn. This is different
+  from ZDoom which doesn't allow this level of customization.
+  
+* MF4_RAVENRESPAWN flag controls whether an item respawns Doom-style (being
+  actually removed and then spawned anew) or Raven-style (using the states and
+  simply becoming dormant for a while).
+  
+* Five new action functions for controlling Raven-style respawning behavior:
+  * A_HideThing
+  * A_UnHideThing
+  * A_RestoreArtifact
+  * A_RestoreSpecialThing1
+  * A_RestoreSpecialThing2
+  
+Remapped the DeHackEd initial_bullets and initial_health variables to affect the
+specific EDF item effect definitions that those values are meant to change.
+
+Big bug fix: the ev binding for Heretic linetype 70 was set to WR activation 
+type instead of SR, via copypasta error; found randomly while playtesting.
+  
+--------------------------------------------------------------------------------
+08/16/13
+
+A Doomworld forums user noted that the Doomguy had become hyperactive on the
+status bar; the face icon was updating at renderer speed instead of being based
+on the game ticker. This was a minor regression caused by code refactoring for
+the inventory system migration.
+
+Parent type and class name now have accessors in RTTIObject::Type.
+
+It is now possible to query a MetaTable for the first object of a given type by
+passing a MetaObject::Type reference, in addition to the by-name lookup that was
+previously available.
+
+--------------------------------------------------------------------------------
+08/15/13
+
+Support has been added for items which spawn at a random spot out of the
+collection of all such spots on a map, via the EDF collectionspawn property.
+
+Added definitions for the Heretic mace spot and pickup object to 
+heretic/things.edf. 
+
+Heretic support milestone: All Heretic objects with doomednums are now
+implemented!
+
+--------------------------------------------------------------------------------
+08/14/13
+
+Conversion of Heretic objects to DECORATE states is FINALLY finished, except for
+the fire mace state (it doesn't have an object to adhere to yet).
+
+Added qstring::empty to match C++'s std::string class.
+
+Refactored MobjCollection to use a qstring as its hash key rather than messing
+with its own dynamic string allocation.
+
+--------------------------------------------------------------------------------
+08/11/13
+
+Conversion of Heretic objects to DECORATE state syntax is STILL ongoing.
+
+XLParser has been changed to add lumps that it parses to the EDF data source
+hive so that it subject to the same behavior of never reparsing lumps it has
+already parsed. This will avoid such things as duplicate SNDINFO entries being
+added every time a wad is runtime loaded.
+
+SNDINFO processing has also been moved into EDF and occurs just before EDF
+sound processing, so that EDF-defined sounds with the same names can take
+precedence without requiring a hacky new keyword inside the SNDINFO language to
+enable that behavior. My apologies go to the ZDoom crew, as they should remove
+support for the $edfoverride keyword I earlier requested that they tolerate.
+EE will ignore the keyword if it sees it, as it is no longer useful.
+
+Fixed a bug in the followcam code which caused the camera to have a groupid of
+zero, which during normal play is fine, but during old demos doesn't match 
+against the R_NOGROUP value (-1) that all sectors and things have at that point.
+
+Also changed the followcam vertex sorting code to use a lambda instead of a 
+function object class, now that we have C++11.
+
+--------------------------------------------------------------------------------
+08/10/13
+
+Removed hacks to D'Sparil's states which accounted for then-incorrect sound
+engine behavior with regard to cutting off multiple sounds being played by an
+object.
+
+Added support for the semi-rare beta Heretic IWAD with 3 levels which was rushed
+out the door by John Romero a couple of days before the game's first release. 
+This is treated as a special version of the shareware mission.
+
+Refactored IWAD version identification code to not use an unnecessary amount of
+indirection (which had historical reasons, I assure you), after it made rice
+very sad on IRC ;)
+
+--------------------------------------------------------------------------------
+08/09/13
+
+Continued with conversion of Heretic objects to use of DECORATE state syntax.
+
+--------------------------------------------------------------------------------
+08/07/13
+
+Started addition of simplified Heretic codepointers that implement vanilla
+behavior without requiring extensive use of arguments (this was originally done
+partially to sidestep Heretic licensing issues and not because it was practical
+in some cases).
+
+Corrected important places in Heretic gamecode to use Heretic's wonky idea of
+what 1 degree is in the binary angle measure system - the value it uses is 
+actually off by roughly 40%, being 1.4 degrees instead. This makes a significant
+noticeable difference in the behavior of homing missiles.
+
+--------------------------------------------------------------------------------
+08/06/13
+
+During debugging I noticed that the RTTIObject type hash was seriously
+overloaded (3-4 objects on some chains), so I doubled the hardbaked table size.
+
+Thingtypes can now define a dropitem through a multi-valued property field,
+allowing either Doom or Heretic-style item drop behaviors. The existing droptype
+field is grandfathered into this system as an unconditionally Doom-style drop.
+
+Dropitems are stored in mobjinfo as a MetaDropItem object in the metatable.
+
+All of Heretic's enemy item drops are now properly specified through EDF now
+that the proper behavior is available. All uses of the deprecated A_HticDrop
+pointer have been redacted from the frame data.
+
+Doom-style drops are still performed during P_KillMobj for compatibility.
+Heretic-style drops occur in the A_Fall codepointer as they did in Heretic.
+This is important so that the Heretic-style drops actually toss the item, since
+if they attempt to apply momentum too early, the item is stopped inside the
+still-solid dying enemy that is tossing it out.
+
+--------------------------------------------------------------------------------
+08/05/13
+
+Heretic DECORATE state conversion continues with significant progress.
+
+Another inventory milestone: ammo types are now defined as artifacts, and ammo
+amounts are now tracked through the player inventory.
+
+--------------------------------------------------------------------------------
+08/03/13
+
+By request, NERVE.WAD will be recognized by its header+directory SHA-1 hash 
+through the "wad hacks" subsystem and will have the ENRVMETA lump loaded for it
+if it is added through -file instead of in-game via the managed mission pack
+support for it. This required addition of a small system for deferring load of
+mission metadata to after completion of W_InitMultipleFiles.
+
+--------------------------------------------------------------------------------
+08/02/13
+
+Heretic things.edf has had its syntax modernized to take advantage of Alfheim
+dialect enhancements, and I have begun converting all of the objects to use
+DECORATE state syntax.
+
+--------------------------------------------------------------------------------
+07/30/13
+
+Fixed sudden surfacing of uninitialized memory in the IWAD picker boot-up
+routine in d_iwad that could randomly cause all IWADs to appear as enabled
+regardless of the actual configuration or non-configuration of paths in the
+system.cfg file. Thanks again to ConSiGno and others who confirmed the same
+behavior on their machines.
+
+--------------------------------------------------------------------------------
+07/29/13
+
+Another inventory milestone - armor type and effects are now defined using
+item effects. Amongst other things this eliminates the ancient hack being used
+to differentiate Heretic armor from Doom's, and allows creation of armor with
+custom protective properties beyond 25%, 50%, or 75% absorption.
+
+Unlike ZDoom, Eternity needs armor protection specified in terms of a numerator
+and denominator (a discrete fraction), and not a floating point percentage. This
+is necessary for demo compatibility, DeHackEd, and for having actual
+self-consistent engine behavior (I found contradictory values in THREE different
+places for the protection amount of green armor amongst ZDoom's various DECORATE
+definitions... WTF is that about?!).
+
+--------------------------------------------------------------------------------
+07/28/13
+
+P_GiveBody has been rewritten to utilize EDF health effect definitions. 
+DeHackEd misc fields regarding health affect only the particular definitions to
+which they originally corresponded.
+
+Changed ALL giving of health in the game engine into P_GiveBody calls, so that
+things like health bonuses and Megaspheres can be properly customized.
+
+--------------------------------------------------------------------------------
+07/27/13
+
+Another minor inventory milestone finds players' possession of a backpack being
+tracked entirely through the inventory system.
+
+Wiped out the rest of the old SMMU backpack dropping system, which would throw
+out a backpack containing all of a player's weapons and ammunition during 
+-trideath mode; this has been broken pretty much since 3.29 Gamma or possibly
+even before, so this is just cleanup. This may be replaced later with something
+resembling a player active weapon drop if the DM_PLAYERDROP dmflag is enabled.
+
+--------------------------------------------------------------------------------
+07/25/13
+
+Refactored the way item respawning works in preparation for inventory
+specifications and Heretic features. In the process, I found and fixed a +10
+year old bug which would cause superitems to item respawn even if the "super
+items respawn" deathmatch flag was not enabled.
+
+Inventory is now saved and loaded from savegames.
+
+I have begun work on a new P_TouchSpecialThing function which will replace the
+current one once hardcoded pickupfx become a thing of the past (this requires
+fully re-implementing all the existing effect types to respect their EDF 
+definitions first). The function is uncalled for the time being.
+
+--------------------------------------------------------------------------------
+07/23/13
+
+A major milestone was passed in inventory implementation as player keys are now
+completely stored and tracked via the inventory system (player->cards no longer
+exists). Lockdefs are fully functional through the EV_ line special binding
+system.
+
+--------------------------------------------------------------------------------
+07/21/13
+
+I was requested to add /usr/share/doom as a UNIX-alike scanning location for
+IWADs.
+
+Lockdefs support in EDF is mostly complete, with a few outstanding TODOs such
+as support for automap color specification pending.
+
+DavidPH added support for looking at the $XDG_CONFIG_HOME environment variable
+while searching for Eternity's user dir, before assuming the file location is
+named "~/.config".
+
+--------------------------------------------------------------------------------
+07/20/13
+
+Added fast lookup facility for key subtype artifacts similar to the one for
+ammo types. Key definitions for Doom's keys have been added to items.edf in
+preparation for beginning of work on lockdefs support (the ability to specify
+what keys are needed to activate a particular linedef dynamically).
+
+--------------------------------------------------------------------------------
+07/19/13
+
+Found that my MD5 implementation has been subtly broken since it was originally
+written (way back in the C versions of EE) by not using big endian numbers where
+the algorithm expects them. This has been fixed and the algorithm now validates
+for several known MD5 outputs.
+
+--------------------------------------------------------------------------------
+07/16/13
+
+E_GetMaxAmountForArtifact has been added to account for special cases for some
+artifact subtypes such as ammo types, which can change their maximum amount
+depending on such things as possession of another inventory item (the backpack
+in their particular case).
+
+Added fast lookup facilities for ammo artifacts and for player backpacks which
+bypass the need to do a full table lookup.
+
+--------------------------------------------------------------------------------
+07/15/13
+
+Conversion of cfg_t's to MetaTables should not adapt default values, as this
+breaks the potential for prototypical inheritance to work properly, and also 
+causes MetaTables to be populated with every possible field regardless of value
+specification, using a ton more memory than is necessary, and making the 
+MetaTable::get* methods' capability of returning a default value unused as it
+should have been.
+
+Started work on specification of the powerup effect type, and an enumeration of
+artifact subtypes. The design is a bit muddled currently, however, and may 
+significantly change before it becomes actually functional.
+
+--------------------------------------------------------------------------------
+07/07/13
+
+The ability to define armor effects is now going into place in the inventory
+module. Also defined an "artifact" effect type in advance for objects that are
+stored into the player inventory and not immediately used. Artifacts will in 
+turn reference other item effects that determine what happens when they are
+used, dropped, etc.
+
+Basic code is now in place for storage and querying of player inventories,
+including:
+* Adding of items to the inventory
+* Removal of items from the inventory
+* Sorting of items in the inventory by their sort key (this is going to support
+  Strife-style inventory where items stay in a convenient and predictable order,
+  and Eternity is going to use this everywhere rather than giving any heed to
+  the broken arbitrary ordering used by Heretic, Hexen, and ZDoom).
+  
+Improved ability to use interned MetaObject keys by adding a MetaKeyIndex class.
+
+--------------------------------------------------------------------------------
+07/06/13
+
+Processing of pickupfx in EDF has been moved from e_edf to the new inventory
+module; eventually pickupfx will be more complicated than they currently are,
+and will control attachment of EDF-defined pickup effects to sprites. Currently
+they still function using the fixed enumeration.
+
+When fopen() fails during D_CheckIWAD, the error message given should call
+strerror() to state what problem it actually encountered if errno is non-zero.
+Thanks again to ConSiGno for perpetually causing the weirdest things to happen
+everytime he runs Eternity :P
+
+As a result of further debugging the same problem prompting the above change,
+paths which fail stat() will no longer be forwarded to the IWAD picker. This 
+would result in a false success message followed immediately by an error
+message that was directly contradictory, which was confusing to say the least.
+
+--------------------------------------------------------------------------------
+07/05/13
+
+Added a MetaConstString class which points to an internal static string resource
+and can therefore achieve yet another form of interning by sharing its const
+char * member directly between instances, rather than duplicating it inside each
+instance. This class should be used any time an internal static string is going
+to be assigned to multiple MetaObjects.
+
+EHashTable's getNumItems and getLoadFactor are now exposed by MetaTable for its
+key hash.
+
+Most basic MetaObject descendants' methods are now inline for speed and for
+brevity of specification.
+
+--------------------------------------------------------------------------------
+07/04/13
+
+This-const versions of EHashTable::tableIterator and its reflection within the
+MetaTable class are now available, so that it's possible to pass around 
+const MetaTable references and actually be able to iterate over the table. 
+Iteration is a constant process anyway so this is just correction of an
+oversight.
+
+items.edf has now been added to the root base folder, as well as a game-specific
+submodule in the doom folder. It currently contains some test definitions which
+do nothing except allow me to exercise code in the e_inventory module.
+
+--------------------------------------------------------------------------------
+07/03/13
+
+The item effect system is beginning to take shape inside the inventory system,
+and it is now at a point where EDF can actually invoke the inventory item 
+processing code. None of the definitions do anything yet, but the ability to
+specify them is as always the first step toward actual functionality.
+
+--------------------------------------------------------------------------------
+06/30/13
+
+Added an E_MetaTableFromCfg function which converts a cfg_t into a MetaTable,
+with optional prototypical inheritance behavior similar to a JavaScript object
+hierarchy.
+
+The hash growth function used previously only by MetaTables has been generalized
+so that other code in the engine can call it. In particular it needs to be
+applied to the MetaKey interning table.
+
+New weapon and inventory modules have been added and are beginning to take shape
+based on my new development plan for inventory, which will store the various
+required definitions as MetaTable instances, rather than creating dozens or even
+hundreds of new binary structure types or even worse, thick class hierarchies 
+like the mess that ZDoom uses and result in highly restrictive behavior of
+certain Hexen objects that seem to frustrate the hell out of everybody I've ever
+heard discuss them.
+
+--------------------------------------------------------------------------------
+06/29/13
+
+I have done various work toward issues that are holding up dynamic weapons:
+
+* The already-defined WPF_NOTSHAREWARE flag is now used in various places in
+  weapon-related code instead of testing against specific weapon ID numbers
+  (wp_plasma and wp_bfg, in particular).
+  
+* An up sound field was added to weaponinfo_t to account for weapons with a 
+  sound which is played when they are initially brought up, such as the chainsaw
+  and Heretic's Gauntlets of the Necromancer.
+
+--------------------------------------------------------------------------------
+06/24/13
+
+Removed console commands and configuration file bindings of variables related to
+end-user weapon preferences, and made the current array used for looking them up
+static to p_pspr.
+
+Also removed the second row of the array, which is no longer needed. The entire
+array itself is actually a contrivance at this point, but can remain in place
+until the EDF weapon definitions system is able to fully specify weapon priority
+order.
+
+--------------------------------------------------------------------------------
+06/23/13
+
+Various small tweaks and fixes for metatables:
+
+* Super() ought to be used in MetaObject constructor lists, as it inherits from
+  RTTIObject and thus can take advantage of that typedef.
+  
+* E_SplitTypeAndState, used in metastate resolution such as for the A_Jump
+  DECORATE codepointer, should not tolerate use of a single colon where a "::"
+  sequence is expected.
+  
+* MetaKey interning could calculate the hash code for a string twice in the
+  worst case where only one calculation was necessary, partially defeating the
+  efficiency gain of key interning. Fixed by caching the hash code in a local
+  variable immediately.
+  
+* MetaKeys were being added the interned keys collection twice, causing lookups
+  by cached key index to arbitrarily break.
+
+--------------------------------------------------------------------------------
+06/22/13
+
+I am warming up for another crack at starting Eternity's dynamic inventory,
+pickup effects, and weapon systems. This time the attempt will be done on trunk
+so that it cannot become subject to branch development hell. 
+
+To start off the process, the earlier abortive inventory code still left in EE
+trunk from a couple years ago has been burned out completely.
+
+I removed the demo-comp-optioned tweak to Lost Souls that tries to avoid 
+recursion through the clipping engine when they collide with objects or walls,
+via using P_SetMobjStateNC instead of P_SetMobjState, because this causes 
+problems with some obscure DeHackEd methods of causing strange things to happen
+when objects using the A_SkullAttack codepointer suffer collisions.
+
+Several old SMMU features which are annoying from the standpoint of inventory
+and dynamic weapons support have been removed, including the following:
+
+* bfglook, an attempt to balance the BFG in multiplayer with mlook enabled.
+  Could potentially return as an EDF weapons option in the future, but don't
+  count on it.
+* weapon change time; this isn't something that should be infinitely flexible.
+  I could see replacing this with an instant weapon changes DM flag for the
+  multiplayer nuts later.
+
+Codepointers have all been reworked to take an actionargs_t structure, which
+allows me to eliminate hackish use of a stack in P_SetPsprite to accomplish
+redirecton of frame arguments to make generic codepointers work on weapon frames
+in the expected way.
+
+Eliminated attempts to prevent recursion in A_Chase, due to potential demo and
+DeHackEd compatibility implications.
+
+The UI for changing weapon preferences has been removed, as weapon changing
+behavior has to become part of the game definition under EDF if it is supposed
+to be able to support an arbitrary number of weapons, and different sets of them
+per player class. There's no way to reflect priority between an arbitrary number
+of weapons in a way that both mod authors AND end users can control.
+
+--------------------------------------------------------------------------------
+06/14/13
+
+Some forwarding methods in RTTIObject which were intended to be static were not
+actually static. Apparently I hadn't actually used them yet or this would have
+been obvious a long time ago.
+
+I made some changes to the savegame code to use those newer statics, which 
+pretties up the lookup of Thinker class types during the savegame loading loop.
+
+--------------------------------------------------------------------------------
+06/09/13
+
+Added the i_forcefeedback option to the gamepad options menu.
+
+--------------------------------------------------------------------------------
+06/08/13
+
+I have reworked the XInput haptic effects into a class hierarchy and changed 
+various details of their management, mostly to avoid unnecessary dynamic 
+overhead for singular effects.
+
+I_StartHaptic now takes two parameters instead of one, which generally reflect
+the intensity and the duration of an effect.
+
+Haptics are now updated immediately when a new effect starts, so that the effect
+begins immediately; this gives a very slightly better minimum response time for
+short effects.
+
+Added haptic damage feedback.
+
+Reworked the BFG and chainsaw effects to have better ramp-up and intensity.
+
+Added i_forcefeedback cvar and system.cfg variable to control haptics support.
+
+--------------------------------------------------------------------------------
+06/05/13
+
+Haptic feedback support is largely functional, with the following effects
+implemented for XInput devices:
+
+* Weapon firing kickback
+* BFG warm-up rattle
+* Hexen Earthquakes
+* Chainsaw idling (effect is not finalized yet and I'm displeased with the 
+  current intensity)
+
+--------------------------------------------------------------------------------
+06/04/13
+
+Started work on support for a force feedback HAL, with a specific implementation
+for XInput on Windows.
+
+Gamepads advertise support for haptic feedback by returning an instance of a
+HALHapticInterface descendant from their override of the virtual method 
+HALGamePad::getHapticInterface().
+
+--------------------------------------------------------------------------------
+06/02/13
+
+Undefined behavior surfaced in use of PODCollection with structures containing
+DLListItem instances - if an object is moved in memory, then the pointers inside
+the DLListItem become invalid. For now, PODCollection must be avoided with self-
+or mutually referential objects. The crash happened at startup while interning
+metatable keys.
+
+printz noticed that translation handling was still broken as a result of recent
+changes made to wad namespace iteration - R_InitTranslationTables wasn't called
+until after EDF parsing, so attempts to lookup translation tables during EDF
+were not obtaining the expected namespace information from local caching static
+variables - instead, it needs to go straight to the WadDirectory for that info.
+
+The audio_buffers variable controlling the SDL_mixer sample buffer bandwidth 
+must be forced to be a power-of-two. Special thanks to ConSiGno for crashing
+Eternity in front of his friends by trying to set this variable to some crazy
+unsupported value :P
+
+--------------------------------------------------------------------------------
+05/29/13
+
+DavidPH has added the capability for EE to create and find its user directory 
+tree in the standard install location on Linux (and potentially other UNIX-
+alikes, though this requires additional support in being able to identify POSIX
+compliant platforms which we don't currently have in the engine).
+
+--------------------------------------------------------------------------------
+05/28/13
+
+The BOOM HUD was mistakenly changed to use "yellow" color instead of "gold"; 
+thanks to ConSiGno for catching it early.
+
+================================================================================
+EOF
+================================================================================
