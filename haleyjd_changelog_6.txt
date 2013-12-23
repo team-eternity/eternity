@@ -2,6 +2,516 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+12/23/13
+
+Taking further advantage of the new sound mixer, I have separated loading of
+digital sound effects out of the low-level code into a new high-level s_formats
+module. In addition to revamping format detection and sanitization of DMX 0x03
+samples, I have added support for 8- and 16-bit Microsoft waves, in the so-
+called canonical format only (not tolerating all the multiple complex possible
+RIFF chunks).
+
+Needs serious testing.
+
+Also added proper support for the sounds/ namespace in PKE archives - EE will
+look there first for sound resources, and only resort to the global namespace
+when it didn't find anything there (courtesy of the NSG-style lookup functions
+in WadDirectory).
+
+--------------------------------------------------------------------------------
+12/22/13
+
+Completed an EDF data model for reverb specification.
+
+Added back Pre-Beta Lost Souls with a ZDoom-compatible spawn number and some
+tweaked behaviors that make them fit with the modern game a bit better (bright
+flag on their frames, improved sprite offsets, and not leaving an ugly corpse
+hanging in midair when they die).
+
+Backed out the change adapted from Chocolate Doom to warp the mouse to the lower
+right as, under SDL's broken mouse handling code, this somehow manages to 
+translate itself into player motion if the mouse is unlocked without the game
+becoming paused (such as during multiplayer for example).
+
+--------------------------------------------------------------------------------
+12/21/13
+
+Implemented an optional pre-delay buffer for the reverb engine.
+
+Added a moving average FIR low pass filter to the backend of the reverb
+effect to experiment with cutting some of the high-pitch noise that is 
+responsible for the Freeverb algorithm's metallic sound. Seems to work, though
+is not powerful enough to prevent the metallicity at very high reverb levels.
+
+Later experimented with a configurable low-pass/high-pass/band-pass filter, but
+settled instead on a full 3-band equalization pass by recommendation of 
+esselfortium, as it is the ability to variably scale different frequency bands
+in a reverb effect which is responsible for about 90% of the perception of 
+different "materials" in filter effects.
+
+For example, trimming high frequencies more than low results in wood or 
+carpeting, or a densely packed space (lots of furniture or people), whereas
+emphasizing high gives a sense of metal and glass and reflective surfaces.
+
+I believe the reverb engine itself is now finalized with the following layout:
+
+   input->[opt. predelay]->[combs]->[allpasses]->[opt. 3band]->output
+   
+Now will begin the actually much more expansive work of integrating support for
+it into the game engine, which has some of the following as subgoals:
+
+* Tracking of "ear" data on a per-player basis, with savegame support
+
+* Implementation of the ear "stack" so that it can be pushed and popped when
+  the user interface (menu or consoles) become active, without erasing the
+  active reverberation data for the playsim.
+
+* Sector, line, and thing types/flags for control of sound environment zones.
+
+* ExtraData support for the above as is required.
+
+* EDF definition of reverb properties.
+
+--------------------------------------------------------------------------------
+12/20/13
+
+Taking immediate advantage of the new sound mixer, I have started work on an
+experimental reverb engine, based on the public domain Freeverb model.
+
+--------------------------------------------------------------------------------
+12/19/13
+
+Rewrote the sound mixer loop to use floating point samples, and rewrote the
+sound effect loader to translate from U8 to double precision samples. This
+opens the door for:
+
+* Support for 16-bit wave-format samples
+* Realtime audio effects which would be too inaccurate or cause too many
+  int <-> float conversions if mixing were being done in Sint16 format still.
+  
+Due to the inner mixing loop now being clip-free, the 3-band equalizer is no
+longer optional, and all traces of the s_equalizer option are gone. The
+rational tanh soft clipper, used on the results of the 3band equalization pass, 
+is responsible for all normalization of samples.
+
+Also rewrote the 3-band equalizer to run over the full stream with a single
+function call, which is a significant optimization.
+
+--------------------------------------------------------------------------------
+12/18/13
+
+Adjusted the sound loading code to trim the DMX pad bytes - discovered during
+Chocolate Strife development - from samples.
+
+Figured out all 3 of the PSX linedef flags. A 2S line in PSX will not render a
+midtexture at all unless one of line flags (512|1024|2048) are set, and when
+set, those flags have the following meanings:
+
+*  512 (0x200): Midtexture is masked
+* 1024 (0x400): Midtexture is rendered with 25% additive translucency
+* 2048 (0x800): Midtexture is solid
+
+Translucent lines usually occur in the combination of (0x400|0x800), but the
+other combinations occur and seem to make no difference to the line's rendering.
+
+0x200 only occurs on lines with masked textures. I am not aware if clearing the
+masked flag (or replacing it with the solid one) would cause the texture to
+render with black areas instead of transparency, but it's a reasonable guess on
+what might happen.
+
+There is ONE line in MAP07 (E1M7 from Ultimate Doom) which has a midtexture but
+yet has none of these flags set, and sure enough, it does not render any 
+middle texture in PSX Doom. This was what tipped me off to how the flags really
+work, together with use of the masked flag in maps not derived from Jaguar Doom.
+
+--------------------------------------------------------------------------------
+12/17/13
+
+Support for PSX line flags, as best that I currently understand them. I need to
+do additional visual "reverse engineering" work to determine what's really going
+on with them.
+
+Added an ev_mapspecials command, which prints out information on every 
+non-static linedef special that the current level is using.
+
+--------------------------------------------------------------------------------
+12/16/13
+
+Added EEPSXSpectre, which is an addtive-blended spectre with an approximated
+translucency level to match PlayStation Doom. He has doomednum 890.
+
+Added EEPSXBloodyChain, which is a PSX-specific object, with doomednum 891.
+
+Things are now translated when loading PSX format maps:
+
+* Demons with special flag values are changed into EENightmareSpectre or
+  EEPSXSpectre depending on their flags. A generic form of support for the
+  nightmare flag is not available, as adding flags to thingtypes in this manner
+  causes issues with features that PSX doesn't have, like nightmare skill and
+  archvile respawning. It's easy enough to create a Nightmare version of a
+  monster via EDF anyway.
+
+* doomednum 64 (normally the Archvile) is redirected to 891.
+
+--------------------------------------------------------------------------------
+12/15/13
+
+When playing maps with map numbers greater than 35 and no EMAPINFO, EE would
+display a "bad music number" message at the start of each map due to a lack of
+rangechecking in the function that calculates music number for map number for
+DOOM II.
+
+I have added an eclamp macro to m_compare, and used it to ensure that all of the
+default music track number generators use indices that are strictly within
+bounds.
+
+Began work on the VImage / VImageManager classes which will represent Eternity's
+new unified internal image storage format and a loader which caches lumps and
+translates them into that format while hiding the details from the game engine
+to the greatest extent possible.
+
+--------------------------------------------------------------------------------
+12/14/13
+
+While performing a code audit to determine all codepoints that need addressing
+before it could be possible for EE to render in 32-bit color, I found and fixed
+up various minor issues:
+
+* Commented-out crap all over the engine left from rewrites and refactorings.
+* Expired FIXME and TODO comments.
+* Dead code in the particle engine from god knows when.
+* Incorrect copypasta of comments
+* Code that has been #ifdef'd out since we still supported DOS...
+
+--------------------------------------------------------------------------------
+12/12/13
+
+Converted all the old Z_SysCalloc calls in the VBuffer code to ecallocs, as
+since conversion of the zone heap to a native heap implementation, there has
+been no strategic advantage to putting large video buffers directly on the 
+C heap.
+
+Added basic loading support for the PSX map format, including its fixed-point
+vertex and specialized sector format.
+
+--------------------------------------------------------------------------------
+12/09/13
+
+I have recoded the way that psprite scaling factors are calculated so that it
+is based purely on the view window geometry and not needlessly reliant on the
+render's field of view. This corrects the long-standing issue of weapons
+floating above the status bar in high FOV and in very wide widescreen modes
+such as 17:9 and 32:15.
+
+--------------------------------------------------------------------------------
+12/08/13
+
+Added support for single patch textures between TX_START / TX_END lumps, as in
+ZDoom, and the corresponding textures/ directory in PKE archives.
+
+Added code to PatchLoader to support limited translation of linears into 
+patches when one is found while trying to load a patch, as a hold-over until the
+new unified image internal storage system I am planning is finished.
+
+Once it is in place, there will be no more need for runtime conversion of 
+resources between different formats. Patch, linear, or PNG, all graphics will
+be converted to and drawn using one unified internal format. This will allow us
+to eliminate TONS of drawing code in the V_ modules, and is an important move
+toward two possible future goals:
+
+* True-color rendering support
+* True 3D GL renderer
+
+Upstreamed some important copy construction glitch fixes for Collection and 
+PODCollection from my psxwadgen project, where I caused undefined behavior by 
+trying to copy-construct them in the patch conversion code adopted from SLADE.
+
+--------------------------------------------------------------------------------
+12/07/13
+
+I have removed the only partially working at best "start on first new map"
+feature from SMMU, as it's always been mostly clutter and could confuse users
+more than help them out.
+
+Turns out maps with zero nodes were supposed to work, via the Doom engine's
+design of returning subsectors[0] if an attempt to access nodes[-1] is made
+via numnodes being zero when used in the calculation "numnodes - 1".
+
+Unfortunately at some point in BOOM or MBF development, Lee Killough refactored
+the R_PointInSubsector function without taking care to preserve this behavior.
+As a result, everywhere in the engine BUT this function was already behaving
+correctly in the case of an empty BSP tree.
+
+But of course, like most things in vanilla Doom, this was subject to a quirk -
+Z_Malloc returns a 32-byte block in vanilla when it asks for zero, which is the
+only thing that prevented an illegal operation in P_SetupNodes.
+
+So with R_PointInSubsector fixed and a special check for zero-size lump added in
+P_LoadNodes, EE can handle these maps again. The only kind of map that can run
+with NO BSP btw is a single-sector map that is perfectly convex.
+
+Vanilla did have a separate issue that could stop maps with only one sector from
+working, so despite tolerating an empty BSP tree, it could still crash on these
+maps.
+
+--------------------------------------------------------------------------------
+12/01/13
+
+Removed extinct low-detail column drawer modules from the project files.
+
+Support has been added for subtractive blending through a precalculated tranmap
+(a SUBMAP lump can also be added to a wad to override this blending when we're
+running in an 8-bit color mode).
+
+Added TLSTYLESUB flag for thingtypes to enable subtractively blended sprites.
+
+Added EDF definition for EENightmareSpectre, which is a custom monster from the
+PlayStation version of Doom. He is a subtractively blended demon with double the
+health - quite dangerous, taking two whole SSG blasts to go down for the count!
+
+Being the logical and spiritual successor of MBF, I have reasserted our claim to
+the ancestral territory of the 800-900 range of doomednums, which are wide open 
+for use currently with no assignment in other ports. (MBF defined the helper dog
+with DoomEd num 888). So, the Nightmare Spectre is available in Doom with the 
+spawn number 889.
+
+--------------------------------------------------------------------------------
+11/29/13
+
+Added support for the grAb chunk, created by ZDoom and now a virtual community
+standard, which allows for specification of x and y offsets in PNG-format
+graphics. This should take effect anywhere a PNG gets used as a patch.
+
+--------------------------------------------------------------------------------
+11/27/13
+
+MacOS X just happens to be having a serious crisis with toupper()/tolower() in
+its standard libraries right now (how can this possibly be a "thing"???), so
+I eliminated the remaining calls to them for printz and ConSiGno's benefits.
+
+--------------------------------------------------------------------------------
+11/24/13
+
+Replaced most usage of <ctype.h> functions with custom functions defined in 
+m_ctype.h and placed in an ectype namespace which are guaranteed to be:
+
+* ASCII no matter where the program is compiled, which is what the rest of EE
+  expects.
+* Safe whether called with signed or unsigned char values.
+* Treat all extended ASCII (>127) as control characters, which is how EE uses
+  them (ie. they cannot be subject to translation via toupper/tolower, nor
+  considered to be alpha, numeric, hex, or punctuation characters).
+
+--------------------------------------------------------------------------------
+11/23/13
+
+Need secure tolower/toupper calls in EE's M_Strupr/M_Strlwr functions, as GCC
+4.x has started using lookup-based chartype functions that are vulnerable to the
+common problem of char promoting to signed int (and of course, ZERO sanity
+checking inside libc functions being considered perfectly acceptable despite the
+ridiculous consequences this has for security).
+
+--------------------------------------------------------------------------------
+11/22/13
+
+Added support for using left and right on the keyboard to rotate monster sprites
+during the DOOM II intermission, as is possible in similar code on the skin
+viewer, and as was allowed during the DOOM 64 cast call. Not totally happy with
+the implementation because it should depend on keybindings so you can also do
+it with gamepads etc.
+
+--------------------------------------------------------------------------------
+11/17/13
+
+When the HUD message widget steps down its y position to account for an active
+chat widget, the distance stepped is now defined in terms of the hud font's
+absh value rather than a hardcoded 8 px.
+
+Stepping of HUD messages from line to line is also now based on the absh value.
+
+As a result of these changes, it is now possible to use V_FontFitTextToRect to
+support multi-line HUD messages. This is an important prereq for Strife support,
+and also fixes problems we already have with longer than usual messages getting
+cut off at the edges of the screen.
+
+--------------------------------------------------------------------------------
+11/14/13
+
+Removed all processor affinity hack code after extensive playtesting. No crashes
+so far.
+
+--------------------------------------------------------------------------------
+11/10/13
+
+ConSiGno noticed a regression from the menu item system refactoring which had
+emulated menus' big sliders rendering a small font text string in addition to
+their patch and slider - though I CODED a method named 
+MenuItem::shouldDrawDescription and properly overloaded it in the big slider
+class, I SORT of forgot to ever put a call to the base class virtual anywhere.
+Oops!?
+
+Upgraded Eternity to build against all of the newest trunk versions of SDL 1.2
+and its support libraries. Not only has this completely resolved the MIDI loop
+deadlocking issue that has plagued us since Windows Vista came out, it also
+added support for FLAC music, the potential capability of supporting FluidSynth
+with minimal work, and makes the old processor affinity hack unneeded.
+
+--------------------------------------------------------------------------------
+11/08/13
+
+Converted the HUD widget system into a proper class hierarchy from the C pseudo-
+OOP it was still using, which was relying on type punning.
+
+The message issued during shareware games about ignoring wads in the game 
+autloads directory will now only be displayed if there was actually an autoload
+path to load files from; if there isn't one, we be quiet about it.
+
+--------------------------------------------------------------------------------
+11/07/13
+
+All files and directory paths that are loaded from the game path will now
+preferentially check for and load a copy that exists under user/<game> before
+checking and loading one that exists under base/<game>, as user is the preferred
+location for storing anything that didn't come with the Eternity install
+package.
+
+Identified and repaired some currently inconsequential undefined behavior in 
+the cam_sight code where non-POD PODCollection was being initialized via memset
+instead of with a constructor call. Since the object didn't have any important
+virtual methods and was mostly POD-like, this was doing mostly the same thing
+by chance.
+
+--------------------------------------------------------------------------------
+11/06/13
+
+Removed now unnecessary macros conditionally defining the GetWindowLongPtr and
+SetWindowLongPtr functions in the i_w32main module, which were there only for 
+the benefit of Visual C++ 6.
+
+--------------------------------------------------------------------------------
+10/27/13
+
+Added a manifest file to Eternity in the 2010 and 2012 projects which declares
+the application to be "DPI aware," which prevents low-level scaling operations
+and off-screen drawing being done by Windows. Microsoft has recommended that all
+games include such an exclusionary declaration in their manifests. Special 
+thanks to fraggle for researching this issue and sharing his findings with us.
+
+--------------------------------------------------------------------------------
+10/18/13
+
+Refactored all the code relating to implementation of individual types of menu
+items in the menu engine to use a class hierarchy, as had been long planned and
+partially migrated toward previously by moving the special behaviors per type 
+into arrays of function pointers.
+
+--------------------------------------------------------------------------------
+10/16/13
+
+Added 2880x1620 to the 16:9 picklist, as it fits within the limits, and there is
+at least one PC monitor manufacturer producing this display size.
+
+--------------------------------------------------------------------------------
+10/14/13
+
+Upped the hopefully temporary resolution cap to 2880x1800 to allow for use of
+Apple Retina displays at their native fullscreen resolution.
+
+--------------------------------------------------------------------------------
+09/21/13
+
+Adapted a change to the low-level input code from Chocolate Doom which warps the
+mouse to a more out-of-the-way location when releasing it.
+
+--------------------------------------------------------------------------------
+09/18/13
+
+Give Lich fireballs the MF4_NOZERODAMAGE flag when they are spawned invisible by
+the lich fire attack pointer.
+
+--------------------------------------------------------------------------------
+09/14/13
+
+Added an MF4_NOZERODAMAGE flag, which allows for missiles with the Heretic and
+Hexen behavior of not invoking P_DamageMobj with a value of 0 damage. This in
+particular affects the behavior of terrain type missiles, as noted by multiple
+people, they never cause infighting in Heretic or Hexen yet did in Eternity.
+
+--------------------------------------------------------------------------------
+09/12/13
+
+Support for gibhealth property in EDF thingtypes. This field is a little bit
+interesting because it depends on another field somewhat for its default value.
+This gets tricky where thingtype inheritance is involved, so to make it simple,
+if an inheriting thingtype changes its spawnhealth, its gibhealth will reset to
+the gamemode's default gibhealth calculation. So if you inherit and change 
+spawnhealth, you'll need to change gibhealth too if you had customized it in the
+base class.
+
+Heretic player death sound behavior has been corrected via addition of a Raven
+player death pointer separate from Doom's. The Raven player classes don't 
+necessarily make a sound based on whether or not they gibbed, but on the amount
+and types of damage taken in either case.
+
+--------------------------------------------------------------------------------
+09/10/13
+
+New flags for thingtypes were added to control MBF's torque (mis)feature:
+
+* NOTORQUE - an object given this flag will never be subjected to torque
+  simulation even if it is enabled. This has been applied to DOOM objects that
+  appear to float or are rooted into the ground (such as floating skulls, and
+  small torches). This fixes a WIDE range of maps where this feature creates
+  problems, including Sunder MAP10 where some torches get torqued off ledges and
+  block your path backward through the map, and No Rest for the Living MAP03, 
+  where some floating skulls fall off a staircase unnecessarily. Does not apply
+  during playback of 203 demos.
+  
+* ALWAYSTORQUE - an object given this flag ignores the comp_falloff variable
+  and will do torque calculation regardless.
+
+--------------------------------------------------------------------------------
+09/08/13
+
+Noticed another bug while playtesting Heretic - BOOM's code to make players
+make an "OOF!" sound when bouncing off of walls in icy sectors didn't exclude
+dead players, so if you died and slid along the ice and bounced off a wall, 
+your corpse would become quite talkative.
+
+--------------------------------------------------------------------------------
+09/07/13
+
+Split base, user, and gamepath determination code out of d_main into d_files.
+
+Changed GameModeInfo's teleFogType field from a DeHackEd num to a thingtype
+mnemonic.
+
+--------------------------------------------------------------------------------
+09/02/13
+
+Added state flags, and the STATEF_SKILL5FAST flag to control monsters who set
+states to be faster during Nightmare gameplay, such as the Demon. This is 
+controlled by using the "fast" keyword via DECORATE state syntax, as in ZDoom.
+A possible difference from ZDoom is that any number of keywords are now 
+tolerated between the tics and the action function, so that multiple flags can
+apply to the same state.
+
+This will be critical later on for Strife support, as Training skill, which 
+ZDoom doesn't even bother to try to implement properly, will require a
+corresponding "slow" flag that affects skill 0, on some of the same states which
+in Bloodbath become faster. Such a state would end up looking like such:
+
+   SARG E 4 slow fast A_SargAttack
+
+--------------------------------------------------------------------------------
+09/01/13
+
+Added a new m_compare module to hold custom comparative function templates, 
+which don't require the inclusion of the massive <algorithm> from STL. Applied
+the new functions in various places they were needed (mainly places already
+defining MIN/MAX macros).
+
+--------------------------------------------------------------------------------
 08/31/13
 
 Added pw_torch powerup effect from Heretic/Hexen, and did some refactoring of
