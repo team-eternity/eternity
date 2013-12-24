@@ -76,7 +76,7 @@ static bool S_checkDMXPadded(byte *data)
 {
    byte  testarray[16];
    byte *pcmstart = data + DMX_SOUNDHDRSIZE;
-   byte *fsample  = pcmstart + 1;
+   byte *fsample  = pcmstart + 16;
 
    memset(testarray, *fsample, sizeof(testarray));
 
@@ -222,6 +222,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       sd.fmt = S_FMT_16;
       break;
    // TODO: support 24- and 32-bit PCM?
+   // TODO: support IEEE PCM?
    }
 
    // check for extended format information in larger headers
@@ -456,8 +457,7 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 {
    bool  res = false;
    int   lump = S_getSfxLumpNum(sfx);
-   byte *lumpdata = NULL;
-   
+  
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = wGlobalDir.getNumForName(GameModeInfo->defSoundName);
@@ -469,7 +469,7 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
    if(!sfx->data)
    {
       edefstructvar(sounddata_t, sd);
-      lumpdata = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
+      byte *lumpdata = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
 
       if(S_detectSoundFormat(sd, lumpdata, lumplen))
       {
