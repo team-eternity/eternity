@@ -319,7 +319,7 @@ static void I_loadLights()
       }
 
       // copy base palette to color palettes
-      byte *light = lights;
+      byte *light = lights+3;
       for(int i = 1; i < 256; i++)
       {
          memcpy(RGB8to32[i], RGB8to32[0], 256*sizeof(Uint32));
