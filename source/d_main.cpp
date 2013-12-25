@@ -1060,7 +1060,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, false, false);
+                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -1407,7 +1407,7 @@ static void D_DoomInit()
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, false, false);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
          }
       }
    }
@@ -1437,7 +1437,7 @@ static void D_DoomInit()
       strncpy(file, demosource, len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, false, false);
+      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
       usermsg("Playing demo %s\n", file);
    }
 

@@ -222,7 +222,7 @@ void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
    else
    {
       if(in_textmode)
-         printf("Warning: couldn't open %s\n", filename);
+         printf(" Warning: couldn't open %s\n", filename);
       else
          C_Printf(FC_ERROR "Couldn't open %s\n", filename);
    }
@@ -238,12 +238,10 @@ void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
 //
 WadDirectory::openwad_t WadDirectory::openFile(wfileadd_t &addInfo)
 {
-   openwad_t openData;
+   edefstructvar(openwad_t, openData);
    qstring   filename;
    bool      allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
    
-   memset(&openData, 0, sizeof(openData));
-
    // Try opening the file
    filename = addInfo.filename;
    if(!(openData.handle = W_TryOpenFile(filename, allowInexact)))
@@ -306,7 +304,7 @@ lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 bool WadDirectory::addSingleFile(openwad_t &openData, wfileadd_t &addInfo,
                                  int startlump)
 {
-   filelump_t  singleinfo;
+   edefstructvar(filelump_t, singleinfo);
    lumpinfo_t *lump_p;
 
    singleinfo.filepos = 0;
@@ -645,7 +643,7 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       &WadDirectory::addSingleFile // W_FORMAT_FILE
    };
    
-   openwad_t openData;
+   edefstructvar(openwad_t, openData);
 
    // When loading a subfile, the physical file is already open.
    if(addInfo.flags & WFA_SUBFILE)

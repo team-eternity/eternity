@@ -32,9 +32,18 @@ struct gfs_t;
 struct wfileadd_t;
 extern wfileadd_t *wadfiles;     // killough 11/98
 
+// enumeration for D_AddFile flags parameter
+enum dafflags_e
+{
+   DAF_NONE    = 0,          // no special behaviors
+   DAF_PRIVATE = 0x00000001, // is a private directory file
+   DAF_IWAD    = 0x00000002, // is the IWAD
+   DAF_DEMO    = 0x00000004  // is a demo
+};
+
 // WAD Files
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               bool privatedir, bool iwad);
+               dafflags_e addflags);
 void D_AddDirectory(const char *dir);
 void D_ListWads();
 void D_NewWadLumps(int source);
