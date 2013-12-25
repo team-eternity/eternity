@@ -2,6 +2,59 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+12/25/13
+
+Fixed the ability to play back internal demos using -playdemo on the command
+line by changing some code in D_AddFile so that demo loading failure is not 
+fatal. This regression occurred when WadDirectory was refactored for zip file 
+support and the system was made more particular about checking files for 
+existence. 
+
+Demos have always been allowed to float through the initial loading check and
+then cause an error later if they're not found when they actually start to play.
+
+--------------------------------------------------------------------------------
+12/24/13
+
+After initial testing of the wave loader against some randomly downloaded files,
+I found that some support beyond the so-called "canonical form" will be more or
+less necessary due to proliferation of the WAVEFORMATEX and extensible headers,
+which many tools generate even for plainjane PCM files where neither is
+technically required.
+
+To support those header types, I also need to tolerate presence of a "fact"
+chunk between the header and the data, as Microsoft's specification requires
+one to exist (still, not all files will have one due to non-compliant writers,
+and I don't assume that it exists without checking for it first - nor do I
+actually require that it exists myself as it's not interesting to me).
+
+This made all my test waves play back in EE, at least, so it's an improvement.
+essel says use of 24-bit, 32-bit, and IEEE PCM formats are almost exclusively
+reserved for high-end professional audio development, so it's very unlikely
+that I'll be adding support for those until and unless someone specifically
+requests them.
+
+Noticed while pasting the code on pastie that my DMX padding check was wrong
+and was testing against byte 2 instead of byte 17. Woops. Easy fix.
+
+Enhanced the runtime wad loading dialog with capability to browse the file
+system directory tree, as a Christmas present to printz who called it out as
+one of his desired features on a Doomworld Forums thread. This had been in my
+head as an idea for a long time (and had been previously requested by other
+users), and I came up with a relatively simple way of doing it finally.
+
+In the process of recording a YouTube demonstration of the above, I noticed that
+EE had started pulling DSTINK from eternity.pke even if the sound existed in the
+IWAD, which was incorrect because the IWAD is supposed to override the resource
+file on the basis of being loaded after it.
+
+Turns out that the NSG-style loading methods of WadDirectory needed to be 
+recoded so that they respect resource loading order more than namespace priority
+as otherwise this will become a universal problem as more code is rewritten to
+use NSG-style logic (in particular when the graphics/ namespace is fully
+supported through VImageManager).
+
+--------------------------------------------------------------------------------
 12/23/13
 
 Taking further advantage of the new sound mixer, I have separated loading of
