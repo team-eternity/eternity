@@ -92,7 +92,6 @@ extern menu_t menu_startmap;
 int screenSize;      // screen size
 
 char *mn_demoname;           // demo to play
-char *mn_wadname;            // wad to load
 
 // haleyjd: moved these up here to fix Z_Free error
 
@@ -115,9 +114,9 @@ void MN_InitMenus()
 {
    int i; // haleyjd
    
-   mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
-   mn_wadname  = Z_Strdup("", PU_STATIC, 0);
-   mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
+   mn_demoname = estrdup("demo1");
+   mn_wadname  = estrdup("");
+   mn_start_mapname = estrdup(""); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
    for(i = 0; i < SAVESLOTS; ++i)
@@ -887,46 +886,9 @@ menu_t menu_wadiwads3 =
    mn_wad_pages,
 };
 
-VARIABLE_STRING(mn_wadname,  NULL,       UL);
-CONSOLE_VARIABLE(mn_wadname, mn_wadname,  0) {}
-
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 {   
    MN_StartMenu(&menu_loadwad);
-}
-
-CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
-{
-   char *filename = NULL;
-
-   // haleyjd 03/12/06: this is much more resilient than the 
-   // chain of console commands that was used by SMMU
-
-   // haleyjd: generalized to all shareware modes
-   if(GameModeInfo->flags & GIF_SHAREWARE)
-   {
-      MN_Alert("You must purchase the full version\n"
-               "to load external wad files.\n"
-               "\n"
-               "%s", DEH_String("PRESSKEY"));
-      return;
-   }
-
-   if(!mn_wadname || strlen(mn_wadname) == 0)
-   {
-      MN_ErrorMsg("Invalid wad file name");
-      return;
-   }
-
-   filename = M_SafeFilePath(wad_directory, mn_wadname);
-
-   if(D_AddNewFile(filename))
-   {
-      MN_ClearMenus();
-      D_StartTitle();
-   }
-   else
-      MN_ErrorMsg("Failed to load wad file");
 }
 
 //=============================================================================

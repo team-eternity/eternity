@@ -194,7 +194,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false; // unknown header size
    }
 
-   // check again againt possibly new minimum length requirement
+   // check again against possibly new minimum length requirement
    if(len <= minLength)
       return false;
 
