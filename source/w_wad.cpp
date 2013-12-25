@@ -1102,19 +1102,28 @@ int W_CheckNumForNameNS(register const char *name, register int li_namespace)
 //
 // WadDirectory::checkNumForNameNSG
 //
-// haleyjd 02/15/10: Looks in specified namespace and if not found, then looks
-// in the global namespace.
+// haleyjd 12/24/13: Looks in both a specified namespace and the global
+// namespace for a lump. If the namespace lump is found and is from a newer
+// source than any global lump, it will be returned. Otherwise, if the
+// global lump exists, it will be returned.
 //
 int WadDirectory::checkNumForNameNSG(const char *name, int ns)
 {
    int num = -1;
-   int curnamespace = ns;
+   int inNS, inGlobal;
+   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
 
-   do
-   {
-      num = checkNumForName(name, curnamespace);
-   }
-   while(num < 0 && curnamespace == ns ? curnamespace = lumpinfo_t::ns_global, 1 : 0);
+   if((inNS = checkNumForName(name, ns)) >= 0)
+      nsLump = lumpinfo[inNS];
+   if((inGlobal = checkNumForName(name, lumpinfo_t::ns_global)) >= 0)
+      globalLump = lumpinfo[inGlobal];
+
+   if(!nsLump)
+      num = inGlobal;
+   else if(!globalLump)
+      num = inNS;
+   else
+      num = nsLump->source >= globalLump->source ? inNS : inGlobal;
 
    return num;
 }
@@ -1168,13 +1177,20 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 int WadDirectory::checkNumForLFNNSG(const char *name, int ns)
 {
    int num = -1;
-   int curnamespace = ns;
+   int inNS, inGlobal;
+   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
 
-   do
-   {
-      num = checkNumForLFN(name, curnamespace);
-   }
-   while(num < 0 && curnamespace == ns ? curnamespace = lumpinfo_t::ns_global, 1 : 0);
+   if((inNS = checkNumForLFN(name, ns)) >= 0)
+      nsLump = lumpinfo[inNS];
+   if((inGlobal = checkNumForLFN(name, lumpinfo_t::ns_global)) >= 0)
+      globalLump = lumpinfo[inGlobal];
+
+   if(!nsLump)
+      num = inGlobal;
+   else if(!globalLump)
+      num = inNS;
+   else
+      num = nsLump->source >= globalLump->source ? inNS : inGlobal;
 
    return num;
 }
