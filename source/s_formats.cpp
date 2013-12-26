@@ -76,7 +76,7 @@ static bool S_checkDMXPadded(byte *data)
 {
    byte  testarray[16];
    byte *pcmstart = data + DMX_SOUNDHDRSIZE;
-   byte *fsample  = pcmstart + 1;
+   byte *fsample  = pcmstart + 16;
 
    memset(testarray, *fsample, sizeof(testarray));
 
@@ -142,15 +142,21 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
 //
 // S_isWaveSample
 //
-// * Need 44-byte header and at least some sample information.
-// * Must be canonical RIFF WAVEfmt file; no bullshit tolerated.
+// * Need at least a 44-byte header and at least some sample information.
+// * Must be a canonical wave, or have a known extended header format.
 // * Currently 8- or 16-bit mono PCM only.
 // * Samplerate and sample count are sanity-checked.
 //
 static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
 {
-   // minimum length check
-   if(len <= 44)
+   size_t minLength    = 44u; // current minimum required length
+   int    factOffset   = 36;  // offset at which to check for a fact chunk
+   int    dataOffset   = 36;  // offset at which to check for a data chunk
+   int    sampleOffset = 44;  // offset at which to find samples
+   int    totalMDSize  = 44;  // total size of file metadata
+
+   // absolute minimum length check for smallest format
+   if(len <= minLength)
       return false;
 
    // check RIFF chunk magic
@@ -165,11 +171,37 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    r = data + 16;
-   if(GetBinaryDWord(&r) != 16) // non-standard fmt chunk size
+   int headerSize = GetBinaryDWord(&r);
+   switch(headerSize)
+   {
+   case 16: // normal PCM header
+      break; // no changes necessary
+   case 18: // WAVEFORMATEX header
+      minLength     = 46u;
+      factOffset    = 38;
+      dataOffset    = 38;
+      sampleOffset  = 46;
+      totalMDSize  +=  2;
+      break;
+   case 40: // EXTENSIBLE header
+      minLength     = 68u;
+      factOffset    = 60;
+      dataOffset    = 60;
+      sampleOffset  = 68;
+      totalMDSize  += 22;
+      break;
+   default:
+      return false; // unknown header size
+   }
+
+   // check again against possibly new minimum length requirement
+   if(len <= minLength)
       return false;
-   if(GetBinaryWord(&r) != 1)   // PCM format only
+
+   int16_t fmt = GetBinaryWord(&r);
+   if(fmt != 0x0001 && fmt != 0xFFFE) // PCM or EXTENSIBLE formats only
       return false;
-   if(GetBinaryWord(&r) != 1)   // mono only
+   if(GetBinaryWord(&r) != 1)    // mono only
       return false;
 
    sd.samplerate = GetBinaryUDWord(&r);
@@ -190,15 +222,51 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       sd.fmt = S_FMT_16;
       break;
    // TODO: support 24- and 32-bit PCM?
+   // TODO: support IEEE PCM?
    }
 
-   r = data + 40;
+   // check for extended format information in larger headers
+   if(headerSize > 16)
+   {
+      int cbSize = GetBinaryWord(&r);
+      if(cbSize != 0 && cbSize != 22)
+         return false; // unknown cbSize
+      if(cbSize == 22) // check for EXTENSIBLE subformat
+      {
+         if(headerSize != 40)
+            return false; // illegal combination.
+         r = data + 44;
+         if(GetBinaryWord(&r) != 1) // must be PCM
+            return false;
+      }
+   }
+
+   // check for presence of a fact chunk
+   r = data + factOffset;
+   if(!memcmp(r, "fact", 4))
+   {
+      minLength    += 12u;
+      dataOffset   += 12;
+      sampleOffset += 12;
+      totalMDSize  += 12;
+
+      // if there is a fact chunk, we need to check minimum length again
+      if(len <= minLength)
+         return false;
+   }
+
+   // check that data marker is at new position
+   r = data + dataOffset;
+   if(memcmp(r, "data", 4))
+      return false; // no data marker
+
+   r += 4;
    size_t bytes = GetBinaryUDWord(&r);
-   if(!bytes || bytes + 44 > len) // empty or truncated sample stream
+   if(!bytes || bytes + totalMDSize > len) // empty or truncated sample stream
       return false;
 
    sd.samplecount = bytes / (bps/8);
-   sd.samplestart = data + 44;
+   sd.samplestart = data + sampleOffset;
 
    return true;
 }
@@ -389,8 +457,7 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 {
    bool  res = false;
    int   lump = S_getSfxLumpNum(sfx);
-   byte *lumpdata = NULL;
-   
+  
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = wGlobalDir.getNumForName(GameModeInfo->defSoundName);
@@ -402,7 +469,7 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
    if(!sfx->data)
    {
       edefstructvar(sounddata_t, sd);
-      lumpdata = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
+      byte *lumpdata = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
 
       if(S_detectSoundFormat(sd, lumpdata, lumplen))
       {

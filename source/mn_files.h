@@ -40,10 +40,11 @@ typedef struct mndir_s
 } mndir_t;
 
 extern char *wad_directory;
-void MN_File_AddCommands(void);
+extern char *mn_wadname;
 
 int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
-                     const char *read_wildcard);
+                     const char *const *read_wildcards, 
+                     size_t numwildcards, bool allowsubdirs);
 void MN_ClearDirectory(mndir_t *dir);
 
 void MN_DisplayFileSelector(mndir_t *dir, const char *title, 

@@ -169,7 +169,7 @@ bool ManagedDirectory::openWadFile()
    bool ret;
    
    if((ret = addNewPrivateFile(name)))
-      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, true, false);
+      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, DAF_PRIVATE);
 
    return ret;
 }
@@ -520,6 +520,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
 //
 void W_EnumerateMasterLevels(bool forceRefresh)
 {
+   static const char *exts[1] = { "*.wad" };
    if(masterlevelsenum && !forceRefresh)
       return;
 
@@ -529,7 +530,7 @@ void W_EnumerateMasterLevels(bool forceRefresh)
       return;
    }
 
-   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, "*.wad"))
+   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, exts, earrlen(exts), false))
    {
       C_Printf(FC_ERROR "Could not enumerate Master Levels directory: %s\n",
                errno ? strerror(errno) : "(unknown error)");

@@ -40,13 +40,16 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_dehtbl.h"
 #include "d_event.h"
-#include "d_main.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "d_main.h"
 #include "doomstat.h"
 #include "g_bind.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "mn_misc.h"
@@ -185,7 +188,7 @@ static void MN_addFile(mndir_t *dir, const char *filename)
                                 dir->numfilesalloc * sizeof(char *));
    }
 
-   (dir->filenames)[dir->numfiles++] = estrdup(filename);
+   dir->filenames[dir->numfiles++] = estrdup(filename);
 }
 
 //
@@ -200,7 +203,7 @@ static int MN_findFile(mndir_t *dir, const char *filename)
 
    for(i = 0; i < dir->numfiles; i++)
    {
-      if(!strcasecmp(filename, (dir->filenames)[i]))
+      if(!strcasecmp(filename, dir->filenames[i]))
          break;
    }
 
@@ -219,8 +222,8 @@ void MN_ClearDirectory(mndir_t *dir)
    // clear all alloced files   
    for(int i = 0; i < dir->numfiles; i++)
    {
-      efree((dir->filenames)[i]);
-      (dir->filenames)[i] = NULL;
+      efree(dir->filenames[i]);
+      dir->filenames[i] = NULL;
    }
 
    dir->numfiles = 0;
@@ -261,7 +264,9 @@ static void MN_sortFiles(mndir_t *dir)
 //
 // haleyjd 06/15/10: made global
 //
-int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildcard)
+int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
+                     const char *const *read_wildcards,
+                     size_t numwildcards, bool allowsubdirs)
 {
    DIR *directory;
    struct dirent *direntry;
@@ -279,8 +284,28 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
   
    while((direntry = readdir(directory)))
    {
-      if(filecmp(direntry->d_name, read_wildcard))
-         MN_addFile(dir, direntry->d_name); // add file to list
+      if(allowsubdirs)
+      {
+         qstring path(read_dir);
+         struct stat sbuf;
+         path.pathConcatenate(direntry->d_name);
+
+         if(!strcmp(direntry->d_name, "."))
+            continue;
+         else if(!strcmp(direntry->d_name, ".."))
+            MN_addFile(dir, "..");
+         else if(!stat(path.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+         {
+            path = "/";
+            path += direntry->d_name;
+            MN_addFile(dir, path.constPtr());
+         }
+      }
+      for(size_t i = 0; i < numwildcards; i++)
+      {
+         if(filecmp(direntry->d_name, read_wildcards[i]))
+            MN_addFile(dir, direntry->d_name); // add file to list
+      }
    }
 
    // done with directory listing
@@ -393,7 +418,7 @@ static void MN_FileDrawer()
    for(i = min; i <= max; ++i)
    {
       int color;
-      const char *text;
+      qstring text;
 
       // if this is the selected item, use the appropriate color
       if(i == selected_item)
@@ -410,8 +435,10 @@ static void MN_FileDrawer()
       else
          text = (mn_currentdir->filenames)[i];
       
+      V_FontFitTextToRect(menu_font, text, x+11, y, bright, y + menu_font->absh + 1);
+
       // draw it!
-      MN_WriteTextColored(text, color, x + 11, y);
+      MN_WriteTextColored(text.constPtr(), color, x + 11, y);
 
       // step by the height of one line
       y += lheight;
@@ -504,17 +531,18 @@ static bool MN_FileResponder(event_t *ev, int action)
   
    if(action == ka_menu_confirm)
    {
+      if(select_dismiss)
+         MN_PopWidget(); // cancel widget
+
       // set variable to new value
       if(variable_name)
       {
          char tempstr[128];
          psnprintf(tempstr, sizeof(tempstr), 
-            "%s \"%s\"", variable_name, (mn_currentdir->filenames)[selected_item]);
+            "%s \"%s\"", variable_name, mn_currentdir->filenames[selected_item]);
          C_RunTextCmd(tempstr);
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
-      if(select_dismiss)
-         MN_PopWidget(); // cancel widget
       return true;
    }
 
@@ -525,7 +553,7 @@ static bool MN_FileResponder(event_t *ev, int action)
    else
       ch = ectype::toLower(ev->data1);
 
-   if(ch >= 'a' && ch <= 'z')
+   if(ectype::isGraph(ch))
    {  
       int n = selected_item;
       
@@ -535,7 +563,13 @@ static bool MN_FileResponder(event_t *ev, int action)
          if(n >= mn_currentdir->numfiles) 
             n = 0; // loop round
          
-         if(ectype::toLower((mn_currentdir->filenames)[n][0]) == ch)
+         const char *fn = mn_currentdir->filenames[n];
+         size_t len     = strlen(fn);
+
+         if(strlen(fn) > 1 && fn[0] == '/')
+            ++fn;
+
+         if(ectype::toLower(*fn) == ch)
          {
             // found a matching item!
             if(n != selected_item) // only make sound if actually moving
@@ -554,6 +588,8 @@ static bool MN_FileResponder(event_t *ev, int action)
 
 char *wad_directory; // directory where user keeps wads
 
+static qstring wad_cur_directory; // current directory being viewed
+
 VARIABLE_STRING(wad_directory,  NULL,          1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 {
@@ -563,16 +599,26 @@ CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 
 static mndir_t mn_diskdir;
 
-CONSOLE_COMMAND(mn_selectwad, 0)
+//
+// MN_doSelectWad
+//
+// Implements logic for bringing up a listing of the current directory
+// being viewed for wad file selection.
+//
+static void MN_doSelectWad(const char *path)
 {
-   int ret = MN_ReadDirectory(&mn_diskdir, wad_directory, "*.wad");
+   static const char *exts[] = { "*.wad", "*.pke", "*.pk3" };
+
+   if(path)
+      wad_cur_directory = path;
+
+   int ret = MN_ReadDirectory(&mn_diskdir, wad_cur_directory.constPtr(), 
+                              exts, earrlen(exts), true);
 
    // check for standard errors
    if(ret)
    {
-      const char *msg = strerror(ret);
-
-      MN_ErrorMsg("opendir error: %d (%s)", ret, msg);
+      MN_ErrorMsg("opendir error: %d (%s)", ret, strerror(ret));
       return;
    }
 
@@ -591,6 +637,73 @@ CONSOLE_COMMAND(mn_selectwad, 0)
    allow_exit         = true;
 
    MN_PushWidget(&file_selector);
+}
+
+CONSOLE_COMMAND(mn_selectwad, 0)
+{
+   MN_doSelectWad(wad_directory);
+}
+
+char *mn_wadname; // wad to load
+
+VARIABLE_STRING(mn_wadname,  NULL,       UL);
+CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset) 
+{
+   if(!Console.argc)
+      return;
+   const qstring &newVal = *Console.argv[0];
+
+   // parent or super-directory?
+   if(newVal == "..") 
+   {
+      size_t lastslash;
+      if((lastslash = wad_cur_directory.findLastOf('/')) != qstring::npos)
+         wad_cur_directory.truncate(lastslash);
+      MN_doSelectWad(NULL);
+   }
+   else if(newVal.findFirstOf('/') == 0)
+   {
+      wad_cur_directory.pathConcatenate(newVal.constPtr());
+      MN_doSelectWad(NULL);
+   }
+   else
+   {
+      if(mn_wadname)
+         efree(mn_wadname);
+      qstring fullPath = wad_cur_directory;
+      fullPath.pathConcatenate(newVal.constPtr());
+      mn_wadname = fullPath.duplicate();
+   }
+}
+
+CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
+{
+   // haleyjd 03/12/06: this is much more resilient than the 
+   // chain of console commands that was used by SMMU
+
+   // haleyjd: generalized to all shareware modes
+   if(GameModeInfo->flags & GIF_SHAREWARE)
+   {
+      MN_Alert("You must purchase the full version\n"
+               "to load external wad files.\n"
+               "\n"
+               "%s", DEH_String("PRESSKEY"));
+      return;
+   }
+
+   if(!mn_wadname || strlen(mn_wadname) == 0)
+   {
+      MN_ErrorMsg("Invalid wad file name");
+      return;
+   }
+
+   if(D_AddNewFile(mn_wadname))
+   {
+      MN_ClearMenus();
+      D_StartTitle();
+   }
+   else
+      MN_ErrorMsg("Failed to load wad file");
 }
 
 //
@@ -628,14 +741,14 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
 CONSOLE_COMMAND(dir, 0)
 {
    int i;
-   const char *wildcard;
+   const char *exts[1];
    
    if(Console.argc)
-      wildcard = Console.argv[0]->constPtr();
+      exts[0] = Console.argv[0]->constPtr();
    else
-      wildcard = "*.*";
+      exts[0] = "*.*";
    
-   MN_ReadDirectory(&mn_diskdir, ".", wildcard);
+   MN_ReadDirectory(&mn_diskdir, ".", exts, earrlen(exts), true);
    
    for(i = 0; i < mn_diskdir.numfiles; ++i)
    {
