@@ -388,10 +388,6 @@ void P_UnsetThingPosition(Mobj *thing)
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
    }
-
-#ifdef R_LINKEDPORTALS
-   thing->groupid = R_NOGROUP;
-#endif
 }
 
 //

@@ -190,7 +190,7 @@ non-static linedef special that the current level is using.
 --------------------------------------------------------------------------------
 12/16/13
 
-Added EEPSXSpectre, which is an addtive-blended spectre with an approximated
+Added EEPSXSpectre, which is an additive-blended spectre with an approximated
 translucency level to match PlayStation Doom. He has doomednum 890.
 
 Added EEPSXBloodyChain, which is a PSX-specific object, with doomednum 891.
@@ -214,9 +214,9 @@ display a "bad music number" message at the start of each map due to a lack of
 rangechecking in the function that calculates music number for map number for
 DOOM II.
 
-I have added an eclamp macro to m_compare, and used it to ensure that all of the
-default music track number generators use indices that are strictly within
-bounds.
+I have added an eclamp function template to m_compare, and used it to ensure 
+that all of the default music track number generators use indices that are 
+strictly within bounds.
 
 Began work on the VImage / VImageManager classes which will represent Eternity's
 new unified internal image storage format and a loader which caches lumps and
@@ -252,7 +252,7 @@ vertex and specialized sector format.
 
 I have recoded the way that psprite scaling factors are calculated so that it
 is based purely on the view window geometry and not needlessly reliant on the
-render's field of view. This corrects the long-standing issue of weapons
+renderer's field of view. This corrects the long-standing issue of weapons
 floating above the status bar in high FOV and in very wide widescreen modes
 such as 17:9 and 32:15.
 
@@ -416,7 +416,7 @@ Converted the HUD widget system into a proper class hierarchy from the C pseudo-
 OOP it was still using, which was relying on type punning.
 
 The message issued during shareware games about ignoring wads in the game 
-autloads directory will now only be displayed if there was actually an autoload
+autoloads directory will now only be displayed if there was actually an autoload
 path to load files from; if there isn't one, we be quiet about it.
 
 --------------------------------------------------------------------------------

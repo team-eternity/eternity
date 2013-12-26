@@ -43,48 +43,8 @@ struct linkoffset_t
 extern linkoffset_t **linktable;
 extern linkoffset_t zerolink;
 
-
-//
-// P_GetLinkOffset
-//
-// This function returns a linkoffset_t object which contains the map-space
-// offset to get from the startgroup to the targetgroup. This will always return 
-// a linkoffset_t object. In cases of invalid input or no link the offset will be
-// (0, 0, 0)
-#ifdef RANGECHECK
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
-#else
-int P_PortalGroupCount();
-extern bool useportalgroups;
-
-inline linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
-{
-   if (!linktable || !useportalgroups || startgroup < 0 || startgroup >= P_PortalGroupCount() || targetgroup < 0 || targetgroup >= P_PortalGroupCount())
-      return &zerolink;
-   else
-   {
-      auto link = linktable[startgroup * P_PortalGroupCount() + targetgroup];
-      return link ? link : &zerolink;
-   }
-}
-#endif
-
-
-//
-// P_GetLinkIfExists
-//
-// Returns a link offset to get from 'fromgroup' to 'togroup' if one exists. 
-// Returns NULL otherwise
-#ifdef RANGECHECK
 linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup);
-#else
-inline linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
-{
-   return (!linktable || !useportalgroups || fromgroup < 0 || fromgroup >= P_PortalGroupCount() || togroup < 0 || togroup >= P_PortalGroupCount())
-      ? NULL
-      : linktable[fromgroup * P_PortalGroupCount() + togroup];
-}
-#endif
 
 #endif
 

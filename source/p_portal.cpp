@@ -106,23 +106,29 @@ void P_InitPortals(void)
 //
 // SoM: yes this is hackish, I admit :(
 // This sets all mobjs inside the sector to have the sector id
+// FIXME: why is this named R_ instead p_portal?
 //
 void R_SetSectorGroupID(sector_t *sector, int groupid)
 {
-   Mobj *mo;
-   int i;
-
    sector->groupid = groupid;
 
    // SoM: soundorg ids need to be set too
    sector->soundorg.groupid  = groupid;
    sector->csoundorg.groupid = groupid;
 
-   for(mo = sector->thinglist; mo; mo = mo->snext)
-      mo->groupid = groupid;
+   // haleyjd 12/25/13: must scan thinker list, not use sector thinglist.
+   for(auto th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      Mobj *mo;
+      if((mo = thinker_cast<Mobj *>(th)))
+      {
+         if(mo->subsector && mo->subsector->sector == sector)
+            mo->groupid = groupid;
+      }
+   }
 
    // haleyjd 04/19/09: propagate to line sound origins
-   for(i = 0; i < sector->linecount; ++i)
+   for(int i = 0; i < sector->linecount; ++i)
       sector->lines[i]->soundorg.groupid = groupid;
 }
 
@@ -256,7 +262,6 @@ void P_GatherSectors(sector_t *from, int groupid)
 // offset to get from the startgroup to the targetgroup. This will always return 
 // a linkoffset_t object. In cases of invalid input or no link the offset will be
 // (0, 0, 0)
-#ifdef RANGECHECK
 //
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
@@ -283,14 +288,13 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
    auto link = linktable[startgroup * groupcount + targetgroup];
    return link ? link : &zerolink;
 }
-#endif
 
 //
 // P_GetLinkIfExists
 //
 // Returns a link offset to get from 'fromgroup' to 'togroup' if one exists. 
 // Returns NULL otherwise
-#ifdef RANGECHECK
+//
 linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 {
    if(!useportalgroups)
@@ -315,7 +319,6 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
    }
    return linktable[fromgroup * groupcount + togroup];
 }
-#endif
 
 //
 // P_AddLinkOffset
