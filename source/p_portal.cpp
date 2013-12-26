@@ -270,21 +270,22 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
       
    if(!linktable)
    {
-      doom_printf("P_GetLinkOffset called with no link table.\n");
+      C_Printf(FC_ERROR "P_GetLinkOffset: called with no link table.\n");
       return &zerolink;
    }
    
    if(startgroup < 0 || startgroup >= groupcount)
    {
-      doom_printf("P_GetLinkOffset called with start groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkOffset: called with OoB start groupid %d.\n", startgroup);
       return &zerolink;
    }
 
    if(targetgroup < 0 || targetgroup >= groupcount)
    {
-      doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkOffset: called with OoB target groupid %d.\n", targetgroup);
       return &zerolink;
    }
+
    auto link = linktable[startgroup * groupcount + targetgroup];
    return link ? link : &zerolink;
 }
@@ -302,21 +303,22 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 
    if(!linktable)
    {
-      doom_printf("P_GetLinkIfExists called with no link table.\n");
+      C_Printf(FC_ERROR "P_GetLinkIfExists: called with no link table.\n");
       return NULL;
    }
    
    if(fromgroup < 0 || fromgroup >= groupcount)
    {
-      doom_printf("P_GetLinkIfExists called with from groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkIfExists: called with OoB fromgroup %d.\n", fromgroup);
       return NULL;
    }
 
    if(togroup < 0 || togroup >= groupcount)
    {
-      doom_printf("P_GetLinkIfExists called with to groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkIfExists: called with OoB togroup %d.\n", togroup);
       return NULL;
    }
+
    return linktable[fromgroup * groupcount + togroup];
 }
 
