@@ -939,6 +939,7 @@ static void P_LoadZNodes(int lump)
 //
 //=============================================================================
 
+static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 static void P_ConvertHereticThing(mapthing_t *mthing);
 static void P_ConvertPSXThing(mapthing_t *mthing);
 
@@ -1004,6 +1005,9 @@ void P_LoadThings(int lump)
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
+
+      // haleyjd 12/27/13: convert Doom extended thing numbers
+      P_ConvertDoomExtendedSpawnNum(ft);
       
       P_SpawnMapThing(ft);
    }
@@ -1056,6 +1060,9 @@ void P_LoadHexenThings(int lump)
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
+
+      // haleyjd 12/27/13: convert Doom extended thing numbers
+      P_ConvertDoomExtendedSpawnNum(ft);
       
       P_SpawnMapThing(ft);
    }
@@ -2662,31 +2669,122 @@ void P_LoadOlo(void)
 }
 #endif
 
+//=============================================================================
+//
+// DoomEd Number Disambiguation
+//
+// Rather than have doomednums be universally contingent on the gamemode, 
+// Eternity moves them around into unambiguous ranges. The 7000 range is 
+// reserved for thing types translated from other Doom engine games (Heretic,
+// Hexen, and Strife). The 6000 range is reserved for "reverse" translation of
+// Doom objects (ie. in any game, an Arch-vile can be spawned using 6064).
+//
+// The "remapped" ranges of doomednums (those that conflict between games)
+// are 5-254, 2001-2048, and 3001-3006, though the exact ranges depend on the
+// individual game in question
+//
+
+//
+// P_ConvertDoomExtendedSpawnNum
+//
+// Checks for and converts a 6000-range doomednum into the corresponding Doom
+// object. This is called regardless of the gamemode, after any gamemode
+// specific translations occur.
+// 6005 - 6089 -> 5    - 89
+// 6201 - 6249 -> 2001 - 2049
+// 6301 - 6306 -> 3001 - 3006
+//
+static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num >= 6005 && num <= 6089)
+      num -= 6000;
+   else if(num >= 6201 && num <= 6249)
+      num -= 4200;
+   else if(num >= 6301 && num <= 6306)
+      num -= 3300;
+
+   mthing->type = num;
+}
+
+// null, player starts 1-4, deathmatch spots, and teleport destinations are
+// common across all games
+#define DEN_MIN     5
+#define DEN_DMSPOT  11
+#define DEN_TELEMAN 14
+
 //
 // P_ConvertHereticThing
 //
-// haleyjd: Converts Heretic doomednums into an Eternity-compatible range.
-//
-// 05/30/06: made much more specific to avoid translating things that don't
-// need to be translated.
+// Converts Heretic doomednums into an Eternity-compatible range:
+// 5    - 96   -> 7005 - 7096
+// 2001 - 2005 -> 7201 - 7205
+// 2035        -> 7235
+// Covers all Heretic thingtypes.
 //
 static void P_ConvertHereticThing(mapthing_t *mthing)
 {
-   // null, player starts, teleport destination are common
-   if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
       return;
-   
-   // handle ordinary Heretic things -- all are less than 100
-   if(mthing->type < 100)
-   {
-      // add 7000 to normal doomednum
-      mthing->type += 7000;
-   }
-   else if(mthing->type > 2000 && mthing->type <= 2035)
-   {
-      // handle items numbered > 2000
-      mthing->type = (mthing->type - 2000) + 7200;
-   }
+
+   if(num <= 96)
+      num += 7000;
+   else if((num >= 2001 && num <= 2005) || num == 2035)
+      num += 5200;
+
+   mthing->type = num;
+}
+
+//
+// P_ConvertHexenThing
+//
+// Converts Hexen doomednums into an Eternity-compatible range:
+// 5    - 124  -> 7305 - 7424
+// 140         -> 7440
+// 254         -> 7554
+// 3000 - 3002 -> 9300 - 9302
+// Others in 8000, 9000, 10000, and 14000 ranges do not conflict.
+//
+static void P_ConvertHexenThing(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
+      return;
+
+   if(num <= 124 || num == 140 || num == 254)
+      num += 7300;
+   else if(num >= 3000 && num <= 3002)
+      num += 6300; // ZDoom-compatible polyobject spot numbers
+
+   mthing->type = num;
+}
+
+//
+// P_ConvertStrifeThing
+//
+// Converts Strife doomednums into an Eternity-compatible range:
+// 5    - 236  -> 7605 - 7836
+// 2001 - 2048 -> 7901 - 7948
+// 3001 - 3006 -> 7951 - 7956
+// Covers all Strife thingtypes.
+//
+static void P_ConvertStrifeThing(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
+      return;
+
+   if(num <= 236)
+      num += 7600;
+   else if(num >= 2001 && num <= 2048)
+      num += 5900;
+   else if(num >= 3001 && num <= 3006)
+      num += 4950;
 }
 
 #define DEN_PSXCHAIN   64

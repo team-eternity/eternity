@@ -272,8 +272,6 @@ thingtype DoomBuilderCameraSpot : Unknown
 
 thingtype ETCFogSpawner 
 {
-  doomednum   6011
-  dehackednum 227
   spawnstate  S_SPAWNFOG1
   flags       NOBLOCKMAP
   flags2      NOTHRUST|FLOATBOB|DONTDRAW
@@ -281,8 +279,6 @@ thingtype ETCFogSpawner
 
 thingtype ETCSmallFog 
 {
-  doomednum   6012
-  dehackednum 228
   spawnstate  S_FOGPATCHS1
   deathstate  S_FOGPATCHS0
   speed       65536
@@ -291,8 +287,6 @@ thingtype ETCSmallFog
 
 thingtype ETCMediumFog 
 {
-  doomednum   6013
-  dehackednum 229
   spawnstate  S_FOGPATCHM1
   deathstate  S_FOGPATCHM0
   speed       65536
@@ -301,8 +295,6 @@ thingtype ETCMediumFog
 
 thingtype ETCLargeFog 
 {
-  doomednum   6014
-  dehackednum 230
   spawnstate  S_FOGPATCHL1
   deathstate  S_FOGPATCHL0
   speed       65536
@@ -311,8 +303,6 @@ thingtype ETCLargeFog
 
 thingtype ETCTotalInvisiSphere 
 {
-  doomednum   6052
-  dehackednum 237
   spawnstate  S_PNS2_1
   flags       SPECIAL|COUNTITEM|TRANSLUCENT
 }
