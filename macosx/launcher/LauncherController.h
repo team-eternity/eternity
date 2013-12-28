@@ -46,8 +46,6 @@
 //
 @interface LauncherController : NSWindowController
 {
-	NSFileManager *fileMan;		// quick pointer to the file manager
-	
 	IBOutlet NSWindow *mainWindow;
 	
 	ELDumpConsole *console;

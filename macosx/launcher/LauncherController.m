@@ -161,7 +161,6 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	{
       dontUndo = FALSE;
       
-		fileMan = [NSFileManager defaultManager];
 		iwadSet = [[NSMutableSet alloc] init];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
@@ -200,7 +199,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 -(void)makeDocumentMenu
 {
    NSError *err = nil;
-   NSArray *contents = [fileMan contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
+   NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
    
    if(err)
    {
@@ -273,7 +272,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 #if 0 // NOT USED: requires OS X 10.6 or later
 - (NSURL*)applicationDataDirectory
 {
-	NSArray* possibleURLs = [fileMan URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
+	NSArray* possibleURLs = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
 	NSURL* appSupportDir = nil;
 	NSURL* appDirectory = nil;
 	
@@ -307,6 +306,8 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 {
    NSString *appDataPath = [[@"~/Library/Application Support" stringByExpandingTildeInPath] stringByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
   	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
+   
+   NSFileManager* fileMan = [NSFileManager defaultManager];
    
 	[fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom"] withIntermediateDirectories:YES attributes:nil error:nil];
    [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom2"] withIntermediateDirectories:YES attributes:nil error:nil];
@@ -566,7 +567,7 @@ iwadMightBe:
    ;
    // Check if wad exists at path and query
    BOOL isDir;
-   if([fileMan fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
+   if([[NSFileManager defaultManager] fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
    {
       if(isDir)
       {
@@ -628,7 +629,7 @@ iwadMightBe:
 		
 		[iwadSet addObject:wURL];
 		      
-      [iwadPopUp insertItemWithTitle:[fileMan displayNameAtPath:iwadPath] atIndex:ind];
+      [iwadPopUp insertItemWithTitle:[[NSFileManager defaultManager] displayNameAtPath:iwadPath] atIndex:ind];
       
       SET_UNDO(iwadPopUp, doRemoveIwadAtIndex:ind, @"Add/Remove Game WAD")
       
