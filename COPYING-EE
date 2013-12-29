@@ -24,7 +24,8 @@
       for the purpose of signing code for execution on platforms where such 
       signing is required in order for a modified version of the source code
       to be compiled and executed in binary form by any recipient of the source
-      code.
+      code, and a suitable replacement key cannot be obtained automatically by
+      an end user.
       
    c) The project does not require a written request for the source code, as
       was allowed under GNU General Public License Version 2, Section 3, 
