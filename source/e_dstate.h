@@ -16,6 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
 //----------------------------------------------------------------------------
 //
 // EDF DECORATE States Implementation
