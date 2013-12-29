@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
+		4F015B101870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
+		4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
 		4F0165DE178375EF00D04FAE /* e_weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0165DC178375EF00D04FAE /* e_weapons.cpp */; };
 		4F0A2C7616ED36E500400F41 /* i_gamepads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */; };
 		4F0A2C7916ED36FD00400F41 /* i_sdlgamepads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0A2C7716ED36FD00400F41 /* i_sdlgamepads.cpp */; };
@@ -559,6 +561,8 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
+		4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_formats.cpp; path = ../source/s_formats.cpp; sourceTree = "<group>"; };
+		4F015B0F1870EA5900ADB3F4 /* s_formats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_formats.h; path = ../source/s_formats.h; sourceTree = "<group>"; };
 		4F0165DC178375EF00D04FAE /* e_weapons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_weapons.cpp; path = ../source/e_weapons.cpp; sourceTree = "<group>"; };
 		4F0165DD178375EF00D04FAE /* e_weapons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_weapons.h; path = ../source/e_weapons.h; sourceTree = "<group>"; };
 		4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_gamepads.cpp; path = ../source/hal/i_gamepads.cpp; sourceTree = "<group>"; };
@@ -1846,6 +1850,8 @@
 		FACACB5F1652F2B50091AF2E /* S_ */ = {
 			isa = PBXGroup;
 			children = (
+				4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */,
+				4F015B0F1870EA5900ADB3F4 /* s_formats.h */,
 				4F2F32A71867100100EED7DE /* s_reverb.cpp */,
 				4F2F32A81867100100EED7DE /* s_reverb.h */,
 				FABF5D43158BF42800C49E93 /* s_sndseq.cpp */,
@@ -2397,6 +2403,7 @@
 				4F5F390C182D9AC00027813A /* p_plats.cpp in Sources */,
 				4F5F390D182D9AC00027813A /* p_portal.cpp in Sources */,
 				4F5F390E182D9AC00027813A /* p_pspr.cpp in Sources */,
+				4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */,
 				4F5F390F182D9AC00027813A /* p_pushers.cpp in Sources */,
 				4F5F3910182D9AC00027813A /* p_saveg.cpp in Sources */,
 				4F5F3911182D9AC00027813A /* p_scroll.cpp in Sources */,
@@ -2660,6 +2667,7 @@
 				FABF5E1C158BF42800C49E93 /* v_misc.cpp in Sources */,
 				FABF5E1D158BF42800C49E93 /* v_patch.cpp in Sources */,
 				FABF5E1E158BF42800C49E93 /* v_patchfmt.cpp in Sources */,
+				4F015B101870EA5900ADB3F4 /* s_formats.cpp in Sources */,
 				FABF5E1F158BF42800C49E93 /* v_png.cpp in Sources */,
 				FABF5E20158BF42800C49E93 /* v_video.cpp in Sources */,
 				FABF5E21158BF42800C49E93 /* version.cpp in Sources */,
