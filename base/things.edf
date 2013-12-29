@@ -65,24 +65,48 @@ thingtype BoomPullPoint : Mobj, 5002, 139
 
 thingtype MBFHelperDog : Mobj, 888, 140
 {
-  spawnstate  S_DOGS_STND
   spawnhealth 500
-  seestate    S_DOGS_RUN1
-  seesound    dgsit
-  attacksound dgatk
-  painstate   S_DOGS_PAIN
   painchance  180
-  painsound   dgpain
-  meleestate  S_DOGS_ATK1
-  deathstate  S_DOGS_DIE1
-  deathsound  dgdth
   speed       10
   radius      12.0
   height      28.0
   activesound dgact
+  seesound    dgsit
+  attacksound dgatk
+  painsound   dgpain
+  deathsound  dgdth
   cflags      SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ|AUTOTRANSLATE
-  raisestate  S_DOGS_RAISE1
   obituary_melee "was chased down by a rabid puppy"
+  
+  firstdecoratestate S_DOGS_STND
+  states
+  @"
+  Spawn:
+    DOGS AB 10 A_Look
+    loop
+  See:
+    DOGS AABBCCDD 2 A_Chase
+    loop
+  Melee:
+    DOGS EF 8 A_FaceTarget
+    DOGS G  8 A_SargAttack
+    goto See
+  Pain:
+    DOGS H 2
+    DOGS H 2 A_Pain
+    goto See
+  Death:
+    DOGS I  8
+    DOGS J  8 A_Scream
+    DOGS K  4
+    DOGS L  4 A_Fall
+    DOGS M  4
+    DOGS N -1
+    stop
+  Raise:
+    DOGS NMLKJI 5
+    goto See
+  "@
 }
 
 // Note: Beta BFG fireballs (deh# 141, 142, 144) are defined in doom/things.edf
