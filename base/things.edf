@@ -1,20 +1,20 @@
 // 
 // things.edf
 // 
-// EDF for Eternity Engine v3.40.27
+// EDF for Eternity Engine v3.40.50
 //
 // thingtypes define monsters, fireballs, decorations, etc.
 // thingtypes may be defined elsewhere, and order is unimportant.
-// User-defined thing types should use DeHackEd numbers greater
-// than 10000 in all cases, to remain compatible with future versions
-// of Eternity. See the EDF documentation for important information on
-// the format of thingtype fields.
+// User-defined thing types should use DoomEd numbers greater than 20000, and
+// DeHackEd numbers greater than 10000 in all cases, to remain compatible with
+// future versions of Eternity. See the EDF documentation for important 
+// information on the format of thingtype fields.
 //
 
 // Doom Thing Types ------------------------------------------------------------
 
 // DoomEdNums: 1 - 3999
-// DeHackEd Nums: 0 - 137, 141, 142, 144, 158
+// DeHackEd Nums: 0 - 137, 141, 142, 144, 158 - 169
 
 includeifenabled("doom/things.edf", "DOOM")
 

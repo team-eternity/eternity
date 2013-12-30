@@ -178,7 +178,7 @@ unsigned int P_RangeRandomEx(pr_class_t pr_class,
 // Each seed is initialized according to its class, so if new classes
 // are added they must be added to end of pr_class_t list. killough
 //
-void M_ClearRandom(void)
+void M_ClearRandom()
 {
    int i;
    unsigned int seed = rngseed * 2 + 1; // add 3/26/98: add rngseed

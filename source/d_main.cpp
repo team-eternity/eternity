@@ -248,7 +248,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer(void)
+void D_PageDrawer()
 {
    int l;
 

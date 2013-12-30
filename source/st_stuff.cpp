@@ -1048,8 +1048,7 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    facenum = 0;
    for(i = 0; i < ST_NUMPAINFACES; i++)
    {
-      int j;
-      for(j = 0; j < ST_NUMSTRAIGHTFACES; j++)
+      for(int j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
          sprintf(namebuf, "%sST%d%d", facename, i, j);
          faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);

@@ -536,15 +536,15 @@ static void S_RunSequence(SndSeq_t *curSeq)
 }
 
 // prototypes for enviro functions from below
-static void S_RunEnviroSequence(void);
-static void S_StopEnviroSequence(void);
+static void S_RunEnviroSequence();
+static void S_StopEnviroSequence();
 
 //
 // S_RunSequences
 //
 // Updates all running sound sequences.
 //
-void S_RunSequences(void)
+void S_RunSequences()
 {
    DLListItem<SndSeq_t> *link = SoundSequences;
 
@@ -566,7 +566,7 @@ void S_RunSequences(void)
 //
 // Stops all running sound sequences. Called at the end of a level.
 //
-void S_StopAllSequences(void)
+void S_StopAllSequences()
 {
    // Because everything is allocated PU_LEVEL, simply disconnecting the list
    // head is all that is needed to stop all sequences from playing. The sndseq
@@ -606,7 +606,7 @@ static SndSeq_t enviroSeq;
 //
 // Resets the environmental sequence engine.
 //
-static void S_ResetEnviroSeqEngine(void)
+static void S_ResetEnviroSeqEngine()
 {
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
@@ -643,7 +643,7 @@ void S_InitEnviroSpots()
 // commands or else they'll lock out any other sequence for the rest of the
 // map.
 //
-static void S_RunEnviroSequence(void)
+static void S_RunEnviroSequence()
 {
    // nothing to do?
    if(enviroSpots.isEmpty())
@@ -708,7 +708,7 @@ static void S_RunEnviroSequence(void)
 // Unconditionally stops the environmental sequence engine. Called from
 // S_StopAllSequences above.
 //
-static void S_StopEnviroSequence(void)
+static void S_StopEnviroSequence()
 {
    // stomp on everything to stop it from running any more sequences
    EnviroSequence = NULL;     // no playing sequence
