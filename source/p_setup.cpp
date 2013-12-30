@@ -1,11 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 // 
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 // 
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -45,7 +44,7 @@
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_bbox.h"
-#include "m_swap.h"
+#include "m_binary.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -74,6 +73,7 @@
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
@@ -245,94 +245,41 @@ inline static int SafeRealUintIndex(uint16_t input, int limit,
 
 //=============================================================================
 //
-// Lump Data Reading Routines
-//
-// haleyjd 05/26/10: These routines replace direct mapping of structures to
-// lumps in memory where this is needed. Eventually I'd like to replace all
-// such direct mapping.
-//
-
-// haleyjd 10/30/10: Read a little-endian short without alignment assumptions
-#define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
-
-// haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
-#define read32_le(b, t) \
-   ((b)[0] | \
-    ((t)((b)[1]) <<  8) | \
-    ((t)((b)[2]) << 16) | \
-    ((t)((b)[3]) << 24))
-
-//
-// GetLevelWord
-//
-// Reads an int16 from the lump data and increments the read pointer.
-//
-static int16_t GetLevelWord(byte **data)
-{
-   int16_t val = SwapShort(read16_le(*data, int16_t));
-   *data += 2;
-
-   return val;
-}
-
-//
-// GetLevelWordU
-//
-// Reads a uint16 from the lump data and increments the read pointer.
-//
-static uint16_t GetLevelWordU(byte **data)
-{
-   uint16_t val = SwapUShort(read16_le(*data, uint16_t));
-   *data += 2;
-
-   return val;
-}
-
-//
-// GetLevelDWord
-//
-// Reads an int32 from the lump data and increments the read pointer.
-//
-static int32_t GetLevelDWord(byte **data)
-{
-   int32_t val = SwapLong(read32_le(*data, int32_t));
-   *data += 4;
-
-   return val;
-}
-
-//
-// GetLevelDwordU
-//
-// Reads a uint32 from the lump data and increments the read pointer.
-//
-static uint32_t GetLevelDWordU(byte **data)
-{
-   uint32_t val = SwapULong(read32_le(*data, uint32_t));
-   *data += 4;
-
-   return val;
-}
-
-//
-// GetLevelString
-//
-// Reads a "len"-byte string from the lump data and writes it into the 
-// destination buffer. The read pointer is incremented by len bytes.
-//
-static void GetLevelString(byte **data, char *dest, int len)
-{
-   char *loc = (char *)(*data);
-
-   memcpy(dest, loc, len);
-
-   *data += len;
-}
-
-//=============================================================================
-//
 // Level Loading
 //
+
+#define DOOM_VERTEX_LEN 4
+#define PSX_VERTEX_LEN  8
+
+//
+// P_LoadConsoleVertexes
+//
+// haleyjd 12/12/13: Support for console maps' fixed-point vertices.
+//
+void P_LoadConsoleVertexes(int lump)
+{
+   ZAutoBuffer buf;
+
+   // Determine number of vertexes
+   numvertexes = setupwad->lumpLength(lump) / PSX_VERTEX_LEN;
+
+   // Allocate
+   vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
+
+   // Load lump
+   setupwad->cacheLumpAuto(lump, buf);
+   auto data = buf.getAs<byte *>();
+
+   // Copy and convert vertex coordinates
+   for(int i = 0; i < numvertexes; i++)
+{
+      vertexes[i].x = GetBinaryDWord(&data);
+      vertexes[i].y = GetBinaryDWord(&data);
+
+      vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
+      vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
+}
+}
 
 //
 // P_LoadVertexes
@@ -341,32 +288,29 @@ static void GetLevelString(byte **data, char *dest, int len)
 //
 void P_LoadVertexes(int lump)
 {
-   byte *data;
-   int i;
+   ZAutoBuffer buf;
    
    // Determine number of vertexes:
    //  total lump length / vertex record length.
-   numvertexes = setupwad->lumpLength(lump) / sizeof(mapvertex_t);
+   numvertexes = setupwad->lumpLength(lump) / DOOM_VERTEX_LEN;
 
    // Allocate zone memory for buffer.
    vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
    
    // Load data into cache.
-   data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+   setupwad->cacheLumpAuto(lump, buf);
+   auto data = buf.getAs<byte *>();
    
    // Copy and convert vertex coordinates, internal representation as fixed.
-   for(i = 0; i < numvertexes; ++i)
+   for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = SwapShort(((mapvertex_t *) data)[i].x) << FRACBITS;
-      vertexes[i].y = SwapShort(((mapvertex_t *) data)[i].y) << FRACBITS;
+      vertexes[i].x = GetBinaryWord(&data) << FRACBITS;
+      vertexes[i].y = GetBinaryWord(&data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
    }
-
-   // Free buffer memory.
-   Z_Free(data);
 }
 
 //
@@ -463,42 +407,15 @@ void P_LoadSubsectors(int lump)
 }
 
 //
-// P_LoadSectors
+// P_InitSector
 //
-// killough 5/3/98: reformatted, cleaned up
+// Shared initialization code for sectors across all map formats.
 //
-void P_LoadSectors(int lumpnum)
+static void P_InitSector(sector_t *ss)
 {
-   byte *lump, *data;
-   int  i;
-   int  defaultSndSeq;
-   char namebuf[9];
-   
-   numsectors  = setupwad->lumpLength(lumpnum) / sizeof(mapsector_t);
-   sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
-   lump = data = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
-
    // haleyjd 09/24/06: determine what the default sound sequence is
-   defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
+   int defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
 
-   // init texture name buffer to ensure null-termination
-   memset(namebuf, 0, sizeof(namebuf));
-
-   for(i = 0; i < numsectors; ++i)
-   {
-      sector_t *ss = sectors + i;
-
-      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
-      GetLevelString(&data, namebuf, 8);
-      ss->floorpic           = R_FindFlat(namebuf);
-      // haleyjd 08/30/09: set ceiling pic using function
-      GetLevelString(&data, namebuf, 8);
-      P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
-      ss->lightlevel         = GetLevelWord(&data);
-      ss->special            = GetLevelWord(&data);
-      ss->tag                = GetLevelWord(&data);
-      
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
 
@@ -576,7 +493,84 @@ void P_LoadSectors(int lumpnum)
       }
    }
 
-   Z_Free(lump);
+#define DOOM_SECTOR_SIZE 26
+#define PSX_SECTOR_SIZE  28
+
+//
+// P_LoadPSXSectors
+//
+// haleyjd 12/12/13: support for PSX port's sector format.
+//
+void P_LoadPSXSectors(int lumpnum)
+{
+   ZAutoBuffer buf;
+   char namebuf[9];
+   
+   numsectors  = setupwad->lumpLength(lumpnum) / PSX_SECTOR_SIZE;
+   sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
+   
+   setupwad->cacheLumpAuto(lumpnum, buf);
+   auto data = buf.getAs<byte *>();
+
+   // init texture name buffer to ensure null-termination
+   memset(namebuf, 0, sizeof(namebuf));
+
+   for(int i = 0; i < numsectors; i++)
+   {
+      sector_t *ss = sectors + i;
+
+      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
+      GetBinaryString(&data, namebuf, 8);
+      ss->floorpic           = R_FindFlat(namebuf);
+      GetBinaryString(&data, namebuf, 8);
+      P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
+      ss->lightlevel         = *data++;
+      ++data;                // skip color ID for now
+      ss->special            = GetBinaryWord(&data);
+      ss->tag                = GetBinaryWord(&data);
+      data += 2;             // skip padding/unknown field for now
+    
+      P_InitSector(ss);
+}
+}
+
+//
+// P_LoadSectors
+//
+// killough 5/3/98: reformatted, cleaned up
+//
+void P_LoadSectors(int lumpnum)
+{
+   ZAutoBuffer buf;
+   char namebuf[9];
+   
+   numsectors  = setupwad->lumpLength(lumpnum) / DOOM_SECTOR_SIZE;
+   sectors     = estructalloctag(sector_t, numsectors, PU_LEVEL);
+   
+   setupwad->cacheLumpAuto(lumpnum, buf);
+   auto data = buf.getAs<byte *>();
+
+   // init texture name buffer to ensure null-termination
+   memset(namebuf, 0, sizeof(namebuf));
+
+   for(int i = 0; i < numsectors; i++)
+   {
+      sector_t *ss = sectors + i;
+
+      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
+      GetBinaryString(&data, namebuf, 8);
+      ss->floorpic           = R_FindFlat(namebuf);
+      // haleyjd 08/30/09: set ceiling pic using function
+      GetBinaryString(&data, namebuf, 8);
+      P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
+      ss->lightlevel         = GetBinaryWord(&data);
+      ss->special            = GetBinaryWord(&data);
+      ss->tag                = GetBinaryWord(&data);
+    
+      P_InitSector(ss);
+   }
 }
 
 //
@@ -742,9 +736,9 @@ static void P_LoadZSegs(byte *data)
       mapseg_znod_t ml;
 
       // haleyjd: FIXME - see no verification of vertex indices
-      v1 = ml.v1 = GetLevelDWordU(&data);
-      v2 = ml.v2 = GetLevelDWordU(&data);
-      ml.linedef = GetLevelWordU(&data);
+      v1 = ml.v1 = GetBinaryUDWord(&data);
+      v2 = ml.v2 = GetBinaryUDWord(&data);
+      ml.linedef = GetBinaryUWord(&data);
       ml.side    = *data++;
 
       linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
@@ -808,10 +802,10 @@ static void P_LoadZNodes(int lump)
 
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
-   orgVerts = GetLevelDWordU(&data);
+   orgVerts = GetBinaryUDWord(&data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
-   newVerts = GetLevelDWordU(&data);
+   newVerts = GetBinaryUDWord(&data);
 
    if(orgVerts + newVerts == (unsigned int)numvertexes)
    {
@@ -828,8 +822,8 @@ static void P_LoadZNodes(int lump)
    {
       int vindex = i + orgVerts;
 
-      newvertarray[vindex].x = (fixed_t)GetLevelDWord(&data);
-      newvertarray[vindex].y = (fixed_t)GetLevelDWord(&data);
+      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(&data);
+      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(&data);
 
       // SoM: Cardboard stores float versions of vertices.
       newvertarray[vindex].fx = M_FixedToFloat(newvertarray[vindex].x);
@@ -851,7 +845,7 @@ static void P_LoadZNodes(int lump)
 
    // Read the subsectors
    CheckZNodesOverflow(len, sizeof(numSubs));
-   numSubs = GetLevelDWordU(&data);
+   numSubs = GetBinaryUDWord(&data);
 
    numsubsectors = (int)numSubs;
    if(numsubsectors <= 0)
@@ -866,13 +860,13 @@ static void P_LoadZNodes(int lump)
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
-      subsectors[i].numlines = (int)(GetLevelDWordU(&data));
+      subsectors[i].numlines  = (int)(GetBinaryUDWord(&data));
       currSeg += subsectors[i].numlines;
    }
 
    // Read the segs
    CheckZNodesOverflow(len, sizeof(numSegs));
-   numSegs = GetLevelDWordU(&data);
+   numSegs = GetBinaryUDWord(&data);
 
    // The number of segs stored should match the number of
    // segs used by subsectors.
@@ -892,7 +886,7 @@ static void P_LoadZNodes(int lump)
 
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
-   numNodes = GetLevelDWordU(&data);
+   numNodes = GetBinaryUDWord(&data);
 
    numnodes = numNodes;
    nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
@@ -905,17 +899,17 @@ static void P_LoadZNodes(int lump)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      mn.x  = GetLevelWord(&data);
-      mn.y  = GetLevelWord(&data);
-      mn.dx = GetLevelWord(&data);
-      mn.dy = GetLevelWord(&data);
+      mn.x  = GetBinaryWord(&data);
+      mn.y  = GetBinaryWord(&data);
+      mn.dx = GetBinaryWord(&data);
+      mn.dy = GetBinaryWord(&data);
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
-            mn.bbox[j][k] = GetLevelWord(&data);
+            mn.bbox[j][k] = GetBinaryWord(&data);
 
       for(j = 0; j < 2; j++)
-         mn.children[j] = GetLevelDWord(&data);
+         mn.children[j] = GetBinaryDWord(&data);
 
       no->x  = mn.x; 
       no->y  = mn.y; 
@@ -946,7 +940,9 @@ static void P_LoadZNodes(int lump)
 //
 //=============================================================================
 
+static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 static void P_ConvertHereticThing(mapthing_t *mthing);
+static void P_ConvertPSXThing(mapthing_t *mthing);
 
 //
 // P_LoadThings
@@ -1003,9 +999,16 @@ void P_LoadThings(int lump)
       ft->angle   = SwapShort(mt->angle);      
       ft->options = SwapShort(mt->options);
 
+      // PSX special behaviors
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+         P_ConvertPSXThing(ft);
+
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
+      
+      // haleyjd 12/27/13: convert Doom extended thing numbers
+      P_ConvertDoomExtendedSpawnNum(ft);
       
       P_SpawnMapThing(ft);
    }
@@ -1013,7 +1016,7 @@ void P_LoadThings(int lump)
    // haleyjd: all player things for players in this game should now be valid
    if(GameType != gt_dm)
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && !players[i].mo)
             level_error = "Missing required player start";
@@ -1058,6 +1061,9 @@ void P_LoadHexenThings(int lump)
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
+      
+      // haleyjd 12/27/13: convert Doom extended thing numbers
+      P_ConvertDoomExtendedSpawnNum(ft);
       
       P_SpawnMapThing(ft);
    }
@@ -1147,6 +1153,10 @@ static void P_InitLineDef(line_t *ld)
    ld->soundorg.groupid = R_NOGROUP;
 }
 
+#define ML_PSX_MIDMASKED      0x200
+#define ML_PSX_MIDTRANSLUCENT 0x400
+#define ML_PSX_MIDSOLID       0x800
+
 //
 // P_PostProcessLineFlags
 //
@@ -1173,13 +1183,12 @@ static void P_PostProcessLineFlags(line_t *ld)
 void P_LoadLineDefs(int lump)
 {
    byte *data;
-   int  i;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedef_t);
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
-   for(i = 0; i < numlines; ++i)
+   for(int i = 0; i < numlines; i++)
    {
       maplinedef_t *mld = (maplinedef_t *)data + i;
       line_t *ld = lines + i;
@@ -1204,13 +1213,9 @@ void P_LoadLineDefs(int lump)
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
-      if(edlinespec && ld->special == edlinespec)
-         E_LoadLineDefExt(ld, true);
-      else if(EV_IsParamLineSpec(ld->special) || 
-              EV_IsParamStaticInit(ld->special))
-      {
-         E_LoadLineDefExt(ld, false);
-      }
+      if((edlinespec && ld->special == edlinespec) ||
+         EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
+         E_LoadLineDefExt(ld, ld->special == edlinespec);
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -1331,12 +1336,11 @@ void P_LoadHexenLineDefs(int lump)
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadLineDefs2(void)
+void P_LoadLineDefs2()
 {
-   int i = numlines;
    register line_t *ld = lines;
 
-   for(; i--; ld++)
+   for(int i = numlines; i--; ld++)
    {
       // killough 11/98: fix common wad errors (missing sidedefs):
       
@@ -1349,12 +1353,30 @@ void P_LoadLineDefs2(void)
       if(ld->sidenum[1] == -1)
          ld->flags &= ~ML_TWOSIDED;  // Clear 2s flag for missing left side
 
+      // handle PSX line flags
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_PSX)
+      {
+         if(ld->flags & ML_PSX_MIDTRANSLUCENT)
+         {
+            ld->alpha = 3.0f/4.0f;
+            ld->extflags |= EX_ML_ADDITIVE;
+         }
+
+         // 2S line midtextures without any of the 3 flags set don't draw.
+         if(ld->sidenum[1] != -1 &&
+            !(ld->flags & (ML_PSX_MIDMASKED|ML_PSX_MIDTRANSLUCENT|ML_PSX_MIDSOLID)))
+         {
+            sides[ld->sidenum[0]].midtexture = 0;
+            sides[ld->sidenum[1]].midtexture = 0;
+         }
+
+         ld->flags &= 0x1FF; // clear all extended flags
+      }
+
       // haleyjd 05/02/06: Reserved line flag. If set, we must clear all
       // BOOM or later extended line flags. This is necessitated by E2M7.
       if(ld->flags & ML_RESERVED)
-         ld->flags &= ML_BLOCKING|ML_BLOCKMONSTERS|ML_TWOSIDED|ML_DONTPEGTOP|
-                      ML_DONTPEGBOTTOM|ML_SECRET|ML_SOUNDBLOCK|ML_DONTDRAW|
-                      ML_MAPPED;
+         ld->flags &= 0x1FF;
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
@@ -1415,24 +1437,20 @@ void P_LoadSideDefs2(int lumpnum)
 
    for(i = 0; i < numsides; ++i)
    {
-      //register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
       int cmap, secnum;
 
-      //sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
-      //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
-
-      sd->textureoffset = GetLevelWord(&data) << FRACBITS;
-      sd->rowoffset     = GetLevelWord(&data) << FRACBITS; 
+      sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
+      sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
-      GetLevelString(&data, toptexture,    8);
-      GetLevelString(&data, bottomtexture, 8);
-      GetLevelString(&data, midtexture,    8);
+      GetBinaryString(&data, toptexture,    8);
+      GetBinaryString(&data, bottomtexture, 8);
+      GetBinaryString(&data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", i, "sector");
+      secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
       sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
@@ -2112,6 +2130,43 @@ static const char *levellumps[] =
 };
 
 //
+// Lumps that are used in console map formats
+//
+static const char *consolelumps[] =
+{
+   "LEAFS",
+   "LIGHTS",
+   "MACROS"
+};
+
+//
+// P_checkConsoleFormat
+//
+// haleyjd 12/12/13: Check for supported console map formats
+//
+static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
+{
+   int          numlumps = dir->getNumLumps();
+   lumpinfo_t **lumpinfo = dir->getLumpInfo();
+
+   for(int i = ML_LEAFS; i <= ML_MACROS; i++)
+   {
+      int ln = lumpnum + i;
+      if(ln >= numlumps ||     // past the last lump?
+         strncmp(lumpinfo[ln]->name, consolelumps[i - ML_LEAFS], 8))
+      {
+         if(i == ML_LIGHTS)
+            return LEVEL_FORMAT_PSX; // PSX
+         else
+            return LEVEL_FORMAT_INVALID; // invalid map
+      }
+   }
+
+   // If we got here, dealing with Doom 64 format. (TODO: Not supported ... yet?)
+   return LEVEL_FORMAT_INVALID; //LEVEL_FORMAT_DOOM64;
+}
+
+//
 // P_CheckLevel
 //
 // sf 11/9/99: We need to do this now because we no longer have to conform to
@@ -2119,13 +2174,12 @@ static const char *levellumps[] =
 //
 int P_CheckLevel(WadDirectory *dir, int lumpnum)
 {
-   int i, ln;
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
    
-   for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
+   for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
    {
-      ln = lumpnum + i;
+      int ln = lumpnum + i;
       if(ln >= numlumps ||     // past the last lump?
          strncmp(lumpinfo[ln]->name, levellumps[i], 8))
       {
@@ -2134,7 +2188,13 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
          // lump means the map is invalid.
 
          if(i == ML_BEHAVIOR)
+         {
+            // If the current lump is named LEAFS, it's a console map
+            if(ln < numlumps && !strncmp(lumpinfo[ln]->name, "LEAFS", 8))
+               return P_checkConsoleFormat(dir, lumpnum);
+            else
             return LEVEL_FORMAT_DOOM;
+         }
          else
             return LEVEL_FORMAT_INVALID;
       }
@@ -2370,7 +2430,9 @@ static void P_InitTagLists()
    {                               // so that lower linedefs appear first
       // haleyjd 05/16/09: unified id into tag;
       // added mapformat parameter to test here:
-      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
+      if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM ||
+         LevelInfo.mapFormat == LEVEL_FORMAT_PSX ||
+         lines[i].tag != -1)
       {
          int j = (unsigned int)lines[i].tag % (unsigned int)numlines; // Hash func
          lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
@@ -2477,8 +2539,17 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    level_error = NULL; // reset
    
+   switch(LevelInfo.mapFormat)
+   {
+   case LEVEL_FORMAT_PSX:
+      P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
+      P_LoadPSXSectors(lumpnum + ML_SECTORS);
+      break;
+   default:
    P_LoadVertexes(lumpnum + ML_VERTEXES);
    P_LoadSectors (lumpnum + ML_SECTORS);
+      break;
+   }
    
    // possible error: missing flats
    CHECK_ERROR();
@@ -2489,6 +2560,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
+   case LEVEL_FORMAT_PSX:
       P_LoadLineDefs(lumpnum + ML_LINEDEFS);
       break;
    case LEVEL_FORMAT_HEXEN:
@@ -2511,7 +2583,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_LoadSubsectors(lumpnum + ML_SSECTORS);
       P_LoadNodes     (lumpnum + ML_NODES);
 
-      // possible error: missing nodes
+      // possible error: missing nodes or subsectors
       CHECK_ERROR();
 
       P_LoadSegs(lumpnum + ML_SEGS);   
@@ -2547,6 +2619,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
+   case LEVEL_FORMAT_PSX:
       P_LoadThings(lumpnum + ML_THINGS);
       break;
    case LEVEL_FORMAT_HEXEN:
@@ -2651,31 +2724,151 @@ void P_LoadOlo(void)
 }
 #endif
 
+//=============================================================================
+//
+// DoomEd Number Disambiguation
+//
+// Rather than have doomednums be universally contingent on the gamemode, 
+// Eternity moves them around into unambiguous ranges. The 7000 range is 
+// reserved for thing types translated from other Doom engine games (Heretic,
+// Hexen, and Strife). The 6000 range is reserved for "reverse" translation of
+// Doom objects (ie. in any game, an Arch-vile can be spawned using 6064).
+//
+// The "remapped" ranges of doomednums (those that conflict between games)
+// are 5-254, 2001-2048, and 3001-3006, though the exact ranges depend on the
+// individual game in question
+//
+
+//
+// P_ConvertDoomExtendedSpawnNum
+//
+// Checks for and converts a 6000-range doomednum into the corresponding Doom
+// object. This is called regardless of the gamemode, after any gamemode
+// specific translations occur.
+// 6005 - 6089 -> 5    - 89
+// 6201 - 6249 -> 2001 - 2049
+// 6301 - 6306 -> 3001 - 3006
+//
+static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num >= 6005 && num <= 6089)
+      num -= 6000;
+   else if(num >= 6201 && num <= 6249)
+      num -= 4200;
+   else if(num >= 6301 && num <= 6306)
+      num -= 3300;
+
+   mthing->type = num;
+}
+
+// null, player starts 1-4, deathmatch spots, and teleport destinations are
+// common across all games
+#define DEN_MIN     5
+#define DEN_DMSPOT  11
+#define DEN_TELEMAN 14
+
 //
 // P_ConvertHereticThing
 //
-// haleyjd: Converts Heretic doomednums into an Eternity-compatible range.
-//
-// 05/30/06: made much more specific to avoid translating things that don't
-// need to be translated.
+// Converts Heretic doomednums into an Eternity-compatible range:
+// 5    - 96   -> 7005 - 7096
+// 2001 - 2005 -> 7201 - 7205
+// 2035        -> 7235
+// Covers all Heretic thingtypes.
 //
 static void P_ConvertHereticThing(mapthing_t *mthing)
 {
-   // null, player starts, teleport destination are common
-   if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
       return;
    
-   // handle ordinary Heretic things -- all are less than 100
-   if(mthing->type < 100)
+   if(num <= 96)
+      num += 7000;
+   else if((num >= 2001 && num <= 2005) || num == 2035)
+      num += 5200;
+
+   mthing->type = num;
+}
+
+//
+// P_ConvertHexenThing
+//
+// Converts Hexen doomednums into an Eternity-compatible range:
+// 5    - 124  -> 7305 - 7424
+// 140         -> 7440
+// 254         -> 7554
+// 3000 - 3002 -> 9300 - 9302
+// Others in 8000, 9000, 10000, and 14000 ranges do not conflict.
+//
+static void P_ConvertHexenThing(mapthing_t *mthing)
    {
-      // add 7000 to normal doomednum
-      mthing->type += 7000;
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
+      return;
+
+   if(num <= 124 || num == 140 || num == 254)
+      num += 7300;
+   else if(num >= 3000 && num <= 3002)
+      num += 6300; // ZDoom-compatible polyobject spot numbers
+
+   mthing->type = num;
    }
-   else if(mthing->type > 2000 && mthing->type <= 2035)
+
+//
+// P_ConvertStrifeThing
+//
+// Converts Strife doomednums into an Eternity-compatible range:
+// 5    - 236  -> 7605 - 7836
+// 2001 - 2048 -> 7901 - 7948
+// 3001 - 3006 -> 7951 - 7956
+// Covers all Strife thingtypes.
+//
+static void P_ConvertStrifeThing(mapthing_t *mthing)
    {
-      // handle items numbered > 2000
-      mthing->type = (mthing->type - 2000) + 7200;
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
+      return;
+
+   if(num <= 236)
+      num += 7600;
+   else if(num >= 2001 && num <= 2048)
+      num += 5900;
+   else if(num >= 3001 && num <= 3006)
+      num += 4950;
    }
+
+#define DEN_PSXCHAIN   64
+#define DEN_NMSPECTRE  889
+#define DEN_PSXSPECTRE 890
+#define DEN_EECHAIN    891
+#define DEN_DEMON      3002
+
+//
+// P_ConvertPSXThing
+//
+// Take care of oddities in the PSX map format.
+//
+static void P_ConvertPSXThing(mapthing_t *mthing)
+{
+   // Demon spawn redirections
+   if(mthing->type == DEN_DEMON)
+   {
+      int16_t flags = mthing->options & MTF_PSX_SPECTRE;
+
+      if(flags == MTF_PSX_SPECTRE)
+         mthing->type = DEN_PSXSPECTRE;
+      else if(flags == MTF_PSX_NIGHTMARE)
+         mthing->type = DEN_NMSPECTRE;
+}
+   else if(mthing->type == DEN_PSXCHAIN)
+      mthing->type = DEN_EECHAIN;
+
+   mthing->options &= ~MTF_PSX_SPECTRE;
 }
 
 //----------------------------------------------------------------------------

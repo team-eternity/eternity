@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -161,7 +160,7 @@ static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
 //
 // Sets r_column_engine to the appropriate set of column drawers.
 //
-void R_SetColumnEngine(void)
+void R_SetColumnEngine()
 {
    r_column_engine = r_column_engines[r_column_engine_num];
 }
@@ -358,8 +357,6 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y)
    return R_PointToAngle2(viewx, viewy, x, y);
 }
 
-float maxtangent = 1.0f;
-
 //
 // R_ResetFOV
 // 
@@ -389,8 +386,6 @@ void R_ResetFOV(int width, int height)
       fov = 20;
    else if(fov > 179)
       fov = 179;
-
-   maxtangent = (float)tan((float)fov * PI / 360.0f);
 }
 
 extern float slopevis; // SoM: used in slope lighting
@@ -400,7 +395,7 @@ extern float slopevis; // SoM: used in slope lighting
 //
 // killough 5/2/98: reformatted
 //
-static void R_InitTextureMapping (void)
+static void R_InitTextureMapping()
 {
    register int i, x, limit;
    float vtan, ratio, slopet;
@@ -619,6 +614,37 @@ void R_SetupViewScaling()
 }
 
 //
+// R_calculateVisSpriteScales
+//
+// haleyjd 12/09/13: FOV-independent vissprite scaling, which works in any
+// video mode, including WSVGA and 17:9 modes that previously had floating
+// weapons.
+//
+static void R_calculateVisSpriteScales()
+{
+   float realxscale = video.xscalef;
+
+   // correct aspect ratio, if necessary
+   if(!((video.width == 320 && video.height == 200) ||
+        (video.width == 640 && video.height == 400)))
+      realxscale = ((float)video.height * 4 / 3) / SCREENWIDTH;
+
+   // determine subwindow scaling for smaller screen sizes
+   float swxscale = 1.0f;
+   float swyscale = 1.0f;
+   if(setblocks < 10)
+   {
+      float sbheight = GameModeInfo->StatusBar->height * video.yscalef;
+      swxscale = (float)viewwindow.width / video.width;
+      swyscale = (float)viewwindow.height / (video.height - sbheight);
+   }
+   
+   view.pspritexscale = realxscale * swxscale;
+   view.pspriteyscale = video.yscalef * swyscale;
+   view.pspriteystep  = 1.0f / view.pspriteyscale;
+}
+
+//
 // R_ExecuteSetViewSize
 //
 void R_ExecuteSetViewSize()
@@ -632,17 +658,16 @@ void R_ExecuteSetViewSize()
    R_InitTextureMapping();
     
    // thing clipping
-   for(i = 0; i < viewwindow.width; ++i)
+   for(i = 0; i < viewwindow.width; i++)
       screenheightarray[i] = view.height - 1.0f;
 
-   // Calculate the light levels to use
-   //  for each level / scale combination.
-   for(i = 0; i < LIGHTLEVELS; ++i)
+   // Calculate the light levels to use for each level / scale combination.
+   for(i = 0; i < LIGHTLEVELS; i++)
    {
-      int j, startcmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
-      for(j = 0; j < MAXLIGHTSCALE; ++j)
+      int startcmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+      for(int j = 0; j < MAXLIGHTSCALE; ++j)
       {                                       // killough 11/98:
-         int t, level = startcmap - j*1/DISTMAP;
+         int level = startcmap - j*1/DISTMAP;
          
          if(level < 0)
             level = 0;
@@ -653,24 +678,12 @@ void R_ExecuteSetViewSize()
          // killough 3/20/98: initialize multiple colormaps
          level *= 256;
          
-         for(t = 0; t < numcolormaps; ++t)     // killough 4/4/98
+         for(int t = 0; t < numcolormaps; t++)     // killough 4/4/98
             c_scalelight[t][i][j] = colormaps[t] + level;
       }
    }
-
-   if(view.tan > maxtangent)
-   {
-      view.pspritexscale = view.width / ((float)SCREENWIDTH * maxtangent);
-      view.pspritexstep = ((float)SCREENWIDTH * maxtangent) / view.width;
-   }
-   else
-   {
-      view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
-      view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
-   }
-
-   view.pspriteyscale = view.pspritexscale * view.focratio;
-   view.pspriteystep = 1.0f / view.pspriteyscale;
+   
+   R_calculateVisSpriteScales();
 }
 
 //

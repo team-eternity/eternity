@@ -1,11 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -40,6 +39,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -98,11 +98,13 @@ static void D_reAllocFiles()
 // haleyjd 05/28/10: added f and baseoffset parameters for subfile support.
 //
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               bool privatedir, bool iwad)
+               dafflags_e addflags)
 {
    unsigned int flags;
 
    D_reAllocFiles();
+
+   memset(&wadfiles[numwadfiles], 0, sizeof(*wadfiles));
 
    wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
@@ -122,13 +124,17 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
    }
 
    // private directory?
-   if(privatedir)
+   if(addflags & DAF_PRIVATE)
       flags |= WFA_PRIVATE;
 
    // haleyjd 10/3/12: must explicitly track what file has been added as the
    // IWAD now. Special thanks to id Software and their BFG Edition fuck-ups!
-   if(iwad)
+   if(addflags & DAF_IWAD)
       flags |= WFA_ISIWADFILE;
+
+   // special check for demos - may actually be a lump name.
+   if(addflags & DAF_DEMO)
+      flags &= ~WFA_OPENFAILFATAL;
 
    wadfiles[numwadfiles].flags = flags;
 
@@ -229,7 +235,7 @@ void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, false, false);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
    }
 }
 
@@ -294,7 +300,7 @@ void D_LooseWads()
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, false, false);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
    }
 }
 
@@ -536,7 +542,7 @@ bool D_AddNewFile(const char *s)
    if(!wGlobalDir.addNewFile(s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, false, false); // add to the list of wads
+   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, DAF_NONE); // add to the list of wads
    C_SetConsole();
    D_reInitWadfiles();
    return true;
@@ -1191,7 +1197,7 @@ void D_GameAutoloadWads()
          if(strstr(direntry->d_name, ".wad"))
          {
             fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
-            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, false, false);
+            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
          }
       }
       

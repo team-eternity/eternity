@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2001 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -1228,30 +1227,7 @@ static void R_DrawPlayerSprites(void)
          R_DrawPSprite(psp);
 }
 
-
-// killough 9/22/98: inlined memcpy of pointer arrays
-
-/* Julian 6/7/2001
-
-        1) cleansed macro layout
-        2) remove esi,edi,ecx from cloberred regs since used in constraints
-           (useless on old gcc, error maker on modern versions)
-*/
-
-#ifdef DJGPP
-
-#define bcopyp(d, s, n) \
-asm(\
-" cld\n"\
-"rep\n" \
-"movsl" :\
-: "D"(d), "S"(s), "c"(n) : "%cc")
-
-#else
-
 #define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
-
-#endif
 
 //
 // killough 9/2/98: merge sort

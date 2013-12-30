@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Stephen McGranahan
+// Copyright(C) 2013 Stephen McGranahan et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -106,23 +105,29 @@ void P_InitPortals(void)
 //
 // SoM: yes this is hackish, I admit :(
 // This sets all mobjs inside the sector to have the sector id
+// FIXME: why is this named R_ instead p_portal?
 //
 void R_SetSectorGroupID(sector_t *sector, int groupid)
 {
-   Mobj *mo;
-   int i;
-
    sector->groupid = groupid;
 
    // SoM: soundorg ids need to be set too
    sector->soundorg.groupid  = groupid;
    sector->csoundorg.groupid = groupid;
 
-   for(mo = sector->thinglist; mo; mo = mo->snext)
-      mo->groupid = groupid;
+   // haleyjd 12/25/13: must scan thinker list, not use sector thinglist.
+   for(auto th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      Mobj *mo;
+      if((mo = thinker_cast<Mobj *>(th)))
+      {
+         if(mo->subsector && mo->subsector->sector == sector)
+            mo->groupid = groupid;
+      }
+   }
 
    // haleyjd 04/19/09: propagate to line sound origins
-   for(i = 0; i < sector->linecount; ++i)
+   for(int i = 0; i < sector->linecount; ++i)
       sector->lines[i]->soundorg.groupid = groupid;
 }
 
@@ -256,7 +261,6 @@ void P_GatherSectors(sector_t *from, int groupid)
 // offset to get from the startgroup to the targetgroup. This will always return 
 // a linkoffset_t object. In cases of invalid input or no link the offset will be
 // (0, 0, 0)
-#ifdef RANGECHECK
 //
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
@@ -265,32 +269,32 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
       
    if(!linktable)
    {
-      doom_printf("P_GetLinkOffset called with no link table.\n");
+      C_Printf(FC_ERROR "P_GetLinkOffset: called with no link table.\n");
       return &zerolink;
    }
    
    if(startgroup < 0 || startgroup >= groupcount)
    {
-      doom_printf("P_GetLinkOffset called with start groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkOffset: called with OoB start groupid %d.\n", startgroup);
       return &zerolink;
    }
 
    if(targetgroup < 0 || targetgroup >= groupcount)
    {
-      doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkOffset: called with OoB target groupid %d.\n", targetgroup);
       return &zerolink;
    }
+
    auto link = linktable[startgroup * groupcount + targetgroup];
    return link ? link : &zerolink;
 }
-#endif
 
 //
 // P_GetLinkIfExists
 //
 // Returns a link offset to get from 'fromgroup' to 'togroup' if one exists. 
 // Returns NULL otherwise
-#ifdef RANGECHECK
+//
 linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 {
    if(!useportalgroups)
@@ -298,24 +302,24 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 
    if(!linktable)
    {
-      doom_printf("P_GetLinkIfExists called with no link table.\n");
+      C_Printf(FC_ERROR "P_GetLinkIfExists: called with no link table.\n");
       return NULL;
    }
    
    if(fromgroup < 0 || fromgroup >= groupcount)
    {
-      doom_printf("P_GetLinkIfExists called with from groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkIfExists: called with OoB fromgroup %d.\n", fromgroup);
       return NULL;
    }
 
    if(togroup < 0 || togroup >= groupcount)
    {
-      doom_printf("P_GetLinkIfExists called with to groupid out of bounds.\n");
+      C_Printf(FC_ERROR "P_GetLinkIfExists: called with OoB togroup %d.\n", togroup);
       return NULL;
    }
+
    return linktable[fromgroup * groupcount + togroup];
 }
-#endif
 
 //
 // P_AddLinkOffset

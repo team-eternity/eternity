@@ -1,21 +1,23 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //-----------------------------------------------------------------------------
 //
@@ -137,7 +139,7 @@ public:
    //
    // Get the item at a given index. Index must be in range from 0 to length-1.
    //
-   T &at(size_t index)
+   T &at(size_t index) const
    {
       if(!ptrArray || index >= length)
          I_Error("BaseCollection::at: array index out of bounds\n");
@@ -145,7 +147,7 @@ public:
    }
 
    // operator[] - Overloaded operator wrapper for at method.
-   T &operator [] (size_t index) { return at(index); }
+   T &operator [] (size_t index) const { return at(index); }
    
    //
    // getRandom
@@ -210,7 +212,7 @@ public:
    }
 
    // Copy constructor
-   PODCollection(const PODCollection<T> &other) : BaseCollection<T>()
+   PODCollection(const PODCollection<T> &other)
    {
       this->assign(other);
    }
@@ -344,6 +346,25 @@ public:
       this->baseResize(initSize);
    }
    
+   // Assignment
+   void assign(const Collection<T> &other)
+   {
+      if(this->ptrArray == other.ptrArray) // same object?
+         return;
+
+      this->clear();
+      for(size_t i = 0; i < other.length; i++)
+         this->add(other[i]);
+
+      this->prototype = other.prototype;
+   }
+
+   // Copy constructor
+   Collection(const Collection<T> &other)
+   {
+      assign(other);
+   }
+
    // Destructor
    ~Collection() { this->clear(); }
 

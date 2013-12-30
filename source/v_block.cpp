@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2004 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -364,14 +363,10 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
    else if(tl == 0)
       return;
 
-   {
-      unsigned int fglevel, bglevel;
-      
-      fglevel = tl & ~0x3ff;
-      bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB8[fglevel >> 10];
-      bg2rgb  = Col2RGB8[bglevel >> 10];
-   }
+   unsigned int fglevel = tl & ~0x3ff;
+   unsigned int bglevel = FRACUNIT - fglevel;
+   fg2rgb  = Col2RGB8[fglevel >> 10];
+   bg2rgb  = Col2RGB8[bglevel >> 10];
 
    x2 = x + w - 1;
    y2 = y + h - 1;
@@ -467,14 +462,10 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
    else if(tl == 0)
       return;
 
-   {
-      unsigned int fglevel, bglevel;
-
-      fglevel = tl & ~0x3ff;
-      bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB8[fglevel >> 10];
-      bg2rgb  = Col2RGB8[bglevel >> 10];
-   }
+   unsigned int fglevel = tl & ~0x3ff;
+   unsigned int bglevel = FRACUNIT - fglevel;
+   fg2rgb  = Col2RGB8[fglevel >> 10];
+   bg2rgb  = Col2RGB8[bglevel >> 10];
 
    dest = buffer->ylut[y] + buffer->xlut[x];
    
@@ -511,10 +502,10 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
    // if width % 64 != 0, we must do some extra copying at the end
    if((wmod = buffer->width & 63))
    {
-      for(y = 0; y < buffer->height; ++y)
+      for(y = 0; y < buffer->height; y++)
       {
          row = dest;
-         for(x = 0; x < buffer->width >> 6; ++x)
+         for(x = 0; x < buffer->width >> 6; x++)
          {
             memcpy(row, src + ((y & 63) << 6), 64);
             row += 64;
@@ -525,7 +516,7 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
    }
    else
    {
-      for(y = 0; y < buffer->height; ++y)
+      for(y = 0; y < buffer->height; y++)
       {
          row = dest;         
          for(x = 0; x < buffer->width >> 6; ++x)

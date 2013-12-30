@@ -355,6 +355,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_reverbs.cpp" />
     <ClCompile Include="..\source\e_rtti.cpp" />
     <ClCompile Include="..\Source\e_sound.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -467,6 +468,9 @@
     <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\p_portalcliplinking.cpp" />
     <ClCompile Include="..\source\p_portalclipmovement.cpp" />
+    <ClCompile Include="..\source\s_formats.cpp" />
+    <ClCompile Include="..\source\s_reverb.cpp" />
+    <ClCompile Include="..\source\v_image.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1267,6 +1271,7 @@
     <ClInclude Include="..\source\e_metastate.h" />
     <ClInclude Include="..\source\e_mod.h" />
     <ClInclude Include="..\source\e_player.h" />
+    <ClInclude Include="..\source\e_reverbs.h" />
     <ClInclude Include="..\source\e_rtti.h" />
     <ClInclude Include="..\Source\e_sound.h" />
     <ClInclude Include="..\source\e_sprite.h" />
@@ -1289,6 +1294,7 @@
     <ClInclude Include="..\Source\in_lude.h" />
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
+    <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
     <ClInclude Include="..\source\p_clipen.h" />
@@ -1296,6 +1302,9 @@
     <ClInclude Include="..\source\p_mapcontext.h" />
     <ClInclude Include="..\source\p_portalclip.h" />
     <ClInclude Include="..\source\p_traceengine.h" />
+    <ClInclude Include="..\source\s_formats.h" />
+    <ClInclude Include="..\source\s_reverb.h" />
+    <ClInclude Include="..\source\v_image.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />
     <ClInclude Include="..\Source\m_argv.h" />
     <ClInclude Include="..\Source\m_bbox.h" />

@@ -3,21 +3,23 @@
 //
 // Copyright(C) 2012 Ioan Chera
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//----------------------------------------------------------------------------
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //
@@ -161,7 +163,6 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	{
       dontUndo = FALSE;
       
-		fileMan = [NSFileManager defaultManager];
 		iwadSet = [[NSMutableSet alloc] init];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
@@ -200,7 +201,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 -(void)makeDocumentMenu
 {
    NSError *err = nil;
-   NSArray *contents = [fileMan contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
+   NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
    
    if(err)
    {
@@ -273,7 +274,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 #if 0 // NOT USED: requires OS X 10.6 or later
 - (NSURL*)applicationDataDirectory
 {
-	NSArray* possibleURLs = [fileMan URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
+	NSArray* possibleURLs = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
 	NSURL* appSupportDir = nil;
 	NSURL* appDirectory = nil;
 	
@@ -307,6 +308,8 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 {
    NSString *appDataPath = [[@"~/Library/Application Support" stringByExpandingTildeInPath] stringByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
   	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
+   
+   NSFileManager* fileMan = [NSFileManager defaultManager];
    
 	[fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom"] withIntermediateDirectories:YES attributes:nil error:nil];
    [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom2"] withIntermediateDirectories:YES attributes:nil error:nil];
@@ -457,16 +460,13 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	// IOAN 20130103: use Neil's PrBoom-Mac Launcher code
 	[task release];
 	task = [[NSTask alloc] init];
-   NSString *enginePath = [[NSBundle mainBundle] pathForResource:@"Eternity.app" ofType:nil];
-   if(!enginePath)
-      enginePath = [[NSBundle mainBundle] pathForResource:@"Eternity-106.app" ofType:nil];
+   NSString *enginePath = [[NSBundle mainBundle] pathForResource:@"eternity" ofType:nil];
    if(!enginePath)
    {
       NSBeep();   // Unexpected error not to have an EE executable, at any rate
       // Beep of death
       return;
    }
-	NSBundle *engineBundle = [NSBundle bundleWithPath:enginePath];
 	
    __block char *env;
    NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithCapacity:2];
@@ -486,17 +486,10 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    [task setEnvironment:environment];
    [environment release];
    
-   NSString *exePath = [engineBundle executablePath];
-   if (!x64flag)
-   {
-      [task setLaunchPath:@"/usr/bin/arch"];
-      [task setArguments:[[NSArray arrayWithObjects:@"-32", exePath, nil] arrayByAddingObjectsFromArray:deploy]];
-   }
-   else
-   {
-      [task setLaunchPath:exePath];
-      [task setArguments:deploy];
-   }
+   NSString *exePath = enginePath;
+
+   [task setLaunchPath:exePath];
+   [task setArguments:deploy];
    
    calledAppMainline = TRUE;
 	
@@ -576,7 +569,7 @@ iwadMightBe:
    ;
    // Check if wad exists at path and query
    BOOL isDir;
-   if([fileMan fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
+   if([[NSFileManager defaultManager] fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
    {
       if(isDir)
       {
@@ -638,7 +631,7 @@ iwadMightBe:
 		
 		[iwadSet addObject:wURL];
 		      
-      [iwadPopUp insertItemWithTitle:[fileMan displayNameAtPath:iwadPath] atIndex:ind];
+      [iwadPopUp insertItemWithTitle:[[NSFileManager defaultManager] displayNameAtPath:iwadPath] atIndex:ind];
       
       SET_UNDO(iwadPopUp, doRemoveIwadAtIndex:ind, @"Add/Remove Game WAD")
       

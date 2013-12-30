@@ -1,21 +1,23 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2010 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //-----------------------------------------------------------------------------
 //
@@ -169,7 +171,7 @@ bool ManagedDirectory::openWadFile()
    bool ret;
    
    if((ret = addNewPrivateFile(name)))
-      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, true, false);
+      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, DAF_PRIVATE);
 
    return ret;
 }
@@ -520,6 +522,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
 //
 void W_EnumerateMasterLevels(bool forceRefresh)
 {
+   static const char *exts[1] = { "*.wad" };
    if(masterlevelsenum && !forceRefresh)
       return;
 
@@ -529,7 +532,7 @@ void W_EnumerateMasterLevels(bool forceRefresh)
       return;
    }
 
-   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, "*.wad"))
+   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, exts, earrlen(exts), false))
    {
       C_Printf(FC_ERROR "Could not enumerate Master Levels directory: %s\n",
                errno ? strerror(errno) : "(unknown error)");

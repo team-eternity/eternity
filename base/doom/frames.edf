@@ -1061,6 +1061,32 @@ frame S_PLS2BALLX1 { cmp "PLS2|C|T|6|*|@next"; dehackednum 1051 }
 frame S_PLS2BALLX2 { cmp "PLS2|D|T|6|*|@next"; dehackednum 1052 }
 frame S_PLS2BALLX3 { cmp "PLS2|E|T|6";         dehackednum 1053 }
 
+// Dummy frames -- there used to be beta emulation items here; now they are free for use.
+frame S_DUMMY1  { cmp = "TNT1|*|*|0"; dehackednum = 1054 }
+frame S_DUMMY2  { cmp = "TNT1|*|*|0"; dehackednum = 1055 }
+
+// Beta Lost Soul Frames
+frame S_DUMMY3  { +decorate; dehackednum 1056 }
+frame S_DUMMY4  { +decorate; dehackednum 1057 }
+frame S_DUMMY5  { +decorate; dehackednum 1058 }
+frame S_DUMMY6  { +decorate; dehackednum 1059 }
+frame S_DUMMY7  { +decorate; dehackednum 1060 }
+frame S_DUMMY8  { +decorate; dehackednum 1061 }
+frame S_DUMMY9  { +decorate; dehackednum 1062 }
+frame S_DUMMY10 { +decorate; dehackednum 1063 }
+frame S_DUMMY11 { +decorate; dehackednum 1064 }
+frame S_DUMMY12 { +decorate; dehackednum 1065 }
+frame S_DUMMY13 { +decorate; dehackednum 1066 }
+frame S_DUMMY14 { +decorate; dehackednum 1067 }
+frame S_DUMMY15 { +decorate; dehackednum 1068 }
+frame S_DUMMY16 { +decorate; dehackednum 1069 }
+frame S_DUMMY17 { +decorate; dehackednum 1070 }
+frame S_DUMMY18 { +decorate; dehackednum 1071 }
+frame S_DUMMY19 { +decorate; dehackednum 1072 }
+frame S_DUMMY20 { +decorate; dehackednum 1073 }
+frame S_DUMMY21 { +decorate; dehackednum 1074 }
+
 // S_MUSHROOM: This frame can be used to make a mushroom cloud explosion
 frame S_MUSHROOM   { cmp "MISL|B|T|8|Mushroom|S_EXPLODE2"; dehackednum 1075 }
+
 

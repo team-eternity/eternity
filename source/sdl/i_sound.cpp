@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+// Copyright(C) 2013 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //----------------------------------------------------------------------------
 //
@@ -50,7 +49,6 @@ int detect_voices; //jff 3/4/98 enables voice detection prior to install_sound
 //jff 1/22/98 make these visible here to disable sound/music on install err
 
 // haleyjd 04/21/10: equalization parameters
-int     s_equalizer; // if true, use equalizer
 double  s_lowfreq;   // low band cutoff frequency
 double  s_highfreq;  // high band cutoff frequency
 double  s_eqpreamp;  // preamp factor
@@ -402,8 +400,6 @@ VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 
 // Equalizer variables
 
-VARIABLE_BOOLEAN(s_equalizer, NULL, onoff);
-
 VARIABLE_FLOAT(s_lowfreq,  NULL, 0.0, UL);
 VARIABLE_FLOAT(s_highfreq, NULL, 0.0, UL);
 VARIABLE_FLOAT(s_eqpreamp, NULL, 0.0, 1.0);
@@ -453,7 +449,6 @@ static void I_UpdateEQ(void)
       i_sounddriver->UpdateEQParams();
 }
 
-CONSOLE_VARIABLE(s_equalizer, s_equalizer, 0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_lowfreq,   s_lowfreq,   0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_highfreq,  s_highfreq,  0) { I_UpdateEQ(); }
 CONSOLE_VARIABLE(s_eqpreamp,  s_eqpreamp,  0) { I_UpdateEQ(); }

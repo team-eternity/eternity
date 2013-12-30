@@ -1,11 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -1060,7 +1059,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, false, false);
+                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -1407,7 +1406,7 @@ static void D_DoomInit()
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, false, false);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
          }
       }
    }
@@ -1437,7 +1436,7 @@ static void D_DoomInit()
       strncpy(file, demosource, len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, false, false);
+      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
       usermsg("Playing demo %s\n", file);
    }
 

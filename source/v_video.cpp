@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -711,52 +710,6 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
       break;
    }
 }
-
-#ifdef DJGPP
-//
-// V_GetBlock
-//
-// Gets a linear block of pixels from the view buffer.
-//
-// The pixels in the rectangle at x,y in screenbuffer scrn with size
-// width by height are linearly packed into the buffer dest.
-// No return value
-//
-void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
-{
-  byte *src;
-  int p;
-
-#ifdef RANGECHECK
-  if (x<0
-      ||x+width > SCREENWIDTH
-      || y<0
-      || y+height > SCREENHEIGHT
-      || (unsigned int)scrn>4 )
-    I_Error("Bad V_GetBlock\n");
-#endif
-
-   // SoM 1-30-04: ANYRES
-   if(video.scaled)
-   {
-      width = video.x2lookup[x + width - 1] - video.x1lookup[x] + 1;
-      x = video.x1lookup[x];
-
-      height = video.y2lookup[y + height - 1] - video.y1lookup[y] + 1;
-      y = video.y1lookup[y];
-   }
-
-   p = scrn == 0 ? video.pitch : video.width;
-
-   src = video.screens[scrn] + y * p + x;
-   while (height--)
-   {
-      memcpy (dest, src, width);
-      src += p;
-      dest += width;
-   }
-}
-#endif
 
 // 
 // V_FindBestColor

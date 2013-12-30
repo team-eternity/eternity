@@ -3,19 +3,18 @@
 //
 // Copyright(C) 2005 James Haley, Simon Howard, et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //----------------------------------------------------------------------------
 //
@@ -82,47 +81,8 @@
 
 extern char gamemapname[9];
 
-//
-// haleyjd 06/25/10: prototype source types
-//
-enum
-{
-   LI_PROTO_CURRENT,  // this prototype is the temporary parsing prototype
-   LI_PROTO_HEXEN,    // this prototype comes from Hexen MAPINFO (not used yet)
-   LI_PROTO_EMAPINFO, // this prototype comes from EMAPINFO
-};
-
-//
-// LevelInfoProto
-//
-// haleyjd 06/21/10: This structure is a prototype for LevelInfo. Information
-// will be stored here from sources of global information such as EMAPINFO or
-// Hexen MAPINFO lumps, and then copied to the normal LevelInfo structure at
-// the start of each level.
-//
-// A single separate prototype object serves as the read destination for the
-// current pass of parsing. This is so that the levelvars array can reference
-// the fields of a static object without overwriting the LevelInfo object 
-// itself.
-//
-struct LevelInfoProto_t
-{
-   DLListItem<LevelInfoProto_t> links;         // links for hashing
-   char       *mapname;                        // name of map to which this belongs
-   char        mapnamestr[9];                  // storage for name
-   int         type;                           // type id via above enumeration   
-   LevelInfo_t info;                           // the LevelInfo object
-   bool        modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
-};
-
 // haleyjd: moved everything into the LevelInfo struct
 LevelInfo_t LevelInfo;
-
-// haleyjd 06/25/10: LevelInfo prototype used for parsing. Data fields marked as
-// "modified" are then copied to the destination LevelInfo (either a prototype, 
-// or the actual LevelInfo object for the current level).
-LevelInfoProto_t LevelInfoProto;
-static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info);
 
 static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel);
 
@@ -284,9 +244,6 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
    P_ParseLevelInfo(&wGlobalDir, lumpnum, PU_LEVEL); // FIXME
-
-   // copy modified fields from the parsing prototype into LevelInfo
-   P_copyPrototypeToLevelInfo(&LevelInfoProto, &LevelInfo);
    
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
@@ -301,197 +258,6 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 
    P_InitWeapons();
 }
-
-//=============================================================================
-//
-// LevelInfo Prototypes Implementation
-//
-// haleyjd 06/21/10
-//
-
-static LevelInfoProto_t **levelInfoPrototypes; // reallocating array of pointers
-static int numPrototypes;
-static int numPrototypesAlloc;
-
-// hash table for prototype objects
-static EHashTable<LevelInfoProto_t, ENCStringHashKey, 
-                  &LevelInfoProto_t::mapname, &LevelInfoProto_t::links> protoHash; 
-
-//
-// P_addLevelInfoPrototype
-//
-// haleyjd 06/21/10: Adds a LevelInfo prototype object to the reallocating
-// pointer list and to the hash table.
-//
-static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
-{
-   LevelInfoProto_t *newProto = ecalloc(LevelInfoProto_t *, 1, sizeof(LevelInfoProto_t));
-
-   // reallocate prototype pointers array if necessary
-   if(numPrototypes >= numPrototypesAlloc)
-   {
-      numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
-      levelInfoPrototypes = 
-         erealloc(LevelInfoProto_t **, levelInfoPrototypes,
-                  numPrototypesAlloc * sizeof(LevelInfoProto_t *));
-   }
-
-   // add it to the pointer array
-   levelInfoPrototypes[numPrototypes++] = newProto;
-
-   // initialize name
-   strncpy(newProto->mapnamestr, mapname, 8);
-   newProto->mapname = newProto->mapnamestr;
-
-   // initialize hash table first time if necessary
-   if(!protoHash.isInitialized())
-      protoHash.initialize(numPrototypesAlloc);
-
-   // add it to the hash table
-   protoHash.addObject(newProto);
-
-   return newProto;
-}
-
-//
-// P_clearLevelInfoPrototypes
-//
-// haleyjd 06/21/10: Deletes all existing LevelInfo prototypes in the event that
-// global MAPINFO sources are being reparsed.
-//
-static void P_clearLevelInfoPrototypes(void)
-{
-   int i;
-
-   // destroy the hash table
-   protoHash.destroy();
-
-   // free all the LevelInfo objects
-   for(i = 0; i < numPrototypes; ++i)
-      efree(levelInfoPrototypes[i]);
-
-   // free the pointer array
-   efree(levelInfoPrototypes);
-   levelInfoPrototypes = NULL;
-   numPrototypes = numPrototypesAlloc = 0;
-}
-
-//
-// P_getLevelInfoPrototype
-//
-// haleyjd 06/21/10: Returns a LevelInfoProto object for the given map name,
-// if such exists. Returns NULL otherwise.
-//
-static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
-{
-   return protoHash.objectForKey(mapname);
-}
-
-
-#define LI_COPY(enumval, field) \
-   if(proto->modified[(LI_FIELD_ ## enumval)]) \
-      info-> field = proto->info. field
-
-//
-// P_copyPrototypeToLevelInfo
-//
-// haleyjd 06/25/10: Copies data from a LevelInfoProto object into a
-// LevelInfo_t
-//
-static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info)
-{
-   LI_COPY(ACSSCRIPTLUMP,    acsScriptLump);
-   LI_COPY(ALTSKYNAME,       altSkyName);
-   LI_COPY(BOSSSPECS,        bossSpecs);
-   LI_COPY(COLORMAP,         colorMap);
-   LI_COPY(CREATOR,          creator);
-   LI_COPY(DOUBLESKY,        doubleSky);
-   LI_COPY(USEEDFINTERNAME,  useEDFInterName);
-   LI_COPY(ENDOFGAME,        endOfGame);
-   LI_COPY(EXTRADATA,        extraData);
-   LI_COPY(FINALESECRETONLY, finaleSecretOnly); 
-   LI_COPY(FINALETYPE,       finaleType);
-   LI_COPY(USEFULLBRIGHT,    useFullBright);
-   LI_COPY(GRAVITY,          gravity);
-   LI_COPY(BACKDROP,         backDrop);
-   LI_COPY(INTERMUSIC,       interMusic);
-   LI_COPY(INTERPIC,         interPic);
-   LI_COPY(INTERTEXTLUMP,    interTextLump);
-   LI_COPY(KILLFINALE,       killFinale);
-   LI_COPY(KILLSTATS,        killStats);
-   LI_COPY(LEVELNAME,        levelName);
-   LI_COPY(LEVELPIC,         levelPic);
-   LI_COPY(NEXTLEVELPIC,     nextLevelPic);
-   LI_COPY(NEXTSECRETPIC,    nextSecretPic);
-   LI_COPY(SCRIPTLUMP,       scriptLump);
-   LI_COPY(HASLIGHTNING,     hasLightning);
-   LI_COPY(MUSICNAME,        musicName);
-   LI_COPY(NEXTLEVEL,        nextLevel);
-   LI_COPY(NEXTSECRET,       nextSecret);
-   LI_COPY(NOAUTOSEQUENCES,  noAutoSequences);
-   LI_COPY(OUTDOORFOG,       outdoorFog);
-   LI_COPY(PARTIME,          partime);
-   LI_COPY(SKYDELTA,         skyDelta);
-   LI_COPY(SKY2DELTA,        sky2Delta);
-   LI_COPY(SKYNAME,          skyName);
-   LI_COPY(SKY2NAME,         sky2Name);
-   LI_COPY(SOUNDSWTCHN,      sound_swtchn);
-   LI_COPY(SOUNDSWTCHX,      sound_swtchx);
-   LI_COPY(SOUNDSTNMOV,      sound_stnmov);
-   LI_COPY(SOUNDPSTOP,       sound_pstop);
-   LI_COPY(SOUNDBDCLS,       sound_bdcls);
-   LI_COPY(SOUNDBDOPN,       sound_bdopn);
-   LI_COPY(SOUNDDORCLS,      sound_dorcls);
-   LI_COPY(SOUNDDOROPN,      sound_doropn);
-   LI_COPY(SOUNDPSTART,      sound_pstart);
-   LI_COPY(SOUNDFCMOVE,      sound_fcmove);
-   LI_COPY(UNEVENLIGHT,      unevenLight);
-}
-
-//
-// P_copyLevelInfoPrototype
-//
-// haleyjd 06/25/10: Copies data out of the LevelInfoProto object into the 
-// destination LevelInfoProto object.
-//
-static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
-{
-   // for prototypes, there are no pre-existing defaults, so just do a memcpy
-   memcpy(dest, &LevelInfoProto, sizeof(LevelInfoProto));
-}
-
-//
-// P_LoadGlobalLevelInfo
-//
-// haleyjd 06/21/10: This function is now responsible for loading and caching
-// global level info into LevelInfoProto objects. If this routine is called
-// more than once (for example, for runtime wad loading), the hive will be
-// dumped and all EMAPINFO lumps will be parsed again.
-//
-void P_LoadGlobalLevelInfo(WadDirectory *dir)
-{
-   // if any prototypes exist, delete them
-   if(numPrototypes)
-      P_clearLevelInfoPrototypes();
-
-   limode = LI_MODE_GLOBAL;
-
-   WadChainIterator wci(*dir, "EMAPINFO");
-   for(wci.begin(); wci.current(); wci.next())
-   {
-      if(wci.testLump(lumpinfo_t::ns_global))
-      {
-         // reset parser state
-         readtype = RT_OTHER;
-         P_ParseLevelInfo(dir, (*wci)->selfindex, PU_STATIC);
-      }
-   }
-}
-
-//
-// End of Prototypes
-//
-//=============================================================================
 
 //
 // P_ParseLevelInfo
@@ -573,8 +339,6 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
 
       if(limode == LI_MODE_GLOBAL)
       {
-// TODO: new global parsing logic
-#if 1
          // when in global mode, returning -1 will make
          // P_ParseLevelInfo break out early, saving time
          if(foundGlobalMap)
@@ -585,15 +349,6 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
             foundGlobalMap = true;
             readtype = RT_LEVELINFO;
          }
-#else
-         // TODO: test if label is mapname
-         //       if so, commit current prototype if any
-         // TODO: determine priority of new potential prototype relative
-         //       to any that may already exist (ie from Hexen MAPINFO)
-         // TODO: dump or clear existing prototype if necessary, else
-         //       keep readtype == RT_OTHER
-         // TODO: create new prototype or modify existing
-#endif
       }
       else
       {
@@ -655,17 +410,17 @@ struct levelvar_t
 //
 #define LI_STRING(name, enumval, field) \
    { IVT_STRING, name, LI_FIELD_ ## enumval, \
-     (void *)(&(LevelInfoProto.info . field)), NULL }
+     (void *)(&(LevelInfo . field)), NULL }
 #define LI_STRNUM(name, enumval, field, extra) \
    { IVT_STRNUM, name, LI_FIELD_ ## enumval, \
-     (void *)(&(LevelInfoProto.info . field)), &(extra) }
+     (void *)(&(LevelInfo . field)), &(extra) }
 #define LI_INTEGR(name, enumval, field) \
-   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field), NULL }
+   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
 #define LI_BOOLNF(name, enumval, field) \
-   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field), NULL }
+   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
 #define LI_FLAGSF(name, enumval, field, extra) \
    { IVT_FLAGS, name, LI_FIELD_ ## enumval, \
-     &(LevelInfoProto.info . field), &(extra) }
+     &(LevelInfo . field), &(extra) }
 #define LI_END() \
    { IVT_END, NULL, LI_FIELD_NUMFIELDS, NULL, NULL }
 
@@ -824,9 +579,6 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
          default:
             I_Error("P_ParseLevelVar: unknown level variable type\n");
          }
-
-         // mark this field as modified in the prototype object
-         LevelInfoProto.modified[current->fieldenum] = true;
       }
       current++;
    }
@@ -1370,13 +1122,10 @@ static void P_SetOutdoorFog(void)
 // MapInfo processing is complete, and thus some of the values set
 // here are used to detect whether or not MapInfo set a value.
 //
-static void P_ClearLevelVars(void)
+static void P_ClearLevelVars()
 {
    static char nextlevel[10];
    static char nextsecret[10];
-
-   // 06/25/10: clear the LevelInfoProto object
-   memset(&LevelInfoProto, 0, sizeof(LevelInfoProto));
 
    // find a metainfo for the level if one exists
    curmetainfo = P_GetMetaInfoForLevel(gamemap);

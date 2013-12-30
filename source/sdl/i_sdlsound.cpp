@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+// Copyright(C) 2013 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //----------------------------------------------------------------------------
 //
@@ -30,20 +29,24 @@
 #include "SDL_mixer.h"
 
 #include "../z_zone.h"
-#include "../d_io.h"
-#include "../c_runcmd.h"
+
 #include "../c_io.h"
+#include "../c_runcmd.h"
+#include "../d_main.h"
+#include "../d_gi.h"
+#include "../d_io.h"
 #include "../doomstat.h"
+#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
 #include "../i_sound.h"
 #include "../i_system.h"
-#include "../w_wad.h"
-#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
-#include "../d_main.h"
-#include "../v_misc.h"
 #include "../m_argv.h"
-#include "../d_gi.h"
-#include "../s_sound.h"
+#include "../m_compare.h"
 #include "../mn_engin.h"
+#include "../s_reverb.h"
+#include "../s_formats.h"
+#include "../s_sound.h"
+#include "../v_misc.h"
+#include "../w_wad.h"
 
 extern bool snd_init;
 
@@ -52,9 +55,15 @@ extern bool snd_init;
 
 int audio_buffers;
 
+// haleyjd 12/18/13: size at which mix buffers must be allocated
+static Uint32 mixbuffer_size;
+
+// haleyjd 12/18/13: primary floating point mixing buffer
+static double *mixbuffer;
+
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
-static int snd_samplerate = 44100;
+static const int snd_samplerate = 44100;
 
 typedef struct channel_info_s
 {
@@ -67,12 +76,11 @@ typedef struct channel_info_s
   unsigned int stepremainder;
   unsigned int samplerate;
   // The channel data pointers, start and end.
-  byte *data;
-  byte *startdata; // haleyjd
-  byte *enddata;
+  double *data;
+  double *startdata; // haleyjd
+  double *enddata;
   // Hardware left and right channel volume lookup.
-  int *leftvol_lookup;
-  int *rightvol_lookup;
+  double  leftvol, rightvol;
   // haleyjd 06/03/06: looping
   int loop;
   unsigned int idnum;
@@ -89,11 +97,7 @@ static channel_info_t channelinfo[MAX_CHANNELS+1];
 static int steptable[256];
 
 // Volume lookups.
-static int vol_lookup[128*256];
-
-static int I_GetSfxLumpNum(sfxinfo_t *sfx);
-
-#define SOUNDHDRSIZE 8
+//static int vol_lookup[128*256];
 
 //
 // addsfx
@@ -109,9 +113,6 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx);
 //
 static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
 {
-   size_t lumplen;
-   int lump;
-
 #ifdef RANGECHECK
    if(channel < 0 || channel >= MAX_CHANNELS)
       I_Error("addsfx: channel out of range!\n");
@@ -121,103 +122,17 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
    if(!snd_init || !sfx)
       return false;
 
-   // We will handle the new SFX.
-   // Set pointer to raw data.
-
-   // haleyjd: Eternity sfxinfo_t does not have a lumpnum field
-   lump = I_GetSfxLumpNum(sfx);
-   
-   // replace missing sounds with a reasonable default
-   if(lump == -1)
-      lump = W_GetNumForName(GameModeInfo->defSoundName);
-   
-   lumplen = W_LumpLength(lump);
-   
-   // haleyjd 10/08/04: do not play zero-length sound lumps
-   if(lumplen <= SOUNDHDRSIZE)
+   // haleyjd 12/23/13: invoke high-level PCM loader
+   if(!S_LoadDigitalSoundEffect(sfx))
       return false;
-
-   // haleyjd 06/03/06: rewrote again to make sound data properly freeable
-   if(sfx->data == NULL)
-   {   
-      byte *data;
-      Uint32 samplerate, samplelen;
-
-      // haleyjd: this should always be called (if lump is already loaded,
-      // wGlobalDir.CacheLumpNum handles that for us).
-      data = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
-
-      // Check the header, and ensure this is a valid sound
-      if(data[0] != 0x03 || data[1] != 0x00)
-      {
-         Z_ChangeTag(data, PU_CACHE);
-         return false;
-      }
-
-      samplerate = (data[3] << 8) | data[2];
-      samplelen  = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
-
-      // don't play sounds that think they're longer than they really are
-      if(samplelen > lumplen - SOUNDHDRSIZE)
-      {
-         Z_ChangeTag(data, PU_CACHE);
-         return false;
-      }
-
-      sfx->alen = (Uint32)(((Uint64)samplelen * snd_samplerate) / samplerate);
-      sfx->data = Z_Malloc(sfx->alen, PU_STATIC, &sfx->data);
-
-      // haleyjd 04/23/08: Convert sound to target samplerate
-      if(sfx->alen != samplelen)
-      {  
-         unsigned int i;
-         byte *dest = (byte *)sfx->data;
-         byte *src  = data + SOUNDHDRSIZE;
-         
-         unsigned int step = (samplerate << 16) / snd_samplerate;
-         unsigned int stepremainder = 0, j = 0;
-
-         // do linear filtering operation
-         for(i = 0; i < sfx->alen && j < samplelen - 1; ++i)
-         {
-            int d = (((unsigned int)src[j  ] * (0x10000 - stepremainder)) +
-                     ((unsigned int)src[j+1] * stepremainder)) >> 16;
-
-            if(d > 255)
-               dest[i] = 255;
-            else if(d < 0)
-               dest[i] = 0;
-            else
-               dest[i] = (byte)d;
-
-            stepremainder += step;
-            j += (stepremainder >> 16);
-
-            stepremainder &= 0xffff;
-         }
-         // fill remainder (if any) with final sample byte
-         for(; i < sfx->alen; ++i)
-            dest[i] = src[j];
-      }
-      else
-      {
-         // sound is already at target samplerate, copy data
-         memcpy(sfx->data, data + SOUNDHDRSIZE, samplelen);
-      }
-
-      // haleyjd 06/03/06: don't need original lump data any more
-      Z_ChangeTag(data, PU_CACHE);
-   }
-   else
-      Z_ChangeTag(sfx->data, PU_STATIC); // reset to static cache level
 
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
-      channelinfo[channel].data = (byte *)(sfx->data);
+      channelinfo[channel].data = (double *)sfx->data;
       
       // Set pointer to end of raw data.
-      channelinfo[channel].enddata = (byte *)sfx->data + sfx->alen - 1;
+      channelinfo[channel].enddata = (double *)sfx->data + sfx->alen - 1;
       
       // haleyjd 06/03/06: keep track of start of sound
       channelinfo[channel].startdata = channelinfo[channel].data;
@@ -278,18 +193,13 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    //  adjust volume properly.
    //volume *= 8;
 
-   leftvol = volume - ((volume*separation*separation) >> 16);
+   leftvol    = volume - ((volume*separation*separation) >> 16);
    separation = separation - 257;
-   rightvol= volume - ((volume*separation*separation) >> 16);  
+   rightvol   = volume - ((volume*separation*separation) >> 16);  
 
-#ifdef RANGECHECK
-   // Sanity check, clamp volume.
-   if(rightvol < 0 || rightvol > 127)
-      I_Error("rightvol out of bounds\n");
-   
-   if(leftvol < 0 || leftvol > 127)
-      I_Error("leftvol out of bounds\n");
-#endif
+   // volume levels are softened slightly by dividing by 191 rather than ideal 127
+   channelinfo[slot].leftvol  = eclamp((double)leftvol  / 191.0, 0.0, 1.0);
+   channelinfo[slot].rightvol = eclamp((double)rightvol / 191.0, 0.0, 1.0);
 
    // haleyjd 06/07/09: critical section is not needed here because this data
    // can be out of sync without affecting the sound update loop. This may cause
@@ -308,8 +218,8 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    
    // Get the proper lookup table piece
    //  for this volume level???
-   channelinfo[slot].leftvol_lookup  = &vol_lookup[leftvol*256];
-   channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
+   //channelinfo[slot].leftvol_lookup  = &vol_lookup[leftvol*256];
+   //channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
 }
 
 //=============================================================================
@@ -393,48 +303,60 @@ static double rational_tanh(double x)
 // The author assumes NO RESPONSIBILITY for any problems caused by the use of
 // this software.
 //
-static double do_3band(EQSTATE *es, double sample)
+// haleyjd 12/19/13: rewritten to loop over the sample buffer and do output
+// directly back to the SDL audio stream.
+//
+static void do_3band(double *stream, double *end, Sint16 *dest)
 {
+   int esnum = 0;
+
    // haleyjd: This "very small addend" is supposed to take care of P4
    // denormalization problems. Do we actually need it?
    static double vsa = (1.0 / 4294967295.0);
-
    // Locals
-   double l, m, h;    // Low / Mid / High - Sample Values
+   double sample, l, m, h;    // Low / Mid / High - Sample Values
 
-   // Filter #1 (lowpass)
-   es->f1p0  += (es->lf * (sample   - es->f1p0)) + vsa;
-   es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
-   es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
-   es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
+   while(stream != end)
+   {
+      auto es = &eqstate[esnum];
+      esnum ^= 1; // haleyjd: toggle between equalizer channels
 
-   l          = es->f1p3;
+      sample = *stream++ * preampmul;
 
-   // Filter #2 (highpass)
-   es->f2p0  += (es->hf * (sample   - es->f2p0)) + vsa;
-   es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
-   es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
-   es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
+      // Filter #1 (lowpass)
+      es->f1p0  += (es->lf * (sample   - es->f1p0)) + vsa;
+      es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
+      es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
+      es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
 
-   h          = es->sdm3 - es->f2p3;
+      l          = es->f1p3;
 
-   // Calculate midrange (signal - (low + high))
-   m          = es->sdm3 - (h + l); // haleyjd 07/05/10: which is right?
-   //m          = sample - (h + l); // the one above seems more correct to me.
+      // Filter #2 (highpass)
+      es->f2p0  += (es->hf * (sample   - es->f2p0)) + vsa;
+      es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
+      es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
+      es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
 
-   // Scale, Combine and store
-   l         *= es->lg;
-   m         *= es->mg;
-   h         *= es->hg;
+      h          = es->sdm3 - es->f2p3;
 
-   // Shuffle history buffer
-   es->sdm3   = es->sdm2;
-   es->sdm2   = es->sdm1;
-   es->sdm1   = sample;                
+      // Calculate midrange (signal - (low + high))
+      m          = es->sdm3 - (h + l); // haleyjd 07/05/10: which is right?
+      //m          = sample - (h + l); // the one above seems more correct to me.
 
-   // Return result
-   // haleyjd: use rational_tanh for soft clipping
-   return rational_tanh(l + m + h);
+      // Scale, Combine and store
+      l         *= es->lg;
+      m         *= es->mg;
+      h         *= es->hg;
+
+      // Shuffle history buffer
+      es->sdm3   = es->sdm2;
+      es->sdm2   = es->sdm1;
+      es->sdm1   = sample;                
+
+      // Return result
+      // haleyjd: use rational_tanh for soft clipping
+      *dest++ = (Sint16)(rational_tanh(l + m + h) * 32767.0);
+   }
 }
 
 //
@@ -454,6 +376,33 @@ static double do_3band(EQSTATE *es, double sample)
 #define STEP 2
 
 //
+// I_SDLConvertSoundBuffer
+//
+// Convert the input buffer to floating point
+//
+static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
+{
+   // Pointers in audio stream, left, right, end.
+   Sint16 *leftout, *leftend;
+   
+   leftout  = (Sint16 *)stream;
+         
+   // Determine end, for left channel only
+   //  (right channel is implicit).
+   leftend = (Sint16 *)(stream + len);
+
+   // convert input to mixbuffer
+   double *bptr = mixbuffer;
+   while(leftout != leftend)
+   {
+      *(bptr + 0) = (double)(*(leftout + 0)) * (1.0/32768.0); // L
+      *(bptr + 1) = (double)(*(leftout + 1)) * (1.0/32768.0); // R
+      leftout += STEP;
+      bptr    += STEP;
+   }
+}
+
+//
 // I_SDLUpdateSoundCB
 //
 // SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
@@ -461,20 +410,15 @@ static double do_3band(EQSTATE *es, double sample)
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
-   // Pointers in audio stream, left, right, end.
-   Sint16 *leftout, *rightout, *leftend;
-   
-   // haleyjd: channel pointer for speed++
-   channel_info_t *chan;
-         
-   // Determine end, for left channel only
-   //  (right channel is implicit).
-   leftend = (Sint16 *)(stream + len);
+   // convert input samples to floating point
+   I_SDLConvertSoundBuffer(stream, len);
 
-   // Love thy L2 cache - made this a loop.
-   // Now more channels could be set at compile time
-   //  as well. Thus loop those channels.
-   for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
+   double *leftout;
+   // Pointer to end of mixbuffer
+   double *leftend = mixbuffer + (len/SAMPLESIZE);
+
+   // Mix audio channels
+   for(channel_info_t *chan = channelinfo; chan != &channelinfo[numChannels]; chan++)
    {
       // fast rejection before semaphore lock
       if(chan->shouldstop || !chan->data)
@@ -484,12 +428,10 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       // this channel we'll just skip it for now - safer and faster.
       if(SDL_SemTryWait(chan->semaphore) != 0)
          continue;
-      
-      // Left and right channel
-      //  are in audio stream, alternating.
-      leftout  = (Sint16 *)stream;
-      rightout = leftout + 1;
-      
+
+      // Left and right channel are in audio stream, alternating.
+      leftout = mixbuffer;
+
       // Lost before semaphore acquired? (very unlikely, but must check for 
       // safety). BTW, don't move this up or you'll chew major CPU whenever this
       // does happen.
@@ -498,48 +440,15 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          SDL_SemPost(chan->semaphore);
          continue;
       }
-      
-      // Mix sounds into the mixing buffer.
-      // Loop over step*SAMPLECOUNT,
-      //  that is 512 values for two channels.
+
       while(leftout != leftend)
       {
-         // Mix current sound data.
-         // Data, from raw sound, for right and left.
-         Uint8  sample;
-         Sint32 dl, dr;
-
-         // Get the raw data from the channel. 
-         // Sounds are now prefiltered.
-         sample = *(chan->data);
-
-         // Reset left/right value. 
-         // Add left and right part
-         //  for this channel (sound)
-         //  to the current data.
-         // Adjust volume accordingly.
-         dl = (Sint32)(*leftout)  + chan->leftvol_lookup[sample];
-         dr = (Sint32)(*rightout) + chan->rightvol_lookup[sample];
-                  
-         // Clamp to range. Left hardware channel.
-         if(dl > SHRT_MAX)
-            *leftout = SHRT_MAX;
-         else if(dl < SHRT_MIN)
-            *leftout = SHRT_MIN;
-         else
-            *leftout = (Sint16)dl;
-            
-         // Same for right hardware channel.
-         if(dr > SHRT_MAX)
-            *rightout = SHRT_MAX;
-         else if(dr < SHRT_MIN)
-            *rightout = SHRT_MIN;
-         else
-            *rightout = (Sint16)dr;
+         double sample  = *(chan->data);         
+         *(leftout + 0) = *(leftout + 0) + sample * chan->leftvol;
+         *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol;
          
          // Increment current pointers in stream
-         leftout  += STEP;
-         rightout += STEP;
+         leftout += STEP;
          
          // Increment index
          chan->stepremainder += chan->step;
@@ -568,32 +477,16 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             }
          }
       }
-      
+
       // release semaphore and move on to the next channel
       SDL_SemPost(chan->semaphore);
    }
 
-   // haleyjd 04/21/10: equalization pass
-   if(s_equalizer)
-   {
-      leftout  = (Sint16 *)stream;
-      rightout = leftout + 1;
+   // TEST REVERB
+   //S_ProcessReverb(mixbuffer, mixbuffer_size/2);
 
-      while(leftout != leftend)
-      {
-         double sl = (double)*leftout  * preampmul;
-         double sr = (double)*rightout * preampmul;
-
-         sl = do_3band(&eqstate[0], sl);
-         sr = do_3band(&eqstate[1], sr);
-
-         *leftout  = (Sint16)(sl * 32767.0);
-         *rightout = (Sint16)(sr * 32767.0);
-
-         leftout  += STEP;
-         rightout += STEP;
-      }
-   }
+   // haleyjd 04/21/10: equalization output pass
+   do_3band(mixbuffer, leftend, (Sint16 *)stream);
 }
 
 //
@@ -610,36 +503,25 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 // This function sets up internal lookups used during
 //  the mixing process. 
 //
-static void I_SetChannels(void)
+static void I_SetChannels()
 {
    int i;
-   int j;
    
    int *steptablemid = steptable + 128;
    
    // Okay, reset internal mixing channels to zero.
-   for(i = 0; i < MAX_CHANNELS; ++i)
+   for(i = 0; i < MAX_CHANNELS; i++)
       memset(&channelinfo[i], 0, sizeof(channel_info_t));
    
    // This table provides step widths for pitch parameters.
-   for(i=-128 ; i<128 ; i++)
+   for(i = -128; i < 128; i++)
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
    
-   // Generates volume lookup tables
-   //  which also turn the unsigned samples
-   //  into signed samples.
-   for(i = 0; i < 128; i++)
-   {
-      for(j = 0; j < 256; j++)
-      {
-         // proff - made this a little bit softer, because with
-         // full volume the sound clipped badly (191 was 127)
-         vol_lookup[i*256+j] = (i*(j-128)*256)/191;
-      }
-   }
+   // allocate mixing buffer
+   mixbuffer = ecalloc(double *, mixbuffer_size, sizeof(double));
 
    // haleyjd 10/02/08: create semaphores
-   for(i = 0; i < MAX_CHANNELS; ++i)
+   for(i = 0; i < MAX_CHANNELS; i++)
    {
       channelinfo[i].semaphore = SDL_CreateSemaphore(1);
 
@@ -659,29 +541,7 @@ static void I_SetChannels(void)
    eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
 
    // Calculate preamplification factor
-   preampmul = s_eqpreamp / 32767.0;
-}
-
-//
-// I_GetSfxLumpNum
-//
-// Retrieve the raw data lump index
-//  for a given SFX name.
-//
-static int I_GetSfxLumpNum(sfxinfo_t *sfx)
-{
-   char namebuf[16];
-
-   memset(namebuf, 0, sizeof(namebuf));
-
-   // haleyjd 09/03/03: determine whether to apply DS prefix to
-   // name or not using new prefix flag
-   if(sfx->flags & SFXF_PREFIX)
-      psnprintf(namebuf, sizeof(namebuf), "ds%s", sfx->name);
-   else
-      strcpy(namebuf, sfx->name);
-
-   return W_CheckNumForName(namebuf);
+   preampmul = s_eqpreamp;
 }
 
 //=============================================================================
@@ -694,7 +554,7 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx)
 //
 // haleyjd 04/21/10
 //
-static void I_SDLUpdateEQParams(void)
+static void I_SDLUpdateEQParams()
 {
    // flush out state of equalizers
    memset(eqstate, 0, sizeof(eqstate));
@@ -709,7 +569,7 @@ static void I_SDLUpdateEQParams(void)
    eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
 
    // Calculate preamp factor
-   preampmul = s_eqpreamp / 32767.0;
+   preampmul = s_eqpreamp;
 }
 
 //
@@ -813,7 +673,7 @@ static int I_SDLSoundID(int handle)
 // cannot be allowed to modify the zone heap due to being dispatched from a
 // separate thread.
 // 
-static void I_SDLUpdateSound(void)
+static void I_SDLUpdateSound()
 {
    // 10/30/10: Moved channel stopping logic to I_StartSound to avoid problems
    // with thread contention when running with d_fastrefresh enabled. Calling
@@ -823,7 +683,7 @@ static void I_SDLUpdateSound(void)
 //
 // I_SDLSubmitSound
 //
-static void I_SDLSubmitSound(void)
+static void I_SDLSubmitSound()
 {
    // haleyjd: whatever it is, SDL doesn't need it either
 }
@@ -833,7 +693,7 @@ static void I_SDLSubmitSound(void)
 //
 // atexit handler.
 //
-static void I_SDLShutdownSound(void)
+static void I_SDLShutdownSound()
 {
    Mix_CloseAudio();
 }
@@ -845,13 +705,34 @@ static void I_SDLShutdownSound(void)
 //
 static void I_SDLCacheSound(sfxinfo_t *sound)
 {
-   int lump = I_GetSfxLumpNum(sound);
-   
-   // replace missing sounds with a reasonable default
-   if(lump == -1)
-      lump = W_GetNumForName(GameModeInfo->defSoundName);
-   
-   wGlobalDir.cacheLumpNum(lump, PU_CACHE);
+   // 12/23/13: invoke high level lump cacher
+   S_CacheDigitalSoundLump(sound);
+}
+
+static void I_SDLDummyCallback(void *, Uint8 *, int) {} 
+
+//
+// I_SDLTestSoundBufferSize
+//
+// This shouldn't be necessary except for really bad API design.
+//
+static Uint32 I_SDLTestSoundBufferSize()
+{
+   Uint32 ret = 0;
+   SDL_AudioSpec want, have;
+   want.freq     = snd_samplerate;
+   want.format   = MIX_DEFAULT_FORMAT;
+   want.channels = 2;
+   want.samples  = audio_buffers;
+   want.callback = I_SDLDummyCallback;
+
+   if(SDL_OpenAudio(&want, &have) >= 0)
+   {
+      ret = have.size;
+      SDL_CloseAudio();
+   }
+
+   return ret;
 }
 
 //
@@ -859,7 +740,7 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 //
 // SoM 9/14/02: Rewrite. code taken from prboom to use SDL_Mixer
 //
-static int I_SDLInitSound(void)
+static int I_SDLInitSound()
 {
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
@@ -872,6 +753,16 @@ static int I_SDLInitSound(void)
 
    if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
+
+   // Figure out mix buffer sizes
+   mixbuffer_size = I_SDLTestSoundBufferSize() / SAMPLESIZE;
+   if(!mixbuffer_size)
+   {
+      printf("Couldn't determine sound mixing buffer size.\n");
+      nosfxparm   = true;
+      nomusicparm = true;
+      return 0;
+   }
    
    if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
    {

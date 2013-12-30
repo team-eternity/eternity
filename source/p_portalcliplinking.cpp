@@ -213,8 +213,6 @@ void PortalClipEngine::unsetThingPosition(Mobj *thing)
    {
       P_RemoveMobjBlockLinks(thing);
    }
-
-   thing->groupid = R_NOGROUP;
 }
 
 

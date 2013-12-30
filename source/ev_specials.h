@@ -1,21 +1,23 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //-----------------------------------------------------------------------------
 //
@@ -100,18 +102,20 @@ typedef bool (*EVActionFunc)(ev_action_t *, ev_instance_t *);
 //
 struct ev_actiontype_t
 {
-   int          activation; // activation type of this special, if restricted
-   EVPreFunc    pre;        // pre-action callback
-   EVPostFunc   post;       // post-action callback
-   unsigned int flags;      // flags; the action may add additional flags.
+   int           activation; // activation type of this special, if restricted
+   EVPreFunc     pre;        // pre-action callback
+   EVPostFunc    post;       // post-action callback
+   unsigned int  flags;      // flags; the action may add additional flags.
+   const char   *name;       // name for display purposes
 };
 
 struct ev_action_t
 {
-   ev_actiontype_t *type;   // actiontype structure
-   EVActionFunc action;     // action function
-   unsigned int flags;      // action flags
-   int          minversion; // minimum demo version
+   ev_actiontype_t *type;       // actiontype structure
+   EVActionFunc     action;     // action function
+   unsigned int     flags;      // action flags
+   int              minversion; // minimum demo version
+   const char      *name;       // name for display purposes
 };
 
 // Binds a line special action to a specific action number.

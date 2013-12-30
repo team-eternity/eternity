@@ -143,33 +143,33 @@ frame S_TNT1 { cmp = "TNT1|*|*|-1|*|@this"; dehackednum = 967 }
 // frames.
 
 // MBFHelperDog frames
-frame S_DOGS_STND   { cmp = "DOGS| *|*|10|Look      |@next"; dehackednum = 972 }
-frame S_DOGS_STND2  { cmp = "DOGS| 1|*|10|Look      |@prev"; dehackednum = 973 }
-frame S_DOGS_RUN1   { cmp = "DOGS| *|*| 2|Chase     |@next"; dehackednum = 974 }
-frame S_DOGS_RUN2   { cmp = "DOGS| *|*| 2|Chase     |@next"; dehackednum = 975 }
-frame S_DOGS_RUN3   { cmp = "DOGS| 1|*| 2|Chase     |@next"; dehackednum = 976 }
-frame S_DOGS_RUN4   { cmp = "DOGS| 1|*| 2|Chase     |@next"; dehackednum = 977 }
-frame S_DOGS_RUN5   { cmp = "DOGS| 2|*| 2|Chase     |@next"; dehackednum = 978 }
-frame S_DOGS_RUN6   { cmp = "DOGS| 2|*| 2|Chase     |@next"; dehackednum = 979 }
-frame S_DOGS_RUN7   { cmp = "DOGS| 3|*| 2|Chase     |@next"; dehackednum = 980 }
-frame S_DOGS_RUN8   { cmp = "DOGS| 3|*| 2|Chase     |S_DOGS_RUN1"; dehackednum = 981 }
-frame S_DOGS_ATK1   { cmp = "DOGS| 4|*| 8|FaceTarget|@next"; dehackednum = 982 }
-frame S_DOGS_ATK2   { cmp = "DOGS| 5|*| 8|FaceTarget|@next"; dehackednum = 983 }
-frame S_DOGS_ATK3   { cmp = "DOGS| 6|*| 8|SargAttack|S_DOGS_RUN1"; dehackednum = 984 }
-frame S_DOGS_PAIN   { cmp = "DOGS| 7|*| 2|*         |@next"; dehackednum = 985 }
-frame S_DOGS_PAIN2  { cmp = "DOGS| 7|*| 2|Pain      |S_DOGS_RUN1"; dehackednum = 986 }
-frame S_DOGS_DIE1   { cmp = "DOGS| 8|*| 8|*         |@next"; dehackednum = 987 }
-frame S_DOGS_DIE2   { cmp = "DOGS| 9|*| 8|Scream    |@next"; dehackednum = 988 }
-frame S_DOGS_DIE3   { cmp = "DOGS|10|*| 4|*         |@next"; dehackednum = 989 }
-frame S_DOGS_DIE4   { cmp = "DOGS|11|*| 4|Fall      |@next"; dehackednum = 990 }
-frame S_DOGS_DIE5   { cmp = "DOGS|12|*| 4|*         |@next"; dehackednum = 991 }
-frame S_DOGS_DIE6   { cmp = "DOGS|13|*|-1";                  dehackednum = 992 }
-frame S_DOGS_RAISE1 { cmp = "DOGS|13|*| 5|*         |@next"; dehackednum = 993 }
-frame S_DOGS_RAISE2 { cmp = "DOGS|12|*| 5|*         |@next"; dehackednum = 994 }
-frame S_DOGS_RAISE3 { cmp = "DOGS|11|*| 5|*         |@next"; dehackednum = 995 }
-frame S_DOGS_RAISE4 { cmp = "DOGS|10|*| 5|*         |@next"; dehackednum = 996 }
-frame S_DOGS_RAISE5 { cmp = "DOGS| 9|*| 5|*         |@next"; dehackednum = 997 }
-frame S_DOGS_RAISE6 { cmp = "DOGS| 8|*| 5|*         |S_DOGS_RUN1"; dehackednum = 998 }
+frame S_DOGS_STND   { +decorate; dehackednum 972 }
+frame S_DOGS_STND2  { +decorate; dehackednum 973 }
+frame S_DOGS_RUN1   { +decorate; dehackednum 974 }
+frame S_DOGS_RUN2   { +decorate; dehackednum 975 }
+frame S_DOGS_RUN3   { +decorate; dehackednum 976 }
+frame S_DOGS_RUN4   { +decorate; dehackednum 977 }
+frame S_DOGS_RUN5   { +decorate; dehackednum 978 }
+frame S_DOGS_RUN6   { +decorate; dehackednum 979 }
+frame S_DOGS_RUN7   { +decorate; dehackednum 980 }
+frame S_DOGS_RUN8   { +decorate; dehackednum 981 }
+frame S_DOGS_ATK1   { +decorate; dehackednum 982 }
+frame S_DOGS_ATK2   { +decorate; dehackednum 983 }
+frame S_DOGS_ATK3   { +decorate; dehackednum 984 }
+frame S_DOGS_PAIN   { +decorate; dehackednum 985 }
+frame S_DOGS_PAIN2  { +decorate; dehackednum 986 }
+frame S_DOGS_DIE1   { +decorate; dehackednum 987 }
+frame S_DOGS_DIE2   { +decorate; dehackednum 988 }
+frame S_DOGS_DIE3   { +decorate; dehackednum 989 }
+frame S_DOGS_DIE4   { +decorate; dehackednum 990 }
+frame S_DOGS_DIE5   { +decorate; dehackednum 991 }
+frame S_DOGS_DIE6   { +decorate; dehackednum 992 }
+frame S_DOGS_RAISE1 { +decorate; dehackednum 993 }
+frame S_DOGS_RAISE2 { +decorate; dehackednum 994 }
+frame S_DOGS_RAISE3 { +decorate; dehackednum 995 }
+frame S_DOGS_RAISE4 { +decorate; dehackednum 996 }
+frame S_DOGS_RAISE5 { +decorate; dehackednum 997 }
+frame S_DOGS_RAISE6 { +decorate; dehackednum 998 }
 
 // Beta BFG firing frames -- avoid editing these or it'll probably break.
 // Warning: don't depend on these being available in Heretic.
@@ -216,29 +216,6 @@ frame S_OLDBFG40 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1038 }
 frame S_OLDBFG41 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1039 }
 frame S_OLDBFG42 { cmp = "BFGG|1|*| 0|Light0    |@next"; dehackednum = 1040 }
 frame S_OLDBFG43 { cmp = "BFGG|1|*|20|ReFire    |S_BFG"; dehackednum = 1041 }
-
-// Dummy frames -- there used to be beta emulation items here; now they are free for use.
-frame S_DUMMY1  { cmp = "TNT1|*|*|0"; dehackednum = 1054 }
-frame S_DUMMY2  { cmp = "TNT1|*|*|0"; dehackednum = 1055 }
-frame S_DUMMY3  { cmp = "TNT1|*|*|0"; dehackednum = 1056 }
-frame S_DUMMY4  { cmp = "TNT1|*|*|0"; dehackednum = 1057 }
-frame S_DUMMY5  { cmp = "TNT1|*|*|0"; dehackednum = 1058 }
-frame S_DUMMY6  { cmp = "TNT1|*|*|0"; dehackednum = 1059 }
-frame S_DUMMY7  { cmp = "TNT1|*|*|0"; dehackednum = 1060 }
-frame S_DUMMY8  { cmp = "TNT1|*|*|0"; dehackednum = 1061 }
-frame S_DUMMY9  { cmp = "TNT1|*|*|0"; dehackednum = 1062 }
-frame S_DUMMY10 { cmp = "TNT1|*|*|0"; dehackednum = 1063 }
-frame S_DUMMY11 { cmp = "TNT1|*|*|0"; dehackednum = 1064 }
-frame S_DUMMY12 { cmp = "TNT1|*|*|0"; dehackednum = 1065 }
-frame S_DUMMY13 { cmp = "TNT1|*|*|0"; dehackednum = 1066 }
-frame S_DUMMY14 { cmp = "TNT1|*|*|0"; dehackednum = 1067 }
-frame S_DUMMY15 { cmp = "TNT1|*|*|0"; dehackednum = 1068 }
-frame S_DUMMY16 { cmp = "TNT1|*|*|0"; dehackednum = 1069 }
-frame S_DUMMY17 { cmp = "TNT1|*|*|0"; dehackednum = 1070 }
-frame S_DUMMY18 { cmp = "TNT1|*|*|0"; dehackednum = 1071 }
-frame S_DUMMY19 { cmp = "TNT1|*|*|0"; dehackednum = 1072 }
-frame S_DUMMY20 { cmp = "TNT1|*|*|0"; dehackednum = 1073 }
-frame S_DUMMY21 { cmp = "TNT1|*|*|0"; dehackednum = 1074 }
 
 // Eternity Engine Frames ------------------------------------------------------
 

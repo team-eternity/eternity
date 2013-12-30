@@ -1,21 +1,23 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //-----------------------------------------------------------------------------
 //
@@ -47,7 +49,8 @@ ev_action_t NullAction =
    &NullActionType,
    EV_ActionNull,
    0,
-   0
+   0,
+   "None"
 };
 
 // Macro to declare a DOOM-style W1 line action
@@ -57,7 +60,8 @@ ev_action_t NullAction =
       &W1ActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // Macro to declare a DOOM-style WR line action
@@ -67,7 +71,8 @@ ev_action_t NullAction =
       &WRActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // Macro to declare a DOOM-style S1 line action
@@ -77,7 +82,8 @@ ev_action_t NullAction =
       &S1ActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // Macro to declare a DOOM-style SR line action
@@ -87,7 +93,8 @@ ev_action_t NullAction =
       &SRActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // Macro to declare a DOOM-style DR line action
@@ -97,7 +104,8 @@ ev_action_t NullAction =
       &DRActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // Macro to declare a DOOM-style G1 line action
@@ -107,7 +115,8 @@ ev_action_t NullAction =
       &G1ActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // Macro to declare a DOOM-style GR line action
@@ -117,7 +126,8 @@ ev_action_t NullAction =
       &GRActionType,                         \
       EV_Action ## action,                   \
       flags,                                 \
-      version                                \
+      version,                               \
+      #name                                  \
    }
 
 // DOOM Line Type 1 - DR Raise Door
@@ -932,7 +942,8 @@ ev_action_t BoomGenAction =
    &BoomGenActionType,    // use generalized action type
    EV_ActionBoomGen,      // use a single action function
    0,                     // flags aren't used
-   200                    // BOOM or up
+   200,                   // BOOM or up
+   "BoomGenAction"        // display name
 };
 
 //=============================================================================
@@ -948,7 +959,8 @@ ev_action_t BoomGenAction =
       &ParamActionType,      \
       EV_Action ## name,     \
       0,                     \
-      333                    \
+      333,                   \
+      #name                  \
    }
 
 PARAMLINE(ParamDoorRaise);

@@ -936,6 +936,9 @@
     <ClCompile Include="..\source\p_portalclipmovement.cpp">
       <Filter>Source Files\Clip\Portal</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\v_image.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1625,7 +1628,7 @@
     <ClInclude Include="..\source\m_compare.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
-<<<<<<< .mine    <ClInclude Include="..\source\p_clipen.h">
+    <ClInclude Include="..\source\p_clipen.h">
       <Filter>Source Files\Clip\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\source\p_mapcontext.h">
@@ -1646,14 +1649,19 @@
     <ClInclude Include="..\source\p_portalclip.h">
       <Filter>Source Files\Clip\Portal</Filter>
     </ClInclude>
-=======    <ClInclude Include="..\source\mn_items.h">
+   <ClInclude Include="..\source\mn_items.h">
       <Filter>Source Files\Mn_\Mn_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\m_ctype.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
->>>>>>> .theirs  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="..\source\m_binary.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\v_image.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+  </ItemGroup>  <ItemGroup>
     <None Include="res\ee.ico">
       <Filter>Resource Files</Filter>
     </None>

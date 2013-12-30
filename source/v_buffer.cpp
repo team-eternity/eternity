@@ -3,19 +3,21 @@
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //--------------------------------------------------------------------------
 //
@@ -41,9 +43,9 @@ static void VB_MakeXYLUT(VBuffer *vb)
    int i;
 
    if(!vb->ylut)
-      vb->ylut = (byte **)(Z_SysCalloc(sizeof(byte*), vb->height));
+      vb->ylut = ecalloc(byte **, sizeof(byte *), vb->height);
    if(!vb->xlut)
-      vb->xlut = (int *)(Z_SysCalloc(sizeof(int), vb->width));
+      vb->xlut = ecalloc(int *, sizeof(int), vb->width);
 
    for(i = 0; i < vb->height; i++)
       vb->ylut[i] = vb->data + vb->pitch * i;
@@ -58,9 +60,9 @@ static void VB_MakeXYLUT(VBuffer *vb)
 static void VB_AllocateData(VBuffer *buffer)
 {
    if(buffer->data && buffer->owndata)
-      Z_SysFree(buffer->data);
+      efree(buffer->data);
 
-   buffer->data = (byte *)(Z_SysCalloc(buffer->width * buffer->height, buffer->pixelsize));
+   buffer->data = ecalloc(byte *, buffer->width*buffer->height, buffer->pixelsize);
    buffer->owndata = true;
 
    VB_MakeXYLUT(buffer);
@@ -72,7 +74,7 @@ static void VB_AllocateData(VBuffer *buffer)
 static void VB_SetData(VBuffer *buffer, byte *pixels)
 {
    if(buffer->data && buffer->owndata)
-      Z_SysFree(buffer->data);
+      efree(buffer->data);
 
    buffer->data = pixels;
    buffer->owndata = false;
@@ -132,7 +134,7 @@ VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
    if(bitdepth != 8)
       I_Error("V_CreateVBuffer: Invalid bitdepth %d\n", bitdepth);
 
-   ret = (VBuffer *)(Z_SysCalloc(1, sizeof(VBuffer)));
+   ret = estructalloc(VBuffer, 1);
 
    V_InitVBuffer(ret, width, height, bitdepth);
    ret->needfree = true;
@@ -180,7 +182,7 @@ void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch,
 // V_CreateVBufferFrom
 //
 // Allocates a new VBuffer object with the given pixeldata. The VBuffer created
-// by this funciton does not OWN the given data and so it will not be freed by
+// by this function does not OWN the given data and so it will not be freed by
 // V_FreeVBuffer
 //
 VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, 
@@ -188,7 +190,7 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
 {
    VBuffer *ret;
 
-   if(width < 0 || height < 0)
+   if(width <= 0 || height <= 0)
    {
       I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n", 
               width, height);
@@ -197,7 +199,7 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
    if(bitdepth != 8)
       I_Error("V_CreateVBufferFrom: Invalid bitdepth %d\n", bitdepth);
 
-   ret = (VBuffer *)(Z_SysCalloc(1, sizeof(VBuffer)));
+   ret = estructalloc(VBuffer, 1);
 
    V_InitVBufferFrom(ret, width, height, pitch, bitdepth, data);
    ret->needfree = true;
@@ -258,7 +260,7 @@ VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height)
 {
    VBuffer *ret;
 
-   ret = (VBuffer *)(Z_SysCalloc(1, sizeof(VBuffer)));
+   ret = estructalloc(VBuffer, 1);
    V_InitSubVBuffer(ret, parent, x, y, width, height);
    ret->needfree = true;
 
@@ -278,25 +280,25 @@ void V_FreeVBuffer(VBuffer *buffer)
 
    if(buffer->owndata)
    {
-      Z_SysFree(buffer->data);
+      efree(buffer->data);
       buffer->data = NULL;
       buffer->owndata = false;
    }
 
    if(buffer->ylut)
    {
-      Z_SysFree(buffer->ylut);
+      efree(buffer->ylut);
       buffer->ylut = NULL;
    }
 
    if(buffer->xlut)
    {
-      Z_SysFree(buffer->xlut);
+      efree(buffer->xlut);
       buffer->xlut = NULL;
    }
 
    if(buffer->needfree)
-      Z_SysFree(buffer);
+      efree(buffer);
    else
       memset(buffer, 0, sizeof(VBuffer));
 }
@@ -315,10 +317,10 @@ void V_UnsetScaling(VBuffer *buffer)
 
    if(buffer->freelookups)
    {
-      Z_SysFree(buffer->x1lookup);
-      Z_SysFree(buffer->x2lookup);
-      Z_SysFree(buffer->y1lookup);
-      Z_SysFree(buffer->y2lookup);
+      efree(buffer->x1lookup);
+      efree(buffer->x2lookup);
+      efree(buffer->y1lookup);
+      efree(buffer->y2lookup);
    }
 
    buffer->x1lookup = buffer->x2lookup 
@@ -364,10 +366,10 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
    {
       int size = sizeof(int) * (unscaledw + 1);
 
-      buffer->x1lookup = (int *)Z_SysCalloc(size, 1);
-      buffer->x2lookup = (int *)Z_SysCalloc(size, 1);
-      buffer->y1lookup = (int *)Z_SysCalloc(size, 1);
-      buffer->y2lookup = (int *)Z_SysCalloc(size, 1);
+      buffer->x1lookup = ecalloc(int *, 1, size);
+      buffer->x2lookup = ecalloc(int *, 1, size);
+      buffer->y1lookup = ecalloc(int *, 1, size);
+      buffer->y2lookup = ecalloc(int *, 1, size);
       buffer->freelookups = true;
    }
 

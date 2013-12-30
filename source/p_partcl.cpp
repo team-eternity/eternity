@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -1026,119 +1025,6 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
    }
 }
 
-/*
-void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z, 
-                   angle_t angle, int updown, int kind)
-{
-   int color1, color2;
-   int zvel, zvelmod, zspread, zadd;
-   // SoM: zvelocity should depend on particle effect type.
-   bool smoke = false, consistant = false;
-   int mod = 31;
-   byte ttl = 12;
-   
-   switch(kind)
-   {
-   case 0:              // Blood
-      color1 = red;
-      color2 = dred;
-      break;
-   case 1:              // Gunshot
-      if(!comp[comp_terrain])
-      {
-         // 06/21/02: make bullet puff colors responsive to 
-         // TerrainTypes -- this is very cool and Quake-2-like ^_^      
-         
-         int terrain = P_GetTerrainTypeForPt(x, y, updown);
-         
-         switch(terrain)
-         {
-         case FLOOR_WATER:
-            color1 = blue1;
-            color2 = blue;
-            zadd = -512;
-            smoke = true;
-            break;
-         case FLOOR_LAVA:
-            color1 = orange;
-            color2 = mdred;
-            zadd = -512;
-            smoke = true;
-            break;
-         default:
-            color1 = grey1;
-            color2 = grey5;
-            zadd = 64;
-            smoke = true;
-            break;
-         }
-      }
-      else
-      {
-         color1 = grey1;
-         color2 = grey5;
-         zadd = 64;
-         smoke = true;
-      }
-      break;
-   case 2:		// Smoke
-      color1 = grey3;
-      color2 = grey1;
-      zadd = 64;
-      smoke = true;
-      break;
-   default:
-      return;
-   }
-   
-   if(smoke)
-   {
-      zvel = 512;
-      zspread = (updown ? -2000 : 2000);
-      mod = 14;
-      ttl = 15;
-   }
-   else
-   {
-      zvel = -3000;
-      zspread = (updown ? -2400 : 2400);
-      zadd = ((updown == 2) ? -128 : 0);
-      mod = 10;
-      ttl = 35;
-      consistant = true;
-   }
-   
-   for(; count; count--)
-   {
-      particle_t *p = newParticle();
-      angle_t an;
-      
-      if(!p)
-         break;
-      
-      p->ttl = ttl;
-      p->fade = FADEFROMTTL(ttl);
-      p->trans = FRACUNIT;
-      p->size = 4;
-      p->color = M_Random() & 0x80 ? color1 : color2;
-      p->velz = !consistant ? (M_Random() * zvel) : 128 * zvel + M_Random();
-      p->accz = -FRACUNIT/22;
-      if(kind)
-      {
-         an = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
-         p->velx = (M_Random() * finecosine[an]) >> 11;
-         p->vely = (M_Random() * finesine[an]) >> 11;
-         p->accx = p->velx >> 4;
-         p->accy = p->vely >> 4;
-      }
-      p->z = z + (M_Random() + zadd) * zspread;
-      an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
-      p->x = x + (M_Random() & mod)*finecosine[an];
-      p->y = y + (M_Random() & mod)*finesine[an];
-   }
-}
-*/
-
 void P_DisconnectEffect(Mobj *actor)
 {
    int i;
@@ -1163,8 +1049,6 @@ void P_DisconnectEffect(Mobj *actor)
       p->styleflags = PS_FULLBRIGHT;
    }
 }
-
-//#define FLYCOUNT 162
 
 //
 // P_FlyEffect

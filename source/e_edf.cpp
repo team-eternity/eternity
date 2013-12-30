@@ -1,21 +1,23 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2003 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //----------------------------------------------------------------------------
 //
@@ -103,6 +105,7 @@
 #include "e_inventory.h"
 #include "e_mod.h"
 #include "e_player.h"
+#include "e_reverbs.h"
 #include "e_sound.h"
 #include "e_sprite.h"
 #include "e_states.h"
@@ -219,6 +222,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ENVIROMGR,   edf_seqmgr_opts,   CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_REVERB,      edf_reverb_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_MOD,         edf_dmgtype_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
@@ -1106,6 +1110,7 @@ static const char *edf_lumpnames[] =
    "ESNDSEQ",
    "ESNDINFO",
    "EFONTS",
+   "EREVERBS",
    NULL
 };
 
@@ -1618,6 +1623,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process sound sequences
    E_ProcessSndSeqs(cfg);
+
+   // process reverb definitions (12/22/13)
+   E_ProcessReverbs(cfg);
 
    // process damage types
    E_ProcessDamageTypes(cfg);

@@ -238,6 +238,12 @@
     <Filter Include="Source Files\Clip\Advanced">
       <UniqueIdentifier>{390f7d8b-ca5f-4add-8af5-935a149595a6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\S_\S_ Headers">
+      <UniqueIdentifier>{6f49c79b-9ba7-479b-982f-80a88a32eace}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\S_\S_ Source">
+      <UniqueIdentifier>{db06d03f-cab2-4823-98b6-8b2bd21b98be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -639,15 +645,6 @@
     <ClCompile Include="..\source\r_voxels.cpp">
       <Filter>Source Files\R_\R_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\s_sndseq.cpp">
-      <Filter>Source Files\S_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\s_sound.cpp">
-      <Filter>Source Files\S_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\sounds.cpp">
-      <Filter>Source Files\S_</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\Win32\i_cpu.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
@@ -939,6 +936,27 @@
     <ClCompile Include="..\Source\p_map.cpp" />
     <ClCompile Include="..\source\p_map.cpp">
       <Filter>Source Files\Clip\Classic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\v_image.cpp">
+      <Filter>Source Files\V_\V_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\s_sndseq.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\s_sound.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\sounds.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\s_reverb.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_reverbs.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\s_formats.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1356,15 +1374,6 @@
     <ClInclude Include="..\source\r_voxels.h">
       <Filter>Source Files\R_\R_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\s_sndseq.h">
-      <Filter>Source Files\S_</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\s_sound.h">
-      <Filter>Source Files\S_</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\sounds.h">
-      <Filter>Source Files\S_</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\Win32\i_fnames.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
@@ -1649,6 +1658,30 @@
     </ClInclude>
     <ClInclude Include="..\source\p_traceengine.h">
       <Filter>Source Files\Clip\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\v_image.h">
+      <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_binary.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_sndseq.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\s_sound.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\sounds.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_reverb.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_reverbs.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_formats.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

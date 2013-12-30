@@ -1,11 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -302,7 +301,7 @@ static void D_FindDiskFileIWAD()
 static void D_LoadDiskFileIWAD()
 {
    if(diskiwad.f)
-      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, false, true);
+      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, DAF_IWAD);
    else
       I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
@@ -319,7 +318,7 @@ static void D_LoadDiskFilePWAD()
    if(wad.f)
    {
       if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, false, false);
+         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, DAF_NONE);
    }
 }
 
@@ -1287,7 +1286,7 @@ static void D_loadResourceWad()
       psnprintf(filestr, len, "%s/doom/eternity.pke", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, false, false);
+   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1394,7 +1393,7 @@ static void D_identifyIWAD()
       // fraggle -- this allows better compatibility with new IWADs
       D_loadResourceWad();
 
-      D_AddFile(iwad.constPtr(), lumpinfo_t::ns_global, NULL, 0, false, true);
+      D_AddFile(iwad.constPtr(), lumpinfo_t::ns_global, NULL, 0, DAF_IWAD);
 
       // 12/24/11: check for game folder hi-def music
       D_CheckGameMusic();

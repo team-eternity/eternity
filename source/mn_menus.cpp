@@ -1,21 +1,20 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 Simon Howard
+// Copyright(C) 2013 Simon Howard et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -92,7 +91,6 @@ extern menu_t menu_startmap;
 int screenSize;      // screen size
 
 char *mn_demoname;           // demo to play
-char *mn_wadname;            // wad to load
 
 // haleyjd: moved these up here to fix Z_Free error
 
@@ -115,9 +113,9 @@ void MN_InitMenus()
 {
    int i; // haleyjd
    
-   mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
-   mn_wadname  = Z_Strdup("", PU_STATIC, 0);
-   mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
+   mn_demoname = estrdup("demo1");
+   mn_wadname  = estrdup("");
+   mn_start_mapname = estrdup(""); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
    for(i = 0; i < SAVESLOTS; ++i)
@@ -887,46 +885,9 @@ menu_t menu_wadiwads3 =
    mn_wad_pages,
 };
 
-VARIABLE_STRING(mn_wadname,  NULL,       UL);
-CONSOLE_VARIABLE(mn_wadname, mn_wadname,  0) {}
-
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 {   
    MN_StartMenu(&menu_loadwad);
-}
-
-CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
-{
-   char *filename = NULL;
-
-   // haleyjd 03/12/06: this is much more resilient than the 
-   // chain of console commands that was used by SMMU
-
-   // haleyjd: generalized to all shareware modes
-   if(GameModeInfo->flags & GIF_SHAREWARE)
-   {
-      MN_Alert("You must purchase the full version\n"
-               "to load external wad files.\n"
-               "\n"
-               "%s", DEH_String("PRESSKEY"));
-      return;
-   }
-
-   if(!mn_wadname || strlen(mn_wadname) == 0)
-   {
-      MN_ErrorMsg("Invalid wad file name");
-      return;
-   }
-
-   filename = M_SafeFilePath(wad_directory, mn_wadname);
-
-   if(D_AddNewFile(filename))
-   {
-      MN_ClearMenus();
-      D_StartTitle();
-   }
-   else
-      MN_ErrorMsg("Failed to load wad file");
 }
 
 //=============================================================================
@@ -1941,11 +1902,9 @@ static const char *sixteenNineModes[] =
    NULL
 };
 
-// FIXME/TODO: Not supported as menu choices yet:
+// TODO: Not supported as menu choices yet:
 // 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
 // 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
-// These are not choices here because EE doesn't support them properly yet.
-// Weapons will float above the status bar in these aspect ratios.
 
 static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
 {
@@ -2351,7 +2310,6 @@ static menuitem_t mn_soundeq_items[] =
    { it_title,      "Sound Options",          NULL, "m_sound" },
    { it_gap },
    { it_info,       "Equalizer"                               },
-   { it_toggle,     "Enable equalizer",       "s_equalizer"   },
    { it_slider,     "Low band gain",          "s_lowgain"     },
    { it_slider,     "Midrange gain",          "s_midgain"     },
    { it_slider,     "High band gain",         "s_highgain"    },

@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -222,7 +221,7 @@ void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
    else
    {
       if(in_textmode)
-         printf("Warning: couldn't open %s\n", filename);
+         printf(" Warning: couldn't open %s\n", filename);
       else
          C_Printf(FC_ERROR "Couldn't open %s\n", filename);
    }
@@ -238,12 +237,10 @@ void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
 //
 WadDirectory::openwad_t WadDirectory::openFile(wfileadd_t &addInfo)
 {
-   openwad_t openData;
+   edefstructvar(openwad_t, openData);
    qstring   filename;
    bool      allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
    
-   memset(&openData, 0, sizeof(openData));
-
    // Try opening the file
    filename = addInfo.filename;
    if(!(openData.handle = W_TryOpenFile(filename, allowInexact)))
@@ -306,7 +303,7 @@ lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 bool WadDirectory::addSingleFile(openwad_t &openData, wfileadd_t &addInfo,
                                  int startlump)
 {
-   filelump_t  singleinfo;
+   edefstructvar(filelump_t, singleinfo);
    lumpinfo_t *lump_p;
 
    singleinfo.filepos = 0;
@@ -645,7 +642,7 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       &WadDirectory::addSingleFile // W_FORMAT_FILE
    };
    
-   openwad_t openData;
+   edefstructvar(openwad_t, openData);
 
    // When loading a subfile, the physical file is already open.
    if(addInfo.flags & WFA_SUBFILE)
@@ -867,6 +864,8 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { "A_START",  "A_END",  lumpinfo_t::ns_acs          },
    { NULL,       NULL,     lumpinfo_t::ns_pads         },
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
+   { NULL,       NULL,     lumpinfo_t::ns_graphics     },
+   { NULL,       NULL,     lumpinfo_t::ns_sounds       },
 };
 
 //
@@ -1098,21 +1097,30 @@ int W_CheckNumForNameNS(register const char *name, register int li_namespace)
 }
 
 //
-// W_CheckNumForNameNSG
+// WadDirectory::checkNumForNameNSG
 //
-// haleyjd 02/15/10: Looks in specified namespace and if not found, then looks
-// in the global namespace.
+// haleyjd 12/24/13: Looks in both a specified namespace and the global
+// namespace for a lump. If the namespace lump is found and is from a newer
+// source than any global lump, it will be returned. Otherwise, if the
+// global lump exists, it will be returned.
 //
 int WadDirectory::checkNumForNameNSG(const char *name, int ns)
 {
    int num = -1;
-   int curnamespace = ns;
+   int inNS, inGlobal;
+   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
 
-   do
-   {
-      num = checkNumForName(name, curnamespace);
-   }
-   while(num < 0 && curnamespace == ns ? curnamespace = lumpinfo_t::ns_global, 1 : 0);
+   if((inNS = checkNumForName(name, ns)) >= 0)
+      nsLump = lumpinfo[inNS];
+   if((inGlobal = checkNumForName(name, lumpinfo_t::ns_global)) >= 0)
+      globalLump = lumpinfo[inGlobal];
+
+   if(!nsLump)
+      num = inGlobal;
+   else if(!globalLump)
+      num = inNS;
+   else
+      num = nsLump->source >= globalLump->source ? inNS : inGlobal;
 
    return num;
 }
@@ -1155,6 +1163,33 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 
    // Return the matching lump, or -1 if none found.   
    return i;
+}
+
+//
+// WadDirectory::checkNumForLFNNSG
+//
+// As above but falling back to ns_global if not initially found in
+// preferred namespace.
+//
+int WadDirectory::checkNumForLFNNSG(const char *name, int ns)
+{
+   int num = -1;
+   int inNS, inGlobal;
+   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
+
+   if((inNS = checkNumForLFN(name, ns)) >= 0)
+      nsLump = lumpinfo[inNS];
+   if((inGlobal = checkNumForLFN(name, lumpinfo_t::ns_global)) >= 0)
+      globalLump = lumpinfo[inGlobal];
+
+   if(!nsLump)
+      num = inGlobal;
+   else if(!globalLump)
+      num = inNS;
+   else
+      num = nsLump->source >= globalLump->source ? inNS : inGlobal;
+
+   return num;
 }
 
 //

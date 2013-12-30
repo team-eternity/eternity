@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F74E18E17589B250066CD25 /* Eternity.app in Resources */ = {isa = PBXBuildFile; fileRef = FA601C711696228000046D2D /* Eternity.app */; };
-		4F74E1911758B53A0066CD25 /* Eternity-106.app in Resources */ = {isa = PBXBuildFile; fileRef = 4F74E18C17589A2D0066CD25 /* Eternity-106.app */; };
+		4F2F32BA186710F300EED7DE /* eternity in Resources */ = {isa = PBXBuildFile; fileRef = 4F2F32B9186710B200EED7DE /* eternity */; };
+		4F2F32BB1867111400EED7DE /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
+		4F2F32BC1867111400EED7DE /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
+		4F2F32BD1867111400EED7DE /* user in Resources */ = {isa = PBXBuildFile; fileRef = FA8216871647128900FF998A /* user */; };
 		4FD651B916B8183500F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */; };
@@ -17,9 +19,6 @@
 		FA3011F4168A44E0005D25A8 /* ELCommandLineArray.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */; };
 		FA601C7B1696246800046D2D /* Launcher.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA601C791696246800046D2D /* Launcher.xib */; };
 		FA730D1B168DFC0D00E39907 /* COPYING.pdf in Resources */ = {isa = PBXBuildFile; fileRef = FA730D1A168DFC0D00E39907 /* COPYING.pdf */; };
-		FA8216A21647129700FF998A /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
-		FA8216A41647129700FF998A /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
-		FA8216A51647129700FF998A /* user in Resources */ = {isa = PBXBuildFile; fileRef = FA8216871647128900FF998A /* user */; };
 		FA891468165424E40034E860 /* ELTextFieldDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FA891467165424E40034E860 /* ELTextFieldDelegate.m */; };
 		FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */ = {isa = PBXBuildFile; fileRef = FAB103DB15911F4E00393DE3 /* DumpConsole.xib */; };
 		FAB103E21591214400393DE3 /* ELDumpConsole.m in Sources */ = {isa = PBXBuildFile; fileRef = FAB103E11591214400393DE3 /* ELDumpConsole.m */; };
@@ -28,10 +27,27 @@
 		FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FABF5FFF158C8F6300C49E93 /* Credits.rtf */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4F2F32B6186710B200EED7DE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D1107320486CEB800E47090;
+			remoteInfo = "Eternity Engine";
+		};
+		4F2F32B8186710B200EED7DE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4F5F386B182D97A10027813A;
+			remoteInfo = eternity;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
-		4F74E18C17589A2D0066CD25 /* Eternity-106.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Eternity-106.app"; path = "../../../../develop/eternity/Eternity-106.app"; sourceTree = "<group>"; };
+		4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = EternityEngine.xcodeproj; path = ../EternityEngine.xcodeproj; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELFileViewDataSource.h; sourceTree = "<group>"; };
@@ -41,7 +57,6 @@
 		FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArgument.m; sourceTree = "<group>"; };
 		FA3011F2168A44DF005D25A8 /* ELCommandLineArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArray.h; sourceTree = "<group>"; };
 		FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArray.m; sourceTree = "<group>"; };
-		FA601C711696228000046D2D /* Eternity.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = Eternity.app; path = ../../../../develop/eternity/Eternity.app; sourceTree = "<group>"; };
 		FA601C7A1696246800046D2D /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Launcher.xib; sourceTree = "<group>"; };
 		FA730D1A168DFC0D00E39907 /* COPYING.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = COPYING.pdf; path = Resources/COPYING.pdf; sourceTree = "<group>"; };
 		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../base; sourceTree = SOURCE_ROOT; };
@@ -82,6 +97,7 @@
 		29B97314FDCFA39411CA2CEA /* EternityLaunch */ = {
 			isa = PBXGroup;
 			children = (
+				4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */,
 				29B97315FDCFA39411CA2CEA /* Code */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -103,8 +119,6 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				4F74E18C17589A2D0066CD25 /* Eternity-106.app */,
-				FA601C711696228000046D2D /* Eternity.app */,
 				FA730D1A168DFC0D00E39907 /* COPYING.pdf */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
 				FABF5F00158C710400C49E93 /* Eternity.icns */,
@@ -123,6 +137,15 @@
 				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4F2F32B2186710B100EED7DE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4F2F32B7186710B200EED7DE /* Eternity.app */,
+				4F2F32B9186710B200EED7DE /* eternity */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		FA1F5705158BC2FD006F8063 /* Main */ = {
@@ -198,12 +221,35 @@
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* EternityLaunch */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4F2F32B2186710B100EED7DE /* Products */;
+					ProjectRef = 4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* Eternity Engine */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4F2F32B7186710B200EED7DE /* Eternity.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = Eternity.app;
+			remoteRef = 4F2F32B6186710B200EED7DE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4F2F32B9186710B200EED7DE /* eternity */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = eternity;
+			remoteRef = 4F2F32B8186710B200EED7DE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8D1107290486CEB800E47090 /* Resources */ = {
@@ -216,11 +262,10 @@
 				FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */,
 				FA730D1B168DFC0D00E39907 /* COPYING.pdf in Resources */,
 				FA601C7B1696246800046D2D /* Launcher.xib in Resources */,
-				FA8216A21647129700FF998A /* base in Resources */,
-				FA8216A41647129700FF998A /* docs in Resources */,
-				FA8216A51647129700FF998A /* user in Resources */,
-				4F74E18E17589B250066CD25 /* Eternity.app in Resources */,
-				4F74E1911758B53A0066CD25 /* Eternity-106.app in Resources */,
+				4F2F32BA186710F300EED7DE /* eternity in Resources */,
+				4F2F32BB1867111400EED7DE /* base in Resources */,
+				4F2F32BC1867111400EED7DE /* docs in Resources */,
+				4F2F32BD1867111400EED7DE /* user in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
