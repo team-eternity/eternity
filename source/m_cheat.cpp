@@ -576,7 +576,7 @@ static void cheat_keyxx(const void *arg)
       msg = "Key Removed";
    }
 
-   doom_printf(msg);
+   doom_printf("%s", msg);
 }
 
 // killough 2/16/98: generalized weapon cheats
