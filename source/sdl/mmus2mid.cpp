@@ -422,7 +422,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
    // set the divisions (ticks per quarter note)
    mididata->divisions = division;
    
-   // allocat for midi tempo/key track, allow for end of track 
+   // allocate for midi tempo/key track, allow for end of track 
    if(!(mididata->track[0].data =
       erealloc(unsigned char *, mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4)))
       return MEMALLOC;
