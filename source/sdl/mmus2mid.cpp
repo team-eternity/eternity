@@ -582,6 +582,15 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
    {
       if(mididata->track[i].len)
       {
+         if(TWriteByte(mididata, i, 0x00)) // haleyjd 12/30/13: send all notes off
+            goto err;
+         if(TWriteByte(mididata, i, 0xB0))
+            goto err;
+         if(TWriteByte(mididata, i, 0x7B))
+            goto err;
+         if(TWriteByte(mididata, i, 0x00))
+            goto err;
+
          if(TWriteByte(mididata, i, 0x00)) // midi end of track code
             goto err;
          if(TWriteByte(mididata, i, 0xFF))
