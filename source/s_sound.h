@@ -23,10 +23,12 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __S_SOUND__
-#define __S_SOUND__
+#ifndef S_SOUND_H__
+#define S_SOUND_H__
 
-#include "p_mobj.h"
+class Mobj;
+class PointThinker;
+
 #include "sounds.h"
 
 // haleyjd 07/13/05: moved these defines to the header
@@ -138,6 +140,16 @@ extern musicinfo_t *musicinfos[];
 
 // haleyjd 12/24/11: hi-def music support
 extern bool s_hidefmusic;
+
+//
+// GameModeInfo music routines
+//
+int S_MusicForMapDoom();
+int S_MusicForMapDoom2();
+int S_MusicForMapHtic();
+int S_DoomMusicCheat(const char *buf);
+int S_Doom2MusicCheat(const char *buf);
+int S_HereticMusicCheat(const char *buf);
 
 #endif
 

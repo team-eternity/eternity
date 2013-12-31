@@ -47,6 +47,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_skin.h"
 #include "p_tick.h"

@@ -52,6 +52,7 @@
 #include "mn_engin.h"
 #include "mn_misc.h"  // haleyjd
 #include "p_inter.h"
+#include "p_mobj.h"
 #include "p_partcl.h" // haleyjd: add particle event cmds
 #include "p_setup.h"
 #include "p_user.h"

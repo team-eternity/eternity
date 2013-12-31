@@ -1277,6 +1277,51 @@ void S_Start()
    }
 }
 
+//=============================================================================
+//
+// Music Cheat Routines
+//
+
+int S_DoomMusicCheat(const char *buf)
+{
+   int input = (buf[0]-'1') * 9 + (buf[1] - '1');
+          
+   // jff 4/11/98: prevent IDMUS0x IDMUSx0 in DOOM I and greater than introa
+   if(buf[0] < '1' || buf[1] < '1' || input > 31)
+      return -1;
+   else
+      return mus_e1m1 + input;
+}
+
+int S_Doom2MusicCheat(const char *buf)
+{
+   int input = (buf[0] - '0') * 10 + buf[1] - '0';
+
+   // jff 4/11/98: prevent IDMUS00 in DOOM II and IDMUS36 or greater
+   if(input < 1 || input > 35)
+      return -1;
+   else
+      return mus_runnin + input - 1;
+}
+
+int S_HereticMusicCheat(const char *buf)
+{
+   // haleyjd 03/10/03: heretic support
+   // use H_Mus_Matrix for easy access
+   int episodenum = (buf[0] - '0') - 1;
+   int mapnum     = (buf[1] - '0') - 1;
+
+   if(episodenum < 0 || episodenum > 5 || mapnum < 0 || mapnum > 8)
+      return -1;
+   else
+      return H_Mus_Matrix[episodenum][mapnum];
+}
+
+//=============================================================================
+//
+// Sound Initialization
+//
+
 static void S_HookMusic(musicinfo_t *);
 
 //

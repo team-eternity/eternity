@@ -49,6 +49,7 @@
 #include "info.h"
 #include "m_collection.h"
 #include "metaapi.h"
+#include "p_mobj.h"
 #include "p_skin.h"
 #include "s_sound.h"
 #include "v_video.h"

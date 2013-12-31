@@ -294,6 +294,10 @@ struct missioninfo_t
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
 };
 
+// function pointer types
+typedef int (*gimusformapfn_t)();
+typedef int (*gimuscheatfn_t)(const char *);
+
 //
 // gamemodeinfo_t
 //
@@ -304,9 +308,9 @@ struct missioninfo_t
 //
 struct gamemodeinfo_t
 {
-   GameMode_t id;             // id      - replaces "gamemode" variable
-   int type;                  // main game mode type: doom, heretic, etc.
-   unsigned int flags;        // game mode flags
+   GameMode_t id;                 // id      - replaces "gamemode" variable
+   int type;                      // main game mode type: doom, heretic, etc.
+   unsigned int flags;            // game mode flags
    
    // startup stuff
    const char *versionName;       // descriptive version name
@@ -323,98 +327,99 @@ struct gamemodeinfo_t
    int titleMusNum;               // music number to use for title
 
    // menu stuff
-   const char *menuBackground;   // name of menu background flat
-   const char *creditBackground; // name of dynamic credit bg flat
-   int   creditY;                // y coord for credit text
-   int   creditTitleStep;        // step-down from credit title
-   gimenucursor_t *menuCursor;   // pointer to the big menu cursor
-   menu_t *mainMenu;             // pointer to main menu structure
-   menu_t *saveMenu;             // pointer to save menu structure
-   menu_t *loadMenu;             // pointer to load menu structure
-   menu_t *newGameMenu;          // pointer to new game menu structure
-   int *menuSounds;              // menu sound indices
-   int transFrame;               // frame DEH # used on video menu
-   int skvAtkSound;              // skin viewer attack sound
-   int unselectColor;            // color of unselected menu item text
-   int selectColor;              // color of selected menu item text
-   int variableColor;            // color of variable text
-   int titleColor;               // color of title strings
-   int infoColor;                // color of it_info items
-   int bigFontItemColor;         // color of selectable items using big font
-   int menuOffset;               // an amount to subtract from menu y coords
+   const char *menuBackground;    // name of menu background flat
+   const char *creditBackground;  // name of dynamic credit bg flat
+   int   creditY;                 // y coord for credit text
+   int   creditTitleStep;         // step-down from credit title
+   gimenucursor_t *menuCursor;    // pointer to the big menu cursor
+   menu_t *mainMenu;              // pointer to main menu structure
+   menu_t *saveMenu;              // pointer to save menu structure
+   menu_t *loadMenu;              // pointer to load menu structure
+   menu_t *newGameMenu;           // pointer to new game menu structure
+   int *menuSounds;               // menu sound indices
+   int transFrame;                // frame DEH # used on video menu
+   int skvAtkSound;               // skin viewer attack sound
+   int unselectColor;             // color of unselected menu item text
+   int selectColor;               // color of selected menu item text
+   int variableColor;             // color of variable text
+   int titleColor;                // color of title strings
+   int infoColor;                 // color of it_info items
+   int bigFontItemColor;          // color of selectable items using big font
+   int menuOffset;                // an amount to subtract from menu y coords
 
    // border stuff
-   const char *borderFlat;    // name of flat to fill backscreen
-   giborder_t *border;        // pointer to a game border
+   const char *borderFlat;        // name of flat to fill backscreen
+   giborder_t *border;            // pointer to a game border
 
    // HU / Video / Console stuff
-   int defTextTrans;          // default text color rng for msgs
-   int colorNormal;           // color # for normal messages
-   int colorHigh;             // color # for highlighted messages
-   int colorError;            // color # for error messages
-   int c_numCharsPerLine;     // number of chars per line in console
-   int c_BellSound;           // sound used for \a in console
-   int c_ChatSound;           // sound used by say command
-   const char *consoleBack;   // lump to use for default console backdrop
-   unsigned char blackIndex;  // palette index for black {0,0,0}
-   unsigned char whiteIndex;  // palette index for white {255,255,255}
-   int numHUDKeys;            // number of keys to show in HUD
-   const char **cardNames;    // names of default key card artifact types
+   int defTextTrans;              // default text color rng for msgs
+   int colorNormal;               // color # for normal messages
+   int colorHigh;                 // color # for highlighted messages
+   int colorError;                // color # for error messages
+   int c_numCharsPerLine;         // number of chars per line in console
+   int c_BellSound;               // sound used for \a in console
+   int c_ChatSound;               // sound used by say command
+   const char *consoleBack;       // lump to use for default console backdrop
+   unsigned char blackIndex;      // palette index for black {0,0,0}
+   unsigned char whiteIndex;      // palette index for white {255,255,255}
+   int numHUDKeys;                // number of keys to show in HUD
+   const char **cardNames;        // names of default key card artifact types
 
    // Status bar
-   stbarfns_t *StatusBar;     // status bar function set
+   stbarfns_t *StatusBar;         // status bar function set
 
    // Automap
-   const char *markNumFmt;    // automap mark number format string
+   const char *markNumFmt;        // automap mark number format string
 
    // Miscellaneous graphics
-   const char *pausePatch;    // name of patch to show when paused
+   const char *pausePatch;        // name of patch to show when paused
 
    // Game interaction stuff
-   int numEpisodes;           // number of game episodes
-   exitrule_t *exitRules;     // exit rule set
-   const char *teleFogType;   // Name of telefog object
-   fixed_t teleFogHeight;     // amount to add to telefog z coord
-   int teleSound;             // sound id for teleportation
-   int16_t thrustFactor;      // damage thrust factor
-   int defaultGibHealth;      // default gibhealth behavior
-   const char *defPClassName; // default playerclass name
-   const char *defTranslate;  // default translation for AUTOTRANSLATE
-   bspecrule_t *bossRules;    // default boss specials
-   int levelType;             // level translation type
+   int numEpisodes;               // number of game episodes
+   exitrule_t *exitRules;         // exit rule set
+   const char *teleFogType;       // Name of telefog object
+   fixed_t teleFogHeight;         // amount to add to telefog z coord
+   int teleSound;                 // sound id for teleportation
+   int16_t thrustFactor;          // damage thrust factor
+   int defaultGibHealth;          // default gibhealth behavior
+   const char *defPClassName;     // default playerclass name
+   const char *defTranslate;      // default translation for AUTOTRANSLATE
+   bspecrule_t *bossRules;        // default boss specials
+   int levelType;                 // level translation type
 
    // Intermission and Finale stuff
-   const char *interPic;      // default intermission backdrop
-   int interMusNum;           // intermission music number
-   giftextpos_t *fTextPos;    // finale text info
-   interfns_t *interfuncs;    // intermission function pointers
-   int teleEndGameFinaleType; // Teleport_EndGame causes this finale by default
-   finaledata_t *finaleData;  // Default finale data for MapInfo
+   const char *interPic;          // default intermission backdrop
+   int interMusNum;               // intermission music number
+   giftextpos_t *fTextPos;        // finale text info
+   interfns_t *interfuncs;        // intermission function pointers
+   int teleEndGameFinaleType;     // Teleport_EndGame causes this finale by default
+   finaledata_t *finaleData;      // Default finale data for MapInfo
 
    // Sound
-   musicinfo_t *s_music;      // pointer to musicinfo_t (sounds.h)
-   int (*MusicForMap)(void);  // pointer to S_MusicForMap* routine
-   int musMin;                // smallest music index value (0)
-   int numMusic;              // maximum music index value
-   const char *musPrefix;     // "D_" for DOOM, "MUS_" for Heretic
-   const char *defMusName;    // default music name
-   const char *defSoundName;  // default sound if one is missing
-   const char **skinSounds;   // default skin sound mnemonics array
-   int *playerSounds;         // player sound dehnum indirection
+   musicinfo_t *s_music;          // pointer to musicinfo_t (sounds.h)
+   gimusformapfn_t MusicForMap;   // pointer to S_MusicForMap* routine
+   gimuscheatfn_t  MusicCheat;    // pointer to music cheat routine
+   int musMin;                    // smallest music index value (0)
+   int numMusic;                  // maximum music index value
+   const char *musPrefix;         // "D_" for DOOM, "MUS_" for Heretic
+   const char *defMusName;        // default music name
+   const char *defSoundName;      // default sound if one is missing
+   const char **skinSounds;       // default skin sound mnemonics array
+   int *playerSounds;             // player sound dehnum indirection
 
    // Renderer stuff
-   int switchEpisode;         // "episode" number for switch texture defs
-   skydata_t *skyData;        // default sky data for MapInfo
+   int switchEpisode;             // "episode" number for switch texture defs
+   skydata_t *skyData;            // default sky data for MapInfo
 
    // Configuration
-   default_or_t *defaultORs;  // default overrides for configuration file
+   default_or_t *defaultORs;      // default overrides for configuration file
 
    // Miscellaneous stuff
-   const char *endTextName;   // name of end text resource
-   int *exitSounds;           // exit sounds array, if GIF_HASEXITSOUNDS is set
+   const char *endTextName;       // name of end text resource
+   int *exitSounds;               // exit sounds array, if GIF_HASEXITSOUNDS is set
 
    // Internal fields - these are set at runtime, so keep them last.
-   missioninfo_t *missionInfo; // gamemission-dependent info
+   missioninfo_t *missionInfo;    // gamemission-dependent info
 };
 
 extern missioninfo_t  *MissionInfoObjects[NumGameMissions];

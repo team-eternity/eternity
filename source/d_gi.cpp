@@ -47,6 +47,7 @@
 #include "mn_menus.h"
 #include "p_info.h"
 #include "p_skin.h"
+#include "s_sound.h"
 #include "st_stuff.h"
 #include "sounds.h"
 #include "v_video.h"
@@ -660,14 +661,6 @@ static const char *HticCardNames[] =
 };
 
 //
-// Music Selection Routines - defined in s_sound.c
-//
-
-extern int S_MusicForMapDoom();
-extern int S_MusicForMapDoom2();
-extern int S_MusicForMapHtic();
-
-//
 // IWAD paths
 //
 
@@ -991,6 +984,7 @@ static gamemodeinfo_t giDoomSW =
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
+   S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
    "D_",              // musPrefix
@@ -1092,6 +1086,7 @@ static gamemodeinfo_t giDoomReg =
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
+   S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
    "D_",              // musPrefix
@@ -1193,6 +1188,7 @@ static gamemodeinfo_t giDoomRetail =
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
+   S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
    "D_",              // musPrefix
@@ -1294,6 +1290,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    S_music,            // s_music
    S_MusicForMapDoom2, // MusicForMap
+   S_Doom2MusicCheat,  // MusicCheat
    mus_None,           // musMin
    NUMMUSIC,           // numMusic
    "D_",               // musPrefix
@@ -1393,15 +1390,16 @@ static gamemodeinfo_t giHereticSW =
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
    &HereticFinale,    // finaleData
 
-   H_music,           // s_music
-   S_MusicForMapHtic, // MusicForMap
-   hmus_None,         // musMin
-   NUMHTICMUSIC,      // numMusic
-   "MUS_",            // musPrefix
-   "e1m1",            // defMusName
-   HTICDEFSOUND,      // defSoundName
-   htic_skindefs,     // skinSounds
-   htic_soundnums,    // playerSounds
+   H_music,             // s_music
+   S_MusicForMapHtic,   // MusicForMap
+   S_HereticMusicCheat, // MusicCheat
+   hmus_None,           // musMin
+   NUMHTICMUSIC,        // numMusic
+   "MUS_",              // musPrefix
+   "e1m1",              // defMusName
+   HTICDEFSOUND,        // defSoundName
+   htic_skindefs,       // skinSounds
+   htic_soundnums,      // playerSounds
 
    1,                // switchEpisode
    &HereticSkyData,  // skyData
@@ -1498,15 +1496,16 @@ static gamemodeinfo_t giHereticReg =
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
    &HereticFinale,    // finaleData
 
-   H_music,           // s_music
-   S_MusicForMapHtic, // MusicForMap
-   hmus_None,         // musMin
-   NUMHTICMUSIC,      // numMusic
-   "MUS_",            // musPrefix
-   "e1m1",            // defMusName
-   HTICDEFSOUND,      // defSoundName
-   htic_skindefs,     // skinSounds
-   htic_soundnums,    // playerSounds
+   H_music,             // s_music
+   S_MusicForMapHtic,   // MusicForMap
+   S_HereticMusicCheat, // MusicCheat
+   hmus_None,           // musMin
+   NUMHTICMUSIC,        // numMusic
+   "MUS_",              // musPrefix
+   "e1m1",              // defMusName
+   HTICDEFSOUND,        // defSoundName
+   htic_skindefs,       // skinSounds
+   htic_soundnums,      // playerSounds
 
    2,                 // switchEpisode
    &HereticSkyData,   // skyData
