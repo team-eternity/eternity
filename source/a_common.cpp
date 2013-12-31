@@ -556,7 +556,7 @@ void A_PlayerScream(actionargs_t *actionargs)
       // haleyjd 09/29/07: wimpy death, if supported
       sound = sk_plwdth;
    }
-   else if(GameModeInfo->id == shareware || mo->health >= -50)
+   else if((GameModeInfo->flags & GIF_NODIEHI) || mo->health >= -50)
    {
       // Default death sound
       sound = sk_pldeth; 

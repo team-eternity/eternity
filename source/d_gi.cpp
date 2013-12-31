@@ -905,9 +905,9 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
 //
 static gamemodeinfo_t giDoomSW =
 {
-   shareware,                    // id
-   Game_DOOM,                    // type
-   GIF_SHAREWARE | DOOM_GIFLAGS, // flags
+   shareware,        // id
+   Game_DOOM,        // type
+   GIF_SHAREWARE | GIF_NODIEHI | DOOM_GIFLAGS, // flags
    
    VNAME_DOOM_SW,    // versionName
    FNAME_DOOM_SW,    // freeVerName
@@ -1232,7 +1232,7 @@ static gamemodeinfo_t giDoomCommercial =
    20,               // creditY
    12,               // creditTitleStep
    &giSkullCursor,   // menuCursor
-   &menu_main,       // mainMenu
+   &menu_main_doom2, // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu

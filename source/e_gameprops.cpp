@@ -154,6 +154,7 @@ static dehflags_t gmi_flags[] =
    { "SKILL5WARNING",  GIF_SKILL5WARNING  },
    { "HUDSTATBARNAME", GIF_HUDSTATBARNAME },
    { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
+   { "NODIEHI",        GIF_NODIEHI        },
    { NULL,             0                  }
 };
 

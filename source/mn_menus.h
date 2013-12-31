@@ -25,6 +25,7 @@ void MN_InitMenus(void);
 void MN_LinkClassicMenus(int link);
 
 extern menu_t menu_main;
+extern menu_t menu_main_doom2;
 extern menu_t menu_newgame;
 
 extern int mn_classic_menus;

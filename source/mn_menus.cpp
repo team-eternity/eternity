@@ -104,28 +104,22 @@ char *mn_start_mapname;
 // haleyjd: keep track of valid save slots
 bool savegamepresent[SAVESLOTS];
 
-static void MN_PatchOldMainMenu();
 static void MN_InitCustomMenu();
 static void MN_InitSearchStr();
 static bool MN_tweakD2EpisodeMenu();
 
 void MN_InitMenus()
 {
-   int i; // haleyjd
-   
    mn_demoname = estrdup("demo1");
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
-   for(i = 0; i < SAVESLOTS; ++i)
+   for(int i = 0; i < SAVESLOTS; i++)
    {
-      savegamenames[i] = Z_Strdup("", PU_STATIC, 0);
+      savegamenames[i]   = estrdup("");
       savegamepresent[i] = false;
    }
-
-   if(GameModeInfo->id == commercial)
-      MN_PatchOldMainMenu(); // haleyjd 05/16/04
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
    MN_InitSearchStr();       // haleyjd 03/15/06
@@ -145,7 +139,7 @@ void MN_InitMenus()
 // Note: The main menu is modified dynamically to point to
 // the rest of the old menu system when appropriate.
 
-void MN_MainMenuDrawer(void)
+void MN_MainMenuDrawer()
 {
    // hack for m_doom compatibility
    V_DrawPatch(94, 2, &subscreen43, 
@@ -173,19 +167,25 @@ menu_t menu_main =
    MN_MainMenuDrawer
 };
 
-//
-// MN_PatchOldMainMenu
-//
-// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
-// compatibility.
-//
-static void MN_PatchOldMainMenu(void)
+static menuitem_t mn_main_doom2_items[] =
 {
-   // turn "Read This!" into "Quit Game" and move down 8 pixels
-   menu_main.menuitems[4] = menu_main.menuitems[5];
-   menu_main.menuitems[5].type = it_end;
-   menu_main.y += 8;
-}
+   { it_runcmd, "New Game",   "mn_newgame",  "M_NGAME"  },
+   { it_runcmd, "Options",    "mn_options",  "M_OPTION" },
+   { it_runcmd, "Load Game",  "mn_loadgame", "M_LOADG"  },
+   { it_runcmd, "Save Game",  "mn_savegame", "M_SAVEG"  },
+   { it_runcmd, "Quit",       "mn_quit",     "M_QUITG"  },
+   { it_end }
+};
+
+menu_t menu_main_doom2 =
+{
+   mn_main_doom2_items,
+   NULL, NULL, NULL,           // pages
+   97, 72,
+   0,
+   mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
+   MN_MainMenuDrawer
+};
 
 // haleyjd 05/14/06: moved these up here
 int start_episode;
@@ -3752,7 +3752,7 @@ CONSOLE_COMMAND(mn_search, 0)
 
    if(!mn_searchstr || !mn_searchstr[0])
    {
-      MN_ErrorMsg("invalid search string");
+      MN_ErrorMsg("Invalid search string");
       return;
    }
 
@@ -3772,8 +3772,6 @@ CONSOLE_COMMAND(mn_search, 0)
          // run through items
          while((item = &(curPage->menuitems[j++])))
          {
-            char *desc;
-
             if(item->type == it_end)
                break;
 
@@ -3789,21 +3787,20 @@ CONSOLE_COMMAND(mn_search, 0)
             if(!pastLast)
                continue;
 
-            desc = M_Strlwr(estrdup(item->description));
+            qstring desc(item->description);
+            desc.toLower();
 
             // found a match
-            if(strstr(desc, mn_searchstr))
+            if(desc.findSubStr(mn_searchstr))
             {
                // go to it
                lastMatch = item;
                MN_StartMenu(curPage);
-               MN_ErrorMsg("found: %s", desc);
+               MN_ErrorMsg("Found: %s", desc.constPtr());
                if(!is_a_gap(item))
                   curPage->selected = j - 1;
-               efree(desc);
                return;
             }
-            efree(desc);
          }
 
          curPage = curPage->nextpage;
@@ -3813,10 +3810,10 @@ CONSOLE_COMMAND(mn_search, 0)
    if(lastMatch) // if doing a valid search, reset it now
    {
       lastMatch = NULL;
-      MN_ErrorMsg("reached end of search");
+      MN_ErrorMsg("Reached end of search");
    }
    else
-      MN_ErrorMsg("no match found for '%s'", mn_searchstr);
+      MN_ErrorMsg("No match found for '%s'", mn_searchstr);
 }
 
 static menuitem_t mn_menus_items[] =

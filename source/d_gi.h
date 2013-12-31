@@ -201,6 +201,7 @@ enum
    GIF_SKILL5WARNING  = 0x00002000, // display menu warning for skill 5
    GIF_HUDSTATBARNAME = 0x00004000, // HUD positions level name above status bar
    GIF_CENTERHUDMSG   = 0x00008000, // HUD messages are centered by default
+   GIF_NODIEHI        = 0x00010000, // never plays PDIEHI sound
 };
 
 // Game mode handling - identify IWAD version

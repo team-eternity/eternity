@@ -82,7 +82,8 @@ static int      skview_rot       = 0;
 static bool     skview_halfspeed = false;
 static int      skview_typenum;                 // 07/12/03
 static bool     skview_haswdth   = false;       // 03/29/08
-static int      skview_light     = 0;          // 01/22/12
+static bool     skview_gibbed    = false;
+static int      skview_light     = 0;           // 01/22/12
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
@@ -95,6 +96,7 @@ extern void A_PlaySoundEx(actionargs_t *);
 extern void A_Pain(actionargs_t *);
 extern void A_Scream(actionargs_t *);
 extern void A_PlayerScream(actionargs_t *);
+extern void A_RavenPlayerScream(actionargs_t *);
 extern void A_XScream(actionargs_t *);
 extern void A_FlameSnd(actionargs_t *);
 
@@ -120,12 +122,14 @@ static void MN_skinEmulateAction(state_t *state)
    {
       S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_pldeth]);
    }
-   else if(state->action == A_PlayerScream)
+   else if(state->action == A_PlayerScream || state->action == A_RavenPlayerScream)
    {
-      // 03/29/08: sometimes play wimpy death if the player skin specifies one
-      if(skview_haswdth)
+      if(skview_gibbed) // may gib when using Raven player behavior
+         S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_slop]);
+      else if(skview_haswdth)
       {
-         int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
+         // 03/29/08: sometimes play wimpy death if the player skin specifies one
+         int rnd = M_Random() % ((GameModeInfo->flags & GIF_NODIEHI) ? 2 : 3);
          int sndnum = 0;
 
          switch(rnd)
@@ -146,7 +150,7 @@ static void MN_skinEmulateAction(state_t *state)
       else
       {
          S_StartSoundName(NULL,
-            (GameModeInfo->id == shareware || M_Random() % 2) ? 
+            ((GameModeInfo->flags & GIF_NODIEHI) || M_Random() % 2) ? 
              players[consoleplayer].skin->sounds[sk_pldeth] :
              players[consoleplayer].skin->sounds[sk_pdiehi]);
       }
@@ -159,6 +163,8 @@ static void MN_skinEmulateAction(state_t *state)
    {
       S_StartSoundName(NULL, "ht_hedat1");
    }
+
+   skview_gibbed = false;
 }
 
 //
@@ -284,6 +290,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
       // gib
       if(skview_action != SKV_DEAD)
       {
+         skview_gibbed = true;
          MN_SkinSetState(states[mobjinfo[skview_typenum]->xdeathstate]);
          skview_action = SKV_DEAD;
       }
@@ -480,6 +487,7 @@ void MN_InitSkinViewer()
    skview_halfspeed = false;
    skview_typenum   = pclass->type;
    skview_light     = 0;
+   skview_gibbed    = false;
 
    // haleyjd 09/29/07: save alternate attack state number
    skview_atkstate2 = pclass->altattack;
