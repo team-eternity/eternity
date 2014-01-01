@@ -83,8 +83,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             // haleyjd 12/15/02: cph found out this was removed
             // in Final DOOM, so don't do it for Final DOOM demos.
             if(!(demo_compatibility &&
-               (GameModeInfo->missionInfo->id == pack_plut || 
-                GameModeInfo->missionInfo->id == pack_tnt)))
+               (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
             {
                // SoM: so yeah... Need this for linked portals.
                if(demo_version >= 333)

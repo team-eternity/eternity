@@ -962,7 +962,7 @@ void P_LoadThings(int lump)
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
-   for(i = 0; i < numthings; ++i)
+   for(i = 0; i < numthings; i++)
    {
       mapthingdoom_t *mt = (mapthingdoom_t *)data + i;
       mapthing_t     *ft = &mapthings[i];

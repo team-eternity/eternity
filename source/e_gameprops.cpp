@@ -172,6 +172,8 @@ static dehflags_t mission_flags[] =
    { "CONBACKTITLE",  MI_CONBACKTITLE  },
    { "WOLFNAMEHACKS", MI_WOLFNAMEHACKS },
    { "HASBETRAY",     MI_HASBETRAY     },
+   { "DOOM2MISSIONS", MI_DOOM2MISSIONS },
+   { "NOTELEPORTZ",   MI_NOTELEPORTZ   },
    { NULL,            0                }
 };
 

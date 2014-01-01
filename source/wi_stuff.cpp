@@ -1891,16 +1891,6 @@ static void WI_loadData(void)
    int   i, j;
    char name[9];
 
-#if 0
-   // UNUSED
-   if(GameModeInfo->id == commercial)
-   {   // darken the background image
-      unsigned char *pic = screens[1];
-      for(; pic != screens[1] + SCREENHEIGHT*SCREENWIDTH; ++pic)
-         *pic = colormaps[256*25 + *pic];
-   }
-#endif
-
    if(GameModeInfo->id == commercial)
    {
       // haleyjd 06/17/06: only load the patches that are needed, and also

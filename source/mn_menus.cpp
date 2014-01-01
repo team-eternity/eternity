@@ -461,8 +461,7 @@ static bool MN_tweakD2EpisodeMenu()
    int curitem = 1;
 
    // Not for TNT, Plutonia, HacX
-   if(GameModeInfo->missionInfo->id != doom2 &&
-      GameModeInfo->missionInfo->id != pack_disk)
+   if(!(GameModeInfo->missionInfo->flags & MI_DOOM2MISSIONS))
       return false;
 
    // Also not when playing PWADs

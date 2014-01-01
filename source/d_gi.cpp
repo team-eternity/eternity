@@ -153,6 +153,8 @@
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
     GIF_HASMADMELEE | GIF_CENTERHUDMSG)
 
+#define FINALDOOM_MIFLAGS (MI_DEMOIFDEMO4 | MI_NOTELEPORTZ)
+
 // globals
 
 // holds the address of the gamemodeinfo_t for the current gamemode,
@@ -714,10 +716,10 @@ static missioninfo_t gmDoom =
 //
 static missioninfo_t gmDoom2 =
 {
-   doom2,   // id
-   0,       // flags
-   "doom2", // gamePathName
-   NULL,    // sameLevels
+   doom2,            // id
+   MI_DOOM2MISSIONS, // flags
+   "doom2",          // gamePathName
+   NULL,             // sameLevels
 
    0,       // addGMIFlags
    0,       // remGMIFlags
@@ -734,7 +736,7 @@ static missioninfo_t gmDoom2 =
 static missioninfo_t gmFinalTNT =
 {
    pack_tnt,           // id
-   MI_DEMOIFDEMO4,     // flags
+   FINALDOOM_MIFLAGS,  // flags
    "tnt",              // gamePathName
    NULL,               // sameLevels
 
@@ -757,7 +759,7 @@ static missioninfo_t gmFinalTNT =
 static missioninfo_t gmFinalPlutonia =
 {
    pack_plut,          // id
-   MI_DEMOIFDEMO4,     // flags
+   FINALDOOM_MIFLAGS,  // flags
    "plutonia",         // gamePathName
    NULL,               // sameLevels
 
@@ -779,10 +781,10 @@ static missioninfo_t gmFinalPlutonia =
 //
 static missioninfo_t gmDisk =
 {
-   pack_disk,                     // id
-   MI_WOLFNAMEHACKS|MI_HASBETRAY, // flags
-   "doom2",                       // gamePathName
-   NULL,                          // sameLevels
+   pack_disk,                                      // id
+   MI_WOLFNAMEHACKS|MI_HASBETRAY|MI_DOOM2MISSIONS, // flags
+   "doom2",                                        // gamePathName
+   NULL,                                           // sameLevels
 
    GIF_LOSTSOULBOUNCE, // addGMIFlags
    0,                  // remGMIFlags

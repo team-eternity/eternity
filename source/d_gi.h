@@ -265,7 +265,9 @@ enum
    MI_DEMOIFDEMO4   = 0x00000001, // use demoStates override iff DEMO4 exists
    MI_CONBACKTITLE  = 0x00000002, // use console backdrop instead of titlepic
    MI_WOLFNAMEHACKS = 0x00000004, // overrides Wolf level names if not replaced
-   MI_HASBETRAY     = 0x00000008  // has Betray secret MAP33 level
+   MI_HASBETRAY     = 0x00000008, // has Betray secret MAP33 level
+   MI_DOOM2MISSIONS = 0x00000010, // supports Doom 2 mission packs
+   MI_NOTELEPORTZ   = 0x00000020  // teleporters don't set z height in old demos
 };
 
 //
