@@ -3840,11 +3840,11 @@ CONSOLE_COMMAND(mn_menus, 0)
 
 static menuitem_t mn_config_items[] =
 {
-   {it_title,    "Configuration" },
-   {it_gap},
-   {it_info,     "Doom Game Modes"},
-   {it_toggle,   "Use base/doom config",     "use_doom_config" },
-   {it_end}
+   { it_title,    "Configuration" },
+   { it_gap },
+   { it_info,     "Doom Game Modes" },
+   { it_toggle,   "Use user/doom config",     "use_doom_config" },
+   { it_end }
 };
 
 menu_t menu_config =
