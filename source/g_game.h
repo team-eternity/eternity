@@ -115,11 +115,6 @@ extern char gamemapname[9];
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
 
-// killough 5/2/98: moved from d_deh.c:
-// Par times (new item with BOOM) - from g_game.c
-extern int pars[][10];  // hardcoded array size
-extern int cpars[];     // hardcoded array size
-
 extern int cooldemo;
 extern bool hub_changelevel;
 

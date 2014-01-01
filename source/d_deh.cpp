@@ -47,6 +47,7 @@
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_misc.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_tick.h"

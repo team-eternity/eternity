@@ -1054,10 +1054,65 @@ static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
 // skyName has ended up as. This may be the default, or 
 // the value from MapInfo.
 //
-static void P_SetSky2Texture(void)
+static void P_SetSky2Texture()
 {
    if(!LevelInfo.sky2Name)
       LevelInfo.sky2Name = LevelInfo.skyName;
+}
+
+// DOOM Par Times
+int pars[4][10] =
+{
+   { 0 },                                             // dummy row
+   { 0,  30,  75, 120,  90, 165, 180, 180,  30, 165}, // episode 1
+   { 0,  90,  90,  90, 120,  90, 360, 240,  30, 170}, // episode 2
+   { 0,  90,  45,  90, 150,  90,  90, 165,  30, 135}  // episode 3
+};
+
+// DOOM II Par Times
+int cpars[34] = 
+{
+    30,  90, 120, 120,  90, 150, 120, 120, 270,  90,  //  1-10
+   210, 150, 150, 150, 210, 150, 420, 150, 210, 150,  // 11-20
+   240, 150, 180, 150, 150, 300, 330, 420, 300, 180,  // 21-30
+   120,  30,  30,  30                                 // 31-34
+};
+
+//
+// P_DoomParTime
+//
+// GameModeInfo routine to get partimes for Doom gamemodes
+//
+int P_DoomParTime(int episode, int map)
+{
+   if(episode >= 1 && episode <= 3 && map >= 1 && map <= 9)
+      return TICRATE * pars[episode][map];
+   else
+      return -1;
+}
+
+//
+// P_Doom2ParTime
+//
+// GameModeInfo routine to get partimes for Doom II gamemodes
+//
+int P_Doom2ParTime(int episode, int map)
+{
+   if(map >= 1 && map <= 34)
+      return TICRATE * cpars[map - 1];
+   else
+      return -1;
+}
+
+//
+// P_NoParTime
+//
+// GameModeInfo routine for gamemodes which do not have partimes.
+// Includes Heretic, Hexen, and Strife.
+//
+int P_NoParTime(int episode, int map)
+{
+   return 0;
 }
 
 //
@@ -1068,32 +1123,12 @@ static void P_SetSky2Texture(void)
 // Sets the map's par time, allowing for DeHackEd replacement and
 // status as a "new" level. Moved here from g_game.c
 //
-static void P_SetParTime(void)
+static void P_SetParTime()
 {
    if(LevelInfo.partime == -1) // if not set via MapInfo already
    {
       if(!newlevel || deh_pars) // if not a new map, OR deh pars loaded
-      {
-         switch(GameModeInfo->id)
-         {
-         case shareware:
-         case retail:
-         case registered:
-            if(gameepisode >= 1 && gameepisode <= 3 &&
-               gamemap >= 1 && gamemap <= 9)
-               LevelInfo.partime = TICRATE * pars[gameepisode][gamemap];
-            break;
-         case commercial:
-            if(gamemap >= 1 && gamemap <= 34)
-               LevelInfo.partime = TICRATE * cpars[gamemap - 1];
-            break;
-         case hereticsw:
-         case hereticreg:
-         default:
-            LevelInfo.partime = 0; // no par times in Heretic
-            break;
-         }
-      }
+         LevelInfo.partime = GameModeInfo->GetParTime(gameepisode, gamemap);
    }
    else
       LevelInfo.partime *= TICRATE; // multiply MapInfo value by TICRATE
@@ -1107,7 +1142,7 @@ static void P_SetParTime(void)
 // If the global fog map has not been set, set it the same as the global
 // colormap for the level.
 //
-static void P_SetOutdoorFog(void)
+static void P_SetOutdoorFog()
 {
    if(LevelInfo.outdoorFog == NULL)
       LevelInfo.outdoorFog = LevelInfo.colorMap;

@@ -299,6 +299,7 @@ struct missioninfo_t
 typedef int  (*gimusformapfn_t)();
 typedef int  (*gimuscheatfn_t )(const char *);
 typedef void (*ginewgamefn_t  )();
+typedef int  (*gipartimefn_t  )(int, int);
 
 //
 // gamemodeinfo_t
@@ -393,6 +394,7 @@ struct gamemodeinfo_t
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
    int interMusNum;               // intermission music number
+   gipartimefn_t GetParTime;      // partime retrieval function for LevelInfo
    giftextpos_t *fTextPos;        // finale text info
    interfns_t *interfuncs;        // intermission function pointers
    int teleEndGameFinaleType;     // Teleport_EndGame causes this finale by default

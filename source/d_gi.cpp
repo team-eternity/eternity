@@ -978,6 +978,7 @@ static gamemodeinfo_t giDoomSW =
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
+   P_DoomParTime,     // GetParTime
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
@@ -1081,6 +1082,7 @@ static gamemodeinfo_t giDoomReg =
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
+   P_DoomParTime,     // GetParTime
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
@@ -1184,6 +1186,7 @@ static gamemodeinfo_t giDoomRetail =
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
+   P_DoomParTime,     // GetParTime
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
@@ -1287,6 +1290,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
+   P_Doom2ParTime,    // GetParTime
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    FINALE_TEXT,       // teleEndGameFinaleType
@@ -1390,6 +1394,7 @@ static gamemodeinfo_t giHereticSW =
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
+   P_NoParTime,       // GetParTime
    &giHticFText,      // fTextPos
    &HticIntermission, // interfuncs
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
@@ -1497,6 +1502,7 @@ static gamemodeinfo_t giHereticReg =
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
+   P_NoParTime,       // GetParTime
    &giHticFText,      // fTextPos
    &HticIntermission, // interfuncs
    DEF_HTIC_FINALE,   // teleEndGameFinaleType

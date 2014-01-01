@@ -198,6 +198,15 @@ extern LevelInfo_t LevelInfo;
 
 extern int default_weaponowned[NUMWEAPONS];
 
+// killough 5/2/98: moved from d_deh.c:
+// Par times (new item with BOOM)
+extern int pars[][10];  // hardcoded array size
+extern int cpars[];     // hardcoded array size
+
+int P_DoomParTime(int episode, int map);
+int P_Doom2ParTime(int episode, int map);
+int P_NoParTime(int episode, int map);
+
 #endif
 
 // EOF
