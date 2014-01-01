@@ -1441,7 +1441,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
    // 3/3/98 explain format of file
    // killough 10/98: use executable's name
 
-   if(config_help && !df->helpHeader &&
+   if(config_help &&
       fprintf(f,
               ";eternity.cfg format:\n"
               ";[min-max(default)] description of variable\n"
@@ -1457,25 +1457,6 @@ void M_SaveDefaultFile(defaultfile_t *df)
    for(blanks = 1, line = 0, dp = df->defaults; ; dp++, blanks = 0)
    {
       int brackets = 0;
-
-      for(; line < df->numcomments && df->comments[line].line <= dp - df->defaults; ++line)
-      {
-         if(*(df->comments[line].text) != '[' || (brackets = 1, config_help))
-         {
-            // If we haven't seen any blank lines
-            // yet, and this one isn't blank,
-            // output a blank line for separation
-
-            if((!blanks && (blanks = 1, 
-                            *(df->comments[line].text) != '\n' &&
-                            putc('\n',f) == EOF)) ||
-               fputs(df->comments[line].text, f) == EOF)
-            {
-               M_defaultFileWriteError(df, tmpfile);
-               return;
-            }
-         }
-      }
 
       // If we still haven't seen any blanks,
       // Output a blank line for separation
@@ -1647,7 +1628,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
       printf("Warning: Cannot read %s -- using built-in defaults\n", df->fileName);
    else
    {
-      int skipblanks = 1, line = df->numcomments = df->helpHeader = 0;
+      int skipblanks = 1, line = 0;
       char s[256];
 
       while(fgets(s, sizeof s, f))
@@ -1664,8 +1645,6 @@ void M_LoadDefaultFile(defaultfile_t *df)
             if(*p)                // If this is not a blank line,
             {
                skipblanks = 0;    // stop skipping blanks.
-               if(strstr(p, ".cfg format:"))
-                  df->helpHeader = true;
             }
             else
             {
@@ -1674,17 +1653,6 @@ void M_LoadDefaultFile(defaultfile_t *df)
                else            // Skip multiple blanks, but remember this one
                   skipblanks = 1, p = "\n";
             }
-
-            if(df->numcomments >= df->numcommentsalloc)
-            {
-               df->comments = 
-                 erealloc(defaultfile_s::comment_s *,
-                          df->comments, sizeof *(df->comments) *
-                          (df->numcommentsalloc = df->numcommentsalloc ?
-                           df->numcommentsalloc * 2 : df->numdefaults));
-            }
-            df->comments[df->numcomments].line = line;
-            df->comments[df->numcomments++].text = estrdup(p);
          }
       }
       fclose(f);
@@ -1700,7 +1668,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
 //
 // haleyjd 03/14/09: This is now the function to handle the default config.
 //
-void M_LoadDefaults(void)
+void M_LoadDefaults()
 {
    int p;
    
@@ -1719,31 +1687,6 @@ void M_LoadDefaults(void)
    M_ApplyGameModeDefaults(df);
 
    M_LoadDefaultFile(df);
-}
-
-//
-// M_ResetDefaultFileComments
-//
-// haleyjd 01/04/10: Removes any saved comments from the given defaults file
-//
-void M_ResetDefaultFileComments(defaultfile_t *df)
-{
-   if(df->comments)
-   {
-      efree(df->comments);
-      df->comments = NULL;
-      df->numcomments = df->numcommentsalloc = 0;
-   }
-}
-
-//
-// M_ResetDefaultComments
-//
-// haleyjd 01/04/10: Removes saved comments from the game config file.
-//
-void M_ResetDefaultComments(void)
-{
-   M_ResetDefaultFileComments(&maindefaults);
 }
 
 //

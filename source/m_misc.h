@@ -150,22 +150,14 @@ struct default_t
      NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 // haleyjd 03/14/09: defaultfile_t structure
-typedef struct defaultfile_s
+struct defaultfile_t
 {
    default_t *defaults;    // array of defaults
    size_t     numdefaults; // length of defaults array
    bool       hashInit;    // if true, this default file's hash table is setup
    char      *fileName;    // name of corresponding file
    bool       loaded;      // if true, defaults are loaded
-   bool       helpHeader;  // has help header?
-   struct comment_s
-   { 
-      char *text; 
-      int line; 
-   } *comments;             // stored comments
-   size_t numcomments;      // number of comments stored
-   size_t numcommentsalloc; // number of comments allocated
-} defaultfile_t;
+};
 
 // haleyjd 06/29/09: default overrides
 struct default_or_t
@@ -178,10 +170,8 @@ struct default_or_t
 bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
-void       M_ResetDefaultFileComments(defaultfile_t *df);
 void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
-void       M_ResetDefaultComments(void);
 default_t *M_FindDefaultForCVar(variable_t *var);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
