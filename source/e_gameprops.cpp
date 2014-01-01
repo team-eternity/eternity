@@ -155,6 +155,7 @@ static dehflags_t gmi_flags[] =
    { "HUDSTATBARNAME", GIF_HUDSTATBARNAME },
    { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
    { "NODIEHI",        GIF_NODIEHI        },
+   { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
    { NULL,             0                  }
 };
 

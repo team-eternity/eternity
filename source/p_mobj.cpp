@@ -765,15 +765,8 @@ static void P_ZMovement(Mobj* mo)
    bool correct_lost_soul_bounce;
    bool moving_down;
 
-   // 10/13/05: fraggle says original DOOM has no bounce either,
-   // so if gamemode != retail, no bounce.
-
    if(demo_compatibility) // v1.9 demos
-   {
-      correct_lost_soul_bounce =
-         ((GameModeInfo->id == retail || GameModeInfo->id == commercial) &&
-          GameModeInfo->missionInfo->id != doom2);
-   }
+      correct_lost_soul_bounce = ((GameModeInfo->flags & GIF_LOSTSOULBOUNCE) != 0);
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;
    else // from now on...

@@ -700,6 +700,8 @@ static missioninfo_t gmDoom =
    "doom", // gamePathName
    NULL,   // sameLevels
 
+   0,      // addGMIFlags
+   0,      // remGMIFlags
    NULL,   // versionNameOR
    NULL,   // startupBannerOR
    0,      // numEpisodesOR
@@ -715,8 +717,10 @@ static missioninfo_t gmDoom2 =
    doom2,   // id
    0,       // flags
    "doom2", // gamePathName
-   NULL,   // sameLevels
+   NULL,    // sameLevels
 
+   0,       // addGMIFlags
+   0,       // remGMIFlags
    NULL,    // versionNameOR
    NULL,    // startupBannerOR
    0,       // numEpisodesOR
@@ -725,72 +729,78 @@ static missioninfo_t gmDoom2 =
 };
 
 //
-// Final Doom - TNT
+// Final Doom - TNT: Evilution
 //
 static missioninfo_t gmFinalTNT =
 {
-   pack_tnt,          // id
-   MI_DEMOIFDEMO4,    // flags
-  "tnt",              // gamePathName
-  NULL,               // sameLevels
+   pack_tnt,           // id
+   MI_DEMOIFDEMO4,     // flags
+   "tnt",              // gamePathName
+   NULL,               // sameLevels
 
-   VNAME_TNT,         // versionNameOR
-   BANNER_TNT,        // startupBannerOR
-   0,                 // numEpisodesOR
-   &gi_path_tnt,      // iwadPathOR
-   &TNTFinale,        // finaleDataOR
-   NULL,              // menuBackgroundOR
-   NULL,              // creditBackgroundOR
-   NULL,              // consoleBackOR
-   demostates_udoom,  // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
+   GIF_LOSTSOULBOUNCE, // addGMIFlags
+   0,                  // remGMIFlags
+   VNAME_TNT,          // versionNameOR
+   BANNER_TNT,         // startupBannerOR
+   0,                  // numEpisodesOR
+   &gi_path_tnt,       // iwadPathOR
+   &TNTFinale,         // finaleDataOR
+   NULL,               // menuBackgroundOR
+   NULL,               // creditBackgroundOR
+   NULL,               // consoleBackOR
+   demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
 };
 
 //
-// Final Doom - Plutonia
+// Final Doom - The Plutonia Experiment
 //
 static missioninfo_t gmFinalPlutonia =
 {
-   pack_plut,         // id
-   MI_DEMOIFDEMO4,    // flags
-   "plutonia",        // gamePathName
-   NULL,              // sameLevels
+   pack_plut,          // id
+   MI_DEMOIFDEMO4,     // flags
+   "plutonia",         // gamePathName
+   NULL,               // sameLevels
 
-   VNAME_PLUT,        // versionNameOR
-   BANNER_PLUT,       // startupBannerOR
-   0,                 // numEpisodesOR
-   &gi_path_plut,     // iwadPathOR
-   &PlutFinale,       // finaleDataOR
-   NULL,              // menuBackgroundOR
-   NULL,              // creditBackgroundOR
-   NULL,              // consoleBackOR
-   demostates_udoom,  // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
+   GIF_LOSTSOULBOUNCE, // addGMIFlags
+   0,                  // remGMIFlags
+   VNAME_PLUT,         // versionNameOR
+   BANNER_PLUT,        // startupBannerOR
+   0,                  // numEpisodesOR
+   &gi_path_plut,      // iwadPathOR
+   &PlutFinale,        // finaleDataOR
+   NULL,               // menuBackgroundOR
+   NULL,               // creditBackgroundOR
+   NULL,               // consoleBackOR
+   demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
 };
 
 //
-// Disk version
+// Disk version (Xbox and BFG Edition)
 //
 static missioninfo_t gmDisk =
 {
-   pack_disk,       // id
-   0,               // flags
-   "doom2",         // gamePathName
-   NULL,            // sameLevels
+   pack_disk,          // id
+   0,                  // flags
+   "doom2",            // gamePathName
+   NULL,               // sameLevels
 
-   VNAME_DISK,      // versionNameOR
-   NULL,            // startupBannerOR
-   0,               // numEpisodesOR
-   NULL,            // iwadPathOR
-   NULL,            // finaleDataOR
-   NULL,            // menuBackgroundOR
-   NULL,            // creditBackgroundOR
-   CONBACK_DEFAULT, // consoleBackOR
-   NULL,            // demoStatesOR
-   NULL,            // interPicOR
-   DiskExitRules,   // exitRulesOR
+   GIF_LOSTSOULBOUNCE, // addGMIFlags
+   0,                  // remGMIFlags
+   VNAME_DISK,         // versionNameOR
+   NULL,               // startupBannerOR
+   0,                  // numEpisodesOR
+   NULL,               // iwadPathOR
+   NULL,               // finaleDataOR
+   NULL,               // menuBackgroundOR
+   NULL,               // creditBackgroundOR
+   CONBACK_DEFAULT,    // consoleBackOR
+   NULL,               // demoStatesOR
+   NULL,               // interPicOR
+   DiskExitRules,      // exitRulesOR
 };
 
 //
-// HacX Stand-alone version
+// HacX - Twitch 'n Kill Version 1.2
 //
 static missioninfo_t gmHacx =
 {
@@ -799,6 +809,8 @@ static missioninfo_t gmHacx =
    "hacx",          // gamePathName
    NULL,            // sameLevels
 
+   0,               // addGMIFlags
+   0,               // remGMIFlags
    VNAME_HACX,      // versionNameOR
    BANNER_HACX,     // startupBannerOR
    0,               // numEpisodesOR
@@ -819,6 +831,8 @@ static missioninfo_t gmHeretic =
    "heretic",         // gamePathName
    hticRegSameLevels, // sameLevels
 
+   0,         // addGMIFlags
+   0,         // remGMIFlags
    NULL,      // versionNameOR
    NULL,      // startupBannerOR
    0,         // numEpisodesOR
@@ -838,6 +852,8 @@ static missioninfo_t gmHereticBeta =
    "heretic",          // gamePathName
    hticBetaSameLevels, // sameLevels
 
+   0,                   // addGMIFlags
+   0,                   // remGMIFlags
    VNAME_HTIC_BETA,     // versionNameOR
    NULL,                // startupBannerOR
    0,                   // numEpisodesOR
@@ -855,6 +871,8 @@ static missioninfo_t gmHereticSoSR =
    "heretic",          // gamePathName
    hticSoSRSameLevels, // sameLevels
 
+   0,                // addGMIFlags
+   0,                // remGMIFlags
    VNAME_HTIC_SOSR,  // versionNameOR
    BANNER_HTIC_SOSR, // startupBannerOR
    6,                // numEpisodesOR
@@ -872,6 +890,8 @@ static missioninfo_t gmUnknown =
    "doom",         // gamePathName
    NULL,           // sameLevels
 
+   0,              // addGMIFlags
+   0,              // remGMIFlags
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
    0,              // numEpisodesOR
@@ -907,7 +927,7 @@ static gamemodeinfo_t giDoomSW =
 {
    shareware,        // id
    Game_DOOM,        // type
-   GIF_SHAREWARE | GIF_NODIEHI | DOOM_GIFLAGS, // flags
+   DOOM_GIFLAGS | GIF_SHAREWARE | GIF_NODIEHI, // flags
    
    VNAME_DOOM_SW,    // versionName
    FNAME_DOOM_SW,    // freeVerName
@@ -1115,7 +1135,7 @@ static gamemodeinfo_t giDoomRetail =
 {
    retail,           // id
    Game_DOOM,        // type
-   DOOM_GIFLAGS,     // flags
+   DOOM_GIFLAGS | GIF_LOSTSOULBOUNCE, // flags
    
    VNAME_DOOM_RET,   // versionName
    FNAME_DOOM_R,     // freeVerName
@@ -1578,6 +1598,10 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    // actually set to "none".
    if(mode == indetermined)
       mi = &gmUnknown;
+
+   // apply GameModeInfo flag additions and removals
+   gi->flags |=  mi->addGMIFlags;
+   gi->flags &= ~mi->remGMIFlags;
 
    // apply overrides
    OVERRIDE(versionName,      NULL);

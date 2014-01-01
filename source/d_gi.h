@@ -202,6 +202,7 @@ enum
    GIF_HUDSTATBARNAME = 0x00004000, // HUD positions level name above status bar
    GIF_CENTERHUDMSG   = 0x00008000, // HUD messages are centered by default
    GIF_NODIEHI        = 0x00010000, // never plays PDIEHI sound
+   GIF_LOSTSOULBOUNCE = 0x00020000, // gamemode or mission normally fixes Lost Soul bouncing 
 };
 
 // Game mode handling - identify IWAD version
@@ -282,6 +283,8 @@ struct missioninfo_t
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
 
+   unsigned int  addGMIFlags;        // flags to add to the base GameModeInfo->flags
+   unsigned int  remGMIFlags;        // flags to remove from base GameModeInfo->flags
    const char   *versionNameOR;      // if not NULL, overrides name of the gamemode
    const char   *startupBannerOR;    // if not NULL, overrides the startup banner 
    int           numEpisodesOR;      // if not    0, overrides number of episodes
