@@ -217,11 +217,39 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
       MN_StartMenu(GameModeInfo->newGameMenu);
 }
 
-// mn_newgame called from main menu:
-// goes to start map OR
-// starts menu
-// according to use_startmap, gametype and modifiedgame
+//
+// MN_DoomNewGame
+//
+// GameModeInfo function for starting a new game in Doom modes.
+//
+void MN_DoomNewGame()
+{
+   // hack -- cut off thy flesh consumed if not retail
+   if(GameModeInfo->numEpisodes < 4)
+      menu_episode.menuitems[3].type = it_end;
 
+   MN_StartMenu(&menu_episode);
+}
+
+//
+// MN_Doom2NewGame
+//
+// GameModeInfo function for starting a new game in Doom II modes.
+//
+void MN_Doom2NewGame()
+{
+   if(MN_tweakD2EpisodeMenu())
+      MN_StartMenu(&menu_d2episode);
+   else
+      MN_StartMenu(&menu_newgame);
+}
+
+//
+// mn_newgame
+// 
+// called from main menu:
+// starts menu according to use_startmap, gametype and modifiedgame
+//
 CONSOLE_COMMAND(mn_newgame, 0)
 {
    if(netgame && !demoplayback)
@@ -241,50 +269,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       return;
    }
    
-   if(GameModeInfo->id == commercial)
-   {
-// haleyjd 08/19/2012: startmap is currently deprecated, may return later
-#ifdef EE_STARTMAP_PROMPT
-      // determine startmap presence and origin
-      int startMapLump = W_CheckNumForName("START");
-      bool mapPresent = true;
-      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-
-      // if lump not found or the game is modified and the
-      // lump comes from the first loaded wad, consider it not
-      // present -- FIXME: this assumes the resource wad is loaded first.
-      if(startMapLump < 0 || 
-         (modifiedgame && 
-          lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
-         mapPresent = false;
-
-      // dont use new game menu if not needed
-      if(use_startmap && mapPresent)
-      {
-         if(use_startmap == -1)              // not asked yet
-            MN_StartMenu(&menu_startmap);
-         else
-         {  
-            // use start map 
-            G_DeferedInitNew((skill_t)(defaultskill - 1), "START");
-            MN_ClearMenus();
-         }
-      }
-      else
-#endif
-         if(MN_tweakD2EpisodeMenu())
-            MN_StartMenu(&menu_d2episode);
-         else
-            MN_StartMenu(&menu_newgame);
-   }
-   else
-   {
-      // hack -- cut off thy flesh consumed if not retail
-      if(GameModeInfo->id != retail)
-         menu_episode.menuitems[3].type = it_end;
-      
-      MN_StartMenu(&menu_episode);
-   }
+   GameModeInfo->OnNewGame();
 }
 
 // menu item to quit doom:

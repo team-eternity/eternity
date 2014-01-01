@@ -296,8 +296,9 @@ struct missioninfo_t
 };
 
 // function pointer types
-typedef int (*gimusformapfn_t)();
-typedef int (*gimuscheatfn_t)(const char *);
+typedef int  (*gimusformapfn_t)();
+typedef int  (*gimuscheatfn_t )(const char *);
+typedef void (*ginewgamefn_t  )();
 
 //
 // gamemodeinfo_t
@@ -347,6 +348,7 @@ struct gamemodeinfo_t
    int infoColor;                 // color of it_info items
    int bigFontItemColor;          // color of selectable items using big font
    int menuOffset;                // an amount to subtract from menu y coords
+   ginewgamefn_t OnNewGame;       // mn_newgame routine
 
    // border stuff
    const char *borderFlat;        // name of flat to fill backscreen

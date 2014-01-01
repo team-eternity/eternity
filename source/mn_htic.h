@@ -24,13 +24,14 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __MN_HTIC_H__
-#define __MN_HTIC_H__
+#ifndef MN_HTIC_H__
+#define MN_HTIC_H__
 
 #include "mn_engin.h"
 
-void MN_HInitSkull(void);
-void MN_AddHMenus(void);
+void MN_HInitSkull();
+void MN_AddHMenus();
+void MN_HticNewGame();
 
 extern menu_t menu_hmain;
 
