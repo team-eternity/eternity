@@ -680,8 +680,7 @@ static void P_InfoDefaultLevelName()
    // haleyjd 11/03/12: in pack_disk, we have 33 map names.
    // This is also allowed for subsitution through BEX mnemonic HUSTR_33.
    if(DEH_StringChanged("HUSTR_33") ||
-      (GameModeInfo->id == commercial && 
-       GameModeInfo->missionInfo->id == pack_disk))
+      (GameModeInfo->missionInfo->flags & MI_HASBETRAY))
       d2upperbound = 33;
 
    if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
