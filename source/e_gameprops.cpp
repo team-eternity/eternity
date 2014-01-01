@@ -168,9 +168,10 @@ static dehflagset_t gmi_flagset =
 // missionInfo flags
 static dehflags_t mission_flags[] =
 {
-   { "DEMOIFDEMO4",  MI_DEMOIFDEMO4  },
-   { "CONBACKTITLE", MI_CONBACKTITLE },
-   { NULL,           0               }
+   { "DEMOIFDEMO4",   MI_DEMOIFDEMO4   },
+   { "CONBACKTITLE",  MI_CONBACKTITLE  },
+   { "WOLFNAMEHACKS", MI_WOLFNAMEHACKS },
+   { NULL,            0                }
 };
 
 static dehflagset_t mission_flagset =

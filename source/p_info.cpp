@@ -639,8 +639,7 @@ static void P_BFGNameHacks()
    static bool firsttime = true;
 
    // Only applies to DOOM II BFG Edition
-   if(GameModeInfo->id != commercial ||
-      GameModeInfo->missionInfo->id != pack_disk)
+   if(!(GameModeInfo->missionInfo->flags & MI_WOLFNAMEHACKS))
       return;
 
    if(firsttime)

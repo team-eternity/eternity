@@ -780,7 +780,7 @@ static missioninfo_t gmFinalPlutonia =
 static missioninfo_t gmDisk =
 {
    pack_disk,          // id
-   0,                  // flags
+   MI_WOLFNAMEHACKS,   // flags
    "doom2",            // gamePathName
    NULL,               // sameLevels
 
