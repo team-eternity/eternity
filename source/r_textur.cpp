@@ -378,11 +378,10 @@ static void R_FreeTextureLump(texturelump_t *tlump)
 //
 static void R_DetectTextureFormat(texturelump_t *tlump)
 {
-   int i;
    int format = texture_doom; // we start out assuming DOOM format...
    byte *directory = tlump->directory;
 
-   for(i = 0; i < tlump->numtextures; ++i)
+   for(int i = 0; i < tlump->numtextures; i++)
    {
       int offset;
       byte *mtexture;
@@ -517,7 +516,6 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             // sf: error_printf
             C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
                          tp.patch, (const char *)(texture->name));
-            //++*errors;
             
             component->width = component->height = 0;
          }
@@ -903,7 +901,7 @@ static void FinishTexture(texture_t *tex)
    }
    
    // Allocate column pointers
-   tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t **), tex->width, PU_RENDERER, NULL);
    
    // Build the columns based on mask info
    maskp = tempmask.buffer;
@@ -1004,7 +1002,7 @@ texture_t *R_CacheTexture(int num)
    {
       tcomponent_t *component = tex->components + i;
       
-      // SoM: Do NOT add lumps with a -1 lump
+      // SoM: Do NOT add lumps with a -1 lumpnum
       if(component->lump == -1)
          continue;
          
@@ -1115,7 +1113,7 @@ static int *R_LoadPNames()
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
    
-   for(i = 0; i < nummappatches; ++i)
+   for(i = 0; i < nummappatches; i++)
    {
       strncpy(name, name_p + i * 8, 8);
       
@@ -1152,15 +1150,13 @@ static int *R_LoadPNames()
 //
 static void R_InitTranslationLUT()
 {
-   int i;
-
    // Create translation table for global animation.
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof   
-   texturetranslation =
-      (int *)(Z_Malloc((texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, 0));
+   texturetranslation = 
+      emalloctag(int *, (texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, NULL);
 
-   for(i = 0; i < texturecount; ++i)
+   for(int i = 0; i < texturecount; i++)
       texturetranslation[i] = i;
 }
 
@@ -1675,14 +1671,12 @@ void R_LoadDoom1()
 
 static int R_Doom1Texture(const char *name)
 {
-   int i;
-   
    // slow i know; should be hash tabled
    // mind you who cares? it's only going to be
    // used by a few people and only at the start of 
    // the level
    
-   for(i = 0; i < numconvs; i++)
+   for(int i = 0; i < numconvs; i++)
    {
       if(!strncasecmp(name, txtrconv[i].doom1, 8))   // found it
       {

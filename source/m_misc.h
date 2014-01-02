@@ -177,16 +177,7 @@ default_t *M_FindDefaultForCVar(variable_t *var);
 #define UL (-123456789) /* magic number for no min or max for parameter */
 
 // haleyjd 06/24/02: platform-dependent macros for sound/music defaults
-#if defined(DJGPP)
-  #define SND_DEFAULT -1
-  #define SND_MIN     -1
-  #define SND_MAX      7
-  #define SND_DESCR    "code used by Allegro to select sounds driver; -1 is autodetect"
-  #define MUS_DEFAULT -1
-  #define MUS_MIN     -1
-  #define MUS_MAX      9
-  #define MUS_DESCR    "code used by Allegro to select music driver; -1 is autodetect"
-#elif defined(_SDL_VER)
+#if defined(_SDL_VER)
   #define SND_DEFAULT -1
   #define SND_MIN     -1
   #define SND_MAX      1
