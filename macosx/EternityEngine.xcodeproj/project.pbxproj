@@ -10,6 +10,10 @@
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		4F015B101870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
 		4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
+		4F015B751875988900ADB3F4 /* libc++.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B731875988900ADB3F4 /* libc++.1.dylib */; };
+		4F015B761875988900ADB3F4 /* libc++.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B731875988900ADB3F4 /* libc++.1.dylib */; };
+		4F015B771875988900ADB3F4 /* libc++abi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B741875988900ADB3F4 /* libc++abi.dylib */; };
+		4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B741875988900ADB3F4 /* libc++abi.dylib */; };
 		4F0165DE178375EF00D04FAE /* e_weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0165DC178375EF00D04FAE /* e_weapons.cpp */; };
 		4F0A2C7616ED36E500400F41 /* i_gamepads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */; };
 		4F0A2C7916ED36FD00400F41 /* i_sdlgamepads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0A2C7716ED36FD00400F41 /* i_sdlgamepads.cpp */; };
@@ -563,6 +567,8 @@
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
 		4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_formats.cpp; path = ../source/s_formats.cpp; sourceTree = "<group>"; };
 		4F015B0F1870EA5900ADB3F4 /* s_formats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_formats.h; path = ../source/s_formats.h; sourceTree = "<group>"; };
+		4F015B731875988900ADB3F4 /* libc++.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.1.dylib"; path = "libc++/libc++.1.dylib"; sourceTree = "<group>"; };
+		4F015B741875988900ADB3F4 /* libc++abi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++abi.dylib"; path = "libc++/libc++abi.dylib"; sourceTree = "<group>"; };
 		4F0165DC178375EF00D04FAE /* e_weapons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_weapons.cpp; path = ../source/e_weapons.cpp; sourceTree = "<group>"; };
 		4F0165DD178375EF00D04FAE /* e_weapons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_weapons.h; path = ../source/e_weapons.h; sourceTree = "<group>"; };
 		4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_gamepads.cpp; path = ../source/hal/i_gamepads.cpp; sourceTree = "<group>"; };
@@ -1110,7 +1116,9 @@
 				4F5F399C182D9C140027813A /* libvorbisfile.a in Frameworks */,
 				4F5F399A182D9C0D0027813A /* libogg.a in Frameworks */,
 				4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */,
+				4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */,
 				4F5F399E182D9C1A0027813A /* libmikmod.a in Frameworks */,
+				4F015B761875988900ADB3F4 /* libc++.1.dylib in Frameworks */,
 				4F5F3997182D9C070027813A /* libSDL_mixer.a in Frameworks */,
 				4F5F399D182D9C160027813A /* libFLAC.a in Frameworks */,
 				4F5F3999182D9C0B0027813A /* libSDL.a in Frameworks */,
@@ -1130,6 +1138,7 @@
 				4FFFDF721753485800E70FEC /* libogg.a in Frameworks */,
 				4FFFDF731753485800E70FEC /* libvorbis.a in Frameworks */,
 				4FFFDF741753485800E70FEC /* libvorbisfile.a in Frameworks */,
+				4F015B771875988900ADB3F4 /* libc++abi.dylib in Frameworks */,
 				4FFFDF781753486D00E70FEC /* libSDL_mixer.a in Frameworks */,
 				4FFFDF791753486D00E70FEC /* libSDL_net.a in Frameworks */,
 				4FFFDF7A1753486D00E70FEC /* libSDL.a in Frameworks */,
@@ -1137,6 +1146,7 @@
 				4FFFDF81175348B600E70FEC /* AudioUnit.framework in Frameworks */,
 				4FFFDF82175348B600E70FEC /* Carbon.framework in Frameworks */,
 				4FFFDF83175348B600E70FEC /* IOKit.framework in Frameworks */,
+				4F015B751875988900ADB3F4 /* libc++.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1182,6 +1192,8 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4F015B731875988900ADB3F4 /* libc++.1.dylib */,
+				4F015B741875988900ADB3F4 /* libc++abi.dylib */,
 				FAE0EB371696BA10007E84F2 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityEngine-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
@@ -2808,6 +2820,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/ioan/dezvoltare/cross/eternity/macosx/staticlib,
+					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2851,6 +2864,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/ioan/dezvoltare/cross/eternity/macosx/staticlib,
+					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2885,6 +2899,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					staticlib,
+					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
 				);
 				PRODUCT_NAME = Eternity;
 				USER_HEADER_SEARCH_PATHS = "/Library/Frameworks/SDL.framework/** /Library/Frameworks/SDL_mixer.framework/** /Library/Frameworks/SDL_net.framework/**";
@@ -2920,6 +2935,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					staticlib,
+					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = Eternity;
