@@ -44,6 +44,7 @@ extern NSArray *gArgArray;
 #import "ELFileViewDataSource.h"
 #import "ELCommandLineArray.h"
 #import "ELCommandLineArgument.h"
+#import "ELAboutController.h"
 
 #define SET_UNDO(a, b, c)     NSUndoManager *undom = [self getUndoFor:a]; \
                               [[undom prepareWithInvocationTarget:self] b]; \
@@ -76,6 +77,8 @@ static BOOL calledAppMainline = FALSE;
 //
 -(void)dealloc
 {
+	[m_aboutController release];
+	
 	[iwadSet release];
 	[pwadTypes release];
 	[iwadPopMenu release];
@@ -1810,17 +1813,18 @@ iwadMightBe:
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://eternity.youfailit.net/"]];
 }
 
-//
-// showLicense
-//
--(IBAction)showLicense:(id)sender
+///
+/// Displays a custom about panel
+///
+-(IBAction)showAboutPanel:(id)sender
 {
-	[[NSWorkspace sharedWorkspace] openFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"COPYING.pdf"] withApplication:@"Preview"];
+	if(!m_aboutController)
+		m_aboutController = [[ELAboutController alloc] initWithWindowNibName:@"About"];
+	[m_aboutController showWindow:nil];
+	
 }
 
 @end	// end LauncherController class definition
-
-
 
 // EOF
 

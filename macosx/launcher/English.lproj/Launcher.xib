@@ -49,7 +49,7 @@
                             <menuItem title="About EternityLaunch" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="orderFrontStandardAboutPanel:" target="-1" id="538"/>
+                                    <action selector="showAboutPanel:" target="-2" id="CGP-kv-kn6"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="236">
@@ -400,11 +400,12 @@
                     <menu key="submenu" title="Window" systemMenu="window" id="24">
                         <items>
                             <menuItem title="Minimize" keyEquivalent="m" id="23">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="performMiniaturize:" target="-1" id="37"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Zoom" id="239">
+                            <menuItem title="Zoom" keyEquivalent="m" id="239">
                                 <connections>
                                     <action selector="performZoom:" target="-1" id="240"/>
                                 </connections>
@@ -432,13 +433,6 @@
                             <menuItem title="Old Documentation" id="1268">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Old Documentation" id="1269"/>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="1272"/>
-                            <menuItem title="Software License" id="1255">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="showLicense:" target="-2" id="1263"/>
-                                </connections>
                             </menuItem>
                         </items>
                     </menu>
@@ -838,7 +832,7 @@ RSP — response files</string>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <popUpButtonCell key="cell" type="push" title="Single/Coop" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="744" id="742">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
+                                                <font key="font" metaFont="menu"/>
                                                 <menu key="menu" title="OtherViews" id="743">
                                                     <items>
                                                         <menuItem title="Single/Coop" state="on" id="744">
@@ -1019,7 +1013,7 @@ RSP — response files</string>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingMiddle" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="714">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
+                            <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="715"/>
                         </popUpButtonCell>
                     </popUpButton>
