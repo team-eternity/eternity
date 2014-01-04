@@ -83,12 +83,12 @@
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray;
   	NSMutableSet *iwadSet;  // set of IWADs
-   NSMutableSet *userSet;  // set of user configurations
 	
 	ELCommandLineArray *param;
 	char *callName;
 	
-	NSMutableString *userPath, *basePath;
+	NSString *userPath;
+	NSString *basePath;
 	
 	NSTask *task;
     

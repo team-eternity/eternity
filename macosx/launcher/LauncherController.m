@@ -83,7 +83,6 @@ static BOOL calledAppMainline = FALSE;
 	[pwadTypes release];
 	[iwadPopMenu release];
 	[pwadArray release];
-   [userSet release];
    
 	[noIwadAlert release];
 	[badIwadAlert release];
@@ -164,23 +163,16 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 {
 	if(self = [super init])
 	{
-      dontUndo = FALSE;
-      
 		iwadSet = [[NSMutableSet alloc] init];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
                    @"pke", @"zip", @"disk", nil];
 		iwadPopMenu = [[NSMenu alloc] initWithTitle:@"Choose IWAD"];
 		pwadArray = [[NSMutableArray alloc] initWithCapacity:0];
-      userSet = [[NSMutableSet alloc] initWithCapacity:0];
       
       [self createAlertBoxes];
       
 		param = [[ELCommandLineArray alloc] init];
-		basePath = [[NSMutableString alloc] init];
-		userPath = [[NSMutableString alloc] init];
-		
-		task = nil;
 		
 		console = [[ELDumpConsole alloc] initWithWindowNibName:@"DumpConsole"];
 
@@ -324,8 +316,11 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 
 	NSString *basPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"base"];
 		
-	[userPath setString:usrPath];
-	[basePath setString:basPath];
+	[userPath release];
+	userPath = [usrPath retain];
+	
+	[basePath release];
+	basePath = [basPath retain];
 	
 	// Now it points to Application Support
 	
@@ -456,7 +451,6 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    //
 	// Start console
    //
-   [deploy retain];
    
 	[[self window] orderOut:self];
 	
@@ -472,7 +466,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    }
 	
    __block char *env;
-   NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithCapacity:2];
+   NSMutableDictionary *environment = [[[NSMutableDictionary alloc] initWithCapacity:2] autorelease];
    [environment setDictionary:@{@"ETERNITYUSER":userPath, @"ETERNITYBASE":basePath}];
    
    
@@ -487,11 +481,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    AddEnv("DOOMWADPATH");
    
    [task setEnvironment:environment];
-   [environment release];
-   
-   NSString *exePath = enginePath;
-
-   [task setLaunchPath:exePath];
+   [task setLaunchPath:enginePath];
    [task setArguments:deploy];
    
    calledAppMainline = TRUE;
@@ -503,7 +493,6 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    //   if(status == 0)   // only exit if it's all ok
    //    exit(status);
    
-   [deploy release];
 }
 
 //
@@ -518,11 +507,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	
 	// Add -base and user here
 
-	NSArray *deploy = [[param deployArray] retain];
-   
-   [self executeGame:x64flag withArgs:deploy];
-   
-   [deploy release];
+   [self executeGame:x64flag withArgs:[param deployArray]];
 }
 
 //
@@ -588,28 +573,6 @@ iwadMightBe:
    }
    
    [self doLaunchGameAs64Bit:x64];
-}
-
-//
-// iwadPopUpShowDifferentPaths
-//
-// Show the path differences if file names are equal
-//
--(void)iwadPopUpShowDifferentPaths
-{
-	// I have to scan all set components
-	NSURL *url;
-	NSString *iwadPath;
-	
-	// There will be a list of files with identical last names
-	// Each component will contain a last name and the indices in the list view
-	
-	for(url in iwadSet)
-	{
-		// We've established that non-path URL can't enter the list
-		iwadPath = [url path];
-		
-	}
 }
 
 //
@@ -1126,7 +1089,7 @@ iwadMightBe:
 		return;
 	}
 	
-	NSMutableString *gfsOut = [[NSMutableString alloc] init];
+	NSMutableString *gfsOut = [[[NSMutableString alloc] init] autorelease];
 	
 	if([iwadPopUp numberOfItems] > 0)
 	{
@@ -1141,7 +1104,7 @@ iwadMightBe:
 		NSInteger pathPosition = 0;
 		NSURL *wURL = nil;
 		NSString *path, *root, *oldroot;
-		NSMutableArray *pathArray = [[NSMutableArray alloc] initWithCapacity:0];
+		NSMutableArray *pathArray = [[[NSMutableArray alloc] initWithCapacity:0] autorelease];
 
 		for(pathPosition = 0;; pathPosition++)
 		{
@@ -1219,12 +1182,9 @@ iwadMightBe:
 				[gfsOut appendString:@"\"\n"];
 			}
 		}
-
-		[pathArray release];
 	}
 	[gfsOut writeToURL:[panel URL] atomically:YES encoding:NSUTF8StringEncoding
                 error:NULL];
-	[gfsOut release];
    
    // Now, replace the files with the GFS
    [self removeAllPwads:self];
