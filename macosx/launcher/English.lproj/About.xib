@@ -53,7 +53,7 @@
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="16g-ga-QGC">
                         <rect key="frame" x="40" y="218" width="444" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="OS X Front-end by Ioan Chera" id="4rd-ue-CYd">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="By Team Eternity. OS X Front-end by Ioan Chera" id="4rd-ue-CYd">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
