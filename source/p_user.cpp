@@ -576,6 +576,10 @@ void P_PlayerThink(player_t *player)
 {
    ticcmd_t*    cmd;
 
+   // haleyjd 01/04/14: backup viewz and mobj location for interpolation
+   player->prevviewz = player->viewz;
+   player->mo->backupPosition();
+
    // killough 2/8/98, 3/21/98:
    // (this code is necessary despite questions raised elsewhere in a comment)
 

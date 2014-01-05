@@ -41,7 +41,6 @@
 #include "s_sndseq.h"
 
 int leveltime;
-bool reset_viewz;
 
 //=============================================================================
 //
@@ -257,7 +256,7 @@ void Thinker::serialize(SaveArchive &arc)
 //
 // P_Ticker
 //
-void P_Ticker(void)
+void P_Ticker()
 {
    int i;
    
@@ -284,8 +283,6 @@ void P_Ticker(void)
          if(playeringame[i])
             P_PlayerThink(&players[i]);
 
-   reset_viewz = false;  // sf
-
    Thinker::RunThinkers();
    P_UpdateSpecials();
    P_RespawnSpecials();
@@ -294,14 +291,6 @@ void P_Ticker(void)
    
    leveltime++;                       // for par times
 
-   // sf: on original doom, sometimes if you activated a hyperlift
-   // while standing on it, your viewz was left behind and appeared
-   // to "jump". code in p_floor.c detects if a hyperlift has been
-   // activated and viewz is reset appropriately here.
-   
-   if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
-      P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
-   
    P_RunEffects(); // haleyjd: run particle effects
 }
 

@@ -1449,7 +1449,7 @@ void A_LichFire(actionargs_t *actionargs)
 
    S_StartSound(actor, sfx_hedat1);
 
-   for(i = 0; i < 5; ++i)
+   for(i = 0; i < 5; i++)
    {
       fire = P_SpawnMobj(baseFire->x, baseFire->y, baseFire->z, headfxType);
     

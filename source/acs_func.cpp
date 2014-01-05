@@ -961,8 +961,10 @@ static void ACS_funcSetThingPosition(ACS_FUNCARG)
 
          mo->x = x;
          mo->y = y;
-
+         
+         mo->backupPosition();
          P_SetThingPosition(mo);
+
 
          // Handle fog.
          if(fog)

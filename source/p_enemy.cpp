@@ -1430,6 +1430,7 @@ void P_BossTeleport(bossteleport_t *bt)
       boss->z = boss->floorz;
       boss->angle = targ->angle;
       boss->momx = boss->momy = boss->momz = 0;
+      boss->backupPosition();
    }
 }
 

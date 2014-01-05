@@ -26,9 +26,11 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomstat.h"
 #include "d_iwad.h"
 #include "d_main.h"
+#include "d_net.h"
 #include "d_gi.h"
 #include "gl/gl_vars.h"
 #include "hal/i_gamepads.h"
@@ -48,7 +50,6 @@
 
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
-extern bool d_fastrefresh;     // haleyjd 01/04/10
 extern int iwad_choice;        // haleyjd 03/19/10
 
 #ifdef _SDL_VER
@@ -236,6 +237,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
+
+   DEFAULT_BOOL("d_interpolate", &d_interpolate, NULL, false, default_t::wad_no,
+                "1 to activate frame interpolation (smooth rendering)"),
 
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, NULL, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),

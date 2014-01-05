@@ -43,8 +43,9 @@
 #include "p_skin.h"
 #include "p_user.h"
 #include "r_bsp.h"
-#include "r_main.h"
 #include "r_draw.h"
+#include "r_interpolate.h"
+#include "r_main.h"
 #include "r_patch.h"
 #include "r_plane.h"
 #include "r_portal.h"
@@ -741,6 +742,27 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
 }
 
+struct spritepos_t
+{
+   fixed_t x, y, z;
+};
+
+static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+{
+   if(view.lerp == FRACUNIT)
+   {
+      pos.x = thing->x;
+      pos.y = thing->y;
+      pos.z = thing->z;
+   }
+   else
+   {
+      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
+      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+      pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+   }
+}
+
 //
 // R_ProjectSprite
 //
@@ -748,6 +770,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 static void R_ProjectSprite(Mobj *thing)
 {
+   spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
@@ -771,9 +794,12 @@ static void R_ProjectSprite(Mobj *thing)
    if((thing->flags2 & MF2_DONTDRAW) || !thing->translucency)
       return; // don't generate vissprite
 
+   // haleyjd 01/05/14: interpolate thing positions
+   R_interpolateThingPosition(thing, spritepos);
+
    // SoM: Cardboard translate the mobj coords and just project the sprite.
-   tempx = M_FixedToFloat(thing->x) - view.x;
-   tempy = M_FixedToFloat(thing->y) - view.y;
+   tempx = M_FixedToFloat(spritepos.x) - view.x;
+   tempy = M_FixedToFloat(spritepos.y) - view.y;
    roty  = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
@@ -825,7 +851,7 @@ static void R_ProjectSprite(Mobj *thing)
    {
       // SoM: Use old rotation code
       // choose a different rotation based on player view
-      angle_t ang = R_PointToAngle(thing->x, thing->y);
+      angle_t ang = R_PointToAngle(spritepos.x, spritepos.y);
       unsigned int rot = (ang - thing->angle + (unsigned int)(ANG45/2)*9) >> 29;
       lump = sprframe->lump[rot];
       flip = !!sprframe->flip[rot];
@@ -861,10 +887,9 @@ static void R_ProjectSprite(Mobj *thing)
    intx1 = (int)(x1 + 0.999f);
    intx2 = (int)(x2 - 0.001f);
 
-
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = thing->yscale * stopoffset + M_FixedToFloat(thing->z - thing->floorclip) - view.z;
+   tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - thing->floorclip) - view.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
@@ -879,12 +904,13 @@ static void R_ProjectSprite(Mobj *thing)
 
    // Cardboard
    // SoM: Block of old code that stays
-   gzt = thing->z + (fixed_t)(spritetopoffset[lump] * thing->yscale);
+   gzt = spritepos.z + (fixed_t)(spritetopoffset[lump] * thing->yscale);
 
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
+   // INTERP_FIXME: heightsec determination out of sync with coords
    heightsec = thing->subsector->sector->heightsec;
    
    if(heightsec != -1)   // only clip things which are in special sectors
@@ -914,10 +940,10 @@ static void R_ProjectSprite(Mobj *thing)
    vis->heightsec = heightsec;
    
    vis->colour = thing->colour;
-   vis->gx = thing->x;
-   vis->gy = thing->y;
-   vis->gz = thing->z;
-   vis->gzt = gzt;                          // killough 3/27/98
+   vis->gx     = spritepos.x;
+   vis->gy     = spritepos.y;
+   vis->gz     = spritepos.z;
+   vis->gzt    = gzt;                          // killough 3/27/98
 
    // Cardboard
    vis->x1 = x1 < 0.0f ? 0 : intx1;
@@ -931,7 +957,7 @@ static void R_ProjectSprite(Mobj *thing)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->sector = thing->subsector->sector - sectors;
+   vis->sector = thing->subsector->sector - sectors; // INTERP_FIXME
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);

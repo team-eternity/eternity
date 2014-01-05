@@ -161,7 +161,7 @@ void IN_StartCamera()
 void IN_slamBackground()
 {
    if(realbackdrop)
-      R_RenderPlayerView(players+displayplayer, &intercam);
+      R_RenderPlayerView(players+displayplayer, &intercam, FRACUNIT);
    else
       IN_DrawBackground();
 }

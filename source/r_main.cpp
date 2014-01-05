@@ -48,6 +48,7 @@
 #include "r_draw.h"
 #include "r_drawq.h"
 #include "r_dynseg.h"
+#include "r_interpolate.h"
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
@@ -726,7 +727,7 @@ unsigned int frameid = 0;
 // be searched and all frameids reset to prevent mishaps in the rendering 
 // process.
 //
-void R_IncrementFrameid(void)
+void R_IncrementFrameid()
 {
    frameid++;
 
@@ -742,23 +743,53 @@ void R_IncrementFrameid(void)
    }
 }
 
+//
+// R_interpolateViewPoint
+//
+// Interpolate a rendering view point based on the player's location.
+//
+static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
+{
+   if(lerp == FRACUNIT)
+   {
+      viewx     = player->mo->x;
+      viewy     = player->mo->y;
+      viewz     = player->viewz;
+      viewangle = player->mo->angle; //+ viewangleoffset;
+   }
+   else
+   {
+      viewx     = lerpCoord(lerp, player->mo->prevpos.x,     player->mo->x);
+      viewy     = lerpCoord(lerp, player->mo->prevpos.y,     player->mo->y);
+      viewz     = lerpCoord(lerp, player->prevviewz,         player->viewz);
+      viewangle = lerpAngle(lerp, player->mo->prevpos.angle, player->mo->angle);
+   }
+}
+
+//
+// R_interpolateViewPoint
+//
+// Interpolate a rendering view point based on the camera's location.
+//
+static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
+{
+}
 
 //
 // R_SetupFrame
 //
-void R_SetupFrame(player_t *player, camera_t *camera)
+static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
 {               
-   Mobj *mobj;
-   fixed_t pitch;
-   fixed_t dy;
-   fixed_t viewheightfrac;
+   Mobj    *mobj;
+   fixed_t  pitch;
+   fixed_t  dy;
+   fixed_t  viewheightfrac;
    
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
    R_SetSpanEngine();
-   // Cardboard
-   R_IncrementFrameid();
+   R_IncrementFrameid(); // Cardboard
    
    viewplayer = player;
    mobj = player->mo;
@@ -766,13 +797,10 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    viewcamera = camera;
    if(!camera)
    {
-      viewx = mobj->x;
-      viewy = mobj->y;
-      viewz = player->viewz;
-      viewangle = mobj->angle;// + viewangleoffset;
-      pitch = player->pitch;
+      R_interpolateViewPoint(player, lerp);
+      pitch     = player->pitch; // INTERP_FIXME
       // SoM
-      viewgroup = mobj->groupid;
+      viewgroup = mobj->groupid; // INTERP_FIXME
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -786,11 +814,11 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    }
    else
    {
-      viewx = camera->x;
-      viewy = camera->y;
-      viewz = camera->z;
+      viewx     = camera->x;
+      viewy     = camera->y;
+      viewz     = camera->z;
       viewangle = camera->angle;
-      pitch = camera->pitch;
+      pitch     = camera->pitch;
       viewgroup = camera->groupid;
    }
 
@@ -799,13 +827,14 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
+   view.x     = M_FixedToFloat(viewx);
+   view.y     = M_FixedToFloat(viewy);
+   view.z     = M_FixedToFloat(viewz);
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.pitch = (ANG90 - pitch) * PI / ANG180;
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+   view.sin   = sin(view.angle);
+   view.cos   = cos(view.angle);
+   view.lerp  = lerp;
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
@@ -830,9 +859,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       centeryfrac = viewheightfrac + dy;
    }
    else
-   {
       centeryfrac = viewheightfrac;
-   }
    
    centery = centeryfrac >> FRACBITS;
 
@@ -933,12 +960,12 @@ extern void R_UntaintPortals(void);
 //
 // R_RenderView
 //
-void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
+void R_RenderPlayerView(player_t* player, camera_t *camerapoint, fixed_t lerp)
 {
    bool quake = false;
    unsigned int savedflags = 0;
 
-   R_SetupFrame(player, camerapoint);
+   R_SetupFrame(player, camerapoint, lerp);
    
    // haleyjd: untaint portals
    R_UntaintPortals();
@@ -1005,7 +1032,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 //
 // sf: rewritten
 //
-void R_HOMdrawer(void)
+void R_HOMdrawer()
 {
    int colour;
    

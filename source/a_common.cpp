@@ -633,6 +633,9 @@ void A_PlayerSkull(actionargs_t *actionargs)
    head->health = actor->health;
    head->angle  = actor->angle;
 
+   // player object needs to backup new view angle
+   head->backupPosition();
+
    // clear old body of player
    actor->flags &= ~MF_SOLID;
    actor->player = NULL;

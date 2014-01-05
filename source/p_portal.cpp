@@ -721,6 +721,8 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
       // Set player's view according to the newly set parameters
       P_CalcHeight(mo->player);
 
+      mo->player->prevviewz = mo->player->viewz;
+
       // Reset the delta to have the same dynamics as before
       mo->player->deltaviewheight = deltaviewheight;
 
@@ -728,6 +730,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
           P_ResetChasecam();
    }
 
+   mo->backupPosition();
    P_AdjustFloorClip(mo);
    
    return 1;

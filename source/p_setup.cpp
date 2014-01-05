@@ -2265,7 +2265,7 @@ static void P_ClearPlayerVars(void)
    wminfo.partime = 180;
 
    // Initial height of PointOfView will be set by player think.
-   players[consoleplayer].viewz = 1;
+   players[consoleplayer].viewz = players[consoleplayer].prevviewz = 1;
 }
 
 //
