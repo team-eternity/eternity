@@ -51,7 +51,7 @@ inline angle_t lerpAngle(fixed_t lerp, angle_t astart, angle_t aend)
 {
    int64_t start = astart;
    int64_t end   = aend;
-   int64_t value = abs(start - end);
+   int64_t value = llabs(start - end);
    if(value > ANG180)
    {
       if(end > start)
