@@ -124,7 +124,7 @@ extern int viewdir;
 
 // haleyjd 09/04/06
 #define NUMCOLUMNENGINES 2
-#define NUMSPANENGINES 2
+#define NUMSPANENGINES 1
 extern int r_column_engine_num;
 extern int r_span_engine_num;
 extern columndrawer_t *r_column_engine;

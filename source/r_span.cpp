@@ -242,9 +242,10 @@ SPAN_FUNC(R_DrawSpanCB_8_512, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00
 SPAN_FUNC(R_DrawSpanCB_8_GEN, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
           (span.yshift), (span.xmask), PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
+#if 0
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
-static void R_DrawSpan_OLD(void) 
+static void R_DrawSpan_OLD() 
 { 
    register unsigned int position;
    unsigned int step;
@@ -294,6 +295,7 @@ static void R_DrawSpan_OLD(void)
       count--;
    } 
 }
+#endif
 
 // SoM: Removed the original span drawing code.
 
@@ -779,15 +781,8 @@ void R_DrawSlope_8_GEN()
    }
 }
 
-
-// NOP
-void R_DrawSpan_CB_NOP(void)
-{
-}
-
 #undef SPANJUMP
 #undef INTERPSTEP
-
 
 //==============================================================================
 //
@@ -800,27 +795,6 @@ void R_DrawSpan_CB_NOP(void)
 #define XS256 (1 << 24)
 #define XS512 (1 << 23)
 #define XSOLD (1 << 16)
-
-// lpspandrawer: uses the optimized but low-precision span drawing
-// routine for opaque 64x64 flats. Same as above for others.
-spandrawer_t r_lpspandrawer =
-{
-   {
-      { R_DrawSpan_OLD,     R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512,  R_DrawSpanCB_8_GEN},
-      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512,  R_DrawSpanTL_8_GEN},
-      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512, R_DrawSpanAdd_8_GEN},
-   },
-
-   // SoM: Sloped span drawers
-   // TODO: TL and ADD drawers
-   {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-   },
-
-   true
-};
 
 // the normal, high-precision span drawer
 spandrawer_t r_spandrawer =

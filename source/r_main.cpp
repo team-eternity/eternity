@@ -173,7 +173,6 @@ int r_span_engine_num;
 static spandrawer_t *r_span_engines[NUMSPANENGINES] =
 {
    &r_spandrawer,    // normal engine
-   &r_lpspandrawer,  // low-precision optimized
 };
 
 //
@@ -1280,7 +1279,7 @@ void R_DoomTLStyle()
 static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal", "quad" };
-static const char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
+static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "none", "boom", "new" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
