@@ -83,10 +83,6 @@ extern int global_cmap_index; // haleyjd: NGCS
 // Globals
 //
 
-// haleyjd 10/09/06: optional vissprite limit
-int r_vissprite_limit;
-
-
 // constant arrays
 //  used for psprite clipping and initializing clipping
 
@@ -187,9 +183,6 @@ static float portaltop[MAX_SCREENWIDTH];
 static float portalbottom[MAX_SCREENWIDTH];
 
 static float *ptop, *pbottom;
-
-// haleyjd 10/09/06: optional vissprite limit
-static int r_vissprite_count;
 
 // haleyjd 04/25/10: drawsegs optimization
 static drawsegs_xrange_t *drawsegs_xrange;
@@ -488,11 +481,9 @@ void R_InitSprites(char **namelist)
 //
 // Called at frame start.
 //
-void R_ClearSprites(void)
+void R_ClearSprites()
 {
    num_vissprite = 0; // killough
-
-   r_vissprite_count = 0; // haleyjd
 }
 
 //
@@ -928,10 +919,6 @@ static void R_ProjectSprite(Mobj *thing)
            thing->z >= sectors[heightsec].ceilingheight)
          return;
    }
-  
-   // haleyjd 10/09/06: optional vissprite limit ^____^
-   if(r_vissprite_limit != -1 && ++r_vissprite_count > r_vissprite_limit)
-      return;
 
    // store information in a vissprite
    vis = R_NewVisSprite();

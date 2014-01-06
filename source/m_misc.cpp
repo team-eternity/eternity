@@ -814,9 +814,6 @@ default_t defaults[] =
    DEFAULT_INT("r_spanengine",&r_span_engine_num, NULL,
                0, 0, NUMSPANENGINES - 1, default_t::wad_no, 
                "0 = high precision, 1 = low precision"),
-   
-   DEFAULT_INT("r_vissprite_limit", &r_vissprite_limit, NULL, -1, -1, UL, default_t::wad_yes,
-               "number of vissprites allowed per frame (-1 = no limit)"),
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, NULL, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_yes,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),

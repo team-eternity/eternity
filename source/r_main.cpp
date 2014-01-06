@@ -1400,9 +1400,6 @@ CONSOLE_VARIABLE(r_ptcltrans, particle_trans, 0) {}
 CONSOLE_VARIABLE(r_columnengine, r_column_engine_num, 0) {}
 CONSOLE_VARIABLE(r_spanengine,   r_span_engine_num,   0) {}
 
-VARIABLE_INT(r_vissprite_limit, NULL, -1, D_MAXINT, NULL);
-CONSOLE_VARIABLE(r_vissprite_limit, r_vissprite_limit, 0) {}
-
 CONSOLE_COMMAND(p_dumphubs, 0)
 {
    extern void P_DumpHubs();
