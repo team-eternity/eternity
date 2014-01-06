@@ -21,7 +21,9 @@
 #define P_CHASE_H__
 
 #include "m_fixed.h"
+#include "r_interpolate.h"
 #include "tables.h"
+
 class Mobj;
 
 // haleyjd 06/04/01: added heightsec field for use in R_FakeFlat
@@ -37,6 +39,8 @@ struct camera_t
    int heightsec;  // haleyjd: for deep water handling
    int groupid;
    bool flying;
+
+   prevpos_t prevpos; // previous position for interpolation
 };
 
 extern int chasex;
@@ -55,14 +59,12 @@ extern camera_t chasecam;
 extern camera_t walkcamera;
 extern camera_t followcam;
 
-void P_ChaseSetupFrame();
 void P_ChaseTicker();
 void P_ChaseStart();
 void P_ChaseEnd();
 void P_ResetChasecam();
 
 void P_WalkTicker();
-void P_ResetWalkcam();
 
 void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY);
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target);

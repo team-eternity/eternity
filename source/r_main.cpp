@@ -773,6 +773,20 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
 //
 static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
 {
+   if(lerp == FRACUNIT)
+   {
+      viewx     = camera->x;
+      viewy     = camera->y;
+      viewz     = camera->z;
+      viewangle = camera->angle;
+   }
+   else
+   {
+      viewx     = lerpCoord(lerp, camera->prevpos.x,     camera->x);
+      viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
+      viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
+      viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+   }
 }
 
 enum secinterpstate_e
@@ -879,12 +893,9 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    }
    else
    {
-      viewx     = camera->x;
-      viewy     = camera->y;
-      viewz     = camera->z;
-      viewangle = camera->angle;
-      pitch     = camera->pitch;
-      viewgroup = camera->groupid;
+      R_interpolateViewPoint(camera, lerp);
+      pitch     = camera->pitch;   // INTERP_FIXME
+      viewgroup = camera->groupid; // INTERP_FIXME
    }
 
    extralight = player->extralight;

@@ -29,6 +29,16 @@
 #include "doomtype.h"
 #include "tables.h"
 
+// prevpos_t represents an Mobj or camera's previous position for purposes of
+// frame interpolation in the renderer. - haleyjd 01/04/14
+struct prevpos_t
+{
+   fixed_t x;
+   fixed_t y;
+   fixed_t z;
+   angle_t angle;
+};
+
 //
 // lerpCoord
 //

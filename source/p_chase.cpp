@@ -47,7 +47,30 @@
 #include "r_main.h"
 #include "r_state.h"
 
-bool PTR_chasetraverse(intercept_t *in);
+//=============================================================================
+//
+// Shared Camera Code
+//
+
+//
+// P_backupCameraPosition
+//
+// Save the current camera position for interpolation purposes.
+//
+static void P_backupCameraPosition(camera_t &cam)
+{
+   cam.prevpos.x     = cam.x;
+   cam.prevpos.y     = cam.y;
+   cam.prevpos.z     = cam.z;
+   cam.prevpos.angle = cam.angle;
+
+   // TODO: pitch, heightsec, etc.
+}
+
+//=============================================================================
+//
+// Chasecam
+//
 
 camera_t chasecam;
 int chaseviewz;
@@ -58,14 +81,6 @@ int targetgroupid;
 #endif
 int chasecam_turnoff = 0;
 
-void P_ChaseSetupFrame()
-{
-   viewx = chasecam.x;
-   viewy = chasecam.y;
-   viewz = chaseviewz;
-   viewangle = chasecam.angle;
-}
-
                 // for simplicity
 #define playermobj players[displayplayer].mo
 #define playerangle (playermobj->angle)
@@ -73,126 +88,12 @@ void P_ChaseSetupFrame()
 int chasecam_height;
 int chasecam_dist;
 
-void P_GetChasecamTarget()
-{
-   int aimfor;
-   subsector_t *ss;
-   int ceilingheight, floorheight;
-
-   // aimfor is the preferred height of the chasecam above
-   // the player
-   // haleyjd: 1 unit for each degree of pitch works surprisingly well
-   aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT 
-               + FixedDiv(players[displayplayer].pitch, ANGLE_1);
-      
-   trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
-   trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
-   
-   targetx = playermobj->x - chasecam_dist * trace.cos;
-   targety = playermobj->y - chasecam_dist * trace.sin;
-   targetz = playermobj->z + aimfor;
-
-#ifdef R_LINKEDPORTALS
-   targetgroupid = playermobj->groupid;
-#endif
-
-   // the intersections test mucks up the first time, but
-   // aiming at something seems to cure it
-   P_AimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0);
-
-   // check for intersections
-   P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
-                  PT_ADDLINES, PTR_chasetraverse);
-
-   ss = R_PointInSubsector(targetx, targety);
-   
-   floorheight = ss->sector->floorheight;
-   ceilingheight = ss->sector->ceilingheight;
-
-   // don't aim above the ceiling or below the floor
-   if(targetz > ceilingheight - 10*FRACUNIT)
-      targetz = ceilingheight - 10*FRACUNIT;
-   if(targetz < floorheight + 10*FRACUNIT)
-      targetz = floorheight + 10*FRACUNIT;
-}
-
-// the 'speed' of the chasecam: the percentage closer we
-// get to the target each tic
-int chasecam_speed;
-
-void P_ChaseTicker()
-{
-   int xdist, ydist, zdist;
-   subsector_t *subsec; // haleyjd
-
-   // find the target
-   P_GetChasecamTarget();
-   
-   // find distance to target..
-   xdist = targetx-chasecam.x;
-   ydist = targety-chasecam.y;
-   zdist = targetz-chasecam.z;
-   
-   // haleyjd: patched these lines with cph's fix
-   //          for overflow occuring in the multiplication
-   // now move chasecam
-   chasecam.x += FixedMul(xdist, chasecam_speed*(FRACUNIT/100));
-   chasecam.y += FixedMul(ydist, chasecam_speed*(FRACUNIT/100));
-   chasecam.z += FixedMul(zdist, chasecam_speed*(FRACUNIT/100));
-   
-   chasecam.pitch = players[displayplayer].pitch;
-   chasecam.angle = playerangle;
-
-   // haleyjd: fix for deep water HOM bug -- 
-   // although this is called from P_GetChasecamTarget, we
-   // can't do it there because the target point may have
-   // different deep water qualities than the interim locale
-   subsec = R_PointInSubsector(chasecam.x, chasecam.y);
-   chasecam.heightsec = subsec->sector->heightsec;
-}
-
-// console commands
-
-VARIABLE_BOOLEAN(chasecam_active, NULL, onoff);
-
-CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
-{
-   if(!Console.argc)
-      return;
-
-   if(Console.argv[0]->toInt())
-      P_ChaseStart();
-   else
-      P_ChaseEnd();
-}
-
-VARIABLE_INT(chasecam_height, NULL, -31, 100, NULL);
-CONSOLE_VARIABLE(chasecam_height, chasecam_height, 0) {}
-
-VARIABLE_INT(chasecam_dist, NULL, 10, 1024, NULL);
-CONSOLE_VARIABLE(chasecam_dist, chasecam_dist, 0) {}
-
-VARIABLE_INT(chasecam_speed, NULL, 1, 100, NULL);
-CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
-
-void P_ChaseStart()
-{
-   chasecam_active = true;
-   camera = &chasecam;
-   P_ResetChasecam();
-}
-
-void P_ChaseEnd()
-{
-   chasecam_active = false;
-   camera = NULL;
-}
-
+//
 // Z of the line at the point of intersection.
 // this function is really just to cast all the
 // variables to 64-bit integers
-
-int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
+//
+static int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 {
    int64_t thezi;
    
@@ -202,17 +103,14 @@ int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
    return (int)thezi;
 }
 
-// SoM: moved globals into linetracer_t see p_maputil.h
-extern linetracer_t trace;
-
 //
-// PTR_chasetraverse
+// PTR_chaseTraverse
 //
 // go til you hit a wall
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-bool PTR_chasetraverse(intercept_t *in)
+static bool PTR_chaseTraverse(intercept_t *in)
 {
    fixed_t dist, frac;
    subsector_t *ss;
@@ -272,12 +170,137 @@ bool PTR_chasetraverse(intercept_t *in)
    return true;
 }
 
-// reset chasecam eg after teleporting etc
+static void P_GetChasecamTarget()
+{
+   int aimfor;
+   subsector_t *ss;
+   int ceilingheight, floorheight;
 
+   // aimfor is the preferred height of the chasecam above
+   // the player
+   // haleyjd: 1 unit for each degree of pitch works surprisingly well
+   aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT 
+               + FixedDiv(players[displayplayer].pitch, ANGLE_1);
+      
+   trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
+   trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
+   
+   targetx = playermobj->x - chasecam_dist * trace.cos;
+   targety = playermobj->y - chasecam_dist * trace.sin;
+   targetz = playermobj->z + aimfor;
+
+#ifdef R_LINKEDPORTALS
+   targetgroupid = playermobj->groupid;
+#endif
+
+   // the intersections test mucks up the first time, but
+   // aiming at something seems to cure it
+   P_AimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0);
+
+   // check for intersections
+   P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
+                  PT_ADDLINES, PTR_chaseTraverse);
+
+   ss = R_PointInSubsector(targetx, targety);
+   
+   floorheight = ss->sector->floorheight;
+   ceilingheight = ss->sector->ceilingheight;
+
+   // don't aim above the ceiling or below the floor
+   if(targetz > ceilingheight - 10*FRACUNIT)
+      targetz = ceilingheight - 10*FRACUNIT;
+   if(targetz < floorheight + 10*FRACUNIT)
+      targetz = floorheight + 10*FRACUNIT;
+}
+
+// the 'speed' of the chasecam: the percentage closer we
+// get to the target each tic
+int chasecam_speed;
+
+void P_ChaseTicker()
+{
+   int xdist, ydist, zdist;
+   subsector_t *subsec; // haleyjd
+
+   // backup current position for interpolation
+   P_backupCameraPosition(chasecam);
+
+   // find the target
+   P_GetChasecamTarget();
+   
+   // find distance to target..
+   xdist = targetx - chasecam.x;
+   ydist = targety - chasecam.y;
+   zdist = targetz - chasecam.z;
+   
+   // haleyjd: patched these lines with cph's fix
+   //          for overflow occuring in the multiplication
+   // now move chasecam
+   chasecam.x += FixedMul(xdist, chasecam_speed*(FRACUNIT/100));
+   chasecam.y += FixedMul(ydist, chasecam_speed*(FRACUNIT/100));
+   chasecam.z += FixedMul(zdist, chasecam_speed*(FRACUNIT/100));
+   
+   chasecam.pitch = players[displayplayer].pitch;
+   chasecam.angle = playerangle;
+
+   // haleyjd: fix for deep water HOM bug -- 
+   // although this is called from P_GetChasecamTarget, we
+   // can't do it there because the target point may have
+   // different deep water qualities than the interim locale
+   subsec = R_PointInSubsector(chasecam.x, chasecam.y);
+   chasecam.heightsec = subsec->sector->heightsec;
+}
+
+// console commands
+
+VARIABLE_BOOLEAN(chasecam_active, NULL, onoff);
+
+CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
+{
+   if(!Console.argc)
+      return;
+
+   if(Console.argv[0]->toInt())
+      P_ChaseStart();
+   else
+      P_ChaseEnd();
+}
+
+VARIABLE_INT(chasecam_height, NULL, -31, 100, NULL);
+CONSOLE_VARIABLE(chasecam_height, chasecam_height, 0) {}
+
+VARIABLE_INT(chasecam_dist, NULL, 10, 1024, NULL);
+CONSOLE_VARIABLE(chasecam_dist, chasecam_dist, 0) {}
+
+VARIABLE_INT(chasecam_speed, NULL, 1, 100, NULL);
+CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
+
+void P_ChaseStart()
+{
+   chasecam_active = true;
+   camera = &chasecam;
+   P_ResetChasecam();
+}
+
+void P_ChaseEnd()
+{
+   chasecam_active = false;
+   camera = NULL;
+}
+
+// SoM: moved globals into linetracer_t see p_maputil.h
+extern linetracer_t trace;
+
+//
+// P_ResetChasecam
+//
+// Reset chasecam eg after teleporting etc
+//
 void P_ResetChasecam()
 {
    if(!chasecam_active)
       return;
+
    if(gamestate != GS_LEVEL) 
       return; // only in level
 
@@ -295,6 +318,8 @@ void P_ResetChasecam()
    // haleyjd
    chasecam.heightsec = 
       R_PointInSubsector(chasecam.x, chasecam.y)->sector->heightsec;
+
+   P_backupCameraPosition(chasecam);
 }
 
 
@@ -314,6 +339,9 @@ void P_WalkTicker()
    int look   = walktic->look;
    int fly    = walktic->fly;
    angle_t fwan, san;
+
+   // backup position for interpolation
+   P_backupCameraPosition(walkcamera);
 
    walkcamera.angle += walktic->angleturn << 16;
    
@@ -375,18 +403,16 @@ void P_WalkTicker()
       walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
    }
 
-   {
-      fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
-      fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
-      
-      if(walkcamera.z > maxheight)
-         walkcamera.z = maxheight;
-      if(walkcamera.z < minheight)
-         walkcamera.z = minheight;
-   }
+   fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
+   fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
+
+   if(walkcamera.z > maxheight)
+      walkcamera.z = maxheight;
+   if(walkcamera.z < minheight)
+      walkcamera.z = minheight;
 }
 
-void P_ResetWalkcam()
+static void P_ResetWalkcam()
 {
    sector_t *sec;
    walkcamera.x      = playerstarts[0].x << FRACBITS;
@@ -399,6 +425,8 @@ void P_ResetWalkcam()
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
    walkcamera.heightsec = sec->heightsec;
    walkcamera.z = sec->floorheight + 41*FRACUNIT;
+
+   P_backupCameraPosition(walkcamera);
 }
 
 VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
@@ -437,7 +465,7 @@ static Mobj *followtarget;
 //
 void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 {
-   PODCollection<vertex_t *> vertexes;
+   PODCollection<vertex_t *> cvertexes;
    sector_t *sec = target->subsector->sector;
 
    // Get all vertexes in the target's sector within 256 units
@@ -447,20 +475,20 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
       vertex_t *v2 = sec->lines[i]->v2;
 
       if(P_AproxDistance(v1->x - target->x, v1->y - target->y) <= 256*FRACUNIT)
-         vertexes.add(v1);
+         cvertexes.add(v1);
       if(P_AproxDistance(v2->x - target->x, v2->y - target->y) <= 256*FRACUNIT)
-         vertexes.add(v2);
+         cvertexes.add(v2);
    }
 
    // Sort by distance from the target, with the furthest vertex first.
-   std::sort(vertexes.begin(), vertexes.end(), [&] (vertex_t *a, vertex_t *b)
+   std::sort(cvertexes.begin(), cvertexes.end(), [&] (vertex_t *a, vertex_t *b)
    {
       return (P_AproxDistance(target->x - a->x, target->y - a->y) >
               P_AproxDistance(target->x - b->x, target->y - b->y));
    });
 
    // Find the furthest one from which the target is visible
-   for(auto vitr = vertexes.begin(); vitr != vertexes.end(); vitr++)
+   for(auto vitr = cvertexes.begin(); vitr != cvertexes.end(); vitr++)
    {
       vertex_t *v = *vitr;
       camsightparams_t camparams;
@@ -535,6 +563,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
    followcam.heightsec = subsec->sector->heightsec;
 
    P_setFollowPitch();
+   P_backupCameraPosition(followcam);
 }
 
 void P_FollowCamOff()
@@ -548,6 +577,8 @@ bool P_FollowCamTicker()
 
    if(!followtarget)
       return false;
+
+   P_backupCameraPosition(followcam);
 
    followcam.angle = P_PointToAngle(followcam.x, followcam.y,
                                     followtarget->x, followtarget->y);

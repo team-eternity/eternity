@@ -37,6 +37,7 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 #include "m_fixed.h"
+#include "r_interpolate.h"
 #include "tables.h"
 
 struct msecnode_t;
@@ -75,16 +76,6 @@ struct skin_t;
 
 // Mobjs are attached to subsectors by pointer.
 struct subsector_t;
-
-// prevpos_t represents an Mobj or camera's previous position for purposes of
-// frame interpolation in the renderer. - haleyjd 01/04/14
-struct prevpos_t
-{
-   fixed_t x;
-   fixed_t y;
-   fixed_t z;
-   angle_t angle;
-};
 
 //
 // NOTES: Mobj
