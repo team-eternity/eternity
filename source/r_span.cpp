@@ -789,13 +789,6 @@ void R_DrawSlope_8_GEN()
 // Span Engine Objects
 //
 
-// x-shift factors; precision decreases with texture size
-#define XS64  (1 << 26)
-#define XS128 (1 << 25)
-#define XS256 (1 << 24)
-#define XS512 (1 << 23)
-#define XSOLD (1 << 16)
-
 // the normal, high-precision span drawer
 spandrawer_t r_spandrawer =
 {
@@ -811,9 +804,7 @@ spandrawer_t r_spandrawer =
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-   },
-
-   false
+   }
 };
 
 // EOF

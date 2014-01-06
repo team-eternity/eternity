@@ -123,8 +123,6 @@ struct spandrawer_t
 {
    void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
    void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
-
-   bool haslp64; // haleyjd: if true, 64x64 flat drawer is low-precision
 };
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
