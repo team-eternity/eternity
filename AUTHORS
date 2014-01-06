@@ -27,7 +27,7 @@ Gez
 Joel Murdoch
 Kate Stone
 MP2E
-Russel Rice
+Russell Rice
 Samuel "Kaiser" Villarreal
 Simon "fraggle" Howard
 SargeBaldy
@@ -36,9 +36,9 @@ Yagisan
 
 Artistic Assets By
 ------------------
+Bob Satori
 Michael Mancuso
 Sven Ruthner
-Bob Satori
 
 
 Based On Works
@@ -70,12 +70,18 @@ SMMU - "Smack My Marine Up"
 Significant Code Utilized From
 ------------------------------
 
-Quake 2 Source, Quake 3 Source
-   id Software
-   Gilles Vollant
+BSP 5.2
+   Raphael Quinet
+   Colin Reed
+   Lee Killough
+   Colin Phipps
+   Simon Howard
 
 Chocolate Doom
    Simon "fraggle" Howard
+
+Odamex
+   "Dr. Sean" Leonard
                               
 PrBoom
    Colin Phipps
@@ -84,48 +90,45 @@ PrBoom
 PrBoom-Plus
    Andrey Budko
    
+Quake 2 Source, Quake 3 Source
+   id Software
+   Gilles Vollant
+
 ZDoom
    Randy Heit
    Graf Zahl
    Braden Obrzut
    
-BSP 5.2
-   Raphael Quinet
-   Colin Reed
-   Lee Killough
-   Colin Phipps
-   Simon Howard
-   
 
 Libraries/Code Utilized
 -----------------------
 
+DJGPP libc
+   DJ Delorie et al.
+
 libConfuse Parser Library
    Martin Hedenfalk
    
+libpng
+   Glenn Randers-Pehrson, Andreas Dilger, Guy Eric Schalnat, et al.
+
+LLVM libc++
+   LLVM Team, University of Illinois at Urbana-Champaign; Howard Hinnant et al.
+
+MinGW libc
+   Matt Weinstein et al.
+
+SDL and Support Libraries
+   Sam Lantinga et al.
+
+snes_spc 0.9.0
+   Shay Green
+
 SpiderMonkey 1.8.0
    Mozilla Foundation; Brendan Eich et al.
    
-zlib
-   Jean-loup Gailly, Mark Adler, et al.
-   
-libpng
-   Glenn Randers-Pehrson, Andreas Dilger, Guy Eric Schalnat, et al.
-   
-snes_spc 0.9.0
-   Shay Green
-   
-DJGPP libc
-   DJ Delorie et al.
-   
-MinGW libc
-   Matt Weinstein et al.
-   
-LLVM libc++
-   LLVM Team, University of Illinois at Urbana-Champaign; Howard Hinnant et al.
-   
-SDL and Support Libraries
-   Sam Lantinga et al.
-                          
 Three-Band EQ and Rational-tanh Clipper
    Neil C / Etanza Systems, cschueler
+
+zlib
+   Jean-loup Gailly, Mark Adler, et al.

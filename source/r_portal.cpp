@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2004 Stephen McGranahan
+// Copyright(C) 2013 Stephen McGranahan et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -178,7 +177,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
-              "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, ytop, ybottom);
    }
 #endif
 
@@ -190,7 +189,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
    {
       I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, ptop, pbottom);
    }
 #endif
 
@@ -671,19 +670,16 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
       return;
 
 #ifdef RANGECHECK
+   for(int i = 0; i < MAX_SCREENWIDTH; i++)
    {
-      int i;
-      for(i = 0; i < MAX_SCREENWIDTH; ++i)
+      if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+         || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+         || window->top[i] > viewwindow.height))
       {
-         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
-            || window->top[i] > viewwindow.height))
-         {
-            I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
-                    "information:\n"
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
-                    i, window->top[i], window->bottom[i]);
-         }
+         I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
+                 "information:\n"
+                 "   x:%i, ytop:%f, ybottom:%f\n", 
+                 i, window->top[i], window->bottom[i]);
       }
    }
 #endif
@@ -822,19 +818,16 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    } 
 
 #ifdef RANGECHECK
+   for(int i = 0; i < MAX_SCREENWIDTH; i++)
    {
-      int i;
-      for(i = 0; i < MAX_SCREENWIDTH; i++)
+      if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+         || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+         || window->top[i] > viewwindow.height))
       {
-         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
-            || window->top[i] > viewwindow.height))
-         {
-            I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
-                    "information:\n" 
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
-                    i, window->top[i], window->bottom[i]);
-         }
+         I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
+                 "information:\n" 
+                 "   x:%i, ytop:%f, ybottom:%f\n", 
+                 i, window->top[i], window->bottom[i]);
       }
    }
 #endif
@@ -918,19 +911,16 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    } 
 
 #ifdef RANGECHECK
+   for(int i = 0; i < MAX_SCREENWIDTH; i++)
    {
-      int i;
-      for(i = 0; i < MAX_SCREENWIDTH; i++)
+      if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+         || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+         || window->top[i] > viewwindow.height))
       {
-         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
-            || window->top[i] > viewwindow.height))
-         {
-            I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
-                    "information:\n" 
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
-                    i, window->top[i], window->bottom[i]);
-         }
+         I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
+                 "information:\n" 
+                 "   x:%i, ytop:%f, ybottom:%f\n", 
+                 i, window->top[i], window->bottom[i]);
       }
    }
 #endif

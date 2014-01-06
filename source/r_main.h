@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -65,15 +64,15 @@ enum
 
 extern int r_tlstyle;
 
-void R_DoomTLStyle(void);
+void R_DoomTLStyle();
 
-void R_ResetTrans(void);
+void R_ResetTrans();
 
 //
 // Function pointer to switch refresh/drawing functions.
 //
 
-extern void (*colfunc)(void);
+extern void (*colfunc)();
 
 //
 // Utility functions.
@@ -99,9 +98,8 @@ void R_SectorColormap(sector_t *s);
 struct camera_t;
 struct player_t;
 
-// sf: camera point added
-void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
-                                                                 // sf: G_Drawer???
+void R_RenderPlayerView(player_t *player, camera_t *viewcamera, fixed_t lerp);
+
 //
 // R_ResetFOV
 // 
@@ -126,7 +124,7 @@ extern int viewdir;
 
 // haleyjd 09/04/06
 #define NUMCOLUMNENGINES 2
-#define NUMSPANENGINES 2
+#define NUMSPANENGINES 1
 extern int r_column_engine_num;
 extern int r_span_engine_num;
 extern columndrawer_t *r_column_engine;
@@ -138,7 +136,7 @@ void R_SetSpanEngine();
 // haleyjd 09/19/07: missing extern!
 extern const float PI;
 
-typedef struct cb_view_s
+struct cb_view_t
 {
    float x, y, z;
    float angle, pitch;
@@ -153,7 +151,9 @@ typedef struct cb_view_s
 
    float pspritexscale, pspriteyscale;
    float pspriteystep;
-} cb_view_t;
+
+   fixed_t lerp; // haleyjd: linear interpolation factor
+};
 
 // haleyjd 3/11/10: markflags
 enum

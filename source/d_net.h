@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -24,15 +23,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_NET__
-#define __D_NET__
+#ifndef D_NET_H__
+#define D_NET_H__
 
 #include "d_ticcmd.h"
-
-// haleyjd 10/16/07: structures in this file must be packed
-#if defined(_MSC_VER) || defined(__GNUC__)
-#pragma pack(push, 1)
-#endif
 
 //
 // Network play related stuff.
@@ -67,6 +61,11 @@ enum
 // haleyjd 10/19/07: moved here from g_game.h:
 // killough 5/2/98: number of bytes reserved for saving options
 #define GAME_OPTION_SIZE 64
+
+// haleyjd 10/16/07: structures in this file must be packed
+#if defined(_MSC_VER) || defined(__GNUC__)
+#pragma pack(push, 1)
+#endif
 
 //
 // Network packet data.
@@ -166,35 +165,29 @@ struct doomcom_t
     
 };
 
-// Create any new ticcmds and broadcast to other players.
-void NetUpdate(void);
-
-void D_InitNetGame(void);
-
-// Broadcasts special packets to other players
-//  to notify of game exit
-void D_QuitNetGame(void);
-void D_KickPlayer(int playernum);
-
-// how many ticks to run?
-void TryRunTics(void);
-
-//extern void (*netdisconnect)();  // function ptr for disconnect function
-
-//void ResetNet();
-
-//extern int isconsoletic;        // is the current tic a gametic
-                                  // or a list of console commands?
-extern bool opensocket;
-//extern doomcom_t singleplayer;
-//extern int newtics, ticnum;     //sf
-
-extern  ticcmd_t   netcmds[][BACKUPTICS];
-
 // haleyjd 10/16/07
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
+
+// Create any new ticcmds and broadcast to other players.
+void NetUpdate();
+
+void D_InitNetGame();
+
+// Broadcasts special packets to other players
+//  to notify of game exit
+void D_QuitNetGame();
+void D_KickPlayer(int playernum);
+
+// how many ticks to run?
+int TryRunTics();
+
+extern bool d_fastrefresh;
+extern bool d_interpolate;
+extern bool opensocket;
+
+extern ticcmd_t netcmds[][BACKUPTICS];
 
 #endif
 

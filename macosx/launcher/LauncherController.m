@@ -3,21 +3,23 @@
 //
 // Copyright(C) 2012 Ioan Chera
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//----------------------------------------------------------------------------
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //
@@ -42,6 +44,7 @@ extern NSArray *gArgArray;
 #import "ELFileViewDataSource.h"
 #import "ELCommandLineArray.h"
 #import "ELCommandLineArgument.h"
+#import "ELAboutController.h"
 
 #define SET_UNDO(a, b, c)     NSUndoManager *undom = [self getUndoFor:a]; \
                               [[undom prepareWithInvocationTarget:self] b]; \
@@ -74,11 +77,12 @@ static BOOL calledAppMainline = FALSE;
 //
 -(void)dealloc
 {
+	[m_aboutController release];
+	
 	[iwadSet release];
 	[pwadTypes release];
 	[iwadPopMenu release];
 	[pwadArray release];
-   [userSet release];
    
 	[noIwadAlert release];
 	[badIwadAlert release];
@@ -159,24 +163,16 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 {
 	if(self = [super init])
 	{
-      dontUndo = FALSE;
-      
-		fileMan = [NSFileManager defaultManager];
 		iwadSet = [[NSMutableSet alloc] init];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
                    @"pke", @"zip", @"disk", nil];
 		iwadPopMenu = [[NSMenu alloc] initWithTitle:@"Choose IWAD"];
 		pwadArray = [[NSMutableArray alloc] initWithCapacity:0];
-      userSet = [[NSMutableSet alloc] initWithCapacity:0];
       
       [self createAlertBoxes];
       
 		param = [[ELCommandLineArray alloc] init];
-		basePath = [[NSMutableString alloc] init];
-		userPath = [[NSMutableString alloc] init];
-		
-		task = nil;
 		
 		console = [[ELDumpConsole alloc] initWithWindowNibName:@"DumpConsole"];
 
@@ -200,7 +196,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 -(void)makeDocumentMenu
 {
    NSError *err = nil;
-   NSArray *contents = [fileMan contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
+   NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] error:&err];
    
    if(err)
    {
@@ -273,7 +269,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 #if 0 // NOT USED: requires OS X 10.6 or later
 - (NSURL*)applicationDataDirectory
 {
-	NSArray* possibleURLs = [fileMan URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
+	NSArray* possibleURLs = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
 	NSURL* appSupportDir = nil;
 	NSURL* appDirectory = nil;
 	
@@ -308,6 +304,8 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    NSString *appDataPath = [[@"~/Library/Application Support" stringByExpandingTildeInPath] stringByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
   	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
    
+   NSFileManager* fileMan = [NSFileManager defaultManager];
+   
 	[fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom"] withIntermediateDirectories:YES attributes:nil error:nil];
    [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom2"] withIntermediateDirectories:YES attributes:nil error:nil];
    [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"hacx"] withIntermediateDirectories:YES attributes:nil error:nil];
@@ -318,8 +316,11 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 
 	NSString *basPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"base"];
 		
-	[userPath setString:usrPath];
-	[basePath setString:basPath];
+	[userPath release];
+	userPath = [usrPath retain];
+	
+	[basePath release];
+	basePath = [basPath retain];
 	
 	// Now it points to Application Support
 	
@@ -450,7 +451,6 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    //
 	// Start console
    //
-   [deploy retain];
    
 	[[self window] orderOut:self];
 	
@@ -466,7 +466,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    }
 	
    __block char *env;
-   NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithCapacity:2];
+   NSMutableDictionary *environment = [[[NSMutableDictionary alloc] initWithCapacity:2] autorelease];
    [environment setDictionary:@{@"ETERNITYUSER":userPath, @"ETERNITYBASE":basePath}];
    
    
@@ -481,11 +481,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    AddEnv("DOOMWADPATH");
    
    [task setEnvironment:environment];
-   [environment release];
-   
-   NSString *exePath = enginePath;
-
-   [task setLaunchPath:exePath];
+   [task setLaunchPath:enginePath];
    [task setArguments:deploy];
    
    calledAppMainline = TRUE;
@@ -497,7 +493,6 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    //   if(status == 0)   // only exit if it's all ok
    //    exit(status);
    
-   [deploy release];
 }
 
 //
@@ -512,11 +507,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	
 	// Add -base and user here
 
-	NSArray *deploy = [[param deployArray] retain];
-   
-   [self executeGame:x64flag withArgs:deploy];
-   
-   [deploy release];
+   [self executeGame:x64flag withArgs:[param deployArray]];
 }
 
 //
@@ -566,7 +557,7 @@ iwadMightBe:
    ;
    // Check if wad exists at path and query
    BOOL isDir;
-   if([fileMan fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
+   if([[NSFileManager defaultManager] fileExistsAtPath:[recordDemoField stringValue] isDirectory:&isDir])
    {
       if(isDir)
       {
@@ -582,28 +573,6 @@ iwadMightBe:
    }
    
    [self doLaunchGameAs64Bit:x64];
-}
-
-//
-// iwadPopUpShowDifferentPaths
-//
-// Show the path differences if file names are equal
-//
--(void)iwadPopUpShowDifferentPaths
-{
-	// I have to scan all set components
-	NSURL *url;
-	NSString *iwadPath;
-	
-	// There will be a list of files with identical last names
-	// Each component will contain a last name and the indices in the list view
-	
-	for(url in iwadSet)
-	{
-		// We've established that non-path URL can't enter the list
-		iwadPath = [url path];
-		
-	}
 }
 
 //
@@ -628,7 +597,7 @@ iwadMightBe:
 		
 		[iwadSet addObject:wURL];
 		      
-      [iwadPopUp insertItemWithTitle:[fileMan displayNameAtPath:iwadPath] atIndex:ind];
+      [iwadPopUp insertItemWithTitle:[[NSFileManager defaultManager] displayNameAtPath:iwadPath] atIndex:ind];
       
       SET_UNDO(iwadPopUp, doRemoveIwadAtIndex:ind, @"Add/Remove Game WAD")
       
@@ -1120,7 +1089,7 @@ iwadMightBe:
 		return;
 	}
 	
-	NSMutableString *gfsOut = [[NSMutableString alloc] init];
+	NSMutableString *gfsOut = [[[NSMutableString alloc] init] autorelease];
 	
 	if([iwadPopUp numberOfItems] > 0)
 	{
@@ -1135,7 +1104,7 @@ iwadMightBe:
 		NSInteger pathPosition = 0;
 		NSURL *wURL = nil;
 		NSString *path, *root, *oldroot;
-		NSMutableArray *pathArray = [[NSMutableArray alloc] initWithCapacity:0];
+		NSMutableArray *pathArray = [[[NSMutableArray alloc] initWithCapacity:0] autorelease];
 
 		for(pathPosition = 0;; pathPosition++)
 		{
@@ -1213,12 +1182,9 @@ iwadMightBe:
 				[gfsOut appendString:@"\"\n"];
 			}
 		}
-
-		[pathArray release];
 	}
 	[gfsOut writeToURL:[panel URL] atomically:YES encoding:NSUTF8StringEncoding
                 error:NULL];
-	[gfsOut release];
    
    // Now, replace the files with the GFS
    [self removeAllPwads:self];
@@ -1807,17 +1773,18 @@ iwadMightBe:
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://eternity.youfailit.net/"]];
 }
 
-//
-// showLicense
-//
--(IBAction)showLicense:(id)sender
+///
+/// Displays a custom about panel
+///
+-(IBAction)showAboutPanel:(id)sender
 {
-	[[NSWorkspace sharedWorkspace] openFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"COPYING.pdf"] withApplication:@"Preview"];
+	if(!m_aboutController)
+		m_aboutController = [[ELAboutController alloc] initWithWindowNibName:@"About"];
+	[m_aboutController showWindow:nil];
+	
 }
 
 @end	// end LauncherController class definition
-
-
 
 // EOF
 

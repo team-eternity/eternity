@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -96,6 +95,9 @@ seg_t    *segs;
 
 int      numsectors;
 sector_t *sectors;
+
+// haleyjd 01/05/14: sector interpolation data
+sectorinterp_t *sectorinterps;
 
 int      numsubsectors;
 subsector_t *subsectors;
@@ -573,6 +575,24 @@ void P_LoadSectors(int lumpnum)
 }
 
 //
+// P_CreateSectorInterps
+//
+// haleyjd 01/05/14: Create sector interpolation structures.
+//
+static void P_CreateSectorInterps()
+{
+   sectorinterps = estructalloctag(sectorinterp_t, numsectors, PU_LEVEL);
+
+   for(int i = 0; i < numsectors; i++)
+   {
+      sectorinterps[i].prevfloorheight    = sectors[i].floorheight;
+      sectorinterps[i].prevceilingheight  = sectors[i].ceilingheight;
+      sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
+      sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
+   }
+}
+
+//
 // P_CalcNodeCoefficients
 //
 // haleyjd 06/14/10: Separated from P_LoadNodes, this routine precalculates
@@ -939,6 +959,7 @@ static void P_LoadZNodes(int lump)
 //
 //=============================================================================
 
+static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 static void P_ConvertHereticThing(mapthing_t *mthing);
 static void P_ConvertPSXThing(mapthing_t *mthing);
 
@@ -962,7 +983,7 @@ void P_LoadThings(int lump)
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
-   for(i = 0; i < numthings; ++i)
+   for(i = 0; i < numthings; i++)
    {
       mapthingdoom_t *mt = (mapthingdoom_t *)data + i;
       mapthing_t     *ft = &mapthings[i];
@@ -1004,6 +1025,9 @@ void P_LoadThings(int lump)
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
+
+      // haleyjd 12/27/13: convert Doom extended thing numbers
+      P_ConvertDoomExtendedSpawnNum(ft);
       
       P_SpawnMapThing(ft);
    }
@@ -1056,6 +1080,9 @@ void P_LoadHexenThings(int lump)
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
+
+      // haleyjd 12/27/13: convert Doom extended thing numbers
+      P_ConvertDoomExtendedSpawnNum(ft);
       
       P_SpawnMapThing(ft);
    }
@@ -2222,7 +2249,7 @@ static void P_SetupLevelError(const char *msg, const char *levelname)
 // Called when loading a new map.
 // haleyjd 06/04/05: moved here and renamed from HU_NewLevel
 //
-static void P_NewLevelMsg(void)
+static void P_NewLevelMsg()
 {   
    C_Printf("\n");
    C_Separator();
@@ -2235,11 +2262,9 @@ static void P_NewLevelMsg(void)
 //
 // haleyjd 2/18/10: clears various player-related data.
 //
-static void P_ClearPlayerVars(void)
+static void P_ClearPlayerVars()
 {
-   int i;
-
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i] && players[i].playerstate == PST_DEAD)
          players[i].playerstate = PST_REBORN;
@@ -2259,7 +2284,7 @@ static void P_ClearPlayerVars(void)
    wminfo.partime = 180;
 
    // Initial height of PointOfView will be set by player think.
-   players[consoleplayer].viewz = 1;
+   players[consoleplayer].viewz = players[consoleplayer].prevviewz = 1;
 }
 
 //
@@ -2268,7 +2293,7 @@ static void P_ClearPlayerVars(void)
 // haleyjd 2/18/10: actions that must be performed immediately prior to 
 // Z_FreeTags should be kept here.
 //
-static void P_PreZoneFreeLevel(void)
+static void P_PreZoneFreeLevel()
 {
    //==============================================
    // Clear player data
@@ -2375,13 +2400,11 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 //
 // If deathmatch, randomly spawn the active players
 //
-static void P_DeathMatchSpawnPlayers(void)
+static void P_DeathMatchSpawnPlayers()
 {
    if(GameType == gt_dm)
    {
-      int i;
-
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(int i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i])
          {
@@ -2504,6 +2527,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // possible error: missing flats
    CHECK_ERROR();
+
+   // haleyjd 01/05/14: create sector interpolation data
+   P_CreateSectorInterps();
 
    P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
@@ -2662,31 +2688,122 @@ void P_LoadOlo(void)
 }
 #endif
 
+//=============================================================================
+//
+// DoomEd Number Disambiguation
+//
+// Rather than have doomednums be universally contingent on the gamemode, 
+// Eternity moves them around into unambiguous ranges. The 7000 range is 
+// reserved for thing types translated from other Doom engine games (Heretic,
+// Hexen, and Strife). The 6000 range is reserved for "reverse" translation of
+// Doom objects (ie. in any game, an Arch-vile can be spawned using 6064).
+//
+// The "remapped" ranges of doomednums (those that conflict between games)
+// are 5-254, 2001-2048, and 3001-3006, though the exact ranges depend on the
+// individual game in question
+//
+
+//
+// P_ConvertDoomExtendedSpawnNum
+//
+// Checks for and converts a 6000-range doomednum into the corresponding Doom
+// object. This is called regardless of the gamemode, after any gamemode
+// specific translations occur.
+// 6005 - 6089 -> 5    - 89
+// 6201 - 6249 -> 2001 - 2049
+// 6301 - 6306 -> 3001 - 3006
+//
+static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num >= 6005 && num <= 6089)
+      num -= 6000;
+   else if(num >= 6201 && num <= 6249)
+      num -= 4200;
+   else if(num >= 6301 && num <= 6306)
+      num -= 3300;
+
+   mthing->type = num;
+}
+
+// null, player starts 1-4, deathmatch spots, and teleport destinations are
+// common across all games
+#define DEN_MIN     5
+#define DEN_DMSPOT  11
+#define DEN_TELEMAN 14
+
 //
 // P_ConvertHereticThing
 //
-// haleyjd: Converts Heretic doomednums into an Eternity-compatible range.
-//
-// 05/30/06: made much more specific to avoid translating things that don't
-// need to be translated.
+// Converts Heretic doomednums into an Eternity-compatible range:
+// 5    - 96   -> 7005 - 7096
+// 2001 - 2005 -> 7201 - 7205
+// 2035        -> 7235
+// Covers all Heretic thingtypes.
 //
 static void P_ConvertHereticThing(mapthing_t *mthing)
 {
-   // null, player starts, teleport destination are common
-   if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
       return;
-   
-   // handle ordinary Heretic things -- all are less than 100
-   if(mthing->type < 100)
-   {
-      // add 7000 to normal doomednum
-      mthing->type += 7000;
-   }
-   else if(mthing->type > 2000 && mthing->type <= 2035)
-   {
-      // handle items numbered > 2000
-      mthing->type = (mthing->type - 2000) + 7200;
-   }
+
+   if(num <= 96)
+      num += 7000;
+   else if((num >= 2001 && num <= 2005) || num == 2035)
+      num += 5200;
+
+   mthing->type = num;
+}
+
+//
+// P_ConvertHexenThing
+//
+// Converts Hexen doomednums into an Eternity-compatible range:
+// 5    - 124  -> 7305 - 7424
+// 140         -> 7440
+// 254         -> 7554
+// 3000 - 3002 -> 9300 - 9302
+// Others in 8000, 9000, 10000, and 14000 ranges do not conflict.
+//
+static void P_ConvertHexenThing(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
+      return;
+
+   if(num <= 124 || num == 140 || num == 254)
+      num += 7300;
+   else if(num >= 3000 && num <= 3002)
+      num += 6300; // ZDoom-compatible polyobject spot numbers
+
+   mthing->type = num;
+}
+
+//
+// P_ConvertStrifeThing
+//
+// Converts Strife doomednums into an Eternity-compatible range:
+// 5    - 236  -> 7605 - 7836
+// 2001 - 2048 -> 7901 - 7948
+// 3001 - 3006 -> 7951 - 7956
+// Covers all Strife thingtypes.
+//
+static void P_ConvertStrifeThing(mapthing_t *mthing)
+{
+   int16_t num = mthing->type;
+
+   if(num < DEN_MIN || num == DEN_DMSPOT || num == DEN_TELEMAN)
+      return;
+
+   if(num <= 236)
+      num += 7600;
+   else if(num >= 2001 && num <= 2048)
+      num += 5900;
+   else if(num >= 3001 && num <= 3006)
+      num += 4950;
 }
 
 #define DEN_PSXCHAIN   64

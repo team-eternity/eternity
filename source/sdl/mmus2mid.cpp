@@ -1,5 +1,22 @@
 //-----------------------------------------------------------------------------
 //
+// Copyright (C) 2013 James Haley et al.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+//-----------------------------------------------------------------------------
+//
 // DESCRIPTION:
 //  This file supports conversion of MUS format music in memory
 //  to MIDI format 1 music in memory. 
@@ -405,7 +422,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
    // set the divisions (ticks per quarter note)
    mididata->divisions = division;
    
-   // allocat for midi tempo/key track, allow for end of track 
+   // allocate for midi tempo/key track, allow for end of track 
    if(!(mididata->track[0].data =
       erealloc(unsigned char *, mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4)))
       return MEMALLOC;
@@ -565,6 +582,15 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
    {
       if(mididata->track[i].len)
       {
+         if(TWriteByte(mididata, i, 0x00)) // haleyjd 12/30/13: send all notes off
+            goto err;
+         if(TWriteByte(mididata, i, 0xB0))
+            goto err;
+         if(TWriteByte(mididata, i, 0x7B))
+            goto err;
+         if(TWriteByte(mididata, i, 0x00))
+            goto err;
+
          if(TWriteByte(mididata, i, 0x00)) // midi end of track code
             goto err;
          if(TWriteByte(mididata, i, 0xFF))

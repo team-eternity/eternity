@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -1277,6 +1276,51 @@ void S_Start()
       S_ChangeMusicNum(mnum, true);
    }
 }
+
+//=============================================================================
+//
+// Music Cheat Routines
+//
+
+int S_DoomMusicCheat(const char *buf)
+{
+   int input = (buf[0]-'1') * 9 + (buf[1] - '1');
+          
+   // jff 4/11/98: prevent IDMUS0x IDMUSx0 in DOOM I and greater than introa
+   if(buf[0] < '1' || buf[1] < '1' || input > 31)
+      return -1;
+   else
+      return mus_e1m1 + input;
+}
+
+int S_Doom2MusicCheat(const char *buf)
+{
+   int input = (buf[0] - '0') * 10 + buf[1] - '0';
+
+   // jff 4/11/98: prevent IDMUS00 in DOOM II and IDMUS36 or greater
+   if(input < 1 || input > 35)
+      return -1;
+   else
+      return mus_runnin + input - 1;
+}
+
+int S_HereticMusicCheat(const char *buf)
+{
+   // haleyjd 03/10/03: heretic support
+   // use H_Mus_Matrix for easy access
+   int episodenum = (buf[0] - '0') - 1;
+   int mapnum     = (buf[1] - '0') - 1;
+
+   if(episodenum < 0 || episodenum > 5 || mapnum < 0 || mapnum > 8)
+      return -1;
+   else
+      return H_Mus_Matrix[episodenum][mapnum];
+}
+
+//=============================================================================
+//
+// Sound Initialization
+//
 
 static void S_HookMusic(musicinfo_t *);
 

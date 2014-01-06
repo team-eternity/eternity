@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2001 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -45,8 +44,9 @@
 #include "p_skin.h"
 #include "p_user.h"
 #include "r_bsp.h"
-#include "r_main.h"
 #include "r_draw.h"
+#include "r_interpolate.h"
+#include "r_main.h"
 #include "r_patch.h"
 #include "r_plane.h"
 #include "r_portal.h"
@@ -83,10 +83,6 @@ extern int global_cmap_index; // haleyjd: NGCS
 //
 // Globals
 //
-
-// haleyjd 10/09/06: optional vissprite limit
-int r_vissprite_limit;
-
 
 // constant arrays
 //  used for psprite clipping and initializing clipping
@@ -189,9 +185,6 @@ static float portaltop[MAX_SCREENWIDTH];
 static float portalbottom[MAX_SCREENWIDTH];
 
 static float *ptop, *pbottom;
-
-// haleyjd 10/09/06: optional vissprite limit
-static int r_vissprite_count;
 
 // haleyjd 04/25/10: drawsegs optimization
 static drawsegs_xrange_t *drawsegs_xrange;
@@ -490,11 +483,9 @@ void R_InitSprites(char **namelist)
 //
 // Called at frame start.
 //
-void R_ClearSprites(void)
+void R_ClearSprites()
 {
    num_vissprite = 0; // killough
-
-   r_vissprite_count = 0; // haleyjd
 }
 
 //
@@ -747,6 +738,27 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
 }
 
+struct spritepos_t
+{
+   fixed_t x, y, z;
+};
+
+static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+{
+   if(view.lerp == FRACUNIT)
+   {
+      pos.x = thing->x;
+      pos.y = thing->y;
+      pos.z = thing->z;
+   }
+   else
+   {
+      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
+      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+      pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+   }
+}
+
 //
 // R_ProjectSprite
 //
@@ -754,6 +766,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 static void R_ProjectSprite(Mobj *thing)
 {
+   spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
@@ -777,9 +790,12 @@ static void R_ProjectSprite(Mobj *thing)
    if((thing->flags2 & MF2_DONTDRAW) || !thing->translucency)
       return; // don't generate vissprite
 
+   // haleyjd 01/05/14: interpolate thing positions
+   R_interpolateThingPosition(thing, spritepos);
+
    // SoM: Cardboard translate the mobj coords and just project the sprite.
-   tempx = M_FixedToFloat(thing->x) - view.x;
-   tempy = M_FixedToFloat(thing->y) - view.y;
+   tempx = M_FixedToFloat(spritepos.x) - view.x;
+   tempy = M_FixedToFloat(spritepos.y) - view.y;
    roty  = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
@@ -831,7 +847,7 @@ static void R_ProjectSprite(Mobj *thing)
    {
       // SoM: Use old rotation code
       // choose a different rotation based on player view
-      angle_t ang = R_PointToAngle(thing->x, thing->y);
+      angle_t ang = R_PointToAngle(spritepos.x, spritepos.y);
       unsigned int rot = (ang - thing->angle + (unsigned int)(ANG45/2)*9) >> 29;
       lump = sprframe->lump[rot];
       flip = !!sprframe->flip[rot];
@@ -867,10 +883,9 @@ static void R_ProjectSprite(Mobj *thing)
    intx1 = (int)(x1 + 0.999f);
    intx2 = (int)(x2 - 0.001f);
 
-
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = thing->yscale * stopoffset + M_FixedToFloat(thing->z - thing->floorclip) - view.z;
+   tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - thing->floorclip) - view.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
@@ -885,12 +900,13 @@ static void R_ProjectSprite(Mobj *thing)
 
    // Cardboard
    // SoM: Block of old code that stays
-   gzt = thing->z + (fixed_t)(spritetopoffset[lump] * thing->yscale);
+   gzt = spritepos.z + (fixed_t)(spritetopoffset[lump] * thing->yscale);
 
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
+   // INTERP_FIXME: heightsec determination out of sync with coords
    heightsec = thing->subsector->sector->heightsec;
    
    if(heightsec != -1)   // only clip things which are in special sectors
@@ -908,10 +924,6 @@ static void R_ProjectSprite(Mobj *thing)
            thing->z >= sectors[heightsec].ceilingheight)
          return;
    }
-  
-   // haleyjd 10/09/06: optional vissprite limit ^____^
-   if(r_vissprite_limit != -1 && ++r_vissprite_count > r_vissprite_limit)
-      return;
 
    // store information in a vissprite
    vis = R_NewVisSprite();
@@ -921,10 +933,10 @@ static void R_ProjectSprite(Mobj *thing)
    
    vis->seccolor = 0;
    vis->colour = thing->colour;
-   vis->gx = thing->x;
-   vis->gy = thing->y;
-   vis->gz = thing->z;
-   vis->gzt = gzt;                          // killough 3/27/98
+   vis->gx     = spritepos.x;
+   vis->gy     = spritepos.y;
+   vis->gz     = spritepos.z;
+   vis->gzt    = gzt;                          // killough 3/27/98
 
    // Cardboard
    vis->x1 = x1 < 0.0f ? 0 : intx1;
@@ -938,7 +950,7 @@ static void R_ProjectSprite(Mobj *thing)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->sector = thing->subsector->sector - sectors;
+   vis->sector = thing->subsector->sector - sectors; // INTERP_FIXME
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);

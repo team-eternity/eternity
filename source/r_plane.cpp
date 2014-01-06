@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -1116,7 +1115,6 @@ static void do_draw_plane(visplane_t *pl)
    {  
       texture_t *tex;
       int        stop, light;
-      bool       lptex64 = false; // haleyjd 06/09/10
       int        stylenum;
 
       int picnum = texturetranslation[pl->picnum];
@@ -1163,10 +1161,6 @@ static void do_draw_plane(visplane_t *pl)
       else
          span.fg2rgb = span.bg2rgb = NULL;
 
-      // haleyjd: check for combination of low precision and texture size 64x64
-      if(r_span_engine->haslp64 && !tex->flatsize)
-         lptex64 = true;
-
       if(pl->pslope)
          plane.slope = &pl->rslope;
       else
@@ -1192,15 +1186,8 @@ static void do_draw_plane(visplane_t *pl)
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
             
-            // haleyjd: we must allow for low-precision drawing to affect this
-            // here since it's no longer looked up from an array
-            if(lptex64)
-               plane.fixedunitx = plane.fixedunity = FRACUNIT;
-            else
-            {
-               plane.fixedunitx = (float)(1 << (32 - rw));
-               plane.fixedunity = (float)(1 << span.yshift);
-            }
+            plane.fixedunitx = (float)(1 << (32 - rw));
+            plane.fixedunity = (float)(1 << span.yshift);
          }
       }
        

@@ -1,11 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //-----------------------------------------------------------------------------
 //
@@ -65,6 +64,7 @@
 #include "i_video.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_compare.h"
 #include "m_misc.h"
 #include "m_syscfg.h"
 #include "m_qstr.h"
@@ -249,7 +249,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer(void)
+void D_PageDrawer()
 {
    int l;
 
@@ -561,14 +561,51 @@ void D_DrawWings()
    }
 }
 
+#define DT (1000LL * 1000LL * 1000LL / TICRATE)
+static unsigned int display_prev_time;
+static uint64_t     display_accumulator;
+
+//
+// D_initDisplayTime
+//
+// Initialize variables related to interpolation.
+//
+static void D_initDisplayTime()
+{
+   display_prev_time   = I_GetTicks();
+   display_accumulator = DT;
+}
+
 //
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
-void D_Display()
+void D_Display(int tics)
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
+
+   fixed_t lerp = FRACUNIT;
+   auto    current_time = I_GetTicks();
+   auto    frame_time   = current_time - display_prev_time;
+   display_prev_time    = current_time;
+ 
+   display_accumulator += (uint64_t)frame_time * 1000000LL;
+
+   if(tics < 0)
+      tics = 0;
+
+   // subtract DT for every tic that was run by TryRunTics
+   uint64_t ticstime = (uint64_t)tics * DT;
+   if(ticstime < display_accumulator)
+      display_accumulator -= ticstime;
+   else
+      display_accumulator = 0;
+
+   // when interpolating, calculate linear interpolation factor
+   if(d_fastrefresh && d_interpolate &&  
+      !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame)))
+      lerp = eclamp((fixed_t)(display_accumulator * FRACUNIT / DT), 0, FRACUNIT);
 
    if(setsizeneeded)            // change the view size if needed
    {
@@ -604,7 +641,7 @@ void D_Display()
          else
          {
             R_DrawViewBorder();    // redraw border
-            R_RenderPlayerView (&players[displayplayer], camera);
+            R_RenderPlayerView(&players[displayplayer], camera, lerp);
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -686,6 +723,7 @@ void D_Display()
                   Wipe_BlitEndScreen();
             }
             while(inwipe);
+            D_initDisplayTime(); // reset interpolation
          }
          else
             Wipe_Drawer();
@@ -1890,8 +1928,10 @@ static void D_DoomInit()
 //
 // D_DoomMain
 //
-void D_DoomMain(void)
+void D_DoomMain()
 {
+   int tics;
+
    D_DoomInit();
 
    oldgamestate = wipegamestate = gamestate;
@@ -1900,20 +1940,21 @@ void D_DoomMain(void)
    if(autostart)
       oldgamestate = GS_NOSTATE;
 
-   // killough 12/98: inlined D_DoomLoop
+   D_initDisplayTime();
 
+   // killough 12/98: inlined D_DoomLoop
    while(1)
    {
       // frame synchronous IO operations
       I_StartFrame();
 
-      TryRunTics(); // will run at least one tic
+      tics = TryRunTics();
 
       // killough 3/16/98: change consoleplayer to displayplayer
       S_UpdateSounds(players[displayplayer].mo); // move positional sounds
 
       // Update display, next frame, with current state.
-      D_Display();
+      D_Display(tics);
 
       // Sound mixing for the buffer is synchronous.
       I_UpdateSound();

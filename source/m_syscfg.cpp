@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2009 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -27,9 +26,11 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomstat.h"
 #include "d_iwad.h"
 #include "d_main.h"
+#include "d_net.h"
 #include "d_gi.h"
 #include "gl/gl_vars.h"
 #include "hal/i_gamepads.h"
@@ -49,7 +50,6 @@
 
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
-extern bool d_fastrefresh;     // haleyjd 01/04/10
 extern int iwad_choice;        // haleyjd 03/19/10
 
 #ifdef _SDL_VER
@@ -238,6 +238,9 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
 
+   DEFAULT_BOOL("d_interpolate", &d_interpolate, NULL, false, default_t::wad_no,
+                "1 to activate frame interpolation (smooth rendering)"),
+
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, NULL, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
 
@@ -296,16 +299,6 @@ void M_LoadSysConfig(const char *filename)
 void M_SaveSysConfig(void)
 {
    M_SaveDefaultFile(&sysdeffile);
-}
-
-//
-// M_ResetSysComments
-//
-// Resets comments in the system config file
-//
-void M_ResetSysComments(void)
-{
-   M_ResetDefaultFileComments(&sysdeffile);
 }
 
 //

@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -25,24 +24,25 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
-#include "c_runcmd.h"
+
 #include "c_io.h"
-#include "doomstat.h"
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_main.h"
-#include "p_user.h"
+#include "doomstat.h"
+#include "i_system.h"
+#include "p_anim.h"
 #include "p_chase.h"
 #include "p_saveg.h"
+#include "p_sector.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "p_anim.h"  // haleyjd
+#include "p_user.h"
 #include "p_partcl.h"
 #include "polyobj.h"
 #include "s_sndseq.h"
 
 int leveltime;
-bool reset_viewz;
 
 //=============================================================================
 //
@@ -258,10 +258,8 @@ void Thinker::serialize(SaveArchive &arc)
 //
 // P_Ticker
 //
-void P_Ticker(void)
+void P_Ticker()
 {
-   int i;
-   
    // pause if in menu and at least one tic has been run
    //
    // killough 9/29/98: note that this ties in with basetic,
@@ -273,6 +271,9 @@ void P_Ticker(void)
    if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
                  players[consoleplayer].viewz != 1))
       return;
+
+   // interpolation: save current sector heights
+   P_SaveSectorPositions();
    
    P_ParticleThinker(); // haleyjd: think for particles
 
@@ -281,11 +282,13 @@ void P_Ticker(void)
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
    if(gamestate == GS_LEVEL && !cinema_pause)
-      for(i = 0; i < MAXPLAYERS; i++)
+   {
+      for(int i = 0; i < MAXPLAYERS; i++)
+      {
          if(playeringame[i])
             P_PlayerThink(&players[i]);
-
-   reset_viewz = false;  // sf
+      }
+   }
 
    Thinker::RunThinkers();
    P_UpdateSpecials();
@@ -295,14 +298,6 @@ void P_Ticker(void)
    
    leveltime++;                       // for par times
 
-   // sf: on original doom, sometimes if you activated a hyperlift
-   // while standing on it, your viewz was left behind and appeared
-   // to "jump". code in p_floor.c detects if a hyperlift has been
-   // activated and viewz is reset appropriately here.
-   
-   if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
-      P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
-   
    P_RunEffects(); // haleyjd: run particle effects
 }
 

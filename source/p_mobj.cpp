@@ -1,11 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 Simon Howard
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //----------------------------------------------------------------------------
 //
@@ -766,15 +765,8 @@ static void P_ZMovement(Mobj* mo)
    bool correct_lost_soul_bounce;
    bool moving_down;
 
-   // 10/13/05: fraggle says original DOOM has no bounce either,
-   // so if gamemode != retail, no bounce.
-
    if(demo_compatibility) // v1.9 demos
-   {
-      correct_lost_soul_bounce =
-         ((GameModeInfo->id == retail || GameModeInfo->id == commercial) &&
-          GameModeInfo->missionInfo->id != doom2);
-   }
+      correct_lost_soul_bounce = ((GameModeInfo->flags & GIF_LOSTSOULBOUNCE) != 0);
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;
    else // from now on...
@@ -1218,6 +1210,11 @@ void Mobj::Think()
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
+   // haleyjd 01/04/14: backup current position at start of frame;
+   // note players do this for themselves in P_PlayerThink.
+   if(!player)
+      backupPosition();
+
    // killough 11/98:
    // removed old code which looked at target references
    // (we use pointer reference counting now)
@@ -1524,6 +1521,7 @@ void Mobj::serialize(SaveArchive &arc)
             skin = NULL;
       }
 
+      backupPosition();
       P_SetThingPosition(this);
       P_AddThingTID(this, tid);
 
@@ -1588,6 +1586,21 @@ void Mobj::updateThinker()
 }
 
 //
+// Mobj::backupPosition
+//
+// Save the Mobj's position data which is relevant to interpolation.
+// Done at the beginning of each gametic, and occasionally when the position of
+// an Mobj is abruptly changed (such as when teleporting).
+//
+void Mobj::backupPosition()
+{
+   prevpos.x     = x;
+   prevpos.y     = y;
+   prevpos.z     = z;
+   prevpos.angle = angle; // NB: only used for player objects
+}
+
+//
 // Mobj::copyPosition
 //
 // Copy all the location data from one Mobj to another.
@@ -1597,6 +1610,7 @@ void Mobj::copyPosition(const Mobj *other)
    x          = other->x;
    y          = other->y;
    z          = other->z;
+   angle      = other->angle;
    groupid    = other->groupid;
    floorz     = other->floorz;
    ceilingz   = other->ceilingz;
@@ -1733,6 +1747,9 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    P_AdjustFloorClip(mobj);
 
    mobj->addThinker();
+
+   // haleyjd 01/04/14: set initial position as backup position
+   mobj->backupPosition();
 
    // e6y
    mobj->friction = ORIG_FRICTION;
@@ -1946,6 +1963,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    mobj->angle  = R_WadToAngle(mthing->angle);
    mobj->player = p;
    mobj->health = p->health;
+   mobj->backupPosition();
 
    // haleyjd: verify that the player skin is valid
    if(!p->skin)
@@ -1963,6 +1981,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    p->fixedcolormap = 0;
    p->viewheight    = VIEWHEIGHT;
    p->viewz         = mobj->z + VIEWHEIGHT;
+   p->prevviewz     = p->viewz;
 
    p->momx = p->momy = 0;   // killough 10/98: initialize bobbing to 0.
 
@@ -2280,6 +2299,8 @@ spawnit:
    if(mthing->type >= 14101 && mthing->type <= 14164)
       mobj->args[0] = mthing->type - 14100;
 
+   mobj->backupPosition();
+
    return mobj;
 }
 
@@ -2360,17 +2381,11 @@ void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj
    }
 }
 
-// FIXME: These two functions are left over from an mobj-based
+// FIXME: This function is left over from an mobj-based
 // particle system attempt in SMMU -- the particle line
 // function could be useful for real particles maybe?
 
 /*
-void P_SpawnParticle(fixed_t x, fixed_t y, fixed_t z)
-{
-   P_SpawnMobj(x, y, z, MT_PARTICLE);
-}
-
-
 void P_ParticleLine(Mobj *source, Mobj *dest)
 {
    fixed_t sourcex, sourcey, sourcez;

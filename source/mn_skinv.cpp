@@ -1,21 +1,23 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2003 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //--------------------------------------------------------------------------
 //
@@ -80,7 +82,8 @@ static int      skview_rot       = 0;
 static bool     skview_halfspeed = false;
 static int      skview_typenum;                 // 07/12/03
 static bool     skview_haswdth   = false;       // 03/29/08
-static int      skview_light     = 0;          // 01/22/12
+static bool     skview_gibbed    = false;
+static int      skview_light     = 0;           // 01/22/12
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
@@ -93,6 +96,7 @@ extern void A_PlaySoundEx(actionargs_t *);
 extern void A_Pain(actionargs_t *);
 extern void A_Scream(actionargs_t *);
 extern void A_PlayerScream(actionargs_t *);
+extern void A_RavenPlayerScream(actionargs_t *);
 extern void A_XScream(actionargs_t *);
 extern void A_FlameSnd(actionargs_t *);
 
@@ -118,12 +122,14 @@ static void MN_skinEmulateAction(state_t *state)
    {
       S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_pldeth]);
    }
-   else if(state->action == A_PlayerScream)
+   else if(state->action == A_PlayerScream || state->action == A_RavenPlayerScream)
    {
-      // 03/29/08: sometimes play wimpy death if the player skin specifies one
-      if(skview_haswdth)
+      if(skview_gibbed) // may gib when using Raven player behavior
+         S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_slop]);
+      else if(skview_haswdth)
       {
-         int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
+         // 03/29/08: sometimes play wimpy death if the player skin specifies one
+         int rnd = M_Random() % ((GameModeInfo->flags & GIF_NODIEHI) ? 2 : 3);
          int sndnum = 0;
 
          switch(rnd)
@@ -144,7 +150,7 @@ static void MN_skinEmulateAction(state_t *state)
       else
       {
          S_StartSoundName(NULL,
-            (GameModeInfo->id == shareware || M_Random() % 2) ? 
+            ((GameModeInfo->flags & GIF_NODIEHI) || M_Random() % 2) ? 
              players[consoleplayer].skin->sounds[sk_pldeth] :
              players[consoleplayer].skin->sounds[sk_pdiehi]);
       }
@@ -157,6 +163,8 @@ static void MN_skinEmulateAction(state_t *state)
    {
       S_StartSoundName(NULL, "ht_hedat1");
    }
+
+   skview_gibbed = false;
 }
 
 //
@@ -282,6 +290,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
       // gib
       if(skview_action != SKV_DEAD)
       {
+         skview_gibbed = true;
          MN_SkinSetState(states[mobjinfo[skview_typenum]->xdeathstate]);
          skview_action = SKV_DEAD;
       }
@@ -478,6 +487,7 @@ void MN_InitSkinViewer()
    skview_halfspeed = false;
    skview_typenum   = pclass->type;
    skview_light     = 0;
+   skview_gibbed    = false;
 
    // haleyjd 09/29/07: save alternate attack state number
    skview_atkstate2 = pclass->altattack;

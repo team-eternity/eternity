@@ -1,20 +1,20 @@
 // 
 // things.edf
 // 
-// EDF for Eternity Engine v3.40.27
+// EDF for Eternity Engine v3.40.50
 //
 // thingtypes define monsters, fireballs, decorations, etc.
 // thingtypes may be defined elsewhere, and order is unimportant.
-// User-defined thing types should use DeHackEd numbers greater
-// than 10000 in all cases, to remain compatible with future versions
-// of Eternity. See the EDF documentation for important information on
-// the format of thingtype fields.
+// User-defined thing types should use DoomEd numbers greater than 20000, and
+// DeHackEd numbers greater than 10000 in all cases, to remain compatible with
+// future versions of Eternity. See the EDF documentation for important 
+// information on the format of thingtype fields.
 //
 
 // Doom Thing Types ------------------------------------------------------------
 
 // DoomEdNums: 1 - 3999
-// DeHackEd Nums: 0 - 137, 141, 142, 144, 158
+// DeHackEd Nums: 0 - 137, 141, 142, 144, 158 - 169
 
 includeifenabled("doom/things.edf", "DOOM")
 
@@ -65,24 +65,48 @@ thingtype BoomPullPoint : Mobj, 5002, 139
 
 thingtype MBFHelperDog : Mobj, 888, 140
 {
-  spawnstate  S_DOGS_STND
   spawnhealth 500
-  seestate    S_DOGS_RUN1
-  seesound    dgsit
-  attacksound dgatk
-  painstate   S_DOGS_PAIN
   painchance  180
-  painsound   dgpain
-  meleestate  S_DOGS_ATK1
-  deathstate  S_DOGS_DIE1
-  deathsound  dgdth
   speed       10
   radius      12.0
   height      28.0
   activesound dgact
+  seesound    dgsit
+  attacksound dgatk
+  painsound   dgpain
+  deathsound  dgdth
   cflags      SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ|AUTOTRANSLATE
-  raisestate  S_DOGS_RAISE1
   obituary_melee "was chased down by a rabid puppy"
+  
+  firstdecoratestate S_DOGS_STND
+  states
+  @"
+  Spawn:
+    DOGS AB 10 A_Look
+    loop
+  See:
+    DOGS AABBCCDD 2 A_Chase
+    loop
+  Melee:
+    DOGS EF 8 A_FaceTarget
+    DOGS G  8 A_SargAttack
+    goto See
+  Pain:
+    DOGS H 2
+    DOGS H 2 A_Pain
+    goto See
+  Death:
+    DOGS I  8
+    DOGS J  8 A_Scream
+    DOGS K  4
+    DOGS L  4 A_Fall
+    DOGS M  4
+    DOGS N -1
+    stop
+  Raise:
+    DOGS NMLKJI 5
+    goto See
+  "@
 }
 
 // Note: Beta BFG fireballs (deh# 141, 142, 144) are defined in doom/things.edf
@@ -272,8 +296,6 @@ thingtype DoomBuilderCameraSpot : Unknown
 
 thingtype ETCFogSpawner 
 {
-  doomednum   6011
-  dehackednum 227
   spawnstate  S_SPAWNFOG1
   flags       NOBLOCKMAP
   flags2      NOTHRUST|FLOATBOB|DONTDRAW
@@ -281,8 +303,6 @@ thingtype ETCFogSpawner
 
 thingtype ETCSmallFog 
 {
-  doomednum   6012
-  dehackednum 228
   spawnstate  S_FOGPATCHS1
   deathstate  S_FOGPATCHS0
   speed       65536
@@ -291,8 +311,6 @@ thingtype ETCSmallFog
 
 thingtype ETCMediumFog 
 {
-  doomednum   6013
-  dehackednum 229
   spawnstate  S_FOGPATCHM1
   deathstate  S_FOGPATCHM0
   speed       65536
@@ -301,8 +319,6 @@ thingtype ETCMediumFog
 
 thingtype ETCLargeFog 
 {
-  doomednum   6014
-  dehackednum 230
   spawnstate  S_FOGPATCHL1
   deathstate  S_FOGPATCHL0
   speed       65536
@@ -311,8 +327,6 @@ thingtype ETCLargeFog
 
 thingtype ETCTotalInvisiSphere 
 {
-  doomednum   6052
-  dehackednum 237
   spawnstate  S_PNS2_1
   flags       SPECIAL|COUNTITEM|TRANSLUCENT
 }

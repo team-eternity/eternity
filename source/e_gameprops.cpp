@@ -1,21 +1,23 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //----------------------------------------------------------------------------
 //
@@ -152,6 +154,8 @@ static dehflags_t gmi_flags[] =
    { "SKILL5WARNING",  GIF_SKILL5WARNING  },
    { "HUDSTATBARNAME", GIF_HUDSTATBARNAME },
    { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
+   { "NODIEHI",        GIF_NODIEHI        },
+   { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
    { NULL,             0                  }
 };
 
@@ -164,9 +168,13 @@ static dehflagset_t gmi_flagset =
 // missionInfo flags
 static dehflags_t mission_flags[] =
 {
-   { "DEMOIFDEMO4",  MI_DEMOIFDEMO4  },
-   { "CONBACKTITLE", MI_CONBACKTITLE },
-   { NULL,           0               }
+   { "DEMOIFDEMO4",   MI_DEMOIFDEMO4   },
+   { "CONBACKTITLE",  MI_CONBACKTITLE  },
+   { "WOLFNAMEHACKS", MI_WOLFNAMEHACKS },
+   { "HASBETRAY",     MI_HASBETRAY     },
+   { "DOOM2MISSIONS", MI_DOOM2MISSIONS },
+   { "NOTELEPORTZ",   MI_NOTELEPORTZ   },
+   { NULL,            0                }
 };
 
 static dehflagset_t mission_flagset =

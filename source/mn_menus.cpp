@@ -1,21 +1,20 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 Simon Howard
+// Copyright(C) 2013 Simon Howard et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -105,28 +104,22 @@ char *mn_start_mapname;
 // haleyjd: keep track of valid save slots
 bool savegamepresent[SAVESLOTS];
 
-static void MN_PatchOldMainMenu();
 static void MN_InitCustomMenu();
 static void MN_InitSearchStr();
 static bool MN_tweakD2EpisodeMenu();
 
 void MN_InitMenus()
 {
-   int i; // haleyjd
-   
    mn_demoname = estrdup("demo1");
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
-   for(i = 0; i < SAVESLOTS; ++i)
+   for(int i = 0; i < SAVESLOTS; i++)
    {
-      savegamenames[i] = Z_Strdup("", PU_STATIC, 0);
+      savegamenames[i]   = estrdup("");
       savegamepresent[i] = false;
    }
-
-   if(GameModeInfo->id == commercial)
-      MN_PatchOldMainMenu(); // haleyjd 05/16/04
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
    MN_InitSearchStr();       // haleyjd 03/15/06
@@ -146,7 +139,7 @@ void MN_InitMenus()
 // Note: The main menu is modified dynamically to point to
 // the rest of the old menu system when appropriate.
 
-void MN_MainMenuDrawer(void)
+void MN_MainMenuDrawer()
 {
    // hack for m_doom compatibility
    V_DrawPatch(94, 2, &subscreen43, 
@@ -174,19 +167,25 @@ menu_t menu_main =
    MN_MainMenuDrawer
 };
 
-//
-// MN_PatchOldMainMenu
-//
-// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
-// compatibility.
-//
-static void MN_PatchOldMainMenu(void)
+static menuitem_t mn_main_doom2_items[] =
 {
-   // turn "Read This!" into "Quit Game" and move down 8 pixels
-   menu_main.menuitems[4] = menu_main.menuitems[5];
-   menu_main.menuitems[5].type = it_end;
-   menu_main.y += 8;
-}
+   { it_runcmd, "New Game",   "mn_newgame",  "M_NGAME"  },
+   { it_runcmd, "Options",    "mn_options",  "M_OPTION" },
+   { it_runcmd, "Load Game",  "mn_loadgame", "M_LOADG"  },
+   { it_runcmd, "Save Game",  "mn_savegame", "M_SAVEG"  },
+   { it_runcmd, "Quit",       "mn_quit",     "M_QUITG"  },
+   { it_end }
+};
+
+menu_t menu_main_doom2 =
+{
+   mn_main_doom2_items,
+   NULL, NULL, NULL,           // pages
+   97, 72,
+   0,
+   mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
+   MN_MainMenuDrawer
+};
 
 // haleyjd 05/14/06: moved these up here
 int start_episode;
@@ -218,11 +217,39 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
       MN_StartMenu(GameModeInfo->newGameMenu);
 }
 
-// mn_newgame called from main menu:
-// goes to start map OR
-// starts menu
-// according to use_startmap, gametype and modifiedgame
+//
+// MN_DoomNewGame
+//
+// GameModeInfo function for starting a new game in Doom modes.
+//
+void MN_DoomNewGame()
+{
+   // hack -- cut off thy flesh consumed if not retail
+   if(GameModeInfo->numEpisodes < 4)
+      menu_episode.menuitems[3].type = it_end;
 
+   MN_StartMenu(&menu_episode);
+}
+
+//
+// MN_Doom2NewGame
+//
+// GameModeInfo function for starting a new game in Doom II modes.
+//
+void MN_Doom2NewGame()
+{
+   if(MN_tweakD2EpisodeMenu())
+      MN_StartMenu(&menu_d2episode);
+   else
+      MN_StartMenu(&menu_newgame);
+}
+
+//
+// mn_newgame
+// 
+// called from main menu:
+// starts menu according to use_startmap, gametype and modifiedgame
+//
 CONSOLE_COMMAND(mn_newgame, 0)
 {
    if(netgame && !demoplayback)
@@ -242,50 +269,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       return;
    }
    
-   if(GameModeInfo->id == commercial)
-   {
-// haleyjd 08/19/2012: startmap is currently deprecated, may return later
-#ifdef EE_STARTMAP_PROMPT
-      // determine startmap presence and origin
-      int startMapLump = W_CheckNumForName("START");
-      bool mapPresent = true;
-      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-
-      // if lump not found or the game is modified and the
-      // lump comes from the first loaded wad, consider it not
-      // present -- FIXME: this assumes the resource wad is loaded first.
-      if(startMapLump < 0 || 
-         (modifiedgame && 
-          lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
-         mapPresent = false;
-
-      // dont use new game menu if not needed
-      if(use_startmap && mapPresent)
-      {
-         if(use_startmap == -1)              // not asked yet
-            MN_StartMenu(&menu_startmap);
-         else
-         {  
-            // use start map 
-            G_DeferedInitNew((skill_t)(defaultskill - 1), "START");
-            MN_ClearMenus();
-         }
-      }
-      else
-#endif
-         if(MN_tweakD2EpisodeMenu())
-            MN_StartMenu(&menu_d2episode);
-         else
-            MN_StartMenu(&menu_newgame);
-   }
-   else
-   {
-      // hack -- cut off thy flesh consumed if not retail
-      if(GameModeInfo->id != retail)
-         menu_episode.menuitems[3].type = it_end;
-      
-      MN_StartMenu(&menu_episode);
-   }
+   GameModeInfo->OnNewGame();
 }
 
 // menu item to quit doom:
@@ -477,8 +461,7 @@ static bool MN_tweakD2EpisodeMenu()
    int curitem = 1;
 
    // Not for TNT, Plutonia, HacX
-   if(GameModeInfo->missionInfo->id != doom2 &&
-      GameModeInfo->missionInfo->id != pack_disk)
+   if(!(GameModeInfo->missionInfo->flags & MI_DOOM2MISSIONS))
       return false;
 
    // Also not when playing PWADs
@@ -3753,7 +3736,7 @@ CONSOLE_COMMAND(mn_search, 0)
 
    if(!mn_searchstr || !mn_searchstr[0])
    {
-      MN_ErrorMsg("invalid search string");
+      MN_ErrorMsg("Invalid search string");
       return;
    }
 
@@ -3773,8 +3756,6 @@ CONSOLE_COMMAND(mn_search, 0)
          // run through items
          while((item = &(curPage->menuitems[j++])))
          {
-            char *desc;
-
             if(item->type == it_end)
                break;
 
@@ -3790,21 +3771,20 @@ CONSOLE_COMMAND(mn_search, 0)
             if(!pastLast)
                continue;
 
-            desc = M_Strlwr(estrdup(item->description));
+            qstring desc(item->description);
+            desc.toLower();
 
             // found a match
-            if(strstr(desc, mn_searchstr))
+            if(desc.findSubStr(mn_searchstr))
             {
                // go to it
                lastMatch = item;
                MN_StartMenu(curPage);
-               MN_ErrorMsg("found: %s", desc);
+               MN_ErrorMsg("Found: %s", desc.constPtr());
                if(!is_a_gap(item))
                   curPage->selected = j - 1;
-               efree(desc);
                return;
             }
-            efree(desc);
          }
 
          curPage = curPage->nextpage;
@@ -3814,10 +3794,10 @@ CONSOLE_COMMAND(mn_search, 0)
    if(lastMatch) // if doing a valid search, reset it now
    {
       lastMatch = NULL;
-      MN_ErrorMsg("reached end of search");
+      MN_ErrorMsg("Reached end of search");
    }
    else
-      MN_ErrorMsg("no match found for '%s'", mn_searchstr);
+      MN_ErrorMsg("No match found for '%s'", mn_searchstr);
 }
 
 static menuitem_t mn_menus_items[] =
@@ -3860,11 +3840,11 @@ CONSOLE_COMMAND(mn_menus, 0)
 
 static menuitem_t mn_config_items[] =
 {
-   {it_title,    "Configuration" },
-   {it_gap},
-   {it_info,     "Doom Game Modes"},
-   {it_toggle,   "Use base/doom config",     "use_doom_config" },
-   {it_end}
+   { it_title,    "Configuration" },
+   { it_gap },
+   { it_info,     "Doom Game Modes" },
+   { it_toggle,   "Use user/doom config",     "use_doom_config" },
+   { it_end }
 };
 
 menu_t menu_config =

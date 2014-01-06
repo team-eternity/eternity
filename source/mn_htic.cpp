@@ -1,21 +1,20 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2002 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -68,12 +67,12 @@ static menuitem_t mn_hmain_items[] =
 {
    // 'heretic' title and skulls drawn by the drawer
    
-   {it_runcmd, "new game",  "mn_hnewgame", NULL },
-   {it_runcmd, "options",   "mn_options",  NULL },
-   {it_runcmd, "load game", "mn_loadgame", NULL },
-   {it_runcmd, "save game", "mn_savegame", NULL },
-   {it_runcmd, "quit game", "mn_quit",     NULL },
-   {it_end}
+   { it_runcmd, "New Game",  "mn_newgame",  NULL },
+   { it_runcmd, "Options",   "mn_options",  NULL },
+   { it_runcmd, "Load Game", "mn_loadgame", NULL },
+   { it_runcmd, "Save Game", "mn_savegame", NULL },
+   { it_runcmd, "Quit Game", "mn_quit",     NULL },
+   { it_end }
 };
 
 menu_t menu_hmain =
@@ -88,10 +87,9 @@ menu_t menu_hmain =
 
 void MN_HInitSkull()
 {
-   int i;
    char tempstr[10];
 
-   for(i = 0; i < NUM_HSKULL; i++)
+   for(int i = 0; i < NUM_HSKULL; i++)
    {
       sprintf(tempstr, "M_SKL%.2d", i);
       HSkullLumpNums[i] = W_GetNumForName(tempstr);         
@@ -118,14 +116,14 @@ static void MN_HMainMenuDrawer()
 
 static menuitem_t mn_hepisode_items[] =
 {
-   {it_info,   "which episode?",       NULL,         NULL },
-   {it_gap},
-   {it_runcmd, "city of the damned",   "mn_hepis 1", NULL },
-   {it_runcmd, "hell's maw",           "mn_hepis 2", NULL },
-   {it_runcmd, "the dome of d'sparil", "mn_hepis 3", NULL },
-   {it_runcmd, "the ossuary",          "mn_hepis 4", NULL },
-   {it_runcmd, "the stagnant demesne", "mn_hepis 5", NULL },
-   {it_end}
+   { it_info,   "Which Episode?",       NULL,         NULL },
+   { it_gap },
+   { it_runcmd, "City of the Damned",   "mn_hepis 1", NULL },
+   { it_runcmd, "Hell's Maw",           "mn_hepis 2", NULL },
+   { it_runcmd, "The Dome of D'Sparil", "mn_hepis 3", NULL },
+   { it_runcmd, "The Ossuary",          "mn_hepis 4", NULL },
+   { it_runcmd, "The Stagnant Demesne", "mn_hepis 5", NULL },
+   { it_end }
 };
 
 menu_t menu_hepisode =
@@ -137,27 +135,15 @@ menu_t menu_hepisode =
    mf_skullmenu | mf_bigfont, // is a skull menu
 };
 
-CONSOLE_COMMAND(mn_hnewgame, 0)
+//
+// MN_HticNewGame
+//
+// GameModeInfo function for starting a new game in Heretic modes
+//
+void MN_HticNewGame()
 {
-   if(netgame && !demoplayback)
-   {
-      MN_Alert("%s", DEH_String("NEWGAME"));
-      return;
-   }
-
-   // haleyjd 05/14/06: reset episode/level selection variables
-   start_episode = 1;
-   start_mapname = NULL;
-
-   // haleyjd 05/14/06: check for episode menu override now
-   if(mn_episode_override)
-   {
-      MN_StartMenu(mn_episode_override);
-      return;
-   }
-
    // chop off SoSR episodes if not present
-   if(GameModeInfo->missionInfo->id != hticsosr)
+   if(GameModeInfo->numEpisodes < 6)
       menu_hepisode.menuitems[5].type = it_end;
    
    MN_StartMenu(&menu_hepisode);
@@ -165,14 +151,14 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
 
 static menuitem_t mn_hnewgame_items[] =
 {
-   {it_info,   "choose skill level",          NULL,        NULL },
-   {it_gap},
-   {it_runcmd, "thou needeth a wet nurse",    "newgame 0", NULL },
-   {it_runcmd, "yellowbellies-r-us",          "newgame 1", NULL },
-   {it_runcmd, "bringest them oneth",         "newgame 2", NULL },
-   {it_runcmd, "thou art a smite-meister",    "newgame 3", NULL },
-   {it_runcmd, "black plague possesses thee", "newgame 4", NULL },
-   {it_end}
+   { it_info,   "Choose Skill Level",          NULL,        NULL },
+   { it_gap },
+   { it_runcmd, "Thou needeth a wet nurse",    "newgame 0", NULL },
+   { it_runcmd, "Yellowbellies-r-us",          "newgame 1", NULL },
+   { it_runcmd, "Bringest them oneth",         "newgame 2", NULL },
+   { it_runcmd, "Thou art a smite-meister",    "newgame 3", NULL },
+   { it_runcmd, "Black plague possesses thee", "newgame 4", NULL },
+   { it_end }
 };
 
 menu_t menu_hnewgame =
@@ -196,7 +182,7 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
    
    if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {
-      MN_Alert("only available in the registered version");
+      MN_Alert("Only available in the registered version.");
       return;
    }
    
@@ -205,22 +191,22 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
 
 static menuitem_t mn_hsavegame_items[] =
 {
-   {it_variable, "", "savegame_0" },
-   {it_gap},
-   {it_variable, "", "savegame_1" },
-   {it_gap},
-   {it_variable, "", "savegame_2" },
-   {it_gap},
-   {it_variable, "", "savegame_3" },
-   {it_gap},
-   {it_variable, "", "savegame_4" },
-   {it_gap},
-   {it_variable, "", "savegame_5" },
-   {it_gap},
-   {it_variable, "", "savegame_6" },
-   {it_gap},
-   {it_variable, "", "savegame_7" },
-   {it_end}
+   { it_variable, "", "savegame_0" },
+   { it_gap },
+   { it_variable, "", "savegame_1" },
+   { it_gap },
+   { it_variable, "", "savegame_2" },
+   { it_gap },
+   { it_variable, "", "savegame_3" },
+   { it_gap },
+   { it_variable, "", "savegame_4" },
+   { it_gap },
+   { it_variable, "", "savegame_5" },
+   { it_gap },
+   { it_variable, "", "savegame_6" },
+   { it_gap },
+   { it_variable, "", "savegame_7" },
+   { it_end }
 };
 
 static void MN_HSaveDrawer();
@@ -244,17 +230,16 @@ menu_t menu_hsavegame =
 
 static void MN_HSaveDrawer()
 {
-   int x, y, i;
-   const char *title = "save game";
+   const char *title = "Save Game";
 
    V_FontWriteText(menu_font_big, title, 
                    160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
                    &subscreen43);
 
-   x = HSAVEGAME_BOX_X;
-   y = HSAVEGAME_BOX_Y;
+   int x = HSAVEGAME_BOX_X;
+   int y = HSAVEGAME_BOX_Y;
 
-   for(i = 0; i < 8; ++i)
+   for(int i = 0; i < 8; i++)
    {
       V_DrawPatch(x, y, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
@@ -264,22 +249,22 @@ static void MN_HSaveDrawer()
 
 static menuitem_t mn_hloadgame_items[] =
 {
-   {it_runcmd, "", "mn_load 0"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 1"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 2"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 3"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 4"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 5"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 6"},
-   {it_gap},
-   {it_runcmd, "", "mn_load 7"},
-   {it_end}
+   { it_runcmd, "", "mn_load 0" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 1" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 2" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 3" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 4" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 5" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 6" },
+   { it_gap },
+   { it_runcmd, "", "mn_load 7" },
+   { it_end }
 };
 
 static void MN_HLoadDrawer();
@@ -307,8 +292,7 @@ extern char *savegamenames[];
 
 static void MN_HLoadDrawer()
 {
-   int x, y, i;
-   const char *title = "load game";
+   const char *title = "Load Game";
    static char *emptystr = NULL;
 
    if(!emptystr)
@@ -318,10 +302,10 @@ static void MN_HLoadDrawer()
                    160 - V_FontStringWidth(menu_font_big, title) / 2, 10, 
                    &subscreen43);
 
-   x = HLOADGAME_BOX_X;
-   y = HLOADGAME_BOX_Y;
+   int x = HLOADGAME_BOX_X;
+   int y = HLOADGAME_BOX_Y;
 
-   for(i = 0; i < 8; ++i)
+   for(int i = 0; i < 8; i++)
    {
       V_DrawPatch(x, y, &subscreen43, 
                   PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
@@ -329,9 +313,9 @@ static void MN_HLoadDrawer()
    }
 
    // this is lame
-   for(i = 0, y = 0; i < SAVESLOTS; ++i, y += 2)
+   for(int i = 0, j = 0; i < SAVESLOTS; i++, j += 2)
    {
-      menu_hloadgame.menuitems[y].description =
+      menu_hloadgame.menuitems[j].description =
          savegamenames[i] ? savegamenames[i] : emptystr;
    }
 }

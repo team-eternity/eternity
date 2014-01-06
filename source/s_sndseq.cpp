@@ -1,21 +1,23 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
 //
 //--------------------------------------------------------------------------
 //
@@ -534,15 +536,15 @@ static void S_RunSequence(SndSeq_t *curSeq)
 }
 
 // prototypes for enviro functions from below
-static void S_RunEnviroSequence(void);
-static void S_StopEnviroSequence(void);
+static void S_RunEnviroSequence();
+static void S_StopEnviroSequence();
 
 //
 // S_RunSequences
 //
 // Updates all running sound sequences.
 //
-void S_RunSequences(void)
+void S_RunSequences()
 {
    DLListItem<SndSeq_t> *link = SoundSequences;
 
@@ -564,7 +566,7 @@ void S_RunSequences(void)
 //
 // Stops all running sound sequences. Called at the end of a level.
 //
-void S_StopAllSequences(void)
+void S_StopAllSequences()
 {
    // Because everything is allocated PU_LEVEL, simply disconnecting the list
    // head is all that is needed to stop all sequences from playing. The sndseq
@@ -604,7 +606,7 @@ static SndSeq_t enviroSeq;
 //
 // Resets the environmental sequence engine.
 //
-static void S_ResetEnviroSeqEngine(void)
+static void S_ResetEnviroSeqEngine()
 {
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
@@ -641,7 +643,7 @@ void S_InitEnviroSpots()
 // commands or else they'll lock out any other sequence for the rest of the
 // map.
 //
-static void S_RunEnviroSequence(void)
+static void S_RunEnviroSequence()
 {
    // nothing to do?
    if(enviroSpots.isEmpty())
@@ -706,7 +708,7 @@ static void S_RunEnviroSequence(void)
 // Unconditionally stops the environmental sequence engine. Called from
 // S_StopAllSequences above.
 //
-static void S_StopEnviroSequence(void)
+static void S_StopEnviroSequence()
 {
    // stomp on everything to stop it from running any more sequences
    EnviroSequence = NULL;     // no playing sequence

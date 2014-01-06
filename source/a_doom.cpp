@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2010 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -423,6 +422,7 @@ void A_SkelMissile(actionargs_t *actionargs)
    
    mo->x += mo->momx;
    mo->y += mo->momy;
+   mo->backupPosition();
    P_SetTarget<Mobj>(&mo->tracer, actor->target);  // killough 11/98
 }
 
@@ -763,6 +763,7 @@ void A_Fire(actionargs_t *actionargs)
    actor->x = dest->x + FixedMul(24*FRACUNIT, finecosine[an]);
    actor->y = dest->y + FixedMul(24*FRACUNIT, finesine[an]);
    actor->z = dest->z;
+   actor->backupPosition();
    P_SetThingPosition(actor);
 }
 

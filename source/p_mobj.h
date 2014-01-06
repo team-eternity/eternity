@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -38,6 +37,7 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 #include "m_fixed.h"
+#include "r_interpolate.h"
 #include "tables.h"
 
 struct msecnode_t;
@@ -207,6 +207,7 @@ public:
    virtual void deSwizzle();
 
    // Methods
+   void backupPosition();
    void copyPosition(const Mobj *other);
    
    // Data members
@@ -345,6 +346,8 @@ public:
    // clipping pass (map architecture + 3d sides).
    fixed_t passfloorz;
    fixed_t passceilz;
+
+   prevpos_t prevpos;   // previous position for interpolation
 
    // scripting fields
    int args[NUMMTARGS]; // arguments

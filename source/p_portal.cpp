@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Stephen McGranahan
+// Copyright(C) 2013 Stephen McGranahan et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -722,6 +721,8 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
       // Set player's view according to the newly set parameters
       P_CalcHeight(mo->player);
 
+      mo->player->prevviewz = mo->player->viewz;
+
       // Reset the delta to have the same dynamics as before
       mo->player->deltaviewheight = deltaviewheight;
 
@@ -729,6 +730,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
           P_ResetChasecam();
    }
 
+   mo->backupPosition();
    P_AdjustFloorClip(mo);
    
    return 1;
@@ -821,9 +823,11 @@ void P_CheckLPortalState(line_t *line)
 //
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
+   // set new value
    sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
-   
+
+   // check floor portal state
    P_CheckFPortalState(sec);
 }
 
@@ -835,9 +839,11 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 //
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
+   // set new value
    sec->ceilingheight = h;
    sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
 
+   // check ceiling portal state
    P_CheckCPortalState(sec);
 }
 
@@ -855,7 +861,6 @@ void P_SetPortalBehavior(portal_t *portal, int newbehavior)
       if(sec->f_portal == portal)
          P_CheckFPortalState(sec);
    }
-   
    
    for(i = 0; i < numlines; i++)
    {

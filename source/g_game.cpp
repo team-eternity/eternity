@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -2458,24 +2457,6 @@ void G_ScreenShot()
 {
    gameaction = ga_screenshot;
 }
-
-// DOOM Par Times
-int pars[4][10] =
-{
-   {0},
-   {0,30,75,120,90,165,180,180,30,165},
-   {0,90,90,90,120,90,360,240,30,170},
-   {0,90,45,90,150,90,90,165,30,135}
-};
-
-// DOOM II Par Times
-int cpars[34] = 
-{
-   30,90,120,120,90,150,120,120,270,90,  //  1-10
-   210,150,150,150,210,150,420,150,210,150,  // 11-20
-   240,150,180,150,150,300,330,420,300,180,  // 21-30
-   120,30,30,30          // 31-34
-};
 
 //
 // G_WorldDone

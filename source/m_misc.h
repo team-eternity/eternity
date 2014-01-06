@@ -1,21 +1,20 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright (C) 2013 James Haley et al.
 //
-// This program is free software; you can redistribute it and/or modify
+// This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
@@ -151,22 +150,14 @@ struct default_t
      NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
 
 // haleyjd 03/14/09: defaultfile_t structure
-typedef struct defaultfile_s
+struct defaultfile_t
 {
    default_t *defaults;    // array of defaults
    size_t     numdefaults; // length of defaults array
    bool       hashInit;    // if true, this default file's hash table is setup
    char      *fileName;    // name of corresponding file
    bool       loaded;      // if true, defaults are loaded
-   bool       helpHeader;  // has help header?
-   struct comment_s
-   { 
-      char *text; 
-      int line; 
-   } *comments;             // stored comments
-   size_t numcomments;      // number of comments stored
-   size_t numcommentsalloc; // number of comments allocated
-} defaultfile_t;
+};
 
 // haleyjd 06/29/09: default overrides
 struct default_or_t
@@ -179,25 +170,14 @@ struct default_or_t
 bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
-void       M_ResetDefaultFileComments(defaultfile_t *df);
 void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
-void       M_ResetDefaultComments(void);
 default_t *M_FindDefaultForCVar(variable_t *var);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
 
 // haleyjd 06/24/02: platform-dependent macros for sound/music defaults
-#if defined(DJGPP)
-  #define SND_DEFAULT -1
-  #define SND_MIN     -1
-  #define SND_MAX      7
-  #define SND_DESCR    "code used by Allegro to select sounds driver; -1 is autodetect"
-  #define MUS_DEFAULT -1
-  #define MUS_MIN     -1
-  #define MUS_MAX      9
-  #define MUS_DESCR    "code used by Allegro to select music driver; -1 is autodetect"
-#elif defined(_SDL_VER)
+#if defined(_SDL_VER)
   #define SND_DEFAULT -1
   #define SND_MIN     -1
   #define SND_MAX      1
