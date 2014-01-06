@@ -24,18 +24,20 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
-#include "c_runcmd.h"
+
 #include "c_io.h"
-#include "doomstat.h"
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_main.h"
-#include "p_user.h"
+#include "doomstat.h"
+#include "i_system.h"
+#include "p_anim.h"
 #include "p_chase.h"
 #include "p_saveg.h"
+#include "p_sector.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "p_anim.h"  // haleyjd
+#include "p_user.h"
 #include "p_partcl.h"
 #include "polyobj.h"
 #include "s_sndseq.h"
@@ -258,8 +260,6 @@ void Thinker::serialize(SaveArchive &arc)
 //
 void P_Ticker()
 {
-   int i;
-   
    // pause if in menu and at least one tic has been run
    //
    // killough 9/29/98: note that this ties in with basetic,
@@ -271,6 +271,9 @@ void P_Ticker()
    if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
                  players[consoleplayer].viewz != 1))
       return;
+
+   // interpolation: save current sector heights
+   P_SaveSectorPositions();
    
    P_ParticleThinker(); // haleyjd: think for particles
 
@@ -279,9 +282,13 @@ void P_Ticker()
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
    if(gamestate == GS_LEVEL && !cinema_pause)
-      for(i = 0; i < MAXPLAYERS; i++)
+   {
+      for(int i = 0; i < MAXPLAYERS; i++)
+      {
          if(playeringame[i])
             P_PlayerThink(&players[i]);
+      }
+   }
 
    Thinker::RunThinkers();
    P_UpdateSpecials();

@@ -37,6 +37,7 @@ struct node_t;
 struct fnode_t;
 struct player_t;
 struct sector_t;
+struct sectorinterp_t;
 struct seg_t;
 struct side_t;
 struct spritedef_t;
@@ -84,6 +85,7 @@ extern seg_t            *segs;
 
 extern int              numsectors;
 extern sector_t         *sectors;
+extern sectorinterp_t   *sectorinterps;
 
 extern int              numsubsectors;
 extern subsector_t      *subsectors;

@@ -31,6 +31,7 @@
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_defs.h"
+#include "r_state.h"
 
 //=============================================================================
 //
@@ -92,6 +93,31 @@ void P_NewSectorActionFromMobj(Mobj *actor)
       // TODO
    }
 #endif
+}
+
+//=============================================================================
+//
+// Sector Interpolation
+//
+
+//
+// P_SaveSectorPositions
+//
+// Backup current sector floor and ceiling heights to the sector interpolation
+// structures at the beginning of a frame.
+//
+void P_SaveSectorPositions()
+{
+   for(int i = 0; i < numsectors; i++)
+   {
+      auto &si  = sectorinterps[i];
+      auto &sec = sectors[i];
+
+      si.prevfloorheight    = sec.floorheight;
+      si.prevfloorheightf   = sec.floorheightf;
+      si.prevceilingheight  = sec.ceilingheight;
+      si.prevceilingheightf = sec.ceilingheightf;
+   }
 }
 
 // EOF

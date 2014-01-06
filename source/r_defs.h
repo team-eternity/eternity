@@ -165,6 +165,22 @@ struct sectoraction_t
    int actionflags;
 };
 
+// sector interpolation values
+struct sectorinterp_t
+{
+   bool    interpolated;       // if true, interpolated
+
+   fixed_t prevfloorheight;    // previous values, stored for interpolation
+   fixed_t prevceilingheight;
+   float   prevfloorheightf;
+   float   prevceilingheightf;
+
+   fixed_t backfloorheight;    // backup values, used as cache during rendering
+   fixed_t backceilingheight;
+   float   backfloorheightf;
+   float   backceilingheightf;
+};
+
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.

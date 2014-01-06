@@ -775,6 +775,71 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
 {
 }
 
+enum secinterpstate_e
+{
+   SEC_INTERPOLATE,
+   SEC_NORMAL
+};
+
+//
+// R_setSectorInterpolationState
+//
+// If passed SEC_INTERPOLATE, current floor and ceiling heights are backed up
+// and then replaced with interpolated values. If passed SEC_NORMAL, backed up
+// sector heights are restored.
+//
+static void R_setSectorInterpolationState(secinterpstate_e state)
+{
+   int i;
+
+   switch(state)
+   {
+   case SEC_INTERPOLATE:
+      for(i = 0; i < numsectors; i++)
+      {
+         auto &si  = sectorinterps[i];
+         auto &sec = sectors[i];
+         
+         if(si.prevfloorheight   != sec.floorheight ||
+            si.prevceilingheight != sec.ceilingheight)
+         {
+            si.interpolated = true;
+
+            // backup heights
+            si.backfloorheight    = sec.floorheight;
+            si.backfloorheightf   = sec.floorheightf;
+            si.backceilingheight  = sec.ceilingheight;
+            si.backceilingheightf = sec.ceilingheightf;
+
+            // set interpolated heights
+            sec.floorheight    = lerpCoord(view.lerp, si.prevfloorheight,   sec.floorheight);
+            sec.ceilingheight  = lerpCoord(view.lerp, si.prevceilingheight, sec.ceilingheight);
+            sec.floorheightf   = M_FixedToFloat(sec.floorheight);
+            sec.ceilingheightf = M_FixedToFloat(sec.ceilingheight);
+         }
+         else
+            si.interpolated = false;
+      }
+      break;
+   case SEC_NORMAL:
+      for(i = 0; i < numsectors; i++)
+      {
+         auto &si  = sectorinterps[i];
+         auto &sec = sectors[i];
+         
+         // restore backed up heights
+         if(si.interpolated)
+         {
+            sec.floorheight    = si.backfloorheight;
+            sec.floorheightf   = si.backfloorheightf;
+            sec.ceilingheight  = si.backceilingheight;
+            sec.ceilingheightf = si.backceilingheightf;
+         }
+      }
+      break;
+   }
+}
+
 //
 // R_SetupFrame
 //
@@ -836,6 +901,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    view.cos   = cos(view.angle);
    view.lerp  = lerp;
 
+   // set interpolated sector heights
+   if(view.lerp != FRACUNIT)
+      R_setSectorInterpolationState(SEC_INTERPOLATE);
+
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
 
@@ -871,8 +940,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    ++validcount;
 }
 
-//
-
 typedef enum
 {
    area_normal,
@@ -880,15 +947,18 @@ typedef enum
    area_above
 } area_t;
 
+//
+// R_SectorColormap
+//
+// killough 3/20/98, 4/4/98: select colormap based on player status
+// haleyjd 03/04/07: rewritten to get colormaps from the sector itself
+// instead of from its heightsec if it has one (heightsec colormaps are
+// transferred to their affected sectors at level setup now).
+//
 void R_SectorColormap(sector_t *s)
 {
    int cm = 0;
    area_t viewarea;
-   
-   // killough 3/20/98, 4/4/98: select colormap based on player status
-   // haleyjd 03/04/07: rewritten to get colormaps from the sector itself
-   // instead of from its heightsec if it has one (heightsec colormaps are
-   // transferred to their affected sectors at level setup now).
    
    if(s->heightsec == -1)
       viewarea = area_normal;
@@ -952,10 +1022,8 @@ angle_t R_WadToAngle(int wadangle)
 
 static int render_ticker = 0;
 
-extern void R_ResetColumnBuffer(void);
-
 // haleyjd: temporary debug
-extern void R_UntaintPortals(void);
+extern void R_UntaintPortals();
 
 //
 // R_RenderView
@@ -1020,6 +1088,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint, fixed_t lerp)
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
+
+   // haleyjd: remove sector interpolations
+   if(view.lerp != FRACUNIT)
+      R_setSectorInterpolationState(SEC_NORMAL);
    
    // Check for new console commands.
    NetUpdate();

@@ -663,8 +663,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    return sec;
 }
 
-
-
 //
 // R_ClipSegToPortal
 //
