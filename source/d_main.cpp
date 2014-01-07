@@ -576,18 +576,6 @@ static void D_initDisplayTime()
    display_accumulator = DT;
 }
 
-// TEMP DEBUG
-static void D_displayAccumulator()
-{
-   char temp[128];
-   memset(temp, 0, sizeof(temp));
-
-   sprintf(temp, "%" PRIu64, display_accumulator);
-   
-   auto font = E_FontForName("ee_smallfont");
-   V_FontWriteText(font, temp, 5, 20);
-}
-
 //
 // D_Display
 //  draw current display, possibly wiping it from the previous
@@ -757,9 +745,6 @@ void D_Display(int tics)
 
    if(d_drawfps)
       D_showDrawnFPS();
-
-   // TEST DEBUG
-   D_displayAccumulator();
 
 #ifdef INSTRUMENTED
    if(printstats)
