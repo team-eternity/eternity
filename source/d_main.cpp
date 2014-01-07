@@ -413,7 +413,7 @@ void D_StartTitle()
 
 gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
 gamestate_t wipegamestate = GS_DEMOSCREEN;
-void        R_ExecuteSetViewSize(void);
+void        R_ExecuteSetViewSize();
 camera_t    *camera;
 extern bool setsizeneeded;
 int         wipewait;        // haleyjd 10/09/07
@@ -423,7 +423,7 @@ bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
 //
 // D_showFPS
 //
-static void D_showDrawnFPS(void)
+static void D_showDrawnFPS()
 {
    static unsigned int lastms, accms, frames;
    unsigned int curms;
@@ -576,6 +576,18 @@ static void D_initDisplayTime()
    display_accumulator = DT;
 }
 
+// TEMP DEBUG
+static void D_displayAccumulator()
+{
+   char temp[128];
+   memset(temp, 0, sizeof(temp));
+
+   sprintf(temp, "%" PRIu64, display_accumulator);
+   
+   auto font = E_FontForName("ee_smallfont");
+   V_FontWriteText(font, temp, 5, 20);
+}
+
 //
 // D_Display
 //  draw current display, possibly wiping it from the previous
@@ -585,23 +597,25 @@ void D_Display(int tics)
    if(nodrawers)                // for comparative timing / profiling
       return;
 
-   fixed_t lerp = FRACUNIT;
+   fixed_t lerp         = FRACUNIT;
    auto    current_time = I_GetTicks();
    auto    frame_time   = current_time - display_prev_time;
    display_prev_time    = current_time;
- 
+
+   frame_time = emin(frame_time, 1000u/35u);
+
    display_accumulator += (uint64_t)frame_time * 1000000LL;
 
    if(tics < 0)
       tics = 0;
-
+   
    // subtract DT for every tic that was run by TryRunTics
    uint64_t ticstime = (uint64_t)tics * DT;
    if(ticstime < display_accumulator)
       display_accumulator -= ticstime;
    else
       display_accumulator = 0;
-
+   
    // when interpolating, calculate linear interpolation factor
    if(d_fastrefresh && d_interpolate &&  
       !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame)))
@@ -743,6 +757,9 @@ void D_Display(int tics)
 
    if(d_drawfps)
       D_showDrawnFPS();
+
+   // TEST DEBUG
+   D_displayAccumulator();
 
 #ifdef INSTRUMENTED
    if(printstats)
