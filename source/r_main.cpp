@@ -855,9 +855,7 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 //
 static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
 {               
-   Mobj    *mobj;
    fixed_t  pitch;
-   fixed_t  dy;
    fixed_t  viewheightfrac;
    
    // haleyjd 09/04/06: set or change column drawing engine
@@ -867,9 +865,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    R_IncrementFrameid(); // Cardboard
    
    viewplayer = player;
-   mobj = player->mo;
-
    viewcamera = camera;
+
    if(!camera)
    {
       R_interpolateViewPoint(player, lerp);
@@ -921,8 +918,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    // appear a half-pixel too low (the entire display was too low actually).
    if(pitch)
    {
-      dy = FixedMul(focallen_y, 
-                    finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
+      fixed_t dy = FixedMul(focallen_y, 
+                            finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
             
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)
