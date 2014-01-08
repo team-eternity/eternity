@@ -36,7 +36,7 @@ struct camera_t
    fixed_t z;
    angle_t angle;
    fixed_t pitch;
-   int heightsec;  // haleyjd: for deep water handling
+   //int heightsec;  // haleyjd: for deep water handling
    int groupid;
    bool flying;
 

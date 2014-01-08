@@ -769,6 +769,7 @@ static void R_ProjectSprite(Mobj *thing)
    bool           flip;
    vissprite_t   *vis;
    int            heightsec;      // killough 3/27/98
+   sector_t      *sec;            // haleyjd: for interpolation
 
    float tempx, tempy;
    float rotx, roty;
@@ -901,22 +902,21 @@ static void R_ProjectSprite(Mobj *thing)
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
-   // INTERP_FIXME: heightsec determination out of sync with coords
-   heightsec = thing->subsector->sector->heightsec;
+   sec = (view.lerp == FRACUNIT ? thing->subsector->sector :
+          R_PointInSubsector(spritepos.x, spritepos.y)->sector);
+   heightsec = sec->heightsec;
    
-   if(heightsec != -1)   // only clip things which are in special sectors
+   if(heightsec != -1) // only clip things which are in special sectors
    {
-      // haleyjd: and yet ANOTHER assumption!
-      int phs = viewcamera ? viewcamera->heightsec :
-                   viewplayer->mo->subsector->sector->heightsec;
+      auto &hsec = sectors[heightsec];
+      int   phs  = view.sector->heightsec;
+      
       if(phs != -1 && viewz < sectors[phs].floorheight ?
-           thing->z >= sectors[heightsec].floorheight :
-           gzt < sectors[heightsec].floorheight)
+         thing->z >= hsec.floorheight : gzt < hsec.floorheight)
          return;
       if(phs != -1 && viewz > sectors[phs].ceilingheight ?
-           gzt < sectors[heightsec].ceilingheight &&
-           viewz >= sectors[heightsec].ceilingheight :
-           thing->z >= sectors[heightsec].ceilingheight)
+         gzt < hsec.ceilingheight && viewz >= hsec.ceilingheight :
+         thing->z >= hsec.ceilingheight)
          return;
    }
 
@@ -944,7 +944,7 @@ static void R_ProjectSprite(Mobj *thing)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->sector = thing->subsector->sector - sectors; // INTERP_FIXME
+   vis->sector = sec - sectors; // haleyjd: use interpolated sector
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
@@ -1353,143 +1353,6 @@ static void R_SortVisSpriteRange(int first, int last)
    }
 }
 
-
-#if 0
-//
-// R_DrawSprite
-//
-void R_DrawSprite(vissprite_t *spr)
-{
-   drawseg_t *ds;
-   int     x;
-   int     r1;
-   int     r2;
-   float dist;
-   float fardist;
-   
-   for(x = spr->x1; x <= spr->x2; ++x)
-      clipbot[x] = cliptop[x] = -2;
-
-   // Scan drawsegs from end to start for obscuring segs.
-   // The first drawseg that has a greater scale is the clip seg.
-   
-   // Modified by Lee Killough:
-   // (pointer check was originally nonportable
-   // and buggy, by going past LEFT end of array):
-   
-   //    for (ds=ds_p-1 ; ds >= drawsegs ; ds--)    old buggy code
-
-   for(ds = ds_p; ds-- > drawsegs; )  // new -- killough
-   {      
-      // determine if the drawseg obscures the sprite
-      if(ds->x1 > spr->x2 || ds->x2 < spr->x1 ||
-         (!ds->silhouette && !ds->maskedtexturecol))
-         continue; // does not cover sprite
-
-      r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
-      r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-
-      if (ds->dist1 > ds->dist2)
-      {
-         fardist = ds->dist2;
-         dist = ds->dist1;
-      }
-      else
-      {
-         fardist = ds->dist1;
-         dist = ds->dist2;
-      }
-
-      if(dist < spr->dist || (fardist < spr->dist &&
-         !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
-      {
-         if(ds->maskedtexturecol) // masked mid texture?
-            R_RenderMaskedSegRange(ds, r1, r2);
-         continue;                // seg is behind sprite
-      }
-      
-      // clip this piece of the sprite
-      // killough 3/27/98: optimized and made much shorter
-
-      // bottom sil
-      if(ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)
-         for(x = r1; x <= r2; ++x)
-            if(clipbot[x] == -2)
-               clipbot[x] = ds->sprbottomclip[x];
-
-      // top sil
-      if(ds->silhouette & SIL_TOP && spr->gzt > ds->tsilheight)
-         for(x = r1; x <= r2; ++x)
-            if(cliptop[x] == -2)
-               cliptop[x] = ds->sprtopclip[x];
-   }
-
-   // Clip the sprite against deep water and/or fake ceilings.
-
-   if(spr->heightsec != -1) // only things in specially marked sectors
-   {
-      float h, mh;
-      
-      int phs = viewcamera ? viewcamera->heightsec :
-                   viewplayer->mo->subsector->sector->heightsec;
-
-      mh = M_FixedToFloat(sectors[spr->heightsec].floorheight) - view.z;
-      if(sectors[spr->heightsec].floorheight > spr->gz &&
-         (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
-         (h < view.height))
-      {
-         if(mh <= 0.0 || (phs != -1 && viewz > sectors[phs].floorheight))
-         {
-            // clip bottom
-            for(x = spr->x1; x <= spr->x2; ++x)
-               if(clipbot[x] == -2 || h < clipbot[x])
-                  clipbot[x] = h;
-         }
-         else  // clip top
-            if(phs != -1 && viewz <= sectors[phs].floorheight) // killough 11/98
-               for(x = spr->x1; x <= spr->x2; ++x)
-                  if(cliptop[x] == -2 || h > cliptop[x])
-                     cliptop[x] = h;
-      }
-
-      mh = M_FixedToFloat(sectors[spr->heightsec].ceilingheight) - view.z;
-      if(sectors[spr->heightsec].ceilingheight < spr->gzt &&
-         (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
-         (h < view.height))
-      {
-         if(phs != -1 && viewz >= sectors[phs].ceilingheight)
-         {
-            // clip bottom
-            for(x = spr->x1; x <= spr->x2; ++x)
-               if(clipbot[x] == -2 || h < clipbot[x])
-                  clipbot[x] = h;
-         }
-         else  // clip top
-            for(x = spr->x1; x <= spr->x2; ++x)
-               if(cliptop[x] == -2 || h > cliptop[x])
-                  cliptop[x] = h;
-      }
-   }
-   // killough 3/27/98: end special clipping for deep water / fake ceilings
-
-   // all clipping has been performed, so draw the sprite
-   // check for unclipped columns
-   
-   for(x = spr->x1; x <= spr->x2; ++x)
-   {
-      if(clipbot[x] == -2)
-         clipbot[x] = view.height - 1.0f;
-      
-      if(cliptop[x] == -2)
-         cliptop[x] = 0.0f;
-   }
-
-   mfloorclip = clipbot;
-   mceilingclip = cliptop;
-   R_DrawVisSprite(spr, spr->x1, spr->x2);
-}
-#endif
-
 //
 // R_DrawSpriteInDSRange
 //
@@ -1624,8 +1487,7 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    {
       float h, mh;
       
-      int phs = viewcamera ? viewcamera->heightsec :
-                   viewplayer->mo->subsector->sector->heightsec;
+      int phs = view.sector->heightsec;
 
       mh = M_FixedToFloat(sectors[spr->heightsec].floorheight) - view.z;
       if(sectors[spr->heightsec].floorheight > spr->gz &&
@@ -1986,8 +1848,7 @@ static void R_ProjectParticle(particle_t *particle)
    // only clip particles which are in special sectors
    if(heightsec != -1)
    {
-      int phs = viewcamera ? viewcamera->heightsec :
-                viewplayer->mo->subsector->sector->heightsec;
+      int phs = view.sector->heightsec;
       
       if(phs != -1 && 
 	 viewz < sectors[phs].floorheight ?

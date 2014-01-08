@@ -751,9 +751,6 @@ void D_Display(int tics)
       D_showMemStats();
 #endif
    
-   // sf: wipe changed: runs alongside the rest of the game rather
-   //     than in its own loop
-   
    I_FinishUpdate();              // page flip or blit buffer
 }
 

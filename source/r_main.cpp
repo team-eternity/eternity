@@ -93,9 +93,6 @@ camera_t *viewcamera;
 // SoM: removed the old zoom code infavor of actual field of view!
 int fov = 90;
 
-// SoM: Used by a hack to fix some hom when traveling through portals.
-int viewgroup;
-
 // SoM: Displays red on the screen if a portal becomes "tainted"
 int showtainted = 0;
 
@@ -876,9 +873,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    if(!camera)
    {
       R_interpolateViewPoint(player, lerp);
-      pitch     = player->pitch; // INTERP_FIXME
-      // SoM
-      viewgroup = mobj->groupid; // INTERP_FIXME
+      pitch = player->pitch; // INTERP_FIXME
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -893,8 +888,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    else
    {
       R_interpolateViewPoint(camera, lerp);
-      pitch     = camera->pitch;   // INTERP_FIXME
-      viewgroup = camera->groupid; // INTERP_FIXME
+      pitch = camera->pitch;   // INTERP_FIXME
    }
 
    extralight = player->extralight;
@@ -902,14 +896,15 @@ static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
-   view.x     = M_FixedToFloat(viewx);
-   view.y     = M_FixedToFloat(viewy);
-   view.z     = M_FixedToFloat(viewz);
-   view.angle = (ANG90 - viewangle) * PI / ANG180;
-   view.pitch = (ANG90 - pitch) * PI / ANG180;
-   view.sin   = sin(view.angle);
-   view.cos   = cos(view.angle);
-   view.lerp  = lerp;
+   view.x      = M_FixedToFloat(viewx);
+   view.y      = M_FixedToFloat(viewy);
+   view.z      = M_FixedToFloat(viewz);
+   view.angle  = (ANG90 - viewangle) * PI / ANG180;
+   view.pitch  = (ANG90 - pitch) * PI / ANG180;
+   view.sin    = sin(view.angle);
+   view.cos    = cos(view.angle);
+   view.lerp   = lerp;
+   view.sector = R_PointInSubsector(viewx, viewy)->sector;
 
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
@@ -974,14 +969,12 @@ void R_SectorColormap(sector_t *s)
       viewarea = area_normal;
    else
    {
-      sector_t *viewsector = R_PointInSubsector(viewx, viewy)->sector;
-      
       // find which area the viewpoint is in
-      viewarea =
-         viewsector->heightsec == -1 ? area_normal :
-         viewz < sectors[viewsector->heightsec].floorheight ? area_below :
-         viewz > sectors[viewsector->heightsec].ceilingheight ? area_above :
-         area_normal;
+      int hs = view.sector->heightsec;
+      viewarea = 
+         (hs == -1 ? area_normal :
+          viewz < sectors[hs].floorheight ? area_below :
+          viewz > sectors[hs].ceilingheight ? area_above : area_normal);
    }
 
    switch(viewarea)
@@ -1036,7 +1029,9 @@ static int render_ticker = 0;
 extern void R_UntaintPortals();
 
 //
-// R_RenderView
+// R_RenderPlayerView
+//
+// Primary renderer entry point.
 //
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint, fixed_t lerp)
 {

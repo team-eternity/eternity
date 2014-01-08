@@ -152,7 +152,8 @@ struct cb_view_t
    float pspritexscale, pspriteyscale;
    float pspriteystep;
 
-   fixed_t lerp; // haleyjd: linear interpolation factor
+   fixed_t   lerp;   // haleyjd: linear interpolation factor
+   sector_t *sector; // haleyjd: view sector, because of interpolation
 };
 
 // haleyjd 3/11/10: markflags

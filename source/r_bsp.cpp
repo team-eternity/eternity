@@ -497,13 +497,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       
       const sector_t *s = &sectors[sec->heightsec];
       
-      // haleyjd: Lee assumed that only players would ever be
-      // involved in LOS calculations for deep water -- must be
-      // fixed for cameras -- thanks to Julian for finding the
-      // solution to this old problem!
-
-      heightsec = camera ? camera->heightsec
-                         : viewplayer->mo->subsector->sector->heightsec;
+      // haleyjd 01/07/14: get from view.sector due to interpolation
+      heightsec = view.sector->heightsec;
             
       underwater = (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
 

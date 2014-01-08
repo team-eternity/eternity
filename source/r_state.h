@@ -115,7 +115,6 @@ extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          *xtoviewangle;  // killough 2/8/98
-extern int              viewgroup; // SoM
 
 extern visplane_t       *floorplane;
 extern visplane_t       *ceilingplane;

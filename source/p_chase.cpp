@@ -220,7 +220,6 @@ int chasecam_speed;
 void P_ChaseTicker()
 {
    int xdist, ydist, zdist;
-   subsector_t *subsec; // haleyjd
 
    // backup current position for interpolation
    P_backupCameraPosition(chasecam);
@@ -242,13 +241,6 @@ void P_ChaseTicker()
    
    chasecam.pitch = players[displayplayer].pitch;
    chasecam.angle = playerangle;
-
-   // haleyjd: fix for deep water HOM bug -- 
-   // although this is called from P_GetChasecamTarget, we
-   // can't do it there because the target point may have
-   // different deep water qualities than the interim locale
-   subsec = R_PointInSubsector(chasecam.x, chasecam.y);
-   chasecam.heightsec = subsec->sector->heightsec;
 }
 
 // console commands
@@ -314,10 +306,6 @@ void P_ResetChasecam()
 #ifdef R_LINKEDPORTALS
    chasecam.groupid = targetgroupid;
 #endif
-
-   // haleyjd
-   chasecam.heightsec = 
-      R_PointInSubsector(chasecam.x, chasecam.y)->sector->heightsec;
 
    P_backupCameraPosition(chasecam);
 }
@@ -394,9 +382,6 @@ void P_WalkTicker()
    // than every frame, naively
    subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
 
-   // haleyjd: handle deep water appropriately
-   walkcamera.heightsec = subsec->sector->heightsec;
-
    if(!walkcamera.flying)
    {
       // keep on the ground
@@ -423,7 +408,6 @@ static void P_ResetWalkcam()
    
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
-   walkcamera.heightsec = sec->heightsec;
    walkcamera.z = sec->floorheight + 41*FRACUNIT;
 
    P_backupCameraPosition(walkcamera);
@@ -560,7 +544,6 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
    followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
-   followcam.heightsec = subsec->sector->heightsec;
 
    P_setFollowPitch();
    P_backupCameraPosition(followcam);
@@ -584,9 +567,8 @@ bool P_FollowCamTicker()
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z         = subsec->sector->floorheight + 41*FRACUNIT;
-   followcam.heightsec = subsec->sector->heightsec;
-   followcam.groupid   = subsec->sector->groupid;
+   followcam.z       = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.groupid = subsec->sector->groupid;
    P_setFollowPitch();
 
    // still visible?
