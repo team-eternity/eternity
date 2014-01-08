@@ -2,6 +2,202 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+01/08/14
+
+Recoded portions of the renderer to get sector properties of the viewpoint from
+view.sector, which guarantees proper interaction of interpolation with features
+such as BOOM deep water.
+
+Added an r_boomcolormaps cvar (may add to configuration later?) which re-enables
+the old BOOM behavior of applying the view.sector's colormap properties to
+everything that is in view. This fixes some maps such as Freedoom E1M1/MAP01.
+Some maps like BOOMEDIT look worse with it on, though, IMO. Right now it's 
+default off.
+
+--------------------------------------------------------------------------------
+01/07/14
+
+Made some tweaks to interpolation that seem to make it work without screenwipes
+being enabled. I shouldn't add in more than one frame's worth of time, because
+if the game IS running behind, we can't interpolate that anyway. It needs a
+chance to catch up.
+
+--------------------------------------------------------------------------------
+01/06/14
+
+Added interpolation when the viewpoint is a camera.
+
+Removed the "low precision" span drawer engine, which is another example of an
+option nobody ever needed or wanted ("Look ugly" vs "Look correct").
+
+Along the same lines as the above, I have also removed the optional vissprite
+limit, which is equivalent to an unnecessary potential branch prediction stall 
+on every vissprite projection.
+
+--------------------------------------------------------------------------------
+01/05/14
+
+Ability to interpolate the player viewpoint, position of vissprites, and sector
+heights is now in place, after significant help in understanding the problem 
+provided earlier by Dr. Sean of the Odamex team. Big thanks to him.
+
+--------------------------------------------------------------------------------
+01/01/14
+
+Happy New Year!
+
+More work on elimination of branches on GMI enumeration values:
+
+* The mn_newgame command now has a callback in GMI which implements proper
+  new game behavior for each game mode. This eliminates need for a redundant
+  mn_hnewgame command for Heretic entirely.
+  
+* Par time determination now has a callback in GMI.
+
+* The ability of Lost Souls to bounce while old demos are playing back is now
+  controlled through a GMI flag. Because this behavior varies both between
+  gamemodes AND game missions (ie. not in Doom 2, but in Final Doom), this
+  needed a handy ability for missions to add and remove flags from their base
+  gamemode (this works similar to addflags and remflags in EDF thingtypes).
+  
+* Missions which support changing the names of MAP31/32 to match BFG Edition are
+  now controlled with the MI_WOLFNAMEHACKS missioninfo flag.
+  
+* Missions which add MAP33 "Betray" are now controlled by the MI_HASBETRAY
+  missioninfo flag.
+  
+* Missions which support Doom 2 managed mission pack selection via the episode
+  menu are now determined with an MI_DOOM2MISSIONS mission flag.
+  
+* Missions which do not set things' z height when teleporting during playback of
+  old demos are now controlled with an MI_NOTELEPORTZ mission flag.
+  
+Beta Lost Souls have been further tweaked to mesh better with the modern engine.
+The Pre-Beta didn't have flying monsters yet so id just offset the sprite a
+certain height above the floor. With flying logic in place, the offsets should
+just be based on the monster's position. Also slightly changed its death
+behavior so that it more closely matches how the Pain Elemental falls when it
+explodes.
+
+By user request, the ability to save custom comments in the configuration files
+has been entirely removed, which completely resolves the BOOM problem of the
+help comments getting out of sync with the variables any time one is added or
+removed from the program. Nobody used this anyway.
+
+--------------------------------------------------------------------------------
+12/31/13
+
+I am currently working on eliminating more branches on GameModeInfo->id, 
+GameModeInfo->missionInfo->id, and GameModeInfo->type.
+
+Work so far:
+
+* The music changing cheat now calls a function pointer in GameModeInfo that
+  implements the proper behavior for that game.
+  
+* Conditional playing of DSPDIEHI is controlled by a GMI flag.
+
+* MN_PatchOldMainMenu is no longer necessary; Doom 2 games now reference a 
+  separate main menu through the already existing GMI pointer.
+  
+I also found that I forgot to add emulation of the A_RavenPlayerScream pointer
+to the skin viewer when I added that action function for proper Heretic player
+death sound behavior.
+
+--------------------------------------------------------------------------------
+12/30/13
+
+While performing more code audits (just looking for weird stuff in the source
+code), I cleaned up a number of things:
+
+* C++ style adjustments
+* Variables with excessive scope (declared at top of function when only used in
+  a single control statement, for example).
+  
+printz sent a small list of warnings from OS X compile that needed addressing
+(printf security, incorrect formatting characters, and a signed-vs-unsigned 
+problem in the new wave sound format reader).
+
+Researched possible solutions to D_DDTBLU no longer looping correctly. It seems
+that inserting an all-notes-off event at the end of each MIDI track in the
+converted MUS data will emulate the behavior of DMX with respect to program
+loops without introducing any issues, at least for the stock MUS lumps. I am not
+entirely confident that this isn't overkill, but, I'll leave it be as the 
+solution for now until somebody complains about finding a WAD with broken music.
+
+--------------------------------------------------------------------------------
+12/29/13
+
+A major announcement is that starting with r2790, the Eternity Engine is now
+under the GNU General Public License v3.0. This is mostly prompted by increasing
+interest in porting of Doom to phone and tablet devices, many of which do not
+support free software development.
+
+I feel it would be grossly unfair to my team and I to have our work monetized on
+iPhone and then be unable to compile our own competing version of the program
+without paying Apple's developer tax and then being subject to their highly
+objectionable terms of service, which include the ability to revoke your license
+to develop at any time, including because you competed with their own products
+(or one of their select friends' products) too much.
+
+The basic freedoms that were intended to be protected by the GPL are not met 
+under those kinds of conditions, on what I like to call "prison platforms."
+
+By transitioning to the GPLv3, Eternity gains the following:
+
+* Protection from TiVoization (the above phenomenon of being locked to a
+  private developer code signing key).
+
+* Ability to specify that we desire proper recognition when our work is used
+  in other ports, even if the terms are legally removable from the license.
+  
+* Exclusion from the GPLv2's outdated allowance for requiring a written request
+  for the source code. GPLv3 only allows this when the product is being 
+  distributed on a physical medium, where such a restriction may actually make
+  sense based on the medium's storage capacity for example. This has been
+  abused by some non-mainstream devs in the Doom community against projects
+  such as Chocolate Doom and is deeply disturbing to me as it represents, from
+  my POV, an attempt to restrict distribution of the source code by making it
+  needlessly inconvenient to obtain. There's no valid reason for this in the
+  age of file sharing, online storage, and universal broadband.
+  
+Now, in order to avoid creating unnecessary schisms in the community, where the
+vast majority of projects are still GPLv2, I've also added an additional 
+permission clause for what I term "license reciprocity." This means if I use 
+your GPLv2 code, and your personal team isn't violating the spirit of the GPLv3
+(ie. by publishing locked down iPhone versions) then you're free to adapt back
+any changes I make to your code *without* upgrading to GPLv3.
+
+These terms do not survive (ie. once you back adapt the code, it is just under
+plain jane GPLv2 again). This does mean somebody else can then take your 
+project and use parts of my code in ways against my wishes, but since that 
+isn't *your* fault you can't be punished for it. I'd just encourage more
+projects to follow suit and convert up to the newest version of the GPL.
+
+As for original code written by Team Eternity, permission will virtually always
+be granted to use it under GPLv2 if such permission is properly requested either
+verbally or in writing. Just taking the code and using it without getting 
+permission is not acceptable though. Please talk to me about it.  
+
+--------------------------------------------------------------------------------
+12/28/13
+
+I converted MBFHelperDog's definitions to use DECORATE state format.
+
+--------------------------------------------------------------------------------
+12/27/13
+
+In advance of further support for Heretic, Hexen, and Strife, I have defined
+functions which remap doomednums for all of those games into the 7000 range, 
+which is pretty much fully allocated at this point for translation purposes.
+
+I also allocated the low end of the unused 6000 range to "reverse translation" 
+of Doom's objects, so that they are available in all games by non-conflicting 
+numbers in this range. For example, an Archvile could be spawned in Heretic, 
+Hexen, or Strife by using doomednum 6064 instead of 64. Objects in the 2000 and
+3000 range fall under 6200 and 6300 respectively.
+
+--------------------------------------------------------------------------------
 12/25/13
 
 Fixed the ability to play back internal demos using -playdemo on the command
@@ -12,6 +208,35 @@ existence.
 
 Demos have always been allowed to float through the initial loading check and
 then cause an error later if they're not found when they actually start to play.
+
+Removed my old half-finished attempt at generalizing the SMMU LevelInfo system
+so that it could store multiple definitions in memory and push them to the 
+active LevelInfo object, which was part of a plan to support Hexen MAPINFO 
+which was active around June 2010 when I got hired at the tribe. The shift in my
+routines threw off EE development for about 2 months and that project basically
+was ruined. Either way, I have different ideas on how to support Hexen MAPINFO
+now.
+
+While testing the above using vapordemo to make sure I didn't break anything, I
+found several problems suddenly surfaced in the portal system:
+
+* When portal groups are setup, the scan done for Mobjs in sectors needs to scan
+  the thinker list for all objects in that sector, NOT the sector's touching
+  thinglist. Otherwise, MF_NOSECTOR objects get skipped and, since these include
+  such things as MapSpots and Ambience, which can play sounds, that's bad. They
+  need valid groupids.
+  
+* Mobjs cannot clear groupid when they are removed, because they may continue to
+  be referenced by things that still target them. This would cause invalid group
+  lookups when those objects tried to get the position of their targets.
+  
+* SoM had a bit of a hack going where the link getting functions were inline
+  conditionally on RANGECHECK. I don't like that because having two copies of 
+  the functions creates the possibility of them going out of sync. I removed the
+  inlines, as I don't think it's performance critical enough to warrant being
+  inline in the first place. I also changed the way invalid group lookup 
+  warning messages work, so that they go to the console rather than the player
+  message widget.
 
 --------------------------------------------------------------------------------
 12/24/13
