@@ -952,6 +952,8 @@ typedef enum
    area_above
 } area_t;
 
+bool r_boomcolormaps;
+
 //
 // R_SectorColormap
 //
@@ -964,7 +966,12 @@ void R_SectorColormap(sector_t *s)
 {
    int cm = 0;
    area_t viewarea;
-   
+
+   // haleyjd: Under BOOM logic, the view sector determines the colormap of
+   // all sectors in view. This is supported for backward compatibility.
+   if(r_boomcolormaps)
+      s = view.sector;
+
    if(s->heightsec == -1)
       viewarea = area_normal;
    else
@@ -996,7 +1003,6 @@ void R_SectorColormap(sector_t *s)
 
    if(viewplayer->fixedcolormap)
    {
-      int i;
       // killough 3/20/98: localize scalelightfixed (readability/optimization)
       static lighttable_t *scalelightfixed[MAXLIGHTSCALE];
 
@@ -1005,7 +1011,7 @@ void R_SectorColormap(sector_t *s)
         
       walllights = scalelightfixed;
 
-      for(i = 0; i < MAXLIGHTSCALE; ++i)
+      for(int i = 0; i < MAXLIGHTSCALE; i++)
          scalelightfixed[i] = fixedcolormap;
    }
    else
@@ -1286,6 +1292,7 @@ VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
 VARIABLE_BOOLEAN(r_swirl, NULL,                     onoff);
 VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);
 VARIABLE_BOOLEAN(autodetect_hom, NULL,              yesno);
+VARIABLE_TOGGLE(r_boomcolormaps, NULL,              onoff);
 
 // SoM: Variable FOV
 VARIABLE_INT(fov, NULL, 20, 179, NULL);
@@ -1405,6 +1412,8 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
 {
    R_DoomTLStyle();
 }
+
+CONSOLE_VARIABLE(r_boomcolormaps, r_boomcolormaps, 0) {}
 
 CONSOLE_COMMAND(r_changesky, 0)
 {
