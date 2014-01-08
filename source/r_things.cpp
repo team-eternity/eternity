@@ -1135,15 +1135,15 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
                       (psp->sy - spritetopoffset[lump]);
 
-   vis->x1 = x1 < 0.0f ? 0 : (int)x1;
-   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
-   vis->colour = 0;      // sf: default colourmap
+   vis->x1           = x1 < 0.0f ? 0 : (int)x1;
+   vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
+   vis->colour       = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
-   vis->footclip = 0; // haleyjd
-   vis->scale = view.pspriteyscale;
-   vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
-   vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
-   vis->sector = viewplayer->mo->subsector->sector - sectors;
+   vis->footclip     = 0; // haleyjd
+   vis->scale        = view.pspriteyscale;
+   vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
+   vis->ybottom      = vis->ytop + (spriteheight[lump] * vis->scale);
+   vis->sector       = view.sector - sectors;
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
    if(flip)
@@ -1200,7 +1200,7 @@ static void R_DrawPSprite(pspdef_t *psp)
 //
 // R_DrawPlayerSprites
 //
-static void R_DrawPlayerSprites(void)
+static void R_DrawPlayerSprites()
 {
    int i, lightnum;
    pspdef_t *psp;
@@ -1210,14 +1210,13 @@ static void R_DrawPlayerSprites(void)
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
    
-   R_SectorColormap(viewplayer->mo->subsector->sector);
+   R_SectorColormap(view.sector);
 
    // get light level
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
    // (see r_bsp.c for similar calculations for non-player sprites)
 
-   R_FakeFlat(viewplayer->mo->subsector->sector, &tmpsec,
-              &floorlightlevel, &ceilinglightlevel, 0);
+   R_FakeFlat(view.sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, 0);
    lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
                  + (extralight * LIGHTBRIGHT);
 
