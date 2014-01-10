@@ -34,6 +34,7 @@
 #include "i_system.h"
 
 #include "autopalette.h"
+#include "d_deh.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
@@ -751,6 +752,9 @@ static missioninfo_t gmFinalTNT =
    NULL,               // creditBackgroundOR
    NULL,               // consoleBackOR
    demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
+   NULL,               // interPicOR
+   NULL,               // exitRulesOR
+   mapnamest,          // levelNamesOR
 };
 
 //
@@ -774,6 +778,9 @@ static missioninfo_t gmFinalPlutonia =
    NULL,               // creditBackgroundOR
    NULL,               // consoleBackOR
    demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
+   NULL,               // interPicOR
+   NULL,               // exitRulesOR
+   mapnamesp,          // levelNamesOR
 };
 
 //
@@ -979,6 +986,8 @@ static gamemodeinfo_t giDoomSW =
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
    DOOMCardNames,    // cardNames
+   mapnames,         // levelNames
+   P_DoomDefaultLevelName, // GetLevelName
 
    &DoomStatusBar,   // StatusBar
 
@@ -1083,6 +1092,8 @@ static gamemodeinfo_t giDoomReg =
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
    DOOMCardNames,    // cardNames
+   mapnames,         // levelNames
+   P_DoomDefaultLevelName, // GetLevelName
 
    &DoomStatusBar,   // StatusBar
 
@@ -1187,6 +1198,8 @@ static gamemodeinfo_t giDoomRetail =
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
    DOOMCardNames,    // cardNames
+   mapnames,         // levelNames
+   P_DoomDefaultLevelName, // GetLevelName
 
    &DoomStatusBar,   // StatusBar
 
@@ -1291,6 +1304,8 @@ static gamemodeinfo_t giDoomCommercial =
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
    DOOMCardNames,    // cardNames
+   mapnames2,        // levelNames
+   P_Doom2DefaultLevelName, // GetLevelName
 
    &DoomStatusBar,   // StatusBar
 
@@ -1395,6 +1410,8 @@ static gamemodeinfo_t giHereticSW =
    35,               // whiteIndex
    3,                // numHUDKeys
    HticCardNames,    // cardNames
+   mapnamesh,        // levelNames
+   P_HticDefaultLevelName, // GetLevelName
 
    &HticStatusBar,   // StatusBar
 
@@ -1503,6 +1520,8 @@ static gamemodeinfo_t giHereticReg =
    35,               // whiteIndex
    3,                // numHUDKeys
    HticCardNames,    // cardNames
+   mapnamesh,        // levelNames
+   P_HticDefaultLevelName, // GetLevelName
 
    &HticStatusBar,   // StatusBar
 
@@ -1616,6 +1635,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(consoleBack,      NULL);
    OVERRIDE(interPic,         NULL);
    OVERRIDE(exitRules,        NULL);
+   OVERRIDE(levelNames,       NULL);
    
    // Note: demostates are not overridden here, see below.
 }

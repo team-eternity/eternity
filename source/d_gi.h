@@ -37,6 +37,7 @@
 
 struct default_or_t;
 struct interfns_t;
+struct levelnamedata_t;
 struct menu_t;
 struct musicinfo_t;
 struct stbarfns_t;
@@ -300,6 +301,7 @@ struct missioninfo_t
    const demostate_t *demoStatesOR;  // if not NULL, overrides demostates
    const char   *interPicOR;         // if not NULL, overrides interPic
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
+   const char  **levelNamesOR;       // if not NULL, overrides levelNames
 };
 
 // function pointer types
@@ -307,6 +309,7 @@ typedef int  (*gimusformapfn_t)();
 typedef int  (*gimuscheatfn_t )(const char *);
 typedef void (*ginewgamefn_t  )();
 typedef int  (*gipartimefn_t  )(int, int);
+typedef void (*gilevelnamefn_t)(levelnamedata_t &);
 
 //
 // gamemodeinfo_t
@@ -375,6 +378,8 @@ struct gamemodeinfo_t
    unsigned char whiteIndex;      // palette index for white {255,255,255}
    int numHUDKeys;                // number of keys to show in HUD
    const char **cardNames;        // names of default key card artifact types
+   const char **levelNames;       // default level name BEX mnemonic array, if any
+   gilevelnamefn_t GetLevelName;  // default level name function
 
    // Status bar
    stbarfns_t *StatusBar;         // status bar function set

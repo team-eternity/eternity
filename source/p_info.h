@@ -207,6 +207,12 @@ int P_DoomParTime(int episode, int map);
 int P_Doom2ParTime(int episode, int map);
 int P_NoParTime(int episode, int map);
 
+struct levelnamedata_t;
+
+void P_DoomDefaultLevelName(levelnamedata_t &lnd);
+void P_Doom2DefaultLevelName(levelnamedata_t &lnd);
+void P_HticDefaultLevelName(levelnamedata_t &lnd);
+
 #endif
 
 // EOF

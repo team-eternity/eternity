@@ -927,6 +927,12 @@
     <ClCompile Include="..\source\s_formats.cpp">
       <Filter>Source Files\S_\S_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\hal\i_timer.cpp">
+      <Filter>Source Files\HAL\HAL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdltimer.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1648,6 +1654,12 @@
     </ClInclude>
     <ClInclude Include="..\source\p_sector.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hal\i_timer.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\sdl\i_sdltimer.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

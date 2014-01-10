@@ -58,6 +58,7 @@
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
+#include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_sound.h"
 #include "i_system.h"
@@ -431,7 +432,7 @@ static void D_showDrawnFPS()
    vfont_t *font;
    char msg[64];
    
-   accms += (curms = I_GetTicks()) - lastms;
+   accms += (curms = i_haltimer.GetTicks()) - lastms;
    lastms = curms;
    ++frames;
 
@@ -572,7 +573,7 @@ static uint64_t     display_accumulator;
 //
 static void D_initDisplayTime()
 {
-   display_prev_time   = I_GetTicks();
+   display_prev_time   = i_haltimer.GetTicks();
    display_accumulator = DT;
 }
 
@@ -586,7 +587,7 @@ void D_Display(int tics)
       return;
 
    fixed_t lerp         = FRACUNIT;
-   auto    current_time = I_GetTicks();
+   auto    current_time = i_haltimer.GetTicks();
    auto    frame_time   = current_time - display_prev_time;
    display_prev_time    = current_time;
 
@@ -698,17 +699,17 @@ void D_Display(int tics)
             
             do
             {
-               int starttime = I_GetTime();
+               int starttime = i_haltimer.GetTime();
                int tics = 0;
                
                Wipe_Drawer();
                
                do
                {
-                  tics = I_GetTime() - starttime;
+                  tics = i_haltimer.GetTime() - starttime;
 
                   // haleyjd 06/16/09: sleep to avoid hogging 100% CPU
-                  I_Sleep(1);
+                  i_haltimer.Sleep(1);
                }
                while(!tics);
                

@@ -432,6 +432,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\hal\i_directory.cpp" />
+    <ClCompile Include="..\source\hal\i_timer.cpp" />
     <ClCompile Include="..\Source\hu_frags.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -463,6 +464,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
     <ClCompile Include="..\source\v_image.cpp" />
@@ -1288,6 +1290,7 @@
     <ClInclude Include="..\Source\g_game.h" />
     <ClInclude Include="..\Source\g_gfs.h" />
     <ClInclude Include="..\source\hal\i_directory.h" />
+    <ClInclude Include="..\source\hal\i_timer.h" />
     <ClInclude Include="..\Source\Hu_frags.h" />
     <ClInclude Include="..\Source\Hu_over.h" />
     <ClInclude Include="..\Source\Hu_stuff.h" />
@@ -1300,6 +1303,7 @@
     <ClInclude Include="..\source\m_ctype.h" />
     <ClInclude Include="..\source\p_sector.h" />
     <ClInclude Include="..\source\r_interpolate.h" />
+    <ClInclude Include="..\source\sdl\i_sdltimer.h" />
     <ClInclude Include="..\source\s_formats.h" />
     <ClInclude Include="..\source\s_reverb.h" />
     <ClInclude Include="..\source\v_image.h" />

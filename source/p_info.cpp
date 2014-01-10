@@ -590,11 +590,13 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 
 // automap name macros (moved from hu_stuff.c)
 
+/*
 #define HU_TITLE  (mapnames[(gameepisode-1)*9+gamemap-1])
 #define HU_TITLE2 (mapnames2[gamemap-1])
 #define HU_TITLEP (mapnamesp[gamemap-1])
 #define HU_TITLET (mapnamest[gamemap-1])
 #define HU_TITLEH (mapnamesh[(gameepisode-1)*9+gamemap-1])
+*/
 
 enum SynthType_e
 {
@@ -605,8 +607,14 @@ enum SynthType_e
 
 static const char *synthNames[SYNTH_NUMTYPES] =
 {
-   "%s: new level",
-   "%s: hidden level"
+   "%s: New Level",
+   "%s: Hidden Level"
+};
+
+struct levelnamedata_t
+{
+   const char  *bexName;   // BEX mnemonic to use
+   SynthType_e  synthType; // synthesis type to use
 };
 
 //
@@ -653,26 +661,28 @@ static void P_BFGNameHacks()
 }
 
 //
-// P_InfoDefaultLevelName
+// P_DoomDefaultLevelName
 //
-// Figures out the name to use for this map.
-// Moved here from hu_stuff.c
+// GameModeInfo routine for DOOM gamemode default level names.
 //
-static void P_InfoDefaultLevelName()
+void P_DoomDefaultLevelName(levelnamedata_t &lnd)
 {
-   const char    *bexname      = NULL;
-   bool           deh_modified = false;
-   SynthType_e    synthType    = SYNTH_NEWLEVEL;
-   int            d2upperbound = 32;
-   missioninfo_t *missionInfo  = GameModeInfo->missionInfo;
-   
-
-   // if we have a current metainfo, use its level name
-   if(curmetainfo)
+   if(isExMy(gamemapname) &&
+      gameepisode > 0 && gameepisode <= GameModeInfo->numEpisodes &&
+      gamemap > 0 && gamemap <= 9)
    {
-      LevelInfo.levelName = curmetainfo->levelname;
-      return;
+      lnd.bexName = GameModeInfo->levelNames[(gameepisode-1)*9+gamemap-1];
    }
+}
+
+//
+// P_Doom2DefaultLevelName
+//
+// GameModeInfo routine for DOOM II default level names.
+//
+void P_Doom2DefaultLevelName(levelnamedata_t &lnd)
+{
+   int d2upperbound = 32;
 
    // haleyjd 04/29/13: a couple hacks for BFG Edition authenticity
    P_BFGNameHacks();
@@ -684,38 +694,61 @@ static void P_InfoDefaultLevelName()
       d2upperbound = 33;
 
    if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
+      lnd.bexName = GameModeInfo->levelNames[gamemap-1];
+   
+}
+
+//
+// P_HticDefaultLevelName
+//
+// GameModeInfo routine for Heretic default level names.
+//
+void P_HticDefaultLevelName(levelnamedata_t &lnd)
+{
+   int maxEpisode = GameModeInfo->numEpisodes;
+
+   if(isExMy(gamemapname) &&
+      gameepisode > 0 && gameepisode <= maxEpisode &&
+      gamemap > 0 && gamemap <= 9)
    {
-      // DOOM II
-      bexname = missionInfo->id == pack_tnt  ? HU_TITLET :
-                missionInfo->id == pack_plut ? HU_TITLEP : HU_TITLE2;
+      // For Heretic, the last episode isn't "real" and contains
+      // "secret" levels -- a name is synthesized for those
+      // 10/10/05: don't catch shareware here
+      if(maxEpisode == 1 || gameepisode < maxEpisode)
+         lnd.bexName = GameModeInfo->levelNames[(gameepisode-1)*9+gamemap-1];
+      else
+         lnd.synthType = SYNTH_HIDDENLEVEL; // put "hidden level"
    }
-   else if(isExMy(gamemapname) &&
-           gameepisode > 0 && gameepisode <= GameModeInfo->numEpisodes &&
-           gamemap > 0 && gamemap <= 9)
+}
+
+//
+// P_InfoDefaultLevelName
+//
+// Figures out the name to use for this map.
+// Moved here from hu_stuff.c
+//
+static void P_InfoDefaultLevelName()
+{
+   levelnamedata_t lnd = { NULL, SYNTH_NEWLEVEL };
+   bool deh_modified = false;
+
+   // if we have a current metainfo, use its level name
+   if(curmetainfo)
    {
-      if(GameModeInfo->type == Game_Heretic) // Heretic
-      {
-         int maxEpisode = GameModeInfo->numEpisodes;
-         
-         // For Heretic, the last episode isn't "real" and contains
-         // "secret" levels -- a name is synthesized for those
-         // 10/10/05: don't catch shareware here
-         if(maxEpisode == 1 || gameepisode < maxEpisode)
-            bexname = HU_TITLEH;            
-         else
-            synthType = SYNTH_HIDDENLEVEL; // put "hidden level"
-      }
-      else // DOOM
-         bexname = HU_TITLE;         
+      LevelInfo.levelName = curmetainfo->levelname;
+      return;
    }
 
-   if(bexname)
-      deh_modified = DEH_StringChanged(bexname);
+   // invoke gamemode-specific retrieval function
+   GameModeInfo->GetLevelName(lnd);
 
-   if((newlevel && !deh_modified) || !bexname)
-      SynthLevelName(synthType);
+   if(lnd.bexName)
+      deh_modified = DEH_StringChanged(lnd.bexName);
+
+   if((newlevel && !deh_modified) || !lnd.bexName)
+      SynthLevelName(lnd.synthType);
    else
-      LevelInfo.levelName = DEH_String(bexname);
+      LevelInfo.levelName = DEH_String(lnd.bexName);
 }
 
 #define NUMMAPINFOSOUNDS 10

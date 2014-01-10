@@ -41,6 +41,7 @@
 #include "f_wipe.h"
 #include "g_dmflag.h"
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "m_random.h"
 #include "mn_engin.h"
 #include "i_net.h"
@@ -293,7 +294,7 @@ void NetUpdate()
    int gameticdiv;
    
    // check time
-   nowtime = I_GetTime() / ticdup;
+   nowtime = i_haltimer.GetTime() / ticdup;
    newtics = nowtime - gametime;
    gametime = nowtime;
    
@@ -382,9 +383,9 @@ static void CheckAbort()
 {
    int stoptic;
    
-   stoptic = I_GetTime() + 2; 
+   stoptic = i_haltimer.GetTime() + 2; 
    
-   while(I_GetTime() < stoptic)
+   while(i_haltimer.GetTime() < stoptic)
       if(I_CheckAbort())
          I_ExitWithMessage("Network game synchronisation aborted.\n");
 }
@@ -598,7 +599,7 @@ void D_QuitNetGame()
          if(nodeingame[j])
             HSendPacket(j, NCMD_EXIT);
       }
-      I_WaitVBL(1);
+      i_haltimer.Sleep(15);
    }  
 }
 
@@ -655,7 +656,7 @@ static int RunGameTics()
    int         numplaying;
 
    // get real tics            
-   entertic = I_GetTime() / ticdup;
+   entertic = i_haltimer.GetTime() / ticdup;
    realtics = entertic - oldentertic;
    oldentertic = entertic;
   
@@ -760,7 +761,7 @@ static int RunGameTics()
       }
       
       // Sleep until a tic is available, so we don't hog the CPU.
-      I_Sleep(1);
+      i_haltimer.Sleep(1);
 
       return 0;
    }
@@ -817,7 +818,7 @@ int TryRunTics()
 
    do
    {
-      entertic = I_GetTime() / ticdup;
+      entertic = i_haltimer.GetTime() / ticdup;
       realtics = entertic - oldentertic;
       oldentertic = entertic;
 

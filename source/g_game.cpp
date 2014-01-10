@@ -29,8 +29,9 @@
 #include "z_zone.h"
 #include "i_system.h"
 
-// Need gamepad HAL
+// Need gamepad and timer HALs
 #include "hal/i_gamepads.h"
+#include "hal/i_timer.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
@@ -1236,7 +1237,7 @@ void G_DoPlayDemo(void)
       static int first = 1;
       if(first)
       {
-         starttime = I_GetTime_RealTime();
+         starttime = i_haltimer.GetRealTime();
          startgametic = gametic;
          first = 0;
       }
@@ -3400,7 +3401,7 @@ bool G_CheckDemoStatus()
 
    if(timingdemo)
    {
-      int endtime = I_GetTime_RealTime();
+      int endtime = i_haltimer.GetRealTime();
 
       // killough -- added fps information and made it work for longer demos:
       unsigned int realtics = endtime - starttime;
