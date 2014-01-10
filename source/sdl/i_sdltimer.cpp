@@ -32,6 +32,7 @@
 
 #include "../doomdef.h"
 #include "../doomstat.h"
+#include "../m_compare.h"
 
 //=============================================================================
 //
@@ -46,8 +47,14 @@ static Uint32 basetime = 0;
 //
 static int I_SDLGetTime_RealTime()
 {
+   Uint32 t = SDL_GetTicks();
+
+   // e6y: removing startup delay
+   if(!basetime)
+      basetime = t;
+
    // milliseconds since SDL initialization
-   return ((SDL_GetTicks() - basetime) * TICRATE) / 1000;
+   return (int)(((t - basetime) * TICRATE) / 1000);
 }
 
 //
@@ -82,10 +89,90 @@ static unsigned int I_SDLGetTicks()
 //
 // haleyjd: routine to sleep a fixed number of milliseconds.
 //
-void I_SDLSleep(int ms)
+static void I_SDLSleep(int ms)
 {
    SDL_Delay(ms);
 }
+
+//=============================================================================
+//
+// Interpolation
+//
+
+static unsigned int start_displaytime;
+static unsigned int displaytime;
+
+static unsigned int rendertic_start;
+static unsigned int rendertic_step;
+static unsigned int rendertic_next;
+static float        rendertic_msec;
+
+//
+// I_SDLSetMSec
+//
+// Module private.
+// Set the value for milliseconds per render frame.
+//
+static void I_SDLSetMSec()
+{
+   rendertic_msec = (float)realtic_clock_rate * TICRATE / 100000.0f;
+}
+
+//
+// I_SDLGetTimeFrac
+//
+// Calculate the fractional multiplier for interpolating the current frame.
+//
+static fixed_t I_SDLGetTimeFrac()
+{
+   fixed_t frac = FRACUNIT;
+
+   if(!singletics && rendertic_step != 0)
+   {
+      unsigned int now = SDL_GetTicks();
+      frac = (fixed_t)((now - rendertic_start + displaytime) * FRACUNIT / rendertic_step);
+      frac = eclamp(frac, 0, FRACUNIT);
+   }
+
+   return frac;
+}
+
+//
+// I_SDLStartDisplay
+//
+// Calculate the starting display time and return the interpolation multiplier.
+//
+static void I_SDLStartDisplay()
+{
+   start_displaytime = SDL_GetTicks();
+}
+
+//
+// I_SDLEndDisplay
+//
+// Calculate the ending display time.
+//
+static void I_SDLEndDisplay()
+{
+   displaytime = SDL_GetTicks() - start_displaytime;
+}
+
+//
+// I_SDLSaveMS
+//
+// Update interpolation state variables at the end of gamesim logic.
+//
+static void I_SDLSaveMS()
+{
+   rendertic_start = SDL_GetTicks();
+   rendertic_next  = (unsigned int)((rendertic_start * rendertic_msec + 1.0f) / rendertic_msec);
+   rendertic_step  = rendertic_next - rendertic_start;
+}
+
+//=============================================================================
+//
+// Global Interface
+//
 
 //
 // I_SDLInitTimer
@@ -94,8 +181,6 @@ void I_SDLSleep(int ms)
 //
 void I_SDLInitTimer()
 {
-   basetime = SDL_GetTicks();
-
    // initialize GetTime, which gets time in gametics
    // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
    if(fastdemo)
@@ -108,10 +193,16 @@ void I_SDLInitTimer()
          i_haltimer.GetTime = I_SDLGetTime_RealTime;
    }
 
+   I_SDLSetMSec();
+
    // initialize constant methods
-   i_haltimer.GetRealTime = I_SDLGetTime_RealTime;
-   i_haltimer.GetTicks    = I_SDLGetTicks;
-   i_haltimer.Sleep       = I_SDLSleep;
+   i_haltimer.GetRealTime  = I_SDLGetTime_RealTime;
+   i_haltimer.GetTicks     = I_SDLGetTicks;
+   i_haltimer.Sleep        = I_SDLSleep;
+   i_haltimer.StartDisplay = I_SDLStartDisplay;
+   i_haltimer.EndDisplay   = I_SDLEndDisplay;
+   i_haltimer.GetFrac      = I_SDLGetTimeFrac;
+   i_haltimer.SaveMS       = I_SDLSaveMS;
 }
 
 //
@@ -128,6 +219,8 @@ void I_SDLChangeClockRate()
       i_haltimer.GetTime = I_SDLGetTime_Scaled;
    else
       i_haltimer.GetTime = I_SDLGetTime_RealTime;
+
+   I_SDLSetMSec();
 }
 
 // EOF

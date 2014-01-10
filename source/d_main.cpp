@@ -562,53 +562,16 @@ void D_DrawWings()
    }
 }
 
-#define DT (1000LL * 1000LL * 1000LL / TICRATE)
-static unsigned int display_prev_time;
-static uint64_t     display_accumulator;
-
-//
-// D_initDisplayTime
-//
-// Initialize variables related to interpolation.
-//
-static void D_initDisplayTime()
-{
-   display_prev_time   = i_haltimer.GetTicks();
-   display_accumulator = DT;
-}
-
 //
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
-void D_Display(int tics)
+void D_Display()
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
 
-   fixed_t lerp         = FRACUNIT;
-   auto    current_time = i_haltimer.GetTicks();
-   auto    frame_time   = current_time - display_prev_time;
-   display_prev_time    = current_time;
-
-   frame_time = emin(frame_time, 1000u/35u);
-
-   display_accumulator += (uint64_t)frame_time * 1000000LL;
-
-   if(tics < 0)
-      tics = 0;
-   
-   // subtract DT for every tic that was run by TryRunTics
-   uint64_t ticstime = (uint64_t)tics * DT;
-   if(ticstime < display_accumulator)
-      display_accumulator -= ticstime;
-   else
-      display_accumulator = 0;
-   
-   // when interpolating, calculate linear interpolation factor
-   if(d_fastrefresh && d_interpolate &&  
-      !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame)))
-      lerp = eclamp((fixed_t)(display_accumulator * FRACUNIT / DT), 0, FRACUNIT);
+   i_haltimer.StartDisplay();
 
    if(setsizeneeded)            // change the view size if needed
    {
@@ -644,7 +607,7 @@ void D_Display(int tics)
          else
          {
             R_DrawViewBorder();    // redraw border
-            R_RenderPlayerView(&players[displayplayer], camera, lerp);
+            R_RenderPlayerView(&players[displayplayer], camera);
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -726,7 +689,6 @@ void D_Display(int tics)
                   Wipe_BlitEndScreen();
             }
             while(inwipe);
-            D_initDisplayTime(); // reset interpolation
          }
          else
             Wipe_Drawer();
@@ -753,6 +715,8 @@ void D_Display(int tics)
 #endif
    
    I_FinishUpdate();              // page flip or blit buffer
+
+   i_haltimer.EndDisplay();
 }
 
 //=============================================================================
@@ -1930,8 +1894,6 @@ static void D_DoomInit()
 //
 void D_DoomMain()
 {
-   int tics;
-
    D_DoomInit();
 
    oldgamestate = wipegamestate = gamestate;
@@ -1940,21 +1902,19 @@ void D_DoomMain()
    if(autostart)
       oldgamestate = GS_NOSTATE;
 
-   D_initDisplayTime();
-
    // killough 12/98: inlined D_DoomLoop
    while(1)
    {
       // frame synchronous IO operations
       I_StartFrame();
 
-      tics = TryRunTics();
+      TryRunTics();
 
       // killough 3/16/98: change consoleplayer to displayplayer
       S_UpdateSounds(players[displayplayer].mo); // move positional sounds
 
       // Update display, next frame, with current state.
-      D_Display(tics);
+      D_Display();
 
       // Sound mixing for the buffer is synchronous.
       I_UpdateSound();

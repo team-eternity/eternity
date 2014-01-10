@@ -780,6 +780,7 @@ static int RunGameTics()
             I_Error("gametic>lowtic\n");
          if(advancedemo)
             D_DoAdvanceDemo();
+         i_haltimer.SaveMS();
          G_Ticker();
          gametic++;
          ticsrun++;

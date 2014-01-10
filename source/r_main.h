@@ -99,7 +99,7 @@ void R_SectorColormap(sector_t *s);
 struct camera_t;
 struct player_t;
 
-void R_RenderPlayerView(player_t *player, camera_t *viewcamera, fixed_t lerp);
+void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
 
 //
 // R_ResetFOV

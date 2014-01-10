@@ -36,6 +36,7 @@
 #include "doomstat.h"
 #include "e_things.h"
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_video.h"
 #include "m_bbox.h"
@@ -851,12 +852,25 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 }
 
 //
+// R_getLerp
+//
+static fixed_t R_getLerp()
+{
+   if(d_fastrefresh && d_interpolate &&
+      !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame)))
+      return i_haltimer.GetFrac();
+   else
+      return FRACUNIT;
+}
+
+//
 // R_SetupFrame
 //
-static void R_SetupFrame(player_t *player, camera_t *camera, fixed_t lerp)
+static void R_SetupFrame(player_t *player, camera_t *camera)
 {               
    fixed_t  pitch;
    fixed_t  viewheightfrac;
+   fixed_t  lerp = R_getLerp();
    
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
@@ -1036,12 +1050,12 @@ extern void R_UntaintPortals();
 //
 // Primary renderer entry point.
 //
-void R_RenderPlayerView(player_t* player, camera_t *camerapoint, fixed_t lerp)
+void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
    bool quake = false;
    unsigned int savedflags = 0;
 
-   R_SetupFrame(player, camerapoint, lerp);
+   R_SetupFrame(player, camerapoint);
    
    // haleyjd: untaint portals
    R_UntaintPortals();

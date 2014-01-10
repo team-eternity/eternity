@@ -26,6 +26,8 @@
 #ifndef I_TIMER_H__
 #define I_TIMER_H__
 
+#include "../m_fixed.h"
+
 //sf: made a #define, changed to 16
 #define CLOCK_BITS 16
 #define CLOCK_UNIT (1<<CLOCK_BITS)
@@ -38,6 +40,10 @@ typedef void         (*HAL_ChangeClockRateFunc)();
 typedef int          (*HAL_GetTimeFunc)();
 typedef unsigned int (*HAL_GetTicksFunc)();
 typedef void         (*HAL_SleepFunc)(int);
+typedef void         (*HAL_StartDisplayFunc)();
+typedef void         (*HAL_EndDisplayFunc)();
+typedef fixed_t      (*HAL_GetFracFunc)();
+typedef void         (*HAL_SaveMSFunc)();
 
 //
 // HALTimer
@@ -53,6 +59,10 @@ struct HALTimer
    HAL_GetTimeFunc         GetRealTime;     // get time in gametics regardless of scaling
    HAL_GetTicksFunc        GetTicks;        // get time in milliseconds
    HAL_SleepFunc           Sleep;           // sleep for time in milliseconds
+   HAL_StartDisplayFunc    StartDisplay;    // call at beginning of drawing for interpolation
+   HAL_EndDisplayFunc      EndDisplay;      // call at end of drawing for interpolation
+   HAL_GetFracFunc         GetFrac;         // get fractional interpolation multiplier
+   HAL_SaveMSFunc          SaveMS;          // save timing data at end of gametic processing
 };
 
 extern HALTimer i_haltimer;
