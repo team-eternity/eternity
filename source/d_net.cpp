@@ -642,10 +642,9 @@ extern bool advancedemo;
 //
 // RunGameTics
 //
-// Run new game tics.  Returns the number of tics run, or -1 if
-// returning early.
+// Run new game tics.
 //
-static int RunGameTics()
+static bool RunGameTics()
 {
    static int  oldentertic;
    int         lowtic;
@@ -686,7 +685,7 @@ static int RunGameTics()
   
    // haleyjd 09/07/10: enhanced d_fastrefresh w/early return when no tics to run
    if(counts <= 0 && d_fastrefresh && !timingdemo) // 10/03/10: not in timedemos!
-      return -1;
+      return false;
 
    if(counts < 1)
       counts = 1;
@@ -739,7 +738,7 @@ static int RunGameTics()
       G_Ticker();
       gametic++;
       maketic++;
-      return 1;
+      return true;
    }
 
    // sf: reorganised to stop doom locking up
@@ -763,13 +762,11 @@ static int RunGameTics()
       // Sleep until a tic is available, so we don't hog the CPU.
       i_haltimer.Sleep(1);
 
-      return 0;
+      return false;
    }
    
    opensocket_count = 0;
    opensocket = 0;
-
-   int ticsrun = 0;
 
    // run the count * ticdup tics
    while(counts--)
@@ -783,7 +780,6 @@ static int RunGameTics()
          i_haltimer.SaveMS();
          G_Ticker();
          gametic++;
-         ticsrun++;
          
          // modify command for duplicated tics
 
@@ -804,10 +800,10 @@ static int RunGameTics()
       NetUpdate();   // check for new console commands
    }
 
-   return ticsrun;
+   return true;
 }
 
-int TryRunTics()
+void TryRunTics()
 {
    static int oldentertic;
    int entertic, realtics;
@@ -843,8 +839,6 @@ int TryRunTics()
       game_advanced = RunGameTics();
    } 
    while(!d_fastrefresh && realtics <= 0 && !game_advanced);
-
-   return game_advanced;
 }
 
 /////////////////////////////////////////////////////

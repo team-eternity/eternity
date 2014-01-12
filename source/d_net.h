@@ -181,7 +181,7 @@ void D_QuitNetGame();
 void D_KickPlayer(int playernum);
 
 // how many ticks to run?
-int TryRunTics();
+void TryRunTics();
 
 extern bool d_fastrefresh;
 extern bool d_interpolate;
