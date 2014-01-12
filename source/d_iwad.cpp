@@ -548,7 +548,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
    &gi_path_tnt,    &gi_path_plut,                      // Final Doom
    &gi_path_hacx,                                       // HACX
    &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
-   &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // FreeDoom
+   &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // Freedoom
 };
 
 //

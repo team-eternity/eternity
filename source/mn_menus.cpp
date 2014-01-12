@@ -785,13 +785,13 @@ static menuitem_t mn_wadiwad2_items[] =
 
 static menuitem_t mn_wadiwad3_items[] =
 {
-   {it_title,    "Wad Options",           NULL,             "M_WADOPT"},
+   {it_title,    "Wad Options",             NULL,             "M_WADOPT"},
    {it_gap},
-   {it_info,     "IWAD Paths - Freedoom", NULL,             NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - Freedoom",   NULL,             NULL, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "Freedoom:",             "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
-   {it_variable, "Ultimate Freedoom:",    "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
-   {it_variable, "FreeDM:",               "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom Phase 1:",       "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom Phase 2:",       "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",                 "iwad_freedm",    NULL, MENUITEM_LALIGNED },
    {it_gap},
    {it_info,     "Mission Packs",           NULL,            NULL, MENUITEM_CENTERED },
    {it_gap}, 

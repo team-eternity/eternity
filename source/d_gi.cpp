@@ -107,9 +107,9 @@
 #define VNAME_UNKNOWN   "Unknown Game version. May not work."
 
 // FreeDoom/Blasphemer/Etc override names
-#define FNAME_DOOM_SW   "FreeDoom demo version"
-#define FNAME_DOOM_R    "FreeDoom version"
-#define FNAME_DOOM2     "FreeDoom II version"
+#define FNAME_DOOM_SW   "Freedoom Demo version"
+#define FNAME_DOOM_R    "Freedoom Phase 1 version"
+#define FNAME_DOOM2     "Freedoom Phase 2 version"
 
 // BFG Edition override names
 #define BFGNAME_DOOM    "Ultimate DOOM - BFG Edition version"
