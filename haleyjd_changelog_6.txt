@@ -2,6 +2,92 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+01/12/14
+
+Made interface changes to the IWAD picker, startup acknowledgment messages, and
+menus to call the two main Freedoom IWADs by their new names "Phase 1" and 
+"Phase 2", as opposed to Ultimate Freedoom and Freedoom.
+
+My solution to D_DDTBLU looping did turn out to be insufficient, both by being
+not good enough to cover Freedoom's D_RUNNIN, which has a stuck note on a
+different channel, and by being overkill by causing notes to potentially end 
+at the end of a song before they are supposed to end, such as in D_BUNNY.
+
+I corrected this by inserting the All Notes Off event with the proper channel
+number for each track (for some reason, mmus2mid generates a track for every
+MIDI channel it uses, one channel per track...) at the very beginning of songs,
+with time offset 0. This prevents it from interfering with normal playback of
+the program, but kills any notes that have hung over past a loop.
+
+Gearing up for 3.40.46 "Bifrost" release, I am finishing the last feature 
+slated for it, which is playsim and high-level sound engine support for the 
+reverb engine in the form of "sound environment zones," which will be partially
+compatible with ZDoom (the range of available effects is considerably smaller 
+and will not likely include any of the same presets).
+
+Done so far:
+
+* Sound zones are created at map load with a flood-fill-like algorithm over
+  the sectors by recursively walking through them to adjacent sectors which 
+  adjoin by 2S lines which are not marked as a boundary. Very similar to sound
+  propagation for alerting monsters.
+
+* The extended line flag EX_ML_ZONEBOUNDARY can be specified via ExtraData to
+  mark a line as a sound zone boundary.
+
+* A no-op ereverb_t structure with a reserved ID of 0 is defined and added to
+  the reverb hash during EDF processing. This default environment will cause 
+  the sound engine to turn off reverberation. A function is also provided for
+  getting the default environment directly without doing a hash lookup.
+  
+* EMAPINFO can override the default sound environment for all sectors in a map
+  by specifying defaultenvironment <id1> <id2>, where the two IDs that range
+  from 0 to 255 match the corresponding EDF reverb definition.
+  
+While working on the above I fixed two unrelated problems:
+
+* qstring::toLong was needlessly missing this-constness, possibly because it
+  uses a non-const char ** argument, which in my mind made it potentially
+  mutating, but, it's not. Use of the char ** to write into *after* the method
+  call returns would be mutating, and extremely ill-advised.
+
+* Found a place in the inventory system where a flag-style option was being
+  specified without the CFGF_SIGNPREFIX flag, meaning it wouldn't have allowed
+  use of + and - before the option name as was intended.
+
+--------------------------------------------------------------------------------
+01/11/14
+
+Reverted out some changes to the d_net core gameloop code which aren't needed
+for the new interpolation system (chiefly, returning the number of tics run 
+down from RunGameTics to TryRunTics and then to D_DoomLoop).
+
+I was alerted of adoption of new official alternate names for the Freedoom IWADs
+("freedoom1.wad" and "freedoom2.wad" respectively) and made alterations to EE
+so that it allows and prefers these names when searching for IWADs. The older
+unofficial names are still supported for now but are considered deprecated.
+
+--------------------------------------------------------------------------------
+01/10/14
+
+Due to architectural differences, the Odamex approach to interpolation wasn't
+behaving optimally in EE when the framerate would go below 35 fps, and would
+introduce a large amount of lag in the renderer. With some additional help from
+Kaiser, I adapted the approach he uses in Doom64 EX, which was originally based
+on prboom-plus's code.
+
+To do this I first introduced a HAL for timer implementation, which was a long-
+standing TODO on the path to getting everything that's done through SDL only
+abstracted behind the HAL. The HALTimer structure has function pointers that can
+be initialized by a timer driver implementation for interpolation calculations.
+This way the most accurate timing method available can be used on a per-platform
+basis.
+
+Implementing the Odamex approach first was still a very useful exercise, though,
+which made the re-implementation easier, having an understanding of the problem
+being solved.
+
+--------------------------------------------------------------------------------
 01/08/14
 
 Recoded portions of the renderer to get sector properties of the viewpoint from
