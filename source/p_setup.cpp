@@ -36,6 +36,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
+#include "e_reverbs.h"
 #include "e_ttypes.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -654,7 +655,14 @@ static void P_CreateSoundZones()
    // allocate soundzones
    soundzones = estructalloctag(soundzone_t, numsoundzones, PU_LEVEL);
    
-   // TODO: set all zones to level default reverb
+   // set all zones to level default reverb, or engine default if level default
+   // is not a valid reverb.
+   ereverb_t *defReverb;
+   if(!(defReverb = E_ReverbForID(LevelInfo.defaultEnvironment)))
+      defReverb = E_GetDefaultReverb();
+
+   for(int zonenum = 0; zonenum < numsoundzones; zonenum++)
+      soundzones[zonenum].reverb = defReverb;
 }
 
 //

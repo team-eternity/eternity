@@ -84,38 +84,38 @@ extern char gamemapname[9];
 // haleyjd: moved everything into the LevelInfo struct
 LevelInfo_t LevelInfo;
 
-static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel);
+static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum);
 
-static int  P_ParseInfoCmd(qstring *line, int cachelevel);
-static void P_ParseLevelVar(qstring *cmd, int cachelevel);
+static int  P_ParseInfoCmd(qstring *line);
+static void P_ParseLevelVar(qstring *cmd);
 
-static void P_ClearLevelVars(void);
-static void P_InitWeapons(void);
+static void P_ClearLevelVars();
+static void P_InitWeapons();
 
 // post-processing routine prototypes
-static void P_LoadInterTextLump(void);
-static void P_SetSky2Texture(void);
-static void P_SetParTime(void);
-static void P_SetInfoSoundNames(void);
-static void P_SetOutdoorFog(void);
+static void P_LoadInterTextLump();
+static void P_SetSky2Texture();
+static void P_SetParTime();
+static void P_SetInfoSoundNames();
+static void P_SetOutdoorFog();
 
 static char *P_openWadTemplate(const char *wadfile, int *len);
 static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor);
 
 // haleyjd 05/30/10: struct for info read from a metadata file
-typedef struct metainfo_s
+struct metainfo_t
 {
-   int level;             // level to use on
-   const char *levelname; // name
-   int partime;           // par time
-   const char *musname;   // music name
-   int nextlevel;         // next level #, only used if non-0
-   int nextsecret;        // next secret #, only used if non-0
-   bool finale;           // if true, sets LevelInfo.endOfGame
-   const char *intertext; // only used if finale is true
-   const char *interpic;  // interpic, if not NULL
-   int mission;           // if non-zero, only applies during a mission pack
-} metainfo_t;
+   int         level;      // level to use on
+   const char *levelname;  // name
+   int         partime;    // par time
+   const char *musname;    // music name
+   int         nextlevel;  // next level #, only used if non-0
+   int         nextsecret; // next secret #, only used if non-0
+   bool        finale;     // if true, sets LevelInfo.endOfGame
+   const char *intertext;  // only used if finale is true
+   const char *interpic;   // interpic, if not NULL
+   int         mission;    // if non-zero, only applies during a mission pack
+};
 
 static int nummetainfo, nummetainfoalloc;
 static metainfo_t *metainfo;
@@ -231,19 +231,16 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       {
          // reset the parser state
          readtype = RT_OTHER;
-         P_ParseLevelInfo(&wGlobalDir, (*wci)->selfindex, PU_LEVEL); // FIXME
+         P_ParseLevelInfo(&wGlobalDir, (*wci)->selfindex);
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
    }
 
-   // FIXME/TODO: eliminate code above and copy fields from global prototype
-   // if one exists.
-   
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
-   P_ParseLevelInfo(&wGlobalDir, lumpnum, PU_LEVEL); // FIXME
+   P_ParseLevelInfo(&wGlobalDir, lumpnum);
    
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
@@ -264,7 +261,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 //
 // Parses one individual MapInfo lump.
 //
-static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
+static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum)
 {
    qstring line;
    char *lump, *rover;
@@ -284,7 +281,6 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
-   // haleyjd 04/08/07: buffer overrun repaired!
    lump[size - 2] = '\n';
    lump[size - 1] = '\0';
 
@@ -296,7 +292,7 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
       {
          // hack for global MapInfo: if P_ParseInfoCmd returns -1,
          // we can break out of parsing early
-         if(P_ParseInfoCmd(&line, cachelevel) == -1)
+         if(P_ParseInfoCmd(&line) == -1)
             break;
          line.clear(); // clear line buffer
       }
@@ -315,7 +311,7 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 //
 // Parses a single line of a MapInfo lump.
 //
-static int P_ParseInfoCmd(qstring *line, int cachelevel)
+static int P_ParseInfoCmd(qstring *line)
 {
    unsigned int len;
    const char *label = NULL;
@@ -363,7 +359,7 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
    switch(readtype)
    {
    case RT_LEVELINFO:
-      P_ParseLevelVar(line, cachelevel);
+      P_ParseLevelVar(line);
       break;
 
    case RT_OTHER:
@@ -389,6 +385,7 @@ enum
    IVT_INT,
    IVT_BOOLEAN,
    IVT_FLAGS,
+   IVT_ENVIRONMENT,
    IVT_END
 };
 
@@ -409,69 +406,75 @@ struct levelvar_t
 // structure.
 //
 #define LI_STRING(name, enumval, field) \
-   { IVT_STRING, name, LI_FIELD_ ## enumval, \
-     (void *)(&(LevelInfo . field)), NULL }
+   { IVT_STRING, name, LI_FIELD_ ## enumval, (void *)(&(LevelInfo . field)), NULL }
+
 #define LI_STRNUM(name, enumval, field, extra) \
-   { IVT_STRNUM, name, LI_FIELD_ ## enumval, \
-     (void *)(&(LevelInfo . field)), &(extra) }
+   { IVT_STRNUM, name, LI_FIELD_ ## enumval, (void *)(&(LevelInfo . field)), &(extra) }
+
 #define LI_INTEGR(name, enumval, field) \
    { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
+
 #define LI_BOOLNF(name, enumval, field) \
    { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
+
 #define LI_FLAGSF(name, enumval, field, extra) \
-   { IVT_FLAGS, name, LI_FIELD_ ## enumval, \
-     &(LevelInfo . field), &(extra) }
+   { IVT_FLAGS, name, LI_FIELD_ ## enumval, &(LevelInfo . field), &(extra) }
+
+#define LI_ENVIRO(name, enumval, field) \
+   { IVT_ENVIRONMENT, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
+
 #define LI_END() \
    { IVT_END, NULL, LI_FIELD_NUMFIELDS, NULL, NULL }
 
 levelvar_t levelvars[]=
 {
-   LI_STRING("acsscript",       ACSSCRIPTLUMP,    acsScriptLump),
-   LI_STRING("altskyname",      ALTSKYNAME,       altSkyName),
-   LI_FLAGSF("boss-specials",   BOSSSPECS,        bossSpecs,        boss_flagset),
-   LI_STRING("colormap",        COLORMAP,         colorMap),
-   LI_STRING("creator",         CREATOR,          creator),
-   LI_BOOLNF("doublesky",       DOUBLESKY,        doubleSky),
-   LI_BOOLNF("edf-intername",   USEEDFINTERNAME,  useEDFInterName),
-   LI_BOOLNF("endofgame",       ENDOFGAME,        endOfGame),
-   LI_STRING("extradata",       EXTRADATA,        extraData),
-   LI_BOOLNF("finale-secret",   FINALESECRETONLY, finaleSecretOnly), 
-   LI_STRNUM("finaletype",      FINALETYPE,       finaleType,       finaleTypeVals),
-   LI_BOOLNF("fullbright",      USEFULLBRIGHT,    useFullBright),
-   LI_INTEGR("gravity",         GRAVITY,          gravity),
-   LI_STRING("inter-backdrop",  BACKDROP,         backDrop),
-   LI_STRING("intermusic",      INTERMUSIC,       interMusic),
-   LI_STRING("interpic",        INTERPIC,         interPic),
-   LI_STRING("intertext",       INTERTEXTLUMP,    interTextLump),
-   LI_BOOLNF("killfinale",      KILLFINALE,       killFinale),
-   LI_BOOLNF("killstats",       KILLSTATS,        killStats),
-   LI_STRING("levelname",       LEVELNAME,        levelName),
-   LI_STRING("levelpic",        LEVELPIC,         levelPic),
-   LI_STRING("levelpicnext",    NEXTLEVELPIC,     nextLevelPic),
-   LI_STRING("levelpicsecret",  NEXTSECRETPIC,    nextSecretPic),
-   LI_STRING("levelscript",     SCRIPTLUMP,       scriptLump),
-   LI_BOOLNF("lightning",       HASLIGHTNING,     hasLightning),
-   LI_STRING("music",           MUSICNAME,        musicName),
-   LI_STRING("nextlevel",       NEXTLEVEL,        nextLevel),
-   LI_STRING("nextsecret",      NEXTSECRET,       nextSecret),
-   LI_BOOLNF("noautosequences", NOAUTOSEQUENCES,  noAutoSequences),
-   LI_STRING("outdoorfog",      OUTDOORFOG,       outdoorFog),
-   LI_INTEGR("partime",         PARTIME,          partime),
-   LI_INTEGR("skydelta",        SKYDELTA,         skyDelta),
-   LI_INTEGR("sky2delta",       SKY2DELTA,        sky2Delta),
-   LI_STRING("skyname",         SKYNAME,          skyName),
-   LI_STRING("sky2name",        SKY2NAME,         sky2Name),
-   LI_STRING("sound-swtchn",    SOUNDSWTCHN,      sound_swtchn),
-   LI_STRING("sound-swtchx",    SOUNDSWTCHX,      sound_swtchx),
-   LI_STRING("sound-stnmov",    SOUNDSTNMOV,      sound_stnmov),
-   LI_STRING("sound-pstop",     SOUNDPSTOP,       sound_pstop),
-   LI_STRING("sound-bdcls",     SOUNDBDCLS,       sound_bdcls),
-   LI_STRING("sound-bdopn",     SOUNDBDOPN,       sound_bdopn),
-   LI_STRING("sound-dorcls",    SOUNDDORCLS,      sound_dorcls),
-   LI_STRING("sound-doropn",    SOUNDDOROPN,      sound_doropn),
-   LI_STRING("sound-pstart",    SOUNDPSTART,      sound_pstart),
-   LI_STRING("sound-fcmove",    SOUNDFCMOVE,      sound_fcmove),
-   LI_BOOLNF("unevenlight",     UNEVENLIGHT,      unevenLight),
+   LI_STRING("acsscript",          ACSSCRIPTLUMP,    acsScriptLump),
+   LI_STRING("altskyname",         ALTSKYNAME,       altSkyName),
+   LI_FLAGSF("boss-specials",      BOSSSPECS,        bossSpecs,         boss_flagset),
+   LI_STRING("colormap",           COLORMAP,         colorMap),
+   LI_STRING("creator",            CREATOR,          creator),
+   LI_ENVIRO("defaultenvironment", DEFENVIRONMENT,   defaultEnvironment),
+   LI_BOOLNF("doublesky",          DOUBLESKY,        doubleSky),
+   LI_BOOLNF("edf-intername",      USEEDFINTERNAME,  useEDFInterName),
+   LI_BOOLNF("endofgame",          ENDOFGAME,        endOfGame),
+   LI_STRING("extradata",          EXTRADATA,        extraData),
+   LI_BOOLNF("finale-secret",      FINALESECRETONLY, finaleSecretOnly), 
+   LI_STRNUM("finaletype",         FINALETYPE,       finaleType,        finaleTypeVals),
+   LI_BOOLNF("fullbright",         USEFULLBRIGHT,    useFullBright),
+   LI_INTEGR("gravity",            GRAVITY,          gravity),
+   LI_STRING("inter-backdrop",     BACKDROP,         backDrop),
+   LI_STRING("intermusic",         INTERMUSIC,       interMusic),
+   LI_STRING("interpic",           INTERPIC,         interPic),
+   LI_STRING("intertext",          INTERTEXTLUMP,    interTextLump),
+   LI_BOOLNF("killfinale",         KILLFINALE,       killFinale),
+   LI_BOOLNF("killstats",          KILLSTATS,        killStats),
+   LI_STRING("levelname",          LEVELNAME,        levelName),
+   LI_STRING("levelpic",           LEVELPIC,         levelPic),
+   LI_STRING("levelpicnext",       NEXTLEVELPIC,     nextLevelPic),
+   LI_STRING("levelpicsecret",     NEXTSECRETPIC,    nextSecretPic),
+   LI_STRING("levelscript",        SCRIPTLUMP,       scriptLump),
+   LI_BOOLNF("lightning",          HASLIGHTNING,     hasLightning),
+   LI_STRING("music",              MUSICNAME,        musicName),
+   LI_STRING("nextlevel",          NEXTLEVEL,        nextLevel),
+   LI_STRING("nextsecret",         NEXTSECRET,       nextSecret),
+   LI_BOOLNF("noautosequences",    NOAUTOSEQUENCES,  noAutoSequences),
+   LI_STRING("outdoorfog",         OUTDOORFOG,       outdoorFog),
+   LI_INTEGR("partime",            PARTIME,          partime),
+   LI_INTEGR("skydelta",           SKYDELTA,         skyDelta),
+   LI_INTEGR("sky2delta",          SKY2DELTA,        sky2Delta),
+   LI_STRING("skyname",            SKYNAME,          skyName),
+   LI_STRING("sky2name",           SKY2NAME,         sky2Name),
+   LI_STRING("sound-swtchn",       SOUNDSWTCHN,      sound_swtchn),
+   LI_STRING("sound-swtchx",       SOUNDSWTCHX,      sound_swtchx),
+   LI_STRING("sound-stnmov",       SOUNDSTNMOV,      sound_stnmov),
+   LI_STRING("sound-pstop",        SOUNDPSTOP,       sound_pstop),
+   LI_STRING("sound-bdcls",        SOUNDBDCLS,       sound_bdcls),
+   LI_STRING("sound-bdopn",        SOUNDBDOPN,       sound_bdopn),
+   LI_STRING("sound-dorcls",       SOUNDDORCLS,      sound_dorcls),
+   LI_STRING("sound-doropn",       SOUNDDOROPN,      sound_doropn),
+   LI_STRING("sound-pstart",       SOUNDPSTART,      sound_pstart),
+   LI_STRING("sound-fcmove",       SOUNDFCMOVE,      sound_fcmove),
+   LI_BOOLNF("unevenlight",        UNEVENLIGHT,      unevenLight),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
@@ -487,13 +490,144 @@ enum
 };
 
 //
+// P_parseLevelString
+//
+// Parse a plain string value.
+//
+static void P_parseLevelString(levelvar_t *var, const qstring &value)
+{
+   *(char**)var->variable = value.duplicate(PU_LEVEL);
+}
+
+//
+// P_parseLevelStrNum
+//
+// Parse an enumerated keyword value into its corresponding integral value.
+//
+static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
+{
+   textvals_t *tv = (textvals_t *)var->extra;
+   int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
+
+   if(val >= tv->numvals)
+      val = tv->defaultval;
+
+   *(int *)var->variable = val;
+}
+
+//
+// P_parseLevelInt
+//
+// Parse an integer value.
+//
+static void P_parseLevelInt(levelvar_t *var, const qstring &value)
+{
+   *(int*)var->variable = value.toInt();
+}
+
+//
+// P_parseLevelBool
+//
+// Parse a boolean true/false option.
+//
+static void P_parseLevelBool(levelvar_t *var, const qstring &value)
+{
+   *(bool *)var->variable = !value.strCaseCmp("true");
+}
+
+//
+// P_parseLevelFlags
+//
+// Parse a BEX-style flags string.
+//
+static void P_parseLevelFlags(levelvar_t *var, const qstring &value)
+{
+   dehflagset_t *flagset = (dehflagset_t *)var->extra;
+   *(unsigned int *)var->variable = E_ParseFlags(value.constPtr(), flagset);
+}
+
+enum
+{
+   ENV_STATE_SCANSTART,
+   ENV_STATE_INID1,
+   ENV_STATE_SCANBETWEEN,
+   ENV_STATE_INID2,
+   ENV_STATE_END
+};
+
+//
+// P_parseLevelEnvironment
+//
+// Parse a sound environment ID.
+//
+static void P_parseLevelEnvironment(levelvar_t *var, const qstring &value)
+{
+   int state = ENV_STATE_SCANSTART;
+   qstring id1, id2;
+   const char *rover = value.constPtr();
+
+   // parse with a small state machine
+   while(state != ENV_STATE_END)
+   {
+      char c = *rover++;
+      int isnum = ectype::isDigit(c);
+      
+      if(!c)
+         break;
+
+      switch(state)
+      {
+      case ENV_STATE_SCANSTART:
+         if(isnum)
+         {
+            id1 += c;
+            state = ENV_STATE_INID1;
+         }
+         break;
+      case ENV_STATE_INID1:
+         if(isnum)
+            id1 += c;
+         else
+            state = ENV_STATE_SCANBETWEEN;
+         break;
+      case ENV_STATE_SCANBETWEEN:
+         if(isnum)
+         {
+            id2 += c;
+            state = ENV_STATE_INID2;
+         }
+         break;
+      case ENV_STATE_INID2:
+         if(isnum)
+            id2 += c;
+         else
+            state = ENV_STATE_END;
+         break;
+      }
+   }
+
+   *(int *)var->variable = (id1.toInt() << 8) | id2.toInt();
+}
+
+typedef void (*varparserfn_t)(levelvar_t *, const qstring &);
+static varparserfn_t infoVarParsers[IVT_END] =
+{
+   P_parseLevelString,
+   P_parseLevelStrNum,
+   P_parseLevelInt,
+   P_parseLevelBool,
+   P_parseLevelFlags,
+   P_parseLevelEnvironment
+};
+
+//
 // P_ParseLevelVar
 //
 // Tokenizes the line parsed by P_ParseInfoCmd and then sets
 // any appropriate matching MapInfo variable to the retrieved
 // value.
 //
-static void P_ParseLevelVar(qstring *cmd, int cachelevel)
+static void P_ParseLevelVar(qstring *cmd)
 {
    int state = 0;
    qstring var, value;
@@ -538,48 +672,7 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
    while(current->type != IVT_END)
    {
       if(!var.strCaseCmp(current->name))
-      {
-         switch(current->type)
-         {
-         case IVT_STRING:
-            *(char**)current->variable = value.duplicate(cachelevel);
-            break;
-
-            // haleyjd 10/05/05: named value support
-         case IVT_STRNUM:
-            {
-               textvals_t *tv = (textvals_t *)current->extra;
-               int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
-
-               if(val >= tv->numvals)
-                  val = tv->defaultval;
-
-               *(int *)current->variable = val;
-            }
-            break;
-            
-         case IVT_INT:
-            *(int*)current->variable = value.toInt();
-            break;
-            
-            // haleyjd 03/15/03: boolean support
-         case IVT_BOOLEAN:
-            *(bool *)current->variable = 
-               !value.strCaseCmp("true") ? true : false;
-            break;
-
-            // haleyjd 03/14/05: flags support
-         case IVT_FLAGS:
-            {
-               dehflagset_t *flagset = (dehflagset_t *)current->extra;
-               
-               *(unsigned int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
-            }
-            break;
-         default:
-            I_Error("P_ParseLevelVar: unknown level variable type\n");
-         }
-      }
+         infoVarParsers[current->type](current, value);
       current++;
    }
 }
@@ -587,16 +680,6 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 //
 // Default Setup and Post-Processing Routines
 //
-
-// automap name macros (moved from hu_stuff.c)
-
-/*
-#define HU_TITLE  (mapnames[(gameepisode-1)*9+gamemap-1])
-#define HU_TITLE2 (mapnames2[gamemap-1])
-#define HU_TITLEP (mapnamesp[gamemap-1])
-#define HU_TITLET (mapnamest[gamemap-1])
-#define HU_TITLEH (mapnamesh[(gameepisode-1)*9+gamemap-1])
-*/
 
 enum SynthType_e
 {
@@ -792,7 +875,7 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 // Restores the alias fields of the sounds used by the sound sequence engine
 // for default effects.
 //
-static void P_InfoDefaultSoundNames(void)
+static void P_InfoDefaultSoundNames()
 {
    static bool firsttime = true;
    int i;
@@ -802,7 +885,7 @@ static void P_InfoDefaultSoundNames(void)
    {
       firsttime = false;
 
-      for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+      for(i = 0; i < NUMMAPINFOSOUNDS; i++)
       {
          sfxinfo_t *sfx = E_SoundForName(DefSoundNames[i]);
 
@@ -813,7 +896,7 @@ static void P_InfoDefaultSoundNames(void)
    else
    {
       // restore defaults
-      for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+      for(i = 0; i < NUMMAPINFOSOUNDS; i++)
       {
          if(DefSoundAliases[i][0])
             DefSoundAliases[i][0]->alias = DefSoundAliases[i][1];
@@ -821,7 +904,7 @@ static void P_InfoDefaultSoundNames(void)
    }
 
    // set sound names to defaults
-   for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+   for(i = 0; i < NUMMAPINFOSOUNDS; i++)
    {
       if(DefSoundAliases[i][0] && DefSoundAliases[i][0]->alias)
          *infoSoundPtrs[i] = DefSoundAliases[i][0]->alias->mnemonic;
@@ -838,11 +921,11 @@ static void P_InfoDefaultSoundNames(void)
 // Changes aliases in sounds used by the sound sequence engine for the default
 // sequences to point at the sounds defined by MapInfo.
 //
-static void P_SetInfoSoundNames(void)
+static void P_SetInfoSoundNames()
 {
    int i;
 
-   for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+   for(i = 0; i < NUMMAPINFOSOUNDS; i++)
    {
       const char *name = *infoSoundPtrs[i];
 
@@ -860,7 +943,7 @@ static void P_SetInfoSoundNames(void)
 // lump and sets LevelInfo.interText to it.
 // Moved here from f_finale.c
 //
-static void P_LoadInterTextLump(void)
+static void P_LoadInterTextLump()
 {
    if(LevelInfo.interTextLump)
    {
@@ -890,7 +973,7 @@ static void P_LoadInterTextLump(void)
 // haleyjd: rewritten 07/03/09 to tablify info through GameModeInfo.
 // haleyjd: merged finaleType here 01/09/10
 //
-static void P_InfoDefaultFinale(void)
+static void P_InfoDefaultFinale()
 {
    finaledata_t *fdata   = GameModeInfo->finaleData;
    finalerule_t *rule    = fdata->rules;
@@ -920,7 +1003,7 @@ static void P_InfoDefaultFinale(void)
    }
 
    // look for a rule that applies to this level in particular
-   for(; rule->gameepisode != -2; ++rule)
+   for(; rule->gameepisode != -2; rule++)
    {
       if((rule->gameepisode == -1 || rule->gameepisode == gameepisode) &&
          (rule->gamemap == -1 || rule->gamemap == gamemap))
@@ -979,7 +1062,7 @@ static void P_InfoDefaultFinale(void)
 // Sets the default sky texture for the level.
 // Moved here from r_sky.c
 //
-static void P_InfoDefaultSky(void)
+static void P_InfoDefaultSky()
 {
    skydata_t *sd      = GameModeInfo->skyData;
    skyrule_t *rule    = sd->rules;
@@ -989,7 +1072,7 @@ static void P_InfoDefaultSky(void)
    // depending on the current episode, and the game version.
    // haleyjd 01/07/10: use GameModeInfo ruleset
 
-   for(; rule->data != -2; ++rule)
+   for(; rule->data != -2; rule++)
    {
       switch(sd->testtype)
       {
@@ -1036,7 +1119,7 @@ static void P_InfoDefaultSky(void)
 // BossDeath and HticBossDeath codepointers. They can now be enabled for
 // any map by using the boss-specials variable.
 //
-static void P_InfoDefaultBossSpecials(void)
+static void P_InfoDefaultBossSpecials()
 {
    bspecrule_t *rule = GameModeInfo->bossRules;
 
@@ -1044,7 +1127,7 @@ static void P_InfoDefaultBossSpecials(void)
    LevelInfo.bossSpecs = 0;
 
    // look for a level-specific default
-   for(; rule->episode != -1; ++rule)
+   for(; rule->episode != -1; rule++)
    {
       if(gameepisode == rule->episode && gamemap == rule->map)
       {
@@ -1095,9 +1178,9 @@ static void P_SetSky2Texture()
 int pars[4][10] =
 {
    { 0 },                                             // dummy row
-   { 0,  30,  75, 120,  90, 165, 180, 180,  30, 165}, // episode 1
-   { 0,  90,  90,  90, 120,  90, 360, 240,  30, 170}, // episode 2
-   { 0,  90,  45,  90, 150,  90,  90, 165,  30, 135}  // episode 3
+   { 0,  30,  75, 120,  90, 165, 180, 180,  30, 165 }, // episode 1
+   { 0,  90,  90,  90, 120,  90, 360, 240,  30, 170 }, // episode 2
+   { 0,  90,  45,  90, 150,  90,  90, 165,  30, 135 }  // episode 3
 };
 
 // DOOM II Par Times
@@ -1232,6 +1315,9 @@ static void P_ClearLevelVars()
    // Hexen TODO: will be true for Hexen maps by default
    LevelInfo.noAutoSequences = false;
 
+   // haleyjd: default sound environment zone
+   LevelInfo.defaultEnvironment = 0;
+
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();
    P_InfoDefaultSoundNames();
@@ -1287,7 +1373,7 @@ int default_weaponowned[NUMWEAPONS];
 // candidate for replacement/rewrite
 // WEAPON_FIXME: mapinfo weapons.
 
-static void P_InitWeapons(void)
+static void P_InitWeapons()
 {
 #if 0
    char *s;

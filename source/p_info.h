@@ -106,6 +106,7 @@ enum
    LI_FIELD_SOUNDPSTART,
    LI_FIELD_SOUNDFCMOVE,
    LI_FIELD_NOAUTOSEQUENCES,
+   LI_FIELD_DEFENVIRONMENT,
    
    // count of fields
    LI_FIELD_NUMFIELDS
@@ -117,7 +118,7 @@ enum
 // haleyjd: This structure is a singleton and now contains all of what were
 // previously a bunch of messy global variables.
 //
-typedef struct LevelInfo_s
+struct LevelInfo_t
 {
    // map type selection
    int mapFormat;            // format of the map (Doom or Hexen)
@@ -191,7 +192,9 @@ typedef struct LevelInfo_s
    // sound sequences
    bool noAutoSequences;      // auto sequence behavior
 
-} LevelInfo_t;
+   // sound environments
+   int  defaultEnvironment;   // ID of default sound environment
+};
 
 // the one and only LevelInfo object
 extern LevelInfo_t LevelInfo;
