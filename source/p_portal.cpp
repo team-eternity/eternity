@@ -585,7 +585,7 @@ bool P_BuildLinkTable()
       if(!P_CheckLinkedPortal(sec->f_portal, sec))
          return false;
 
-      for(p = 0; p < sec->linecount; ++p)
+      for(p = 0; p < sec->linecount; p++)
       {
          if(!P_CheckLinkedPortal(sec->lines[p]->portal, sec))
            return false;
@@ -596,9 +596,9 @@ bool P_BuildLinkTable()
    // Now the fun begins! Checking the actual groups for correct backlinks.
    // this needs to be done before the indirect link information is gathered to
    // make sure every link is two-way.
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount; i++)
    {
-      for(p = 0; p < groupcount; ++p)
+      for(p = 0; p < groupcount; p++)
       {
          if(p == i)
             continue;
@@ -621,7 +621,7 @@ bool P_BuildLinkTable()
    }
 
    // That first loop has to complete before this can be run!
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount; i++)
       P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
 
    // SoM: one last step. Find all map architecture with a group id of -1 and 
@@ -633,7 +633,7 @@ bool P_BuildLinkTable()
    }
    
    // Last step is to put zerolink in every link that goes from a group to that same group
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount; i++)
    {
       if(!linktable[i * groupcount + i])
          linktable[i * groupcount + i] = &zerolink;

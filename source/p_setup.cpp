@@ -99,7 +99,11 @@ sector_t *sectors;
 // haleyjd 01/05/14: sector interpolation data
 sectorinterp_t *sectorinterps;
 
-int      numsubsectors;
+// haleyjd 01/12/14: sector sound environment zones
+int         numsoundzones;
+soundzone_t *soundzones;
+
+int         numsubsectors;
 subsector_t *subsectors;
 
 int      numnodes;
@@ -455,6 +459,9 @@ static void P_InitSector(sector_t *ss)
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;
 
+   // haleyjd 01/12/14: set sound zone to -1 
+   ss->soundzone = -1;
+
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
@@ -590,6 +597,64 @@ static void P_CreateSectorInterps()
       sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
       sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
    }
+}
+
+//
+// P_propagateSoundZone
+//
+// haleyjd 01/12/14: Recursive routine to propagate a sound zone from a
+// sector to all its neighboring sectors which border it by a 2S line which
+// is not marked as a sound boundary.
+//
+static void P_propagateSoundZone(sector_t *sector, int zoneid)
+{
+   // if we already touched this sector somehow, return immediately
+   if(sector->soundzone == zoneid)
+      return;
+
+   // set the zone to the sector
+   sector->soundzone = zoneid;
+
+   // iterate on the sector linedef list to find neighboring sectors
+   for(int ln = 0; ln < sector->linecount; ln++)
+   {
+      auto line = sector->lines[ln];
+
+      // must be 2S and not a zone boundary line
+      if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
+         continue;
+
+      auto next = ((line->backsector != sector) ? line->backsector : line->frontsector);
+
+      // if not already in the same sound zone, propagate recursively.
+      if(next->soundzone != zoneid)
+         P_propagateSoundZone(next, zoneid);
+   }
+}
+
+//
+// P_CreateSoundZones
+//
+// haleyjd 01/12/14: create sound environment zones for the map by using an
+// alert-like propagation method.
+//
+static void P_CreateSoundZones()
+{
+   numsoundzones = 0;
+
+   for(int secnum = 0; secnum < numsectors; secnum++)
+   {
+      auto sec = &sectors[secnum];
+      
+      // if the sector hasn't become part of a zone yet, do propagation for it
+      if(sec->soundzone == -1)
+         P_propagateSoundZone(sec, numsoundzones++);
+   }
+
+   // allocate soundzones
+   soundzones = estructalloctag(soundzone_t, numsoundzones, PU_LEVEL);
+   
+   // TODO: set all zones to level default reverb
 }
 
 //
@@ -1897,17 +1962,17 @@ static void AddLineToSector(sector_t *s, line_t *l)
 // killough 5/3/98: reformatted, cleaned up
 // killough 8/24/98: rewrote to use faster algorithm
 //
-void P_GroupLines(void)
+void P_GroupLines()
 {
    int i, total;
    line_t **linebuffer;
 
    // look up sector number for each subsector
-   for(i = 0; i < numsubsectors; ++i)
+   for(i = 0; i < numsubsectors; i++)
       subsectors[i].sector = segs[subsectors[i].firstline].sidedef->sector;
 
    // count number of lines in each sector
-   for(i = 0; i < numlines; ++i)
+   for(i = 0; i < numlines; i++)
    {
       lines[i].frontsector->linecount++;
       if(lines[i].backsector && 
@@ -1918,7 +1983,7 @@ void P_GroupLines(void)
    }
 
    // compute total number of lines and clear bounding boxes
-   for(total = 0, i = 0; i < numsectors; ++i)
+   for(total = 0, i = 0; i < numsectors; i++)
    {
       total += sectors[i].linecount;
       M_ClearBox(sectors[i].blockbox);
@@ -1927,13 +1992,13 @@ void P_GroupLines(void)
    // build line tables for each sector
    linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
 
-   for(i = 0; i < numsectors; ++i)
+   for(i = 0; i < numsectors; i++)
    {
       sectors[i].lines = linebuffer;
       linebuffer += sectors[i].linecount;
    }
   
-   for(i = 0; i < numlines; ++i)
+   for(i = 0; i < numlines; i++)
    {
       AddLineToSector(lines[i].frontsector, &lines[i]);
       if(lines[i].backsector && 
@@ -1943,7 +2008,7 @@ void P_GroupLines(void)
       }
    }
 
-   for(i = 0; i < numsectors; ++i)
+   for(i = 0; i < numsectors; i++)
    {
       sector_t *sector = sectors+i;
       int block;
@@ -2033,7 +2098,7 @@ void P_GroupLines(void)
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
-void P_RemoveSlimeTrails(void)             // killough 10/98
+void P_RemoveSlimeTrails()             // killough 10/98
 {
    byte *hit; 
    int i;
@@ -2044,7 +2109,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
 
    hit = ecalloc(byte *, 1, numvertexes); // Hitlist for vertices
 
-   for(i = 0; i < numsegs; ++i)            // Go through each seg
+   for(i = 0; i < numsegs; i++)            // Go through each seg
    {
       const line_t *l = segs[i].linedef;   // The parent linedef
       if(l->dx && l->dy)                   // We can ignore orthogonal lines
@@ -2571,6 +2636,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
    P_GroupLines();
+
+   // haleyjd 01/12/14: build sound environment zones
+   P_CreateSoundZones();
 
    // killough 10/98: remove slime trails from wad
    P_RemoveSlimeTrails(); 

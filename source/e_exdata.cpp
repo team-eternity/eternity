@@ -189,18 +189,19 @@ static cfg_opt_t linedef_opts[] =
 
 static dehflags_t extlineflags[] =
 {
-   { "CROSS",    EX_ML_CROSS    },
-   { "USE",      EX_ML_USE      },
-   { "IMPACT",   EX_ML_IMPACT   },
-   { "PUSH",     EX_ML_PUSH     },
-   { "PLAYER",   EX_ML_PLAYER   },
-   { "MONSTER",  EX_ML_MONSTER  },
-   { "MISSILE",  EX_ML_MISSILE  },
-   { "REPEAT",   EX_ML_REPEAT   },
-   { "1SONLY",   EX_ML_1SONLY   },
-   { "ADDITIVE", EX_ML_ADDITIVE },
-   { "BLOCKALL", EX_ML_BLOCKALL },
-   { NULL,       0              }
+   { "CROSS",        EX_ML_CROSS        },
+   { "USE",          EX_ML_USE          },
+   { "IMPACT",       EX_ML_IMPACT       },
+   { "PUSH",         EX_ML_PUSH         },
+   { "PLAYER",       EX_ML_PLAYER       },
+   { "MONSTER",      EX_ML_MONSTER      },
+   { "MISSILE",      EX_ML_MISSILE      },
+   { "REPEAT",       EX_ML_REPEAT       },
+   { "1SONLY",       EX_ML_1SONLY       },
+   { "ADDITIVE",     EX_ML_ADDITIVE     },
+   { "BLOCKALL",     EX_ML_BLOCKALL     },
+   { "ZONEBOUNDARY", EX_ML_ZONEBOUNDARY },
+   { NULL,           0                  }
 };
 
 static dehflagset_t ld_flagset =

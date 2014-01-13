@@ -40,6 +40,7 @@ struct particle_t;
 struct planehash_t;
 struct portal_t;
 struct sector_t;
+struct ereverb_t;
 struct ETerrain;
 
 // Silhouette, needed for clipping Segs (mainly)
@@ -182,6 +183,14 @@ struct sectorinterp_t
 };
 
 //
+// Sound Zones
+//
+struct soundzone_t
+{
+   ereverb_t *reverb;
+};
+
+//
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
@@ -319,6 +328,9 @@ struct sector_t
 
    // haleyjd 01/15/12: sector actions
    DLListItem<sectoraction_t> *actions;
+
+   // haleyjd 01/12/14: sound environment
+   int soundzone;
 };
 
 //
