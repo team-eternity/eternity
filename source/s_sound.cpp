@@ -165,14 +165,13 @@ static void S_StopChannel(int cnum)
 // haleyjd: isolated code to check for sector sound killing.
 // Returns true if the sound should be killed.
 //
-static bool S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
+static bool S_CheckSectorKill(const sector_t *earsec, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
    { 
       // are we in a killed-sound sector?
-      if(ear && 
-         R_PointInSubsector(ear->x, ear->y)->sector->flags & SECF_KILLSOUND)
+      if(earsec && earsec->flags & SECF_KILLSOUND)
          return true;
       
       // source in a killed-sound sector?
@@ -431,7 +430,8 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    bool extcamera      = false;
    bool nocutoff       = false;
    camera_t playercam;
-   camera_t *listener = &playercam;
+   camera_t *listener  = &playercam;
+   sector_t *earsec    = NULL;
    Mobj *mo;
 
    // haleyjd 09/03/03: allow NULL sounds to fall through
@@ -554,10 +554,12 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
             listener = NULL;
          }
       }
+
+      earsec = R_PointInSubsector(playercam.x, playercam.y)->sector;
    }
 
    // haleyjd 09/29/06: check for sector sound kill here.
-   if(S_CheckSectorKill(listener, origin))
+   if(S_CheckSectorKill(earsec, origin))
       return;
 
    // Check to see if it is audible, modify the params
@@ -805,10 +807,9 @@ void S_ResumeSound()
 //
 void S_UpdateSounds(const Mobj *listener)
 {
-   int cnum;
-
    // sf: a camera_t holding the information about the player
    camera_t playercam = { 0 }; 
+   sector_t *earsec = NULL;
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
@@ -817,7 +818,6 @@ void S_UpdateSounds(const Mobj *listener)
    if(listener)
    {
       // haleyjd 08/12/04: fix possible bugs with external cameras
-      
       if(camera) // an external camera is active
       {
          playercam = *camera; // assign directly
@@ -829,11 +829,12 @@ void S_UpdateSounds(const Mobj *listener)
          playercam.z = listener->z;
          playercam.angle = listener->angle;
          playercam.groupid = listener->groupid;
-      }      
+      }
+      earsec = R_PointInSubsector(playercam.x, playercam.y)->sector;
    }
 
    // now update each individual channel
-   for(cnum = 0; cnum < numChannels; ++cnum)
+   for(int cnum = 0; cnum < numChannels; cnum++)
    {
       channel_t *c = &channels[cnum];
       sfxinfo_t *sfx = c->sfxinfo;
@@ -870,7 +871,7 @@ void S_UpdateSounds(const Mobj *listener)
          // inappropriately. The only reason he changed this was to get to
          // the code in S_AdjustSoundParams that checks for sector sound
          // killing. We do that here now instead.
-         if(listener && S_CheckSectorKill(&playercam, c->origin))
+         if(listener && S_CheckSectorKill(earsec, c->origin))
             S_StopChannel(cnum);
          else if(c->origin && (PointThinker *)listener != c->origin) // killough 3/20/98
          {
