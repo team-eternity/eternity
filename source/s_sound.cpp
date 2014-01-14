@@ -401,7 +401,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
 //
 // haleyjd 04/28/10: gets a count of the currently active sound channels.
 //
-static int S_countChannels(void)
+static int S_countChannels()
 {
    int cnum;
    int numchannels = 0;
@@ -789,7 +789,7 @@ void S_PauseSound(void)
 //
 // Start music back up.
 //
-void S_ResumeSound(void)
+void S_ResumeSound()
 {
    if(mus_playing && mus_paused)
    {
@@ -947,7 +947,7 @@ void S_StopSounds(bool killall)
 // haleyjd 10/06/06: Looped sounds need to stop playing when the intermission
 // starts up, or else they'll play all the way til the next level.
 //
-void S_StopLoopedSounds(void)
+void S_StopLoopedSounds()
 {
    int cnum;
 
@@ -1004,7 +1004,7 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 // detected. This allows the sound to be used separately without 
 // use of EDF.
 //
-void S_Chgun(void)
+void S_Chgun()
 {
    sfxinfo_t *s_chgun = E_SoundForName("chgun");
 
@@ -1158,7 +1158,7 @@ void S_ChangeMusicName(const char *name, int looping)
 //
 // S_StopMusic
 //
-void S_StopMusic(void)
+void S_StopMusic()
 {
    if(!mus_playing || !mus_playing->data)
       return;

@@ -54,6 +54,7 @@
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_saveg.h"
+#include "p_sector.h"
 #include "p_skin.h"
 #include "p_tick.h"
 #include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
@@ -2290,6 +2291,10 @@ spawnit:
    // haleyjd: set particle fountain color
    if(mthing->type >= 9027 && mthing->type <= 9033)
       mobj->effects |= (mthing->type - 9026u) << FX_FOUNTAINSHIFT;
+
+   // haleyjd: sector sound zones
+   if(mthing->type == 9048)
+      P_SetSectorZoneFromMobj(mobj);
 
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)

@@ -1135,7 +1135,7 @@ void P_LoadHexenThings(int lump)
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
-   for(i = 0; i < numthings; ++i)
+   for(i = 0; i < numthings; i++)
    {
       mapthinghexen_t *mt = (mapthinghexen_t *)data + i;
       mapthing_t      *ft = &mapthings[i];
@@ -1400,7 +1400,7 @@ void P_LoadHexenLineDefs(int lump)
       ld->flags   = SwapShort(mld->flags);
       ld->special = mld->special;
       
-      for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
+      for(int argnum = 0; argnum < NUMHXLINEARGS; argnum++)
          ld->args[argnum] = mld->args[argnum];
 
       // Convert line flags after setting special?
@@ -1527,7 +1527,7 @@ void P_LoadSideDefs2(int lumpnum)
    memset(bottomtexture, 0, sizeof(bottomtexture));
    memset(midtexture,    0, sizeof(midtexture));
 
-   for(i = 0; i < numsides; ++i)
+   for(i = 0; i < numsides; i++)
    {
       register side_t *sd = sides + i;
       register sector_t *sec;
@@ -1645,7 +1645,7 @@ static void P_CreateBlockMap(void)
 
    // First find limits of map
    
-   for(i = 0; i < (unsigned int)numvertexes; ++i)
+   for(i = 0; i < (unsigned int)numvertexes; i++)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
          minx = vertexes[i].x >> FRACBITS;
@@ -1689,7 +1689,7 @@ static void P_CreateBlockMap(void)
       unsigned tot = bmapwidth * bmapheight;                  // size of blockmap
       bmap_t *bmap = ecalloc(bmap_t *, sizeof *bmap, tot);    // array of blocklists
 
-      for(i = 0; i < (unsigned int)numlines; ++i)
+      for(i = 0; i < (unsigned int)numlines; i++)
       {
          // starting coordinates
          int x = (lines[i].v1->x >> FRACBITS) - minx;
@@ -1759,7 +1759,7 @@ static void P_CreateBlockMap(void)
          // we need at least 1 word per block, plus reserved's
          int count = tot + 6;
 
-         for(i = 0; i < tot; ++i)
+         for(i = 0; i < tot; i++)
          {
             // 1 header word + 1 trailer word + blocklist
             if(bmap[i].n)
@@ -1814,9 +1814,9 @@ static bool P_VerifyBlockMap(int count)
 
    bmaperrormsg = NULL;
 
-   for(y = 0; y < bmapheight; ++y)
+   for(y = 0; y < bmapheight; y++)
    {
-      for(x = 0; x < bmapwidth; ++x)
+      for(x = 0; x < bmapwidth; x++)
       {
          int offset;
          int *list, *tmplist;
@@ -1837,7 +1837,7 @@ static bool P_VerifyBlockMap(int count)
          list   = blockmaplump + offset;
 
          // scan forward for a -1 terminator before maxoffs
-         for(tmplist = list; ; ++tmplist)
+         for(tmplist = list; ; tmplist++)
          {
             // we have overflowed the lump?
             if(tmplist >= maxoffs)
@@ -1853,7 +1853,7 @@ static bool P_VerifyBlockMap(int count)
             break;
 
          // scan the list for out-of-range linedef indicies in list
-         for(tmplist = list; *tmplist != -1; ++tmplist)
+         for(tmplist = list; *tmplist != -1; tmplist++)
          {
             if(*tmplist < 0 || *tmplist >= numlines)
             {
@@ -2326,7 +2326,7 @@ static void P_NewLevelMsg()
 {   
    C_Printf("\n");
    C_Separator();
-   C_Printf("%c  %s\n\n", 128+CR_GRAY, LevelInfo.levelName);
+   C_Printf(FC_GRAY "  %s\n\n", LevelInfo.levelName);
    C_InstaPopup();       // put console away
 }
 

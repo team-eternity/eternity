@@ -25,6 +25,7 @@
 
 #include "z_zone.h"
 
+#include "e_reverbs.h"
 #include "e_things.h"
 #include "m_fixed.h"
 #include "p_mobj.h"
@@ -118,6 +119,27 @@ void P_SaveSectorPositions()
       si.prevceilingheight  = sec.ceilingheight;
       si.prevceilingheightf = sec.ceilingheightf;
    }
+}
+
+//=============================================================================
+//
+// Sound Environment Zones
+//
+
+//
+// P_SetSectorZoneFromMobj
+//
+// Change a sound environment zone to the reverb definition indicated in the
+// actor's first two arguments. The zone affected will be the one containing 
+// the sector that the thing's centerpoint is inside.
+//
+void P_SetSectorZoneFromMobj(Mobj *actor)
+{
+   sector_t  *sec    = actor->subsector->sector;
+   ereverb_t *reverb = E_ReverbForID(actor->args[0], actor->args[1]);
+
+   if(reverb)
+      soundzones[sec->soundzone].reverb = reverb;
 }
 
 // EOF

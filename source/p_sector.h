@@ -26,7 +26,10 @@
 #ifndef P_SECTOR_H__
 #define P_SECTOR_H__
 
+class Mobj;
+
 void P_SaveSectorPositions();
+void P_SetSectorZoneFromMobj(Mobj *actor);
 
 #endif
 
