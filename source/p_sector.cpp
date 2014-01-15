@@ -25,6 +25,9 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
+#include "c_runcmd.h"
+#include "doomstat.h"
 #include "e_reverbs.h"
 #include "e_things.h"
 #include "m_fixed.h"
@@ -33,6 +36,7 @@
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
+#include "v_misc.h"
 
 //=============================================================================
 //
@@ -141,6 +145,40 @@ void P_SetSectorZoneFromMobj(Mobj *actor)
    if(reverb)
       soundzones[sec->soundzone].reverb = reverb;
 }
+
+//
+// p_testenvironment
+//
+// Alter the console command player's sound zone.
+//
+CONSOLE_COMMAND(p_testenvironment, cf_level)
+{
+   if(Console.argc < 2)
+   {
+      C_Printf("Usage: p_testenvironment id1 id2\n");
+      return;
+   }
+   int id1 = Console.argv[0]->toInt();
+   int id2 = Console.argv[1]->toInt();
+
+   ereverb_t *reverb = E_ReverbForID(id1, id2);
+   if(!reverb)
+   {
+      C_Printf(FC_ERROR "Reverb (%d, %d) not defined.\n", id1, id2);
+      return;
+   }
+   
+   Mobj *mo = players[Console.cmdsrc].mo;
+   if(!mo)
+   {
+      C_Printf(FC_ERROR "Command source has no body!\n");
+      return;
+   }
+   
+   sector_t *sec = mo->subsector->sector;
+   soundzones[sec->soundzone].reverb = reverb;
+}
+
 
 // EOF
 

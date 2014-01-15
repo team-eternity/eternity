@@ -242,3 +242,95 @@ soundsequence EEFloor
   "@
 }
 
+// Sound Environment Presets ---------------------------------------------------
+
+reverb FreeverbDefault : 254, 0
+{
+}
+
+reverb SmallRoomBright : 254, 1
+{
+  roomsize    0.7
+  dampening   0.92
+  +equalized
+  eq.lowgain  0.27
+  eq.midgain  0.80
+  eq.highgain 0.95
+}
+
+reverb SmallRoomDark : 254, 2
+{
+  roomsize    0.7
+  dampening   0.95
+  +equalized
+  eq.lowgain  0.96
+  eq.midgain  0.5
+  eq.highgain 0.0
+}
+
+reverb LargeRoomBright : 254, 3
+{
+  roomsize    0.829
+  dampening   0.99
+  +equalized
+  eq.lowgain  0.70
+  eq.midgain  0.66
+  eq.highgain 0.46
+}
+
+reverb LargeRoomDark : 254, 4
+{
+  roomsize    0.829
+  dampening   0.99
+  +equalized
+  eq.lowgain  0.92
+  eq.midgain  0.5
+  eq.highgain 0.0
+}
+
+reverb SmallHallBright : 254, 5
+{
+  roomsize    0.814
+  dampening   0.75
+  predelay    20
+  +equalized
+  eq.lowgain  0.89
+  eq.midgain  0.60
+  eq.highgain 0.22  
+}
+
+reverb SmallHallDark : 254, 6
+{
+  roomsize    0.814
+  dampening   0.75
+  predelay    20
+  +equalized
+  eq.lowgain  0.95
+  eq.midgain  0.5
+  eq.highgain 0.0
+}
+
+reverb LargeHallBright : 254, 7
+{
+  roomsize    0.87
+  dampening   0.57
+  predelay    20
+  +equalized
+  eq.lowgain  0.89
+  eq.midgain  0.60
+  eq.highgain 0.35
+}
+
+reverb LargeHallDark : 254, 8
+{
+  roomsize    0.87
+  dampening   0.57
+  predelay    20
+  +equalized
+  eq.lowgain  0.96
+  eq.midgain  0.5
+  eq.highgain 0.0
+}
+
+// EOF
+
