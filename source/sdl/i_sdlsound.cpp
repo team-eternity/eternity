@@ -482,8 +482,9 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       SDL_SemPost(chan->semaphore);
    }
 
-   // TEST REVERB
-   //S_ProcessReverb(mixbuffer, mixbuffer_size/2);
+   // do reverberation if an effect is active
+   if(s_reverbactive)
+      S_ProcessReverb(mixbuffer, mixbuffer_size/2);
 
    // haleyjd 04/21/10: equalization output pass
    do_3band(mixbuffer, leftend, (Sint16 *)stream);

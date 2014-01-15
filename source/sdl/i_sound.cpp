@@ -56,6 +56,8 @@ double  s_lowgain;   // low band gain
 double  s_midgain;   // mid band gain
 double  s_highgain;  // high band gain
 
+bool    s_reverbactive; // reverberation effects processing is active
+
 // haleyjd 11/07/08: driver objects
 static i_sounddriver_t *i_sounddriver;
 static i_musicdriver_t *i_musicdriver;

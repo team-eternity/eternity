@@ -31,6 +31,7 @@
 #include "z_zone.h"
 
 #include "e_reverbs.h"
+#include "i_sound.h"
 #include "s_reverb.h"
 
 //
@@ -697,6 +698,7 @@ void S_ReverbSetState(ereverb_t *ereverb)
    if(!(ereverb->flags & REVERB_ENABLED))
    {
       reverb.mute();
+      s_reverbactive = false;
       return;
    }
 
@@ -720,6 +722,8 @@ void S_ReverbSetState(ereverb_t *ereverb)
    }
    else
       reverb.doEQ = false;
+
+   s_reverbactive = true;
 }
 
 //

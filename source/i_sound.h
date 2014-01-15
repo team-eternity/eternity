@@ -136,6 +136,8 @@ extern double  s_lowgain;   // low band gain
 extern double  s_midgain;   // mid band gain
 extern double  s_highgain;  // high band gain
 
+extern bool    s_reverbactive;
+
 static inline bool I_IsSoundBufferSizePowerOf2(int i)
 {
    return (i & (i - 1)) == 0;

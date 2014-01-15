@@ -26,7 +26,6 @@
 // killough 5/2/98: reindented, removed useless code, beautified
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "a_small.h"
 #include "c_io.h"
@@ -36,8 +35,10 @@
 #include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
 #include "doomstat.h"
+#include "e_reverbs.h"
 #include "e_sound.h"
 #include "i_sound.h"
+#include "i_system.h"
 #include "m_compare.h"
 #include "m_random.h"
 #include "m_queue.h"
@@ -50,6 +51,7 @@
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "s_reverb.h"
 #include "s_sound.h"
 #include "v_misc.h"
 #include "v_video.h"
@@ -791,6 +793,30 @@ void S_ResumeSound()
    }
 }
 
+// Currently active reverberation environment
+static ereverb_t *s_currentEnvironment;
+
+//
+// S_updateEnvironment
+//
+// Update the active sound environment.
+//
+static void S_updateEnvironment(sector_t *earsec)
+{
+   ereverb_t *reverb;
+   
+   if(!earsec || menuactive || consoleactive || gamestate != GS_LEVEL)
+      reverb = E_GetDefaultReverb();
+   else
+      reverb = soundzones[earsec->soundzone].reverb;
+
+   if(reverb != s_currentEnvironment)
+   {
+      s_currentEnvironment = reverb;
+      S_ReverbSetState(reverb);
+   }
+}
+
 //
 // S_UpdateSounds
 //
@@ -823,6 +849,9 @@ void S_UpdateSounds(const Mobj *listener)
       }
       earsec = R_PointInSubsector(playercam.x, playercam.y)->sector;
    }
+
+   // update sound environment
+   S_updateEnvironment(earsec);
 
    // now update each individual channel
    for(int cnum = 0; cnum < numChannels; cnum++)
