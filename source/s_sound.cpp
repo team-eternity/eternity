@@ -402,10 +402,9 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
 //
 static int S_countChannels()
 {
-   int cnum;
    int numchannels = 0;
 
-   for(cnum = 0; cnum < numChannels; ++cnum)
+   for(int cnum = 0; cnum < numChannels; cnum++)
       if(channels[cnum].sfxinfo)
          ++numchannels;
 
@@ -507,10 +506,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       pitch = NORM_PITCH;
 
    // haleyjd 09/29/06: rangecheck volumeScale now!
-   if(volumeScale < 0)
-      volumeScale = 0;
-   else if(volumeScale > 127)
-      volumeScale = 127;
+   volumeScale = eclamp(volumeScale, 0, 127);
 
    // haleyjd 04/28/10: adjust volume for channel overload
    if((chancount = S_countChannels()) >= 4)
@@ -570,10 +566,9 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    {
       sep = NORM_SEP;
       volume = (volume * volumeScale) / 15; // haleyjd 05/29/06: scale volume
-      if(volume < 1)
+      volume = eclamp(volume, 0, 127);
+      if(volume < 1) // clip due to inaudibility
          return;
-      if(volume > 127)
-         volume = 127;
    }
    else
    {     
@@ -608,11 +603,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
          break;
       }
 
-      if(pitch < 0)
-         pitch = 0;
-      
-      if(pitch > 255)
-         pitch = 255;
+      pitch = eclamp(pitch, 0, 255);
    }
 
    // haleyjd 06/12/08: determine subchannel. If auto, try using the sound's
@@ -777,7 +768,7 @@ void S_StopSound(const PointThinker *origin, int subchannel)
 //
 // Stop music, during game PAUSE.
 //
-void S_PauseSound(void)
+void S_PauseSound()
 {
    if(mus_playing && !mus_paused)
    {
@@ -908,7 +899,7 @@ bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 
    if(mo && sfx)
    {   
-      for(cnum = 0; cnum < numChannels; ++cnum)
+      for(cnum = 0; cnum < numChannels; cnum++)
       {
          if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
          {
@@ -1285,7 +1276,7 @@ void S_Start()
 
 int S_DoomMusicCheat(const char *buf)
 {
-   int input = (buf[0]-'1') * 9 + (buf[1] - '1');
+   int input = (buf[0] - '1') * 9 + (buf[1] - '1');
           
    // jff 4/11/98: prevent IDMUS0x IDMUSx0 in DOOM I and greater than introa
    if(buf[0] < '1' || buf[1] < '1' || input > 31)
@@ -1334,8 +1325,7 @@ static void S_HookMusic(musicinfo_t *);
 //
 void S_Init(int sfxVolume, int musicVolume)
 {
-   // haleyjd 09/03/03: the sound hash is now maintained by
-   // EDF
+   // haleyjd 09/03/03: the sound hash is now maintained by EDF
 
    //jff 1/22/98 skip sound init if sound not enabled
    if(snd_card && !nosfxparm)
@@ -1457,7 +1447,7 @@ musicinfo_t *S_MusicForName(const char *name)
    // Not found? Create a new musicinfo if the indicated lump is found.
    if(lumpnum >= 0)
    {
-      mus = ecalloc(musicinfo_t *, 1, sizeof(musicinfo_t));
+      mus = estructalloc(musicinfo_t, 1);
       mus->name = estrdup(nameToUse);
 
       // The music code should prefix the sound name to get the lump if:
