@@ -252,8 +252,8 @@ public:
 #define INITIALLG    1.0
 #define INITIALMG    1.0
 #define INITIALHG    1.0
-#define INITIALLF    880.0
-#define INITIALHF    5000.0
+#define INITIALLF    250.0
+#define INITIALHF    4000.0
 
 struct EQSTATE
 {
@@ -465,7 +465,6 @@ public:
       eqparams.highgain = INITIALHG;
       eqparams.lowfreq  = INITIALLF;
       eqparams.highfreq = INITIALHF;
-      init_3band(eqparams, eql, eqr);
       update();
 
       // Buffer will be full of rubbish - so we MUST mute them
@@ -625,6 +624,8 @@ public:
          combR[i].feedback = roomsize1;
          combR[i].setdamp(damp1);
       }
+
+      init_3band(eqparams, eql, eqr);
    }
 
    void setRoomSize(double value)
@@ -709,7 +710,6 @@ void S_ReverbSetState(ereverb_t *ereverb)
    reverb.setDry(ereverb->dryscale);
    reverb.setWidth(ereverb->width);
    reverb.setDelay((size_t)ereverb->predelay);
-   reverb.update();
 
    if(ereverb->flags & REVERB_EQUALIZED)
    {
@@ -722,6 +722,8 @@ void S_ReverbSetState(ereverb_t *ereverb)
    }
    else
       reverb.doEQ = false;
+
+   reverb.update();
 
    s_reverbactive = true;
 }
