@@ -632,7 +632,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       sfx = sfx->link;     // sf: skip thru link(s)
 
    // Assigns the handle to one of the channels in the mix/output buffer.
-   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, loop);
+   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, loop, true);
 
    // haleyjd: check to see if the sound was started
    if(handle >= 0)

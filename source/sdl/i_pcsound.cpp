@@ -98,7 +98,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
    rightptr = ((Sint16 *) stream) + 1;
     
    // Fill the output buffer   
-   for(i = 0; i < nsamples; ++i)
+   for(i = 0; i < nsamples; i++)
    {
       // Has this sound expired? If so, invoke the callback to get 
       // the next frequency.      
@@ -156,7 +156,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
    }
 }
 
-static void PCSound_SDL_Shutdown(void)
+static void PCSound_SDL_Shutdown()
 {
    Mix_CloseAudio();
    SDL_QuitSubSystem(SDL_INIT_AUDIO);
@@ -237,7 +237,7 @@ static const float frequencies[] =
    2157.64f, 2217.80f, 2285.78f, 2353.41f, 2420.24f, 2490.98f, 2565.97f, 2639.77f
 };
 
-#define NUMFREQUENCIES (sizeof(frequencies) / sizeof(float))
+#define NUMFREQUENCIES earrlen(frequencies)
 
 //=============================================================================
 //
@@ -363,7 +363,7 @@ static bool CachePCSLump(sfxinfo_t *sfx)
 // Driver Routines
 //
 
-static int I_PCSInitSound(void)
+static int I_PCSInitSound()
 {
    // Use the sample rate from the configuration file   
    PCSound_SetSampleRate(44100);
@@ -388,24 +388,24 @@ static void I_PCSCacheSound(sfxinfo_t *sfx)
    // no-op
 }
 
-static void I_PCSUpdateSound(void)
+static void I_PCSUpdateSound()
 {
    // no-op
 }
 
-static void I_PCSSubmitSound(void)
+static void I_PCSSubmitSound()
 {
    // no-op
 }
 
-static void I_PCSShutdownSound(void)
+static void I_PCSShutdownSound()
 {
    if(pcs_initialised)
       PCSound_SDL_Shutdown();
 }
 
 static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep, 
-                          int pitch, int pri, int loop)
+                          int pitch, int pri, int loop, bool reverb)
 {
    int result;
 

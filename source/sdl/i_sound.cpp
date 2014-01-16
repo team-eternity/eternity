@@ -98,10 +98,10 @@ void I_SetSfxVolume(int volume)
 // I_StartSound
 //
 int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, 
-                 int pri, int loop)
+                 int pri, int loop, bool reverb)
 {   
    return snd_init ? 
-      i_sounddriver->StartSound(sound, cnum, vol, sep, pitch, pri, loop) : -1;
+      i_sounddriver->StartSound(sound, cnum, vol, sep, pitch, pri, loop, reverb) : -1;
 }
 
 //
