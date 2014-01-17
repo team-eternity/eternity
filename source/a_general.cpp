@@ -1270,7 +1270,7 @@ void A_AmbientThinker(actionargs_t *actionargs)
    params.volumeScale = amb->volume;
    params.attenuation = amb->attenuation;
    params.subchannel  = CHAN_AUTO;
-   params.reverb      = true; // TODO/FIXME: allow as parameter
+   params.reverb      = amb->reverb;
 
    // time to play the sound
    S_StartSfxInfo(params);

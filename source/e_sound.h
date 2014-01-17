@@ -43,8 +43,8 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
 sfxinfo_t *E_NewWadSound(const char *);
 sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name);
 
-void E_PreCacheSounds(void);
-void E_UpdateSoundCache(void);
+void E_PreCacheSounds();
+void E_UpdateSoundCache();
 
 // haleyjd: EDF ambience types
 enum
@@ -55,20 +55,21 @@ enum
 };
 
 // haleyjd 05/30/06: EDF ambience objects
-typedef struct EAmbience_s
+struct EAmbience_t
 {
    int index;        // numeric id
 
    sfxinfo_t *sound; // sound to use
-   int type;         // continuous, periodic, random
-   int volume;       // scale value from 0 to 127
-   int attenuation;  // normal/idle, static, or none
-   int period;       // used for periodic only
-   int minperiod;    // minimum period length for random
-   int maxperiod;    // maximum period length for random
+   int  type;        // continuous, periodic, random
+   int  volume;      // scale value from 0 to 127
+   int  attenuation; // normal/idle, static, or none
+   int  period;      // used for periodic only
+   int  minperiod;   // minimum period length for random
+   int  maxperiod;   // maximum period length for random
+   bool reverb;      // whether or not ambience is affected by environments
 
-   struct EAmbience_s *next; // for hashing
-} EAmbience_t;
+   EAmbience_t *next; // for hashing
+};
 
 EAmbience_t *E_AmbienceForNum(int num);
 
