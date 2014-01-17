@@ -78,7 +78,10 @@ BSP 5.2
    Simon Howard
 
 Chocolate Doom
-   Simon "fraggle" Howard
+   Simon Howard
+   
+Doom64 EX
+   Samuel Villarreal
 
 Odamex
    "Dr. Sean" Leonard
@@ -105,6 +108,9 @@ Libraries/Code Utilized
 
 DJGPP libc
    DJ Delorie et al.
+   
+Freeverb - Public Domain Reverb Engine
+   Jezar at Dreampoint Design and Engineering
 
 libConfuse Parser Library
    Martin Hedenfalk
