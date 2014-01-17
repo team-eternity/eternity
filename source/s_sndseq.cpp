@@ -108,9 +108,15 @@ void S_StopSequence(PointThinker *mo)
          // if a stopsound is defined, play it
          if(curSeq->sequence->stopsound)
          {
-            S_StartSfxInfo(curSeq->origin, curSeq->sequence->stopsound,
-                           curSeq->volume, curSeq->attenuation, false,
-                           CHAN_AUTO);
+            soundparams_t params;
+            params.origin      = curSeq->origin;
+            params.sfx         = curSeq->sequence->stopsound;
+            params.volumeScale = curSeq->volume;
+            params.attenuation = curSeq->attenuation;
+            params.loop        = false;
+            params.subchannel  = CHAN_AUTO;
+            params.reverb      = true; // TODO/FIXME: allow as parameter?
+            S_StartSfxInfo(params);
          }
 
          // unlink and delete this object
@@ -407,8 +413,15 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
       // clear the NORANDOM flag
       seq->flags &= ~SEQ_FLAG_NORANDOM;
 
-      S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume, 
-                     seq->attenuation, loop, CHAN_AUTO);
+      soundparams_t params;
+      params.origin      = seq->origin;
+      params.sfx         = seq->currentSound;
+      params.volumeScale = seq->volume;
+      params.attenuation = seq->attenuation;
+      params.loop        = loop;
+      params.subchannel  = CHAN_AUTO;
+      params.reverb      = true; // TODO/FIXME: allow as parameter?
+      S_StartSfxInfo(params);
    }
 }
 

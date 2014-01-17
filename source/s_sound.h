@@ -61,7 +61,7 @@ void S_Init(int sfxVolume, int musicVolume);
 // Kills playing sounds at start of level,
 //  determines music if any, changes music.
 //
-void S_Start(void);
+void S_Start();
 
 // haleyjd 05/30/06: sound attenuation types
 enum
@@ -73,20 +73,43 @@ enum
    ATTN_NUM     // number of types
 };
 
+struct soundparams_t
+{
+   PointThinker *origin;
+   sfxinfo_t    *sfx;
+   int           volumeScale;
+   int           attenuation;
+   bool          loop;
+   int           subchannel;
+   bool          reverb;
+
+   soundparams_t &setNormalDefaults(PointThinker *pOrigin)
+   {
+      origin      = pOrigin;
+      volumeScale = 127;
+      attenuation = ATTN_NORMAL;
+      loop        = false;
+      subchannel  = CHAN_AUTO;
+      reverb      = true;
+
+      return *this;
+   }
+};
+
 //
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
 //
+void S_StartSfxInfo(const soundparams_t &params);
 void S_StartSound(PointThinker *origin, int sound_id);
 void S_StartSoundName(PointThinker *origin, const char *name);
-void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
-                    int volumeScale, int attenuation,
-                    bool loop, int subchannel);
 void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel);
 void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
                               int volume, int attn,
                               int subchannel);
+void S_StartInterfaceSound(int sound_id);
+void S_StartInterfaceSound(const char *name);
 
 // Stop sound for thing at <origin>
 void S_StopSound(const PointThinker *origin, int subchannel);

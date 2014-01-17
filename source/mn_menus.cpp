@@ -1299,7 +1299,7 @@ void MN_SaveGame()
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // create the savegame console commands
@@ -1496,7 +1496,7 @@ CONSOLE_COMMAND(mn_load, 0)
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // haleyjd 02/23/02: Quick Load -- restored from MBF and converted
@@ -1608,7 +1608,7 @@ CONSOLE_COMMAND(quicksave, 0)
 
    if(!usergame && (!demoplayback || netgame))  // killough 10/98
    {
-      S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
+      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
       return;
    }
    
@@ -2707,7 +2707,7 @@ static bool MN_padTestResponder(event_t *ev, int action)
    if(ev->data1 == KEYD_ESCAPE) // Must be keyboard ESC
    {
       // kill the widget
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       MN_PopWidget();
    }
 

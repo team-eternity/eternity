@@ -129,7 +129,7 @@ void G_QuitDoom()
    if((!netgame || demoplayback) && !nosfxparm && snd_card &&
       GameModeInfo->flags & GIF_HASEXITSOUNDS)
    {
-      S_StartSound(NULL, GameModeInfo->exitSounds[(gametic>>2)&7]);
+      S_StartInterfaceSound(GameModeInfo->exitSounds[(gametic>>2)&7]);
       i_haltimer.Sleep(1500);
    }
 

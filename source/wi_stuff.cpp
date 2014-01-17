@@ -1139,14 +1139,14 @@ static void WI_updateDeathmatchStats(void)
          }
       }
   
-      S_StartSound(NULL, sfx_barexp);  // bang
+      S_StartInterfaceSound(sfx_barexp);  // bang
       dm_state = 4;  // we're done with all 4 (or all we have to do)
    }
     
    if(dm_state == 2)
    {
       if(!(intertime&3))
-         S_StartSound(NULL, sfx_pistol);  // noise while counting
+         S_StartInterfaceSound(sfx_pistol);  // noise while counting
   
       stillticking = false;
       
@@ -1184,7 +1184,7 @@ static void WI_updateDeathmatchStats(void)
 
       if(!stillticking)
       {
-         S_StartSound(NULL, sfx_barexp);
+         S_StartInterfaceSound(sfx_barexp);
          dm_state++;
       }
    }
@@ -1192,7 +1192,7 @@ static void WI_updateDeathmatchStats(void)
    {
       if(acceleratestage)
       {   
-         S_StartSound(NULL, sfx_slop);
+         S_StartInterfaceSound(sfx_slop);
 
          if(GameModeInfo->id == commercial)
             WI_initNoState();
@@ -1394,14 +1394,14 @@ static void WI_updateNetgameStats(void)
          if(dofrags)
             cnt_frags[i] = WI_fragSum(i);  // we had frags
       }
-      S_StartSound(NULL, sfx_barexp);  // bang
+      S_StartInterfaceSound(sfx_barexp);  // bang
       ng_state = 10;
    }
    
    if(ng_state == 2)
    {
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);  // pop
+         S_StartInterfaceSound(sfx_pistol);  // pop
       
       stillticking = false;
       
@@ -1420,18 +1420,18 @@ static void WI_updateNetgameStats(void)
       
       if(!stillticking)
       {
-         S_StartSound(NULL, sfx_barexp); 
+         S_StartInterfaceSound(sfx_barexp); 
          ng_state++;
       }
    }
    else if(ng_state == 4)
    {
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
       
       stillticking = false;
       
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(!playeringame[i])
             continue;
@@ -1445,18 +1445,18 @@ static void WI_updateNetgameStats(void)
       
       if(!stillticking)
       {
-         S_StartSound(NULL, sfx_barexp);
+         S_StartInterfaceSound(sfx_barexp);
          ng_state++;
       }
    }
    else if(ng_state == 6)
    {
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
       
       stillticking = false;
       
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(!playeringame[i])
             continue;
@@ -1473,18 +1473,18 @@ static void WI_updateNetgameStats(void)
       
       if(!stillticking)
       {
-         S_StartSound(NULL, sfx_barexp);
+         S_StartInterfaceSound(sfx_barexp);
          ng_state += 1 + 2*!dofrags;
       }
    }
    else if(ng_state == 8)
    {
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
       
       stillticking = false;
       
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
          if(!playeringame[i])
             continue;
@@ -1499,7 +1499,7 @@ static void WI_updateNetgameStats(void)
       
       if(!stillticking)
       {
-         S_StartSound(NULL, sfx_pldeth);
+         S_StartInterfaceSound(sfx_pldeth);
          ng_state++;
       }
    }
@@ -1507,7 +1507,7 @@ static void WI_updateNetgameStats(void)
    {
       if(acceleratestage)
       {
-         S_StartSound(NULL, sfx_sgcock);
+         S_StartInterfaceSound(sfx_sgcock);
          if(GameModeInfo->id == commercial)
             WI_initNoState();
          else
@@ -1651,7 +1651,7 @@ static void WI_updateStats(void)
 
       cnt_time = plrs[me].stime / TICRATE;
       cnt_par = wbs->partime==-1 ? 0 : wbs->partime/TICRATE;
-      S_StartSound(NULL, sfx_barexp);
+      S_StartInterfaceSound(sfx_barexp);
       sp_state = 10;
    }
 
@@ -1660,12 +1660,12 @@ static void WI_updateStats(void)
       cnt_kills[0] += 2;
       
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
 
       if(cnt_kills[0] >= (plrs[me].skills * 100) / wbs->maxkills)
       {
          cnt_kills[0] = (plrs[me].skills * 100) / wbs->maxkills;
-         S_StartSound(NULL, sfx_barexp);
+         S_StartInterfaceSound(sfx_barexp);
          sp_state++;
       }
    }
@@ -1674,12 +1674,12 @@ static void WI_updateStats(void)
       cnt_items[0] += 2;
       
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
       
       if(cnt_items[0] >= (plrs[me].sitems * 100) / wbs->maxitems)
       {
          cnt_items[0] = (plrs[me].sitems * 100) / wbs->maxitems;
-         S_StartSound(NULL, sfx_barexp);
+         S_StartInterfaceSound(sfx_barexp);
          sp_state++;
       }
    }
@@ -1688,7 +1688,7 @@ static void WI_updateStats(void)
       cnt_secret[0] += 2;
       
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
 
       // killough 2/22/98: Make secrets = 100% if maxsecret = 0:
       if(cnt_secret[0] >= (wbs->maxsecret ? 
@@ -1696,14 +1696,14 @@ static void WI_updateStats(void)
       {
          cnt_secret[0] = (wbs->maxsecret ? 
             (plrs[me].ssecret * 100) / wbs->maxsecret : 100);
-         S_StartSound(NULL, sfx_barexp);
+         S_StartInterfaceSound(sfx_barexp);
          sp_state++;
       }
    }
    else if(sp_state == 8)
    {
       if(!(intertime & 3))
-         S_StartSound(NULL, sfx_pistol);
+         S_StartInterfaceSound(sfx_pistol);
       
       cnt_time += 3;
       
@@ -1718,7 +1718,7 @@ static void WI_updateStats(void)
          
          if (cnt_time >= plrs[me].stime / TICRATE)
          {
-            S_StartSound(NULL, sfx_barexp);
+            S_StartInterfaceSound(sfx_barexp);
             sp_state++;
          }
       }
@@ -1729,7 +1729,7 @@ static void WI_updateStats(void)
    {
       if(acceleratestage)
       {
-         S_StartSound(NULL, sfx_sgcock);
+         S_StartInterfaceSound(sfx_sgcock);
          
          if(GameModeInfo->id == commercial)
             WI_initNoState();

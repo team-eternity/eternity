@@ -667,10 +667,10 @@ void M_ScreenShot(void)
    {
       doom_printf("%s",
          errno ? strerror(errno) : FC_ERROR "Could not take screenshot");
-      S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
+      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
    }
    else
-      S_StartSound(NULL, GameModeInfo->c_BellSound);
+      S_StartInterfaceSound(GameModeInfo->c_BellSound);
 }
 
 // EOF

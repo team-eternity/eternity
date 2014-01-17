@@ -422,17 +422,20 @@ static int S_countChannels()
 // range from 0 to 127. Also added customizable attenuation types.
 // haleyjd 06/03/06: added ability to loop sound samples
 //
-void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
-                    int volumeScale, int attenuation, bool loop, int subchannel)
+void S_StartSfxInfo(const soundparams_t &params)
 {
    int  sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
    int  volume         = snd_SfxVolume;
+   int  volumeScale    = params.volumeScale;
+   int  subchannel     = params.subchannel;
    bool priority_boost = false;
    bool extcamera      = false;
    bool nocutoff       = false;
-   camera_t playercam;
-   camera_t *listener  = &playercam;
-   sector_t *earsec    = NULL;
+   camera_t      playercam;
+   camera_t     *listener = &playercam;
+   sector_t     *earsec   = NULL;
+   sfxinfo_t    *sfx      = params.sfx;
+   PointThinker *origin   = params.origin;
    Mobj *mo;
 
    // haleyjd 09/03/03: allow NULL sounds to fall through
@@ -575,7 +578,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    else
    {     
       // use an external cam?
-      if(!S_AdjustSoundParams(listener, origin, volumeScale, attenuation,
+      if(!S_AdjustSoundParams(listener, origin, volumeScale, params.attenuation,
                               &volume, &sep, &pitch, &priority, sfx))
          return;
       else if(origin->x == playercam.x && origin->y == playercam.y)
@@ -632,7 +635,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       sfx = sfx->link;     // sf: skip thru link(s)
 
    // Assigns the handle to one of the channels in the mix/output buffer.
-   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, loop, true);
+   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, params.loop, params.reverb);
 
    // haleyjd: check to see if the sound was started
    if(handle >= 0)
@@ -644,12 +647,12 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       // haleyjd 09/27/06: store priority and singularity values (!!!)
       // haleyjd 06/12/08: store subchannel
       channels[cnum].volume      = volumeScale;
-      channels[cnum].attenuation = attenuation;
+      channels[cnum].attenuation = params.attenuation;
       channels[cnum].pitch       = pitch;
       channels[cnum].o_priority  = o_priority;  // original priority
       channels[cnum].priority    = priority;    // scaled priority
       channels[cnum].singularity = singularity;
-      channels[cnum].looping     = loop;
+      channels[cnum].looping     = params.loop;
       channels[cnum].subchannel  = subchannel;
       channels[cnum].idnum       = I_SoundID(handle); // unique instance id
    }
@@ -671,15 +674,21 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel)
 {
+   soundparams_t params;
+
    // haleyjd: changed to use EDF DeHackEd number hashing,
    // to enable full use of dynamically defined sounds ^_^
-   sfxinfo_t *sfx = E_SoundForDEHNum(sfx_id);
+   if((params.sfx = E_SoundForDEHNum(sfx_id)))
+   {
+      params.origin      = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop        = false;
+      params.subchannel  = subchannel;
+      params.reverb      = true;
 
-   // ignore any invalid sounds
-   if(!sfx)
-      return;
-
-   S_StartSfxInfo(origin, sfx, volume, attn, false, subchannel);
+      S_StartSfxInfo(params);
+   }
 }
 
 //
@@ -703,14 +712,22 @@ void S_StartSound(PointThinker *origin, int sfx_id)
 void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
                               int volume, int attn, int subchannel)
 {
-   sfxinfo_t *sfx;
+   soundparams_t params;
    
    // haleyjd 03/17/03: allow NULL sound names to fall through
    if(!name)
       return;
 
-   if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn, false, subchannel);
+   if((params.sfx = S_SfxInfoForName(name)))
+   {
+      params.origin      = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop        = false;
+      params.subchannel  = subchannel;
+      params.reverb      = true;
+      S_StartSfxInfo(params);
+   }
 }
 
 //
@@ -734,13 +751,55 @@ void S_StartSoundName(PointThinker *origin, const char *name)
 void S_StartSoundLooped(PointThinker *origin, char *name, int volume, 
                         int attn, int subchannel)
 {
-   sfxinfo_t *sfx;
+   soundparams_t params;
    
    if(!name)
       return;
 
-   if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn, true, subchannel);
+   if((params.sfx = S_SfxInfoForName(name)))
+   {
+      params.origin      = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop        = true;
+      params.subchannel  = subchannel;
+      params.reverb      = true;
+      S_StartSfxInfo(params);
+   }
+}
+
+//
+// S_StartInterfaceSound(int)
+//
+// Start an interface sound by DeHackEd number.
+//
+void S_StartInterfaceSound(int sound_id)
+{
+   soundparams_t params;
+
+   if((params.sfx = E_SoundForDEHNum(sound_id)))
+   {
+      params.setNormalDefaults(NULL);
+      params.reverb = false;
+      S_StartSfxInfo(params);
+   }
+}
+
+//
+// S_StartInterfaceSound(const char *)
+//
+// Start an interface sound by name.
+//
+void S_StartInterfaceSound(const char *name)
+{
+   soundparams_t params;
+
+   if((params.sfx = E_SoundForName(name)))
+   {
+      params.setNormalDefaults(NULL);
+      params.reverb = false;
+      S_StartSfxInfo(params);
+   }
 }
 
 //
@@ -805,7 +864,7 @@ static void S_updateEnvironment(sector_t *earsec)
 {
    ereverb_t *reverb;
    
-   if(!earsec || menuactive || consoleactive || gamestate != GS_LEVEL)
+   if(!earsec || gamestate != GS_LEVEL)
       reverb = E_GetDefaultReverb();
    else
       reverb = soundzones[earsec->soundzone].reverb;

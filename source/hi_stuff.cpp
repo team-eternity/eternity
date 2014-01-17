@@ -554,7 +554,7 @@ static void HI_drawSingleStats(void)
    {
       if(statstage == 0)
       {
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
          statstage = 1;
       }
 
@@ -567,7 +567,7 @@ static void HI_drawSingleStats(void)
    {
       if(statstage == 1)
       {
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
          statstage = 2;
       }
 
@@ -580,7 +580,7 @@ static void HI_drawSingleStats(void)
    {
       if(statstage == 2)
       {
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
          statstage = 3;
       }
 
@@ -596,7 +596,7 @@ static void HI_drawSingleStats(void)
    {
       if(statstage == 3)
       {
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
          statstage = 4;
       }
 
@@ -648,7 +648,7 @@ static void HI_drawCoopStats(void)
    else if(intertime >= 40 && statstage == 0)
    {
       statstage = 1;
-      S_StartSound(NULL, sfx_hdorcls);
+      S_StartInterfaceSound(sfx_hdorcls);
    }
 
    for(i = 0; i < MAXPLAYERS; ++i)
@@ -750,7 +750,7 @@ static void HI_drawDMStats(void)
    {
       if(dmstatstage == 0)
       {
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
          dmstatstage = 1;
       }
 
@@ -759,7 +759,7 @@ static void HI_drawDMStats(void)
          if(dmstatstage == 1)
          {
             if(slaughterboy)
-               S_StartSound(NULL, sfx_hwpnup);
+               S_StartInterfaceSound(sfx_hwpnup);
             dmstatstage = 2;
          }
       }
@@ -880,7 +880,7 @@ static void HI_Ticker(void)
       {
          interstate = INTR_GOING;
          HI_DrawBackground(); // force a background change
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
       }
       else
       {
@@ -888,7 +888,7 @@ static void HI_Ticker(void)
          countdown = 10;
          flashtime = true;
 
-         S_StartSound(NULL, sfx_hdorcls);
+         S_StartInterfaceSound(sfx_hdorcls);
       }
 
       // clear accelerate flag
@@ -914,7 +914,7 @@ static void HI_DrawBackground(void)
    }
 }
 
-static void HI_Drawer(void)
+static void HI_Drawer()
 {
    static int oldinterstate;
 
@@ -922,7 +922,7 @@ static void HI_Drawer(void)
       return;
    
    if(oldinterstate != INTR_GOING && interstate == INTR_GOING)
-      S_StartSound(NULL, sfx_hpstop);
+      S_StartInterfaceSound(sfx_hpstop);
 
    // swap the background onto the screen
    IN_slamBackground();
