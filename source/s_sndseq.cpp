@@ -115,7 +115,7 @@ void S_StopSequence(PointThinker *mo)
             params.attenuation = curSeq->attenuation;
             params.loop        = false;
             params.subchannel  = CHAN_AUTO;
-            params.reverb      = true; // TODO/FIXME: allow as parameter?
+            params.reverb      = curSeq->sequence->reverb;
             S_StartSfxInfo(params);
          }
 
@@ -420,7 +420,7 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
       params.attenuation = seq->attenuation;
       params.loop        = loop;
       params.subchannel  = CHAN_AUTO;
-      params.reverb      = true; // TODO/FIXME: allow as parameter?
+      params.reverb      = seq->sequence->reverb;
       S_StartSfxInfo(params);
    }
 }
@@ -766,7 +766,7 @@ void S_SetSequenceStatus(SndSeq_t *seq)
 // This is called from the savegame loading code to reset the sound sequence
 // engine.
 //
-void S_SequenceGameLoad(void)
+void S_SequenceGameLoad()
 {
    DLListItem<SndSeq_t> *link;
 

@@ -102,6 +102,7 @@ struct ESoundSeq_t
    sfxinfo_t *stopsound;         // stopsound, if any
    bool nostopcutoff;            // if true, sounds aren't cut off at end
    bool randomplayvol;           // if true, volume is randomized on most play cmds
+   bool reverb;                  // whether or not to apply environments
 
    ESoundSeq_t *doorseq;  // redirect for door sequence use
    ESoundSeq_t *platseq;  // redirect for platform sequence use

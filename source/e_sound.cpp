@@ -894,6 +894,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 #define ITEM_SEQ_PLAT   "platsequence"
 #define ITEM_SEQ_FLOOR  "floorsequence"
 #define ITEM_SEQ_CEIL   "ceilingsequence"
+#define ITEM_SEQ_REVERB "reverb"
 
 // attenuation types -- also used by ambience
 static const char *attenuation_types[] =
@@ -972,12 +973,15 @@ cfg_opt_t edf_sndseq_opts[] =
    CFG_STR(ITEM_SEQ_ATTN,    "normal",  CFGF_NONE),
    CFG_INT(ITEM_SEQ_VOL,     127,       CFGF_NONE),
    CFG_INT(ITEM_SEQ_MNVOL,   -1,        CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_NSCO,   false,     CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_RNDVOL, false,     CFGF_NONE),
    CFG_STR(ITEM_SEQ_DOOR,    NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_PLAT,    NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_FLOOR,   NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_CEIL,    NULL,      CFGF_NONE),
+
+   CFG_BOOL(ITEM_SEQ_NSCO,   false,     CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_RNDVOL, false,     CFGF_NONE),
+   CFG_FLAG(ITEM_SEQ_REVERB, 1,         CFGF_SIGNPREFIX),
+
    CFG_END()
 };
 
@@ -1325,7 +1329,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 
    tempcmdbuf = ecalloc(seqcmd_t *, 1, cmdalloc);
 
-   for(i = 0; i < numcmds; ++i)
+   for(i = 0; i < numcmds; i++)
    {
       tempcmd_t tempcmd;
       char *tempstr = estrdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
@@ -1524,6 +1528,9 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
 
    // haleyjd 01/12/11: support for proper Heretic randomization behavior
    newSeq->randomplayvol = cfg_getbool(cfg, ITEM_SEQ_RNDVOL);
+
+   // 01/16/14: reverb flag
+   newSeq->reverb = !!cfg_getflag(cfg, ITEM_SEQ_REVERB);
 
    // process command list
 
