@@ -1210,7 +1210,7 @@ menu_t menu_player =
 #define SPRITEBOX_X 200
 #define SPRITEBOX_Y (menu_player.menuitems[7].y + 16)
 
-void MN_PlayerDrawer(void)
+void MN_PlayerDrawer()
 {
    int lump, w, h, toff, loff;
    spritedef_t *sprdef;
@@ -1312,7 +1312,7 @@ void MN_CreateSaveCmds()
       char tempstr[16];
 
       // create the variable first
-      save_variable = (variable_t *)(Z_Malloc(sizeof(*save_variable), PU_STATIC, 0)); // haleyjd
+      save_variable = estructalloc(variable_t, 1);
       save_variable->variable  = &savegamenames[i];
       save_variable->v_default = NULL;
       save_variable->type      = vt_string;      // string value
@@ -1321,7 +1321,7 @@ void MN_CreateSaveCmds()
       save_variable->defines   = NULL;
       
       // now the command
-      save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
+      save_command = estructalloc(command_t, 1);
       
       sprintf(tempstr, "savegame_%i", i);
       save_command->name     = estrdup(tempstr);
@@ -1343,9 +1343,7 @@ void MN_CreateSaveCmds()
 //
 void MN_ReadSaveStrings()
 {
-   int i;
-   
-   for(i = 0; i < SAVESLOTS; i++)
+   for(int i = 0; i < SAVESLOTS; i++)
    {
       char *name = NULL;    // killough 3/22/98
       size_t len;
@@ -1727,7 +1725,7 @@ CONSOLE_COMMAND(mn_options, 0)
 // If not, the "custom menu" item on the second page of the
 // options menu will be disabled.
 //
-static void MN_InitCustomMenu(void)
+static void MN_InitCustomMenu()
 {
    if(!MN_DynamicMenuForName("_MN_Custom"))
    {
@@ -1791,7 +1789,7 @@ CONSOLE_VARIABLE(mn_favscreentype, mn_favscreentype, 0) {}
 // Legacy settings, w/aspect-corrected variants
 static const char *legacyModes[] =
 {
-   "320x200",  // Mode 13h (16:10 logical, 4:3 physical)
+   "320x200",  // Mode Y (16:10 logical, 4:3 physical)
    "320x240",  // QVGA
    "640x400",  // VESA Extension (same as 320x200)
    "640x480",  // VGA
@@ -2004,11 +2002,11 @@ extern menu_t menu_vidadv;
 
 static const char *mn_vidpage_names[] =
 {
-   "Mode / Rendering / Misc",
+   "Mode / Rendering",
+   "Framerate / Screen Wipe / Misc",
    "System / Console / Screenshots",
-   "Screen Wipe",
    "Particles",
-   "Advanced",
+   "Advanced / OpenGL",
    NULL
 };
 
@@ -2022,7 +2020,7 @@ static menu_t *mn_vidpage_menus[] =
    NULL
 };
 
-void MN_VideoModeDrawer(void);
+void MN_VideoModeDrawer();
 
 static menuitem_t mn_video_items[] =
 {
@@ -2058,7 +2056,7 @@ menu_t menu_video =
    mn_vidpage_menus
 };
 
-void MN_VideoModeDrawer(void)
+void MN_VideoModeDrawer()
 {
    int lump, y;
    patch_t *patch;
@@ -2094,24 +2092,19 @@ CONSOLE_COMMAND(mn_video, 0)
 
 static menuitem_t mn_sysvideo_items[] =
 {
-   {it_title,    "Video Options",           NULL, "m_video"},
-   {it_gap},
-   {it_info,     "System"},
-   {it_toggle,   "DOS-like startup",        "textmode_startup"},
-#ifdef _SDL_VER
-   {it_toggle,   "Wait at exit",            "i_waitatexit"},
-   {it_toggle,   "Show ENDOOM",             "i_showendoom"},
-   {it_variable, "ENDOOM delay",            "i_endoomdelay"},
-#endif
-   {it_gap},
-   {it_info,     "Console"},
-   {it_variable, "Dropdown speed",           "c_speed"},
-   {it_variable, "Console size",             "c_height"},
-   {it_gap},
-   {it_info,     "Screenshots"},
-   {it_toggle,   "Screenshot format",       "shot_type"},
-   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
-   {it_end}
+   { it_title,  "Video Options",            NULL, "m_video" },
+   { it_gap },
+   { it_info,   "Framerate"   },
+   { it_toggle, "Uncapped framerate",       "d_fastrefresh" },
+   { it_toggle, "Interpolation",            "d_interpolate" },
+   { it_gap },
+   { it_info,   "Screen Wipe" },
+   { it_toggle, "Wipe style",               "wipetype"      },
+   { it_toggle, "Game waits for wipe",      "wipewait"      },
+   { it_gap },
+   { it_info,   "Misc." },
+   { it_toggle, "Loading disk icon",       "v_diskicon"     },
+   { it_end }
 };
 
 menu_t menu_sysvideo =
@@ -2130,14 +2123,23 @@ menu_t menu_sysvideo =
 
 static menuitem_t mn_video_page2_items[] =
 {
-   {it_title,   "Video Options",            NULL, "m_video"},
+   {it_title,    "Video Options",           NULL, "m_video"},
    {it_gap},
-   {it_info,    "Screen Wipe"},
-   {it_toggle,  "Wipe style",               "wipetype"},
-   {it_toggle,  "Game waits for wipe",      "wipewait"},
+   {it_info,     "System"},
+   {it_toggle,   "DOS-like startup",        "textmode_startup"},
+#ifdef _SDL_VER
+   {it_toggle,   "Wait at exit",            "i_waitatexit"},
+   {it_toggle,   "Show ENDOOM",             "i_showendoom"},
+   {it_variable, "ENDOOM delay",            "i_endoomdelay"},
+#endif
    {it_gap},
-   {it_info,    "Misc."},
-   {it_toggle,  "Loading disk icon",       "v_diskicon"},
+   {it_info,     "Console"},
+   {it_variable, "Dropdown speed",           "c_speed"},
+   {it_variable, "Console size",             "c_height"},
+   {it_gap},
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_end}
 };
 
