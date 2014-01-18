@@ -1409,7 +1409,6 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
    if(!artifact)
       return 0;
 
-   inventoryslot_t *backpackSlot = NULL;
    int subType = artifact->getInt(keyArtifactType, ARTI_NORMAL);
 
    switch(subType)

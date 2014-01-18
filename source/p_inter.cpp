@@ -552,8 +552,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    // INVENTORY_TODO: transitional logic is in place below until this function
    // can be fully converted to being based on itemeffects
-   itemeffect_t    *effect = NULL;
-   inventoryslot_t *slot   = NULL;
+   itemeffect_t *effect = NULL;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
       return;        // out of reach

@@ -1001,16 +1001,16 @@ static void ACS_funcSetThingPosition(ACS_FUNCARG)
 //
 static void ACS_funcSetThingSpecial(ACS_FUNCARG)
 {
-   int     tid  = args[0];
-   int     spec = args[1];
-   int     larg[NUMLINEARGS];
-   Mobj   *mo   = NULL;
+   int   tid  = args[0];
+   //int   spec = args[1]; HEXEN_TODO
+   int   larg[NUMLINEARGS];
+   Mobj *mo   = NULL;
 
    memcpy(larg, args+2, sizeof(larg));
 
    while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
    {
-    //mo->special = spec; HEXEN_TODO
+      //mo->special = spec; HEXEN_TODO
       memcpy(mo->args, larg, sizeof(larg));
    }
 }

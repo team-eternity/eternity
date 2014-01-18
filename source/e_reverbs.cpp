@@ -86,7 +86,7 @@ ereverb_t *E_ReverbForID(int id)
 #define ITEM_TP_ID2 "id2"
 
 #define ITEM_REVERB_ROOMSIZE  "roomsize"
-#define ITEM_REVERB_DAMPENING "dampening"
+#define ITEM_REVERB_DAMPING   "damping"
 #define ITEM_REVERB_WETSCALE  "wetscale"
 #define ITEM_REVERB_DRYSCALE  "dryscale"
 #define ITEM_REVERB_WIDTH     "width"
@@ -112,7 +112,7 @@ cfg_opt_t edf_reverb_opts[] =
    CFG_TPROPS(titleprops, CFGF_NOCASE),
 
    CFG_FLOAT(ITEM_REVERB_ROOMSIZE,  0.5,     CFGF_NONE),
-   CFG_FLOAT(ITEM_REVERB_DAMPENING, 0.5,     CFGF_NONE),
+   CFG_FLOAT(ITEM_REVERB_DAMPING,   0.5,     CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_WETSCALE,  1.0/3.0, CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_DRYSCALE,  0.0,     CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_WIDTH,     1.0,     CFGF_NONE),
@@ -225,7 +225,7 @@ static void E_processReverb(cfg_t *sec)
    }
 
    E_getFloatAndClamp(sec, ITEM_REVERB_ROOMSIZE,  newReverb->roomsize,  0.0, 1.07143, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_DAMPENING, newReverb->dampening, 0.0, 1.0,     def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_DAMPING,   newReverb->dampening, 0.0, 1.0,     def);
    E_getFloatAndClamp(sec, ITEM_REVERB_WETSCALE,  newReverb->wetscale,  0.0, 1.0,     def);
    E_getFloatAndClamp(sec, ITEM_REVERB_DRYSCALE,  newReverb->dryscale,  0.0, 1.0,     def);
    E_getFloatAndClamp(sec, ITEM_REVERB_WIDTH,     newReverb->width,     0.0, 1.0,     def);
@@ -246,11 +246,11 @@ static void E_processReverb(cfg_t *sec)
          newReverb->flags &= ~REVERB_EQUALIZED;
    }
 
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWFREQ, newReverb->eqlowfreq,  0.0, 20000.0, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIFREQ,  newReverb->eqhighfreq, 0.0, 20000.0, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWGAIN, newReverb->eqlowgain,  0.0,     1.5, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQMIDGAIN, newReverb->eqmidgain,  0.0,     1.5, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIGAIN,  newReverb->eqhighgain, 0.0,     1.5, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWFREQ, newReverb->eqlowfreq,  20.0, 20000.0, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIFREQ,  newReverb->eqhighfreq, 20.0, 20000.0, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWGAIN, newReverb->eqlowgain,   0.0,     1.5, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQMIDGAIN, newReverb->eqmidgain,   0.0,     1.5, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIGAIN,  newReverb->eqhighgain,  0.0,     1.5, def);
 
    E_EDFLogPrintf("\t\t* Finished reverb definition %s (%d %d)\n", title, id1, id2);
 }

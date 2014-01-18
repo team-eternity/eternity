@@ -563,8 +563,6 @@ static bool MN_FileResponder(event_t *ev, int action)
             n = 0; // loop round
          
          const char *fn = mn_currentdir->filenames[n];
-         size_t len     = strlen(fn);
-
          if(strlen(fn) > 1 && fn[0] == '/')
             ++fn;
 
