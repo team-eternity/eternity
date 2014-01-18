@@ -93,7 +93,7 @@ static default_t sysdefaults[] =
                "1 to show help strings about each variable in config file"),
 
    DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 1, 0, 1, default_t::wad_no,
-               "1 to use base/doom/eternity.cfg for all DOOM gamemodes"),
+               "1 to use user/doom/eternity.cfg for all DOOM gamemodes"),
 
    // IWAD paths
 

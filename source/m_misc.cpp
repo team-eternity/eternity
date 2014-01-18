@@ -304,6 +304,9 @@ default_t defaults[] =
    DEFAULT_INT("mouse_novert", &novert, NULL, 0, 0, 1, default_t::wad_no,
                "0 for normal mouse, 1 for no vertical movement"),
 
+   DEFAULT_INT("smooth_turning", &smooth_turning, NULL, 0, 0, 1, default_t::wad_no,
+               "average mouse input when turning player"),
+
    DEFAULT_INT("sfx_volume", &snd_SfxVolume, NULL, 8, 0, 15, default_t::wad_no,
                "adjust sound effects volume"),
 
