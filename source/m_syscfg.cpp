@@ -238,7 +238,7 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
 
-   DEFAULT_BOOL("d_interpolate", &d_interpolate, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("d_interpolate", &d_interpolate, NULL, true, default_t::wad_no,
                 "1 to activate frame interpolation (smooth rendering)"),
 
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, NULL, true, default_t::wad_no,
