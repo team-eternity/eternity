@@ -793,7 +793,10 @@ void P_PlayerThink(player_t *player)
    if(player->powers[pw_totalinvis] > 0) // haleyjd
    {
       if(!--player->powers[pw_totalinvis])
+      {
          player->mo->flags2 &= ~MF2_DONTDRAW;
+         player->mo->flags4 &= ~MF4_TOTALINVISIBLE;
+      }
    }
 
    if(player->powers[pw_flight] > 0) // haleyjd 06/05/12

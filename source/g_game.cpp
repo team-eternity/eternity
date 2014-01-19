@@ -1418,9 +1418,10 @@ static void G_PlayerFinishLevel(int player)
 
    // INVENTORY_TODO: convert powers to inventory
    memset(p->powers, 0, sizeof p->powers);
-   p->mo->flags  &= ~MF_SHADOW;    // cancel invisibility
-   p->mo->flags2 &= ~MF2_DONTDRAW; // haleyjd: cancel total invis.
-   p->mo->flags3 &= ~MF3_GHOST;    // haleyjd: cancel ghost
+   p->mo->flags  &= ~MF_SHADOW;             // cancel invisibility
+   p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
+   p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
+   p->mo->flags3 &= ~MF3_GHOST;             // haleyjd: cancel ghost
 
    E_InventoryEndHub(p);   // haleyjd: strip inventory
 

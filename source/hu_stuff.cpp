@@ -956,7 +956,7 @@ void HUDCrossHairWidget::ticker()
 
       if(((clip.linetarget->flags  & MF_SHADOW || 
            clip.linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
-         clip.linetarget->flags2 & MF2_DONTDRAW)
+         clip.linetarget->flags4 & MF4_TOTALINVISIBLE)
       {
          color = notargetcolour;
       }

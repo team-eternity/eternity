@@ -133,7 +133,7 @@ void A_Look(actionargs_t *actionargs)
       {
          // haleyjd 1/25/00: test for AMBUSH enemies seeing totally invisible
          // players after the soundtarget is activated.
-         if(actor->flags & MF_AMBUSH && sndtarget->flags2 & MF2_DONTDRAW)
+         if(actor->flags & MF_AMBUSH && sndtarget->flags4 & MF4_TOTALINVISIBLE)
             return;
 
          // soundtarget is valid, acquire it.
@@ -241,12 +241,10 @@ void A_FaceTarget(actionargs_t *actionargs)
 #else
                                   actor->target->x, actor->target->y);
 #endif
-   if(actor->target->flags & MF_SHADOW ||
-      actor->target->flags2 & MF2_DONTDRAW || // haleyjd
-      actor->target->flags3 & MF3_GHOST)      // haleyjd
-   {
-      actor->angle += P_SubRandom(pr_facetarget) << 21;
-   }
+
+   int shiftamount = P_GetAimShift(actor->target, false);
+   if(shiftamount >= 0)
+      actor->angle += P_SubRandom(pr_facetarget) << shiftamount;
 }
 
 //

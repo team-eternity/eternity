@@ -46,6 +46,7 @@
 #include "in_lude.h"
 #include "m_random.h"
 #include "p_chase.h"
+#include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -2517,12 +2518,9 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
    // fuzzy player -- haleyjd: add total invisibility, ghost
    if(dest && !(missileinfo.flags & missileinfo_t::NOFUZZ))
    {
-      if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
-         dest->flags3 & MF3_GHOST)
-      {
-         int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
-         an += P_SubRandom(pr_shadow) << shamt;
-      }
+      int shiftamount = P_GetAimShift(dest, true);
+      if(shiftamount >= 0)
+         an += P_SubRandom(pr_shadow) << shiftamount;
    }
    
    mo->angle = an;

@@ -48,6 +48,7 @@
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_random.h"
+#include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
 #include "p_info.h"
@@ -915,7 +916,7 @@ void P_NewChaseDir(Mobj *actor)
 //
 static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 {
-   if(mo->flags2 & MF2_DONTDRAW)
+   if(mo->flags4 & MF4_TOTALINVISIBLE)
       return 0;  // haleyjd: total invisibility!
 
    // haleyjd 11/14/02: Heretic ghost effects
@@ -1432,6 +1433,32 @@ void P_BossTeleport(bossteleport_t *bt)
       boss->momx = boss->momy = boss->momz = 0;
       boss->backupPosition();
    }
+}
+
+//
+// P_GetAimShift
+//
+// Get the aiming inaccuracy shift for an enemy. Returns -1 if there is none.
+//
+int P_GetAimShift(Mobj *target, bool missile)
+{
+   static MetaKeyIndex aimShiftKey("aimshift");
+   int shiftamount = -1;
+
+   // some thing flags set a shift amount
+   if(target->flags & MF_SHADOW || target->flags4 & MF4_TOTALINVISIBLE)
+      shiftamount = missile ? 20 : 21;
+   if(target->flags3 & MF3_GHOST)
+      shiftamount = 21;
+
+   // check out the metatable aimshift amount; if it is within range, it
+   // will override the shift amount set by any flags. If it is out of 
+   // range, it will remove any aim shifting.
+   int metashift = target->info->meta->getInt(aimShiftKey, -1);
+   if(metashift >= 0)
+      shiftamount = (metashift <= 24 ? metashift : -1);
+
+   return shiftamount;
 }
 
 //=============================================================================

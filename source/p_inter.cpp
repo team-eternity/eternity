@@ -366,6 +366,7 @@ bool P_GivePower(player_t *player, int power)
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
       player->mo->flags2 |= MF2_DONTDRAW;
+      player->mo->flags4 |= MF4_TOTALINVISIBLE;
       break;
    case pw_ghost:        // haleyjd: heretic ghost
       player->mo->flags3 |= MF3_GHOST;
