@@ -456,7 +456,7 @@ void MN_DrawCredits(void)
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2013 Team Eternity et al.", 
+                   FC_ABSCENTER "Copyright 2014 Team Eternity et al.", 
                    0, y, &subscreen43);
 }
 
