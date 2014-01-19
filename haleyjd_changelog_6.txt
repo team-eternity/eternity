@@ -2,6 +2,21 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+01/19/14
+
+Added one last feature, "aimshift", which allows customizing the way that 
+enemies mis-aim at monsters in the way that normally happens for SHADOW, GHOST,
+and totally invisible monsters. This is needed so that the PSX spectre varieties
+can have this behavior without making it an intrinsic property of another flag
+they have.
+
+I also took care of a related problem I'd been meaning to address for a while of
+the DONTDRAW flag having this inaccuracy effect when it is needed to only 
+disable vissprite generation without having other side effects by most of the
+game engine. This would be a compatibility break, if anybody ever actually
+used EE for anything :P
+
+--------------------------------------------------------------------------------
 01/18/14
 
 Doing prep work for the lead-up to Bifrost release:
