@@ -2,6 +2,89 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+01/18/14
+
+Doing prep work for the lead-up to Bifrost release:
+
+* Added framerate options d_fastrefresh and d_interpolate to the video options
+  menu and rearranged the pages of that menu to put more important settings
+  first. Also, interpolation is now on by default. We'll see how the community
+  reacts :)
+  
+* Added smooth_turning to the config file as someone earlier reported that it
+  was not being saved.
+  
+* Changed the "dampening" keyword in EDF to "damping" as I see the latter much
+  more frequently and thus suspect it to be the correct term.
+  
+* printz sent me a list of some warnings about unused variables of the type that
+  Visual Studio ignores, and I fixed all the ones that are not simply due to
+  unfinished features.
+
+--------------------------------------------------------------------------------
+01/16/14
+
+Fine tuning of the reverb effects and bug fixes have occurred:
+
+* The EQ parameters in the reverb engine weren't being updated except the first
+  time, so I mysteriously couldn't hear any difference between the "bright" and
+  "dark" presets.
+  
+* Tweaked the default "corner" frequencies of the reverb's 3-band EQ to 250 and 
+  4000 respectively, based on various advice from different audio tech web 
+  pages. Seems much more effective.
+  
+* Fine-tuned parameters in the presets to make them slightly more distinguished
+  between bright and dark variations.
+  
+Being unsatisfied with the way that environments could apply to global sounds, I
+have also rewritten the sound loop so that a secondary buffer is used for sound
+channels that want reverberation, and then the two buffers are mixed together
+before being output by the global EQ pass.
+
+By adding a new function S_StartInterfaceSound, there is now full semantic
+separation between playsim audio and global sounds made by systems such as the
+menus and console.
+
+As a result of this change, I am also able to add reverb as a parameter to 
+various sound-playing action functions, as well as to EDF ambience and sound
+sequence definitions.
+
+--------------------------------------------------------------------------------
+01/15/14
+
+Finished integration of reverb with the playsim:
+
+* The high-level sound engine now keeps track of the active environment for the
+  display player and notifies the reverb engine when a change occurs.
+  
+* The reverb engine now sets a flag to notify the low-level sound update loop
+  that it needs to call into the reverb engine effect processor.
+  
+* Nine environmental presets (basic reverb effects including the Freeverb
+  default settings and 8 different room sizes with different "luminosities" via
+  equalization parameters) are now defined in base/sounds.edf.
+  
+* Added a p_testenvironment console command which sets the zone that the player
+  running the command is in to the indicated reverb.
+
+--------------------------------------------------------------------------------
+01/14/14
+
+Finishing up work on integration of reverb with the playsim:
+
+* Added EESoundEnvironment with a ZDoom-compatible doomednum of 9048 and the
+  ability to alter its spawn sector's sound zone by setting it to the EDF
+  reverb specified by its args[0] and args[1] fields.
+
+* Data from an ereverb_t can now be propagated into the reverb class and its
+  subordinate data structures in s_reverb.cpp.
+
+* Sound engine now gets "earsec" when there's a valid listener during sound
+  origin adjustment, so that the currently active zone can be adjusted from it
+  in addition to the existing sound kill flag checks that are done.
+
+--------------------------------------------------------------------------------
 01/12/14
 
 Made interface changes to the IWAD picker, startup acknowledgment messages, and
