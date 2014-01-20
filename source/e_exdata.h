@@ -72,6 +72,7 @@ enum
    EX_ML_ADDITIVE     = 0x00000200, // uses additive blending
    EX_ML_BLOCKALL     = 0x00000400, // line blocks everything
    EX_ML_ZONEBOUNDARY = 0x00000800, // line marks a sound zone boundary
+   EX_ML_CLIPMIDTEX   = 0x00001000, // line clips midtextures to floor and ceiling height
 };
 
 // ExtraData line structure

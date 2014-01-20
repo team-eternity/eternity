@@ -201,6 +201,7 @@ static dehflags_t extlineflags[] =
    { "ADDITIVE",     EX_ML_ADDITIVE     },
    { "BLOCKALL",     EX_ML_BLOCKALL     },
    { "ZONEBOUNDARY", EX_ML_ZONEBOUNDARY },
+   { "CLIPMIDTEX",   EX_ML_CLIPMIDTEX   },
    { NULL,           0                  }
 };
 
