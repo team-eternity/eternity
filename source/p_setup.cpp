@@ -2300,6 +2300,41 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
    return LEVEL_FORMAT_HEXEN;
 }
 
+//
+// P_CheckLevelName
+//
+// haleyjd 01/21/14: Check for a level's existence and format by lump name.
+//
+int P_CheckLevelName(WadDirectory *dir, const char *mapname)
+{
+   int lumpnum;
+   return ((lumpnum = dir->checkNumForName(mapname)) >= 0 ? 
+      P_CheckLevel(dir, lumpnum) : LEVEL_FORMAT_INVALID);
+}
+
+//
+// P_CheckLevelMapNum
+//
+// haleyjd 01/21/14: Check for a level's existence and format from a map
+// number. Note behavior here for ExMy levels is ZDoom-compatible (episode
+// is base 0, not base 1).
+//
+int P_CheckLevelMapNum(WadDirectory *dir, int mapnum)
+{
+   qstring mapname;
+
+   if(GameModeInfo->flags & GIF_MAPXY)
+      mapname.Printf(9, "MAP%02d", mapnum);
+   else
+   {
+      int episode = mapnum / 10 + 1;
+      int map     = mapnum % 10;
+      mapname.Printf(9, "E%dM%d", episode, map);
+   }
+
+   return P_CheckLevelName(dir, mapname.constPtr());
+}
+
 void P_ConvertHereticSpecials(); // haleyjd
 
 void P_InitThingLists(); // haleyjd

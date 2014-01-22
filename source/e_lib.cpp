@@ -43,6 +43,7 @@
 #include "doomstat.h"
 #include "doomtype.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_qstr.h"
@@ -1192,9 +1193,9 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
       ++strpos;
 
    // On a number?
-   if(isnumchar(str[strpos]))
+   if(ectype::isDigit(str[strpos]))
    {
-      while(isnumchar(str[strpos]))
+      while(ectype::isDigit(str[strpos]))
       {
          *pstate->token += str[strpos];
          ++strpos;
@@ -1227,7 +1228,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
    }
 }
 
-#define COLOR_CLAMP(c) ((c) > 255 ? 255 : ((c) < 0 ? 0 : (c)))
+//#define COLOR_CLAMP(c) ((c) > 255 ? 255 : ((c) < 0 ? 0 : (c)))
 
 //
 // PushRange
@@ -1239,10 +1240,10 @@ static void PushRange(tr_pstate_t *pstate)
 {
    tr_range_t *newrange = estructalloc(tr_range_t, 1);
 
-   newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
-   newrange->srcend   = COLOR_CLAMP(pstate->srcend);
-   newrange->dstbegin = COLOR_CLAMP(pstate->dstbegin);
-   newrange->dstend   = COLOR_CLAMP(pstate->dstend);
+   newrange->srcbegin = eclamp(pstate->srcbegin, 0, 255);
+   newrange->srcend   = eclamp(pstate->srcend,   0, 255);
+   newrange->dstbegin = eclamp(pstate->dstbegin, 0, 255);
+   newrange->dstend   = eclamp(pstate->dstend,   0, 255);
 
    // normalize ranges
    if(newrange->srcbegin > newrange->srcend)
@@ -1524,7 +1525,8 @@ void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output)
       if(str)
          output += str;
 
-      if(i != numopts - 1 && output[output.length() - 1] != ',')
+      size_t len = output.length();
+      if(i != numopts - 1 && len && output[len - 1] != ',')
          output += ',';
    }
 }
