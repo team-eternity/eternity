@@ -28,6 +28,7 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -2462,6 +2463,9 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    
    //==============================================
    // Wake up subsystems
+
+   // haleyjd 01/21/14: clear marks here along with everything else
+   AM_clearMarks();
 
    // wake up heads-up display
    HU_Start();

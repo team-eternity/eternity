@@ -1387,7 +1387,7 @@ static bool secretexit;
 // haleyjd: true if a script called exitsecret()
 bool scriptSecret = false; 
 
-void G_ExitLevel(void)
+void G_ExitLevel()
 {
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1400,7 +1400,7 @@ void G_ExitLevel(void)
 // IF NO WOLF3D LEVELS, NO SECRET EXIT!
 // (unless it's a script secret exit)
 //
-void G_SecretExitLevel(void)
+void G_SecretExitLevel()
 {
    secretexit = 
       !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
@@ -1437,13 +1437,13 @@ static void G_PlayerFinishLevel(int player)
 // haleyjd 07/03/09: Replaces gamemode-dependent exit determination
 // functions with interpretation of a rule set held in GameModeInfo.
 //
-static void G_SetNextMap(void)
+static void G_SetNextMap()
 {
    exitrule_t *exitrule = GameModeInfo->exitRules;
    exitrule_t *theRule = NULL;
 
    // find a rule
-   for(; exitrule->gameepisode != -2; ++exitrule)
+   for(; exitrule->gameepisode != -2; exitrule++)
    {
       if((exitrule->gameepisode == -1 || exitrule->gameepisode == gameepisode) &&
          (exitrule->gamemap == -1 || exitrule->gamemap == gamemap) &&
@@ -1466,13 +1466,13 @@ static void G_SetNextMap(void)
 // Called upon level completion. Figures out what map is next and
 // starts the intermission.
 //
-static void G_DoCompleted(void)
+static void G_DoCompleted()
 {
    int i;
    
    gameaction = ga_nothing;
    
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i])
          G_PlayerFinishLevel(i);        // take away cards and stuff
@@ -1496,7 +1496,7 @@ static void G_DoCompleted(void)
          }
          break;
       case 9:
-         for(i = 0; i < MAXPLAYERS; ++i)
+         for(i = 0; i < MAXPLAYERS; i++)
             players[i].didsecret = true;
          break;
       }
@@ -1618,7 +1618,6 @@ static void G_DoWorldDone()
    hub_changelevel = false;
    G_DoLoadLevel();
    gameaction = ga_nothing;
-   AM_clearMarks(); //jff 4/12/98 clear any marks on the automap
    // haleyjd 01/07/07: run deferred ACS scripts
    ACS_RunDeferredScripts();
 }
@@ -2894,9 +2893,6 @@ void G_InitNew(skill_t skill, char *name)
 
    G_SetGameMap();  // sf
   
-   //jff 4/16/98 force marks on automap cleared every new level start
-   AM_clearMarks();
-
    if(demo_version >= 203)
       M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
   
