@@ -409,17 +409,14 @@ static void R_DetectTextureFormat(texturelump_t *tlump)
 }
 
 //
-// R_TextureHacks
+// R_DoomTextureHacks
 //
-// SoM: This function determines special cases for some textures with known 
-// erroneous data.
+// GameModeInfo routine to fix up bad Doom textures
 //
-static void R_TextureHacks(texture_t *t)
-{   
+void R_DoomTextureHacks(texture_t *t)
+{
    // Adapted from Zdoom's FMultiPatchTexture::CheckForHacks
-   if(GameModeInfo->type == Game_DOOM &&
-      GameModeInfo->missionInfo->id == doom &&
-      t->ccount == 1 &&
+   if(t->ccount == 1 &&
       t->height == 128 &&
       t->name[0] == 'S' &&
       t->name[1] == 'K' &&
@@ -428,27 +425,10 @@ static void R_TextureHacks(texture_t *t)
       t->name[4] == 0)
    {
       t->components->originy = 0;
-      return;
-   }
-   
-   if(GameModeInfo->type == Game_Heretic &&
-      t->height == 128 &&
-      t->name[0] == 'S' &&
-      t->name[1] == 'K' &&
-      t->name[2] == 'Y' &&
-      t->name[3] >= '1' &&
-      t->name[3] <= '3' &&
-      t->name[4] == 0)
-   {
-      t->height = 200;
-      t->heightfrac = 200*FRACUNIT;
-      return;
    }
 
    // BIGDOOR7 in Doom also has patches at y offset -4 instead of 0.
-   if (GameModeInfo->type == Game_DOOM &&
-      GameModeInfo->missionInfo->id == doom &&
-      t->ccount == 2 &&
+   if(t->ccount == 2 &&
       t->height == 128 &&
       t->components[0].originy == -4 &&
       t->components[1].originy == -4 &&
@@ -462,7 +442,26 @@ static void R_TextureHacks(texture_t *t)
       t->name[7] == '7')
    {
       t->components[0].originy = t->components[1].originy = 0;
-      return;
+   }
+}
+
+//
+// R_HticTextureHacks
+//
+// GameModeInfo routine to fix up bad Heretic textures
+//
+void R_HticTextureHacks(texture_t *t)
+{
+   if(t->height == 128 &&
+      t->name[0] == 'S' &&
+      t->name[1] == 'K' &&
+      t->name[2] == 'Y' &&
+      t->name[3] >= '1' &&
+      t->name[3] <= '3' &&
+      t->name[4] == 0)
+   {
+      t->height = 200;
+      t->heightfrac = 200*FRACUNIT;
    }
 }
 
@@ -527,7 +526,8 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
          }
       }
       
-      R_TextureHacks(texture);
+      if(GameModeInfo->TextureHacks)
+         GameModeInfo->TextureHacks(texture);
    }
 
    return texnum;

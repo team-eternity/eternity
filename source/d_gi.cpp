@@ -48,6 +48,7 @@
 #include "mn_menus.h"
 #include "p_info.h"
 #include "p_skin.h"
+#include "r_textur.h"
 #include "s_sound.h"
 #include "st_stuff.h"
 #include "sounds.h"
@@ -1026,8 +1027,9 @@ static gamemodeinfo_t giDoomSW =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
 
-   1,                // switchEpisode
-   &DoomSkyData,     // skyData
+   1,                  // switchEpisode
+   &DoomSkyData,       // skyData
+   R_DoomTextureHacks, // TextureHacks
 
    NULL,             // defaultORs
 
@@ -1132,8 +1134,9 @@ static gamemodeinfo_t giDoomReg =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
 
-   2,                // switchEpisode
-   &DoomSkyData,     // skyData
+   2,                  // switchEpisode
+   &DoomSkyData,       // skyData
+   R_DoomTextureHacks, // TextureHacks
 
    NULL,             // defaultORs
 
@@ -1238,8 +1241,9 @@ static gamemodeinfo_t giDoomRetail =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
 
-   2,                // switchEpisode
-   &DoomSkyData,     // skyData
+   2,                  // switchEpisode
+   &DoomSkyData,       // skyData
+   R_DoomTextureHacks, // TextureHacks
 
    NULL,             // defaultORs
 
@@ -1346,6 +1350,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    3,                // switchEpisode
    &Doom2SkyData,    // skyData
+   NULL,             // TextureHakcs
 
    NULL,             // defaultORs
 
@@ -1450,8 +1455,9 @@ static gamemodeinfo_t giHereticSW =
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
 
-   1,                // switchEpisode
-   &HereticSkyData,  // skyData
+   1,                  // switchEpisode
+   &HereticSkyData,    // skyData
+   R_HticTextureHacks, // TextureHacks
 
    HereticDefaultORs, // defaultORs
 
@@ -1560,8 +1566,9 @@ static gamemodeinfo_t giHereticReg =
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
 
-   2,                 // switchEpisode
-   &HereticSkyData,   // skyData
+   2,                  // switchEpisode
+   &HereticSkyData,    // skyData
+   R_HticTextureHacks, // TextureHacks
    
    HereticDefaultORs, // defaultORs
 

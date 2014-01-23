@@ -1661,6 +1661,9 @@
     <ClInclude Include="..\source\sdl\i_sdltimer.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\r_textur.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

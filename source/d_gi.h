@@ -41,6 +41,7 @@ struct levelnamedata_t;
 struct menu_t;
 struct musicinfo_t;
 struct stbarfns_t;
+struct texture_t;
 
 // inspired by, but not taken from, zdoom
 
@@ -310,6 +311,7 @@ typedef int  (*gimuscheatfn_t )(const char *);
 typedef void (*ginewgamefn_t  )();
 typedef int  (*gipartimefn_t  )(int, int);
 typedef void (*gilevelnamefn_t)(levelnamedata_t &);
+typedef void (*gitexhackfn_t  )(texture_t *);
 
 //
 // gamemodeinfo_t
@@ -427,6 +429,7 @@ struct gamemodeinfo_t
    // Renderer stuff
    int switchEpisode;             // "episode" number for switch texture defs
    skydata_t *skyData;            // default sky data for MapInfo
+   gitexhackfn_t TextureHacks;    // texture hacks function
 
    // Configuration
    default_or_t *defaultORs;      // default overrides for configuration file
