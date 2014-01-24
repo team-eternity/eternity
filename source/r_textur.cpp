@@ -477,7 +477,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
    int i, j;
    byte *directory = tlump->directory;
 
-   for(i = 0; i < tlump->numtextures; ++i, ++texnum)
+   for(i = 0; i < tlump->numtextures; i++, texnum++)
    {
       int            offset;
       byte           *rawtex, *rawpatch;
@@ -500,7 +500,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
          
       component = texture->components;
 
-      for(j = 0; j < texture->ccount; ++j, ++component)
+      for(j = 0; j < texture->ccount; j++, component++)
       {
          rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
 
@@ -526,6 +526,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
          }
       }
       
+      // haleyjd: apply texture hacks on a gamemode-dependent basis
       if(GameModeInfo->TextureHacks)
          GameModeInfo->TextureHacks(texture);
    }
