@@ -430,70 +430,6 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // mouse
   
-   if(mouseb_dblc2 >= 0)
-   {
-      // check for timeout if in double click state
-      if(dclickstate && (dclicktime += ticdup) > 35)
-      {
-         dclickstate = false;
-         dclicktime  = 0;
-         dclicks     = 0;
-      }
-
-      // forward double click -- haleyjd: still allow double clicks
-      if(mousebuttons[mouseb_dblc2]) // mouse button down
-      {
-         if(!dclickstate) // first time?
-         {
-            dclickstate = true;
-            dclicktime  = 0;
-            dclicks     = 1;
-         }
-         else if(dclicktime > 10)
-            ++dclicks; // increment click count
-
-         if(dclicks == 2) // got one
-         {
-            cmd->buttons |= BT_USE;
-            dclickstate = false;
-            dclicktime  = 0;
-            dclicks     = 0;
-         }
-      }
-   }
-
-   if(mouseb_dblc1 >= 0)
-   {
-      // check for timeout if in double click state
-      if(dclickstate2 && (dclicktime2 += ticdup) > 35)
-      {
-         dclickstate2 = false;
-         dclicktime2  = 0;
-         dclicks2     = 0;
-      }
-
-      // strafe double click
-      if(mousebuttons[mouseb_dblc1]) // mouse button down
-      {
-         if(!dclickstate2) // first time?
-         {
-            dclickstate2 = true;
-            dclicktime2  = 0;
-            dclicks2     = 1;
-         }
-         else if(dclicktime2 > 10)
-            ++dclicks2; // increment click count
-
-         if(dclicks2 == 2) // got one
-         {
-            cmd->buttons |= BT_USE;
-            dclickstate2 = false;
-            dclicktime2  = 0;
-            dclicks2     = 0;
-         }
-      }
-   }
-   /*
    // forward double click -- haleyjd: still allow double clicks
    if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
    {
@@ -538,7 +474,6 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       dclicks2 = 0;
       dclickstate2 = false;
    }
-   */
 
    // sf: smooth out the mouse movement
    // change to use tmousex, y   
