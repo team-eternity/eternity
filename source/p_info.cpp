@@ -777,8 +777,7 @@ void P_Doom2DefaultLevelName(levelnamedata_t &lnd)
       d2upperbound = 33;
 
    if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
-      lnd.bexName = GameModeInfo->levelNames[gamemap-1];
-   
+      lnd.bexName = GameModeInfo->levelNames[gamemap-1];   
 }
 
 //
@@ -1616,9 +1615,9 @@ const char *P_GetMusInfoMusic(const char *mapname, int number)
 
    if((music = musInfoMusHash.objectForKey(mapname)))
    {
-      int nummaps = music->maps.getLength();
+      size_t nummaps = music->maps.getLength();
 
-      for(int i = 0; i < nummaps; i++)
+      for(size_t i = 0; i < nummaps; i++)
       {
          if(music->maps[i].num == number)
          {

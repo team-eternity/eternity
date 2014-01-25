@@ -65,7 +65,7 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "w_wad.h"
-#include "xl_scripts.h"
+#include "xl_sndinfo.h"
 
 //
 // Sound keywords

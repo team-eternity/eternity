@@ -1053,6 +1053,8 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\w_zip.cpp" />
+    <ClCompile Include="..\source\xl_musinfo.cpp" />
+    <ClCompile Include="..\source\xl_sndinfo.cpp" />
     <ClCompile Include="..\source\z_native.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1412,6 +1414,8 @@
     <ClInclude Include="..\source\w_levels.h" />
     <ClInclude Include="..\Source\w_wad.h" />
     <ClInclude Include="..\source\w_zip.h" />
+    <ClInclude Include="..\source\xl_musinfo.h" />
+    <ClInclude Include="..\source\xl_sndinfo.h" />
     <ClInclude Include="..\source\z_auto.h" />
     <ClInclude Include="..\Source\z_zone.h" />
     <ClInclude Include="..\source\autopalette.h" />
