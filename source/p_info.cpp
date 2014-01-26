@@ -75,6 +75,7 @@
 #include "sounds.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "xl_mapinfo.h"
 
 // need wad iterators
 #include "w_iterator.h"
@@ -91,6 +92,9 @@ static void P_ParseLevelVar(qstring *cmd);
 
 static void P_ClearLevelVars();
 static void P_InitWeapons();
+
+// Hexen MAPINFO
+static void P_applyHexenMapInfo();
 
 // post-processing routine prototypes
 static void P_LoadInterTextLump();
@@ -136,7 +140,7 @@ static enum limode_e
    LI_NUMMODES
 } limode;
 
-static bool foundGlobalMap;
+static bool foundEEMapInfo;
 
 // haleyjd: flag set for boss specials
 static dehflags_t boss_spec_flags[] =
@@ -221,7 +225,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 
    // parse global lumps
    limode = LI_MODE_GLOBAL;
-   foundGlobalMap = false;
+   foundEEMapInfo = false;
 
    // run down the hash chain for EMAPINFO
    WadChainIterator wci(wGlobalDir, "EMAPINFO");
@@ -232,7 +236,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
          // reset the parser state
          readtype = RT_OTHER;
          P_ParseLevelInfo(&wGlobalDir, (*wci)->selfindex);
-         if(foundGlobalMap) // parsed an entry for this map, so stop
+         if(foundEEMapInfo) // parsed an entry for this map, so stop
             break;
       }
    }
@@ -241,6 +245,11 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
    P_ParseLevelInfo(&wGlobalDir, lumpnum);
+
+   // haleyjd 01/26/14: if no EE map information was specified for this map,
+   // defer to any defined Hexen MAPINFO data now.
+   if(!foundEEMapInfo)
+      P_applyHexenMapInfo();
    
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
@@ -248,10 +257,6 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    P_SetParTime();
    P_SetInfoSoundNames();
    P_SetOutdoorFog();
-
-   // haleyjd 03/15/03: handle level scripts
-   if(LevelInfo.scriptLump)
-      LevelInfo.hasScripts = true;
 
    P_InitWeapons();
 }
@@ -337,19 +342,22 @@ static int P_ParseInfoCmd(qstring *line)
       {
          // when in global mode, returning -1 will make
          // P_ParseLevelInfo break out early, saving time
-         if(foundGlobalMap)
+         if(foundEEMapInfo)
             return -1;
 
          if(!strncasecmp(label, gamemapname, strlen(gamemapname)))
          {
-            foundGlobalMap = true;
+            foundEEMapInfo = true;
             readtype = RT_LEVELINFO;
          }
       }
       else
       {
          if(!strncmp(label, "level info", 10))
+         {
+            foundEEMapInfo = true;
             readtype = RT_LEVELINFO;
+         }
       }
 
       // go to next line immediately
@@ -452,7 +460,6 @@ levelvar_t levelvars[]=
    LI_STRING("levelpic",           LEVELPIC,         levelPic),
    LI_STRING("levelpicnext",       NEXTLEVELPIC,     nextLevelPic),
    LI_STRING("levelpicsecret",     NEXTSECRETPIC,    nextSecretPic),
-   LI_STRING("levelscript",        SCRIPTLUMP,       scriptLump),
    LI_BOOLNF("lightning",          HASLIGHTNING,     hasLightning),
    LI_STRING("music",              MUSICNAME,        musicName),
    LI_STRING("nextlevel",          NEXTLEVEL,        nextLevel),
@@ -867,6 +874,94 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
    &LevelInfo.sound_stnmov,
    &LevelInfo.sound_fcmove,
 };
+
+//
+// P_applyHexenMapInfo
+//
+// haleyjd 01/26/14: Applies data from Hexen MAPINFO
+//
+static void P_applyHexenMapInfo()
+{
+   XLMapInfo *xlmi;
+
+   if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
+      return;
+
+   LevelInfo.levelName = xlmi->name.constPtr();
+
+   // sky textures
+   if(xlmi->setfields[XL_MAPINFO_SKY1])
+   {
+      LevelInfo.skyName  = xlmi->sky1.constPtr();
+      LevelInfo.skyDelta = xlmi->sky1delta;
+   }
+   if(xlmi->setfields[XL_MAPINFO_SKY2])
+   {
+      LevelInfo.sky2Name  = xlmi->sky2.constPtr();
+      LevelInfo.sky2Delta = xlmi->sky2delta;
+   }
+
+   // double skies
+   if(xlmi->setfields[XL_MAPINFO_DOUBLESKY])
+      LevelInfo.doubleSky = xlmi->doublesky;
+
+   // lightning
+   if(xlmi->setfields[XL_MAPINFO_LIGHTNING])
+      LevelInfo.hasLightning = xlmi->lightning;
+
+   // colormap
+   if(xlmi->setfields[XL_MAPINFO_FADETABLE])
+      LevelInfo.colorMap = xlmi->fadetable.constPtr();
+
+   // TODO: cluster, warptrans
+
+   // next map
+   if(xlmi->setfields[XL_MAPINFO_NEXT])
+   {
+      LevelInfo.nextLevel = xlmi->next.constPtr();
+      // TODO: fiddle with name of next map here?
+   }
+
+   // next secret
+   if(xlmi->setfields[XL_MAPINFO_SECRETNEXT])
+   {
+      LevelInfo.nextSecret = xlmi->secretnext.constPtr();
+      // TODO: need ability for secret-next name in intermission
+   }
+
+   // titlepatch for intermission
+   if(xlmi->setfields[XL_MAPINFO_TITLEPATCH])
+   {
+      LevelInfo.levelPic = xlmi->titlepatch.constPtr();
+      // TODO: next level's title patch...
+   }
+
+   // TODO: cdtrack
+
+   // par times
+   if(xlmi->setfields[XL_MAPINFO_PAR])
+      LevelInfo.partime = xlmi->par;
+
+   // music
+   if(xlmi->setfields[XL_MAPINFO_MUSIC])
+      LevelInfo.musicName = xlmi->music.constPtr();
+
+   // flags
+   if(xlmi->setfields[XL_MAPINFO_NOINTERMISSION])
+      LevelInfo.killStats = xlmi->nointermission;
+   if(xlmi->setfields[XL_MAPINFO_EVENLIGHTING])
+      LevelInfo.unevenLight = !xlmi->evenlighting;
+   if(xlmi->setfields[XL_MAPINFO_NOAUTOSEQUENCES])
+      LevelInfo.noAutoSequences = xlmi->noautosequences;
+
+   /*
+   Stuff with "Unfinished Business":
+   qstring name;
+   qstring next;
+   qstring secretnext;
+   qstring titlepatch;
+   */
+}
 
 //
 // P_InfoDefaultSoundNames
@@ -1306,8 +1401,6 @@ static void P_ClearLevelVars()
    LevelInfo.nextSecret      = "";
    //info_weapons            = "";
    LevelInfo.gravity         = DEFAULTGRAVITY;
-   LevelInfo.hasScripts      = false;
-   LevelInfo.scriptLump      = NULL;
    LevelInfo.acsScriptLump   = NULL;
    LevelInfo.extraData       = NULL;
    

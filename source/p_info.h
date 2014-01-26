@@ -172,8 +172,6 @@ struct LevelInfo_t
    const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   bool hasScripts;           // true if scriptLump is valid
-   char *scriptLump;          // name of Levelscript lump
    char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
    char *extraData;           // name of ExtraData lump
 

@@ -132,8 +132,8 @@ static int hi_faces[4];
 static int hi_dead_faces[4];
 
 // 03/27/05: EDF strings for intermission level names
-static edf_string_t *mapName;
-static edf_string_t *nextMapName;
+static const char *mapName;
+static const char *nextMapName;
 
 // 04/25/09: deathmatch data
 static fixed_t dSlideX[MAXPLAYERS];
@@ -183,16 +183,18 @@ static void HI_loadData(void)
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName = NULL;
+   mapName     = NULL;
    nextMapName = NULL;
 
    {
       char nameBuffer[24];
       const char *basename;
+      edf_string_t *str;
 
       // set current map
       psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);
-      mapName = E_StringForName(nameBuffer);
+      if((str = E_StringForName(nameBuffer)))
+         mapName = str->string;
 
       // are we going to a secret level?
       basename = hi_wbs.gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
@@ -202,7 +204,8 @@ static void HI_loadData(void)
       {
          psnprintf(nameBuffer, 24, "_IN_NAME_%s", basename);
 
-         nextMapName = E_StringForName(nameBuffer);
+         if((str = E_StringForName(nameBuffer)))
+            nextMapName = str->string;
       }
       else
       {
@@ -211,12 +214,14 @@ static void HI_loadData(void)
          {
             psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
                       hi_wbs.epsd + 1, hi_wbs.next + 1);
-            nextMapName = E_StringForName(nameBuffer);
+            if((str = E_StringForName(nameBuffer)))
+               nextMapName = str->string;
          }
          else if(isMAPxy(gamemapname))
          {
             psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", hi_wbs.next + 1);
-            nextMapName = E_StringForName(nameBuffer);
+            if((str = E_StringForName(nameBuffer)))
+               nextMapName = str->string;
          }
       }
    }
@@ -317,7 +322,7 @@ static void HI_drawNewLevelName(int y)
    V_FontWriteText(in_font, HIS_NOWENTERING, x, y, &subscreen43);
 
    if(nextMapName)
-      thisLevelName = nextMapName->string;
+      thisLevelName = nextMapName;
    else
       thisLevelName = "new level";
 
@@ -337,7 +342,7 @@ static void HI_drawOldLevelName(int y)
    const char *oldLevelName;
 
    if(mapName)
-      oldLevelName = mapName->string;
+      oldLevelName = mapName;
    else
       oldLevelName = "new level";
 
@@ -355,7 +360,7 @@ static void HI_drawOldLevelName(int y)
 // "now entering" is shown, and a pointer blinks at the next
 // stage on the map.
 //
-static void HI_drawGoing(void)
+static void HI_drawGoing()
 {
    int i, previous;
 

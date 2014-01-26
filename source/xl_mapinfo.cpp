@@ -450,6 +450,11 @@ XLMapInfo *XL_MapInfoForMapNum(int episode, int map)
    return mapInfoTable.objectForKey(mapname.constPtr());
 }
 
+//
+// XL_ParseMapInfo
+//
+// Parse all MAPINFO lumps.
+//
 void XL_ParseMapInfo()
 {
    XLMapInfoParser parser;
@@ -462,6 +467,11 @@ void XL_ParseMapInfo()
 // Console Commands
 //
 
+//
+// xl_dumpmapinfo
+//
+// Display information on a single MAPINFO entry by map name.
+//
 CONSOLE_COMMAND(xl_dumpmapinfo, 0)
 {
    if(Console.argc < 1)
@@ -479,27 +489,27 @@ CONSOLE_COMMAND(xl_dumpmapinfo, 0)
 
       for(int i = 0; i < XL_NUMMAPINFO_FIELDS; i++)
       {
-         auto kwd       = &mapKeywordParseTable[i];
-         auto fieldname = XLMapInfoParser::mapKeywords[kwd->index];
+         auto &kwd       = mapKeywordParseTable[i];
+         auto  fieldname = XLMapInfoParser::mapKeywords[kwd.index];
 
-         if(mapInfo->setfields[kwd->index])
+         if(mapInfo->setfields[kwd.index])
          {
             qstring val;
 
-            switch(kwd->vartype)
+            switch(kwd.vartype)
             {
             case KW_VALUE_SKY:
-               val << mapInfo->*(kwd->qstrval) << ", " << mapInfo->*(kwd->intval);
+               val << mapInfo->*(kwd.qstrval) << ", " << mapInfo->*(kwd.intval);
                break;
             case KW_VALUE_INT:
-               val << mapInfo->*(kwd->intval);
+               val << mapInfo->*(kwd.intval);
                break;
             case KW_VALUE_MAP:
             case KW_VALUE_QSTR:
-               val << mapInfo->*(kwd->qstrval);
+               val << mapInfo->*(kwd.qstrval);
                break;
             case KW_VALUE_BOOL:
-               val << mapInfo->*(kwd->boolval);
+               val << mapInfo->*(kwd.boolval);
                break;
             }
 
@@ -508,7 +518,7 @@ CONSOLE_COMMAND(xl_dumpmapinfo, 0)
       }
    }
    else
-      C_Printf(FC_ERROR "No MAPINFO for %s\n", Console.argv[0]->constPtr());
+      C_Printf(FC_ERROR "No MAPINFO defined for %s\n", Console.argv[0]->constPtr());
 }
 
 // EOF

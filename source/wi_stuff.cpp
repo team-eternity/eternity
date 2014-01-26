@@ -394,8 +394,8 @@ static int cur_pause_time;
 static bool fade_applied = false;
 
 // haleyjd 03/27/05: EDF-defined intermission map names
-static edf_string_t *mapName;
-static edf_string_t *nextMapName;
+static const char *mapName;
+static const char *nextMapName;
 
 // globals
 
@@ -440,10 +440,10 @@ static void WI_drawLF(void)
       // draw <LevelName> 
       if(mapName)
       {
-         V_FontWriteText(in_bigfont, mapName->string, 
-            (SCREENWIDTH - V_FontStringWidth(in_bigfont, mapName->string)) / 2, y,
+         V_FontWriteText(in_bigfont, mapName, 
+            (SCREENWIDTH - V_FontStringWidth(in_bigfont, mapName)) / 2, y,
             &subscreen43);
-         y += (5 * V_FontStringHeight(in_bigfont, mapName->string)) / 4;
+         y += (5 * V_FontStringHeight(in_bigfont, mapName)) / 4;
       }
       else
       {
@@ -510,8 +510,8 @@ static void WI_drawEL(void)
       // draw level
       if(nextMapName)
       {
-         V_FontWriteText(in_bigfont, nextMapName->string,
-            (SCREENWIDTH - V_FontStringWidth(in_bigfont, nextMapName->string)) / 2,
+         V_FontWriteText(in_bigfont, nextMapName,
+            (SCREENWIDTH - V_FontStringWidth(in_bigfont, nextMapName)) / 2,
             y, &subscreen43);
       }
       else
@@ -2119,7 +2119,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName = NULL;
+   mapName     = NULL;
    nextMapName = NULL;
 
    if(LevelInfo.useEDFInterName || inmanageddir)
@@ -2139,12 +2139,14 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
          V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
 
          buffer << "{EE_MLEV_" << lvname << "}";
-         mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1);
+         mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1)->string;
       }
       else
       {
+         edf_string_t *str;
          psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
-         mapName = E_StringForName(nameBuffer);
+         if((str = E_StringForName(nameBuffer)))
+            mapName = str->string;
       }
 
       // are we going to a secret level?
@@ -2153,23 +2155,29 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
       // set next map
       if(*basename)
       {
+         edf_string_t *str;
          psnprintf(nameBuffer, 24, "_IN_NAME_%s", basename);
 
-         nextMapName = E_StringForName(nameBuffer);
+         if((str = E_StringForName(nameBuffer)))
+            nextMapName = str->string;
       }
       else
       {
          // try ExMy and MAPxy defaults for normally-named maps
          if(isExMy(gamemapname))
          {
+            edf_string_t *str;
             psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
                       wbs->epsd + 1, wbs->next + 1);
-            nextMapName = E_StringForName(nameBuffer);
+            if((str = E_StringForName(nameBuffer)))
+               nextMapName = str->string;
          }
          else if(isMAPxy(gamemapname))
          {
+            edf_string_t *str;
             psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);
-            nextMapName = E_StringForName(nameBuffer);
+            if((str = E_StringForName(nameBuffer)))
+               nextMapName = str->string;
          }
       }
    }
