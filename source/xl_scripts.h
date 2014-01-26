@@ -50,6 +50,7 @@ public:
    {
       STATE_SCAN,    // scanning for a string token
       STATE_INTOKEN, // in a string token
+      STATE_QUOTED,  // in a quoted string
       STATE_COMMENT, // reading out a comment (eat rest of line)
       STATE_DONE     // finished the current token
    };
@@ -73,6 +74,7 @@ protected:
 
    void doStateScan();
    void doStateInToken();
+   void doStateQuoted();
    void doStateComment();
 
    // State table declaration
@@ -107,7 +109,7 @@ protected:
 
    // Override me!
    virtual void startLump() {} // called at beginning of a new lump
-   virtual void doToken(XLTokenizer &token) {} // called for each token
+   virtual bool doToken(XLTokenizer &token) { return true; } // called for each token
 
    void parseLump(WadDirectory &dir, lumpinfo_t *lump);
    void parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump);

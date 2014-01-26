@@ -36,6 +36,7 @@
 #include "e_lib.h"
 #include "m_misc.h"
 #include "w_wad.h"
+#include "xl_mapinfo.h"
 #include "xl_musinfo.h"
 #include "xl_scripts.h"
 
@@ -67,6 +68,10 @@ void XLTokenizer::doStateScan()
       break;
    case ';': // start of a comment
       state = STATE_COMMENT;
+      break;
+   case '"': // start of quoted string
+      tokentype = TOKEN_STRING;
+      state     = STATE_QUOTED;
       break;
    default:
       // anything else is the start of a new token
@@ -103,6 +108,24 @@ void XLTokenizer::doStateInToken()
    }
 }
 
+// Reading out a quoted string token
+void XLTokenizer::doStateQuoted()
+{
+   switch(input[idx])
+   {
+   case '"':  // end of quoted string
+      state = STATE_DONE;
+      break;
+   case '\0': // end of input (technically, this is malformed)
+      --idx;
+      state = STATE_DONE;
+      break;
+   default:
+      token += input[idx];
+      break;
+   }
+}
+
 // Reading out a single-line comment
 void XLTokenizer::doStateComment()
 {
@@ -121,6 +144,7 @@ void (XLTokenizer::* XLTokenizer::States[])() =
 {
    &XLTokenizer::doStateScan,
    &XLTokenizer::doStateInToken,
+   &XLTokenizer::doStateQuoted,
    &XLTokenizer::doStateComment
 };
 
@@ -186,7 +210,10 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
       XLTokenizer tokenizer = XLTokenizer(lumpdata);
 
       while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
-         doToken(tokenizer);
+      {
+         if(!doToken(tokenizer))
+            break; // the subclassed parser wants to stop parsing
+      }
    }
 }
 
@@ -247,6 +274,7 @@ void XLParser::parseNew(WadDirectory &dir)
 //
 void XL_ParseHexenScripts()
 {
+   XL_ParseMapInfo(); // Hexen MAPINFO
    XL_ParseMusInfo(); // Risen3D MUSINFO
 }
 

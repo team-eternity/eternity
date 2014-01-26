@@ -64,7 +64,7 @@ protected:
    // State table declaration
    static void (XLMusInfoParser::*States[])(XLTokenizer &);
 
-   virtual void doToken(XLTokenizer &token);
+   virtual bool doToken(XLTokenizer &token);
    virtual void startLump();
 
 public:
@@ -178,9 +178,10 @@ void (XLMusInfoParser::* XLMusInfoParser::States[])(XLTokenizer &) =
 //
 // Dispatch a token via this class's state table.
 //
-void XLMusInfoParser::doToken(XLTokenizer &token)
+bool XLMusInfoParser::doToken(XLTokenizer &token)
 {
    (this->*States[state])(token);
+   return true;
 }
 
 //

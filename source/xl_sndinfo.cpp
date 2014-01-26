@@ -97,7 +97,7 @@ protected:
    // State table declaration
    static void (XLSndInfoParser::*States[])(XLTokenizer &);
 
-   virtual void doToken(XLTokenizer &token);
+   virtual bool doToken(XLTokenizer &token);
    virtual void startLump();
 
 public:
@@ -280,20 +280,21 @@ void (XLSndInfoParser::* XLSndInfoParser::States[])(XLTokenizer &) =
 };
 
 //
-// XLSndInfoParser::DoToken
+// XLSndInfoParser::doToken
 //
 // Processes a token extracted from the SNDINFO input
 //
-void XLSndInfoParser::doToken(XLTokenizer &token)
+bool XLSndInfoParser::doToken(XLTokenizer &token)
 {
    // Call handler method for the current state. Why is this done from
    // a virtual call-down? Because parent classes cannot call child
    // class method pointers! :P
    (this->*States[state])(token);
+   return true;
 }
 
 //
-// XLSndInfoParser::StartLump
+// XLSndInfoParser::startLump
 //
 // Resets the parser at the beginning of a new SNDINFO lump.
 //
