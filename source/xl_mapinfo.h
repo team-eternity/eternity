@@ -29,9 +29,7 @@
 #ifndef XL_MAPINFO_H__
 #define XL_MAPINFO_H__
 
-#include "m_dllist.h"
-#include "m_qstr.h"
-#include "z_zone.h"
+class MetaTable;
 
 // map keywords enum
 enum
@@ -59,46 +57,8 @@ enum
    XL_NUMMAPINFO_FIELDS
 };
 
-//
-// XLMapInfo
-//
-// Represents a Hexen MAPINFO entry. Data here will populate Eternity's global
-// LevelInfo structure when there is no EMAPINFO for the same map. Unlike Hexen
-// we will parse all MAPINFO lumps, but the newest definition for a map is the
-// one that wins. Definitions are cumulative between lumps, but not additive 
-// to each other when they apply to the same map.
-//
-class XLMapInfo : public ZoneObject
-{
-public:
-   qstring map;
-   qstring name;
-   qstring sky1;
-   qstring sky2;
-   int     sky1delta;
-   int     sky2delta;
-   bool    doublesky;
-   bool    lightning;
-   qstring fadetable;
-   int     cluster;
-   int     warptrans;
-   qstring next;
-   int     cdtrack;
-   qstring secretnext;
-   qstring titlepatch;
-   int     par;
-   qstring music;
-   bool    nointermission;
-   bool    evenlighting;
-   bool    noautosequences;
-
-   bool    setfields[XL_NUMMAPINFO_FIELDS];
-
-   DLListItem<XLMapInfo> links; // hash links
-};
-
-XLMapInfo *XL_MapInfoForMapName(const char *name);
-XLMapInfo *XL_MapInfoForMapNum(int episode, int map);
+MetaTable *XL_MapInfoForMapName(const char *name);
+MetaTable *XL_MapInfoForMapNum(int episode, int map);
 void       XL_ParseMapInfo();
 
 #endif

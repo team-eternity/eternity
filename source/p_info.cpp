@@ -68,6 +68,7 @@
 #include "m_qstr.h"
 #include "m_qstrkeys.h"
 #include "m_misc.h"
+#include "metaapi.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_setup.h"
@@ -885,77 +886,69 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 //
 static void P_applyHexenMapInfo()
 {
-   XLMapInfo *xlmi;
+   MetaTable *xlmi;
+   const char *s;
+   int i;
 
    if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
       return;
 
-   LevelInfo.levelName = xlmi->name.constPtr();
-
+   LevelInfo.levelName = xlmi->getString("name", "");
+   
    // sky textures
-   if(xlmi->setfields[XL_MAPINFO_SKY1])
+   if((s = xlmi->getString("sky1", NULL)))
    {
-      LevelInfo.skyName  = xlmi->sky1.constPtr();
-      LevelInfo.skyDelta = xlmi->sky1delta;
+      LevelInfo.skyName  = s;
+      LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0);
    }
-   if(xlmi->setfields[XL_MAPINFO_SKY2])
+   if((s = xlmi->getString("sky2", NULL)))
    {
-      LevelInfo.sky2Name  = xlmi->sky2.constPtr();
-      LevelInfo.sky2Delta = xlmi->sky2delta;
+      LevelInfo.sky2Name  = s;
+      LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0);
    }
 
    // double skies
-   if(xlmi->setfields[XL_MAPINFO_DOUBLESKY])
-      LevelInfo.doubleSky = xlmi->doublesky;
+   if((i = xlmi->getInt("doublesky", -1)) >= 0)
+      LevelInfo.doubleSky = !!i;
 
    // lightning
-   if(xlmi->setfields[XL_MAPINFO_LIGHTNING])
-      LevelInfo.hasLightning = xlmi->lightning;
+   if((i = xlmi->getInt("lightning", -1)) >= 0)
+      LevelInfo.hasLightning = !!i;
 
    // colormap
-   if(xlmi->setfields[XL_MAPINFO_FADETABLE])
-      LevelInfo.colorMap = xlmi->fadetable.constPtr();
+   if((s = xlmi->getString("fadetable", NULL)))
+      LevelInfo.colorMap = s;
 
    // TODO: cluster, warptrans
 
    // next map
-   if(xlmi->setfields[XL_MAPINFO_NEXT])
-   {
-      LevelInfo.nextLevel = xlmi->next.constPtr();
-      // TODO: fiddle with name of next map here?
-   }
+   if((s = xlmi->getString("next", NULL)))
+      LevelInfo.nextLevel = s;
 
    // next secret
-   if(xlmi->setfields[XL_MAPINFO_SECRETNEXT])
-   {
-      LevelInfo.nextSecret = xlmi->secretnext.constPtr();
-      // TODO: need ability for secret-next name in intermission
-   }
+   if((s = xlmi->getString("secretnext", NULL)))
+      LevelInfo.nextSecret = s;
 
    // titlepatch for intermission
-   if(xlmi->setfields[XL_MAPINFO_TITLEPATCH])
-   {
-      LevelInfo.levelPic = xlmi->titlepatch.constPtr();
-      // TODO: next level's title patch...
-   }
+   if((s = xlmi->getString("titlepatch", NULL)))
+      LevelInfo.levelPic = s;
 
    // TODO: cdtrack
 
-   // par times
-   if(xlmi->setfields[XL_MAPINFO_PAR])
-      LevelInfo.partime = xlmi->par;
+   // par time
+   if((i = xlmi->getInt("par", -1)) >= 0)
+      LevelInfo.partime = i;
 
-   // music
-   if(xlmi->setfields[XL_MAPINFO_MUSIC])
-      LevelInfo.musicName = xlmi->music.constPtr();
+   if((s = xlmi->getString("music", NULL)))
+      LevelInfo.musicName = s;
 
    // flags
-   if(xlmi->setfields[XL_MAPINFO_NOINTERMISSION])
-      LevelInfo.killStats = xlmi->nointermission;
-   if(xlmi->setfields[XL_MAPINFO_EVENLIGHTING])
-      LevelInfo.unevenLight = !xlmi->evenlighting;
-   if(xlmi->setfields[XL_MAPINFO_NOAUTOSEQUENCES])
-      LevelInfo.noAutoSequences = xlmi->noautosequences;
+   if((i = xlmi->getInt("nointermission", -1)) >= 0)
+      LevelInfo.killStats = !!i;
+   if((i = xlmi->getInt("evenlighting", -1)) >= 0)
+      LevelInfo.unevenLight = !i;
+   if((i = xlmi->getInt("noautosequences", -1)) >= 0)
+      LevelInfo.noAutoSequences = !!i;
 
    /*
    Stuff with "Unfinished Business":

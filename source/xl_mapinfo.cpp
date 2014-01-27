@@ -31,9 +31,8 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
-#include "e_hash.h"
 #include "e_lib.h"
-#include "m_qstrkeys.h"
+#include "metaapi.h"
 #include "v_misc.h"
 #include "w_wad.h"
 #include "xl_mapinfo.h"
@@ -41,32 +40,30 @@
 
 //=============================================================================
 //
-// XLMapInfo Maintenance
+// MAPINFO Data Maintenance
 //
 
-// XLMapInfo hash
-static EHashTable<XLMapInfo, ENCQStrHashKey, &XLMapInfo::map, &XLMapInfo::links>
-   mapInfoTable(191);
+static MetaTable mapInfoTable;
 
 //
 // XL_newMapInfo
 //
 // Create a new XLMapInfo structure, add it to the hash table, and return it.
 //
-static XLMapInfo *XL_newMapInfo(const qstring &map, const qstring &name)
+static MetaTable *XL_newMapInfo(const qstring &map, const qstring &name)
 {
-   XLMapInfo *ret = new XLMapInfo();
+   MetaTable *ret;
 
-   ret->map  = map;
-   ret->name = name;
-
-   // mark all fields as unmodified
-   for(int i = 0; i < XL_NUMMAPINFO_FIELDS; i++)
-      ret->setfields[i] = false;
-
-   // add it to the hash
-   mapInfoTable.addObject(ret);
-
+   if((ret = mapInfoTable.getObjectKeyAndTypeEx<MetaTable>(map.constPtr())))
+      ret->clearTable();
+   else
+   {
+      ret = new MetaTable(map.constPtr());
+      mapInfoTable.addObject(ret);
+   }
+   
+   ret->setString("name", name.constPtr());
+   
    return ret;
 }
 
@@ -128,7 +125,7 @@ protected:
    // parser state data
    int            state;
    int            globalKW;
-   XLMapInfo     *curInfo;
+   MetaTable     *curInfo;
    qstring        mapName;
    xlmikeyword_t *kwd;
 
@@ -183,9 +180,8 @@ struct xlmikeyword_t
    int kwtype;  // keyword type for parsing
    int vartype; // type of variable
 
-   qstring XLMapInfo::*qstrval; // qstring value pointer
-   int     XLMapInfo::*intval;  // integer value pointer
-   bool    XLMapInfo::*boolval; // boolean value pointer
+   const char *key;    // primary value key
+   const char *intkey; // key for secondary integer value
 };
 
 // map keyword types (determine state transition patterns)
@@ -206,36 +202,36 @@ enum
    KW_VALUE_MAP   // is a map name or number
 };
 
-#define XLMI_INTEGER(n, i) \
-   { XL_MAPINFO_ ## n, KW_TYPE_VALUE, KW_VALUE_INT,  NULL, i,    NULL }
-#define XLMI_QSTRING(n, s) \
-   { XL_MAPINFO_ ## n, KW_TYPE_VALUE, KW_VALUE_QSTR, s,    NULL, NULL }
-#define XLMI_BOOLEAN(n, b) \
-   { XL_MAPINFO_ ## n, KW_TYPE_FLAG,  KW_VALUE_BOOL, NULL, NULL, b    }
-#define XLMI_SKYTYPE(n, s, i) \
-   { XL_MAPINFO_ ## n, KW_TYPE_SKY,   KW_VALUE_SKY,  s,    i,    NULL }
-#define XLMI_MAPNAME(n, s) \
-   { XL_MAPINFO_ ## n, KW_TYPE_VALUE, KW_VALUE_MAP,  s,    NULL, NULL }
+#define XLMI_INTEGER(n)    \
+   { n, KW_TYPE_VALUE, KW_VALUE_INT,  XLMapInfoParser::mapKeywords[n], NULL }
+#define XLMI_QSTRING(n)    \
+   { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::mapKeywords[n], NULL }
+#define XLMI_BOOLEAN(n)    \
+   { n, KW_TYPE_FLAG,  KW_VALUE_BOOL, XLMapInfoParser::mapKeywords[n], NULL }
+#define XLMI_SKYTYPE(n, i) \
+   { n, KW_TYPE_SKY,   KW_VALUE_SKY,  XLMapInfoParser::mapKeywords[n], i    }
+#define XLMI_MAPNAME(n)    \
+   { n, KW_TYPE_VALUE, KW_VALUE_MAP,  XLMapInfoParser::mapKeywords[n], NULL }
 
 // This table drives parsing while inside a map block.
 static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
 {
-   XLMI_SKYTYPE(SKY1,            &XLMapInfo::sky1, &XLMapInfo::sky1delta),
-   XLMI_SKYTYPE(SKY2,            &XLMapInfo::sky2, &XLMapInfo::sky2delta),
-   XLMI_BOOLEAN(DOUBLESKY,       &XLMapInfo::doublesky),
-   XLMI_BOOLEAN(LIGHTNING,       &XLMapInfo::lightning),
-   XLMI_QSTRING(FADETABLE,       &XLMapInfo::fadetable),
-   XLMI_INTEGER(CLUSTER,         &XLMapInfo::cluster),
-   XLMI_INTEGER(WARPTRANS,       &XLMapInfo::warptrans),
-   XLMI_MAPNAME(NEXT,            &XLMapInfo::next),
-   XLMI_INTEGER(CDTRACK,         &XLMapInfo::cdtrack),
-   XLMI_MAPNAME(SECRETNEXT,      &XLMapInfo::secretnext),
-   XLMI_QSTRING(TITLEPATCH,      &XLMapInfo::titlepatch),
-   XLMI_INTEGER(PAR,             &XLMapInfo::par),
-   XLMI_QSTRING(MUSIC,           &XLMapInfo::music),
-   XLMI_BOOLEAN(NOINTERMISSION,  &XLMapInfo::nointermission),
-   XLMI_BOOLEAN(EVENLIGHTING,    &XLMapInfo::evenlighting),
-   XLMI_BOOLEAN(NOAUTOSEQUENCES, &XLMapInfo::noautosequences)
+   XLMI_SKYTYPE(XL_MAPINFO_SKY1, "sky1delta"),
+   XLMI_SKYTYPE(XL_MAPINFO_SKY2, "sky2delta"),
+   XLMI_BOOLEAN(XL_MAPINFO_DOUBLESKY),
+   XLMI_BOOLEAN(XL_MAPINFO_LIGHTNING),
+   XLMI_QSTRING(XL_MAPINFO_FADETABLE),
+   XLMI_INTEGER(XL_MAPINFO_CLUSTER),
+   XLMI_INTEGER(XL_MAPINFO_WARPTRANS),
+   XLMI_MAPNAME(XL_MAPINFO_NEXT),
+   XLMI_INTEGER(XL_MAPINFO_CDTRACK),
+   XLMI_MAPNAME(XL_MAPINFO_SECRETNEXT),
+   XLMI_QSTRING(XL_MAPINFO_TITLEPATCH),
+   XLMI_INTEGER(XL_MAPINFO_PAR),
+   XLMI_QSTRING(XL_MAPINFO_MUSIC),
+   XLMI_BOOLEAN(XL_MAPINFO_NOINTERMISSION),
+   XLMI_BOOLEAN(XL_MAPINFO_EVENLIGHTING),
+   XLMI_BOOLEAN(XL_MAPINFO_NOAUTOSEQUENCES)
 };
 
 //
@@ -349,8 +345,7 @@ bool XLMapInfoParser::doStateExpectMapCmd(XLTokenizer &token)
       state = STATE_EXPECTSKYNAME; // sky name should be next token
       break;
    case KW_TYPE_FLAG:              // flags have no value; presence means set it now
-      curInfo->*(kwd->boolval) = true;
-      curInfo->setfields[kwd->index] = true;
+      curInfo->setInt(kwd->key, 1);
       state = STATE_EXPECTMAPCMD;
       break;      
    case KW_TYPE_VALUE:             // next token should be value
@@ -364,8 +359,7 @@ bool XLMapInfoParser::doStateExpectMapCmd(XLTokenizer &token)
 // Expecting the name of a sky texture
 bool XLMapInfoParser::doStateExpectSkyName(XLTokenizer &token)
 {
-   curInfo->*(kwd->qstrval) = token.getToken();
-   curInfo->setfields[kwd->index] = true;
+   curInfo->setString(kwd->key, token.getToken().constPtr());
    state = STATE_EXPECTSKYNUM;
    return true;
 }
@@ -373,7 +367,7 @@ bool XLMapInfoParser::doStateExpectSkyName(XLTokenizer &token)
 // Expecting the scroll delta to apply to that sky texture
 bool XLMapInfoParser::doStateExpectSkyNum(XLTokenizer &token)
 {
-   curInfo->*(kwd->intval) = token.getToken().toInt();
+   curInfo->setInt(kwd->intkey, token.getToken().toInt());
    state = STATE_EXPECTMAPCMD; // go back to scanning for a map command
    return true;
 }
@@ -382,23 +376,23 @@ bool XLMapInfoParser::doStateExpectSkyNum(XLTokenizer &token)
 bool XLMapInfoParser::doStateExpectValue(XLTokenizer &token)
 {
    auto &tokenVal = token.getToken();
+   
    switch(kwd->vartype)
    {
    case KW_VALUE_INT: // integer value
-      curInfo->*(kwd->intval) = tokenVal.toInt();
+      curInfo->setInt(kwd->key, tokenVal.toInt());
       break;
    case KW_VALUE_QSTR: // string
-      curInfo->*(kwd->qstrval) = tokenVal;
+      curInfo->setString(kwd->key, tokenVal.constPtr());
       break;
-   case KW_VALUE_MAP: // could be int, or full map name
-      curInfo->*(kwd->qstrval) = tokenVal;
-      MakeMAPxy(curInfo->*(kwd->qstrval));
-      break;
-   default: // not handled here...
+   case KW_VALUE_MAP:
+      {
+         qstring temp = tokenVal;
+         MakeMAPxy(temp);
+         curInfo->setString(kwd->key, temp.constPtr());
+      }
       break;
    }
-   curInfo->setfields[kwd->index] = true;
-
    state = STATE_EXPECTMAPCMD; // go back to scanning for map commands
    return true;
 }
@@ -427,9 +421,9 @@ bool (XLMapInfoParser::* XLMapInfoParser::States[])(XLTokenizer &) =
 // Lookup an XLMapInfo object by mapname. Returns the active object for the
 // map if one exists, and NULL otherwise.
 //
-XLMapInfo *XL_MapInfoForMapName(const char *name)
+MetaTable *XL_MapInfoForMapName(const char *name)
 {
-   return mapInfoTable.objectForKey(name);
+   return mapInfoTable.getObjectKeyAndTypeEx<MetaTable>(name);
 }
 
 //
@@ -438,7 +432,7 @@ XLMapInfo *XL_MapInfoForMapName(const char *name)
 // Lookup an XLMapInfo object by map number, assuming the map name in MAPINFO
 // is an ExMy or MAPxy lump. Send in 0 for episode if should be MAPxy.
 //
-XLMapInfo *XL_MapInfoForMapNum(int episode, int map)
+MetaTable *XL_MapInfoForMapNum(int episode, int map)
 {
    qstring mapname;
 
@@ -447,7 +441,7 @@ XLMapInfo *XL_MapInfoForMapNum(int episode, int map)
    else
       mapname.Printf(9, "MAP%02d", map);
 
-   return mapInfoTable.objectForKey(mapname.constPtr());
+   return mapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname.constPtr());
 }
 
 //
@@ -480,42 +474,14 @@ CONSOLE_COMMAND(xl_dumpmapinfo, 0)
       return;
    }
 
-   XLMapInfo *mapInfo = NULL;
+   MetaTable *mapInfo = NULL;
    if((mapInfo = XL_MapInfoForMapName(Console.argv[0]->constPtr())))
    {
-      C_Printf("MAPINFO Entry for %s:\n"
-               FC_HI "name: " FC_NORMAL "%s\n",
-               mapInfo->map.constPtr(), mapInfo->name.constPtr());
+      const MetaObject *obj = NULL;
 
-      for(int i = 0; i < XL_NUMMAPINFO_FIELDS; i++)
-      {
-         auto &kwd       = mapKeywordParseTable[i];
-         auto  fieldname = XLMapInfoParser::mapKeywords[kwd.index];
-
-         if(mapInfo->setfields[kwd.index])
-         {
-            qstring val;
-
-            switch(kwd.vartype)
-            {
-            case KW_VALUE_SKY:
-               val << mapInfo->*(kwd.qstrval) << ", " << mapInfo->*(kwd.intval);
-               break;
-            case KW_VALUE_INT:
-               val << mapInfo->*(kwd.intval);
-               break;
-            case KW_VALUE_MAP:
-            case KW_VALUE_QSTR:
-               val << mapInfo->*(kwd.qstrval);
-               break;
-            case KW_VALUE_BOOL:
-               val << mapInfo->*(kwd.boolval);
-               break;
-            }
-
-            C_Printf(FC_HI "%s: " FC_NORMAL "%s\n", fieldname, val.constPtr());
-         }
-      }
+      C_Printf("MAPINFO Entry for %s:\n", mapInfo->getKey());
+      while((obj = mapInfo->tableIterator(obj)))
+         C_Printf(FC_HI "%s: " FC_NORMAL "%s\n", obj->getKey(), obj->toString());
    }
    else
       C_Printf(FC_ERROR "No MAPINFO defined for %s\n", Console.argv[0]->constPtr());
