@@ -130,6 +130,7 @@ struct finalerule_t
    int finaleType;        // transferred to LevelInfo.finaleType
    bool endOfGame;        // if true, LevelInfo.endOfGame is set
    bool secretOnly;       // if true, LevelInfo.finaleSecretOnly is set
+   bool early;            // if true, LevelInfo.finaleEarly is set
 };
 
 struct finaledata_t

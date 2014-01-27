@@ -97,7 +97,7 @@ static void P_InitWeapons();
 static void P_applyHexenMapInfo();
 
 // post-processing routine prototypes
-static void P_LoadInterTextLump();
+static void P_LoadInterTextLumps();
 static void P_SetSky2Texture();
 static void P_SetParTime();
 static void P_SetInfoSoundNames();
@@ -162,12 +162,12 @@ static dehflagset_t boss_flagset =
    0,               // mode: single flags word
 };
 
-typedef struct textvals_s
+struct textvals_t
 {
    const char **vals;
    int numvals;
    int defaultval;
-} textvals_t;
+};
 
 static const char *finaleTypeStrs[] =
 {
@@ -252,7 +252,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       P_applyHexenMapInfo();
    
    // haleyjd: call post-processing routines
-   P_LoadInterTextLump();
+   P_LoadInterTextLumps();
    P_SetSky2Texture();
    P_SetParTime();
    P_SetInfoSoundNames();
@@ -401,7 +401,6 @@ struct levelvar_t
 {
    int         type;
    const char *name;
-   int         fieldenum;
    void       *variable;
    void       *extra;
 };
@@ -413,75 +412,79 @@ struct levelvar_t
 // These provide a mapping between keywords and the fields of the LevelInfo
 // structure.
 //
-#define LI_STRING(name, enumval, field) \
-   { IVT_STRING, name, LI_FIELD_ ## enumval, (void *)(&(LevelInfo . field)), NULL }
+#define LI_STRING(name, field) \
+   { IVT_STRING, name, (void *)(&(LevelInfo . field)), NULL }
 
-#define LI_STRNUM(name, enumval, field, extra) \
-   { IVT_STRNUM, name, LI_FIELD_ ## enumval, (void *)(&(LevelInfo . field)), &(extra) }
+#define LI_STRNUM(name, field, extra) \
+   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra) }
 
-#define LI_INTEGR(name, enumval, field) \
-   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
+#define LI_INTEGR(name, field) \
+   { IVT_INT, name, &(LevelInfo . field), NULL }
 
-#define LI_BOOLNF(name, enumval, field) \
-   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
+#define LI_BOOLNF(name, field) \
+   { IVT_BOOLEAN, name, &(LevelInfo . field), NULL }
 
-#define LI_FLAGSF(name, enumval, field, extra) \
-   { IVT_FLAGS, name, LI_FIELD_ ## enumval, &(LevelInfo . field), &(extra) }
+#define LI_FLAGSF(name, field, extra) \
+   { IVT_FLAGS, name, &(LevelInfo . field), &(extra) }
 
-#define LI_ENVIRO(name, enumval, field) \
-   { IVT_ENVIRONMENT, name, LI_FIELD_ ## enumval, &(LevelInfo . field), NULL }
+#define LI_ENVIRO(name, field) \
+   { IVT_ENVIRONMENT, name, &(LevelInfo . field), NULL }
 
 #define LI_END() \
-   { IVT_END, NULL, LI_FIELD_NUMFIELDS, NULL, NULL }
+   { IVT_END, NULL, NULL }
 
 levelvar_t levelvars[]=
 {
-   LI_STRING("acsscript",          ACSSCRIPTLUMP,    acsScriptLump),
-   LI_STRING("altskyname",         ALTSKYNAME,       altSkyName),
-   LI_FLAGSF("boss-specials",      BOSSSPECS,        bossSpecs,         boss_flagset),
-   LI_STRING("colormap",           COLORMAP,         colorMap),
-   LI_STRING("creator",            CREATOR,          creator),
-   LI_ENVIRO("defaultenvironment", DEFENVIRONMENT,   defaultEnvironment),
-   LI_BOOLNF("doublesky",          DOUBLESKY,        doubleSky),
-   LI_BOOLNF("edf-intername",      USEEDFINTERNAME,  useEDFInterName),
-   LI_BOOLNF("endofgame",          ENDOFGAME,        endOfGame),
-   LI_STRING("extradata",          EXTRADATA,        extraData),
-   LI_BOOLNF("finale-secret",      FINALESECRETONLY, finaleSecretOnly), 
-   LI_STRNUM("finaletype",         FINALETYPE,       finaleType,        finaleTypeVals),
-   LI_BOOLNF("fullbright",         USEFULLBRIGHT,    useFullBright),
-   LI_INTEGR("gravity",            GRAVITY,          gravity),
-   LI_STRING("inter-backdrop",     BACKDROP,         backDrop),
-   LI_STRING("intermusic",         INTERMUSIC,       interMusic),
-   LI_STRING("interpic",           INTERPIC,         interPic),
-   LI_STRING("intertext",          INTERTEXTLUMP,    interTextLump),
-   LI_BOOLNF("killfinale",         KILLFINALE,       killFinale),
-   LI_BOOLNF("killstats",          KILLSTATS,        killStats),
-   LI_STRING("levelname",          LEVELNAME,        levelName),
-   LI_STRING("levelpic",           LEVELPIC,         levelPic),
-   LI_STRING("levelpicnext",       NEXTLEVELPIC,     nextLevelPic),
-   LI_STRING("levelpicsecret",     NEXTSECRETPIC,    nextSecretPic),
-   LI_BOOLNF("lightning",          HASLIGHTNING,     hasLightning),
-   LI_STRING("music",              MUSICNAME,        musicName),
-   LI_STRING("nextlevel",          NEXTLEVEL,        nextLevel),
-   LI_STRING("nextsecret",         NEXTSECRET,       nextSecret),
-   LI_BOOLNF("noautosequences",    NOAUTOSEQUENCES,  noAutoSequences),
-   LI_STRING("outdoorfog",         OUTDOORFOG,       outdoorFog),
-   LI_INTEGR("partime",            PARTIME,          partime),
-   LI_INTEGR("skydelta",           SKYDELTA,         skyDelta),
-   LI_INTEGR("sky2delta",          SKY2DELTA,        sky2Delta),
-   LI_STRING("skyname",            SKYNAME,          skyName),
-   LI_STRING("sky2name",           SKY2NAME,         sky2Name),
-   LI_STRING("sound-swtchn",       SOUNDSWTCHN,      sound_swtchn),
-   LI_STRING("sound-swtchx",       SOUNDSWTCHX,      sound_swtchx),
-   LI_STRING("sound-stnmov",       SOUNDSTNMOV,      sound_stnmov),
-   LI_STRING("sound-pstop",        SOUNDPSTOP,       sound_pstop),
-   LI_STRING("sound-bdcls",        SOUNDBDCLS,       sound_bdcls),
-   LI_STRING("sound-bdopn",        SOUNDBDOPN,       sound_bdopn),
-   LI_STRING("sound-dorcls",       SOUNDDORCLS,      sound_dorcls),
-   LI_STRING("sound-doropn",       SOUNDDOROPN,      sound_doropn),
-   LI_STRING("sound-pstart",       SOUNDPSTART,      sound_pstart),
-   LI_STRING("sound-fcmove",       SOUNDFCMOVE,      sound_fcmove),
-   LI_BOOLNF("unevenlight",        UNEVENLIGHT,      unevenLight),
+   LI_STRING("acsscript",          acsScriptLump),
+   LI_STRING("altskyname",         altSkyName),
+   LI_FLAGSF("boss-specials",      bossSpecs,         boss_flagset),
+   LI_STRING("colormap",           colorMap),
+   LI_STRING("creator",            creator),
+   LI_ENVIRO("defaultenvironment", defaultEnvironment),
+   LI_BOOLNF("doublesky",          doubleSky),
+   LI_BOOLNF("edf-intername",      useEDFInterName),
+   LI_BOOLNF("endofgame",          endOfGame),
+   LI_STRING("extradata",          extraData),
+   LI_BOOLNF("finale-normal",      finaleNormalOnly),
+   LI_BOOLNF("finale-secret",      finaleSecretOnly), 
+   LI_BOOLNF("finale-early",       finaleEarly),
+   LI_STRNUM("finaletype",         finaleType,        finaleTypeVals),
+   LI_STRNUM("finalesecrettype",   finaleSecretType,  finaleTypeVals),
+   LI_BOOLNF("fullbright",         useFullBright),
+   LI_INTEGR("gravity",            gravity),
+   LI_STRING("inter-backdrop",     backDrop),
+   LI_STRING("intermusic",         interMusic),
+   LI_STRING("interpic",           interPic),
+   LI_STRING("intertext",          interTextLump),
+   LI_STRING("intertext-secret",   interTextSLump),
+   LI_BOOLNF("killfinale",         killFinale),
+   LI_BOOLNF("killstats",          killStats),
+   LI_STRING("levelname",          levelName),
+   LI_STRING("levelpic",           levelPic),
+   LI_STRING("levelpicnext",       nextLevelPic),
+   LI_STRING("levelpicsecret",     nextSecretPic),
+   LI_BOOLNF("lightning",          hasLightning),
+   LI_STRING("music",              musicName),
+   LI_STRING("nextlevel",          nextLevel),
+   LI_STRING("nextsecret",         nextSecret),
+   LI_BOOLNF("noautosequences",    noAutoSequences),
+   LI_STRING("outdoorfog",         outdoorFog),
+   LI_INTEGR("partime",            partime),
+   LI_INTEGR("skydelta",           skyDelta),
+   LI_INTEGR("sky2delta",          sky2Delta),
+   LI_STRING("skyname",            skyName),
+   LI_STRING("sky2name",           sky2Name),
+   LI_STRING("sound-swtchn",       sound_swtchn),
+   LI_STRING("sound-swtchx",       sound_swtchx),
+   LI_STRING("sound-stnmov",       sound_stnmov),
+   LI_STRING("sound-pstop",        sound_pstop),
+   LI_STRING("sound-bdcls",        sound_bdcls),
+   LI_STRING("sound-bdopn",        sound_bdopn),
+   LI_STRING("sound-dorcls",       sound_dorcls),
+   LI_STRING("sound-doropn",       sound_doropn),
+   LI_STRING("sound-pstart",       sound_pstart),
+   LI_STRING("sound-fcmove",       sound_fcmove),
+   LI_BOOLNF("unevenlight",        unevenLight),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
@@ -1029,7 +1032,30 @@ static void P_SetInfoSoundNames()
 }
 
 //
-// P_LoadInterTextLump
+// P_loadTextLump
+//
+// Load a text lump as a null-terminated C string with PU_LEVEL cache tag.
+//
+static char *P_loadTextLump(const char *lumpname)
+{
+   int lumpNum, lumpLen;
+   char *str;
+
+   lumpNum = W_GetNumForName(lumpname);
+   lumpLen = W_LumpLength(lumpNum);
+
+   str = emalloctag(char *, lumpLen + 1, PU_LEVEL, NULL);
+
+   wGlobalDir.readLump(lumpNum, str);
+
+   // null-terminate the string
+   str[lumpLen] = '\0';
+
+   return str;
+}
+
+//
+// P_LoadInterTextLumps
 //
 // Post-processing routine.
 //
@@ -1037,25 +1063,13 @@ static void P_SetInfoSoundNames()
 // lump and sets LevelInfo.interText to it.
 // Moved here from f_finale.c
 //
-static void P_LoadInterTextLump()
+static void P_LoadInterTextLumps()
 {
    if(LevelInfo.interTextLump)
-   {
-      int lumpNum, lumpLen;
-      char *str;
-            
-      lumpNum = W_GetNumForName(LevelInfo.interTextLump);
-      lumpLen = W_LumpLength(lumpNum);
-      
-      str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
-      
-      wGlobalDir.readLump(lumpNum, str);
-      
-      // null-terminate the string
-      str[lumpLen] = '\0';
+      LevelInfo.interText = P_loadTextLump(LevelInfo.interTextLump);
 
-      LevelInfo.interText = str;
-   }
+   if(LevelInfo.interTextSLump)
+      LevelInfo.interTextSecret = P_loadTextLump(LevelInfo.interTextSLump);
 }
 
 //
@@ -1075,7 +1089,10 @@ static void P_InfoDefaultFinale()
 
    // universal defaults
    LevelInfo.interTextLump    = NULL;
+   LevelInfo.interTextSLump   = NULL;
+   LevelInfo.finaleNormalOnly = false;
    LevelInfo.finaleSecretOnly = false;
+   LevelInfo.finaleEarly      = false;
    LevelInfo.killFinale       = false;
    LevelInfo.killStats        = false;
    LevelInfo.endOfGame        = false;
@@ -1122,6 +1139,10 @@ static void P_InfoDefaultFinale()
       if(rule->secretOnly)
          LevelInfo.finaleSecretOnly = true;
 
+      // check for early flag
+      if(rule->early)
+         LevelInfo.finaleEarly = true;
+
       // allow metainfo overrides
       if(curmetainfo)
       {
@@ -1147,6 +1168,11 @@ static void P_InfoDefaultFinale()
       LevelInfo.interText  = NULL;
       LevelInfo.finaleType = FINALE_TEXT;
    }
+
+   // finale type for secret exits starts unspecified; if left that way and a
+   // finale occurs for a secret exit anyway, the normal finale will be used.
+   LevelInfo.finaleSecretType = FINALE_UNSPECIFIED;
+   LevelInfo.interTextSecret  = NULL;
 }
 
 

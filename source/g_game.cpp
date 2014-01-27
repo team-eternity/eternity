@@ -1457,6 +1457,41 @@ static void G_SetNextMap()
 }
 
 //
+// G_doFinale
+//
+// Test whether or not a level should have a finale done for it.
+//
+static bool G_doFinale()
+{
+   if(LevelInfo.killFinale) // "kill finale" flag disables unconditionally
+      return false;
+
+   // determine which finale will be run
+   if(secretexit)
+   {
+      if(LevelInfo.finaleNormalOnly) // normal exit only?
+         return false;
+
+      // at least one of the texts must be defined; secret will be preferred,
+      // but intertext will be used if it is undefined
+      if(!LevelInfo.interTextSecret && !LevelInfo.interText)
+         return false;
+   }  
+   else
+   {
+      if(LevelInfo.finaleSecretOnly) // secret exit only?
+         return false;
+
+      // only normal text is used here
+      if(!LevelInfo.interText)
+         return false;
+   }
+
+   return true;
+}
+
+
+//
 // G_DoCompleted
 //
 // Called upon level completion. Figures out what map is next and
@@ -1480,21 +1515,18 @@ static void G_DoCompleted()
    if(automapactive)
       AM_Stop();
 
+   if(LevelInfo.finaleEarly && G_doFinale())
+   {
+      gameaction = ga_victory;
+      return;
+   }
+
    if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
-      switch(gamemap)
+      if(gamemap == 9)
       {
-      case 8:
-         if(!LevelInfo.killFinale) // haleyjd 05/26/10: long-forgotten
-         {
-            gameaction = ga_victory;
-            return;
-         }
-         break;
-      case 9:
          for(i = 0; i < MAXPLAYERS; i++)
             players[i].didsecret = true;
-         break;
       }
    }
 
@@ -1625,7 +1657,7 @@ static void G_DoWorldDone()
 // If the map does not have a finale sequence defined, it will be given
 // a default sequence.
 //
-void G_ForceFinale(void)
+void G_ForceFinale()
 {
    // in DOOM 2, we want a cast call
    if(GameModeInfo->flags & GIF_SETENDOFGAME)
@@ -1639,7 +1671,8 @@ void G_ForceFinale(void)
       LevelInfo.interText = "You have won.";
 
    // set other variables for consistency
-   LevelInfo.killFinale = false;
+   LevelInfo.killFinale       = false;
+   LevelInfo.finaleNormalOnly = false;
    LevelInfo.finaleSecretOnly = false;
 
    gameaction = ga_victory;
@@ -1865,7 +1898,7 @@ void G_Ticker()
          G_DoCompleted();
          break;
       case ga_victory:
-         F_StartFinale();
+         F_StartFinale(secretexit);
          break;
       case ga_worlddone:
          G_DoWorldDone();
@@ -2470,18 +2503,15 @@ void G_WorldDone()
 
    if(secretexit)
       players[consoleplayer].didsecret = true;
-   
-   if(LevelInfo.interText && !LevelInfo.killFinale &&
-      (!LevelInfo.finaleSecretOnly || secretexit))
-   {
-      F_StartFinale();
-   }
+
+   if(G_doFinale())
+      F_StartFinale(secretexit);
 }
 
-static skill_t   d_skill;
-static int       d_episode;
-static int       d_map;
-static char      d_mapname[10];
+static skill_t d_skill;
+static int     d_episode;
+static int     d_map;
+static char    d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
