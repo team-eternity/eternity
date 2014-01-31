@@ -36,6 +36,7 @@
 #include "e_lib.h"
 #include "m_misc.h"
 #include "w_wad.h"
+#include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
 #include "xl_musinfo.h"
 #include "xl_scripts.h"
@@ -54,14 +55,24 @@
 // Looking for the start of a new token
 void XLTokenizer::doStateScan()
 {
-   switch(input[idx])
+   char c = input[idx];
+
+   switch(c)
    {
    case ' ':
    case '\t':
    case '\r':
-   case '\n':
       // remain in this state
       break; 
+   case '\n':
+      // if linebreak tokens are enabled, return one now
+      if(flags & TF_LINEBREAKS)
+      {
+         tokentype = TOKEN_LINEBREAK;
+         state     = STATE_DONE;
+      }
+      // otherwise, remain in STATE_SCAN
+      break;
    case '\0': // end of input
       tokentype = TOKEN_EOF;
       state     = STATE_DONE;
@@ -75,12 +86,23 @@ void XLTokenizer::doStateScan()
       break;
    default:
       // anything else is the start of a new token
-      if(input[idx] == '$') // detect $ keywords
+      if(c == '#' && (flags & TF_HASHCOMMENTS)) // possible start of hash comment
+      {
+         state = STATE_COMMENT;
+         break;
+      }
+      else if(c == '[' && (flags & TF_BRACKETS))
+      {
+         tokentype = TOKEN_BRACKETSTR;
+         state     = STATE_INBRACKETS;
+         break;
+      }
+      else if(c == '$') // detect $ keywords
          tokentype = TOKEN_KEYWORD;
       else
          tokentype = TOKEN_STRING;
       state = STATE_INTOKEN;
-      token += input[idx];
+      token += c;
       break;
    }
 }
@@ -90,10 +112,13 @@ void XLTokenizer::doStateInToken()
 {
    switch(input[idx])
    {
+   case '\n':
+      if(flags & TF_LINEBREAKS) // if linebreaks are tokens, we need to back up
+         --idx;
+      // fall through
    case ' ':  // whitespace
    case '\t':
    case '\r':
-   case '\n':
       // end of token
       state = STATE_DONE;
       break;
@@ -102,7 +127,33 @@ void XLTokenizer::doStateInToken()
       --idx;   // backup, next call will handle it in STATE_SCAN.
       state = STATE_DONE;
       break;
+   case '#': // hashes may conditionally be supported as comments
+      if(flags & TF_HASHCOMMENTS)
+      {
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      // fall through
    default: 
+      token += input[idx];
+      break;
+   }
+}
+
+// Reading out a bracketed string token
+void XLTokenizer::doStateInBrackets()
+{
+   switch(input[idx])
+   {
+   case ']':  // end of bracketed token
+      state = STATE_DONE;
+      break;
+   case '\0': // end of input (technically, malformed)
+      --idx;
+      state = STATE_DONE;
+      break;
+   default:   // anything else is part of the token
       token += input[idx];
       break;
    }
@@ -131,7 +182,16 @@ void XLTokenizer::doStateComment()
 {
    // consume all input to the end of the line
    if(input[idx] == '\n')
-      state = STATE_SCAN;
+   {
+      // if linebreak tokens are enabled, send one now
+      if(flags & TF_LINEBREAKS)
+      {
+         tokentype = TOKEN_LINEBREAK;
+         state     = STATE_DONE;
+      }
+      else
+         state = STATE_SCAN;
+   }
    else if(input[idx] == '\0') // end of input
    {
       tokentype = TOKEN_EOF;
@@ -144,6 +204,7 @@ void (XLTokenizer::* XLTokenizer::States[])() =
 {
    &XLTokenizer::doStateScan,
    &XLTokenizer::doStateInToken,
+   &XLTokenizer::doStateInBrackets,
    &XLTokenizer::doStateQuoted,
    &XLTokenizer::doStateComment
 };
@@ -188,7 +249,7 @@ int XLTokenizer::getNextToken()
 //
 // Parses a single lump.
 //
-void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump) 
+void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global) 
 {
    // free any previously loaded lump
    if(lumpdata)
@@ -204,16 +265,27 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
    lumpdata = ecalloc(char *, 1, lump->size + 1);
    dir.readLump(lump->selfindex, lumpdata);
 
-   // check with EDF SHA-1 cache that this lump hasn't already been processed
-   if(E_CheckInclude(lumpdata, lump->size))
+   // check with EDF SHA-1 cache that this lump hasn't already been processed,
+   // unless the data source is marked as non-global (which means, parse it every time)
+   if(!global || E_CheckInclude(lumpdata, lump->size))
    {
-      XLTokenizer tokenizer = XLTokenizer(lumpdata);
+      XLTokenizer tokenizer(lumpdata);
+      bool early = false;
+
+      // allow subclasses to alter properties of the tokenizer now before parsing begins
+      initTokenizer(tokenizer);
 
       while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
       {
          if(!doToken(tokenizer))
+         {
+            early = true;
             break; // the subclassed parser wants to stop parsing
+         }
       }
+
+      // allow subclasses to handle EOF
+      onEOF(early);
    }
 }
 
@@ -234,7 +306,7 @@ void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
    // Parse this lump, provided it matches by name and is global
    if(!strncasecmp(curlump->name, lumpname, 8) &&
       curlump->li_namespace == lumpinfo_t::ns_global)
-      parseLump(dir, curlump);
+      parseLump(dir, curlump, true);
 }
 
 //
@@ -259,7 +331,7 @@ void XLParser::parseNew(WadDirectory &dir)
 {
    int lumpnum = dir.checkNumForName(lumpname);
    if(lumpnum >= 0)
-      parseLump(dir, dir.getLumpInfo()[lumpnum]);
+      parseLump(dir, dir.getLumpInfo()[lumpnum], true);
 }
 
 //=============================================================================
@@ -274,8 +346,9 @@ void XLParser::parseNew(WadDirectory &dir)
 //
 void XL_ParseHexenScripts()
 {
-   XL_ParseMapInfo(); // Hexen MAPINFO
-   XL_ParseMusInfo(); // Risen3D MUSINFO
+   XL_ParseEMapInfo(); // Eternity: EMAPINFO
+   XL_ParseMapInfo();  // Hexen:    MAPINFO
+   XL_ParseMusInfo();  // Risen3D:  MUSINFO
 }
 
 // EOF

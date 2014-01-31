@@ -948,6 +948,9 @@
     <ClCompile Include="..\source\xl_mapinfo.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\xl_emapinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1686,6 +1689,9 @@
       <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\xl_mapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_emapinfo.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
