@@ -91,6 +91,11 @@ void XLTokenizer::doStateScan()
          state = STATE_COMMENT;
          break;
       }
+      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
+      {
+         state = STATE_COMMENT;
+         break;
+      }
       else if(c == '[' && (flags & TF_BRACKETS))
       {
          tokentype = TOKEN_BRACKETSTR;
@@ -110,7 +115,9 @@ void XLTokenizer::doStateScan()
 // Scanning inside a token
 void XLTokenizer::doStateInToken() 
 {
-   switch(input[idx])
+   char c = input[idx];
+
+   switch(c)
    {
    case '\n':
       if(flags & TF_LINEBREAKS) // if linebreaks are tokens, we need to back up
@@ -127,16 +134,22 @@ void XLTokenizer::doStateInToken()
       --idx;   // backup, next call will handle it in STATE_SCAN.
       state = STATE_DONE;
       break;
-   case '#': // hashes may conditionally be supported as comments
-      if(flags & TF_HASHCOMMENTS)
+   default: 
+      if(c == '#' && (flags & TF_HASHCOMMENTS))
       {
+         // hashes may conditionally be supported as comments
          --idx;
          state = STATE_DONE;
          break;
       }
-      // fall through
-   default: 
-      token += input[idx];
+      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
+      {
+         // double slashes may conditionally be supported as comments
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      token += c;
       break;
    }
 }
@@ -258,11 +271,15 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global)
       lumpdata = NULL;
    }
 
+   // can't parse empty lumps
+   if(!lump->size)
+      return;
+
    waddir = &dir;
    startLump();
 
-   // allocate at lump->size + 1 for null termination
-   lumpdata = ecalloc(char *, 1, lump->size + 1);
+   // allocate at lump->size + 2 for null termination and look-ahead padding
+   lumpdata = ecalloc(char *, 1, lump->size + 2);
    dir.readLump(lump->selfindex, lumpdata);
 
    // check with EDF SHA-1 cache that this lump hasn't already been processed,

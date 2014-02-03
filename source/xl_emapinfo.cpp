@@ -162,9 +162,10 @@ void XLEMapInfoParser::startLump()
 void XLEMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 {
    tokenizer.setTokenFlags(
-      XLTokenizer::TF_LINEBREAKS  |  // linebreaks are treated as significant
-      XLTokenizer::TF_BRACKETS    |  // support [keyword] tokens
-      XLTokenizer::TF_HASHCOMMENTS); // # can start a comment as well as ;
+      XLTokenizer::TF_LINEBREAKS   |  // linebreaks are treated as significant
+      XLTokenizer::TF_BRACKETS     |  // support [keyword] tokens
+      XLTokenizer::TF_HASHCOMMENTS |  // # can start a comment as well as ;
+      XLTokenizer::TF_SLASHCOMMENTS); // support C++-style comments too.
 }
 
 // Handle EOF
