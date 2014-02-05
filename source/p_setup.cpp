@@ -2482,7 +2482,7 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    // Map data scripts
 
    // load MapInfo
-   P_LoadLevelInfo(lumpnum, W_GetManagedDirFN(waddir));
+   P_LoadLevelInfo(waddir, lumpnum, W_GetManagedDirFN(waddir));
    
    // haleyjd 10/08/03: load ExtraData
    E_LoadExtraData();         

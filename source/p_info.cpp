@@ -76,36 +76,18 @@
 #include "sounds.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
-
-// need wad iterators
-#include "w_iterator.h"
 
 extern char gamemapname[9];
 
+//=============================================================================
+//
+// Structures and Data
+//
+
 // haleyjd: moved everything into the LevelInfo struct
 LevelInfo_t LevelInfo;
-
-static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum);
-
-static int  P_ParseInfoCmd(qstring *line);
-static void P_ParseLevelVar(qstring *cmd);
-
-static void P_ClearLevelVars();
-static void P_InitWeapons();
-
-// Hexen MAPINFO
-static void P_applyHexenMapInfo();
-
-// post-processing routine prototypes
-static void P_LoadInterTextLumps();
-static void P_SetSky2Texture();
-static void P_SetParTime();
-static void P_SetInfoSoundNames();
-static void P_SetOutdoorFog();
-
-static char *P_openWadTemplate(const char *wadfile, int *len);
-static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor);
 
 // haleyjd 05/30/10: struct for info read from a metadata file
 struct metainfo_t
@@ -125,21 +107,6 @@ struct metainfo_t
 static int nummetainfo, nummetainfoalloc;
 static metainfo_t *metainfo;
 static metainfo_t *curmetainfo;
-
-static metainfo_t *P_GetMetaInfoForLevel(int mapnum);
-
-static enum lireadtype_e
-{
-   RT_LEVELINFO,
-   RT_OTHER,
-} readtype;
-
-static enum limode_e
-{
-   LI_MODE_GLOBAL, // global: we're reading a global MapInfo lump
-   LI_MODE_LEVEL,  // level:  we're reading a level header
-   LI_NUMMODES
-} limode;
 
 static bool foundEEMapInfo;
 
@@ -189,505 +156,473 @@ static textvals_t finaleTypeVals =
    0
 };
 
+//=============================================================================
 //
-// P_LoadLevelInfo
+// Meta Info
 //
-// Parses global MapInfo lumps looking for the first entry that
-// matches this map, then parses the map's own header MapInfo if
-// it has any. This is the main external function of this module.
-// Called from P_SetupLevel.
+// Meta info is only loaded from diskfiles and may override LevelInfo defaults.
+// 
+
 //
-// lvname, if non-null, is the filepath of the wad that contains
-// the level when it has been loaded from a managed wad directory.
+// P_GetMetaInfoForLevel
 //
-void P_LoadLevelInfo(int lumpnum, const char *lvname)
+// Finds a metainfo object for the given map number, if one exists (returns 
+// NULL otherwise).
+//
+static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
-   // set all the level defaults
-   P_ClearLevelVars();
+   metainfo_t *mi = NULL;
 
-   // override with info from text file?
-   if(lvname)
+   for(int i = 0; i < nummetainfo; i++)
    {
-      int len = 0;
-      char *text = P_openWadTemplate(lvname, &len);
-      char *str;
-
-      if(text && len > 0)
+      // Check for map number match, and mission match, if a mission
+      // is required to be active in order to use this metadata.
+      if(metainfo[i].level == mapnum && metainfo[i].mission == inmanageddir)
       {
-         // look for title
-         if((str = P_findTextInTemplate(text, len, 0)))
-            LevelInfo.levelName = str;
-
-         // look for author
-         if((str = P_findTextInTemplate(text, len, 1)))
-            LevelInfo.creator = str;
+         mi = &metainfo[i];
+         break;
       }
    }
 
-   // parse global lumps
-   limode = LI_MODE_GLOBAL;
-   foundEEMapInfo = false;
-
-   // run down the hash chain for EMAPINFO
-   WadChainIterator wci(wGlobalDir, "EMAPINFO");
-   for(wci.begin(); wci.current(); wci.next())
-   {
-      if(wci.testLump(lumpinfo_t::ns_global))
-      {
-         // reset the parser state
-         readtype = RT_OTHER;
-         P_ParseLevelInfo(&wGlobalDir, (*wci)->selfindex);
-         if(foundEEMapInfo) // parsed an entry for this map, so stop
-            break;
-      }
-   }
-
-   // parse level lump
-   limode   = LI_MODE_LEVEL;
-   readtype = RT_OTHER;
-   P_ParseLevelInfo(&wGlobalDir, lumpnum);
-
-   // haleyjd 01/26/14: if no EE map information was specified for this map,
-   // defer to any defined Hexen MAPINFO data now.
-   if(!foundEEMapInfo)
-      P_applyHexenMapInfo();
-   
-   // haleyjd: call post-processing routines
-   P_LoadInterTextLumps();
-   P_SetSky2Texture();
-   P_SetParTime();
-   P_SetInfoSoundNames();
-   P_SetOutdoorFog();
-
-   P_InitWeapons();
+   return mi;
 }
 
 //
-// P_ParseLevelInfo
+// P_CreateMetaInfo
 //
-// Parses one individual MapInfo lump.
+// Creates a metainfo object for a given map with all of the various data that
+// can be defined in metadata.txt files. This is called from some code in 
+// d_main.c that deals with special ".disk" files that contain an IWAD and
+// possible PWAD(s) that originate from certain console versions of DOOM.
 //
-static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum)
+void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
+                      int next, int secr, bool finale, const char *intertext,
+                      int mission, const char *interpic)
 {
-   qstring line;
-   char *lump, *rover;
-   int  size;
+   metainfo_t *mi;
 
-   // haleyjd 03/12/05: seriously restructured to eliminate last line
-   // problem and to use qstring to buffer lines
-   
-   // if lump is zero size, we are done
-   if(!(size = dir->lumpLength(lumpnum)))
-      return;
-
-   // allocate lump buffer with size + 2 to allow for termination
-   size += 2;
-   lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
-   dir->readLump(lumpnum, lump);
-
-   // terminate lump data with a line break and null character;
-   // this makes uniform parsing much easier
-   lump[size - 2] = '\n';
-   lump[size - 1] = '\0';
-
-   rover = lump;
-
-   while(*rover)
+   if(nummetainfo >= nummetainfoalloc)
    {
-      if(*rover == '\n') // end of line
+      nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
+      metainfo = erealloc(metainfo_t *, metainfo, nummetainfoalloc * sizeof(metainfo_t));
+   }
+
+   mi = &metainfo[nummetainfo];
+
+   mi->level      = map;
+   mi->levelname  = levelname;
+   mi->partime    = par;
+   mi->musname    = mus;
+   mi->nextlevel  = next;
+   mi->nextsecret = secr;
+   mi->finale     = finale;
+   mi->intertext  = intertext;
+   mi->mission    = mission;
+   mi->interpic   = interpic;
+
+   ++nummetainfo;
+}
+
+//=============================================================================
+//
+// SNDINFO Music Definitions
+//
+
+struct sndinfomus_t
+{
+   DLListItem<sndinfomus_t> links;
+   int   mapnum;
+   char *lumpname;
+};
+
+static EHashTable<sndinfomus_t, EIntHashKey, 
+                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash(101);
+
+//
+// P_AddSndInfoMusic
+//
+// Adds a music definition from a Hexen SNDINFO lump.
+//
+void P_AddSndInfoMusic(int mapnum, const char *lumpname)
+{
+   sndinfomus_t *newmus;
+
+   // If one already exists, modify it. Otherwise create a new one.
+   if((newmus = sndInfoMusHash.objectForKey(mapnum)))
+   {
+      efree(newmus->lumpname);
+      newmus->lumpname = estrdup(lumpname);
+   }
+   else
+   {
+      newmus = estructalloc(sndinfomus_t, 1);
+
+      newmus->mapnum   = mapnum;
+      newmus->lumpname = estrdup(lumpname);
+
+      sndInfoMusHash.addObject(newmus);
+   }
+
+   // Make sure that this music appears in the music selection menu by asking
+   // for a musicinfo_t from the sound engine. This'll add a musicinfo structure
+   // for it right now, rather than waiting for the music to actually be played.
+   S_MusicForName(newmus->lumpname);
+}
+
+// 
+// P_GetSndInfoMusic
+//
+// If a Hexen SNDINFO music definition exists for the passed-in map number,
+// the lumpname to use will be passed in. Otherwise, NULL is returned.
+//
+const char *P_GetSndInfoMusic(int mapnum)
+{
+   const char   *lumpname = NULL;
+   sndinfomus_t *music    = NULL;
+
+   if((music = sndInfoMusHash.objectForKey(mapnum)))
+      lumpname = music->lumpname;
+
+   return lumpname;
+}
+
+//=============================================================================
+//
+// MUSINFO Music Definitions
+//
+
+struct musinfomap_t
+{
+   int   num;
+   char *lump;
+};
+
+class MusInfoMusic : public ZoneObject
+{
+public:
+   DLListItem<MusInfoMusic>    links;
+   PODCollection<musinfomap_t> maps;
+   qstring mapname;
+};
+
+static EHashTable<MusInfoMusic, ENCQStrHashKey, 
+                  &MusInfoMusic::mapname, &MusInfoMusic::links> musInfoMusHash(101);
+
+//
+// P_AddMusInfoMusic
+//
+// Add a single music definition from a Risen3D MUSINFO lump.
+//
+void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
+{
+   MusInfoMusic *music = NULL;
+
+   // Does it exist already?
+   if((music = musInfoMusHash.objectForKey(mapname)))
+   {
+      int nummaps = music->maps.getLength();
+      bool foundnum = false;
+
+      // Does it have an entry for this number already?
+      for(int i = 0; i < nummaps; i++)
       {
-         // hack for global MapInfo: if P_ParseInfoCmd returns -1,
-         // we can break out of parsing early
-         if(P_ParseInfoCmd(&line) == -1)
+         if(music->maps[i].num == number)
+         {
+            E_ReplaceString(music->maps[i].lump, estrdup(lump));
+            foundnum = true;
             break;
-         line.clear(); // clear line buffer
+         }
+      }
+
+      if(!foundnum) // Add a new one.
+      {
+         musinfomap_t newmap;
+         newmap.num  = number;
+         newmap.lump = estrdup(lump);
+         music->maps.add(newmap);
+      }
+   }
+   else
+   {
+      // Create a new MUSINFO entry.
+      MusInfoMusic *newMusInfo = new MusInfoMusic();
+      newMusInfo->mapname = mapname;
+
+      // Create a new subentry.
+      musinfomap_t newmap;
+      newmap.num = number;
+      newmap.lump = estrdup(lump);
+      newMusInfo->maps.add(newmap);
+
+      // Add it to the hash table.
+      musInfoMusHash.addObject(newMusInfo);
+   }
+}
+
+// 
+// P_GetMusInfoMusic
+//
+// If a Risen3D MUSINFO music definition exists for the passed-in map name,
+// the lumpname to use will be passed in. Otherwise, NULL is returned.
+//
+const char *P_GetMusInfoMusic(const char *mapname, int number)
+{
+   const char   *lumpname = NULL;
+   MusInfoMusic *music    = NULL;
+
+   if((music = musInfoMusHash.objectForKey(mapname)))
+   {
+      size_t nummaps = music->maps.getLength();
+
+      for(size_t i = 0; i < nummaps; i++)
+      {
+         if(music->maps[i].num == number)
+         {
+            lumpname = music->maps[i].lump;
+            break;
+         }
+      }
+   }
+
+   return lumpname;
+}
+
+//=============================================================================
+//
+// Wad Template Parsing
+//
+// haleyjd 06/16/10: For situations where we can get information from a wad
+// file's corresponding template text file.
+//
+
+//
+// P_openWadTemplate
+//
+// Input:  The filepath to the wad file for the current level.
+// Output: The buffered text from the corresponding wad template file, if the
+//         file was found. NULL otherwise.
+//
+static char *P_openWadTemplate(const char *wadfile, int *len)
+{
+   char *fn = Z_Strdupa(wadfile);
+   char *dotloc = NULL;
+   byte *buffer = NULL;
+
+   // find an extension if it has one, and see that it is ".wad"
+   if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
+   {
+      strcpy(dotloc, ".txt");    // try replacing .wad with .txt
+
+      if(access(fn, R_OK))       // no?
+      {
+         strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
+         if(access(fn, R_OK))
+            return NULL;         // oh well, tough titties.
+      }
+   }
+
+   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : (char *)buffer;
+}
+
+// template parsing states
+enum
+{
+   TMPL_STATE_START,   // at beginning
+   TMPL_STATE_QUOTE,   // saw a quote first off (for Sverre levels)
+   TMPL_STATE_TITLE,   // reading in "Title" identifier
+   TMPL_STATE_SPACE,   // skipping spaces and/or ':' characters
+   TMPL_STATE_INTITLE, // parsing out the title
+   TMPL_STATE_DONE     // finished successfully
+};
+
+typedef struct tmplpstate_s
+{
+   char *text;
+   int i;
+   int len;
+   int state;
+   qstring *tokenbuf;
+   int spacecount;
+   int titleOrAuthor; // if non-zero, looking for Author, not title
+} tmplpstate_t;
+
+static void TmplStateStart(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case '"':
+      if(!state->titleOrAuthor) // only when looking for title...
+      {
+         state->spacecount = 0;
+         state->state = TMPL_STATE_QUOTE; // this is a hack for Sverre levels
+      }
+      break;
+   case 'T':
+   case 't':
+      if(state->titleOrAuthor)
+         break;
+      *state->tokenbuf += c;
+      state->state = TMPL_STATE_TITLE; // start reading out "Title"
+      break;
+   case 'A':
+   case 'a':
+      if(state->titleOrAuthor)
+      {
+         *state->tokenbuf += c;
+         state->state = TMPL_STATE_TITLE; // start reading out "Author"
+      }
+      break;
+   default:
+      break; // stay in same state
+   }
+}
+
+static void TmplStateQuote(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+      if(++state->spacecount == 2)
+      {
+         *state->tokenbuf += ' ';
+         state->spacecount = 0;
+      }
+      break;
+   case '\n':
+   case '\r':
+   case '"': // done
+      state->state = TMPL_STATE_DONE;
+      break;
+   default:
+      state->spacecount = 0;
+      *state->tokenbuf += c;
+      break;
+   }
+}
+
+static void TmplStateTitle(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+   case '\n':
+   case '\r':
+   case '\t':
+   case ':':
+      // whitespace - check to see if we have "Title" or "Author" in the token buffer
+      if(!state->tokenbuf->strCaseCmp(state->titleOrAuthor ? "Author" : "Title"))
+      {
+         state->tokenbuf->clear();
+         state->state = TMPL_STATE_SPACE;
       }
       else
-         line += *rover; // add char to line buffer
-
-      ++rover;
-   }
-
-   // free the lump
-   Z_Free(lump);
-}
-
-//
-// P_ParseInfoCmd
-//
-// Parses a single line of a MapInfo lump.
-//
-static int P_ParseInfoCmd(qstring *line)
-{
-   unsigned int len;
-   const char *label = NULL;
-
-   line->replace("\t\r\n", ' '); // erase any control characters
-   line->toLower();              // make everything lowercase
-   line->lstrip(' ');            // strip spaces at beginning
-   line->rstrip(' ');            // strip spaces at end
-   
-   if(!(len = line->length()))   // ignore totally empty lines
-      return 0;
-
-   // detect comments at beginning
-   if(line->charAt(0) == '#' || line->charAt(0) == ';' || 
-      (len > 1 && line->charAt(0) == '/' && line->charAt(1) == '/'))
-      return 0;
-     
-   if((label = line->strChr('[')))  // a new section separator
-   {
-      ++label;
-
-      if(limode == LI_MODE_GLOBAL)
       {
-         // when in global mode, returning -1 will make
-         // P_ParseLevelInfo break out early, saving time
-         if(foundEEMapInfo)
-            return -1;
-
-         if(!strncasecmp(label, gamemapname, strlen(gamemapname)))
-         {
-            foundEEMapInfo = true;
-            readtype = RT_LEVELINFO;
-         }
+         state->tokenbuf->clear();
+         state->state = TMPL_STATE_START; // start over
       }
-      else
-      {
-         if(!strncmp(label, "level info", 10))
-         {
-            foundEEMapInfo = true;
-            readtype = RT_LEVELINFO;
-         }
-      }
-
-      // go to next line immediately
-      return 0;
-   }
-  
-   switch(readtype)
-   {
-   case RT_LEVELINFO:
-      P_ParseLevelVar(line);
       break;
-
-   case RT_OTHER:
+   default:
+      *state->tokenbuf += c;
       break;
    }
-
-   return 0;
 }
 
-//
-//  Level vars: level variables in the [level info] section.
-//
-//  Takes the form:
-//     [variable name] = [value]
-//
-//  '=' sign is optional
-//
-
-enum
+static void TmplStateSpace(tmplpstate_t *state)
 {
-   IVT_STRING,
-   IVT_STRNUM,
-   IVT_INT,
-   IVT_BOOLEAN,
-   IVT_FLAGS,
-   IVT_ENVIRONMENT,
-   IVT_END
-};
+   char c = state->text[state->i];
 
-struct levelvar_t
-{
-   int         type;
-   const char *name;
-   void       *variable;
-   void       *extra;
-};
-
-
-//
-// levelvars field prototype macros
-//
-// These provide a mapping between keywords and the fields of the LevelInfo
-// structure.
-//
-#define LI_STRING(name, field) \
-   { IVT_STRING, name, (void *)(&(LevelInfo . field)), NULL }
-
-#define LI_STRNUM(name, field, extra) \
-   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra) }
-
-#define LI_INTEGR(name, field) \
-   { IVT_INT, name, &(LevelInfo . field), NULL }
-
-#define LI_BOOLNF(name, field) \
-   { IVT_BOOLEAN, name, &(LevelInfo . field), NULL }
-
-#define LI_FLAGSF(name, field, extra) \
-   { IVT_FLAGS, name, &(LevelInfo . field), &(extra) }
-
-#define LI_ENVIRO(name, field) \
-   { IVT_ENVIRONMENT, name, &(LevelInfo . field), NULL }
-
-#define LI_END() \
-   { IVT_END, NULL, NULL }
-
-levelvar_t levelvars[]=
-{
-   LI_STRING("acsscript",          acsScriptLump),
-   LI_STRING("altskyname",         altSkyName),
-   LI_FLAGSF("boss-specials",      bossSpecs,         boss_flagset),
-   LI_STRING("colormap",           colorMap),
-   LI_STRING("creator",            creator),
-   LI_ENVIRO("defaultenvironment", defaultEnvironment),
-   LI_BOOLNF("doublesky",          doubleSky),
-   LI_BOOLNF("edf-intername",      useEDFInterName),
-   LI_BOOLNF("endofgame",          endOfGame),
-   LI_STRING("extradata",          extraData),
-   LI_BOOLNF("finale-normal",      finaleNormalOnly),
-   LI_BOOLNF("finale-secret",      finaleSecretOnly), 
-   LI_BOOLNF("finale-early",       finaleEarly),
-   LI_STRNUM("finaletype",         finaleType,        finaleTypeVals),
-   LI_STRNUM("finalesecrettype",   finaleSecretType,  finaleTypeVals),
-   LI_BOOLNF("fullbright",         useFullBright),
-   LI_INTEGR("gravity",            gravity),
-   LI_STRING("inter-backdrop",     backDrop),
-   LI_STRING("intermusic",         interMusic),
-   LI_STRING("interpic",           interPic),
-   LI_STRING("intertext",          interTextLump),
-   LI_STRING("intertext-secret",   interTextSLump),
-   LI_BOOLNF("killfinale",         killFinale),
-   LI_BOOLNF("killstats",          killStats),
-   LI_STRING("levelname",          levelName),
-   LI_STRING("levelpic",           levelPic),
-   LI_STRING("levelpicnext",       nextLevelPic),
-   LI_STRING("levelpicsecret",     nextSecretPic),
-   LI_BOOLNF("lightning",          hasLightning),
-   LI_STRING("music",              musicName),
-   LI_STRING("nextlevel",          nextLevel),
-   LI_STRING("nextsecret",         nextSecret),
-   LI_BOOLNF("noautosequences",    noAutoSequences),
-   LI_STRING("outdoorfog",         outdoorFog),
-   LI_INTEGR("partime",            partime),
-   LI_INTEGR("skydelta",           skyDelta),
-   LI_INTEGR("sky2delta",          sky2Delta),
-   LI_STRING("skyname",            skyName),
-   LI_STRING("sky2name",           sky2Name),
-   LI_STRING("sound-swtchn",       sound_swtchn),
-   LI_STRING("sound-swtchx",       sound_swtchx),
-   LI_STRING("sound-stnmov",       sound_stnmov),
-   LI_STRING("sound-pstop",        sound_pstop),
-   LI_STRING("sound-bdcls",        sound_bdcls),
-   LI_STRING("sound-bdopn",        sound_bdopn),
-   LI_STRING("sound-dorcls",       sound_dorcls),
-   LI_STRING("sound-doropn",       sound_doropn),
-   LI_STRING("sound-pstart",       sound_pstart),
-   LI_STRING("sound-fcmove",       sound_fcmove),
-   LI_BOOLNF("unevenlight",        unevenLight),
-
-   //{ IVT_STRING,  "defaultweapons", &info_weapons },
-   
-   LI_END() // must be last
-};
-
-// lexer state enumeration for P_ParseLevelVar
-enum
-{
-   STATE_VAR,
-   STATE_BETWEEN,
-   STATE_VAL
-};
-
-//
-// P_parseLevelString
-//
-// Parse a plain string value.
-//
-static void P_parseLevelString(levelvar_t *var, const qstring &value)
-{
-   *(char**)var->variable = value.duplicate(PU_LEVEL);
-}
-
-//
-// P_parseLevelStrNum
-//
-// Parse an enumerated keyword value into its corresponding integral value.
-//
-static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
-{
-   textvals_t *tv = (textvals_t *)var->extra;
-   int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
-
-   if(val >= tv->numvals)
-      val = tv->defaultval;
-
-   *(int *)var->variable = val;
-}
-
-//
-// P_parseLevelInt
-//
-// Parse an integer value.
-//
-static void P_parseLevelInt(levelvar_t *var, const qstring &value)
-{
-   *(int*)var->variable = value.toInt();
-}
-
-//
-// P_parseLevelBool
-//
-// Parse a boolean true/false option.
-//
-static void P_parseLevelBool(levelvar_t *var, const qstring &value)
-{
-   *(bool *)var->variable = !value.strCaseCmp("true");
-}
-
-//
-// P_parseLevelFlags
-//
-// Parse a BEX-style flags string.
-//
-static void P_parseLevelFlags(levelvar_t *var, const qstring &value)
-{
-   dehflagset_t *flagset = (dehflagset_t *)var->extra;
-   *(unsigned int *)var->variable = E_ParseFlags(value.constPtr(), flagset);
-}
-
-enum
-{
-   ENV_STATE_SCANSTART,
-   ENV_STATE_INID1,
-   ENV_STATE_SCANBETWEEN,
-   ENV_STATE_INID2,
-   ENV_STATE_END
-};
-
-//
-// P_parseLevelEnvironment
-//
-// Parse a sound environment ID.
-//
-static void P_parseLevelEnvironment(levelvar_t *var, const qstring &value)
-{
-   int state = ENV_STATE_SCANSTART;
-   qstring id1, id2;
-   const char *rover = value.constPtr();
-
-   // parse with a small state machine
-   while(state != ENV_STATE_END)
+   switch(c)
    {
-      char c = *rover++;
-      int isnum = ectype::isDigit(c);
-      
-      if(!c)
-         break;
+   case ' ':
+   case ':':
+   case '\n':
+   case '\r':
+   case '\t':
+   case '"':
+      break; // stay in same state
+   default:
+      // should be start of title
+      *state->tokenbuf += c;
+      state->state = TMPL_STATE_INTITLE;
+      break;
+   }
+}
 
-      switch(state)
+static void TmplStateInTitle(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case '"':
+      if(state->titleOrAuthor) // for authors, quotes are allowed
       {
-      case ENV_STATE_SCANSTART:
-         if(isnum)
-         {
-            id1 += c;
-            state = ENV_STATE_INID1;
-         }
-         break;
-      case ENV_STATE_INID1:
-         if(isnum)
-            id1 += c;
-         else
-            state = ENV_STATE_SCANBETWEEN;
-         break;
-      case ENV_STATE_SCANBETWEEN:
-         if(isnum)
-         {
-            id2 += c;
-            state = ENV_STATE_INID2;
-         }
-         break;
-      case ENV_STATE_INID2:
-         if(isnum)
-            id2 += c;
-         else
-            state = ENV_STATE_END;
+         *state->tokenbuf += c;
          break;
       }
+      // intentional fall-through for titles (end of title)
+   case '\n':
+   case '\r':
+      // done
+      state->state = TMPL_STATE_DONE;
+      break;
+   default:
+      *state->tokenbuf += c;
+      break;
    }
-
-   *(int *)var->variable = (id1.toInt() << 8) | id2.toInt();
 }
 
-typedef void (*varparserfn_t)(levelvar_t *, const qstring &);
-static varparserfn_t infoVarParsers[IVT_END] =
+typedef void (*tmplstatefunc_t)(tmplpstate_t *state);
+
+// state functions
+static tmplstatefunc_t statefuncs[] =
 {
-   P_parseLevelString,
-   P_parseLevelStrNum,
-   P_parseLevelInt,
-   P_parseLevelBool,
-   P_parseLevelFlags,
-   P_parseLevelEnvironment
+   TmplStateStart,  // TMPL_STATE_START
+   TmplStateQuote,  // TMPL_STATE_QUOTE
+   TmplStateTitle,  // TMPL_STATE_TITLE
+   TmplStateSpace,  // TMPL_STATE_SPACE
+   TmplStateInTitle // TMPL_STATE_INTITLE
 };
 
 //
-// P_ParseLevelVar
+// P_findTextInTemplate
 //
-// Tokenizes the line parsed by P_ParseInfoCmd and then sets
-// any appropriate matching MapInfo variable to the retrieved
-// value.
+// haleyjd 06/16/10: Find the title or author of the wad in the template.
 //
-static void P_ParseLevelVar(qstring *cmd)
+static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
 {
-   int state = 0;
-   qstring var, value;
-   char c;
-   const char *rover = cmd->constPtr();
-   levelvar_t *current = levelvars;
+   tmplpstate_t state;
+   qstring tokenbuffer;
+   char *ret = NULL;
 
-   // haleyjd 03/12/05: seriously restructured to remove possible
-   // overflow of static buffer and bad kludges used to separate
-   // the variable and value tokens -- now uses qstring.
+   state.text          = text;
+   state.len           = len;
+   state.i             = 0;
+   state.state         = TMPL_STATE_START;
+   state.tokenbuf      = &tokenbuffer;
+   state.titleOrAuthor = titleOrAuthor;
 
-   while((c = *rover++))
+   while(state.i != len && state.state != TMPL_STATE_DONE)
    {
-      switch(state)
-      {
-      case STATE_VAR: // in variable -- read until whitespace or = is hit
-         if(c == ' ' || c == '=')
-            state = STATE_BETWEEN;
-         else
-            var += c;
-         continue;
-      case STATE_BETWEEN: // between -- skip whitespace or =
-         if(c != ' ' && c != '=')
-         {
-            state = STATE_VAL;
-            value += c;
-         }
-         continue;
-      case STATE_VAL: // value -- everything else goes here
-         value += c;
-         continue;
-      default:
-         I_Error("P_ParseLevelVar: undefined state in lexer\n");
-      }
+      statefuncs[state.state](&state);
+      state.i++;
    }
 
-   // detect some syntax errors
-   if(state != STATE_VAL || !var.length() || !value.length())
-      return;
+   // valid termination states are DONE or INTITLE (though it's pretty unlikely
+   // that we would hit EOF in the title string, I'll allow for it)
+   if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
+      ret = tokenbuffer.duplicate(PU_LEVEL);
 
-   // TODO: improve linear search? fixed small set, so may not matter
-   while(current->type != IVT_END)
-   {
-      if(!var.strCaseCmp(current->name))
-         infoVarParsers[current->type](current, value);
-      current++;
-   }
+   return ret;
 }
 
+//=============================================================================
 //
 // Default Setup and Post-Processing Routines
 //
@@ -1513,468 +1448,337 @@ static void P_InitWeapons()
 
 //=============================================================================
 //
-// Meta Info
+// EMAPINFO Processing
 //
-// Meta info is only loaded from diskfiles and may override LevelInfo defaults.
-// 
-
-//
-// P_GetMetaInfoForLevel
-//
-// Finds a metainfo object for the given map number, if one exists (returns 
-// NULL otherwise).
-//
-static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
-{
-   metainfo_t *mi = NULL;
-
-   for(int i = 0; i < nummetainfo; i++)
-   {
-      // Check for map number match, and mission match, if a mission
-      // is required to be active in order to use this metadata.
-      if(metainfo[i].level == mapnum && metainfo[i].mission == inmanageddir)
-      {
-         mi = &metainfo[i];
-         break;
-      }
-   }
-
-   return mi;
-}
-
-//
-// P_CreateMetaInfo
-//
-// Creates a metainfo object for a given map with all of the various data that
-// can be defined in metadata.txt files. This is called from some code in 
-// d_main.c that deals with special ".disk" files that contain an IWAD and
-// possible PWAD(s) that originate from certain console versions of DOOM.
-//
-void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, bool finale, const char *intertext,
-                      int mission, const char *interpic)
-{
-   metainfo_t *mi;
-
-   if(nummetainfo >= nummetainfoalloc)
-   {
-      nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
-      metainfo = erealloc(metainfo_t *, metainfo, nummetainfoalloc * sizeof(metainfo_t));
-   }
-
-   mi = &metainfo[nummetainfo];
-
-   mi->level      = map;
-   mi->levelname  = levelname;
-   mi->partime    = par;
-   mi->musname    = mus;
-   mi->nextlevel  = next;
-   mi->nextsecret = secr;
-   mi->finale     = finale;
-   mi->intertext  = intertext;
-   mi->mission    = mission;
-   mi->interpic   = interpic;
-
-   ++nummetainfo;
-}
-
-//=============================================================================
-//
-// SNDINFO Music Definitions
+// EMAPINFO and level header [level info] data (for SMMU compatibility) is
+// now parsed by a finite state automaton parser in the XLParser family.
+// Data from EMAPINFO is loaded up for us at startup and any time an archive
+// is runtime loaded. Level header info has to be dealt with here if it exists.
+// Our job here is to get the MetaTable from the XL system and process the
+// fields that are defined in it into the LevelInfo structure.
 //
 
-struct sndinfomus_t
-{
-   DLListItem<sndinfomus_t> links;
-   int   mapnum;
-   char *lumpname;
-};
-
-static EHashTable<sndinfomus_t, EIntHashKey, 
-                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash(101);
-
-//
-// P_AddSndInfoMusic
-//
-// Adds a music definition from a Hexen SNDINFO lump.
-//
-void P_AddSndInfoMusic(int mapnum, const char *lumpname)
-{
-   sndinfomus_t *newmus;
-
-   // If one already exists, modify it. Otherwise create a new one.
-   if((newmus = sndInfoMusHash.objectForKey(mapnum)))
-   {
-      efree(newmus->lumpname);
-      newmus->lumpname = estrdup(lumpname);
-   }
-   else
-   {
-      newmus = estructalloc(sndinfomus_t, 1);
-
-      newmus->mapnum   = mapnum;
-      newmus->lumpname = estrdup(lumpname);
-
-      sndInfoMusHash.addObject(newmus);
-   }
-
-   // Make sure that this music appears in the music selection menu by asking
-   // for a musicinfo_t from the sound engine. This'll add a musicinfo structure
-   // for it right now, rather than waiting for the music to actually be played.
-   S_MusicForName(newmus->lumpname);
-}
-
-// 
-// P_GetSndInfoMusic
-//
-// If a Hexen SNDINFO music definition exists for the passed-in map number,
-// the lumpname to use will be passed in. Otherwise, NULL is returned.
-//
-const char *P_GetSndInfoMusic(int mapnum)
-{
-   const char   *lumpname = NULL;
-   sndinfomus_t *music    = NULL;
-
-   if((music = sndInfoMusHash.objectForKey(mapnum)))
-      lumpname = music->lumpname;
-
-   return lumpname;
-}
-
-//=============================================================================
-//
-// MUSINFO Music Definitions
-//
-
-struct musinfomap_t
-{
-   int   num;
-   char *lump;
-};
-
-class MusInfoMusic : public ZoneObject
-{
-public:
-   DLListItem<MusInfoMusic>    links;
-   PODCollection<musinfomap_t> maps;
-   qstring mapname;
-};
-
-static EHashTable<MusInfoMusic, ENCQStrHashKey, 
-                  &MusInfoMusic::mapname, &MusInfoMusic::links> musInfoMusHash(101);
-
-//
-// P_AddMusInfoMusic
-//
-// Add a single music definition from a Risen3D MUSINFO lump.
-//
-void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
-{
-   MusInfoMusic *music = NULL;
-
-   // Does it exist already?
-   if((music = musInfoMusHash.objectForKey(mapname)))
-   {
-      int nummaps = music->maps.getLength();
-      bool foundnum = false;
-
-      // Does it have an entry for this number already?
-      for(int i = 0; i < nummaps; i++)
-      {
-         if(music->maps[i].num == number)
-         {
-            E_ReplaceString(music->maps[i].lump, estrdup(lump));
-            foundnum = true;
-            break;
-         }
-      }
-
-      if(!foundnum) // Add a new one.
-      {
-         musinfomap_t newmap;
-         newmap.num  = number;
-         newmap.lump = estrdup(lump);
-         music->maps.add(newmap);
-      }
-   }
-   else
-   {
-      // Create a new MUSINFO entry.
-      MusInfoMusic *newMusInfo = new MusInfoMusic();
-      newMusInfo->mapname = mapname;
-
-      // Create a new subentry.
-      musinfomap_t newmap;
-      newmap.num = number;
-      newmap.lump = estrdup(lump);
-      newMusInfo->maps.add(newmap);
-
-      // Add it to the hash table.
-      musInfoMusHash.addObject(newMusInfo);
-   }
-}
-
-// 
-// P_GetMusInfoMusic
-//
-// If a Risen3D MUSINFO music definition exists for the passed-in map name,
-// the lumpname to use will be passed in. Otherwise, NULL is returned.
-//
-const char *P_GetMusInfoMusic(const char *mapname, int number)
-{
-   const char   *lumpname = NULL;
-   MusInfoMusic *music    = NULL;
-
-   if((music = musInfoMusHash.objectForKey(mapname)))
-   {
-      size_t nummaps = music->maps.getLength();
-
-      for(size_t i = 0; i < nummaps; i++)
-      {
-         if(music->maps[i].num == number)
-         {
-            lumpname = music->maps[i].lump;
-            break;
-         }
-      }
-   }
-
-   return lumpname;
-}
-
-//=============================================================================
-//
-// Wad Template Parsing
-//
-// haleyjd 06/16/10: For situations where we can get information from a wad
-// file's corresponding template text file.
-//
-
-//
-// P_openWadTemplate
-//
-// Input:  The filepath to the wad file for the current level.
-// Output: The buffered text from the corresponding wad template file, if the
-//         file was found. NULL otherwise.
-//
-static char *P_openWadTemplate(const char *wadfile, int *len)
-{
-   char *fn = Z_Strdupa(wadfile);
-   char *dotloc = NULL;
-   byte *buffer = NULL;
-
-   // find an extension if it has one, and see that it is ".wad"
-   if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
-   {
-      strcpy(dotloc, ".txt");    // try replacing .wad with .txt
-
-      if(access(fn, R_OK))       // no?
-      {
-         strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
-         if(access(fn, R_OK))
-            return NULL;         // oh well, tough titties.
-      }
-   }
-
-   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : (char *)buffer;
-}
-
-// template parsing states
+// levelvar types
 enum
 {
-   TMPL_STATE_START,   // at beginning
-   TMPL_STATE_QUOTE,   // saw a quote first off (for Sverre levels)
-   TMPL_STATE_TITLE,   // reading in "Title" identifier
-   TMPL_STATE_SPACE,   // skipping spaces and/or ':' characters
-   TMPL_STATE_INTITLE, // parsing out the title
-   TMPL_STATE_DONE     // finished successfully
+   IVT_STRING,      // data is stored as a straight string value
+   IVT_STRNUM,      // data is a string in EMAPINFO that is converted to an enum value
+   IVT_INT,         // data is converted to integer
+   IVT_BOOLEAN,     // data is boolean true or false
+   IVT_FLAGS,       // data is a BEX-style flags string
+   IVT_ENVIRONMENT, // data is a pair of sound environment ID numbers
+   IVT_END
 };
 
-typedef struct tmplpstate_s
+// levelvar structure maps from keys to LevelInfo structure fields
+struct levelvar_t
 {
-   char *text;
-   int i;
-   int len;
-   int state;
-   qstring *tokenbuf;
-   int spacecount;
-   int titleOrAuthor; // if non-zero, looking for Author, not title
-} tmplpstate_t;
-
-static void TmplStateStart(tmplpstate_t *state)
-{
-   char c = state->text[state->i];
-
-   switch(c)
-   {
-   case '"':
-      if(!state->titleOrAuthor) // only when looking for title...
-      {
-         state->spacecount = 0;
-         state->state = TMPL_STATE_QUOTE; // this is a hack for Sverre levels
-      }
-      break;
-   case 'T':
-   case 't':
-      if(state->titleOrAuthor)
-         break;
-      *state->tokenbuf += c;
-      state->state = TMPL_STATE_TITLE; // start reading out "Title"
-      break;
-   case 'A':
-   case 'a':
-      if(state->titleOrAuthor)
-      {
-         *state->tokenbuf += c;
-         state->state = TMPL_STATE_TITLE; // start reading out "Author"
-      }
-      break;
-   default:
-      break; // stay in same state
-   }
-}
-
-static void TmplStateQuote(tmplpstate_t *state)
-{
-   char c = state->text[state->i];
-
-   switch(c)
-   {
-   case ' ':
-      if(++state->spacecount == 2)
-      {
-         *state->tokenbuf += ' ';
-         state->spacecount = 0;
-      }
-      break;
-   case '\n':
-   case '\r':
-   case '"': // done
-      state->state = TMPL_STATE_DONE;
-      break;
-   default:
-      state->spacecount = 0;
-      *state->tokenbuf += c;
-      break;
-   }
-}
-
-static void TmplStateTitle(tmplpstate_t *state)
-{
-   char c = state->text[state->i];
-
-   switch(c)
-   {
-   case ' ':
-   case '\n':
-   case '\r':
-   case '\t':
-   case ':':
-      // whitespace - check to see if we have "Title" or "Author" in the token buffer
-      if(!state->tokenbuf->strCaseCmp(state->titleOrAuthor ? "Author" : "Title"))
-      {
-         state->tokenbuf->clear();
-         state->state = TMPL_STATE_SPACE;
-      }
-      else
-      {
-         state->tokenbuf->clear();
-         state->state = TMPL_STATE_START; // start over
-      }
-      break;
-   default:
-      *state->tokenbuf += c;
-      break;
-   }
-}
-
-static void TmplStateSpace(tmplpstate_t *state)
-{
-   char c = state->text[state->i];
-
-   switch(c)
-   {
-   case ' ':
-   case ':':
-   case '\n':
-   case '\r':
-   case '\t':
-   case '"':
-      break; // stay in same state
-   default:
-      // should be start of title
-      *state->tokenbuf += c;
-      state->state = TMPL_STATE_INTITLE;
-      break;
-   }
-}
-
-static void TmplStateInTitle(tmplpstate_t *state)
-{
-   char c = state->text[state->i];
-
-   switch(c)
-   {
-   case '"':
-      if(state->titleOrAuthor) // for authors, quotes are allowed
-      {
-         *state->tokenbuf += c;
-         break;
-      }
-      // intentional fall-through for titles (end of title)
-   case '\n':
-   case '\r':
-      // done
-      state->state = TMPL_STATE_DONE;
-      break;
-   default:
-      *state->tokenbuf += c;
-      break;
-   }
-}
-
-typedef void (*tmplstatefunc_t)(tmplpstate_t *state);
-
-// state functions
-static tmplstatefunc_t statefuncs[] =
-{
-   TmplStateStart,  // TMPL_STATE_START
-   TmplStateQuote,  // TMPL_STATE_QUOTE
-   TmplStateTitle,  // TMPL_STATE_TITLE
-   TmplStateSpace,  // TMPL_STATE_SPACE
-   TmplStateInTitle // TMPL_STATE_INTITLE
+   int         type;     // determines how MetaTable value should be parsed
+   const char *name;     // key of the MetaTable value
+   void       *variable; // pointer to destination LevelInfo field
+   void       *extra;    // pointer to any "extra" info needed for this parsing
 };
 
 //
-// P_findTextInTemplate
+// levelvars field prototype macros
 //
-// haleyjd 06/16/10: Find the title or author of the wad in the template.
+// These provide a mapping between keywords and the fields of the LevelInfo
+// structure.
 //
-static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
+#define LI_STRING(name, field) \
+   { IVT_STRING, name, (void *)(&(LevelInfo . field)), NULL }
+
+#define LI_STRNUM(name, field, extra) \
+   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra) }
+
+#define LI_INTEGR(name, field) \
+   { IVT_INT, name, &(LevelInfo . field), NULL }
+
+#define LI_BOOLNF(name, field) \
+   { IVT_BOOLEAN, name, &(LevelInfo . field), NULL }
+
+#define LI_FLAGSF(name, field, extra) \
+   { IVT_FLAGS, name, &(LevelInfo . field), &(extra) }
+
+#define LI_ENVIRO(name, field) \
+   { IVT_ENVIRONMENT, name, &(LevelInfo . field), NULL }
+
+static levelvar_t levelvars[]=
 {
-   tmplpstate_t state;
-   qstring tokenbuffer;
-   char *ret = NULL;
+   LI_STRING("acsscript",          acsScriptLump),
+   LI_STRING("altskyname",         altSkyName),
+   LI_FLAGSF("boss-specials",      bossSpecs,         boss_flagset),
+   LI_STRING("colormap",           colorMap),
+   LI_STRING("creator",            creator),
+   LI_ENVIRO("defaultenvironment", defaultEnvironment),
+   LI_BOOLNF("doublesky",          doubleSky),
+   LI_BOOLNF("edf-intername",      useEDFInterName),
+   LI_BOOLNF("endofgame",          endOfGame),
+   LI_STRING("extradata",          extraData),
+   LI_BOOLNF("finale-normal",      finaleNormalOnly),
+   LI_BOOLNF("finale-secret",      finaleSecretOnly), 
+   LI_BOOLNF("finale-early",       finaleEarly),
+   LI_STRNUM("finaletype",         finaleType,        finaleTypeVals),
+   LI_STRNUM("finalesecrettype",   finaleSecretType,  finaleTypeVals),
+   LI_BOOLNF("fullbright",         useFullBright),
+   LI_INTEGR("gravity",            gravity),
+   LI_STRING("inter-backdrop",     backDrop),
+   LI_STRING("intermusic",         interMusic),
+   LI_STRING("interpic",           interPic),
+   LI_STRING("intertext",          interTextLump),
+   LI_STRING("intertext-secret",   interTextSLump),
+   LI_BOOLNF("killfinale",         killFinale),
+   LI_BOOLNF("killstats",          killStats),
+   LI_STRING("levelname",          levelName),
+   LI_STRING("levelpic",           levelPic),
+   LI_STRING("levelpicnext",       nextLevelPic),
+   LI_STRING("levelpicsecret",     nextSecretPic),
+   LI_BOOLNF("lightning",          hasLightning),
+   LI_STRING("music",              musicName),
+   LI_STRING("nextlevel",          nextLevel),
+   LI_STRING("nextsecret",         nextSecret),
+   LI_BOOLNF("noautosequences",    noAutoSequences),
+   LI_STRING("outdoorfog",         outdoorFog),
+   LI_INTEGR("partime",            partime),
+   LI_INTEGR("skydelta",           skyDelta),
+   LI_INTEGR("sky2delta",          sky2Delta),
+   LI_STRING("skyname",            skyName),
+   LI_STRING("sky2name",           sky2Name),
+   LI_STRING("sound-swtchn",       sound_swtchn),
+   LI_STRING("sound-swtchx",       sound_swtchx),
+   LI_STRING("sound-stnmov",       sound_stnmov),
+   LI_STRING("sound-pstop",        sound_pstop),
+   LI_STRING("sound-bdcls",        sound_bdcls),
+   LI_STRING("sound-bdopn",        sound_bdopn),
+   LI_STRING("sound-dorcls",       sound_dorcls),
+   LI_STRING("sound-doropn",       sound_doropn),
+   LI_STRING("sound-pstart",       sound_pstart),
+   LI_STRING("sound-fcmove",       sound_fcmove),
+   LI_BOOLNF("unevenlight",        unevenLight),
 
-   state.text          = text;
-   state.len           = len;
-   state.i             = 0;
-   state.state         = TMPL_STATE_START;
-   state.tokenbuf      = &tokenbuffer;
-   state.titleOrAuthor = titleOrAuthor;
+   //{ IVT_STRING,  "defaultweapons", &info_weapons },
+};
 
-   while(state.i != len && state.state != TMPL_STATE_DONE)
+//
+// P_parseLevelString
+//
+// Parse a plain string value.
+//
+static void P_parseLevelString(levelvar_t *var, const qstring &value)
+{
+   *(char**)var->variable = value.duplicate(PU_LEVEL);
+}
+
+//
+// P_parseLevelStrNum
+//
+// Parse an enumerated keyword value into its corresponding integral value.
+//
+static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
+{
+   textvals_t *tv = (textvals_t *)var->extra;
+   int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
+
+   if(val >= tv->numvals)
+      val = tv->defaultval;
+
+   *(int *)var->variable = val;
+}
+
+//
+// P_parseLevelInt
+//
+// Parse an integer value.
+//
+static void P_parseLevelInt(levelvar_t *var, const qstring &value)
+{
+   *(int*)var->variable = value.toInt();
+}
+
+//
+// P_parseLevelBool
+//
+// Parse a boolean true/false option.
+//
+static void P_parseLevelBool(levelvar_t *var, const qstring &value)
+{
+   *(bool *)var->variable = !value.strCaseCmp("true");
+}
+
+//
+// P_parseLevelFlags
+//
+// Parse a BEX-style flags string.
+//
+static void P_parseLevelFlags(levelvar_t *var, const qstring &value)
+{
+   dehflagset_t *flagset = (dehflagset_t *)var->extra;
+   *(unsigned int *)var->variable = E_ParseFlags(value.constPtr(), flagset);
+}
+
+enum
+{
+   ENV_STATE_SCANSTART,
+   ENV_STATE_INID1,
+   ENV_STATE_SCANBETWEEN,
+   ENV_STATE_INID2,
+   ENV_STATE_END
+};
+
+//
+// P_parseLevelEnvironment
+//
+// Parse a sound environment ID.
+//
+static void P_parseLevelEnvironment(levelvar_t *var, const qstring &value)
+{
+   int state = ENV_STATE_SCANSTART;
+   qstring id1, id2;
+   const char *rover = value.constPtr();
+
+   // parse with a small state machine
+   while(state != ENV_STATE_END)
    {
-      statefuncs[state.state](&state);
-      state.i++;
+      char c = *rover++;
+      int isnum = ectype::isDigit(c);
+      
+      if(!c)
+         break;
+
+      switch(state)
+      {
+      case ENV_STATE_SCANSTART:
+         if(isnum)
+         {
+            id1 += c;
+            state = ENV_STATE_INID1;
+         }
+         break;
+      case ENV_STATE_INID1:
+         if(isnum)
+            id1 += c;
+         else
+            state = ENV_STATE_SCANBETWEEN;
+         break;
+      case ENV_STATE_SCANBETWEEN:
+         if(isnum)
+         {
+            id2 += c;
+            state = ENV_STATE_INID2;
+         }
+         break;
+      case ENV_STATE_INID2:
+         if(isnum)
+            id2 += c;
+         else
+            state = ENV_STATE_END;
+         break;
+      }
    }
 
-   // valid termination states are DONE or INTITLE (though it's pretty unlikely
-   // that we would hit EOF in the title string, I'll allow for it)
-   if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
-      ret = tokenbuffer.duplicate(PU_LEVEL);
+   *(int *)var->variable = (id1.toInt() << 8) | id2.toInt();
+}
 
-   return ret;
+typedef void (*varparserfn_t)(levelvar_t *, const qstring &);
+static varparserfn_t infoVarParsers[IVT_END] =
+{
+   P_parseLevelString,
+   P_parseLevelStrNum,
+   P_parseLevelInt,
+   P_parseLevelBool,
+   P_parseLevelFlags,
+   P_parseLevelEnvironment
+};
+
+//
+// P_processEMapInfo
+//
+// Call the proper processing routine for every MetaString object in the 
+// MapInfo MetaTable.
+//
+static void P_processEMapInfo(MetaTable *info)
+{
+   for(size_t i = 0; i < earrlen(levelvars); i++)
+   {
+      levelvar_t *levelvar  = &levelvars[i];
+      MetaString *str       = NULL;
+
+      if((str = info->getObjectKeyAndTypeEx<MetaString>(levelvar->name)))
+         infoVarParsers[levelvar->type](levelvar, qstring(str->getValue()));
+   }
+}
+
+//=============================================================================
+//
+// LevelInfo External Interface
+//
+
+//
+// P_LoadLevelInfo
+//
+// Parses global MapInfo lumps looking for the first entry that
+// matches this map, then parses the map's own header MapInfo if
+// it has any. This is the main external function of this module.
+// Called from P_SetupLevel.
+//
+// lvname, if non-null, is the filepath of the wad that contains
+// the level when it has been loaded from a managed wad directory.
+//
+void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
+{
+   MetaTable *info = NULL;
+   
+   // set all the level defaults
+   P_ClearLevelVars();
+
+   // override with info from text file?
+   if(lvname)
+   {
+      int len = 0;
+      char *text = P_openWadTemplate(lvname, &len);
+      char *str;
+
+      if(text && len > 0)
+      {
+         // look for title
+         if((str = P_findTextInTemplate(text, len, 0)))
+            LevelInfo.levelName = str;
+
+         // look for author
+         if((str = P_findTextInTemplate(text, len, 1)))
+            LevelInfo.creator = str;
+      }
+   }
+
+   foundEEMapInfo = false;
+   
+   // process any global EMAPINFO data
+   if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
+   {
+      P_processEMapInfo(info);
+      foundEEMapInfo = true;
+   }
+
+   // additively process any SMMU header information for compatibility
+   if((info = XL_ParseLevelInfo(dir, lumpnum)))
+   {
+      P_processEMapInfo(info);
+      foundEEMapInfo = true;
+   }
+
+   // haleyjd 01/26/14: if no EE map information was specified for this map,
+   // defer to any defined Hexen MAPINFO data now.
+   if(!foundEEMapInfo)
+      P_applyHexenMapInfo();
+   
+   // haleyjd: call post-processing routines
+   P_LoadInterTextLumps();
+   P_SetSky2Texture();
+   P_SetParTime();
+   P_SetInfoSoundNames();
+   P_SetOutdoorFog();
+
+   P_InitWeapons();
 }
 
 // EOF

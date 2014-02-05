@@ -23,7 +23,9 @@
 
 #include "doomdef.h"
 
-void P_LoadLevelInfo(int lumpnum, const char *lvname);
+class WadDirectory;
+
+void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, bool finale, const char *intertext,
