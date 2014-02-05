@@ -35,7 +35,7 @@ class WadDirectory;
 MetaTable *XL_EMapInfoForMapName(const char *mapname);
 MetaTable *XL_EMapInfoForMapNum(int episode, int map);
 void       XL_ParseEMapInfo();
-MetaTable *XL_ParseLevelInfo(WadDirectory &dir, int lumpnum);
+MetaTable *XL_ParseLevelInfo(WadDirectory *dir, int lumpnum);
 
 #endif
 

@@ -107,12 +107,12 @@ protected:
    bool doStateSkipSection(XLTokenizer &);
 
    // parser state data
-   int            state;
-   int            nextstate;
-   bool           isGlobal;
-   MetaTable     *curInfo;
-   qstring        key;
-   qstring        value;
+   int        state;
+   int        nextstate;
+   bool       isGlobal;
+   MetaTable *curInfo;
+   qstring    key;
+   qstring    value;
 
    virtual bool doToken(XLTokenizer &token);
    virtual void startLump();
@@ -364,13 +364,13 @@ void XL_ParseEMapInfo()
 // any definitions were present, and the object will be returned. Ownership
 // of the MetaTable is assumed by the caller.
 //
-MetaTable *XL_ParseLevelInfo(WadDirectory &dir, int lumpnum)
+MetaTable *XL_ParseLevelInfo(WadDirectory *dir, int lumpnum)
 {
    MetaTable *ret = NULL;
    XLEMapInfoParser parser;
 
    parser.setGlobalMode(false); // put into [level info] parsing mode
-   parser.parseLump(dir, dir.getLumpInfo()[lumpnum], false);
+   parser.parseLump(*dir, dir->getLumpInfo()[lumpnum], false);
 
    return parser.getCurrentInfo();
 }
