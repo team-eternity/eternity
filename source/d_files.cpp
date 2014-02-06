@@ -36,6 +36,7 @@
 #include "hal/i_directory.h"
 #include "hal/i_platform.h"
 
+#include "autodoom/b_util.h"	// IOANCH
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
@@ -758,6 +759,50 @@ static const char *const userdirs[] =
 #endif
 
 //
+// D_CheckMiscellaneousPath
+//
+// IOANCH: added because of being needed, based on the function below
+//
+static int D_CheckMiscellaneousPath(const qstring &qpath)
+{
+	int ret = -1;
+	struct stat sbuf;
+	qstring str;
+	const char *path;
+
+	str = qpath;
+
+	// Rub out any ending slashes; stat does not like them.
+	str.rstrip('\\');
+	str.rstrip('/');
+
+	path = str.constPtr();
+
+	if (!stat(path, &sbuf)) // check for existence
+	{
+		if (S_ISDIR(sbuf.st_mode)) // check that it's a directory
+		{
+			DIR *dir;
+			int score = 0;
+
+			if ((dir = opendir(path)))
+			{
+				closedir(dir);
+				ret = BASE_ISGOOD;    // Got it.	
+			}
+			else
+				ret = BASE_CANTOPEN; // opendir failed
+		}
+		else
+			ret = BASE_NOTDIR; // S_ISDIR failed
+	}
+	else
+		ret = BASE_NOTEXIST; // stat failed
+
+	return ret;
+}
+
+//
 // D_CheckUserPath
 //
 // Checks a provided path to see that it both exists and that it is a directory
@@ -954,6 +999,25 @@ void D_SetUserPath()
    printf("User path set %s.\n", s);
 }
 
+//
+// D_SetAutoDoomPath
+//
+// Set AutoDoom path, which can be below user or not
+//
+void D_SetAutoDoomPath()
+{
+	int res = BASE_NOTEXIST, source = BASE_NUMBASE;
+	qstring autodoomdir;
+
+	autodoomdir = M_SafeFilePath(userpath, "autodoom");
+
+	if ((res = D_CheckMiscellaneousPath(autodoomdir)) == BASE_ISGOOD)
+		g_autoDoomPath = autodoomdir.duplicate();
+	else
+		g_autoDoomPath = userpath;	// just return userpath if failing
+	B_Log("AutoDoom path: %s\n", g_autoDoomPath);
+}
+
 // haleyjd 8/18/07: if true, the game path has been set
 bool gamepathset;
 
@@ -1114,6 +1178,29 @@ char *D_CheckGamePathFile(const char *name, bool isDir)
 
    // not found, or not a file or directory as expected
    return NULL;
+}
+
+//
+// D_CheckAutoDoomPathFile
+//
+// IOANCH 20131229:
+// Check for a file or directory in the autodoom path
+//
+char *D_CheckAutoDoomPathFile(const char *name, bool isDir)
+{
+	struct stat sbuf;
+
+	// check for existence under user/<game>
+	char *fullpath = M_SafeFilePath(g_autoDoomPath, name);
+	if (!stat(fullpath, &sbuf))
+	{
+		// check that it is or is not a directory as requested
+		if (S_ISDIR(sbuf.st_mode) == isDir)
+			return fullpath;
+	}
+
+	// not found, or not a file or directory as expected
+	return NULL;
 }
 
 

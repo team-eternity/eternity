@@ -286,6 +286,28 @@ const char *MetaInteger::toString() const
 }
 
 //
+// IOANCH: v2fixed_t
+//
+
+IMPLEMENT_RTTI_TYPE(MetaV2Fixed)
+
+//
+// MetaInteger::toString
+//
+// String conversion method for MetaInteger objects.
+//
+const char *MetaV2Fixed::toString() const
+{
+   static char str[64];
+   
+   memset(str, 0, sizeof(str));
+   
+   psnprintf(str, sizeof(str), "(%d %d)", value.x, value.y);
+   
+   return str;
+}
+
+//
 // Double
 //
 
@@ -1046,6 +1068,75 @@ int MetaTable::removeInt(const char *key)
 
    delete obj;
 
+   return value;
+}
+
+// IOANCH 20130815: added for 2D fixed vector
+//
+// MetaTable::addV2Fixed
+//
+void MetaTable::addV2Fixed(const char *key, v2fixed_t value)
+{
+   addObject(new MetaV2Fixed(key, value));
+}
+
+//
+// MetaTable::getDouble
+//
+v2fixed_t MetaTable::getV2Fixed(const char *key, v2fixed_t defValue)
+{
+   v2fixed_t retval;
+   MetaObject *obj;
+   
+   metaerrno = META_ERR_NOERR;
+   
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaV2Fixed))))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval = defValue;
+   }
+   else
+      retval = static_cast<MetaV2Fixed *>(obj)->value;
+   
+   return retval;
+}
+
+//
+// MetaTable::setV2Fixed
+//
+void MetaTable::setV2Fixed(const char *key, v2fixed_t newValue)
+{
+   MetaObject *obj;
+   
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaV2Fixed))))
+      addV2Fixed(key, newValue);
+   else
+      static_cast<MetaV2Fixed *>(obj)->value = newValue;
+}
+
+//
+// MetaTable::removeV2Fixed
+//
+v2fixed_t MetaTable::removeV2Fixed(const char *key)
+{
+   MetaObject *obj;
+   v2fixed_t value;
+   
+   metaerrno = META_ERR_NOERR;
+   
+   if(!(obj = getObjectKeyAndType(key, RTTI(MetaV2Fixed))))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      v2fixed_t ret = {0 , 0};
+      return ret;
+   }
+   
+   removeObject(obj);
+   
+   value = static_cast<MetaV2Fixed *>(obj)->value;
+   
+   delete obj;
+   
    return value;
 }
 

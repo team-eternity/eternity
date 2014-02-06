@@ -32,6 +32,7 @@
 
 #include "a_small.h"
 #include "am_map.h"
+#include "autodoom/b_botmap.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -1332,6 +1333,7 @@ static bool HU_ChatRespond(event_t *ev)
 //   Yet Another Lost MBF Feature
 //   Restored by Quasar (tm)
 //
+// IOANCH: added subsector coordinates
 
 class HUDAutomapCoordWidget : public HUDTextWidget
 {
@@ -1340,7 +1342,8 @@ public:
    {
       COORDTYPE_X,
       COORDTYPE_Y,
-      COORDTYPE_Z
+      COORDTYPE_Z,
+      COORDTYPE_SUBSECTOR,
    };
 
 protected:
@@ -1368,6 +1371,9 @@ public:
          case COORDTYPE_Z:
             y = 28;
             break;
+	 case COORDTYPE_SUBSECTOR:
+	    y = 37;
+	    break;
          default:
             break;
          }
@@ -1386,6 +1392,9 @@ public:
          case COORDTYPE_Z:
             y = 25;
             break;
+	 case COORDTYPE_SUBSECTOR:
+	    y = 34;
+	    break;
          default:
             break;
          }
@@ -1400,6 +1409,7 @@ public:
 static HUDAutomapCoordWidget coordx_widget;
 static HUDAutomapCoordWidget coordy_widget;
 static HUDAutomapCoordWidget coordz_widget;
+static HUDAutomapCoordWidget coords_widget;
 
 // haleyjd 02/12/06: configuration variables
 bool hu_showcoords;
@@ -1418,6 +1428,7 @@ void HUDAutomapCoordWidget::ticker()
    static char coordxstr[16];
    static char coordystr[16];
    static char coordzstr[16];
+   static char coordsstr[16];
 
    if(!automapactive || !hu_showcoords)
    {
@@ -1438,10 +1449,16 @@ void HUDAutomapCoordWidget::ticker()
       sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
       message = coordystr;
    }
-   else
+   else if(coordType == COORDTYPE_Z)
    {
       sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       message = coordzstr;
+   }
+   else
+   {
+	   BSubsec& bss = botMap->pointInSubsector(x, y);
+      sprintf(coordsstr, "%cS: %-5d", hu_coordscolor + 128, (int)(&bss - &botMap->ssectors[0]));
+      message = coordsstr;
    }
 }
 
@@ -1456,21 +1473,25 @@ static void HU_InitCoords()
    coordx_widget.setName("_HU_CoordXWidget");
    coordy_widget.setName("_HU_CoordYWidget");
    coordz_widget.setName("_HU_CoordZWidget");
+   coords_widget.setName("_HU_CoordSWidget");
 
    // set types
    coordx_widget.setType(WIDGET_TEXT);
    coordy_widget.setType(WIDGET_TEXT);
    coordz_widget.setType(WIDGET_TEXT);
+   coords_widget.setType(WIDGET_TEXT);
 
    // add to hash
    HUDWidget::AddWidgetToHash(&coordx_widget);
    HUDWidget::AddWidgetToHash(&coordy_widget);
    HUDWidget::AddWidgetToHash(&coordz_widget);
+   HUDWidget::AddWidgetToHash(&coords_widget);
 
    // set data
    coordx_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_X);
    coordy_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_Y);
    coordz_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_Z);
+   coords_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_SUBSECTOR);
 }
 
 ////////////////////////////////////////////////////////////////////////

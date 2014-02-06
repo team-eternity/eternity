@@ -296,6 +296,8 @@ extern  char   *basepath;
 extern  char   *userpath;
 extern  char   *basegamepath;
 extern  char   *usergamepath;
+// IOANCH: autodoom
+extern	char	*g_autoDoomPath;
 
 // if true, load all graphics at level load
 extern  bool precache;

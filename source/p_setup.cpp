@@ -28,6 +28,8 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "autodoom/b_botmap.h"   // IOANCH
+#include "autodoom/b_think.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -157,6 +159,9 @@ mapthing_t playerstarts[MAXPLAYERS];
 // haleyjd 06/14/10: level wad directory
 static WadDirectory *setupwad;
 
+// IOANCH 20131229: level hash
+HashData g_levelHash;
+
 //
 // ShortToLong
 //
@@ -270,6 +275,9 @@ void P_LoadConsoleVertexes(int lump)
    setupwad->cacheLumpAuto(lump, buf);
    auto data = buf.getAs<byte *>();
 
+   // IOANCH: hash it
+   g_levelHash.addData(data, numvertexes * PSX_VERTEX_LEN);
+
    // Copy and convert vertex coordinates
    for(int i = 0; i < numvertexes; i++)
    {
@@ -300,6 +308,9 @@ void P_LoadVertexes(int lump)
    // Load data into cache.
    setupwad->cacheLumpAuto(lump, buf);
    auto data = buf.getAs<byte *>();
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numvertexes * DOOM_VERTEX_LEN);
    
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(int i = 0; i < numvertexes; i++)
@@ -326,6 +337,9 @@ void P_LoadSegs(int lump)
    numsegs = setupwad->lumpLength(lump) / sizeof(mapseg_t);
    segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numsegs * sizeof(mapseg_t));
    
    for(i = 0; i < numsegs; ++i)
    {
@@ -393,6 +407,9 @@ void P_LoadSubsectors(int lump)
    numsubsectors = setupwad->lumpLength(lump) / sizeof(mapsubsector_t);
    subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numsubsectors * sizeof(mapsubsector_t));
    
    for(i = 0; i < numsubsectors; ++i)
    {
@@ -510,6 +527,9 @@ void P_LoadPSXSectors(int lumpnum)
    setupwad->cacheLumpAuto(lumpnum, buf);
    auto data = buf.getAs<byte *>();
 
+   // IOANCH: hash it
+   g_levelHash.addData(data, numsectors * PSX_SECTOR_SIZE);
+
    // init texture name buffer to ensure null-termination
    memset(namebuf, 0, sizeof(namebuf));
 
@@ -548,6 +568,9 @@ void P_LoadSectors(int lumpnum)
    
    setupwad->cacheLumpAuto(lumpnum, buf);
    auto data = buf.getAs<byte *>();
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numsectors * DOOM_SECTOR_SIZE);
 
    // init texture name buffer to ensure null-termination
    memset(namebuf, 0, sizeof(namebuf));
@@ -619,6 +642,9 @@ void P_LoadNodes(int lump)
    nodes  = estructalloctag(node_t,  numnodes, PU_LEVEL);
    fnodes = estructalloctag(fnode_t, numnodes, PU_LEVEL);
    data   = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numnodes * sizeof(mapnode_t));
 
    for(i = 0; i < numnodes; i++)
    {
@@ -794,6 +820,9 @@ static void P_LoadZNodes(int lump)
    data = lumpptr = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    len  = setupwad->lumpLength(lump);
 
+   // IOANCH: hash it
+   g_levelHash.addData(data, len);
+
    // skip header
    CheckZNodesOverflow(len, 4);
    data += 4;
@@ -959,6 +988,9 @@ void P_LoadThings(int lump)
    
    numthings = setupwad->lumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
 
+   // IOANCH: hash it
+   g_levelHash.addData(data, numthings * sizeof(mapthingdoom_t));
+
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
@@ -1037,6 +1069,9 @@ void P_LoadHexenThings(int lump)
    mapthing_t *mapthings;
    
    numthings = setupwad->lumpLength(lump) / sizeof(mapthinghexen_t);
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numthings * sizeof(mapthinghexen_t));
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
@@ -1186,6 +1221,9 @@ void P_LoadLineDefs(int lump)
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
+   // IOANCH: hash it
+   g_levelHash.addData(data, numlines * sizeof(maplinedef_t));
+
    for(int i = 0; i < numlines; i++)
    {
       maplinedef_t *mld = (maplinedef_t *)data + i;
@@ -1297,6 +1335,9 @@ void P_LoadHexenLineDefs(int lump)
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedefhexen_t);
    lines    = estructalloctag(line_t, numlines, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numlines * sizeof(maplinedefhexen_t));
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1432,6 +1473,9 @@ void P_LoadSideDefs2(int lumpnum)
    memset(toptexture,    0, sizeof(toptexture));
    memset(bottomtexture, 0, sizeof(bottomtexture));
    memset(midtexture,    0, sizeof(midtexture));
+
+   // IOANCH: hash it
+   g_levelHash.addData(data, numsides * sizeof(mapsidedef_t));
 
    for(i = 0; i < numsides; ++i)
    {
@@ -2449,7 +2493,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 {
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
-
+   
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
    gamestate = GS_LOADING;
@@ -2487,6 +2531,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // perform post-Z_FreeTags actions
    P_InitNewLevel(lumpnum, dir);
+
+   // IOANCH 20131229: init hash. Further data will be digested in the loading functions
+   g_levelHash.initialize(HashData::SHA1);
 
    // note: most of this ordering is important
    
@@ -2527,6 +2574,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
    P_LoadLineDefs2();                      // killough 4/4/98
+   
+   // IOANCH NOTE: blockmap is not hashed
    P_LoadBlockMap (lumpnum + ML_BLOCKMAP); // killough 3/1/98
    
    if(P_CheckForZDoomUncompressedNodes(lumpnum))
@@ -2620,6 +2669,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       acslumpnum = setupwad->checkNumForName(LevelInfo.acsScriptLump);
 
    ACS_LoadLevelScript(dir, acslumpnum);
+
+   // IOANCH: finish the digest
+   g_levelHash.wrapUp();
+   
+   // IOANCH: create the bot map
+   B_BuildBotMap();
+   for (int i = 0; i < MAXPLAYERS; ++i)
+      if(playeringame[i])
+         bots[i].mapInit();
 }
 
 //

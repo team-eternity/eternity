@@ -35,6 +35,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
+#include "autodoom/b_think.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -1928,6 +1929,10 @@ void G_Ticker()
             playerclass_t *pc = players[i].pclass;
             
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
+            
+            // IOANCH: add bot commands if game is running
+            if(botMap && !demoplayback && gamestate == GS_LEVEL && !paused)
+               bots[i].doCommand();
             
             if(demoplayback)
                G_ReadDemoTiccmd(cmd);

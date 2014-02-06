@@ -28,6 +28,7 @@
 
 #include "z_zone.h"
 
+#include "autodoom/b_botmap.h"   // IOANCH
 #include "doomstat.h"
 #include "m_bbox.h"
 #include "p_map.h"
@@ -369,6 +370,10 @@ void P_UnsetThingPosition(Mobj *thing)
       
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
+      
+      // IOANCH 20130814: unlink from bot subsectors
+      if(botMap)
+         botMap->unsetThingPosition(thing);
    }
 
    if(!(thing->flags & MF_NOBLOCKMAP))
@@ -437,6 +442,10 @@ void P_SetThingPosition(Mobj *thing)
 
       thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y);
       thing->old_sectorlist = NULL;
+      
+      // IOANCH: set thing position to bot subsectors
+      if(botMap)
+         botMap->setThingPosition(thing);
    }
 
    // link into blockmap

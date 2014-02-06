@@ -34,7 +34,7 @@ class  Mobj;
 #define BASETHRESHOLD   (100)
 
 bool P_GivePower(player_t *, int);
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
+bool P_TouchSpecialThing(Mobj *special, Mobj *toucher);  // IOANCH: bool
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
 

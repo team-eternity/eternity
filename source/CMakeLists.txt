@@ -86,12 +86,18 @@ FILE (GLOB GL_SOURCES gl/*.cpp)
 INCLUDE_DIRECTORIES (sdl/)
 FILE (GLOB SDL_SOURCES sdl/*.cpp)
 
+# IOANCH 20130925: AutoDoom
+INCLUDE_DIRECTORIES (autodoom/)
+FILE (GLOB AUTODOOM_SOURCES autodoom/*.cpp)
+INCLUDE_DIRECTORIES (autodoom/glbsp/)
+FILE (GLOB AUTODOOM_GLBSP_SOURCES autodoom/glbsp/*.c)
+
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
-                ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
+                ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES} ${AUTODOOM_SOURCES} ${AUTODOOM_GLBSP_SOURCES})
 
 target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
 

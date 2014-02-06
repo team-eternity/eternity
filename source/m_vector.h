@@ -54,6 +54,12 @@ struct v2float_t
    float x, y;
 };
 
+// IOANCH: added v2double_t
+struct v2double_t
+{
+   double x, y;
+};
+
 // 
 // M_MagnitudeVec2
 //

@@ -33,6 +33,7 @@
 
 #include "e_rtti.h"
 #include "m_dllist.h"
+#include "m_vector.h"   // IOANCH
 
 // METATYPE macro - make a string from a typename
 #define METATYPE(t) #t
@@ -146,6 +147,48 @@ public:
    int getValue() const { return value; }
    void setValue(int i) { value = i;    }
 
+   friend class MetaTable;
+};
+
+//
+// MetaV2Fixed
+//
+// IOANCH 20130815:
+// Wrap XY map coordinates.
+//
+class MetaV2Fixed : public MetaObject
+{
+   DECLARE_RTTI_TYPE(MetaV2Fixed, MetaObject)
+   
+protected:
+   v2fixed_t value;
+   
+public:
+   MetaV2Fixed() : Super()
+   {
+      value.x = value.y = 0;
+   }
+   MetaV2Fixed(size_t keyIndex, v2fixed_t i)
+   : Super(keyIndex), value(i)
+   {
+   }
+   MetaV2Fixed(const char *key, v2fixed_t i)
+   : Super(key), value(i)
+   {
+   }
+   MetaV2Fixed(const MetaV2Fixed &other)
+   : Super(other), value(other.value)
+   {
+   }
+   
+   // Virtual Methods
+   virtual MetaObject *clone()    const { return new MetaV2Fixed(*this); }
+   virtual const char *toString() const;
+   
+   // Accessors
+   v2fixed_t getValue() const { return value; }
+   void setValue(v2fixed_t i) { value = i;    }
+   
    friend class MetaTable;
 };
 
@@ -376,6 +419,12 @@ public:
    void setInt(size_t keyIndex, int newValue);
    void setInt(const char *key, int newValue);
    int  removeInt(const char *key);
+   
+   // IOANCH: XY fixed vector
+   void addV2Fixed(const char *key, v2fixed_t value);
+   v2fixed_t getV2Fixed(const char *key, v2fixed_t defValue);
+   void setV2Fixed(const char *key, v2fixed_t newValue);
+   v2fixed_t removeV2Fixed(const char *key);
 
    // Double floating-point
    void   addDouble(const char *key, double value);

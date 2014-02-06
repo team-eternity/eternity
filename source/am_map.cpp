@@ -27,6 +27,8 @@
 #include "i_system.h"
 
 #include "am_map.h"
+#include "autodoom/b_botmap.h"   // IOANCH
+#include "autodoom/b_think.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalizations
@@ -1847,18 +1849,105 @@ static void AM_drawWalls()
 static void AM_drawNodeLines()
 {
    mline_t l;
-
-   for(int i = 0; i < numnodes; i++)
+   for (int i = 0; i < botMap->numsegs; ++i)
    {
-      fnode_t *fnode = &fnodes[i];
-
-      l.a.x = fnode->fx;
-      l.a.y = fnode->fy;
-      l.b.x = fnode->fx + fnode->fdx;
-      l.b.y = fnode->fy + fnode->fdy;
-
-      AM_drawMline(&l, mapcolor_frnd);
+      const BotMap::Seg &sg = botMap->segs[i];
+      l.a.x = M_FixedToDouble(sg.v[0]->x);
+      l.a.y = M_FixedToDouble(sg.v[0]->y);
+      l.b.x = M_FixedToDouble(sg.v[1]->x);
+      l.b.y = M_FixedToDouble(sg.v[1]->y);
+      AM_drawMline(&l, mapcolor_prtl);
    }
+   //for (int i = 0; i < botMap->numlines; ++i)
+   //{
+	  // const BotMap::Line &ln = botMap->lines[i];
+	  // l.a.x = M_FixedToDouble(ln.v[0]->x);
+	  // l.a.y = M_FixedToDouble(ln.v[0]->y);
+	  // l.b.x = M_FixedToDouble(ln.v[1]->x);
+	  // l.b.y = M_FixedToDouble(ln.v[1]->y);
+	  // AM_drawMline(&l, mapcolor_prtl);
+   //}
+   if (bots[0].path.exists())
+   {
+      int i;
+      fixed_t x, y;
+      for (i = 0; i != -1; i = bots[0].path.getNextStraightIndex(i))
+      {
+         if(i != 0)
+         {
+            l.a.x = M_FixedToDouble(x);
+            l.a.y = M_FixedToDouble(y);
+         }
+         bots[0].path.getStraightCoords(i, x, y);
+         l.b.x = M_FixedToDouble(x);
+         l.b.y = M_FixedToDouble(y);
+         if(i != 0)
+         {
+            AM_drawMline(&l, mapcolor_unsn);
+         }
+      }
+      l.a.x = M_FixedToDouble(x);
+      l.a.y = M_FixedToDouble(y);
+      bots[0].path.getFinalCoord(x, y);
+      l.b.x = M_FixedToDouble(x);
+      l.b.y = M_FixedToDouble(y);
+      AM_drawMline(&l, mapcolor_unsn);
+   }
+//   for (int i = 0; i < numlines; ++i)
+//   {
+//      if (lines[i].special)
+//      {
+//         l.a.x = M_FixedToDouble(lines[i].v1->x);
+//         l.a.y = M_FixedToDouble(lines[i].v1->y);
+//         l.b.x = M_FixedToDouble(lines[i].v2->x);
+//         l.b.y = M_FixedToDouble(lines[i].v2->y);
+//         AM_drawMline(&l, mapcolor_prtl);
+//      }
+//   }
+//   for (int i = 0; i < botMap->numlines; ++i)
+//   {
+//      const BotMap::Line &ln = botMap->lines[i];
+//      l.a.x = M_FixedToDouble(ln.v[0]->x);
+//      l.a.y = M_FixedToDouble(ln.v[0]->y);
+//      l.b.x = M_FixedToDouble(ln.v[1]->x);
+//      l.b.y = M_FixedToDouble(ln.v[1]->y);
+//      const fixed_t fl[2] = {ln.msec[0]->getFloorHeight(),
+//         ln.msec[1]->getFloorHeight()};
+//      if ((fl[0] == D_MAXINT || fl[1] == D_MAXINT) && fl[0] != fl[1])
+//      {
+//         AM_drawMline(&l, mapcolor_wall);
+//      }
+//      else if (fl[0] != fl[1])
+//         AM_drawMline(&l, mapcolor_fchg);
+//      else if (ln.msec[0]->getCeilingHeight() !=
+//               ln.msec[1]->getCeilingHeight())
+//      {
+//         AM_drawMline(&l, mapcolor_cchg);
+//      }
+//      else
+//         AM_drawMline(&l, mapcolor_unsn);
+//   }
+//
+   for (int i = 0; i < botMap->numverts; ++i)
+   {
+      l.a.x = M_FixedToDouble(botMap->vertices[i].x) - 0.25;
+      l.a.y = M_FixedToDouble(botMap->vertices[i].y) - 0.25;
+      l.b.x = M_FixedToDouble(botMap->vertices[i].x) + 0.25;
+      l.b.y = M_FixedToDouble(botMap->vertices[i].y) + 0.25;
+      AM_drawMline(&l, mapcolor_sprt);
+   }
+   
+//   for(int i = 0; i < numnodes; i++)
+//   {
+//      fnode_t *fnode = &fnodes[i];
+//
+//      l.a.x = fnode->fx;
+//      l.a.y = fnode->fy;
+//      l.b.x = fnode->fx + fnode->fdx;
+//      l.b.y = fnode->fy + fnode->fdy;
+//
+//      AM_drawMline(&l, mapcolor_frnd);
+//   }
 }
 
 //
@@ -2296,8 +2385,9 @@ void AM_Drawer()
    
    if(automap_grid)                 // killough 2/28/98: change var name
       AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
-   
-   AM_drawWalls();
+
+//   if(!am_drawnodelines)   // IOANCH: don't draw walls when in that mode
+      AM_drawWalls();
 
    // haleyjd 05/17/08:
    if(am_drawnodelines)

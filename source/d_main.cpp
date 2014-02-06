@@ -36,6 +36,7 @@
 
 #include "acs_intr.h"
 #include "am_map.h"
+#include "autodoom/b_think.h" // IOANCH
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -133,6 +134,8 @@ char    *basegamepath;            // haleyjd 11/23/06: path of base/game directo
 
 char    *userpath;                // haleyjd 02/05/12: path of "user" directory
 char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
+
+char	*g_autoDoomPath;			// IOANCH 20131229: autodoom path
 
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
@@ -1267,6 +1270,7 @@ static void D_DoomInit()
    // haleyjd 08/18/07: set base path and user path
    D_SetBasePath();
    D_SetUserPath();
+   D_SetAutoDoomPath();	// IOANCH
 
    // haleyjd 08/19/07: check for -game parameter first
    D_CheckGamePathParam();
@@ -1876,6 +1880,9 @@ static void D_DoomInit()
       }
       */
    }
+   
+   // IOANCH 20130814: init static bot stuff
+   Bot::InitBots();
 
    // a lot of alloca calls are made during startup; kill them all now.
    Z_FreeAlloca();

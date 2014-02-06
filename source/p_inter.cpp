@@ -29,6 +29,9 @@
 
 #include "a_small.h"
 #include "am_map.h"
+#include "autodoom/b_classifier.h"
+#include "autodoom/b_think.h"
+#include "autodoom/b_util.h"
 #include "c_io.h"
 #include "d_deh.h"     // Ty 03/22/98 - externalized strings
 #include "d_dehtbl.h"
@@ -540,7 +543,8 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 //
 // P_TouchSpecialThing
 //
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
+// IOANCH: modified to bool to determine whether failure was due to item nopick
+bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t   *player;
    int        sound;
@@ -556,40 +560,46 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    inventoryslot_t *slot   = NULL;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
-      return;        // out of reach
+      return false;        // out of reach
 
    sound = sfx_itemup;
 
    // haleyjd: don't crash if a monster gets here.
    if(!(player = toucher->player))
-      return;
+      return false;
    
    // Dead thing touching.
    // Can happen with a sliding player corpse.
    if(toucher->health <= 0)
-      return;
+      return false;
 
    // haleyjd 05/11/03: EDF pickups modifications
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
-      return;
+      return false;
 
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
    // Identify by sprite.
    // INVENTORY_FIXME: apply pickupfx[].effect instead!
+   
+   // IOANCH 20131007: bot learn item
+   Bot *plbot = botDict[player];
+   PlayerStats &effectStats = plbot->getEffectStats(special->sprite);
+   effectStats.setPriorState(*player);
+   //plbot->getNopickStats(special->sprite).reduceByCurrentState(*player);
    switch(pickupfx[special->sprite].tempeffect)
    {
       // armor
    case PFX_GREENARMOR:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_GREENARMOR)))
-         return;
+         return true;
       message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BLUEARMOR:
       if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
-         return;
+         return true;
       message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
       break;
 
@@ -618,7 +628,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_MEGASPHERE:
       if(demo_version < 335 && GameModeInfo->id != commercial)
-         return;
+         return true;
       // INVENTORY_TODO: hardcoded for now
       P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
       P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR));
@@ -686,7 +696,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_STIMPACK:
       // INVENTORY_FIXME: temp hard-coded
       if(!P_GiveBody(player, E_ItemEffectForName(ITEMNAME_STIMPACK)))
-         return;
+         return true;
       message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
       break;
       
@@ -694,7 +704,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // INVENTORY_TODO: hardcoded for now
       effect = E_ItemEffectForName(ITEMNAME_MEDIKIT);
       if(!P_GiveBody(player, effect))
-         return;
+         return true;
       // sf: fix medineed 
       // (check for below 25, but medikit gives 25, so always > 25)
       message = DEH_String(player->health < 50 ? "GOTMEDINEED" : "GOTMEDIKIT");
@@ -704,7 +714,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // power ups
    case PFX_INVULNSPHERE:
       if(!P_GivePower(player, pw_invulnerability))
-         return;
+         return true;
       message = DEH_String("GOTINVUL"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
@@ -712,7 +722,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // WEAPON_FIXME: berserk changes to fist
    case PFX_BERZERKBOX:
       if(!P_GivePower(player, pw_strength))
-         return;
+         return true;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
       if(player->readyweapon != wp_fist)
          // sf: removed beta
@@ -722,28 +732,28 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_INVISISPHERE:
       if(!P_GivePower(player, pw_invisibility))
-         return;
+         return true;
       message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
    case PFX_RADSUIT:
       if(!P_GivePower(player, pw_ironfeet))
-         return;
+         return true;
       message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
    case PFX_ALLMAP:
       if(!P_GivePower(player, pw_allmap))
-         return;
+         return true;
       message = DEH_String("GOTMAP"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
    case PFX_LIGHTAMP:
       if(!P_GivePower(player, pw_infrared))
-         return;
+         return true;
       sound = sfx_getpow;
       message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
       break;
@@ -752,56 +762,56 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_CLIP:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped, special->dropamount))
-         return;
+         return true;
       message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CLIPBOX:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKET:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKETBOX:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELL:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELLPACK:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELL:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELLBOX:
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false, 0))
-         return;
+         return true;
       message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
       break;
 
@@ -817,7 +827,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // weapons
    case PFX_BFG:
       if(!P_GiveWeapon(player, wp_bfg, false))
-         return;
+         return true;
       // FIXME: externalize all BFG pickup strings
       message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
                 : bfgtype==1 ? "You got the BFG 2704!"
@@ -830,42 +840,42 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_CHAINGUN:
       if(!P_GiveWeapon(player, wp_chaingun, dropped))
-         return;
+         return true;
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_CHAINSAW:
       if(!P_GiveWeapon(player, wp_chainsaw, false))
-         return;
+         return true;
       message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_LAUNCHER:
       if(!P_GiveWeapon(player, wp_missile, false))
-         return;
+         return true;
       message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_PLASMA:
       if(!P_GiveWeapon(player, wp_plasma, false))
-         return;
+         return true;
       message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SHOTGUN:
       if(!P_GiveWeapon(player, wp_shotgun, dropped))
-         return;
+         return true;
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
       if(!P_GiveWeapon(player, wp_supershotgun, dropped))
-         return;
+         return true;
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
@@ -904,7 +914,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_HPOTION: // heretic potion
       if(!P_GiveBody(player, E_ItemEffectForName("CrystalVial")))
-         return;
+         return true;
       message = DEH_String("HITEMHEALTH");
       sound = sfx_hitemup;
       break;
@@ -912,7 +922,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_SILVERSHIELD: // heretic shield 1
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_SILVERSHIELD)))
-         return;
+         return true;
       message = DEH_String("HITEMSHIELD1");
       sound = sfx_hitemup;
       break;
@@ -920,7 +930,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    case PFX_ENCHANTEDSHIELD: // heretic shield 2
       // INVENTORY_TODO: hardcoded for now
       if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ENCHANTEDSHLD)))
-         return;
+         return true;
       message = DEH_String("HITEMSHIELD2");
       sound = sfx_hitemup;
       break;
@@ -933,7 +943,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_HMAP: // map scroll
       if(!P_GivePower(player, pw_allmap))
-         return;
+         return true;
       message = DEH_String("HITEMSUPERMAP");
       sound = sfx_hitemup;
       break;
@@ -1014,14 +1024,14 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // start new Eternity power-ups
    case PFX_TOTALINVIS:
       if(!P_GivePower(player, pw_totalinvis))
-         return;
+         return true;
       message = "Total Invisibility!";
       sound = sfx_getpow;
       break;
 
    default:
       // I_Error("P_SpecialThing: Unknown gettable thing");
-      return;      // killough 12/98: suppress error message
+      return false;      // killough 12/98: suppress error message
    }
 
    // sf: display message using player_printf
@@ -1032,6 +1042,16 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    // checking for COUNTITEM flag.
    if(special->flags & MF_COUNTITEM)
       player->itemcount++;
+   
+   // IOANCH 20130815: add item to bot's stack
+   effectStats.maximizeByStateDelta(*player);
+   PlayerStats *nopickStats = plbot->findNopickStats(special->sprite);
+   if(nopickStats && effectStats.overlaps(*player, *nopickStats))
+   {
+      nopickStats->reset(true);
+   }
+   
+   plbot->addXYEvent(BOT_PICKUP, B_CoordXY(*special));
 
    if(removeobj)
    {
@@ -1047,6 +1067,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       player->bonuscount += BONUSADD;
       S_StartSound(player->mo, sound);   // killough 4/25/98, 12/98
    }
+
+   return false;
 }
 
 //

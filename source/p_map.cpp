@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autodoom/b_think.h"
 #include "c_io.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -796,7 +797,21 @@ bool P_CheckPickUp(Mobj *thing)
    int solid = thing->flags & MF_SOLID;
 
    if(clip.thing->flags & MF_PICKUP)
-      P_TouchSpecialThing(thing, clip.thing); // can remove thing
+   {
+      // IOANCH 20131007: pickup item bot control
+
+      v2fixed_t coord = B_CoordXY(*thing);
+      spritenum_t spnum = thing->sprite;
+      bool nopick = P_TouchSpecialThing(thing, clip.thing); // can remove thing
+      player_t *player = clip.thing->player;
+      if(nopick && player)
+      {
+         Bot *plbot = botDict[player];
+         plbot->getNopickStats(spnum).
+            reduceByCurrentState(*player);
+         plbot->addXYEvent(BOT_PICKUP, coord);
+      }
+   }
 
    return !solid;
 }

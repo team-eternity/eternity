@@ -67,6 +67,12 @@ inline static fixed_t FixedMul(fixed_t a, fixed_t b)
   return (fixed_t)((int64_t) a*b >> FRACBITS);
 }
 
+// IOANCH: added 64-bit version
+inline static int64_t FixedMul64(fixed_t a, fixed_t b)
+{
+   return (int64_t) a*b >> FRACBITS;
+}
+
 //
 // Fixed Point Division
 //

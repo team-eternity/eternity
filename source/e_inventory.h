@@ -122,6 +122,8 @@ struct e_pickupfx_t
 // INVENTORY_TODO: alter as needed
 extern e_pickupfx_t *pickupfx;
 
+extern inventoryitemid_t e_maxitemid;   // IOANCH: no longer static
+
 //
 // Functions
 //
@@ -229,6 +231,11 @@ void E_ClearInventory(player_t *player);
 
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();
+
+// IOANCH: needed by bot
+bool E_WantInventoryItem(player_t *player, itemeffect_t *artifact, int amount,
+                         bool wantfull);
+
 
 //
 // EDF-Only Definitions

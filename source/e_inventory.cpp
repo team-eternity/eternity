@@ -1168,7 +1168,7 @@ static void E_processPickupItems(cfg_t *cfg)
 
 // Lookup table of inventory item types by assigned ID number
 static PODCollection<itemeffect_t *> e_InventoryItemsByID;
-static inventoryitemid_t e_maxitemid;
+inventoryitemid_t e_maxitemid;   // IOANCH: no longer static
 
 //
 // E_allocateInventoryItemIDs
@@ -1505,6 +1505,52 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
    if(newSlot > 0)
       E_sortInventory(player, newSlot, artifact->getInt(keySortOrder, 0));
 
+   return true;
+}
+
+//
+// E_WantAmmoInventoryItem
+//
+// IOANCH 20130814: added here from Bot's commands so it can reach static data
+// Returns true if item is pickable. May contain duplicate code, but I won't
+// change the original because it's rapidly modifying from upstream.
+//
+bool E_WantInventoryItem(player_t *player, itemeffect_t *artifact, int amount,
+                         bool wantfull)
+{
+   if(!artifact)
+      return false;
+   
+   itemeffecttype_t  fxtype = artifact->getInt(keyClass, ITEMFX_NONE);
+   inventoryitemid_t itemid = artifact->getInt(keyItemID, -1);
+   
+   // Not an artifact??
+   if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
+      return false;
+
+   inventoryindex_t newSlot = -1;
+   int amountToGive = artifact->getInt(keyAmount, 1);
+   int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
+
+   // may override amount to give via parameter "amount", if > 0
+   if(amount > 0)
+      amountToGive = amount;
+
+   // Does the player already have this item?
+   inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
+   
+   // If not, make a slot for it
+   if(!slot)
+   {
+      if((newSlot = E_findInventorySlot(player->inventory)) < 0)
+         return false; // internal error, actually... shouldn't happen
+      slot = &player->inventory[newSlot];
+   }
+   
+   // If must collect full amount, but it won't fit, return now.
+   if((artifact->getInt(keyFullAmountOnly, 0) || wantfull) &&
+      slot->amount + amountToGive > maxAmount)
+      return false;
    return true;
 }
 

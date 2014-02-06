@@ -30,6 +30,9 @@
 #ifndef E_STATES_H__
 #define E_STATES_H__
 
+// IOANCH 20130808: forward declare
+struct state_t;
+
 int E_StateNumForDEHNum(int dehnum);        // dehnum lookup
 int E_GetStateNumForDEHNum(int dehnum);     //    fatal error version
 int E_SafeState(int dehnum);                //    fallback version

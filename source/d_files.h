@@ -69,12 +69,15 @@ extern bool gamepathset;
 void D_SetGamePath();
 void D_SetBasePath();
 void D_SetUserPath();
+void D_SetAutoDoomPath();	// IOANCH
 void D_CheckGamePathParam();
 void D_EnumerateAutoloadDir();
 void D_GameAutoloadWads();
 void D_GameAutoloadDEH();
 void D_GameAutoloadCSC();
 void D_CloseAutoloadDir();
+
+char *D_CheckAutoDoomPathFile(const char *name, bool isDir);	// IOANCH
 
 #endif
 

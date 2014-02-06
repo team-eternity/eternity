@@ -78,8 +78,7 @@ protected:
    //
    void baseClear()
    {
-      if(ptrArray)
-         efree(ptrArray);
+		efree(ptrArray);
       ptrArray = NULL;
       length = 0;
       numalloc = 0;
@@ -226,6 +225,39 @@ public:
       this->assign(other);
       return *this;
    }
+   
+   //
+   // IOANCH 20130805: added move semantics
+   //
+   // Assignment
+   void assign(PODCollection<T> &&other)
+   {
+      if(this->ptrArray == other.ptrArray) // same object?
+         return;
+      
+      this->clear();
+      this->length = other.length;
+      this->wrapiterator = other.wrapiterator;
+      this->ptrArray = other.ptrArray;
+      this->numalloc = other.numalloc;
+      
+      other.ptrArray = nullptr;
+		other.length = 0;
+		other.wrapiterator = 0;
+		other.numalloc = 0;
+   }
+   
+   // Copy constructor
+   PODCollection(PODCollection<T> &&other) : BaseCollection<T>()
+   {
+      this->assign(other);
+   }
+   // operator = - Overloaded operator wrapper for assign method
+   PODCollection<T> &operator = (PODCollection<T> &&other)
+   {
+      this->assign(other);
+      return *this;
+   }
 
    //
    // clear
@@ -300,7 +332,7 @@ public:
 
       return ret;
    }
-
+   
    //
    // resize
    //
@@ -320,6 +352,17 @@ public:
       // set the new length, in all cases.
       this->length = n;
       this->checkWrapIterator();
+   }
+
+   //
+   // reserve
+   //
+   // IOANCH 20132612: reserve space like with std::vector
+   //
+   void reserve(size_t size)
+   {
+	   if (size > this->numalloc)
+		   this->baseResize(size - this->numalloc);
    }
 };
 

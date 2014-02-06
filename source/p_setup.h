@@ -29,6 +29,7 @@
 #include "doomdef.h"  // for skill_t
 #include "doomtype.h" // for byte
 #include "m_fixed.h"  // for fixed_t
+#include "m_hash.h"		// IOANCH
 
 class  Mobj;
 struct seg_t;
@@ -61,6 +62,9 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;      // for thing chains
 extern byte    *portalmap;       // haleyjd: for fast linked portal checks
+
+// IOANCH 20131229: level hash
+extern HashData g_levelHash;
 
 // haleyjd 05/17/13: portalmap flags
 enum

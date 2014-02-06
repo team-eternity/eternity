@@ -69,6 +69,9 @@
 // haleyjd: C++ headers
 #include <new>
 #include <type_traits>
+// IOANCH: more C++ headers
+#include <functional>
+#include <algorithm>
 
 // haleyjd: portable replacement function headers
 #include "m_ctype.h"
