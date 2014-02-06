@@ -28,3 +28,5 @@ macosx/libc++/libc++.1.dylib
 macosx/libc++/libc++.dylib
 macosx/libc++/libc++abi.dylib
 macosx/EternityEngine.xcodeproj/xcuserdata/ioan.xcuserdatad
+vc2013-autodoom/Eternity.opensdf
+vc2013-autodoom/Eternity.sdf
