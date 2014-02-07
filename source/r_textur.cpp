@@ -32,6 +32,7 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "e_hash.h"
+#include "m_compare.h"
 #include "m_swap.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -154,15 +155,15 @@ static void R_DetermineFlatSize(texture_t *t)
 // Allocates and initializes a new texture_t struct, filling in all needed data
 // for the given parameters.
 //
-static texture_t *R_AllocTexStruct(const char *name, uint16_t width, 
-                                   uint16_t height, int16_t compcount)
+static texture_t *R_AllocTexStruct(const char *name, int16_t width, 
+                                   int16_t height, int16_t compcount)
 {
    size_t    size;
    texture_t *ret;
    int       j;
   
 #ifdef RANGECHECK
-   if(!width || !height || !name || compcount < 0)
+   if(!name || compcount < 0)
    {
       I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n", 
               name, width, height, compcount);
@@ -175,8 +176,8 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width,
    
    ret->name = ret->namebuf;
    strncpy(ret->namebuf, name, 8);
-   ret->width = width;
-   ret->height = height;
+   ret->width  = emax<int16_t>(1, width);
+   ret->height = emax<int16_t>(1, height);
    ret->ccount = compcount;
    
    // SoM: no longer use global lists. This is now done for every texture.
@@ -1219,7 +1220,7 @@ static void R_CountFlats()
 // Rational log2(N) courtesy of Sean Eron Anderson's famous bit hacks:
 // http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
 //
-static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
+static void R_linearOptimalSize(size_t lumpsize, int16_t &w, int16_t &h)
 {
    if(!lumpsize)
    {
@@ -1233,8 +1234,8 @@ static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
    while(v >>= 1)
       ++r;
 
-   h = static_cast<uint16_t>(1 << (r / 2));
-   w = static_cast<uint16_t>(lumpsize / h);
+   h = static_cast<int16_t>(1 << (r / 2));
+   w = static_cast<int16_t>(lumpsize / h);
 }
 
 //
@@ -1245,7 +1246,7 @@ static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
 static void R_AddFlats()
 {
    byte     flatsize;
-   uint16_t width, height;
+   int16_t width, height;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
    for(int i = 0; i < numflats; i++)
