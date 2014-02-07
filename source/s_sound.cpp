@@ -1536,12 +1536,8 @@ musicinfo_t *S_MusicForName(const char *name)
    if(lumpnum >= 0)
    {
       mus = estructalloc(musicinfo_t, 1);
-      mus->name = estrdup(nameToUse);
-
-      // The music code should prefix the sound name to get the lump if:
-      // 1. The sound name does not have the prefix, AND
-      // 2. The lump does DOES have the prefix.
-      mus->prefix = (!nameHasPrefix && lumpHasPrefix);
+      mus->name   = estrdup(nameToUse);
+      mus->prefix = lumpHasPrefix;
       S_HookMusic(mus);
    }
    
