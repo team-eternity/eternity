@@ -435,7 +435,7 @@ enum
    TMPL_STATE_DONE     // finished successfully
 };
 
-typedef struct tmplpstate_s
+struct tmplpstate_t
 {
    char *text;
    int i;
@@ -444,7 +444,7 @@ typedef struct tmplpstate_s
    qstring *tokenbuf;
    int spacecount;
    int titleOrAuthor; // if non-zero, looking for Author, not title
-} tmplpstate_t;
+};
 
 static void TmplStateStart(tmplpstate_t *state)
 {
@@ -821,8 +821,8 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 //
 static void P_applyHexenMapInfo()
 {
-   MetaTable *xlmi;
-   const char *s;
+   MetaTable  *xlmi = NULL;
+   const char *s    = NULL;
    int i;
 
    if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
